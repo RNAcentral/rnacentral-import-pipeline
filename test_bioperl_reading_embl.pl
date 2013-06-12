@@ -1,5 +1,7 @@
 #!/usr/bin/perl
 
+# Test script for importing embl files with ncRNAs into a database.
+
 use warnings;
 use strict;
 
