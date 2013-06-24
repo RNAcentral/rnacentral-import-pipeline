@@ -21,6 +21,8 @@ PACKAGE BODY RNC_TEST AS
     The first entry in all arrays is the default record that everything else
     is compared to.
   */
+
+  -- define array types
   TYPE SeqList IS VARRAY(17) OF VARCHAR(10); -- first entry + 16 test cases
   TYPE AccList IS VARRAY(17) OF VARCHAR(4);
   TYPE VerList IS VARRAY(17) OF NUMBER;
@@ -28,37 +30,39 @@ PACKAGE BODY RNC_TEST AS
   TYPE CrcList IS VARRAY(17) OF VARCHAR(16);
   TYPE Md5List IS VARRAY(17) OF VARCHAR(32);
 
-   -- 9 identical, then 8 different, 17 total
+   -- first 9 sequences are identical, the next 8 are different, 17 total
   v_seq SeqList := SeqList('AAAAA','AAAAA','AAAAA','AAAAA','AAAAA','AAAAA','AAAAA','AAAAA','AAAAA',
                            'GGGGG','GGGGG','GGGGG','GGGGG','GGGGG','GGGGG','GGGGG','GGGGG');
   v_acc AccList := AccList('id1','id1','id2','id1','id1','id2','id2','id1','id2','id2','id2','id2','id1','id1','id1','id2','id1');
   v_ver VerList := VerList(1,1,1,2,1,2,1,2,2,2,2,1,2,1,2,1,1);
   v_tax TaxList := TaxList(100,100,100,100,200,100,200,200,200,200,100,200,200,200,100,100,100);
-  v_crc CrcList := CrcList('0000000000000000','0000000000000000','0000000000000000','0000000000000000',
-                           '0000000000000000','0000000000000000','0000000000000000','0000000000000000',
-                           '0000000000000001','0000000000000001','0000000000000001','0000000000000001',
-                           '0000000000000001','0000000000000001','0000000000000001','0000000000000001',
-                           '0000000000000001');
-  v_md5 Md5List := Md5List('00000000000000000000000000000000','00000000000000000000000000000000','00000000000000000000000000000000','00000000000000000000000000000000',
-                           '00000000000000000000000000000000','00000000000000000000000000000000','00000000000000000000000000000000','00000000000000000000000000000000',
-                           '00000000000000000000000000000001','00000000000000000000000000000001','00000000000000000000000000000001','00000000000000000000000000000001',
-                           '00000000000000000000000000000001','00000000000000000000000000000001','00000000000000000000000000000001','00000000000000000000000000000001',
-                           '00000000000000000000000000000001');
+  v_crc CrcList := CrcList('0000000000000000','0000000000000000','0000000000000000',
+                           '0000000000000000','0000000000000000','0000000000000000',
+                           '0000000000000000','0000000000000000','0000000000000000',
+                           '1111111111111111','1111111111111111','1111111111111111','1111111111111111',
+                           '1111111111111111','1111111111111111','1111111111111111','1111111111111111'
+                           );
+  v_md5 Md5List := Md5List('00000000000000000000000000000000','00000000000000000000000000000000','00000000000000000000000000000000',
+                           '00000000000000000000000000000000','00000000000000000000000000000000','00000000000000000000000000000000',
+                           '00000000000000000000000000000000','00000000000000000000000000000000','00000000000000000000000000000000',
+                           '11111111111111111111111111111111','11111111111111111111111111111111','11111111111111111111111111111111','11111111111111111111111111111111',
+                           '11111111111111111111111111111111','11111111111111111111111111111111','11111111111111111111111111111111','11111111111111111111111111111111'
+                           );
 
   /* Insert the first record. */
   PROCEDURE initialize_rna_table AS
   BEGIN
     INSERT
       INTO rnacen.rna
-      VALUES(1, -- id
-             FIRST_UPI, -- UPI
+      VALUES(1,                 -- id
+             FIRST_UPI,         -- UPI
              CURRENT_TIMESTAMP, -- timestamp
-             USER,  -- user stamp
-             v_crc(1), -- crc64
-             SEQ_LENGTH, -- length
-             v_seq(1), -- sequence
-             NULL, -- long sequence
-             v_md5(1) -- md5
+             USER,              -- user stamp
+             v_crc(1),          -- crc64
+             SEQ_LENGTH,        -- length
+             v_seq(1),          -- sequence
+             NULL,              -- long sequence
+             v_md5(1)           -- md5
              );
     COMMIT;
   END initialize_rna_table;
@@ -126,7 +130,7 @@ PACKAGE BODY RNC_TEST AS
   END setup;
 
   /*
-    Import new data into the staging table
+    Import new data into the staging table load_rnacentral_test
   */
   PROCEDURE import_staging_data(
     p_test_id NUMBER
@@ -196,16 +200,16 @@ PACKAGE BODY RNC_TEST AS
   /*
     Utility function for unit testing.
     Example: assertEquals(2, 2, 'function_name');
-    Inspired by https://github.com/uzilan/asserts-package
+    Adopted from https://github.com/uzilan/asserts-package
   */
   PROCEDURE assertEquals(
-    proc IN VARCHAR2,
-    expected in NUMBER,
-    actual in NUMBER)
+    proc     IN VARCHAR2,
+    expected IN NUMBER,
+    actual   IN NUMBER)
   IS
   BEGIN
     IF NOT expected = actual THEN
-      DBMS_OUTPUT.put_line(proc || 'expected ' || expected || ', got ' || actual);
+      DBMS_OUTPUT.put_line('Warning! ' || proc || ' expected ' || expected || ', got ' || actual);
     ELSE
       DBMS_OUTPUT.put_line(proc || ' ok');
     END IF;
@@ -238,13 +242,13 @@ PACKAGE BODY RNC_TEST AS
     Check results
   */
   PROCEDURE check_result(
-    p_test_id NUMBER
+    p_test_id IN NUMBER
   ) AS
   BEGIN
 
     -- todo: formalize this better
     CASE p_test_id
-      WHEN 2 THEN check_test1;
+      WHEN 1 THEN check_test1;
       ELSE
         NULL;
     END CASE;
@@ -286,7 +290,7 @@ PACKAGE BODY RNC_TEST AS
     -- truncate tables in the beginning
     teardown;
 
-    FOR l_cntr IN 2..17
+    FOR l_cntr IN 1..1 -- 17
     LOOP
       DBMS_OUTPUT.put_line('Running test ' || l_cntr);
       run_test(l_cntr);
