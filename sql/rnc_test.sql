@@ -1,11 +1,19 @@
-create or replace
+CREATE OR REPLACE
 PACKAGE BODY RNC_TEST AS
 
   /*
     Warning: this package truncates all critical tables
-    so that tests run in a clean environment. Never run in production.
+    in order to run tests in a clean environment.
+    The tests should never be run in production.
 
-    Find additional documentation at http://goo.gl/U1bWK.
+    Input records in the staging table contain 4 primary fields:
+    sequence, accession, version, and taxid.
+    Other fields are derived from these 4.
+    Given an input record in one release, there are 16 ways
+    in which this record can change in the next release.
+    These tests are designed to cover all 16 possibilities.
+
+    Find additional documentation at http://goo.gl/U1bWK
   */
 
 
@@ -34,8 +42,8 @@ PACKAGE BODY RNC_TEST AS
   v_seq SeqList := SeqList('AAAAA','AAAAA','AAAAA','AAAAA','AAAAA','AAAAA','AAAAA','AAAAA','AAAAA',
                            'GGGGG','GGGGG','GGGGG','GGGGG','GGGGG','GGGGG','GGGGG','GGGGG');
   v_acc AccList := AccList('id1','id1','id2','id1','id1','id2','id2','id1','id2','id2','id2','id2','id1','id1','id1','id2','id1');
-  v_ver VerList := VerList(1,1,1,2,1,2,1,2,2,2,2,1,2,1,2,1,1);
-  v_tax TaxList := TaxList(100,100,100,100,200,100,200,200,200,200,100,200,200,200,100,100,100);
+  v_ver VerList := VerList(   1 ,   1 ,   1 ,   2 ,   1 ,   2 ,   1 ,   2 ,   2 ,   2 ,   2 ,   1 ,   2 ,   1 ,   2 ,   1 ,   1);
+  v_tax TaxList := TaxList(   1 ,   1 ,   1 ,   1 ,   2 ,   1 ,   2 ,   2 ,   2 ,   2 ,   1 ,   2 ,   2 ,   2 ,   1 ,   1 ,   1);
   v_crc CrcList := CrcList('0000000000000000','0000000000000000','0000000000000000',
                            '0000000000000000','0000000000000000','0000000000000000',
                            '0000000000000000','0000000000000000','0000000000000000',
@@ -49,7 +57,7 @@ PACKAGE BODY RNC_TEST AS
                            '11111111111111111111111111111111','11111111111111111111111111111111','11111111111111111111111111111111','11111111111111111111111111111111'
                            );
 
-  /* Insert the first record. */
+  /* Insert the first record into the RNA table. */
   PROCEDURE initialize_rna_table AS
   BEGIN
     INSERT
@@ -67,7 +75,7 @@ PACKAGE BODY RNC_TEST AS
     COMMIT;
   END initialize_rna_table;
 
-  /* Insert the first record. */
+  /* Insert the first record into the XREF table. */
   PROCEDURE initialize_xref_table AS
   BEGIN
     INSERT
@@ -95,14 +103,14 @@ PACKAGE BODY RNC_TEST AS
   */
   PROCEDURE initialize_releases AS
   BEGIN
-    -- add first release
+    -- add first release, set release status to "Done"
     INSERT
       INTO RNACEN.rnc_release
       VALUES(1,                 -- id
              1,                 -- dbid
              CURRENT_TIMESTAMP, -- release date
              'F',               -- release type
-             'L',               -- release status
+             'D',               -- release status
              CURRENT_TIMESTAMP, -- timestamp
              USER,              -- userstamp
              'test release 1',  -- description
@@ -136,6 +144,13 @@ PACKAGE BODY RNC_TEST AS
     p_test_id NUMBER
   ) AS
   BEGIN
+
+    -- do not insert anything for this test.
+    -- new release contains no records.
+    IF p_test_id = 18 THEN
+      RETURN;
+    END IF;
+
     INSERT INTO
       RNACEN.load_rnacentral_test
       VALUES(v_crc(p_test_id), -- crc64
@@ -145,7 +160,7 @@ PACKAGE BODY RNC_TEST AS
              v_acc(p_test_id), -- accession
              v_ver(p_test_id), -- version
              v_tax(p_test_id), -- taxid
-             v_md5(p_test_id)  --md5
+             v_md5(p_test_id)  -- md5
              );
     COMMIT;
   END import_staging_data;
@@ -216,27 +231,375 @@ PACKAGE BODY RNC_TEST AS
   end assertEquals;
 
   /*
-    Same sequence.
+  *********
+  * TESTS *
+  *********
+  */
+
+  /*
+    Input: identical entry.
+    Expected action: increment Last seen field in the existing xref.
   */
   PROCEDURE check_test1 AS
     l_count NUMBER;
+    l_test_id VARCHAR(20);
   BEGIN
 
+    l_test_id := 'check_test1';
+
     SELECT count(*) INTO l_count FROM rna;
-    assertEquals('check_test1', 1, l_count);
+    assertEquals(l_test_id, 1, l_count);
 
     SELECT count(*) INTO l_count FROM xref;
-    assertEquals('check_test1', 2, l_count);
+    assertEquals(l_test_id, 1, l_count);
 
     SELECT count(*) INTO l_count FROM xref
-    WHERE upi = FIRST_UPI AND deleted = 'Y' AND created = 1 AND LAST = 1;
-    assertEquals('check_test1', 1, l_count);
-
-    SELECT count(*) INTO l_count FROM xref
-    WHERE upi = FIRST_UPI AND deleted = 'N' AND created = 1 AND LAST = 2;
-    assertEquals('check_test1', 1, l_count);
+    WHERE upi = FIRST_UPI AND deleted = 'N' AND created = 1 AND last = 2;
+    assertEquals(l_test_id, 1, l_count);
 
   END check_test1;
+
+  /*
+    Input: different accession number.
+    Expected action: retire existing xref, create a new xref with new accession.
+  */
+  PROCEDURE check_test2 AS
+    l_count NUMBER;
+    l_test_id VARCHAR(20);
+  BEGIN
+
+    l_test_id := 'check_test2';
+
+    SELECT count(*) INTO l_count FROM rna;
+    assertEquals(l_test_id, 1, l_count);
+
+    SELECT count(*) INTO l_count FROM xref;
+    assertEquals(l_test_id, 2, l_count);
+
+    SELECT count(*) INTO l_count FROM xref
+    WHERE upi = FIRST_UPI AND deleted = 'Y' AND created = 1 AND LAST = 1 AND ac = 'id1';
+    assertEquals(l_test_id, 1, l_count);
+
+    SELECT count(*) INTO l_count FROM xref
+    WHERE upi = FIRST_UPI AND deleted = 'N' AND created = 2 AND LAST = 2 AND ac = 'id2';
+    assertEquals(l_test_id, 1, l_count);
+
+  END check_test2;
+
+  /*
+    Input: different version number.
+    Expected action: retire existing xref, create a new xref with updated version.
+  */
+  PROCEDURE check_test3 AS
+    l_count NUMBER;
+    l_test_id VARCHAR(20);
+  BEGIN
+
+    l_test_id := 'check_test3';
+
+    SELECT count(*) INTO l_count FROM rna;
+    assertEquals(l_test_id, 1, l_count);
+
+    SELECT count(*) INTO l_count FROM xref;
+    assertEquals(l_test_id, 2, l_count);
+
+    SELECT count(*) INTO l_count FROM xref
+    WHERE upi = FIRST_UPI AND deleted = 'Y' AND created = 1 AND LAST = 1 AND version = 1;
+    assertEquals(l_test_id, 1, l_count);
+
+    SELECT count(*) INTO l_count FROM xref
+    WHERE upi = FIRST_UPI AND deleted = 'N' AND created = 2 AND LAST = 2 AND version = 2;
+    assertEquals(l_test_id, 1, l_count);
+
+  END check_test3;
+
+  /*
+    Input: different taxid.
+    Expected action: retire existing xref, create a new xref with updated taxid.
+    TODO
+    Real action: overriding taxid in the existing xref, no change to version_I
+  */
+  PROCEDURE check_test4 AS
+    l_count NUMBER;
+    l_test_id VARCHAR(20);
+  BEGIN
+
+    l_test_id := 'check_test4';
+
+    SELECT count(*) INTO l_count FROM rna;
+    assertEquals(l_test_id, 1, l_count);
+
+    SELECT count(*) INTO l_count FROM xref;
+    assertEquals(l_test_id, 2, l_count);
+
+    SELECT count(*) INTO l_count FROM xref
+    WHERE upi = FIRST_UPI AND deleted = 'Y' AND created = 1 AND LAST = 1 AND taxid = 1;
+    assertEquals(l_test_id, 1, l_count);
+
+    SELECT count(*) INTO l_count FROM xref
+    WHERE upi = FIRST_UPI AND deleted = 'N' AND created = 2 AND LAST = 2 AND taxid = 2;
+    assertEquals(l_test_id, 1, l_count);
+
+  END check_test4;
+
+  /*
+    Input: Same seq and taxid, but diff accession and version.
+    Expected action: retire existing xref, create a new xref with updated version and accession.
+  */
+  PROCEDURE check_test5 AS
+    l_count NUMBER;
+    l_test_id VARCHAR(20);
+  BEGIN
+
+    l_test_id := 'check_test5';
+
+    SELECT count(*) INTO l_count FROM rna;
+    assertEquals(l_test_id, 1, l_count);
+
+    SELECT count(*) INTO l_count FROM xref;
+    assertEquals(l_test_id, 2, l_count);
+
+    SELECT count(*) INTO l_count FROM xref
+    WHERE upi = FIRST_UPI AND deleted = 'Y' AND created = 1 AND LAST = 1 AND ac = 'id1' AND version = 1;
+    assertEquals(l_test_id, 1, l_count);
+
+    SELECT count(*) INTO l_count FROM xref
+    WHERE upi = FIRST_UPI AND deleted = 'N' AND created = 2 AND LAST = 2 AND ac = 'id2' AND version = 2;
+    assertEquals(l_test_id, 1, l_count);
+
+  END check_test5;
+
+  /*
+    Input: Same seq and version, but new acc and taxid
+    Expected action: retire existing xref, create a new one with updated acc and taxid
+  */
+  PROCEDURE check_test6 AS
+    l_count NUMBER;
+    l_test_id VARCHAR(20);
+  BEGIN
+
+    l_test_id := 'check_test6';
+
+    SELECT count(*) INTO l_count FROM rna;
+    assertEquals(l_test_id, 1, l_count);
+
+    SELECT count(*) INTO l_count FROM xref;
+    assertEquals(l_test_id, 2, l_count);
+
+    SELECT count(*) INTO l_count FROM xref
+    WHERE upi = FIRST_UPI AND deleted = 'Y' AND created = 1 AND LAST = 1 AND ac = 'id1' AND taxid = 1;
+    assertEquals(l_test_id, 1, l_count);
+
+    SELECT count(*) INTO l_count FROM xref
+    WHERE upi = FIRST_UPI AND deleted = 'N' AND created = 2 AND LAST = 2 AND ac = 'id2' AND taxid = 2;
+    assertEquals(l_test_id, 1, l_count);
+
+  END check_test6;
+
+  /*
+    Input: Same seq and acc, but new version and taxid
+    Expected action: retire existing xref, create a new one with updated version and taxid
+  */
+  PROCEDURE check_test7 AS
+    l_count NUMBER;
+    l_test_id VARCHAR(20);
+  BEGIN
+
+    l_test_id := 'check_test7';
+
+    SELECT count(*) INTO l_count FROM rna;
+    assertEquals(l_test_id, 1, l_count);
+
+    SELECT count(*) INTO l_count FROM xref;
+    assertEquals(l_test_id, 2, l_count);
+
+    SELECT count(*) INTO l_count FROM xref
+    WHERE upi = FIRST_UPI AND deleted = 'Y' AND created = 1 AND LAST = 1 AND version = 1 AND taxid = 1;
+    assertEquals(l_test_id, 1, l_count);
+
+    SELECT count(*) INTO l_count FROM xref
+    WHERE upi = FIRST_UPI AND deleted = 'N' AND created = 2 AND LAST = 2 AND version = 2 AND taxid = 2;
+    assertEquals(l_test_id, 1, l_count);
+
+  END check_test7;
+
+  /*
+    Input: Same seq, but diff accession, ver, taxid
+    Expected action: retire existing xref, create a new one with updated acc, version, and taxid
+  */
+  PROCEDURE check_test8 AS
+    l_count NUMBER;
+    l_test_id VARCHAR(20);
+  BEGIN
+
+    l_test_id := 'check_test8';
+
+    SELECT count(*) INTO l_count FROM rna;
+    assertEquals(l_test_id, 1, l_count);
+
+    SELECT count(*) INTO l_count FROM xref;
+    assertEquals(l_test_id, 2, l_count);
+
+    SELECT count(*) INTO l_count FROM xref
+    WHERE upi = FIRST_UPI AND deleted = 'Y' AND created = 1 AND LAST = 1 AND version = 1 AND taxid = 1 AND ac = 'id1';
+    assertEquals(l_test_id, 1, l_count);
+
+    SELECT count(*) INTO l_count FROM xref
+    WHERE upi = FIRST_UPI AND deleted = 'N' AND created = 2 AND LAST = 2 AND version = 2 AND taxid = 2 AND ac = 'id2';
+    assertEquals(l_test_id, 1, l_count);
+
+  END check_test8;
+
+  /*
+    Tests 8-16 are for entries with different sequences.
+  /*
+
+  /*
+    Input: new seq, ac, ver, taxid
+    Expected action: retire existing xref because it's no longer present
+    in the release, add a new sequence, add a new xref.
+
+    This test is also run on test entries 10, 11 and 15.
+  */
+  PROCEDURE check_test9 AS
+    l_count NUMBER;
+    l_test_id VARCHAR(30);
+  BEGIN
+
+    l_test_id := 'check_test_9,10,11,15';
+
+    SELECT count(*) INTO l_count FROM rna;
+    assertEquals(l_test_id, 2, l_count);
+
+    SELECT count(*) INTO l_count FROM xref;
+    assertEquals(l_test_id, 2, l_count);
+
+    SELECT count(*) INTO l_count FROM xref
+    WHERE upi = FIRST_UPI AND deleted = 'Y' AND created = 1;
+    assertEquals(l_test_id, 1, l_count);
+
+    SELECT count(*) INTO l_count FROM xref
+    WHERE upi != FIRST_UPI AND deleted = 'N' AND created = 2;
+    assertEquals(l_test_id, 1, l_count);
+
+  END check_test9;
+
+  /*
+    Input: Only tax id is the same.
+    Expected action: New seq and xref, retire existing xref.
+  */
+  PROCEDURE check_test10 AS
+  BEGIN
+
+    check_test9;
+
+  END check_test10;
+
+  /*
+    Input: Only version is the same.
+    Expected action: New seq and xref, retire existing xref.
+  */
+  PROCEDURE check_test11 AS
+  BEGIN
+
+    check_test9;
+
+  END check_test11;
+
+  /*
+    Input: Same acc, but new seq, ver, taxid.
+    Expected action: New seq and xref, retire existing xref. Increment VERSION_I.
+    Applies to tests 12,13,14,16
+  */
+  PROCEDURE check_test12 AS
+    l_count NUMBER;
+    l_test_id VARCHAR(30);
+  BEGIN
+
+    l_test_id := 'check_test12_12,13,14,16';
+
+    SELECT count(*) INTO l_count FROM rna;
+    assertEquals(l_test_id, 2, l_count);
+
+    SELECT count(*) INTO l_count FROM xref;
+    assertEquals(l_test_id, 2, l_count);
+
+    SELECT count(*) INTO l_count FROM xref
+    WHERE upi = FIRST_UPI AND deleted = 'Y' AND created = 1 AND version_I = 1;
+    assertEquals(l_test_id, 1, l_count);
+
+    SELECT count(*) INTO l_count FROM xref
+    WHERE upi != FIRST_UPI AND deleted = 'N' AND created = 2 AND version_I = 2;
+    assertEquals(l_test_id, 1, l_count);
+
+  END check_test12;
+
+  /*
+    Input: Same acc and ver, but new seq and taxid
+    Expected action: New seq and xref, retire existing xref. Increment VERSION_I.
+  */
+  PROCEDURE check_test13 AS
+  BEGIN
+
+    check_test12;
+
+  END check_test13;
+
+  /*
+    Input: Same acc and taxid, but updated seq and version
+    Expected action: New seq and xref, retire existing xref. Increment VERSION_I.
+  */
+  PROCEDURE check_test14 AS
+  BEGIN
+
+    check_test12;
+
+  END check_test14;
+
+  /*
+    Input: Only version and tax id are the same
+    Expected action: New seq and xref, retire existing xref.
+  */
+  PROCEDURE check_test15 AS
+  BEGIN
+
+    check_test9;
+
+  END check_test15;
+
+  /*
+    Input: same ac, ver, taxid, but updated seq
+    Expected action: New seq and xref, retire existing xref. Increment VERSION_I.
+  */
+  PROCEDURE check_test16 AS
+  BEGIN
+
+    check_test12;
+
+  END check_test16;
+
+  /*
+    Input: new release contains no entries.
+    Expected action: retire existing xref.
+  */
+  PROCEDURE check_test17 AS
+    l_count NUMBER;
+    l_test_id VARCHAR(20);
+  BEGIN
+
+    l_test_id := 'check_test17';
+
+    SELECT count(*) INTO l_count FROM rna;
+    assertEquals(l_test_id, 1, l_count);
+
+    SELECT count(*) INTO l_count FROM xref;
+    assertEquals(l_test_id, 1, l_count);
+
+    SELECT count(*) INTO l_count FROM xref
+    WHERE upi = FIRST_UPI AND deleted = 'Y' AND created = 1;
+    assertEquals(l_test_id, 1, l_count);
+
+  END check_test17;
 
   /*
     Check results
@@ -246,11 +609,27 @@ PACKAGE BODY RNC_TEST AS
   ) AS
   BEGIN
 
-    -- todo: formalize this better
+    -- dynamic function call turned out to be tricky to set up
     CASE p_test_id
-      WHEN 1 THEN check_test1;
+      WHEN 1  THEN check_test1;
+      WHEN 2  THEN check_test2;
+      WHEN 3  THEN check_test3;
+      WHEN 4  THEN check_test4;
+      WHEN 5  THEN check_test5;
+      WHEN 6  THEN check_test6;
+      WHEN 7  THEN check_test7;
+      WHEN 8  THEN check_test8;
+      WHEN 9  THEN check_test9;
+      WHEN 10 THEN check_test10;
+      WHEN 11 THEN check_test11;
+      WHEN 12 THEN check_test12;
+      WHEN 13 THEN check_test13;
+      WHEN 14 THEN check_test14;
+      WHEN 15 THEN check_test15;
+      WHEN 16 THEN check_test16;
+      WHEN 17 THEN check_test17;
       ELSE
-        NULL;
+        DBMS_OUTPUT.put_line('Unknown test id ' || p_test_id);
     END CASE;
 
   END check_result;
@@ -267,7 +646,8 @@ PACKAGE BODY RNC_TEST AS
     setup;
 
     -- insert new data into the staging table
-    import_staging_data( p_test_id );
+    -- adding 1 accounts for the first (default) entry
+    import_staging_data( p_test_id + 1 );
 
     -- run update
     LOAD_RETRO_SETBASED.load_job_setbased;
@@ -287,10 +667,11 @@ PACKAGE BODY RNC_TEST AS
     l_cntr NUMBER;
   BEGIN
 
-    -- truncate tables in the beginning
+    -- truncate all tables in the beginning
     teardown;
 
-    FOR l_cntr IN 1..1 -- 17
+    -- 17 test cases
+    FOR l_cntr IN 1..17
     LOOP
       DBMS_OUTPUT.put_line('Running test ' || l_cntr);
       run_test(l_cntr);
