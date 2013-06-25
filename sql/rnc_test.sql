@@ -1,4 +1,4 @@
-CREATE OR REPLACE
+create or replace
 PACKAGE BODY RNC_TEST AS
 
   /*
@@ -138,7 +138,7 @@ PACKAGE BODY RNC_TEST AS
   END setup;
 
   /*
-    Import new data into the staging table load_rnacentral_test
+    Import new data into the staging table load_rnacentral
   */
   PROCEDURE import_staging_data(
     p_test_id NUMBER
@@ -152,7 +152,7 @@ PACKAGE BODY RNC_TEST AS
     END IF;
 
     INSERT INTO
-      RNACEN.load_rnacentral_test
+      RNACEN.load_rnacentral
       VALUES(v_crc(p_test_id), -- crc64
              SEQ_LENGTH,       -- length
              v_seq(p_test_id), -- seq
@@ -190,7 +190,7 @@ PACKAGE BODY RNC_TEST AS
     EXECUTE IMMEDIATE 'TRUNCATE TABLE RNACEN.rnc_release DROP STORAGE';
     EXECUTE IMMEDIATE 'TRUNCATE TABLE RNACEN.rna DROP STORAGE';
     EXECUTE IMMEDIATE 'TRUNCATE TABLE RNACEN.xref DROP STORAGE';
-    EXECUTE IMMEDIATE 'TRUNCATE TABLE RNACEN.load_rnacentral_test DROP STORAGE';
+    EXECUTE IMMEDIATE 'TRUNCATE TABLE RNACEN.load_rnacentral DROP STORAGE';
     EXECUTE IMMEDIATE 'TRUNCATE TABLE XREF_PEL_DELETED DROP STORAGE';
     EXECUTE IMMEDIATE 'TRUNCATE TABLE XREF_PEL_NOT_DELETED DROP STORAGE';
 
@@ -646,11 +646,11 @@ PACKAGE BODY RNC_TEST AS
     setup;
 
     -- insert new data into the staging table
-    -- adding 1 accounts for the first (default) entry
+    -- +1 accounts for the first (default) entry
     import_staging_data( p_test_id + 1 );
 
     -- run update
-    LOAD_RETRO_SETBASED.load_job_setbased;
+    RNC_UPDATE.new_update;
 
     -- check results
     check_result(p_test_id);
