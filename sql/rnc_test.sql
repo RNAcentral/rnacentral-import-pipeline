@@ -9,13 +9,17 @@ PACKAGE BODY RNC_TEST AS
     Input records in the staging table contain 4 primary fields:
     sequence, accession, version, and taxid.
     Other fields are derived from these 4.
-    Given an input record in one release, there are 16 ways
+
+    Therefore, given an input record in one release, there are 16 ways
     in which this record can change in the next release.
     These tests are designed to cover all 16 possibilities.
 
     Find additional documentation at http://goo.gl/U1bWK
-  */
 
+    Currently not covered:
+      - sequences longer than 4000 nts
+      - multiple preceding xrefs
+  */
 
   /*
     Global constants
@@ -90,7 +94,6 @@ PACKAGE BODY RNC_TEST AS
              USER,              -- userstamp
              v_acc(1),          -- accession
              1,                 -- version_I
-             'gi',              -- GI
              v_tax(1)           -- taxid
              );
     COMMIT;

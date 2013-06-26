@@ -69,6 +69,8 @@ PACKAGE BODY RNC_UPDATE AS
         id;
   BEGIN
 
+    DBMS_OUTPUT.put_line('Launching an update');
+
     FOR v_load IN c_load
     LOOP
       load_release(
