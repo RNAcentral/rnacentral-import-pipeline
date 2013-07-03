@@ -1,0 +1,391 @@
+ID   AB330785.1:1..34:misc_RNA; SV 1; linear; other RNA; STD; HUM; 34 BP.
+XX
+PA   AB330785.1
+XX
+DT   17-JUN-2009 (Rel. 101, Created)
+DT   17-JUN-2009 (Rel. 101, Last updated, Version 1)
+XX
+DE   Homo sapiens (human) miscellaneous RNA
+XX
+KW   .
+XX
+OS   Homo sapiens (human)
+OC   Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi; Mammalia;
+OC   Eutheria; Euarchontoglires; Primates; Haplorrhini; Catarrhini; Hominidae;
+OC   Homo.
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..34
+FT                   /organism="Homo sapiens"
+FT                   /mol_type="other RNA"
+FT                   /clone="tRNaseZL-interacting RNA B6"
+FT                   /db_xref="taxon:9606"
+FT   misc_RNA        AB330785.1:1..34
+FT                   /note="RNA sequence binds to tRNaseZL"
+FT                   /note="similar to 28S rRNA fragment"
+XX
+SQ   Sequence 34 BP; 8 A; 12 C; 10 G; 4 T; 0 other;
+     cgcgacctca gatcagacgt ggcgacccgc tgaa                                    34
+//
+ID   AB330786.1:1..27:misc_RNA; SV 1; linear; other RNA; STD; HUM; 27 BP.
+XX
+PA   AB330786.1
+XX
+DT   17-JUN-2009 (Rel. 101, Created)
+DT   17-JUN-2009 (Rel. 101, Last updated, Version 1)
+XX
+DE   Homo sapiens (human) miscellaneous RNA
+XX
+KW   .
+XX
+OS   Homo sapiens (human)
+OC   Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi; Mammalia;
+OC   Eutheria; Euarchontoglires; Primates; Haplorrhini; Catarrhini; Hominidae;
+OC   Homo.
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..27
+FT                   /organism="Homo sapiens"
+FT                   /mol_type="other RNA"
+FT                   /clone="tRNaseZL-interacting RNA C1"
+FT                   /db_xref="taxon:9606"
+FT   misc_RNA        AB330786.1:1..27
+FT                   /note="RNA sequence binds to tRNaseZL"
+FT                   /note="similar to U2 snRNA fragment"
+XX
+SQ   Sequence 27 BP; 7 A; 8 C; 7 G; 5 T; 0 other;
+     attgcagtac ctccaggaac ggtgcac                                            27
+//
+ID   AB330787.1:1..34:misc_RNA; SV 1; linear; other RNA; STD; HUM; 34 BP.
+XX
+PA   AB330787.1
+XX
+DT   17-JUN-2009 (Rel. 101, Created)
+DT   17-JUN-2009 (Rel. 101, Last updated, Version 1)
+XX
+DE   Homo sapiens (human) miscellaneous RNA
+XX
+KW   .
+XX
+OS   Homo sapiens (human)
+OC   Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi; Mammalia;
+OC   Eutheria; Euarchontoglires; Primates; Haplorrhini; Catarrhini; Hominidae;
+OC   Homo.
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..34
+FT                   /organism="Homo sapiens"
+FT                   /mol_type="other RNA"
+FT                   /clone="tRNaseZL-interacting RNA C2"
+FT                   /db_xref="taxon:9606"
+FT   misc_RNA        AB330787.1:1..34
+FT                   /note="RNA sequence binds to tRNaseZL"
+FT                   /note="similar to U3 snRNA fragment"
+XX
+SQ   Sequence 34 BP; 11 A; 3 C; 15 G; 5 T; 0 other;
+     attggggagt gagaaggaga gaacgcggtc tgaa                                    34
+//
+ID   AB330788.1:1..36:misc_RNA; SV 1; linear; other RNA; STD; HUM; 36 BP.
+XX
+PA   AB330788.1
+XX
+DT   17-JUN-2009 (Rel. 101, Created)
+DT   17-JUN-2009 (Rel. 101, Last updated, Version 1)
+XX
+DE   Homo sapiens (human) miscellaneous RNA
+XX
+KW   .
+XX
+OS   Homo sapiens (human)
+OC   Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi; Mammalia;
+OC   Eutheria; Euarchontoglires; Primates; Haplorrhini; Catarrhini; Hominidae;
+OC   Homo.
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..36
+FT                   /organism="Homo sapiens"
+FT                   /mol_type="other RNA"
+FT                   /clone="tRNaseZL-interacting RNA C3"
+FT                   /db_xref="taxon:9606"
+FT   misc_RNA        AB330788.1:1..36
+FT                   /note="RNA sequence binds to tRNaseZL"
+FT                   /note="similar to U5 snRNA fragment"
+XX
+SQ   Sequence 36 BP; 12 A; 6 C; 9 G; 9 T; 0 other;
+     tactaaagat ttccgtggag aggaacaact ctgagt                                  36
+//
+ID   AB330789.1:1..21:misc_RNA; SV 1; linear; other RNA; STD; HUM; 21 BP.
+XX
+PA   AB330789.1
+XX
+DT   17-JUN-2009 (Rel. 101, Created)
+DT   17-JUN-2009 (Rel. 101, Last updated, Version 1)
+XX
+DE   Homo sapiens (human) miscellaneous RNA
+XX
+KW   .
+XX
+OS   Homo sapiens (human)
+OC   Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi; Mammalia;
+OC   Eutheria; Euarchontoglires; Primates; Haplorrhini; Catarrhini; Hominidae;
+OC   Homo.
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..21
+FT                   /organism="Homo sapiens"
+FT                   /mol_type="other RNA"
+FT                   /clone="tRNaseZL-interacting RNA D1"
+FT                   /db_xref="taxon:9606"
+FT   misc_RNA        AB330789.1:1..21
+FT                   /note="RNA sequence binds to tRNaseZL"
+XX
+SQ   Sequence 21 BP; 4 A; 4 C; 4 G; 9 T; 0 other;
+     cgtgaagcgt tccatatttt t                                                  21
+//
+ID   AB330790.1:1..21:misc_RNA; SV 1; linear; other RNA; STD; HUM; 21 BP.
+XX
+PA   AB330790.1
+XX
+DT   17-JUN-2009 (Rel. 101, Created)
+DT   17-JUN-2009 (Rel. 101, Last updated, Version 1)
+XX
+DE   Homo sapiens (human) miscellaneous RNA
+XX
+KW   .
+XX
+OS   Homo sapiens (human)
+OC   Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi; Mammalia;
+OC   Eutheria; Euarchontoglires; Primates; Haplorrhini; Catarrhini; Hominidae;
+OC   Homo.
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..21
+FT                   /organism="Homo sapiens"
+FT                   /mol_type="other RNA"
+FT                   /clone="tRNaseZL-interacting RNA D2"
+FT                   /db_xref="taxon:9606"
+FT   misc_RNA        AB330790.1:1..21
+FT                   /note="RNA sequence binds to tRNaseZL"
+XX
+SQ   Sequence 21 BP; 3 A; 5 C; 5 G; 8 T; 0 other;
+     ttcagatgga cttccgtgct t                                                  21
+//
+ID   AB330791.1:1..22:misc_RNA; SV 1; linear; other RNA; STD; HUM; 22 BP.
+XX
+PA   AB330791.1
+XX
+DT   17-JUN-2009 (Rel. 101, Created)
+DT   17-JUN-2009 (Rel. 101, Last updated, Version 1)
+XX
+DE   Homo sapiens (human) miscellaneous RNA
+XX
+KW   .
+XX
+OS   Homo sapiens (human)
+OC   Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi; Mammalia;
+OC   Eutheria; Euarchontoglires; Primates; Haplorrhini; Catarrhini; Hominidae;
+OC   Homo.
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..22
+FT                   /organism="Homo sapiens"
+FT                   /mol_type="other RNA"
+FT                   /clone="tRNaseZL-interacting RNA D3"
+FT                   /db_xref="taxon:9606"
+FT   misc_RNA        AB330791.1:1..22
+FT                   /note="RNA sequence binds to tRNaseZL"
+XX
+SQ   Sequence 22 BP; 5 A; 9 C; 4 G; 4 T; 0 other;
+     ggacctctca cacacagttc gc                                                 22
+//
+ID   AB330792.1:1..33:misc_RNA; SV 1; linear; other RNA; STD; HUM; 33 BP.
+XX
+PA   AB330792.1
+XX
+DT   17-JUN-2009 (Rel. 101, Created)
+DT   17-JUN-2009 (Rel. 101, Last updated, Version 1)
+XX
+DE   Homo sapiens (human) miscellaneous RNA
+XX
+KW   .
+XX
+OS   Homo sapiens (human)
+OC   Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi; Mammalia;
+OC   Eutheria; Euarchontoglires; Primates; Haplorrhini; Catarrhini; Hominidae;
+OC   Homo.
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..33
+FT                   /organism="Homo sapiens"
+FT                   /mol_type="other RNA"
+FT                   /clone="tRNaseZL-interacting RNA D4"
+FT                   /db_xref="taxon:9606"
+FT   misc_RNA        AB330792.1:1..33
+FT                   /note="RNA sequence binds to tRNaseZL"
+XX
+SQ   Sequence 33 BP; 6 A; 5 C; 7 G; 15 T; 0 other;
+     ttggagtccg tggatattta atttttctga tcc                                     33
+//
+ID   AB330793.1:1..33:misc_RNA; SV 1; linear; other RNA; STD; HUM; 33 BP.
+XX
+PA   AB330793.1
+XX
+DT   17-JUN-2009 (Rel. 101, Created)
+DT   17-JUN-2009 (Rel. 101, Last updated, Version 1)
+XX
+DE   Homo sapiens (human) miscellaneous RNA
+XX
+KW   .
+XX
+OS   Homo sapiens (human)
+OC   Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi; Mammalia;
+OC   Eutheria; Euarchontoglires; Primates; Haplorrhini; Catarrhini; Hominidae;
+OC   Homo.
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..33
+FT                   /organism="Homo sapiens"
+FT                   /mol_type="other RNA"
+FT                   /clone="tRNaseZL-interacting RNA D5"
+FT                   /db_xref="taxon:9606"
+FT   misc_RNA        AB330793.1:1..33
+FT                   /note="RNA sequence binds to tRNaseZL"
+XX
+SQ   Sequence 33 BP; 6 A; 11 C; 9 G; 7 T; 0 other;
+     ccagcgccgg tcctgctgta tttggaaacg cac                                     33
+//
+ID   AB330794.1:1..33:misc_RNA; SV 1; linear; other RNA; STD; HUM; 33 BP.
+XX
+PA   AB330794.1
+XX
+DT   17-JUN-2009 (Rel. 101, Created)
+DT   17-JUN-2009 (Rel. 101, Last updated, Version 1)
+XX
+DE   Homo sapiens (human) miscellaneous RNA
+XX
+KW   .
+XX
+OS   Homo sapiens (human)
+OC   Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi; Mammalia;
+OC   Eutheria; Euarchontoglires; Primates; Haplorrhini; Catarrhini; Hominidae;
+OC   Homo.
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..33
+FT                   /organism="Homo sapiens"
+FT                   /mol_type="other RNA"
+FT                   /clone="tRNaseZL-interacting RNA D6"
+FT                   /db_xref="taxon:9606"
+FT   misc_RNA        AB330794.1:1..33
+FT                   /note="RNA sequence binds to tRNaseZL"
+XX
+SQ   Sequence 33 BP; 7 A; 9 C; 10 G; 7 T; 0 other;
+     cggaatacga gccccattca ggttgctgga tgc                                     33
+//
+ID   KC177631.1:1..4096:rRNA; SV 1; linear; genomic DNA; STD; INV; 4096 BP.
+XX
+PA   KC177631.1
+XX
+DT   03-DEC-2012 (Rel. 115, Created)
+DT   23-JAN-2013 (Rel. 115, Last updated, Version 2)
+XX
+DE   Mengenilla sp. BMW-2012 partial 28S ribosomal RNA
+XX
+KW   .
+XX
+OS   Mengenilla sp. BMW-2012
+OC   Eukaryota; Metazoa; Ecdysozoa; Arthropoda; Hexapoda; Insecta; Pterygota;
+OC   Neoptera; Endopterygota; Strepsiptera; Mengenillidia; Mengenillidae;
+OC   Mengenilla.
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..4096
+FT                   /organism="Mengenilla sp. BMW-2012"
+FT                   /mol_type="genomic DNA"
+FT                   /specimen_voucher="NCSU:FLYTREE 1"
+FT                   /db_xref="taxon:1262264"
+FT   rRNA            KC177631.1:<1..>4096
+FT                   /product="28S ribosomal RNA"
+XX
+SQ   Sequence 4096 BP; 983 A; 855 C; 1138 G; 1068 T; 52 other;
+     tggcgaacga aaacggatta gtccagcgct taatctcgca aaaaaggaaa cctgtttccg        60
+     gacttttgcg cgaaatgtag cgttcggaca gacatcgtga cgtgttttcg gtattcgtgc       120
+     acgttttgaa tacgtgacat ttaactcata gagggtgtta ggcccgtaaa atgtcgcgac       180
+     gaactgccgc agcagtctgt ctcagagtcg gattgcttga gagtgcaatc ttaagttggt       240
+     ggtaaactcc atcgaagact aaatacggcc acaagaccga tagcgaacaa gtaccgtgag       300
+     ggaaagttga aaagcactct gaagagagag tcaaaagtac gtgaaaccgt ttaagagtaa       360
+     acccgtgtaa gtcgtgtagt ttttgacacg ttacccgttt tgccgccgtc gcccgatctg       420
+     tgtcccgtac attttatgtg tatagtcgaa gtgcggttat cgtgtgttga agcgatttta       480
+     cacgggaccc gtcttgaaac acggaccaag gagtctaaca agtgcgcgag tcaatggtac       540
+     tgaaaattcc acaaaaccat aggcgcaatg aaggtgttgt tcaagtgatg agactgactc       600
+     gtggaacgct gcgcgcgtgc attcatgcag tcgaaacgta tcaagagcgt acttgttggg       660
+     acccgaaaga tggtgaacta tgcctggcca ggatgaagtc aggagaaatt ctgatggaag       720
+     tccgtagcga ttctgacgtg caaatcgatc gtcagagctg ggtatagggg cgaaagacta       780
+     atcgaaccat ctagtagctg gttccttccg aagtttccct caggatagct ggcatgattt       840
+     aaatgtcgag tcacattcgg taaagcgaat gattagagga attgggaacg aaacgttctc       900
+     aacctattct caaactttaa atgagtgaga cgatcggctt gcttaaatgc ttattgcgca       960
+     cctcgtggat tatacggtag cggtggtggc gatttatcgt cgtcatctcg ttatcgtgtg      1020
+     cttagatcga atattgccaa gtgggccatt tttggtaann nnnnnnnnnn nnnnnnnnnn      1080
+     nnnnnnnnnn nnnnnnnnnn nnnnnnnnnn aacgctcatc agagaccatg aaaggtgttg      1140
+     gtaacttaag acagcagggc ggtggccatg gaagtcggaa tccgctaagg agtgtgtaac      1200
+     aactcacctg ccgaagttac cagccctgaa aatggatgac gctaaagcgt tatgcttata      1260
+     cttgaccgtt aatagcaaca agtcgcctcg atgattgtct gttgtcgagc gcgcgcgact      1320
+     aaaaagcttt aacgagtagg aaggtcgtaa tagtgtgcgt tgaaggattc agtgtagact      1380
+     ggtctggagc cgctattagt gcagatcttg gtggtagtag caaatactcc agcgaggccc      1440
+     tggaggactg acgtggagaa gggtttcgtg tgaacagcag ttgcacacga gtcagtcgat      1500
+     cctaagccca aggagaattc cgaattcgaa tgtatcaggt gttgtgtttt cgtttcggtg      1560
+     tcgtgctcgg actgcgatgg ctgttggcaa tctgttgtcg gcagacattg cgtgcttctt      1620
+     gcgcggcgcg gaaacgacga agatggcatc tgattcgatg cgggagaaag ggaatccggt      1680
+     tcatattccg gaactcagat gcggagccga ttgaatttaa aaattacagg agccgagcca      1740
+     catgttgacc gtttggtcat cgtgtctaaa tggctccggc acctgacgag gtaactcaaa      1800
+     cgatcccgga gacgtcgtta aagagtccag aaagagttat cttttctata taagtgtcta      1860
+     aagttttcgg ctgtcggtgc gtttcattgt gtgcgcacgc ggtctgcacg tacgttgcgt      1920
+     taacgtctct aaaacgtcgt ttacgcttcg ttttagttgt agtctgtgtg tgcgtgcgaa      1980
+     ttgcgtaccg gtcgcgtaga aaacgaaaag aaatccctgg aatcctttca aagggagata      2040
+     gggtttctga cacgaagagc atcgcatttg tcgcgatgtc tggacatttt tagcgaccct      2100
+     tgaaaatccg ggtaagggaa acggtcgttt cgcactgaat cgtacccata tccgcagcag      2160
+     gtctccaagg tgaagagcct ctagtcgata gaataatgta ggtaaaggaa gtcgacaaaa      2220
+     tagatccgta acttcgggat aaggattggc tctgagaatc ggagcgtgcc gggccgtgtg      2280
+     tttcacgatc cggagtctgg ttgatgtttc gatctgaaac taagattttt aaacgttctt      2340
+     cagagttcgt tgacgagtgt gtgtgtgccg gtctacggtg cgtacgcgtg catttcggtg      2400
+     tgcgtgtacg tgtgcagtcg gtcgcgtgca cgcggaaacg gcttgtttta aggaacgttt      2460
+     ttaatattcg gtttcggatt aatgtcaatc gtccgatcat acgaaatgca cggcttgcta      2520
+     aagggaactg tgttcggcca atacgtgtcc gtctgattgt gtcgcacgcg tcttgctata      2580
+     ctgttcgttt gtgtgttgtt gtacttgtta cggcaacgtg ccgatgaacg gtgccggacg      2640
+     agtgaacgct cgacgtggcc gcgtattgtg attcgggtgc gtttccgaaa cggccgctag      2700
+     ataacgatta gctcagaact ggcacggaca aaggaaatcc gactgtctaa ttaaaacaaa      2760
+     gcattgcgat ggctccaaat gagtgttgac gcaatgtgat ttctgcccag tgctctgaat      2820
+     gtcaatgtga agaaattcaa taaagcgcgg gtaaacggcg ggagtaacta tgactctctt      2880
+     aaggtagcca aatgcctcgt catctaatta gtgacgcgca tgaatggatt aacgagattt      2940
+     ccgttgtctc tatctacttt ctagcgaaac cacagccaag ggaacgggct tggaaaaatt      3000
+     agcggggaaa gaagaccctg ttgagcttga ctccagtttg gctttgtgag gagacataag      3060
+     aggtgtaggc ataagtggga gactgtggcg tcgcttcgcg gtgacattcg cagtcgaatg      3120
+     tgaaatacca ctacttttat cgtttcctta cttactcgat taagcggaac gttcgcgtag      3180
+     attcgttgcc ttcgcttcgg aaatttaagg cggccgtttc ggccacgagt ctgtagtgtc      3240
+     gtgtgcgctt gcgtacgcgc actgcacggc ccgttgtgtc gcggtcgctg tccgctgtga      3300
+     actttgtgtg cacgtctacg tgtaactgat ttttcgaaat aatggcgttg tttttgttcg      3360
+     gtcgcgttgt cgtcatgtac cgcccggttg cgtgtgcacg gcacgcggtt gcttcgcggc      3420
+     gaccgtgtgt gcagtgtctc gtcgactggc ggtcgggcac gtgcgccggc aaaatcgaat      3480
+     cgaaatgcct gatccgattc gaggacattg tcaggcagag agtttgactg gggcggtaca      3540
+     tctgtcaaac aataacgcag gtgtcctaag gctagctcag cgaggacaga aacctcgcgt      3600
+     cgagtaaaag ggcaaaagct agcttgatcc agacgttcag tatgcgtatg gactgcgaaa      3660
+     gcacggccta tcgatccttt tggcaattgt aataagtgcg tgcgtgtgtg tgcctcgtgt      3720
+     tcatgcgcgc atgtgctcat tgtattgatg agttttcaac aagaggtgtc agaaaagtta      3780
+     ccacagggat aactggcttg tggcggccaa gcgttcatag cgacgtcgct ttttgatcct      3840
+     tcgatgtcgg ctcttcctat cattgcgaag cagaattcgc caagcgttgg attgttcacc      3900
+     cacaaatagg gaacgtgagc tgggtttaga ccgtcgtgag acaggttagt tttaccctac      3960
+     tgatgactgt gtcgttgcga cagtaattct gcttagtacg agaggaaccg cagattcgga      4020
+     catttggttc atgcactcgg tcgatcggcc gatggtgcga cgctaccatc cgcgggacta      4080
+     gacctgaacg cctcta                                                      4096
+//
