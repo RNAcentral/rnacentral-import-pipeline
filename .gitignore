@@ -47,5 +47,6 @@ build/config/buildinfo.properties
 # project specific
 config.cfg
 oracle_connection
-data/*.ncr
 data/*.ncRNA
+temp/*
+
