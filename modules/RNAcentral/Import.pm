@@ -47,6 +47,8 @@ our $RELEASE_TABLE = 'rnc_release';
 our $MAXSEQLONG    = 1000000;  # maximum length for long sequences stored as clobs
 our $MAXSEQSHORT   = 4000;     # maximum length for short sequences stored as chars
 our $EXTENSION     = 'ncr';    # look for .ncr files
+our $SIZECUTOFF    = 10**7;    # 10 Mb, file size cutoff
+
 
 main();
 
@@ -80,8 +82,18 @@ sub main {
     truncate_staging_table($self);
     create_new_release($self);
 
+    # get a list of all files
+    my @original_files = list_files($self, $location, $EXTENSION);
+    # my @all_files = ();
+    # # split large files into small chunks and analyze them instead
+    # foreach my $file (@original_files) {
+    #     @all_files = (@all_files, file2chunks($self, $file));
+    # }
+
+
+    my @files = @original_files;
+
     # create csv files based on embl input files
-    @files = list_files($self, $location, $EXTENSION);
     embl2csv(\@files, $self->{'job_id'});
 
     # load the data into the staging table using sqlldr
@@ -505,6 +517,67 @@ sub list_files {
     $self->{'logger'}->info("Found " . scalar(@files) . " .$extension files");
 
     return @files;
+}
+
+
+=head2 file2chunks
+
+    Some input files are very large, so it's faster to split them into chunks for processing.
+    Split large files into chunks and return an array of filenames.
+    Return an array with the original file if it's small.
+
+=cut
+
+sub file2chunks {
+
+    (my $self, my $filename) = @_;
+
+    my $size = -s $filename;
+    if ( $size < $SIZECUTOFF ) {
+        return ($filename);
+    }
+
+    $self->{'logger'}->info("File $filename is $size bytes, will split it into chunks");
+
+    local $/ = "//\n";
+
+    my $i      = 1;
+    my $text   = '';
+    my @chunks = ();
+    my $chunk  = '';
+    (my $path, my $extension) = split('\.', $filename);
+
+    use bytes; # to calculate length in bytes
+
+    open (INFILE, $filename);
+    while (<INFILE>) {
+        $text .= $_;
+        if ( length($text) > $SIZECUTOFF ) {
+            $chunk = $path . '_chunk' . $i . '.' . $extension;
+            push @chunks, $chunk;
+            _print_to_file($chunk, $text);
+            $i++;
+            $text = '';
+            $self->{'logger'}->info("Created file $chunk");
+        }
+    }
+    close INFILE;
+
+    # left over sequences
+    if ( length($text) > 0 ) {
+        $chunk = $path . '_chunk' . $i . '.' . $extension;
+        _print_to_file($chunk, $text);
+        $self->{'logger'}->info("Created file $chunk");
+    }
+
+    return @chunks;
+}
+
+
+sub _print_to_file {
+    open (OUTFILE, "> $_[0]") or die("Couldn't open file");
+    print OUTFILE $_[1];
+    close OUTFILE;
 }
 
 
