@@ -1,76 +1,106 @@
 #!/usr/bin/env perl
 
 # package RNAcentral::Import;
+# TODO: complete package structure once it becomes clear how to integrate this with eHive
 
-#
+=pod
+
+=head1 NAME
+
+test
+
+=head1 SYNOPSIS
+
+    perl modules/RNAcentral/Import.pm --dir data --user=$user --password=$password --host=$host --sid=$sid --port=$port
+
+    data is the folder with input files in embl format.
+
+=head1 DESCRIPTION
+
+=head1 CONTACT
+
+
+=cut
 
 use strict;
 use warnings;
 
+# lib folder contains SWISS:CRC64 and the modified version of BIO::SeqIO::embl.pm
+# add it to the beginning of @INC
 use FindBin qw($Bin);
-use lib "$Bin/../../lib"; # add lib folder to the beginning of @INC, this lets us run modified version of BIO::SeqIO::embl.pm
+use lib "$Bin/../../lib";
 
 use Getopt::Long;
+use Pod::Usage;
 use Log::Log4perl;
-use Bio::SeqIO;
+use Bio::SeqIO;   # BioPerl is used for reading embl files
+use SWISS::CRC64; # cyclic redundancy check
 use Digest::MD5 qw(md5_hex);
-use SWISS::CRC64;
 use DBI;
 use DBD::Oracle;
 
 
-our $OUTPUT = '/homes/apetrov/rnac-loader/temp'; # TODO replace with a CLI option
+# Global parameters
+our $OUTPUT        = '/homes/apetrov/rnac-loader/temp'; # TODO replace with a CLI option
 our $STAGING_TABLE = 'load_rnacentral';
+our $RELEASE_TABLE = 'rnc_release';
+our $MAXSEQLONG    = 1000000;  # maximum length for long sequences stored as clobs
+our $MAXSEQSHORT   = 4000;     # maximum length for short sequences stored as chars
+our $EXTENSION     = 'ncr';    # look for .ncr files
 
 main();
 
 sub main {
 
-    my $dir = '';
+    my $location = '';
     my @files = ();
 
     my $self = {};
-    $self->{'logger'} = initialize_logger();
-    $self->{'job_id'} = 'test_output';
 
     &GetOptions (
-        'dir=s'      => \$dir,
+        'dir=s'      => \$location,
         'user=s'     => \$self->{'user'},
         'password=s' => \$self->{'password'},
         'sid=s'      => \$self->{'sid'},
         'port=i'     => \$self->{'port'},
         'host=s'     => \$self->{'host'}
     );
-    &Usage if ($dir eq '');
+    &pod2usage if ( $location eq ''               or
+                    !defined($self->{'user'})     or
+                    !defined($self->{'password'}) or
+                    !defined($self->{'sid'})      or
+                    !defined($self->{'port'})     or
+                    !defined($self->{'host'}) );
 
-    # $self->{'job_id'} = 'test_output';
-    # $self->{'user'} = 'RNACEN';
-    # $self->{'password'} ='necanr13';
-    # $self->{'sid'}  ='RNCDEV';
-    # $self->{'port'} =1541;
-    # $self->{'host'} ='ora-vm-014.ebi.ac.uk';
+    $self->{'job_id'} = 'test_output'; # TODO: make dynamic, replace with the current filename
+    $self->{'logger'} = initialize_logger();
+    $self->{'dbh'}    = db_oracle_connect($self);
 
+    # prepare the database
+    truncate_staging_table($self);
+    create_new_release($self);
 
-    # prepare the database: truncate staging table, disable indexes
-    prepare_staging_table($self);
-    # create_new_release($self);
-
-    # create csv files
-    @files = get_embl_files($self, $dir);
+    # create csv files based on embl input files
+    @files = list_files($self, $location, $EXTENSION);
     embl2csv(\@files, $self->{'job_id'});
 
-    # load the data into the staging table
+    # load the data into the staging table using sqlldr
     load_seq($self, 'long');
     load_seq($self, 'short');
 
     # launch PL/SQL update
+    run_pl_sql_update($self);
 
-
+    db_oracle_disconnect($self);
 }
 
 
-### SUBS ###
+=head2 initialize_logger
 
+    Initialize the logger object and return it so it can be reused.
+    TODO: switch to logging to file or both to screen and file
+
+=cut
 
 sub initialize_logger {
 
@@ -95,52 +125,68 @@ sub initialize_logger {
 }
 
 
-sub run_pl_sql_update {
+=head2 db_oracle_connect
+
+    Establish a database connection and keep it open.
+
+=cut
+
+sub db_oracle_connect {
     my $self = shift;
 
     my $dsn = "dbi:Oracle:host=$self->{'host'};sid=$self->{'sid'};port=$self->{'port'}";
     my $dbh = DBI->connect($dsn, $self->{'user'}, $self->{'password'})
               or $self->{'logger'}->logdie( $DBI::errstr . "\n" );
 
-    my $command = <<PLSQL;
-BEGIN
-  RNC_UPDATE.NEW_UPDATE();
-END;
-PLSQL
+    $self->{'logger'}->info("Connected to the database");
+    return $dbh;
+}
 
-    $dbh->do($command) or $self->{'logger'}->logdie("PL/SQL update failed");
-    $dbh->disconnect();
+=head2 db_oracle_disconnect
 
-    $self->{'logger'}->info("PL/SQL update complete");
+    Close database connection.
+
+=cut
+
+sub db_oracle_disconnect {
+    my $self = shift;
+
+    if ( exists $self->{'dbh'} ) {
+        $self->{'dbh'}->disconnect();
+        $self->{'logger'}->info("Disconnected from the database");
+    }
 }
 
 
-sub prepare_staging_table {
-    my $self = shift;
+=head2 truncate_staging_table
 
-    my $dsn = "dbi:Oracle:host=$self->{'host'};sid=$self->{'sid'};port=$self->{'port'}";
-    my $dbh = DBI->connect($dsn, $self->{'user'}, $self->{'password'})
-              or $self->{'logger'}->logdie( $DBI::errstr . "\n" );
+    The staging table should be empty at the beginning of the import.
+
+=cut
+
+sub truncate_staging_table {
+    my $self = shift;
 
     my $command = "TRUNCATE TABLE $STAGING_TABLE";
+    $self->{'dbh'}->do($command)
+        or $self->{'logger'}->logdie("Couldn't truncate the staging table");
 
-    $dbh->do($command) or $self->{'logger'}->logdie("Couldn't truncate the staging table");
-    $dbh->disconnect();
-
-    $self->{'logger'}->info("Staging table ready");
+    $self->{'logger'}->info("Staging table truncated");
 }
 
 
-# todo use a single dbh connection
+=head2 create_new_release
+
+    TODO: figure out how many staging tables are going to be used.
+    TODO: replace placeholder parameters with real dates etc.
+
+=cut
+
 sub create_new_release {
     my $self = shift;
 
-    my $dsn = "dbi:Oracle:host=$self->{'host'};sid=$self->{'sid'};port=$self->{'port'}";
-    my $dbh = DBI->connect($dsn, $self->{'user'}, $self->{'password'})
-              or $self->{'logger'}->logdie( $DBI::errstr . "\n" );
-
     my $command = <<SQL;
-INSERT INTO rnc_release
+INSERT INTO $RELEASE_TABLE
 VALUES(
   (SELECT count(*)+1 FROM rnc_release),
   1,
@@ -154,32 +200,45 @@ VALUES(
 )
 SQL
 
-    $self->{'logger'}->info($command);
-
-    $dbh->do($command) or $self->{'logger'}->logdie("Couldn't create new release");
-    $dbh->disconnect();
+    $self->{'dbh'}->do($command)
+        or $self->{'logger'}->logdie("Couldn't create new release");
 
     $self->{'logger'}->info("New release created");
 }
 
 
+=head2 load_seq
+
+    Short sequences can be loaded very fast using direct path loading.
+    Long sequences are stored as CLOBs in the Oracle database
+    and cannot be loaded using direct path sqlldr strategy.
+    As a result, long and short sequences are loaded separately.
+
+=cut
+
 sub load_seq {
     (my $self, my $seq_type) = @_;
 
     # create sqlldr control file
-    make_ctl_file($self, $seq_type);
+    _make_ctl_file($self, $seq_type);
 
-    # delete_old_log_files;
+    _delete_old_log_files($self, $seq_type);
 
     # launch sqlldr
-    my $command = get_sqlldr_command($self, $seq_type);
-    system_call($command);
+    my $command = _get_sqlldr_command($self, $seq_type);
+    _run_sqlldr($self, $command);
 
-    check_sqlldr_status($self, $seq_type);
+    _check_sqlldr_status($self, $seq_type);
 }
 
 
-sub get_sqlldr_command {
+=head2 _get_sqlldr_command
+
+    Construct the sqlldr system command.
+
+=cut
+
+sub _get_sqlldr_command {
     (my $self, my $seq_type) = @_;
 
     my $badfile = get_filename($self->{'job_id'}, $seq_type, 'bad');
@@ -196,32 +255,56 @@ sub get_sqlldr_command {
                   'bad='     . $badfile . ' ' .
                   'log='     . $logfile;
 
-    # direct conventional loading for lob files
+    # conventional loading for lob files, direct loading for short sequences
     if ( $seq_type eq 'short' ) {
         $command .= ' direct=true parallel=true';
     }
-
-    $self->{'logger'}->info($command);
 
     return $command;
 }
 
 
-# sub delete_old_log_files {
-#     # delete bad and log files from previous runs
-#     my @to_delete = ($badfile, $logfile);
-#     foreach my $file ( @to_delete ) {
-#         if ( -e $file ) {
-#             unlink $file or warn "Could not unlink $file: $!";
-#         }
-#     }
-# }
+=head2 _delete_old_log_files
 
+    Delete any .bad and .log files left from previous runs.
+    If they are not deleted, it may look as if the current run has an error too.
 
-sub system_call {
-    system(shift) == 0 or print STDERR "Couldn't launch sqlldr: $!\n";
+=cut
+
+sub _delete_old_log_files {
+    (my $self, my $seq_type) = @_;
+
+    my $badfile = get_filename($self->{'job_id'}, $seq_type, 'bad');
+    my $logfile = get_filename($self->{'job_id'}, $seq_type, 'log');
+
+    my @to_delete = ($badfile, $logfile);
+    foreach my $file ( @to_delete ) {
+        if ( -e $file ) {
+            unlink $file or $self->{'logger'}->logwarn("Could not unlink $file: $!");
+        }
+    }
 }
 
+=head2
+
+    Launch sqlldr and make sure that it runs successfully, log any errors.
+
+=cut
+
+sub _run_sqlldr {
+    (my $self, my $command) = @_;
+    $self->{'logger'}->info('Launching sqlldr');
+    system($command) == 0
+        or $self->{'logger'}->warn("Couldn't launch sqlldr\n. Command: $command\n Error: $!\n");
+}
+
+
+=head2
+
+    Generic function for constructing filenames for different types of files,
+    such as ctl, csv, bad, and log files.
+
+=cut
 
 sub get_filename {
 
@@ -231,10 +314,14 @@ sub get_filename {
 }
 
 
-sub make_ctl_file {
-    (my $self, my $seq_type) = @_;
+=head2
 
-    my $MAXSEQLONG = 1000000;
+    Create a control file used by sqlldr.
+
+=cut
+
+sub _make_ctl_file {
+    (my $self, my $seq_type) = @_;
 
     my $ctlfile  = get_filename($self->{'job_id'}, $seq_type, 'ctl');
     my $datafile = get_filename($self->{'job_id'}, $seq_type, 'csv');
@@ -253,8 +340,9 @@ FIELDS TERMINATED BY ','
   LEN integer external,
 CTL
 
+    # different handling of long and short sequences
     if ( $seq_type eq 'short' ) {
-        print $fh "  SEQ_SHORT char(4000),\n";
+        print $fh "  SEQ_SHORT char($MAXSEQSHORT),\n";
     } elsif ( $seq_type eq 'long' ) {
         print $fh "  SEQ_LONG char($MAXSEQLONG),\n";
     } else {
@@ -272,24 +360,37 @@ CTL
 }
 
 
-sub check_sqlldr_status {
+=head2 _check_sqlldr_status
+
+    Entries rejected by the database are stored in the .bad file.
+    Warn if bad file exists.
+
+=cut
+
+sub _check_sqlldr_status {
 
     my $self = shift @_;
     my $seq_type = shift @_;
 
     my $badfile = get_filename($self->{'job_id'}, $seq_type, 'bad');
 
-    # check if bad file exists
     if (-e $badfile) {
-        print "Bad file exists, there were mistakes\n";
+        $self->{'logger'}->warn("sqlldr import had errors");
     } else {
-        print "No mistakes\n";
+        $self->{'logger'}->info("No sqlldr errors");
     }
 
-    # find error messages in the log file
+    # TODO: find error messages in the log file
 
 }
 
+
+=head2
+
+    Read a list of embl files and create two csv files,
+    one with short, another with long sequences.
+
+=cut
 
 sub embl2csv {
 
@@ -336,7 +437,7 @@ sub embl2csv {
             $version  = $seq->seq_version;
             $sequence = $seq->seq;
 
-            if ($length > 4000) {
+            if ($length > $MAXSEQSHORT) {
                 $isLong = 1;
                 $seqs_long++;
             } else {
@@ -363,6 +464,7 @@ sub embl2csv {
 
             $data = join(',', ($crc64, $length, $sequence, $ac, $version, $taxid, $md5)) . "\n";
 
+            # print the data in different files depending on sequence length
             if ( $isLong == 1 ) {
                 print $fh_long $data;
             } elsif ( $isLong == 0 ) {
@@ -378,47 +480,51 @@ sub embl2csv {
 }
 
 
-sub get_embl_files {
+=head2 list_files
 
-    (my $self, my $dir) = @_;
+    Get all files with the specified extension from the input directory
+
+=cut
+
+sub list_files {
+
+    (my $self, my $dir, my $extension) = @_;
 
     opendir(DIR, $dir) or die $!;
 
     my @files = ();
     while (my $file = readdir(DIR)) {
         next if ($file =~ m/^\./);
-        next if ($file !~ m/\.ncr$/);
+        next if ($file !~ m/\.$extension$/);
 
         push @files, $dir . '/' . $file;
     }
 
     closedir(DIR);
 
-    $self->{'logger'}->info("Found " . scalar(@files) . " files\n");
+    $self->{'logger'}->info("Found " . scalar(@files) . " .$extension files");
 
     return @files;
 }
 
 
-sub Usage {
-    print <<EOF
- $0 --dir <path to input files>
+=head2 run_pl_sql_update
 
-        Mandatory
-            --dir     Location of input files
-EOF
-;
-    exit(1);
+    Update Oracle database, import sequences, create new xrefs.
+
+=cut
+
+sub run_pl_sql_update {
+    my $self = shift;
+
+    my $command = <<PLSQL;
+BEGIN
+  RNC_UPDATE.NEW_UPDATE();
+END;
+PLSQL
+
+    $self->{'dbh'}->do($command)
+        or $self->{'logger'}->logdie("PL/SQL update failed");
+
+    $self->{'logger'}->info("PL/SQL update complete");
 }
-
-__DATA__
-
-== pod
-
-
-
-
-
-== cut
-
-
