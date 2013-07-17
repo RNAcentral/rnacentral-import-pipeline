@@ -12,6 +12,14 @@ test
 
 =head1 DESCRIPTION
 
+    Short sequences can be loaded very fast using direct path loading.
+    Long sequences are stored as CLOBs in the Oracle database
+    and cannot be loaded using direct path sqlldr strategy.
+    As a result, long and short sequences are loaded separately.
+
+    Creates temporary output files (sqlldr control files and sqlldr log files)
+    in the directory specified by 
+
 =head1 CONTACT
 
 
@@ -22,13 +30,6 @@ use warnings;
 
 use base ('Bio::RNAcentral::Base');
 
-# TODO default parameters in Base class
-
-
-# Global parameters
-# our $MAXSEQLONG    = 1000000;  # maximum length for long sequences stored as clobs
-# our $MAXSEQSHORT   = 4000;     # maximum length for short sequences stored as chars
-
 
 sub new {
     my ($class, $opt) = @_;
@@ -36,8 +37,8 @@ sub new {
     # run parent constructor
     my $self = $class->SUPER::new();
 
-    $self->{'seq_type'} = '';
-    $self->{'job_id'} = '';
+    $self->{'job_id'}   = '';
+    $self->{'seq_type'} = '';    
 
     $self->{'user'}     = $opt->{'user'};
     $self->{'password'} = $opt->{'password'};
@@ -45,30 +46,32 @@ sub new {
     $self->{'port'}     = $opt->{'port'};
     $self->{'host'}     = $opt->{'host'};
 
+    # location of temporary output files
+    if ( defined($opt->{'out'}) ) {
+        $self->{'opt'}{'temp_dir'} = $opt->{'out'};
+    }
+
     return $self;
 }
 
 
 =head2 load_seq
 
-    Short sequences can be loaded very fast using direct path loading.
-    Long sequences are stored as CLOBs in the Oracle database
-    and cannot be loaded using direct path sqlldr strategy.
-    As a result, long and short sequences are loaded separately.
+    Input: location of csv file with sequence data.
+    Create control files for sqlldr, launch sqlldr, report mistakes.
 
 =cut
 
 sub load_seq {
     (my $self, my $file) = @_;
 
-    if ( $file =~ /_(long|short)/ ) {
-        $self->{'seq_type'} = $1;
-    }
-
-
-
     # get file name without extension
-    $self->{'job_id'} = File::Basename::fileparse($file, qr/\.[^.]*/);
+    $file = File::Basename::fileparse($file, qr/\.[^.]*/);
+
+    if ( $file =~ /(.*)_(long|short)/ ) {
+        $self->{'job_id'}   = $1;
+        $self->{'seq_type'} = $2;
+    }    
 
     # create sqlldr control file
     $self->_make_ctl_file();
@@ -76,10 +79,10 @@ sub load_seq {
     $self->_delete_old_log_files();
 
     # launch sqlldr
-    my $command = $self->_get_sqlldr_command();
-    # $self->_run_sqlldr($command);
+    my $cmd = $self->_get_sqlldr_command();
+    # $self->_run_sqlldr($cmd);
 
-    $self->{'logger'}->info($command);
+    $self->{'logger'}->info($cmd);
 
     $self->_check_sqlldr_status();
 }
@@ -164,14 +167,13 @@ sub _make_ctl_file {
     my $ctlfile  = $self->get_output_filename($self->{'job_id'}, $self->{'seq_type'}, 'ctl');
     my $datafile = $self->get_output_filename($self->{'job_id'}, $self->{'seq_type'}, 'csv');
 
-    my $fh = IO::File->new("> $ctlfile")
-             or $self->{'logger'}->logdie("Couldn't open file $ctlfile");
+    open my $fh, '>', $ctlfile or die $!;
 
     print $fh <<CTL;
 LOAD DATA
 INFILE '$datafile' "str '\\n'"
 APPEND
-INTO TABLE load_rnacentral
+INTO TABLE $self->{'opt'}{'staging_table'}
 FIELDS TERMINATED BY ','
 (
   CRC64 char,
@@ -180,9 +182,9 @@ CTL
 
     # different handling of long and short sequences
     if ( $self->{'seq_type'} eq 'short' ) {
-        print $fh "  SEQ_SHORT char(" . $self->{'default_options'}{'MAXSEQSHORT'} . "),\n";
+        print $fh "  SEQ_SHORT char(" . $self->{'opt'}{'MAXSEQSHORT'} . "),\n";
     } elsif ( $self->{'seq_type'} eq 'long' ) {
-        print $fh "  SEQ_LONG char("  . $self->{'default_options'}{'MAXSEQLONG'}  . "),\n";
+        print $fh "  SEQ_LONG char("  . $self->{'opt'}{'MAXSEQLONG'}  . "),\n";
     } else {
         $self->{'logger'}->logdie("Wrong sequence sequence type");
     }
@@ -194,7 +196,7 @@ CTL
   MD5 char
 )
 CTL
-    $fh->close;
+    close $fh;
 }
 
 

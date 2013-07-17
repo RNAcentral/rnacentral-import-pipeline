@@ -42,18 +42,14 @@ sub default_options {
     
     return {
 
+        'file_extension'   => 'ncr',         # look for .ncr files
+        'file_size_cutoff' => 50 * 10**6,    # 50 Mb, file size cutoff
+
+        'staging_table' => 'load_rnacentral', # staging table
+        'temp_dir'      => '/Users/apetrov/Desktop/ensembl_main/rnac-loader/temp2',       # default location of temporary output files, can be specified on command line
 		'MAXSEQLONG'    => 1000000,  # maximum length for long sequences stored as clobs
 		'MAXSEQSHORT'   => 4000,     # maximum length for short sequences stored as chars
 
-    	'test' => 'test',
-
-        'db'   => {
-            -host   => '',
-            -port   => 0,
-            -user   => '',
-            -pass   => '',
-            -dbname => '',
-        },
     };
 }
 
@@ -97,7 +93,7 @@ sub get_output_filename {
 
     (my $self, my $job_id, my $prefix, my $extension) = @_;
 
-    return $OUTPUT . '/' . $job_id . '_' . $prefix . '.' . $extension;
+    return $self->{'opt'}{'temp_dir'} . '/' . $job_id . '_' . $prefix . '.' . $extension;
 }
 
 1;
