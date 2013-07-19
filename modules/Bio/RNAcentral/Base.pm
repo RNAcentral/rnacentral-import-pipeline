@@ -15,14 +15,12 @@ package Bio::RNAcentral::Base;
 use strict;
 
 use Log::Log4perl;
-
-
-our $OUTPUT = '/Users/apetrov/Desktop/ensembl_main/rnac-loader/temp'; # TODO replace with a CLI option
+use File::Spec;
 
 
 =head2 new
 
-	Constructor, initializes logging.
+	Constructor, initializes logging and sets default options.
 
 =cut
 
@@ -92,9 +90,9 @@ sub initialize_logger {
 
 sub get_output_filename {
 
-    (my $self, my $job_id, my $prefix, my $extension) = @_;
+    my ($self, $job_id, $prefix, $extension) = @_;
 
-    return $self->{'opt'}{'temp_dir'} . '/' . $job_id . '_' . $prefix . '.' . $extension;
+    return File::Spec->catfile($self->{'opt'}{'temp_dir'}, $job_id . '_' . $prefix . '.' . $extension);
 }
 
 1;
