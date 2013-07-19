@@ -6,11 +6,21 @@ package Bio::RNAcentral::InputFiles;
 
 =head1 NAME
 
-test
+
 
 =head1 SYNOPSIS
 
+    my $location = 'path/to/files';
+    my $opt{'out'} = 'path/to/output/directory';
+    my $a = Bio::RNAcentral::InputFiles->new($opt);
+    # prepare csv files for sqlldr
+    $a->process_folder($location);
+
 =head1 DESCRIPTION
+
+    This package is responsible for getting a list of input files,
+    reorganizing them as necessary, and parsing them into csv files
+    expected by SQL*Loader.
 
 =head1 CONTACT
 

@@ -6,20 +6,15 @@
 
 =head1 NAME
 
-
+    scripts/controller.pl
 
 =head1 SYNOPSIS
 
-    Non-parallelized version of the data import pipeline.
-
-    perl modules/RNAcentral/Import.pm --dir data --user=$user --password=$password --host=$host --sid=$sid --port=$port --out /path/to/temp/folder
-
-    data is the folder with input files in embl format.
+    perl scripts/controller.pl --dir /path/to/ncr/files --out /path/to/temp/folder --user=$user --password=$password --host=$host --sid=$sid --port=$port
 
 =head1 DESCRIPTION
 
-=head1 CONTACT
-
+    Non-parallelized version of the data import pipeline.
 
 =cut
 
