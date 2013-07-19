@@ -21,6 +21,13 @@
 use strict;
 use warnings;
 
+use Cwd            ();
+use File::Basename ();
+BEGIN {
+    my $root_dir = File::Basename::dirname( File::Basename::dirname( Cwd::realpath($0) ) );
+    unshift @INC, "$root_dir/modules";
+}
+
 use Getopt::Long;
 use Pod::Usage;
 
