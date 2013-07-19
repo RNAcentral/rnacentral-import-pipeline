@@ -33,6 +33,7 @@ use Pod::Usage;
 
 use Bio::RNAcentral::InputFiles;
 use Bio::RNAcentral::SqlldrImport;
+use Bio::RNAcentral::OracleUpdate;
 
 
 my $location = '';
@@ -69,6 +70,8 @@ for my $csvfile (@csvfiles) {
 }
 
 # plsql update
+my $c = Bio::RNAcentral::OracleUpdate->new($opt);
+$c->update();
 
 
 
