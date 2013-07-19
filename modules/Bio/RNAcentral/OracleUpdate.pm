@@ -47,28 +47,9 @@ sub new {
         $self->{'opt'}{'port'} = $opt->{'port'};
     }
 
-    return $self;
-}
-
-
-=head2 update
-
-    Main entry point for updating the RNAcentral Oracle database.
-
-=cut
-
-sub update {
-    my $self = shift;
-
     $self->db_oracle_connect();
 
-    $self->truncate_staging_table();
-
-    $self->create_new_release();
-
-    $self->run_pl_sql_update();
-
-    $self->db_oracle_disconnect();
+    return $self;
 }
 
 
@@ -162,6 +143,8 @@ SQL
 
 sub run_pl_sql_update {
     my $self = shift;
+
+    $self->{'logger'}->info("Launching PL/SQL update");
 
     my $command = <<PLSQL;
 BEGIN
