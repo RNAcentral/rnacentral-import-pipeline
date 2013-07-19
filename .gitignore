@@ -49,4 +49,6 @@ config.cfg
 oracle_connection
 data/*.ncRNA
 temp/*
+log/*
+
 
