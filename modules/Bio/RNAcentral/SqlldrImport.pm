@@ -6,9 +6,7 @@ package Bio::RNAcentral::SqlldrImport;
 
 =head1 NAME
 
-test
-
-=head1 SYNOPSIS
+    Bio::RNAcentral::SqlldrImport
 
 =head1 DESCRIPTION
 
@@ -17,11 +15,8 @@ test
     and cannot be loaded using direct path sqlldr strategy.
     As a result, long and short sequences are loaded separately.
 
-    Creates temporary output files (sqlldr control files and sqlldr log files)
-    in the directory specified by 
-
-=head1 CONTACT
-
+    Create sqlldr temporary output files (sqlldr control files and sqlldr log files)
+    in the temporary directory, clean up on exit.
 
 =cut
 
@@ -38,7 +33,7 @@ sub new {
     my $self = $class->SUPER::new();
 
     $self->{'job_id'}   = '';
-    $self->{'seq_type'} = '';    
+    $self->{'seq_type'} = '';
 
     $self->{'user'}     = $opt->{'user'};
     $self->{'password'} = $opt->{'password'};
@@ -52,6 +47,18 @@ sub new {
     }
 
     return $self;
+}
+
+
+sub _set_filenames {
+    my $self = shift;
+
+    $self->{'ctlfile'}   = $self->get_output_filename($self->{'job_id'}, $self->{'seq_type'}, 'ctl');
+    $self->{'logfile'}   = $self->get_output_filename($self->{'job_id'}, $self->{'seq_type'}, 'log');
+    $self->{'csvfile'}   = $self->get_output_filename($self->{'job_id'}, $self->{'seq_type'}, 'csv');
+    $self->{'badfile'}   = $self->get_output_filename($self->{'job_id'}, $self->{'seq_type'}, 'bad');
+    $self->{'longfile'}  = $self->get_output_filename($self->{'job_id'}, $self->{'seq_type'}, 'long');
+    $self->{'shortfile'} = $self->get_output_filename($self->{'job_id'}, $self->{'seq_type'}, 'short');
 }
 
 
@@ -71,7 +78,11 @@ sub load_seq {
     if ( $file =~ /(.*)_(long|short)/ ) {
         $self->{'job_id'}   = $1;
         $self->{'seq_type'} = $2;
-    }    
+        $self->_set_filenames(); # initialize all filenames for this job_id
+    } else {
+        $self->{'logger'}->logwarn("Unexpected file $file");
+        return;
+    }
 
     # create sqlldr control file
     $self->_make_ctl_file();
@@ -80,11 +91,11 @@ sub load_seq {
 
     # launch sqlldr
     my $cmd = $self->_get_sqlldr_command();
-    # $self->_run_sqlldr($cmd);
+    my $problems = $self->_run_sqlldr($cmd);
 
-    # $self->{'logger'}->info($cmd);
-
-    $self->_check_sqlldr_status();
+    unless ( $self->_errors_found() or $problems ) {
+        $self->_clean_up_files();
+    }
 }
 
 
@@ -97,19 +108,15 @@ sub load_seq {
 sub _get_sqlldr_command {
     my $self = shift;
 
-    my $badfile = $self->get_output_filename($self->{'job_id'}, $self->{'seq_type'}, 'bad');
-    my $logfile = $self->get_output_filename($self->{'job_id'}, $self->{'seq_type'}, 'log');
-    my $ctlfile = $self->get_output_filename($self->{'job_id'}, $self->{'seq_type'}, 'ctl');
-
     my $command = 'sqlldr ' .
                    $self->{'user'} . '/' . $self->{'password'} . '@' .
                   '\"\(DESCRIPTION=\(ADDRESS=\(PROTOCOL=TCP\)' .
                   '\(HOST=' . $self->{'host'} . '\)' .
                   '\(PORT=' . $self->{'port'} . '\)\)' .
                   '\(CONNECT_DATA\=\(SERVICE_NAME=' . $self->{'sid'} . '\)\)\)\" ' .
-                  'control=' . $ctlfile . ' ' .
-                  'bad='     . $badfile . ' ' .
-                  'log='     . $logfile;
+                  'control=' . $self->{'ctlfile'} . ' ' .
+                  'bad='     . $self->{'badfile'} . ' ' .
+                  'log='     . $self->{'logfile'};
 
     # conventional loading for lob files, direct loading for short sequences
     if ( $self->{'seq_type'} eq 'short' ) {
@@ -130,10 +137,7 @@ sub _get_sqlldr_command {
 sub _delete_old_log_files {
     my $self = shift;
 
-    my $badfile = $self->get_output_filename($self->{'job_id'}, $self->{'seq_type'}, 'bad');
-    my $logfile = $self->get_output_filename($self->{'job_id'}, $self->{'seq_type'}, 'log');
-
-    my @to_delete = ($badfile, $logfile);
+    my @to_delete = ($self->{'badfile'}, $self->{'logfile'});
     foreach my $file ( @to_delete ) {
         if ( -e $file ) {
             unlink $file or $self->{'logger'}->logwarn("Could not unlink $file: $!");
@@ -150,8 +154,14 @@ sub _delete_old_log_files {
 sub _run_sqlldr {
     (my $self, my $command) = @_;
     $self->{'logger'}->info('Launching sqlldr');
-    system($command) == 0
-        or $self->{'logger'}->warn("Couldn't launch sqlldr\n. Command: $command\n Error: $!\n");
+
+    my $status = system($command); # 0 on success
+    print "Status $status\n";
+    unless ( $status == 0 ) {
+        $self->{'logger'}->logwarn("Couldn't launch sqlldr\n. Command: $command\n Error: $!\n");
+    }
+
+    return $status;
 }
 
 
@@ -164,14 +174,11 @@ sub _run_sqlldr {
 sub _make_ctl_file {
     my $self = shift;
 
-    my $ctlfile  = $self->get_output_filename($self->{'job_id'}, $self->{'seq_type'}, 'ctl');
-    my $datafile = $self->get_output_filename($self->{'job_id'}, $self->{'seq_type'}, 'csv');
-
-    open my $fh, '>', $ctlfile or die $!;
+    open my $fh, '>', $self->{'ctlfile'} or die $!;
 
     print $fh <<CTL;
 LOAD DATA
-INFILE '$datafile' "str '\\n'"
+INFILE '$self->{"csvfile"}' "str '\\n'"
 APPEND
 INTO TABLE $self->{'opt'}{'staging_table'}
 FIELDS TERMINATED BY ','
@@ -200,26 +207,47 @@ CTL
 }
 
 
-=head2 _check_sqlldr_status
+=head2 _errors_found
 
     Entries rejected by the database are stored in the .bad file.
     Warn if bad file exists.
+    Discard file is not specified in control files, so it's never created.
 
 =cut
 
-sub _check_sqlldr_status {
+sub _errors_found {
     my $self = shift;
-
-    my $badfile = $self->get_output_filename($self->{'job_id'}, $self->{'seq_type'}, 'bad');
-
-    if (-e $badfile) {
-        $self->{'logger'}->warn("sqlldr import had errors");
-    } else {
-        $self->{'logger'}->info("No sqlldr errors");
-    }
 
     # TODO: find error messages in the log file
 
+    if (-e $self->{'badfile'}) {
+        $self->{'logger'}->logwarn("sqlldr import had errors, check $self->{'badfile'}");
+        return 1;
+    } else {
+        $self->{'logger'}->info("No bad file");
+        return 0;
+    }
 }
+
+
+=head2 _clean_up_files
+
+    Remove files the upload to save disk space.
+
+=cut
+
+sub _clean_up_files {
+    my $self = shift;
+
+    $self->{'logger'}->info("Cleaning up $self->{'job_id'}_$self->{'seq_type'} files");
+
+    # no need to unlink bad file because this sub only runs when bad file doesn't exist
+    unlink $self->{'ctlfile'},
+           $self->{'logfile'},
+           $self->{'shortfile'},
+           $self->{'csvfile'},
+           $self->{'longfile'};
+}
+
 
 1;
