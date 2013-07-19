@@ -10,11 +10,11 @@ package Bio::RNAcentral::InputFiles;
 
 =head1 SYNOPSIS
 
-    my $location = 'path/to/files';
-    my $opt{'out'} = 'path/to/output/directory';
+    my $opt{'out'} = 'path/to/output/temp/directory';
     my $a = Bio::RNAcentral::InputFiles->new($opt);
     # prepare csv files for sqlldr
-    $a->process_folder($location);
+    $a->process_folder('path/to/files1');
+    $a->process_folder('path/to/files2');
 
 =head1 DESCRIPTION
 
