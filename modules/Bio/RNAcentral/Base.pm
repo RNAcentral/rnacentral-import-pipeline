@@ -1,4 +1,4 @@
-=pod 
+=pod
 
 =head1 NAME
 
@@ -30,14 +30,14 @@ sub new {
     my $self = bless {}, $class;
 
     $self->{'logger'} = initialize_logger();
-    $self->{'opt'} = default_options();    
+    $self->{'opt'} = default_options();
 
     return $self;
 }
 
 
 sub default_options {
-    
+
     return {
 
         'file_extension'   => 'ncr',         # look for .ncr files
@@ -62,9 +62,6 @@ sub default_options {
 
 sub initialize_logger {
 
-    # log4perl.appender.LOG1.filename  = mylog.log
-    # log4perl.appender.LOG1.mode      = append
-
     my $log_conf = q(
        log4perl.rootLogger              = DEBUG, LOG1
        log4perl.appender.LOG1           = Log::Log4perl::Appender::Screen
@@ -76,8 +73,6 @@ sub initialize_logger {
     Log::Log4perl::init_once(\$log_conf);
 
     my $logger = Log::Log4perl->get_logger();
-
-    $logger->info("Logger initialized");
 
     return $logger;
 }
