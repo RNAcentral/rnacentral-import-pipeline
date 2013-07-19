@@ -87,11 +87,11 @@ sub get_files {
     my @original_files = $self->list_folder($location, $self->{'opt'}{'file_extension'});
 
     # split large files into small chunks and analyze them instead
-    foreach my $file (@original_files) {
-        @files = (@files, $self->file2chunks($file));
-    }
+    # foreach my $file (@original_files) {
+    #     @files = (@files, $self->file2chunks($file));
+    # }
 
-    #reorganize_files;
+    @files = @original_files;
 
     return @files;
 }

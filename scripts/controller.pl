@@ -38,14 +38,15 @@ my $location = '';
 my $opt = {};
 
 &GetOptions (
-    'dir=s'      => \$location,
-    'user=s'     => \$opt->{'user'},
+    'dir=s'      => \$location,          # input data location
+    'out=s'      => \$opt->{'out'},      # location of output temp files
+    'user=s'     => \$opt->{'user'},     # Oracle connection details
     'password=s' => \$opt->{'password'},
     'sid=s'      => \$opt->{'sid'},
     'port=i'     => \$opt->{'port'},
-    'host=s'     => \$opt->{'host'},
-    'out=s'      => \$opt->{'out'}
+    'host=s'     => \$opt->{'host'}
 );
+
 &pod2usage if ( $location eq ''              or
                 !defined($opt->{'user'})     or
                 !defined($opt->{'password'}) or
@@ -55,18 +56,17 @@ my $opt = {};
                 !defined($opt->{'out'}));
 
 
-# my $a = Bio::RNAcentral::InputFiles->new($opt);
-# $a->process_folder($location);
-
-test_merge($opt, $location, 'ncr');
-
-exit;
+my $a = Bio::RNAcentral::InputFiles->new($opt);
+# prepare csv files for sqlldr
+$a->process_folder($location);
 
 my $b = Bio::RNAcentral::SqlldrImport->new($opt);
 my @csvfiles = $a->list_folder($opt->{'out'}, 'csv');
 for my $csvfile (@csvfiles) {
     $b->load_seq($csvfile);
 }
+
+# plsql update
 
 
 
