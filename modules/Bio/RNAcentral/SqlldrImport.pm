@@ -82,7 +82,7 @@ sub load_seq {
     my $cmd = $self->_get_sqlldr_command();
     # $self->_run_sqlldr($cmd);
 
-    $self->{'logger'}->info($cmd);
+    # $self->{'logger'}->info($cmd);
 
     $self->_check_sqlldr_status();
 }

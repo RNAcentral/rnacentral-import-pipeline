@@ -329,6 +329,11 @@ sub embl2csv {
         # get basic data for UniParc-style functionality
         %data = $self->_get_basic_data($seq);
 
+        unless ( $data{'isValid'} ) {
+            $self->{'logger'}->logwarn("Skipping record $i: $data{'text'}");
+            next;
+        }
+
         # print the data in different files depending on sequence length
         if ( $data{'isLong'} == 1 ) {
             print $fh_long $data{'text'};
@@ -387,6 +392,7 @@ sub _get_basic_data {
 
     my $seqs_long  = 0;
     my $seqs_short = 0;    
+    my $isValid    = 0;
 
     # get new data
     $ac       = $seq->display_id;
@@ -419,11 +425,19 @@ sub _get_basic_data {
         }
     }
 
+    # quality control
+    if ( $ac eq '' or $sequence eq '' or $length == 0 ) {
+        $isValid = 0;
+    } else {
+        $isValid = 1;
+    }
+
     return (
         'text'   => join(',', ($crc64, $length, $sequence, $ac, $version, $taxid, $md5)) . "\n",
         'isLong' => $isLong,
         'seqs_long'  => $seqs_long,
         'seqs_short' => $seqs_short,
+        'isValid'    => $isValid,
     );
 }
 
