@@ -46,7 +46,7 @@ build/config/buildinfo.properties
 
 # project specific
 config.cfg
-oracle_connection
+hive_params
 data/*.ncRNA
 temp/*
 log/*
