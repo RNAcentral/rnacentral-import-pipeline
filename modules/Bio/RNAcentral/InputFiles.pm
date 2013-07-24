@@ -38,6 +38,8 @@ BEGIN {
     unshift @INC, "$root_dir/lib";
 }
 
+use File::Spec;
+
 use Bio::SeqIO;   # BioPerl is used for reading embl files
 use SWISS::CRC64; # cyclic redundancy check
 use Digest::MD5 qw(md5_hex);
@@ -124,7 +126,7 @@ sub list_folder {
         next if ($file =~ m/^\./);
         next if ($file !~ m/\.$extension$/);
 
-        push @files, $dir . '/' . $file;
+        push @files, File::Spec->catfile($dir, $file);
     }
 
     closedir(DIR);
