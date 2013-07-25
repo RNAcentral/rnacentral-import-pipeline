@@ -54,9 +54,7 @@ sub new {
     my $self = $class->SUPER::new();
 
     # location of temporary output files
-    if ( defined($opt->{'out'}) ) {
-        $self->{'opt'}{'temp_dir'} = $opt->{'out'};
-    }
+    $self->{'temp_dir'} = $opt->{'out'};
 
     return $self;
 }
@@ -304,8 +302,8 @@ sub embl2csv {
     # get file name without extension
     $job_id = File::Basename::fileparse($file, qr/\.[^.]*/);
 
-    my $fname_long  = $self->get_output_filename($job_id, 'long',  'csv');
-    my $fname_short = $self->get_output_filename($job_id, 'short', 'csv');
+    my $fname_long  = $self->get_output_filename($self->{'temp_dir'}, $job_id, 'long',  'csv');
+    my $fname_short = $self->get_output_filename($self->{'temp_dir'}, $job_id, 'short', 'csv');
 
     # open output files
     my $fh_long  = IO::File->new("> $fname_long")  or $self->{'logger'}->logdie("Couldn't open file $fname_long");
@@ -402,7 +400,7 @@ sub _get_basic_data {
     $version  = $seq->seq_version;
     $sequence = $seq->seq;
 
-    if ($length > $self->{'opt'}{'MAXSEQSHORT'}) {
+    if ($length > $self->{'opt'}{'maxseqshort'}) {
         $isLong = 1;
         $seqs_long++;
     } else {

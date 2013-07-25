@@ -40,11 +40,7 @@ sub new {
     $self->{'sid'}      = $opt->{'sid'};
     $self->{'port'}     = $opt->{'port'};
     $self->{'host'}     = $opt->{'host'};
-
-    # location of temporary output files
-    if ( defined($opt->{'out'}) ) {
-        $self->{'opt'}{'temp_dir'} = $opt->{'out'};
-    }
+    $self->{'temp_dir'} = $opt->{'out'};
 
     return $self;
 }
@@ -53,12 +49,12 @@ sub new {
 sub _set_filenames {
     my $self = shift;
 
-    $self->{'ctlfile'}   = $self->get_output_filename($self->{'job_id'}, $self->{'seq_type'}, 'ctl');
-    $self->{'logfile'}   = $self->get_output_filename($self->{'job_id'}, $self->{'seq_type'}, 'log');
-    $self->{'csvfile'}   = $self->get_output_filename($self->{'job_id'}, $self->{'seq_type'}, 'csv');
-    $self->{'badfile'}   = $self->get_output_filename($self->{'job_id'}, $self->{'seq_type'}, 'bad');
-    $self->{'longfile'}  = $self->get_output_filename($self->{'job_id'}, $self->{'seq_type'}, 'long');
-    $self->{'shortfile'} = $self->get_output_filename($self->{'job_id'}, $self->{'seq_type'}, 'short');
+    $self->{'ctlfile'}   = $self->get_output_filename($self->{'temp_dir'}, $self->{'job_id'}, $self->{'seq_type'}, 'ctl');
+    $self->{'logfile'}   = $self->get_output_filename($self->{'temp_dir'}, $self->{'job_id'}, $self->{'seq_type'}, 'log');
+    $self->{'csvfile'}   = $self->get_output_filename($self->{'temp_dir'}, $self->{'job_id'}, $self->{'seq_type'}, 'csv');
+    $self->{'badfile'}   = $self->get_output_filename($self->{'temp_dir'}, $self->{'job_id'}, $self->{'seq_type'}, 'bad');
+    $self->{'longfile'}  = $self->get_output_filename($self->{'temp_dir'}, $self->{'job_id'}, $self->{'seq_type'}, 'long');
+    $self->{'shortfile'} = $self->get_output_filename($self->{'temp_dir'}, $self->{'job_id'}, $self->{'seq_type'}, 'short');
 }
 
 
@@ -189,9 +185,9 @@ CTL
 
     # different handling of long and short sequences
     if ( $self->{'seq_type'} eq 'short' ) {
-        print $fh "  SEQ_SHORT char(" . $self->{'opt'}{'MAXSEQSHORT'} . "),\n";
+        print $fh "  SEQ_SHORT char(" . $self->{'opt'}{'maxseqshort'} . "),\n";
     } elsif ( $self->{'seq_type'} eq 'long' ) {
-        print $fh "  SEQ_LONG char("  . $self->{'opt'}{'MAXSEQLONG'}  . "),\n";
+        print $fh "  SEQ_LONG char("  . $self->{'opt'}{'maxseqlong'}  . "),\n";
     } else {
         $self->{'logger'}->logdie("Wrong sequence sequence type");
     }

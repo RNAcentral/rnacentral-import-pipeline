@@ -31,21 +31,11 @@ sub new {
     # run parent constructor
     my $self = $class->SUPER::new();
 
-    if ( defined($opt->{'user'}) ) {
-        $self->{'opt'}{'user'} = $opt->{'user'};
-    }
-    if ( defined($opt->{'password'}) ) {
-        $self->{'opt'}{'password'} = $opt->{'password'};
-    }
-    if ( defined($opt->{'host'}) ) {
-        $self->{'opt'}{'host'} = $opt->{'host'};
-    }
-    if ( defined($opt->{'sid'}) ) {
-        $self->{'opt'}{'sid'} = $opt->{'sid'};
-    }
-    if ( defined($opt->{'port'}) ) {
-        $self->{'opt'}{'port'} = $opt->{'port'};
-    }
+    $self->{'user'}     = $opt->{'user'};
+    $self->{'password'} = $opt->{'password'};
+    $self->{'sid'}      = $opt->{'sid'};
+    $self->{'port'}     = $opt->{'port'};
+    $self->{'host'}     = $opt->{'host'};
 
     $self->db_oracle_connect();
 
@@ -62,8 +52,8 @@ sub new {
 sub db_oracle_connect {
     my $self = shift;
 
-    my $dsn = "dbi:Oracle:host=$self->{'opt'}{'host'};sid=$self->{'opt'}{'sid'};port=$self->{'opt'}{'port'}";
-    my $dbh = DBI->connect($dsn, $self->{'opt'}{'user'}, $self->{'opt'}{'password'})
+    my $dsn = "dbi:Oracle:host=$self->{'host'};sid=$self->{'sid'};port=$self->{'port'}";
+    my $dbh = DBI->connect($dsn, $self->{'user'}, $self->{'password'})
               or $self->{'logger'}->logdie( $DBI::errstr . "\n" );
 
     $self->{'dbh'} = $dbh;

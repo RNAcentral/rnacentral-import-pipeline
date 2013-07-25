@@ -44,9 +44,8 @@ sub default_options {
         'file_size_cutoff' => 50 * 10**6,       # 50 Mb, file size cutoff
         'staging_table' => 'load_rnacentral2',  # staging table
         'release_table' => 'rnc_release',       # keeps track of all RNAcentral releases
-        'temp_dir'      => 'temp',              # default location of temporary output files, can be specified on command line
-		'MAXSEQLONG'    => 1000000,  # maximum length for long sequences stored as clobs
-		'MAXSEQSHORT'   => 4000,     # maximum length for short sequences stored as chars
+		'maxseqlong'    => 1000000,  # maximum length for long sequences stored as clobs
+		'maxseqshort'   => 4000,     # maximum length for short sequences stored as chars
 
     };
 }
@@ -84,9 +83,9 @@ sub initialize_logger {
 
 sub get_output_filename {
 
-    my ($self, $job_id, $prefix, $extension) = @_;
+    my ($self, $path, $job_id, $prefix, $extension) = @_;
 
-    return File::Spec->catfile($self->{'opt'}{'temp_dir'}, $job_id . '_' . $prefix . '.' . $extension);
+    return File::Spec->catfile($path, $job_id . '_' . $prefix . '.' . $extension);
 }
 
 1;
