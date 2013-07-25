@@ -6,13 +6,14 @@ package Bio::RNAcentral::OracleUpdate;
 
 =head1 NAME
 
-
-
-=head1 SYNOPSIS
-
+    Bio::RNAcentral::OracleUpdate
 
 =head1 DESCRIPTION
 
+    Manage connection to the Oracle database
+    Truncate staging table in the beginning of the update
+    Create new release
+    Launch PL/SQL update
 
 =cut
 
