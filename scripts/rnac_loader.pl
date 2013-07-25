@@ -1,16 +1,15 @@
 #!/usr/bin/env perl
 
-
-
 =pod
 
 =head1 NAME
 
-    scripts/rnac_loader.pl
+    rnac_loader.pl
 
-=head1 SYNOPSIS
+=head1 USAGE
 
-    perl scripts/rnac_loader.pl --dir /path/to/ncr/files --out /path/to/temp/folder --user=$user --password=$password --host=$host --sid=$sid --port=$port
+    . ./config/hive_params
+    perl scripts/rnac_loader.pl -in /path/to/ncr_files -out /path/to/temp_folder -user=$ORACLE_USER -password=$ORACLE_PASSWORD -host=$ORACLE_HOST -port=$ORACLE_PORT -sid=$ORACLE_SID
 
 =head1 DESCRIPTION
 
@@ -37,11 +36,11 @@ use Bio::RNAcentral::OracleUpdate;
 
 
 my $location = '';
-
 my $opt = {};
 
+# all options are mandatory
 &GetOptions (
-    'dir=s'      => \$location,          # input data location
+    'in=s'       => \$location,          # input data location
     'out=s'      => \$opt->{'out'},      # location of output temp files
     'user=s'     => \$opt->{'user'},     # Oracle connection details
     'password=s' => \$opt->{'password'},
@@ -62,11 +61,11 @@ my $a = Bio::RNAcentral::InputFiles->new($opt);
 my $b = Bio::RNAcentral::SqlldrImport->new($opt);
 my $c = Bio::RNAcentral::OracleUpdate->new($opt);
 
-prepare staging table
+# prepare staging table
 $c->truncate_staging_table();
 
 
-my @folders = (); # list of folders with ncr files
+my @folders = ($location); # list of folders with ncr files
 
 for my $folder (@folders) {
     # prepare csv files for sqlldr
@@ -81,8 +80,8 @@ for my $folder (@folders) {
 
 
 # launch plsql update
-$c->create_new_release();
-$c->run_pl_sql_update();
+# $c->create_new_release();
+# $c->run_pl_sql_update();
 $c->db_oracle_disconnect();
 
 
