@@ -1,0 +1,8 @@
+export HIVE_HOST=""
+export HIVE_USERNAME=""
+export HIVE_PASSWORD=""
+export ORACLE_USER=""
+export ORACLE_PASSWORD=""
+export ORACLE_SID=""
+export ORACLE_PORT=""
+export ORACLE_HOST=""
