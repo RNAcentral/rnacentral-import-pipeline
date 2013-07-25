@@ -30,7 +30,7 @@ sub new {
     my $self = bless {}, $class;
 
     $self->{'logger'} = initialize_logger();
-    $self->{'opt'} = default_options();
+    $self->{'opt'}    = default_options();
 
     return $self;
 }
@@ -40,12 +40,11 @@ sub default_options {
 
     return {
 
-        'file_extension'   => 'ncr',         # look for .ncr files
-        'file_size_cutoff' => 50 * 10**6,    # 50 Mb, file size cutoff
-
-        'staging_table' => 'load_rnacentral', # staging table
-        'release_table' => 'rnc_release',     # keeps track of all RNAcentral releases
-        'temp_dir'      => '/Users/apetrov/Desktop/ensembl_main/rnac-loader/temp2',       # default location of temporary output files, can be specified on command line
+        'file_extension'   => 'ncr',            # look for .ncr files
+        'file_size_cutoff' => 50 * 10**6,       # 50 Mb, file size cutoff
+        'staging_table' => 'load_rnacentral2',  # staging table
+        'release_table' => 'rnc_release',       # keeps track of all RNAcentral releases
+        'temp_dir'      => 'temp',              # default location of temporary output files, can be specified on command line
 		'MAXSEQLONG'    => 1000000,  # maximum length for long sequences stored as clobs
 		'MAXSEQSHORT'   => 4000,     # maximum length for short sequences stored as chars
 
