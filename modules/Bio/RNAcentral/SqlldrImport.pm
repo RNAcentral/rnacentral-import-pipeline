@@ -10,13 +10,14 @@ package Bio::RNAcentral::SqlldrImport;
 
 =head1 DESCRIPTION
 
+    Write sqlldr temporary output files (sqlldr control files and sqlldr log files) in the temporary directory.
+    Construct sqlldr commands and run sqlldr.
+    Delete temporary files on successful import.
+
     Short sequences can be loaded very fast using direct path loading.
     Long sequences are stored as CLOBs in the Oracle database
     and cannot be loaded using direct path sqlldr strategy.
     As a result, long and short sequences are loaded separately.
-
-    Create sqlldr temporary output files (sqlldr control files and sqlldr log files)
-    in the temporary directory. If there are no errors, then delete temporary files.
 
 =cut
 
@@ -43,18 +44,6 @@ sub new {
     $self->{'temp_dir'} = $opt->{'out'};
 
     return $self;
-}
-
-
-sub _set_filenames {
-    my $self = shift;
-
-    $self->{'ctlfile'}   = $self->get_output_filename($self->{'temp_dir'}, $self->{'job_id'}, $self->{'seq_type'}, 'ctl');
-    $self->{'logfile'}   = $self->get_output_filename($self->{'temp_dir'}, $self->{'job_id'}, $self->{'seq_type'}, 'log');
-    $self->{'csvfile'}   = $self->get_output_filename($self->{'temp_dir'}, $self->{'job_id'}, $self->{'seq_type'}, 'csv');
-    $self->{'badfile'}   = $self->get_output_filename($self->{'temp_dir'}, $self->{'job_id'}, $self->{'seq_type'}, 'bad');
-    $self->{'longfile'}  = $self->get_output_filename($self->{'temp_dir'}, $self->{'job_id'}, $self->{'seq_type'}, 'long');
-    $self->{'shortfile'} = $self->get_output_filename($self->{'temp_dir'}, $self->{'job_id'}, $self->{'seq_type'}, 'short');
 }
 
 
@@ -93,6 +82,24 @@ sub load_seq {
     unless ( $self->_errors_found() or $problems ) {
         $self->_clean_up_files();
     }
+}
+
+
+=head2 _set_filenames
+
+    Initialize all filenames once for easy access.
+
+=cut
+
+sub _set_filenames {
+    my $self = shift;
+
+    $self->{'ctlfile'}   = $self->get_output_filename($self->{'temp_dir'}, $self->{'job_id'}, $self->{'seq_type'}, 'ctl');
+    $self->{'logfile'}   = $self->get_output_filename($self->{'temp_dir'}, $self->{'job_id'}, $self->{'seq_type'}, 'log');
+    $self->{'csvfile'}   = $self->get_output_filename($self->{'temp_dir'}, $self->{'job_id'}, $self->{'seq_type'}, 'csv');
+    $self->{'badfile'}   = $self->get_output_filename($self->{'temp_dir'}, $self->{'job_id'}, $self->{'seq_type'}, 'bad');
+    $self->{'longfile'}  = $self->get_output_filename($self->{'temp_dir'}, $self->{'job_id'}, $self->{'seq_type'}, 'long');
+    $self->{'shortfile'} = $self->get_output_filename($self->{'temp_dir'}, $self->{'job_id'}, $self->{'seq_type'}, 'short');
 }
 
 
