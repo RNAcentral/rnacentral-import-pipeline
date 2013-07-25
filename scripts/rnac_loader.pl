@@ -6,11 +6,11 @@
 
 =head1 NAME
 
-    scripts/controller.pl
+    scripts/rnac_loader.pl
 
 =head1 SYNOPSIS
 
-    perl scripts/controller.pl --dir /path/to/ncr/files --out /path/to/temp/folder --user=$user --password=$password --host=$host --sid=$sid --port=$port
+    perl scripts/rnac_loader.pl --dir /path/to/ncr/files --out /path/to/temp/folder --user=$user --password=$password --host=$host --sid=$sid --port=$port
 
 =head1 DESCRIPTION
 
@@ -58,25 +58,37 @@ my $opt = {};
                 !defined($opt->{'host'})     or
                 !defined($opt->{'out'}));
 
-
 my $a = Bio::RNAcentral::InputFiles->new($opt);
-# prepare csv files for sqlldr
-$a->process_folder($location);
-
 my $b = Bio::RNAcentral::SqlldrImport->new($opt);
-my @csvfiles = $a->list_folder($opt->{'out'}, 'csv');
-for my $csvfile (@csvfiles) {
-    $b->load_seq($csvfile);
+my $c = Bio::RNAcentral::OracleUpdate->new($opt);
+
+prepare staging table
+$c->truncate_staging_table();
+
+
+my @folders = (); # list of folders with ncr files
+
+for my $folder (@folders) {
+    # prepare csv files for sqlldr
+    $a->process_folder($folder);
+
+    # load data into the staging table
+    my @csvfiles = $a->list_folder($opt->{'out'}, 'csv');
+    for my $csvfile (@csvfiles) {
+        $b->load_seq($csvfile);
+    }
 }
 
-# plsql update
-my $c = Bio::RNAcentral::OracleUpdate->new($opt);
-$c->update();
+
+# launch plsql update
+$c->create_new_release();
+$c->run_pl_sql_update();
+$c->db_oracle_disconnect();
 
 
 
 sub test_merge {
-        
+
     my ($opt, $location, $extension) = @_;
     my $self = Bio::RNAcentral::InputFiles->new($opt);
     my ($size_ref, $ordered_files_ref) = $self->list_folder_order_by_size($location, $extension);
