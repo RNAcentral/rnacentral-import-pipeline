@@ -6,7 +6,7 @@ package Bio::RNAcentral::InputFiles;
 
 =head1 NAME
 
-
+    Bio::RNAcentral::InputFiles
 
 =head1 SYNOPSIS
 
@@ -97,11 +97,11 @@ sub get_files {
     my @original_files = $self->list_folder($location, $self->{'opt'}{'file_extension'});
 
     # split large files into small chunks and analyze them instead
-    # foreach my $file (@original_files) {
-    #     @files = (@files, $self->file2chunks($file));
-    # }
+    foreach my $file (@original_files) {
+        @files = (@files, $self->file2chunks($file));
+    }
 
-    @files = @original_files;
+    # @files = @original_files;
 
     return @files;
 }
@@ -260,7 +260,7 @@ sub file2chunks {
         $text .= $_;
         if ( length($text) > $self->{'opt'}{'file_size_cutoff'} ) {
             # create chunk files in temp directory
-            $chunkfile = $self->{'opt'}{'temp_dir'} . '/' . $file . '_chunk' . $i . '.' . $self->{'opt'}{'file_extension'};
+            $chunkfile = $self->{'temp_dir'} . '/' . $file . '_chunk' . $i . '.' . $self->{'opt'}{'file_extension'};
             push @chunks, $chunkfile;
             _print_to_file($chunkfile, $text);
             $i++;
@@ -272,7 +272,7 @@ sub file2chunks {
 
     # left over sequences
     if ( length($text) > 0 ) {
-        $chunkfile = $self->{'opt'}{'temp_dir'} . '/' . $file . '_chunk' . $i . '.' . $self->{'opt'}{'file_extension'};
+        $chunkfile = $self->{'temp_dir'} . '/' . $file . '_chunk' . $i . '.' . $self->{'opt'}{'file_extension'};
         push @chunks, $chunkfile;
         _print_to_file($chunkfile, $text);
         $self->{'logger'}->info("Created file $chunkfile");
