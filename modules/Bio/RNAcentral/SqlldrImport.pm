@@ -16,7 +16,7 @@ package Bio::RNAcentral::SqlldrImport;
     As a result, long and short sequences are loaded separately.
 
     Create sqlldr temporary output files (sqlldr control files and sqlldr log files)
-    in the temporary directory, clean up on exit.
+    in the temporary directory. If there are no errors, then delete temporary files.
 
 =cut
 
@@ -91,8 +91,7 @@ sub load_seq {
 
     # launch sqlldr
     my $cmd = $self->_get_sqlldr_command();
-    # my $problems = $self->_run_sqlldr($cmd);
-    my $problems = 0;
+    my $problems = $self->_run_sqlldr($cmd);
 
     # clean up if no errors and no problems in sqlldr
     unless ( $self->_errors_found() or $problems ) {
@@ -158,7 +157,6 @@ sub _run_sqlldr {
     $self->{'logger'}->info('Launching sqlldr');
 
     my $status = system($command); # 0 on success
-    print "Status $status\n";
     unless ( $status == 0 ) {
         $self->{'logger'}->logwarn("Couldn't launch sqlldr\n. Command: $command\n Error: $!\n");
     }
