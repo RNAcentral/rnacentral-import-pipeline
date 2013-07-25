@@ -91,8 +91,10 @@ sub load_seq {
 
     # launch sqlldr
     my $cmd = $self->_get_sqlldr_command();
-    my $problems = $self->_run_sqlldr($cmd);
+    # my $problems = $self->_run_sqlldr($cmd);
+    my $problems = 0;
 
+    # clean up if no errors and no problems in sqlldr
     unless ( $self->_errors_found() or $problems ) {
         $self->_clean_up_files();
     }

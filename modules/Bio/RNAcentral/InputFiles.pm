@@ -71,7 +71,7 @@ sub new {
 
 sub process_folder {
     (my $self, my $location) = @_;
-    
+
     # concatenate small files, split large ones
     my @files = $self->get_files($location);
 
@@ -91,7 +91,7 @@ sub process_folder {
 =cut
 
 sub get_files {
-    (my $self, my $location) = @_;    
+    (my $self, my $location) = @_;
 
     my @files = ();
 
@@ -164,7 +164,7 @@ sub list_folder_order_by_size {
     my @ordered_files = ();
     foreach my $key (sort { $size{$a} <=> $size{$b} } keys %size) {
         push @ordered_files, $key;
-    }    
+    }
 
     $self->{'logger'}->info("Found " . scalar(keys %size) . " .$extension files");
 
@@ -173,14 +173,14 @@ sub list_folder_order_by_size {
 
 =head2 group_files
 
-    Return an array of arrays with each nested array representing 
-    a group of files with cumulative size not exceeding 
+    Return an array of arrays with each nested array representing
+    a group of files with cumulative size not exceeding
     the specified cutoff.
     Called recursively. Used in conjunction with sub list_folder_order_by_size.
 
 =cut
 
-sub group_files {    
+sub group_files {
 
     my $self          = shift;
     my %size          = %{$_[0]};
@@ -192,21 +192,21 @@ sub group_files {
     }
 
     my $MAX = $self->{'opt'}{'file_size_cutoff'};
-    
+
     my $i = 0;
-    my $file1 = shift @ordered_files;    
+    my $file1 = shift @ordered_files;
     my @group = ( $file1 );
     my $total = $size{$file1};
-    
+
     foreach my $file2 (@ordered_files) {
-        if ( $size{$file2} + $total <= $MAX ) {                        
+        if ( $size{$file2} + $total <= $MAX ) {
             push @group, $file2;
-            $total += $size{$file2};            
+            $total += $size{$file2};
         } else {
             last; # don't check the remaining files because the array is sorted by size
         }
         $i++;
-    }    
+    }
 
     # get the remaining non-concatenated files
     my @next_level = @ordered_files[$i .. $#ordered_files];
@@ -223,7 +223,7 @@ sub group_files {
     }
 
     # contains this group and all groups from following iterations
-    return \@temp; 
+    return \@temp;
 }
 
 
@@ -313,12 +313,12 @@ sub embl2csv {
         # get other filehandles, if necessary
 
     # counters
-    my $i = 0;    
+    my $i = 0;
     my $records    = 0;
     my $seqs_long  = 0;
     my $seqs_short = 0;
 
-    # open file with BioPerl        
+    # open file with BioPerl
     $self->{'logger'}->info("Reading $file");
     my $stream = Bio::SeqIO->new(-file => $file, -format => 'EMBL');
 
@@ -342,16 +342,16 @@ sub embl2csv {
             $seqs_long += $data{'seqs_long'};
         } elsif ( $data{'isLong'} == 0 ) {
             print $fh_short $data{'text'};
-            $seqs_short += $data{'seqs_short'};            
+            $seqs_short += $data{'seqs_short'};
         } else {
             print 'Error';
         }
 
-        # get other data from the same record 
+        # get other data from the same record
         # and print it to other files if necessary
     }
     $records += $i;
-    
+
     $self->{'logger'}->info("$records records, $seqs_short short, $seqs_long long");
     $self->{'logger'}->info("Created files $fname_long and $fname_short");
 
@@ -366,7 +366,7 @@ sub embl2csv {
 # delete temp files if empty, return only files with content
 sub _check_temp_files{
     (my $self, my $file) = @_;
-    
+
     if ( -s $file > 0 ) {
         return $file;
     } else {
@@ -393,7 +393,7 @@ sub _get_basic_data {
     my $sequence = '';
 
     my $seqs_long  = 0;
-    my $seqs_short = 0;    
+    my $seqs_short = 0;
     my $isValid    = 0;
 
     # get new data
