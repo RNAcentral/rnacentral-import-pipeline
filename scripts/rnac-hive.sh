@@ -1,0 +1,4 @@
+HIVE_DATABASE=$HIVE_USERNAME'_rnacentral_update';
+perl $ENSEMBL_CVS_ROOT_DIR/ensembl-hive/scripts/init_pipeline.pl Bio::EnsEMBL::Hive::PipeConfig::RNAcentralUpdate_conf -pipeline-db -host=$HIVE_HOST -pipeline-db -user=$HIVE_USERNAME -pipeline-db -pass=$HIVE_PASSWORD -out='/Users/apetrov/Desktop/ensembl_main/rnac-loader/temp' -oracle-user=$ORACLE_USER -oracle-password=$ORACLE_PASSWORD -oracle-host=$ORACLE_HOST -oracle-sid=$ORACLE_SID -oracle-port=$ORACLE_PORT -dir='/Users/apetrov/Desktop/ncrna_sample_files';
+perl $ENSEMBL_CVS_ROOT_DIR/ensembl-hive/scripts/beekeeper.pl -url mysql://$HIVE_USERNAME:$HIVE_PASSWORD@$HIVE_HOST:3306/$HIVE_DATABASE -sync;
+perl $ENSEMBL_CVS_ROOT_DIR/ensembl-hive/scripts/beekeeper.pl -url mysql://$HIVE_USERNAME:$HIVE_PASSWORD@$HIVE_HOST:3306/$HIVE_DATABASE -meadow_type LOCAL -total_running_workers_max 4 -loop;
