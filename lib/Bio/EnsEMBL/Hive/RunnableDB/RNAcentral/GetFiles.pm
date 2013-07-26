@@ -42,7 +42,10 @@ sub fetch_input {
 
     my $location = $self->param_required('location');
 
-    my $rnac = Bio::RNAcentral::InputFiles->new();
+    my $opt = {};
+    $opt->{'out'} = $self->param_required('out');
+
+    my $rnac = Bio::RNAcentral::InputFiles->new($opt);
     my @files = $rnac->get_files($location);
 
     my @files = map { { 'ncr_file' => $_ } } values @files;
