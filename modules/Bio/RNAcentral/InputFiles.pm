@@ -260,7 +260,7 @@ sub file2chunks {
         $text .= $_;
         if ( length($text) > $self->{'opt'}{'file_size_cutoff'} ) {
             # create chunk files in temp directory
-            $chunkfile = $self->{'temp_dir'} . '/' . $file . '_chunk' . $i . '.' . $self->{'opt'}{'file_extension'};
+            $chunkfile = File::Spec->catfile($self->{'temp_dir'}, $file . '_chunk' . $i . '.' . $self->{'opt'}{'file_extension'});
             push @chunks, $chunkfile;
             _print_to_file($chunkfile, $text);
             $i++;
@@ -272,7 +272,7 @@ sub file2chunks {
 
     # left over sequences
     if ( length($text) > 0 ) {
-        $chunkfile = $self->{'temp_dir'} . '/' . $file . '_chunk' . $i . '.' . $self->{'opt'}{'file_extension'};
+        $chunkfile = File::Spec->catfile($self->{'temp_dir'}, $file . '_chunk' . $i . '.' . $self->{'opt'}{'file_extension'});
         push @chunks, $chunkfile;
         _print_to_file($chunkfile, $text);
         $self->{'logger'}->info("Created file $chunkfile");
@@ -283,7 +283,7 @@ sub file2chunks {
 
 
 sub _print_to_file {
-    open (OUTFILE, "> $_[0]") or die("Couldn't open file");
+    open (OUTFILE, "> $_[0]") or die("Couldn't open file $_[0]");
     print OUTFILE $_[1];
     close OUTFILE;
 }
