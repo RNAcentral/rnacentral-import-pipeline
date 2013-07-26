@@ -1,4 +1,3 @@
-export HIVE_HOST=""
 export HIVE_USERNAME=""
 export HIVE_PASSWORD=""
 export ORACLE_USER=""
