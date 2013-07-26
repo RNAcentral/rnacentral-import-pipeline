@@ -50,5 +50,5 @@ hive_params
 data/*.ncRNA
 temp/*
 log/*
-
-
+# hive database
+*_rnacentral_update
