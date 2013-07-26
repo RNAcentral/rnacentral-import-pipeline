@@ -37,9 +37,10 @@ sub default_options {
         %{ $self->SUPER::default_options() },               # inherit other stuff from the base class
 
         'pipeline_name' => 'rnacentral_update',             # name used by the beekeeper to prefix job names on the farm
+        'hive_force_init' => 1,                             # always recreate the hive database
 
-        'location' => '/Users/apetrov/Desktop/ncrna_sample_files/',
-
+        # get the command line option
+        'location'        => $self->o('in'),
     };
 }
 
@@ -80,7 +81,6 @@ sub pipeline_wide_parameters {
         'oracle-sid'      => $self->o('oracle-sid'),
         'oracle-port'     => $self->o('oracle-port'),
         'oracle-host'     => $self->o('oracle-host'),
-
     };
 }
 
