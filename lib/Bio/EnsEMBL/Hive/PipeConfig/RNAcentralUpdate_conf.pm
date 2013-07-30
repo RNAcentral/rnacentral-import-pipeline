@@ -97,8 +97,6 @@ sub pipeline_analyses {
     return [
         {   -logic_name => 'get_files',
             -module     => 'Bio::EnsEMBL::Hive::RunnableDB::RNAcentral::GetFiles',
-            -meadow_type=> 'LOCAL',
-            -analysis_capacity  =>  1,
             -input_ids => [
                 { 'location' => $self->o('location') },
             ],
@@ -109,17 +107,8 @@ sub pipeline_analyses {
 
         {   -logic_name    => 'print_files',
             -module        => 'Bio::EnsEMBL::Hive::RunnableDB::RNAcentral::CreateCsvFiles',
-            -analysis_capacity  =>  4,
-            -flow_into => {
-                1 => { 'sqlldr' => { 'csv_file' => '#csv_file#' } },
-            },
+            -analysis_capacity  =>  2,
         },
-
-        {   -logic_name    => 'sqlldr',
-            -module        => 'Bio::EnsEMBL::Hive::RunnableDB::RNAcentral::SqlldrUpload',
-            -analysis_capacity  =>  4,
-        },
-
     ];
 }
 

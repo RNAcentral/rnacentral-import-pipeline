@@ -17,6 +17,7 @@ package Bio::EnsEMBL::Hive::RunnableDB::RNAcentral::CreateCsvFiles;
 use strict;
 
 use Bio::RNAcentral::InputFiles;
+use Bio::RNAcentral::SqlldrImport;
 
 use base ('Bio::EnsEMBL::Hive::Process');
 
@@ -58,32 +59,31 @@ sub run {
     my $input_file = $self->param_required('ncr_file');
 
     my $opt = {};
-    $opt->{'out'} = $self->param_required('out');
+    $opt->{'out'}      = $self->param_required('out');
+    $opt->{'user'}     = $self->param_required('oracle-user');
+    $opt->{'password'} = $self->param_required('oracle-password');
+    $opt->{'sid'}      = $self->param_required('oracle-sid');
+    $opt->{'port'}     = $self->param_required('oracle-port');
+    $opt->{'host'}     = $self->param_required('oracle-host');
 
-    # produce one or two csv files
+    # produce csv files
     my $rnac = Bio::RNAcentral::InputFiles->new($opt);
     my @csv_files = $rnac->embl2csv($input_file);
 
-    my @files = map { { 'csv_file' => $_ } } values @csv_files;
-
-        # store them for future use:
-    $self->param('csv_files', \@files);
+    # import csv files
+    my $sqlldr = Bio::RNAcentral::SqlldrImport->new($opt);
+    for my $csv_file (@csv_files) {
+        $sqlldr->load_seq($csv_file);
+    }
 }
 
 =head2 write_output
 
     Description :
 
-
 =cut
 
 sub write_output {
-    my $self = shift @_;
-
-    my $files = $self->param('csv_files');
-
-    $self->dataflow_output_id($files, 1);
-
 }
 
 

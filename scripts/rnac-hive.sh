@@ -1,3 +1,4 @@
+#!/bin/bash
 perl $ENSEMBL_CVS_ROOT_DIR/ensembl-hive/scripts/init_pipeline.pl Bio::EnsEMBL::Hive::PipeConfig::RNAcentralUpdate_conf \
 	-in=$HOME'/rnac-loader/data' \
 	-out=$HOME'/rnac-loader/temp' \
@@ -10,4 +11,4 @@ perl $ENSEMBL_CVS_ROOT_DIR/ensembl-hive/scripts/init_pipeline.pl Bio::EnsEMBL::H
 	-oracle-port=$ORACLE_PORT;
 HIVE_URL='sqlite:///'$HIVE_USERNAME'_rnacentral_update'
 perl $ENSEMBL_CVS_ROOT_DIR/ensembl-hive/scripts/beekeeper.pl -url $HIVE_URL -sync;
-perl $ENSEMBL_CVS_ROOT_DIR/ensembl-hive/scripts/beekeeper.pl -url $HIVE_URL -meadow_type LOCAL -total_running_workers_max 4 -loop -sleep 0.1;
+perl $ENSEMBL_CVS_ROOT_DIR/ensembl-hive/scripts/beekeeper.pl -url $HIVE_URL -meadow_type LSF -loop;
