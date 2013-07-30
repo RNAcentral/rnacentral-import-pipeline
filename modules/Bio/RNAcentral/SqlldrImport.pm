@@ -100,6 +100,7 @@ sub _set_filenames {
     $self->{'badfile'}   = $self->get_output_filename($self->{'temp_dir'}, $self->{'job_id'}, $self->{'seq_type'}, 'bad');
     $self->{'longfile'}  = $self->get_output_filename($self->{'temp_dir'}, $self->{'job_id'}, $self->{'seq_type'}, 'long');
     $self->{'shortfile'} = $self->get_output_filename($self->{'temp_dir'}, $self->{'job_id'}, $self->{'seq_type'}, 'short');
+    $self->{'chunkfile'} = File::Spec->catfile($self->{'temp_dir'}, $self->{'job_id'} . '.ncr');
 }
 
 
@@ -235,7 +236,7 @@ sub _errors_found {
 
 =head2 _clean_up_files
 
-    Remove files the upload to save disk space.
+    Remove temporary files to save disk space.
 
 =cut
 
@@ -243,6 +244,11 @@ sub _clean_up_files {
     my $self = shift;
 
     $self->{'logger'}->info("Cleaning up $self->{'job_id'}_$self->{'seq_type'} files");
+
+    # delete chunk files
+    if ( -e $self->{'chunkfile'} ) {
+        unlink $self->{'chunkfile'};
+    }
 
     # no need to unlink bad file because this sub only runs when bad file doesn't exist
     unlink $self->{'ctlfile'},
