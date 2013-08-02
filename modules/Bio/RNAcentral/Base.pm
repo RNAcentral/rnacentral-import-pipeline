@@ -62,10 +62,15 @@ sub initialize_logger {
 
     my $log_conf = q(
        log4perl.rootLogger              = DEBUG, LOG1
-       log4perl.appender.LOG1           = Log::Log4perl::Appender::Screen
+       log4perl.appender.LOG1           = Log::Log4perl::Appender::File
+       log4perl.appender.LOG1.filename  = log/rnacentral_import.log
+       log4perl.appender.LOG1.autoflush = 1
        log4perl.appender.Screen.stderr  = 0
        log4perl.appender.LOG1.layout    = Log::Log4perl::Layout::PatternLayout
        log4perl.appender.LOG1.layout.ConversionPattern = %d %p %m %n
+
+       log4perl.appender.Syncer            = Log::Log4perl::Appender::Synchronized
+       log4perl.appender.Syncer.appender   = LOG1
     );
 
     Log::Log4perl::init_once(\$log_conf);
