@@ -36,11 +36,20 @@ sub default_options {
     return {
         %{ $self->SUPER::default_options() },               # inherit other stuff from the base class
 
-        'pipeline_name' => 'rnacentral_update',             # name used by the beekeeper to prefix job names on the farm
+        'pipeline_name' => 'rnacentral_staging',             # name used by the beekeeper to prefix job names on the farm
         'hive_force_init' => 1,                             # always recreate the hive database
 
         # get the command line option
         'location'        => $self->o('in'),
+
+        'pipeline_db'   => {
+            -host   => $self->o('host'),
+            -port   => $self->o('port'),
+            -user   => $self->o('user'),
+            -pass   => $self->o('password'),
+            -dbname => $self->o('pipeline_name'),  # example of a linked definition (resolved via saturation)
+        },
+
     };
 }
 
