@@ -39,6 +39,7 @@ BEGIN {
 }
 
 use File::Spec;
+use File::Find qw(finddepth);
 
 use Bio::SeqIO;   # BioPerl is used for reading embl files
 use SWISS::CRC64; # cyclic redundancy check
@@ -81,6 +82,28 @@ sub process_folder {
 }
 
 
+=head2 list_folder_recursive
+
+    Find all files with the specified extension in a folder recursively.
+
+=cut
+
+sub list_folder_recursive {
+    (my $self, my $dir, my $extension) = @_;
+
+    my @files;
+
+    finddepth(sub {
+      return if(-d $_ || $_ !~ /$extension$/ || $_ =~ m/^\./ );
+      push @files, $File::Find::name;
+    }, $dir);
+
+    $self->{'logger'}->info("Found " . scalar(@files) . " $extension files");
+
+    return @files;
+}
+
+
 =head2 get_files
 
     Read all files with specified extension in a location.
@@ -94,7 +117,7 @@ sub get_files {
     my @files = ();
 
     # get a list of all files
-    my @original_files = $self->list_folder($location, $self->{'opt'}{'file_extension'});
+    my @original_files = $self->list_folder_recursive($location, $self->{'opt'}{'file_extension'});
 
     # split large files into small chunks and analyze them instead
     foreach my $file (@original_files) {

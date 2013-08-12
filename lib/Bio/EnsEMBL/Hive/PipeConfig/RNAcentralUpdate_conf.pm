@@ -85,6 +85,7 @@ sub pipeline_wide_parameters {
 
         # store command line parameters
         'out'             => $self->o('out'),
+        'in'              => $self->o('in'),
         'oracle-user'     => $self->o('oracle-user'),
         'oracle-password' => $self->o('oracle-password'),
         'oracle-sid'      => $self->o('oracle-sid'),
@@ -96,7 +97,7 @@ sub pipeline_wide_parameters {
 
 =head2 pipeline_analyses
 
-    Description :
+    Description : Main logic of the pipeline.
 
 =cut
 
@@ -106,8 +107,8 @@ sub pipeline_analyses {
     return [
         {   -logic_name => 'get_files',
             -module     => 'Bio::EnsEMBL::Hive::RunnableDB::RNAcentral::GetFiles',
-            -input_ids => [
-                { 'location' => $self->o('location') },
+            -input_ids  => [
+                { 'location' => $self->o('in') }
             ],
             -flow_into => {
                 1 => { 'print_files' => { 'ncr_file' => '#ncr_file#' } },
@@ -116,7 +117,7 @@ sub pipeline_analyses {
 
         {   -logic_name    => 'print_files',
             -module        => 'Bio::EnsEMBL::Hive::RunnableDB::RNAcentral::CreateCsvFiles',
-            -analysis_capacity  =>  2,
+            -analysis_capacity  =>  40,
         },
     ];
 }
