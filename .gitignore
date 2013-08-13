@@ -52,3 +52,4 @@ temp/*
 log/*
 # hive database
 *_rnacentral_update
+pipeline.png
