@@ -105,20 +105,67 @@ sub pipeline_analyses {
     my ($self) = @_;
 
     return [
-        {   -logic_name => 'get_files',
+        {   -logic_name => 'get_ncr_files',
             -module     => 'Bio::EnsEMBL::Hive::RunnableDB::RNAcentral::GetFiles',
+            -analysis_capacity  =>  0,
             -input_ids  => [
-                { 'location' => $self->o('in') }
+                { 'location'  => $self->o('in'),
+                  'extension' => 'ncr' }
             ],
             -flow_into => {
-                1 => { 'print_files' => { 'ncr_file' => '#ncr_file#' } },
+                1 => { 'check_chunks' => { 'ncr_file' => '#ncr_file#' } },
             },
         },
 
-        {   -logic_name    => 'print_files',
-            -module        => 'Bio::EnsEMBL::Hive::RunnableDB::RNAcentral::CreateCsvFiles',
-            -analysis_capacity  =>  40,
+        {   -logic_name => 'check_chunks',
+            -module     => 'Bio::EnsEMBL::Hive::RunnableDB::RNAcentral::CheckChunks',
+            -analysis_capacity  =>  0,
+            -flow_into => {
+                1 => { 'create_csv_files' => { 'ncr_file' => '#ncr_file#' } },
+            },
         },
+
+        {   -logic_name    => 'create_csv_files',
+            -module        => 'Bio::EnsEMBL::Hive::RunnableDB::RNAcentral::CreateCsvFiles',
+            -analysis_capacity  =>  0,
+        },
+
+        {   -logic_name => 'get_long_csv_files',
+            -module     => 'Bio::EnsEMBL::Hive::RunnableDB::RNAcentral::GetFiles',
+            -analysis_capacity  => 0,
+            -input_ids  => [
+                { 'location'  => $self->o('out'),
+                  'extension' => '_long.csv' }
+            ],
+            -flow_into => {
+                1 => { 'import_long_csv' => { 'csv_file' => '#ncr_file#' } },
+            },
+            -wait_for => [ 'create_csv_files' ]
+        },
+
+        {   -logic_name    => 'import_long_csv',
+            -module        => 'Bio::EnsEMBL::Hive::RunnableDB::RNAcentral::ImportCsv',
+            -analysis_capacity  =>  0,
+        },
+
+        {   -logic_name => 'get_short_csv_files',
+            -module     => 'Bio::EnsEMBL::Hive::RunnableDB::RNAcentral::GetFiles',
+            -analysis_capacity  => 0,
+            -input_ids  => [
+                { 'location'  => $self->o('out'),
+                  'extension' => '_short.csv' }
+            ],
+            -flow_into => {
+                1 => { 'import_short_csv' => { 'csv_file' => '#ncr_file#' } },
+            },
+            -wait_for => [ 'import_long_csv' ]
+        },
+
+        {   -logic_name    => 'import_short_csv',
+            -module        => 'Bio::EnsEMBL::Hive::RunnableDB::RNAcentral::ImportCsv',
+            -analysis_capacity  =>  0,
+        },
+
     ];
 }
 

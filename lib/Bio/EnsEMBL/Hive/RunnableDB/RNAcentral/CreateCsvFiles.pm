@@ -68,13 +68,18 @@ sub run {
 
     # produce csv files
     my $rnac = Bio::RNAcentral::InputFiles->new($opt);
-    my @csv_files = $rnac->embl2csv($input_file);
+    my @files = $rnac->embl2csv($input_file);
 
-    # import csv files
-    my $sqlldr = Bio::RNAcentral::SqlldrImport->new($opt);
-    for my $csv_file (@csv_files) {
-        $sqlldr->load_seq($csv_file);
-    }
+    # my @csv_files = map { { 'csv_file' => $_ } } values @files;
+
+        # store them for future use:
+    # $self->param('csv_files', \@csv_files);
+
+    # # import csv files
+    # my $sqlldr = Bio::RNAcentral::SqlldrImport->new($opt);
+    # for my $csv_file (@csv_files) {
+    #     $sqlldr->load_seq($csv_file);
+    # }
 }
 
 =head2 write_output
@@ -84,6 +89,11 @@ sub run {
 =cut
 
 sub write_output {
+    # my $self = shift @_;
+
+    # my $files = $self->param('csv_files');
+
+    # $self->dataflow_output_id($files, 1);
 }
 
 
