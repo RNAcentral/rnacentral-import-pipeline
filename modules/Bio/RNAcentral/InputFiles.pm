@@ -1,7 +1,3 @@
-#!/usr/bin/env perl
-
-package Bio::RNAcentral::InputFiles;
-
 =pod
 
 =head1 NAME
@@ -26,6 +22,8 @@ package Bio::RNAcentral::InputFiles;
 
 
 =cut
+
+package Bio::RNAcentral::InputFiles;
 
 use strict;
 use warnings;
@@ -320,10 +318,10 @@ sub _print_to_file {
 =cut
 
 sub embl2csv {
-    (my $self, my $file, my $job_id) = @_;
+    (my $self, my $file) = @_;
 
     # get file name without extension
-    $job_id = File::Basename::fileparse($file, qr/\.[^.]*/);
+    my $job_id = File::Basename::fileparse($file, qr/\.[^.]*/);
 
     my $fname_long  = $self->get_output_filename($self->{'temp_dir'}, $job_id, 'long',  'csv');
     my $fname_short = $self->get_output_filename($self->{'temp_dir'}, $job_id, 'short', 'csv');
@@ -344,9 +342,10 @@ sub embl2csv {
     my $stream = Bio::SeqIO->new(-file => $file, -format => 'EMBL');
 
     my %data = ();
+    my $seq;
 
     # loop over records
-    while ( (my $seq = $stream->next_seq()) ) {
+    while ( eval { $seq = $stream->next_seq() } ) {
         $i++;
 
         # get basic data for UniParc-style functionality
@@ -371,6 +370,16 @@ sub embl2csv {
         # get other data from the same record
         # and print it to other files if necessary
     }
+
+    # report any problems, delete already created files to prevent any import
+    if ( $@ ) {
+        $self->{'logger'}->logwarn('BioPerl error');
+        $self->{'logger'}->logwarn($@);
+        $self->{'logger'}->logwarn("Not safe to continue, skipping $file");
+        unlink $fname_short, $fname_long;
+        return ();
+    }
+
     $records += $i;
 
     $self->{'logger'}->info("$records records, $seqs_short short, $seqs_long long");
