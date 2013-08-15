@@ -201,7 +201,9 @@ CTL
     }
 
     print $fh <<CTL;
+  DATABASE char,
   AC char,
+  OPTIONAL_ID char,
   VERSION integer external,
   TAXID integer external,
   MD5 char
