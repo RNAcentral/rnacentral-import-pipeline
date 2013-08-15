@@ -363,10 +363,10 @@ sub embl2csv {
         # print the data in different files depending on sequence length
         if ( $data->{'isLong'} ) {
             print $fh_long $data->{'text'};
-            $seqs_long += $data->{'seqs_long'};
+            $seqs_long++;
         } else {
             print $fh_short $data->{'text'};
-            $seqs_short += $data->{'seqs_short'};
+            $seqs_short++;
         }
 
         # get database links
@@ -519,10 +519,10 @@ sub _get_basic_data {
     (my $self, my $seq)  = @_;
 
     my ($ac, $length, $version, $isLong, $md5, $crc64, $taxid,
-        $data, $sequence, $seqs_short, $seqs_long, $isValid);
+        $data, $sequence, $isValid);
 
     $ac = $md5 = $crc64 = $taxid = $data = $sequence = '';
-    $length = $version = $seqs_long = $seqs_short = $isValid = 0;
+    $length = $version = $isValid = 0;
 
     # get new data
     $ac       = $seq->display_id;
@@ -532,10 +532,8 @@ sub _get_basic_data {
 
     if ($length > $self->{'opt'}{'maxseqshort'}) {
         $isLong = 1;
-        $seqs_long++;
     } else {
         $isLong = 0;
-        $seqs_short++;
     }
 
     $md5   = md5_hex($seq->seq);
@@ -565,8 +563,6 @@ sub _get_basic_data {
     return {
         'text'   => join(',', ($crc64, $length, $sequence, $ac, $version, $taxid, $md5)) . "\n",
         'isLong' => $isLong,
-        'seqs_long'  => $seqs_long,
-        'seqs_short' => $seqs_short,
         'isValid'    => $isValid,
     };
 }
