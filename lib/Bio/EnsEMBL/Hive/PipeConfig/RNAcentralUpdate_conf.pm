@@ -107,7 +107,7 @@ sub pipeline_analyses {
     return [
         {   -logic_name => 'get_ncr_files',
             -module     => 'Bio::EnsEMBL::Hive::RunnableDB::RNAcentral::GetFiles',
-            -analysis_capacity  =>  0,
+            -analysis_capacity  =>  1,
             -input_ids  => [
                 { 'location'  => $self->o('in'),
                   'extension' => 'ncr' }
@@ -119,7 +119,6 @@ sub pipeline_analyses {
 
         {   -logic_name => 'check_chunks',
             -module     => 'Bio::EnsEMBL::Hive::RunnableDB::RNAcentral::CheckChunks',
-            -analysis_capacity  =>  0,
             -flow_into => {
                 1 => { 'create_csv_files' => { 'ncr_file' => '#ncr_file#' } },
             },
@@ -127,12 +126,11 @@ sub pipeline_analyses {
 
         {   -logic_name    => 'create_csv_files',
             -module        => 'Bio::EnsEMBL::Hive::RunnableDB::RNAcentral::CreateCsvFiles',
-            -analysis_capacity  =>  0,
         },
 
         {   -logic_name => 'get_long_csv_files',
             -module     => 'Bio::EnsEMBL::Hive::RunnableDB::RNAcentral::GetFiles',
-            -analysis_capacity  => 0,
+            -analysis_capacity  => 1,
             -input_ids  => [
                 { 'location'  => $self->o('out'),
                   'extension' => '_long.csv' }
@@ -145,12 +143,12 @@ sub pipeline_analyses {
 
         {   -logic_name    => 'import_long_csv',
             -module        => 'Bio::EnsEMBL::Hive::RunnableDB::RNAcentral::ImportCsv',
-            -analysis_capacity  =>  0,
+            -analysis_capacity  =>  1,
         },
 
         {   -logic_name => 'get_short_csv_files',
             -module     => 'Bio::EnsEMBL::Hive::RunnableDB::RNAcentral::GetFiles',
-            -analysis_capacity  => 0,
+            -analysis_capacity  => 1,
             -input_ids  => [
                 { 'location'  => $self->o('out'),
                   'extension' => '_short.csv' }
@@ -163,7 +161,6 @@ sub pipeline_analyses {
 
         {   -logic_name    => 'import_short_csv',
             -module        => 'Bio::EnsEMBL::Hive::RunnableDB::RNAcentral::ImportCsv',
-            -analysis_capacity  =>  0,
         },
 
     ];

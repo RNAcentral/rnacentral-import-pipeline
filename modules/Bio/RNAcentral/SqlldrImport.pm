@@ -162,7 +162,7 @@ sub _run_sqlldr {
 
     my $status = system($command); # 0 on success
     unless ( $status == 0 ) {
-        $self->{'logger'}->logwarn("Couldn't launch sqlldr\n. Command: $command\n Error: $!\n");
+        $self->{'logger'}->logdie("Couldn't launch sqlldr\n. Command: $command\n Error: $!\n");
     }
 
     return $status;

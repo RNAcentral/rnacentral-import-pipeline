@@ -7,7 +7,9 @@ DT   17-JUN-2009 (Rel. 101, Last updated, Version 1)
 XX
 DE   Homo sapiens (human) miscellaneous RNA
 XX
-KW   .
+KW   RNAcentral; Third Party Annotation; TPA; TPA:specialist_db.
+XX
+DR   SRPDB; Xeno.laev._DC015625.
 XX
 OS   Homo sapiens (human)
 OC   Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi; Mammalia;
@@ -38,6 +40,8 @@ XX
 DE   Homo sapiens (human) miscellaneous RNA
 XX
 KW   .
+XX
+DR   RFAM; RF00005; tRNA.
 XX
 OS   Homo sapiens (human)
 OC   Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi; Mammalia;
