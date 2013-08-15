@@ -328,27 +328,23 @@ sub embl2csv {
 
     my $fname_long  = $self->get_output_filename($self->{'temp_dir'}, $job_id, 'long',  'csv');
     my $fname_short = $self->get_output_filename($self->{'temp_dir'}, $job_id, 'short', 'csv');
-    my $fname_xref  = $self->get_output_filename($self->{'temp_dir'}, $job_id, 'xref',  'csv');
     my $fname_refs  = $self->get_output_filename($self->{'temp_dir'}, $job_id, 'refs',  'csv');
 
     # open output files
     my $fh_long  = IO::File->new("> $fname_long")  or $self->{'logger'}->logdie("Couldn't open file $fname_long");
     my $fh_short = IO::File->new("> $fname_short") or $self->{'logger'}->logdie("Couldn't open file $fname_short");
-    my $fh_xrefs = IO::File->new("> $fname_xref")  or $self->{'logger'}->logdie("Couldn't open file $fname_xref");
     my $fh_refs  = IO::File->new("> $fname_refs")  or $self->{'logger'}->logdie("Couldn't open file $fname_refs");
 
-    # counters
-    my ($i, $records, $seqs_long, $seqs_short, $dblinks_num, $refs_num);
+    # initializations
+    my ($i, $records, $seqs_long, $seqs_short, $dblinks_num, $refs_num, $data, $seq, $refs);
     $i = $records = $seqs_long = $seqs_short = $dblinks_num = $refs_num = 0;
+    $refs = '';
 
     # open file with BioPerl
     $self->{'logger'}->info("Reading $file");
     my $stream = Bio::SeqIO->new(-file => $file, -format => 'EMBL');
 
-    my ($data, $seq, $dblinks, $refs);
-    $dblinks = $refs = '';
-
-    # loop over records
+    # loop over seq records
     while ( eval { $seq = $stream->next_seq() } ) {
         $i++;
 
@@ -359,6 +355,7 @@ sub embl2csv {
             $self->{'logger'}->logwarn("Skipping record $i: $data->{'text'}");
             next;
         }
+        $dblinks_num += $data->{'dblinks_num'};
 
         # print the data in different files depending on sequence length
         if ( $data->{'isLong'} ) {
@@ -369,13 +366,6 @@ sub embl2csv {
             $seqs_short++;
         }
 
-        # get database links
-        $dblinks = $self->_get_dblinks($seq);
-        if ( $dblinks ) {
-            print $fh_xrefs $dblinks->{'text'};
-            $dblinks_num += $dblinks->{'num'};
-        }
-
         # get literature references
         $refs = $self->_get_references($seq);
         if ( $refs ) {
@@ -384,28 +374,24 @@ sub embl2csv {
         }
     }
 
-    # report any problems, delete already created files to prevent any import
+    # if there are any problems, delete already created files to prevent any import
     if ( $@ ) {
         $self->{'logger'}->logwarn('BioPerl error');
         $self->{'logger'}->logwarn($@);
         $self->{'logger'}->logwarn("Not safe to continue, skipping $file");
-        unlink $fname_short, $fname_long, $fname_refs, $fname_xref;
+        unlink $fname_short, $fname_long, $fname_refs;
         return ();
     }
 
     $records += $i;
 
-    $self->{'logger'}->info("$records records, $seqs_short short, $seqs_long long");
-    $self->{'logger'}->info("Created files $fname_long and $fname_short");
-    $self->{'logger'}->info("Found $dblinks_num database links");
-    $self->{'logger'}->info("Found $refs_num literature references");
+    $self->{'logger'}->info("$records records, $seqs_short short, $seqs_long long, " .
+                            "$dblinks_num database links, $refs_num literature references");
 
     $fh_short->close;
     $fh_long->close;
     $fh_refs->close;
-    $fh_xrefs->close;
 
-    $self->_check_temp_files($fname_xref);
     $self->_check_temp_files($fname_refs);
 
     # return an array with csv files
@@ -474,7 +460,7 @@ sub _get_references {
 
 =head2 _get_dblinks
 
-    Get csv text with database crossreferences given a BioPerl seq object.
+    Get database cross-references from a BioPerl seq object.
 
 =cut
 
@@ -482,29 +468,31 @@ sub _get_dblinks {
 
     (my $self, my $seq)  = @_;
 
-    my ($database, $primary_id, $optional_id);
-    my $text = '';
-    my $num = 0;
+    my (@data, $database, $primary_id, $optional_id);
 
-    # reading database links (DR lines) and references
+    # initialize as an ENA entry
+    $data[0] = { database    => 'ENA',
+                 primary_id  => $seq->display_id,
+                 optional_id => '' };
+
+    # add any DR entries
     my $anno_collection = $seq->annotation;
     for my $key ( $anno_collection->get_all_annotation_keys ) {
         my @annotations = $anno_collection->get_Annotations($key);
         for my $value ( @annotations ) {
             if ( $value->tagname eq "dblink" ) {
-                $num++;
                 $database    = _nvl($value->database());
                 $primary_id  = _nvl($value->primary_id());
                 $optional_id = _nvl($value->optional_id());
-                $text .= '"' . join('","', ($seq->display_id,
-                                            $database,
-                                            $primary_id,
-                                            $optional_id) ) . "\"\n";
+
+                push @data, { database    => $database,
+                              primary_id  => $primary_id,
+                              optional_id => $optional_id };
             }
         }
     }
 
-    return { text => $text, num => $num };
+    return \@data;
 }
 
 
@@ -519,9 +507,9 @@ sub _get_basic_data {
     (my $self, my $seq)  = @_;
 
     my ($ac, $length, $version, $isLong, $md5, $crc64, $taxid,
-        $data, $sequence, $isValid);
+        $data, $sequence, $isValid, $text);
 
-    $ac = $md5 = $crc64 = $taxid = $data = $sequence = '';
+    $ac = $md5 = $crc64 = $taxid = $data = $sequence = $text = '';
     $length = $version = $isValid = 0;
 
     # get new data
@@ -529,13 +517,6 @@ sub _get_basic_data {
     $length   = $seq->length;
     $version  = $seq->seq_version;
     $sequence = $seq->seq;
-
-    if ($length > $self->{'opt'}{'maxseqshort'}) {
-        $isLong = 1;
-    } else {
-        $isLong = 0;
-    }
-
     $md5   = md5_hex($seq->seq);
     $crc64 = SWISS::CRC64::crc64($seq->seq);
 
@@ -560,10 +541,26 @@ sub _get_basic_data {
         $isValid = 1;
     }
 
+    if ($length > $self->{'opt'}{'maxseqshort'}) {
+        $isLong = 1;
+    } else {
+        $isLong = 0;
+    }
+
+    # get database links
+    my $dblinks = $self->_get_dblinks($seq);
+
+    foreach my $dblink ( @$dblinks ) {
+        $text .=  join(',', ($crc64, $length, $sequence,
+                             $dblink->{'database'}, $dblink->{'primary_id'}, $dblink->{'optional_id'},
+                             $version, $taxid, $md5)) . "\n";
+    }
+
     return {
-        'text'   => join(',', ($crc64, $length, $sequence, $ac, $version, $taxid, $md5)) . "\n",
+        'text'   => $text,
         'isLong' => $isLong,
-        'isValid'    => $isValid,
+        'isValid' => $isValid,
+        'dblinks_num' => scalar @$dblinks,
     };
 }
 
