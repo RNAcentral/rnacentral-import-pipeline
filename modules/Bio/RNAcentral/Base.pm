@@ -37,16 +37,13 @@ sub new {
 
 
 sub default_options {
-
     return {
-
-        'file_extension'   => 'ncr',            # look for .ncr files
-        'file_size_cutoff' => 50 * 10**6,       # file size cutoff in bytes
-        'staging_table' => 'load_rnacentral',   # staging table
-        'release_table' => 'rnc_release',       # keeps track of all RNAcentral releases
-    		'maxseqlong'    => 1000000,  # maximum length for long sequences stored as clobs
-    		'maxseqshort'   => 4000,     # maximum length for short sequences stored as chars
-
+        'file_extension'   => 'ncr',                 # look for .ncr files
+        'file_size_cutoff' => 50 * 10**6,            # file size cutoff in bytes
+        'staging_table'    => 'load_rnacentral_all', # staging table
+        'release_table'    => 'rnc_release',         # keeps track of all RNAcentral releases
+    		'maxseqlong'       => 1000000,  # maximum length for long sequences stored as clobs
+    		'maxseqshort'      => 4000,     # maximum length for short sequences stored as chars
     };
 }
 
