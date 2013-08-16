@@ -1,0 +1,83 @@
+ID   AL123456.3:1025321..1025393:tRNA; SV 3; linear; genomic DNA; STD; PRO; 73 BP.
+XX
+PA   AL123456.3
+XX
+PR   Project:PRJNA224;
+XX
+DT   18-JUL-2002 (Rel. 72, Created)
+DT   13-JUN-2013 (Rel. 117, Last updated, Version 9)
+XX
+DE   Mycobacterium tuberculosis H37Rv tRNA-Arg
+XX
+KW   .
+XX
+OS   Mycobacterium tuberculosis H37Rv
+OC   Bacteria; Actinobacteria; Actinobacteridae; Actinomycetales;
+OC   Corynebacterineae; Mycobacteriaceae; Mycobacterium;
+OC   Mycobacterium tuberculosis complex.
+XX
+RN   [1]
+RC   Erratum:[Nature 1998 Nov 12;396(6707):190]
+RA   Cole S.T., Brosch R., Parkhill J., Garnier T., Churcher C., Harris D.,
+RA   Gordon S.V., Eiglmeier K., Gas S., Barry C.E.III., Tekaia F., Badcock K.,
+RA   Basham D., Brown D., Chillingworth T., Connor R., Davies R., Devlin K.,
+RA   Feltwell T., Gentles S., Hamlin N., Holroyd S., Hornsby T., Jagels K.,
+RA   Krogh A., McLean J., Moule S., Murphy L., Oliver K., Osborne J.,
+RA   Quail M.A., Rajandream M.A., Rogers J., Rutter S., Seeger K., Skelton J.,
+RA   Squares R., Squares S., Sulston J.E., Taylor K., Whitehead S.,
+RA   Barrell B.G.;
+RT   "Deciphering the biology of Mycobacterium tuberculosis from the complete
+RT   genome sequence";
+RL   Nature 393(6685):537-544(1998).
+XX
+RN   [2]
+RA   Camus J.C., Pryor M.J., Medigue C., Cole S.T.;
+RT   "Re-annotation of the genome sequence of Mycobacterium tuberculosis H37Rv";
+RL   :2967-2973(2002).
+XX
+RN   [3]
+RX   DOI; 10.1016/j.tube.2010.09.008.
+RX   PUBMED; 20980199.
+RA   Lew J.M., Kapopoulou A., Jones L.M., Cole S.T.;
+RT   "TubercuList--10 years after";
+RL   :1-7(2011).
+XX
+RN   [4]
+RP   1-4411529
+RA   Parkhill J.;
+RT   ;
+RL   Submitted (11-JUN-1998) to the INSDC.
+RL   Submitted on behalf of the Mycobacterium tuberculosis sequencing and
+RL   mapping teams, Sanger Centre, Wellcome Trust Genome Campus, Hinxton,
+RL   Cambridge CB10 1SA Unite de Genetique Moleculaire Bacterienne, Institut
+RL   Pasteur, 28 rue du Docteur Roux, 75724 Paris Cedex 15, France E-mail:
+RL   parkhill@sanger.ac.uk
+XX
+RN   [5]
+RP   1-4411532
+RA   Lew J.M.;
+RT   ;
+RL   Submitted (18-DEC-2012) to the INSDC.
+RL   Lew J., Ecole Polytechnique Federale de Lausanne, CH-1015, Lausanne,
+RL   Switzerland, and the Swiss Institute of Bioinformatics, CMU - Rue
+RL   Michel-Servet 1, 1211 Geneva 4, SWITZERLAND
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..73
+FT                   /organism="Mycobacterium tuberculosis H37Rv"
+FT                   /strain="H37Rv"
+FT                   /mol_type="genomic DNA"
+FT                   /db_xref="taxon:83332"
+FT   tRNA            complement(AL123456.3:1025321..1025393)
+FT                   /gene="argT"
+FT                   /product="tRNA-Arg"
+FT                   /anticodon=(pos:complement(1025358..1025360),aa:Arg,
+FT                   seq:cct)
+FT                   /note="codon recognized: AGG; argT, tRNA-Arg, anticodon
+FT                   cct, length = 73"
+XX
+SQ   Sequence 73 BP; 13 A; 22 C; 25 G; 13 T; 0 other;
+     gccctcgtag ctcaggggat agagcacggc tctcctaaag ccggtgtcgc aggttcgaat        60
+     cctgccgggg gca                                                           73
+//
