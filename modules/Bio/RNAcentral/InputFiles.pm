@@ -445,6 +445,10 @@ sub _get_references {
                 $ref_doi       = _nvl($value->doi());       # parsed RX line
                 $ref_publisher = _nvl($value->publisher()); # parsed RL line
                 $ref_editors   = _nvl($value->editors());   # parsed RL line
+
+                $ref_title =~ s/^"//; # remove quotes from the title
+                $ref_title =~ s/"$//;
+
                 $text .= '"' . join('","', ($md5,
                                             $ref_authors,
                                             $ref_location,
