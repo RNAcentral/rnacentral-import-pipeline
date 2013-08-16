@@ -336,7 +336,7 @@ sub embl2csv {
     my $fh_refs  = IO::File->new("> $fname_refs")  or $self->{'logger'}->logdie("Couldn't open file $fname_refs");
 
     # initializations
-    my ($i, $records, $seqs_long, $seqs_short, $dblinks_num, $refs_num, $data, $seq, $refs);
+    my ($i, $records, $seqs_long, $seqs_short, $dblinks_num, $refs_num, $data, $seq, $refs, $md5);
     $i = $records = $seqs_long = $seqs_short = $dblinks_num = $refs_num = 0;
     $refs = '';
 
@@ -348,8 +348,10 @@ sub embl2csv {
     while ( eval { $seq = $stream->next_seq() } ) {
         $i++;
 
+        $md5 = md5_hex($seq->seq);
+
         # get basic data for UniParc-style functionality
-        $data = $self->_get_basic_data($seq);
+        $data = $self->_get_basic_data($seq, $md5);
 
         unless ( $data->{'isValid'} ) {
             $self->{'logger'}->logwarn("Skipping record $i: $data->{'text'}");
@@ -367,7 +369,7 @@ sub embl2csv {
         }
 
         # get literature references
-        $refs = $self->_get_references($seq);
+        $refs = $self->_get_references($seq, $md5);
         if ( $refs ) {
             print $fh_refs $refs->{'text'};
             $refs_num += $refs->{'num'};
@@ -421,7 +423,7 @@ sub _check_temp_files{
 
 sub _get_references {
 
-    (my $self, my $seq)  = @_;
+    (my $self, my $seq, my $md5)  = @_;
 
     my ($ref_authors, $ref_location, $ref_title,
         $ref_pubmed,  $ref_doi,      $ref_publisher,
@@ -443,7 +445,7 @@ sub _get_references {
                 $ref_doi       = _nvl($value->doi());       # parsed RX line
                 $ref_publisher = _nvl($value->publisher()); # parsed RL line
                 $ref_editors   = _nvl($value->editors());   # parsed RL line
-                $text .= '"' . join('","', ($seq->display_id,
+                $text .= '"' . join('","', ($md5,
                                             $ref_authors,
                                             $ref_location,
                                             $ref_title,
@@ -504,12 +506,12 @@ sub _get_dblinks {
 
 sub _get_basic_data {
 
-    (my $self, my $seq)  = @_;
+    (my $self, my $seq, my $md5)  = @_;
 
-    my ($ac, $length, $version, $isLong, $md5, $crc64, $taxid,
+    my ($ac, $length, $version, $isLong, $crc64, $taxid,
         $data, $sequence, $isValid, $text);
 
-    $ac = $md5 = $crc64 = $taxid = $data = $sequence = $text = '';
+    $ac = $crc64 = $taxid = $data = $sequence = $text = '';
     $length = $version = $isValid = 0;
 
     # get new data
@@ -517,7 +519,6 @@ sub _get_basic_data {
     $length   = $seq->length;
     $version  = $seq->seq_version;
     $sequence = $seq->seq;
-    $md5   = md5_hex($seq->seq);
     $crc64 = SWISS::CRC64::crc64($seq->seq);
 
     for my $feat_object ($seq->get_SeqFeatures) {
