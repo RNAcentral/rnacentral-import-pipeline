@@ -2,6 +2,34 @@ create or replace
 PACKAGE BODY RNC_UPDATE AS
 
   /*
+  * Move the data for the specified database into the staging table.
+  */
+  PROCEDURE move_staging_data (
+    p_in_dbid IN RNACEN.rnc_database.ID%TYPE
+  )
+  IS
+  BEGIN
+
+    EXECUTE IMMEDIATE 'TRUNCATE TABLE load_rnacentral DROP STORAGE';
+
+    INSERT INTO load_rnacentral (
+      SELECT CRC64,
+             LEN,
+             SEQ_SHORT,
+             SEQ_LONG,
+             DATABASE,
+             AC,
+             OPTIONAL_ID,
+             VERSION,
+             TAXID,
+             MD5
+      FROM load_rnacentral_all d1, rnc_database d2
+      WHERE d1.DATABASE = d2.descr AND d2.ID = p_in_dbid
+    );
+
+  END move_staging_data;
+
+  /*
   * Create a new release for the specified database.
   */
   PROCEDURE create_release (
@@ -53,7 +81,7 @@ PACKAGE BODY RNC_UPDATE AS
       SELECT distinct
         d2.id
       FROM
-          load_rnacentral d1,
+          load_rnacentral_all d1,
           rnc_database d2
       WHERE
         d1.database = d2.descr;
@@ -63,7 +91,7 @@ PACKAGE BODY RNC_UPDATE AS
 
     FOR v_db IN q
     LOOP
-      rnc_update.create_release(p_in_dbid => v_db.id);
+      rnc_update.create_release(p_in_dbid => v_db.ID);
     END LOOP;
 
   END prepare_releases;
@@ -142,6 +170,7 @@ PACKAGE BODY RNC_UPDATE AS
 
     FOR v_load IN c_load
     LOOP
+      move_staging_data(p_in_dbid => v_load.dbid);
       load_release(
         p_in_dbid         => v_load.dbid,
         P_in_load_release => v_load.id
