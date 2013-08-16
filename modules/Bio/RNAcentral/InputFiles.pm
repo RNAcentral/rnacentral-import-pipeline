@@ -446,9 +446,6 @@ sub _get_references {
                 $ref_publisher = _nvl($value->publisher()); # parsed RL line
                 $ref_editors   = _nvl($value->editors());   # parsed RL line
 
-                $ref_title =~ s/^"//; # remove quotes from the title
-                $ref_title =~ s/"$//;
-
                 $text .= '"' . join('","', ($md5,
                                             $ref_authors,
                                             $ref_location,
@@ -463,6 +460,17 @@ sub _get_references {
     return { text => $text, num => $num };
 }
 
+
+sub _sanitize {
+    my $text = shift;
+
+    $text =~ s/^"+//; # remove leading and trailing quotes
+    $text =~ s/"+$//;
+
+    $text =~ s/"/\"/; # escape the remaining double quotes
+
+    return $text;
+}
 
 =head2 _get_dblinks
 
@@ -572,7 +580,7 @@ sub _get_basic_data {
 # get non-empty value, named after the NVL function in Oracle
 sub _nvl {
     my $value = shift;
-    return ( defined( $value ) ? $value : '' );
+    return ( defined( $value ) ? _sanitize($value) : '' );
 }
 
 
