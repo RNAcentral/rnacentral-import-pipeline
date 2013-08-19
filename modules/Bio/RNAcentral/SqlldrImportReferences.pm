@@ -28,7 +28,7 @@ sub new {
     my $self = $class->SUPER::new($opt);
 
     $self->{'refs'} = {
-        refs_path => File::Spec->catfile($self->{'output_folder'}, 'refs'),
+        refs_path => $self->get_refs_path(),
         ctlfile   => '',
         badfile   => '',
         logfile   => '',
@@ -79,7 +79,7 @@ sub load_all_references {
 
         # clean up if no errors and no problems in sqlldr
         unless ( $self->_errors_found() or $problems ) {
-            unlink $file, $self->{'refs'}{'logfile'};
+            # unlink $file, $self->{'refs'}{'logfile'};
         }
     }
 }

@@ -51,6 +51,7 @@ sub fetch_input {
     $opt->{'host'}     = $self->param_required('oracle-host');
 
     my $sqlldr = Bio::RNAcentral::SqlldrImport->new($opt);
+    $sqlldr->make_ctl_files();
     $sqlldr->load_seq($input_file);
 }
 

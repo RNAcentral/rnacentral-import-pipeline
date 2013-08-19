@@ -62,9 +62,6 @@ sub load_seq {
         return;
     }
 
-    # create sqlldr control file
-    $self->_make_ctl_file();
-
     $self->_delete_old_log_files();
 
     # launch sqlldr
@@ -87,7 +84,8 @@ sub load_seq {
 sub _set_filenames {
     my $self = shift;
 
-    $self->{'ctlfile'}   = $self->get_output_filename($self->{'output_folder'}, $self->{'job_id'}, $self->{'seq_type'}, 'ctl');
+    $self->{'ctllong'}   = $self->get_output_filename($self->{'output_folder'}, 'seq', 'long',  'ctl');
+    $self->{'ctlshort'}  = $self->get_output_filename($self->{'output_folder'}, 'seq', 'short', 'ctl');
     $self->{'logfile'}   = $self->get_output_filename($self->{'output_folder'}, $self->{'job_id'}, $self->{'seq_type'}, 'log');
     $self->{'csvfile'}   = $self->get_output_filename($self->{'output_folder'}, $self->{'job_id'}, $self->{'seq_type'}, 'csv');
     $self->{'badfile'}   = $self->get_output_filename($self->{'output_folder'}, $self->{'job_id'}, $self->{'seq_type'}, 'bad');
@@ -112,14 +110,17 @@ sub _get_sqlldr_command {
                   '\(HOST=' . $self->{'host'} . '\)' .
                   '\(PORT=' . $self->{'port'} . '\)\)' .
                   '\(CONNECT_DATA\=\(SERVICE_NAME=' . $self->{'sid'} . '\)\)\)\" ' .
-                  'control=' . $self->{'ctlfile'} . ' ' .
                   'bad='     . $self->{'badfile'} . ' ' .
                   'log='     . $self->{'logfile'} . ' ' .
-                  'direct=true';
+                  'direct=true ' .
+                  'data=' . $self->{'csvfile'} . ' ';
 
     # conventional loading for lob files, direct loading for short sequences
     if ( $self->{'seq_type'} eq 'short' ) {
-        $command .= ' parallel=true';
+        $command .= 'parallel=true ' . ' ' .
+                    'control=' . $self->{'ctlshort'};
+    } else {
+        $command .= 'control=' . $self->{'ctllong'};
     }
 
     return $command;
@@ -163,20 +164,42 @@ sub _run_sqlldr {
 }
 
 
-=head2
+=head2 make_ctl_files
+
+    Create sqlldr control files for short and long sequences.
+
+=cut
+
+sub make_ctl_files {
+    my $self = shift;
+    $self->_set_filenames();
+    $self->_make_ctl_file('short');
+    $self->_make_ctl_file('long');
+}
+
+
+=head2 _make_ctl_file
 
     Create a control file used by sqlldr.
 
 =cut
 
 sub _make_ctl_file {
-    my $self = shift;
+    (my $self, my $mode) = @_;
 
-    open my $fh, '>', $self->{'ctlfile'} or die $!;
+    my $fh;
+
+    if ( $mode eq 'short' ) {
+        open $fh, '>', $self->{'ctlshort'} or die $!;
+    } elsif ( $mode eq 'long' ) {
+        open $fh, '>', $self->{'ctllong'} or die $!;
+    } else {
+        $self->{'logger'}->logdie("Wrong sequence type");
+    }
 
     print $fh <<CTL;
 LOAD DATA
-INFILE '$self->{"csvfile"}' "str '\\n'"
+INFILE "str '\\n'"
 APPEND
 INTO TABLE $self->{'opt'}{'staging_table'}
 FIELDS TERMINATED BY ','
@@ -186,12 +209,10 @@ FIELDS TERMINATED BY ','
 CTL
 
     # different handling of long and short sequences
-    if ( $self->{'seq_type'} eq 'short' ) {
+    if ( $mode eq 'short' ) {
         print $fh "  SEQ_SHORT char(" . $self->{'opt'}{'maxseqshort'} . "),\n";
-    } elsif ( $self->{'seq_type'} eq 'long' ) {
-        print $fh "  SEQ_LONG char("  . $self->{'opt'}{'maxseqlong'}  . "),\n";
     } else {
-        $self->{'logger'}->logdie("Wrong sequence sequence type");
+        print $fh "  SEQ_LONG char("  . $self->{'opt'}{'maxseqlong'}  . "),\n";
     }
 
     print $fh <<CTL;
@@ -247,8 +268,7 @@ sub _clean_up_files {
     }
 
     # no need to unlink bad file because this sub only runs when bad file doesn't exist
-    unlink $self->{'ctlfile'},
-           $self->{'logfile'},
+    unlink $self->{'logfile'},
            $self->{'shortfile'},
            $self->{'csvfile'},
            $self->{'longfile'};

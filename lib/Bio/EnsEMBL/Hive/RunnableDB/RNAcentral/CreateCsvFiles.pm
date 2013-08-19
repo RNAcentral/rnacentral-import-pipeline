@@ -16,8 +16,7 @@ package Bio::EnsEMBL::Hive::RunnableDB::RNAcentral::CreateCsvFiles;
 
 use strict;
 
-use Bio::RNAcentral::InputFiles;
-use Bio::RNAcentral::SqlldrImport;
+use Bio::RNAcentral::Embl2csv;
 
 use base ('Bio::EnsEMBL::Hive::Process');
 
@@ -67,7 +66,7 @@ sub run {
     $opt->{'host'}     = $self->param_required('oracle-host');
 
     # produce csv files
-    my $rnac = Bio::RNAcentral::InputFiles->new($opt);
+    my $rnac = Bio::RNAcentral::Embl2csv->new($opt);
     my @files = $rnac->embl2csv($input_file);
 }
 
