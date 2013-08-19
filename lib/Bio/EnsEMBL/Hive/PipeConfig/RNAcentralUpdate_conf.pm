@@ -84,7 +84,7 @@ sub pipeline_wide_parameters {
         %{$self->SUPER::pipeline_wide_parameters},          # here we inherit anything from the base class
 
         # store command line parameters
-        'out'             => $self->o('out'),
+        'output_folder'   => $self->o('output_folder'),
         'in'              => $self->o('in'),
         'oracle-user'     => $self->o('oracle-user'),
         'oracle-password' => $self->o('oracle-password'),
@@ -132,7 +132,7 @@ sub pipeline_analyses {
             -module     => 'Bio::EnsEMBL::Hive::RunnableDB::RNAcentral::GetFiles',
             -analysis_capacity  => 1,
             -input_ids  => [
-                { 'location'  => $self->o('out'),
+                { 'location'  => $self->o('output_folder'),
                   'extension' => '_long.csv' }
             ],
             -flow_into => {
@@ -150,7 +150,7 @@ sub pipeline_analyses {
             -module     => 'Bio::EnsEMBL::Hive::RunnableDB::RNAcentral::GetFiles',
             -analysis_capacity  => 1,
             -input_ids  => [
-                { 'location'  => $self->o('out'),
+                { 'location'  => $self->o('output_folder'),
                   'extension' => '_short.csv' }
             ],
             -flow_into => {

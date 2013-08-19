@@ -33,6 +33,7 @@ use Pod::Usage;
 use Bio::RNAcentral::InputFiles;
 use Bio::RNAcentral::SqlldrImport;
 use Bio::RNAcentral::OracleUpdate;
+use Bio::RNAcentral::SqlldrImportReferences;
 
 
 my $location = '';
@@ -40,9 +41,9 @@ my $opt = {};
 
 # all options are mandatory
 &GetOptions (
-    'in=s'       => \$location,          # input data location
-    'out=s'      => \$opt->{'out'},      # location of output temp files
-    'user=s'     => \$opt->{'user'},     # Oracle connection details
+    'in=s'       => \$location,               # input data location
+    'out=s'      => \$opt->{'output_folder'}, # location of output temp files
+    'user=s'     => \$opt->{'user'},          # Oracle connection details
     'password=s' => \$opt->{'password'},
     'sid=s'      => \$opt->{'sid'},
     'port=i'     => \$opt->{'port'},
@@ -55,57 +56,31 @@ my $opt = {};
                 !defined($opt->{'sid'})      or
                 !defined($opt->{'port'})     or
                 !defined($opt->{'host'})     or
-                !defined($opt->{'out'}));
+                !defined($opt->{'output_folder'}));
 
 my $a = Bio::RNAcentral::InputFiles->new($opt);
 my $b = Bio::RNAcentral::SqlldrImport->new($opt);
 my $c = Bio::RNAcentral::OracleUpdate->new($opt);
+my $d = Bio::RNAcentral::SqlldrImportReferences->new($opt);
 
 # prepare staging table
+$c->db_oracle_connect();
 $c->truncate_staging_table();
 
-
-my @folders = ($location); # list of folders with ncr files
-
-for my $folder (@folders) {
-    # prepare csv files for sqlldr
-    $a->process_folder($folder);
-
-    # load data into the staging table
-    my @csvfiles = $a->list_folder($opt->{'out'}, 'csv');
-    for my $csvfile (@csvfiles) {
-        $b->load_seq($csvfile);
-    }
+# create output files in csv format
+my @ncrfiles = $a->list_folder_recursive($location, 'ncr');
+for my $ncrfile (@ncrfiles) {
+    $a->embl2csv($ncrfile);
 }
 
+# load data into the staging table
+my @csvfiles = $a->list_folder($opt->{'output_folder'}, 'csv');
+for my $csvfile (@csvfiles) {
+    $b->load_seq($csvfile);
+}
+
+$d->load_all_references();
 
 # launch plsql update
-# $c->create_new_release();
-# $c->run_pl_sql_update();
+$c->run_pl_sql_update();
 $c->db_oracle_disconnect();
-
-
-
-sub test_merge {
-
-    my ($opt, $location, $extension) = @_;
-    my $self = Bio::RNAcentral::InputFiles->new($opt);
-    my ($size_ref, $ordered_files_ref) = $self->list_folder_order_by_size($location, $extension);
-
-    my $groups_ref = $self->group_files($size_ref, $ordered_files_ref);
-
-    use Data::Dumper;
-    print Dumper($groups_ref);
-
-    # verify that all files were found
-    my @arr = @{$groups_ref};
-    my $total = 0;
-    foreach my $group (@arr) {
-        if ($group) {
-            $total += scalar @$group;
-        }
-    }
-
-    print $total, "\n";
-
-}

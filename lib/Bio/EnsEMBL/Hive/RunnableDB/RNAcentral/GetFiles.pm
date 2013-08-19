@@ -44,7 +44,7 @@ sub fetch_input {
     my $extension = $self->param_required('extension');
 
     my $opt = {};
-    $opt->{'out'} = $self->param_required('out');
+    $opt->{'output_folder'} = $self->param_required('output_folder');
 
     my $rnac = Bio::RNAcentral::InputFiles->new($opt);
     my @files = $rnac->list_folder_recursive($location, $extension);

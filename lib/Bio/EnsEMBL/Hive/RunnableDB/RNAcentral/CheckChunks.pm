@@ -43,7 +43,7 @@ sub fetch_input {
     my $input_file = $self->param_required('ncr_file');
 
     my $opt = {};
-    $opt->{'out'} = $self->param_required('out');
+    $opt->{'output_folder'} = $self->param_required('output_folder');
 
     my $rnac = Bio::RNAcentral::InputFiles->new($opt);
     my @files = $rnac->file2chunks($input_file);
@@ -57,8 +57,7 @@ sub fetch_input {
 
 =head2 run
 
-    Description : TODO: add file concatenation and splitting here.
-
+    Description :
 
 =cut
 

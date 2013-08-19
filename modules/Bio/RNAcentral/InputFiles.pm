@@ -31,6 +31,7 @@ use warnings;
 # override default modules, use embl.pm and CRC64.pm modules from the lib directory
 use Cwd            ();
 use File::Basename ();
+use File::Spec;
 BEGIN {
     my $root_dir = File::Basename::dirname( File::Basename::dirname( Cwd::realpath($0) ) );
     unshift @INC, "$root_dir/lib";
@@ -50,10 +51,10 @@ sub new {
     my ($class, $opt) = @_;
 
     # run parent constructor
-    my $self = $class->SUPER::new();
+    my $self = $class->SUPER::new($opt);
 
-    # location of temporary output files
-    $self->{'temp_dir'} = $opt->{'out'};
+    # create output directory for references if it doesn't exist
+    mkdir $self->get_refs_path() unless -d $self->get_refs_path();
 
     return $self;
 }
@@ -74,7 +75,6 @@ sub process_folder {
 
     # create csv files based on embl files
     for my $file (@files) {
-        # TODO get a list of newly created output files
         $self->embl2csv($file);
     }
 }
@@ -282,7 +282,7 @@ sub file2chunks {
         $text .= $_;
         if ( length($text) > $self->{'opt'}{'file_size_cutoff'} ) {
             # create chunk files in temp directory
-            $chunkfile = File::Spec->catfile($self->{'temp_dir'}, $file . '_chunk' . $i . '.' . $self->{'opt'}{'file_extension'});
+            $chunkfile = File::Spec->catfile($self->{'output_folder'}, $file . '_chunk' . $i . '.' . $self->{'opt'}{'file_extension'});
             push @chunks, $chunkfile;
             _print_to_file($chunkfile, $text);
             $i++;
@@ -294,7 +294,7 @@ sub file2chunks {
 
     # left over sequences
     if ( length($text) > 0 ) {
-        $chunkfile = File::Spec->catfile($self->{'temp_dir'}, $file . '_chunk' . $i . '.' . $self->{'opt'}{'file_extension'});
+        $chunkfile = File::Spec->catfile($self->{'output_folder'}, $file . '_chunk' . $i . '.' . $self->{'opt'}{'file_extension'});
         push @chunks, $chunkfile;
         _print_to_file($chunkfile, $text);
         $self->{'logger'}->info("Created file $chunkfile");
@@ -326,9 +326,9 @@ sub embl2csv {
     # get file name without extension
     my $job_id = File::Basename::fileparse($file, qr/\.[^.]*/);
 
-    my $fname_long  = $self->get_output_filename($self->{'temp_dir'}, $job_id, 'long',  'csv');
-    my $fname_short = $self->get_output_filename($self->{'temp_dir'}, $job_id, 'short', 'csv');
-    my $fname_refs  = $self->get_output_filename($self->{'temp_dir'}, $job_id, 'refs',  'csv');
+    my $fname_long  = $self->get_output_filename($self->{'output_folder'}, $job_id, 'long',  'csv');
+    my $fname_short = $self->get_output_filename($self->{'output_folder'}, $job_id, 'short', 'csv');
+    my $fname_refs  = File::Spec->catfile($self->get_refs_path(), $job_id . '.csv');
 
     # open output files
     my $fh_long  = IO::File->new("> $fname_long")  or $self->{'logger'}->logdie("Couldn't open file $fname_long");

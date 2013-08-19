@@ -25,9 +25,16 @@ use File::Spec;
 =cut
 
 sub new {
-    my ($class, @args) = @_;
+    my ($class, $opt) = @_;
 
     my $self = bless {}, $class;
+
+    $self->{'user'}          = $opt->{'user'};
+    $self->{'password'}      = $opt->{'password'};
+    $self->{'sid'}           = $opt->{'sid'};
+    $self->{'port'}          = $opt->{'port'};
+    $self->{'host'}          = $opt->{'host'};
+    $self->{'output_folder'} = $opt->{'output_folder'};
 
     $self->{'logger'} = initialize_logger();
     $self->{'opt'}    = default_options();
@@ -42,6 +49,7 @@ sub default_options {
         'file_size_cutoff' => 50 * 10**6,            # file size cutoff in bytes
         'staging_table'    => 'load_rnacentral_all', # staging table
         'release_table'    => 'rnc_release',         # keeps track of all RNAcentral releases
+        'references_table' => 'rnc_references',      # table with literature references
     		'maxseqlong'       => 1000000,  # maximum length for long sequences stored as clobs
     		'maxseqshort'      => 4000,     # maximum length for short sequences stored as chars
     };
@@ -76,6 +84,20 @@ sub initialize_logger {
 
     return $logger;
 }
+
+
+=head2 get_refs_path
+
+  Get full path of the folder with csv files containing literature
+  references.
+
+=cut
+
+sub get_refs_path {
+    my $self = shift;
+    return File::Spec->catfile($self->{'output_folder'}, 'refs');
+}
+
 
 =head2 get_filename
 

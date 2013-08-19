@@ -31,17 +31,10 @@ sub new {
     my ($class, $opt) = @_;
 
     # run parent constructor
-    my $self = $class->SUPER::new();
+    my $self = $class->SUPER::new($opt);
 
     $self->{'job_id'}   = '';
     $self->{'seq_type'} = '';
-
-    $self->{'user'}     = $opt->{'user'};
-    $self->{'password'} = $opt->{'password'};
-    $self->{'sid'}      = $opt->{'sid'};
-    $self->{'port'}     = $opt->{'port'};
-    $self->{'host'}     = $opt->{'host'};
-    $self->{'temp_dir'} = $opt->{'out'};
 
     return $self;
 }
@@ -94,13 +87,13 @@ sub load_seq {
 sub _set_filenames {
     my $self = shift;
 
-    $self->{'ctlfile'}   = $self->get_output_filename($self->{'temp_dir'}, $self->{'job_id'}, $self->{'seq_type'}, 'ctl');
-    $self->{'logfile'}   = $self->get_output_filename($self->{'temp_dir'}, $self->{'job_id'}, $self->{'seq_type'}, 'log');
-    $self->{'csvfile'}   = $self->get_output_filename($self->{'temp_dir'}, $self->{'job_id'}, $self->{'seq_type'}, 'csv');
-    $self->{'badfile'}   = $self->get_output_filename($self->{'temp_dir'}, $self->{'job_id'}, $self->{'seq_type'}, 'bad');
-    $self->{'longfile'}  = $self->get_output_filename($self->{'temp_dir'}, $self->{'job_id'}, $self->{'seq_type'}, 'long');
-    $self->{'shortfile'} = $self->get_output_filename($self->{'temp_dir'}, $self->{'job_id'}, $self->{'seq_type'}, 'short');
-    $self->{'chunkfile'} = File::Spec->catfile($self->{'temp_dir'}, $self->{'job_id'} . '.ncr');
+    $self->{'ctlfile'}   = $self->get_output_filename($self->{'output_folder'}, $self->{'job_id'}, $self->{'seq_type'}, 'ctl');
+    $self->{'logfile'}   = $self->get_output_filename($self->{'output_folder'}, $self->{'job_id'}, $self->{'seq_type'}, 'log');
+    $self->{'csvfile'}   = $self->get_output_filename($self->{'output_folder'}, $self->{'job_id'}, $self->{'seq_type'}, 'csv');
+    $self->{'badfile'}   = $self->get_output_filename($self->{'output_folder'}, $self->{'job_id'}, $self->{'seq_type'}, 'bad');
+    $self->{'longfile'}  = $self->get_output_filename($self->{'output_folder'}, $self->{'job_id'}, $self->{'seq_type'}, 'long');
+    $self->{'shortfile'} = $self->get_output_filename($self->{'output_folder'}, $self->{'job_id'}, $self->{'seq_type'}, 'short');
+    $self->{'chunkfile'} = File::Spec->catfile($self->{'output_folder'}, $self->{'job_id'} . '.ncr');
 }
 
 
@@ -121,11 +114,12 @@ sub _get_sqlldr_command {
                   '\(CONNECT_DATA\=\(SERVICE_NAME=' . $self->{'sid'} . '\)\)\)\" ' .
                   'control=' . $self->{'ctlfile'} . ' ' .
                   'bad='     . $self->{'badfile'} . ' ' .
-                  'log='     . $self->{'logfile'};
+                  'log='     . $self->{'logfile'} . ' ' .
+                  'direct=true';
 
     # conventional loading for lob files, direct loading for short sequences
     if ( $self->{'seq_type'} eq 'short' ) {
-        $command .= ' direct=true parallel=true';
+        $command .= ' parallel=true';
     }
 
     return $command;

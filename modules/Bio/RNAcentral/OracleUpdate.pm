@@ -30,15 +30,7 @@ sub new {
     my ($class, $opt) = @_;
 
     # run parent constructor
-    my $self = $class->SUPER::new();
-
-    $self->{'user'}     = $opt->{'user'};
-    $self->{'password'} = $opt->{'password'};
-    $self->{'sid'}      = $opt->{'sid'};
-    $self->{'port'}     = $opt->{'port'};
-    $self->{'host'}     = $opt->{'host'};
-
-    $self->db_oracle_connect();
+    my $self = $class->SUPER::new($opt);
 
     return $self;
 }
@@ -91,38 +83,6 @@ sub truncate_staging_table {
         or $self->{'logger'}->logdie("Couldn't truncate the staging table");
 
     $self->{'logger'}->info("Staging table truncated");
-}
-
-
-=head2 create_new_release
-
-    TODO: figure out how many staging tables are going to be used.
-    TODO: replace placeholder parameters with real dates etc.
-
-=cut
-
-sub create_new_release {
-    my $self = shift;
-
-    my $command = <<SQL;
-INSERT INTO $self->{'opt'}{'release_table'}
-VALUES(
-  (SELECT count(*)+1 FROM rnc_release),
-  1,
-  '12-JUL-13',
-  'F',
-  'L',
-  '12-JUL-13',
-  'perl',
-  'test',
-  'N'
-)
-SQL
-
-    $self->{'dbh'}->do($command)
-        or $self->{'logger'}->logdie("Couldn't create new release");
-
-    $self->{'logger'}->info("New release created");
 }
 
 

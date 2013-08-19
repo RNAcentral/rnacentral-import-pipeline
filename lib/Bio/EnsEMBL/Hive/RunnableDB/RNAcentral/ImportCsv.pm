@@ -43,7 +43,7 @@ sub fetch_input {
     my $input_file = $self->param_required('csv_file');
 
     my $opt = {};
-    $opt->{'out'}      = $self->param_required('out');
+    $opt->{'output_folder'} = $self->param_required('output_folder');
     $opt->{'user'}     = $self->param_required('oracle-user');
     $opt->{'password'} = $self->param_required('oracle-password');
     $opt->{'sid'}      = $self->param_required('oracle-sid');
