@@ -208,7 +208,7 @@ sub _sanitize {
     $text =~ s/^"+//; # remove leading and trailing quotes
     $text =~ s/"+$//;
 
-    $text =~ s/"/\"/; # escape the remaining double quotes
+    $text =~ s/"/""/g; # escape the remaining double quotes
 
     return $text;
 }
