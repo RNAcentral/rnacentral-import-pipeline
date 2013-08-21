@@ -53,3 +53,4 @@ log/*
 # hive database
 *_rnacentral_update
 pipeline.png
+scripts/rnac_loader_wrapper.sh
