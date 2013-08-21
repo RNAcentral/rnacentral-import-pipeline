@@ -1,7 +1,7 @@
 #!/bin/bash
 perl $ENSEMBL_CVS_ROOT_DIR/ensembl-hive/scripts/init_pipeline.pl Bio::EnsEMBL::Hive::PipeConfig::RNAcentralUpdate_conf \
-	-in='/ebi/production/seqdb/embl/release/116_test2' \
-	-out='/nfs/nobackup2/ensemblgenomes/apetrov/temp' \
+	-in='/nfs/nobackup2/ensemblgenomes/apetrov/116_test2' \
+	-output_folder='/nfs/nobackup2/ensemblgenomes/apetrov/temp' \
 	-pipeline-db -pass=$HIVE_PASSWORD \
 	-pipeline-db -user=$HIVE_USERNAME \
 	-pipeline-db -host=$HIVE_HOST \
@@ -14,4 +14,10 @@ perl $ENSEMBL_CVS_ROOT_DIR/ensembl-hive/scripts/init_pipeline.pl Bio::EnsEMBL::H
 HIVE_URL='mysql://'$HIVE_USERNAME':'$HIVE_PASSWORD'@'$HIVE_HOST':'$HIVE_PORT'/rnacentral_staging'
 perl $ENSEMBL_CVS_ROOT_DIR/ensembl-hive/scripts/beekeeper.pl -url $HIVE_URL -sync;
 perl $ENSEMBL_CVS_ROOT_DIR/ensembl-hive/scripts/generate_graph.pl -url $HIVE_URL -output pipeline.png
-perl $ENSEMBL_CVS_ROOT_DIR/ensembl-hive/scripts/beekeeper.pl -url $HIVE_URL -meadow_type LSF -loop;
+perl $ENSEMBL_CVS_ROOT_DIR/ensembl-hive/scripts/beekeeper.pl -url $HIVE_URL -meadow_type LSF -loop -total_running_workers_max 60;
+
+
+	# /ebi/production/seqdb/embl/release/116_test2
+	# '/homes/apetrov/rnac-loader/temp'
+	# -in='/homes/apetrov/rnac-loader/data' \
+#perl $ENSEMBL_CVS_ROOT_DIR/ensembl-hive/scripts/beekeeper.pl -url $HIVE_URL -meadow_type LSF -loop -total_running_workers_max 50 -reset_failed_jobs_for_analysis import_long_csv

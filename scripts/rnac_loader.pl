@@ -33,6 +33,7 @@ use Pod::Usage;
 use Bio::RNAcentral::InputFiles;
 use Bio::RNAcentral::SqlldrImport;
 use Bio::RNAcentral::OracleUpdate;
+use Bio::RNAcentral::Embl2csv;
 use Bio::RNAcentral::SqlldrImportReferences;
 
 
@@ -59,6 +60,7 @@ my $opt = {};
                 !defined($opt->{'output_folder'}));
 
 my $a = Bio::RNAcentral::InputFiles->new($opt);
+my $e = Bio::RNAcentral::Embl2csv->new($opt);
 my $b = Bio::RNAcentral::SqlldrImport->new($opt);
 my $c = Bio::RNAcentral::OracleUpdate->new($opt);
 my $d = Bio::RNAcentral::SqlldrImportReferences->new($opt);
@@ -70,10 +72,11 @@ $c->truncate_staging_table();
 # create output files in csv format
 my @ncrfiles = $a->list_folder_recursive($location, 'ncr');
 for my $ncrfile (@ncrfiles) {
-    $a->embl2csv($ncrfile);
+    $e->embl2csv($ncrfile);
 }
 
 # load data into the staging table
+$b->make_ctl_files();
 my @csvfiles = $a->list_folder($opt->{'output_folder'}, 'csv');
 for my $csvfile (@csvfiles) {
     $b->load_seq($csvfile);
