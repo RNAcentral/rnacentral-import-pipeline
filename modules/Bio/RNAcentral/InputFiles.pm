@@ -22,21 +22,9 @@ package Bio::RNAcentral::InputFiles;
 use strict;
 use warnings;
 
-# override default modules, use embl.pm and CRC64.pm modules from the lib directory
-use Cwd            ();
 use File::Basename ();
 use File::Spec;
-BEGIN {
-    my $root_dir = File::Basename::dirname( File::Basename::dirname( Cwd::realpath($0) ) );
-    unshift @INC, "$root_dir/lib";
-}
-
-use File::Spec;
 use File::Find qw(finddepth);
-
-use Bio::SeqIO;   # BioPerl is used for reading embl files
-use SWISS::CRC64; # cyclic redundancy check
-use Digest::MD5 qw(md5_hex);
 
 use base ('Bio::RNAcentral::Base');
 
