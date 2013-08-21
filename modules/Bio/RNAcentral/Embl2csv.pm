@@ -168,7 +168,7 @@ sub _get_references {
 
     my ($ref_authors, $ref_location, $ref_title,
         $ref_pubmed,  $ref_doi,      $ref_publisher,
-        $ref_editors, $ref_consortium);
+        $ref_editors, $ref_consortium, $md5_authors);
     my $text = '';
     my $num = 0;
 
@@ -180,6 +180,7 @@ sub _get_references {
             if ( $value->tagname eq 'reference' ) {
                 $num++;
                 $ref_authors   = _nvl($value->authors());   # RA line
+                $md5_authors   = md5_hex($ref_authors);
                 $ref_location  = _nvl($value->location());  # RL line
                 $ref_title     = _nvl($value->title());     # RT line
                 $ref_pubmed    = _nvl($value->pubmed());    # parsed RX line
@@ -188,6 +189,7 @@ sub _get_references {
                 $ref_editors   = _nvl($value->editors());   # parsed RL line
 
                 $text .= '"' . join('","', ($md5,
+                                            $md5_authors,
                                             $ref_authors,
                                             $ref_location,
                                             $ref_title,

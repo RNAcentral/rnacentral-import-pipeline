@@ -10,6 +10,10 @@ package Bio::RNAcentral::SqlldrImportReferences;
 
 =head1 DESCRIPTION
 
+    Import literature references into the RNAcentral Oracle database.
+    Since some fields (e.g. authors) are longer than 4000 characters, they are stored as clobs.
+    Parallel load option is not allowed when loading lob columns (SQL*Loader-971),
+    so the data are loaded sequentially.
 
 =cut
 
@@ -27,15 +31,15 @@ sub new {
     # run parent constructor
     my $self = $class->SUPER::new($opt);
 
-    $self->{'refs'} = {
-        refs_path => $self->get_refs_path(),
-        ctlfile   => '',
-        badfile   => '',
-        logfile   => '',
-    };
+    my $refs_path = $self->get_refs_path();
 
-    # get ctl filename
-    $self->{'refs'}{'ctlfile'} = File::Spec->catfile($self->{'output_folder'}, 'refs.ctl');
+    $self->{'refs'} = {
+        refs_path => $refs_path,
+        ctlfile   => File::Spec->catfile($refs_path, 'refs.ctl'),
+        allrefs   => File::Spec->catfile($refs_path, 'allrefs.dat'),
+        badfile   => File::Spec->catfile($refs_path, 'allrefs.bad'),
+        logfile   => File::Spec->catfile($refs_path, 'allrefs.log'),
+    };
 
     return $self;
 }
@@ -43,8 +47,7 @@ sub new {
 
 =head2 load_all_references
 
-
-
+    Main subroutine for loading the references.
 
 =cut
 
@@ -56,46 +59,25 @@ sub load_all_references {
     # create one sqlldr control file
     $self->_make_ctl_file();
 
-    # get all csv files with references
-    my $csv_files = File::Spec->catfile($self->{'refs'}{'refs_path'}, '*.csv');
-    my @files = glob "$csv_files";
-    $self->{'logger'}->info('Found ' . scalar(@files) . ' files with references');
+    # concatenate all csv files
+    my $cmd = "cat $self->{'refs'}{'refs_path'}/*.csv > $self->{'refs'}{'allrefs'}";
+    $self->{'logger'}->info("Creating a single datafile with references: $cmd");
+    system($cmd);
 
-    foreach my $file (@files) {
-        $self->{'logger'}->info("Importing $file");
+    # clean up old files if present
+    $self->_delete_old_log_files();
 
-        # get file name without extension
-        my $job_id = File::Basename::fileparse($file, qr/\.[^.]*/);
+    # prepare sqlldr command
+    $cmd = $self->_get_sqlldr_command($self->{'refs'}{'allrefs'});
 
-        # initialize all filenames for this job_id
-        $self->_set_filenames($job_id);
-        $self->_delete_old_log_files();
+    # run sqlldr
+    $self->{'logger'}->info("Importing $self->{'refs'}{'allrefs'}");
+    my $problems = $self->_run_sqlldr($cmd);
 
-        # prepare sqlldr command
-        my $cmd = $self->_get_sqlldr_command($file);
-
-        # run sqlldr
-        my $problems = $self->_run_sqlldr($cmd);
-
-        # clean up if no errors and no problems in sqlldr
-        unless ( $self->_errors_found() or $problems ) {
-            # unlink $file, $self->{'refs'}{'logfile'};
-        }
+    # clean up if no errors and no problems in sqlldr
+    unless ( $self->_errors_found() or $problems ) {
+        unlink $self->{'refs'}{'allrefs'}, $self->{'refs'}{'logfile'};
     }
-}
-
-
-=head2 _set_filenames
-
-    Initialize all filenames once for easy access.
-
-=cut
-
-sub _set_filenames {
-    (my $self, my $job_id) = @_;
-
-    $self->{'refs'}{'logfile'} = File::Spec->catfile($self->{'refs'}{'refs_path'}, $job_id . '.log');
-    $self->{'refs'}{'badfile'} = File::Spec->catfile($self->{'refs'}{'refs_path'}, $job_id . '.bad');
 }
 
 
@@ -106,7 +88,7 @@ sub _set_filenames {
 =cut
 
 sub _get_sqlldr_command {
-    (my $self, my $file) = @_;
+    my $self = shift;
 
     my $command = 'sqlldr ' .
                    $self->{'user'} . '/' . $self->{'password'} . '@' .
@@ -117,7 +99,7 @@ sub _get_sqlldr_command {
                   'control=' . $self->{'refs'}{'ctlfile'} . ' ' .
                   'bad='     . $self->{'refs'}{'badfile'} . ' ' .
                   'log='     . $self->{'refs'}{'logfile'} . ' ' .
-                  'direct=true data=' . $file;
+                  'direct=true errors=99999999 data=' . $self->{'refs'}{'allrefs'};
     return $command;
 }
 
@@ -173,6 +155,7 @@ INTO TABLE $self->{'opt'}{'references_table'}
 FIELDS TERMINATED BY ',' enclosed by '"'
 (
     MD5 char,
+    AUTHORS_MD5 char,
     AUTHORS char(1000000),
     LOCATION char(4000),
     TITLE char(4000),
@@ -188,9 +171,8 @@ CTL
 
 =head2 _errors_found
 
-    Entries rejected by the database are stored in the .bad file.
     Warn if bad file exists.
-    Discard file is not specified in control files, so it's never created.
+    Bad file contains the entries rejected by the database.
 
 =cut
 
