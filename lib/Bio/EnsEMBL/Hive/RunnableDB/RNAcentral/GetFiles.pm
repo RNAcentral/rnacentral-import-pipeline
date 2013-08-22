@@ -1,14 +1,9 @@
 
 =pod
 
-=head1 NAME
-
-
-=head1 SYNOPSIS
-
-
 =head1 DESCRIPTION
 
+    Recursively get a list of files with a specified extension.
 
 =cut
 
@@ -51,14 +46,14 @@ sub fetch_input {
 
     my @files = map { { 'ncr_file' => $_ } } values @files;
 
-        # store them for future use:
+        # store the files for future use:
     $self->param('ncr_files', \@files);
 }
 
 
 =head2 run
 
-    Description : TODO: add file concatenation and splitting here.
+    Description :
 
 
 =cut
@@ -74,8 +69,8 @@ sub run {
 
 =cut
 
-sub write_output {  # nothing to write out, but some dataflow to perform:
-    my $self = shift @_;
+sub write_output {
+    my $self = shift;
 
     my $files = $self->param('ncr_files');
 

@@ -101,8 +101,6 @@ sub get_files {
         @files = (@files, $self->file2chunks($file));
     }
 
-    # @files = @original_files;
-
     return @files;
 }
 

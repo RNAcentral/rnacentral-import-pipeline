@@ -117,7 +117,7 @@ sub _delete_old_log_files {
     unlink @to_delete;
 }
 
-=head2
+=head2 _run_sqlldr
 
     Launch sqlldr and make sure that it runs successfully, log any errors.
 
@@ -136,7 +136,7 @@ sub _run_sqlldr {
 }
 
 
-=head2
+=head2 _make_ctl_file
 
     Create a control file used by sqlldr.
 

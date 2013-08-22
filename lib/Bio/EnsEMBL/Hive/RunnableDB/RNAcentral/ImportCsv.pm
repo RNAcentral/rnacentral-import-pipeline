@@ -43,14 +43,15 @@ sub fetch_input {
     my $input_file = $self->param_required('csv_file');
 
     my $opt = {};
+    $opt->{'user'}          = $self->param_required('oracle-user');
+    $opt->{'password'}      = $self->param_required('oracle-password');
+    $opt->{'sid'}           = $self->param_required('oracle-sid');
+    $opt->{'port'}          = $self->param_required('oracle-port');
+    $opt->{'host'}          = $self->param_required('oracle-host');
     $opt->{'output_folder'} = $self->param_required('output_folder');
-    $opt->{'user'}     = $self->param_required('oracle-user');
-    $opt->{'password'} = $self->param_required('oracle-password');
-    $opt->{'sid'}      = $self->param_required('oracle-sid');
-    $opt->{'port'}     = $self->param_required('oracle-port');
-    $opt->{'host'}     = $self->param_required('oracle-host');
 
     my $sqlldr = Bio::RNAcentral::SqlldrImport->new($opt);
+
     $sqlldr->make_ctl_files();
     $sqlldr->load_seq($input_file);
 }

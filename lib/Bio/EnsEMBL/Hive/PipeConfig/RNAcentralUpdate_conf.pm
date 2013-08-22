@@ -1,16 +1,9 @@
 
 =pod
 
-=head1 NAME
-
-
-=head1 SYNOPSIS
-
-
 =head1 DESCRIPTION
 
-
-=head1 CONTACT
+    Hive pipeline configuration file for the RNAcentral data import pipeline.
 
 =cut
 
@@ -25,8 +18,7 @@ use base ('Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf');  # All Hive datab
 
 =head2 default_options
 
-    Description :
-
+    Use the command line parameters to configure the pipeline.
 
 =cut
 
@@ -34,10 +26,10 @@ sub default_options {
     my ($self) = @_;
 
     return {
-        %{ $self->SUPER::default_options() },               # inherit other stuff from the base class
+        %{ $self->SUPER::default_options() },    # inherit other stuff from the base class
 
-        'pipeline_name' => 'rnacentral_staging',             # name used by the beekeeper to prefix job names on the farm
-        'hive_force_init' => 1,                             # always recreate the hive database
+        'pipeline_name' => 'rnacentral_staging', # name used by the beekeeper to prefix job names on the farm
+        'hive_force_init' => 1,                  # always recreate the hive database
 
         # get the command line option
         'location'        => $self->o('in'),
@@ -47,7 +39,7 @@ sub default_options {
             -port   => $self->o('port'),
             -user   => $self->o('user'),
             -pass   => $self->o('password'),
-            -dbname => $self->o('pipeline_name'),  # example of a linked definition (resolved via saturation)
+            -dbname => $self->o('pipeline_name'),
         },
 
     };
@@ -56,8 +48,7 @@ sub default_options {
 
 =head2 pipeline_create_commands
 
-    Description :
-
+    Hive internal processing.
 
 =cut
 
@@ -72,9 +63,9 @@ sub pipeline_create_commands {
 
 =head2 pipeline_wide_parameters
 
-    Description : Interface method that should return a hash of pipeline_wide_parameter_name->pipeline_wide_parameter_value pairs.
-                  The value doesn't have to be a scalar, can be any Perl structure now (will be stringified and de-stringified automagically).
-                  Please see existing PipeConfig modules for examples.
+    Interface method that should return a hash of pipeline_wide_parameter_name->pipeline_wide_parameter_value pairs.
+    The value doesn't have to be a scalar, can be any Perl structure now (will be stringified and de-stringified automagically).
+    Please see existing PipeConfig modules for examples.
 
 =cut
 
@@ -84,8 +75,8 @@ sub pipeline_wide_parameters {
         %{$self->SUPER::pipeline_wide_parameters},          # here we inherit anything from the base class
 
         # store command line parameters
-        'output_folder'   => $self->o('output_folder'),
         'in'              => $self->o('in'),
+        'output_folder'   => $self->o('output_folder'),
         'oracle-user'     => $self->o('oracle-user'),
         'oracle-password' => $self->o('oracle-password'),
         'oracle-sid'      => $self->o('oracle-sid'),
@@ -97,7 +88,7 @@ sub pipeline_wide_parameters {
 
 =head2 pipeline_analyses
 
-    Description : Main logic of the pipeline.
+    Main logic of the pipeline.
 
 =cut
 
@@ -105,6 +96,7 @@ sub pipeline_analyses {
     my ($self) = @_;
 
     return [
+        # list all ncr files
         {   -logic_name => 'get_ncr_files',
             -module     => 'Bio::EnsEMBL::Hive::RunnableDB::RNAcentral::GetFiles',
             -analysis_capacity  =>  1,
@@ -117,6 +109,8 @@ sub pipeline_analyses {
             },
         },
 
+        # split large files into chunks for faster processing
+        # this step is parallelized by Hive
         {   -logic_name => 'check_chunks',
             -module     => 'Bio::EnsEMBL::Hive::RunnableDB::RNAcentral::CheckChunks',
             -flow_into => {
@@ -124,11 +118,13 @@ sub pipeline_analyses {
             },
         },
 
+        # prepare csv files for sql loader
         {   -logic_name    => 'create_csv_files',
             -module        => 'Bio::EnsEMBL::Hive::RunnableDB::RNAcentral::CreateCsvFiles',
-            -wait_for => [ 'check_chunks' ],
+            -wait_for => [ 'check_chunks' ]
         },
 
+        # list all csv files with sequences longer than 4000 characters.
         {   -logic_name => 'get_long_csv_files',
             -module     => 'Bio::EnsEMBL::Hive::RunnableDB::RNAcentral::GetFiles',
             -analysis_capacity  => 1,
@@ -142,11 +138,14 @@ sub pipeline_analyses {
             -wait_for => [ 'create_csv_files' ]
         },
 
+        # long sequences need to be imported sequentially, because they are stored as clobs
+        # and parallel loading for clobs is not supported in Oracle.
         {   -logic_name    => 'import_long_csv',
             -module        => 'Bio::EnsEMBL::Hive::RunnableDB::RNAcentral::ImportCsv',
             -analysis_capacity  =>  1,
         },
 
+        # list all csv files with sequences shorter than 4000 characters
         {   -logic_name => 'get_short_csv_files',
             -module     => 'Bio::EnsEMBL::Hive::RunnableDB::RNAcentral::GetFiles',
             -analysis_capacity  => 1,
@@ -160,6 +159,8 @@ sub pipeline_analyses {
             -wait_for => [ 'import_long_csv' ]
         },
 
+        # import all csv files with short sequences
+        # highly parallel step
         {   -logic_name    => 'import_short_csv',
             -module        => 'Bio::EnsEMBL::Hive::RunnableDB::RNAcentral::ImportCsv',
         },

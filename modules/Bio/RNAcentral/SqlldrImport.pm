@@ -10,7 +10,7 @@ package Bio::RNAcentral::SqlldrImport;
 
 =head1 DESCRIPTION
 
-    Write sqlldr temporary output files (sqlldr control files and sqlldr log files) in the temporary directory.
+    Write sqlldr temporary output files (sqlldr control files and sqlldr log files).
     Construct sqlldr commands and run sqlldr.
     Delete temporary files on successful import.
 
