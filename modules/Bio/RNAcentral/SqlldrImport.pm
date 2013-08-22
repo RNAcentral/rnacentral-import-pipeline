@@ -189,6 +189,14 @@ sub _make_ctl_file {
 
     my $fh;
 
+    if ( $mode eq 'short' and -e $self->{'ctlshort'} ) {
+        return;
+    }
+
+    if ( $mode eq 'long' and -e $self->{'ctllong'} ) {
+        return;
+    }
+
     if ( $mode eq 'short' ) {
         open $fh, '>', $self->{'ctlshort'} or die $!;
     } elsif ( $mode eq 'long' ) {
