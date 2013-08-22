@@ -126,6 +126,7 @@ sub pipeline_analyses {
 
         {   -logic_name    => 'create_csv_files',
             -module        => 'Bio::EnsEMBL::Hive::RunnableDB::RNAcentral::CreateCsvFiles',
+            -wait_for => [ 'check_chunks' ],
         },
 
         {   -logic_name => 'get_long_csv_files',
