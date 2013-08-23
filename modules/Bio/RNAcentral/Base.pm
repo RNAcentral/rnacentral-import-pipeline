@@ -52,6 +52,11 @@ sub default_options {
         'references_table' => 'rnc_references',      # table with literature references
     		'maxseqlong'       => 1000000,  # maximum length for long sequences stored as clobs
     		'maxseqshort'      => 4000,     # maximum length for short sequences stored as chars
+        'ebi_ftp_site'     => 'ftp.ebi.ac.uk',
+        'ebi_ftp_user'     => 'anonymous',
+        'ebi_ftp_password' => '',
+        'ebi_ftp_update_folder'  => '/pub/databases/ena/non-coding/update',
+        'ebi_ftp_release_folder' => '/pub/databases/ena/non-coding/release',
     };
 }
 
@@ -83,6 +88,18 @@ sub initialize_logger {
     my $logger = Log::Log4perl->get_logger();
 
     return $logger;
+}
+
+
+=head2 get_ftp_downloads_path
+
+  Get full path to the folder containing files downloaded over ftp.
+
+=cut
+
+sub get_ftp_downloads_path {
+    my $self = shift;
+    return File::Spec->catfile($self->{'output_folder'}, 'ftpdata');
 }
 
 

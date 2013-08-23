@@ -25,6 +25,8 @@ use warnings;
 use File::Basename ();
 use File::Spec;
 use File::Find qw(finddepth);
+use File::Listing qw(parse_dir);
+use Net::FTP;
 
 use base ('Bio::RNAcentral::Base');
 
@@ -36,6 +38,56 @@ sub new {
     my $self = $class->SUPER::new($opt);
 
     return $self;
+}
+
+
+sub list_folder_recursive_ftp {
+    my $self = shift;
+
+    # create a new instance of the FTP connection
+    my $ftp = Net::FTP->new($self->{'opt'}{'ebi_ftp_site'}, Debug=>0)
+        or $self->{'logger'}->logdie("Cannot connect $!");
+
+    # login to the server
+    $ftp->login($self->{'opt'}{'ebi_ftp_user'}, $self->{'opt'}{'ebi_ftp_password'})
+        or $self->{'logger'}->logdie("Login failed $!");
+
+    # change remote directory
+    $ftp->cwd($self->{'opt'}{'ebi_ftp_update_folder'})
+        or $self->{'logger'}->logdie("Could not change remote working directory");
+
+    # set binary transfer mode, necessary for gz files
+    $ftp->binary();
+
+    # get recursive file listing
+    my @ls = $ftp->ls('-lR');
+
+    my $ftpdir = $self->get_ftp_downloads_path();
+    if ( !-e $ftpdir ) {
+        mkdir $ftpdir;
+    }
+
+    my ($filename, $savename, $name, $type, $size, $mtime, $mode);
+
+    # parse and loop through the directory listing
+    foreach my $file (parse_dir(\@ls))
+    {
+        ($name, $type, $size, $mtime, $mode) = @$file;
+
+        next if $name !~ /\.$self->{'opt'}{'file_extension'}(\.gz)*$/;
+
+        $filename = File::Basename::fileparse($name); # get just the filename
+        $savename = File::Spec->catfile($ftpdir, $filename);
+
+        $self->{'logger'}->info("Downloading $savename");
+
+        $ftp->get("$self->{'opt'}{'ebi_ftp_update_folder'}/$name", $savename) or $self->{'logger'}->logdie($!);
+
+        system("gunzip $savename");
+    }
+
+    # close the FTP connection
+    $ftp->quit();
 }
 
 
