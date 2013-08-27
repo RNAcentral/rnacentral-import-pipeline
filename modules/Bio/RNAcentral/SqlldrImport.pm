@@ -36,6 +36,9 @@ sub new {
     $self->{'job_id'}   = '';
     $self->{'seq_type'} = '';
 
+    mkdir $self->get_sqlldr_log_path() unless -d $self->get_sqlldr_log_path();
+    mkdir $self->get_sqlldr_bad_path() unless -d $self->get_sqlldr_bad_path();
+
     return $self;
 }
 
@@ -49,6 +52,8 @@ sub new {
 
 sub load_seq {
     (my $self, my $file) = @_;
+
+    $self->{'csvfile'} = $file;
 
     # get file name without extension
     $file = File::Basename::fileparse($file, qr/\.[^.]*/);
@@ -86,12 +91,9 @@ sub _set_filenames {
 
     $self->{'ctllong'}   = $self->get_output_filename($self->{'output_folder'}, 'seq', 'long',  'ctl');
     $self->{'ctlshort'}  = $self->get_output_filename($self->{'output_folder'}, 'seq', 'short', 'ctl');
-    $self->{'logfile'}   = $self->get_output_filename($self->{'output_folder'}, $self->{'job_id'}, $self->{'seq_type'}, 'log');
-    $self->{'csvfile'}   = $self->get_output_filename($self->{'output_folder'}, $self->{'job_id'}, $self->{'seq_type'}, 'csv');
-    $self->{'badfile'}   = $self->get_output_filename($self->{'output_folder'}, $self->{'job_id'}, $self->{'seq_type'}, 'bad');
-    $self->{'longfile'}  = $self->get_output_filename($self->{'output_folder'}, $self->{'job_id'}, $self->{'seq_type'}, 'long');
-    $self->{'shortfile'} = $self->get_output_filename($self->{'output_folder'}, $self->{'job_id'}, $self->{'seq_type'}, 'short');
-    $self->{'chunkfile'} = File::Spec->catfile($self->{'output_folder'}, $self->{'job_id'} . '.ncr');
+    $self->{'logfile'}   = $self->get_output_filename($self->get_sqlldr_log_path(), $self->{'job_id'}, $self->{'seq_type'}, 'log');
+    $self->{'badfile'}   = $self->get_output_filename($self->get_sqlldr_bad_path(), $self->{'job_id'}, $self->{'seq_type'}, 'bad');
+    $self->{'chunkfile'} = File::Spec->catfile($self->get_chunks_path(), $self->{'job_id'} . '.ncr');
 }
 
 
@@ -276,10 +278,7 @@ sub _clean_up_files {
     }
 
     # no need to unlink bad file because this sub only runs when bad file doesn't exist
-    unlink $self->{'logfile'},
-           $self->{'shortfile'},
-           $self->{'csvfile'},
-           $self->{'longfile'};
+    unlink $self->{'logfile'};
 }
 
 

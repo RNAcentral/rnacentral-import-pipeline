@@ -48,6 +48,12 @@ sub new {
     # create output directory for references if it doesn't exist
     mkdir $self->get_refs_path() unless -d $self->get_refs_path();
 
+    # create output directory for long files
+    mkdir $self->get_long_folder_path() unless -d $self->get_long_folder_path();
+
+    # create output directory for short files
+    mkdir $self->get_short_folder_path() unless -d $self->get_short_folder_path();
+
     return $self;
 }
 
@@ -67,8 +73,8 @@ sub embl2csv {
     # get file name without extension
     my $job_id = File::Basename::fileparse($file, qr/\.[^.]*/);
 
-    my $fname_long  = $self->get_output_filename($self->{'output_folder'}, $job_id, 'long',  'csv');
-    my $fname_short = $self->get_output_filename($self->{'output_folder'}, $job_id, 'short', 'csv');
+    my $fname_long  = $self->get_output_filename($self->get_long_folder_path(),  $job_id, 'long',  'csv');
+    my $fname_short = $self->get_output_filename($self->get_short_folder_path(), $job_id, 'short', 'csv');
     my $fname_refs  = File::Spec->catfile($self->get_refs_path(), $job_id . '.csv');
 
     # open output files

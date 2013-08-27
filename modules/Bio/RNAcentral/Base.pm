@@ -90,11 +90,29 @@ sub initialize_logger {
 }
 
 
-=head2 get_chunks_path
+sub get_sqlldr_bad_path {
+  my $self = shift;
+  return File::Spec->catfile($self->{'output_folder'}, 'bad');
+}
 
 
+sub get_sqlldr_log_path {
+  my $self = shift;
+  return File::Spec->catfile($self->{'output_folder'}, 'log');
+}
 
-=cut
+
+sub get_short_folder_path {
+  my $self = shift;
+  return File::Spec->catfile($self->{'output_folder'}, 'short');
+}
+
+
+sub get_long_folder_path {
+  my $self = shift;
+  return File::Spec->catfile($self->{'output_folder'}, 'long');
+}
+
 
 sub get_chunks_path {
     my $self = shift;

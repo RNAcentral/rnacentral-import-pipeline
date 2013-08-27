@@ -7,7 +7,7 @@
 
 =cut
 
-package Bio::EnsEMBL::Hive::RunnableDB::RNAcentral::GetFiles;
+package Bio::EnsEMBL::Hive::RunnableDB::RNAcentral::GetNcProduct;
 
 use strict;
 
@@ -35,14 +35,11 @@ sub param_defaults {
 sub fetch_input {
     my $self = shift @_;
 
-    my $location = $self->param_required('location');
-    my $extension = $self->param_required('extension');
-
     my $opt = {};
     $opt->{'output_folder'} = $self->param_required('output_folder');
 
     my $rnac = Bio::RNAcentral::InputFiles->new($opt);
-    my @files = $rnac->list_folder($location, $extension);
+    my @files = $rnac->list_folder_recursive_ftp();
 
     my @files = map { { 'ncr_file' => $_ } } values @files;
 

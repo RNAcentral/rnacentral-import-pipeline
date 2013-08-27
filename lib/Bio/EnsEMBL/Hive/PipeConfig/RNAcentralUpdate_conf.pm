@@ -31,9 +31,7 @@ sub default_options {
         'pipeline_name' => 'rnacentral_staging', # name used by the beekeeper to prefix job names on the farm
         'hive_force_init' => 1,                  # always recreate the hive database
 
-        # get the command line option
-        'location'        => $self->o('in'),
-
+        # get the command line options
         'pipeline_db'   => {
             -host   => $self->o('host'),
             -port   => $self->o('port'),
@@ -75,7 +73,6 @@ sub pipeline_wide_parameters {
         %{$self->SUPER::pipeline_wide_parameters},          # here we inherit anything from the base class
 
         # store command line parameters
-        'in'              => $self->o('in'),
         'output_folder'   => $self->o('output_folder'),
         'oracle-user'     => $self->o('oracle-user'),
         'oracle-password' => $self->o('oracle-password'),
@@ -98,11 +95,11 @@ sub pipeline_analyses {
     return [
         # list all ncr files
         {   -logic_name => 'get_ncr_files',
-            -module     => 'Bio::EnsEMBL::Hive::RunnableDB::RNAcentral::GetFiles',
-            -analysis_capacity  =>  1,
+            -module     => 'Bio::EnsEMBL::Hive::RunnableDB::RNAcentral::GetNcProduct',
             -input_ids  => [
-                { 'location'  => $self->o('in') }
+                { 'location'  => 1 }
             ],
+            -analysis_capacity  =>  1,
             -flow_into => {
                 1 => { 'create_csv_files' => { 'ncr_file' => '#ncr_file#' } },
             },
@@ -118,8 +115,8 @@ sub pipeline_analyses {
             -module     => 'Bio::EnsEMBL::Hive::RunnableDB::RNAcentral::GetFiles',
             -analysis_capacity  => 1,
             -input_ids  => [
-                { 'location'  => $self->o('output_folder'),
-                  'extension' => '_long.csv' }
+                { 'location'  => $self->o('output_folder') . '/long',
+                  'extension' => 'csv' }
             ],
             -flow_into => {
                 1 => { 'import_long_csv' => { 'csv_file' => '#ncr_file#' } },
@@ -139,8 +136,8 @@ sub pipeline_analyses {
             -module     => 'Bio::EnsEMBL::Hive::RunnableDB::RNAcentral::GetFiles',
             -analysis_capacity  => 1,
             -input_ids  => [
-                { 'location'  => $self->o('output_folder'),
-                  'extension' => '_short.csv' }
+                { 'location'  => $self->o('output_folder') . '/short',
+                  'extension' => 'csv' }
             ],
             -flow_into => {
                 1 => { 'import_short_csv' => { 'csv_file' => '#ncr_file#' } },
