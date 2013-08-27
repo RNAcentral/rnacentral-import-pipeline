@@ -41,8 +41,20 @@ sub new {
 }
 
 
+=head2
+
+    Download the entire non-coding product and uncompress all files.
+    Split large files into chunks.
+    Return a list of files for further processing.
+
+=cut
+
 sub list_folder_recursive_ftp {
     my $self = shift;
+
+    my @output_files = ();
+
+    $self->{'logger'}->info("Connecting to the non-coding product FTP site");
 
     # create a new instance of the FTP connection
     my $ftp = Net::FTP->new($self->{'opt'}{'ebi_ftp_site'}, Debug=>0)
@@ -53,11 +65,13 @@ sub list_folder_recursive_ftp {
         or $self->{'logger'}->logdie("Login failed $!");
 
     # change remote directory
-    $ftp->cwd($self->{'opt'}{'ebi_ftp_update_folder'})
+    $ftp->cwd($self->{'opt'}{'ebi_ftp_non_coding_product_folder'})
         or $self->{'logger'}->logdie("Could not change remote working directory");
 
     # set binary transfer mode, necessary for gz files
     $ftp->binary();
+
+    $self->{'logger'}->info("Getting recursive file list");
 
     # get recursive file listing
     my @ls = $ftp->ls('-lR');
@@ -67,7 +81,7 @@ sub list_folder_recursive_ftp {
         mkdir $ftpdir;
     }
 
-    my ($filename, $savename, $name, $type, $size, $mtime, $mode);
+    my ($filename, $savename, $name, $type, $size, $mtime, $mode, $uncompressed_file, $chunks);
 
     # parse and loop through the directory listing
     foreach my $file (parse_dir(\@ls))
@@ -79,15 +93,28 @@ sub list_folder_recursive_ftp {
         $filename = File::Basename::fileparse($name); # get just the filename
         $savename = File::Spec->catfile($ftpdir, $filename);
 
+        $uncompressed_file = $savename;
+        $uncompressed_file =~ s/(\.gz)*$//;
+
         $self->{'logger'}->info("Downloading $savename");
 
-        $ftp->get("$self->{'opt'}{'ebi_ftp_update_folder'}/$name", $savename) or $self->{'logger'}->logdie($!);
+        $ftp->get("$self->{'opt'}{'ebi_ftp_non_coding_product_folder'}/$name", $savename) or $self->{'logger'}->logdie($!);
 
-        system("gunzip $savename");
+        $self->{'logger'}->info("Unzipping");
+
+        system("gunzip -fq $savename"); # will create $uncompressed_file
+
+        $chunks = $self->file2chunks($uncompressed_file);
+
+        push @output_files, @$chunks;
     }
+
+    $self->{'logger'}->info("Ftp sync complete, processed " . scalar @output_files . " files");
 
     # close the FTP connection
     $ftp->quit();
+
+    return @output_files;
 }
 
 
@@ -150,7 +177,7 @@ sub get_files {
 
     # split large files into small chunks and analyze them instead
     foreach my $file (@original_files) {
-        @files = (@files, $self->file2chunks($file));
+        @files = (@files, @{ $self->file2chunks($file) });
     }
 
     return @files;
@@ -290,7 +317,7 @@ sub file2chunks {
 
     my $size = -s $filename;
     if ( $size < $self->{'opt'}{'file_size_cutoff'} ) {
-        return ($filename);
+        return [ $filename ];
     }
 
     $self->{'logger'}->info("File $filename is $size bytes, will split it into chunks");
@@ -302,6 +329,12 @@ sub file2chunks {
     my @chunks = ();
     my $chunkfile  = '';
 
+    # get location of the chunk files
+    my $chunks_path = $self->get_chunks_path();
+    if ( !-e $chunks_path ) {
+        mkdir $chunks_path;
+    }
+
     my $file = File::Basename::fileparse($filename, qr/\.[^.]*/);
 
     use bytes; # to calculate length in bytes
@@ -311,7 +344,7 @@ sub file2chunks {
         $text .= $_;
         if ( length($text) > $self->{'opt'}{'file_size_cutoff'} ) {
             # create chunk files in temp directory
-            $chunkfile = File::Spec->catfile($self->{'output_folder'}, $file . '_chunk' . $i . '.' . $self->{'opt'}{'file_extension'});
+            $chunkfile = File::Spec->catfile($chunks_path, $file . '_chunk' . $i . '.' . $self->{'opt'}{'file_extension'});
             push @chunks, $chunkfile;
             _print_to_file($chunkfile, $text);
             $i++;
@@ -323,13 +356,13 @@ sub file2chunks {
 
     # left over sequences
     if ( length($text) > 0 ) {
-        $chunkfile = File::Spec->catfile($self->{'output_folder'}, $file . '_chunk' . $i . '.' . $self->{'opt'}{'file_extension'});
+        $chunkfile = File::Spec->catfile($chunks_path, $file . '_chunk' . $i . '.' . $self->{'opt'}{'file_extension'});
         push @chunks, $chunkfile;
         _print_to_file($chunkfile, $text);
         $self->{'logger'}->info("Created file $chunkfile");
     }
 
-    return @chunks;
+    return \@chunks;
 }
 
 

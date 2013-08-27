@@ -55,8 +55,7 @@ sub default_options {
         'ebi_ftp_site'     => 'ftp.ebi.ac.uk',
         'ebi_ftp_user'     => 'anonymous',
         'ebi_ftp_password' => '',
-        'ebi_ftp_update_folder'  => '/pub/databases/ena/non-coding/update',
-        'ebi_ftp_release_folder' => '/pub/databases/ena/non-coding/release',
+        'ebi_ftp_non_coding_product_folder' => '/pub/databases/ena/non-coding',
     };
 }
 
@@ -91,6 +90,18 @@ sub initialize_logger {
 }
 
 
+=head2 get_chunks_path
+
+
+
+=cut
+
+sub get_chunks_path {
+    my $self = shift;
+    return File::Spec->catfile($self->{'output_folder'}, 'chunks');
+}
+
+
 =head2 get_ftp_downloads_path
 
   Get full path to the folder containing files downloaded over ftp.
@@ -99,7 +110,7 @@ sub initialize_logger {
 
 sub get_ftp_downloads_path {
     my $self = shift;
-    return File::Spec->catfile($self->{'output_folder'}, 'ftpdata');
+    return File::Spec->catfile($self->{'output_folder'}, 'ncproduct');
 }
 
 

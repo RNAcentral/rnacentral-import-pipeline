@@ -101,18 +101,8 @@ sub pipeline_analyses {
             -module     => 'Bio::EnsEMBL::Hive::RunnableDB::RNAcentral::GetFiles',
             -analysis_capacity  =>  1,
             -input_ids  => [
-                { 'location'  => $self->o('in'),
-                  'extension' => 'ncr' }
+                { 'location'  => $self->o('in') }
             ],
-            -flow_into => {
-                1 => { 'check_chunks' => { 'ncr_file' => '#ncr_file#' } },
-            },
-        },
-
-        # split large files into chunks for faster processing
-        # this step is parallelized by Hive
-        {   -logic_name => 'check_chunks',
-            -module     => 'Bio::EnsEMBL::Hive::RunnableDB::RNAcentral::CheckChunks',
             -flow_into => {
                 1 => { 'create_csv_files' => { 'ncr_file' => '#ncr_file#' } },
             },
@@ -121,7 +111,6 @@ sub pipeline_analyses {
         # prepare csv files for sql loader
         {   -logic_name    => 'create_csv_files',
             -module        => 'Bio::EnsEMBL::Hive::RunnableDB::RNAcentral::CreateCsvFiles',
-            -wait_for => [ 'check_chunks' ]
         },
 
         # list all csv files with sequences longer than 4000 characters.
@@ -135,7 +124,7 @@ sub pipeline_analyses {
             -flow_into => {
                 1 => { 'import_long_csv' => { 'csv_file' => '#ncr_file#' } },
             },
-            -wait_for => [ 'create_csv_files' ]
+            -wait_for => [ 'get_ncr_files', 'create_csv_files' ]
         },
 
         # long sequences need to be imported sequentially, because they are stored as clobs
