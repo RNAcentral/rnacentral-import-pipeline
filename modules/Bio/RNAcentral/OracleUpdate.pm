@@ -69,6 +69,23 @@ sub db_oracle_disconnect {
 }
 
 
+=head2 truncate_references_staging_table
+
+    The staging table should be empty at the beginning of the import.
+
+=cut
+
+sub truncate_references_staging_table {
+    my $self = shift;
+
+    my $command = "TRUNCATE TABLE $self->{'opt'}{'references_table'}";
+    $self->{'dbh'}->do($command)
+        or $self->{'logger'}->logdie("Couldn't truncate the references staging table");
+
+    $self->{'logger'}->info("References staging table truncated");
+}
+
+
 =head2 truncate_staging_table
 
     The staging table should be empty at the beginning of the import.
