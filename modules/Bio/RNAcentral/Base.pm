@@ -49,10 +49,10 @@ sub default_options {
         'file_size_cutoff' => 50 * 10**6,            # file size cutoff in bytes
         'staging_table'    => 'load_rnacentral_all', # staging table
         'release_table'    => 'rnc_release',         # keeps track of all RNAcentral releases
-        'references_table' => 'rnc_references',      # table with literature references
-    		'maxseqlong'       => 1000000,  # maximum length for long sequences stored as clobs
-    		'maxseqshort'      => 4000,     # maximum length for short sequences stored as chars
-        'ebi_ftp_site'     => 'ftp.ebi.ac.uk',
+        'references_table' => 'rnc_references_all',  # table with literature references
+    		'maxseqlong'       => 1000000,               # maximum length for long sequences stored as clobs
+    		'maxseqshort'      => 4000,                  # maximum length for short sequences stored as chars
+        'ebi_ftp_site'     => 'ftp.ebi.ac.uk',       # Non-coding Product FTP site details
         'ebi_ftp_user'     => 'anonymous',
         'ebi_ftp_password' => '',
         'ebi_ftp_non_coding_product_folder' => '/pub/databases/ena/non-coding',
