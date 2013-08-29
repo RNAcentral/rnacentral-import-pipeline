@@ -249,7 +249,7 @@ sub _get_dblinks {
                 $optional_id = _nvl($value->optional_id());
 
                 push @data, { database    => $database,
-                              primary_id  => $primary_id,
+                              primary_id  => $primary_id . '_' . $seq->display_id,
                               optional_id => $optional_id };
             }
         }
