@@ -156,6 +156,16 @@ PACKAGE BODY RNC_TEST AS
 
     INSERT INTO
       RNACEN.load_rnacentral
+      (
+        crc64,
+        len,
+        seq_short,
+        seq_long,
+        ac,
+        VERSION,
+        taxid,
+        md5
+      )
       VALUES(v_crc(p_test_id), -- crc64
              SEQ_LENGTH,       -- length
              v_seq(p_test_id), -- seq
