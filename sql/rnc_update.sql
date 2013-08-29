@@ -27,6 +27,8 @@ PACKAGE BODY RNC_UPDATE AS
       WHERE d1.DATABASE = d2.descr AND d2.ID = p_in_dbid
     );
 
+    COMMIT;
+
   END move_staging_data;
 
   /*
@@ -66,8 +68,7 @@ PACKAGE BODY RNC_UPDATE AS
       'N'
     );
 
-    --rnacen.DATABASE.set_current_release(p_in_dbid , v_next_release);
-
+    COMMIT;
 
   END create_release;
 
@@ -84,8 +85,19 @@ PACKAGE BODY RNC_UPDATE AS
           load_rnacentral_all d1,
           rnc_database d2
       WHERE
-        d1.database = d2.descr;
+        d1.DATABASE = d2.descr;
+      v_count_existing_releases INTEGER;
   BEGIN
+
+    SELECT count(*)
+    INTO v_count_existing_releases
+    FROM rnc_release
+    WHERE status='L';
+
+    IF (v_count_existing_releases > 0) THEN
+      DBMS_OUTPUT.put_line('Found releases to be loaded');
+      RETURN;
+    END IF;
 
     DBMS_OUTPUT.put_line('Preparing the release table');
 
@@ -141,6 +153,8 @@ PACKAGE BODY RNC_UPDATE AS
 
     RNC_LOGGING.log_release_end(p_in_dbid, p_in_load_release, v_previous_release);
 
+    COMMIT;
+
   END load_release;
 
   /*
@@ -161,7 +175,7 @@ PACKAGE BODY RNC_UPDATE AS
       WHERE
         status = 'L'
       ORDER BY
-        id;
+        ID;
   BEGIN
 
     DBMS_OUTPUT.put_line('Launching an update');
