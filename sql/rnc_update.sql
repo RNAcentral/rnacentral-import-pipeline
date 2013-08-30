@@ -35,7 +35,8 @@ PACKAGE BODY RNC_UPDATE AS
   * Create a new release for the specified database.
   */
   PROCEDURE create_release (
-    p_in_dbid IN RNACEN.rnc_database.ID%TYPE
+    p_in_dbid IN RNACEN.rnc_database.ID%TYPE,
+    p_release_type IN RNACEN.rnc_release.release_type%TYPE
   )
   IS
     v_next_release INTEGER;
@@ -60,7 +61,7 @@ PACKAGE BODY RNC_UPDATE AS
       v_next_release,
       p_in_dbid ,
       (SELECT to_char(trunc(SYSDATE),'dd-MON-yy') FROM dual),
-      'F',
+      p_release_type,
       'L',
       (SELECT to_char(trunc(SYSDATE),'dd-MON-yy') FROM dual),
       'auto',
@@ -75,7 +76,9 @@ PACKAGE BODY RNC_UPDATE AS
   /*
   * Create new releases for all databases mentioned in the staging table.
   */
-  PROCEDURE prepare_releases
+  PROCEDURE prepare_releases(
+    p_release_type IN RNACEN.rnc_release.release_type%TYPE
+  )
   IS
     CURSOR q
     IS
@@ -92,7 +95,7 @@ PACKAGE BODY RNC_UPDATE AS
     SELECT count(*)
     INTO v_count_existing_releases
     FROM rnc_release
-    WHERE status='L';
+    WHERE status = 'L';
 
     IF (v_count_existing_releases > 0) THEN
       DBMS_OUTPUT.put_line('Found releases to be loaded');
@@ -103,7 +106,7 @@ PACKAGE BODY RNC_UPDATE AS
 
     FOR v_db IN q
     LOOP
-      rnc_update.create_release(p_in_dbid => v_db.ID);
+      rnc_update.create_release(p_in_dbid => v_db.ID, p_release_type => p_release_type);
     END LOOP;
 
   END prepare_releases;
@@ -134,7 +137,8 @@ PACKAGE BODY RNC_UPDATE AS
     p_in_dbid         IN RNACEN.rnc_database.id%TYPE,
     p_in_load_release IN RNACEN.rnc_release.id%TYPE)
   IS
-    v_previous_release RNACEN.rnc_release.id%TYPE;
+    v_previous_release RNACEN.rnc_release.ID%TYPE;
+    v_release_type RNACEN.rnc_release.release_type%TYPE;
   BEGIN
 
     DBMS_OUTPUT.PUT_LINE('Loading release: ' || p_in_load_release);
@@ -146,8 +150,13 @@ PACKAGE BODY RNC_UPDATE AS
     RNC_LOAD_RNA.load_rna(p_in_dbid, p_in_load_release);
 
     -- load xrefs
+    v_release_type := RNACEN.release.get_release_type(p_in_load_release);
     v_previous_release := RNACEN.release.get_previous_release(p_in_dbid, p_in_load_release);
-    RNC_LOAD_XREF.load_xref(v_previous_release, p_in_dbid);
+    IF v_release_type = 'F' THEN
+      RNC_LOAD_XREF.load_xref(v_previous_release, p_in_dbid);
+    elsif v_release_type = 'I' THEN
+      RNC_LOAD_XREF_INCREMENTAL.load_xref_incremental(v_previous_release, p_in_dbid);
+    END IF;
 
     mark_as_done(p_in_dbid, p_in_load_release);
 
@@ -158,9 +167,11 @@ PACKAGE BODY RNC_UPDATE AS
   END load_release;
 
   /*
-    Iterates over all releases with status 'L' and load them into the database.
+    Iterate over all releases with status 'L' and load them into the database.
   */
-  PROCEDURE new_update
+  PROCEDURE new_update (
+    p_release_type IN RNACEN.rnc_release.release_type%TYPE DEFAULT 'F'
+  )
   IS
     CURSOR c_load
     IS
@@ -180,14 +191,14 @@ PACKAGE BODY RNC_UPDATE AS
 
     DBMS_OUTPUT.put_line('Launching an update');
 
-    prepare_releases();
+    prepare_releases(p_release_type);
 
     FOR v_load IN c_load
     LOOP
       move_staging_data(p_in_dbid => v_load.dbid);
       load_release(
         p_in_dbid         => v_load.dbid,
-        P_in_load_release => v_load.id
+        P_in_load_release => v_load.ID
       );
     END LOOP;
 

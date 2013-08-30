@@ -19,6 +19,7 @@ PACKAGE BODY RNC_TEST AS
     Currently not covered:
       - sequences longer than 4000 nts
       - multiple preceding xrefs
+      - incremental releases
   */
 
   /*
@@ -26,6 +27,7 @@ PACKAGE BODY RNC_TEST AS
   */
   SEQ_LENGTH CONSTANT NUMBER := 5;
   FIRST_UPI  CONSTANT VARCHAR(13) := 'UPI0000000001';
+  DEFAULT_DB_NAME CONSTANT VARCHAR(3) := 'ENA';
 
   /*
     Test parameters (available globally).
@@ -155,7 +157,7 @@ PACKAGE BODY RNC_TEST AS
     END IF;
 
     INSERT INTO
-      RNACEN.load_rnacentral
+      RNACEN.load_rnacentral_all
       (
         crc64,
         len,
@@ -164,7 +166,8 @@ PACKAGE BODY RNC_TEST AS
         ac,
         VERSION,
         taxid,
-        md5
+        md5,
+        database
       )
       VALUES(v_crc(p_test_id), -- crc64
              SEQ_LENGTH,       -- length
@@ -173,7 +176,8 @@ PACKAGE BODY RNC_TEST AS
              v_acc(p_test_id), -- accession
              v_ver(p_test_id), -- version
              v_tax(p_test_id), -- taxid
-             v_md5(p_test_id)  -- md5
+             v_md5(p_test_id), -- md5
+             DEFAULT_DB_NAME   -- default database label
              );
     COMMIT;
   END import_staging_data;
@@ -183,6 +187,8 @@ PACKAGE BODY RNC_TEST AS
   */
   PROCEDURE teardown AS
   BEGIN
+
+    EXECUTE IMMEDIATE 'TRUNCATE TABLE load_rnacentral_all DROP STORAGE';
 
     EXECUTE IMMEDIATE 'ALTER TABLE xref DISABLE CONSTRAINT FK_XREF$CREATED';
     EXECUTE IMMEDIATE 'ALTER TABLE xref DISABLE CONSTRAINT FK_XREF$DBID';
