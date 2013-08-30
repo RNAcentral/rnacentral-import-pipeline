@@ -1,7 +1,9 @@
 #!/bin/bash
+. config/hive_params
 rm log/rnacentral_import.log;
 perl $ENSEMBL_CVS_ROOT_DIR/ensembl-hive/scripts/init_pipeline.pl Bio::EnsEMBL::Hive::PipeConfig::RNAcentralUpdate_conf \
-	-output_folder='/nfs/nobackup2/ensemblgenomes/apetrov/rnacentral' \
+	-output_folder=$DATA_OUT \
+	-release_type=$DB_RELEASE_TYPE \
 	-pipeline-db -pass=$HIVE_PASSWORD \
 	-pipeline-db -user=$HIVE_USERNAME \
 	-pipeline-db -host=$HIVE_HOST \

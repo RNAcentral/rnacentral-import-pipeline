@@ -114,9 +114,14 @@ sub run_pl_sql_update {
 
     $self->{'logger'}->info("Launching PL/SQL update");
 
+    if ( $self->{'release_type'} ne 'F' and
+         $self->{'release_type'} ne 'I' ) {
+        $self->{'logger'}->logdie('Incorrect release type');
+    }
+
     my $command = <<PLSQL;
 BEGIN
-  RNC_UPDATE.NEW_UPDATE();
+  RNC_UPDATE.NEW_UPDATE('$self->{'release_type'}');
 END;
 PLSQL
 

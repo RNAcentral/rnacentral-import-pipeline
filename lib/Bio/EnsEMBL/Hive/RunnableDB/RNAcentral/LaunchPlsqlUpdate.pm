@@ -54,6 +54,7 @@ sub run {
     $opt->{'port'}          = $self->param_required('oracle-port');
     $opt->{'host'}          = $self->param_required('oracle-host');
     $opt->{'output_folder'} = $self->param_required('output_folder');
+    $opt->{'release_type'}  = $self->param_required('release_type');
 
     # truncate the sequences staging table
     my $oracle = Bio::RNAcentral::OracleUpdate->new($opt);

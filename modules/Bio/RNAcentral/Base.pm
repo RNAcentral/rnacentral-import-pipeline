@@ -35,6 +35,7 @@ sub new {
     $self->{'port'}          = $opt->{'port'};
     $self->{'host'}          = $opt->{'host'};
     $self->{'output_folder'} = $opt->{'output_folder'};
+    $self->{'release_type'}  = $opt->{'release_type'};
 
     $self->{'logger'} = initialize_logger();
     $self->{'opt'}    = default_options();

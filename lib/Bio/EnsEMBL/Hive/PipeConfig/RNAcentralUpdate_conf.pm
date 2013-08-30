@@ -79,6 +79,7 @@ sub pipeline_wide_parameters {
         'oracle-sid'      => $self->o('oracle-sid'),
         'oracle-port'     => $self->o('oracle-port'),
         'oracle-host'     => $self->o('oracle-host'),
+        'release_type'    => $self->o('release_type'), # incremental or full
     };
 }
 
@@ -93,7 +94,30 @@ sub pipeline_analyses {
     my ($self) = @_;
 
     return [
-        # list all ncr files
+        # truncate staging table
+        {   -logic_name => 'truncate_staging_table',
+            -module     => 'Bio::EnsEMBL::Hive::RunnableDB::RNAcentral::TruncateStagingTable',
+            -analysis_capacity  => 1,
+            -input_ids  => [
+                { 'id' => 1 }
+            ],
+        },
+
+        # get ncr files from a local folder
+        # {   -logic_name => 'get_ncr_files',
+        #     -module     => 'Bio::EnsEMBL::Hive::RunnableDB::RNAcentral::GetFiles',
+        #     -analysis_capacity  => 1,
+        #     -input_ids  => [
+        #         { 'location'  => '',
+        #           'extension' => 'ncr' }
+        #     ],
+        #     -flow_into => {
+        #         1 => { 'create_csv_files' => { 'ncr_file' => '#ncr_file#' } },
+        #     },
+        #     -wait_for => [ 'truncate_staging_table' ]
+        # },
+
+        # list all ncr files from the ftp site
         {   -logic_name => 'get_ncr_files',
             -module     => 'Bio::EnsEMBL::Hive::RunnableDB::RNAcentral::GetNcProduct',
             -input_ids  => [
@@ -108,6 +132,16 @@ sub pipeline_analyses {
         # prepare csv files for sql loader
         {   -logic_name    => 'create_csv_files',
             -module        => 'Bio::EnsEMBL::Hive::RunnableDB::RNAcentral::CreateCsvFiles',
+        },
+
+        # load literature references
+        {   -logic_name => 'load_references',
+            -module     => 'Bio::EnsEMBL::Hive::RunnableDB::RNAcentral::LoadReferences',
+            -analysis_capacity  => 1,
+            -input_ids  => [
+                { 'id' => 1 }
+            ],
+            -wait_for => [ 'get_ncr_files', 'create_csv_files' ]
         },
 
         # list all csv files with sequences longer than 4000 characters.
@@ -149,6 +183,16 @@ sub pipeline_analyses {
         # highly parallel step
         {   -logic_name    => 'import_short_csv',
             -module        => 'Bio::EnsEMBL::Hive::RunnableDB::RNAcentral::ImportCsv',
+        },
+
+        # launch PL/SQL update
+        {   -logic_name => 'launch_plsql_update',
+            -module     => 'Bio::EnsEMBL::Hive::RunnableDB::RNAcentral::LaunchPlsqlUpdate',
+            -analysis_capacity  => 1,
+            -input_ids  => [
+                { 'release_type' => $self->o('release_type') }
+            ],
+            -wait_for => [ 'import_short_csv' ],
         },
 
     ];

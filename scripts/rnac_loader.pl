@@ -9,7 +9,7 @@
 =head1 USAGE
 
     . ./config/hive_params
-    perl scripts/rnac_loader.pl -in /path/to/ncr_files -out /path/to/temp_folder -user=$ORACLE_USER -password=$ORACLE_PASSWORD -host=$ORACLE_HOST -port=$ORACLE_PORT -sid=$ORACLE_SID
+    perl scripts/rnac_loader.pl -in /path/to/ncr_files -out /path/to/temp_folder -user=$ORACLE_USER -password=$ORACLE_PASSWORD -host=$ORACLE_HOST -port=$ORACLE_PORT -sid=$ORACLE_SID -release_type=F/I
 
 =head1 DESCRIPTION
 
@@ -48,7 +48,8 @@ my $opt = {};
     'password=s' => \$opt->{'password'},
     'sid=s'      => \$opt->{'sid'},
     'port=i'     => \$opt->{'port'},
-    'host=s'     => \$opt->{'host'}
+    'host=s'     => \$opt->{'host'},
+    'release_type=s' => \$opt->{'release_type'}, # release type (full or incremental)
 );
 
 &pod2usage if ( $location eq ''              or
@@ -58,6 +59,11 @@ my $opt = {};
                 !defined($opt->{'port'})     or
                 !defined($opt->{'host'})     or
                 !defined($opt->{'output_folder'}));
+
+# Full release is default
+if ( !defined($opt->{'release_type'}) ) {
+    $opt->{'release_type'} = 'F';
+}
 
 my $a = Bio::RNAcentral::InputFiles->new($opt);
 my $e = Bio::RNAcentral::Embl2csv->new($opt);
