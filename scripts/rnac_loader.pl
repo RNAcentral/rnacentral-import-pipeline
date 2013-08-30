@@ -75,9 +75,15 @@ for my $ncrfile (@ncrfiles) {
     $e->embl2csv($ncrfile);
 }
 
-# load data into the staging table
+# load long sequences
 $b->make_ctl_files();
-my @csvfiles = $a->list_folder($opt->{'output_folder'}, 'csv');
+my @csvfiles = $a->list_folder($a->get_long_folder_path(), 'csv');
+for my $csvfile (@csvfiles) {
+    $b->load_seq($csvfile);
+}
+
+# load short sequences
+@csvfiles = $a->list_folder($a->get_short_folder_path(), 'csv');
 for my $csvfile (@csvfiles) {
     $b->load_seq($csvfile);
 }
