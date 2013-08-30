@@ -65,15 +65,25 @@ sub list_folder_recursive_ftp {
         or $self->{'logger'}->logdie("Login failed $!");
 
     # change remote directory
-    $ftp->cwd($self->{'opt'}{'ebi_ftp_non_coding_product_folder'})
+    my $remote_dir;
+    if ( $self->{'release_type'} eq 'F' ) {
+        $self->{'logger'}->info('Getting full release');
+        $remote_dir = $self->{'opt'}{'ebi_ftp_non_coding_product_release'};
+    } elsif ( $self->{'release_type'} eq 'I' ) {
+        $self->{'logger'}->info('Getting incremental release');
+        $remote_dir = $self->{'opt'}{'ebi_ftp_non_coding_product_update'};
+    } else {
+        $self->{'logger'}->logdie("Incorrect release type");
+    }
+
+    $ftp->cwd($remote_dir)
         or $self->{'logger'}->logdie("Could not change remote working directory");
 
     # set binary transfer mode, necessary for gz files
     $ftp->binary();
 
-    $self->{'logger'}->info("Getting recursive file list");
-
     # get recursive file listing
+    $self->{'logger'}->info("Getting recursive file list");
     my @ls = $ftp->ls('-lR');
 
     my $ftpdir = $self->get_ftp_downloads_path();
@@ -98,7 +108,7 @@ sub list_folder_recursive_ftp {
 
         $self->{'logger'}->info("Downloading $savename");
 
-        $ftp->get("$self->{'opt'}{'ebi_ftp_non_coding_product_folder'}/$name", $savename) or $self->{'logger'}->logdie($!);
+        $ftp->get("$remote_dir/$name", $savename) or $self->{'logger'}->logdie($!);
 
         $self->{'logger'}->info("Unzipping");
 

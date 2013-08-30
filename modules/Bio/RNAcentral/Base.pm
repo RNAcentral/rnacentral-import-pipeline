@@ -56,7 +56,9 @@ sub default_options {
         'ebi_ftp_site'     => 'ftp.ebi.ac.uk',       # Non-coding Product FTP site details
         'ebi_ftp_user'     => 'anonymous',
         'ebi_ftp_password' => '',
-        'ebi_ftp_non_coding_product_folder' => '/pub/databases/ena/non-coding',
+        'ebi_ftp_non_coding_product_folder'  => '/pub/databases/ena/non-coding',
+        'ebi_ftp_non_coding_product_update'  => '/pub/databases/ena/non-coding/update',
+        'ebi_ftp_non_coding_product_release' => '/pub/databases/ena/non-coding/release',
     };
 }
 

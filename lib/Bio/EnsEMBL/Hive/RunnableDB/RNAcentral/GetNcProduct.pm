@@ -37,6 +37,7 @@ sub fetch_input {
 
     my $opt = {};
     $opt->{'output_folder'} = $self->param_required('output_folder');
+    $opt->{'release_type'}  = $self->param_required('release_type');
 
     my $rnac = Bio::RNAcentral::InputFiles->new($opt);
     my @files = $rnac->list_folder_recursive_ftp();

@@ -121,7 +121,7 @@ sub pipeline_analyses {
         {   -logic_name => 'get_ncr_files',
             -module     => 'Bio::EnsEMBL::Hive::RunnableDB::RNAcentral::GetNcProduct',
             -input_ids  => [
-                { 'location'  => 1 }
+                { 'release_type'  => $self->o('release_type') }
             ],
             -analysis_capacity  =>  1,
             -flow_into => {
