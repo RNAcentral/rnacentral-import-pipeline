@@ -193,6 +193,7 @@ sub pipeline_analyses {
                 { 'release_type' => $self->o('release_type') }
             ],
             -wait_for => [ 'import_short_csv' ],
+            -max_retry_count => 0,
         },
 
     ];
