@@ -126,7 +126,7 @@ END;
 PLSQL
 
     $self->{'dbh'}->do($command)
-        or $self->{'logger'}->logdie("PL/SQL update failed");
+        or $self->{'logger'}->logdie("PL/SQL update failed " . $DBI::errstr);
 
     $self->{'logger'}->info("PL/SQL update complete");
 }
