@@ -1,7 +1,7 @@
 #!/bin/bash
 . config/hive_params
 rm -Rf $DATA_OUT/*
-rm log/rnacentral_import.log;
+rm -f log/rnacentral_import.log;
 perl $ENSEMBL_CVS_ROOT_DIR/ensembl-hive/scripts/init_pipeline.pl Bio::EnsEMBL::Hive::PipeConfig::RNAcentralUpdate_conf \
 	-output_folder=$DATA_OUT \
 	-release_type=$DB_RELEASE_TYPE \
