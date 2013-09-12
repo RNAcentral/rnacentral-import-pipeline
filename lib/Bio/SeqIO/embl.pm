@@ -300,6 +300,20 @@ sub next_seq {
                   $params{'-version'} = $sv;
               }
 
+              #project, PR line. RNAcentral.
+              if ( /^PR\s+(.*)$/ ) {
+                my $project_id = $1;
+                $project_id =~ s/;$//;
+                $project_id =~ s/Project://g;
+                if ( $project_id ) {
+                  my $project = Bio::Annotation::SimpleValue->new(
+                                                                   -tagname => 'project_id',
+                                                                   -value   => $project_id
+                                                                  );
+                  $annotation->add_Annotation($project);
+                }
+              }
+
               #date (NOTE: takes last date line)
               if ( /^DT\s+(.+)$/ ) {
                   my $line = $1;
