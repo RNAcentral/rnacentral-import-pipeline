@@ -53,3 +53,5 @@ log/*
 # hive database
 *_rnacentral_update
 pipeline.png
+# macfuse files
+._*
