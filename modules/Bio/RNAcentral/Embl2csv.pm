@@ -212,7 +212,13 @@ sub _get_ac_info {
     $ordinal                = $7;
 
     $species = $seq->species;
+
     $project = ($seq->annotation->get_Annotations('project_id'))[0];
+    if ( $project ) {
+        $project = $project->display_text();
+    } else {
+        $project = '';
+    }
     $keywords = _nvl($seq->keywords);
     $keywords =~ s/\.$//;
 
@@ -223,7 +229,7 @@ sub _get_ac_info {
                                $feature_location_end,
                                $feature_name,
                                _nvl($ordinal),
-                               _nvl($project->display_text()),
+                               $project,
                                _nvl($seq->division),
                                $keywords,
                                _nvl(_sanitize($seq->desc)),
