@@ -1,12 +1,12 @@
 #!/usr/bin/env perl
 
-package Bio::RNAcentral::SqlldrImport;
+package Bio::RNAcentral::SqlldrImportSequences;
 
 =pod
 
 =head1 NAME
 
-    Bio::RNAcentral::SqlldrImport
+    Bio::RNAcentral::SqlldrImportSequences
 
 =head1 DESCRIPTION
 

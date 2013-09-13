@@ -103,7 +103,7 @@ sub pipeline_analyses {
             ],
         },
 
-        # get ncr files from a local folder
+        # # get ncr files from a local folder
         # {   -logic_name => 'get_ncr_files',
         #     -module     => 'Bio::EnsEMBL::Hive::RunnableDB::RNAcentral::GetFiles',
         #     -analysis_capacity  => 1,
@@ -144,6 +144,27 @@ sub pipeline_analyses {
             -wait_for => [ 'get_ncr_files', 'create_csv_files' ]
         },
 
+        # load accession info
+        {   -logic_name => 'load_accession_info',
+            -module     => 'Bio::EnsEMBL::Hive::RunnableDB::RNAcentral::LoadAccessionInfo',
+            -analysis_capacity  => 1,
+            -input_ids  => [
+                { 'id' => 1 }
+            ],
+            -wait_for => [ 'get_ncr_files', 'create_csv_files' ]
+        },
+
+
+        # load composite ids
+        {   -logic_name => 'load_composite_ids',
+            -module     => 'Bio::EnsEMBL::Hive::RunnableDB::RNAcentral::LoadCompositeIds',
+            -analysis_capacity  => 1,
+            -input_ids  => [
+                { 'id' => 1 }
+            ],
+            -wait_for => [ 'get_ncr_files', 'create_csv_files' ]
+        },
+
         # list all csv files with sequences longer than 4000 characters.
         {   -logic_name => 'get_long_csv_files',
             -module     => 'Bio::EnsEMBL::Hive::RunnableDB::RNAcentral::GetFiles',
@@ -161,7 +182,7 @@ sub pipeline_analyses {
         # long sequences need to be imported sequentially, because they are stored as clobs
         # and parallel loading for clobs is not supported in Oracle.
         {   -logic_name    => 'import_long_csv',
-            -module        => 'Bio::EnsEMBL::Hive::RunnableDB::RNAcentral::ImportCsv',
+            -module        => 'Bio::EnsEMBL::Hive::RunnableDB::RNAcentral::LoadSequences',
             -analysis_capacity  =>  1,
         },
 
@@ -182,7 +203,7 @@ sub pipeline_analyses {
         # import all csv files with short sequences
         # highly parallel step
         {   -logic_name    => 'import_short_csv',
-            -module        => 'Bio::EnsEMBL::Hive::RunnableDB::RNAcentral::ImportCsv',
+            -module        => 'Bio::EnsEMBL::Hive::RunnableDB::RNAcentral::LoadSequences',
         },
 
         # launch PL/SQL update

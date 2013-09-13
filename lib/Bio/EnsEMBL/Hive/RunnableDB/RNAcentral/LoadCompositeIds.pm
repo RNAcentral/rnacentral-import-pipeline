@@ -3,15 +3,15 @@
 
 =head1 DESCRIPTION
 
-    Prepare the Oracle staging table for loading the data.
+    Load literature references extracted from the Non-coding Product.
 
 =cut
 
-package Bio::EnsEMBL::Hive::RunnableDB::RNAcentral::TruncateStagingTable;
+package Bio::EnsEMBL::Hive::RunnableDB::RNAcentral::LoadCompositeIds;
 
 use strict;
 
-
+use Bio::RNAcentral::SqlldrImportCompositeIds;
 use Bio::RNAcentral::OracleUpdate;
 
 use base ('Bio::EnsEMBL::Hive::Process');
@@ -55,11 +55,8 @@ sub run {
     $opt->{'host'}          = $self->param_required('oracle-host');
     $opt->{'output_folder'} = $self->param_required('output_folder');
 
-    # truncate the sequences staging table
-    my $oracle = Bio::RNAcentral::OracleUpdate->new($opt);
-    $oracle->db_oracle_connect();
-    $oracle->truncate_table($oracle->{'opt'}{'staging_table'});
-    $oracle->db_oracle_disconnect();
+    my $rnac = Bio::RNAcentral::SqlldrImportCompositeIds->new($opt, 'composite_ids');
+    $rnac->update();
 }
 
 

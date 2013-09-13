@@ -12,11 +12,11 @@
 
 =cut
 
-package Bio::EnsEMBL::Hive::RunnableDB::RNAcentral::ImportCsv;
+package Bio::EnsEMBL::Hive::RunnableDB::RNAcentral::LoadSequences;
 
 use strict;
 
-use Bio::RNAcentral::SqlldrImport;
+use Bio::RNAcentral::SqlldrImportSequences;
 
 use base ('Bio::EnsEMBL::Hive::Process');
 
@@ -50,7 +50,7 @@ sub fetch_input {
     $opt->{'host'}          = $self->param_required('oracle-host');
     $opt->{'output_folder'} = $self->param_required('output_folder');
 
-    my $sqlldr = Bio::RNAcentral::SqlldrImport->new($opt);
+    my $sqlldr = Bio::RNAcentral::SqlldrImportSequences->new($opt);
 
     $sqlldr->make_ctl_files();
     $sqlldr->load_seq($input_file);

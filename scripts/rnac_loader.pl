@@ -31,10 +31,12 @@ use Getopt::Long;
 use Pod::Usage;
 
 use Bio::RNAcentral::InputFiles;
-use Bio::RNAcentral::SqlldrImport;
 use Bio::RNAcentral::OracleUpdate;
 use Bio::RNAcentral::Embl2csv;
+use Bio::RNAcentral::SqlldrImportSequences;
 use Bio::RNAcentral::SqlldrImportReferences;
+use Bio::RNAcentral::SqlldrImportAccessionInfo;
+use Bio::RNAcentral::SqlldrImportCompositeIds;
 
 
 my $location = '';
@@ -67,19 +69,30 @@ if ( !defined($opt->{'release_type'}) ) {
 
 my $a = Bio::RNAcentral::InputFiles->new($opt);
 my $e = Bio::RNAcentral::Embl2csv->new($opt);
-my $b = Bio::RNAcentral::SqlldrImport->new($opt);
+my $b = Bio::RNAcentral::SqlldrImportSequences->new($opt);
 my $c = Bio::RNAcentral::OracleUpdate->new($opt);
-my $d = Bio::RNAcentral::SqlldrImportReferences->new($opt);
 
 # prepare staging table
 $c->db_oracle_connect();
-$c->truncate_staging_table();
+$c->truncate_table($c->{'opt'}{'staging_table'});
 
 # create output files in csv format
 my @ncrfiles = $a->list_folder_recursive($location, 'ncr');
 for my $ncrfile (@ncrfiles) {
     $e->embl2csv($ncrfile);
 }
+
+# load information about non-coding accessions
+my $f = Bio::RNAcentral::SqlldrImportAccessionInfo->new($opt, 'ac_info');
+$f->update();
+
+# load information about composite non-coding ids
+my $g = Bio::RNAcentral::SqlldrImportCompositeIds->new($opt, 'composite_ids');
+$g->update();
+
+# load literature references
+my $d = Bio::RNAcentral::SqlldrImportReferences->new($opt, 'refs');
+$d->update();
 
 # load long sequences
 $b->make_ctl_files();
@@ -93,8 +106,6 @@ for my $csvfile (@csvfiles) {
 for my $csvfile (@csvfiles) {
     $b->load_seq($csvfile);
 }
-
-$d->load_all_references();
 
 # launch plsql update
 $c->run_pl_sql_update();

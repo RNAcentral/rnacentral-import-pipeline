@@ -69,37 +69,92 @@ sub db_oracle_disconnect {
 }
 
 
-=head2 truncate_references_staging_table
+=head2 truncate_table
 
-    The staging table should be empty at the beginning of the import.
+    Generic truncate table function.
 
 =cut
 
-sub truncate_references_staging_table {
-    my $self = shift;
+sub truncate_table {
+    (my $self, my $table) = @_;
 
-    my $command = "TRUNCATE TABLE $self->{'opt'}{'references_table'}";
+    my $command = "TRUNCATE TABLE $table";
     $self->{'dbh'}->do($command)
-        or $self->{'logger'}->logdie("Couldn't truncate the references staging table");
+        or $self->{'logger'}->logdie("Couldn't truncate $table");
 
-    $self->{'logger'}->info("References staging table truncated");
+    $self->{'logger'}->info("Table $table truncated");
 }
 
 
-=head2 truncate_staging_table
+=head2 update_ac_info
 
-    The staging table should be empty at the beginning of the import.
+    Merge the accession information from the staging table.
 
 =cut
 
-sub truncate_staging_table {
+sub update_accession_info {
     my $self = shift;
 
-    my $command = "TRUNCATE TABLE $self->{'opt'}{'staging_table'}";
-    $self->{'dbh'}->do($command)
-        or $self->{'logger'}->logdie("Couldn't truncate the staging table");
+    $self->{'logger'}->info("Launching accession info update");
 
-    $self->{'logger'}->info("Staging table truncated");
+    my $command = <<PLSQL;
+BEGIN
+  RNC_UPDATE.update_accession_info();
+END;
+PLSQL
+
+    $self->{'dbh'}->do($command)
+        or $self->{'logger'}->logdie("Accession info update failed " . $DBI::errstr);
+
+    $self->{'logger'}->info("Accession info update complete");
+}
+
+
+=head2 update_composite_ids
+
+    Merge the composite id data from the staging table.
+
+=cut
+
+sub update_composite_ids {
+    my $self = shift;
+
+    $self->{'logger'}->info("Launching composite id update");
+
+    my $command = <<PLSQL;
+BEGIN
+  RNC_UPDATE.update_composite_ids();
+END;
+PLSQL
+
+    $self->{'dbh'}->do($command)
+        or $self->{'logger'}->logdie("Composite id update failed " . $DBI::errstr);
+
+    $self->{'logger'}->info("Composite id update complete");
+}
+
+
+=head2 update_literature_references
+
+    Merge the literature references data from the staging table.
+
+=cut
+
+sub update_literature_references {
+    my $self = shift;
+
+    $self->{'logger'}->info("Launching literature references update");
+
+    my $command = <<PLSQL;
+BEGIN
+  RNC_UPDATE.update_literature_references();
+END;
+PLSQL
+
+    $self->{'dbh'}->do($command)
+        or $self->{'logger'}->logdie("Literature references update failed " . $DBI::errstr);
+
+    $self->{'logger'}->info("Literature references update complete");
 }
 
 

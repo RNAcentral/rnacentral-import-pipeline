@@ -54,6 +54,12 @@ sub new {
     # create output directory for short files
     mkdir $self->get_short_folder_path() unless -d $self->get_short_folder_path();
 
+    # create output directory for info files
+    mkdir $self->get_info_path() unless -d $self->get_info_path();
+
+    # create output directory for composite id files
+    mkdir $self->get_comp_id_path() unless -d $self->get_comp_id_path();
+
     return $self;
 }
 
@@ -73,17 +79,22 @@ sub embl2csv {
     # get file name without extension
     my $job_id = File::Basename::fileparse($file, qr/\.[^.]*/);
 
-    my $fname_long  = $self->get_output_filename($self->get_long_folder_path(),  $job_id, 'long',  'csv');
-    my $fname_short = $self->get_output_filename($self->get_short_folder_path(), $job_id, 'short', 'csv');
-    my $fname_refs  = File::Spec->catfile($self->get_refs_path(), $job_id . '.csv');
+    my $fname_long    = $self->get_output_filename($self->get_long_folder_path(),  $job_id, 'long',  'csv');
+    my $fname_short   = $self->get_output_filename($self->get_short_folder_path(), $job_id, 'short', 'csv');
+    my $fname_refs    = File::Spec->catfile($self->get_refs_path(),    $job_id . '.csv');
+    my $fname_ac_info = File::Spec->catfile($self->get_info_path(),    $job_id . '.csv');
+    my $fname_comp_id = File::Spec->catfile($self->get_comp_id_path(), $job_id . '.csv');
 
     # open output files
-    my $fh_long  = IO::File->new("> $fname_long")  or $self->{'logger'}->logdie("Couldn't open file $fname_long");
-    my $fh_short = IO::File->new("> $fname_short") or $self->{'logger'}->logdie("Couldn't open file $fname_short");
-    my $fh_refs  = IO::File->new("> $fname_refs")  or $self->{'logger'}->logdie("Couldn't open file $fname_refs");
+    my $fh_long    = IO::File->new("> $fname_long")    or $self->{'logger'}->logdie("Couldn't open file $fname_long");
+    my $fh_short   = IO::File->new("> $fname_short")   or $self->{'logger'}->logdie("Couldn't open file $fname_short");
+    my $fh_refs    = IO::File->new("> $fname_refs")    or $self->{'logger'}->logdie("Couldn't open file $fname_refs");
+    my $fh_ac_info = IO::File->new("> $fname_ac_info") or $self->{'logger'}->logdie("Couldn't open file $fname_ac_info");
+    my $fh_comp_id = IO::File->new("> $fname_comp_id") or $self->{'logger'}->logdie("Couldn't open file $fname_comp_id");
 
     # initializations
-    my ($i, $records, $seqs_long, $seqs_short, $dblinks_num, $refs_num, $data, $seq, $refs, $md5);
+    my ($i, $records, $seqs_long, $seqs_short, $dblinks_num, $refs_num, $data,
+        $seq, $refs, $md5, $info, @dblinks);
     $i = $records = $seqs_long = $seqs_short = $dblinks_num = $refs_num = 0;
     $refs = '';
 
@@ -121,6 +132,18 @@ sub embl2csv {
             print $fh_refs $refs->{'text'};
             $refs_num += $refs->{'num'};
         }
+
+        # get general info about accessions
+        $info = $self->_get_ac_info($seq);
+        if ( $info ) {
+            print $fh_ac_info $info->{'text'};
+        }
+
+        # write out composite id data
+        if ( $data->{'comp_id_text'} ) {
+            print $fh_comp_id $data->{'comp_id_text'};
+        }
+
     }
 
     # if there are any problems, delete already created files to prevent any import
@@ -140,6 +163,8 @@ sub embl2csv {
     $fh_short->close;
     $fh_long->close;
     $fh_refs->close;
+    $fh_ac_info->close;
+    $fh_comp_id->close;
 
     $self->_check_temp_files($fname_refs);
 
@@ -159,6 +184,184 @@ sub _check_temp_files{
         unlink $file;
         return ();
     }
+}
+
+
+=head _get_ac_info
+
+    Get general info about accessions.
+
+=cut
+
+sub _get_ac_info {
+
+    (my $self, my $seq)  = @_;
+
+    my ($text, $accession, $seq_version, $feature_location_start,
+        $feature_location_end, $feature_name, $ordinal, $species,
+        $keywords, $project);
+
+    # GU187164.1:15402..15468:tRNA
+    # <accession>.<sequence version>:<feature location string>:<feature name>[:ordinal]
+    $seq->display_id =~ /(\w+)\.(\d+):(\d+)\.\.(\d+):(\w+)(:(\w+))*/;
+    $accession              = $1;
+    $seq_version            = $2;
+    $feature_location_start = $3;
+    $feature_location_end   = $4;
+    $feature_name           = $5;
+    $ordinal                = $7;
+
+    $species = $seq->species;
+    $project = ($seq->annotation->get_Annotations('project_id'))[0];
+    $keywords = _nvl($seq->keywords);
+    $keywords =~ s/\.$//;
+
+    $text = '"' . join('","', (_nvl($seq->display_id),
+                               $accession,
+                               $seq_version,
+                               $feature_location_start,
+                               $feature_location_end,
+                               $feature_name,
+                               _nvl($ordinal),
+                               _nvl($project->display_text()),
+                               _nvl($seq->division),
+                               $keywords,
+                               _nvl(_sanitize($seq->desc)),
+                               $species->binomial,
+                               _nvl($species->organelle),
+                               join('; ', reverse $species->classification),
+                               ) ) . "\"\n";
+    return { text => $text };
+}
+
+
+sub _get_dblinks {
+
+    (my $self, my $seq)  = @_;
+
+    my (@data, $database, $primary_id, $optional_id);
+
+    # initialize as an ENA entry
+    $data[0] = { database    => 'ENA',
+                 primary_id  => $seq->display_id,
+                 accession   => $seq->display_id,
+                 optional_id => '' };
+
+    # add any DR entries
+    my $anno_collection = $seq->annotation;
+    for my $key ( $anno_collection->get_all_annotation_keys ) {
+        my @annotations = $anno_collection->get_Annotations($key);
+        for my $value ( @annotations ) {
+            if ( $value->tagname eq "dblink" ) {
+                $database    = _nvl($value->database());
+                $primary_id  = _nvl($value->primary_id());
+                $optional_id = _nvl($value->optional_id());
+
+                push @data, { # create unique ids for the DR links
+                              # example: RF01271_BK006945.2:460712..467569:rRNA
+                              primary_id  => $primary_id . '_' . $seq->display_id,
+                              accession   => $primary_id,
+                              optional_id => $optional_id,
+                              database    => $database,
+                            };
+            }
+        }
+    }
+
+    return \@data;
+}
+
+
+=head2 _get_basic_data
+
+    Get minimum data required for UniParc-style functionality given a BioPerl seq object.
+
+=cut
+
+sub _get_basic_data {
+
+    (my $self, my $seq, my $md5)  = @_;
+
+    my ($ac, $length, $version, $isLong, $crc64, $taxid,
+        $data, $sequence, $isValid, $text, $comp_id_text, $dblink);
+
+    $ac = $crc64 = $taxid = $data = $sequence = $text = $comp_id_text = '';
+    $length = $version = $isValid = 0;
+
+    # get new data
+    $ac       = $seq->display_id;
+    $length   = $seq->length;
+    $version  = $seq->seq_version;
+    $sequence = $seq->seq;
+    $crc64 = SWISS::CRC64::crc64($seq->seq);
+
+    for my $feat_object ($seq->get_SeqFeatures) {
+        if ( $feat_object->primary_tag eq 'source' ) {
+            for my $tag ($feat_object->get_all_tags) {
+                for my $value ($feat_object->get_tag_values($tag)) {
+                    if ($tag eq 'db_xref') {
+                        (my $text, $taxid) = split(':', $value);
+                        last;
+                    }
+                }
+            }
+            last; # found taxid, stop looking
+        }
+    }
+
+    # quality control
+    if ( $ac eq '' or $sequence eq '' or $length == 0 ) {
+        $isValid = 0;
+    } else {
+        $isValid = 1;
+    }
+
+    if ($length > $self->{'opt'}{'maxseqshort'}) {
+        $isLong = 1;
+    } else {
+        $isLong = 0;
+    }
+
+    # get database links
+    my $dblinks = $self->_get_dblinks($seq);
+
+    # treat DRs as independent xrefs
+    foreach my $dblink ( @$dblinks ) {
+        $text .=  join(',', ($crc64,
+                             $length,
+                             $sequence,
+                             $dblink->{'database'},
+                             $dblink->{'primary_id'},
+                             $dblink->{'optional_id'}, # TODO: drop this column
+                             $version,
+                             $taxid,
+                             $md5)) . "\n";
+    }
+
+    # write out composite id correspondences
+    if ( scalar @$dblinks > 1 ) {
+        # skip the first entry (non-composite ENA id)
+        for ( my $i=1; $i < scalar @$dblinks; $i++ ) {
+            $dblink = @$dblinks[$i];
+            $comp_id_text .= '"' . join('","', ($dblink->{'primary_id'},  # composite id like RF01271_BK006945.2:460712..467569:rRNA
+                                                $seq->display_id,         # ENA id BK006945.2:460712..467569:rRNA
+                                                $dblink->{'database'}),   # e.g. RFAM
+                                                $dblink->{'optional_id'}, # e.g. 5.8S_RNA
+                                                $dblink->{'accession'},   # e.g. RF01271
+
+                                        ) . "\"\n";;
+        }
+    } else {
+        $comp_id_text = '';
+    }
+
+    return {
+        'text'         => $text,
+        'isLong'       => $isLong,
+        'isValid'      => $isValid,
+        'comp_id_text' => $comp_id_text,
+        'dblinks_num'  => scalar @$dblinks,
+    };
 }
 
 
@@ -227,104 +430,6 @@ sub _sanitize {
 
 =cut
 
-sub _get_dblinks {
-
-    (my $self, my $seq)  = @_;
-
-    my (@data, $database, $primary_id, $optional_id);
-
-    # initialize as an ENA entry
-    $data[0] = { database    => 'ENA',
-                 primary_id  => $seq->display_id,
-                 optional_id => '' };
-
-    # add any DR entries
-    my $anno_collection = $seq->annotation;
-    for my $key ( $anno_collection->get_all_annotation_keys ) {
-        my @annotations = $anno_collection->get_Annotations($key);
-        for my $value ( @annotations ) {
-            if ( $value->tagname eq "dblink" ) {
-                $database    = _nvl($value->database());
-                $primary_id  = _nvl($value->primary_id());
-                $optional_id = _nvl($value->optional_id());
-
-                push @data, { database    => $database,
-                              primary_id  => $primary_id . '_' . $seq->display_id,
-                              optional_id => $optional_id };
-            }
-        }
-    }
-
-    return \@data;
-}
-
-
-=head2 _get_references
-
-    Get minimum data required for UniParc-style functionality given a BioPerl seq object.
-
-=cut
-
-sub _get_basic_data {
-
-    (my $self, my $seq, my $md5)  = @_;
-
-    my ($ac, $length, $version, $isLong, $crc64, $taxid,
-        $data, $sequence, $isValid, $text);
-
-    $ac = $crc64 = $taxid = $data = $sequence = $text = '';
-    $length = $version = $isValid = 0;
-
-    # get new data
-    $ac       = $seq->display_id;
-    $length   = $seq->length;
-    $version  = $seq->seq_version;
-    $sequence = $seq->seq;
-    $crc64 = SWISS::CRC64::crc64($seq->seq);
-
-    for my $feat_object ($seq->get_SeqFeatures) {
-        if ( $feat_object->primary_tag eq 'source' ) {
-            for my $tag ($feat_object->get_all_tags) {
-                for my $value ($feat_object->get_tag_values($tag)) {
-                    if ($tag eq 'db_xref') {
-                        (my $text, $taxid) = split(':', $value);
-                        last;
-                    }
-                }
-            }
-            last; # found taxid, stop looking
-        }
-    }
-
-    # quality control
-    if ( $ac eq '' or $sequence eq '' or $length == 0 ) {
-        $isValid = 0;
-    } else {
-        $isValid = 1;
-    }
-
-    if ($length > $self->{'opt'}{'maxseqshort'}) {
-        $isLong = 1;
-    } else {
-        $isLong = 0;
-    }
-
-    # get database links
-    my $dblinks = $self->_get_dblinks($seq);
-
-    foreach my $dblink ( @$dblinks ) {
-        $text .=  join(',', ($crc64, $length, $sequence,
-                             $dblink->{'database'}, $dblink->{'primary_id'}, $dblink->{'optional_id'},
-                             $version, $taxid, $md5)) . "\n";
-    }
-
-    return {
-        'text'   => $text,
-        'isLong' => $isLong,
-        'isValid' => $isValid,
-        'dblinks_num' => scalar @$dblinks,
-    };
-}
 
 # get non-empty value, named after the NVL function in Oracle
 sub _nvl {

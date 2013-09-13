@@ -1,19 +1,16 @@
 #!/usr/bin/env perl
 
-package Bio::RNAcentral::SqlldrImportReferences;
+package Bio::RNAcentral::SqlldrImportCompositeIds;
 
 =pod
 
 =head1 NAME
 
-    Bio::RNAcentral::SqlldrImportReferences
+    Bio::RNAcentral::SqlldrImportCompositeIds
 
 =head1 DESCRIPTION
 
-    Import literature references into the RNAcentral Oracle database.
-    Since some fields (e.g. authors) are longer than 4000 characters, they are stored as clobs.
-    Parallel load option is not allowed when loading lob columns (SQL*Loader-971),
-    so the data are loaded sequentially.
+
 
 =cut
 
@@ -44,21 +41,21 @@ sub new {
 sub load_all {
     my $self = shift;
 
-    $self->{'logger'}->info("Loading references");
+    $self->{'logger'}->info("Loading composite ids");
 
     # create one sqlldr control file
     $self->_make_ctl_file();
 
     # concatenate all csv files
     my $cmd = "cat $self->{'local'}{'path'}/*.csv > $self->{'local'}{'allfile'}";
-    $self->{'logger'}->info("Creating a single datafile with references: $cmd");
+    $self->{'logger'}->info("Creating a single datafile with composite ids: $cmd");
     system($cmd);
 
     # clean up old files if present
     $self->_delete_old_log_files();
 
     # prepare sqlldr command
-    $cmd = $self->_get_sqlldr_command($self->{'local'}{'allfile'});
+    $cmd = $self->_get_sqlldr_command();
 
     # run sqlldr
     $self->{'logger'}->info("Importing $self->{'local'}{'allfile'}");
@@ -66,7 +63,7 @@ sub load_all {
 
     # clean up if no errors and no problems in sqlldr
     unless ( $self->_errors_found() or $problems ) {
-        unlink $self->{'local'}{'allfile'}, $self->{'local'}{'logfile'};
+        unlink $self->{'local'}{'logfile'}, $self->{'local'}{'badfile'};
     }
 }
 
@@ -86,18 +83,14 @@ sub _make_ctl_file {
 LOAD DATA
 INFILE "str '\\n'"
 APPEND
-INTO TABLE $self->{'opt'}{'references_table'}
+INTO TABLE $self->{'opt'}{'comp_id_table'}
 FIELDS TERMINATED BY ',' enclosed by '"'
 (
-    MD5 char,
-    AUTHORS_MD5 char,
-    AUTHORS char(1000000),
-    LOCATION char(4000),
-    TITLE char(4000),
-    PUBMED char,
-    DOI char,
-    PUBLISHER char,
-    EDITORS char
+    COMPOSITE_ID char,
+    AC char,
+    DATABASE char,
+    OPTIONAL_ID char,
+    EXTERNAL_ID char
 )
 CTL
     close $fh;
@@ -114,10 +107,11 @@ sub update {
     my $self = shift;
 
     $self->db_oracle_connect();
-    $self->truncate_table($self->{'opt'}{'references_table'});
+    $self->truncate_table($self->{'opt'}{'comp_id_table'});
     $self->load_all();
-    $self->update_literature_references();
+    $self->update_composite_ids();
     $self->db_oracle_disconnect();
 }
+
 
 1;

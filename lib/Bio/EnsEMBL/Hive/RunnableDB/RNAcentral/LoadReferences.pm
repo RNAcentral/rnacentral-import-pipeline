@@ -12,7 +12,6 @@ package Bio::EnsEMBL::Hive::RunnableDB::RNAcentral::LoadReferences;
 use strict;
 
 use Bio::RNAcentral::SqlldrImportReferences;
-use Bio::RNAcentral::OracleUpdate;
 
 use base ('Bio::EnsEMBL::Hive::Process');
 
@@ -55,14 +54,8 @@ sub run {
     $opt->{'host'}          = $self->param_required('oracle-host');
     $opt->{'output_folder'} = $self->param_required('output_folder');
 
-    # truncate references staging table
-    my $oracle = Bio::RNAcentral::OracleUpdate->new($opt);
-    $oracle->db_oracle_connect();
-    $oracle->truncate_references_staging_table();
-    $oracle->db_oracle_disconnect();
-
-    my $rnac = Bio::RNAcentral::SqlldrImportReferences->new($opt);
-    $rnac->load_all_references();
+    my $rnac = Bio::RNAcentral::SqlldrImportReferences->new($opt, 'refs');
+    $rnac->update();
 }
 
 

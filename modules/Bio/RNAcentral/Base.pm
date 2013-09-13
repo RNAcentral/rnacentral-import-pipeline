@@ -46,14 +46,16 @@ sub new {
 
 sub default_options {
     return {
-        'file_extension'   => 'ncr',                 # look for .ncr files
-        'file_size_cutoff' => 50 * 10**6,            # file size cutoff in bytes
-        'staging_table'    => 'load_rnacentral_all', # staging table
-        'release_table'    => 'rnc_release',         # keeps track of all RNAcentral releases
-        'references_table' => 'rnc_references_all',  # table with literature references
-    		'maxseqlong'       => 1000000,               # maximum length for long sequences stored as clobs
-    		'maxseqshort'      => 4000,                  # maximum length for short sequences stored as chars
-        'ebi_ftp_site'     => 'ftp.ebi.ac.uk',       # Non-coding Product FTP site details
+        'file_extension'   => 'ncr',                     # look for .ncr files
+        'file_size_cutoff' => 50 * 10**6,                # file size cutoff in bytes
+        'staging_table'    => 'load_rnacentral_all',     # staging table
+        'release_table'    => 'rnc_release',             # keeps track of all RNAcentral releases
+        'references_table' => 'rnc_references_all',      # table with literature references
+        'ac_info_table'    => 'rnc_ac_info_all',         # data about accessions
+        'comp_id_table'    => 'rnc_composite_ids_all',   # composite ids derived from DR lines
+    		'maxseqlong'       => 1000000,                   # maximum length for long sequences stored as clobs
+    		'maxseqshort'      => 4000,                      # maximum length for short sequences stored as chars
+        'ebi_ftp_site'     => 'ftp.ebi.ac.uk',           # Non-coding Product FTP site details
         'ebi_ftp_user'     => 'anonymous',
         'ebi_ftp_password' => '',
         'ebi_ftp_non_coding_product_folder'  => '/pub/databases/ena/non-coding',
@@ -123,6 +125,18 @@ sub get_chunks_path {
 }
 
 
+=head2 get_comp_id_path
+
+  Get full path to the folder containing files downloaded over ftp.
+
+=cut
+
+sub get_comp_id_path {
+    my $self = shift;
+    return File::Spec->catfile($self->{'output_folder'}, 'composite_ids');
+}
+
+
 =head2 get_ftp_downloads_path
 
   Get full path to the folder containing files downloaded over ftp.
@@ -145,6 +159,19 @@ sub get_ftp_downloads_path {
 sub get_refs_path {
     my $self = shift;
     return File::Spec->catfile($self->{'output_folder'}, 'refs');
+}
+
+
+=head2 get_info_path
+
+  Get full path of the folder with csv files containing general information
+  about accessions, such as descriptions etc.
+
+=cut
+
+sub get_info_path {
+    my $self = shift;
+    return File::Spec->catfile($self->{'output_folder'}, 'ac_info');
 }
 
 
