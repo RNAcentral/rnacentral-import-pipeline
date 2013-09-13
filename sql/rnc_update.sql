@@ -2,6 +2,179 @@ create or replace
 PACKAGE BODY RNC_UPDATE AS
 
   /*
+  *
+  */
+  PROCEDURE update_composite_ids
+  IS
+  BEGIN
+
+    DBMS_OUTPUT.put_line('Updating composite ids');
+
+    MERGE INTO rnc_composite_ids t1
+    --ignore duplicates
+    USING (SELECT * FROM rnc_composite_ids_all WHERE ROWID IN (SELECT MIN (ROWID) FROM rnc_composite_ids_all GROUP BY ac)) t2
+    ON (t1.composite_id = t2.composite_id)
+    WHEN MATCHED THEN UPDATE SET
+      t1.OPTIONAL_ID = t2.OPTIONAL_ID
+    WHEN NOT MATCHED THEN INSERT
+    (
+      t1.COMPOSITE_ID,
+      t1.AC,
+      t1.DATABASE,
+      t1.OPTIONAL_ID,
+      t1.EXTERNAL_ID
+    )
+    VALUES
+    (
+      t2.COMPOSITE_ID,
+      t2.AC,
+      t2.DATABASE,
+      t2.OPTIONAL_ID,
+      t2.EXTERNAL_ID
+    );
+
+    DBMS_OUTPUT.put_line('Composite ids updated');
+
+  END update_composite_ids;
+
+
+  /*
+  * Merge in the accession-level information from the staging table.
+  */
+  PROCEDURE update_accession_info
+  IS
+  BEGIN
+
+    DBMS_OUTPUT.put_line('Updating accession information');
+
+    MERGE INTO rnc_ac_info t1
+    --ignore duplicates
+    USING (SELECT * FROM rnc_ac_info_all WHERE ROWID IN (SELECT MIN (ROWID) FROM rnc_ac_info_all GROUP BY ac)) t2
+    ON (t1.ac = t2.ac)
+    WHEN MATCHED THEN UPDATE SET
+      t1.DIVISION = t2.DIVISION,
+      t1.KEYWORDS = t2.KEYWORDS,
+      t1.DESCRIPTION = t2.DESCRIPTION,
+      t1.ORGANELLE = t2.ORGANELLE,
+      t1.SPECIES = t2.SPECIES,
+      t1.CLASSIFICATION = t2.CLASSIFICATION,
+      t1."PROJECT" = t2."PROJECT"
+    WHEN NOT MATCHED THEN INSERT
+    (
+      t1.AC,
+      t1.PARENT_AC,
+      t1.SEQ_VERSION,
+      t1.FEATURE_START,
+      t1.FEATURE_END,
+      t1.FEATURE_NAME,
+      t1.ORDINAL,
+      t1.DIVISION,
+      t1."PROJECT",
+      t1.KEYWORDS,
+      t1.DESCRIPTION,
+      t1.ORGANELLE,
+      t1.SPECIES,
+      t1.CLASSIFICATION
+    )
+    VALUES
+    (
+      t2.AC,
+      t2.PARENT_AC,
+      t2.SEQ_VERSION,
+      t2.FEATURE_START,
+      t2.FEATURE_END,
+      t2.FEATURE_NAME,
+      t2.ORDINAL,
+      t2.DIVISION,
+      t2."PROJECT",
+      t2.KEYWORDS,
+      t2.DESCRIPTION,
+      t2.ORGANELLE,
+      t2.SPECIES,
+      t2.CLASSIFICATION
+    );
+
+    DBMS_OUTPUT.put_line('Accession information updated');
+
+  END update_accession_info;
+
+
+  /*
+  * Insert non-redundant literature references from the staging table into
+  * the main table.
+  */
+  PROCEDURE update_literature_references
+  IS
+  BEGIN
+
+    INSERT INTO rnc_references
+    (
+      md5,
+      authors_md5,
+      location,
+      authors,
+      title,
+      pubmed,
+      doi,
+      publisher,
+      editors
+    )
+    SELECT
+      /*+ PARALLEL */
+      in_md5,
+      in_authors_md5,
+      in_location,
+      in_my_authors,
+      in_title,
+      in_pubmed,
+      in_doi,
+      in_publisher,
+      in_editors
+    FROM
+      (
+      WITH
+        distinct_new_refs AS
+        (
+          SELECT DISTINCT
+            md5,
+            authors_md5,
+            location,
+            useful_clob_object(authors) MY_AUTHORS,
+            title,
+            pubmed,
+            doi,
+            publisher,
+            editors
+          FROM
+            rnc_references_all
+         )
+      SELECT
+        l.md5 in_md5,
+        l.authors_md5 in_authors_md5,
+        l.location in_location,
+        TREAT(l.MY_AUTHORS AS USEFUL_CLOB_OBJECT).UCO AS in_my_authors,
+        l.title in_title,
+        l.pubmed in_pubmed,
+        l.doi in_doi,
+        l.publisher in_publisher,
+        l.editors in_editors
+      FROM
+        distinct_new_refs l,
+        rnc_references p
+     WHERE p.md5 (+) = l.md5
+        AND p.authors_md5 (+) = l.authors_md5
+        and p.location (+) = l.location
+        AND p.md5 IS NULL
+        AND p.authors_md5 IS NULL
+        and p.location is null
+      );
+
+    COMMIT;
+
+  END update_literature_references;
+
+
+  /*
   * Move the data for the specified database into the staging table.
   */
   PROCEDURE move_staging_data (
