@@ -42,7 +42,7 @@ sub fetch_input {
     $opt->{'output_folder'} = $self->param_required('output_folder');
 
     my $rnac = Bio::RNAcentral::InputFiles->new($opt);
-    my @files = $rnac->list_folder($location, $extension);
+    my @files = $rnac->list_folder_recursive($location, $extension);
 
     my @files = map { { 'ncr_file' => $_ } } values @files;
 
