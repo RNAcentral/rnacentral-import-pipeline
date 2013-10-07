@@ -100,7 +100,7 @@ FIELDS TERMINATED BY ',' enclosed by '"'
     DESCRIPTION char,
     SPECIES char,
     ORGANELLE char,
-    CLASSIFICATION char
+    CLASSIFICATION char(500)
 )
 CTL
     close $fh;
