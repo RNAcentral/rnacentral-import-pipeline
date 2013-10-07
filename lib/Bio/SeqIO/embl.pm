@@ -1376,6 +1376,15 @@ sub _read_FTHelper_EMBL {
     # intact to provide informative error messages.)
   QUAL: for (my $i = 0; $i < @qual; $i++) {
         $_ = $qual[$i];
+        # RNAcentral
+        # enclose multi-line feature strings in quotation marks:
+        # /anticodon=(pos:complement(1025358..1025360),aa:Arg,
+        # seq:cct)
+        if ( m{/anticodon=\(.+,$} ) {  # anticodon with unclosed parentheses and a trailing comma
+          $_ =~ s/anticodon=/anticodon=\"/;
+          $qual[$i+1] = $qual[$i+1] . '"';
+        }
+        # RNAcentral
         my( $qualifier, $value ) = m{^/([^=]+)(?:=(.+))?}
             or $self->throw("Can't see new qualifier in: $_\nfrom:\n"
                             . join('', map "$_\n", @qual));
