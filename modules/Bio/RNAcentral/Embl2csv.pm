@@ -259,13 +259,25 @@ sub _get_dblinks {
 
     (my $self, my $seq)  = @_;
 
-    my (@data, $database, $primary_id, $optional_id);
+    my (@data, $database, $primary_id, $optional_id, $project);
 
     # initialize as an ENA entry
     $data[0] = { database    => 'ENA',
                  primary_id  => $seq->display_id,
                  accession   => $seq->display_id,
                  optional_id => '' };
+
+    # get mirbase entries by project ids
+    # todo: remove this temporary fix when DR lines are added to mirbase entries
+    $project = _get_project_id($seq);
+    if ($project eq 'PRJEB4451') {
+        push @data, {
+            primary_id  => 'MIRBASE' . '_' . $seq->display_id, # unique xref
+            accession   => 'MIRBASE',
+            optional_id => '',
+            database    => 'MIRBASE',
+        };
+    }
 
     # add any DR entries
     my $anno_collection = $seq->annotation;
