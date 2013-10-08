@@ -213,12 +213,8 @@ sub _get_ac_info {
 
     $species = $seq->species;
 
-    $project = ($seq->annotation->get_Annotations('project_id'))[0];
-    if ( $project ) {
-        $project = $project->display_text();
-    } else {
-        $project = '';
-    }
+    $project = _get_project_id($seq);
+
     $keywords = _nvl($seq->keywords);
     $keywords =~ s/\.$//;
 
@@ -238,6 +234,24 @@ sub _get_ac_info {
                                join('; ', reverse $species->classification),
                                ) ) . "\"\n";
     return { text => $text };
+}
+
+
+=head2 _get_project_id
+
+    A wrapper to retrieve project id.
+
+=cut
+
+sub _get_project_id {
+    my $seq = shift;
+
+    my $project = ($seq->annotation->get_Annotations('project_id'))[0];
+    if ( $project ) {
+        return $project->display_text();
+    } else {
+        return '';
+    }
 }
 
 
