@@ -93,7 +93,7 @@ FIELDS TERMINATED BY ',' enclosed by '"'
     FEATURE_START integer external,
     FEATURE_END integer external,
     FEATURE_NAME char,
-    ORDINAL char,
+    ORDINAL integer external,
     PROJECT char,
     DIVISION char,
     KEYWORDS char,
