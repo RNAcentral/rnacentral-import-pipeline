@@ -1,3 +1,10 @@
+location=/path/to/rnac-loader
+export ENSEMBL_CVS_ROOT_DIR=/path/to/ensembl_main
+export PERL5LIB=${ENSEMBL_CVS_ROOT_DIR}/ensembl/modules:${PERL5LIB}
+export PERL5LIB=${ENSEMBL_CVS_ROOT_DIR}/ensembl-hive/modules:${PERL5LIB}
+export PERL5LIB=${location}/rnac-loader/modules:${PERL5LIB}
+export PERL5LIB=${location}/rnac-loader/lib/:${PERL5LIB}
+
 export HIVE_USERNAME=""
 export HIVE_PASSWORD=""
 export HIVE_PORT=""
