@@ -50,6 +50,7 @@ sub db_oracle_connect {
               or $self->{'logger'}->logdie( $DBI::errstr . "\n" );
 
     $self->{'dbh'} = $dbh;
+    $self->{'dbh'}->func( 1000000, 'dbms_output_enable' );
     $self->{'logger'}->info("Connected to the database");
 }
 
@@ -106,6 +107,7 @@ PLSQL
     $self->{'dbh'}->do($command)
         or $self->{'logger'}->logdie("Accession info update failed " . $DBI::errstr);
 
+    $self->log_plsql_output();
     $self->{'logger'}->info("Accession info update complete");
 }
 
@@ -130,6 +132,7 @@ PLSQL
     $self->{'dbh'}->do($command)
         or $self->{'logger'}->logdie("Composite id update failed " . $DBI::errstr);
 
+    $self->log_plsql_output();
     $self->{'logger'}->info("Composite id update complete");
 }
 
@@ -154,6 +157,7 @@ PLSQL
     $self->{'dbh'}->do($command)
         or $self->{'logger'}->logdie("Literature references update failed " . $DBI::errstr);
 
+    $self->log_plsql_output();
     $self->{'logger'}->info("Literature references update complete");
 }
 
@@ -183,7 +187,22 @@ PLSQL
     $self->{'dbh'}->do($command)
         or $self->{'logger'}->logdie("PL/SQL update failed " . $DBI::errstr);
 
+    $self->log_plsql_output();
     $self->{'logger'}->info("PL/SQL update complete");
+}
+
+
+=head2 log_plsql_output
+
+    Auxiliary function for logging PL/SQL output.
+
+=cut
+
+sub log_plsql_output {
+    my $self = shift;
+    my $output = $self->{'dbh'}->func( 'dbms_output_get' );
+    $self->{'logger'}->info($output);
+    print $output;
 }
 
 
