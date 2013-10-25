@@ -254,6 +254,37 @@ sub _get_project_id {
     }
 }
 
+=head2 _get_missing_dr_links
+
+    Some entries don't have DR links for all xrefs.
+    As a temporary measure, these xrefs are identified using hardcoded project ids.
+
+=cut
+
+sub _get_missing_dr_links {
+    my ($seq, $db_name) = @_;
+
+    my $entry_project_id = _get_project_id($seq);
+    my $db_project_id;
+
+    if ($db_name eq 'MIRBASE') {
+        $db_project_id = 'PRJEB4451';
+    } elsif ($db_name eq 'VEGA') {
+        $db_project_id = 'PRJEB4568';
+    }
+
+    if ($entry_project_id eq $db_project_id) {
+        return {
+            primary_id  => $db_name . '_' . $seq->display_id, # unique xref
+            accession   => $db_name, # temporary accession
+            optional_id => '',
+            database    => $db_name,
+        };
+    } else {
+        return ();
+    }
+}
+
 
 sub _get_dblinks {
 
@@ -267,17 +298,10 @@ sub _get_dblinks {
                  accession   => $seq->display_id,
                  optional_id => '' };
 
-    # get mirbase entries by project ids
+    # get mirbase and vega entries by project ids
     # todo: remove this temporary fix when DR lines are added to mirbase entries
-    $project = _get_project_id($seq);
-    if ($project eq 'PRJEB4451') {
-        push @data, {
-            primary_id  => 'MIRBASE' . '_' . $seq->display_id, # unique xref
-            accession   => 'MIRBASE',
-            optional_id => '',
-            database    => 'MIRBASE',
-        };
-    }
+    push @data, _get_missing_dr_links($seq, 'MIRBASE');
+    push @data, _get_missing_dr_links($seq, 'VEGA');
 
     # add any DR entries
     my $anno_collection = $seq->annotation;
