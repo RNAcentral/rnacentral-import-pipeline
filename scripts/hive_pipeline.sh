@@ -3,7 +3,9 @@
 #################
 ## Data import ##
 #################
-# read config
+# store PERL5LIB
+perl5lib_backup=$PERL5LIB
+# read config, change PERL5LIB
 . config/hive_params
 # delete old output data
 rm -Rf $DATA_OUT/*
@@ -48,3 +50,6 @@ mutt $RNACENTRAL_ADMIN_EMAIL -s "$title" -a log/rnacentral_import.log.gz -i emai
 rm email_message_body.txt
 # uncompress log
 gzip -d log/rnacentral_import.log.gz
+
+# restore PERL5LIB
+export PERL5LIB=$perl5lib_backup
