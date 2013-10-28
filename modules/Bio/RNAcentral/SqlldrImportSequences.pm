@@ -62,6 +62,10 @@ sub load_seq {
         $self->{'job_id'}   = $1;
         $self->{'seq_type'} = $2;
         $self->_set_filenames(); # initialize all filenames for this job_id
+    } elsif ( $file =~ /empty_dummy_file/ ) {
+        # these files are necessary to enable hive dataflow
+        $self->{'logger'}->info("Skipping an empty dummy file");
+        return;
     } else {
         $self->{'logger'}->logwarn("Unexpected file $file");
         return;
