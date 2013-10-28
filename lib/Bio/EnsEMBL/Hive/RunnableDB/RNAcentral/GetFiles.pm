@@ -12,6 +12,7 @@ package Bio::EnsEMBL::Hive::RunnableDB::RNAcentral::GetFiles;
 use strict;
 
 use Bio::RNAcentral::InputFiles;
+use File::Spec;
 
 use base ('Bio::EnsEMBL::Hive::Process');
 
@@ -43,6 +44,15 @@ sub fetch_input {
 
     my $rnac = Bio::RNAcentral::InputFiles->new($opt);
     my @files = $rnac->list_folder_recursive($location, $extension);
+
+    # if no files are found, create an empty dummy file
+    # to enable correct hive dataflow.
+    if ( !@files ) {
+        my $filename = File::Spec->catfile($location, 'empty_dummy_file' . $extension);
+        open(DUMMY, ">", $filename ) || die "Can't open $filename: $!";
+        close DUMMY;
+        push @files, $filename;
+    }
 
     my @files = map { { 'ncr_file' => $_ } } values @files;
 
