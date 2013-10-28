@@ -48,7 +48,7 @@ sub fetch_input {
     # if no files are found, create an empty dummy file
     # to enable correct hive dataflow.
     if ( !@files ) {
-        my $filename = File::Spec->catfile($location, 'empty_dummy_file' . $extension);
+        my $filename = File::Spec->catfile($location, 'empty_dummy_file.' . $extension);
         open(DUMMY, ">", $filename ) || die "Can't open $filename: $!";
         close DUMMY;
         push @files, $filename;
