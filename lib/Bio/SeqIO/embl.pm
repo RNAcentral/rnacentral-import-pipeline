@@ -120,6 +120,7 @@ methods. Internal methods are usually preceded with a _
 package Bio::SeqIO::embl;
 use vars qw(%FTQUAL_NO_QUOTE);
 use strict;
+use JSON;
 use Bio::SeqIO::FTHelper;
 use Bio::SeqFeature::Generic;
 use Bio::Species;
@@ -184,6 +185,7 @@ sub next_seq {
     my ($annotation, %params, @features) =
         Bio::Annotation::Collection->new();
 
+    my @assembly_info = ();
     $line = $self->_readline;
     # This needs to be before the first eof() test
 
@@ -216,7 +218,7 @@ sub next_seq {
         # This regexp comes from the new2old.pl conversion script, from EBI
         # if ($line =~ m/^ID   (\w+);\s+SV (\d+); (\w+); ([^;]+); (\w{3}); (\w{3}); (\d+) BP./) {
 
-        # Anton: to accommodate RNAcentral id lines like this:
+        # to accommodate RNAcentral id lines like this:
         # ID   CM000913.1:2116358..2116434:tRNA; SV 1; linear; genomic DNA; CON; PRO; 77 BP.
         if ($line =~ m/^ID   (.*);\s+SV (\d+); (\w+); ([^;]+); (\w{3}); (\w{3}); (\d+) BP./) {
         ($name, $sv, $topology, $mol, $div) = ($1, $2, $3, $4, $6);
@@ -300,7 +302,7 @@ sub next_seq {
                   $params{'-version'} = $sv;
               }
 
-              #project, PR line. RNAcentral.
+              #project, PR line. Required for RNAcentral.
               if ( /^PR\s+(.*)$/ ) {
                 my $project_id = $1;
                 $project_id =~ s/;$//;
@@ -312,6 +314,31 @@ sub next_seq {
                                                                   );
                   $annotation->add_Annotation($project);
                 }
+              }
+
+              #assembly information, AH and AS lines. Required for RNAcentral.
+              # AH   LOCAL_SPAN     PRIMARY_IDENTIFIER     PRIMARY_SPAN     COMP
+              elsif (/^AH /) {
+                  while (defined ($_ = $self->_readline) ) {
+                      if (/^AS\s+(\d+)-(\d+)\s+(.+?)\s+(\d+)-(\d+)\s+(c)*/) {
+                          push @assembly_info, {
+                            'local_start'        => $1,
+                            'local_end'          => $2,
+                            'primary_identifier' => $3,
+                            'primary_start'      => $4,
+                            'primary_end'        => $5,
+                            'strand'             => $6 ? -1 : 1,
+                          };
+                      } else {
+                          last;
+                      }
+                  }
+                  $annotation->add_Annotation(
+                      Bio::Annotation::SimpleValue->new(
+                                                          -tagname => 'assembly_json',
+                                                          -value   => encode_json \@assembly_info
+                                                        )
+                  );
               }
 
               #date (NOTE: takes last date line)

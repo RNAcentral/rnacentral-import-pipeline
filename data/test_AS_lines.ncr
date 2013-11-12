@@ -1,0 +1,81 @@
+ID   HG501938.1:1..435:ncRNA; SV 1; linear; transcribed RNA; STD; HUM; 435 BP.
+XX
+AC   HG501938;
+XX
+PR   Project:PRJEB4568;
+XX
+DT   23-OCT-2013 (Rel. 118, Created)
+DT   23-OCT-2013 (Rel. 118, Last updated, Version 1)
+XX
+DE   TPA: Homo sapiens RP11-149I2.4 gene for long non-coding RNA
+DE   OTTHUMT00000445879.1, sense_intronic
+XX
+KW   RNAcentral; Third Party Annotation; TPA; TPA:specialist_db.
+XX
+OS   Homo sapiens (human)
+OC   Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi; Mammalia;
+OC   Eutheria; Euarchontoglires; Primates; Haplorrhini; Catarrhini; Hominidae;
+OC   Homo.
+XX
+RN   [1]
+RP   1-435
+RG   Vega and RNAcentral
+RA   ;
+RT   ;
+RL   Submitted (15-OCT-2013) to the INSDC.
+XX
+RN   [2]
+RX   DOI; 10.1101/gr.132159.111.
+RX   PUBMED; 22955988.
+RA   Derrien T., Johnson R., Bussotti G., Tanzer A., Djebali S., Tilgner H.,
+RA   Guernec G., Martin D., Merkel A., Knowles D.G., Lagarde J., Veeravalli L.,
+RA   Ruan X., Ruan Y., Lassmann T., Carninci P., Brown J.B., Lipovich L.,
+RA   Gonzalez J.M., Thomas M., Davis C.A., Shiekhattar R., Gingeras T.R.,
+RA   Hubbard T.J., Notredame C., Harrow J., Guigo R.;
+RT   "The GENCODE v7 catalog of human long noncoding RNAs: analysis of their
+RT   gene structure, evolution, and expression";
+RL   Genome Res. 22(9):1775-1789(2012).
+XX
+RN   [3]
+RX   DOI; 10.1101/gr.135350.111.
+RX   PUBMED; 22955987.
+RA   Harrow J., Frankish A., Gonzalez J.M., Tapanari E., Diekhans M.,
+RA   Kokocinski F., Aken B.L., Barrell D., Zadissa A., Searle S., Barnes I.,
+RA   Bignell A., Boychenko V., Hunt T., Kay M., Mukherjee G., Rajan J.,
+RA   Despacio-Reyes G., Saunders G., Steward C., Harte R., Lin M., Howald C.,
+RA   Tanzer A., Derrien T., Chrast J., Walters N., Balasubramanian S., Pei B.,
+RA   Tress M., Rodriguez J.M., Ezkurdia I., van Baren J., Brent M., Haussler D.,
+RA   Kellis M., Valencia A., Reymond A., Gerstein M., Guigo R., Hubbard T.J.;
+RT   "GENCODE: the reference human genome annotation for The ENCODE Project";
+RL   Genome Res. 22(9):1760-1774(2012).
+XX
+CC   Specialist DB   : VEGA (The Vertebrate Genome Annotation database)
+CC   URL             : http://vega.sanger.ac.uk
+XX
+AH   LOCAL_SPAN      PRIMARY_IDENTIFIER   PRIMARY_SPAN       COMP
+AS   1-24            CM000671.1           21995481-21995504
+AS   25-435          CM000671.1           21995602-21996012
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..435
+FT                   /organism="Homo sapiens"
+FT                   /chromosome="9"
+FT                   /mol_type="transcribed RNA"
+FT                   /db_xref="taxon:9606"
+FT   ncRNA           1..435
+FT                   /gene="RP11-149I2.4"
+FT                   /product="long non-coding RNA OTTHUMT00000445879.1"
+FT                   /note="biotype:sense_intronic"
+FT                   /ncRNA_class="lncRNA"
+XX
+SQ   Sequence 435 BP; 77 A; 129 C; 164 G; 65 T; 0 other;
+     gatcccgccg cctgactcct cggcctggga gacaggaaaa gcggtcctgt ttgggaacag        60
+     taaaagcagg gcaaggaaag gaaggagcgg cagaaaggag gggtgagtcg aggacacagg       120
+     ggcagccgga gaatgcggag gagccgggtc ctgagcgcgg tctaagcgag gctcggctct       180
+     cgtccaggaa ctcggacgcg ggctcgccgg ctctccgcgc gcgggaagtc gagcccagga       240
+     cgccgccttc aggccggcgc gctgacccgg tgccccgacc cggagcctgc ggtctgcctg       300
+     gatccgtcct aaacctcgcg ggctggaccc gcggcctgag tgggtgggtg tgtgccagag       360
+     gattcgggac taggcccagc tccgggaacc tggaaatgtg gcccgcttct cagtggcttc       420
+     ctgttcatgc gcttg                                                        435
+//
