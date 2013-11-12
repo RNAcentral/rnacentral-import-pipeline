@@ -95,6 +95,11 @@ sub initialize_logger {
 }
 
 
+sub get_assembly_path {
+  my $self = shift;
+  return File::Spec->catfile($self->{'output_folder'}, 'assemblies');
+}
+
 sub get_sqlldr_bad_path {
   my $self = shift;
   return File::Spec->catfile($self->{'output_folder'}, 'bad');

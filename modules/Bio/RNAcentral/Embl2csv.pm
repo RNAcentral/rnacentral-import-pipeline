@@ -35,6 +35,8 @@ use File::Find qw(finddepth);
 use Bio::SeqIO;   # BioPerl is used for reading embl files
 use SWISS::CRC64; # cyclic redundancy check
 use Digest::MD5 qw(md5_hex);
+use JSON;
+use LWP::Simple;
 
 use base ('Bio::RNAcentral::Base');
 
@@ -60,6 +62,11 @@ sub new {
     # create output directory for composite id files
     mkdir $self->get_comp_id_path() unless -d $self->get_comp_id_path();
 
+    # create output directory for assembly data files
+    mkdir $self->get_assembly_path() unless -d $self->get_assembly_path();
+
+    $self->{'assemblies'} = {};
+
     return $self;
 }
 
@@ -81,9 +88,10 @@ sub embl2csv {
 
     my $fname_long    = $self->get_output_filename($self->get_long_folder_path(),  $job_id, 'long',  'csv');
     my $fname_short   = $self->get_output_filename($self->get_short_folder_path(), $job_id, 'short', 'csv');
-    my $fname_refs    = File::Spec->catfile($self->get_refs_path(),    $job_id . '.csv');
-    my $fname_ac_info = File::Spec->catfile($self->get_info_path(),    $job_id . '.csv');
-    my $fname_comp_id = File::Spec->catfile($self->get_comp_id_path(), $job_id . '.csv');
+    my $fname_refs    = File::Spec->catfile($self->get_refs_path(),     $job_id . '.csv');
+    my $fname_ac_info = File::Spec->catfile($self->get_info_path(),     $job_id . '.csv');
+    my $fname_comp_id = File::Spec->catfile($self->get_comp_id_path(),  $job_id . '.csv');
+    my $fname_as_info = File::Spec->catfile($self->get_assembly_path(), $job_id . '.csv');
 
     # open output files
     my $fh_long    = IO::File->new("> $fname_long")    or $self->{'logger'}->logdie("Couldn't open file $fname_long");
@@ -91,6 +99,7 @@ sub embl2csv {
     my $fh_refs    = IO::File->new("> $fname_refs")    or $self->{'logger'}->logdie("Couldn't open file $fname_refs");
     my $fh_ac_info = IO::File->new("> $fname_ac_info") or $self->{'logger'}->logdie("Couldn't open file $fname_ac_info");
     my $fh_comp_id = IO::File->new("> $fname_comp_id") or $self->{'logger'}->logdie("Couldn't open file $fname_comp_id");
+    my $fh_as_info = IO::File->new("> $fname_as_info") or $self->{'logger'}->logdie("Couldn't open file $fname_as_info");
 
     # initializations
     my ($i, $records, $seqs_long, $seqs_short, $dblinks_num, $refs_num, $data,
@@ -144,6 +153,22 @@ sub embl2csv {
             print $fh_comp_id $data->{'comp_id_text'};
         }
 
+        # assembly information with genome locations
+        my $assembly_json = ($seq->annotation->get_Annotations('assembly_json'))[0];
+        if ($assembly_json) {
+            $self->{'logger'}->info("Found assembly data for " . $seq->display_id);
+            my $assembly_info = decode_json($assembly_json->display_text);
+            for my $exon (@$assembly_info) {
+                print $fh_as_info '"' . join( '","', ($seq->display_id,
+                                                      $exon->{'local_start'},
+                                                      $exon->{'local_end'},
+                                                      $exon->{'primary_identifier'},
+                                                      $self->_get_chromosome_from_assembly($exon->{'primary_identifier'}),
+                                                      $exon->{'primary_start'},
+                                                      $exon->{'primary_end'},
+                                                      $exon->{'strand'})) . "\"\n";
+            }
+        }
     }
 
     # if there are any problems, delete already created files to prevent any import
@@ -165,8 +190,12 @@ sub embl2csv {
     $fh_refs->close;
     $fh_ac_info->close;
     $fh_comp_id->close;
+    $fh_as_info->close;
 
+    # remove empty files
     $self->_check_temp_files($fname_refs);
+    $self->_check_temp_files($fname_comp_id);
+    $self->_check_temp_files($fname_as_info);
 
     # return an array with csv files
     return ($self->_check_temp_files($fname_short), $self->_check_temp_files($fname_long));
@@ -491,6 +520,38 @@ sub _sanitize {
 sub _nvl {
     my $value = shift;
     return ( defined( $value ) ? _sanitize($value) : '' );
+}
+
+
+=head2 _get_chromosome_from_assembly
+
+    Get chromosome number from the ENA REST service based on the assembly id.
+    Store the information locally for faster lookups.
+
+=cut
+
+sub _get_chromosome_from_assembly {
+    my ($self, $assembly_id) = @_;
+
+    if ( exists $self->{'assemblies'}{$assembly_id} ) {
+        return $self->{'assemblies'}{$assembly_id};
+    }
+
+    my $url = "http://www.ebi.ac.uk/ena/data/view/$assembly_id&display=xml";
+    my $content = get $url;
+
+    if (! defined $content) {
+        $self->{'logger'}->warn("Failed to retrieve chromosome number for assembly $assembly_id, $@");
+        return '';
+    }
+
+    if ( $content =~ /<qualifier name="chromosome">\s*<value>\s*([A-Za-z0-9]+)\s*<\/value>\s*<\/qualifier>/ ) {
+        $self->{'assemblies'}{$assembly_id} = $1;
+        return $1;
+    } else {
+        $self->{'logger'}->warn("Chromosome number not found in xml file $url");
+        return '';
+    }
 }
 
 
