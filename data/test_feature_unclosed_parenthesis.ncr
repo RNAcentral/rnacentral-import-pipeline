@@ -1,3 +1,56 @@
+ID   HE860504.1:1..14644:tRNA; SV 1; linear; genomic DNA; STD; INV; 48 BP.
+XX
+PA   HE860504.1
+XX
+DT   12-NOV-2012 (Rel. 114, Created)
+DT   12-NOV-2012 (Rel. 114, Last updated, Version 1)
+XX
+DE   Metacrangonyx sp. 3 ssp. 1 MDMBR-2012 transfer RNA Serine
+XX
+KW   .
+XX
+OS   Metacrangonyx sp. 3 ssp. 1 MDMBR-2012
+OC   Eukaryota; Metazoa; Ecdysozoa; Arthropoda; Crustacea; Malacostraca;
+OC   Eumalacostraca; Peracarida; Amphipoda; Gammaridea; Hadzioidea;
+OC   Metacrangonyctidae; Metacrangonyx.
+OG   Mitochondrion
+XX
+RN   [1]
+RP   1-14644
+RA   Bauza-Ribot M.;
+RT   ;
+RL   Submitted (07-JUN-2012) to the INSDC.
+RL   Biology, Universitat de les Illes Balears, Ctra.Valldemossa km 7.5,
+RL   E-07122, SPAIN.
+XX
+RN   [2]
+RX   DOI; 10.1016/j.cub.2012.09.012.
+RX   PUBMED; 23063439.
+RA   Bauza-Ribot M.M., Juan C., Nardi F., Oromi P., Pons J., Jaume D.;
+RT   "Mitogenomic phylogenetic analysis supports continental-scale vicariance in
+RT   subterranean thalassoid crustaceans";
+RL   Curr Biol 22(21):2069-2074(2012).
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..48
+FT                   /organism="Metacrangonyx sp. 3 ssp. 1 MDMBR-2012"
+FT                   /organelle="mitochondrion"
+FT                   /sub_species="1"
+FT                   /isolate="Tamri"
+FT                   /mol_type="genomic DNA"
+FT                   /country="Morocco:North of Agadir, Tamri"
+FT                   /db_xref="taxon:1200666"
+FT   tRNA            complement(join(HE860504.1:14599..14644,HE860504.1:1..2))
+FT                   /gene="tRNA-Ser"
+FT                   /product="transfer RNA Serine"
+FT                   /anticodon=(pos:HE860504.1:
+FT                   complement(14629..14631),aa:Ser)
+FT                   /note="codon recognized=UCN"
+XX
+SQ   Sequence 48 BP; 19 A; 6 C; 7 G; 16 T; 0 other;
+     aacttataag tgttttgaaa acactaaaca gactaagtct agtagttt                     48
+//
 ID   AL123456.3:1025321..1025393:tRNA; SV 3; linear; genomic DNA; STD; PRO; 73 BP.
 XX
 PA   AL123456.3
