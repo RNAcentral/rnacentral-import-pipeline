@@ -1,5 +1,21 @@
-create or replace
-PACKAGE BODY RNC_LOAD_RNA AS
+set define off
+
+create or replace PACKAGE RNC_LOAD_RNA AS
+
+  /*
+    Package for populating the RNA table from the staging table LOAD_RNACENTRAL.
+    Assign UPIs to all new sequences.
+  */
+
+  PROCEDURE load_rna( p_in_dbid IN RNACEN.rnc_database.ID%TYPE,
+                      p_in_load_release IN RNACEN.rnc_release.ID%TYPE
+                    );
+
+END RNC_LOAD_RNA;
+/
+
+create or replace PACKAGE BODY RNC_LOAD_RNA AS
+
 
   /*
   * Loads the data from the staging table load_rnacentral
@@ -11,6 +27,7 @@ PACKAGE BODY RNC_LOAD_RNA AS
       p_in_dbid         IN RNACEN.RNC_DATABASE.ID%TYPE,
       p_in_load_release IN RNACEN.rnc_release.ID%TYPE )
   IS
+
   BEGIN
 
     BEGIN
@@ -24,6 +41,7 @@ PACKAGE BODY RNC_LOAD_RNA AS
     EXECUTE IMMEDIATE 'ALTER SESSION FORCE PARALLEL DML';
 
     EXECUTE IMMEDIATE '
+
     INSERT
       /*+ APPEND PARALLEL */
     INTO
@@ -37,6 +55,7 @@ PACKAGE BODY RNC_LOAD_RNA AS
         IN_SEQ_LONG ,
         IN_AC ,
         IN_VERSION ,
+
         IN_MD5 ,
         IN_TAXID ,
         COMPARABLE_PROT_UPI
@@ -50,6 +69,7 @@ PACKAGE BODY RNC_LOAD_RNA AS
       in_seq_short,
       in_seq_long,
       in_ac,
+
       in_version,
       IN_MD5,
       in_taxid,
@@ -63,6 +83,7 @@ PACKAGE BODY RNC_LOAD_RNA AS
                   in_len   > 4000
                 AND in_len = prot_len
                 )
+
               AND dbms_lob.compare( in_seq_long, prot_seq_long) = 0
               )
             THEN -- a rna with the same md5, len, sequence (lob) exists
@@ -76,6 +97,7 @@ PACKAGE BODY RNC_LOAD_RNA AS
               AND in_seq_short = prot_seq_short
               )
             THEN -- a rna with the same md5, len, sequence (not lob) exists
+
               prot_upi
             ELSE -- the rna is not really the same
               NULL
@@ -89,6 +111,7 @@ PACKAGE BODY RNC_LOAD_RNA AS
         (
           SELECT
             DISTINCT CRC64,
+
             LEN,
             SEQ_SHORT,
             useful_clob_object(seq_long) MY_SEQ_LONG,
@@ -102,6 +125,7 @@ PACKAGE BODY RNC_LOAD_RNA AS
       SELECT
         l.crc64 in_crc64,
         L.LEN in_len,
+
         L.SEQ_SHORT in_seq_short,
         TREAT(l.MY_SEQ_LONG AS USEFUL_CLOB_OBJECT).UCO AS in_seq_long,
         l.ac in_ac,
@@ -115,6 +139,7 @@ PACKAGE BODY RNC_LOAD_RNA AS
         P.UPI PROT_UPI
       FROM
         distinct_loaded_rows l,
+
         RNACEN.rna p
       WHERE p.md5 (+) = l.md5)' USING TO_CHAR (
         p_in_dbid), TO_CHAR (p_in_load_release);
@@ -127,6 +152,7 @@ PACKAGE BODY RNC_LOAD_RNA AS
     END;
 
   END load_retro_tmp_table;
+
 
   /*
   *
@@ -141,6 +167,7 @@ PACKAGE BODY RNC_LOAD_RNA AS
       /*+ APPEND PARALLEL (LOAD_MD5_STATS 4) */
     INTO
       RNACEN.LOAD_MD5_STATS
+
       (
         IN_MD5,
         CNT,
@@ -154,6 +181,7 @@ PACKAGE BODY RNC_LOAD_RNA AS
       COUNT (DISTINCT DBMS_LOB.SUBSTR (IN_SEQ_LONG, 4000, 1)) CNT_DST_SEQ_LONG
     FROM
       (
+
         SELECT
           /*+ PARALLEL (L 4) */
           l.in_seq_short,
@@ -166,6 +194,7 @@ PACKAGE BODY RNC_LOAD_RNA AS
       )
     GROUP BY
       IN_MD5;
+
 
     COMMIT;
 
@@ -180,6 +209,7 @@ PACKAGE BODY RNC_LOAD_RNA AS
 
     EXECUTE IMMEDIATE 'TRUNCATE TABLE load_md5_collisions DROP STORAGE';
 
+
     INSERT
       /*+ APPEND PARALLEL (LOAD_MD5_COLLISIONS 4) */
     INTO
@@ -193,6 +223,7 @@ PACKAGE BODY RNC_LOAD_RNA AS
     SELECT
       /*+ PARALLEL (LOAD_MD5_STATS 4) */
       IN_MD5,
+
       cnt,
       CNT_DST_SEQ_SHORT,
       CNT_DST_SEQ_LONG
@@ -205,6 +236,7 @@ PACKAGE BODY RNC_LOAD_RNA AS
       );
 
     COMMIT;
+
 
   END load_md5_collisions_table;
 
@@ -219,6 +251,7 @@ PACKAGE BODY RNC_LOAD_RNA AS
     EXECUTE IMMEDIATE 'TRUNCATE TABLE load_md5_new_sequences DROP STORAGE';
 
     INSERT
+
       /*+ APPEND PARALLEL (load_md5_new_sequences 4) */
     INTO
       RNACEN.load_md5_new_sequences
@@ -231,7 +264,8 @@ PACKAGE BODY RNC_LOAD_RNA AS
       /*+ PARALLEL (LOAD_MD5_STATS 4) */
       IN_MD5,
       SEQ_UPI.NEXTVAL PROT_ID,
-      CAST (RNACEN.UPI.GET_UPI(SEQ_UPI.CURRVAL) AS CHAR(13)) PROT_UPI
+      CAST (RNACEN.UPI.GET_UPI(SEQ_UPI.CURRVAL) AS NVARCHAR2(13)) PROT_UPI
+
     FROM
       LOAD_MD5_STATS
     WHERE
@@ -246,6 +280,7 @@ PACKAGE BODY RNC_LOAD_RNA AS
 
   END load_md5_new_sequences_table;
 
+
   /*
   * Propagate the newly assigned identifiers
   * to the field COMPARABLE_PROT_UPI.
@@ -258,6 +293,7 @@ PACKAGE BODY RNC_LOAD_RNA AS
     UPDATE
       /*+ PARALLEL (L 4) */
       LOAD_RETRO_TMP L
+
     SET
       L.COMPARABLE_PROT_UPI =
       (
@@ -272,6 +308,7 @@ PACKAGE BODY RNC_LOAD_RNA AS
     WHERE
       L.COMPARABLE_PROT_UPI IS NULL;
 
+
     COMMIT;
 
     EXECUTE IMMEDIATE 'CREATE INDEX "RNACEN"."LOAD_RETRO_TMP$AC_DBID_UPI" ON LOAD_RETRO_TMP (IN_AC, IN_DBID, COMPARABLE_PROT_UPI) PARALLEL TABLESPACE "RNACEN_IND"';
@@ -284,6 +321,7 @@ PACKAGE BODY RNC_LOAD_RNA AS
   END;
 
   /*
+
   * Deposit the new sequences into the main
   * table containing all sequences from all sources.
   */
@@ -297,6 +335,7 @@ PACKAGE BODY RNC_LOAD_RNA AS
       (
         id,
         upi,
+
         crc64,
         LEN,
         seq_short,
@@ -310,6 +349,7 @@ PACKAGE BODY RNC_LOAD_RNA AS
       PROT_UPI,
       in_crc64,
       in_len,
+
       in_seq_short,
       IN_SEQ_LONG,
       IN_MD5,
@@ -323,6 +363,7 @@ PACKAGE BODY RNC_LOAD_RNA AS
       (
         SELECT
           /*+ PARALLEL (L 2) PARALLEL (N 2) */
+
           n.PROT_ID,
           n.PROT_UPI,
           l.in_crc64,
@@ -336,6 +377,7 @@ PACKAGE BODY RNC_LOAD_RNA AS
           load_md5_new_sequences n
         WHERE
           n.in_md5 = l.in_md5
+
           -- AND l.comparable_prot_upi IS NULL
       )
     WHERE
@@ -349,6 +391,7 @@ PACKAGE BODY RNC_LOAD_RNA AS
     The main procedure for importing data from the staging table
     into the main RNA table. Responsible for assigning UPIs.
   */
+
   PROCEDURE load_rna( p_in_dbid         IN RNACEN.rnc_database.ID%TYPE,
                       p_in_load_release IN RNACEN.rnc_release.ID%TYPE)
   AS
@@ -363,4 +406,7 @@ PACKAGE BODY RNC_LOAD_RNA AS
 
   END load_rna;
 
+
 END RNC_LOAD_RNA;
+/
+set define on

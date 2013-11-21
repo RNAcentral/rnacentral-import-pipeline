@@ -1,10 +1,19 @@
-CREATE OR REPLACE
-PACKAGE BODY RNC_HEALTHCHECKS AS
+set define off
+
+create or replace PACKAGE RNC_HEALTHCHECKS AS
+
+  procedure run_healthchecks;
+
+END RNC_HEALTHCHECKS;
+/
+create or replace PACKAGE BODY RNC_HEALTHCHECKS AS
+
 
   /*
   * All UPIs must be unique.
   */
   PROCEDURE check_unique_upis AS
+
     v_distinct_upi NUMBER;
     v_distinct_md5 NUMBER;
     v_all_rna_seq  NUMBER;
@@ -18,6 +27,7 @@ PACKAGE BODY RNC_HEALTHCHECKS AS
        v_distinct_md5 != v_all_rna_seq THEN
       DBMS_OUTPUT.put_line('not ok ... check_unique_upis');
     ELSE
+
       DBMS_OUTPUT.put_line('ok ... check_unique_upis, found '
                             || v_all_rna_seq || ' RNA sequences');
     END IF;
@@ -31,6 +41,7 @@ PACKAGE BODY RNC_HEALTHCHECKS AS
   PROCEDURE check_negative_taxid AS
     v_xref NUMBER;
     v_staging NUMBER;
+
   BEGIN
     SELECT count(*) INTO v_xref FROM xref WHERE taxid < 0;
     SELECT count(*) into v_staging FROM load_rnacentral_all WHERE taxid < 0;
@@ -42,6 +53,7 @@ PACKAGE BODY RNC_HEALTHCHECKS AS
     end if;
 
   end check_negative_taxid;
+
 
 
   /*
@@ -57,6 +69,7 @@ PACKAGE BODY RNC_HEALTHCHECKS AS
     SELECT count(DISTINCT ac) into v_ac_distinct FROM load_rnacentral_all;
 
     IF v_ac_all != v_ac_distinct THEN
+
       DBMS_OUTPUT.put_line('not ok ... check_unique_ac_staging');
     ELSE
       DBMS_OUTPUT.put_line('ok ... check_unique_ac_staging');
@@ -70,6 +83,7 @@ PACKAGE BODY RNC_HEALTHCHECKS AS
   procedure check_unique_ac_xref
   AS
     v_ac_all NUMBER;
+
     v_ac_distinct NUMBER;
   BEGIN
     SELECT count(*) INTO v_ac_all FROM xref WHERE deleted='N';
@@ -84,6 +98,7 @@ PACKAGE BODY RNC_HEALTHCHECKS AS
   END check_unique_ac_xref;
 
 
+
   PROCEDURE check_rnas_without_xrefs
   AS
     v_count NUMBER;
@@ -95,6 +110,7 @@ PACKAGE BODY RNC_HEALTHCHECKS AS
     else
       DBMS_OUTPUT.put_line('ok ... check_rnas_without_xrefs');
     END IF;
+
 
   END check_rnas_without_xrefs;
 
@@ -109,9 +125,12 @@ PACKAGE BODY RNC_HEALTHCHECKS AS
     check_negative_taxid;
     check_unique_ac_staging;
     check_unique_ac_xref;
+
     check_rnas_without_xrefs;
 
   END run_healthchecks;
 
 
 END RNC_HEALTHCHECKS;
+/
+set define on

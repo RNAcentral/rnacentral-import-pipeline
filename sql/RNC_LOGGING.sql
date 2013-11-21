@@ -1,5 +1,21 @@
-create or replace
-PACKAGE BODY RNC_LOGGING AS
+set define off
+
+create or replace PACKAGE RNC_LOGGING AS
+
+  /* Package for logging RNAcentral operations. */
+
+  PROCEDURE log_release_start(p_dbid NUMBER,
+                              p_this_release NUMBER);
+
+  PROCEDURE log_release_end(p_dbid NUMBER,
+                            p_this_release NUMBER,
+                            p_prev_release NUMBER := NULL);
+
+END RNC_LOGGING;
+/
+
+create or replace PACKAGE BODY RNC_LOGGING AS
+
 
   /*
     Populate table RELEASE_STATS with basic stats about the staging table.
@@ -11,6 +27,7 @@ PACKAGE BODY RNC_LOGGING AS
   IS
     PRAGMA AUTONOMOUS_TRANSACTION;
     l_dbid         NUMBER := p_dbid;
+
     l_this_release NUMBER:= p_this_release;
     l_sql_stmt     VARCHAR2 (4000);
   BEGIN
@@ -24,6 +41,7 @@ PACKAGE BODY RNC_LOGGING AS
         SYSDATE start_time,
         COUNT (taxid) ff_taxid_count,
         COUNT (*) ff_loaded_rows -- all rows from the staging table
+
       FROM RNACEN.load_rnacentral
     ) q
     ON (s.this_release = q.this_release)
@@ -37,6 +55,7 @@ PACKAGE BODY RNC_LOGGING AS
     -- loading a new releaes
     WHEN NOT MATCHED THEN INSERT
       (
+
         dbid,
         this_release,
         start_time,
@@ -50,6 +69,7 @@ PACKAGE BODY RNC_LOGGING AS
         q.start_time,
         (q.ff_loaded_rows - q.ff_taxid_count),
         q.ff_loaded_rows
+
       )'
     ;
 
@@ -63,6 +83,7 @@ PACKAGE BODY RNC_LOGGING AS
 
   */
   PROCEDURE log_release_end (
+
     p_dbid number,
     p_this_release NUMBER,
     p_prev_release number := NULL
@@ -76,6 +97,7 @@ PACKAGE BODY RNC_LOGGING AS
   BEGIN
 
     MERGE INTO RELEASE_STATS s
+
     USING (
     SELECT
       l_dbid dbid,
@@ -89,6 +111,7 @@ PACKAGE BODY RNC_LOGGING AS
       created_w_predecessors_v_1,
       created_w_predecessors_v_gt1,
       created_w_predecessors,
+
       created_wo_predecessors_v_1,
       created_wo_predecessors_v_gt1,
       created_wo_predecessors,
@@ -102,6 +125,7 @@ PACKAGE BODY RNC_LOGGING AS
     FROM (
       SELECT
         sum (retired_prev_releases) retired_prev_releases,
+
         sum (retired_this_release) retired_this_release,
         sum (retired_next_releases) retired_next_releases,
         sum (retired_total) retired_total,
@@ -115,6 +139,7 @@ PACKAGE BODY RNC_LOGGING AS
         sum (active_created_this_release) active_created_this_release,
         sum (active_created_next_releases) active_created_next_releases,
         sum (created_this_release) created_this_release,
+
         sum (active_updated_this_release) active_updated_this_release,
         sum (active_untouched_this_release) active_untouched_this_release,
         sum (active_total) active_total
@@ -128,6 +153,7 @@ PACKAGE BODY RNC_LOGGING AS
                 END) retired_prev_releases,
               sum (
                 CASE
+
                 WHEN deleted = 'Y' AND LAST = l_prev_release
                 THEN 1
                 ELSE 0
@@ -141,6 +167,7 @@ PACKAGE BODY RNC_LOGGING AS
               sum (
                 CASE
                 WHEN deleted = 'Y'
+
                 then 1
                 else 0
                 END) retired_total,
@@ -154,6 +181,7 @@ PACKAGE BODY RNC_LOGGING AS
                   WHERE
                     p.ac        = x.ac
                   and p.dbid    = x.dbid
+
                   and p.created < l_this_release)
                 then 1
                 else 0
@@ -167,6 +195,7 @@ PACKAGE BODY RNC_LOGGING AS
                     xref p
                   WHERE
                     p.ac        = x.ac
+
                   and p.dbid    = x.dbid
                   and p.created < l_this_release)
                 then 1
@@ -180,6 +209,7 @@ PACKAGE BODY RNC_LOGGING AS
                 END) active_created_prev_releases,
               sum (
                 CASE
+
                 when deleted = 'N' and created = l_this_release
                 then 1
                 else 0
@@ -193,6 +223,7 @@ PACKAGE BODY RNC_LOGGING AS
                 case
                 when created = l_this_release
                 then 1
+
                 else 0
                 end) created_this_release,
               sum (
@@ -206,6 +237,7 @@ PACKAGE BODY RNC_LOGGING AS
                 when deleted = 'N' and created != l_this_release and last != l_this_release
                 then 1
                 else 0
+
                 end) active_untouched_this_release,
               sum (
                 case
@@ -219,6 +251,7 @@ PACKAGE BODY RNC_LOGGING AS
       ) q
     ON (s.this_release = q.this_release)
     WHEN MATCHED THEN UPDATE
+
     SET
       s.dbid = q.dbid,
       s.prev_release = q.prev_release,
@@ -232,6 +265,7 @@ PACKAGE BODY RNC_LOGGING AS
       s.created_w_predecessors = q.created_w_predecessors,
       s.created_wo_predecessors_v_1 = q.created_wo_predecessors_v_1,
       s.created_wo_predecessors_v_gt1 = q.created_wo_predecessors_v_gt1,
+
       s.created_wo_predecessors = q.created_wo_predecessors,
       s.active_created_prev_releases = q.active_created_prev_releases,
       s.active_created_this_release = q.active_created_this_release,
@@ -245,6 +279,7 @@ PACKAGE BODY RNC_LOGGING AS
       dbid,
       this_release,
       prev_release,
+
       end_time,
       retired_prev_releases,
       retired_this_release,
@@ -258,6 +293,7 @@ PACKAGE BODY RNC_LOGGING AS
       created_wo_predecessors,
       active_created_prev_releases,
       active_created_this_release,
+
       active_created_next_releases,
       created_this_release,
       active_updated_this_release,
@@ -271,6 +307,7 @@ PACKAGE BODY RNC_LOGGING AS
       q.prev_release,
       q.end_time,
       q.retired_prev_releases,
+
       q.retired_this_release,
       q.retired_next_releases,
       q.retired_total,
@@ -284,6 +321,7 @@ PACKAGE BODY RNC_LOGGING AS
       q.active_created_this_release,
       q.active_created_next_releases,
       q.created_this_release,
+
       q.active_updated_this_release,
       q.active_untouched_this_release,
       q.active_total
@@ -294,3 +332,5 @@ PACKAGE BODY RNC_LOGGING AS
   END log_release_end;
 
 END RNC_LOGGING;
+/
+set define on

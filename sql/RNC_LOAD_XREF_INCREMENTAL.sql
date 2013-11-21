@@ -1,9 +1,19 @@
-create or replace
-PACKAGE BODY RNC_LOAD_XREF_INCREMENTAL AS
+set define off
+
+create or replace PACKAGE RNC_LOAD_XREF_INCREMENTAL AS
+
+  PROCEDURE load_xref_incremental(p_previous_release IN RNACEN.rnc_release.ID%TYPE,
+                                  p_in_dbid          IN RNACEN.rnc_database.id%TYPE);
+
+END RNC_LOAD_XREF_INCREMENTAL;
+/
+create or replace PACKAGE BODY RNC_LOAD_XREF_INCREMENTAL AS
+
 
   PROCEDURE incremental1(
     p_previous_release IN RNACEN.rnc_release.ID%TYPE)
   IS
+
   BEGIN
     /*
     -- updates last, deleted and taxid
@@ -17,6 +27,7 @@ PACKAGE BODY RNC_LOAD_XREF_INCREMENTAL AS
         U.LAST,
         U.DELETED,
         u.taxid
+
       )
       =
       (
@@ -30,6 +41,7 @@ PACKAGE BODY RNC_LOAD_XREF_INCREMENTAL AS
                 (
                   U."VERSION" = L.IN_VERSION
                 OR
+
                   (
                     U."VERSION"    IS NULL
                   AND L.IN_VERSION IS NULL
@@ -43,6 +55,7 @@ PACKAGE BODY RNC_LOAD_XREF_INCREMENTAL AS
             WHEN
               (
                 U.UPI = L.COMPARABLE_PROT_UPI
+
               AND
                 (
                   U."VERSION" = L.IN_VERSION
@@ -56,6 +69,7 @@ PACKAGE BODY RNC_LOAD_XREF_INCREMENTAL AS
             THEN 'N'
             ELSE 'Y'
           END "DELETED",
+
           CASE
             WHEN
               (
@@ -69,6 +83,7 @@ PACKAGE BODY RNC_LOAD_XREF_INCREMENTAL AS
                   AND L.IN_VERSION IS NULL
                   )
                 )
+
               )
             THEN NVL (L.IN_TAXID, U.TAXID)
             ELSE U.TAXID
@@ -82,6 +97,7 @@ PACKAGE BODY RNC_LOAD_XREF_INCREMENTAL AS
         AND U.last                 < L.IN_LOAD_RELEASE
         AND l.COMPARABLE_PROT_UPI IS NOT NULL
       )
+
     WHERE
       U.DELETED = 'N'
     AND EXISTS
@@ -95,6 +111,7 @@ PACKAGE BODY RNC_LOAD_XREF_INCREMENTAL AS
           u.AC                     = x.IN_AC
         AND U.DBID                 = X.IN_DBID
         AND U.last                 < X.IN_LOAD_RELEASE
+
         AND x.COMPARABLE_PROT_UPI IS NOT NULL
       );
 
@@ -107,6 +124,7 @@ PACKAGE BODY RNC_LOAD_XREF_INCREMENTAL AS
     p_previous_release IN RNACEN.rnc_release.ID%TYPE)
   IS
   BEGIN
+
 
     -- inserts new xref
     -- for each deleted = 'Y'
@@ -121,6 +139,7 @@ PACKAGE BODY RNC_LOAD_XREF_INCREMENTAL AS
         version,
         version_i,
         upi,
+
         created,
         last,
         deleted,
@@ -134,6 +153,7 @@ PACKAGE BODY RNC_LOAD_XREF_INCREMENTAL AS
       CASE
         WHEN
           (
+
             X.UPI != L.COMPARABLE_PROT_UPI
           )
         OR
@@ -147,6 +167,7 @@ PACKAGE BODY RNC_LOAD_XREF_INCREMENTAL AS
           )
         OR
           (
+
             X."VERSION"    IS NOT NULL
           AND L.IN_VERSION IS NULL
           )
@@ -160,6 +181,7 @@ PACKAGE BODY RNC_LOAD_XREF_INCREMENTAL AS
       IN_TAXID
     FROM
       RNACEN.XREF X,
+
       LOAD_RETRO_TMP L
     WHERE
       X.AC        = L.IN_AC
@@ -173,6 +195,7 @@ PACKAGE BODY RNC_LOAD_XREF_INCREMENTAL AS
       AND
         (
           X."VERSION" = L.IN_VERSION
+
         OR
           (
             X."VERSION"    IS NULL
@@ -184,6 +207,7 @@ PACKAGE BODY RNC_LOAD_XREF_INCREMENTAL AS
     COMMIT;
 
   END incremental2;
+
 
 
   PROCEDURE incremental3
@@ -199,6 +223,7 @@ PACKAGE BODY RNC_LOAD_XREF_INCREMENTAL AS
     -- + 1)
     INSERT
       /*+ PARALLEL (XREF 4) */
+
     INTO
       RNACEN.xref
       (
@@ -212,6 +237,7 @@ PACKAGE BODY RNC_LOAD_XREF_INCREMENTAL AS
         deleted,
         taxid
       )
+
     SELECT
       /*+ PARALLEL (T 4) */
       T.IN_AC,
@@ -225,6 +251,7 @@ PACKAGE BODY RNC_LOAD_XREF_INCREMENTAL AS
               UNIQUE(PREVIOUS_XREF.UPI)
             FROM
               RNACEN.XREF PREVIOUS_XREF
+
             WHERE
               PREVIOUS_XREF.AC          = T.IN_AC
             AND PREVIOUS_XREF.VERSION_I = T.MAX_PREVIOUS_XREF_VERSION_I
@@ -238,6 +265,7 @@ PACKAGE BODY RNC_LOAD_XREF_INCREMENTAL AS
       T.IN_LOAD_RELEASE LAST,
       'N' DELETED,
       T.IN_TAXID TAXID
+
     FROM
       (
         SELECT
@@ -251,6 +279,7 @@ PACKAGE BODY RNC_LOAD_XREF_INCREMENTAL AS
               /*+ PARALLEL (PREVIOUS_XREF 4) */
               MAX(PREVIOUS_XREF.VERSION_I)
             FROM
+
               RNACEN.XREF PREVIOUS_XREF
             WHERE
               PREVIOUS_XREF.AC     = L.IN_AC
@@ -264,6 +293,7 @@ PACKAGE BODY RNC_LOAD_XREF_INCREMENTAL AS
           LOAD_RETRO_TMP L
         WHERE
           L.COMPARABLE_PROT_UPI IS NOT NULL
+
         AND NOT EXISTS
           (
             SELECT
@@ -277,6 +307,7 @@ PACKAGE BODY RNC_LOAD_XREF_INCREMENTAL AS
             AND X.DELETED = 'N'
             AND X.LAST   <= L.IN_LOAD_RELEASE
               -- using also = in X.LAST <= L.IN_LOAD_RELEASE
+
               -- to eliminate from the selection
               -- the xref inserted right above after updating
               --  active xref exists with another protein/version
@@ -290,6 +321,7 @@ PACKAGE BODY RNC_LOAD_XREF_INCREMENTAL AS
 
 
   /*
+
     Main entry point.
   */
   PROCEDURE load_xref_incremental(
@@ -303,6 +335,7 @@ PACKAGE BODY RNC_LOAD_XREF_INCREMENTAL AS
     -- this is an INCREMENTAL release
     -- this is NOT a FULL release
     -- better to AVOID Partition Exchange Loading
+
     -- updates last, deleted and taxid
     -- of existing xrefs
     */
@@ -316,6 +349,7 @@ PACKAGE BODY RNC_LOAD_XREF_INCREMENTAL AS
     constraint
     then running Parallel DML again this may fail with an unexpected ORA-12839
     or even fail with an ORA-600.
+
     Workaround
     Setting "_disable_parallel_conventional_load" = true can help avoid this.
     */
@@ -329,6 +363,7 @@ PACKAGE BODY RNC_LOAD_XREF_INCREMENTAL AS
 
     /*
     Re-enable parall DML previously disabled because of the
+
     Bug 9831227 : Parallel DML fails with ORA-12839 or ORA-600
     Description
      you have a parent table and child table with a parent referential
@@ -342,4 +377,7 @@ PACKAGE BODY RNC_LOAD_XREF_INCREMENTAL AS
 
   END;
 
+
 END RNC_LOAD_XREF_INCREMENTAL;
+/
+set define on

@@ -1,8 +1,19 @@
-create or replace
-PACKAGE BODY RNC_LOAD_XREF AS
+set define off
+
+create or replace PACKAGE RNC_LOAD_XREF AS
+
+  /* TODO enter package declarations (types, exceptions, methods etc) here */
+  PROCEDURE load_xref(p_previous_release IN RNACEN.rnc_release.ID%TYPE,
+                      p_in_dbid          IN RNACEN.rnc_database.id%TYPE);
+
+END RNC_LOAD_XREF;
+/
+create or replace PACKAGE BODY RNC_LOAD_XREF AS
+
 
   /*
   * Package for importing cross-references from the staging table.
+
   * PEL - Partition Exchange Loading
   * Two temporary tables are populated and inserted into the main XREF table
   * to optimize performance.
@@ -16,6 +27,7 @@ PACKAGE BODY RNC_LOAD_XREF AS
 
     EXECUTE IMMEDIATE 'TRUNCATE TABLE XREF_PEL_DELETED DROP STORAGE';
     EXECUTE IMMEDIATE 'TRUNCATE TABLE XREF_PEL_NOT_DELETED DROP STORAGE';
+
     BEGIN
       -- INCAPSULATED TO IGNORE ANY 'DOES NOT EXISTS ERROR'
       -- WHEN RESTARTING THE PROCEDURE AFTER UNPREDICTABLE EXCEPTIONS
@@ -29,6 +41,7 @@ PACKAGE BODY RNC_LOAD_XREF AS
       EXECUTE IMMEDIATE 'DROP INDEX "RNACEN"."XREF_PEL_DELETED$CREATED"';
       --  DDL for Index XREF_PEL_DELETED$UPI
       --------------------------------------------------------
+
       EXECUTE IMMEDIATE 'DROP INDEX "RNACEN"."XREF_PEL_DELETED$UPI"';
       --------------------------------------------------------
       --  DDL for Index XREF_PEL_DELETED$TAXID
@@ -42,6 +55,7 @@ PACKAGE BODY RNC_LOAD_XREF AS
       --  Constraints for Table XREF
       --------------------------------------------------------
       /*
+
       ALTER TABLE "RNACEN"."XREF_PEL_DELETED" DROP CONSTRAINT "XREF_PEL_DELETED_CK1";
       ALTER TABLE "RNACEN"."XREF_PEL_DELETED" MODIFY ("DBID" NOT NULL DISABLE NOVALIDATE);
       ALTER TABLE "RNACEN"."XREF_PEL_DELETED" MODIFY ("CREATED" NOT NULL DISABLE NOVALIDATE);
@@ -55,6 +69,7 @@ PACKAGE BODY RNC_LOAD_XREF AS
       */
       --------------------------------------------------------
       --  Ref Constraints for Table XREF
+
       --------------------------------------------------------
       EXECUTE IMMEDIATE 'ALTER TABLE "RNACEN"."XREF_PEL_DELETED" DROP CONSTRAINT "XREF_PEL_DELETED_FK1"';
       EXECUTE IMMEDIATE 'ALTER TABLE "RNACEN"."XREF_PEL_DELETED" DROP CONSTRAINT "XREF_PEL_DELETED_FK2"';
@@ -68,6 +83,7 @@ PACKAGE BODY RNC_LOAD_XREF AS
       --  DDL for Index XREF_PEL_NOT_DELETED$CREATED
       --------------------------------------------------------
       EXECUTE IMMEDIATE 'DROP INDEX "RNACEN"."XREF_PEL_NOT_DELETED$CREATED"';
+
       --  DDL for Index XREF_PEL_NOT_DELETED$UPI
       --------------------------------------------------------
       EXECUTE IMMEDIATE 'DROP INDEX "RNACEN"."XREF_PEL_NOT_DELETED$UPI"';
@@ -81,6 +97,7 @@ PACKAGE BODY RNC_LOAD_XREF AS
       EXECUTE IMMEDIATE 'DROP INDEX "RNACEN"."XREF_PEL_NOT_DELETED$AC$UPPER"';
       --------------------------------------------------------
       --  Constraints for Table XREF
+
       --------------------------------------------------------
       /*
       ALTER TABLE "RNACEN"."XREF_PEL_NOT_DELETED" DROP CONSTRAINT "XREF_PEL_NOT_DELETED_CK1";
@@ -94,6 +111,7 @@ PACKAGE BODY RNC_LOAD_XREF AS
       ALTER TABLE "RNACEN"."XREF_PEL_NOT_DELETED" MODIFY ("USERSTAMP" NOT NULL DISABLE NOVALIDATE);
       ALTER TABLE "RNACEN"."XREF_PEL_NOT_DELETED" MODIFY ("AC" NOT NULL DISABLE NOVALIDATE);
       */
+
       --------------------------------------------------------
       --  Ref Constraints for Table XREF
       --------------------------------------------------------
@@ -107,12 +125,13 @@ PACKAGE BODY RNC_LOAD_XREF AS
       NULL;
     END;
 
+
   END prepare_pel_tables;
 
   /*
-    Select existing xrefs with unchanged UPI and external db VERSION
-    OR retire old entries (updated UPI / changed VERSION).
-    New entres are inserted in populate_pel_tables2.
+    Select existing xrefs with unchanged UPI and external db VERSION
+    OR retire old entries (updated UPI / changed VERSION).
+    New entres are inserted in populate_pel_tables2.
   */
   PROCEDURE populate_pel_tables1 (
     v_previous_release RNACEN.rnc_release.id%TYPE)
@@ -120,6 +139,7 @@ PACKAGE BODY RNC_LOAD_XREF AS
   BEGIN
 
     INSERT --+ APPEND PARALLEL (XREF_PEL_DELETED 2) PARALLEL (
+
       -- XREF_PEL_NOT_DELETED 2)
       ALL
     WHEN DELETED = 'Y' THEN
@@ -133,6 +153,7 @@ PACKAGE BODY RNC_LOAD_XREF AS
         "TIMESTAMP",
         USERSTAMP,
         AC,
+
         "VERSION",
         "LAST",
         "DELETED",
@@ -146,6 +167,7 @@ PACKAGE BODY RNC_LOAD_XREF AS
         VERSION_I,
         "TIMESTAMP",
         USERSTAMP,
+
         AC,
         "VERSION",
         "LAST",
@@ -159,6 +181,7 @@ PACKAGE BODY RNC_LOAD_XREF AS
         DBID,
         CREATED,
         UPI,
+
         VERSION_I,
         "TIMESTAMP",
         USERSTAMP,
@@ -172,6 +195,7 @@ PACKAGE BODY RNC_LOAD_XREF AS
       (
         DBID,
         CREATED,
+
         UPI,
         VERSION_I,
         "TIMESTAMP",
@@ -185,6 +209,7 @@ PACKAGE BODY RNC_LOAD_XREF AS
     SELECT
       /*+ PARALLEL (X 2) PARALLEL (L 2) */
       x.DBID,
+
       x.CREATED,
       x.UPI,
       x.VERSION_I,
@@ -198,6 +223,7 @@ PACKAGE BODY RNC_LOAD_XREF AS
           (
             x.LAST  < l.in_load_release
           AND X.UPI = L.COMPARABLE_PROT_UPI
+
           AND
             (
               X."VERSION" = L.IN_VERSION
@@ -211,6 +237,7 @@ PACKAGE BODY RNC_LOAD_XREF AS
         THEN L.IN_LOAD_RELEASE
         ELSE NVL (v_previous_release, x.LAST)
       END "LAST",
+
       -- x.DELETED
       CASE
         WHEN
@@ -224,6 +251,7 @@ PACKAGE BODY RNC_LOAD_XREF AS
               (
                 X."VERSION"    IS NULL
               AND L.IN_VERSION IS NULL
+
               )
             )
           )
@@ -237,6 +265,7 @@ PACKAGE BODY RNC_LOAD_XREF AS
             x.LAST  < l.in_load_release
           AND X.UPI = L.COMPARABLE_PROT_UPI
           AND
+
             (
               X."VERSION" = L.IN_VERSION
             OR
@@ -250,6 +279,7 @@ PACKAGE BODY RNC_LOAD_XREF AS
         ELSE x.TAXID
       END "TAXID"
     FROM
+
       LOAD_RETRO_TMP l,
       XREF x
     WHERE
@@ -263,6 +293,7 @@ PACKAGE BODY RNC_LOAD_XREF AS
   END populate_pel_tables1;
 
   /*
+
     Insert new xrefs, which supersede xrefs retired in populate_pel_tables1.
     Increment VERSION_I when the accession and dbid from an existing xref
     are matched to a different UPI.
@@ -276,6 +307,7 @@ PACKAGE BODY RNC_LOAD_XREF AS
         DBID,
         CREATED,
         UPI,
+
         VERSION_I,
         "TIMESTAMP",
         USERSTAMP,
@@ -289,6 +321,7 @@ PACKAGE BODY RNC_LOAD_XREF AS
       /*+ PARALLEL (X 4) PARALLEL (L 4) */
       l.IN_DBID,
       l.IN_LOAD_RELEASE CREATED,
+
       l.COMPARABLE_PROT_UPI UPI,
       CASE
         WHEN
@@ -302,6 +335,7 @@ PACKAGE BODY RNC_LOAD_XREF AS
       USER USERSTAMP,
       L.IN_AC AC,
       l.in_version "VERSION",
+
       l.IN_LOAD_RELEASE "LAST",
       'N' DELETED,
       IN_TAXID TAXID
@@ -315,6 +349,7 @@ PACKAGE BODY RNC_LOAD_XREF AS
     AND NOT -- this condition differentiates this procedure from populate_pel_tables1
       (
         x.LAST  < l.IN_LOAD_RELEASE
+
       AND x.UPI = l.COMPARABLE_PROT_UPI
       AND
         (
@@ -327,6 +362,7 @@ PACKAGE BODY RNC_LOAD_XREF AS
         )
       )
     AND x.deleted = 'N';
+
 
     COMMIT;
 
@@ -342,6 +378,7 @@ PACKAGE BODY RNC_LOAD_XREF AS
     --    2) and had a different UPI, VERSION (VERSION_I = OLD_VERSION_I + 1)
   */
 
+
   /*
     Create a temporary table with maximum internal versions for each
     ac/db/upi combination.
@@ -354,6 +391,7 @@ PACKAGE BODY RNC_LOAD_XREF AS
     EXECUTE IMMEDIATE 'TRUNCATE TABLE load_upi_max_versions DROP STORAGE';
 
     INSERT /*+ APPEND */
+
     INTO load_upi_max_versions
       SELECT DISTINCT
         /*+ PARALLEL (PREVIOUS_XREF 4) PARALLEL (L 4) */
@@ -367,6 +405,7 @@ PACKAGE BODY RNC_LOAD_XREF AS
       WHERE
         L.COMPARABLE_PROT_UPI IS NOT NULL
         AND L.IN_DBID = p_in_dbid
+
         AND PREVIOUS_XREF.DBID (+)  = L.IN_DBID -- outer join, left side can be NULL
         AND PREVIOUS_XREF.AC   (+)  = L.IN_AC   -- outer join, left side can be NULL
         AND NOT EXISTS
@@ -380,6 +419,7 @@ PACKAGE BODY RNC_LOAD_XREF AS
                 X.AC      = L.IN_AC
             AND X.DBID    = L.IN_DBID
             AND X.DELETED = 'N'
+
           )
       GROUP BY
         L.IN_AC,
@@ -394,6 +434,7 @@ PACKAGE BODY RNC_LOAD_XREF AS
 
   END load_upi_max_versions_table;
 
+
   /*
     Create a temporary table with maximum internal versions for each
     ac/db combination.
@@ -406,6 +447,7 @@ PACKAGE BODY RNC_LOAD_XREF AS
     SELECT DISTINCT
       /*+ PARALLEL (L 4) */
       l.AC,
+
       L.DBID,
       MAX(L.MAX_VERSION_I) MAX_VERSION_I
     FROM load_upi_max_versions l
@@ -418,6 +460,7 @@ PACKAGE BODY RNC_LOAD_XREF AS
     BEGIN
       DBMS_STATS.GATHER_TABLE_STATS ( OWNNAME => 'RNACEN', TABNAME => 'load_max_versions', ESTIMATE_PERCENT => 10 );
     END;
+
 
   END load_max_versions_table;
 
@@ -432,6 +475,7 @@ PACKAGE BODY RNC_LOAD_XREF AS
     INSERT --+ APPEND PARALLEL (XREF_PEL_NOT_DELETED 4)
     INTO
       RNACEN.XREF_PEL_NOT_DELETED
+
       (
         AC,
         DBID,
@@ -445,6 +489,7 @@ PACKAGE BODY RNC_LOAD_XREF AS
         "TIMESTAMP",
         USERSTAMP
       )
+
     SELECT
       /*+ PARALLEL (T 4) PARALLEL (LUMV 4) */
       T.IN_AC,
@@ -458,6 +503,7 @@ PACKAGE BODY RNC_LOAD_XREF AS
         ELSE T.MAX_PREVIOUS_XREF_VERSION_I + 1 -- updated UPI, update VERSION_I
       END VERSION_I,
       T.COMPARABLE_PROT_UPI UPI,
+
       T.IN_LOAD_RELEASE CREATED,
       T.IN_LOAD_RELEASE LAST,
       'N' DELETED,
@@ -471,6 +517,7 @@ PACKAGE BODY RNC_LOAD_XREF AS
           /*+ PARALLEL (L 4) PARALLEL (LMV 4) */
           L.IN_AC,
           L.IN_DBID,
+
           L.IN_VERSION,
           LMV.MAX_VERSION_I MAX_PREVIOUS_XREF_VERSION_I,
           L.COMPARABLE_PROT_UPI,
@@ -484,6 +531,7 @@ PACKAGE BODY RNC_LOAD_XREF AS
         AND L.IN_DBID = p_in_dbid
         AND LMV.AC           = L.IN_AC
         AND LMV.DBID         = L.IN_DBID
+
       ) T
     WHERE
         LUMV.AC (+)            = T.IN_AC
@@ -497,6 +545,7 @@ PACKAGE BODY RNC_LOAD_XREF AS
   /*
     Existing xrefs not present in the new release for which the old entries
     must be retired or those that were already retired and weren't updated.
+
   */
   PROCEDURE populate_pel_tables4 (
     p_in_dbid IN RNACEN.RNC_DATABASE.ID%TYPE,
@@ -510,6 +559,7 @@ PACKAGE BODY RNC_LOAD_XREF AS
         DBID,
         CREATED,
         UPI,
+
         VERSION_I,
         "TIMESTAMP",
         USERSTAMP,
@@ -523,6 +573,7 @@ PACKAGE BODY RNC_LOAD_XREF AS
       /*+ PARALLEL (X 4) */
       x.DBID,
       x.CREATED,
+
       x.UPI,
       x.VERSION_I,
       x.TIMESTAMP,
@@ -536,6 +587,7 @@ PACKAGE BODY RNC_LOAD_XREF AS
         ELSE                               -- retired xref that weren't updated
           X.LAST
       END LAST,
+
       'Y' DELETED,
       x.taxid
     FROM
@@ -549,6 +601,7 @@ PACKAGE BODY RNC_LOAD_XREF AS
         (
           SELECT
             /*+ PARALLEL (L 4) */
+
             1
           FROM
             LOAD_RETRO_TMP L
@@ -563,6 +616,7 @@ PACKAGE BODY RNC_LOAD_XREF AS
 
   END populate_pel_tables4;
 
+
   /*
     Prepare temporary PEL tables and perform the exchange.
   */
@@ -575,6 +629,7 @@ PACKAGE BODY RNC_LOAD_XREF AS
     --------------------------------------------------------
     EXECUTE IMMEDIATE 'CREATE INDEX "RNACEN"."XREF_PEL_DELETED$AC" ON "RNACEN"."XREF_PEL_DELETED" ("AC") PARALLEL TABLESPACE "RNACEN_IND" COMPRESS 1';
     EXECUTE IMMEDIATE 'ALTER INDEX "RNACEN"."XREF_PEL_DELETED$AC" NOPARALLEL';
+
     --------------------------------------------------------
     --  DDL for Index XREF_PEL_DELETED$CREATED
     --------------------------------------------------------
@@ -588,6 +643,7 @@ PACKAGE BODY RNC_LOAD_XREF AS
     --------------------------------------------------------
     --  DDL for Index XREF_PEL_DELETED$TAXID
     --------------------------------------------------------
+
     EXECUTE IMMEDIATE 'CREATE INDEX "RNACEN"."XREF_PEL_DELETED$TAXID" ON "RNACEN"."XREF_PEL_DELETED" ("TAXID") PARALLEL TABLESPACE "RNACEN_IND" COMPRESS 1';
     EXECUTE IMMEDIATE 'ALTER INDEX "RNACEN"."XREF_PEL_DELETED$TAXID" NOPARALLEL';
     --------------------------------------------------------
@@ -601,6 +657,7 @@ PACKAGE BODY RNC_LOAD_XREF AS
     /*
     ALTER TABLE "RNACEN"."XREF_PEL_DELETED" ADD CONSTRAINT "XREF_PEL_DELETED_CK1" CHECK (deleted IN ('Y', 'N')) ENABLE VALIDATE;
     ALTER TABLE "RNACEN"."XREF_PEL_DELETED" MODIFY ("DBID" NOT NULL ENABLE VALIDATE);
+
     ALTER TABLE "RNACEN"."XREF_PEL_DELETED" MODIFY ("CREATED" NOT NULL ENABLE VALIDATE);
     ALTER TABLE "RNACEN"."XREF_PEL_DELETED" MODIFY ("LAST" NOT NULL ENABLE VALIDATE);
     ALTER TABLE "RNACEN"."XREF_PEL_DELETED" MODIFY ("UPI" NOT NULL ENABLE VALIDATE);
@@ -614,6 +671,7 @@ PACKAGE BODY RNC_LOAD_XREF AS
     --  Ref Constraints for Table XREF
     --------------------------------------------------------
     EXECUTE IMMEDIATE 'ALTER TABLE "RNACEN"."XREF_PEL_DELETED" ADD CONSTRAINT "XREF_PEL_DELETED_FK1" FOREIGN KEY ("CREATED") REFERENCES "RNACEN"."RNC_RELEASE" ("ID") ENABLE VALIDATE';
+
     EXECUTE IMMEDIATE 'ALTER TABLE "RNACEN"."XREF_PEL_DELETED" ADD CONSTRAINT "XREF_PEL_DELETED_FK2" FOREIGN KEY ("DBID") REFERENCES "RNACEN"."RNC_DATABASE" ("ID") ENABLE VALIDATE';
 
     EXECUTE IMMEDIATE 'ALTER TABLE "RNACEN"."XREF_PEL_DELETED" ADD CONSTRAINT "XREF_PEL_DELETED_FK3" FOREIGN KEY ("LAST") REFERENCES "RNACEN"."RNC_RELEASE" ("ID") ENABLE VALIDATE';
@@ -627,6 +685,7 @@ PACKAGE BODY RNC_LOAD_XREF AS
     --  DDL for Index XREF_PEL_NOT_DELETED$CREATED
     --------------------------------------------------------
     EXECUTE IMMEDIATE 'CREATE INDEX "RNACEN"."XREF_PEL_NOT_DELETED$CREATED" ON "RNACEN"."XREF_PEL_NOT_DELETED" ("CREATED") PARALLEL TABLESPACE "RNACEN_IND" COMPRESS 1';
+
     EXECUTE IMMEDIATE 'ALTER INDEX "RNACEN"."XREF_PEL_NOT_DELETED$CREATED" NOPARALLEL';
     --------------------------------------------------------
     --  DDL for Index XREF_PEL_NOT_DELETED$UPI
@@ -640,6 +699,7 @@ PACKAGE BODY RNC_LOAD_XREF AS
     EXECUTE IMMEDIATE 'ALTER INDEX "RNACEN"."XREF_PEL_NOT_DELETED$TAXID" NOPARALLEL';
     --------------------------------------------------------
     --  DDL for Index XREF_PEL_NOT_DELETED$AC$UPPER
+
     --------------------------------------------------------
     EXECUTE IMMEDIATE 'CREATE INDEX "RNACEN"."XREF_PEL_NOT_DELETED$AC$UPPER" ON "RNACEN"."XREF_PEL_NOT_DELETED" (UPPER("AC")) PARALLEL TABLESPACE "RNACEN_IND" COMPRESS 1';
     EXECUTE IMMEDIATE 'ALTER INDEX "RNACEN"."XREF_PEL_NOT_DELETED$AC$UPPER" NOPARALLEL';
@@ -653,6 +713,7 @@ PACKAGE BODY RNC_LOAD_XREF AS
     ALTER TABLE "RNACEN"."XREF_PEL_NOT_DELETED" MODIFY ("LAST" NOT NULL ENABLE VALIDATE);
     ALTER TABLE "RNACEN"."XREF_PEL_NOT_DELETED" MODIFY ("UPI" NOT NULL ENABLE VALIDATE);
     ALTER TABLE "RNACEN"."XREF_PEL_NOT_DELETED" MODIFY ("VERSION_I" NOT NULL ENABLE VALIDATE);
+
     ALTER TABLE "RNACEN"."XREF_PEL_NOT_DELETED" MODIFY ("DELETED" NOT NULL ENABLE VALIDATE);
     ALTER TABLE "RNACEN"."XREF_PEL_NOT_DELETED" MODIFY ("TIMESTAMP" NOT NULL ENABLE VALIDATE);
     ALTER TABLE "RNACEN"."XREF_PEL_NOT_DELETED" MODIFY ("USERSTAMP" NOT NULL ENABLE VALIDATE);
@@ -665,6 +726,7 @@ PACKAGE BODY RNC_LOAD_XREF AS
     EXECUTE IMMEDIATE 'ALTER TABLE "RNACEN"."XREF_PEL_NOT_DELETED" ADD CONSTRAINT "XREF_PEL_NOT_DELETED_FK2" FOREIGN KEY ("DBID") REFERENCES "RNACEN"."RNC_DATABASE" ("ID") ENABLE VALIDATE';
     EXECUTE IMMEDIATE 'ALTER TABLE "RNACEN"."XREF_PEL_NOT_DELETED" ADD CONSTRAINT "XREF_PEL_NOT_DELETED_FK3" FOREIGN KEY ("LAST") REFERENCES "RNACEN"."RNC_RELEASE" ("ID") ENABLE VALIDATE';
     EXECUTE IMMEDIATE 'ALTER TABLE "RNACEN"."XREF_PEL_NOT_DELETED" ADD CONSTRAINT "XREF_PEL_NOT_DELETED_FK4" FOREIGN KEY ("UPI") REFERENCES "RNACEN"."RNA" ("UPI") ENABLE VALIDATE';
+
 
     DBMS_STATS.GATHER_TABLE_STATS (OWNNAME => 'RNACEN', TABNAME =>
       'XREF_PEL_DELETED', ESTIMATE_PERCENT => DBMS_STATS.AUTO_SAMPLE_SIZE,
@@ -679,6 +741,7 @@ PACKAGE BODY RNC_LOAD_XREF AS
 
   END do_pel_exchange;
 
+
   /*
     Main entry point.
   */
@@ -692,6 +755,7 @@ PACKAGE BODY RNC_LOAD_XREF AS
     populate_pel_tables1(p_previous_release);
     populate_pel_tables2;
 
+
     load_upi_max_versions_table(p_in_dbid);
     load_max_versions_table;
     populate_pel_tables3(p_in_dbid);
@@ -701,3 +765,5 @@ PACKAGE BODY RNC_LOAD_XREF AS
   END;
 
 END RNC_LOAD_XREF;
+/
+set define on
