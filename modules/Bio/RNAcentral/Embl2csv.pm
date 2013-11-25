@@ -300,6 +300,8 @@ sub _get_missing_dr_links {
         $db_project_id = 'PRJEB4451';
     } elsif ($db_name eq 'VEGA') {
         $db_project_id = 'PRJEB4568';
+    } elsif ($db_name eq 'tmRNA_Web') {
+        $db_project_id = 'PRJEB4570';
     }
 
     if ($entry_project_id eq $db_project_id) {
@@ -327,10 +329,11 @@ sub _get_dblinks {
                  accession   => $seq->display_id,
                  optional_id => '' };
 
-    # get mirbase and vega entries by project ids
-    # todo: remove this temporary fix when DR lines are added to mirbase entries
+    # get mirbase, vega, tmRNA website entries by project ids
+    # todo: remove this temporary fix when DR lines are added to all entries
     push @data, _get_missing_dr_links($seq, 'MIRBASE');
     push @data, _get_missing_dr_links($seq, 'VEGA');
+    push @data, _get_missing_dr_links($seq, 'tmRNA_Web');
 
     # add any DR entries
     my $anno_collection = $seq->annotation;
