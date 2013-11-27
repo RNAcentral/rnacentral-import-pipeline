@@ -107,7 +107,7 @@ create or replace PACKAGE BODY RNC_UPDATE AS
         t1.organelle = t2.organelle,
         t1.classification = t2.classification,
         t1.project = t2.project,
-        t1.non_coding_id = t2.composite_id,
+        t1.non_coding_id = t2.ac,
         t1.database = t2.database,
         t1.optional_id = t2.optional_id,
         t1.external_id = t2.external_id
