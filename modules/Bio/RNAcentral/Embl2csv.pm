@@ -163,7 +163,6 @@ sub embl2csv {
                                                       $exon->{'local_start'},
                                                       $exon->{'local_end'},
                                                       $exon->{'primary_identifier'},
-                                                      $self->_get_chromosome_from_assembly($exon->{'primary_identifier'}),
                                                       $exon->{'primary_start'},
                                                       $exon->{'primary_end'},
                                                       $exon->{'strand'})) . "\"\n";
