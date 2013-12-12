@@ -1253,7 +1253,7 @@ sub _read_EMBL_DBLink {
 
     $_ = $$buffer;
     while (defined( $_ ||= $self->_readline )) {
-        if ( /^DR   ([^\s;]+);\s*([^\s;]+);?\s*([^\s;]+)?\.$/) {
+        if ( /^DR   ([^\s;]+);\s*([^\s;]+);?\s*(.+)?\.$/) {
         my ($databse, $prim_id, $sec_id) = ($1,$2,$3);
         my $link = Bio::Annotation::DBLink->new(-database    => $databse,
                             -primary_id  => $prim_id,
