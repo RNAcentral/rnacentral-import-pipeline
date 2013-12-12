@@ -45,7 +45,7 @@ sub new {
 sub db_oracle_connect {
     my $self = shift;
 
-    my $dsn = "dbi:Oracle:host=$self->{'host'};sid=$self->{'sid'};port=$self->{'port'}";
+    my $dsn = "dbi:Oracle:host=$self->{'host'};service_name=$self->{'sid'};port=$self->{'port'}";
     my $dbh = DBI->connect($dsn, $self->{'user'}, $self->{'password'})
               or $self->{'logger'}->logdie( $DBI::errstr . "\n" );
 
