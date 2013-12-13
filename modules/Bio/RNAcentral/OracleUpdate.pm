@@ -202,7 +202,7 @@ sub log_plsql_output {
     my $self = shift;
     my $output = $self->{'dbh'}->func( 'dbms_output_get' );
     $self->{'logger'}->info($output);
-    print $output;
+    print $output, "\n";
 }
 
 

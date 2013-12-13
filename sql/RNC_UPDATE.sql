@@ -274,82 +274,85 @@ create or replace PACKAGE BODY RNC_UPDATE AS
   IS
   BEGIN
 
+    -- update rnc_references table
     INSERT INTO rnc_references
     (
       md5,
-      authors_md5,
       location,
 
       authors,
       title,
-      pubmed,
-      doi,
-      publisher,
-      editors
+      pmid,
+      doi
     )
     SELECT
       /*+ PARALLEL */
       in_md5,
-      in_authors_md5,
       in_location,
       in_my_authors,
-
       in_title,
-      in_pubmed,
-      in_doi,
-      in_publisher,
-      in_editors
+      in_pmid,
+      in_doi
+
     FROM
       (
       WITH
         distinct_new_refs AS
         (
-          SELECT DISTINCT
+          SELECT /*+ PARALLEL */ DISTINCT
             md5,
-            authors_md5,
-
             location,
             useful_clob_object(authors) MY_AUTHORS,
             title,
-            pubmed,
-            doi,
-            publisher,
-            editors
+            pmid,
+            doi
           FROM
-            rnc_references_all
+
+            load_rnc_references
          )
       SELECT
         l.md5 in_md5,
-        l.authors_md5 in_authors_md5,
-
         l.location in_location,
         TREAT(l.MY_AUTHORS AS USEFUL_CLOB_OBJECT).UCO AS in_my_authors,
         l.title in_title,
-        l.pubmed in_pubmed,
-        l.doi in_doi,
-        l.publisher in_publisher,
-        l.editors in_editors
+        l.pmid in_pmid,
+        l.doi in_doi
       FROM
         distinct_new_refs l,
         rnc_references p
-     WHERE p.md5 (+) = l.md5
-        AND p.authors_md5 (+) = l.authors_md5
-        and p.location (+) = l.location
+     WHERE p.md5 (+) = l.md5 AND p.md5 IS NULL
 
-        AND p.md5 IS NULL
-        AND p.authors_md5 IS NULL
-        and p.location is null
       );
+
+    commit;
+
+    -- update rnc_reference_map table
+    MERGE INTO rnc_reference_map t1
+    USING (select t3.ACCESSION, t4.ID from load_rnc_references t3, rnc_references t4 where t3.md5 = t4.md5) t2
+		ON (t1.ACCESSION = t2.ACCESSION and t1.reference_id=t2.id)
+		WHEN NOT MATCHED THEN INSERT
+		(
+  		t1.accession,
+			t1.reference_id
+		)
+
+		VALUES
+		(
+  		t2.accession,
+			t2.id
+		);
 
     COMMIT;
 
+    DBMS_OUTPUT.put_line('Literature references updated');
+
   END update_literature_references;
+
 
 
   /*
   * Move the data for the specified database into the staging table.
   */
-
   PROCEDURE move_staging_data (
     p_in_dbid IN RNACEN.rnc_database.ID%TYPE
   )

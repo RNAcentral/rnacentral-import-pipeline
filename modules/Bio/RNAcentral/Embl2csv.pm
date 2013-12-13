@@ -136,7 +136,7 @@ sub embl2csv {
         }
 
         # get literature references
-        $refs = $self->_get_references($seq, $md5);
+        $refs = $self->_get_references($seq);
         if ( $refs ) {
             print $fh_refs $refs->{'text'};
             $refs_num += $refs->{'num'};
@@ -536,11 +536,10 @@ sub _get_basic_data {
 
 sub _get_references {
 
-    (my $self, my $seq, my $md5)  = @_;
+    (my $self, my $seq)  = @_;
 
     my ($ref_authors, $ref_location, $ref_title,
-        $ref_pubmed,  $ref_doi,      $ref_publisher,
-        $ref_editors, $ref_consortium, $md5_authors);
+        $ref_pmid,    $ref_doi,      $md5);
     my $text = '';
     my $num = 0;
 
@@ -551,24 +550,20 @@ sub _get_references {
             # all reference lines: RN, RC, RP, RX, RG, RA, RT, RL
             if ( $value->tagname eq 'reference' ) {
                 $num++;
-                $ref_authors   = _nvl($value->authors());   # RA line
-                $md5_authors   = md5_hex($ref_authors);
-                $ref_location  = _nvl($value->location());  # RL line
-                $ref_title     = _nvl($value->title());     # RT line
-                $ref_pubmed    = _nvl($value->pubmed());    # parsed RX line
-                $ref_doi       = _nvl($value->doi());       # parsed RX line
-                $ref_publisher = _nvl($value->publisher()); # parsed RL line
-                $ref_editors   = _nvl($value->editors());   # parsed RL line
+                $ref_authors  = _nvl($value->authors());   # RA line
+                $ref_location = _nvl($value->location());  # RL line
+                $ref_title    = _nvl($value->title());     # RT line
+                $ref_pmid     = _nvl($value->pubmed());    # parsed RX line
+                $ref_doi      = _nvl($value->doi());       # parsed RX line
+                $md5          = md5_hex($ref_authors . $ref_location . $ref_title);
 
                 $text .= '"' . join('","', ($md5,
-                                            $md5_authors,
+                                            $seq->display_id,
                                             $ref_authors,
                                             $ref_location,
                                             $ref_title,
-                                            $ref_pubmed,
-                                            $ref_doi,
-                                            $ref_publisher,
-                                            $ref_editors) ) . "\"\n";
+                                            $ref_pmid,
+                                            $ref_doi) ) . "\"\n";
             }
         }
     }
