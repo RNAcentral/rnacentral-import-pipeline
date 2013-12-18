@@ -1,6 +1,6 @@
 set define off
 
-create or replace PACKAGE RNC_TEST AS
+create or replace PACKAGE "RNC_TEST" AS
 
   /*
     Package for testing the RNAcentral data import pipeline.
@@ -10,7 +10,7 @@ create or replace PACKAGE RNC_TEST AS
 
 END RNC_TEST;
 /
-create or replace PACKAGE BODY RNC_TEST AS
+create or replace PACKAGE BODY "RNC_TEST" AS
 
 
 
@@ -788,27 +788,6 @@ create or replace PACKAGE BODY RNC_TEST AS
     END LOOP;
 
   END run_tests;
-
-
-  /*
-    Immediately truncate all tables
-  */
-  PROCEDURE truncate_all_tables AS
-  begin
-
-    teardown;
-    EXECUTE IMMEDIATE 'TRUNCATE TABLE RNACEN.release_stats DROP STORAGE';
-    EXECUTE IMMEDIATE 'TRUNCATE TABLE RNACEN.rnc_ac_info DROP STORAGE';
-    EXECUTE IMMEDIATE 'TRUNCATE TABLE RNACEN.rnc_ac_info_all DROP STORAGE';
-    EXECUTE IMMEDIATE 'TRUNCATE TABLE RNACEN.rnc_accessions DROP STORAGE';
-    EXECUTE IMMEDIATE 'TRUNCATE TABLE RNACEN.rnc_composite_ids DROP STORAGE';
-    EXECUTE IMMEDIATE 'TRUNCATE TABLE RNACEN.rnc_composite_ids_all DROP STORAGE';
-    EXECUTE IMMEDIATE 'TRUNCATE TABLE RNACEN.rnc_assembly DROP STORAGE';
-    EXECUTE IMMEDIATE 'TRUNCATE TABLE RNACEN.rnc_references DROP STORAGE';
-    EXECUTE IMMEDIATE 'TRUNCATE TABLE RNACEN.rnc_references_all DROP STORAGE';
-    DBMS_OUTPUT.put_line('All tables truncated');
-  end;
-
 
 
 END RNC_TEST;
