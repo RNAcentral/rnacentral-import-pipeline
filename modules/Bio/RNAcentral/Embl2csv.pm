@@ -346,7 +346,7 @@ sub _get_dblinks {
                               primary_id  => _get_composite_id($database, $primary_id, $seq->display_id),
                               accession   => $primary_id,
                               optional_id => $optional_id,
-                              database    => $database,
+                              database    => uc($database),
                             };
             }
         }
@@ -417,10 +417,10 @@ sub _collate_vega_xrefs {
     };
 
     for my $dr_link (@$data) {
-        if ( $dr_link->{'database'} eq 'VEGA-Gn' ) {
+        if ( $dr_link->{'database'} =~ /^VEGA-Gn$/i ) {
             $new_vega_dr_link->{'primary_id'} = $dr_link->{'primary_id'};
             $new_vega_dr_link->{'accession'} = $dr_link->{'accession'};
-        } elsif ( $dr_link->{'database'} eq 'VEGA-Tr' ) {
+        } elsif ( $dr_link->{'database'} =~ /^VEGA-Tr$/i ) {
             $new_vega_dr_link->{'optional_id'} = $dr_link->{'accession'};
         } else {
             push @new_data, $dr_link;
