@@ -14,6 +14,7 @@ create or replace PACKAGE RNC_UPDATE AS
   PROCEDURE update_composite_ids;
 
 
+
   PROCEDURE update_rnc_accessions;
 
 END RNC_UPDATE;
@@ -21,10 +22,12 @@ END RNC_UPDATE;
 create or replace PACKAGE BODY RNC_UPDATE AS
 
 
+
   /*
   * Based on the rnc_ac_info and rnc_composite_ids
   * update a denormalized table combining the other two tables.
   * Useful for convenient access using Django ORM.
+
   */
   PROCEDURE update_rnc_accessions
 
@@ -38,6 +41,7 @@ create or replace PACKAGE BODY RNC_UPDATE AS
     USING (SELECT * FROM rnc_ac_info) t2
     ON (t1.accession = t2.ac)
     WHEN MATCHED THEN UPDATE SET
+
         t1.parent_ac = t2.parent_ac,
         t1.seq_version = t2.seq_version,
         t1.feature_start = t2.feature_start,
@@ -51,6 +55,7 @@ create or replace PACKAGE BODY RNC_UPDATE AS
         t1.species = t2.species,
         t1.organelle = t2.organelle,
         t1.classification = t2.classification,
+
         t1.project = t2.project
     WHEN NOT MATCHED THEN INSERT
         (t1.accession,
@@ -64,6 +69,7 @@ create or replace PACKAGE BODY RNC_UPDATE AS
          t1.division,
          t1.keywords,
          t1.description,
+
          t1.species,
          t1.organelle,
          t1.classification,
@@ -77,6 +83,7 @@ create or replace PACKAGE BODY RNC_UPDATE AS
          t2.feature_start,
          t2.feature_end,
          t2.feature_name,
+
          t2.ordinal,
          t2.division,
          t2.keywords,
@@ -90,6 +97,7 @@ create or replace PACKAGE BODY RNC_UPDATE AS
 
     -- merge composite ids from rnc_composite_ids
     MERGE /*+ parallel */ INTO rnc_accessions t1
+
     USING (SELECT distinct t3.*, t4.COMPOSITE_ID, t4.DATABASE, t4.OPTIONAL_ID, t4.EXTERNAL_ID FROM rnc_ac_info t3, rnc_composite_ids t4 WHERE t3.ac = t4.ac) t2
     ON (t1.accession = t2.COMPOSITE_ID)
     WHEN MATCHED THEN UPDATE SET
@@ -103,6 +111,7 @@ create or replace PACKAGE BODY RNC_UPDATE AS
         t1.division = t2.division,
         t1.keywords = t2.keywords,
         t1.description = t2.description,
+
         t1.species = t2.species,
         t1.organelle = t2.organelle,
         t1.classification = t2.classification,
@@ -116,6 +125,7 @@ create or replace PACKAGE BODY RNC_UPDATE AS
         (t1.accession,
          t1.parent_ac,
          t1.seq_version,
+
          t1.feature_start,
          t1.feature_end,
          t1.feature_name,
@@ -129,6 +139,7 @@ create or replace PACKAGE BODY RNC_UPDATE AS
          t1.classification,
          t1.project,
          t1.is_composite,
+
          t1.non_coding_id,
          t1.database,
          t1.external_id,
@@ -142,6 +153,7 @@ create or replace PACKAGE BODY RNC_UPDATE AS
 
          t2.feature_name,
          t2.ordinal,
+
          t2.division,
          t2.keywords,
          t2.description,
@@ -156,6 +168,7 @@ create or replace PACKAGE BODY RNC_UPDATE AS
 
          t2.optional_id);
 
+
     COMMIT;
 
   END update_rnc_accessions;
@@ -166,6 +179,7 @@ create or replace PACKAGE BODY RNC_UPDATE AS
   PROCEDURE update_composite_ids
   IS
   BEGIN
+
 
 
     DBMS_OUTPUT.put_line('Updating composite ids');
@@ -182,6 +196,7 @@ create or replace PACKAGE BODY RNC_UPDATE AS
       t1.AC,
       t1.DATABASE,
 
+
       t1.OPTIONAL_ID,
       t1.EXTERNAL_ID
 		)
@@ -193,6 +208,7 @@ create or replace PACKAGE BODY RNC_UPDATE AS
       t2.OPTIONAL_ID,
       t2.EXTERNAL_ID
     );
+
 
     DBMS_OUTPUT.put_line('Composite ids updated');
 
@@ -207,6 +223,7 @@ create or replace PACKAGE BODY RNC_UPDATE AS
   IS
   BEGIN
 
+
     DBMS_OUTPUT.put_line('Updating accession information');
 
 
@@ -220,6 +237,7 @@ create or replace PACKAGE BODY RNC_UPDATE AS
       t1.DESCRIPTION = t2.DESCRIPTION,
       t1.ORGANELLE = t2.ORGANELLE,
       t1.SPECIES = t2.SPECIES,
+
       t1.CLASSIFICATION = t2.CLASSIFICATION,
       t1."PROJECT" = t2."PROJECT"
 		WHEN NOT MATCHED THEN INSERT
@@ -233,6 +251,7 @@ create or replace PACKAGE BODY RNC_UPDATE AS
 			t1.FEATURE_NAME,
 			t1.ORDINAL,
 			t1.DIVISION,
+
       t1."PROJECT",
 			t1.KEYWORDS,
 			t1.DESCRIPTION,
@@ -246,6 +265,7 @@ create or replace PACKAGE BODY RNC_UPDATE AS
   		t2.AC,
 			t2.PARENT_AC,
 			t2.SEQ_VERSION,
+
 			t2.FEATURE_START,
 			t2.FEATURE_END,
 			t2.FEATURE_NAME,
@@ -260,6 +280,7 @@ create or replace PACKAGE BODY RNC_UPDATE AS
 			t2.CLASSIFICATION
 		);
 
+
     DBMS_OUTPUT.put_line('Accession information updated');
 
   END update_accession_info;
@@ -272,6 +293,7 @@ create or replace PACKAGE BODY RNC_UPDATE AS
   */
   PROCEDURE update_literature_references
   IS
+
   BEGIN
 
     -- update rnc_references table
@@ -285,6 +307,7 @@ create or replace PACKAGE BODY RNC_UPDATE AS
       pmid,
       doi
     )
+
     SELECT
       /*+ PARALLEL */
       in_md5,
@@ -298,6 +321,7 @@ create or replace PACKAGE BODY RNC_UPDATE AS
       (
       WITH
         distinct_new_refs AS
+
         (
           SELECT /*+ PARALLEL */ DISTINCT
             md5,
@@ -311,6 +335,7 @@ create or replace PACKAGE BODY RNC_UPDATE AS
             load_rnc_references
          )
       SELECT
+
         l.md5 in_md5,
         l.location in_location,
         TREAT(l.MY_AUTHORS AS USEFUL_CLOB_OBJECT).UCO AS in_my_authors,
@@ -323,6 +348,7 @@ create or replace PACKAGE BODY RNC_UPDATE AS
      WHERE p.md5 (+) = l.md5 AND p.md5 IS NULL
 
       );
+
 
     commit;
 
@@ -337,16 +363,34 @@ create or replace PACKAGE BODY RNC_UPDATE AS
 		)
 
 		VALUES
+
 		(
   		t2.accession,
 			t2.id
 		);
+    COMMIT;
 
+    -- copy literature references for the composite ids
+    MERGE INTO rnc_reference_map t1
+    USING (select t3.ac, t3.composite_id, t4.reference_ID from rnc_composite_ids t3, rnc_reference_map t4 where t3.ac = t4.accession) t2
+		ON (t1.accession = t2.composite_id and t1.reference_id=t2.reference_ID)
+		WHEN NOT MATCHED THEN INSERT
+		(
+  		t1.accession,
+
+			t1.reference_id
+		)
+		VALUES
+		(
+  		t2.composite_id,
+			t2.reference_ID
+		);
     COMMIT;
 
     DBMS_OUTPUT.put_line('Literature references updated');
 
   END update_literature_references;
+
 
 
 
@@ -361,6 +405,7 @@ create or replace PACKAGE BODY RNC_UPDATE AS
 
 		EXECUTE IMMEDIATE 'TRUNCATE TABLE load_rnacentral DROP STORAGE';
 
+
 		INSERT INTO load_rnacentral (
       SELECT CRC64,
              LEN,
@@ -374,6 +419,7 @@ create or replace PACKAGE BODY RNC_UPDATE AS
              TAXID,
              MD5
       FROM load_rnacentral_all d1, rnc_database d2
+
       WHERE d1.DATABASE = d2.descr AND d2.ID = p_in_dbid
     );
 
@@ -387,6 +433,7 @@ create or replace PACKAGE BODY RNC_UPDATE AS
   */
   PROCEDURE create_release (
     p_in_dbid IN RNACEN.rnc_database.ID%TYPE,
+
     p_release_type IN RNACEN.rnc_release.release_type%TYPE
   )
   IS
@@ -400,6 +447,7 @@ create or replace PACKAGE BODY RNC_UPDATE AS
 
     INSERT INTO rnc_release
       (ID,
+
        dbid,
        release_date,
        release_type,
@@ -413,6 +461,7 @@ create or replace PACKAGE BODY RNC_UPDATE AS
       (
       v_next_release,
       p_in_dbid ,
+
       (SELECT to_char(trunc(SYSDATE),'dd-MON-yy') FROM dual),
       p_release_type,
       'L',
@@ -427,6 +476,7 @@ create or replace PACKAGE BODY RNC_UPDATE AS
 
   END create_release;
 
+
   /*
   * Create new releases for all databases mentioned in the staging table.
   */
@@ -439,6 +489,7 @@ create or replace PACKAGE BODY RNC_UPDATE AS
 
       SELECT distinct
         d2.id
+
       FROM
           load_rnacentral_all d1,
           rnc_database d2
@@ -453,6 +504,7 @@ create or replace PACKAGE BODY RNC_UPDATE AS
 
     WHERE status = 'L';
 
+
     IF (v_count_existing_releases > 0) THEN
       DBMS_OUTPUT.put_line('Found releases to be loaded');
       RETURN;
@@ -464,6 +516,7 @@ create or replace PACKAGE BODY RNC_UPDATE AS
     LOOP
       rnc_update.create_release(p_in_dbid => v_db.ID, p_release_type => p_release_type);
     END LOOP;
+
 
 
   END prepare_releases;
@@ -479,6 +532,7 @@ create or replace PACKAGE BODY RNC_UPDATE AS
   BEGIN
 
 
+
     EXECUTE IMMEDIATE 'ALTER SESSION DISABLE PARALLEL DML';
     -- the next statement causes ORA-12838 without disabling parallel DML
     RNACEN.release.set_release_status( p_in_load_release, 'D' );
@@ -491,6 +545,7 @@ create or replace PACKAGE BODY RNC_UPDATE AS
   /*
     Load one release into the database.
   */
+
   PROCEDURE load_release(
 
     p_in_dbid         IN RNACEN.rnc_database.id%TYPE,
@@ -505,6 +560,7 @@ create or replace PACKAGE BODY RNC_UPDATE AS
     -- initial logging
     RNC_LOGGING.log_release_start(p_in_dbid, p_in_load_release);
 
+
     -- load sequences
 
     RNC_LOAD_RNA.load_rna(p_in_dbid, p_in_load_release);
@@ -518,6 +574,7 @@ create or replace PACKAGE BODY RNC_UPDATE AS
       RNC_LOAD_XREF_INCREMENTAL.load_xref_incremental(v_previous_release, p_in_dbid);
     END IF;
 
+
     mark_as_done(p_in_dbid, p_in_load_release);
 
 
@@ -530,6 +587,7 @@ create or replace PACKAGE BODY RNC_UPDATE AS
   /*
     Iterate over all releases with status 'L' and load them into the database.
   */
+
   PROCEDURE new_update (
     p_release_type IN RNACEN.rnc_release.release_type%TYPE DEFAULT 'F'
   )
@@ -543,6 +601,7 @@ create or replace PACKAGE BODY RNC_UPDATE AS
         release_type,
         release_date,
         force_load
+
       FROM
           RNACEN.rnc_release
       WHERE
@@ -555,6 +614,7 @@ create or replace PACKAGE BODY RNC_UPDATE AS
     DBMS_OUTPUT.put_line('Launching an update');
 
     prepare_releases(p_release_type);
+
 
     FOR v_load IN c_load
     LOOP
@@ -569,6 +629,7 @@ create or replace PACKAGE BODY RNC_UPDATE AS
     rnc_healthchecks.run_healthchecks();
 
   END new_update;
+
 
 END RNC_UPDATE;
 /
