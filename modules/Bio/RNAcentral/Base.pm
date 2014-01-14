@@ -51,7 +51,7 @@ sub default_options {
         'staging_table'    => 'load_rnacentral_all',     # staging table
         'release_table'    => 'rnc_release',             # keeps track of all RNAcentral releases
         'references_table' => 'load_rnc_references',     # table with literature references
-        'ac_info_table'    => 'rnc_ac_info_all',         # data about accessions
+        'ac_info_table'    => 'load_rnc_ac_info',        # data about accessions
         'comp_id_table'    => 'rnc_composite_ids_all',   # composite ids derived from DR lines
     		'maxseqlong'       => 1000000,                   # maximum length for long sequences stored as clobs
     		'maxseqshort'      => 4000,                      # maximum length for short sequences stored as chars
