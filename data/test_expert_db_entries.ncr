@@ -47,7 +47,6 @@ XX
 SQ   Sequence 21 BP; 5 A; 9 C; 4 G; 3 T; 0 other;
      accactgcac tccagcctga g                                                  21
 //
-
 ID   HG502048.1:1..747:ncRNA; SV 1; linear; transcribed RNA; STD; HUM; 747 BP.
 XX
 PA   HG502048.1
@@ -134,4 +133,59 @@ SQ   Sequence 747 BP; 223 A; 167 C; 195 G; 162 T; 0 other;
      tctctgaatc atcctgtgca ctgccgggtg tgacagaggc tcctagaatc ctgtctcaag       660
      tggccgcctt cacagaggga gtcactgacg tccctgctca gcgcagccct ggcatgtggg       720
      ggtccctcta ctcatgagaa accccca                                           747
+//
+ID   HG527461.1:1..348:tmRNA; SV 1; linear; genomic DNA; STD; PRO; 348 BP.
+XX
+PA   HG527461.1
+XX
+PR   Project:PRJEB4570;
+XX
+DT   22-NOV-2013 (Rel. 118, Created)
+DT   22-NOV-2013 (Rel. 118, Last updated, Version 1)
+XX
+DE   Streptococcus pneumoniae PNI0360 transfer-messenger mRNA Strep_pneum_R6
+XX
+KW   RNAcentral; TPA; TPA:specialist_db.
+XX
+OS   Streptococcus pneumoniae PNI0360
+OC   Bacteria; Firmicutes; Bacilli; Lactobacillales; Streptococcaceae;
+OC   Streptococcus.
+XX
+RN   [1]
+RP   1-348
+RG   The tmRNA Website and RNAcentral
+RA   ;
+RT   ;
+RL   Submitted (13-SEP-2013) to the INSDC.
+XX
+RN   [2]
+RX   DOI; 10.1093/nar/gkh102.
+RX   PUBMED; 14681369.
+RA   Gueneau de Novoa P., Williams K.P.;
+RT   "The tmRNA website: reductive evolution of tmRNA in plastids and other
+RT   endosymbionts";
+RL   Nucleic Acids Res. 32(Database issue):D104-D108(2004).
+XX
+AH   LOCAL_SPAN          PRIMARY_IDENTIFIER PRIMARY_SPAN        COMP
+AS   1-348               KB372419.1         20876-21223         c
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..348
+FT                   /organism="Streptococcus pneumoniae PNI0360"
+FT                   /mol_type="genomic DNA"
+FT                   /db_xref="taxon:1159100"
+FT   tmRNA           HG527461.1:1..348
+FT                   /gene="tmRNA Strep_pneum_R6"
+FT                   /product="transfer-messenger mRNA Strep_pneum_R6"
+FT                   /note="Tag:(A)AKNNTSYALAA*"
+FT                   /tag_peptide=83..118
+XX
+SQ   Sequence 348 BP; 93 A; 67 C; 87 G; 101 T; 0 other;
+     ggggtcgtta cggattcgac aggcattatg aggcatattt tgcgactcgt gtggcgacgt        60
+     aaacgctcag ttaaatataa ctgcaaaaaa taacacttct tacgctctag ctgcctaaaa       120
+     accagcaggc gtgacccgat ttggattgct cgtgttcaat gacaggtctt attattagcg       180
+     agatacgatt aagccttgtc tagcggcttg ataagagatt gatagactcg cagtttctag       240
+     acttgagtta tgtgtcgagg ggctgttaaa ataatacata acctatggtt gtagacaaat       300
+     atgttggcag gtgtttggac gtgggttcga ctcccaccgg ctccatta                    348
 //
