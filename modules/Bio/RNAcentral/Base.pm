@@ -52,7 +52,7 @@ sub default_options {
         'release_table'    => 'rnc_release',             # keeps track of all RNAcentral releases
         'references_table' => 'load_rnc_references',     # table with literature references
         'ac_info_table'    => 'load_rnc_ac_info',        # data about accessions
-        'comp_id_table'    => 'rnc_composite_ids_all',   # composite ids derived from DR lines
+        'comp_id_table'    => 'load_rnc_composite_ids',  # composite ids derived from DR lines
     		'maxseqlong'       => 1000000,                   # maximum length for long sequences stored as clobs
     		'maxseqshort'      => 4000,                      # maximum length for short sequences stored as chars
         'ebi_ftp_site'     => 'ftp.ebi.ac.uk',           # Non-coding Product FTP site details

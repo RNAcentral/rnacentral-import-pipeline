@@ -186,7 +186,7 @@ create or replace PACKAGE BODY RNC_UPDATE AS
 
     MERGE INTO rnc_composite_ids t1
     --ignore duplicates
-    USING (SELECT * FROM rnc_composite_ids_all WHERE ROWID IN (SELECT MIN (ROWID) FROM rnc_composite_ids_all GROUP BY ac)) t2
+    USING (SELECT * FROM load_rnc_composite_ids WHERE ROWID IN (SELECT MIN (ROWID) FROM load_rnc_composite_ids GROUP BY ac)) t2
 		ON (t1.composite_id = t2.composite_id)
 		WHEN MATCHED THEN UPDATE SET
   		t1.OPTIONAL_ID = t2.OPTIONAL_ID
@@ -229,7 +229,7 @@ create or replace PACKAGE BODY RNC_UPDATE AS
 
     MERGE INTO rnc_ac_info t1
     --ignore duplicates
-    USING (SELECT * FROM rnc_ac_info_all WHERE ROWID IN (SELECT MIN (ROWID) FROM rnc_ac_info_all GROUP BY ac)) t2
+    USING (SELECT * FROM load_rnc_ac_info WHERE ROWID IN (SELECT MIN (ROWID) FROM load_rnc_ac_info GROUP BY ac)) t2
 		ON (t1.ac = t2.ac)
 		WHEN MATCHED THEN UPDATE SET
   		t1.DIVISION = t2.DIVISION,
