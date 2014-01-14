@@ -1,0 +1,97 @@
+ID   KC177631.1:1..4096:rRNA; SV 1; linear; genomic DNA; STD; INV; 4096 BP.
+XX
+PA   KC177631.1
+XX
+DT   03-DEC-2012 (Rel. 115, Created)
+DT   23-JAN-2013 (Rel. 115, Last updated, Version 2)
+XX
+DE   Mengenilla sp. BMW-2012 partial 28S ribosomal RNA
+XX
+KW   .
+XX
+OS   Mengenilla sp. BMW-2012
+OC   Eukaryota; Metazoa; Ecdysozoa; Arthropoda; Hexapoda; Insecta; Pterygota;
+OC   Neoptera; Endopterygota; Strepsiptera; Mengenillidia; Mengenillidae;
+OC   Mengenilla.
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..4096
+FT                   /organism="Mengenilla sp. BMW-2012"
+FT                   /mol_type="genomic DNA"
+FT                   /specimen_voucher="NCSU:FLYTREE 1"
+FT                   /db_xref="taxon:1262264"
+FT   rRNA            KC177631.1:<1..>4096
+FT                   /product="28S ribosomal RNA"
+XX
+SQ   Sequence 4096 BP; 983 A; 855 C; 1138 G; 1068 T; 52 other;
+     tggcgaacga aaacggatta gtccagcgct taatctcgca aaaaaggaaa cctgtttccg        60
+     gacttttgcg cgaaatgtag cgttcggaca gacatcgtga cgtgttttcg gtattcgtgc       120
+     acgttttgaa tacgtgacat ttaactcata gagggtgtta ggcccgtaaa atgtcgcgac       180
+     gaactgccgc agcagtctgt ctcagagtcg gattgcttga gagtgcaatc ttaagttggt       240
+     ggtaaactcc atcgaagact aaatacggcc acaagaccga tagcgaacaa gtaccgtgag       300
+     ggaaagttga aaagcactct gaagagagag tcaaaagtac gtgaaaccgt ttaagagtaa       360
+     acccgtgtaa gtcgtgtagt ttttgacacg ttacccgttt tgccgccgtc gcccgatctg       420
+     tgtcccgtac attttatgtg tatagtcgaa gtgcggttat cgtgtgttga agcgatttta       480
+     cacgggaccc gtcttgaaac acggaccaag gagtctaaca agtgcgcgag tcaatggtac       540
+     tgaaaattcc acaaaaccat aggcgcaatg aaggtgttgt tcaagtgatg agactgactc       600
+     gtggaacgct gcgcgcgtgc attcatgcag tcgaaacgta tcaagagcgt acttgttggg       660
+     acccgaaaga tggtgaacta tgcctggcca ggatgaagtc aggagaaatt ctgatggaag       720
+     tccgtagcga ttctgacgtg caaatcgatc gtcagagctg ggtatagggg cgaaagacta       780
+     atcgaaccat ctagtagctg gttccttccg aagtttccct caggatagct ggcatgattt       840
+     aaatgtcgag tcacattcgg taaagcgaat gattagagga attgggaacg aaacgttctc       900
+     aacctattct caaactttaa atgagtgaga cgatcggctt gcttaaatgc ttattgcgca       960
+     cctcgtggat tatacggtag cggtggtggc gatttatcgt cgtcatctcg ttatcgtgtg      1020
+     cttagatcga atattgccaa gtgggccatt tttggtaann nnnnnnnnnn nnnnnnnnnn      1080
+     nnnnnnnnnn nnnnnnnnnn nnnnnnnnnn aacgctcatc agagaccatg aaaggtgttg      1140
+     gtaacttaag acagcagggc ggtggccatg gaagtcggaa tccgctaagg agtgtgtaac      1200
+     aactcacctg ccgaagttac cagccctgaa aatggatgac gctaaagcgt tatgcttata      1260
+     cttgaccgtt aatagcaaca agtcgcctcg atgattgtct gttgtcgagc gcgcgcgact      1320
+     aaaaagcttt aacgagtagg aaggtcgtaa tagtgtgcgt tgaaggattc agtgtagact      1380
+     ggtctggagc cgctattagt gcagatcttg gtggtagtag caaatactcc agcgaggccc      1440
+     tggaggactg acgtggagaa gggtttcgtg tgaacagcag ttgcacacga gtcagtcgat      1500
+     cctaagccca aggagaattc cgaattcgaa tgtatcaggt gttgtgtttt cgtttcggtg      1560
+     tcgtgctcgg actgcgatgg ctgttggcaa tctgttgtcg gcagacattg cgtgcttctt      1620
+     gcgcggcgcg gaaacgacga agatggcatc tgattcgatg cgggagaaag ggaatccggt      1680
+     tcatattccg gaactcagat gcggagccga ttgaatttaa aaattacagg agccgagcca      1740
+     catgttgacc gtttggtcat cgtgtctaaa tggctccggc acctgacgag gtaactcaaa      1800
+     cgatcccgga gacgtcgtta aagagtccag aaagagttat cttttctata taagtgtcta      1860
+     aagttttcgg ctgtcggtgc gtttcattgt gtgcgcacgc ggtctgcacg tacgttgcgt      1920
+     taacgtctct aaaacgtcgt ttacgcttcg ttttagttgt agtctgtgtg tgcgtgcgaa      1980
+     ttgcgtaccg gtcgcgtaga aaacgaaaag aaatccctgg aatcctttca aagggagata      2040
+     gggtttctga cacgaagagc atcgcatttg tcgcgatgtc tggacatttt tagcgaccct      2100
+     tgaaaatccg ggtaagggaa acggtcgttt cgcactgaat cgtacccata tccgcagcag      2160
+     gtctccaagg tgaagagcct ctagtcgata gaataatgta ggtaaaggaa gtcgacaaaa      2220
+     tagatccgta acttcgggat aaggattggc tctgagaatc ggagcgtgcc gggccgtgtg      2280
+     tttcacgatc cggagtctgg ttgatgtttc gatctgaaac taagattttt aaacgttctt      2340
+     cagagttcgt tgacgagtgt gtgtgtgccg gtctacggtg cgtacgcgtg catttcggtg      2400
+     tgcgtgtacg tgtgcagtcg gtcgcgtgca cgcggaaacg gcttgtttta aggaacgttt      2460
+     ttaatattcg gtttcggatt aatgtcaatc gtccgatcat acgaaatgca cggcttgcta      2520
+     aagggaactg tgttcggcca atacgtgtcc gtctgattgt gtcgcacgcg tcttgctata      2580
+     ctgttcgttt gtgtgttgtt gtacttgtta cggcaacgtg ccgatgaacg gtgccggacg      2640
+     agtgaacgct cgacgtggcc gcgtattgtg attcgggtgc gtttccgaaa cggccgctag      2700
+     ataacgatta gctcagaact ggcacggaca aaggaaatcc gactgtctaa ttaaaacaaa      2760
+     gcattgcgat ggctccaaat gagtgttgac gcaatgtgat ttctgcccag tgctctgaat      2820
+     gtcaatgtga agaaattcaa taaagcgcgg gtaaacggcg ggagtaacta tgactctctt      2880
+     aaggtagcca aatgcctcgt catctaatta gtgacgcgca tgaatggatt aacgagattt      2940
+     ccgttgtctc tatctacttt ctagcgaaac cacagccaag ggaacgggct tggaaaaatt      3000
+     agcggggaaa gaagaccctg ttgagcttga ctccagtttg gctttgtgag gagacataag      3060
+     aggtgtaggc ataagtggga gactgtggcg tcgcttcgcg gtgacattcg cagtcgaatg      3120
+     tgaaatacca ctacttttat cgtttcctta cttactcgat taagcggaac gttcgcgtag      3180
+     attcgttgcc ttcgcttcgg aaatttaagg cggccgtttc ggccacgagt ctgtagtgtc      3240
+     gtgtgcgctt gcgtacgcgc actgcacggc ccgttgtgtc gcggtcgctg tccgctgtga      3300
+     actttgtgtg cacgtctacg tgtaactgat ttttcgaaat aatggcgttg tttttgttcg      3360
+     gtcgcgttgt cgtcatgtac cgcccggttg cgtgtgcacg gcacgcggtt gcttcgcggc      3420
+     gaccgtgtgt gcagtgtctc gtcgactggc ggtcgggcac gtgcgccggc aaaatcgaat      3480
+     cgaaatgcct gatccgattc gaggacattg tcaggcagag agtttgactg gggcggtaca      3540
+     tctgtcaaac aataacgcag gtgtcctaag gctagctcag cgaggacaga aacctcgcgt      3600
+     cgagtaaaag ggcaaaagct agcttgatcc agacgttcag tatgcgtatg gactgcgaaa      3660
+     gcacggccta tcgatccttt tggcaattgt aataagtgcg tgcgtgtgtg tgcctcgtgt      3720
+     tcatgcgcgc atgtgctcat tgtattgatg agttttcaac aagaggtgtc agaaaagtta      3780
+     ccacagggat aactggcttg tggcggccaa gcgttcatag cgacgtcgct ttttgatcct      3840
+     tcgatgtcgg ctcttcctat cattgcgaag cagaattcgc caagcgttgg attgttcacc      3900
+     cacaaatagg gaacgtgagc tgggtttaga ccgtcgtgag acaggttagt tttaccctac      3960
+     tgatgactgt gtcgttgcga cagtaattct gcttagtacg agaggaaccg cagattcgga      4020
+     catttggttc atgcactcgg tcgatcggcc gatggtgcga cgctaccatc cgcgggacta      4080
+     gacctgaacg cctcta                                                      4096
+//

@@ -1,3 +1,97 @@
+ID   AB330787.1:1..34:misc_RNA; SV 1; linear; other RNA; STD; HUM; 34 BP.
+XX
+PA   AB330787.1
+XX
+DT   17-JUN-2009 (Rel. 101, Created)
+DT   17-JUN-2009 (Rel. 101, Last updated, Version 1)
+XX
+DE   Homo sapiens (human) miscellaneous RNA
+XX
+KW   .
+XX
+OS   Homo sapiens (human)
+OC   Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi; Mammalia;
+OC   Eutheria; Euarchontoglires; Primates; Haplorrhini; Catarrhini; Hominidae;
+OC   Homo.
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..34
+FT                   /organism="Homo sapiens"
+FT                   /mol_type="other RNA"
+FT                   /clone="tRNaseZL-interacting RNA C2"
+FT                   /db_xref="taxon:9606"
+FT   misc_RNA        AB330787.1:1..34
+FT                   /note="RNA sequence binds to tRNaseZL"
+FT                   /note="similar to U3 snRNA fragment"
+XX
+SQ   Sequence 34 BP; 11 A; 3 C; 15 G; 5 T; 0 other;
+     attggggagt gagaaggaga gaacgcggtc tgaa                                    34
+//
+ID   AB330786.1:1..27:misc_RNA; SV 1; linear; other RNA; STD; HUM; 27 BP.
+XX
+PA   AB330786.1
+XX
+DT   17-JUN-2009 (Rel. 101, Created)
+DT   17-JUN-2009 (Rel. 101, Last updated, Version 1)
+XX
+DE   Homo sapiens (human) miscellaneous RNA
+XX
+KW   .
+XX
+DR   RFAM; RF00005; tRNA.
+XX
+OS   Homo sapiens (human)
+OC   Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi; Mammalia;
+OC   Eutheria; Euarchontoglires; Primates; Haplorrhini; Catarrhini; Hominidae;
+OC   Homo.
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..27
+FT                   /organism="Homo sapiens"
+FT                   /mol_type="other RNA"
+FT                   /clone="tRNaseZL-interacting RNA C1"
+FT                   /db_xref="taxon:9606"
+FT   misc_RNA        AB330786.1:1..27
+FT                   /note="RNA sequence binds to tRNaseZL"
+FT                   /note="similar to U2 snRNA fragment"
+XX
+SQ   Sequence 27 BP; 7 A; 8 C; 7 G; 5 T; 0 other;
+     attgcagtac ctccaggaac ggtgcac                                            27
+//
+ID   AB330785.1:1..34:misc_RNA; SV 1; linear; other RNA; STD; HUM; 34 BP.
+XX
+PA   AB330785.1
+XX
+DT   17-JUN-2009 (Rel. 101, Created)
+DT   17-JUN-2009 (Rel. 101, Last updated, Version 1)
+XX
+DE   Homo sapiens (human) miscellaneous RNA
+XX
+KW   RNAcentral; Third Party Annotation; TPA; TPA:specialist_db.
+XX
+DR   SRPDB; Xeno.laev._DC015625.
+XX
+OS   Homo sapiens (human)
+OC   Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi; Mammalia;
+OC   Eutheria; Euarchontoglires; Primates; Haplorrhini; Catarrhini; Hominidae;
+OC   Homo.
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..34
+FT                   /organism="Homo sapiens"
+FT                   /mol_type="other RNA"
+FT                   /clone="tRNaseZL-interacting RNA B6"
+FT                   /db_xref="taxon:9606"
+FT   misc_RNA        AB330785.1:1..34
+FT                   /note="RNA sequence binds to tRNaseZL"
+FT                   /note="similar to 28S rRNA fragment"
+XX
+SQ   Sequence 34 BP; 8 A; 12 C; 10 G; 4 T; 0 other;
+     cgcgacctca gatcagacgt ggcgacccgc tgaa                                    34
+//
 ID   HAAO01001079.1:1..21:ncRNA; SV 1; linear; transcribed RNA; TSA; HUM; 21 BP.
 XX
 PA   HAAO01001079.1
