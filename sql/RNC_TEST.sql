@@ -1,6 +1,6 @@
 set define off
 
-create or replace PACKAGE "RNC_TEST" AS
+create or replace PACKAGE RNC_TEST AS
 
   /*
     Package for testing the RNAcentral data import pipeline.
@@ -10,7 +10,9 @@ create or replace PACKAGE "RNC_TEST" AS
 
 END RNC_TEST;
 /
-create or replace PACKAGE BODY "RNC_TEST" AS
+create or replace PACKAGE BODY RNC_TEST AS
+
+
 
 
 
@@ -21,10 +23,11 @@ create or replace PACKAGE BODY "RNC_TEST" AS
 
     Input records in the staging table contain 4 primary fields:
     sequence, accession, version, and taxid.
-    Other fields are derived from these 4.								
+    Other fields are derived from these 4.
 
     Therefore, given an input record in one release, there are 16 ways
     in which this record can change in the next release.
+
     These tests are designed to cover all 16 possibilities.
 
 
@@ -38,6 +41,7 @@ create or replace PACKAGE BODY "RNC_TEST" AS
 
   /*
     Global constants
+
   */
   SEQ_LENGTH CONSTANT NUMBER := 5;
   FIRST_UPI  CONSTANT VARCHAR(13) := 'UPI0000000001';
@@ -50,6 +54,7 @@ create or replace PACKAGE BODY "RNC_TEST" AS
     The first entry in all arrays is the default record that everything else
     is compared to.
   */
+
 
   -- define array types
   TYPE SeqList IS VARRAY(17) OF VARCHAR(10); -- first entry + 16 test cases
@@ -64,6 +69,7 @@ create or replace PACKAGE BODY "RNC_TEST" AS
   v_seq SeqList := SeqList('AAAAA','AAAAA','AAAAA','AAAAA','AAAAA','AAAAA','AAAAA','AAAAA','AAAAA',
                            'GGGGG','GGGGG','GGGGG','GGGGG','GGGGG','GGGGG','GGGGG','GGGGG');
   v_acc AccList := AccList('id1','id1','id2','id1','id1','id2','id2','id1','id2','id2','id2','id2','id1','id1','id1','id2','id1');
+
   v_ver VerList := VerList(   1 ,   1 ,   1 ,   2 ,   1 ,   2 ,   1 ,   2 ,   2 ,   2 ,   2 ,   1 ,   2 ,   1 ,   2 ,   1 ,   1);
   v_tax TaxList := TaxList(   1 ,   1 ,   1 ,   1 ,   2 ,   1 ,   2 ,   2 ,   2 ,   2 ,   1 ,   2 ,   2 ,   2 ,   1 ,   1 ,   1);
   v_crc CrcList := CrcList('0000000000000000','0000000000000000','0000000000000000',
@@ -77,6 +83,7 @@ create or replace PACKAGE BODY "RNC_TEST" AS
                            '00000000000000000000000000000000','00000000000000000000000000000000','00000000000000000000000000000000',
                            '00000000000000000000000000000000','00000000000000000000000000000000','00000000000000000000000000000000',
                            '11111111111111111111111111111111','11111111111111111111111111111111','11111111111111111111111111111111','11111111111111111111111111111111',
+
                            '11111111111111111111111111111111','11111111111111111111111111111111','11111111111111111111111111111111','11111111111111111111111111111111'
                            );
 
@@ -90,6 +97,7 @@ create or replace PACKAGE BODY "RNC_TEST" AS
          UPI,
          TIMESTAMP,
          USERSTAMP,
+
          CRC64,
          LEN,
          SEQ_SHORT,
@@ -103,6 +111,7 @@ create or replace PACKAGE BODY "RNC_TEST" AS
              v_crc(1),          -- crc64
              SEQ_LENGTH,        -- length
              v_seq(1),          -- sequence
+
              NULL,              -- long sequence
              v_md5(1)           -- md5
              );
@@ -116,6 +125,7 @@ create or replace PACKAGE BODY "RNC_TEST" AS
     INSERT
       INTO RNACEN.xref
       (
+
         DBID,
         CREATED,
         LAST,
@@ -129,6 +139,7 @@ create or replace PACKAGE BODY "RNC_TEST" AS
         AC,
         TAXID
       )
+
       VALUES(
              1,                 -- dbid
              1,                 -- first release
@@ -142,6 +153,7 @@ create or replace PACKAGE BODY "RNC_TEST" AS
 
              v_acc(1),          -- accession
              v_tax(1)           -- taxid
+
              );
     COMMIT;
   END initialize_xref_table;
@@ -155,6 +167,7 @@ create or replace PACKAGE BODY "RNC_TEST" AS
   BEGIN
 
     -- add first release, set release status to "Done"
+
     INSERT
       INTO RNACEN.rnc_release
       VALUES(1,                 -- id
@@ -167,6 +180,7 @@ create or replace PACKAGE BODY "RNC_TEST" AS
              'test release 1',  -- description
              'N'                -- force load
              );
+
 
 
     -- add second release
@@ -182,6 +196,7 @@ create or replace PACKAGE BODY "RNC_TEST" AS
   */
   PROCEDURE setup AS
 
+
   BEGIN
 
     initialize_releases;
@@ -194,6 +209,7 @@ create or replace PACKAGE BODY "RNC_TEST" AS
     Import new data into the staging table load_rnacentral
   */
   PROCEDURE import_staging_data(
+
     p_test_id NUMBER
 
   ) AS
@@ -207,6 +223,7 @@ create or replace PACKAGE BODY "RNC_TEST" AS
 
     INSERT INTO
       RNACEN.load_rnacentral_all
+
       (
         crc64,
 
@@ -220,6 +237,7 @@ create or replace PACKAGE BODY "RNC_TEST" AS
         database
       )
       VALUES(v_crc(p_test_id), -- crc64
+
              SEQ_LENGTH,       -- length
              v_seq(p_test_id), -- seq
              NULL,             -- long seq
@@ -232,6 +250,7 @@ create or replace PACKAGE BODY "RNC_TEST" AS
              );
     COMMIT;
   END import_staging_data;
+
 
   /*
     Truncate all test tables
@@ -247,6 +266,7 @@ create or replace PACKAGE BODY "RNC_TEST" AS
     EXECUTE IMMEDIATE 'ALTER TABLE xref DISABLE CONSTRAINT FK_XREF$LAST';
     EXECUTE IMMEDIATE 'ALTER TABLE xref DISABLE CONSTRAINT FK_XREF$UPI';
 
+
     EXECUTE IMMEDIATE 'ALTER TABLE XREF_PEL_DELETED DISABLE CONSTRAINT XREF_PEL_DELETED_FK1';
     EXECUTE IMMEDIATE 'ALTER TABLE XREF_PEL_DELETED DISABLE CONSTRAINT XREF_PEL_DELETED_FK2';
     EXECUTE IMMEDIATE 'ALTER TABLE XREF_PEL_DELETED DISABLE CONSTRAINT XREF_PEL_DELETED_FK3';
@@ -258,6 +278,7 @@ create or replace PACKAGE BODY "RNC_TEST" AS
     EXECUTE IMMEDIATE 'ALTER TABLE XREF_PEL_NOT_DELETED DISABLE CONSTRAINT XREF_PEL_NOT_DELETED_FK4';
 
     EXECUTE IMMEDIATE 'ALTER TABLE RNACEN.rnc_release DISABLE CONSTRAINT RNC_RELEASE$ID$PK';
+
 
     EXECUTE IMMEDIATE 'TRUNCATE TABLE RNACEN.rnc_release DROP STORAGE';
     EXECUTE IMMEDIATE 'TRUNCATE TABLE RNACEN.rna DROP STORAGE';
@@ -272,6 +293,7 @@ create or replace PACKAGE BODY "RNC_TEST" AS
     EXECUTE IMMEDIATE 'ALTER TABLE xref ENABLE CONSTRAINT FK_XREF$CREATED';
     EXECUTE IMMEDIATE 'ALTER TABLE xref ENABLE CONSTRAINT FK_XREF$DBID';
     EXECUTE IMMEDIATE 'ALTER TABLE xref ENABLE CONSTRAINT FK_XREF$LAST';
+
     EXECUTE IMMEDIATE 'ALTER TABLE xref ENABLE CONSTRAINT FK_XREF$UPI';
 
     EXECUTE IMMEDIATE 'ALTER TABLE XREF_PEL_DELETED ENABLE CONSTRAINT XREF_PEL_DELETED_FK1';
@@ -286,6 +308,7 @@ create or replace PACKAGE BODY "RNC_TEST" AS
 
   END teardown;
 
+
   /*
     Utility function for unit testing.
     Example: assertEquals(2, 2, 'function_name');
@@ -298,6 +321,7 @@ create or replace PACKAGE BODY "RNC_TEST" AS
     actual   IN NUMBER)
   IS
   BEGIN
+
     IF NOT expected = actual THEN
       DBMS_OUTPUT.put_line('Warning! ' || proc || ' expected ' || expected || ', got ' || actual);
     ELSE
@@ -312,6 +336,7 @@ create or replace PACKAGE BODY "RNC_TEST" AS
   *********
   */
 
+
   /*
     Input: identical entry.
     Expected action: increment Last seen field in the existing xref.
@@ -324,6 +349,7 @@ create or replace PACKAGE BODY "RNC_TEST" AS
 
     l_test_id := 'check_test1';
 
+
     SELECT count(*) INTO l_count FROM rna;
     assertEquals(l_test_id, 1, l_count);
 
@@ -335,6 +361,7 @@ create or replace PACKAGE BODY "RNC_TEST" AS
     assertEquals(l_test_id, 1, l_count);
 
   END check_test1;
+
 
 
   /*
@@ -350,6 +377,7 @@ create or replace PACKAGE BODY "RNC_TEST" AS
 
     SELECT count(*) INTO l_count FROM rna;
 
+
     assertEquals(l_test_id, 1, l_count);
 
     SELECT count(*) INTO l_count FROM xref;
@@ -362,6 +390,7 @@ create or replace PACKAGE BODY "RNC_TEST" AS
     SELECT count(*) INTO l_count FROM xref
     WHERE upi = FIRST_UPI AND deleted = 'N' AND created = 2 AND LAST = 2 AND ac = 'id2';
     assertEquals(l_test_id, 1, l_count);
+
 
 
   END check_test2;
@@ -378,6 +407,7 @@ create or replace PACKAGE BODY "RNC_TEST" AS
     l_test_id := 'check_test3';
 
 
+
     SELECT count(*) INTO l_count FROM rna;
     assertEquals(l_test_id, 1, l_count);
 
@@ -389,6 +419,7 @@ create or replace PACKAGE BODY "RNC_TEST" AS
     assertEquals(l_test_id, 1, l_count);
 
     SELECT count(*) INTO l_count FROM xref
+
     WHERE upi = FIRST_UPI AND deleted = 'N' AND created = 2 AND LAST = 2 AND version = 2;
     assertEquals(l_test_id, 1, l_count);
 
@@ -402,6 +433,7 @@ create or replace PACKAGE BODY "RNC_TEST" AS
     This test can fail.
   */
   PROCEDURE check_test4 AS
+
     l_count NUMBER;
     l_test_id VARCHAR(20);
   BEGIN
@@ -414,6 +446,7 @@ create or replace PACKAGE BODY "RNC_TEST" AS
 
     SELECT count(*) INTO l_count FROM xref;
     assertEquals(l_test_id, 2, l_count);
+
 
     SELECT count(*) INTO l_count FROM xref
     WHERE upi = FIRST_UPI AND deleted = 'Y' AND created = 1 AND LAST = 1 AND taxid = 1;
@@ -428,6 +461,7 @@ create or replace PACKAGE BODY "RNC_TEST" AS
 
   /*
     Input: Same seq and taxid, but diff accession and version.
+
     Expected action: retire existing xref, create a new xref with updated version and accession.
   */
   PROCEDURE check_test5 AS
@@ -440,6 +474,7 @@ create or replace PACKAGE BODY "RNC_TEST" AS
 
     SELECT count(*) INTO l_count FROM rna;
     assertEquals(l_test_id, 1, l_count);
+
 
     SELECT count(*) INTO l_count FROM xref;
     assertEquals(l_test_id, 2, l_count);
@@ -455,6 +490,7 @@ create or replace PACKAGE BODY "RNC_TEST" AS
 
   END check_test5;
 
+
   /*
     Input: Same seq and version, but new acc and taxid
     Expected action: retire existing xref, create a new one with updated acc and taxid
@@ -466,6 +502,7 @@ create or replace PACKAGE BODY "RNC_TEST" AS
   BEGIN
 
     l_test_id := 'check_test6';
+
 
     SELECT count(*) INTO l_count FROM rna;
     assertEquals(l_test_id, 1, l_count);
@@ -480,6 +517,7 @@ create or replace PACKAGE BODY "RNC_TEST" AS
 
     SELECT count(*) INTO l_count FROM xref
     WHERE upi = FIRST_UPI AND deleted = 'N' AND created = 2 AND LAST = 2 AND ac = 'id2' AND taxid = 2;
+
     assertEquals(l_test_id, 1, l_count);
 
   END check_test6;
@@ -494,6 +532,7 @@ create or replace PACKAGE BODY "RNC_TEST" AS
     l_test_id VARCHAR(20);
   BEGIN
 
+
     l_test_id := 'check_test7';
 
     SELECT count(*) INTO l_count FROM rna;
@@ -507,6 +546,7 @@ create or replace PACKAGE BODY "RNC_TEST" AS
     WHERE upi = FIRST_UPI AND deleted = 'Y' AND created = 1 AND LAST = 1 AND version = 1 AND taxid = 1;
     assertEquals(l_test_id, 1, l_count);
 
+
     SELECT count(*) INTO l_count FROM xref
     WHERE upi = FIRST_UPI AND deleted = 'N' AND created = 2 AND LAST = 2 AND version = 2 AND taxid = 2;
     assertEquals(l_test_id, 1, l_count);
@@ -519,6 +559,7 @@ create or replace PACKAGE BODY "RNC_TEST" AS
   */
 
   PROCEDURE check_test8 AS
+
     l_count NUMBER;
     l_test_id VARCHAR(20);
   BEGIN
@@ -530,6 +571,7 @@ create or replace PACKAGE BODY "RNC_TEST" AS
 
     SELECT count(*) INTO l_count FROM xref;
     assertEquals(l_test_id, 2, l_count);
+
 
 
     SELECT count(*) INTO l_count FROM xref
@@ -547,6 +589,7 @@ create or replace PACKAGE BODY "RNC_TEST" AS
   /*
 
 
+
   /*
     Input: new seq, ac, ver, taxid
     Expected action: retire existing xref because it's no longer present
@@ -558,6 +601,7 @@ create or replace PACKAGE BODY "RNC_TEST" AS
     l_count NUMBER;
     l_test_id VARCHAR(30);
   BEGIN
+
 
 
     l_test_id := 'check_test_9,10,11,15';
@@ -572,6 +616,7 @@ create or replace PACKAGE BODY "RNC_TEST" AS
     WHERE upi = FIRST_UPI AND deleted = 'Y' AND created = 1;
     assertEquals(l_test_id, 1, l_count);
 
+
     SELECT count(*) INTO l_count FROM xref
 
     WHERE upi != FIRST_UPI AND deleted = 'N' AND created = 2;
@@ -584,6 +629,7 @@ create or replace PACKAGE BODY "RNC_TEST" AS
     Expected action: New seq and xref, retire existing xref.
   */
   PROCEDURE check_test10 AS
+
   BEGIN
 
     check_test9;
@@ -598,6 +644,7 @@ create or replace PACKAGE BODY "RNC_TEST" AS
   PROCEDURE check_test11 AS
   BEGIN
 
+
     check_test9;
 
   END check_test11;
@@ -610,6 +657,7 @@ create or replace PACKAGE BODY "RNC_TEST" AS
   */
   PROCEDURE check_test12 AS
     l_count NUMBER;
+
     l_test_id VARCHAR(30);
   BEGIN
 
@@ -623,6 +671,7 @@ create or replace PACKAGE BODY "RNC_TEST" AS
     assertEquals(l_test_id, 2, l_count);
 
     SELECT count(*) INTO l_count FROM xref
+
     WHERE upi = FIRST_UPI AND deleted = 'Y' AND created = 1 AND version_I = 1;
     assertEquals(l_test_id, 1, l_count);
 
@@ -636,6 +685,7 @@ create or replace PACKAGE BODY "RNC_TEST" AS
   /*
     Input: Same acc and ver, but new seq and taxid
     Expected action: New seq and xref, retire existing xref. Increment VERSION_I.
+
   */
   PROCEDURE check_test13 AS
   BEGIN
@@ -649,6 +699,7 @@ create or replace PACKAGE BODY "RNC_TEST" AS
     Input: Same acc and taxid, but updated seq and version
     Expected action: New seq and xref, retire existing xref. Increment VERSION_I.
   */
+
   PROCEDURE check_test14 AS
   BEGIN
 
@@ -662,6 +713,7 @@ create or replace PACKAGE BODY "RNC_TEST" AS
     Expected action: New seq and xref, retire existing xref.
   */
   PROCEDURE check_test15 AS
+
   BEGIN
 
     check_test9;
@@ -676,6 +728,7 @@ create or replace PACKAGE BODY "RNC_TEST" AS
   PROCEDURE check_test16 AS
   BEGIN
 
+
     check_test12;
 
   END check_test16;
@@ -688,6 +741,7 @@ create or replace PACKAGE BODY "RNC_TEST" AS
 
     l_count NUMBER;
     l_test_id VARCHAR(20);
+
   BEGIN
 
     l_test_id := 'check_test17';
@@ -701,6 +755,7 @@ create or replace PACKAGE BODY "RNC_TEST" AS
     SELECT count(*) INTO l_count FROM xref
 
     WHERE upi = FIRST_UPI AND deleted = 'Y' AND created = 1;
+
     assertEquals(l_test_id, 1, l_count);
 
   END check_test17;
@@ -712,6 +767,7 @@ create or replace PACKAGE BODY "RNC_TEST" AS
     p_test_id IN NUMBER
   ) AS
   BEGIN
+
 
 
     -- dynamic function call turned out to be tricky to set up
@@ -728,6 +784,7 @@ create or replace PACKAGE BODY "RNC_TEST" AS
       WHEN 10 THEN check_test10;
       WHEN 11 THEN check_test11;
 
+
       WHEN 12 THEN check_test12;
       WHEN 13 THEN check_test13;
       WHEN 14 THEN check_test14;
@@ -739,6 +796,7 @@ create or replace PACKAGE BODY "RNC_TEST" AS
     END CASE;
 
   END check_result;
+
 
   /*
 
@@ -753,6 +811,7 @@ create or replace PACKAGE BODY "RNC_TEST" AS
     setup;
 
     -- insert new data into the staging table
+
     -- +1 accounts for the first (default) entry
     import_staging_data( p_test_id + 1 );
 
@@ -765,6 +824,7 @@ create or replace PACKAGE BODY "RNC_TEST" AS
 
     -- clean up
     teardown;
+
 
   END run_test;
 
@@ -779,6 +839,7 @@ create or replace PACKAGE BODY "RNC_TEST" AS
     -- truncate all tables in the beginning
     teardown;
 
+
     -- 17 test cases
     FOR l_cntr IN 1..17
     LOOP
@@ -788,6 +849,24 @@ create or replace PACKAGE BODY "RNC_TEST" AS
     END LOOP;
 
   END run_tests;
+
+
+  /*
+    Immediately truncate all tables
+
+  */
+  PROCEDURE truncate_all_tables AS
+  begin
+    teardown;
+    EXECUTE IMMEDIATE 'TRUNCATE TABLE RNACEN.release_stats DROP STORAGE';
+    EXECUTE IMMEDIATE 'TRUNCATE TABLE RNACEN.rnc_ac_info DROP STORAGE';
+    EXECUTE IMMEDIATE 'TRUNCATE TABLE RNACEN.rnc_accessions DROP STORAGE';
+    EXECUTE IMMEDIATE 'TRUNCATE TABLE RNACEN.rnc_composite_ids DROP STORAGE';
+    EXECUTE IMMEDIATE 'TRUNCATE TABLE RNACEN.rnc_assembly DROP STORAGE';
+    EXECUTE IMMEDIATE 'TRUNCATE TABLE RNACEN.rnc_references DROP STORAGE';
+    DBMS_OUTPUT.put_line('All tables truncated');
+  end;
+
 
 
 END RNC_TEST;
