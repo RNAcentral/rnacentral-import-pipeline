@@ -295,11 +295,7 @@ sub _get_missing_dr_links {
     my $entry_project_id = _get_project_id($seq);
     my $db_project_id;
 
-    if ($db_name eq 'MIRBASE') {
-        $db_project_id = 'PRJEB4451';
-    } elsif ($db_name eq 'VEGA') {
-        $db_project_id = 'PRJEB4568';
-    } elsif ($db_name eq 'tmRNA_Web') {
+    if ($db_name eq 'TMRNA_WEB') {
         $db_project_id = 'PRJEB4570';
     }
 
@@ -330,7 +326,7 @@ sub _get_dblinks {
 
     # get tmRNA website entries by project ids
     # todo: remove this temporary fix when DR lines are added to all entries
-    push @data, _get_missing_dr_links($seq, 'tmRNA_Web');
+    push @data, _get_missing_dr_links($seq, 'TMRNA_WEB');
 
     # add any DR entries
     my $anno_collection = $seq->annotation;
@@ -380,7 +376,7 @@ sub _get_composite_id {
     my $composite_id = '';
     if ( $database =~ /^mirbase/i or
          $database =~ /^vega/i or
-         $database =~ /^tmRNA_Web/i ) {
+         $database =~ /^TMRNA_WEB/i ) {
         $composite_id = uc($database) . '_' . $display_id, # unique xref
     } else {
         $composite_id = $primary_id . '_' . $display_id;
