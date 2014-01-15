@@ -36,140 +36,100 @@ create or replace PACKAGE BODY RNC_UPDATE AS
 
     DBMS_OUTPUT.put_line('Updating rnc_accessions');
 
-    -- merge regular ids from rnc_ac_info
-    MERGE /*+ parallel */ INTO rnc_accessions t1
-    USING (SELECT * FROM rnc_ac_info) t2
-    ON (t1.accession = t2.ac)
-    WHEN MATCHED THEN UPDATE SET
+    TRUNCATE TABLE rnc_accessions;
 
-        t1.parent_ac = t2.parent_ac,
-        t1.seq_version = t2.seq_version,
-        t1.feature_start = t2.feature_start,
-
-        t1.feature_end = t2.feature_end,
-        t1.feature_name = t2.feature_name,
-        t1.ordinal = t2.ordinal,
-        t1.division = t2.division,
-        t1.keywords = t2.keywords,
-        t1.description = t2.description,
-        t1.species = t2.species,
-        t1.organelle = t2.organelle,
-        t1.classification = t2.classification,
-
-        t1.project = t2.project
-    WHEN NOT MATCHED THEN INSERT
-        (t1.accession,
-         t1.parent_ac,
-
-         t1.seq_version,
-         t1.feature_start,
-         t1.feature_end,
-         t1.feature_name,
-         t1.ordinal,
-         t1.division,
-         t1.keywords,
-         t1.description,
-
-         t1.species,
-         t1.organelle,
-         t1.classification,
-         t1.project,
-         t1.is_composite)
-
-    VALUES
-        (t2.ac,
-         t2.parent_ac,
-         t2.seq_version,
-         t2.feature_start,
-         t2.feature_end,
-         t2.feature_name,
-
-         t2.ordinal,
-         t2.division,
-         t2.keywords,
-         t2.description,
-         t2.species,
-         t2.organelle,
-
-         t2.classification,
-         t2.project,
-         'N');
-
-    -- merge composite ids from rnc_composite_ids
-    MERGE /*+ parallel */ INTO rnc_accessions t1
-
-    USING (SELECT distinct t3.*, t4.COMPOSITE_ID, t4.DATABASE, t4.OPTIONAL_ID, t4.EXTERNAL_ID FROM rnc_ac_info t3, rnc_composite_ids t4 WHERE t3.ac = t4.ac) t2
-    ON (t1.accession = t2.COMPOSITE_ID)
-    WHEN MATCHED THEN UPDATE SET
-        t1.parent_ac = t2.parent_ac,
-        t1.seq_version = t2.seq_version,
-        t1.feature_start = t2.feature_start,
-        t1.feature_end = t2.feature_end,
-
-        t1.feature_name = t2.feature_name,
-        t1.ordinal = t2.ordinal,
-        t1.division = t2.division,
-        t1.keywords = t2.keywords,
-        t1.description = t2.description,
-
-        t1.species = t2.species,
-        t1.organelle = t2.organelle,
-        t1.classification = t2.classification,
-        t1.project = t2.project,
-        t1.non_coding_id = t2.composite_id,
-        t1.database = t2.database,
-        t1.optional_id = t2.optional_id,
-        t1.external_id = t2.external_id
-
-    WHEN NOT MATCHED THEN INSERT
-        (t1.accession,
-         t1.parent_ac,
-         t1.seq_version,
-
-         t1.feature_start,
-         t1.feature_end,
-         t1.feature_name,
-         t1.ordinal,
-         t1.division,
-         t1.keywords,
-         t1.description,
-         t1.species,
-         t1.organelle,
-
-         t1.classification,
-         t1.project,
-         t1.is_composite,
-
-         t1.non_coding_id,
-         t1.database,
-         t1.external_id,
-         t1.optional_id)
-    VALUES
-        (t2.composite_id,
-         t2.parent_ac,
-         t2.seq_version,
-         t2.feature_start,
-         t2.feature_end,
-
-         t2.feature_name,
-         t2.ordinal,
-
-         t2.division,
-         t2.keywords,
-         t2.description,
-         t2.species,
-         t2.organelle,
-         t2.classification,
-         t2.project,
-         'Y',
-         t2.ac,
-         t2.database,
-         t2.external_id,
-
-         t2.optional_id);
-
+    -- import ENA accession data
+    INSERT /*+ PARALLEL */ INTO rnc_accessions
+    (
+      accession,
+      parent_ac,
+      seq_version,
+      feature_start,
+      feature_end,
+      feature_name,
+      ordinal,
+      division,
+      keywords,
+      description,
+      species,
+      organelle,
+      classification,
+      project,
+      is_composite
+    )
+    SELECT
+      ac,
+      parent_ac,
+      seq_version,
+      feature_start,
+      feature_end,
+      feature_name,
+      ordinal,
+      division,
+      keywords,
+      description,
+      species,
+      organelle,
+      classification,
+      project,
+      'N' as is_composite
+    FROM rnc_ac_info;
 
     COMMIT;
+
+    -- import expert database accession data
+    INSERT /*+ PARALLEL */ INTO rnc_accessions
+    (
+      accession,
+      parent_ac,
+      seq_version,
+      feature_start,
+      feature_end,
+      feature_name,
+      ordinal,
+      division,
+      keywords,
+      description,
+      species,
+      organelle,
+      classification,
+      project,
+      is_composite,
+      non_coding_id,
+      database,
+      external_id,
+      optional_id
+    )
+    SELECT
+      t2.composite_id,
+      t1.parent_ac,
+      t1.seq_version,
+      t1.feature_start,
+      t1.feature_end,
+      t1.feature_name,
+      t1.ordinal,
+      t1.division,
+      t1.keywords,
+      t1.description,
+      t1.species,
+      t1.organelle,
+      t1.classification,
+      t1.project,
+      'Y' as is_composite,
+      t1.ac,
+      t2.database,
+      t2.external_id,
+      t2.optional_id
+    FROM rnc_ac_info t1, rnc_composite_ids t2
+    WHERE t1.ac = t2.ac;
+
+    COMMIT;
+
+    BEGIN
+      DBMS_STATS.GATHER_TABLE_STATS ( OWNNAME => 'RNACEN', TABNAME => 'rnc_accessions', ESTIMATE_PERCENT => 10 );
+    END;
+
+    DBMS_OUTPUT.put_line('rnc_accessions updated');
 
   END update_rnc_accessions;
 
