@@ -36,7 +36,7 @@ create or replace PACKAGE BODY RNC_UPDATE AS
 
     DBMS_OUTPUT.put_line('Updating rnc_accessions');
 
-    TRUNCATE TABLE rnc_accessions;
+    EXECUTE IMMEDIATE 'TRUNCATE TABLE rnc_accessions';
 
     -- import ENA accession data
     INSERT /*+ PARALLEL */ INTO rnc_accessions
