@@ -189,7 +189,8 @@ create or replace PACKAGE BODY RNC_UPDATE AS
     USING (SELECT * FROM load_rnc_composite_ids WHERE ROWID IN (SELECT MIN (ROWID) FROM load_rnc_composite_ids GROUP BY ac)) t2
 		ON (t1.composite_id = t2.composite_id)
 		WHEN MATCHED THEN UPDATE SET
-  		t1.OPTIONAL_ID = t2.OPTIONAL_ID
+      t1.OPTIONAL_ID = t2.OPTIONAL_ID,
+      t1.external_id = t2.external_id
 		WHEN NOT MATCHED THEN INSERT
 		(
       t1.COMPOSITE_ID,
