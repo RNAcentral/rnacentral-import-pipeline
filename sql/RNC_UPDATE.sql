@@ -588,6 +588,7 @@ create or replace PACKAGE BODY RNC_UPDATE AS
     END LOOP;
 
     rnc_healthchecks.run_healthchecks();
+    update_rnc_accessions();
 
   END new_update;
 
