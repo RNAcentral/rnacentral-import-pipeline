@@ -135,6 +135,24 @@ create or replace PACKAGE BODY RNC_HEALTHCHECKS AS
 
   END check_xrefs_without_lit_refs;
 
+  PROCEDURE check_xrefs_without_ac_data
+  AS
+    v_count NUMBER;
+  BEGIN
+    SELECT count(*) INTO v_count
+    FROM xref t1, rnc_accessions t2
+    WHERE
+      t2.ACCESSION (+) = t1.ac AND
+      t2.accession is null;
+
+    IF v_count > 0 THEN
+      DBMS_OUTPUT.put_line('not ok ... check_xrefs_without_ac_data');
+    else
+      DBMS_OUTPUT.put_line('ok ... check_xrefs_without_ac_data');
+    END IF;
+
+  END check_xrefs_without_ac_data;
+
   /*
   * Main entry point.
   */
@@ -145,9 +163,9 @@ create or replace PACKAGE BODY RNC_HEALTHCHECKS AS
     check_negative_taxid;
     check_unique_ac_staging;
     check_unique_ac_xref;
-
     check_rnas_without_xrefs;
     check_xrefs_without_lit_refs;
+    check_xrefs_without_ac_data;
 
   END run_healthchecks;
 
