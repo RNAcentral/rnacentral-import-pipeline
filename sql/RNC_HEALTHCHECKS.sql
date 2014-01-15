@@ -115,6 +115,26 @@ create or replace PACKAGE BODY RNC_HEALTHCHECKS AS
   END check_rnas_without_xrefs;
 
 
+  PROCEDURE check_xrefs_without_lit_refs
+  AS
+    v_count NUMBER;
+  BEGIN
+    select count(distinct upi) INTO v_count
+    from xref t1, rnc_reference_map t2
+    where
+    t2.ACCESSION (+) = t1.ac and
+    t2.accession is null and
+    deleted = 'N';
+
+    -- some entries don't have literature refs in ENA
+    IF v_count > 100 THEN
+      DBMS_OUTPUT.put_line('not ok ... check_xrefs_without_literature_refs');
+    else
+      DBMS_OUTPUT.put_line('ok ... check_rnas_without_xrefs');
+    END IF;
+
+  END check_xrefs_without_lit_refs;
+
   /*
   * Main entry point.
   */
@@ -127,6 +147,7 @@ create or replace PACKAGE BODY RNC_HEALTHCHECKS AS
     check_unique_ac_xref;
 
     check_rnas_without_xrefs;
+    check_xrefs_without_lit_refs;
 
   END run_healthchecks;
 
