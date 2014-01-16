@@ -154,9 +154,60 @@ create or replace PACKAGE BODY RNC_HEALTHCHECKS AS
   END check_xrefs_without_ac_data;
 
   /*
+  * Auxiliary procedure to report healthcheck results.
+  */
+  PROCEDURE report_results (
+    p_in_count IN NUMBER,
+    p_in_msg IN STRING
+  )
+  AS
+  BEGIN
+    IF p_in_count > 0 THEN
+      DBMS_OUTPUT.put_line('not ok ... '||p_in_msg);
+    ELSE
+      DBMS_OUTPUT.put_line('ok ... '||p_in_msg);
+    END IF;
+
+  END report_results;
+
+
+  /*
+  * Verify external and optional ids in rnc_accessions and
+  * indirectly check the rnc_composite_ids table it is based on.
+  * Add more checks as more expert databases are imported into RNAcentral.
+  */
+  PROCEDURE check_expert_db_accessions
+  AS
+    v_count NUMBER;
+  BEGIN
+
+    -- RFAM
+    SELECT count(*) INTO v_count FROM rnc_accessions WHERE database = 'RFAM' AND (external_id IS NULL OR optional_id IS NULL);
+    report_results(v_count, 'RFAM expert accessions');
+
+    -- SRPDB, only external_id is provided
+    SELECT count(*) INTO v_count FROM rnc_accessions WHERE database = 'SRPDB' AND external_id IS null;
+    report_results(v_count, 'SRPDB expert accessions');
+
+    -- MIRBASE
+    SELECT count(*) INTO v_count FROM rnc_accessions WHERE database = 'MIRBASE' AND (external_id IS NULL OR optional_id IS NULL);
+    report_results(v_count, 'MIRBASE expert accessions');
+
+    -- VEGA
+    SELECT count(*) INTO v_count FROM rnc_accessions WHERE database = 'VEGA' AND (external_id IS NULL OR optional_id IS NULL);
+    report_results(v_count, 'VEGA expert accessions');
+
+    -- tmRNA Website, not all entries have both external and optional ids
+    SELECT count(*) into v_count FROM rnc_accessions WHERE database = 'TMRNA_WEB' AND external_id IS null;
+    report_results(v_count, 'TMRNA_WEB expert accessions');
+
+  END check_expert_db_accessions;
+
+
+  /*
   * Main entry point.
   */
-  procedure run_healthchecks AS
+  PROCEDURE run_healthchecks AS
   BEGIN
 
     check_unique_upis;
@@ -166,8 +217,10 @@ create or replace PACKAGE BODY RNC_HEALTHCHECKS AS
     check_rnas_without_xrefs;
     check_xrefs_without_lit_refs;
     check_xrefs_without_ac_data;
+    check_expert_db_accessions;
 
   END run_healthchecks;
+
 
 
 END RNC_HEALTHCHECKS;
