@@ -191,3 +191,38 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
+
+
+RNACENTRAL CORE PROJECT SUBCOMPONENTS
+
+The RNAcentral Core Project includes a number of subcomponents with
+separate copyright notices and license terms. Your use of the source
+code for the these subcomponents is subject to the terms and
+conditions of the following licenses.
+
+COMPONENT: /lib/SWISS/CRC64.pm
+
+Copyright (C) 1999-2010, the European Bioinformatics Institute and
+the Swiss Institute of Bioinformatics.
+
+The SWISS modules are free software; you can redistribute and/or
+modify them under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+These modules are distributed in the hope that they will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+
+COMPONENT: /lib/Bio/SeqIO/embl.pm
+
+This is a patch for a BioPerl module responsible for reading EMBL files.
+The code has seen some re-writing but derives from the original source.
+
+BioPerl is licensed under the same terms as Perl itself, which means it is
+dually-licensed under either the Artistic or GPL licenses.

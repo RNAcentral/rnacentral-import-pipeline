@@ -66,3 +66,7 @@ The options are specified as command line arguments and as default options in th
 
 	perl scripts/rnac_loader.pl <options>
 
+## License
+
+	See the LICENSE file for more information.
+
