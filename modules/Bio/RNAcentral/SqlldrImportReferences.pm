@@ -108,14 +108,12 @@ INTO TABLE $self->{'opt'}{'references_table'}
 FIELDS TERMINATED BY ',' enclosed by '"'
 (
     MD5 char,
-    AUTHORS_MD5 char,
+    ACCESSION char,
     AUTHORS char(1000000),
     LOCATION char(4000),
     TITLE char(4000),
-    PUBMED char,
-    DOI char,
-    PUBLISHER char,
-    EDITORS char
+    PMID char,
+    DOI char
 )
 CTL
     close $fh;

@@ -1,0 +1,285 @@
+ID   AB330787.1:1..34:misc_RNA; SV 1; linear; other RNA; STD; HUM; 34 BP.
+XX
+PA   AB330787.1
+XX
+DT   17-JUN-2009 (Rel. 101, Created)
+DT   17-JUN-2009 (Rel. 101, Last updated, Version 1)
+XX
+DE   Homo sapiens (human) miscellaneous RNA
+XX
+KW   .
+XX
+OS   Homo sapiens (human)
+OC   Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi; Mammalia;
+OC   Eutheria; Euarchontoglires; Primates; Haplorrhini; Catarrhini; Hominidae;
+OC   Homo.
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..34
+FT                   /organism="Homo sapiens"
+FT                   /mol_type="other RNA"
+FT                   /clone="tRNaseZL-interacting RNA C2"
+FT                   /db_xref="taxon:9606"
+FT   misc_RNA        AB330787.1:1..34
+FT                   /note="RNA sequence binds to tRNaseZL"
+FT                   /note="similar to U3 snRNA fragment"
+XX
+SQ   Sequence 34 BP; 11 A; 3 C; 15 G; 5 T; 0 other;
+     attggggagt gagaaggaga gaacgcggtc tgaa                                    34
+//
+ID   AB330786.1:1..27:misc_RNA; SV 1; linear; other RNA; STD; HUM; 27 BP.
+XX
+PA   AB330786.1
+XX
+DT   17-JUN-2009 (Rel. 101, Created)
+DT   17-JUN-2009 (Rel. 101, Last updated, Version 1)
+XX
+DE   Homo sapiens (human) miscellaneous RNA
+XX
+KW   .
+XX
+DR   RFAM; RF00005; tRNA.
+XX
+OS   Homo sapiens (human)
+OC   Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi; Mammalia;
+OC   Eutheria; Euarchontoglires; Primates; Haplorrhini; Catarrhini; Hominidae;
+OC   Homo.
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..27
+FT                   /organism="Homo sapiens"
+FT                   /mol_type="other RNA"
+FT                   /clone="tRNaseZL-interacting RNA C1"
+FT                   /db_xref="taxon:9606"
+FT   misc_RNA        AB330786.1:1..27
+FT                   /note="RNA sequence binds to tRNaseZL"
+FT                   /note="similar to U2 snRNA fragment"
+XX
+SQ   Sequence 27 BP; 7 A; 8 C; 7 G; 5 T; 0 other;
+     attgcagtac ctccaggaac ggtgcac                                            27
+//
+ID   AB330785.1:1..34:misc_RNA; SV 1; linear; other RNA; STD; HUM; 34 BP.
+XX
+PA   AB330785.1
+XX
+DT   17-JUN-2009 (Rel. 101, Created)
+DT   17-JUN-2009 (Rel. 101, Last updated, Version 1)
+XX
+DE   Homo sapiens (human) miscellaneous RNA
+XX
+KW   RNAcentral; Third Party Annotation; TPA; TPA:specialist_db.
+XX
+DR   SRPDB; Xeno.laev._DC015625.
+XX
+OS   Homo sapiens (human)
+OC   Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi; Mammalia;
+OC   Eutheria; Euarchontoglires; Primates; Haplorrhini; Catarrhini; Hominidae;
+OC   Homo.
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..34
+FT                   /organism="Homo sapiens"
+FT                   /mol_type="other RNA"
+FT                   /clone="tRNaseZL-interacting RNA B6"
+FT                   /db_xref="taxon:9606"
+FT   misc_RNA        AB330785.1:1..34
+FT                   /note="RNA sequence binds to tRNaseZL"
+FT                   /note="similar to 28S rRNA fragment"
+XX
+SQ   Sequence 34 BP; 8 A; 12 C; 10 G; 4 T; 0 other;
+     cgcgacctca gatcagacgt ggcgacccgc tgaa                                    34
+//
+ID   HAAO01001079.1:1..21:ncRNA; SV 1; linear; transcribed RNA; TSA; HUM; 21 BP.
+XX
+PA   HAAO01001079.1
+XX
+PR   Project:PRJEB4451;
+XX
+DT   21-AUG-2013 (Rel. 117, Created)
+DT   24-SEP-2013 (Rel. 118, Last updated, Version 2)
+XX
+DE   Homo sapiens (human) microRNA hsa-miR-1273g-3p
+XX
+KW   RNAcentral; TPA; TPA:specialist_db; Transcriptome Shotgun Assembly; TSA.
+XX
+OS   Homo sapiens (human)
+OC   Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi; Mammalia;
+OC   Eutheria; Euarchontoglires; Primates; Haplorrhini; Catarrhini; Hominidae;
+OC   Homo.
+XX
+RN   [1]
+RP   1-21
+RG   miRBase and RNAcentral
+RA   ;
+RT   ;
+RL   Submitted (20-AUG-2013) to the INSDC.
+XX
+RN   [2]
+RX   DOI; 10.1093/nar/gkq1027.
+RX   PUBMED; 21037258.
+RA   Kozomara A., Griffiths-Jones S.;
+RT   "miRBase: integrating microRNA annotation and deep-sequencing data";
+RL   Nucleic Acids Res. 39(Database issue):D152-D157(2011).
+XX
+DR   miRBase; MIMAT0022742; hsa-miR-1273g-3p.
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..21
+FT                   /organism="Homo sapiens"
+FT                   /mol_type="transcribed RNA"
+FT                   /db_xref="taxon:9606"
+FT   ncRNA           HAAO01001079.1:1..21
+FT                   /gene="hsa-miR-1273g-3p"
+FT                   /product="microRNA hsa-miR-1273g-3p"
+FT                   /experiment="EXISTENCE:RNA-seq ECO0000205"
+FT                   /ncRNA_class="miRNA"
+XX
+SQ   Sequence 21 BP; 5 A; 9 C; 4 G; 3 T; 0 other;
+     accactgcac tccagcctga g                                                  21
+//
+ID   HG502048.1:1..747:ncRNA; SV 1; linear; transcribed RNA; STD; HUM; 747 BP.
+XX
+PA   HG502048.1
+XX
+PR   Project:PRJEB4568;
+XX
+DT   23-OCT-2013 (Rel. 118, Created)
+DT   23-OCT-2013 (Rel. 118, Last updated, Version 1)
+XX
+DE   Homo sapiens (human) long non-coding RNA OTTHUMT00000037008.1
+XX
+KW   RNAcentral; TPA; TPA:specialist_db.
+XX
+OS   Homo sapiens (human)
+OC   Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi; Mammalia;
+OC   Eutheria; Euarchontoglires; Primates; Haplorrhini; Catarrhini; Hominidae;
+OC   Homo.
+XX
+RN   [1]
+RP   1-747
+RG   Vega and RNAcentral
+RA   ;
+RT   ;
+RL   Submitted (15-OCT-2013) to the INSDC.
+XX
+RN   [2]
+RX   DOI; 10.1101/gr.132159.111.
+RX   PUBMED; 22955988.
+RA   Derrien T., Johnson R., Bussotti G., Tanzer A., Djebali S., Tilgner H.,
+RA   Guernec G., Martin D., Merkel A., Knowles D.G., Lagarde J., Veeravalli L.,
+RA   Ruan X., Ruan Y., Lassmann T., Carninci P., Brown J.B., Lipovich L.,
+RA   Gonzalez J.M., Thomas M., Davis C.A., Shiekhattar R., Gingeras T.R.,
+RA   Hubbard T.J., Notredame C., Harrow J., Guigo R.;
+RT   "The GENCODE v7 catalog of human long noncoding RNAs: analysis of their
+RT   gene structure, evolution, and expression";
+RL   Genome Res. 22(9):1775-1789(2012).
+XX
+RN   [3]
+RX   DOI; 10.1101/gr.135350.111.
+RX   PUBMED; 22955987.
+RA   Harrow J., Frankish A., Gonzalez J.M., Tapanari E., Diekhans M.,
+RA   Kokocinski F., Aken B.L., Barrell D., Zadissa A., Searle S., Barnes I.,
+RA   Bignell A., Boychenko V., Hunt T., Kay M., Mukherjee G., Rajan J.,
+RA   Despacio-Reyes G., Saunders G., Steward C., Harte R., Lin M., Howald C.,
+RA   Tanzer A., Derrien T., Chrast J., Walters N., Balasubramanian S., Pei B.,
+RA   Tress M., Rodriguez J.M., Ezkurdia I., van Baren J., Brent M., Haussler D.,
+RA   Kellis M., Valencia A., Reymond A., Gerstein M., Guigo R., Hubbard T.J.;
+RT   "GENCODE: the reference human genome annotation for The ENCODE Project";
+RL   Genome Res. 22(9):1760-1774(2012).
+XX
+DR   VEGA-Gn; OTTHUMG00000013241; Homo sapiens.
+DR   VEGA-Tr; OTTHUMT00000037008; Homo sapiens.
+XX
+AH   LOCAL_SPAN          PRIMARY_IDENTIFIER PRIMARY_SPAN        COMP
+AS   1-135               CM000671.1         45108581-45108715
+AS   136-312             CM000671.1         45109655-45109831
+AS   313-434             CM000671.1         45111943-45112064
+AS   435-747             CM000671.1         45112155-45112467
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..747
+FT                   /organism="Homo sapiens"
+FT                   /chromosome="9"
+FT                   /mol_type="transcribed RNA"
+FT                   /db_xref="taxon:9606"
+FT   ncRNA           HG502048.1:1..747
+FT                   /gene="RP11-374M1.2"
+FT                   /product="long non-coding RNA OTTHUMT00000037008.1"
+FT                   /note="biotype:lincRNA"
+FT                   /ncRNA_class="lncRNA"
+XX
+SQ   Sequence 747 BP; 223 A; 167 C; 195 G; 162 T; 0 other;
+     atttatctac tgctcgtgaa atctctggat ttaactctga tgaaagactg gaggctgaag        60
+     gagaacttca atatcatata ttttaaaggt tgattcacag tttggagcaa gaattaaaga       120
+     accacgaact tcaagtctgg ataaagtgct tcatgcctgt aatccaagca ctttgagagg       180
+     ctgaggcggg tggatggctt gagcccagga gtttgagacc agcatggaaa acatagagaa       240
+     accccatctc aatataagaa gaagaagaaa aagaaaaaaa aaatcaaaaa cgaaaacaac       300
+     acaaatttta gagtgatgta aaattctcaa acaatgagat agataaaaag tacgcagcca       360
+     aaaagttcaa gaagaagtgt tatggagatg gagcaggccc ttcgtaaaaa cacgatgttg       420
+     gttttctgga ttttggaggc ctcacaaaac ccggatcaga ctcgcccact gccctgtgtc       480
+     tgccctcccg accgcctctc ctgcccagca gggatgaggg tggcagtggt gctgtgtgga       540
+     gggtggcggg aggacctgga agactgcgac cagtgagccg ggaggccttg ggacagcctc       600
+     tctctgaatc atcctgtgca ctgccgggtg tgacagaggc tcctagaatc ctgtctcaag       660
+     tggccgcctt cacagaggga gtcactgacg tccctgctca gcgcagccct ggcatgtggg       720
+     ggtccctcta ctcatgagaa accccca                                           747
+//
+ID   HG527461.1:1..348:tmRNA; SV 1; linear; genomic DNA; STD; PRO; 348 BP.
+XX
+PA   HG527461.1
+XX
+PR   Project:PRJEB4570;
+XX
+DT   22-NOV-2013 (Rel. 118, Created)
+DT   22-NOV-2013 (Rel. 118, Last updated, Version 1)
+XX
+DE   Streptococcus pneumoniae PNI0360 transfer-messenger mRNA Strep_pneum_R6
+XX
+KW   RNAcentral; TPA; TPA:specialist_db.
+XX
+OS   Streptococcus pneumoniae PNI0360
+OC   Bacteria; Firmicutes; Bacilli; Lactobacillales; Streptococcaceae;
+OC   Streptococcus.
+XX
+RN   [1]
+RP   1-348
+RG   The tmRNA Website and RNAcentral
+RA   ;
+RT   ;
+RL   Submitted (13-SEP-2013) to the INSDC.
+XX
+RN   [2]
+RX   DOI; 10.1093/nar/gkh102.
+RX   PUBMED; 14681369.
+RA   Gueneau de Novoa P., Williams K.P.;
+RT   "The tmRNA website: reductive evolution of tmRNA in plastids and other
+RT   endosymbionts";
+RL   Nucleic Acids Res. 32(Database issue):D104-D108(2004).
+XX
+AH   LOCAL_SPAN          PRIMARY_IDENTIFIER PRIMARY_SPAN        COMP
+AS   1-348               KB372419.1         20876-21223         c
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..348
+FT                   /organism="Streptococcus pneumoniae PNI0360"
+FT                   /mol_type="genomic DNA"
+FT                   /db_xref="taxon:1159100"
+FT   tmRNA           HG527461.1:1..348
+FT                   /gene="tmRNA Strep_pneum_R6"
+FT                   /product="transfer-messenger mRNA Strep_pneum_R6"
+FT                   /note="Tag:(A)AKNNTSYALAA*"
+FT                   /tag_peptide=83..118
+XX
+SQ   Sequence 348 BP; 93 A; 67 C; 87 G; 101 T; 0 other;
+     ggggtcgtta cggattcgac aggcattatg aggcatattt tgcgactcgt gtggcgacgt        60
+     aaacgctcag ttaaatataa ctgcaaaaaa taacacttct tacgctctag ctgcctaaaa       120
+     accagcaggc gtgacccgat ttggattgct cgtgttcaat gacaggtctt attattagcg       180
+     agatacgatt aagccttgtc tagcggcttg ataagagatt gatagactcg cagtttctag       240
+     acttgagtta tgtgtcgagg ggctgttaaa ataatacata acctatggtt gtagacaaat       300
+     atgttggcag gtgtttggac gtgggttcga ctcccaccgg ctccatta                    348
+//

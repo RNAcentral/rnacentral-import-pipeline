@@ -63,7 +63,7 @@ sub new {
 sub db_oracle_connect {
     my $self = shift;
 
-    my $dsn = "dbi:Oracle:host=$self->{'host'};sid=$self->{'sid'};port=$self->{'port'}";
+    my $dsn = "dbi:Oracle:host=$self->{'host'};service_name=$self->{'sid'};port=$self->{'port'}";
     my $dbh = DBI->connect($dsn, $self->{'user'}, $self->{'password'})
               or $self->{'logger'}->logdie( $DBI::errstr . "\n" );
 
@@ -220,7 +220,7 @@ sub log_plsql_output {
     my $self = shift;
     my $output = $self->{'dbh'}->func( 'dbms_output_get' );
     $self->{'logger'}->info($output);
-    print $output;
+    print $output, "\n";
 }
 
 

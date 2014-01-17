@@ -154,7 +154,7 @@ sub embl2csv {
         }
 
         # get literature references
-        $refs = $self->_get_references($seq, $md5);
+        $refs = $self->_get_references($seq);
         if ( $refs ) {
             print $fh_refs $refs->{'text'};
             $refs_num += $refs->{'num'};
@@ -313,11 +313,7 @@ sub _get_missing_dr_links {
     my $entry_project_id = _get_project_id($seq);
     my $db_project_id;
 
-    if ($db_name eq 'MIRBASE') {
-        $db_project_id = 'PRJEB4451';
-    } elsif ($db_name eq 'VEGA') {
-        $db_project_id = 'PRJEB4568';
-    } elsif ($db_name eq 'tmRNA_Web') {
+    if ($db_name eq 'TMRNA_WEB') {
         $db_project_id = 'PRJEB4570';
     }
 
@@ -346,11 +342,9 @@ sub _get_dblinks {
                  accession   => $seq->display_id,
                  optional_id => '' };
 
-    # get mirbase, vega, tmRNA website entries by project ids
+    # get tmRNA website entries by project ids
     # todo: remove this temporary fix when DR lines are added to all entries
-    push @data, _get_missing_dr_links($seq, 'MIRBASE');
-    push @data, _get_missing_dr_links($seq, 'VEGA');
-    push @data, _get_missing_dr_links($seq, 'tmRNA_Web');
+    push @data, _get_missing_dr_links($seq, 'TMRNA_WEB');
 
     # add any DR entries
     my $anno_collection = $seq->annotation;
@@ -362,18 +356,96 @@ sub _get_dblinks {
                 $primary_id  = _nvl($value->primary_id());
                 $optional_id = _nvl($value->optional_id());
 
-                push @data, { # create unique ids for the DR links
-                              # example: RF01271_BK006945.2:460712..467569:rRNA
-                              primary_id  => $primary_id . '_' . $seq->display_id,
+                push @data, {
+                              primary_id  => _get_composite_id($database, $primary_id, $seq->display_id),
                               accession   => $primary_id,
                               optional_id => $optional_id,
-                              database    => $database,
+                              database    => uc($database),
                             };
             }
         }
     }
 
+    # VEGA xrefs require special treatment
+    @data = @{_collate_vega_xrefs(\@data)};
+
     return \@data;
+}
+
+
+=head2 _get_composite_id
+
+    Create unique ids for external databases.
+
+    Format: uppercase(<database or primary_id>)'_'<ENA non-coding id>
+
+    Several databases were initially imported manually
+    before their primary_ids became available.
+    These databases use database name as the prefix.
+
+    Example: RF01271_BK006945.2:460712..467569:rRNA
+    Example: VEGA_HG497133.1:1..472:ncRNA
+=cut
+
+sub _get_composite_id {
+
+    my ($database, $primary_id, $display_id) = @_;
+
+    my $composite_id = '';
+    if ( $database =~ /^mirbase/i or
+         $database =~ /^vega/i or
+         $database =~ /^TMRNA_WEB/i ) {
+        $composite_id = uc($database) . '_' . $display_id, # unique xref
+    } else {
+        $composite_id = $primary_id . '_' . $display_id;
+    }
+    $composite_id =~ s/VEGA-[GT]n/VEGA/i;
+
+    return $composite_id;
+}
+
+
+=head2 _collate_vega_xrefs
+
+    VEGA xref is split into 2 DR lines:
+    DR   VEGA-Gn; OTTHUMG00000013241; Homo sapiens. # genes
+    DR   VEGA-Tr; OTTHUMT00000037008; Homo sapiens. # transcripts
+
+    This procedure collates them as if they were in one:
+    DR   VEGA; OTTHUMG00000013241; OTTHUMT00000037008.
+
+    The "Homo sapiens" bit is not important because the taxon
+    also appears elsewhere in the entry.
+
+=cut
+
+sub _collate_vega_xrefs {
+
+    my ($data) = @_;
+    my @new_data;
+    my $new_vega_dr_link = {
+        primary_id  => '',
+        accession   => '',
+        optional_id => '',
+        database    => 'VEGA',
+    };
+
+    for my $dr_link (@$data) {
+        if ( $dr_link->{'database'} =~ /^VEGA-Gn$/i ) {
+            $new_vega_dr_link->{'primary_id'} = $dr_link->{'primary_id'};
+            $new_vega_dr_link->{'accession'} = $dr_link->{'accession'};
+        } elsif ( $dr_link->{'database'} =~ /^VEGA-Tr$/i ) {
+            $new_vega_dr_link->{'optional_id'} = $dr_link->{'accession'};
+        } else {
+            push @new_data, $dr_link;
+        }
+    }
+
+    if ( $new_vega_dr_link->{'primary_id'} ne '' ) {
+        push @new_data, $new_vega_dr_link;
+    }
+
+    return \@new_data;
 }
 
 
@@ -437,7 +509,7 @@ sub _get_basic_data {
                              $sequence,
                              $dblink->{'database'},
                              $dblink->{'primary_id'},
-                             $dblink->{'optional_id'}, # TODO: drop this column
+                             $dblink->{'optional_id'},
                              $version,
                              $taxid,
                              $md5)) . "\n";
@@ -478,11 +550,10 @@ sub _get_basic_data {
 
 sub _get_references {
 
-    (my $self, my $seq, my $md5)  = @_;
+    (my $self, my $seq)  = @_;
 
     my ($ref_authors, $ref_location, $ref_title,
-        $ref_pubmed,  $ref_doi,      $ref_publisher,
-        $ref_editors, $ref_consortium, $md5_authors);
+        $ref_pmid,    $ref_doi,      $md5);
     my $text = '';
     my $num = 0;
 
@@ -493,24 +564,20 @@ sub _get_references {
             # all reference lines: RN, RC, RP, RX, RG, RA, RT, RL
             if ( $value->tagname eq 'reference' ) {
                 $num++;
-                $ref_authors   = _nvl($value->authors());   # RA line
-                $md5_authors   = md5_hex($ref_authors);
-                $ref_location  = _nvl($value->location());  # RL line
-                $ref_title     = _nvl($value->title());     # RT line
-                $ref_pubmed    = _nvl($value->pubmed());    # parsed RX line
-                $ref_doi       = _nvl($value->doi());       # parsed RX line
-                $ref_publisher = _nvl($value->publisher()); # parsed RL line
-                $ref_editors   = _nvl($value->editors());   # parsed RL line
+                $ref_authors  = _nvl($value->authors());   # RA line
+                $ref_location = _nvl($value->location());  # RL line
+                $ref_title    = _nvl($value->title());     # RT line
+                $ref_pmid     = _nvl($value->pubmed());    # parsed RX line
+                $ref_doi      = _nvl($value->doi());       # parsed RX line
+                $md5          = md5_hex($ref_authors . $ref_location . $ref_title);
 
                 $text .= '"' . join('","', ($md5,
-                                            $md5_authors,
+                                            $seq->display_id,
                                             $ref_authors,
                                             $ref_location,
                                             $ref_title,
-                                            $ref_pubmed,
-                                            $ref_doi,
-                                            $ref_publisher,
-                                            $ref_editors) ) . "\"\n";
+                                            $ref_pmid,
+                                            $ref_doi) ) . "\"\n";
             }
         }
     }
