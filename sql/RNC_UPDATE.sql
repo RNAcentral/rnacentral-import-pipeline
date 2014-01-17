@@ -545,6 +545,35 @@ create or replace PACKAGE BODY RNC_UPDATE AS
 
   END load_release;
 
+
+  /*
+  * All xref ids are reset during Full updates because the xrefs
+  * are imported using Partition Exchange Loading.
+  * This operation is harmless because the ids are only used
+  * by the Django web code.
+  */
+
+  PROCEDURE verify_xref_id_not_null
+  AS
+    v_count NUMBER;
+  BEGIN
+    SELECT count(*) INTO v_count FROM xref WHERE id IS NULL;
+    IF v_count > 0 THEN
+      -- drop sequence to reset the starting value
+      EXECUTE IMMEDIATE 'DROP SEQUENCE "RNACEN"."XREF_PK_SEQ"';
+
+      -- recreate the sequence
+      EXECUTE IMMEDIATE 'CREATE SEQUENCE  "RNACEN"."XREF_PK_SEQ"  MINVALUE 1 MAXVALUE 9999999999999999999999999999 INCREMENT BY 1 START WITH 1 CACHE 20 NOORDER  NOCYCLE';
+
+      -- update all id values
+      UPDATE xref SET id = XREF_PK_SEQ.nextval;
+      COMMIT;
+
+    END IF;
+
+  END verify_xref_id_not_null;
+
+
   /*
     Iterate over all releases with status 'L' and load them into the database.
   */
@@ -588,6 +617,8 @@ create or replace PACKAGE BODY RNC_UPDATE AS
     END LOOP;
 
     update_rnc_accessions();
+    verify_xref_id_not_null();
+
     rnc_healthchecks.run_healthchecks();
 
   END new_update;

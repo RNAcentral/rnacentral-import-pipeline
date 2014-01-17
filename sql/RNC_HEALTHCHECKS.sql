@@ -205,6 +205,20 @@ create or replace PACKAGE BODY RNC_HEALTHCHECKS AS
 
 
   /*
+  * After full update the id column is set to NULL
+  * because the xrefs are imported using Partition Exchange Loading so no triggers are fired,
+  * but this prevents django models to work correctly, so the ids must be populated before
+  * the data are used by the web code.
+  */
+  PROCEDURE check_xref_id_not_null
+  AS
+    v_count NUMBER;
+  BEGIN
+    SELECT count(*) INTO v_count FROM xref WHERE id IS NULL;
+    report_results(v_count, 'check_xref_id_not_null');
+  END check_xref_id_not_null;
+
+  /*
   * Main entry point.
   */
   PROCEDURE run_healthchecks AS
@@ -218,6 +232,7 @@ create or replace PACKAGE BODY RNC_HEALTHCHECKS AS
     check_xrefs_without_lit_refs;
     check_xrefs_without_ac_data;
     check_expert_db_accessions;
+    check_xref_id_not_null;
 
   END run_healthchecks;
 
