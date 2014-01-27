@@ -178,7 +178,7 @@ accepting any such warranty or additional liability.
       same "printed page" as the copyright notice for easier
       identification within third-party archives.
 
-Copyright [1999-2013] EMBL-European Bioinformatics Institute
+Copyright [1999-2014] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -226,3 +226,9 @@ The code has seen some re-writing but derives from the original source.
 
 BioPerl is licensed under the same terms as Perl itself, which means it is
 dually-licensed under either the Artistic or GPL licenses.
+
+COMPONENT: /sql/*.sql
+
+The PL/SQL code derives from the programs developed at the EBI for the Uniparc project.
+That code was made available under the Apache License, Version 2.0.
+In many cases the code has seen some re-writing but derives from the original source.

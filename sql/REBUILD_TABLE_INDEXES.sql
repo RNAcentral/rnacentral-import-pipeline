@@ -17,17 +17,6 @@ set define off
 create or replace PROCEDURE REBUILD_TABLE_INDEXES (table_id IN VARCHAR2)
 IS
 
-/***********************************************************************
-/* Package Name:  REBUILD_TABLE_INDEXES
-/* Author:        Steven Rosanoff
-/* Date Created:  13/12/2012
-/* Description:   The package allows the user to rebuild indexes
-/*                on a specific table. You must specify a table name
-/*                when the procedure is called.
-/* Automated:     No. This procedure is run manually.
-/**********************************************************************/
-
-
     CURSOR index_list
     IS
         SELECT index_name
