@@ -26,6 +26,7 @@ cd ../sql
 echo "@install_all_code.sql" | sqlplus $ORACLE_USER'/'$ORACLE_PASSWORD'@EGRNAPRO'
 echo "@install_all_code.sql" | sqlplus $ORACLE_USER'/'$ORACLE_PASSWORD'@EGRNADEV'
 echo "@install_all_code.sql" | sqlplus $ORACLE_USER'/'$ORACLE_PASSWORD'@EGRNATST'
+echo "@install_all_code.sql" | sqlplus $ORACLE_USER'/'$ORACLE_PASSWORD'@EGRNARLS'
 
 # return to the original location
 cd $STARTING_DIR
