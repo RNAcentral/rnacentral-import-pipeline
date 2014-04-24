@@ -267,7 +267,8 @@ sub _get_ac_info {
                                _nvl($seq->division),
                                $keywords,
                                _nvl(_sanitize($seq->desc)),
-                               $species->binomial,
+                               $species->binomial('FULL'),
+                               _nvl($species->common_name),
                                _nvl($species->organelle),
                                join('; ', reverse $species->classification),
                                ) ) . "\"\n";
