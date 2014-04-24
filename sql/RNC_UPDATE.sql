@@ -66,6 +66,7 @@ create or replace PACKAGE BODY RNC_UPDATE AS
       keywords,
       description,
       species,
+      common_name,
       organelle,
       classification,
       project,
@@ -83,6 +84,7 @@ create or replace PACKAGE BODY RNC_UPDATE AS
       keywords,
       description,
       species,
+      common_name,
       organelle,
       classification,
       project,
@@ -105,6 +107,7 @@ create or replace PACKAGE BODY RNC_UPDATE AS
       keywords,
       description,
       species,
+      common_name,
       organelle,
       classification,
       project,
@@ -126,6 +129,7 @@ create or replace PACKAGE BODY RNC_UPDATE AS
       t1.keywords,
       t1.description,
       t1.species,
+      t1.common_name,
       t1.organelle,
       t1.classification,
       t1.project,
@@ -212,7 +216,7 @@ create or replace PACKAGE BODY RNC_UPDATE AS
       t1.DESCRIPTION = t2.DESCRIPTION,
       t1.ORGANELLE = t2.ORGANELLE,
       t1.SPECIES = t2.SPECIES,
-
+      t1.COMMON_NAME = t2.COMMON_NAME,
       t1.CLASSIFICATION = t2.CLASSIFICATION,
       t1."PROJECT" = t2."PROJECT"
 		WHEN NOT MATCHED THEN INSERT
@@ -233,6 +237,7 @@ create or replace PACKAGE BODY RNC_UPDATE AS
 			t1.ORGANELLE,
 
 			t1.SPECIES,
+      t1.COMMON_NAME,
 			t1.CLASSIFICATION
 		)
 		VALUES
@@ -252,6 +257,7 @@ create or replace PACKAGE BODY RNC_UPDATE AS
 			t2.DESCRIPTION,
 			t2.ORGANELLE,
 			t2.SPECIES,
+      t2.COMMON_NAME,
 			t2.CLASSIFICATION
 		);
 

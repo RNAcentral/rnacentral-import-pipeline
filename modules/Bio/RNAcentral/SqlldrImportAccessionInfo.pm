@@ -112,6 +112,7 @@ FIELDS TERMINATED BY ',' enclosed by '"'
     KEYWORDS char,
     DESCRIPTION char,
     SPECIES char,
+    COMMON_NAME char,
     ORGANELLE char,
     CLASSIFICATION char(500)
 )

@@ -237,7 +237,7 @@ sub _get_ac_info {
 
     my ($text, $accession, $seq_version, $feature_location_start,
         $feature_location_end, $feature_name, $ordinal, $species,
-        $keywords, $project);
+        $common_name, $keywords, $project);
 
     # GU187164.1:15402..15468:tRNA
     # <accession>.<sequence version>:<feature location string>:<feature name>[:ordinal]
