@@ -70,7 +70,25 @@ create or replace PACKAGE BODY RNC_UPDATE AS
       organelle,
       classification,
       project,
-      is_composite
+      is_composite,
+      allele,
+      anticodon,
+      chromosome,
+      experiment,
+      function,
+      gene,
+      gene_synonym,
+      inference,
+      locus_tag,
+      map,
+      mol_type,
+      ncRNA_class,
+      note,
+      old_locus_tag,
+      operon,
+      product,
+      pseudogene,
+      standard_name
     )
     SELECT
       ac,
@@ -88,7 +106,25 @@ create or replace PACKAGE BODY RNC_UPDATE AS
       organelle,
       classification,
       project,
-      'N' as is_composite
+      'N' as is_composite,
+      allele,
+      anticodon,
+      chromosome,
+      experiment,
+      function,
+      gene,
+      gene_synonym,
+      inference,
+      locus_tag,
+      map,
+      mol_type,
+      ncRNA_class,
+      note,
+      old_locus_tag,
+      operon,
+      product,
+      pseudogene,
+      standard_name
     FROM rnc_ac_info;
 
     COMMIT;
@@ -115,7 +151,25 @@ create or replace PACKAGE BODY RNC_UPDATE AS
       non_coding_id,
       database,
       external_id,
-      optional_id
+      optional_id,
+      allele,
+      anticodon,
+      chromosome,
+      experiment,
+      function,
+      gene,
+      gene_synonym,
+      inference,
+      locus_tag,
+      map,
+      mol_type,
+      ncRNA_class,
+      note,
+      old_locus_tag,
+      operon,
+      product,
+      pseudogene,
+      standard_name
     )
     SELECT
       t2.composite_id,
@@ -137,7 +191,25 @@ create or replace PACKAGE BODY RNC_UPDATE AS
       t1.ac,
       t2.database,
       t2.external_id,
-      t2.optional_id
+      t2.optional_id,
+      t1.allele,
+      t1.anticodon,
+      t1.chromosome,
+      t1.experiment,
+      t1.function,
+      t1.gene,
+      t1.gene_synonym,
+      t1.inference,
+      t1.locus_tag,
+      t1.map,
+      t1.mol_type,
+      t1.ncRNA_class,
+      t1.note,
+      t1.old_locus_tag,
+      t1.operon,
+      t1.product,
+      t1.pseudogene,
+      t1.standard_name
     FROM rnc_ac_info t1, rnc_composite_ids t2
     WHERE t1.ac = t2.ac;
 
@@ -218,7 +290,25 @@ create or replace PACKAGE BODY RNC_UPDATE AS
       t1.SPECIES = t2.SPECIES,
       t1.COMMON_NAME = t2.COMMON_NAME,
       t1.CLASSIFICATION = t2.CLASSIFICATION,
-      t1."PROJECT" = t2."PROJECT"
+      t1."PROJECT" = t2."PROJECT",
+      t1.ALLELE = t2.ALLELE,
+      t1.ANTICODON = t2.ANTICODON,
+      t1.CHROMOSOME = t2.CHROMOSOME,
+      t1.EXPERIMENT = t2.EXPERIMENT,
+      t1.FUNCTION = t2.FUNCTION,
+      t1.GENE = t2.GENE,
+      t1.GENE_SYNONYM = t2.GENE_SYNONYM,
+      t1.INFERENCE = t2.INFERENCE,
+      t1.LOCUS_TAG = t2.LOCUS_TAG,
+      t1.MAP = t2.MAP,
+      t1.MOL_TYPE = t2.MOL_TYPE,
+      t1.NCRNA_CLASS = t2.NCRNA_CLASS,
+      t1.NOTE = t2.NOTE,
+      t1.OLD_LOCUS_TAG = t2.OLD_LOCUS_TAG,
+      t1.OPERON = t2.OPERON,
+      t1.PRODUCT = t2.PRODUCT,
+      t1.PSEUDOGENE = t2.PSEUDOGENE,
+      t1.STANDARD_NAME = t2.STANDARD_NAME
 		WHEN NOT MATCHED THEN INSERT
 
 		(
@@ -238,7 +328,25 @@ create or replace PACKAGE BODY RNC_UPDATE AS
 
 			t1.SPECIES,
       t1.COMMON_NAME,
-			t1.CLASSIFICATION
+			t1.CLASSIFICATION,
+      t1.ALLELE,
+      t1.ANTICODON,
+      t1.CHROMOSOME,
+      t1.EXPERIMENT,
+      t1.FUNCTION,
+      t1.GENE,
+      t1.GENE_SYNONYM,
+      t1.INFERENCE,
+      t1.LOCUS_TAG,
+      t1.MAP,
+      t1.MOL_TYPE,
+      t1.NCRNA_CLASS,
+      t1.NOTE,
+      t1.OLD_LOCUS_TAG,
+      t1.OPERON,
+      t1.PRODUCT,
+      t1.PSEUDOGENE,
+      t1.STANDARD_NAME
 		)
 		VALUES
 		(
@@ -258,9 +366,28 @@ create or replace PACKAGE BODY RNC_UPDATE AS
 			t2.ORGANELLE,
 			t2.SPECIES,
       t2.COMMON_NAME,
-			t2.CLASSIFICATION
+			t2.CLASSIFICATION,
+      t2.ALLELE,
+      t2.ANTICODON,
+      t2.CHROMOSOME,
+      t2.EXPERIMENT,
+      t2.FUNCTION,
+      t2.GENE,
+      t2.GENE_SYNONYM,
+      t2.INFERENCE,
+      t2.LOCUS_TAG,
+      t2.MAP,
+      t2.MOL_TYPE,
+      t2.NCRNA_CLASS,
+      t2.NOTE,
+      t2.OLD_LOCUS_TAG,
+      t2.OPERON,
+      t2.PRODUCT,
+      t2.PSEUDOGENE,
+      t2.STANDARD_NAME
 		);
 
+    commit;
 
     DBMS_OUTPUT.put_line('Accession information updated');
 

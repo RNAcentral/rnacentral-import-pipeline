@@ -256,6 +256,9 @@ sub _get_ac_info {
     $keywords = _nvl($seq->keywords);
     $keywords =~ s/\.$//;
 
+    # get feature table qualifiers
+    my %feature_tags = _get_feature_tags($seq);
+
     $text = '"' . join('","', (_nvl($seq->display_id),
                                $accession,
                                $seq_version,
@@ -271,10 +274,89 @@ sub _get_ac_info {
                                _nvl($species->common_name),
                                _nvl($species->organelle),
                                join('; ', reverse $species->classification),
+                               $feature_tags{'allele'},
+                               $feature_tags{'anticodon'},
+                               $feature_tags{'chromosome'},
+                               $feature_tags{'experiment'},
+                               $feature_tags{'function'},
+                               $feature_tags{'gene'},
+                               $feature_tags{'gene_synonym'},
+                               $feature_tags{'inference'},
+                               $feature_tags{'locus_tag'},
+                               $feature_tags{'map'},
+                               $feature_tags{'mol_type'},
+                               $feature_tags{'ncRNA_class'},
+                               $feature_tags{'note'},
+                               $feature_tags{'old_locus_tag'},
+                               $feature_tags{'operon'},
+                               $feature_tags{'product'},
+                               $feature_tags{'pseudogene'},
+                               $feature_tags{'standard_name'}
                                ) ) . "\"\n";
     return { text => $text };
 }
 
+
+=head2 _get_feature_tags
+
+    Retrieve a dictionary with feature data.
+
+    The Non-coding product includes the following features:
+
+    source
+    tRNA
+    tmRNA
+    rRNA
+    precursor_RNA
+    ncRNA
+    misc_RNA
+
+    The list of feature qualifiers for these features is available at:
+    http://www.insdc.org/documents/feature_table.html
+
+=cut
+
+sub _get_feature_tags {
+
+    my $seq = shift;
+    my @tags = (
+        'allele',        # name of the allele for the given gene
+        'anticodon',     # location of the anticodon of tRNA and the amino acid for which it codes
+        'chromosome',    # chromosome (e.g. Chromosome number) from which the sequence was obtained
+        'experiment',    # a brief description of the nature of the experimental evidence that supports the feature identification or assignment.
+        'function',      # function attributed to a sequence
+        'gene',          # symbol of the gene corresponding to a sequence region
+        'gene_synonym',  # synonymous, replaced, obsolete or former gene symbol
+        'inference',     # a structured description of non-experimental evidence that supports the feature identification or assignment.
+        'locus_tag',     # a submitter-supplied, systematic, stable identifier for a gene and its associated features, used for tracking purposes
+        'map',           # genomic map position of feature
+        'mol_type',      # in vivo molecule type of sequence
+        'ncRNA_class',   # INSDC http://www.insdc.org/rna_vocab.html
+        'note',          # any comment or additional information
+        'old_locus_tag', # feature tag assigned for tracking purposes
+        'operon',        # name of the group of contiguous genes transcribed into a single transcript to which that feature belongs.
+        'product',       # name of the product associated with the feature
+        'pseudogene',    # indicates that this feature is a pseudogene of the element named by the feature key
+        'standard_name', # accepted standard name for this feature
+    );
+    my %tag_values = ();
+
+    # initialize with empty strings
+    for my $tag (@tags) {
+        $tag_values{$tag} = '';
+    }
+
+    # get data
+    for my $tag (@tags) {
+        for my $feat_object ($seq->get_SeqFeatures) {
+            if ($feat_object->has_tag($tag)) {
+                $tag_values{$tag} = join(' ', $feat_object->get_tag_values($tag));
+            }
+        }
+    }
+
+    return %tag_values;
+}
 
 =head2 _get_project_id
 

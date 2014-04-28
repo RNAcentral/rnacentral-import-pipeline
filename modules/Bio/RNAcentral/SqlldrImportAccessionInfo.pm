@@ -86,6 +86,7 @@ sub load_all {
 
     Create a control file used by sqlldr.
 
+    Default for `char` with unspecified length is 255 characters.
 =cut
 
 sub _make_ctl_file {
@@ -114,7 +115,25 @@ FIELDS TERMINATED BY ',' enclosed by '"'
     SPECIES char,
     COMMON_NAME char,
     ORGANELLE char,
-    CLASSIFICATION char(500)
+    CLASSIFICATION char(500),
+    ALLELE char,
+    ANTICODON char,
+    CHROMOSOME char,
+    EXPERIMENT char,
+    FUNCTION char(500),
+    GENE char,
+    GENE_SYNONYM char(400),
+    INFERENCE char,
+    LOCUS_TAG char,
+    MAP char,
+    MOL_TYPE char,
+    NCRNA_CLASS char,
+    NOTE char(1500),
+    OLD_LOCUS_TAG char,
+    OPERON char,
+    PRODUCT char,
+    PSEUDOGENE char,
+    STANDARD_NAME char
 )
 CTL
     close $fh;
