@@ -407,30 +407,30 @@ sub _get_missing_dr_links {
 }
 
 
-=head2 _get_dblinks
+=head2 _get_xrefs
 
-    Get database cross-references from a BioPerl seq object.
+    Read DR lines with database cross-references from a BioPerl seq object.
 
 =cut
 
-sub _get_dblinks {
+sub _get_xrefs {
 
     (my $self, my $seq)  = @_;
 
     my (@data, $database, $primary_id, $optional_id, $project);
 
-    # initialize as an ENA entry
+    # first element is the source ENA entry
     $data[0] = { database    => 'ENA',
                  primary_id  => $seq->display_id,
                  accession   => $seq->display_id,
                  optional_id => '' };
 
-    # get tmRNA website entries by project ids
+    # get gtRNAdb and lncRNAdb entries by project ids
     # todo: remove this temporary fix when DR lines are added to all entries
     push @data, _get_missing_dr_links($seq, 'GTRNADB');
     push @data, _get_missing_dr_links($seq, 'LNCRNADB');
 
-    # add any DR entries
+    # append other xrefs from DR lines
     my $anno_collection = $seq->annotation;
     for my $key ( $anno_collection->get_all_annotation_keys ) {
         my @annotations = $anno_collection->get_Annotations($key);
@@ -588,7 +588,7 @@ sub _get_basic_data {
     }
 
     # get database links
-    my $dblinks = $self->_get_dblinks($seq);
+    my $dblinks = $self->_get_xrefs($seq);
 
     # treat DRs as independent xrefs
     foreach my $dblink ( @$dblinks ) {
