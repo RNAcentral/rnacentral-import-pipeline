@@ -405,6 +405,12 @@ sub _get_missing_dr_links {
 }
 
 
+=head2 _get_dblinks
+
+    Get database cross-references from a BioPerl seq object.
+
+=cut
+
 sub _get_dblinks {
 
     (my $self, my $seq)  = @_;
@@ -428,6 +434,9 @@ sub _get_dblinks {
         for my $value ( @annotations ) {
             if ( $value->tagname eq "dblink" ) {
                 $database    = _nvl($value->database());
+                if ($database eq 'MD5') {
+                    next;
+                }
                 $primary_id  = _nvl($value->primary_id());
                 $optional_id = _nvl($value->optional_id());
 
@@ -547,6 +556,7 @@ sub _get_basic_data {
     $sequence = $seq->seq;
     $crc64 = SWISS::CRC64::crc64($seq->seq);
 
+    # get taxid
     for my $feat_object ($seq->get_SeqFeatures) {
         if ( $feat_object->primary_tag eq 'source' ) {
             for my $tag ($feat_object->get_all_tags) {
@@ -670,13 +680,6 @@ sub _sanitize {
 
     return $text;
 }
-
-=head2 _get_dblinks
-
-    Get database cross-references from a BioPerl seq object.
-
-=cut
-
 
 # get non-empty value, named after the NVL function in Oracle
 sub _nvl {
