@@ -388,8 +388,10 @@ sub _get_missing_dr_links {
     my $entry_project_id = _get_project_id($seq);
     my $db_project_id;
 
-    if ($db_name eq 'TMRNA_WEB') {
-        $db_project_id = 'PRJEB4570';
+    if ($db_name eq 'GTRNADB') {
+        $db_project_id = 'PRJEB5173';
+    } elsif ($db_name eq 'LNCRNADB') {
+        $db_project_id = 'PRJEB6238';
     }
 
     if ($entry_project_id eq $db_project_id) {
@@ -425,7 +427,8 @@ sub _get_dblinks {
 
     # get tmRNA website entries by project ids
     # todo: remove this temporary fix when DR lines are added to all entries
-    push @data, _get_missing_dr_links($seq, 'TMRNA_WEB');
+    push @data, _get_missing_dr_links($seq, 'GTRNADB');
+    push @data, _get_missing_dr_links($seq, 'LNCRNADB');
 
     # add any DR entries
     my $anno_collection = $seq->annotation;
