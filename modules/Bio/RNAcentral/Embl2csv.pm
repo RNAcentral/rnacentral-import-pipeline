@@ -396,7 +396,7 @@ sub _get_missing_dr_links {
 
     if ($entry_project_id eq $db_project_id) {
         return {
-            primary_id  => $db_name . '_' . $seq->display_id, # unique xref
+            primary_id  => _get_composite_id($seq->display_id, $db_name, ''),
             accession   => $db_name, # temporary accession
             optional_id => '',
             database    => $db_name,
@@ -444,7 +444,7 @@ sub _get_xrefs {
                 $optional_id = _nvl($value->optional_id());
 
                 push @data, {
-                              primary_id  => _get_composite_id($database, $primary_id, $seq->display_id),
+                              primary_id  => _get_composite_id($seq->display_id, $database, $primary_id),
                               accession   => $primary_id,
                               optional_id => $optional_id,
                               database    => uc($database),
@@ -464,28 +464,16 @@ sub _get_xrefs {
 
     Create unique ids for external databases.
 
-    Format: uppercase(<database or primary_id>)'_'<ENA non-coding id>
+    Format: <ENA_accession> : uppercase(<database>) : <external_id>
 
-    Several databases were initially imported manually
-    before their primary_ids became available.
-    These databases use database name as the prefix.
-
-    Example: RF01271_BK006945.2:460712..467569:rRNA
-    Example: VEGA_HG497133.1:1..472:ncRNA
+    Example: HG497133.1:1..472:ncRNA:VEGA:OTTHUMG00000161051
 =cut
 
 sub _get_composite_id {
 
-    my ($database, $primary_id, $display_id) = @_;
+    my ($ena_source, $database, $external_id) = @_;
 
-    my $composite_id = '';
-    if ( $database =~ /^mirbase/i or
-         $database =~ /^vega/i or
-         $database =~ /^TMRNA_WEB/i ) {
-        $composite_id = uc($database) . '_' . $display_id, # unique xref
-    } else {
-        $composite_id = $primary_id . '_' . $display_id;
-    }
+    my $composite_id = $ena_source . ':' . uc($database) . ':' . $external_id;
     $composite_id =~ s/VEGA-[GT]n/VEGA/i;
 
     return $composite_id;
@@ -608,8 +596,8 @@ sub _get_basic_data {
         # skip the first entry (non-composite ENA id)
         for ( my $i=1; $i < scalar @$dblinks; $i++ ) {
             $dblink = @$dblinks[$i];
-            $comp_id_text .= '"' . join('","', ($dblink->{'primary_id'},  # composite id like RF01271_BK006945.2:460712..467569:rRNA
-                                                $seq->display_id,         # ENA id BK006945.2:460712..467569:rRNA
+            $comp_id_text .= '"' . join('","', ($dblink->{'primary_id'},  # composite id like HG497133.1:1..472:ncRNA:VEGA:OTTHUMG00000161051
+                                                $seq->display_id,         # ENA source accession BK006945.2:460712..467569:rRNA
                                                 $dblink->{'database'}),   # e.g. RFAM
                                                 $dblink->{'optional_id'}, # e.g. 5.8S_RNA
                                                 $dblink->{'accession'},   # e.g. RF01271
