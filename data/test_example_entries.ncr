@@ -228,25 +228,24 @@ SQ   Sequence 747 BP; 223 A; 167 C; 195 G; 162 T; 0 other;
      tggccgcctt cacagaggga gtcactgacg tccctgctca gcgcagccct ggcatgtggg       720
      ggtccctcta ctcatgagaa accccca                                           747
 //
-ID   HG527461.1:1..348:tmRNA; SV 1; linear; genomic DNA; STD; PRO; 348 BP.
+ID   HG519048.1:1..359:tmRNA; SV 1; linear; genomic DNA; STD; UNC; 359 BP.
 XX
-PA   HG527461.1
+PA   HG519048.1
 XX
 PR   Project:PRJEB4570;
 XX
 DT   22-NOV-2013 (Rel. 118, Created)
 DT   22-NOV-2013 (Rel. 118, Last updated, Version 1)
 XX
-DE   Streptococcus pneumoniae PNI0360 transfer-messenger mRNA Strep_pneum_R6
+DE   unidentified transfer-messenger mRNA Campy_jejun_700819
 XX
 KW   RNAcentral; TPA; TPA:specialist_db.
 XX
-OS   Streptococcus pneumoniae PNI0360
-OC   Bacteria; Firmicutes; Bacilli; Lactobacillales; Streptococcaceae;
-OC   Streptococcus.
+OS   unidentified
+OC   unclassified sequences.
 XX
 RN   [1]
-RP   1-348
+RP   1-359
 RG   The tmRNA Website and RNAcentral
 RA   ;
 RT   ;
@@ -260,26 +259,145 @@ RT   "The tmRNA website: reductive evolution of tmRNA in plastids and other
 RT   endosymbionts";
 RL   Nucleic Acids Res. 32(Database issue):D104-D108(2004).
 XX
+DR   MD5; 5343dc96a70cc56aace5e45d971026e7.
+DR   tmRNA-Website; Campy_jejun_700819.
+XX
 AH   LOCAL_SPAN          PRIMARY_IDENTIFIER PRIMARY_SPAN        COMP
-AS   1-348               KB372419.1         20876-21223         c
+AS   1-359               AR948540.1         1-359
 XX
 FH   Key             Location/Qualifiers
 FH
-FT   source          1..348
-FT                   /organism="Streptococcus pneumoniae PNI0360"
+FT   source          1..359
+FT                   /organism="unidentified"
 FT                   /mol_type="genomic DNA"
-FT                   /db_xref="taxon:1159100"
-FT   tmRNA           HG527461.1:1..348
-FT                   /gene="tmRNA Strep_pneum_R6"
-FT                   /product="transfer-messenger mRNA Strep_pneum_R6"
-FT                   /note="Tag:(A)AKNNTSYALAA*"
-FT                   /tag_peptide=83..118
+FT                   /db_xref="taxon:32644"
+FT   tmRNA           HG519048.1:1..359
+FT                   /gene="tmRNA Campy_jejun_700819"
+FT                   /product="transfer-messenger mRNA Campy_jejun_700819"
+FT                   /note="Tag:(A)ANNVKFAPAYAKAA*"
+FT                   /tag_peptide=88..132
 XX
-SQ   Sequence 348 BP; 93 A; 67 C; 87 G; 101 T; 0 other;
-     ggggtcgtta cggattcgac aggcattatg aggcatattt tgcgactcgt gtggcgacgt        60
-     aaacgctcag ttaaatataa ctgcaaaaaa taacacttct tacgctctag ctgcctaaaa       120
-     accagcaggc gtgacccgat ttggattgct cgtgttcaat gacaggtctt attattagcg       180
-     agatacgatt aagccttgtc tagcggcttg ataagagatt gatagactcg cagtttctag       240
-     acttgagtta tgtgtcgagg ggctgttaaa ataatacata acctatggtt gtagacaaat       300
-     atgttggcag gtgtttggac gtgggttcga ctcccaccgg ctccatta                    348
+SQ   Sequence 359 BP; 94 A; 64 C; 90 G; 111 T; 0 other;
+     gggagcgact tggcttcgac aggagtaagt ctgcttagat ggcatgtcgc tttgggcaaa        60
+     gcgtaaaaag cccaaataaa attaaacgca aacaacgtta aattcgctcc tgcttacgct       120
+     aaagctgcgt aagttcagtt gagcctgaaa tttaagtcat actatctagc ttaattttcg       180
+     gtcatttttg atagtgtagc cttgcgtttg acaagcgttg aggtgaaata aagtcttagc       240
+     cttgcttttg agttttggaa gatgagcgaa gtagggtgaa gtagtcatct ttgctaagca       300
+     tgtagaggtc tttgtgggat tatttttgga caggggttcg attcccctcg cttccacca        359
+//
+ID   HG975377.1:1..332:ncRNA; SV 1; linear; transcribed RNA; STD; HUM; 332 BP.
+XX
+PA   HG975377.1
+XX
+PR   Project:PRJEB6238;
+XX
+DT   07-MAY-2014 (Rel. 120, Created)
+DT   07-MAY-2014 (Rel. 120, Last updated, Version 1)
+XX
+DE   Homo sapiens (human) Small nuclear RNA7SK
+XX
+KW   RNAcentral; TPA; TPA:specialist_db.
+XX
+OS   Homo sapiens (human)
+OC   Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi; Mammalia;
+OC   Eutheria; Euarchontoglires; Primates; Haplorrhini; Catarrhini; Hominidae;
+OC   Homo.
+XX
+RN   [1]
+RP   1-332
+RG   lncRNAdb and RNAcentral
+RA   ;
+RT   ;
+RL   Submitted (30-APR-2014) to the INSDC.
+XX
+RN   [2]
+RX   DOI; 10.1093/nar/gkq1138.
+RX   PUBMED; 21112873.
+RA   Amaral P.P., Clark M.B., Gascoigne D.K., Dinger M.E., Mattick J.S.;
+RT   "lncRNAdb: a reference database for long noncoding RNAs";
+RL   Nucleic Acids Res. 39(Database issue):D146-D151(2011).
+XX
+DR   MD5; 8a3f93890b05943cd6fcab0c50ec2bee.
+XX
+AH   LOCAL_SPAN          PRIMARY_IDENTIFIER PRIMARY_SPAN        COMP
+AS   1-332               AL162581.11        6343-6674
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..332
+FT                   /organism="Homo sapiens"
+FT                   /mol_type="transcribed RNA"
+FT                   /db_xref="taxon:9606"
+FT   ncRNA           HG975377.1:1..332
+FT                   /gene="RN7SK"
+FT                   /product="Small nuclear RNA7SK"
+FT                   /note="biotype:snRNA"
+FT                   /experiment="EXISTENCE: lncRNAdb literature review [PMID:
+FT                   6196783,11713533,11713532,6434539,11864590,1646389,
+FT                   17709395,20471949,14627702,954090,9018369,18193315,
+FT                   18566019,19906723,19416841,20562857,20139302,17381310,
+FT                   10824089,19734296,2443710,17643375,20668672,20404130,
+FT                   17925858]"
+FT                   /ncRNA_class="snRNA"
+XX
+SQ   Sequence 332 BP; 65 A; 99 C; 93 G; 75 T; 0 other;
+     ggatgtgagg gcgatctggc tgcgacatct gtcaccccat tgatcgccag ggttgattcg        60
+     gctgatctgg ctggctaggc gggtgtcccc ttcctccctc accgctccat gtgcgtccct       120
+     cccgaagctg cgcgctcggt cgaagaggac gaccatcccc gatagaggag gaccggtctt       180
+     cggtcaaggg tatacgagta gctgcgctcc cctgctagaa cctccaaaca agctctcaag       240
+     gtccatttgt aggagaacgt agggtagtca agcttccaag actccagaca catccaaatg       300
+     aggcgctgca tgtggcagtc tgcctttctt tt                                     332
+//
+ID   HG985290.1:1..72:tRNA; SV 1; linear; genomic DNA; STD; PRO; 72 BP.
+XX
+PA   HG985290.1
+XX
+PR   Project:PRJEB5173;
+XX
+DT   13-MAY-2014 (Rel. 120, Created)
+DT   13-MAY-2014 (Rel. 120, Last updated, Version 1)
+XX
+DE   Methanoregula boonei 6A8 transfer RNA-Ala (CGC)
+XX
+KW   RNAcentral; TPA; TPA:specialist_db.
+XX
+OS   Methanoregula boonei 6A8
+OC   Archaea; Euryarchaeota; Methanomicrobia; Methanomicrobiales;
+OC   Methanoregulaceae; Methanoregula.
+XX
+RN   [1]
+RP   1-72
+RG   GtRNAdb and RNAcentral
+RA   ;
+RT   ;
+RL   Submitted (13-MAY-2014) to the INSDC.
+XX
+RN   [2]
+RA   Chan P.P., Lowe T.M.;
+RT   "GtRNAdb: a database of transfer RNA genes detected in genomic sequence";
+RL   Nucleic Acids Res. 37(Database issue):D93-D97(2009).
+XX
+DR   MD5; eea9f7f911ba347266eee6b3f5a39f20.
+XX
+AH   LOCAL_SPAN          PRIMARY_IDENTIFIER PRIMARY_SPAN        COMP
+AS   1-72                CP000780.1         2379574-2379645
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..72
+FT                   /organism="Methanoregula boonei 6A8"
+FT                   /mol_type="genomic DNA"
+FT                   /db_xref="taxon:456442"
+FT   tRNA            HG985290.1:1..72
+FT                   /gene="tRNA-Ala-CGC-1-1"
+FT                   /standard_name="tRNA-Ala (CGC)"
+FT                   /product="transfer RNA-Ala (CGC)"
+FT                   /anticodon="(pos:HG985290.1:33..35,aa:Ala)"
+FT                   /note="Covariance Model: Archaea; CM Score: 71.36"
+FT                   /note="Legacy ID: chr.trna18-AlaCGC"
+FT                   /inference="ab initio prediction:tRNAscan-SE:1.21"
+XX
+SQ   Sequence 72 BP; 14 A; 20 C; 25 G; 13 T; 0 other;
+     gggctcgtag atcaggggta gatcgctacg ttcgcaacgt agaggccgcg ggttcaaatc        60
+     ccgccgggtc ca                                                            72
 //
