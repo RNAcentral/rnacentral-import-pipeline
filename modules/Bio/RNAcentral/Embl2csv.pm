@@ -431,6 +431,11 @@ sub _get_dblinks {
                 $primary_id  = _nvl($value->primary_id());
                 $optional_id = _nvl($value->optional_id());
 
+                # use a shorter label
+                if ($database eq 'tmRNA-Website') {
+                    $database = 'tmRNA-Web';
+                }
+
                 push @data, {
                               primary_id  => _get_composite_id($database, $primary_id, $seq->display_id),
                               accession   => $primary_id,
