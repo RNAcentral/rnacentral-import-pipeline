@@ -464,13 +464,16 @@ sub _get_xrefs {
         for my $value ( @annotations ) {
             if ( $value->tagname eq "dblink" ) {
                 $database    = _nvl($value->database());
+
+                # skip these DR lines
                 if ($database eq 'MD5' or $database =~ /SILVA/) {
                     next;
                 }
+
                 $primary_id  = _nvl($value->primary_id());
                 $optional_id = _nvl($value->optional_id());
 
-                # use a shorter label
+                # use a shorter label for tmRNA-Website
                 if ($database eq 'tmRNA-Website') {
                     $database = 'tmRNA-Web';
                 }
