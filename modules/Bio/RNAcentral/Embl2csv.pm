@@ -462,7 +462,7 @@ sub _get_xrefs {
         for my $value ( @annotations ) {
             if ( $value->tagname eq "dblink" ) {
                 $database    = _nvl($value->database());
-                if ($database eq 'MD5' or $database eq 'RFAM') {
+                if ($database eq 'MD5' or $database =~ /SILVA/) {
                     next;
                 }
                 $primary_id  = _nvl($value->primary_id());
