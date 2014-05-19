@@ -249,6 +249,18 @@ sub _get_ac_info {
     $feature_name           = $5;
     $ordinal                = $7;
 
+    # for RFAM entries, feature_name in the id is 'rfam', so retrieve
+    # feature_name from feature table
+    if ($seq->display_id =~ /rfam$/) {
+        for my $feat_object ($seq->get_SeqFeatures) {
+            if ($feat_object->primary_tag eq 'source') {
+                next;
+            } else {
+                $feature_name = $feat_object->primary_tag;
+            }
+        }
+    }
+
     $species = $seq->species;
 
     $project = _get_project_id($seq);
