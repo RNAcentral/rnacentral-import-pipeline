@@ -444,11 +444,13 @@ sub _get_xrefs {
 
     my (@data, $database, $primary_id, $optional_id, $project);
 
-    # first element is the source ENA entry
-    $data[0] = { database    => 'ENA',
-                 primary_id  => $seq->display_id,
-                 accession   => $seq->display_id,
-                 optional_id => '' };
+    # first element is the source ENA entry unless it's an RFAM entry
+    if ( $seq->display_id !~ /rfam$/i ) {
+        $data[0] = { database    => 'ENA',
+                     primary_id  => $seq->display_id,
+                     accession   => $seq->display_id,
+                     optional_id => '' };
+    }
 
     # get gtRNAdb and lncRNAdb entries by project ids
     # todo: remove this temporary fix when DR lines are added to all entries
@@ -623,7 +625,7 @@ sub _get_basic_data {
 
     # write out composite id correspondences
     if ( scalar @$dblinks > 1 ) {
-        # skip the first entry (non-composite ENA id)
+        # skip the first entry (non-composite ENA id or RFAM product)
         for ( my $i=1; $i < scalar @$dblinks; $i++ ) {
             $dblink = @$dblinks[$i];
             $comp_id_text .= '"' . join('","', ($dblink->{'primary_id'},  # composite id like HG497133.1:1..472:ncRNA:VEGA:OTTHUMG00000161051
