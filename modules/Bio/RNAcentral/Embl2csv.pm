@@ -478,8 +478,15 @@ sub _get_xrefs {
                     $database = 'tmRNA-Web';
                 }
 
+                # RFAM entries already have a unique id
+                if ($database eq 'RFAM') {
+                    $primary_id = $seq->display_id;
+                } else {
+                    $primary_id = _get_composite_id($seq->display_id, $database, $primary_id);
+                }
+
                 push @data, {
-                              primary_id  => _get_composite_id($seq->display_id, $database, $primary_id),
+                              primary_id  => $primary_id, # external id
                               accession   => $primary_id,
                               optional_id => $optional_id,
                               database    => uc($database),
