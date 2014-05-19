@@ -454,10 +454,16 @@ sub _get_xrefs {
 
     (my $self, my $seq)  = @_;
 
-    my (@data, $database, $primary_id, $optional_id, $project);
+    my (@data, $database, $primary_id, $optional_id, $project, $is_rfam_entry);
+
+    if ( $seq->display_id =~ /rfam$/i ) {
+        $is_rfam_entry = 1;
+    } else {
+        $is_rfam_entry = 0;
+    }
 
     # first element is the source ENA entry unless it's an RFAM entry
-    if ( $seq->display_id !~ /rfam$/i ) {
+    if ( !$is_rfam_entry ) {
         $data[0] = { database    => 'ENA',
                      primary_id  => $seq->display_id,
                      accession   => $seq->display_id,
@@ -479,6 +485,11 @@ sub _get_xrefs {
 
                 # skip these DR lines
                 if ($database eq 'MD5' or $database =~ /SILVA/) {
+                    next;
+                }
+
+                # skip RFAM DR lines in regular Non-coding entries
+                if (!$is_rfam_entry and $database eq 'RFAM') {
                     next;
                 }
 
