@@ -377,16 +377,15 @@ sub _get_project_id {
 
 =head2 _get_missing_dr_links
 
-    Some entries don't have DR links for all xrefs.
-    As a temporary measure, these xrefs are identified using hardcoded project ids.
+    Some entries don't have DR lines for all xrefs.
+    As a temporary measure, these xrefs are identified using project ids
+    and the DR data are parsed from the CC lines.
 
 =cut
 
 sub _get_missing_dr_links {
     my ($seq, $db_name) = @_;
-
-    my $entry_project_id = _get_project_id($seq);
-    my $db_project_id;
+    my ($db_project_id, $external_id, $optional_id);
 
     if ($db_name eq 'GTRNADB') {
         $db_project_id = 'PRJEB5173';
@@ -394,11 +393,37 @@ sub _get_missing_dr_links {
         $db_project_id = 'PRJEB6238';
     }
 
+    my $entry_project_id = _get_project_id($seq);
     if ($entry_project_id eq $db_project_id) {
+        #parse comment lines to extract xref information
+        #lncRNAdb; 190; 7SK. Text continues.
+        #
+        # or
+        #
+        #Specialist DB   : gtRNAdb (Genomic tRNA Database)
+        #URL             : http://lowelab.ucsc.edu/GtRNAdb/
+        #gtRNAdb; Cand_Meth_boonei_6A8/Cand_Meth_boonei_6A8-summary.
+        my @annotations = $seq->annotation->get_Annotations('comment');
+        for my $value ( @annotations ) {
+            my $comment = $value->display_text;
+            my $search_string = "$db_name; (\\S+)(; (\\S+))?\\.";
+            if ($comment =~ /$search_string/i) {;
+                $external_id = $1;
+                if (defined $3) {
+                    $optional_id = $3;
+                } else {
+                    $optional_id = '';
+                }
+            } else {
+                $external_id = $db_name;
+                $optional_id = '';
+            }
+        }
+
         return {
-            primary_id  => _get_composite_id($seq->display_id, $db_name, ''),
-            accession   => $db_name, # temporary accession
-            optional_id => '',
+            primary_id  => _get_composite_id($seq->display_id, $db_name, $external_id),
+            accession   => $external_id,
+            optional_id => $optional_id,
             database    => $db_name,
         };
     } else {
