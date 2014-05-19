@@ -1,0 +1,125 @@
+ID   DQ991734.1:164..317:rfam; SV 1; linear; rRNA; STD; FUN; 154 BP.
+XX
+PA   DQ991734.1
+XX
+PR   Project:PRJEB5799;
+XX
+DT   12-MAY-2014 (Rel. 119, Created)
+DT   12-MAY-2014 (Rel. 119, Last updated, Version 1)
+XX
+DE   TPA: Glomerella cingulata 5.8S ribosomal RNA
+XX
+KW   RNAcentral; TPA; TPA:specialist_db.
+XX
+OS   Glomerella cingulata
+OC   Eukaryota; Fungi; Dikarya; Ascomycota; Pezizomycotina; Sordariomycetes;
+OC   Hypocreomycetidae; Glomerellales; Glomerellaceae; Glomerella.
+XX
+RN   [1]
+RP   1-154
+RG   RFAM and RNAcentral
+RA   ;
+RT   ;
+RL   Submitted (12-MAY-2014) to the INSDC.
+XX
+RN   [2]
+RX   DOI; 10.1093/nar/gks1005.
+RX   PUBMED; 23125362.
+RA   Burge S.W., Daub J., Eberhardt R., Tate J., Barquist L., Nawrocki E.P.,
+RA   Gardner P.P., Bateman A.;
+RT   "Rfam 11.0: 10 years of RNA families";
+RL   Nucleic Acids Res. 41(Database issue):D226-D232(2013).
+XX
+DR   RFAM; RF00002; 5_8S_rRNA.
+DR   MD5; dd01cb252f13b1cd73a2473d19ac082f.
+XX
+AH   LOCAL_SPAN          PRIMARY_IDENTIFIER PRIMARY_SPAN        COMP
+AS   1-154               DQ991734.1         164-317
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..154
+FT                   /organism="Glomerella cingulata"
+FT                   /host="Vitis vinifera grape"
+FT                   /isolate="DAR24969"
+FT                   /mol_type="genomic DNA"
+FT                   /country="Australia:Hastings valley, NSW"
+FT                   /db_xref="taxon:5457"
+FT   rRNA            DQ991734.1:164..317
+FT                   /gene="5 8S rRNA"
+FT                   /product="5.8S ribosomal RNA"
+FT                   /note="Bit score:165.9"
+FT                   /note="Alignment:full"
+FT                   /note="GO:0003735"
+FT                   /note="GO:0005840"
+FT                   /note="SO:0000375"
+FT                   /experiment="EXISTENCE: RFAM literature review [PMID:
+FT                   11125083,9154813,9108162]"
+XX
+SQ   Sequence 154 BP; 42 A; 35 C; 38 G; 39 T; 0 other;
+     aacttttaac aacggatctc ttggttctgg catcgatgaa gaacgcagcg aaatgcgata        60
+     agtaatgtga attgcagaat tcagtgaatc atcgaatctt tgaacgcaca ttgcgcccgc       120
+     cagcattctg gcgggcatgc ctgttcgagc gtca                                   154
+//
+ID   X06880.1:1..162:rfam; SV 1; linear; transcribed RNA; STD; PLN; 162 BP.
+XX
+PA   X06880.1
+XX
+PR   Project:PRJEB5799;
+XX
+DT   12-MAY-2014 (Rel. 119, Created)
+DT   12-MAY-2014 (Rel. 119, Last updated, Version 1)
+XX
+DE   TPA: Chloroidium saccharophilum U1 spliceosomal RNA
+XX
+KW   RNAcentral; TPA; TPA:specialist_db.
+XX
+OS   Chloroidium saccharophilum
+OC   Eukaryota; Viridiplantae; Chlorophyta; Trebouxiophyceae; Chlorellales;
+OC   Chlorellaceae; Chloroidium.
+XX
+RN   [1]
+RP   1-162
+RG   RFAM and RNAcentral
+RA   ;
+RT   ;
+RL   Submitted (12-MAY-2014) to the INSDC.
+XX
+RN   [2]
+RX   DOI; 10.1093/nar/gks1005.
+RX   PUBMED; 23125362.
+RA   Burge S.W., Daub J., Eberhardt R., Tate J., Barquist L., Nawrocki E.P.,
+RA   Gardner P.P., Bateman A.;
+RT   "Rfam 11.0: 10 years of RNA families";
+RL   Nucleic Acids Res. 41(Database issue):D226-D232(2013).
+XX
+DR   RFAM; RF00003; U1.
+DR   MD5; bc2253af6bc5967a5888b968734897a3.
+XX
+AH   LOCAL_SPAN          PRIMARY_IDENTIFIER PRIMARY_SPAN        COMP
+AS   1-162               X06880.1           1-162
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..162
+FT                   /organism="Chloroidium saccharophilum"
+FT                   /mol_type="transcribed RNA"
+FT                   /db_xref="taxon:3082"
+FT   ncRNA           X06880.1:1..162
+FT                   /gene="U1"
+FT                   /product="U1 spliceosomal RNA"
+FT                   /note="Bit score:107.1"
+FT                   /note="Alignment:seed"
+FT                   /note="GO:0000395"
+FT                   /note="GO:0030627"
+FT                   /note="SO:0000391"
+FT                   /note="GO:0005685"
+FT                   /experiment="EXISTENCE: RFAM literature review [PMID:
+FT                   11297556,2405391,9016512,7984237]"
+FT                   /ncRNA_class="snRNA"
+XX
+SQ   Sequence 162 BP; 26 A; 44 C; 51 G; 41 T; 0 other;
+     atacttacct gtccggcctg cgacctcgag caagaagggg gtctaggtag tgcttgtacc        60
+     tcgccttgta ctatgcttgg ggtagcgctg tgtgcggggc aagtcctcgt tacaacggaa       120
+     taatttctgg caggccgttg cacgcgcttg cgcgtcctcg gc                          162
+//
