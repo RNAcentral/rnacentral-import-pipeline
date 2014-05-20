@@ -131,7 +131,7 @@ sub embl2csv {
         $data = $self->_get_basic_data($seq, $md5);
 
         unless ( $data->{'isValid'} ) {
-            $self->{'logger'}->logwarn("Skipping record $i: $data->{'text'}");
+            $self->{'logger'}->logwarn("Skipping invalid record $i: $data->{'text'}");
             next;
         }
         $dblinks_num += $data->{'dblinks_num'};
@@ -205,6 +205,7 @@ sub embl2csv {
     $self->_check_temp_files($fname_refs);
     $self->_check_temp_files($fname_comp_id);
     $self->_check_temp_files($fname_as_info);
+    $self->_check_temp_files($fname_ac_info);
 
     # return an array with csv files
     return ($self->_check_temp_files($fname_short), $self->_check_temp_files($fname_long));
@@ -589,6 +590,31 @@ sub _collate_vega_xrefs {
 }
 
 
+=head2 _is_valid_sequence
+
+    Discard sequences shorter than minimum or those composed only of Ns.
+
+=cut
+
+sub _is_valid_sequence {
+
+    my ($self, $sequence) = @_;
+    my $status;
+
+    my $N_characters = () = $sequence =~ /N/ig;
+
+    if (length($sequence) < $self->{'opt'}{'minseqlength'}) {
+        $status = 0;
+    } elsif ($N_characters == length($sequence)) {
+        $status = 0;
+    } else {
+        $status = 1;
+    }
+
+    return $status;
+}
+
+
 =head2 _get_basic_data
 
     Get minimum data required for UniParc-style functionality given a BioPerl seq object.
@@ -628,11 +654,7 @@ sub _get_basic_data {
     }
 
     # quality control
-    if ( $ac eq '' or $sequence eq '' or $length == 0 ) {
-        $isValid = 0;
-    } else {
-        $isValid = 1;
-    }
+    $isValid = $self->_is_valid_sequence($sequence);
 
     if ($length > $self->{'opt'}{'maxseqshort'}) {
         $isLong = 1;

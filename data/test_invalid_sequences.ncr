@@ -1,0 +1,137 @@
+ID   DQ219891.1:1..1:tRNA; SV 1; linear; genomic DNA; STD; VRT; 1 BP.
+XX
+PA   DQ219891.1
+XX
+DT   26-OCT-2005 (Rel. 85, Created)
+DT   26-OCT-2005 (Rel. 85, Last updated, Version 1)
+XX
+DE   Engraulis japonicus (Japanese anchovy) partial tRNA-Pro
+XX
+KW   .
+XX
+OS   Engraulis japonicus (Japanese anchovy)
+OC   Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi;
+OC   Actinopterygii; Neopterygii; Teleostei; Clupeomorpha; Clupeiformes;
+OC   Engraulidae; Engraulinae; Engraulis.
+OG   Mitochondrion
+XX
+RN   [1]
+RA   Cho E.S.;
+RT   "Japanese anchovy for population genetic structure";
+RL   Unpublished.
+XX
+RN   [2]
+RA   Cho E.S.;
+RT   ;
+RL   Submitted (20-SEP-2005) to the INSDC.
+RL   Marine Science, National Fisheries Research and Development Institute,
+RL   Apo-ri, Hwayang-myeon, Yeosu 556-823, South Korea
+XX
+DR   MD5; 0d61f8370cad1d412f80b84d143e1257.
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1
+FT                   /organism="Engraulis japonicus"
+FT                   /organelle="mitochondrion"
+FT                   /isolate="JAA4"
+FT                   /mol_type="genomic DNA"
+FT                   /db_xref="taxon:42892"
+FT   tRNA            complement(DQ219891.1:<1)
+FT                   /product="tRNA-Pro"
+XX
+SQ   Sequence 1 BP; 0 A; 1 C; 0 G; 0 T; 0 other;
+     c                                                                         1
+//
+ID   DQ207883.1:1021..1029:rRNA; SV 1; linear; genomic DNA; STD; PLN; 9 BP.
+XX
+PA   DQ207883.1
+XX
+DT   01-JAN-2010 (Rel. 103, Created)
+DT   01-JAN-2010 (Rel. 103, Last updated, Version 1)
+XX
+DE   Cyclolejeunea convexistipa partial 26S ribosomal RNA
+XX
+KW   .
+XX
+OS   Cyclolejeunea convexistipa
+OC   Eukaryota; Viridiplantae; Streptophyta; Embryophyta; Marchantiophyta;
+OC   Jungermanniopsida; Jungermanniidae; Porellales; Jubulineae; Lejeuneaceae;
+OC   Cyclolejeunea.
+XX
+RN   [1]
+RA   Ilkiu-Borges A.L.;
+RT   "A taxonomic monograph of the genus Prionolejeunea (Lejeuneaceae,
+RT   Jungermanniopsida)";
+RL   Unpublished.
+XX
+RN   [2]
+RA   Ilkiu-Borges A.L.;
+RT   ;
+RL   Submitted (16-SEP-2005) to the INSDC.
+RL   Systematic Botany, Albrecht-von-Haller Institute of Plant Sciences
+RL   University Goettingen, Untere Karspuele 2, Goettingen 37073, Germany
+XX
+DR   MD5; f3cad1a9e26488c9d7f36bdf50b157b1.
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..9
+FT                   /organism="Cyclolejeunea convexistipa"
+FT                   /mol_type="genomic DNA"
+FT                   /specimen_voucher="Salazar Allen & Gradstein 9406 (GOET)"
+FT                   /db_xref="taxon:280824"
+FT   rRNA            DQ207883.1:1021..>1029
+FT                   /product="26S ribosomal RNA"
+XX
+SQ   Sequence 9 BP; 4 A; 2 C; 1 G; 2 T; 0 other;
+     atcactaag                                                                 9
+//
+ID   AF438453.1:1234..1264:tRNA; SV 1; linear; genomic DNA; STD; INV; 31 BP.
+XX
+PA   AF438453.1
+XX
+DT   04-APR-2002 (Rel. 71, Created)
+DT   15-APR-2005 (Rel. 83, Last updated, Version 2)
+XX
+DE   Halictus rubicundus tRNA-Leu
+XX
+KW   .
+XX
+OS   Halictus rubicundus
+OC   Eukaryota; Metazoa; Ecdysozoa; Arthropoda; Hexapoda; Insecta; Pterygota;
+OC   Neoptera; Endopterygota; Hymenoptera; Apocrita; Aculeata; Apoidea;
+OC   Halictidae; Halictinae; Halictini; Halictus; Halictus.
+OG   Mitochondrion
+XX
+RN   [1]
+RX   PUBMED; 11926501.
+RA   Soucy S.L., Danforth B.N.;
+RT   "Phylogeography of the socially polymorphic sweat bee Halictus rubicundus
+RT   (Hymenoptera: Halictidae)";
+RL   Evolution 56(2):330-341(2002).
+XX
+RN   [2]
+RA   Soucy S.L., Danforth B.N.;
+RT   ;
+RL   Submitted (22-OCT-2001) to the INSDC.
+RL   Department of Ecology and Evolution, State University of New York at Stony
+RL   Brook, Stony Brook, NY 11794-5245, USA
+XX
+DR   MD5; 6c7515da3507de38438d018d0aa75927.
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..31
+FT                   /organism="Halictus rubicundus"
+FT                   /organelle="mitochondrion"
+FT                   /mol_type="genomic DNA"
+FT                   /country="USA"
+FT                   /clone="Treasureton_Reservoir_ID"
+FT                   /db_xref="taxon:77578"
+FT   tRNA            AF438453.1:1234..1264
+FT                   /product="tRNA-Leu"
+XX
+SQ   Sequence 31 BP; 0 A; 0 C; 0 G; 0 T; 31 other;
+     nnnnnnnnnn nnnnnnnnnn nnnnnnnnnn n                                       31
+//

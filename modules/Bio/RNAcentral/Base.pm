@@ -67,6 +67,7 @@ sub default_options {
         'references_table' => 'load_rnc_references',     # table with literature references
         'ac_info_table'    => 'load_rnc_ac_info',        # data about accessions
         'comp_id_table'    => 'load_rnc_composite_ids',  # composite ids derived from DR lines
+        'minseqlength'     => 10,                        # minimum acceptable sequence length
     		'maxseqlong'       => 1000000,                   # maximum length for long sequences stored as clobs
     		'maxseqshort'      => 4000,                      # maximum length for short sequences stored as chars
         'ebi_ftp_site'     => 'ftp.ebi.ac.uk',           # Non-coding Product FTP site details
