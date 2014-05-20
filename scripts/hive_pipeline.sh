@@ -44,9 +44,6 @@ perl $ENSEMBL_CVS_ROOT_DIR/ensembl-hive/scripts/generate_graph.pl -url $HIVE_URL
 # launch the pipeline
 perl $ENSEMBL_CVS_ROOT_DIR/ensembl-hive/scripts/beekeeper.pl -url $HIVE_URL -meadow_type LSF -loop -total_running_workers_max 20;
 
-# manually import tmrna website accessions
-. scripts/tmrna_website_manual_import/update_tmrna_accessions.sh
-
 ###############
 ## Reporting ##
 ###############
