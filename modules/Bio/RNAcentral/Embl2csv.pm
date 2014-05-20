@@ -498,7 +498,7 @@ sub _get_xrefs {
 
                 # use a shorter label for tmRNA-Website
                 if ($database eq 'tmRNA-Website') {
-                    $database = 'tmRNA-Web';
+                    $database = 'tmRNA_Web';
                 }
 
                 # RFAM entries already have a unique id
