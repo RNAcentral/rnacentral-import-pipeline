@@ -539,7 +539,7 @@ sub _get_composite_id {
     my ($ena_source, $database, $external_id) = @_;
 
     my $composite_id = $ena_source . ':' . uc($database) . ':' . $external_id;
-    $composite_id =~ s/VEGA-[GT]n/VEGA/i;
+    $composite_id =~ s/VEGA-Gn|VEGA-Tr/VEGA/i;
 
     return $composite_id;
 }
