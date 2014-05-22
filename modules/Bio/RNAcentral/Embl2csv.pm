@@ -531,6 +531,9 @@ sub _get_xrefs {
     Create unique ids for external databases.
 
     Format: <ENA_accession> : uppercase(<database>) : <external_id>
+    The id is truncated at 100 characters because a small number of accessions
+    exceeded that length, and it's not clear whether it's useful to store
+    longer ids.
 
     Example: HG497133.1:1..472:ncRNA:VEGA:OTTHUMG00000161051
 =cut
@@ -542,7 +545,8 @@ sub _get_composite_id {
     my $composite_id = $ena_source . ':' . uc($database) . ':' . $external_id;
     $composite_id =~ s/VEGA-Gn|VEGA-Tr/VEGA/i;
 
-    return $composite_id;
+    my $MAX_ACCESSION_LENGTH = 100;
+    return substr($composite_id, 0, $MAX_ACCESSION_LENGTH);
 }
 
 
