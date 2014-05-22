@@ -131,7 +131,7 @@ sub embl2csv {
         $data = $self->_get_basic_data($seq, $md5);
 
         unless ( $data->{'isValid'} ) {
-            $self->{'logger'}->logwarn("Skipping invalid record $i: $data->{'text'}");
+            $self->{'logger'}->info("Skipping invalid record $i: $data->{'text'}");
             next;
         }
         $dblinks_num += $data->{'dblinks_num'};
