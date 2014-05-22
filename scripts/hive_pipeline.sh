@@ -21,8 +21,6 @@
 perl5lib_backup=$PERL5LIB
 # read config, change PERL5LIB
 . config/hive_params
-# delete old output data
-rm -Rf $DATA_OUT/*
 rm -f log/rnacentral_import.log;
 # initialize hive pipeline
 perl $ENSEMBL_CVS_ROOT_DIR/ensembl-hive/scripts/init_pipeline.pl Bio::EnsEMBL::Hive::PipeConfig::RNAcentralUpdate_conf \
