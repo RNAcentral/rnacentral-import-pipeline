@@ -434,8 +434,8 @@ sub _get_missing_dr_links {
         }
 
         return {
-            primary_id  => _get_composite_id($seq->display_id, $db_name, $external_id),
-            accession   => $external_id,
+            accession   => _get_composite_id($seq->display_id, $db_name, $external_id),
+            primary_id  => $external_id,
             optional_id => $optional_id,
             database    => $db_name,
         };
@@ -455,7 +455,8 @@ sub _get_xrefs {
 
     (my $self, my $seq)  = @_;
 
-    my (@data, $database, $primary_id, $optional_id, $project, $is_rfam_entry);
+    my (@data, $database, $primary_id, $optional_id, $project, $is_rfam_entry,
+        $composite_id);
 
     if ( $seq->display_id =~ /rfam$/i ) {
         $is_rfam_entry = 1;
@@ -504,14 +505,14 @@ sub _get_xrefs {
 
                 # RFAM entries already have a unique id
                 if ($database eq 'RFAM') {
-                    $primary_id = $seq->display_id;
+                    $composite_id = $seq->display_id;
                 } else {
-                    $primary_id = _get_composite_id($seq->display_id, $database, $primary_id);
+                    $composite_id = _get_composite_id($seq->display_id, $database, $primary_id);
                 }
 
                 push @data, {
+                              accession   => $composite_id,
                               primary_id  => $primary_id, # external id
-                              accession   => $primary_id,
                               optional_id => $optional_id,
                               database    => uc($database),
                             };
@@ -580,7 +581,7 @@ sub _collate_vega_xrefs {
             $new_vega_dr_link->{'primary_id'} = $dr_link->{'primary_id'};
             $new_vega_dr_link->{'accession'} = $dr_link->{'accession'};
         } elsif ( $dr_link->{'database'} =~ /^VEGA-Tr$/i ) {
-            $new_vega_dr_link->{'optional_id'} = $dr_link->{'accession'};
+            $new_vega_dr_link->{'optional_id'} = $dr_link->{'primary_id'};
         } else {
             push @new_data, $dr_link;
         }
@@ -675,7 +676,7 @@ sub _get_basic_data {
                              $length,
                              $sequence,
                              $dblink->{'database'},
-                             $dblink->{'primary_id'},
+                             $dblink->{'accession'},
                              $dblink->{'optional_id'},
                              $version,
                              $taxid,
@@ -687,11 +688,11 @@ sub _get_basic_data {
         # skip the first entry (non-composite ENA id or RFAM product)
         for ( my $i=1; $i < scalar @$dblinks; $i++ ) {
             $dblink = @$dblinks[$i];
-            $comp_id_text .= '"' . join('","', ($dblink->{'primary_id'},  # composite id like HG497133.1:1..472:ncRNA:VEGA:OTTHUMG00000161051
+            $comp_id_text .= '"' . join('","', ($dblink->{'accession'},   # composite id like HG497133.1:1..472:ncRNA:VEGA:OTTHUMG00000161051
                                                 $seq->display_id,         # ENA source accession BK006945.2:460712..467569:rRNA
                                                 $dblink->{'database'}),   # e.g. RFAM
                                                 $dblink->{'optional_id'}, # e.g. 5.8S_RNA
-                                                $dblink->{'accession'},   # e.g. RF01271
+                                                $dblink->{'primary_id'},  # e.g. RF01271
 
                                         ) . "\"\n";;
         }
