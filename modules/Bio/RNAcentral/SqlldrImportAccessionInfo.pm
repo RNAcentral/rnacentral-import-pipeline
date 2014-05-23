@@ -119,7 +119,7 @@ FIELDS TERMINATED BY ',' enclosed by '"'
     ALLELE char,
     ANTICODON char,
     CHROMOSOME char,
-    EXPERIMENT char,
+    EXPERIMENT char(500),
     FUNCTION char(500),
     GENE char,
     GENE_SYNONYM char(400),
