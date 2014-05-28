@@ -52,7 +52,7 @@ create or replace PACKAGE BODY RNC_UPDATE AS
 
     EXECUTE IMMEDIATE 'TRUNCATE TABLE rnc_accessions';
 
-    -- import ENA accession data
+    -- import ENA and RFAM accession data
     INSERT /*+ PARALLEL */ INTO rnc_accessions
     (
       accession,
@@ -88,7 +88,8 @@ create or replace PACKAGE BODY RNC_UPDATE AS
       operon,
       product,
       pseudogene,
-      standard_name
+      standard_name,
+      database
     )
     SELECT
       ac,
@@ -124,7 +125,11 @@ create or replace PACKAGE BODY RNC_UPDATE AS
       operon,
       product,
       pseudogene,
-      standard_name
+      standard_name,
+      CASE
+        WHEN REGEXP_LIKE(ac, '\:rfam$') THEN 'RFAM'
+        ELSE 'ENA'
+      END
     FROM rnc_ac_info;
 
     COMMIT;
