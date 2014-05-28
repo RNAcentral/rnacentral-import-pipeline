@@ -607,8 +607,11 @@ sub _is_valid_sequence {
     my $status;
 
     my $N_characters = () = $sequence =~ /N/ig;
+    my $N_content = ($N_characters * 100)/length($sequence);
 
     if (length($sequence) < $self->{'opt'}{'minseqlength'}) {
+        $status = 0;
+    } elsif ($N_content > $self->{'opt'}{'maxNcontent'} ) {
         $status = 0;
     } elsif ($N_characters == length($sequence)) {
         $status = 0;

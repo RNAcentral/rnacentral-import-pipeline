@@ -135,3 +135,50 @@ XX
 SQ   Sequence 31 BP; 0 A; 0 C; 0 G; 0 T; 31 other;
      nnnnnnnnnn nnnnnnnnnn nnnnnnnnnn n                                       31
 //
+ID   DQ320799.1:247..410:rRNA; SV 1; linear; genomic DNA; STD; PLN; 164 BP.
+XX
+PA   DQ320799.1
+XX
+DT   31-DEC-2006 (Rel. 90, Created)
+DT   31-DEC-2006 (Rel. 90, Last updated, Version 1)
+XX
+DE   Polemonium pulcherrimum var. lindleyi 5.8S ribosomal RNA
+XX
+KW   .
+XX
+OS   Polemonium pulcherrimum var. lindleyi
+OC   Eukaryota; Viridiplantae; Streptophyta; Embryophyta; Tracheophyta;
+OC   Spermatophyta; Magnoliophyta; eudicotyledons; Gunneridae; Pentapetalae;
+OC   asterids; Ericales; Polemoniaceae; Polemonium.
+XX
+RN   [1]
+RA   Timme R.E., Patterson R.;
+RT   "A molecular phylogeny of Polemonium (Polemoniaceae)";
+RL   Unpublished.
+XX
+RN   [2]
+RA   Timme R.E., Patterson R.;
+RT   ;
+RL   Submitted (09-DEC-2005) to the INSDC.
+RL   Integrative Biology, University of Texas at Austin, 1 University Station
+RL   #A6700, Austin, TX 78712, USA
+XX
+DR   MD5; 885f04eff83a896ba716206e448202bc.
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..164
+FT                   /organism="Polemonium pulcherrimum var. lindleyi"
+FT                   /sub_species="lindleyi"
+FT                   /mol_type="genomic DNA"
+FT                   /country="Canada:British Columbia"
+FT                   /specimen_voucher="Calder 12696; HDT"
+FT                   /db_xref="taxon:363827"
+FT   rRNA            DQ320799.1:247..410
+FT                   /product="5.8S ribosomal RNA"
+XX
+SQ   Sequence 164 BP; 1 A; 0 C; 0 G; 0 T; 163 other;
+     nnnnnnnnnn nnnnnnnnnn nnnnnnnnnn nnnnnnnnnn nnnnnnnnnn nnnnnnnnnn        60
+     nnnnnnnnnn nnnnnnnnnn nnnnnnnnnn nnnnnnnnnn nnnnnnnnnn nnnnnnnnnn       120
+     nnnnnnnnnn nnnnnnnnnn nnnnnnnnnn nnnnnnnnnn nnna                        164
+//

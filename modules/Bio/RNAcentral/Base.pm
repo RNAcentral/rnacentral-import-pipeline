@@ -70,6 +70,7 @@ sub default_options {
         'minseqlength'     => 10,                        # minimum acceptable sequence length
     		'maxseqlong'       => 1000000,                   # maximum length for long sequences stored as clobs
     		'maxseqshort'      => 4000,                      # maximum length for short sequences stored as chars
+        'maxNcontent'      => 10,                        # maximum 10% of N characters in the sequence
         'ebi_ftp_site'     => 'ftp.ebi.ac.uk',           # Non-coding Product FTP site details
         'ebi_ftp_user'     => 'anonymous',
         'ebi_ftp_password' => '',
