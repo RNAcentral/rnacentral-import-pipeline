@@ -717,11 +717,6 @@ create or replace PACKAGE BODY RNC_UPDATE AS
   BEGIN
     SELECT count(*) INTO v_count FROM xref WHERE id IS NULL;
     IF v_count > 0 THEN
-      -- drop sequence to reset the starting value
-      EXECUTE IMMEDIATE 'DROP SEQUENCE "RNACEN"."XREF_PK_SEQ"';
-
-      -- recreate the sequence
-      EXECUTE IMMEDIATE 'CREATE SEQUENCE  "RNACEN"."XREF_PK_SEQ"  MINVALUE 1 MAXVALUE 9999999999999999999999999999 INCREMENT BY 1 START WITH 1 CACHE 20 NOORDER  NOCYCLE';
 
       -- update all id values
       UPDATE xref SET id = XREF_PK_SEQ.nextval;
