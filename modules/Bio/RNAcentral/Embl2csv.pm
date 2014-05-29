@@ -166,7 +166,6 @@ sub embl2csv {
         # assembly information with genome locations
         my $assembly_json = ($seq->annotation->get_Annotations('assembly_json'))[0];
         if ($assembly_json) {
-            $self->{'logger'}->info("Found assembly data for " . $seq->display_id);
             my $assembly_info = decode_json($assembly_json->display_text);
             for my $exon (@$assembly_info) {
                 print $fh_as_info '"' . join( '","', ($seq->display_id,
