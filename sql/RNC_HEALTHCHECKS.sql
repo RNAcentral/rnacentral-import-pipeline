@@ -144,7 +144,7 @@ create or replace PACKAGE BODY RNC_HEALTHCHECKS AS
     IF v_count > 100 THEN
       DBMS_OUTPUT.put_line('not ok ... check_xrefs_without_literature_refs');
     else
-      DBMS_OUTPUT.put_line('ok ... check_rnas_without_xrefs');
+      DBMS_OUTPUT.put_line('ok ... check_xrefs_without_literature_refs');
     END IF;
 
   END check_xrefs_without_lit_refs;
