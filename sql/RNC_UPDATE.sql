@@ -268,6 +268,8 @@ create or replace PACKAGE BODY RNC_UPDATE AS
 
     DBMS_OUTPUT.put_line('Composite ids updated');
 
+    EXECUTE IMMEDIATE 'TRUNCATE TABLE load_rnc_composite_ids DROP STORAGE';
+
 
   END update_composite_ids;
 
@@ -394,6 +396,8 @@ create or replace PACKAGE BODY RNC_UPDATE AS
 
     commit;
 
+    EXECUTE IMMEDIATE 'TRUNCATE TABLE load_rnc_ac_info DROP STORAGE';
+
     DBMS_OUTPUT.put_line('Accession information updated');
 
   END update_accession_info;
@@ -499,6 +503,8 @@ create or replace PACKAGE BODY RNC_UPDATE AS
 			t2.reference_ID
 		);
     COMMIT;
+
+    EXECUTE IMMEDIATE 'TRUNCATE TABLE load_rnc_references DROP STORAGE';
 
     DBMS_OUTPUT.put_line('Literature references updated');
 
