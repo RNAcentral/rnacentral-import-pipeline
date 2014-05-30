@@ -215,6 +215,14 @@ create or replace PACKAGE BODY RNC_HEALTHCHECKS AS
     SELECT count(*) into v_count FROM rnc_accessions WHERE database = 'TMRNA_WEB' AND external_id IS null;
     report_results(v_count, 'TMRNA_WEB expert accessions');
 
+    -- gtRNAdb, only external ids
+    SELECT count(*) INTO v_count FROM rnc_accessions WHERE database = 'GTRNADB' AND (external_id IS NULL);
+    report_results(v_count, 'GTRNADB expert accessions');
+
+    -- LNCRNADB
+    SELECT count(*) INTO v_count FROM rnc_accessions WHERE database = 'LNCRNADB' AND (external_id IS NULL OR optional_id IS NULL);
+    report_results(v_count, 'LNCRNADB expert accessions');
+
   END check_expert_db_accessions;
 
 
