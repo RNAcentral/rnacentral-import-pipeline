@@ -290,7 +290,7 @@ sub _get_ac_info {
                                $project,
                                _nvl($seq->division),
                                $keywords,
-                               _nvl(_sanitize($seq->desc)),
+                               _nvl($seq->desc),
                                $species->binomial(),
                                _nvl($species->common_name),
                                _nvl($species->organelle),
@@ -830,7 +830,14 @@ sub _get_references {
 }
 
 
-sub _sanitize {
+=head2 _escape_quotes
+
+    Prepare text for writing out in comma-separated format with each field
+    wrapped in quotes.
+
+=cut
+
+sub _escape_quotes {
     my $text = shift;
 
     $text =~ s/^"+//; # remove leading and trailing quotes
@@ -841,10 +848,14 @@ sub _sanitize {
     return $text;
 }
 
-# get non-empty value, named after the NVL function in Oracle
+=head2 _nvl
+
+    Get a non-empty value, named after the NVL Oracle function.
+=cut
+
 sub _nvl {
     my $value = shift;
-    return ( defined( $value ) ? _sanitize_text($value) : '' );
+    return ( defined( $value ) ? _escape_quotes($value) : '' );
 }
 
 
