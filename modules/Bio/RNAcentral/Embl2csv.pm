@@ -144,7 +144,7 @@ sub embl2csv {
         # get literature references
         $refs = _get_literature_references($seq);
         if ( $refs ) {
-            print $fh_refs $refs->{'text'};
+            print $fh_refs $refs;
         }
 
         # get information about accessions
@@ -695,14 +695,12 @@ sub _get_basic_data {
 
     my ($seq, $md5) = @_;
 
-    my ($ac, $length, $version, $crc64, $taxid,
-        $data, $sequence, $text, $comp_id_text, $dblink);
+    my ($length, $version, $crc64, $taxid, $data, $sequence, $text, $comp_id_text);
 
-    $ac = $crc64 = $taxid = $data = $sequence = $text = $comp_id_text = '';
+    $crc64 = $taxid = $data = $sequence = $text = $comp_id_text = '';
     $length = $version = 0;
 
     # get new data
-    $ac       = $seq->display_id;
     $length   = $seq->length;
     $version  = $seq->seq_version;
     $sequence = $seq->seq;
@@ -731,7 +729,7 @@ sub _get_basic_data {
     if ( scalar @$dblinks > 1 ) {
         # skip the first entry (non-composite ENA id or RFAM product)
         for ( my $i=1; $i < scalar @$dblinks; $i++ ) {
-            $dblink = @$dblinks[$i];
+            my $dblink = @$dblinks[$i];
             $comp_id_text .= '"' . join('","', ($dblink->{'accession'},   # composite id like HG497133.1:1..472:ncRNA:VEGA:OTTHUMG00000161051
                                                 $seq->display_id,         # ENA source accession BK006945.2:460712..467569:rRNA
                                                 $dblink->{'database'}),   # e.g. RFAM
@@ -760,10 +758,8 @@ sub _get_literature_references {
 
     my $seq = shift;
 
-    my ($ref_authors, $ref_location, $ref_title,
-        $ref_pmid,    $ref_doi,      $md5);
+    my ($ref_authors, $ref_location, $ref_title, $ref_pmid, $ref_doi, $md5);
     my $text = '';
-    my $num = 0;
 
     my $anno_collection = $seq->annotation;
     for my $key ( $anno_collection->get_all_annotation_keys ) {
@@ -771,7 +767,6 @@ sub _get_literature_references {
         for my $value ( @annotations ) {
             # all reference lines: RN, RC, RP, RX, RG, RA, RT, RL
             if ( $value->tagname eq 'reference' ) {
-                $num++;
                 $ref_authors  = _nvl($value->authors());   # RA line
                 $ref_location = _nvl($value->location());  # RL line
                 $ref_title    = _nvl($value->title());     # RT line
@@ -789,7 +784,7 @@ sub _get_literature_references {
             }
         }
     }
-    return { text => $text, num => $num };
+    return $text;
 }
 
 ####################
