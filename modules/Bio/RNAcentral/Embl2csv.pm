@@ -114,9 +114,7 @@ sub embl2csv {
     my $fh_gen_loc = IO::File->new("> $fname_genloc")  or $self->{'logger'}->logdie("Couldn't open file $fname_genloc");
 
     # initializations
-    my ($i, $records, $seqs_long, $seqs_short, $xrefs_num, $refs_num, $data,
-        $seq, $refs, $md5, $info, @dblinks);
-    $i = $records = $seqs_long = $seqs_short = $xrefs_num = $refs_num = 0;
+    my ($data, $seq, $refs, $md5, $info, @dblinks);
     $refs = '';
 
     # open file with BioPerl
@@ -125,36 +123,31 @@ sub embl2csv {
 
     # loop over seq records
     while ( eval { $seq = $stream->next_seq() } ) {
-        $i++;
+
+        unless ( $self->_is_valid_sequence($seq->seq) ) {
+            $self->{'logger'}->info("Skipping invalid record: " . $seq->display_id);
+            next;
+        }
 
         $md5 = md5_hex($seq->seq);
 
         # get basic data for UniParc-style functionality
         $data = $self->_get_basic_data($seq, $md5);
 
-        unless ( $data->{'isValid'} ) {
-            $self->{'logger'}->info("Skipping invalid record $i: $data->{'text'}");
-            next;
-        }
-        $xrefs_num += $data->{'xrefs_num'};
-
-        # print the data in different files depending on sequence length
+        # print data in different files depending on sequence length
         if ( $data->{'isLong'} ) {
             print $fh_long $data->{'text'};
-            $seqs_long++;
         } else {
             print $fh_short $data->{'text'};
-            $seqs_short++;
         }
 
         # get literature references
-        $refs = $self->_get_references($seq);
+        $refs = $self->_get_literature_references($seq);
         if ( $refs ) {
             print $fh_refs $refs->{'text'};
-            $refs_num += $refs->{'num'};
         }
 
-        # get general info about accessions
+        # get information about accessions
         $info = $self->_get_accession_data($seq);
         if ( $info ) {
             print $fh_ac_info $info->{'text'};
@@ -184,7 +177,7 @@ sub embl2csv {
         }
     }
 
-    # if there are any problems, delete already created files to prevent any import
+    # if there are errors, delete already created files to prevent data import
     if ( $@ ) {
         $self->{'logger'}->logwarn('BioPerl error');
         $self->{'logger'}->logwarn($@);
@@ -192,11 +185,6 @@ sub embl2csv {
         unlink $fname_short, $fname_long, $fname_refs;
         return ();
     }
-
-    $records += $i;
-
-    $self->{'logger'}->info("$records records, $seqs_short short, $seqs_long long, " .
-                            "$xrefs_num database links, $refs_num literature references");
 
     $fh_short->close;
     $fh_long->close;
@@ -207,13 +195,46 @@ sub embl2csv {
     $fh_gen_loc->close;
 
     # remove empty files
-    $self->_delete_empty_file($fname_refs);
-    $self->_delete_empty_file($fname_comp_id);
-    $self->_delete_empty_file($fname_as_info);
-    $self->_delete_empty_file($fname_ac_info);
+    _delete_empty_file($fname_refs);
+    _delete_empty_file($fname_comp_id);
+    _delete_empty_file($fname_as_info);
+    _delete_empty_file($fname_ac_info);
 
     # return an array with csv files
-    return ($self->_delete_empty_file($fname_short), $self->_delete_empty_file($fname_long));
+    return (_delete_empty_file($fname_short), _delete_empty_file($fname_long));
+}
+
+
+=head2 _is_valid_sequence
+
+    Return 0 if a sequence is not valid, otherwise return 1.
+
+    Invalid sequences:
+    * shorter than minimum
+    * contain only Ns
+    * have high N-content
+
+=cut
+
+sub _is_valid_sequence {
+
+    my ($self, $sequence) = @_;
+    my $status;
+
+    my $N_characters = () = $sequence =~ /N/ig;
+    my $N_content = ($N_characters * 100)/length($sequence);
+
+    if (length($sequence) < $self->{'opt'}{'minseqlength'}) {
+        $status = 0;
+    } elsif ($N_content > $self->{'opt'}{'maxNcontent'} ) {
+        $status = 0;
+    } elsif ($N_characters == length($sequence)) {
+        $status = 0;
+    } else {
+        $status = 1;
+    }
+
+    return $status;
 }
 
 
@@ -362,22 +383,6 @@ sub _get_feature_tags {
     return %tag_values;
 }
 
-=head2 _get_project_id
-
-    A wrapper to retrieve project id.
-
-=cut
-
-sub _get_project_id {
-    my $seq = shift;
-
-    my $project = ($seq->annotation->get_Annotations('project_id'))[0];
-    if ( $project ) {
-        return $project->display_text();
-    } else {
-        return '';
-    }
-}
 
 =head2 _inject_xrefs
 
@@ -586,34 +591,6 @@ sub _combine_vega_xrefs {
 }
 
 
-=head2 _is_valid_sequence
-
-    Discard sequences shorter than minimum or those composed only of Ns.
-
-=cut
-
-sub _is_valid_sequence {
-
-    my ($self, $sequence) = @_;
-    my $status;
-
-    my $N_characters = () = $sequence =~ /N/ig;
-    my $N_content = ($N_characters * 100)/length($sequence);
-
-    if (length($sequence) < $self->{'opt'}{'minseqlength'}) {
-        $status = 0;
-    } elsif ($N_content > $self->{'opt'}{'maxNcontent'} ) {
-        $status = 0;
-    } elsif ($N_characters == length($sequence)) {
-        $status = 0;
-    } else {
-        $status = 1;
-    }
-
-    return $status;
-}
-
-
 =head2 _get_genomic_locations
 
     Find genomic locations relative to the primary accessions.
@@ -679,32 +656,18 @@ sub _get_genomic_locations {
 }
 
 
-=head2 _get_basic_data
+=head2 _get_taxid
 
-    Get minimum data required for UniParc-style functionality given a BioPerl seq object.
+    Get taxonomic id which is found in the `db_xref` field under `source`.
 
 =cut
+sub _get_taxid {
 
-sub _get_basic_data {
-
-    (my $self, my $seq, my $md5)  = @_;
-
-    my ($ac, $length, $version, $isLong, $crc64, $taxid,
-        $data, $sequence, $isValid, $text, $comp_id_text, $dblink);
-
-    $ac = $crc64 = $taxid = $data = $sequence = $text = $comp_id_text = '';
-    $length = $version = $isValid = 0;
-
-    # get new data
-    $ac       = $seq->display_id;
-    $length   = $seq->length;
-    $version  = $seq->seq_version;
-    $sequence = $seq->seq;
-    $crc64 = SWISS::CRC64::crc64($seq->seq);
+    my $seq = shift;
+    my $taxid = '';
 
     # loop over features
     for my $feat_object ($seq->get_SeqFeatures) {
-        # get taxid
         if ( $feat_object->primary_tag eq 'source' ) {
             for my $tag ($feat_object->get_all_tags) {
                 for my $value ($feat_object->get_tag_values($tag)) {
@@ -718,8 +681,35 @@ sub _get_basic_data {
         }
     }
 
-    # quality control
-    $isValid = $self->_is_valid_sequence($sequence);
+    return $taxid;
+}
+
+
+=head2 _get_basic_data
+
+    Get minimum data required for UniParc-style functionality given a BioPerl seq object.
+
+=cut
+
+sub _get_basic_data {
+
+    (my $self, my $seq, my $md5)  = @_;
+
+    my ($ac, $length, $version, $isLong, $crc64, $taxid,
+        $data, $sequence, $text, $comp_id_text, $dblink);
+
+    $ac = $crc64 = $taxid = $data = $sequence = $text = $comp_id_text = '';
+    $length = $version = 0;
+
+    # get new data
+    $ac       = $seq->display_id;
+    $length   = $seq->length;
+    $version  = $seq->seq_version;
+    $sequence = $seq->seq;
+    $crc64 = SWISS::CRC64::crc64($seq->seq);
+
+    # get NCBI taxonomic id
+    $taxid = _get_taxid($seq);
 
     if ($length > $self->{'opt'}{'maxseqshort'}) {
         $isLong = 1;
@@ -763,20 +753,18 @@ sub _get_basic_data {
     return {
         'text'         => $text,
         'isLong'       => $isLong,
-        'isValid'      => $isValid,
         'comp_id_text' => $comp_id_text,
-        'xrefs_num'  => scalar @$dblinks,
     };
 }
 
 
-=head2 _get_references
+=head2 _get_literature_references
 
     Get csv text with literature references given a BioPerl seq object.
 
 =cut
 
-sub _get_references {
+sub _get_literature_references {
 
     (my $self, my $seq)  = @_;
 
@@ -812,6 +800,29 @@ sub _get_references {
     return { text => $text, num => $num };
 }
 
+####################
+#                  #
+# Helper functions #
+#                  #
+####################
+
+=head2 _get_project_id
+
+    A wrapper to retrieve project id.
+
+=cut
+
+sub _get_project_id {
+    my $seq = shift;
+
+    my $project = ($seq->annotation->get_Annotations('project_id'))[0];
+    if ( $project ) {
+        return $project->display_text();
+    } else {
+        return '';
+    }
+}
+
 
 =head2 _delete_empty_file
 
@@ -821,7 +832,7 @@ sub _get_references {
 =cut
 
 sub _delete_empty_file{
-    my ($self, $file) = @_;
+    my $file = shift;
 
     if ( -s $file > 0 ) {
         return $file;
