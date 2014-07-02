@@ -86,10 +86,7 @@ sub new {
 
 =head2 embl2csv
 
-    Read an embl file and create two csv files,
-    one with short, one with long sequences.
-    In addition, create csv files with database cross-references
-    and literature references.
+    Read an embl file and create all required csv files.
 
 =cut
 
@@ -117,9 +114,9 @@ sub embl2csv {
     my $fh_gen_loc = IO::File->new("> $fname_genloc")  or $self->{'logger'}->logdie("Couldn't open file $fname_genloc");
 
     # initializations
-    my ($i, $records, $seqs_long, $seqs_short, $dblinks_num, $refs_num, $data,
+    my ($i, $records, $seqs_long, $seqs_short, $xrefs_num, $refs_num, $data,
         $seq, $refs, $md5, $info, @dblinks);
-    $i = $records = $seqs_long = $seqs_short = $dblinks_num = $refs_num = 0;
+    $i = $records = $seqs_long = $seqs_short = $xrefs_num = $refs_num = 0;
     $refs = '';
 
     # open file with BioPerl
@@ -139,7 +136,7 @@ sub embl2csv {
             $self->{'logger'}->info("Skipping invalid record $i: $data->{'text'}");
             next;
         }
-        $dblinks_num += $data->{'dblinks_num'};
+        $xrefs_num += $data->{'xrefs_num'};
 
         # print the data in different files depending on sequence length
         if ( $data->{'isLong'} ) {
@@ -158,7 +155,7 @@ sub embl2csv {
         }
 
         # get general info about accessions
-        $info = $self->_get_ac_info($seq);
+        $info = $self->_get_accession_data($seq);
         if ( $info ) {
             print $fh_ac_info $info->{'text'};
         }
@@ -199,7 +196,7 @@ sub embl2csv {
     $records += $i;
 
     $self->{'logger'}->info("$records records, $seqs_short short, $seqs_long long, " .
-                            "$dblinks_num database links, $refs_num literature references");
+                            "$xrefs_num database links, $refs_num literature references");
 
     $fh_short->close;
     $fh_long->close;
@@ -210,37 +207,23 @@ sub embl2csv {
     $fh_gen_loc->close;
 
     # remove empty files
-    $self->_check_temp_files($fname_refs);
-    $self->_check_temp_files($fname_comp_id);
-    $self->_check_temp_files($fname_as_info);
-    $self->_check_temp_files($fname_ac_info);
+    $self->_delete_empty_file($fname_refs);
+    $self->_delete_empty_file($fname_comp_id);
+    $self->_delete_empty_file($fname_as_info);
+    $self->_delete_empty_file($fname_ac_info);
 
     # return an array with csv files
-    return ($self->_check_temp_files($fname_short), $self->_check_temp_files($fname_long));
+    return ($self->_delete_empty_file($fname_short), $self->_delete_empty_file($fname_long));
 }
 
 
-# delete temp files if empty, return only files with content
-sub _check_temp_files{
-    (my $self, my $file) = @_;
+=head _get_accession_data
 
-    if ( -s $file > 0 ) {
-        return $file;
-    } else {
-        $self->{'logger'}->info("File $file is empty and will be deleted");
-        unlink $file;
-        return ();
-    }
-}
-
-
-=head _get_ac_info
-
-    Get general info about accessions.
+    Parse the accessions.
 
 =cut
 
-sub _get_ac_info {
+sub _get_accession_data {
 
     (my $self, my $seq)  = @_;
 
@@ -782,7 +765,7 @@ sub _get_basic_data {
         'isLong'       => $isLong,
         'isValid'      => $isValid,
         'comp_id_text' => $comp_id_text,
-        'dblinks_num'  => scalar @$dblinks,
+        'xrefs_num'  => scalar @$dblinks,
     };
 }
 
@@ -827,6 +810,25 @@ sub _get_references {
         }
     }
     return { text => $text, num => $num };
+}
+
+
+=head2 _delete_empty_file
+
+    Return the filename if the file is not empty, otherwise delete the file
+    and return an empty list.
+
+=cut
+
+sub _delete_empty_file{
+    my ($self, $file) = @_;
+
+    if ( -s $file > 0 ) {
+        return $file;
+    } else {
+        unlink $file;
+        return ();
+    }
 }
 
 
