@@ -129,10 +129,8 @@ sub embl2csv {
             next;
         }
 
-        $md5 = md5_hex($seq->seq);
-
         # get basic data for UniParc-style functionality
-        $data = _get_basic_data($seq, $md5);
+        $data = _get_basic_data($seq);
 
         # print data in different files depending on sequence length
         if ($seq->length > $self->{'opt'}{'maxseqshort'}) {
@@ -141,27 +139,17 @@ sub embl2csv {
             print $fh_short $data->{'text'};
         }
 
-        # get literature references
-        $refs = _get_literature_references($seq);
-        if ( $refs ) {
-            print $fh_refs $refs;
-        }
-
-        # get information about accessions
-        $info = _get_accession_data($seq);
-        if ( $info ) {
-            print $fh_ac_info $info->{'text'};
-        }
-
         # write out composite id data
         if ( $data->{'comp_id_text'} ) {
             print $fh_comp_id $data->{'comp_id_text'};
         }
 
-        # get genomic locations
-        print $fh_gen_loc _get_genomic_locations($seq);
+        _parse_literature_references($seq, $fh_refs);
+        _parse_accession_data($seq, $fh_ac_info);
+        _parse_genomic_locations($seq, $fh_gen_loc);
 
         # assembly information with genome locations
+        # TODO: remove this section when _parse_genomic_locations is used
         my $assembly_json = ($seq->annotation->get_Annotations('assembly_json'))[0];
         if ($assembly_json) {
             my $assembly_info = decode_json($assembly_json->display_text);
@@ -238,16 +226,11 @@ sub _is_valid_sequence {
 }
 
 
-=head _get_accession_data
-
+=hparse _parse_accession_data
     Parse the accessions.
-
 =cut
-
-sub _get_accession_data {
-
-    my $seq = shift;
-
+sub _parse_accession_data {
+    my ($seq, $fh_ac_info) = @_;
     my ($text, $accession, $seq_version, $feature_location_start,
         $feature_location_end, $feature_name, $ordinal, $species,
         $common_name, $keywords, $project);
@@ -318,7 +301,7 @@ sub _get_accession_data {
                                $feature_tags{'pseudogene'},
                                $feature_tags{'standard_name'}
                                ) ) . "\"\n";
-    return { text => $text };
+    print $fh_ac_info $text;
 }
 
 
@@ -384,60 +367,96 @@ sub _get_feature_tags {
 }
 
 
-=head2 _inject_xrefs
+=head2 _get_taxid
 
-    Some entries don't have DR lines for all xrefs.
-    As a temporary measure, these xrefs are identified using project ids
-    and the DR data are parsed from the CC lines.
+    Get taxonomic id which is found in the `db_xref` field under `source`.
+
+=cut
+sub _get_taxid {
+
+    my $seq = shift;
+    my $taxid = '';
+
+    # loop over features
+    for my $feat_object ($seq->get_SeqFeatures) {
+        if ( $feat_object->primary_tag eq 'source' ) {
+            for my $tag ($feat_object->get_all_tags) {
+                for my $value ($feat_object->get_tag_values($tag)) {
+                    if ($tag eq 'db_xref') {
+                        (my $text, $taxid) = split(':', $value);
+                        last;
+                    }
+                }
+            }
+            last; # found taxid, stop looking
+        }
+    }
+
+    return $taxid;
+}
+
+
+=head2 _get_basic_data
+
+    Get minimum data required for UniParc-style functionality given a BioPerl seq object.
 
 =cut
 
-sub _inject_xrefs {
-    my ($seq, $db_name) = @_;
-    my ($db_project_id, $external_id, $optional_id);
+sub _get_basic_data {
 
-    if ($db_name eq 'GTRNADB') {
-        $db_project_id = 'PRJEB5173';
-    } elsif ($db_name eq 'LNCRNADB') {
-        $db_project_id = 'PRJEB6238';
+    my $seq = shift;
+
+    my ($length, $version, $md5, $crc64, $taxid, $data, $sequence, $text, $comp_id_text);
+
+    $crc64 = $taxid = $data = $sequence = $text = $comp_id_text = '';
+    $length = $version = 0;
+
+    # get new data
+    $md5      = md5_hex($seq->seq);
+    $length   = $seq->length;
+    $version  = $seq->seq_version;
+    $sequence = $seq->seq;
+    $crc64 = SWISS::CRC64::crc64($seq->seq);
+
+    # get NCBI taxonomic id
+    $taxid = _get_taxid($seq);
+
+    # get database links
+    my $dblinks = _get_xrefs($seq);
+
+    # treat DRs as independent xrefs
+    foreach my $dblink ( @$dblinks ) {
+        $text .=  join(',', ($crc64,
+                             $length,
+                             $sequence,
+                             $dblink->{'database'},
+                             $dblink->{'accession'},
+                             $dblink->{'optional_id'},
+                             $version,
+                             $taxid,
+                             $md5)) . "\n";
     }
 
-    my $entry_project_id = _get_project_id($seq);
-    if ($entry_project_id eq $db_project_id) {
-        #parse comment lines to extract xref information
-        #lncRNAdb; 190; 7SK. Text continues.
-        #
-        # or
-        #
-        #Specialist DB   : gtRNAdb (Genomic tRNA Database)
-        #URL             : http://lowelab.ucsc.edu/GtRNAdb/
-        #gtRNAdb; Cand_Meth_boonei_6A8/Cand_Meth_boonei_6A8-summary.
-        my @annotations = $seq->annotation->get_Annotations('comment');
-        for my $value ( @annotations ) {
-            my $comment = $value->display_text;
-            my $search_string = "$db_name; (\\S+)(; (\\S+))?\\.";
-            if ($comment =~ /$search_string/i) {;
-                $external_id = $1;
-                if (defined $3) {
-                    $optional_id = $3;
-                } else {
-                    $optional_id = '';
-                }
-            } else {
-                $external_id = $db_name;
-                $optional_id = '';
-            }
+    # write out composite id correspondences
+    if ( scalar @$dblinks > 1 ) {
+        # skip the first entry (non-composite ENA id or RFAM product)
+        for ( my $i=1; $i < scalar @$dblinks; $i++ ) {
+            my $dblink = @$dblinks[$i];
+            $comp_id_text .= '"' . join('","', ($dblink->{'accession'},   # composite id like HG497133.1:1..472:ncRNA:VEGA:OTTHUMG00000161051
+                                                $seq->display_id,         # ENA source accession BK006945.2:460712..467569:rRNA
+                                                $dblink->{'database'}),   # e.g. RFAM
+                                                $dblink->{'optional_id'}, # e.g. 5.8S_RNA
+                                                $dblink->{'primary_id'},  # e.g. RF01271
+                                        ) . "\"\n";;
         }
-
-        return {
-            accession   => _get_composite_id($seq->display_id, $db_name, $external_id),
-            primary_id  => $external_id,
-            optional_id => $optional_id,
-            database    => $db_name,
-        };
     } else {
-        return ();
+        $comp_id_text = '';
     }
+
+    return {
+        'text'         => $text,
+        'comp_id_text' => $comp_id_text,
+    };
 }
 
 
@@ -523,6 +542,63 @@ sub _get_xrefs {
 }
 
 
+=head2 _inject_xrefs
+
+    Some entries don't have DR lines for all xrefs.
+    As a temporary measure, these xrefs are identified using project ids
+    and the DR data are parsed from the CC lines.
+
+=cut
+
+sub _inject_xrefs {
+    my ($seq, $db_name) = @_;
+    my ($db_project_id, $external_id, $optional_id);
+
+    if ($db_name eq 'GTRNADB') {
+        $db_project_id = 'PRJEB5173';
+    } elsif ($db_name eq 'LNCRNADB') {
+        $db_project_id = 'PRJEB6238';
+    }
+
+    my $entry_project_id = _get_project_id($seq);
+    if ($entry_project_id eq $db_project_id) {
+        #parse comment lines to extract xref information
+        #lncRNAdb; 190; 7SK. Text continues.
+        #
+        # or
+        #
+        #Specialist DB   : gtRNAdb (Genomic tRNA Database)
+        #URL             : http://lowelab.ucsc.edu/GtRNAdb/
+        #gtRNAdb; Cand_Meth_boonei_6A8/Cand_Meth_boonei_6A8-summary.
+        my @annotations = $seq->annotation->get_Annotations('comment');
+        for my $value ( @annotations ) {
+            my $comment = $value->display_text;
+            my $search_string = "$db_name; (\\S+)(; (\\S+))?\\.";
+            if ($comment =~ /$search_string/i) {;
+                $external_id = $1;
+                if (defined $3) {
+                    $optional_id = $3;
+                } else {
+                    $optional_id = '';
+                }
+            } else {
+                $external_id = $db_name;
+                $optional_id = '';
+            }
+        }
+
+        return {
+            accession   => _get_composite_id($seq->display_id, $db_name, $external_id),
+            primary_id  => $external_id,
+            optional_id => $optional_id,
+            database    => $db_name,
+        };
+    } else {
+        return ();
+    }
+}
+
+
 =head2 _get_composite_id
 
     Create unique ids for external databases.
@@ -591,7 +667,7 @@ sub _combine_vega_xrefs {
 }
 
 
-=head2 _get_genomic_locations
+=head2 _parse_genomic_locations
 
     Find genomic locations relative to the primary accessions.
     These data can be used in conjunction with Ensembl Perl API to find
@@ -603,9 +679,9 @@ sub _combine_vega_xrefs {
 
 =cut
 
-sub _get_genomic_locations {
+sub _parse_genomic_locations {
 
-    my $seq = shift;
+    my ($seq, $fh_gen_loc) = @_;
     my $text = '';
     my @locations;
 
@@ -652,111 +728,19 @@ sub _get_genomic_locations {
             }
         }
     }
-    return $text;
+    print $fh_gen_loc $text;
 }
 
 
-=head2 _get_taxid
-
-    Get taxonomic id which is found in the `db_xref` field under `source`.
-
-=cut
-sub _get_taxid {
-
-    my $seq = shift;
-    my $taxid = '';
-
-    # loop over features
-    for my $feat_object ($seq->get_SeqFeatures) {
-        if ( $feat_object->primary_tag eq 'source' ) {
-            for my $tag ($feat_object->get_all_tags) {
-                for my $value ($feat_object->get_tag_values($tag)) {
-                    if ($tag eq 'db_xref') {
-                        (my $text, $taxid) = split(':', $value);
-                        last;
-                    }
-                }
-            }
-            last; # found taxid, stop looking
-        }
-    }
-
-    return $taxid;
-}
-
-
-=head2 _get_basic_data
-
-    Get minimum data required for UniParc-style functionality given a BioPerl seq object.
-
-=cut
-
-sub _get_basic_data {
-
-    my ($seq, $md5) = @_;
-
-    my ($length, $version, $crc64, $taxid, $data, $sequence, $text, $comp_id_text);
-
-    $crc64 = $taxid = $data = $sequence = $text = $comp_id_text = '';
-    $length = $version = 0;
-
-    # get new data
-    $length   = $seq->length;
-    $version  = $seq->seq_version;
-    $sequence = $seq->seq;
-    $crc64 = SWISS::CRC64::crc64($seq->seq);
-
-    # get NCBI taxonomic id
-    $taxid = _get_taxid($seq);
-
-    # get database links
-    my $dblinks = _get_xrefs($seq);
-
-    # treat DRs as independent xrefs
-    foreach my $dblink ( @$dblinks ) {
-        $text .=  join(',', ($crc64,
-                             $length,
-                             $sequence,
-                             $dblink->{'database'},
-                             $dblink->{'accession'},
-                             $dblink->{'optional_id'},
-                             $version,
-                             $taxid,
-                             $md5)) . "\n";
-    }
-
-    # write out composite id correspondences
-    if ( scalar @$dblinks > 1 ) {
-        # skip the first entry (non-composite ENA id or RFAM product)
-        for ( my $i=1; $i < scalar @$dblinks; $i++ ) {
-            my $dblink = @$dblinks[$i];
-            $comp_id_text .= '"' . join('","', ($dblink->{'accession'},   # composite id like HG497133.1:1..472:ncRNA:VEGA:OTTHUMG00000161051
-                                                $seq->display_id,         # ENA source accession BK006945.2:460712..467569:rRNA
-                                                $dblink->{'database'}),   # e.g. RFAM
-                                                $dblink->{'optional_id'}, # e.g. 5.8S_RNA
-                                                $dblink->{'primary_id'},  # e.g. RF01271
-                                        ) . "\"\n";;
-        }
-    } else {
-        $comp_id_text = '';
-    }
-
-    return {
-        'text'         => $text,
-        'comp_id_text' => $comp_id_text,
-    };
-}
-
-
-=head2 _get_literature_references
+=head2 _parse_literature_references
 
     Get csv text with literature references given a BioPerl seq object.
 
 =cut
 
-sub _get_literature_references {
+sub _parse_literature_references {
 
-    my $seq = shift;
+    my ($seq, $fh_refs) = @_;
 
     my ($ref_authors, $ref_location, $ref_title, $ref_pmid, $ref_doi, $md5);
     my $text = '';
@@ -784,7 +768,7 @@ sub _get_literature_references {
             }
         }
     }
-    return $text;
+    print $fh_refs $text;
 }
 
 ####################
