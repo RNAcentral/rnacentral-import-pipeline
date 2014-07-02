@@ -75,6 +75,9 @@ sub new {
     # create output directory for assembly data files
     mkdir $self->get_assembly_path() unless -d $self->get_assembly_path();
 
+    # create output directory for genomic locations
+    mkdir $self->get_genomic_locations_path() unless -d $self->get_genomic_locations_path();
+
     $self->{'assemblies'} = {};
 
     return $self;
@@ -102,6 +105,7 @@ sub embl2csv {
     my $fname_ac_info = File::Spec->catfile($self->get_info_path(),     $job_id . '.csv');
     my $fname_comp_id = File::Spec->catfile($self->get_comp_id_path(),  $job_id . '.csv');
     my $fname_as_info = File::Spec->catfile($self->get_assembly_path(), $job_id . '.csv');
+    my $fname_genloc  = File::Spec->catfile($self->get_genomic_locations_path(), $job_id . '.csv');
 
     # open output files
     my $fh_long    = IO::File->new("> $fname_long")    or $self->{'logger'}->logdie("Couldn't open file $fname_long");
@@ -110,6 +114,7 @@ sub embl2csv {
     my $fh_ac_info = IO::File->new("> $fname_ac_info") or $self->{'logger'}->logdie("Couldn't open file $fname_ac_info");
     my $fh_comp_id = IO::File->new("> $fname_comp_id") or $self->{'logger'}->logdie("Couldn't open file $fname_comp_id");
     my $fh_as_info = IO::File->new("> $fname_as_info") or $self->{'logger'}->logdie("Couldn't open file $fname_as_info");
+    my $fh_gen_loc = IO::File->new("> $fname_genloc")  or $self->{'logger'}->logdie("Couldn't open file $fname_genloc");
 
     # initializations
     my ($i, $records, $seqs_long, $seqs_short, $dblinks_num, $refs_num, $data,
@@ -163,6 +168,9 @@ sub embl2csv {
             print $fh_comp_id $data->{'comp_id_text'};
         }
 
+        # get genomic locations
+        print $fh_gen_loc $self->_get_genomic_locations($seq);
+
         # assembly information with genome locations
         my $assembly_json = ($seq->annotation->get_Annotations('assembly_json'))[0];
         if ($assembly_json) {
@@ -199,6 +207,7 @@ sub embl2csv {
     $fh_ac_info->close;
     $fh_comp_id->close;
     $fh_as_info->close;
+    $fh_gen_loc->close;
 
     # remove empty files
     $self->_check_temp_files($fname_refs);
@@ -622,6 +631,71 @@ sub _is_valid_sequence {
 }
 
 
+=head2 _get_genomic_locations
+
+    Find genomic locations relative to the primary accessions.
+    These data can be used in conjunction with Ensembl Perl API to find
+    toplevel genomic coordinates.
+
+    TPA and Non-TPA entries are treated differently because TPAs refer to
+    existing primary accessions and Non-TPA entries are primary accessions
+    in their own right.
+
+=cut
+
+sub _get_genomic_locations {
+
+    my ($self, $seq) = @_;
+    my $text = '';
+    my @locations;
+
+    my $is_TPA;
+    if ($seq->keywords =~ /TPA;/) {
+        $is_TPA = 1;
+    } else {
+        $is_TPA = 0;
+    }
+
+    if ($is_TPA) {
+        # look in the AS lines
+        my $assembly_json = ($seq->annotation->get_Annotations('assembly_json'))[0];
+        if ($assembly_json) {
+            my $assembly_info = decode_json($assembly_json->display_text);
+            for my $exon (@$assembly_info) {
+                $text .= '"' . join('","', ($seq->display_id,
+                                            $exon->{'primary_identifier'},
+                                            $exon->{'primary_start'},
+                                            $exon->{'primary_end'},
+                                            $exon->{'strand'})
+                                    ) . "\"\n";
+            }
+        }
+    } else {
+        # look in the feature table
+        for my $feat_object ($seq->get_SeqFeatures) {
+            # find tRNA, ncRNA and other non-coding features
+            if ( $feat_object->primary_tag ne 'source' ) {
+                # split location or a simple range
+                if ( $feat_object->location->isa('Bio::Location::SplitLocationI') ) {
+                    @locations = $feat_object->location->sub_Location;
+                } else {
+                    @locations = ($feat_object->location);
+                }
+                for my $location ( @locations ) {
+                    $text .= '"' . join('","', ($seq->display_id,
+                                                $seq->accession,   # primary identifier, e.g. AB446294.1
+                                                $location->start,  # local_start (relative to the parent accession)
+                                                $location->end,    # local_end (relative to the parent accession)
+                                                $location->strand) # 1 or -1
+                                        ) . "\"\n";
+                }
+            }
+        }
+    }
+    return $text;
+}
+
+
 =head2 _get_basic_data
 
     Get minimum data required for UniParc-style functionality given a BioPerl seq object.
@@ -645,8 +719,9 @@ sub _get_basic_data {
     $sequence = $seq->seq;
     $crc64 = SWISS::CRC64::crc64($seq->seq);
 
-    # get taxid
+    # loop over features
     for my $feat_object ($seq->get_SeqFeatures) {
+        # get taxid
         if ( $feat_object->primary_tag eq 'source' ) {
             for my $tag ($feat_object->get_all_tags) {
                 for my $value ($feat_object->get_tag_values($tag)) {

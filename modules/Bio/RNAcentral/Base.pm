@@ -111,6 +111,11 @@ sub initialize_logger {
 }
 
 
+sub get_genomic_locations_path {
+  my $self = shift;
+  return File::Spec->catfile($self->{'output_folder'}, 'genomic_locations');
+}
+
 sub get_assembly_path {
   my $self = shift;
   return File::Spec->catfile($self->{'output_folder'}, 'assemblies');
