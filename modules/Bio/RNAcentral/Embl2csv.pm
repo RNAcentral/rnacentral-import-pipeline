@@ -113,13 +113,11 @@ sub embl2csv {
     my $fh_as_info = IO::File->new("> $fname_as_info") or $self->{'logger'}->logdie("Couldn't open file $fname_as_info");
     my $fh_gen_loc = IO::File->new("> $fname_genloc")  or $self->{'logger'}->logdie("Couldn't open file $fname_genloc");
 
-    # initializations
-    my ($data, $seq, $refs, $md5, $info, @dblinks);
-    $refs = '';
-
     # open file with BioPerl
     $self->{'logger'}->info("Reading $file");
     my $stream = Bio::SeqIO->new(-file => $file, -format => 'EMBL');
+
+    my $seq;
 
     # loop over seq records
     while ( eval { $seq = $stream->next_seq() } ) {
@@ -129,20 +127,9 @@ sub embl2csv {
             next;
         }
 
-        # get basic data for UniParc-style functionality
-        $data = _get_basic_data($seq);
-
-        # print data in different files depending on sequence length
-        if ($seq->length > $self->{'opt'}{'maxseqshort'}) {
-            print $fh_long $data->{'text'};
-        } else {
-            print $fh_short $data->{'text'};
-        }
-
-        # write out composite id data
-        if ( $data->{'comp_id_text'} ) {
-            print $fh_comp_id $data->{'comp_id_text'};
-        }
+        my $xrefs = _get_xrefs($seq);
+        _parse_sequences_and_xrefs($seq, $xrefs, $self->{'opt'}{'maxseqshort'}, $fh_long, $fh_short);
+        _store_xref_correspondences($seq, $xrefs, $fh_comp_id);
 
         _parse_literature_references($seq, $fh_refs);
         _parse_accession_data($seq, $fh_ac_info);
@@ -209,14 +196,14 @@ sub _is_valid_sequence {
     my ($self, $sequence) = @_;
     my $status;
 
-    my $N_characters = () = $sequence =~ /N/ig;
-    my $N_content = ($N_characters * 100)/length($sequence);
+    my $N_length = () = $sequence =~ /N/ig;
+    my $N_percentage = ($N_length * 100)/length($sequence);
 
     if (length($sequence) < $self->{'opt'}{'minseqlength'}) {
         $status = 0;
-    } elsif ($N_content > $self->{'opt'}{'maxNcontent'} ) {
+    } elsif ($N_percentage > $self->{'opt'}{'maxNcontent'} ) {
         $status = 0;
-    } elsif ($N_characters == length($sequence)) {
+    } elsif ($N_length == length($sequence)) {
         $status = 0;
     } else {
         $status = 1;
@@ -226,9 +213,12 @@ sub _is_valid_sequence {
 }
 
 
-=hparse _parse_accession_data
-    Parse the accessions.
+=head2 _parse_accession_data
+
+    Prepare data for the load_rnc_ac_info table table.
+
 =cut
+
 sub _parse_accession_data {
     my ($seq, $fh_ac_info) = @_;
     my ($text, $accession, $seq_version, $feature_location_start,
@@ -372,6 +362,7 @@ sub _get_feature_tags {
     Get taxonomic id which is found in the `db_xref` field under `source`.
 
 =cut
+
 sub _get_taxid {
 
     my $seq = shift;
@@ -395,74 +386,79 @@ sub _get_taxid {
     return $taxid;
 }
 
+=head2 _parse_sequences_and_xrefs
 
-=head2 _get_basic_data
-
-    Get minimum data required for UniParc-style functionality given a BioPerl seq object.
+    Prepare data for the load_rnacentral_all table.
 
 =cut
 
-sub _get_basic_data {
+sub _parse_sequences_and_xrefs {
 
-    my $seq = shift;
+    my ($seq, $xrefs, $maxseqshort, $fh_long, $fh_short) = @_;
 
-    my ($length, $version, $md5, $crc64, $taxid, $data, $sequence, $text, $comp_id_text);
-
-    $crc64 = $taxid = $data = $sequence = $text = $comp_id_text = '';
-    $length = $version = 0;
-
-    # get new data
-    $md5      = md5_hex($seq->seq);
-    $length   = $seq->length;
-    $version  = $seq->seq_version;
-    $sequence = $seq->seq;
-    $crc64 = SWISS::CRC64::crc64($seq->seq);
-
-    # get NCBI taxonomic id
-    $taxid = _get_taxid($seq);
-
-    # get database links
-    my $dblinks = _get_xrefs($seq);
+    my $text     = '';
+    my $sequence = $seq->seq;
+    my $crc64    = SWISS::CRC64::crc64($sequence);
+    my $md5      = md5_hex($sequence);
 
     # treat DRs as independent xrefs
-    foreach my $dblink ( @$dblinks ) {
+    foreach my $xref ( @$xrefs ) {
         $text .=  join(',', ($crc64,
-                             $length,
+                             $seq->length,
                              $sequence,
-                             $dblink->{'database'},
-                             $dblink->{'accession'},
-                             $dblink->{'optional_id'},
-                             $version,
-                             $taxid,
+                             $xref->{'database'},
+                             $xref->{'accession'},
+                             $xref->{'optional_id'},
+                             $seq->seq_version,
+                             _get_taxid($seq),
                              $md5)) . "\n";
     }
 
-    # write out composite id correspondences
-    if ( scalar @$dblinks > 1 ) {
-        # skip the first entry (non-composite ENA id or RFAM product)
-        for ( my $i=1; $i < scalar @$dblinks; $i++ ) {
-            my $dblink = @$dblinks[$i];
-            $comp_id_text .= '"' . join('","', ($dblink->{'accession'},   # composite id like HG497133.1:1..472:ncRNA:VEGA:OTTHUMG00000161051
-                                                $seq->display_id,         # ENA source accession BK006945.2:460712..467569:rRNA
-                                                $dblink->{'database'}),   # e.g. RFAM
-                                                $dblink->{'optional_id'}, # e.g. 5.8S_RNA
-                                                $dblink->{'primary_id'},  # e.g. RF01271
-                                        ) . "\"\n";;
+    # print data in different files depending on sequence length
+    if ($seq->length > $maxseqshort) {
+        print $fh_long $text;
+    } else {
+        print $fh_short $text;
+    }
+}
+
+
+=head2 _store_xref_correspondences(
+
+    Prepare data for the load_rnc_composite_ids table.
+
+    Each expert database DR line is treated as a separate accession
+    derived from the source ENA accession.
+
+=cut
+
+sub _store_xref_correspondences {
+    my ($seq, $xrefs, $fh_comp_id) = @_;
+
+    my $text = '';
+
+    if ( scalar @$xrefs > 1 ) {
+        # skip the first entry (ENA id or RFAM product)
+        for ( my $i = 1; $i < scalar @$xrefs; $i++ ) {
+            my $xref = @$xrefs[$i];
+            $text .= '"' . join('","', ($xref->{'accession'},   # expert_db xref like HG497133.1:1..472:ncRNA:VEGA:OTTHUMG00000161051
+                                        $seq->display_id,       # ENA source accession BK006945.2:460712..467569:rRNA
+                                        $xref->{'database'}),   # e.g. RFAM
+                                        $xref->{'optional_id'}, # e.g. 5.8S_RNA
+                                        $xref->{'primary_id'},  # e.g. RF01271
+                                ) . "\"\n";;
         }
     } else {
-        $comp_id_text = '';
+        $text = '';
     }
 
-    return {
-        'text'         => $text,
-        'comp_id_text' => $comp_id_text,
-    };
+    print $fh_comp_id $text;
 }
 
 
 =head2 _get_xrefs
 
-    Read DR lines with database cross-references from a BioPerl seq object.
+    Read DR lines with database cross-references into an array of hashes.
 
 =cut
 
@@ -486,11 +482,12 @@ sub _get_xrefs {
                      accession   => $seq->display_id,
                      optional_id => '' };
     }
+    # TODO : do not skip RFAM
 
     # get gtRNAdb and lncRNAdb entries by project ids
     # todo: remove this temporary fix when DR lines are added to all entries
-    push @data, _inject_xrefs($seq, 'GTRNADB');
-    push @data, _inject_xrefs($seq, 'LNCRNADB');
+    push @data, _inject_xrefs_manually($seq, 'GTRNADB');
+    push @data, _inject_xrefs_manually($seq, 'LNCRNADB');
 
     # append other xrefs from DR lines
     my $anno_collection = $seq->annotation;
@@ -522,14 +519,14 @@ sub _get_xrefs {
                 if ($database eq 'RFAM') {
                     $composite_id = $seq->display_id;
                 } else {
-                    $composite_id = _get_composite_id($seq->display_id, $database, $primary_id);
+                    $composite_id = _get_expert_db_id($seq->display_id, $database, $primary_id);
                 }
 
                 push @data, {
                               accession   => $composite_id,
                               primary_id  => $primary_id, # external id
                               optional_id => $optional_id,
-                              database    => uc($database),
+                              database    => uc($database), # convert to upper case
                             };
             }
         }
@@ -542,15 +539,17 @@ sub _get_xrefs {
 }
 
 
-=head2 _inject_xrefs
+=head2 _inject_xrefs_manually
 
-    Some entries don't have DR lines for all xrefs.
+    Some xrefs are added not as DR lines but as structured comments
+    because the ENA xref pipeline cannot add xrefs between ENA releases.
+
     As a temporary measure, these xrefs are identified using project ids
     and the DR data are parsed from the CC lines.
 
 =cut
 
-sub _inject_xrefs {
+sub _inject_xrefs_manually {
     my ($seq, $db_name) = @_;
     my ($db_project_id, $external_id, $optional_id);
 
@@ -561,6 +560,7 @@ sub _inject_xrefs {
     }
 
     my $entry_project_id = _get_project_id($seq);
+
     if ($entry_project_id eq $db_project_id) {
         #parse comment lines to extract xref information
         #lncRNAdb; 190; 7SK. Text continues.
@@ -588,7 +588,7 @@ sub _inject_xrefs {
         }
 
         return {
-            accession   => _get_composite_id($seq->display_id, $db_name, $external_id),
+            accession   => _get_expert_db_id($seq->display_id, $db_name, $external_id),
             primary_id  => $external_id,
             optional_id => $optional_id,
             database    => $db_name,
@@ -599,7 +599,7 @@ sub _inject_xrefs {
 }
 
 
-=head2 _get_composite_id
+=head2 _get_expert_db_id
 
     Create unique ids for external databases.
 
@@ -611,7 +611,7 @@ sub _inject_xrefs {
     Example: HG497133.1:1..472:ncRNA:VEGA:OTTHUMG00000161051
 =cut
 
-sub _get_composite_id {
+sub _get_expert_db_id {
 
     my ($ena_source, $database, $external_id) = @_;
 
@@ -733,6 +733,8 @@ sub _parse_genomic_locations {
 
 
 =head2 _parse_literature_references
+
+    Prepare data for the load_rnc_references table.
 
     Get csv text with literature references given a BioPerl seq object.
 
