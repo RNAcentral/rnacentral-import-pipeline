@@ -132,7 +132,7 @@ sub embl2csv {
         $md5 = md5_hex($seq->seq);
 
         # get basic data for UniParc-style functionality
-        $data = $self->_get_basic_data($seq, $md5);
+        $data = _get_basic_data($seq, $md5);
 
         # print data in different files depending on sequence length
         if ($seq->length > $self->{'opt'}{'maxseqshort'}) {
@@ -142,13 +142,13 @@ sub embl2csv {
         }
 
         # get literature references
-        $refs = $self->_get_literature_references($seq);
+        $refs = _get_literature_references($seq);
         if ( $refs ) {
             print $fh_refs $refs->{'text'};
         }
 
         # get information about accessions
-        $info = $self->_get_accession_data($seq);
+        $info = _get_accession_data($seq);
         if ( $info ) {
             print $fh_ac_info $info->{'text'};
         }
@@ -159,7 +159,7 @@ sub embl2csv {
         }
 
         # get genomic locations
-        print $fh_gen_loc $self->_get_genomic_locations($seq);
+        print $fh_gen_loc _get_genomic_locations($seq);
 
         # assembly information with genome locations
         my $assembly_json = ($seq->annotation->get_Annotations('assembly_json'))[0];
@@ -246,7 +246,7 @@ sub _is_valid_sequence {
 
 sub _get_accession_data {
 
-    (my $self, my $seq)  = @_;
+    my $seq = shift;
 
     my ($text, $accession, $seq_version, $feature_location_start,
         $feature_location_end, $feature_name, $ordinal, $species,
@@ -449,7 +449,7 @@ sub _inject_xrefs {
 
 sub _get_xrefs {
 
-    (my $self, my $seq)  = @_;
+    my $seq = shift;
 
     my (@data, $database, $primary_id, $optional_id, $project, $is_rfam_entry,
         $composite_id);
@@ -605,7 +605,7 @@ sub _combine_vega_xrefs {
 
 sub _get_genomic_locations {
 
-    my ($self, $seq) = @_;
+    my $seq = shift;
     my $text = '';
     my @locations;
 
@@ -693,7 +693,7 @@ sub _get_taxid {
 
 sub _get_basic_data {
 
-    my ($self, $seq, $md5) = @_;
+    my ($seq, $md5) = @_;
 
     my ($ac, $length, $version, $crc64, $taxid,
         $data, $sequence, $text, $comp_id_text, $dblink);
@@ -712,7 +712,7 @@ sub _get_basic_data {
     $taxid = _get_taxid($seq);
 
     # get database links
-    my $dblinks = $self->_get_xrefs($seq);
+    my $dblinks = _get_xrefs($seq);
 
     # treat DRs as independent xrefs
     foreach my $dblink ( @$dblinks ) {
@@ -758,7 +758,7 @@ sub _get_basic_data {
 
 sub _get_literature_references {
 
-    (my $self, my $seq)  = @_;
+    my $seq = shift;
 
     my ($ref_authors, $ref_location, $ref_title,
         $ref_pmid,    $ref_doi,      $md5);
