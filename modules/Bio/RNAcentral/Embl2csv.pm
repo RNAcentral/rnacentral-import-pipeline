@@ -135,7 +135,7 @@ sub embl2csv {
         $data = $self->_get_basic_data($seq, $md5);
 
         # print data in different files depending on sequence length
-        if ( $data->{'isLong'} ) {
+        if ($seq->length > $self->{'opt'}{'maxseqshort'}) {
             print $fh_long $data->{'text'};
         } else {
             print $fh_short $data->{'text'};
@@ -693,9 +693,9 @@ sub _get_taxid {
 
 sub _get_basic_data {
 
-    (my $self, my $seq, my $md5)  = @_;
+    my ($self, $seq, $md5) = @_;
 
-    my ($ac, $length, $version, $isLong, $crc64, $taxid,
+    my ($ac, $length, $version, $crc64, $taxid,
         $data, $sequence, $text, $comp_id_text, $dblink);
 
     $ac = $crc64 = $taxid = $data = $sequence = $text = $comp_id_text = '';
@@ -710,12 +710,6 @@ sub _get_basic_data {
 
     # get NCBI taxonomic id
     $taxid = _get_taxid($seq);
-
-    if ($length > $self->{'opt'}{'maxseqshort'}) {
-        $isLong = 1;
-    } else {
-        $isLong = 0;
-    }
 
     # get database links
     my $dblinks = $self->_get_xrefs($seq);
@@ -743,7 +737,6 @@ sub _get_basic_data {
                                                 $dblink->{'database'}),   # e.g. RFAM
                                                 $dblink->{'optional_id'}, # e.g. 5.8S_RNA
                                                 $dblink->{'primary_id'},  # e.g. RF01271
-
                                         ) . "\"\n";;
         }
     } else {
@@ -752,7 +745,6 @@ sub _get_basic_data {
 
     return {
         'text'         => $text,
-        'isLong'       => $isLong,
         'comp_id_text' => $comp_id_text,
     };
 }
