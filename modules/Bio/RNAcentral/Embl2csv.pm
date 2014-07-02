@@ -237,7 +237,7 @@ sub _parse_accession_data {
 
     # for RFAM entries, feature_name in the id is 'rfam', so retrieve
     # feature_name from feature table
-    if ($seq->display_id =~ /rfam$/) {
+    if ( _is_rfam_entry($seq->display_id) ) {
         for my $feat_object ($seq->get_SeqFeatures) {
             if ($feat_object->primary_tag eq 'source') {
                 next;
@@ -456,6 +456,23 @@ sub _store_xref_correspondences {
 }
 
 
+=head2 _is_rfam_entry
+
+    Return 1 if an accession is an RFAM entry, return 0 otherwise.
+
+=cut
+
+sub _is_rfam_entry {
+    my $accession = shift;
+
+    if ( $accession =~ /rfam$/i ) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+
 =head2 _get_xrefs
 
     Read DR lines with database cross-references into an array of hashes.
@@ -466,17 +483,10 @@ sub _get_xrefs {
 
     my $seq = shift;
 
-    my (@data, $database, $primary_id, $optional_id, $project, $is_rfam_entry,
-        $composite_id);
-
-    if ( $seq->display_id =~ /rfam$/i ) {
-        $is_rfam_entry = 1;
-    } else {
-        $is_rfam_entry = 0;
-    }
+    my (@data, $database, $primary_id, $optional_id, $project, $composite_id);
 
     # first element is the source ENA entry unless it's an RFAM entry
-    if ( !$is_rfam_entry ) {
+    if ( !_is_rfam_entry($seq->display_id) ) {
         $data[0] = { database    => 'ENA',
                      primary_id  => $seq->display_id,
                      accession   => $seq->display_id,
@@ -503,7 +513,7 @@ sub _get_xrefs {
                 }
 
                 # skip RFAM DR lines in regular Non-coding entries
-                if (!$is_rfam_entry and $database eq 'RFAM') {
+                if (!_is_rfam_entry($seq->display_id) and $database eq 'RFAM') {
                     next;
                 }
 
