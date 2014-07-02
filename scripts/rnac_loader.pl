@@ -57,17 +57,18 @@ use Bio::RNAcentral::SqlldrImportCompositeIds;
 
 my $location = '';
 my $opt = {};
+my $no_import = 0;
 
-# all options are mandatory
 &GetOptions (
-    'in=s'       => \$location,               # input data location
-    'out=s'      => \$opt->{'output_folder'}, # location of output temp files
-    'user=s'     => \$opt->{'user'},          # Oracle connection details
-    'password=s' => \$opt->{'password'},
-    'sid=s'      => \$opt->{'sid'},
-    'port=i'     => \$opt->{'port'},
-    'host=s'     => \$opt->{'host'},
-    'release_type=s' => \$opt->{'release_type'}, # release type (full or incremental)
+    'in=s'           => \$location,                  # input data location
+    'out=s'          => \$opt->{'output_folder'},    # location of output temp files
+    'user=s'         => \$opt->{'user'},             # Oracle user name
+    'password=s'     => \$opt->{'password'},         # Oracle password
+    'sid=s'          => \$opt->{'sid'},              # Oracle SID
+    'port=i'         => \$opt->{'port'},             # Oracle port
+    'host=s'         => \$opt->{'host'},             # Oracle host
+    'no_import:i'    => \$no_import,                 # if 1, do not import files into the database (optional, default = 0)
+    'release_type=s' => \$opt->{'release_type'},     # release type (full or incremental),
 );
 
 &pod2usage if ( $location eq ''              or
@@ -85,18 +86,27 @@ if ( !defined($opt->{'release_type'}) ) {
 
 my $a = Bio::RNAcentral::InputFiles->new($opt);
 my $e = Bio::RNAcentral::Embl2csv->new($opt);
-my $b = Bio::RNAcentral::SqlldrImportSequences->new($opt);
-my $c = Bio::RNAcentral::OracleUpdate->new($opt);
-
-# prepare staging table
-$c->db_oracle_connect();
-$c->truncate_table($c->{'opt'}{'staging_table'});
 
 # create output files in csv format
 my @ncrfiles = $a->list_folder_recursive($location, 'ncr');
 for my $ncrfile (@ncrfiles) {
     $e->embl2csv($ncrfile);
 }
+
+print "Files processed\n";
+
+if ($no_import) {
+    print "Skipping database import\n";
+    exit;
+}
+
+my $b = Bio::RNAcentral::SqlldrImportSequences->new($opt);
+my $c = Bio::RNAcentral::OracleUpdate->new($opt);
+
+#prepare staging table
+$c->db_oracle_connect();
+$c->truncate_table($c->{'opt'}{'staging_table'});
+
 
 # load information about non-coding accessions
 my $f = Bio::RNAcentral::SqlldrImportAccessionInfo->new($opt, 'ac_info');

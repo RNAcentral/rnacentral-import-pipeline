@@ -29,6 +29,7 @@ perl scripts/rnac_loader.pl -in=$DATA_IN \
                             -host=$ORACLE_HOST \
                             -port=$ORACLE_PORT \
                             -sid=$ORACLE_SID \
-                            -release_type=$DB_RELEASE_TYPE;
+                            -release_type=$DB_RELEASE_TYPE \
+                            -no_import=$RNACENTRAL_NO_IMPORT;
 # restore PERL5LIB
 export PERL5LIB=$perl5lib_backup

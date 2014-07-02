@@ -25,12 +25,16 @@ export HIVE_USERNAME=""
 export HIVE_PASSWORD=""
 export HIVE_PORT=""
 export HIVE_HOST=""
+
 export ORACLE_USER=""
 export ORACLE_PASSWORD=""
 export ORACLE_SID=""
 export ORACLE_PORT=""
 export ORACLE_HOST=""
+
 export DATA_IN=""
 export DATA_OUT=""
+
 export DB_RELEASE_TYPE=""
 export RNACENTRAL_ADMIN_EMAIL=""
+export RNACENTRAL_NO_IMPORT=1 # 0 or 1, useful when for development work
