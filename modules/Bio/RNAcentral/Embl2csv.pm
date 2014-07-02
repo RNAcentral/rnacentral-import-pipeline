@@ -396,7 +396,7 @@ sub _get_project_id {
     }
 }
 
-=head2 _get_missing_dr_links
+=head2 _inject_xrefs
 
     Some entries don't have DR lines for all xrefs.
     As a temporary measure, these xrefs are identified using project ids
@@ -404,7 +404,7 @@ sub _get_project_id {
 
 =cut
 
-sub _get_missing_dr_links {
+sub _inject_xrefs {
     my ($seq, $db_name) = @_;
     my ($db_project_id, $external_id, $optional_id);
 
@@ -482,8 +482,8 @@ sub _get_xrefs {
 
     # get gtRNAdb and lncRNAdb entries by project ids
     # todo: remove this temporary fix when DR lines are added to all entries
-    push @data, _get_missing_dr_links($seq, 'GTRNADB');
-    push @data, _get_missing_dr_links($seq, 'LNCRNADB');
+    push @data, _inject_xrefs($seq, 'GTRNADB');
+    push @data, _inject_xrefs($seq, 'LNCRNADB');
 
     # append other xrefs from DR lines
     my $anno_collection = $seq->annotation;
@@ -529,7 +529,7 @@ sub _get_xrefs {
     }
 
     # VEGA xrefs require special treatment
-    @data = @{_collate_vega_xrefs(\@data)};
+    @data = @{_combine_vega_xrefs(\@data)};
 
     return \@data;
 }
@@ -559,7 +559,7 @@ sub _get_composite_id {
 }
 
 
-=head2 _collate_vega_xrefs
+=head2 _combine_vega_xrefs
 
     VEGA xref is split into 2 DR lines:
     DR   VEGA-Gn; OTTHUMG00000013241; Homo sapiens. # genes
@@ -573,7 +573,7 @@ sub _get_composite_id {
 
 =cut
 
-sub _collate_vega_xrefs {
+sub _combine_vega_xrefs {
 
     my ($data) = @_;
     my @new_data;
@@ -844,39 +844,7 @@ sub _sanitize {
 # get non-empty value, named after the NVL function in Oracle
 sub _nvl {
     my $value = shift;
-    return ( defined( $value ) ? _sanitize($value) : '' );
-}
-
-
-=head2 _get_chromosome_from_assembly
-
-    Get chromosome number from the ENA REST service based on the assembly id.
-    Store the information locally for faster lookups.
-
-=cut
-
-sub _get_chromosome_from_assembly {
-    my ($self, $assembly_id) = @_;
-
-    if ( exists $self->{'assemblies'}{$assembly_id} ) {
-        return $self->{'assemblies'}{$assembly_id};
-    }
-
-    my $url = "http://www.ebi.ac.uk/ena/data/view/$assembly_id&display=xml";
-    my $content = get $url;
-
-    if (! defined $content) {
-        $self->{'logger'}->warn("Failed to retrieve chromosome number for assembly $assembly_id, $@");
-        return '';
-    }
-
-    if ( $content =~ /<qualifier name="chromosome">\s*<value>\s*([A-Za-z0-9]+)\s*<\/value>\s*<\/qualifier>/ ) {
-        $self->{'assemblies'}{$assembly_id} = $1;
-        return $1;
-    } else {
-        $self->{'logger'}->warn("Chromosome number not found in xml file $url");
-        return '';
-    }
+    return ( defined( $value ) ? _sanitize_text($value) : '' );
 }
 
 
