@@ -129,10 +129,10 @@ sub embl2csv {
 
         my $xrefs = _get_xrefs($seq);
         _parse_sequences_and_xrefs($seq, $xrefs, $self->{'opt'}{'maxseqshort'}, $fh_long, $fh_short);
-        _store_xref_correspondences($seq, $xrefs, $fh_comp_id);
+        # _store_xref_correspondences($seq, $xrefs, $fh_comp_id); # no longer needed as rnc_composite_ids will be deprecated
 
         _parse_literature_references($seq, $fh_refs);
-        _parse_accession_data($seq, $fh_ac_info);
+        _parse_accession_data($seq, $xrefs, $fh_ac_info);
         _parse_genomic_locations($seq, $fh_gen_loc);
 
         # assembly information with genome locations
@@ -215,37 +215,19 @@ sub _is_valid_sequence {
 
 =head2 _parse_accession_data
 
-    Prepare data for the load_rnc_ac_info table table.
+    Prepare data for the load_rnc_accessions table, which will be merged into
+    the main rnc_accessions table.
 
 =cut
 
 sub _parse_accession_data {
-    my ($seq, $fh_ac_info) = @_;
-    my ($text, $accession, $seq_version, $feature_location_start,
+    my ($seq, $xrefs, $fh_ac_info) = @_;
+    my ($text, $accession, $parent_accession, $seq_version, $feature_location_start,
         $feature_location_end, $feature_name, $ordinal, $species,
-        $common_name, $keywords, $project);
+        $common_name, $keywords, $project, $is_composite, $non_coding_id,
+        $source_accession, %feature_tags);
 
-    # GU187164.1:15402..15468:tRNA
-    # <accession>.<sequence version>:<feature location string>:<feature name>[:ordinal]
-    $seq->display_id =~ /(\w+)\.(\d+):(\d+)\.\.(\d+):(\w+)(:(\w+))*/;
-    $accession              = $1;
-    $seq_version            = $2;
-    $feature_location_start = $3;
-    $feature_location_end   = $4;
-    $feature_name           = $5;
-    $ordinal                = $7;
-
-    # for RFAM entries, feature_name in the id is 'rfam', so retrieve
-    # feature_name from feature table
-    if ( _is_rfam_entry($seq->display_id) ) {
-        for my $feat_object ($seq->get_SeqFeatures) {
-            if ($feat_object->primary_tag eq 'source') {
-                next;
-            } else {
-                $feature_name = $feat_object->primary_tag;
-            }
-        }
-    }
+    $source_accession = ${$xrefs}[0]{'accession'}; # accession of the source ENA entry
 
     $species = $seq->species;
 
@@ -255,43 +237,85 @@ sub _parse_accession_data {
     $keywords =~ s/\.$//;
 
     # get feature table qualifiers
-    my %feature_tags = _get_feature_tags($seq);
+    %feature_tags = _get_feature_tags($seq);
 
-    $text = '"' . join('","', (_nvl($seq->display_id),
-                               $accession,
-                               $seq_version,
-                               $feature_location_start,
-                               $feature_location_end,
-                               $feature_name,
-                               _nvl($ordinal),
-                               $project,
-                               _nvl($seq->division),
-                               $keywords,
-                               _nvl($seq->desc),
-                               $species->binomial(),
-                               _nvl($species->common_name),
-                               _nvl($species->organelle),
-                               join('; ', reverse $species->classification),
-                               $feature_tags{'allele'},
-                               $feature_tags{'anticodon'},
-                               $feature_tags{'chromosome'},
-                               $feature_tags{'experiment'},
-                               $feature_tags{'function'},
-                               $feature_tags{'gene'},
-                               $feature_tags{'gene_synonym'},
-                               $feature_tags{'inference'},
-                               $feature_tags{'locus_tag'},
-                               $feature_tags{'map'},
-                               $feature_tags{'mol_type'},
-                               $feature_tags{'ncRNA_class'},
-                               $feature_tags{'note'},
-                               $feature_tags{'old_locus_tag'},
-                               $feature_tags{'operon'},
-                               $feature_tags{'product'},
-                               $feature_tags{'pseudogene'},
-                               $feature_tags{'standard_name'}
-                               ) ) . "\"\n";
-    print $fh_ac_info $text;
+    # iterate over all xrefs from the entry
+    for my $xref (@{$xrefs}) {
+
+        $accession = $xref->{'accession'};
+
+        # GU187164.1:15402..15468:tRNA
+        # <accession>.<sequence version>:<feature location string>:<feature name>[:ordinal]
+        $accession =~ /(\w+)\.(\d+):(\d+)\.\.(\d+):(\w+)(:(\d+))*/;
+        $parent_accession       = $1;
+        $seq_version            = $2;
+        $feature_location_start = $3;
+        $feature_location_end   = $4;
+        $feature_name           = $5;
+        $ordinal                = $7;
+
+        # for RFAM entries, feature_name in the id is 'rfam', so retrieve
+        # feature_name from feature table
+        if ( _is_rfam_entry($accession) ) {
+            for my $feat_object ($seq->get_SeqFeatures) {
+                if ($feat_object->primary_tag eq 'source') {
+                    next;
+                } else {
+                    $feature_name = $feat_object->primary_tag;
+                }
+            }
+        }
+
+        # determine if the entry comes from a DR line or from the main entry.
+        if ($xref->{'database'} eq 'ENA' or $xref->{'database'} eq 'RFAM' or $xref->{'database'} eq 'REFSEQ') {
+            $is_composite = 'N';
+            $non_coding_id = '';
+        } else {
+            $is_composite = 'Y';
+            $non_coding_id = $source_accession;
+        }
+
+        $text = '"' . join('","', ($accession,
+                                   $parent_accession,
+                                   $seq_version,
+                                   $feature_location_start,
+                                   $feature_location_end,
+                                   $feature_name,
+                                   _nvl($ordinal),
+                                   $is_composite,
+                                   $non_coding_id, # source ENA id
+                                   $xref->{'database'},
+                                   $xref->{'primary_id'},
+                                   $xref->{'optional_id'},
+                                   $project,
+                                   _nvl($seq->division),
+                                   $keywords,
+                                   _nvl($seq->desc),
+                                   $species->binomial(),
+                                   _nvl($species->common_name),
+                                   _nvl($species->organelle),
+                                   join('; ', reverse $species->classification),
+                                   $feature_tags{'allele'},
+                                   $feature_tags{'anticodon'},
+                                   $feature_tags{'chromosome'},
+                                   $feature_tags{'experiment'},
+                                   $feature_tags{'function'},
+                                   $feature_tags{'gene'},
+                                   $feature_tags{'gene_synonym'},
+                                   $feature_tags{'inference'},
+                                   $feature_tags{'locus_tag'},
+                                   $feature_tags{'map'},
+                                   $feature_tags{'mol_type'},
+                                   $feature_tags{'ncRNA_class'},
+                                   $feature_tags{'note'},
+                                   $feature_tags{'old_locus_tag'},
+                                   $feature_tags{'operon'},
+                                   $feature_tags{'product'},
+                                   $feature_tags{'pseudogene'},
+                                   $feature_tags{'standard_name'}
+                                   ) ) . "\"\n";
+        print $fh_ac_info $text;
+    } # end for loop
 }
 
 
@@ -488,8 +512,8 @@ sub _get_xrefs {
     # first element is the source ENA entry unless it's an RFAM entry
     if ( !_is_rfam_entry($seq->display_id) ) {
         $data[0] = { database    => 'ENA',
-                     primary_id  => $seq->display_id,
                      accession   => $seq->display_id,
+                     primary_id  => '',
                      optional_id => '' };
     }
     # TODO : do not skip RFAM

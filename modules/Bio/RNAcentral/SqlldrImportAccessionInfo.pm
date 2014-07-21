@@ -101,13 +101,18 @@ APPEND
 INTO TABLE $self->{'opt'}{'ac_info_table'}
 FIELDS TERMINATED BY ',' enclosed by '"'
 (
-    AC char,
+    ACCESSION char,
     PARENT_AC char,
     SEQ_VERSION integer external,
     FEATURE_START integer external,
     FEATURE_END integer external,
     FEATURE_NAME char,
     ORDINAL integer external,
+    IS_COMPOSITE,
+    NON_CODING_ID,
+    DATABASE,
+    EXTERNAL_ID,
+    OPTIONAL_ID,
     PROJECT char,
     DIVISION char,
     KEYWORDS char,
