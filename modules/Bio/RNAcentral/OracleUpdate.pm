@@ -114,7 +114,7 @@ sub update_accession_info {
 
     my $command = <<PLSQL;
 BEGIN
-  RNC_UPDATE.update_accession_info();
+  RNC_UPDATE.update_rnc_accessions();
 END;
 PLSQL
 

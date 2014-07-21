@@ -38,10 +38,7 @@ create or replace PACKAGE BODY RNC_UPDATE AS
 
 
   /*
-  * Based on the rnc_ac_info and rnc_composite_ids
-  * update a denormalized table combining the other two tables.
-  * Useful for convenient access using Django ORM.
-
+  * Update rnc_accessions by merging new data from load_rnc_accessions.
   */
   PROCEDURE update_rnc_accessions
 
@@ -50,134 +47,45 @@ create or replace PACKAGE BODY RNC_UPDATE AS
 
     DBMS_OUTPUT.put_line('Updating rnc_accessions');
 
-    EXECUTE IMMEDIATE 'TRUNCATE TABLE rnc_accessions';
-
-    -- import ENA and RFAM accession data
-    INSERT /*+ PARALLEL */ INTO rnc_accessions
+    MERGE INTO rnc_accessions t1
+    --ignore duplicates
+    USING (SELECT * FROM load_rnc_accessions) t2
+    ON (t1.accession = t2.accession)
+    WHEN MATCHED THEN UPDATE SET
+      t1.division=t2.division,
+      t1.keywords=t2.keywords,
+      t1.description=t2.description,
+      t1.species=t2.species,
+      t1.common_name=t2.common_name,
+      t1.organelle=t2.organelle,
+      t1.classification=t2.classification,
+      t1.project=t2.project,
+      t1.allele=t2.allele,
+      t1.anticodon=t2.anticodon,
+      t1.chromosome=t2.chromosome,
+      t1.experiment=t2.experiment,
+      t1.function=t2.function,
+      t1.gene=t2.gene,
+      t1.gene_synonym=t2.gene_synonym,
+      t1.inference=t2.inference,
+      t1.locus_tag=t2.locus_tag,
+      t1.map=t2.map,
+      t1.mol_type=t2.mol_type,
+      t1.ncRNA_class=t2.ncRNA_class,
+      t1.note=t2.note,
+      t1.old_locus_tag=t2.old_locus_tag,
+      t1.operon=t2.operon,
+      t1.product=t2.product,
+      t1.pseudogene=t2.pseudogene,
+      t1.standard_name=t2.standard_name,
+      t1.is_composite=t2.is_composite,
+      t1.non_coding_id=t2.non_coding_id,
+      t1.database=t2.database,
+      t1.external_id=t2.external_id,
+      t1.optional_id=t2.optional_id
+    WHEN NOT MATCHED THEN INSERT
     (
-      accession,
-      parent_ac,
-      seq_version,
-      feature_start,
-      feature_end,
-      feature_name,
-      ordinal,
-      division,
-      keywords,
-      description,
-      species,
-      common_name,
-      organelle,
-      classification,
-      project,
-      is_composite,
-      allele,
-      anticodon,
-      chromosome,
-      experiment,
-      function,
-      gene,
-      gene_synonym,
-      inference,
-      locus_tag,
-      map,
-      mol_type,
-      ncRNA_class,
-      note,
-      old_locus_tag,
-      operon,
-      product,
-      pseudogene,
-      standard_name,
-      database
-    )
-    SELECT
-      ac,
-      parent_ac,
-      seq_version,
-      feature_start,
-      feature_end,
-      feature_name,
-      ordinal,
-      division,
-      keywords,
-      description,
-      species,
-      common_name,
-      organelle,
-      classification,
-      project,
-      'N' as is_composite,
-      allele,
-      anticodon,
-      chromosome,
-      experiment,
-      function,
-      gene,
-      gene_synonym,
-      inference,
-      locus_tag,
-      map,
-      mol_type,
-      ncRNA_class,
-      note,
-      old_locus_tag,
-      operon,
-      product,
-      pseudogene,
-      standard_name,
-      CASE
-        WHEN REGEXP_LIKE(ac, '\:rfam$') THEN 'RFAM'
-        ELSE 'ENA'
-      END
-    FROM rnc_ac_info;
-
-    COMMIT;
-
-    -- import expert database accession data
-    INSERT /*+ PARALLEL */ INTO rnc_accessions
-    (
-      accession,
-      parent_ac,
-      seq_version,
-      feature_start,
-      feature_end,
-      feature_name,
-      ordinal,
-      division,
-      keywords,
-      description,
-      species,
-      common_name,
-      organelle,
-      classification,
-      project,
-      is_composite,
-      non_coding_id,
-      database,
-      external_id,
-      optional_id,
-      allele,
-      anticodon,
-      chromosome,
-      experiment,
-      function,
-      gene,
-      gene_synonym,
-      inference,
-      locus_tag,
-      map,
-      mol_type,
-      ncRNA_class,
-      note,
-      old_locus_tag,
-      operon,
-      product,
-      pseudogene,
-      standard_name
-    )
-    SELECT
-      t2.composite_id,
+      t1.accession,
       t1.parent_ac,
       t1.seq_version,
       t1.feature_start,
@@ -192,11 +100,6 @@ create or replace PACKAGE BODY RNC_UPDATE AS
       t1.organelle,
       t1.classification,
       t1.project,
-      'Y' as is_composite,
-      t1.ac,
-      t2.database,
-      t2.external_id,
-      t2.optional_id,
       t1.allele,
       t1.anticodon,
       t1.chromosome,
@@ -214,9 +117,54 @@ create or replace PACKAGE BODY RNC_UPDATE AS
       t1.operon,
       t1.product,
       t1.pseudogene,
-      t1.standard_name
-    FROM rnc_ac_info t1, rnc_composite_ids t2
-    WHERE t1.ac = t2.ac;
+      t1.standard_name,
+      t1.is_composite,
+      t1.non_coding_id,
+      t1.database,
+      t1.external_id,
+      t1.optional_id
+    )
+    VALUES
+    (
+      t2.accession,
+      t2.parent_ac,
+      t2.seq_version,
+      t2.feature_start,
+      t2.feature_end,
+      t2.feature_name,
+      t2.ordinal,
+      t2.division,
+      t2.keywords,
+      t2.description,
+      t2.species,
+      t2.common_name,
+      t2.organelle,
+      t2.classification,
+      t2.project,
+      t2.allele,
+      t2.anticodon,
+      t2.chromosome,
+      t2.experiment,
+      t2.function,
+      t2.gene,
+      t2.gene_synonym,
+      t2.inference,
+      t2.locus_tag,
+      t2.map,
+      t2.mol_type,
+      t2.ncRNA_class,
+      t2.note,
+      t2.old_locus_tag,
+      t2.operon,
+      t2.product,
+      t2.pseudogene,
+      t2.standard_name,
+      t2.is_composite,
+      t2.non_coding_id,
+      t2.database,
+      t2.external_id,
+      t2.optional_id
+    );
 
     COMMIT;
 
