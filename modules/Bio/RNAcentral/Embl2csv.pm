@@ -240,13 +240,12 @@ sub _parse_accession_data {
             }
         }
 
-        # determine if the entry comes from a DR line or from the main entry.
-        if ($xref->{'database'} eq 'ENA' or $xref->{'database'} eq 'RFAM' or $xref->{'database'} eq 'REFSEQ') {
-            $is_composite = 'N';
-            $non_coding_id = '';
-        } else {
+        if ( _is_xref_from_dr_line($xref->{'database'}) ) {
             $is_composite = 'Y';
             $non_coding_id = $source_accession;
+        } else {
+            $is_composite = 'N';
+            $non_coding_id = '';
         }
 
         $text = '"' . join('","', ($accession,
@@ -291,6 +290,32 @@ sub _parse_accession_data {
                                    ) ) . "\"\n";
         print $fh_ac_info $text;
     } # end for loop
+}
+
+
+=head2
+
+    Every sequence entry is an xref that is tracked in the RNAcentral system.
+    In addition, the DR lines from the Expert Databases create additional xrefs
+    that are also tracked.
+
+=cut
+
+sub _is_xref_from_dr_line {
+
+    my $database = shift;
+
+    my %non_dr_line_databases = (
+        'ENA'    => 1,
+        'RFAM'   => 1,
+        'REFSEQ' => 1,
+    );
+
+    if ( exists($non_dr_line_databases{$database}) ) {
+        return 0;
+    } else {
+        return 1;
+    }
 }
 
 
