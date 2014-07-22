@@ -121,7 +121,7 @@ sub embl2csv {
         _parse_sequences_and_xrefs($seq, $xrefs, $self->{'opt'}{'maxseqshort'}, $fh_long, $fh_short);
         _parse_literature_references($seq, $xrefs, $fh_refs);
         _parse_accession_data($seq, $xrefs, $fh_ac_info);
-        _parse_genomic_locations($seq, $fh_gen_loc);
+        _parse_genomic_locations($seq, $xrefs, $fh_gen_loc);
     }
 
     # if there are errors, delete already created files to prevent data import
@@ -650,7 +650,7 @@ sub _combine_vega_xrefs {
 
 sub _parse_genomic_locations {
 
-    my ($seq, $fh_gen_loc) = @_;
+    my ($seq, $xrefs, $fh_gen_loc) = @_;
     my $text = '';
     my @locations;
 
@@ -667,12 +667,14 @@ sub _parse_genomic_locations {
         if ($assembly_json) {
             my $assembly_info = decode_json($assembly_json->display_text);
             for my $exon (@$assembly_info) {
-                $text .= '"' . join('","', ($seq->display_id,
-                                            $exon->{'primary_identifier'},
-                                            $exon->{'primary_start'},
-                                            $exon->{'primary_end'},
-                                            $exon->{'strand'})
-                                    ) . "\"\n";
+                for my $xref (@{$xrefs}) {
+                    $text .= '"' . join('","', ($xref->{'accession'},
+                                                $exon->{'primary_identifier'},
+                                                $exon->{'primary_start'},
+                                                $exon->{'primary_end'},
+                                                $exon->{'strand'})
+                                        ) . "\"\n";
+                }
             }
         }
     } else {
@@ -687,12 +689,14 @@ sub _parse_genomic_locations {
                     @locations = ($feat_object->location);
                 }
                 for my $location ( @locations ) {
-                    $text .= '"' . join('","', ($seq->display_id,
-                                                $seq->accession,   # primary identifier, e.g. AB446294.1
-                                                $location->start,  # local_start (relative to the parent accession)
-                                                $location->end,    # local_end (relative to the parent accession)
-                                                $location->strand) # 1 or -1
-                                        ) . "\"\n";
+                    for my $xref (@{$xrefs}) {
+                        $text .= '"' . join('","', ($xref->{'accession'}, # accession used by RNAcentral
+                                                    $seq->accession,      # primary identifier, e.g. AB446294.1
+                                                    $location->start,     # local_start (relative to the parent accession)
+                                                    $location->end,       # local_end (relative to the parent accession)
+                                                    $location->strand)    # 1 or -1
+                                            ) . "\"\n";
+                    }
                 }
             }
         }
