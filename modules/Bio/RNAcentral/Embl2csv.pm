@@ -22,6 +22,8 @@
 
 =head1 DESCRIPTION
 
+    This is the main program for parsing the ENA Non-coding product
+    as well as other products used in the RNAcentral pipeline.
 
 =cut
 
@@ -42,7 +44,7 @@ BEGIN {
 use File::Spec;
 use File::Find qw(finddepth);
 
-use Bio::SeqIO;   # BioPerl is used for reading embl files
+use Bio::SeqIO;   # BioPerl
 use SWISS::CRC64; # cyclic redundancy check
 use Digest::MD5 qw(md5_hex);
 use JSON;
@@ -69,10 +71,8 @@ sub new {
     # create output directory for info files
     mkdir $self->get_info_path() unless -d $self->get_info_path();
 
-    # create output directory for genomic locations
+    # create output directory for genomic coordinates
     mkdir $self->get_genomic_locations_path() unless -d $self->get_genomic_locations_path();
-
-    $self->{'assemblies'} = {};
 
     return $self;
 }
@@ -80,7 +80,8 @@ sub new {
 
 =head2 embl2csv
 
-    Read an embl file and create all required csv files.
+    Read an embl file and create the output files in csv format.
+    This is the main public method of this module.
 
 =cut
 
@@ -157,6 +158,8 @@ sub embl2csv {
     * contain only Ns
     * have high N-content
 
+    The cutoff values are specified in Bio::RNAcentral::Base.
+
 =cut
 
 sub _is_valid_sequence {
@@ -183,7 +186,7 @@ sub _is_valid_sequence {
 
 =head2 _parse_accession_data
 
-    Prepare data for the load_rnc_accessions table, which will be merged into
+    Prepare the data for the load_rnc_accessions table, which will be merged into
     the main rnc_accessions table.
 
 =cut
@@ -193,7 +196,7 @@ sub _parse_accession_data {
     my ($text, $accession, $parent_accession, $seq_version, $feature_location_start,
         $feature_location_end, $feature_name, $ordinal, $species,
         $common_name, $keywords, $project, $is_composite, $non_coding_id,
-        $source_accession, %feature_tags);
+        $source_accession, %feature_tags, $db_xrefs);
 
     $source_accession = ${$xrefs}[0]{'accession'}; # accession of the source ENA entry
 
@@ -206,6 +209,9 @@ sub _parse_accession_data {
 
     # get feature table qualifiers
     %feature_tags = _get_feature_tags($seq);
+
+    # get db_xref feature qualifiers
+    $db_xrefs = _get_db_xref_feature_qualifiers($seq);
 
     # iterate over all xrefs from the entry
     for my $xref (@{$xrefs}) {
@@ -281,7 +287,7 @@ sub _parse_accession_data {
                                    $feature_tags{'product'},
                                    $feature_tags{'pseudogene'},
                                    $feature_tags{'standard_name'},
-                                   _get_db_xref_feature_qualifiers($seq),
+                                   $db_xrefs,
                                    ) ) . "\"\n";
         print $fh_ac_info $text;
     } # end for loop
