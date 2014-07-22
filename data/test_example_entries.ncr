@@ -228,6 +228,74 @@ SQ   Sequence 747 BP; 223 A; 167 C; 195 G; 162 T; 0 other;
      tggccgcctt cacagaggga gtcactgacg tccctgctca gcgcagccct ggcatgtggg       720
      ggtccctcta ctcatgagaa accccca                                           747
 //
+ID   HG977712.1:1..250:ncRNA; SV 1; linear; transcribed RNA; STD; MUS; 250 BP.
+XX
+PA   HG977712.1
+XX
+PR   Project:PRJEB4568;
+XX
+DT   02-JUN-2014 (Rel. 121, Created)
+DT   02-JUN-2014 (Rel. 121, Last updated, Version 1)
+XX
+DE   Mus musculus (house mouse) long non-coding RNA OTTMUST00000065165.1
+DE   (RP23-115I1.1 gene)
+XX
+KW   RNAcentral; TPA; TPA:specialist_db.
+XX
+OS   Mus musculus (house mouse)
+OC   Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi; Mammalia;
+OC   Eutheria; Euarchontoglires; Glires; Rodentia; Sciurognathi; Muroidea;
+OC   Muridae; Murinae; Mus; Mus.
+XX
+RN   [1]
+RP   1-250
+RG   Vega and RNAcentral
+RA   ;
+RT   ;
+RL   Submitted (30-APR-2014) to the INSDC.
+XX
+RN   [2]
+RX   DOI; 10.1093/nar/gkt1241.
+RX   PUBMED; 24316575.
+RA   Harrow J.L., Steward C.A., Frankish A., Gilbert J.G., Gonzalez J.M.,
+RA   Loveland J.E., Mudge J., Sheppard D., Thomas M., Trevanion S.,
+RA   Wilming L.G.;
+RT   "The Vertebrate Genome Annotation browser 10 years on";
+RL   Nucleic Acids Res. 42(Database issue):D771-D779(2014).
+XX
+DR   VEGA-Gn; OTTMUSG00000026352; Mus_musculus.
+DR   VEGA-Tr; OTTMUST00000065165; Mus_musculus.
+DR   MD5; d8809681ebc9531eb1b5f183830006a7.
+XX
+CC   Specialist DB   : VEGA (The Vertebrate Genome Annotation database)
+CC   URL             : http://vega.sanger.ac.uk
+CC   Version         : Release 56
+XX
+AH   LOCAL_SPAN          PRIMARY_IDENTIFIER PRIMARY_SPAN        COMP
+AS   1-101               CM000994.2         3466587-3466687
+AS   102-250             CM000994.2         3513405-3513553
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..250
+FT                   /organism="Mus musculus"
+FT                   /chromosome="1"
+FT                   /strain="C57BL/6J"
+FT                   /mol_type="transcribed RNA"
+FT                   /db_xref="taxon:10090"
+FT   ncRNA           HG977712.1:1..250
+FT                   /gene="RP23-115I1.1"
+FT                   /product="long non-coding RNA OTTMUST00000065165.1"
+FT                   /note="biotype:antisense"
+FT                   /ncRNA_class="lncRNA"
+XX
+SQ   Sequence 250 BP; 85 A; 53 C; 50 G; 62 T; 0 other;
+     tgaaaatgga tagcagttcc cttaatcttc ttgtacttat gggaggaaag agaagaggtg        60
+     gagatatgcc cgtgtgcagt gagatctgtt ggattctaac ggctttgcct ggatggcatt       120
+     tgaaatctcc aactcagaca caccagattg cacccatcat ccaagatgaa gactcctaag       180
+     cttgataaat tccactgaca aaacaaacca acaaagcaaa taaactgata tgatcaaatg       240
+     attactccca                                                              250
+//
 ID   HG519048.1:1..359:tmRNA; SV 1; linear; genomic DNA; STD; UNC; 359 BP.
 XX
 PA   HG519048.1
