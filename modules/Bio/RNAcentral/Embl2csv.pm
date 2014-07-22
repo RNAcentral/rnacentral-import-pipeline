@@ -258,7 +258,7 @@ sub _parse_accession_data {
                                    $project,
                                    _nvl($seq->division),
                                    $keywords,
-                                   _nvl($seq->desc),
+                                   _get_description_line($seq->desc),
                                    $species->binomial(),
                                    _nvl($species->common_name),
                                    _nvl($species->organelle),
@@ -284,6 +284,20 @@ sub _parse_accession_data {
                                    ) ) . "\"\n";
         print $fh_ac_info $text;
     } # end for loop
+}
+
+
+=head2 _get_description_line
+
+    Tweak the description line to remove the "TPA: " string.
+
+=cut
+
+sub _get_description_line {
+
+    my $description = shift;
+    $description =~ s/^TPA\: //;
+    return _nvl($description);
 }
 
 
