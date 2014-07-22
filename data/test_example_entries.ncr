@@ -410,3 +410,60 @@ SQ   Sequence 72 BP; 14 A; 20 C; 25 G; 13 T; 0 other;
      gggctcgtag atcaggggta gatcgctacg ttcgcaacgt agaggccgcg ggttcaaatc        60
      ccgccgggtc ca                                                            72
 //
+ID   LM608264.1:7..26:ncRNA; SV 1; linear; transcribed RNA; STD; PLN; 20 BP.
+XX
+PA   LM608264.1
+XX
+PR   Project:PRJEB4451;
+XX
+DT   21-JUL-2014 (Rel. 121, Created)
+DT   21-JUL-2014 (Rel. 121, Last updated, Version 1)
+XX
+DE   Arabidopsis thaliana (thale cress) microRNA ath-miR156e
+XX
+KW   RNAcentral; TPA; TPA:specialist_db.
+XX
+OS   Arabidopsis thaliana (thale cress)
+OC   Eukaryota; Viridiplantae; Streptophyta; Embryophyta; Tracheophyta;
+OC   Spermatophyta; Magnoliophyta; eudicotyledons; Gunneridae; Pentapetalae;
+OC   rosids; malvids; Brassicales; Brassicaceae; Camelineae; Arabidopsis.
+XX
+RN   [1]
+RG   miRBase and RNAcentral
+RA   ;
+RT   ;
+RL   Submitted (18-JUL-2014) to the INSDC.
+XX
+RN   [2]
+RX   DOI; 10.1093/nar/gkq1027.
+RX   PUBMED; 21037258.
+RA   Kozomara A., Griffiths-Jones S.;
+RT   "miRBase: integrating microRNA annotation and deep-sequencing data";
+RL   Nucleic Acids Res. 39(Database issue):D152-D157(2011).
+XX
+DR   MD5; c1f1fbd028754e4325eccd76cb0f646c.
+XX
+CC   miRBase; MI0000182.
+CC
+CC   Specialist DB   : miRBase (The microRNA database)
+CC   URL             : http://www.mirbase.org
+CC   Version         : Release 21
+XX
+AH   LOCAL_SPAN          PRIMARY_IDENTIFIER PRIMARY_SPAN        COMP
+AS   1-20                CP002688.1         7-26
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..20
+FT                   /organism="Arabidopsis thaliana"
+FT                   /mol_type="transcribed RNA"
+FT                   /db_xref="taxon:3702"
+FT   ncRNA           LM608264.1:7..26
+FT                   /product="microRNA ath-miR156e"
+FT                   /note="mature miRNA accession:MIMAT0000170"
+FT                   /experiment="EXISTENCE:RNA-seq ECO0000205"
+FT                   /ncRNA_class="miRNA"
+XX
+SQ   Sequence 20 BP; 8 A; 3 C; 7 G; 2 T; 0 other;
+     tgacagaaga gagtgagcac                                                    20
+//

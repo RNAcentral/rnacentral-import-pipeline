@@ -486,6 +486,7 @@ sub _get_xrefs {
     # todo: remove this temporary fix when DR lines are added to all entries
     push @data, _inject_xrefs_manually($seq, 'GTRNADB');
     push @data, _inject_xrefs_manually($seq, 'LNCRNADB');
+    push @data, _inject_xrefs_manually($seq, 'MIRBASE');
 
     # append other xrefs from DR lines
     my $anno_collection = $seq->annotation;
@@ -545,55 +546,53 @@ sub _get_xrefs {
     As a temporary measure, these xrefs are identified using project ids
     and the DR data are parsed from the CC lines.
 
+    Some entries from an expert database may already have DR lines while others
+    may still have CC lines, depending on the status of the ENA xref pipeline.
+
+    Example CC lines:
+    lncRNAdb; 190; 7SK.
+    gtRNAdb; Cand_Meth_boonei_6A8/Cand_Meth_boonei_6A8-summary.
+    miRBase; MI0000182.
 =cut
 
 sub _inject_xrefs_manually {
     my ($seq, $db_name) = @_;
     my ($db_project_id, $external_id, $optional_id);
 
-    if ($db_name eq 'GTRNADB') {
-        $db_project_id = 'PRJEB5173';
-    } elsif ($db_name eq 'LNCRNADB') {
-        $db_project_id = 'PRJEB6238';
+    my %project_ids = (
+        'GTRNADB'  => 'PRJEB5173',
+        'LNCRNADB' => 'PRJEB6238',
+        'MIRBASE'  => 'PRJEB4451',
+    );
+
+    if ( exists($project_ids{$db_name} ) ) {
+        $db_project_id = $project_ids{$db_name};
     }
 
     my $entry_project_id = _get_project_id($seq);
 
     if ($entry_project_id eq $db_project_id) {
-        #parse comment lines to extract xref information
-        #lncRNAdb; 190; 7SK. Text continues.
-        #
-        # or
-        #
-        #Specialist DB   : gtRNAdb (Genomic tRNA Database)
-        #URL             : http://lowelab.ucsc.edu/GtRNAdb/
-        #gtRNAdb; Cand_Meth_boonei_6A8/Cand_Meth_boonei_6A8-summary.
         my @annotations = $seq->annotation->get_Annotations('comment');
         for my $value ( @annotations ) {
             my $comment = $value->display_text;
             my $search_string = "$db_name; (\\S+)(; (\\S+))?\\.";
-            if ($comment =~ /$search_string/i) {;
+            if ($comment =~ /$search_string/i) {
                 $external_id = $1;
                 if (defined $3) {
                     $optional_id = $3;
                 } else {
                     $optional_id = '';
                 }
-            } else {
-                $external_id = $db_name;
-                $optional_id = '';
+                return {
+                    accession   => _get_expert_db_id($seq->display_id, $db_name, $external_id),
+                    primary_id  => $external_id,
+                    optional_id => $optional_id,
+                    database    => $db_name,
+                };
             }
         }
-
-        return {
-            accession   => _get_expert_db_id($seq->display_id, $db_name, $external_id),
-            primary_id  => $external_id,
-            optional_id => $optional_id,
-            database    => $db_name,
-        };
-    } else {
-        return ();
     }
+    return ();
 }
 
 
