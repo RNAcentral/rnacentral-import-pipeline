@@ -106,7 +106,6 @@ my $c = Bio::RNAcentral::OracleUpdate->new($opt);
 $c->db_oracle_connect();
 $c->truncate_table($c->{'opt'}{'staging_table'});
 
-
 # load information about non-coding accessions
 my $f = Bio::RNAcentral::SqlldrImportAccessionInfo->new($opt, 'ac_info');
 $f->update();

@@ -121,7 +121,7 @@ sub embl2csv {
         _parse_sequences_and_xrefs($seq, $xrefs, $self->{'opt'}{'maxseqshort'}, $fh_long, $fh_short);
         # _store_xref_correspondences($seq, $xrefs, $fh_comp_id); # no longer needed as rnc_composite_ids will be deprecated
 
-        _parse_literature_references($seq, $fh_refs);
+        _parse_literature_references($seq, $xrefs, $fh_refs);
         _parse_accession_data($seq, $xrefs, $fh_ac_info);
         _parse_genomic_locations($seq, $fh_gen_loc);
     }
@@ -713,7 +713,7 @@ sub _parse_genomic_locations {
 
 sub _parse_literature_references {
 
-    my ($seq, $fh_refs) = @_;
+    my ($seq, $xrefs, $fh_refs) = @_;
 
     my ($ref_authors, $ref_location, $ref_title, $ref_pmid, $ref_doi, $md5);
     my $text = '';
@@ -731,13 +731,16 @@ sub _parse_literature_references {
                 $ref_doi      = _nvl($value->doi());       # parsed RX line
                 $md5          = md5_hex($ref_authors . $ref_location . $ref_title);
 
-                $text .= '"' . join('","', ($md5,
-                                            $seq->display_id,
-                                            $ref_authors,
-                                            $ref_location,
-                                            $ref_title,
-                                            $ref_pmid,
-                                            $ref_doi) ) . "\"\n";
+                # iterate over all xrefs from the entry
+                for my $xref (@{$xrefs}) {
+                    $text .= '"' . join('","', ($md5,
+                                                $xref->{'accession'},
+                                                $ref_authors,
+                                                $ref_location,
+                                                $ref_title,
+                                                $ref_pmid,
+                                                $ref_doi) ) . "\"\n";
+                }
             }
         }
     }

@@ -386,23 +386,6 @@ create or replace PACKAGE BODY RNC_UPDATE AS
 		);
     COMMIT;
 
-    -- copy literature references for the composite ids
-    MERGE INTO rnc_reference_map t1
-    USING (select t3.ac, t3.composite_id, t4.reference_ID from rnc_composite_ids t3, rnc_reference_map t4 where t3.ac = t4.accession) t2
-		ON (t1.accession = t2.composite_id and t1.reference_id=t2.reference_ID)
-		WHEN NOT MATCHED THEN INSERT
-		(
-  		t1.accession,
-
-			t1.reference_id
-		)
-		VALUES
-		(
-  		t2.composite_id,
-			t2.reference_ID
-		);
-    COMMIT;
-
     EXECUTE IMMEDIATE 'TRUNCATE TABLE load_rnc_references DROP STORAGE';
 
     DBMS_OUTPUT.put_line('Literature references updated');
