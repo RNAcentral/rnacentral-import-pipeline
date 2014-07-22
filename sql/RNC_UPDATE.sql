@@ -78,7 +78,8 @@ create or replace PACKAGE BODY RNC_UPDATE AS
       t1.non_coding_id=t2.non_coding_id,
       t1.database=t2.database,
       t1.external_id=t2.external_id,
-      t1.optional_id=t2.optional_id
+      t1.optional_id=t2.optional_id,
+      t1.db_xref=t2.db_xref
     WHEN NOT MATCHED THEN INSERT
     (
       t1.accession,
@@ -118,7 +119,8 @@ create or replace PACKAGE BODY RNC_UPDATE AS
       t1.non_coding_id,
       t1.database,
       t1.external_id,
-      t1.optional_id
+      t1.optional_id,
+      t1.db_xref
     )
     VALUES
     (
@@ -159,7 +161,8 @@ create or replace PACKAGE BODY RNC_UPDATE AS
       t2.non_coding_id,
       t2.database,
       t2.external_id,
-      t2.optional_id
+      t2.optional_id,
+      t2.db_xref
     );
 
     COMMIT;

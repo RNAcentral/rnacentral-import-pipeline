@@ -138,7 +138,8 @@ FIELDS TERMINATED BY ',' enclosed by '"'
     OPERON char,
     PRODUCT char,
     PSEUDOGENE char,
-    STANDARD_NAME char
+    STANDARD_NAME char,
+    DB_XREF char
 )
 CTL
     close $fh;

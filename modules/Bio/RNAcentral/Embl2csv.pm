@@ -280,7 +280,8 @@ sub _parse_accession_data {
                                    $feature_tags{'operon'},
                                    $feature_tags{'product'},
                                    $feature_tags{'pseudogene'},
-                                   $feature_tags{'standard_name'}
+                                   $feature_tags{'standard_name'},
+                                   _get_db_xref_feature_qualifiers($seq),
                                    ) ) . "\"\n";
         print $fh_ac_info $text;
     } # end for loop
@@ -360,6 +361,42 @@ sub _get_feature_tags {
     }
 
     return %tag_values;
+}
+
+
+=head2 _get_db_xref_feature_qualifiers
+
+    Get the /db_xref feature qualifiers that contain feature-level xrefs
+    to other resources.
+
+    Examples of useful db_xrefs:
+    * GeneID for RefSeq
+    * HGNC ids for gtRNAdb
+
+    The `source` feature is not analyzed because it only contains the taxid db_xref.
+
+=cut
+
+sub _get_db_xref_feature_qualifiers {
+
+    my $seq = shift;
+    my @db_xrefs;
+
+    # loop over features
+    for my $feat_object ($seq->get_SeqFeatures) {
+        if ( $feat_object->primary_tag ne 'source' ) {
+            # loop over feature qualifiers (tags)
+            for my $tag ($feat_object->get_all_tags) {
+                for my $value ($feat_object->get_tag_values($tag)) {
+                    if ($tag eq 'db_xref') {
+                        push @db_xrefs, $value;
+                    }
+                }
+            }
+        }
+    }
+
+    return join(' ', @db_xrefs);
 }
 
 
