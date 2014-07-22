@@ -782,7 +782,7 @@ sub _parse_literature_references {
 
     my ($seq, $xrefs, $fh_refs) = @_;
 
-    my ($ref_authors, $ref_location, $ref_title, $ref_pmid, $ref_doi, $md5);
+    my ($authors, $location, $title, $pmid, $doi, $md5);
     my $text = '';
 
     my $anno_collection = $seq->annotation;
@@ -791,22 +791,22 @@ sub _parse_literature_references {
         for my $value ( @annotations ) {
             # all reference lines: RN, RC, RP, RX, RG, RA, RT, RL
             if ( $value->tagname eq 'reference' ) {
-                $ref_authors  = _sanitize($value->authors());   # RA line
-                $ref_location = _sanitize($value->location());  # RL line
-                $ref_title    = _sanitize($value->title());     # RT line
-                $ref_pmid     = _sanitize($value->pubmed());    # parsed RX line
-                $ref_doi      = _sanitize($value->doi());       # parsed RX line
-                $md5          = md5_hex($ref_authors . $ref_location . $ref_title);
+                $authors  = _sanitize($value->authors());   # RA line
+                $location = _sanitize($value->location());  # RL line
+                $title    = _sanitize($value->title());     # RT line
+                $pmid     = _sanitize($value->pubmed());    # parsed RX line
+                $doi      = _sanitize($value->doi());       # parsed RX line
+                $md5      = md5_hex($authors . $location . $title);
 
                 # iterate over all xrefs from the entry
                 for my $xref (@{$xrefs}) {
                     $text .= '"' . join('","', ($md5,
                                                 $xref->{'accession'},
-                                                $ref_authors,
-                                                $ref_location,
-                                                $ref_title,
-                                                $ref_pmid,
-                                                $ref_doi) ) . "\"\n";
+                                                $authors,
+                                                $location,
+                                                $title,
+                                                $pmid,
+                                                $doi) ) . "\"\n";
                 }
             }
         }
