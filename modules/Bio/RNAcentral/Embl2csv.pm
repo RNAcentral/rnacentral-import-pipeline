@@ -665,15 +665,14 @@ sub _get_expert_db_id {
 
 =head2 _combine_vega_xrefs
 
-    VEGA xref is split into 2 DR lines:
+    The VEGA xrefs is defined in 2 DR lines:
     DR   VEGA-Gn; OTTHUMG00000013241; Homo sapiens. # genes
     DR   VEGA-Tr; OTTHUMT00000037008; Homo sapiens. # transcripts
 
-    This procedure collates them as if they were in one:
+    This procedure combines them as if they were in one:
     DR   VEGA; OTTHUMG00000013241; OTTHUMT00000037008.
 
-    The "Homo sapiens" bit is not important because the taxon
-    also appears elsewhere in the entry.
+    The species is stored elsewhere so this information is not recorded.
 
 =cut
 
@@ -725,6 +724,7 @@ sub _parse_genomic_locations {
     my $text = '';
     my @locations;
 
+    # determine if the entry is a TPA or a primary accession
     my $is_TPA;
     if ($seq->keywords =~ /TPA;/) {
         $is_TPA = 1;
