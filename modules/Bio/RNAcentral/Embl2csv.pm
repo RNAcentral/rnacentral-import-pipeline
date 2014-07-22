@@ -201,7 +201,7 @@ sub _parse_accession_data {
 
     $project = _get_project_id($seq);
 
-    $keywords = _nvl($seq->keywords);
+    $keywords = _sanitize($seq->keywords);
     $keywords =~ s/\.$//;
 
     # get feature table qualifiers
@@ -249,19 +249,19 @@ sub _parse_accession_data {
                                    $feature_location_start,
                                    $feature_location_end,
                                    $feature_name,
-                                   _nvl($ordinal),
+                                   _sanitize($ordinal),
                                    $is_composite,
                                    $non_coding_id, # source ENA id
                                    $xref->{'database'},
                                    $xref->{'primary_id'},
                                    $xref->{'optional_id'},
                                    $project,
-                                   _nvl($seq->division),
+                                   _sanitize($seq->division),
                                    $keywords,
                                    _get_description_line($seq->desc),
                                    $species->binomial(),
-                                   _nvl($species->common_name),
-                                   _nvl($species->organelle),
+                                   _sanitize($species->common_name),
+                                   _sanitize($species->organelle),
                                    join('; ', reverse $species->classification),
                                    $feature_tags{'allele'},
                                    $feature_tags{'anticodon'},
@@ -298,7 +298,7 @@ sub _get_description_line {
 
     my $description = shift;
     $description =~ s/^TPA\: //;
-    return _nvl($description);
+    return _sanitize($description);
 }
 
 
@@ -531,7 +531,7 @@ sub _get_xrefs {
         my @annotations = $anno_collection->get_Annotations($key);
         for my $value ( @annotations ) {
             if ( $value->tagname eq "dblink" ) {
-                $database    = _nvl($value->database());
+                $database    = _sanitize($value->database());
 
                 # skip these DR lines
                 if ($database eq 'MD5' or $database =~ /SILVA/) {
@@ -543,8 +543,8 @@ sub _get_xrefs {
                     next;
                 }
 
-                $primary_id  = _nvl($value->primary_id());
-                $optional_id = _nvl($value->optional_id());
+                $primary_id  = _sanitize($value->primary_id());
+                $optional_id = _sanitize($value->optional_id());
 
                 # use a shorter label for tmRNA-Website
                 if ($database eq 'tmRNA-Website') {
@@ -791,11 +791,11 @@ sub _parse_literature_references {
         for my $value ( @annotations ) {
             # all reference lines: RN, RC, RP, RX, RG, RA, RT, RL
             if ( $value->tagname eq 'reference' ) {
-                $ref_authors  = _nvl($value->authors());   # RA line
-                $ref_location = _nvl($value->location());  # RL line
-                $ref_title    = _nvl($value->title());     # RT line
-                $ref_pmid     = _nvl($value->pubmed());    # parsed RX line
-                $ref_doi      = _nvl($value->doi());       # parsed RX line
+                $ref_authors  = _sanitize($value->authors());   # RA line
+                $ref_location = _sanitize($value->location());  # RL line
+                $ref_title    = _sanitize($value->title());     # RT line
+                $ref_pmid     = _sanitize($value->pubmed());    # parsed RX line
+                $ref_doi      = _sanitize($value->doi());       # parsed RX line
                 $md5          = md5_hex($ref_authors . $ref_location . $ref_title);
 
                 # iterate over all xrefs from the entry
@@ -875,12 +875,12 @@ sub _escape_quotes {
     return $text;
 }
 
-=head2 _nvl
+=head2 _sanitize
 
-    Get a non-empty value, named after the NVL Oracle function.
+    Get a non-empty value with escaped quotes.
 =cut
 
-sub _nvl {
+sub _sanitize {
     my $value = shift;
     return ( defined( $value ) ? _escape_quotes($value) : '' );
 }
