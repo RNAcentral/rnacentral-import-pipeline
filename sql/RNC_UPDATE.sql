@@ -25,10 +25,6 @@ create or replace PACKAGE RNC_UPDATE AS
 
   PROCEDURE update_accession_info;
 
-  PROCEDURE update_composite_ids;
-
-
-
   PROCEDURE update_rnc_accessions;
 
 END RNC_UPDATE;
@@ -175,51 +171,6 @@ create or replace PACKAGE BODY RNC_UPDATE AS
     DBMS_OUTPUT.put_line('rnc_accessions updated');
 
   END update_rnc_accessions;
-
-  /*
-  *
-  */
-  PROCEDURE update_composite_ids
-  IS
-  BEGIN
-
-
-
-    DBMS_OUTPUT.put_line('Updating composite ids');
-
-    MERGE INTO rnc_composite_ids t1
-    --ignore duplicates
-    USING (SELECT * FROM load_rnc_composite_ids WHERE ROWID IN (SELECT MIN (ROWID) FROM load_rnc_composite_ids GROUP BY ac)) t2
-		ON (t1.composite_id = t2.composite_id)
-		WHEN MATCHED THEN UPDATE SET
-      t1.OPTIONAL_ID = t2.OPTIONAL_ID,
-      t1.external_id = t2.external_id
-		WHEN NOT MATCHED THEN INSERT
-		(
-      t1.COMPOSITE_ID,
-      t1.AC,
-      t1.DATABASE,
-
-
-      t1.OPTIONAL_ID,
-      t1.EXTERNAL_ID
-		)
-		VALUES
-		(
-      t2.COMPOSITE_ID,
-      t2.AC,
-      t2.DATABASE,
-      t2.OPTIONAL_ID,
-      t2.EXTERNAL_ID
-    );
-
-
-    DBMS_OUTPUT.put_line('Composite ids updated');
-
-    EXECUTE IMMEDIATE 'TRUNCATE TABLE load_rnc_composite_ids DROP STORAGE';
-
-
-  END update_composite_ids;
 
 
   /*

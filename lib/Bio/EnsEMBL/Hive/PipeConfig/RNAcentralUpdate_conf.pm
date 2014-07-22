@@ -174,16 +174,6 @@ sub pipeline_analyses {
         },
 
 
-        # load composite ids
-        {   -logic_name => 'load_composite_ids',
-            -module     => 'Bio::EnsEMBL::Hive::RunnableDB::RNAcentral::LoadCompositeIds',
-            -analysis_capacity  => 1,
-            -input_ids  => [
-                { 'id' => 1 }
-            ],
-            -wait_for => [ 'get_ncr_files', 'create_csv_files' ]
-        },
-
         # list all csv files with sequences longer than 4000 characters.
         {   -logic_name => 'get_long_csv_files',
             -module     => 'Bio::EnsEMBL::Hive::RunnableDB::RNAcentral::GetFiles',

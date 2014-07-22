@@ -116,11 +116,6 @@ sub get_genomic_locations_path {
   return File::Spec->catfile($self->{'output_folder'}, 'genomic_locations');
 }
 
-sub get_assembly_path {
-  my $self = shift;
-  return File::Spec->catfile($self->{'output_folder'}, 'assemblies');
-}
-
 sub get_sqlldr_bad_path {
   my $self = shift;
   return File::Spec->catfile($self->{'output_folder'}, 'bad');
@@ -148,18 +143,6 @@ sub get_long_folder_path {
 sub get_chunks_path {
     my $self = shift;
     return File::Spec->catfile($self->{'output_folder'}, 'chunks');
-}
-
-
-=head2 get_comp_id_path
-
-  Get full path to the folder containing files downloaded over ftp.
-
-=cut
-
-sub get_comp_id_path {
-    my $self = shift;
-    return File::Spec->catfile($self->{'output_folder'}, 'composite_ids');
 }
 
 

@@ -52,7 +52,6 @@ use Bio::RNAcentral::Embl2csv;
 use Bio::RNAcentral::SqlldrImportSequences;
 use Bio::RNAcentral::SqlldrImportReferences;
 use Bio::RNAcentral::SqlldrImportAccessionInfo;
-use Bio::RNAcentral::SqlldrImportCompositeIds;
 
 
 my $location = '';
@@ -111,10 +110,6 @@ $c->truncate_table($c->{'opt'}{'staging_table'});
 # load information about non-coding accessions
 my $f = Bio::RNAcentral::SqlldrImportAccessionInfo->new($opt, 'ac_info');
 $f->update();
-
-# load information about composite non-coding ids
-my $g = Bio::RNAcentral::SqlldrImportCompositeIds->new($opt, 'composite_ids');
-$g->update();
 
 # load literature references
 my $d = Bio::RNAcentral::SqlldrImportReferences->new($opt, 'refs');

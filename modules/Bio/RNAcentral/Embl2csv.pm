@@ -69,12 +69,6 @@ sub new {
     # create output directory for info files
     mkdir $self->get_info_path() unless -d $self->get_info_path();
 
-    # create output directory for composite id files
-    mkdir $self->get_comp_id_path() unless -d $self->get_comp_id_path();
-
-    # create output directory for assembly data files
-    mkdir $self->get_assembly_path() unless -d $self->get_assembly_path();
-
     # create output directory for genomic locations
     mkdir $self->get_genomic_locations_path() unless -d $self->get_genomic_locations_path();
 
@@ -100,8 +94,6 @@ sub embl2csv {
     my $fname_short   = $self->get_output_filename($self->get_short_folder_path(), $job_id, 'short', 'csv');
     my $fname_refs    = File::Spec->catfile($self->get_refs_path(),     $job_id . '.csv');
     my $fname_ac_info = File::Spec->catfile($self->get_info_path(),     $job_id . '.csv');
-    my $fname_comp_id = File::Spec->catfile($self->get_comp_id_path(),  $job_id . '.csv');
-    my $fname_as_info = File::Spec->catfile($self->get_assembly_path(), $job_id . '.csv');
     my $fname_genloc  = File::Spec->catfile($self->get_genomic_locations_path(), $job_id . '.csv');
 
     # open output files
@@ -109,8 +101,6 @@ sub embl2csv {
     my $fh_short   = IO::File->new("> $fname_short")   or $self->{'logger'}->logdie("Couldn't open file $fname_short");
     my $fh_refs    = IO::File->new("> $fname_refs")    or $self->{'logger'}->logdie("Couldn't open file $fname_refs");
     my $fh_ac_info = IO::File->new("> $fname_ac_info") or $self->{'logger'}->logdie("Couldn't open file $fname_ac_info");
-    my $fh_comp_id = IO::File->new("> $fname_comp_id") or $self->{'logger'}->logdie("Couldn't open file $fname_comp_id");
-    my $fh_as_info = IO::File->new("> $fname_as_info") or $self->{'logger'}->logdie("Couldn't open file $fname_as_info");
     my $fh_gen_loc = IO::File->new("> $fname_genloc")  or $self->{'logger'}->logdie("Couldn't open file $fname_genloc");
 
     # open file with BioPerl
@@ -134,22 +124,6 @@ sub embl2csv {
         _parse_literature_references($seq, $fh_refs);
         _parse_accession_data($seq, $xrefs, $fh_ac_info);
         _parse_genomic_locations($seq, $fh_gen_loc);
-
-        # assembly information with genome locations
-        # TODO: remove this section when _parse_genomic_locations is used
-        my $assembly_json = ($seq->annotation->get_Annotations('assembly_json'))[0];
-        if ($assembly_json) {
-            my $assembly_info = decode_json($assembly_json->display_text);
-            for my $exon (@$assembly_info) {
-                print $fh_as_info '"' . join( '","', ($seq->display_id,
-                                                      $exon->{'local_start'},
-                                                      $exon->{'local_end'},
-                                                      $exon->{'primary_identifier'},
-                                                      $exon->{'primary_start'},
-                                                      $exon->{'primary_end'},
-                                                      $exon->{'strand'})) . "\"\n";
-            }
-        }
     }
 
     # if there are errors, delete already created files to prevent data import
@@ -165,14 +139,10 @@ sub embl2csv {
     $fh_long->close;
     $fh_refs->close;
     $fh_ac_info->close;
-    $fh_comp_id->close;
-    $fh_as_info->close;
     $fh_gen_loc->close;
 
     # remove empty files
     _delete_empty_file($fname_refs);
-    _delete_empty_file($fname_comp_id);
-    _delete_empty_file($fname_as_info);
     _delete_empty_file($fname_ac_info);
 
     # return an array with csv files
@@ -444,39 +414,6 @@ sub _parse_sequences_and_xrefs {
     } else {
         print $fh_short $text;
     }
-}
-
-
-=head2 _store_xref_correspondences(
-
-    Prepare data for the load_rnc_composite_ids table.
-
-    Each expert database DR line is treated as a separate accession
-    derived from the source ENA accession.
-
-=cut
-
-sub _store_xref_correspondences {
-    my ($seq, $xrefs, $fh_comp_id) = @_;
-
-    my $text = '';
-
-    if ( scalar @$xrefs > 1 ) {
-        # skip the first entry (ENA id or RFAM product)
-        for ( my $i = 1; $i < scalar @$xrefs; $i++ ) {
-            my $xref = @$xrefs[$i];
-            $text .= '"' . join('","', ($xref->{'accession'},   # expert_db xref like HG497133.1:1..472:ncRNA:VEGA:OTTHUMG00000161051
-                                        $seq->display_id,       # ENA source accession BK006945.2:460712..467569:rRNA
-                                        $xref->{'database'}),   # e.g. RFAM
-                                        $xref->{'optional_id'}, # e.g. 5.8S_RNA
-                                        $xref->{'primary_id'},  # e.g. RF01271
-                                ) . "\"\n";;
-        }
-    } else {
-        $text = '';
-    }
-
-    print $fh_comp_id $text;
 }
 
 
