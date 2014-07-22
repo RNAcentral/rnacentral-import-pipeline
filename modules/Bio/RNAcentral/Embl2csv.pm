@@ -119,8 +119,6 @@ sub embl2csv {
 
         my $xrefs = _get_xrefs($seq);
         _parse_sequences_and_xrefs($seq, $xrefs, $self->{'opt'}{'maxseqshort'}, $fh_long, $fh_short);
-        # _store_xref_correspondences($seq, $xrefs, $fh_comp_id); # no longer needed as rnc_composite_ids will be deprecated
-
         _parse_literature_references($seq, $xrefs, $fh_refs);
         _parse_accession_data($seq, $xrefs, $fh_ac_info);
         _parse_genomic_locations($seq, $fh_gen_loc);
