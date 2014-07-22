@@ -445,6 +445,22 @@ sub _is_rfam_entry {
     }
 }
 
+=head _is_refseq_entry
+
+    Return 1 if an accession is a RefSeq entry, return 0 otherwise.
+
+=cut
+
+sub _is_refseq_entry {
+    my $keywords = shift;
+
+    if ( $keywords =~ '^RefSeq;' ) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
 
 =head2 _get_xrefs
 
@@ -458,14 +474,13 @@ sub _get_xrefs {
 
     my (@data, $database, $primary_id, $optional_id, $project, $composite_id);
 
-    # first element is the source ENA entry unless it's an RFAM entry
-    if ( !_is_rfam_entry($seq->display_id) ) {
+    # first element is the source ENA entry unless the entry is from the RFAM or RefSeq products
+    if ( !_is_rfam_entry($seq->display_id) and !_is_refseq_entry($seq->keywords) ) {
         $data[0] = { database    => 'ENA',
                      accession   => $seq->display_id,
                      primary_id  => '',
                      optional_id => '' };
     }
-    # TODO : do not skip RFAM
 
     # get gtRNAdb and lncRNAdb entries by project ids
     # todo: remove this temporary fix when DR lines are added to all entries
@@ -499,7 +514,7 @@ sub _get_xrefs {
                 }
 
                 # RFAM entries already have a unique id
-                if ($database eq 'RFAM') {
+                if ($database eq 'RFAM' or $database eq 'RefSeq') {
                     $composite_id = $seq->display_id;
                 } else {
                     $composite_id = _get_expert_db_id($seq->display_id, $database, $primary_id);

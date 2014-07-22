@@ -1,0 +1,223 @@
+ID   NR_029991.1:1..95:precursor_RNA; SV 1; linear; transcribed RNA; STD; VRT; 95 BP.
+XX
+PA   NR_029991.1
+XX
+PR   Project:PRJEB6684;
+XX
+DT   10-JUL-2014 (Rel. 120, Created)
+DT   10-JUL-2014 (Rel. 120, Last updated, Version 1)
+XX
+DE   Danio rerio (zebrafish) microRNA let-7i precursor.
+XX
+KW   RefSeq; RNAcentral; TPA; TPA:specialist_db.
+XX
+OS   Danio rerio (zebrafish)
+OC   Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi;
+OC   Actinopterygii; Neopterygii; Teleostei; Ostariophysi; Cypriniformes;
+OC   Cyprinidae; Danio.
+XX
+RN   [1]
+RP   1-95
+RX   PUBMED; 22374218.
+RA   Yin VP, Lepilina A, Smith A, Poss KD.;
+RT   "Regulation of zebrafish heart regeneration by miR-133";
+RL   Dev. Biol. 365 (2):319-327(2012).
+XX
+RN   [2]
+RP   1-95
+RX   PUBMED; 16381832.
+RA   Griffiths-Jones S, Grocock RJ, van Dongen S, Bateman A, Enright AJ.;
+RT   "miRBase: microRNA sequences, targets and gene nomenclature";
+RL   Nucleic Acids Res. 34 (DATABASE ISSUE):D140-D144(2006).
+XX
+RN   [3]
+RP   1-95
+RX   PUBMED; 15937218.
+RA   Chen PY, Manninga H, Slanchev K, Chien M, Russo JJ, Ju J, Sheridan R,
+RA   John B, Marks DS, Gaidatzis D, Sander C, Zavolan M, Tuschl T.;
+RT   "The developmental miRNA profiles of zebrafish as determined by small RNA
+RT   cloning";
+RL   Genes Dev. 19 (11):1288-1293(2005).
+XX
+RN   [4]
+RP   1-95
+RX   PUBMED; 24259432.
+RA   Pruitt KD, Brown GR, Hiatt SM, Thibaud-Nissen F, Astashyn A, Farrell CM,
+RA   Hart J, Landrum MJ, McGarvey KM, Murphy MR, O'Leary NA, Pujar S, Rajput B,
+RA   Rangwala SH, Riddick LD, Shkeda A, Sun H, Tamez P, Tully RE, Wallin C,
+RA   Webb D, Weber J, Wu W, Dicuccio M, Kitts P, Maglott DR, Murphy TD,
+RA   Ostell JM;
+RT   "RefSeq: an update on mammalian reference sequences";
+RL   Nucleic Acids Res. 42(Database issue):D756-D763(2014).
+XX
+RN   [5]
+RG   RefSeq and RNAcentral
+RA   ;
+RT   ;
+RL   Submitted (10-JUL-2014) to the INSDC.
+XX
+DR   RefSeq; NR_029991.
+DR   MD5; bfe5da6b84230e072480a93e40590636.
+XX
+CC   PROVISIONAL REFSEQ: This record is based on preliminary annotation
+CC   provided by NCBI staff in collaboration with miRBase. The reference
+CC   sequence was derived from CR354429.17.
+CC   
+CC   Summary: microRNAs (miRNAs) are short (20-24 nt) non-coding RNAs
+CC   that are involved in post-transcriptional regulation of gene
+CC   expression in multicellular organisms by affecting both the
+CC   stability and translation of mRNAs. miRNAs are transcribed by RNA
+CC   polymerase II as part of capped and polyadenylated primary
+CC   transcripts (pri-miRNAs) that can be either protein-coding or
+CC   non-coding. The primary transcript is cleaved by the Drosha
+CC   ribonuclease III enzyme to produce an approximately 70-nt stem-loop
+CC   precursor miRNA (pre-miRNA), which is further cleaved by the
+CC   cytoplasmic Dicer ribonuclease to generate the mature miRNA and
+CC   antisense miRNA star (miRNA*) products. The mature miRNA is
+CC   incorporated into a RNA-induced silencing complex (RISC), which
+CC   recognizes target mRNAs through imperfect base pairing with the
+CC   miRNA and most commonly results in translational inhibition or
+CC   destabilization of the target mRNA. The RefSeq represents the
+CC   predicted microRNA stem-loop. [provided by RefSeq, Sep 2009].
+CC   
+CC   Sequence Note: This record represents a predicted microRNA
+CC   stem-loop as defined by miRBase. Some sequence at the 5' and 3'
+CC   ends may not be included in the intermediate precursor miRNA
+CC   produced by Drosha cleavage.
+XX
+AH   LOCAL_SPAN          PRIMARY_IDENTIFIER PRIMARY_SPAN        COMP
+AS   1-95                CR354429.17        13055-13149
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..95
+FT                   /organism="Danio rerio"
+FT                   /chromosome="25"
+FT                   /map="25"
+FT                   /strain="Tuebingen"
+FT                   /mol_type="transcribed RNA"
+FT                   /db_xref="taxon:7955"
+FT   precursor_RNA   1..95
+FT                   /gene="mirlet7i"
+FT                   /gene_synonym="dre-let-7i"
+FT                   /product="microRNA let-7i"
+FT                   /db_xref="GeneID:100033549"
+FT                   /db_xref="miRBase:MI0001876"
+FT                   /db_xref="ZFIN:ZDB-GENE-081203-23"
+XX
+SQ   Sequence 95 BP; 15 A; 18 C; 32 G; 30 T; 0 other;
+     gtgtactggc tgaggtagta gtttgtgctg ttggttggga tgtgacattg cccgttatgg        60
+     agatgactgc gcaagctact cccttgccag tgctg                                   95
+//
+ID   NR_029991.1:11..32:ncRNA; SV 1; linear; transcribed RNA; STD; VRT; 22 BP.
+XX
+PA   NR_029991.1
+XX
+PR   Project:PRJEB6684;
+XX
+DT   10-JUL-2014 (Rel. 120, Created)
+DT   10-JUL-2014 (Rel. 120, Last updated, Version 1)
+XX
+DE   Danio rerio (zebrafish) dre-let-7i.
+XX
+KW   RefSeq; RNAcentral; TPA; TPA:specialist_db.
+XX
+OS   Danio rerio (zebrafish)
+OC   Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi;
+OC   Actinopterygii; Neopterygii; Teleostei; Ostariophysi; Cypriniformes;
+OC   Cyprinidae; Danio.
+XX
+RN   [1]
+RP   1-95
+RX   PUBMED; 22374218.
+RA   Yin VP, Lepilina A, Smith A, Poss KD.;
+RT   "Regulation of zebrafish heart regeneration by miR-133";
+RL   Dev. Biol. 365 (2):319-327(2012).
+XX
+RN   [2]
+RP   1-95
+RX   PUBMED; 16381832.
+RA   Griffiths-Jones S, Grocock RJ, van Dongen S, Bateman A, Enright AJ.;
+RT   "miRBase: microRNA sequences, targets and gene nomenclature";
+RL   Nucleic Acids Res. 34 (DATABASE ISSUE):D140-D144(2006).
+XX
+RN   [3]
+RP   1-95
+RX   PUBMED; 15937218.
+RA   Chen PY, Manninga H, Slanchev K, Chien M, Russo JJ, Ju J, Sheridan R,
+RA   John B, Marks DS, Gaidatzis D, Sander C, Zavolan M, Tuschl T.;
+RT   "The developmental miRNA profiles of zebrafish as determined by small RNA
+RT   cloning";
+RL   Genes Dev. 19 (11):1288-1293(2005).
+XX
+RN   [4]
+RP   1-95
+RX   PUBMED; 24259432.
+RA   Pruitt KD, Brown GR, Hiatt SM, Thibaud-Nissen F, Astashyn A, Farrell CM,
+RA   Hart J, Landrum MJ, McGarvey KM, Murphy MR, O'Leary NA, Pujar S, Rajput B,
+RA   Rangwala SH, Riddick LD, Shkeda A, Sun H, Tamez P, Tully RE, Wallin C,
+RA   Webb D, Weber J, Wu W, Dicuccio M, Kitts P, Maglott DR, Murphy TD,
+RA   Ostell JM;
+RT   "RefSeq: an update on mammalian reference sequences";
+RL   Nucleic Acids Res. 42(Database issue):D756-D763(2014).
+XX
+RN   [5]
+RG   RefSeq and RNAcentral
+RA   ;
+RT   ;
+RL   Submitted (10-JUL-2014) to the INSDC.
+XX
+DR   RefSeq; NR_029991.
+DR   MD5; d8212769dc68feb1f674ab9076ac803a.
+XX
+CC   PROVISIONAL REFSEQ: This record is based on preliminary annotation
+CC   provided by NCBI staff in collaboration with miRBase. The reference
+CC   sequence was derived from CR354429.17.
+CC   
+CC   Summary: microRNAs (miRNAs) are short (20-24 nt) non-coding RNAs
+CC   that are involved in post-transcriptional regulation of gene
+CC   expression in multicellular organisms by affecting both the
+CC   stability and translation of mRNAs. miRNAs are transcribed by RNA
+CC   polymerase II as part of capped and polyadenylated primary
+CC   transcripts (pri-miRNAs) that can be either protein-coding or
+CC   non-coding. The primary transcript is cleaved by the Drosha
+CC   ribonuclease III enzyme to produce an approximately 70-nt stem-loop
+CC   precursor miRNA (pre-miRNA), which is further cleaved by the
+CC   cytoplasmic Dicer ribonuclease to generate the mature miRNA and
+CC   antisense miRNA star (miRNA*) products. The mature miRNA is
+CC   incorporated into a RNA-induced silencing complex (RISC), which
+CC   recognizes target mRNAs through imperfect base pairing with the
+CC   miRNA and most commonly results in translational inhibition or
+CC   destabilization of the target mRNA. The RefSeq represents the
+CC   predicted microRNA stem-loop. [provided by RefSeq, Sep 2009].
+CC   
+CC   Sequence Note: This record represents a predicted microRNA
+CC   stem-loop as defined by miRBase. Some sequence at the 5' and 3'
+CC   ends may not be included in the intermediate precursor miRNA
+CC   produced by Drosha cleavage.
+XX
+AH   LOCAL_SPAN          PRIMARY_IDENTIFIER PRIMARY_SPAN        COMP
+AS   11-32               CR354429.17        13055-13149
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..22
+FT                   /organism="Danio rerio"
+FT                   /chromosome="25"
+FT                   /map="25"
+FT                   /strain="Tuebingen"
+FT                   /mol_type="transcribed RNA"
+FT                   /db_xref="taxon:7955"
+FT   ncRNA           11..32
+FT                   /gene="mirlet7i"
+FT                   /gene_synonym="dre-let-7i"
+FT                   /product="dre-let-7i"
+FT                   /db_xref="miRBase:MIMAT0001767"
+FT                   /db_xref="GeneID:100033549"
+FT                   /db_xref="miRBase:MI0001876"
+FT                   /db_xref="ZFIN:ZDB-GENE-081203-23"
+FT                   /ncRNA_class="miRNA"
+XX
+SQ   Sequence 22 BP; 3 A; 1 C; 8 G; 10 T; 0 other;
+     tgaggtagta gtttgtgctg tt                                                 22
+//
