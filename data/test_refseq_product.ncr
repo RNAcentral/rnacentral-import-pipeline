@@ -4,8 +4,8 @@ PA   NR_029991.1
 XX
 PR   Project:PRJEB6684;
 XX
-DT   10-JUL-2014 (Rel. 120, Created)
-DT   10-JUL-2014 (Rel. 120, Last updated, Version 1)
+DT   22-JUL-2014 (Rel. 120, Created)
+DT   22-JUL-2014 (Rel. 120, Last updated, Version 1)
 XX
 DE   Danio rerio (zebrafish) microRNA let-7i precursor.
 XX
@@ -54,7 +54,7 @@ RN   [5]
 RG   RefSeq and RNAcentral
 RA   ;
 RT   ;
-RL   Submitted (10-JUL-2014) to the INSDC.
+RL   Submitted (22-JUL-2014) to the INSDC.
 XX
 DR   RefSeq; NR_029991.
 DR   MD5; bfe5da6b84230e072480a93e40590636.
@@ -115,8 +115,8 @@ PA   NR_029991.1
 XX
 PR   Project:PRJEB6684;
 XX
-DT   10-JUL-2014 (Rel. 120, Created)
-DT   10-JUL-2014 (Rel. 120, Last updated, Version 1)
+DT   22-JUL-2014 (Rel. 120, Created)
+DT   22-JUL-2014 (Rel. 120, Last updated, Version 1)
 XX
 DE   Danio rerio (zebrafish) dre-let-7i.
 XX
@@ -165,7 +165,7 @@ RN   [5]
 RG   RefSeq and RNAcentral
 RA   ;
 RT   ;
-RL   Submitted (10-JUL-2014) to the INSDC.
+RL   Submitted (22-JUL-2014) to the INSDC.
 XX
 DR   RefSeq; NR_029991.
 DR   MD5; d8212769dc68feb1f674ab9076ac803a.
@@ -197,7 +197,7 @@ CC   ends may not be included in the intermediate precursor miRNA
 CC   produced by Drosha cleavage.
 XX
 AH   LOCAL_SPAN          PRIMARY_IDENTIFIER PRIMARY_SPAN        COMP
-AS   11-32               CR354429.17        13055-13149
+AS   1-22                CR354429.1         13065-13086
 XX
 FH   Key             Location/Qualifiers
 FH
