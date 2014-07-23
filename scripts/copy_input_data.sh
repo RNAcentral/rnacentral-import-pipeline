@@ -44,7 +44,7 @@ do
 done
 
 # ncr.gz files
-for files in *.ncr.gz
+for files in `find . -name '*.ncr.gz'`
 do
 	cp "$files" "${final_location}/$files"
 	gzip -d "${final_location}/$files"
