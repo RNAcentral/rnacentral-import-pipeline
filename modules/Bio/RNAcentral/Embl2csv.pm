@@ -552,8 +552,6 @@ sub _get_xrefs {
 
     # get gtRNAdb and lncRNAdb entries by project ids
     # todo: remove this temporary fix when DR lines are added to all entries
-    push @data, _inject_xrefs_manually($seq, 'GTRNADB');
-    push @data, _inject_xrefs_manually($seq, 'LNCRNADB');
     push @data, _inject_xrefs_manually($seq, 'MIRBASE');
 
     # append other xrefs from DR lines
