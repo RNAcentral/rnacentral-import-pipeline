@@ -46,11 +46,12 @@ done
 # ncr.gz files
 for files in `find . -name '*.ncr.gz'`
 do
-	# $files - nested file path, $filename - file basename
-	$filename=`basename $files`
-	cp "$files" "${final_location}/$filename"
-	gzip -d "${final_location}/$filename"
+	# $files - nested file path, $file_name - file's basename
+	file_name=`basename $files`
+	cp "$files" "${final_location}/$file_name"
 done
+cd $final_location
+gzip -d *.gz
 
 # return to the original location
 cd $STARTING_DIR
