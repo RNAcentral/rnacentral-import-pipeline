@@ -230,7 +230,8 @@ sub _parse_accession_data {
 
         # for RFAM entries, feature_name in the id is 'rfam', so retrieve
         # feature_name from feature table
-        if ( _is_rfam_entry($accession) ) {
+        # same for RDP
+        if ( _is_rfam_entry($accession) or _is_rdp_entry($accession) ) {
             for my $feat_object ($seq->get_SeqFeatures) {
                 if ($feat_object->primary_tag eq 'source') {
                     next;
@@ -307,6 +308,7 @@ sub _is_xref_from_dr_line {
 
     my %non_dr_line_databases = (
         'ENA'    => 1,
+        'RDP'    => 1,
         'RFAM'   => 1,
         'REFSEQ' => 1,
     );
@@ -497,6 +499,22 @@ sub _parse_sequences_and_xrefs {
 }
 
 
+=head2 _is_rdp_entry
+
+    Return 1 if an accession is an RDP entry, return 0 otherwise.
+
+=cut
+
+sub _is_rdp_entry {
+    my $accession = shift;
+
+    if ( $accession =~ /RDP$/i ) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
 =head2 _is_rfam_entry
 
     Return 1 if an accession is an RFAM entry, return 0 otherwise.
@@ -542,8 +560,8 @@ sub _get_xrefs {
 
     my (@data, $database, $primary_id, $optional_id, $project, $composite_id);
 
-    # first element is the source ENA entry unless the entry is from the RFAM or RefSeq products
-    if ( !_is_rfam_entry($seq->display_id) and !_is_refseq_entry($seq->keywords) ) {
+    # first element is the source ENA entry unless the entry is from RFAM/RefSeq/RDP
+    if ( !_is_rfam_entry($seq->display_id) and !_is_refseq_entry($seq->keywords) and !_is_rdp_entry($seq->display_id)) {
         $data[0] = { database    => 'ENA',
                      accession   => $seq->display_id,
                      primary_id  => '',
@@ -580,8 +598,8 @@ sub _get_xrefs {
                     $database = 'tmRNA_Web';
                 }
 
-                # RFAM entries already have a unique id
-                if ($database eq 'RFAM' or $database eq 'RefSeq') {
+                # RFAM/RefSeq/RDP entries already have a unique id
+                if ($database eq 'RFAM' or $database eq 'RefSeq' or $database eq 'RDP') {
                     $composite_id = $seq->display_id;
                 } else {
                     $composite_id = _get_expert_db_id($seq->display_id, $database, $primary_id);

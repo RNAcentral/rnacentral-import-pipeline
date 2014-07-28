@@ -1,0 +1,80 @@
+ID   AE000511.1:1207581..1209081:RDP; SV 1; linear; rRNA; STD; PRO; 1501 BP.
+XX
+PR   Project:PRJEB6779;
+XX
+DT   23-JUL-2014 (Rel. 120, Created)
+DT   23-JUL-2014 (Rel. 120, Last updated, Version 1)
+XX
+DE   TPA: Helicobacter pylori 26695 16S ribosomal RNA
+XX
+KW   RNAcentral; TPA; TPA:specialist_db.
+XX
+OS   Helicobacter pylori 26695
+OC   unclassified sequences.
+XX
+RN   [1]
+RP   1-1501
+RG   RDP and RNAcentral
+RA   ;
+RT   ;
+RL   Submitted (23-JUL-2014) to the INSDC.
+XX
+RN   [2]
+RA   Cole J. R., Wang Q., Fish J. A., Chai B., McGarrell D. M., Sun Y.,
+RA   Brown C. T., Porras-Alfaro A., Kuske C. R., Tiedje J. M.;
+RT   "Ribosomal Database Project: data and tools for high throughput rRNA
+RT   analysis";
+RL   Nucl. Acids Res. 41(Database issue):D633-D642(2014).
+XX
+DR   RDP; S004062581.
+DR   MD5; c731f0b2c2ed28b7ec987ca1bcdc0cbb.
+XX
+CC   Specialist DB   : RDP (The Ribosomal Database Project)
+CC   URL             : http://rdp.cme.msu.edu/
+CC   Version         : Release 11, Update 2
+XX
+AH   LOCAL_SPAN          PRIMARY_IDENTIFIER PRIMARY_SPAN        COMP
+AS   1-1501              AE000511.1         1207581-1209081
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..1501
+FT                   /organism="Helicobacter pylori 26695"
+FT                   /mol_type="rRNA"
+FT                   /db_xref="taxon:85962"
+FT   rRNA            AE000511.1:1207581..1209081
+FT                   /gene="rrn"
+FT                   /gene_synonym="16S rRNA"
+FT                   /product="16S ribosomal RNA"
+FT                   /note="Bit score:1816.19"
+FT                   /db_xref="RefSeq:NC_000915"
+FT                   /inference="ab initio prediction:INFERNAL-model:1.1"
+XX
+SQ   Sequence 1501 BP; 395 A; 321 C; 434 G; 346 T; 5 other;
+     tttatggaga gtttgatcct ggctcagagt gaacgctggc ggcgtgccta atacatgcaa        60
+     gtcgaacgat gaagcttcta gcttgctaga gtgctgatta gtggcgcacg ggtgagtaac       120
+     gcataggtta tgtgcctctt agtttgggat agccattgga aacgatgatt aataccagat       180
+     actccctacg ggggaaagat ttatcgctaa gagatcagcc tatgtcctat cagcttgttg       240
+     gtaaggtaat ggcttaccaa ggctatgacg ggtatccggc ctgagagggt gaacggacac       300
+     actggaactg agacacggtc cagactccta cgggaggcag cagtagggaa tattgctcaa       360
+     tgggggaaac cctgaagcag caacgccgcg tggaggatga aggttttagg attgtaaact       420
+     ccttttgtta gagaagataa tgacggtatc taacgaataa gcaccggcta actccgtgcc       480
+     agcagccgcg gtaatacgga gggtgcaagc gttactcgga atcactgggc gtaaagagcg       540
+     cgtaggcggg atagtcagtc aggtgtgaaa tcctatggct taaccataga actgcatttg       600
+     aractactat tctagagtgt gggagaggta ggtggaattc ttggtgtagg ggtawwatcc       660
+     gtagagatca agaggaatac tcattgcgwa ggcgacctgc tggaacatta ctgacgctga       720
+     ttgcgcgaaa gcgtggggag caaacaggat tagataccct ggtagtccac gccctaaacg       780
+     atggatgcta gttgttggag ggcttagttt tccagtaatg cagctaacgc attaagcatc       840
+     ccgcctgggg agtacggtcg caagattaaa atcaaaggaa tagacgggga cccgcacaag       900
+     cggtggagca tgtggtttaa ttcgaagata cacgaagaac cttacctagg cttgacattg       960
+     agagaatccg ctagaaatag tggagtgtct ggcttgccag accttgaaaa caggtgctgc      1020
+     acggctgtcg tcagctcgtg tcgtgagatg ttgggttaag tcccgcaacg agcgcaaccc      1080
+     cttttcttag ttgctaacag gttatgctga gaactctaag gatactgcct ccgtaaggag      1140
+     gaggaaggtg gggacgacgt caagtcatca tggcccttac gcctagggct acacacgtgc      1200
+     tacaatgggg tgcacaaagm gaagcaatac tgcgaagtgg agccaatctt caaaacacct      1260
+     ctcagttcgg attgtaggct gcaactcgcc tgcatgaagc tggaatcgct agtaatcgca      1320
+     aatcagccat gttgcggtga atacgttccc gggtcttgta ctcaccgccc gtcacaccat      1380
+     gggagttgtg tttgccttaa gtcaggatgc taaattggct actgcccacg gcacacacag      1440
+     cgactggggt gaagtcgtaa caaggtaacc gtagtgaacc tgcggttgga tcacctcctt      1500
+     t                                                                      1501
+//
