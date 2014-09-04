@@ -721,7 +721,6 @@ sub _inject_vega_xrefs_manually {
 
             for my $regex (@regexes) {
                 if ($comment =~ $regex) {
-                    print $1;
                     $external_id = $1;
                     if (defined $3) {
                         $optional_id = $3;
