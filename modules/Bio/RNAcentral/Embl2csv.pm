@@ -571,6 +571,7 @@ sub _get_xrefs {
     # get gtRNAdb and lncRNAdb entries by project ids
     # todo: remove this temporary fix when DR lines are added to all entries
     push @data, _inject_xrefs_manually($seq, 'MIRBASE');
+    push @data, _inject_vega_xrefs_manually($seq, 'Vega');
 
     # append other xrefs from DR lines
     my $anno_collection = $seq->annotation;
@@ -679,6 +680,74 @@ sub _inject_xrefs_manually {
     return ();
 }
 
+=head2 _inject_vega_xrefs_manually
+
+    Some Vega xrefs are found in CC lines. They are called "Vega" and not
+    "Vega-Gn" or "Vega-Tr". Also, there are two lines to be extracted from
+    a comment.
+    TODO: revise this code once all Vega xrefs have DR lines.
+
+    Example:
+    CC   Vega; OTTHUMT00000475966; AC037193.1.
+    CC   Vega; OTTHUMG00000155019; AC037193.1.
+
+=cut
+
+sub _inject_vega_xrefs_manually {
+    my ($seq, $db_name) = @_;
+    my ($db_project_id, $external_id, $optional_id, @lines);
+    my @vega_xrefs = ();
+
+    my %project_ids = (
+        'Vega' => 'PRJEB4568',
+    );
+
+    if ( exists($project_ids{$db_name} ) ) {
+        $db_project_id = $project_ids{$db_name};
+    }
+
+    my $entry_project_id = _get_project_id($seq);
+
+    if ($entry_project_id eq $db_project_id) {
+        my @annotations = $seq->annotation->get_Annotations('comment');
+        for my $value ( @annotations ) {
+            my $comment = $value->display_text;
+
+            my @regexes = (qr/Vega; (OTTHUMG\w+);/, qr/Vega; (OTTHUMT\w+);/);
+
+            for my $regex (@regexes) {
+                if ($comment =~ $regex) {
+                    print $1;
+                    $external_id = $1;
+                    if (defined $3) {
+                        $optional_id = $3;
+                    } else {
+                        $optional_id = '';
+                    }
+                    if ($external_id =~ /^OTTHUMG/) {
+                        $db_name = 'VEGA-Gn';
+                    } elsif ($external_id =~ /^OTTHUMT/) {
+                        $db_name = 'VEGA-Tr';
+                    }
+                    push @vega_xrefs, {
+                        accession   => _get_expert_db_id($seq->display_id, $db_name, $external_id),
+                        primary_id  => $external_id,
+                        optional_id => $optional_id,
+                        database    => $db_name,
+                    };
+                }
+            }
+        }
+    }
+    # if (@vega_xrefs) {
+    #     for my $xref (@vega_xrefs) {
+    #         print $xref->{'accession'}, "\n";
+    #         print $xref->{'database'}, "\n";
+    #     }
+    # }
+
+    return @vega_xrefs;
+}
 
 =head2 _get_expert_db_id
 

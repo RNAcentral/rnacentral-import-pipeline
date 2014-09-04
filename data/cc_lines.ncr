@@ -1,0 +1,175 @@
+ID   LK938098.1:1..393:ncRNA; SV 1; linear; transcribed RNA; STD; HUM; 393 BP.
+XX
+PA   LK938098.1
+XX
+PR   Project:PRJEB4568;
+XX
+DT   15-JUL-2014 (Rel. 121, Created)
+DT   15-JUL-2014 (Rel. 121, Last updated, Version 1)
+XX
+DE   Homo sapiens (human) long non-coding RNA OTTHUMT00000477139.1
+XX
+KW   RNAcentral; TPA; TPA:specialist_db.
+XX
+OS   Homo sapiens (human)
+OC   Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi; Mammalia;
+OC   Eutheria; Euarchontoglires; Primates; Haplorrhini; Catarrhini; Hominidae;
+OC   Homo.
+XX
+RN   [1]
+RP   1-393
+RG   Vega and RNAcentral
+RA   ;
+RT   ;
+RL   Submitted (24-SEP-2013) to the INSDC.
+XX
+RN   [2]
+RX   DOI; 10.1101/gr.132159.111.
+RX   PUBMED; 22955988.
+RA   Derrien T., Johnson R., Bussotti G., Tanzer A., Djebali S., Tilgner H.,
+RA   Guernec G., Martin D., Merkel A., Knowles D.G., Lagarde J., Veeravalli L.,
+RA   Ruan X., Ruan Y., Lassmann T., Carninci P., Brown J.B., Lipovich L.,
+RA   Gonzalez J.M., Thomas M., Davis C.A., Shiekhattar R., Gingeras T.R.,
+RA   Hubbard T.J., Notredame C., Harrow J., Guigo R.;
+RT   "The GENCODE v7 catalog of human long noncoding RNAs: analysis of their
+RT   gene structure, evolution, and expression";
+RL   Genome Res. 22(9):1775-1789(2012).
+XX
+RN   [3]
+RX   DOI; 10.1101/gr.135350.111.
+RX   PUBMED; 22955987.
+RA   Harrow J., Frankish A., Gonzalez J.M., Tapanari E., Diekhans M.,
+RA   Kokocinski F., Aken B.L., Barrell D., Zadissa A., Searle S., Barnes I.,
+RA   Bignell A., Boychenko V., Hunt T., Kay M., Mukherjee G., Rajan J.,
+RA   Despacio-Reyes G., Saunders G., Steward C., Harte R., Lin M., Howald C.,
+RA   Tanzer A., Derrien T., Chrast J., Walters N., Balasubramanian S., Pei B.,
+RA   Tress M., Rodriguez J.M., Ezkurdia I., van Baren J., Brent M., Haussler D.,
+RA   Kellis M., Valencia A., Reymond A., Gerstein M., Guigo R., Hubbard T.J.;
+RT   "GENCODE: the reference human genome annotation for The ENCODE Project";
+RL   Genome Res. 22(9):1760-1774(2012).
+XX
+DR   MD5; 6bd73505c5b032bf79a2cf79e3895b30.
+XX
+CC   Vega; OTTHUMT00000477139; AC069363.1.
+CC   Vega; OTTHUMG00000188411; AC069363.1.
+CC
+CC   Specialist DB   : VEGA (The Vertebrate Genome Annotation database)
+CC   URL             : http://vega.sanger.ac.uk
+CC   Version         : Release 56
+XX
+AH   LOCAL_SPAN          PRIMARY_IDENTIFIER PRIMARY_SPAN        COMP
+AS   1-76                CM000679.2         36081634-36081709
+AS   77-393              CM000679.2         36089546-36089862
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..393
+FT                   /organism="Homo sapiens"
+FT                   /chromosome="17"
+FT                   /mol_type="transcribed RNA"
+FT                   /db_xref="taxon:9606"
+FT   ncRNA           LK938098.1:1..393
+FT                   /gene="AC069363.1"
+FT                   /product="long non-coding RNA OTTHUMT00000477139.1"
+FT                   /note="biotype:antisense"
+FT                   /ncRNA_class="lncRNA"
+XX
+SQ   Sequence 393 BP; 108 A; 109 C; 87 G; 89 T; 0 other;
+     ttgcaggctg ccaccctcca agtcctgctt ctctccagag atgggcagaa gcaccagccc        60
+     tcgcctggca ccagcattct cttcagggaa ttttgtctgg ttcaagaagt cataccccaa       120
+     cccaagagaa gccttggaca tctctcataa gacatccaag ggacagagct cctgggagac       180
+     ctagagtgag ctggagagtg aacaacatac cccactggga agtaagcagc cctggattct       240
+     gcctcttgct aactgattcg tttcgaaccc tgtttttcta tctgtaaaag ggactgtaac       300
+     tcccctgccc ctgcctagat tctcatacct ggagactagg gggctaagac cccttctaga       360
+     gataaaaata aaagtcttaa agagaaagac caa                                    393
+//
+ID   LK937707.1:1..648:ncRNA; SV 1; linear; transcribed RNA; STD; HUM; 648 BP.
+XX
+PA   LK937707.1
+XX
+PR   Project:PRJEB4568;
+XX
+DT   15-JUL-2014 (Rel. 121, Created)
+DT   15-JUL-2014 (Rel. 121, Last updated, Version 1)
+XX
+DE   Homo sapiens (human) long non-coding RNA OTTHUMT00000475966.1
+XX
+KW   RNAcentral; TPA; TPA:specialist_db.
+XX
+OS   Homo sapiens (human)
+OC   Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi; Mammalia;
+OC   Eutheria; Euarchontoglires; Primates; Haplorrhini; Catarrhini; Hominidae;
+OC   Homo.
+XX
+RN   [1]
+RP   1-648
+RG   Vega and RNAcentral
+RA   ;
+RT   ;
+RL   Submitted (24-SEP-2013) to the INSDC.
+XX
+RN   [2]
+RX   DOI; 10.1101/gr.132159.111.
+RX   PUBMED; 22955988.
+RA   Derrien T., Johnson R., Bussotti G., Tanzer A., Djebali S., Tilgner H.,
+RA   Guernec G., Martin D., Merkel A., Knowles D.G., Lagarde J., Veeravalli L.,
+RA   Ruan X., Ruan Y., Lassmann T., Carninci P., Brown J.B., Lipovich L.,
+RA   Gonzalez J.M., Thomas M., Davis C.A., Shiekhattar R., Gingeras T.R.,
+RA   Hubbard T.J., Notredame C., Harrow J., Guigo R.;
+RT   "The GENCODE v7 catalog of human long noncoding RNAs: analysis of their
+RT   gene structure, evolution, and expression";
+RL   Genome Res. 22(9):1775-1789(2012).
+XX
+RN   [3]
+RX   DOI; 10.1101/gr.135350.111.
+RX   PUBMED; 22955987.
+RA   Harrow J., Frankish A., Gonzalez J.M., Tapanari E., Diekhans M.,
+RA   Kokocinski F., Aken B.L., Barrell D., Zadissa A., Searle S., Barnes I.,
+RA   Bignell A., Boychenko V., Hunt T., Kay M., Mukherjee G., Rajan J.,
+RA   Despacio-Reyes G., Saunders G., Steward C., Harte R., Lin M., Howald C.,
+RA   Tanzer A., Derrien T., Chrast J., Walters N., Balasubramanian S., Pei B.,
+RA   Tress M., Rodriguez J.M., Ezkurdia I., van Baren J., Brent M., Haussler D.,
+RA   Kellis M., Valencia A., Reymond A., Gerstein M., Guigo R., Hubbard T.J.;
+RT   "GENCODE: the reference human genome annotation for The ENCODE Project";
+RL   Genome Res. 22(9):1760-1774(2012).
+XX
+DR   MD5; f99dae9e7cbf9a47eff5d4f32601447c.
+XX
+CC   Vega; OTTHUMT00000475966; AC037193.1.
+CC   Vega; OTTHUMG00000155019; AC037193.1.
+CC
+CC   Specialist DB   : VEGA (The Vertebrate Genome Annotation database)
+CC   URL             : http://vega.sanger.ac.uk
+CC   Version         : Release 56
+XX
+AH   LOCAL_SPAN          PRIMARY_IDENTIFIER PRIMARY_SPAN        COMP
+AS   1-493               CM000665.2         9192503-9192995
+AS   494-609             CM000665.2         9193375-9193490
+AS   610-648             CM000665.2         9193726-9193764
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..648
+FT                   /organism="Homo sapiens"
+FT                   /chromosome="3"
+FT                   /mol_type="transcribed RNA"
+FT                   /db_xref="taxon:9606"
+FT   ncRNA           LK937707.1:1..648
+FT                   /gene="AC037193.1"
+FT                   /product="long non-coding RNA OTTHUMT00000475966.1"
+FT                   /note="biotype:antisense"
+FT                   /ncRNA_class="lncRNA"
+XX
+SQ   Sequence 648 BP; 168 A; 152 C; 171 G; 157 T; 0 other;
+     gctatgtttt gtcacacatc attgctggga gagttcagtg ctatccaagt gactcccccg        60
+     ggagaggaca actggaaatt tatgcctggt gtcttcctgg actccgacct atgcaccttt       120
+     ttccttggat gattttaacc tgtctccttt tgctgcaatg aaccataacc atgagtatat       180
+     cagcttttct aatttttgtg agtccctcaa gtgaattatc aaacctaagg tagttttggg       240
+     acccccatca cagagagtca aacaggggca gggcaagaag agctgctttt cctggaaggc       300
+     taatgagtct gaacttcgcc ctggaggtaa tcgttatagt aactccaggc tctaacctgg       360
+     agctgacatg ataaggtcaa atgtacacct ctagaagact tccgactgca gaggggaatg       420
+     gatgggggag ctgagggagg agagctgaag caggaagacc atggcctgga aagagatggc       480
+     tgaaccagtc cagccaccga aaagtgtgct tggctgatct ccctgacctc aatttctctg       540
+     ctggcagaat cacaagaaag gcatcagcac cttctgtgaa atggggagcc atgcagagga       600
+     ggtgcccagg tggcgaggag tccatgtcag ctgccgtcat ccacacca                    648
+//
