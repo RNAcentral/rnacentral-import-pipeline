@@ -167,6 +167,10 @@ sub _is_valid_sequence {
     my ($self, $sequence) = @_;
     my $status;
 
+    if (length($sequence) == 0) {
+        return 0; # immediately skip empty sequences
+    }
+
     my $N_length = () = $sequence =~ /N/ig;
     my $N_percentage = ($N_length * 100)/length($sequence);
 
