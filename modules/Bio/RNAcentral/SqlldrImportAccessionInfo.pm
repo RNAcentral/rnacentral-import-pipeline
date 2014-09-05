@@ -125,7 +125,7 @@ FIELDS TERMINATED BY ',' enclosed by '"'
     ANTICODON char,
     CHROMOSOME char,
     EXPERIMENT char(500),
-    FUNCTION char(1000),
+    FUNCTION char(2000),
     GENE char,
     GENE_SYNONYM char(400),
     INFERENCE char,
