@@ -1,14 +1,13 @@
-ID   HG501938.1:1..435:ncRNA; SV 1; linear; transcribed RNA; STD; HUM; 435 BP.
+ID   HG491497.1:1..712:ncRNA; SV 1; linear; transcribed RNA; STD; HUM; 712 BP.
 XX
-AC   HG501938;
+PA   HG491497.1
 XX
 PR   Project:PRJEB4568;
 XX
 DT   23-OCT-2013 (Rel. 118, Created)
 DT   23-OCT-2013 (Rel. 118, Last updated, Version 1)
 XX
-DE   TPA: Homo sapiens RP11-149I2.4 gene for long non-coding RNA
-DE   OTTHUMT00000445879.1, sense_intronic
+DE   Homo sapiens (human) long non-coding RNA OTTHUMT00000002840.1
 XX
 KW   RNAcentral; Third Party Annotation; TPA; TPA:specialist_db.
 XX
@@ -18,7 +17,7 @@ OC   Eutheria; Euarchontoglires; Primates; Haplorrhini; Catarrhini; Hominidae;
 OC   Homo.
 XX
 RN   [1]
-RP   1-435
+RP   1-712
 RG   Vega and RNAcentral
 RA   ;
 RT   ;
@@ -49,33 +48,101 @@ RA   Kellis M., Valencia A., Reymond A., Gerstein M., Guigo R., Hubbard T.J.;
 RT   "GENCODE: the reference human genome annotation for The ENCODE Project";
 RL   Genome Res. 22(9):1760-1774(2012).
 XX
+DR   MD5; b9dd04e3c5232ec0c2c686774463cb20.
+XX
 CC   Specialist DB   : VEGA (The Vertebrate Genome Annotation database)
 CC   URL             : http://vega.sanger.ac.uk
 XX
-AH   LOCAL_SPAN      PRIMARY_IDENTIFIER   PRIMARY_SPAN       COMP
-AS   1-24            CM000671.1           21995481-21995504
-AS   25-435          CM000671.1           21995602-21996012
+AH   LOCAL_SPAN          PRIMARY_IDENTIFIER PRIMARY_SPAN        COMP
+AS   1-486               CM000663.1         29554-30039
+AS   487-590             CM000663.1         30564-30667
+AS   591-712             CM000663.1         30976-31097
 XX
 FH   Key             Location/Qualifiers
 FH
-FT   source          1..435
+FT   source          1..712
 FT                   /organism="Homo sapiens"
-FT                   /chromosome="9"
+FT                   /chromosome="1"
 FT                   /mol_type="transcribed RNA"
 FT                   /db_xref="taxon:9606"
-FT   ncRNA           1..435
-FT                   /gene="RP11-149I2.4"
-FT                   /product="long non-coding RNA OTTHUMT00000445879.1"
-FT                   /note="biotype:sense_intronic"
+FT   ncRNA           HG491497.1:1..712
+FT                   /gene="RP11-34P13.3"
+FT                   /product="long non-coding RNA OTTHUMT00000002840.1"
+FT                   /note="biotype:lincRNA"
 FT                   /ncRNA_class="lncRNA"
 XX
-SQ   Sequence 435 BP; 77 A; 129 C; 164 G; 65 T; 0 other;
-     gatcccgccg cctgactcct cggcctggga gacaggaaaa gcggtcctgt ttgggaacag        60
-     taaaagcagg gcaaggaaag gaaggagcgg cagaaaggag gggtgagtcg aggacacagg       120
-     ggcagccgga gaatgcggag gagccgggtc ctgagcgcgg tctaagcgag gctcggctct       180
-     cgtccaggaa ctcggacgcg ggctcgccgg ctctccgcgc gcgggaagtc gagcccagga       240
-     cgccgccttc aggccggcgc gctgacccgg tgccccgacc cggagcctgc ggtctgcctg       300
-     gatccgtcct aaacctcgcg ggctggaccc gcggcctgag tgggtgggtg tgtgccagag       360
-     gattcgggac taggcccagc tccgggaacc tggaaatgtg gcccgcttct cagtggcttc       420
-     ctgttcatgc gcttg                                                        435
+SQ   Sequence 712 BP; 137 A; 236 C; 181 G; 158 T; 0 other;
+     gtgcacacgg ctcccatgcg ttgtcttccg agcgtcaggc cgcccctacc cgtgctttct        60
+     gctctgcaga ccctcttcct agacctccgt cctttgtccc atcgctgcct tcccctcaag       120
+     ctcagggcca agctgtccgc caacctcggc tcctccgggc agccctcgcc cggggtgcgc       180
+     cccggggcag gacccccagc ccacgcccag ggcccgcccc tgccctccag ccctacgcct       240
+     tgacccgctt tcctgcgtct ctcagcctac ctgaccttgt ctttacctct gtgggcagct       300
+     cccttgtgat ctgcttagtt cccacccccc tttaagaatt caatagagaa gccagacgca       360
+     aaactacaga tatcgtatga gtccagtttt gtgaagtgcc tagaatagtc aaaattcaca       420
+     gagacagaag cagtggtcgc caggaatggg gaagcaaggc ggagttgggc agctcgtgtt       480
+     caatggtttt gtccgccttc cctgcctcct cttctggggg agttagatcg agttgtaaca       540
+     agaacatgcc actgtctcgc tggctgcagc gtgtggtccc cttaccagag tgaggatgcg       600
+     aagagaaggt ggctgtctgc aaaccaggaa gagagccctc accgggaacc cgtccagctg       660
+     ccaccttgaa cttggacttc caagcctcca gaactgtgag ggataaatgt at               712
+//
+ID   HG985201.1:1..92:tRNA; SV 1; linear; genomic DNA; STD; FUN; 73 BP.
+XX
+PA   HG985201.1
+XX
+PR   Project:PRJEB5173;
+XX
+DT   13-MAY-2014 (Rel. 120, Created)
+DT   15-MAY-2014 (Rel. 120, Last updated, Version 2)
+XX
+DE   Saccharomyces cerevisiae S288c tRNA-Phe-GAA-2-4
+XX
+KW   RNAcentral; TPA; TPA:specialist_db.
+XX
+OS   Saccharomyces cerevisiae S288c
+OC   Eukaryota; Fungi; Dikarya; Ascomycota; Saccharomycotina; Saccharomycetes;
+OC   Saccharomycetales; Saccharomycetaceae; Saccharomyces.
+XX
+RN   [1]
+RP   1-92
+RG   GtRNAdb and RNAcentral
+RA   ;
+RT   ;
+RL   Submitted (13-MAY-2014) to the INSDC.
+XX
+RN   [2]
+RX   DOI; 10.1093/nar/gkn787.
+RX   PUBMED; 18984615.
+RA   Chan P.P., Lowe T.M.;
+RT   "GtRNAdb: a database of transfer RNA genes detected in genomic sequence";
+RL   Nucleic Acids Res. 37(Database issue):D93-D97(2009).
+XX
+DR   GtRNAdb; Scere3; tRNA-Phe-GAA-2-4.
+DR   MD5; 374d5c4080a1cf6b6da3cacb7d0c72bd.
+XX
+CC   Specialist DB   : gtRNAdb (Genomic tRNA Database)
+CC   URL             : http://lowelab.ucsc.edu/GtRNAdb/
+CC   gtRNAdb; Scere3/Scere3-summary.
+XX
+AH   LOCAL_SPAN          PRIMARY_IDENTIFIER PRIMARY_SPAN        COMP
+AS   1-37                BK006934.1         237848-237884       c
+AS   38-73               BK006934.1         237904-237939       c
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..73
+FT                   /organism="Saccharomyces cerevisiae S288c"
+FT                   /mol_type="genomic DNA"
+FT                   /db_xref="taxon:559292"
+FT   tRNA            join(HG985201.1:1..37,HG985201.1:57..92)
+FT                   /gene="tRNA-Phe-GAA-2-4"
+FT                   /standard_name="tRNA-Phe (GAA)"
+FT                   /product="transfer RNA-Phe (GAA)"
+FT                   /anticodon="(pos:HG985201.1:34..36,aa:Phe)"
+FT                   /note="Covariance Model: Eukaryote; CM Score: 69.79"
+FT                   /note="Legacy ID: chrVIII.trna7-PheGAA"
+FT                   /inference="ab initio prediction:tRNAscan-SE:1.21"
+XX
+SQ   Sequence 73 BP; 17 A; 16 C; 23 G; 17 T; 0 other;
+     gcggatttag ctcagttggg agagcgccag actgaagatc tggaggtcct gtgttcgatc        60
+     cacagaattc gca                                                           73
 //
