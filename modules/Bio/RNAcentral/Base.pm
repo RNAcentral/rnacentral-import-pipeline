@@ -67,6 +67,7 @@ sub default_options {
         'references_table' => 'load_rnc_references',     # table with literature references
         'ac_info_table'    => 'load_rnc_accessions',     # data about accessions
         'comp_id_table'    => 'load_rnc_composite_ids',  # composite ids derived from DR lines
+        'coordinates_table'=> 'load_rnc_coordinates',    # genome coordinates table
         'minseqlength'     => 10,                        # minimum acceptable sequence length
     		'maxseqlong'       => 1000000,                   # maximum length for long sequences stored as clobs
     		'maxseqshort'      => 4000,                      # maximum length for short sequences stored as chars

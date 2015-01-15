@@ -49,6 +49,8 @@ sub new {
         $path = $self->get_comp_id_path();
     } elsif ( $prefix eq 'refs' ) {
         $path = $self->get_refs_path();
+    } elsif ( $prefix eq 'genome_coordinates' ) {
+        $path = $self->get_genomic_locations_path();
     } else {
         $self->{'logger'}->logdie('Incorrect prefix parameter')
     }
