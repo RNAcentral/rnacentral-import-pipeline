@@ -544,7 +544,7 @@ sub _is_rfam_entry {
 sub _is_refseq_entry {
     my $keywords = shift;
 
-    if ( $keywords =~ '^RefSeq;' ) {
+    if ( $keywords =~ 'RefSeq;' ) {
         return 1;
     } else {
         return 0;
