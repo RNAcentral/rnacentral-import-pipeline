@@ -144,7 +144,7 @@ CTL
 sub update_coordinates {
     my $self = shift;
 
-    $self->{'logger'}->info("Launching accession info update");
+    $self->{'logger'}->info("Launching PLSQL coordinates update");
 
     my $command = <<PLSQL;
 BEGIN
