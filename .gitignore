@@ -55,3 +55,4 @@ log/*
 pipeline.png
 # macfuse files
 ._*
+.fuse_hidden*
