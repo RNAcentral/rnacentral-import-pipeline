@@ -17,16 +17,28 @@
 #################
 ## Data import ##
 #################
-# store PERL5LIB
-perl5lib_backup=$PERL5LIB
-# read config, change PERL5LIB
-. config/hive_params
-rm -f log/rnacentral_import.log;
+
+# find directory of this script
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+# remember current directory
+STARTING_DIR=`pwd`
+# navigate to project's root
+cd $DIR # project_root/scripts
+cd .. # project_root
+RNACENTRAL_HOME_DIR=`pwd`
+
+# remember current PERL5LIB
+PERL5LIB_BACKUP=$PERL5LIB
+# read config, set PERL5LIB
+. $RNACENTRAL_HOME_DIR/config/hive_params
+# clear logs
+rm -f $RNACENTRAL_HOME_DIR/log/rnacentral_import.log;
+
 # initialize hive pipeline
-perl $ENSEMBL_CVS_ROOT_DIR/ensembl-hive/scripts/init_pipeline.pl Bio::EnsEMBL::Hive::PipeConfig::RNAcentralUpdate_conf \
+perl $RNACENTRAL_HOME_DIR/ensembl-hive/scripts/init_pipeline.pl Bio::EnsEMBL::Hive::PipeConfig::RNAcentralUpdate_conf \
 	-output_folder=$DATA_OUT \
 	-release_type=$DB_RELEASE_TYPE \
-	-pipeline-db -pass=$HIVE_PASSWORD \
+	-pipeline-db -password=$HIVE_PASSWORD \
 	-pipeline-db -user=$HIVE_USERNAME \
 	-pipeline-db -host=$HIVE_HOST \
 	-pipeline-db -port=$HIVE_PORT \
@@ -36,11 +48,11 @@ perl $ENSEMBL_CVS_ROOT_DIR/ensembl-hive/scripts/init_pipeline.pl Bio::EnsEMBL::H
 	-oracle-sid=$ORACLE_SID \
 	-oracle-port=$ORACLE_PORT;
 HIVE_URL='mysql://'$HIVE_USERNAME':'$HIVE_PASSWORD'@'$HIVE_HOST':'$HIVE_PORT'/rnacentral_staging'
-perl $ENSEMBL_CVS_ROOT_DIR/ensembl-hive/scripts/beekeeper.pl -url $HIVE_URL -sync;
+perl $RNACENTRAL_HOME_DIR/ensembl-hive/scripts/beekeeper.pl -url $HIVE_URL -sync;
 # generate graph
-perl $ENSEMBL_CVS_ROOT_DIR/ensembl-hive/scripts/generate_graph.pl -url $HIVE_URL -output pipeline.png
+perl $RNACENTRAL_HOME_DIR/ensembl-hive/scripts/generate_graph.pl -url $HIVE_URL -output pipeline.png
 # launch the pipeline
-perl $ENSEMBL_CVS_ROOT_DIR/ensembl-hive/scripts/beekeeper.pl -url $HIVE_URL -meadow_type LSF -loop -total_running_workers_max 20;
+perl $RNACENTRAL_HOME_DIR/ensembl-hive/scripts/beekeeper.pl -url $HIVE_URL -meadow_type LSF -loop -total_running_workers_max 20;
 
 ###############
 ## Reporting ##
@@ -64,4 +76,7 @@ rm email_message_body.txt
 gzip -d log/rnacentral_import.log.gz
 
 # restore PERL5LIB
-export PERL5LIB=$perl5lib_backup
+export PERL5LIB=$PERL5LIB_BACKUP
+
+# return to the original directory
+cd $STARTING_DIR
