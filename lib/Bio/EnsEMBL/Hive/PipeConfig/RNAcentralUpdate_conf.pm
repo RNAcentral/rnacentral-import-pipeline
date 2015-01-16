@@ -52,6 +52,7 @@ sub default_options {
 
         # get the command line options
         'pipeline_db'   => {
+            -driver => 'mysql',
             -host   => $self->o('host'),
             -port   => $self->o('port'),
             -user   => $self->o('user'),
