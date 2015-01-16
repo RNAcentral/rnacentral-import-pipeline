@@ -52,6 +52,7 @@ use Bio::RNAcentral::Embl2csv;
 use Bio::RNAcentral::SqlldrImportSequences;
 use Bio::RNAcentral::SqlldrImportReferences;
 use Bio::RNAcentral::SqlldrImportAccessionInfo;
+use Bio::RNAcentral::SqlldrImportCoordinates;
 
 
 my $location = '';
@@ -113,6 +114,10 @@ $f->update();
 # load literature references
 my $d = Bio::RNAcentral::SqlldrImportReferences->new($opt, 'refs');
 $d->update();
+
+# load genome coordinates
+my $coordinates_importer = Bio::RNAcentral::SqlldrImportCoordinates->new($opt);
+$coordinates_importer->update();
 
 # load long sequences
 $b->make_ctl_files();
