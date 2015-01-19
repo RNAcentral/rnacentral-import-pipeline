@@ -49,13 +49,13 @@ sub new {
 }
 
 
-=head2 load_all_references
+=head2 load_staging_table
 
-    Main subroutine for loading the references.
+    Load the data into the staging table.
 
 =cut
 
-sub load_all {
+sub load_staging_table {
     my $self = shift;
 
     $self->{'logger'}->info("Loading references");
@@ -63,24 +63,18 @@ sub load_all {
     # create one sqlldr control file
     $self->_make_ctl_file();
 
-    # concatenate all csv files
-    my $cmd = "cat $self->{'local'}{'path'}/*.csv > $self->{'local'}{'allfile'}";
-    $self->{'logger'}->info("Creating a single datafile with references: $cmd");
-    system($cmd);
-
     # clean up old files if present
     $self->_delete_old_log_files();
 
     # prepare sqlldr command
-    $cmd = $self->_get_sqlldr_command($self->{'local'}{'allfile'});
+    my $cmd = $self->_get_sqlldr_command_list_files();
 
     # run sqlldr
-    $self->{'logger'}->info("Importing $self->{'local'}{'allfile'}");
     my $problems = $self->_run_sqlldr($cmd);
 
     # clean up if no errors and no problems in sqlldr
     unless ( $self->_errors_found() or $problems ) {
-        unlink $self->{'local'}{'allfile'}, $self->{'local'}{'logfile'};
+        unlink $self->{'local'}{'logfile'}, $self->{'local'}{'badfile'};
     }
 }
 
@@ -96,11 +90,11 @@ sub _make_ctl_file {
 
     open my $fh, '>', $self->{'local'}{'ctlfile'} or die $!;
 
+    print $fh "LOAD DATA\n";
+    $self->_list_input_files($fh, $self->{'local'}{'path'}, 'csv');
+
     print $fh <<CTL;
-LOAD DATA
-INFILE "str '\\n'"
-APPEND
-INTO TABLE $self->{'opt'}{'references_table'}
+INTO TABLE $self->{'opt'}{'references_table'} TRUNCATE
 FIELDS TERMINATED BY ',' enclosed by '"'
 (
     MD5 char,
@@ -125,11 +119,8 @@ CTL
 sub update {
     my $self = shift;
 
-    $self->db_oracle_connect();
-    $self->truncate_table($self->{'opt'}{'references_table'});
-    $self->load_all();
+    $self->load_staging_table();
     $self->update_literature_references();
-    $self->db_oracle_disconnect();
 }
 
 1;
