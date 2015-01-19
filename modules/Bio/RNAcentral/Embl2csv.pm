@@ -269,7 +269,7 @@ sub _parse_accession_data {
                                    _sanitize($seq->division),
                                    $keywords,
                                    _get_description_line($seq->desc),
-                                   $species->binomial(),
+                                   $species->binomial('FULL'),
                                    _sanitize($species->common_name),
                                    _sanitize($species->organelle),
                                    join('; ', reverse $species->classification),
