@@ -575,7 +575,17 @@ sub _get_xrefs {
     # get gtRNAdb and lncRNAdb entries by project ids
     # todo: remove this temporary fix when DR lines are added to all entries
     push @data, _inject_xrefs_manually($seq, 'MIRBASE');
+    push @data, _inject_xrefs_manually($seq, 'GTRNADB');
     push @data, _inject_vega_xrefs_manually($seq, 'Vega');
+
+    # Set a flag when Vega accessions are present in CC lines
+    # todo: remove this when DR lines are updated
+    my $skip_vega_dr_lines = 0;
+    for my $xref (@data) {
+        if ( $xref->{'database'} =~ /vega/i ) {
+            $skip_vega_dr_lines = 1;
+        }
+    }
 
     # append other xrefs from DR lines
     my $anno_collection = $seq->annotation;
@@ -592,6 +602,12 @@ sub _get_xrefs {
 
                 # skip RFAM DR lines in regular Non-coding entries
                 if (!_is_rfam_entry($seq->display_id) and $database eq 'RFAM') {
+                    next;
+                }
+
+                # skip DR lines if they are also present in CC lines
+                # TODO: remove this statement when DR lines are updated
+                if ($database =~ /Vega/i && $skip_vega_dr_lines == 1) {
                     next;
                 }
 
@@ -742,12 +758,6 @@ sub _inject_vega_xrefs_manually {
             }
         }
     }
-    # if (@vega_xrefs) {
-    #     for my $xref (@vega_xrefs) {
-    #         print $xref->{'accession'}, "\n";
-    #         print $xref->{'database'}, "\n";
-    #     }
-    # }
 
     return @vega_xrefs;
 }

@@ -5,7 +5,7 @@ XX
 PR   Project:PRJEB4568;
 XX
 DT   15-JUL-2014 (Rel. 121, Created)
-DT   15-JUL-2014 (Rel. 121, Last updated, Version 1)
+DT   18-SEP-2014 (Rel. 122, Last updated, Version 2)
 XX
 DE   Homo sapiens (human) long non-coding RNA OTTHUMT00000477139.1
 XX
@@ -21,7 +21,7 @@ RP   1-393
 RG   Vega and RNAcentral
 RA   ;
 RT   ;
-RL   Submitted (24-SEP-2013) to the INSDC.
+RL   Submitted (16-SEP-2014) to the INSDC.
 XX
 RN   [2]
 RX   DOI; 10.1101/gr.132159.111.
@@ -55,7 +55,7 @@ CC   Vega; OTTHUMG00000188411; AC069363.1.
 CC
 CC   Specialist DB   : VEGA (The Vertebrate Genome Annotation database)
 CC   URL             : http://vega.sanger.ac.uk
-CC   Version         : Release 56
+CC   Version         : Release 57
 XX
 AH   LOCAL_SPAN          PRIMARY_IDENTIFIER PRIMARY_SPAN        COMP
 AS   1-76                CM000679.2         36081634-36081709
@@ -83,16 +83,17 @@ SQ   Sequence 393 BP; 108 A; 109 C; 87 G; 89 T; 0 other;
      tcccctgccc ctgcctagat tctcatacct ggagactagg gggctaagac cccttctaga       360
      gataaaaata aaagtcttaa agagaaagac caa                                    393
 //
-ID   LK937707.1:1..648:ncRNA; SV 1; linear; transcribed RNA; STD; HUM; 648 BP.
+ID   HG491503.1:1..629:ncRNA; SV 1; linear; transcribed RNA; STD; HUM; 629 BP.
 XX
-PA   LK937707.1
+PA   HG491503.1
 XX
 PR   Project:PRJEB4568;
 XX
-DT   15-JUL-2014 (Rel. 121, Created)
-DT   15-JUL-2014 (Rel. 121, Last updated, Version 1)
+DT   23-OCT-2013 (Rel. 118, Created)
+DT   18-SEP-2014 (Rel. 122, Last updated, Version 4)
 XX
-DE   Homo sapiens (human) long non-coding RNA OTTHUMT00000475966.1
+DE   Homo sapiens (human) long non-coding RNA OTTHUMT00000003687.1 (RP11-34P13.7
+DE   gene)
 XX
 KW   RNAcentral; TPA; TPA:specialist_db.
 XX
@@ -102,11 +103,11 @@ OC   Eutheria; Euarchontoglires; Primates; Haplorrhini; Catarrhini; Hominidae;
 OC   Homo.
 XX
 RN   [1]
-RP   1-648
+RP   1-629
 RG   Vega and RNAcentral
 RA   ;
 RT   ;
-RL   Submitted (24-SEP-2013) to the INSDC.
+RL   Submitted (16-SEP-2014) to the INSDC.
 XX
 RN   [2]
 RX   DOI; 10.1101/gr.132159.111.
@@ -133,43 +134,167 @@ RA   Kellis M., Valencia A., Reymond A., Gerstein M., Guigo R., Hubbard T.J.;
 RT   "GENCODE: the reference human genome annotation for The ENCODE Project";
 RL   Genome Res. 22(9):1760-1774(2012).
 XX
-DR   MD5; f99dae9e7cbf9a47eff5d4f32601447c.
+DR   VEGA-Gn; OTTHUMG00000001096; Homo_sapiens.
+DR   VEGA-Tr; OTTHUMT00000003687; Homo_sapiens.
+DR   MD5; c392fdea57aa7cdcbc832aee0230af95.
 XX
-CC   Vega; OTTHUMT00000475966; AC037193.1.
-CC   Vega; OTTHUMG00000155019; AC037193.1.
+CC   Vega; OTTHUMT00000003687; RP11-34P13.7.
+CC   Vega; OTTHUMG00000001096; RP11-34P13.7.
 CC
 CC   Specialist DB   : VEGA (The Vertebrate Genome Annotation database)
 CC   URL             : http://vega.sanger.ac.uk
-CC   Version         : Release 56
+CC   Version         : Release 57
 XX
 AH   LOCAL_SPAN          PRIMARY_IDENTIFIER PRIMARY_SPAN        COMP
-AS   1-493               CM000665.2         9192503-9192995
-AS   494-609             CM000665.2         9193375-9193490
-AS   610-648             CM000665.2         9193726-9193764
+AS   1-119               CM000663.2         129055-129173       c
+AS   120-224             CM000663.2         112700-112804       c
+AS   225-629             CM000663.2         110953-111357       c
 XX
 FH   Key             Location/Qualifiers
 FH
-FT   source          1..648
+FT   source          1..629
 FT                   /organism="Homo sapiens"
-FT                   /chromosome="3"
+FT                   /chromosome="1"
 FT                   /mol_type="transcribed RNA"
 FT                   /db_xref="taxon:9606"
-FT   ncRNA           LK937707.1:1..648
-FT                   /gene="AC037193.1"
-FT                   /product="long non-coding RNA OTTHUMT00000475966.1"
-FT                   /note="biotype:antisense"
+FT   ncRNA           HG491503.1:1..629
+FT                   /gene="RP11-34P13.7"
+FT                   /product="long non-coding RNA OTTHUMT00000003687.1"
+FT                   /note="biotype:lincRNA"
 FT                   /ncRNA_class="lncRNA"
 XX
-SQ   Sequence 648 BP; 168 A; 152 C; 171 G; 157 T; 0 other;
-     gctatgtttt gtcacacatc attgctggga gagttcagtg ctatccaagt gactcccccg        60
-     ggagaggaca actggaaatt tatgcctggt gtcttcctgg actccgacct atgcaccttt       120
-     ttccttggat gattttaacc tgtctccttt tgctgcaatg aaccataacc atgagtatat       180
-     cagcttttct aatttttgtg agtccctcaa gtgaattatc aaacctaagg tagttttggg       240
-     acccccatca cagagagtca aacaggggca gggcaagaag agctgctttt cctggaaggc       300
-     taatgagtct gaacttcgcc ctggaggtaa tcgttatagt aactccaggc tctaacctgg       360
-     agctgacatg ataaggtcaa atgtacacct ctagaagact tccgactgca gaggggaatg       420
-     gatgggggag ctgagggagg agagctgaag caggaagacc atggcctgga aagagatggc       480
-     tgaaccagtc cagccaccga aaagtgtgct tggctgatct ccctgacctc aatttctctg       540
-     ctggcagaat cacaagaaag gcatcagcac cttctgtgaa atggggagcc atgcagagga       600
-     ggtgcccagg tggcgaggag tccatgtcag ctgccgtcat ccacacca                    648
+SQ   Sequence 629 BP; 185 A; 139 C; 141 G; 164 T; 0 other;
+     gaagctcgag gaagagaaaa aaaaactgga aggagaaatc atagattttt ataaaatgaa        60
+     agctgcctct gaagcactgc agactcagct gagcaccgat acaaagaaag acaaacatct       120
+     aacaatttgg acaagacagc aaatgctatt gtccaagttt tctaaagaag aatctgaagt       180
+     gaaatgacat caagagacct atcaagacct gtatccagga aaagagtctt gctcttgttg       240
+     cccaggctgg agtgcaatgg catgattttg gctcactgta aactccacct cctgggttca       300
+     agcgattctc ctgcctcagc ctccctagta gctggtatta caggtgcctg ccaccacacc       360
+     cagctaattt ttgtattttt agtagagatg ggggtttcac catgttggcc agcctggtcc       420
+     cgaactcctg accttaggtg atccaccagc atcggcctcc caaagtgctg ggattacagg       480
+     tgtgagccac tgtgtccagc cagtggtggg tctcatatct caatgtggac ttttactaac       540
+     tcccaatgcc tcagtttcct catcagttga aaggaatgaa tgaaagatat gtgtttttca       600
+     tattaccagg tagatgataa ggagatttt                                         629
+//
+ID   LM379575.1:1..22:ncRNA; SV 1; linear; transcribed RNA; STD; VRT; 22 BP.
+XX
+PA   LM379575.1
+XX
+PR   Project:PRJEB4451;
+XX
+DT   17-JUL-2014 (Rel. 121, Created)
+DT   17-JUL-2014 (Rel. 121, Last updated, Version 1)
+XX
+DE   Danio rerio (zebrafish) microRNA dre-let-7a
+XX
+KW   RNAcentral; TPA; TPA:specialist_db.
+XX
+OS   Danio rerio (zebrafish)
+OC   Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi;
+OC   Actinopterygii; Neopterygii; Teleostei; Ostariophysi; Cypriniformes;
+OC   Cyprinidae; Danio.
+XX
+RN   [1]
+RP   1-22
+RG   miRBase and RNAcentral
+RA   ;
+RT   ;
+RL   Submitted (16-JUL-2014) to the INSDC.
+XX
+RN   [2]
+RX   DOI; 10.1093/nar/gkq1027.
+RX   PUBMED; 21037258.
+RA   Kozomara A., Griffiths-Jones S.;
+RT   "miRBase: integrating microRNA annotation and deep-sequencing data";
+RL   Nucleic Acids Res. 39(Database issue):D152-D157(2011).
+XX
+DR   MD5; db572b223186b5235717611349648129.
+XX
+CC   miRBase; MIMAT0001759.
+CC
+CC   Specialist DB   : miRBase (The microRNA database)
+CC   URL             : http://www.mirbase.org
+CC   Version         : Release 21
+CC   Assembly Method : Available small RNA deep sequencing datasets were
+CC   obtained from SRA and GEO.  Small RNA sequencing reads were mapped to the
+CC   miRBase 20 hairpin sequences using Bowtie (v 0.12.7), using a seed length
+CC   of 17 (-l 18) allowing 1 mismatch (-n 1).  After normalising each dataset
+CC   by the number of reads mapping to all microRNAs, the most abundant read
+CC   from each arm of each microRNA hairpin was chosen as the representative
+CC   mature microRNA sequence.
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..22
+FT                   /organism="Danio rerio"
+FT                   /mol_type="transcribed RNA"
+FT                   /db_xref="taxon:7955"
+FT   ncRNA           LM379575.1:1..22
+FT                   /product="microRNA dre-let-7a"
+FT                   /experiment="EXISTENCE:RNA-seq ECO0000205"
+FT                   /ncRNA_class="miRNA"
+XX
+SQ   Sequence 22 BP; 5 A; 0 C; 8 G; 9 T; 0 other;
+     tgaggtagta ggttgtatag tt                                                 22
+//
+ID   LK011103.1:1..77:tRNA; SV 1; linear; genomic DNA; STD; PRO; 77 BP.
+XX
+PA   LK011103.1
+XX
+PR   Project:PRJEB5173;
+XX
+DT   13-MAY-2014 (Rel. 120, Created)
+DT   13-MAY-2014 (Rel. 120, Last updated, Version 1)
+XX
+DE   Mycobacterium tuberculosis CDC1551 tRNA-Phe-GAA-1-1
+XX
+KW   RNAcentral; TPA; TPA:specialist_db.
+XX
+OS   Mycobacterium tuberculosis CDC1551
+OC   Bacteria; Actinobacteria; Actinobacteridae; Actinomycetales;
+OC   Corynebacterineae; Mycobacteriaceae; Mycobacterium;
+OC   Mycobacterium tuberculosis complex.
+XX
+RN   [1]
+RP   1-77
+RG   GtRNAdb and RNAcentral
+RA   ;
+RT   ;
+RL   Submitted (13-MAY-2014) to the INSDC.
+XX
+RN   [2]
+RX   DOI; 10.1093/nar/gkn787.
+RX   PUBMED; 18984615.
+RA   Chan P.P., Lowe T.M.;
+RT   "GtRNAdb: a database of transfer RNA genes detected in genomic sequence";
+RL   Nucleic Acids Res. 37(Database issue):D93-D97(2009).
+XX
+DR   GtRNAdb; Myco_tube_CDC1551; tRNA-Phe-GAA-1-1.
+DR   MD5; 521a9890bcaf27e1e1000004fb6a599e.
+XX
+CC   Specialist DB   : gtRNAdb (Genomic tRNA Database)
+CC   URL             : http://lowelab.ucsc.edu/GtRNAdb/
+CC   gtRNAdb; Myco_tube_CDC1551/Myco_tube_CDC1551-summary.
+XX
+AH   LOCAL_SPAN          PRIMARY_IDENTIFIER PRIMARY_SPAN        COMP
+AS   1-77                AE000516.2         924122-924198
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..77
+FT                   /organism="Mycobacterium tuberculosis CDC1551"
+FT                   /mol_type="genomic DNA"
+FT                   /db_xref="taxon:83331"
+FT   tRNA            LK011103.1:1..77
+FT                   /gene="tRNA-Phe-GAA-1-1"
+FT                   /standard_name="tRNA-Phe (GAA)"
+FT                   /product="transfer RNA-Phe (GAA)"
+FT                   /anticodon="(pos:LK011103.1:35..37,aa:Phe)"
+FT                   /note="Covariance Model: Bacteria; CM Score: 90.33"
+FT                   /note="Legacy ID: chr.trna10-PheGAA"
+FT                   /inference="ab initio prediction:tRNAscan-SE:1.21"
+XX
+SQ   Sequence 77 BP; 14 A; 25 C; 26 G; 12 T; 0 other;
+     ggccaggtag ctcagtcggt atgagcgtcc gcctgaaaag cggaaggtcg gcggttcgat        60
+     cccgcccctg gccacca                                                       77
 //
