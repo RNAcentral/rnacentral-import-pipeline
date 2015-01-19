@@ -186,8 +186,7 @@ create or replace PACKAGE BODY RNC_HEALTHCHECKS AS
 
 
   /*
-  * Verify external and optional ids in rnc_accessions and
-  * indirectly check the rnc_composite_ids table it is based on.
+  * Verify external and optional ids in rnc_accessions.
   * Add more checks as more expert databases are imported into RNAcentral.
   */
   PROCEDURE check_expert_db_accessions
