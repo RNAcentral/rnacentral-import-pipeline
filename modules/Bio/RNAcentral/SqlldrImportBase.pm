@@ -183,4 +183,32 @@ sub _errors_found {
 }
 
 
+=head2 load_staging_table
+
+    Load the data into the staging table.
+
+=cut
+
+sub load_staging_table {
+    my $self = shift;
+
+    # create one sqlldr control file
+    $self->_make_ctl_file();
+
+    # clean up old files if present
+    $self->_delete_old_log_files();
+
+    # prepare sqlldr command
+    my $cmd = $self->_get_sqlldr_command();
+
+    # run sqlldr
+    my $problems = $self->_run_sqlldr($cmd);
+
+    # clean up if no errors in sqlldr
+    unless ( $self->_errors_found() or $problems ) {
+        unlink $self->{'local'}{'logfile'}, $self->{'local'}{'badfile'};
+    }
+}
+
+
 1;

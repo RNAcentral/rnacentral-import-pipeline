@@ -45,33 +45,6 @@ sub new {
 }
 
 
-=head2 load_staging_table
-
-    Load the data into the staging table.
-
-=cut
-
-sub load_staging_table {
-    my $self = shift;
-
-    $self->{'logger'}->info("Loading genomic coordinates");
-
-    # create one sqlldr control file
-    $self->_make_ctl_file();
-
-    # prepare sqlldr command
-    my $cmd = $self->_get_sqlldr_command();
-
-    # run sqlldr
-    my $problems = $self->_run_sqlldr($cmd);
-
-    # clean up if no errors in sqlldr
-    unless ( $self->_errors_found() or $problems ) {
-        unlink $self->{'local'}{'logfile'}, $self->{'local'}{'badfile'};
-    }
-}
-
-
 =head2 _make_ctl_file
 
     Create a control file for sqlldr.
@@ -180,7 +153,7 @@ PLSQL
 
 sub update {
     my $self = shift;
-
+    $self->{'logger'}->info("Loading genomic coordinates");
     $self->load_staging_table();
     $self->update_coordinates();
 }
