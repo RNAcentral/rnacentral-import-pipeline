@@ -47,7 +47,7 @@ sub new {
 
 =head2 load_all_references
 
-    Main subroutine for loading the references.
+    Load the data into the staging table.
 
 =cut
 
