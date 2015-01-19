@@ -51,7 +51,7 @@ sub new {
 
 =cut
 
-sub load_all {
+sub load_staging_table {
     my $self = shift;
 
     $self->{'logger'}->info("Loading accession info");
@@ -59,19 +59,13 @@ sub load_all {
     # create one sqlldr control file
     $self->_make_ctl_file();
 
-    # concatenate all csv files
-    my $cmd = "cat $self->{'local'}{'path'}/*.csv > $self->{'local'}{'allfile'}";
-    $self->{'logger'}->info("Creating a single datafile with accession info: $cmd");
-    system($cmd);
-
     # clean up old files if present
     $self->_delete_old_log_files();
 
     # prepare sqlldr command
-    $cmd = $self->_get_sqlldr_command();
+    my $cmd = $self->_get_sqlldr_command_list_files();
 
     # run sqlldr
-    $self->{'logger'}->info("Importing $self->{'local'}{'allfile'}");
     my $problems = $self->_run_sqlldr($cmd);
 
     # clean up if no errors and no problems in sqlldr
@@ -94,11 +88,13 @@ sub _make_ctl_file {
 
     open my $fh, '>', $self->{'local'}{'ctlfile'} or die $!;
 
+    print $fh "LOAD DATA\n";
+
+    my $path = $self->get_info_path();
+    $self->_list_input_files($fh, $path, 'csv');
+
     print $fh <<CTL;
-LOAD DATA
-INFILE "str '\\n'"
-APPEND
-INTO TABLE $self->{'opt'}{'ac_info_table'}
+INTO TABLE $self->{'opt'}{'ac_info_table'} TRUNCATE
 FIELDS TERMINATED BY ',' enclosed by '"'
 (
     ACCESSION char,
@@ -155,11 +151,8 @@ CTL
 sub update {
     my $self = shift;
 
-    $self->db_oracle_connect();
-    $self->truncate_table($self->{'opt'}{'ac_info_table'});
-    $self->load_all();
+    $self->load_staging_table();
     $self->update_accession_info();
-    $self->db_oracle_disconnect();
 }
 
 
