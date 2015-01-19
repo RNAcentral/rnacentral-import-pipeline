@@ -93,6 +93,7 @@ sub pipeline_wide_parameters {
         %{$self->SUPER::pipeline_wide_parameters},          # here we inherit anything from the base class
 
         # store command line parameters
+        'input_folder'    => $self->o('input_folder'),
         'output_folder'   => $self->o('output_folder'),
         'oracle-user'     => $self->o('oracle-user'),
         'oracle-password' => $self->o('oracle-password'),
@@ -123,30 +124,18 @@ sub pipeline_analyses {
             ],
         },
 
-        # # get ncr files from a local folder
-        # {   -logic_name => 'get_ncr_files',
-        #     -module     => 'Bio::EnsEMBL::Hive::RunnableDB::RNAcentral::GetFiles',
-        #     -analysis_capacity  => 1,
-        #     -input_ids  => [
-        #         { 'location'  => '',
-        #           'extension' => 'ncr' }
-        #     ],
-        #     -flow_into => {
-        #         1 => { 'create_csv_files' => { 'ncr_file' => '#ncr_file#' } },
-        #     },
-        #     -wait_for => [ 'truncate_staging_table' ]
-        # },
-
-        # list all ncr files from the ftp site
+        # get ncr files from a local folder
         {   -logic_name => 'get_ncr_files',
-            -module     => 'Bio::EnsEMBL::Hive::RunnableDB::RNAcentral::GetNcProduct',
+            -module     => 'Bio::EnsEMBL::Hive::RunnableDB::RNAcentral::GetFiles',
+            -analysis_capacity  => 1,
             -input_ids  => [
-                { 'release_type'  => $self->o('release_type') }
+                { 'location'  => $self->o('input_folder'),
+                  'extension' => 'ncr' }
             ],
-            -analysis_capacity  =>  1,
             -flow_into => {
                 1 => { 'create_csv_files' => { 'ncr_file' => '#ncr_file#' } },
             },
+            -wait_for => [ 'truncate_staging_table' ]
         },
 
         # prepare csv files for sql loader

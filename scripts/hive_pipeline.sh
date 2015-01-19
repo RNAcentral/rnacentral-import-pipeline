@@ -36,6 +36,7 @@ rm -f $RNACENTRAL_HOME_DIR/log/rnacentral_import.log;
 
 # initialize hive pipeline
 perl $RNACENTRAL_HOME_DIR/ensembl-hive/scripts/init_pipeline.pl Bio::EnsEMBL::Hive::PipeConfig::RNAcentralUpdate_conf \
+	-input_folder=$DATA_IN \
 	-output_folder=$DATA_OUT \
 	-release_type=$DB_RELEASE_TYPE \
 	-pipeline-db -password=$HIVE_PASSWORD \
