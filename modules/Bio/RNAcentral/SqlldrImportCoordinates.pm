@@ -60,7 +60,7 @@ sub load_staging_table {
     $self->_make_ctl_file();
 
     # prepare sqlldr command
-    my $cmd = $self->_get_sqlldr_command();
+    my $cmd = $self->_get_sqlldr_command_list_files();
 
     # run sqlldr
     my $problems = $self->_run_sqlldr($cmd);
@@ -69,29 +69,6 @@ sub load_staging_table {
     unless ( $self->_errors_found() or $problems ) {
         unlink $self->{'local'}{'logfile'}, $self->{'local'}{'badfile'};
     }
-}
-
-
-=head2 _get_sqlldr_command
-
-    Construct the sqlldr system command.
-
-=cut
-
-sub _get_sqlldr_command {
-    my $self = shift;
-
-    my $command = 'sqlldr ' .
-                   $self->{'user'} . '/' . $self->{'password'} . '@' .
-                  '\"\(DESCRIPTION=\(ADDRESS=\(PROTOCOL=TCP\)' .
-                  '\(HOST=' . $self->{'host'} . '\)' .
-                  '\(PORT=' . $self->{'port'} . '\)\)' .
-                  '\(CONNECT_DATA\=\(SERVICE_NAME=' . $self->{'sid'} . '\)\)\)\" ' .
-                  'control=' . $self->{'local'}{'ctlfile'} . ' ' .
-                  'bad='     . $self->{'local'}{'badfile'} . ' ' .
-                  'log='     . $self->{'local'}{'logfile'} . ' ' .
-                  'direct=true errors=99999999';
-    return $command;
 }
 
 
@@ -112,13 +89,7 @@ sub _make_ctl_file {
     print $fh "LOAD DATA\n";
 
     my $path = $self->get_genomic_locations_path();
-    opendir (DIR, $path) or die $!;
-    while (my $file = readdir(DIR)) {
-        if ( $file =~ /\.csv$/) {
-            print $fh "INFILE \"$path/$file\"\n";
-        }
-    }
-    closedir(DIR);
+    $self->_list_input_files($fh, $path, 'csv');
 
 print $fh <<CTL;
 INTO TABLE $self->{'opt'}{'coordinates_table'} TRUNCATE

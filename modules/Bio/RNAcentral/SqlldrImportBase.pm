@@ -110,6 +110,48 @@ sub _get_sqlldr_command {
 }
 
 
+=head2 _get_sqlldr_command_list_files
+
+    Construct the sqlldr system command.
+
+=cut
+
+sub _get_sqlldr_command_list_files {
+    my $self = shift;
+
+    my $command = 'sqlldr ' .
+                   $self->{'user'} . '/' . $self->{'password'} . '@' .
+                  '\"\(DESCRIPTION=\(ADDRESS=\(PROTOCOL=TCP\)' .
+                  '\(HOST=' . $self->{'host'} . '\)' .
+                  '\(PORT=' . $self->{'port'} . '\)\)' .
+                  '\(CONNECT_DATA\=\(SERVICE_NAME=' . $self->{'sid'} . '\)\)\)\" ' .
+                  'control=' . $self->{'local'}{'ctlfile'} . ' ' .
+                  'bad='     . $self->{'local'}{'badfile'} . ' ' .
+                  'log='     . $self->{'local'}{'logfile'} . ' ' .
+                  'direct=true errors=99999999';
+    return $command;
+}
+
+
+=head2 _list_input_files
+
+    Write out a list of input files to be imported by sqlldr.
+
+=cut
+
+sub _list_input_files {
+    my ($self, $fh, $path, $extension) = @_;
+
+    opendir (DIR, $path) or die $!;
+    while (my $file = readdir(DIR)) {
+        if ( $file =~ /\.$extension$/) {
+            print $fh "INFILE \"$path/$file\"\n";
+        }
+    }
+    closedir(DIR);
+}
+
+
 =head2 _run_sqlldr
 
     Launch sqlldr and make sure that it runs successfully, log any errors.
