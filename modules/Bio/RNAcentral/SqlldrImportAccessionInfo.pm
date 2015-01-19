@@ -58,9 +58,7 @@ sub _make_ctl_file {
     open my $fh, '>', $self->{'local'}{'ctlfile'} or die $!;
 
     print $fh "LOAD DATA\n";
-
-    my $path = $self->get_info_path();
-    $self->_list_input_files($fh, $path, 'csv');
+    $self->_list_input_files($fh, $self->{'local'}{'path'}, 'csv');
 
     print $fh <<CTL;
 INTO TABLE $self->{'opt'}{'ac_info_table'} TRUNCATE

@@ -61,8 +61,7 @@ sub _make_ctl_file {
 
     print $fh "LOAD DATA\n";
 
-    my $path = $self->get_genomic_locations_path();
-    $self->_list_input_files($fh, $path, 'csv');
+    $self->_list_input_files($fh, $self->{'local'}{'path'}, 'csv');
 
 print $fh <<CTL;
 INTO TABLE $self->{'opt'}{'coordinates_table'} TRUNCATE
