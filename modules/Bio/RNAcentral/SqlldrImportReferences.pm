@@ -67,7 +67,7 @@ sub load_staging_table {
     $self->_delete_old_log_files();
 
     # prepare sqlldr command
-    my $cmd = $self->_get_sqlldr_command_list_files();
+    my $cmd = $self->_get_sqlldr_command();
 
     # run sqlldr
     my $problems = $self->_run_sqlldr($cmd);

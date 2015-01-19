@@ -58,7 +58,6 @@ sub new {
     $self->{'local'} = {
         path    => $path,
         ctlfile => File::Spec->catfile($path, "$prefix.ctl"),
-        allfile => File::Spec->catfile($path, "$prefix.dat"),
         badfile => File::Spec->catfile($path, "$prefix.bad"),
         logfile => File::Spec->catfile($path, "$prefix.log"),
     };
@@ -94,29 +93,6 @@ sub _make_ctl_file {
 =cut
 
 sub _get_sqlldr_command {
-    my $self = shift;
-
-    my $command = 'sqlldr ' .
-                   $self->{'user'} . '/' . $self->{'password'} . '@' .
-                  '\"\(DESCRIPTION=\(ADDRESS=\(PROTOCOL=TCP\)' .
-                  '\(HOST=' . $self->{'host'} . '\)' .
-                  '\(PORT=' . $self->{'port'} . '\)\)' .
-                  '\(CONNECT_DATA\=\(SERVICE_NAME=' . $self->{'sid'} . '\)\)\)\" ' .
-                  'control=' . $self->{'local'}{'ctlfile'} . ' ' .
-                  'bad='     . $self->{'local'}{'badfile'} . ' ' .
-                  'log='     . $self->{'local'}{'logfile'} . ' ' .
-                  'direct=true errors=99999999 data=' . $self->{'local'}{'allfile'};
-    return $command;
-}
-
-
-=head2 _get_sqlldr_command_list_files
-
-    Construct the sqlldr system command.
-
-=cut
-
-sub _get_sqlldr_command_list_files {
     my $self = shift;
 
     my $command = 'sqlldr ' .
