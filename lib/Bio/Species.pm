@@ -504,8 +504,8 @@ sub binomial {
     if (defined($full) && $full =~ /full/i) { 
         my $ssp = $self->sub_species;
         if ($ssp) {
-            $ssp =~ s/$bi\s+//;
-            $ssp =~ s/$species\s+//;
+            $ssp =~ s/\Q$bi\E\s+//;
+            $ssp =~ s/\Q$species\E\s+//;
             $bi .= " $ssp";
         }
     }
