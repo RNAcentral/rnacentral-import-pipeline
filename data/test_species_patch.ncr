@@ -1,0 +1,67 @@
+ID   EF411133.1:1..726:misc_RNA; SV 1; linear; genomic DNA; STD; ENV; 726 BP.
+XX
+PA   EF411133.1
+XX
+DT   01-AUG-2007 (Rel. 92, Created)
+DT   26-MAR-2008 (Rel. 95, Last updated, Version 2)
+XX
+DE   uncultured ectomycorrhiza (Russula brevipes var. acrior) partial contains
+DE   18S ribosomal RNA, internal transcribed spacer 1, 5.8S ribosomal RNA,
+DE   internal transcribed spacer 2, and 28S ribosomal RNA
+XX
+KW   ENV.
+XX
+OS   uncultured ectomycorrhiza (Russula brevipes var. acrior)
+OC   Eukaryota; Fungi; Dikarya; Basidiomycota; Agaricomycotina; Agaricomycetes;
+OC   Russulales; Russulaceae; Russula; environmental samples.
+XX
+RN   [1]
+RP   1-726
+RX   DOI; 10.1111/j.1469-8137.2007.02348.x.
+RX   PUBMED; 18194145.
+RA   Morris M.H., Smith M.E., Rizzo D.M., Rejmanek M., Bledsoe C.S.;
+RT   "Contrasting ectomycorrhizal fungal communities on the roots of
+RT   co-occurring oaks (Quercus spp.) in a California woodland";
+RL   New Phytol. 178(1):167-176(2008).
+XX
+RN   [2]
+RP   1-726
+RA   Morris M.H., Smith M.E., Rizzo D.M., Rejmanek M., Bledsoe C.S.;
+RT   ;
+RL   Submitted (30-JAN-2007) to the INSDC.
+RL   Land, Air & Water Resources, University of California-Davis, One Shields
+RL   Ave, Davis, CA 95616, USA
+XX
+DR   MD5; 41cd5809c33d712ba2f9eabeab51c724.
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..726
+FT                   /organism="uncultured ectomycorrhiza (Russula brevipes var.
+FT                   acrior)"
+FT                   /host="Quercus wislizeni"
+FT                   /environmental_sample
+FT                   /mol_type="genomic DNA"
+FT                   /clone="L8DA5"
+FT                   /tissue_type="ectomycorrhizal root tip"
+FT                   /db_xref="taxon:446167"
+FT   misc_RNA        EF411133.1:<1..>726
+FT                   /note="contains 18S ribosomal RNA, internal transcribed
+FT                   spacer 1, 5.8S ribosomal RNA, internal transcribed spacer
+FT                   2, and 28S ribosomal RNA"
+XX
+SQ   Sequence 726 BP; 173 A; 186 C; 177 G; 190 T; 0 other;
+     aggatcatta tcgtacaatg ggggtacgac ggctgtcgct gactttttgt cgtgcacgcc        60
+     cgagtgctct cacatacaaa tatccatctc acccctttgt gcatcaccgc gtgggtcctc       120
+     ttcctcggag ggggtgctca cgtttttaac attaaacacc cattcgaacg tagtgtagaa       180
+     tgttctttgc gcgtgaacgc gcgatcaata caactttcaa caacggatct cttggctctc       240
+     gcatcgatga agaacgcagc gaaatgcgat acgtaatgtg aattgcagaa ttcagtgaat       300
+     catcgaatct ttgaacgcac cttgcgcccc ttggcattcc gaggggcaca cccgtttgag       360
+     tgtcgtgaac atcctcaacc gacttggttt tatcgaaccc aagtaggctt ggaatttgga       420
+     ggttttctgc tggcctcctc tgaagccagc tcctcttaaa tgtatcagtg ggatccgctt       480
+     tgctagatcc tcgacgttga taagatgttt ttctacgtct tgggtttcgc tcgggaagga       540
+     acctgcttct aaccgtccca tcaggggaca acgttcgagc cgatcgccct ttacggggtg       600
+     ggaagctttc gacccatcga accttgacct caaatcgggt gagactaccc gctgaactta       660
+     agcatatcaa taagcggagg aaaagaaact aacaaggatt cccctagtaa ctgcgagtga       720
+     agcggg                                                                  726
+//
