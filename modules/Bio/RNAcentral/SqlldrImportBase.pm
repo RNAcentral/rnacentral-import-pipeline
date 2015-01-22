@@ -41,6 +41,10 @@ sub new {
     # run parent constructor
     my $self = $class->SUPER::new($opt);
 
+    if ( ! exists $self->{'dbh'} ) {
+        $self->db_oracle_connect();
+    }
+
     my $path;
 
     if ( $prefix eq 'ac_info' )  {
