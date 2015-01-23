@@ -237,3 +237,61 @@ XX
 SQ   Sequence 22 BP; 5 A; 0 C; 8 G; 9 T; 0 other;
      tgaggtagta ggttgtatag tt                                                 22
 //
+ID   LM608092.1:1..99:precursor_RNA; SV 1; linear; transcribed RNA; STD; INV; 99 BP.
+XX
+PA   LM608092.1
+XX
+PR   Project:PRJEB4451;
+XX
+DT   21-JUL-2014 (Rel. 121, Created)
+DT   21-JUL-2014 (Rel. 121, Last updated, Version 1)
+XX
+DE   Caenorhabditis elegans microRNA cel-let-7 precursor
+XX
+KW   RNAcentral; TPA; TPA:specialist_db.
+XX
+OS   Caenorhabditis elegans
+OC   Eukaryota; Metazoa; Ecdysozoa; Nematoda; Chromadorea; Rhabditida;
+OC   Rhabditoidea; Rhabditidae; Peloderinae; Caenorhabditis.
+XX
+RN   [1]
+RP   1-99
+RG   miRBase and RNAcentral
+RA   ;
+RT   ;
+RL   Submitted (18-JUL-2014) to the INSDC.
+XX
+RN   [2]
+RX   DOI; 10.1093/nar/gkq1027.
+RX   PUBMED; 21037258.
+RA   Kozomara A., Griffiths-Jones S.;
+RT   "miRBase: integrating microRNA annotation and deep-sequencing data";
+RL   Nucleic Acids Res. 39(Database issue):D152-D157(2011).
+XX
+DR   miRBase; MI0000001; cel-let-7.
+DR   MD5; 1832aaeb0b8cd9a56c5acb5f263cbfe4.
+XX
+CC   miRBase; MI0000001.
+CC
+CC   Specialist DB   : miRBase (The microRNA database)
+CC   URL             : http://www.mirbase.org
+CC   Version         : Release 21
+XX
+AH   LOCAL_SPAN          PRIMARY_IDENTIFIER PRIMARY_SPAN        COMP
+AS   1-99                BX284606.5         14744173-14744271   c
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..99
+FT                   /organism="Caenorhabditis elegans"
+FT                   /mol_type="transcribed RNA"
+FT                   /db_xref="taxon:6239"
+FT   precursor_RNA   LM608092.1:1..99
+FT                   /gene="let-7"
+FT                   /product="microRNA cel-let-7 precursor"
+FT                   /experiment="EXISTENCE:RNA-seq ECO0000053"
+XX
+SQ   Sequence 99 BP; 26 A; 19 C; 24 G; 30 T; 0 other;
+     tacactgtgg atccggtgag gtagtaggtt gtatagtttg gaatattacc accggtgaac        60
+     tatgcaattt tctaccttac cggagacaga actcttcga                               99
+//
