@@ -572,20 +572,12 @@ sub _get_xrefs {
                      optional_id => '' };
     }
 
-    # get gtRNAdb and lncRNAdb entries by project ids
-    # todo: remove this temporary fix when DR lines are added to all entries
-    push @data, _inject_xrefs_manually($seq, 'MIRBASE');
-    push @data, _inject_xrefs_manually($seq, 'GTRNADB');
-    push @data, _inject_vega_xrefs_manually($seq, 'Vega');
-
-    # Set a flag when Vega accessions are present in CC lines
-    # todo: remove this when DR lines are updated
-    my $skip_vega_dr_lines = 0;
-    for my $xref (@data) {
-        if ( $xref->{'database'} =~ /vega/i ) {
-            $skip_vega_dr_lines = 1;
-        }
-    }
+    # todo: remove when DR lines are added
+    # set a flag if DR lines were found
+    my %flags = (
+        'mirbase_DR' => 0,
+        'vega_DR' => 0
+    );
 
     # append other xrefs from DR lines
     my $anno_collection = $seq->annotation;
@@ -605,10 +597,13 @@ sub _get_xrefs {
                     next;
                 }
 
-                # skip DR lines if they are also present in CC lines
                 # TODO: remove this statement when DR lines are updated
-                if ($database =~ /Vega/i && $skip_vega_dr_lines == 1) {
-                    next;
+                if ($database =~ /Vega/i) {
+                    # set a flag that Vega DR lines were injected
+                    $flags{'vega_DR'} = 1;
+                } elsif ($database =~ /mirbase/i) {
+                    # set a flag that mirbase DR lines were injected
+                    $flags{'mirbase_DR'} = 1;
                 }
 
                 $primary_id  = _sanitize($value->primary_id());
@@ -634,6 +629,15 @@ sub _get_xrefs {
                             };
             }
         }
+    }
+
+    # todo: remove this temporary fix when DR lines are added to all entries
+    # inject CC lines only if no DR lines were found
+    $project = _get_project_id($seq);
+    if ($flags{'mirbase_DR'} == 0 && $project eq 'PRJEB4451') {
+        push @data, _inject_xrefs_manually($seq, 'MIRBASE');
+    } elsif ($flags{'vega_DR'} == 0 && $project eq 'PRJEB4568') {
+        push @data, _inject_vega_xrefs_manually($seq, 'Vega');
     }
 
     # VEGA xrefs require special treatment
