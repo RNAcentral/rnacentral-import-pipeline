@@ -119,6 +119,13 @@ sub embl2csv {
         }
 
         my $xrefs = _get_xrefs($seq);
+
+        # skip Rfam mismatches to avoid creating duplicates
+        if ( skip_rfam_mismatch($seq, $xrefs) ) {
+            $self->{'logger'}->info("Skipping mismatching Rfam record" . $seq->display_id);
+            next;
+        }
+
         _parse_sequences_and_xrefs($seq, $xrefs, $self->{'opt'}{'maxseqshort'}, $fh_long, $fh_short);
         _parse_literature_references($seq, $xrefs, $fh_refs);
         _parse_accession_data($seq, $xrefs, $fh_ac_info);
@@ -146,6 +153,54 @@ sub embl2csv {
 
     # return an array with csv files
     return (_delete_empty_file($fname_short), _delete_empty_file($fname_long));
+}
+
+
+=head2 skip_rfam_mismatch
+
+    Return 0 if a sequence should be skipped, otherwise return 1.
+
+    Some sequences match more than one Rfam model, for example
+    a bacterial SSU sequence can match up to four Rfam models:
+
+    * RF01959 SSU_rRNA_archaea
+    * RF00177 SSU_rRNA_bacteria
+    * RF01960 SSU_rRNA_eukarya  Eukaryota and not Microsporidia
+    * RF02542 SSU_rRNA_microsporidia Microsporidia
+
+    When the taxon of the sequence and the Rfam model do not match,
+    such entries should be skipped, so for example
+    only bacterial sequences matching bacterial Rfam model are kept.
+
+=cut
+
+sub skip_rfam_mismatch {
+
+    my ($seq, $xrefs) = @_;
+    my $skip_entry = 0;
+
+    if ( _is_rfam_entry($seq->display_id) ) {
+        my $classification = join('; ', reverse $seq->species->classification);
+
+        if ($$xrefs[0]->{'primary_id'}      eq 'RF01959' && $classification !~ m/Archaea/) {
+            # SSU_rRNA_archaea not matching Archaea
+            $skip_entry = 1;
+        } elsif ($$xrefs[0]->{'primary_id'} eq 'RF00177' && $classification !~ m/Bacteria/) {
+            # SSU_rRNA_bacteria not matching Bacteria
+            $skip_entry = 1;
+        } elsif ($$xrefs[0]->{'primary_id'} eq 'RF01960' && $classification !~ m/Eukaryota/) {
+            # SSU_rRNA_eukarya not matching Eukarya
+            $skip_entry = 1;
+        } elsif ($$xrefs[0]->{'primary_id'} eq 'RF01960' && $classification =~ m/Microsporidia/) {
+            # SSU_rRNA_eukarya matching Microsporidia
+            $skip_entry = 1;
+        } elsif ($$xrefs[0]->{'primary_id'} eq 'RF02542' && $classification !~ m/Microsporidia/) {
+            # SSU_rRNA_microsporidia not matching Microsporidia
+            $skip_entry = 1;
+        }
+    }
+
+    return $skip_entry;
 }
 
 

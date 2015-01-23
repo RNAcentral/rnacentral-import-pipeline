@@ -1,0 +1,656 @@
+ID   JF833540.1:1..1429:rfam; SV 1; linear; rRNA; STD; ENV; 1429 BP.
+XX
+PA   JF833540.1
+XX
+PR   Project:PRJEB5799;
+XX
+DT   12-JAN-2015 (Rel. 119, Created)
+DT   12-JAN-2015 (Rel. 119, Last updated, Version 1)
+XX
+DE   TPA: uncultured bacterium Archaeal small subunit ribosomal RNA
+XX
+KW   RNAcentral; TPA; TPA:specialist_db.
+XX
+OS   uncultured bacterium
+OC   Bacteria; environmental samples.
+XX
+RN   [1]
+RP   1-1429
+RG   RFAM and RNAcentral
+RA   ;
+RT   ;
+RL   Submitted (12-JAN-2015) to the INSDC.
+XX
+RN   [2]
+RX   DOI; 10.1093/nar/gks1005.
+RX   PUBMED; 23125362.
+RA   Burge S.W., Daub J., Eberhardt R., Tate J., Barquist L., Nawrocki E.P.,
+RA   Gardner P.P., Bateman A.;
+RT   "Rfam 11.0: 10 years of RNA families";
+RL   Nucleic Acids Res. 41(Database issue):D226-D232(2013).
+XX
+DR   RFAM; RF01959; SSU_rRNA_archaea.
+DR   MD5; 721df4fe51e3fd92cdf8edf4f6c26796.
+XX
+AH   LOCAL_SPAN          PRIMARY_IDENTIFIER PRIMARY_SPAN        COMP
+AS   1-1429              JF833540.1         1-1429
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..1429
+FT                   /organism="uncultured bacterium"
+FT                   /environmental_sample
+FT                   /mol_type="genomic DNA"
+FT                   /country="China:Yuexi, Anhui"
+FT                   /isolation_source="potassium mine soil"
+FT                   /clone="A480"
+FT                   /db_xref="taxon:77133"
+FT   rRNA            JF833540.1:1..1429
+FT                   /gene="SSU rRNA archaea"
+FT                   /product="Archaeal small subunit ribosomal RNA"
+FT                   /note="Bit score:936.2"
+FT                   /note="Alignment:full"
+FT                   /note="SO:0001263"
+FT                   /note="GO:0003735"
+FT                   /note="GO:0005840"
+FT                   /experiment="EXISTENCE: RFAM literature review [PMID:
+FT                   11283358,11869452]"
+XX
+SQ   Sequence 1429 BP; 348 A; 355 C; 455 G; 271 T; 0 other;
+     gcttaacaca tgcaagtcga gtgcgcgcct gtagcaatac aggtggcgca cggcgcacgg        60
+     gtgcgtaaca cgtgggcaat ctgccctctg atggggaata acccgccgaa aggcgggcta       120
+     ataccgcata aaattccttg gactcatgtt cgaggactca aaggcgtaag tcgtcggagg       180
+     aggagcccgc gcacgattag ctagttggta gggtaacggc ctaccaaggc tttgatcgtt       240
+     agctggtctg agaggatggc cagccacact ggaactgaga cacggtccag actcctacgg       300
+     gaggcagcag tggggaatct tgcacaatgg gcgaaagcct gatgcagcga cgccgcgtgg       360
+     gggatgaagc atttcggtgt gtaaacccct ttcgatccgg acgaatacct cgcaagaggg       420
+     gtgacggtac ggatataaga agccccggct aactacgtgc cagcagccgc ggtaagacgt       480
+     agggggccag cgttgttcgg aattactggg tgtaaagggt tcgtaggcgg tgtggcaagt       540
+     tgggagtgaa atctctgggc tcaacccaga ggctgcttcc aaaactgctg tgcttgagtg       600
+     tgagagaggc gcgtggaatt gcaggtgtag cggtgaaatg cgtagatatc tgcaggaaca       660
+     cccgtggcga aagcggcgcg ctggatcact actgacgctg aggaacgaaa gctaggggag       720
+     caaacaggat tagataccct ggtagtccta gccctaaacg atcaggactt ggggtgccac       780
+     ccgttcgggt gtcgtcccgg agctaacgcg ttaagtcctg cacctgggga gtacggtcgc       840
+     aagactgaaa ctcaaaggaa ttgacggggg cccgcacaag cggtggaaca tgtggttcaa       900
+     ttcgacgcta cgcgaggaac cttacctggg ctcgaaatgc tggtgaccag ctgtagaaat       960
+     acggccttcc cgcaagggac accagtatag gcgctgcatg gctgtcgtca gctcgtgccg      1020
+     tgaggtgttg ggttaagtcc cgcaacgagc gcaacccctg cacacagtta ctactcgcaa      1080
+     gagaggactc tgtgtggact gctccggata acggagagga aggtggggat gacgtcaagt      1140
+     ccgcatggcc tttatgtcca gggctacaca cgtgttacaa tgcagggcac aaaccgttgc      1200
+     caacccgcga gggggagcta atcggaaaaa actctgctca gttcggattg cagtctgcaa      1260
+     ctcgactgca tgaagccgga atcgctagta atggcgtatc agatcgacgc cgtgaatacg      1320
+     ttcccgggcc ttgtacacac cgcccgtcac atcacgaaag tgagttgtac tagaagtcgc      1380
+     cgcgcgaacc gcaaggacgc aagcgcccaa ggtatgactc atgattggg                  1429
+//
+ID   JF833540.1:1..1429:rfam; SV 1; linear; rRNA; STD; ENV; 1429 BP.
+XX
+PA   JF833540.1
+XX
+PR   Project:PRJEB5799;
+XX
+DT   13-JAN-2015 (Rel. 119, Created)
+DT   13-JAN-2015 (Rel. 119, Last updated, Version 1)
+XX
+DE   TPA: uncultured bacterium Bacterial small subunit ribosomal RNA
+XX
+KW   RNAcentral; TPA; TPA:specialist_db.
+XX
+OS   uncultured bacterium
+OC   Bacteria; environmental samples.
+XX
+RN   [1]
+RP   1-1429
+RG   RFAM and RNAcentral
+RA   ;
+RT   ;
+RL   Submitted (13-JAN-2015) to the INSDC.
+XX
+RN   [2]
+RX   DOI; 10.1093/nar/gks1005.
+RX   PUBMED; 23125362.
+RA   Burge S.W., Daub J., Eberhardt R., Tate J., Barquist L., Nawrocki E.P.,
+RA   Gardner P.P., Bateman A.;
+RT   "Rfam 11.0: 10 years of RNA families";
+RL   Nucleic Acids Res. 41(Database issue):D226-D232(2013).
+XX
+DR   RFAM; RF00177; SSU_rRNA_bacteria.
+DR   MD5; 721df4fe51e3fd92cdf8edf4f6c26796.
+XX
+AH   LOCAL_SPAN          PRIMARY_IDENTIFIER PRIMARY_SPAN        COMP
+AS   1-1429              JF833540.1         1-1429
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..1429
+FT                   /organism="uncultured bacterium"
+FT                   /environmental_sample
+FT                   /mol_type="genomic DNA"
+FT                   /country="China:Yuexi, Anhui"
+FT                   /isolation_source="potassium mine soil"
+FT                   /clone="A480"
+FT                   /db_xref="taxon:77133"
+FT   rRNA            JF833540.1:1..1429
+FT                   /gene="SSU rRNA bacteria"
+FT                   /product="Bacterial small subunit ribosomal RNA"
+FT                   /note="Bit score:1415.8"
+FT                   /note="Alignment:full"
+FT                   /note="SO:0001263"
+FT                   /note="GO:0003735"
+FT                   /note="GO:0005840"
+FT                   /experiment="EXISTENCE: RFAM literature review [PMID:
+FT                   11283358,11869452]"
+XX
+SQ   Sequence 1429 BP; 348 A; 355 C; 455 G; 271 T; 0 other;
+     gcttaacaca tgcaagtcga gtgcgcgcct gtagcaatac aggtggcgca cggcgcacgg        60
+     gtgcgtaaca cgtgggcaat ctgccctctg atggggaata acccgccgaa aggcgggcta       120
+     ataccgcata aaattccttg gactcatgtt cgaggactca aaggcgtaag tcgtcggagg       180
+     aggagcccgc gcacgattag ctagttggta gggtaacggc ctaccaaggc tttgatcgtt       240
+     agctggtctg agaggatggc cagccacact ggaactgaga cacggtccag actcctacgg       300
+     gaggcagcag tggggaatct tgcacaatgg gcgaaagcct gatgcagcga cgccgcgtgg       360
+     gggatgaagc atttcggtgt gtaaacccct ttcgatccgg acgaatacct cgcaagaggg       420
+     gtgacggtac ggatataaga agccccggct aactacgtgc cagcagccgc ggtaagacgt       480
+     agggggccag cgttgttcgg aattactggg tgtaaagggt tcgtaggcgg tgtggcaagt       540
+     tgggagtgaa atctctgggc tcaacccaga ggctgcttcc aaaactgctg tgcttgagtg       600
+     tgagagaggc gcgtggaatt gcaggtgtag cggtgaaatg cgtagatatc tgcaggaaca       660
+     cccgtggcga aagcggcgcg ctggatcact actgacgctg aggaacgaaa gctaggggag       720
+     caaacaggat tagataccct ggtagtccta gccctaaacg atcaggactt ggggtgccac       780
+     ccgttcgggt gtcgtcccgg agctaacgcg ttaagtcctg cacctgggga gtacggtcgc       840
+     aagactgaaa ctcaaaggaa ttgacggggg cccgcacaag cggtggaaca tgtggttcaa       900
+     ttcgacgcta cgcgaggaac cttacctggg ctcgaaatgc tggtgaccag ctgtagaaat       960
+     acggccttcc cgcaagggac accagtatag gcgctgcatg gctgtcgtca gctcgtgccg      1020
+     tgaggtgttg ggttaagtcc cgcaacgagc gcaacccctg cacacagtta ctactcgcaa      1080
+     gagaggactc tgtgtggact gctccggata acggagagga aggtggggat gacgtcaagt      1140
+     ccgcatggcc tttatgtcca gggctacaca cgtgttacaa tgcagggcac aaaccgttgc      1200
+     caacccgcga gggggagcta atcggaaaaa actctgctca gttcggattg cagtctgcaa      1260
+     ctcgactgca tgaagccgga atcgctagta atggcgtatc agatcgacgc cgtgaatacg      1320
+     ttcccgggcc ttgtacacac cgcccgtcac atcacgaaag tgagttgtac tagaagtcgc      1380
+     cgcgcgaacc gcaaggacgc aagcgcccaa ggtatgactc atgattggg                  1429
+//
+ID   JF833540.1:1..1429:rfam; SV 1; linear; rRNA; STD; ENV; 1429 BP.
+XX
+PA   JF833540.1
+XX
+PR   Project:PRJEB5799;
+XX
+DT   15-JAN-2015 (Rel. 119, Created)
+DT   15-JAN-2015 (Rel. 119, Last updated, Version 1)
+XX
+DE   TPA: uncultured bacterium Eukaryotic small subunit ribosomal RNA
+XX
+KW   RNAcentral; TPA; TPA:specialist_db.
+XX
+OS   uncultured bacterium
+OC   Bacteria; environmental samples.
+XX
+RN   [1]
+RP   1-1429
+RG   RFAM and RNAcentral
+RA   ;
+RT   ;
+RL   Submitted (15-JAN-2015) to the INSDC.
+XX
+RN   [2]
+RX   DOI; 10.1093/nar/gks1005.
+RX   PUBMED; 23125362.
+RA   Burge S.W., Daub J., Eberhardt R., Tate J., Barquist L., Nawrocki E.P.,
+RA   Gardner P.P., Bateman A.;
+RT   "Rfam 11.0: 10 years of RNA families";
+RL   Nucleic Acids Res. 41(Database issue):D226-D232(2013).
+XX
+DR   RFAM; RF01960; SSU_rRNA_eukarya.
+DR   MD5; 721df4fe51e3fd92cdf8edf4f6c26796.
+XX
+AH   LOCAL_SPAN          PRIMARY_IDENTIFIER PRIMARY_SPAN        COMP
+AS   1-1429              JF833540.1         1-1429
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..1429
+FT                   /organism="uncultured bacterium"
+FT                   /environmental_sample
+FT                   /mol_type="genomic DNA"
+FT                   /country="China:Yuexi, Anhui"
+FT                   /isolation_source="potassium mine soil"
+FT                   /clone="A480"
+FT                   /db_xref="taxon:77133"
+FT   rRNA            JF833540.1:1..1429
+FT                   /gene="SSU rRNA eukarya"
+FT                   /product="Eukaryotic small subunit ribosomal RNA"
+FT                   /note="Bit score:564.6"
+FT                   /note="Alignment:full"
+FT                   /note="SO:0001263"
+FT                   /note="GO:0003735"
+FT                   /note="GO:0005840"
+FT                   /experiment="EXISTENCE: RFAM literature review [PMID:
+FT                   11283358,11869452]"
+XX
+SQ   Sequence 1429 BP; 348 A; 355 C; 455 G; 271 T; 0 other;
+     gcttaacaca tgcaagtcga gtgcgcgcct gtagcaatac aggtggcgca cggcgcacgg        60
+     gtgcgtaaca cgtgggcaat ctgccctctg atggggaata acccgccgaa aggcgggcta       120
+     ataccgcata aaattccttg gactcatgtt cgaggactca aaggcgtaag tcgtcggagg       180
+     aggagcccgc gcacgattag ctagttggta gggtaacggc ctaccaaggc tttgatcgtt       240
+     agctggtctg agaggatggc cagccacact ggaactgaga cacggtccag actcctacgg       300
+     gaggcagcag tggggaatct tgcacaatgg gcgaaagcct gatgcagcga cgccgcgtgg       360
+     gggatgaagc atttcggtgt gtaaacccct ttcgatccgg acgaatacct cgcaagaggg       420
+     gtgacggtac ggatataaga agccccggct aactacgtgc cagcagccgc ggtaagacgt       480
+     agggggccag cgttgttcgg aattactggg tgtaaagggt tcgtaggcgg tgtggcaagt       540
+     tgggagtgaa atctctgggc tcaacccaga ggctgcttcc aaaactgctg tgcttgagtg       600
+     tgagagaggc gcgtggaatt gcaggtgtag cggtgaaatg cgtagatatc tgcaggaaca       660
+     cccgtggcga aagcggcgcg ctggatcact actgacgctg aggaacgaaa gctaggggag       720
+     caaacaggat tagataccct ggtagtccta gccctaaacg atcaggactt ggggtgccac       780
+     ccgttcgggt gtcgtcccgg agctaacgcg ttaagtcctg cacctgggga gtacggtcgc       840
+     aagactgaaa ctcaaaggaa ttgacggggg cccgcacaag cggtggaaca tgtggttcaa       900
+     ttcgacgcta cgcgaggaac cttacctggg ctcgaaatgc tggtgaccag ctgtagaaat       960
+     acggccttcc cgcaagggac accagtatag gcgctgcatg gctgtcgtca gctcgtgccg      1020
+     tgaggtgttg ggttaagtcc cgcaacgagc gcaacccctg cacacagtta ctactcgcaa      1080
+     gagaggactc tgtgtggact gctccggata acggagagga aggtggggat gacgtcaagt      1140
+     ccgcatggcc tttatgtcca gggctacaca cgtgttacaa tgcagggcac aaaccgttgc      1200
+     caacccgcga gggggagcta atcggaaaaa actctgctca gttcggattg cagtctgcaa      1260
+     ctcgactgca tgaagccgga atcgctagta atggcgtatc agatcgacgc cgtgaatacg      1320
+     ttcccgggcc ttgtacacac cgcccgtcac atcacgaaag tgagttgtac tagaagtcgc      1380
+     cgcgcgaacc gcaaggacgc aagcgcccaa ggtatgactc atgattggg                  1429
+//
+ID   JF833540.1:1..1429:rfam; SV 1; linear; rRNA; STD; ENV; 1429 BP.
+XX
+PA   JF833540.1
+XX
+PR   Project:PRJEB5799;
+XX
+DT   16-JAN-2015 (Rel. 119, Created)
+DT   16-JAN-2015 (Rel. 119, Last updated, Version 1)
+XX
+DE   TPA: uncultured bacterium Microsporidia small subunit ribosomal RNA
+XX
+KW   RNAcentral; TPA; TPA:specialist_db.
+XX
+OS   uncultured bacterium
+OC   Bacteria; environmental samples.
+XX
+RN   [1]
+RP   1-1429
+RG   RFAM and RNAcentral
+RA   ;
+RT   ;
+RL   Submitted (16-JAN-2015) to the INSDC.
+XX
+RN   [2]
+RX   DOI; 10.1093/nar/gks1005.
+RX   PUBMED; 23125362.
+RA   Burge S.W., Daub J., Eberhardt R., Tate J., Barquist L., Nawrocki E.P.,
+RA   Gardner P.P., Bateman A.;
+RT   "Rfam 11.0: 10 years of RNA families";
+RL   Nucleic Acids Res. 41(Database issue):D226-D232(2013).
+XX
+DR   RFAM; RF02542; SSU_rRNA_microsporidia.
+DR   MD5; 721df4fe51e3fd92cdf8edf4f6c26796.
+XX
+AH   LOCAL_SPAN          PRIMARY_IDENTIFIER PRIMARY_SPAN        COMP
+AS   1-1429              JF833540.1         1-1429
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..1429
+FT                   /organism="uncultured bacterium"
+FT                   /environmental_sample
+FT                   /mol_type="genomic DNA"
+FT                   /country="China:Yuexi, Anhui"
+FT                   /isolation_source="potassium mine soil"
+FT                   /clone="A480"
+FT                   /db_xref="taxon:77133"
+FT   rRNA            JF833540.1:1..1429
+FT                   /gene="SSU rRNA microsporidia"
+FT                   /product="Microsporidia small subunit ribosomal RNA"
+FT                   /note="Bit score:609.9"
+FT                   /note="Alignment:full"
+FT                   /note="SO:0001263"
+FT                   /note="GO:0003735"
+FT                   /note="GO:0005840"
+FT                   /experiment="EXISTENCE: RFAM literature review [PMID:
+FT                   11869452,11283358]"
+XX
+SQ   Sequence 1429 BP; 348 A; 355 C; 455 G; 271 T; 0 other;
+     gcttaacaca tgcaagtcga gtgcgcgcct gtagcaatac aggtggcgca cggcgcacgg        60
+     gtgcgtaaca cgtgggcaat ctgccctctg atggggaata acccgccgaa aggcgggcta       120
+     ataccgcata aaattccttg gactcatgtt cgaggactca aaggcgtaag tcgtcggagg       180
+     aggagcccgc gcacgattag ctagttggta gggtaacggc ctaccaaggc tttgatcgtt       240
+     agctggtctg agaggatggc cagccacact ggaactgaga cacggtccag actcctacgg       300
+     gaggcagcag tggggaatct tgcacaatgg gcgaaagcct gatgcagcga cgccgcgtgg       360
+     gggatgaagc atttcggtgt gtaaacccct ttcgatccgg acgaatacct cgcaagaggg       420
+     gtgacggtac ggatataaga agccccggct aactacgtgc cagcagccgc ggtaagacgt       480
+     agggggccag cgttgttcgg aattactggg tgtaaagggt tcgtaggcgg tgtggcaagt       540
+     tgggagtgaa atctctgggc tcaacccaga ggctgcttcc aaaactgctg tgcttgagtg       600
+     tgagagaggc gcgtggaatt gcaggtgtag cggtgaaatg cgtagatatc tgcaggaaca       660
+     cccgtggcga aagcggcgcg ctggatcact actgacgctg aggaacgaaa gctaggggag       720
+     caaacaggat tagataccct ggtagtccta gccctaaacg atcaggactt ggggtgccac       780
+     ccgttcgggt gtcgtcccgg agctaacgcg ttaagtcctg cacctgggga gtacggtcgc       840
+     aagactgaaa ctcaaaggaa ttgacggggg cccgcacaag cggtggaaca tgtggttcaa       900
+     ttcgacgcta cgcgaggaac cttacctggg ctcgaaatgc tggtgaccag ctgtagaaat       960
+     acggccttcc cgcaagggac accagtatag gcgctgcatg gctgtcgtca gctcgtgccg      1020
+     tgaggtgttg ggttaagtcc cgcaacgagc gcaacccctg cacacagtta ctactcgcaa      1080
+     gagaggactc tgtgtggact gctccggata acggagagga aggtggggat gacgtcaagt      1140
+     ccgcatggcc tttatgtcca gggctacaca cgtgttacaa tgcagggcac aaaccgttgc      1200
+     caacccgcga gggggagcta atcggaaaaa actctgctca gttcggattg cagtctgcaa      1260
+     ctcgactgca tgaagccgga atcgctagta atggcgtatc agatcgacgc cgtgaatacg      1320
+     ttcccgggcc ttgtacacac cgcccgtcac atcacgaaag tgagttgtac tagaagtcgc      1380
+     cgcgcgaacc gcaaggacgc aagcgcccaa ggtatgactc atgattggg                  1429
+//
+ID   AF186007.1:1..1252:rfam; SV 1; linear; rRNA; STD; FUN; 1252 BP.
+XX
+PA   AF186007.1
+XX
+PR   Project:PRJEB5799;
+XX
+DT   12-JAN-2015 (Rel. 119, Created)
+DT   12-JAN-2015 (Rel. 119, Last updated, Version 1)
+XX
+DE   TPA: Nucleospora sp. P_vetulus Archaeal small subunit ribosomal RNA
+XX
+KW   RNAcentral; TPA; TPA:specialist_db.
+XX
+OS   Nucleospora sp. P_vetulus
+OC   Eukaryota; Fungi; Microsporidia; Enterocytozoonidae; Nucleospora.
+XX
+RN   [1]
+RP   1-1252
+RG   RFAM and RNAcentral
+RA   ;
+RT   ;
+RL   Submitted (12-JAN-2015) to the INSDC.
+XX
+RN   [2]
+RX   DOI; 10.1093/nar/gks1005.
+RX   PUBMED; 23125362.
+RA   Burge S.W., Daub J., Eberhardt R., Tate J., Barquist L., Nawrocki E.P.,
+RA   Gardner P.P., Bateman A.;
+RT   "Rfam 11.0: 10 years of RNA families";
+RL   Nucleic Acids Res. 41(Database issue):D226-D232(2013).
+XX
+DR   RFAM; RF01959; SSU_rRNA_archaea.
+DR   MD5; e8ae8847b37635086adb5140f75cb369.
+XX
+AH   LOCAL_SPAN          PRIMARY_IDENTIFIER PRIMARY_SPAN        COMP
+AS   1-1252              AF186007.1         1-1252
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..1252
+FT                   /organism="Nucleospora sp. P_vetulus"
+FT                   /host="English sole, Pleuronectes vetulus"
+FT                   /mol_type="genomic DNA"
+FT                   /country="USA: Washington"
+FT                   /cell_type="X-cell tumor"
+FT                   /db_xref="taxon:138567"
+FT   rRNA            AF186007.1:1..1252
+FT                   /gene="SSU rRNA archaea"
+FT                   /product="Archaeal small subunit ribosomal RNA"
+FT                   /note="Bit score:589.9"
+FT                   /note="Alignment:full"
+FT                   /note="SO:0001263"
+FT                   /note="GO:0003735"
+FT                   /note="GO:0005840"
+FT                   /experiment="EXISTENCE: RFAM literature review [PMID:
+FT                   11869452,11283358]"
+XX
+SQ   Sequence 1252 BP; 356 A; 236 C; 364 G; 296 T; 0 other;
+     tgacgtgggt gctagcctct aagatttagc catgcatgct gcgtgaactt ttagggaacg        60
+     gcgaacggct cagtaatgtt gcgattatct gctctggttg tttaagataa ccacggaaac       120
+     ctgtggctaa gagaccagaa tgagacgcaa gcctatcagt ttgttggtag tgtaatggac       180
+     taccaagacg atgacgggtg acgggaaatc agtgtttgat tccggagagg gagcctgaga       240
+     gatggctccc acgtccaagg atggcagcag gcgcgaaaat tgtccactct ttgttgagga       300
+     gacagttatg aggcgtgatt gtaagagcgg agtgtaaaat actctgtgta atgcaactag       360
+     agggcaagtt ttggtgccag cagccgcggt aacaccaact ctagaaatgc ctattgtgga       420
+     tgctgcagtt aaaacgtccg tagtctatga tacaattaaa gggtgcagat caaaggcact       480
+     aagtttgtta gttgtagcgg agcggacagg gagcatggta tagggcggcg aagaatgaaa       540
+     tctcaagacc cgccctggac caacagaggc gaaagcagtg ctcttgtacg catctgagga       600
+     tcaaggacga aggcttagag gatcgaaagt gattagacac cgctgtagtt ctagcagtaa       660
+     acgatgccga cactctgtgc ctgtgatggg cgtggagatg agaaatcata gttttcgggc       720
+     tctggggata gtacgcttgc aagagtgaaa cttaaagcga aattgacgga agaacactac       780
+     aaggagtgga tcgtactgct taatttgact caacacggga aaacttacca gggccaagcc       840
+     gtgcgtagat tggatgcatg agtacggcag gagtggtgca tggccgttgg aaattgatgg       900
+     gacgaccttt agcttaaatg ctataatcag tgagatcttc tagacaggtg ctgttgcagt       960
+     acaggaggga gaaggctata acaggtccgt gatgccctca gacgccctgg gccgcaagtg      1020
+     caatacaata tgcgttgaga cgatataaat gtggttacgg atgagtagga ttagcttgtg      1080
+     taagagagct atgaataagg aattcctagt aagtgtgtct caacaaggca cagtgaatgc      1140
+     gtccctgttc tttgtacaca ccgcccgtca ctattgcgga tggcaatcaa gatgaagagc      1200
+     ttcggttctg aatattcatg tctagacata atacaagtcg taacaaggta gc              1252
+//
+ID   AF186007.1:1..1252:rfam; SV 1; linear; rRNA; STD; FUN; 1252 BP.
+XX
+PA   AF186007.1
+XX
+PR   Project:PRJEB5799;
+XX
+DT   13-JAN-2015 (Rel. 119, Created)
+DT   13-JAN-2015 (Rel. 119, Last updated, Version 1)
+XX
+DE   TPA: Nucleospora sp. P_vetulus Bacterial small subunit ribosomal RNA
+XX
+KW   RNAcentral; TPA; TPA:specialist_db.
+XX
+OS   Nucleospora sp. P_vetulus
+OC   Eukaryota; Fungi; Microsporidia; Enterocytozoonidae; Nucleospora.
+XX
+RN   [1]
+RP   1-1252
+RG   RFAM and RNAcentral
+RA   ;
+RT   ;
+RL   Submitted (13-JAN-2015) to the INSDC.
+XX
+RN   [2]
+RX   DOI; 10.1093/nar/gks1005.
+RX   PUBMED; 23125362.
+RA   Burge S.W., Daub J., Eberhardt R., Tate J., Barquist L., Nawrocki E.P.,
+RA   Gardner P.P., Bateman A.;
+RT   "Rfam 11.0: 10 years of RNA families";
+RL   Nucleic Acids Res. 41(Database issue):D226-D232(2013).
+XX
+DR   RFAM; RF00177; SSU_rRNA_bacteria.
+DR   MD5; e8ae8847b37635086adb5140f75cb369.
+XX
+AH   LOCAL_SPAN          PRIMARY_IDENTIFIER PRIMARY_SPAN        COMP
+AS   1-1252              AF186007.1         1-1252
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..1252
+FT                   /organism="Nucleospora sp. P_vetulus"
+FT                   /host="English sole, Pleuronectes vetulus"
+FT                   /mol_type="genomic DNA"
+FT                   /country="USA: Washington"
+FT                   /cell_type="X-cell tumor"
+FT                   /db_xref="taxon:138567"
+FT   rRNA            AF186007.1:1..1252
+FT                   /gene="SSU rRNA bacteria"
+FT                   /product="Bacterial small subunit ribosomal RNA"
+FT                   /note="Bit score:507.7"
+FT                   /note="Alignment:full"
+FT                   /note="SO:0001263"
+FT                   /note="GO:0003735"
+FT                   /note="GO:0005840"
+FT                   /experiment="EXISTENCE: RFAM literature review [PMID:
+FT                   11283358,11869452]"
+XX
+SQ   Sequence 1252 BP; 356 A; 236 C; 364 G; 296 T; 0 other;
+     tgacgtgggt gctagcctct aagatttagc catgcatgct gcgtgaactt ttagggaacg        60
+     gcgaacggct cagtaatgtt gcgattatct gctctggttg tttaagataa ccacggaaac       120
+     ctgtggctaa gagaccagaa tgagacgcaa gcctatcagt ttgttggtag tgtaatggac       180
+     taccaagacg atgacgggtg acgggaaatc agtgtttgat tccggagagg gagcctgaga       240
+     gatggctccc acgtccaagg atggcagcag gcgcgaaaat tgtccactct ttgttgagga       300
+     gacagttatg aggcgtgatt gtaagagcgg agtgtaaaat actctgtgta atgcaactag       360
+     agggcaagtt ttggtgccag cagccgcggt aacaccaact ctagaaatgc ctattgtgga       420
+     tgctgcagtt aaaacgtccg tagtctatga tacaattaaa gggtgcagat caaaggcact       480
+     aagtttgtta gttgtagcgg agcggacagg gagcatggta tagggcggcg aagaatgaaa       540
+     tctcaagacc cgccctggac caacagaggc gaaagcagtg ctcttgtacg catctgagga       600
+     tcaaggacga aggcttagag gatcgaaagt gattagacac cgctgtagtt ctagcagtaa       660
+     acgatgccga cactctgtgc ctgtgatggg cgtggagatg agaaatcata gttttcgggc       720
+     tctggggata gtacgcttgc aagagtgaaa cttaaagcga aattgacgga agaacactac       780
+     aaggagtgga tcgtactgct taatttgact caacacggga aaacttacca gggccaagcc       840
+     gtgcgtagat tggatgcatg agtacggcag gagtggtgca tggccgttgg aaattgatgg       900
+     gacgaccttt agcttaaatg ctataatcag tgagatcttc tagacaggtg ctgttgcagt       960
+     acaggaggga gaaggctata acaggtccgt gatgccctca gacgccctgg gccgcaagtg      1020
+     caatacaata tgcgttgaga cgatataaat gtggttacgg atgagtagga ttagcttgtg      1080
+     taagagagct atgaataagg aattcctagt aagtgtgtct caacaaggca cagtgaatgc      1140
+     gtccctgttc tttgtacaca ccgcccgtca ctattgcgga tggcaatcaa gatgaagagc      1200
+     ttcggttctg aatattcatg tctagacata atacaagtcg taacaaggta gc              1252
+//
+ID   AF186007.1:1..1252:rfam; SV 1; linear; rRNA; STD; FUN; 1252 BP.
+XX
+PA   AF186007.1
+XX
+PR   Project:PRJEB5799;
+XX
+DT   15-JAN-2015 (Rel. 119, Created)
+DT   15-JAN-2015 (Rel. 119, Last updated, Version 1)
+XX
+DE   TPA: Nucleospora sp. P_vetulus Eukaryotic small subunit ribosomal RNA
+XX
+KW   RNAcentral; TPA; TPA:specialist_db.
+XX
+OS   Nucleospora sp. P_vetulus
+OC   Eukaryota; Fungi; Microsporidia; Enterocytozoonidae; Nucleospora.
+XX
+RN   [1]
+RP   1-1252
+RG   RFAM and RNAcentral
+RA   ;
+RT   ;
+RL   Submitted (15-JAN-2015) to the INSDC.
+XX
+RN   [2]
+RX   DOI; 10.1093/nar/gks1005.
+RX   PUBMED; 23125362.
+RA   Burge S.W., Daub J., Eberhardt R., Tate J., Barquist L., Nawrocki E.P.,
+RA   Gardner P.P., Bateman A.;
+RT   "Rfam 11.0: 10 years of RNA families";
+RL   Nucleic Acids Res. 41(Database issue):D226-D232(2013).
+XX
+DR   RFAM; RF01960; SSU_rRNA_eukarya.
+DR   MD5; e8ae8847b37635086adb5140f75cb369.
+XX
+AH   LOCAL_SPAN          PRIMARY_IDENTIFIER PRIMARY_SPAN        COMP
+AS   1-1252              AF186007.1         1-1252
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..1252
+FT                   /organism="Nucleospora sp. P_vetulus"
+FT                   /host="English sole, Pleuronectes vetulus"
+FT                   /mol_type="genomic DNA"
+FT                   /country="USA: Washington"
+FT                   /cell_type="X-cell tumor"
+FT                   /db_xref="taxon:138567"
+FT   rRNA            AF186007.1:1..1252
+FT                   /gene="SSU rRNA eukarya"
+FT                   /product="Eukaryotic small subunit ribosomal RNA"
+FT                   /note="Bit score:789.4"
+FT                   /note="Alignment:full"
+FT                   /note="SO:0001263"
+FT                   /note="GO:0003735"
+FT                   /note="GO:0005840"
+FT                   /experiment="EXISTENCE: RFAM literature review [PMID:
+FT                   11283358,11869452]"
+XX
+SQ   Sequence 1252 BP; 356 A; 236 C; 364 G; 296 T; 0 other;
+     tgacgtgggt gctagcctct aagatttagc catgcatgct gcgtgaactt ttagggaacg        60
+     gcgaacggct cagtaatgtt gcgattatct gctctggttg tttaagataa ccacggaaac       120
+     ctgtggctaa gagaccagaa tgagacgcaa gcctatcagt ttgttggtag tgtaatggac       180
+     taccaagacg atgacgggtg acgggaaatc agtgtttgat tccggagagg gagcctgaga       240
+     gatggctccc acgtccaagg atggcagcag gcgcgaaaat tgtccactct ttgttgagga       300
+     gacagttatg aggcgtgatt gtaagagcgg agtgtaaaat actctgtgta atgcaactag       360
+     agggcaagtt ttggtgccag cagccgcggt aacaccaact ctagaaatgc ctattgtgga       420
+     tgctgcagtt aaaacgtccg tagtctatga tacaattaaa gggtgcagat caaaggcact       480
+     aagtttgtta gttgtagcgg agcggacagg gagcatggta tagggcggcg aagaatgaaa       540
+     tctcaagacc cgccctggac caacagaggc gaaagcagtg ctcttgtacg catctgagga       600
+     tcaaggacga aggcttagag gatcgaaagt gattagacac cgctgtagtt ctagcagtaa       660
+     acgatgccga cactctgtgc ctgtgatggg cgtggagatg agaaatcata gttttcgggc       720
+     tctggggata gtacgcttgc aagagtgaaa cttaaagcga aattgacgga agaacactac       780
+     aaggagtgga tcgtactgct taatttgact caacacggga aaacttacca gggccaagcc       840
+     gtgcgtagat tggatgcatg agtacggcag gagtggtgca tggccgttgg aaattgatgg       900
+     gacgaccttt agcttaaatg ctataatcag tgagatcttc tagacaggtg ctgttgcagt       960
+     acaggaggga gaaggctata acaggtccgt gatgccctca gacgccctgg gccgcaagtg      1020
+     caatacaata tgcgttgaga cgatataaat gtggttacgg atgagtagga ttagcttgtg      1080
+     taagagagct atgaataagg aattcctagt aagtgtgtct caacaaggca cagtgaatgc      1140
+     gtccctgttc tttgtacaca ccgcccgtca ctattgcgga tggcaatcaa gatgaagagc      1200
+     ttcggttctg aatattcatg tctagacata atacaagtcg taacaaggta gc              1252
+//
+ID   AF186007.1:1..1252:rfam; SV 1; linear; rRNA; STD; FUN; 1252 BP.
+XX
+PA   AF186007.1
+XX
+PR   Project:PRJEB5799;
+XX
+DT   16-JAN-2015 (Rel. 119, Created)
+DT   16-JAN-2015 (Rel. 119, Last updated, Version 1)
+XX
+DE   TPA: Nucleospora sp. P_vetulus Microsporidia small subunit ribosomal RNA
+XX
+KW   RNAcentral; TPA; TPA:specialist_db.
+XX
+OS   Nucleospora sp. P_vetulus
+OC   Eukaryota; Fungi; Microsporidia; Enterocytozoonidae; Nucleospora.
+XX
+RN   [1]
+RP   1-1252
+RG   RFAM and RNAcentral
+RA   ;
+RT   ;
+RL   Submitted (16-JAN-2015) to the INSDC.
+XX
+RN   [2]
+RX   DOI; 10.1093/nar/gks1005.
+RX   PUBMED; 23125362.
+RA   Burge S.W., Daub J., Eberhardt R., Tate J., Barquist L., Nawrocki E.P.,
+RA   Gardner P.P., Bateman A.;
+RT   "Rfam 11.0: 10 years of RNA families";
+RL   Nucleic Acids Res. 41(Database issue):D226-D232(2013).
+XX
+DR   RFAM; RF02542; SSU_rRNA_microsporidia.
+DR   MD5; e8ae8847b37635086adb5140f75cb369.
+XX
+AH   LOCAL_SPAN          PRIMARY_IDENTIFIER PRIMARY_SPAN        COMP
+AS   1-1252              AF186007.1         1-1252
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..1252
+FT                   /organism="Nucleospora sp. P_vetulus"
+FT                   /host="English sole, Pleuronectes vetulus"
+FT                   /mol_type="genomic DNA"
+FT                   /country="USA: Washington"
+FT                   /cell_type="X-cell tumor"
+FT                   /db_xref="taxon:138567"
+FT   rRNA            AF186007.1:1..1252
+FT                   /gene="SSU rRNA microsporidia"
+FT                   /product="Microsporidia small subunit ribosomal RNA"
+FT                   /note="Bit score:1092.5"
+FT                   /note="Alignment:full"
+FT                   /note="SO:0001263"
+FT                   /note="GO:0003735"
+FT                   /note="GO:0005840"
+FT                   /experiment="EXISTENCE: RFAM literature review [PMID:
+FT                   11869452,11283358]"
+XX
+SQ   Sequence 1252 BP; 356 A; 236 C; 364 G; 296 T; 0 other;
+     tgacgtgggt gctagcctct aagatttagc catgcatgct gcgtgaactt ttagggaacg        60
+     gcgaacggct cagtaatgtt gcgattatct gctctggttg tttaagataa ccacggaaac       120
+     ctgtggctaa gagaccagaa tgagacgcaa gcctatcagt ttgttggtag tgtaatggac       180
+     taccaagacg atgacgggtg acgggaaatc agtgtttgat tccggagagg gagcctgaga       240
+     gatggctccc acgtccaagg atggcagcag gcgcgaaaat tgtccactct ttgttgagga       300
+     gacagttatg aggcgtgatt gtaagagcgg agtgtaaaat actctgtgta atgcaactag       360
+     agggcaagtt ttggtgccag cagccgcggt aacaccaact ctagaaatgc ctattgtgga       420
+     tgctgcagtt aaaacgtccg tagtctatga tacaattaaa gggtgcagat caaaggcact       480
+     aagtttgtta gttgtagcgg agcggacagg gagcatggta tagggcggcg aagaatgaaa       540
+     tctcaagacc cgccctggac caacagaggc gaaagcagtg ctcttgtacg catctgagga       600
+     tcaaggacga aggcttagag gatcgaaagt gattagacac cgctgtagtt ctagcagtaa       660
+     acgatgccga cactctgtgc ctgtgatggg cgtggagatg agaaatcata gttttcgggc       720
+     tctggggata gtacgcttgc aagagtgaaa cttaaagcga aattgacgga agaacactac       780
+     aaggagtgga tcgtactgct taatttgact caacacggga aaacttacca gggccaagcc       840
+     gtgcgtagat tggatgcatg agtacggcag gagtggtgca tggccgttgg aaattgatgg       900
+     gacgaccttt agcttaaatg ctataatcag tgagatcttc tagacaggtg ctgttgcagt       960
+     acaggaggga gaaggctata acaggtccgt gatgccctca gacgccctgg gccgcaagtg      1020
+     caatacaata tgcgttgaga cgatataaat gtggttacgg atgagtagga ttagcttgtg      1080
+     taagagagct atgaataagg aattcctagt aagtgtgtct caacaaggca cagtgaatgc      1140
+     gtccctgttc tttgtacaca ccgcccgtca ctattgcgga tggcaatcaa gatgaagagc      1200
+     ttcggttctg aatattcatg tctagacata atacaagtcg taacaaggta gc              1252
+//
