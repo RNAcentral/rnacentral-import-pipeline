@@ -5,11 +5,12 @@ XX
 PR   Project:PRJEB4568;
 XX
 DT   23-OCT-2013 (Rel. 118, Created)
-DT   23-OCT-2013 (Rel. 118, Last updated, Version 1)
+DT   18-SEP-2014 (Rel. 122, Last updated, Version 4)
 XX
-DE   Homo sapiens (human) long non-coding RNA OTTHUMT00000002840.1
+DE   Homo sapiens (human) long non-coding RNA OTTHUMT00000002840.1 (RP11-34P13.3
+DE   gene)
 XX
-KW   RNAcentral; Third Party Annotation; TPA; TPA:specialist_db.
+KW   RNAcentral; TPA; TPA:specialist_db.
 XX
 OS   Homo sapiens (human)
 OC   Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi; Mammalia;
@@ -21,7 +22,7 @@ RP   1-712
 RG   Vega and RNAcentral
 RA   ;
 RT   ;
-RL   Submitted (15-OCT-2013) to the INSDC.
+RL   Submitted (16-SEP-2014) to the INSDC.
 XX
 RN   [2]
 RX   DOI; 10.1101/gr.132159.111.
@@ -48,15 +49,21 @@ RA   Kellis M., Valencia A., Reymond A., Gerstein M., Guigo R., Hubbard T.J.;
 RT   "GENCODE: the reference human genome annotation for The ENCODE Project";
 RL   Genome Res. 22(9):1760-1774(2012).
 XX
+DR   VEGA-Gn; OTTHUMG00000000959; Homo_sapiens.
+DR   VEGA-Tr; OTTHUMT00000002840; Homo_sapiens.
 DR   MD5; b9dd04e3c5232ec0c2c686774463cb20.
 XX
+CC   Vega; OTTHUMT00000002840; RP11-34P13.3.
+CC   Vega; OTTHUMG00000000959; RP11-34P13.3.
+CC
 CC   Specialist DB   : VEGA (The Vertebrate Genome Annotation database)
 CC   URL             : http://vega.sanger.ac.uk
+CC   Version         : Release 57
 XX
 AH   LOCAL_SPAN          PRIMARY_IDENTIFIER PRIMARY_SPAN        COMP
-AS   1-486               CM000663.1         29554-30039
-AS   487-590             CM000663.1         30564-30667
-AS   591-712             CM000663.1         30976-31097
+AS   1-486               CM000663.2         29554-30039
+AS   487-590             CM000663.2         30564-30667
+AS   591-712             CM000663.2         30976-31097
 XX
 FH   Key             Location/Qualifiers
 FH
