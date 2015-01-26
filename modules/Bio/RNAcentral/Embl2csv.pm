@@ -182,13 +182,13 @@ sub skip_rfam_mismatch {
     if ( _is_rfam_entry($seq->display_id) ) {
         my $classification = join('; ', reverse $seq->species->classification);
 
-        if ($$xrefs[0]->{'primary_id'}      eq 'RF01959' && $classification !~ m/Archaea/) {
+        if ($$xrefs[0]->{'primary_id'}      eq 'RF01959' && $classification !~ m/^Archaea;/) {
             # SSU_rRNA_archaea not matching Archaea
             $skip_entry = 1;
-        } elsif ($$xrefs[0]->{'primary_id'} eq 'RF00177' && $classification !~ m/Bacteria/) {
+        } elsif ($$xrefs[0]->{'primary_id'} eq 'RF00177' && $classification !~ m/^Bacteria;/) {
             # SSU_rRNA_bacteria not matching Bacteria
             $skip_entry = 1;
-        } elsif ($$xrefs[0]->{'primary_id'} eq 'RF01960' && $classification !~ m/Eukaryota/) {
+        } elsif ($$xrefs[0]->{'primary_id'} eq 'RF01960' && $classification !~ m/^Eukaryota;/) {
             # SSU_rRNA_eukarya not matching Eukarya
             $skip_entry = 1;
         } elsif ($$xrefs[0]->{'primary_id'} eq 'RF01960' && $classification =~ m/Microsporidia/) {
