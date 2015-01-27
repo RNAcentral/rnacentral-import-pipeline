@@ -221,3 +221,262 @@ XX
 SQ   Sequence 22 BP; 3 A; 1 C; 8 G; 10 T; 0 other;
      tgaggtagta gtttgtgctg tt                                                 22
 //
+ID   NR_004024.2:1..1123:rRNA; SV 1; linear; rRNA; STD; INV; 1123 BP.
+XX
+PA   NR_004024.2
+XX
+PR   Project:PRJEB6684;
+XX
+DT   27-JAN-2015 (Rel. 120, Created)
+DT   27-JAN-2015 (Rel. 120, Last updated, Version 1)
+XX
+DE   Drosophila melanogaster ribosomal RNA (CR40685), rRNA.
+XX
+KW   RefSeq; RNAcentral; TPA; TPA:specialist_db.
+XX
+OS   Drosophila melanogaster (fruit fly)
+OC   Eukaryota; Metazoa; Ecdysozoa; Arthropoda; Hexapoda; Insecta; Pterygota;
+OC   Neoptera; Endopterygota; Diptera; Brachycera; Muscomorpha; Ephydroidea;
+OC   Drosophilidae; Drosophila; Sophophora.
+XX
+RN   [1]
+RP   1-1123
+RX   PUBMED; 17569867.
+RA   Hoskins R.A., Carlson J.W., Kennedy C., Acevedo D., Evans-Holm M.,
+RA   Frise E., Wan K.H., Park S., Mendez-Lago M., Rossi F., Villasante A.,
+RA   Dimitri P., Karpen G.H., Celniker S.E.;
+RT   "Sequence finishing and mapping of Drosophila melanogaster
+RT   heterochromatin";
+RL   Science 316 (5831):1625-1628(2007).
+XX
+RN   [2]
+RC   Erratum:[Science. 2007 Sep 7;317(5843):1325]
+RP   1-1123
+RX   PUBMED; 17569856.
+RA   Smith C.D., Shu S., Mungall C.J., Karpen G.H.;
+RT   "The Release 5.1 annotation of Drosophila melanogaster heterochromatin";
+RL   Science 316 (5831):1586-1591(2007).
+XX
+RN   [3]
+RP   1-1123
+RX   PUBMED; 16110336.
+RA   Quesneville H., Bergman C.M., Andrieu O., Autard D., Nouaud D.,
+RA   Ashburner M., Anxolabehere D.;
+RT   "Combined evidence annotation of transposable elements in genome
+RT   sequences";
+RL   PLoS Comput. Biol. 1 (2):166-175(2005).
+XX
+RN   [4]
+RP   1-1123
+RX   PUBMED; 12537574.
+RA   Hoskins R.A., Smith C.D., Carlson J.W., Carvalho A.B., Halpern A.,
+RA   Kaminker J.S., Kennedy C., Mungall C.J., Sullivan B.A., Sutton G.G.,
+RA   Yasuhara J.C., Wakimoto B.T., Myers E.W., Celniker S.E., Rubin G.M.,
+RA   Karpen G.H.;
+RT   "Heterochromatic sequences in a Drosophila whole-genome shotgun assembly";
+RL   Genome Biol. 3 (12):RESEARCH0085(2002).
+XX
+RN   [5]
+RP   1-1123
+RX   PUBMED; 12537573.
+RA   Kaminker J.S., Bergman C.M., Kronmiller B., Carlson J., Svirskas R.,
+RA   Patel S., Frise E., Wheeler D.A., Lewis S.E., Rubin G.M., Ashburner M.,
+RA   Celniker S.E.;
+RT   "The transposable elements of the Drosophila melanogaster euchromatin: a
+RT   genomics perspective";
+RL   Genome Biol. 3 (12):RESEARCH0084(2002).
+XX
+RN   [6]
+RP   1-1123
+RX   PUBMED; 12537572.
+RA   Misra S., Crosby M.A., Mungall C.J., Matthews B.B., Campbell K.S.,
+RA   Hradecky P., Huang Y., Kaminker J.S., Millburn G.H., Prochnik S.E.,
+RA   Smith C.D., Tupy J.L., Whitfied E.J., Bayraktaroglu L., Berman B.P.,
+RA   Bettencourt B.R., Celniker S.E., de Grey A.D., Drysdale R.A., Harris N.L.,
+RA   Richter J., Russo S., Schroeder A.J., Shu S.Q., Stapleton M., Yamada C.,
+RA   Ashburner M., Gelbart W.M., Rubin G.M., Lewis S.E.;
+RT   "Annotation of the Drosophila melanogaster euchromatic genome: a systematic
+RT   review";
+RL   Genome Biol. 3 (12):RESEARCH0083(2002).
+XX
+RN   [7]
+RP   1-1123
+RX   PUBMED; 12537568.
+RA   Celniker S.E., Wheeler D.A., Kronmiller B., Carlson J.W., Halpern A.,
+RA   Patel S., Adams M., Champe M., Dugan S.P., Frise E., Hodgson A.,
+RA   George R.A., Hoskins R.A., Laverty T., Muzny D.M., Nelson C.R.,
+RA   Pacleb J.M., Park S., Pfeiffer B.D., Richards S., Sodergren E.J.,
+RA   Svirskas R., Tabor P.E., Wan K., Stapleton M., Sutton G.G., Venter C.,
+RA   Weinstock G., Scherer S.E., Myers E.W., Gibbs R.A., Rubin G.M.;
+RT   "Finishing a whole-genome shotgun: release 3 of the Drosophila melanogaster
+RT   euchromatic genome sequence";
+RL   Genome Biol. 3 (12):RESEARCH0079(2002).
+XX
+RN   [8]
+RP   1-1123
+RX   PUBMED; 10731132.
+RA   Adams M.D., Celniker S.E., Holt R.A., Evans C.A., Gocayne J.D.,
+RA   Amanatides P.G., Scherer S.E., Li P.W., Hoskins R.A., Galle R.F.,
+RA   George R.A., Lewis S.E., Richards S., Ashburner M., Henderson S.N.,
+RA   Sutton G.G., Wortman J.R., Yandell M.D., Zhang Q., Chen L.X., Brandon R.C.,
+RA   Rogers Y.H., Blazej R.G., Champe M., Pfeiffer B.D., Wan K.H., Doyle C.,
+RA   Baxter E.G., Helt G., Nelson C.R., Gabor G.L., Abril J.F., Agbayani A.,
+RA   An H.J., Andrews-Pfannkoch C., Baldwin D., Ballew R.M., Basu A.,
+RA   Baxendale J., Bayraktaroglu L., Beasley E.M., Beeson K.Y., Benos P.V.,
+RA   Berman B.P., Bhandari D., Bolshakov S., Borkova D., Botchan M.R., Bouck J.,
+RA   Brokstein P., Brottier P., Burtis K.C., Busam D.A., Butler H., Cadieu E.,
+RA   Center A., Chandra I., Cherry J.M., Cawley S., Dahlke C., Davenport L.B.,
+RA   Davies P., de Pablos B., Delcher A., Deng Z., Mays A.D., Dew I.,
+RA   Dietz S.M., Dodson K., Doup L.E., Downes M., Dugan-Rocha S., Dunkov B.C.,
+RA   Dunn P., Durbin K.J., Evangelista C.C., Ferraz C., Ferriera S.,
+RA   Fleischmann W., Fosler C., Gabrielian A.E., Garg N.S., Gelbart W.M.,
+RA   Glasser K., Glodek A., Gong F., Gorrell J.H., Gu Z., Guan P., Harris M.,
+RA   Harris N.L., Harvey D., Heiman T.J., Hernandez J.R., Houck J., Hostin D.,
+RA   Houston K.A., Howland T.J., Wei M.H., Ibegwam C., Jalali M., Kalush F.,
+RA   Karpen G.H., Ke Z., Kennison J.A., Ketchum K.A., Kimmel B.E., Kodira C.D.,
+RA   Kraft C., Kravitz S., Kulp D., Lai Z., Lasko P., Lei Y., Levitsky A.A.,
+RA   Li J., Li Z., Liang Y., Lin X., Liu X., Mattei B., McIntosh T.C.,
+RA   McLeod M.P., McPherson D., Merkulov G., Milshina N.V., Mobarry C.,
+RA   Morris J., Moshrefi A., Mount S.M., Moy M., Murphy B., Murphy L.,
+RA   Muzny D.M., Nelson D.L., Nelson D.R., Nelson K.A., Nixon K., Nusskern D.R.,
+RA   Pacleb J.M., Palazzolo M., Pittman G.S., Pan S., Pollard J., Puri V.,
+RA   Reese M.G., Reinert K., Remington K., Saunders R.D., Scheeler F., Shen H.,
+RA   Shue B.C., Siden-Kiamos I., Simpson M., Skupski M.P., Smith T., Spier E.,
+RA   Spradling A.C., Stapleton M., Strong R., Sun E., Svirskas R., Tector C.,
+RA   Turner R., Venter E., Wang A.H., Wang X., Wang Z.Y., Wassarman D.A.,
+RA   Weinstock G.M., Weissenbach J., Williams S.M., WoodageT, Worley K.C.,
+RA   Wu D., Yang S., Yao Q.A., Ye J., Yeh R.F., Zaveri J.S., Zhan M., Zhang G.,
+RA   Zhao Q., Zheng L., Zheng X.H., Zhong F.N., Zhong W., Zhou X., Zhu S.,
+RA   Zhu X., Smith H.O., Gibbs R.A., Myers E.W., Rubin G.M., Venter J.C.;
+RT   "The genome sequence of Drosophila melanogaster";
+RL   Science 287 (5461):2185-2195(2000).
+XX
+RN   [9]
+RP   1-1123
+RG   Berkeley Drosophila Genome Project
+RA   Celniker S., Carlson J., Wan K., Pfeiffer B., Frise E., George R.,
+RA   Hoskins R., Stapleton M., Pacleb J., Park S., Svirskas R., Smith E., Yu C.,
+RA   Rubin G.;
+RT   "Drosophila melanogaster release 4 sequence";
+RL   Unpublished.
+XX
+RN   [10]
+RP   1-1123
+RG   FlyBase
+RA   ;
+RT   "Direct Submission";
+RL   Submitted (25-JUL-2014) to the INSDC.
+RL   FlyBase, Harvard University, Biological Laboratories, 16 Divinity Ave,
+RL   Cambridge, MA 02138, USA
+XX
+RN   [11]
+RP   1-1123
+RG   FlyBase
+RA   ;
+RT   "Direct Submission";
+RL   Submitted (15-JAN-2014) to the INSDC.
+RL   FlyBase, Harvard University, Biological Laboratories, 16 Divinity Ave,
+RL   Cambridge, MA 02138, USA
+XX
+RN   [12]
+RC   Direct Submission
+RP   1-1123
+RA   Celniker S., Carlson J., Kennedy C., Wan K., Frise E., Hoskins R., Park S.,
+RA   Svirskas R., Karpen G.;
+RT   "Direct Submission";
+RL   Submitted (10-AUG-2006) to the INSDC.
+RL   Berkeley Drosophila Genome Project, Lawrence Berkeley National Laboratory,
+RL   One #Cyclotron RoadOne Cyclotron Road, MS 64-121, Berkeley, CA 94720, USA
+XX
+RN   [13]
+RC   Direct Submission
+RP   1-1123
+RA   Celniker S., Carlson J., Wan K., Frise E., Hoskins R., Park S.,
+RA   Svirskas R., Rubin G.;
+RT   "Direct Submission";
+RL   Submitted (10-AUG-2006) to the INSDC.
+RL   Berkeley Drosophila Genome Project, Lawrence Berkeley National Laboratory,
+RL   One Cyclotron Road, MS 64-121, Berkeley, CA 94720, USA
+XX
+RN   [14]
+RP   1-1123
+RG   Drosophila Heterochromatin Genome Project
+RA   Smith C.D., Shu S., Mungall C.J., Karpen G.H.;
+RT   "Direct Submission";
+RL   Submitted (01-AUG-2006) to the INSDC.
+RL   Drosophila Heterochromatin Genome Project, Ernest Orlando Lawrence Berkeley
+RL   National Laboratory, 1 Cyclotron Road, Mailstop 64-121, Berkeley, CA 94720,
+RL   USA
+XX
+RN   [15]
+RP   1-1123
+RA   Adams M.D., Celniker S.E., Gibbs R.A., Rubin G.M., Venter C.J.;
+RT   "Direct Submission";
+RL   Submitted (21-MAR-2000) to the INSDC.
+RL   Celera Genomics, 45 West Gude Drive, Rockville, MD 20850, USA
+XX
+RN   [16]
+RP   1-1123
+RX   PUBMED; 24259432.
+RA   Pruitt KD, Brown GR, Hiatt SM, Thibaud-Nissen F, Astashyn A, Farrell CM,
+RA   Hart J, Landrum MJ, McGarvey KM, Murphy MR, O'Leary NA, Pujar S, Rajput B,
+RA   Rangwala SH, Riddick LD, Shkeda A, Sun H, Tamez P, Tully RE, Wallin C,
+RA   Webb D, Weber J, Wu W, Dicuccio M, Kitts P, Maglott DR, Murphy TD,
+RA   Ostell JM;
+RT   "RefSeq: an update on mammalian reference sequences";
+RL   Nucleic Acids Res. 42(Database issue):D756-D763(2014).
+XX
+RN   [17]
+RG   RefSeq and RNAcentral
+RA   ;
+RT   ;
+RL   Submitted (27-JAN-2015) to the INSDC.
+XX
+DR   RefSeq; NR_004024.
+DR   MD5; b09a491277d7cb37aa6f9b902956fac8.
+XX
+CC   REVIEWED REFSEQ: This record has been curated by FlyBase. This
+CC   record is derived from an annotated genomic sequence
+CC   (NW_007931121).
+CC   On Jul 31, 2014 this sequence version replaced gi:160717634.
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..1123
+FT                   /organism="Drosophila melanogaster"
+FT                   /chromosome="X; Y"
+FT                   /mol_type="rRNA"
+FT                   /db_xref="taxon:7227"
+FT                   /genotype=y[1]; Gr22b[1] Gr22d[1] cn[1] CG33964[R4.2] bw[1]
+FT                   sp[1]; LysC[1] MstProx[1] GstD5[1] Rh6[1]
+FT   rRNA            1..1123
+FT                   /gene="CR40685"
+FT                   /gene_synonym="Dmel\CR40685"
+FT                   /locus_tag="Dmel_CR40685"
+FT                   /product="ribosomal RNA"
+FT                   /note="CR40685-RA; Dmel\CR40685-RA"
+FT                   /db_xref="FLYBASE:FBtr0114217"
+FT                   /db_xref="FLYBASE:FBgn0085767"
+FT                   /db_xref="GeneID:5740510"
+XX
+SQ   Sequence 1123 BP; 429 A; 142 C; 175 G; 377 T; 0 other;
+     ataaatattt gtaattatac aaataaaaac aatttaccaa aataaaaata taacaaaatg        60
+     attccatgga atcaaaagtt aaaatcaaaa taaaacgaag atgggtttta tttatatagt       120
+     tagtgtgggg cttggcaacc tcataaaaag attttaacat ttctaatgta tgttgtgcgt       180
+     atttgtggcg agtacttaca acaacggcgt ttcctataaa aataatgttt cgaacatgaa       240
+     aatcgaagaa acaaaattcg aaagtggaag tcgaatcaaa ataaaataat ttcgaatgtg       300
+     tggtaatcat cgaaataagt gttaatataa ttggtagata ttaactaatt tttaaaattt       360
+     gtgtgtattt attactatac acgcgttgcg aatatgtatt gttcatctta gttatgggca       420
+     tacgttggct aatgcaacaa cctgaaataa acaatgttgt acctggcatc catcaggtta       480
+     atgttttata taaattgcag tatgtgtcac ccaaaatagc aaaccccata accaaccaga       540
+     ttattatgat acataatgct tatatgaaac taagacattt cgcaacattt attttaggta       600
+     tataaataca tttattgaag gaattgatat atgccagtaa aatggtgtat ttttaatttc       660
+     tttcaataaa aacataattg acattatata aaaatgaatt ataaaactct aagcggtgga       720
+     tcactcggct catgggtcga tgaagaacgc agcaaactgt gcgtcatcgt gtgaactgca       780
+     ggacacatga acatcgacat tttgaacgca tatcgcagtc catgctgtta tgtactttaa       840
+     ttaattttat agtgctgctt ggactacata tggttgaggg ttgtaagact atgctaatta       900
+     agttgcttat aaatttttat aagcatatgg tatattattg gataaatata ataattttta       960
+     ttcataatat taaaaaataa atgaaaaaca ttatctcaca tttgaatgtg aaaaacgaag      1020
+     agaaatattt tctttttcaa tcaaataata ctgagaaatg tctagcataa aaaattgaaa      1080
+     tatttttcat ctagaattgt ctcttattaa tgattcggaa ata                        1123
+//

@@ -1407,6 +1407,15 @@ sub _read_FTHelper_EMBL {
           $_ =~ s/anticodon=/anticodon=\"/;
           $qual[$i+1] = $qual[$i+1] . '"';
         }
+        # multiline genotype annotations cause an error. Example:
+        # /genotype=y[1]; Gr22b[1] Gr22d[1] cn[1] CG33964[R4.2] bw[1]
+        # sp[1]; LysC[1] MstProx[1] GstD5[1] Rh6[1]
+        if ( /\/genotype/ && $qual[$i+1] =~ m/^\w/) {
+          # this line is genotype and the next line is not a new qualifier
+          $_ =~ s/genotype=/genotype=\"/;
+          $qual[$i+1] = $qual[$i+1] . '"';
+        }
+        # RNAcentral
         my( $qualifier, $value ) = m{^/([^=]+)(?:=(.+))?}
             or $self->throw("Can't see new qualifier in: $_\nfrom:\n"
                             . join('', map "$_\n", @qual));
