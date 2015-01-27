@@ -186,41 +186,18 @@ create or replace PACKAGE BODY RNC_HEALTHCHECKS AS
 
 
   /*
-  * Verify external and optional ids in rnc_accessions.
-  * Add more checks as more expert databases are imported into RNAcentral.
+  * Verify external ids in rnc_accessions.
   */
   PROCEDURE check_expert_db_accessions
   AS
     v_count NUMBER;
   BEGIN
 
-    -- RFAM
-    SELECT count(*) INTO v_count FROM rnc_accessions WHERE database = 'RFAM' AND (external_id IS NULL OR optional_id IS NULL);
-    report_results(v_count, 'RFAM expert accessions');
-
-    -- SRPDB, only external_id is provided
-    SELECT count(*) INTO v_count FROM rnc_accessions WHERE database = 'SRPDB' AND external_id IS null;
-    report_results(v_count, 'SRPDB expert accessions');
-
-    -- MIRBASE
-    SELECT count(*) INTO v_count FROM rnc_accessions WHERE database = 'MIRBASE' AND (external_id IS NULL OR optional_id IS NULL);
-    report_results(v_count, 'MIRBASE expert accessions');
-
-    -- VEGA
-    SELECT count(*) INTO v_count FROM rnc_accessions WHERE database = 'VEGA' AND (external_id IS NULL OR optional_id IS NULL);
-    report_results(v_count, 'VEGA expert accessions');
-
-    -- tmRNA Website, not all entries have both external and optional ids
-    SELECT count(*) into v_count FROM rnc_accessions WHERE database = 'TMRNA_WEB' AND external_id IS null;
-    report_results(v_count, 'TMRNA_WEB expert accessions');
-
-    -- gtRNAdb, only external ids
-    SELECT count(*) INTO v_count FROM rnc_accessions WHERE database = 'GTRNADB' AND (external_id IS NULL);
-    report_results(v_count, 'GTRNADB expert accessions');
-
-    -- LNCRNADB
-    SELECT count(*) INTO v_count FROM rnc_accessions WHERE database = 'LNCRNADB' AND (external_id IS NULL OR optional_id IS NULL);
-    report_results(v_count, 'LNCRNADB expert accessions');
+    FOR dbs IN (select descr from rnc_database where descr != 'ENA')
+    LOOP
+      SELECT count(*) INTO v_count FROM rnc_accessions WHERE database = dbs.descr AND external_id IS NULL;
+      report_results(v_count, dbs.descr || ' expert accessions');
+    END LOOP;
 
   END check_expert_db_accessions;
 
