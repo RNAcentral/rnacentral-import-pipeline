@@ -160,7 +160,8 @@ sub pipeline_analyses {
             -input_ids  => [
                 { 'id' => 1 }
             ],
-            -wait_for => [ 'get_ncr_files', 'create_csv_files' ]
+            -wait_for => [ 'get_ncr_files', 'create_csv_files' ],
+            -max_retry_count => 0,
         },
 
         # load genomic coordinates
