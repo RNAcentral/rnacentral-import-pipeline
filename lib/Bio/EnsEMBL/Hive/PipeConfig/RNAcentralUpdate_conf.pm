@@ -138,6 +138,20 @@ sub pipeline_analyses {
             -wait_for => [ 'truncate_staging_table' ]
         },
 
+        # get dat files from a local folder
+        {   -logic_name => 'get_dat_files',
+            -module     => 'Bio::EnsEMBL::Hive::RunnableDB::RNAcentral::GetFiles',
+            -analysis_capacity  => 1,
+            -input_ids  => [
+                { 'location'  => $self->o('input_folder'),
+                  'extension' => 'dat' }
+            ],
+            -flow_into => {
+                1 => { 'create_csv_files' => { 'ncr_file' => '#ncr_file#' } },
+            },
+            -wait_for => [ 'truncate_staging_table' ]
+        },
+
         # prepare csv files for sql loader
         {   -logic_name    => 'create_csv_files',
             -module        => 'Bio::EnsEMBL::Hive::RunnableDB::RNAcentral::CreateCsvFiles',
@@ -150,7 +164,7 @@ sub pipeline_analyses {
             -input_ids  => [
                 { 'id' => 1 }
             ],
-            -wait_for => [ 'get_ncr_files', 'create_csv_files' ]
+            -wait_for => [ 'get_ncr_files', 'get_dat_files', 'create_csv_files' ]
         },
 
         # load accession info
@@ -160,7 +174,7 @@ sub pipeline_analyses {
             -input_ids  => [
                 { 'id' => 1 }
             ],
-            -wait_for => [ 'get_ncr_files', 'create_csv_files' ],
+            -wait_for => [ 'get_ncr_files', 'get_dat_files', 'create_csv_files' ],
             -max_retry_count => 0,
         },
 
@@ -171,7 +185,7 @@ sub pipeline_analyses {
             -input_ids  => [
                 { 'id' => 1 }
             ],
-            -wait_for => [ 'get_ncr_files', 'create_csv_files' ]
+            -wait_for => [ 'get_ncr_files', 'get_dat_files', 'create_csv_files' ]
         },
 
         # list all csv files with sequences longer than 4000 characters.
@@ -185,7 +199,7 @@ sub pipeline_analyses {
             -flow_into => {
                 1 => { 'import_long_csv' => { 'csv_file' => '#ncr_file#' } },
             },
-            -wait_for => [ 'get_ncr_files', 'create_csv_files' ]
+            -wait_for => [ 'get_ncr_files', 'get_dat_files', 'create_csv_files' ]
         },
 
         # long sequences need to be imported sequentially, because they are stored as clobs
