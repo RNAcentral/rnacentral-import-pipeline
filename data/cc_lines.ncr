@@ -295,3 +295,61 @@ SQ   Sequence 99 BP; 26 A; 19 C; 24 G; 30 T; 0 other;
      tacactgtgg atccggtgag gtagtaggtt gtatagtttg gaatattacc accggtgaac        60
      tatgcaattt tctaccttac cggagacaga actcttcga                               99
 //
+ID   LN809256.1:1..80:ncRNA; SV 1; linear; genomic DNA; STD; PLN; 80 BP.
+XX
+PA   LN809256.1
+XX
+PR   Project:PRJEB8122;
+XX
+DT   28-JAN-2015 (Rel. 123, Created)
+DT   28-JAN-2015 (Rel. 123, Last updated, Version 1)
+XX
+DE   Arabidopsis thaliana (thale cress) small nucleolar RNA 39BYa
+XX
+KW   RNAcentral; TPA; TPA:specialist_db.
+XX
+OS   Arabidopsis thaliana (thale cress)
+OC   Eukaryota; Viridiplantae; Streptophyta; Embryophyta; Tracheophyta;
+OC   Spermatophyta; Magnoliophyta; eudicotyledons; Gunneridae; Pentapetalae;
+OC   rosids; malvids; Brassicales; Brassicaceae; Camelineae; Arabidopsis.
+XX
+RN   [1]
+RP   1-80
+RG   snOPY and RNAcentral
+RA   ;
+RT   ;
+RL   Submitted (27-JAN-2015) to the INSDC.
+XX
+RN   [2]
+RA   Yoshihama M., Nakao A., Kenmochi N.;
+RT   "snOPY: a small nucleolar RNA orthological gene database";
+RL   BMC Res Notes 6:426-426(2013).
+XX
+DR   MD5; 262001d6d4410b713f455fffcd54b3a9.
+XX
+CC   Specialist DB   : snOPY (snoRNA Orthological Gene Database)
+CC   URL             : http://snoopy.med.miyazaki-u.ac.jp
+CC   snOPY; Arabidopsis_thaliana300072.
+XX
+AH   LOCAL_SPAN          PRIMARY_IDENTIFIER PRIMARY_SPAN        COMP
+AS   1-80                AJ240068.1         3-82
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..80
+FT                   /organism="Arabidopsis thaliana"
+FT                   /mol_type="genomic DNA"
+FT                   /db_xref="taxon:3702"
+FT   ncRNA           LN809256.1:1..80
+FT                   /gene="39BYa"
+FT                   /product="small nucleolar RNA 39BYa"
+FT                   /note="Modification:C/D"
+FT                   /note="Target:25S rRNA, 5.8S rRNA"
+FT                   /note="Organisation:Intronic"
+FT                   /experiment="EXISTENCE:Curator Inference ECO0000305"
+FT                   /ncRNA_class="snoRNA"
+XX
+SQ   Sequence 80 BP; 27 A; 15 C; 16 G; 22 T; 0 other;
+     gccaatgagg acatcagatt ataaaagaac accatctttc gggactgatt aacattgatg        60
+     atacttctgc aattctgagg                                                    80
+//

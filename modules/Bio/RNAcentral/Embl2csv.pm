@@ -695,6 +695,10 @@ sub _get_xrefs {
         push @data, _inject_vega_xrefs_manually($seq, 'Vega');
     }
 
+    if ( $project eq 'PRJEB8122' ) {
+        push @data, _inject_xrefs_manually($seq, 'SNOPY');
+    }
+
     # VEGA xrefs require special treatment
     @data = @{_combine_vega_xrefs(\@data)};
 
@@ -727,6 +731,7 @@ sub _inject_xrefs_manually {
         'GTRNADB'  => 'PRJEB5173',
         'LNCRNADB' => 'PRJEB6238',
         'MIRBASE'  => 'PRJEB4451',
+        'SNOPY'    => 'PRJEB8122',
     );
 
     if ( exists($project_ids{$db_name} ) ) {
