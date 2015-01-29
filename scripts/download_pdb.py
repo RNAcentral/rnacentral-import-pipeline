@@ -517,9 +517,6 @@ def main():
     refs = get_literature_references(pdb_ids)
     species = get_full_lineages(chains)
 
-    # import sys
-    # sys.exit()
-
     write_sequence_files(chains)
     write_literature_references(chains, refs)
     write_accession_info(chains, species)
