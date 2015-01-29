@@ -409,7 +409,7 @@ def write_accession_info(chains, species):
             'ordinal': 1,
             'is_composite': 'N',
             'non_coding_id': '',
-            'database': 'PDB',
+            'database': 'PDBE',
             'external_id': data['structureId'],
             'optional_id': data['chainId'],
             'project': '',
