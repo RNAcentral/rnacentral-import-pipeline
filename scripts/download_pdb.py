@@ -100,6 +100,7 @@ def get_chain_descriptions(pdb_ids):
         'source',
         'taxonomyId',
         'compound',
+        'resolution',
     ]
 
     def filter_out_chains(report):
@@ -377,7 +378,7 @@ def write_accession_info(chains, species):
         """
         Store additional information in the structured note.
         """
-        notes = []
+        notes = {}
         fields = [
             'structureTitle',
             'experimentalTechnique',
@@ -386,7 +387,7 @@ def write_accession_info(chains, species):
         ]
         for field in fields:
             if field in data and data[field]:
-                notes.append({field: data[field]})
+                notes[field] = data[field]
         line = json.dumps(notes)
         return sanitize(line)
 
