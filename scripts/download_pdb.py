@@ -229,7 +229,7 @@ def write_sequence_files(chains):
             'crc64': CRC64digest(sequence),
             'length': data['chainLength'],
             'seq': sequence,
-            'dbid': 'PDB',
+            'dbid': 'PDBE',
             'accession': accession,
             'optional_id': '',
             'version': 1,
