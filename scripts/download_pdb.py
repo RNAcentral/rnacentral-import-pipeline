@@ -114,16 +114,22 @@ def get_chain_descriptions(pdb_ids):
         reader = csv.DictReader(report, delimiter=',', quotechar='"')
         data = dict()
         min_seq_length = 10
+        disqualified = {
+            'too_short': 0,
+            'mRNA': 0,
+        }
         for row in reader:
             # skip proteins
             if 'RNA' not in row['entityMacromoleculeType']:
                 continue
             # skip short sequences
             if int(row['chainLength']) < min_seq_length:
+                disqualified['too_short'] += 1
                 continue
             # skip mRNAs
             if re.search('mRNA', row['compound'], re.IGNORECASE) and \
                not re.search('tmRNA', row['compound'], re.IGNORECASE):
+                disqualified['mRNA'] += 1
                 continue
 
             # use entityId to ensure that the id is unique when chainIds
@@ -133,6 +139,9 @@ def get_chain_descriptions(pdb_ids):
             if row['taxonomyId'] == '':
                 row['taxonomyId'] = '32630' # synthetic construct
             data[accession] = row
+
+        print 'Disqualified %i chains < 10 nts' % disqualified['too_short']
+        print 'Disqualified %i mRNA chains' % disqualified['mRNA']
         return data
 
     report = get_custom_report(pdb_ids, fields)
@@ -506,21 +515,24 @@ def main():
     """
     Main program.
     """
-
     pdb_ids = get_rna_containing_pdb_ids()
-    print len(pdb_ids)
-
-    # pdb_ids = ['1S72', '1J5E']
-    # pdb_ids = pdb_ids[:10]
+    print 'Found %i RNA-containing PDB files' % len(pdb_ids)
 
     chains = get_chain_descriptions(pdb_ids)
+    print '%i RNA chains' % len(chains)
+
+    print 'Downloading literature references'
     refs = get_literature_references(pdb_ids)
+
+    print 'Downloading full lineages'
     species = get_full_lineages(chains)
 
+    print 'Writing output files'
     write_sequence_files(chains)
     write_literature_references(chains, refs)
     write_accession_info(chains, species)
 
+    print 'Done'
 
 # main entry point
 if __name__ == "__main__":
