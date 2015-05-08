@@ -1,0 +1,917 @@
+ID   OTTMUST00000043398.1; SV 1; linear; transcribed RNA; STD; MUS; 577 BP.
+XX
+AC   ;
+XX
+PR   Project:PRJEB4568;
+XX
+DE   Mus musculus long non-coding RNA OTTMUST00000043398.1 (RP23-438H3.1 gene), lincRNA
+XX
+KW   RNAcentral; Third Party Data; TPA; TPA:specialist_db.
+XX
+OS   Mus musculus (house mouse)
+OC   Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi; Mammalia;
+OC   Eutheria; Euarchontoglires; Glires; Rodentia; Sciurognathi; Muroidea;
+OC   Muridae; Murinae; Mus; Mus.
+XX
+RN   [1]
+RP   1-577
+RG   Vega and RNAcentral
+RT   ;
+RL   Submitted (10-MAR-2015) to the INSDC.
+XX
+RN   [2]
+RA   Derrien T., Johnson R., Bussotti G., Tanzer A., Djebali S., Tilgner H., 
+RA   Guernec G., Martin D., Merkel A., Knowles D.G., Lagarde J., Veeravalli L., 
+RA   Ruan X., Ruan Y., Lassmann T., Carninci P., Brown J.B., Lipovich L., 
+RA   Gonzalez J.M., Thomas M., Davis C.A., Shiekhattar R., Gingeras T.R., 
+RA   Hubbard T.J., Notredame C., Harrow J., Guigo R.;
+RT   "The GENCODE v7 catalog of human long noncoding RNAs: analysis of their 
+RT   gene structure, evolution, and expression";
+RL   Genome Res. 22(9):1775-1789(2012).
+XX
+RN   [3]
+RA   Harrow J., Frankish A., Gonzalez J.M., Tapanari E., Diekhans M., 
+RA   Kokocinski F., Aken B.L., Barrell D., Zadissa A., Searle S., Barnes I.,
+RA   Bignell A., Boychenko V., Hunt T., Kay M., Mukherjee G., Rajan J., 
+RA   Despacio-Reyes G., Saunders G., Steward C., Harte R., Lin M., Howald C., 
+RA   Tanzer A., Derrien T., Chrast J., Walters N., Balasubramanian S., Pei B., 
+RA   Tress M., Rodriguez J.M., Ezkurdia I., van Baren J., Brent M., Haussler D., 
+RA   Kellis M., Valencia A., Reymond A., Gerstein M., Guigo R., Hubbard T.J.;
+RT   "GENCODE: the reference human genome annotation for The ENCODE Project";
+RL   Genome Res. 22(9):1760-1774(2012).
+XX
+DR   VEGA; OTTMUST00000043398; OTTMUSG00000017966.
+XX
+CC   Specialist DB   : VEGA (The Vertebrate Genome Annotation database)
+CC   URL             : http://vega.sanger.ac.uk
+CC   Version         : Release 60
+XX
+AH   LOCAL_SPAN      PRIMARY_IDENTIFIER   PRIMARY_SPAN   COMP
+AS   1-230 CM000685.1 93156154-93156383
+AS   231-577 CM000685.1 93156527-93156873
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..577
+FT                   /organism="Mus musculus"
+FT                   /chromosome="X"
+FT                   /strain="C57BL/6J"
+FT                   /mol_type="transcribed RNA"
+FT                   /db_xref="taxon:10090"                                    
+FT   ncRNA           1..577
+FT                   /gene="RP23-438H3.1"
+FT                   /product="long non-coding RNA OTTMUST00000043398.1"
+FT                   /note="biotype:lincRNA"
+FT                   /note="ECO:0000305"  
+FT                   /note="SO:0001463"
+FT                   /ncRNA_class="lncRNA"
+XX
+SQ   Sequence 577 BP; 0 A; 0 C; 0 G; 0 T; 577 other;
+     AGGATTCAGG GGTGTGGCCT CCCATTGTTC AGGGTGGGTT CATAAGACCG TGCCTCTGAG        60
+     AGCTCTGGAC CAGACCACCA CAAGGCATCA GGATGGTGAA AGCAACTAAG AAGACACACT       120
+     ATCTGACACA GGATGTTGTG CCATCAACTT CGGCATCCAA ACCCAAGACA GTGAAGATTT       180
+     GCCATGGTCA GCCCTGTTCC AAATGTAACA AGAAGATAAG AAACCCCAAG GTGCAGGAGC       240
+     CTAAGAAGAA GAGCAAGAAA ACACTGCCAA GCATGCCTAA AAGAAAGACT TCGAAGAAAA       300
+     CTACACCACC AAAAACAAAG GACCAATAAA GGCGAGGGGA AAGAACTATT CGGTCACTAC       360
+     CGCCCTTTGT TGAAAGAGCT GTCAACAGGT ACTAGGAAGA AGCTCGAACA TAGCAGCAAG       420
+     TGATTAAGAA TGCAAGTAGA CTCAGCATGC CAACCAAAGA CCTGGAAATC TGTGAAATGG       480
+     CTTGGTAGCT GAGCAATGCC AAACTGTGTA GTCTGAAAAT ATCAGTACTA CACACTGCTT       540
+     TGACTCTGGT GAAAATAAAA TCAATCTGAT ATGAAAA                                577
+//
+ID   OTTMUST00000043411.1; SV 1; linear; transcribed RNA; STD; MUS; 577 BP.
+XX
+AC   ;
+XX
+PR   Project:PRJEB4568;
+XX
+DE   Mus musculus long non-coding RNA OTTMUST00000043411.1 (RP23-438H3.2 gene), lincRNA
+XX
+KW   RNAcentral; Third Party Data; TPA; TPA:specialist_db.
+XX
+OS   Mus musculus (house mouse)
+OC   Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi; Mammalia;
+OC   Eutheria; Euarchontoglires; Glires; Rodentia; Sciurognathi; Muroidea;
+OC   Muridae; Murinae; Mus; Mus.
+XX
+RN   [1]
+RP   1-577
+RG   Vega and RNAcentral
+RT   ;
+RL   Submitted (10-MAR-2015) to the INSDC.
+XX
+RN   [2]
+RA   Derrien T., Johnson R., Bussotti G., Tanzer A., Djebali S., Tilgner H., 
+RA   Guernec G., Martin D., Merkel A., Knowles D.G., Lagarde J., Veeravalli L., 
+RA   Ruan X., Ruan Y., Lassmann T., Carninci P., Brown J.B., Lipovich L., 
+RA   Gonzalez J.M., Thomas M., Davis C.A., Shiekhattar R., Gingeras T.R., 
+RA   Hubbard T.J., Notredame C., Harrow J., Guigo R.;
+RT   "The GENCODE v7 catalog of human long noncoding RNAs: analysis of their 
+RT   gene structure, evolution, and expression";
+RL   Genome Res. 22(9):1775-1789(2012).
+XX
+RN   [3]
+RA   Harrow J., Frankish A., Gonzalez J.M., Tapanari E., Diekhans M., 
+RA   Kokocinski F., Aken B.L., Barrell D., Zadissa A., Searle S., Barnes I.,
+RA   Bignell A., Boychenko V., Hunt T., Kay M., Mukherjee G., Rajan J., 
+RA   Despacio-Reyes G., Saunders G., Steward C., Harte R., Lin M., Howald C., 
+RA   Tanzer A., Derrien T., Chrast J., Walters N., Balasubramanian S., Pei B., 
+RA   Tress M., Rodriguez J.M., Ezkurdia I., van Baren J., Brent M., Haussler D., 
+RA   Kellis M., Valencia A., Reymond A., Gerstein M., Guigo R., Hubbard T.J.;
+RT   "GENCODE: the reference human genome annotation for The ENCODE Project";
+RL   Genome Res. 22(9):1760-1774(2012).
+XX
+DR   VEGA; OTTMUST00000043411; OTTMUSG00000017973.
+XX
+CC   Specialist DB   : VEGA (The Vertebrate Genome Annotation database)
+CC   URL             : http://vega.sanger.ac.uk
+CC   Version         : Release 60
+XX
+AH   LOCAL_SPAN      PRIMARY_IDENTIFIER   PRIMARY_SPAN   COMP
+AS   1-230 CM000685.1 93183227-93183456
+AS   231-577 CM000685.1 93183600-93183946
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..577
+FT                   /organism="Mus musculus"
+FT                   /chromosome="X"
+FT                   /strain="C57BL/6J"
+FT                   /mol_type="transcribed RNA"
+FT                   /db_xref="taxon:10090"                                    
+FT   ncRNA           1..577
+FT                   /gene="RP23-438H3.2"
+FT                   /product="long non-coding RNA OTTMUST00000043411.1"
+FT                   /note="biotype:lincRNA"
+FT                   /note="ECO:0000305"  
+FT                   /note="SO:0001463"
+FT                   /ncRNA_class="lncRNA"
+XX
+SQ   Sequence 577 BP; 0 A; 0 C; 0 G; 0 T; 577 other;
+     AGGATTCAGG GGTGTGGCCT CCCATTGTTC AGGGTGGGTT CATAAGACCG TGCCTCTGAG        60
+     AGCTCTGGAC CAGACCACCA CAAGGCATCA GGATGGTGAA AGCAACTAAG AAGACACACT       120
+     ATCTGACACA GGATGTTGTG CCATCAACTT CGGCATCCAA ACCCAAGACA GTGAAGATTT       180
+     GCCATGGTCA GCCCTGTTCC AAATGTAACA AGAAGATAAG AAACCCCAAG GTGCAGGAGC       240
+     CTAAGAAGAA GAGCAAGAAA ACACTGCCAA GCATGCCTAA AAGAAAGACT TCGAAGAAAA       300
+     CTACACCACC AAAAACAAAG GACCAATAAA GGCGAGGGGA AAGAACTATT CGGTCACTAC       360
+     CGCCCTTTGT TGAAAGAGCT GTCAACAGGT ACTGGGAAGA AGCTCGAACA TAGCAGCAAG       420
+     TGATTAAGAA TGCAAGTAGA CTCAGCATGC CAACCAAAGA CCTGGAAATC TGTGAAATGG       480
+     CTTGGTAGCT GAGCAATGCC AAACTGTGTA GTCTGAAAAT ATCAGTACTA CACACTGCTT       540
+     TGACTCTGGT GAAAATAAAA TCAATCTGAT ATGAAAA                                577
+//
+ID   OTTMUST00000118514.1; SV 1; linear; transcribed RNA; STD; MUS; 507 BP.
+XX
+AC   ;
+XX
+PR   Project:PRJEB4568;
+XX
+DE   Mus musculus long non-coding RNA OTTMUST00000118514.1 (RP23-132H1.4 gene), lincRNA
+XX
+KW   RNAcentral; Third Party Data; TPA; TPA:specialist_db.
+XX
+OS   Mus musculus (house mouse)
+OC   Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi; Mammalia;
+OC   Eutheria; Euarchontoglires; Glires; Rodentia; Sciurognathi; Muroidea;
+OC   Muridae; Murinae; Mus; Mus.
+XX
+RN   [1]
+RP   1-507
+RG   Vega and RNAcentral
+RT   ;
+RL   Submitted (10-MAR-2015) to the INSDC.
+XX
+RN   [2]
+RA   Derrien T., Johnson R., Bussotti G., Tanzer A., Djebali S., Tilgner H., 
+RA   Guernec G., Martin D., Merkel A., Knowles D.G., Lagarde J., Veeravalli L., 
+RA   Ruan X., Ruan Y., Lassmann T., Carninci P., Brown J.B., Lipovich L., 
+RA   Gonzalez J.M., Thomas M., Davis C.A., Shiekhattar R., Gingeras T.R., 
+RA   Hubbard T.J., Notredame C., Harrow J., Guigo R.;
+RT   "The GENCODE v7 catalog of human long noncoding RNAs: analysis of their 
+RT   gene structure, evolution, and expression";
+RL   Genome Res. 22(9):1775-1789(2012).
+XX
+RN   [3]
+RA   Harrow J., Frankish A., Gonzalez J.M., Tapanari E., Diekhans M., 
+RA   Kokocinski F., Aken B.L., Barrell D., Zadissa A., Searle S., Barnes I.,
+RA   Bignell A., Boychenko V., Hunt T., Kay M., Mukherjee G., Rajan J., 
+RA   Despacio-Reyes G., Saunders G., Steward C., Harte R., Lin M., Howald C., 
+RA   Tanzer A., Derrien T., Chrast J., Walters N., Balasubramanian S., Pei B., 
+RA   Tress M., Rodriguez J.M., Ezkurdia I., van Baren J., Brent M., Haussler D., 
+RA   Kellis M., Valencia A., Reymond A., Gerstein M., Guigo R., Hubbard T.J.;
+RT   "GENCODE: the reference human genome annotation for The ENCODE Project";
+RL   Genome Res. 22(9):1760-1774(2012).
+XX
+DR   VEGA; OTTMUST00000118514; OTTMUSG00000045102.
+XX
+CC   Specialist DB   : VEGA (The Vertebrate Genome Annotation database)
+CC   URL             : http://vega.sanger.ac.uk
+CC   Version         : Release 60
+XX
+AH   LOCAL_SPAN      PRIMARY_IDENTIFIER   PRIMARY_SPAN   COMP
+AS   1-284 CM000685.1 95732982-95733265 C
+AS   285-507 CM000685.1 95732586-95732808 C
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..507
+FT                   /organism="Mus musculus"
+FT                   /chromosome="X"
+FT                   /strain="C57BL/6J"
+FT                   /mol_type="transcribed RNA"
+FT                   /db_xref="taxon:10090"                                    
+FT   ncRNA           1..507
+FT                   /gene="RP23-132H1.4"
+FT                   /product="long non-coding RNA OTTMUST00000118514.1"
+FT                   /note="biotype:lincRNA"
+FT                   /note="ECO:0000305"  
+FT                   /note="SO:0001463"
+FT                   /ncRNA_class="lncRNA"
+XX
+SQ   Sequence 507 BP; 0 A; 0 C; 0 G; 0 T; 507 other;
+     GGACCAGACC ACCACAAGGC ATCAGGATGG TGAAAGCAAC TAAGAAGAGG CACAATCTGA        60
+     TACAGGATGT TGTGCCATCA ACCACAACAT CTAAACCCAA GAGAGTGATG AACTGCCTCA       120
+     TACCAGATGC TGTGCCATCA ACCTGGACTT CCGAACCCAA GACAGTGGAC ACTTGCCTCA       180
+     CACCTGATGT TGAGCCATCA ACCTCGACTG CTGAGCCAAA GATAGTGAAG ATTTGCCTTC       240
+     ATCAGTTCCA GTCCAAATGT AGCAAGAAGA TTAGAAGGCC CAAGGTGCCT ACCATGAAGA       300
+     ACAAGAAAAC GCTGGGAAGG ATGCTGAAAA AAAAGGCATC TAAGAACAAT ATAGCACCTA       360
+     AACGGCGTTT CGACTTGTGA TTGAGAATGC CAGTCTCAGC ATGCCACCTA AAGGAGGTGT       420
+     GGCATCTGAG CAATGGCCAA CTGTGTAGAT ACTGTAGATA CTACACAGTT CTTTGACTCT       480
+     CAAAATAAAA TCAATCTGAT ATGAAAA                                           507
+//
+ID   OTTMUST00000098037.1; SV 1; linear; transcribed RNA; STD; MUS; 354 BP.
+XX
+AC   ;
+XX
+PR   Project:PRJEB4568;
+XX
+DE   Mus musculus long non-coding RNA OTTMUST00000098037.1 (RP23-140G16.2 gene), antisense
+XX
+KW   RNAcentral; Third Party Data; TPA; TPA:specialist_db.
+XX
+OS   Mus musculus (house mouse)
+OC   Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi; Mammalia;
+OC   Eutheria; Euarchontoglires; Glires; Rodentia; Sciurognathi; Muroidea;
+OC   Muridae; Murinae; Mus; Mus.
+XX
+RN   [1]
+RP   1-354
+RG   Vega and RNAcentral
+RT   ;
+RL   Submitted (10-MAR-2015) to the INSDC.
+XX
+RN   [2]
+RA   Derrien T., Johnson R., Bussotti G., Tanzer A., Djebali S., Tilgner H., 
+RA   Guernec G., Martin D., Merkel A., Knowles D.G., Lagarde J., Veeravalli L., 
+RA   Ruan X., Ruan Y., Lassmann T., Carninci P., Brown J.B., Lipovich L., 
+RA   Gonzalez J.M., Thomas M., Davis C.A., Shiekhattar R., Gingeras T.R., 
+RA   Hubbard T.J., Notredame C., Harrow J., Guigo R.;
+RT   "The GENCODE v7 catalog of human long noncoding RNAs: analysis of their 
+RT   gene structure, evolution, and expression";
+RL   Genome Res. 22(9):1775-1789(2012).
+XX
+RN   [3]
+RA   Harrow J., Frankish A., Gonzalez J.M., Tapanari E., Diekhans M., 
+RA   Kokocinski F., Aken B.L., Barrell D., Zadissa A., Searle S., Barnes I.,
+RA   Bignell A., Boychenko V., Hunt T., Kay M., Mukherjee G., Rajan J., 
+RA   Despacio-Reyes G., Saunders G., Steward C., Harte R., Lin M., Howald C., 
+RA   Tanzer A., Derrien T., Chrast J., Walters N., Balasubramanian S., Pei B., 
+RA   Tress M., Rodriguez J.M., Ezkurdia I., van Baren J., Brent M., Haussler D., 
+RA   Kellis M., Valencia A., Reymond A., Gerstein M., Guigo R., Hubbard T.J.;
+RT   "GENCODE: the reference human genome annotation for The ENCODE Project";
+RL   Genome Res. 22(9):1760-1774(2012).
+XX
+DR   VEGA; OTTMUST00000098037; OTTMUSG00000038069.
+XX
+CC   Specialist DB   : VEGA (The Vertebrate Genome Annotation database)
+CC   URL             : http://vega.sanger.ac.uk
+CC   Version         : Release 60
+XX
+AH   LOCAL_SPAN      PRIMARY_IDENTIFIER   PRIMARY_SPAN   COMP
+AS   1-344 CM000681.1 5406740-5407083
+AS   345-354 CM000681.1 5415012-5415021
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..354
+FT                   /organism="Mus musculus"
+FT                   /chromosome="19"
+FT                   /strain="C57BL/6J"
+FT                   /mol_type="transcribed RNA"
+FT                   /db_xref="taxon:10090"                                    
+FT   ncRNA           1..354
+FT                   /gene="RP23-140G16.2"
+FT                   /product="long non-coding RNA OTTMUST00000098037.1"
+FT                   /note="biotype:antisense"
+FT                   /note="ECO:0000305"  
+FT                   /note="SO:0001904"
+FT                   /note="GO:0030371"
+FT                   /note="GO:0043488"
+FT                   /ncRNA_class="antisense_RNA"
+XX
+SQ   Sequence 354 BP; 0 A; 0 C; 0 G; 0 T; 354 other;
+     ATGCGCAGAT TATTTGTTTA CCACTTAGAA CACAGGATGT CAGCGCCATC TTGTGACGGC        60
+     GAATGTGGGG GCGGCTCCCA ACATGTAACC TTGACTGGAC TGGAACTCAC TCTGTAGACC       120
+     AGGCTGGCTT CAAACTCAAA GATCCACCTG CCCCTGCTGG GTGCTGGGAC TAAAGGCCTG       180
+     CACCACACGC CTGACTGGTG AATTGTCTTC TAATTCTAAA TCTGGTACTA AGTGCTCTAA       240
+     GAAAGCTCAA GAGGCTCACT GGTGTTGTGG TGGCCCAGGG CGTCAGTAGT GCCGTGACCT       300
+     CCAGCAAGCG TATGGCCTGG CAGTGGAGAC TGACTAACCC TAAGGAACTG TGTT             354
+//
+ID   OTTMUST00000098033.2; SV 2; linear; transcribed RNA; STD; MUS; 820 BP.
+XX
+AC   ;
+XX
+PR   Project:PRJEB4568;
+XX
+DE   Mus musculus long non-coding RNA OTTMUST00000098033.2 (RP23-140G16.2 gene), antisense
+XX
+KW   RNAcentral; Third Party Data; TPA; TPA:specialist_db.
+XX
+OS   Mus musculus (house mouse)
+OC   Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi; Mammalia;
+OC   Eutheria; Euarchontoglires; Glires; Rodentia; Sciurognathi; Muroidea;
+OC   Muridae; Murinae; Mus; Mus.
+XX
+RN   [1]
+RP   1-820
+RG   Vega and RNAcentral
+RT   ;
+RL   Submitted (10-MAR-2015) to the INSDC.
+XX
+RN   [2]
+RA   Derrien T., Johnson R., Bussotti G., Tanzer A., Djebali S., Tilgner H., 
+RA   Guernec G., Martin D., Merkel A., Knowles D.G., Lagarde J., Veeravalli L., 
+RA   Ruan X., Ruan Y., Lassmann T., Carninci P., Brown J.B., Lipovich L., 
+RA   Gonzalez J.M., Thomas M., Davis C.A., Shiekhattar R., Gingeras T.R., 
+RA   Hubbard T.J., Notredame C., Harrow J., Guigo R.;
+RT   "The GENCODE v7 catalog of human long noncoding RNAs: analysis of their 
+RT   gene structure, evolution, and expression";
+RL   Genome Res. 22(9):1775-1789(2012).
+XX
+RN   [3]
+RA   Harrow J., Frankish A., Gonzalez J.M., Tapanari E., Diekhans M., 
+RA   Kokocinski F., Aken B.L., Barrell D., Zadissa A., Searle S., Barnes I.,
+RA   Bignell A., Boychenko V., Hunt T., Kay M., Mukherjee G., Rajan J., 
+RA   Despacio-Reyes G., Saunders G., Steward C., Harte R., Lin M., Howald C., 
+RA   Tanzer A., Derrien T., Chrast J., Walters N., Balasubramanian S., Pei B., 
+RA   Tress M., Rodriguez J.M., Ezkurdia I., van Baren J., Brent M., Haussler D., 
+RA   Kellis M., Valencia A., Reymond A., Gerstein M., Guigo R., Hubbard T.J.;
+RT   "GENCODE: the reference human genome annotation for The ENCODE Project";
+RL   Genome Res. 22(9):1760-1774(2012).
+XX
+DR   VEGA; OTTMUST00000098033; OTTMUSG00000038069.
+XX
+CC   Specialist DB   : VEGA (The Vertebrate Genome Annotation database)
+CC   URL             : http://vega.sanger.ac.uk
+CC   Version         : Release 60
+XX
+AH   LOCAL_SPAN      PRIMARY_IDENTIFIER   PRIMARY_SPAN   COMP
+AS   1-322 CM000681.1 5406762-5407083
+AS   323-427 CM000681.1 5415008-5415112
+AS   428-633 CM000681.1 5415607-5415812
+AS   634-820 CM000681.1 5417394-5417580
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..820
+FT                   /organism="Mus musculus"
+FT                   /chromosome="19"
+FT                   /strain="C57BL/6J"
+FT                   /mol_type="transcribed RNA"
+FT                   /db_xref="taxon:10090"                                    
+FT   ncRNA           1..820
+FT                   /gene="RP23-140G16.2"
+FT                   /product="long non-coding RNA OTTMUST00000098033.2"
+FT                   /note="biotype:antisense"
+FT                   /note="ECO:0000305"  
+FT                   /note="SO:0001904"
+FT                   /note="GO:0030371"
+FT                   /note="GO:0043488"
+FT                   /ncRNA_class="antisense_RNA"
+XX
+SQ   Sequence 820 BP; 0 A; 0 C; 0 G; 0 T; 820 other;
+     ACTTAGAACA CAGGATGTCA GCGCCATCTT GTGACGGCGA ATGTGGGGGC GGCTCCCAAC        60
+     ATGTAACCTT GACTGGACTG GAACTCACTC TGTAGACCAG GCTGGCTTCA AACTCAAAGA       120
+     TCCACCTGCC CCTGCTGGGT GCTGGGACTA AAGGCCTGCA CCACACGCCT GACTGGTGAA       180
+     TTGTCTTCTA ATTCTAAATC TGGTACTAAG TGCTCTAAGA AAGCTCAAGA GGCTCACTGG       240
+     TGTTGTGGTG GCCCAGGGCG TCAGTAGTGC CGTGACCTCC AGCAAGCGTA TGGCCTGGCA       300
+     GTGGAGACTG ACTAACCCTA AGACAGGAAC TGTGTTTCTT ACTGGCCTGG AACTCACTAC       360
+     ATAGACCAGA CTGGCCTGAA GAATCAGAGA TCTGCCTGCA TGTGCCTCCA GAGGGTGAGG       420
+     ATTAAAGTTT CCCCTCGTTG ATGTGCTCAT AGATCGCGTC TGCGCCCTGA TCCAAGGCAC       480
+     GCTCGAAGAA CAGGGCGCCC ACTGCGATGG TGAGGGCGAA GGTGGAAGTT CTGCGGAACA       540
+     GCAAGGAGTA CAGACGCGAA GGGATCGTCG GCAACGACAT GTTGCCTCAC TGCCGAACTC       600
+     GCGCCACTGC CAGATGTATT TCTTTATGTT CCGGTGCCAC ATGCATGCCT GGTACCTGAG       660
+     GATGACAGAA GAGGACATCA GGTCCCCTGG AACTTGAGTT GCAATTGTAA GCCACCTTGT       720
+     AGGTGCTGGG AAGCAAAGCT GGGTCCCCTG GAAAAGCATC CAATGCTCTT AACTGCTGAG       780
+     CCGTTTCCCA GCCCCCTTTT AAAGGTGTTT TCTTTTGTTT                             820
+//
+ID   OTTMUST00000098035.1; SV 1; linear; transcribed RNA; STD; MUS; 857 BP.
+XX
+AC   ;
+XX
+PR   Project:PRJEB4568;
+XX
+DE   Mus musculus long non-coding RNA OTTMUST00000098035.1 (RP23-140G16.2 gene), antisense
+XX
+KW   RNAcentral; Third Party Data; TPA; TPA:specialist_db.
+XX
+OS   Mus musculus (house mouse)
+OC   Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi; Mammalia;
+OC   Eutheria; Euarchontoglires; Glires; Rodentia; Sciurognathi; Muroidea;
+OC   Muridae; Murinae; Mus; Mus.
+XX
+RN   [1]
+RP   1-857
+RG   Vega and RNAcentral
+RT   ;
+RL   Submitted (10-MAR-2015) to the INSDC.
+XX
+RN   [2]
+RA   Derrien T., Johnson R., Bussotti G., Tanzer A., Djebali S., Tilgner H., 
+RA   Guernec G., Martin D., Merkel A., Knowles D.G., Lagarde J., Veeravalli L., 
+RA   Ruan X., Ruan Y., Lassmann T., Carninci P., Brown J.B., Lipovich L., 
+RA   Gonzalez J.M., Thomas M., Davis C.A., Shiekhattar R., Gingeras T.R., 
+RA   Hubbard T.J., Notredame C., Harrow J., Guigo R.;
+RT   "The GENCODE v7 catalog of human long noncoding RNAs: analysis of their 
+RT   gene structure, evolution, and expression";
+RL   Genome Res. 22(9):1775-1789(2012).
+XX
+RN   [3]
+RA   Harrow J., Frankish A., Gonzalez J.M., Tapanari E., Diekhans M., 
+RA   Kokocinski F., Aken B.L., Barrell D., Zadissa A., Searle S., Barnes I.,
+RA   Bignell A., Boychenko V., Hunt T., Kay M., Mukherjee G., Rajan J., 
+RA   Despacio-Reyes G., Saunders G., Steward C., Harte R., Lin M., Howald C., 
+RA   Tanzer A., Derrien T., Chrast J., Walters N., Balasubramanian S., Pei B., 
+RA   Tress M., Rodriguez J.M., Ezkurdia I., van Baren J., Brent M., Haussler D., 
+RA   Kellis M., Valencia A., Reymond A., Gerstein M., Guigo R., Hubbard T.J.;
+RT   "GENCODE: the reference human genome annotation for The ENCODE Project";
+RL   Genome Res. 22(9):1760-1774(2012).
+XX
+DR   VEGA; OTTMUST00000098035; OTTMUSG00000038069.
+XX
+CC   Specialist DB   : VEGA (The Vertebrate Genome Annotation database)
+CC   URL             : http://vega.sanger.ac.uk
+CC   Version         : Release 60
+XX
+AH   LOCAL_SPAN      PRIMARY_IDENTIFIER   PRIMARY_SPAN   COMP
+AS   1-269 CM000681.1 5406815-5407083
+AS   270-361 CM000681.1 5415008-5415099
+AS   362-567 CM000681.1 5415607-5415812
+AS   568-857 CM000681.1 5417394-5417683
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..857
+FT                   /organism="Mus musculus"
+FT                   /chromosome="19"
+FT                   /strain="C57BL/6J"
+FT                   /mol_type="transcribed RNA"
+FT                   /db_xref="taxon:10090"                                    
+FT   ncRNA           1..857
+FT                   /gene="RP23-140G16.2"
+FT                   /product="long non-coding RNA OTTMUST00000098035.1"
+FT                   /note="biotype:antisense"
+FT                   /note="ECO:0000305"  
+FT                   /note="SO:0001904"
+FT                   /note="GO:0030371"
+FT                   /note="GO:0043488"
+FT                   /ncRNA_class="antisense_RNA"
+XX
+SQ   Sequence 857 BP; 0 A; 0 C; 0 G; 0 T; 857 other;
+     TCCCAACATG TAACCTTGAC TGGACTGGAA CTCACTCTGT AGACCAGGCT GGCTTCAAAC        60
+     TCAAAGATCC ACCTGCCCCT GCTGGGTGCT GGGACTAAAG GCCTGCACCA CACGCCTGAC       120
+     TGGTGAATTG TCTTCTAATT CTAAATCTGG TACTAAGTGC TCTAAGAAAG CTCAAGAGGC       180
+     TCACTGGTGT TGTGGTGGCC CAGGGCGTCA GTAGTGCCGT GACCTCCAGC AAGCGTATGG       240
+     CCTGGCAGTG GAGACTGACT AACCCTAAGA CAGGAACTGT GTTTCTTACT GGCCTGGAAC       300
+     TCACTACATA GACCAGACTG GCCTGAAGAA TCAGAGATCT GCCTGCATGT GCCTCCAGAG       360
+     GTTTCCCCTC GTTGATGTGC TCATAGATCG CGTCTGCGCC CTGATCCAAG GCACGCTCGA       420
+     AGAACAGGGC GCCCACTGCG ATGGTGAGGG CGAAGGTGGA AGTTCTGCGG AACAGCAAGG       480
+     AGTACAGACG CGAAGGGATC GTCGGCAACG ACATGTTGCC TCACTGCCGA ACTCGCGCCA       540
+     CTGCCAGATG TATTTCTTTA TGTTCCGGTG CCACATGCAT GCCTGGTACC TGAGGATGAC       600
+     AGAAGAGGAC ATCAGGTCCC CTGGAACTTG AGTTGCAATT GTAAGCCACC TTGTAGGTGC       660
+     TGGGAAGCAA AGCTGGGTCC CCTGGAAAAG CATCCAATGC TCTTAACTGC TGAGCCGTTT       720
+     CCCAGCCCCC TTTTAAAGGT GTTTTCTTTT GTTTAACTTG CTGTGTAGCT GAAAGTGTCC       780
+     TTGAATTCCT AGTCCCGGCG CTCCCATCTT GGTTTCTCTC CTCCCCCTGC CATGTCCAAA       840
+     TGTGAGTATT CTTCTTT                                                      857
+//
+
+ID   OTTHUMT00000481199.1; SV 1; linear; transcribed RNA; STD; HUM; 618 BP.
+XX
+AC   ;
+XX
+PR   Project:PRJEB4568;
+XX
+DE   Homo sapiens long non-coding RNA OTTHUMT00000481199.1 (AC022002.4 gene), antisense
+XX
+KW   RNAcentral; Third Party Data; TPA; TPA:specialist_db.
+XX
+OS   
+OC   Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi; Mammalia;
+OC   Eutheria; Euarchontoglires; Primates; Haplorrhini; Catarrhini; Hominidae;
+OC   Homo.
+XX
+RN   [1]
+RP   1-618
+RG   Vega and RNAcentral
+RT   ;
+RL   Submitted (19-JAN-2015) to the INSDC.
+XX
+RN   [2]
+RA   Derrien T., Johnson R., Bussotti G., Tanzer A., Djebali S., Tilgner H., 
+RA   Guernec G., Martin D., Merkel A., Knowles D.G., Lagarde J., Veeravalli L., 
+RA   Ruan X., Ruan Y., Lassmann T., Carninci P., Brown J.B., Lipovich L., 
+RA   Gonzalez J.M., Thomas M., Davis C.A., Shiekhattar R., Gingeras T.R., 
+RA   Hubbard T.J., Notredame C., Harrow J., Guigo R.;
+RT   "The GENCODE v7 catalog of human long noncoding RNAs: analysis of their 
+RT   gene structure, evolution, and expression";
+RL   Genome Res. 22(9):1775-1789(2012).
+XX
+RN   [3]
+RA   Harrow J., Frankish A., Gonzalez J.M., Tapanari E., Diekhans M., 
+RA   Kokocinski F., Aken B.L., Barrell D., Zadissa A., Searle S., Barnes I.,
+RA   Bignell A., Boychenko V., Hunt T., Kay M., Mukherjee G., Rajan J., 
+RA   Despacio-Reyes G., Saunders G., Steward C., Harte R., Lin M., Howald C., 
+RA   Tanzer A., Derrien T., Chrast J., Walters N., Balasubramanian S., Pei B., 
+RA   Tress M., Rodriguez J.M., Ezkurdia I., van Baren J., Brent M., Haussler D., 
+RA   Kellis M., Valencia A., Reymond A., Gerstein M., Guigo R., Hubbard T.J.;
+RT   "GENCODE: the reference human genome annotation for The ENCODE Project";
+RL   Genome Res. 22(9):1760-1774(2012).
+XX
+DR   VEGA; OTTHUMT00000481199; OTTHUMG00000154875.
+XX
+CC   Specialist DB   : VEGA (The Vertebrate Genome Annotation database)
+CC   URL             : http://vega.sanger.ac.uk
+CC   Version         : Release 59
+XX
+AH   LOCAL_SPAN      PRIMARY_IDENTIFIER   PRIMARY_SPAN   COMP
+AS   1-150 CM000665.2 3069093-3069242 C
+AS   151-280 CM000665.2 3061067-3061196 C
+AS   281-446 CM000665.2 3059215-3059380 C
+AS   447-618 CM000665.2 3042842-3043013 C
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..618
+FT                   /organism="Homo sapiens"
+FT                   /mol_type="transcribed RNA"
+FT                   /chromosome="3"                                     
+FT   ncRNA           1..618
+FT                   /gene="AC022002.4"
+FT                   /product="long non-coding RNA OTTHUMT00000481199.1"
+FT                   /note="biotype:antisense"
+FT                   /note="ECO:0000305"  
+FT                   /note="SO:0001904"
+FT                   /note="GO:0030371"
+FT                   /note="GO:0043488"
+FT                   /ncRNA_class="antisense_RNA"
+XX
+SQ   Sequence 618 BP; 0 A; 0 C; 0 G; 0 T; 618 other;
+     ATCCAGATTG GAGGCCTTTG TGGTGGGTGG TGGACTGCAG GTGGAACCAA GCACAGGTGT        60
+     GCCCTGGGCA GAGGTGGGCA AGAGGAAGGA ACCCAAACAG TGCTGATTCC ACATGGCCCT       120
+     TGGTCAAGAA GCTGAAGGCC TAGAAAGGAG GTCTGAGATG GAGGTGACAC AGGCCTTGTG       180
+     CCTGGGAGCA CAATGAGGAA CCACACCCAG ATGCCAACGC TGAGGTGCCG TGTGTCTACT       240
+     ATAAGGCGGA AGACACCAAC AAAAATGATT TAAATATAAG CCAGTGGACC CTACCTGAGG       300
+     CAACCATGAA AGCCAACAAA TGAGACAAGT TTGGGTGGAG GTGCTCATGG GGCACTTTCT       360
+     AAAACATCTT CAATTCAGTT AGACTCAACT AATCCAGGAC CTCATTTACC CGATGATGAA       420
+     GCCAATTGGT CAAAGACTTC TTCCAGCATT TTCTTCTTTG TCTTCATGTC TCCAATATTT       480
+     AACCTAAGAA GATAAACAGA AAGACCTTGG AAACCATACC CAATGGGGAT ATTTGCAATG       540
+     TCATCAGGTA ATTTTGTACG CAGATTCTTA TGATGGAGTT AGTTTTCTAT ACTACATCAT       600
+     GAGCAGAGCT ATCAGGAC                                                     618
+//
+ID   OTTHUMT00000481269.1; SV 1; linear; transcribed RNA; STD; HUM; 548 BP.
+XX
+AC   ;
+XX
+PR   Project:PRJEB4568;
+XX
+DE   Homo sapiens long non-coding RNA OTTHUMT00000481269.1 (AC093495.4 gene), antisense
+XX
+KW   RNAcentral; Third Party Data; TPA; TPA:specialist_db.
+XX
+OS   
+OC   Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi; Mammalia;
+OC   Eutheria; Euarchontoglires; Primates; Haplorrhini; Catarrhini; Hominidae;
+OC   Homo.
+XX
+RN   [1]
+RP   1-548
+RG   Vega and RNAcentral
+RT   ;
+RL   Submitted (19-JAN-2015) to the INSDC.
+XX
+RN   [2]
+RA   Derrien T., Johnson R., Bussotti G., Tanzer A., Djebali S., Tilgner H., 
+RA   Guernec G., Martin D., Merkel A., Knowles D.G., Lagarde J., Veeravalli L., 
+RA   Ruan X., Ruan Y., Lassmann T., Carninci P., Brown J.B., Lipovich L., 
+RA   Gonzalez J.M., Thomas M., Davis C.A., Shiekhattar R., Gingeras T.R., 
+RA   Hubbard T.J., Notredame C., Harrow J., Guigo R.;
+RT   "The GENCODE v7 catalog of human long noncoding RNAs: analysis of their 
+RT   gene structure, evolution, and expression";
+RL   Genome Res. 22(9):1775-1789(2012).
+XX
+RN   [3]
+RA   Harrow J., Frankish A., Gonzalez J.M., Tapanari E., Diekhans M., 
+RA   Kokocinski F., Aken B.L., Barrell D., Zadissa A., Searle S., Barnes I.,
+RA   Bignell A., Boychenko V., Hunt T., Kay M., Mukherjee G., Rajan J., 
+RA   Despacio-Reyes G., Saunders G., Steward C., Harte R., Lin M., Howald C., 
+RA   Tanzer A., Derrien T., Chrast J., Walters N., Balasubramanian S., Pei B., 
+RA   Tress M., Rodriguez J.M., Ezkurdia I., van Baren J., Brent M., Haussler D., 
+RA   Kellis M., Valencia A., Reymond A., Gerstein M., Guigo R., Hubbard T.J.;
+RT   "GENCODE: the reference human genome annotation for The ENCODE Project";
+RL   Genome Res. 22(9):1760-1774(2012).
+XX
+DR   VEGA; OTTHUMT00000481269; OTTHUMG00000155524.
+XX
+CC   Specialist DB   : VEGA (The Vertebrate Genome Annotation database)
+CC   URL             : http://vega.sanger.ac.uk
+CC   Version         : Release 59
+XX
+AH   LOCAL_SPAN      PRIMARY_IDENTIFIER   PRIMARY_SPAN   COMP
+AS   1-314 CM000665.2 14145370-14145683
+AS   315-548 CM000665.2 14147277-14147510
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..548
+FT                   /organism="Homo sapiens"
+FT                   /mol_type="transcribed RNA"
+FT                   /chromosome="3"                                     
+FT   ncRNA           1..548
+FT                   /gene="AC093495.4"
+FT                   /product="long non-coding RNA OTTHUMT00000481269.1"
+FT                   /note="biotype:antisense"
+FT                   /note="ECO:0000305"  
+FT                   /note="SO:0001904"
+FT                   /note="GO:0030371"
+FT                   /note="GO:0043488"
+FT                   /ncRNA_class="antisense_RNA"
+XX
+SQ   Sequence 548 BP; 0 A; 0 C; 0 G; 0 T; 548 other;
+     CCCAGCAGAT GACCTGTACT TCTCTGCTCT CTCCCCTACT GCAAAGAGGC AGTGAGGGCA        60
+     GCATTAGTAA GCCTGACTCA GGGGAAGGTA AGTGGCCTGC AGAGAAATGG TCCTAGGTCC       120
+     GCAACCGAGG CGAGTGAACT TGTCGGACAG ATGAAGACTC TAACTGGAAG AAACGATCAG       180
+     CGCATTCACG GATGCACCAC CATCCAGAAA TCTCCCGGTG GCTTCCATAC AAAAACTGAT       240
+     GTTTCTAAAG ATGGAAAGAA CAGGTCTAGG AGGCAGAAGA GTATCTCCTA GCAAAGTGTT       300
+     CTGTAGCTCA AAGGAACCTG CACTGACCTT GGGCCCGTAG CGACGCTTCA GCCTCTCCCT       360
+     GATGAGCAGA CCTTTGGCCA GCAACTTCCA GTTCCCTAGA GCCCGCTTCT CCTTTTTCTG       420
+     CAGGCAAAAA TGAAGTGGGA GAAAAGTGTT AAGCACTGAC ATTTTCAGGA AAAATATTAA       480
+     GATGGAAACT GTGAATGTAA AGACAGATAT ATACACCACT TTAGAATATA GCCTCTCCTT       540
+     CACACCAA                                                                548
+//
+ID   OTTHUMT00000481270.1; SV 1; linear; transcribed RNA; STD; HUM; 1514 BP.
+XX
+AC   ;
+XX
+PR   Project:PRJEB4568;
+XX
+DE   Homo sapiens long non-coding RNA OTTHUMT00000481270.1 (AC093495.4 gene), antisense
+XX
+KW   RNAcentral; Third Party Data; TPA; TPA:specialist_db.
+XX
+OS   
+OC   Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi; Mammalia;
+OC   Eutheria; Euarchontoglires; Primates; Haplorrhini; Catarrhini; Hominidae;
+OC   Homo.
+XX
+RN   [1]
+RP   1-1514
+RG   Vega and RNAcentral
+RT   ;
+RL   Submitted (19-JAN-2015) to the INSDC.
+XX
+RN   [2]
+RA   Derrien T., Johnson R., Bussotti G., Tanzer A., Djebali S., Tilgner H., 
+RA   Guernec G., Martin D., Merkel A., Knowles D.G., Lagarde J., Veeravalli L., 
+RA   Ruan X., Ruan Y., Lassmann T., Carninci P., Brown J.B., Lipovich L., 
+RA   Gonzalez J.M., Thomas M., Davis C.A., Shiekhattar R., Gingeras T.R., 
+RA   Hubbard T.J., Notredame C., Harrow J., Guigo R.;
+RT   "The GENCODE v7 catalog of human long noncoding RNAs: analysis of their 
+RT   gene structure, evolution, and expression";
+RL   Genome Res. 22(9):1775-1789(2012).
+XX
+RN   [3]
+RA   Harrow J., Frankish A., Gonzalez J.M., Tapanari E., Diekhans M., 
+RA   Kokocinski F., Aken B.L., Barrell D., Zadissa A., Searle S., Barnes I.,
+RA   Bignell A., Boychenko V., Hunt T., Kay M., Mukherjee G., Rajan J., 
+RA   Despacio-Reyes G., Saunders G., Steward C., Harte R., Lin M., Howald C., 
+RA   Tanzer A., Derrien T., Chrast J., Walters N., Balasubramanian S., Pei B., 
+RA   Tress M., Rodriguez J.M., Ezkurdia I., van Baren J., Brent M., Haussler D., 
+RA   Kellis M., Valencia A., Reymond A., Gerstein M., Guigo R., Hubbard T.J.;
+RT   "GENCODE: the reference human genome annotation for The ENCODE Project";
+RL   Genome Res. 22(9):1760-1774(2012).
+XX
+DR   VEGA; OTTHUMT00000481270; OTTHUMG00000155524.
+XX
+CC   Specialist DB   : VEGA (The Vertebrate Genome Annotation database)
+CC   URL             : http://vega.sanger.ac.uk
+CC   Version         : Release 59
+XX
+AH   LOCAL_SPAN      PRIMARY_IDENTIFIER   PRIMARY_SPAN   COMP
+AS   1-314 CM000665.2 14145370-14145683
+AS   315-1061 CM000665.2 14147955-14148701
+AS   1062-1217 CM000665.2 14149842-14149997
+AS   1218-1514 CM000665.2 14151364-14151660
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..1514
+FT                   /organism="Homo sapiens"
+FT                   /mol_type="transcribed RNA"
+FT                   /chromosome="3"                                     
+FT   ncRNA           1..1514
+FT                   /gene="AC093495.4"
+FT                   /product="long non-coding RNA OTTHUMT00000481270.1"
+FT                   /note="biotype:antisense"
+FT                   /note="ECO:0000305"  
+FT                   /note="SO:0001904"
+FT                   /note="GO:0030371"
+FT                   /note="GO:0043488"
+FT                   /ncRNA_class="antisense_RNA"
+XX
+SQ   Sequence 1514 BP; 0 A; 0 C; 0 G; 0 T; 1514 other;
+     CCCAGCAGAT GACCTGTACT TCTCTGCTCT CTCCCCTACT GCAAAGAGGC AGTGAGGGCA        60
+     GCATTAGTAA GCCTGACTCA GGGGAAGGTA AGTGGCCTGC AGAGAAATGG TCCTAGGTCC       120
+     GCAACCGAGG CGAGTGAACT TGTCGGACAG ATGAAGACTC TAACTGGAAG AAACGATCAG       180
+     CGCATTCACG GATGCACCAC CATCCAGAAA TCTCCCGGTG GCTTCCATAC AAAAACTGAT       240
+     GTTTCTAAAG ATGGAAAGAA CAGGTCTAGG AGGCAGAAGA GTATCTCCTA GCAAAGTGTT       300
+     CTGTAGCTCA AAGGTCAGGA GCACGTCTTT GAATTCCTCG CAGACGATGT ATCCATCAGT       360
+     CCTGTGGGGA CACAACGCGA TGTCAACCCT CGAACCTGCT GCCTGCTCTG CCTCTCCTCC       420
+     CTCCCCAGTT TGTGGAAGAC AGTGGGCCAC ATCTGAGCAC TAGGGGTCCT GAAGGATGTC       480
+     GCGGGTCAGC CAGTGTCCCA CATCCTCCGT GCAGAAGGCA GGCCTGTGGA AGCTGGCACT       540
+     GCCTCTTCCT CCCCAGATTC TGCCGAAGAA AGCTGGGGTG AAAGCCCCTA TCCAGCCTCA       600
+     CCCATCATGG AACAGAGCTC ACTAACCAGG CAGCTGCCGG GGAAAGATGC TGACTGTTTT       660
+     TTGCTCACTA GCCTGTGAGT CCCTAAACCT GGGAAGAACG TTTTAATCCA GCATTACGAT       720
+     GCCAGTTTCA TTGGCTCCGT TCCCTCTGGA GGGAAGCCAG AATTGGTAAA GCACTGACTT       780
+     TGCAAATCCA GTGTAACATC CTGAAAATTG GAGCCACCAG GCCTCAACTC CCAGCAGCCC       840
+     CATGCCAGCT TTCCATCCCC ATCTCTGGAG CCACCCCTCC CCATCCCTGT GTTTAGCCTC       900
+     CATCGAAGGC CCCTCACGCA CACGGGATGG GAGTAGCCGC CATGGAAATC AAAGCCAGTG       960
+     ATGGCCTGGA CACAGTCGAT GTCCAGCTTG CGGGCCACGC GGTGTAGATT GGGCAGGTTC      1020
+     AGCTGGACAC AGCCAATAGG CATCATGCTG GGCAGGAAGA GATGAACACC ACAGACGGGG      1080
+     TAAATGATTT GCCTAAAGTC ACACAGCTCG TAAGGGCCAG AGCCCACACT TTCATCCACT      1140
+     AGCCTATATT CTGTGCTGTC ATCACTGATA GCAGTGACTG AGACTGAGAG ACAAAGTCAC      1200
+     TTAAGAGCTG ATGGCTGCTA CTAAAAAATT TAAATGTGTG GCTCACGTTA CATTTCAACT      1260
+     GAACACTGCT ATGCTGGTTC CAGCACAAAA GACAGGTGAG ATGGTGCAGA GAAAATCCTC      1320
+     AGCAACCCTG CAGGCCCAGG CAGGGGGCAT CGCCCACTCC AGCCTGCTGC TGGCAGTGAC      1380
+     TGTGACCAGC GCCTGCAGCC TTTCCCACTA AGCGGAGGCC CCTCCACTCC CCACTCAGCT      1440
+     TCCCGGAGTC TTGCAACCCC CAAGGACTCC TGGGGTCTGA TGAGAAGTAA ATGGTCTCTG      1500
+     TGATCAGCCA CTGT                                                        1514
+//
+ID   OTTHUMT00000481271.1; SV 1; linear; transcribed RNA; STD; HUM; 254 BP.
+XX
+AC   ;
+XX
+PR   Project:PRJEB4568;
+XX
+DE   Homo sapiens long non-coding RNA OTTHUMT00000481271.1 (AC093495.4 gene), antisense
+XX
+KW   RNAcentral; Third Party Data; TPA; TPA:specialist_db.
+XX
+OS   
+OC   Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi; Mammalia;
+OC   Eutheria; Euarchontoglires; Primates; Haplorrhini; Catarrhini; Hominidae;
+OC   Homo.
+XX
+RN   [1]
+RP   1-254
+RG   Vega and RNAcentral
+RT   ;
+RL   Submitted (19-JAN-2015) to the INSDC.
+XX
+RN   [2]
+RA   Derrien T., Johnson R., Bussotti G., Tanzer A., Djebali S., Tilgner H., 
+RA   Guernec G., Martin D., Merkel A., Knowles D.G., Lagarde J., Veeravalli L., 
+RA   Ruan X., Ruan Y., Lassmann T., Carninci P., Brown J.B., Lipovich L., 
+RA   Gonzalez J.M., Thomas M., Davis C.A., Shiekhattar R., Gingeras T.R., 
+RA   Hubbard T.J., Notredame C., Harrow J., Guigo R.;
+RT   "The GENCODE v7 catalog of human long noncoding RNAs: analysis of their 
+RT   gene structure, evolution, and expression";
+RL   Genome Res. 22(9):1775-1789(2012).
+XX
+RN   [3]
+RA   Harrow J., Frankish A., Gonzalez J.M., Tapanari E., Diekhans M., 
+RA   Kokocinski F., Aken B.L., Barrell D., Zadissa A., Searle S., Barnes I.,
+RA   Bignell A., Boychenko V., Hunt T., Kay M., Mukherjee G., Rajan J., 
+RA   Despacio-Reyes G., Saunders G., Steward C., Harte R., Lin M., Howald C., 
+RA   Tanzer A., Derrien T., Chrast J., Walters N., Balasubramanian S., Pei B., 
+RA   Tress M., Rodriguez J.M., Ezkurdia I., van Baren J., Brent M., Haussler D., 
+RA   Kellis M., Valencia A., Reymond A., Gerstein M., Guigo R., Hubbard T.J.;
+RT   "GENCODE: the reference human genome annotation for The ENCODE Project";
+RL   Genome Res. 22(9):1760-1774(2012).
+XX
+DR   VEGA; OTTHUMT00000481271; OTTHUMG00000155524.
+XX
+CC   Specialist DB   : VEGA (The Vertebrate Genome Annotation database)
+CC   URL             : http://vega.sanger.ac.uk
+CC   Version         : Release 59
+XX
+AH   LOCAL_SPAN      PRIMARY_IDENTIFIER   PRIMARY_SPAN   COMP
+AS   1-87 CM000665.2 14145370-14145456
+AS   88-254 CM000665.2 14159726-14159892
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..254
+FT                   /organism="Homo sapiens"
+FT                   /mol_type="transcribed RNA"
+FT                   /chromosome="3"                                     
+FT   ncRNA           1..254
+FT                   /gene="AC093495.4"
+FT                   /product="long non-coding RNA OTTHUMT00000481271.1"
+FT                   /note="biotype:antisense"
+FT                   /note="ECO:0000305"  
+FT                   /note="SO:0001904"
+FT                   /note="GO:0030371"
+FT                   /note="GO:0043488"
+FT                   /ncRNA_class="antisense_RNA"
+XX
+SQ   Sequence 254 BP; 0 A; 0 C; 0 G; 0 T; 254 other;
+     CCCAGCAGAT GACCTGTACT TCTCTGCTCT CTCCCCTACT GCAAAGAGGC AGTGAGGGCA        60
+     GCATTAGTAA GCCTGACTCA GGGGAAGCCC TGCGCACCTC ACCTTTGCTG TTGCTGACTT       120
+     CAGAGGAATT GGCTGTAGAG ACAATACCAG CCGGGTCAAG AGCTGCAGAG CCCGGAGAAT       180
+     CAGTAAGAAT ATCTATGATG AAAAGGAAGA ACATAGTTAT CCTAAGAAAG TAATTAAAGA       240
+     TGTAATGAGT TCAA                                                         254
+//
+ID   OTTHUMT00000481272.1; SV 1; linear; transcribed RNA; STD; HUM; 890 BP.
+XX
+AC   ;
+XX
+PR   Project:PRJEB4568;
+XX
+DE   Homo sapiens long non-coding RNA OTTHUMT00000481272.1 (AC093495.4 gene), antisense
+XX
+KW   RNAcentral; Third Party Data; TPA; TPA:specialist_db.
+XX
+OS   
+OC   Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi; Mammalia;
+OC   Eutheria; Euarchontoglires; Primates; Haplorrhini; Catarrhini; Hominidae;
+OC   Homo.
+XX
+RN   [1]
+RP   1-890
+RG   Vega and RNAcentral
+RT   ;
+RL   Submitted (19-JAN-2015) to the INSDC.
+XX
+RN   [2]
+RA   Derrien T., Johnson R., Bussotti G., Tanzer A., Djebali S., Tilgner H., 
+RA   Guernec G., Martin D., Merkel A., Knowles D.G., Lagarde J., Veeravalli L., 
+RA   Ruan X., Ruan Y., Lassmann T., Carninci P., Brown J.B., Lipovich L., 
+RA   Gonzalez J.M., Thomas M., Davis C.A., Shiekhattar R., Gingeras T.R., 
+RA   Hubbard T.J., Notredame C., Harrow J., Guigo R.;
+RT   "The GENCODE v7 catalog of human long noncoding RNAs: analysis of their 
+RT   gene structure, evolution, and expression";
+RL   Genome Res. 22(9):1775-1789(2012).
+XX
+RN   [3]
+RA   Harrow J., Frankish A., Gonzalez J.M., Tapanari E., Diekhans M., 
+RA   Kokocinski F., Aken B.L., Barrell D., Zadissa A., Searle S., Barnes I.,
+RA   Bignell A., Boychenko V., Hunt T., Kay M., Mukherjee G., Rajan J., 
+RA   Despacio-Reyes G., Saunders G., Steward C., Harte R., Lin M., Howald C., 
+RA   Tanzer A., Derrien T., Chrast J., Walters N., Balasubramanian S., Pei B., 
+RA   Tress M., Rodriguez J.M., Ezkurdia I., van Baren J., Brent M., Haussler D., 
+RA   Kellis M., Valencia A., Reymond A., Gerstein M., Guigo R., Hubbard T.J.;
+RT   "GENCODE: the reference human genome annotation for The ENCODE Project";
+RL   Genome Res. 22(9):1760-1774(2012).
+XX
+DR   VEGA; OTTHUMT00000481272; OTTHUMG00000155524.
+XX
+CC   Specialist DB   : VEGA (The Vertebrate Genome Annotation database)
+CC   URL             : http://vega.sanger.ac.uk
+CC   Version         : Release 59
+XX
+AH   LOCAL_SPAN      PRIMARY_IDENTIFIER   PRIMARY_SPAN   COMP
+AS   1-592 CM000665.2 14145373-14145964
+AS   593-890 CM000665.2 14147955-14148252
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..890
+FT                   /organism="Homo sapiens"
+FT                   /mol_type="transcribed RNA"
+FT                   /chromosome="3"                                     
+FT   ncRNA           1..890
+FT                   /gene="AC093495.4"
+FT                   /product="long non-coding RNA OTTHUMT00000481272.1"
+FT                   /note="biotype:antisense"
+FT                   /note="ECO:0000305"  
+FT                   /note="SO:0001904"
+FT                   /note="GO:0030371"
+FT                   /note="GO:0043488"
+FT                   /ncRNA_class="antisense_RNA"
+XX
+SQ   Sequence 890 BP; 0 A; 0 C; 0 G; 0 T; 890 other;
+     AGCAGATGAC CTGTACTTCT CTGCTCTCTC CCCTACTGCA AAGAGGCAGT GAGGGCAGCA        60
+     TTAGTAAGCC TGACTCAGGG GAAGGTAAGT GGCCTGCAGA GAAATGGTCC TAGGTCCGCA       120
+     ACCGAGGCGA GTGAACTTGT CGGACAGATG AAGACTCTAA CTGGAAGAAA CGATCAGCGC       180
+     ATTCACGGAT GCACCACCAT CCAGAAATCT CCCGGTGGCT TCCATACAAA AACTGATGTT       240
+     TCTAAAGATG GAAAGAACAG GTCTAGGAGG CAGAAGAGTA TCTCCTAGCA AAGTGTTCTG       300
+     TAGCTCAAAG GGTGAGTGGG CTTTGGTAGC AAAAAGCTTT GAAGGCTTCA CCCTGGGTGA       360
+     ATCTGACAAG GGCTGGAGCC AGACGGGACC TGCAGCACCT CCTCAGCTTG GCCTCGTCTC       420
+     CCCTGACCCC GCCTCCGTGC ATGCTGCCTC AGTTTGCCTT CTCAGCAGAG AAGCCCCCAC       480
+     CACCAGGGGC TGGGCATGCC CAGGGCAGGT GTGGGGCCTG TAGTGGGGCA GCAGCAACTG       540
+     GTGGGTGCCC CTCTAGTGGG CGCTCAGCTC ACAGCTGCTC AAATGGGAAC AGTCAGGAGC       600
+     ACGTCTTTGA ATTCCTCGCA GACGATGTAT CCATCAGTCC TGTGGGGACA CAACGCGATG       660
+     TCAACCCTCG AACCTGCTGC CTGCTCTGCC TCTCCTCCCT CCCCAGTTTG TGGAAGACAG       720
+     TGGGCCACAT CTGAGCACTA GGGGTCCTGA AGGATGTCGC GGGTCAGCCA GTGTCCCACA       780
+     TCCTCCGTGC AGAAGGCAGG CCTGTGGAAG CTGGCACTGC CTCTTCCTCC CCAGATTCTG       840
+     CCGAAGAAAG CTGGGGTGAA AGCCCCTATC CAGCCTCACC CATCATGGAA                  890
+//
+
