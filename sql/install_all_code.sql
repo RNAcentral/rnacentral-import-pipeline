@@ -17,7 +17,6 @@
 @DATABASE                                         
 @STATS                                            
 @TREMBL_UTILS                                     
-@UPI                                              
 @RELEASE                                          
 @MAIL                                             
 @UNISTATS                                         
