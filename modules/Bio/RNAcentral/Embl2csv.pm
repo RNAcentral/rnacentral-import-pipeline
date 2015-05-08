@@ -200,9 +200,8 @@ sub _parse_accession_data {
     my ($seq, $xrefs, $fh_ac_info) = @_;
     my ($text, $accession, $parent_accession, $seq_version, $feature_location_start,
         $feature_location_end, $feature_name, $ordinal, $species,
-        $common_name, $keywords, $project, $is_composite, $non_coding_id,
-        $source_accession, %feature_tags, $db_xrefs,
-        $binomial_species_name);
+        $keywords, $project, $is_composite, $non_coding_id,
+        $source_accession, %feature_tags, $db_xrefs);
 
     $source_accession = ${$xrefs}[0]{'accession'}; # accession of the source ENA entry
 
@@ -263,15 +262,6 @@ sub _parse_accession_data {
             $non_coding_id = '';
         }
 
-        # temporary fix TODO: remove when the data is fixed
-        if ( $accession =~ /^OTTHUM/ ) {
-            $common_name = 'human';
-            $binomial_species_name = 'Homo sapiens';
-        } else {
-            $common_name = $species->common_name;
-            $binomial_species_name = $species->binomial('FULL');
-        }
-
         $text = '"' . join('","', ($accession,
                                    $parent_accession,
                                    $seq_version,
@@ -288,8 +278,8 @@ sub _parse_accession_data {
                                    _sanitize($seq->division),
                                    $keywords,
                                    _get_description_line($seq->desc),
-                                   $binomial_species_name,
-                                   _sanitize($common_name),
+                                   $species->binomial('FULL'),
+                                   _sanitize($species->common_name),
                                    _sanitize($species->organelle),
                                    join('; ', reverse $species->classification),
                                    $feature_tags{'allele'},

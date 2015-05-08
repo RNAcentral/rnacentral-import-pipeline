@@ -492,7 +492,6 @@ SQ   Sequence 857 BP; 0 A; 0 C; 0 G; 0 T; 857 other;
      TTGAATTCCT AGTCCCGGCG CTCCCATCTT GGTTTCTCTC CTCCCCCTGC CATGTCCAAA       840
      TGTGAGTATT CTTCTTT                                                      857
 //
-
 ID   OTTHUMT00000481199.1; SV 1; linear; transcribed RNA; STD; HUM; 618 BP.
 XX
 AC   ;
@@ -503,7 +502,7 @@ DE   Homo sapiens long non-coding RNA OTTHUMT00000481199.1 (AC022002.4 gene), an
 XX
 KW   RNAcentral; Third Party Data; TPA; TPA:specialist_db.
 XX
-OS   
+OS   Homo sapiens (human)
 OC   Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi; Mammalia;
 OC   Eutheria; Euarchontoglires; Primates; Haplorrhini; Catarrhini; Hominidae;
 OC   Homo.
@@ -586,7 +585,7 @@ DE   Homo sapiens long non-coding RNA OTTHUMT00000481269.1 (AC093495.4 gene), an
 XX
 KW   RNAcentral; Third Party Data; TPA; TPA:specialist_db.
 XX
-OS   
+OS   Homo sapiens (human)
 OC   Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi; Mammalia;
 OC   Eutheria; Euarchontoglires; Primates; Haplorrhini; Catarrhini; Hominidae;
 OC   Homo.
@@ -666,7 +665,7 @@ DE   Homo sapiens long non-coding RNA OTTHUMT00000481270.1 (AC093495.4 gene), an
 XX
 KW   RNAcentral; Third Party Data; TPA; TPA:specialist_db.
 XX
-OS   
+OS   Homo sapiens (human)
 OC   Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi; Mammalia;
 OC   Eutheria; Euarchontoglires; Primates; Haplorrhini; Catarrhini; Hominidae;
 OC   Homo.
@@ -764,7 +763,7 @@ DE   Homo sapiens long non-coding RNA OTTHUMT00000481271.1 (AC093495.4 gene), an
 XX
 KW   RNAcentral; Third Party Data; TPA; TPA:specialist_db.
 XX
-OS   
+OS   Homo sapiens (human)
 OC   Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi; Mammalia;
 OC   Eutheria; Euarchontoglires; Primates; Haplorrhini; Catarrhini; Hominidae;
 OC   Homo.
@@ -839,7 +838,7 @@ DE   Homo sapiens long non-coding RNA OTTHUMT00000481272.1 (AC093495.4 gene), an
 XX
 KW   RNAcentral; Third Party Data; TPA; TPA:specialist_db.
 XX
-OS   
+OS   Homo sapiens (human)
 OC   Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi; Mammalia;
 OC   Eutheria; Euarchontoglires; Primates; Haplorrhini; Catarrhini; Hominidae;
 OC   Homo.
@@ -914,4 +913,3 @@ SQ   Sequence 890 BP; 0 A; 0 C; 0 G; 0 T; 890 other;
      TCCTCCGTGC AGAAGGCAGG CCTGTGGAAG CTGGCACTGC CTCTTCCTCC CCAGATTCTG       840
      CCGAAGAAAG CTGGGGTGAA AGCCCCTATC CAGCCTCACC CATCATGGAA                  890
 //
-
