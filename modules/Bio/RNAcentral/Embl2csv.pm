@@ -201,7 +201,8 @@ sub _parse_accession_data {
     my ($text, $accession, $parent_accession, $seq_version, $feature_location_start,
         $feature_location_end, $feature_name, $ordinal, $species,
         $common_name, $keywords, $project, $is_composite, $non_coding_id,
-        $source_accession, %feature_tags, $db_xrefs);
+        $source_accession, %feature_tags, $db_xrefs,
+        $binomial_species_name);
 
     $source_accession = ${$xrefs}[0]{'accession'}; # accession of the source ENA entry
 
@@ -233,10 +234,18 @@ sub _parse_accession_data {
         $feature_name           = $5;
         $ordinal                = $7;
 
+        # Vega accessions don't contain these fields
+        if ( _is_vega_entry($accession) ) {
+            ($parent_accession, $seq_version) = split('\.', $accession);
+            $feature_location_start = 1;
+            $feature_location_end   = $seq->length;
+            $ordinal                = undef;
+        }
+
         # for RFAM entries, feature_name in the id is 'rfam', so retrieve
         # feature_name from feature table
-        # same for RDP
-        if ( _is_rfam_entry($accession) or _is_rdp_entry($accession) ) {
+        # same for RDP and Vega
+        if ( _is_rfam_entry($accession) or _is_rdp_entry($accession) or _is_vega_entry($accession) ) {
             for my $feat_object ($seq->get_SeqFeatures) {
                 if ($feat_object->primary_tag eq 'source') {
                     next;
@@ -252,6 +261,15 @@ sub _parse_accession_data {
         } else {
             $is_composite = 'N';
             $non_coding_id = '';
+        }
+
+        # temporary fix TODO: remove when the data is fixed
+        if ( $accession =~ /^OTTHUM/ ) {
+            $common_name = 'human';
+            $binomial_species_name = 'Homo sapiens';
+        } else {
+            $common_name = $species->common_name;
+            $binomial_species_name = $species->binomial('FULL');
         }
 
         $text = '"' . join('","', ($accession,
@@ -270,8 +288,8 @@ sub _parse_accession_data {
                                    _sanitize($seq->division),
                                    $keywords,
                                    _get_description_line($seq->desc),
-                                   $species->binomial('FULL'),
-                                   _sanitize($species->common_name),
+                                   $binomial_species_name,
+                                   _sanitize($common_name),
                                    _sanitize($species->organelle),
                                    join('; ', reverse $species->classification),
                                    $feature_tags{'allele'},
@@ -316,6 +334,7 @@ sub _is_xref_from_dr_line {
         'RDP'    => 1,
         'RFAM'   => 1,
         'REFSEQ' => 1,
+        'VEGA'   => 1,
     );
 
     if ( exists($non_dr_line_databases{$database}) ) {
@@ -520,6 +539,24 @@ sub _is_rdp_entry {
     }
 }
 
+
+=head2 _is_vega_entry
+
+    Return 1 if an accession is a Vega entry, return 0 otherwise.
+
+=cut
+
+sub _is_vega_entry {
+    my $accession = shift;
+
+    if ( $accession =~ /^OTT/i ) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+
 =head2 _is_rfam_entry
 
     Return 1 if an accession is an RFAM entry, return 0 otherwise.
@@ -565,8 +602,8 @@ sub _get_xrefs {
 
     my (@data, $database, $primary_id, $optional_id, $project, $composite_id);
 
-    # first element is the source ENA entry unless the entry is from RFAM/RefSeq/RDP
-    if ( !_is_rfam_entry($seq->display_id) and !_is_refseq_entry($seq->keywords) and !_is_rdp_entry($seq->display_id)) {
+    # first element is the source ENA entry unless the entry is from RFAM/RefSeq/RDP/Vega
+    if ( !_is_rfam_entry($seq->display_id) and !_is_refseq_entry($seq->keywords) and !_is_rdp_entry($seq->display_id) and !_is_vega_entry($seq->display_id)) {
         $data[0] = { database    => 'ENA',
                      accession   => $seq->display_id,
                      primary_id  => '',
@@ -599,8 +636,8 @@ sub _get_xrefs {
                     $database = 'tmRNA_Web';
                 }
 
-                # RFAM/RefSeq/RDP entries already have a unique id
-                if ($database eq 'RFAM' or $database eq 'RefSeq' or $database eq 'RDP') {
+                # RFAM/RefSeq/Vega/RDP entries already have a unique id
+                if ($database eq 'RFAM' or $database eq 'RefSeq' or $database eq 'RDP' or $database eq 'VEGA') {
                     $composite_id = $seq->display_id;
                 } else {
                     $composite_id = _get_expert_db_id($seq->display_id, $database, $primary_id);
@@ -637,53 +674,9 @@ sub _get_expert_db_id {
     my ($ena_source, $database, $external_id) = @_;
 
     my $composite_id = $ena_source . ':' . uc($database) . ':' . $external_id;
-    $composite_id =~ s/VEGA-Gn|VEGA-Tr/VEGA/i;
 
     my $MAX_ACCESSION_LENGTH = 100;
     return substr($composite_id, 0, $MAX_ACCESSION_LENGTH);
-}
-
-
-=head2 _combine_vega_xrefs
-
-    The VEGA xrefs is defined in 2 DR lines:
-    DR   VEGA-Gn; OTTHUMG00000013241; Homo sapiens. # genes
-    DR   VEGA-Tr; OTTHUMT00000037008; Homo sapiens. # transcripts
-
-    This procedure combines them as if they were in one:
-    DR   VEGA; OTTHUMG00000013241; OTTHUMT00000037008.
-
-    The species is stored elsewhere so this information is not recorded.
-
-=cut
-
-sub _combine_vega_xrefs {
-
-    my ($data) = @_;
-    my @new_data;
-    my $new_vega_dr_link = {
-        primary_id  => '',
-        accession   => '',
-        optional_id => '',
-        database    => 'VEGA',
-    };
-
-    for my $dr_link (@$data) {
-        if ( $dr_link->{'database'} =~ /^VEGA-Gn$/i ) {
-            $new_vega_dr_link->{'primary_id'} = $dr_link->{'primary_id'};
-            $new_vega_dr_link->{'accession'} = $dr_link->{'accession'};
-        } elsif ( $dr_link->{'database'} =~ /^VEGA-Tr$/i ) {
-            $new_vega_dr_link->{'optional_id'} = $dr_link->{'primary_id'};
-        } else {
-            push @new_data, $dr_link;
-        }
-    }
-
-    if ( $new_vega_dr_link->{'primary_id'} ne '' ) {
-        push @new_data, $new_vega_dr_link;
-    }
-
-    return \@new_data;
 }
 
 
