@@ -535,3 +535,93 @@ XX
 SQ   Sequence 20 BP; 8 A; 3 C; 7 G; 2 T; 0 other;
      tgacagaaga gagtgagcac                                                    20
 //
+ID   BX284601.5:1693190..1693457:ncRNA; SV 5; linear; genomic DNA; CON; INV; 268 BP.
+XX
+PA   BX284601.5
+XX
+PR   Project:PRJNA13758;
+XX
+DT   04-MAR-2003 (Rel. 75, Created)
+DT   27-FEB-2015 (Rel. 123, Last updated, Version 10)
+XX
+DE   Caenorhabditis elegans RNA transcript Y71G12B.41
+XX
+KW   .
+XX
+OS   Caenorhabditis elegans
+OC   Eukaryota; Metazoa; Ecdysozoa; Nematoda; Chromadorea; Rhabditida;
+OC   Rhabditoidea; Rhabditidae; Peloderinae; Caenorhabditis.
+XX
+RN   [1]
+RG   WormBase Consortium
+RA   Barlow K.;
+RT   ;
+RL   Submitted (06-FEB-2013) to the INSDC.
+RL   Nematode Sequencing Project: Sanger Institute, Hinxton, Cambridge CB10 1SA,
+RL   UK and The Genome Institute at Washington University, St. Louis, MO 63110,
+RL   USA. E-mail: help@wormbase.org
+XX
+RN   [2]
+RG   Caenorhabditis elegans Sequencing Consortium
+RA   Sulson J.E., Waterston R.;
+RT   "Genome sequence of the nematode C. elegans: a platform for investigating
+RT   biology";
+RL   Science 282(5396):2012-2018(1998).
+XX
+DR   WormBase; WBGene00220197; Y71G12B.41.
+DR   MD5; e4c714605049892da39129fc4bdcdf60.
+DR   BioSample; SAMEA3138177.
+XX
+CC   Annotated features correspond to WormBase release WS245.
+CC   
+CC   Protein-coding gene structures below are the result of integration
+CC   and manual review of the following types of data: ab initio
+CC   predictions by Genefinder (P. Green and L. Hillier, pers. comm.);
+CC   alignments to published proteins and cDNAs; genome sequence
+CC   conservation with other nematodes (e.g. to C. briggsae using WABA:
+CC   Genome Res. 2000. 10:1115-1125); sequence features (such as
+CC   trans-splice and polyA sites).
+CC   
+CC   Sources of data: large-scale EST projects of Yuji Kohara
+CC   (http://www.ddbj.nig.ac.jp/c-elegans/html/CE_INDEX.html); ORFeome
+CC   cloning project (http://worfdb.dfci.harvard.edu); RST large-scale
+CC   sequencing project (Genome Res. 2009. 19:2334-2342); IST library
+CC   (Science. 2004. 303:540-3); RT-PCR EST set (Ewing B. Green P. 2010
+CC   Unpublished); UTRome EST data submission (UTRome v1 Mangone M.
+CC   Piano F. 2009); TEC-RED data (PNAS 2004. 101:1650-1655); RNA Deep
+CC   sequencing data (454 read clusters - Makedonka Mitreva,
+CC   unpublished; Illumina sequence data, Genome Res. 2009. 19:657-66);
+CC   Numerous data sets from the modENCODE project (Science. 2010.
+CC   330:1775-87); Individual C. elegans Nucleotide Database
+CC   submissions; Personal communications with C. elegans researchers;
+CC   
+CC   Non-Coding gene structures below are derived using the following
+CC   methods and data: ab initio prediction of tRNAs by tRNAscan-SE
+CC   (Nucl. Acids. Res., 25, 955-964); integration and appraisal of
+CC   miRNAs from miRBase (http://www.mirbase.org); integration and
+CC   appraisal of RFAM predictions (rfam.sanger.ac.uk); 21U-RNAs (Cell.
+CC   2006. 127:1193-1207); modENCODE data (Science. 2010. 330:1775-87);
+CC   manual curation of novel published ncRNAs from the literature.
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..268
+FT                   /organism="Caenorhabditis elegans"
+FT                   /chromosome="I"
+FT                   /strain="Bristol N2"
+FT                   /mol_type="genomic DNA"
+FT                   /db_xref="taxon:6239"
+FT   ncRNA           BX284601.5:1693190..1693457
+FT                   /gene="Y71G12B.41"
+FT                   /locus_tag="CELE_Y71G12B.41"
+FT                   /standard_name="Y71G12B.41"
+FT                   /product="RNA transcript Y71G12B.41"
+FT                   /ncRNA_class="snoRNA"
+XX
+SQ   Sequence 268 BP; 66 A; 64 C; 56 G; 82 T; 0 other;
+     gcgctggttc ttccactttt ggcagttgtt gtacctgctt tggtgttctg ccacgactgt        60
+     aacaaattca atttagtcct atagttgccg cctagttgtg tgaccttgcc cgtcgcaatc       120
+     gacttgaagt cttgtggtag acgtagagaa tgaagcacgt gacacaacac attaaaagca       180
+     tacttgcagc taggcaagcg atgattattt ccgctactgt agaaccaaaa ttgactttca       240
+     gtttcatgtc tcaccactta ccagccat                                          268
+//
