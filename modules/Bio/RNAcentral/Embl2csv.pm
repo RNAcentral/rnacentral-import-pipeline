@@ -573,14 +573,7 @@ sub _get_xrefs {
                      optional_id => '' };
     }
 
-    # todo: remove when DR lines are added
-    # set a flag if DR lines were found
-    my %flags = (
-        'mirbase_DR' => 0,
-        'vega_DR' => 0
-    );
-
-    # append other xrefs from DR lines
+    # append xrefs from DR lines
     my $anno_collection = $seq->annotation;
     for my $key ( $anno_collection->get_all_annotation_keys ) {
         my @annotations = $anno_collection->get_Annotations($key);
@@ -596,15 +589,6 @@ sub _get_xrefs {
                 # skip RFAM DR lines in regular Non-coding entries
                 if (!_is_rfam_entry($seq->display_id) and $database eq 'RFAM') {
                     next;
-                }
-
-                # TODO: remove this statement when DR lines are updated
-                if ($database =~ /Vega/i) {
-                    # set a flag that Vega DR lines were injected
-                    $flags{'vega_DR'} = 1;
-                } elsif ($database =~ /mirbase/i) {
-                    # set a flag that mirbase DR lines were injected
-                    $flags{'mirbase_DR'} = 1;
                 }
 
                 $primary_id  = _sanitize($value->primary_id());
@@ -632,145 +616,9 @@ sub _get_xrefs {
         }
     }
 
-    # todo: remove this temporary fix when DR lines are added to all entries
-    # inject CC lines only if no DR lines were found
-    $project = _get_project_id($seq);
-    if ($flags{'mirbase_DR'} == 0 && $project eq 'PRJEB4451') {
-        push @data, _inject_xrefs_manually($seq, 'MIRBASE');
-    } elsif ($flags{'vega_DR'} == 0 && $project eq 'PRJEB4568') {
-        push @data, _inject_vega_xrefs_manually($seq, 'Vega');
-    }
-
-    if ( $project eq 'PRJEB8122' ) {
-        push @data, _inject_xrefs_manually($seq, 'SNOPY');
-    }
-
-    # VEGA xrefs require special treatment
-    @data = @{_combine_vega_xrefs(\@data)};
-
     return \@data;
 }
 
-
-=head2 _inject_xrefs_manually
-
-    Some xrefs are added not as DR lines but as structured comments
-    because the ENA xref pipeline cannot add xrefs between ENA releases.
-
-    As a temporary measure, these xrefs are identified using project ids
-    and the DR data are parsed from the CC lines.
-
-    Some entries from an expert database may already have DR lines while others
-    may still have CC lines, depending on the status of the ENA xref pipeline.
-
-    Example CC lines:
-    lncRNAdb; 190; 7SK.
-    gtRNAdb; Cand_Meth_boonei_6A8/Cand_Meth_boonei_6A8-summary.
-    miRBase; MI0000182.
-=cut
-
-sub _inject_xrefs_manually {
-    my ($seq, $db_name) = @_;
-    my ($db_project_id, $external_id, $optional_id);
-
-    my %project_ids = (
-        'GTRNADB'  => 'PRJEB5173',
-        'LNCRNADB' => 'PRJEB6238',
-        'MIRBASE'  => 'PRJEB4451',
-        'SNOPY'    => 'PRJEB8122',
-    );
-
-    if ( exists($project_ids{$db_name} ) ) {
-        $db_project_id = $project_ids{$db_name};
-    }
-
-    my $entry_project_id = _get_project_id($seq);
-
-    if ($entry_project_id eq $db_project_id) {
-        my @annotations = $seq->annotation->get_Annotations('comment');
-        for my $value ( @annotations ) {
-            my $comment = $value->display_text;
-            my $search_string = "$db_name; (\\S+)(; (\\S+))?\\.";
-            if ($comment =~ /$search_string/i) {
-                $external_id = $1;
-                if (defined $3) {
-                    $optional_id = $3;
-                } else {
-                    $optional_id = '';
-                }
-                return {
-                    accession   => _get_expert_db_id($seq->display_id, $db_name, $external_id),
-                    primary_id  => $external_id,
-                    optional_id => $optional_id,
-                    database    => $db_name,
-                };
-            }
-        }
-    }
-    return ();
-}
-
-=head2 _inject_vega_xrefs_manually
-
-    Some Vega xrefs are found in CC lines. They are called "Vega" and not
-    "Vega-Gn" or "Vega-Tr". Also, there are two lines to be extracted from
-    a comment.
-    TODO: revise this code once all Vega xrefs have DR lines.
-
-    Example:
-    CC   Vega; OTTHUMT00000475966; AC037193.1.
-    CC   Vega; OTTHUMG00000155019; AC037193.1.
-
-=cut
-
-sub _inject_vega_xrefs_manually {
-    my ($seq, $db_name) = @_;
-    my ($db_project_id, $external_id, $optional_id, @lines);
-    my @vega_xrefs = ();
-
-    my %project_ids = (
-        'Vega' => 'PRJEB4568',
-    );
-
-    if ( exists($project_ids{$db_name} ) ) {
-        $db_project_id = $project_ids{$db_name};
-    }
-
-    my $entry_project_id = _get_project_id($seq);
-
-    if ($entry_project_id eq $db_project_id) {
-        my @annotations = $seq->annotation->get_Annotations('comment');
-        for my $value ( @annotations ) {
-            my $comment = $value->display_text;
-
-            my @regexes = (qr/Vega; (OTTHUMG\w+);/, qr/Vega; (OTTHUMT\w+);/);
-
-            for my $regex (@regexes) {
-                if ($comment =~ $regex) {
-                    $external_id = $1;
-                    if (defined $3) {
-                        $optional_id = $3;
-                    } else {
-                        $optional_id = '';
-                    }
-                    if ($external_id =~ /^OTTHUMG/) {
-                        $db_name = 'VEGA-Gn';
-                    } elsif ($external_id =~ /^OTTHUMT/) {
-                        $db_name = 'VEGA-Tr';
-                    }
-                    push @vega_xrefs, {
-                        accession   => _get_expert_db_id($seq->display_id, $db_name, $external_id),
-                        primary_id  => $external_id,
-                        optional_id => $optional_id,
-                        database    => $db_name,
-                    };
-                }
-            }
-        }
-    }
-
-    return @vega_xrefs;
-}
 
 =head2 _get_expert_db_id
 
