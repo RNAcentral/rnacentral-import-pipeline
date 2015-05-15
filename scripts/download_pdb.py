@@ -219,7 +219,12 @@ def get_md5(input_string):
     """
     md5 = hashlib.md5()
     md5.update(input_string)
-    return md5.hexdigest()
+    result = md5.hexdigest()
+    if len(result) != 32:
+        class MD5Exception(Exception):
+            pass
+        raise MD5Exception('MD5 value is too short! %s' % result)
+    return result
 
 
 def write_sequence_files(chains):
