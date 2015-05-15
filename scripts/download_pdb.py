@@ -204,7 +204,7 @@ def get_full_lineages(chains):
 
         lineage = []
         for taxon in root.findall('./taxon/lineage/taxon'):
-            if 'hidden' not in taxon.attrib:
+            if taxon.get('hidden') == 'false':
                 lineage.append(taxon.get('scientificName'))
         lineage.reverse()
         lineage.append(taxids[taxid]['species'])
