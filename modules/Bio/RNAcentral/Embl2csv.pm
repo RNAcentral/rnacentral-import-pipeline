@@ -609,7 +609,8 @@ sub _get_xrefs {
                 $database    = _sanitize($value->database());
 
                 # skip these DR lines
-                if ($database eq 'MD5' or $database =~ /SILVA/i or $database =~ /BioSample/i ) {
+                if ($database eq 'MD5' or $database =~ /SILVA/i or $database =~ /BioSample/i
+                    or $database =~ /VEGA\-[GN|TR]/i ) {
                     next;
                 }
 
