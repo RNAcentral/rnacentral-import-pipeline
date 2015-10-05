@@ -418,7 +418,7 @@ DR   MD5; e4c714605049892da39129fc4bdcdf60.
 DR   BioSample; SAMEA3138177.
 XX
 CC   Annotated features correspond to WormBase release WS245.
-CC   
+CC
 CC   Protein-coding gene structures below are the result of integration
 CC   and manual review of the following types of data: ab initio
 CC   predictions by Genefinder (P. Green and L. Hillier, pers. comm.);
@@ -426,7 +426,7 @@ CC   alignments to published proteins and cDNAs; genome sequence
 CC   conservation with other nematodes (e.g. to C. briggsae using WABA:
 CC   Genome Res. 2000. 10:1115-1125); sequence features (such as
 CC   trans-splice and polyA sites).
-CC   
+CC
 CC   Sources of data: large-scale EST projects of Yuji Kohara
 CC   (http://www.ddbj.nig.ac.jp/c-elegans/html/CE_INDEX.html); ORFeome
 CC   cloning project (http://worfdb.dfci.harvard.edu); RST large-scale
@@ -439,7 +439,7 @@ CC   unpublished; Illumina sequence data, Genome Res. 2009. 19:657-66);
 CC   Numerous data sets from the modENCODE project (Science. 2010.
 CC   330:1775-87); Individual C. elegans Nucleotide Database
 CC   submissions; Personal communications with C. elegans researchers;
-CC   
+CC
 CC   Non-Coding gene structures below are derived using the following
 CC   methods and data: ab initio prediction of tRNAs by tRNAscan-SE
 CC   (Nucl. Acids. Res., 25, 955-964); integration and appraisal of
@@ -469,4 +469,114 @@ SQ   Sequence 268 BP; 66 A; 64 C; 56 G; 82 T; 0 other;
      gacttgaagt cttgtggtag acgtagagaa tgaagcacgt gacacaacac attaaaagca       180
      tacttgcagc taggcaagcg atgattattt ccgctactgt agaaccaaaa ttgactttca       240
      gtttcatgtc tcaccactta ccagccat                                          268
+//
+ID   CU329672.1:1601457..1602924:misc_RNA; SV 1; linear; genomic DNA; STD; FUN; 1468 BP.
+XX
+PA   CU329672.1
+XX
+PR   Project:PRJNA13836;
+XX
+DT   09-JUL-2007 (Rel. 92, Created)
+DT   27-FEB-2015 (Rel. 123, Last updated, Version 11)
+XX
+DE   Schizosaccharomyces pombe (fission yeast) antisense RNA (predicted)
+XX
+KW   .
+XX
+OS   Schizosaccharomyces pombe (fission yeast)
+OC   Eukaryota; Fungi; Dikarya; Ascomycota; Taphrinomycotina;
+OC   Schizosaccharomycetes; Schizosaccharomycetales; Schizosaccharomycetaceae;
+OC   Schizosaccharomyces.
+XX
+RN   [1]
+RG   The Schizosaccharomyces pombe Genome Sequencing Consortium
+RA   Wood V.;
+RT   ;
+RL   Submitted (03-JUL-2007) to the INSDC.
+RL   European Schizosaccharomyces genome sequencing project, Sanger Institute,
+RL   The Wellcome Trust Genome Campus, Hinxton, Cambridge CB10 1SA
+XX
+RN   [2]
+RX   DOI; 10.1038/nature724.
+RX   PUBMED; 11859360.
+RA   Wood V., Gwilliam R., Rajandream M.A., Lyne M., Lyne R., Stewart A.,
+RA   Sgouros J., Peat N., Hayles J., Baker S., Basham D., Bowman S., Brooks K.,
+RA   Brown D., Brown S., Chillingworth T., Churcher C., Collins M., Connor R.,
+RA   Cronin A., Davis P., Feltwell T., Fraser A., Gentles S., Goble A.,
+RA   Hamlin N., Harris D., Hidalgo J., Hodgson G., Holroyd S., Hornsby T.,
+RA   Howarth S., Huckle E.J., Hunt S., Jagels K., James K., Jones L., Jones M.,
+RA   Leather S., McDonald S., McLean J., Mooney P., Moule S., Mungall K.,
+RA   Murphy L., Niblett D., Odell C., Oliver K., O'Neil S., Pearson D.,
+RA   Quail M.A., Rabbinowitsch E., Rutherford K., Rutter S., Saunders D.,
+RA   Seeger K., Sharp S., Skelton J., Simmonds M., Squares R., Squares S.,
+RA   Stevens K., Taylor K., Taylor R.G., Tivey A., Walsh S., Warren T.,
+RA   Whitehead S., Woodward J., Volckaert G., Aert R., Robben J., Grymonprez B.,
+RA   Weltjens I., Vanstreels E., Rieger M., Schafer M., Muller-Auer S.,
+RA   Gabel C., Fuchs M., Dusterhoft A., Fritzc C., Holzer E., Moestl D.,
+RA   Hilbert H., Borzym K., Langer I., Beck A., Lehrach H., Reinhardt R.,
+RA   Pohl T.M., Eger P., Zimmermann W., Wedler H., Wambutt R., Purnelle B.,
+RA   Goffeau A., Cadieu E., Dreano S., Gloux S., Lelaure V., Mottier S.,
+RA   Galibert F., Aves S.J., Xiang Z., Hunt C., Moore K., Hurst S.M., Lucas M.,
+RA   Rochet M., Gaillardin C., Tallada V.A., Garzon A., Thode G., Daga R.R.,
+RA   Cruzado L., Jimenez J., Sanchez M., del Rey F., Benito J., Dominguez A.,
+RA   Revuelta J.L., Moreno S., Armstrong J., Forsburg S.L., Cerutti L., Lowe T.,
+RA   McCombie W.R., Paulsen I., Potashkin J., Shpakovski G.V., Ussery D.,
+RA   Barrell B.G., Nurse P.;
+RT   "The genome sequence of Schizosaccharomyces pombe";
+RL   Nature 415(6874):871-880(2002).
+XX
+DR   PomBase; SPNCRNA.1210.
+DR   MD5; 16a022600a2104974ecd747c3fa15a7f.
+DR   BioSample; SAMEA3138176.
+XX
+CC   Notes:
+CC
+CC   S. pombe (fission yeast) sequence and annotation are available from:
+CC   (URL, http://www.genedb.org/genedb/pombe/index.jsp)
+CC   (URL, http://www.sanger.ac.uk/Projects/S_pombe/)
+CC
+CC   CDS are numbered using the following system eg SPAC5H10.01c.
+CC   SP (S. pombe), A (chromosome 1), c5H10 (cosmid name),
+CC   .01 (first CDS), c (complementary strand). However, clones may have
+CC   been reorientated since the original submission, therefore the
+CC   complementary strand notation may be invalid for strand inference.
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..1468
+FT                   /organism="Schizosaccharomyces pombe"
+FT                   /chromosome="III"
+FT                   /strain="972h-"
+FT                   /mol_type="genomic DNA"
+FT                   /db_xref="taxon:4896"
+FT   misc_RNA        CU329672.1:1601457..1602924
+FT                   /locus_tag="SPNCRNA.1210"
+FT                   /product="antisense RNA (predicted)"
+XX
+SQ   Sequence 1468 BP; 454 A; 282 C; 267 G; 465 T; 0 other;
+     cccgcacgtg tagcaatcta actttttcac ttaggtccaa cacagaatcg tcctcttaat        60
+     taaagggtat cttattgaga actcctttct tgatggtatt ggctaacctc gaaatatcgg       120
+     cagcattgtt gtaaagaccc aaagaaagtc gaatcccatc tctatattga gaagcgtaca       180
+     caccttcgtt tttgagaaat gcatcccact cagggttcaa gattttcgca acgtaagagt       240
+     gggtagacct tttctttgga tcctttgagc cgataattgt tacaccaagc ttggatagct       300
+     catcaaccag cgactttcca agttcacgaa gatattgttc tatattttca aaaccgatgt       360
+     ccattaagaa gctaaggtaa ttgttcaaac acagagtagt aatcagcgac ttgttcaaat       420
+     gttcaaatct tcgagccgta gaaaaataaa taggattcag attgactagt aaatttgcat       480
+     caagattttc aatggctcca gctccaacaa ttggaggtac atttttaagt tgtggaagca       540
+     catcgggagc aacatataat actcccaaac cagtcggaca gcttaaacct ttatgacatg       600
+     caaatgcgca tgcagaaaca tttaattcct gaacatctat gctgcttaac ccaacctgtt       660
+     gggtcatgtc gactaataca tgaatgtttt caggccgaaa tttattgcaa atgtctttca       720
+     cgttatttag ctgtcccgaa tggaacatga cagatgatat gccaattgct tttgtctttt       780
+     catctacata cggttcaaac gttgaggcat cagcataata tatatcttta gacggtatta       840
+     atcgaacttc taaaccagct tcttgaaggg aaatccatcc aaagccatga ttagggtgct       900
+     ctccatctaa taataccacg ttatcgccag gttgaaaatg catagagcgt tggaacaagt       960
+     tcaatccctc agtagtgtcc ctagtgaatg caattgagtc agaactagac gcatttaaat      1020
+     attttgcaac taactctcta gtttcttctg ctttctgttg ccatagtggt tttggattag      1080
+     gattgtacaa accccaatca acgtattcat ttatagtatt ggcaactata gagttcatgg      1140
+     gtggttgaaa tgaaaggttg aaaaaggtta tgttttcatt tttttcgact aatgggacct      1200
+     gcttacgaaa agcttgaatc cttgcgatgc cttctgaaac agtcatttgg aaattattct      1260
+     gcgaacaatt aactaggtct gagagccata tttatgtact tatttaaatt gataaacaga      1320
+     taagtaaagg atattcatat ccgacactta tttatcttta ggagatatat gtccgcaatt      1380
+     gacggtcatc aatgaccatg ttattcaaaa cggcgaaaat gttaatatca gcatttttaa      1440
+     tttatttgaa attgattata aatagtcc                                         1468
 //
