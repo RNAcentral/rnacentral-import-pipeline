@@ -1,0 +1,264 @@
+ID   FJ949123.1:1..1657:silva; SV 1; linear; rRNA; STD; INV; 1657 BP.
+XX
+PA   FJ949123.1
+XX
+DT   23-JUN-2015 (Rel. 123, Created)
+DT   23-JUN-2015 (Rel. 123, Last updated, Version 1)
+XX
+DE   TPA: Limnoperna securis small subunit ribosomal RNA
+XX
+KW   RNAcentral; TPA; TPA:specialist_db.
+XX
+OS   Limnoperna securis
+OC   Eukaryota; Metazoa; Lophotrochozoa; Mollusca; Bivalvia; Pteriomorphia;
+OC   Mytiloida; Mytiloidea; Mytilidae; Mytilinae; Limnoperna.
+XX
+RN   [1]
+RP   1-1657
+RG   SILVA and RNAcentral
+RA   ;
+RT   ;
+RL   Submitted (23-JUN-2015) to the INSDC.
+XX
+RN   [2]
+RX   DOI; 10.1093/nar/gks1219.
+RX   PUBMED; 23193283.
+RA   Quast C., Pruesse E., Yilmaz P., Gerken J., Schweer T., Yarza P.,
+RA   Peplies J., Glöckner FO.;
+RT   "The SILVA ribosomal RNA gene database project: improved data processing
+RT   and web-based tools.";
+RL   Nucleic Acids Res. 41(Database issue):D590-D596(2013).
+XX
+DR   SILVA; FJ949123.1; FJ949123.
+DR   MD5; 0b764218d6659baa88268936500f1d8f.
+XX
+AH   LOCAL_SPAN          PRIMARY_IDENTIFIER PRIMARY_SPAN        COMP
+AS   1-1657              FJ949123.1         1-1657
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..1657
+FT                   /organism="Limnoperna securis"
+FT                   /isolate="17GAL"
+FT                   /mol_type="genomic DNA"
+FT                   /country="Spain"
+FT                   /PCR_primers="fwd_name: 16S-A,
+FT                   fwd_seq:aacctggttgatcctgccagt, rev_name: 16S-B,
+FT                   rev_seq:gatccttccgcaggttcacctac"
+FT                   /db_xref="taxon:1289581"
+FT   rRNA            FJ949123.1:1..1657
+FT                   /gene="rrn"
+FT                   /product="small subunit ribosomal RNA"
+FT                   /note="Quality score:89.94"
+FT                   /note="Alignment:reference"
+FT                   /note="ECO:0000053"
+FT                   /note="SO:0001000"
+FT                   /note="GO:0003735"
+FT                   /note="GO:0005840"
+XX
+SQ   Sequence 1657 BP; 403 A; 388 C; 460 G; 406 T; 0 other;
+     aaaccgcgaa tggctcatta aatcagttat ggttccttag atcgtacaat cctacttgga        60
+     taactgtggt aattctagag ctaatacatg aaacaaagct ccgacctccc tcggggggaa       120
+     agagcgcgtt taccacttac aaaaccagtc gggtcgcaag gcccgtccac ctggtgaagc       180
+     tggataactt tgtgctgatc gcacggcctc gcgccggcga cgtatctttc aaatgtctgc       240
+     cctatcaact ttcgatggta cgtgatatgc ctaccatggt tgtaacgggt aacggggaat       300
+     cagggttcga ttccggagag ggagcatgag aaacggctac cacatccaag gaaggcagca       360
+     ggcgcgcaaa ttacccactc ctggcacggg gaggtagtga cgaaaaataa caatacggga       420
+     ctctttcgag gccccgtaat tggaatgagt acactttaaa ccctttaacg aggatctatt       480
+     ggagggcaag tctggtgcca gcagccgcgg taattccagc tccaatagcg tatattaaag       540
+     ttgttgcagt taaaaagctc gtagttggat ctcgggtcca ggctggcggt ccggcgcatg       600
+     ccggttactg cttgtcctga cctacctccc ggtcgcgccc ttggtgctct tgattgagtg       660
+     tctcgggtcg ccggaacgtt tactttgaaa aaattagagt gttcaaagca ggcaattcgc       720
+     ctgaataatg gtgcatggaa taatggaata ggacctcggt tctattttgc tggttttcgg       780
+     agctcgaggt aatgattaag agggactgac gggggcattc gtattacggt gttagaggtg       840
+     aaattcttgg atcgccgtaa gacgaaccgc tgcgaaagcg tttgccaaga atgttttcat       900
+     tagtcaagaa cgaaagtcag aggttcgaag acgatcagat accgtcgtag ttctgaccat       960
+     aaacgatgcc aactagcgat ccgccggagt tgcttcaatg actcggcggg cagcccccgg      1020
+     gaaaccaaag tttttgggtt ccgggggaag tatggttgca aagctgaaac ttaaaggaat      1080
+     tgacggaagg gcaccaccag gagtggagcc tgcggcttaa tttgactcaa cacgggaaaa      1140
+     ctcacccggc ccggacactg taaggattga cagattgaga gctctttctt gattcggtgg      1200
+     gtggtggtgc atggccgttc ttagttggtg gagcgatttg tctggttaat tccgataacg      1260
+     aacgagactc tagcctacta aatagttcgc cgatcctttt acgcgtcggt gcaacttctt      1320
+     agagggacaa gtggcgttta gccacacgag attgagcaat aacaggtctg tgatgccctt      1380
+     agatgttcgg ggccgcacgc gcgctacact gaaggaatca acgtgtcttt taccctggcc      1440
+     tggaaaggtt gggtaacccg ttgaacctcc ttcgtgctag ggattggggc ttgtaattct      1500
+     tccccatgaa cgaggaattc ccagtaagcg cgagtcataa gctcgcgttg attacgtccc      1560
+     tgccctttgt acacaccgcc cgtcgctact accgattgga cggtttagtg agctcctcgg      1620
+     attggtcccg gaacgggtgg caacacctcg taccggt                               1657
+//
+ID   FJ949124.1:1..1657:silva; SV 1; linear; rRNA; STD; INV; 1657 BP.
+XX
+PA   FJ949124.1
+XX
+DT   23-JUN-2015 (Rel. 123, Created)
+DT   23-JUN-2015 (Rel. 123, Last updated, Version 1)
+XX
+DE   TPA: Limnoperna securis small subunit ribosomal RNA
+XX
+KW   RNAcentral; TPA; TPA:specialist_db.
+XX
+OS   Limnoperna securis
+OC   Eukaryota; Metazoa; Lophotrochozoa; Mollusca; Bivalvia; Pteriomorphia;
+OC   Mytiloida; Mytiloidea; Mytilidae; Mytilinae; Limnoperna.
+XX
+RN   [1]
+RP   1-1657
+RG   SILVA and RNAcentral
+RA   ;
+RT   ;
+RL   Submitted (23-JUN-2015) to the INSDC.
+XX
+RN   [2]
+RX   DOI; 10.1093/nar/gks1219.
+RX   PUBMED; 23193283.
+RA   Quast C., Pruesse E., Yilmaz P., Gerken J., Schweer T., Yarza P.,
+RA   Peplies J., Glöckner FO.;
+RT   "The SILVA ribosomal RNA gene database project: improved data processing
+RT   and web-based tools.";
+RL   Nucleic Acids Res. 41(Database issue):D590-D596(2013).
+XX
+DR   SILVA; FJ949124.1; FJ949124.
+DR   MD5; 0b764218d6659baa88268936500f1d8f.
+XX
+AH   LOCAL_SPAN          PRIMARY_IDENTIFIER PRIMARY_SPAN        COMP
+AS   1-1657              FJ949124.1         1-1657
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..1657
+FT                   /organism="Limnoperna securis"
+FT                   /isolate="18GAL"
+FT                   /mol_type="genomic DNA"
+FT                   /country="Spain"
+FT                   /PCR_primers="fwd_name: 16S-A,
+FT                   fwd_seq:aacctggttgatcctgccagt, rev_name: 16S-B,
+FT                   rev_seq:gatccttccgcaggttcacctac"
+FT                   /db_xref="taxon:1289581"
+FT   rRNA            FJ949124.1:1..1657
+FT                   /gene="rrn"
+FT                   /product="small subunit ribosomal RNA"
+FT                   /note="Quality score:89.94"
+FT                   /note="Alignment:reference"
+FT                   /note="ECO:0000053"
+FT                   /note="SO:0001000"
+FT                   /note="GO:0003735"
+FT                   /note="GO:0005840"
+XX
+SQ   Sequence 1657 BP; 403 A; 388 C; 460 G; 406 T; 0 other;
+     aaaccgcgaa tggctcatta aatcagttat ggttccttag atcgtacaat cctacttgga        60
+     taactgtggt aattctagag ctaatacatg aaacaaagct ccgacctccc tcggggggaa       120
+     agagcgcgtt taccacttac aaaaccagtc gggtcgcaag gcccgtccac ctggtgaagc       180
+     tggataactt tgtgctgatc gcacggcctc gcgccggcga cgtatctttc aaatgtctgc       240
+     cctatcaact ttcgatggta cgtgatatgc ctaccatggt tgtaacgggt aacggggaat       300
+     cagggttcga ttccggagag ggagcatgag aaacggctac cacatccaag gaaggcagca       360
+     ggcgcgcaaa ttacccactc ctggcacggg gaggtagtga cgaaaaataa caatacggga       420
+     ctctttcgag gccccgtaat tggaatgagt acactttaaa ccctttaacg aggatctatt       480
+     ggagggcaag tctggtgcca gcagccgcgg taattccagc tccaatagcg tatattaaag       540
+     ttgttgcagt taaaaagctc gtagttggat ctcgggtcca ggctggcggt ccggcgcatg       600
+     ccggttactg cttgtcctga cctacctccc ggtcgcgccc ttggtgctct tgattgagtg       660
+     tctcgggtcg ccggaacgtt tactttgaaa aaattagagt gttcaaagca ggcaattcgc       720
+     ctgaataatg gtgcatggaa taatggaata ggacctcggt tctattttgc tggttttcgg       780
+     agctcgaggt aatgattaag agggactgac gggggcattc gtattacggt gttagaggtg       840
+     aaattcttgg atcgccgtaa gacgaaccgc tgcgaaagcg tttgccaaga atgttttcat       900
+     tagtcaagaa cgaaagtcag aggttcgaag acgatcagat accgtcgtag ttctgaccat       960
+     aaacgatgcc aactagcgat ccgccggagt tgcttcaatg actcggcggg cagcccccgg      1020
+     gaaaccaaag tttttgggtt ccgggggaag tatggttgca aagctgaaac ttaaaggaat      1080
+     tgacggaagg gcaccaccag gagtggagcc tgcggcttaa tttgactcaa cacgggaaaa      1140
+     ctcacccggc ccggacactg taaggattga cagattgaga gctctttctt gattcggtgg      1200
+     gtggtggtgc atggccgttc ttagttggtg gagcgatttg tctggttaat tccgataacg      1260
+     aacgagactc tagcctacta aatagttcgc cgatcctttt acgcgtcggt gcaacttctt      1320
+     agagggacaa gtggcgttta gccacacgag attgagcaat aacaggtctg tgatgccctt      1380
+     agatgttcgg ggccgcacgc gcgctacact gaaggaatca acgtgtcttt taccctggcc      1440
+     tggaaaggtt gggtaacccg ttgaacctcc ttcgtgctag ggattggggc ttgtaattct      1500
+     tccccatgaa cgaggaattc ccagtaagcg cgagtcataa gctcgcgttg attacgtccc      1560
+     tgccctttgt acacaccgcc cgtcgctact accgattgga cggtttagtg agctcctcgg      1620
+     attggtcccg gaacgggtgg caacacctcg taccggt                               1657
+//
+ID   FJ949125.1:1..1657:silva; SV 1; linear; rRNA; STD; INV; 1657 BP.
+XX
+PA   FJ949125.1
+XX
+DT   23-JUN-2015 (Rel. 123, Created)
+DT   23-JUN-2015 (Rel. 123, Last updated, Version 1)
+XX
+DE   TPA: Limnoperna securis small subunit ribosomal RNA
+XX
+KW   RNAcentral; TPA; TPA:specialist_db.
+XX
+OS   Limnoperna securis
+OC   Eukaryota; Metazoa; Lophotrochozoa; Mollusca; Bivalvia; Pteriomorphia;
+OC   Mytiloida; Mytiloidea; Mytilidae; Mytilinae; Limnoperna.
+XX
+RN   [1]
+RP   1-1657
+RG   SILVA and RNAcentral
+RA   ;
+RT   ;
+RL   Submitted (23-JUN-2015) to the INSDC.
+XX
+RN   [2]
+RX   DOI; 10.1093/nar/gks1219.
+RX   PUBMED; 23193283.
+RA   Quast C., Pruesse E., Yilmaz P., Gerken J., Schweer T., Yarza P.,
+RA   Peplies J., Glöckner FO.;
+RT   "The SILVA ribosomal RNA gene database project: improved data processing
+RT   and web-based tools.";
+RL   Nucleic Acids Res. 41(Database issue):D590-D596(2013).
+XX
+DR   SILVA; FJ949125.1; FJ949125.
+DR   MD5; 0b764218d6659baa88268936500f1d8f.
+XX
+AH   LOCAL_SPAN          PRIMARY_IDENTIFIER PRIMARY_SPAN        COMP
+AS   1-1657              FJ949125.1         1-1657
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..1657
+FT                   /organism="Limnoperna securis"
+FT                   /isolate="19GAL"
+FT                   /mol_type="genomic DNA"
+FT                   /country="Spain"
+FT                   /PCR_primers="fwd_name: 16S-A,
+FT                   fwd_seq:aacctggttgatcctgccagt, rev_name: 16S-B,
+FT                   rev_seq:gatccttccgcaggttcacctac"
+FT                   /db_xref="taxon:1289581"
+FT   rRNA            FJ949125.1:1..1657
+FT                   /gene="rrn"
+FT                   /product="small subunit ribosomal RNA"
+FT                   /note="Quality score:89.94"
+FT                   /note="Alignment:reference"
+FT                   /note="ECO:0000053"
+FT                   /note="SO:0001000"
+FT                   /note="GO:0003735"
+FT                   /note="GO:0005840"
+XX
+SQ   Sequence 1657 BP; 403 A; 388 C; 460 G; 406 T; 0 other;
+     aaaccgcgaa tggctcatta aatcagttat ggttccttag atcgtacaat cctacttgga        60
+     taactgtggt aattctagag ctaatacatg aaacaaagct ccgacctccc tcggggggaa       120
+     agagcgcgtt taccacttac aaaaccagtc gggtcgcaag gcccgtccac ctggtgaagc       180
+     tggataactt tgtgctgatc gcacggcctc gcgccggcga cgtatctttc aaatgtctgc       240
+     cctatcaact ttcgatggta cgtgatatgc ctaccatggt tgtaacgggt aacggggaat       300
+     cagggttcga ttccggagag ggagcatgag aaacggctac cacatccaag gaaggcagca       360
+     ggcgcgcaaa ttacccactc ctggcacggg gaggtagtga cgaaaaataa caatacggga       420
+     ctctttcgag gccccgtaat tggaatgagt acactttaaa ccctttaacg aggatctatt       480
+     ggagggcaag tctggtgcca gcagccgcgg taattccagc tccaatagcg tatattaaag       540
+     ttgttgcagt taaaaagctc gtagttggat ctcgggtcca ggctggcggt ccggcgcatg       600
+     ccggttactg cttgtcctga cctacctccc ggtcgcgccc ttggtgctct tgattgagtg       660
+     tctcgggtcg ccggaacgtt tactttgaaa aaattagagt gttcaaagca ggcaattcgc       720
+     ctgaataatg gtgcatggaa taatggaata ggacctcggt tctattttgc tggttttcgg       780
+     agctcgaggt aatgattaag agggactgac gggggcattc gtattacggt gttagaggtg       840
+     aaattcttgg atcgccgtaa gacgaaccgc tgcgaaagcg tttgccaaga atgttttcat       900
+     tagtcaagaa cgaaagtcag aggttcgaag acgatcagat accgtcgtag ttctgaccat       960
+     aaacgatgcc aactagcgat ccgccggagt tgcttcaatg actcggcggg cagcccccgg      1020
+     gaaaccaaag tttttgggtt ccgggggaag tatggttgca aagctgaaac ttaaaggaat      1080
+     tgacggaagg gcaccaccag gagtggagcc tgcggcttaa tttgactcaa cacgggaaaa      1140
+     ctcacccggc ccggacactg taaggattga cagattgaga gctctttctt gattcggtgg      1200
+     gtggtggtgc atggccgttc ttagttggtg gagcgatttg tctggttaat tccgataacg      1260
+     aacgagactc tagcctacta aatagttcgc cgatcctttt acgcgtcggt gcaacttctt      1320
+     agagggacaa gtggcgttta gccacacgag attgagcaat aacaggtctg tgatgccctt      1380
+     agatgttcgg ggccgcacgc gcgctacact gaaggaatca acgtgtcttt taccctggcc      1440
+     tggaaaggtt gggtaacccg ttgaacctcc ttcgtgctag ggattggggc ttgtaattct      1500
+     tccccatgaa cgaggaattc ccagtaagcg cgagtcataa gctcgcgttg attacgtccc      1560
+     tgccctttgt acacaccgcc cgtcgctact accgattgga cggtttagtg agctcctcgg      1620
+     attggtcccg gaacgggtgg caacacctcg taccggt                               1657
+//
