@@ -155,7 +155,7 @@ sub embl2csv {
     Return 0 if a sequence is not valid, otherwise return 1.
 
     Invalid sequences:
-    * shorter than minimum
+    * shorter than minimum length
     * contain only Ns
     * have high N-content
 
@@ -167,19 +167,22 @@ sub _is_valid_sequence {
 
     my ($self, $sequence) = @_;
     my $status;
+    my $seqlength = length($sequence);
 
-    if (length($sequence) == 0) {
+    if ($seqlength == 0) {
         return 0; # immediately skip empty sequences
     }
 
     my $N_length = () = $sequence =~ /N/ig;
-    my $N_percentage = ($N_length * 100)/length($sequence);
+    my $N_percentage = ($N_length * 100)/$seqlength;
 
-    if (length($sequence) < $self->{'opt'}{'minseqlength'}) {
+    if ($seqlength < $self->{'opt'}{'minseqlength'}) {
+        $status = 0;
+    } elsif ($seqlength > $self->{'opt'}{'maxseqlong'}) {
         $status = 0;
     } elsif ($N_percentage > $self->{'opt'}{'maxNcontent'} ) {
         $status = 0;
-    } elsif ($N_length == length($sequence)) {
+    } elsif ($N_length == $seqlength) {
         $status = 0;
     } else {
         $status = 1;
