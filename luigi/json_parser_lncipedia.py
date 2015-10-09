@@ -147,7 +147,7 @@ class JsonParserLncipedia(luigi.Task, CsvOutputWriter):  # pylint: disable=W0232
                 product=seq['product'],
                 project='PRJ_LNCPD',
                 seq_version=seq['primary_accession'].split('.')[-1],
-                sequence=seq['sequence'],
+                sequence=seq['sequence'].uppercase(),
                 species=seq['scientific_name'],
                 references=[
                     {
