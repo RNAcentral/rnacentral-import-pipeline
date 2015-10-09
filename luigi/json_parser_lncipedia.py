@@ -12,7 +12,7 @@ limitations under the License.
 
 Usage:
 
-python path/to/this/file.py JsonParserLncipedia
+python path/to/this/file.py
     --local-scheduler
     --destination /path/to/output/files
     --input-file /path/to/input/file.json
@@ -220,4 +220,4 @@ class JsonParserLncipedia(luigi.Task, CsvOutputWriter):  # pylint: disable=W0232
 
 # main entry point
 if __name__ == '__main__':
-    luigi.run()
+    luigi.run(main_task_cls=JsonParserLncipedia)
