@@ -49,23 +49,23 @@ class JsonParserGreengenes(JsonParser):  # pylint: disable=W0232
             (feature_location_start, feature_location_end) = self.get_feature_start_end(seq['assembly_info']) # pylint: disable=E1101
 
             rnacentral_entry = RNAcentralEntry(
-                database = self.database.upper(),
+                database=self.database.upper(),
                 division='XXX', # pylint: disable=W0511
                 feature_location_end=feature_location_end,
                 feature_location_start=feature_location_start,
-                feature_type = seq['feature_type'],
-                gene = seq['gene'],
-                is_composite = 'N',
-                lineage = seq['lineage'] + seq['scientific_name'],
-                ncbi_tax_id = seq['ncbi_tax_id'],
-                note = ' '.join(seq['ontology']),
-                parent_accession = seq['primary_accession'].split('.')[0],
-                primary_id = seq['xref'][1],
-                product = seq['product'],
-                project = 'PRJ_GRNGNS',
-                sequence = seq['sequence'].upper(),
-                seq_version = seq['primary_accession'].split('.')[-1],
-                species = seq['scientific_name'],
+                feature_type=seq['feature_type'],
+                gene=seq['gene'],
+                is_composite='N',
+                lineage=seq['lineage'] + seq['scientific_name'],
+                ncbi_tax_id=seq['ncbi_tax_id'],
+                note=' '.join(seq['ontology']),
+                parent_accession=seq['primary_accession'].split('.')[0],
+                primary_id=seq['xref'][1],
+                product=seq['product'],
+                project='PRJ_GRNGNS',
+                sequence=seq['sequence'].upper(),
+                seq_version=seq['primary_accession'].split('.')[-1],
+                species=seq['scientific_name'],
                 inference=seq['greengenes_lineage'],
                 references=[
                     {
