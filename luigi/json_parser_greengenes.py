@@ -22,6 +22,7 @@ Optional parameters:
 """
 
 import luigi
+import re
 
 from rnacentral_entry import RNAcentralEntry
 from json_parser import JsonParser
@@ -44,6 +45,7 @@ class JsonParserGreengenes(JsonParser):  # pylint: disable=W0232
                 break
 
             seq['assembly_info'] = [seq['assembly_info']]
+            seq['greengenes_lineage'] = re.sub(r'\w__;?', '', seq['greengenes_lineage']).strip()
             (feature_location_start, feature_location_end) = self.get_feature_start_end(seq['assembly_info']) # pylint: disable=E1101
 
             rnacentral_entry = RNAcentralEntry(
@@ -64,6 +66,7 @@ class JsonParserGreengenes(JsonParser):  # pylint: disable=W0232
                 sequence = seq['sequence'].upper(),
                 seq_version = seq['primary_accession'].split('.')[-1],
                 species = seq['scientific_name'],
+                inference=seq['greengenes_lineage'],
                 references=[
                     {
                         'authors': 'McDonald D, Price MN, Goodrich J, Nawrocki EP, DeSantis TZ, Probst A, Andersen GL, Knight R, Hugenholtz P',
