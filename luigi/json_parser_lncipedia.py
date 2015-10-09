@@ -141,6 +141,7 @@ class JsonParserLncipedia(luigi.Task, CsvOutputWriter):  # pylint: disable=W0232
                 lineage='; '.join(seq['lineage']),
                 ncbi_tax_id=seq['ncbi_tax_id'],
                 ncrna_class=seq['ncrna_class'],
+                note=' '.join(seq['ontology']),
                 optional_id=seq['xref'][2],
                 parent_accession=seq['primary_accession'].split('.')[0],
                 primary_id=seq['xref'][1],
