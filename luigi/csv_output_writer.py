@@ -31,6 +31,9 @@ class CsvOutputWriter(object): # pylint: disable=W0232
             writer_short = csv.writer(f_short, delimiter=',', lineterminator='\n')
             writer_long = csv.writer(f_long, delimiter=',', lineterminator='\n')
             for entry in entries:
+                if not entry.is_valid():
+                    print 'Skipping invalid entry'
+                    continue
                 row = entry.format_sequence_line()
                 if entry.sequence > 4000:
                     writer_long.writerow(row)
@@ -50,6 +53,9 @@ class CsvOutputWriter(object): # pylint: disable=W0232
         with open(filename, 'w') as f:
             writer = csv.writer(f, delimiter=',', quotechar='"', quoting=csv.QUOTE_ALL, lineterminator='\n')
             for entry in entries:
+                if not entry.is_valid():
+                    print 'Skipping invalid entry'
+                    continue
                 writer.writerows(entry.format_references())
 
     def format_accession_info(self, entries, filename):
@@ -59,6 +65,9 @@ class CsvOutputWriter(object): # pylint: disable=W0232
         with open(filename, 'w') as f:
             writer = csv.writer(f, delimiter=',', quotechar='"', quoting=csv.QUOTE_ALL, lineterminator='\n')
             for entry in entries:
+                if not entry.is_valid():
+                    print 'Skipping invalid entry'
+                    continue
                 writer.writerow(entry.format_ac_line())
 
     def format_genomic_locations(self, entries, filename):
@@ -68,4 +77,7 @@ class CsvOutputWriter(object): # pylint: disable=W0232
         with open(filename, 'w') as f:
             writer = csv.writer(f, delimiter=',', quotechar='"', quoting=csv.QUOTE_ALL, lineterminator='\n')
             for entry in entries:
+                if not entry.is_valid():
+                    print 'Skipping invalid entry'
+                    continue
                 writer.writerows(entry.format_genomic_locations())

@@ -155,7 +155,7 @@ class JsonParserLncipedia(luigi.Task, CsvOutputWriter):  # pylint: disable=W0232
                         'location': 'Nucleic Acids Res. 2015 Jan;43(Database issue):D174-80',
                         'title': 'An update on LNCipedia: a database for annotated human lncRNA sequences',
                         'pmid': 25378313,
-                        'doi': 'doi: 10.1093/nar/gkv295',
+                        'doi': '10.1093/nar/gkv295',
                     },
                 ],
             )
