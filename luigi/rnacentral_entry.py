@@ -129,6 +129,18 @@ class RNAcentralEntry(object):
         """
         return self.CRC64digest(self.sequence)
 
+    def is_valid(self):
+        """
+        Check that the entry meets minimum quality requirements.
+        """
+        if len(self.sequence) < 10 or len(self.sequence) > 1000000:
+            return False
+        mandatory_fields = ['accession', 'sequence', 'primary_id', 'ncbi_tax_id']
+        for field in mandatory_fields:
+            if not getattr(self, field):
+                return False
+        return True
+
     def format_references(self):
         """
         Format the entry for writing out into csv files.
