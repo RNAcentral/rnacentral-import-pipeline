@@ -35,7 +35,7 @@ class JsonParserLncipedia(JsonParser):  # pylint: disable=W0232
     Luigi Task for converting LNCipedia Json file into csv files
     that can be loaded into the RNAcentral database.
     """
-    no_assembly_mapping = luigi.BoolParameter(default=True, significant=False)
+    no_assembly_mapping = luigi.BoolParameter(default=False, significant=False)
     database = 'lncipedia'
 
     def map_genomic_assembly(self, rnacentral_entry):
