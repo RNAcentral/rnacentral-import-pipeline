@@ -12,7 +12,7 @@ limitations under the License.
 """
 
 import csv
-import os
+# import os
 
 
 class CsvOutputWriter(object): # pylint: disable=W0232
@@ -40,10 +40,10 @@ class CsvOutputWriter(object): # pylint: disable=W0232
                 else:
                     writer_short.writerow(row)
         # remove empty files
-        if os.stat(fn_short).st_size == 0:
-            os.remove(fn_short)
-        if os.stat(fn_long).st_size == 0:
-            os.remove(fn_long)
+        # if os.stat(fn_short).st_size == 0:
+        #     os.remove(fn_short)
+        # if os.stat(fn_long).st_size == 0:
+        #     os.remove(fn_long)
 
     def format_references(self, entries, filename):
         """
