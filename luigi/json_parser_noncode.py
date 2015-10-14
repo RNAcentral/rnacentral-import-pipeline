@@ -77,6 +77,11 @@ class JsonParserNoncode(JsonParser):  # pylint: disable=W0232
                     }
                 ],
             )
+
+            if 'Unknown' in rnacentral_entry.parent_accession:
+                print 'Skipping an entry with an Unknown primary accession'
+                continue
+
             for exon in seq['assembly_info']:
                 rnacentral_entry.assembly_info.append(exon)
             rnacentral_entry.accession = self.get_accession(rnacentral_entry, self.database) # pylint: disable=E1101
