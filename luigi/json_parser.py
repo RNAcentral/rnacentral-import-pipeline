@@ -28,18 +28,20 @@ class JsonParser(luigi.Task, CsvOutputWriter):  # pylint: disable=W0232
     data = [] # json input data
     entries = [] # RNAcentralEntry objects
 
-    def get_accession(self, entry, label):
+    def get_accession(self, entry, database):
         """
         Generate unique accession.
         Example: CM000670.1:104203457..104215098:ncRNA:lncipedia
         """
-        return '{parent_accession}.{seq_version}:{start}..{stop}:{ncRNA_type}:{label}'.format(
+        return ('{parent_accession}.{seq_version}:{start}..{stop}:{ncRNA_type}:'
+                '{database}:{external_id}').format(
             parent_accession=entry.parent_accession,
             seq_version=entry.seq_version,
             start=entry.feature_location_start,
             stop=entry.feature_location_end,
             ncRNA_type=entry.feature_type,
-            label=label
+            database=database,
+            external_id=entry.primary_id
         )
 
     def get_description(self, entry):
