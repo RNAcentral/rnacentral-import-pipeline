@@ -114,6 +114,6 @@ class JsonParser(luigi.Task, CsvOutputWriter):  # pylint: disable=W0232
             subpath = os.path.join(self.destination, folder)
             if not os.path.exists(subpath):
                 os.makedirs(subpath)
-            filename = ''.join([self.database, '_', os.path.basename(self.input().fn).split('.')[0], '.csv']) # pylint: disable=E1101
+            filename = ''.join([self.database, '_', os.path.basename(self.input().fn).split('.')[0], '_', folder, '.csv']) # pylint: disable=E1101
             outputs[folder] = luigi.LocalTarget(os.path.join(subpath, filename))
         return outputs
