@@ -35,7 +35,7 @@ class CsvOutputWriter(object): # pylint: disable=W0232
                     print 'Skipping invalid entry'
                     continue
                 row = entry.format_sequence_line()
-                if entry.sequence > 4000:
+                if len(entry.sequence) > 4000:
                     writer_long.writerow(row)
                 else:
                     writer_short.writerow(row)
