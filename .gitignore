@@ -56,3 +56,6 @@ pipeline.png
 # macfuse files
 ._*
 .fuse_hidden*
+
+# python
+*.py[cod]
