@@ -34,6 +34,12 @@ class JsonParserNoncode(JsonParser):  # pylint: disable=W0232
     """
     database = 'noncode'
 
+    def get_accession(self, entry, database):
+        """
+        Get Noncode unique accession.
+        """
+        return entry.primary_id # use transcript id as a
+
     def create_rnacentral_entries(self):
         """
         Process json file into RNAcentralEntry objects that can be written
