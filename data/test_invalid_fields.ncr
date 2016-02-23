@@ -1,0 +1,75 @@
+ID   KM079256.1:1..1300:rRNA; SV 1; linear; genomic DNA; STD; PRO; 1300 BP.
+XX
+PA   KM079256.1
+XX
+DT   31-JUL-2015 (Rel. 125, Created)
+DT   19-NOV-2015 (Rel. 127, Last updated, Version 3)
+XX
+DE   Candidatus Stammerula sp. of Trupanea "pohakuloa 16S ribosomal RNA
+XX
+KW   .
+XX
+OS   Candidatus Stammerula sp. of Trupanea "pohakuloa
+OC   unclassified sequences.
+XX
+RN   [1]
+RP   1-1300
+RX   DOI; 10.1016/j.ympev.2015.04.025.
+RX   PUBMED; 25959751.
+RA   Viale E., Martinez-Sanudo I., Brown J.M., Simonato M., Girolami V.,
+RA   Squartini A., Bressan A., Faccoli M., Mazzon L.;
+RT   "Pattern of association between endemic Hawaiian fruit flies (Diptera,
+RT   Tephritidae) and their symbiotic bacteria: Evidence of cospeciation events
+RT   and proposal of Candidatus Stammerula trupaneae";
+RL   Mol. Phylogenet. Evol. 90:67-79(2015).
+XX
+RN   [2]
+RP   1-1300
+RA   Viale E., Martinez-Sanudo I., Brown J., Simonato M., Squartini A.,
+RA   Bressan A., Faccoli M., Mazzon L.;
+RT   ;
+RL   Submitted (01-JUL-2014) to the INSDC.
+RL   a Department of Agronomy, Food, Natural Resources, Animals and the
+RL   Environment (DAFNAE), University of Padova, Viale dell'Universita, Legnaro,
+RL   Padova 35020, Italy
+XX
+DR   MD5; 31075610ba976f62e65c26a162eceaa3.
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..1300
+FT                   /organism="Candidatus Stammerula sp. of Trupanea
+FT                   "pohakuloa"
+FT                   /host="Trupanea sp. 'pohakuloa' ex Dubautia linearis"
+FT                   /isolate="Tpohsym"
+FT                   /mol_type="genomic DNA"
+FT                   /country="USA:Archipelago Hawaii, Hawaii, Mauna Kea SP"
+FT                   /isolation_source="extraperitrophic area of midgut"
+FT                   /db_xref="taxon:1630665"
+FT   rRNA            KM079256.1:1..1300
+FT                   /product="16S ribosomal RNA"
+XX
+SQ   Sequence 1300 BP; 336 A; 294 C; 397 G; 273 T; 0 other;
+     gcataacgtc ataagaccaa agtgggggcc ctttttaggc ctcatgccat tggatgaacc        60
+     cagatgggat tagctagtag gtaaggtaaa ggctcaccta ggctacgatc cctagctggt       120
+     ctgagaggat gaccagccac actggaactg agacacggtc cagactcctg cgggaggcag       180
+     cagtggggaa tattgcacaa tgggcgaaag cctgatgcag ccatgccgcg tgtatgaaga       240
+     aggctttcga gttgtaaagt actttcagtg gggaggaagg caataaggct aataacctta       300
+     ttgattgacg ttacctacag aagaagcacc ggctaactcc gtgccagcag ccgcggtaat       360
+     acggagggtg cgagcgttaa tcggaattac tgggcgtaaa gcgcacgcag gcggtctgcc       420
+     aagtcggatg tgaaatcccc gggcttaacc tgggaactgc atttgaaact ggtagactcg       480
+     agtcttgtag aggggggtag aattctaggt gtagcggtga aatgcgtaga tatctggagg       540
+     aataccagtg gcgaaggcgg ccccctggac aaagactgac gctcaggtgc gaaagcgtgg       600
+     ggagcaaaca ggattagata ccctggtagt ccatgccgta aacgatgtcg acttggaggt       660
+     tgcacccatg aggtgtggct tccgaagcta acgcgttaag tcgaccgcct ggggagtacg       720
+     gccgcaaggt taaaactcaa atgaattgac gggggcccgc acaagcggtg gagcatgtgg       780
+     tttaattcga tgcaacgcga agaaccttac ctggccttga catccacgga attcgacaga       840
+     gatgtcttag tgccttcggg aatcgtgaga caggtgctgc atggctgtcg tcagctcgtg       900
+     ttgtgaaatg ttgggttaag tcccgcaacg agcgcaaccc ttatcttttg ttgccagcga       960
+     tttggtcggg aactcaaaag agactgccgg tgataaaccg gaggaaggtg gggatgacgt      1020
+     caagtcatca tggcccttac ggccagggct acacacgtgc tacaatggcg catacaaaga      1080
+     gaagcgacct tgcgaaagta agcggacctc atcaaagtgt gtcgtagtcc ggatcggagt      1140
+     ctgcaactcg actccgtgaa gtcggaatcg ctagtaatcg tagatcagaa tgctacggtg      1200
+     aatacgttcc cgggccttgt acacaccgcc cgtcacacca tgggagtggg ttgcaaaaga      1260
+     agtgggtagc ttaaccttcg ggagagcgct taccactttg                            1300
+//
