@@ -69,11 +69,11 @@ class JsonParserNoncode(JsonParser):  # pylint: disable=W0232
                 species = seq['scientific_name'],
                 references=[
                     {
-                        'authors': 'Xie C, Yuan J, Li H, Li M, Zhao G, Bu D, Zhu W, Wu W, Chen R, Zhao Y',
-                        'location': 'Nucleic Acids Res. 2014 Jan;42(Database issue):D98-103',
-                        'title': 'NONCODEv4: exploring the world of long non-coding RNA genes',
-                        'pmid': 24285305,
-                        'doi': '10.1093/nar/gkt1222',
+                        'authors': 'Zhao Y, Li H, Fang S, Kang Y, Wu W, Hao Y, Li Z, Bu D4, Sun N, Zhang MQ, Chen R',
+                        'location': 'Nucleic Acids Res. 2016 Jan 4;44(D1):D203-8',
+                        'title': 'NONCODE 2016: an informative and valuable data source of long non-coding RNAs',
+                        'pmid': 26586799,
+                        'doi': '10.1093/nar/gkv1252',
                     }
                 ],
             )
