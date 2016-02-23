@@ -65,7 +65,7 @@ class JsonParserNoncode(JsonParser):  # pylint: disable=W0232
                 product = seq['product'],
                 project = 'PRJ_NNCD',
                 sequence = seq['sequence'].upper(),
-                seq_version = seq['primary_accession'].split('.')[-1],
+                seq_version = seq['primary_accession'].split('.')[1] if '.' in seq['primary_accession'] else '1',
                 species = seq['scientific_name'],
                 references=[
                     {
