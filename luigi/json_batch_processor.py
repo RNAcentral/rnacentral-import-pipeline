@@ -12,7 +12,7 @@ limitations under the License.
 
 Usage:
 
-python path/to/this/file.py <Greengenes/Noncode>
+python path/to/this/file.py <Greengenes/Noncode/Rfam>
     --local-scheduler
     --destination /path/to/output/files
     --input-folder /path/to/input/folder/
@@ -23,6 +23,7 @@ import luigi
 from glob import glob
 from json_parser_greengenes import JsonParserGreengenes
 from json_parser_noncode import JsonParserNoncode
+from json_parser_rfam import JsonParserRfam
 
 
 class Noncode(luigi.Task): # pylint: disable=W0232
@@ -48,6 +49,16 @@ class Greengenes(luigi.Task): # pylint: disable=W0232
     def requires(self):
         return [JsonParserGreengenes(input_file=f, destination=self.destination, test=self.test) for f in glob(self.input_folder + '*.json')]
 
+class Rfam(luigi.Task): # pylint: disable=W0232
+    """
+    Luigi task for processing all Json files found in an input folder.
+    """
+    input_folder = luigi.Parameter()
+    destination = luigi.Parameter(default='/tmp')
+    test = luigi.BoolParameter(default=False, significant=False)
+
+    def requires(self):
+        return [JsonParserRfam(input_file=f, destination=self.destination, test=self.test) for f in glob(self.input_folder + '*.json')]
 
 # main entry point
 if __name__ == '__main__':
