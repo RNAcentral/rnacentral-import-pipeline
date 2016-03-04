@@ -43,8 +43,8 @@ class JsonParserRfam(JsonParser):  # pylint: disable=W0232
         return ('{parent_accession}.{seq_version}:{start}..{stop}:rfam').format(
             parent_accession=entry.parent_accession,
             seq_version=entry.seq_version,
-            start=entry.feature_location_start,
-            stop=entry.feature_location_end,
+            start=entry.feature_location_start if not entry.complement else entry.feature_location_end,
+            stop=entry.feature_location_end if not entry.complement else entry.feature_location_start,
             external_id=entry.primary_id
         )
 
