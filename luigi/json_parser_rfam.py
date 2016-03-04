@@ -38,9 +38,9 @@ class JsonParserRfam(JsonParser):  # pylint: disable=W0232
     def get_accession(self, entry, database):
         """
         Generate unique accession.
-        Example: Z83731.1:29638..29638:RF00047
+        Example: Z83731.1:29638..30638:rfam
         """
-        return ('{parent_accession}.{seq_version}:{start}..{stop}:{external_id}').format(
+        return ('{parent_accession}.{seq_version}:{start}..{stop}:rfam').format(
             parent_accession=entry.parent_accession,
             seq_version=entry.seq_version,
             start=entry.feature_location_start,
