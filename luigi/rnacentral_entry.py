@@ -133,11 +133,22 @@ class RNAcentralEntry(object):
         """
         Check that the entry meets minimum quality requirements.
         """
-        if len(self.sequence) < 10 or len(self.sequence) > 1000000:
+        length = len(self.sequence)
+        if length < 10:
+            if verbose:
+                print 'WARN: {accession} is too short (length = {length})'.format(accession=self.accession, length=length)
             return False
+
+        if length > 1000000:
+            if verbose:
+                print 'WARN: {accession} is too long (length = {length})'.format(accession=self.accession, length=length)
+            return False
+
         mandatory_fields = ['accession', 'sequence', 'primary_id', 'ncbi_tax_id']
         for field in mandatory_fields:
             if not getattr(self, field):
+                if verbose:
+                    print 'WARN: Attribute {field} is missing in {accession}'.format(field=field, accession=self.accession)
                 return False
         return True
 
