@@ -129,7 +129,7 @@ class RNAcentralEntry(object):
         """
         return self.CRC64digest(self.sequence)
 
-    def is_valid(self):
+    def is_valid(self, verbose=False):
         """
         Check that the entry meets minimum quality requirements.
         """

@@ -74,10 +74,10 @@ class JsonParser(luigi.Task, CsvOutputWriter):  # pylint: disable=W0232
         """
         Create output files.
         """
-        self.format_sequence_data(self.entries, self.output()['short'].fn, self.output()['long'].fn) # pylint: disable=E1101
-        self.format_references(self.entries, self.output()['refs'].fn) # pylint: disable=E1101
-        self.format_accession_info(self.entries, self.output()['ac_info'].fn) # pylint: disable=E1101
-        self.format_genomic_locations(self.entries, self.output()['genomic_locations'].fn) # pylint: disable=E1101
+        self.format_sequence_data(self.entries, self.output()['short'].fn, self.output()['long'].fn, verbose=True) # pylint: disable=E1101
+        self.format_references(self.entries, self.output()['refs'].fn, verbose=False) # pylint: disable=E1101
+        self.format_accession_info(self.entries, self.output()['ac_info'].fn, verbose=False) # pylint: disable=E1101
+        self.format_genomic_locations(self.entries, self.output()['genomic_locations'].fn, verbose=False) # pylint: disable=E1101
         # free up memory, useful for batch processing
         self.entries = []
         self.data = []

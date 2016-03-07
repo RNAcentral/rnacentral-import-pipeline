@@ -19,7 +19,7 @@ class CsvOutputWriter(object): # pylint: disable=W0232
     """
     An object for writing RNAcentralEntry objects into csv files.
     """
-    def format_sequence_data(self, entries, fn_short, fn_long):
+    def format_sequence_data(self, entries, fn_short, fn_long, verbose):
         """
         Write out the data that is going to be loaded
         into the `load_rnacentral_all` table.
@@ -31,7 +31,7 @@ class CsvOutputWriter(object): # pylint: disable=W0232
             writer_short = csv.writer(f_short, delimiter=',', lineterminator='\n')
             writer_long = csv.writer(f_long, delimiter=',', lineterminator='\n')
             for entry in entries:
-                if not entry.is_valid():
+                if not entry.is_valid(verbose):
                     print 'Skipping invalid entry'
                     continue
                 row = entry.format_sequence_line()
@@ -45,7 +45,7 @@ class CsvOutputWriter(object): # pylint: disable=W0232
         # if os.stat(fn_long).st_size == 0:
         #     os.remove(fn_long)
 
-    def format_references(self, entries, filename):
+    def format_references(self, entries, filename, verbose):
         """
         Write out the data for loading into the `load_rnc_references`
         table.
@@ -53,31 +53,31 @@ class CsvOutputWriter(object): # pylint: disable=W0232
         with open(filename, 'w') as f:
             writer = csv.writer(f, delimiter=',', quotechar='"', quoting=csv.QUOTE_ALL, lineterminator='\n')
             for entry in entries:
-                if not entry.is_valid():
+                if not entry.is_valid(verbose):
                     print 'Skipping invalid entry'
                     continue
                 writer.writerows(entry.format_references())
 
-    def format_accession_info(self, entries, filename):
+    def format_accession_info(self, entries, filename, verbose):
         """
         Write out the data for loading into the `load_rnc_accessions` table.
         """
         with open(filename, 'w') as f:
             writer = csv.writer(f, delimiter=',', quotechar='"', quoting=csv.QUOTE_ALL, lineterminator='\n')
             for entry in entries:
-                if not entry.is_valid():
+                if not entry.is_valid(verbose):
                     print 'Skipping invalid entry'
                     continue
                 writer.writerow(entry.format_ac_line())
 
-    def format_genomic_locations(self, entries, filename):
+    def format_genomic_locations(self, entries, filename, verbose):
         """
         Write out the data for loading into the `load_rnc_coordinates` table.
         """
         with open(filename, 'w') as f:
             writer = csv.writer(f, delimiter=',', quotechar='"', quoting=csv.QUOTE_ALL, lineterminator='\n')
             for entry in entries:
-                if not entry.is_valid():
+                if not entry.is_valid(verbose):
                     print 'Skipping invalid entry'
                     continue
                 writer.writerows(entry.format_genomic_locations())

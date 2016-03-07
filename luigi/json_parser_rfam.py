@@ -107,9 +107,7 @@ class JsonParserRfam(JsonParser):  # pylint: disable=W0232
             if rnacentral_entry.complement:
                 rnacentral_entry.assembly_info[0]['complement'] = ''
 
-            if len(rnacentral_entry.sequence) < 10:
-                print 'Skipping short sequence %s' % rnacentral_entry.accession
-                print rnacentral_entry.sequence
+            if not rnacentral_entry.is_valid(verbose=True):
                 skipped += 1
                 continue
 
