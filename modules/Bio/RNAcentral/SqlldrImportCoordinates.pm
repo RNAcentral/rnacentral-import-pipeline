@@ -92,6 +92,10 @@ sub update_coordinates {
     my $command = <<PLSQL;
 BEGIN
 
+    -- create index on the temporary table
+    EXECUTE IMMEDIATE 'CREATE INDEX "RNACEN"."LOAD_RNC_COORDINATES$ACCESSION" ON LOAD_RNC_COORDINATES (ACCESSION) PARALLEL TABLESPACE "RNACEN_IND"';
+    EXECUTE IMMEDIATE 'ALTER INDEX "RNACEN"."LOAD_RNC_COORDINATES$ACCESSION" NOPARALLEL';
+
     -- remove old entries so that they can be replaced with new data
     EXECUTE IMMEDIATE '
     DELETE FROM rnc_coordinates t1
@@ -128,6 +132,9 @@ BEGIN
     ';
 
     EXECUTE IMMEDIATE 'COMMIT';
+
+    -- drop index so that it doesn't interfere with direct path loading
+    EXECUTE IMMEDIATE 'DROP INDEX LOAD_RNC_COORDINATES$ACCESSION';
 
     DBMS_OUTPUT.put_line('PLSQL: Coordinates updated');
 
