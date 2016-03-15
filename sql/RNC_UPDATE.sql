@@ -533,8 +533,6 @@ create or replace PACKAGE BODY RNC_UPDATE AS
 
     verify_xref_id_not_null();
 
-    rnc_healthchecks.run_healthchecks();
-
   END new_update;
 
 
