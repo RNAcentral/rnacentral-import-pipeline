@@ -1415,6 +1415,18 @@ sub _read_FTHelper_EMBL {
           $_ =~ s/genotype=/genotype=\"/;
           $qual[$i+1] = $qual[$i+1] . '"';
         }
+        # skip because synonym is not a valid feature name
+        if ( /\/synonym=/ && $qual[$i+1] =~ m/^\w/) {
+          # this line is synonym and the next line is not a new qualifier
+          $i += 1;
+	  next;
+        }
+        # skip because authority is not a valid feature name
+        if ( /\/authority=/ && $qual[$i+1] =~ m/^\w/) {
+          #this line is authority and the next line is not a new qualifier
+          $i += 1;
+          next;
+        }
         # RNAcentral
         my( $qualifier, $value ) = m{^/([^=]+)(?:=(.+))?}
             or $self->throw("Can't see new qualifier in: $_\nfrom:\n"
