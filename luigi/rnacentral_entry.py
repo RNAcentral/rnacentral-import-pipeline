@@ -208,7 +208,7 @@ class RNAcentralEntry(object):
         """
         Format the entry for writing out into csv files.
         """
-        return  [
+        return [
             self.accession,
             self.parent_accession,
             self.seq_version,
