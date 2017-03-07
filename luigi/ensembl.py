@@ -17,7 +17,6 @@ import os
 import re
 import csv
 import logging
-import itertools as it
 
 from rnacentral_entry import RNAcentralEntry
 
@@ -40,66 +39,85 @@ class Output(object):
     locations = attr.ib(validator=is_a(luigi.LocalTarget))
 
     @classmethod
-    def target(cls, name):
-        pass
+    def build(cls, base, database, prefix):
+        def path_to(name):
+            filename = '{database}_{prefix}_{folder}.csv'
+            path = os.path.join(
+                base,
+                name,
+                filename.format(
+                    database=database,
+                    prefix=prefix,
+                    folder=name
+                )
+            )
 
-    @classmethod
-    def build(cls, base, database):
+            if not os.path.exists(os.path.dirname(path)):
+                os.makedirs(os.path.dirname(path))
+            return path
+
         return cls(
+            short_sequences=luigi.LocalTarget(path_to('short')),
+            long_sequences=luigi.LocalTarget(path_to('long')),
+            references=luigi.LocalTarget(path_to('refs')),
+            accession=luigi.LocalTarget(path_to('ac_info')),
+            locations=luigi.LocalTarget(path_to('genomic_locations')),
         )
+
+    def exists(self):
+        return self.short_sequences.exists() and \
+            self.long_sequences.exists() and \
+            self.references.exists() and \
+            self.accession.exists() and \
+            self.locations.exists()
 
 
 @attr.s()
-class OutputHandles(object):
-    short_sequences = attr.ib(validator=is_a(file))
-    long_sequences = attr.ib(validator=is_a(file))
-    references = attr.ib(validator=is_a(file))
-    accessions = attr.ib(validator=is_a(file))
-    locations = attr.ib(validator=is_a(file))
+class OutputWriters(object):
+    short_sequences = attr.ib()
+    long_sequences = attr.ib()
+    references = attr.ib()
+    accessions = attr.ib()
+    locations = attr.ib()
 
     @classmethod
     def build(cls, output):
-
-        return cls(
-            short_sequences=open(output.short_sequences, 'w'),
-            long_sequences=open(output.long_sequences, 'w'),
-            references=open(output.references, 'w'),
-            accessions=open(output.accesion, 'w'),
-            locations=open(output.locations, 'w'),
-        )
-
-    def __enter__(self):
-        def as_csv(handle):
+        def as_csv(target):
+            handle = open(target.fn, 'wb')
             return csv.writer(handle, delimiter=',', quotechar='"',
                               quoting=csv.QUOTE_ALL, lineterminator='\n')
 
-        return OutputHandles(
-            short_sequences=as_csv(self.short_sequences),
-            long_sequences=as_csv(self.long_sequences),
-            references=as_csv(self.references),
-            accessions=as_csv(self.accessions),
-            locations=as_csv(self.locations),
+        return cls(
+            short_sequences=as_csv(output.short_sequences),
+            long_sequences=as_csv(output.long_sequences),
+            references=as_csv(output.references),
+            accessions=as_csv(output.accession),
+            locations=as_csv(output.locations),
         )
 
-    def __exit__(self, *args):
+    def write(self, data):
+        if len(data.sequence) <= 4000:
+            self.short_sequences.writerow(data.format_sequence_line())
+        else:
+            self.long_sequences.writerow(data.format_sequence_line())
+
+        self.references.writerow(data.format_references())
+        self.accessions.writerow(data.format_ac_line())
+        self.locations.writerow(data.format_genomic_locations())
+
+    def close(self):
         self.short_sequences.close()
         self.long_sequences.close()
         self.references.close()
         self.accessions.close()
         self.locations.close()
 
+    def __enter__(self):
+        return self
 
-@attr.s(slots=True, frozen=True)
-class GeneInfo(object):
-    locus_tag = attr.ib()
-    description = attr.ib()
-
-    @classmethod
-    def from_feature(cls, feature):
-        return cls(
-            locus_tag=feature.qualifiers.get('locus_tag', [None])[0],
-            description=feature.qualifiers.get('note', [None])[0],
-        )
+    def __exit__(self, *args):
+        # TODO We should really close all the handles
+        pass
 
 
 def qualifier_value(feature, name, pattern, max_allowed=1):
@@ -111,6 +129,7 @@ def qualifier_value(feature, name, pattern, max_allowed=1):
     if max_allowed is not None and len(values) > max_allowed:
         raise ValueError("Multiple values (%s) for %s",
                          ', '.join(sorted(values)), name)
+
     if len(values) == 0:
         return None
     if max_allowed == 1:
@@ -118,58 +137,7 @@ def qualifier_value(feature, name, pattern, max_allowed=1):
     return values
 
 
-class EnsemblImporter(luigi.Task):
-
-    def format(self):
-        return 'embl'
-
-    def write(self, writers, data):
-        if data.is_short():
-            writers.short_sequences.writerow(data.format_sequence())
-        else:
-            writers.long_sequences.writerow(data.format_sequence())
-
-        writers.references.writerow(data.format_references())
-        writers.accessions.writerow(data.format_accession())
-        writers.locations.writerow(data.format_locations())
-
-    def output(self):
-        if not os.path.exists(self.destination):
-            os.makedirs(self.destination)
-        return Output.build(self.destination, 'ensembl')
-
-    def gene_info(self, records):
-        info = {}
-        for record in records:
-            for feature in record.features:
-                if feature.type != 'gene':
-                    continue
-                info[feature.id] = GeneInfo.from_feature(feature)
-        return info
-
-    def data(self):
-        data = SeqIO.parse(self.filename(), self.format())
-        data = it.chain.from_iterable(data.features)
-        # Maybe should process all genes to find the names of things? That way
-        # we can have a better description than something super generic based
-        # off the annotations? We could also extract the locus tags this way.
-        data = it.ifilterfalse(data, self.is_pseduogene)
-        data = it.ifilter(data, self.is_ncrna)
-        data = it.imap(self.create_rnacentral_entries, data)
-        data = it.ifilter(data, lambda e: e.is_valid())
-
-    def run(self):
-        with OutputHandles.build(self.output()) as writers:
-            for entry in self.data():
-                if not entry.is_valid():
-                    logger.info("Skipping invalid entry")
-                self.write(writers, entry)
-
-
-class Importer(EnsemblImporter):
-    input_file = luigi.Parameter()
-    destination = luigi.Parameter(default='/tmp')
-    test = luigi.BoolParameter(default=False, significant=False)
+class BioImporter(luigi.Task):
 
     def is_pseudogene(self, feature):
         notes = feature.qualifiers.get('note', [])
@@ -177,6 +145,43 @@ class Importer(EnsemblImporter):
 
     def is_ncrna(self, feature):
         return feature.type in {'misc_RNA', 'ncRNA'}
+
+    def output(self, destination, input_file):
+        prefix = os.path.basename(input_file)
+        return Output.build(destination, 'ensembl', prefix)
+
+    def rnacentral_entry(self, annotations, feature):
+        pass
+
+    def data(self, input_file):
+        # Maybe should process all genes to find the names of things? That way
+        # we can have a better description than something super generic based
+        # off the annotations? We could also extract the locus tags this way.
+        for record in SeqIO.parse(input_file, self.format()):
+            annotations = self.standard_annotations(record)
+            for feature in record.features:
+                if self.is_ncrna(feature) and not self.is_pseudogene(feature):
+                    entry = self.rnacentral_entry(annotations, feature)
+                    if entry.is_valid():
+                        yield entry
+
+    def run(self):
+        with OutputWriters.build(self.output()) as writers:
+            for entry in self.data(self.input_file):
+                writers.write(entry)
+
+
+class EnsemblImporter(BioImporter):
+    input_file = luigi.Parameter()
+    test = luigi.BoolParameter(default=False, significant=False)
+    destination = luigi.Parameter(default='/tmp')
+
+    def format(self):
+        return 'embl'
+
+    def output(self):
+        return super(EnsemblImporter, self).output(self.destination,
+                                                   self.input_file)
 
     def assembly_info(self, feature):
         def as_exon(location):
@@ -193,7 +198,7 @@ class Importer(EnsemblImporter):
 
     def references(self, data):
         return [{
-            'author': "Andrew Yates, Wasiu Akanni, M. Ridwan Amode, Daniel Barrell, Konstantinos Billis, Denise Carvalho-Silva, Carla Cummins, Peter Clapham, Stephen Fitzgerald, Laurent Gil1 Carlos Garcín Girón, Leo Gordon, Thibaut Hourlier, Sarah E. Hunt, Sophie H. Janacek, Nathan Johnson, Thomas Juettemann, Stephen Keenan, Ilias Lavidas, Fergal J. Martin, Thomas Maurel, William McLaren, Daniel N. Murphy, Rishi Nag, Michael Nuhn, Anne Parker, Mateus Patricio, Miguel Pignatelli, Matthew Rahtz, Harpreet Singh Riat, Daniel Sheppard, Kieron Taylor, Anja Thormann, Alessandro Vullo, Steven P. Wilder, Amonida Zadissa, Ewan Birney, Jennifer Harrow, Matthieu Muffato, Emily Perry, Magali Ruffier, Giulietta Spudich, Stephen J. Trevanion, Fiona Cunningham, Bronwen L. Aken, Daniel R. Zerbino, Paul Flicek",
+            'authors': "Andrew Yates, Wasiu Akanni, M. Ridwan Amode, Daniel Barrell, Konstantinos Billis, Denise Carvalho-Silva, Carla Cummins, Peter Clapham, Stephen Fitzgerald, Laurent Gil1 Carlos Garcín Girón, Leo Gordon, Thibaut Hourlier, Sarah E. Hunt, Sophie H. Janacek, Nathan Johnson, Thomas Juettemann, Stephen Keenan, Ilias Lavidas, Fergal J. Martin, Thomas Maurel, William McLaren, Daniel N. Murphy, Rishi Nag, Michael Nuhn, Anne Parker, Mateus Patricio, Miguel Pignatelli, Matthew Rahtz, Harpreet Singh Riat, Daniel Sheppard, Kieron Taylor, Anja Thormann, Alessandro Vullo, Steven P. Wilder, Amonida Zadissa, Ewan Birney, Jennifer Harrow, Matthieu Muffato, Emily Perry, Magali Ruffier, Giulietta Spudich, Stephen J. Trevanion, Fiona Cunningham, Bronwen L. Aken, Daniel R. Zerbino, Paul Flicek",
             'location': "Nucleic Acids Res. 2016 44 Database issue:D710-6",
             'title': "Ensembl 2016",
             'pmid': 26687719,
@@ -300,3 +305,7 @@ class Importer(EnsemblImporter):
         data['description'] = self.description(annotations, feature)
         data['sequence'] = self.sequence(annotations, feature)
         return RNAcentralEntry(**data)
+
+
+if __name__ == '__main__':
+    luigi.run(main_task_cls=EnsemblImporter)
