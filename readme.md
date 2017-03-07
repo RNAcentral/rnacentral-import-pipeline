@@ -39,6 +39,15 @@ or
 
 	source scripts/rnac_loader_wrapper.sh
 
+## Testing
+
+The tests can be run using [py.test](http://pytest.org). For example, running
+Ensembl importing tests can be done with:
+
+```sh
+py.test luigi/tests/ensembl_test.py
+```
+
 ## License
 
 See [LICENSE](https://github.com/RNAcentral/rnacentral-import-pipeline/blob/master/LICENSE) for more information.
