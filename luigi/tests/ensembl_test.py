@@ -10,7 +10,7 @@ from ensembl import EnsemblImporter
 
 
 class BaseTest(ut.TestCase):
-    filename = 'luigi/tests/files/Taeniopygia_guttata.taeGut3.2.4.87.chromosome.1.dat'
+    filename = 'data/Caenorhabditis_elegans.WBcel235.87.chromosome.IV.dat'
 
     @classmethod
     def setUpClass(cls):
@@ -45,32 +45,28 @@ class BothParsingTest(BaseTest):
 class SimpleTests(FeatureParsingTest):
 
     def test_can_detect_if_is_noncoding(self):
-        assert self.is_ncrna('gene', 'ENSTGUG00000005151.1') is False
-        assert self.is_ncrna('misc_RNA', 'ENSTGUG00000005150.1') is True
+        assert self.is_ncrna('gene', 'WBGene00021406') is False
+        assert self.is_ncrna('misc_RNA', 'WBGene00195502') is True
 
     def test_can_detect_if_is_pseudogene(self):
-        assert self.is_pseudogene('misc_RNA', 'ENSTGUG00000005150.1') is True
-        assert self.is_pseudogene('gene', 'ENSTGUG00000005151.1') is False
+        assert self.is_pseudogene('misc_RNA', 'WBGene00023163') is True
+        assert self.is_pseudogene('gene', 'WBGene00001103') is False
 
     def test_it_can_get_all_standard_annotations(self):
         assert self.importer.standard_annotations(self.record) == {
             'database': 'ensembl',
             'lineage': (
                 'Eukaryota; Opisthokonta; Metazoa; Eumetazoa; Bilateria; '
-                'Deuterostomia; Chordata; Craniata; Vertebrata; Gnathostomata;'
-                ' Teleostomi; Euteleostomi; Sarcopterygii; '
-                'Dipnotetrapodomorpha; Tetrapoda; Amniota; Sauropsida;'
-                ' Sauria; Archelosauria; Archosauria; Dinosauria; Saurischia;'
-                ' Theropoda; Coelurosauria; Aves; Neognathae; Passeriformes; '
-                'Passeroidea; Estrildidae; Estrildinae'
+                'Protostomia; Ecdysozoa; Nematoda; Chromadorea; Rhabditida; '
+                'Rhabditoidea; Rhabditidae; Peloderinae'
             ),
             'mol_type': 'genomic DNA',
             'pseudogene': 'N',
-            'parent_accession': "1.taeGut3.2.4",
+            'parent_accession': "IV.WBcel235",
             'seq_version': '',
-            'common_name': 'zebra finch',
-            'species': "Taeniopygia guttata",
-            'ncbi_tax_id':  59729,
+            'common_name': 'C.elegans',
+            'species': "Caenorhabditis elegans",
+            'ncbi_tax_id':  6239,
             'is_composite': 'N',
             'accession': None,
             'references': [{
@@ -84,35 +80,29 @@ class SimpleTests(FeatureParsingTest):
         }
 
     def test_can_get_transcript_id(self):
-        ans = "ENSTGUT00000005641.1"
-        assert self.transcript('mRNA', "ENSTGUG00000005420.1") == ans
+        assert self.transcript('mRNA', "WBGene00021408") == 'Y38C1AB.6'
 
     def test_can_get_ncrna_type(self):
-        assert self.ncrna('misc_RNA', "ENSTGUG00000017636.1") == 'miRNA'
+        assert self.ncrna('misc_RNA', "WBGene00195502") == 'ncRNA'
 
     def test_can_get_notes_without_ncrna(self):
-        assert self.note('misc_RNA', "ENSTGUG00000017636.1") == [
-            "transcript_id=ENSTGUT00000018323.1",
+        assert self.note('misc_RNA', "WBGene00195502") == [
+            "transcript_id=Y38C1AB.9",
         ]
 
     def test_can_create_easy_locations(self):
-        assert self.assembly_info('gene', 'ENSTGUG00000011206.1') == [
-            {'complement': False, 'primary_start': 41661941, 'primary_end': 41662687}
+        assert self.assembly_info('misc_RNA', "WBGene00195502") == [
+            {'complement': False, 'primary_start': 41471, 'primary_end': 41620}
         ]
 
     def test_can_get_joined_locations(self):
-        assert self.assembly_info('mRNA', 'ENSTGUG00000011242.1') == [
-             {'complement': True, 'primary_start': 44551450, 'primary_end': 44552280},
-             {'complement': True, 'primary_start': 44550508, 'primary_end': 44551428},
-             {'complement': True, 'primary_start': 44550496, 'primary_end': 44550506},
-             {'complement': True, 'primary_start': 44550265, 'primary_end': 44550427},
+        assert self.assembly_info('mRNA', 'WBGene00235257') == [
+             {'complement': True, 'primary_start': 53543, 'primary_end': 53631},
+             {'complement': True, 'primary_start': 53401, 'primary_end': 53485},
         ]
 
     def test_can_get_gene_id(self):
-        assert self.gene('misc_RNA', "ENSTGUG00000017636.1") == \
-            "ENSTGUG00000017636.1"
-        assert self.gene('misc_RNA', "ENSTGUG00000017636.1") == \
-            "ENSTGUG00000017636.1"
+        assert self.gene('misc_RNA', "WBGene00166500") == "WBGene00166500"
 
 
 class LongSpeciesTests(FeatureParsingTest):
@@ -161,69 +151,72 @@ class LoadingTests(FeatureParsingTest):
         return self.entry_specific_data(*key)
 
     def test_produces_correct_entries(self):
-        assert self.entry('misc_RNA', "ENSTGUG00000017978.1") == {
+        assert self.entry('misc_RNA', "WBGene00166500") == {
             'assembly_info': [{
-                'complement': True,
-                'primary_start': 43202354,
-                'primary_end': 43202459,
+                'complement': False,
+                'primary_start': 58691,
+                'primary_end': 58711,
             }],
-            'db_xrefs': [],
-            'feature_location_end':  43202459,
-            'feature_location_start': 43202354,
+            'db_xrefs': [
+                "RefSeq_ncRNA:NR_052854",
+                "wormbase_transcript:T05C7.2",
+            ],
+            'feature_location_end': 58711,
+            'feature_location_start': 58691,
             'feature_type': 'misc_RNA',
-            'gene': "ENSTGUG00000017978.1",
-            'ncrna_class': 'miRNA',
-            'note': ['transcript_id=ENSTGUT00000018665.1'],
+            'gene': "WBGene00166500",
+            'ncrna_class': 'piRNA',
+            'note': ['transcript_id=T05C7.2'],
             'locus_tag': '',
-            'primary_id': 'ENSTGUT00000018665.1',
+            'primary_id': 'T05C7.2',
         }
 
-    def test_can_get_xrefs(self):
-        assert self.entry('misc_RNA', "ENSTGUG00000017886.1") == {
-            'assembly_info': [
-                {'complement': True, 'primary_start': 43202481, 'primary_end': 43202567},
-            ],
-            'db_xrefs': ["RNACentral:URS000075DEE3"],
-            'feature_location_end': 43202567,
-            'feature_location_start': 43202481,
-            'feature_type': 'misc_RNA',
-            'gene': "ENSTGUG00000017886.1",
-            'ncrna_class': 'miRNA',
-            'note': ["transcript_id=ENSTGUT00000018573.1"],
-            'locus_tag': '',
-            'primary_id': 'ENSTGUT00000018573.1',
-        }
+    # def test_can_get_xrefs(self):
+    #     assert self.entry('misc_RNA', "ENSTGUG00000017886.1") == {
+    #         'assembly_info': [
+    #             {'complement': True, 'primary_start': 43202481, 'primary_end': 43202567},
+    #         ],
+    #         'db_xrefs': ["RNACentral:URS000075DEE3"],
+    #         'feature_location_end': 43202567,
+    #         'feature_location_start': 43202481,
+    #         'feature_type': 'misc_RNA',
+    #         'gene': "ENSTGUG00000017886.1",
+    #         'ncrna_class': 'miRNA',
+    #         'note': ["transcript_id=ENSTGUT00000018573.1"],
+    #         'locus_tag': '',
+    #         'primary_id': 'ENSTGUT00000018573.1',
+    #     }
 
-    def test_can_have_several_xrefs(self):
-        assert self.entry('misc_RNA', "ENSTGUG00000018724.1") == {
-            'assembly_info': [
-                {'complement': False, 'primary_start': 48906815, 'primary_end': 48906895},
-            ],
-            'db_xrefs': ["RFAM_trans_name:SNORD102-201",
-                         "RNACentral:URS0000661E55"],
-            'feature_location_end': 48906895,
-            'feature_location_start': 48906815,
-            'feature_type': 'misc_RNA',
-            'gene': "ENSTGUG00000018724.1",
-            'ncrna_class': 'snoRNA',
-            'note': ["transcript_id=ENSTGUT00000019440.1"],
-            'locus_tag': '',
-            'primary_id': 'ENSTGUT00000019440.1',
-        }
+    # def test_can_have_several_xrefs(self):
+    #     assert self.entry('misc_RNA', "ENSTGUG00000018724.1") == {
+    #         'assembly_info': [
+    #             {'complement': False, 'primary_start': 48906815, 'primary_end': 48906895},
+    #         ],
+    #         'db_xrefs': ["RFAM_trans_name:SNORD102-201",
+    #                      "RNACentral:URS0000661E55"],
+    #         'feature_location_end': 48906895,
+    #         'feature_location_start': 48906815,
+    #         'feature_type': 'misc_RNA',
+    #         'gene': "ENSTGUG00000018724.1",
+    #         'ncrna_class': 'snoRNA',
+    #         'note': ["transcript_id=ENSTGUT00000019440.1"],
+    #         'locus_tag': '',
+    #         'primary_id': 'ENSTGUT00000019440.1',
+    #     }
 
 
 class CompleteParsingTest(BothParsingTest):
     def test_can_create_reasonable_description(self):
-        assert self.description('misc_RNA', "ENSTGUG00000018724.1") == \
-            "Taeniopygia guttata (zebra finch) snoRNA"
+        assert self.description('misc_RNA', "WBGene00166500") == \
+            "Caenorhabditis elegans (C.elegans) piRNA"
 
     def test_can_create_reasonable_primary_id(self):
-        assert self.primary_id('misc_RNA', "ENSTGUG00000017725.1") == \
-            "1.taeGut3.2.4:ENSTGUT00000018412.1:miRNA"
+        assert self.primary_id('misc_RNA', "WBGene00202392") == \
+            "IV.WBcel235:cTel79B.2:ncRNA"
 
     def test_produces_valid_data(self):
-        entry = self.rnacentral_entry('misc_RNA', "ENSTGUG00000017725.1")
-        assert entry.sequence == 'GGAATATTCTGGGAGTTGTAGTCTTTCAAACAGAGCTTCACAAGGACATACCTGTATTGGAACACTACAGCTCCCTGAACTTCC'
+        entry = self.rnacentral_entry('misc_RNA', "WBGene00198969")
+        assert entry.sequence == 'TTAGGCTTAGGCTTAGGCTTAGGCTTAGGCTTAGGCTTAGGCTTAGGCTTAGGCTTAGGCTTAGGCTTAGGCTTAGGCTTAGGCTTAGGCTTAGGCTTAGGCTTAGGCTTAGG'
         assert entry.is_valid(verbose=True) is True
 
     @pytest.mark.skip()
