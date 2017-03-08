@@ -2,8 +2,6 @@
 
 import unittest as ut
 
-import pytest
-
 from Bio import SeqIO
 
 from ensembl import EnsemblImporter
@@ -219,6 +217,6 @@ class CompleteParsingTest(BothParsingTest):
         assert entry.sequence == 'TTAGGCTTAGGCTTAGGCTTAGGCTTAGGCTTAGGCTTAGGCTTAGGCTTAGGCTTAGGCTTAGGCTTAGGCTTAGGCTTAGGCTTAGGCTTAGGCTTAGGCTTAGGCTTAGG'
         assert entry.is_valid(verbose=True) is True
 
-    @pytest.mark.skip()
     def test_can_loads_all_non_coding_rnas(self):
-        pass
+        data = self.importer.data(self.filename)
+        assert len(list(data)) == 16272
