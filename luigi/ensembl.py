@@ -264,8 +264,8 @@ class EnsemblImporter(BioImporter):
     def primary_id(self, annotations, feature):
         transcript = self.transcript(feature)
         ncrna = self.ncrna(feature)
-        assert transcript, 'Cannot primary id without transcript'
-        assert ncrna, 'Cannot primary id without ncRNA type'
+        assert transcript, 'Cannot create a primary id without transcript id'
+        assert ncrna, 'Cannot create a primary id without ncRNA type'
         assert annotations['parent_accession']
 
         return '{parent}:{transcript}:{type}'.format(
