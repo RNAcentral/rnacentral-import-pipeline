@@ -1,5 +1,16 @@
 #!/usr/bin/env bash
 
+# Copyright [2009-2017] EMBL-European Bioinformatics Institute
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# http://www.apache.org/licenses/LICENSE-2.0
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 set -euo pipefail
 IFS=$'\n\t'
 
@@ -10,9 +21,9 @@ get_data()
   test_file="$(basename $1)"
   final="$(basename "$filename" ".gz")"
   pushd data
-  wget -O - "$filename" | gzip -d > "$final" 
+  wget -O - "$filename" | gzip -d > "$final"
   hash="$(md5 -q "$final")"
-  [ "$hash" = "$expected" ] || { 
+  [ "$hash" = "$expected" ] || {
     echo 2>&1 "Unexpected hash for $filename";
     echo 2>&1 "Expected: $expected"
     echo 2>&1 "Actual: $hash"
