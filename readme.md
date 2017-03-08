@@ -41,8 +41,15 @@ or
 
 ## Testing
 
-The tests can be run using [py.test](http://pytest.org). For example, running
-Ensembl importing tests can be done with:
+Running tests for ensembl import requires downloading data from Ensembl first.
+This can be done with:
+
+```sh
+./scripts/fetch-test-data.sh
+```
+
+The tests can then be run using [py.test](http://pytest.org). For example,
+running Ensembl importing tests can be done with:
 
 ```sh
 py.test luigi/tests/ensembl_test.py
