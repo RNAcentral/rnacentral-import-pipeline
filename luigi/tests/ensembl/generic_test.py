@@ -13,28 +13,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import unittest as ut
 from collections import Counter
 
-from Bio import SeqIO
+from rnacentral_entry import RNAcentralEntry
+from ensembl.generic import EnsemblImporter
 
-from ensembl import EnsemblImporter
+from tests.ensembl.helpers import Base
 
 
-class BaseTest(ut.TestCase):
+class BaseTest(Base):
     filename = 'data/Caenorhabditis_elegans.WBcel235.87.chromosome.IV.dat'
-
-    @classmethod
-    def setUpClass(cls):
-        cls.features = {}
-        cls.record = SeqIO.read(cls.filename, 'embl')
-        for feature in cls.record.features:
-            gene = feature.qualifiers.get('gene', [None])[0]
-            key = (feature.type, gene)
-            cls.features[key] = feature
-
-    def setUp(self):
-        self.importer = EnsemblImporter(input_file=self.filename)
+    importer_class = EnsemblImporter
 
 
 class FeatureParsingTest(BaseTest):
@@ -144,7 +133,7 @@ class LongSpeciesTests(FeatureParsingTest):
 
             # Note this is *NOT* the reference in the file and this is on
             # purpose. The parser here is not a general EMBL format parser, but
-            # a parser for the data produced by ENSEMBL. For this reason we
+            # a parser for the data produced by Ensembl. For this reason we
             # only use a default reference, and not what may be in the file.
             'references': [{
                 'authors': """Andrew Yates, Wasiu Akanni, M. Ridwan Amode, Daniel Barrell, Konstantinos Billis, Denise Carvalho-Silva, Carla Cummins, Peter Clapham, Stephen Fitzgerald, Laurent Gil1 Carlos Garcín Girón, Leo Gordon, Thibaut Hourlier, Sarah E. Hunt, Sophie H. Janacek, Nathan Johnson, Thomas Juettemann, Stephen Keenan, Ilias Lavidas, Fergal J. Martin, Thomas Maurel, William McLaren, Daniel N. Murphy, Rishi Nag, Michael Nuhn, Anne Parker, Mateus Patricio, Miguel Pignatelli, Matthew Rahtz, Harpreet Singh Riat, Daniel Sheppard, Kieron Taylor, Anja Thormann, Alessandro Vullo, Steven P. Wilder, Amonida Zadissa, Ewan Birney, Jennifer Harrow, Matthieu Muffato, Emily Perry, Magali Ruffier, Giulietta Spudich, Stephen J. Trevanion, Fiona Cunningham, Bronwen L. Aken, Daniel R. Zerbino, Paul Flicek""",
@@ -227,9 +216,9 @@ class CompleteParsingTest(BothParsingTest):
             "IV.WBcel235:cTel79B.2:ncRNA"
 
     def test_produces_valid_data(self):
-        entry = self.rnacentral_entry('misc_RNA', "WBGene00198969")
-        assert entry.sequence == 'TTAGGCTTAGGCTTAGGCTTAGGCTTAGGCTTAGGCTTAGGCTTAGGCTTAGGCTTAGGCTTAGGCTTAGGCTTAGGCTTAGGCTTAGGCTTAGGCTTAGGCTTAGGCTTAGG'
-        assert entry.is_valid(verbose=True) is True
+        entry = self.rnacentral_entries('misc_RNA', "WBGene00198969")
+        assert entry[0]['sequence'] == 'TTAGGCTTAGGCTTAGGCTTAGGCTTAGGCTTAGGCTTAGGCTTAGGCTTAGGCTTAGGCTTAGGCTTAGGCTTAGGCTTAGGCTTAGGCTTAGGCTTAGGCTTAGGCTTAGG'
+        assert RNAcentralEntry(**entry[0]).is_valid(verbose=True) is True
 
     def test_can_loads_all_non_coding_rnas(self):
         data = self.importer.data(self.filename)

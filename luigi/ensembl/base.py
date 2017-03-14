@@ -15,6 +15,7 @@ limitations under the License.
 
 import os
 import re
+import abc
 import csv
 import logging
 
@@ -189,6 +190,15 @@ def qualifier_value(feature, name, pattern, max_allowed=1):
 
 
 class BioImporter(luigi.Task):
+    """
+    This is the base importer for all Ensembl data. This outlines the general
+    parsing and output strategy. It does not actually parse data into anything,
+    for that look at some subclasses. With relatively minimal effort this could
+    be changed to a generic importer for any format that biopython can parse
+    correctly.
+    """
+
+    __metaclass__ = abc.ABCMeta
 
     def is_pseudogene(self, feature):
         notes = feature.qualifiers.get('note', [])
@@ -197,15 +207,23 @@ class BioImporter(luigi.Task):
     def is_ncrna(self, feature):
         return feature.type in {'misc_RNA', 'ncRNA'}
 
-    def output(self, destination, input_file):
+    def build_output(self, destination, input_file):
         prefix = os.path.basename(input_file)
         return Output.build(destination, 'ensembl', prefix)
 
-    def rnacentral_entry(self, annotations, feature):
-        pass
+    @abc.abstractmethod
+    def rnacentral_entries(self, annotations, feature, **kwargs):
+        return []
 
+    @abc.abstractmethod
     def format(self):
         pass
+
+    def sequence(self, annotations, feature):
+        """
+        Extract the sequence of the given feature.
+        """
+        return str(feature.extract(annotations['sequence']))
 
     def standard_annotations(self, record):
         return {
@@ -219,8 +237,10 @@ class BioImporter(luigi.Task):
         for record in SeqIO.parse(input_file, self.format()):
             annotations = self.standard_annotations(record)
             for feature in record.features:
-                if self.is_ncrna(feature) and not self.is_pseudogene(feature):
-                    entry = self.rnacentral_entry(annotations, feature)
+                if not self.is_ncrna(feature) or self.is_pseudogene(feature):
+                    continue
+                for data in self.rnacentral_entries(annotations, feature):
+                    entry = RNAcentralEntry(**data)
                     if entry.is_valid():
                         yield entry
 
@@ -228,150 +248,3 @@ class BioImporter(luigi.Task):
         with OutputWriters.build(self.output()) as writers:
             for entry in self.data(self.input_file):
                 writers.write(entry)
-
-
-class EnsemblImporter(BioImporter):
-    input_file = luigi.Parameter()
-    test = luigi.BoolParameter(default=False, significant=False)
-    destination = luigi.Parameter(default='/tmp')
-
-    def format(self):
-        return 'embl'
-
-    def output(self):
-        return super(EnsemblImporter, self).output(self.destination,
-                                                   self.input_file)
-
-    def assembly_info(self, feature):
-        def as_exon(location):
-            """
-            Turn a biopython location into the dict we use.
-            """
-
-            return {
-                'primary_start': location.start + 1,
-                'primary_end': int(location.end),
-                'complement': location.strand == -1,
-            }
-
-        parts = [feature.location]
-        if hasattr(feature.location, 'parts'):
-            parts = feature.location.parts
-        return [as_exon(l) for l in parts]
-
-    def references(self, _):
-        return [{
-            'authors': "Andrew Yates, Wasiu Akanni, M. Ridwan Amode, Daniel Barrell, Konstantinos Billis, Denise Carvalho-Silva, Carla Cummins, Peter Clapham, Stephen Fitzgerald, Laurent Gil1 Carlos Garcín Girón, Leo Gordon, Thibaut Hourlier, Sarah E. Hunt, Sophie H. Janacek, Nathan Johnson, Thomas Juettemann, Stephen Keenan, Ilias Lavidas, Fergal J. Martin, Thomas Maurel, William McLaren, Daniel N. Murphy, Rishi Nag, Michael Nuhn, Anne Parker, Mateus Patricio, Miguel Pignatelli, Matthew Rahtz, Harpreet Singh Riat, Daniel Sheppard, Kieron Taylor, Anja Thormann, Alessandro Vullo, Steven P. Wilder, Amonida Zadissa, Ewan Birney, Jennifer Harrow, Matthieu Muffato, Emily Perry, Magali Ruffier, Giulietta Spudich, Stephen J. Trevanion, Fiona Cunningham, Bronwen L. Aken, Daniel R. Zerbino, Paul Flicek",
-            'location': "Nucleic Acids Res. 2016 44 Database issue:D710-6",
-            'title': "Ensembl 2016",
-            'pmid': 26687719,
-            'doi': "10.1093/nar/gkv115",
-        }]
-
-    def standard_annotations(self, record):
-        pattern = re.compile(r'\((.+)\)$')
-        common_name = None
-        species = record.annotations['organism']
-        match = re.search(pattern, species)
-        if match:
-            common_name = match.group(1)
-            species = re.sub(pattern, '', species).strip()
-
-        taxid = None
-        source = record.features[0]
-        if source.type == 'source':
-            taxid = int(qualifier_value(source, 'db_xref', r'^taxon:(\d+)$'))
-
-        return {
-            'accession': None,
-            'database': 'ENSEMBL',
-            'lineage': '; '.join(record.annotations['taxonomy']),
-            'mol_type': 'genomic DNA',
-            'pseudogene': 'N',
-            'parent_accession': record.id,
-            'seq_version': '',
-            'common_name': common_name,
-            'species': species,
-            'ncbi_tax_id': taxid,
-            'is_composite': 'N',
-            'references': self.references(record),
-            'sequence': record.seq,
-        }
-
-    def description(self, annotations, feature):
-        species = annotations['species']
-        if annotations.get('common_name', None):
-            species += ' (%s)' % annotations['common_name']
-
-        rna_type = self.ncrna(feature) or feature.type
-        return '{species} {rna_type}'.format(
-            species=species,
-            rna_type=rna_type,
-        )
-
-    def gene(self, feature):
-        return qualifier_value(feature, 'gene', '^(.+)$')
-
-    def transcript(self, feature):
-        return qualifier_value(feature, 'note', '^transcript_id=(.+)$')
-
-    def ncrna(self, feature):
-        return feature.qualifiers.get('note', [''])[0]
-
-    def note(self, feature):
-        note = feature.qualifiers.get('note', [])
-        if len(note) > 1:
-            return note[1:]
-        return None
-
-    def primary_id(self, annotations, feature):
-        transcript = self.transcript(feature)
-        ncrna = self.ncrna(feature)
-        assert transcript, 'Cannot create a primary id without transcript id'
-        assert ncrna, 'Cannot create a primary id without ncRNA type'
-        assert annotations['parent_accession']
-
-        return '{parent}:{transcript}:{type}'.format(
-            parent=annotations['parent_accession'],
-            transcript=transcript,
-            type=ncrna,
-        )
-
-    def sequence(self, annotations, feature):
-        """
-        Extract the sequence of the given feature.
-        """
-        return str(feature.extract(annotations['sequence']))
-
-    def entry_specific_data(self, feature):
-        start, end = sorted([int(feature.location.start),
-                             int(feature.location.end)])
-
-        # Ensure that this is 1 based, even though biopython
-        # switches to 0 based
-        start += 1
-
-        return {
-            'primary_id': self.transcript(feature),
-            'assembly_info': self.assembly_info(feature),
-            'db_xrefs': feature.qualifiers.get('db_xref', []),
-            'feature_location_start': start,
-            'feature_location_end': end,
-            'feature_type': feature.type,
-            'gene': self.gene(feature),
-            'ncrna_class': self.ncrna(feature),
-            'note': self.note(feature),
-            'locus_tag': feature.qualifiers.get('locus_tag', ''),
-        }
-
-    def rnacentral_entry(self, annotations, feature):
-        data = dict(annotations)
-        data.update(self.entry_specific_data(feature))
-        data['accession'] = self.primary_id(annotations, feature)
-        data['description'] = self.description(annotations, feature)
-        data['sequence'] = self.sequence(annotations, feature)
-        return RNAcentralEntry(**data)
-
-
-if __name__ == '__main__':
-    luigi.run(main_task_cls=EnsemblImporter)
