@@ -63,3 +63,4 @@ pipeline.png
 default.nix
 env/
 data/Caenorhabditis_elegans.WBcel235.87.chromosome.IV.dat
+data/Homo_sapiens.GRCh38.87.chromosome.12.dat

@@ -33,3 +33,4 @@ get_data()
 }
 
 get_data 'ftp://ftp.ensembl.org/pub/release-87/embl/caenorhabditis_elegans/Caenorhabditis_elegans.WBcel235.87.chromosome.IV.dat.gz' '2b693489f7fb5cf7db1b9f7cdaf14c50'
+get_data 'ftp://ftp.ensembl.org/pub/release-87/embl/homo_sapiens/Homo_sapiens.GRCh38.87.chromosome.12.dat.gz' '51bbbf2516669d3b5fa39a2237833613'
