@@ -14,6 +14,7 @@ limitations under the License.
 """
 
 import unittest as ut
+from collections import Counter
 
 from Bio import SeqIO
 
@@ -233,3 +234,15 @@ class CompleteParsingTest(BothParsingTest):
     def test_can_loads_all_non_coding_rnas(self):
         data = self.importer.data(self.filename)
         assert len(list(data)) == 16272
+
+
+class TRNATest(BothParsingTest):
+    def test_gets_all_tRNA(self):
+        data = self.importer.data(self.filename)
+        rna_types = Counter(r.ncrna_class for r in data)
+        assert rna_types['tRNA'] == 71
+
+    def test_does_not_get_tRNA_pseudogenes(self):
+        data = self.importer.data(self.filename)
+        rna_types = set(r.ncrna_class for r in data)
+        assert 'tRNA_pseudogene' not in rna_types
