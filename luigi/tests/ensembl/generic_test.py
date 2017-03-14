@@ -176,39 +176,6 @@ class LoadingTests(FeatureParsingTest):
             'optional_id': 'WBGene00166500',
         }
 
-    # def test_can_get_xrefs(self):
-    #     assert self.entry('misc_RNA', "ENSTGUG00000017886.1") == {
-    #         'assembly_info': [
-    #             {'complement': True, 'primary_start': 43202481, 'primary_end': 43202567},
-    #         ],
-    #         'db_xrefs': ["RNACentral:URS000075DEE3"],
-    #         'feature_location_end': 43202567,
-    #         'feature_location_start': 43202481,
-    #         'feature_type': 'misc_RNA',
-    #         'gene': "ENSTGUG00000017886.1",
-    #         'ncrna_class': 'miRNA',
-    #         'note': ["transcript_id=ENSTGUT00000018573.1"],
-    #         'locus_tag': '',
-    #         'primary_id': 'ENSTGUT00000018573.1',
-    #     }
-
-    # def test_can_have_several_xrefs(self):
-    #     assert self.entry('misc_RNA', "ENSTGUG00000018724.1") == {
-    #         'assembly_info': [
-    #             {'complement': False, 'primary_start': 48906815, 'primary_end': 48906895},
-    #         ],
-    #         'db_xrefs': ["RFAM_trans_name:SNORD102-201",
-    #                      "RNACentral:URS0000661E55"],
-    #         'feature_location_end': 48906895,
-    #         'feature_location_start': 48906815,
-    #         'feature_type': 'misc_RNA',
-    #         'gene': "ENSTGUG00000018724.1",
-    #         'ncrna_class': 'snoRNA',
-    #         'note': ["transcript_id=ENSTGUT00000019440.1"],
-    #         'locus_tag': '',
-    #         'primary_id': 'ENSTGUT00000019440.1',
-    #     }
-
 
 class CompleteParsingTest(BothParsingTest):
     def test_can_create_reasonable_description(self):
