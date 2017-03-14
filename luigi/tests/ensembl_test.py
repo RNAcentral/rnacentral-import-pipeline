@@ -65,7 +65,7 @@ class SimpleTests(FeatureParsingTest):
 
     def test_it_can_get_all_standard_annotations(self):
         assert self.importer.standard_annotations(self.record) == {
-            'database': 'ensembl',
+            'database': 'ENSEMBL',
             'lineage': (
                 'Eukaryota; Opisthokonta; Metazoa; Eumetazoa; Bilateria; '
                 'Protostomia; Ecdysozoa; Nematoda; Chromadorea; Rhabditida; '
@@ -125,7 +125,7 @@ class LongSpeciesTests(FeatureParsingTest):
         """
 
         assert self.importer.standard_annotations(self.record) == {
-            'database': 'ensembl',
+            'database': 'ENSEMBL',
             'lineage': (
                 'Eukaryota; Fungi; Dikarya; Basidiomycota; Agaricomycotina; '
                 'Agaricomycetes; Russulales; Russulaceae; Russula; '

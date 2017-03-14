@@ -20,18 +20,22 @@ import logging
 
 from rnacentral_entry import RNAcentralEntry
 
-import attr
 import luigi
 from Bio import SeqIO
 
+import attr
 from attr.validators import instance_of as is_a
 
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 
 @attr.s()
 class Output(object):
+    """
+    This is a container for all output files that the import process will
+    create.
+    """
     short_sequences = attr.ib(validator=is_a(luigi.LocalTarget))
     long_sequences = attr.ib(validator=is_a(luigi.LocalTarget))
     references = attr.ib(validator=is_a(luigi.LocalTarget))
@@ -40,7 +44,16 @@ class Output(object):
 
     @classmethod
     def build(cls, base, database, prefix):
+        """
+        Create a new Output object. This will create an instance of this class
+        with all the correct files in the correct locations.
+        """
+
         def path_to(name):
+            """
+            Determine the path to the file with the given name.
+            """
+
             filename = '{database}_{prefix}_{folder}.csv'
             path = os.path.join(
                 base,
@@ -153,6 +166,14 @@ class BioImporter(luigi.Task):
     def rnacentral_entry(self, annotations, feature):
         pass
 
+    def format(self):
+        pass
+
+    def standard_annotations(self, record):
+        return {
+            'sequence': record.seq
+        }
+
     def data(self, input_file):
         # Maybe should process all genes to find the names of things? That way
         # we can have a better description than something super generic based
@@ -206,7 +227,7 @@ class EnsemblImporter(BioImporter):
         }]
 
     def standard_annotations(self, record):
-        pattern = re.compile('\((.+)\)$')
+        pattern = re.compile(r'\((.+)\)$')
         common_name = None
         species = record.annotations['organism']
         match = re.search(pattern, species)
@@ -217,11 +238,11 @@ class EnsemblImporter(BioImporter):
         taxid = None
         source = record.features[0]
         if source.type == 'source':
-            taxid = int(qualifier_value(source, 'db_xref', '^taxon:(\d+)$'))
+            taxid = int(qualifier_value(source, 'db_xref', r'^taxon:(\d+)$'))
 
         return {
             'accession': None,
-            'database': 'ensembl',
+            'database': 'ENSEMBL',
             'lineage': '; '.join(record.annotations['taxonomy']),
             'mol_type': 'genomic DNA',
             'pseudogene': 'N',
@@ -275,6 +296,9 @@ class EnsemblImporter(BioImporter):
         )
 
     def sequence(self, annotations, feature):
+        """
+        Extract the sequence of the given feature.
+        """
         return str(feature.extract(annotations['sequence']))
 
     def entry_specific_data(self, feature):
