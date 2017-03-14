@@ -78,6 +78,14 @@ class Output(object):
         )
 
     def exists(self):
+        """
+        Determine if all output file this creates exists.
+
+        Returns
+        -------
+        exists : bool
+            True of all outputs exist.
+        """
         return self.short_sequences.exists() and \
             self.long_sequences.exists() and \
             self.references.exists() and \
@@ -87,6 +95,11 @@ class Output(object):
 
 @attr.s()
 class OutputWriters(object):
+    """
+    This stores the csv writer objects that will actually write the data to a
+    file.
+    """
+
     short_sequences = attr.ib()
     long_sequences = attr.ib()
     references = attr.ib()
@@ -95,7 +108,32 @@ class OutputWriters(object):
 
     @classmethod
     def build(cls, output):
+        """
+        Create a new OutputWriters based upon an Output object.
+
+        Parameters
+        ----------
+        output : Output
+            The writer containing the file objects to create csv writers for.
+
+        Returns
+        -------
+        A new OutputWriters object.
+        """
+
         def as_csv(target):
+            """
+            Turn a input file into a csv writer.
+
+            Parameters
+            ----------
+            target : luigi.LocalTarget
+                A local target to create a csv writer for.
+
+            Returns
+            -------
+            A csv writer to the location of the target file.
+            """
             handle = open(target.fn, 'wb')
             return csv.writer(handle, delimiter=',', quotechar='"',
                               quoting=csv.QUOTE_ALL, lineterminator='\n')
@@ -206,6 +244,10 @@ class EnsemblImporter(BioImporter):
 
     def assembly_info(self, feature):
         def as_exon(location):
+            """
+            Turn a biopython location into the dict we use.
+            """
+
             return {
                 'primary_start': location.start + 1,
                 'primary_end': int(location.end),
@@ -217,7 +259,7 @@ class EnsemblImporter(BioImporter):
             parts = feature.location.parts
         return [as_exon(l) for l in parts]
 
-    def references(self, data):
+    def references(self, _):
         return [{
             'authors': "Andrew Yates, Wasiu Akanni, M. Ridwan Amode, Daniel Barrell, Konstantinos Billis, Denise Carvalho-Silva, Carla Cummins, Peter Clapham, Stephen Fitzgerald, Laurent Gil1 Carlos Garcín Girón, Leo Gordon, Thibaut Hourlier, Sarah E. Hunt, Sophie H. Janacek, Nathan Johnson, Thomas Juettemann, Stephen Keenan, Ilias Lavidas, Fergal J. Martin, Thomas Maurel, William McLaren, Daniel N. Murphy, Rishi Nag, Michael Nuhn, Anne Parker, Mateus Patricio, Miguel Pignatelli, Matthew Rahtz, Harpreet Singh Riat, Daniel Sheppard, Kieron Taylor, Anja Thormann, Alessandro Vullo, Steven P. Wilder, Amonida Zadissa, Ewan Birney, Jennifer Harrow, Matthieu Muffato, Emily Perry, Magali Ruffier, Giulietta Spudich, Stephen J. Trevanion, Fiona Cunningham, Bronwen L. Aken, Daniel R. Zerbino, Paul Flicek",
             'location': "Nucleic Acids Res. 2016 44 Database issue:D710-6",
