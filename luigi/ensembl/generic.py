@@ -109,9 +109,14 @@ class EnsemblImporter(BioImporter):
             species += ' (%s)' % annotations['common_name']
 
         rna_type = self.ncrna(feature) or feature.type
-        return '{species} {rna_type}'.format(
+        transcript = self.transcript(feature)
+        assert rna_type, "Cannot build description without rna_type"
+        assert transcript, "Cannot build description without transcript"
+
+        return '{species} {rna_type} transcript {transcript}'.format(
             species=species,
             rna_type=rna_type,
+            transcript=transcript,
         )
 
     def gene(self, feature):

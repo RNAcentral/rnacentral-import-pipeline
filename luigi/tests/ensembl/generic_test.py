@@ -180,7 +180,7 @@ class LoadingTests(FeatureParsingTest):
 class CompleteParsingTest(BothParsingTest):
     def test_can_create_reasonable_description(self):
         assert self.description('misc_RNA', "WBGene00166500") == \
-            "Caenorhabditis elegans (C.elegans) piRNA"
+            "Caenorhabditis elegans (C.elegans) piRNA transcript T05C7.2"
 
     def test_can_create_reasonable_accession(self):
         assert self.accession('misc_RNA', "WBGene00202392") == \
