@@ -153,7 +153,8 @@ class OutputWriters(object):
         else:
             self.long_sequences.writerow(data.format_sequence_line())
 
-        self.references.writerow(data.format_references())
+        for line in data.format_references():
+            self.references.writerow(line)
         self.accessions.writerow(data.format_ac_line())
         for line in data.format_genomic_locations():
             self.locations.writerow(line)
