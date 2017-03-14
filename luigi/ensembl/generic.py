@@ -129,7 +129,7 @@ class EnsemblImporter(BioImporter):
             note = note[1:]
         return self.__as_grouped_json__(note, '=')
 
-    def primary_id(self, annotations, feature):
+    def accession(self, annotations, feature):
         transcript = self.transcript(feature)
         ncrna = self.ncrna(feature)
         assert transcript, 'Cannot create a primary id without transcript id'
@@ -171,7 +171,7 @@ class EnsemblImporter(BioImporter):
     def rnacentral_entries(self, annotations, feature, **kwargs):
         data = dict(annotations)
         data.update(self.entry_specific_data(feature))
-        data['accession'] = self.primary_id(annotations, feature)
+        data['accession'] = self.accession(annotations, feature)
         data['description'] = self.description(annotations, feature)
         data['sequence'] = self.sequence(annotations, feature)
         return [data]

@@ -182,8 +182,8 @@ class CompleteParsingTest(BothParsingTest):
         assert self.description('misc_RNA', "WBGene00166500") == \
             "Caenorhabditis elegans (C.elegans) piRNA"
 
-    def test_can_create_reasonable_primary_id(self):
-        assert self.primary_id('misc_RNA', "WBGene00202392") == \
+    def test_can_create_reasonable_accession(self):
+        assert self.accession('misc_RNA', "WBGene00202392") == \
             "IV.WBcel235:cTel79B.2:ncRNA"
 
     def test_produces_valid_data(self):
