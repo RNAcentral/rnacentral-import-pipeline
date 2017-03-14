@@ -14,10 +14,10 @@ limitations under the License.
 """
 
 import re
+import json
+import collections as coll
 
 import luigi
-
-from rnacentral_entry import RNAcentralEntry
 
 from ensembl.base import BioImporter
 from ensembl.base import qualifier_value
@@ -126,8 +126,12 @@ class EnsemblImporter(BioImporter):
     def note(self, feature):
         note = feature.qualifiers.get('note', [])
         if len(note) > 1:
-            return note[1:]
-        return None
+            note = note[1:]
+        parsed = coll.defaultdict(list)
+        for entry in note:
+            key, value = entry.split('=', 1)
+            parsed[key].append(value)
+        return json.dumps(dict(parsed))
 
     def primary_id(self, annotations, feature):
         transcript = self.transcript(feature)
@@ -161,6 +165,7 @@ class EnsemblImporter(BioImporter):
             'ncrna_class': self.ncrna(feature),
             'note': self.note(feature),
             'locus_tag': feature.qualifiers.get('locus_tag', ''),
+            'optional_id': self.gene(feature),
         }
 
     def rnacentral_entries(self, annotations, feature, **kwargs):

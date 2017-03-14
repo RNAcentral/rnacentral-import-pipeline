@@ -13,6 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import json
 from collections import Counter
 
 from rnacentral_entry import RNAcentralEntry
@@ -87,9 +88,9 @@ class SimpleTests(FeatureParsingTest):
         assert self.ncrna('misc_RNA', "WBGene00195502") == 'ncRNA'
 
     def test_can_get_notes_without_ncrna(self):
-        assert self.note('misc_RNA', "WBGene00195502") == [
-            "transcript_id=Y38C1AB.9",
-        ]
+        assert self.note('misc_RNA', "WBGene00195502") == json.dumps({
+            "transcript_id": ["Y38C1AB.9"],
+        })
 
     def test_can_create_easy_locations(self):
         assert self.assembly_info('misc_RNA', "WBGene00195502") == [
@@ -167,9 +168,12 @@ class LoadingTests(FeatureParsingTest):
             'feature_type': 'misc_RNA',
             'gene': "WBGene00166500",
             'ncrna_class': 'piRNA',
-            'note': ['transcript_id=T05C7.2'],
+            'note': json.dumps({
+                'transcript_id': ['T05C7.2']
+            }),
             'locus_tag': '',
             'primary_id': 'T05C7.2',
+            'optional_id': 'WBGene00166500',
         }
 
     # def test_can_get_xrefs(self):
