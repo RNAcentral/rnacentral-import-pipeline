@@ -155,7 +155,8 @@ class OutputWriters(object):
 
         self.references.writerow(data.format_references())
         self.accessions.writerow(data.format_ac_line())
-        self.locations.writerow(data.format_genomic_locations())
+        for line in data.format_genomic_locations():
+            self.locations.writerow(line)
 
     def close(self):
         self.short_sequences.close()
