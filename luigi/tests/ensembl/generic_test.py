@@ -159,10 +159,10 @@ class LoadingTests(FeatureParsingTest):
                 'primary_start': 58691,
                 'primary_end': 58711,
             }],
-            'db_xrefs': [
-                "RefSeq_ncRNA:NR_052854",
-                "wormbase_transcript:T05C7.2",
-            ],
+            'db_xrefs': json.dumps({
+                "RefSeq_ncRNA": ["NR_052854"],
+                "wormbase_transcript": ["T05C7.2"],
+            }),
             'feature_location_end': 58711,
             'feature_location_start': 58691,
             'feature_type': 'misc_RNA',

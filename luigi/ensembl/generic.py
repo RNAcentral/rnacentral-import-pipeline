@@ -127,11 +127,7 @@ class EnsemblImporter(BioImporter):
         note = feature.qualifiers.get('note', [])
         if len(note) > 1:
             note = note[1:]
-        parsed = coll.defaultdict(list)
-        for entry in note:
-            key, value = entry.split('=', 1)
-            parsed[key].append(value)
-        return json.dumps(dict(parsed))
+        return self.__as_grouped_json__(note, '=')
 
     def primary_id(self, annotations, feature):
         transcript = self.transcript(feature)
@@ -146,6 +142,10 @@ class EnsemblImporter(BioImporter):
             type=ncrna,
         )
 
+    def db_xrefs(self, feature):
+        raw = feature.qualifiers.get('db_xref', [])
+        return self.__as_grouped_json__(raw, ':')
+
     def entry_specific_data(self, feature):
         start, end = sorted([int(feature.location.start),
                              int(feature.location.end)])
@@ -157,7 +157,7 @@ class EnsemblImporter(BioImporter):
         return {
             'primary_id': self.transcript(feature),
             'assembly_info': self.assembly_info(feature),
-            'db_xrefs': feature.qualifiers.get('db_xref', []),
+            'db_xrefs': self.db_xrefs(feature),
             'feature_location_start': start,
             'feature_location_end': end,
             'feature_type': feature.type,
@@ -175,6 +175,13 @@ class EnsemblImporter(BioImporter):
         data['description'] = self.description(annotations, feature)
         data['sequence'] = self.sequence(annotations, feature)
         return [data]
+
+    def __as_grouped_json__(self, raw, split):
+        parsed = coll.defaultdict(list)
+        for entry in raw:
+            key, value = entry.split(split, 1)
+            parsed[key].append(value)
+        return json.dumps(dict(parsed))
 
 
 if __name__ == '__main__':
