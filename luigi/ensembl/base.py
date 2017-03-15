@@ -182,6 +182,24 @@ class OutputWriters(object):
             self.locations.writerow(line)
 
 
+@attr.s(frozen=True, slots=True)
+class GeneInfo(object):
+    description = attr.ib(validator=is_a(basestring))
+
+    @classmethod
+    def build(cls, feature):
+        description = qualifier_value(feature, 'note', '^(.+)$',
+                                      max_allowed=None)
+        description = description or ''
+        return cls(
+            description=' '.join(description)
+        )
+
+    def is_pseudogene(self):
+        pattern = r'\bpseudogene\b'
+        return bool(re.search(pattern, self.description, re.IGNORECASE))
+
+
 def qualifier_value(feature, name, pattern, max_allowed=1):
     values = set()
     for note in feature.qualifiers.get(name, []):
@@ -210,9 +228,26 @@ class BioImporter(luigi.Task):
 
     __metaclass__ = abc.ABCMeta
 
-    def is_pseudogene(self, feature):
+    def gene(self, feature):
+        return qualifier_value(feature, 'gene', '^(.+)$')
+
+    def is_gene(self, feature):
+        return feature.type == 'gene'
+
+    def update_gene_info(self, known, gene):
+        name = self.gene(gene)
+        if name in known:
+            LOGGER.error("Duplicate gene %s, may result in bad data", name)
+        known[name] = GeneInfo.build(gene)
+        return known
+
+    def is_pseudogene(self, feature, genes):
         notes = feature.qualifiers.get('note', [])
-        return any('pseudogene' in n for n in notes)
+        if any('pseudogene' in n for n in notes):
+            return True
+
+        gene = self.gene(feature)
+        return genes[gene].is_pseudogene()
 
     def is_ncrna(self, feature):
         """
@@ -256,11 +291,17 @@ class BioImporter(luigi.Task):
         # Maybe should process all genes to find the names of things? That way
         # we can have a better description than something super generic based
         # off the annotations? We could also extract the locus tags this way.
+        genes = {}
         for record in SeqIO.parse(input_file, self.format()):
             annotations = self.standard_annotations(record)
             for feature in record.features:
-                if not self.is_ncrna(feature) or self.is_pseudogene(feature):
+                if self.is_gene(feature):
+                    genes = self.update_gene_info(genes, feature)
+
+                if not self.is_ncrna(feature) or \
+                        self.is_pseudogene(feature, genes):
                     continue
+
                 for data in self.rnacentral_entries(annotations, feature):
                     entry = RNAcentralEntry(**data)
                     if entry.is_valid():

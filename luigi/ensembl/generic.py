@@ -137,9 +137,6 @@ class EnsemblImporter(BioImporter):
             transcript=transcript,
         )
 
-    def gene(self, feature):
-        return qualifier_value(feature, 'gene', '^(.+)$')
-
     def transcript(self, feature):
         return qualifier_value(feature, 'note', '^transcript_id=(.+)$')
 

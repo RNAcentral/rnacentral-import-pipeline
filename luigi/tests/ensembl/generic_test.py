@@ -254,3 +254,12 @@ class HumanTests(BothParsingTest):
         assert {(e['accession'], e['database']) for e in entries} == set([
             ('ENST00000540868.1', 'ENSEMBL'),
         ])
+
+    def test_marks_transcript_as_pseudogene_if_gene_is_pseudo(self):
+        feature = self.features['misc_RNA', 'ENSG00000252079.1']
+        assert self.importer.is_pseudogene(feature) is True
+
+    def test_it_does_not_create_entries_for_pseudogene(self):
+        entries = self.importer.data(self.filename)
+        entries = {e.optional_id for e in entries}
+        assert 'ENSG00000252079.1' not in entries
