@@ -210,6 +210,8 @@ class EnsemblImporter(BioImporter):
         parsed = coll.defaultdict(list)
         for entry in raw:
             key, value = entry.split(split, 1)
+            if key == 'RNACentral':
+                key = 'RNAcentral'
             parsed[key].append(value)
         return json.dumps(dict(parsed))
 
