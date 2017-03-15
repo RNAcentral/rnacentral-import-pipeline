@@ -61,11 +61,7 @@ class Gencode(BaseImporter):
         return json.dumps(xrefs)
 
     def gencode_accession(self, entry):
-        return '{parent}:{gencode}:{type}'.format(
-            parent=entry['parent_accession'],
-            gencode=self.gencode_primary_id(entry),
-            type=entry['ncrna_class'],
-        )
+        return self.gencode_primary_id(entry)
 
     def gencode_primary_id(self, entry):
         for value in entry['db_xrefs']['OTTT']:

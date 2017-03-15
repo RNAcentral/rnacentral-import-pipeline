@@ -64,3 +64,11 @@ class OverridingEnsemblDataTest(ut.TestCase):
 class CompleteGencodeTest(ut.TestCase):
     def test_it_gets_all_gencode_entries(self):
         assert len(list(self.loader.data(self.filename))) == 1000
+
+    def test_it_sets_accession_to_transcript_id(self):
+        entries = self.rnacentral_entries('misc_RNA', 'ENSG00000255746.1')
+        assert len(entries) == 1
+        assert {(e['accession'], e['database']) for e in entries} == set([
+            ('ENST00000540868.1', 'ENSEMBL'),
+            ('OTTHUMT00000421260', 'GENCODE'),
+        ])

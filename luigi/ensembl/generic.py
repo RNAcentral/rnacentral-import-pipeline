@@ -169,16 +169,8 @@ class EnsemblImporter(BioImporter):
 
     def accession(self, annotations, feature):
         transcript = self.transcript(feature)
-        ncrna = self.ncrna(feature)
         assert transcript, 'Cannot create a primary id without transcript id'
-        assert ncrna, 'Cannot create a primary id without ncRNA type'
-        assert annotations['parent_accession']
-
-        return '{parent}:{transcript}:{type}'.format(
-            parent=annotations['parent_accession'],
-            transcript=transcript,
-            type=ncrna,
-        )
+        return transcript
 
     def db_xrefs(self, feature):
         raw = feature.qualifiers.get('db_xref', [])

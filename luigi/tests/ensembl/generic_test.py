@@ -196,6 +196,11 @@ class CompleteParsingTest(BothParsingTest):
         data = self.importer.data(self.filename)
         assert len(list(data)) == 16272
 
+    def test_it_sets_accession_to_transcript_id(self):
+        entries = self.rnacentral_entries('misc_RNA', "WBGene00198969")
+        assert len(entries) == 1
+        assert entries[0]['accession'] == "cTel79B.1"
+
 
 class TRNATest(BothParsingTest):
     def test_gets_all_tRNA(self):
@@ -239,3 +244,14 @@ class ScaRNATest(FeatureParsingTest):
             'primary_id': 'ENST00000516089.1',
             'product': 'scaRNA',
         }
+
+
+class HumanTests(BothParsingTest):
+    filename = 'data/Homo_sapiens.GRCh38.87.chromosome.12.dat'
+
+    def test_it_sets_accession_to_transcript_id(self):
+        entries = self.rnacentral_entries('misc_RNA', 'ENSG00000255746.1')
+        assert len(entries) == 1
+        assert {(e['accession'], e['database']) for e in entries} == set([
+            ('ENST00000540868.1', 'ENSEMBL'),
+        ])
