@@ -22,6 +22,7 @@ import logging
 from rnacentral_entry import RNAcentralEntry
 
 import luigi
+from luigi.local_target import AtomicLocalFile, atomic_file
 from Bio import SeqIO
 
 import attr
@@ -37,11 +38,11 @@ class Output(object):
     This is a container for all output files that the import process will
     create.
     """
-    short_sequences = attr.ib(validator=is_a(luigi.LocalTarget))
-    long_sequences = attr.ib(validator=is_a(luigi.LocalTarget))
-    references = attr.ib(validator=is_a(luigi.LocalTarget))
-    accession = attr.ib(validator=is_a(luigi.LocalTarget))
-    locations = attr.ib(validator=is_a(luigi.LocalTarget))
+    short_sequences = attr.ib(validator=is_a(AtomicLocalFile))
+    long_sequences = attr.ib(validator=is_a(AtomicLocalFile))
+    references = attr.ib(validator=is_a(AtomicLocalFile))
+    accession = attr.ib(validator=is_a(AtomicLocalFile))
+    locations = attr.ib(validator=is_a(AtomicLocalFile))
 
     @classmethod
     def build(cls, base, database, prefix):
@@ -71,11 +72,11 @@ class Output(object):
             return path
 
         return cls(
-            short_sequences=luigi.LocalTarget(path_to('short')),
-            long_sequences=luigi.LocalTarget(path_to('long')),
-            references=luigi.LocalTarget(path_to('refs')),
-            accession=luigi.LocalTarget(path_to('ac_info')),
-            locations=luigi.LocalTarget(path_to('genomic_locations')),
+            short_sequences=atomic_file(path_to('short')),
+            long_sequences=atomic_file(path_to('long')),
+            references=atomic_file(path_to('refs')),
+            accession=atomic_file(path_to('ac_info')),
+            locations=atomic_file(path_to('genomic_locations')),
         )
 
     def exists(self):
@@ -87,11 +88,25 @@ class Output(object):
         exists : bool
             True of all outputs exist.
         """
-        return self.short_sequences.exists() and \
-            self.long_sequences.exists() and \
-            self.references.exists() and \
-            self.accession.exists() and \
-            self.locations.exists()
+
+        def exists(target):
+            return os.path.exists(target.path)
+
+        return exists(self.short_sequences) and \
+            exists(self.long_sequences) and \
+            exists(self.references) and \
+            exists(self.accession) and \
+            exists(self.locations)
+
+    def __enter__(self):
+        return OutputWriters.build(self)
+
+    def __exit__(self, *args):
+        self.short_sequences.close()
+        self.long_sequences.close()
+        self.references.close()
+        self.accession.close()
+        self.locations.close()
 
 
 @attr.s()
@@ -135,8 +150,7 @@ class OutputWriters(object):
             -------
             A csv writer to the location of the target file.
             """
-            handle = open(target.fn, 'wb')
-            return csv.writer(handle, delimiter=',', quotechar='"',
+            return csv.writer(target, delimiter=',', quotechar='"',
                               quoting=csv.QUOTE_ALL, lineterminator='\n')
 
         return cls(
@@ -153,25 +167,13 @@ class OutputWriters(object):
         else:
             self.long_sequences.writerow(data.format_sequence_line())
 
+        self.accessions.writerow(data.format_ac_line())
+
         for line in data.format_references():
             self.references.writerow(line)
-        self.accessions.writerow(data.format_ac_line())
+
         for line in data.format_genomic_locations():
             self.locations.writerow(line)
-
-    def close(self):
-        self.short_sequences.close()
-        self.long_sequences.close()
-        self.references.close()
-        self.accessions.close()
-        self.locations.close()
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, *args):
-        # TODO We should really close all the handles
-        pass
 
 
 def qualifier_value(feature, name, pattern, max_allowed=1):
@@ -221,6 +223,10 @@ class BioImporter(luigi.Task):
     def format(self):
         pass
 
+    @abc.abstractmethod
+    def output(self):
+        return Output()
+
     def sequence(self, annotations, feature):
         """
         Extract the sequence of the given feature.
@@ -247,6 +253,6 @@ class BioImporter(luigi.Task):
                         yield entry
 
     def run(self):
-        with OutputWriters.build(self.output()) as writers:
+        with self.output() as writers:
             for entry in self.data(self.input_file):
                 writers.write(entry)
