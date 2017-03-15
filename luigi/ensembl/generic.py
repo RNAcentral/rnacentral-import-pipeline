@@ -151,6 +151,8 @@ class EnsemblImporter(BioImporter):
             return 'ncRNA'
         if base_type in MITO_TYPES:
             return base_type.replace('Mt_')
+        if base_type == 'scaRNA':
+            return 'snRNA'
         return base_type
 
     def note(self, feature):
