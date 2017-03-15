@@ -143,6 +143,12 @@ class EnsemblImporter(BioImporter):
     def transcript(self, feature):
         return qualifier_value(feature, 'note', '^transcript_id=(.+)$')
 
+    def product(self, feature):
+        base_type = feature.qualifiers.get('note', [''])[0]
+        if base_type == 'scaRNA':
+            return base_type
+        return ''
+
     def ncrna(self, feature):
         base_type = feature.qualifiers.get('note', [''])[0]
         if base_type in LNC_ALIASES:
@@ -198,6 +204,7 @@ class EnsemblImporter(BioImporter):
             'note': self.note(feature),
             'locus_tag': feature.qualifiers.get('locus_tag', ''),
             'optional_id': self.gene(feature),
+            'product': self.product(feature),
         }
 
     def rnacentral_entries(self, annotations, feature, **kwargs):

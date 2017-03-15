@@ -174,6 +174,7 @@ class LoadingTests(FeatureParsingTest):
             'locus_tag': '',
             'primary_id': 'T05C7.2',
             'optional_id': 'WBGene00166500',
+            'product': '',
         }
 
 
@@ -206,3 +207,35 @@ class TRNATest(BothParsingTest):
         data = self.importer.data(self.filename)
         rna_types = set(r.ncrna_class for r in data)
         assert 'tRNA_pseudogene' not in rna_types
+
+
+class ScaRNATest(FeatureParsingTest):
+    filename = 'data/Homo_sapiens.GRCh38.87.chromosome.12.dat'
+
+    def test_it_sets_rna_type_to_snRNA(self):
+        assert self.ncrna('misc_RNA', 'ENSG00000251898.1') == 'snRNA'
+        assert self.ncrna('misc_RNA', 'ENSG00000256948.1') == 'antisense'
+
+    def test_it_sets_product_to_snaRNA(self):
+        assert self.product('misc_RNA', 'ENSG00000251898.1') == 'scaRNA'
+        assert self.entry_specific_data('misc_RNA', 'ENSG00000251898.1') == {
+            'assembly_info': [
+                {'complement': True, 'primary_end': 6581609, 'primary_start': 6581474}
+            ],
+            'db_xrefs': json.dumps({
+                "UCSC": ["uc001qpr.2"],
+                "RNAcentral": ["URS00006C9D52"],
+                "HGNC_trans_name": ["SCARNA11-201"],
+                "RefSeq_ncRNA": ["NR_003012"]
+            }),
+            'note': json.dumps({"transcript_id": ["ENST00000516089.1"]}),
+            'feature_location_end': 6581609,
+            'feature_location_start': 6581474,
+            'feature_type': 'misc_RNA',
+            'gene': 'ENSG00000251898.1',
+            'locus_tag': '',
+            'ncrna_class': 'snRNA',
+            'optional_id': 'ENSG00000251898.1',
+            'primary_id': 'ENST00000516089.1',
+            'product': 'scaRNA',
+        }
