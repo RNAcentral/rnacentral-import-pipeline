@@ -31,6 +31,12 @@ from attr.validators import instance_of as is_a
 
 LOGGER = logging.getLogger(__name__)
 
+CODING_RNA_TYPES = set([
+    'tec',
+    'processed_transcript',
+    'retained_intron',
+])
+
 
 @attr.s()
 class Output(object):
@@ -209,7 +215,15 @@ class BioImporter(luigi.Task):
         return any('pseudogene' in n for n in notes)
 
     def is_ncrna(self, feature):
-        return feature.type in {'misc_RNA', 'ncRNA'}
+        """
+        Checks if the feature is that of ncRNA. This requires that the type be
+        one of misc_RNA or ncRNA and that the ncRNA type is not 'TEC'.
+        """
+
+        # The checking the first entry in 'note' is a quick and dirty way of
+        # getting the ncRNA type.
+        return feature.type in {'misc_RNA', 'ncRNA'} and \
+            feature.qualifiers['note'][0].lower() not in CODING_RNA_TYPES
 
     def build_output(self, destination, input_file):
         prefix = os.path.basename(input_file)

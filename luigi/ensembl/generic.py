@@ -22,6 +22,24 @@ import luigi
 from ensembl.base import BioImporter
 from ensembl.base import qualifier_value
 
+LNC_ALIASES = set([
+    'sense_intronic',
+    'sense_overlapping',
+    'macro_lncRNA',
+    'bidirectional_promoter_lncRNA',
+])
+
+MITO_TYPES = set([
+    'Mt_rRNA',
+    'Mt_tRNA',
+])
+
+NC_ALIASES = set([
+    '3prime_overlapping_ncRNA',
+    'known_ncrna',
+    'non_coding',
+])
+
 
 class EnsemblImporter(BioImporter):
     """
@@ -126,7 +144,14 @@ class EnsemblImporter(BioImporter):
         return qualifier_value(feature, 'note', '^transcript_id=(.+)$')
 
     def ncrna(self, feature):
-        return feature.qualifiers.get('note', [''])[0]
+        base_type = feature.qualifiers.get('note', [''])[0]
+        if base_type in LNC_ALIASES:
+            return 'lncRNA'
+        if base_type in NC_ALIASES:
+            return 'ncRNA'
+        if base_type in MITO_TYPES:
+            return base_type.replace('Mt_')
+        return base_type
 
     def note(self, feature):
         note = feature.qualifiers.get('note', [])
