@@ -184,8 +184,7 @@ class CompleteParsingTest(BothParsingTest):
             "Caenorhabditis elegans (C.elegans) piRNA transcript T05C7.2"
 
     def test_can_create_reasonable_accession(self):
-        assert self.accession('misc_RNA', "WBGene00202392") == \
-            "IV.WBcel235:cTel79B.2:ncRNA"
+        assert self.accession('misc_RNA', "WBGene00202392") == "cTel79B.2"
 
     def test_produces_valid_data(self):
         entry = self.rnacentral_entries('misc_RNA', "WBGene00198969")
@@ -218,7 +217,7 @@ class ScaRNATest(FeatureParsingTest):
     filename = 'data/Homo_sapiens.GRCh38.87.chromosome.12.dat'
 
     def test_it_sets_rna_type_to_snRNA(self):
-        assert self.ncrna('misc_RNA', 'ENSG00000251898.1') == 'snRNA'
+        assert self.ncrna('misc_RNA', 'ENSG00000251898.1') == 'snoRNA'
         assert self.ncrna('misc_RNA', 'ENSG00000256948.1') == 'antisense'
 
     def test_it_sets_product_to_snaRNA(self):
@@ -239,7 +238,7 @@ class ScaRNATest(FeatureParsingTest):
             'feature_type': 'misc_RNA',
             'gene': 'ENSG00000251898.1',
             'locus_tag': '',
-            'ncrna_class': 'snRNA',
+            'ncrna_class': 'snoRNA',
             'optional_id': 'ENSG00000251898.1',
             'primary_id': 'ENST00000516089.1',
             'product': 'scaRNA',
