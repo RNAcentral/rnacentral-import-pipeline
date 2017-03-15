@@ -19,7 +19,9 @@ bit special in that it also has GENCODE annotations. These have to be handled
 differently. Notably, we provide a separate xref for these annotations as well.
 """
 
+import re
 import copy
+import json
 
 import luigi
 
@@ -41,7 +43,7 @@ class Gencode(BaseImporter):
         two databases despite being in the same database to provide users clear
         information about the high quality annotations.
         """
-        return any(xref.startswith('OTTT:') for xref in entry['db_xrefs'])
+        return 'OTTT' in json.loads(entry['db_xrefs'])
 
     def gencode_references(self, _):
         return [{
@@ -53,9 +55,10 @@ class Gencode(BaseImporter):
         }]
 
     def gencode_xrefs(self, entry):
-        xrefs = [v for v in entry['db_xrefs'] if not v.startswith('OTTT:')]
-        xrefs.append('Ensembl:%s' % entry['accession'])
-        return xrefs
+        xrefs = dict(entry['db_xrefs'])
+        del xrefs['OTTT']
+        xrefs['Ensembl'] = entry['accession']
+        return json.dumps(xrefs)
 
     def gencode_accession(self, entry):
         return '{parent}:{gencode}:{type}'.format(
@@ -65,10 +68,22 @@ class Gencode(BaseImporter):
         )
 
     def gencode_primary_id(self, entry):
-        for xref in entry['db_xrefs']:
-            if xref.startswith('OTTT:OTTHUMT'):
-                return xref[4:]
+        for value in entry['db_xrefs']['OTTT']:
+            if re.match(r'^OTT\w+T\d+$', value):
+                return value
         raise ValueError("Cannot find GENCODE primary id")
+
+    def gencode_description(self, entry):
+        name = entry['common_name'] or entry['species']
+        rna_type = entry['ncrna_class']
+        gencode_id = self.gencode_primary_id(entry)
+        assert name, "Must have a name to create description"
+        assert rna_type, "Must have an rna_type to create description"
+        return '{common_name} {rna_type} {gencode_id}'.format(
+            common_name=name,
+            rna_type=rna_type,
+            gencode_id=gencode_id,
+        )
 
     def gencode_entry(self, entry):
         """
@@ -76,12 +91,16 @@ class Gencode(BaseImporter):
         assumes that the entry has GENCODE data.
         """
 
-        return entry.update({
+        entry['db_xrefs'] = json.loads(entry['db_xrefs'])
+        entry.update({
             'primary_id': self.gencode_primary_id(entry),
             'accession': self.gencode_accession(entry),
             'db_xrefs': self.gencode_xrefs(entry),
             'references': self.gencode_references(entry),
+            'database': 'GENCODE',
+            'description': self.gencode_description(entry),
         })
+        return entry
 
     def rnacentral_entries(self, annotations, feature,
                            ignore_nongencode=False, gencode_only=False,
