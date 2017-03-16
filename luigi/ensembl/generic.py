@@ -100,26 +100,20 @@ class EnsemblImporter(BioImporter):
             common_name = match.group(1)
             species = re.sub(pattern, '', species).strip()
 
-        taxid = None
-        source = record.features[0]
-        if source.type == 'source':
-            taxid = int(qualifier_value(source, 'db_xref', r'^taxon:(\d+)$'))
-
-        return {
+        info = super(EnsemblImporter, self).standard_annotations(record)
+        info.update({
             'accession': None,
             'database': 'ENSEMBL',
-            'lineage': '; '.join(record.annotations['taxonomy']),
             'mol_type': 'genomic DNA',
             'pseudogene': 'N',
             'parent_accession': record.id,
             'seq_version': '',
             'common_name': common_name,
             'species': species,
-            'ncbi_tax_id': taxid,
             'is_composite': 'N',
             'references': self.references(record),
-            'sequence': record.seq,
-        }
+        })
+        return info
 
     def description(self, annotations, feature):
         species = annotations['species']

@@ -26,6 +26,12 @@ class BaseTest(Base):
     filename = 'data/Caenorhabditis_elegans.WBcel235.87.chromosome.IV.dat'
     importer_class = EnsemblImporter
 
+    def is_pseudogene(self, *key):
+        feature = self.features[key]
+        gene = self.features['gene', key[1]]
+        info = self.importer.update_gene_info({}, gene)
+        return self.importer.is_pseudogene(feature, info)
+
 
 class FeatureParsingTest(BaseTest):
     def __getattr__(self, key):
@@ -58,9 +64,9 @@ class SimpleTests(FeatureParsingTest):
         assert self.importer.standard_annotations(self.record) == {
             'database': 'ENSEMBL',
             'lineage': (
-                'Eukaryota; Opisthokonta; Metazoa; Eumetazoa; Bilateria; '
-                'Protostomia; Ecdysozoa; Nematoda; Chromadorea; Rhabditida; '
-                'Rhabditoidea; Rhabditidae; Peloderinae'
+                "Eukaryota; Metazoa; Ecdysozoa; Nematoda; Chromadorea; "
+                "Rhabditida; Rhabditoidea; Rhabditidae; Peloderinae; "
+                "Caenorhabditis; Caenorhabditis elegans"
             ),
             'mol_type': 'genomic DNA',
             'pseudogene': 'N',
@@ -120,7 +126,8 @@ class LongSpeciesTests(FeatureParsingTest):
             'lineage': (
                 'Eukaryota; Fungi; Dikarya; Basidiomycota; Agaricomycotina; '
                 'Agaricomycetes; Russulales; Russulaceae; Russula; '
-                'environmental samples'
+                'environmental samples; uncultured ectomycorrhiza '
+                '(Russula brevipes var. acrior)'
             ),
             'mol_type': 'genomic DNA',
             'pseudogene': 'N',
@@ -256,10 +263,17 @@ class HumanTests(BothParsingTest):
         ])
 
     def test_marks_transcript_as_pseudogene_if_gene_is_pseudo(self):
-        feature = self.features['misc_RNA', 'ENSG00000252079.1']
-        assert self.importer.is_pseudogene(feature) is True
+        assert self.is_pseudogene('misc_RNA', 'ENSG00000252079.1') is True
 
     def test_it_does_not_create_entries_for_pseudogene(self):
         entries = self.importer.data(self.filename)
         entries = {e.optional_id for e in entries}
         assert 'ENSG00000252079.1' not in entries
+
+    def test_it_normalizes_lineage_to_standard_one(self):
+        entries = self.rnacentral_entries('misc_RNA', 'ENSG00000255746.1')
+        assert entries[0]['lineage'] == (
+            "Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; "
+            "Euteleostomi; Mammalia; Eutheria; Euarchontoglires; Primates; "
+            "Haplorrhini; Catarrhini; Hominidae; Homo; Homo sapiens"
+        )

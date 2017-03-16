@@ -24,6 +24,7 @@ from rnacentral_entry import RNAcentralEntry
 import luigi
 from luigi.local_target import AtomicLocalFile, atomic_file
 from Bio import SeqIO
+import requests
 
 import attr
 from attr.validators import instance_of as is_a
@@ -36,6 +37,8 @@ CODING_RNA_TYPES = set([
     'processed_transcript',
     'retained_intron',
 ])
+
+TAX_URL = 'https://www.ebi.ac.uk/ena/data/taxonomy/v1/taxon/tax-id/{taxon_id}'
 
 
 @attr.s()
@@ -228,6 +231,10 @@ class BioImporter(luigi.Task):
 
     __metaclass__ = abc.ABCMeta
 
+    def __init__(self, *args, **kwargs):
+        super(BioImporter, self).__init__(*args, **kwargs)
+        self._taxonomy = {}
+
     def gene(self, feature):
         return qualifier_value(feature, 'gene', '^(.+)$')
 
@@ -283,9 +290,32 @@ class BioImporter(luigi.Task):
         return str(feature.extract(annotations['sequence']))
 
     def standard_annotations(self, record):
+        taxid = None
+        source = record.features[0]
+        if source.type == 'source':
+            taxid = int(qualifier_value(source, 'db_xref', r'^taxon:(\d+)$'))
+
+        assert taxid is not None, "Must have taxon id to get lineage"
+        lineage = None
+        if taxid >= 0:
+            lineage = self.lineage(taxid)
+            assert lineage, "Could not get lineage of %i" % taxid
+
         return {
-            'sequence': record.seq
+            'sequence': record.seq,
+            'ncbi_tax_id': taxid,
+            'lineage': lineage,
         }
+
+    def lineage(self, taxon_id):
+        if taxon_id not in self._taxonomy:
+            response = requests.get(TAX_URL.format(taxon_id=taxon_id))
+            response.raise_for_status()
+            data = response.json()
+            self._taxonomy[taxon_id] = '{lineage}{name}'.format(
+                lineage=data['lineage'],
+                name=data['scientificName'])
+        return self._taxonomy[taxon_id]
 
     def data(self, input_file):
         # Maybe should process all genes to find the names of things? That way
