@@ -41,6 +41,29 @@ NC_ALIASES = set([
     'non_coding',
 ])
 
+RFAM_TYPES = {
+    'Y_RNA': 'Y_RNA',
+    'Metazoa_SRP': 'SRP_RNA',
+    'uc_338': 'lncRNA',
+    'RMST_8': 'lncRNA',
+    '7SK': 'snoRNA',
+    'DLX6-AS1': 'lncRNA',
+    'FAS-AS1': 'lncRNA',
+    'HOXB13-AS1': 'lncRNA',
+    'PVT1': 'lncRNA',
+    'RFPL3-AS1': 'lncRNA',
+    'ST7-OT3': 'lncRNA',
+    'TUSC7': 'lncRNA',
+    'VIS1': 'lncRNA',
+}
+
+MGI_TYPES = {
+    'Terc': 'telomerase_RNA',
+    'Rn7s6': 'SRP_RNA',
+    'Nkx2-2os': 'lncRNA',
+    # 'Nbr1-203': 'protein',
+}
+
 
 class EnsemblImporter(BioImporter):
     """
@@ -156,14 +179,9 @@ class EnsemblImporter(BioImporter):
         if base_type == 'misc_RNA':
             notes = json.loads(self.db_xrefs(feature))
             rfam = notes.get('RFAM_trans_name', [''])[0]
-            if rfam.startswith('Y_RNA'):
-                return 'Y_RNA'
-            if rfam.startswith('Metazoa_SRP'):
-                return 'SRP_RNA'
-            if rfam.startswith('uc_338'):
-                return 'lncRNA'
-            if rfam.startswith('RMST_8'):
-                return 'lncRNA'
+            for key, value in RFAM_TYPES.items():
+                if rfam.startswith(key):
+                    return value
         return base_type
 
     def note(self, feature):
