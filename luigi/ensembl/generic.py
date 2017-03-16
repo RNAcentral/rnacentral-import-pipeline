@@ -202,13 +202,13 @@ class EnsemblImporter(BioImporter):
         return [data]
 
     def __as_grouped_json__(self, raw, split):
-        parsed = coll.defaultdict(list)
+        parsed = coll.defaultdict(set)
         for entry in raw:
             key, value = entry.split(split, 1)
             if key == 'RNACentral':
                 key = 'RNAcentral'
-            parsed[key].append(value)
-        return json.dumps(dict(parsed))
+            parsed[key].add(value)
+        return json.dumps({k: sorted(v) for k, v in parsed.items()})
 
 
 if __name__ == '__main__':
