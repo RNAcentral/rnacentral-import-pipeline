@@ -153,7 +153,7 @@ class EnsemblImporter(BioImporter):
         if base_type in NC_ALIASES:
             return 'ncRNA'
         if base_type in MITO_TYPES:
-            return base_type.replace('Mt_')
+            return base_type.replace('Mt_', '')
         if base_type == 'scaRNA':
             return 'snoRNA'
         return base_type
