@@ -27,6 +27,7 @@ LNC_ALIASES = set([
     'sense_overlapping',
     'macro_lncRNA',
     'bidirectional_promoter_lncRNA',
+    'lincRNA',
 ])
 
 MITO_TYPES = set([
@@ -102,7 +103,6 @@ class EnsemblImporter(BioImporter):
 
         info = super(EnsemblImporter, self).standard_annotations(record)
         info.update({
-            'accession': None,
             'database': 'ENSEMBL',
             'mol_type': 'genomic DNA',
             'pseudogene': 'N',
@@ -115,7 +115,13 @@ class EnsemblImporter(BioImporter):
         })
         return info
 
-    def description(self, annotations, feature):
+    def description(self, info, feature):
+        if self.gene(feature) in info.gene_info:
+            current = super(EnsemblImporter, self).description(info, feature)
+            if current:
+                return current
+
+        annotations = info.annotations
         species = annotations['species']
         if annotations.get('common_name', None):
             species += ' (%s)' % annotations['common_name']
@@ -130,9 +136,6 @@ class EnsemblImporter(BioImporter):
             rna_type=rna_type,
             transcript=transcript,
         )
-
-    def transcript(self, feature):
-        return qualifier_value(feature, 'note', '^transcript_id=(.+)$')
 
     def product(self, feature):
         base_type = feature.qualifiers.get('note', [''])[0]
@@ -158,7 +161,7 @@ class EnsemblImporter(BioImporter):
             note = note[1:]
         return self.__as_grouped_json__(note, '=')
 
-    def accession(self, annotations, feature):
+    def accession(self, feature):
         transcript = self.transcript(feature)
         assert transcript, 'Cannot create a primary id without transcript id'
         return transcript
@@ -188,14 +191,14 @@ class EnsemblImporter(BioImporter):
             'locus_tag': feature.qualifiers.get('locus_tag', ''),
             'optional_id': self.gene(feature),
             'product': self.product(feature),
+            'accession': self.accession(feature),
         }
 
-    def rnacentral_entries(self, annotations, feature, **kwargs):
-        data = dict(annotations)
+    def rnacentral_entries(self, summary, feature, **kwargs):
+        data = dict(summary.annotations)
         data.update(self.entry_specific_data(feature))
-        data['accession'] = self.accession(annotations, feature)
-        data['description'] = self.description(annotations, feature)
-        data['sequence'] = self.sequence(annotations, feature)
+        data['description'] = self.description(summary, feature)
+        data['sequence'] = self.sequence(summary, feature)
         return [data]
 
     def __as_grouped_json__(self, raw, split):

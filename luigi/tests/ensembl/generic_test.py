@@ -27,10 +27,10 @@ class BaseTest(Base):
     importer_class = EnsemblImporter
 
     def is_pseudogene(self, *key):
-        feature = self.features[key]
         gene = self.features['gene', key[1]]
-        info = self.importer.update_gene_info({}, gene)
-        return self.importer.is_pseudogene(feature, info)
+        summary = self.importer.summary(self.record)
+        summary = self.importer.update_gene_info(summary, gene)
+        return self.importer.is_pseudogene(summary, self.features[key])
 
 
 class FeatureParsingTest(BaseTest):
@@ -44,9 +44,13 @@ class FeatureParsingTest(BaseTest):
 class BothParsingTest(BaseTest):
     def __getattr__(self, key):
         if hasattr(self.importer, key):
-            annotation = self.importer.standard_annotations(self.record)
-            fn = getattr(self.importer, key)
-            return lambda *key: fn(annotation, self.features[key])
+            def wrapped(*selector):
+                gene = self.features['gene', selector[1]]
+                summary = self.importer.summary(self.record)
+                summary = self.importer.update_gene_info(summary, gene)
+                method = getattr(self.importer, key)
+                return method(summary, self.features[selector])
+            return wrapped
         raise AttributeError("Unknown attribute %s" % key)
 
 
@@ -76,7 +80,6 @@ class SimpleTests(FeatureParsingTest):
             'species': "Caenorhabditis elegans",
             'ncbi_tax_id':  6239,
             'is_composite': 'N',
-            'accession': None,
             'references': [{
                 'authors': "Andrew Yates, Wasiu Akanni, M. Ridwan Amode, Daniel Barrell, Konstantinos Billis, Denise Carvalho-Silva, Carla Cummins, Peter Clapham, Stephen Fitzgerald, Laurent Gil1 Carlos Garcín Girón, Leo Gordon, Thibaut Hourlier, Sarah E. Hunt, Sophie H. Janacek, Nathan Johnson, Thomas Juettemann, Stephen Keenan, Ilias Lavidas, Fergal J. Martin, Thomas Maurel, William McLaren, Daniel N. Murphy, Rishi Nag, Michael Nuhn, Anne Parker, Mateus Patricio, Miguel Pignatelli, Matthew Rahtz, Harpreet Singh Riat, Daniel Sheppard, Kieron Taylor, Anja Thormann, Alessandro Vullo, Steven P. Wilder, Amonida Zadissa, Ewan Birney, Jennifer Harrow, Matthieu Muffato, Emily Perry, Magali Ruffier, Giulietta Spudich, Stephen J. Trevanion, Fiona Cunningham, Bronwen L. Aken, Daniel R. Zerbino, Paul Flicek",
                 'location': "Nucleic Acids Res. 2016 44 Database issue:D710-6",
@@ -84,7 +87,6 @@ class SimpleTests(FeatureParsingTest):
                 'pmid': 26687719,
                 'doi': "10.1093/nar/gkv115",
             }],
-            'sequence': self.record.seq,
         }
 
     def test_can_get_transcript_id(self):
@@ -137,12 +139,13 @@ class LongSpeciesTests(FeatureParsingTest):
             'species': 'uncultured ectomycorrhiza',
             'ncbi_tax_id':  446167,
             'is_composite': 'N',
-            'accession': None,
 
             # Note this is *NOT* the reference in the file and this is on
             # purpose. The parser here is not a general EMBL format parser, but
             # a parser for the data produced by Ensembl. For this reason we
-            # only use a default reference, and not what may be in the file.
+            # only use a default reference, and not what may be in the file as
+            # when parsing Ensembl data there will not be a reference in the
+            # file, but there will be a hardcoded one we should use.
             'references': [{
                 'authors': """Andrew Yates, Wasiu Akanni, M. Ridwan Amode, Daniel Barrell, Konstantinos Billis, Denise Carvalho-Silva, Carla Cummins, Peter Clapham, Stephen Fitzgerald, Laurent Gil1 Carlos Garcín Girón, Leo Gordon, Thibaut Hourlier, Sarah E. Hunt, Sophie H. Janacek, Nathan Johnson, Thomas Juettemann, Stephen Keenan, Ilias Lavidas, Fergal J. Martin, Thomas Maurel, William McLaren, Daniel N. Murphy, Rishi Nag, Michael Nuhn, Anne Parker, Mateus Patricio, Miguel Pignatelli, Matthew Rahtz, Harpreet Singh Riat, Daniel Sheppard, Kieron Taylor, Anja Thormann, Alessandro Vullo, Steven P. Wilder, Amonida Zadissa, Ewan Birney, Jennifer Harrow, Matthieu Muffato, Emily Perry, Magali Ruffier, Giulietta Spudich, Stephen J. Trevanion, Fiona Cunningham, Bronwen L. Aken, Daniel R. Zerbino, Paul Flicek""",
                 'location': "Nucleic Acids Res. 2016 44 Database issue:D710-6",
@@ -150,7 +153,6 @@ class LongSpeciesTests(FeatureParsingTest):
                 'pmid': 26687719,
                 'doi': "10.1093/nar/gkv115",
             }],
-            'sequence': self.record.seq,
         }
 
 
@@ -182,16 +184,17 @@ class LoadingTests(FeatureParsingTest):
             'primary_id': 'T05C7.2',
             'optional_id': 'WBGene00166500',
             'product': '',
+            'accession': 'T05C7.2',
         }
+
+    def test_can_create_reasonable_accession(self):
+        assert self.accession('misc_RNA', "WBGene00202392") == "cTel79B.2"
 
 
 class CompleteParsingTest(BothParsingTest):
     def test_can_create_reasonable_description(self):
         assert self.description('misc_RNA', "WBGene00166500") == \
             "Caenorhabditis elegans (C.elegans) piRNA transcript T05C7.2"
-
-    def test_can_create_reasonable_accession(self):
-        assert self.accession('misc_RNA', "WBGene00202392") == "cTel79B.2"
 
     def test_produces_valid_data(self):
         entry = self.rnacentral_entries('misc_RNA', "WBGene00198969")
@@ -249,6 +252,7 @@ class ScaRNATest(FeatureParsingTest):
             'optional_id': 'ENSG00000251898.1',
             'primary_id': 'ENST00000516089.1',
             'product': 'scaRNA',
+            'accession': 'ENST00000516089.1',
         }
 
 
@@ -277,3 +281,13 @@ class HumanTests(BothParsingTest):
             "Euteleostomi; Mammalia; Eutheria; Euarchontoglires; Primates; "
             "Haplorrhini; Catarrhini; Hominidae; Homo; Homo sapiens"
         )
+
+    def test_calls_lincRNA_lncRNA(self):
+        entries = self.rnacentral_entries('misc_RNA', 'ENSG00000256560.1')
+        assert {e['ncrna_class'] for e in entries} == set(['lncRNA'])
+
+    def test_uses_lincRNA_in_description_of_lincRNA(self):
+        entries = self.rnacentral_entries('misc_RNA', 'ENSG00000256560.1')
+        assert {e['description'] for e in entries} == set([
+            "Homo sapiens long intergenic non-protein coding RNA 1486 (ENST00000538041.1)"
+        ])

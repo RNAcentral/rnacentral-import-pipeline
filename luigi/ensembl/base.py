@@ -202,6 +202,23 @@ class GeneInfo(object):
         pattern = r'\bpseudogene\b'
         return bool(re.search(pattern, self.description, re.IGNORECASE))
 
+    def trimmed_description(self):
+        return re.sub(r'\s*\[.*$', '', self.description)
+
+
+@attr.s(frozen=True)
+class Summary(object):
+    annotations = attr.ib(validator=is_a(dict))
+    gene_info = attr.ib(validator=is_a(dict))
+    sequence = attr.ib()
+
+    def update(self, annotations=None, gene_info=None):
+        if annotations:
+            self.annotations.update(annotations)
+        if gene_info:
+            self.gene_info.update(gene_info)
+        return self
+
 
 def qualifier_value(feature, name, pattern, max_allowed=1):
     values = set()
@@ -241,20 +258,19 @@ class BioImporter(luigi.Task):
     def is_gene(self, feature):
         return feature.type == 'gene'
 
-    def update_gene_info(self, known, gene):
+    def update_gene_info(self, summary, gene):
         name = self.gene(gene)
-        if name in known:
+        if name in summary.gene_info:
             LOGGER.error("Duplicate gene %s, may result in bad data", name)
-        known[name] = GeneInfo.build(gene)
-        return known
+        return summary.update(gene_info={name: GeneInfo.build(gene)})
 
-    def is_pseudogene(self, feature, genes):
+    def is_pseudogene(self, summary, feature):
         notes = feature.qualifiers.get('note', [])
         if any('pseudogene' in n for n in notes):
             return True
 
         gene = self.gene(feature)
-        return genes[gene].is_pseudogene()
+        return summary.gene_info[gene].is_pseudogene()
 
     def is_ncrna(self, feature):
         """
@@ -283,11 +299,28 @@ class BioImporter(luigi.Task):
     def output(self):
         return Output()
 
-    def sequence(self, annotations, feature):
+    def sequence(self, summary, feature):
         """
         Extract the sequence of the given feature.
         """
-        return str(feature.extract(annotations['sequence']))
+        return str(feature.extract(summary.sequence))
+
+    def transcript(self, feature):
+        return qualifier_value(feature, 'note', '^transcript_id=(.+)$')
+
+    def description(self, summary, feature):
+        species = summary.annotations['species']
+        gene = self.gene(feature)
+        trimmed = summary.gene_info[gene].trimmed_description()
+        transcript = self.transcript(feature)
+        if not trimmed:
+            return None
+
+        return '{species} {trimmed} ({transcript})'.format(
+            species=species,
+            trimmed=trimmed,
+            transcript=transcript,
+        )
 
     def standard_annotations(self, record):
         taxid = None
@@ -302,7 +335,6 @@ class BioImporter(luigi.Task):
             assert lineage, "Could not get lineage of %i" % taxid
 
         return {
-            'sequence': record.seq,
             'ncbi_tax_id': taxid,
             'lineage': lineage,
         }
@@ -317,22 +349,26 @@ class BioImporter(luigi.Task):
                 name=data['scientificName'])
         return self._taxonomy[taxon_id]
 
+    def summary(self, record):
+        return Summary(annotations=self.standard_annotations(record),
+                       gene_info={},
+                       sequence=record.seq)
+
     def data(self, input_file):
         # Maybe should process all genes to find the names of things? That way
         # we can have a better description than something super generic based
         # off the annotations? We could also extract the locus tags this way.
-        genes = {}
         for record in SeqIO.parse(input_file, self.format()):
-            annotations = self.standard_annotations(record)
+            summary = self.summary(record)
             for feature in record.features:
                 if self.is_gene(feature):
-                    genes = self.update_gene_info(genes, feature)
+                    summary = self.update_gene_info(summary, feature)
 
                 if not self.is_ncrna(feature) or \
-                        self.is_pseudogene(feature, genes):
+                        self.is_pseudogene(summary, feature):
                     continue
 
-                for data in self.rnacentral_entries(annotations, feature):
+                for data in self.rnacentral_entries(summary, feature):
                     entry = RNAcentralEntry(**data)
                     if entry.is_valid():
                         yield entry
