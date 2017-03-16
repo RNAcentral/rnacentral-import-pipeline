@@ -98,14 +98,14 @@ class Gencode(BaseImporter):
         })
         return entry
 
-    def rnacentral_entries(self, annotations, feature,
+    def rnacentral_entries(self, summary, feature,
                            ignore_nongencode=False, gencode_only=False,
                            **kwargs):
         """
         Compute the RNAcentralEntrys for the feature. The features
         """
 
-        entries = super(Gencode, self).rnacentral_entries(annotations, feature)
+        entries = super(Gencode, self).rnacentral_entries(summary, feature)
         for entry in entries:
             if self.is_gencode(entry):
                 if not gencode_only:
