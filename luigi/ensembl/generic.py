@@ -153,6 +153,17 @@ class EnsemblImporter(BioImporter):
             return base_type.replace('Mt_', '')
         if base_type == 'scaRNA':
             return 'snoRNA'
+        if base_type == 'misc_RNA':
+            notes = json.loads(self.db_xrefs(feature))
+            rfam = notes.get('RFAM_trans_name', [''])[0]
+            if rfam.startswith('Y_RNA'):
+                return 'Y_RNA'
+            if rfam.startswith('Metazoa_SRP'):
+                return 'SRP_RNA'
+            if rfam.startswith('uc_338'):
+                return 'lncRNA'
+            if rfam.startswith('RMST_8'):
+                return 'lncRNA'
         return base_type
 
     def note(self, feature):
