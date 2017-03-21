@@ -61,7 +61,9 @@ MGI_TYPES = {
     'Terc': 'telomerase_RNA',
     'Rn7s6': 'SRP_RNA',
     'Nkx2-2os': 'lncRNA',
-    # 'Nbr1-203': 'protein',
+    # Nbr1-203
+    # Vis1-201
+    # 1600017P15Rik-201
 }
 
 
