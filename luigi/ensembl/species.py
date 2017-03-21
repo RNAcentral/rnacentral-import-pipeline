@@ -51,6 +51,16 @@ All species names in this set should use the gencode importer instead of the
 generic one.
 """
 
+MODEL_ORGANISMS = set([
+    'saccharomyces_cerevisiae',
+    'caenorhabditis_elegans',
+    'drosophila_melanogaster',
+])
+"""
+This is a set of species names that should be considered a model oragnism and
+thus excluded from the default import.
+"""
+
 
 @attr.s(frozen=True)
 class SpeciesDescription(object):
@@ -88,6 +98,7 @@ class SpeciesImporter(luigi.Task):
 
     destination = luigi.Parameter(default='/tmp')
     name = luigi.Parameter(default='')
+    allow_model_organisms = luigi.BoolParameter(default=False)
 
     def __init__(self, *args, **kwargs):
         """
@@ -197,6 +208,11 @@ class SpeciesImporter(luigi.Task):
         for requirement in self.requires():
             yield requirement.output()
 
+    def is_allowed(self, name):
+        if self.allow_model_organisms:
+            return True
+        return name.lower().replace(' ', '_') not in MODEL_ORGANISMS
+
     def select_descriptions(self, pattern):
         """
         Get the specified descriptions. If the given pattern is a name the
@@ -214,9 +230,10 @@ class SpeciesImporter(luigi.Task):
             A list of either a SpeciesDescription object or None.
         """
 
+        desc = self.description_of
         if pattern:
-            return [self.description_of(pattern)]
-        return [self.description_of(n) for n in self.ftp.nlst()]
+            return [desc(pattern)]
+        return [desc(n) for n in self.ftp.nlst() if self.is_allowed(n)]
 
     def requires(self):
         """
