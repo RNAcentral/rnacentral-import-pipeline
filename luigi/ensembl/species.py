@@ -62,6 +62,14 @@ thus excluded from the default import.
 """
 
 
+class CommaSeperatedSet(luigi.Parameter):
+    def serialize(self, value):
+        return ','.join(sorted(value))
+
+    def parse(self, value):
+        return set(value.split(','))
+
+
 @attr.s(frozen=True)
 class SpeciesDescription(object):
     """
@@ -97,7 +105,7 @@ class SpeciesImporter(luigi.Task):
     """
 
     destination = luigi.Parameter(default='/tmp')
-    name = luigi.Parameter(default='')
+    name = CommaSeperatedSet()
     allow_model_organisms = luigi.BoolParameter(default=False)
 
     def __init__(self, *args, **kwargs):
@@ -232,7 +240,7 @@ class SpeciesImporter(luigi.Task):
 
         desc = self.description_of
         if pattern:
-            return [desc(pattern)]
+            return [desc(n) for n in pattern]
         return [desc(n) for n in self.ftp.nlst() if self.is_allowed(n)]
 
     def requires(self):
