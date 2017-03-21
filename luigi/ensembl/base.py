@@ -17,12 +17,15 @@ import os
 import re
 import abc
 import csv
+import gzip
 import logging
 
 from rnacentral_entry import RNAcentralEntry
 
 import luigi
-from luigi.local_target import AtomicLocalFile, atomic_file
+from luigi.target import FileSystemTarget
+from luigi import LocalTarget
+from luigi.local_target import atomic_file
 from Bio import SeqIO
 import requests
 
@@ -47,11 +50,11 @@ class Output(object):
     This is a container for all output files that the import process will
     create.
     """
-    short_sequences = attr.ib(validator=is_a(AtomicLocalFile))
-    long_sequences = attr.ib(validator=is_a(AtomicLocalFile))
-    references = attr.ib(validator=is_a(AtomicLocalFile))
-    accession = attr.ib(validator=is_a(AtomicLocalFile))
-    locations = attr.ib(validator=is_a(AtomicLocalFile))
+    short_sequences = attr.ib(validator=is_a(FileSystemTarget))
+    long_sequences = attr.ib(validator=is_a(FileSystemTarget))
+    references = attr.ib(validator=is_a(FileSystemTarget))
+    accessions = attr.ib(validator=is_a(FileSystemTarget))
+    locations = attr.ib(validator=is_a(FileSystemTarget))
 
     @classmethod
     def build(cls, base, database, prefix):
@@ -81,11 +84,11 @@ class Output(object):
             return path
 
         return cls(
-            short_sequences=atomic_file(path_to('short')),
-            long_sequences=atomic_file(path_to('long')),
-            references=atomic_file(path_to('refs')),
-            accession=atomic_file(path_to('ac_info')),
-            locations=atomic_file(path_to('genomic_locations')),
+            short_sequences=LocalTarget(path_to('short')),
+            long_sequences=LocalTarget(path_to('long')),
+            references=LocalTarget(path_to('refs')),
+            accessions=LocalTarget(path_to('ac_info')),
+            locations=LocalTarget(path_to('genomic_locations')),
         )
 
     def exists(self):
@@ -98,23 +101,28 @@ class Output(object):
             True of all outputs exist.
         """
 
-        def exists(target):
-            return os.path.exists(target.path)
-
-        return exists(self.short_sequences) and \
-            exists(self.long_sequences) and \
-            exists(self.references) and \
-            exists(self.accession) and \
-            exists(self.locations)
+        return self.short_sequences.exists() and \
+            self.long_sequences.exists() and \
+            self.references.exists() and \
+            self.accessions.exists() and \
+            self.locations.exists()
 
     def __enter__(self):
+        self.short_sequences = atomic_file(self.short_sequences.path)
+        self.long_sequences = atomic_file(self.long_sequences.path)
+        self.references = atomic_file(self.references.path)
+        self.accessions = atomic_file(self.accessions.path)
+        self.locations = atomic_file(self.locations.path)
         return OutputWriters.build(self)
 
-    def __exit__(self, *args):
+    def __exit__(self, exc_type, exc_value, traceback):
+        if exc_type:
+            return
+
         self.short_sequences.close()
         self.long_sequences.close()
         self.references.close()
-        self.accession.close()
+        self.accessions.close()
         self.locations.close()
 
 
@@ -134,7 +142,8 @@ class OutputWriters(object):
     @classmethod
     def build(cls, output):
         """
-        Create a new OutputWriters based upon an Output object.
+        Create a new OutputWriters based upon an Output object. All the members
+        of the Output object must be file like objects.
 
         Parameters
         ----------
@@ -166,7 +175,7 @@ class OutputWriters(object):
             short_sequences=as_csv(output.short_sequences),
             long_sequences=as_csv(output.long_sequences),
             references=as_csv(output.references),
-            accessions=as_csv(output.accession),
+            accessions=as_csv(output.accessions),
             locations=as_csv(output.locations),
         )
 
@@ -199,11 +208,11 @@ class GeneInfo(object):
         )
 
     def is_pseudogene(self):
-        pattern = r'\bpseudogene\b'
+        pattern = r'\spseudogene\s'
         return bool(re.search(pattern, self.description, re.IGNORECASE))
 
     def trimmed_description(self):
-        return re.sub(r'\s*\[.*$', '', self.description)
+        return re.sub(r'\s*(\[.)*$', '', self.description)
 
 
 @attr.s(frozen=True)
@@ -218,6 +227,16 @@ class Summary(object):
         if gene_info:
             self.gene_info.update(gene_info)
         return self
+
+
+class FileParameter(luigi.parameter.Parameter):
+    def serialize(self, value):
+        return value.path
+
+    def parse(self, value):
+        if isinstance(value, luigi.target.FileSystemTarget):
+            return value
+        return luigi.LocalTarget(path=value)
 
 
 def qualifier_value(feature, name, pattern, max_allowed=1):
@@ -284,7 +303,7 @@ class BioImporter(luigi.Task):
             feature.qualifiers['note'][0].lower() not in CODING_RNA_TYPES
 
     def build_output(self, destination, input_file):
-        prefix = os.path.basename(input_file)
+        prefix = os.path.basename(input_file.path)
         return Output.build(destination, 'ensembl', prefix)
 
     @abc.abstractmethod
@@ -298,6 +317,10 @@ class BioImporter(luigi.Task):
     @abc.abstractmethod
     def output(self):
         return Output()
+
+    @abc.abstractproperty
+    def input_file(self):
+        pass
 
     def sequence(self, summary, feature):
         """
@@ -358,20 +381,24 @@ class BioImporter(luigi.Task):
         # Maybe should process all genes to find the names of things? That way
         # we can have a better description than something super generic based
         # off the annotations? We could also extract the locus tags this way.
-        for record in SeqIO.parse(input_file, self.format()):
-            summary = self.summary(record)
-            for feature in record.features:
-                if self.is_gene(feature):
-                    summary = self.update_gene_info(summary, feature)
+        with input_file.open('r') as handle:
+            if input_file.path.endswith('.gz'):
+                handle = gzip.GzipFile(fileobj=handle, mode='rb')
 
-                if not self.is_ncrna(feature) or \
-                        self.is_pseudogene(summary, feature):
-                    continue
+            for record in SeqIO.parse(handle, self.format()):
+                summary = self.summary(record)
+                for feature in record.features:
+                    if self.is_gene(feature):
+                        summary = self.update_gene_info(summary, feature)
 
-                for data in self.rnacentral_entries(summary, feature):
-                    entry = RNAcentralEntry(**data)
-                    if entry.is_valid():
-                        yield entry
+                    if not self.is_ncrna(feature) or \
+                            self.is_pseudogene(summary, feature):
+                        continue
+
+                    for data in self.rnacentral_entries(summary, feature):
+                        entry = RNAcentralEntry(**data)
+                        if entry.is_valid():
+                            yield entry
 
     def run(self):
         with self.output() as writers:
