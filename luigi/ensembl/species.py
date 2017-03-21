@@ -32,6 +32,7 @@ would add some more complexity and this is not needed yet.
 """
 
 import os
+import logging
 from ftplib import FTP
 
 import attr
@@ -61,12 +62,48 @@ This is a set of species names that should be considered a model oragnism and
 thus excluded from the default import.
 """
 
+LOGGER = logging.getLogger(__name__)
+
 
 class CommaSeperatedSet(luigi.Parameter):
+    """
+    A type of Parameter that is a comma separated string. Luigi comes with
+    something similar (luigi.ListParameter) but it requires more syntax than
+    this does.
+    """
+
     def serialize(self, value):
+        """
+        Create a ',' separated string out of a given iterable for display
+
+        Parameters
+        ----------
+        value : iterable
+            An iterable to turn into a ',' separated string.
+
+        Returns
+        -------
+        serialized : str
+            The display string.
+        """
+
         return ','.join(sorted(value))
 
     def parse(self, value):
+        """
+        Parse the value into a set of values. Each value is separated by ','.
+
+        Parameters
+        ----------
+        value : str
+            A value to parse.
+
+        Returns
+        -------
+        parsed : set
+            A set of the ',' separated strings in the input.
+        """
+
         return set(value.split(','))
 
 
@@ -84,6 +121,7 @@ class SpeciesDescription(object):
     filenames : list
         List of filenames (not full paths) of EMBL file to import.
     """
+
     species_name = attr.ib(validator=is_a(basestring))
     filenames = attr.ib(validator=is_a(list))
 
@@ -195,13 +233,17 @@ class SpeciesImporter(luigi.Task):
         cleaned = cleaned[0].upper() + cleaned[1:]
         path = name.lower()
         names = [f for f in self.ftp.nlst(path) if self.is_data_file(f)]
+
         if not names:
+            LOGGER.info("Attempt to use nonchromosomal data for %s", name)
             names = [f for f in self.ftp.nlst(path) if self.is_data_file(f, allow_nonchromosomal=True)]
+
         if names:
             return SpeciesDescription(
                 species_name=cleaned,
                 filenames=names,
             )
+        LOGGER.info("No importable data found for %s", name)
         return None
 
     def output(self):
@@ -217,6 +259,24 @@ class SpeciesImporter(luigi.Task):
             yield requirement.output()
 
     def is_allowed(self, name):
+        """
+        Check if the given name is allowed to be imported. By default this will
+        ignore any name that is in the MODEL_ORGANISMS set. However if the
+        allow_model_organisms property is set to True then all organisms are
+        allowed.
+
+
+        Parameters
+        ----------
+        name : str
+            The name to check
+
+        Returns
+        -------
+        allowed : bool
+            True if allowed to import this species.
+        """
+
         if self.allow_model_organisms:
             return True
         return name.lower().replace(' ', '_') not in MODEL_ORGANISMS
