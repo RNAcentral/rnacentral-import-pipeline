@@ -20,7 +20,7 @@ import collections as coll
 import luigi
 
 from ensembl.base import BioImporter
-from ensembl.base import qualifier_value
+from ensembl.base import FileParameter
 
 LNC_ALIASES = set([
     'sense_intronic',
@@ -73,7 +73,7 @@ class EnsemblImporter(BioImporter):
     those cases a more specific importer must be used to get the correct data.
     """
 
-    input_file = luigi.Parameter()
+    input_file = FileParameter()
     test = luigi.BoolParameter(default=False, significant=False)
     destination = luigi.Parameter(default='/tmp')
 
