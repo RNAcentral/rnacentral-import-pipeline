@@ -220,7 +220,7 @@ class GeneInfo(object):
         return bool(re.search(pattern, self.description, re.IGNORECASE))
 
     def trimmed_description(self):
-        return re.sub(r'\s*(\[.)*$', '', self.description)
+        return re.sub(r'\s*\[.*$', '', self.description)
 
 
 @attr.s(frozen=True)
