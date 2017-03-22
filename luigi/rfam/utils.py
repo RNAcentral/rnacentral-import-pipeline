@@ -24,6 +24,8 @@ import gzip
 from cStringIO import StringIO
 from ftplib import FTP
 
+from functools32 import lru_cache
+
 NON_ISNDC = set([
     'CRISPR',
     'antitoxin',
@@ -82,10 +84,12 @@ def get_isndc(raw):
     return None
 
 
+@lru_cache()
 def get_families(version='CURRENT'):
     return fetch_file(version=version, filename='database_files/family.txt.gz')
 
 
+@lru_cache()
 def name_to_isnsdc_type(version='CURRENT'):
     mapping = {}
     raw = get_families(version=version)

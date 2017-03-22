@@ -88,6 +88,7 @@ def test_fetch_file_handles_uncompressed_files():
     ('group-II-D1D4-4', 'autocatalytically_spliced_intron'),
     ('Vault', 'vault_RNA'),
     ('tmRNA', 'tmRNA'),
+    ('CDKN2B-AS', 'lncRNA'),
 ])
 def test_can_fetch_a_mapping_from_name_to_isndc(name, expected):
     mapping = utils.name_to_isnsdc_type()
