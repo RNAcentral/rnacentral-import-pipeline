@@ -97,9 +97,13 @@ class EnsemblImporter(BioImporter):
             Turn a biopython location into the dict we use.
             """
 
+            start = location.start + 1
+            end = int(location.end)
             return {
-                'primary_start': location.start + 1,
-                'primary_end': int(location.end),
+                'primary_start': start,
+                'primary_end': end,
+                'local_start': start,
+                'local_end': end,
                 'complement': location.strand == -1,
             }
 
