@@ -19,6 +19,8 @@ import collections as coll
 
 import luigi
 
+from rfam import utils as rfutil
+
 from ensembl.base import BioImporter
 from ensembl.base import FileParameter
 
@@ -41,22 +43,6 @@ NC_ALIASES = set([
     'non_coding',
 ])
 
-RFAM_TYPES = {
-    'Y_RNA': 'Y_RNA',
-    'Metazoa_SRP': 'SRP_RNA',
-    'uc_338': 'lncRNA',
-    'RMST_8': 'lncRNA',
-    '7SK': 'snoRNA',
-    'DLX6-AS1': 'lncRNA',
-    'FAS-AS1': 'lncRNA',
-    'HOXB13-AS1': 'lncRNA',
-    'PVT1': 'lncRNA',
-    'RFPL3-AS1': 'lncRNA',
-    'ST7-OT3': 'lncRNA',
-    'TUSC7': 'lncRNA',
-    'VIS1': 'lncRNA',
-}
-
 MGI_TYPES = {
     'Terc': 'telomerase_RNA',
     'Rn7s6': 'SRP_RNA',
@@ -78,6 +64,10 @@ class EnsemblImporter(BioImporter):
     input_file = FileParameter()
     test = luigi.BoolParameter(default=False, significant=False)
     destination = luigi.Parameter(default='/tmp')
+
+    def __init__(self, *args, **kwargs):
+        super(EnsemblImporter, self).__init__(*args, **kwargs)
+        self.rfam_mapping = rfutil.name_to_isnsdc_type()
 
     def format(self):
         """
@@ -133,10 +123,10 @@ class EnsemblImporter(BioImporter):
         info = super(EnsemblImporter, self).standard_annotations(record)
         info.update({
             'database': 'ENSEMBL',
+            'chromosome': record.id.split('.')[0],
             'mol_type': 'genomic DNA',
             'pseudogene': 'N',
             'parent_accession': record.id,
-            'seq_version': '',
             'common_name': common_name,
             'species': species,
             'is_composite': 'N',
@@ -172,6 +162,17 @@ class EnsemblImporter(BioImporter):
             return base_type
         return ''
 
+    def rfam_type(self, trans_names):
+        possible = set()
+        for name in trans_names:
+            print(name)
+            rfam_name = name.split('.')[0]
+            possible.add(self.rfam_mapping[rfam_name])
+
+        if len(possible) == 1:
+            return possible.pop()
+        return None
+
     def ncrna(self, feature):
         base_type = feature.qualifiers.get('note', [''])[0]
         if base_type in LNC_ALIASES:
@@ -184,10 +185,11 @@ class EnsemblImporter(BioImporter):
             return 'snoRNA'
         if base_type == 'misc_RNA':
             notes = json.loads(self.db_xrefs(feature))
-            rfam = notes.get('RFAM_trans_name', [''])[0]
-            for key, value in RFAM_TYPES.items():
-                if rfam.startswith(key):
-                    return value
+            print(notes)
+            if 'RFAM_trans_name' in notes:
+                rfam_type = self.rfam_type(notes['RFAM_trans_name'])
+                if rfam_type:
+                    return rfam_type
         return base_type
 
     def note(self, feature):
@@ -204,6 +206,13 @@ class EnsemblImporter(BioImporter):
     def db_xrefs(self, feature):
         raw = feature.qualifiers.get('db_xref', [])
         return self.__as_grouped_json__(raw, ':')
+
+    def seq_version(self, feature):
+        transcript = self.transcript(feature)
+        if '.' in transcript:
+            parts = transcript.split('.', 1)
+            return parts[1]
+        return ''
 
     def entry_specific_data(self, feature):
         start, end = sorted([int(feature.location.start),
@@ -227,6 +236,7 @@ class EnsemblImporter(BioImporter):
             'optional_id': self.gene(feature),
             'product': self.product(feature),
             'accession': self.accession(feature),
+            'seq_version': self.seq_version(feature),
         }
 
     def rnacentral_entries(self, summary, feature, **kwargs):
