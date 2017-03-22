@@ -155,7 +155,7 @@ class OutputWriters(object):
         A new OutputWriters object.
         """
 
-        def as_csv(target):
+        def as_csv(target, quote=True):
             """
             Turn a input file into a csv writer.
 
@@ -168,12 +168,20 @@ class OutputWriters(object):
             -------
             A csv writer to the location of the target file.
             """
-            return csv.writer(target, delimiter=',', quotechar='"',
-                              quoting=csv.QUOTE_ALL, lineterminator='\n')
+            options = {
+                'delimiter': ',',
+                'quotechar': '"',
+                'quoting': csv.QUOTE_ALL,
+                'lineterminator': '\n',
+            }
+            if not quote:
+                del options['quoting']
+                del options['quotechar']
+            return csv.writer(target, **options)
 
         return cls(
-            short_sequences=as_csv(output.short_sequences),
-            long_sequences=as_csv(output.long_sequences),
+            short_sequences=as_csv(output.short_sequences, quote=None),
+            long_sequences=as_csv(output.long_sequences, quote=None),
             references=as_csv(output.references),
             accessions=as_csv(output.accessions),
             locations=as_csv(output.locations),
