@@ -27,7 +27,8 @@ from ensembl.helpers import (
     taxid,
     transcript,
     xref_data,
-    is_gene
+    is_gene,
+    is_ncrna
 )
 
 
@@ -87,9 +88,9 @@ class HelpersTest(ut.TestCase):
             "RNAcentral": ["URS000010A1F5"],
         }
 
-    @pytest.mark.skip()
-    def test_it_knows_if_something_is_ncrna(self):
-        pass
+    def test_can_detect_if_is_noncoding(self):
+        assert is_ncrna(self.features['gene', 'ENSG00000221439.1']) is True
+        assert is_ncrna(self.features['CDS', 'ENSG00000002016.17']) is False
 
     @pytest.mark.skip()
     def test_it_can_lookup_lineage(self):

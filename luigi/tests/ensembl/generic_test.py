@@ -16,53 +16,35 @@ limitations under the License.
 import json
 from collections import Counter
 
+import pytest
+
 from rnacentral_entry import RNAcentralEntry
 from ensembl.generic import EnsemblImporter
 
-from tests.ensembl.helpers import Base
+from tests.ensembl.helpers import BaseTest
 
 
-class BaseTest(Base):
+class RealBaseTest(BaseTest):
+
+    def test_it_never_has_conflicting_md5s(self):
+        _, count = Counter(d.md5() for d in self.data()).most_common(1)
+        assert count == 1
+
+    def test_it_never_has_conflicting_crc64s(self):
+        _, count = Counter(d.crc64() for d in self.data()).most_common(1)
+        assert count == 1
+
+    def test_it_always_has_valid_rna_types(self):
+        for entry in self.data():
+            assert entry.feature_type in set(['misc_RNA', 'ncRNA'])
+
+    def indivudal_method(self, name, *args):
+        pass
+
+
+class SimpleTests(BaseTest):
     filename = 'data/Caenorhabditis_elegans.WBcel235.87.chromosome.IV.dat'
     importer_class = EnsemblImporter
-
-    def is_pseudogene(self, *key):
-        gene = self.features['gene', key[1]]
-        summary = self.importer.summary(self.record)
-        summary = self.importer.update_gene_info(summary, gene)
-        return self.importer.is_pseudogene(summary, self.features[key])
-
-
-class FeatureParsingTest(BaseTest):
-    def __getattr__(self, key):
-        if hasattr(self.importer, key):
-            fn = getattr(self.importer, key)
-            return lambda *key: fn(self.features[key])
-        raise AttributeError("Unknown attribute %s" % key)
-
-
-class BothParsingTest(BaseTest):
-    def __getattr__(self, key):
-        if hasattr(self.importer, key):
-            def wrapped(*selector):
-                gene = self.features['gene', selector[1]]
-                summary = self.importer.summary(self.record)
-                summary = self.importer.update_gene_info(summary, gene)
-                method = getattr(self.importer, key)
-                return method(summary, self.features[selector])
-            return wrapped
-        raise AttributeError("Unknown attribute %s" % key)
-
-
-class SimpleTests(FeatureParsingTest):
-
-    def test_can_detect_if_is_noncoding(self):
-        assert self.is_ncrna('gene', 'WBGene00021406') is False
-        assert self.is_ncrna('misc_RNA', 'WBGene00195502') is True
-
-    def test_can_detect_if_is_pseudogene(self):
-        assert self.is_pseudogene('misc_RNA', 'WBGene00023163') is True
-        assert self.is_pseudogene('gene', 'WBGene00001103') is False
 
     def test_it_can_get_all_standard_annotations(self):
         assert self.importer.standard_annotations(self.record) == {
@@ -72,10 +54,10 @@ class SimpleTests(FeatureParsingTest):
                 "Rhabditida; Rhabditoidea; Rhabditidae; Peloderinae; "
                 "Caenorhabditis; Caenorhabditis elegans"
             ),
+            'chromosome': 'IV',
             'mol_type': 'genomic DNA',
             'pseudogene': 'N',
             'parent_accession': "IV.WBcel235",
-            'seq_version': '',
             'common_name': 'C.elegans',
             'species': "Caenorhabditis elegans",
             'ncbi_tax_id':  6239,
@@ -101,62 +83,34 @@ class SimpleTests(FeatureParsingTest):
         })
 
     def test_can_create_easy_locations(self):
-        assert self.assembly_info('misc_RNA', "WBGene00195502") == [
-            {'complement': False, 'primary_start': 41471, 'primary_end': 41620}
-        ]
+        assert self.assembly_info('misc_RNA', "WBGene00195502") == [{
+            'complement': False,
+            'primary_start': 41471,
+            'primary_end': 41620,
+            'local_start': 41471,
+            'local_end': 41620,
+        }]
 
     def test_can_get_joined_locations(self):
         assert self.assembly_info('mRNA', 'WBGene00235257') == [
-             {'complement': True, 'primary_start': 53543, 'primary_end': 53631},
-             {'complement': True, 'primary_start': 53401, 'primary_end': 53485},
+             {
+                 'complement': True,
+                 'primary_start': 53543,
+                 'primary_end': 53631,
+                 'local_start': 53543,
+                 'local_end': 53631,
+             },
+             {
+                 'complement': True,
+                 'primary_start': 53401,
+                 'primary_end': 53485,
+                 'local_start': 53401,
+                 'local_end': 53485,
+             },
         ]
 
     def test_can_get_gene_id(self):
         assert self.gene('misc_RNA', "WBGene00166500") == "WBGene00166500"
-
-
-class LongSpeciesTests(FeatureParsingTest):
-    filename = 'data/test_species_patch.ncr'
-
-    def test_can_load_large_organism_name(self):
-        """This test is meant to see if the biopython reader can handle parsing
-        an EMBL file where the organism name may span more than one name.
-        """
-
-        assert self.importer.standard_annotations(self.record) == {
-            'database': 'ENSEMBL',
-            'lineage': (
-                'Eukaryota; Fungi; Dikarya; Basidiomycota; Agaricomycotina; '
-                'Agaricomycetes; Russulales; Russulaceae; Russula; '
-                'environmental samples; uncultured ectomycorrhiza '
-                '(Russula brevipes var. acrior)'
-            ),
-            'mol_type': 'genomic DNA',
-            'pseudogene': 'N',
-            'parent_accession': "EF411133.1:1..726:misc_RNA",
-            'seq_version': '',
-            'common_name': 'Russula brevipes var. acrior',
-            'species': 'uncultured ectomycorrhiza',
-            'ncbi_tax_id':  446167,
-            'is_composite': 'N',
-
-            # Note this is *NOT* the reference in the file and this is on
-            # purpose. The parser here is not a general EMBL format parser, but
-            # a parser for the data produced by Ensembl. For this reason we
-            # only use a default reference, and not what may be in the file as
-            # when parsing Ensembl data there will not be a reference in the
-            # file, but there will be a hardcoded one we should use.
-            'references': [{
-                'authors': """Andrew Yates, Wasiu Akanni, M. Ridwan Amode, Daniel Barrell, Konstantinos Billis, Denise Carvalho-Silva, Carla Cummins, Peter Clapham, Stephen Fitzgerald, Laurent Gil1 Carlos Garcín Girón, Leo Gordon, Thibaut Hourlier, Sarah E. Hunt, Sophie H. Janacek, Nathan Johnson, Thomas Juettemann, Stephen Keenan, Ilias Lavidas, Fergal J. Martin, Thomas Maurel, William McLaren, Daniel N. Murphy, Rishi Nag, Michael Nuhn, Anne Parker, Mateus Patricio, Miguel Pignatelli, Matthew Rahtz, Harpreet Singh Riat, Daniel Sheppard, Kieron Taylor, Anja Thormann, Alessandro Vullo, Steven P. Wilder, Amonida Zadissa, Ewan Birney, Jennifer Harrow, Matthieu Muffato, Emily Perry, Magali Ruffier, Giulietta Spudich, Stephen J. Trevanion, Fiona Cunningham, Bronwen L. Aken, Daniel R. Zerbino, Paul Flicek""",
-                'location': "Nucleic Acids Res. 2016 44 Database issue:D710-6",
-                'title': "Ensembl 2016",
-                'pmid': 26687719,
-                'doi': "10.1093/nar/gkv115",
-            }],
-        }
-
-
-class LoadingTests(FeatureParsingTest):
 
     def entry(self, *key):
         return self.entry_specific_data(*key)
@@ -167,6 +121,8 @@ class LoadingTests(FeatureParsingTest):
                 'complement': False,
                 'primary_start': 58691,
                 'primary_end': 58711,
+                'local_start': 58691,
+                'local_end': 58711,
             }],
             'db_xrefs': json.dumps({
                 "RefSeq_ncRNA": ["NR_052854"],
@@ -184,14 +140,13 @@ class LoadingTests(FeatureParsingTest):
             'primary_id': 'T05C7.2',
             'optional_id': 'WBGene00166500',
             'product': '',
+            'seq_version': '2',
             'accession': 'T05C7.2',
         }
 
     def test_can_create_reasonable_accession(self):
         assert self.accession('misc_RNA', "WBGene00202392") == "cTel79B.2"
 
-
-class CompleteParsingTest(BothParsingTest):
     def test_can_create_reasonable_description(self):
         assert self.description('misc_RNA', "WBGene00166500") == \
             "Caenorhabditis elegans (C.elegans) piRNA transcript T05C7.2"
@@ -202,7 +157,7 @@ class CompleteParsingTest(BothParsingTest):
         assert RNAcentralEntry(**entry[0]).is_valid(verbose=True) is True
 
     def test_can_loads_all_non_coding_rnas(self):
-        data = self.importer.data(self.filename)
+        data = self.importer.data(self.target())
         assert len(list(data)) == 16272
 
     def test_it_sets_accession_to_transcript_id(self):
@@ -210,21 +165,78 @@ class CompleteParsingTest(BothParsingTest):
         assert len(entries) == 1
         assert entries[0]['accession'] == "cTel79B.1"
 
-
-class TRNATest(BothParsingTest):
     def test_gets_all_tRNA(self):
-        data = self.importer.data(self.filename)
+        data = self.importer.data(self.target())
         rna_types = Counter(r.ncrna_class for r in data)
         assert rna_types['tRNA'] == 71
 
     def test_does_not_get_tRNA_pseudogenes(self):
-        data = self.importer.data(self.filename)
+        data = self.importer.data(self.target())
         rna_types = set(r.ncrna_class for r in data)
         assert 'tRNA_pseudogene' not in rna_types
 
+    def test_it_never_has_conflicting_md5s(self):
+        _, count = Counter(d.md5() for d in self.data()).most_common(1)
+        assert count == 1
 
-class ScaRNATest(FeatureParsingTest):
+    def test_it_never_has_conflicting_crc64s(self):
+        _, count = Counter(d.crc64() for d in self.data()).most_common(1)
+        assert count == 1
+
+    def test_it_always_has_valid_rna_types(self):
+        for entry in self.data():
+            assert entry.feature_type in set(['misc_RNA', 'ncRNA'])
+
+
+class LongSpeciesTests(BaseTest):
+    filename = 'data/test_species_patch.ncr'
+    importer_class = EnsemblImporter
+
+    def test_can_load_large_organism_name(self):
+        """This test is meant to see if the biopython reader can handle parsing
+        an EMBL file where the organism name may span more than one name.
+        """
+
+        assert self.importer.standard_annotations(self.record) == {
+            'database': 'ENSEMBL',
+            'lineage': (
+                'Eukaryota; Fungi; Dikarya; Basidiomycota; Agaricomycotina; '
+                'Agaricomycetes; Russulales; Russulaceae; Russula; '
+                'environmental samples; uncultured ectomycorrhiza '
+                '(Russula brevipes var. acrior)'
+            ),
+            'mol_type': 'genomic DNA',
+            'pseudogene': 'N',
+            'parent_accession': "EF411133.1:1..726:misc_RNA",
+            'common_name': 'Russula brevipes var. acrior',
+            'species': 'uncultured ectomycorrhiza',
+            'ncbi_tax_id':  446167,
+            'is_composite': 'N',
+
+            # Note this isn't actually a chromosme so this data is 'wrong' but
+            # we are running Ensembl import on a non-ensembl file so this is
+            # expected.
+            'chromosome': 'EF411133',
+
+            # Note this is *NOT* the reference in the file and this is on
+            # purpose. The parser here is not a general EMBL format parser, but
+            # a parser for the data produced by Ensembl. For this reason we
+            # only use a default reference, and not what may be in the file as
+            # when parsing Ensembl data there will not be a reference in the
+            # file, but there will be a hardcoded one we should use.
+            'references': [{
+                'authors': """Andrew Yates, Wasiu Akanni, M. Ridwan Amode, Daniel Barrell, Konstantinos Billis, Denise Carvalho-Silva, Carla Cummins, Peter Clapham, Stephen Fitzgerald, Laurent Gil1 Carlos Garcín Girón, Leo Gordon, Thibaut Hourlier, Sarah E. Hunt, Sophie H. Janacek, Nathan Johnson, Thomas Juettemann, Stephen Keenan, Ilias Lavidas, Fergal J. Martin, Thomas Maurel, William McLaren, Daniel N. Murphy, Rishi Nag, Michael Nuhn, Anne Parker, Mateus Patricio, Miguel Pignatelli, Matthew Rahtz, Harpreet Singh Riat, Daniel Sheppard, Kieron Taylor, Anja Thormann, Alessandro Vullo, Steven P. Wilder, Amonida Zadissa, Ewan Birney, Jennifer Harrow, Matthieu Muffato, Emily Perry, Magali Ruffier, Giulietta Spudich, Stephen J. Trevanion, Fiona Cunningham, Bronwen L. Aken, Daniel R. Zerbino, Paul Flicek""",
+                'location': "Nucleic Acids Res. 2016 44 Database issue:D710-6",
+                'title': "Ensembl 2016",
+                'pmid': 26687719,
+                'doi': "10.1093/nar/gkv115",
+            }],
+        }
+
+
+class HumanTests(BaseTest):
     filename = 'data/Homo_sapiens.GRCh38.87.chromosome.12.dat'
+    importer_class = EnsemblImporter
 
     def test_it_sets_rna_type_to_snRNA(self):
         assert self.ncrna('misc_RNA', 'ENSG00000251898.1') == 'snoRNA'
@@ -233,9 +245,13 @@ class ScaRNATest(FeatureParsingTest):
     def test_it_sets_product_to_snaRNA(self):
         assert self.product('misc_RNA', 'ENSG00000251898.1') == 'scaRNA'
         assert self.entry_specific_data('misc_RNA', 'ENSG00000251898.1') == {
-            'assembly_info': [
-                {'complement': True, 'primary_end': 6581609, 'primary_start': 6581474}
-            ],
+            'assembly_info': [{
+                'complement': True,
+                'primary_end': 6581609,
+                'primary_start': 6581474,
+                'local_end': 6581609,
+                'local_start': 6581474,
+            }],
             'db_xrefs': json.dumps({
                 "UCSC": ["uc001qpr.2"],
                 "RNAcentral": ["URS00006C9D52"],
@@ -247,6 +263,7 @@ class ScaRNATest(FeatureParsingTest):
             'feature_location_start': 6581474,
             'feature_type': 'misc_RNA',
             'gene': 'ENSG00000251898.1',
+            'seq_version': '1',
             'locus_tag': '',
             'ncrna_class': 'snoRNA',
             'optional_id': 'ENSG00000251898.1',
@@ -254,10 +271,6 @@ class ScaRNATest(FeatureParsingTest):
             'product': 'scaRNA',
             'accession': 'ENST00000516089.1',
         }
-
-
-class HumanTests(BothParsingTest):
-    filename = 'data/Homo_sapiens.GRCh38.87.chromosome.12.dat'
 
     def test_it_sets_accession_to_transcript_id(self):
         entries = self.rnacentral_entries('misc_RNA', 'ENSG00000255746.1')
@@ -270,7 +283,7 @@ class HumanTests(BothParsingTest):
         assert self.is_pseudogene('misc_RNA', 'ENSG00000252079.1') is True
 
     def test_it_does_not_create_entries_for_pseudogene(self):
-        entries = self.importer.data(self.filename)
+        entries = self.importer.data(self.target())
         entries = {e.optional_id for e in entries}
         assert 'ENSG00000252079.1' not in entries
 
@@ -291,3 +304,22 @@ class HumanTests(BothParsingTest):
         assert {e['description'] for e in entries} == set([
             "Homo sapiens long intergenic non-protein coding RNA 1486 (ENST00000538041.1)"
         ])
+
+    def test_can_correct_rfam_name_to_type(self):
+        entries = self.rnacentral_entries('misc_RNA', 'ENSG00000278469.1')
+        assert {e['ncrna_class'] for e in entries} == set(['SRP_RNA'])
+
+
+class HumanPatchTests(BaseTest):
+    @pytest.mark.skip()
+    def test_it_sets_chromosome_correctly(self):
+        pass
+
+
+class MouseTests(BaseTest):
+    filename = 'data/Mus_musculus.GRCm38.87.chromosome.3.dat'
+    importer_class = EnsemblImporter
+
+    def test_can_use_mouse_models_to_correct_rna_type(self):
+        entries = self.rnacentral_entries('misc_RNA', 'ENSMUSG00000064796.1')
+        assert {e['ncrna_class'] for e in entries} == set(['telomerase_RNA'])

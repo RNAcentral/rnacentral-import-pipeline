@@ -34,6 +34,7 @@ would add some more complexity and this is not needed yet.
 import os
 import logging
 from ftplib import FTP
+from contextlib import contextmanager
 
 import attr
 from attr.validators import instance_of as is_a
@@ -42,6 +43,8 @@ from luigi.contrib.ftp import RemoteTarget
 
 from ensembl.gencode import Gencode
 from ensembl.generic import EnsemblImporter
+
+from rfam import utils as rfutil
 
 GENCODE_SPECIES = set([
     'Homo sapiens',
@@ -104,6 +107,8 @@ class CommaSeperatedSet(luigi.Parameter):
             A set of the ',' separated strings in the input.
         """
 
+        if value == 'all':
+            return set()
         return set(value.split(','))
 
 
@@ -153,9 +158,6 @@ class SpeciesImporter(luigi.Task):
         """
 
         super(SpeciesImporter, self).__init__(*args, **kwargs)
-        self.ftp = FTP(self.host())
-        self.ftp.login()
-        self.ftp.cwd(self.base())
 
     def host(self):
         """
@@ -211,7 +213,7 @@ class SpeciesImporter(luigi.Task):
             return 'nonchromosomal' in filename
         return False
 
-    def description_of(self, name):
+    def description_of(self, ftp, name):
         """
         Compute the SpeciesDescription for the species with the given name.
         This will build a description using only chromosomal files, unless
@@ -232,11 +234,11 @@ class SpeciesImporter(luigi.Task):
         cleaned = os.path.basename(name).lower().replace('_', ' ')
         cleaned = cleaned[0].upper() + cleaned[1:]
         path = name.lower()
-        names = [f for f in self.ftp.nlst(path) if self.is_data_file(f)]
+        names = [f for f in ftp.nlst(path) if self.is_data_file(f)]
 
         if not names:
             LOGGER.info("Attempt to use nonchromosomal data for %s", name)
-            names = [f for f in self.ftp.nlst(path) if self.is_data_file(f, allow_nonchromosomal=True)]
+            names = [f for f in ftp.nlst(path) if self.is_data_file(f, allow_nonchromosomal=True)]
 
         if names:
             return SpeciesDescription(
@@ -281,6 +283,16 @@ class SpeciesImporter(luigi.Task):
             return True
         return name.lower().replace(' ', '_') not in MODEL_ORGANISMS
 
+    @contextmanager
+    def ftp(self):
+        ftp = FTP(self.host())
+        ftp.login()
+        ftp.cwd(self.base())
+        try:
+            yield ftp
+        finally:
+            ftp.quit()
+
     def select_descriptions(self, pattern):
         """
         Get the specified descriptions. If the given pattern is a name the
@@ -299,9 +311,10 @@ class SpeciesImporter(luigi.Task):
         """
 
         desc = self.description_of
-        if pattern:
-            return [desc(n) for n in pattern]
-        return [desc(n) for n in self.ftp.nlst() if self.is_allowed(n)]
+        with self.ftp() as ftp:
+            if pattern:
+                return [desc(ftp, n) for n in pattern]
+            return [desc(ftp, n) for n in ftp.nlst() if self.is_allowed(n)]
 
     def requires(self):
         """
@@ -314,6 +327,11 @@ class SpeciesImporter(luigi.Task):
         task : luigi.Task
             A task this importer requires.
         """
+
+        # Fetch the data first before we have any FTP connections open so that
+        # later we can have more workers without worrying about the limit on
+        # FTP connections to Ensembl.
+        rfutil.name_to_isnsdc_type()
 
         for description in self.select_descriptions(self.name):
             if not description:

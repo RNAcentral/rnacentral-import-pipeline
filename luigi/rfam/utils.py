@@ -84,7 +84,6 @@ def get_isndc(raw):
     return None
 
 
-@lru_cache()
 def get_families(version='CURRENT'):
     return fetch_file(version=version, filename='database_files/family.txt.gz')
 

@@ -13,44 +13,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import re
-import json
-import collections as coll
-
 import luigi
 
-from rfam import utils as rfutil
-
 from ensembl.base import BioImporter
-from ensembl.base import FileParameter
+from ensembl import data
+from ensembl import helpers
+from ensembl.rna_type_inference import RnaTypeInference
 
-LNC_ALIASES = set([
-    'sense_intronic',
-    'sense_overlapping',
-    'macro_lncRNA',
-    'bidirectional_promoter_lncRNA',
-    'lincRNA',
-])
-
-MITO_TYPES = set([
-    'Mt_rRNA',
-    'Mt_tRNA',
-])
-
-NC_ALIASES = set([
-    '3prime_overlapping_ncRNA',
-    'known_ncrna',
-    'non_coding',
-])
-
-MGI_TYPES = {
-    'Terc': 'telomerase_RNA',
-    'Rn7s6': 'SRP_RNA',
-    'Nkx2-2os': 'lncRNA',
-    # Nbr1-203
-    # Vis1-201
-    # 1600017P15Rik-201
-}
+import parameters
 
 
 class EnsemblImporter(BioImporter):
@@ -61,13 +31,9 @@ class EnsemblImporter(BioImporter):
     those cases a more specific importer must be used to get the correct data.
     """
 
-    input_file = FileParameter()
+    input_file = parameters.FileParameter()
     test = luigi.BoolParameter(default=False, significant=False)
     destination = luigi.Parameter(default='/tmp')
-
-    def __init__(self, *args, **kwargs):
-        super(EnsemblImporter, self).__init__(*args, **kwargs)
-        self.rfam_mapping = rfutil.name_to_isnsdc_type()
 
     def format(self):
         """
@@ -75,78 +41,42 @@ class EnsemblImporter(BioImporter):
         """
         return 'embl'
 
-    def output(self):
-        """
-        Create all luigi output objects.
-        """
-        return self.build_output(self.destination, self.input_file)
+    def initial_entries(self, record, summary, feature):
+        species, common_name = helpers.organism_naming(record)
+        transcript_id = helpers.transcript(feature)
+        gene = helpers.gene(feature)
 
-    def assembly_info(self, feature):
-        def as_exon(location):
-            """
-            Turn a biopython location into the dict we use.
-            """
+        return [data.Entry(
+            primary_id=transcript_id,
+            accession=transcript_id,
+            seq=str(feature.extract(record.seq)),
+            ncbi_tax_id=helpers.taxid(record),
+            database='ENSEMBL',
+            lineage=helpers.lineage(record),
+            chromosome=record.id.split('.')[0],
+            parent_accession=record.id,
+            common_name=common_name,
+            species=species,
+            gene=gene,
+            optional_id=gene,
+            note_data=helpers.note_data(feature),
+            locus_tag=helpers.locus_tag(feature),
+            xref_data=helpers.xref_data(feature),
+        )]
 
-            start = location.start + 1
-            end = int(location.end)
-            return {
-                'primary_start': start,
-                'primary_end': end,
-                'local_start': start,
-                'local_end': end,
-                'complement': location.strand == -1,
-            }
+    def description(self, summary, feature, current):
+        if current.gene in summary.gene_info:
+            super_method = super(EnsemblImporter, self).description
+            computed = super_method(summary, feature, current)
+            if computed:
+                return computed
 
-        parts = [feature.location]
-        if hasattr(feature.location, 'parts'):
-            parts = feature.location.parts
-        return [as_exon(l) for l in parts]
+        species = current.species
+        if current.common_name:
+            species += ' (%s)' % current.common_name
 
-    def references(self, _):
-        return [{
-            'authors': "Andrew Yates, Wasiu Akanni, M. Ridwan Amode, Daniel Barrell, Konstantinos Billis, Denise Carvalho-Silva, Carla Cummins, Peter Clapham, Stephen Fitzgerald, Laurent Gil1 Carlos Garcín Girón, Leo Gordon, Thibaut Hourlier, Sarah E. Hunt, Sophie H. Janacek, Nathan Johnson, Thomas Juettemann, Stephen Keenan, Ilias Lavidas, Fergal J. Martin, Thomas Maurel, William McLaren, Daniel N. Murphy, Rishi Nag, Michael Nuhn, Anne Parker, Mateus Patricio, Miguel Pignatelli, Matthew Rahtz, Harpreet Singh Riat, Daniel Sheppard, Kieron Taylor, Anja Thormann, Alessandro Vullo, Steven P. Wilder, Amonida Zadissa, Ewan Birney, Jennifer Harrow, Matthieu Muffato, Emily Perry, Magali Ruffier, Giulietta Spudich, Stephen J. Trevanion, Fiona Cunningham, Bronwen L. Aken, Daniel R. Zerbino, Paul Flicek",
-            'location': "Nucleic Acids Res. 2016 44 Database issue:D710-6",
-            'title': "Ensembl 2016",
-            'pmid': 26687719,
-            'doi': "10.1093/nar/gkv115",
-        }]
-
-    def standard_annotations(self, record):
-        pattern = re.compile(r'\((.+)\)$')
-        common_name = None
-        species = record.annotations['organism']
-        match = re.search(pattern, species)
-        if match:
-            common_name = match.group(1)
-            species = re.sub(pattern, '', species).strip()
-
-        info = super(EnsemblImporter, self).standard_annotations(record)
-        info.update({
-            'database': 'ENSEMBL',
-            'chromosome': record.id.split('.')[0],
-            'mol_type': 'genomic DNA',
-            'pseudogene': 'N',
-            'parent_accession': record.id,
-            'common_name': common_name,
-            'species': species,
-            'is_composite': 'N',
-            'references': self.references(record),
-        })
-        return info
-
-    def description(self, info, feature):
-        if self.gene(feature) in info.gene_info:
-            current = super(EnsemblImporter, self).description(info, feature)
-            if current:
-                return current
-
-        annotations = info.annotations
-        species = annotations['species']
-        if annotations.get('common_name', None):
-            species += ' (%s)' % annotations['common_name']
-
-        rna_type = self.ncrna(feature) or feature.type
-        transcript = self.transcript(feature)
+        rna_type = current.rna_type
+        transcript = current.primary_id
         assert rna_type, "Cannot build description without rna_type"
         assert transcript, "Cannot build description without transcript"
 
@@ -156,104 +86,53 @@ class EnsemblImporter(BioImporter):
             transcript=transcript,
         )
 
-    def product(self, feature):
-        base_type = feature.qualifiers.get('note', [''])[0]
-        if base_type == 'scaRNA':
-            return base_type
-        return ''
+    def exons(self, summary, feature, current):
+        parts = [feature.location]
+        if hasattr(feature.location, 'parts'):
+            parts = feature.location.parts
+        return [data.Exon.from_biopython(l) for l in parts]
 
-    def rfam_type(self, trans_names):
-        possible = set()
-        for name in trans_names:
-            print(name)
-            rfam_name = name.split('.')[0]
-            possible.add(self.rfam_mapping[rfam_name])
+    def references(self, summary, feature, current):
+        return [data.Reference(
+            authors=(
+                "Andrew Yates, Wasiu Akanni, M. Ridwan Amode, Daniel Barrell, "
+                "Konstantinos Billis, Denise Carvalho-Silva, Carla Cummins, "
+                "Peter Clapham, Stephen Fitzgerald, Laurent Gil Carlos Garci"
+                "n Giro n, Leo Gordon, Thibaut Hourlier, Sarah E. Hunt, "
+                "Sophie H. Janacek, Nathan Johnson, Thomas Juettemann, "
+                "Stephen Keenan, Ilias Lavidas, Fergal J. Martin, "
+                "Thomas Maurel, William McLaren, Daniel N. Murphy, Rishi Nag, "
+                "Michael Nuhn, Anne Parker, Mateus Patricio, "
+                "Miguel Pignatelli, Matthew Rahtz, Harpreet Singh Riat, "
+                "Daniel Sheppard, Kieron Taylor, Anja Thormann, "
+                "Alessandro Vullo, Steven P. Wilder, Amonida Zadissa, "
+                "Ewan Birney, Jennifer Harrow, Matthieu Muffato, Emily Perry, "
+                "Magali Ruffier, Giulietta Spudich, Stephen J. Trevanion, "
+                "Fiona Cunningham, Bronwen L. Aken, Daniel R. Zerbino, "
+                "Paul Flicek"
+            ),
+            location="Nucleic Acids Res. 2016 44 Database issue:D710-6",
+            title="Ensembl 2016",
+            pmid=26687719,
+            doi="10.1093/nar/gkv115",
+            accession=current.accession,
+        )]
 
-        if len(possible) == 1:
-            return possible.pop()
-        return None
-
-    def ncrna(self, feature):
-        base_type = feature.qualifiers.get('note', [''])[0]
-        if base_type in LNC_ALIASES:
-            return 'lncRNA'
-        if base_type in NC_ALIASES:
-            return 'ncRNA'
-        if base_type in MITO_TYPES:
-            return base_type.replace('Mt_', '')
-        if base_type == 'scaRNA':
-            return 'snoRNA'
-        if base_type == 'misc_RNA':
-            notes = json.loads(self.db_xrefs(feature))
-            print(notes)
-            if 'RFAM_trans_name' in notes:
-                rfam_type = self.rfam_type(notes['RFAM_trans_name'])
-                if rfam_type:
-                    return rfam_type
-        return base_type
-
-    def note(self, feature):
-        note = feature.qualifiers.get('note', [])
-        if len(note) > 1:
-            note = note[1:]
-        return self.__as_grouped_json__(note, '=')
-
-    def accession(self, feature):
-        transcript = self.transcript(feature)
-        assert transcript, 'Cannot create a primary id without transcript id'
-        return transcript
-
-    def db_xrefs(self, feature):
-        raw = feature.qualifiers.get('db_xref', [])
-        return self.__as_grouped_json__(raw, ':')
-
-    def seq_version(self, feature):
-        transcript = self.transcript(feature)
+    def seq_version(self, current, *args):
+        transcript = current.primary_id
         if '.' in transcript:
             parts = transcript.split('.', 1)
             return parts[1]
         return ''
 
-    def entry_specific_data(self, feature):
-        start, end = sorted([int(feature.location.start),
-                             int(feature.location.end)])
+    def product(self, summary, feature, current):
+        if current.rna_type == 'scaRNA':
+            return current.rna_type
+        return ''
 
-        # Ensure that this is 1 based, even though biopython
-        # switches to 0 based
-        start += 1
-
-        return {
-            'primary_id': self.transcript(feature),
-            'assembly_info': self.assembly_info(feature),
-            'db_xrefs': self.db_xrefs(feature),
-            'feature_location_start': start,
-            'feature_location_end': end,
-            'feature_type': feature.type,
-            'gene': self.gene(feature),
-            'ncrna_class': self.ncrna(feature),
-            'note': self.note(feature),
-            'locus_tag': feature.qualifiers.get('locus_tag', ''),
-            'optional_id': self.gene(feature),
-            'product': self.product(feature),
-            'accession': self.accession(feature),
-            'seq_version': self.seq_version(feature),
-        }
-
-    def rnacentral_entries(self, summary, feature, **kwargs):
-        data = dict(summary.annotations)
-        data.update(self.entry_specific_data(feature))
-        data['description'] = self.description(summary, feature)
-        data['sequence'] = self.sequence(summary, feature)
-        return [data]
-
-    def __as_grouped_json__(self, raw, split):
-        parsed = coll.defaultdict(set)
-        for entry in raw:
-            key, value = entry.split(split, 1)
-            if key == 'RNACentral':
-                key = 'RNAcentral'
-            parsed[key].add(value)
-        return json.dumps({k: sorted(v) for k, v in parsed.items()})
+    def rna_type(self, summary, feature, current):
+        inference = RnaTypeInference()
+        return inference.infer_rna_type(current)
 
 
 if __name__ == '__main__':
