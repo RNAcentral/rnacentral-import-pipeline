@@ -84,6 +84,10 @@ def notes(feature):
     return feature.qualifiers.get('note', [])
 
 
+def rna_type(feature):
+    return notes(feature)[0]
+
+
 def locus_tag(feature):
     return feature.qualifiers.get('locus_tag', [''])[0]
 
@@ -120,6 +124,14 @@ def is_ncrna(feature):
     # getting the ncRNA type.
     return feature.type in {'misc_RNA', 'ncRNA'} and \
         feature.qualifiers['note'][0].lower() not in CODING_RNA_TYPES
+
+
+def chromosome(record):
+    basic = record.id
+    if basic.startswith('chromosome:') or basic.startswith('scaffold:'):
+        parts = basic.split(':')
+        return parts[2]
+    return basic.split('.')[0]
 
 
 @lru_cache()
