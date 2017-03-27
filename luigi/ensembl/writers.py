@@ -237,7 +237,6 @@ class OutputWriters(object):
     def write_exon(self, data, exon):
         self.locations.writerow([
             data.accession,
-            data.parent_accession,
             data.chromosome,
             exon.primary_start,
             exon.primary_end,
@@ -245,7 +244,7 @@ class OutputWriters(object):
         ])
 
     def write(self, data):
-        if len(data.sequence) <= 4000:
+        if len(data.seq) <= 4000:
             self.write_sequence(self.short_sequences, data)
         else:
             self.write_sequence(self.long_sequences, data)

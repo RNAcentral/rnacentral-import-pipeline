@@ -13,6 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import logging
+
 import luigi
 
 from ensembl.base import BioImporter
@@ -21,6 +23,8 @@ from ensembl import helpers
 from ensembl.rna_type_inference import RnaTypeInference
 
 import parameters
+
+LOGGER = logging.getLogger(__name__)
 
 
 class EnsemblImporter(BioImporter):
@@ -31,7 +35,7 @@ class EnsemblImporter(BioImporter):
     those cases a more specific importer must be used to get the correct data.
     """
 
-    input_file = parameters.FileParameter()
+    input_file = parameters.GenericFileParameter()
     test = luigi.BoolParameter(default=False, significant=False)
     destination = luigi.Parameter(default='/tmp')
 
@@ -42,6 +46,13 @@ class EnsemblImporter(BioImporter):
         return 'embl'
 
     def initial_entries(self, record, summary, feature):
+        try:
+            sequence = str(feature.extract(record.seq))
+        except Exception as err:
+            LOGGER.exception(err)
+            LOGGER.warn("Could not get sequence for %s", feature)
+            return []
+
         species, common_name = helpers.organism_naming(record)
         transcript_id = helpers.transcript(feature)
         gene = helpers.gene(feature)
@@ -49,41 +60,36 @@ class EnsemblImporter(BioImporter):
         return [data.Entry(
             primary_id=transcript_id,
             accession=transcript_id,
-            seq=str(feature.extract(record.seq)),
+            seq=sequence,
             ncbi_tax_id=helpers.taxid(record),
             database='ENSEMBL',
             lineage=helpers.lineage(record),
-            chromosome=record.id.split('.')[0],
+            chromosome=helpers.chromosome(record),
             parent_accession=record.id,
             common_name=common_name,
             species=species,
             gene=gene,
+            locus_tag=summary.locus_tag(gene),
             optional_id=gene,
             note_data=helpers.note_data(feature),
-            locus_tag=helpers.locus_tag(feature),
             xref_data=helpers.xref_data(feature),
         )]
 
     def description(self, summary, feature, current):
-        if current.gene in summary.gene_info:
-            super_method = super(EnsemblImporter, self).description
-            computed = super_method(summary, feature, current)
-            if computed:
-                return computed
+        super_method = super(EnsemblImporter, self).description
+        computed = super_method(summary, feature, current)
+        if computed:
+            return computed
 
         species = current.species
         if current.common_name:
             species += ' (%s)' % current.common_name
 
-        rna_type = current.rna_type
-        transcript = current.primary_id
-        assert rna_type, "Cannot build description without rna_type"
-        assert transcript, "Cannot build description without transcript"
-
-        return '{species} {rna_type} transcript {transcript}'.format(
+        assert current.rna_type, "Cannot build description without rna_type"
+        return '{species} {rna_type} {locus_tag}'.format(
             species=species,
-            rna_type=rna_type,
-            transcript=transcript,
+            rna_type=current.rna_type,
+            locus_tag=current.locus_tag,
         )
 
     def exons(self, summary, feature, current):
@@ -95,26 +101,16 @@ class EnsemblImporter(BioImporter):
     def references(self, summary, feature, current):
         return [data.Reference(
             authors=(
-                "Andrew Yates, Wasiu Akanni, M. Ridwan Amode, Daniel Barrell, "
-                "Konstantinos Billis, Denise Carvalho-Silva, Carla Cummins, "
-                "Peter Clapham, Stephen Fitzgerald, Laurent Gil Carlos Garci"
-                "n Giro n, Leo Gordon, Thibaut Hourlier, Sarah E. Hunt, "
-                "Sophie H. Janacek, Nathan Johnson, Thomas Juettemann, "
-                "Stephen Keenan, Ilias Lavidas, Fergal J. Martin, "
-                "Thomas Maurel, William McLaren, Daniel N. Murphy, Rishi Nag, "
-                "Michael Nuhn, Anne Parker, Mateus Patricio, "
-                "Miguel Pignatelli, Matthew Rahtz, Harpreet Singh Riat, "
-                "Daniel Sheppard, Kieron Taylor, Anja Thormann, "
-                "Alessandro Vullo, Steven P. Wilder, Amonida Zadissa, "
-                "Ewan Birney, Jennifer Harrow, Matthieu Muffato, Emily Perry, "
-                "Magali Ruffier, Giulietta Spudich, Stephen J. Trevanion, "
-                "Fiona Cunningham, Bronwen L. Aken, Daniel R. Zerbino, "
-                "Paul Flicek"
+                "Aken BL, Ayling S, Barrell D, Clarke L, Curwen V, Fairley "
+                "S, Fernandez Banet J, Billis K, Garci a Giro n C, Hourlier "
+                "T, Howe K, Kahari A, Kokocinski F, Martin FJ, Murphy DN, "
+                "Nag R, Ruffier M, Schuster M, Tang YA, Vogel JH, White "
+                "S, Zadissa A, Flicek P, Searle SM."
             ),
-            location="Nucleic Acids Res. 2016 44 Database issue:D710-6",
-            title="Ensembl 2016",
-            pmid=26687719,
-            doi="10.1093/nar/gkv115",
+            location="Database (Oxford). 2016 Jun 23",
+            title="The Ensembl gene annotation system",
+            pmid=27337980,
+            doi="10.1093/database/baw093",
             accession=current.accession,
         )]
 
@@ -132,7 +128,9 @@ class EnsemblImporter(BioImporter):
 
     def rna_type(self, summary, feature, current):
         inference = RnaTypeInference()
-        return inference.infer_rna_type(current)
+        base_type = helpers.rna_type(feature)
+        found = inference.infer_rna_type(current, base_type)
+        return found
 
 
 if __name__ == '__main__':

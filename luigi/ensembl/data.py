@@ -16,11 +16,15 @@ limitations under the License.
 import re
 import json
 import hashlib
+import logging
+from collections import MutableMapping
 
 import attr
 from attr.validators import instance_of as is_a
 from attr.validators import optional
-from ensembl.helpers import qualifier_value
+from ensembl import helpers
+
+LOGGER = logging.getLogger(__name__)
 
 
 def optional_string():
@@ -40,20 +44,22 @@ def crc64(input_string):
     Adapted from:
     http://code.activestate.com/recipes/259177-crc64-calculate-the-cyclic-redundancy-check/
     """
-
     POLY64REVh = 0xd8000000L
     CRCTableh = [0] * 256
     CRCTablel = [0] * 256
+    isInitialized = False
     crcl = 0
     crch = 0
-    for i in xrange(256):
-        partl = i
-        parth = 0L
-        for _ in xrange(8):
-            rflag = partl & 1L
-            partl >>= 1L
-            if parth & 1:
-                partl |= (1L << 31L)
+    if isInitialized is not True:
+        isInitialized = True
+        for i in xrange(256):
+            partl = i
+            parth = 0L
+            for _ in xrange(8):
+                rflag = partl & 1L
+                partl >>= 1L
+                if parth & 1:
+                    partl |= (1L << 31L)
                 parth >>= 1L
                 if rflag:
                     parth ^= POLY64REVh
@@ -74,15 +80,31 @@ def crc64(input_string):
 
 @attr.s(frozen=True, slots=True)
 class GeneInfo(object):
+    gene_id = attr.ib(validator=is_a(basestring))
     description = attr.ib(validator=is_a(basestring))
+    locus_tag = attr.ib(validator=is_a(basestring))
+
+    @classmethod
+    def id_of(cls, value):
+        if isinstance(value, cls):
+            return value.gene_id
+        if isinstance(value, basestring):
+            return value
+        return helpers.gene(value)
 
     @classmethod
     def build(cls, feature):
-        description = qualifier_value(feature, 'note', '^(.+)$',
-                                      max_allowed=None)
+        description = helpers.qualifier_value(
+            feature,
+            'note',
+            '^(.+)$',
+            max_allowed=None
+        )
         description = description or ''
         return cls(
-            description=' '.join(description)
+            gene_id=cls.id_of(feature),
+            description=' '.join(description),
+            locus_tag=helpers.locus_tag(feature),
         )
 
     def is_pseudogene(self):
@@ -94,13 +116,41 @@ class GeneInfo(object):
 
 
 @attr.s(frozen=True)
-class Summary(object):
+class Summary(MutableMapping):
     sequence = attr.ib()
     gene_info = attr.ib(default=attr.Factory(dict), validator=is_a(dict))
 
-    def update(self, gene_info):
-        self.gene_info.update(gene_info)
+    def update_gene_info(self, gene):
+        gene_info = GeneInfo.build(gene)
+        self[gene_info] = gene_info
         return self
+
+    def locus_tag(self, gene):
+        return self[gene].locus_tag
+
+    def trimmed_description(self, gene):
+        return self[gene].trimmed_description()
+
+    def is_pseudogene(self, gene):
+        return self[gene].is_pseudogene()
+
+    def __getitem__(self, feature):
+        gene_id = GeneInfo.id_of(feature)
+        return self.gene_info[gene_id]  # pylint: disable=E1136
+
+    def __setitem__(self, key, value):
+        gene_id = GeneInfo.id_of(key)
+        self.gene_info[gene_id] = value  # pylint: disable=E1136
+
+    def __delitem__(self, key):
+        gene_id = GeneInfo.id_of(key)
+        del self.gene_info[gene_id]  # pylint: disable=E1136
+
+    def __iter__(self):
+        return iter(self.gene_info)
+
+    def __len__(self):
+        return len(self.gene_info)
 
 
 @attr.s(frozen=True)
@@ -175,13 +225,13 @@ class Entry(object):
     @property
     def ncrna_class(self):
         if self.feature_type != 'ncRNA':
-            return None
+            return ''
         return self.rna_type
 
     @property
     def seq_version(self):
         if '.' in self.primary_id:  # pylint: disable=E1135
-            return self.primary_id.split('.')[0]
+            return self.primary_id.split('.')[1]
         return ''
 
     @property
@@ -209,6 +259,19 @@ class Entry(object):
 
     def md5(self):
         return md5(self.seq)
+
+    def is_valid(self):
+        length = len(self.seq)
+        if length < 10:
+            LOGGER.warn("%s is too short (length = %s)",
+                        self.accession, length)
+            return False
+
+        if length > 1000000:
+            LOGGER.warn("%s is too long (length = %s)",
+                        self.accession, length)
+            return False
+        return True
 
     def __getattr__(self, name):
         if name in set(['ordinal', 'non_coding_id', 'project', 'keywords',

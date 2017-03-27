@@ -48,63 +48,40 @@ class Gencode(BaseImporter):
     def method_for(self, instance, field):
         name = field.name
         if instance.database == 'GENCODE' and \
-                hasattr(instance, 'gencode_' + field.name):
+                hasattr(self, 'gencode_' + field.name):
             name = 'gencode_' + field.name
         if hasattr(self, name):
             return getattr(self, name)
         return None
 
     def initial_entries(self, *args):
-        parent = super(Gencode, self).initial_entries(*args)
-        if self.is_gencode(parent[0]):
-            parent.append(attr.assoc(
-                parent[0],
-                database='GENCODE',
-            ))
-        return parent
+        for entry in super(Gencode, self).initial_entries(*args):
+            yield entry
+            if self.is_gencode(entry):
+                yield attr.assoc(entry, database='GENCODE')
 
     def gencode_xref_data(self, summary, feature, current):
         xrefs = {k: v for k, v in current.xref_data.items() if k != 'OTTT'}
-        xrefs['Ensembl'] = current.accession
+        xrefs['Ensembl'] = [current.accession]
         return xrefs
 
-    def gencode_accession(self, summary, feature, current):
-        return current.primary_id
-
     def gencode_primary_id(self, summary, feature, current):
-        for value in current['db_xrefs']['OTTT']:
+        for value in current.xref_data['OTTT']:
             if re.match(r'^OTT\w+T\d+$', value):
                 return value
         raise ValueError("Cannot find GENCODE primary id")
 
-    def gencode_description(self, summary, feature, current):
-        name = current.species
-        rna_type = current.ncrna_class
-        gencode_id = current.primary_id
-        assert name, "Must have a name to create description"
-        assert rna_type, "Must have an rna_type to create description"
-        return '{species} {rna_type} {gencode_id}'.format(
-            species=name,
-            rna_type=rna_type,
-            gencode_id=gencode_id,
-        )
-
     def gencode_references(self, summary, feature, current):
         return [data.Reference(
             authors=(
-                "Jennifer Harrow, Adam Frankish, Jose M. Gonzalez, "
-                "Electra Tapanari, Mark Diekhans, Felix Kokocinski, "
-                "Bronwen L. Aken, Daniel Barrell, Amonida Zadissa, "
-                "Stephen Searle, If Barnes, Alexandra Bignell, "
-                "Veronika Boychenko, Toby Hunt, Mike Kay, Gaurab Mukherjee, "
-                "Jeena Rajan, Gloria Despacio-Reyes, Gary Saunders, "
-                "Charles Steward, Rachel Harte, Michael Lin, Cedric Howald, "
-                "Andrea Tanzer, Thomas Derrien, Jacqueline Chrast, "
-                "Nathalie Walters, Suganthi Balasubramanian, Baikang Pei, "
-                "Michael Tress, Jose Manuel Rodriguez, Iakes Ezkurdia, "
-                "Jeltje van Baren, Michael Brent, David Haussler, "
-                "Manolis Kellis, Alfonso Valencia, Alexandre Reymond, "
-                "Mark Gerstein, Roderic Guigo and Tim J. Hubbard"
+                "Harrow J, Frankish A, Gonzalez JM, Tapanari E, Diekhans M, "
+                "Kokocinski F, Aken BL, Barrell D, Zadissa A, Searle S, Barnes"
+                " I, Bignell A, Boychenko V, Hunt T, Kay M, Mukherjee G, Rajan"
+                " J,  Despacio-Reyes G, Saunders G, Steward C, Harte R, Lin M,"
+                " Howald  C, Tanzer A, Derrien T, Chrast J, Walters N, "
+                "Balasubramanian S,  Pei B, Tress M, Rodriguez JM, Ezkurdia "
+                "I, van Baren J, Brent M,  Haussler D, Kellis M, Valencia A, "
+                "Reymond A, Gerstein M, Guigo  R, Hubbard TJ. "
             ),
             location="Genome Research",
             title=(
@@ -116,11 +93,11 @@ class Gencode(BaseImporter):
             accession=current.accession,
         )]
 
+    def gencode_accession(self, summary, feature, current):
+        return current.primary_id
+
     def gencode_optional_id(self, *args):
         return None
-
-    # def gencode_seq_version(self, *args):
-    #     return ''
 
 
 if __name__ == '__main__':

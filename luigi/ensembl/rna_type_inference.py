@@ -13,7 +13,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import re
+import logging
+
 from rfam import utils as rfutil
+
+LOGGER = logging.getLogger(__name__)
 
 
 LNC_ALIASES = set([
@@ -59,10 +64,11 @@ class RnaTypeInference(object):
         ]
 
     def rfam_type(self, name):
-        rfam_name = name.split('.')[0]
-        if rfam_name not in self.rfam_mapping and '-' in rfam_name:
-            rfam_name, _ = rfam_name.split('-', 1)
-        return self.rfam_mapping.get(rfam_name, None)
+        pattern = r'^(.+)\.\d+-\d+$'
+        match = re.match(pattern, name)
+        if name not in self.rfam_mapping and match:
+            name = match.group(1)
+        return self.rfam_mapping.get(name, None)
 
     def mouse_type(self, name):
         return MGI_TYPES.get(name, None)
@@ -76,11 +82,14 @@ class RnaTypeInference(object):
             values.discard(None)
             if len(values) == 1:
                 return values.pop()
-        raise UnknownRnaTypeException("Could not determine rna_type of %s",
-                                      current)
+            if len(values) > 1:
+                LOGGER.info("Conflicting rna types for %s according to %s",
+                            current, key)
 
-    def infer_rna_type(self, current):
-        base_type = current.note[0]
+        LOGGER.info("Could not infer an rna-type for %s", current)
+        return 'misc_RNA'
+
+    def infer_rna_type(self, current, base_type):
         if base_type in LNC_ALIASES:
             return 'lncRNA'
         if base_type in NC_ALIASES:

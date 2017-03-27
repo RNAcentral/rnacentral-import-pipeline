@@ -17,13 +17,15 @@ import os
 import abc
 import logging
 
-from ensembl import data
-from ensembl import helpers
-from ensembl.writers import Output
-
 import attr
 from Bio import SeqIO
 import luigi
+
+from download import Download
+
+from ensembl import data
+from ensembl import helpers
+from ensembl.writers import Output
 
 
 LOGGER = logging.getLogger(__name__)
@@ -56,6 +58,9 @@ class BioImporter(luigi.Task):
     def initial_entries(self, summary, record, feature):
         return []
 
+    def requires(self):
+        return Download(remote_file=self.input_file)
+
     def update_gene_info(self, summary, gene):
         """
         Update the gene information for the current summary.
@@ -73,10 +78,9 @@ class BioImporter(luigi.Task):
             The summary object with updated gene information.
         """
 
-        name = helpers.gene(gene)
-        if name in summary.gene_info:
-            LOGGER.error("Duplicate gene %s, may result in bad data", name)
-        return summary.update({name: data.GeneInfo.build(gene)})
+        if gene in summary:
+            LOGGER.error("Duplicate gene %s, may result in bad data", gene)
+        return summary.update_gene_info(gene)
 
     def is_pseudogene(self, summary, feature):
         notes = feature.qualifiers.get('note', [])
@@ -84,10 +88,10 @@ class BioImporter(luigi.Task):
             return True
 
         gene = helpers.gene(feature)
-        return summary.gene_info[gene].is_pseudogene()
+        return summary.is_pseudogene(gene)
 
     def output(self):
-        prefix = os.path.basename(self.input_file.path)
+        prefix = os.path.basename(self.input_file)
         return Output.build(self.destination, 'ensembl', prefix)
 
     def method_for(self, instance, field):
@@ -106,15 +110,13 @@ class BioImporter(luigi.Task):
             yield current
 
     def description(self, summary, feature, current):
-        gene = current.gene
-        trimmed = summary.gene_info[gene].trimmed_description()
+        trimmed = summary.trimmed_description(feature)
         if not trimmed:
             return None
 
-        return '{species} {trimmed} ({transcript})'.format(
+        return '{species} {trimmed}'.format(
             species=current.species,
             trimmed=trimmed,
-            transcript=current.primary_id,
         )
 
     def summary(self, record):
@@ -134,9 +136,11 @@ class BioImporter(luigi.Task):
 
                     entries = self.rnacentral_entries(record, summary, feature)
                     for entry in entries:
-                        yield entry
+                        if entry.is_valid():
+                            yield entry
 
     def run(self):
+        local_file = self.requires().output()
         with self.output() as writers:
-            for entry in self.data(self.input_file):
+            for entry in self.data(local_file):
                 writers.write(entry)

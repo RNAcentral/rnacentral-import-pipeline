@@ -39,7 +39,6 @@ from contextlib import contextmanager
 import attr
 from attr.validators import instance_of as is_a
 import luigi
-from luigi.contrib.ftp import RemoteTarget
 
 from ensembl.gencode import Gencode
 from ensembl.generic import EnsemblImporter
@@ -149,15 +148,8 @@ class SpeciesImporter(luigi.Task):
 
     destination = luigi.Parameter(default='/tmp')
     name = CommaSeperatedSet()
+    release = luigi.Parameter(default='current')
     allow_model_organisms = luigi.BoolParameter(default=False)
-
-    def __init__(self, *args, **kwargs):
-        """
-        Create a new SpeciesImporter. This will connect to Ensembl's FTP site
-        when created.
-        """
-
-        super(SpeciesImporter, self).__init__(*args, **kwargs)
 
     def host(self):
         """
@@ -181,9 +173,11 @@ class SpeciesImporter(luigi.Task):
             The path.
         """
 
-        return 'pub/current_embl'
+        if self.release == 'current':
+            return 'pub/current_embl'
+        return 'pub/release-{release}/embl/'.format(release=self.release)
 
-    def is_data_file(self, name, allow_nonchromosomal=False):
+    def is_data_file(self, name):
         """
         Check if the given filename contains genome data to import. By default
         this will only use data from chromosomes. However there is an option to
@@ -207,11 +201,7 @@ class SpeciesImporter(luigi.Task):
         """
 
         filename = os.path.basename(name)
-        if 'chromosome' in filename:
-            return True
-        if allow_nonchromosomal:
-            return 'nonchromosomal' in filename
-        return False
+        return 'chromosome' in filename or 'nonchromosomal' in filename
 
     def description_of(self, ftp, name):
         """
@@ -235,11 +225,6 @@ class SpeciesImporter(luigi.Task):
         cleaned = cleaned[0].upper() + cleaned[1:]
         path = name.lower()
         names = [f for f in ftp.nlst(path) if self.is_data_file(f)]
-
-        if not names:
-            LOGGER.info("Attempt to use nonchromosomal data for %s", name)
-            names = [f for f in ftp.nlst(path) if self.is_data_file(f, allow_nonchromosomal=True)]
-
         if names:
             return SpeciesDescription(
                 species_name=cleaned,
@@ -338,8 +323,12 @@ class SpeciesImporter(luigi.Task):
                 continue
 
             for filename in description.filenames:
-                path = '%s/%s' % (self.base(), filename)
-                input_file = RemoteTarget(path, self.host())
+                remote_path = 'ftp://{host}/{base}/{filename}'.format(
+                    host=self.host(),
+                    base=self.base(),
+                    filename=filename)
+                input_file = remote_path
+
                 if description.species_name in GENCODE_SPECIES:
                     yield Gencode(input_file=input_file,
                                   destination=self.destination)
