@@ -21,24 +21,27 @@ from luigi.contrib.ftp import RemoteTarget as FtpTarget
 from luigi.local_target import LocalTarget
 
 
-def handle_generic_file(path, **kwargs):
-    parsed = urlparse(path)
-    fmt = None
-    if path.endswith('.gz'):
-        fmt = GzipFormat
-    kwargs['format'] = fmt
-
-    if not parsed.scheme:
-        return LocalTarget(path=path, **kwargs)
-    if parsed.scheme == 'ftp':
-        return FtpTarget(parsed.path, parsed.netloc, **kwargs)
-
-    raise ValueError("Cannot build target for %s" % path)
-
-
 class GenericFileParameter(Parameter):
     def serialize(self, value):
         return value
 
     def parse(self, value):
-        return value
+        try:
+            self.as_target(value)
+            return value
+        except:
+            raise ValueError("Unknown type of file %s" % value)
+
+    def as_target(self, path, **kwargs):
+        parsed = urlparse(path)
+        fmt = None
+        if path.endswith('.gz'):
+            fmt = GzipFormat
+        kwargs['format'] = fmt
+
+        if not parsed.scheme:
+            return LocalTarget(path=path, **kwargs)
+        if parsed.scheme == 'ftp':
+            return FtpTarget(parsed.path, parsed.netloc, **kwargs)
+
+        raise ValueError("Cannot build target for %s" % path)

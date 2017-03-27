@@ -18,7 +18,6 @@ from luigi import LocalTarget
 from luigi.local_target import atomic_file
 
 from parameters import GenericFileParameter
-from parameters import handle_generic_file
 
 
 class Download(luigi.Task):
@@ -30,7 +29,7 @@ class Download(luigi.Task):
 
     @property
     def remote(self):
-        return handle_generic_file(self.remote_file)
+        return GenericFileParameter().as_target(self.remote_file)
 
     def output(self):
         return LocalTarget(path=self.path())
