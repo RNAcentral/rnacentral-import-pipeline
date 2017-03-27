@@ -45,9 +45,6 @@ MGI_TYPES = {
     'Terc': 'telomerase_RNA',
     'Rn7s6': 'SRP_RNA',
     'Nkx2-2os': 'lncRNA',
-    # Nbr1-203
-    # Vis1-201
-    # 1600017P15Rik-201
 }
 
 
@@ -71,6 +68,10 @@ class RnaTypeInference(object):
         return self.rfam_mapping.get(name, None)
 
     def mouse_type(self, name):
+        pattern = r'^(.+)-.*$'
+        match = re.match(pattern, name)
+        if name not in MGI_TYPES and match:
+            name = match.group(1)
         return MGI_TYPES.get(name, None)
 
     def compute_fallback_rna_type(self, current):

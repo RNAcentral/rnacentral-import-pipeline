@@ -13,10 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from collections import Counter
-
 import pytest
-from Bio import SeqIO
 import luigi
 import parameters
 
@@ -26,7 +23,7 @@ from tests.ensembl.helpers import Base
 
 
 class Simple(BioImporter):
-    input_file = parameters.FileParameter()
+    input_file = parameters.GenericFileParameter()
     destination = luigi.Parameter(default='/tmp')
     format = 'embl'
 
@@ -35,30 +32,22 @@ class Simple(BioImporter):
 
 
 class CoreTests(Base):
+    filename = 'data/Homo_sapiens.GRCh38.87.chromosome.12.dat'
+    importer_class = Simple
 
-    @classmethod
-    def setUpClass(cls):
-        cls.filename = 'data/Homo_sapiens.GRCh38.87.chromosome.12.dat'
-        cls.importer_class = Simple
-
-        cls.features = {}
-        cls.record = SeqIO.read(cls.filename, 'embl')
-        for feature in cls.record.features:
-            gene = feature.qualifiers.get('gene', [None])[0]
-            key = (feature.type, gene)
-            cls.features[key] = feature
-
-    def importer_method(self, name, key):
+    def importer_method(self, name, gene_key, key):
         feature = self.features[key]
         summary = self.importer.summary(self.record)
+        gene = self.features[gene_key]
+        summary = self.importer.update_gene_info(summary, gene)
         method = getattr(self.importer, name)
         return method(summary, feature)
 
-    def is_pseudogene(self, *key):
-        return self.importer_method('is_pseudogene', key)
+    def is_pseudogene(self, gene_key, key):
+        return self.importer_method('is_pseudogene', gene_key, key)
 
     def test_transcript_is_pseudogene_if_gene_is(self):
-        assert self.is_pseudogene('misc_RNA', 'ENSG00000221439.1') is True
+        assert self.is_pseudogene("HTR1DP1", 'ENST00000616500.1') is True
 
     @pytest.mark.skip()
     def test_it_always_outputs_things_with_rnacentral_links(self):
@@ -69,14 +58,11 @@ class CoreTests(Base):
         pass
 
     def test_can_detect_if_is_pseudogene(self):
-        assert self.is_pseudogene('misc_RNA', 'ENSG00000226210.3') is True
-        assert self.is_pseudogene('gene', 'ENSG00000249054.2') is False
-
-    def test_it_excludes_retrained_introns(self):
-        assert self.is_pseudogene('misc_RNA', 'ENSG00000002016.17') is True
+        assert self.is_pseudogene("WASH7P", 'ENST00000400706.3') is True
+        assert self.is_pseudogene('FAM138D', 'FAM138D') is False
 
     def test_excludes_unprocessed_pseudogenes(self):
-        assert self.is_pseudogene('misc_RNA', 'ENSG00000226210.3') is True
+        assert self.is_pseudogene("WASH7P", 'ENST00000400706.3') is True
 
     @pytest.mark.skip()
     def test_it_can_get_description_from_the_gene(self):

@@ -80,6 +80,10 @@ def transcript(feature):
     return qualifier_value(feature, 'note', '^transcript_id=(.+)$')
 
 
+def is_transcript(feature):
+    return transcript(feature) is not None
+
+
 def notes(feature):
     return feature.qualifiers.get('note', [])
 

@@ -122,8 +122,8 @@ class EnsemblImporter(BioImporter):
         return ''
 
     def product(self, summary, feature, current):
-        if current.rna_type == 'scaRNA':
-            return current.rna_type
+        if helpers.rna_type(feature) == 'scaRNA':
+            return 'scaRNA'
         return ''
 
     def rna_type(self, summary, feature, current):
