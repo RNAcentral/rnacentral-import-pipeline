@@ -225,7 +225,7 @@ class OutputWriters(object):
 
     def write_reference(self, reference):
         self.references.writerow([
-            reference.md5,
+            reference.md5(),
             reference.accession,
             reference.authors,
             reference.location,
