@@ -40,29 +40,9 @@ import attr
 from attr.validators import instance_of as is_a
 import luigi
 
-from ensembl.gencode import Gencode
-from ensembl.generic import EnsemblImporter
+from ensembl.deduplicate import DeduplicateTask
 
 from rfam import utils as rfutil
-
-GENCODE_SPECIES = set([
-    'Homo sapiens',
-    'Mus musculus',
-])
-"""
-All species names in this set should use the gencode importer instead of the
-generic one.
-"""
-
-MODEL_ORGANISMS = set([
-    'saccharomyces_cerevisiae',
-    'caenorhabditis_elegans',
-    'drosophila_melanogaster',
-])
-"""
-This is a set of species names that should be considered a model oragnism and
-thus excluded from the default import.
-"""
 
 LOGGER = logging.getLogger(__name__)
 
@@ -150,6 +130,7 @@ class SpeciesImporter(luigi.Task):
     name = CommaSeperatedSet()
     release = luigi.Parameter(default='current')
     allow_model_organisms = luigi.BoolParameter(default=False)
+    test = luigi.BoolParameter(default=False, significant=False)
 
     def host(self):
         """
@@ -322,19 +303,19 @@ class SpeciesImporter(luigi.Task):
             if not description:
                 continue
 
+            full_paths = []
             for filename in description.filenames:
-                remote_path = 'ftp://{host}/{base}/{filename}'.format(
+                full_paths.append('ftp://{host}/{base}/{filename}'.format(
                     host=self.host(),
                     base=self.base(),
-                    filename=filename)
-                input_file = remote_path
+                    filename=filename))
 
-                if description.species_name in GENCODE_SPECIES:
-                    yield Gencode(input_file=input_file,
-                                  destination=self.destination)
-                else:
-                    yield EnsemblImporter(input_file=input_file,
-                                          destination=self.destination)
+            yield DeduplicateTask(
+                name=description.species_name,
+                filenames=','.join(full_paths),
+                destination=self.destination,
+                test=self.test,
+            )
 
 
 if __name__ == '__main__':
