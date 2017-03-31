@@ -57,9 +57,17 @@ class EnsemblImporter(BioImporter):
         transcript_id = helpers.transcript(feature)
         gene = helpers.gene(feature)
 
+        primary_id = transcript_id
+        accession = transcript_id
+        standard_name = helpers.standard_name(feature)
+
+        if not transcript_id:
+            primary_id = standard_name
+            accession = standard_name
+
         return [data.Entry(
-            primary_id=transcript_id,
-            accession=transcript_id,
+            primary_id=primary_id,
+            accession=accession,
             seq=sequence,
             ncbi_tax_id=helpers.taxid(record),
             database='ENSEMBL',

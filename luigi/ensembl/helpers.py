@@ -111,6 +111,8 @@ def xref_data(feature):
 def grouped_annotations(raw, split):
     parsed = coll.defaultdict(set)
     for entry in raw:
+        if split not in entry:
+            continue
         key, value = entry.split(split, 1)
         if key == 'RNACentral':
             key = 'RNAcentral'
@@ -128,6 +130,10 @@ def is_ncrna(feature):
     # getting the ncRNA type.
     return feature.type in {'misc_RNA', 'ncRNA'} and \
         feature.qualifiers['note'][0].lower() not in CODING_RNA_TYPES
+
+
+def standard_name(feature):
+    return qualifier_value(feature, 'standard_name', '^(.+)$')
 
 
 def chromosome(record):
