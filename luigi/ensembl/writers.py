@@ -59,9 +59,14 @@ class Output(object):
                 )
             )
 
-            if not os.path.exists(os.path.dirname(path)):
-                os.makedirs(os.path.dirname(path))
+            dirname = os.path.dirname(path)
+            try:
+                os.makedirs(dirname)
+            except:
+                if not os.path.exists(dirname):
+                    raise ValueError("Could not create %s" % dirname)
             return path
+
 
         return cls(
             short_sequences=LocalTarget(path_to('short')),
