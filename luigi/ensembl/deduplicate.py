@@ -111,7 +111,7 @@ class DeduplicateTask(luigi.Task):
     name = luigi.Parameter()
     filenames = CommaGenericFileParameter()
     test = luigi.BoolParameter(default=False, significant=False)
-    destination = luigi.Parameter(default='/tmp')
+    destination = PathParameter(default='/tmp')
     cleanup = luigi.BoolParameter(default=False, significant=False)
 
     @property

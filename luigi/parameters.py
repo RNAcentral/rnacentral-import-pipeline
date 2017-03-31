@@ -13,6 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import os
+
 from urlparse import urlparse
 
 from luigi.parameter import Parameter
@@ -40,7 +42,7 @@ class GenericFileParameter(Parameter):
         kwargs['format'] = fmt
 
         if not parsed.scheme or parsed.scheme == 'file':
-            return LocalTarget(path=path, **kwargs)
+            return LocalTarget(path=os.path.normalize(path), **kwargs)
         if parsed.scheme == 'ftp':
             return FtpTarget(parsed.path, parsed.netloc, **kwargs)
 
@@ -66,3 +68,10 @@ class CommaGenericFileParameter(Parameter):
         paths = [p.strip() for p in value.split(',')]
         return [parameter.as_target(path) for path in paths]
 
+
+class PathParameter(Parameter):
+    def seralize(self, value):
+        return value
+
+    def parse(self, value):
+        return os.path.normalie(value)

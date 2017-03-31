@@ -37,7 +37,7 @@ class EnsemblImporter(BioImporter):
 
     input_file = parameters.GenericFileParameter()
     test = luigi.BoolParameter(default=False, significant=False)
-    destination = luigi.Parameter(default='/tmp')
+    destination = PathParameter(default='/tmp')
 
     def format(self):
         """

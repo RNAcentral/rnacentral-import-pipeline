@@ -40,6 +40,8 @@ import attr
 from attr.validators import instance_of as is_a
 import luigi
 
+from parameters import PathParameter
+
 from ensembl.config import MODEL_ORGANISMS
 from ensembl.deduplicate import DeduplicateTask
 
@@ -127,7 +129,7 @@ class SpeciesImporter(luigi.Task):
         Name of the species in Ensembl to import.
     """
 
-    destination = luigi.Parameter(default='/tmp')
+    destination = PathParameter(default='/tmp')
     name = CommaSeperatedSet()
     release = luigi.Parameter(default='current')
     allow_model_organisms = luigi.BoolParameter(default=False)
