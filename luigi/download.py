@@ -17,6 +17,7 @@ import luigi
 from luigi import LocalTarget
 from luigi.local_target import atomic_file
 
+from parameters import PathParameter
 from parameters import GenericFileParameter
 
 
@@ -25,7 +26,7 @@ class Download(luigi.Task):
     A simple class to download remote files and store them locally. They will
     """
     remote_file = GenericFileParameter()
-    directory = luigi.Parameter(default='./data')
+    directory = PathParameter(default='./data')
 
     @property
     def remote(self):
@@ -40,7 +41,7 @@ class Download(luigi.Task):
             remote = remote[:-3]
         if remote.startswith('/'):
             remote = remote[1:]
-        return os.path.join(self.directory, remote)
+        return os.path.abspath(os.path.join(self.directory, remote))
 
     def run(self):
         path = self.path()
