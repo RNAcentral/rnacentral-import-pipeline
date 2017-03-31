@@ -19,11 +19,10 @@ from glob import glob
 
 import luigi
 from luigi.target import FileSystemTarget
+from luigi.local_target import atomic_file
+
 import attr
 from attr.validators import instance_of as is_a
-
-from plumbum import local
-from plumbum.cmd import cat, sort, cd
 
 from parameters import CommaGenericFileParameter
 
@@ -58,20 +57,15 @@ class DedupOutput(object):
             sorting_options=options,
         )
 
-    @property
-    def command(self):
+    def write(self):
+        os.chdir(self.directory)
         files = glob('*%s*' % self.species)
-        if not self.sorting_options:
-            return (cat[files] > self.final.path)
+        cat = sp.Popen(['cat'] + files, stdout=sp.PIPE)
+        sort = sp.Popen(['sort', '-t', ',', '-u'] + self.sorting_options,
+                        stdin=cat.stdout, stdout=sp.PIPE)
 
-        args = ['-t', ',', '-u'] + self.sorting_options
-        return (
-            cat[files] | sort[args] > str(self.final.path)
-        )
-
-    def run(self):
-        with local.cwd(self.directory):
-            self.command()
+        with atomic_file(self.final.path) as out:
+            out.writelines(line for line in sort.stdout)
 
     def exists(self):
         return self.final.exists()
@@ -79,29 +73,38 @@ class DedupOutput(object):
 
 @attr.s()
 class DedupOutputs(object):
-    short = attr.ib(validator=is_a(DedupOutput))
-    long = attr.ib(validator=is_a(DedupOutput))
+    short_sequences = attr.ib(validator=is_a(DedupOutput))
+    long_sequences = attr.ib(validator=is_a(DedupOutput))
     references = attr.ib(validator=is_a(DedupOutput))
     accessions = attr.ib(validator=is_a(DedupOutput))
     locations = attr.ib(validator=is_a(DedupOutput))
 
     @classmethod
     def build(cls, species, tasks):
+        name = species.replace(' ', '_')
         out = [t.output() for t in tasks]
         return cls(
-            short=DedupOutput.build(['-k', '5,5'], species, 'short_sequences', out),
-            long=DedupOutput.build(['-k', '5,5'], species, 'long_sequences', out),
-            references=DedupOutput.build(['-k', '1,2'], species, 'references', out),
-            accessions=DedupOutput.build(['-k', '1,1'], species, 'accessions', out),
-            locations=DedupOutput.build([], species, 'locations', out),
+            short_sequences=DedupOutput.build(['-k', '5,5'], name, 'short_sequences', out),
+            long_sequences=DedupOutput.build(['-k', '5,5'], name, 'long_sequences', out),
+            references=DedupOutput.build(['-k', '1,2'], name, 'references', out),
+            accessions=DedupOutput.build(['-k', '1,1'], name, 'accessions', out),
+            locations=DedupOutput.build([], name, 'locations', out),
         )
 
     def exists(self):
-        return self.short.exists() and \
-            self.long.exists() and \
-            self.references.exists() and \
-            self.accessions.exists() and \
-            self.locations.exists()
+        for output in self.outputs():
+            if not output.exists():
+                return False
+        return True
+
+    def write(self):
+        here = os.curdir
+        for output in self.outputs():
+            output.write()
+            os.chdir(here)
+
+    def outputs(self):
+        return [getattr(self, f.name) for f in attr.fields(self.__class__)]
 
 
 class DeduplicateTask(luigi.Task):
@@ -127,22 +130,18 @@ class DeduplicateTask(luigi.Task):
             )
 
     def output(self):
-        return DedupOutputs.build(self.name.replace(' ', '_'), self.requires())
-
-    def command(self, output):
-        return [
-            'cat', '*%s*' % output.species, '|',
-            'sort', '-t', ',', output.sorting_options, '-u', '>', output.final.path
-        ]
+        return DedupOutputs.build(self.name, self.requires())
 
     def run(self):
-        outputs = self.output()
+        self.output().write()
+        if not self.cleanup:
+            return
+
         for field in attr.fields(outputs.__class__):
             output = getattr(outputs, field.name)
-            output.run()
-            if self.cleanup:
-                for filename in output.filenames:
-                    os.remove(filename)
+            for filename in output.filenames:
+                os.remove(filename)
+
 
 if __name__ == "__main__":
     luigi.run(main_task_cls=DeduplicateTask)
