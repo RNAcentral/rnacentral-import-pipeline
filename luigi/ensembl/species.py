@@ -40,6 +40,7 @@ import attr
 from attr.validators import instance_of as is_a
 import luigi
 
+from ensembl.config import MODEL_ORGANISMS
 from ensembl.deduplicate import DeduplicateTask
 
 from rfam import utils as rfutil
