@@ -58,7 +58,6 @@ class DedupOutput(object):
         )
 
     def write(self):
-        os.chdir(self.directory)
         files = glob('*%s*' % self.species)
         cat = sp.Popen(['cat'] + files, stdout=sp.PIPE)
         sort = sp.Popen(['sort', '-t', ',', '-u'] + self.sorting_options,
@@ -98,10 +97,8 @@ class DedupOutputs(object):
         return True
 
     def write(self):
-        here = os.curdir
         for output in self.outputs():
             output.write()
-            os.chdir(here)
 
     def outputs(self):
         return [getattr(self, f.name) for f in attr.fields(self.__class__)]
