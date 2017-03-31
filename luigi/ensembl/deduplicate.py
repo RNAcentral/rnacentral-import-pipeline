@@ -112,19 +112,16 @@ class DeduplicateTask(luigi.Task):
     cleanup = luigi.BoolParameter(default=False, significant=False)
 
     @property
-    def file_targets(self):
-        return CommaGenericFileParameter().as_targets(self.filenames)
-
-    @property
     def ensembl_class(self):
         if self.name.replace('_', ' ') in GENCODE_SPECIES:
             return Gencode
         return EnsemblImporter
 
     def requires(self):
-        for filename in self.file_targets:
+        filenames = CommaGenericFileParameter().parse(self.filenames)
+        for filename in filenames:
             yield self.ensembl_class(
-                input_file=filename.path,
+                input_file=filename,
                 test=self.test,
                 destination=self.destination,
             )
