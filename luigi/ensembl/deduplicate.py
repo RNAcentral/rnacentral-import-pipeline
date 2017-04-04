@@ -41,7 +41,7 @@ class DedupOutput(object):
     @classmethod
     def build(cls, options, species, name, targets):
         outputs = [getattr(t, name) for t in targets]
-        directory = os.path.dirname(outputs[0].path)
+        directory = os.path.abspath(os.path.dirname(outputs[0].path))
         final = '{database}_{species}_{prefix}_{folder}.csv'.format(
             database='ensembl',
             species=species,
@@ -58,7 +58,7 @@ class DedupOutput(object):
         )
 
     def write(self):
-        files = glob('*%s*' % self.species)
+        files = glob(os.path.join(self.directory, '*%s*' % self.species))
         cat = sp.Popen(['cat'] + files, stdout=sp.PIPE)
         sort = sp.Popen(['sort', '-t', ',', '-u'] + self.sorting_options,
                         stdin=cat.stdout, stdout=sp.PIPE)
