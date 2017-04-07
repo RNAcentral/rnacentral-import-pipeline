@@ -20,43 +20,6 @@ import pytest
 from rfam import utils
 
 
-@pytest.mark.parametrize("given,correct", [
-    (None, None),
-    ("", None),
-    (";", None),
-    ("; ;", None),
-    ("; ; ;", None),
-    ("; ; ; ; ; ;", None),
-    ("a bad input", None),
-    ("Gene; snRNA; snoRNA; CD-box; longer;", "snoRNA"),
-
-    ("Cis-reg;", None),
-    ("Cis-reg; frameshift_element;", None),
-    ("Cis-reg; IRES;", None),
-    ("Cis-reg; leader;", None),
-    ("Cis-reg; riboswitch;", "riboswitch"),
-    ("Cis-reg; thermoregulator;", None),
-    ("Gene;", None),
-    ("Gene; antisense;", "antisense"),
-    ("Gene; antitoxin;", None),
-    ("Gene; CRISPR;", None),
-    ("Gene; lncRNA;", "lncRNA"),
-    ("Gene; miRNA;", "precursor_RNA"),
-    ("Gene; ribozyme;", "ribozyme"),
-    ("Gene; rRNA;", "rRNA"),
-    ("Gene; snRNA;", "snRNA"),
-    ("Gene; snRNA; snoRNA; CD-box;", "snoRNA"),
-    ("Gene; snRNA; snoRNA; HACA-box;", "snoRNA"),
-    ("Gene; snRNA; snoRNA; scaRNA;", "snoRNA"),
-    ("Gene; snRNA; splicing;", None),
-    ("Gene; sRNA;", "ncRNA"),
-    ("Gene; tRNA;", "tRNA"),
-    ("Intron;", None),
-])
-def test_can_handle_all_current_types(given, correct):
-    assert utils.get_isndc(given) == correct
-
-
 def test_fetch_file_gets_unzipped_contents():
     contents = utils.fetch_file('12.2', 'database_files/family.txt.gz')
     assert hashlib.md5(contents.read()).hexdigest() == "5060f63e875739dab1ae514f5ae4b775"
@@ -68,8 +31,8 @@ def test_fetch_file_handles_uncompressed_files():
 
 
 @pytest.mark.parametrize("name,expected", [
-    ("Cis52_sRNA", "ncRNA"),
-    ("CbSR2", "antisense"),
+    ("Cis52_sRNA", "other"),
+    ("CbSR2", None),
     ("ppoRNA", "rRNA"),
     ("SNOR75", "snoRNA"),
     ("URE2_IRES", None),
@@ -80,7 +43,7 @@ def test_fetch_file_handles_uncompressed_files():
     ("ROSE_2", None),
     ("astro_FSE", None),
     ("RUF20", None),
-    ("lactis-plasmid", "ncRNA"),
+    ("lactis-plasmid", "other"),
     ("leu-phe_leader", None),
     ("CRISPR-DR2", None),
     ('Metazoa_SRP', 'SRP_RNA'),
@@ -91,5 +54,15 @@ def test_fetch_file_handles_uncompressed_files():
     ('CDKN2B-AS', 'lncRNA'),
 ])
 def test_can_fetch_a_mapping_from_name_to_isndc(name, expected):
-    mapping = utils.name_to_isnsdc_type()
+    mapping = utils.name_to_insdc_type()
     assert mapping[name] == expected
+
+
+@pytest.mark.parametrize("family_id,expected", [
+    ("RF02647", "other"),
+    ("RF02558", None),
+    ("RF02554", "rRNA"),
+])
+def test_can_fetch_a_mapping_from_id_to_isndc(family_id, expected):
+    mapping = utils.id_to_insdc_type()
+    assert mapping[family_id] == expected
