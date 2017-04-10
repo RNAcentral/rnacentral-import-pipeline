@@ -37,6 +37,7 @@ INFORMATIVE_NAMES = {
     "vault": "vault_RNA",
     "tmrna": "tmRNA",
     "rnase_p": "RNase_P_RNA",
+    "rnasep": "RNase_P_RNA",
     "rnase_mrp": "RNase_MRP_RNA",
     "telomerase": "telomerase_RNA"
 }
