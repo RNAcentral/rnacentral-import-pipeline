@@ -36,6 +36,7 @@ INFORMATIVE_NAMES = {
     "group-ii": "autocatalytically_spliced_intron",
     "vault": "vault_RNA",
     "tmrna": "tmRNA",
+    "trna": "tRNA",
     "rnase_p": "RNase_P_RNA",
     "rnasep": "RNase_P_RNA",
     "rnase_mrp": "RNase_MRP_RNA",
