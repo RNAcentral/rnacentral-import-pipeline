@@ -53,6 +53,7 @@ def test_fetch_file_handles_uncompressed_files():
     ('Vault', 'vault_RNA'),
     ('tmRNA', 'tmRNA'),
     ('CDKN2B-AS', 'lncRNA'),
+    ('7SK', 'snRNA'),
     ('isrP', 'other'),
 ])
 def test_can_fetch_a_mapping_from_name_to_isndc(name, expected):
@@ -64,10 +65,27 @@ def test_can_fetch_a_mapping_from_name_to_isndc(name, expected):
     ("RF02647", "other"),
     ("RF02558", None),
     ("RF02554", "rRNA"),
+    ("RF01268", "snoRNA"),
+    ("RF00006", "vault_RNA"),
+    ("RF01960", "rRNA"),
+    ("RF01855", "SRP_RNA"),
+    ("RF00017", "SRP_RNA"),
+    ("RF02144", None),
+    ("RF01414", None),
+    ("RF00106", "antisense_RNA"),
+    ("RF00242", "antisense_RNA"),
+    ("RF01695", "antisense_RNA"),
+    ("RF00039", "antisense_RNA"),
+    ("RF00079", "other"),
 ])
 def test_can_fetch_a_mapping_from_id_to_isndc(family_id, expected):
     mapping = utils.id_to_insdc_type()
     assert mapping[family_id] == expected
+
+
+def test_it_maps_a_known_lncRNA():
+    mapping = utils.id_to_insdc_type()
+    assert mapping['RF01800'] == 'lncRNA'
 
 
 class INSDCRNATypeTest(ut.TestCase):
