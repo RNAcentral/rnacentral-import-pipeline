@@ -82,16 +82,24 @@ SO_TERM_MAPPING = {
 }
 
 RFAM_RNA_TYPE_MAPPING = {
+    "Cis-reg; leader;": "other",
+    "Cis-reg; riboswitch;": "other",
+    "Gene; CRISPR;": "other",
+    "Gene; antisense;": "antisense_RNA",
+    "Gene; antitoxin;": "other",
     "Gene; lncRNA;": "lncRNA",
     "Gene; miRNA;": "precursor_RNA",
     "Gene; rRNA;": "rRNA",
+    "Gene; ribozyme;": "ribozyme",
     "Gene; sRNA;": "other",
-    "Gene; snRNA;": "snRNA",
     "Gene; snRNA; snoRNA; CD-box;": "snoRNA",
     "Gene; snRNA; snoRNA; HACA-box;": "snoRNA",
     "Gene; snRNA; snoRNA; scaRNA;": "snoRNA",
-    "Gene; tRNA;": "tRNA",
     "Gene; snRNA; splicing;": "snRNA",
+    "Gene; snRNA;": "snRNA",
+    "Gene; tRNA;": "tRNA",
+    "Gene; tRNA;": "tRNA",
+    "Gene;": "other",
 }
 
 
