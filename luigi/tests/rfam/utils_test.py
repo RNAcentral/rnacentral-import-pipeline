@@ -80,6 +80,15 @@ def test_can_fetch_a_mapping_from_name_to_isndc(name, expected):
     ("RF00079", "other"),
     ("RF00003", "snRNA"),
     ("RF00548", "snRNA"),
+    ("RF00024", "telomerase_RNA"),
+    ("RF01050", "telomerase_RNA"),
+    ("RF02277", "hammerhead_ribozyme"),
+    ("RF01577", "RNase_P_RNA"),
+    ("RF01807", "autocatalytically_spliced_intron"),
+    ("RF02357", "RNase_P_RNA"),
+    ("RF00094", "ribozyme"),
+    ("RF02276", "hammerhead_ribozyme"),
+    ("RF00023", "tmRNA"),
 ])
 def test_can_fetch_a_mapping_from_id_to_isndc(family_id, expected):
     mapping = utils.id_to_insdc_type()
