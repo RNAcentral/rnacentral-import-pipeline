@@ -30,17 +30,24 @@ from attr.validators import instance_of as is_a
 from functools32 import lru_cache
 
 INFORMATIVE_NAMES = {
-    "srp": "SRP_RNA",
+    # The leading _ is to prevent this from hitting isrP
+    "_srp": "SRP_RNA",
     "y_rna": "Y_RNA",
     "hammerhead": "hammerhead_ribozyme",
     "group-ii": "autocatalytically_spliced_intron",
     "vault": "vault_RNA",
     "tmrna": "tmRNA",
-    "trna": "tRNA",
     "rnase_p": "RNase_P_RNA",
     "rnasep": "RNase_P_RNA",
     "rnase_mrp": "RNase_MRP_RNA",
-    "telomerase": "telomerase_RNA"
+    "telomerase": "telomerase_RNA",
+
+    # This is to prevent this from hitting 'ctRNA' as well
+    "^trna": "tRNA",
+
+    # These two patterns are so that we don't hit tracrRNA with rRNA
+    "_rRNA": "rRNA",
+    "PK-G12rRNA": "rRNA",
 }
 
 SO_TERM_MAPPING = {
@@ -115,9 +122,16 @@ class RfamFamily(object):
         return families
 
     def guess_insdc_using_name(self):
+        found = set()
         for name, rna_type in INFORMATIVE_NAMES.items():
             if re.search(name, self.name, re.IGNORECASE):
-                return rna_type
+                found.add(name)
+
+        if found:
+            if len(found) > 1:
+                raise ValueError("Name patterns not distinct %s" %
+                                 ', '.join(sorted(found)))
+            return INFORMATIVE_NAMES[found.pop()]
         return None
 
     def guess_insdc_using_rna_type(self):
@@ -151,26 +165,27 @@ def fetch_file(version, filename):
     return raw
 
 
-def get_families(version='CURRENT'):
+def get_family_file(version='CURRENT'):
     return fetch_file(version=version, filename='database_files/family.txt.gz')
 
 
-def get_links(version='CURRENT'):
+def get_link_file(version='CURRENT'):
     return fetch_file(version=version,
                       filename='database_files/database_link.txt.gz')
 
 
 @lru_cache()
+def load_families(version='CURRENT'):
+    family_file = get_family_file(version=version)
+    link_file = get_link_file(version=version)
+    return RfamFamily.build_all(link_file, family_file)
+
+
 def name_to_insdc_type(version='CURRENT'):
-    family_file = get_families(version=version)
-    link_file = get_links(version=version)
-    families = RfamFamily.build_all(link_file, family_file)
+    families = load_families(version=version)
     return {family.name: family.guess_insdc() for family in families}
 
 
-@lru_cache()
 def id_to_insdc_type(version='CURRENT'):
-    family_file = get_families(version=version)
-    link_file = get_links(version=version)
-    families = RfamFamily.build_all(link_file, family_file)
+    families = load_families(version=version)
     return {family.id: family.guess_insdc() for family in families}

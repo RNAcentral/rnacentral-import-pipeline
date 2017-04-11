@@ -13,6 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import unittest as ut
 import hashlib
 
 import pytest
@@ -52,6 +53,7 @@ def test_fetch_file_handles_uncompressed_files():
     ('Vault', 'vault_RNA'),
     ('tmRNA', 'tmRNA'),
     ('CDKN2B-AS', 'lncRNA'),
+    ('isrP', 'other'),
 ])
 def test_can_fetch_a_mapping_from_name_to_isndc(name, expected):
     mapping = utils.name_to_insdc_type()
@@ -66,3 +68,36 @@ def test_can_fetch_a_mapping_from_name_to_isndc(name, expected):
 def test_can_fetch_a_mapping_from_id_to_isndc(family_id, expected):
     mapping = utils.id_to_insdc_type()
     assert mapping[family_id] == expected
+
+
+class INSDCRNATypeTest(ut.TestCase):
+
+    def test_it_does_not_call_isrp_srp(self):
+        rna = utils.RfamFamily(
+            id='RF01398',
+            name='isrP',
+            so_terms=set(['SO:0001263']),
+            rna_type='gene sRNA',
+        )
+        assert rna.guess_insdc_using_name() != 'SRP_RNA'
+        assert rna.guess_insdc() != 'SRP_RNA'
+
+    def test_it_does_not_call_ctrna_trna(self):
+        rna = utils.RfamFamily(
+            id='RF00236',
+            name='ctRNA_pGA1',
+            so_terms=set(['SO:0000644']),
+            rna_type='Gene; antisense',
+        )
+        assert rna.guess_insdc_using_name() != 'tRNA'
+        assert rna.guess_insdc() == 'antisense_RNA'
+
+    def test_it_does_not_label_tracrrna_rrna(self):
+        rna = utils.RfamFamily(
+            id='RF02348',
+            name='tracrRNA',
+            so_terms=set(['SO:0000655']),
+            rna_type='',
+        )
+        assert rna.guess_insdc_using_name() != 'tRNA'
+        assert rna.guess_insdc() == 'other'
