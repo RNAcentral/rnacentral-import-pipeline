@@ -55,6 +55,7 @@ def test_fetch_file_handles_uncompressed_files():
     ('CDKN2B-AS', 'lncRNA'),
     ('7SK', 'snRNA'),
     ('isrP', 'other'),
+    ("U2", "snRNA"),
 ])
 def test_can_fetch_a_mapping_from_name_to_isndc(name, expected):
     mapping = utils.name_to_insdc_type()
@@ -77,6 +78,8 @@ def test_can_fetch_a_mapping_from_name_to_isndc(name, expected):
     ("RF01695", "antisense_RNA"),
     ("RF00039", "antisense_RNA"),
     ("RF00079", "other"),
+    ("RF00003", "snRNA"),
+    ("RF00548", "snRNA"),
 ])
 def test_can_fetch_a_mapping_from_id_to_isndc(family_id, expected):
     mapping = utils.id_to_insdc_type()

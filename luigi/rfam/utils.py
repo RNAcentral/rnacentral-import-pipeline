@@ -90,7 +90,8 @@ RFAM_RNA_TYPE_MAPPING = {
     "Gene; snRNA; snoRNA; CD-box;": "snoRNA",
     "Gene; snRNA; snoRNA; HACA-box;": "snoRNA",
     "Gene; snRNA; snoRNA; scaRNA;": "snoRNA",
-    "Gene; tRNA;": "tRNA"
+    "Gene; tRNA;": "tRNA",
+    "Gene; snRNA; splicing;": "snRNA",
 }
 
 
