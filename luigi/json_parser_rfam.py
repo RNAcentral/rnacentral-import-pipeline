@@ -27,6 +27,8 @@ import re
 from rnacentral_entry import RNAcentralEntry
 from json_parser import JsonParser
 
+from rfam import utils
+
 
 class JsonParserRfam(JsonParser):  # pylint: disable=W0232
     """
@@ -55,6 +57,7 @@ class JsonParserRfam(JsonParser):  # pylint: disable=W0232
         """
         skipped = 0
 
+        mapping = utils.id_to_insdc_type()
         for i, seq in enumerate(self.data): # pylint: disable=E1101
             if self.test and i > 100: # pylint: disable=E1101
                 break
@@ -77,7 +80,7 @@ class JsonParserRfam(JsonParser):  # pylint: disable=W0232
                 lineage='; '.join(seq['lineage'].split(' ') + [seq['species']]),
                 mol_type='full' if seq['is_seed'] == '0' else 'seed',
                 ncbi_tax_id=seq['ncbi_tax_id'],
-                ncrna_class=seq['ncrna_class'],
+                ncrna_class=mapping.get(seq['primary_id'], None) or seq['ncrna_class'],
                 note=' '.join(seq['ontology']) + ' ' + ('Alignment:full' if seq['is_seed'] == '0' else 'Alignment:seed'),
                 optional_id=seq['optional_id'],
                 parent_accession=seq['parent_accession'],

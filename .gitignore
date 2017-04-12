@@ -59,3 +59,10 @@ pipeline.png
 
 # python
 *.py[cod]
+
+default.nix
+env/
+data/Caenorhabditis_elegans.WBcel235.87.chromosome.IV.dat
+data/Homo_sapiens.GRCh38.87.chromosome.*.dat
+data/Mus_musculus.GRCm38.87.chromosome.*.dat
+data/pub/
