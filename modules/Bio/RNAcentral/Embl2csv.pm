@@ -613,6 +613,12 @@ sub _get_xrefs {
 
     my (@data, $database, $primary_id, $optional_id, $project, $composite_id);
 
+    # skip Vega project as it is replaced by Ensembl
+    $project = _get_project_id($seq);
+    if ($project eq 'PRJEB4568') {
+      next;
+    }
+
     # first element is the source ENA entry unless the entry is from RFAM/RefSeq/RDP/Vega/SILVA
     if ( !_is_rfam_entry($seq->display_id) and !_is_refseq_entry($seq->keywords) and !_is_rdp_entry($seq->display_id) and !_is_vega_entry($seq->display_id) and !_is_silva_entry($seq->display_id)) {
         $data[0] = { database    => 'ENA',
