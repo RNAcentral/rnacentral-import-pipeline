@@ -527,6 +527,9 @@ create or replace PACKAGE BODY RNC_UPDATE AS
         P_in_load_release => v_load.ID
 
       );
+      EXECUTE IMMEDIATE 'alter index I_XREF$ID  rebuild';
+      EXECUTE IMMEDIATE 'alter index I_XREF$DELETED  rebuild';
+      EXECUTE IMMEDIATE 'alter index I_XREF$DBID  rebuild';
     END LOOP;
 
     EXECUTE IMMEDIATE 'DROP INDEX "RNACEN"."LOAD_RNACENTRAL_ALL$DATABASE"';
