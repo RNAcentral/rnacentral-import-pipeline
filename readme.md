@@ -39,6 +39,22 @@ or
 
 	source scripts/rnac_loader_wrapper.sh
 
+## Testing
+
+Running tests for ensembl import requires downloading data from Ensembl first.
+This can be done with:
+
+```sh
+./scripts/fetch-test-data.sh
+```
+
+The tests can then be run using [py.test](http://pytest.org). For example,
+running Ensembl importing tests can be done with:
+
+```sh
+py.test luigi/tests/ensembl_test.py
+```
+
 ## License
 
 See [LICENSE](https://github.com/RNAcentral/rnacentral-import-pipeline/blob/master/LICENSE) for more information.
