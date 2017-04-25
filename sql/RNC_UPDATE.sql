@@ -477,7 +477,7 @@ create or replace PACKAGE BODY RNC_UPDATE AS
     IF v_count > 0 THEN
 
       -- update all id values
-      UPDATE xref SET id = XREF_PK_SEQ.nextval;
+      UPDATE xref SET id = XREF_PK_SEQ.nextval WHERE id IS NULL;
       COMMIT;
 
     END IF;
