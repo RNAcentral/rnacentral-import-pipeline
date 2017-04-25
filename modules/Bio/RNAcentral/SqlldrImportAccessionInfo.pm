@@ -102,7 +102,7 @@ FIELDS TERMINATED BY ',' enclosed by '"'
     PRODUCT char,
     PSEUDOGENE char,
     STANDARD_NAME char,
-    DB_XREF char
+    DB_XREF char(800)
 )
 CTL
     close $fh;
