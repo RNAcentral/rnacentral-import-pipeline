@@ -24,8 +24,15 @@ import csv
 import hashlib
 import json
 import re
-import requests # pip install requests
+import requests  # pip install requests
 import xml.etree.ElementTree as ET
+
+from itertools import izip_longest
+
+
+def grouper(iterable, n, fillvalue=None):
+    args = [iter(iterable)] * n
+    return izip_longest(*args, fillvalue=fillvalue)
 
 
 def get_rna_containing_pdb_ids():
@@ -65,11 +72,12 @@ def get_custom_report(pdb_ids, fields):
         'pdbids': ','.join(pdb_ids),
         'customReportColumns': ','.join(fields),
         'format': 'csv',
+        'service': 'wsfile',  # Use actual CSV files
     }
     request = requests.post(url, data=data)
 
     if request.status_code == 200:
-        return request.text.split('<br />')
+        return request.text.split('\n')
     else:
         return None
 
@@ -172,9 +180,17 @@ def get_literature_references(pdb_ids):
     ]
     report = get_custom_report(pdb_ids, fields)
 
+    def as_name(pair):
+        return ' '.join(pair)
+
     reader = csv.DictReader(report, delimiter=',', quotechar='"')
     data = dict()
     for row in reader:
+        # This is pretty dirty but it should work assuming that each name
+        # always has a ',' after both the first and last name.
+        parts = row['citationAuthor'].split(',')
+        grouped = grouper(parts, 2, '')
+        row['citationAuthor'] = ','.join(''.join(p) for p in grouped)
         data[row['structureId']] = row
     return data
 
