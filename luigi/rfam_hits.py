@@ -40,7 +40,7 @@ class RfamHitsImporter(luigi.Task):
     def parse_hits(self):
         return []
 
-    def run(self):
+    def data(self):
         # Split file by Rfam model:
         # awk '{ print >> $1".txt" }' /hps/nobackup/production/xfam/rfam/rfam13_rnac/rnac_all.txt
 
@@ -52,10 +52,14 @@ class RfamHitsImporter(luigi.Task):
             urs_range = seq_slice(hit)
             mdl_id = self.stored_id(RfamHitRegion, mdl_range)
             urs_id = self.stored_id(URS, seq_range)
-            RfamModelHit.create(
+            yield RfamModelHit(
                 urs=hit['urs'],
                 rfam_model_range_id=mdl_id,
                 sequence_hit_range_id=urs_id,
                 e_value=hit['e_value'],
                 score=hit['score'],
             )
+
+    def run(self):
+        for entry in self.data():
+            entry.save()
