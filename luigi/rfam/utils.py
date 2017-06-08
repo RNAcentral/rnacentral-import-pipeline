@@ -13,11 +13,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-__doc__ = """
-This module contains utility classes and functions for fetching and parsing
-Rfam data from the FTP site.
-"""
-
 import re
 import csv
 import gzip
@@ -28,6 +23,34 @@ import collections as coll
 import attr
 from attr.validators import instance_of as is_a
 from functools32 import lru_cache
+
+__doc__ = """
+This module contains utility classes and functions for fetching and parsing
+Rfam data from the FTP site.
+"""
+
+
+INFERNAL_HEADER = [
+    'target_name',
+    'accession',
+    'query_name',
+    'accession ',
+    'mdl',
+    'mdl_from',
+    'mdl_to',
+    'seq_from',
+    'seq_to',
+    'strand',
+    'trunc',
+    'pass',
+    'gc',
+    'bias',
+    'score',
+    'e_value',
+    'inc',
+    'description',
+]
+
 
 INFORMATIVE_NAMES = {
     # The leading _ is to prevent this from hitting isrP
@@ -198,3 +221,12 @@ def name_to_insdc_type(version='CURRENT'):
 def id_to_insdc_type(version='CURRENT'):
     families = load_families(version=version)
     return {family.id: family.guess_insdc() for family in families}
+
+
+def tbl_iterator(filename):
+    with open(filename, 'rb') as raw:
+        for line in raw:
+            if line.startswith('#'):
+                continue
+            parts = re.split('\s+', line.strip(), 20)
+            yield dict(zip(INFERNAL_HEADER, parts))
