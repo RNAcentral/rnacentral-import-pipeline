@@ -28,57 +28,6 @@ import parameters
 from rfam.utils import tbl_iterator
 
 
-def as_0_based(raw):
-    return int(raw) - 1
-
-
-def convert_overlap(raw):
-    if raw == '!':
-        return 'unique'
-    if raw == '^':
-        return 'best'
-    raise Exception("Unknown overlap symbol %s" % raw)
-
-
-def convert_strand(raw):
-    if raw == '+':
-        return 1
-    if raw == '-':
-        return -1
-    raise Exception("Unknown strand %s" % raw)
-
-
-@attr.s(frozen=True)
-class RfamHit(object):
-    upi = attr.ib()
-    sequence_start = attr.ib(convert=as_0_based)
-    sequence_stop = attr.ib(convert=int)
-    strand = attr.ib(convert=convert_strand)
-    rfam_model_id = attr.ib()
-    model_start = attr.ib(convert=as_0_based)
-    model_stop = attr.ib(convert=int)
-    overlap = attr.ib(convert=convert_overlap)
-    e_value = attr.ib(convert=float)
-    score = attr.ib(convert=float)
-
-    @classmethod
-    def build(cls, data):
-        return cls(
-            upi=data['target_name'],
-            sequence_start=data['seq_from'],
-            sequence_stop=data['seq_to'],
-            rfam_model_id=data['accession'],
-            model_start=data['mdl_from'],
-            model_stop=data['mdl_to'],
-            overlap=data['inc'],
-            e_value=data['e_value'],
-            score=data['score'],
-        )
-
-    def is_valid(self):
-        return self.overlap == 'unique' or self.overlap == 'best'
-
-
 @attr.s()
 class Output(object):
     hits = attr.ib(validator=is_a(FileSystemTarget))
@@ -114,39 +63,22 @@ class Writer(object):
 
     @classmethod
     def build(cls, output):
-        def as_csv(target, quote=True):
-            """
-            Turn a input file into a csv writer.
-
-            Parameters
-            ----------
-            target : luigi.LocalTarget
-                A local target to create a csv writer for.
-
-            Returns
-            -------
-            A csv writer to the location of the target file.
-            """
-            options = {
-                'delimiter': ',',
-                'quotechar': '"',
-                'quoting': csv.QUOTE_ALL,
-                'lineterminator': '\n',
-            }
-            return csv.writer(target, **options)
+        def as_csv(target):
+            return csv.writer(target, delimiter=',', quotechar='"',
+                              quoting=csv.QUOTE_ALL, lineterminator='\n')
 
         return cls(hits=as_csv(output.hits))
 
     def write(self, hit):
         self.hits.writerow([
-            hit.upi,
-            hit.sequence_start,
-            hit.sequence_stop,
+            hit.target_name,
+            hit.seq_from,
+            hit.seq_to,
             hit.strand,
-            hit.rfam_model_id,
-            hit.model_start,
-            hit.model_stop,
-            hit.overlap,
+            hit.rfam_acc,
+            hit.mdl_from,
+            hit.mdl_to,
+            hit.inc,
             hit.e_value,
             hit.score,
         ])
@@ -161,9 +93,8 @@ class RfamHitsImporter(luigi.Task):
 
     def data(self):
         for hit in tbl_iterator(self.input_file):
-            entry = RfamHit.build(hit)
-            if entry.is_valid():
-                yield entry
+            if hit.inc == 'unique':
+                yield hit
 
     def run(self):
         with self.output() as writer:

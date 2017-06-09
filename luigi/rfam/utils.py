@@ -30,26 +30,66 @@ Rfam data from the FTP site.
 """
 
 
-INFERNAL_HEADER = [
-    'target_name',
-    'accession',
-    'query_name',
-    'accession ',
-    'mdl',
-    'mdl_from',
-    'mdl_to',
-    'seq_from',
-    'seq_to',
-    'strand',
-    'trunc',
-    'pass',
-    'gc',
-    'bias',
-    'score',
-    'e_value',
-    'inc',
-    'description',
-]
+def as_0_based(raw):
+    return int(raw) - 1
+
+
+def convert_overlap(raw):
+    if raw == '!' or raw == 'unique':
+        return 'unique'
+    if raw == '^' or raw == 'best':
+        return 'best'
+    raise Exception("Unknown overlap symbol %s" % raw)
+
+
+def convert_strand(raw):
+    if raw == '+' or raw == 1:
+        return 1
+    if raw == '-' or raw == -1:
+        return -1
+    raise Exception("Unknown strand %s" % raw)
+
+
+def dash_none(raw):
+    if raw == '-':
+        return None
+    return raw
+
+
+def convert_trunc(raw):
+    if isinstance(raw, tuple):
+        return raw
+    if raw == 'no':
+        return (False, False)
+    if raw == "5'":
+        return (True, False)
+    if raw == "3'":
+        return (False, True)
+    if raw == "5'&3'":
+        return (True, True)
+    raise Exception("Unknown yes/no %s" % raw)
+
+
+@attr.s(frozen=True, slots=True)
+class RfamHit(object):
+    target_name = attr.ib()
+    seq_acc = attr.ib(convert=dash_none)
+    rfam_name = attr.ib()
+    rfam_acc = attr.ib()
+    mdl = attr.ib()
+    mdl_from = attr.ib(convert=as_0_based)
+    mdl_to = attr.ib(convert=int)
+    seq_from = attr.ib(convert=as_0_based)
+    seq_to = attr.ib(convert=int)
+    strand = attr.ib(convert=convert_strand)
+    trunc = attr.ib(convert=convert_trunc)
+    infernal_pass = attr.ib(convert=int)
+    infernal_gc = attr.ib(convert=float)
+    bias = attr.ib(convert=float)
+    score = attr.ib(convert=float)
+    e_value = attr.ib(convert=float)
+    inc = attr.ib(convert=convert_overlap)
+    description = attr.ib()
 
 
 INFORMATIVE_NAMES = {
@@ -228,5 +268,6 @@ def tbl_iterator(filename):
         for line in raw:
             if line.startswith('#'):
                 continue
-            parts = re.split('\s+', line.strip(), 20)
-            yield dict(zip(INFERNAL_HEADER, parts))
+            fields = attr.fields(RfamHit)
+            parts = re.split(r'\s+', line.strip(), len(fields) - 1)
+            yield RfamHit(*parts)
