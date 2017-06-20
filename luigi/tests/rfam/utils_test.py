@@ -213,3 +213,28 @@ class LoadingFamiliesTest(ut.TestCase):
         bacterial = set(f.id for f in families if f.domain == 'Bacteria')
         assert bacterial == set([
         ])
+
+
+class LoadingClansTest(ut.TestCase):
+    def test_it_can_load_all_clans(self):
+        assert len(utils.load_clans()) == 110
+
+    def test_it_can_load_a_clan_correctly(self):
+        assert utils.load_clans()[0] == utils.RfamClan(
+            id='CL00001',
+            name='tRNA clan',
+            description=(
+                'The tRNA clan contains the RNA families tRNA and '
+                'tmRNA. Homology between these families has been established '
+                'in the published literature [1-5].'
+            ),
+            families=set([
+                'RF00005',
+                'RF00023',
+                'RF01849',
+                'RF01850',
+                'RF01851',
+                'RF01852',
+                'RF02544',
+            ])
+        )

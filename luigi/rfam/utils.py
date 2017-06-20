@@ -236,6 +236,37 @@ class RfamFamily(object):
             self.guess_insdc_using_rna_type()
 
 
+@attr.s()
+class RfamClan(object):
+    id = attr.ib(validator=is_a(str))
+    name = attr.ib(validator=is_a(str))
+    description = attr.ib(validator=is_a(str))
+    families = attr.ib(validator=is_a(set))
+
+    @classmethod
+    def build_all(cls, clan_file, membership_file):
+        membership = coll.defaultdict(set)
+        for line in membership_file:
+            parts = line.split()
+            membership[parts[0]].add(parts[1])
+        membership = dict(membership)
+
+        clans = []
+        for line in clan_file:
+            parts = line.strip().split('\t')
+            clans.append(cls(
+                id=parts[0],
+                name=parts[3],
+                description=parts[5],
+                families=membership[parts[0]],
+            ))
+        return clans
+
+    @property
+    def family_count(self):
+        return len(self.families)
+
+
 def fetch_file(version, filename):
     ftp = FTP('ftp.ebi.ac.uk')
     ftp.login()
@@ -266,12 +297,23 @@ def get_clan_membership(version='CURRENT'):
                       filename='database_files/clan_membership.txt.gz')
 
 
+def get_clans(version='CURRENT'):
+    return fetch_file(version=version, filename='database_files/clan.txt.gz')
+
+
 @lru_cache()
 def load_families(version='CURRENT'):
     family_file = get_family_file(version=version)
     link_file = get_link_file(version=version)
     clan_file = get_clan_membership(version=version)
     return RfamFamily.build_all(clan_file, link_file, family_file)
+
+
+@lru_cache()
+def load_clans(version='CURRENT'):
+    clan_file = get_clans(version=version)
+    membership_file = get_clan_membership(version=version)
+    return RfamClan.build_all(clan_file, membership_file)
 
 
 def name_to_insdc_type(version='CURRENT'):
