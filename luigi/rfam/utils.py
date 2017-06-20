@@ -172,15 +172,25 @@ class RfamFamily(object):
     name = attr.ib(validator=is_a(str))
     so_terms = attr.ib(validator=is_a(set))
     rna_type = attr.ib(validator=is_a(str))
+    domain = attr.ib()
+    description = attr.ib(validator=is_a(str))
+    seed_count = attr.ib(validator=is_a(int))
+    full_count = attr.ib(validator=is_a(int))
+    clan_id = attr.ib()
 
     @classmethod
-    def build_all(cls, link_file, family_file):
+    def build_all(cls, clan_file, link_file, family_file):
         so_terms = coll.defaultdict(set)
         for line in link_file:
             parts = line.split()
             if parts[1] != 'SO':
                 continue
             so_terms[parts[0]].add('SO:%s' % parts[2])
+
+        clans = coll.defaultdict(set)
+        for line in clan_file:
+            parts = line.split()
+            clans[parts[1]] = parts[0]
 
         families = []
         for row in csv.reader(family_file, delimiter='\t'):
@@ -189,7 +199,12 @@ class RfamFamily(object):
                 id=family,
                 name=row[1],
                 so_terms=so_terms[family],
-                rna_type=row[18].strip()
+                rna_type=row[18].strip(),
+                domain=None,
+                description=row[9],
+                seed_count=int(row[14]),
+                full_count=int(row[15]),
+                clan_id=clans.get(family, None),
             ))
         return families
 
@@ -246,11 +261,17 @@ def get_link_file(version='CURRENT'):
                       filename='database_files/database_link.txt.gz')
 
 
+def get_clan_membership(version='CURRENT'):
+    return fetch_file(version=version,
+                      filename='database_files/clan_membership.txt.gz')
+
+
 @lru_cache()
 def load_families(version='CURRENT'):
     family_file = get_family_file(version=version)
     link_file = get_link_file(version=version)
-    return RfamFamily.build_all(link_file, family_file)
+    clan_file = get_clan_membership(version=version)
+    return RfamFamily.build_all(clan_file, link_file, family_file)
 
 
 def name_to_insdc_type(version='CURRENT'):

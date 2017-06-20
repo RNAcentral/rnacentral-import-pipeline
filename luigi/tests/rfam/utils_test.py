@@ -15,6 +15,7 @@ limitations under the License.
 
 import unittest as ut
 import hashlib
+import collections as coll
 
 import pytest
 
@@ -122,6 +123,11 @@ class INSDCRNATypeTest(ut.TestCase):
             name='isrP',
             so_terms=set(['SO:0001263']),
             rna_type='gene sRNA',
+            domain=None,
+            description='',
+            seed_count=-1,
+            full_count=-1,
+            clan_id=None,
         )
         assert rna.guess_insdc_using_name() != 'SRP_RNA'
         assert rna.guess_insdc() != 'SRP_RNA'
@@ -132,6 +138,11 @@ class INSDCRNATypeTest(ut.TestCase):
             name='ctRNA_pGA1',
             so_terms=set(['SO:0000644']),
             rna_type='Gene; antisense',
+            domain=None,
+            description='',
+            seed_count=-1,
+            full_count=-1,
+            clan_id=None,
         )
         assert rna.guess_insdc_using_name() != 'tRNA'
         assert rna.guess_insdc() == 'antisense_RNA'
@@ -142,6 +153,63 @@ class INSDCRNATypeTest(ut.TestCase):
             name='tracrRNA',
             so_terms=set(['SO:0000655']),
             rna_type='',
+            domain=None,
+            description='',
+            seed_count=-1,
+            full_count=-1,
+            clan_id=None,
         )
         assert rna.guess_insdc_using_name() != 'tRNA'
         assert rna.guess_insdc() == 'other'
+
+
+class LoadingFamiliesTest(ut.TestCase):
+    def test_it_loads_all_families(self):
+        assert len(utils.load_families()) == 2588
+
+    def test_it_can_load_family_correctly(self):
+        assert utils.load_families()[0] == utils.RfamFamily(
+            id='RF00001',
+            name='5S_rRNA',
+            so_terms=set(['SO:0000652']),
+            rna_type='Gene; rRNA;',
+            domain=None,
+            description=(
+                '5S ribosomal RNA (5S rRNA) is a component of the '
+                'large ribosomal subunit in both prokaryotes and eukaryotes. '
+                'In eukaryotes, it is synthesised by RNA polymerase III (the '
+                'other eukaryotic rRNAs are cleaved from a 45S precursor '
+                'synthesised by RNA polymerase I). In Xenopus oocytes, it has '
+                'been shown that fingers 4-7 of the nine-zinc finger '
+                'transcription factor TFIIIA can bind to the central region '
+                'of 5S RNA. Thus, in addition to positively regulating 5S '
+                'rRNA transcription, TFIIIA also stabilises 5S rRNA until it '
+                'is required for transcription.'
+            ),
+            seed_count=712,
+            full_count=183439,
+            clan_id=None,
+        )
+
+    def test_it_can_assign_correct_clan_ids(self):
+        clans = coll.defaultdict(set)
+        for f in utils.load_families():
+            clans[f.clan_id].add(f.id)
+
+        assert len(clans) == 111
+        assert clans['CL00001'] == set([
+            'RF00005',
+            'RF00023',
+            'RF01849',
+            'RF01850',
+            'RF01851',
+            'RF01852',
+            'RF02544',
+        ])
+
+    @pytest.mark.skip()
+    def test_it_can_correctly_find_all_bacterial_families(self):
+        families = utils.load_families()
+        bacterial = set(f.id for f in families if f.domain == 'Bacteria')
+        assert bacterial == set([
+        ])
