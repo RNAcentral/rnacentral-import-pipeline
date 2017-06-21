@@ -218,6 +218,11 @@ class LoadingFamiliesTest(ut.TestCase):
         assert bacterial == set([
         ])
 
+    def test_it_can_set_description_to_empty(self):
+        families = utils.load_families()
+        family = next(f for f in families if f.id == 'RF02493')
+        assert family.description == ''
+
 
 class LoadingClansTest(ut.TestCase):
     def test_it_can_load_all_clans(self):

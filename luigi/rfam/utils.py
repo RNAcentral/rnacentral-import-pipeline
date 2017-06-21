@@ -70,6 +70,14 @@ def convert_trunc(raw):
     raise Exception("Unknown yes/no %s" % raw)
 
 
+def empty_str_from(target):
+    def fn(raw):
+        if raw == target:
+            return ''
+        return raw
+    return fn
+
+
 @attr.s(frozen=True, slots=True)
 class RfamHit(object):
     target_name = attr.ib()
@@ -173,11 +181,12 @@ class RfamFamily(object):
     so_terms = attr.ib(validator=is_a(set))
     rna_type = attr.ib(validator=is_a(str))
     domain = attr.ib()
-    description = attr.ib(validator=is_a(str))
+    description = attr.ib(validator=is_a(str), convert=empty_str_from(r'\N'))
     seed_count = attr.ib(validator=is_a(int))
     full_count = attr.ib(validator=is_a(int))
     clan_id = attr.ib()
     length = attr.ib(validator=is_a(int))
+    is_supressed = attr.ib(validator=is_a(bool), default=True)
 
     @classmethod
     def build_all(cls, clan_file, link_file, family_file):
