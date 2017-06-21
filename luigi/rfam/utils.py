@@ -177,6 +177,7 @@ class RfamFamily(object):
     seed_count = attr.ib(validator=is_a(int))
     full_count = attr.ib(validator=is_a(int))
     clan_id = attr.ib()
+    length = attr.ib(validator=is_a(int))
 
     @classmethod
     def build_all(cls, clan_file, link_file, family_file):
@@ -205,6 +206,7 @@ class RfamFamily(object):
                 seed_count=int(row[14]),
                 full_count=int(row[15]),
                 clan_id=clans.get(family, None),
+                length=int(row[28]),
             ))
         return families
 

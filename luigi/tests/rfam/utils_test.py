@@ -128,6 +128,7 @@ class INSDCRNATypeTest(ut.TestCase):
             seed_count=-1,
             full_count=-1,
             clan_id=None,
+            length=148,
         )
         assert rna.guess_insdc_using_name() != 'SRP_RNA'
         assert rna.guess_insdc() != 'SRP_RNA'
@@ -143,6 +144,7 @@ class INSDCRNATypeTest(ut.TestCase):
             seed_count=-1,
             full_count=-1,
             clan_id=None,
+            length=79,
         )
         assert rna.guess_insdc_using_name() != 'tRNA'
         assert rna.guess_insdc() == 'antisense_RNA'
@@ -158,6 +160,7 @@ class INSDCRNATypeTest(ut.TestCase):
             seed_count=-1,
             full_count=-1,
             clan_id=None,
+            length=91,
         )
         assert rna.guess_insdc_using_name() != 'tRNA'
         assert rna.guess_insdc() == 'other'
@@ -189,6 +192,7 @@ class LoadingFamiliesTest(ut.TestCase):
             seed_count=712,
             full_count=183439,
             clan_id=None,
+            length=119,
         )
 
     def test_it_can_assign_correct_clan_ids(self):
