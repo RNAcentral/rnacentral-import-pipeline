@@ -65,7 +65,7 @@ class PGLoadFamilies(PGLoader):
         ]
 
     def output(self):
-        for requirement in self.requires:
+        for requirement in self.requires():
             yield requirement.output()
 
     def filename(self):

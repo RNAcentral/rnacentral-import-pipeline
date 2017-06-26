@@ -20,7 +20,6 @@ import csv
 from contextlib import contextmanager
 
 import luigi
-from luigi.target import FileSystemTarget
 from luigi import LocalTarget
 from luigi.local_target import atomic_file
 
@@ -32,19 +31,30 @@ class CsvWriter(luigi.Task):
 
     @abc.abstractproperty
     def headers(self):
-        pass
+        """
+        This is a list of the headers that will be written to the csv file.
+        """
+        return []
 
     @abc.abstractmethod
     def data(self):
+        """
+        This should produce an iterable of dicts to write to the csv file.
+        """
         pass
 
     @classmethod
     def directory(cls):
-        s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', cls.__name__)
-        return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
+        """
+        Determine the name of the directory to write the data file to. The name
+        will be a snake cased version of the class name.
+        """
+        first = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', cls.__name__)
+        return re.sub('([a-z0-9])([A-Z])', r'\1_\2', first).lower()
 
     def output(self):
-        path = os.path.join(output().base, self.directory)
+        base = os.path.abspath(output().base)
+        path = os.path.join(base, self.directory())
         try:
             os.makedirs(path)
         except Exception as err:
@@ -55,10 +65,15 @@ class CsvWriter(luigi.Task):
 
     @contextmanager
     def writer(self):
+        """
+        Generate the csv writer to use to save all data. This will be an atomic
+        file, that is if the process fails for any reason there will not be a
+        final file (though there may be temp files around).
+        """
         out = self.output()
-        with atomic_file(out.fn) as output:
+        with atomic_file(out.fn) as handle:
             writer = csv.DictWriter(
-                output,
+                handle,
                 fieldnames=self.headers,
                 extrasaction='ignore',
                 delimiter=',',

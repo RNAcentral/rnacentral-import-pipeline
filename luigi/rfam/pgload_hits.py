@@ -103,6 +103,10 @@ class PGLoadHits(PGLoader):
             PGLoadClans(),
         ]
 
+    def output(self):
+        for requirement in self.requires():
+            yield requirement.output()
+
     def filename(self):
         return self.requires()[0].output().fn
 
