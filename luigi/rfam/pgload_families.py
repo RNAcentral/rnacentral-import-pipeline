@@ -34,9 +34,9 @@ HAVING FIELDS
     full_count,
     length,
     domain [null if blanks],
-    is_supressed
+    is_suppressed
 )
-INTO postgresql://{user}:{password}@{host}:{port}/{db}?rnc_rfam_models
+INTO postgresql://{user}:{password}@{host}:{port}/{db}?load_rnc_rfam_models
 TARGET COLUMNS
 (
     rfam_model_id,
@@ -47,13 +47,46 @@ TARGET COLUMNS
     full_count,
     length,
     domain,
-    is_supressed
+    is_suppressed
 )
-WITH 
+WITH
     skip header = 1,
     fields escaped by double-quote,
     fields terminated by ','
 ;
+BEFORE LOAD DO
+$$
+truncate table load_rnc_rfam_models;
+$$
+AFTER LOAD DO
+$$ insert into rnc_rfam_models (
+    rfam_model_id,
+    name,
+    description,
+    seed_count,
+    full_count,
+    length,
+    is_suppressed,
+    rfam_clan_id,
+    domain
+) (
+select
+    rfam_model_id,
+    name,
+    description,
+    seed_count,
+    full_count,
+    length,
+    is_suppressed,
+    rfam_clan_id,
+    domain
+from load_rnc_rfam_models
+)
+ON CONFLICT DO UPDATE;
+$$,
+$$
+truncate table load_rnc_rfam_models;
+$$
 """
 
 
@@ -68,13 +101,11 @@ class PGLoadFamilies(PGLoader):
         for requirement in self.requires():
             yield requirement.output()
 
-    def filename(self):
-        return self.requires()[0].output().fn
-
     def control_file(self):
         config = DBConfig()
+        filename = self.requires()[0].output().fn
         return CONTROL_FILE.format(
-            filename=self.filename,
+            filename=filename,
             user=config.user,
             password=config.password,
             host=config.host,

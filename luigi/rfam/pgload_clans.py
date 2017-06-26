@@ -38,11 +38,34 @@ TARGET COLUMNS
     description,
     family_count
 )
-WITH 
+WITH
     skip header = 1,
     fields escaped by double-quote,
     fields terminated by ','
 ;
+BEFORE LOAD DO
+$$
+truncate table load_rnc_rfam_clans;
+$$
+AFTER LOAD DO
+$$ insert into rnc_rfam_clans (
+    rfam_clan_id,
+    name,
+    description,
+    family_count,
+) (
+select
+    rfam_clan_id,
+    name,
+    description,
+    family_count,
+from load_rnc_rfam_clans
+)
+ON CONFLICT DO UPDATE;
+$$,
+$$
+truncate table load_rnc_rfam_clans;
+$$
 """
 
 
@@ -56,13 +79,11 @@ class PGLoadClans(PGLoader):
         for requirement in self.requires():
             yield requirement.output()
 
-    def filename(self):
-        return self.requires()[0].output().fn
-
     def control_file(self):
         config = DBConfig()
+        filename = self.requires()[0].output().fn
         return CONTROL_FILE.format(
-            filename=self.filename,
+            filename=filename,
             user=config.user,
             password=config.password,
             host=config.host,
