@@ -14,56 +14,65 @@ limitations under the License.
 """
 
 import os
+import re
+import abc
 import csv
 from contextlib import contextmanager
 
-import attr
 import luigi
+from luigi.target import FileSystemTarget
+from luigi import LocalTarget
 from luigi.local_target import atomic_file
 
-from luigi.rfam import utils
-from luigi import parameters
+from rfam.config import output
 
 
-class Importer(luigi.Task):
-    destination = parameters.PathParameter(default='/tmp')
-    headers = [
-        'id',
-        'name',
-        'description',
-        'domain',
-        'clan',
-        'seed_count',
-        'full_count',
-        'length',
-        'domain',
-    ]
+class CsvWriter(luigi.Task):
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractproperty
+    def headers(self):
+        pass
+
+    @abc.abstractmethod
+    def data(self):
+        pass
+
+    @classmethod
+    def directory(cls):
+        s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', cls.__name__)
+        return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
 
     def output(self):
-        path = os.path.join(self.destination, 'rfam_families')
+        path = os.path.join(output().base, self.directory)
         try:
-            os.path.mkdirs(path)
-        except:
+            os.makedirs(path)
+        except Exception as err:
             if not os.path.exists(path):
-                raise Exception("Could not create the path")
+                raise err
 
-        return atomic_file(os.path.join(path, 'families.csv'))
+        return LocalTarget(os.path.join(path, 'data.csv'))
 
     @contextmanager
     def writer(self):
-        with self.output() as output:
+        out = self.output()
+        with atomic_file(out.fn) as output:
             writer = csv.DictWriter(
                 output,
-                headers=self.headers,
-                extrasaction='ignore'
+                fieldnames=self.headers,
+                extrasaction='ignore',
+                delimiter=',',
+                quotechar='"',
+                quoting=csv.QUOTE_ALL,
+                lineterminator='\n',
             )
             writer.writeheader()
             yield writer
 
-    def data(self):
-        for family in utils.load_families():
-            yield attr.asdict(family)
-
     def run(self):
         with self.writer() as writer:
             writer.writerows(self.data())
+
+
+if __name__ == '__main__':
+    luigi.run(main_task_cls=CsvWriter)
