@@ -121,6 +121,7 @@ class INSDCRNATypeTest(ut.TestCase):
         rna = utils.RfamFamily(
             id='RF01398',
             name='isrP',
+            pretty_name='Hfq binding RNA',
             so_terms=set(['SO:0001263']),
             rna_type='gene sRNA',
             domain=None,
@@ -137,6 +138,7 @@ class INSDCRNATypeTest(ut.TestCase):
         rna = utils.RfamFamily(
             id='RF00236',
             name='ctRNA_pGA1',
+            pretty_name='ctRNA',
             so_terms=set(['SO:0000644']),
             rna_type='Gene; antisense',
             domain=None,
@@ -153,6 +155,7 @@ class INSDCRNATypeTest(ut.TestCase):
         rna = utils.RfamFamily(
             id='RF02348',
             name='tracrRNA',
+            pretty_name='Trans-activating crRNA',
             so_terms=set(['SO:0000655']),
             rna_type='',
             domain=None,
@@ -174,6 +177,7 @@ class LoadingFamiliesTest(ut.TestCase):
         assert utils.load_families()[0] == utils.RfamFamily(
             id='RF00001',
             name='5S_rRNA',
+            pretty_name='5S ribosomal RNA',
             so_terms=set(['SO:0000652']),
             rna_type='Gene; rRNA;',
             domain=None,

@@ -31,6 +31,7 @@ class FamiliesCSV(CsvWriter):
         'length',
         'domain',
         'is_supressed',
+        'rna_type',
     ]
 
     def data(self):

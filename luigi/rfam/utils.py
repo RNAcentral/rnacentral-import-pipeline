@@ -178,6 +178,7 @@ RFAM_RNA_TYPE_MAPPING = {
 class RfamFamily(object):
     id = attr.ib(validator=is_a(str))
     name = attr.ib(validator=is_a(str))
+    pretty_name = attr.ib(validator=is_a(str))
     so_terms = attr.ib(validator=is_a(set))
     rna_type = attr.ib(validator=is_a(str))
     domain = attr.ib()
@@ -208,6 +209,7 @@ class RfamFamily(object):
             families.append(cls(
                 id=family,
                 name=row[1],
+                pretty_name=row[3],
                 so_terms=so_terms[family],
                 rna_type=row[18].strip(),
                 domain=None,
