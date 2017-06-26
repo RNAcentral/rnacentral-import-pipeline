@@ -59,7 +59,7 @@ class CommaGenericFileParameter(Parameter):
             raise ValueError("Must provide files to deduplicate")
 
         try:
-            targets = self.as_targets(value)
+            self.as_targets(value)
             return [path.strip() for path in value.split(',')]
         except:
             raise ValueError("Unhandable type of files %s" % value)
