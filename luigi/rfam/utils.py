@@ -187,7 +187,6 @@ class RfamFamily(object):
     full_count = attr.ib(validator=is_a(int))
     clan_id = attr.ib()
     length = attr.ib(validator=is_a(int))
-    is_supressed = attr.ib(validator=is_a(bool), default=True)
 
     @classmethod
     def build_all(cls, clan_file, link_file, family_file):
@@ -220,6 +219,11 @@ class RfamFamily(object):
                 length=int(row[28]),
             ))
         return families
+
+    @property
+    def is_suppressed(self):
+        return 'lncRNA' in self.rna_type or \
+            not self.rna_type.startswith('Gene')
 
     def guess_insdc_using_name(self):
         found = set()

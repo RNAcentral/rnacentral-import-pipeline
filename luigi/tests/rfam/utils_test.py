@@ -227,6 +227,22 @@ class LoadingFamiliesTest(ut.TestCase):
         family = next(f for f in families if f.id == 'RF02493')
         assert family.description == ''
 
+    def test_it_does_not_supress_all_families(self):
+        families = {f.id for f in utils.load_families() if not f.is_suppressed}
+        assert len(families) == 1992
+
+    def test_it_will_supress_lncRNA(self):
+        families = {f.id for f in utils.load_families() if not f.is_suppressed}
+        assert 'RF01976' not in families
+        assert 'RF01977' not in families
+        assert 'RF01978' not in families
+        assert 'RF02255' not in families
+
+    def test_it_will_exclude_cis_reg_riboswitches(self):
+        families = {f.id for f in utils.load_families() if not f.is_suppressed}
+        assert 'RF01108' not in families
+        assert 'RF00080' not in families
+
 
 class LoadingClansTest(ut.TestCase):
     def test_it_can_load_all_clans(self):

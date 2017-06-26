@@ -37,7 +37,7 @@ class FamiliesCSV(CsvWriter):
     def data(self):
         for family in utils.load_families():
             data = attr.asdict(family)
-            data['is_supressed'] = int(data['is_supressed'])
+            data['is_suppressed'] = int(family.is_suppressed)
             data['rna_type'] = family.guess_insdc()
             yield data
 
