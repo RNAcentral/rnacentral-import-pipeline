@@ -16,13 +16,12 @@ limitations under the License.
 import luigi
 
 from pgloader import PGLoader
+
 from rfam.hits_csv import RfamHitsCSV
 from rfam.pgload_families import PGLoadFamilies
-from rfam.pgload_clans import PGLoadClans
 from rfam.config import db as DBConfig
 
-CONTROL_FILE = """
-LOAD CSV
+CONTROL_FILE = """LOAD CSV
      FROM '{filename}'
      HAVING FIELDS
       (
@@ -92,6 +91,7 @@ $$,
 $$
 truncate table load_rnc_rfam_model_hits;
 $$
+;
 """
 
 
@@ -100,19 +100,9 @@ class PGLoadHits(PGLoader):
         return [
             RfamHitsCSV(),
             PGLoadFamilies(),
-            PGLoadClans(),
         ]
 
-    def output(self):
-        for requirement in self.requires():
-            yield requirement.output()
-
     def control_file(self):
-        """
-        This generates the text to write as a control file for pgloader.
-
-        :returns: The control file text
-        """
         config = DBConfig()
         filename = RfamHitsCSV().output().fn
         return CONTROL_FILE.format(

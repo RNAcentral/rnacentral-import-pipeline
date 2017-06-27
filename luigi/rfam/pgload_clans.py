@@ -20,8 +20,7 @@ from pgloader import PGLoader
 from rfam.clans_csv import ClanCSV
 from rfam.config import db as DBConfig
 
-CONTROL_FILE = """
-LOAD CSV
+CONTROL_FILE = """LOAD CSV
 FROM '{filename}'
 HAVING FIELDS
 (
@@ -76,13 +75,9 @@ class PGLoadClans(PGLoader):
             ClanCSV(),
         ]
 
-    def output(self):
-        for requirement in self.requires():
-            yield requirement.output()
-
     def control_file(self):
         config = DBConfig()
-        filename = self.requires()[0].output().fn
+        filename = ClanCSV().output().fn
         return CONTROL_FILE.format(
             filename=filename,
             user=config.user,
