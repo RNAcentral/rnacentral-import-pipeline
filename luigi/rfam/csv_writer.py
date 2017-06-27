@@ -86,7 +86,8 @@ class CsvWriter(luigi.Task):
 
     def run(self):
         with self.writer() as writer:
-            writer.writerows(self.data())
+            for row in self.data():
+                writer.writerow(row)
 
 
 if __name__ == '__main__':
