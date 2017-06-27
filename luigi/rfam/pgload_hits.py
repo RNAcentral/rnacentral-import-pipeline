@@ -74,10 +74,10 @@ $$ insert into rnc_rfam_model_hits (
 select
     load.sequence_start,
     load.sequence_stop,
-    (load.sequence_stop - load.sequence_start)::float / rna.len,
+    (load.sequence_stop - load.sequence_start)::float / rna.len::float,
     load.model_start,
     load.model_stop,
-    (load.model_stop - load.model_start)::float / models.length,
+    (load.model_stop - load.model_start)::float / models.length::float,
     load.overlap,
     load.e_value,
     load.score,
@@ -107,9 +107,6 @@ class PGLoadHits(PGLoader):
         for requirement in self.requires():
             yield requirement.output()
 
-    def filename(self):
-        return self.requires()[0].output().fn
-
     def control_file(self):
         """
         This generates the text to write as a control file for pgloader.
@@ -117,8 +114,9 @@ class PGLoadHits(PGLoader):
         :returns: The control file text
         """
         config = DBConfig()
+        filename = RfamHitsCSV().output().fn
         return CONTROL_FILE.format(
-            filename=self.filename,
+            filename=filename,
             user=config.user,
             password=config.password,
             host=config.host,
