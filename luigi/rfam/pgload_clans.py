@@ -66,6 +66,7 @@ $$,
 $$
 truncate table load_rnc_rfam_clans;
 $$
+;
 """
 
 
