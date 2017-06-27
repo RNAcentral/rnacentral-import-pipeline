@@ -33,5 +33,6 @@ class PGLoader(ExternalProgramTask):
     def run(self):
         with NamedTemporaryFile() as out:
             out.write(self.control_file())
+            out.flush()
             self.__control_filename = out.name
             super(PGLoader, self).run()
