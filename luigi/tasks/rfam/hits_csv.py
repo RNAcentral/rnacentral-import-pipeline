@@ -14,34 +14,32 @@ limitations under the License.
 """
 
 import attr
-import luigi
 
-from rfam import utils
-from rfam.csv_writer import CsvWriter
+from rfam.utils import tbl_iterator
+from tasks.config import rfam
+from tasks.utils.csv_writer import CsvWriter
 
 
-class FamiliesCSV(CsvWriter):
+class RfamHitsCSV(CsvWriter):
+    """
+    This class will build a CSV file that can be loaded by pgloader from the
+    Rfam hits. It uses the rfam_hits configuration value in the files section.
+    """
+
     headers = [
-        'id',
-        'name',
-        'description',
-        'clan',
-        'seed_count',
-        'full_count',
-        'length',
-        'domain',
-        'is_suppressed',
-        'rna_type',
+        'target_name',
+        'seq_from',
+        'seq_to',
+        'strand',
+        'rfam_acc',
+        'mdl_from',
+        'mdl_to',
+        'inc',
+        'e_value',
+        'score',
     ]
 
     def data(self):
-        for family in utils.load_families():
-            data = attr.asdict(family)
-            data['name'] = family.pretty_name
-            data['is_suppressed'] = int(family.is_suppressed)
-            data['rna_type'] = family.guess_insdc()
-            yield data
-
-
-if __name__ == '__main__':
-    luigi.run(main_task_cls=FamiliesCSV)
+        for hit in tbl_iterator(rfam().hits):
+            if hit.inc == 'unique' or hit.inc == 'best':
+                yield attr.asdict(hit)

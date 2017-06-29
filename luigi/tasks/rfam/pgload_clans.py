@@ -13,12 +13,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import luigi
+from tasks.utils.pgloader import PGLoader
 
-from pgloader import PGLoader
-
-from rfam.clans_csv import ClanCSV
-from rfam.config import db as DBConfig
+from tasks.rfam.clans_csv import RfamClansCSV
 
 CONTROL_FILE = """LOAD CSV
 FROM '{filename}'
@@ -29,7 +26,7 @@ HAVING FIELDS
     description,
     family_count
 )
-INTO postgresql://{user}:{password}@{host}:{port}/{db}?rnc_rfam_clans
+INTO {db_url}?load_rnc_rfam_clans
 TARGET COLUMNS
 (
     rfam_clan_id,
@@ -41,7 +38,6 @@ WITH
     skip header = 1,
     fields escaped by double-quote,
     fields terminated by ','
-;
 BEFORE LOAD DO
 $$
 truncate table load_rnc_rfam_clans;
@@ -51,16 +47,19 @@ $$ insert into rnc_rfam_clans (
     rfam_clan_id,
     name,
     description,
-    family_count,
+    family_count
 ) (
 select
     rfam_clan_id,
     name,
     description,
-    family_count,
+    family_count
 from load_rnc_rfam_clans
 )
-ON CONFLICT DO UPDATE;
+ON CONFLICT (rfam_clan_id) DO UPDATE SET
+    name = excluded.name,
+    description = excluded.description,
+    family_count = excluded.family_count
 $$,
 $$
 truncate table load_rnc_rfam_clans;
@@ -69,24 +68,16 @@ $$
 """
 
 
-class PGLoadClans(PGLoader):
+class RfamPGLoadClans(PGLoader):  # pylint: disable=R0904
+    """
+    This will run pgloader on the Rfam clan CSV file. The import procedure will
+    update any existing clans and will not produce duplicates.
+    """
     def requires(self):
         return [
-            ClanCSV(),
+            RfamClansCSV(),
         ]
 
     def control_file(self):
-        config = DBConfig()
-        filename = ClanCSV().output().fn
-        return CONTROL_FILE.format(
-            filename=filename,
-            user=config.user,
-            password=config.password,
-            host=config.host,
-            port=config.port,
-            db=config.db_name,
-        )
-
-
-if __name__ == '__main__':
-    luigi.run(main_task_cls=PGLoadClans)
+        filename = RfamClansCSV().output().fn
+        return CONTROL_FILE.format(filename=filename)

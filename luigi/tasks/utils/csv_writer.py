@@ -14,16 +14,16 @@ limitations under the License.
 """
 
 import os
-import re
 import abc
-import csv
 from contextlib import contextmanager
 
+import csv
 import luigi
 from luigi import LocalTarget
 from luigi.local_target import atomic_file
 
-from rfam.config import output
+from utils import snake_case
+from tasks.config import output
 
 
 class CsvWriter(luigi.Task):
@@ -49,12 +49,10 @@ class CsvWriter(luigi.Task):
         Determine the name of the directory to write the data file to. The name
         will be a snake cased version of the class name.
         """
-        first = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', cls.__name__)
-        return re.sub('([a-z0-9])([A-Z])', r'\1_\2', first).lower()
+        return os.path.join(output().base, snake_case(cls.__name__))
 
     def output(self):
-        base = os.path.abspath(output().base)
-        path = os.path.join(base, self.directory())
+        path = self.directory()
         try:
             os.makedirs(path)
         except Exception as err:

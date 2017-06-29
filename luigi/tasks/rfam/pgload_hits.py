@@ -13,13 +13,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import luigi
+from tasks.utils.pgloader import PGLoader
 
-from pgloader import PGLoader
-
-from rfam.hits_csv import RfamHitsCSV
-from rfam.pgload_families import PGLoadFamilies
-from rfam.config import db as DBConfig
+from tasks.rfam.hits_csv import RfamHitsCSV
+from tasks.rfam.pgload_families import RfamPGLoadFamilies
 
 CONTROL_FILE = """LOAD CSV
      FROM '{filename}'
@@ -36,7 +33,7 @@ CONTROL_FILE = """LOAD CSV
       E_VALUE,
       SCORE
       )
-  INTO postgresql://{user}:{password}@{host}:{port}/{db}?load_rnc_rfam_model_hits
+  INTO {db_url}?load_rnc_rfam_model_hits
      TARGET COLUMNS
       (
       UPI,
@@ -49,7 +46,7 @@ CONTROL_FILE = """LOAD CSV
       E_VALUE,
       SCORE
       )
-     WITH skip header = 0,
+     WITH skip header = 1,
           fields escaped by double-quote,
           fields terminated by ','
 BEFORE LOAD DO
@@ -95,25 +92,20 @@ $$
 """
 
 
-class PGLoadHits(PGLoader):
+class RfamPGLoadHits(PGLoader):  # pylint: disable=R0904
+    """
+    This task will run pgloader on the generate hits CSV file. This will
+    populate the database with the hits. The loading process does not attempt
+    to prevent duplicates so reimporting the same data will lead to duplicates
+    in the database.
+    """
+
     def requires(self):
         return [
             RfamHitsCSV(),
-            PGLoadFamilies(),
+            RfamPGLoadFamilies(),
         ]
 
     def control_file(self):
-        config = DBConfig()
         filename = RfamHitsCSV().output().fn
-        return CONTROL_FILE.format(
-            filename=filename,
-            user=config.user,
-            password=config.password,
-            host=config.host,
-            port=config.port,
-            db=config.db_name,
-        )
-
-
-if __name__ == '__main__':
-    luigi.run(main_task_cls=PGLoadHits)
+        return CONTROL_FILE.format(filename=filename)

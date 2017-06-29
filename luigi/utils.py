@@ -13,26 +13,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import os
-import abc
-from tempfile import NamedTemporaryFile
-
-from luigi.contrib.external_program import ExternalProgramTask
+import re
 
 
-class PGLoader(ExternalProgramTask):
-    __metaclass__ = abc.ABCMeta
+def snake_case(name):
+    """
+    Snakecase a string. That is turn a string from 'SomethingOther' to
+    something_other'.
 
-    def program_args(self):
-        return ['pgloader', self.__control_filename]
-
-    @abc.abstractmethod
-    def control_file(self):
-        pass
-
-    def run(self):
-        with NamedTemporaryFile() as out:
-            out.write(self.control_file())
-            out.flush()
-            self.__control_filename = out.name
-            super(PGLoader, self).run()
+    This is taken from:
+    https://stackoverflow.com/questions/1175208/elegant-python-function-to-convert-camelcase-to-snake-case
+    """
+    first = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
+    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', first).lower()

@@ -36,9 +36,9 @@ def as_0_based(raw):
 
 def convert_overlap(raw):
     if raw == '!' or raw == 'unique':
-        return 'unique'
+        return u'unique'
     if raw == '^' or raw == 'best':
-        return 'best'
+        return u'best'
     raise Exception("Unknown overlap symbol %s" % raw)
 
 
@@ -73,7 +73,7 @@ def convert_trunc(raw):
 def empty_str_from(target):
     def fn(raw):
         if raw == target:
-            return ''
+            return u''
         return raw
     return fn
 
@@ -176,13 +176,13 @@ RFAM_RNA_TYPE_MAPPING = {
 
 @attr.s(frozen=True)
 class RfamFamily(object):
-    id = attr.ib(validator=is_a(str))
-    name = attr.ib(validator=is_a(str))
-    pretty_name = attr.ib(validator=is_a(str))
+    id = attr.ib(validator=is_a(basestring))
+    name = attr.ib(validator=is_a(basestring))
+    pretty_name = attr.ib(validator=is_a(basestring))
     so_terms = attr.ib(validator=is_a(set))
-    rna_type = attr.ib(validator=is_a(str))
+    rna_type = attr.ib(validator=is_a(basestring))
     domain = attr.ib()
-    description = attr.ib(validator=is_a(str), convert=empty_str_from(r'\N'))
+    description = attr.ib(validator=is_a(basestring), convert=empty_str_from(r'\N'))
     seed_count = attr.ib(validator=is_a(int))
     full_count = attr.ib(validator=is_a(int))
     clan_id = attr.ib()
@@ -296,7 +296,7 @@ def fetch_file(version, filename):
     ftp.quit()
     raw.seek(0)
     if filename.endswith('.gz'):
-        raw = gzip.GzipFile(fileobj=raw, mode='rb')
+        raw = gzip.GzipFile(fileobj=raw, mode='rt')
     return raw
 
 

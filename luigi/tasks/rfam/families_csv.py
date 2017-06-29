@@ -14,26 +14,29 @@ limitations under the License.
 """
 
 import attr
-import luigi
 
 from rfam import utils
-from rfam.csv_writer import CsvWriter
+from tasks.utils.csv_writer import CsvWriter
 
 
-class ClanCSV(CsvWriter):
+class RfamFamiliesCSV(CsvWriter):
     headers = [
         'id',
         'name',
         'description',
-        'family_count',
+        'clan',
+        'seed_count',
+        'full_count',
+        'length',
+        'domain',
+        'is_suppressed',
+        'rna_type',
     ]
 
     def data(self):
-        for clan in utils.load_clans():
-            data = attr.asdict(clan)
-            data['family_count'] = clan.family_count
+        for family in utils.load_families():
+            data = attr.asdict(family)
+            data['name'] = family.pretty_name
+            data['is_suppressed'] = int(family.is_suppressed)
+            data['rna_type'] = family.guess_insdc()
             yield data
-
-
-if __name__ == '__main__':
-    luigi.run(main_task_cls=ClanCSV)

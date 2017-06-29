@@ -13,16 +13,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import luigi
+from tasks.utils.pgloader import PGLoader
 
-from pgloader import PGLoader
-
-from rfam.families_csv import FamiliesCSV
-from rfam.pgload_clans import PGLoadClans
-from rfam.config import db as DBConfig
+from tasks.rfam.families_csv import RfamFamiliesCSV
+from tasks.rfam.pgload_clans import RfamPGLoadClans
 
 CONTROL_FILE = """LOAD CSV
-FROM '{filename}'
+FROM '{filename}' WITH ENCODING ISO-8859-14
 HAVING FIELDS
 (
     rfam_model_id,
@@ -33,9 +30,10 @@ HAVING FIELDS
     full_count,
     length,
     domain [null if blanks],
-    is_suppressed
+    is_suppressed,
+    rna_type
 )
-INTO postgresql://{user}:{password}@{host}:{port}/{db}?load_rnc_rfam_models
+INTO {db_url}?load_rnc_rfam_models
 TARGET COLUMNS
 (
     rfam_model_id,
@@ -46,13 +44,13 @@ TARGET COLUMNS
     full_count,
     length,
     domain,
-    is_suppressed
+    is_suppressed,
+    rna_type
 )
 WITH
     skip header = 1,
     fields escaped by double-quote,
     fields terminated by ','
-;
 BEFORE LOAD DO
 $$
 truncate table load_rnc_rfam_models;
@@ -67,7 +65,8 @@ $$ insert into rnc_rfam_models (
     length,
     is_suppressed,
     rfam_clan_id,
-    domain
+    domain,
+    rna_type
 ) (
 select
     rfam_model_id,
@@ -78,10 +77,20 @@ select
     length,
     is_suppressed,
     rfam_clan_id,
-    domain
+    domain,
+    rna_type
 from load_rnc_rfam_models
 )
-ON CONFLICT DO UPDATE;
+ON CONFLICT (rfam_model_id) DO UPDATE SET
+    name = excluded.name,
+    description = excluded.description,
+    seed_count = excluded.seed_count,
+    full_count = excluded.full_count,
+    length = excluded.length,
+    is_suppressed = excluded.is_suppressed,
+    rfam_clan_id = excluded.rfam_clan_id,
+    domain = excluded.domain,
+    rna_type = excluded.rna_type
 $$,
 $$
 truncate table load_rnc_rfam_models;
@@ -90,25 +99,18 @@ $$
 """
 
 
-class PGLoadFamilies(PGLoader):
+class RfamPGLoadFamilies(PGLoader):  # pylint: disable=R0904
+    """
+    This will run pgloader on the Rfam family CSV file. The importing will
+    update any existing families and will not produce duplicates.
+    """
+
     def requires(self):
         return [
-            FamiliesCSV(),
-            PGLoadClans(),
+            RfamFamiliesCSV(),
+            RfamPGLoadClans(),
         ]
 
     def control_file(self):
-        config = DBConfig()
-        filename = FamiliesCSV().output().fn
-        return CONTROL_FILE.format(
-            filename=filename,
-            user=config.user,
-            password=config.password,
-            host=config.host,
-            port=config.port,
-            db=config.db_name,
-        )
-
-
-if __name__ == '__main__':
-    luigi.run(main_task_cls=PGLoadFamilies)
+        filename = RfamFamiliesCSV().output().fn
+        return CONTROL_FILE.format(filename=filename)
