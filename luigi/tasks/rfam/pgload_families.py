@@ -33,7 +33,7 @@ HAVING FIELDS
     is_suppressed,
     rna_type
 )
-INTO {db_url}?load_rnc_rfam_models
+INTO {db_url}
 TARGET COLUMNS
 (
     rfam_model_id,
@@ -113,4 +113,7 @@ class RfamPGLoadFamilies(PGLoader):  # pylint: disable=R0904
 
     def control_file(self):
         filename = RfamFamiliesCSV().output().fn
-        return CONTROL_FILE.format(filename=filename)
+        return CONTROL_FILE.format(
+            filename=filename,
+            db_url=self.db_url(table='load_rnc_rfam_models')
+        )

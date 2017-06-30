@@ -72,6 +72,17 @@ class PGLoader(ExternalProgramTask):  # pylint: disable=R0921
         """
         return ''
 
+    def db_url(self, table=None):
+        """
+        Create a pgloader url for the postgres database that is configured in
+        the db section. If the table is given and not None then it will be
+        added as well.
+        """
+        db_url = DBConfig().pgloader_url()
+        if table is not None:
+            return '%s?%s' % (db_url, table)
+        return db_url
+
     def write_control_file(self):
         """
         This will write the control file just prior to running pgloader. This
@@ -80,10 +91,8 @@ class PGLoader(ExternalProgramTask):  # pylint: disable=R0921
         by config.db.
         """
         filename = self.control_filename()
-        db_url = DBConfig().pgloader_url()
         with atomic_file(filename) as out:
-            text = self.control_file()
-            out.write(text.format(db_url=db_url))
+            out.write(self.control_file())
         return filename
 
     def run(self):

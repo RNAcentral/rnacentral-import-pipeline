@@ -24,7 +24,7 @@ HAVING FIELDS
     upi,
     date
 )
-INTO {db_url}?rfam_analyzed_sequences
+INTO {db_url}
 TARGET COLUMNS
 (
     upi,
@@ -52,4 +52,7 @@ class RfamPGLoadFasta(PGLoader):  # pylint: disable=R0904
 
     def control_file(self):
         filename = RfamFastaCSV().output().fn
-        return CONTROL_FILE.format(filename=filename)
+        return CONTROL_FILE.format(
+            filename=filename,
+            db_url=self.db_url(table='rfam_analyzed_sequences')
+        )

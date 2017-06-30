@@ -33,7 +33,7 @@ CONTROL_FILE = """LOAD CSV
       E_VALUE,
       SCORE
       )
-  INTO {db_url}?load_rnc_rfam_model_hits
+  INTO {db_url}
      TARGET COLUMNS
       (
       UPI,
@@ -50,6 +50,9 @@ CONTROL_FILE = """LOAD CSV
           fields escaped by double-quote,
           fields terminated by ','
 BEFORE LOAD DO
+$$
+set work_mem='256MB';
+$$,
 $$
 truncate table load_rnc_rfam_model_hits;
 $$
@@ -108,4 +111,7 @@ class RfamPGLoadHits(PGLoader):  # pylint: disable=R0904
 
     def control_file(self):
         filename = RfamHitsCSV().output().fn
-        return CONTROL_FILE.format(filename=filename)
+        return CONTROL_FILE.format(
+            filename=filename,
+            db_url=self.db_url(table='load_rnc_rfam_model_hits')
+        )

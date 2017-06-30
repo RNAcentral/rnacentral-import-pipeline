@@ -26,7 +26,7 @@ HAVING FIELDS
     description,
     family_count
 )
-INTO {db_url}?load_rnc_rfam_clans
+INTO {db_url}
 TARGET COLUMNS
 (
     rfam_clan_id,
@@ -80,4 +80,7 @@ class RfamPGLoadClans(PGLoader):  # pylint: disable=R0904
 
     def control_file(self):
         filename = RfamClansCSV().output().fn
-        return CONTROL_FILE.format(filename=filename)
+        return CONTROL_FILE.format(
+            filename=filename,
+            db_url=self.db_url(table='load_rnc_rfam_clans')
+        )
