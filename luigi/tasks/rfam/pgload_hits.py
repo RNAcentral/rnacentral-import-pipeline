@@ -51,7 +51,7 @@ CONTROL_FILE = """LOAD CSV
           fields terminated by ','
 BEFORE LOAD DO
 $$
-set work_mem='256MB';
+set work_mem='512MB';
 $$,
 $$
 truncate table load_rnc_rfam_model_hits;
