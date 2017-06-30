@@ -22,7 +22,8 @@ from tasks.utils.csv_writer import CsvWriter
 class RfamFamiliesCSV(CsvWriter):
     headers = [
         'id',
-        'name',
+        'short_name',
+        'long_name',
         'description',
         'clan',
         'seed_count',
@@ -36,7 +37,8 @@ class RfamFamiliesCSV(CsvWriter):
     def data(self):
         for family in utils.load_families():
             data = attr.asdict(family)
-            data['name'] = family.pretty_name
+            data['short_name'] = family.name
+            data['long_name'] = family.pretty_name
             data['is_suppressed'] = int(family.is_suppressed)
             data['rna_type'] = family.guess_insdc()
             yield data

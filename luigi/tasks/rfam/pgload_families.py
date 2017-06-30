@@ -23,7 +23,8 @@ FROM '{filename}' WITH ENCODING ISO-8859-14
 HAVING FIELDS
 (
     rfam_model_id,
-    name,
+    short_name,
+    long_name,
     description [null if blanks],
     rfam_clan_id [null if blanks],
     seed_count,
@@ -37,7 +38,8 @@ INTO {db_url}
 TARGET COLUMNS
 (
     rfam_model_id,
-    name,
+    short_name,
+    long_name,
     description,
     rfam_clan_id,
     seed_count,
@@ -58,7 +60,8 @@ $$
 AFTER LOAD DO
 $$ insert into rnc_rfam_models (
     rfam_model_id,
-    name,
+    short_name,
+    long_name,
     description,
     seed_count,
     full_count,
@@ -70,7 +73,8 @@ $$ insert into rnc_rfam_models (
 ) (
 select
     rfam_model_id,
-    name,
+    short_name,
+    long_name,
     description,
     seed_count,
     full_count,
@@ -82,7 +86,8 @@ select
 from load_rnc_rfam_models
 )
 ON CONFLICT (rfam_model_id) DO UPDATE SET
-    name = excluded.name,
+    short_name = excluded.short_name,
+    long_name = excluded.long_name,
     description = excluded.description,
     seed_count = excluded.seed_count,
     full_count = excluded.full_count,
