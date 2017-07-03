@@ -25,7 +25,7 @@ class RfamFamiliesCSV(CsvWriter):
         'short_name',
         'long_name',
         'description',
-        'clan',
+        'clan_id',
         'seed_count',
         'full_count',
         'length',
