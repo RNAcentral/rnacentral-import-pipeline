@@ -55,10 +55,25 @@ WITH
     fields terminated by ','
 BEFORE LOAD DO
 $$
-truncate table load_rnc_rfam_models;
+create table if not exists load_rfam_models (
+    rfam_model_id character varying(20) COLLATE pg_catalog."default" NOT NULL,
+    long_name character varying(200) COLLATE pg_catalog."default" NOT NULL,
+    description character varying(2000) COLLATE pg_catalog."default",
+    seed_count integer NOT NULL,
+    full_count integer NOT NULL,
+    length integer NOT NULL,
+    is_suppressed boolean NOT NULL,
+    rfam_clan_id character varying(20) COLLATE pg_catalog."default",
+    domain character varying(50) COLLATE pg_catalog."default",
+    rna_type character varying(250) COLLATE pg_catalog."default",
+    short_name character varying(50) COLLATE pg_catalog."default"
+);
+$$,
+$$
+truncate table load_rfam_clans;
 $$
 AFTER LOAD DO
-$$ insert into rnc_rfam_models (
+$$ insert into rfam_models (
     rfam_model_id,
     short_name,
     long_name,
@@ -83,7 +98,7 @@ select
     rfam_clan_id,
     domain,
     rna_type
-from load_rnc_rfam_models
+from load_rfam_models
 )
 ON CONFLICT (rfam_model_id) DO UPDATE SET
     short_name = excluded.short_name,
@@ -98,7 +113,8 @@ ON CONFLICT (rfam_model_id) DO UPDATE SET
     rna_type = excluded.rna_type
 $$,
 $$
-truncate table load_rnc_rfam_models;
+truncate table load_rfam_models;
+drop table load_rfam_models;
 $$
 ;
 """
@@ -120,5 +136,5 @@ class RfamPGLoadFamilies(PGLoader):  # pylint: disable=R0904
         filename = RfamFamiliesCSV().output().fn
         return CONTROL_FILE.format(
             filename=filename,
-            db_url=self.db_url(table='load_rnc_rfam_models')
+            db_url=self.db_url(table='load_rfam_models')
         )

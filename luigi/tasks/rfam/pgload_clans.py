@@ -38,12 +38,22 @@ WITH
     skip header = 1,
     fields escaped by double-quote,
     fields terminated by ','
+
 BEFORE LOAD DO
 $$
-truncate table load_rnc_rfam_clans;
+create table if not exists load_rfam_clans (
+    rfam_clan_id character varying(20) COLLATE pg_catalog."default" NOT NULL,
+    name character varying(40) COLLATE pg_catalog."default" NOT NULL,
+    description character varying(1000) COLLATE pg_catalog."default" NOT NULL,
+    family_count integer NOT NULL
+);
+$$,
 $$
+truncate table load_rfam_clans;
+$$
+
 AFTER LOAD DO
-$$ insert into rnc_rfam_clans (
+$$ insert into rfam_clans (
     rfam_clan_id,
     name,
     description,
@@ -54,7 +64,7 @@ select
     name,
     description,
     family_count
-from load_rnc_rfam_clans
+from load_rfam_clans
 )
 ON CONFLICT (rfam_clan_id) DO UPDATE SET
     name = excluded.name,
@@ -62,7 +72,8 @@ ON CONFLICT (rfam_clan_id) DO UPDATE SET
     family_count = excluded.family_count
 $$,
 $$
-truncate table load_rnc_rfam_clans;
+truncate table load_rfam_clans;
+drop table load_rfam_clans;
 $$
 ;
 """
@@ -82,5 +93,5 @@ class RfamPGLoadClans(PGLoader):  # pylint: disable=R0904
         filename = RfamClansCSV().output().fn
         return CONTROL_FILE.format(
             filename=filename,
-            db_url=self.db_url(table='load_rnc_rfam_clans')
+            db_url=self.db_url(table='load_rfam_clans')
         )

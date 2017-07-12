@@ -49,15 +49,36 @@ CONTROL_FILE = """LOAD CSV
      WITH skip header = 1,
           fields escaped by double-quote,
           fields terminated by ','
+
 BEFORE LOAD DO
 $$
 set work_mem='512MB';
 $$,
 $$
-truncate table load_rnc_rfam_model_hits;
+create table if not exists load_rfam_model_hits (
+    sequence_start integer NOT NULL,
+    sequence_stop integer NOT NULL,
+    sequence_completness double precision,
+    model_start integer NOT NULL,
+    model_stop integer NOT NULL,
+    model_completeness double precision,
+    overlap character varying(30) COLLATE pg_catalog."default" NOT NULL,
+    e_value double precision NOT NULL,
+    score double precision NOT NULL,
+    rfam_model_id character varying(20) COLLATE pg_catalog."default" NOT NULL,
+    upi character varying(13) COLLATE pg_catalog."default" NOT NULL
+);
+$$,
 $$
+truncate table load_rfam_model_hits;
+$$
+
 AFTER LOAD DO
-$$ insert into rnc_rfam_model_hits (
+$$
+create index ix__load_rfam_model_hits__upi on load_rfam_model_hits (upi);
+create index ix__load_rfam_model_hits__rfam_model_id on load_rfam_model_hits (rfam_model_id);
+$$,
+$$ insert into rfam_model_hits (
     sequence_start,
     sequence_stop,
     sequence_completness,
@@ -82,14 +103,17 @@ select
     load.score,
     load.rfam_model_id,
     load.upi
-from rna, rnc_rfam_models as models, load_rnc_rfam_model_hits as load
+from rna, rfam_models as models, load_rfam_model_hits as load
 where
     rna.upi = load.upi
     and models.rfam_model_id = load.rfam_model_id
 );
 $$,
 $$
-truncate table load_rnc_rfam_model_hits;
+drop index ix__load_rfam_model_hits__rfam_model_id;
+drop index ix__load_rfam_model_hits__upi;
+truncate table load_rfam_model_hits;
+drop table load_rfam_model_hits;
 $$
 ;
 """
@@ -113,5 +137,5 @@ class RfamPGLoadHits(PGLoader):  # pylint: disable=R0904
         filename = RfamHitsCSV().output().fn
         return CONTROL_FILE.format(
             filename=filename,
-            db_url=self.db_url(table='load_rnc_rfam_model_hits')
+            db_url=self.db_url(table='load_rfam_model_hits')
         )
