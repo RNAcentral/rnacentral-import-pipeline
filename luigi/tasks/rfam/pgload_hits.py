@@ -113,8 +113,14 @@ where
 $$,
 $$
 drop index ix__load_rfam_model_hits__rfam_model_id;
+$$,
+$$
 drop index ix__load_rfam_model_hits__upi;
+$$,
+$$
 truncate table load_rfam_model_hits;
+$$,
+$$
 drop table load_rfam_model_hits;
 $$
 ;

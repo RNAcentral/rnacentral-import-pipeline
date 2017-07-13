@@ -76,6 +76,8 @@ ON CONFLICT (rfam_clan_id) DO UPDATE SET
 $$,
 $$
 truncate table load_rfam_clans;
+$$,
+$$
 drop table load_rfam_clans;
 $$
 ;
