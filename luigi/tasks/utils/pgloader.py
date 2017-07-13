@@ -83,6 +83,9 @@ class PGLoader(ExternalProgramTask):  # pylint: disable=R0921
             return '%s?%s' % (db_url, table)
         return db_url
 
+    def db_search_path(self):
+        return DBConfig().search_path
+
     def write_control_file(self):
         """
         This will write the control file just prior to running pgloader. This

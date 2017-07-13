@@ -49,6 +49,8 @@ CONTROL_FILE = """LOAD CSV
      WITH skip header = 1,
           fields escaped by double-quote,
           fields terminated by ','
+SET
+    search_path = '{search_path}'
 
 BEFORE LOAD DO
 $$
@@ -137,5 +139,6 @@ class RfamPGLoadHits(PGLoader):  # pylint: disable=R0904
         filename = RfamHitsCSV().output().fn
         return CONTROL_FILE.format(
             filename=filename,
-            db_url=self.db_url(table='load_rfam_model_hits')
+            db_url=self.db_url(table='load_rfam_model_hits'),
+            search_path=self.db_search_path(),
         )
