@@ -74,7 +74,7 @@ create table if not exists load_rfam_models (
 );
 $$,
 $$
-truncate table load_rfam_clans;
+truncate table load_rfam_models;
 $$
 
 AFTER LOAD DO
@@ -116,9 +116,6 @@ ON CONFLICT (rfam_model_id) DO UPDATE SET
     rfam_clan_id = excluded.rfam_clan_id,
     domain = excluded.domain,
     rna_type = excluded.rna_type
-$$,
-$$
-truncate table load_rfam_models;
 $$,
 $$
 drop table load_rfam_models;

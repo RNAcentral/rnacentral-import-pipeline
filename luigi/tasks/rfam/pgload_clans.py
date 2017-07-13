@@ -52,7 +52,7 @@ create table if not exists load_rfam_clans (
 );
 $$,
 $$
-truncate table load_rfam_clans;
+truncate    table load_rfam_clans ;
 $$
 
 AFTER LOAD DO
@@ -73,9 +73,6 @@ ON CONFLICT (rfam_clan_id) DO UPDATE SET
     name = excluded.name,
     description = excluded.description,
     family_count = excluded.family_count
-$$,
-$$
-truncate table load_rfam_clans;
 $$,
 $$
 drop table load_rfam_clans;
