@@ -40,6 +40,7 @@ class db(luigi.Config):  # pylint: disable=C0103, R0904
     host = luigi.Parameter(default='127.0.0.1')
     port = luigi.Parameter(default=5432)
     db_name = luigi.Parameter(default='rnacen')
+    search_path = luigi.Parameter()
 
     def pgloader_url(self):
         """
