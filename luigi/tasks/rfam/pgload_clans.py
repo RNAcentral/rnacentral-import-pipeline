@@ -34,6 +34,9 @@ TARGET COLUMNS
     description,
     family_count
 )
+SET
+    search_path = '{search_path}'
+
 WITH
     skip header = 1,
     fields escaped by double-quote,
@@ -93,5 +96,6 @@ class RfamPGLoadClans(PGLoader):  # pylint: disable=R0904
         filename = RfamClansCSV().output().fn
         return CONTROL_FILE.format(
             filename=filename,
-            db_url=self.db_url(table='load_rfam_clans')
+            db_url=self.db_url(table='load_rfam_clans'),
+            search_path=self.db_search_path(),
         )
