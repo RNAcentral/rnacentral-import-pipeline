@@ -351,3 +351,8 @@ def tbl_iterator(filename):
             fields = attr.fields(RfamHit)
             parts = re.split(r'\s+', line.strip(), len(fields) - 1)
             yield RfamHit(*parts)
+
+
+def name_to_suppression(version='CURRENT'):
+    families = load_families(version=version)
+    return {family.name: family.is_suppressed for family in families}

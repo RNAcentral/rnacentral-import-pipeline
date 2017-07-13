@@ -21,6 +21,7 @@ from ensembl.base import BioImporter
 from ensembl import data
 from ensembl import helpers
 from ensembl.rna_type_inference import RnaTypeInference
+from rfam import utils as rfutils
 
 import parameters
 
@@ -37,13 +38,27 @@ class EnsemblImporter(BioImporter):
 
     input_file = parameters.GenericFileParameter()
     test = luigi.BoolParameter(default=False, significant=False)
-    destination = PathParameter(default='/tmp')
+    destination = parameters.PathParameter(default='/tmp')
 
     def format(self):
         """
         Determine the format. This is always 'embl' for Ensembl.
         """
         return 'embl'
+
+    def is_from_suppressed_rfam_model(self, current):
+        inference = RnaTypeInference()
+        rfam_model = inference.rfam_xref(current)
+        if not rfam_model:
+            return False
+        name = inference.rfam_name(rfam_model)
+        if name is None:
+            return False
+
+        mapping = rfutils.name_to_suppression()
+        if name not in mapping:
+            raise ValueError("Unknown Rfam model name: %s" % name)
+        return mapping[name]
 
     def initial_entries(self, record, summary, feature):
         try:
@@ -65,7 +80,7 @@ class EnsemblImporter(BioImporter):
             primary_id = standard_name
             accession = standard_name
 
-        return [data.Entry(
+        entry = data.Entry(
             primary_id=primary_id,
             accession=accession,
             seq=sequence,
@@ -81,7 +96,14 @@ class EnsemblImporter(BioImporter):
             optional_id=gene,
             note_data=helpers.note_data(feature),
             xref_data=helpers.xref_data(feature),
-        )]
+        )
+
+        if self.is_from_suppressed_rfam_model(entry):
+            LOGGER.debug("Skipping feature %s because it is from a suppressed"
+                         " Rfam family", feature)
+            return []
+
+        return [entry]
 
     def description(self, summary, feature, current):
         super_method = super(EnsemblImporter, self).description

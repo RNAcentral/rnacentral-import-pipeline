@@ -54,17 +54,29 @@ class UnknownRnaTypeException(Exception):
 
 class RnaTypeInference(object):
     def __init__(self):
-        self.rfam_mapping = rfutil.name_to_isnsdc_type()
+        self.rfam_mapping = rfutil.name_to_insdc_type()
         self.fallbacks = [
             ('RFAM_trans_name', self.rfam_type),
             ('MGI_trans_name', self.mouse_type),
         ]
 
-    def rfam_type(self, name):
+    def rfam_xref(self, entry):
+        key = self.fallbacks[0]
+        if key in entry.xref_data:
+            return entry.xref_data[key]
+        return None
+
+    def rfam_name(self, name):
         pattern = r'^(.+)\.\d+-\d+$'
         match = re.match(pattern, name)
-        if name not in self.rfam_mapping and match:
+        if name in self.rfam_mapping:
+            return name
+        elif match:
             name = match.group(1)
+        return None
+
+    def rfam_type(self, name):
+        name = self.rfam_name(name)
         return self.rfam_mapping.get(name, None)
 
     def mouse_type(self, name):
