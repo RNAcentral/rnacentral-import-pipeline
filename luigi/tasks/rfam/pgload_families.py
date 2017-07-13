@@ -119,6 +119,8 @@ ON CONFLICT (rfam_model_id) DO UPDATE SET
 $$,
 $$
 truncate table load_rfam_models;
+$$,
+$$
 drop table load_rfam_models;
 $$
 ;
