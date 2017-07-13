@@ -78,6 +78,8 @@ $$
 AFTER LOAD DO
 $$
 create index ix__load_rfam_model_hits__upi on load_rfam_model_hits (upi);
+$$,
+$$
 create index ix__load_rfam_model_hits__rfam_model_id on load_rfam_model_hits (rfam_model_id);
 $$,
 $$ insert into rfam_model_hits (
