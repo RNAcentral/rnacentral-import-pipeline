@@ -47,6 +47,16 @@ class EnsemblImporter(BioImporter):
         return 'embl'
 
     def is_from_suppressed_rfam_model(self, current):
+        """
+        Check fi the currenty entry is from a suppressed Rfam model. Some Rfam
+        models are not good fits for the RNAcentral, notably the models of part
+        of an lncRNA or piRNA models. We can compute which models are not good
+        fits and so we use that to reject some Ensembl annotation as they are
+        the result of searching using one of these models.
+
+        :param data.Entry entry: The Entry to check.
+        :return bool: True if this is entry is from a suppressed Rfam model.
+        """
         inference = RnaTypeInference()
         rfam_model = inference.rfam_xref(current)
         if not rfam_model:
