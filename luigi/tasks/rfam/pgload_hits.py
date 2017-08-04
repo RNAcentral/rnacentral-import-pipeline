@@ -60,7 +60,7 @@ $$
 create table if not exists load_rfam_model_hits (
     sequence_start integer NOT NULL,
     sequence_stop integer NOT NULL,
-    sequence_completness double precision,
+    sequence_completeness double precision,
     model_start integer NOT NULL,
     model_stop integer NOT NULL,
     model_completeness double precision,
@@ -85,7 +85,7 @@ $$,
 $$ insert into rfam_model_hits (
     sequence_start,
     sequence_stop,
-    sequence_completness,
+    sequence_completeness,
     model_start,
     model_stop,
     model_completeness,
