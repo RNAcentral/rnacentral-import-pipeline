@@ -294,6 +294,7 @@ class RfamFamily(object):
     name = attr.ib(validator=is_a(basestring))
     pretty_name = attr.ib(validator=is_a(basestring))
     so_terms = attr.ib(validator=is_a(set))
+    go_terms = attr.ib(validator=is_a(set))
     rna_type = attr.ib(validator=is_a(basestring))
     domain = attr.ib()
     description = attr.ib(validator=is_a(basestring), convert=empty_str_from(r'\N'))
@@ -305,11 +306,14 @@ class RfamFamily(object):
     @classmethod
     def build_all(cls, clan_file, link_file, family_file):
         so_terms = coll.defaultdict(set)
+        go_terms = coll.defaultdict(set)
         for line in link_file:
             parts = line.split()
-            if parts[1] != 'SO':
-                continue
-            so_terms[parts[0]].add('SO:%s' % parts[2])
+            if parts[1] == 'SO':
+                so_terms[parts[0]].add('SO:%s' % parts[2])
+            if parts[1] == 'GO':
+                go_name = ' '.join(parts[3:])
+                go_terms[parts[0]].add(('GO:%s' % parts[2], go_name))
 
         clans = coll.defaultdict(set)
         for line in clan_file:
@@ -325,6 +329,7 @@ class RfamFamily(object):
                 name=row[1],
                 pretty_name=row[3],
                 so_terms=so_terms[family],
+                go_terms=go_terms[family],
                 rna_type=row[18].strip(),
                 domain=domain,
                 description=row[9],
