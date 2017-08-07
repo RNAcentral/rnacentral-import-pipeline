@@ -123,6 +123,7 @@ class INSDCRNATypeTest(ut.TestCase):
             name='isrP',
             pretty_name='Hfq binding RNA',
             so_terms=set(['SO:0001263']),
+            go_terms=set([]),
             rna_type='gene sRNA',
             domain=None,
             description='',
@@ -140,6 +141,7 @@ class INSDCRNATypeTest(ut.TestCase):
             name='ctRNA_pGA1',
             pretty_name='ctRNA',
             so_terms=set(['SO:0000644']),
+            go_terms=set([('GO:0003729', 'mRNA binding')]),
             rna_type='Gene; antisense',
             domain=None,
             description='',
@@ -157,6 +159,7 @@ class INSDCRNATypeTest(ut.TestCase):
             name='tracrRNA',
             pretty_name='Trans-activating crRNA',
             so_terms=set(['SO:0000655']),
+            go_terms=set([]),
             rna_type='',
             domain=None,
             description='',
@@ -171,7 +174,7 @@ class INSDCRNATypeTest(ut.TestCase):
 
 class LoadingFamiliesTest(ut.TestCase):
     def test_it_loads_all_families(self):
-        assert len(utils.load_families()) == 2588
+        assert len(utils.load_families()) == 2687
 
     def test_it_can_load_family_correctly(self):
         assert utils.load_families()[0] == utils.RfamFamily(
@@ -179,6 +182,10 @@ class LoadingFamiliesTest(ut.TestCase):
             name='5S_rRNA',
             pretty_name='5S ribosomal RNA',
             so_terms=set(['SO:0000652']),
+            go_terms=set([
+                ('GO:0003735', 'structural constituent of ribosome'),
+                ('GO:0005840', 'ribosome')
+            ]),
             rna_type='Gene; rRNA;',
             domain=None,
             description=(
@@ -195,14 +202,15 @@ class LoadingFamiliesTest(ut.TestCase):
             ),
             seed_count=712,
             full_count=183439,
-            clan_id=None,
+            clan_id='CL00113',
             length=119,
         )
 
     def test_it_can_assign_correct_clan_ids(self):
         clans = coll.defaultdict(set)
         for f in utils.load_families():
-            clans[f.clan_id].add(f.id)
+            if f.clan_id:
+                clans[f.clan_id].add(f.id)
 
         assert len(clans) == 111
         assert clans['CL00001'] == set([
@@ -229,7 +237,7 @@ class LoadingFamiliesTest(ut.TestCase):
 
     def test_it_does_not_supress_all_families(self):
         families = {f.id for f in utils.load_families() if not f.is_suppressed}
-        assert len(families) == 1992
+        assert len(families) == 2066
 
     def test_it_will_supress_lncRNA(self):
         families = {f.id for f in utils.load_families() if not f.is_suppressed}
@@ -246,7 +254,7 @@ class LoadingFamiliesTest(ut.TestCase):
 
 class LoadingClansTest(ut.TestCase):
     def test_it_can_load_all_clans(self):
-        assert len(utils.load_clans()) == 110
+        assert len(utils.load_clans()) == 111
 
     def test_it_can_load_a_clan_correctly(self):
         assert utils.load_clans()[0] == utils.RfamClan(
