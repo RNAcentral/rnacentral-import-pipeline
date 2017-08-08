@@ -330,7 +330,7 @@ class RfamFamily(object):
                 pretty_name=row[3],
                 so_terms=so_terms[family],
                 go_terms=go_terms[family],
-                rna_type=row[18].strip(),
+                rna_type=row[18].strip().strip(';'),
                 domain=domain,
                 description=row[9],
                 seed_count=int(row[14]),

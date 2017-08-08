@@ -72,8 +72,8 @@ create table if not exists load_rfam_models (
     rfam_clan_id character varying(20) COLLATE pg_catalog."default",
     domain character varying(50) COLLATE pg_catalog."default",
     rna_type character varying(250) COLLATE pg_catalog."default",
-    short_name character varying(50) COLLATE pg_catalog."default"
-    rfam_rna_type character varying(250) COLLATE pg_catalog."default",
+    short_name character varying(50) COLLATE pg_catalog."default",
+    rfam_rna_type character varying(250) COLLATE pg_catalog."default"
 );
 $$,
 $$
