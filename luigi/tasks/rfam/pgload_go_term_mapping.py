@@ -30,7 +30,7 @@ INTO {db_url}
 TARGET COLUMNS
 (
     go_term_id,
-    name
+    rfam_model_id
 )
 SET
     search_path = '{search_path}'
