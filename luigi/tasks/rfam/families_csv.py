@@ -32,6 +32,7 @@ class RfamFamiliesCSV(CsvWriter):
         'domain',
         'is_suppressed',
         'rna_type',
+        'rfam_rna_type',
     ]
 
     def data(self):
@@ -40,5 +41,6 @@ class RfamFamiliesCSV(CsvWriter):
             data['short_name'] = family.name
             data['long_name'] = family.pretty_name
             data['is_suppressed'] = int(family.is_suppressed)
+            data['rfam_rna_type'] = data['rna_type']
             data['rna_type'] = family.guess_insdc()
             yield data
