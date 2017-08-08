@@ -28,6 +28,19 @@ from .fasta_csv import RfamFastaCSV
 from .go_term_mapping_csv import RfamGoTermsCSV
 
 
+class RfamFamilies(luigi.WrapperTask):  # pylint: disable=R0904
+    """
+    This will load the metadata associated with all Rfam families. This is mean
+    to be a useful loader for times when it is easier to load all metadata and
+    not include the searches.
+    """
+
+    def requires(self):
+        yield RfamPGLoadClans()
+        yield RfamPGLoadFamilies()
+        yield RfamPGLoadGoTerms()
+
+
 class RfamSearches(luigi.WrapperTask):  # pylint: disable=R0904
     """
     This will import all Rfam search results to the database. It will build the
@@ -37,9 +50,7 @@ class RfamSearches(luigi.WrapperTask):  # pylint: disable=R0904
 
     def requires(self):
         yield RfamPGLoadFasta()
-        yield RfamPGLoadClans()
-        yield RfamPGLoadFamilies()
-        yield RfamPGLoadGoTerms()
+        yield RfamFamilies()
         yield RfamPGLoadHits()
 
 
