@@ -32,7 +32,8 @@ HAVING FIELDS
     length,
     domain [null if blanks],
     is_suppressed,
-    rna_type
+    rna_type,
+    rfam_rna_type
 )
 INTO {db_url}
 TARGET COLUMNS
@@ -47,7 +48,8 @@ TARGET COLUMNS
     length,
     domain,
     is_suppressed,
-    rna_type
+    rna_type,
+    rfam_rna_type
 )
 SET
     search_path = '{search_path}'
@@ -71,6 +73,7 @@ create table if not exists load_rfam_models (
     domain character varying(50) COLLATE pg_catalog."default",
     rna_type character varying(250) COLLATE pg_catalog."default",
     short_name character varying(50) COLLATE pg_catalog."default"
+    rfam_rna_type character varying(250) COLLATE pg_catalog."default",
 );
 $$,
 $$
@@ -89,7 +92,8 @@ $$ insert into rfam_models (
     is_suppressed,
     rfam_clan_id,
     domain,
-    rna_type
+    rna_type,
+    rfam_rna_type
 ) (
 select
     rfam_model_id,
@@ -102,7 +106,8 @@ select
     is_suppressed,
     rfam_clan_id,
     domain,
-    rna_type
+    rna_type,
+    rfam_rna_type
 from load_rfam_models
 )
 ON CONFLICT (rfam_model_id) DO UPDATE SET
@@ -115,7 +120,8 @@ ON CONFLICT (rfam_model_id) DO UPDATE SET
     is_suppressed = excluded.is_suppressed,
     rfam_clan_id = excluded.rfam_clan_id,
     domain = excluded.domain,
-    rna_type = excluded.rna_type
+    rna_type = excluded.rna_type,
+    rfam_rna_type = excluded.rfam_rna_type
 $$,
 $$
 drop table load_rfam_models;
