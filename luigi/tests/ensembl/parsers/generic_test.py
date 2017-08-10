@@ -13,36 +13,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from collections import Counter
-
-# import attr
 import pytest
 
-from ensembl.generic import EnsemblImporter
-from ensembl import helpers
+from ensembl.parsers import EnsemblParser
 from ensembl.data import Exon
 
-from tests.ensembl.helpers import Base
+from tests.ensembl.utils import Base
 
 
-class BaseTest(Base):
-
-    def entries_for(self, feature_key):
-        feature = self.features[feature_key]
-        summary = self.summary_of(helpers.gene(feature))
-        entries = self.importer.rnacentral_entries(self.record, summary,
-                                                   feature)
-        return list(entries)
-
-    def entry_for(self, feature_key):
-        entries = self.entries_for(feature_key)
-        assert len(entries) == 1
-        return entries[0]
-
-
-class HumanTests(BaseTest):
+class HumanTests(Base):
     filename = 'data/Homo_sapiens.GRCh38.87.chromosome.12.dat'
-    importer_class = EnsemblImporter
+    importer_class = EnsemblParser
 
     def test_it_sets_primary_id_to_transcript_id(self):
         assert self.entry_for('ENST00000516089.1').primary_id == \
@@ -61,7 +42,7 @@ class HumanTests(BaseTest):
 
     def test_it_sets_rna_type_to_snRNA(self):
         assert self.entry_for('ENST00000516089.1').rna_type == 'snoRNA'
-        assert self.entry_for('ENST00000540226.1').rna_type == 'antisense'
+        assert self.entry_for('ENST00000540226.1').rna_type == 'antisense_RNA'
 
     def test_it_sets_product_to_snaRNA(self):
         assert self.entry_for("ENST00000516089.1").product == 'scaRNA'
@@ -95,7 +76,7 @@ class HumanTests(BaseTest):
 
     def test_generated_description_includes_locus(self):
         assert self.entry_for('ENST00000501075.2').description == \
-            "Homo sapiens (human) antisense RP5-940J5.6"
+            "Homo sapiens (human) antisense RNA RP5-940J5.6"
 
     def test_can_correct_rfam_name_to_type(self):
         assert self.entry_for('ENST00000620330.1').rna_type == 'SRP_RNA'
@@ -117,12 +98,14 @@ class HumanTests(BaseTest):
         ]
 
     def test_it_gets_cross_references(self):
-        assert self.entry_for('ENST00000505276.2').xref_data == {
-            "Vega_transcript": ["OTTHUMT00000398632"],
-            "UCSC": ["uc001qlq.2"],
-            "Clone_based_vega_transcript": ["RP5-1063M23.3-003"],
-            "OTTT": ["OTTHUMT00000398632"],
-            "RNAcentral": ["URS00002FA1C6"],
+        assert self.entry_for('ENST00000504074.1').xref_data == {
+            "Vega_transcript": ["OTTHUMT00000397330"],
+            "UCSC": ["uc010scw.2"],
+            "Clone_based_vega_transcript": ["RP11-598F7.1-001"],
+            "OTTT": ["OTTHUMT00000397330"],
+            "RNAcentral": ["URS000042090E"],
+            "HGNC_trans_name": ['FAM138D-001'],
+            "RefSeq_ncRNA": ['NR_026823'],
         }
 
     def test_it_always_has_valid_rna_types(self):
@@ -130,18 +113,18 @@ class HumanTests(BaseTest):
             assert entry.feature_type in set(['misc_RNA', 'ncRNA'])
 
 
-class HumanPatchTests(BaseTest):
+class HumanPatchTests(Base):
     filename = None
-    importer_class = EnsemblImporter
+    importer_class = EnsemblParser
 
     @pytest.mark.skip()
     def test_it_sets_chromosome_correctly(self):
         pass
 
 
-class MouseTests(BaseTest):
+class MouseTests(Base):
     filename = 'data/Mus_musculus.GRCm38.87.chromosome.3.dat'
-    importer_class = EnsemblImporter
+    importer_class = EnsemblParser
 
     def test_can_use_mouse_models_to_correct_rna_type(self):
         assert self.entry_for('ENSMUST00000082862.1').rna_type == 'telomerase_RNA'
@@ -149,3 +132,7 @@ class MouseTests(BaseTest):
     def test_it_always_has_valid_rna_types(self):
         for entry in self.data():
             assert entry.feature_type in set(['misc_RNA', 'ncRNA'])
+
+    def test_it_never_has_bad_vault(self):
+        for entry in self.data():
+            assert entry.rna_type != 'vaultRNA'

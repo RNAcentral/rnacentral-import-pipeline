@@ -30,8 +30,7 @@ class Output(object):
     This is a container for all output files that the import process will
     create.
     """
-    short_sequences = attr.ib(validator=is_a(FileSystemTarget))
-    long_sequences = attr.ib(validator=is_a(FileSystemTarget))
+    sequences = attr.ib(validator=is_a(FileSystemTarget))
     references = attr.ib(validator=is_a(FileSystemTarget))
     accessions = attr.ib(validator=is_a(FileSystemTarget))
     locations = attr.ib(validator=is_a(FileSystemTarget))
@@ -67,10 +66,8 @@ class Output(object):
                     raise ValueError("Could not create %s" % dirname)
             return path
 
-
         return cls(
-            short_sequences=LocalTarget(path_to('short')),
-            long_sequences=LocalTarget(path_to('long')),
+            sequences=LocalTarget(path_to('short')),
             references=LocalTarget(path_to('refs')),
             accessions=LocalTarget(path_to('ac_info')),
             locations=LocalTarget(path_to('genomic_locations')),
@@ -86,15 +83,13 @@ class Output(object):
             True of all outputs exist.
         """
 
-        return self.short_sequences.exists() and \
-            self.long_sequences.exists() and \
+        return self.sequences.exists() and \
             self.references.exists() and \
             self.accessions.exists() and \
             self.locations.exists()
 
     def __enter__(self):
-        self.short_sequences = atomic_file(self.short_sequences.path)
-        self.long_sequences = atomic_file(self.long_sequences.path)
+        self.sequences = atomic_file(self.sequences.path)
         self.references = atomic_file(self.references.path)
         self.accessions = atomic_file(self.accessions.path)
         self.locations = atomic_file(self.locations.path)
@@ -104,8 +99,7 @@ class Output(object):
         if exc_type:
             return
 
-        self.short_sequences.close()
-        self.long_sequences.close()
+        self.sequences.close()
         self.references.close()
         self.accessions.close()
         self.locations.close()
@@ -118,8 +112,7 @@ class OutputWriters(object):
     file.
     """
 
-    short_sequences = attr.ib()
-    long_sequences = attr.ib()
+    sequences = attr.ib()
     references = attr.ib()
     accessions = attr.ib()
     locations = attr.ib()
@@ -165,8 +158,7 @@ class OutputWriters(object):
             return csv.writer(target, **options)
 
         return cls(
-            short_sequences=as_csv(output.short_sequences, quote=None),
-            long_sequences=as_csv(output.long_sequences, quote=None),
+            sequences=as_csv(output.sequences, quote=None),
             references=as_csv(output.references),
             accessions=as_csv(output.accessions),
             locations=as_csv(output.locations),
@@ -250,9 +242,7 @@ class OutputWriters(object):
 
     def write(self, data):
         if len(data.seq) <= 4000:
-            self.write_sequence(self.short_sequences, data)
-        else:
-            self.write_sequence(self.long_sequences, data)
+            self.write_sequence(self.sequences, data)
 
         self.write_accession(data)
 

@@ -13,23 +13,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-GENCODE_SPECIES = set([
-    'Homo sapiens',
-    'Mus musculus',
-])
-"""
-All species names in this set should use the gencode importer instead of the
-generic one.
-"""
-
-MODEL_ORGANISMS = set([
-    'saccharomyces_cerevisiae',
-    'caenorhabditis_elegans',
-    'drosophila_melanogaster',
-])
-"""
-This is a set of species names that should be considered a model oragnism and
-thus excluded from the default import.
-"""
+from ensembl.parsers import EnsemblParser
+from ensembl.parsers import GencodeParser
 
 
+def parser_class(config, input_file):
+    """
+    Given a configuration object and the input filename this will determine
+    which parser class to use. If it is a GENCODE organism then the GENCODE
+    paresr will be returned, otherwise the more generic one will be provided.
+    """
+
+    if is_gencode_file(config, input_file):
+        return GencodeParser()
+    return EnsemblParser()

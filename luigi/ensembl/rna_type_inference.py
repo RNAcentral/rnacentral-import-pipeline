@@ -67,12 +67,13 @@ class RnaTypeInference(object):
         return None
 
     def rfam_name(self, name):
-        pattern = r'^(.+)\.\d+-\d+$'
-        match = re.match(pattern, name)
         if name in self.rfam_mapping:
             return name
-        elif match:
-            name = match.group(1)
+
+        pattern = r'^(.+?)\.\d+-\d+$'
+        match = re.match(pattern, name)
+        if match:
+            return match.group(1)
         return None
 
     def rfam_type(self, name):
@@ -86,8 +87,7 @@ class RnaTypeInference(object):
             name = match.group(1)
         return MGI_TYPES.get(name, None)
 
-    def compute_fallback_rna_type(self, current):
-        xrefs = current.xref_data
+    def compute_fallback_rna_type(self, xrefs):
         for key, func in self.fallbacks:
             if key not in xrefs:
                 continue
@@ -97,12 +97,19 @@ class RnaTypeInference(object):
                 return values.pop()
             if len(values) > 1:
                 LOGGER.info("Conflicting rna types for %s according to %s",
-                            current, key)
+                            xrefs, key)
 
-        LOGGER.info("Could not infer an rna-type for %s", current)
+        LOGGER.info("Could not infer an rna-type for %s", xrefs)
         return 'misc_RNA'
 
-    def infer_rna_type(self, current, base_type):
+    def compute_type(self, xref_data, base_type):
+        """
+        Determine the RNA type for the given data. This will compute an RNA
+        type based upon the base type and if that fails compute a fallback type
+        based upon the xref data if it is 'misc_RNA'. if that still fails it
+        will use the given type.
+        """
+
         if base_type in LNC_ALIASES:
             return 'lncRNA'
         if base_type in NC_ALIASES:
@@ -112,5 +119,26 @@ class RnaTypeInference(object):
         if base_type == 'scaRNA':
             return 'snoRNA'
         if base_type == 'misc_RNA':
-            return self.compute_fallback_rna_type(current)
+            return self.compute_fallback_rna_type(xref_data)
         return base_type
+
+    def correct_spelling(self, rna_type):
+        """
+        Correct any possible spelling mistakes. Sometimes Ensembl has vaultRNA
+        instead of 'vault_RNA' or 'antisense' instead of 'antisense_RNA'. This
+        corrects those problems.
+        """
+
+        if rna_type.startswith('vault'):
+            return 'vault_RNA'
+        if rna_type.startswith('antisense'):
+            return 'antisense_RNA'
+        return rna_type
+
+    def infer_rna_type(self, xref_data, base_type):
+        """
+        Infer the RNA type for the given xrefs and current base type.
+        """
+
+        rna_type = self.compute_type(xref_data, base_type)
+        return self.correct_spelling(rna_type)

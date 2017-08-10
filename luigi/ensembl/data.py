@@ -22,7 +22,8 @@ from collections import MutableMapping
 import attr
 from attr.validators import instance_of as is_a
 from attr.validators import optional
-from ensembl import helpers
+
+from .helpers import bio as helpers
 
 LOGGER = logging.getLogger(__name__)
 
@@ -112,7 +113,9 @@ class GeneInfo(object):
         return bool(re.search(pattern, self.description, re.IGNORECASE))
 
     def trimmed_description(self):
-        return re.sub(r'\s*\[.*$', '', self.description)
+        trimmed = re.sub(r'\s*\[.*$', '', self.description)
+        trimmed = trimmed.replace('(non-protein coding)', '')
+        return trimmed
 
 
 @attr.s(frozen=True)
@@ -132,19 +135,22 @@ class Summary(MutableMapping):
         return self[gene].trimmed_description()
 
     def is_pseudogene(self, gene):
+        """
+        Check if the given gene is a pseudogene.
+        """
         return self[gene].is_pseudogene()
 
     def __getitem__(self, feature):
         gene_id = GeneInfo.id_of(feature)
-        return self.gene_info[gene_id]  # pylint: disable=E1136
+        return self.gene_info[gene_id]
 
     def __setitem__(self, key, value):
         gene_id = GeneInfo.id_of(key)
-        self.gene_info[gene_id] = value  # pylint: disable=E1136
+        self.gene_info[gene_id] = value
 
     def __delitem__(self, key):
         gene_id = GeneInfo.id_of(key)
-        del self.gene_info[gene_id]  # pylint: disable=E1136
+        del self.gene_info[gene_id]
 
     def __iter__(self):
         return iter(self.gene_info)
@@ -230,8 +236,9 @@ class Entry(object):
 
     @property
     def seq_version(self):
-        if '.' in self.primary_id:  # pylint: disable=E1135
-            return self.primary_id.split('.')[1]
+        if '.' in self.primary_id:
+            parts = self.primary_id.split('.', 1)
+            return parts[1]
         return ''
 
     @property

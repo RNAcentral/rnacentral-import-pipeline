@@ -19,7 +19,7 @@ import unittest as ut
 
 from Bio import SeqIO
 
-from ensembl.helpers import (
+from ensembl.helpers.bio import (
     gene,
     locus_tag,
     notes,
@@ -32,7 +32,7 @@ from ensembl.helpers import (
 )
 
 
-class HelpersTest(ut.TestCase):
+class HelpersTest(ut.TestCase):  # pylint: disable=R0904
     filename = 'data/Homo_sapiens.GRCh38.87.chromosome.12.dat'
 
     @classmethod
@@ -89,8 +89,20 @@ class HelpersTest(ut.TestCase):
         }
 
     def test_can_detect_if_is_noncoding(self):
-        assert is_ncrna(self.features['gene', 'ENSG00000221439.1']) is True
-        assert is_ncrna(self.features['CDS', 'ENSG00000002016.17']) is False
+        # No retained introns
+        assert not is_ncrna(self.features['misc_RNA', 'ENSG00000060237.16'])
+        # No genes
+        assert not is_ncrna(self.features['gene', 'ENSG00000221439.1'])
+        # No proteins
+        assert not is_ncrna(self.features['CDS', 'ENSG00000002016.17'])
+        # No processed transcripts
+        assert not is_ncrna(self.features['misc_RNA', 'ENSG00000120645.11'])
+        # No TEC
+        assert not is_ncrna(self.features['misc_RNA', 'ENSG00000171792.10'])
+        # No mRNA
+        assert not is_ncrna(self.features['mRNA', 'ENSG00000002016.17'])
+        # Allow misc_RNA
+        assert is_ncrna(self.features['misc_RNA', 'ENSG00000249054.2'])
 
     @pytest.mark.skip()
     def test_it_can_lookup_lineage(self):

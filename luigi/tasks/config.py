@@ -14,10 +14,10 @@ limitations under the License.
 """
 
 import luigi
-from parameters import PathParameter
+from tasks.utils.parameters import PathParameter
 
 
-class output(luigi.Config):  # pylint: disable=C0103
+class output(luigi.Config):  # pylint: disable=C0103, R0904
     """
     This contains the configuration for all output files.
 
@@ -28,7 +28,7 @@ class output(luigi.Config):  # pylint: disable=C0103
     base = PathParameter(default='/tmp')
 
 
-class db(luigi.Config):  # pylint: disable=C0103
+class db(luigi.Config):  # pylint: disable=C0103, R0904
     """
     This contains the configuration information about the database to connect
     to.
@@ -53,7 +53,7 @@ class db(luigi.Config):  # pylint: disable=C0103
         )
 
 
-class rfam(luigi.Config):  # pylint: disable=C0103
+class rfam(luigi.Config):  # pylint: disable=C0103, R0904
     """
     This contains the configuration about the rfam files to read.
 
@@ -70,7 +70,7 @@ class rfam(luigi.Config):  # pylint: disable=C0103
     json_folder = PathParameter()
 
 
-class noncode(luigi.Config):  # pylint: disable=C0103
+class noncode(luigi.Config):  # pylint: disable=C0103, R0904
     """
     This contains the configuration for NONCODE files to read.
 
@@ -80,7 +80,7 @@ class noncode(luigi.Config):  # pylint: disable=C0103
     json_folder = PathParameter()
 
 
-class greengenes(luigi.Config):  # pylint: disable=C0103
+class greengenes(luigi.Config):  # pylint: disable=C0103, R0904
     """
     This contains the configuration for the Greegenes data.
 
@@ -90,7 +90,7 @@ class greengenes(luigi.Config):  # pylint: disable=C0103
     json_folder = PathParameter()
 
 
-class ensembl(luigi.Config):  # pylint: disable=C0103
+class ensembl(luigi.Config):  # pylint: disable=C0103, R0904
     """
     This contains the configuration for the Greegenes data.
 
@@ -107,3 +107,32 @@ class ensembl(luigi.Config):  # pylint: disable=C0103
     name = luigi.Parameter(default='all')
     release = luigi.Parameter(default='current')
     allow_model_organisms = luigi.BoolParameter(default=False)
+    model_organisms = luigi.Parameter(default=(
+        'saccharomyces_cerevisiae, '
+        'caenorhabditis_elegans, '
+        'drosophila_melanogaster'
+    ))
+    gencode_species = luigi.Parameter(default='Homo sapiens,Mus musculus')
+    ftp_host = luigi.Parameter(default='ftp.ensembl.org')
+
+    def model_organism_set(self):
+        """
+        This will create a set of all configured model organisms. The organsims
+        should be ',' separated and whitespce leading/trailing is removed.
+        """
+
+        orgs = self.model_organisms.split(',')  # pylint: disable=E1101
+        return set(o.strip() for o in orgs)
+
+    def species_names(self):
+        """
+        This will create a set, if needed, of all species names to process. If
+        the set name is 'all' then that will be used, otherwise the name will
+        be split on commas, whitespace stripped and used as the species to
+        import.
+        """
+
+        if self.name == 'all':
+            return 'all'
+        names = self.name.split(',')  # pylint: disable=E1101
+        return set(n.strip() for n in names)
