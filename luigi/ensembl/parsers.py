@@ -189,10 +189,8 @@ class GencodeParser(EnsemblParser):
             if gencode.has_gencode_xref(entry):
                 yield attr.assoc(
                     entry,
-                    primary_id=gencode.primary_id(entry),
                     database='GENCODE',
                     xref_data=gencode.xref_data(entry),
                     optional_id='',
-                    accession=gencode.primary_id(entry),
                     references=gencode.references(entry),
                 )
