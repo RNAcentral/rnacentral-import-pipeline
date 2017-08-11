@@ -99,7 +99,11 @@ class EnsemblParser(Parser):
         """
 
         inference = RnaTypeInference()
-        for rfam_model in inference.rfam_xref(current):
+        rfam_models = inference.rfam_xref(current)
+        if not rfam_models:
+            return False
+
+        for rfam_model in rfam_models:
             name = inference.rfam_name(rfam_model)
             if name is None:
                 continue

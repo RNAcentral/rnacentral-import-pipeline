@@ -112,6 +112,9 @@ class HumanTests(Base):
         for entry in self.data():
             assert entry.feature_type in set(['misc_RNA', 'ncRNA'])
 
+    def test_it_uses_correct_antisense_type(self):
+        assert self.entry_for('ENST00000605233.2').rna_type == 'antisense_RNA'
+
 
 class HumanPatchTests(Base):
     filename = None
