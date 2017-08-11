@@ -56,23 +56,33 @@ class Parser(object):
 
         for record in SeqIO.parse(handle, 'embl'):
             summary = data.Summary(sequence=record.seq)
+            counts = data.ImportCounts()
             for feature in record.features:
+                counts.total += 1
                 if helpers.is_gene(feature):
                     if feature in summary:
                         raise ValueError("Duplicate gene %s" % feature)
+                    counts.genes += 1
                     summary.update_gene_info(feature)
+                    continue
 
+                counts.transcripts += 1
                 if not helpers.is_ncrna(feature):
                     LOGGER.debug("Skipping %s, because not ncRNA", feature)
                     continue
 
+                counts.ncrna += 1
                 if ensembl.is_pseudogene(summary, feature):
                     LOGGER.debug("Skipping %s, because is psuedogene", feature)
+                    counts.pseudo += 1
                     continue
 
                 entries = self.rnacentral_entries(record, summary, feature)
+                counts.valid += 1
                 for entry in entries:
+                    counts.genereated += 1
                     yield entry
+            LOGGER.debug("Imported counts: %s" % counts)
 
 
 class EnsemblParser(Parser):

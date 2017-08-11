@@ -308,3 +308,14 @@ class Exon(object):
         if self.complement:
             return -1
         return 1
+
+
+@attr.s()
+class ImportCounts(object):
+    total = attr.ib(validator=is_a(int), default=0)
+    genes = attr.ib(validator=is_a(int), default=0)
+    transcripts = attr.ib(validator=is_a(int), default=0)
+    ncrna = attr.ib(validator=is_a(int), default=0)
+    pseudo = attr.ib(validator=is_a(int), default=0)
+    valid = attr.ib(validator=is_a(int), default=0)
+    generated = attr.ib(validator=is_a(int), default=0)
