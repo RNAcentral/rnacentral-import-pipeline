@@ -2,7 +2,7 @@
 # absolute path. Absolute is probably better
 
 [output]
-# This is the base directory that all results will go to. 
+# This is the base directory that all results will go to.
 base = results
 
 # Configure the database connection details.
@@ -25,19 +25,19 @@ hits = rnac_all.tbl
 fasta = rnac.fasta
 
 # The path to the Rfam JSON export folders. All JSON files (*.json) in that
-# folder should be valid JSON files to import for Rfam. 
+# folder should be valid JSON files to import for Rfam.
 json_folder = /data/rfam
 
 # Configuration for NONCODE data.
 [noncode]
 # The path to the NONCODE JSON export folders. All JSON files (*.json) in that
-# folder should be valid JSON files to import for NONCODE. 
+# folder should be valid JSON files to import for NONCODE.
 json_folder = /data/noncode
 
 # Configuration for Greengenes data
 [greengenes]
 # The path to the Greengenes JSON export folders. All JSON files (*.json) in
-# that folder should be valid JSON files to import for Greengenes. 
+# that folder should be valid JSON files to import for Greengenes.
 json_folder = /data/greengenes
 
 [ensembl]
@@ -47,14 +47,26 @@ json_folder = /data/greengenes
 name = all
 
 # Optional (default 'current'): The release number, like 50, or 'current' to
-# indicate the latest available release of Enesmbl to import. 
+# indicate the latest available release of Enesmbl to import.
 release = current
 
 # Optional (default false): If we should import Ensembl's annotation of model organisms, as
 # defined in rnac_pipeline.ensembl.config.MODEL_ORGANISMS. Generally we don't
 # import from Ensembl in this case as we work with some model organism database
-# directly. 
+# directly.
 #
 # If a model organism is given in the name list but this is false then it will
 # not be imported, that is to say this setting overrides the name setting.
 allow_model_organisms = false
+
+# A list of organism names that should be considered as model species and thus
+# not imported if allow_model_organisms is true.
+model_organisms = saccharomyces_cerevisiae,caenorhabditis_elegans,drosophila_melanogaster
+
+# A comma separated list of species names that should be considered GENCODE
+# species. Generally there is no need to change this.
+gencode_species = Homo sapiens,Mus musculus
+
+# The FTP host for ensembl's files. Generally there is no need to alter this
+# value.
+ftp_host = ftp.ensembl.org

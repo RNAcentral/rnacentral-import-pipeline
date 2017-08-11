@@ -13,8 +13,20 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+from utils import normalize_species_name
+
 from ensembl.parsers import EnsemblParser
 from ensembl.parsers import GencodeParser
+
+
+def is_gencode_file(config, input_file):
+    """
+    Check if the given file contains GENCODE data. This is done by checking if
+    file starts with a species name that is in the configured gencode species.
+    """
+
+    input_organism = normalize_species_name(input_file.split('.')[0])
+    return input_organism in config.gencode_species_set()
 
 
 def parser_class(config, input_file):

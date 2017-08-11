@@ -14,6 +14,8 @@ limitations under the License.
 """
 
 import luigi
+
+from utils import normalize_species_name
 from tasks.utils.parameters import PathParameter
 
 
@@ -122,7 +124,7 @@ class ensembl(luigi.Config):  # pylint: disable=C0103, R0904
         """
 
         orgs = self.model_organisms.split(',')  # pylint: disable=E1101
-        return set(o.strip() for o in orgs)
+        return {normalize_species_name(o) for o in orgs}
 
     def species_names(self):
         """
@@ -134,5 +136,14 @@ class ensembl(luigi.Config):  # pylint: disable=C0103, R0904
 
         if self.name == 'all':
             return 'all'
-        names = self.name.split(',')  # pylint: disable=E1101
-        return set(n.strip() for n in names)
+
+        parts = self.name.split(',')  # pylint: disable=E1101
+        return {normalize_species_name(n) for n in parts}
+
+    def gencode_species_set(self):
+        """
+        Get a set of all normalized species names that are part of GENCODE.
+        """
+
+        orgs = self.gencode_species.split(',')  # pylint: disable=E1101
+        return {normalize_species_name(o) for o in orgs}

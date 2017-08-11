@@ -26,3 +26,11 @@ def snake_case(name):
     """
     first = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
     return re.sub('([a-z0-9])([A-Z])', r'\1_\2', first).lower()
+
+
+def normalize_species_name(species):
+    """
+    This will put species names into a standard format. That is lower case,
+    without leading or trailing whitespace and with spaces replaced by '_'.
+    """
+    return species.strip().lower().replace(' ', '_')
