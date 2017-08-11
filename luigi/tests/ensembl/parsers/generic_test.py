@@ -115,6 +115,9 @@ class HumanTests(Base):
     def test_it_uses_correct_antisense_type(self):
         assert self.entry_for('ENST00000605233.2').rna_type == 'antisense_RNA'
 
+    def test_it_does_not_import_suprressed_rfam_families(self):
+        assert not self.entries_for('ENST00000611210.1')
+
 
 class HumanPatchTests(Base):
     filename = None

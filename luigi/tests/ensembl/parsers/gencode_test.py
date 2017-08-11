@@ -49,6 +49,3 @@ class GencodeTests(Base):  # pylint: disable=R0904,C0111
             ('ENST00000540868.1', 'ENSEMBL'),
             ('ENST00000540868.1', 'GENCODE'),
         ])
-
-    def test_it_does_not_import_suprressed_rfam_families(self):
-        assert not self.entries_for('ENST00000611210.1')
