@@ -36,8 +36,8 @@ from tasks.ensembl.deduplicate import DeduplicateTask
 from rfam import utils as rfutil
 from tasks.config import ensembl
 
-from tasks.ensembl.utils.generic import release_to_path
-from tasks.ensembl.utils.generic import known_species
+from tasks.ensembl.utils.ftp import release_to_path
+from tasks.ensembl.utils.ftp import known_species
 
 
 class SpeciesImporter(luigi.Task):  # pylint: disable=R0904
