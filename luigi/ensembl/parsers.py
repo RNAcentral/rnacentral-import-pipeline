@@ -62,8 +62,12 @@ class Parser(object):
                         raise ValueError("Duplicate gene %s" % feature)
                     summary.update_gene_info(feature)
 
-                if not helpers.is_ncrna(feature) or \
-                        ensembl.is_pseudogene(summary, feature):
+                if not helpers.is_ncrna(feature):
+                    LOGGER.debug("Skipping %s, because not ncRNA", feature)
+                    continue
+
+                if ensembl.is_pseudogene(summary, feature):
+                    LOGGER.debug("Skipping %s, because is psuedogene", feature)
                     continue
 
                 entries = self.rnacentral_entries(record, summary, feature)
@@ -95,16 +99,15 @@ class EnsemblParser(Parser):
         """
 
         inference = RnaTypeInference()
-        rfam_model = inference.rfam_xref(current)
-        if not rfam_model:
-            return False
-        name = inference.rfam_name(rfam_model)
-        if name is None:
-            return False
-
-        if name not in self.supressed_mapping:
-            raise ValueError("Unknown Rfam model name: %s" % name)
-        return self.supressed_mapping[name]
+        for rfam_model in inference.rfam_xref(current):
+            name = inference.rfam_name(rfam_model)
+            if name is None:
+                continue
+            if name not in self.supressed_mapping:
+                raise ValueError("Unknown Rfam model name: %s" % name)
+            if self.supressed_mapping[name]:
+                return True
+        return False
 
     def rnacentral_entries(self, record, summary, feature):
         try:
@@ -127,7 +130,6 @@ class EnsemblParser(Parser):
             primary_id = standard_name
             accession = standard_name or ''
 
-        print(feature)
         entry = data.Entry(
             primary_id=primary_id,
             accession=accession,

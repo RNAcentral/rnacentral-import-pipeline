@@ -61,7 +61,7 @@ class RnaTypeInference(object):
         ]
 
     def rfam_xref(self, entry):
-        key = self.fallbacks[0]
+        key = self.fallbacks[0][0]
         if key in entry.xref_data:
             return entry.xref_data[key]
         return None
