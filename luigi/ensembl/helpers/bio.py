@@ -66,6 +66,7 @@ def taxid(record):
     Get the taxon id of the given record. This will pull the first feature,
     which must be of the 'source' type to do so.
     """
+
     source = record.features[0]
     if source.type == 'source':
         return int(qualifier_value(source, 'db_xref', r'^taxon:(\d+)$'))
