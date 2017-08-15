@@ -18,7 +18,8 @@ search_path = rnacen
 [rfam]
 # This file is the result of the searching RNAcentral sequences with rfam
 # models. Ideally, only the delta between the last release and the current one
-# is searched, but import will work even if all are rerun.
+# is searched, but import will work even if all are rerun. This may be a shell
+# pattern to specify a list of files like: 'rnac7_*.tbl'
 hits = rnac_all.tbl
 
 # This is the path to the fasta file that was run in the rfam searches. The id
