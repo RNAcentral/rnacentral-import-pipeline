@@ -13,6 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+from glob import iglob
+
 import attr
 
 from rfam.utils import tbl_iterator
@@ -20,26 +22,27 @@ from tasks.config import rfam
 from tasks.utils.csv_writer import CsvWriter
 
 
-class RfamHitsCSV(CsvWriter):
+class RfamHitsCSV(CsvWriter):  # pylint: disable=R0904
     """
     This class will build a CSV file that can be loaded by pgloader from the
     Rfam hits. It uses the rfam_hits configuration value in the files section.
     """
 
     headers = [
-        'target_name',
+        'seq_name',
         'seq_from',
         'seq_to',
         'strand',
         'rfam_acc',
         'mdl_from',
         'mdl_to',
-        'inc',
+        'overlap',
         'e_value',
         'score',
     ]
 
     def data(self):
-        for hit in tbl_iterator(rfam().hits):
-            if hit.inc == 'unique' or hit.inc == 'best':
-                yield attr.asdict(hit)
+        for filename in iglob(rfam().hits):
+            for hit in tbl_iterator(filename, clan_competition=True):
+                if hit.overlap == 'unique' or hit.overlap == 'best':
+                    yield attr.asdict(hit)
