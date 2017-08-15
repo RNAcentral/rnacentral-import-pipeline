@@ -30,15 +30,24 @@ Rfam data from the FTP site.
 """
 
 
+def dash_none_or(other):
+    def fn(raw):
+        if raw is None or raw == '-':
+            return None
+        return other(raw)
+    return fn
+
 def as_0_based(raw):
     return int(raw) - 1
 
 
 def convert_overlap(raw):
-    if raw == '!' or raw == 'unique':
+    if raw == '*' or raw == 'unique':
         return u'unique'
     if raw == '^' or raw == 'best':
         return u'best'
+    if raw == '=' or raw == 'secondary':
+        return u'secondary'
     raise Exception("Unknown overlap symbol %s" % raw)
 
 
@@ -96,8 +105,44 @@ class RfamHit(object):
     bias = attr.ib(convert=float)
     score = attr.ib(convert=float)
     e_value = attr.ib(convert=float)
-    inc = attr.ib(convert=convert_overlap)
-    description = attr.ib()
+    inc = attr.ib()
+    description = attr.ib(convert=dash_none)
+
+
+@attr.s(frozen=True, slots=True)  # pylint: disable=R0903
+class RfamClanHit(object):
+    """
+    This represents the result of an rfam scan using infernal after clan
+    competition.
+    """
+
+    idx = attr.ib(convert=as_0_based)
+    rfam_name = attr.ib()
+    rfam_acc = attr.ib()
+    seq_name = attr.ib()
+    seq_acc = attr.ib(convert=dash_none)
+    clan_name = attr.ib(convert=dash_none)
+    mdl = attr.ib()
+    mdl_from = attr.ib(convert=as_0_based)
+    mdl_to = attr.ib(convert=int)
+    seq_from = attr.ib(convert=as_0_based)
+    seq_to = attr.ib(convert=int)
+    strand = attr.ib(convert=convert_strand)
+    trunc = attr.ib(convert=convert_trunc)
+    infernal_pass = attr.ib(convert=int)
+    infernal_gc = attr.ib(convert=float)
+    bias = attr.ib(convert=float)
+    score = attr.ib(convert=float)
+    e_value = attr.ib(convert=float)
+    inc = attr.ib()
+    overlap = attr.ib(convert=convert_overlap)
+    anyidx = attr.ib(convert=dash_none_or(as_0_based))
+    afrct1 = attr.ib(convert=dash_none_or(float))
+    afrct2 = attr.ib(convert=dash_none_or(float))
+    winidx = attr.ib(convert=dash_none)
+    wfrct1 = attr.ib(convert=dash_none)
+    wfrct2 = attr.ib(convert=dash_none)
+    description = attr.ib(convert=dash_none)
 
 
 INFORMATIVE_NAMES = {
@@ -463,14 +508,27 @@ def id_to_insdc_type(version='CURRENT'):
     return {family.id: family.guess_insdc() for family in families}
 
 
-def tbl_iterator(filename):
+def tbl_iterator(filename, clan_competition=False):
+    """
+    This can parse the results of an infernal scan. It can handle both the
+    standard tbl format as well as the tbl produced after clan competition. To
+    handle clan copetition add the clan_competition=True argument. In this case
+    the function will return an instance of the RfamClanHit class instead of
+    the RfamHit class.
+    """
+
+    model = RfamHit
+    if clan_competition:
+        model = RfamClanHit
+    fields = attr.fields(model)
+    count = len(fields) - 1
+
     with open(filename, 'rb') as raw:
         for line in raw:
             if line.startswith('#'):
                 continue
-            fields = attr.fields(RfamHit)
-            parts = re.split(r'\s+', line.strip(), len(fields) - 1)
-            yield RfamHit(*parts)
+            parts = re.split(r'\s+', line.strip(), count)
+            yield model(*parts)
 
 
 def name_to_suppression(version='CURRENT'):
