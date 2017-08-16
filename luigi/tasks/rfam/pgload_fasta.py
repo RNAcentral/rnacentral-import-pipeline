@@ -34,6 +34,37 @@ WITH
     skip header = 1,
     fields escaped by double-quote,
     fields terminated by ','
+SET
+    search_path = '{search_path}'
+BEFORE LOAD DO
+$$
+create table if not exists load_rfam_analyzed_sequences
+    upi character varying(13) COLLATE pg_catalog."default" NOT NULL,
+    date date NOT NULL
+);
+$$,
+$$
+truncate table load_rfam_model_hits;
+$$
+
+AFTER LOAD DO
+$$
+insert into rfam_analyzed_sequences (
+    upi,
+    date,
+) (
+select
+    upi,
+    date
+from load_rfam_analyzed_sequences
+)
+ON CONFLICT (upi) DO UPDATE SET
+    upi = excluded.upi,
+    date = excluded.date
+$$,
+$$
+drop table load_rfam_analyzed_sequences;
+$$
 ;
 """
 
@@ -54,5 +85,6 @@ class RfamPGLoadFasta(PGLoader):  # pylint: disable=R0904
         filename = RfamFastaCSV().output().fn
         return CONTROL_FILE.format(
             filename=filename,
-            db_url=self.db_url(table='rfam_analyzed_sequences')
+            db_url=self.db_url(table='load_rfam_analyzed_sequences'),
+            search_path=self.db_search_path(),
         )
