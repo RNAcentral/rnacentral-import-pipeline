@@ -80,9 +80,9 @@ class Parser(object):
                 entries = self.rnacentral_entries(record, summary, feature)
                 counts.valid += 1
                 for entry in entries:
-                    counts.genereated += 1
+                    counts.generated += 1
                     yield entry
-            LOGGER.debug("Imported counts: %s" % counts)
+            LOGGER.debug("Imported counts: %s", counts)
 
 
 class EnsemblParser(Parser):
