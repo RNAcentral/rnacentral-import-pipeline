@@ -148,3 +148,7 @@ class ensembl(luigi.Config):  # pylint: disable=C0103, R0904
 
         orgs = self.gencode_species.split(',')  # pylint: disable=E1101
         return {normalize_species_name(o) for o in orgs}
+
+
+class gtrnadb(luigi.Config):  # pylint: disable=C0103
+    pattern = luigi.Parameter()
