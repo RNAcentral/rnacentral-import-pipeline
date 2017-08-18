@@ -108,3 +108,7 @@ class ensembl(luigi.Config):  # pylint: disable=C0103
     name = luigi.Parameter(default='all')
     release = luigi.Parameter(default='current')
     allow_model_organisms = luigi.BoolParameter(default=False)
+
+
+class gtrnadb(luigi.Config):  # pylint: disable=C0103
+    pattern = luigi.Parameter()
