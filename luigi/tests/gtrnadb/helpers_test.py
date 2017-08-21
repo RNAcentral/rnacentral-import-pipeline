@@ -80,7 +80,22 @@ def test_as_dotbracket_detects_weird_strings():
         helpers.as_dotbracket(data)
 
 
-# def test_primary_id_is_always_unique(data):
-#     seen = set()
-#     for entry in data:
-#         pid = helpers.primary_id
+def test_primary_id_is_always_unique(data):
+    seen = set()
+    for entry in data:
+        for location in entry['genome_locations']:
+            pid = helpers.primary_id(entry, location)
+            assert pid not in seen
+            seen.add(pid)
+
+
+def test_builds_primary_id(data):
+    pids = []
+    entry = data[0]
+    for location in entry['genome_locations']:
+        pid = helpers.primary_id(entry, location)
+        pids.append(pid)
+    assert pids == [
+        "tRNA-Ala-CGC-1-1:CP000828.1:603738-603810"
+    ]
+

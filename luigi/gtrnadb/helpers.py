@@ -105,8 +105,8 @@ def primary_id(data, location):
     Generate a primary key for the given data and location.
     """
 
-    start = min(e['start'] for e in location['exons'])
-    stop = max(e['stop'] for e in location['exons'])
+    start = min(int(e['start']) for e in location['exons'])
+    stop = max(int(e['stop']) for e in location['exons'])
     return '{gene}:{accession}:{start}-{stop}'.format(
         gene=data['gene'],
         accession=location['exons'][0]['INSDC_accession'],
