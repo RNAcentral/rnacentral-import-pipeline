@@ -27,7 +27,7 @@ def optionally(instance_type, **kwargs):
     """
     return attr.ib(
         validator=optional(is_a(instance_type)),
-        default=attr.Factory(None),
+        default=None,
         **kwargs
     )
 
@@ -53,7 +53,7 @@ def possibly_empty(instance_type, **kwargs):
 class Exon(object):
     primary_start = attr.ib(validator=is_a(int))
     primary_end = attr.ib(validator=is_a(int))
-    complement = attr.ib(validator=is_a(int))
+    complement = attr.ib(validator=is_a(bool))
 
     @property
     def strand(self):
@@ -109,31 +109,35 @@ class Entry(object):
     note_data = possibly_empty(dict)
     xref_data = possibly_empty(dict)
 
-    chromosome = optionally(str)
-    species = optionally(str)
-    common_name = optionally(str)
-    lineage = optionally(str)
-    gene = optionally(str)
-    locus_tag = optionally(str)
-    optional_id = optionally(str)
-    product = optionally(str)
-    parent_accession = optionally(str)
-    ordinal = optionally(str)
-    non_coding_id = optionally(str)
-    project = optionally(str)
-    keywords = optionally(str)
-    division = optionally(str)
-    organelle = optionally(str)
-    allele = optionally(str)
-    anticodon = optionally(str)
-    experiment = optionally(str)
-    function = optionally(str)
-    inference = optionally(str)
-    map = optionally(str)
-    old_locus_tag = optionally(str)
-    operon = optionally(str)
-    standard_name = optionally(str)
-    description = optionally(str)
+    chromosome = optionally(basestring)
+    species = optionally(basestring)
+    common_name = optionally(basestring)
+    lineage = optionally(basestring)
+    gene = optionally(basestring)
+    locus_tag = optionally(basestring)
+    optional_id = optionally(basestring)
+    product = optionally(basestring)
+    parent_accession = optionally(basestring)
+    ordinal = optionally(basestring)
+    non_coding_id = optionally(basestring)
+    project = optionally(basestring)
+    keywords = optionally(basestring)
+    division = optionally(basestring)
+    organelle = optionally(basestring)
+    allele = optionally(basestring)
+    anticodon = optionally(basestring)
+    experiment = optionally(basestring)
+    function = optionally(basestring)
+    inference = optionally(basestring)
+    map = optionally(basestring)
+    old_locus_tag = optionally(basestring)
+    operon = optionally(basestring)
+    standard_name = optionally(basestring)
+    description = optionally(basestring)
+    mol_type = optionally(basestring)
+
+    feature_location_start = optionally(int)
+    feature_location_stop = optionally(int)
 
     gene_synonyms = possibly_empty(list)
     references = possibly_empty(list)

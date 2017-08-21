@@ -137,3 +137,17 @@ def dot_bracket(data):
         raise InvalidDotBracket("Unexpected characters in %s" % transformed)
 
     return transformed
+
+
+def parent_accession(location):
+    """
+    Get the parent accessino for the given location.
+    """
+    return location['exons'][0]['INSDC_accession']
+
+
+def accession(data, location):
+    """
+    Generate an accession for the given location in data.
+    """
+    return '{ac}:{gene}'.format(ac=parent_accession(location), gene=data['gene'])

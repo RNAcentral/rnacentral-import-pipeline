@@ -30,6 +30,8 @@ from gtrnadb.helpers import description
 from gtrnadb.helpers import product
 from gtrnadb.helpers import primary_id
 from gtrnadb.helpers import dot_bracket
+from gtrnadb.helpers import accession
+from gtrnadb.helpers import parent_accession
 
 
 def gtrnadb_secondary_structure(data):
@@ -41,13 +43,13 @@ def gtrnadb_secondary_structure(data):
     return SecondaryStructure(dot_bracket=dot_bracket(data))
 
 
-def gtrnadb_exons(data):
+def gtrnadb_exons(locations):
     """
     This will create the Exons from the data provided by GtRNAdb.
     """
 
     exons = []
-    for exon in data['locations']:
+    for exon in locations['exons']:
         complement = None
         if exon['strand'] == '+':
             complement = False
@@ -77,14 +79,11 @@ def gtrnadb_entries(data):
 
     two_d = gtrnadb_secondary_structure(data)
     for location in data['genome_locations']:
-        parent_ac = location['exons'][0]['INSDC_accession']
-        accession = '{ac}:{gene}'.format(ac=parent_ac, gene=data['gene'])
-
         yield Entry(
             primary_id=primary_id(data, location),
-            accession=accession,
+            accession=accession(data, location),
             ncbi_tax_id=int(data['ncbi_tax_id']),
-            database='GtRNADB',
+            database='GtRNAdb',
             sequence=data['sequence'],
             exons=gtrnadb_exons(location),
             rna_type='tRNA',
@@ -92,14 +91,14 @@ def gtrnadb_entries(data):
             note_data=note_data(data),
             secondary_structure=two_d,
             chromosome=chromosome(location),
-            species=species(location),
+            species=species(data),
             common_name=common_name(data),
             anticodon=anticodon(data),
-            lineage=lineage(location),
+            lineage=lineage(data),
             gene=data['gene'],
             optional_id=data['gene'],
             product=product(data),
-            parent_accession=parent_ac,
+            parent_accession=parent_accession(location),
             description=description(data),
             mol_type='genomic DNA',
             feature_location_start=1,
