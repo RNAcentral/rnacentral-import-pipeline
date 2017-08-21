@@ -76,8 +76,8 @@ def test_description(data):
 
 def test_as_dotbracket_detects_weird_strings():
     data = {'secondary_structure': '>>>...A<<<'}
-    with pytest.raises(Exception):
-        helpers.as_dotbracket(data)
+    with pytest.raises(helpers.InvalidDotBracket):
+        helpers.dot_bracket(data)
 
 
 def test_primary_id_is_always_unique(data):
@@ -98,4 +98,3 @@ def test_builds_primary_id(data):
     assert pids == [
         "tRNA-Ala-CGC-1-1:CP000828.1:603738-603810"
     ]
-

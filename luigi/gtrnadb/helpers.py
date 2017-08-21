@@ -16,6 +16,14 @@ limitations under the License.
 from databases import helpers as dbs
 
 
+class InvalidDotBracket(Exception):
+    """
+    This is raised when the given string cannot be turned into a valid
+    dot-bracket string.
+    """
+    pass
+
+
 def url(data):
     """
     Adds a http:// to the start of the url in data.
@@ -124,5 +132,8 @@ def dot_bracket(data):
     transformed = data['secondary_structure'].\
         replace('>', '(').\
         replace('<', ')')
-    assert set(transformed) == set('(.)')
+
+    if set(transformed) != set('(.)'):
+        raise InvalidDotBracket("Unexpected characters in %s" % transformed)
+
     return transformed
