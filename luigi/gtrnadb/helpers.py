@@ -61,7 +61,7 @@ def chromosome(location):
     Get the chromosome this location is part of.
     """
 
-    chrom = location['chromosome']
+    chrom = location['exons'][0]['chromosome']
     if chrom == 'Chromosome':
         return '1'
     return chrom

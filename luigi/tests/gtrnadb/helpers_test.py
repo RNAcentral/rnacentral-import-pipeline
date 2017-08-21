@@ -98,3 +98,7 @@ def test_builds_primary_id(data):
     assert pids == [
         "tRNA-Ala-CGC-1-1:CP000828.1:603738-603810"
     ]
+
+
+def test_chromosome(data):
+    assert helpers.chromosome(data[0]['genome_locations'][0]) == '1'
