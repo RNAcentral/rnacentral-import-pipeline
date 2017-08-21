@@ -63,7 +63,7 @@ def chromosome(location):
 
     chrom = location['exons'][0]['chromosome']
     if chrom == 'Chromosome':
-        return '1'
+        return 'chr'
     return chrom
 
 

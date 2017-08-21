@@ -101,4 +101,4 @@ def test_builds_primary_id(data):
 
 
 def test_chromosome(data):
-    assert helpers.chromosome(data[0]['genome_locations'][0]) == '1'
+    assert helpers.chromosome(data[0]['genome_locations'][0]) == 'chr'
