@@ -66,11 +66,21 @@ def test_product(data):
 
 
 def test_as_dotbracket(data):
-    ans = "(((((((..((((........)))).(((((.......))))).....(((((.......)))))))))))).",
-    assert helpers.dot_bracket(data) == ans
+    ans = "(((((((..((((........)))).(((((.......))))).....(((((.......))))))))))))."
+    assert helpers.dot_bracket(data[0]) == ans
+
+
+def test_description(data):
+    assert helpers.description(data[0]) == "Acaryochloris marina MBIC11017 tRNA-Ala (CGC)"
 
 
 def test_as_dotbracket_detects_weird_strings():
     data = {'secondary_structure': '>>>...A<<<'}
     with pytest.raises(Exception):
         helpers.as_dotbracket(data)
+
+
+# def test_primary_id_is_always_unique(data):
+#     seen = set()
+#     for entry in data:
+#         pid = helpers.primary_id

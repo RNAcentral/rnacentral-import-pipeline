@@ -85,7 +85,7 @@ def description(data):
     Generate a description for the entries specified by the data.
     """
     return '{name} {product}'.format(
-        name=common_name(data),
+        name=species(data),
         product=product(data),
     )
 
@@ -121,7 +121,7 @@ def dot_bracket(data):
     GtRNAdb uses. That is turn '>>..<<' to '((..))'.
     """
 
-    transformed = data['seconary_structure'].\
+    transformed = data['secondary_structure'].\
         replace('>', '(').\
         replace('<', ')')
     assert set(transformed) == set('(.)')
