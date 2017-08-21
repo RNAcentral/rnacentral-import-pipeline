@@ -14,10 +14,12 @@ limitations under the License.
 """
 
 import json
+import logging
 
 from databases.data import Exon
 from databases.data import Entry
 from databases.data import SecondaryStructure
+from databases import helpers
 
 from gtrnadb.helpers import url
 from gtrnadb.helpers import anticodon
@@ -32,6 +34,8 @@ from gtrnadb.helpers import primary_id
 from gtrnadb.helpers import dot_bracket
 from gtrnadb.helpers import accession
 from gtrnadb.helpers import parent_accession
+
+LOGGER = logging.getLogger(__name__)
 
 
 def gtrnadb_secondary_structure(data):
@@ -79,32 +83,36 @@ def gtrnadb_entries(data):
 
     two_d = gtrnadb_secondary_structure(data)
     for location in data['genome_locations']:
-        yield Entry(
-            primary_id=primary_id(data, location),
-            accession=accession(data, location),
-            ncbi_tax_id=int(data['ncbi_tax_id']),
-            database='GtRNAdb',
-            sequence=data['sequence'],
-            exons=gtrnadb_exons(location),
-            rna_type='tRNA',
-            url=url(data),
-            note_data=note_data(data),
-            secondary_structure=two_d,
-            chromosome=chromosome(location),
-            species=species(data),
-            common_name=common_name(data),
-            anticodon=anticodon(data),
-            lineage=lineage(data),
-            gene=data['gene'],
-            optional_id=data['gene'],
-            product=product(data),
-            parent_accession=parent_accession(location),
-            description=description(data),
-            mol_type='genomic DNA',
-            feature_location_start=1,
-            feature_location_stop=len(data['sequence']),
-            gene_synonyms=data.get('synonyms', []),
-        )
+        try:
+            yield Entry(
+                primary_id=primary_id(data, location),
+                accession=accession(data, location),
+                ncbi_tax_id=int(data['ncbi_tax_id']),
+                database='GtRNAdb',
+                sequence=data['sequence'],
+                exons=gtrnadb_exons(location),
+                rna_type='tRNA',
+                url=url(data),
+                note_data=note_data(data),
+                secondary_structure=two_d,
+                chromosome=chromosome(location),
+                species=species(data),
+                common_name=common_name(data),
+                anticodon=anticodon(data),
+                lineage=lineage(data),
+                gene=data['gene'],
+                optional_id=data['gene'],
+                product=product(data),
+                parent_accession=parent_accession(location),
+                description=description(data),
+                mol_type='genomic DNA',
+                feature_location_start=1,
+                feature_location_end=len(data['sequence']),
+                gene_synonyms=data.get('synonyms', []),
+            )
+        except helpers.UnknownTaxonId:
+            LOGGER.warning("Unknown taxon id in %s", data)
+            break
 
 
 def parse(filename):

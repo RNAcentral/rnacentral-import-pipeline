@@ -22,6 +22,14 @@ from functools32 import lru_cache
 TAX_URL = 'https://www.ebi.ac.uk/ena/data/taxonomy/v1/taxon/tax-id/{taxon_id}'
 
 
+class UnknownTaxonId(Exception):
+    """
+    This is raised if we cannot get the required information about the given
+    taxon id. This happens with the taxon id is obsoleted, or invalid.
+    """
+    pass
+
+
 @lru_cache()
 def phylogney(taxon_id):
     """
@@ -30,7 +38,11 @@ def phylogney(taxon_id):
     """
 
     response = requests.get(TAX_URL.format(taxon_id=taxon_id))
-    response.raise_for_status()
+    try:
+        response.raise_for_status()
+    except:
+        raise UnknownTaxonId(taxon_id)
+
     data = response.json()
     assert data, "Somehow got no data"
     return data
@@ -65,6 +77,14 @@ def species(taxon_id):
 
     data = phylogney(taxon_id)
     return data['scientificName']
+
+
+def current_taxon_id(taxon_id):
+    """
+    If the taxon id is oudated then this will look up the current taxon id,
+    otherwise it will return the given taxon id.
+    """
+    return taxon_id
 
 
 def md5(data):
@@ -112,5 +132,3 @@ def crc64(input_string):
         crch = temp1h ^ CRCTableh[tableindex]
         crcl = temp1l ^ CRCTablel[tableindex]
     return "%08X%08X" % (crch, crcl)
-
-

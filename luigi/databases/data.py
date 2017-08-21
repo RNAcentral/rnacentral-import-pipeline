@@ -14,11 +14,17 @@ limitations under the License.
 """
 
 import json
-from hashlib import md5
+import logging
+from collections import Counter
 
 import attr
 from attr.validators import instance_of as is_a
 from attr.validators import optional
+
+from databases.helpers import md5
+from databases.helpers import crc64
+
+LOGGER = logging.getLogger(__name__)
 
 
 def optionally(instance_type, **kwargs):
@@ -87,7 +93,7 @@ class SecondaryStructure(object):
         """
         Compute the MD5 of the dot_bracket string.
         """
-        return md5(self.dot_bracket).hexdigest()
+        return md5(self.dot_bracket)
 
 
 @attr.s(frozen=True)
@@ -135,9 +141,12 @@ class Entry(object):
     standard_name = optionally(basestring)
     description = optionally(basestring)
     mol_type = optionally(basestring)
+    seq_version = optionally(basestring)
+    is_composite = optionally(basestring)
+    pseudogene = optionally(basestring)
 
     feature_location_start = optionally(int)
-    feature_location_stop = optionally(int)
+    feature_location_end = optionally(int)
 
     gene_synonyms = possibly_empty(list)
     references = possibly_empty(list)
@@ -177,8 +186,50 @@ class Entry(object):
             return ''
         return self.rna_type
 
+    @property
     def gene_synonym(self):
         """
         Returns a comma separated list of gene synonyms.
         """
         return ','.join(self.gene_synonyms)
+
+    def crc64(self):
+        """
+        Compute a CRC64 check sum for the sequence.
+        """
+
+        return crc64(self.sequence)
+
+    def md5(self):
+        """
+        Compute an MD5 hash of the sequence.
+        """
+
+        return md5(self.sequence)
+
+    def is_valid(self):
+        """
+        Detect if this entry is valid. This means it is neither too short (< 10
+        nt) not too long (> 1000000 nts) and has less than 10% N's.
+        """
+
+        length = len(self.sequence)
+        if length < 10:
+            LOGGER.warn("%s is too short (%s)", self.accession, length)
+            return False
+
+        if length > 1000000:
+            LOGGER.warn("%s is too long (%s)", self.accession, length)
+            return False
+
+        counts = Counter(self.sequence)
+        if counts.get('N', 0) / len(self.sequence) > 0.1:
+            LOGGER.info(
+                "%s has too many (%i/%i) N's",
+                self.accession,
+                counts['N'],
+                length
+            )
+            return False
+
+        return True

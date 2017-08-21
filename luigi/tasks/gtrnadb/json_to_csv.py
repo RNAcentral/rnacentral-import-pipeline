@@ -13,27 +13,35 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from glob import iglob
+import os
 
 import luigi
 
-from gtrnadb import parse
+from gtrnadb.parsers import parse
 
-from tasks.config import gtrnadb
+from tasks.config import output
+
+from tasks.utils.parameters import PathParameter
+from tasks.utils.entry_writers import Output
 
 
-class GtRNAdbJsonParser(luigi.Task):  # pylint: disable=R0904
+class GtRNAdbJsonToCsv(luigi.Task):  # pylint: disable=R0904
     """
     Parse all GtRNAdb JSON files and produce the files needed to import to the
     database.
     """
+    input_file = PathParameter()
 
-    def data(self):
+    def output(self):
+        prefix = os.path.basename(self.input_file)
+        return Output.build(output().base, 'gtrnadb', prefix)
+
+    def run(self):
         """
         Create a generator for all entries in all configured GtRNAdb JSON files.
         """
 
-        config = gtrnadb()
-        for filename in iglob(config.pattern):
-            for entry in parse(filename):
-                yield entry
+        with self.output().writer() as writer:
+            for entry in parse(self.input_file):
+                if entry.is_valid():
+                    writer.write(entry)
