@@ -14,12 +14,16 @@ limitations under the License.
 """
 
 import hashlib
+from time import sleep
+import logging
 
 import requests
 
 from functools32 import lru_cache
 
 TAX_URL = 'https://www.ebi.ac.uk/ena/data/taxonomy/v1/taxon/tax-id/{taxon_id}'
+
+LOGGER = logging.getLogger(__name__)
 
 
 class UnknownTaxonId(Exception):
@@ -30,18 +34,37 @@ class UnknownTaxonId(Exception):
     pass
 
 
+class FailedTaxonId(Exception):
+    """
+    This is raised when we cannot fetch information on a taxon id.
+    """
+    pass
+
+
 @lru_cache()
 def phylogney(taxon_id):
     """
     Call the EBI taxonomy API to get the phylogenetic information for the given
-    taxon id. This will cache requests to the same taxon id.
+    taxon id. This will cache requests to the same taxon id. This will retry
+    the request up to 10 times (with a sleep between each one) in the case of
+    500 errors. These seem to happen sometimes but go away with more requests.
+        However in the case of 400 errors this will fail on the first attempt.
     """
 
-    response = requests.get(TAX_URL.format(taxon_id=taxon_id))
-    try:
-        response.raise_for_status()
-    except:
-        raise UnknownTaxonId(taxon_id)
+    for count in xrange(10):
+        response = requests.get(TAX_URL.format(taxon_id=taxon_id))
+        try:
+            response.raise_for_status()
+            break
+        except requests.HTTPError as err:
+            if response.status_code == 500:
+                sleep(0.1 * (count + 1))
+                continue
+            else:
+                print(err)
+                raise UnknownTaxonId(taxon_id)
+    else:
+        raise FailedTaxonId("Could not get taxon id for %s" % taxon_id)
 
     data = response.json()
     assert data, "Somehow got no data"

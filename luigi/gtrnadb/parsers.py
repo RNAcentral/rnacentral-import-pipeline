@@ -15,6 +15,9 @@ limitations under the License.
 
 import json
 import logging
+import itertools as it
+import operator as op
+from time import sleep
 
 from databases.data import Exon
 from databases.data import Entry
@@ -111,7 +114,7 @@ def gtrnadb_entries(data):
                 gene_synonyms=data.get('synonyms', []),
             )
         except helpers.UnknownTaxonId:
-            LOGGER.warning("Unknown taxon id in %s", data)
+            print("Unknown taxon id in %s" % data)
             break
 
 
