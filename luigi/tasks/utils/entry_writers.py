@@ -19,37 +19,9 @@ import csv
 import attr
 from attr.validators import instance_of as is_a
 
-from luigi.target import FileSystemTarget
 from luigi import LocalTarget
+from luigi.local_target import FileSystemTarget
 from luigi.local_target import atomic_file
-
-
-def atomic_csv(handle, quote=True):
-    """
-    Turn a input file into a csv writer.
-
-    Parameters
-    ----------
-    target : luigi.LocalTarget
-        A local target to create a csv writer for.
-
-    Returns
-    -------
-    A csv writer to the location of the target file.
-    """
-
-    options = {
-        'delimiter': ',',
-        'quotechar': '"',
-        'quoting': csv.QUOTE_ALL,
-        'lineterminator': '\n',
-    }
-
-    if not quote:
-        del options['quoting']
-        del options['quotechar']
-
-    return csv.writer(handle, **options)
 
 
 def path_to(base, database, prefix, name):
@@ -79,6 +51,13 @@ class SeqShortWriter(object):
     handle = attr.ib()
     csv = attr.ib()
 
+    @classmethod
+    def csv_options(cls):
+        """
+        Generate the CSV options to use for writing
+        """
+        return {'delimiter': ',', 'lineterminator': '\n'}
+
     def write(self, data):
         """
         Will write the entry to the seq_short file if the sequence is less than
@@ -107,6 +86,13 @@ class SeqLongWriter(object):
     handle = attr.ib()
     csv = attr.ib()
 
+    @classmethod
+    def csv_options(cls):
+        """
+        Generate the CSV options to use for writing
+        """
+        return {'delimiter': ',', 'lineterminator': '\n'}
+
     def write(self, data):
         """
         Will write the entry to the seq_long file if the entry is more than
@@ -129,10 +115,29 @@ class SeqLongWriter(object):
 
 @attr.s()
 class ReferenceWriter(object):
+    """
+    Handles writing out references.
+    """
     handle = attr.ib()
     csv = attr.ib()
 
+    @classmethod
+    def csv_options(cls):
+        """
+        Generate the CSV options to use for writing
+        """
+        return {
+            'delimiter': ',',
+            'quotechar': '"',
+            'quoting': csv.QUOTE_ALL,
+            'lineterminator': '\n',
+        }
+
     def write(self, data):
+        """
+        Write out all references.
+        """
+
         for reference in data.references:
             self.csv.writerow([
                 reference.md5(),
@@ -147,10 +152,28 @@ class ReferenceWriter(object):
 
 @attr.s()
 class ExonWriter(object):
+    """
+    Handles writing genomic locations (exons).
+    """
     handle = attr.ib()
     csv = attr.ib()
 
+    @classmethod
+    def csv_options(cls):
+        """
+        Generate the CSV options to use for writing
+        """
+        return {
+            'delimiter': ',',
+            'quotechar': '"',
+            'quoting': csv.QUOTE_ALL,
+            'lineterminator': '\n',
+        }
+
     def write(self, data):
+        """
+        Write out all known exons.
+        """
         for exon in data.exons:
             self.csv.writerow([
                 data.accession,
@@ -163,10 +186,29 @@ class ExonWriter(object):
 
 @attr.s()
 class AccessionWriter(object):
+    """
+    Handles writing accession information.
+    """
     handle = attr.ib()
     csv = attr.ib()
 
+    @classmethod
+    def csv_options(cls):
+        """
+        Generate the CSV options to use for writing
+        """
+        return {
+            'delimiter': ',',
+            'quotechar': '"',
+            'quoting': csv.QUOTE_ALL,
+            'lineterminator': '\n',
+        }
+
     def write(self, data):
+        """
+        Writes out accession level data.
+        """
+
         self.csv.writerow([
             data.accession,
             data.parent_accession,
@@ -212,10 +254,29 @@ class AccessionWriter(object):
 
 @attr.s()
 class SecondaryStructureWriter(object):
+    """
+    A writer for secondary structure information.
+    """
     handle = attr.ib()
     csv = attr.ib()
 
+    @classmethod
+    def csv_options(cls):
+        """
+        Generate the CSV options to use for writing
+        """
+        return {
+            'delimiter': ',',
+            'quotechar': '"',
+            'quoting': csv.QUOTE_ALL,
+            'lineterminator': '\n',
+        }
+
     def write(self, data):
+        """
+        Will write out secondary structure, if any.
+        """
+
         if data.secondary_structure:
             self.csv.writerow([
                 data.secondary_structure.md5,
@@ -226,6 +287,10 @@ class SecondaryStructureWriter(object):
 
 @attr.s()
 class Writer(object):
+    """
+    This is the class that will write out the CSV files that get processed by
+    pgloader. This is basically just a wrapper around each
+    """
     short = attr.ib(validator=is_a(SeqShortWriter))
     long = attr.ib(validator=is_a(SeqLongWriter))
     ac_info = attr.ib(validator=is_a(AccessionWriter))
@@ -242,7 +307,7 @@ class Writer(object):
 
         outputs = {}
         for field in attr.fields(cls):
-            outputs[field.name] = attr.ib(validator=is_a(SimpleOutput))
+            outputs[field.name] = attr.ib(validator=is_a(FileSystemTarget))
         return outputs
 
     @classmethod
@@ -255,9 +320,10 @@ class Writer(object):
         fields = []
         for field in attr.fields(cls):
             klass = field.validator.type
-            out = getattr(output, field.name)
-            handle = atomic_file(out.target.fn)
-            fields.append(klass(handle=handle, csv=atomic_csv(handle)))
+            target = getattr(output, field.name)
+            handle = atomic_file(target.fn)
+            writer = csv.writer(handle, klass.csv_options())
+            fields.append(klass(handle=handle, csv=writer))
         return cls(*fields)
 
     def write(self, data):
@@ -281,16 +347,7 @@ class Writer(object):
             writer.handle.close()
 
 
-@attr.s(frozen=True)
-class SimpleOutput(object):
-    name = attr.ib(validator=is_a(basestring))
-    target = attr.ib(validator=is_a(FileSystemTarget))
-
-    def exists(self):
-        return self.target.exists()
-
-
-@attr.s(frozen=True)
+@attr.s(frozen=True)  # pylint: disable=W0232
 class Output(attr.make_class("Base", Writer.outputs())):
     """
     This is a wrapper around all outputs an entry writer can possibly create.
@@ -306,7 +363,7 @@ class Output(attr.make_class("Base", Writer.outputs())):
         fields = []
         for field in attr.fields(cls):
             path = path_to(base, database, prefix, field.name)
-            fields.append(SimpleOutput(field.name, LocalTarget(path)))
+            fields.append(LocalTarget(path))
         return cls(*fields)
 
     def exists(self):
@@ -318,6 +375,7 @@ class Output(attr.make_class("Base", Writer.outputs())):
         exists : bool
             True of all outputs exist.
         """
+
         for field in attr.fields(self.__class__):
             if not getattr(self, field.name).exists():
                 return False
