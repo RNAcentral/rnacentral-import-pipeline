@@ -226,11 +226,11 @@ class SecondaryStructureWriter(object):
 
 @attr.s()
 class Writer(object):
-    seq_short = attr.ib(validator=is_a(SeqShortWriter))
-    seq_long = attr.ib(validator=is_a(SeqLongWriter))
-    accession = attr.ib(validator=is_a(AccessionWriter))
-    reference = attr.ib(validator=is_a(ReferenceWriter))
-    locations = attr.ib(validator=is_a(ExonWriter))
+    short = attr.ib(validator=is_a(SeqShortWriter))
+    long = attr.ib(validator=is_a(SeqLongWriter))
+    ac_info = attr.ib(validator=is_a(AccessionWriter))
+    refs = attr.ib(validator=is_a(ReferenceWriter))
+    genomic_locations = attr.ib(validator=is_a(ExonWriter))
     secondary_structure = attr.ib(validator=is_a(SecondaryStructureWriter))
 
     @classmethod
