@@ -60,8 +60,9 @@ class DeduplicateOutputType(luigi.Task):  # pylint: disable=R0904
         filehandle.
         """
 
-        with fileinput.input(files=self.files()) as raw:
-            shutil.copyfileobj(raw, out)
+        raw = fileinput.input(files=self.files()):
+        shutil.copyfileobj(raw, out)
+        raw.close()
 
     def dedup_files(self, out, unique_columns):
         """
@@ -72,13 +73,14 @@ class DeduplicateOutputType(luigi.Task):  # pylint: disable=R0904
         seen = set()
         key = op.itemgetter(unique_columns)
         writer = csv.writer(out)
-        with fileinput.input(files=self.files()) as raw:
-            reader = csv.reader(raw)
-            for row in reader:
-                value = key(row)
-                if value not in seen:
-                    writer.writerow(row)
-                    seen.add(value)
+        raw = fileinput.input(files=self.files())
+        reader = csv.reader(raw)
+        for row in reader:
+            value = key(row)
+            if value not in seen:
+                writer.writerow(row)
+                seen.add(value)
+        raw.close()
 
     def cleanup(self):
         """
