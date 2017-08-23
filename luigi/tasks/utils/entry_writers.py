@@ -279,9 +279,9 @@ class SecondaryStructureWriter(object):
 
         if data.secondary_structure:
             self.csv.writerow([
-                data.secondary_structure.md5,
                 data.accession,
                 data.secondary_structure.dot_bracket,
+                data.secondary_structure.md5,
             ])
 
 
