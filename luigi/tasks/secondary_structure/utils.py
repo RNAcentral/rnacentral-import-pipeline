@@ -24,7 +24,7 @@ LOAD CSV
 FROM
     ALL FILENAMES
     MATCHING {pattern}
-    IN DIRECOTRY {directory}
+    IN DIRECTORY '{directory}'
 HAVING FIELDS (
     rnc_accession_id,
     secondary_structure,
@@ -43,6 +43,7 @@ SET
     search_path = '{search_path}'
 
 BEFORE LOAD DO
+$$
 create table if not exists load_{tablename} (
     rnc_accession_id varchar(100),
     secondary_structure text,
@@ -60,15 +61,15 @@ INSERT INTO {tablename} (
     secondary_structure,
     md5
 ) (
-select
+select distinct
     rnc_accession_id,
     secondary_structure,
     md5
 from load_{tablename}
 )
 -- We can't include two ON CONFLICT statements so this will do extra inserts
-ON CONFLICT (accession) DO UPDATE SET
-    accession = excluded.accession,
+ON CONFLICT (rnc_accession_id, md5) DO UPDATE SET
+    rnc_accession_id = excluded.rnc_accession_id,
     secondary_structure = excluded.secondary_structure,
     md5 = excluded.md5
 ;

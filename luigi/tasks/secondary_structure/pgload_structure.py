@@ -13,7 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from tasks.utils.parameters import PathParameter
+import luigi
 
 from .utils import BaseImporter
 
@@ -22,7 +22,7 @@ class PGLoadSecondaryStructure(BaseImporter):  # pylint: disable=R0904
     """
     This will load only the given file in the secondary structure directory.
     """
-    input_file = PathParameter()
+    input_file = luigi.Parameter()
 
     def file_pattern(self):
         return "~|^%s|" % self.input_file
