@@ -13,23 +13,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from glob import iglob
 
-import luigi
-
-from tasks.config import gtrnadb
-
-from .json_to_csv import GtRNAdbJsonToCsv
-
-
-class GtRNAdb(luigi.WrapperTask):  # pylint: disable=R0904
-    """
-    Imports all GtRNAdb data. This will generate a task for each separate file to
-    create the CSV files, but does not run the secondary structure importing.
-    That has to be trigger manually after this is complete.
-    """
-
-    def requires(self):
-        config = gtrnadb()
-        for filename in iglob(config.pattern):
-            yield GtRNAdbJsonToCsv(input_file=filename)
+from .pgload_all_structures import PGLoadAllSecondaryStructures
+from .pgload_structure import PGLoadSecondaryStructure

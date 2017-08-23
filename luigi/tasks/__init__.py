@@ -33,3 +33,6 @@ from .go_terms.pgload_go_terms import PGLoadGoTerms
 from .go_terms import GoTerms
 
 from .gtrnadb import GtRNAdb
+
+from .secondary_structure import PGLoadAllSecondaryStructures
+from .secondary_structure import PGLoadSecondaryStructure
