@@ -29,6 +29,8 @@ workers to 10 and have many workers to process each downloaded file. Doing so
 would add some more complexity and this is not needed yet.
 """
 
+import os
+
 import luigi
 
 from tasks.config import output
@@ -40,7 +42,7 @@ from tasks.ensembl.utils.writers import Output
 from tasks.ensembl.utils.generic import parser_class
 
 
-class EnsemblTask(luigi.Task):  # pylint: disable=R0904
+class EnsemblSingleFileTask(luigi.Task):  # pylint: disable=R0904
     """
     This is the base importer for all Ensembl data. This outlines the general
     parsing and output strategy. It does not actually parse data into anything,
@@ -51,10 +53,13 @@ class EnsemblTask(luigi.Task):  # pylint: disable=R0904
     input_file = luigi.Parameter()
 
     def requires(self):
-        return Download(remote_file=self.input_file)
+        return Download(remote_file='ftp://{base}/{filename}'.format(
+            base=ensembl().ftp_host,
+            filename=self.input_file,
+        ))
 
     def output(self):
-        prefix = 'ensembl'
+        prefix = os.path.basename(self.input_file)
         return Output.build(output().base, 'ensembl', prefix)
 
     def run(self):

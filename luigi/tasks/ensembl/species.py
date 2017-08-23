@@ -29,18 +29,18 @@ workers to 10 and have many workers to process each downloaded file. Doing so
 would add some more complexity and this is not needed yet.
 """
 
+import attr
 import luigi
 
-from tasks.ensembl.deduplicate import DeduplicateTask
+from tasks.ensembl.deduplicate import DeduplicateOutputType
 
-from rfam import utils as rfutil
 from tasks.config import ensembl
 
-from tasks.ensembl.utils.ftp import release_to_path
-from tasks.ensembl.utils.ftp import known_species
+from .generic import EnsemblSingleFileTask
+from .utils.ftp import species_description
 
 
-class SpeciesImporter(luigi.Task):  # pylint: disable=R0904
+class SpeciesImporter(luigi.WrapperTask):  # pylint: disable=R0904
     """
     A species level importer for Ensembl. This can import either the selected
     one or all species. This acts as an aggregation of the basic
@@ -55,6 +55,7 @@ class SpeciesImporter(luigi.Task):  # pylint: disable=R0904
     name : luigi.Parameter
         Name of the species in Ensembl to import.
     """
+    species_name = luigi.Parameter()
 
     def output(self):
         """
@@ -79,27 +80,11 @@ class SpeciesImporter(luigi.Task):  # pylint: disable=R0904
             A task this importer requires.
         """
 
-        # Fetch the data first before we have any FTP connections open so that
-        # later we can have more workers without worrying about the limit on
-        # FTP connections to Ensembl. The result of calling the FTP site is
-        # cached.
-        rfutil.name_to_insdc_type()
-
-        config = ensembl()
-        name = config.species_names
-        host = config.ftp_host
-        base = release_to_path(config.release)
-
-        for description in known_species(config, name):
-            full_paths = []
-            for filename in description.filenames:
-                full_paths.append('ftp://{host}/{base}/{filename}'.format(
-                    host=host,
-                    base=base,
-                    filename=filename
-                ))
-
-            yield DeduplicateTask(
-                name=description.species_name,
-                filenames=','.join(full_paths),
+        description = species_description(ensembl(), self.species_name)
+        task = EnsemblSingleFileTask(input_file=description.filenames[0])
+        output = task.output()
+        for field in attr.fields(output.__class__):
+            yield DeduplicateOutputType(
+                filenames=','.join(description.filenames),
+                output_type=field.name,
             )

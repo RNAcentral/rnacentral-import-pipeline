@@ -41,6 +41,17 @@ class SpeciesDescription(object):
     species_name = attr.ib(validator=is_a(basestring))
     filenames = attr.ib(validator=is_a(list))
 
+    # @property
+    # def remote_paths(self):
+    #     full_paths = []
+    #     for filename in self.filenames:
+    #         full_paths.append('ftp://{host}/{base}/{filename}'.format(
+    #             host=host,
+    #             base=base,
+    #             filename=filename
+    #         ))
+    #     return full_paths
+
 
 def is_data_file(name):
     """
@@ -128,16 +139,10 @@ def description_of(ftp, name):
     return None
 
 
-def known_species(config, names):
+def known_species(config):
     """
     Get the specified descriptions. If the given pattern is a name the
     species with that name will be selected.
-
-    Parameters
-    ----------
-    names : list
-        Names of the species to get a description for. If given 'all' then all
-        known Ensembl species will be used.
 
     Returns:
     --------
@@ -147,21 +152,39 @@ def known_species(config, names):
 
     host = config.ftp_host
     base = release_to_path(config.release)
+    configured = config.species_names()
+    with ftp_context(host, base=base) as ftp:
+        files = []
+        if configured == 'all':
+            files = ftp.nlst()
+        else:
+            files = sorted(configured)
+
+        names = []
+        for name in files:
+            if not allowed_species(config, name):
+                continue
+            if has_data_files(ftp, name):
+                names.append(name)
+
+        if not names:
+            raise ValueError("No organisms found for: %s" % configured)
+        return names
+
+
+def species_description(config, name):
+    """
+    Generate a description of the species. This will be a SpeciesDescription
+    object.
+    """
+
+    host = config.ftp_host
+    base = release_to_path(config.release)
+    names = config.species_names()
     with ftp_context(host, base=base) as ftp:
         files = []
         if names == 'all':
             files = ftp.nlst()
         else:
             files = sorted(names)
-
-        descriptions = []
-        for name in files:
-            if not allowed_species(config, name):
-                continue
-            description = description_of(ftp, name)
-            if description:
-                descriptions.append(description)
-
-        if not description:
-            raise ValueError("No suitable organisms found")
-        return descriptions
+    return SpeciesDescription(species_name=name, filenames=files)

@@ -14,115 +14,91 @@ limitations under the License.
 """
 
 import os
-import subprocess as sp
-from glob import glob
+import csv
+import shutil
+import fileinput
+import operator as op
 
 import luigi
-from luigi.target import FileSystemTarget
-from luigi.local_target import atomic_file
 
-import attr
-from attr.validators import instance_of as is_a
+from ..config import output
+from ..config import ensembl
+from ..utils.parameters import CommaGenericFileParameter
 
-from tasks.utils.parameters import CommaGenericFileParameter
-from tasks.ensembl.generic import EnsemblTask
-
-
-@attr.s()
-class DedupOutput(object):
-    final = attr.ib(validator=is_a(FileSystemTarget))
-    species = attr.ib(validator=is_a(basestring))
-    sorting_options = attr.ib(validator=is_a(list))
-
-    @classmethod
-    def build(cls, options, species, name, targets):
-        outputs = [getattr(t, name) for t in targets]
-        directory = os.path.abspath(os.path.dirname(outputs[0].path))
-        final = '{database}_{species}_{prefix}_{folder}.csv'.format(
-            database='ensembl',
-            species=species,
-            prefix='dedup',
-            folder=name,
-        )
-        final = os.path.join(directory, final)
-
-        return cls(
-            final=luigi.LocalTarget(final),
-            species=species,
-            directory=directory,
-            sorting_options=options,
-        )
-
-    def write(self):
-        files = glob(os.path.join(self.directory, '*%s*' % self.species))
-        cat = sp.Popen(['cat'] + files, stdout=sp.PIPE)
-        sort = sp.Popen(['sort', '-t', ',', '-u'] + self.sorting_options,
-                        stdin=cat.stdout, stdout=sp.PIPE)
-
-        with atomic_file(self.final.path) as out:
-            out.writelines(line for line in sort.stdout)
-
-    def exists(self):
-        return self.final.exists()
+from .utils.writers import Output
+from .generic import EnsemblSingleFileTask
 
 
-@attr.s()
-class DedupOutputs(object):
-    sequences = attr.ib(validator=is_a(DedupOutput))
-    references = attr.ib(validator=is_a(DedupOutput))
-    accessions = attr.ib(validator=is_a(DedupOutput))
-    locations = attr.ib(validator=is_a(DedupOutput))
-
-    @classmethod
-    def build(cls, species, tasks):
-        name = species.replace(' ', '_')
-        out = [t.output() for t in tasks]
-        return cls(
-            sequences=DedupOutput.build(['-k', '5,5'], name, 'sequences', out),
-            references=DedupOutput.build(['-k', '1,2'], name, 'references', out),
-            accessions=DedupOutput.build(['-k', '1,1'], name, 'accessions', out),
-            locations=DedupOutput.build([], name, 'locations', out),
-        )
-
-    def exists(self):
-        for output in self.outputs():
-            if not output.exists():
-                return False
-        return True
-
-    def write(self):
-        for output in self.outputs():
-            output.write()
-
-    def outputs(self):
-        return [getattr(self, f.name) for f in attr.fields(self.__class__)]
-
-
-class Dedupfiles(luigi.Task):
-    input_files = CommaGenericFileParameter()
-    unique_file = luigi.Parameter()
-    sort_options = luigi.Parameter()
-
-
-class DeduplicateTask(luigi.Task):
-    name = luigi.Parameter()
+class DeduplicateOutputType(luigi.Task):  # pylint: disable=R0904
+    """
+    This is a task that deduplicates a single file type for a single species. For example
+    this will deduplicate all Homo sapiens short files.
+    """
     filenames = CommaGenericFileParameter()
-    cleanup = luigi.BoolParameter(default=False, significant=False)
+    output_type = luigi.Parameter()
+
+    @property
+    def files(self):
+        """
+        Get the list of filenames this task needs to work with.
+        """
+
+        return CommaGenericFileParameter.parse(self.filenames)
 
     def requires(self):
-        filenames = CommaGenericFileParameter().parse(self.filenames)
-        for filename in filenames:
-            yield EnsemblTask(input_file=filename)
+        for filename in self.files:
+            yield EnsemblSingleFileTask(input_file=filename)
 
     def output(self):
-        return DedupOutputs.build(self.name, self.requires())
+        out = Output.build(output().base, 'ensembl', 'dedup')
+        final = getattr(out, self.output_type)
+        return luigi.LocalTarget(final)
+
+    def copy_files(self, out):
+        """
+        This will copy the contents of the given files to the output
+        filehandle.
+        """
+
+        with fileinput.input(files=self.files()) as raw:
+            shutil.copyfileobj(raw, out)
+
+    def dedup_files(self, out, unique_columns):
+        """
+        This will deduplicate all csv files from self.files() according to the
+        columns in unique_columns and write the result to the
+        """
+
+        seen = set()
+        key = op.itemgetter(unique_columns)
+        writer = csv.writer(out)
+        with fileinput.input(files=self.files()) as raw:
+            reader = csv.reader(raw)
+            for row in reader:
+                value = key(row)
+                if value not in seen:
+                    writer.writerow(row)
+                    seen.add(value)
+
+    def cleanup(self):
+        """
+        This will delete all files this has deduplicated.
+        """
+
+        for filename in self.files():
+            os.remove(filename)
 
     def run(self):
-        self.output().write()
-        if not self.cleanup:
-            return
+        task = EnsemblSingleFileTask(input_file=self.files[0])
+        out = task.output()
+        output_type = getattr(output, self.output_type)
+        klass = output_type.validator.type
+        with open(output_type.fn, 'wb') as out:
+            unique_columns = getattr(klass, 'unique_columns', None)
+            if not unique_columns:
+                self.copy_files(out)
+            else:
+                self.dedup_files(out, unique_columns)
 
-        for field in attr.fields(outputs.__class__):
-            output = getattr(outputs, field.name)
-            for filename in output.filenames:
-                os.remove(filename)
+        if ensembl().cleanup:
+            self.cleanup()
