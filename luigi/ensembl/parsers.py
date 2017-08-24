@@ -196,11 +196,10 @@ class GencodeParser(EnsemblParser):
 
         for entry in super(GencodeParser, self).rnacentral_entries(*args):
             yield entry
-            if gencode.has_gencode_xref(entry):
-                yield attr.assoc(
-                    entry,
-                    database='GENCODE',
-                    xref_data=gencode.xref_data(entry),
-                    optional_id='',
-                    references=gencode.references(entry),
-                )
+            yield attr.assoc(
+                entry,
+                database='GENCODE',
+                xref_data=gencode.xref_data(entry),
+                optional_id='',
+                references=gencode.references(entry),
+            )

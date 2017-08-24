@@ -13,6 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import os
+
 from ensembl.parsers import EnsemblParser
 from ensembl.parsers import GencodeParser
 
@@ -23,8 +25,9 @@ def is_gencode_file(config, input_file):
     file starts with a species name that is in the configured gencode species.
     """
 
-    input_organism = normalize_species_name(input_file.split('.')[0])
-    return input_organism in config.gencode_species_set()
+    species = os.path.basename(input_file).split('.')[0]
+    normalized = normalize_species_name(species)
+    return normalized in config.gencode_species_set()
 
 
 def parser_class(config, input_file):

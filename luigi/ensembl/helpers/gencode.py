@@ -13,18 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import re
-
 from .. import data
-
-
-def has_gencode_xref(ensembl_entry):
-    """
-    Check if this entry is also from gencode. We need to separate out these
-    two databases despite being in the same database to provide users clear
-    information about the high quality annotations.
-    """
-    return 'OTTT' in ensembl_entry.xref_data
 
 
 def xref_data(entry):
