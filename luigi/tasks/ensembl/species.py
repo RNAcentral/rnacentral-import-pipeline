@@ -29,6 +29,8 @@ workers to 10 and have many workers to process each downloaded file. Doing so
 would add some more complexity and this is not needed yet.
 """
 
+import logging
+
 import attr
 import luigi
 
@@ -38,6 +40,8 @@ from tasks.config import ensembl
 
 from .generic import EnsemblSingleFileTask
 from .utils.ftp import species_description
+
+LOGGER = logging.getLogger(__name__)
 
 
 class SpeciesImporter(luigi.WrapperTask):  # pylint: disable=R0904
@@ -57,17 +61,6 @@ class SpeciesImporter(luigi.WrapperTask):  # pylint: disable=R0904
     """
     species_name = luigi.Parameter()
 
-    def output(self):
-        """
-        Create an iterator of all outputs that this will produce.
-
-        Yields
-        ------
-        An Output object for each output this will produce.
-        """
-        for requirement in self.requires():
-            yield requirement.output()
-
     def requires(self):
         """
         Determine what other tasks this task requires. This will create the
@@ -81,6 +74,10 @@ class SpeciesImporter(luigi.WrapperTask):  # pylint: disable=R0904
         """
 
         description = species_description(ensembl(), self.species_name)
+        if not description:
+            print("Species %s has no data files", self.species_name)
+            return
+
         task = EnsemblSingleFileTask(input_file=description.filenames[0])
         output = task.output()
         for field in attr.fields(output.__class__):

@@ -38,6 +38,7 @@ from tasks.config import ensembl
 
 from tasks.download import Download
 
+from tasks.ensembl.utils.ftp import species_file_path
 from tasks.ensembl.utils.writers import Output
 from tasks.ensembl.utils.generic import parser_class
 
@@ -53,9 +54,10 @@ class EnsemblSingleFileTask(luigi.Task):  # pylint: disable=R0904
     input_file = luigi.Parameter()
 
     def requires(self):
-        return Download(remote_file='ftp://{base}/{filename}'.format(
-            base=ensembl().ftp_host,
-            filename=self.input_file,
+        config = ensembl()
+        return Download(remote_file='ftp://{host}/{path}'.format(
+            path=species_file_path(config, self.input_file),
+            host=config.ftp_host,
         ))
 
     def output(self):
@@ -66,8 +68,9 @@ class EnsemblSingleFileTask(luigi.Task):  # pylint: disable=R0904
         config = ensembl()
         local_file = self.requires().output()
         with self.output() as writers:
-            with self.input_file.open('r') as handle:  # pylint: disable=E1101
-                parser = parser_class(config, local_file)
+            input_target = self.requires().output()
+            with input_target.open('r') as handle:
+                parser = parser_class(config, local_file.fn)
                 for entry in parser.data(handle):
                     if entry.is_valid():
                         writers.write(entry)

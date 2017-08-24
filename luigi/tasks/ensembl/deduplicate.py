@@ -18,8 +18,10 @@ import csv
 import shutil
 import fileinput
 import operator as op
+from contextlib import contextmanager
 
 import luigi
+from luigi.local_target import atomic_file
 
 from ..config import output
 from ..config import ensembl
@@ -34,25 +36,48 @@ class DeduplicateOutputType(luigi.Task):  # pylint: disable=R0904
     This is a task that deduplicates a single file type for a single species. For example
     this will deduplicate all Homo sapiens short files.
     """
-    filenames = CommaGenericFileParameter()
+    filenames = luigi.Parameter()
     output_type = luigi.Parameter()
 
     @property
-    def files(self):
+    def duplicate_filenames(self):
         """
         Get the list of filenames this task needs to work with.
         """
 
-        return CommaGenericFileParameter.parse(self.filenames)
+        files = []
+        for task in self.requires():
+            target = getattr(task.output(), self.output_type)
+            files.append(target.fn)
+        return files
+
+    @property
+    def unique_columns(self):
+        return []
+
+    @contextmanager
+    def duplicate_fileobjs(self):
+        """
+        This is a simple contextmanager to ensure that all file handles are
+        closed even if there is an error part way through processing them. It
+        will yield a fileinput.input object of all files this task has to
+        deduplicate.
+        """
+
+        try:
+            raw = fileinput.input(files=self.duplicate_filenames)
+            yield raw
+        finally:
+            raw.close()
 
     def requires(self):
-        for filename in self.files:
+        for filename in self.filenames.split(','):
             yield EnsemblSingleFileTask(input_file=filename)
 
     def output(self):
         out = Output.build(output().base, 'ensembl', 'dedup')
         final = getattr(out, self.output_type)
-        return luigi.LocalTarget(final)
+        return luigi.LocalTarget(final.fn)
 
     def copy_files(self, out):
         """
@@ -60,9 +85,9 @@ class DeduplicateOutputType(luigi.Task):  # pylint: disable=R0904
         filehandle.
         """
 
-        raw = fileinput.input(files=self.files()):
-        shutil.copyfileobj(raw, out)
-        raw.close()
+        for filename in self.duplicate_filenames:
+            with open(filename, 'rb') as raw:
+                shutil.copyfileobj(raw, out)
 
     def dedup_files(self, out, unique_columns):
         """
@@ -71,36 +96,31 @@ class DeduplicateOutputType(luigi.Task):  # pylint: disable=R0904
         """
 
         seen = set()
-        key = op.itemgetter(unique_columns)
+        key = op.itemgetter(*unique_columns)
         writer = csv.writer(out)
-        raw = fileinput.input(files=self.files())
-        reader = csv.reader(raw)
-        for row in reader:
-            value = key(row)
-            if value not in seen:
-                writer.writerow(row)
-                seen.add(value)
-        raw.close()
+        with self.duplicate_fileobjs() as raw:
+            reader = csv.reader(raw)
+            for row in reader:
+                value = key(row)
+                if value not in seen:
+                    writer.writerow(row)
+                    seen.add(value)
 
     def cleanup(self):
         """
         This will delete all files this has deduplicated.
         """
 
-        for filename in self.files():
+        for filename in self.duplicate_filenames:
             os.remove(filename)
 
     def run(self):
-        task = EnsemblSingleFileTask(input_file=self.files[0])
-        out = task.output()
-        output_type = getattr(output, self.output_type)
-        klass = output_type.validator.type
-        with open(output_type.fn, 'wb') as out:
-            unique_columns = getattr(klass, 'unique_columns', None)
+        unique_columns = self.unique_columns
+        with atomic_file(self.output().fn) as out:
             if not unique_columns:
                 self.copy_files(out)
             else:
                 self.dedup_files(out, unique_columns)
 
-        if ensembl().cleanup:
-            self.cleanup()
+        # if ensembl().cleanup:
+        #     self.cleanup()

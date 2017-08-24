@@ -19,6 +19,8 @@ import logging
 import attr
 from attr.validators import instance_of as is_a
 
+from tasks.ensembl.utils.generic import allowed_species
+from tasks.ensembl.utils.generic import normalize_species_name
 from tasks.utils.ftp import ftp_context
 
 LOGGER = logging.getLogger(__name__)
@@ -40,17 +42,6 @@ class SpeciesDescription(object):
     """
     species_name = attr.ib(validator=is_a(basestring))
     filenames = attr.ib(validator=is_a(list))
-
-    # @property
-    # def remote_paths(self):
-    #     full_paths = []
-    #     for filename in self.filenames:
-    #         full_paths.append('ftp://{host}/{base}/{filename}'.format(
-    #             host=host,
-    #             base=base,
-    #             filename=filename
-    #         ))
-    #     return full_paths
 
 
 def is_data_file(name):
@@ -80,7 +71,23 @@ def is_data_file(name):
     return 'chromosome' in filename or 'nonchromosomal' in filename
 
 
-def release_to_path(release):
+def data_files_path(release, datatype):
+    """
+    Get the path on the remote server to the given type of data files for the
+    given release. This does not check if such a path exists, only constructs
+    what the path will be. Release should be either 'current' or a known
+    release number.
+    """
+
+    if release == 'current':
+        return 'pub/current_%s' % datatype
+    return 'pub/release-{release}/{datatype}/'.format(
+        release=release,
+        datatype=datatype,
+    )
+
+
+def embl_directory(release):
     """
     Turn an ensembl release id to the path on the FTP site for data from that
     release. The release can be a number like 99, or the string 'current'.
@@ -90,53 +97,19 @@ def release_to_path(release):
     path : str
         The path.
     """
-
-    if release == 'current':
-        return 'pub/current_embl'
-    return 'pub/release-{release}/embl/'.format(release=release)
+    return data_files_path(release, 'embl')
 
 
-def allowed_species(config, name):
+def species_file_path(config, filename, datatype='embl'):
     """
-    Check if given the current configuration if the given species name is one
-    that should be imported.
+    Given a filename return the path to where that file will be in the Ensembl
+    FTP site.
     """
 
-    if config.allow_model_organisms:
-        return True
-    model_organisms = config.model_organism_set()
-    return name.lower().replace(' ', '_') not in model_organisms
-
-
-def description_of(ftp, name):
-    """
-    Compute the SpeciesDescription for the species with the given name.
-    This will build a description using only chromosomal files, unless
-    there are no such files in which case the non-chromosomal files will be
-    used. If there are still no files found then None is returned.
-
-    Parameters
-    ----------
-    name : str
-        Name of the species in Ensembl to import.
-
-    Returns
-    -------
-    description : SpeciesDescription or None
-        The description, if any of the given species.
-    """
-
-    cleaned = os.path.basename(name).lower().replace('_', ' ')
-    cleaned = cleaned[0].upper() + cleaned[1:]
-    path = name.lower()
-    names = [f for f in ftp.nlst(path) if is_data_file(f)]
-    if names:
-        return SpeciesDescription(
-            species_name=cleaned,
-            filenames=names,
-        )
-    LOGGER.info("No importable data found for %s", name)
-    return None
+    return '{base}/{filename}'.format(
+        base=data_files_path(config.release, datatype),
+        filename=filename,
+    )
 
 
 def known_species(config):
@@ -151,7 +124,7 @@ def known_species(config):
     """
 
     host = config.ftp_host
-    base = release_to_path(config.release)
+    base = embl_directory(config.release)
     configured = config.species_names()
     with ftp_context(host, base=base) as ftp:
         files = []
@@ -164,27 +137,28 @@ def known_species(config):
         for name in files:
             if not allowed_species(config, name):
                 continue
-            if has_data_files(ftp, name):
+            path = normalize_species_name(name)
+            if any(f for f in ftp.nlst(path) if is_data_file(f)):
                 names.append(name)
 
-        if not names:
-            raise ValueError("No organisms found for: %s" % configured)
-        return names
+    if not names:
+        raise ValueError("No organisms found for: %s" % configured)
+    return names
 
 
-def species_description(config, name):
+def species_description(config, species):
     """
     Generate a description of the species. This will be a SpeciesDescription
     object.
     """
 
-    host = config.ftp_host
-    base = release_to_path(config.release)
-    names = config.species_names()
-    with ftp_context(host, base=base) as ftp:
-        files = []
-        if names == 'all':
-            files = ftp.nlst()
-        else:
-            files = sorted(names)
-    return SpeciesDescription(species_name=name, filenames=files)
+    base = embl_directory(config.release)
+    with ftp_context(config.ftp_host, base=base) as ftp:
+        path = normalize_species_name(species)
+        names = [f for f in ftp.nlst(path) if is_data_file(f)]
+
+    if names:
+        return SpeciesDescription(species_name=species, filenames=names)
+
+    LOGGER.info("No importable data found for %s", species)
+    return None

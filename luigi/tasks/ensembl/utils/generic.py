@@ -13,8 +13,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from utils import normalize_species_name
-
 from ensembl.parsers import EnsemblParser
 from ensembl.parsers import GencodeParser
 
@@ -39,3 +37,23 @@ def parser_class(config, input_file):
     if is_gencode_file(config, input_file):
         return GencodeParser()
     return EnsemblParser()
+
+
+def normalize_species_name(species):
+    """
+    This will put species names into a standard format. That is lower case,
+    without leading or trailing whitespace and with spaces replaced by '_'.
+    """
+    return species.strip().lower().replace(' ', '_')
+
+
+def allowed_species(config, species):
+    """
+    Check if given the current configuration if the given species name is one
+    that should be imported.
+    """
+
+    if config.allow_model_organisms:
+        return True
+    model_organisms = config.model_organism_set()
+    return normalize_species_name(species) not in model_organisms

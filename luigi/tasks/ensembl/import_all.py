@@ -13,5 +13,21 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-# from .import_all import EnesmblImporter
-# from .species import SpeciesImporter
+
+import luigi
+
+from tasks.config import ensembl
+
+from .species import SpeciesImporter
+
+from .utils.ftp import known_species
+
+
+class EnesmblImporter(luigi.WrapperTask):  # pylint: disable=R0904
+    """
+    This imports all known Ensembl species.
+    """
+
+    def requires(self):
+        for name in known_species(ensembl()):
+            yield SpeciesImporter(species_name=name)

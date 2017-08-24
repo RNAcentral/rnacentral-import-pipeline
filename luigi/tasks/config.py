@@ -16,15 +16,7 @@ limitations under the License.
 import luigi
 
 from tasks.utils.parameters import PathParameter
-
-
-
-def normalize_species_name(species):
-    """
-    This will put species names into a standard format. That is lower case,
-    without leading or trailing whitespace and with spaces replaced by '_'.
-    """
-    return species.strip().lower().replace(' ', '_')
+from tasks.ensembl.utils.generic import normalize_species_name
 
 
 class output(luigi.Config):  # pylint: disable=C0103, R0904
@@ -124,7 +116,7 @@ class ensembl(luigi.Config):  # pylint: disable=C0103, R0904
     ))
     gencode_species = luigi.Parameter(default='Homo sapiens,Mus musculus')
     ftp_host = luigi.Parameter(default='ftp.ensembl.org')
-    cleanup = luigi.BoolParameter(default=True)
+    cleanup = luigi.BoolParameter(default=False)
 
     def model_organism_set(self):
         """
