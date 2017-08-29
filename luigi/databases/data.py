@@ -57,12 +57,15 @@ def possibly_empty(instance_type, **kwargs):
 
 @attr.s(frozen=True)
 class Exon(object):
+    chromosome = attr.ib(validator=is_a(basestring))
     primary_start = attr.ib(validator=is_a(int))
     primary_end = attr.ib(validator=is_a(int))
-    complement = attr.ib(validator=is_a(bool))
+    complement = optionally(bool)
 
     @property
     def strand(self):
+        if self.complement is None:
+            return None
         if self.complement:
             return -1
         return 1
