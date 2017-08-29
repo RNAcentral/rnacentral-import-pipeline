@@ -18,8 +18,9 @@ import csv
 import attr
 from attr.validators import instance_of as is_a
 
-from databases.data import optionally
+from databases.data import Entry
 from databases.data import Exon
+from databases import helpers
 
 RNA_TYPE_MAPPING = {
     "gene": None,
@@ -118,14 +119,16 @@ def is_complement(data):
 def exon(data):
     start_pos = start(data)
     if not start_pos:
-        return None
+        return []
 
-    return Exon(
-        chromosome=chromosome(data),
-        primary_start=start_pos,
-        primary_end=stop(data),
-        complement=is_complement(data),
-    )
+    return [
+        Exon(
+            chromosome=chromosome(data),
+            primary_start=start_pos,
+            primary_end=stop(data),
+            complement=is_complement(data),
+        )
+    ]
 
 
 def split_ids(name, data):
@@ -134,79 +137,69 @@ def split_ids(name, data):
     return []
 
 
-@attr.s()
-class RefSeqIds(object):
-    transcript_ids = attr.ib()
-    protein_ids = attr.ib()
-
-    @classmethod
-    def build(cls, data):
-        return cls(
-            transcript_ids=split_ids('refseq_transcript_ids', data),
-            protein_ids=split_ids('refseq_protein_ids', data),
-        )
-
-
-@attr.s()
-class VegaIds(object):
-    transcript_ids = attr.ib()
-    protein_ids = attr.ib()
-
-    @classmethod
-    def build(cls, data):
-        return cls(
-            transcript_ids=split_ids('vega_transcript_ids', data),
-            protein_ids=split_ids('vega_protein_ids', data),
-        )
+def xref_data(data):
+    return {
+        'ensembl': {
+            'transcript_ids': split_ids('ensembl_transcript_ids', data),
+            'protein_ids': split_ids('ensembl_protein_ids', data),
+        },
+        'ref_seq': {
+            'transcript_ids': split_ids('refseq_transcript_ids', data),
+            'protein_ids': split_ids('refseq_protein_ids', data),
+        },
+    }
 
 
-@attr.s()
-class EnsemblIds(object):
-    transcript_ids = attr.ib()
-    protein_ids = attr.ib()
-
-    @classmethod
-    def build(cls, data):
-        return cls(
-            transcript_ids=split_ids('ensembl_transcript_ids', data),
-            protein_ids=split_ids('ensembl_protein_ids', data),
-        )
+def gene(data):
+    if 'gene' in data['feature_type']:
+        return symbol(data)
+    return None
 
 
-@attr.s()
-class CrossReference(object):
-    ensembl = attr.ib(validator=is_a(EnsemblIds))
-    ref_seq = attr.ib(validator=is_a(RefSeqIds))
-    vega = attr.ib(validator=is_a(VegaIds))
-
-    @classmethod
-    def build(cls, data):
-        return cls(
-            ensembl=EnsemblIds.build(data),
-            ref_seq=RefSeqIds.build(data),
-            vega=VegaIds.build(data),
-        )
+def taxon_id(data):
+    return 10090
 
 
-@attr.s()
-class MGI(object):
-    accession = attr.ib(validator=is_a(basestring))
-    name = attr.ib(validator=is_a(basestring))
-    symbol = attr.ib(validator=is_a(basestring))
-    cross_references = attr.ib(validator=is_a(CrossReference))
-    rna_type = optionally(basestring)
-    location = optionally(Exon)
+def species(data):
+    return helpers.species(taxon_id(data))
 
-    @classmethod
-    def build(cls, data):
-        return cls(
-            accession=accession(data),
-            name=name(data),
-            symbol=symbol(data),
-            cross_references=CrossReference.build(data),
-            rna_type=infer_rna_type(data),
-            location=exon(data),
-        )
+
+def lineage(data):
+    return helpers.lineage(taxon_id(data))
+
+
+def common_name(data):
+    return helpers.common_name(taxon_id(data))
+
+
+def primary_id(data):
+    return accession(data)
+
+
+def mgi_to_entry(data):
+    return Entry(
+        primary_id=primary_id(data),
+        accession=accession(data),
+        ncbi_tax_id=taxon_id(data),
+        database='MGI',
+        sequence='',
+        exons=exon(data),
+        rna_type=infer_rna_type(data) or '',
+        url='',
+
+        xref_data=xref_data(data),
+
+        chromosome=chromosome(data),
+        species=species(data),
+        common_name=common_name(data),
+        lineage=lineage(data),
+        gene=gene(data),
+        optional_id=symbol(data),
+        description=name(data),
+        seq_version='1',
+        feature_location_start=start(data),
+        feature_location_end=stop(data),
+    )
 
 
 def lines(raw):
@@ -229,7 +222,7 @@ def parser(filename):
 
     with open(filename, 'rb') as raw:
         for row in csv.DictReader(lines(raw), delimiter='\t'):
-            yield MGI.build(row)
+            yield mgi_to_entry(row)
 
 
 def rna_entries(filename):
@@ -238,5 +231,5 @@ def rna_entries(filename):
     """
 
     for entry in parser(filename):
-        if entry.rna_type is not None:
+        if entry.rna_type:
             yield entry

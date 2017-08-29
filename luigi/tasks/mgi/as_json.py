@@ -42,6 +42,12 @@ class MgiToJson(luigi.Task):  # pylint: disable=R0904
 
     def run(self):
         input_file = self.requires().output().fn
-        data = [attr.asdict(e) for e in rna_entries(input_file)]
+        data = []
+        for entry in rna_entries(input_file):
+            result = attr.asdict(entry)
+            result['feature_type'] = entry.feature_type
+            result['ncrna_class'] = entry.ncrna_class
+            data.append(result)
+
         with atomic_file(self.output().fn) as out:
             json.dump(data, out)
