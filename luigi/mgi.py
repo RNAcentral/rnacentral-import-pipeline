@@ -136,13 +136,17 @@ def split_ids(name, data):
 
 
 def xref_data(data):
+    ref_trans_all = split_ids('refseq_transcript_ids', data)
+    xr_ids = [tid for tid in ref_trans_all if tid.startswith('XR_')]
+    ref_trans = [tid for tid in ref_trans_all if not tid.startswith('XR_')]
     return {
         'ensembl': {
             'transcript_ids': split_ids('ensembl_transcript_ids', data),
             'protein_ids': split_ids('ensembl_protein_ids', data),
         },
         'ref_seq': {
-            'transcript_ids': split_ids('refseq_transcript_ids', data),
+            'transcript_ids': ref_trans,
+            'xr_ids': xr_ids,
             'protein_ids': split_ids('refseq_protein_ids', data),
         },
     }
