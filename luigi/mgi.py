@@ -176,6 +176,10 @@ def primary_id(data):
     return accession(data)
 
 
+def references(data):
+    return []
+
+
 def mgi_to_entry(data):
     return Entry(
         primary_id=primary_id(data),
@@ -186,9 +190,7 @@ def mgi_to_entry(data):
         exons=exon(data),
         rna_type=infer_rna_type(data) or '',
         url='',
-
         xref_data=xref_data(data),
-
         chromosome=chromosome(data),
         species=species(data),
         common_name=common_name(data),
@@ -199,6 +201,7 @@ def mgi_to_entry(data):
         seq_version='1',
         feature_location_start=start(data),
         feature_location_end=stop(data),
+        references=references(data),
     )
 
 

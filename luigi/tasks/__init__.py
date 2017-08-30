@@ -39,3 +39,4 @@ from .secondary_structure import PGLoadSecondaryStructure
 
 from .mgi.download import MgiDownload
 from .mgi.as_json import MgiToJson
+from .mgi import Mgi
