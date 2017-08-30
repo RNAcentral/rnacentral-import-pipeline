@@ -15,11 +15,9 @@ limitations under the License.
 
 import csv
 
-import attr
-from attr.validators import instance_of as is_a
-
 from databases.data import Entry
 from databases.data import Exon
+from databases.data import Reference
 from databases import helpers
 
 RNA_TYPE_MAPPING = {
@@ -177,7 +175,20 @@ def primary_id(data):
 
 
 def references(data):
-    return []
+    return [Reference(
+        accession=accession(data),
+        authors=(
+            'Blake JA, Eppig JT, Kadin JA, Richardson JE, Smith CL, Bult CJ; '
+            'the Mouse Genome Database Group.'
+        ),
+        location='Nucleic Acids Res. 2017 Jan 4;',
+        title=(
+            'Mouse Genome Database (MGD)-2017: community knowledge resource '
+            'for the laboratory mouse'
+        ),
+        pmid=27899570,
+        doi='10.1093/nar/gkw1040',
+    )]
 
 
 def mgi_to_entry(data):

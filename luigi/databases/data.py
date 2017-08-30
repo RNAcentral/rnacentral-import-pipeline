@@ -100,6 +100,32 @@ class SecondaryStructure(object):
 
 
 @attr.s(frozen=True)
+class Reference(object):
+    """
+    This stores the data for a reference that will be written to out to csv
+    files.
+    """
+
+    accession = attr.ib(validator=is_a(basestring))
+    authors = attr.ib(validator=is_a(basestring))
+    location = attr.ib(validator=is_a(basestring))
+    title = attr.ib(validator=is_a(basestring))
+    pmid = attr.ib(validator=is_a(int))
+    doi = attr.ib(validator=is_a(basestring))
+
+    def md5(self):
+        """
+        Computes the MD5 hash of the reference.
+        """
+
+        return md5(''.join([
+            self.authors,
+            self.location,
+            self.title
+        ]))
+
+
+@attr.s(frozen=True)
 class Entry(object):
     """
     This represents an RNAcentral entry from GtRNAdb that we will write out for
