@@ -144,7 +144,8 @@ def get_chain_descriptions(pdb_ids):
 
             # Skip chains with too many N's
             counts = Counter(row['sequence'])
-            if counts.get('N', 0) / len(row['sequence']) > 0.1:
+            fraction = float(counts.get('N', 0)) / float(len(row['sequence']))
+            if fraction > 0.1:
                 disqualified['N'] += 1
                 continue
 
