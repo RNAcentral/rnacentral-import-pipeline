@@ -223,7 +223,8 @@ class Entry(object):
             return False
 
         counts = Counter(self.sequence)
-        if counts.get('N', 0) / len(self.sequence) > 0.1:
+        fraction = float(counts.get('N', 0)) / float(len(self.sequence))
+        if fraction > 0.1:
             LOGGER.info(
                 "%s has too many (%i/%i) N's",
                 self.accession,
