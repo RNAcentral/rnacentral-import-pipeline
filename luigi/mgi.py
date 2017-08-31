@@ -149,6 +149,10 @@ def xref_data(data):
             'xr_ids': xr_ids,
             'protein_ids': split_ids('refseq_protein_ids', data),
         },
+        'vega': {
+            'transcript_ids': split_ids('vega_transcript_ids', data),
+            'protein_ids': split_ids('vega_protein_ids', data),
+        },
     }
 
 
