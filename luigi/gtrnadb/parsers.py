@@ -91,7 +91,7 @@ def gtrnadb_entries(data):
                 primary_id=primary_id(data, location),
                 accession=accession(data, location),
                 ncbi_tax_id=int(data['ncbi_tax_id']),
-                database='GtRNAdb',
+                database='GTRNADB',
                 sequence=data['sequence'],
                 exons=gtrnadb_exons(location),
                 rna_type='tRNA',
