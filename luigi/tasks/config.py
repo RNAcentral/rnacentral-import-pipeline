@@ -19,6 +19,14 @@ from tasks.utils.parameters import PathParameter
 from tasks.ensembl.utils.generic import normalize_species_name
 
 
+def normalize_species_name(species):
+    """
+    This will put species names into a standard format. That is lower case,
+    without leading or trailing whitespace and with spaces replaced by '_'.
+    """
+    return species.strip().lower().replace(' ', '_')
+
+
 class output(luigi.Config):  # pylint: disable=C0103, R0904
     """
     This contains the configuration for all output files.
@@ -40,6 +48,7 @@ class db(luigi.Config):  # pylint: disable=C0103, R0904
     host = luigi.Parameter(default='127.0.0.1')
     port = luigi.Parameter(default=5432)
     db_name = luigi.Parameter(default='rnacen')
+    search_path = luigi.Parameter()
 
     def pgloader_url(self):
         """
@@ -148,3 +157,7 @@ class ensembl(luigi.Config):  # pylint: disable=C0103, R0904
 
         orgs = self.gencode_species.split(',')  # pylint: disable=E1101
         return {normalize_species_name(o) for o in orgs}
+
+
+class gtrnadb(luigi.Config):  # pylint: disable=C0103
+    pattern = luigi.Parameter()

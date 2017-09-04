@@ -13,34 +13,25 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import attr
-
 from rfam import utils
 from tasks.utils.csv_writer import CsvWriter
 
 
-class RfamFamiliesCSV(CsvWriter):
+class RfamGoTermsCSV(CsvWriter):  # pylint: disable=R0904
+    """
+    This will create a csv file of the mapping from GO term id to Rfam family
+    id.
+    """
+
     headers = [
-        'id',
-        'short_name',
-        'long_name',
-        'description',
-        'clan_id',
-        'seed_count',
-        'full_count',
-        'length',
-        'domain',
-        'is_suppressed',
-        'rna_type',
-        'rfam_rna_type',
+        'go_term_id',
+        'rfam_model_id',
     ]
 
     def data(self):
         for family in utils.load_families():
-            data = attr.asdict(family)
-            data['short_name'] = family.name
-            data['long_name'] = family.pretty_name
-            data['is_suppressed'] = int(family.is_suppressed)
-            data['rfam_rna_type'] = data['rna_type']
-            data['rna_type'] = family.guess_insdc()
-            yield data
+            for (go_term_id, _) in family.go_terms:
+                yield {
+                    'go_term_id': go_term_id,
+                    'rfam_model_id': family.id,
+                }

@@ -49,6 +49,8 @@ CONTROL_FILE = """LOAD CSV
      WITH skip header = 1,
           fields escaped by double-quote,
           fields terminated by ','
+SET
+    search_path = '{search_path}'
 
 BEFORE LOAD DO
 $$
@@ -58,7 +60,7 @@ $$
 create table if not exists load_rfam_model_hits (
     sequence_start integer NOT NULL,
     sequence_stop integer NOT NULL,
-    sequence_completness double precision,
+    sequence_completeness double precision,
     model_start integer NOT NULL,
     model_stop integer NOT NULL,
     model_completeness double precision,
@@ -76,12 +78,14 @@ $$
 AFTER LOAD DO
 $$
 create index ix__load_rfam_model_hits__upi on load_rfam_model_hits (upi);
+$$,
+$$
 create index ix__load_rfam_model_hits__rfam_model_id on load_rfam_model_hits (rfam_model_id);
 $$,
 $$ insert into rfam_model_hits (
     sequence_start,
     sequence_stop,
-    sequence_completness,
+    sequence_completeness,
     model_start,
     model_stop,
     model_completeness,
@@ -111,8 +115,14 @@ where
 $$,
 $$
 drop index ix__load_rfam_model_hits__rfam_model_id;
+$$,
+$$
 drop index ix__load_rfam_model_hits__upi;
+$$,
+$$
 truncate table load_rfam_model_hits;
+$$,
+$$
 drop table load_rfam_model_hits;
 $$
 ;
@@ -137,5 +147,6 @@ class RfamPGLoadHits(PGLoader):  # pylint: disable=R0904
         filename = RfamHitsCSV().output().fn
         return CONTROL_FILE.format(
             filename=filename,
-            db_url=self.db_url(table='load_rfam_model_hits')
+            db_url=self.db_url(table='load_rfam_model_hits'),
+            search_path=self.db_search_path(),
         )

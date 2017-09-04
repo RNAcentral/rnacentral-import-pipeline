@@ -19,14 +19,29 @@ from .pgload_hits import RfamPGLoadHits
 from .pgload_clans import RfamPGLoadClans
 from .pgload_families import RfamPGLoadFamilies
 from .pgload_fasta import RfamPGLoadFasta
+from .pgload_go_term_mapping import RfamPGLoadGoTerms
 
 from .clans_csv import RfamClansCSV
 from .families_csv import RfamFamiliesCSV
 from .hits_csv import RfamHitsCSV
 from .fasta_csv import RfamFastaCSV
+from .go_term_mapping_csv import RfamGoTermsCSV
 
 
-class RfamSearches(luigi.WrapperTask):
+class RfamFamilies(luigi.WrapperTask):  # pylint: disable=R0904
+    """
+    This will load the metadata associated with all Rfam families. This is mean
+    to be a useful loader for times when it is easier to load all metadata and
+    not include the searches.
+    """
+
+    def requires(self):
+        yield RfamPGLoadClans()
+        yield RfamPGLoadFamilies()
+        yield RfamPGLoadGoTerms()
+
+
+class RfamSearches(luigi.WrapperTask):  # pylint: disable=R0904
     """
     This will import all Rfam search results to the database. It will build the
     CSV files and the run all pgloader scripts. For details of each one and any
@@ -35,12 +50,11 @@ class RfamSearches(luigi.WrapperTask):
 
     def requires(self):
         yield RfamPGLoadFasta()
-        yield RfamPGLoadClans()
-        yield RfamPGLoadFamilies()
+        yield RfamFamilies()
         yield RfamPGLoadHits()
 
 
-class RfamCSV(luigi.WrapperTask):
+class RfamCSV(luigi.WrapperTask):  # pylint: disable=R0904
     """
     This will generate all CSV files for Rfam searches. This is a simple
     utitlity wrapper for testing things out. In a real import it is often more
@@ -50,5 +64,6 @@ class RfamCSV(luigi.WrapperTask):
     def requires(self):
         yield RfamClansCSV()
         yield RfamFamiliesCSV()
+        yield RfamGoTermsCSV()
         yield RfamHitsCSV()
         yield RfamFastaCSV()
