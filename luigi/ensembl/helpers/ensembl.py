@@ -13,7 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from .. import data
+from databases.data import Reference
+
 from ..helpers import bio as helpers
 from ..rna_type_inference import RnaTypeInference
 
@@ -26,14 +27,15 @@ def exons(feature):
     parts = [feature.location]
     if hasattr(feature.location, 'parts'):
         parts = feature.location.parts
-    return [data.Exon.from_biopython(l) for l in parts]
+    return [helpers.exon(l) for l in parts]
 
 
 def references(accession):
     """
     Get the standard reference for all Ensembl entries.
     """
-    return [data.Reference(
+    return [Reference(
+        accession=accession,
         authors=(
             "Aken BL, Ayling S, Barrell D, Clarke L, Curwen V, Fairley "
             "S, Fernandez Banet J, Billis K, Garci a Giro n C, Hourlier "
@@ -45,7 +47,6 @@ def references(accession):
         title="The Ensembl gene annotation system",
         pmid=27337980,
         doi="10.1093/database/baw093",
-        accession=accession,
     )]
 
 
@@ -109,3 +110,14 @@ def description(summary, feature, entry):
     """
     return feature_description(summary, feature, entry) or \
         locus_description(entry)
+
+
+def seq_version(primary_id):
+    """
+    Compute the sequence version, if any, of the given id.
+    """
+
+    if '.' in primary_id:
+        parts = primary_id.split('.', 1)
+        return parts[1]
+    return ''

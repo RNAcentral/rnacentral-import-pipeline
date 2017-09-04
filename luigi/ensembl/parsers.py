@@ -19,16 +19,21 @@ import logging
 import attr
 from Bio import SeqIO
 
-import data
+from rfam import utils as rfutils
+
+from databases import data
+
+from .data import Summary
+from .data import ImportCounts
 from .helpers import bio as helpers
 from .helpers import gencode
 from .helpers import ensembl
 from .rna_type_inference import RnaTypeInference
 
-from rfam import utils as rfutils
-
 
 LOGGER = logging.getLogger(__name__)
+
+URL = 'http://www.ensembl.org/Homo_sapiens/Transcript/Summary?t={transcript}'
 
 
 class Parser(object):
@@ -55,8 +60,8 @@ class Parser(object):
         """
 
         for record in SeqIO.parse(handle, 'embl'):
-            summary = data.Summary(sequence=record.seq)
-            counts = data.ImportCounts()
+            summary = Summary(sequence=record.seq)
+            counts = ImportCounts()
             for feature in record.features:
                 counts.total += 1
                 if helpers.is_gene(feature):
@@ -147,9 +152,12 @@ class EnsemblParser(Parser):
         entry = data.Entry(
             primary_id=primary_id,
             accession=accession,
-            seq=sequence,
             ncbi_tax_id=helpers.taxid(record),
             database='ENSEMBL',
+            sequence=sequence,
+            exons=ensembl.exons(feature),
+            rna_type=ensembl.rna_type(helpers.rna_type(feature), xref_data),
+            url=URL.format(transcript=transcript_id),
             lineage=helpers.lineage(record),
             chromosome=helpers.chromosome(record),
             parent_accession=record.id,
@@ -160,10 +168,12 @@ class EnsemblParser(Parser):
             optional_id=gene,
             note_data=helpers.note_data(feature),
             xref_data=xref_data,
-            exons=ensembl.exons(feature),
             product=helpers.product(feature),
             references=ensembl.references(accession),
-            rna_type=ensembl.rna_type(helpers.rna_type(feature), xref_data),
+            mol_type='genomic DNA',
+            pseudogene='N',
+            is_composite='N',
+            seq_version=ensembl.seq_version(primary_id),
         )
 
         if self.is_from_suppressed_rfam_model(entry):

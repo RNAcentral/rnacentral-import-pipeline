@@ -39,8 +39,9 @@ from tasks.config import ensembl
 from tasks.download import Download
 
 from tasks.ensembl.utils.ftp import species_file_path
-from tasks.ensembl.utils.writers import Output
 from tasks.ensembl.utils.generic import parser_class
+
+from tasks.utils.entry_writers import Output
 
 
 class EnsemblSingleFileTask(luigi.Task):  # pylint: disable=R0904
@@ -67,10 +68,10 @@ class EnsemblSingleFileTask(luigi.Task):  # pylint: disable=R0904
     def run(self):
         config = ensembl()
         local_file = self.requires().output()
-        with self.output() as writers:
+        with self.output().writer() as writer:
             input_target = self.requires().output()
             with input_target.open('r') as handle:
                 parser = parser_class(config, local_file.fn)
                 for entry in parser.data(handle):
                     if entry.is_valid():
-                        writers.write(entry)
+                        writer.write(entry)

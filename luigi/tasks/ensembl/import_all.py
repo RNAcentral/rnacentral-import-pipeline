@@ -23,7 +23,7 @@ from .species import SpeciesImporter
 from .utils.ftp import known_species
 
 
-class EnesmblImporter(luigi.WrapperTask):  # pylint: disable=R0904
+class EnsemblImporter(luigi.WrapperTask):  # pylint: disable=R0904
     """
     This imports all known Ensembl species.
     """

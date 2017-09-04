@@ -13,7 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from .. import data
+from databases.data import Reference
 
 
 def xref_data(entry):
@@ -40,7 +40,8 @@ def references(ensembl_entry):
     Get the standard GENCODE reference.
     """
 
-    return [data.Reference(
+    return [Reference(
+        accession=ensembl_entry.accession,
         authors=(
             "Harrow J, Frankish A, Gonzalez JM, Tapanari E, Diekhans M, "
             "Kokocinski F, Aken BL, Barrell D, Zadissa A, Searle S, Barnes"
@@ -58,5 +59,4 @@ def references(ensembl_entry):
         ),
         pmid=22955987,
         doi="10.1101/gr.135350.111",
-        accession=ensembl_entry.accession,
     )]

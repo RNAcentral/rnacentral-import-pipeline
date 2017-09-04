@@ -109,8 +109,8 @@ def gtrnadb_entries(data):
                 parent_accession=parent_accession(location),
                 description=description(data),
                 mol_type='genomic DNA',
-                feature_location_start=1,
-                feature_location_end=len(data['sequence']),
+                _feature_location_start=1,
+                _feature_location_end=len(data['sequence']),
                 gene_synonyms=data.get('synonyms', []),
             )
         except helpers.UnknownTaxonId:

@@ -32,6 +32,10 @@ from .go_terms.go_terms_csv import GoTermsCSV
 from .go_terms.pgload_go_terms import PGLoadGoTerms
 from .go_terms import GoTerms
 
+from .ensembl.import_all import EnsemblImporter
+from .ensembl.species import SpeciesImporter
+from .ensembl.generic import EnsemblSingleFileTask
+
 from .gtrnadb import GtRNAdb
 
 from .secondary_structure import PGLoadAllSecondaryStructures

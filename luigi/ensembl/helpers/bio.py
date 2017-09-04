@@ -19,6 +19,8 @@ import collections as coll
 import requests
 from functools32 import lru_cache
 
+from databases.data import Exon
+
 TAX_URL = 'https://www.ebi.ac.uk/ena/data/taxonomy/v1/taxon/tax-id/{taxon_id}'
 
 
@@ -239,3 +241,15 @@ def product(feature):
     if rna_type(feature) == 'scaRNA':
         return 'scaRNA'
     return ''
+
+
+def exon(location):
+    """
+    Build an Exon from a biopython location object.
+    """
+    return Exon(
+        chromosome='',
+        primary_start=location.start + 1,
+        primary_end=int(location.end),
+        complement=location.strand == -1,
+    )

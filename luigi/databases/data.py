@@ -174,13 +174,20 @@ class Entry(object):
     is_composite = optionally(basestring)
     pseudogene = optionally(basestring)
 
-    feature_location_start = optionally(int)
-    feature_location_end = optionally(int)
+    _feature_location_start = optionally(int)
+    _feature_location_end = optionally(int)
 
     gene_synonyms = possibly_empty(list)
     references = possibly_empty(list)
 
     secondary_structure = possibly_empty(SecondaryStructure)
+
+    @property
+    def database_name(self):
+        """
+        Get the database name in upper case.
+        """
+        return self.database.upper()  # pylint: disable=E1101
 
     @property
     def db_xrefs(self):
@@ -221,6 +228,28 @@ class Entry(object):
         Returns a comma separated list of gene synonyms.
         """
         return ','.join(self.gene_synonyms)
+
+    @property
+    def feature_location_start(self):
+        """
+        This will compute the feature location start if it is not set,
+        otherwise this will use the set one.
+        """
+
+        if self._feature_location_start is not None:
+            return self._feature_location_start
+        return min(e.primary_start for e in self.exons)
+
+    @property
+    def feature_location_end(self):
+        """
+        This will compute the feature location end if it is not set,
+        otherwise this will use the set one.
+        """
+
+        if self._feature_location_end is not None:
+            return self._feature_location_end
+        return max(e.primary_end for e in self.exons)
 
     def crc64(self):
         """

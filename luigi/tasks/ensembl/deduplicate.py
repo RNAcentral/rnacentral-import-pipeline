@@ -24,11 +24,10 @@ import luigi
 from luigi.local_target import atomic_file
 
 from ..config import output
-from ..config import ensembl
-from ..utils.parameters import CommaGenericFileParameter
 
-from .utils.writers import Output
 from .generic import EnsemblSingleFileTask
+
+from tasks.utils.entry_writers import Output
 
 
 class DeduplicateOutputType(luigi.Task):  # pylint: disable=R0904
