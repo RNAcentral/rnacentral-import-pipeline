@@ -57,7 +57,7 @@ WITH
 SET
     work_mem to '256 MB',
     maintenance_work_mem to '256 MB',
-    search_path = {search_path}
+    search_path = '{search_path}'
 
 BEFORE LOAD DO
 $$
