@@ -63,6 +63,18 @@ class db(luigi.Config):  # pylint: disable=C0103, R0904
             db=self.db_name,
         )
 
+    def psycopg2_string(self):
+        """
+        Generates a connection string for psycopg2
+        """
+        return 'dbname={db} user={user} password={password} host={host} port={port}'.format(
+            db=self.db_name,
+            user=self.user,
+            password=self.password,
+            host=self.host,
+            port=self.port,
+        )
+
 
 class rfam(luigi.Config):  # pylint: disable=C0103, R0904
     """

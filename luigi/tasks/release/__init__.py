@@ -19,6 +19,8 @@ from .load_short import LoadShort
 from .load_long import LoadLong
 from .load_accessions import LoadAccessions
 from .load_references import LoadReferences
+from .store import StoreRelease
+from .prepare import PrepareRelease
 
 
 class LoadRelease(luigi.WrapperTask):  # pylint: disable=R0904
@@ -33,3 +35,16 @@ class LoadRelease(luigi.WrapperTask):  # pylint: disable=R0904
         yield LoadLong(database=self.database)
         yield LoadAccessions(database=self.database)
         yield LoadReferences(database=self.database)
+
+
+class Release(luigi.WrapperTask):  # pylint: disable=R0904
+    """
+    This runs all steps required to build and prepare a release for RNAcentral.
+    """
+
+    database = luigi.Parameter(default='all')
+
+    def requires(self):
+        yield LoadRelease(database=self.database)
+        yield PrepareRelease()
+        yield StoreRelease()
