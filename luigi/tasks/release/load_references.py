@@ -27,6 +27,10 @@ class LoadReferences(PGLoadReferences):  # pylint: disable=R0904
 
     database = luigi.Parameter(default='all')
 
+    def control_filename(self):
+        suffix = '%s.ctl' % self.database
+        return self.__directory_filename__('cmds', suffix=suffix)
+
     def pattern(self):
         if self.database == 'all':
             return '.*'
