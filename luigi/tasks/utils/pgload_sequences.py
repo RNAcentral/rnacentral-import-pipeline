@@ -24,7 +24,7 @@ IN DIRECTORY '{directory}'
 HAVING FIELDS (
     CRC64,
     LEN,
-    SEQ_SHORT,
+    {sequence_column},
     DATABASE,
     AC,
     OPTIONAL_ID,
@@ -36,7 +36,7 @@ INTO {db_url}
 TARGET COLUMNS (
     CRC64,
     LEN,
-    SEQ_SHORT,
+    {sequence_column},
     DATABASE,
     AC,
     OPTIONAL_ID,
@@ -73,10 +73,24 @@ class PGLoadSequences(PGLoader):  # pylint: disable=R0921,R0904
 
     @abc.abstractmethod
     def pattern(self):
+        """
+        A regex to match the files that will be loaded.
+        """
         pass
 
     @abc.abstractmethod
     def directory(self):
+        """
+        The directory the sequence files are stored in.
+        """
+        pass
+
+    @abc.abstractproperty
+    def sequence_column(self):
+        """
+        This is the name of the sequence column. This should be one of
+        SEQ_SHORT or SEQ_LONG for long or short sequences.
+        """
         pass
 
     def control_file(self):
@@ -85,4 +99,5 @@ class PGLoadSequences(PGLoader):  # pylint: disable=R0921,R0904
             db_url=self.db_url(table='load_rnacentral_all'),
             search_path=self.db_search_path(),
             directory=self.directory(),
+            sequence_column=self.sequence_column
         )

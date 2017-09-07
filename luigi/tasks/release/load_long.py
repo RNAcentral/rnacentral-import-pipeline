@@ -30,6 +30,10 @@ class LoadLong(PGLoadSequences):  # pylint: disable=R0904
 
     database = luigi.Parameter(default='all')
 
+    @property
+    def sequence_column(self):
+        return 'SEQ_LONG'
+
     def control_filename(self):
         suffix = '%s.ctl' % self.database
         return self.__directory_filename__('cmds', suffix=suffix)
