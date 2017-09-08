@@ -44,3 +44,13 @@ from .secondary_structure import PGLoadSecondaryStructure
 from .mgi.download import MgiDownload
 from .mgi.as_json import MgiToJson
 from .mgi import Mgi
+
+from .release import LoadShort
+from .release import LoadLong
+from .release import LoadAccessions
+from .release import LoadReferences
+from .release import StoreRelease
+from .release import PrepareRelease
+from .release import CleanupRelease
+from .release import LoadRelease
+from .release import Release

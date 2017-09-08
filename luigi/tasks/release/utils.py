@@ -17,39 +17,37 @@ from contextlib import contextmanager
 
 import psycopg2
 
-from tasks.config import db
 
-
-class DatabaseConnection(object):
+@contextmanager
+def connection(config):
     """
-    Some general utilities for having a connection to the database.
+    Opens a connection to the datbase.
     """
 
-    @contextmanager
-    def connection(self):
-        """
-        Opens a connection to the datbase.
-        """
+    conn = psycopg2.connect(config.psycopg2_string())
+    conn.set_session(autocommit=False)
+    try:
+        yield conn
+    finally:
+        conn.close()
 
-        connection = psycopg2.connect(db().psycopg2_string())
-        connection.set_session(autocommit=False)
-        yield connection
-        connection.close()
 
-    @contextmanager
-    def cursor(self, commit_on_leave=True):
-        """
-        Create a cursor to the database. The cursor will be built with the
-        standard options for work_mem and maintenance_work_mem. If
-        commit_on_leave is true then the cursor will commit once the context
-        handler exits.
-        """
+@contextmanager
+def cursor(config, commit_on_leave=True):
+    """
+    Create a cursor to the database. The cursor will be built with the
+    standard options for work_mem and maintenance_work_mem. If
+    commit_on_leave is true then the cursor will commit once the context
+    handler exits.
+    """
 
-        with self.connection() as connection:
-            cursor = connection.cursor()
-            cursor.execute("SET work_mem to '256MB'")
-            cursor.execute("SET maintenance_work_mem TO '512MB'")
-            yield cursor
+    with connection(config) as conn:
+        cur = conn.cursor()
+        cur.execute("SET work_mem to '256MB'")
+        cur.execute("SET maintenance_work_mem TO '512MB'")
+        try:
+            yield cur
+        finally:
             if commit_on_leave:
-                cursor.commit()
-            cursor.close()
+                cur.commit()
+            cur.close()

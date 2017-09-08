@@ -16,36 +16,31 @@ limitations under the License.
 import luigi
 
 from tasks.config import db
-from .prepare import PrepareRelease
 from .utils import cursor
 
 
-SQL = """
-select
-    dbid,
-    id,
-    release_type,
-    release_date,
-    force_load
-from rnacen.rnc_release
-where status = 'L'
-order by id
-"""
+TABLES = [
+    'load_rnacentral',
+    'load_rnacentral_all',
+    'load_rnc_accessions',
+    'load_rnc_references',
+    'load_rnc_coordinates',
+    'load_upi_max_versions',
+    'load_rnc_secondary_structure',
+    'load_retro_tmp',
+    'load_max_versions',
+]
 
 
-class StoreRelease(luigi.Task):  # pylint: disable=R0904
+class CleanupRelease(luigi.Task):  # pylint: disable=R0904
     """
-    This will store all the loaded data. It will not prepare a new database
-    release by itself.
+    This will empty out the load_* tables. This is distinct from the normal
+    loading procedure because sometimes things go wrong it and it is very hard
+    to debug when all the intermediate data has been deleted.
     """
-
-    def requires(self):
-        yield PrepareRelease()
 
     def run(self):
         with cursor(db()) as cur:
-            cur.execute(SQL)
-            for result in cur.fetchall():
-                cur.execute('select rnc_update.new_update_release(%s, %s)',
-                            (result[0], result[1]))
+            for table in TABLES:
+                cur.execute('truncate table %s', (table,))
                 cur.commit()

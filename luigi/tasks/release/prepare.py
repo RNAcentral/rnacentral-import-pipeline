@@ -15,7 +15,8 @@ limitations under the License.
 
 import luigi
 
-from .utils import DatabaseConnection
+from tasks.config import db
+from .utils import cursor
 
 CREATE_INDEX = """
 create index if not exists load_rnacentral_all$database
@@ -23,13 +24,13 @@ on rnacen.load_rnacentral_all(database)
 """
 
 
-class PrepareRelease(luigi.Task, DatabaseConnection):  # pylint: disable=R0904
+class PrepareRelease(luigi.Task):  # pylint: disable=R0904
     """
     This will prepare a release in the database. Basically callsed the
     prepare_releases('F') procedure.
     """
 
     def run(self):
-        with self.cursor() as cursor:
-            cursor.exectue(CREATE_INDEX)
-            cursor.execute("select rnc_update.prepare_releases('F')")
+        with cursor(db()) as cur:
+            cur.exectue(CREATE_INDEX)
+            cur.execute("select rnc_update.prepare_releases('F')")

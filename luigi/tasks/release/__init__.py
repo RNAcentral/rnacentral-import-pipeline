@@ -21,6 +21,7 @@ from .load_accessions import LoadAccessions
 from .load_references import LoadReferences
 from .store import StoreRelease
 from .prepare import PrepareRelease
+from .cleanup import CleanupRelease
 
 
 class LoadRelease(luigi.WrapperTask):  # pylint: disable=R0904
@@ -40,6 +41,8 @@ class LoadRelease(luigi.WrapperTask):  # pylint: disable=R0904
 class Release(luigi.WrapperTask):  # pylint: disable=R0904
     """
     This runs all steps required to build and prepare a release for RNAcentral.
+    This will not delete any data. To do that you must run the CleanupRelease
+    task manually afterwards.
     """
 
     database = luigi.Parameter(default='all')
