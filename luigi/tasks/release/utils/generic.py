@@ -13,13 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from .utils import BaseImporter
 
-
-class PGLoadAllSecondaryStructures(BaseImporter):  # pylint: disable=R0904
-    """
-    This will load all files in the secondary structure directory.
-    """
-
-    def file_pattern(self):
-        return "~|.*|"
+def file_pattern(name):
+    if name == 'all':
+        return '.*.csv'
+    return name + '.*.csv'

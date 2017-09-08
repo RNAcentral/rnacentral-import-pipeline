@@ -15,6 +15,7 @@ limitations under the License.
 
 import os
 import abc
+from hashlib import sha256
 
 from luigi.local_target import LocalTarget
 from luigi.local_target import atomic_file
@@ -78,12 +79,16 @@ class PGLoader(ExternalProgramTask):  # pylint: disable=R0921
         the db section. If the table is given and not None then it will be
         added as well.
         """
+
         db_url = DBConfig().pgloader_url()
         if table is not None:
             return '%s?%s' % (db_url, table)
         return db_url
 
     def db_search_path(self):
+        """
+        Get the configured search path.
+        """
         return DBConfig().search_path
 
     def write_control_file(self):
@@ -111,8 +116,24 @@ class PGLoader(ExternalProgramTask):  # pylint: disable=R0921
             os.remove(filename)
             raise
 
+    def content_hash(self):
+        """
+        This produces a hash of the content of the control file. This is useful
+        in naming the files as sometimes the file depends on some given
+        parameters and instead of forcing the user to override the filename
+        written so we always have a unique filename this will provide a unique
+        hash for each parameter.
+        """
+
+        content = self.control_file()
+        return sha256(content).hexdigest()
+
     def __directory_filename__(self, directory, suffix='ctl'):
         directory = os.path.join(output().base, directory)
         name = snake_case(self.__class__.__name__)
-        filename = '%s.%s' % (name, suffix)
+        filename = '%{name}-{hash}.{suffix}'.format(
+            name=name,
+            hash=self.content_hash(),
+            suffix=suffix,
+        )
         return os.path.join(directory, filename)

@@ -38,17 +38,14 @@ from .ensembl.generic import EnsemblSingleFileTask
 
 from .gtrnadb import GtRNAdb
 
-from .secondary_structure import PGLoadAllSecondaryStructures
-from .secondary_structure import PGLoadSecondaryStructure
-
 from .mgi.download import MgiDownload
 from .mgi.as_json import MgiToJson
 from .mgi import Mgi
 
-from .release import LoadShort
-from .release import LoadLong
+from .release import LoadSequences
 from .release import LoadAccessions
 from .release import LoadReferences
+from .release import LoadSecondaryStructures
 from .release import StoreRelease
 from .release import PrepareRelease
 from .release import CleanupRelease

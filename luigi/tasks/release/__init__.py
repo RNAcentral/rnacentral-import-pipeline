@@ -15,10 +15,10 @@ limitations under the License.
 
 import luigi
 
-from .load_short import LoadShort
-from .load_long import LoadLong
+from .load_sequences import LoadSequences
 from .load_accessions import LoadAccessions
 from .load_references import LoadReferences
+from .load_secondary_structures import LoadSecondaryStructures
 from .store import StoreRelease
 from .prepare import PrepareRelease
 from .cleanup import CleanupRelease
@@ -32,10 +32,10 @@ class LoadRelease(luigi.WrapperTask):  # pylint: disable=R0904
     database = luigi.Parameter(default='all')
 
     def requires(self):
-        yield LoadShort(database=self.database)
-        yield LoadLong(database=self.database)
+        yield LoadSequences(database=self.database, type='all')
         yield LoadAccessions(database=self.database)
         yield LoadReferences(database=self.database)
+        yield LoadSecondaryStructures(database=self.database)
 
 
 class Release(luigi.WrapperTask):  # pylint: disable=R0904
@@ -48,6 +48,5 @@ class Release(luigi.WrapperTask):  # pylint: disable=R0904
     database = luigi.Parameter(default='all')
 
     def requires(self):
-        yield LoadRelease(database=self.database)
         yield PrepareRelease()
         yield StoreRelease()

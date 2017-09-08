@@ -13,9 +13,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import abc
+import os
 
+import luigi
+
+from tasks.config import output
 from tasks.utils.pgloader import PGLoader
+
+from .generic import file_pattern
+
 
 CONTROL_FILE = """
 LOAD CSV
@@ -69,35 +75,21 @@ class PGLoadSequences(PGLoader):  # pylint: disable=R0921,R0904
     not run further scripts.
     """
 
-    __metaclass__ = abc.ABCMeta
+    database = luigi.Parameter(default='all')
+    type = luigi.ChoiceParameter(choice=['short', 'long'])
 
-    @abc.abstractmethod
-    def pattern(self):
-        """
-        A regex to match the files that will be loaded.
-        """
-        pass
-
-    @abc.abstractmethod
-    def directory(self):
-        """
-        The directory the sequence files are stored in.
-        """
-        pass
-
-    @abc.abstractproperty
     def sequence_column(self):
         """
-        This is the name of the sequence column. This should be one of
-        SEQ_SHORT or SEQ_LONG for long or short sequences.
+        This is the name of the sequence column. This is computed from the name
+        of the directory, which should be one of short or long.
         """
-        pass
+        return 'SEQ_' + self.type.upper()
 
     def control_file(self):
         return CONTROL_FILE.format(
-            pattern=self.pattern(),
+            pattern=file_pattern(self.database),
             db_url=self.db_url(table='load_rnacentral_all'),
             search_path=self.db_search_path(),
-            directory=self.directory(),
-            sequence_column=self.sequence_column
+            directory=os.path.join(output().base, self.type),
+            sequence_column=self.sequence_column(),
         )

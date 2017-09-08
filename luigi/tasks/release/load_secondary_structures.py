@@ -14,10 +14,14 @@ limitations under the License.
 """
 
 import os
-import abc
+
+import luigi
 
 from tasks.config import output
 from tasks.utils.pgloader import PGLoader
+
+from .utils.generic import file_pattern
+
 
 CONTROL_FILE = """
 LOAD CSV
@@ -81,25 +85,17 @@ $$
 """
 
 
-class BaseImporter(PGLoader):  # pylint: disable=R0904,R0921
+class LoadSecondaryStructures(PGLoader):  # pylint: disable=R0904
     """
-    This is the base importer for secondary structures. It will use pgloader to
-    load one or more secondary structures as needed. The ones loaded depend on
-    the file_pattern method.
+    This will load only the given file in the secondary structure directory.
     """
-    __metaclass__ = abc.ABCMeta
 
-    @abc.abstractmethod
-    def file_pattern(self):
-        """
-        This should return the filename, or a pattern of filenames to import.
-        """
-        pass
+    database = luigi.Parameter(default='all')
 
     def control_file(self):
         tablename = 'rnc_secondary_structure'
         return CONTROL_FILE.format(
-            pattern=self.file_pattern(),
+            pattern=file_pattern(self.database),
             directory=os.path.join(output().base, 'secondary_structure'),
             tablename=tablename,
             db_url=self.db_url('load_%s' % tablename),
