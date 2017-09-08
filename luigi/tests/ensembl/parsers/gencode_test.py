@@ -13,7 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from ensembl.parsers import GencodeParser as Gencode
+from databases.ensembl.parsers import GencodeParser as Gencode
 
 from tests.ensembl.utils import Base
 
@@ -40,7 +40,7 @@ class GencodeTests(Base):  # pylint: disable=R0904,C0111
         assert 'ENST00000540226.1' in entry.xref_data['Ensembl']
 
     def test_it_gets_all_gencode_entries(self):
-        assert len(list(self.data())) == 2729
+        assert len(list(self.data())) == 2898
 
     def test_it_sets_accession_to_transcript_id(self):
         val = self.entries_for("ENST00000540868.1")

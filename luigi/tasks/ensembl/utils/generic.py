@@ -15,8 +15,8 @@ limitations under the License.
 
 import os
 
-from ensembl.parsers import EnsemblParser
-from ensembl.parsers import GencodeParser
+from databases.ensembl.parsers import EnsemblParser
+from databases.ensembl.parsers import GencodeParser
 
 
 def is_gencode_file(config, input_file):

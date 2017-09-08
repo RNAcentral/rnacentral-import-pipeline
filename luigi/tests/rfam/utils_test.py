@@ -17,9 +17,10 @@ import unittest as ut
 import hashlib
 import collections as coll
 
+import attr
 import pytest
 
-from rfam import utils
+from databases.rfam import utils
 
 
 def test_fetch_file_gets_unzipped_contents():
@@ -186,7 +187,7 @@ class LoadingFamiliesTest(ut.TestCase):
                 ('GO:0003735', 'structural constituent of ribosome'),
                 ('GO:0005840', 'ribosome')
             ]),
-            rna_type='Gene; rRNA;',
+            rna_type='Gene; rRNA',
             domain=None,
             description=(
                 '5S ribosomal RNA (5S rRNA) is a component of the '

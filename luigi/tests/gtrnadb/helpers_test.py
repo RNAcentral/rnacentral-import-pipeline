@@ -17,7 +17,7 @@ import json
 
 import pytest
 
-from gtrnadb import helpers
+from databases.gtrnadb import helpers
 
 
 @pytest.fixture

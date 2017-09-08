@@ -11,14 +11,17 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
+
+This contains the logic for parsing MGI data files and producing Entry objects
+for export to usable flat files.
 """
 
 import csv
 
-from databases.data import Entry
-from databases.data import Exon
-from databases.data import Reference
-from databases import helpers
+from .data import Entry
+from .data import Exon
+from .data import Reference
+from . import helpers
 
 RNA_TYPE_MAPPING = {
     "gene": None,
@@ -74,19 +77,32 @@ def infer_rna_type(data):
     Determine the rna_type of the given entry. If the entry is not RNA then
     None will be returned.
     """
+
     base = data['feature_type']
     return RNA_TYPE_MAPPING[base]
 
 
 def name(data):
+    """
+    Get the assigned name of the entry.
+    """
+
     return data['marker_name']
 
 
 def symbol(data):
+    """
+    Get the feature symbol.
+    """
+
     return data['marker_symbol']
 
 
 def chromosome(data):
+    """
+    Get the chromosome, if known. This treats 'UN' as unknown meaning unknown.
+    """
+
     chrom = data['chromosome']
     if chrom == 'UN':
         return None
@@ -94,6 +110,10 @@ def chromosome(data):
 
 
 def start(data):
+    """
+    Get the start coordinate as an int of the data.
+    """
+
     value = data['genome_coordinate_start']
     if value:
         return int(value)
@@ -101,6 +121,10 @@ def start(data):
 
 
 def stop(data):
+    """
+    Get the stop coordinate as an int of the data.
+    """
+
     value = data['genome_coordinate_end']
     if value:
         return int(value)
@@ -108,6 +132,10 @@ def stop(data):
 
 
 def is_complement(data):
+    """
+    Check if the entry is on the - strand.
+    """
+
     strand = data['strand']
     if not strand:
         return None
@@ -115,6 +143,11 @@ def is_complement(data):
 
 
 def exon(data):
+    """
+    Create an exon representing the known location of the given datum if the
+    location is known.
+    """
+
     start_pos = start(data)
     if not start_pos:
         return []
@@ -129,13 +162,26 @@ def exon(data):
     ]
 
 
-def split_ids(name, data):
-    if data[name]:
-        return data[name].split('|')
+def split_ids(key, data):
+    """
+    This will split an entry by '|', since the id fields are '|' separated. If
+    the given key is not present then [] is returned.
+    """
+
+    if data[key]:
+        return data[key].split('|')
     return []
 
 
 def xref_data(data):
+    """
+    Creates Xref data for the entry. This will create a dict with keys for
+    ensembl, ref_seq and vega that will contain a list of the transcript and
+    protein is (which should be empty). For RefSeq it will also have an
+    'xr_ids' entry which will contain all XR_* ids. These are separate from the
+    transcript ids because we do not import this data.
+    """
+
     ref_trans_all = split_ids('refseq_transcript_ids', data)
     xr_ids = [tid for tid in ref_trans_all if tid.startswith('XR_')]
     ref_trans = [tid for tid in ref_trans_all if not tid.startswith('XR_')]
@@ -157,32 +203,55 @@ def xref_data(data):
 
 
 def gene(data):
+    """
+    Gets the name of the gene this data is from. This is the symbol assigned to
+    the data.
+    """
     if 'gene' in data['feature_type']:
         return symbol(data)
     return None
 
 
-def taxon_id(data):
+def taxon_id(_):
+    """
+    Always returns 10090, the mouse taxon id.
+    """
     return 10090
 
 
 def species(data):
+    """
+    Gets the species name for mice.
+    """
     return helpers.species(taxon_id(data))
 
 
 def lineage(data):
+    """
+    Gets the mouse lineage.
+    """
     return helpers.lineage(taxon_id(data))
 
 
 def common_name(data):
+    """
+    Fetches the common name of the species for the given entry.
+    """
     return helpers.common_name(taxon_id(data))
 
 
 def primary_id(data):
+    """
+    Returns the primary id for an MGI entry. This is just the accession right
+    now.
+    """
     return accession(data)
 
 
 def references(data):
+    """
+    Creates the default reference for all MGI data.
+    """
     return [Reference(
         accession=accession(data),
         authors=(
@@ -200,6 +269,9 @@ def references(data):
 
 
 def mgi_to_entry(data):
+    """
+    Creates an Entry object based off the given MGI data.
+    """
     return Entry(
         primary_id=primary_id(data),
         accession=accession(data),

@@ -16,7 +16,7 @@ limitations under the License.
 import re
 import logging
 
-from rfam import utils as rfutil
+from databases.rfam import utils as rfutil
 
 LOGGER = logging.getLogger(__name__)
 

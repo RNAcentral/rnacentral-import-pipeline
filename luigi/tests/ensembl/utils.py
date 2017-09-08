@@ -15,8 +15,8 @@ import unittest as ut
 
 from Bio import SeqIO
 
-from ensembl import data
-from ensembl.helpers import bio as helpers
+from databases.ensembl import data
+from databases.ensembl.helpers import bio as helpers
 
 
 class Base(ut.TestCase):  # pylint: disable=R0904

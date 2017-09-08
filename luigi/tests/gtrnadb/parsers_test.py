@@ -18,7 +18,7 @@ import unittest as ut
 import attr
 
 from databases import data
-from gtrnadb import parsers
+from databases.gtrnadb import parsers
 
 
 class EntryTest(ut.TestCase):
@@ -39,10 +39,11 @@ class EntryTest(ut.TestCase):
             primary_id='tRNA-Ala-CGC-1-1:CP000828.1:603738-603810',
             accession='CP000828.1:tRNA-Ala-CGC-1-1',
             ncbi_tax_id=329726,
-            database='GtRNAdb',
+            database='GTRNADB',
             sequence='GGGGAATTAGCTCAGCTGGTAGAGTGCTGCGATCGCACCGCAGAGGTCAGGGGTTCGAATCCCCTATTCTCCA',
             exons=[
                 data.Exon(
+                    chromosome='chr',
                     primary_start=603738,
                     primary_end=603810,
                     complement=False,
@@ -76,7 +77,7 @@ class EntryTest(ut.TestCase):
             parent_accession='CP000828.1',
             description='Acaryochloris marina MBIC11017 tRNA-Ala (CGC)',
             mol_type='genomic DNA',
-            feature_location_start=1,
-            feature_location_stop=73,
+            location_start=1,
+            location_end=73,
             gene_synonyms=["chr.trna27-AlaCGC"],
         ))

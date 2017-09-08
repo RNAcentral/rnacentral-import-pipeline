@@ -17,7 +17,7 @@ import os
 
 import luigi
 
-from gtrnadb.parsers import parse
+from databases.gtrnadb.parsers import parse
 
 from tasks.config import output
 

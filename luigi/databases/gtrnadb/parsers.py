@@ -15,28 +15,25 @@ limitations under the License.
 
 import json
 import logging
-import itertools as it
-import operator as op
-from time import sleep
 
 from databases.data import Exon
 from databases.data import Entry
 from databases.data import SecondaryStructure
 from databases import helpers
 
-from gtrnadb.helpers import url
-from gtrnadb.helpers import anticodon
-from gtrnadb.helpers import note_data
-from gtrnadb.helpers import chromosome
-from gtrnadb.helpers import common_name
-from gtrnadb.helpers import lineage
-from gtrnadb.helpers import species
-from gtrnadb.helpers import description
-from gtrnadb.helpers import product
-from gtrnadb.helpers import primary_id
-from gtrnadb.helpers import dot_bracket
-from gtrnadb.helpers import accession
-from gtrnadb.helpers import parent_accession
+from .helpers import url
+from .helpers import anticodon
+from .helpers import note_data
+from .helpers import chromosome
+from .helpers import common_name
+from .helpers import lineage
+from .helpers import species
+from .helpers import description
+from .helpers import product
+from .helpers import primary_id
+from .helpers import dot_bracket
+from .helpers import accession
+from .helpers import parent_accession
 
 LOGGER = logging.getLogger(__name__)
 
@@ -66,6 +63,7 @@ def gtrnadb_exons(locations):
             raise ValueError("Invalid strand %s" % exon)
 
         exons.append(Exon(
+            chromosome=chromosome(locations),
             primary_start=int(exon['start']),
             primary_end=int(exon['stop']),
             complement=complement,
@@ -109,8 +107,8 @@ def gtrnadb_entries(data):
                 parent_accession=parent_accession(location),
                 description=description(data),
                 mol_type='genomic DNA',
-                _feature_location_start=1,
-                _feature_location_end=len(data['sequence']),
+                location_start=1,
+                location_end=len(data['sequence']),
                 gene_synonyms=data.get('synonyms', []),
             )
         except helpers.UnknownTaxonId:

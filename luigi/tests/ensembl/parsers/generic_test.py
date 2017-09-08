@@ -15,8 +15,8 @@ limitations under the License.
 
 import pytest
 
-from ensembl.parsers import EnsemblParser
-from ensembl.data import Exon
+from databases.ensembl.parsers import EnsemblParser
+from databases.data import Exon
 
 from tests.ensembl.utils import Base
 
@@ -83,18 +83,18 @@ class HumanTests(Base):
 
     def test_it_gets_simple_locations(self):
         assert self.entry_for('ENST00000495392.1').exons == [
-            Exon(primary_start=3211663, primary_end=3211917, complement=True)
+            Exon(chromosome='12', primary_start=3211663, primary_end=3211917, complement=True)
         ]
 
     def test_can_get_joined_locations(self):
         assert self.entry_for('ENST00000635814.1').exons == [
-            Exon(primary_start=3337119, primary_end=3337202, complement=True),
-            Exon(primary_start=3323324, primary_end=3323512, complement=True),
-            Exon(primary_start=3307748, primary_end=3307818, complement=True),
-            Exon(primary_start=3306764, primary_end=3306868, complement=True),
-            Exon(primary_start=3303782, primary_end=3303937, complement=True),
-            Exon(primary_start=3303337, primary_end=3303403, complement=True),
-            Exon(primary_start=3298210, primary_end=3298262, complement=True),
+            Exon(chromosome='12', primary_start=3337119, primary_end=3337202, complement=True),
+            Exon(chromosome='12', primary_start=3323324, primary_end=3323512, complement=True),
+            Exon(chromosome='12', primary_start=3307748, primary_end=3307818, complement=True),
+            Exon(chromosome='12', primary_start=3306764, primary_end=3306868, complement=True),
+            Exon(chromosome='12', primary_start=3303782, primary_end=3303937, complement=True),
+            Exon(chromosome='12', primary_start=3303337, primary_end=3303403, complement=True),
+            Exon(chromosome='12', primary_start=3298210, primary_end=3298262, complement=True),
         ]
 
     def test_it_gets_cross_references(self):

@@ -19,7 +19,7 @@ import unittest as ut
 
 from Bio import SeqIO
 
-from ensembl.helpers.bio import (
+from databases.ensembl.helpers.bio import (
     gene,
     locus_tag,
     notes,

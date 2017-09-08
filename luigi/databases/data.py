@@ -174,8 +174,8 @@ class Entry(object):
     is_composite = optionally(basestring)
     pseudogene = optionally(basestring)
 
-    _feature_location_start = optionally(int)
-    _feature_location_end = optionally(int)
+    location_start = optionally(int)
+    location_end = optionally(int)
 
     gene_synonyms = possibly_empty(list)
     references = possibly_empty(list)
@@ -236,8 +236,8 @@ class Entry(object):
         otherwise this will use the set one.
         """
 
-        if self._feature_location_start is not None:
-            return self._feature_location_start
+        if self.location_start is not None:
+            return self.location_start
         return min(e.primary_start for e in self.exons)
 
     @property
@@ -247,8 +247,8 @@ class Entry(object):
         otherwise this will use the set one.
         """
 
-        if self._feature_location_end is not None:
-            return self._feature_location_end
+        if self.location_end is not None:
+            return self.location_end
         return max(e.primary_end for e in self.exons)
 
     def crc64(self):

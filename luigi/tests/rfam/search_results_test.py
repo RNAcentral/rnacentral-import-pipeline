@@ -19,7 +19,7 @@ import unittest as ut
 import attr
 import pytest
 
-from rfam.utils import tbl_iterator, RfamHit, RfamClanHit
+from databases.rfam.utils import tbl_iterator, RfamHit, RfamClanHit
 
 
 class ParsingTest(ut.TestCase):  # pylint: disable=R0904

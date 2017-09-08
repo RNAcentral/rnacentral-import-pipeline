@@ -37,11 +37,10 @@ from tasks.config import output
 from tasks.config import ensembl
 
 from tasks.download import Download
-
-from tasks.ensembl.utils.ftp import species_file_path
-from tasks.ensembl.utils.generic import parser_class
-
 from tasks.utils.entry_writers import Output
+
+from .utils.ftp import species_file_path
+from .utils.generic import parser_class
 
 
 class EnsemblSingleFileTask(luigi.Task):  # pylint: disable=R0904

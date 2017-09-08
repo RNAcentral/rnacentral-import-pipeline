@@ -21,7 +21,7 @@ from tasks.config import output
 from tasks.utils.entry_writers import Output
 from tasks.mgi.download import MgiDownload
 
-from mgi import rna_entries
+from databases.mgi import rna_entries
 
 
 class MgiToCsv(luigi.Task):  # pylint: disable=R0904

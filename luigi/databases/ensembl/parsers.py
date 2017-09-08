@@ -19,9 +19,8 @@ import logging
 import attr
 from Bio import SeqIO
 
-from rfam import utils as rfutils
-
 from databases import data
+from databases.rfam import utils as rfutils
 
 from .data import Summary
 from .data import ImportCounts
@@ -149,17 +148,21 @@ class EnsemblParser(Parser):
             primary_id = standard_name
             accession = standard_name or ''
 
+        chromosome = helpers.chromosome(record)
+        exons = ensembl.exons(feature)
+        exons = [attr.assoc(e, chromosome=chromosome) for e in exons]
+
         entry = data.Entry(
             primary_id=primary_id,
             accession=accession,
             ncbi_tax_id=helpers.taxid(record),
             database='ENSEMBL',
             sequence=sequence,
-            exons=ensembl.exons(feature),
+            exons=exons,
             rna_type=ensembl.rna_type(helpers.rna_type(feature), xref_data),
             url=URL.format(transcript=transcript_id),
             lineage=helpers.lineage(record),
-            chromosome=helpers.chromosome(record),
+            chromosome=chromosome,
             parent_accession=record.id,
             common_name=common_name,
             species=species,

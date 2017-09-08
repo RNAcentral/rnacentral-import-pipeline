@@ -164,6 +164,8 @@ INFORMATIVE_NAMES = {
     # These two patterns are so that we don't hit tracrRNA with rRNA
     "_rRNA": "rRNA",
     "PK-G12rRNA": "rRNA",
+    "^RUF\d+$": "other",
+    '^CRISPR-': 'other',
 }
 
 SO_TERM_MAPPING = {
@@ -195,27 +197,31 @@ SO_TERM_MAPPING = {
     "SO:0001463": "lncRNA",
     "SO:0001641": "lncRNA",
     "SO:0001877": "lncRNA",
+    "SO:0000593": "snoRNA",
+    "SO:0000392": "snRNA",
+    "SO:0000399": "snRNA",
+    "SO:0000594": "snoRNA",
 }
 
 RFAM_RNA_TYPE_MAPPING = {
-    "Cis-reg; leader;": "other",
-    "Cis-reg; riboswitch;": "other",
-    "Gene; CRISPR;": "other",
-    "Gene; antisense;": "antisense_RNA",
-    "Gene; antitoxin;": "other",
-    "Gene; lncRNA;": "lncRNA",
-    "Gene; miRNA;": "precursor_RNA",
-    "Gene; rRNA;": "rRNA",
-    "Gene; ribozyme;": "ribozyme",
-    "Gene; sRNA;": "other",
-    "Gene; snRNA; snoRNA; CD-box;": "snoRNA",
-    "Gene; snRNA; snoRNA; HACA-box;": "snoRNA",
-    "Gene; snRNA; snoRNA; scaRNA;": "snoRNA",
-    "Gene; snRNA; splicing;": "snRNA",
-    "Gene; snRNA;": "snRNA",
-    "Gene; tRNA;": "tRNA",
-    "Gene; tRNA;": "tRNA",
-    "Gene;": "other",
+    "Cis-reg; leader": "other",
+    "Cis-reg; riboswitch": "other",
+    "Gene; CRISPR": "other",
+    "Gene; antisense": "antisense_RNA",
+    "Gene; antitoxin": "other",
+    "Gene; lncRNA": "lncRNA",
+    "Gene; miRNA": "precursor_RNA",
+    "Gene; rRNA": "rRNA",
+    "Gene; ribozyme": "ribozyme",
+    "Gene; sRNA": "other",
+    "Gene; snRNA; snoRNA; CD-box": "snoRNA",
+    "Gene; snRNA; snoRNA; HACA-box": "snoRNA",
+    "Gene; snRNA; snoRNA; scaRNA": "snoRNA",
+    "Gene; snRNA; splicing": "snRNA",
+    "Gene; snRNA": "snRNA",
+    "Gene; tRNA": "tRNA",
+    "Gene; tRNA": "tRNA",
+    "Gene": "other",
 }
 
 DOMAIN_MAPPING = {
@@ -408,6 +414,8 @@ class RfamFamily(object):
 
     def guess_insdc_using_so_terms(self):
         terms = set(SO_TERM_MAPPING.get(so, None) for so in self.so_terms)
+        if len(terms) > 1 and 'other' in terms:
+            terms.remove('other')
         if len(terms) != 1:
             return None
         return terms.pop()
