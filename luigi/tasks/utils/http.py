@@ -15,24 +15,24 @@ limitations under the License.
 
 import os
 
-import luigi
-from luigi import LocalTarget
+import requests
 
-from tasks.config import output
-from tasks.utils.http import download
-
-URL = 'http://www.informatics.jax.org/downloads/reports/MRK_Sequence.rpt'
+from luigi.local_target import atomic_file
 
 
-class MgiDownload(luigi.Task):  # pylint: disable=R0904
+def download(url, filename):
     """
-    This will download the MGI MRK_Sequence.rpt file for future processing.
+    This will fetch some file over HTTP using requests. It will create the
+    required directory to save in if requried as well. Note there is a race
+    condition in the directory creation, so if that is a problem create it
+    ahead of time.
     """
 
-    def output(self):
-        path = os.path.join(output().base, 'mgi', 'MRK_Sequence.rpt')
-        return LocalTarget(path)
+    dirname = os.path.dirname(filename)
+    if not os.path.exists(dirname):
+        os.makedirs(dirname)
 
-    def run(self):
-        filename = self.output().fn
-        return download(URL, filename)
+    response = requests.get(url)
+    response.raise_for_status()
+    with atomic_file(filename) as out:
+        out.write(response.text)

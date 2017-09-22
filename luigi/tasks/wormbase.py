@@ -21,18 +21,17 @@ from luigi import LocalTarget
 from tasks.config import output
 from tasks.utils.http import download
 
-URL = 'http://www.informatics.jax.org/downloads/reports/MRK_Sequence.rpt'
+URL = 'http://www.ebi.ac.uk/ena/data/xref/search?source=WormBase'
 
 
-class MgiDownload(luigi.Task):  # pylint: disable=R0904
+class WormbaseDownload(luigi.Task):  # pylint: disable=R0904
     """
-    This will download the MGI MRK_Sequence.rpt file for future processing.
+    This will download the Wormbase TSV file that ENA provides.
     """
 
     def output(self):
-        path = os.path.join(output().base, 'mgi', 'MRK_Sequence.rpt')
+        path = os.path.join(output().base, 'wormbase', 'wormbase.tsv')
         return LocalTarget(path)
 
     def run(self):
-        filename = self.output().fn
-        return download(URL, filename)
+        download(URL, self.output().fn)
