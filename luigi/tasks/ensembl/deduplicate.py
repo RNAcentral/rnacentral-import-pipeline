@@ -74,7 +74,8 @@ class DeduplicateOutputType(luigi.Task):  # pylint: disable=R0904
             yield EnsemblSingleFileTask(input_file=filename)
 
     def output(self):
-        out = Output.build(output().base, 'ensembl', 'dedup')
+        species = os.path.dirname(self.filenames.split(',')[0])
+        out = Output.build(output().base, 'ensembl', species + '-dedup')
         final = getattr(out, self.output_type)
         return luigi.LocalTarget(final.fn)
 
