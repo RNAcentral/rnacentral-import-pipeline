@@ -89,4 +89,3 @@ class PGLoadGoTerms(PGLoader):  # pylint: disable=R0904
             db_url=self.db_url(table='load_go_terms'),
             search_path=self.db_search_path(),
         )
-
