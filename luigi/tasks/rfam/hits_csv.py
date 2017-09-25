@@ -17,7 +17,7 @@ from glob import iglob
 
 import attr
 
-from rfam.utils import tbl_iterator
+from databases.rfam.utils import tbl_iterator
 from tasks.config import rfam
 from tasks.utils.csv_writer import CsvWriter
 

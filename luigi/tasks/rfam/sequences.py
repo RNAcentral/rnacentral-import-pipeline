@@ -1,36 +1,27 @@
+# -*- coding: utf-8 -*-
+
 """
-Copyright [2009-2014] EMBL-European Bioinformatics Institute
+Copyright [2009-2017] EMBL-European Bioinformatics Institute
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
-     http://www.apache.org/licenses/LICENSE-2.0
+http://www.apache.org/licenses/LICENSE-2.0
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-
-Usage:
-
-python path/to/this/file.py
-    --local-scheduler
-    --destination /path/to/output/files
-    --input-file /path/to/input/file.json
-
-Optional parameters:
-    --test # to process just the first few entries (default: False)
 """
 
-import luigi
 import re
 
 from rnacentral_entry import RNAcentralEntry
 from json_parser import JsonParser
 
-from rfam import utils
+from databases.rfam import utils
 
 
-class JsonParserRfam(JsonParser):  # pylint: disable=W0232
+class RfamSequenceFile(JsonParser):  # pylint: disable=W0232,R0904
     """
     Luigi Task for converting Rfam JSON files into csv files
     that can be loaded into the RNAcentral database.
@@ -117,7 +108,3 @@ class JsonParserRfam(JsonParser):  # pylint: disable=W0232
             self.entries.append(rnacentral_entry) # pylint: disable=E1101
 
         print 'Skipped %i sequences' % skipped
-
-# main entry point
-if __name__ == '__main__':
-    luigi.run(main_task_cls=JsonParserRfam)

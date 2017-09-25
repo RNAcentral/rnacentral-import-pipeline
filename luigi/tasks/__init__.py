@@ -27,6 +27,7 @@ from .rfam.go_term_mapping_csv import RfamGoTermsCSV
 from .rfam import RfamSearches
 from .rfam import RfamCSV
 from .rfam import RfamFamilies
+from .rfam import RfamSequences
 
 from .go_terms.go_terms_csv import GoTermsCSV
 from .go_terms.pgload_go_terms import PGLoadGoTerms

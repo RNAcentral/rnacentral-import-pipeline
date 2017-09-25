@@ -15,6 +15,9 @@ limitations under the License.
 
 import luigi
 
+from tasks.config import rfam
+from tasks.config import output
+
 from .pgload_hits import RfamPGLoadHits
 from .pgload_clans import RfamPGLoadClans
 from .pgload_families import RfamPGLoadFamilies
@@ -26,6 +29,7 @@ from .families_csv import RfamFamiliesCSV
 from .hits_csv import RfamHitsCSV
 from .fasta_csv import RfamFastaCSV
 from .go_term_mapping_csv import RfamGoTermsCSV
+from .sequences import RfamSequenceFile
 
 
 class RfamFamilies(luigi.WrapperTask):  # pylint: disable=R0904
@@ -67,3 +71,16 @@ class RfamCSV(luigi.WrapperTask):  # pylint: disable=R0904
         yield RfamGoTermsCSV()
         yield RfamHitsCSV()
         yield RfamFastaCSV()
+
+
+class RfamSequences(luigi.WrapperTask):  # pylint: disable=W0232,R0904
+    """
+    Luigi task for processing all Json files found in an input folder.
+    """
+
+    def requires(self):
+        for filename in rfam().json_files():
+            yield RfamSequenceFile(
+                input_file=filename,
+                destination=output().base
+            )

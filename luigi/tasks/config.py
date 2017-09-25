@@ -13,6 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import glob
+
 import luigi
 
 from tasks.utils.parameters import PathParameter
@@ -91,6 +93,9 @@ class rfam(luigi.Config):  # pylint: disable=C0103, R0904
     hits = PathParameter()
     fasta = PathParameter()
     json_folder = PathParameter()
+
+    def json_files(self):
+        return glob(self.json_folder + '*.json')
 
 
 class noncode(luigi.Config):  # pylint: disable=C0103, R0904
