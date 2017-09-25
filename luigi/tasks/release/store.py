@@ -17,7 +17,7 @@ import luigi
 
 from tasks.config import db
 from .prepare import PrepareRelease
-from .utils import cursor
+from .utils.db import cursor
 
 
 SQL = """

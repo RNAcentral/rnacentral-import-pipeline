@@ -16,7 +16,7 @@ limitations under the License.
 import luigi
 
 from tasks.config import db
-from .utils import cursor
+from .utils.db import cursor
 
 
 TABLES = [
