@@ -27,7 +27,7 @@ class LoadSequences(luigi.WrapperTask):  # pylint: disable=R0904
 
     database = luigi.Parameter(default='all')
     type = luigi.ChoiceParameter(
-        choice=['short', 'long', 'all'],
+        choices=['short', 'long', 'all'],
         default='all',
     )
 

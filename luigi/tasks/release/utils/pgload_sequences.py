@@ -76,7 +76,7 @@ class PGLoadSequences(PGLoader):  # pylint: disable=R0921,R0904
     """
 
     database = luigi.Parameter(default='all')
-    type = luigi.ChoiceParameter(choice=['short', 'long'])
+    type = luigi.ChoiceParameter(choices=['short', 'long'])
 
     def sequence_column(self):
         """
