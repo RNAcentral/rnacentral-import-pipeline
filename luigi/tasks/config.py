@@ -13,20 +13,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import glob
+import os
+from glob import iglob
 
 import luigi
 
 from tasks.utils.parameters import PathParameter
 from tasks.ensembl.utils.generic import normalize_species_name
-
-
-def normalize_species_name(species):
-    """
-    This will put species names into a standard format. That is lower case,
-    without leading or trailing whitespace and with spaces replaced by '_'.
-    """
-    return species.strip().lower().replace(' ', '_')
 
 
 class output(luigi.Config):  # pylint: disable=C0103, R0904
@@ -95,7 +88,12 @@ class rfam(luigi.Config):  # pylint: disable=C0103, R0904
     json_folder = PathParameter()
 
     def json_files(self):
-        return glob(self.json_folder + '*.json')
+        """
+        This will produce an iterable of all JSON files that are in the
+        json_folder.
+        """
+
+        return iglob(os.path.join(self.json_folder, '*.json'))
 
 
 class noncode(luigi.Config):  # pylint: disable=C0103, R0904
@@ -176,5 +174,8 @@ class ensembl(luigi.Config):  # pylint: disable=C0103, R0904
         return {normalize_species_name(o) for o in orgs}
 
 
-class gtrnadb(luigi.Config):  # pylint: disable=C0103
+class gtrnadb(luigi.Config):  # pylint: disable=C0103, R0904
+    """
+    This contains the configuration for loading GtRNAdb files.
+    """
     pattern = luigi.Parameter()
