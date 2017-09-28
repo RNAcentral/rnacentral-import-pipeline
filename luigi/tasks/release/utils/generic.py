@@ -15,6 +15,13 @@ limitations under the License.
 
 
 def file_pattern(name):
+    """
+    Given a database name this will produce a pattern for pgloader to match
+    files from that database. If the name is 'all' then a pattern that matches
+    all files will be created. The file pattern is quoted using '#'.
+    """
+
+    pattern = name
     if name == 'all':
-        return '.*.csv'
-    return name + '.*.csv'
+        pattern = '.'
+    return '~#{pattern}*.csv#'.format(pattern=pattern)
