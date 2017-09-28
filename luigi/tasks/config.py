@@ -31,6 +31,7 @@ class output(luigi.Config):  # pylint: disable=C0103, R0904
     ``{base}/cmds/pgload_hits.ctl``.
     """
     base = PathParameter(default='/tmp')
+    search_files = PathParameter(default='/tmp')
 
 
 class db(luigi.Config):  # pylint: disable=C0103, R0904
@@ -179,3 +180,11 @@ class gtrnadb(luigi.Config):  # pylint: disable=C0103, R0904
     This contains the configuration for loading GtRNAdb files.
     """
     pattern = luigi.Parameter()
+
+
+class rnacentral(luigi.Config):  # pylint: disable=C0103, R0904
+    """
+    This contains configuration for RNAcentral related tasks, like search
+    export
+    """
+    xml_export_size = luigi.IntParameter(default=10000)
