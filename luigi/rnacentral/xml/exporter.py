@@ -15,17 +15,18 @@ limitations under the License.
 
 import operator as op
 import itertools as it
-import xml.etree.ElementTree as ET
 
 from .data import XmlEntry
 
 
-SQL = """
+BASE_SQL = """
 SELECT
+    rna.upi,
+    rna.md5,
     xref.taxid,
     xref.deleted,
     acc.species,
-    acc.organelle,
+    acc.organelle organelles,
     acc.external_id,
     acc.optional_id,
     acc.non_coding_id,
@@ -44,14 +45,15 @@ SELECT
     release2.timestamp as last,
     rna.len as length,
     pre.rna_type,
+    pre.description,
     acc.locus_tag,
     acc.standard_name,
     ref.id pub_id,
     ref.location,
-    ref.title,
-    ref.pmid,
+    ref.title pub_title,
+    ref.pmid pubmed,
     ref.doi,
-    ref.author,
+    ref.authors author,
     acc.classification tax_string
 FROM
     xref,
@@ -61,7 +63,7 @@ FROM
     rnc_release release2,
     rna,
     rnc_rna_precomputed pre,
-    rnc_references refs,
+    rnc_references ref,
     rnc_reference_map ref_map
 WHERE
     xref.ac = acc.accession AND
@@ -71,23 +73,54 @@ WHERE
     xref.upi = rna.upi AND
     xref.upi = pre.upi AND
     xref.taxid = pre.taxid AND
-    xref.upi = :upi AND
     xref.deleted = 'N' AND
     xref.ac = ref_map.accession AND
-    ref_map.reference = ref.id AND
-    xref.taxid = :taxid
+    ref_map.reference_id = ref.id AND
+    {terms}
 """
 
+SINGLE_SQL = BASE_SQL.format(
+    terms="xref.upi = %(upi)s AND xref.taxid = %(taxid)s"
+)
 
-def export(cursor, min_id, max_id):
+RANGE_SQL = BASE_SQL.format(terms="rna.id BETWEEN %(min_id)s AND %(max_id)s")
+
+
+def fetch_dicts(cursor):
+    """
+    Creates a generator of all values as dicts for the results of the given
+    query.
+    """
+
+    names = [col.name for col in cursor.description]
+    while True:
+        results = cursor.fetchmany()
+        if not results:
+            break
+        for result in results:
+            yield dict(zip(names, result))
+
+
+def export_range(cursor, min_id, max_id):
     """
     Generates a series of XML strings representing all entries in the given
     range of ids.
     """
 
     with cursor() as cur:
-        results = cur.execute(SQL, min_id=min_id, max_id=max_id)
-        grouped = it.groupby(results, op.attrgetter('upi', 'taxid'))
+        cur.execute(RANGE_SQL, {'min_id': min_id, 'max_id': max_id})
+        results = fetch_dicts(cursor)
+        grouped = it.groupby(results, op.itemgetter('upi', 'taxid'))
         for _, results in grouped:
-            entry = XmlEntry.build(results)
-            yield ET.tostring(entry.as_xml())
+            yield XmlEntry.build(list(results))
+
+
+def export_upi(cursor, upi, taxid):
+    """
+    Will create a XmlEntry object for the given upi, taxid.
+    """
+
+    with cursor() as cur:
+        cur.execute(SINGLE_SQL, {'upi': upi, 'taxid': taxid})
+        data = list(fetch_dicts(cur))
+        return XmlEntry.build(data)

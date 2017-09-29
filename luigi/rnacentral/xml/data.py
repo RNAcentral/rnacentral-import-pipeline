@@ -15,7 +15,10 @@ limitations under the License.
 
 import re
 import json
+import datetime
+import itertools as it
 import collections as coll
+import functools as ft
 
 from xml.sax import saxutils
 import xml.etree.ElementTree as ET
@@ -23,6 +26,7 @@ import xml.etree.ElementTree as ET
 import attr
 from attr.validators import in_
 from attr.validators import instance_of as is_a
+from attr.validators import optional
 
 
 GENERIC_TYPES = set(['misc_RNA', 'misc RNA', 'other'])
@@ -67,21 +71,10 @@ def is_set_of(element_type):
 
     checker.type = set
     checker.member_type = element_type
-
     return checker
 
 
-def one_of(*choices):
-    """
-    Simple wrapper for in_
-    """
-
-    checker = in_(set(choices))
-    checker.type = type(choices[0])
-    return checker
-
-
-def unique_value(name, rows, allow_falsey=True):
+def unique_value(name, rows, allow_empty=False, allow_falsey=True, lowercase=False):
     """
     Checks that there is a unique value for the given name in all given rows.
     The rows should be a dict of values. If there is not a unique value then an
@@ -92,11 +85,26 @@ def unique_value(name, rows, allow_falsey=True):
     if not allow_falsey:
         values = set(v for v in values if v)
 
+    if lowercase:
+        values = set(str(v).lower() for v in values)
+
     if not values:
-        raise ValueError("No values for for %s" % name)
+        if not allow_empty:
+            raise ValueError("No values for for %s" % name)
+        return None
     if len(values) != 1:
         raise ValueError("%s must be unique, got %s" % (name, str(values)))
     return values.pop()
+
+
+def all_values(name, rows, converter=None):
+    """
+    This will fetch and convert all values into some set.
+    """
+
+    if converter is not None:
+        return set(converter(r[name]) for r in rows if r[name])
+    return set(r[name] for r in rows if r[name])
 
 
 def class_builder(cls, rows):
@@ -112,25 +120,24 @@ def class_builder(cls, rows):
 
     values = []
     for field in attr.fields(cls):
-        allowed = field.validator.type
         if field.metadata.get('builder', None):
             values.append(field.metadata['builder'](rows))
-        elif allowed == set or allowed == list:
-            mem_type = field.validator.member_type
-            values.append(allowed(mem_type(row[field.name]) for row in rows))
-        elif hasattr(allowed, 'build'):
-            values.append(allowed.build(rows))
         else:
-            values.append(unique_value(field.name, rows))
+            validator = field.validator
+            if hasattr(validator, 'validator'):
+                validator = validator.validator
+            allowed = validator.type
+            if hasattr(allowed, 'build'):
+                values.append(allowed.build(rows))
+            elif allowed == set:
+                converter = validator.member_type
+                if converter == basestring:
+                    converter = str
+                values.append(all_values(field.name, rows, converter))
+            else:
+                kwargs = field.metadata.get('building', {})
+                values.append(unique_value(field.name, rows, **kwargs))
     return cls(*values)  # pylint: disable=W0142
-
-
-def check_popular(rows):
-    """
-    Checks if the data is for one of the popular species (in the
-    POPULAR_SPECIES set).
-    """
-    return unique_value('taxid', rows) in POPULAR_SPECIES
 
 
 def get_status(rows):
@@ -169,7 +176,8 @@ def get_genes(rows):
             short_gene = re.sub(product_pattern, '', row['product'])
             genes.add(short_gene)
         else:
-            genes.add(row['gene'])
+            if row['gene']:
+                genes.add(row['gene'])
     return genes
 
 
@@ -192,6 +200,19 @@ def get_insdc(rows):
     Get all INSDC publications from the given rows.
     """
     return set(r['location'] for r in rows if is_insdc(r))
+
+
+def get_species(rows):
+    """
+    This will get the species name for all rows. If there is only one name then
+    that used. If there is more than one then the longest is used. Ideally
+    there should only be one, but that isn't how our data is organized now.
+    """
+
+    species = all_values('species', rows)
+    if len(species) == 1:
+        return species.pop()
+    return sorted(species)[0]
 
 
 def field_formatter(root, value, name, escape=False):
@@ -230,7 +251,8 @@ def split_authors(rows):
 
     authors = set()
     for row in rows:
-        authors.update(row['authors'].split(', '))
+        if row['author']:
+            authors.update(row['author'].split(', '))
     return set(a for a in authors if a)
 
 
@@ -273,8 +295,8 @@ class DateRange(object):
     This represents the starting and end dates that an entry has been observed
     from.
     """
-    first_seen = attr.ib(validator=is_a(str))
-    last_seen = attr.ib(validator=is_a(str))
+    first_seen = attr.ib(validator=is_a(datetime.datetime))
+    last_seen = attr.ib(validator=is_a(datetime.datetime))
 
     @classmethod
     def build(cls, rows):
@@ -307,36 +329,49 @@ class AdditionalFields(object):
     use the given callable to initalize the value.
     """
 
-    taxid = attr.ib(validator=is_a(int), metadata={'export': False})
+    taxid = attr.ib(validator=is_a(long), metadata={'export': False})
     is_active = attr.ib(
-        validator=one_of('Active', 'Obsolete'),
+        validator=in_(['Active', 'Obsolete']),
         metadata={'export': False, 'builder': get_status},
     )
     length = attr.ib(validator=is_a(int))
-    species = attr.ib(validator=is_a(basestring), metadata={'escape': True})
+    species = attr.ib(
+        validator=is_a(basestring),
+        metadata={'escape': True, 'builder': get_species}
+    )
     organelles = attr.ib(validator=is_set_of(basestring))
     expert_db = attr.ib(validator=is_set_of(basestring))
     common_name = attr.ib(
-        validator=is_a(basestring),
-        metadata={'escape': True},
+        validator=optional(is_a(basestring)),
+        metadata={
+            'escape': True,
+            'building': {
+                'allow_falsey': False,
+                'lowercase': True,
+                'allow_empty': True
+            },
+        },
     )
     function = attr.ib(
         validator=is_set_of(basestring),
         metadata={'escape': True},
     )
     gene = attr.ib(
-        validator=is_a(basestring),
+        validator=is_set_of(basestring),
         metadata={'escape': True, 'builder': get_genes},
     )
     gene_synonym = attr.ib(
-        validator=is_a(basestring),
+        validator=optional(is_set_of(basestring)),
         metadata={'escape': True, 'formatter': format_gene_synonym},
     )
     rna_type = attr.ib(
         validator=is_a(basestring),
         metadata={'builder': get_rna_type},
     )
-    product = attr.ib(validator=is_a(basestring), metadata={'escape': True})
+    product = attr.ib(
+        validator=is_set_of(basestring),
+        metadata={'escape': True}
+    )
     # has_genomic_coordinates
     md5 = attr.ib(validator=is_a(basestring))
     author = attr.ib(
@@ -345,21 +380,17 @@ class AdditionalFields(object):
     )
     journal = attr.ib(
         validator=is_set_of(basestring),
-        metadata={'formatter': get_journals},
+        metadata={'builder': get_journals},
     )
     insdc_submission = attr.ib(
         validator=is_set_of(basestring),
-        metadata={'formatter': get_insdc},
+        metadata={'builder': get_insdc},
     )
     pub_title = attr.ib(validator=is_set_of(basestring))
     pub_id = attr.ib(validator=is_set_of(basestring))
-    popular_species = attr.ib(
-        validator=is_a(bool),
-        metadata={'builder': check_popular},
-    )
     locus_tag = attr.ib(validator=is_set_of(basestring))
     standard_name = attr.ib(validator=is_set_of(basestring))
-    tax_string = attr.ib(validator=is_a(basestring))
+    # tax_string = attr.ib(validator=is_a(basestring))
 
     @classmethod
     def build(cls, rows):
@@ -417,7 +448,7 @@ class AdditionalFields(object):
                 method(root, value, field.name, escape=escape)
 
 
-@attr.s()
+@attr.s(frozen=True)
 class CrossReference(object):
     """
     This represents a single cross reference from an RNAcentral entry to some
@@ -428,7 +459,7 @@ class CrossReference(object):
         validator=is_a(basestring),
         convert=lambda n: n.replace(' ', '_').upper(),
     )
-    key = attr.ib(validator=is_a(basestring))
+    key = attr.ib(validator=is_a(basestring), convert=str)
 
     @classmethod
     def build(cls, result):
@@ -474,7 +505,8 @@ class CrossReference(object):
                 yield cls(key, value)
 
         # Create NCBI cross references
-        yield cls('ncbi_taxonomy_id', result['taxid'])
+        if result['taxid']:
+            yield cls('ncbi_taxonomy_id', result['taxid'])
 
     def as_xml(self, root):
         """
@@ -485,7 +517,7 @@ class CrossReference(object):
         return ET.SubElement(root, 'ref', attrib=attrib)
 
 
-@attr.s()
+@attr.s(frozen=True)
 class CrossReferences(object):
     """
     This is a container for all cross references.
@@ -498,8 +530,9 @@ class CrossReferences(object):
         Store xrefs as (database, accession) tuples in data['xrefs'].
         """
 
-        references = set(CrossReference.build(row) for row in rows)
-        references = set(ref for ref in references if ref)
+        references = it.imap(CrossReference.build, rows)
+        references = it.chain.from_iterable(references)
+        references = set(references)
         return cls(references=references)
 
     def as_xml(self, root):
@@ -521,7 +554,7 @@ class XmlEntry(object):
     taxid = attr.ib(validator=is_a(int), convert=int)
     description = attr.ib(validator=is_a(basestring))
     dates = attr.ib(validator=is_a(DateRange))
-    cross_references = attr.ib(validator=is_set_of(CrossReference))
+    cross_references = attr.ib(validator=is_a(CrossReferences))
     additional_fields = attr.ib(validator=is_a(AdditionalFields))
 
     @classmethod
