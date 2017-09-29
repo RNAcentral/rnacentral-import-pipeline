@@ -51,7 +51,8 @@ SELECT
     ref.title,
     ref.pmid,
     ref.doi,
-    ref.author
+    ref.author,
+    acc.classification tax_string
 FROM
     xref,
     rnc_accessions acc,

@@ -359,6 +359,7 @@ class AdditionalFields(object):
     )
     locus_tag = attr.ib(validator=is_set_of(basestring))
     standard_name = attr.ib(validator=is_set_of(basestring))
+    tax_string = attr.ib(validator=is_a(basestring))
 
     @classmethod
     def build(cls, rows):
