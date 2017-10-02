@@ -32,6 +32,11 @@ where status = 'L'
 order by id
 """
 
+CREATE_INDEX = """
+create index if not exists load_rnacentral_all$database
+on rnacen.load_rnacentral_all(database)
+"""
+
 
 class StoreRelease(luigi.Task):  # pylint: disable=R0904
     """
@@ -39,11 +44,10 @@ class StoreRelease(luigi.Task):  # pylint: disable=R0904
     release by itself.
     """
 
-    def requires(self):
-        yield PrepareRelease()
-
     def run(self):
         with cursor(db()) as cur:
+            cur.exectue(CREATE_INDEX)
+            cur.execute("select rnc_update.prepare_releases('F')")
             cur.execute(SQL)
             for result in cur.fetchall():
                 cur.execute('select rnc_update.new_update_release(%s, %s)',
