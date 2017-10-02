@@ -12,6 +12,7 @@ limitations under the License.
 """
 
 import hashlib
+from collections import Counter
 
 
 class RNAcentralEntry(object):
@@ -150,6 +151,17 @@ class RNAcentralEntry(object):
                 if verbose:
                     print 'WARN: Attribute {field} is missing in {accession}'.format(field=field, accession=self.accession)
                 return False
+
+        counts = Counter(self.sequence)
+        fraction = float(counts.get('N', 0)) / float(length)
+        if fraction > 0.1:
+            if verbose:
+                print 'WARN: {accession} has too many ({fraction}%) Ns'.format(
+                    accession=self.accession,
+                    fraction=round(fraction),
+                )
+            return False
+
         return True
 
     def format_references(self):
