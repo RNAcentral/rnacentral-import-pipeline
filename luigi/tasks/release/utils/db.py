@@ -19,7 +19,7 @@ import psycopg2
 
 
 @contextmanager
-def connection(config):
+def connection(config, commit_on_leave=True):
     """
     Opens a connection to the datbase.
     """
@@ -29,6 +29,8 @@ def connection(config):
     try:
         yield conn
     finally:
+        if commit_on_leave:
+            conn.commit()
         conn.close()
 
 
@@ -41,13 +43,11 @@ def cursor(config, commit_on_leave=True):
     handler exits.
     """
 
-    with connection(config) as conn:
+    with connection(config, commit_on_leave=commit_on_leave) as conn:
         cur = conn.cursor()
         cur.execute("SET work_mem to '256MB'")
         cur.execute("SET maintenance_work_mem TO '512MB'")
         try:
             yield cur
         finally:
-            if commit_on_leave:
-                cur.commit()
             cur.close()
