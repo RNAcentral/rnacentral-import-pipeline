@@ -42,7 +42,7 @@ class FailedTaxonId(Exception):
 
 
 @lru_cache()
-def phylogney(taxon_id):
+def phylogeny(taxon_id):
     """
     Call the EBI taxonomy API to get the phylogenetic information for the given
     taxon id. This will cache requests to the same taxon id. This will retry
@@ -76,7 +76,7 @@ def lineage(taxon_id):
     Call the EBI taxonomy API to fetch the lineage for the given
     """
 
-    data = phylogney(taxon_id)
+    data = phylogeny(taxon_id)
     return '{lineage}{name}'.format(
         lineage=data['lineage'],
         name=data['scientificName']
@@ -89,7 +89,7 @@ def common_name(taxon_id):
     exists then None is returned.
     """
 
-    data = phylogney(taxon_id)
+    data = phylogeny(taxon_id)
     return data.get('common_name', None)
 
 
@@ -98,7 +98,7 @@ def species(taxon_id):
     Get a standardized species name for the given taxon id.
     """
 
-    data = phylogney(taxon_id)
+    data = phylogeny(taxon_id)
     return data['scientificName']
 
 
