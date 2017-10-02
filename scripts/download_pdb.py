@@ -26,6 +26,7 @@ import json
 import re
 import requests  # pip install requests
 import xml.etree.ElementTree as ET
+from collections import Counter
 
 from itertools import izip_longest
 
@@ -125,6 +126,7 @@ def get_chain_descriptions(pdb_ids):
         disqualified = {
             'too_short': 0,
             'mRNA': 0,
+            'N': 0,
         }
         for row in reader:
             # skip proteins
@@ -140,6 +142,13 @@ def get_chain_descriptions(pdb_ids):
                 disqualified['mRNA'] += 1
                 continue
 
+            # Skip chains with too many N's
+            counts = Counter(row['sequence'])
+            fraction = float(counts.get('N', 0)) / float(len(row['sequence']))
+            if fraction > 0.1:
+                disqualified['N'] += 1
+                continue
+
             # use entityId to ensure that the id is unique when chainIds
             # are only different in case ('A' and 'a')
             accession = '{structureId}_{chainId}_{entityId}'.format(**row)
@@ -150,6 +159,7 @@ def get_chain_descriptions(pdb_ids):
 
         print 'Disqualified %i chains < 10 nts' % disqualified['too_short']
         print 'Disqualified %i mRNA chains' % disqualified['mRNA']
+        print 'Disqualified %i chains with > 10%% Ns' % disqualified['N']
         return data
 
     report = get_custom_report(pdb_ids, fields)
