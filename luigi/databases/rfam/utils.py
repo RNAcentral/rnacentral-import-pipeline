@@ -225,6 +225,7 @@ RFAM_RNA_TYPE_MAPPING = {
 }
 
 DOMAIN_MAPPING = {
+    'RF00002': 'Eukaryota',
     'RF00008': 'Eukaryota',
     'RF00010': 'Bacteria',
     'RF00011': 'Bacteria',
