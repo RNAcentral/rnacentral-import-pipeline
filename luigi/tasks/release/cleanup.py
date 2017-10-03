@@ -43,4 +43,3 @@ class CleanupRelease(luigi.Task):  # pylint: disable=R0904
         with cursor(db()) as cur:
             for table in TABLES:
                 cur.execute('truncate table %s' % table)
-                cur.commit()
