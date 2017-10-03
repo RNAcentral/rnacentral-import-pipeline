@@ -32,5 +32,5 @@ class PrepareRelease(luigi.Task):  # pylint: disable=R0904
 
     def run(self):
         with cursor(db()) as cur:
-            cur.exectue(CREATE_INDEX)
+            cur.execute(CREATE_INDEX)
             cur.execute("select rnc_update.prepare_releases('F')")
