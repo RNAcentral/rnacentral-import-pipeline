@@ -24,4 +24,4 @@ def file_pattern(name):
     pattern = name
     if name == 'all':
         pattern = '.'
-    return '~#{pattern}*.csv#'.format(pattern=pattern)
+    return '{pattern}*.csv'.format(pattern=pattern)
