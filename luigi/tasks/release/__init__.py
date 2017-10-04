@@ -44,9 +44,7 @@ class Release(luigi.WrapperTask):  # pylint: disable=R0904
     This will not delete any data. To do that you must run the CleanupRelease
     task manually afterwards.
     """
-
     database = luigi.Parameter(default='all')
 
     def requires(self):
-        yield PrepareRelease()
         yield StoreRelease()
