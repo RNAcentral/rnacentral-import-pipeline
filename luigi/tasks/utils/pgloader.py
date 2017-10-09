@@ -35,7 +35,7 @@ class PGLoader(ExternalProgramTask):  # pylint: disable=R0921
     file is what determines if the task is complete or not.
 
     PGloader will log to a file called logs/class_name.log, relative to the
-    glovally configured base directory (see config.output). This log file will
+    globally configured base directory (see config.output). This log file will
     be appended to each run, not overwritten. It is also ignored when
     determining if the task is complete.
     """
