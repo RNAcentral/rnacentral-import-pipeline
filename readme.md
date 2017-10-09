@@ -19,6 +19,12 @@ This is the main pipeline that is used internally for loading the data into the 
   docker run -v `pwd`:/rnacentral/rnacentral-import-pipeline -v /path/to/data:/rnacentral/data/ -it rnacentral-import-pipeline bash
   ```
 
+* example luigi command
+
+  ```
+  python -m luigi --module tasks.release LoadRelease --local-scheduler
+  ```
+
 ### Installation
 
 ```
