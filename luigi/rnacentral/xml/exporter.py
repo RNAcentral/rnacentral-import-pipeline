@@ -13,8 +13,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+from datetime import date
 import operator as op
 import itertools as it
+
+import xml.etree.cElementTree as ET
 
 from .data import XmlEntry
 
@@ -124,3 +127,36 @@ def export_upi(cursor, upi, taxid):
         cur.execute(SINGLE_SQL, {'upi': upi, 'taxid': taxid})
         data = list(fetch_dicts(cur))
         return XmlEntry.build(data)
+
+
+def as_document(results):
+    """
+    This will create the required root XML element and place all the given
+    XmlEntry objects as ElementTree.Element's in it. This then produces the
+    string representation of that document which can be saved.
+    """
+
+    root = ET.Element('database')
+    ET.SubElement(root, 'name', text='RNAcentral')
+    ET.SubElement(
+        root,
+        'description',
+        text='a database for non-protein coding RNA sequences'
+    )
+    ET.SubElement(root, 'release', text='1.0')
+
+    timestamp = date.today.strformat('%d/%m/%y')
+    ET.SubElement(root, 'release_date', timestamp)
+
+    count = 0
+    count_element = ET.SubElement(root, 'entry_count')
+    entries = ET.SubElement(root, 'entries')
+    for result in results:
+        entries.append(result.as_xml())
+        count += 1
+
+    if not count:
+        raise ValueError("No entries found")
+
+    count_element.text = count
+    return ET.tostring(root)
