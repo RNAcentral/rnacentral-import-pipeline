@@ -18,7 +18,7 @@ import os
 import luigi
 
 from tasks.config import db, output
-from .utils.db import cursor
+from rnacentral.db import cursor
 
 
 SQL = """
@@ -58,12 +58,12 @@ class StoreRelease(luigi.Task):  # pylint: disable=R0904
             cur.execute('select rnc_update.update_rnc_accessions()')
             cur.execute('select rnc_update.update_literature_references()')
 
-        with open(self.output().fn , 'w') as sentinel_file:
+        with open(self.output().fn, 'w') as sentinel_file:
             sentinel_file.write('Done')
-
 
     def output(self):
         """
         Check that a sentinel file exists.
         """
-        return luigi.LocalTarget(os.path.join(output().base, '%s.txt' % self.__class__.__name__))
+        name = os.path.join(output().base, '%s.txt' % self.__class__.__name__)
+        return luigi.LocalTarget(name)
