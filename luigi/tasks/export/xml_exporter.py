@@ -17,14 +17,20 @@ import os
 
 import luigi
 from luigi import LocalTarget
-from luigi.local_targets import atomic_file
+from luigi.local_target import atomic_file
 
 from tasks.config import output
 
-from rnacentral.xml_exporter import XmlExporter
+from rnacentral.xml.exporter import export_range
+from rnacentral.xml.exporter import as_document
+from rnacentral.db import cursor
 
 
 class XmlExporterTask(luigi.Task):  # pylint: disable=R0904
+    """
+    This is a task that will create an xml export for the given range of UPI's.
+    """
+
     min = luigi.IntParameter()
     max = luigi.IntParameter()
 
@@ -38,6 +44,7 @@ class XmlExporterTask(luigi.Task):  # pylint: disable=R0904
         return LocalTarget(filename)
 
     def run(self):
-        exporter = XmlExporter()
         with atomic_file(self.output().fn) as raw:
-            raw.write(exporter.export(self.min, self.max))
+            with cursor() as cur:
+                results = export_range(cur, self.min, self.max)
+                raw.write(as_document(results))

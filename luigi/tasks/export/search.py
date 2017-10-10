@@ -15,10 +15,14 @@ limitations under the License.
 
 import luigi
 
+from tasks.config import db
 from tasks.config import output
-from tasks.config import rnacentral
-from .xml_exporter import XmlExporterTask
+from tasks.config import rnacentral as rnac
 from tasks.utils.compress import CompressTask
+
+from rnacentral.utils import upi_ranges
+
+from .xml_exporter import XmlExporterTask
 
 
 class Search(luigi.WrapperTask):  # pylint: disable=R0904
@@ -28,9 +32,9 @@ class Search(luigi.WrapperTask):  # pylint: disable=R0904
     """
 
     def requires(self):
-        config = rnacentral()
-        for upi_range in upi_ranges(config.xml_export_size):
-            xml_task = XmlExporterTask(upi_range=upi_range)
+        config = rnac()
+        for start, stop in upi_ranges(config.xml_export_size, db()):
+            xml_task = XmlExporterTask(min=start, max=stop)
             xml_file = xml_task.output().fn
             yield CompressTask(
                filename=xml_file,
