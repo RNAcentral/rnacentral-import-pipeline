@@ -51,3 +51,4 @@ def cursor(config, commit_on_leave=True):
             yield cur
         finally:
             cur.close()
+

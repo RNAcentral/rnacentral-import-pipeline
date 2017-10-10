@@ -13,20 +13,19 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from .db import cursor
+from rnacentral.utils import upi_ranges
+from tasks.config import db
 
 
-def upi_ranges(dbconf, max_size):
-    """
-    This will create range of the ids for all UPI's in the database.
-    """
+def test_can_get_range_of_all_upis():
+    ranges = list(upi_ranges(db(), 100000))
+    assert len(ranges) == 118
 
-    with cursor(dbconf) as cur:
-        cur.execute('select max(id) from rna')
-        stop = cur.fetchone()[0]
 
-    for start in xrange(1, stop, max_size):
-        yield (start, start + max_size)
-
-    if start < stop:
-        yield (start, stop)
+def test_can_get_correct_upi_ranges():
+    ranges = list(upi_ranges(db(), 100000))
+    assert ranges[0:2] == [
+        (1, 100001),
+        (100001, 200001),
+    ]
+    assert ranges[-1] == (11700001, 11735072)
