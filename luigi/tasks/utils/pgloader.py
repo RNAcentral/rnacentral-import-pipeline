@@ -107,13 +107,13 @@ class PGLoader(ExternalProgramTask):  # pylint: disable=R0921
         """
         This will run pgloader on the generated control file. If pgloader runs
         with no issues, then this will keep the file, otherwise the file will
-        be deleted.
+        be renamed by adding a '-crashed' prefix to assist with debugging.
         """
         filename = self.write_control_file()
         try:
             super(PGLoader, self).run()
         except:
-            os.remove(filename)
+            os.rename(filename, '%s-crashed' % filename)
             raise
 
     def content_hash(self):
