@@ -126,6 +126,8 @@ def export_upi(cursor, upi, taxid):
     with cursor() as cur:
         cur.execute(SINGLE_SQL, {'upi': upi, 'taxid': taxid})
         data = list(fetch_dicts(cur))
+        if not data:
+            raise ValueError("Found no entries for %s_%s" % (upi, str(taxid)))
         return XmlEntry.build(data)
 
 
