@@ -145,7 +145,7 @@ def as_document(results):
     )
     ET.SubElement(root, 'release', text='1.0')
 
-    timestamp = date.today.strformat('%d/%m/%y')
+    timestamp = date.today.strftime('%d/%m/%Y')
     ET.SubElement(root, 'release_date', timestamp)
 
     count = 0
