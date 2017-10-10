@@ -18,10 +18,9 @@ import json
 import datetime
 import itertools as it
 import collections as coll
-import functools as ft
 
 from xml.sax import saxutils
-import xml.etree.ElementTree as ET
+import xml.etree.cElementTree as ET
 
 import attr
 from attr.validators import in_
