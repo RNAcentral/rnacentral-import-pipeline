@@ -15,6 +15,7 @@ limitations under the License.
 
 import unittest as ut
 import hashlib
+import collections as coll
 
 import pytest
 
@@ -120,8 +121,16 @@ class INSDCRNATypeTest(ut.TestCase):
         rna = utils.RfamFamily(
             id='RF01398',
             name='isrP',
+            pretty_name='Hfq binding RNA',
             so_terms=set(['SO:0001263']),
+            go_terms=set([]),
             rna_type='gene sRNA',
+            domain=None,
+            description='',
+            seed_count=-1,
+            full_count=-1,
+            clan_id=None,
+            length=148,
         )
         assert rna.guess_insdc_using_name() != 'SRP_RNA'
         assert rna.guess_insdc() != 'SRP_RNA'
@@ -130,8 +139,16 @@ class INSDCRNATypeTest(ut.TestCase):
         rna = utils.RfamFamily(
             id='RF00236',
             name='ctRNA_pGA1',
+            pretty_name='ctRNA',
             so_terms=set(['SO:0000644']),
+            go_terms=set([('GO:0003729', 'mRNA binding')]),
             rna_type='Gene; antisense',
+            domain=None,
+            description='',
+            seed_count=-1,
+            full_count=-1,
+            clan_id=None,
+            length=79,
         )
         assert rna.guess_insdc_using_name() != 'tRNA'
         assert rna.guess_insdc() == 'antisense_RNA'
@@ -140,8 +157,121 @@ class INSDCRNATypeTest(ut.TestCase):
         rna = utils.RfamFamily(
             id='RF02348',
             name='tracrRNA',
+            pretty_name='Trans-activating crRNA',
             so_terms=set(['SO:0000655']),
+            go_terms=set([]),
             rna_type='',
+            domain=None,
+            description='',
+            seed_count=-1,
+            full_count=-1,
+            clan_id=None,
+            length=91,
         )
         assert rna.guess_insdc_using_name() != 'tRNA'
         assert rna.guess_insdc() == 'other'
+
+
+class LoadingFamiliesTest(ut.TestCase):
+    def test_it_loads_all_families(self):
+        assert len(utils.load_families()) == 2687
+
+    def test_it_can_load_family_correctly(self):
+        assert utils.load_families()[0] == utils.RfamFamily(
+            id='RF00001',
+            name='5S_rRNA',
+            pretty_name='5S ribosomal RNA',
+            so_terms=set(['SO:0000652']),
+            go_terms=set([
+                ('GO:0003735', 'structural constituent of ribosome'),
+                ('GO:0005840', 'ribosome')
+            ]),
+            rna_type='Gene; rRNA;',
+            domain=None,
+            description=(
+                '5S ribosomal RNA (5S rRNA) is a component of the '
+                'large ribosomal subunit in both prokaryotes and eukaryotes. '
+                'In eukaryotes, it is synthesised by RNA polymerase III (the '
+                'other eukaryotic rRNAs are cleaved from a 45S precursor '
+                'synthesised by RNA polymerase I). In Xenopus oocytes, it has '
+                'been shown that fingers 4-7 of the nine-zinc finger '
+                'transcription factor TFIIIA can bind to the central region '
+                'of 5S RNA. Thus, in addition to positively regulating 5S '
+                'rRNA transcription, TFIIIA also stabilises 5S rRNA until it '
+                'is required for transcription.'
+            ),
+            seed_count=712,
+            full_count=183439,
+            clan_id='CL00113',
+            length=119,
+        )
+
+    def test_it_can_assign_correct_clan_ids(self):
+        clans = coll.defaultdict(set)
+        for f in utils.load_families():
+            if f.clan_id:
+                clans[f.clan_id].add(f.id)
+
+        assert len(clans) == 111
+        assert clans['CL00001'] == set([
+            'RF00005',
+            'RF00023',
+            'RF01849',
+            'RF01850',
+            'RF01851',
+            'RF01852',
+            'RF02544',
+        ])
+
+    @pytest.mark.skip()
+    def test_it_can_correctly_find_all_bacterial_families(self):
+        families = utils.load_families()
+        bacterial = set(f.id for f in families if f.domain == 'Bacteria')
+        assert bacterial == set([
+        ])
+
+    def test_it_can_set_description_to_empty(self):
+        families = utils.load_families()
+        family = next(f for f in families if f.id == 'RF02493')
+        assert family.description == ''
+
+    def test_it_does_not_supress_all_families(self):
+        families = {f.id for f in utils.load_families() if not f.is_suppressed}
+        assert len(families) == 2066
+
+    def test_it_will_supress_lncRNA(self):
+        families = {f.id for f in utils.load_families() if not f.is_suppressed}
+        assert 'RF01976' not in families
+        assert 'RF01977' not in families
+        assert 'RF01978' not in families
+        assert 'RF02255' not in families
+
+    def test_it_will_exclude_cis_reg_riboswitches(self):
+        families = {f.id for f in utils.load_families() if not f.is_suppressed}
+        assert 'RF01108' not in families
+        assert 'RF00080' not in families
+
+
+class LoadingClansTest(ut.TestCase):
+    def test_it_can_load_all_clans(self):
+        assert len(utils.load_clans()) == 111
+
+    def test_it_can_load_a_clan_correctly(self):
+        assert utils.load_clans()[0] == utils.RfamClan(
+            id='CL00001',
+            name='tRNA clan',
+            description=(
+                'The tRNA clan contains the RNA families tRNA and '
+                'tmRNA. Homology between these families has been established '
+                'in the published literature [1-5].'
+            ),
+            families=set([
+                'RF00005',
+                'RF00023',
+                'RF01849',
+                'RF01850',
+                'RF01851',
+                'RF01852',
+                'RF02544',
+            ])
+        )

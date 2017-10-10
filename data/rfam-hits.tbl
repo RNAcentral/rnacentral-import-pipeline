@@ -1,0 +1,1000 @@
+#target name         accession query name           accession mdl mdl from   mdl to seq from   seq to strand trunc pass   gc  bias  score   E-value inc description of target
+#------------------- --------- -------------------- --------- --- -------- -------- -------- -------- ------ ----- ---- ---- ----- ------ --------- --- ---------------------
+URS000046C624        -         5S_rRNA              RF00001    cm        1      119      194      312      +    no    1 0.55   0.0  131.6   6.9e-29 !   Avena murphyi partial 5S ribosomal RNA
+URS00004769EF        -         5S_rRNA              RF00001    cm        1      119        1      119      +    no    1 0.54   0.0  130.7   1.2e-28 !   Elymus hispidus 5S ribosomal RNA
+URS000045FD39        -         5S_rRNA              RF00001    cm        1      119      112      230      +    no    1 0.56   0.0  129.5   2.4e-28 !   Arabidopsis thaliana (thale cress) partial 5S ribosomal RNA
+URS0000473162        -         5S_rRNA              RF00001    cm        1      119        1      119      +    no    1 0.55   0.0  129.0   3.1e-28 !   5S ribosomal RNA from 2 species
+URS00004742A1        -         5S_rRNA              RF00001    cm        1      119        1      119      +    no    1 0.54   0.0  129.0   3.2e-28 !   Nelumbo nucifera 5S ribosomal RNA
+URS0000473A46        -         5S_rRNA              RF00001    cm        1      119        1      119      +    no    1 0.53   0.0  128.6   4.2e-28 !   Oryza officinalis partial 5S ribosomal RNA
+URS000046CD0B        -         5S_rRNA              RF00001    cm        1      119        1      119      +    no    1 0.53   0.0  128.4   4.5e-28 !   Oryza meyeriana partial 5S ribosomal RNA
+URS000047668A        -         5S_rRNA              RF00001    cm        1      119      101      219      +    no    1 0.55   0.0  127.0   1.1e-27 !   Arabidopsis thaliana (thale cress) partial 5S ribosomal RNA
+URS00004728B0        -         5S_rRNA              RF00001    cm        1      119      183      301      +    no    1 0.55   0.0  126.2   1.7e-27 !   Arabidopsis thaliana (thale cress) partial 5S ribosomal RNA
+URS0000471C1D        -         5S_rRNA              RF00001    cm        1      119        1      119      +    no    1 0.55   0.0  125.9     2e-27 !   Gossypium arboreum x Gossypium thurberi 5S ribosomal RNA
+URS0000475F5F        -         5S_rRNA              RF00001    cm        1      119        1      119      +    no    1 0.52   0.0  125.8   2.1e-27 !   Elymus hispidus 5S ribosomal RNA
+URS0000462476        -         5S_rRNA              RF00001    cm        1      119        1      119      +    no    1 0.55   0.0  125.3   2.8e-27 !   Helictotrichon sarracenorum 5S ribosomal RNA
+URS000046F337        -         5S_rRNA              RF00001    cm        1      119        1      120      +    no    1 0.57   0.0  124.9   3.7e-27 !   5S ribosomal RNA from 2 species
+URS00004603BF        -         5S_rRNA              RF00001    cm        1      119        1      119      +    no    1 0.57   0.0  124.2   5.5e-27 !   Tsuga chinensis var. tchekiangensis partial 5S ribosomal RNA
+URS000046AB8F        -         5S_rRNA              RF00001    cm        1      119      182      300      +    no    1 0.54   0.0  124.1   6.1e-27 !   Avena macrostachya partial 5S ribosomal RNA
+URS000046ACBE        -         5S_rRNA              RF00001    cm        1      119        1      119      +    no    1 0.53   0.0  124.0   6.1e-27 !   Triticum dicoccoides 5S ribosomal RNA
+URS0000463EC3        -         5S_rRNA              RF00001    cm        1      119        1      118      +    no    1 0.53   0.0  121.3   3.1e-26 !   Heteranthelium piliferum 5S ribosomal RNA
+URS000047213A        -         5S_rRNA              RF00001    cm        1      119       35      153      +    no    1 0.57   0.0  121.0   3.8e-26 !   Eruca vesicaria subsp. sativa 5S rRNA
+URS0000475BA7        -         5S_rRNA              RF00001    cm        1      119        1      119      +    no    1 0.50   0.0  120.2   6.1e-26 !   Triticum dicoccoides 5S ribosomal RNA
+URS0000474E4B        -         5S_rRNA              RF00001    cm        1      119        1      119      +    no    1 0.59   0.0  120.1   6.5e-26 !   Nothotsuga longibracteata partial 5S ribosomal RNA
+URS0000468C9E        -         5S_rRNA              RF00001    cm        1      119        1      118      +    no    1 0.53   0.0  118.9   1.3e-25 !   Triticum monococcum 5S ribosomal RNA
+URS0000466652        -         5S_rRNA              RF00001    cm        1      119        1      119      +    no    1 0.55   0.0  117.9   2.4e-25 !   Pinus luchuensis partial 5S ribosomal RNA
+URS00004619B5        -         5S_rRNA              RF00001    cm        1      119        1      119      +    no    1 0.58   0.0  117.3   3.3e-25 !   Plantago major (common plantain) partial 5S ribosomal RNA
+URS0000463986        -         5S_rRNA              RF00001    cm        1      119        1      119      +    no    1 0.55   0.0  116.7   4.9e-25 !   Pinus densata 5S ribosomal RNA
+URS0000476479        -         5S_rRNA              RF00001    cm        1      119        1      119      +    no    1 0.54   0.0  115.4   1.1e-24 !   Gossypium barbadense (sea-island cotton) 5S ribosomal RNA
+URS000045EDFE        -         5S_rRNA              RF00001    cm        1      119        1      119      +    no    1 0.55   0.0  115.2   1.2e-24 !   Ensis directus 5S ribosomal RNA
+URS00004767BF        -         5S_rRNA              RF00001    cm        1      119        1      120      +    no    1 0.52   0.0  114.2   2.1e-24 !   Aegilops tauschii 5S ribosomal RNA
+URS00004698F0        -         5S_rRNA              RF00001    cm        1      119        1      118      +    no    1 0.62   0.0  113.1   4.2e-24 !   Anthoceros punctatus 5S ribosomal RNA
+URS0000475C44        -         5S_rRNA              RF00001    cm        1      119        1      119      +    no    1 0.59   0.0  112.9   4.7e-24 !   Pagrus auriga 5S ribosomal RNA
+URS000046CC4E        -         5S_rRNA              RF00001    cm        1      119        1      119      +    no    1 0.60   0.0  111.3   1.2e-23 !   Juniperus chinensis partial 5S ribosomal RNA
+URS0000476637        -         5S_rRNA              RF00001    cm        1      119        1      118      +    no    1 0.63   0.0  108.9     5e-23 !   Anthoceros agrestis 5S ribosomal RNA
+URS0000462C53        -         5S_rRNA              RF00001    cm        1      119        1      119      +    no    1 0.61   0.0  107.9   9.2e-23 !   Rhizoprionodon porosus (Caribbean sharpnose shark) 5S ribosomal RNA
+URS000046ADDB        -         5S_rRNA              RF00001    cm        1      119        1      118      +    no    1 0.58   0.0  107.1   1.5e-22 !   Chrysanthemum indicum var. albescens partial 5S ribosomal RNA
+URS00004611F3        -         5S_rRNA              RF00001    cm        1      119        1      119      +    no    1 0.59   0.0  105.7   3.4e-22 !   Xenopus laevis rRNA
+URS0000476506        -         5S_rRNA              RF00001    cm        3      116        1      114      +    no    1 0.61   0.0  104.4   7.2e-22 !   Leptestheria dahalacensis 5S ribosomal RNA
+URS000046055B        -         5S_rRNA              RF00001    cm        1      118        1      118      +    3'    3 0.56   0.0  103.4   1.3e-21 !   Tilletia controversa 5S ribosomal RNA
+URS0000468B48        -         5S_rRNA              RF00001    cm        1      119        1      119      +    no    1 0.56   0.0  103.3   1.4e-21 !   Drosophila persimilis 5S ribosomal RNA
+URS0000467223        -         5S_rRNA              RF00001    cm        1      119        1      119      +    no    1 0.59   0.0  103.2   1.5e-21 !   Pseudotaxus chienii partial 5S ribosomal RNA
+URS00004644C2        -         5S_rRNA              RF00001    cm        1      119        1      119      +    no    1 0.58   0.0  101.9   3.3e-21 !   Diplodus sargus (white seabream) 5S ribosomal RNA
+URS0000477396        -         5S_rRNA              RF00001    cm        1      119        1      119      +    no    1 0.55   0.0  101.4   4.5e-21 !   Rattus norvegicus (Norway rat) miscellaneous RNA
+URS0000475532        -         5S_rRNA              RF00001    cm        1      119        1      119      +    no    1 0.56   0.0  100.6   6.9e-21 !   Ailuropoda melanoleuca (giant panda) similar to 5S ribosomal RNA
+URS0000463567        -         5S_rRNA              RF00001    cm        1      119        1      117      +    no    1 0.63   0.0  100.1   9.4e-21 !   Desulfomonile tiedjei DSM 6799 5S ribosomal RNA
+URS0000467581        -         5S_rRNA              RF00001    cm        1      119        1      120      +    no    1 0.55   0.0   95.9   1.2e-19 !   5S ribosomal RNA from 5 species
+URS0000469BD8        -         5S_rRNA              RF00001    cm        5      119        1      115      +    5'    2 0.55   0.0   95.1   1.9e-19 !   Schizosaccharomyces cryophilus OY26 5S ribosomal RNA
+URS000046C0FC        -         5S_rRNA              RF00001    cm       24      119        1       96      +    5'    2 0.57   0.0   92.1   1.1e-18 !   Betula nigra 5S ribosomal RNA
+URS0000463ACD        -         5S_rRNA              RF00001    cm        3      119        1      120      +    5'    2 0.66   0.0   91.2   1.9e-18 !   Halomicrobium mukohataei DSM 12286 5S ribosomal RNA
+URS000046E139        -         5S_rRNA              RF00001    cm        1      115        1      115      +    3'    3 0.44   0.0   90.5   2.9e-18 !   Nosema bombycis 5S ribosomal RNA
+URS000046CCC3        -         5S_rRNA              RF00001    cm        1      119        1      117      +    no    1 0.56   0.0   89.6     5e-18 !   Halobacteroides halobius DSM 5150 5S ribosomal RNA
+URS000047345F        -         5S_rRNA              RF00001    cm        1      119        1      118      +    no    1 0.52   0.0   89.1   6.5e-18 !   Batrachoides manglae (Cotuero toadfish) 5S ribosomal RNA
+URS000046B3CB        -         5S_rRNA              RF00001    cm        1      119       90      208      +    no    1 0.50   0.0   88.9   7.3e-18 !   Arabidopsis thaliana (thale cress) partial 5S ribosomal RNA
+URS0000460363        -         5S_rRNA              RF00001    cm        1      119        1      117      +    no    1 0.54   0.0   87.9   1.3e-17 !   Alkaliphilus oremlandii OhILAs 5S ribosomal RNA
+URS000046E903        -         5S_rRNA              RF00001    cm        1      119       96      211      +    no    1 0.59   0.0   87.6   1.6e-17 !   Bacillus licheniformis 5S rRNA
+URS0000473E82        -         5S_rRNA              RF00001    cm        1      119        1      117      +    no    1 0.66   0.0   87.1   2.2e-17 !   Oceanithermus profundus DSM 14977 5S ribosomal RNA
+URS000045F285        -         5S_rRNA              RF00001    cm        1      119        3      119      +    no    1 0.64   0.0   86.7   2.7e-17 !   Amycolatopsis lactamdurans 5S ribosomal RNA
+URS0000469A84        -         5S_rRNA              RF00001    cm        1      119        1      116      +    no    1 0.54   0.0   86.6   2.8e-17 !   5S ribosomal RNA from 68 species
+URS00004684E9        -         5S_rRNA              RF00001    cm       30      119        1       90      +    5'    2 0.52   0.0   86.1   3.8e-17 !   Hordeum vulgare subsp. spontaneum partial 5S rRNA
+URS00004664F9        -         5S_rRNA              RF00001    cm        1      119        3      119      +    no    1 0.65   0.0   86.1   3.9e-17 !   Cellulosimicrobium cellulans 5S ribosomal RNA
+URS0000467418        -         5S_rRNA              RF00001    cm        1      118        1      119      +    3'    3 0.50   0.0   86.0   4.2e-17 !   Yarrowia lipolytica CLIB122 ribosomal RNA
+URS0000467500        -         5S_rRNA              RF00001    cm        1      119        1      116      +    no    1 0.52   0.0   85.9   4.4e-17 !   5S ribosomal RNA from 39 species
+URS0000469AB6        -         5S_rRNA              RF00001    cm        1      119        1      117      +    no    1 0.61   0.0   85.7   4.9e-17 !   Meiothermus ruber DSM 1279 5S ribosomal RNA
+URS00004620E3        -         5S_rRNA              RF00001    cm        1      119        1      116      +    no    1 0.58   0.0   85.4     6e-17 !   Planococcus citreus 5S ribosomal RNA
+URS0000466944        -         5S_rRNA              RF00001    cm        1      119        1      117      +    no    1 0.55   0.0   85.3   6.3e-17 !   Clostridium sp. BNL1100 5S ribosomal RNA
+URS0000469233        -         5S_rRNA              RF00001    cm        1      119        1      122      +    no    1 0.54   0.0   85.3   6.5e-17 !   Methanospirillum hungatei JF-1 5S ribosomal RNA
+URS000046D225        -         5S_rRNA              RF00001    cm        1      119        1      117      +    no    1 0.54   0.0   84.5   9.9e-17 !   Clostridium sp. BNL1100 5S ribosomal RNA
+URS000046F4FC        -         5S_rRNA              RF00001    cm        1      119        1      116      +    no    1 0.64   0.0   84.5     1e-16 !   5S ribosomal RNA from 45 species
+URS00004716FB        -         5S_rRNA              RF00001    cm        1      119        1      116      +    no    1 0.55   0.0   84.4   1.1e-16 !   5S ribosomal RNA from 4 species
+URS0000474D35        -         5S_rRNA              RF00001    cm        4      119        1      114      +    5'    2 0.51   0.0   83.8   1.6e-16 !   Peptoclostridium difficile P37 partial 5S ribosomal RNA
+URS0000460BE4        -         5S_rRNA              RF00001    cm        1      119        5      126      +    no    1 0.58   0.0   83.5   1.8e-16 !   Methanosarcina mazei Go1 5S Ribosomal RNA
+URS0000464044        -         5S_rRNA              RF00001    cm        1      119        1      109      +    no    1 0.51   0.0   83.3     2e-16 !   Acipenser oxyrinchus (Atlantic sturgeon) 5S ribosomal RNA
+URS0000473E1A        -         5S_rRNA              RF00001    cm        1      119        1      117      +    no    1 0.55   0.0   83.2   2.2e-16 !   Desulfitobacterium dichloroeliminans LMG P-21439 5S ribosomal RNA
+URS0000462458        -         5S_rRNA              RF00001    cm        5      119        1      116      +    5'    2 0.54   0.0   83.2   2.2e-16 !   Colletotrichum graminicola M1.001 5S ribosomal RNA
+URS0000476FD3        -         5S_rRNA              RF00001    cm        1      119        1      122      +    no    1 0.64   0.0   82.6   3.2e-16 !   Halopiger xanaduensis SH-6 5S ribosomal RNA
+URS000047437D        -         5S_rRNA              RF00001    cm        1      115        1      114      +    3'    3 0.46   0.0   82.3   3.8e-16 !   Nosema sp. CO 05-11 5S ribosomal RNA
+URS0000468948        -         5S_rRNA              RF00001    cm        1      119     3028     3142      +    no    1 0.60   0.0   81.7   5.5e-16 !   Roseovarius sp. TM1035 rrn
+URS0000461808        -         5S_rRNA              RF00001    cm        1      119        1      115      +    no    1 0.57   0.0   81.1   7.5e-16 !   Dinoroseobacter shibae DFL 12 = DSM 16493 rRNA
+URS000046F3C6        -         5S_rRNA              RF00001    cm        9      110        1      102      +    no    1 0.56   0.0   80.7   9.6e-16 !   Drosophila persimilis 5S ribosomal RNA
+URS0000469F90        -         5S_rRNA              RF00001    cm        1      119        1      115      +    no    1 0.53   0.0   80.6     1e-15 !   5S ribosomal RNA from 5 species
+URS0000460991        -         5S_rRNA              RF00001    cm        1      119        1      121      +    no    1 0.49   0.0   80.6     1e-15 !   5S ribosomal RNA from 2 species
+URS0000465701        -         5S_rRNA              RF00001    cm        5      119        1      116      +    5'    2 0.55   0.0   80.4   1.1e-15 !   5S ribosomal RNA from 3 species
+URS0000472803        -         5S_rRNA              RF00001    cm        1      102      326      426      +    3'    3 0.52   0.0   80.4   1.2e-15 !   Hordeum euclaston 5S ribosomal RNA
+URS00004633C5        -         5S_rRNA              RF00001    cm        1      119        1      117      +    no    1 0.60   0.0   80.3   1.2e-15 !   Paenibacillus sp. HGF7 5S ribosomal RNA
+URS0000464608        -         5S_rRNA              RF00001    cm       22      119        1       98      +    5'    2 0.55   0.0   79.8   1.6e-15 !   Carassius auratus red var. (red crucian carp) partial 5S ribosomal RNA
+URS0000469DA9        -         5S_rRNA              RF00001    cm        3      119        1      115      +    5'    2 0.52   0.0   79.6   1.8e-15 !   Anaerococcus prevotii DSM 20548 5S ribosomal RNA
+URS000046B8F6        -         5S_rRNA              RF00001    cm        1      119        1      115      +    no    1 0.61   0.0   79.5     2e-15 !   5S ribosomal RNA from 2 species
+URS000046E8EE        -         5S_rRNA              RF00001    cm        5      119        1      116      +    5'    2 0.54   0.0   79.0   2.6e-15 !   Fusarium verticillioides 7600 5S ribosomal RNA
+URS000045FF96        -         5S_rRNA              RF00001    cm        3      119        1      115      +    5'    2 0.64   0.0   79.0   2.7e-15 !   Leifsonia aquatica ATCC 14665 5S ribosomal RNA
+URS0000469AE6        -         5S_rRNA              RF00001    cm        1      119        1      117      +    no    1 0.51   0.0   78.9   2.8e-15 !   5S ribosomal RNA from 3 species
+URS0000477487        -         5S_rRNA              RF00001    cm        1      119        1      115      +    no    1 0.64   0.0   78.9   2.9e-15 !   Asticcacaulis excentricus CB 48 5S ribosomal RNA
+URS0000470DEC        -         5S_rRNA              RF00001    cm        5      119        1      116      +    5'    2 0.56   0.0   78.8   3.1e-15 !   5S ribosomal RNA from 10 species
+URS000045F618        -         5S_rRNA              RF00001    cm       30      119        1       90      +    5'    2 0.52   0.0   78.4   3.7e-15 !   Hordeum vulgare subsp. spontaneum partial 5S rRNA
+URS00004717ED        -         5S_rRNA              RF00001    cm        1      119        3      117      +    no    1 0.61   0.0   78.4   3.8e-15 !   Aeromonas salmonicida subsp. salmonicida A449 5S ribosomal RNA
+URS0000470799        -         5S_rRNA              RF00001    cm        1      119      323      439      +    no    1 0.61   0.0   78.3     4e-15 !   Uncultured organism partial contains 16S-23S ribosomal RNA intergenic spacer and 23S ribosomal RNA
+URS0000469E22        -         5S_rRNA              RF00001    cm        1       95        1       94      +    3'    3 0.59   0.0   78.3   4.1e-15 !   Medicago strasseri partial 5S ribosomal RNA
+URS000046C380        -         5S_rRNA              RF00001    cm        3      119        1      116      +    5'    2 0.59   0.0   78.3   4.1e-15 !   Corynebacterium sp. KPL1818 5S ribosomal RNA
+URS000046CC32        -         5S_rRNA              RF00001    cm        1      119        1      117      +    no    1 0.62   0.0   78.2   4.3e-15 !   Thermobacillus composti KWC4 5S ribosomal RNA
+URS00004766F4        -         5S_rRNA              RF00001    cm        3      119        1      115      +    5'    2 0.50   0.0   78.0   4.9e-15 !   Finegoldia magna ATCC 53516 5S ribosomal RNA
+URS000046B01A        -         5S_rRNA              RF00001    cm        1      119        1      116      +    no    1 0.65   0.0   77.9   5.1e-15 !   rRNA from 16 species
+URS00004769F9        -         5S_rRNA              RF00001    cm        1      118        1      120      +    3'    3 0.52   0.0   77.9   5.2e-15 !   Gloiopeltis complanata 5S ribosomal RNA
+URS0000466EC4        -         5S_rRNA              RF00001    cm        3      119        1      115      +    5'    2 0.50   0.0   77.0   8.6e-15 !   Peptoclostridium difficile Y21 5S ribosomal RNA
+URS000046CC21        -         5S_rRNA              RF00001    cm        5      119        1      116      +    5'    2 0.53   0.0   77.0   8.7e-15 !   Verticillium dahliae VdLs.17 5S ribosomal RNA
+URS0000472ABF        -         5S_rRNA              RF00001    cm        1      119        1      116      +    no    1 0.58   0.0   77.0   8.7e-15 !   5S ribosomal RNA from 4 species
+URS000045F740        -         5S_rRNA              RF00001    cm        5      119        1      116      +    5'    2 0.56   0.0   77.0   8.8e-15 !   Fusarium pseudograminearum CS3427 ribosomal RNA
+URS000046A81E        -         5S_rRNA              RF00001    cm        1      119        3      118      +    no    1 0.65   0.0   76.8   9.7e-15 !   Escherichia coli CE516 5S ribosomal RNA
+URS000046DCE3        -         5S_rRNA              RF00001    cm        1      119        3      118      +    no    1 0.53   0.0   76.8     1e-14 !   Vibrio sp. RC586 5S ribosomal RNA
+URS0000469F92        -         5S_rRNA              RF00001    cm        1      118        1      119      +    3'    3 0.55   0.0   76.7   1.1e-14 !   5S ribosomal RNA from 2 species
+URS00004612F8        -         5S_rRNA              RF00001    cm        5      119        1      116      +    5'    2 0.58   0.0   76.7   1.1e-14 !   Verticillium dahliae VdLs.17 5S ribosomal RNA
+URS0000471608        -         5S_rRNA              RF00001    cm        1      119        3      117      +    no    1 0.63   0.0   76.6   1.1e-14 !   Mycobacterium phlei 5S rRNA
+URS000046B04B        -         5S_rRNA              RF00001    cm        3      119        1      115      +    5'    2 0.63   0.0   76.5   1.2e-14 !   5S ribosomal RNA from 3 species
+URS000047151B        -         5S_rRNA              RF00001    cm        1      119        1      117      +    no    1 0.56   0.0   76.5   1.2e-14 !   rRNA from 2 species
+URS0000472FE9        -         5S_rRNA              RF00001    cm        1      119        1      116      +    no    1 0.51   0.0   76.2   1.5e-14 !   Shewanella pealeana ATCC 700345 5S ribosomal RNA
+URS0000460E70        -         5S_rRNA              RF00001    cm        5      119        1      116      +    5'    2 0.59   0.0   76.1   1.5e-14 !   5S ribosomal RNA from 11 species
+URS000046BF6F        -         5S_rRNA              RF00001    cm       33      119        1       87      +    5'    2 0.51   0.0   75.9   1.7e-14 !   Cycas circinalis partial 5S ribosomal RNA
+URS00004725F2        -         5S_rRNA              RF00001    cm        3      119        1      114      +    5'    2 0.54   0.0   75.1   2.8e-14 !   Enterococcus pallens ATCC BAA-351 5S ribosomal RNA
+URS0000471EF1        -         5S_rRNA              RF00001    cm        1      119        3      118      +    no    1 0.58   0.0   75.0   2.8e-14 !   Photobacterium damselae subsp. damselae CIP 102761 5S ribosomal RNA
+URS000046E0F8        -         5S_rRNA              RF00001    cm        3      119        1      115      +    5'    2 0.63   0.0   74.8   3.2e-14 !   Alicyclobacillus acidocaldarius subsp. acidocaldarius Tc-4-1 5S ribosomal RNA
+URS0000461299        -         5S_rRNA              RF00001    cm        3      119        1      110      +    5'    2 0.54   0.0   74.4   4.1e-14 !   5S ribosomal RNA from 16 species
+URS00004748F2        -         5S_rRNA              RF00001    cm        1      119        4      118      +    no    1 0.63   0.0   74.4   4.1e-14 !   Acetobacter aceti 5S ribosomal RNA
+URS00004697DD        -         5S_rRNA              RF00001    cm       22      119        1       98      +    5'    2 0.56   0.0   74.4   4.2e-14 !   Carassius auratus (goldfish) partial 5S ribosomal RNA
+URS0000475AB0        -         5S_rRNA              RF00001    cm        3      119        1      114      +    5'    2 0.57   0.0   74.4   4.2e-14 !   Sporosarcina newyorkensis 2681 5S ribosomal RNA
+URS000046116F        -         5S_rRNA              RF00001    cm        1      119        1      116      +    no    1 0.64   0.0   74.3   4.3e-14 !   Klebsiella pneumoniae IS46 5S RNA
+URS000046C750        -         5S_rRNA              RF00001    cm        1      119        4      117      +    no    1 0.62   0.0   74.3   4.4e-14 !   Rhodopseudomonas palustris ribosomal RNA
+URS000046674D        -         5S_rRNA              RF00001    cm        3      119        1      110      +    5'    2 0.65   0.0   74.2   4.7e-14 !   Pontibacter sp. BAB1700 5S ribosomal RNA
+URS000046169C        -         5S_rRNA              RF00001    cm        3      119        1      114      +    5'    2 0.55   0.0   74.1     5e-14 !   Enterococcus cecorum DSM 20682 = ATCC 43198 5S ribosomal RNA
+URS0000473E43        -         5S_rRNA              RF00001    cm        1      119        1      119      +    no    1 0.45   0.0   74.1     5e-14 !   Aedes aegypti rRNA
+URS000046F966        -         5S_rRNA              RF00001    cm        1      119        1      117      +    no    1 0.55   0.0   73.9   5.6e-14 !   Vibrio orientalis CIP 102891 = ATCC 33934 5S ribosomal RNA
+URS000046BD33        -         5S_rRNA              RF00001    cm        1      119        3      116      +    no    1 0.57   0.0   73.6   6.5e-14 !   Methylophaga frappieri 5S ribosomal RNA
+URS0000467E44        -         5S_rRNA              RF00001    cm        1      119        1      116      +    no    1 0.49   0.0   73.1   9.1e-14 !   Thiovulum sp. ES 5S ribosomal RNA
+URS000046EF0E        -         5S_rRNA              RF00001    cm        1      119        1      116      +    no    1 0.59   0.0   72.7   1.1e-13 !   Commensalibacter sp. MX01 5S ribosomal RNA
+URS000046D5F5        -         5S_rRNA              RF00001    cm       31      115        1       85      +    5'    4 0.53   0.0   72.7   1.1e-13 !   Nelumbo nucifera partial 5S ribosomal RNA
+URS000046EB03        -         5S_rRNA              RF00001    cm        1      110      110        1      -    3'    3 0.59   0.0   72.6   1.2e-13 !   Trypanosoma cruzi 5S ribosomal RNA (M5)
+URS0000461C6A        -         5S_rRNA              RF00001    cm        5      119        1      116      +    5'    2 0.55   0.0   72.4   1.4e-13 !   Fusarium oxysporum f. sp. pisi HDV247 5S ribosomal RNA
+URS000046D336        -         5S_rRNA              RF00001    cm       31      113        1       83      +    5'    4 0.51   0.0   72.2   1.5e-13 !   Nelumbo nucifera partial 5S ribosomal RNA
+URS0000473C5E        -         5S_rRNA              RF00001    cm        1      119        1      113      +    no    1 0.58   0.0   72.1   1.6e-13 !   Prevotella multisaccharivorax DSM 17128 5S ribosomal RNA
+URS0000470D15        -         5S_rRNA              RF00001    cm        3      119        1      114      +    5'    2 0.62   0.0   72.0   1.7e-13 !   Escherichia coli DEC1B 5S ribosomal RNA
+URS000045F3A1        -         5S_rRNA              RF00001    cm        4       99        3       98      +    3'    4 0.47   0.0   71.6   2.2e-13 !   Vairimorpha cheracis partial 5S ribosomal RNA
+URS0000475A5E        -         5S_rRNA              RF00001    cm        3      119        1      115      +    5'    2 0.54   0.0   71.4   2.5e-13 !   5S ribosomal RNA from 2 species
+URS000046C5E7        -         5S_rRNA              RF00001    cm        1      119        1      117      +    no    1 0.62   0.0   71.1     3e-13 !   Bacillus methanolicus PB1 5S ribosomal RNA
+URS00004644FA        -         5S_rRNA              RF00001    cm        1      119        1      115      +    no    1 0.53   0.0   71.1     3e-13 !   Oceanimonas sp. GK1 5S ribosomal RNA
+URS000046E6F8        -         5S_rRNA              RF00001    cm        1      119        1      112      +    no    1 0.63   0.0   70.5   4.2e-13 !   Echinicola vietnamensis DSM 17526 5S ribosomal RNA
+URS00004645D9        -         5S_rRNA              RF00001    cm        3      119        1      114      +    5'    2 0.61   0.0   70.3   4.9e-13 !   Mine drainage metagenome 5S ribosomal RNA
+URS0000469EEC        -         5S_rRNA              RF00001    cm        3      119        1      114      +    5'    2 0.57   0.0   70.2   5.1e-13 !   5S ribosomal RNA from 5 species
+URS0000469D01        -         5S_rRNA              RF00001    cm        1      119        1      116      +    no    1 0.57   0.0   69.7   6.7e-13 !   5S ribosomal RNA from 6 species
+URS00004618B9        -         5S_rRNA              RF00001    cm        1      119        2      109      +    no    1 0.52   0.0   69.4     8e-13 !   Bacteroides ovatus 3_8_47FAA 5S ribosomal RNA
+URS00004648F5        -         5S_rRNA              RF00001    cm        3      119        1      114      +    5'    2 0.56   0.0   69.3   8.5e-13 !   Bacillus cereus HuA2-9 partial 5S ribosomal RNA
+URS000046F9F0        -         5S_rRNA              RF00001    cm        3      119        1      113      +    5'    2 0.61   0.0   68.9   1.1e-12 !   Aeromonas media WS 5S ribosomal RNA
+URS0000461514        -         5S_rRNA              RF00001    cm        1      119     5270     5382      +    no    1 0.60   0.0   68.8   1.2e-12 !   Ralstonia solanacearum GMI1000 miscellaneous RNA
+URS000046ED72        -         5S_rRNA              RF00001    cm        5      119        1      116      +    5'    2 0.53   0.0   68.5   1.4e-12 !   Macrophomina phaseolina MS6 5.8S ribosomal RNA
+URS000045EE11        -         5S_rRNA              RF00001    cm        1      119        1      115      +    no    1 0.48   0.0   68.3   1.5e-12 !   5S ribosomal RNA from 3 species
+URS0000472401        -         5S_rRNA              RF00001    cm        3      119        1      114      +    5'    2 0.47   0.0   68.1   1.8e-12 !   5S ribosomal RNA from 2 species
+URS0000460A79        -         5S_rRNA              RF00001    cm        1      119        1      116      +    no    1 0.53   0.0   68.0   1.8e-12 !   5S ribosomal RNA from 2 species
+URS0000469684        -         5S_rRNA              RF00001    cm        1      119        1      114      +    no    1 0.48   0.0   68.0   1.9e-12 !   Catenovulum agarivorans DS-2 5S ribosomal RNA
+URS00004684EE        -         5S_rRNA              RF00001    cm        1      119        1      117      +    no    1 0.68   0.4   67.8   2.1e-12 !   Bifidobacterium thermophilum RBL67 5S ribosomal RNA
+URS00004752D5        -         5S_rRNA              RF00001    cm        4      119        1      113      +    5'    2 0.57   0.0   67.6   2.3e-12 !   Bacillus thuringiensis serovar chinensis CT-43 5S ribosomal RNA
+URS00004699B9        -         5S_rRNA              RF00001    cm        5      119        1      113      +    5'    2 0.63   0.0   67.6   2.4e-12 !   Corynebacterium pseudotuberculosis 316 5S ribosomal RNA
+URS0000464DA7        -         5S_rRNA              RF00001    cm        1      119      117        3      -    no    1 0.57   0.0   67.4   2.6e-12 !   Candidatus Liberibacter sp. Guangxi_Guilin_China 5S ribosomal RNA
+URS0000466180        -         5S_rRNA              RF00001    cm        3      119      115        2      -    5'    2 0.54   0.0   67.4   2.7e-12 !   Candidatus Photodesmus katoptron Akat1 5S ribosomal RNA
+URS00004735B0        -         5S_rRNA              RF00001    cm        4      119      110        5      -    5'    2 0.52   0.0   67.3   2.8e-12 !   Candidatus Azobacteroides pseudotrichonymphae genomovar. CFP2 5S ribosomal RNA
+URS0000470D76        -         5S_rRNA              RF00001    cm        3      119        1      115      +    5'    2 0.54   0.0   67.1   3.2e-12 !   5S ribosomal RNA from 2 species
+URS00004732EC        -         5S_rRNA              RF00001    cm        1      115        1      112      +    3'    3 0.55   0.0   67.1   3.3e-12 !   Haemophilus ducreyi 35000HP 5S ribosomal RNA
+URS000046AF23        -         5S_rRNA              RF00001    cm        4      119        1      113      +    5'    2 0.65   0.0   66.3     5e-12 !   5S ribosomal RNA from 13 species
+URS00004713F7        -         5S_rRNA              RF00001    cm        3      119        1      114      +    5'    2 0.56   0.0   66.2   5.5e-12 !   5S ribosomal RNA from 2 species
+URS000046623A        -         5S_rRNA              RF00001    cm        1      119        1      114      +    no    1 0.59   0.0   66.1   5.6e-12 !   5S ribosomal RNA from 2 species
+URS0000470741        -         5S_rRNA              RF00001    cm        1      119        4      121      +    no    1 0.61   0.0   65.9   6.4e-12 !   5S ribosomal RNA from 2 species
+URS00004765B6        -         5S_rRNA              RF00001    cm        1      119        1      121      +    no    1 0.53   0.0   65.9   6.6e-12 !   Brochothrix thermosphacta DSM 20171 = FSL F6-1036 5S ribosomal RNA
+URS0000465DD6        -         5S_rRNA              RF00001    cm        3      119        1      115      +    5'    2 0.61   0.0   65.3   9.1e-12 !   Mesotoga infera ribosomal RNA 5s ribosomal RNA
+URS000046C5DE        -         5S_rRNA              RF00001    cm        5      119        1      117      +    5'    2 0.50   0.0   65.1     1e-11 !   Cladophialophora carrionii CBS 160.54 5S ribosomal RNA
+URS0000475C90        -         5S_rRNA              RF00001    cm        3      119        1      114      +    5'    2 0.63   0.0   65.1   1.1e-11 !   Escherichia coli UMEA 3150-1 5S ribosomal RNA
+URS00004736D5        -         5S_rRNA              RF00001    cm        1      119      115        1      -    no    1 0.48   0.0   65.1   1.1e-11 !   5S ribosomal RNA from 2 species
+URS000047719C        -         5S_rRNA              RF00001    cm        1      119        1      115      +    no    1 0.48   0.0   65.0   1.1e-11 !   5S ribosomal RNA from 17 species
+URS000046E15E        -         5S_rRNA              RF00001    cm        1       79      387      462      +    3'    3 0.54   0.0   64.7   1.3e-11 !   Arabidopsis thaliana (thale cress) partial 5S ribosomal RNA
+URS000046C96E        -         5S_rRNA              RF00001    cm        3      119        1      115      +    5'    2 0.53   0.0   64.2   1.8e-11 !   Eubacterium sp. CAG:202 5S RNA
+URS0000475DB1        -         5S_rRNA              RF00001    cm        3      119        1      115      +    5'    2 0.54   0.0   63.5   2.7e-11 !   5S ribosomal RNA from 2 species
+URS000046B34F        -         5S_rRNA              RF00001    cm        1      115        6      118      +    3'    3 0.56   0.0   63.1   3.4e-11 !   Lactobacillus ruminis ATCC 27782 5S ribosomal RNA
+URS00004747E5        -         5S_rRNA              RF00001    cm        3      119        1      114      +    5'    2 0.56   0.0   62.7   4.3e-11 !   5S ribosomal RNA from 2 species
+URS000046A0CF        -         5S_rRNA              RF00001    cm        1      119      116        3      -    no    1 0.54   0.0   62.3   5.6e-11 !   Haemonchus contortus (barber pole worm) 8s rRNA
+URS0000460D76        -         5S_rRNA              RF00001    cm       36      119        1       84      +    5'    2 0.57   0.0   62.2   5.9e-11 !   Pharus legumen partial 5S ribosomal RNA
+URS000046E07A        -         5S_rRNA              RF00001    cm        7       90       84        1      - 5'&3'    4 0.54   0.0   61.6   8.5e-11 !   Cricetulus griseus (Chinese hamster) 5S ribosomal RNA
+URS0000473663        -         5S_rRNA              RF00001    cm        3      116        1      111      +    no    1 0.61   0.0   60.4   1.7e-10 !   Mine drainage metagenome ribosomal RNA 5S
+URS000046FBA5        -         5S_rRNA              RF00001    cm        1      119        1      115      +    no    1 0.50   0.0   60.2   1.9e-10 !   rRNA from 3 species
+URS000046CD56        -         5S_rRNA              RF00001    cm        3      119        1      111      +    5'    2 0.59   0.0   60.1   2.1e-10 !   Blood disease bacterium R229 ribosomal RNA 5s ribosomal RNA
+URS0000473321        -         5S_rRNA              RF00001    cm        3      116        1      105      +    no    1 0.57   0.0   59.5   2.9e-10 !   Flavobacterium johnsoniae UW101 5S ribosomal RNA
+URS00004637A0        -         5S_rRNA              RF00001    cm        4      119        1      112      +    5'    2 0.67   0.0   59.3   3.3e-10 !   Eggerthella lenta DSM 2243 5S ribosomal RNA
+URS0000468CB9        -         5S_rRNA              RF00001    cm        1      116        1      114      +    3'    3 0.54   0.0   59.2   3.4e-10 !   5S ribosomal RNA from 3 species
+URS000046D2E7        -         5S_rRNA              RF00001    cm        1      119        3      119      +    no    1 0.49   0.0   59.2   3.5e-10 !   Palmaria palmata 5SrRNA
+URS0000467BB9        -         5S_rRNA              RF00001    cm        1      119        3      117      +    no    1 0.49   0.0   58.6   5.1e-10 !   Pseudoalteromonas sp. SM9913 5S ribosomal RNA
+URS0000476673        -         5S_rRNA              RF00001    cm        3      104        1       98      + 5'&3'    4 0.50   0.0   58.4   5.5e-10 !   Enterococcus faecalis EnGen0238 partial 5S ribosomal RNA
+URS000045F251        -         5S_rRNA              RF00001    cm        4      119        1      113      +    5'    2 0.50   0.0   58.2   6.2e-10 !   Helicobacter cinaedi PAGU611 5S ribosomal RNA
+URS000046666D        -         5S_rRNA              RF00001    cm        3      119        1      116      +    5'    2 0.56   0.0   58.2   6.2e-10 !   Clostridium sp. ASF356 5S ribosomal RNA
+URS00004652C9        -         5S_rRNA              RF00001    cm       12      119        1      105      +    5'    2 0.63   0.0   58.2   6.5e-10 !   Escherichia coli HVH 3 (4-7276001) partial 5S ribosomal RNA
+URS00004726CE        -         5S_rRNA              RF00001    cm       44      119        1       76      +    5'    2 0.61   0.0   57.9   7.5e-10 !   Paratrygon ajereba partial 5S ribosomal RNA
+URS00004619B8        -         5S_rRNA              RF00001    cm        1      119        2      120      +    no    1 0.51   0.0   57.9   7.7e-10 !   Campylobacter fetus subsp. venerealis NCTC 10354 5S ribosomal RNA
+URS0000476C13        -         5S_rRNA              RF00001    cm        4      119        1      113      +    5'    2 0.52   0.0   57.6   9.3e-10 !   Streptococcus urinalis FB127-CNA-2 5S ribosomal RNA
+URS0000475CD3        -         5S_rRNA              RF00001    cm        1      115        1      114      +    3'    3 0.54   0.0   57.4     1e-09 !   Clostridium perfringens str. 13 5S ribosomal RNA
+URS0000476417        -         5S_rRNA              RF00001    cm        3      119        1      115      +    5'    2 0.53   0.0   57.1   1.2e-09 !   Cetobacterium somerae ATCC BAA-474 5S ribosomal RNA
+URS0000465161        -         5S_rRNA              RF00001    cm       32      119        1       89      +    5'    2 0.57   0.0   57.0   1.3e-09 !   Phaseolus vulgaris partial 5S ribosomal RNA
+URS000046A21D        -         5S_rRNA              RF00001    cm       30      119        1       93      +    5'    2 0.61   0.0   56.6   1.6e-09 !   Toxoplasma gondii partial 5S ribosomal RNA
+URS0000468481        -         5S_rRNA              RF00001    cm       21      119        1      100      +    5'    2 0.50   0.0   56.4   1.9e-09 !   Neurospora crassa OR74A 5S ribosomal RNA
+URS000046569B        -         5S_rRNA              RF00001    cm        4      119        1      113      +    5'    2 0.50   0.0   56.0   2.3e-09 !   Streptococcus agalactiae SA20-06 5S ribosomal RNA
+URS000046919A        -         5S_rRNA              RF00001    cm        4       98        1       92      + 5'&3'    4 0.64   0.0   55.8   2.7e-09 !   Yersinia pestis PY-63 5S ribosomal RNA
+URS0000461AA8        -         5S_rRNA              RF00001    cm       45      119        1       75      +    5'    2 0.55   0.0   55.5   3.2e-09 !   5S ribosomal RNA from 2 species
+URS0000475352        -         5S_rRNA              RF00001    cm        3      119        1      113      +    5'    2 0.53   0.0   55.5   3.2e-09 !   Methanococcus voltae A3 5S ribosomal RNA
+URS000046CCF3        -         5S_rRNA              RF00001    cm        1      119        4      120      +    no    1 0.60   0.0   55.1   4.1e-09 !   Staurastrum punctulatum 5S ribosomal RNA
+URS00004669A1        -         5S_rRNA              RF00001    cm        3      108        1      103      + 5'&3'    4 0.51   0.0   54.8   4.7e-09 !   rRNA from 2 species
+URS0000466F8E        -         5S_rRNA              RF00001    cm        1       94        2       92      +    3'    3 0.51   0.0   54.1   7.2e-09 !   Legionella cincinnatiensis rRNA
+URS000046634F        -         5S_rRNA              RF00001    cm        5      119        1      111      +    5'    2 0.54   0.0   53.4   1.1e-08 !   Streptococcus pneumoniae GA43265 5S ribosomal RNA
+URS00004602C7        -         5S_rRNA              RF00001    cm        3      119        1      112      +    5'    2 0.62   0.0   52.9   1.5e-08 !   5S ribosomal RNA from 2 species
+URS0000467C78        -         5S_rRNA              RF00001    cm        1      110      107        1      -    3'    3 0.50   0.0   52.7   1.7e-08 !   Haemophilus parasuis SH0165 5S ribosomal RNA
+URS000046CE95        -         5S_rRNA              RF00001    cm        1      115        2      114      +    3'    3 0.57   0.0   52.6   1.8e-08 !   5S ribosomal RNA from 2 species
+URS000047606C        -         5S_rRNA              RF00001    cm        3      104        2      105      +    3'    4 0.51   0.0   52.6   1.8e-08 !   Metschnikowia pulcherrima partial 5S ribosomal RNA
+URS00004721C5        -         5S_rRNA              RF00001    cm        1       94        2       92      +    3'    3 0.53   0.0   52.2   2.3e-08 !   Legionella erythra rRNA
+URS00004686DF        -         5S_rRNA              RF00001    cm        4      119        1      114      +    5'    2 0.48   0.0   51.9   2.7e-08 !   Nannochloropsis salina 5S ribosomal RNA
+URS0000461495        -         5S_rRNA              RF00001    cm        1      119        1      119      +    no    1 0.44   0.0   51.0   4.5e-08 !   Pseudotaxus chienii partial 5S ribosomal RNA
+URS0000467883        -         5S_rRNA              RF00001    cm        1      119        2      117      +    no    1 0.43   0.0   50.5   6.1e-08 !   Aureoumbra lagunensis 5S ribosomal RNA
+URS0000462631        -         5S_rRNA              RF00001    cm        1      119        2      120      +    no    1 0.54   0.0   50.3   6.9e-08 !   Kingia australis 5S ribosomal RNA
+URS0000466E47        -         5S_rRNA              RF00001    cm        3      119        1      116      +    5'    2 0.63   0.0   50.2   7.3e-08 !   [Clostridium] hylemonae DSM 15053 5S ribosomal RNA
+URS00004768FE        -         5S_rRNA              RF00001    cm        3      119        1      114      +    5'    2 0.52   0.0   48.1   2.6e-07 !   Streptococcus suis A7 5S ribosomal RNA
+URS000046F53F        -         5S_rRNA              RF00001    cm        3      119        1      115      +    5'    2 0.47   0.0   48.0   2.8e-07 !   Gut metagenome 5S ribosomal RNA
+URS0000464467        -         5S_rRNA              RF00001    cm        6      113        2      107      +    no    1 0.55   0.0   47.3   4.1e-07 !   Streptococcus pneumoniae GA49194 partial 5S ribosomal RNA
+URS000045FBB4        -         5S_rRNA              RF00001    cm        5      119        1      114      +    5'    2 0.46   0.0   45.5   1.2e-06 !   Helicobacter pylori R036d 5S ribosomal RNA
+URS0000475B3D        -         5S_rRNA              RF00001    cm       25      119        1       92      +    5'    2 0.62   0.0   45.4   1.3e-06 !   5S ribosomal RNA from 9 species
+URS000045EE0C        -         5S_rRNA              RF00001    cm       24      119        1       94      +    5'    2 0.56   0.0   44.1   2.8e-06 !   [Clostridium] clostridioforme 90A1 5S ribosomal RNA
+URS00004740A5        -         5S_rRNA              RF00001    cm        1      119        4      119      +    no    1 0.53   0.0   44.1   2.8e-06 !   Jasminum nudiflorum 5S ribosomal RNA
+URS000046423E        -         5S_rRNA              RF00001    cm       51      119        1       66      +    5'    2 0.55   0.0   43.7   3.5e-06 !   Melampodium longipes 5S ribosomal RNA
+URS000046405A        -         5S_rRNA              RF00001    cm        1       84        3       84      +    3'    3 0.55   0.0   43.3   4.4e-06 !   Streptomyces netropsis partial 5S ribosomal RNA
+URS0000462AC9        -         5S_rRNA              RF00001    cm        7      112        4      105      +    no    1 0.54   0.0   42.7   6.3e-06 !   5S ribosomal RNA from 2 species
+URS000046193F        -         5S_rRNA              RF00001    cm        1      119        1      119      +    no    1 0.53   0.0   41.1   1.6e-05 !   Drosophila yakuba 5S ribosomal RNA
+URS00004682B5        -         5S_rRNA              RF00001    cm        1      119        4      119      +    no    1 0.36   0.0   41.0   1.8e-05 !   Euglena gracilis ribosomal RNA
+URS0000475F70        -         5S_rRNA              RF00001    cm        3       90       88        1      - 5'&3'    4 0.53   0.0   40.4   2.6e-05 !   Cricetulus griseus (Chinese hamster) 5S ribosomal RNA
+URS0000471C9C        -         5S_rRNA              RF00001    cm       15       96        1       83      + 5'&3'    4 0.57   0.0   40.1     3e-05 !   5S ribosomal RNA from 2 species
+URS0000474923        -         5S_rRNA              RF00001    cm       27      119        1       89      +    5'    2 0.52   0.0   39.5   4.4e-05 !   5S ribosomal RNA from 60 species
+URS0000476DD9        -         5S_rRNA              RF00001    cm       37      119        1       80      +    5'    2 0.55   0.0   38.6   7.3e-05 !   5S ribosomal RNA from 2 species
+URS000046B5F8        -         5_8S_rRNA            RF00002    cm        1      154      270      423      +    no    1 0.45   0.0  172.2   6.7e-45 !   Uncultured Inocybe sequence contains ITS1, 5.8S rRNA gene and ITS2
+URS0000474805        -         5_8S_rRNA            RF00002    cm        1      154      208      361      +    no    1 0.45   0.0  172.2   6.7e-45 !   Inocybe nitidiuscula sequence contains 18S rRNA gene, ITS1, 5.8S rRNA gene, ITS2 and 28S rRNA gene
+URS0000476CD7        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.46   0.0  172.1   6.9e-45 !   Trametes versicolor 5.8S ribosomal RNA
+URS0000460B49        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.47   0.0  172.1   7.2e-45 !   5.8S ribosomal RNA from 2 species
+URS0000474A58        -         5_8S_rRNA            RF00002    cm        1      154        3      156      +    no    1 0.46   0.0  171.7   9.3e-45 !   Marasmius araneocephalus 5.8S ribosomal RNA
+URS0000460669        -         5_8S_rRNA            RF00002    cm        1      154        4      157      +    no    1 0.46   0.0  171.7   9.3e-45 !   Phlebia tremellosa 5.8S ribosomal RNA
+URS00004613BD        -         5_8S_rRNA            RF00002    cm        1      154        3      156      +    no    1 0.46   0.0  171.7   9.3e-45 !   Cystolepiota cystophora 5.8S ribosomal RNA
+URS00004633AD        -         5_8S_rRNA            RF00002    cm        1      154      227      380      +    no    1 0.46   0.0  171.7   9.3e-45 !   Psilocybe allenii sequence contains 18S rRNA gene, ITS1, 5.8S rRNA gene, ITS2, 28S rRNA gene
+URS0000465CD9        -         5_8S_rRNA            RF00002    cm        1      154        1      154      +    no    1 0.46   0.0  171.7   9.3e-45 !   Laccaria bicolor 5.8S ribosomal RNA
+URS00004668B4        -         5_8S_rRNA            RF00002    cm        1      154      255      408      +    no    1 0.46   0.0  171.7   9.3e-45 !   Uncultured ectomycorrhizal fungus sequence contains ITS1, 5.8S rRNA gene, ITS2 and 28S rRNA gene
+URS000046B4F9        -         5_8S_rRNA            RF00002    cm        1      154      180      333      +    no    1 0.46   0.0  171.7   9.3e-45 !   Uncultured ectomycorrhizal fungus sequence contains ITS1, 5.8S rRNA gene, ITS2 and 28S rRNA gene
+URS000046FD69        -         5_8S_rRNA            RF00002    cm        1      154        4      157      +    no    1 0.46   0.0  171.7   9.3e-45 !   5.8S ribosomal RNA from 14 species
+URS000046D78A        -         5_8S_rRNA            RF00002    cm        1      154        5      158      +    no    1 0.47   0.0  171.7   9.4e-45 !   Cryptococcus podzolicus 5.8S ribosomal RNA
+URS0000467AF0        -         5_8S_rRNA            RF00002    cm        1      154        3      156      +    no    1 0.45   0.0  171.6   9.6e-45 !   Vishniacozyma victoriae 5.8S ribosomal RNA
+URS00004606C2        -         5_8S_rRNA            RF00002    cm        1      154      252      405      +    no    1 0.47   0.0  171.6     1e-44 !   Fomitiporia torreyae partial contains ITS1, 5.8S rRNA and ITS2
+URS000047620E        -         5_8S_rRNA            RF00002    cm        1      154      258      411      +    no    1 0.47   0.0  171.6     1e-44 !   Fomitiporia torreyae partial contains ITS1, 5.8S rRNA and ITS2
+URS000047740A        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.47   0.0  171.5   1.1e-44 !   Jahnoporus hirtus 5.8S ribosomal RNA
+URS00004685D4        -         5_8S_rRNA            RF00002    cm        1      154        3      156      +    no    1 0.45   0.0  171.4   1.1e-44 !   Amanita muscaria (fly agaric) 5.8S ribosomal RNA
+URS000046B902        -         5_8S_rRNA            RF00002    cm        1      154      270      423      +    no    1 0.45   0.0  171.4   1.1e-44 !   Uncultured ectomycorrhizal fungus partial contains ITS1, 5.8S rRNA and ITS2
+URS000046249D        -         5_8S_rRNA            RF00002    cm        1      154      159      312      +    no    1 0.46   0.0  171.0   1.5e-44 !   Rhodotorula glutinis sequence contains ITS1, 5.8S rRNA gene and ITS2
+URS00004617C9        -         5_8S_rRNA            RF00002    cm        1      154       10      163      +    no    1 0.45   0.0  170.9   1.6e-44 !   Bridgeoporus nobilissimus 5.8S ribosomal RNA
+URS0000476FCC        -         5_8S_rRNA            RF00002    cm        1      154       12      165      +    no    1 0.45   0.0  170.9   1.6e-44 !   Leucopaxillus alboalutaceus 5.8S ribosomal RNA
+URS0000477265        -         5_8S_rRNA            RF00002    cm        1      154        3      156      +    no    1 0.45   0.0  170.9   1.6e-44 !   Amanita pleropus 5.8S ribosomal RNA
+URS0000469D3F        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.45   0.0  170.9   1.6e-44 !   Uncultured cf. Cortinarius sp. 5.8S ribosomal RNA
+URS00004668DD        -         5_8S_rRNA            RF00002    cm        1      154      366      519      +    no    1 0.47   0.0  170.7   1.7e-44 !   Saccharomyces cerevisiae (baker's yeast) partial contains ITS1, 5.8S rRNA, ITS2
+URS000046B7EF        -         5_8S_rRNA            RF00002    cm        1      154        3      156      +    no    1 0.45   0.0  170.7   1.7e-44 !   Postia fragilis 5.8S ribosomal RNA
+URS00004625F7        -         5_8S_rRNA            RF00002    cm        1      154        1      154      +    no    1 0.46   0.0  170.7   1.8e-44 !   Cortinarius assiduus 5.8S ribosomal RNA
+URS0000462777        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.47   0.0  170.7   1.8e-44 !   Schizophyllum commune 5.8S ribosomal RNA
+URS000046B2AD        -         5_8S_rRNA            RF00002    cm        1      154      262      415      +    no    1 0.44   0.0  170.7   1.8e-44 !   Uncultured fungus partial contains ITS1, 5.8S rRNA, and ITS2
+URS000046D175        -         5_8S_rRNA            RF00002    cm        1      154        1      154      +    no    1 0.44   0.0  170.7   1.8e-44 !   5.8S ribosomal RNA from 10 species
+URS00004729EB        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.45   0.0  170.7   1.8e-44 !   5.8S ribosomal RNA from 2 species
+URS000046143B        -         5_8S_rRNA            RF00002    cm        1      154      291      444      +    no    1 0.45   0.0  170.6   1.9e-44 !   Uncultured Laccaria partial contains 18S rRNA, ITS1, 5.8S rRNA, ITS2 and 28S rRNA
+URS000046200A        -         5_8S_rRNA            RF00002    cm        1      154      161      314      +    no    1 0.44   0.0  170.2   2.4e-44 !   Mrakia sp. MOA-3 partial contains 18S rRNA, ITS1, 5.8S rRNA, ITS2 and 28S rRNA
+URS0000469479        -         5_8S_rRNA            RF00002    cm        1      154      175      328      +    no    1 0.44   0.0  170.2   2.4e-44 !   Mrakia robertii partial contains 18S rRNA, ITS1, 5.8S rRNA, ITS2 and 28S rRNA
+URS0000468667        -         5_8S_rRNA            RF00002    cm        1      154      258      411      +    no    1 0.47   0.0  170.0   2.8e-44 !   Fomitiporia torreyae partial contains ITS1, 5.8S rRNA and ITS2
+URS00004645BC        -         5_8S_rRNA            RF00002    cm        1      154        1      154      +    no    1 0.48   0.0  169.9     3e-44 !   Dictyonema glabratum 5.8S ribosomal RNA
+URS0000474185        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.47   0.0  169.8   3.1e-44 !   Uncultured Basidiomycota 5.8S ribosomal RNA
+URS0000476C16        -         5_8S_rRNA            RF00002    cm        1      154        3      156      +    no    1 0.44   0.0  169.6   3.6e-44 !   Gloeophyllum trabeum 5.8S ribosomal RNA
+URS000046DBBD        -         5_8S_rRNA            RF00002    cm        1      154        4      157      +    no    1 0.47   0.0  169.3   4.5e-44 !   Fomitiporia mediterranea 5.8S ribosomal RNA
+URS0000465369        -         5_8S_rRNA            RF00002    cm        1      154      245      398      +    no    1 0.44   0.0  169.2   4.6e-44 !   Uncultured Amanita sequence contains ITS1, 5.8S rRNA gene and ITS2
+URS00004747A2        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.47   0.0  169.1     5e-44 !   Vuilleminia comedens 5.8S ribosomal RNA
+URS00004771DC        -         5_8S_rRNA            RF00002    cm        1      154        3      156      +    no    1 0.47   0.0  169.1   5.1e-44 !   Uncultured Basidiomycota 5.8S ribosomal RNA
+URS000046E5B1        -         5_8S_rRNA            RF00002    cm        1      154        4      157      +    no    1 0.45   0.0  169.0   5.5e-44 !   Basidiomycete from Bashania fargesii 5.8S ribosomal RNA
+URS0000461527        -         5_8S_rRNA            RF00002    cm        1      154        3      156      +    no    1 0.47   0.0  169.0   5.5e-44 !   Neofavolus alveolaris 5.8S rRNA
+URS000046123D        -         5_8S_rRNA            RF00002    cm        1      154        1      154      +    no    1 0.48   0.0  168.9   5.8e-44 !   5.8S ribosomal RNA from 35 species
+URS0000473753        -         5_8S_rRNA            RF00002    cm        1      154      213      366      +    no    1 0.48   0.0  168.9   5.8e-44 !   Uncultured ectomycorrhizal fungus sequence contains ITS1, 5.8S rRNA gene, ITS2
+URS000045F153        -         5_8S_rRNA            RF00002    cm        1      154      157      310      +    no    1 0.43   0.0  168.9   5.8e-44 !   Rhodotorula sp. 64c partial 18S ribosomal RNA
+URS0000473BB8        -         5_8S_rRNA            RF00002    cm        1      154      378      225      -    no    1 0.49   0.0  168.8     6e-44 !   Humicola sp. FLN10c sequence contains 18S rRNA gene, ITS1, 5.8S rRNA gene, ITS2 and 28S rRNA gene
+URS0000466587        -         5_8S_rRNA            RF00002    cm        1      154      181      334      +    no    1 0.48   0.0  168.8   6.3e-44 !   Fusarium solani partial contains 18S rRNA, ITS1, 5.8S rRNA, ITS2, 28S rRNA
+URS000046AF97        -         5_8S_rRNA            RF00002    cm        1      154      153      306      +    no    1 0.48   0.0  168.8   6.3e-44 !   28S ribosomal RNA from 3 species
+URS000046D095        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.45   0.0  168.7   6.6e-44 !   Armillaria ectypa 5.8S ribosomal RNA
+URS00004633AF        -         5_8S_rRNA            RF00002    cm        1      154        3      156      +    no    1 0.47   0.0  168.6   6.9e-44 !   Gymnopus gibbosus 5.8S ribosomal RNA
+URS000046023A        -         5_8S_rRNA            RF00002    cm        1      154        3      156      +    no    1 0.45   0.0  168.5   7.3e-44 !   Amanita thiersii 5.8S ribosomal RNA
+URS0000465004        -         5_8S_rRNA            RF00002    cm        1      154      143      296      +    no    1 0.44   0.0  168.5   7.7e-44 !   Uncultured Basidiomycota sequence contains ITS1, 5.8S rRNA gene and ITS2
+URS0000471EEF        -         5_8S_rRNA            RF00002    cm        1      154      203      356      +    no    1 0.48   0.0  168.5   7.7e-44 !   Nectria sp. G142 partial contains 18S rRNA, ITS1, 5.8S rRNA, ITS2 and 28S rRNA
+URS0000471248        -         5_8S_rRNA            RF00002    cm        1      154      136      289      +    no    1 0.45   0.0  168.5   7.8e-44 !   Uncultured eukaryote partial contains fungal ITS1, 5.8S rRNA and ITS2
+URS0000473CDB        -         5_8S_rRNA            RF00002    cm        1      154        3      156      +    no    1 0.47   0.0  168.4   7.9e-44 !   Polyporus tricholoma 5.8S rRNA
+URS0000468744        -         5_8S_rRNA            RF00002    cm        1      154        1      154      +    no    1 0.49   0.0  168.4   8.1e-44 !   5.8S ribosomal RNA from 3 species
+URS000046FCD4        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.47   0.0  168.3   8.3e-44 !   5.8S ribosomal RNA from 3 species
+URS000045F16C        -         5_8S_rRNA            RF00002    cm        1      154      205      358      +    no    1 0.44   0.0  168.3   8.3e-44 !   Uncultured fungus partial contains 18S rRNA, ITS1, 5.8S rRNA, ITS2 and 28S rRNA
+URS0000472112        -         5_8S_rRNA            RF00002    cm        1      154      135      288      +    no    1 0.45   0.0  168.3   8.6e-44 !   Uncultured eukaryote partial contains fungal ITS1, 5.8S rRNA and ITS2
+URS000046ED94        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.45   0.0  168.2   9.2e-44 !   Cleistocybe carneogrisea 5.8S ribosomal RNA
+URS0000475C5E        -         5_8S_rRNA            RF00002    cm        1      154        3      156      +    no    1 0.45   0.0  168.2   9.4e-44 !   rRNA from 15 species
+URS000047464A        -         5_8S_rRNA            RF00002    cm        1      154        5      158      +    no    1 0.47   0.0  168.1   9.6e-44 !   5.8S ribosomal RNA from 8 species
+URS0000464CA4        -         5_8S_rRNA            RF00002    cm        1      154      191      344      +    no    1 0.49   0.0  168.0     1e-43 !   Geosmithia langdonii sequence contains 18S rRNA gene, ITS1, 5.8S rRNA gene, ITS2 and 28S rRNA gene
+URS000045F024        -         5_8S_rRNA            RF00002    cm        1      154      178      331      +    no    1 0.42   0.0  168.0     1e-43 !   Uncultured fungus partial contains 18S rRNA, ITS1, 5.8S rRNA, ITS2 and 28S rRNA
+URS0000472BE7        -         5_8S_rRNA            RF00002    cm        1      154      217      370      +    no    1 0.47   0.0  168.0     1e-43 !   Uncultured fungus sequence contains ITS1, 5.8S rRNA gene and ITS2
+URS000046907B        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.45   0.0  168.0   1.1e-43 !   Tremellales sp. QMW-2009d 5.8S ribosomal RNA
+URS000047577B        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.45   0.0  167.9   1.1e-43 !   Cortinarius leucophanes 5.8S ribosomal RNA
+URS0000477496        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.47   0.0  167.9   1.1e-43 !   Bacidia arceutina 5.8S ribosomal RNA
+URS00004756CC        -         5_8S_rRNA            RF00002    cm        1      154        3      156      +    no    1 0.46   0.0  167.8   1.2e-43 !   Pleurotus abieticola 5.8S ribosomal RNA
+URS0000463CB7        -         5_8S_rRNA            RF00002    cm        1      154      157        4      -    no    1 0.47   0.0  167.8   1.2e-43 !   Bionectriaceae sp. IBL 03143 5.8S ribosomal RNA
+URS000046F8DB        -         5_8S_rRNA            RF00002    cm        1      154      149      302      +    no    1 0.47   0.0  167.8   1.2e-43 !   Cordana ellipsoidea sequence contains 18S rRNA gene, ITS1, 5.8S rRNA gene, ITS2, 28S rRNA gene
+URS00004715A1        -         5_8S_rRNA            RF00002    cm        1      154        7      160      +    no    1 0.47   0.0  167.8   1.2e-43 !   Paecilomyces sp. RCEF4111 5.8S ribosomal RNA
+URS00004761C6        -         5_8S_rRNA            RF00002    cm        1      154      235      388      +    no    1 0.47   0.0  167.8   1.2e-43 !   Uncultured fungus sequence contains ITS1, 5.8S rRNA gene and ITS2
+URS000046380D        -         5_8S_rRNA            RF00002    cm        1      154        3      156      +    no    1 0.45   0.0  167.8   1.2e-43 !   5.8S ribosomal RNA from 2 species
+URS0000474EBB        -         5_8S_rRNA            RF00002    cm        1      154        4      157      +    no    1 0.47   0.0  167.7   1.2e-43 !   Fusarium lateritium 5.8S ribosomal RNA
+URS000046BE93        -         5_8S_rRNA            RF00002    cm        1      154      194      347      +    no    1 0.45   0.0  167.7   1.3e-43 !   Hygrophorus quercetorum partial ribosomal RNA
+URS0000464D73        -         5_8S_rRNA            RF00002    cm        1      154      219      372      +    no    1 0.48   0.0  167.5   1.4e-43 !   Umbilicaria cylindrica partial 18S ribosomal RNA
+URS000046108F        -         5_8S_rRNA            RF00002    cm        1      154        1      154      +    no    1 0.50   0.0  167.5   1.4e-43 !   5.8S ribosomal RNA from 7 species
+URS0000475D03        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.45   0.0  167.5   1.4e-43 !   Cortinarius armeniacus 5.8S ribosomal RNA
+URS0000473AA4        -         5_8S_rRNA            RF00002    cm        1      154        3      156      +    no    1 0.48   0.0  167.5   1.4e-43 !   Uncultured Leotiomycetes 5.8S ribosomal RNA
+URS00004686E9        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.47   0.0  167.5   1.5e-43 !   Acremonium sp. CBS 118526 5.8S ribosomal RNA
+URS00004709E2        -         5_8S_rRNA            RF00002    cm        1      154      136      289      +    no    1 0.47   0.0  167.4   1.5e-43 !   Lecythophora sp. N34 sequence contains ITS1, 5.8S rRNA gene, ITS2
+URS0000467932        -         5_8S_rRNA            RF00002    cm        1      154      180      333      +    no    1 0.48   0.0  167.4   1.5e-43 !   Trichoderma harzianum contains ITS1, 5.8S ribosomal RNA gene and ITS2, and 28S ribosomal RNA gene
+URS0000474765        -         5_8S_rRNA            RF00002    cm        1      154      126      279      +    no    1 0.48   0.0  167.4   1.5e-43 !   Trichoderma viride partial contains 18S rRNA, ITS1, 5.8S rRNA, ITS2 and 28S rRNA
+URS000046C5FD        -         5_8S_rRNA            RF00002    cm        1      154        1      154      +    no    1 0.47   0.0  167.4   1.6e-43 !   5.8S ribosomal RNA from 2 species
+URS0000467A31        -         5_8S_rRNA            RF00002    cm        1      154        1      154      +    no    1 0.46   0.0  167.4   1.6e-43 !   Gloeophyllum sp. SHH-2012 5.8S subunit ribosomal RNA
+URS000045F80E        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.47   0.0  167.3   1.6e-43 !   5.8S ribosomal RNA from 2 species
+URS0000467C37        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.47   0.0  167.3   1.6e-43 !   5.8S ribosomal RNA from 2 species
+URS000046D5FC        -         5_8S_rRNA            RF00002    cm        1      154        1      154      +    no    1 0.47   0.0  167.3   1.6e-43 !   5.8S ribosomal RNA from 30 species
+URS00004638D2        -         5_8S_rRNA            RF00002    cm        1      154      173      326      +    no    1 0.47   0.0  167.2   1.7e-43 !   Lambertella yunnanensis partial contains 18S rRNA, ITS1, 5.8S rRNA, ITS2, 28S rRNA
+URS0000472848        -         5_8S_rRNA            RF00002    cm        1      154      182      335      +    no    1 0.47   0.0  167.2   1.7e-43 !   Uncultured ectomycorrhizal fungus sequence contains ITS1, 5.8S rRNA gene, ITS2 and 28S rRNA gene
+URS0000472DA7        -         5_8S_rRNA            RF00002    cm        1      154      160      313      +    no    1 0.47   0.0  167.2   1.7e-43 !   Hymenoscyphus cf. fructigenus 2247 partial ribosomal RNA
+URS0000474566        -         5_8S_rRNA            RF00002    cm        1      154      232      385      +    no    1 0.47   0.0  167.2   1.7e-43 !   Uncultured Helotiales sequence contains 18S rRNA gene, ITS1, 5.8S rRNA gene, ITS2 and 28S rRNA gene
+URS0000472161        -         5_8S_rRNA            RF00002    cm        1      154        3      156      +    no    1 0.47   0.0  167.1   1.8e-43 !   5.8S ribosomal RNA from 2 species
+URS0000467F96        -         5_8S_rRNA            RF00002    cm        1      154      225      378      +    no    1 0.48   0.0  167.0     2e-43 !   Scedosporium apiospermum partial contains 18S rRNA, ITS1, 5.8S rRNA, ITS2 and 28S rRNA
+URS000046A7F8        -         5_8S_rRNA            RF00002    cm        1      154      139      292      +    no    1 0.46   0.0  167.0     2e-43 !   Curvularia spicifera partial contains ITS1, 5.8S rRNA, ITS2, 28S rRNA
+URS000045FAA4        -         5_8S_rRNA            RF00002    cm        1      154        5      158      +    no    1 0.45   0.0  167.0     2e-43 !   5.8S ribosomal RNA from 3 species
+URS00004636F8        -         5_8S_rRNA            RF00002    cm        1      154        3      156      +    no    1 0.45   0.0  167.0     2e-43 !   Caloplaca cerina 5.8S ribosomal RNA
+URS0000464069        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.45   0.0  167.0     2e-43 !   rRNA from 161 species
+URS0000470B95        -         5_8S_rRNA            RF00002    cm        1      154      144      297      +    no    1 0.45   0.0  167.0     2e-43 !   Ascomycota cf. Helotiales OTU_021 sequence contains ITS1, 5.8S rRNA gene and ITS2
+URS00004761A3        -         5_8S_rRNA            RF00002    cm        1      154        1      154      +    no    1 0.51   0.0  167.0     2e-43 !   5.8S ribosomal RNA from 4 species
+URS000046B516        -         5_8S_rRNA            RF00002    cm        1      154        1      154      +    no    1 0.47   0.0  166.9   2.1e-43 !   Leaf litter ascomycete strain its095 5.8S ribosomal RNA
+URS0000462136        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.47   0.0  166.9   2.1e-43 !   Uncultured endophytic fungus 5.8S ribosomal RNA
+URS0000468BDF        -         5_8S_rRNA            RF00002    cm        1      154      199      352      +    no    1 0.45   0.0  166.9   2.1e-43 !   Alternaria alternata partial contains 18S rRNA, ITS1, 5.8S rRNA, ITS2 and 28S rRNA
+URS000046EB65        -         5_8S_rRNA            RF00002    cm        1      154      167      320      +    no    1 0.45   0.0  166.9   2.1e-43 !   Alternaria arborescens rrn
+URS0000471487        -         5_8S_rRNA            RF00002    cm        1      154      337      490      +    no    1 0.49   0.0  166.9   2.2e-43 !   Uncultured fungus sequence contains ITS1, 5.8S rRNA gene and ITS2
+URS0000464B2E        -         5_8S_rRNA            RF00002    cm        1      154      188      341      +    no    1 0.48   0.0  166.8   2.3e-43 !   Clavulina sp. 726 CG-2012 sequence contains ITS1, 5.8S rRNA gene, ITS2
+URS0000467971        -         5_8S_rRNA            RF00002    cm        1      154        3      156      +    no    1 0.45   0.0  166.8   2.3e-43 !   Amanita basiorubra 5.8S ribosomal RNA
+URS00004725C0        -         5_8S_rRNA            RF00002    cm        1      154      234      387      +    no    1 0.49   0.0  166.7   2.4e-43 !   Uncultured ectomycorrhizal fungus sequence contains ITS1, 5.8S rRNA gene, ITS2 and 28S rRNA gene
+URS00004708AB        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.47   0.0  166.7   2.5e-43 !   Cochliobolus pallescens 5.8S ribosomal RNA
+URS0000472F35        -         5_8S_rRNA            RF00002    cm        1      154        4      156      +    no    1 0.48   0.0  166.7   2.5e-43 !   Trametes punicea 5.8S ribosomal RNA
+URS000045F021        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.49   0.0  166.6   2.6e-43 !   Akanthomyces arachnophilus 5.8S ribosomal RNA
+URS0000472B68        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.43   0.0  166.6   2.6e-43 !   5.8S ribosomal RNA from 43 species
+URS000046FB81        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.47   0.0  166.5   2.8e-43 !   5.8S ribosomal RNA from 3 species
+URS00004637C5        -         5_8S_rRNA            RF00002    cm        1      154        1      154      +    no    1 0.47   0.0  166.4   2.9e-43 !   5.8S ribosomal RNA from 4 species
+URS0000473C10        -         5_8S_rRNA            RF00002    cm        1      154      180      333      +    no    1 0.47   0.0  166.4   2.9e-43 !   Lecythophora sp. OTU_030 sequence contains ITS1, 5.8S rRNA gene and ITS2
+URS000046C87A        -         5_8S_rRNA            RF00002    cm        1      154        3      156      +    no    1 0.46   0.0  166.4   2.9e-43 !   Protoglossum violaceum 5.8S ribosomal RNA
+URS0000460EC3        -         5_8S_rRNA            RF00002    cm        1      154        1      154      +    no    1 0.48   0.0  166.4     3e-43 !   Morchella sp. Mes-26 5.8S ribosomal RNA
+URS000046EF03        -         5_8S_rRNA            RF00002    cm        1      154        1      154      +    no    1 0.45   0.0  166.3   3.1e-43 !   5.8S ribosomal RNA from 2 species
+URS000046C765        -         5_8S_rRNA            RF00002    cm        1      154        1      154      +    no    1 0.47   0.0  166.2   3.3e-43 !   Brodoa atrofusca 5.8S ribosomal RNA
+URS000045FCF8        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.45   0.0  166.2   3.5e-43 !   5.8S ribosomal RNA from 30 species
+URS0000467106        -         5_8S_rRNA            RF00002    cm        1      154        5      158      +    no    1 0.46   0.0  166.1   3.6e-43 !   Pleopsidium chlorophanum 5.8S ribosomal RNA
+URS000046B26C        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.48   0.0  166.1   3.7e-43 !   5.8S ribosomal RNA from 2 species
+URS000046E3DE        -         5_8S_rRNA            RF00002    cm        1      154      212      366      +    no    1 0.47   0.0  166.0   3.8e-43 !   Uncultured ectomycorrhizal fungus sequence contains ITS1, 5.8S rRNA gene, ITS2 and 28S rRNA gene
+URS000046F324        -         5_8S_rRNA            RF00002    cm        1      154      389      235      -    no    1 0.47   0.0  166.0   3.8e-43 !   Uncultured ectomycorrhizal fungus sequence contains ITS1, 5.8S rRNA gene, ITS2 and 28S rRNA gene
+URS000046E043        -         5_8S_rRNA            RF00002    cm        1      154        3      156      +    no    1 0.46   0.0  166.0   3.8e-43 !   Heterodermia speciosa 5.8S ribosomal RNA
+URS00004635AF        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.46   0.0  166.0   3.8e-43 !   5.8S ribosomal RNA from 14 species
+URS000046FFAE        -         5_8S_rRNA            RF00002    cm        1      154      166      319      +    no    1 0.47   0.0  166.0   3.8e-43 !   Metarhizium anisopliae sequence contains 18S rRNA gene, ITS1 and ITS2
+URS000046874E        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.44   0.0  166.0   3.9e-43 !   Vialaea minutella 5.8S ribosomal RNA
+URS0000473D27        -         5_8S_rRNA            RF00002    cm        1      154        3      156      +    no    1 0.50   0.0  165.9     4e-43 !   Haptocillium sinense 5.8S ribosomal RNA
+URS000046C208        -         5_8S_rRNA            RF00002    cm        1      154      189      342      +    no    1 0.49   0.0  165.9   4.1e-43 !   Gliomastix murorum contains 18S rRNA gene, ITS1, 5.8S rRNA gene, ITS2 and 28S rRNA gene
+URS0000467349        -         5_8S_rRNA            RF00002    cm        1      154       15      168      +    no    1 0.48   0.0  165.9   4.1e-43 !   Caloplaca coronata 5.8S ribosomal RNA
+URS0000471013        -         5_8S_rRNA            RF00002    cm        1      154      323      170      -    no    1 0.47   0.0  165.9   4.2e-43 !   misc_RNA from 5 species
+URS0000476B66        -         5_8S_rRNA            RF00002    cm        1      154      201      354      +    no    1 0.47   0.0  165.9   4.2e-43 !   Colletotrichum gloeosporioides partial 18S ribosomal RNA
+URS0000467FFF        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.49   0.0  165.8   4.3e-43 !   Mytilinidion mytilinellum 5.8S ribosomal RNA
+URS000046EE73        -         5_8S_rRNA            RF00002    cm        1      154      190      343      +    no    1 0.44   0.0  165.8   4.3e-43 !   Leucosporidium sp. BSS-2 partial contains 18S rRNA, ITS1, 5.8S rRNA, ITS2 and 28S rRNA
+URS000045FB15        -         5_8S_rRNA            RF00002    cm        1      154      213      367      +    no    1 0.46   0.0  165.8   4.4e-43 !   Uncultured Thelephoraceae sequence contains ITS1, 5.8S rRNA gene, ITS2
+URS0000463CAD        -         5_8S_rRNA            RF00002    cm        1      154        9      163      +    no    1 0.46   0.0  165.8   4.4e-43 !   Uncultured Tomentella 5.8S ribosomal RNA
+URS000046BA8B        -         5_8S_rRNA            RF00002    cm        1      154        2      156      +    no    1 0.46   0.0  165.8   4.4e-43 !   Uncultured Tomentella 5.8S ribosomal RNA
+URS0000470B1E        -         5_8S_rRNA            RF00002    cm        1      154        1      155      +    no    1 0.46   0.0  165.8   4.4e-43 !   Tomentella lilacinogrisea 5.8S ribosomal RNA
+URS0000464875        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.46   0.0  165.8   4.4e-43 !   Haasiella splendidissima 5.8S ribosomal RNA
+URS000046C03E        -         5_8S_rRNA            RF00002    cm        1      154        4      157      +    no    1 0.48   0.0  165.8   4.4e-43 !   Tolypocladium tundrense 5.8S ribosomal RNA
+URS0000461B72        -         5_8S_rRNA            RF00002    cm        1      154      177      330      +    no    1 0.47   0.0  165.8   4.6e-43 !   Dasyscyphella longistipitata partial contains ITS1, 5.8S rRNA, ITS2
+URS0000465214        -         5_8S_rRNA            RF00002    cm        1      154      224      377      +    no    1 0.47   0.0  165.8   4.6e-43 !   Hyphodiscus hymeniophilus partial contains ITS1, 5.8S rRNA and ITS2
+URS000046D9C8        -         5_8S_rRNA            RF00002    cm        1      154        3      156      +    no    1 0.47   0.0  165.8   4.6e-43 !   5.8S ribosomal RNA from 12 species
+URS000046F5FE        -         5_8S_rRNA            RF00002    cm        1      154      498      651      +    no    1 0.47   0.0  165.8   4.6e-43 !   Hymenoscyphus fraxineus partial contains 18S rRNA, ITS1, 5.8S rRNA, ITS2, 28S rRNA
+URS0000474C91        -         5_8S_rRNA            RF00002    cm        1      154      226      379      +    no    1 0.47   0.0  165.8   4.6e-43 !   Phialocephala virens partial contains 18S rRNA, ITS1, 5.8S rRNA, ITS2 and 28S rRNA
+URS000046341B        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.51   0.0  165.7   4.6e-43 !   rRNA from 8 species
+URS0000475DD9        -         5_8S_rRNA            RF00002    cm        1      154        3      156      +    no    1 0.51   0.0  165.7   4.6e-43 !   5.8S ribosomal RNA from 2 species
+URS000047752A        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.51   0.0  165.7   4.6e-43 !   5.8S ribosomal RNA from 35 species
+URS0000465DE4        -         5_8S_rRNA            RF00002    cm        1      154      190      343      +    no    1 0.48   0.0  165.6   5.1e-43 !   Purpureocillium lilacinum (nematode egg-parasitic fungus) partial 18S ribosomal RNA
+URS000046F3F6        -         5_8S_rRNA            RF00002    cm        1      154      216      369      +    no    1 0.48   0.0  165.6   5.1e-43 !   Chaetomium globosum sequence contains ITS1, 5.8S rRNA gene and ITS2
+URS00004756F8        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.47   0.0  165.5   5.4e-43 !   Roccella sinensis 5.8S ribosomal RNA
+URS0000466872        -         5_8S_rRNA            RF00002    cm        1      154      356      203      -    no    1 0.50   0.0  165.5   5.4e-43 !   Penicillium oxalicum sequence contains ITS1, 5.8S rRNA gene and ITS2
+URS000046486A        -         5_8S_rRNA            RF00002    cm        1      154        1      153      +    no    1 0.45   0.0  165.4   5.6e-43 !   Uncultured fungus 5.8S ribosomal RNA
+URS00004628B1        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.49   0.0  165.4   5.7e-43 !   Uncultured Ascomycota 5.8S ribosomal RNA
+URS000046DA1B        -         5_8S_rRNA            RF00002    cm        1      154      264      417      +    no    1 0.49   0.0  165.3   6.1e-43 !   Uncultured fungus sequence contains ITS1, 5.8S rRNA gene and ITS2
+URS000046605D        -         5_8S_rRNA            RF00002    cm        1      154      213      366      +    no    1 0.45   0.0  165.3   6.1e-43 !   Tuber sp. 18 KA-2010 partial contains ITS1, 5.8S rRNA, ITS2 and 28S rRNA
+URS000046CECB        -         5_8S_rRNA            RF00002    cm        1      154      212      365      +    no    1 0.45   0.0  165.3   6.1e-43 !   Tuber sp. 18 KA-2010 partial contains ITS1, 5.8S rRNA, ITS2 and 28S rRNA
+URS0000468943        -         5_8S_rRNA            RF00002    cm        1      154        3      156      +    no    1 0.49   0.0  165.3   6.1e-43 !   Verticillium griseum 5.8S ribosomal RNA
+URS0000470C3D        -         5_8S_rRNA            RF00002    cm        1      154        3      156      +    no    1 0.49   0.0  165.3   6.2e-43 !   5.8S ribosomal RNA from 4 species
+URS0000468552        -         5_8S_rRNA            RF00002    cm        1      154        6      158      +    no    1 0.46   0.0  165.3   6.2e-43 !   5.8S ribosomal RNA from 2 species
+URS000046C708        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.44   0.0  165.3   6.3e-43 !   Hamamotoa singularis 5.8S rRNA
+URS000046C17E        -         5_8S_rRNA            RF00002    cm        1      154        3      156      +    no    1 0.47   0.0  165.0   7.5e-43 !   Phialocephala trigonospora 5.8S ribosomal RNA
+URS00004705DB        -         5_8S_rRNA            RF00002    cm        1      154        3      156      +    no    1 0.50   0.0  165.0   7.6e-43 !   Dermatocarpon taminium 5.8S ribosomal RNA
+URS0000474C01        -         5_8S_rRNA            RF00002    cm        1      154        1      154      +    no    1 0.47   0.0  164.8   8.3e-43 !   Otidea bufonia 5.8S ribosomal RNA
+URS0000469B61        -         5_8S_rRNA            RF00002    cm        1      154      330      483      +    no    1 0.49   0.0  164.8   8.5e-43 !   Echinophyllia echinata sequence contains 18S rRNA gene, ITS1, 5.8S rRNA gene, ITS2, 28S rRNA gene
+URS000046DA52        -         5_8S_rRNA            RF00002    cm        1      154      379      532      +    no    1 0.49   0.0  164.8   8.5e-43 !   Parasimplastrea sheppardi sequence contains partial 18S rRNA gene, ITS1, 5.8S rRNA gene, ITS2 and partial 28S rRNA gene
+URS000046DC7B        -         5_8S_rRNA            RF00002    cm        1      154      325      478      +    no    1 0.49   0.0  164.8   8.5e-43 !   Parascolymia vitiensis sequence contains 18S rRNA gene, ITS1, 5.8S rRNA gene, ITS2, 28S rRNA gene
+URS000046893B        -         5_8S_rRNA            RF00002    cm        1      154        1      154      +    no    1 0.49   0.0  164.8   8.5e-43 !   5.8S ribosomal RNA from 2 species
+URS00004764F1        -         5_8S_rRNA            RF00002    cm        1      154      187      340      +    no    1 0.49   0.0  164.7   9.4e-43 !   Aspergillus spelaeus sequence contains ITS1, 5.8S rRNA gene and ITS2
+URS0000462A45        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.49   0.0  164.6   9.5e-43 !   Chrysosporium synchronum 5.8S ribosomal RNA
+URS000046251B        -         5_8S_rRNA            RF00002    cm        1      154        2      156      +    no    1 0.46   0.0  164.6   9.6e-43 !   Chroogomphus sp. H23 5.8S ribosomal RNA
+URS00004732D0        -         5_8S_rRNA            RF00002    cm        1      154        1      154      +    no    1 0.47   0.0  164.6   9.6e-43 !   Ascomycete sp. MA 4954 5.8S ribosomal RNA
+URS00004763CE        -         5_8S_rRNA            RF00002    cm        1      154      170      323      +    no    1 0.47   0.0  164.6   9.6e-43 !   Uncultured fungus partial 18S ribosomal RNA
+URS0000475018        -         5_8S_rRNA            RF00002    cm        1      154        3      156      +    no    1 0.49   0.0  164.6   9.6e-43 !   Lecidella carpathica 5.8S ribosomal RNA
+URS00004649BD        -         5_8S_rRNA            RF00002    cm        1      154        3      156      +    no    1 0.46   0.0  164.6   9.7e-43 !   Uncultured Sebacinales 23S ribosomal RNA
+URS0000465AAD        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.51   0.0  164.6   9.9e-43 !   Ceratocystiopsis collifera 5.8S ribosomal RNA
+URS000046D2C7        -         5_8S_rRNA            RF00002    cm        1      154        4      157      +    no    1 0.49   0.0  164.5     1e-42 !   Uncultured Russula 5.8S ribosomal RNA
+URS000046FB16        -         5_8S_rRNA            RF00002    cm        1      154        1      155      +    no    1 0.46   0.0  164.5   1.1e-42 !   Uncultured Thelephoraceae 5.8S ribosomal RNA
+URS0000460986        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.48   0.0  164.3   1.1e-42 !   Uncultured ectomycorrhizal fungus 5.8S ribosomal RNA
+URS0000464B24        -         5_8S_rRNA            RF00002    cm        1      154      208      362      +    no    1 0.48   0.0  164.3   1.2e-42 !   Thelephoraceae sp. 8 CG-2012 sequence contains ITS1, 5.8S rRNA gene, ITS2
+URS00004611A4        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.40   0.0  164.2   1.2e-42 !   Puccinia coronata 5.8S ribosomal RNA
+URS00004767BA        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.46   0.0  164.2   1.3e-42 !   5.8S ribosomal RNA from 4 species
+URS000046CD31        -         5_8S_rRNA            RF00002    cm        1      154      224      377      +    no    1 0.42   0.0  164.2   1.3e-42 !   Mortierella sp. TUFC 20053 rrn
+URS000046BB10        -         5_8S_rRNA            RF00002    cm        1      154      229      382      +    no    1 0.47   0.0  164.1   1.3e-42 !   Aspergillus neobridgeri sequence contains 18S rRNA gene, ITS1, 5.8S rRNA gene, ITS2 and 28S rRNA gene
+URS0000463AC4        -         5_8S_rRNA            RF00002    cm        1      154      223      377      +    no    1 0.46   0.0  164.1   1.4e-42 !   Uncultured ectomycorrhizal fungus sequence contains ITS1, 5.8S rRNA gene, ITS2, 28S rRNA gene
+URS000046E442        -         5_8S_rRNA            RF00002    cm        1      154       64      220      +    no    1 0.46   0.0  164.1   1.4e-42 !   Termitomyces sp. PG 5.8S ribosomal RNA
+URS00004654F6        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.49   0.0  164.0   1.5e-42 !   5.8S ribosomal RNA from 4 species
+URS0000473386        -         5_8S_rRNA            RF00002    cm        1      154      132      285      +    no    1 0.49   0.0  164.0   1.5e-42 !   Uncultured fungus partial contains 18S rRNA, ITS1, 5.8S rRNA, ITS2 and 28S rRNA
+URS0000469892        -         5_8S_rRNA            RF00002    cm        1      154      166      319      +    no    1 0.45   0.0  163.8   1.6e-42 !   Tuber sp. 3 KA-2010 partial contains ITS1, 5.8S rRNA, ITS2 and 28S rRNA
+URS000045F59D        -         5_8S_rRNA            RF00002    cm        1      154        2      156      +    no    1 0.46   0.0  163.8   1.6e-42 !   5.8S ribosomal RNA from 2 species
+URS0000466745        -         5_8S_rRNA            RF00002    cm        1      154      297      451      +    no    1 0.46   0.0  163.8   1.6e-42 !   Uncultured ectomycorrhizal fungus sequence contains ITS1, 5.8S rRNA gene, ITS2 and 28S rRNA gene
+URS00004757C0        -         5_8S_rRNA            RF00002    cm        1      154        1      154      +    no    1 0.48   0.0  163.8   1.6e-42 !   Roccella tuberculata 5.8S ribosomal RNA
+URS0000461770        -         5_8S_rRNA            RF00002    cm        1      154      211      364      +    no    1 0.51   0.0  163.8   1.6e-42 !   Aspergillus corrugatus partial contains ITS1, 5.8S rRNA and ITS2
+URS0000471397        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.47   0.0  163.8   1.7e-42 !   5.8S ribosomal RNA from 4 species
+URS0000463F99        -         5_8S_rRNA            RF00002    cm        1      154        1      155      +    no    1 0.46   0.0  163.7   1.8e-42 !   Uncultured Thelephoraceae 5.8S ribosomal RNA
+URS00004738DF        -         5_8S_rRNA            RF00002    cm        1      154        1      154      +    no    1 0.45   0.0  163.6   1.9e-42 !   5.8S ribosomal RNA from 3 species
+URS000047491F        -         5_8S_rRNA            RF00002    cm        1      154      160      313      +    no    1 0.45   0.0  163.6   1.9e-42 !   Debaryomyces hansenii sequence contains ITS1, 5.8S rRNA gene, ITS2 and 28S rRNA gene
+URS000046F4C6        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.44   0.0  163.6   1.9e-42 !   Uncultured ectomycorrhizal fungus 5.8S ribosomal RNA
+URS000046B5B9        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.53   0.0  163.6   1.9e-42 !   Dermatocarpon luridum var. xerophilum 5.8S ribosomal RNA
+URS000046664E        -         5_8S_rRNA            RF00002    cm        1      154        2      156      +    no    1 0.46   0.0  163.6   1.9e-42 !   5.8S ribosomal RNA from 3 species
+URS0000474ED9        -         5_8S_rRNA            RF00002    cm        1      154        4      157      +    no    1 0.44   0.0  163.5     2e-42 !   5.8S ribosomal RNA from 2 species
+URS0000462CAB        -         5_8S_rRNA            RF00002    cm        1      154        2      154      +    no    1 0.46   0.0  163.4   2.1e-42 !   Uncultured Cortinarius 5.8S ribosomal RNA
+URS0000467328        -         5_8S_rRNA            RF00002    cm        1      154        1      154      +    no    1 0.47   0.0  163.4   2.1e-42 !   5.8S ribosomal RNA from 2 species
+URS0000464521        -         5_8S_rRNA            RF00002    cm        1      154        1      154      +    no    1 0.48   0.0  163.4   2.1e-42 !   Siderastrea glynni 5.8S ribosomal RNA
+URS0000475893        -         5_8S_rRNA            RF00002    cm        1      154      192      345      +    no    1 0.47   0.0  163.3   2.3e-42 !   Chaetomium piluliferum contains 18S rRNA gene, ITS1, 5.8S rRNA gene, ITS2 and 28S rRNA gene
+URS0000468BF7        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.45   0.0  163.3   2.3e-42 !   Xanthomendoza sp. L477t1-133.3 5.8S ribosomal RNA
+URS0000466534        -         5_8S_rRNA            RF00002    cm        1      154      195      348      +    no    1 0.44   0.0  163.3   2.3e-42 !   Yamadazyma siamensis partial contains ITS1, 5.8S rRNA and ITS2
+URS000046C9B7        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.47   0.0  163.3   2.3e-42 !   Devriesia tardicrescens 5.8S ribosomal RNA
+URS00004702BA        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.47   0.0  163.2   2.4e-42 !   Gomphidius borealis 5.8S ribosomal RNA
+URS000045FE45        -         5_8S_rRNA            RF00002    cm        1      154        3      156      +    no    1 0.46   0.0  163.2   2.4e-42 !   Gymnopus earleae 5.8S RNA
+URS0000468B9C        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.47   0.0  163.2   2.4e-42 !   Geoglossum simile 5.8S ribosomal RNA
+URS000047333A        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.47   0.0  163.1   2.7e-42 !   Cladosporium cladosporioides 5.8S ribosomal RNA
+URS000047344A        -         5_8S_rRNA            RF00002    cm        1      154        2      154      +    no    1 0.48   0.0  163.1   2.7e-42 !   Uncultured fungus 5.8S ribosomal RNA
+URS000046D248        -         5_8S_rRNA            RF00002    cm        1      154        1      154      +    no    1 0.48   0.0  163.1   2.7e-42 !   5.8S ribosomal RNA from 72 species
+URS00004604B8        -         5_8S_rRNA            RF00002    cm        1      154        1      154      +    no    1 0.44   0.0  163.0   2.7e-42 !   Biscogniauxia mediterranea 5.8S ribosomal RNA
+URS0000464D1F        -         5_8S_rRNA            RF00002    cm        1      154        4      157      +    no    1 0.49   0.0  163.0   2.7e-42 !   Penicillium sp. 3T30BA 5.8S ribosomal RNA
+URS000046CDB4        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.50   0.0  163.0   2.7e-42 !   5.8S ribosomal RNA from 2 species
+URS00004745AA        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.49   0.0  163.0   2.7e-42 !   Roccella canariensis 5.8S ribosomal RNA
+URS00004614C2        -         5_8S_rRNA            RF00002    cm        2      154        1      153      +    5'    2 0.45   0.0  163.0   2.8e-42 !   5.8S ribosomal RNA from 2 species
+URS000046213B        -         5_8S_rRNA            RF00002    cm        1      154        1      154      +    no    1 0.38   0.0  163.0   2.8e-42 !   Puccinia monoica 5.8S ribosomal RNA
+URS0000474C90        -         5_8S_rRNA            RF00002    cm        1      154        1      152      +    no    1 0.44   0.0  162.9     3e-42 !   Uncultured Inocybe 5.8S ribosomal RNA
+URS0000469955        -         5_8S_rRNA            RF00002    cm        1      154        2      156      +    no    1 0.45   0.0  162.8   3.1e-42 !   Uncultured Piloderma 5.8S ribosomal RNA
+URS0000463431        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.47   0.0  162.7   3.3e-42 !   5.8S ribosomal RNA from 4 species
+URS000045FA0E        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.45   0.0  162.7   3.3e-42 !   5.8S ribosomal RNA from 3 species
+URS0000471E0B        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.51   0.0  162.6   3.5e-42 !   Diploschistes elixii 5.8S ribosomal RNA
+URS0000472702        -         5_8S_rRNA            RF00002    cm        1      154        2      156      +    no    1 0.46   0.0  162.6   3.6e-42 !   Uncultured Xerocomus 5.8S ribosomal RNA
+URS0000464940        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.45   0.0  162.6   3.6e-42 !   Candida olivae 5.8S ribosomal RNA
+URS000046F0BF        -         5_8S_rRNA            RF00002    cm        1      154        1      154      +    no    1 0.37   0.0  162.5   3.8e-42 !   5.8S ribosomal RNA from 3 species
+URS00004656FB        -         5_8S_rRNA            RF00002    cm        1      154        1      154      +    no    1 0.47   0.0  162.5   3.8e-42 !   Xylomelasma sp. ZK29/08 5.8S ribosomal RNA
+URS00004648CA        -         5_8S_rRNA            RF00002    cm        1      154        2      156      +    no    1 0.46   0.0  162.5   3.9e-42 !   Chroogomphus rutilus 5.8S ribosomal RNA
+URS0000464832        -         5_8S_rRNA            RF00002    cm        1      154        1      153      +    no    1 0.46   0.0  162.5   3.9e-42 !   Uncultured fungus 5.8S ribosomal RNA
+URS0000464AFA        -         5_8S_rRNA            RF00002    cm        1      154        3      156      +    no    1 0.47   0.0  162.4   4.2e-42 !   Uncultured Leotiomycetes 5.8S ribosomal RNA
+URS000046F58A        -         5_8S_rRNA            RF00002    cm        1      154        3      156      +    no    1 0.52   0.0  162.4   4.2e-42 !   Chlorella sorokiniana 5.8S ribosomal RNA
+URS000047406B        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.47   0.0  162.3   4.3e-42 !   Xenostigmina sp. FG7.3 5.8S ribosomal RNA
+URS0000473CF9        -         5_8S_rRNA            RF00002    cm        1      154        2      156      +    no    1 0.48   0.0  162.3   4.5e-42 !   Pisolithus abditus 5.8S ribosomal RNA
+URS000046AA4F        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.46   0.0  162.3   4.5e-42 !   Sporendocladia foliicola 5.8S ribosomal RNA
+URS0000464F74        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.49   0.0  162.2   4.6e-42 !   Uncultured Lactarius 5.8S ribosomal RNA
+URS0000472F1D        -         5_8S_rRNA            RF00002    cm        1      154        2      154      +    no    1 0.48   0.0  162.2   4.7e-42 !   Grateloupia sp. 5.8S ribosomal RNA
+URS000046ADE5        -         5_8S_rRNA            RF00002    cm        1      154      111      265      +    no    1 0.46   0.0  162.2   4.7e-42 !   Thelephoraceae sp. 18 CG-2012 sequence contains ITS1, 5.8S rRNA gene, ITS2
+URS000046B9CB        -         5_8S_rRNA            RF00002    cm        1      154      329      482      +    no    1 0.45   0.0  162.1   4.9e-42 !   Uncultured Funneliformis sequence contains 18S rRNA gene, ITS1, 5.8S rRNA gene, ITS2 and 28S rRNA gene
+URS00004632E6        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.49   0.0  161.9   5.7e-42 !   Lactarius sanguifluus 5.8S ribosomal RNA
+URS000046172B        -         5_8S_rRNA            RF00002    cm        3      154        1      152      +    5'    2 0.47   0.0  161.9   5.8e-42 !   Fomitopsis sp. CLF-T 5.8S rRNA
+URS0000471500        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.49   0.0  161.7   6.3e-42 !   Nectria haematococca 5.8S ribosomal RNA
+URS0000467864        -         5_8S_rRNA            RF00002    cm        1      154        1      155      +    no    1 0.46   0.0  161.7   6.4e-42 !   Sulzbacheromyces caatingae 5.8S ribosomal RNA
+URS00004600F5        -         5_8S_rRNA            RF00002    cm        1      154      118      271      +    no    1 0.45   0.0  161.6   6.8e-42 !   Uncultured fungus partial contains 18S rRNA, ITS1, 5.8S rRNA, ITS2 and 28S rRNA
+URS000046CBB5        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.46   0.0  161.6   6.8e-42 !   Helotiales sp. IMI 392566 5.8S ribosomal RNA
+URS0000462711        -         5_8S_rRNA            RF00002    cm        1      154        1      154      +    no    1 0.45   0.0  161.6   6.8e-42 !   Debaryomyces coudertii 5.8S ribosomal RNA
+URS0000463BFC        -         5_8S_rRNA            RF00002    cm        1      154      353      506      +    no    1 0.47   0.0  161.6   6.9e-42 !   Uncultured Rhizophagus sequence contains 18S rRNA gene, ITS1, 5.8S rRNA gene, ITS2 and 28S rRNA gene
+URS0000472E4C        -         5_8S_rRNA            RF00002    cm        1      154      163      316      +    no    1 0.49   0.0  161.6   7.1e-42 !   Phialemonium atrogriseum partial 5.8S ribosomal RNA
+URS0000473A10        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.51   0.0  161.5   7.2e-42 !   Aspergillus coremiiformis 5.8S ribosomal RNA
+URS000046D0D4        -         5_8S_rRNA            RF00002    cm        1      154      243      397      +    no    1 0.47   0.0  161.5   7.2e-42 !   Rhizopogon vesiculosus partial contains internal transcribed spacer 1, 5.8S ribosomal RNA, and internal transcribed spacer 2
+URS0000461CBC        -         5_8S_rRNA            RF00002    cm        1      154      143      296      +    no    1 0.44   0.0  161.5   7.3e-42 !   Candida tropicalis ITS1
+URS00004641B0        -         5_8S_rRNA            RF00002    cm        1      154        2      157      +    no    1 0.47   0.0  161.5   7.4e-42 !   Uncultured Thelephora 5.8S ribosomal RNA
+URS0000471AAF        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.45   0.0  161.5   7.5e-42 !   Uncultured Glomus 5.8S ribosomal RNA
+URS0000464511        -         5_8S_rRNA            RF00002    cm        1      154      224      378      +    no    1 0.46   0.0  161.4   7.7e-42 !   Uncultured ectomycorrhizal fungus sequence contains ITS1, 5.8S rRNA gene, ITS2, 28S rRNA gene
+URS0000464EF2        -         5_8S_rRNA            RF00002    cm        1      154        6      160      +    no    1 0.46   0.0  161.3   8.6e-42 !   Leccinum aurantiacum 5.8S ribosomal RNA
+URS000046EABB        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.44   0.0  161.2   8.8e-42 !   Uncultured Glomus 5.8S ribosomal RNA
+URS0000467B58        -         5_8S_rRNA            RF00002    cm        1      154        1      153      +    no    1 0.46   0.0  161.2   9.1e-42 !   5.8S ribosomal RNA from 2 species
+URS0000470E25        -         5_8S_rRNA            RF00002    cm        1      154        1      154      +    no    1 0.44   0.0  161.1   9.7e-42 !   5.8S ribosomal RNA from 6 species
+URS00004606F3        -         5_8S_rRNA            RF00002    cm        1      154      192      345      +    no    1 0.45   0.0  161.0     1e-41 !   Candida gosingica partial contains ITS1, 5.8S rRNA and ITS2
+URS000046A435        -         5_8S_rRNA            RF00002    cm        1      154        2      154      +    no    1 0.49   0.0  161.0   1.1e-41 !   Cyphellophora fusarioides 5.8S ribosomal RNA
+URS0000467D33        -         5_8S_rRNA            RF00002    cm        1      154      148      302      +    no    1 0.43   0.0  161.0   1.1e-41 !   Ophiocordyceps nutans contains ITS1, 5.8S rRNA and ITS2
+URS000046DCBC        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.53   0.0  160.9   1.1e-41 !   Compactochlorella dohrmannii 5.8S ribosomal RNA
+URS000046E0B1        -         5_8S_rRNA            RF00002    cm        1      154        2      154      +    no    1 0.47   0.0  160.8   1.2e-41 !   Pezoloma ericae 5.8S ribosomal RNA
+URS00004772DD        -         5_8S_rRNA            RF00002    cm        1      154        1      154      +    no    1 0.47   0.0  160.8   1.2e-41 !   5.8S ribosomal RNA from 2 species
+URS0000461C93        -         5_8S_rRNA            RF00002    cm        1      154      177      329      +    no    1 0.50   0.0  160.7   1.3e-41 !   Penicillium oxalicum sequence contains ITS1 and 5.8S rRNA gene
+URS0000472813        -         5_8S_rRNA            RF00002    cm        1      154        3      156      +    no    1 0.48   0.0  160.7   1.3e-41 !   Emericellopsis minima 5.8S ribosomal RNA
+URS000045EE20        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.44   0.0  160.6   1.3e-41 !   Rhizoctonia solani 5.8S ribosomal RNA
+URS0000464D29        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.40   0.0  160.6   1.3e-41 !   Puccinia coronata 5.8S ribosomal RNA
+URS0000476C2F        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.47   0.0  160.6   1.3e-41 !   Fungal endophyte sp. AP659 5.8S ribosomal RNA
+URS0000467BD3        -         5_8S_rRNA            RF00002    cm        1      154       60      213      +    no    1 0.51   0.0  160.6   1.4e-41 !   5.8S ribosomal RNA from 2 species
+URS00004685E1        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.49   0.0  160.5   1.4e-41 !   Phacopsis huuskonenii 5.8S ribosomal RNA
+URS0000465AF8        -         5_8S_rRNA            RF00002    cm        1      154        2      156      +    no    1 0.45   0.0  160.5   1.4e-41 !   Uncultured Glomus 5.8S ribosomal RNA
+URS000046C80B        -         5_8S_rRNA            RF00002    cm        1      154      209      362      +    no    1 0.44   0.0  160.5   1.5e-41 !   Uncultured Candida partial 18S ribosomal RNA
+URS0000465FBA        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.51   0.0  160.4   1.5e-41 !   Pesotum sp. MAE1D-3-25-P1 5.8S ribosomal RNA
+URS000046E8A9        -         5_8S_rRNA            RF00002    cm        2      154        1      153      +    5'    2 0.46   0.0  160.3   1.6e-41 !   Armillaria mellea 5.8S ribosomal RNA
+URS0000470C9A        -         5_8S_rRNA            RF00002    cm        1      154        2      156      +    no    1 0.46   0.0  160.2   1.7e-41 !   Uncultured fungus 5.8S ribosomal RNA
+URS000046A3C1        -         5_8S_rRNA            RF00002    cm        1      154      161      314      +    no    1 0.47   0.0  160.2   1.8e-41 !   Uncultured Ascomycota sequence contains ITS1, 5.8S rRNA gene and ITS2
+URS0000468B4E        -         5_8S_rRNA            RF00002    cm        1      154        2      154      +    no    1 0.43   0.0  160.2   1.8e-41 !   Umbelopsis autotrophica 5.8S ribosomal RNA
+URS00004637A9        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.41   0.0  160.1   1.8e-41 !   Gigaspora margarita 5.8S ribosomal RNA
+URS0000474905        -         5_8S_rRNA            RF00002    cm        1      154        2      156      +    no    1 0.47   0.0  159.9   2.1e-41 !   Leptosphaeria polylepidis 5.8S ribosomal RNA
+URS00004652ED        -         5_8S_rRNA            RF00002    cm        1      154      132      286      +    no    1 0.46   0.0  159.9   2.2e-41 !   Uncultured fungus partial contains 18S rRNA, ITS1, 5.8S rRNA, ITS2 and 28S rRNA
+URS0000468233        -         5_8S_rRNA            RF00002    cm        1      154      250      404      +    no    1 0.48   0.0  159.8   2.3e-41 !   Phialophora verrucosa partial contains small subunit rRNA, ITS1, 5.8S rRNA, ITS2 and large subunit rRNA
+URS0000464A38        -         5_8S_rRNA            RF00002    cm        1      154        2      156      +    no    1 0.48   0.0  159.7   2.5e-41 !   Scutellinia scutellata 5.8S ribosomal RNA
+URS000046A737        -         5_8S_rRNA            RF00002    cm        1      154        6      158      +    no    1 0.47   0.0  159.6   2.6e-41 !   Metarhizium anisopliae 5.8S ribosomal RNA
+URS000045F456        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.51   0.0  159.2   3.3e-41 !   Ophiostoma ulmi 5.8S ribosomal RNA
+URS0000467D7D        -         5_8S_rRNA            RF00002    cm        1      154        5      158      +    no    1 0.44   0.0  159.2   3.3e-41 !   Foliar endophyte of Picea glauca sp. L10 5.8S ribosomal RNA
+URS0000460B43        -         5_8S_rRNA            RF00002    cm        1      154      171      324      +    no    1 0.47   0.0  159.2   3.4e-41 !   Uncultured fungus partial contains 18S rRNA, ITS1, 5.8S rRNA, ITS2 and 28S rRNA
+URS000046FF27        -         5_8S_rRNA            RF00002    cm        1      154       11      164      +    no    1 0.51   0.0  159.2   3.4e-41 !   Aphanochaete repens 5.8S ribosomal RNA
+URS00004633D5        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.52   0.0  159.1   3.6e-41 !   Dicloster acuatus 5.8S ribosomal RNA
+URS0000468967        -         5_8S_rRNA            RF00002    cm        1      154       10      160      +    no    1 0.47   0.0  159.0   3.9e-41 !   Fusarium oxysporum 5.8S ribosomal RNA
+URS00004738D9        -         5_8S_rRNA            RF00002    cm        1      154       96      250      +    no    1 0.47   0.0  159.0   3.9e-41 !   environmental samples uncultured fungus rRNA
+URS000046FF5D        -         5_8S_rRNA            RF00002    cm        1      154        2      156      +    no    1 0.48   0.0  158.9     4e-41 !   5.8S ribosomal RNA from 2 species
+URS0000461AEE        -         5_8S_rRNA            RF00002    cm        1      154        2      154      +    no    1 0.48   0.0  158.8   4.3e-41 !   Perrotia flammea ribosomal RNA
+URS000046670D        -         5_8S_rRNA            RF00002    cm        1      154        5      159      +    no    1 0.48   0.0  158.8   4.4e-41 !   Pisolithus albus 5.8S ribosomal RNA
+URS000046B086        -         5_8S_rRNA            RF00002    cm        1      154        1      154      +    no    1 0.47   0.0  158.7   4.6e-41 !   Phlyctochytrium arcticum 5.8S ribosomal RNA
+URS000046FA0F        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.41   0.0  158.5   5.4e-41 !   Acaulospora morrowiae 5.8S ribosomal RNA
+URS0000464238        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.44   0.0  158.4   5.7e-41 !   5.8S ribosomal RNA from 2 species
+URS0000468781        -         5_8S_rRNA            RF00002    cm        1      154      400      553      +    no    1 0.51   0.0  158.4   5.8e-41 !   Xanthidium antilopaeum var. antilopaeum sequence contains ITS1, 5.8S rRNA gene and ITS2
+URS0000461494        -         5_8S_rRNA            RF00002    cm        2      154        1      153      +    5'    2 0.47   0.0  158.3     6e-41 !   5.8S ribosomal RNA from 3 species
+URS00004705F2        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.46   0.0  158.2   6.3e-41 !   Rhizoctonia bataticola 5.8S ribosomal RNA
+URS0000463455        -         5_8S_rRNA            RF00002    cm        1      154      207      361      +    no    1 0.47   0.0  158.1   6.7e-41 !   Exophiala spinifera rrn
+URS0000466E78        -         5_8S_rRNA            RF00002    cm        1      154      172      325      +    no    1 0.45   0.0  158.1   6.9e-41 !   Tuber sp. 7 KA-2010 partial contains ITS1, 5.8S rRNA, ITS2 and 28S rRNA
+URS0000464E9D        -         5_8S_rRNA            RF00002    cm        1      154        5      158      +    no    1 0.48   0.0  157.9   7.6e-41 !   Uncultured Thelephoraceae 5.8S ribosomal RNA
+URS0000474BA3        -         5_8S_rRNA            RF00002    cm        1      154        2      154      +    no    1 0.45   0.0  157.9   7.7e-41 !   Funneliformis caledonium 5.8S ribosomal RNA
+URS0000461D9F        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.52   0.0  157.9   7.7e-41 !   5.8S ribosomal RNA from 2 species
+URS0000468EE4        -         5_8S_rRNA            RF00002    cm        2      154        1      153      +    5'    2 0.49   0.0  157.8   8.2e-41 !   Blastomyces dermatitidis ATCC 18188 28S ribosomal RNA
+URS0000463306        -         5_8S_rRNA            RF00002    cm        1      154        1      154      +    no    1 0.45   0.0  157.7   8.7e-41 !   Dictyosporium stellatum 5.8S ribosomal RNA
+URS00004671FC        -         5_8S_rRNA            RF00002    cm        1      154        1      154      +    no    1 0.50   0.0  157.7   8.9e-41 !   5.8S ribosomal RNA from 2 species
+URS000046013E        -         5_8S_rRNA            RF00002    cm        1      154        4      158      +    no    1 0.47   0.0  157.7   8.9e-41 !   Pisolithus sp. DYS1 5.8S ribosomal RNA
+URS00004746FC        -         5_8S_rRNA            RF00002    cm        1      154       46      199      +    no    1 0.51   0.0  157.7   9.2e-41 !   Trebouxia jamesii partial 5.8S ribosomal RNA
+URS0000460B05        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.47   0.0  157.6   9.4e-41 !   Uncultured Glomus 5.8S ribosomal RNA
+URS000046C5B5        -         5_8S_rRNA            RF00002    cm        1      154      177      331      +    no    1 0.47   0.0  157.6   9.4e-41 !   Sebacinales sp. 6 CG-2012 sequence contains ITS1, 5.8S rRNA gene, ITS2
+URS0000469803        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.51   0.0  157.6   9.7e-41 !   Gibellulopsis nigrescens 5.8S ribosomal RNA
+URS00004720B9        -         5_8S_rRNA            RF00002    cm        1      154        2      156      +    no    1 0.45   0.0  157.5     1e-40 !   Pythium cryptoirregulare 5.8S ribosomal RNA
+URS0000460535        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.45   0.0  157.4   1.1e-40 !   Arthrobotrys sp. r251 5.8S ribosomal RNA
+URS000046815E        -         5_8S_rRNA            RF00002    cm        1      154        1      154      +    no    1 0.44   0.0  157.3   1.2e-40 !   Muscodor sp. 2CCSTITD 5.8S ribosomal RNA
+URS000046C244        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.44   0.0  157.2   1.2e-40 !   Spirosphaera minuta 5.8S ribosomal RNA
+URS000046C0DA        -         5_8S_rRNA            RF00002    cm        1      154      178      331      +    no    1 0.48   0.0  157.2   1.2e-40 !   Chaetomium globosum sequence contains 18S rRNA gene, ITS1, 5.8S rRNA gene, ITS2 and 28S rRNA gene
+URS0000464D93        -         5_8S_rRNA            RF00002    cm        1      154        1      151      +    no    1 0.43   0.0  157.0   1.4e-40 !   Mortierella longicollis 5.8S ribosomal RNA
+URS000047499E        -         5_8S_rRNA            RF00002    cm        1      154      284      438      +    no    1 0.46   0.0  157.0   1.4e-40 !   Uncultured fungus partial contains 18S rRNA, ITS1, 5.8S rRNA, ITS2 and 28S rRNA
+URS0000463783        -         5_8S_rRNA            RF00002    cm        1      154       11      164      +    no    1 0.51   0.0  156.9   1.5e-40 !   Stigeoclonium variabile 5.8S ribosomal RNA
+URS0000469BB0        -         5_8S_rRNA            RF00002    cm        1      154        1      154      +    no    1 0.36   0.0  156.9   1.5e-40 !   Puccinia horiana 5.8S ribosomal RNA
+URS000046F506        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.46   0.0  156.9   1.5e-40 !   Fungal sp. JH52 5.8S ribosomal RNA
+URS000046FF5C        -         5_8S_rRNA            RF00002    cm        1      154        5      158      +    no    1 0.50   0.0  156.9   1.5e-40 !   Dunaliella sp. SPMO 211-2 5.8S ribosomal RNA
+URS0000461A89        -         5_8S_rRNA            RF00002    cm        3      154        1      152      +    5'    2 0.48   0.0  156.8   1.6e-40 !   5.8S ribosomal RNA from 3 species
+URS000045FF64        -         5_8S_rRNA            RF00002    cm        2      154        1      153      +    5'    2 0.43   0.0  156.7   1.7e-40 !   Hypoxylon petriniae 5.8S ribosomal RNA
+URS000046CA42        -         5_8S_rRNA            RF00002    cm        1      154        2      156      +    no    1 0.46   0.0  156.7   1.7e-40 !   Suillus variegatus 5.8S ribosomal RNA
+URS0000461E68        -         5_8S_rRNA            RF00002    cm        1      154        1      152      +    no    1 0.45   0.0  156.7   1.7e-40 !   Periconia macrospinosa 5.8S ribosomal RNA
+URS000046A3A6        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.46   0.0  156.7   1.8e-40 !   Uncultured Glomus 5.8S ribosomal RNA
+URS000046928B        -         5_8S_rRNA            RF00002    cm        1      154        3      158      +    no    1 0.47   0.0  156.6   1.9e-40 !   Diaporthe helianthi 5.8S ribosomal RNA
+URS00004723FA        -         5_8S_rRNA            RF00002    cm        1      154        1      153      +    no    1 0.50   0.0  156.3   2.2e-40 !   Cyphellophora suttonii 5.8S ribosomal RNA
+URS0000473A70        -         5_8S_rRNA            RF00002    cm        3      154        1      152      +    5'    2 0.49   0.0  156.3   2.2e-40 !   Stereocaulon nivale 5.8S ribosomal RNA
+URS00004740E3        -         5_8S_rRNA            RF00002    cm        1      154        1      154      +    no    1 0.45   0.0  156.2   2.3e-40 !   5.8S ribosomal RNA from 2 species
+URS0000470AC1        -         5_8S_rRNA            RF00002    cm        2      154        1      153      +    5'    2 0.48   0.0  156.2   2.4e-40 !   Mycosphaerella keniensis 5.8S ribosomal RNA
+URS000046800C        -         5_8S_rRNA            RF00002    cm        1      154      234      387      +    no    1 0.52   0.0  156.2   2.4e-40 !   Leptographium truncatum partial contains 18S rRNA, ITS1, 5.8S rRNA, ITS2 and 28S rRNA
+URS0000476441        -         5_8S_rRNA            RF00002    cm        1      154      236      390      +    no    1 0.50   0.0  156.0   2.7e-40 !   Corollospora maritima partial miscellaneous RNA
+URS0000473341        -         5_8S_rRNA            RF00002    cm        2      154        1      153      +    5'    2 0.46   0.0  156.0   2.8e-40 !   Rhizophagus irregularis 5.8S ribosomal RNA
+URS0000460EDD        -         5_8S_rRNA            RF00002    cm        1      154        1      154      +    no    1 0.42   0.0  156.0   2.8e-40 !   Biscogniauxia nummularia 5.8S ribosomal RNA
+URS000047050C        -         5_8S_rRNA            RF00002    cm        1      146        2      147      +    3'    3 0.47   0.0  155.9   2.8e-40 !   Mycogone perniciosa 5.8S ribosomal RNA
+URS0000467419        -         5_8S_rRNA            RF00002    cm        3      154        1      152      +    5'    2 0.48   0.0  155.9   2.8e-40 !   Lasiodiplodia theobromae 5.8S ribosomal RNA
+URS000045F783        -         5_8S_rRNA            RF00002    cm        1      154      287      440      +    no    1 0.47   0.0  155.8     3e-40 !   Pseudo-nitzschia pungens sequence contains ITS1, 5.8S rRNA gene, ITS2
+URS0000463BDA        -         5_8S_rRNA            RF00002    cm        1      154        4      157      +    no    1 0.51   0.0  155.8   3.2e-40 !   Tetradesmus obliquus 5.8S ribosomal RNA
+URS00004720A3        -         5_8S_rRNA            RF00002    cm        1      154        5      158      +    no    1 0.47   0.0  155.7   3.3e-40 !   Pisolithus tinctorius 5.8S ribosomal RNA
+URS0000476005        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.43   0.0  155.5   3.7e-40 !   Glomus sp. R19.5 5.8S ribosomal RNA
+URS00004689CF        -         5_8S_rRNA            RF00002    cm        1      154        4      158      +    no    1 0.47   0.0  155.4     4e-40 !   Pisolithus tinctorius 5.8S ribosomal RNA
+URS000046EED7        -         5_8S_rRNA            RF00002    cm        1      154       15      168      +    no    1 0.49   0.0  155.4   4.1e-40 !   Desmodesmus sp. F51 5.8S ribosomal RNA
+URS0000474E38        -         5_8S_rRNA            RF00002    cm        1      154        1      153      +    no    1 0.38   0.0  155.4   4.1e-40 !   Puccinia graminis f. sp. tritici 5.8S ribosomal RNA
+URS000045F202        -         5_8S_rRNA            RF00002    cm        1      154       12      159      +    no    1 0.47   0.0  155.4   4.1e-40 !   Cladosporium sp. MBC003 5.8S ribosomal RNA
+URS000046A95F        -         5_8S_rRNA            RF00002    cm        1      154        1      156      +    no    1 0.46   0.0  155.3   4.2e-40 !   Tylospora sp. R29 5.8S ribosomal RNA
+URS0000467276        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.47   0.0  155.3   4.4e-40 !   Eimeria gruis 5.8S ribosomal RNA
+URS00004632BA        -         5_8S_rRNA            RF00002    cm        1      154        4      152      +    no    1 0.48   0.0  155.2   4.6e-40 !   Tolypocladium tundrense 5.8S ribosomal RNA
+URS0000460E04        -         5_8S_rRNA            RF00002    cm        1      154        2      154      +    no    1 0.45   0.0  155.1   4.8e-40 !   Funneliformis mosseae 5.8S ribosomal RNA
+URS00004734B5        -         5_8S_rRNA            RF00002    cm        1      154        1      153      +    no    1 0.43   0.0  155.1     5e-40 !   Candida parapsilosis 5.8S ribosomal RNA
+URS000046B87D        -         5_8S_rRNA            RF00002    cm        2      154        1      153      +    5'    2 0.46   0.0  154.9   5.6e-40 !   Ascomycete sp. CH-Co24 5.8S ribosomal RNA
+URS000047435E        -         5_8S_rRNA            RF00002    cm        6      154        1      149      +    5'    2 0.49   0.0  154.8     6e-40 !   Lophodermium indianum 5.8S ribosomal RNA
+URS0000469790        -         5_8S_rRNA            RF00002    cm        1      154      200      354      +    no    1 0.48   0.0  154.8   6.1e-40 !   Phytophthora chrysanthemi partial contains ITS1, 5.8S rRNA and ITS2
+URS000046BE50        -         5_8S_rRNA            RF00002    cm        1      154        1      155      +    no    1 0.46   0.0  154.6   6.7e-40 !   Lagenidium sp. PWL-2010a 5.8S ribosomal RNA
+URS000046DFE0        -         5_8S_rRNA            RF00002    cm        1      154        5      158      +    no    1 0.47   0.0  154.4   7.9e-40 !   Tricholoma sejunctum 5.8S ribosomal RNA
+URS000046C038        -         5_8S_rRNA            RF00002    cm        1      154      329      482      +    no    1 0.49   0.0  154.4   7.9e-40 !   Microsporum ferrugineum partial contains 18S rRNA, ITS1, 5.8S rRNA and ITS2
+URS00004688CA        -         5_8S_rRNA            RF00002    cm        1      154        2      157      +    no    1 0.47   0.0  154.3   8.1e-40 !   Scutellinia colensoi 5.8S ribosomal RNA
+URS000046572A        -         5_8S_rRNA            RF00002    cm        2      154        1      153      +    5'    2 0.46   0.0  154.3   8.2e-40 !   Uncultured Glomus 5.8S ribosomal RNA
+URS000045F807        -         5_8S_rRNA            RF00002    cm        3      154        1      152      +    5'    2 0.45   0.0  154.3   8.4e-40 !   Funneliformis mosseae 5.8S ribosomal RNA
+URS000046113B        -         5_8S_rRNA            RF00002    cm        1      154        4      158      +    no    1 0.44   0.0  154.2   8.6e-40 !   Cyphellopsis anomala 5.8S ribosomal RNA
+URS000045F7C8        -         5_8S_rRNA            RF00002    cm        1      154      192      345      +    no    1 0.44   0.0  154.0     1e-39 !   Halocrusticida parasitica partial ribosomal RNA
+URS0000475ED7        -         5_8S_rRNA            RF00002    cm        1      154      329      483      +    no    1 0.46   0.0  154.0     1e-39 !   Pseudo-nitzschia calliantha sequence contains ITS1, 5.8S rRNA gene, ITS2
+URS000046FA0A        -         5_8S_rRNA            RF00002    cm        1      154        2      156      +    no    1 0.44   0.0  153.9   1.1e-39 !   Candida parapsilosis 5.8S rRNA
+URS000045FC64        -         5_8S_rRNA            RF00002    cm        5      154        1      150      +    5'    2 0.49   0.0  153.5   1.4e-39 !   Uncultured Ascomycota 5.8S ribosomal RNA
+URS00004602F3        -         5_8S_rRNA            RF00002    cm        7      154        1      148      +    5'    2 0.49   0.0  153.4   1.5e-39 !   5.8S ribosomal RNA from 9 species
+URS0000460188        -         5_8S_rRNA            RF00002    cm        1      146        2      147      +    3'    3 0.47   0.0  153.4   1.5e-39 !   Epichloe tembladerae 5.8S ribosomal RNA
+URS00004613CC        -         5_8S_rRNA            RF00002    cm        1      154      250      404      +    no    1 0.50   0.0  153.4   1.5e-39 !   Desmarestia distans sequence contains ITS1
+URS0000471EA8        -         5_8S_rRNA            RF00002    cm        1      154      246      400      +    no    1 0.50   0.0  153.4   1.5e-39 !   Desmarestia viridis sequence contains ITS1
+URS0000467782        -         5_8S_rRNA            RF00002    cm        1      154        5      157      +    no    1 0.52   0.0  153.4   1.5e-39 !   Schistidium papillosum partial 5.8S ribosomal RNA
+URS0000475AFB        -         5_8S_rRNA            RF00002    cm        1      154        5      157      +    no    1 0.52   0.0  153.3   1.6e-39 !   5.8S ribosomal RNA from 31 species
+URS000046A1E1        -         5_8S_rRNA            RF00002    cm        1      154        1      153      +    no    1 0.44   0.0  153.2   1.7e-39 !   Ceratobasidium sp. AG-Fa 5.8S ribosomal RNA
+URS000046AA0A        -         5_8S_rRNA            RF00002    cm        1      154        2      156      +    no    1 0.45   0.0  153.2   1.7e-39 !   Pythium ultimum var. ultimum 5.8S ribosomal RNA
+URS0000468260        -         5_8S_rRNA            RF00002    cm        3      154        1      152      +    5'    2 0.49   0.0  153.2   1.7e-39 !   Bryochiton microscopicus partial 5.8S ribosomal RNA
+URS00004755C9        -         5_8S_rRNA            RF00002    cm        4      154        1      151      +    5'    2 0.45   0.0  153.1   1.9e-39 !   Uncultured Glomus 5.8S ribosomal RNA
+URS0000465FDA        -         5_8S_rRNA            RF00002    cm        1      154        1      154      +    no    1 0.45   0.0  153.0   1.9e-39 !   Ramaria suecica 5.8S ribosomal RNA
+URS000046757A        -         5_8S_rRNA            RF00002    cm        1      154        5      157      +    no    1 0.51   0.0  152.9   2.1e-39 !   Schistidium obscurum 5.8S ribosomal RNA
+URS00004680DA        -         5_8S_rRNA            RF00002    cm        1      154        5      158      +    no    1 0.51   0.0  152.8   2.2e-39 !   5.8S ribosomal RNA from 3 species
+URS0000476AB7        -         5_8S_rRNA            RF00002    cm        1      154        1      154      +    no    1 0.49   0.0  152.8   2.3e-39 !   Trentepohlia iolithus 5.8S ribosomal RNA
+URS000046B980        -         5_8S_rRNA            RF00002    cm        1      154        1      152      +    no    1 0.45   0.0  152.7   2.3e-39 !   Typhula incarnata 5.8S ribosomal RNA
+URS00004696A7        -         5_8S_rRNA            RF00002    cm        1      154        2      156      +    no    1 0.46   0.0  152.7   2.4e-39 !   Astraeus odoratus 5.8S ribosomal RNA
+URS0000461594        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.46   0.0  152.6   2.5e-39 !   Uncultured Glomus 5.8S ribosomal RNA
+URS0000461AF9        -         5_8S_rRNA            RF00002    cm        1      154        4      156      +    no    1 0.48   0.0  152.5   2.8e-39 !   Porites compressa 5.8S ribosomal RNA
+URS0000461F38        -         5_8S_rRNA            RF00002    cm        1      154        8      161      +    no    1 0.46   0.0  152.1   3.4e-39 !   Armillaria mellea 5.8S ribosomal RNA
+URS00004623EE        -         5_8S_rRNA            RF00002    cm        1      154        5      161      +    no    1 0.48   0.0  152.1   3.6e-39 !   5.8S ribosomal RNA from 2 species
+URS000046E15D        -         5_8S_rRNA            RF00002    cm        1      154        1      154      +    no    1 0.47   0.0  152.0   3.7e-39 !   Cordyceps gunnii 5.8S ribosomal RNA
+URS0000475C13        -         5_8S_rRNA            RF00002    cm        1      154        1      153      +    no    1 0.47   0.0  152.0   3.8e-39 !   Leveillula taurica 5.8 rRNA
+URS0000473150        -         5_8S_rRNA            RF00002    cm        1      154       12      166      +    no    1 0.46   0.0  152.0   3.8e-39 !   Pseudo-nitzschia australis 5.8S ribosomal RNA
+URS00004753CF        -         5_8S_rRNA            RF00002    cm        1      141        1      141      +    3'    3 0.48   0.0  151.8   4.2e-39 !   Phanerochaete chrysosporium 5.8S ribosomal RNA
+URS0000466B7A        -         5_8S_rRNA            RF00002    cm        1      154        5      159      +    no    1 0.50   0.0  151.8   4.2e-39 !   Papenfussiella kuromo 5.8S ribosomal RNA
+URS0000468C71        -         5_8S_rRNA            RF00002    cm        1      154        2      154      +    no    1 0.45   0.0  151.4   5.4e-39 !   Erysiphe australiana 5.8S ribosomal RNA
+URS00004645C1        -         5_8S_rRNA            RF00002    cm        1      154        6      159      +    no    1 0.53   0.0  151.4   5.5e-39 !   Plagiochila punctata 5.8S ribosomal RNA
+URS0000465B7D        -         5_8S_rRNA            RF00002    cm        1      154        2      154      +    no    1 0.45   0.0  151.1   6.9e-39 !   Allomyces arbusculus 5.8S ribosomal RNA
+URS000046FEF3        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.49   0.0  150.9   7.5e-39 !   5.8S ribosomal RNA from 2 species
+URS0000471358        -         5_8S_rRNA            RF00002    cm        7      154        1      148      +    5'    2 0.50   0.0  150.9   7.6e-39 !   Lepraria isidiata 5.8S ribosomal RNA
+URS000046F3F3        -         5_8S_rRNA            RF00002    cm        1      154       10      164      +    no    1 0.45   0.0  150.8   8.2e-39 !   Saprolegnia sp. MCA 3070 5.8S ribosomal RNA
+URS0000474E52        -         5_8S_rRNA            RF00002    cm        1      154       12      159      +    no    1 0.47   0.0  150.7   8.6e-39 !   5.8S ribosomal RNA from 2 species
+URS0000466A25        -         5_8S_rRNA            RF00002    cm        2      154        1      153      +    5'    2 0.50   0.0  150.7   8.8e-39 !   Ophiocordyceps nutans 5.8S ribosomal RNA
+URS00004662FE        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.49   0.0  150.6   9.7e-39 !   Pandorina morum 5.8S ribosomal RNA
+URS000046E33E        -         5_8S_rRNA            RF00002    cm        1      154        2      153      +    no    1 0.45   0.0  150.4   1.1e-38 !   Funneliformis mosseae 5.8S ribosomal RNA
+URS000046E329        -         5_8S_rRNA            RF00002    cm        1      154        5      158      +    no    1 0.53   0.0  150.4   1.1e-38 !   Chiloscyphus martianus 5.8S ribosomal RNA
+URS000046A2C1        -         5_8S_rRNA            RF00002    cm        2      154        1      153      +    5'    2 0.47   0.0  150.3   1.1e-38 !   Caloplaca sp. RVM-2012 5.8S ribosomal RNA
+URS0000462D3D        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.48   0.0  150.3   1.1e-38 !   Diploschistes gypsaceus 5.8S ribosomal RNA
+URS0000468CCF        -         5_8S_rRNA            RF00002    cm        1      154        3      155      +    no    1 0.53   0.0  150.3   1.2e-38 !   5.8S ribosomal RNA from 2 species
+URS0000469D7C        -         5_8S_rRNA            RF00002    cm        1      154       74      226      +    no    1 0.53   0.0  150.3   1.2e-38 !   Pichia kudriavzevii partial contains ITS1, 5.8S rRNA and ITS2
+URS0000476D94        -         5_8S_rRNA            RF00002    cm        1      154      166      320      +    no    1 0.53   0.0  150.2   1.2e-38 !   Uncultured Asterochloris photobiont sequence contains ITS1, 5.8S rRNA gene, ITS2
+URS0000474084        -         5_8S_rRNA            RF00002    cm        1      154        3      158      +    no    1 0.51   0.0  149.9   1.5e-38 !   Hydropunctaria maura 5.8S ribosomal RNA
+URS0000467E9A        -         5_8S_rRNA            RF00002    cm        2      154        1      154      +    5'    2 0.47   0.0  149.8   1.6e-38 !   Rhinocladiella similis 5.8S ribosomal RNA
+URS0000467842        -         5_8S_rRNA            RF00002    cm        1      154        5      158      +    no    1 0.53   0.0  149.7   1.6e-38 !   5.8S ribosomal RNA from 2 species
+URS0000472E53        -         5_8S_rRNA            RF00002    cm        1      154        7      160      +    no    1 0.53   0.0  149.7   1.7e-38 !   Frullania brasiliensis 5.8S ribosomal RNA
+URS000046B552        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.49   0.0  149.6   1.8e-38 !   Eimeria acervulina 5.8S ribosomal RNA
+URS000046DD18        -         5_8S_rRNA            RF00002    cm        1      154        1      155      +    no    1 0.50   0.0  149.4   2.1e-38 !   Ulva prolifera 5.8S ribosomal RNA
+URS00004677A0        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.51   0.0  149.2   2.3e-38 !   Aspergillus flavus 5.8S ribosomal RNA
+URS0000464764        -         5_8S_rRNA            RF00002    cm        1      154        2      156      +    no    1 0.49   0.0  149.2   2.4e-38 !   Xanthoparmelia conspersa 5.8S ribosomal RNA
+URS000046CF8B        -         5_8S_rRNA            RF00002    cm        1      154        2      156      +    no    1 0.45   0.0  149.0   2.6e-38 !   Saprolegnia longicaulis 5.8S ribosomal RNA
+URS000046C7A1        -         5_8S_rRNA            RF00002    cm        1      146        2      147      +    3'    3 0.48   0.0  148.9   2.8e-38 !   Russula cyanoxantha 5.8S ribosomal RNA
+URS0000466795        -         5_8S_rRNA            RF00002    cm        1      154        6      159      +    no    1 0.55   0.0  148.8   3.1e-38 !   5.8S ribosomal RNA from 2 species
+URS0000465C30        -         5_8S_rRNA            RF00002    cm        2      154        1      153      +    5'    2 0.49   0.0  148.8   3.1e-38 !   Oedogonium nodulosum 5.8S ribosomal RNA
+URS00004757C6        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.46   0.0  148.7   3.4e-38 !   Uncultured Tulasnellaceae 5.8S ribosomal RNA
+URS000046CF1F        -         5_8S_rRNA            RF00002    cm        1      154        7      159      +    no    1 0.50   0.0  148.5   3.6e-38 !   Elliptochloris marina 5.8S ribosomal RNA
+URS000045EFF5        -         5_8S_rRNA            RF00002    cm        1      154     1931     2082      +    no    1 0.46   0.0  148.5   3.8e-38 !   Rhodomonas sp. CCMP758 sequence contains 18S rRNA gene, ITS1, 5.8S rRNA gene, ITS2 and 28S rRNA gene
+URS000046EE99        -         5_8S_rRNA            RF00002    cm        1      154     1936     2087      +    no    1 0.46   0.0  148.5   3.8e-38 !   Rhinomonas nottbecki sequence contains 18S rRNA gene, ITS1, 5.8S rRNA gene, ITS2 and 28S rRNA gene
+URS0000475067        -         5_8S_rRNA            RF00002    cm        1      154        6      158      +    no    1 0.51   0.0  148.4     4e-38 !   Symbiochloris reticulata 5.8S ribosomal RNA
+URS0000462215        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.48   0.0  148.3   4.3e-38 !   Cordyceps confragosa 5.8 S ribosomal RNA
+URS00004654EA        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.45   0.0  148.2   4.4e-38 !   Uncultured freshwater diatom 5.8S ribosomal RNA
+URS000046089B        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.44   0.0  148.2   4.6e-38 !   Uncultured fungus 5.8S ribosomal RNA
+URS0000476511        -         5_8S_rRNA            RF00002    cm        1      154        6      159      +    no    1 0.51   0.0  148.1   4.9e-38 !   Odontolejeunea lunulata 5.8S ribosomal RNA
+URS000046D1F7        -         5_8S_rRNA            RF00002    cm        1      154        9      157      +    no    1 0.45   0.0  148.0   5.2e-38 !   Amauroderma schomburgkii 5.8S ribosomal RNA
+URS0000470B1A        -         5_8S_rRNA            RF00002    cm        1      154        1      151      +    no    1 0.44   0.0  148.0   5.2e-38 !   5.8S ribosomal RNA from 2 species
+URS00004719BE        -         5_8S_rRNA            RF00002    cm        1      154       12      167      +    no    1 0.47   0.0  148.0   5.3e-38 !   Pseudo-nitzschia pseudodelicatissima 5.8S ribosomal RNA
+URS0000476179        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.46   0.0  147.9   5.7e-38 !   Meyerozyma guilliermondii 5.8S ribosomal RNA
+URS000046DB78        -         5_8S_rRNA            RF00002    cm        9      150        1      142      + 5'&3'    4 0.46   0.0  147.8   5.9e-38 !   Uncultured Olpidiaceae 5.8S ribosomal RNA
+URS0000469BEC        -         5_8S_rRNA            RF00002    cm        1      154        2      157      +    no    1 0.53   0.0  147.7   6.1e-38 !   5.8S ribosomal RNA from 9 species
+URS0000460C36        -         5_8S_rRNA            RF00002    cm        1      154        1      152      +    no    1 0.45   0.0  147.6   6.7e-38 !   5.8S ribosomal RNA from 2 species
+URS000046C0EB        -         5_8S_rRNA            RF00002    cm        1      154        1      150      +    no    1 0.47   0.0  147.6   6.9e-38 !   5.8S ribosomal RNA from 11 species
+URS000046A586        -         5_8S_rRNA            RF00002    cm        1      154        6      159      +    no    1 0.53   0.0  147.2   8.8e-38 !   5.8S ribosomal RNA from 3 species
+URS000046FD81        -         5_8S_rRNA            RF00002    cm        1      154        7      159      +    no    1 0.50   0.0  147.0   9.7e-38 !   Elliptochloris marina 5.8S ribosomal RNA
+URS000047223F        -         5_8S_rRNA            RF00002    cm        3      154        1      151      +    5'    2 0.50   0.0  147.0     1e-37 !   Diploschistes cinereocaesius 5.8S ribosomal RNA
+URS000046EA66        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.48   0.0  146.9   1.1e-37 !   Eimeria maxima 5.8S ribosomal RNA
+URS00004662DB        -         5_8S_rRNA            RF00002    cm        1      154        6      158      +    no    1 0.53   0.0  146.7   1.2e-37 !   Lejeunea grossitexta 5.8S ribosomal RNA
+URS0000466EB5        -         5_8S_rRNA            RF00002    cm        1      154        2      153      +    no    1 0.47   0.0  146.7   1.2e-37 !   Dendronephthya suensoni 5.8S ribosomal RNA
+URS0000460753        -         5_8S_rRNA            RF00002    cm        1      154        1      154      +    no    1 0.49   0.0  146.6   1.3e-37 !   Uncultured Russula 5.8S ribosomal RNA
+URS00004739AE        -         5_8S_rRNA            RF00002    cm        1      154        4      158      +    no    1 0.48   0.0  146.6   1.3e-37 !   Verrucaria anziana 5.8S ribosomal RNA
+URS00004625DD        -         5_8S_rRNA            RF00002    cm        1      154        2      153      +    no    1 0.47   0.0  146.5   1.4e-37 !   Trichoderma virens 5.8S ribosomal RNA
+URS000046A36A        -         5_8S_rRNA            RF00002    cm        1      138        4      141      +    3'    3 0.42   0.0  146.3   1.5e-37 !   Creosphaeria sassafras 5.8S ribosomal RNA
+URS0000475280        -         5_8S_rRNA            RF00002    cm        1      154        4      159      +    no    1 0.56   0.0  146.1   1.7e-37 !   Stylophorum diphyllum 5.8S ribosomal RNA
+URS000047266A        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.52   0.0  146.0   1.9e-37 !   Egletes viscosa 5.8S ribosomal RNA
+URS0000463506        -         5_8S_rRNA            RF00002    cm        1      154        6      158      +    no    1 0.52   0.0  146.0   1.9e-37 !   Lejeunea flava 5.8S ribosomal RNA
+URS000046E688        -         5_8S_rRNA            RF00002    cm        1      154        6      158      +    no    1 0.52   0.0  146.0   1.9e-37 !   5.8S ribosomal RNA from 2 species
+URS0000470E7F        -         5_8S_rRNA            RF00002    cm        1      154      247      402      +    no    1 0.56   0.0  145.9     2e-37 !   Leucadendron glaberrimum subsp. glaberrimum partial ribosomal RNA
+URS0000460442        -         5_8S_rRNA            RF00002    cm        2      154        1      154      +    5'    2 0.45   0.0  145.9   2.1e-37 !   Aphanomyces astaci 5.8S ribosomal RNA
+URS00004749AC        -         5_8S_rRNA            RF00002    cm        1      154        6      159      +    no    1 0.56   0.0  145.9   2.1e-37 !   Combretum elaeagnoides 5.8S ribosomal RNA
+URS0000469B02        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.57   0.0  145.8   2.2e-37 !   Erythronium elegans 5.8S ribosomal RNA
+URS0000476CDB        -         5_8S_rRNA            RF00002    cm        1      154        2      157      +    no    1 0.53   0.0  145.8   2.2e-37 !   5.8S ribosomal RNA from 25 species
+URS00004699D6        -         5_8S_rRNA            RF00002    cm        1      154        2      153      +    no    1 0.47   0.0  145.6   2.4e-37 !   [Candida] smagusa 5.8S ribosomal RNA
+URS0000461D14        -         5_8S_rRNA            RF00002    cm        1      154      273      425      +    no    1 0.51   0.0  145.5   2.6e-37 !   misc_RNA from 2 species
+URS000046213E        -         5_8S_rRNA            RF00002    cm        1      154        5      157      +    no    1 0.51   0.0  145.5   2.6e-37 !   Lopidium concinnum 5.8S ribosomal RNA
+URS00004664B2        -         5_8S_rRNA            RF00002    cm        1      154      359      511      +    no    1 0.51   0.0  145.5   2.6e-37 !   Anacolia laevisphaera sequence contains 18S rRNA gene, ITS1, 5.8S rRNA gene, ITS2 and 28S rRNA gene
+URS000047134B        -         5_8S_rRNA            RF00002    cm        1      154      294      446      +    no    1 0.51   0.0  145.5   2.6e-37 !   Flowersia abyssinica sequence contains 18S rRNA gene, ITS1, 5.8S rRNA gene, ITS2 and 28S rRNA gene
+URS0000473960        -         5_8S_rRNA            RF00002    cm        1      154      271      423      +    no    1 0.51   0.0  145.5   2.6e-37 !   Sciuro-hypnum hylotapetum sequence contains ITS1, 5.8S rRNA gene, ITS2 and 28S rRNA gene
+URS0000475360        -         5_8S_rRNA            RF00002    cm        1      154      128      281      +    no    1 0.49   0.0  145.5   2.7e-37 !   Calocera arborea partial contains ITS1, 5.8S rRNA, ITS2, 28S rRNA
+URS000046D781        -         5_8S_rRNA            RF00002    cm        1      154        1      152      +    no    1 0.44   0.0  145.4   2.8e-37 !   Rhizoctonia solani 5.8S ribosomal RNA
+URS0000473626        -         5_8S_rRNA            RF00002    cm        1      154        4      159      +    no    1 0.54   0.0  145.3     3e-37 !   5.8S ribosomal RNA from 2 species
+URS000046953F        -         5_8S_rRNA            RF00002    cm        3      142        1      140      + 5'&3'    4 0.49   0.0  145.3     3e-37 !   Tephromela atra var. calcarea 5.8S ribosomal RNA
+URS000046157D        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.54   0.0  145.2   3.1e-37 !   Coelachyrum poiflorum 5.8S ribosomal RNA
+URS000046EAC9        -         5_8S_rRNA            RF00002    cm        3      154        1      153      +    5'    2 0.41   0.0  145.1   3.5e-37 !   Melampsora epiphylla 5.8S ribosomal RNA
+URS0000469D3E        -         5_8S_rRNA            RF00002    cm        1      154        5      157      +    no    1 0.50   0.0  145.0   3.6e-37 !   5.8S ribosomal RNA from 2 species
+URS000046BDB7        -         5_8S_rRNA            RF00002    cm        1      154        6      158      +    no    1 0.50   0.0  145.0   3.6e-37 !   5.8S ribosomal RNA from 22 species
+URS0000469CB6        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.56   0.0  144.9     4e-37 !   Cardwellia sublimis 5.8S ribosomal RNA
+URS0000473D17        -         5_8S_rRNA            RF00002    cm        1      154      150      306      +    no    1 0.47   0.0  144.8   4.2e-37 !   Metarhizium anisopliae partial 18S ribosomal RNA
+URS0000469812        -         5_8S_rRNA            RF00002    cm        1      154        3      158      +    no    1 0.53   0.0  144.7   4.5e-37 !   Berberis hainesii 5.8S ribosomal RNA
+URS00004642E3        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.56   0.0  144.7   4.6e-37 !   5.8S ribosomal RNA from 2 species
+URS0000473704        -         5_8S_rRNA            RF00002    cm        1      154      332      487      +    no    1 0.58   0.0  144.6   4.8e-37 !   Tulipa korolkowii sequence contains 18S rRNA gene, ITS1, 5.8S rRNA gene, ITS2, 28S rRNA gene
+URS0000474B30        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.57   0.0  144.5   5.2e-37 !   Loncomelos narbonense 5.8S ribosomal RNA
+URS000046523D        -         5_8S_rRNA            RF00002    cm        1      136        3      138      +    3'    3 0.45   0.0  144.4   5.6e-37 !   Gyalolechia allochroa 5.8S ribosomal RNA
+URS000046E605        -         5_8S_rRNA            RF00002    cm        1      154        1      156      +    no    1 0.44   0.0  144.3   5.8e-37 !   Thanatephorus cucumeris 5.8S ribosomal RNA
+URS000046F929        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.54   0.0  144.2   6.1e-37 !   Aconitum chiisanense 5.8S rRNA
+URS0000470461        -         5_8S_rRNA            RF00002    cm        1      154        6      158      +    no    1 0.54   0.0  144.2   6.2e-37 !   5.8S ribosomal RNA from 3 species
+URS00004738D6        -         5_8S_rRNA            RF00002    cm        4      154        1      150      +    5'    2 0.41   0.0  144.2   6.3e-37 !   Paramoeba pemaquidensis 5.8S ribosomal RNA
+URS0000476E8F        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.55   0.0  144.1   6.5e-37 !   5.8S ribosomal RNA from 5 species
+URS000046C2E5        -         5_8S_rRNA            RF00002    cm        1      154        1      152      +    no    1 0.52   0.0  144.1   6.5e-37 !   Mastocarpus papillatus s.l. clade 2 5.8S ribosomal RNA
+URS00004642E7        -         5_8S_rRNA            RF00002    cm        1      154        9      161      +    no    1 0.53   0.0  144.0   6.9e-37 !   Cyclolejeunea convexistipa 5.8S ribosomal RNA
+URS000047348A        -         5_8S_rRNA            RF00002    cm        1      154        6      158      +    no    1 0.53   0.0  144.0   6.9e-37 !   Lejeunea flava 5.8S ribosomal RNA
+URS000046AACB        -         5_8S_rRNA            RF00002    cm        1      154        5      160      +    no    1 0.53   0.0  143.9   7.7e-37 !   Jenmaniella ceratophylla 5.8S ribosomal RNA
+URS000046DCFC        -         5_8S_rRNA            RF00002    cm        1      154      255      410      +    no    1 0.54   0.0  143.8   7.8e-37 !   Dalbergia abbreviata partial contains 18S rRNA, ITS1, 5.8S rRNA and ITS2
+URS00004709BA        -         5_8S_rRNA            RF00002    cm        1      154      273      428      +    no    1 0.54   0.0  143.8   8.1e-37 !   Fuchsia macrostigma ribosomal RNA
+URS000046FDB2        -         5_8S_rRNA            RF00002    cm        1      154        8      163      +    no    1 0.56   0.0  143.8   8.3e-37 !   Lagotis globosa 5.8S ribosomal RNA
+URS000045F8DE        -         5_8S_rRNA            RF00002    cm        1      154        5      160      +    no    1 0.56   0.0  143.7   8.8e-37 !   Orobanche macrolepis 5.8S ribosomal RNA
+URS000047646E        -         5_8S_rRNA            RF00002    cm        1      154        9      164      +    no    1 0.53   0.0  143.7   8.8e-37 !   Krameria revoluta 5.8S ribosomal RNA
+URS000047075A        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.56   0.0  143.6   9.1e-37 !   Erythronium quinaultense 5.8S ribosomal RNA
+URS0000470EF5        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.54   0.0  143.6   9.4e-37 !   Melicytus flexuosus 5.8S ribosomal RNA
+URS0000462E95        -         5_8S_rRNA            RF00002    cm        1      154        4      159      +    no    1 0.56   0.0  143.5   9.8e-37 !   Euphorbia cremersii 5.8S ribosomal RNA
+URS000046651B        -         5_8S_rRNA            RF00002    cm        1      154        5      161      +    no    1 0.50   0.0  143.2   1.2e-36 !   Toxicodendron vernicifluum 5.8S ribosomal RNA
+URS0000463265        -         5_8S_rRNA            RF00002    cm        1      154        6      159      +    no    1 0.58   0.0  143.2   1.2e-36 !   5.8S ribosomal RNA from 2 species
+URS000046A4E5        -         5_8S_rRNA            RF00002    cm        1      154        4      159      +    no    1 0.54   0.0  143.2   1.2e-36 !   5.8S ribosomal RNA from 8 species
+URS000045F686        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.58   0.0  143.2   1.2e-36 !   Oryza alta 5.8S ribosomal RNA
+URS000047513D        -         5_8S_rRNA            RF00002    cm        1      154      256      411      +    no    1 0.54   0.0  143.2   1.2e-36 !   Hypericum scouleri sequence contains ITS1, 5.8S rRNA gene, ITS2
+URS000046669F        -         5_8S_rRNA            RF00002    cm        1      154        2      154      +    no    1 0.51   0.0  143.2   1.2e-36 !   Staurodesmus triangularis 5.8S ribosomal RNA
+URS00004771CD        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.54   0.0  143.2   1.2e-36 !   5.8S ribosomal RNA from 2 species
+URS0000468126        -         5_8S_rRNA            RF00002    cm        1      154        5      160      +    no    1 0.54   0.0  143.2   1.2e-36 !   Brassica juncea var. tumida 5.8S ribosomal RNA
+URS0000463591        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.56   0.0  143.1   1.3e-36 !   5.8S ribosomal RNA from 3 species
+URS0000475516        -         5_8S_rRNA            RF00002    cm        1      154        7      162      +    no    1 0.55   0.0  143.0   1.3e-36 !   Oxalis acetosella subsp. japonica 5.8S ribosomal RNA
+URS0000476135        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.54   0.0  143.0   1.4e-36 !   Dinebra nealleyi 5.8S ribosomal RNA
+URS0000461AD4        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.53   0.0  143.0   1.4e-36 !   Phedimus aizoon 5.8S ribosomal RNA
+URS0000460591        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.55   0.0  143.0   1.4e-36 !   Sidalcea cusickii 5.8S ribosomal RNA
+URS0000460E89        -         5_8S_rRNA            RF00002    cm        1      154      256      411      +    no    1 0.54   0.0  143.0   1.4e-36 !   Hypericum erectum sequence contains ITS1, 5.8S rRNA gene, ITS2
+URS000047131B        -         5_8S_rRNA            RF00002    cm        1      154      396      241      -    no    1 0.58   0.0  142.9   1.5e-36 !   Uncultured eukaryote partial contains ITS1, 5.8S rRNA, and ITS2
+URS00004730E3        -         5_8S_rRNA            RF00002    cm        1      154      251      406      +    no    1 0.55   0.0  142.9   1.5e-36 !   Dalbergia glomerata partial contains 18S rRNA, ITS1, 5.8S rRNA and ITS2
+URS000046A141        -         5_8S_rRNA            RF00002    cm        1      154      319      474      +    no    1 0.53   0.0  142.8   1.5e-36 !   Oldenlandia lapeyrousii sequence contains ITS1, 5.8S rRNA gene, ITS2
+URS000046F439        -         5_8S_rRNA            RF00002    cm        1      154      227      382      +    no    1 0.56   0.0  142.8   1.5e-36 !   Salix tschuktschorum sequence contains ITS1, 5.8S rRNA gene and ITS2
+URS000046FB61        -         5_8S_rRNA            RF00002    cm        1      154      227      382      +    no    1 0.56   0.0  142.8   1.5e-36 !   misc_RNA from 3 species
+URS000046190B        -         5_8S_rRNA            RF00002    cm        1      154      362      517      +    no    1 0.53   0.0  142.8   1.6e-36 !   Callerya bonatiana sequence contains 18S rRNA gene, ITS1, 5.8S rRNA gene, ITS2 and 28S rRNA gene
+URS000046BBF0        -         5_8S_rRNA            RF00002    cm        1      154        9      164      +    no    1 0.53   0.0  142.8   1.6e-36 !   Aganope gabonica 5.8S ribosomal RNA
+URS0000473742        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.54   0.0  142.8   1.6e-36 !   5.8S ribosomal RNA from 53 species
+URS00004695B5        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.58   0.0  142.7   1.6e-36 !   5.8S ribosomal RNA from 7 species
+URS0000460B0A        -         5_8S_rRNA            RF00002    cm        1      154      308      463      +    no    1 0.54   0.0  142.7   1.6e-36 !   Passiflora herbertiana partial contains 18S ribosomal RNA, internal transcribed spacer 1, 5.8S ribosomal RNA, internal transcribed spacer 2, and 26S ribosomal RNA
+URS00004698E4        -         5_8S_rRNA            RF00002    cm        1      154       24      179      +    no    1 0.55   0.0  142.7   1.6e-36 !   Cardamine amara 5.8S ribosomal RNA
+URS000047260B        -         5_8S_rRNA            RF00002    cm        1      154        3      158      +    no    1 0.55   0.0  142.7   1.6e-36 !   Hesperis sibirica 5.8S ribosomal RNA
+URS000046A9BE        -         5_8S_rRNA            RF00002    cm       19      154        1      136      +    5'    2 0.49   0.0  142.7   1.7e-36 !   5.8S ribosomal RNA from 9 species
+URS00004741AB        -         5_8S_rRNA            RF00002    cm        1      154        1      153      +    no    1 0.43   0.0  142.7   1.7e-36 !   Rhizopus schipperae 5.8S ribosomal RNA
+URS000046D01A        -         5_8S_rRNA            RF00002    cm        1      154        3      158      +    no    1 0.56   0.0  142.7   1.7e-36 !   5.8S ribosomal RNA from 4 species
+URS000046E6D1        -         5_8S_rRNA            RF00002    cm        1      154        3      158      +    no    1 0.56   0.0  142.7   1.7e-36 !   Croton humilis 5.8S ribosomal RNA
+URS0000468F53        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.52   0.0  142.6   1.8e-36 !   Ilex spicata 5.8S ribosomal RNA
+URS000046A5B1        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.54   0.0  142.6   1.8e-36 !   5.8S ribosomal RNA from 2 species
+URS0000471B8E        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.54   0.0  142.5   1.8e-36 !   Cyrtanthus macowanii 5.8S ribosomal RNA
+URS0000469FD6        -         5_8S_rRNA            RF00002    cm        1      154        1      151      +    no    1 0.52   0.0  142.5   1.9e-36 !   5.8S ribosomal RNA from 3 species
+URS000046D16E        -         5_8S_rRNA            RF00002    cm        1      154       13      168      +    no    1 0.53   0.0  142.5   1.9e-36 !   5.8S ribosomal RNA from 2 species
+URS00004671FA        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.54   0.0  142.5   1.9e-36 !   Smelowskia alba 5.8S ribosomal RNA
+URS000046F5F5        -         5_8S_rRNA            RF00002    cm        1      154       16      171      +    no    1 0.56   0.0  142.5   1.9e-36 !   Ruellia malacophylla 5.8S ribosomal RNA
+URS0000465DCA        -         5_8S_rRNA            RF00002    cm        1      154        5      160      +    no    1 0.53   0.0  142.5   1.9e-36 !   Senecio calocephalus 5.8S ribosomal RNA
+URS000045FB6B        -         5_8S_rRNA            RF00002    cm       19      154       32      167      +    no    2 0.49   0.0  142.5   1.9e-36 !   Trichoderma oblongisporum 5.8S ribosomal RNA
+URS000045F204        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.58   0.0  142.5   1.9e-36 !   Dendrobium devonianum 5.8S ribosomal RNA
+URS000046499A        -         5_8S_rRNA            RF00002    cm        1      154        2      157      +    no    1 0.54   0.0  142.5   1.9e-36 !   5.8S ribosomal RNA from 4 species
+URS00004768A8        -         5_8S_rRNA            RF00002    cm        1      154        3      158      +    no    1 0.53   0.0  142.4     2e-36 !   Nymphoides aquatica 5.8S ribosomal RNA
+URS0000471B45        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.55   0.0  142.4     2e-36 !   Thalictrum flavum 5.8S ribosomal RNA
+URS0000468B1F        -         5_8S_rRNA            RF00002    cm        1      154        5      160      +    no    1 0.54   0.0  142.4     2e-36 !   5.8S ribosomal RNA from 6 species
+URS0000467896        -         5_8S_rRNA            RF00002    cm        1      154        1      155      +    no    1 0.51   0.0  142.4     2e-36 !   Peltigera monticola 5.8S ribosomal RNA
+URS000046F114        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.56   0.0  142.3   2.1e-36 !   Solenomelus segethi 5.8S ribosomal RNA
+URS0000468DDE        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.54   0.0  142.3   2.1e-36 !   Agalmyla clarkei 5.8S ribosomal RNA
+URS000046420B        -         5_8S_rRNA            RF00002    cm        1      154        5      160      +    no    1 0.54   0.0  142.3   2.2e-36 !   5.8S ribosomal RNA from 64 species
+URS0000461619        -         5_8S_rRNA            RF00002    cm        1      154      320      475      +    no    1 0.54   0.0  142.3   2.2e-36 !   misc_RNA from 2 species
+URS000046642A        -         5_8S_rRNA            RF00002    cm        1      154        4      159      +    no    1 0.55   0.0  142.2   2.4e-36 !   5.8S ribosomal RNA from 19 species
+URS000046A09C        -         5_8S_rRNA            RF00002    cm        1      154       15      170      +    no    1 0.55   0.0  142.2   2.4e-36 !   5.8S ribosomal RNA from 4 species
+URS000046DD7A        -         5_8S_rRNA            RF00002    cm        1      154        9      164      +    no    1 0.54   0.0  142.1   2.4e-36 !   5.8S ribosomal RNA from 4 species
+URS000045EE7A        -         5_8S_rRNA            RF00002    cm        1      154        5      160      +    no    1 0.51   0.0  142.1   2.5e-36 !   Blumea virens 5.8S ribosomal RNA
+URS000046E37E        -         5_8S_rRNA            RF00002    cm        1      147        2      148      +    3'    3 0.49   0.0  142.1   2.5e-36 !   Lactarius volemus 5.8S ribosomal RNA
+URS000046D91C        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.56   0.0  142.1   2.5e-36 !   Streptocarpus papangae 5.8S ribosomal RNA
+URS0000467D96        -         5_8S_rRNA            RF00002    cm        1      154        4      154      +    no    1 0.46   0.0  142.1   2.5e-36 !   Fragilariopsis cylindrus partial 5.8S ribosomal RNA
+URS000046DB79        -         5_8S_rRNA            RF00002    cm        1      154      253      408      +    no    1 0.54   0.0  142.1   2.5e-36 !   Dalbergia cochinchinensis partial contains 18S rRNA, ITS1, 5.8S rRNA and ITS2
+URS0000473457        -         5_8S_rRNA            RF00002    cm        1      154        5      160      +    no    1 0.54   0.0  142.0   2.7e-36 !   Sarcaulus brasiliensis 5.8S ribosomal RNA
+URS0000465F77        -         5_8S_rRNA            RF00002    cm        1      154        7      159      +    no    1 0.50   0.0  141.9   2.8e-36 !   Elliptochloris marina 5.8S ribosomal RNA
+URS000046F788        -         5_8S_rRNA            RF00002    cm        1      154        2      150      +    no    1 0.45   0.0  141.9   2.9e-36 !   Pythium myriotylum 5.8S rRNA
+URS000047651C        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.55   0.0  141.9   2.9e-36 !   Oxalis rhombeo-ovata 5.8S ribosomal RNA
+URS0000473DAC        -         5_8S_rRNA            RF00002    cm        1      154        5      160      +    no    1 0.53   0.0  141.8     3e-36 !   Orobanche gracilis 5.8S ribosomal RNA
+URS0000465FFB        -         5_8S_rRNA            RF00002    cm        1      154        3      158      +    no    1 0.58   0.0  141.8     3e-36 !   Euphorbia tehuacana 5.8S ribosomal RNA
+URS0000469F5A        -         5_8S_rRNA            RF00002    cm        1      154      271      426      +    no    1 0.55   0.0  141.8     3e-36 !   Fuchsia paniculata ribosomal RNA
+URS000046D4B1        -         5_8S_rRNA            RF00002    cm        1      154      384      536      +    no    1 0.51   0.0  141.7   3.1e-36 !   Conostomum pentastichum sequence contains ITS1, 5.8S rRNA gene, ITS2 and 28S rRNA gene
+URS0000460F75        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.55   0.0  141.7   3.1e-36 !   5.8S ribosomal RNA from 2 species
+URS000046CEF0        -         5_8S_rRNA            RF00002    cm        1      154        3      152      +    no    1 0.48   0.0  141.7   3.2e-36 !   Starmerella sp. CBS 7267 5.8S ribosomal RNA
+URS000046758F        -         5_8S_rRNA            RF00002    cm        1      154        7      163      +    no    1 0.56   0.0  141.7   3.2e-36 !   Arthraxon hispidus 5.8S ribosomal RNA
+URS00004671B5        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.54   0.0  141.7   3.2e-36 !   Pachira aquatica 5.8S ribosomal RNA
+URS0000475D11        -         5_8S_rRNA            RF00002    cm        1      154      229      384      +    no    1 0.56   0.0  141.7   3.3e-36 !   Gagea dubia sequence contains ITS1, 5.8S rRNA gene and ITS2
+URS0000476D1F        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.52   0.0  141.7   3.3e-36 !   Laestadia costaricensis 5.8S ribosomal RNA
+URS0000476949        -         5_8S_rRNA            RF00002    cm        1      154        6      164      +    no    1 0.44   0.0  141.6   3.4e-36 !   Arceuthobium globosum subsp. aureum 5.8S ribosomal RNA
+URS000047117A        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.55   0.0  141.6   3.5e-36 !   Triantha japonica 5.8S rRNA
+URS000046FC6C        -         5_8S_rRNA            RF00002    cm        1      154       77      231      +    no    1 0.56   0.0  141.5   3.5e-36 !   Suessenguthia barthleniana 5.8S ribosomal RNA
+URS0000467CB8        -         5_8S_rRNA            RF00002    cm        1      154        3      158      +    no    1 0.53   0.0  141.5   3.6e-36 !   Centaurea mollis 5.8S ribosomal RNA
+URS000046EBA5        -         5_8S_rRNA            RF00002    cm        1      142        1      143      +    3'    3 0.50   0.0  141.5   3.6e-36 !   5.8S ribosomal RNA from 2 species
+URS000046E439        -         5_8S_rRNA            RF00002    cm        1      154      244      399      +    no    1 0.56   0.0  141.5   3.6e-36 !   Crocus speciosus subsp. xantholaimos sequence contains ITS1, 5.8S rRNA gene and ITS2
+URS00004707BC        -         5_8S_rRNA            RF00002    cm        1      154      244      399      +    no    1 0.56   0.0  141.5   3.6e-36 !   Crocus speciosus sequence contains ITS1, 5.8S rRNA gene, ITS2
+URS00004653B7        -         5_8S_rRNA            RF00002    cm        1      154        3      157      +    no    1 0.49   0.0  141.5   3.7e-36 !   Prorocentrum sp. CCMP703 5.8S ribosomal RNA
+URS0000469E01        -         5_8S_rRNA            RF00002    cm        1      154      250      405      +    no    1 0.55   0.0  141.5   3.7e-36 !   Dysphania graveolens sequence contains ITS1, 5.8S rRNA gene, ITS2
+URS0000471D56        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.52   0.0  141.4   3.9e-36 !   Bellis azorica 5.8S ribosomal RNA
+URS000046D19D        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.58   0.0  141.4     4e-36 !   Hura crepitans 5.8S ribosomal RNA
+URS0000463AE6        -         5_8S_rRNA            RF00002    cm        6      154        1      150      +    5'    2 0.49   0.0  141.4     4e-36 !   Phytophthora colocasiae 5.8S ribosomal RNA
+URS00004762F7        -         5_8S_rRNA            RF00002    cm        1      154        2      155      +    no    1 0.45   0.0  141.3   4.1e-36 !   Uncultured Cenococcum 5.8S ribosomal RNA
+URS000046F721        -         5_8S_rRNA            RF00002    cm        1      154      260      415      +    no    1 0.54   0.0  141.3   4.2e-36 !   Hypericum juniperinum sequence contains ITS1, 5.8S rRNA gene, ITS2
+URS0000466766        -         5_8S_rRNA            RF00002    cm        1      154      216      371      +    no    1 0.59   0.0  141.3   4.3e-36 !   Koeleria loweana sequence contains ITS1, 5.8S rRNA gene and ITS2
+URS000045F141        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.54   0.0  141.2   4.3e-36 !   5.8S ribosomal RNA from 3 species
+URS000046077D        -         5_8S_rRNA            RF00002    cm        1      154        7      162      +    no    1 0.54   0.0  141.2   4.4e-36 !   5.8S ribosomal RNA from 2 species
+URS0000463EC0        -         5_8S_rRNA            RF00002    cm        1      154        1      156      +    no    1 0.54   0.0  141.2   4.5e-36 !   Nymphoides cordata 5.8S ribosomal RNA
+URS0000475237        -         5_8S_rRNA            RF00002    cm        1      154       13      168      +    no    1 0.53   0.0  141.2   4.5e-36 !   5.8S ribosomal RNA from 26 species
+URS0000470055        -         5_8S_rRNA            RF00002    cm        1      154        5      159      +    no    1 0.53   0.0  141.2   4.5e-36 !   5.8S ribosomal RNA from 2 species
+URS000046C022        -         5_8S_rRNA            RF00002    cm        1      154        3      158      +    no    1 0.53   0.0  141.2   4.6e-36 !   5.8S ribosomal RNA from 2 species
+URS000047527C        -         5_8S_rRNA            RF00002    cm        1      154        5      160      +    no    1 0.54   0.0  141.2   4.6e-36 !   Menonvillea cuneata 5.8S ribosomal RNA
+URS000045F5C8        -         5_8S_rRNA            RF00002    cm        1      154        9      164      +    no    1 0.53   0.0  141.1   4.6e-36 !   Vigna unguiculata (cowpea) 5.8S ribosomal RNA
+URS000047590C        -         5_8S_rRNA            RF00002    cm        1      154        5      160      +    no    1 0.56   0.0  141.1   4.7e-36 !   Tiquilia hispidissima 5.8S ribosomal RNA
+URS0000466276        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.56   0.0  141.1   4.7e-36 !   Solanum allophyllum 5.8S ribosomal RNA
+URS00004644C1        -         5_8S_rRNA            RF00002    cm        1      154        2      157      +    no    1 0.54   0.0  141.1   4.8e-36 !   Notobubon pearsonii 5.8S ribosomal RNA
+URS0000463014        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.56   0.0  141.1   4.8e-36 !   Vachellia tortilis 5.8S ribosomal RNA
+URS000046F306        -         5_8S_rRNA            RF00002    cm        1      154        7      162      +    no    1 0.56   0.0  141.0     5e-36 !   Cardamine hirsuta (hairy bittercress) 5.8S ribosomal RNA
+URS000045FA58        -         5_8S_rRNA            RF00002    cm        1      154        8      162      +    no    1 0.55   0.0  141.0   5.1e-36 !   Maurandya wislizeni 5.8S ribosomal RNA
+URS000047705D        -         5_8S_rRNA            RF00002    cm        1      154      257      412      +    no    1 0.56   0.0  141.0   5.2e-36 !   Pedicularis rhizomatosa sequence contains ITS1, 5.8S rRNA gene and ITS2
+URS00004709C0        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.54   0.0  140.9   5.3e-36 !   5.8S ribosomal RNA from 3 species
+URS0000468988        -         5_8S_rRNA            RF00002    cm        1      154        7      162      +    no    1 0.56   0.0  140.9   5.4e-36 !   Ateleia glazioveana 5.8S ribosomal RNA
+URS0000461265        -         5_8S_rRNA            RF00002    cm        1      154        7      162      +    no    1 0.54   0.0  140.9   5.4e-36 !   Bakeridesia nelsonii 5.8S ribosomal RNA
+URS000046DEA5        -         5_8S_rRNA            RF00002    cm        2      154        1      150      +    5'    2 0.45   0.0  140.9   5.5e-36 !   [Candida] homilentoma 5.8S ribosomal RNA
+URS0000464B4E        -         5_8S_rRNA            RF00002    cm        1      154        4      159      +    no    1 0.56   0.0  140.9   5.6e-36 !   5.8S ribosomal RNA from 9 species
+URS0000460E5E        -         5_8S_rRNA            RF00002    cm        1      154        5      160      +    no    1 0.58   0.0  140.9   5.6e-36 !   5.8S ribosomal RNA from 60 species
+URS000046B0E2        -         5_8S_rRNA            RF00002    cm        1      154        5      160      +    no    1 0.53   0.0  140.8   5.6e-36 !   Pericallis tussilaginis 5.8S ribosomal RNA
+URS00004746BB        -         5_8S_rRNA            RF00002    cm        1      154        5      160      +    no    1 0.57   0.0  140.8   5.6e-36 !   5.8S ribosomal RNA from 2 species
+URS0000467FA2        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.55   0.0  140.8   5.6e-36 !   5.8S ribosomal RNA from 207 species
+URS000046CF01        -         5_8S_rRNA            RF00002    cm        1      154        3      158      +    no    1 0.55   0.0  140.8   5.6e-36 !   5.8S ribosomal RNA from 12 species
+URS000046E8FB        -         5_8S_rRNA            RF00002    cm        1      154        4      159      +    no    1 0.55   0.0  140.8   5.6e-36 !   5.8S ribosomal RNA from 24 species
+URS0000472EEB        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.55   0.0  140.8   5.6e-36 !   5.8S ribosomal RNA from 3 species
+URS000046A0E4        -         5_8S_rRNA            RF00002    cm        1      154        4      158      +    no    1 0.50   0.0  140.8   5.9e-36 !   Ensiculifera sp. SSND22 5.8S ribosomal RNA
+URS0000460912        -         5_8S_rRNA            RF00002    cm        1      154        5      160      +    no    1 0.54   0.0  140.7     6e-36 !   Triosteum aurantiacum 5.8S ribosomal RNA
+URS0000468121        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.54   0.0  140.7   6.2e-36 !   5.8S ribosomal RNA from 4 species
+URS0000469414        -         5_8S_rRNA            RF00002    cm        1      154      324      479      +    no    1 0.54   0.0  140.7   6.2e-36 !   Psiadia rodriguesiana sequence contains 18S rRNA gene, ITS1, 5.8S rRNA gene, ITS2 and 28S rRNA gene
+URS0000470FB1        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.56   0.0  140.7   6.3e-36 !   5.8S ribosomal RNA from 3 species
+URS000046B586        -         5_8S_rRNA            RF00002    cm        1      154        5      160      +    no    1 0.54   0.0  140.6   6.5e-36 !   Lactuca perennis 5.8S ribosomal RNA
+URS000045F694        -         5_8S_rRNA            RF00002    cm        1      154      274      429      +    no    1 0.54   0.0  140.6   6.5e-36 !   Flaveria palmeri partial ribosomal RNA
+URS000047267E        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.55   0.0  140.6   6.5e-36 !   5.8S ribosomal RNA from 4 species
+URS000046C5C0        -         5_8S_rRNA            RF00002    cm        1      154       10      165      +    no    1 0.56   0.0  140.6   6.7e-36 !   5.8S ribosomal RNA from 2 species
+URS000046FA7E        -         5_8S_rRNA            RF00002    cm        1      154        1      157      +    no    1 0.52   0.0  140.6   6.8e-36 !   Poeciloneuron indicum 5.8S ribosomal RNA
+URS0000464DDF        -         5_8S_rRNA            RF00002    cm        1      154      354      509      +    no    1 0.53   0.0  140.5   6.8e-36 !   Embelia vestita sequence contains 18S rRNA gene, ITS1, 5.8S rRNA gene, ITS2 and 28S rRNA gene
+URS00004706B6        -         5_8S_rRNA            RF00002    cm        1      154        6      159      +    no    1 0.51   0.0  140.5   6.9e-36 !   Pinus squamata 5.8S
+URS000046B794        -         5_8S_rRNA            RF00002    cm        1      154      222      377      +    no    1 0.59   0.0  140.5     7e-36 !   Briza humilis sequence contains ITS1, 5.8S rRNA gene and ITS2
+URS000046F9C0        -         5_8S_rRNA            RF00002    cm        1      154        5      159      +    no    1 0.54   0.0  140.5   7.1e-36 !   Pimpinella siifolia 5.8S ribosomal RNA
+URS0000473371        -         5_8S_rRNA            RF00002    cm        1      154      373      219      -    no    1 0.54   0.0  140.5   7.1e-36 !   Bunium sp. EM410 sequence contains ITS1, 5.8S rRNA gene, ITS2
+URS0000464520        -         5_8S_rRNA            RF00002    cm        1      154        6      160      +    no    1 0.58   0.0  140.5   7.2e-36 !   5.8S ribosomal RNA from 3 species
+URS0000475408        -         5_8S_rRNA            RF00002    cm        1      154        6      160      +    no    1 0.58   0.0  140.5   7.2e-36 !   5.8S ribosomal RNA from 3 species
+URS000046A36D        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.56   0.0  140.4   7.3e-36 !   Malacothrix californica 5.8S ribosomal RNA
+URS000045EF39        -         5_8S_rRNA            RF00002    cm        2      154        1      152      +    5'    2 0.51   0.0  140.4   7.4e-36 !   Isoetes asiatica 5.8S ribosomal RNA
+URS0000470429        -         5_8S_rRNA            RF00002    cm        1      154        3      158      +    no    1 0.54   0.0  140.4   7.4e-36 !   5.8S ribosomal RNA from 2 species
+URS00004705B2        -         5_8S_rRNA            RF00002    cm        1      154        2      157      +    no    1 0.54   0.0  140.4   7.5e-36 !   Crotalaria incana 5.8S ribosomal RNA
+URS000046A1BD        -         5_8S_rRNA            RF00002    cm        1      154        7      162      +    no    1 0.54   0.0  140.4   7.6e-36 !   Phanera carcinophylla 5.8S ribosomal RNA
+URS000046449A        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.53   0.0  140.4   7.6e-36 !   5S ribosomal RNA from 2 species
+URS000046B826        -         5_8S_rRNA            RF00002    cm        1      154        4      159      +    no    1 0.56   0.0  140.4   7.6e-36 !   Ipomoea costellata 5.8S ribosomal RNA
+URS00004601F3        -         5_8S_rRNA            RF00002    cm        1      154        5      160      +    no    1 0.51   0.0  140.3   7.8e-36 !   Primula latifolia 5.8S ribosomal RNA
+URS0000462CD9        -         5_8S_rRNA            RF00002    cm        1      154        7      162      +    no    1 0.55   0.0  140.3   7.8e-36 !   Bakeridesia rufinervis 5.8S ribosomal RNA
+URS0000465442        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.54   0.0  140.3   7.9e-36 !   5.8S ribosomal RNA from 2 species
+URS000047194E        -         5_8S_rRNA            RF00002    cm        1      154      219      374      +    no    1 0.54   0.0  140.3   7.9e-36 !   Fatsia japonica sequence contains ITS1, 5.8S rRNA gene and ITS2
+URS00004764CC        -         5_8S_rRNA            RF00002    cm        1      154      219      374      +    no    1 0.54   0.0  140.3   7.9e-36 !   Fatsia oligocarpella sequence contains ITS1, 5.8S rRNA gene and ITS2
+URS00004704D8        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.56   0.0  140.3   8.1e-36 !   Ornithocephalus dressleri 5.8S ribosomal RNA
+URS0000462A66        -         5_8S_rRNA            RF00002    cm        1      154        4      159      +    no    1 0.54   0.0  140.3   8.1e-36 !   Rudgea hostmanniana 5.8S ribosomal RNA
+URS000046F2C9        -         5_8S_rRNA            RF00002    cm        1      154       10      165      +    no    1 0.54   0.0  140.3   8.1e-36 !   Coprosma crenulata 5.8S ribosomal RNA
+URS000046AB88        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.53   0.0  140.3   8.1e-36 !   5.8S ribosomal RNA from 2 species
+URS0000465DF9        -         5_8S_rRNA            RF00002    cm        1      154        5      160      +    no    1 0.53   0.0  140.2   8.5e-36 !   Piper aduncum 5.8S ribosomal RNA
+URS00004704DA        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.55   0.0  140.2   8.6e-36 !   rRNA from 3 species
+URS000046DBA2        -         5_8S_rRNA            RF00002    cm        1      154        4      159      +    no    1 0.53   0.0  140.2   8.8e-36 !   5.8S ribosomal RNA from 15 species
+URS00004723CE        -         5_8S_rRNA            RF00002    cm        1      154        5      160      +    no    1 0.54   0.0  140.2   8.8e-36 !   Piper urdanetanum 5.8S ribosomal RNA
+URS000046CD50        -         5_8S_rRNA            RF00002    cm        1      154      274      429      +    no    1 0.53   0.0  140.1   9.1e-36 !   Flaveria floridana partial ribosomal RNA
+URS000045EE9B        -         5_8S_rRNA            RF00002    cm        1      154        8      163      +    no    1 0.53   0.0  140.1   9.2e-36 !   Ourisia caespitosa 5.8S ribosomal RNA
+URS0000470617        -         5_8S_rRNA            RF00002    cm        1      154        5      160      +    no    1 0.58   0.0  140.0     1e-35 !   5.8S ribosomal RNA from 2 species
+URS000046B42B        -         5_8S_rRNA            RF00002    cm        1      154        6      159      +    no    1 0.56   0.0  140.0     1e-35 !   rRNA from 2 species
+URS000046B008        -         5_8S_rRNA            RF00002    cm        1      154        2      157      +    no    1 0.57   0.0  139.9   1.1e-35 !   Senegalia senegal 5.8S ribosomal RNA
+URS000045EE59        -         5_8S_rRNA            RF00002    cm        1      154        5      161      +    no    1 0.54   0.0  139.9   1.1e-35 !   Actaea arizonica 5.8S nuclear ribosomal RNA
+URS000046E312        -         5_8S_rRNA            RF00002    cm        1      154        5      160      +    no    1 0.55   0.0  139.9   1.1e-35 !   Coluria geoides 5.8S ribosomal RNA
+URS00004751D5        -         5_8S_rRNA            RF00002    cm        1      154      236      391      +    no    1 0.56   0.0  139.9   1.1e-35 !   Hypseocharis bilobata sequence contains ITS1, 5.8S rRNA gene, ITS2
+URS00004660CF        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.56   0.0  139.8   1.1e-35 !   5.8S ribosomal RNA from 2 species
+URS000046C294        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.56   0.0  139.8   1.1e-35 !   Rubus innominatus 5.8S ribosomal RNA
+URS00004667E0        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.55   0.0  139.8   1.1e-35 !   5.8S ribosomal RNA from 2 species
+URS0000468B2F        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.53   0.0  139.7   1.2e-35 !   Senecio glaucus subsp. coronopifolius 5.8S ribosomal RNA
+URS000046A049        -         5_8S_rRNA            RF00002    cm        1      154        6      160      +    no    1 0.56   0.0  139.7   1.2e-35 !   Fagus sylvatica subsp. sylvatica 5.8S ribosomal RNA
+URS000047458B        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.56   0.0  139.7   1.2e-35 !   5.8S ribosomal RNA from 6 species
+URS000045F76F        -         5_8S_rRNA            RF00002    cm        1      154        2      156      +    no    1 0.46   0.0  139.7   1.2e-35 !   Trichoderma harzianum 5.8S ribosomal RNA
+URS0000467CE8        -         5_8S_rRNA            RF00002    cm        1      154        5      160      +    no    1 0.54   0.0  139.7   1.2e-35 !   Oligochaeta minima 5.8S ribosomal RNA
+URS000046B2B3        -         5_8S_rRNA            RF00002    cm        1      154        8      163      +    no    1 0.55   0.0  139.7   1.2e-35 !   Neopicrorhiza scrophulariiflora 5.8S ribosomal RNA
+URS000045F0FD        -         5_8S_rRNA            RF00002    cm        1      154        8      163      +    no    1 0.56   0.0  139.7   1.2e-35 !   Ipomoea nil (Japanese morning glory) 5.8S ribosomal RNA
+URS00004639C4        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.53   0.0  139.7   1.2e-35 !   Oreocharis lungshengensis 5.8S ribosomal RNA
+URS000046B11A        -         5_8S_rRNA            RF00002    cm        1      154      204      359      +    no    1 0.56   0.0  139.7   1.2e-35 !   Thyridolepis mitchelliana sequence contains ITS1, 5.8S rRNA gene and ITS2
+URS0000467099        -         5_8S_rRNA            RF00002    cm        1      154        4      159      +    no    1 0.56   0.0  139.7   1.2e-35 !   Bourreria succulenta 5.8S ribosomal RNA
+URS000046A601        -         5_8S_rRNA            RF00002    cm        1      154        2      157      +    no    1 0.54   0.0  139.6   1.2e-35 !   Notobubon capense 5.8S ribosomal RNA
+URS000046448A        -         5_8S_rRNA            RF00002    cm        1      154        7      162      +    no    1 0.53   0.0  139.6   1.2e-35 !   Trichostigma peruvianum 5.8S ribosomal RNA
+URS000046ED4C        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.54   0.0  139.6   1.2e-35 !   Lilium wallichianum 5.8S ribosomal RNA
+URS00004771D6        -         5_8S_rRNA            RF00002    cm        1      154        7      162      +    no    1 0.58   0.0  139.5   1.3e-35 !   5.8S ribosomal RNA from 4 species
+URS00004719F3        -         5_8S_rRNA            RF00002    cm        1      154      225      380      +    no    1 0.60   0.0  139.5   1.4e-35 !   Pholiurus pannonicus sequence contains ITS1, 5.8S rRNA gene and ITS2
+URS0000476997        -         5_8S_rRNA            RF00002    cm        1      154        2      157      +    no    1 0.54   0.0  139.5   1.4e-35 !   Pimpinella sp. B AM-2009 5.8S ribosomal RNA
+URS00004721AA        -         5_8S_rRNA            RF00002    cm        1      154        1      156      +    no    1 0.56   0.0  139.4   1.4e-35 !   5.8S ribosomal RNA from 9 species
+URS00004678A1        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.52   0.0  139.4   1.4e-35 !   Primula stricta 5.8S ribosomal RNA
+URS000046BF0E        -         5_8S_rRNA            RF00002    cm        1      154        1      153      +    no    1 0.47   0.0  139.4   1.5e-35 !   5.8S ribosomal RNA from 2 species
+URS00004730F8        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.53   0.0  139.4   1.5e-35 !   Mitracarpus microspermus 5.8S ribosomal RNA
+URS000046AEC1        -         5_8S_rRNA            RF00002    cm        1      154        4      159      +    no    1 0.55   0.0  139.4   1.5e-35 !   Swertia binchuanensis 5.8S ribosomal RNA
+URS000046A076        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.54   0.0  139.3   1.5e-35 !   5.8S ribosomal RNA from 2 species
+URS000046A9F9        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.54   0.0  139.3   1.5e-35 !   Eucalyptus deglupta 5.8S ribosomal RNA
+URS0000471FE3        -         5_8S_rRNA            RF00002    cm        1      154        5      160      +    no    1 0.57   0.0  139.3   1.6e-35 !   Polygala platycarpa 5.8S ribosomal RNA
+URS000046395C        -         5_8S_rRNA            RF00002    cm        1      154        3      158      +    no    1 0.54   0.0  139.3   1.6e-35 !   Macropodium nivale 5.8S ribosomal RNA
+URS0000473984        -         5_8S_rRNA            RF00002    cm        1      154      229      384      +    no    1 0.55   0.0  139.3   1.6e-35 !   Atriplex deserticola sequence contains ITS1, 5.8S rRNA gene, ITS2
+URS00004644DE        -         5_8S_rRNA            RF00002    cm        1      154        3      158      +    no    1 0.55   0.0  139.3   1.6e-35 !   Croton microcarpus 5.8S ribosomal RNA
+URS0000460832        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.56   0.0  139.3   1.6e-35 !   Poa apiculata 5.8S ribosomal RNA
+URS000045FDA4        -         5_8S_rRNA            RF00002    cm        1      154       12      167      +    no    1 0.56   0.0  139.3   1.6e-35 !   Macrocarpaea glabra 5.8S ribosomal RNA
+URS0000465DE6        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.57   0.0  139.2   1.6e-35 !   Oryza latifolia 5.8S ribosomal RNA
+URS0000473E55        -         5_8S_rRNA            RF00002    cm        1      154        1      152      +    no    1 0.47   0.0  139.2   1.6e-35 !   Uncultured fungus 5.8S ribosomal RNA
+URS0000471DAC        -         5_8S_rRNA            RF00002    cm        1      154        4      159      +    no    1 0.56   0.0  139.2   1.7e-35 !   Opuntia cubensis 5.8S ribosomal RNA
+URS000046FF02        -         5_8S_rRNA            RF00002    cm        1      154        1      156      +    no    1 0.52   0.0  139.2   1.7e-35 !   5.8S ribosomal RNA from 40 species
+URS000046B88A        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.55   0.0  139.2   1.7e-35 !   Collinsia tinctoria 5.8S ribosomal RNA
+URS0000470B9B        -         5_8S_rRNA            RF00002    cm        1      154        5      160      +    no    1 0.57   0.0  139.1   1.8e-35 !   Strobilanthes alata 5.8S ribosomal RNA
+URS000045FC16        -         5_8S_rRNA            RF00002    cm        1      154        6      160      +    no    1 0.57   0.0  139.1   1.8e-35 !   Capeobolus brevicaulis 5.8S ribosomal RNA
+URS00004674DB        -         5_8S_rRNA            RF00002    cm        1      154        5      160      +    no    1 0.55   0.0  139.1   1.8e-35 !   5.8S rRNA from 8 species
+URS0000464DD4        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.58   0.0  139.0   1.9e-35 !   Oryza grandiglumis 5.8S ribosomal RNA
+URS00004639AF        -         5_8S_rRNA            RF00002    cm        1      154        6      160      +    no    1 0.52   0.0  138.9     2e-35 !   Blastodinium sp. 1 CAdS-2011 5.8S ribosomal RNA
+URS0000467A59        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.58   0.0  138.9     2e-35 !   Ornithocephalus cochleariformis 5.8S ribosomal RNA
+URS00004618AB        -         5_8S_rRNA            RF00002    cm        1      154      241      396      +    no    1 0.56   0.0  138.9     2e-35 !   Ixora mocquerysii sequence contains 18S rRNA gene, ITS1, 5.8S rRNA gene, ITS2, 28S rRNA gene
+URS0000465102        -         5_8S_rRNA            RF00002    cm        1      154        1      152      +    no    1 0.46   0.0  138.9     2e-35 !   Ganoderma lucidum 5.8S ribosomal RNA
+URS00004658C1        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.56   0.0  138.9   2.1e-35 !   Dendrobium peguanum 5.8S ribosomal RNA
+URS0000464569        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.52   0.0  138.9   2.1e-35 !   Quercus petraea subsp. petraea 5.8S ribosomal RNA
+URS000046687D        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.53   0.0  138.9   2.1e-35 !   Ilex theizans 5.8S ribosomal RNA
+URS000047168F        -         5_8S_rRNA            RF00002    cm        1      142       11      151      +    3'    3 0.48   0.0  138.8   2.1e-35 !   Tricholoma matsutake 5.8S ribosomal RNA
+URS00004644E6        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.57   0.0  138.8   2.1e-35 !   5.8S ribosomal RNA from 2 species
+URS000046FA58        -         5_8S_rRNA            RF00002    cm        1      154        4      158      +    no    1 0.56   0.0  138.8   2.1e-35 !   Lewisia pygmaea 5.8S ribosomal RNA
+URS0000475D71        -         5_8S_rRNA            RF00002    cm        1      154        5      157      +    no    1 0.56   0.0  138.8   2.1e-35 !   Pachymatisma normani 5.8S ribosomal RNA
+URS0000468908        -         5_8S_rRNA            RF00002    cm        1      154        5      155      +    no    1 0.46   0.0  138.8   2.2e-35 !   Pseudo-nitzschia delicatissima 5.8S ribosomal RNA
+URS0000468621        -         5_8S_rRNA            RF00002    cm        1      154       15      161      +    no    1 0.48   0.0  138.8   2.2e-35 !   Dinobryon bavaricum 5.8S ribosomal RNA
+URS0000463028        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.57   0.0  138.7   2.3e-35 !   Musa velutina 5.8S ribosomal RNA
+URS000045F665        -         5_8S_rRNA            RF00002    cm        1      154        7      162      +    no    1 0.55   0.0  138.7   2.3e-35 !   Arctium lappa (great burdock) 5.8S ribosomal RNA
+URS000047034B        -         5_8S_rRNA            RF00002    cm        1      154        5      159      +    no    1 0.54   0.0  138.7   2.3e-35 !   Myrcia multiflora 5.8S ribosomal RNA
+URS000046C7A0        -         5_8S_rRNA            RF00002    cm        1      154        7      162      +    no    1 0.57   0.0  138.6   2.5e-35 !   Chascolytrum parodianum 5.8S ribosomal RNA
+URS000046B36E        -         5_8S_rRNA            RF00002    cm        1      154      115      270      +    no    1 0.53   0.0  138.5   2.5e-35 !   Trifolium leibergii rrn
+URS00004759BB        -         5_8S_rRNA            RF00002    cm        1      154      115      270      +    no    1 0.53   0.0  138.5   2.5e-35 !   Trifolium thompsonii rrn
+URS00004731F5        -         5_8S_rRNA            RF00002    cm        2      154        1      152      +    5'    2 0.51   0.0  138.5   2.6e-35 !   Brachymenium exile 5.8S ribosomal RNA
+URS0000461D07        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.56   0.0  138.5   2.7e-35 !   Pinanga javana 5.8S rRNA
+URS00004772D5        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.51   0.0  138.5   2.7e-35 !   5.8S ribosomal RNA from 2 species
+URS000046F2D3        -         5_8S_rRNA            RF00002    cm        1      154      256      411      +    no    1 0.54   0.0  138.5   2.7e-35 !   Hypericum atomarium sequence contains ITS1, 5.8S rRNA gene, ITS2
+URS0000476F92        -         5_8S_rRNA            RF00002    cm        1      154        4      159      +    no    1 0.51   0.0  138.4   2.7e-35 !   Buxus gonoclada 5.8S ribosomal RNA
+URS0000468C28        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.55   0.0  138.4   2.8e-35 !   5.8S ribosomal RNA from 7 species
+URS000046F88B        -         5_8S_rRNA            RF00002    cm        1      154        1      149      +    no    1 0.41   0.0  138.4   2.8e-35 !   Geotrichum candidum 5.8S ribosomal RNA
+URS0000462552        -         5_8S_rRNA            RF00002    cm        1      154        3      158      +    no    1 0.52   0.0  138.4   2.8e-35 !   5.8S ribosomal RNA from 2 species
+URS000047171B        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.53   0.0  138.4   2.9e-35 !   Senecio inaequidens 5.8S ribosomal RNA
+URS000046FCCA        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.55   0.0  138.4   2.9e-35 !   Coffea rhamnifolia 5.8S ribosomal RNA
+URS0000469320        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.60   0.0  138.3     3e-35 !   Campylocentrum poeppigii 5.8S ribosomal RNA
+URS000046B22D        -         5_8S_rRNA            RF00002    cm        1      154        5      160      +    no    1 0.54   0.0  138.3     3e-35 !   5.8S ribosomal RNA from 6 species
+URS000046C9DF        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.53   0.0  138.3     3e-35 !   Brassica rapa subsp. chinensis 5.8S ribosomal RNA
+URS000046E03C        -         5_8S_rRNA            RF00002    cm        1      154        6      160      +    no    1 0.59   0.0  138.2   3.3e-35 !   5.8S ribosomal RNA from 3 species
+URS0000465AAB        -         5_8S_rRNA            RF00002    cm        1      154        4      159      +    no    1 0.53   0.0  138.1   3.3e-35 !   5.8S ribosomal RNA from 3 species
+URS0000467BE3        -         5_8S_rRNA            RF00002    cm        1      154      266      421      +    no    1 0.58   0.0  138.1   3.3e-35 !   Trichosanthes quinquangulata sequence contains ITS1, 5.8S rRNA gene and ITS2
+URS0000465EE5        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.55   0.0  138.1   3.4e-35 !   Solanum pectinatum 5.8S ribosomal RNA
+URS000047188D        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.54   0.0  138.0   3.5e-35 !   Beauverdia hirtella 5.8S ribosomal RNA
+URS00004725EE        -         5_8S_rRNA            RF00002    cm        1      154        7      161      +    no    1 0.54   0.0  138.0   3.5e-35 !   Viola japonica 5.8S ribosomal RNA
+URS000045FB3E        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.54   0.0  138.0   3.5e-35 !   Trymalium x ramosissimum 5.8S ribosomal RNA
+URS00004763BF        -         5_8S_rRNA            RF00002    cm        1      154        1      154      +    no    1 0.45   0.0  138.0   3.5e-35 !   Dichotomocladium sphaerosporum 5.8S ribosomal RNA
+URS000046BD15        -         5_8S_rRNA            RF00002    cm        1      154        7      162      +    no    1 0.55   0.0  138.0   3.6e-35 !   Ficus religiosa (bo tree) 5.8S ribosomal RNA
+URS000046D6C6        -         5_8S_rRNA            RF00002    cm        1      154        9      164      +    no    1 0.55   0.0  138.0   3.6e-35 !   Ficus trigona 5.8S ribosomal RNA
+URS0000474030        -         5_8S_rRNA            RF00002    cm        1      154       28      183      +    no    1 0.51   0.0  137.9   3.8e-35 !   Gunnera herteri 5.8S ribosomal RNA
+URS000046392C        -         5_8S_rRNA            RF00002    cm        1      154        6      159      +    no    1 0.52   0.0  137.9   3.8e-35 !   Pinus luchuensis 5.8S ribosomal RNA
+URS000045FFBF        -         5_8S_rRNA            RF00002    cm        1      154        5      160      +    no    1 0.53   0.0  137.9   3.9e-35 !   Mangifera sylvatica 5.8S ribosomal RNA
+URS0000472665        -         5_8S_rRNA            RF00002    cm        1      154        4      159      +    no    1 0.54   0.0  137.9   3.9e-35 !   5.8S ribosomal RNA from 2 species
+URS0000471556        -         5_8S_rRNA            RF00002    cm        1      154        4      159      +    no    1 0.54   0.0  137.9   3.9e-35 !   Ceriops zippeliana 5.8S ribosomal RNA
+URS0000474144        -         5_8S_rRNA            RF00002    cm        1      154        4      159      +    no    1 0.54   0.0  137.9     4e-35 !   Ainsliaea latifolia 5.8S ribosomal RNA
+URS0000467022        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.59   0.0  137.8     4e-35 !   5.8S ribosomal RNA from 2 species
+URS0000466DA7        -         5_8S_rRNA            RF00002    cm        1      154        5      160      +    no    1 0.53   0.0  137.8   4.2e-35 !   5.8S ribosomal RNA from 2 species
+URS000046398C        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.55   0.0  137.7   4.4e-35 !   Chrysophyllum cainito 5.8S ribosomal RNA
+URS0000471566        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.53   0.0  137.6   4.6e-35 !   Gunnera kauaiensis 5.8S ribosomal RNA
+URS0000466936        -         5_8S_rRNA            RF00002    cm        1      154        5      160      +    no    1 0.51   0.0  137.6   4.7e-35 !   Allium brevidens 5.8S ribosomal RNA
+URS0000467F76        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.52   0.0  137.5   4.9e-35 !   Ewartia catipes 5.8S ribosomal RNA
+URS0000477274        -         5_8S_rRNA            RF00002    cm        1      154      305      460      +    no    1 0.54   0.0  137.4   5.4e-35 !   Adenia hondala partial contains 18S ribosomal RNA, internal transcribed spacer 1, 5.8S ribosomal RNA, internal transcribed spacer 2, and 26S ribosomal RNA
+URS000045F4BA        -         5_8S_rRNA            RF00002    cm        1      154        5      160      +    no    1 0.55   0.0  137.4   5.5e-35 !   Erythroseris somaliensis 5.8S ribosomal RNA
+URS000046AA5E        -         5_8S_rRNA            RF00002    cm        2      154        1      155      +    5'    2 0.55   0.0  137.3   5.6e-35 !   Krascheninnikovia ceratoides 23S ribosomal RNA
+URS0000473612        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.54   0.0  137.3   5.6e-35 !   Carapichea ipecacuanha 5.8S ribosomal RNA
+URS000046D71C        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.56   0.0  137.3   5.7e-35 !   Veronica perfoliata 5.8S ribosomal RNA
+URS0000472B9F        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.58   0.0  137.3   5.9e-35 !   Brachypodium hybridum 5.8S ribosomal RNA
+URS000045FAFA        -         5_8S_rRNA            RF00002    cm        1      154        2      157      +    no    1 0.54   0.0  137.3   5.9e-35 !   Cynorhiza typica 5.8S ribosomal RNA
+URS000046B47F        -         5_8S_rRNA            RF00002    cm        1      154      282      439      +    no    1 0.50   0.0  137.2   6.2e-35 !   Arthroderma otae partial contains 18S rRNA, ITS1, 5.8S rRNA and ITS2
+URS000046615D        -         5_8S_rRNA            RF00002    cm        1      154        9      164      +    no    1 0.54   0.0  137.1   6.5e-35 !   Chascolytrum subaristatum 5.8S ribosomal RNA
+URS0000475E83        -         5_8S_rRNA            RF00002    cm        1      154        5      160      +    no    1 0.56   0.0  137.1   6.5e-35 !   Phalaris truncata 5.8S ribosomal RNA
+URS000046D4C6        -         5_8S_rRNA            RF00002    cm        1      154        4      160      +    no    1 0.49   0.0  137.0   7.1e-35 !   Allium moschatum 5.8S ribosomal RNA
+URS000046DF99        -         5_8S_rRNA            RF00002    cm        1      154        7      162      +    no    1 0.51   0.0  136.9   7.2e-35 !   Allium hymenorrhizum 23S ribosomal RNA
+URS0000475D46        -         5_8S_rRNA            RF00002    cm        1      154        2      157      +    no    1 0.56   0.0  136.9   7.6e-35 !   Myriophyllum sp. Aq-red2 5.8S ribosomal RNA
+URS00004733C7        -         5_8S_rRNA            RF00002    cm        1      154        6      161      +    no    1 0.60   0.0  136.9   7.7e-35 !   5.8S ribosomal RNA from 49 species
+URS0000473CA7        -         5_8S_rRNA            RF00002    cm        1      154        5      160      +    no    1 0.54   0.0  136.8   7.9e-35 !   Campanula austroadriatica 5.8S ribosomal RNA

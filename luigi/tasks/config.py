@@ -1,0 +1,110 @@
+# -*- coding: utf-8 -*-
+
+"""
+Copyright [2009-2017] EMBL-European Bioinformatics Institute
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+     http://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+"""
+
+import luigi
+from parameters import PathParameter
+
+
+class output(luigi.Config):  # pylint: disable=C0103
+    """
+    This contains the configuration for all output files.
+
+    :base: This is the path to a directory where all output files will be
+    placed. For example Rfam produces a file that found at
+    ``{base}/cmds/pgload_hits.ctl``.
+    """
+    base = PathParameter(default='/tmp')
+
+
+class db(luigi.Config):  # pylint: disable=C0103
+    """
+    This contains the configuration information about the database to connect
+    to.
+    """
+    user = luigi.Parameter(default='rnacen')
+    password = luigi.Parameter()
+    host = luigi.Parameter(default='127.0.0.1')
+    port = luigi.Parameter(default=5432)
+    db_name = luigi.Parameter(default='rnacen')
+    search_path = luigi.Parameter()
+
+    def pgloader_url(self):
+        """
+        This creates the url for pgloader that specifies the postgres database
+        to use.
+        """
+        return 'postgresql://{user}:{password}@{host}:{port}/{db}'.format(
+            user=self.user,
+            password=self.password,
+            host=self.host,
+            port=self.port,
+            db=self.db_name,
+        )
+
+
+class rfam(luigi.Config):  # pylint: disable=C0103
+    """
+    This contains the configuration about the rfam files to read.
+
+    :hits: The path to the .tbl file from running rfam on the sequences in the
+    ``fasta`` file.
+    :fasta: The path to the fasta file that contained the sequences for
+    infernal to run on. Each id in the file must be an URS.
+    :json_folder: This should be a path to a folder where all *.json files in
+    the folder and valid JSON and contain the Rfam sequence information to
+    import.
+    """
+    hits = PathParameter()
+    fasta = PathParameter()
+    json_folder = PathParameter()
+
+
+class noncode(luigi.Config):  # pylint: disable=C0103
+    """
+    This contains the configuration for NONCODE files to read.
+
+    :json_folder: This should be a path to a folder where all *.json files in
+    the folder and valid JSON and contain the NONCODE information to import.
+    """
+    json_folder = PathParameter()
+
+
+class greengenes(luigi.Config):  # pylint: disable=C0103
+    """
+    This contains the configuration for the Greegenes data.
+
+    :json_folder: This should be a path to a folder where all *.json files in
+    the folder and valid JSON and contain the Greengenes information to import.
+    """
+    json_folder = PathParameter()
+
+
+class ensembl(luigi.Config):  # pylint: disable=C0103
+    """
+    This contains the configuration for the Greegenes data.
+
+    :name: This is a comma separated list of species names to import, or the
+    string 'all' to mean all Ensembl species on Ensembl's FTP site.
+    :release: The release number to use. The defualt string 'current' means the
+    lastest release on Ensembl's FTP site.
+    :allow_model_organisms: This is a flag to indicate if we should import
+    model organisms from Ensembl. Generally we don't as those organisms have
+    specific database we import from. This will override the settings in
+    ``name``. That is if the given name is a model organism and this parameter
+    is False it will not be imported.
+    """
+    name = luigi.Parameter(default='all')
+    release = luigi.Parameter(default='current')
+    allow_model_organisms = luigi.BoolParameter(default=False)

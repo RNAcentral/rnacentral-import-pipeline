@@ -31,7 +31,8 @@ class GenericFileParameter(Parameter):
         try:
             self.as_target(value)
             return value
-        except:
+        except Exception as err:
+            print(err)
             raise ValueError("Unknown type of file %s" % value)
 
     def as_target(self, path, **kwargs):
@@ -42,7 +43,7 @@ class GenericFileParameter(Parameter):
         kwargs['format'] = fmt
 
         if not parsed.scheme or parsed.scheme == 'file':
-            return LocalTarget(path=os.path.normalize(path), **kwargs)
+            return LocalTarget(path=os.path.abspath(path), **kwargs)
         if parsed.scheme == 'ftp':
             return FtpTarget(parsed.path, parsed.netloc, **kwargs)
 
@@ -58,7 +59,7 @@ class CommaGenericFileParameter(Parameter):
             raise ValueError("Must provide files to deduplicate")
 
         try:
-            targets = self.as_targets(value)
+            self.as_targets(value)
             return [path.strip() for path in value.split(',')]
         except:
             raise ValueError("Unhandable type of files %s" % value)
@@ -74,4 +75,4 @@ class PathParameter(Parameter):
         return value
 
     def parse(self, value):
-        return os.path.normalie(value)
+        return os.path.abspath(value)
