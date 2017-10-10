@@ -156,6 +156,8 @@ def get_rna_type(rows):
     """
 
     rna_type = unique_value('rna_type', rows)
+    if rna_type is None:
+        return 'ncRNA'
     return rna_type.replace('_', ' ')
 
 
