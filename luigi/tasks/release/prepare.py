@@ -26,7 +26,7 @@ on rnacen.load_rnacentral_all(database)
 
 class PrepareRelease(luigi.Task):  # pylint: disable=R0904
     """
-    This will prepare a release in the database. Basically callsed the
+    This will prepare a release in the database by calling the
     prepare_releases('F') procedure.
     """
 

@@ -35,7 +35,7 @@ class PGLoader(ExternalProgramTask):  # pylint: disable=R0921
     file is what determines if the task is complete or not.
 
     PGloader will log to a file called logs/class_name.log, relative to the
-    glovally configured base directory (see config.output). This log file will
+    globally configured base directory (see config.output). This log file will
     be appended to each run, not overwritten. It is also ignored when
     determining if the task is complete.
     """
@@ -107,13 +107,13 @@ class PGLoader(ExternalProgramTask):  # pylint: disable=R0921
         """
         This will run pgloader on the generated control file. If pgloader runs
         with no issues, then this will keep the file, otherwise the file will
-        be deleted.
+        be renamed by adding a '-crashed' prefix to assist with debugging.
         """
         filename = self.write_control_file()
         try:
             super(PGLoader, self).run()
         except:
-            os.remove(filename)
+            os.rename(filename, '%s-crashed' % filename)
             raise
 
     def content_hash(self):

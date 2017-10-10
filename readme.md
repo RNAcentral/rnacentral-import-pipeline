@@ -7,12 +7,23 @@ This is the main pipeline that is used internally for loading the data into the 
 
 ## Installation
 
-### Perl dependencies
+## Using with Docker
 
--   BioPerl
--   DBI
--   DBD::Oracle
--   Log4perl
+* build container
+  ```
+  docker build -t rnacentral-import-pipeline .
+  ```
+
+* open interactive shell inside a running container
+  ```
+  docker run -v `pwd`:/rnacentral/rnacentral-import-pipeline -v /path/to/data:/rnacentral/data/ -it rnacentral-import-pipeline bash
+  ```
+
+* example luigi command
+
+  ```
+  python -m luigi --module tasks.release LoadRelease --local-scheduler
+  ```
 
 ### Installation
 
