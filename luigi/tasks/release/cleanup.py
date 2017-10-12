@@ -32,7 +32,7 @@ TABLES = [
 ]
 
 
-class CleanupRelease(luigi.Task):  # pylint: disable=R0904
+class TruncateLoadTables(luigi.Task):  # pylint: disable=R0904
     """
     This will empty out the load_* tables. This is distinct from the normal
     loading procedure because sometimes things go wrong it and it is very hard
