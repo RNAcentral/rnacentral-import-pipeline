@@ -19,7 +19,7 @@ import luigi
 from tasks.config import output
 from tasks.utils.pgloader import PGLoader
 from .utils.generic import file_pattern
-from .manage_files import SplitFiles
+from .manage_files import SplitMergedFile
 
 
 CONTROL_FILE = """
@@ -86,7 +86,7 @@ class LoadCoordinates(PGLoader):  # pylint: disable=R0904
     directory = 'genomic_locations'
 
     def requires(self):
-        return SplitFiles(directory=self.directory)
+        return SplitMergedFile(directory=self.directory)
 
     def control_file(self):
         config = output()
