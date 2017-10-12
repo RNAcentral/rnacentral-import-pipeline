@@ -35,17 +35,44 @@ create index if not exists load_rnacentral_all$database
 on rnacen.load_rnacentral_all(database)
 """
 
+class DatabaseUpdater(luigi.Task):
+    """
+    """
+    conn = get_db_connection(db())
 
-class StoreRelease(luigi.Task):  # pylint: disable=R0904
+    def output(self):
+        """
+        Check that a sentinel file exists.
+        """
+        return luigi.LocalTarget(os.path.join(output().base, '%s.txt' % self.__class__.__name__))
+
+    def create_sentinel_file(self):
+        """
+        """
+        with open(self.output().fn , 'w') as sentinel_file:
+            sentinel_file.write('Done')
+
+
+class UpdateAccessions(DatabaseUpdater):
+    """
+
+    """
+    def run(self):
+        cur = self.conn.cursor()
+        cur.execute("SET work_mem TO '256MB'")
+        cur.execute('SELECT rnc_update.update_rnc_accessions()')
+        self.create_sentinel_file()
+        self.conn.close()
+
+
+class StoreRelease(DatabaseUpdater):  # pylint: disable=R0904
     """
     Import data from the temporary load_* tables into the main tables.
     Create a sentinel file on completion.
     To rerun the import, the sentinel file must be deleted.
     """
-
     def run(self):
-        conn = get_db_connection(db())
-        cur = conn.cursor()
+        cur = self.conn.cursor()
         cur.execute("SET work_mem TO '256MB'")
         cur.execute(CREATE_INDEX)
         cur.execute("SELECT rnc_update.prepare_releases('F')")
@@ -56,15 +83,6 @@ class StoreRelease(luigi.Task):  # pylint: disable=R0904
                         (result[0], result[1]))
             print "Committing..."
             conn.commit()
-        cur.execute('SELECT rnc_update.update_rnc_accessions()')
         cur.execute('SELECT rnc_update.update_literature_references()')
-        conn.close()
-        with open(self.output().fn , 'w') as sentinel_file:
-            sentinel_file.write('Done')
-
-
-    def output(self):
-        """
-        Check that a sentinel file exists.
-        """
-        return luigi.LocalTarget(os.path.join(output().base, '%s.txt' % self.__class__.__name__))
+        self.create_sentinel_file()
+        self.conn.close()

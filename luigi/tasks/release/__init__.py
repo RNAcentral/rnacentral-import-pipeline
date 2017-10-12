@@ -21,6 +21,7 @@ from .load_references import LoadReferences
 from .load_coordinates import LoadCoordinates
 from .load_secondary_structures import LoadSecondaryStructures
 from .store import StoreRelease
+from .store import UpdateAccessions
 from .prepare import PrepareRelease
 from .cleanup import TruncateLoadTables
 
@@ -49,3 +50,4 @@ class Release(luigi.WrapperTask):  # pylint: disable=R0904
 
     def requires(self):
         yield StoreRelease()
+        yield UpdateAccessions()
