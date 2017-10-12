@@ -19,6 +19,7 @@ import luigi
 from tasks.config import output
 from tasks.utils.pgloader import PGLoader
 from .utils.generic import file_pattern
+from .manage_files import SplitFiles
 
 
 CONTROL_FILE = """
@@ -145,12 +146,14 @@ $$
 
 class LoadAccessions(PGLoader):  # pylint: disable=R0904
     """
-    This will load accessions. The database paraemter defaults to all
+    This will load accessions. The database parameter defaults to all
     acecssion, if a value is given then it is assumed to be the name of the
     database to load. All files that begin with that name will be loaded.
     """
-
     database = luigi.Parameter(default='all')
+
+    def requires(self):
+        return SplitFiles(directory=self.directory)
 
     def control_file(self):
         config = output()

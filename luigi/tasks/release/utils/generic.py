@@ -20,8 +20,9 @@ def file_pattern(name):
     files from that database. If the name is 'all' then a pattern that matches
     all files will be created. The file pattern is quoted using '#'.
     """
-
     pattern = name
     if name == 'all':
-        pattern = '.'
-    return '{pattern}*.csv'.format(pattern=pattern)
+        pattern = 'chunk_*'
+    else:
+        pattern = '{pattern}*.csv'.format(pattern=pattern)
+    return pattern
