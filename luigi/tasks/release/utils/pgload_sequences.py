@@ -21,6 +21,7 @@ from tasks.config import output
 from tasks.utils.pgloader import PGLoader
 
 from .generic import file_pattern
+from tasks.release.manage_files import SplitFiles
 
 
 CONTROL_FILE = """
@@ -78,6 +79,9 @@ class PGLoadSequences(PGLoader):  # pylint: disable=R0921,R0904
 
     database = luigi.Parameter(default='all')
     type = luigi.ChoiceParameter(choices=['short', 'long'])
+
+    def requires(self):
+        return SplitFiles(directory=self.type)
 
     def sequence_column(self):
         """
