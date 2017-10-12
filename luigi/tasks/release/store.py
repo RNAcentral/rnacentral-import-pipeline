@@ -18,16 +18,13 @@ import os
 import luigi
 
 from tasks.config import db, output
-from .utils.db import cursor
+from .utils.db import get_db_connection
 
 
 SQL = """
 select
     dbid,
-    id,
-    release_type,
-    release_date,
-    force_load
+    id
 from rnacen.rnc_release
 where status = 'L'
 order by id
@@ -47,17 +44,21 @@ class StoreRelease(luigi.Task):  # pylint: disable=R0904
     """
 
     def run(self):
-        with cursor(db()) as cur:
-            cur.execute("SET work_mem TO '1GB'")
-            cur.execute(CREATE_INDEX)
-            cur.execute("select rnc_update.prepare_releases('F')")
-            cur.execute(SQL)
-            for result in cur.fetchall():
-                cur.execute('select rnc_update.new_update_release(%s, %s)',
-                            (result[0], result[1]))
-            cur.execute('select rnc_update.update_rnc_accessions()')
-            cur.execute('select rnc_update.update_literature_references()')
-
+        conn = get_db_connection(db())
+        cur = conn.cursor()
+        cur.execute("SET work_mem TO '256MB'")
+        cur.execute(CREATE_INDEX)
+        cur.execute("SELECT rnc_update.prepare_releases('F')")
+        cur.execute(SQL)
+        for result in cur.fetchall():
+            print "Running release %i from database %s" % (result[1], result[0])
+            cur.execute('SELECT rnc_update.new_update_release(%s, %s)',
+                        (result[0], result[1]))
+            print "Committing..."
+            conn.commit()
+        cur.execute('SELECT rnc_update.update_rnc_accessions()')
+        cur.execute('SELECT rnc_update.update_literature_references()')
+        conn.close()
         with open(self.output().fn , 'w') as sentinel_file:
             sentinel_file.write('Done')
 
