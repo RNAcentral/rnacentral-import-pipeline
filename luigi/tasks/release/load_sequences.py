@@ -22,7 +22,7 @@ class LoadSequences(luigi.WrapperTask):  # pylint: disable=R0904
     """
     This will load sequences into the database. It will load either the short,
     or long sequences as needed. By default, and when type is all, it will load
-    botht types of sequences.
+    both types of sequences.
     """
 
     database = luigi.Parameter(default='all')
