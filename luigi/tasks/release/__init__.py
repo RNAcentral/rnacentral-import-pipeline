@@ -20,8 +20,10 @@ from .load_accessions import LoadAccessions
 from .load_references import LoadReferences
 from .load_coordinates import LoadCoordinates
 from .load_secondary_structures import LoadSecondaryStructures
-from .store import StoreRelease
+from .store import RunRelease
 from .store import UpdateAccessions
+from .store import UpdateReferences
+from .store import UpdateCoordinates
 from .prepare import PrepareRelease
 from .cleanup import TruncateLoadTables
 
@@ -49,5 +51,7 @@ class Release(luigi.WrapperTask):  # pylint: disable=R0904
     database = luigi.Parameter(default='all')
 
     def requires(self):
-        yield StoreRelease()
+        yield RunRelease()
         yield UpdateAccessions()
+        yield UpdateReferences()
+        yield UpdateCoordinates()

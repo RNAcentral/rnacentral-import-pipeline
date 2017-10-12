@@ -72,17 +72,6 @@ ALTER TABLE rnacen.load_rnc_coordinates SET (
     toast.autovacuum_enabled = true
 );
 $$
-,
-$$
-INSERT INTO rnacen.rnc_coordinates AS t1 (
-  accession, primary_accession, local_start, local_end, strand, id
-)
-SELECT
-  accession, primary_accession, local_start, local_end, strand, NEXTVAL('rnc_coordinates_pk_seq')
-FROM rnacen.load_rnc_coordinates as t2
-  ON CONFLICT (accession, primary_accession, local_start, local_end)
-  DO NOTHING;
-$$
 ;
 """
 
