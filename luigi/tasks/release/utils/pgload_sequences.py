@@ -52,6 +52,7 @@ TARGET COLUMNS (
 )
 
 WITH
+    drop indexes,
     batch rows = 25000,
     batch size =  512MB,
     workers = 10,

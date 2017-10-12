@@ -49,6 +49,7 @@ TARGET COLUMNS (
 
 WITH
     truncate,
+    drop indexes,    
     batch rows = 500,
     batch size = 32MB,
     prefetch rows = 500,
