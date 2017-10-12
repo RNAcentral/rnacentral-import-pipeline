@@ -49,6 +49,6 @@ from .release import LoadReferences
 from .release import LoadSecondaryStructures
 from .release import StoreRelease
 from .release import PrepareRelease
-from .release import CleanupRelease
+from .release import TruncateLoadTables
 from .release import LoadRelease
 from .release import Release
