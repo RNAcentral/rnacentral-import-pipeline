@@ -78,8 +78,8 @@ def parser(filename):
                 optional_id=symbol(data),
                 description=name(data),
                 seq_version='1',
-                feature_location_start=start(data),
-                feature_location_end=stop(data),
+                location_start=start(data),
+                location_end=stop(data),
                 references=references(data),
             )
 
