@@ -132,7 +132,7 @@ class Entry(object):
     import.
     """
 
-    primary_id = attr.ib(validator=is_a(basestring))
+    primary_id = attr.ib(validator=is_a(basestring))  # Also known as external_id
     accession = attr.ib(validator=is_a(basestring))
     ncbi_tax_id = attr.ib(validator=is_a(int))
     database = attr.ib(validator=is_a(basestring))

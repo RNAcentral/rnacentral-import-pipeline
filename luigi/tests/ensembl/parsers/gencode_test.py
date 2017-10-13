@@ -28,7 +28,7 @@ class GencodeTests(Base):  # pylint: disable=R0904,C0111
 
     def test_it_uses_correct_primary_id(self):
         entry = self.entry_from('GENCODE', "ENST00000400706.3")
-        assert entry.primary_id == 'ENST00000400706.3'
+        assert entry.primary_id == 'ENST00000400706'
 
     def test_it_keeps_xref_to_OTT(self):
         entry = self.entry_from('GENCODE', "ENST00000540226.1")

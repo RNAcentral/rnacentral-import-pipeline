@@ -112,12 +112,26 @@ def description(summary, feature, entry):
         locus_description(entry)
 
 
-def seq_version(primary_id):
+def seq_version(feature):
     """
     Compute the sequence version, if any, of the given id.
     """
 
-    if '.' in primary_id:
-        parts = primary_id.split('.', 1)
+    pid = helpers.transcript(feature)
+    if '.' in pid:
+        parts = pid.split('.', 1)
         return parts[1]
     return ''
+
+
+def primary_id(feature):
+    """
+    This will fetch an Ensembl specific primary id. This is used for extenral
+    id in our database. It will be the transcript id with the version stripped,
+    or standard name.
+    """
+
+    primary = helpers.transcript(feature)
+    if not primary:
+        primary = helpers.standard_name(feature)
+    return primary.split('.', 1)[0]
