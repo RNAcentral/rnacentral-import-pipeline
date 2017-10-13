@@ -18,7 +18,7 @@ for export to usable flat files.
 
 import csv
 
-from database.data import Entry
+from databases.data import Entry
 
 from .helpers import primary_id
 from .helpers import accession

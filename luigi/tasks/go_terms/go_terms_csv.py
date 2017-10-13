@@ -13,7 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from rfam import utils
+from databases.rfam import utils
 from tasks.utils.csv_writer import CsvWriter
 
 

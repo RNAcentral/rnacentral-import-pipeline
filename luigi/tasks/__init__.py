@@ -13,35 +13,35 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-# from .rfam.pgload_clans import RfamPGLoadClans
-# from .rfam.pgload_families import RfamPGLoadFamilies
-# from .rfam.pgload_hits import RfamPGLoadHits
-# from .rfam.pgload_fasta import RfamPGLoadFasta
-# from .rfam.pgload_go_term_mapping import RfamPGLoadGoTerms
-#
-# from .rfam.clans_csv import RfamClansCSV
-# from .rfam.families_csv import RfamFamiliesCSV
-# from .rfam.hits_csv import RfamHitsCSV
-# from .rfam.fasta_csv import RfamFastaCSV
-# from .rfam.go_term_mapping_csv import RfamGoTermsCSV
-# from .rfam import RfamSearches
-# from .rfam import RfamCSV
-# from .rfam import RfamFamilies
-# from .rfam import RfamSequences
-#
-# from .go_terms.go_terms_csv import GoTermsCSV
-# from .go_terms.pgload_go_terms import PGLoadGoTerms
-# from .go_terms import GoTerms
-#
-# from .ensembl.import_all import EnsemblImporter
-# from .ensembl.species import SpeciesImporter
-# from .ensembl.generic import EnsemblSingleFileTask
-#
-# from .gtrnadb import GtRNAdb
-#
-# from .mgi.download import MgiDownload
-# from .mgi.as_json import MgiToJson
-# from .mgi import Mgi
+from .rfam.pgload_clans import RfamPGLoadClans
+from .rfam.pgload_families import RfamPGLoadFamilies
+from .rfam.pgload_hits import RfamPGLoadHits
+from .rfam.pgload_fasta import RfamPGLoadFasta
+from .rfam.pgload_go_term_mapping import RfamPGLoadGoTerms
+
+from .rfam.clans_csv import RfamClansCSV
+from .rfam.families_csv import RfamFamiliesCSV
+from .rfam.hits_csv import RfamHitsCSV
+from .rfam.fasta_csv import RfamFastaCSV
+from .rfam.go_term_mapping_csv import RfamGoTermsCSV
+from .rfam import RfamSearches
+from .rfam import RfamCSV
+from .rfam import RfamFamilies
+from .rfam import RfamSequences
+
+from .go_terms.go_terms_csv import GoTermsCSV
+from .go_terms.pgload_go_terms import PGLoadGoTerms
+from .go_terms import GoTerms
+
+from .ensembl.import_all import EnsemblImporter
+from .ensembl.species import SpeciesImporter
+from .ensembl.generic import EnsemblSingleFileTask
+
+from .gtrnadb import GtRNAdb
+
+from .mgi.download import MgiDownload
+from .mgi.as_json import MgiToJson
+from .mgi import Mgi
 
 from .release import LoadSequences
 from .release import LoadAccessions

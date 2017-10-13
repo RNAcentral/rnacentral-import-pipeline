@@ -15,7 +15,7 @@ limitations under the License.
 
 import attr
 
-from rfam import utils
+from databases.rfam import utils
 from tasks.utils.csv_writer import CsvWriter
 
 
