@@ -47,6 +47,12 @@ class MgiToJson(luigi.Task):  # pylint: disable=R0904
             result = attr.asdict(entry)
             result['feature_type'] = entry.feature_type
             result['ncrna_class'] = entry.ncrna_class
+            result['feature_location_start'] = entry.feature_location_start
+            result['feature_location_end'] = entry.feature_location_end
+            result['external_id'] = entry.accession
+            for index, reference in enumerate(entry.references):
+                result['references'][index]['md5'] = reference.md5()
+
             data.append(result)
 
         with atomic_file(self.output().fn) as out:
