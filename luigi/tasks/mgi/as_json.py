@@ -23,7 +23,7 @@ from luigi.local_target import atomic_file
 import attr
 
 from tasks.mgi.download import MgiDownload
-from databases.mgi import rna_entries
+from databases.mgi.parser import rna_entries
 
 
 class MgiToJson(luigi.Task):  # pylint: disable=R0904
