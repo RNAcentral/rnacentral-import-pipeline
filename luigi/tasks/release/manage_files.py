@@ -19,7 +19,7 @@ import luigi
 from tasks.config import output
 
 
-class SplitFiles(luigi.Task):
+class SplitMergedFile(luigi.Task):
     """
     Split a file into multiple chunks.
     """
