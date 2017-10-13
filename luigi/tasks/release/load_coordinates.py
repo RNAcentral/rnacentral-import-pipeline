@@ -19,6 +19,7 @@ import luigi
 from tasks.config import output
 from tasks.utils.pgloader import PGLoader
 from .utils.generic import file_pattern
+from .manage_files import SplitFiles
 
 
 CONTROL_FILE = """
@@ -42,6 +43,7 @@ TARGET COLUMNS (
 )
 
 WITH truncate,
+    drop indexes,
     batch rows = 500,
     batch size = 32MB,
     prefetch rows = 500,
@@ -70,17 +72,6 @@ ALTER TABLE rnacen.load_rnc_coordinates SET (
     toast.autovacuum_enabled = true
 );
 $$
-,
-$$
-INSERT INTO rnacen.rnc_coordinates AS t1 (
-  accession, primary_accession, local_start, local_end, strand, id
-)
-SELECT
-  accession, primary_accession, local_start, local_end, strand, NEXTVAL('rnc_coordinates_pk_seq')
-FROM rnacen.load_rnc_coordinates as t2
-  ON CONFLICT (accession, primary_accession, local_start, local_end)
-  DO NOTHING;
-$$
 ;
 """
 
@@ -91,12 +82,15 @@ class LoadCoordinates(PGLoader):  # pylint: disable=R0904
     coordinates, if a value is given then it is assumed to be the name of the
     database to load. All files that begin with that name will be loaded.
     """
-
     database = luigi.Parameter(default='all')
+    directory = 'genomic_locations'
+
+    def requires(self):
+        return SplitFiles(directory=self.directory)
 
     def control_file(self):
         config = output()
-        directory = os.path.join(config.base, 'genomic_locations')
+        directory = os.path.join(config.base, self.directory)
         return CONTROL_FILE.format(
             pattern=file_pattern(self.database),
             db_url=self.db_url(table='load_rnc_coordinates'),

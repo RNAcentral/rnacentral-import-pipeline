@@ -20,9 +20,12 @@ from .load_accessions import LoadAccessions
 from .load_references import LoadReferences
 from .load_coordinates import LoadCoordinates
 from .load_secondary_structures import LoadSecondaryStructures
-from .store import StoreRelease
+from .store import RunRelease
+from .store import UpdateAccessions
+from .store import UpdateReferences
+from .store import UpdateCoordinates
 from .prepare import PrepareRelease
-from .cleanup import CleanupRelease
+from .cleanup import TruncateLoadTables
 
 
 class LoadRelease(luigi.WrapperTask):  # pylint: disable=R0904
@@ -37,16 +40,18 @@ class LoadRelease(luigi.WrapperTask):  # pylint: disable=R0904
         yield LoadAccessions(database=self.database)
         yield LoadReferences(database=self.database)
         yield LoadCoordinates(database=self.database)
-        yield LoadSecondaryStructures(database=self.database)
 
 
 class Release(luigi.WrapperTask):  # pylint: disable=R0904
     """
     This runs all steps required to build and prepare a release for RNAcentral.
-    This will not delete any data. To do that you must run the CleanupRelease
+    This will not delete any data. To do that you must run the TruncateLoadTables
     task manually afterwards.
     """
     database = luigi.Parameter(default='all')
 
     def requires(self):
-        yield StoreRelease()
+        yield RunRelease()
+        yield UpdateAccessions()
+        yield UpdateReferences()
+        yield UpdateCoordinates()

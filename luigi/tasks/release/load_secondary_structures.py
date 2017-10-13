@@ -40,6 +40,7 @@ TARGET COLUMNS (
     md5
 )
 WITH
+    drop indexes,
     SKIP HEADER = 1,
     FIELDS ESCAPED BY double-quote,
     FIELDS TERMINATED BY ','

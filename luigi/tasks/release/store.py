@@ -18,52 +18,122 @@ import os
 import luigi
 
 from tasks.config import db, output
-from .utils.db import cursor
+from .utils.db import get_db_connection
 
 
-SQL = """
-select
-    dbid,
-    id,
-    release_type,
-    release_date,
-    force_load
-from rnacen.rnc_release
-where status = 'L'
-order by id
-"""
-
-CREATE_INDEX = """
-create index if not exists load_rnacentral_all$database
-on rnacen.load_rnacentral_all(database)
-"""
-
-
-class StoreRelease(luigi.Task):  # pylint: disable=R0904
+class DatabaseUpdater(luigi.Task):
     """
-    Import data from the temporary load_* tables into the main tables.
-    Create a sentinel file on completion.
-    To rerun the import, the sentinel file must be deleted.
+    Base class for running pgsql procedures.
     """
-
-    def run(self):
-        with cursor(db()) as cur:
-            cur.execute("SET work_mem TO '1GB'")
-            cur.execute(CREATE_INDEX)
-            cur.execute("select rnc_update.prepare_releases('F')")
-            cur.execute(SQL)
-            for result in cur.fetchall():
-                cur.execute('select rnc_update.new_update_release(%s, %s)',
-                            (result[0], result[1]))
-            cur.execute('select rnc_update.update_rnc_accessions()')
-            cur.execute('select rnc_update.update_literature_references()')
-
-        with open(self.output().fn , 'w') as sentinel_file:
-            sentinel_file.write('Done')
-
 
     def output(self):
         """
         Check that a sentinel file exists.
         """
-        return luigi.LocalTarget(os.path.join(output().base, '%s.txt' % self.__class__.__name__))
+        filename = '%s.txt' % self.__class__.__name__
+        return luigi.LocalTarget(os.path.join(output().base, 'cmds', filename))
+
+    def create_sentinel_file(self):
+        """
+        Create a sentinel file on completion.
+        To rerun the import, the sentinel file must be deleted.
+        """
+        with open(self.output().fn, 'w') as sentinel_file:
+            sentinel_file.write('Done')
+
+
+class UpdateAccessions(DatabaseUpdater):
+    """
+    Merge accessions data from loading table into main table.
+    """
+    conn = get_db_connection(db())
+
+    def run(self):
+        cur = self.conn.cursor()
+        cur.execute("SET work_mem TO '256MB'")
+        cur.execute('SELECT rnc_update.update_rnc_accessions()')
+        self.create_sentinel_file()
+        self.conn.close()
+
+
+class UpdateReferences(DatabaseUpdater):
+    """
+    Merge literature references from loading table into main table.
+    """
+    conn = get_db_connection(db())
+
+    def run(self):
+        cur = self.conn.cursor()
+        cur.execute("SET work_mem TO '256MB'")
+        cur.execute('SELECT rnc_update.update_literature_references()')
+        self.create_sentinel_file()
+        self.conn.close()
+
+
+class UpdateCoordinates(DatabaseUpdater):
+    """
+    Merge coordinates from loading table into main table.
+    """
+    conn = get_db_connection(db())
+
+    sql = """
+    INSERT INTO rnacen.rnc_coordinates AS t1 (
+      accession,
+      primary_accession,
+      local_start,
+      local_end,
+      strand,
+      id
+    )
+    SELECT
+      accession,
+      primary_accession,
+      local_start,
+      local_end,
+      strand,
+      NEXTVAL('rnc_coordinates_pk_seq')
+    FROM rnacen.load_rnc_coordinates as t2
+      ON CONFLICT (accession, primary_accession, local_start, local_end)
+      DO NOTHING
+    """
+
+    def run(self):
+        cur = self.conn.cursor()
+        cur.execute("SET work_mem TO '256MB'")
+        cur.execute(self.sql)
+        self.create_sentinel_file()
+        self.conn.close()
+
+
+class RunRelease(DatabaseUpdater):  # pylint: disable=R0904
+    """
+    Import data from the temporary load_* tables into the main tables.
+    """
+    conn = get_db_connection(db())
+
+    sql = """
+    SELECT dbid, id
+    FROM rnacen.rnc_release
+    WHERE status = 'L'
+    ORDER BY id
+    """
+
+    create_index_sql = """
+    CREATE INDEX IF NOT EXISTS load_rnacentral_all$database
+    ON rnacen.load_rnacentral_all(database)
+    """
+
+    def run(self):
+        cur = self.conn.cursor()
+        cur.execute("SET work_mem TO '256MB'")
+        cur.execute(self.create_index_sql)
+        cur.execute("SELECT rnc_update.prepare_releases('F')")
+        cur.execute(self.sql)
+        for result in cur.fetchall():
+            print "INFO: Executing release %i from database %i" % (result[1], result[0])
+            cur.execute('SELECT rnc_update.new_update_release(%s, %s)',
+                        (result[0], result[1]))
+            print "INFO: Committing..."
+            self.conn.commit()
+        self.create_sentinel_file()
+        self.conn.close()
