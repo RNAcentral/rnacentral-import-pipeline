@@ -196,7 +196,7 @@ class ExonWriter(object):
         """
         This markes all columns, 1-6 as unique.
         """
-        return range(0, 6)
+        return [0, 6]
 
     def write(self, data):
         """

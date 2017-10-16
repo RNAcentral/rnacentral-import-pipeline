@@ -43,7 +43,7 @@ from .utils.ftp import species_file_path
 from .utils.generic import parser_class
 
 
-class EnsemblSingleFileTask(luigi.Task):  # pylint: disable=R0904
+class EnsemblFile(luigi.Task):  # pylint: disable=R0904
     """
     This is the base importer for all Ensembl data. This outlines the general
     parsing and output strategy. It does not actually parse data into anything,

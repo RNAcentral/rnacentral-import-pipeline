@@ -14,21 +14,17 @@ limitations under the License.
 """
 
 import os
-import csv
-import shutil
-import fileinput
-import operator as op
-from contextlib import contextmanager
-
-import attr
+# import fileinput
+import subprocess as sp
+# from contextlib import contextmanager
 
 import luigi
 from luigi.local_target import atomic_file
+# from luigi.contrib.external_program import ExternalProgramTask
 
 from ..config import output
-from ..config import ensembl
 
-from .generic import EnsemblSingleFileTask
+from .generic import EnsemblFile
 
 from tasks.utils.entry_writers import Output
 
@@ -38,20 +34,9 @@ class DeduplicateOutputType(luigi.Task):  # pylint: disable=R0904
     This is a task that deduplicates a single file type for a single species. For example
     this will deduplicate all Homo sapiens short files.
     """
+    species_name = luigi.Parameter()
     filenames = luigi.Parameter()
     output_type = luigi.Parameter()
-
-    @property
-    def duplicate_filenames(self):
-        """
-        Get the list of filenames this task needs to work with.
-        """
-
-        files = []
-        for task in self.requires():
-            target = getattr(task.output(), self.output_type)
-            files.append(target.fn)
-        return files
 
     @property
     def unique_columns(self):
@@ -61,77 +46,50 @@ class DeduplicateOutputType(luigi.Task):  # pylint: disable=R0904
         unique rows.
         """
 
-        species = os.path.dirname(self.filenames.split(',')[0])
-        out = Output.build(output().base, 'ensembl', species + '-dedup')
+        out = Output.build(output().base, 'ensembl', self.species_name + '-dedup')
         final = getattr(out.writer(), self.output_type)
         return final.unique_columns()
 
-    @contextmanager
-    def duplicate_fileobjs(self):
-        """
-        This is a simple contextmanager to ensure that all file handles are
-        closed even if there is an error part way through processing them. It
-        will yield a fileinput.input object of all files this task has to
-        deduplicate.
-        """
-
-        try:
-            raw = fileinput.input(files=self.duplicate_filenames)
-            yield raw
-        finally:
-            raw.close()
-
     def requires(self):
         for filename in self.filenames.split(','):
-            yield EnsemblSingleFileTask(input_file=filename)
+            yield EnsemblFile(input_file=filename)
 
     def output(self):
-        species = os.path.dirname(self.filenames.split(',')[0])
-        out = Output.build(output().base, 'ensembl', species + '-dedup')
+        out = Output.build(output().base, 'ensembl', self.species_name + '-dedup')
         final = getattr(out, self.output_type)
         return luigi.LocalTarget(final.fn)
 
-    def copy_files(self, out):
-        """
-        This will copy the contents of the given files to the output
-        filehandle.
-        """
+    def filename_pattern(self):
+        return os.path.join(
+            output().duplicated_ensembl_path(),
+            self.output_type,
+            'ensembl*{species}*.csv'.format(species=self.species_name),
+        )
 
-        for filename in self.duplicate_filenames:
-            with open(filename, 'rb') as raw:
-                shutil.copyfileobj(raw, out)
-
-    def dedup_files(self, out, unique_columns):
+    def run(self):
         """
         This will deduplicate all csv files from self.files() according to the
         columns in unique_columns and write the result to the
         """
 
-        seen = set()
-        key = op.itemgetter(*unique_columns)
-        writer = csv.writer(out)
-        with self.duplicate_fileobjs() as raw:
-            reader = csv.reader(raw)
-            for row in reader:
-                value = key(row)
-                if value not in seen:
-                    writer.writerow(row)
-                    seen.add(value)
-
-    def cleanup(self):
-        """
-        This will delete all files this has deduplicated.
-        """
-        for filename in self.duplicate_filenames:
-            os.remove(filename)
-
-    def run(self):
+        start = None
+        stop = None
         unique_columns = self.unique_columns
-        with atomic_file(self.output().fn) as out:
-            if not unique_columns:
-                self.copy_files(out)
-            else:
-                self.dedup_files(out, unique_columns)
+        if len(unique_columns) == 1:
+            start = unique_columns[0] + 1
+            stop = unique_columns[0] + 1
+        elif len(unique_columns) == 2:
+            start, stop = unique_columns
+            start += 1
+            stop += 1
+        else:
+            raise ValueError("Unique columns must be a tuple of start, stop")
 
-        # if ensembl().cleanup:
-        #     self.cleanup()
+        command = "sort -u -t, -k{start},{stop} {pattern}".format(
+            start=start,
+            stop=stop,
+            pattern=self.filename_pattern(),
+        )
+
+        with atomic_file(self.output().fn) as out:
+            sp.check_call(command, stdout=out, shell=True)

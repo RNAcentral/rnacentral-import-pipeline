@@ -33,9 +33,9 @@ from .go_terms.go_terms_csv import GoTermsCSV
 from .go_terms.pgload_go_terms import PGLoadGoTerms
 from .go_terms import GoTerms
 
-from .ensembl.import_all import EnsemblImporter as Ensembl
-from .ensembl.species import SpeciesImporter as EnsemblSpecies
-from .ensembl.generic import EnsemblSingleFileTask as EnsemblFile
+# from .ensembl import Ensembl
+from .ensembl.species import EnsemblSpecies
+from .ensembl.generic import EnsemblFile
 
 from .gtrnadb import GtRNAdb
 
