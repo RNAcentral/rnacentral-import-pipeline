@@ -21,7 +21,7 @@ import pytest
 class NcRNAtest(ut.TestCase):
     @pytest.mark.skip()
     def test_it_labels_y_rna_correctly(self):
-        assert self.parser.ncrna_class({
+        assert self.parser.rna_type({
             "lineage": "Eukaryota Metazoa Chordata Craniata Vertebrata Chondrichthyes Holocephali Chimaeriformes Callorhinchidae Callorhinchus.",
             "primary_id": "RF00019",
             "is_seed": "1",
@@ -54,4 +54,4 @@ class NcRNAtest(ut.TestCase):
 
     @pytest.mark.skip()
     def test_it_calls_7SK_snRNA(self):
-        assert self.parser.ncrna_class("URS00006B7E5C/9606") == "snRNA"
+        assert self.parser.rna_type("URS00006B7E5C/9606") == "snRNA"
