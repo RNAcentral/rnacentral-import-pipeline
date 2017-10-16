@@ -118,10 +118,13 @@ def seq_version(feature):
     """
 
     pid = helpers.transcript(feature)
+    if not pid:
+        return None
+
     if '.' in pid:
         parts = pid.split('.', 1)
         return parts[1]
-    return ''
+    return None
 
 
 def primary_id(feature):
@@ -134,4 +137,5 @@ def primary_id(feature):
     primary = helpers.transcript(feature)
     if not primary:
         primary = helpers.standard_name(feature)
+    assert primary, "Could not generate primary id for %s" % feature
     return primary.split('.', 1)[0]

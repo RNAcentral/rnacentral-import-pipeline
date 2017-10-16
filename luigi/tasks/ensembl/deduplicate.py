@@ -20,10 +20,13 @@ import fileinput
 import operator as op
 from contextlib import contextmanager
 
+import attr
+
 import luigi
 from luigi.local_target import atomic_file
 
 from ..config import output
+from ..config import ensembl
 
 from .generic import EnsemblSingleFileTask
 
@@ -52,7 +55,16 @@ class DeduplicateOutputType(luigi.Task):  # pylint: disable=R0904
 
     @property
     def unique_columns(self):
-        return []
+        """"
+        This will look at the writer for the given type and call the method to
+        determine what columns in the output should be used to detect the
+        unique rows.
+        """
+
+        species = os.path.dirname(self.filenames.split(',')[0])
+        out = Output.build(output().base, 'ensembl', species + '-dedup')
+        final = getattr(out.writer(), self.output_type)
+        return final.unique_columns()
 
     @contextmanager
     def duplicate_fileobjs(self):
@@ -110,7 +122,6 @@ class DeduplicateOutputType(luigi.Task):  # pylint: disable=R0904
         """
         This will delete all files this has deduplicated.
         """
-
         for filename in self.duplicate_filenames:
             os.remove(filename)
 
