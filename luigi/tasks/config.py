@@ -179,3 +179,13 @@ class gtrnadb(luigi.Config):  # pylint: disable=C0103, R0904
     This contains the configuration for loading GtRNAdb files.
     """
     pattern = luigi.Parameter()
+
+
+class mgi(luigi.Config):  # pylint: disable=C0103, R0904
+    """
+    This contains values for configuring the output of processing MGI.
+    Generally these don't need to be set by hand.
+    """
+
+    max_entry_count = luigi.IntParameter(default=1000)
+    json_filename = luigi.Parameter(default='rna')
