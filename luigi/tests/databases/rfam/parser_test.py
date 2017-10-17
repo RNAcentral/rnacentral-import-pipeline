@@ -86,7 +86,8 @@ def test_it_builds_first_entry_correctly():
         'species': "Stegodyphus mimosarum",
         'lineage': (
             "Eukaryota; Metazoa; Arthropoda; Chelicerata; Arachnida; Araneae; "
-            "Araneomorphae; Entelegynae; Eresoidea; Eresidae; Stegodyphus; Stegodyphus mimosarum"
+            "Araneomorphae; Entelegynae; Eresoidea; Eresidae; Stegodyphus; "
+            "Stegodyphus mimosarum"
         ),
         'references': [{
             'accession': 'KK113858.1:230594..230666:rfam',
