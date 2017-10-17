@@ -47,6 +47,7 @@ class RfamSequenceFile(JsonParser):  # pylint: disable=W0232,R0904
         to the output files using standard methods.
         """
         skipped = 0
+        self.entries = []
 
         mapping = utils.id_to_insdc_type()
         for i, seq in enumerate(self.data): # pylint: disable=E1101
