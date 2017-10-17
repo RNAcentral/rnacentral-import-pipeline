@@ -58,13 +58,6 @@ class SeqShortWriter(object):
         """
         return {'delimiter': ',', 'lineterminator': '\n'}
 
-    @classmethod
-    def unique_columns(cls):
-        """
-        Defines the sequence column as unique.
-        """
-        return [1]
-
     def write(self, data):
         """
         Will write the entry to the seq_short file if the sequence is less than
@@ -99,13 +92,6 @@ class SeqLongWriter(object):
         Generate the CSV options to use for writing
         """
         return {'delimiter': ',', 'lineterminator': '\n'}
-
-    @classmethod
-    def unique_columns(cls):
-        """
-        Defines the sequence column as unique.
-        """
-        return [1]
 
     def write(self, data):
         """
@@ -147,13 +133,6 @@ class ReferenceWriter(object):
             'lineterminator': '\n',
         }
 
-    @classmethod
-    def unique_columns(cls):
-        """
-        This uses the MD5 and accession columns as unique.
-        """
-        return [0, 1]
-
     def write(self, data):
         """
         Write out all references.
@@ -191,13 +170,6 @@ class ExonWriter(object):
             'lineterminator': '\n',
         }
 
-    @classmethod
-    def unique_columns(cls):
-        """
-        This markes all columns, 1-6 as unique.
-        """
-        return [0, 6]
-
     def write(self, data):
         """
         Write out all known exons.
@@ -231,13 +203,6 @@ class AccessionWriter(object):
             'quoting': csv.QUOTE_ALL,
             'lineterminator': '\n',
         }
-
-    @classmethod
-    def unique_columns(cls):
-        """
-        Defines the accession column as unique.
-        """
-        return [0]
 
     def write(self, data):
         """
@@ -306,13 +271,6 @@ class SecondaryStructureWriter(object):
             'quoting': csv.QUOTE_ALL,
             'lineterminator': '\n',
         }
-
-    @classmethod
-    def unique_columns(cls):
-        """
-        Defines the accession and MD5 columns as unique.
-        """
-        return [0, 2]
 
     def write(self, data):
         """

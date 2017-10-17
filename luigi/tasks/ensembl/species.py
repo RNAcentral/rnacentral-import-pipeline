@@ -31,10 +31,7 @@ would add some more complexity and this is not needed yet.
 
 import logging
 
-import attr
 import luigi
-
-from tasks.ensembl.deduplicate import DeduplicateOutputType
 
 from tasks.config import ensembl
 
@@ -78,11 +75,5 @@ class EnsemblSpecies(luigi.WrapperTask):  # pylint: disable=R0904
             print("Species %s has no data files", self.species_name)
             return
 
-        task = EnsemblFile(input_file=description.filenames[0])
-        output = task.output()
-        for field in attr.fields(output.__class__):
-            yield DeduplicateOutputType(
-                species_name=self.species_name.replace(' ', '_'),
-                filenames=','.join(description.filenames),
-                output_type=field.name,
-            )
+        for filename in description.filenames:
+            yield EnsemblFile(input_file=filename)
