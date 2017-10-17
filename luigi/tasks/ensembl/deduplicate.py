@@ -14,13 +14,11 @@ limitations under the License.
 """
 
 import os
-# import fileinput
+from glob import glob
 import subprocess as sp
-# from contextlib import contextmanager
 
 import luigi
 from luigi.local_target import atomic_file
-# from luigi.contrib.external_program import ExternalProgramTask
 
 from ..config import output
 
@@ -60,10 +58,12 @@ class DeduplicateOutputType(luigi.Task):  # pylint: disable=R0904
         return luigi.LocalTarget(final.fn)
 
     def filename_pattern(self):
+        species = self.species_name
+        species = species[0].upper() + species[1:]
         return os.path.join(
             output().duplicated_ensembl_path(),
             self.output_type,
-            'ensembl*{species}*.csv'.format(species=self.species_name),
+            'ensembl*{species}*.csv'.format(species=species),
         )
 
     def run(self):
@@ -84,6 +84,10 @@ class DeduplicateOutputType(luigi.Task):  # pylint: disable=R0904
             stop += 1
         else:
             raise ValueError("Unique columns must be a tuple of start, stop")
+
+        pattern = self.filename_pattern()
+        if not glob(pattern):
+            raise ValueError("There are no files matching that pattern")
 
         command = "sort -u -t, -k{start},{stop} {pattern}".format(
             start=start,
