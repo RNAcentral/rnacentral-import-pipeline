@@ -15,13 +15,13 @@ limitations under the License.
 
 import re
 import operator as op
+import collections as coll
 
 from ..data import Reference
 from ..data import Exon
 
 seq_version = op.itemgetter('seq_version')
 species = op.itemgetter('species')
-taxid = op.itemgetter('ncbi_tax_id')
 product = op.itemgetter('description')
 primary_id = op.itemgetter('primary_id')
 common_name = op.itemgetter('common_name')
@@ -31,13 +31,16 @@ parent_accession = op.itemgetter('parent_accession')
 
 def lineage(data):
     base = re.sub(r'\.$', '', data['lineage'])
-    return '; '.join(base.split(' ') + [data['species']]),
+    return '; '.join(base.split(' ') + [data['species']])
 
+
+def taxid(data):
+    return int(data['ncbi_tax_id'])
 
 def feature_location_endpoints(data):
     start = int(data['feature_location_start'])
     stop = int(data['feature_location_end'])
-    return tuple(sorted(start, stop))
+    return tuple(sorted([start, stop]))
 
 
 
@@ -48,7 +51,7 @@ def mol_type(data):
 
 
 def references(data):
-    return Reference(
+    return [Reference(
         accession=accession(data),
         authors=(
             'Nawrocki E.P., Burge S.W., Bateman A., Daub J., '
@@ -59,14 +62,16 @@ def references(data):
         title='Rfam 12.0: updates to the RNA families database',
         pmid=25392425,
         doi='10.1093/nar/gku1063',
-    )
+    )]
 
 
 def note(data):
-    # return ' '.join(seq['ontology'])
-    return {
-        'Alignment': mol_type(data),
-    }
+    result = coll.defaultdict(list)
+    result['Alignment'] = mol_type(data)
+    for entry in data['ontology']:
+        db = entry.split(':', 1)[0]
+        result[db].append(entry)
+    return dict(result)
 
 
 def exons(data):
@@ -110,4 +115,4 @@ def description(data):
 
 
 def url(data):
-    return 'http://rfam.xfam.org/family/%s' % data['primary_id']
+    return 'http://rfam.org/family/%s' % data['primary_id']
