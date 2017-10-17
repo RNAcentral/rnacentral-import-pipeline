@@ -143,6 +143,11 @@ class RunRelease(DatabaseUpdater):  # pylint: disable=R0904
     ON rnacen.load_rnacentral_all(database)
     """
 
+    def requires(self):
+        yield UpdateAccessions()
+        yield UpdateReferences()
+        yield UpdateCoordinates()
+
     def run(self):
         cur = self.conn.cursor()
         cur.execute("SET work_mem TO '256MB'")
