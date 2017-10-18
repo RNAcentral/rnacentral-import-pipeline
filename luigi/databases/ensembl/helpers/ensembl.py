@@ -18,6 +18,8 @@ from databases.data import Reference
 from ..helpers import bio as helpers
 from ..rna_type_inference import RnaTypeInference
 
+URL = 'http://www.ensembl.org/Homo_sapiens/Transcript/Summary?t={transcript}'
+
 
 def exons(feature):
     """
@@ -64,10 +66,11 @@ def is_pseudogene(summary, feature):
     return summary.is_pseudogene(gene)
 
 
-def rna_type(base_type, xref_data):
+def rna_type(feature, xref_data):
     """
     Compute the RNA type of the given feature.
     """
+    base_type = helpers.rna_type(feature)
     inference = RnaTypeInference()
     return inference.infer_rna_type(xref_data, base_type)
 
@@ -117,13 +120,9 @@ def seq_version(feature):
     Compute the sequence version, if any, of the given id.
     """
 
-    pid = helpers.transcript(feature)
-    if not pid:
-        return None
-
-    if '.' in pid:
-        parts = pid.split('.', 1)
-        return parts[1]
+    acc = accession(feature)
+    if '.' in acc:
+        return acc.split('.', 1)[1]
     return None
 
 
@@ -139,3 +138,22 @@ def primary_id(feature):
         primary = helpers.standard_name(feature)
     assert primary, "Could not generate primary id for %s" % feature
     return primary.split('.', 1)[0]
+
+
+def accession(feature):
+    """
+    This will compute the accession for the given feature. This will either be
+    the transcript id or the standard name.
+    """
+
+    acc = helpers.transcript(feature) or helpers.standard_name(feature)
+    if not acc:
+        raise ValueError("No accession possible for %s" % feature)
+    return acc
+
+
+def url(feature):
+    """
+    Get the URL for the given Enesmbl feature.
+    """
+    return URL.format(transcript=helpers.transcript(feature))

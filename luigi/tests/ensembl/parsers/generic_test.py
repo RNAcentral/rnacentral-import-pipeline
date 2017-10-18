@@ -30,6 +30,9 @@ class HumanTests(Base):
         assert self.entry_for('ENST00000516089.1').primary_id == \
             'ENST00000516089'
 
+    def test_it_generates_correct_seq_version(self):
+        assert self.entry_for('ENST00000516089.1').seq_version == '1'
+
     def test_sets_optional_id_to_gene_id(self):
         assert self.entry_for('ENST00000516089.1').optional_id == \
             "ENSG00000251898.1"
