@@ -32,14 +32,6 @@ class output(luigi.Config):  # pylint: disable=C0103, R0904
     """
     base = PathParameter(default='/tmp')
 
-    def duplicated_ensembl_path(self):
-        """
-        For single file tasks we have a separate directory to keep all csv
-        files in. This is because we later have to deduplicate the files, so we
-        place them somewhere separate for future processing.
-        """
-        return os.path.join(self.base, 'ensembl-with-duplicates')
-
 
 class db(luigi.Config):  # pylint: disable=C0103, R0904
     """

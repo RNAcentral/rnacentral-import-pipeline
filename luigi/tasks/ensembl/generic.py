@@ -62,8 +62,7 @@ class EnsemblFile(luigi.Task):  # pylint: disable=R0904
 
     def output(self):
         prefix = os.path.basename(self.input_file)
-        base = output().duplicated_ensembl_path()
-        return Output.build(base, 'ensembl', prefix)
+        return Output.build(output().base, 'ensembl', prefix)
 
     def run(self):
         config = ensembl()
