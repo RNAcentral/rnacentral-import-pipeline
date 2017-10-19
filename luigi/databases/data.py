@@ -18,6 +18,7 @@ import logging
 from collections import Counter
 
 import attr
+from attr.validators import and_
 from attr.validators import instance_of as is_a
 from attr.validators import optional
 
@@ -140,6 +141,7 @@ class Entry(object):
     exons = attr.ib(validator=is_a(list))
     rna_type = attr.ib(validator=is_a(basestring))
     url = attr.ib(validator=is_a(basestring))
+    seq_version = attr.ib(validator=and_(is_a(basestring), bool))
 
     note_data = possibly_empty(dict)
     xref_data = possibly_empty(dict)
@@ -170,7 +172,6 @@ class Entry(object):
     standard_name = optionally(basestring)
     description = optionally(basestring)
     mol_type = optionally(basestring)
-    seq_version = optionally(basestring)
     is_composite = optionally(basestring)
     pseudogene = optionally(basestring)
 
