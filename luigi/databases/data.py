@@ -56,6 +56,14 @@ def possibly_empty(instance_type, **kwargs):
     )
 
 
+def is_truish():
+    def fn(instance, attribute, value):
+        if not bool(value):
+            raise TypeError("Bad value (%s) for %s in %s" %
+                            (value, attribute, instance))
+    return fn
+
+
 @attr.s(frozen=True)
 class Exon(object):
     chromosome = attr.ib(validator=is_a(basestring))
@@ -133,15 +141,19 @@ class Entry(object):
     import.
     """
 
-    primary_id = attr.ib(validator=is_a(basestring))  # Also known as external_id
+    # Also known as external_id
+    primary_id = attr.ib(validator=is_a(basestring))
     accession = attr.ib(validator=is_a(basestring))
     ncbi_tax_id = attr.ib(validator=is_a(int))
-    database = attr.ib(validator=is_a(basestring))
+    database = attr.ib(
+        validator=is_a(basestring),
+        convert=lambda s: s.upper(),
+    )
     sequence = attr.ib(validator=is_a(basestring))
     exons = attr.ib(validator=is_a(list))
     rna_type = attr.ib(validator=is_a(basestring))
     url = attr.ib(validator=is_a(basestring))
-    seq_version = attr.ib(validator=and_(is_a(basestring), bool))
+    seq_version = attr.ib(validator=and_(is_a(basestring), is_truish()))
 
     note_data = possibly_empty(dict)
     xref_data = possibly_empty(dict)

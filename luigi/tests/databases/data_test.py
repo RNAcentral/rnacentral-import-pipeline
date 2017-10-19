@@ -19,11 +19,11 @@ from databases import data
 
 
 def test_cannot_build_entry_without_seq_id():
-    with pytest.raises(Exception):
+    with pytest.raises(TypeError):
         data.Entry(
             primary_id='a',
             accession='b',
-            ncbi_taxid=1,
+            ncbi_tax_id=1,
             database='A',
             sequence='ACCG',
             exons=[],
@@ -34,11 +34,11 @@ def test_cannot_build_entry_without_seq_id():
 
 
 def test_cannot_build_entry_with_empty_seq_id():
-    with pytest.raises(Exception):
+    with pytest.raises(TypeError):
         data.Entry(
             primary_id='a',
             accession='b',
-            ncbi_taxid=1,
+            ncbi_tax_id=1,
             database='A',
             sequence='ACCG',
             exons=[],
@@ -49,15 +49,31 @@ def test_cannot_build_entry_with_empty_seq_id():
 
 
 def test_can_build_with_seq_version():
-    with pytest.raises(Exception):
-        data.Entry(
-            primary_id='a',
-            accession='b',
-            ncbi_taxid=1,
-            database='A',
-            sequence='ACCG',
-            exons=[],
-            rna_type='ncRNA',
-            url='http://www.google.com',
-            seq_version='1',
-        )
+    entry = data.Entry(
+        primary_id='a',
+        accession='b',
+        ncbi_tax_id=1,
+        database='A',
+        sequence='ACCG',
+        exons=[],
+        rna_type='ncRNA',
+        url='http://www.google.com',
+        seq_version='1',
+    )
+    assert entry.seq_version == '1'
+
+
+def test_it_will_always_uppercase_database():
+    entry = data.Entry(
+        primary_id='a',
+        accession='b',
+        ncbi_tax_id=1,
+        database='a_database_name',
+        sequence='ACCG',
+        exons=[],
+        rna_type='ncRNA',
+        url='http://www.google.com',
+        seq_version='1',
+    )
+    assert entry.database == 'A_DATABASE_NAME'
+    assert entry.database_name == 'A_DATABASE_NAME'
