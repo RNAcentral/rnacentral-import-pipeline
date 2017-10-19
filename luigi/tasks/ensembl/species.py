@@ -31,20 +31,17 @@ would add some more complexity and this is not needed yet.
 
 import logging
 
-import attr
 import luigi
-
-from tasks.ensembl.deduplicate import DeduplicateOutputType
 
 from tasks.config import ensembl
 
-from .generic import EnsemblSingleFileTask
+from .generic import EnsemblFile
 from .utils.ftp import species_description
 
 LOGGER = logging.getLogger(__name__)
 
 
-class SpeciesImporter(luigi.WrapperTask):  # pylint: disable=R0904
+class EnsemblSpecies(luigi.WrapperTask):  # pylint: disable=R0904
     """
     A species level importer for Ensembl. This can import either the selected
     one or all species. This acts as an aggregation of the basic
@@ -78,10 +75,5 @@ class SpeciesImporter(luigi.WrapperTask):  # pylint: disable=R0904
             print("Species %s has no data files", self.species_name)
             return
 
-        task = EnsemblSingleFileTask(input_file=description.filenames[0])
-        output = task.output()
-        for field in attr.fields(output.__class__):
-            yield DeduplicateOutputType(
-                filenames=','.join(description.filenames),
-                output_type=field.name,
-            )
+        for filename in description.filenames:
+            yield EnsemblFile(input_file=filename)

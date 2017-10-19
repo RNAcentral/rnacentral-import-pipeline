@@ -46,7 +46,12 @@ class UpdateAccessions(DatabaseUpdater):
     """
     Merge accessions data from loading table into main table.
     """
-    conn = get_db_connection(db())
+
+    @property
+    def conn(self):
+        if not hasattr(self, "_conn"):
+            self._conn = get_db_connection(db())
+        return self._conn
 
     def run(self):
         cur = self.conn.cursor()
@@ -60,7 +65,12 @@ class UpdateReferences(DatabaseUpdater):
     """
     Merge literature references from loading table into main table.
     """
-    conn = get_db_connection(db())
+
+    @property
+    def conn(self):
+        if not hasattr(self, "_conn"):
+            self._conn = get_db_connection(db())
+        return self._conn
 
     def run(self):
         cur = self.conn.cursor()
@@ -74,7 +84,12 @@ class UpdateCoordinates(DatabaseUpdater):
     """
     Merge coordinates from loading table into main table.
     """
-    conn = get_db_connection(db())
+
+    @property
+    def conn(self):
+        if not hasattr(self, "_conn"):
+            self._conn = get_db_connection(db())
+        return self._conn
 
     sql = """
     INSERT INTO rnacen.rnc_coordinates AS t1 (
@@ -109,7 +124,12 @@ class RunRelease(DatabaseUpdater):  # pylint: disable=R0904
     """
     Import data from the temporary load_* tables into the main tables.
     """
-    conn = get_db_connection(db())
+
+    @property
+    def conn(self):
+        if not hasattr(self, "_conn"):
+            self._conn = get_db_connection(db())
+        return self._conn
 
     sql = """
     SELECT dbid, id
@@ -122,6 +142,11 @@ class RunRelease(DatabaseUpdater):  # pylint: disable=R0904
     CREATE INDEX IF NOT EXISTS load_rnacentral_all$database
     ON rnacen.load_rnacentral_all(database)
     """
+
+    def requires(self):
+        yield UpdateAccessions()
+        yield UpdateReferences()
+        yield UpdateCoordinates()
 
     def run(self):
         cur = self.conn.cursor()

@@ -32,8 +32,6 @@ from .rna_type_inference import RnaTypeInference
 
 LOGGER = logging.getLogger(__name__)
 
-URL = 'http://www.ensembl.org/Homo_sapiens/Transcript/Summary?t={transcript}'
-
 
 class Parser(object):
     """
@@ -136,16 +134,10 @@ class EnsemblParser(Parser):
             return []
 
         species, common_name = helpers.organism_naming(record)
-        transcript_id = helpers.transcript(feature)
         gene = helpers.gene(feature)
 
-        accession = transcript_id or ''
-        standard_name = helpers.standard_name(feature)
         xref_data = helpers.xref_data(feature)
-
-        if not transcript_id:
-            accession = standard_name or ''
-
+        accession = ensembl.accession(feature)
         chromosome = helpers.chromosome(record)
         exons = ensembl.exons(feature)
         exons = [attr.assoc(e, chromosome=chromosome) for e in exons]
@@ -157,8 +149,8 @@ class EnsemblParser(Parser):
             database='ENSEMBL',
             sequence=sequence,
             exons=exons,
-            rna_type=ensembl.rna_type(helpers.rna_type(feature), xref_data),
-            url=URL.format(transcript=transcript_id),
+            rna_type=ensembl.rna_type(feature, xref_data),
+            url=ensembl.url(feature),
             lineage=helpers.lineage(record),
             chromosome=chromosome,
             parent_accession=record.id,
