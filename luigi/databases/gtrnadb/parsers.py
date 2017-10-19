@@ -34,6 +34,7 @@ from .helpers import primary_id
 from .helpers import dot_bracket
 from .helpers import accession
 from .helpers import parent_accession
+from .helpers import seq_version
 
 LOGGER = logging.getLogger(__name__)
 
@@ -94,6 +95,7 @@ def gtrnadb_entries(data):
                 exons=gtrnadb_exons(location),
                 rna_type='tRNA',
                 url=url(data),
+                seq_version=seq_version(data),
                 note_data=note_data(data),
                 secondary_structure=two_d,
                 chromosome=chromosome(location),

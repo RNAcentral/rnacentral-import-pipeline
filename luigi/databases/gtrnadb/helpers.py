@@ -154,3 +154,11 @@ def accession(data, location):
         ac=parent_accession(location),
         gene=data['gene'],
     )
+
+
+def seq_version(_):
+    """
+    Compute a seq_version for GtRNAdb data. CUrrentlyt his will always return
+    '1'
+    """
+    return '1'

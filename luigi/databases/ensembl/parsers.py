@@ -151,6 +151,7 @@ class EnsemblParser(Parser):
             exons=exons,
             rna_type=ensembl.rna_type(feature, xref_data),
             url=ensembl.url(feature),
+            seq_version=ensembl.seq_version(feature),
             lineage=helpers.lineage(record),
             chromosome=chromosome,
             parent_accession=record.id,
@@ -166,7 +167,6 @@ class EnsemblParser(Parser):
             mol_type='genomic DNA',
             pseudogene='N',
             is_composite='N',
-            seq_version=ensembl.seq_version(feature),
         )
 
         if self.is_from_suppressed_rfam_model(entry):
