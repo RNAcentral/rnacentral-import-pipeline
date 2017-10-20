@@ -80,7 +80,4 @@ class RfamSequences(luigi.WrapperTask):  # pylint: disable=W0232,R0904
 
     def requires(self):
         for filename in rfam().json_files():
-            yield RfamSequenceFile(
-                input_file=filename,
-                destination=output().base
-            )
+            yield RfamSequenceFile(input_file=filename)
