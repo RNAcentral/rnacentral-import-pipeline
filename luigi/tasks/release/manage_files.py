@@ -19,7 +19,7 @@ import luigi
 from tasks.config import output
 
 
-class SplitMergedFile(luigi.Task):
+class SplitMergedFile(luigi.Task):  # pylint: disable=R0904
     """
     Split a file into multiple chunks.
     """
@@ -33,11 +33,26 @@ class SplitMergedFile(luigi.Task):
         """
         return MergeFiles(directory=self.directory)
 
+    def merged_empty(self):
+        """
+        Check if the merged file is empty.
+        """
+
+        merged = self.requires().output().fn
+        return os.stat(merged).st_size == 0
+
     def run(self):
         """
-        Split file into chunks of up to `chunk_size` named
-        chunk_00, chunk_01 etc. Lines are preserved.
+        Split file into chunks of up to `chunk_size` named chunk_00, chunk_01
+        etc. Lines are preserved. If the merged file is empty this will create
+        an empty chunk_00 file. This is done to ensure the task creates all
+        required outputs, so downstream tasks do not fail unnecessarily.
         """
+
+        if self.merged_empty():
+            os.system('touch %s' % self.output().fn)
+            return
+
         cmd = 'cd {path} && split -dC {chunk_size} {merged_file} {prefix}'.format(
             path=os.path.join(output().base, self.directory),
             chunk_size=1024 * 1000 * 1000,
@@ -54,7 +69,7 @@ class SplitMergedFile(luigi.Task):
         return luigi.LocalTarget(filename)
 
 
-class MergeFiles(luigi.Task):
+class MergeFiles(luigi.Task):  # pylint: disable=R0904
     """
     Merge all files found in a specified folder into one.
     The taks does not use luigi.ExternalProgramTask because the commands
