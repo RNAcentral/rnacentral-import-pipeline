@@ -35,6 +35,7 @@ from .helpers import dot_bracket
 from .helpers import accession
 from .helpers import parent_accession
 from .helpers import seq_version
+from .helpers import references
 
 LOGGER = logging.getLogger(__name__)
 
@@ -112,6 +113,7 @@ def gtrnadb_entries(data):
                 location_start=1,
                 location_end=len(data['sequence']),
                 gene_synonyms=data.get('synonyms', []),
+                references=references(data, location),
             )
         except helpers.UnknownTaxonId:
             print("Unknown taxon id in %s" % data)

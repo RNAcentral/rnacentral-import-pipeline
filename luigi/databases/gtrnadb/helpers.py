@@ -14,6 +14,7 @@ limitations under the License.
 """
 
 from databases import helpers as dbs
+from databases.data import Reference
 
 
 class InvalidDotBracket(Exception):
@@ -162,3 +163,21 @@ def seq_version(_):
     '1'
     """
     return '1'
+
+
+def references(data, location):
+    """
+    Returns the default accessions for GtRNAdb data.
+    """
+
+    return [Reference(
+        accession=accession(data, location),
+        authors='Chan P.P., Lowe T.M.',
+        location='Nucl. Acids Res. 37(Database issue)',
+        title=(
+            'GtRNAdb: A database of transfer RNA genes detected in '
+            'genomic sequence'
+        ),
+        pmid=18984615,
+        doi='10.1093/nar/gkn787.',
+    )]
