@@ -26,7 +26,7 @@ TABLES = [
     'load_rnc_references',
     'load_rnc_coordinates',
     'load_upi_max_versions',
-    'load_rnc_secondary_structure',
+    # 'load_rnc_secondary_structure',
     'load_retro_tmp',
     'load_max_versions',
 ]
