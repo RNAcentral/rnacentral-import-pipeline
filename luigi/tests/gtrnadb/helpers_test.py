@@ -70,8 +70,14 @@ def test_as_dotbracket(data):
     assert helpers.dot_bracket(data[0]) == ans
 
 
-def test_description(data):
+def test_simple_description(data):
     assert helpers.description(data[0]) == "Acaryochloris marina MBIC11017 tRNA-Ala (CGC)"
+
+
+def test_adds_label_about_introns(data):
+    entry = next(d for d in data if d['gene'] == 'tRNA-Ser-CGA-2-1')
+    name = 'Acaryochloris marina MBIC11017 tRNA-Ser (CGA) containing a group I intron'
+    assert helpers.description(entry) == name
 
 
 def test_as_dotbracket_detects_weird_strings():
