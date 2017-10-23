@@ -83,12 +83,17 @@ class MergeFiles(luigi.Task):  # pylint: disable=R0904
         List all files using `find`.
         Note that `ls` cannot handle folders with an excessive number of files.
         """
+
+        filename = self.output().fn
         cmd = "find {directory} -type f -name '*.{extension}' | xargs cat > {output}".format(
             directory=os.path.join(output().base, self.directory),
             extension=self.extension,
-            output=self.output().fn
+            output=filename,
         )
         os.system(cmd)
+
+        if os.stat(filename).st_size == 0:
+            os.system('touch %s' % filename)
 
     def output(self):
         """
