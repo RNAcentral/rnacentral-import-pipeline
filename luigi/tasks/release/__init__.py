@@ -40,6 +40,7 @@ class LoadRelease(luigi.WrapperTask):  # pylint: disable=R0904
         yield LoadAccessions(database=self.database)
         yield LoadReferences(database=self.database)
         yield LoadCoordinates(database=self.database)
+        yield LoadSecondaryStructures(database=self.database)
 
 
 class Release(luigi.WrapperTask):  # pylint: disable=R0904
