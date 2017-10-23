@@ -27,7 +27,7 @@ CONTROL_FILE = """
 LOAD CSV
 FROM
     ALL FILENAMES
-    MATCHING {pattern}
+    MATCHING ~<{pattern}>
     IN DIRECTORY '{directory}'
 HAVING FIELDS (
     rnc_accession_id,
