@@ -92,7 +92,9 @@ class MergeFiles(luigi.Task):  # pylint: disable=R0904
         )
         os.system(cmd)
 
-        if os.stat(filename).st_size == 0:
+        if not os.path.exists(filename):
+            if not os.path.exists(os.path.dirname(filename)):
+                os.makedirs(os.path.dirname(filename))
             os.system('touch %s' % filename)
 
     def output(self):
