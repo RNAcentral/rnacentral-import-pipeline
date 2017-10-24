@@ -27,6 +27,14 @@ from databases.helpers import crc64
 
 LOGGER = logging.getLogger(__name__)
 
+FEATURE_TYPE_RNAS = set([
+    'rRNA',
+    'tRNA',
+    'precursor_RNA',
+    'tmRNA',
+    'misc_RNA',
+])
+
 
 def optionally(instance_type, **kwargs):
     """
@@ -221,8 +229,8 @@ class Entry(object):
         """
         Return the feature for the RNA type.
         """
-        if self.rna_type in set(['rRNA', 'tRNA', 'precursor_RNA', 'tmRNA']):
-            return 'misc_RNA'
+        if self.rna_type in FEATURE_TYPE_RNAS:
+            return self.rna_type
         return 'ncRNA'
 
     @property
@@ -232,7 +240,7 @@ class Entry(object):
         empty string.
         """
         if self.feature_type != 'ncRNA':
-            return ''
+            return None
         return self.rna_type
 
     @property

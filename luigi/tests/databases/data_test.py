@@ -77,3 +77,64 @@ def test_it_will_always_uppercase_database():
     )
     assert entry.database == 'A_DATABASE_NAME'
     assert entry.database_name == 'A_DATABASE_NAME'
+
+
+@pytest.mark.parametrize('rna_type', [
+    'tRNA',
+    'rRNA',
+    'tmRNA',
+    'misc_RNA',
+    'precursor_RNA',
+])
+def test_labels_feature_type_rnas_correctly(rna_type):
+    entry = data.Entry(
+        primary_id='a',
+        accession='b',
+        ncbi_tax_id=1,
+        database='a_database_name',
+        sequence='ACCG',
+        exons=[],
+        rna_type=rna_type,
+        url='http://www.google.com',
+        seq_version='1',
+    )
+    assert entry.feature_type == rna_type
+    assert entry.ncrna_class is None
+
+
+@pytest.mark.parametrize('rna_type', [
+    "RNase_MRP_RNA",
+    "RNase_P_RNA",
+    "SRP_RNA",
+    "Y_RNA",
+    "antisense_RNA",
+    "autocatalytically_spliced_intron",
+    "guide_RNA",
+    "hammerhead_ribozyme",
+    "lncRNA",
+    "miRNA",
+    "other",
+    "piRNA",
+    "rasiRNA",
+    "ribozyme",
+    "scRNA",
+    "siRNA",
+    "snRNA",
+    "snoRNA",
+    "telomerase_RNA",
+    "vault_RNA",
+])
+def test_labels_ncrna_types_correctly(rna_type):
+    entry = data.Entry(
+        primary_id='a',
+        accession='b',
+        ncbi_tax_id=1,
+        database='a_database_name',
+        sequence='ACCG',
+        exons=[],
+        rna_type=rna_type,
+        url='http://www.google.com',
+        seq_version='1',
+    )
+    assert entry.feature_type == 'ncRNA'
+    assert entry.ncrna_class is rna_type
