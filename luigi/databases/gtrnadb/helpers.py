@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+
 
 """
 Copyright [2009-2017] EMBL-European Bioinformatics Institute
@@ -89,27 +89,13 @@ def species(data):
     return dbs.species(data['ncbi_tax_id'])
 
 
-def contains_intron(data):
-    """
-    This does a simple check to see if the data contains an intron. This should
-    only happen if the sequence is more than 100 nts long.
-    """
-    return len(data['sequence']) > 100
-
-
 def description(data):
     """
     Generate a description for the entries specified by the data.
     """
-
-    intron = ''
-    if contains_intron(data):
-        intron = ' containing a group I intron'
-
-    return '{name} {product}{intron}'.format(
+    return '{name} {product}'.format(
         name=species(data),
         product=product(data),
-        intron=intron,
     )
 
 
