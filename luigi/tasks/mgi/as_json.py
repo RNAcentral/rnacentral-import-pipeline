@@ -22,8 +22,6 @@ from luigi.local_target import atomic_file
 
 import attr
 
-from utils import grouper
-
 from tasks.config import mgi
 from tasks.mgi.download import MgiDownload
 from databases.mgi.parser import rna_entries
@@ -38,39 +36,29 @@ class MgiToJson(luigi.Task):  # pylint: disable=R0904
     def requires(self):
         return MgiDownload()
 
-    def chunk_filename(self, chunk):
-        """
-        This computes the name of the file for the given chunk to write to.
-        """
-
-        filename = self.requires().output().fn
-        base = os.path.dirname(filename)
-        return os.path.join(base, mgi().json_filename + "_%03i.json" % chunk)
-
     def output(self):
-        first_chunk = self.chunk_filename(0)
-        return LocalTarget(first_chunk)
+        downloaded = self.requires().output().fn
+        base = os.path.dirname(downloaded)
+        filename = os.path.join(base, mgi().json_filename)
+        return LocalTarget(filename)
 
     def run(self):
         input_file = self.requires().output().fn
-        entries = list(rna_entries(input_file))
-        grouped = grouper(entries, mgi().max_entry_count)
-        for index, group in enumerate(grouped):
-            data = []
-            filename = self.chunk_filename(index)
-            for entry in group:
-                if not entry:
-                    continue
-                result = attr.asdict(entry)
-                result['feature_type'] = entry.feature_type
-                result['ncrna_class'] = entry.ncrna_class
-                result['feature_location_start'] = entry.feature_location_start
-                result['feature_location_end'] = entry.feature_location_end
-                result['external_id'] = entry.accession
-                for index, reference in enumerate(entry.references):
-                    result['references'][index]['md5'] = reference.md5()
+        data = []
+        for entry in rna_entries(input_file):
+            if not entry:
+                continue
+            result = attr.asdict(entry)
+            result['feature_type'] = entry.feature_type
+            result['ncrna_class'] = entry.ncrna_class
+            result['feature_location_start'] = entry.feature_location_start
+            result['feature_location_end'] = entry.feature_location_end
+            result['external_id'] = entry.accession
+            for index, reference in enumerate(entry.references):
+                result['references'][index]['md5'] = reference.md5()
 
-                data.append(result)
+            data.append(result)
 
-            with atomic_file(filename) as out:
-                json.dump(data, out)
+        filename = self.output().fn
+        with atomic_file(filename) as out:
+            json.dump(data, out)
