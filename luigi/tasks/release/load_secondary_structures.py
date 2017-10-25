@@ -101,7 +101,9 @@ class LoadSecondaryStructures(PGLoader):  # pylint: disable=R0904
     directory = 'secondary_structure'
 
     def requires(self):
-        return SplitMergedFile(directory=self.directory)
+        if os.path.exists(self.data_directory()):
+            return SplitMergedFile(directory=self.directory)
+        return []
 
     def data_directory(self):
         """
