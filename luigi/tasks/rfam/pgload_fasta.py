@@ -44,7 +44,7 @@ create table if not exists load_rfam_analyzed_sequences (
 );
 $$,
 $$
-truncate table load_rfam_model_hits;
+truncate table load_rfam_analyzed_sequences;
 $$
 
 AFTER LOAD DO
