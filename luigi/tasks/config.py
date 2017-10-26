@@ -141,6 +141,7 @@ class ensembl(luigi.Config):  # pylint: disable=C0103, R0904
     gencode_species = luigi.Parameter(default='Homo sapiens,Mus musculus')
     ftp_host = luigi.Parameter(default='ftp.ensembl.org')
     cleanup = luigi.BoolParameter(default=False)
+    exclude_mouse_strains = luigi.BoolParameter(default=True)
 
     def model_organism_set(self):
         """
