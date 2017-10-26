@@ -51,7 +51,7 @@ AFTER LOAD DO
 $$
 insert into rfam_analyzed_sequences (
     upi,
-    date,
+    date
 ) (
 select
     upi,
@@ -61,6 +61,7 @@ from load_rfam_analyzed_sequences
 ON CONFLICT (upi) DO UPDATE SET
     upi = excluded.upi,
     date = excluded.date
+;
 $$,
 $$
 drop table load_rfam_analyzed_sequences;
