@@ -38,7 +38,7 @@ SET
     search_path = '{search_path}'
 BEFORE LOAD DO
 $$
-create table if not exists load_rfam_analyzed_sequences
+create table if not exists load_rfam_analyzed_sequences (
     upi character varying(13) COLLATE pg_catalog."default" NOT NULL,
     date date NOT NULL
 );
