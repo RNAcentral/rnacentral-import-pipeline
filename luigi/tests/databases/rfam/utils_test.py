@@ -175,10 +175,10 @@ class INSDCRNATypeTest(ut.TestCase):
 
 class LoadingFamiliesTest(ut.TestCase):
     def test_it_loads_all_families(self):
-        assert len(utils.load_families()) == 2687
+        assert len(utils.load_families()) == 2686
 
     def test_it_can_load_family_correctly(self):
-        assert utils.load_families()[0] == utils.RfamFamily(
+        assert attr.asdict(utils.load_families()[0]) == attr.asdict(utils.RfamFamily(
             id='RF00001',
             name='5S_rRNA',
             pretty_name='5S ribosomal RNA',
@@ -202,10 +202,10 @@ class LoadingFamiliesTest(ut.TestCase):
                 'is required for transcription.'
             ),
             seed_count=712,
-            full_count=183439,
+            full_count=108778,
             clan_id='CL00113',
             length=119,
-        )
+        ))
 
     def test_it_can_assign_correct_clan_ids(self):
         clans = coll.defaultdict(set)
@@ -238,7 +238,7 @@ class LoadingFamiliesTest(ut.TestCase):
 
     def test_it_does_not_supress_all_families(self):
         families = {f.id for f in utils.load_families() if not f.is_suppressed}
-        assert len(families) == 2066
+        assert len(families) == 2063
 
     def test_it_will_supress_lncRNA(self):
         families = {f.id for f in utils.load_families() if not f.is_suppressed}
