@@ -201,6 +201,7 @@ class GencodeParser(EnsemblParser):
             yield entry
             yield attr.assoc(
                 entry,
+                accession=gencode.accession(entry),
                 database='GENCODE',
                 xref_data=gencode.xref_data(entry),
                 optional_id='',

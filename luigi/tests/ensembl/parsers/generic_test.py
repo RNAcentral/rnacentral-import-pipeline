@@ -217,7 +217,14 @@ class MouseTests(Base):
 
     def test_it_always_has_valid_rna_types(self):
         for entry in self.data():
-            assert entry.feature_type in set(['misc_RNA', 'ncRNA'])
+            assert entry.feature_type in set([
+                'rRNA',
+                'tRNA',
+                'precursor_RNA',
+                'tmRNA',
+                'misc_RNA',
+                'ncRNA'
+            ])
 
     def test_it_never_has_bad_vault(self):
         for entry in self.data():
