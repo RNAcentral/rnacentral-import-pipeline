@@ -51,6 +51,7 @@ class EntryTest(ut.TestCase):
             ],
             rna_type='tRNA',
             url='http://gtrnadb.ucsc.edu/genomes/bacteria/Acar_mari_MBIC11017/genes/tRNA-Ala-CGC-1-1.html',
+            seq_version='1',
             note_data={
                 "anticodon": "CGC",
                 "anticodon_positions": [
@@ -66,6 +67,17 @@ class EntryTest(ut.TestCase):
             secondary_structure=data.SecondaryStructure(
                 "(((((((..((((........)))).(((((.......))))).....(((((.......))))))))))))."
             ),
+            references=[data.Reference(
+                accession='CP000828.1:tRNA-Ala-CGC-1-1',
+                authors='Chan P.P., Lowe T.M.',
+                location='Nucl. Acids Res. 37(Database issue)',
+                title=(
+                    'GtRNAdb: A database of transfer RNA genes detected in '
+                    'genomic sequence'
+                ),
+                pmid=18984615,
+                doi='10.1093/nar/gkn787.',
+            )],
             chromosome='chr',
             species='Acaryochloris marina MBIC11017',
             common_name=None,
