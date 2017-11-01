@@ -234,6 +234,7 @@ DOMAIN_MAPPING = {
     'RF00018': 'Bacteria',
     'RF00021': 'Bacteria',
     'RF00022': 'Bacteria',
+    'RF00023': 'Bacteria',
     'RF00032': 'Eukaryota',
     'RF00033': 'Bacteria',
     'RF00034': 'Bacteria',
