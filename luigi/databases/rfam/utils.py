@@ -338,6 +338,7 @@ DOMAIN_MAPPING = {
     'RF00559': 'Bacteria',
     'RF01857': 'Archaea',
     'RF01959': 'Archaea',
+    'RF01960': 'Eukaryota',
     'RF02540': 'Archaea',
     'RF02541': 'Bacteria',
     'RF02542': 'Eukaryota',
