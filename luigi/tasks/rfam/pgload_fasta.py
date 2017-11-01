@@ -38,20 +38,20 @@ SET
     search_path = '{search_path}'
 BEFORE LOAD DO
 $$
-create table if not exists load_rfam_analyzed_sequences
+create table if not exists load_rfam_analyzed_sequences (
     upi character varying(13) COLLATE pg_catalog."default" NOT NULL,
     date date NOT NULL
 );
 $$,
 $$
-truncate table load_rfam_model_hits;
+truncate table load_rfam_analyzed_sequences;
 $$
 
 AFTER LOAD DO
 $$
 insert into rfam_analyzed_sequences (
     upi,
-    date,
+    date
 ) (
 select
     upi,
@@ -61,6 +61,7 @@ from load_rfam_analyzed_sequences
 ON CONFLICT (upi) DO UPDATE SET
     upi = excluded.upi,
     date = excluded.date
+;
 $$,
 $$
 drop table load_rfam_analyzed_sequences;

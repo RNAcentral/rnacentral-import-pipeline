@@ -16,12 +16,9 @@ This contains the logic for parsing MGI data files and producing Entry objects
 for export to usable flat files.
 """
 
-import csv
-
-from .data import Entry
-from .data import Exon
-from .data import Reference
-from . import helpers
+from databases.data import Exon
+from databases.data import Reference
+from databases import helpers
 
 RNA_TYPE_MAPPING = {
     "gene": None,
@@ -268,62 +265,13 @@ def references(data):
     )]
 
 
-def mgi_to_entry(data):
+def description(data):
     """
-    Creates an Entry object based off the given MGI data.
+    Computes a description of the entry. This will generate a hopefully
+    useful name of the entry.
     """
-    return Entry(
-        primary_id=primary_id(data),
-        accession=accession(data),
-        ncbi_tax_id=taxon_id(data),
-        database='MGI',
-        sequence='',
-        exons=exon(data),
-        rna_type=infer_rna_type(data) or '',
-        url='',
-        xref_data=xref_data(data),
-        chromosome=chromosome(data),
+    return '{name} ({species}) {gene}'.format(
+        name=common_name(data),
         species=species(data),
-        common_name=common_name(data),
-        lineage=lineage(data),
-        gene=gene(data),
-        optional_id=symbol(data),
-        description=name(data),
-        seq_version='1',
-        feature_location_start=start(data),
-        feature_location_end=stop(data),
-        references=references(data),
+        gene=name(data),
     )
-
-
-def lines(raw):
-    """
-    Produces an iterable of all ines in the file. This will correct the issues
-    with header being over 2 lines so a normal CSV parser can parse the file.
-    """
-
-    header = '\t'.join([next(raw).strip(), next(raw).strip()])
-    header = header.lower()
-    yield header.replace(' ', '_')
-    for line in raw:
-        yield line
-
-
-def parser(filename):
-    """
-    Parses the file and produces an iterable of all entries as MGI objects.
-    """
-
-    with open(filename, 'rb') as raw:
-        for row in csv.DictReader(lines(raw), delimiter='\t'):
-            yield mgi_to_entry(row)
-
-
-def rna_entries(filename):
-    """
-    Parses the file and produces an iterable of only the RNA entries.
-    """
-
-    for entry in parser(filename):
-        if entry.rna_type:
-            yield entry

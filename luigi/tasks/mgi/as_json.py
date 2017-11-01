@@ -22,8 +22,9 @@ from luigi.local_target import atomic_file
 
 import attr
 
+from tasks.config import mgi
 from tasks.mgi.download import MgiDownload
-from databases.mgi import rna_entries
+from databases.mgi.parser import rna_entries
 
 
 class MgiToJson(luigi.Task):  # pylint: disable=R0904
@@ -36,18 +37,28 @@ class MgiToJson(luigi.Task):  # pylint: disable=R0904
         return MgiDownload()
 
     def output(self):
-        filename = self.requires().output().fn
-        base = os.path.dirname(filename)
-        return LocalTarget(os.path.join(base, 'rna.json'))
+        downloaded = self.requires().output().fn
+        base = os.path.dirname(downloaded)
+        filename = os.path.join(base, mgi().json_filename)
+        return LocalTarget(filename)
 
     def run(self):
         input_file = self.requires().output().fn
         data = []
         for entry in rna_entries(input_file):
+            if not entry:
+                continue
             result = attr.asdict(entry)
             result['feature_type'] = entry.feature_type
             result['ncrna_class'] = entry.ncrna_class
+            result['feature_location_start'] = entry.feature_location_start
+            result['feature_location_end'] = entry.feature_location_end
+            result['external_id'] = entry.accession
+            for index, reference in enumerate(entry.references):
+                result['references'][index]['md5'] = reference.md5()
+
             data.append(result)
 
-        with atomic_file(self.output().fn) as out:
+        filename = self.output().fn
+        with atomic_file(filename) as out:
             json.dump(data, out)

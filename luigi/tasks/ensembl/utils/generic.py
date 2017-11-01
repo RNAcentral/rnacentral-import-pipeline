@@ -14,6 +14,7 @@ limitations under the License.
 """
 
 import os
+import re
 
 from databases.ensembl.parsers import EnsemblParser
 from databases.ensembl.parsers import GencodeParser
@@ -50,6 +51,13 @@ def normalize_species_name(species):
     return species.strip().lower().replace(' ', '_')
 
 
+def is_mouse_strain(species):
+    """
+    Check if a species name is likely a mouse strain.
+    """
+    return bool(re.search('^mus_musculus_.*', species, re.IGNORECASE))
+
+
 def allowed_species(config, species):
     """
     Check if given the current configuration if the given species name is one
@@ -57,6 +65,8 @@ def allowed_species(config, species):
     """
 
     if config.allow_model_organisms:
-        return True
-    model_organisms = config.model_organism_set()
-    return normalize_species_name(species) not in model_organisms
+        return not (config.exclude_mouse_strains and is_mouse_strain(species))
+
+    if normalize_species_name(species) in config.model_organism_set():
+        return False
+    return not (config.exclude_mouse_strains and is_mouse_strain(species))

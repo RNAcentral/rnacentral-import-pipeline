@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+
 
 """
 Copyright [2009-2017] EMBL-European Bioinformatics Institute
@@ -14,6 +14,7 @@ limitations under the License.
 """
 
 from databases import helpers as dbs
+from databases.data import Reference
 
 
 class InvalidDotBracket(Exception):
@@ -154,3 +155,29 @@ def accession(data, location):
         ac=parent_accession(location),
         gene=data['gene'],
     )
+
+
+def seq_version(_):
+    """
+    Compute a seq_version for GtRNAdb data. CUrrentlyt his will always return
+    '1'
+    """
+    return '1'
+
+
+def references(data, location):
+    """
+    Returns the default accessions for GtRNAdb data.
+    """
+
+    return [Reference(
+        accession=accession(data, location),
+        authors='Chan P.P., Lowe T.M.',
+        location='Nucl. Acids Res. 37(Database issue)',
+        title=(
+            'GtRNAdb: A database of transfer RNA genes detected in '
+            'genomic sequence'
+        ),
+        pmid=18984615,
+        doi='10.1093/nar/gkn787.',
+    )]

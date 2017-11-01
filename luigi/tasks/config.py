@@ -142,6 +142,7 @@ class ensembl(luigi.Config):  # pylint: disable=C0103, R0904
     gencode_species = luigi.Parameter(default='Homo sapiens,Mus musculus')
     ftp_host = luigi.Parameter(default='ftp.ensembl.org')
     cleanup = luigi.BoolParameter(default=False)
+    exclude_mouse_strains = luigi.BoolParameter(default=True)
 
     def model_organism_set(self):
         """
@@ -188,3 +189,13 @@ class rnacentral(luigi.Config):  # pylint: disable=C0103, R0904
     export
     """
     xml_export_size = luigi.IntParameter(default=10000)
+
+
+class mgi(luigi.Config):  # pylint: disable=C0103, R0904
+    """
+    This contains values for configuring the output of processing MGI.
+    Generally these don't need to be set by hand.
+    """
+
+    max_entry_count = luigi.IntParameter(default=1000)
+    json_filename = luigi.Parameter(default='rna')

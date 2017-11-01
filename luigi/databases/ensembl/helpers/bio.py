@@ -240,7 +240,7 @@ def product(feature):
 
     if rna_type(feature) == 'scaRNA':
         return 'scaRNA'
-    return ''
+    return None
 
 
 def exon(location):

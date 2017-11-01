@@ -70,7 +70,7 @@ def test_as_dotbracket(data):
     assert helpers.dot_bracket(data[0]) == ans
 
 
-def test_description(data):
+def test_simple_description(data):
     assert helpers.description(data[0]) == "Acaryochloris marina MBIC11017 tRNA-Ala (CGC)"
 
 

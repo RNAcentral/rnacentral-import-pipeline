@@ -19,6 +19,7 @@ import luigi
 from tasks.config import output
 from tasks.utils.pgloader import PGLoader
 from .utils.generic import file_pattern
+from .manage_files import SplitMergedFile
 
 
 CONTROL_FILE = """
@@ -110,6 +111,7 @@ TARGET COLUMNS (
 )
 
 WITH truncate,
+    drop indexes,
     batch rows = 500,
     batch size = 32MB,
     prefetch rows = 500,
@@ -144,16 +146,19 @@ $$
 
 class LoadAccessions(PGLoader):  # pylint: disable=R0904
     """
-    This will load accessions. The database paraemter defaults to all
+    This will load accessions. The database parameter defaults to all
     acecssion, if a value is given then it is assumed to be the name of the
     database to load. All files that begin with that name will be loaded.
     """
-
     database = luigi.Parameter(default='all')
+    directory = 'ac_info'
+
+    def requires(self):
+        return SplitMergedFile(directory=self.directory)
 
     def control_file(self):
         config = output()
-        directory = os.path.join(config.base, 'ac_info')
+        directory = os.path.join(config.base, self.directory)
         return CONTROL_FILE.format(
             pattern=file_pattern(self.database),
             db_url=self.db_url(table='load_rnc_accessions'),

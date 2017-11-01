@@ -60,3 +60,10 @@ def references(ensembl_entry):
         pmid=22955987,
         doi="10.1101/gr.135350.111",
     )]
+
+
+def accession(entry):
+    """
+    This will produce an accession that is unique and specific to GENCODE.
+    """
+    return 'GENCODE:%s' % entry.accession

@@ -18,6 +18,7 @@ import logging
 from collections import Counter
 
 import attr
+from attr.validators import and_
 from attr.validators import instance_of as is_a
 from attr.validators import optional
 
@@ -25,6 +26,14 @@ from databases.helpers import md5
 from databases.helpers import crc64
 
 LOGGER = logging.getLogger(__name__)
+
+FEATURE_TYPE_RNAS = set([
+    'rRNA',
+    'tRNA',
+    'precursor_RNA',
+    'tmRNA',
+    'misc_RNA',
+])
 
 
 def optionally(instance_type, **kwargs):
@@ -53,6 +62,14 @@ def possibly_empty(instance_type, **kwargs):
         default=attr.Factory(factory),
         **kwargs
     )
+
+
+def is_truish():
+    def fn(instance, attribute, value):
+        if not bool(value):
+            raise TypeError("Bad value (%s) for %s in %s" %
+                            (value, attribute, instance))
+    return fn
 
 
 @attr.s(frozen=True)
@@ -132,14 +149,19 @@ class Entry(object):
     import.
     """
 
+    # Also known as external_id
     primary_id = attr.ib(validator=is_a(basestring))
     accession = attr.ib(validator=is_a(basestring))
     ncbi_tax_id = attr.ib(validator=is_a(int))
-    database = attr.ib(validator=is_a(basestring))
+    database = attr.ib(
+        validator=is_a(basestring),
+        convert=lambda s: s.upper(),
+    )
     sequence = attr.ib(validator=is_a(basestring))
     exons = attr.ib(validator=is_a(list))
     rna_type = attr.ib(validator=is_a(basestring))
     url = attr.ib(validator=is_a(basestring))
+    seq_version = attr.ib(validator=and_(is_a(basestring), is_truish()))
 
     note_data = possibly_empty(dict)
     xref_data = possibly_empty(dict)
@@ -170,7 +192,6 @@ class Entry(object):
     standard_name = optionally(basestring)
     description = optionally(basestring)
     mol_type = optionally(basestring)
-    seq_version = optionally(basestring)
     is_composite = optionally(basestring)
     pseudogene = optionally(basestring)
 
@@ -208,8 +229,8 @@ class Entry(object):
         """
         Return the feature for the RNA type.
         """
-        if self.rna_type in set(['rRNA', 'tRNA', 'precursor_RNA', 'tmRNA']):
-            return 'misc_RNA'
+        if self.rna_type in FEATURE_TYPE_RNAS:
+            return self.rna_type
         return 'ncRNA'
 
     @property
@@ -219,7 +240,7 @@ class Entry(object):
         empty string.
         """
         if self.feature_type != 'ncRNA':
-            return ''
+            return None
         return self.rna_type
 
     @property
@@ -238,6 +259,8 @@ class Entry(object):
 
         if self.location_start is not None:
             return self.location_start
+        if not self.exons:
+            return None
         return min(e.primary_start for e in self.exons)
 
     @property
@@ -249,6 +272,8 @@ class Entry(object):
 
         if self.location_end is not None:
             return self.location_end
+        if not self.exons:
+            return None
         return max(e.primary_end for e in self.exons)
 
     def crc64(self):

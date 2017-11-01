@@ -14,6 +14,7 @@ limitations under the License.
 """
 
 import pytest
+import attr
 
 from databases.ensembl.parsers import EnsemblParser
 from databases.data import Exon
@@ -25,9 +26,12 @@ class HumanTests(Base):
     filename = 'data/Homo_sapiens.GRCh38.87.chromosome.12.dat'
     importer_class = EnsemblParser
 
-    def test_it_sets_primary_id_to_transcript_id(self):
+    def test_it_sets_primary_id_to_versionless_transcript_id(self):
         assert self.entry_for('ENST00000516089.1').primary_id == \
-            'ENST00000516089.1'
+            'ENST00000516089'
+
+    def test_it_generates_correct_seq_version(self):
+        assert self.entry_for('ENST00000516089.1').seq_version == '1'
 
     def test_sets_optional_id_to_gene_id(self):
         assert self.entry_for('ENST00000516089.1').optional_id == \
@@ -118,6 +122,82 @@ class HumanTests(Base):
     def test_it_does_not_import_suprressed_rfam_families(self):
         assert not self.entries_for('ENST00000611210.1')
 
+    def test_it_builds_correct_entries(self):
+        val = attr.asdict(self.entry_for('ENST00000620330.1'))
+        del val['sequence']
+        assert val == {
+            'allele': None,
+            'anticodon': None,
+            'division': None,
+            'experiment': None,
+            'primary_id': 'ENST00000620330',
+            'accession': 'ENST00000620330.1',
+            'ncbi_tax_id': 9606,
+            'database': 'ENSEMBL',
+            'exons': [{
+                'chromosome': "12",
+                "primary_start": 3124777,
+                "primary_end": 3125063,
+                "complement": False
+            }],
+            'rna_type': 'SRP_RNA',
+            'url': 'http://www.ensembl.org/Homo_sapiens/Transcript/Summary?t=ENST00000620330.1',
+            'lineage': (
+                "Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; "
+                "Euteleostomi; Mammalia; Eutheria; Euarchontoglires; Primates; "
+                "Haplorrhini; Catarrhini; Hominidae; Homo; Homo sapiens"
+            ),
+            "chromosome": "12",
+            'parent_accession': '12.GRCh38',
+            'common_name': 'human',
+            'species': 'Homo sapiens',
+            'gene': 'ENSG00000278469.1',
+            'gene_synonyms': [],
+            'locus_tag': 'Metazoa_SRP',
+            'optional_id': 'ENSG00000278469.1',
+            'function': None,
+            'inference': None,
+            'keywords': None,
+            'map': None,
+            'location_start': None,
+            'location_end': None,
+            'description': 'Homo sapiens Metazoan signal recognition particle RNA',
+            'note_data': {
+                'transcript_id': ['ENST00000620330.1']
+            },
+            'xref_data': {
+                "UCSC": ["uc058jxg.1"],
+                "RFAM_trans_name": ["Metazoa_SRP.190-201"],
+            },
+            'product': None,
+            'project': None,
+            'references': [{
+                'accession': 'ENST00000620330.1',
+                'authors': (
+                    "Aken BL, Ayling S, Barrell D, Clarke L, Curwen V, Fairley "
+                    "S, Fernandez Banet J, Billis K, Garci a Giro n C, Hourlier "
+                    "T, Howe K, Kahari A, Kokocinski F, Martin FJ, Murphy DN, "
+                    "Nag R, Ruffier M, Schuster M, Tang YA, Vogel JH, White "
+                    "S, Zadissa A, Flicek P, Searle SM."
+                ),
+                'location': "Database (Oxford). 2016 Jun 23",
+                'title': "The Ensembl gene annotation system",
+                'pmid': 27337980,
+                'doi': "10.1093/database/baw093",
+            }],
+            'mol_type': 'genomic DNA',
+            'pseudogene': 'N',
+            'is_composite': 'N',
+            'seq_version': '1',
+            'non_coding_id': None,
+            'old_locus_tag': None,
+            'operon': None,
+            'ordinal': None,
+            'organelle': None,
+            'standard_name': None,
+            'secondary_structure': {'dot_bracket': ''},
+        }
+
 
 class HumanPatchTests(Base):
     filename = None
@@ -137,7 +217,14 @@ class MouseTests(Base):
 
     def test_it_always_has_valid_rna_types(self):
         for entry in self.data():
-            assert entry.feature_type in set(['misc_RNA', 'ncRNA'])
+            assert entry.feature_type in set([
+                'rRNA',
+                'tRNA',
+                'precursor_RNA',
+                'tmRNA',
+                'misc_RNA',
+                'ncRNA'
+            ])
 
     def test_it_never_has_bad_vault(self):
         for entry in self.data():

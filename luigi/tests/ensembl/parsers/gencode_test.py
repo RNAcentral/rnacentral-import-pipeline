@@ -28,7 +28,7 @@ class GencodeTests(Base):  # pylint: disable=R0904,C0111
 
     def test_it_uses_correct_primary_id(self):
         entry = self.entry_from('GENCODE', "ENST00000400706.3")
-        assert entry.primary_id == 'ENST00000400706.3'
+        assert entry.primary_id == 'ENST00000400706'
 
     def test_it_keeps_xref_to_OTT(self):
         entry = self.entry_from('GENCODE', "ENST00000540226.1")
@@ -42,10 +42,10 @@ class GencodeTests(Base):  # pylint: disable=R0904,C0111
     def test_it_gets_all_gencode_entries(self):
         assert len(list(self.data())) == 2898
 
-    def test_it_sets_accession_to_transcript_id(self):
+    def test_it_sets_accession_correctly(self):
         val = self.entries_for("ENST00000540868.1")
         assert len(val) == 2
         assert {(e.accession, e.database) for e in val} == set([
             ('ENST00000540868.1', 'ENSEMBL'),
-            ('ENST00000540868.1', 'GENCODE'),
+            ('GENCODE:ENST00000540868.1', 'GENCODE'),
         ])

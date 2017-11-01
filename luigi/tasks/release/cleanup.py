@@ -26,13 +26,13 @@ TABLES = [
     'load_rnc_references',
     'load_rnc_coordinates',
     'load_upi_max_versions',
-    'load_rnc_secondary_structure',
+    # 'load_rnc_secondary_structure',
     'load_retro_tmp',
     'load_max_versions',
 ]
 
 
-class CleanupRelease(luigi.Task):  # pylint: disable=R0904
+class TruncateLoadTables(luigi.Task):  # pylint: disable=R0904
     """
     This will empty out the load_* tables. This is distinct from the normal
     loading procedure because sometimes things go wrong it and it is very hard

@@ -14,6 +14,7 @@ limitations under the License.
 """
 
 import re
+from itertools import izip_longest
 
 
 def snake_case(name):
@@ -34,3 +35,8 @@ def normalize_species_name(species):
     without leading or trailing whitespace and with spaces replaced by '_'.
     """
     return species.strip().lower().replace(' ', '_')
+
+
+def grouper(iterable, n, fillvalue=None):
+    args = [iter(iterable)] * n
+    return izip_longest(*args, fillvalue=fillvalue)
