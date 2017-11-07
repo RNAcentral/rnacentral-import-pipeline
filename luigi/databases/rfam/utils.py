@@ -236,6 +236,7 @@ DOMAIN_MAPPING = {
     'RF00021': 'Bacteria',
     'RF00022': 'Bacteria',
     'RF00023': 'Bacteria',
+    'RF00023': 'Bacteria',
     'RF00032': 'Eukaryota',
     'RF00033': 'Bacteria',
     'RF00034': 'Bacteria',
@@ -340,6 +341,8 @@ DOMAIN_MAPPING = {
     'RF00559': 'Bacteria',
     'RF01502': 'Eukaryota',
     'RF01570': 'Eukaryota',
+    'RF01849': 'Bacteria',
+    'RF01850': 'Bacteria',
     'RF01854': 'Bacteria',
     'RF01855': 'Eukaryota',
     'RF01856': 'Eukaryota',
@@ -350,6 +353,7 @@ DOMAIN_MAPPING = {
     'RF02541': 'Bacteria',
     'RF02542': 'Eukaryota',
     'RF02543': 'Eukaryota',
+    'RF02544': 'Eukaryota',
 }
 
 
