@@ -164,7 +164,7 @@ INFORMATIVE_NAMES = {
     # These two patterns are so that we don't hit tracrRNA with rRNA
     "_rRNA": "rRNA",
     "PK-G12rRNA": "rRNA",
-    "^RUF\d+$": "other",
+    r"^RUF\d+$": "other",
     '^CRISPR-': 'other',
 }
 
@@ -206,6 +206,7 @@ SO_TERM_MAPPING = {
 RFAM_RNA_TYPE_MAPPING = {
     "Cis-reg; leader": "other",
     "Cis-reg; riboswitch": "other",
+    "Gene": "other",
     "Gene; CRISPR": "other",
     "Gene; antisense": "antisense_RNA",
     "Gene; antitoxin": "other",
@@ -214,14 +215,12 @@ RFAM_RNA_TYPE_MAPPING = {
     "Gene; rRNA": "rRNA",
     "Gene; ribozyme": "ribozyme",
     "Gene; sRNA": "other",
+    "Gene; snRNA": "snRNA",
     "Gene; snRNA; snoRNA; CD-box": "snoRNA",
     "Gene; snRNA; snoRNA; HACA-box": "snoRNA",
     "Gene; snRNA; snoRNA; scaRNA": "snoRNA",
     "Gene; snRNA; splicing": "snRNA",
-    "Gene; snRNA": "snRNA",
     "Gene; tRNA": "tRNA",
-    "Gene; tRNA": "tRNA",
-    "Gene": "other",
 }
 
 DOMAIN_MAPPING = {
@@ -235,7 +234,6 @@ DOMAIN_MAPPING = {
     'RF00018': 'Bacteria',
     'RF00021': 'Bacteria',
     'RF00022': 'Bacteria',
-    'RF00023': 'Bacteria',
     'RF00023': 'Bacteria',
     'RF00032': 'Eukaryota',
     'RF00033': 'Bacteria',
@@ -343,6 +341,7 @@ DOMAIN_MAPPING = {
     'RF01570': 'Eukaryota',
     'RF01849': 'Bacteria',
     'RF01850': 'Bacteria',
+    'RF01851': 'Bacteria',
     'RF01854': 'Bacteria',
     'RF01855': 'Eukaryota',
     'RF01856': 'Eukaryota',
@@ -416,7 +415,7 @@ class RfamFamily(object):
 
     def guess_insdc_using_name(self):
         found = set()
-        for name, rna_type in INFORMATIVE_NAMES.items():
+        for name, _ in INFORMATIVE_NAMES.items():
             if re.search(name, self.name, re.IGNORECASE):
                 found.add(name)
 
