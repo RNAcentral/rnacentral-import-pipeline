@@ -50,7 +50,7 @@ class JsonParserGreengenes(JsonParser):  # pylint: disable=W0232
 
             rnacentral_entry = RNAcentralEntry(
                 database=self.database.upper(),
-                division='XXX', # pylint: disable=W0511
+                division='XXX',  # pylint: disable=W0511
                 feature_location_end=feature_location_end,
                 feature_location_start=feature_location_start,
                 feature_type=seq['feature_type'],
