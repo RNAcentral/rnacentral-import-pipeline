@@ -47,7 +47,11 @@ def gtrnadb_secondary_structure(data):
     will transform it into a reasonable dot-bracket string and create a
     SecondaryStructure object.
     """
-    return SecondaryStructure(dot_bracket=dot_bracket(data))
+    twod = SecondaryStructure(dot_bracket=dot_bracket(data))
+    seq = sequence(data)
+    if len(seq) != len(twod):
+        return SecondaryStructure.empty()
+    return twod
 
 
 def gtrnadb_exons(locations):
@@ -86,10 +90,6 @@ def gtrnadb_entries(data):
         return
 
     two_d = gtrnadb_secondary_structure(data)
-    seq = sequence(data)
-    if len(seq) != len(two_d):
-        two_d = None
-
     for location in data['genome_locations']:
         try:
             yield Entry(
@@ -97,7 +97,7 @@ def gtrnadb_entries(data):
                 accession=accession(data, location),
                 ncbi_tax_id=int(data['ncbi_tax_id']),
                 database='GTRNADB',
-                sequence=seq,
+                sequence=sequence(data),
                 exons=gtrnadb_exons(location),
                 rna_type='tRNA',
                 url=url(data),
