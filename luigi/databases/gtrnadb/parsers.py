@@ -36,6 +36,7 @@ from .helpers import accession
 from .helpers import parent_accession
 from .helpers import seq_version
 from .helpers import references
+from .helpers import sequence
 
 LOGGER = logging.getLogger(__name__)
 
@@ -85,6 +86,10 @@ def gtrnadb_entries(data):
         return
 
     two_d = gtrnadb_secondary_structure(data)
+    seq = sequence(data)
+    if len(seq) != len(two_d):
+        two_d = None
+
     for location in data['genome_locations']:
         try:
             yield Entry(
@@ -92,7 +97,7 @@ def gtrnadb_entries(data):
                 accession=accession(data, location),
                 ncbi_tax_id=int(data['ncbi_tax_id']),
                 database='GTRNADB',
-                sequence=data['sequence'],
+                sequence=seq,
                 exons=gtrnadb_exons(location),
                 rna_type='tRNA',
                 url=url(data),

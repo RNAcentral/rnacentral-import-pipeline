@@ -47,6 +47,10 @@ def note_data(data):
 
     note = {}
     note.update(data['metadata'])
+    extra = ['mature_sequence', 'description']
+    for entry in extra:
+        if entry in note:
+            del note[entry]
     del note['organism']
     del note['pseudogene']
     for position in note['anticodon_positions']:
@@ -93,9 +97,10 @@ def description(data):
     """
     Generate a description for the entries specified by the data.
     """
-    return '{name} {product}'.format(
+    details = data['metadata'].get('description', product(data))
+    return '{name} {details}'.format(
         name=species(data),
-        product=product(data),
+        details=details,
     )
 
 
@@ -181,3 +186,9 @@ def references(data, location):
         pmid=18984615,
         doi='10.1093/nar/gkn787.',
     )]
+
+
+def sequence(data):
+    if 'mature_sequence' in data['metadata']:
+        return data['metadata']['mature_sequence'].upper()
+    return data['sequence'].upper()

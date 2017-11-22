@@ -26,6 +26,12 @@ def data():
         return json.load(raw)
 
 
+@pytest.fixture
+def data2():
+    with open('data/gtrnadb-version2.json', 'rb') as raw:
+        return json.load(raw)
+
+
 def test_url(data):
     assert helpers.url(data[0]) == "http://gtrnadb.ucsc.edu/genomes/bacteria/Acar_mari_MBIC11017/genes/tRNA-Ala-CGC-1-1.html"
 
@@ -49,7 +55,22 @@ def test_note_data(data):
     }
 
 
-def test_common_name(data):
+def test_complex_note_data(data2):
+    assert helpers.note_data(data2[0]) == {
+        "anticodon": "CGC",
+        "anticodon_positions": [
+            {
+                "relative_start": 35,
+                "relative_stop": 37
+            }
+        ],
+        "isotype": "Ala",
+        "score": 82.1,
+        "url": "http://gtrnadb.ucsc.edu/genomes/archaea/Acid_MAR08_339/genes/tRNA-Ala-CGC-1-1.html"
+    }
+
+
+def test_no_common_name(data):
     assert helpers.common_name(data[0]) is None
 
 
@@ -71,7 +92,17 @@ def test_as_dotbracket(data):
 
 
 def test_simple_description(data):
-    assert helpers.description(data[0]) == "Acaryochloris marina MBIC11017 tRNA-Ala (CGC)"
+    assert helpers.description(data[0]) == (
+        "Acaryochloris marina MBIC11017 "
+        "tRNA-Ala (CGC)"
+    )
+
+
+def test_complex_description(data2):
+    assert helpers.description(data2[0]) == (
+        'Aciduliprofundum sp. MAR08-339 '
+        'tRNA Alanine with anticodon CGC'
+    )
 
 
 def test_as_dotbracket_detects_weird_strings():
@@ -80,13 +111,15 @@ def test_as_dotbracket_detects_weird_strings():
         helpers.dot_bracket(data)
 
 
-def test_primary_id_is_always_unique(data):
+def test_primary_id_is_always_unique():
     seen = set()
-    for entry in data:
+    possible = data() + data2()
+    for entry in possible:
         for location in entry['genome_locations']:
             pid = helpers.primary_id(entry, location)
             assert pid not in seen
             seen.add(pid)
+    assert seen
 
 
 def test_builds_primary_id(data):
@@ -102,3 +135,11 @@ def test_builds_primary_id(data):
 
 def test_chromosome(data):
     assert helpers.chromosome(data[0]['genome_locations'][0]) == 'chr'
+
+
+def test_sequence_without_mature(data):
+    assert helpers.sequence(data[0]) == 'GGGGAATTAGCTCAGCTGGTAGAGTGCTGCGATCGCACCGCAGAGGTCAGGGGTTCGAATCCCCTATTCTCCA'
+
+
+def test_sequence_with_mature(data2):
+    assert helpers.sequence(data2[0]) == 'GGGCCGGTAGATCAGACCGGAAGATCGCCACATTCGCAATGTGGAGGCCGCGGGTTCAAATCCCGCCCGGTCCA'
