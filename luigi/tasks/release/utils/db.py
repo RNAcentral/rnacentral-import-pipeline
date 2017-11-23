@@ -53,7 +53,7 @@ def cursor(config, commit_on_leave=True):
             cur.close()
 
 
-def get_db_connection(config):
+def get_db_connection(config, **options):
     """
     Open a database connection.
     Should be used in situations where @contextmanager connection doesn't work.
@@ -61,7 +61,7 @@ def get_db_connection(config):
     because it wraps all work in a giant database transaction
     that is likely to crash.
     """
-    conn = psycopg2.connect(config.psycopg2_string())
+    conn = psycopg2.connect(config.psycopg2_string(), **options)
     conn.set_session(autocommit=False)
     conn.set_isolation_level(0)
     return conn
