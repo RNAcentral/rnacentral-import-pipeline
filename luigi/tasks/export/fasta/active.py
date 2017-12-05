@@ -28,7 +28,7 @@ CREATE TEMP TABLE rna_active (
 
 INSERT_INTO_ACTIVE_TABLE = """
 INSERT INTO rna_active
-select distinct upi from xref_p{dbid}_not_deleted
+select upi from xref_p{dbid}_not_deleted
 ON CONFLICT DO NOTHING
 """
 
@@ -41,9 +41,10 @@ select
         else rna.seq_short end as sequence
 from rna_active active
 join rnc_rna_precomputed pre on pre.upi = active.upi
-join rna on active.upi = rna.upi
+join rna on rna.upi = active.upi
 where
-    pre.taxid is null
+    pre.id = rna.upi
+    and pre.upi = active.upi
 """
 
 FETCH_ACTIVE_SPECIES = """
@@ -74,7 +75,7 @@ class ActiveFastaExport(FastaExportBase):  # pylint: disable=too-many-public-met
     def output(self):
         return luigi.LocalTarget(export().ftp(
             'sequences',
-            'rnacentral_active.fasta.gz',
+            'rnacentral_active.fasta',
         ))
 
 
@@ -86,5 +87,5 @@ class SpeciesSpecificFastaExport(FastaExportBase):
     def output(self):
         return luigi.LocalTarget(export().ftp(
             'sequences',
-            'rnacentral_species_specific_ids.fasta.gz',
+            'rnacentral_species_specific_ids.fasta',
         ))

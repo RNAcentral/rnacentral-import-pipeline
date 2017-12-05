@@ -13,6 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import os
+
 import luigi
 
 from .active import ActiveFastaExport
@@ -20,20 +22,17 @@ from .active import SpeciesSpecificFastaExport
 from .inactive import InactiveFastaExport
 from .nhmmer import NHmmerDBExport
 from .nhmmer import NHmmerExcludedExport
-# from .compress import CompressExport
 
 
-class FastaExport(luigi.WrapperTask):
-    """
-    This is the main class to generate all FASTA file exports.
-    """
+class CompressExport(luigi.Task):
 
     def requires(self):
-        yield ActiveFastaExport()
-        yield InactiveFastaExport()
-        yield SpeciesSpecificFastaExport()
-        yield NHmmerExcludedExport()
-        yield NHmmerDBExport()
+        self.klss
 
-    # def requires(self):
-    #     yield CompressExport()
+    def output(self):
+        for requirement in self.requires():
+            yield requirement.output().fn + '.gz'
+
+    def run(self):
+        for requirement in self.requires():
+            os.system('gzip %s' % requirement.output().fn)
