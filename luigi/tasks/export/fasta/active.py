@@ -80,6 +80,10 @@ class ActiveFastaExport(FastaExportBase):  # pylint: disable=too-many-public-met
 
 
 class SpeciesSpecificFastaExport(FastaExportBase):
+    """
+    Export all species specific sequences.
+    """
+
     table = CREATE_ACTIVE_TABLE
     populate = INSERT_INTO_ACTIVE_TABLE
     fetch = FETCH_ACTIVE_SPECIES

@@ -27,11 +27,15 @@ from .nhmmer import NHmmerExcludedExport
 class CompressExport(luigi.Task):
 
     def requires(self):
-        self.klss
+        yield ActiveFastaExport()
+        yield InactiveFastaExport()
+        yield SpeciesSpecificFastaExport()
+        yield NHmmerExcludedExport()
+        yield NHmmerDBExport()
 
     def output(self):
         for requirement in self.requires():
-            yield requirement.output().fn + '.gz'
+            yield luigi.LocalTarget(requirement.output().fn + '.gz')
 
     def run(self):
         for requirement in self.requires():

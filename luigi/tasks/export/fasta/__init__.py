@@ -20,7 +20,7 @@ from .active import SpeciesSpecificFastaExport
 from .inactive import InactiveFastaExport
 from .nhmmer import NHmmerDBExport
 from .nhmmer import NHmmerExcludedExport
-# from .compress import CompressExport
+from .compress import CompressExport
 
 
 class FastaExport(luigi.WrapperTask):
@@ -29,11 +29,19 @@ class FastaExport(luigi.WrapperTask):
     """
 
     def requires(self):
+        yield CompressExport()
         yield ActiveFastaExport()
         yield InactiveFastaExport()
         yield SpeciesSpecificFastaExport()
         yield NHmmerExcludedExport()
         yield NHmmerDBExport()
 
-    # def requires(self):
-    #     yield CompressExport()
+
+class NHmmerExport(luigi.WrapperTask):
+    """
+    This does the exports required for nhmmer.
+    """
+
+    def requires(self):
+        yield NHmmerExcludedExport()
+        yield NHmmerDBExport()
