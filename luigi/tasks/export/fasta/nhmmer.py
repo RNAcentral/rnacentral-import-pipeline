@@ -52,7 +52,7 @@ class NHmmerDBExport(NHmmerExportBase):
         return luigi.LocalTarget(export().ftp(
             'sequences',
             '.internal',
-            'rnacentral_nhmmer.fasta.gz',
+            'rnacentral_nhmmer.fasta',
         ))
 
     def sequences(self):
@@ -67,7 +67,7 @@ class NHmmerExcludedExport(NHmmerExportBase):
         return luigi.LocalTarget(export().ftp(
             'sequences',
             '.internal',
-            'rnacentral_nhmmer_excluded.fasta.gz',
+            'rnacentral_nhmmer_excluded.fasta',
         ))
 
     def sequences(self):

@@ -15,6 +15,8 @@ limitations under the License.
 
 import os
 
+import psycopg2
+
 import luigi
 from luigi.local_target import atomic_file
 
@@ -32,18 +34,29 @@ class FastaExportBase(luigi.Task):
     fetch = None
 
     def sequences(self, cursor):
+        print(self.fetch)
         cursor.execute(self.fetch)
+        print('executed')
         for result in cursor:
+            print(result)
             yield SeqRecord(
-                Seq(result[2]),
-                id=result[0],
-                description=result[1],
+                Seq(result['sequence']),
+                id=result['id'],
+                description=result['description'],
             )
 
     def run(self):
-        connection = get_db_connection(db(), connect_timeout=10 * 60)
-        populate_table_by_partition(connection, self.table, self.populate)
-        cursor = connection.cursor()
+        connection = get_db_connection(db(), connect_timeout=20 * 60)
+        # populate_table_by_partition(connection, self.table, self.populate)
+        # unique = md5(self.table).\
+        #     update(self.populate).\
+        #     update(self.fetch).\
+        #     hexdigest()
+
+        cursor = connection.cursor(
+            cursor_factory=psycopg2.extras.DictCursor,
+            name=self.__class__.__name__,
+        )
         filename = self.output().fn
         try:
             os.makedirs(os.path.basename(filename))
@@ -52,6 +65,7 @@ class FastaExportBase(luigi.Task):
 
         with atomic_file(filename) as out:
             SeqIO.write(self.sequences(cursor), out, "fasta")
+        cursor.close()
         connection.close()
 
 
