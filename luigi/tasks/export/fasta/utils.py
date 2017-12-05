@@ -15,8 +15,7 @@ limitations under the License.
 
 import os
 import tempfile
-
-from psycopg2.extras import DictCursor
+from contextlib import contextmanager
 
 import luigi
 from luigi.local_target import atomic_file
@@ -29,43 +28,19 @@ from tasks.release.utils.db import get_db_connection
 from tasks.config import db
 
 
-class FastaExportBase(luigi.Task):
-    table = None
-    populate = None
-    fetch = None
+def tsv_to_records(tsv_lines):
+    """
+    Given a file of TSV entries (id description sequence) produce a generator
+    of Bio.SeqRecord.SeqRecord items.
+    """
 
-    def sequences(self, cursor):
-        with tempfile.TemporaryFile() as out:
-            cursor.copy_expert(self.fetch, out)
-
-            out.seek(0)
-            for line in out:
-                sid, description, sequence = line.strip().split('\t')
-                yield SeqRecord(
-                    Seq(sequence),
-                    id=sid,
-                    description=description,
-                )
-
-    def run(self):
-        connection = get_db_connection(db(), connect_timeout=20 * 60)
-        # populate_table_by_partition(connection, self.table, self.populate)
-        # unique = md5(self.table).\
-        #     update(self.populate).\
-        #     update(self.fetch).\
-        #     hexdigest()
-
-        filename = self.output().fn
-        try:
-            os.makedirs(os.path.dirname(filename))
-        except:
-            pass
-
-        with atomic_file(filename) as out:
-            cursor = connection.cursor(cursor_factory=DictCursor)
-            SeqIO.write(self.sequences(cursor), out, "fasta")
-            cursor.close()
-        connection.close()
+    for line in tsv_lines:
+        sid, description, sequence = line.strip().split('\t')
+        yield SeqRecord(
+            Seq(sequence),
+            id=sid,
+            description=description,
+        )
 
 
 def populate_table_by_partition(connection, table, populate):
@@ -82,3 +57,39 @@ def populate_table_by_partition(connection, table, populate):
     dbids = [r[0] for r in cursor.fetchall()]
     for dbid in dbids:
         cursor.execute(populate.format(dbid=dbid))
+
+
+class FastaExportBase(luigi.Task):
+    table = None
+    populate = None
+    fetch = None
+
+    @contextmanager
+    def tsv_file(self, connection):
+        with tempfile.NamedTemporaryFile(delete=False) as out:
+            query = self.fetch.replace('\n', ' ')
+            command = "COPY ({query}) TO STDOUT".format(query=query)
+            cursor = connection.cursor()
+            cursor.copy_expert(command, out)
+            cursor.close()
+
+        try:
+            with open(out.name, 'rb') as readable:
+                yield readable
+        finally:
+            out.unlink(out.name)
+
+    def run(self):
+        connection = get_db_connection(db(), connect_timeout=20 * 60)
+        # populate_table_by_partition(connection, self.table, self.populate)
+
+        filename = self.output().fn
+        try:
+            os.makedirs(os.path.dirname(filename))
+        except:
+            pass
+
+        with self.tsv_file(connection) as tsv_file:
+            with atomic_file(filename) as out:
+                SeqIO.write(tsv_to_records(tsv_file), out, "fasta")
+        connection.close()
