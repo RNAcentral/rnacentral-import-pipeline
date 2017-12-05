@@ -15,7 +15,7 @@ limitations under the License.
 
 import os
 
-import psycopg2
+import psycopg2.extras
 
 import luigi
 from luigi.local_target import atomic_file
@@ -55,11 +55,10 @@ class FastaExportBase(luigi.Task):
 
         cursor = connection.cursor(
             cursor_factory=psycopg2.extras.DictCursor,
-            name=self.__class__.__name__,
         )
         filename = self.output().fn
         try:
-            os.makedirs(os.path.basename(filename))
+            os.makedirs(os.path.dirname(filename))
         except:
             pass
 
