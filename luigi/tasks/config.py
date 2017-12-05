@@ -190,3 +190,10 @@ class mgi(luigi.Config):  # pylint: disable=C0103, R0904
 
     max_entry_count = luigi.IntParameter(default=1000)
     json_filename = luigi.Parameter(default='rna')
+
+
+class ena(luigi.Config):
+    pattern = luigi.Parameter()
+
+    def files(self):
+        return iglob(self.pattern)
