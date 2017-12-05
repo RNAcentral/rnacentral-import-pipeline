@@ -14,8 +14,9 @@ limitations under the License.
 """
 
 import os
+import tempfile
 
-import psycopg2.extras
+from psycopg2.extras import DictCursor
 
 import luigi
 from luigi.local_target import atomic_file
@@ -34,16 +35,17 @@ class FastaExportBase(luigi.Task):
     fetch = None
 
     def sequences(self, cursor):
-        print(self.fetch)
-        cursor.execute(self.fetch)
-        print('executed')
-        for result in cursor:
-            print(result)
-            yield SeqRecord(
-                Seq(result['sequence']),
-                id=result['id'],
-                description=result['description'],
-            )
+        with tempfile.TemporaryFile() as out:
+            cursor.copy_expert(self.fetch, out)
+
+            out.seek(0)
+            for line in out:
+                sid, description, sequence = line.strip().split('\t')
+                yield SeqRecord(
+                    Seq(sequence),
+                    id=sid,
+                    description=description,
+                )
 
     def run(self):
         connection = get_db_connection(db(), connect_timeout=20 * 60)
@@ -53,9 +55,6 @@ class FastaExportBase(luigi.Task):
         #     update(self.fetch).\
         #     hexdigest()
 
-        cursor = connection.cursor(
-            cursor_factory=psycopg2.extras.DictCursor,
-        )
         filename = self.output().fn
         try:
             os.makedirs(os.path.dirname(filename))
@@ -63,8 +62,9 @@ class FastaExportBase(luigi.Task):
             pass
 
         with atomic_file(filename) as out:
+            cursor = connection.cursor(cursor_factory=DictCursor)
             SeqIO.write(self.sequences(cursor), out, "fasta")
-        cursor.close()
+            cursor.close()
         connection.close()
 
 
