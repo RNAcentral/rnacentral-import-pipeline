@@ -49,9 +49,9 @@ def references(record):
 
 
 def rna_type(feature):
-    if feature.type != 'misc_RNA':
-        return feature.type
-    return None
+    if feature.type == 'ncRNA':
+        return embl.qualifier_value(feature, 'ncRNA_class', r'^(.+)$')
+    return feature.type
 
 
 def mol_type(record):
@@ -66,6 +66,10 @@ def product(feature):
 
 
 def note_data(feature):
+    if 'note' in feature.qualifiers:
+        return {
+            'text': feature.qualifiers['note']
+        }
     return {}
 
 
