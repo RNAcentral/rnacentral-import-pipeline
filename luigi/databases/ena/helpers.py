@@ -129,7 +129,6 @@ def old_locus_tag(_):
 
 def keywords(record):
     keys = [k for k in record.annotations['keywords'] if k]
-    # keys = [k for k in record.annotations['keywords'] if k != 'RNAcentral']
     keys = ' '.join(keys)
     if keys:
         return keys
