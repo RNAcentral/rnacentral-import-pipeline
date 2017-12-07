@@ -17,7 +17,7 @@ import attr
 
 import pytest
 
-from databases.data import Entry
+from databases.data import Entry, Exon, Reference
 from databases.ena.parsers import parse
 
 
@@ -32,16 +32,15 @@ def test_creates_simple_entry():
         ncbi_tax_id=227321,
         database='ENA',
         sequence='GCCCGGATGGTCTAGTGGTATGATTCTCCCTTCGGGGGCAGCGCCCGGTACATAATAACATGTATCAGAAATGGGAGAGGTCCCGCGTTCGAATCGCGGTTCGGGCC',
-        exons=[{
-            'chromosome': 'VIII',
-            'complement': False,
-            'primary_end': 101773,
-            'primary_start': 101667,
-        }],
+        exons=[Exon(
+            chromosome='VIII',
+            complement=False,
+            primary_end=101773,
+            primary_start=101667,
+        )],
         rna_type='tRNA',
         url='https://www.ebi.ac.uk/ena/data/view/Non-coding:AACD01000002.1:101667..101773:tRNA',
         seq_version='1',
-
         chromosome='VIII',
         species='Aspergillus nidulans FGSC A4',
         lineage=(
@@ -57,7 +56,14 @@ def test_creates_simple_entry():
         description='Aspergillus nidulans FGSC A4 tRNA-Pro',
         mol_type='genomic DNA',
         is_composite='N',
-        references=[],
+        references=[Reference(
+            accession='AACD01000002.1:101667..101773:tRNA',
+            authors='',
+            location='Whitehead Institute/MIT Center for Genome Research, 320 Charles Street',
+            title='Submitted (04-APR-2003) to the INSDC',
+            pmid=None,
+            doi=None,
+        )]
     ))
 
 
