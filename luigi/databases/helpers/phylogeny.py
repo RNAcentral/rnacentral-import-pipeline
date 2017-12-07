@@ -87,9 +87,7 @@ def common_name(taxon_id):
     Get the common name, if any for the given taxon id. If no common name
     exists then None is returned.
     """
-
-    data = phylogeny(taxon_id)
-    return data.get('common_name', None)
+    return phylogeny(taxon_id).get('commonName', None)
 
 
 def species(taxon_id):

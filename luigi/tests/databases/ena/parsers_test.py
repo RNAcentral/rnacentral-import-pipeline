@@ -17,38 +17,31 @@ import attr
 
 import pytest
 
-from databases import data
+from databases.data import Entry
 from databases.ena.parsers import parse
 
 
-@pytest.fixture
-def simpe_data():
-    with open('data/wgs_aacd01_fun.ncr', 'rb') as raw:
-        return list(parse(raw))
+def test_creates_simple_entry():
+    with open('data/ena/wgs_aacd01_fun.ncr', 'rb') as raw:
+        simple_data = list(parse(raw))
 
-
-@pytest.fixture
-def ncrna_data():
-    with open('data/wgs_abxv02_pro.ncr', 'rb') as raw:
-        return list(parse(raw))
-
-
-def test_creates_all_entries(simpe_data):
-    assert len(list(simpe_data)) == 188
-
-
-def test_creates_simple_entry(simpe_data):
-    assert attr.asdict(simpe_data[0]) == attr.asdict(data.Entry(
+    assert len(simple_data) == 188
+    assert attr.asdict(simple_data[0]) == attr.asdict(Entry(
         primary_id='',
         accession='AACD01000002.1:101667..101773:tRNA',
         ncbi_tax_id=227321,
         database='ENA',
         sequence='GCCCGGATGGTCTAGTGGTATGATTCTCCCTTCGGGGGCAGCGCCCGGTACATAATAACATGTATCAGAAATGGGAGAGGTCCCGCGTTCGAATCGCGGTTCGGGCC',
-        exons=[
-        ],
+        exons=[{
+            'chromosome': 'VIII',
+            'complement': False,
+            'primary_end': 101773,
+            'primary_start': 101667,
+        }],
         rna_type='tRNA',
-        url='',
+        url='https://www.ebi.ac.uk/ena/data/view/Non-coding:AACD01000002.1:101667..101773:tRNA',
         seq_version='1',
+
         chromosome='VIII',
         species='Aspergillus nidulans FGSC A4',
         lineage=(
@@ -64,29 +57,37 @@ def test_creates_simple_entry(simpe_data):
         description='Aspergillus nidulans FGSC A4 tRNA-Pro',
         mol_type='genomic DNA',
         is_composite='N',
-        references=[
-
-        ],
+        references=[],
     ))
 
 
-def test_can_find_correct_ncRNA_type(ncrna_data):
+def test_can_find_correct_ncRNA_type():
+    with open('data/ena/wgs_abxv02_pro.ncr', 'rb') as raw:
+        ncrna_data = list(parse(raw))
+
     assert len(ncrna_data) == 103
-    assert attr.asdict(ncrna_data[0]) == attr.asdict(data.Entry(
+    assert attr.asdict(ncrna_data[0]) == attr.asdict(Entry(
         primary_id='',
         accession='ABXV02000002.1:33498..33573:ncRNA',
         ncbi_tax_id=500637,
         database='ENA',
-        sequence='',
+        sequence='ACTGCTTTTCTTTGATGTCCCCATATTGAGGAGCCCGATAGCCATTTGATTACTTCATGCTATCGGGTTTTTTATT',
+        exons=[],
         rna_type='other',
-        url='',
+        url='https://www.ebi.ac.uk/ena/data/view/Non-coding:ABXV02000002.1:33498..33573:ncRNA',
         seq_version='1',
+        note_data={
+            'text': ['Rfam score 66']
+        },
         species="Providencia rustigianii DSM 4541",
         lineage=(
-
+            "Bacteria; Proteobacteria; Gammaproteobacteria; Enterobacterales; "
+            "Morganellaceae; Providencia; Providencia rustigianii DSM 4541"
         ),
         product="RybB RNA",
+        parent_accession='ABXV02000002',
         keywords='WGS',
+        division='PRO',
         description='Providencia rustigianii DSM 4541 RybB RNA',
         mol_type="genomic DNA",
         is_composite='N',
@@ -97,13 +98,13 @@ def test_can_find_correct_ncRNA_type(ncrna_data):
     ))
 
 
-def function_data():
-    with open('wgs_acnt01_pro.ncr', 'rb') as raw:
-        return list(parse(raw))
+@pytest.mark.skip("Didn't fetch data yet")
+def test_can_assign_function():
+    with open('data/ena/wgs_acnt01_pro.ncr', 'rb') as raw:
+        data = list(parse(raw))
 
-
-def test_can_assign_function(function_data):
-    assert attr.asdict(ncrna_data[0]) == attr.asdict(data.Entry(
+    assert len(data) == 188
+    assert attr.asdict(data[0]) == attr.asdict(Entry(
         primary_id='',
         accession='ACNT01000002.1:8279..8533:ncRNA',
         ncbi_tax_id=545431,
@@ -127,164 +128,210 @@ def test_can_assign_function(function_data):
     ))
 
 
-def test_can_assign_alleles(allele_data):
-    assert attr.asdict(ncrna_data[0]) == attr.asdict(data.Entry(
-        accession='',
-        allele='',
+# def test_can_assign_alleles(allele_data):
+#     assert attr.asdict(ncrna_data[0]) == attr.asdict(data.Entry(
+#         accession='',
+#         allele='',
+#     ))
+
+
+def test_can_parse_all_example_entries():
+    with open('data/test_example_entries.ncr', 'rb') as raw:
+        examples = list(parse(raw))
+
+    assert len(examples) == 10
+    assert attr.asdict(examples[0]) == attr.asdict(Entry(
+        primary_id='',
+        accession='AB330787.1:1..34:misc_RNA',
+        ncbi_tax_id=9606,
+        database='ENA',
+        sequence="ATTGGGGAGTGAGAAGGAGAGAACGCGGTCTGAA",
+        exons=[],
+        rna_type='misc_RNA',
+        url='https://www.ebi.ac.uk/ena/data/view/Non-coding:AB330787.1:1..34:misc_RNA',
+        seq_version='1',
+        lineage=(
+            'Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; '
+            'Euteleostomi; Mammalia; Eutheria; Euarchontoglires; '
+            'Primates; Haplorrhini; Catarrhini; Hominidae; Homo; '
+            'Homo sapiens'
+        ),
+        species='Homo sapiens',
+        common_name='human',
+        division='HUM',
+        description='Homo sapiens (human) miscellaneous RNA',
+        parent_accession='AB330787',
+        note_data={
+            'text': [
+                "RNA sequence binds to tRNaseZL",
+                "similar to U3 snRNA fragment"
+            ]
+        },
+        mol_type='other RNA',
+        is_composite='N',
     ))
 
+    assert attr.asdict(examples[1]) == attr.asdict(Entry(
+        primary_id='',
+        accession='AB330786.1:1..27:misc_RNA',
+        database='ENA',
+        ncbi_tax_id=9606,
+        sequence='ATTGCAGTACCTCCAGGAACGGTGCAC',
+        exons=[],
+        rna_type='misc_RNA',
+        url='https://www.ebi.ac.uk/ena/data/view/Non-coding:AB330786.1:1..27:misc_RNA',
+        seq_version='1',
+        lineage=(
+            'Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; '
+            'Euteleostomi; Mammalia; Eutheria; Euarchontoglires; '
+            'Primates; Haplorrhini; Catarrhini; Hominidae; Homo; '
+            'Homo sapiens'
+        ),
+        species='Homo sapiens',
+        common_name='human',
+        division='HUM',
+        description='Homo sapiens (human) miscellaneous RNA',
+        parent_accession='AB330786',
+        note_data={
+            'text': [
+                'RNA sequence binds to tRNaseZL',
+                'similar to U2 snRNA fragment'
+            ]
+        },
+        mol_type='other RNA',
+        is_composite='N',
+    ))
 
-def test_can_parse_all_example_entries(examples):
-    assert [attr.asdict(e) for e in examples] == [
-        attr.asdict(data.Entry(
-            primary_id='',
-            accession='AB330787.1:1..34:misc_RNA',
-            database='ENA',
-            ncbi_tax_id=9606,
-            sequence="ATTGGGGAGTGAGAAGGAGAGAACGCGGTCTGAA",
-            lineage=(
-                'Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; '
-                'Euteleostomi; Mammalia; Eutheria; Euarchontoglires; '
-                'Primates; Haplorrhini; Catarrhini; Hominidae; Homo; '
-                'Homo sapiens'
-            ),
-            common_name='human',
-            division='HUM',
-            description='Homo sapiens (human) miscellaneous RNA',
-            seq_version='1',
-            parent_accession='AB330787.1',
-            note_data={
-                'text': [
-                    "RNA sequence binds to tRNaseZL",
-                    "similar to U3 snRNA fragment"
-                ]
-            },
-            rna_type='misc_RNA',
-            mol_type='other RNA',
-        )),
+    assert attr.asdict(examples[2]) == attr.asdict(Entry(
+        primary_id='',
+        accession='AB330785.1:1..34:misc_RNA',
+        database='ENA',
+        ncbi_tax_id=9606,
+        sequence='CGCGACCTCAGATCAGACGTGGCGACCCGCTGAA',
+        exons=[],
+        rna_type='misc_RNA',
+        url='https://www.ebi.ac.uk/ena/data/view/Non-coding:AB330785.1:1..34:misc_RNA',
+        seq_version='1',
+        lineage=(
+            'Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; '
+            'Euteleostomi; Mammalia; Eutheria; Euarchontoglires; '
+            'Primates; Haplorrhini; Catarrhini; Hominidae; Homo; '
+            'Homo sapiens'
+        ),
+        species='Homo sapiens',
+        common_name='human',
+        division='HUM',
+        description='Homo sapiens (human) miscellaneous RNA',
+        note_data={
+            'text': [
+                "RNA sequence binds to tRNaseZL",
+                "similar to 28S rRNA fragment",
+            ]
+        },
+        parent_accession='AB330785',
+        mol_type='other RNA',
+        is_composite='N',
+        keywords='RNAcentral Third Party Annotation TPA TPA:specialist_db',
+    ))
 
-        attr.asdict(data.Entry(
-            primary_id='',
-            accession='AB330786.1:1..27:misc_RNA',
-            database='ENA',
-            ncbi_tax_id=9606,
-            sequence='ATTGCAGTACCTCCAGGAACGGTGCAC',
-            lineage=(
-                'Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; '
-                'Euteleostomi; Mammalia; Eutheria; Euarchontoglires; '
-                'Primates; Haplorrhini; Catarrhini; Hominidae; Homo; '
-                'Homo sapiens'
-            ),
-            common_name='human',
-            division='HUM',
-            parent_accession='AB330786.1',
-            description='Homo sapiens (human) miscellaneous RNA',
-            seq_version='1',
-            note_data={
-                'text': [
-                    "RNA sequence binds to tRNaseZL",
-                    "similar to U3 snRNA fragment"
-                ]
-            },
-            rna_type='misc_RNA',
-            mol_type='other RNA',
-        )),
+    assert attr.asdict(examples[3]) == attr.asdict(Entry(
+        primary_id='',
+        accession='HAAO01001079.1:1..21:ncRNA',
+        database='ENA',
+        ncbi_tax_id=9606,
+        sequence='ACCACTGCACTCCAGCCTGAG',
+        exons=[],
+        rna_type='miRNA',
+        url='https://www.ebi.ac.uk/ena/data/view/Non-coding:HAAO01001079.1:1..21:ncRNA',
+        seq_version='1',
+        lineage=(
+            'Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; '
+            'Euteleostomi; Mammalia; Eutheria; Euarchontoglires; '
+            'Primates; Haplorrhini; Catarrhini; Hominidae; Homo; '
+            'Homo sapiens'
+        ),
+        species='Homo sapiens',
+        common_name='human',
+        division='HUM',
+        project='PRJEB4451',
+        description='Homo sapiens (human) microRNA hsa-miR-1273g-3p',
+        product="microRNA hsa-miR-1273g-3p",
+        experiment="EXISTENCE:RNA-seq ECO0000205",
+        mol_type='transcribed RNA',
+        gene="hsa-miR-1273g-3p",
+        keywords=(
+            'RNAcentral TPA TPA:specialist_db Transcriptome Shotgun '
+            'Assembly TSA'
+        ),
+        is_composite='N',
+        parent_accession='HAAO01001079',
+    ))
 
-        attr.asdict(data.Entry(
-            primary_id='',
-            accession='AB330785.1:1..34:misc_RNA',
-            database='ENA',
-            ncbi_tax_id=9606,
-            sequence='CGCGACCTCAGATCAGACGTGGCGACCCGCTGAA',
-            lineage=(
-                'Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; '
-                'Euteleostomi; Mammalia; Eutheria; Euarchontoglires; '
-                'Primates; Haplorrhini; Catarrhini; Hominidae; Homo; '
-                'Homo sapiens'
-            ),
-            common_name='human',
-            division='HUM',
-            seq_version='1',
-            description='Homo sapiens (human) miscellaneous RNA',
-            note_data={
-                'text': [
-                    "RNA sequence binds to tRNaseZL",
-                    "similar to 28S rRNA fragment",
-                ]
-            },
-            rna_type='misc_RNA',
-            mol_type='other RNA',
-        )),
+    assert attr.asdict(examples[4]) == attr.asdict(Entry(
+        primary_id='',
+        accession='HG519048.1:1..359:tmRNA',
+        database='ENA',
+        ncbi_tax_id=32644,
+        sequence="GGGAGCGACTTGGCTTCGACAGGAGTAAGTCTGCTTAGATGGCATGTCGCTTTGGGCAAAGCGTAAAAAGCCCAAATAAAATTAAACGCAAACAACGTTAAATTCGCTCCTGCTTACGCTAAAGCTGCGTAAGTTCAGTTGAGCCTGAAATTTAAGTCATACTATCTAGCTTAATTTTCGGTCATTTTTGATAGTGTAGCCTTGCGTTTGACAAGCGTTGAGGTGAAATAAAGTCTTAGCCTTGCTTTTGAGTTTTGGAAGATGAGCGAAGTAGGGTGAAGTAGTCATCTTTGCTAAGCATGTAGAGGTCTTTGTGGGATTATTTTTGGACAGGGGTTCGATTCCCCTCGCTTCCACCA",
+        exons=[],
+        rna_type='tmRNA',
+        url='https://www.ebi.ac.uk/ena/data/view/Non-coding:HG519048.1:1..359:tmRNA',
+        seq_version='1',
+        note_data={
+            'text': ['Tag:(A)ANNVKFAPAYAKAA*'],
+        },
+        lineage='unclassified sequences; unidentified',
+        species='unidentified',
+        division='UNC',
+        keywords='RNAcentral TPA TPA:specialist_db',
+        description='unidentified transfer-messenger mRNA Campy_jejun_700819',
+        product="transfer-messenger mRNA Campy_jejun_700819",
+        gene="tmRNA Campy_jejun_700819",
+        project='PRJEB4570',
+        mol_type='genomic DNA',
+        parent_accession='HG519048',
+        is_composite='N',
+    ))
 
-        attr.asdict(data.Entry(
-            primary_id='',
-            accession='HAAO01001079.1:1..21:ncRNA',
-            database='ENA',
-            sequence='ACCACTGCACTCCAGCCTGAG',
-            ncbi_tax_id=9606,
-            lineage=(
-                'Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; '
-                'Euteleostomi; Mammalia; Eutheria; Euarchontoglires; '
-                'Primates; Haplorrhini; Catarrhini; Hominidae; Homo; '
-                'Homo sapiens'
-            ),
-            common_name='human',
-            division='HUM',
-            description='Homo sapiens (human) microRNA hsa-miR-1273g-3p',
-            rna_type='miRNA',
-            product="microRNA hsa-miR-1273g-3p",
-            experiment="EXISTENCE:RNA-seq ECO0000205",
-            mol_type='transcribed RNA',
-            gene="hsa-miR-1273g-3p",
-        )),
+    # attr.asdict(data.Entry(
+    #     primary_id='',
+    #     accession='HG975377.1:1..332:ncRNA',
+    #     database='ENA',
+    # )),
 
-        attr.asdict(data.Entry(
-            primary_id='',
-            accession='HG519048.1:1..359:tmRNA',
-            database='ENA',
-        )),
+    # attr.asdict(data.Entry(
+    #     primary_id='',
+    #     accession='HG985290.1:1..72:tRNA',
+    #     database='ENA',
+    # )),
 
-        attr.asdict(data.Entry(
-            primary_id='',
-            accession='HG975377.1:1..332:ncRNA',
-            database='ENA',
-        )),
+    # attr.asdict(data.Entry(
+    #     primary_id='',
+    #     accession='LM608264.1:7..26:ncRNA',
+    #     database='ENA',
+    # )),
 
-        attr.asdict(data.Entry(
-            primary_id='',
-            accession='HG985290.1:1..72:tRNA',
-            database='ENA',
-        )),
+    # attr.asdict(data.Entry(
+    #     primary_id='',
+    #     accession='BX284601.5:1693190..1693457:ncRNA',
+    #     database='ENA',
+    #     rna_type='snoRNA',
+    #     product="RNA transcript Y71G12B.41",
+    #     standard_name="Y71G12B.41",
+    #     locus_tag="CELE_Y71G12B.41",
+    #     gene="Y71G12B.41",
+    #     mol_type='genomic DNA',
+    #     chromosome='I',
+    # )),
 
-        attr.asdict(data.Entry(
-            primary_id='',
-            accession='LM608264.1:7..26:ncRNA',
-            database='ENA',
-        )),
-
-        attr.asdict(data.Entry(
-            primary_id='',
-            accession='BX284601.5:1693190..1693457:ncRNA',
-            database='ENA',
-            rna_type='snoRNA',
-            product="RNA transcript Y71G12B.41",
-            standard_name="Y71G12B.41",
-            locus_tag="CELE_Y71G12B.41",
-            gene="Y71G12B.41",
-            mol_type='genomic DNA',
-            chromosome='I',
-        )),
-
-        attr.asdict(data.Entry(
-            primary_id='',
-            accession='CU329672.1:1601457..1602924:misc_RNA',
-            database='ENA',
-            ncbi_tax_id=4896,
-            rna_type='misc_RNA'
-            mol_type='genomic DNA',
-            locus_tag="SPNCRNA.1210",
-            chromosome='III',
-            product='antisense RNA (predicted)'
-        )),
-
-    ]
+    # attr.asdict(data.Entry(
+    #     primary_id='',
+    #     accession='CU329672.1:1601457..1602924:misc_RNA',
+    #     database='ENA',
+    #     ncbi_tax_id=4896,
+    #     rna_type='misc_RNA'
+    #     mol_type='genomic DNA',
+    #     locus_tag="SPNCRNA.1210",
+    #     chromosome='III',
+    #     product='antisense RNA (predicted)'
+    # )),

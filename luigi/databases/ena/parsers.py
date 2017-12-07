@@ -21,6 +21,13 @@ from . import helpers
 import databases.helpers.embl as embl
 
 
+class InvalidEnaFile(Exception):
+    """
+    This is raised when there is something wrong with the ENA EMBL file.
+    """
+    pass
+
+
 def parse(handle):
     """
     Parse a file like object into an iterable of Entry objects. This will parse
@@ -29,59 +36,55 @@ def parse(handle):
     """
 
     for record in SeqIO.parse(handle, 'embl'):
-        taxid = embl.taxid(record)
-        species = embl.species(record)
-        chromosome = helpers.chromosome(record)
-        common_name = embl.common_name(record)
-        lineage = embl.lineage(record)
-        project = embl.project(record)
-        description = embl.description(record)
-        seq_version = embl.seq_version(record)
-        accession = helpers.accession(record)
-        division = embl.division(record)
-        references = embl.references(accession, record)
-        sequence = helpers.sequence(record)
 
-        for feature in record.features[1:]:
-            yield Entry(
-                primary_id=helpers.primary_id(feature),
-                accession=accession,
-                ncbi_tax_id=taxid,
-                database='ENA',
-                sequence=sequence,
-                exons=helpers.exons(feature),
-                rna_type=helpers.rna_type(feature),
-                url=helpers.url(feature),
-                seq_version=seq_version,
-                note_data=helpers.note_data(feature),
-                xref_data=embl.xref_data(feature),
-                chromosome=chromosome,
-                species=species,
-                common_name=common_name,
-                lineage=lineage,
-                gene=embl.gene(feature),
-                locus_tag=embl.locus_tag(feature),
-                product=helpers.product(feature),
-                parent_accession=helpers.parent_accession(record),
-                ordinal=helpers.ordinal(feature),
-                non_coding_id=helpers.non_coding_id(feature),
-                project=project,
-                keywords=helpers.keywords(record),
-                division=division,
-                organelle=helpers.organelle(feature),
-                allele=helpers.allele(feature),
-                anticodon=helpers.anticodon(feature),
-                experiment=helpers.experiment(feature),
-                function=helpers.function(feature),
-                inference=helpers.inference(feature),
-                map=helpers.map(feature),
-                old_locus_tag=helpers.old_locus_tag(feature),
-                operon=helpers.operon(feature),
-                standard_name=embl.standard_name(feature),
-                description=description,
-                mol_type=helpers.mol_type(record),
-                is_composite=helpers.is_composite(feature),
-                pseudogene=helpers.pseudogene(feature),
-                gene_synonyms=helpers.gene_synonyms(feature),
-                references=references,
-            )
+        if len(record.features) != 2:
+            raise InvalidEnaFile("ENA EMBL files must  have 2 features/record")
+
+        accession = helpers.accession(record)
+
+        feature = record.features[1]
+        yield Entry(
+            primary_id=helpers.primary_id(feature),
+            accession=accession,
+            ncbi_tax_id=embl.taxid(record),
+            database='ENA',
+            sequence=helpers.sequence(record),
+            exons=helpers.exons(record, feature),
+            rna_type=helpers.rna_type(feature),
+            url=helpers.url(record),
+            seq_version=embl.seq_version(record),
+
+            note_data=helpers.note_data(feature),
+            xref_data=embl.xref_data(feature),
+
+            chromosome=helpers.chromosome(record),
+            species=embl.species(record),
+            common_name=embl.common_name(record),
+            lineage=embl.lineage(record),
+            gene=embl.gene(feature),
+            locus_tag=embl.locus_tag(feature),
+            product=helpers.product(feature),
+            parent_accession=helpers.parent_accession(record),
+            ordinal=helpers.ordinal(feature),
+            non_coding_id=helpers.non_coding_id(feature),
+            project=embl.project(record),
+            keywords=helpers.keywords(record),
+            division=embl.division(record),
+            organelle=helpers.organelle(feature),
+            allele=helpers.allele(record),
+            anticodon=helpers.anticodon(feature),
+            experiment=embl.experiment(feature),
+            function=helpers.function(record),
+            inference=embl.inference(feature),
+            map=helpers.map(feature),
+            old_locus_tag=helpers.old_locus_tag(feature),
+            operon=helpers.operon(feature),
+            standard_name=embl.standard_name(feature),
+            description=embl.description(record),
+            mol_type=helpers.mol_type(record),
+            is_composite=helpers.is_composite(feature),
+            pseudogene=helpers.pseudogene(feature),
+
+            gene_synonyms=helpers.gene_synonyms(feature),
+            references=embl.references(accession, record),
+        )
