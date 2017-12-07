@@ -13,6 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import attr
+
 import databases.helpers.embl as embl
 from databases.data import Reference
 
@@ -30,11 +32,7 @@ def sequence(record):
     return str(record.seq)
 
 
-def accession(_):
-    pass
-
-
-def as_reference(ref):
+def as_reference(accession, ref):
     return Reference(
         accession=accession,
         authors=ref.authors,
@@ -44,8 +42,8 @@ def as_reference(ref):
     )
 
 
-def references(record):
-    return [as_reference(ref) for ref in record.annotations['references']]
+def references(accession, record):
+    return [as_reference(accession, ref) for ref in record.annotations['references']]
 
 
 def rna_type(feature):
@@ -73,39 +71,51 @@ def note_data(feature):
     return {}
 
 
-def url(feature):
-    return ''
+def url(record):
+    """
+    Gets the standard url for this record.
+    """
+    return 'https://www.ebi.ac.uk/ena/data/view/Non-coding:%s' % accession(record)
 
 
-def exons(feature):
-    return []
+def exons(record, feature):
+    data = []
+    chrom = chromosome(record)
+    if not chrom:
+        return embl.exons(feature)
+    for exon in embl.exons(feature):
+        data.append(attr.evolve(
+            exon,
+            chromosome=chrom
+        ))
+    return data
 
 
 def accession(record):
+    """
+    Uses the record id as the accession for a feature.
+    """
     return record.id
 
 
 def is_composite(_):
+    """
+    Always returns 'N'
+    """
     return 'N'
 
 
-def function(_):
-    return None
+def function(record):
+    source = embl.source_feature(record)
+    return embl.qualifier_value(source, 'function', r'^(.+)$')
 
 
-def allele(_):
-    return None
+def allele(record):
+    source = embl.source_feature(record)
+    return embl.qualifier_value(source, 'allele', r'^(.+)$')
 
 
 def anticodon(_):
-    return None
-
-
-def experiment(_):
-    return None
-
-
-def inference(_):
     return None
 
 
@@ -116,8 +126,15 @@ def map(_):
 def old_locus_tag(_):
     return None
 
+
 def keywords(record):
-    return record.annotations['keywords'][0]
+    keys = [k for k in record.annotations['keywords'] if k]
+    # keys = [k for k in record.annotations['keywords'] if k != 'RNAcentral']
+    keys = ' '.join(keys)
+    if keys:
+        return keys
+    return None
+
 
 def parent_accession(record):
     return record.id.split('.', 1)[0]

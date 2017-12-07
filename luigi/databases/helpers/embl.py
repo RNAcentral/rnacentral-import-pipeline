@@ -16,6 +16,7 @@ limitations under the License.
 import re
 import collections as coll
 
+from databases.data import Exon, Reference
 import databases.helpers.phylogeny as phy
 
 
@@ -128,8 +129,28 @@ def description(record):
     return record.description
 
 
+def as_exon(location):
+    return Exon(
+        chromosome='',
+        primary_start=location.start + 1,
+        primary_end=int(location.end),
+        complement=location.strand == -1,
+    )
+
+
 def exons(feature):
-    return []
+    parts = [feature.location]
+    if hasattr(feature.location, 'parts'):
+        parts = feature.location.parts
+    return [as_exon(l) for l in parts]
+
+
+def experiment(feature):
+    return qualifier_value(feature, 'experiment', r'^(.+)$')
+
+
+def inference(feature):
+    return qualifier_value(feature, 'inference', r'^(.+)$')
 
 
 def seq_version(record):
@@ -171,5 +192,25 @@ def locus_tag(feature):
     return feature.qualifiers.get('locus_tag', [None])[0]
 
 
+def as_reference(accession, ref):
+    """
+    Convert a biopython reference to one of our references.
+    """
+
+    pmid = None
+    if ref.pubmed_id:
+        pmid = int(ref.pubmed_id)
+
+    return Reference(
+        accession=accession,
+        authors=ref.authors,
+        location=ref.journal,
+        title=ref.title,
+        pmid=pmid,
+        doi=None,
+    )
+
+
 def references(accession, record):
-    return []
+    refs = record.annotations.get('references', [])
+    return [as_reference(accession, ref) for ref in refs]
