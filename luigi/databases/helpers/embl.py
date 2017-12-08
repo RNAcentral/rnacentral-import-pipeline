@@ -91,7 +91,10 @@ def taxid(record):
     """
 
     source = source_feature(record)
-    value = int(qualifier_value(source, 'db_xref', r'^taxon:(\d+)$'))
+    value = qualifier_value(source, 'db_xref', r'^taxon:(\d+)$')
+    if value is None:
+        raise MissingTaxId("No taxid found for %s" % record)
+    value = int(value)
     if value < 0:
         return 32644  # Unclassified sequence
     return value
@@ -194,23 +197,34 @@ def locus_tag(feature):
 
 def as_reference(accession, ref):
     """
-    Convert a biopython reference to one of our references.
+    Convert a biopython reference to one of our references. This will do some
+    minor cleanups on the parsed reference to normalize some datatypes and
+    remove bad title descriptions.
     """
 
     pmid = None
     if ref.pubmed_id:
         pmid = int(ref.pubmed_id)
 
+    title = ref.title
+    if title == ';':
+        title = None
+
     return Reference(
         accession=accession,
         authors=ref.authors,
         location=ref.journal,
-        title=ref.title,
+        title=title,
         pmid=pmid,
         doi=None,
     )
 
 
 def references(accession, record):
+    """
+    Turn all references for a record into a our type of references. This will
+    assign all references to a single acecssion.
+    """
+
     refs = record.annotations.get('references', [])
     return [as_reference(accession, ref) for ref in refs]
