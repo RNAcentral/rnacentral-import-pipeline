@@ -600,3 +600,68 @@ def test_can_parse_all_example_entries():
     #     chromosome='III',
     #     product='antisense RNA (predicted)'
     # )),
+
+
+def test_can_handle_file_with_invalid_fields():
+    with open('data/test_invalid_fields.ncr', 'rb') as raw:
+        data = next(parse(raw))
+
+    assert data.accession == 'KM079256.1:1..1300:rRNA'
+    assert data.mol_type == 'genomic DNA'
+    assert data.species == "Candidatus Stammerula sp. of Trupanea 'pohakuloa'"
+    assert data.ncbi_tax_id == 1630665
+    assert data.product == "16S ribosomal RNA"
+
+
+def test_can_parse_out_anticodon_from_gene():
+    with open('data/ena/trna-with-anticodon.embl', 'rb') as raw:
+        data = next(parse(raw))
+
+    assert data.accession == 'HF536610.1:1288..1686:tRNA'
+    assert data.ncbi_tax_id == 188169
+    assert data.product == "transfer RNA Leu"
+    assert data.gene == "tRNA-Leu (UAA)"
+    assert data.mol_type == 'genomic DNA'
+    assert data.anticodon == 'UAA'
+    assert data.organelle == 'plastid:chloroplast'
+
+
+def test_can_parse_anticodon_from_gtrnadb_stype_gene():
+    with open('data/ena/trna-with-anticodon.embl', 'rb') as raw:
+        data = list(parse(raw))[1]
+
+    assert data.accession == 'LK008175.1:1..73:tRNA'
+    assert data.ncbi_tax_id == 411154
+    assert data.mol_type == "genomic DNA"
+    assert data.anticodon == 'GCC'
+    assert data.product == "transfer RNA-Gly (GCC)"
+    assert data.gene == "tRNA-Gly-GCC-1-1"
+    assert data.standard_name == "tRNA-Gly (GCC)"
+    assert data.inference == "ab initio prediction:tRNAscan-SE:1.21"
+    assert data.note_data == {
+        'ontology': [
+            "ECO:0000202",
+            "GO:0030533",
+            "SO:0000253",
+        ],
+        "text": [
+            "Covariance Model: Bacteria; CM Score: 87.61",
+            "Legacy ID: chr.trna3-GlyGCC"
+        ]
+    }
+
+
+# def test_can_handle_unclosed_parens():
+#     with open('data/test_feature_unclosed_parenthesis.ncr', 'rb') as raw:
+#         data = next(parse(raw))
+
+#     assert data.accession == 'HE860504.1:1..14644:tRNA'
+#     assert data.mol_type == 'genomic DNA'
+#     assert data.ncbi_tax_id == 1200666
+#     assert data.gene == 'tRNA-Ser'
+#     assert data.product == "transfer RNA Serine"
+#     assert data.species == "Metacrangonyx sp. 3 ssp. 1 MDMBR-2012"
+#     assert data.organelle == "mitochondrion"
+#     assert data.project is None
+#     assert data.description == 'Metacrangonyx sp. 3 ssp. 1 MDMBR-2012 transfer RNA Serine'
+#     assert data.anticodon == ''

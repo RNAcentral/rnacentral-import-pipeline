@@ -13,15 +13,28 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import re
 import attr
+
+from Bio.GenBank import _FeatureConsumer
 
 import databases.helpers.embl as embl
 from databases.data import Reference
 
+ONTOLOGIES = set([
+    'ECO',
+    'SO',
+    'GO',
+])
+
+
+def source_qualifier_value(record, qualifier, pattern=r'^(.+)$'):
+    source = embl.source_feature(record)
+    return embl.qualifier_value(source, qualifier, pattern)
+
 
 def chromosome(record):
-    source = embl.source_feature(record)
-    return embl.qualifier_value(source, 'chromosome', r'^(.+)$')
+    return source_qualifier_value(record, 'chromosome')
 
 
 def primary_id(_):
@@ -53,10 +66,7 @@ def rna_type(feature):
 
 
 def mol_type(record):
-    source = embl.source_feature(record)
-    if source:
-        return embl.qualifier_value(source, 'mol_type', r'^(.+)$')
-    return None
+    return source_qualifier_value(record, 'mol_type')
 
 
 def product(feature):
@@ -64,11 +74,23 @@ def product(feature):
 
 
 def note_data(feature):
-    if 'note' in feature.qualifiers:
-        return {
-            'text': feature.qualifiers['note']
-        }
-    return {}
+    data = {}
+    text = []
+    onts = set()
+    for note in feature.qualifiers.get('note', []):
+        for ontology in ONTOLOGIES:
+            if note.startswith(ontology + ':'):
+                onts.add(note)
+                break
+        else:
+            text.append(note)
+
+    print(text)
+    if text:
+        data['text'] = text
+    if onts:
+        data['ontology'] = sorted(onts)
+    return data
 
 
 def url(record):
@@ -106,17 +128,55 @@ def is_composite(_):
 
 
 def function(record):
-    source = embl.source_feature(record)
-    return embl.qualifier_value(source, 'function', r'^(.+)$')
+    return source_qualifier_value(record, 'function')
 
 
 def allele(record):
-    source = embl.source_feature(record)
-    return embl.qualifier_value(source, 'allele', r'^(.+)$')
+    return source_qualifier_value(record, 'allele')
 
 
-def anticodon(_):
-    return None
+def anticodon(record, feature):
+    value = embl.qualifier_value(feature, 'anticodon', r'^(.+)$')
+    if not value:
+        return None
+
+    match = re.search('seq:([ACGUT]{3})', value)
+    if match:
+        return match.group(1).upper()
+
+    gene = embl.gene(feature)
+    match = re.search(r'tRNA-\w+ \(([ACGU]{3})\)$', gene)
+    if match:
+        return match.group(1)
+
+    match = re.search(r'tRNA-\w{3}-([ACGUT]{3})', gene)
+    if match:
+        return match.group(1)
+
+    # match = re.search('pos:(.+),aa', value)
+    # if match and match.group(1):
+    #     location_string = match.group(1)
+    #     consumer = _FeatureConsumer(1)
+    #     consumer.feature_key('anticodon')
+    #     consumer.location(location_string)
+    #     feature = consumer._cur_feature
+
+    #     # If the feature could not get parsed.
+    #     if feature.location is None:
+    #         return value
+
+    #     from pprint import pprint
+    #     print(feature)
+    #     pprint(feature)
+    #     pprint(record)
+
+    #     # The feature may not refer to the current record, for some reason
+    #         try:
+    #         return str(feature.extract(record.seq))
+    #     except ValueError:
+    #         return value
+
+    return value
 
 
 def map(_):
@@ -142,8 +202,8 @@ def ordinal(_):
     return None
 
 
-def organelle(_):
-    return None
+def organelle(record):
+    return source_qualifier_value(record, 'organelle')
 
 
 def operon(_):
@@ -152,6 +212,7 @@ def operon(_):
 
 def pseudogene(_):
     return None
+
 
 def gene_synonyms(_):
     return []
