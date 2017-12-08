@@ -21,11 +21,31 @@ from databases.data import Entry, Exon, Reference
 from databases.ena.parsers import parse
 
 
+@pytest.mark.parametrize('filename,count', [
+    ('data/ena/wgs_aacd01_fun.ncr', 188),
+    ('data/ena/wgs_abxv02_pro.ncr', 103),
+    ('data/test_AS_lines.ncr', 1),
+    ('data/test_example_entries.ncr', 10),
+    ('data/test_feature_unclosed_parenthesis.ncr', 2),
+    ('data/test_invalid_fields.ncr', 1),
+    ('data/test_invalid_sequences.ncr', 4),
+    ('data/test_long_sequence.ncr', 1),
+    ('data/test_rdp_product.ncr', 1),
+    ('data/test_refseq_product.ncr', 3),
+    ('data/test_rfam_duplicates.ncr', 8),
+    # ('data/test_rfam_product.ncr', 2),  # Skipped because outdated taxon id
+    ('data/test_silva_product.ncr', 3),
+    ('data/test_species_patch.ncr', 1),
+])
+def test_can_parse_variety_of_files(filename, count):
+    with open(filename, 'rb') as raw:
+        assert len(list(parse(raw))) == count
+
+
 def test_creates_simple_entry():
     with open('data/ena/wgs_aacd01_fun.ncr', 'rb') as raw:
         simple_data = list(parse(raw))
 
-    assert len(simple_data) == 188
     assert attr.asdict(simple_data[0]) == attr.asdict(Entry(
         primary_id='',
         accession='AACD01000002.1:101667..101773:tRNA',
@@ -56,14 +76,130 @@ def test_creates_simple_entry():
         description='Aspergillus nidulans FGSC A4 tRNA-Pro',
         mol_type='genomic DNA',
         is_composite='N',
-        references=[Reference(
-            accession='AACD01000002.1:101667..101773:tRNA',
-            authors='',
-            location='Whitehead Institute/MIT Center for Genome Research, 320 Charles Street',
-            title='Submitted (04-APR-2003) to the INSDC',
-            pmid=None,
-            doi=None,
-        )]
+        references=[
+            Reference(
+                accession='AACD01000002.1:101667..101773:tRNA',
+                authors=(
+                    "Galagan J.E., Calvo S.E., Cuomo C., Ma L.J., Wortman J.R."
+                    ", Batzoglou S., Lee S.I., Basturkmen M., Spevak C.C., "
+                    "Clutterbuck J., Kapitonov V., Jurka J., Scazzocchio C., "
+                    "Farman M., Butler J., Purcell S., Harris S., Braus G.H., "
+                    "Draht O., Busch S., D'Enfert C., Bouchier C., Goldman "
+                    "G.H., Bell-Pedersen D., Griffiths-Jones S., Doonan J.H., "
+                    "Yu J., Vienken K., Pain A., Freitag M., Selker E.U., "
+                    "Archer D.B., Penalva M.A., Oakley B.R., Momany M., "
+                    "Tanaka T., Kumagai T., Asai K., Machida M., Nierman W.C.,"
+                    " Denning D.W., Caddick M., Hynes M., Paoletti M., "
+                    "Fischer R., Miller B., Dyer P., Sachs M.S., Osmani S.A., "
+                    "Birren B.W."
+                ),
+                location='Nature 438(7071):1105-1115(2005).',
+                title=(
+                    'Sequencing of Aspergillus nidulans and comparative '
+                    'analysis with A. fumigatus and A. oryzae'
+                ),
+                pmid=16372000,
+                doi=None,
+            ),
+            Reference(
+                accession='AACD01000002.1:101667..101773:tRNA',
+                location=(
+                    'Submitted (04-APR-2003) to the INSDC. Whitehead '
+                    'Institute/MIT Center for Genome Research, 320 Charles '
+                    "Street, Cambridge, MA 02142, USA"
+                ),
+                title=None,
+                authors=(
+                    'Birren B., Nusbaum C., Abouelleil A., Allen N., '
+                    'Anderson S., Arachchi H.M., Barna N., Bastien V., '
+                    'Bloom T., Boguslavkiy L., Boukhgalter B., Butler J., '
+                    'Calvo S.E., Camarata J., Chang J., Choepel Y., '
+                    'Collymore A., Cook A., Cooke P., Corum B., DeArellano K.,'
+                    ' Diaz J.S., Dodge S., Dooley K., Dorris L., Elkins T., '
+                    'Engels R., Erickson J., Faro S., Ferreira P., '
+                    'FitzGerald M., Gage D., Galagan J., Gardyna S., Gnerre S.'
+                    ', Graham L., Grand-Pierre N., Hafez N., Hagopian D., '
+                    'Hagos B., Hall J., Horton L., Hulme W., Iliev I., '
+                    'Jaffe D., Johnson R., Jones C., Kamal M., Kamat A., '
+                    'Karatas A., Kells C., Landers T., Levine R., '
+                    'Lindblad-Toh K., Liu G., Lui A., Ma L.-J., Mabbitt R., '
+                    'MacLean C., Macdonald P., Major J., Manning J., '
+                    'Matthews C., Mauceli E., McCarthy M., Meldrim J., '
+                    'Meneus L., Mihova T., Mlenga V., Murphy T., Naylor J., '
+                    "Nguyen C., Nicol R., Nielsen C.B., Norbu C., O'Connor T.,"
+                    " O'Donnell P., O'Neil D., Oliver J., Peterson K., "
+                    'Phunkhang P., Pierre N., Purcell S., Rachupka A., '
+                    'Ramasamy U., Raymond C., Retta R., Rise C., Rogov P., '
+                    'Roman J., Schauer S., Schupback R., Seaman S., Severy P.,'
+                    ' Smirnov S., Smith C., Spencer B., Stange-Thomann N., '
+                    'Stojanovic N., Stubbs M., Talamas J., Tesfaye S., '
+                    'Theodore J., Topham K., Travers M., Vassiliev H., '
+                    'Venkataraman V.S., Viel R., Vo A., Wang S., Wilson B., '
+                    'Wu X., Wyman D., Young G., Zainoun J., Zembek L., '
+                    'Zimmer A., Zody M., Lander E.'
+                ),
+                pmid=None,
+                doi=None,
+            ),
+            Reference(
+                accession='AACD01000002.1:101667..101773:tRNA',
+                authors=(
+                    "Birren B., Nusbaum C., Abebe A., Abouelleil A., Adekoya "
+                    "E., Ait-zahra M., Allen N., Allen T., An P., Anderson M., "
+                    "Anderson S., Arachchi H., Armbruster J., Bachantsang P., "
+                    "Baldwin J., Barry A., Bayul T., Blitshsteyn B., Bloom T., "
+                    "Blye J., Boguslavskiy L., Borowsky M., Boukhgalter B., "
+                    "Brunache A., Butler J., Calixte N., Calvo S., Camarata "
+                    "J., Campo K., Chang J., Cheshatsang Y., Citroen M., "
+                    "Collymore A., Considine T., Cook A., Cooke P., Corum B., "
+                    "Cuomo C., David R., Dawoe T., Degray S., Dodge S., Dooley "
+                    "K., Dorje P., Dorjee K., Dorris L., Duffey N., Dupes A., "
+                    "Elkins T., Engels R., Erickson J., Farina A., Faro S., "
+                    "Ferreira P., Fischer H., Fitzgerald M., Foley K., Gage "
+                    "D., Galagan J., Gearin G., Gnerre S., Gnirke A., Goyette "
+                    "A., Graham J., Grandbois E., Gyaltsen K., Hafez N., "
+                    "Hagopian D., Hagos B., Hall J., Hatcher B., Heller A., "
+                    "Higgins H., Honan T., Horn A., Houde N., Hughes L., Hulme "
+                    "W., Husby E., Iliev I., Jaffe D., Jones C., Kamal M., "
+                    "Kamat A., Kamvysselis M., Karlsson E., Kells C., Kieu A., "
+                    "Kisner P., Kodira C., Kulbokas E., Labutti K., Lama D., "
+                    "Landers T., Leger J., Levine S., Lewis D., Lewis T., "
+                    "Lindblad-toh K., Liu X., Lokyitsang T., Lokyitsang Y., "
+                    "Lucien O., Lui A., Ma L.J., Mabbitt R., Macdonald J., "
+                    "Maclean C., Major J., Manning J., Marabella R., Maru K., "
+                    "Matthews C., Mauceli E., Mccarthy M., Mcdonough S., "
+                    "Mcghee T., Meldrim J., Meneus L., Mesirov J., Mihalev A., "
+                    "Mihova T., Mikkelsen T., Mlenga V., Moru K., Mozes J., "
+                    "Mulrain L., Munson G., Naylor J., Newes C., Nguyen C., "
+                    "Nguyen N., Nguyen T., Nicol R., Nielsen C., Nizzari M., "
+                    "Norbu C., Norbu N., O'donnell P., Okoawo O., O'leary S., "
+                    "Omotosho B., O'neill K., Osman S., Parker S., Perrin D., "
+                    "Phunkhang P., Piqani B., Purcell S., Rachupka T., "
+                    "Ramasamy U., Rameau R., Ray V., Raymond C., Retta R., "
+                    "Richardson S., Rise C., Rodriguez J., Rogers J., Rogov "
+                    "P., Rutman M., Schupbach R., Seaman C., Settipalli S., "
+                    "Sharpe T., Sheridan J., Sherpa N., Shi J., Smirnov S., "
+                    "Smith C., Sougnez C., Spencer B., Stalker J., "
+                    "Stange-thomann N., Stavropoulos S., Stetson K., Stone C., "
+                    "Stone S., Stubbs M., Talamas J., Tchuinga P., Tenzing P., "
+                    "Tesfaye S., Theodore J., Thoulutsang Y., Topham K., Towey "
+                    "S., Tsamla T., Tsomo N., Vallee D., Vassiliev H., "
+                    "Venkataraman V., Vinson J., Vo A., Wade C., Wang S., "
+                    "Wangchuk T., Wangdi T., Whittaker C., Wilkinson J., Wu "
+                    "Y., Wyman D., Yadav S., Yang S., Yang X., Yeager S., Yee "
+                    "E., Young G., Zainoun J., Zembeck L., Zimmer A., Zody M., "
+                    "Lander E."
+                ),
+                location=(
+                    'Submitted (07-JAN-2004) to the INSDC. Whitehead '
+                    'Institute/MIT Center for Genome Research, '
+                    '320 Charles Street, Cambridge, MA 02142, USA'
+                ),
+                title=None,
+                pmid=None,
+                doi=None,
+            )
+        ]
     ))
 
 
@@ -71,14 +207,18 @@ def test_can_find_correct_ncRNA_type():
     with open('data/ena/wgs_abxv02_pro.ncr', 'rb') as raw:
         ncrna_data = list(parse(raw))
 
-    assert len(ncrna_data) == 103
     assert attr.asdict(ncrna_data[0]) == attr.asdict(Entry(
         primary_id='',
         accession='ABXV02000002.1:33498..33573:ncRNA',
         ncbi_tax_id=500637,
         database='ENA',
         sequence='ACTGCTTTTCTTTGATGTCCCCATATTGAGGAGCCCGATAGCCATTTGATTACTTCATGCTATCGGGTTTTTTATT',
-        exons=[],
+        exons=[Exon(
+            chromosome='',
+            complement=False,
+            primary_end=33573,
+            primary_start=33498
+        )],
         rna_type='other',
         url='https://www.ebi.ac.uk/ena/data/view/Non-coding:ABXV02000002.1:33498..33573:ncRNA',
         seq_version='1',
@@ -97,10 +237,65 @@ def test_can_find_correct_ncRNA_type():
         description='Providencia rustigianii DSM 4541 RybB RNA',
         mol_type="genomic DNA",
         is_composite='N',
-        references=[],
         inference="nucleotide motif:Rfam:RF00110",
         locus_tag="PROVRUST_04548",
         project='PRJNA28651',
+        references=[
+            Reference(
+                accession='ABXV02000002.1:33498..33573:ncRNA',
+                authors=(
+                    "Fulton L., Clifton S., Fulton B., Xu J., Minx P., Pepin "
+                    "K.H., Johnson M., Bhonagiri V., Nash W.E., Mardis E.R., "
+                    "Wilson R.K."
+                ),
+                location=(
+                    "Submitted (16-OCT-2008) to the INSDC. Genome Sequencing "
+                    "Center, Washington University School of Medicine, 4444 "
+                    "Forest Park, St. Louis, MO 63108, USA"
+                ),
+                title=None,
+                pmid=None,
+                doi=None,
+            ),
+            Reference(
+                accession='ABXV02000002.1:33498..33573:ncRNA',
+                authors=(
+                    "Weinstock G., Sodergren E., Clifton S., Fulton L., Fulton "
+                    "B., Courtney L., Fronick C., Harrison M., Strong C., "
+                    "Farmer C., Delahaunty K., Markovic C., Hall O., Minx P., "
+                    "Tomlinson C., Mitreva M., Nelson J., Hou S., Wollam A., "
+                    "Pepin K.H., Johnson M., Bhonagiri V., Nash W.E., Warren "
+                    "W., Chinwalla A., Mardis E.R., Wilson R.K."
+                ),
+                location=(
+                    "Submitted (21-SEP-2009) to the INSDC. Genome Sequencing "
+                    "Center, Washington University School of Medicine, 4444 "
+                    "Forest Park, St. Louis, MO 63108, USA"
+                ),
+                title=None,
+                pmid=None,
+                doi=None,
+            ),
+            Reference(
+                accession='ABXV02000002.1:33498..33573:ncRNA',
+                authors=(
+                    "Weinstock G., Sodergren E., Clifton S., Fulton L., Fulton "
+                    "B., Courtney L., Fronick C., Harrison M., Strong C., "
+                    "Farmer C., Delahaunty K., Markovic C., Hall O., Minx P., "
+                    "Tomlinson C., Mitreva M., Nelson J., Hou S., Wollam A., "
+                    "Pepin K.H., Johnson M., Bhonagiri V., Nash W.E., Warren "
+                    "W., Chinwalla A., Mardis E.R., Wilson R.K."
+                ),
+                location=(
+                    "Submitted (14-DEC-2009) to the INSDC. Genome Sequencing "
+                    "Center, Washington University School of Medicine, 4444 "
+                    "Forest Park, St. Louis, MO 63108, USA"
+                ),
+                title=None,
+                pmid=None,
+                doi=None,
+            ),
+        ],
     ))
 
 
@@ -145,14 +340,18 @@ def test_can_parse_all_example_entries():
     with open('data/test_example_entries.ncr', 'rb') as raw:
         examples = list(parse(raw))
 
-    assert len(examples) == 10
     assert attr.asdict(examples[0]) == attr.asdict(Entry(
         primary_id='',
         accession='AB330787.1:1..34:misc_RNA',
         ncbi_tax_id=9606,
         database='ENA',
         sequence="ATTGGGGAGTGAGAAGGAGAGAACGCGGTCTGAA",
-        exons=[],
+        exons=[Exon(
+            chromosome='',
+            complement=False,
+            primary_start=1,
+            primary_end=34,
+        )],
         rna_type='misc_RNA',
         url='https://www.ebi.ac.uk/ena/data/view/Non-coding:AB330787.1:1..34:misc_RNA',
         seq_version='1',
@@ -183,7 +382,12 @@ def test_can_parse_all_example_entries():
         database='ENA',
         ncbi_tax_id=9606,
         sequence='ATTGCAGTACCTCCAGGAACGGTGCAC',
-        exons=[],
+        exons=[Exon(
+            chromosome='',
+            complement=False,
+            primary_start=1,
+            primary_end=27,
+        )],
         rna_type='misc_RNA',
         url='https://www.ebi.ac.uk/ena/data/view/Non-coding:AB330786.1:1..27:misc_RNA',
         seq_version='1',
@@ -214,7 +418,12 @@ def test_can_parse_all_example_entries():
         database='ENA',
         ncbi_tax_id=9606,
         sequence='CGCGACCTCAGATCAGACGTGGCGACCCGCTGAA',
-        exons=[],
+        exons=[Exon(
+            chromosome='',
+            complement=False,
+            primary_start=1,
+            primary_end=34,
+        )],
         rna_type='misc_RNA',
         url='https://www.ebi.ac.uk/ena/data/view/Non-coding:AB330785.1:1..34:misc_RNA',
         seq_version='1',
@@ -237,7 +446,7 @@ def test_can_parse_all_example_entries():
         parent_accession='AB330785',
         mol_type='other RNA',
         is_composite='N',
-        keywords='RNAcentral Third Party Annotation TPA TPA:specialist_db',
+        keywords='RNAcentral; Third Party Annotation; TPA; TPA:specialist_db',
     ))
 
     assert attr.asdict(examples[3]) == attr.asdict(Entry(
@@ -246,7 +455,12 @@ def test_can_parse_all_example_entries():
         database='ENA',
         ncbi_tax_id=9606,
         sequence='ACCACTGCACTCCAGCCTGAG',
-        exons=[],
+        exons=[Exon(
+            chromosome='',
+            complement=False,
+            primary_start=1,
+            primary_end=21,
+        )],
         rna_type='miRNA',
         url='https://www.ebi.ac.uk/ena/data/view/Non-coding:HAAO01001079.1:1..21:ncRNA',
         seq_version='1',
@@ -266,11 +480,29 @@ def test_can_parse_all_example_entries():
         mol_type='transcribed RNA',
         gene="hsa-miR-1273g-3p",
         keywords=(
-            'RNAcentral TPA TPA:specialist_db Transcriptome Shotgun '
-            'Assembly TSA'
+            'RNAcentral; TPA; TPA:specialist_db; Transcriptome Shotgun '
+            'Assembly; TSA'
         ),
         is_composite='N',
         parent_accession='HAAO01001079',
+        references=[
+            Reference(
+                accession='HAAO01001079.1:1..21:ncRNA',
+                authors='',
+                location='Submitted (20-AUG-2013) to the INSDC.',
+                title=None,
+                pmid=None,
+                doi=None,
+            ),
+            Reference(
+                accession='HAAO01001079.1:1..21:ncRNA',
+                authors='Kozomara A., Griffiths-Jones S.',
+                location='Nucleic Acids Res. 39(Database issue):D152-D157(2011).',
+                title='miRBase: integrating microRNA annotation and deep-sequencing data',
+                pmid=21037258,
+                doi=None,
+            ),
+        ]
     ))
 
     assert attr.asdict(examples[4]) == attr.asdict(Entry(
@@ -279,7 +511,12 @@ def test_can_parse_all_example_entries():
         database='ENA',
         ncbi_tax_id=32644,
         sequence="GGGAGCGACTTGGCTTCGACAGGAGTAAGTCTGCTTAGATGGCATGTCGCTTTGGGCAAAGCGTAAAAAGCCCAAATAAAATTAAACGCAAACAACGTTAAATTCGCTCCTGCTTACGCTAAAGCTGCGTAAGTTCAGTTGAGCCTGAAATTTAAGTCATACTATCTAGCTTAATTTTCGGTCATTTTTGATAGTGTAGCCTTGCGTTTGACAAGCGTTGAGGTGAAATAAAGTCTTAGCCTTGCTTTTGAGTTTTGGAAGATGAGCGAAGTAGGGTGAAGTAGTCATCTTTGCTAAGCATGTAGAGGTCTTTGTGGGATTATTTTTGGACAGGGGTTCGATTCCCCTCGCTTCCACCA",
-        exons=[],
+        exons=[Exon(
+            chromosome='',
+            complement=False,
+            primary_start=1,
+            primary_end=359,
+        )],
         rna_type='tmRNA',
         url='https://www.ebi.ac.uk/ena/data/view/Non-coding:HG519048.1:1..359:tmRNA',
         seq_version='1',
@@ -289,7 +526,7 @@ def test_can_parse_all_example_entries():
         lineage='unclassified sequences; unidentified',
         species='unidentified',
         division='UNC',
-        keywords='RNAcentral TPA TPA:specialist_db',
+        keywords='RNAcentral; TPA; TPA:specialist_db',
         description='unidentified transfer-messenger mRNA Campy_jejun_700819',
         product="transfer-messenger mRNA Campy_jejun_700819",
         gene="tmRNA Campy_jejun_700819",
@@ -297,6 +534,28 @@ def test_can_parse_all_example_entries():
         mol_type='genomic DNA',
         parent_accession='HG519048',
         is_composite='N',
+        references=[
+            Reference(
+                accession='HG519048.1:1..359:tmRNA',
+                authors='',
+                location='Submitted (13-SEP-2013) to the INSDC.',
+                title=None,
+                pmid=None,
+                doi=None,
+            ),
+
+            Reference(
+                accession='HG519048.1:1..359:tmRNA',
+                authors='Gueneau de Novoa P., Williams K.P.',
+                location='Nucleic Acids Res. 32(Database issue):D104-D108(2004).',
+                title=(
+                    "The tmRNA website: reductive evolution of tmRNA in "
+                    "plastids and other endosymbionts"
+                ),
+                pmid=14681369,
+                doi=None,
+            ),
+        ]
     ))
 
     # attr.asdict(data.Entry(

@@ -126,7 +126,7 @@ class Reference(object):
     accession = attr.ib(validator=is_a(basestring))
     authors = attr.ib(validator=is_a(basestring))
     location = attr.ib(validator=is_a(basestring))
-    title = attr.ib(validator=is_a(basestring))
+    title = attr.ib(validator=optional(is_a(basestring)))
     pmid = attr.ib(validator=optional(is_a(int)))
     doi = attr.ib(validator=optional(is_a(basestring)))
 

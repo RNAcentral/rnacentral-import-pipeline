@@ -50,7 +50,7 @@ def phylogeny(taxon_id):
         However in the case of 400 errors this will fail on the first attempt.
     """
 
-    for count in xrange(10):
+    for count in xrange(5):
         response = requests.get(TAX_URL.format(taxon_id=taxon_id))
         try:
             response.raise_for_status()
