@@ -53,4 +53,4 @@ from .release import TruncateLoadTables
 from .release import LoadRelease
 from .release import Release
 
-from .export.rfam_annotations import ExportRfamAnnotations
+from .export.ftp.rfam import ExportRfamAnnotaitons
