@@ -16,9 +16,9 @@ limitations under the License.
 import re
 import attr
 
-from Bio.GenBank import _FeatureConsumer
-
 import databases.helpers.embl as embl
+from databases.helpers.phylogeny import UnknownTaxonId
+
 from databases.data import Reference
 
 ONTOLOGIES = set([
@@ -226,3 +226,31 @@ def gene_synonyms(_):
 
 def non_coding_id(_):
     return None
+
+
+def species(record):
+    try:
+        return embl.species(record)
+    except UnknownTaxonId:
+        return record.annotations.get('organism', None)
+
+
+def common_name(record):
+    try:
+        return embl.common_name(record)
+    except UnknownTaxonId:
+        organism = record.annotations.get('organism', None)
+        if organism and organism[-1] == ')':
+            match = re.search(r'\(.\+\)$', organism)
+            return match.group(1)
+        return None
+
+
+def lineage(record):
+    try:
+        return embl.lineage(record)
+    except UnknownTaxonId:
+        taxonomy = record.annotations.get('taxonomy', [])
+        if taxonomy:
+            return '; '.join(taxonomy)
+        return None
