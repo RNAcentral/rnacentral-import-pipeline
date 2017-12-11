@@ -193,7 +193,10 @@ class mgi(luigi.Config):  # pylint: disable=C0103, R0904
 
 
 class ena(luigi.Config):
-    pattern = luigi.Parameter()
+    base = luigi.Parameter()
 
     def files(self):
-        return iglob(self.pattern)
+        dirs = os.listdir(self.base)
+        return [os.path.join(self.base, d) for d in dirs]
+
+
