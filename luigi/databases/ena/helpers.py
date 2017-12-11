@@ -85,7 +85,6 @@ def note_data(feature):
         else:
             text.append(note)
 
-    print(text)
     if text:
         data['text'] = text
     if onts:
@@ -145,6 +144,9 @@ def anticodon(record, feature):
         return match.group(1).upper()
 
     gene = embl.gene(feature)
+    if not gene:
+        return value
+
     match = re.search(r'tRNA-\w+ \(([ACGU]{3})\)$', gene)
     if match:
         return match.group(1)

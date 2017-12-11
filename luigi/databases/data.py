@@ -136,9 +136,9 @@ class Reference(object):
         """
 
         return md5(''.join([
-            self.authors,
-            self.location,
-            self.title
+            self.authors or '',
+            self.location or '',
+            self.title or ''
         ]))
 
 
