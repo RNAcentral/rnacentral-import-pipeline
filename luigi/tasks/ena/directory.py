@@ -13,7 +13,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-
 import os
 import gzip
 
@@ -25,16 +24,25 @@ from tasks.config import output
 from tasks.utils.entry_writers import Output
 
 
-class SingleEnaFile(luigi.Task):
-    input_file = luigi.Parameter()
+class EnaDirectory(luigi.Task):
+    input_dir = luigi.Parameter()
 
     def output(self):
-        prefix = os.path.basename(self.input_file)
+        prefix = os.path.basename(self.input_dir)
         return Output.build(output().base, 'ena', prefix)
+
+    def files(self):
+        files = os.listdir(self.input_dir)
+        for filename in files:
+            if filename == 'fasta':
+                continue
+            filename = os.path.join(self.input_dir, filename)
+            with gzip.open(filename, 'rb') as raw:
+                yield raw
 
     def run(self):
         with self.output().writer() as writer:
-            with gzip.open(self.input_file, 'rb') as handle:
+            for handle in self.files():
                 for entry in parse(handle):
                     if entry.is_valid():
                         writer.write(entry)

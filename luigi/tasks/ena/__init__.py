@@ -13,15 +13,27 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import os
+
 import luigi
 
 from tasks.config import ena
 
 from .single_file import SingleEnaFile
+from .directory import EnaDirectory
 
 
 class Ena(luigi.WrapperTask):
 
     def requires(self):
-        for filename in ena().files():
-            yield SingleEnaFile(input_file=filename)
+        for directory in ena().files():
+            if not os.path.isdir(directory):
+                continue
+            for entry in os.listdir(directory):
+                if entry == 'fasta':
+                    continue
+                entry = os.path.join(directory, entry)
+                if os.path.isdir(entry):
+                    yield EnaDirectory(input_dir=entry)
+                elif os.path.isfile(entry):
+                    yield SingleEnaFile(input_file=entry)
