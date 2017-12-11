@@ -51,12 +51,16 @@ join rfam_models models on models.rfam_model_id = hits.rfam_model_id
 """
 
 
-class ExportRfamAnnotations(luigi.Task):
+
+class RfamAnnotations(luigi.Task):
     def output(self):
-        filename = export().ftp('rfam-matches.tsv')
+        filename = export().rfam('rfam_annotations.tsv')
         return luigi.LocalTarget(filename)
 
-    def command(self):
+    def command(self, example=False):
+        query = QUERY.replace('\n', '')
+        if example:
+            query = '%s LIMIT 10' % query
         return "COPY ({query}) to STDOUT DELIMITER '\t'".format(
             query=QUERY.replace('\n', ' '),
         )
@@ -71,14 +75,8 @@ class ExportRfamAnnotations(luigi.Task):
 
     def run(self):
         connection = get_db_connection(db(), connect_timeout=10 * 60)
-        self.populate_active_table(connection)
-        filename = self.output().fn
-        try:
-            os.makedirs(os.path.dirname(filename))
-        except:
-            pass
-
-        with atomic_file(filename) as out:
+        # self.populate_active_table(connection)
+        with atomic_file(self.output().fn) as out:
             cursor = connection.cursor()
             cursor.copy_expert(self.command(), out)
             connection.close()
