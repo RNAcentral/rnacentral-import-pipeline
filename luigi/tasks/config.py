@@ -190,3 +190,13 @@ class mgi(luigi.Config):  # pylint: disable=C0103, R0904
 
     max_entry_count = luigi.IntParameter(default=1000)
     json_filename = luigi.Parameter(default='rna')
+
+
+class export(luigi.Config):  # pylint: disable=C0103,R0904
+    rfam_example_size = luigi.IntParameter(default=10)
+
+    def ftp(self, *args):
+        return os.path.join(output().base, 'ftp', *args)
+
+    def rfam(self, *args):
+        return self.ftp('rfam', *args)
