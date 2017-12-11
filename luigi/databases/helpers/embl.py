@@ -153,7 +153,10 @@ def experiment(feature):
 
 
 def inference(feature):
-    return qualifier_value(feature, 'inference', r'^(.+)$')
+    values = qualifier_value(feature, 'inference', r'^(.+)$', max_allowed=None)
+    if values:
+        return ' '.join(values)
+    return None
 
 
 def seq_version(record):
