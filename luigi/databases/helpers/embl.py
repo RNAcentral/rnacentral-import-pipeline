@@ -67,14 +67,21 @@ def qualifier_value(feature, name, pattern, max_allowed=1):
         if match:
             values.add(match.group(1))
     if max_allowed is not None and len(values) > max_allowed:
-        raise ValueError("Multiple values (%s) for %s",
-                         ', '.join(sorted(values)), name)
+        raise ValueError("Multiple values (%s) for %s in %s" %
+                         ', '.join(sorted(values)), name, str(feature))
 
     if len(values) == 0:
         return None
     if max_allowed == 1:
         return values.pop()
     return values
+
+
+def qualifier_string(feature, name, separator=' '):
+    values = feature.qualifiers.get(name, [])
+    if not values:
+        return None
+    return separator.join(values)
 
 
 def source_feature(record):

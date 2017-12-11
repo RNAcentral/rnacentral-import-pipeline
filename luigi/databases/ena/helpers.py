@@ -70,7 +70,11 @@ def mol_type(record):
 
 
 def product(feature):
-    return embl.qualifier_value(feature, 'product', r'^(.+)$')
+    products = embl.qualifier_value(feature, 'product', r'^(.+)$',
+                                    max_allowed=None)
+    if not products:
+        return None
+    return ' '.join(products)
 
 
 def note_data(feature):
