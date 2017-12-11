@@ -46,7 +46,7 @@ def parse(handle):
         yield Entry(
             primary_id=helpers.primary_id(feature),
             accession=accession,
-            ncbi_tax_id=embl.taxid(record),
+            ncbi_tax_id=helpers.taxid(record),
             database='ENA',
             sequence=helpers.sequence(record),
             exons=helpers.exons(record, feature),
@@ -71,7 +71,7 @@ def parse(handle):
             non_coding_id=helpers.non_coding_id(feature),
             project=embl.project(record),
             keywords=helpers.keywords(record),
-            division=embl.division(record),
+            division=helpers.division(record),
             organelle=helpers.organelle(record),
             allele=helpers.allele(record),
             anticodon=helpers.anticodon(record, feature),
