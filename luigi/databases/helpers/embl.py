@@ -100,7 +100,8 @@ def taxid(record):
     source = source_feature(record)
     value = qualifier_value(source, 'db_xref', r'^taxon:(\d+)$')
     if value is None:
-        raise MissingTaxId("No taxid found for %s" % record)
+        return 32644  # Unclassified sequence
+        # raise MissingTaxId("No taxid found for %s" % record)
     value = int(value)
     if value < 0:
         return 32644  # Unclassified sequence
