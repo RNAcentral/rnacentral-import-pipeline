@@ -243,9 +243,10 @@ def common_name(record):
         return embl.common_name(record)
     except UnknownTaxonId:
         organism = record.annotations.get('organism', None)
-        if organism and organism[-1] == ')':
-            match = re.search(r'\(.\+\)$', organism)
-            return match.group(1)
+        if organism:
+            match = re.search(r'\((.+)\)$', organism)
+            if match:
+                return match.group(1)
         return None
 
 
