@@ -224,6 +224,13 @@ def non_coding_id(_):
     return None
 
 
+def taxid(record):
+    try:
+        return embl.taxid(record)
+    except UnknownTaxonId:
+        return 32644  # Unclassified sequence
+
+
 def species(record):
     try:
         return embl.species(record)
@@ -249,4 +256,11 @@ def lineage(record):
         taxonomy = record.annotations.get('taxonomy', [])
         if taxonomy:
             return '; '.join(taxonomy)
+        return None
+
+
+def division(record):
+    try:
+        return embl.division(record)
+    except UnknownTaxonId:
         return None
