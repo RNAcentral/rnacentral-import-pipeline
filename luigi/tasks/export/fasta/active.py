@@ -62,7 +62,7 @@ where
 """
 
 
-class ActiveFastaExport(FastaExportBase):  # pylint: disable=too-many-public-methods
+class ActiveFastaExport(FastaExportBase):
     """
     This task will create the fasta file of all active RNAcentral sequences. It
     does not create the species specific ids.

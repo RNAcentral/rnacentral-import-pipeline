@@ -80,7 +80,7 @@ class FastaExportBase(luigi.Task):
             out.unlink(out.name)
 
     def run(self):
-        connection = get_db_connection(db(), connect_timeout=20 * 60)
+        connection = get_db_connection(db(), connect_timeout=50 * 60)
         # populate_table_by_partition(connection, self.table, self.populate)
 
         filename = self.output().fn
