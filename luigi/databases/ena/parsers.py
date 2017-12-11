@@ -58,9 +58,11 @@ def parse(handle):
             xref_data=embl.xref_data(feature),
 
             chromosome=helpers.chromosome(record),
-            species=embl.species(record),
-            common_name=embl.common_name(record),
-            lineage=embl.lineage(record),
+
+            species=helpers.species(record),
+            common_name=helpers.common_name(record),
+            lineage=helpers.lineage(record),
+
             gene=embl.gene(feature),
             locus_tag=embl.locus_tag(feature),
             product=helpers.product(feature),
