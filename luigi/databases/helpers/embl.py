@@ -156,7 +156,7 @@ def exons(feature):
 
 
 def experiment(feature):
-    return qualifier_value(feature, 'experiment', r'^(.+)$')
+    return qualifier_string(feature, 'experiment')
 
 
 def inference(feature):
