@@ -37,9 +37,8 @@ class HumanTests(Base):
         assert self.entry_for('ENST00000516089.1').optional_id == \
             "ENSG00000251898.1"
 
-    def test_it_gets_gene_id(self):
-        assert self.entry_for('ENST00000516089.1').gene == \
-            "ENSG00000251898.1"
+    def test_it_gets_gene_id_to_locus(self):
+        assert self.entry_for('ENST00000516089.1').gene == 'SCARNA11'
 
     def test_it_gets_the_locus_tag(self):
         assert self.entry_for('ENST00000516089.1').locus_tag == 'SCARNA11'
@@ -151,7 +150,7 @@ class HumanTests(Base):
             'parent_accession': '12.GRCh38',
             'common_name': 'human',
             'species': 'Homo sapiens',
-            'gene': 'ENSG00000278469.1',
+            'gene': 'Metazoa_SRP',
             'gene_synonyms': [],
             'locus_tag': 'Metazoa_SRP',
             'optional_id': 'ENSG00000278469.1',
