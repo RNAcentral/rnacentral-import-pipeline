@@ -200,3 +200,14 @@ class export(luigi.Config):  # pylint: disable=C0103,R0904
 
     def rfam(self, *args):
         return self.ftp('rfam', *args)
+
+
+class quickgo(luigi.Config):
+    def base(self, *args):
+        return os.path.join(output().base, 'quickgo')
+
+    def raw(self, *args):
+        return os.path.join(self.base(), 'raw', *args)
+
+    def csv(self):
+        return os.path.join(self.base(), 'csv', 'annotations.csv')
