@@ -20,18 +20,17 @@ import luigi
 from .active import ActiveFastaExport
 from .active import SpeciesSpecificFastaExport
 from .inactive import InactiveFastaExport
-from .nhmmer import NHmmerIncludedExport
-from .nhmmer import NHmmerExcludedExport
 
 
 class CompressExport(luigi.Task):
+    """
+    This will compress the files the generic FASTA export files.
+    """
 
     def requires(self):
         yield ActiveFastaExport()
         yield InactiveFastaExport()
         yield SpeciesSpecificFastaExport()
-        yield NHmmerExcludedExport()
-        yield NHmmerIncludedExport()
 
     def output(self):
         for requirement in self.requires():
