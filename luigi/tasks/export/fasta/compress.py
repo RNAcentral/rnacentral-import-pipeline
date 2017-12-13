@@ -20,7 +20,7 @@ import luigi
 from .active import ActiveFastaExport
 from .active import SpeciesSpecificFastaExport
 from .inactive import InactiveFastaExport
-from .nhmmer import NHmmerDBExport
+from .nhmmer import NHmmerIncludedExport
 from .nhmmer import NHmmerExcludedExport
 
 
@@ -31,7 +31,7 @@ class CompressExport(luigi.Task):
         yield InactiveFastaExport()
         yield SpeciesSpecificFastaExport()
         yield NHmmerExcludedExport()
-        yield NHmmerDBExport()
+        yield NHmmerIncludedExport()
 
     def output(self):
         for requirement in self.requires():

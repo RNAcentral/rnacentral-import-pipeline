@@ -47,7 +47,7 @@ class NHmmerExportBase(luigi.Task):
             SeqIO.write(self.sequences(), out, "fasta")
 
 
-class NHmmerDBExport(NHmmerExportBase):
+class NHmmerIncludedExport(NHmmerExportBase):
     def output(self):
         return luigi.LocalTarget(export().ftp(
             'sequences',
