@@ -230,7 +230,7 @@ class AccessionWriter(object):
             data.common_name,
             data.organelle,
             data.lineage,
-            data.allele,
+            None,  # This was data.allele,
             data.anticodon,
             data.chromosome,
             data.experiment,
