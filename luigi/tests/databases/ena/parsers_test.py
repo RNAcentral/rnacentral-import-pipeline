@@ -651,14 +651,13 @@ def test_can_parse_anticodon_from_gtrnadb_stype_gene():
     }
 
 
-@pytest.mark.skip()
 def test_can_parse_anticodon_from_note():
     with open('data/ena/anticodon-in-note.embl', 'rb') as raw:
         data = next(parse(raw))
 
     assert data.accession == 'CP000102.1:337323..337406:tRNA'
     assert data.note_data == {'text': ['codon recognized: CUA']}
-    assert data.anticodon == 'CUA'
+    assert data.anticodon == 'UAG'
     assert data.operon == 'trnA'
     assert data.product == 'tRNA-Leu'
     assert data.gene is None
