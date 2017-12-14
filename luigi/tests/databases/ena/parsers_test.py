@@ -36,6 +36,7 @@ from databases.ena.parsers import parse
     # ('data/test_rfam_product.ncr', 2),  # Skipped because outdated taxon id
     ('data/test_silva_product.ncr', 3),
     ('data/test_species_patch.ncr', 1),
+    ('data/ena/wgs_acnt01_pro.ncr', 106),
 ])
 def test_can_parse_variety_of_files(filename, count):
     with open(filename, 'rb') as raw:
@@ -297,43 +298,6 @@ def test_can_find_correct_ncRNA_type():
             ),
         ],
     ))
-
-
-@pytest.mark.skip("Didn't fetch data yet")
-def test_can_assign_function():
-    with open('data/ena/wgs_acnt01_pro.ncr', 'rb') as raw:
-        data = list(parse(raw))
-
-    assert len(data) == 188
-    assert attr.asdict(data[0]) == attr.asdict(Entry(
-        primary_id='',
-        accession='ACNT01000002.1:8279..8533:ncRNA',
-        ncbi_tax_id=545431,
-        gene='csrC',
-        locus_tag='YPS_0015',
-        product='CsrC carbon storage regulatory RNA',
-        function=(
-            'binds CsrA protein, antagonizing CsrA regulation of central '
-            'carbon flux, biofilm formation and motility'
-        ),
-        rna_type='other',
-        project='PRJNA30511',
-        keywords='WGS',
-        mol_type="genomic DNA",
-        is_composite='N',
-        organism='Yersinia pestis Pestoides A',
-        lineage=(
-            'Bacteria; Proteobacteria; Gammaproteobacteria; Enterobacterales;',
-            ' Yersiniaceae; Yersinia'
-        )
-    ))
-
-
-# def test_can_assign_alleles(allele_data):
-#     assert attr.asdict(ncrna_data[0]) == attr.asdict(data.Entry(
-#         accession='',
-#         allele='',
-#     ))
 
 
 def test_can_parse_all_example_entries():
@@ -710,13 +674,17 @@ def test_can_parse_operons():
     assert data.operon == 'rrnD'
 
 
-@pytest.mark.skip()
 def test_can_parse_gene_synonyms():
-    with open('data/ena/gene_synonyms.embl', 'rb') as raw:
+    with open('data/ena/gene_synonym.embl', 'rb') as raw:
         data = next(parse(raw))
 
-    assert data.accession == 'CH379058.3:1121004..1121074:tRNA'
-    assert data.gene_synonyms == r'Dpse\GA29638 Dpse\GA_TRNA_ATT_14000163 GA29638 tRNA:GA29638'
+    assert data.accession == 'CP000948.1:2011661..2011909:misc_RNA'
+    assert data.gene_synonyms == ['IS091', 'sraC', 'tpke79']
+    assert data.locus_tag == 'ECDH10B_1978'
+    assert data.mol_type == 'genomic DNA'
+    assert data.gene == 'ryeA'
+    assert data.product == 'small RNA'
+    assert data.project == 'PRJNA20079'
 
 
 @pytest.mark.parametrize('pmid', [
