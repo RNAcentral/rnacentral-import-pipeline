@@ -719,24 +719,22 @@ def test_can_parse_gene_synonyms():
     assert data.gene_synonyms == r'Dpse\GA29638 Dpse\GA_TRNA_ATT_14000163 GA29638 tRNA:GA29638'
 
 
-@pytest.mark.skip()
 @pytest.mark.parametrize('pmid', [
-    12244299, 6196367, 6181418, 6802847, 3403542, 6084597, 10924331,
-    7528809, 7529207, 1704372, 20610725, 18617187, 17881443,
-    17164479, 8389475, 10834842, 10684931, 15611297, 20668672,
-    911771, 6209580])
+    12244299, 6196367, 6181418, 6802847, 3403542, 6084597, 10924331, 7528809,
+    7529207, 1704372, 20610725, 18617187, 17881443, 17164479, 8389475,
+    10834842, 10684931, 15611297, 20668672, 911771, 6209580])
 def test_can_extract_references_from_experiment(pmid):
     with open('data/ena/experiment-references.embl', 'rb') as raw:
         data = next(parse(raw))
 
     assert data.accession == 'HG975378.1:1..299:ncRNA'
     assert data.rna_type == 'SRP_RNA'
-    assert data.experiment == 'EXISTENCE: lncRNAdb literature review [PMID: 12244299,6196367,6181418,6802847,3403542,6084597,10924331,7528809,7529207,1704372,20610725,18617187,17881443,17164479,8389475,10834842,10684931,15611297,20668672,911771,6209580]'
+    assert data.experiment == 'EXISTENCE: lncRNAdb literature review [PMID: 12244299,6196367,6181418,6802847,3403542,6084597,10924331, 7528809,7529207,1704372,20610725,18617187,17881443, 17164479,8389475,10834842,10684931,15611297,20668672, 911771,6209580]'
     assert data.gene == 'RN7SL1'
     assert data.mol_type == 'transcribed RNA'
     assert data.product == 'Small nucleolar RNA 7SL'
     assert data.note_data == {
-        'ontology': ['ECO:0000305', 'SO:0000590', 'GO:0006617', 'GO:0048501'],
+        'ontology': ['ECO:0000305', 'GO:0006617', 'GO:0048501', 'SO:0000590'],
         'text': ['biotype:SRP_RNA'],
     }
     assert pmid in (ref.pmid for ref in data.references)

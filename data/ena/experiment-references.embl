@@ -1,4 +1,3 @@
-rel_std_hum_23_r133.ncr
 ID   HG975378.1:1..299:ncRNA; SV 1; linear; transcribed RNA; STD; HUM; 299 BP.
 XX
 PA   HG975378.1
@@ -35,7 +34,7 @@ DR   lncRNAdb; 140; 7SL.
 DR   MD5; 020711a90d35bb197e29e085595dd52e.
 XX
 CC   lncRNAdb; 140; 7SL.
-CC   
+CC
 CC   Specialist DB   : lncRNAdb (The long non-coding RNA database)
 CC   URL             : http://www/lncrnadb.org/
 XX
