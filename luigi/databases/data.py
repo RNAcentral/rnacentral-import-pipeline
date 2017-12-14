@@ -108,6 +108,9 @@ class SecondaryStructure(object):
         """
         return bool(self.dot_bracket)
 
+    def __len__(self):
+        return len(self.dot_bracket)
+
     @property
     def md5(self):
         """
