@@ -15,11 +15,15 @@ limitations under the License.
 
 import re
 import attr
+import logging
 
 import databases.helpers.embl as embl
 from databases.helpers.phylogeny import UnknownTaxonId
+import databases.helpers.publications as pubs
 
 from databases.data import Reference
+
+LOGGER = logging.getLogger(__name__)
 
 ONTOLOGIES = set([
     'ECO',
@@ -55,8 +59,39 @@ def as_reference(accession, ref):
     )
 
 
-def references(accession, record):
-    return [as_reference(accession, ref) for ref in record.annotations['references']]
+def extract_experiment_refs(accession, feature, known):
+    experiment = embl.experiment(feature)
+    if not experiment:
+        return []
+
+    match = re.search(r'PMID:([\d, ]+)', experiment)
+    if not match:
+        return []
+
+    found = []
+    pmids = match.group(1).split(',')
+    for pmid in pmids:
+        pmid = pmid.strip()
+        if not pmid:
+            continue
+
+        pmid = int(pmid)
+        if pmid in known:
+            continue
+        try:
+            found.append(pubs.reference(accession, pmid))
+        except Exception as err:
+            LOGGER.exception(err)
+            LOGGER.warning("Failed to lookup reference for %s", pmid)
+    return found
+
+
+def references(accession, record, feature):
+    refs = embl.references(accession, record)
+    known_pmids = {ref.pmid for ref in refs if ref.pmid}
+    experiment_refs = extract_experiment_refs(accession, feature, known_pmids)
+    refs.extend(experiment_refs)
+    return refs
 
 
 def rna_type(feature):
@@ -126,8 +161,13 @@ def is_composite(_):
     return 'N'
 
 
-def function(record):
-    return source_qualifier_value(record, 'function')
+def function(feature):
+    value = embl.qualifier_string(feature, 'function')
+    if not value:
+        return None
+    value = re.sub(r' :', ':', value)
+    value = re.sub(r'\s+', ' ', value)
+    return value
 
 
 def allele(record):
@@ -135,7 +175,7 @@ def allele(record):
 
 
 def anticodon(record, feature):
-    value = embl.qualifier_value(feature, 'anticodon', r'^(.+)$')
+    value = embl.qualifier_string(feature, 'anticodon')
     if not value:
         return None
 
@@ -155,37 +195,15 @@ def anticodon(record, feature):
     if match:
         return match.group(1)
 
-    # match = re.search('pos:(.+),aa', value)
-    # if match and match.group(1):
-    #     location_string = match.group(1)
-    #     consumer = _FeatureConsumer(1)
-    #     consumer.feature_key('anticodon')
-    #     consumer.location(location_string)
-    #     feature = consumer._cur_feature
-
-    #     # If the feature could not get parsed.
-    #     if feature.location is None:
-    #         return value
-
-    #     from pprint import pprint
-    #     print(feature)
-    #     pprint(feature)
-    #     pprint(record)
-
-    #     # The feature may not refer to the current record, for some reason
-    #         try:
-    #         return str(feature.extract(record.seq))
-    #     except ValueError:
-    #         return value
+    note = ' '.join(note_data(feature)['text'])
+    match = re.search(r'codon recognized:(\s*[ACGUT]{3}\s*)', note)
+    if match:
+        return match.group(1).strip()
 
     return value
 
 
 def map(_):
-    return None
-
-
-def old_locus_tag(_):
     return None
 
 
@@ -208,16 +226,16 @@ def organelle(record):
     return source_qualifier_value(record, 'organelle')
 
 
-def operon(_):
-    return None
+def operon(feature):
+    return embl.qualifier_string(feature, 'operon')
 
 
-def pseudogene(_):
-    return None
+def pseudogene(feature):
+    return embl.qualifier_string(feature, 'pseudogene')
 
 
-def gene_synonyms(_):
-    return []
+def gene_synonyms(feature):
+    return feature.qualifiers.get('gene_synonyms', [])
 
 
 def non_coding_id(_):
