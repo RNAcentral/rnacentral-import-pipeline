@@ -235,7 +235,7 @@ def pseudogene(feature):
 
 
 def gene_synonyms(feature):
-    return feature.qualifiers.get('gene_synonyms', [])
+    return feature.qualifiers.get('gene_synonym', [])
 
 
 def non_coding_id(_):
