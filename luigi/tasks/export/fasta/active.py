@@ -13,10 +13,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import luigi
-
-from tasks.config import export
-
 from .utils import FastaExportBase
 
 
@@ -32,64 +28,55 @@ select upi from xref_p{dbid}_not_deleted
 ON CONFLICT DO NOTHING
 """
 
-FETCH_ACTIVE = """
-select
-    pre.id,
-    pre.description,
-    case when rna.seq_short is null
-        then rna.seq_long
-        else rna.seq_short end as sequence
-from rna_active active
-join rnc_rna_precomputed pre on pre.upi = active.upi
-join rna on rna.upi = active.upi
-where
-    pre.id = rna.upi
-    and pre.upi = active.upi
-"""
-
-FETCH_ACTIVE_SPECIES = """
-select
-    pre.id,
-    pre.description,
-    case when rna.seq_short is null
-        then rna.seq_long
-        else rna.seq_short end as sequence
-from rna_active active
-join rnc_rna_precomputed pre on pre.upi = active.upi
-join rna on active.upi = rna.upi
-where
-    pre.taxid is not null
-"""
-
 
 class ActiveFastaExport(FastaExportBase):
     """
     This task will create the fasta file of all active RNAcentral sequences. It
-    does not create the species specific ids.
+    does not create the species specific ids and produces a fasta file with the
+    generic UPI's.
     """
 
-    table = CREATE_ACTIVE_TABLE
-    populate = INSERT_INTO_ACTIVE_TABLE
-    fetch = FETCH_ACTIVE
+    filename = 'rnacentral_active.fasta'
 
-    def output(self):
-        return luigi.LocalTarget(export().ftp(
-            'sequences',
-            'rnacentral_active.fasta',
-        ))
+    @property
+    def fetch(self):
+        return """
+        select
+            pre.id,
+            pre.description,
+            case when rna.seq_short is null
+                then rna.seq_long
+                else rna.seq_short end as sequence
+        from rna_active active
+        join rnc_rna_precomputed pre on pre.upi = active.upi
+        join rna on rna.upi = active.upi
+        where
+            pre.id = rna.upi
+            and pre.upi = active.upi
+        """
 
 
 class SpeciesSpecificFastaExport(FastaExportBase):
     """
-    Export all species specific sequences.
+    Export all species specific sequences. This produces the
+    rnacentral_species_specific_ids.fasta file which contains all active
+    sequences with the sequence specific UPI's.
     """
 
-    table = CREATE_ACTIVE_TABLE
-    populate = INSERT_INTO_ACTIVE_TABLE
-    fetch = FETCH_ACTIVE_SPECIES
+    filename = 'rnacentral_species_specific_ids.fasta'
 
-    def output(self):
-        return luigi.LocalTarget(export().ftp(
-            'sequences',
-            'rnacentral_species_specific_ids.fasta',
-        ))
+    @property
+    def fetch(self):
+        return """
+        select
+            pre.id,
+            pre.description,
+            case when rna.seq_short is null
+                then rna.seq_long
+                else rna.seq_short end as sequence
+        from rna_active active
+        join rnc_rna_precomputed pre on pre.upi = active.upi
+        join rna on active.upi = rna.upi
+        where
+            pre.taxid is not null
+        """

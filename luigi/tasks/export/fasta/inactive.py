@@ -13,10 +13,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import luigi
-
-from tasks.config import export
-
 from .utils import FastaExportBase
 
 
@@ -32,29 +28,29 @@ where
     active.upi = rna_inactive.upi;
 """
 
-FETCH_INACTIVE = """
-select
-    pre.id,
-    pre.description,
-    case when rna.seq_short is null
-        then rna.seq_long
-        else rna.seq_short end as sequence
-from rna_inactive inactive
-join rnc_rna_precomputed pre on pre.upi = inactive.upi
-join rna on rna.upi = inactive.upi
-where
-    pre.id = rna.upi
-    and pre.upi = inactive.upi
-"""
-
 
 class InactiveFastaExport(FastaExportBase):
-    table = CREATE_INACTIVE_TABLE
-    populate = DELETE_FROM_INACTIVE_TABLE
-    fetch = FETCH_INACTIVE
+    """
+    This produces the rnacentral_inactive.fasta file. This file contains the
+    sequences and UPI's for all sequences that are no longer active in
+    RNAcentral.
+    """
 
-    def output(self):
-        return luigi.LocalTarget(export().ftp(
-            'sequences',
-            'rnacentral_inactive.fasta',
-        ))
+    filename = 'rnacentral_inactive.fasta'
+
+    @property
+    def fetch(self):
+        return """
+            select
+                pre.id,
+                pre.description,
+                case when rna.seq_short is null
+                    then rna.seq_long
+                    else rna.seq_short end as sequence
+            from rna_inactive inactive
+            join rnc_rna_precomputed pre on pre.upi = inactive.upi
+            join rna on rna.upi = inactive.upi
+            where
+                pre.id = rna.upi
+                and pre.upi = inactive.upi
+        """

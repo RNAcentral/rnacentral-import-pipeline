@@ -29,15 +29,29 @@ NHMMER_PATTERN = re.compile('^[ABCDGHKMNRSTVWXYU]+$', re.IGNORECASE)
 
 
 class NHmmerExportBase(luigi.Task):
+    """
+    This is the base class that contains most of the logic for writing out an
+    nhmmer fasta file. It handles the requirements, output and the actual
+    writing. Subclasses need only implement the sequences method.
+    """
+
+    filename = None
+
     def requires(self):
         return ActiveFastaExport()
 
+    def output(self):
+        return luigi.LocalTarget(export().nhmmer(self.filename))
+
     def sequences(self):
+        """
+        This should create an interable of the SeqRecords to write out.
+        """
+
         return []
 
     def run(self):
         filename = self.output().fn
-        print(filename)
         try:
             os.makedirs(os.path.dirname(filename))
         except:
@@ -48,12 +62,14 @@ class NHmmerExportBase(luigi.Task):
 
 
 class NHmmerIncludedExport(NHmmerExportBase):
-    def output(self):
-        return luigi.LocalTarget(export().ftp(
-            'sequences',
-            '.internal',
-            'rnacentral_nhmmer.fasta',
-        ))
+    """
+    This creates a fasta file of all sequences which are included in the nhmmer
+    database. This works by parsing the active export files and then producing
+    a new one which only contains sequences that contain the accepted charaters
+    only.
+    """
+
+    filename = 'rnacentral_nhmmer.fasta'
 
     def sequences(self):
         filename = ActiveFastaExport().output().fn
@@ -63,12 +79,13 @@ class NHmmerIncludedExport(NHmmerExportBase):
 
 
 class NHmmerExcludedExport(NHmmerExportBase):
-    def output(self):
-        return luigi.LocalTarget(export().ftp(
-            'sequences',
-            '.internal',
-            'rnacentral_nhmmer_excluded.fasta',
-        ))
+    """
+    This creates a fasta file of all sequences which are not included in the
+    nhmmer database. This is based off all sequences in the active fasta export
+    that contain characters which are not part of the allowed characters.
+    """
+
+    filename = 'rnacentral_nhmmer_excluded.fasta'
 
     def sequences(self):
         filename = ActiveFastaExport().output().fn

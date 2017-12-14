@@ -16,6 +16,7 @@ limitations under the License.
 import os
 import tempfile
 from contextlib import contextmanager
+import subprocess as sp
 
 import luigi
 from luigi.local_target import atomic_file
@@ -24,8 +25,8 @@ from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 
-from tasks.release.utils.db import get_db_connection
 from tasks.config import db
+from tasks.config import export
 
 
 def tsv_to_records(tsv_lines):
@@ -60,36 +61,43 @@ def populate_table_by_partition(connection, table, populate):
 
 
 class FastaExportBase(luigi.Task):
-    table = None
-    populate = None
+    filename = None
     fetch = None
 
-    @contextmanager
-    def tsv_file(self, connection):
-        with tempfile.NamedTemporaryFile(delete=False) as out:
-            query = self.fetch.replace('\n', ' ')
-            command = "COPY ({query}) TO STDOUT".format(query=query)
-            cursor = connection.cursor()
-            cursor.copy_expert(command, out)
-            cursor.close()
+    def output(self):
+        return luigi.LocalTarget(export().sequences(self.filename))
 
-        try:
+    @contextmanager
+    def tsv_file(self):
+        """
+        This will dump the results of a the query to a TSV file and then create
+        a context manage with a file handle of that file. The file is temporary
+        and is deleted once the handler exits.
+        """
+
+        config = db()
+        with tempfile.NamedTemporaryFile(delete=False) as out:
+            print(out.name)
+            query = self.fetch.replace('\n', ' ')
+            command = 'COPY ({query}) TO STDOUT'.format(query=query)
+            process = sp.Popen(
+                ['psql', '-c', command, config.pgloader_url()],
+                env={'PGPASSWORD': config.password},
+                stdout=out,
+            )
+
+            if process.wait() != 0:
+                raise ValueError('Failed to run psql')
+
             with open(out.name, 'rb') as readable:
                 yield readable
-        finally:
-            out.unlink(out.name)
 
     def run(self):
-        connection = get_db_connection(db(), connect_timeout=50 * 60)
-        # populate_table_by_partition(connection, self.table, self.populate)
-
         filename = self.output().fn
         try:
             os.makedirs(os.path.dirname(filename))
         except:
             pass
 
-        with self.tsv_file(connection) as tsv_file:
-            with atomic_file(filename) as out:
-                SeqIO.write(tsv_to_records(tsv_file), out, "fasta")
-        connection.close()
+        with self.tsv_file() as tsv_file, atomic_file(filename) as out:
+            SeqIO.write(tsv_to_records(tsv_file), out, "fasta")
