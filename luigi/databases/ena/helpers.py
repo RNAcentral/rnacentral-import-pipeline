@@ -17,6 +17,8 @@ import re
 import attr
 import logging
 
+from Bio.Seq import Seq
+
 import databases.helpers.embl as embl
 from databases.helpers.phylogeny import UnknownTaxonId
 import databases.helpers.publications as pubs
@@ -175,32 +177,30 @@ def allele(record):
 
 
 def anticodon(record, feature):
-    value = embl.qualifier_string(feature, 'anticodon')
-    if not value:
-        return None
-
-    match = re.search('seq:([ACGUT]{3})', value)
-    if match:
-        return match.group(1).upper()
+    raw_anti = embl.qualifier_string(feature, 'anticodon')
+    if raw_anti:
+        match = re.search('seq:([ACGUT]{3})', raw_anti)
+        if match:
+            return match.group(1).upper()
 
     gene = embl.gene(feature)
-    if not gene:
-        return value
+    if gene:
+        match = re.search(r'tRNA-\w+ \(([ACGU]{3})\)$', gene)
+        if match:
+            return match.group(1)
 
-    match = re.search(r'tRNA-\w+ \(([ACGU]{3})\)$', gene)
-    if match:
-        return match.group(1)
+        match = re.search(r'tRNA-\w{3}[-_]([ACGUT]{3})', gene)
+        if match:
+            return match.group(1)
 
-    match = re.search(r'tRNA-\w{3}[-_]([ACGUT]{3})', gene)
-    if match:
-        return match.group(1)
+    note = ' '.join(note_data(feature).get('text', []))
+    if note:
+        match = re.search(r'codon recognized:(\s*[ACGUT]{3}\s*)', note)
+        if match:
+            raw = match.group(1).strip()
+            return str(Seq(raw).reverse_complement())
 
-    note = ' '.join(note_data(feature)['text'])
-    match = re.search(r'codon recognized:(\s*[ACGUT]{3}\s*)', note)
-    if match:
-        return match.group(1).strip()
-
-    return value
+    return raw_anti
 
 
 def map(_):
