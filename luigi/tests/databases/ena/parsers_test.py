@@ -690,13 +690,17 @@ def test_can_parse_function():
     # assert data[2].function == '16.2: Construct biomass (Anabolism)'
 
 
-@pytest.mark.skip()
 def test_can_parse_old_locus_tag():
     with open('data/ena/old_locus_tag.embl', 'rb') as raw:
         data = next(parse(raw))
 
-    assert data.accession == 'JPSL02000039.1:111541..111627:tRNA'
-    assert data.old_locus_tag == 'THFILI_06300'
+    assert data.accession == 'AL591985.1:1315182..1315258:tRNA'
+    assert data.parent_accession == 'AL591985'
+    assert data.project == 'PRJNA19'
+    assert data.old_locus_tag == 'SMb21712'
+    assert data.locus_tag == "SM_b21712"
+    assert data.gene == "tRNA-ARG_CCG"
+    assert data.anticodon == "CCG"
 
 
 def test_can_parse_operons():
