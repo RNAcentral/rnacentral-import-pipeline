@@ -157,7 +157,7 @@ class EnsemblParser(Parser):
             parent_accession=record.id,
             common_name=common_name,
             species=species,
-            gene=gene,
+            gene=summary.locus_tag(gene),
             locus_tag=summary.locus_tag(gene),
             optional_id=gene,
             note_data=helpers.note_data(feature),
