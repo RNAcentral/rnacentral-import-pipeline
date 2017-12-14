@@ -30,7 +30,7 @@ annotations for those sequences.
     A tab separated file of all active RNAcentral sequences and their
     associated Rfam annotations. The file has the format:
 
-    UPI Rfam-Model-Id Score E-value Sequence-Start Sequence-Stop Model-Start Model-Stop Rfam-Model-Description
+    URS-Id Rfam-Model-Id Score E-value Sequence-Start Sequence-Stop Model-Start Model-Stop Rfam-Model-Description
 
     The start and stop positions are 0 indexed.
 
