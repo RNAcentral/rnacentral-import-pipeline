@@ -239,7 +239,7 @@ class AccessionWriter(object):
             data.gene_synonym,
             data.inference,
             data.locus_tag,
-            data.map,
+            None,  # This was data.map,
             data.mol_type,
             data.ncrna_class,
             data.note,
