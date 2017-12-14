@@ -651,17 +651,124 @@ def test_can_parse_anticodon_from_gtrnadb_stype_gene():
     }
 
 
-# def test_can_handle_unclosed_parens():
-#     with open('data/test_feature_unclosed_parenthesis.ncr', 'rb') as raw:
-#         data = next(parse(raw))
+@pytest.mark.skip()
+def test_can_parse_anticodon_from_note():
+    with open('data/ena/anticodon-in-note.embl', 'rb') as raw:
+        data = next(parse(raw))
 
-#     assert data.accession == 'HE860504.1:1..14644:tRNA'
-#     assert data.mol_type == 'genomic DNA'
-#     assert data.ncbi_tax_id == 1200666
-#     assert data.gene == 'tRNA-Ser'
-#     assert data.product == "transfer RNA Serine"
-#     assert data.species == "Metacrangonyx sp. 3 ssp. 1 MDMBR-2012"
-#     assert data.organelle == "mitochondrion"
-#     assert data.project is None
-#     assert data.description == 'Metacrangonyx sp. 3 ssp. 1 MDMBR-2012 transfer RNA Serine'
-#     assert data.anticodon == ''
+    assert data.accession == 'CP000102.1:337323..337406:tRNA'
+    assert data.note_data == {'text': ['codon recognized: CUA']}
+    assert data.anticodon == 'CUA'
+    assert data.operon == 'trnA'
+    assert data.product == 'tRNA-Leu'
+    assert data.gene is None
+    assert data.locus_tag == 'Msp_0274'
+
+
+def test_can_parse_pseudogene():
+    with open('data/ena/pseudogene.embl', 'rb') as raw:
+        data = next(parse(raw))
+    assert data.accession == 'NIDN01000248.1:29758..29889:tRNA'
+    assert data.pseudogene == 'unprocessed'
+
+
+def test_can_parse_function():
+    with open('data/ena/function.embl', 'rb') as raw:
+        data = list(parse(raw))
+
+    assert data[0].accession == 'EU410654.1:1..92:ncRNA'
+    assert data[0].function == 'guide for 26S rRNA methylation at U1043'
+    assert data[0].references[0].pmid == 18493037
+    # TODO: Improve biopython so it can parse DOI's from references
+    # assert data[0].references[0].doi == '10.1534/genetics.107.086025'
+
+    assert data[1].accession == 'AB046489.1:221..306:tRNA'
+    assert data[1].function == 'tRNA-Pro'
+    assert data[1].organelle == 'mitochondrion'
+
+    # assert data[2].accession == 'CU928158.2:1940250..1940337:tRNA'
+    # assert data[2].function == '16.2: Construct biomass (Anabolism)'
+
+
+@pytest.mark.skip()
+def test_can_parse_old_locus_tag():
+    with open('data/ena/old_locus_tag.embl', 'rb') as raw:
+        data = next(parse(raw))
+
+    assert data.accession == 'JPSL02000039.1:111541..111627:tRNA'
+    assert data.old_locus_tag == 'THFILI_06300'
+
+
+def test_can_parse_operons():
+    with open('data/ena/operons.embl', 'rb') as raw:
+        data = next(parse(raw))
+
+    assert data.accession == 'CP000102.1:1163547..1163662:rRNA'
+    assert data.operon == 'rrnD'
+
+
+@pytest.mark.skip()
+def test_can_parse_gene_synonyms():
+    with open('data/ena/gene_synonyms.embl', 'rb') as raw:
+        data = next(parse(raw))
+
+    assert data.accession == 'CH379058.3:1121004..1121074:tRNA'
+    assert data.gene_synonyms == r'Dpse\GA29638 Dpse\GA_TRNA_ATT_14000163 GA29638 tRNA:GA29638'
+
+
+@pytest.mark.skip()
+@pytest.mark.parametrize('pmid', [
+    12244299, 6196367, 6181418, 6802847, 3403542, 6084597, 10924331,
+    7528809, 7529207, 1704372, 20610725, 18617187, 17881443,
+    17164479, 8389475, 10834842, 10684931, 15611297, 20668672,
+    911771, 6209580])
+def test_can_extract_references_from_experiment(pmid):
+    with open('data/ena/experiment-references.embl', 'rb') as raw:
+        data = next(parse(raw))
+
+    assert data.accession == 'HG975378.1:1..299:ncRNA'
+    assert data.rna_type == 'SRP_RNA'
+    assert data.experiment == 'EXISTENCE: lncRNAdb literature review [PMID: 12244299,6196367,6181418,6802847,3403542,6084597,10924331,7528809,7529207,1704372,20610725,18617187,17881443,17164479,8389475,10834842,10684931,15611297,20668672,911771,6209580]'
+    assert data.gene == 'RN7SL1'
+    assert data.mol_type == 'transcribed RNA'
+    assert data.product == 'Small nucleolar RNA 7SL'
+    assert data.note_data == {
+        'ontology': ['ECO:0000305', 'SO:0000590', 'GO:0006617', 'GO:0048501'],
+        'text': ['biotype:SRP_RNA'],
+    }
+    assert pmid in (ref.pmid for ref in data.references)
+
+
+@pytest.mark.parametrize('pmid', [
+    1379177, 8288542, 9098041, 9826762, 12165569, 12547201, 1317842, 15831787
+])
+def test_can_extract_references_from_note_or_experiment(pmid):
+    with open('data/ena/note-references.embl', 'rb') as raw:
+        data = next(parse(raw))
+
+    assert data.accession == 'AL009126.3:3856226..3856447:misc_RNA'
+    assert data.note_data == {
+        'text': ['Evidence 1a: Function experimentally demonstrated in the studied strain; PubMedId: 1379177, 8288542, 9098041, 9826762, 12165569, 12547201, 1317842, 15831787; Product type n: RNA']
+    }
+    assert data.product == 'T-box'
+    assert data.locus_tag == 'BSU_misc_RNA_57'
+    assert data.experiment == 'publication(s) with functional evidences, PMID:1379177, 8288542, 9098041, 9826762, 12165569, 12547201, 1317842, 15831787'
+    assert data.function == '16.3: Control'
+    assert data.gene == 'tboTB'
+    assert pmid in [ref.pmid for ref in data.references]
+
+
+def test_can_handle_unclosed_parens():
+    with open('data/test_feature_unclosed_parenthesis.ncr', 'rb') as raw:
+        data = next(parse(raw))
+
+    assert data.accession == 'HE860504.1:1..14644:tRNA'
+    assert data.mol_type == 'genomic DNA'
+    assert data.ncbi_tax_id == 1200666
+    assert data.gene == 'tRNA-Ser'
+    assert data.product == "transfer RNA Serine"
+    assert data.species == "Metacrangonyx sp. 3 ssp. 1 MDMBR-2012"
+    assert data.organelle == "mitochondrion"
+    assert data.project is None
+    assert data.description == 'Metacrangonyx sp. 3 ssp. 1 MDMBR-2012 transfer RNA Serine'
+    assert data.anticodon == '(pos:HE860504.1: complement(14629..14631),aa:Ser)'

@@ -206,6 +206,13 @@ def locus_tag(feature):
     return feature.qualifiers.get('locus_tag', [None])[0]
 
 
+def old_locus_tag(feature):
+    """
+    Get the old_locus_tag of this feature.
+    """
+    return feature.qualifiers.get('old_locus_tag', [None])[0]
+
+
 def as_reference(accession, ref):
     """
     Convert a biopython reference to one of our references. This will do some

@@ -75,9 +75,9 @@ def parse(handle):
             organelle=helpers.organelle(record),
             anticodon=helpers.anticodon(record, feature),
             experiment=embl.experiment(feature),
-            function=helpers.function(record),
+            function=helpers.function(feature),
             inference=embl.inference(feature),
-            old_locus_tag=helpers.old_locus_tag(feature),
+            old_locus_tag=embl.old_locus_tag(feature),
             operon=helpers.operon(feature),
             standard_name=embl.standard_name(feature),
             description=embl.description(record),
@@ -86,5 +86,5 @@ def parse(handle):
             pseudogene=helpers.pseudogene(feature),
 
             gene_synonyms=helpers.gene_synonyms(feature),
-            references=embl.references(accession, record),
+            references=helpers.references(accession, record, feature),
         )
