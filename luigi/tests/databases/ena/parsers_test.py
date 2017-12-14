@@ -649,8 +649,12 @@ def test_can_parse_function():
     assert data[1].function == 'tRNA-Pro'
     assert data[1].organelle == 'mitochondrion'
 
-    # assert data[2].accession == 'CU928158.2:1940250..1940337:tRNA'
-    # assert data[2].function == '16.2: Construct biomass (Anabolism)'
+    assert data[2].accession == 'CP003783.1:1548698..1548818:ncRNA'
+    assert data[2].function == '1.8: Sporulation'
+    assert data[2].gene == "csfG"
+    assert data[2].product == "sporulation-specific regulatory RNA"
+    assert data[2].locus_tag == "B657_miscRNA23"
+    assert data[2].rna_type == 'other'
 
 
 def test_can_parse_old_locus_tag():
