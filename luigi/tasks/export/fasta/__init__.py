@@ -21,6 +21,7 @@ from .inactive import InactiveFastaExport
 from .nhmmer import NHmmerIncludedExport
 from .nhmmer import NHmmerExcludedExport
 from .compress import CompressExport
+from .readme import FastaReadme
 
 
 class FastaExport(luigi.WrapperTask):
@@ -29,6 +30,7 @@ class FastaExport(luigi.WrapperTask):
     """
 
     def requires(self):
+        yield FastaReadme()
         yield CompressExport()
         yield ActiveFastaExport()
         yield InactiveFastaExport()
