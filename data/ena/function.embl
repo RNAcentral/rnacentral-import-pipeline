@@ -1,4 +1,3 @@
-rel_std_pln_06_r133.ncr
 ID   EU410654.1:1..92:ncRNA; SV 1; linear; genomic DNA; STD; PLN; 92 BP.
 XX
 PA   EU410654.1
@@ -53,7 +52,6 @@ SQ   Sequence 92 BP; 22 A; 28 C; 22 G; 20 T; 0 other;
      gcggcgatga ctgccctcga gtgcctaact cgtcttacct attttcagag tcccctcaag        60
      gggcgcgctg ctgaaacaaa tacacaatga gc                                      92
 //
-rel_std_vrt_01_r133.ncr
 ID   AB046489.1:221..306:tRNA; SV 1; linear; genomic DNA; STD; VRT; 86 BP.
 XX
 PA   AB046489.1
@@ -102,4 +100,60 @@ XX
 SQ   Sequence 86 BP; 16 A; 16 C; 25 G; 29 T; 0 other;
      aagttagaga gcgatttaat ttatgacccc ggccttgggg ccttggggtc ttggggatgg        60
      gagtttaatt tcccccctta attttg                                             86
+//
+ID   CP003783.1:1548698..1548818:ncRNA; SV 1; linear; genomic DNA; STD; PRO; 121 BP.
+XX
+PA   CP003783.1
+XX
+PR   Project:PRJNA172244;
+XX
+DT   29-AUG-2012 (Rel. 113, Created)
+DT   15-MAY-2014 (Rel. 120, Last updated, Version 6)
+XX
+DE   Bacillus subtilis QB928 sporulation-specific regulatory RNA
+XX
+KW   .
+XX
+OS   Bacillus subtilis QB928
+OC   Bacteria; Firmicutes; Bacilli; Bacillales; Bacillaceae; Bacillus.
+XX
+RN   [1]
+RX   PUBMED; 23105055.
+RA   Yu C.S., Yim K.Y., Tsui S.K., Chan T.F.;
+RT   "Complete Genome Sequence of Bacillus subtilis Strain QB928, a Strain
+RT   Widely Used in B. subtilis Genetic Studies";
+RL   J. Bacteriol. 194(22):6308-6309(2012).
+XX
+RN   [2]
+RA   Yu C.-S., Yim K.-Y., Mat W.-K., Tsui S.K., Wong J.T., Chan T.-F.;
+RT   ;
+RL   Submitted (19-AUG-2012) to the INSDC.
+RL   School of Life Sciences, The Chinese University of Hong Kong, G12, Run Run
+RL   Shaw Science Building, The Chinese University of Hong Kong, Shatin, N.T.,
+RL   Hong Kong, China
+XX
+DR   MD5; 4d454fc72801b39b5f4d10cbc60aca39.
+DR   BioSample; SAMN02603911.
+XX
+CC   Bacillus subtilis str. QB928 is available from Bacillus Genetic
+CC   Stock Center (BGSC).
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..121
+FT                   /organism="Bacillus subtilis QB928"
+FT                   /strain="QB928"
+FT                   /mol_type="genomic DNA"
+FT                   /db_xref="taxon:1220533"
+FT   ncRNA           CP003783.1:1548698..1548818
+FT                   /gene="csfG"
+FT                   /locus_tag="B657_miscRNA23"
+FT                   /product="sporulation-specific regulatory RNA"
+FT                   /function="1.8 : Sporulation"
+FT                   /ncRNA_class="other"
+XX
+SQ   Sequence 121 BP; 39 A; 23 C; 35 G; 24 T; 0 other;
+     ataaaaaaat ccccgcaggc atctgcgggg tccttctatt ccttaatatg ttaaggagaa        60
+     ggcaaaggga gaggagaaac cggaggaaga acttatgggg aaacgtaagt cttctccgcg       120
+     g                                                                       121
 //
