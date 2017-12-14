@@ -38,7 +38,7 @@ def parse(handle):
     for record in SeqIO.parse(handle, 'embl'):
 
         if len(record.features) != 2:
-            raise InvalidEnaFile("ENA EMBL files must  have 2 features/record")
+            raise InvalidEnaFile("ENA EMBL files must have 2 features/record")
 
         accession = helpers.accession(record)
 
@@ -73,12 +73,10 @@ def parse(handle):
             keywords=helpers.keywords(record),
             division=helpers.division(record),
             organelle=helpers.organelle(record),
-            allele=helpers.allele(record),
             anticodon=helpers.anticodon(record, feature),
             experiment=embl.experiment(feature),
             function=helpers.function(record),
             inference=embl.inference(feature),
-            map=helpers.map(feature),
             old_locus_tag=helpers.old_locus_tag(feature),
             operon=helpers.operon(feature),
             standard_name=embl.standard_name(feature),
