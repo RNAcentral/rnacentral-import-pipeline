@@ -191,7 +191,7 @@ def anticodon(record, feature):
     if match:
         return match.group(1)
 
-    match = re.search(r'tRNA-\w{3}-([ACGUT]{3})', gene)
+    match = re.search(r'tRNA-\w{3}[-_]([ACGUT]{3})', gene)
     if match:
         return match.group(1)
 
