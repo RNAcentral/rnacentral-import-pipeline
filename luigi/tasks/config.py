@@ -200,3 +200,9 @@ class export(luigi.Config):  # pylint: disable=C0103,R0904
 
     def rfam(self, *args):
         return self.ftp('rfam', *args)
+
+    def id_mapping(self, *args):
+        return self.ftp('id_mapping', *args)
+
+    def database_mappings(self, *args):
+        return self.id_mapping('database_mappings', *args)
