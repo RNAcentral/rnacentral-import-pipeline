@@ -44,6 +44,7 @@ def test_can_parse_variety_of_files(filename, count):
         assert len(data) == count
         for entry in data:
             assert 'TPA:' not in entry.description
+            assert entry.description
 
 
 def test_creates_simple_entry():
