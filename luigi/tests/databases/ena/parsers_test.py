@@ -40,7 +40,10 @@ from databases.ena.parsers import parse
 ])
 def test_can_parse_variety_of_files(filename, count):
     with open(filename, 'rb') as raw:
-        assert len(list(parse(raw))) == count
+        data = list(parse(raw))
+        assert len(data) == count
+        for entry in data:
+            assert 'TPA:' not in entry.description
 
 
 def test_creates_simple_entry():
