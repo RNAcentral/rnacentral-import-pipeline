@@ -23,6 +23,7 @@ from databases.helpers.embl import standard_name
 from databases.helpers.embl import gene
 from databases.helpers.embl import xref_data
 from databases.helpers.embl import grouped_annotations
+from databases.helpers.embl import locus_tag
 
 
 CODING_RNA_TYPES = set([
