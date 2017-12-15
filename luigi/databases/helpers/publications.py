@@ -13,8 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import re
 from time import sleep
-import collections as coll
 
 import requests
 
@@ -64,7 +64,7 @@ def summary(pmid):
 
 def reference(accession, pmid):
     data = summary(pmid)
-    location = '{title} {volume} ({issue}):{pages} ({year})'.format(
+    location = '{title} {volume}({issue}):{pages} ({year})'.format(
         title=data['journalTitle'],
         issue=data['issue'],
         volume=data['journalVolume'],
@@ -72,11 +72,12 @@ def reference(accession, pmid):
         year=data['pubYear'],
     )
 
+    title = re.sub(r'\.$', '', data['title'])
     return Reference(
         accession=accession,
         authors=data['authorString'],
         location=location,
-        title=data['title'],
+        title=title,
         pmid=int(pmid),
         doi=data.get('doi', None),
     )
