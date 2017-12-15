@@ -15,39 +15,52 @@ limitations under the License.
 
 import csv
 import collections as coll
+import operator as op
 
 import attr
 from attr.validators import instance_of as is_a
+from attr.validators import optional
+
+tpa_key = op.itemgetter('parent_accession', 'locus_tag')
 
 
-@attr.s(frozen=True)
+@attr.s(frozen=True, slots=True)
 class GenericTpa(object):
     database = attr.ib(validator=is_a(basestring))
     database_accession = attr.ib(validator=is_a(basestring))
-    locus_tag = attr.ib(validator=is_a(basestring))
+    locus_tag = attr.ib(validator=optional(is_a(basestring)))
     parent_accession = attr.ib(validator=is_a(basestring))
-    feature_type = attr.ib(validator=is_a(basestring))
 
     @classmethod
     def from_tsv(cls, row):
+        secondary = row['Source secondary accession']
+        if not secondary:
+            secondary = None
+
+        database = row['Source'].upper()
+        if database == 'SNOPYDB':
+            database = 'SNOPY'
+        if database == 'TMRNA-WEBSITE':
+            database = 'TMRNA_WEB'
+
         return cls(
-            row['Source'].upper(),
+            database,
             row['Source primary accession'],
-            row['Source secondary accession'],
-            row['Target secondary accession'],
-            row['Target'],
+            secondary,
+            row['Target primary accession'],
         )
 
     def accession(self, entry):
         return '{accession}:{database}:{db_accession}'.format(
-            entry.accession,
-            self.database,
-            self.database_accession
+            accession=entry.accession,
+            database=self.database,
+            db_accession=self.database_accession
         )
 
     def transform(self, entry):
         return attr.assoc(
             entry,
+            primary_id=self.database_accession,
             accession=self.accession(entry),
             database=self.database,
             is_composite='Y',
@@ -65,18 +78,18 @@ class UrlBuilder(object):
     def mirbase(self, entry):
         return 'http://www.mirbase.org/cgi-bin/mirna_entry.pl?acc=%s' % entry.primary_id
 
-    def tmrna_website(self, entry):
+    def tmrna_web(self, entry):
         return 'http://bioinformatics.sandia.gov/tmrna/seqs/%s.html' % entry.primary_id
 
     def lncrnadb(self, entry):
         return 'http://www.lncrnadb.org/Detail.aspx?TKeyID=%s' % entry.primary_id
 
-    def snopydb(self, entry):
+    def snopy(self, entry):
         return 'http://snoopy.med.miyazaki-u.ac.jp/snorna_db.cgi?mode=sno_info&id=%s' % entry.primary_id
 
     def transform(self, entry):
-        url_builder = getattr(self, entry.database.lower())
-        return attr.assoc(entry, url=url_builder())
+        builder = getattr(self, entry.database.lower())
+        return attr.assoc(entry, url=builder(entry))
 
 
 @attr.s()
@@ -88,23 +101,22 @@ class TpaMappings(object):
 
     def add_tpas(self, tpas):
         for tpa in tpas:
-            self.simple_mapping[tpas.parent_accession].add(tpa)
+            self.simple_mapping[tpa_key(tpa)].add(tpa)
 
     def has_tpa_for(self, entry):
         return any(self.find_tpas(entry))
 
     def find_tpas(self, entry):
-        for tpa in self.simple_mapping.get(entry.parent_accession, []):
+        for tpa in self.simple_mapping.get(tpa_key(entry), []):
             yield tpa
 
 
-def parse_tpa_file(filename, klass):
-    with open(filename, 'rb') as raw:
-        reader = csv.DictReader(raw, delimiter='\t')
-        for row in reader:
-            if row['Target'] != 'sequence':
-                continue
-            yield klass.from_tsv(row)
+def parse_tpa_file(handle, klass=GenericTpa):
+    reader = csv.DictReader(handle, delimiter='\t')
+    for row in reader:
+        if row['Target'] != 'sequence':
+            continue
+        yield klass.from_tsv(row)
 
 
 def load(description):
@@ -121,8 +133,7 @@ def apply(mapping, entries):
         if mapping.has_tpa_for(entry):
             for tpa in mapping.find_tpas(entry):
                 updated = tpa.transform(entry)
-                updated = urls.transform(updated)
-                yield updated
+                yield urls.transform(updated)
         else:
             yield entry
 
