@@ -283,3 +283,8 @@ def division(record):
         return embl.division(record)
     except UnknownTaxonId:
         return None
+
+
+def description(record):
+    raw = embl.description(record)
+    return re.sub(r'^TPA:\s*', '', raw)

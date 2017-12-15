@@ -80,7 +80,7 @@ def parse(handle):
             old_locus_tag=embl.old_locus_tag(feature),
             operon=helpers.operon(feature),
             standard_name=embl.standard_name(feature),
-            description=embl.description(record),
+            description=helpers.description(record),
             mol_type=helpers.mol_type(record),
             is_composite=helpers.is_composite(feature),
             pseudogene=helpers.pseudogene(feature),
