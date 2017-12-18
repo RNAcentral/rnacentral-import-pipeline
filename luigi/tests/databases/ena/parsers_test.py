@@ -40,11 +40,14 @@ from databases.ena.parsers import parse
 ])
 def test_can_parse_variety_of_files(filename, count):
     with open(filename, 'rb') as raw:
+        print(filename)
         data = list(parse(raw))
         assert len(data) == count
         for entry in data:
             assert 'TPA:' not in entry.description
             assert entry.description
+            for reference in entry.references:
+                assert reference.title != ';'
 
 
 def test_creates_simple_entry():
@@ -749,3 +752,13 @@ def test_can_handle_unclosed_parens():
     assert data.project is None
     assert data.description == 'Metacrangonyx sp. 3 ssp. 1 MDMBR-2012 transfer RNA Serine'
     assert data.anticodon == '(pos:HE860504.1: complement(14629..14631),aa:Ser)'
+
+
+def test_can_extract_xrefs():
+    with open('data/test_example_entries.ncr', 'rb') as raw:
+        data = list(parse(raw))
+
+    assert data[5].accession == 'HG975377.1:1..332:ncRNA'
+    assert data[5].xref_data == {'lncrnadb': set(['190', '7SK'])}
+    assert data[7].accession == 'LM608264.1:7..26:ncRNA'
+    assert data[7].xref_data == {'mirbase': set(['MI0000182'])}
