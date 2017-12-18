@@ -15,13 +15,21 @@ limitations under the License.
 
 import csv
 import collections as coll
-import operator as op
 
 import attr
 from attr.validators import instance_of as is_a
 from attr.validators import optional
 
-tpa_key = op.itemgetter('parent_accession', 'locus_tag')
+
+CHROMOSOME_LEVEL_MAPPINGS = set([
+    "WORMBASE",
+])
+
+
+def tpa_key(value):
+    if value.database in CHROMOSOME_LEVEL_MAPPINGS:
+        return (value.parent_accession, value.locus_tag)
+    return (value.parent_accession, None)
 
 
 @attr.s(frozen=True, slots=True)
@@ -95,8 +103,7 @@ class UrlBuilder(object):
 @attr.s()
 class TpaMappings(object):
     simple_mapping = attr.ib(
-        validator=is_a(dict),
-        default=lambda: coll.defaultdict(set)
+        default=attr.Factory(lambda: coll.defaultdict(set))
     )
 
     def add_tpas(self, tpas):
@@ -119,11 +126,11 @@ def parse_tpa_file(handle, klass=GenericTpa):
         yield klass.from_tsv(row)
 
 
-def load(description):
+def load(filenames):
     mapping = TpaMappings()
-    for _, filename in description:
+    for filename in filenames:
         with open(filename, 'rb') as raw:
-            mapping.add_tpas(parse_tpa_file(raw, GenericTpa))
+            mapping.add_tpas(parse_tpa_file(raw))
     return mapping
 
 
@@ -136,30 +143,3 @@ def apply(mapping, entries):
                 yield urls.transform(updated)
         else:
             yield entry
-
-
-# @attr.s()
-# class WormBaseTpa(object):
-#     wormbase_accession = attr.ib(validator=is_a(basestring))
-#     locus_tag = attr.ib(validator=is_a(basestring))
-#     ena_accession = attr.ib(validator=is_a(basestring))
-#     feature_type = attr.ib(validator=is_a(basestring))
-#     @classmethod
-#     def from_tsv(cls, row):
-#         return cls(
-#             row['Source primary accession'],
-#             row['Source secondary accession'],
-#             row['Target secondary accession'],
-#             row['Target'],
-#         )
-#     def accession(self, entry):
-#         return '%s:WORMBASE:%s' % (entry.accession, self.wormbase_accession)
-#     def transform(self, entry, extra={}):
-#         updated = attr.assoc(
-#             entry,
-#             accession=self.accession(entry),
-#             database='WORMBASE',
-#             is_composite='Y',
-#             non_coding_id=entry.accession,
-#         )
-#         return attr.assoc(updated, **extra)

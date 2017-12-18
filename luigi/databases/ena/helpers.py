@@ -34,6 +34,25 @@ ONTOLOGIES = set([
 ])
 
 
+KNOWN_DBS = set([
+    'srpdb',
+    'mirbase',
+    'tmrna-website',
+    'snopydb',
+    'plncdb',
+    'wormbase',
+    'tair',
+    'sgd',
+    'rgd',
+    'mgi',
+    'pombase',
+    'dictybase',
+    'flybase',
+    'silva-ssu',
+    'silva-lsu',
+])
+
+
 def source_qualifier_value(record, qualifier, pattern=r'^(.+)$'):
     source = embl.source_feature(record)
     return embl.qualifier_value(source, qualifier, pattern)
@@ -126,6 +145,7 @@ def note_data(feature):
         data['text'] = text
     if onts:
         data['ontology'] = sorted(onts)
+
     return data
 
 
@@ -288,3 +308,17 @@ def division(record):
 def description(record):
     raw = embl.description(record)
     return re.sub(r'^TPA:\s*', '', raw)
+
+
+def xref_data(record, feature):
+    xrefs = embl.xref_data(feature)
+    comment = record.annotations.get('comment', '')
+    if not comment:
+        return xrefs
+    for line in comment.split('\n'):
+        line = line.lower()
+        if ';' in line:
+            db_name, xref_id = re.split('\s*;\s*', line, maxsplit=1)
+            if db_name in KNOWN_DBS:
+                xrefs[db_name].add(xref_id.strip())
+    return xrefs
