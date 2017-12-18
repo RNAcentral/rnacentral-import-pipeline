@@ -57,11 +57,13 @@ def phylogeny(taxon_id):
             break
         except requests.HTTPError as err:
             if response.status_code == 500:
-                sleep(0.1 * (count + 1))
+                sleep(0.15 * (count + 1))
                 continue
-            else:
-                print(err)
+            elif response.status_code == 404:
                 raise UnknownTaxonId(taxon_id)
+            else:
+                LOGGER.exception(err)
+                raise FailedTaxonId("Unknown error")
     else:
         raise FailedTaxonId("Could not get taxon id for %s" % taxon_id)
 
