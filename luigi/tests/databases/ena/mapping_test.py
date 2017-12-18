@@ -259,3 +259,80 @@ def test_can_transform_correct_snopy_entry():
     del result['references']
 
     assert transformed == result
+
+
+def test_build_correct_tpa_key_for_snopy_entries():
+    with open('data/ena/tpa/snopy/entry.embl', 'rb') as raw:
+        entry = next(parse(raw))
+    assert tpa.tpa_key(entry) == ('LN809305', None)
+
+
+def test_builds_correct_tpa_key_for_snopy_tpa():
+    with open('data/ena/tpa/snopy/mapping.tsv', 'rb') as raw:
+        data = next(tpa.parse_tpa_file(raw))
+    assert tpa.tpa_key(data) == ('LN809305', None)
+
+
+def test_builds_correct_tpa_key_for_wormbase_tpa():
+    with open('data/ena/tpa/wormbase/mapping.tsv', 'rb') as raw:
+        data = next(tpa.parse_tpa_file(raw))
+    assert tpa.tpa_key(data) == ('BX284604', 'T13A10.10b')
+
+
+def test_knows_if_it_has_mappings():
+    mapping = tpa.load(['data/ena/tpa/snopy/mapping.tsv'])
+    with open('data/ena/tpa/snopy/entry.embl', 'rb') as raw:
+        entry = next(parse(raw))
+    assert mapping.has_tpa_for(entry) is True
+
+
+def test_knows_if_does_not_have_entry_for():
+    mapping = tpa.load(['data/ena/tpa/snopy/mapping.tsv'])
+    with open('data/ena/tpa/lncrnadb/entry.embl', 'rb') as raw:
+        entry = next(parse(raw))
+    assert mapping.has_tpa_for(entry) is False
+
+
+def test_can_fetch_tpa_for_entry():
+    mapping = tpa.load(['data/ena/tpa/snopy/mapping.tsv'])
+    with open('data/ena/tpa/snopy/entry.embl', 'rb') as raw:
+        entry = next(parse(raw))
+    tpas = list(mapping.find_tpas(entry))
+    assert len(tpas) == 1
+    assert tpas[0] == tpa.GenericTpa(
+        'SNOPY',
+        'Arabidopsis_thaliana300001',
+        'SnoR1b',
+        'LN809305',
+    )
+
+
+def test_fetch_tpa_for_non_exist_returns_empty_list():
+    mapping = tpa.load(['data/ena/tpa/snopy/mapping.tsv'])
+    with open('data/ena/tpa/lncrnadb/entry.embl', 'rb') as raw:
+        entry = next(parse(raw))
+    assert list(mapping.find_tpas(entry)) == []
+
+
+def test_can_map_snopy_entries():
+    mapping = tpa.load(['data/ena/tpa/snopy/mapping.tsv'])
+
+    with open('data/ena/tpa/snopy/entry.embl', 'rb') as raw:
+        entries = list(parse(raw))
+
+    mapped = list(tpa.apply(mapping, entries))
+    assert len(mapped) == 1
+    assert mapped[0].database == 'SNOPY'
+    assert mapped[0].accession == 'LN809305.1:1..93:ncRNA:SNOPY:Arabidopsis_thaliana300001'
+
+
+def test_can_will_not_alter_entries_from_other_dbs():
+    mapping = tpa.load(['data/ena/tpa/snopy/mapping.tsv'])
+
+    with open('data/ena/tpa/lncrnadb/entry.embl', 'rb') as raw:
+        entries = list(parse(raw))
+
+    mapped = list(tpa.apply(mapping, entries))
+    assert len(mapped) == 1
+    assert mapped[0].database == 'ENA'
+    assert mapped[0].accession == 'HG975405.1:1..32753:ncRNA'

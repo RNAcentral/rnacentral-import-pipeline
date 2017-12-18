@@ -40,6 +40,7 @@ def parse(handle):
         if len(record.features) != 2:
             raise InvalidEnaFile("ENA EMBL files must have 2 features/record")
 
+        print(record.annotations)
         accession = helpers.accession(record)
 
         feature = record.features[1]
@@ -55,7 +56,7 @@ def parse(handle):
             seq_version=embl.seq_version(record),
 
             note_data=helpers.note_data(feature),
-            xref_data=embl.xref_data(feature),
+            xref_data=helpers.xref_data(record, feature),
 
             chromosome=helpers.chromosome(record),
 
