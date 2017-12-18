@@ -20,6 +20,7 @@ def md5(data):
     """
     Get the MD5 hash as a string.
     """
+    data = data.encode('ascii', 'ignore')
     return hashlib.md5(data).hexdigest()
 
 
