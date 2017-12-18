@@ -64,9 +64,12 @@ def summary(pmid):
 
 def reference(accession, pmid):
     data = summary(pmid)
-    location = '{title} {volume}({issue}):{pages} ({year})'.format(
+    issue = data.get('issue', None)
+    if issue:
+        issue = ('(%s)' % issue)
+    location = '{title} {volume}{issue}:{pages} ({year})'.format(
         title=data['journalTitle'],
-        issue=data['issue'],
+        issue=issue,
         volume=data['journalVolume'],
         pages=data['pageInfo'],
         year=data['pubYear'],
