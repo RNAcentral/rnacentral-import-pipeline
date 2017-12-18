@@ -308,7 +308,7 @@ class Entry(object):
         counts = Counter(self.sequence)
         fraction = float(counts.get('N', 0)) / float(len(self.sequence))
         if fraction > 0.1:
-            LOGGER.info(
+            LOGGER.warn(
                 "%s has too many (%i/%i) N's",
                 self.accession,
                 counts['N'],
