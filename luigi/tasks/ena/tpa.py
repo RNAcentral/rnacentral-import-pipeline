@@ -13,25 +13,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import os
-
 import luigi
 
 from tasks.config import ena
+from tasks.utils.http import download
 
-from .single_file import SingleEnaFile
-from .directory import EnaDirectory
-from .tpa import FetchTPA
+class FetchTPA(luigi.Task):
+    database = luigi.Parameter()
 
+    def output(self):
+        return luigi.LocalTarget(ena().input_tpa_file(self.database))
 
-class Ena(luigi.WrapperTask):
-
-    def requires(self):
-        for database in ena().tpa_databases:
-            yield FetchTPA(database=database)
-
-        for entry in ena().raw_ncr_files():
-            if os.path.isdir(entry):
-                yield EnaDirectory(input_dir=entry)
-            elif os.path.isfile(entry):
-                yield SingleEnaFile(input_file=entry)
+    def run(self):
+        download(ena().raw_tpa_url(self.database), self.output().fn)

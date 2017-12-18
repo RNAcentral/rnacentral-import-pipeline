@@ -18,31 +18,46 @@ import gzip
 
 import luigi
 
-from databases.ena.parsers import parse
+from databases.ena.parsers import parse_with_mapping_files
 
+from tasks.config import ena
 from tasks.config import output
 from tasks.utils.entry_writers import Output
+
+from .copy import CopyNcr
+from .tpa import FetchTPA
 
 
 class EnaDirectory(luigi.Task):
     input_dir = luigi.Parameter()
 
+    def requires(self):
+        yield CopyNcr(ncr=self.input_dir)
+
+        for database in ena().tpa_databases:
+            yield FetchTPA(database=database)
+
     def output(self):
         prefix = os.path.basename(self.input_dir)
         return Output.build(output().base, 'ena', prefix)
 
-    def files(self):
-        files = os.listdir(self.input_dir)
+    def handles(self):
+        """
+        Produce an interable for all compressed non-coding product files that
+        this task imports.
+        """
+
+        base_dir = CopyNcr(ncr=self.input_dir).output().fn
+        files = os.listdir(base_dir)
         for filename in files:
-            if filename == 'fasta':
-                continue
             filename = os.path.join(self.input_dir, filename)
             with gzip.open(filename, 'rb') as raw:
                 yield raw
 
     def run(self):
+        files = ena().all_tpa_files()
         with self.output().writer() as writer:
-            for handle in self.files():
-                for entry in parse(handle):
+            for handle in self.handles():
+                for entry in parse_with_mapping_files(handle, files):
                     if entry.is_valid():
                         writer.write(entry)
