@@ -17,8 +17,10 @@ from Bio import SeqIO
 
 from databases.data import Entry
 
-from . import helpers
 import databases.helpers.embl as embl
+
+from . import helpers
+from . import mapping as tpa
 
 
 class InvalidEnaFile(Exception):
@@ -40,7 +42,6 @@ def parse(handle):
         if len(record.features) != 2:
             raise InvalidEnaFile("ENA EMBL files must have 2 features/record")
 
-        print(record.annotations)
         accession = helpers.accession(record)
 
         feature = record.features[1]
@@ -89,3 +90,8 @@ def parse(handle):
             gene_synonyms=helpers.gene_synonyms(feature),
             references=helpers.references(accession, record, feature),
         )
+
+
+def parse_with_mapping_files(handle, mapping_files):
+    mapping = tpa.load(mapping_files)
+    return tpa.apply(mapping, parse(handle))

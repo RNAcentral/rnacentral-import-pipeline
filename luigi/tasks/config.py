@@ -194,9 +194,45 @@ class mgi(luigi.Config):  # pylint: disable=C0103, R0904
 
 class ena(luigi.Config):
     base = luigi.Parameter()
+    tpa_databases = luigi.TupleParameter(
+        default=(
+            'SRPDB',
+            'miRBase',
+            'tmRNA-Website',
+            'lncRNAdb',
+            'snOPYdb',
+            'WormBase',
+            'TAIR',
+            'SGD',
+            'PomBase',
+            'dictyBase',
+        )
+    )
+    tpa_url = 'https://www.ebi.ac.uk/ena/data/xref/search?source={db}'
 
-    def files(self):
-        dirs = os.listdir(self.base)
-        return [os.path.join(self.base, d) for d in dirs]
+    def raw_ncr_files(self):
+        files = []
+        for name in os.listdir(self.base):
+            directory = os.path.join(self.base, name)
+            if not os.path.isdir(directory):
+                continue
+            for entry in os.listdir(directory):
+                if entry == 'fasta':
+                    continue
+                files.append(os.path.join(directory, entry))
+        return files
 
+    def raw_tpa_url(self, db_name):
+        return self.tpa_url.format(db=db_name)
 
+    def input_files(self, *args):
+        return os.path.join(output().base, 'ena', *args)
+
+    def input_tpa_file(self, db_name):
+        return self.input_files('tpa', db_name + '.tsv')
+
+    def input_ncr_file(self, *args):
+        return self.input_files('ncr', *args)
+
+    def all_tpa_files(self):
+        return [self.input_tpa_file(tpa_db) for tpa_db in self.tpa_databases]
