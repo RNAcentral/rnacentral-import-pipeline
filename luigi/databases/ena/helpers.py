@@ -16,6 +16,7 @@ limitations under the License.
 import re
 import attr
 import logging
+import collections as coll
 
 from Bio.Seq import Seq
 
@@ -50,6 +51,8 @@ KNOWN_DBS = set([
     'flybase',
     'silva-ssu',
     'silva-lsu',
+    'lncrnadb',
+    'gtrnadb',
 ])
 
 
@@ -310,15 +313,31 @@ def description(record):
     return re.sub(r'^TPA:\s*', '', raw)
 
 
+def comment_xrefs(comments):
+    xrefs = coll.defaultdict(set)
+    for line in comments:
+        match = re.match(r'^\s*(.+?)\s*;\s*(.+?)\s*\.?$', line)
+        if match:
+            db_name = match.group(1).lower()
+            if db_name not in KNOWN_DBS:
+                continue
+            rest = match.group(2)
+            print(line)
+            print(db_name)
+            print(rest)
+            print(match)
+            if ';' in rest:
+                xrefs[db_name].update(re.split('\s*;\s*', rest))
+            else:
+                xrefs[db_name].add(rest)
+    return xrefs
+
+
 def xref_data(record, feature):
-    xrefs = embl.xref_data(feature)
+    xrefs = {}
+    xrefs.update(embl.xref_data(feature))
     comment = record.annotations.get('comment', '')
     if not comment:
         return xrefs
-    for line in comment.split('\n'):
-        line = line.lower()
-        if ';' in line:
-            db_name, xref_id = re.split('\s*;\s*', line, maxsplit=1)
-            if db_name in KNOWN_DBS:
-                xrefs[db_name].add(xref_id.strip())
+    xrefs.update(comment_xrefs(comment.split('\n')))
     return xrefs
