@@ -54,6 +54,7 @@ def phylogeny(taxon_id):
         response = requests.get(TAX_URL.format(taxon_id=taxon_id))
         try:
             response.raise_for_status()
+            data = response.json()
             break
         except requests.HTTPError as err:
             if response.status_code == 500:
@@ -67,8 +68,9 @@ def phylogeny(taxon_id):
     else:
         raise FailedTaxonId("Could not get taxon id for %s" % taxon_id)
 
-    data = response.json()
-    assert data, "Somehow got no data"
+    if not data:
+        raise FailedTaxonId("Somehow got no data")
+
     return data
 
 
