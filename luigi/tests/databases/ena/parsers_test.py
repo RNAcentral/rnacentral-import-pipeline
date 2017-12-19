@@ -759,6 +759,6 @@ def test_can_extract_xrefs():
         data = list(parse(raw))
 
     assert data[5].accession == 'HG975377.1:1..332:ncRNA'
-    assert data[5].xref_data == {'lncrnadb': set(['190', '7SK'])}
+    assert data[5].xref_data == {'lncrnadb': ['190', '7SK']}
     assert data[7].accession == 'LM608264.1:7..26:ncRNA'
-    assert data[7].xref_data == {'mirbase': set(['MI0000182'])}
+    assert data[7].xref_data == {'mirbase': ['MI0000182']}

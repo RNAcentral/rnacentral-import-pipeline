@@ -314,7 +314,7 @@ def description(record):
 
 
 def comment_xrefs(comments):
-    xrefs = coll.defaultdict(set)
+    xrefs = coll.defaultdict(list)
     for line in comments:
         match = re.match(r'^\s*(.+?)\s*;\s*(.+?)\s*\.?$', line)
         if match:
@@ -322,14 +322,10 @@ def comment_xrefs(comments):
             if db_name not in KNOWN_DBS:
                 continue
             rest = match.group(2)
-            print(line)
-            print(db_name)
-            print(rest)
-            print(match)
             if ';' in rest:
-                xrefs[db_name].update(re.split('\s*;\s*', rest))
+                xrefs[db_name].extend(re.split('\s*;\s*', rest))
             else:
-                xrefs[db_name].add(rest)
+                xrefs[db_name].append(rest)
     return xrefs
 
 
