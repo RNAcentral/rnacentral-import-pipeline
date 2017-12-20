@@ -221,7 +221,12 @@ def anticodon(record, feature):
         match = re.search(r'codon recognized:(\s*[ACGUT]{3}\s*)', note)
         if match:
             raw = match.group(1).strip()
-            return str(Seq(raw).reverse_complement())
+            try:
+                return str(Seq(raw).reverse_complement())
+            except Exception as err:
+                LOGGER.warn("Error getting reverse_complement")
+                LOGGER.exception(err)
+                return raw_anti
 
     return raw_anti
 
@@ -273,39 +278,39 @@ def taxid(record):
 
 
 def species(record):
-    try:
-        return embl.species(record)
-    except UnknownTaxonId:
-        return record.annotations.get('organism', None)
+    # try:
+    #     return embl.species(record)
+    # except UnknownTaxonId:
+    return record.annotations.get('organism', None)
 
 
 def common_name(record):
-    try:
-        return embl.common_name(record)
-    except UnknownTaxonId:
-        organism = record.annotations.get('organism', None)
-        if organism:
-            match = re.search(r'\((.+)\)$', organism)
-            if match:
-                return match.group(1)
-        return None
+    # try:
+    #     return embl.common_name(record)
+    # except UnknownTaxonId:
+    organism = record.annotations.get('organism', None)
+    if organism:
+        match = re.search(r'\((.+)\)$', organism)
+        if match:
+            return match.group(1)
+    return None
 
 
 def lineage(record):
-    try:
-        return embl.lineage(record)
-    except UnknownTaxonId:
-        taxonomy = record.annotations.get('taxonomy', [])
-        if taxonomy:
-            return '; '.join(taxonomy)
-        return None
+    # try:
+    #     return embl.lineage(record)
+    # except UnknownTaxonId:
+    taxonomy = record.annotations.get('taxonomy', [])
+    if taxonomy:
+        return '; '.join(taxonomy)
+    return None
 
 
 def division(record):
-    try:
-        return embl.division(record)
-    except UnknownTaxonId:
-        return None
+    # try:
+    #     return embl.division(record)
+    # except UnknownTaxonId:
+    return None
 
 
 def description(record):
