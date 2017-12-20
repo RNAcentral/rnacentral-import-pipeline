@@ -196,16 +196,16 @@ class ena(luigi.Config):
     base = luigi.Parameter()
     tpa_databases = luigi.TupleParameter(
         default=(
-            'SRPDB',
-            'miRBase',
-            'tmRNA-Website',
-            'lncRNAdb',
-            'snOPYdb',
-            'WormBase',
-            'TAIR',
-            'SGD',
             'PomBase',
+            'SGD',
+            'SRPDB',
+            'TAIR',
+            'WormBase',
             'dictyBase',
+            'lncRNAdb',
+            'miRBase',
+            'snOPYdb',
+            'tmRNA-Website',
         )
     )
     tpa_url = 'https://www.ebi.ac.uk/ena/data/xref/search?source={db}'
