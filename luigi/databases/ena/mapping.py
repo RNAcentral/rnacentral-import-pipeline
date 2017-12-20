@@ -15,11 +15,11 @@ limitations under the License.
 
 import csv
 import collections as coll
+import operator as op
 
 import attr
 from attr.validators import instance_of as is_a
 from attr.validators import optional
-
 
 CHROMOSOME_LEVEL_MAPPINGS = set([
     "WORMBASE",
@@ -77,23 +77,35 @@ class GenericTpa(object):
 
 
 class UrlBuilder(object):
-    def wormbase(self, entry):
-        return 'http://www.wormbase.org/species/c_elegans/gene/%s' % entry.primary_id
+    def pombase(self, entry):
+        return 'http://www.pombase.org/spombe/result/%s' % entry.primary_id
+
+    def sgd(self, entry):
+        return 'http://www.yeastgenome.org/locus/%s/overview' % entry.primary_id
 
     def srpdb(self, entry):
         return 'http://rnp.uthscsa.edu/rnp/SRPDB/rna/sequences/fasta/%s' % entry.primary_id
 
-    def mirbase(self, entry):
-        return 'http://www.mirbase.org/cgi-bin/mirna_entry.pl?acc=%s' % entry.primary_id
+    def tair(self, entry):
+        return 'https://www.arabidopsis.org/servlets/TairObject?id=%s&type=locus' % entry.primary_id
 
-    def tmrna_web(self, entry):
-        return 'http://bioinformatics.sandia.gov/tmrna/seqs/%s.html' % entry.primary_id
+    def wormbase(self, entry):
+        return 'http://www.wormbase.org/species/c_elegans/gene/%s' % entry.primary_id
+
+    def dictybase(self, entry):
+        return 'http://dictybase.org/gene/%s' % entry.primary_id
 
     def lncrnadb(self, entry):
         return 'http://www.lncrnadb.org/Detail.aspx?TKeyID=%s' % entry.primary_id
 
+    def mirbase(self, entry):
+        return 'http://www.mirbase.org/cgi-bin/mirna_entry.pl?acc=%s' % entry.primary_id
+
     def snopy(self, entry):
         return 'http://snoopy.med.miyazaki-u.ac.jp/snorna_db.cgi?mode=sno_info&id=%s' % entry.primary_id
+
+    def tmrna_web(self, entry):
+        return 'http://bioinformatics.sandia.gov/tmrna/seqs/%s.html' % entry.primary_id
 
     def transform(self, entry):
         builder = getattr(self, entry.database.lower())
