@@ -18,6 +18,8 @@ import os
 import attr
 import pytest
 
+from tasks.config import ena
+
 from databases.data import Exon
 from databases.data import Entry
 from databases.ena import mapping as tpa
@@ -337,3 +339,10 @@ def test_can_will_not_alter_entries_from_other_dbs():
     assert len(mapped) == 1
     assert mapped[0].database == 'ENA'
     assert mapped[0].accession == 'HG975405.1:1..32753:ncRNA'
+
+
+@pytest.mark.parametrize(
+    'name',
+    [tpa.internal_database_name(n) for n in ena().tpa_databases])
+def test_url_builder_can_build_url(name):
+    assert hasattr(tpa.UrlBuilder(), name.lower())

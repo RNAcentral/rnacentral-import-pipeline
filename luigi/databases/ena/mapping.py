@@ -32,6 +32,15 @@ def tpa_key(value):
     return (value.parent_accession, None)
 
 
+def internal_database_name(ena_name):
+    name = ena_name.upper()
+    if name == 'SNOPYDB':
+        return 'SNOPY'
+    if name == 'TMRNA-WEBSITE':
+        return 'TMRNA_WEB'
+    return name
+
+
 @attr.s(frozen=True, slots=True)
 class GenericTpa(object):
     database = attr.ib(validator=is_a(basestring))
@@ -45,11 +54,7 @@ class GenericTpa(object):
         if not secondary:
             secondary = None
 
-        database = row['Source'].upper()
-        if database == 'SNOPYDB':
-            database = 'SNOPY'
-        if database == 'TMRNA-WEBSITE':
-            database = 'TMRNA_WEB'
+        database = internal_database_name(row['Source'])
 
         return cls(
             database,
