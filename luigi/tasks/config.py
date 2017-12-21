@@ -219,7 +219,10 @@ class ena(luigi.Config):
             for entry in os.listdir(directory):
                 if entry == 'fasta':
                     continue
-                files.append(os.path.join(directory, entry))
+                path = os.path.join(directory, entry)
+                if os.path.isdir(path) and not os.listdir(path):
+                    continue
+                files.append(path)
         return files
 
     def raw_tpa_url(self, db_name):
