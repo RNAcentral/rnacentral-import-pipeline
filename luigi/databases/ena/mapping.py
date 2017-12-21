@@ -15,7 +15,6 @@ limitations under the License.
 
 import csv
 import collections as coll
-import operator as op
 
 import attr
 from attr.validators import instance_of as is_a
