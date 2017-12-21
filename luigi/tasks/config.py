@@ -193,6 +193,8 @@ class mgi(luigi.Config):  # pylint: disable=C0103, R0904
 
 
 class export(luigi.Config):  # pylint: disable=C0103,R0904
+    rfam_example_size = luigi.IntParameter(default=10)
+
     def ftp(self, *args):
         return os.path.join(output().base, 'ftp', *args)
 
@@ -201,3 +203,6 @@ class export(luigi.Config):  # pylint: disable=C0103,R0904
 
     def nhmmer(self, *args):
         return self.sequences('.internal', *args)
+
+    def rfam(self, *args):
+        return self.ftp('rfam', *args)
