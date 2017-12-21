@@ -234,7 +234,7 @@ class AccessionWriter(object):
             data.primary_id,
             data.optional_id,
             data.project,
-            data.division,
+            None,  # data.division,
             data.keywords,
             data.description,
             data.species,
