@@ -13,6 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import os
 
 import luigi
 from luigi.local_target import atomic_file
@@ -25,6 +26,11 @@ class FastaReadme(luigi.Task):
         return luigi.LocalTarget(export().sequences('readme.txt'))
 
     def run(self):
+        try:
+            os.makedirs(os.path.dirname(self.output().fn))
+        except:
+            pass
+
         with atomic_file(self.output().fn) as out:
             out.write("""
 ===================================================================
