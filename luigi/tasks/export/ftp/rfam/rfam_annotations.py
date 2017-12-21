@@ -14,7 +14,6 @@ limitations under the License.
 """
 
 import os
-import time
 
 import luigi
 from luigi.local_target import atomic_file
@@ -38,24 +37,30 @@ ON CONFLICT DO NOTHING
 QUERY = """
 select
     hits.upi,
-    rfam_model_id,
+    hits.rfam_model_id,
     score,
     e_value,
     sequence_start,
     sequence_stop,
     model_start,
-    model_stop
+    model_stop,
+    models.long_name
 from rfam_model_hits hits
 join rna_active active on active.upi = hits.upi
+join rfam_models models on models.rfam_model_id = hits.rfam_model_id
 """
 
 
-class ExportRfamAnnotations(luigi.Task):
+
+class RfamAnnotations(luigi.Task):
     def output(self):
-        filename = export().ftp('rfam-matches.tsv')
+        filename = export().rfam('rfam_annotations.tsv')
         return luigi.LocalTarget(filename)
 
-    def command(self):
+    def command(self, example=False):
+        query = QUERY.replace('\n', '')
+        if example:
+            query = '%s LIMIT 10' % query
         return "COPY ({query}) to STDOUT DELIMITER '\t'".format(
             query=QUERY.replace('\n', ' '),
         )
@@ -66,22 +71,12 @@ class ExportRfamAnnotations(luigi.Task):
         cursor.execute('select id from rnc_database order by id')
         dbids = [r[0] for r in cursor.fetchall()]
         for dbid in dbids:
-            start = time.time()
-            print('INSERTING from ' + str(dbid))
             cursor.execute(INSERT_INTO_ACTIVE_TABLE.format(dbid=dbid))
-            print('  Done in %s seconds' % (time.time() - start))
-        print('BUILT TABLE')
 
     def run(self):
-        filename = self.output().fn
-        try:
-            os.makedirs(os.path.dirname(filename))
-        except:
-            pass
-
-        with atomic_file(filename) as out:
-            connection = get_db_connection(db(), connect_timeout=10 * 60)
-            self.populate_active_table(connection)
+        connection = get_db_connection(db(), connect_timeout=10 * 60)
+        # self.populate_active_table(connection)
+        with atomic_file(self.output().fn) as out:
             cursor = connection.cursor()
             cursor.copy_expert(self.command(), out)
             connection.close()
