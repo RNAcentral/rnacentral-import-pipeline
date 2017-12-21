@@ -31,12 +31,8 @@ class FastaExport(luigi.WrapperTask):
 
     def requires(self):
         yield FastaReadme()
+        yield NHmmerExport()
         yield CompressExport()
-        yield ActiveFastaExport()
-        yield InactiveFastaExport()
-        yield SpeciesSpecificFastaExport()
-        yield NHmmerExcludedExport()
-        yield NHmmerIncludedExport()
 
 
 class NHmmerExport(luigi.WrapperTask):
