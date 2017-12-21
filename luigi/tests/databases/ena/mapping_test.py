@@ -123,7 +123,7 @@ def test_can_transform_correct_lncrnadb_entry():
                 'transcribed from intron 10 of the maternally expressed Kncq1 (KvLQT1) gene',
             ],
         },
-        xref_data={'lncrnadb': set(['101', 'Kcnq1ot1'])},
+        xref_data={'lncrnadb': ['101', 'Kcnq1ot1']},
 
         non_coding_id='HG975405.1:1..32753:ncRNA',
         is_composite='Y',
