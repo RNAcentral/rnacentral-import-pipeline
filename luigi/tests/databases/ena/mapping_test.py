@@ -130,7 +130,8 @@ def test_can_transform_correct_lncrnadb_entry():
         non_coding_id='HG975405.1:1..32753:ncRNA',
         is_composite='Y',
         species='Homo sapiens',
-        division='HUM',
+        division=None,
+        # division='HUM',
         lineage=(
             'Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi;'
             ' Mammalia; Eutheria; Euarchontoglires; Primates; Haplorrhini; '
@@ -193,7 +194,8 @@ def test_can_transform_correct_srpdb_entry():
             'Acinetobacter calcoaceticus/baumannii complex; '
             'Acinetobacter baumannii ATCC 17978'
         ),
-        division='PRO',
+        division=None,
+        # division='PRO',
         keywords='RNAcentral; TPA; TPA:specialist_db',
         description='Acinetobacter baumannii ATCC 17978 signal recognition particle RNA',
         mol_type='transcribed RNA',
@@ -245,7 +247,8 @@ def test_can_transform_correct_snopy_entry():
             'Brassicaceae; Camelineae; Arabidopsis; Arabidopsis thaliana'
         ),
         common_name='thale cress',
-        division='PLN',
+        division=None,
+        # division='PLN',
         keywords='RNAcentral; TPA; TPA:specialist_db',
         mol_type='genomic DNA',
         gene='SnoR1b',

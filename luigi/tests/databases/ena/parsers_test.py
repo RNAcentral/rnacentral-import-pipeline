@@ -80,7 +80,8 @@ def test_creates_simple_entry():
         parent_accession='AACD01000002',
         project='PRJNA130',
         keywords='WGS',
-        division='FUN',
+        division=None,
+        # division='FUN',
         description='Aspergillus nidulans FGSC A4 tRNA-Pro',
         mol_type='genomic DNA',
         is_composite='N',
@@ -241,7 +242,8 @@ def test_can_find_correct_ncRNA_type():
         product="RybB RNA",
         parent_accession='ABXV02000002',
         keywords='WGS',
-        division='PRO',
+        division=None,
+        # division='PRO',
         description='Providencia rustigianii DSM 4541 RybB RNA',
         mol_type="genomic DNA",
         is_composite='N',
@@ -334,7 +336,8 @@ def test_can_parse_all_example_entries():
         ),
         species='Homo sapiens',
         common_name='human',
-        division='HUM',
+        division=None,
+        # division='HUM',
         description='Homo sapiens (human) miscellaneous RNA',
         parent_accession='AB330787',
         note_data={
@@ -370,7 +373,8 @@ def test_can_parse_all_example_entries():
         ),
         species='Homo sapiens',
         common_name='human',
-        division='HUM',
+        division=None,
+        # division='HUM',
         description='Homo sapiens (human) miscellaneous RNA',
         parent_accession='AB330786',
         note_data={
@@ -406,7 +410,8 @@ def test_can_parse_all_example_entries():
         ),
         species='Homo sapiens',
         common_name='human',
-        division='HUM',
+        division=None,
+        # division='HUM',
         description='Homo sapiens (human) miscellaneous RNA',
         note_data={
             'text': [
@@ -443,7 +448,8 @@ def test_can_parse_all_example_entries():
         ),
         species='Homo sapiens',
         common_name='human',
-        division='HUM',
+        division=None,
+        # division='HUM',
         project='PRJEB4451',
         description='Homo sapiens (human) microRNA hsa-miR-1273g-3p',
         product="microRNA hsa-miR-1273g-3p",
@@ -496,7 +502,8 @@ def test_can_parse_all_example_entries():
         },
         lineage='unclassified sequences; unidentified',
         species='unidentified',
-        division='UNC',
+        division=None,
+        # division='UNC',
         keywords='RNAcentral; TPA; TPA:specialist_db',
         description='unidentified transfer-messenger mRNA Campy_jejun_700819',
         product="transfer-messenger mRNA Campy_jejun_700819",
@@ -579,7 +586,7 @@ def test_can_handle_file_with_invalid_fields():
 
     assert data.accession == 'KM079256.1:1..1300:rRNA'
     assert data.mol_type == 'genomic DNA'
-    assert data.species == "Candidatus Stammerula sp. of Trupanea 'pohakuloa'"
+    assert data.species == 'Candidatus Stammerula sp. of Trupanea "pohakuloa"'
     assert data.ncbi_tax_id == 1630665
     assert data.product == "16S ribosomal RNA"
 

@@ -277,20 +277,33 @@ def taxid(record):
         return 32644  # Unclassified sequence
 
 
+def organism(record):
+    return record.annotations.get('organism', None)
+
+
 def species(record):
     # try:
     #     return embl.species(record)
     # except UnknownTaxonId:
-    return record.annotations.get('organism', None)
+    org = organism(record)
+    # Strip out the common name if present
+    if re.search(r'\([^()]+\)\s*$', org):
+        return re.sub('\s*\(.+$', '', org)
+
+    # Add a closing quote if needed
+    match = re.search("([\"'])\w+$", org)
+    if match:
+        org += match.group(1)
+    return org
 
 
 def common_name(record):
     # try:
     #     return embl.common_name(record)
     # except UnknownTaxonId:
-    organism = record.annotations.get('organism', None)
-    if organism:
-        match = re.search(r'\((.+)\)$', organism)
+    org = organism(record)
+    if org:
+        match = re.search(r'\(([^()]+)\)$', org)
         if match:
             return match.group(1)
     return None
@@ -302,6 +315,7 @@ def lineage(record):
     # except UnknownTaxonId:
     taxonomy = record.annotations.get('taxonomy', [])
     if taxonomy:
+        taxonomy.append(species(record))
         return '; '.join(taxonomy)
     return None
 
