@@ -239,3 +239,13 @@ class ena(luigi.Config):
 
     def all_tpa_files(self):
         return [self.input_tpa_file(tpa_db) for tpa_db in self.tpa_databases]
+
+
+class export(luigi.Config):  # pylint: disable=C0103,R0904
+    rfam_example_size = luigi.IntParameter(default=10)
+
+    def ftp(self, *args):
+        return os.path.join(output().base, 'ftp', *args)
+
+    def rfam(self, *args):
+        return self.ftp('rfam', *args)
