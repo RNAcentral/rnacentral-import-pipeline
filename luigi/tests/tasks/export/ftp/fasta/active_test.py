@@ -20,8 +20,8 @@ import pytest
 
 from tasks.config import db
 
-from tasks.export.fasta.active import ActiveFastaExport
-from tasks.export.fasta.active import SpeciesSpecificFastaExport
+from tasks.export.ftp.fasta.active import ActiveFastaExport
+from tasks.export.ftp.fasta.active import SpeciesSpecificFastaExport
 
 
 def count(sql):
