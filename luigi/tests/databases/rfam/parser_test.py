@@ -134,3 +134,10 @@ def test_it_builds_first_entry_correctly():
         'xref_data': {},
         'secondary_structure': {'dot_bracket': ''},
     }
+
+
+def test_it_can_parse_with_similar_accessions_correctly():
+    data = list(parse('data/rfam-duplicates.json'))
+    assert len(data) == 2
+    assert data[0].accession == 'CM000677.2:93286238..93286321:rfam'
+    assert data[1].accession == 'CM000677.2:93286321..93286238:rfam'
