@@ -15,6 +15,7 @@ limitations under the License.
 
 import os
 import re
+import abc
 
 import luigi
 from luigi.local_target import atomic_file
@@ -34,6 +35,7 @@ class NHmmerExportBase(luigi.Task):
     nhmmer fasta file. It handles the requirements, output and the actual
     writing. Subclasses need only implement the sequences method.
     """
+    __metaclass__ = abc.ABCMeta
 
     filename = None
 
@@ -43,12 +45,17 @@ class NHmmerExportBase(luigi.Task):
     def output(self):
         return luigi.LocalTarget(export().nhmmer(self.filename))
 
-    def sequences(self):
+    @abc.abstractmethod
+    def is_valid_record(self, record):
+        pass
+
+    def sequences(self, filename):
         """
         This should create an interable of the SeqRecords to write out.
         """
-
-        return []
+        for record in SeqIO.parse(filename, 'fasta'):
+            if self.is_valid_record(record):
+                yield record
 
     def run(self):
         filename = self.output().fn
@@ -57,8 +64,9 @@ class NHmmerExportBase(luigi.Task):
         except:
             pass
 
+        active_file = ActiveFastaExport().output().fn
         with atomic_file(filename) as out:
-            SeqIO.write(self.sequences(), out, "fasta")
+            SeqIO.write(self.sequences(active_file), out, "fasta")
 
 
 class NHmmerIncludedExport(NHmmerExportBase):
@@ -68,14 +76,10 @@ class NHmmerIncludedExport(NHmmerExportBase):
     a new one which only contains sequences that contain the accepted charaters
     only.
     """
-
     filename = 'rnacentral_nhmmer.fasta'
 
-    def sequences(self):
-        filename = ActiveFastaExport().output().fn
-        for record in SeqIO.parse(filename, 'fasta'):
-            if NHMMER_PATTERN.match(str(record.seq)):
-                yield record
+    def is_valid_record(self, record):
+        return bool(NHMMER_PATTERN.match(str(record.seq)))
 
 
 class NHmmerExcludedExport(NHmmerExportBase):
@@ -84,11 +88,7 @@ class NHmmerExcludedExport(NHmmerExportBase):
     nhmmer database. This is based off all sequences in the active fasta export
     that contain characters which are not part of the allowed characters.
     """
-
     filename = 'rnacentral_nhmmer_excluded.fasta'
 
-    def sequences(self):
-        filename = ActiveFastaExport().output().fn
-        for record in SeqIO.parse(filename, 'fasta'):
-            if not NHMMER_PATTERN.match(str(record.seq)):
-                yield record
+    def is_valid_record(self, record):
+        return not bool(NHMMER_PATTERN.match(str(record.seq)))
