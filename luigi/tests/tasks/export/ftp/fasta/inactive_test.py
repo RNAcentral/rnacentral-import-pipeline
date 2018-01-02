@@ -17,7 +17,7 @@ import pytest
 
 from .active_test import count
 
-from tasks.export.fasta.inactive import InactiveFastaExport
+from tasks.export.ftp.fasta.inactive import InactiveFastaExport
 
 
 @pytest.mark.slowtest

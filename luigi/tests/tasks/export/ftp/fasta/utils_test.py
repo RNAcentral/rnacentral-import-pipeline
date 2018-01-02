@@ -20,7 +20,7 @@ import pytest
 from Bio.Seq import Seq
 
 from tasks.config import db
-from tasks.export.fasta import utils
+from tasks.export.ftp.fasta import utils
 
 
 def test_can_produce_iterable_from_psql_copy():
