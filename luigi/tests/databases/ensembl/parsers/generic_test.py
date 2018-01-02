@@ -19,9 +19,10 @@ import attr
 from databases.ensembl.parsers import EnsemblParser
 from databases.data import Exon
 
-from tests.ensembl.utils import Base
+from tests.databases.ensembl.utils import Base
 
 
+@pytest.mark.slowtest
 class HumanTests(Base):
     filename = 'data/Homo_sapiens.GRCh38.87.chromosome.12.dat'
     importer_class = EnsemblParser
@@ -198,6 +199,7 @@ class HumanTests(Base):
         }
 
 
+@pytest.mark.slowtest
 class HumanPatchTests(Base):
     filename = None
     importer_class = EnsemblParser
@@ -207,6 +209,7 @@ class HumanPatchTests(Base):
         pass
 
 
+@pytest.mark.slowtest
 class MouseTests(Base):
     filename = 'data/Mus_musculus.GRCm38.87.chromosome.3.dat'
     importer_class = EnsemblParser
