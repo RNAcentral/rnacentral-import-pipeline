@@ -13,11 +13,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import pytest
+
 from databases.ensembl.parsers import GencodeParser as Gencode
 
-from tests.ensembl.utils import Base
+from tests.databases.ensembl.utils import Base
 
 
+@pytest.mark.slowtest
 class GencodeTests(Base):  # pylint: disable=R0904,C0111
     filename = 'data/Homo_sapiens.GRCh38.87.chromosome.12.dat'
     importer_class = Gencode

@@ -198,6 +198,12 @@ class export(luigi.Config):  # pylint: disable=C0103,R0904
     def ftp(self, *args):
         return os.path.join(output().base, 'ftp', *args)
 
+    def sequences(self, *args):
+        return self.ftp('sequences', *args)
+
+    def nhmmer(self, *args):
+        return self.sequences('.internal', *args)
+
     def rfam(self, *args):
         return self.ftp('rfam', *args)
 
