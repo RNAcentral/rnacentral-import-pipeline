@@ -18,8 +18,8 @@ import pytest
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 
-from tasks.export.fasta.nhmmer import NHmmerIncludedExport
-from tasks.export.fasta.nhmmer import NHmmerExcludedExport
+from tasks.export.ftp.fasta.nhmmer import NHmmerIncludedExport
+from tasks.export.ftp.fasta.nhmmer import NHmmerExcludedExport
 
 
 @pytest.mark.parametrize('sequence,accepted', [

@@ -54,3 +54,4 @@ from .release import LoadRelease
 from .release import Release
 
 from .export.ftp.rfam import ExportRfamAnnotaitons
+from .export.ftp.fasta import FastaExport
