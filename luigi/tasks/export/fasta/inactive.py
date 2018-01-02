@@ -48,9 +48,9 @@ class InactiveFastaExport(FastaExportBase):
                     then rna.seq_long
                     else rna.seq_short end as sequence
             from rna_inactive inactive
-            join rnc_rna_precomputed pre on pre.upi = inactive.upi
             join rna on rna.upi = inactive.upi
+            join rnc_rna_precomputed pre
+            on pre.upi = rna.upi and pre.upi = inactive.upi
             where
-                pre.id = rna.upi
-                and pre.upi = inactive.upi
+                pre.taxid is null
         """

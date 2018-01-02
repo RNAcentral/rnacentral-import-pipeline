@@ -46,13 +46,14 @@ class ActiveFastaExport(FastaExportBase):
             pre.description,
             case when rna.seq_short is null
                 then rna.seq_long
-                else rna.seq_short end as sequence
+                else rna.seq_short
+            end as sequence
         from rna_active active
-        join rnc_rna_precomputed pre on pre.upi = active.upi
         join rna on rna.upi = active.upi
+        join rnc_rna_precomputed pre
+        on pre.upi = rna.upi and pre.upi = active.upi
         where
-            pre.id = rna.upi
-            and pre.upi = active.upi
+            pre.taxid is null
         """
 
 
@@ -73,10 +74,12 @@ class SpeciesSpecificFastaExport(FastaExportBase):
             pre.description,
             case when rna.seq_short is null
                 then rna.seq_long
-                else rna.seq_short end as sequence
+                else rna.seq_short
+            end as sequence
         from rna_active active
-        join rnc_rna_precomputed pre on pre.upi = active.upi
         join rna on active.upi = rna.upi
+        join rnc_rna_precomputed pre
+        on pre.upi = rna.upi and pre.upi = active.upi
         where
             pre.taxid is not null
         """
