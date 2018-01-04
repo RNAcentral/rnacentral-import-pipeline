@@ -16,6 +16,8 @@ limitations under the License.
 import os
 from glob import iglob
 
+from distutils.spawn import find_executable
+
 import luigi
 
 from tasks.utils.parameters import PathParameter
@@ -44,6 +46,7 @@ class db(luigi.Config):  # pylint: disable=C0103, R0904
     port = luigi.Parameter(default=5432)
     db_name = luigi.Parameter(default='rnacen')
     search_path = luigi.Parameter()
+    psql = luigi.Parameter(default=find_executable('psql'))
 
     def pgloader_url(self):
         """
