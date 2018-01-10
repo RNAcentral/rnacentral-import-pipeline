@@ -15,11 +15,41 @@ limitations under the License.
 
 import csv
 
+import attr
+from attr.validators import instance_of as is_a
+
 import luigi
 
 from tasks.config import export
 
 from .id_mapping import IdMapping
+
+
+@attr.s()
+class DatabaseWriter(object):
+    handle = attr.ib(validator=is_a(file))
+    writer = attr.ib()
+
+    @classmethod
+    def from_name(cls, name):
+        handle = open(export().database_mappings(name + '.tsv'))
+        return cls(
+            handle=handle,
+            writer=csv.writer(handle, delimiter='\t')
+        )
+
+    def write(self, entry):
+        self.writer.writerow(entry)
+
+
+class SplitWriter(object):
+    ena = attr.ib(validator=is_a(DatabaseWriter))
+    rfam = attr.ib(validator=is_a(DatabaseWriter))
+
+    def split(self, entries):
+        for entry in entries:
+            writer = getattr(self, entry[1].lower())
+            writer.write(entry)
 
 
 class DatabaseSpecificMappings(luigi.Task):
@@ -28,7 +58,7 @@ class DatabaseSpecificMappings(luigi.Task):
         return IdMapping()
 
     def output(self):
-        pass
+        return luigi.LocalTarget(export().database_mappings('ena.tsv'))
 
     def run(self):
         handles = {}

@@ -13,13 +13,22 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import csv
+
 import luigi
 
-from .id_mapping import IdMapping
-from .database_mappings import DatabaseSpecificMappings
+from tasks.config import db
+from tasks.config import export
+from tasks.utils.files import atomic_output
+
+from internal.export.ftp import id_mapping
 
 
-class CompressTask(luigi.Task):
-    def requires(self):
-        yield IdMapping()
-        yield DatabaseSpecificMappings()
+class ExampleIdMapping(luigi.Task):
+    def output(self):
+        return luigi.LocalTarget(export().id_mapping('id_mapping.tsv'))
+
+    def run(self):
+        with atomic_output(self.output()) as out:
+            writer = csv.writer(out, delimiter='\t')
+            writer.writerows(id_mapping.example(db()))
