@@ -15,6 +15,7 @@ limitations under the License.
 
 import re
 import csv
+import sys
 import tempfile
 from contextlib import contextmanager
 import subprocess as sp
@@ -59,5 +60,6 @@ class PsqlWrapper(object):
             query=query
         )
         with self.command(command) as out:
+            csv.field_size_limit(sys.maxsize)
             for result in csv.DictReader(out):
                 yield result
