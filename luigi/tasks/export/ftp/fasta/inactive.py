@@ -13,20 +13,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+from tasks.config import db
+from internal.export.ftp import fasta
+
 from .utils import FastaExportBase
-
-
-CREATE_INACTIVE_TABLE = """
-CREATE TEMP TABLE rna_inactive as
-select upi from rna
-"""
-
-DELETE_FROM_INACTIVE_TABLE = """
-delete from rna_inactive
-using rna_active as active
-where
-    active.upi = rna_inactive.upi;
-"""
 
 
 class InactiveFastaExport(FastaExportBase):
@@ -39,18 +29,5 @@ class InactiveFastaExport(FastaExportBase):
     filename = 'rnacentral_inactive.fasta'
 
     @property
-    def fetch(self):
-        return """
-            select
-                pre.id,
-                pre.description,
-                case when rna.seq_short is null
-                    then rna.seq_long
-                    else rna.seq_short end as sequence
-            from rna_inactive inactive
-            join rna on rna.upi = inactive.upi
-            join rnc_rna_precomputed pre
-            on pre.upi = rna.upi and pre.upi = inactive.upi
-            where
-                pre.taxid is null
-        """
+    def records(self):
+        return fasta.inactive(db())

@@ -13,8 +13,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import abc
-
 import luigi
 
 from Bio import SeqIO
@@ -22,25 +20,24 @@ from Bio import SeqIO
 from tasks.config import export
 from tasks.utils.files import atomic_output
 
+from .active import ActiveFastaExport
 
-class FastaExportBase(luigi.Task):
-    """
-    A base class for tasks that export fasta files.
-    """
-    __metaclass__ = abc.ABCMeta
 
-    filename = None
+class ExampleFasta(luigi.Task):
+    max = 10
 
     def output(self):
-        return luigi.LocalTarget(export().sequences(self.filename))
+        return luigi.LocalTarget(export().sequences('example.txt'))
 
-    @abc.abstractmethod
-    def records(self):
-        """
-        This should generate an iterable of Bio.SeqRecords to write out.
-        """
-        return []
+    def requires(self):
+        yield ActiveFastaExport()
+
+    def sequences(self):
+        with SeqIO.parse(ActiveFastaExport().output().fn, 'fasta') as records:
+            for index, record in enumerate(records):
+                if index < self.max:
+                    yield record
 
     def run(self):
         with atomic_output(self.output()) as out:
-            SeqIO.write(self.records(), out, "fasta")
+            SeqIO.write(self.sequences(), out, 'fasta')

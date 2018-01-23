@@ -38,3 +38,15 @@ def test_can_run_command_and_provide_output():
             '(1 row)',
             '',
         ]
+
+
+def test_can_produce_iterable_from_psql_copy():
+    sql = 'select upi, md5 from rna order by id desc limit 5'
+    psql = PsqlWrapper(db())
+    assert list(psql.copy_to_iterable(sql)) == [
+        {'upi': 'URS0000C8E9EF', 'md5': 'fc30780b063695720cc37a9ce1968b7a'},
+        {'upi': 'URS0000C8E9EE', 'md5': 'f98993c13f10b65603df026553964f5e'},
+        {'upi': 'URS0000C8E9ED', 'md5': 'ebad5a2c948b840158b6684319a826e3'},
+        {'upi': 'URS0000C8E9EC', 'md5': 'e4a59b51c0426dd5fb73684fb5476537'},
+        {'upi': 'URS0000C8E9EB', 'md5': 'deec63eaa14fe3571f79a3850545be2a'},
+    ]

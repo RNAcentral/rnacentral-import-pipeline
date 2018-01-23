@@ -13,20 +13,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+from tasks.config import db
+from internal.export.ftp import fasta
+
 from .utils import FastaExportBase
-
-
-CREATE_ACTIVE_TABLE = """
-CREATE TEMP TABLE rna_active (
-    upi varchar(30) primary KEY
-)
-"""
-
-INSERT_INTO_ACTIVE_TABLE = """
-INSERT INTO rna_active
-select upi from xref_p{dbid}_not_deleted
-ON CONFLICT DO NOTHING
-"""
 
 
 class ActiveFastaExport(FastaExportBase):
@@ -38,23 +28,8 @@ class ActiveFastaExport(FastaExportBase):
 
     filename = 'rnacentral_active.fasta'
 
-    @property
-    def fetch(self):
-        return """
-        select
-            pre.id,
-            pre.description,
-            case when rna.seq_short is null
-                then rna.seq_long
-                else rna.seq_short
-            end as sequence
-        from rna_active active
-        join rna on rna.upi = active.upi
-        join rnc_rna_precomputed pre
-        on pre.upi = rna.upi and pre.upi = active.upi
-        where
-            pre.taxid is null
-        """
+    def records(self):
+        return fasta.active(db())
 
 
 class SpeciesSpecificFastaExport(FastaExportBase):
@@ -66,20 +41,5 @@ class SpeciesSpecificFastaExport(FastaExportBase):
 
     filename = 'rnacentral_species_specific_ids.fasta'
 
-    @property
-    def fetch(self):
-        return """
-        select
-            pre.id,
-            pre.description,
-            case when rna.seq_short is null
-                then rna.seq_long
-                else rna.seq_short
-            end as sequence
-        from rna_active active
-        join rna on active.upi = rna.upi
-        join rnc_rna_precomputed pre
-        on pre.upi = rna.upi and pre.upi = active.upi
-        where
-            pre.taxid is not null
-        """
+    def records(self):
+        return fasta.species(db())
