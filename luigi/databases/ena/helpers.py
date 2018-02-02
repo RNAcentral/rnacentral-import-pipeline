@@ -252,7 +252,7 @@ def ordinal(_):
 
 def organelle(record):
     values = source_qualifier_value(record, 'organelle', max_allowed=None)
-    if len(values) == 0:
+    if not values:
         return None
     if len(values) == 1:
         return values.pop()
