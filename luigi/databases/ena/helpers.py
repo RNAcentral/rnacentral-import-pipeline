@@ -56,9 +56,9 @@ KNOWN_DBS = set([
 ])
 
 
-def source_qualifier_value(record, qualifier, pattern=r'^(.+)$'):
+def source_qualifier_value(record, qualifier, pattern=r'^(.+)$', **kwargs):
     source = embl.source_feature(record)
-    return embl.qualifier_value(source, qualifier, pattern)
+    return embl.qualifier_value(source, qualifier, pattern, **kwargs)
 
 
 def chromosome(record):
@@ -251,7 +251,19 @@ def ordinal(_):
 
 
 def organelle(record):
-    return source_qualifier_value(record, 'organelle')
+    values = source_qualifier_value(record, 'organelle', max_allowed=None)
+    if len(values) == 0:
+        return None
+    if len(values) == 1:
+        return values.pop()
+    if len(values) == 2:
+        # Seems strange but there are cases where the value is
+        # ['plastid', 'plastid:chloroplast'] and in that case we want
+        # 'plastid:chloroplast' as that is more specific.
+        first, second = sorted(values, key=len)
+        if second.startswith(first):
+            return second
+    return ' '.join(sorted(values))
 
 
 def operon(feature):
