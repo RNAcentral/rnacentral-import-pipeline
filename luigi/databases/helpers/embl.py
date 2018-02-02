@@ -68,7 +68,7 @@ def qualifier_value(feature, name, pattern, max_allowed=1):
             values.add(match.group(1))
     if max_allowed is not None and len(values) > max_allowed:
         raise ValueError("Multiple values (%s) for %s in %s" %
-                         ', '.join(sorted(values)), name, str(feature))
+                         (', '.join(sorted(values)), name, str(feature)))
 
     if len(values) == 0:
         return None
