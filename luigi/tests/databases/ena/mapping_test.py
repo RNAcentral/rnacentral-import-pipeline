@@ -33,10 +33,29 @@ from databases.ena.parsers import parse
     ('data/ena/tpa/srpdb/mapping.tsv', 855),
     ('data/ena/tpa/tmrna/mapping.tsv', 21318),
     ('data/ena/tpa/wormbase/mapping.tsv', 27665),
+    ('data/ena/tpa/pombase/mapping.tsv', 4292),
+    ('data/ena/tpa/tair/mapping.tsv', 1290),
 ])
 def test_can_parse_complete_tpa_files(filename, count):
     with open(filename, 'rb') as raw:
-        assert len(list(tpa.parse_tpa_file(raw))) == count
+        loaded = list(tpa.parse_tpa_file(raw))
+        assert len(loaded) == count
+
+
+@pytest.mark.parametrize('filename,count', [
+    ('data/ena/tpa/lncrnadb/mapping.tsv', 62),
+    ('data/ena/tpa/snopy/mapping.tsv', 2634),
+    ('data/ena/tpa/srpdb/mapping.tsv', 855),
+    ('data/ena/tpa/tmrna/mapping.tsv', 21318),
+    ('data/ena/tpa/wormbase/mapping.tsv', 27665),
+    ('data/ena/tpa/pombase/mapping.tsv', 4292),
+    ('data/ena/tpa/tair/mapping.tsv', 1290),
+])
+def test_can_produce_correct_number_of_tpa_keys_from_tpa_file(filename, count):
+    with open(filename, 'rb') as raw:
+        loaded = list(tpa.parse_tpa_file(raw))
+        keys = set(tpa.tpa_key(t) for t in loaded)
+        assert len(keys) == count
 
 
 def test_can_build_correct_lncrnadb_tpas():
@@ -47,6 +66,7 @@ def test_can_build_correct_lncrnadb_tpas():
         '101',
         'Kcnq1ot1',
         'HG975405',
+        None,
     )
 
 
@@ -58,6 +78,7 @@ def test_can_build_correct_snopy_tpas():
         'Arabidopsis_thaliana300001',
         'SnoR1b',
         'LN809305',
+        None,
     )
 
 
@@ -69,6 +90,7 @@ def test_can_build_correct_srpdb_tpas():
         'Acin.baum._CP000521',
         None,
         'HG323367',
+        None,
     )
 
 
@@ -80,6 +102,43 @@ def test_can_build_correct_tmrna_tpas():
         'Acary_marin_MBIC11',
         None,
         'HG525190',
+        None,
+    )
+
+
+def test_can_build_correct_wormbase_tpas():
+    with open('data/ena/tpa/wormbase/mapping.tsv', 'rb') as raw:
+        data = next(tpa.parse_tpa_file(raw))
+    assert data == tpa.GenericTpa(
+        'WORMBASE',
+        'WBGene00000005',
+        'T13A10.10b',
+        'BX284604',
+        None,
+    )
+
+
+def test_can_build_correct_pombase_tpas():
+    with open('data/ena/tpa/pombase/mapping.tsv', 'rb') as raw:
+        data = next(tpa.parse_tpa_file(raw))
+    assert data == tpa.GenericTpa(
+        'POMBASE',
+        'ENSRNA049622790',
+        'Schizosaccharomyces_pombe',
+        'CU329672',
+        None,
+    )
+
+
+def test_can_build_correct_tair_tpas():
+    with open('data/ena/tpa/tair/mapping.tsv', 'rb') as raw:
+        data = next(tpa.parse_tpa_file(raw))
+    assert data == tpa.GenericTpa(
+        'TAIR',
+        '1000429427',
+        'AT5G52495',
+        'CP002688',
+        None,
     )
 
 
@@ -267,6 +326,48 @@ def test_can_transform_correct_snopy_entry():
     assert transformed == result
 
 
+def test_can_transform_correct_wormbase_entry():
+    transformed = attr.asdict(transform_first('wormbase'))
+    result = attr.asdict(Entry(
+        primary_id='WBGene00001734',
+        accession='BX284603.4:8962295..8965569:misc_RNA:WORMBASE:WBGene00001734',
+        ncbi_tax_id=6239,
+        database='WORMBASE',
+        exons=[],
+        rna_type='misc_RNA',
+        url='',
+        seq_version='1',
+        description='Caenorhabditis elegans Non-coding transcript of protein-coding gene grl-25',
+        species='Caenorhabditis elegans',
+        lineage=(
+            'Eukaryota; Metazoa; Ecdysozoa; Nematoda; Chromadorea; Rhabditida;'
+            ' Rhabditoidea; Rhabditidae; Peloderinae; Caenorhabditis; '
+            'Caenorhabditis elegans'
+        ),
+        common_name='',
+        division=None,
+        keywords='RNAcentral; TPA; TPA:specialist_db',
+        mol_type='genomic DNA',
+        gene='grl-25',
+        is_composite='Y',
+        non_coding_id='BX284603.4:8962295..8965569:misc_RNA',
+        product='Non-coding transcript of protein-coding gene grl-25',
+        project='PRJNA13758',
+        parent_accession='BX284603',
+    ))
+
+    assert len(transformed['references']) == 2
+    assert len(transformed['exons']) == 6
+    assert len(transformed['sequence']) == 2767
+    del transformed['references']
+    del result['references']
+    del transformed['sequence']
+    del result['sequence']
+    del transformed['exons']
+    del result['exons']
+    assert transformed == result
+
+
 def test_build_correct_tpa_key_for_snopy_entries():
     with open('data/ena/tpa/snopy/entry.embl', 'rb') as raw:
         entry = next(parse(raw))
@@ -310,6 +411,7 @@ def test_can_fetch_tpa_for_entry():
         'Arabidopsis_thaliana300001',
         'SnoR1b',
         'LN809305',
+        None,
     )
 
 
@@ -342,6 +444,33 @@ def test_can_will_not_alter_entries_from_other_dbs():
     assert len(mapped) == 1
     assert mapped[0].database == 'ENA'
     assert mapped[0].accession == 'HG975405.1:1..32753:ncRNA'
+
+
+def test_can_apply_wormbase_tpas():
+    mapping = tpa.load(['data/ena/tpa/wormbase/mapping.tsv'])
+
+    with open('data/ena/tpa/wormbase/entry.embl', 'r') as raw:
+        entries = list(parse(raw))
+    assert entries
+
+    mapped = list(tpa.apply(mapping, entries))
+    assert len(mapped) == len(entries)
+    assert mapped[0].database == 'WORMBASE'
+    assert mapped[0].accession == 'BX284603.4:8962295..8965569:misc_RNA:WORMBASE:WBGene00001734'
+
+
+def test_can_apply_pombase_tpas():
+    mapping = tpa.load(['data/ena/tpa/pombase/mapping.tsv'])
+
+    with open('data/ena/tpa/pombase/entry.embl', 'r') as raw:
+        entries = list(parse(raw))
+    assert entries
+
+    mapped = list(tpa.apply(mapping, entries))
+    assert len(mapped) == len(entries)
+
+    assert mapped[0].database == 'POMBASE'
+    assert mapped[0].accession == 'CU329670.1:1005499..1005710:misc_RNA:POMBASE:SPNCRNA.164'
 
 
 @pytest.mark.parametrize(
