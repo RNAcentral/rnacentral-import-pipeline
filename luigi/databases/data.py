@@ -72,6 +72,12 @@ def is_truish():
     return fn
 
 
+def optional_utf8(raw):
+    if raw is None:
+        return None
+    return raw.decode('utf8', 'ignore')
+
+
 @attr.s(frozen=True)
 class Exon(object):
     chromosome = attr.ib(validator=is_a(basestring))
@@ -127,9 +133,12 @@ class Reference(object):
     """
 
     accession = attr.ib(validator=is_a(basestring))
-    authors = attr.ib(validator=is_a(basestring))
+    authors = attr.ib(validator=is_a(basestring), convert=optional_utf8)
     location = attr.ib(validator=is_a(basestring))
-    title = attr.ib(validator=optional(is_a(basestring)))
+    title = attr.ib(
+        validator=optional(is_a(basestring)),
+        convert=optional_utf8
+    )
     pmid = attr.ib(validator=optional(is_a(int)))
     doi = attr.ib(validator=optional(is_a(basestring)))
 
