@@ -20,14 +20,37 @@ import attr
 from attr.validators import instance_of as is_a
 from attr.validators import optional
 
+from databases.data import Entry
+
 CHROMOSOME_LEVEL_MAPPINGS = set([
     "WORMBASE",
+    "POMBASE",
+    "TAIR",
 ])
 
 
-def tpa_key(value):
-    if value.database in CHROMOSOME_LEVEL_MAPPINGS:
-        return (value.parent_accession, value.locus_tag)
+def tpa_key(value, database=None):
+    """
+    Generate a key that can be used to map from a GenericTpa to an Entry.
+    """
+
+    db_name = value.database
+    if database:
+        db_name = database
+
+    if db_name in CHROMOSOME_LEVEL_MAPPINGS:
+        if isinstance(value, Entry):
+            if db_name == 'WORMBASE':
+                return (value.parent_accession, value.standard_name)
+            else:
+                return (value.parent_accession, value.locus_tag)
+
+        elif isinstance(value, GenericTpa):
+            if db_name == 'POMBASE':
+                return (value.parent_accession, value.database_accession)
+            else:
+                return (value.parent_accession, value.locus_tag)
+
     return (value.parent_accession, None)
 
 
@@ -46,10 +69,15 @@ class GenericTpa(object):
     database_accession = attr.ib(validator=is_a(basestring))
     locus_tag = attr.ib(validator=optional(is_a(basestring)))
     parent_accession = attr.ib(validator=is_a(basestring))
+    parent_secondary = attr.ib(validator=optional(is_a(basestring)))
 
     @classmethod
     def from_tsv(cls, row):
-        secondary = row['Source secondary accession']
+        locus_tag = row['Source secondary accession']
+        if not locus_tag:
+            locus_tag = None
+
+        secondary = row['Target secondary accession']
         if not secondary:
             secondary = None
 
@@ -58,8 +86,9 @@ class GenericTpa(object):
         return cls(
             database,
             row['Source primary accession'],
-            secondary,
+            locus_tag,
             row['Target primary accession'],
+            secondary,
         )
 
     def accession(self, entry):
@@ -118,6 +147,7 @@ class UrlBuilder(object):
 
 @attr.s()
 class TpaMappings(object):
+    databases = attr.ib(default=attr.Factory(set))
     simple_mapping = attr.ib(
         default=attr.Factory(lambda: coll.defaultdict(set))
     )
@@ -125,13 +155,19 @@ class TpaMappings(object):
     def add_tpas(self, tpas):
         for tpa in tpas:
             self.simple_mapping[tpa_key(tpa)].add(tpa)
+            self.databases.add(tpa.database)
 
     def has_tpa_for(self, entry):
         return any(self.find_tpas(entry))
 
     def find_tpas(self, entry):
-        for tpa in self.simple_mapping.get(tpa_key(entry), []):
-            yield tpa
+        for database in self.databases:
+            key = tpa_key(entry, database=database)
+            tpas = self.simple_mapping.get(key, [])
+            for tpa in tpas:
+                yield tpa
+            if tpas:
+                break
 
 
 def parse_tpa_file(handle, klass=GenericTpa):
