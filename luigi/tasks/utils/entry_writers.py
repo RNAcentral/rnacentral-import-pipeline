@@ -335,6 +335,15 @@ class Writer(object):
             writer = getattr(self, field.name)
             writer.write(data)
 
+    def write_all(self, entries):
+        """
+        Write all valid entries in the given entries iterable.
+        """
+
+        for entry in entries:
+            if entry.is_valid():
+                self.write(entry)
+
     def __enter__(self):
         return self
 
