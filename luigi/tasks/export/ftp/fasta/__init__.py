@@ -15,20 +15,31 @@ limitations under the License.
 
 import luigi
 
-from databases.gtrnadb.helpers import downloadable_files
+from .active import ActiveFastaExport
+from .active import SpeciesSpecificFastaExport
+from .inactive import InactiveFastaExport
+from .nhmmer import NHmmerIncludedExport
+from .nhmmer import NHmmerExcludedExport
+from .compress import CompressExport
+from .readme import FastaReadme
 
-from tasks.config import gtrnadb
 
-from .json_to_csv import GtRNAdbJsonToCsv
-
-
-class GtRNAdb(luigi.WrapperTask):  # pylint: disable=R0904
+class FastaExport(luigi.WrapperTask):
     """
-    Imports all GtRNAdb data. This will generate a task for each separate file
-    to create the CSV files, but does not run the secondary structure
-    importing. That has to be trigger manually after this is complete.
+    This is the main class to generate all FASTA file exports.
     """
 
     def requires(self):
-        for _, url in downloadable_files(gtrnadb().url):
-            yield GtRNAdbJsonToCsv(url=url)
+        yield FastaReadme()
+        yield NHmmerExport()
+        yield CompressExport()
+
+
+class NHmmerExport(luigi.WrapperTask):
+    """
+    This does the exports required for nhmmer.
+    """
+
+    def requires(self):
+        yield NHmmerExcludedExport()
+        yield NHmmerIncludedExport()
