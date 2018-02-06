@@ -15,20 +15,18 @@ limitations under the License.
 
 import luigi
 
-from databases.gtrnadb.helpers import downloadable_files
-
-from tasks.config import gtrnadb
-
-from .json_to_csv import GtRNAdbJsonToCsv
+from tasks.utils.http import download
 
 
-class GtRNAdb(luigi.WrapperTask):  # pylint: disable=R0904
+class GtRNAdbDownload(luigi.Task):
     """
-    Imports all GtRNAdb data. This will generate a task for each separate file
-    to create the CSV files, but does not run the secondary structure
-    importing. That has to be trigger manually after this is complete.
+    Download all GtRNAdb data.
     """
+    filename = luigi.Parameter()
+    url = luigi.Parameter()
 
-    def requires(self):
-        for _, url in downloadable_files(gtrnadb().url):
-            yield GtRNAdbJsonToCsv(url=url)
+    def output(self):
+        return luigi.LocalTarget(self.filename)
+
+    def run(self):
+        download(self.url, self.filename)

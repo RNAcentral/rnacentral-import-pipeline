@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 
 
 """
@@ -13,8 +14,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import databases.helpers.phylogeny as phy
+import re
+import urlparse
+
+import requests
+
+from databases import helpers as dbs
 from databases.data import Reference
+import databases.helpers.phylogeny as phy
 
 
 class InvalidDotBracket(Exception):
@@ -23,6 +30,36 @@ class InvalidDotBracket(Exception):
     dot-bracket string.
     """
     pass
+
+
+def extract_download_urls(base_url, text):
+    """
+    Given a chunk of text returned by the main GtRNAdb RNAcentral download url
+    (http://trna.ucsc.edu/download/RNAcentral/) this can pull out the URLs that
+    represent the filenames to download.
+    """
+
+    data = []
+    for line in text.split("\n"):
+        # I am aware of how awful it is to parse HTML via regex, but I long for
+        # the return of the elder gods and I'm doing my part to bring them
+        # back.
+        if "/icons/compressed.gif" in line:
+            match = re.search('href="([^"]+)"', line)
+            assert match
+            filename = match.group(1)
+            data.append((filename, urlparse.urljoin(base_url, filename)))
+    assert data, "Given text contained now downloadable urls"
+    return data
+
+
+def downloadable_files(base_url):
+    """
+    Determine all remote files to download.
+    """
+
+    response = requests.get(base_url)
+    return extract_download_urls(base_url, response.text)
 
 
 def url(data):
