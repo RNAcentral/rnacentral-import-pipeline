@@ -179,7 +179,10 @@ class gtrnadb(luigi.Config):  # pylint: disable=C0103, R0904
     """
     This contains the configuration for loading GtRNAdb files.
     """
-    pattern = luigi.Parameter()
+    url = luigi.Parameter(default='http://trna.ucsc.edu/download/RNAcentral/')
+
+    def raw(self, *args):
+        return os.path.join(output().base, 'gtrnadb', 'raw', *args)
 
 
 class mgi(luigi.Config):  # pylint: disable=C0103, R0904
