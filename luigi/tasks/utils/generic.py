@@ -13,22 +13,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import luigi
 
-from databases.gtrnadb.helpers import downloadable_files
-
-from tasks.config import gtrnadb
-
-from .json_to_csv import GtRNAdbJsonToCsv
-
-
-class GtRNAdb(luigi.WrapperTask):  # pylint: disable=R0904
+def normalize_species_name(species):
     """
-    Imports all GtRNAdb data. This will generate a task for each separate file
-    to create the CSV files, but does not run the secondary structure
-    importing. That has to be trigger manually after this is complete.
+    This will put species names into a standard format. That is lower case,
+    without leading or trailing whitespace and with spaces replaced by '_'.
     """
-
-    def requires(self):
-        for _, url in downloadable_files(gtrnadb().url):
-            yield GtRNAdbJsonToCsv(url=url)
+    return species.strip().lower().replace(' ', '_')

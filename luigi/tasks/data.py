@@ -15,20 +15,25 @@ limitations under the License.
 
 import luigi
 
-from databases.gtrnadb.helpers import downloadable_files
+from tasks.ena import Ena
+from tasks.ensembl.ensembl import Ensembl
+from tasks import rfam
+from tasks.gtrnadb import GtRNAdb
 
-from tasks.config import gtrnadb
 
-from .json_to_csv import GtRNAdbJsonToCsv
-
-
-class GtRNAdb(luigi.WrapperTask):  # pylint: disable=R0904
+class DataImport(luigi.WrapperTask):
     """
-    Imports all GtRNAdb data. This will generate a task for each separate file
-    to create the CSV files, but does not run the secondary structure
-    importing. That has to be trigger manually after this is complete.
+    This runs the data import that we preform on each release. This will
+    import:
+
+    - All Ena data
+    - All Ensembl data
+    - All Rfam families, clans and sequences
     """
 
     def requires(self):
-        for _, url in downloadable_files(gtrnadb().url):
-            yield GtRNAdbJsonToCsv(url=url)
+        yield Ena()
+        yield Ensembl()
+        yield rfam.RfamFamilies()
+        yield rfam.RfamSequences()
+        yield GtRNAdb()
