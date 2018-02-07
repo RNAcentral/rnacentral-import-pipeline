@@ -1,0 +1,42 @@
+{
+        "data": [{
+                "primaryId": "LNCIPEDIA:LINC00923:10",
+                "taxonId": "NCBITaxon:9606",
+                "symbolSynonyms": [
+                        "lnc-RP11-82I10.1.1-2:1",
+                        "LINC00923:10",
+                        "TCONS_00023823"
+                ],
+                "soTermId": "SO:0001877",
+                "sequence": "GAAACTTGGATCTACATAAAGAAGACAAAAGCATCAAAGACGGAATAAGTGCAGGACCTCAGCTGATTGGATGATGCCCACCATATTGGGGGAGGATCTTCCTCACCCAGTCTACCAACTGCCATGCCAATTTCCTCCAGAAACACCCTCACAGACACACCTGAGTAGCCGAATCATTCTAATTGAAAGCTAAACCACCTGGATTTTCCTTACAGCAGAAGAGGAACAAGGTCAGTGCCTACTGAAGCACTGAGAATAATGAATGTTTTCCCAGCTACCTGGGTATCCCTTAATTCCGTCAAGTTGACACTTAAGTCAACTATCACAAAACTTAAGAAAAGCAATTTTTCTGAGTTAGGGAATGTAAAGAGAAATTGTATAAAATTAGCTTTTAGTTTTAAAAAAGGACGCAGAAATAAAAGAGCCTATCTCCAGCTGGCTGAAGGCCTGGGAAGAAAATTATCT",
+                "name": "non-protein coding LINC00923:10",
+                "version": "1",
+                "gene": {
+                        "geneId": "LNCIPEDIA:LINC00923",
+                        "synonyms": ["XLOC_011602", "linc-RGMA-5"],
+                        "url": "https://hg38.lncipedia.org/db/gene/LINC00923"
+                },
+                "genomeLocations": [{
+                        "assembly": "GRCh38",
+                        "gca_accession": "GCA_000001405.25",
+                        "ucsc_accession": "hg38",
+                        "exons": [{
+                                "INSDC_accession": "CP007120.1",
+                                "chromosome": "chr15",
+                                "startPosition": 97665305,
+                                "endPosition": 97670289,
+                                "strand": "-"
+                        }]
+                }],
+                "url": "https://hg38.lncipedia.org/db/transcript/LINC00923:10",
+                "crossReferenceIds": [
+                        "NONCODE:NONHSAT050743"
+                ]
+        }],
+        "metaData": {
+                "dateProduced": "2017-11-20T22:19:12+01:00",
+                "dataProvider": "LNCIPEDIA",
+                "release": "5.0",
+                "schemaVersion": "-1.0.0"
+        }
+}

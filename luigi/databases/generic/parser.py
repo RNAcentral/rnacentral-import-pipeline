@@ -15,6 +15,8 @@ limitations under the License.
 
 import json
 
+import semver
+
 from . import v1
 
 
@@ -30,10 +32,10 @@ def parse(handle):
     if not data['data']:
         raise ValueError("Missing data to import")
 
-    version = data.get('metadata', {}).get('schemaVersion', None)
+    version = data.get('metaData', {}).get('schemaVersion', None)
     if not version:
         raise ValueError("Must specify a schema version in metadata")
 
-    if version == '1.0':
+    if semver.match(version, "<=2.0.0"):
         return v1.parse(data)
     raise ValueError("Unknown schema version: %s" % version)
