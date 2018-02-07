@@ -15,9 +15,7 @@ limitations under the License.
 
 import collections as coll
 
-from databases.data import Entry
-from databases.data import Reference
-from databases.data import SecondaryStructure
+from databases import data
 
 
 def secondary_structure(record):
@@ -27,8 +25,8 @@ def secondary_structure(record):
 
     dot_bracket = record.get('secondary_structure', None)
     if dot_bracket:
-        return SecondaryStructure(dot_bracket=dot_bracket)
-    return SecondaryStructure.empty()
+        return data.SecondaryStructure(dot_bracket=dot_bracket)
+    return data.SecondaryStructure.empty()
 
 
 def xrefs(record):
@@ -39,8 +37,8 @@ def xrefs(record):
 
     grouped = coll.defaultdict(list)
     for xref in record.get('crossReferenceIds', []):
-        dbid, _ = xref.split(':', 1)
-        grouped[dbid].append(xref)
+        dbid, accession = xref.split(':', 1)
+        grouped[dbid].append(accession)
     return dict(grouped)
 
 
@@ -49,17 +47,36 @@ def taxid(entry):
     Gets the NCBI taxon id as an integer.
     """
 
-    base, tid = entry['ncbi_tax_id'].split(':', 1)
+    base, tid = entry['taxonId'].split(':', 1)
     assert base == 'NCBITaxon'
     return int(tid)
 
 
-def locations(_):
+def as_location(location):
+    exons = []
+    for exon in location['exons']:
+        complement = None
+        if exon['strand'] == '+':
+            complement = False
+        elif exon['strand'] == '-':
+            complement = True
+        else:
+            raise ValueError("Invalid strand %s" % exon)
+
+        exons.append(data.Exon(
+            chromosome=exon['chromosome'],
+            primary_start=exon['startPosition'],
+            primary_end=exon['endPosition'],
+            complement=complement,
+        ))
+    return exons
+
+
+def locations(record):
     """
     Get all genomic locations this record is in.
     """
-
-    return []
+    return [as_location(location) for location in record['genomeLocations']]
 
 
 def gene_info(_):
@@ -73,7 +90,7 @@ def as_reference(ref):
     """
     Turn a raw reference (just a pmid) into a reference we can import.
     """
-    return Reference(
+    return data.Reference(
         pmid=ref['pubMedId'],
     )
 
@@ -92,29 +109,59 @@ def anticodon(record):
     return record.get('sequenceFeatures', {}).get('anticodon', None)
 
 
-def parse(data):
+def external_id(record):
+    """
+    Extract the external id for the record.
+    """
+
+    _, eid = record['primaryId'].split(':', 1)
+    return eid
+
+
+def description(ncrna):
+    """
+    Generate a description for the given ncrna record. This will use a series
+    of choices to select a good description.
+    """
+
+    if 'description' in ncrna and ncrna['description']:
+        return ncrna['description']
+
+    if 'name' in ncrna and ncrna['name']:
+        return ncrna['name']
+
+    if 'gene' in ncrna:
+        gene = ncrna['gene']
+        if 'name' in gene:
+            return gene['name']
+        if 'symbol' in gene:
+            return gene['symbol']
+
+    raise ValueError("Could not create a name for %s" % ncrna)
+
+
+def parse(raw):
     """
     Parses the given dict. This assumes the data is formatted according to
     version 1.0 (or equivalent) of the RNAcentral JSON schema.
     """
 
-    database = data['metadata']['dataSource']
-    for record in data['data']:
-        for location in locations(record):
-            yield Entry(
-                primary_id=record['id'],
-                accession=record['id'],
+    database = raw['metaData']['dataProvider']
+    for record in raw['data']:
+        for exons in locations(record):
+            yield data.Entry(
+                primary_id=external_id(record),
+                accession=record['primaryId'],
                 ncbi_tax_id=taxid(record),
                 database=database,
-                sequence=data['sequence'],
-                exons=location,
-                rna_type=data['rna_type'],
-                url=record['externalUrl'],
-                description=record['name'],
-                seq_version=record['version'],
+                sequence=record['sequence'],
+                exons=exons,
+                rna_type=record['soTermId'],
+                url=record['url'],
+                description=description(record),
+                seq_version=record.get('version', '1'),
                 xref_data=xrefs(record),
                 secondary_structure=secondary_structure(record),
-                gene_info=gene_info(record),
                 references=references(record),
                 organelle=record.get('localization', None),
                 product=record.get('product', None),
