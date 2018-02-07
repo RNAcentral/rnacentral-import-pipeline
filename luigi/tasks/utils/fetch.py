@@ -22,7 +22,26 @@ from . import http
 from . import ftp
 
 
-class Fetch(luigi.Task):
+def fetch(remote_path, local_path):
+    if remote_path.startswith('http'):
+        http.download(remote_path, local_path)
+
+    elif remote_path.startswith('ftp:'):
+        ftp.download(remote_path, local_path)
+
+    elif os.path.exists(remote_path):
+        if os.path.isdir(remote_path):
+            shutil.copytree(remote_path, local_path)
+        elif os.path.isfile(remote_path):
+            shutil.copy(remote_path, local_path)
+        else:
+            raise ValueError("Unknown type of file")
+
+    else:
+        raise ValueError("Remote must be http/ftp url or existing path")
+
+
+class FetchTask(luigi.Task):
     """
     A class to handle the generic task of downloading a file. The file can be
     accessed via http, ftp or
@@ -35,19 +54,4 @@ class Fetch(luigi.Task):
         return luigi.LocalTarget(self.local_path)
 
     def run(self):
-        if self.remote_path.startswith('http'):
-            http.download(self.remote_path, self.local_path)
-
-        elif self.remote_path.startswith('ftp:'):
-            ftp.download(self.remote_path, self.local_path)
-
-        elif os.path.exists(self.remote_path):
-            if os.path.isdir(self.remote_path):
-                shutil.copytree(self.remote_path, self.local_path)
-            elif os.path.isfile(self.remote_path):
-                shutil.copy(self.remote_path, self.local_path)
-            else:
-                raise ValueError("Unknown type of file")
-
-        else:
-            raise ValueError("Remote must be http/ftp url or existing path")
+        return fetch(self.remote_path, self.local_path)
