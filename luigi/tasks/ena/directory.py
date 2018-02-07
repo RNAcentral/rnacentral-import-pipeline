@@ -22,10 +22,10 @@ from databases.ena.parsers import parse_with_mapping_files
 
 from tasks.config import ena
 from tasks.config import output
+from tasks.utils.fetch import FetchTask
 from tasks.utils.entry_writers import Output
 
 from .copy import CopyNcr
-from .tpa import FetchTPA
 
 
 class EnaDirectory(luigi.Task):
@@ -34,8 +34,11 @@ class EnaDirectory(luigi.Task):
     def requires(self):
         yield CopyNcr(ncr=self.input_dir)
 
+        conf = ena()
         for database in ena().tpa_databases:
-            yield FetchTPA(database=database)
+            local_path = conf.input_tpa_file(database)
+            remote_path = conf.raw_tpa_url(database)
+            yield FetchTask(remote_path=remote_path, local_path=local_path)
 
     def output(self):
         prefix = os.path.basename(self.input_dir)
