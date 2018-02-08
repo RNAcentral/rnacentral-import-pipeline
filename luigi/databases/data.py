@@ -130,7 +130,7 @@ class Reference(object):
     authors = attr.ib(validator=is_a(basestring))
     location = attr.ib(validator=is_a(basestring))
     title = attr.ib(validator=is_a(basestring))
-    pmid = attr.ib(validator=is_a(int))
+    pmid = attr.ib(validator=optional(is_a(int)))
     doi = attr.ib(validator=is_a(basestring))
 
     def md5(self):
