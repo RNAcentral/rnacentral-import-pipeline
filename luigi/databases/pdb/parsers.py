@@ -86,6 +86,8 @@ def as_entry(row, reference_mapping):
         product=utils.product(row),
         optional_id=utils.optional_id(row),
         description=utils.description(row),
+        species=utils.species(row),
+        lineage=utils.lineage(row),
         parent_accession=utils.parent_accession(row),
         references=utils.references_for(row, reference_mapping),
         location_start=utils.location_start(row),
