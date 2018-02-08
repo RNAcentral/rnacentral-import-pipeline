@@ -88,6 +88,8 @@ def as_entry(row, reference_mapping):
         description=utils.description(row),
         parent_accession=utils.parent_accession(row),
         references=utils.references_for(row, reference_mapping),
+        location_start=utils.location_start(row),
+        location_end=utils.location_end(row),
     )
 
 

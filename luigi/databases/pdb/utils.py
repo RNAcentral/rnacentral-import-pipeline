@@ -16,10 +16,13 @@ limitations under the License.
 import re
 import csv
 import logging
+import itertools as it
+import collections as coll
 
 import requests
 
 from databases.data import Reference
+from databases.helpers import phylogeny as phy
 
 RIBOSOMES = set([
     '5S',
@@ -34,8 +37,14 @@ RIBOSOMES = set([
     '80S',
 ])
 
+URL = 'https://www.ebi.ac.uk/pdbe/entry/pdb/{pdb_id}'
 
 LOGGER = logging.getLogger(__name__)
+
+
+def grouper(iterable, n, fillvalue=None):
+    args = [iter(iterable)] * n
+    return it.izip_longest(*args, fillvalue=fillvalue)
 
 
 def rna_containing_pdb_ids():
@@ -96,6 +105,7 @@ def accession(row):
 
     # use entityId to ensure that the id is unique when chainIds
     # are only different in case ('A' and 'a')
+    print(row)
     return '{structureId}_{chainId}_{entityId}'.format(
         structureId=row['structureId'],
         chainId=row['chainId'],
@@ -136,13 +146,19 @@ def as_reference(row):
     grouped = grouper(parts, 2, '')
     authors = ','.join(''.join(p) for p in grouped)
 
+    pmid = row['pubmedId']
+    if pmid:
+        pmid = int(pmid)
+    else:
+        pmid = None
+
     return Reference(
-        accession=accession(row),
+        accession='',
         authors=authors,
-        location=sanitize(row['journal']),
-        title=sanitize(row['title']),
-        pmid=sanitize(row['pubmedId']),
-        doi=sanitize(row['doi']),
+        location=row['journalName'],
+        title=row['title'],
+        pmid=pmid,
+        doi=row['doi'],
     )
 
 
@@ -169,9 +185,9 @@ def reference_mapping(pdb_ids):
         'doi',
     ])
 
-    mapping = {}
+    mapping = coll.defaultdict(list)
     for row in report:
-        mapping[reference_mapping_id(row)] = as_reference(row)
+        mapping[reference_mapping_id(row)].append(as_reference(row))
     return mapping
 
 
@@ -214,9 +230,11 @@ def rna_type(row):
 
 
 def url(row):
-    return 'https://www.ebi.ac.uk/pdbe/entry/pdb/{pdb}'.format(
-        pdb=row['structureId'],
-    )
+    """
+    Generate a URL for a given result. It will point to the page for the whole
+    structure.
+    """
+    return URL.format(pdb_id=row['structureId'])
 
 
 def xref_data(row):
@@ -224,12 +242,12 @@ def xref_data(row):
     Put NDB and EMDB xrefs in the db_xref field.
     """
 
-    xref = {}
+    xref = coll.defaultdict(list)
     if row.get('ndbId', None):
-        xref['NDB'] = 'NDB:%s' % row['ndbId']
+        xref['NDB'].append(row['ndbId'])
     if row.get('db_name', None):
-        xref[row['db_name']] = '%s:%s' % (row['db_name'], row['db_id'])
-    return xref
+        xref[row['db_name']].append(row['db_id'])
+    return dict(xref)
 
 
 def note_data(row):
@@ -239,6 +257,7 @@ def note_data(row):
         'resolution',
         'releaseDate',
     ]
+    notes = {}
     for field in fields:
         if field in row and row[field]:
             notes[field] = row[field]
@@ -272,9 +291,13 @@ def parent_accession(row):
     return row['structureId']
 
 
-def feature_location_start(_):
+def location_start(_):
     return 1
 
 
-def feature_location_end(row):
+def location_end(row):
     return int(row['chainLength'])
+
+
+def lineage(row):
+    return phy.lineage(taxid(row))
