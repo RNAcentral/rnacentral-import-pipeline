@@ -21,8 +21,8 @@ import collections as coll
 
 import requests
 
+from databases import helpers
 from databases.data import Reference
-from databases.helpers import phylogeny as phy
 
 RIBOSOMES = set([
     '5S',
@@ -105,7 +105,6 @@ def accession(row):
 
     # use entityId to ensure that the id is unique when chainIds
     # are only different in case ('A' and 'a')
-    print(row)
     return '{structureId}_{chainId}_{entityId}'.format(
         structureId=row['structureId'],
         chainId=row['chainId'],
@@ -126,17 +125,6 @@ def taxid(row):
     if row['taxonomyId'] == '':
         return 32630  # synthetic construct
     return int(row['taxonomyId'])
-
-
-def sanitize(input_string):
-    """
-    Remove leading and trailing quotes
-    and scape the remaining double quotes.
-    """
-    input_string = re.sub('^"+', '', input_string)  # leading quotes
-    input_string = re.sub('"+$', '', input_string)  # trailing quotes
-    input_string = re.sub('"', '""', input_string)  # escape double quotes
-    return input_string
 
 
 def as_reference(row):
@@ -218,7 +206,7 @@ def rna_type(row):
     if 'RIBOZYME' in compound and 'HAMMERHEAD' not in compound:
         return 'ribozyme'
 
-    # Hammerhead ribozym
+    # Hammerhead ribozyme
     if 'RIBOZYME' in compound and 'HAMMERHEAD' in compound:
         return 'hammerhead_ribozyme'
 
@@ -234,7 +222,7 @@ def url(row):
     Generate a URL for a given result. It will point to the page for the whole
     structure.
     """
-    return URL.format(pdb_id=row['structureId'])
+    return URL.format(pdb_id=row['structureId'].lower())
 
 
 def xref_data(row):
@@ -246,7 +234,9 @@ def xref_data(row):
     if row.get('ndbId', None):
         xref['NDB'].append(row['ndbId'])
     if row.get('db_name', None):
-        xref[row['db_name']].append(row['db_id'])
+        db_name = row['db_name']
+        if db_name != 'PDB':
+            xref[db_name].append(row['db_id'])
     return dict(xref)
 
 
@@ -267,7 +257,7 @@ def note_data(row):
 def description(row, max_length=80):
     compound = row['compound'][:max_length] + \
                 (row['compound'][max_length:] and '...')
-    return '{compound} from {source} (PDB {pdb}, chain {chain}'.format(
+    return '{compound} from {source} (PDB {pdb}, chain {chain})'.format(
         compound=compound,
         source=row['source'],
         pdb=row['structureId'],
@@ -300,4 +290,8 @@ def location_end(row):
 
 
 def lineage(row):
-    return phy.lineage(taxid(row))
+    return helpers.lineage(taxid(row))
+
+
+def species(row):
+    return helpers.species(taxid(row))
