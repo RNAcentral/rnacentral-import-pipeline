@@ -17,6 +17,8 @@ import os
 import operator as op
 import itertools as it
 
+import attr
+
 from databases.data import Entry
 
 
@@ -37,26 +39,63 @@ gene = op.itemgetter('SYMBOL')
 locus_tag = op.itemgetter('SYMBOL')
 
 
-def known_organisms(host):
-    return []
+def known_organisms(_):
+    """
+    Get the names of organisms that RGD annotates. This will only return 'rat'
+    currently. While they have annotations for other databases we only process
+    rat because this is the only organism that they provide chromosomes that we
+    can extract sequences from. Without that I would have to write logic, like
+    in Rfam, that tracks down genomes. This isn't needed yet.
+    """
+
+    return [
+        'rat'
+    ]
 
 
-def gene_path(host, organism):
-    filename = 'GENES_%s.txt' % (organism.upper())
-    return os.path.join(host, 'data_release', filename)
+@attr.s()
+class RgdInfo(object):
+    organism = attr.ib()
+    genome = attr.ib()
 
+    @classmethod
+    def from_name(cls, name):
+        genome = None
+        if name == 'rat':
+            genome = 'rn6'
+        elif name == 'human':
+            return 'hg38'
+        else:
+            raise ValueError("Cannot determine genome for %s" % name)
 
-def base_gff_path(organism):
-    name = organism[0].upper() + organism[1:]
-    return 'data_release/GFF3/GENE/{name}'.format(name=name)
+        return cls(
+            organism=name,
+            genome=genome,
+        )
 
+    @property
+    def pretty(self):
+        return self.organism[0].upper() + self.organism[1:]
 
-def chromosome_files(_, _):
-    return []
+    @property
+    def chromosome_path(self):
+        return 'pub/data_release/agr/fasta/{genome}'.format(genome=self.genome)
 
+    @property
+    def gene_path(self):
+        filename = 'GENES_%s.txt' % (self.organism.upper())
+        return 'pub/data_release/{filename}'.format(filename=filename)
 
-def gff_files(host, organism):
-    pass
+    @property
+    def gff_path(self):
+        return 'data_release/GFF3/Gene/{name}'.format(name=self.pretty)
+
+    def chromosomes(self, conn):
+        return conn.lst(self.chromosome_path())
+
+    def gff_files(self, conn):
+        paths = conn.lst(self.gff_path())
+        return [path for path in paths if 'RATMINE' not in path]
 
 
 def accession(entry):
