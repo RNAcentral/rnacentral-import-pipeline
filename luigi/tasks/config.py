@@ -244,6 +244,13 @@ class ena(luigi.Config):
         return [self.input_tpa_file(tpa_db) for tpa_db in self.tpa_databases]
 
 
+class rgd(luigi.Config):
+    host = luigi.Parameter(default='ftp://ftp.rgd.mcw.edu/pub')
+
+    def raw(self, *args):
+        return os.path.join(output().base, 'rgd', 'raw', *args)
+
+
 class export(luigi.Config):  # pylint: disable=C0103,R0904
     rfam_example_size = luigi.IntParameter(default=10)
 

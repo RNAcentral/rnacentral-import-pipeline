@@ -13,6 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import os
 import operator as op
 import itertools as it
 
@@ -34,6 +35,28 @@ pmids = op.itemgetter('CURATED_REF_RGD_ID', 'CURATED_REF_PUBMED_ID',
                       'UNCURATED_PUBMED_ID')
 gene = op.itemgetter('SYMBOL')
 locus_tag = op.itemgetter('SYMBOL')
+
+
+def known_organisms(host):
+    return []
+
+
+def gene_path(host, organism):
+    filename = 'GENES_%s.txt' % (organism.upper())
+    return os.path.join(host, 'data_release', filename)
+
+
+def base_gff_path(organism):
+    name = organism[0].upper() + organism[1:]
+    return 'data_release/GFF3/GENE/{name}'.format(name=name)
+
+
+def chromosome_files(_, _):
+    return []
+
+
+def gff_files(host, organism):
+    pass
 
 
 def accession(entry):
