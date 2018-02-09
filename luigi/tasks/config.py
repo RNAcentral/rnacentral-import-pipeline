@@ -195,6 +195,14 @@ class mgi(luigi.Config):  # pylint: disable=C0103, R0904
     json_filename = luigi.Parameter(default='rna')
 
 
+
+class rgd(luigi.Config):
+    host = luigi.Parameter(default='ftp://ftp.rgd.mcw.edu/pub')
+
+    def raw(self, *args):
+        return os.path.join(output().base, 'rgd', 'raw', *args)
+
+
 class export(luigi.Config):  # pylint: disable=C0103,R0904
     rfam_example_size = luigi.IntParameter(default=10)
 
