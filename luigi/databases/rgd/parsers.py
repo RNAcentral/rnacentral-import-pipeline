@@ -47,7 +47,7 @@ def parse_v_2_2_5(tsv_handle, seqs):
     """
 
     entries = csv.DictReader(lines(tsv_handle))
-    ncrna = it.filter(helpers.is_ncrna, entries)
+    ncrna = it.ifilter(helpers.is_ncrna, entries)
     return it.imap(lambda e: helpers.as_entry(e, seqs), ncrna)
 
 
