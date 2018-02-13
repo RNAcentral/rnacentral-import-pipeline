@@ -82,6 +82,17 @@ def test_can_build_xrefs(simple_entry):
     }
 
 
+@pytest.mark.skip()
+def test_can_fetch_sequence(simple_entry, sequences):
+    pass
+
+
+def test_fails_without_existing_sequence(simple_entry, sequences):
+    simple_entry['RGD_GENE_ID'] = 'something-made-up'
+    with pytest.raises(Exception):
+        rgd.sequence(simple_entry, sequences)
+
+
 @pytest.mark.skip
 def test_can_build_correct_entry(simple_entry):
     assert attr.asdict(rgd.as_entry(simple_entry, None)) == attr.asdict(Entry(

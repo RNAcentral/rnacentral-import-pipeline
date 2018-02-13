@@ -14,6 +14,7 @@ limitations under the License.
 """
 
 import os
+import tempfile
 
 import luigi
 
@@ -24,20 +25,25 @@ from tasks.utils.fetch import FetchTask
 
 from databases.rgd import parsers
 from databases.rgd import helpers
-from databases.rgd import sequences as seqs
-
-from . sequences import RgdExtractSequences
 
 
 class RgdOrganism(luigi.Task):
     organism = luigi.Parameter()
 
     def requires(self):
-        local_genes = rgd().raw(self.organism + '-genes.txt')
-        remote_genes = helpers.gene_path(rgd().host, self.organism)
+        conf = rgd()
+        summary = helpers.RgdInfo.from_name(self.organism)
+        local_genes = conf.raw(self.organism + '-genes.txt')
+        local_sequences = conf.raw(self.organism + 'sequences.fasta')
         return [
-            RgdExtractSequences(self.organism),
-            FetchTask(remote_file=remote_genes, local_file=local_genes),
+            FetchTask(
+                remote_file=summary.sequence_uri(conf),
+                local_file=local_sequences,
+            ),
+            FetchTask(
+                remote_file=summary.gene_uri(conf),
+                local_file=local_genes,
+            ),
         ]
 
     def output(self):
@@ -48,7 +54,10 @@ class RgdOrganism(luigi.Task):
         extract, fetch = self.requires()
         genes_file = fetch.output().fn
         seqs_file = extract.output().fn
+
         with self.output().writer() as writer:
-            with seqs.open(seqs_file, 'r') as sequences, \
+            with tempfile.NamedTemporaryFile() as tmp, \
                     open(genes_file, 'r') as handle:
-                    writer.write_all(parsers.parse(handle, sequences))
+
+                indexed = helpers.index(seqs_file, tmp.name)
+                writer.write_all(parsers.parse(handle, indexed))

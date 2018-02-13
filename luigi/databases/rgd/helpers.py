@@ -14,10 +14,12 @@ limitations under the License.
 """
 
 import csv
+import gzip
 import operator as op
 import itertools as it
 
 import attr
+from Bio import SeqIO
 
 from databases.data import Entry
 from databases import helpers as phy
@@ -39,7 +41,7 @@ XREF_NAMING = {
 }
 
 primary_id = op.itemgetter('GENE_RGD_ID')
-rna_type = op.itemgetter('GENE_TYPE')
+basic_rna_type = op.itemgetter('GENE_TYPE')
 pmids = op.itemgetter('CURATED_REF_RGD_ID', 'CURATED_REF_PUBMED_ID',
                       'UNCURATED_PUBMED_ID')
 gene = op.itemgetter('SYMBOL')
@@ -62,46 +64,85 @@ def known_organisms():
 @attr.s()
 class RgdInfo(object):
     organism = attr.ib()
-    genome = attr.ib()
 
     @classmethod
     def from_name(cls, name):
-        genome = None
-        if name == 'rat':
-            genome = 'rn6'
-        elif name == 'human':
-            return 'hg38'
-        else:
-            raise ValueError("Cannot determine genome for %s" % name)
-
         return cls(
             organism=name,
-            genome=genome,
         )
 
     @property
-    def pretty(self):
-        return self.organism[0].upper() + self.organism[1:]
-
-    @property
-    def chromosome_path(self):
-        return 'pub/data_release/agr/fasta/{genome}'.format(genome=self.genome)
+    def sequence_path(self):
+        if self.organism == 'rat':
+            return 'pub/data_release/UserReqFiles/RAT_NUCLEOTIDE_SEQUENCES.fa.gz'
+        raise ValueError("Cannot find sequences for %s" % self.organism)
 
     @property
     def gene_path(self):
         filename = 'GENES_%s.txt' % (self.organism.upper())
         return 'pub/data_release/{filename}'.format(filename=filename)
 
-    @property
-    def gff_path(self):
-        return 'data_release/GFF3/Gene/{name}'.format(name=self.pretty)
+    def sequence_uri(self, config):
+        return 'ftp://{host}/{path}'.format(
+            host=config.host,
+            path=self.sequence_path,
+        )
 
-    def chromosomes(self, conn):
-        return conn.lst(self.chromosome_path())
+    def gene_uri(self, config):
+        return 'ftp://{host}/{path}'.format(
+            host=config.host,
+            path=self.gene_path,
+        )
 
-    def gff_files(self, conn):
-        paths = conn.lst(self.gff_path())
-        return [path for path in paths if 'RATMINE' not in path]
+
+def corrected_records(handle):
+    """
+    Process all records and ensure that the id of each record is the RGD gene
+    id, which is what we want to index them by.
+    """
+
+    for record in SeqIO.parse(handle, 'fasta'):
+        record.id = description_gene_id(record.description)
+        yield record
+
+
+def index(filename, tmp_handle):
+    """
+    This will decompress the fasta file we fetch from RGD and process it to
+    produce an indexed file that uses the gene id as the key to index the
+    sequences.
+    """
+
+    with gzip.open(filename, 'r') as raw:
+        SeqIO.write(corrected_records(raw), tmp_handle, 'fasta')
+
+    tmp_handle.seek(0)
+    return SeqIO.index(tmp_handle, 'fasta')
+
+
+def description_gene_id(description):
+    for part in description.split(', '):
+        if part.startswith('gene'):
+            _, gene_id = part.split(' ')
+            return gene_id.replace('RGD:', '')
+    raise ValueError("No gene id for %s" % description)
+
+
+def rna_type(entry):
+    basic = basic_rna_type(entry)
+    if basic == 'rrna':
+        return 'rRNA'
+    if basic == 'trna':
+        return 'tRNA'
+    if basic == 'ncrna':
+        return 'other'
+    if basic == 'snrna':
+        return 'snRNA'
+    raise ValueError("Cannot determine rna type for %s" % entry)
+
+
+def indexed_gene_id(entry):
+    return primary_id(entry)
 
 
 def accession(entry):
@@ -134,10 +175,9 @@ def seq_version(_):
     return '1'
 
 
-def sequence(entry, seqs):
-    return ''
-    # record = seqs[primary_id(entry)]
-    # return str(record.seq)
+def sequence(entry, indexed):
+    record = indexed[primary_id(entry)]
+    return str(record.seq)
 
 
 def exons(_):
@@ -178,7 +218,7 @@ def description(entry):
 
 
 def gene_synonyms(entry):
-    if entry['OLD_NAME']:
+    if entry['OLD_SYMBOL']:
         return entry['OLD_SYMBOL'].split(';')
     return []
 
