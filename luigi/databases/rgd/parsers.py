@@ -13,7 +13,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import csv
 import itertools as it
 
 from . import helpers
@@ -46,7 +45,7 @@ def parse_v_2_2_5(tsv_handle, seqs):
     equivelant).
     """
 
-    entries = csv.DictReader(lines(tsv_handle))
+    entries = helpers.as_rows(lines(tsv_handle))
     ncrna = it.ifilter(helpers.is_ncrna, entries)
     return it.imap(lambda e: helpers.as_entry(e, seqs), ncrna)
 
