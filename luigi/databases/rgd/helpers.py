@@ -13,13 +13,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import os
+import csv
 import operator as op
 import itertools as it
 
 import attr
 
 from databases.data import Entry
+from databases import helpers as phy
 
 
 KNOWN_RNA_TYPES = set([
@@ -31,6 +32,12 @@ KNOWN_RNA_TYPES = set([
 
 URL = 'https://rgd.mcw.edu/rgdweb/report/gene/main.html?id={id}'
 
+XREF_NAMING = {
+    'ensembl': 'ENSEMBL_ID',
+    'ncbi_gene': 'NCBI_GENE_ID',
+    'genbank': 'GENBANK_NUCLEOTIDE',
+}
+
 primary_id = op.itemgetter('GENE_RGD_ID')
 rna_type = op.itemgetter('GENE_TYPE')
 pmids = op.itemgetter('CURATED_REF_RGD_ID', 'CURATED_REF_PUBMED_ID',
@@ -39,7 +46,7 @@ gene = op.itemgetter('SYMBOL')
 locus_tag = op.itemgetter('SYMBOL')
 
 
-def known_organisms(_):
+def known_organisms():
     """
     Get the names of organisms that RGD annotates. This will only return 'rat'
     currently. While they have annotations for other databases we only process
@@ -47,7 +54,6 @@ def known_organisms(_):
     can extract sequences from. Without that I would have to write logic, like
     in Rfam, that tracks down genomes. This isn't needed yet.
     """
-
     return [
         'rat'
     ]
@@ -99,14 +105,20 @@ class RgdInfo(object):
 
 
 def accession(entry):
-    return 'RGD:%s' % primary_id(entry)
+    return 'RRID:RGD_%s' % primary_id(entry)
 
 
 def taxid(_):
-    pass
+    return 10116
+
+
+def species(entry):
+    return phy.species(taxid(entry))
 
 
 def fetch_and_split(entry, name):
+    if not entry[name]:
+        return None
     return entry[name].split(';')
 
 
@@ -123,8 +135,9 @@ def seq_version(_):
 
 
 def sequence(entry, seqs):
-    record = seqs[primary_id(entry)]
-    return str(record.seq)
+    return ''
+    # record = seqs[primary_id(entry)]
+    # return str(record.seq)
 
 
 def exons(_):
@@ -133,17 +146,16 @@ def exons(_):
 
 def xref_data(entry):
     xrefs = {}
-    ensembl = fetch_and_split(entry, 'ENSEMBL_ID')
-    if ensembl:
-        xrefs['ensembl'] = ensembl
-    refseq = fetch_and_split(entry, 'NCBI_GENE_ID')
-    if refseq:
-        xrefs['refseq'] = refseq
+    for name, key in XREF_NAMING.items():
+        data = fetch_and_split(entry, key)
+        if data:
+            xrefs[name] = data
     return xrefs
 
 
 def references(entry):
     refs = []
+    # refs.append(pub.as_reference(25355511))  # The general RGD citation
     possible_ids = it.chain.from_iterable(pmids(entry))
     for idset in possible_ids:
         pubids = idset.split(';')
@@ -154,9 +166,21 @@ def references(entry):
 
 
 def description(entry):
-    return '{species} ({common_name}) {name}'.format(
+    tag = None
+    if locus_tag(entry):
+        tag = ' (%s)' % locus_tag(entry)
+
+    return '{species} {name}{tag}'.format(
         name=entry['NAME'],
+        species=species(entry),
+        tag=tag,
     )
+
+
+def gene_synonyms(entry):
+    if entry['OLD_NAME']:
+        return entry['OLD_SYMBOL'].split(';')
+    return []
 
 
 def as_entry(data, seqs):
@@ -175,7 +199,12 @@ def as_entry(data, seqs):
 
         gene=gene(data),
         locus_tag=locus_tag(data),
+        gene_synonyms=gene_synonyms(data),
         description=description(data),
 
         references=references(data),
     )
+
+
+def as_rows(lines):
+    return csv.DictReader(lines, delimiter='\t')
