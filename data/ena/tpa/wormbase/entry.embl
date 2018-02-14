@@ -1,0 +1,142 @@
+ID   BX284603.4:8962295..8965569:misc_RNA; SV 4; linear; genomic DNA; CON; INV; 2767 BP.
+XX
+PA   BX284603.4
+XX
+PR   Project:PRJNA13758;
+XX
+DT   04-MAR-2003 (Rel. 75, Created)
+DT   29-SEP-2017 (Rel. 134, Last updated, Version 24)
+XX
+DE   Caenorhabditis elegans Non-coding transcript of protein-coding gene grl-25
+XX
+KW   .
+XX
+OS   Caenorhabditis elegans
+OC   Eukaryota; Metazoa; Ecdysozoa; Nematoda; Chromadorea; Rhabditida;
+OC   Rhabditoidea; Rhabditidae; Peloderinae; Caenorhabditis.
+XX
+RN   [1]
+RG   WormBase Consortium
+RA   WormBase;
+RT   ;
+RL   Submitted (26-SEP-2017) to the INSDC.
+RL   WormBase Group, European Bioinformatics Institute, Cambridge, CB10 1SA, UK.
+RL   Email: help@wormbase.org
+XX
+RN   [2]
+RA   Sulson J.E., Waterston R.;
+RT   ;
+RL   Submitted (03-MAR-2003) to the INSDC.
+RL   Nematode Sequencing Project: Sanger Institute, Hinxton, Cambridge CB10 1SA,
+RL   UK and The Genome Institute at Washington University, St. Louis, MO 63110,
+RL   USA.
+XX
+RN   [3]
+RG   Caenorhabditis elegans Sequencing Consortium
+RA   Sulson J.E., Waterston R.;
+RT   "Genome sequence of the nematode C. elegans: a platform for investigating
+RT   biology";
+RL   Science, e1252229 282(5396):2012-2018(1998).
+XX
+DR   WormBase; WBGene00001734; ZK643.8b.
+DR   MD5; fc9388425e6b9a0a205260089e3af275.
+DR   BioSample; SAMEA3138177.
+XX
+CC   Annotated features correspond to WormBase release WS262.
+CC   
+CC   Protein-coding gene structures below are the result of integration
+CC   and manual review of the following types of data: ab initio
+CC   predictions by Genefinder (P. Green and L. Hillier, pers. comm.);
+CC   alignments to published proteins and cDNAs; genome sequence
+CC   conservation with other nematodes (e.g. to C. briggsae using WABA:
+CC   Genome Res. 2000. 10:1115-1125); sequence features (such as
+CC   trans-splice and polyA sites).
+CC   
+CC   Sources of data: large-scale EST projects of Yuji Kohara
+CC   (http://www.ddbj.nig.ac.jp/c-elegans/html/CE_INDEX.html); ORFeome
+CC   cloning project (http://worfdb.dfci.harvard.edu); RST large-scale
+CC   sequencing project (Genome Res. 2009. 19:2334-2342); IST library
+CC   (Science. 2004. 303:540-3); RT-PCR EST set (Ewing B. Green P. 2010
+CC   Unpublished); UTRome EST data submission (UTRome v1 Mangone M.
+CC   Piano F. 2009); TEC-RED data (PNAS 2004. 101:1650-1655); RNA Deep
+CC   sequencing data (454 read clusters - Makedonka Mitreva,
+CC   unpublished; Illumina sequence data, Genome Res. 2009. 19:657-66);
+CC   Numerous data sets from the modENCODE project (Science. 2010.
+CC   330:1775-87); Individual C. elegans Nucleotide Database
+CC   submissions; Personal communications with C. elegans researchers;
+CC   
+CC   Non-Coding gene structures below are derived using the following
+CC   methods and data: ab initio prediction of tRNAs by tRNAscan-SE
+CC   (Nucl. Acids. Res., 25, 955-964); integration and appraisal of
+CC   miRNAs from miRBase (http://www.mirbase.org); integration and
+CC   appraisal of RFAM predictions (rfam.sanger.ac.uk); 21U-RNAs (Cell.
+CC   2006. 127:1193-1207); modENCODE data (Science. 2010. 330:1775-87);
+CC   manual curation of novel published ncRNAs from the literature.
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..2767
+FT                   /organism="Caenorhabditis elegans"
+FT                   /chromosome="III"
+FT                   /strain="Bristol N2"
+FT                   /mol_type="genomic DNA"
+FT                   /db_xref="taxon:6239"
+FT   misc_RNA        join(BX284603.4:8962295..8962388,
+FT                   BX284603.4:8962438..8963055,BX284603.4:8963106..8963198,
+FT                   BX284603.4:8963244..8963858,BX284603.4:8964169..8965329,
+FT                   BX284603.4:8965384..8965569)
+FT                   /gene="grl-25"
+FT                   /locus_tag="CELE_ZK643.8"
+FT                   /standard_name="ZK643.8b"
+FT                   /product="Non-coding transcript of protein-coding gene
+FT                   grl-25"
+XX
+SQ   Sequence 2767 BP; 663 A; 621 C; 916 G; 567 T; 0 other;
+     atggctacct accttcggtt ggtagttctc ttcctattga cgatccacgt ttcgtcattc        60
+     ctcttcccta gcgccggagg aggaggaggt ggaggcggct gcggtggcgg ctgcggtggt       120
+     ggctgcggtg gtggcggagg atgtgctcca ccacctgctc cgtgtggagg tggatgtgga       180
+     ggtggaggtg gtggctgcgg aggtggcgga ggatgtgctc caccacctgc tccgtgtgga       240
+     ggtggatgtg gaggtggagg aggtggatgc ggaggtggag gtggtggctg cggaggcggc       300
+     ggaggatgcg gtggaggagg cggaggatgc ggaggaggtg gcggaggatg cggtggagga       360
+     ggtggaggat gcggaggagg aggtggagga tgcggaggag gaggcggcgg aggatgtggt       420
+     ggaggatcca gcggaggatg cggtggagga tctagcggag gatgcggagg aggaggtggc       480
+     ggaggatgcg gaggaggagg cggtggaggc tgtggaggag gatccagcgg aggaggtgga       540
+     tatgctgttg caccatcagg tggaggagga tgcggaggag gaggatcaag cggaggaggt       600
+     ggatatgctg ttgctccatc aggaggagga ggatgcggag gtggaggatc cagcggtgga       660
+     ggaggatatg cctcggctcc atccggaggc ggtggatacg caactagcgg aggaggaggc       720
+     agcggtggat acgctaccgg tggaagctct ggaggaggat attcatctgg aggaagctcc       780
+     ggcggaggat actcaactgg cggaggagga ggatatgccg gaggaggcgg aggaggcggc       840
+     ggaagcagcg gaggatatgc cggaagcagt ggtggaggag gatattcagc cccagctgct       900
+     gctccaccac cgccacctcc accaccacca ccaccagctc cagctccagt gtcgagcgga       960
+     ggaggatact ctgaacaagc aagtggtggt tcttcttacc cgtcacgctt cagattctcg      1020
+     cgcttcttca acaaggcata atttaagtac catcacaatt cccaatgatg ccccccgtta      1080
+     tgatattgtt gtgagaaatg agagtgactg tagcagtcaa ttctcaacaa gaagtgtcta      1140
+     gtattgtctc ttttcccacc atctttcctg tcagagccga gattccatca tctcttctca      1200
+     aattttatgt tttgttgcca acgtcttgtc tgtcggccaa aacaaaaccc atgtgtcctg      1260
+     tatataaatg tttccgaatg tgtacgtcgt tttctaacgc aatgcatgaa cacaaacata      1320
+     tcaacgaaga ttacattatt cagttaaagg ttcacaggct caatgtgtta aaatgacaag      1380
+     cagactgact ctcaactaaa tggatttgga agaatacgtg agcagcggag gaggaggagg      1440
+     atcgtcttat tccggcggag gagaagcatc atcgtcatcc ggaggtggat attcaggagg      1500
+     tggtgaatcc tcatcgagcg gtggatcttc ttattctagc ggaggagact cgtcttcgtc      1560
+     atcaggcgga ggatactcat cgggaggtga cagctcatca tcatcatctt catctggagg      1620
+     atattcggga gggagtgatt catcgtcgag ctcatcatcc tcgtctggtg gatattcatc      1680
+     cggaggaggc gatgctggag catcatctgg aggagagtcc tcttctgcag gaggatattc      1740
+     cggatcttca tcaagcggag gagaagcatc atccggagga tactctggtg gatcgtcaga      1800
+     gccagcacca gctccagaag cagcacctgc ttcatctggg ggatactcag gaggatccga      1860
+     agcagcacca gaagctgctc cagcagcacc atcaggtgga tattcaggat ctgaggctgc      1920
+     accagaagct gctccagcag ccccatcagg tggatattca ggatccgaag cagcaccaga      1980
+     agctgctcca gcagcaccat caggtggata ttcaggttct gaagctgcac cggaagccgc      2040
+     tccagcggcc ccatccggtg gatactctgg atctgaagca gcaccagaag cagctccagc      2100
+     agctccatct gggggatatt ccggatcaga ggcagctcca gaagccgcac cagcagcccc      2160
+     atctggggga tactcaggat ctgaatcctc agcacctgcc gctccagagc cagctccgtc      2220
+     ttctggaggc tattctggag gaggaggtga cgctggatca gctgctggag gcagcaacta      2280
+     ctctggaggt ggtgaaaccg ctccagctgc cccaccacca gctccggaac cagctcaaac      2340
+     ctactcagga gcaggtggag agtcggccgc cgccgcacca gcaccatctg gaggaggata      2400
+     cagtggaagt ggaggagccg gtggagcacc aaatggagcc aattatgacg aagcacaaga      2460
+     agatgtagaa gaatatgaag gaggagctgc tggattcaga aacagaagat tctcaaaggg      2520
+     aggaactgct gatgatactc caatctgtaa ctcagttaga ctcaggaaac ttattagaca      2580
+     gagtctcact gaggatccag aatcctcaat gcaacgtttg gctcaacgtg tcaaatctcg      2640
+     tcttgtgagt ggagaattct atgttgcctg tggagagcaa ggtctcttac cacttgctgg      2700
+     agagaatcgt gagcactgtt tcatcaagag cggaaaattc gcttgctatg tcctaagaaa      2760
+     agcctaa                                                                2767
+//
