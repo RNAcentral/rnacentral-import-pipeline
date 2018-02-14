@@ -47,7 +47,8 @@ def parse_v_2_2_5(tsv_handle, seqs):
 
     entries = helpers.as_rows(lines(tsv_handle))
     ncrna = it.ifilter(helpers.is_ncrna, entries)
-    entries = it.imap(lambda e: helpers.as_entry(e, seqs), ncrna)
+    entries = it.imap(lambda e: helpers.as_entries(e, seqs), ncrna)
+    entries = it.chain.from_iterable(entries)
     return it.ifilter(None, entries)
 
 
