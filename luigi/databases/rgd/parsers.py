@@ -47,7 +47,8 @@ def parse_v_2_2_5(tsv_handle, seqs):
 
     entries = helpers.as_rows(lines(tsv_handle))
     ncrna = it.ifilter(helpers.is_ncrna, entries)
-    return it.imap(lambda e: helpers.as_entry(e, seqs), ncrna)
+    entries = it.imap(lambda e: helpers.as_entry(e, seqs), ncrna)
+    return it.ifilter(None, entries)
 
 
 def parse(tsv_handle, indexed):
@@ -56,6 +57,13 @@ def parse(tsv_handle, indexed):
     objects to save. It will validate the version of the TSV handle to check
     that it is a version we know how to parse. If it cannot find a version, or
     the version is unparsable then this will raise an Exception.
+
+    The parsing has some limitations.
+    - All sequences will only have 1 exon. This is because the information in
+    the tsv file does not include the exons, just the gene start/stop. We don't
+    yet parse the gff files to fix this.
+    - This assumes all sequences come from Rat.
+    - No references are extracted yet.
     """
 
     version = get_version(tsv_handle)
