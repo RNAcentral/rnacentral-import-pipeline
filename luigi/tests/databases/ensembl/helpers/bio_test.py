@@ -32,6 +32,7 @@ from databases.ensembl.helpers.bio import (
 )
 
 
+@pytest.mark.slowtest
 class HelpersTest(ut.TestCase):  # pylint: disable=R0904
     filename = 'data/Homo_sapiens.GRCh38.87.chromosome.12.dat'
 
