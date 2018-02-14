@@ -13,22 +13,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import luigi
+import pytest
 
-from databases.gtrnadb.helpers import downloadable_files
+from .active_test import count
 
-from tasks.config import gtrnadb
-
-from .json_to_csv import GtRNAdbJsonToCsv
+from tasks.export.ftp.fasta.inactive import InactiveFastaExport
 
 
-class GtRNAdb(luigi.WrapperTask):  # pylint: disable=R0904
-    """
-    Imports all GtRNAdb data. This will generate a task for each separate file
-    to create the CSV files, but does not run the secondary structure
-    importing. That has to be trigger manually after this is complete.
-    """
-
-    def requires(self):
-        for _, url in downloadable_files(gtrnadb().url):
-            yield GtRNAdbJsonToCsv(url=url)
+@pytest.mark.slowtest
+def test_inactive_sql_produces_correct_counts():
+    sql = InactiveFastaExport().fetch
+    assert count(sql) == 2079637

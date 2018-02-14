@@ -13,22 +13,20 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import shutil
+
 import luigi
 
-from databases.gtrnadb.helpers import downloadable_files
-
-from tasks.config import gtrnadb
-
-from .json_to_csv import GtRNAdbJsonToCsv
+from tasks.config import ensembl
 
 
-class GtRNAdb(luigi.WrapperTask):  # pylint: disable=R0904
+class Copy(luigi.Task):
     """
-    Imports all GtRNAdb data. This will generate a task for each separate file
-    to create the CSV files, but does not run the secondary structure
-    importing. That has to be trigger manually after this is complete.
+    Copies an Ensembl files to our data store.
     """
 
-    def requires(self):
-        for _, url in downloadable_files(gtrnadb().url):
-            yield GtRNAdbJsonToCsv(url=url)
+    def output(self):
+        return luigi.LocalTarget(ensembl.raw('homo_sapiens'))
+
+    def run(self):
+        shutil.copytree(ensembl().directory, ensembl.raw())
