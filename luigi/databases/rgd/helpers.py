@@ -19,6 +19,7 @@ import gzip
 import tempfile
 import operator as op
 import itertools as it
+import collections as coll
 from contextlib import contextmanager
 
 import attr
@@ -104,8 +105,32 @@ def corrected_records(handle):
     This just strips out the ',' that is at the end of ids that RGD provides.
     """
 
+    seen = coll.defaultdict(set)
     for record in SeqIO.parse(handle, 'fasta'):
-        record.id = record.id.replace(',', '')  # Remove trailing comma on ids
+
+        if not str(record.seq):
+            continue
+
+        # These are probably protein, so skip them
+        if record.id.startswith('XM_') or record.id.startswith('NM_'):
+            continue
+
+        # Change given ids into a probably unique id
+        given = record.id.replace(',', '')
+        match = re.search('gene RGD:(\d+),', record.description)
+        if not match:
+            raise ValueError("RGD fasta must state gene id")
+
+        record.id = '{given}-{gene}'.format(
+            given=given,
+            gene=match.group(1),
+        )
+
+        # Prevent writing duplicate entries
+        if str(record.seq) in seen[record.id]:
+            continue
+
+        seen[record.id].add(str(record.seq))
         yield record
 
 
@@ -189,16 +214,17 @@ def sequences_for(entry, sequences):
     count = 0
     seqs = set()
     for xref_id in seq_xref_ids(entry):
-        if xref_id not in sequences:
+        record_id = xref_id + '-' + primary_id(entry)
+        if record_id not in sequences:
             continue
         count += 1
-        record = sequences[xref_id]
+        record = sequences[record_id]
         seqs.add(str(record.seq))
 
     # if not seqs:
     #     raise ValueError("No sequences found for: %s" % entry)
 
-    assert count == len(seqs), "RGD is a pita"
+    # assert count == len(seqs), "RGD is a pita"
     return list(seqs)
 
 
