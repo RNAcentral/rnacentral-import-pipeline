@@ -245,7 +245,7 @@ class ena(luigi.Config):
 
 
 class rgd(luigi.Config):
-    host = luigi.Parameter(default='ftp://ftp.rgd.mcw.edu/pub')
+    host = luigi.Parameter(default='ftp.rgd.mcw.edu')
 
     def raw(self, *args):
         return os.path.join(output().base, 'rgd', 'raw', *args)
