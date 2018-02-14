@@ -26,7 +26,7 @@ from Bio import SeqIO
 
 from databases.data import Exon
 from databases.data import Entry
-from databases import helpers as phy
+from databases.helpers import phylogeny as phy
 
 
 KNOWN_RNA_TYPES = set([
