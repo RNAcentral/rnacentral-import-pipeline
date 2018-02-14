@@ -13,14 +13,18 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import re
 import csv
 import gzip
+import tempfile
 import operator as op
 import itertools as it
+from contextlib import contextmanager
 
 import attr
 from Bio import SeqIO
 
+from databases.data import Exon
 from databases.data import Entry
 from databases import helpers as phy
 
@@ -97,35 +101,28 @@ class RgdInfo(object):
 
 def corrected_records(handle):
     """
-    Process all records and ensure that the id of each record is the RGD gene
-    id, which is what we want to index them by.
+    This just strips out the ',' that is at the end of ids that RGD provides.
     """
 
     for record in SeqIO.parse(handle, 'fasta'):
-        record.id = description_gene_id(record.description)
+        record.id = record.id.replace(',', '')  # Remove trailing comma on ids
         yield record
 
 
-def index(filename, tmp_handle):
+@contextmanager
+def indexed(filename):
     """
     This will decompress the fasta file we fetch from RGD and process it to
     produce an indexed file that uses the gene id as the key to index the
     sequences.
     """
 
-    with gzip.open(filename, 'r') as raw:
-        SeqIO.write(corrected_records(raw), tmp_handle, 'fasta')
+    with tempfile.NamedTemporaryFile() as tmp:
+        with gzip.open(filename, 'r') as raw:
+            SeqIO.write(corrected_records(raw), tmp, 'fasta')
 
-    tmp_handle.seek(0)
-    return SeqIO.index(tmp_handle, 'fasta')
-
-
-def description_gene_id(description):
-    for part in description.split(', '):
-        if part.startswith('gene'):
-            _, gene_id = part.split(' ')
-            return gene_id.replace('RGD:', '')
-    raise ValueError("No gene id for %s" % description)
+        tmp.flush()
+        yield SeqIO.index(tmp.name, 'fasta')
 
 
 def rna_type(entry):
@@ -145,7 +142,9 @@ def indexed_gene_id(entry):
     return primary_id(entry)
 
 
-def accession(entry):
+def accession(entry, index=None):
+    if index is not None:
+        return 'RRID:RGD_%s:%i' % (primary_id(entry), index)
     return 'RRID:RGD_%s' % primary_id(entry)
 
 
@@ -164,7 +163,7 @@ def fetch_and_split(entry, name):
 
 
 def is_ncrna(entry):
-    return rna_type(entry) in KNOWN_RNA_TYPES
+    return basic_rna_type(entry) in KNOWN_RNA_TYPES
 
 
 def url(entry):
@@ -175,13 +174,47 @@ def seq_version(_):
     return '1'
 
 
-def sequence(entry, indexed):
-    record = indexed[primary_id(entry)]
-    return str(record.seq)
+def seq_xref_ids(entry):
+    """
+    This will produce the list of all ids that could be used to extract the
+    """
+
+    xref_ids = []
+    for ids in xref_data(entry).values():
+        xref_ids.extend(ids)
+    return xref_ids
 
 
-def exons(_):
-    return []
+def sequences_for(entry, sequences):
+    count = 0
+    seqs = set()
+    for xref_id in seq_xref_ids(entry):
+        if xref_id not in sequences:
+            continue
+        count += 1
+        record = sequences[xref_id]
+        seqs.add(str(record.seq))
+
+    # if not seqs:
+    #     raise ValueError("No sequences found for: %s" % entry)
+
+    assert count == len(seqs), "RGD is a pita"
+    return list(seqs)
+
+
+def exons(entry):
+    if not entry['CHROMOSOME_6.0']:
+        return []
+    complement = False
+    strand = entry['STRAND_6.0']
+    if strand == '-':
+        complement = True
+    return [Exon(
+        chromosome='chr%s' % entry['CHROMOSOME_6.0'],
+        primary_start=int(entry['START_POS_6.0']),
+        primary_end=int(entry['STOP_POS_6.0']),
+        complement=complement,
+    )]
 
 
 def xref_data(entry):
@@ -224,26 +257,32 @@ def gene_synonyms(entry):
 
 
 def as_entry(data, seqs):
-    return Entry(
-        primary_id=primary_id(data),
-        accession=accession(data),
-        ncbi_tax_id=taxid(data),
-        database='RGD',
-        sequence=sequence(data, seqs),
-        exons=exons(data),
-        rna_type=rna_type(data),
-        url=url(data),
-        seq_version=seq_version(data),
+    sequences = sequences_for(data, seqs)
+    for index, sequence in enumerate(sequences):
+        acc_index = index + 1
+        if len(sequences) == 1:
+            acc_index = None
 
-        xref_data=xref_data(data),
+        return Entry(
+            primary_id=primary_id(data),
+            accession=accession(data, acc_index),
+            ncbi_tax_id=taxid(data),
+            database='RGD',
+            sequence=sequence,
+            exons=exons(data),
+            rna_type=rna_type(data),
+            url=url(data),
+            seq_version=seq_version(data),
 
-        gene=gene(data),
-        locus_tag=locus_tag(data),
-        gene_synonyms=gene_synonyms(data),
-        description=description(data),
+            xref_data=xref_data(data),
 
-        references=references(data),
-    )
+            gene=gene(data),
+            locus_tag=locus_tag(data),
+            gene_synonyms=gene_synonyms(data),
+            description=description(data),
+
+            references=references(data),
+        )
 
 
 def as_rows(lines):
