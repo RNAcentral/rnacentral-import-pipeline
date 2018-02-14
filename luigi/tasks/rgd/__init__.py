@@ -15,13 +15,11 @@ limitations under the License.
 
 import luigi
 
-from tasks.config import rgd
-
 from databases.rgd import helpers
 from .organism import RgdOrganism
 
 
 class Rgd(luigi.WrapperTask):
     def requires(self):
-        for organism in helpers.gene_files(rgd().host):
+        for organism in helpers.known_organisms():
             yield RgdOrganism(organism=organism)
