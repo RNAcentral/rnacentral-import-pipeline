@@ -21,7 +21,7 @@ import luigi
 from tasks.config import rgd
 from tasks.config import output
 from tasks.utils.entry_writers import Output
-from tasks.utils.fetch import FetchTask
+from tasks.utils.fetch import Fetch as FetchTask
 
 from databases.rgd import parsers
 from databases.rgd import helpers
@@ -37,12 +37,12 @@ class RgdOrganism(luigi.Task):
         local_sequences = conf.raw(self.organism + 'sequences.fasta')
         return [
             FetchTask(
-                remote_file=summary.sequence_uri(conf),
-                local_file=local_sequences,
+                remote_path=summary.sequence_uri(conf),
+                local_path=local_sequences,
             ),
             FetchTask(
-                remote_file=summary.gene_uri(conf),
-                local_file=local_genes,
+                remote_path=summary.gene_uri(conf),
+                local_path=local_genes,
             ),
         ]
 
