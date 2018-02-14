@@ -14,7 +14,6 @@ limitations under the License.
 """
 
 import os
-import tempfile
 
 import luigi
 
@@ -56,8 +55,7 @@ class RgdOrganism(luigi.Task):
         seqs_file = extract.output().fn
 
         with self.output().writer() as writer:
-            with tempfile.NamedTemporaryFile() as tmp, \
+            with helpers.indexed(seqs_file) as indexed, \
                     open(genes_file, 'r') as handle:
 
-                indexed = helpers.index(seqs_file, tmp.name)
                 writer.write_all(parsers.parse(handle, indexed))
