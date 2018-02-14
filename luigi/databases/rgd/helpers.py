@@ -265,7 +265,6 @@ def sequences_for(entry, sequences):
     for (record_id, exon) in seq_xref_ids(entry):
         if record_id not in sequences:
             continue
-        print(record_id)
         count += 1
         record = sequences[record_id]
         seqs.add((str(record.seq), exon))
