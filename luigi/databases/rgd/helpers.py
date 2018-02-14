@@ -100,6 +100,37 @@ class RgdInfo(object):
         )
 
 
+@attr.s()
+class RgdLocation(object):
+    chromosomes = attr.ib()
+    starts = attr.ib()
+    stops = attr.ib()
+    strands = attr.ib()
+
+    @classmethod
+    def from_dict(cls, entry):
+        if not entry['CHROMOSOME_6.0']:
+            return None
+
+        chromosomes = entry['CHROMOSOME_6.0'].split(';')
+        starts = [int(p) for p in entry['START_POS_6.0'].split(';')]
+        stops = [int(p) for p in entry['STOP_POS_6.0'].split(';')]
+        strands = entry['STRAND_6.0'].split(';')
+        assert len(chromosomes) == len(starts) == len(stops) == len(strands)
+
+        return cls(
+            chromosomes=chromosomes,
+            starts=starts,
+            stops=stops,
+            strands=strands,
+        )
+
+    def endpoints(self):
+        for index, chromosome in enumerate(self.chromosomes):
+            yield (chromosome, self.starts[index], self.stops[index],
+                   self.strands[index])
+
+
 def corrected_records(handle):
     """
     This just strips out the ',' that is at the end of ids that RGD provides.
@@ -120,10 +151,17 @@ def corrected_records(handle):
         match = re.search('gene RGD:(\d+),', record.description)
         if not match:
             raise ValueError("RGD fasta must state gene id")
+        gene = match.group(1)
 
-        record.id = '{given}-{gene}'.format(
+        match = re.search('locus: (.+)$', record.description)
+        if not match:
+            raise ValueError("RGD fasta must have a locus")
+        location = match.group(1)
+
+        record.id = '{given}-{gene}-{location}'.format(
             given=given,
-            gene=match.group(1),
+            gene=gene,
+            location=location,
         )
 
         # Prevent writing duplicate entries
@@ -205,21 +243,32 @@ def seq_xref_ids(entry):
     """
 
     xref_ids = []
+    exon_data = exons(entry)
     for ids in xref_data(entry).values():
-        xref_ids.extend(ids)
+        for exon in exon_data:
+            for xref_id in ids:
+                key = '{xref_id}-{gene_id}-{chr}:{start}..{stop}'.format(
+                    xref_id=xref_id,
+                    gene_id=primary_id(entry),
+                    chr=exon.chromosome,
+                    start=exon.primary_start,
+                    stop=exon.primary_end,
+                )
+                xref_ids.append((key, exon))
+
     return xref_ids
 
 
 def sequences_for(entry, sequences):
     count = 0
     seqs = set()
-    for xref_id in seq_xref_ids(entry):
-        record_id = xref_id + '-' + primary_id(entry)
+    for (record_id, exon) in seq_xref_ids(entry):
         if record_id not in sequences:
             continue
+        print(record_id)
         count += 1
         record = sequences[record_id]
-        seqs.add(str(record.seq))
+        seqs.add((str(record.seq), exon))
 
     # if not seqs:
     #     raise ValueError("No sequences found for: %s" % entry)
@@ -229,18 +278,20 @@ def sequences_for(entry, sequences):
 
 
 def exons(entry):
-    if not entry['CHROMOSOME_6.0']:
+    info = RgdLocation.from_dict(entry)
+    if info is None:
         return []
-    complement = False
-    strand = entry['STRAND_6.0']
-    if strand == '-':
-        complement = True
-    return [Exon(
-        chromosome='chr%s' % entry['CHROMOSOME_6.0'],
-        primary_start=int(entry['START_POS_6.0']),
-        primary_end=int(entry['STOP_POS_6.0']),
-        complement=complement,
-    )]
+
+    exons = []
+    for (chrom, start, stop, strand) in info.endpoints():
+        complement = strand == '-'
+        exons.append(Exon(
+            chromosome='chr%s' % chrom,
+            primary_start=start,
+            primary_end=stop,
+            complement=complement,
+        ))
+    return exons
 
 
 def xref_data(entry):
@@ -265,9 +316,12 @@ def references(entry):
 
 
 def description(entry):
-    tag = None
+    tag = ''
     if locus_tag(entry):
         tag = ' (%s)' % locus_tag(entry)
+
+    if entry['NAME'].endswith(locus_tag(entry)):
+        tag = ''
 
     return '{species} {name}{tag}'.format(
         name=entry['NAME'],
@@ -282,20 +336,21 @@ def gene_synonyms(entry):
     return []
 
 
-def as_entry(data, seqs):
+def as_entries(data, seqs):
+    entries = []
     sequences = sequences_for(data, seqs)
-    for index, sequence in enumerate(sequences):
+    for index, (sequence, exons) in enumerate(sequences):
         acc_index = index + 1
         if len(sequences) == 1:
             acc_index = None
 
-        return Entry(
+        entries.append(Entry(
             primary_id=primary_id(data),
             accession=accession(data, acc_index),
             ncbi_tax_id=taxid(data),
             database='RGD',
             sequence=sequence,
-            exons=exons(data),
+            exons=[exons],
             rna_type=rna_type(data),
             url=url(data),
             seq_version=seq_version(data),
@@ -308,7 +363,8 @@ def as_entry(data, seqs):
             description=description(data),
 
             references=references(data),
-        )
+        ))
+    return entries
 
 
 def as_rows(lines):
