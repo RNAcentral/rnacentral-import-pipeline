@@ -1,0 +1,65 @@
+wgs_nidn01_fun.ncr
+ID   NIDN01000248.1:29758..29889:tRNA; SV 1; linear; genomic DNA; WGS; FUN; 132 BP.
+XX
+PA   NIDN01000248.1
+XX
+PR   Project:PRJNA388473;
+XX
+DT   18-AUG-2017 (Rel. 133, Created)
+DT   18-AUG-2017 (Rel. 133, Last updated, Version 1)
+XX
+DE   Aspergillus turcosus partial tRNA-OTHER
+XX
+KW   WGS.
+XX
+OS   Aspergillus turcosus
+OC   Eukaryota; Fungi; Dikarya; Ascomycota; Pezizomycotina; Eurotiomycetes;
+OC   Eurotiomycetidae; Eurotiales; Aspergillaceae; Aspergillus.
+XX
+RN   [1]
+RA   Dufresne P.J., Fournier E., Martineau C., De Repentigny L., Dufresne S.F.;
+RT   "Draft genome of two Aspergillus turcosus strains, one azole-susceptible
+RT   and the other azole-resistant, isolated from bronchoalveolarlavage fluid";
+RL   Unpublished.
+XX
+RN   [2]
+RA   Dufresne P.J., Fournier E., Martineau C., de Repentigny L., Dufresne S.F.;
+RT   ;
+RL   Submitted (04-OCT-2016) to the INSDC.
+RL   Microbiology, Infectiology and Immunology, University of Montreal,
+RL   Boulevard Edouard-Montpetit, Montreal, Quebec H3T 1J4, Canada
+XX
+DR   MD5; 52ccbd3fd64d84e5582782c105c17b14.
+DR   BioSample; SAMN07177609.
+XX
+CC   ##Genome-Assembly-Data-START##
+CC   Assembly Date         :: JUL-2016
+CC   Assembly Method       :: other v. Jul-2016
+CC   Genome Coverage       :: 211.0x
+CC   Sequencing Technology :: Illumina HiSeq; PacBio
+CC   ##Genome-Assembly-Data-END##
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..132
+FT                   /organism="Aspergillus turcosus"
+FT                   /host="Homo sapiens"
+FT                   /isolate="HMR AF 1038"
+FT                   /mol_type="genomic DNA"
+FT                   /country="Canada:Montreal"
+FT                   /lat_lon="45.57 N 73.56 W"
+FT                   /isolation_source="Bronchoalveolar lavage fluid"
+FT                   /collected_by="Michel Laverdiere"
+FT                   /collection_date="16-Jan-2012"
+FT                   /db_xref="taxon:1245748"
+FT   tRNA            complement(NIDN01000248.1:<29758..>29889)
+FT                   /locus_tag="CFD26_08241"
+FT                   /product="tRNA-OTHER"
+FT                   /note="tRNA-Undet"
+FT                   /pseudogene="unprocessed"
+XX
+SQ   Sequence 132 BP; 32 A; 33 C; 28 G; 39 T; 0 other;
+     ggggctatag cgtaattggt agcgcgtggt acgttccatc aacagtcttc atcatctcca        60
+     tcaatctgtt ctaataaatt tccacagaga ctccagatct caaggttatc cgttcgagtc       120
+     gggttagcct ca                                                           132
+//

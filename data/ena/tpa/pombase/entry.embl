@@ -1,0 +1,183 @@
+ID   CU329670.1:1005499..1005710:misc_RNA; SV 1; linear; genomic DNA; STD; FUN; 212 BP.
+XX
+PA   CU329670.1
+XX
+PR   Project:PRJNA13836;
+XX
+DT   09-JUL-2007 (Rel. 92, Created)
+DT   27-FEB-2015 (Rel. 123, Last updated, Version 14)
+XX
+DE   Schizosaccharomyces pombe (fission yeast) non-coding RNA (predicted)
+XX
+KW   .
+XX
+OS   Schizosaccharomyces pombe (fission yeast)
+OC   Eukaryota; Fungi; Dikarya; Ascomycota; Taphrinomycotina;
+OC   Schizosaccharomycetes; Schizosaccharomycetales; Schizosaccharomycetaceae;
+OC   Schizosaccharomyces.
+XX
+RN   [1]
+RG   The Schizosaccharomyces pombe Genome Sequencing Consortium
+RA   Wood V.;
+RT   ;
+RL   Submitted (29-JUN-2007) to the INSDC.
+RL   European Schizosaccharomyces genome sequencing project, Sanger Institute,
+RL   The Wellcome Trust Genome Campus, Hinxton, Cambridge CB10 1SA
+XX
+RN   [2]
+RX   DOI; 10.1038/nature724.
+RX   PUBMED; 11859360.
+RA   Wood V., Gwilliam R., Rajandream M.A., Lyne M., Lyne R., Stewart A.,
+RA   Sgouros J., Peat N., Hayles J., Baker S., Basham D., Bowman S., Brooks K.,
+RA   Brown D., Brown S., Chillingworth T., Churcher C., Collins M., Connor R.,
+RA   Cronin A., Davis P., Feltwell T., Fraser A., Gentles S., Goble A.,
+RA   Hamlin N., Harris D., Hidalgo J., Hodgson G., Holroyd S., Hornsby T.,
+RA   Howarth S., Huckle E.J., Hunt S., Jagels K., James K., Jones L., Jones M.,
+RA   Leather S., McDonald S., McLean J., Mooney P., Moule S., Mungall K.,
+RA   Murphy L., Niblett D., Odell C., Oliver K., O'Neil S., Pearson D.,
+RA   Quail M.A., Rabbinowitsch E., Rutherford K., Rutter S., Saunders D.,
+RA   Seeger K., Sharp S., Skelton J., Simmonds M., Squares R., Squares S.,
+RA   Stevens K., Taylor K., Taylor R.G., Tivey A., Walsh S., Warren T.,
+RA   Whitehead S., Woodward J., Volckaert G., Aert R., Robben J., Grymonprez B.,
+RA   Weltjens I., Vanstreels E., Rieger M., Schafer M., Muller-Auer S.,
+RA   Gabel C., Fuchs M., Dusterhoft A., Fritzc C., Holzer E., Moestl D.,
+RA   Hilbert H., Borzym K., Langer I., Beck A., Lehrach H., Reinhardt R.,
+RA   Pohl T.M., Eger P., Zimmermann W., Wedler H., Wambutt R., Purnelle B.,
+RA   Goffeau A., Cadieu E., Dreano S., Gloux S., Lelaure V., Mottier S.,
+RA   Galibert F., Aves S.J., Xiang Z., Hunt C., Moore K., Hurst S.M., Lucas M.,
+RA   Rochet M., Gaillardin C., Tallada V.A., Garzon A., Thode G., Daga R.R.,
+RA   Cruzado L., Jimenez J., Sanchez M., del Rey F., Benito J., Dominguez A.,
+RA   Revuelta J.L., Moreno S., Armstrong J., Forsburg S.L., Cerutti L., Lowe T.,
+RA   McCombie W.R., Paulsen I., Potashkin J., Shpakovski G.V., Ussery D.,
+RA   Barrell B.G., Nurse P.;
+RT   "The genome sequence of Schizosaccharomyces pombe";
+RL   Nature 415(6874):871-880(2002).
+XX
+DR   PomBase; SPNCRNA.164; Schizosaccharomyces_pombe.
+DR   MD5; 41042020537c3023b957d73a0a3f201a.
+DR   BioSample; SAMEA3138176.
+XX
+CC   Notes:
+CC   
+CC   S. pombe (fission yeast) sequence and annotation are available from:
+CC   (URL, http://www.genedb.org/genedb/pombe/index.jsp)
+CC   (URL, http://www.sanger.ac.uk/Projects/S_pombe/)
+CC   
+CC   CDS are numbered using the following system eg SPAC5H10.01c.
+CC   SP (S. pombe), A (chromosome 1), c5H10 (cosmid name),
+CC   .01 (first CDS), c (complementary strand). However, clones may have
+CC   been reorientated since the original submission, therefore the
+CC   complementary strand notation may be invalid for strand inference.
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..212
+FT                   /organism="Schizosaccharomyces pombe"
+FT                   /chromosome="I"
+FT                   /strain="972h-"
+FT                   /mol_type="genomic DNA"
+FT                   /db_xref="taxon:4896"
+FT   misc_RNA        CU329670.1:1005499..1005710
+FT                   /gene_synonym="SPNG168"
+FT                   /locus_tag="SPNCRNA.164"
+FT                   /product="non-coding RNA (predicted)"
+XX
+SQ   Sequence 212 BP; 77 A; 28 C; 34 G; 73 T; 0 other;
+     tttatcgatt ttttttgaag caaagtattt ctttctgatt ctataaattg tcgacttggg        60
+     ggacaattgt gaaactgtaa ggcaagatga actttgcaaa tatggaatta aattcaaagt       120
+     aattgcgttc aaattaaaaa aaaagtacta tattaatgaa cagtttgatc agccattgta       180
+     aacaattcaa ttacaaccgt tagcgatact ct                                     212
+//
+ID   CU329670.1:238509..238898:misc_RNA; SV 1; linear; genomic DNA; STD; FUN; 390 BP.
+XX
+PA   CU329670.1
+XX
+PR   Project:PRJNA13836;
+XX
+DT   09-JUL-2007 (Rel. 92, Created)
+DT   27-FEB-2015 (Rel. 123, Last updated, Version 14)
+XX
+DE   Schizosaccharomyces pombe (fission yeast) non-coding RNA (predicted)
+XX
+KW   .
+XX
+OS   Schizosaccharomyces pombe (fission yeast)
+OC   Eukaryota; Fungi; Dikarya; Ascomycota; Taphrinomycotina;
+OC   Schizosaccharomycetes; Schizosaccharomycetales; Schizosaccharomycetaceae;
+OC   Schizosaccharomyces.
+XX
+RN   [1]
+RG   The Schizosaccharomyces pombe Genome Sequencing Consortium
+RA   Wood V.;
+RT   ;
+RL   Submitted (29-JUN-2007) to the INSDC.
+RL   European Schizosaccharomyces genome sequencing project, Sanger Institute,
+RL   The Wellcome Trust Genome Campus, Hinxton, Cambridge CB10 1SA
+XX
+RN   [2]
+RX   DOI; 10.1038/nature724.
+RX   PUBMED; 11859360.
+RA   Wood V., Gwilliam R., Rajandream M.A., Lyne M., Lyne R., Stewart A.,
+RA   Sgouros J., Peat N., Hayles J., Baker S., Basham D., Bowman S., Brooks K.,
+RA   Brown D., Brown S., Chillingworth T., Churcher C., Collins M., Connor R.,
+RA   Cronin A., Davis P., Feltwell T., Fraser A., Gentles S., Goble A.,
+RA   Hamlin N., Harris D., Hidalgo J., Hodgson G., Holroyd S., Hornsby T.,
+RA   Howarth S., Huckle E.J., Hunt S., Jagels K., James K., Jones L., Jones M.,
+RA   Leather S., McDonald S., McLean J., Mooney P., Moule S., Mungall K.,
+RA   Murphy L., Niblett D., Odell C., Oliver K., O'Neil S., Pearson D.,
+RA   Quail M.A., Rabbinowitsch E., Rutherford K., Rutter S., Saunders D.,
+RA   Seeger K., Sharp S., Skelton J., Simmonds M., Squares R., Squares S.,
+RA   Stevens K., Taylor K., Taylor R.G., Tivey A., Walsh S., Warren T.,
+RA   Whitehead S., Woodward J., Volckaert G., Aert R., Robben J., Grymonprez B.,
+RA   Weltjens I., Vanstreels E., Rieger M., Schafer M., Muller-Auer S.,
+RA   Gabel C., Fuchs M., Dusterhoft A., Fritzc C., Holzer E., Moestl D.,
+RA   Hilbert H., Borzym K., Langer I., Beck A., Lehrach H., Reinhardt R.,
+RA   Pohl T.M., Eger P., Zimmermann W., Wedler H., Wambutt R., Purnelle B.,
+RA   Goffeau A., Cadieu E., Dreano S., Gloux S., Lelaure V., Mottier S.,
+RA   Galibert F., Aves S.J., Xiang Z., Hunt C., Moore K., Hurst S.M., Lucas M.,
+RA   Rochet M., Gaillardin C., Tallada V.A., Garzon A., Thode G., Daga R.R.,
+RA   Cruzado L., Jimenez J., Sanchez M., del Rey F., Benito J., Dominguez A.,
+RA   Revuelta J.L., Moreno S., Armstrong J., Forsburg S.L., Cerutti L., Lowe T.,
+RA   McCombie W.R., Paulsen I., Potashkin J., Shpakovski G.V., Ussery D.,
+RA   Barrell B.G., Nurse P.;
+RT   "The genome sequence of Schizosaccharomyces pombe";
+RL   Nature 415(6874):871-880(2002).
+XX
+DR   PomBase; SPNCRNA.144; Schizosaccharomyces_pombe.
+DR   MD5; 4260b291e5a3b3e8154a0b590972ec01.
+DR   BioSample; SAMEA3138176.
+XX
+CC   Notes:
+CC   
+CC   S. pombe (fission yeast) sequence and annotation are available from:
+CC   (URL, http://www.genedb.org/genedb/pombe/index.jsp)
+CC   (URL, http://www.sanger.ac.uk/Projects/S_pombe/)
+CC   
+CC   CDS are numbered using the following system eg SPAC5H10.01c.
+CC   SP (S. pombe), A (chromosome 1), c5H10 (cosmid name),
+CC   .01 (first CDS), c (complementary strand). However, clones may have
+CC   been reorientated since the original submission, therefore the
+CC   complementary strand notation may be invalid for strand inference.
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..390
+FT                   /organism="Schizosaccharomyces pombe"
+FT                   /chromosome="I"
+FT                   /strain="972h-"
+FT                   /mol_type="genomic DNA"
+FT                   /db_xref="taxon:4896"
+FT   misc_RNA        CU329670.1:238509..238898
+FT                   /gene_synonym="SPNG48"
+FT                   /locus_tag="SPNCRNA.144"
+FT                   /product="non-coding RNA (predicted)"
+XX
+SQ   Sequence 390 BP; 107 A; 83 C; 72 G; 128 T; 0 other;
+     ccttccgtcc atttgctccc ttctcctcct ccttttactt tccccttgtg ctgttctcat        60
+     acactaggca tattttaaaa atatttacac ccctgactta cttggtcagt aagagttaca       120
+     atggtagtac taagagggaa agaaagtaaa gtcccgattc gataaaaaac ctgatttttc       180
+     atgagacaac atccccagtt tcagcgttta gtagatagcg aatgggatgg ttgaaagttg       240
+     agggtaattg tttgctaaac atgatcgcta aaaggagcac ggtatgcgtg tttccacaat       300
+     tcatgaagtt cccctgactg tagcggtttc ccttgttttt accaatatct atttctggta       360
+     actatgattt cgcaaaaatg atttcacaag                                        390
+//

@@ -1,0 +1,63 @@
+ID   LN809305.1:1..93:ncRNA; SV 1; linear; genomic DNA; STD; PLN; 93 BP.
+XX
+PA   LN809305.1
+XX
+PR   Project:PRJEB8122;
+XX
+DT   28-JAN-2015 (Rel. 123, Created)
+DT   18-FEB-2015 (Rel. 123, Last updated, Version 2)
+XX
+DE   Arabidopsis thaliana (thale cress) small nucleolar RNA SnoR1b
+XX
+KW   RNAcentral; TPA; TPA:specialist_db.
+XX
+OS   Arabidopsis thaliana (thale cress)
+OC   Eukaryota; Viridiplantae; Streptophyta; Embryophyta; Tracheophyta;
+OC   Spermatophyta; Magnoliophyta; eudicotyledons; Gunneridae; Pentapetalae;
+OC   rosids; malvids; Brassicales; Brassicaceae; Camelineae; Arabidopsis.
+XX
+RN   [1]
+RP   1-93
+RG   snOPY and RNAcentral
+RA   ;
+RT   ;
+RL   Submitted (27-JAN-2015) to the INSDC.
+XX
+RN   [2]
+RX   DOI; 10.1186/1756-0500-6-426.
+RX   PUBMED; 24148649.
+RA   Yoshihama M., Nakao A., Kenmochi N.;
+RT   "snOPY: a small nucleolar RNA orthological gene database";
+RL   BMC Res Notes 6:426-426(2013).
+XX
+DR   MD5; 4a0f62ed61918b011d0b90b15e60f9aa.
+XX
+CC   Specialist DB   : snOPY (snoRNA Orthological Gene Database)
+CC   URL             : http://snoopy.med.miyazaki-u.ac.jp
+CC   snOPY; Arabidopsis_thaliana300001.
+XX
+AH   LOCAL_SPAN          PRIMARY_IDENTIFIER PRIMARY_SPAN        COMP
+AS   1-93                BX824219.1         556-648
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..93
+FT                   /organism="Arabidopsis thaliana"
+FT                   /mol_type="genomic DNA"
+FT                   /db_xref="taxon:3702"
+FT   ncRNA           LN809305.1:1..93
+FT                   /gene="SnoR1b"
+FT                   /product="small nucleolar RNA SnoR1b"
+FT                   /note="Modification:C/D"
+FT                   /note="Target:25S rRNA, 18S rRNA"
+FT                   /note="Organisation:Poly"
+FT                   /note="ECO:0000305"
+FT                   /note="SO:0000275"
+FT                   /note="GO:0005730"
+FT                   /note="GO:0006396"
+FT                   /ncRNA_class="snoRNA"
+XX
+SQ   Sequence 93 BP; 27 A; 19 C; 20 G; 27 T; 0 other;
+     ggcgaggatg aataatgcta aatttctgac acctcttgta tgaggagaga ttgataacct        60
+     ctcctttgag cacattatgc aatactctga gcc                                     93
+//

@@ -19,7 +19,7 @@ import logging
 from databases.data import Exon
 from databases.data import Entry
 from databases.data import SecondaryStructure
-from databases import helpers
+import databases.helpers.phylogeny as phy
 
 from .helpers import url
 from .helpers import anticodon
@@ -120,7 +120,7 @@ def gtrnadb_entries(data):
                 gene_synonyms=data.get('synonyms', []),
                 references=references(data, location),
             )
-        except helpers.UnknownTaxonId:
+        except phy.UnknownTaxonId:
             print("Unknown taxon id in %s" % data)
             break
 
