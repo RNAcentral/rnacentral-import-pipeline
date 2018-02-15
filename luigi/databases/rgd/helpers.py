@@ -312,7 +312,6 @@ def references(accession, entry):
     refs = []
     refs.append(pub.reference(accession, 25355511))  # The general RGD citation
     for pmid_set in pmids(entry):
-        print(pmid_set)
         if not pmid_set:
             continue
         for pmid in pmid_set.split(';'):
