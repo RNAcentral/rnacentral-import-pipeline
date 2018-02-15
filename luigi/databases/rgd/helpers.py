@@ -28,6 +28,7 @@ from Bio import SeqIO
 from databases.data import Exon
 from databases.data import Entry
 from databases.helpers import phylogeny as phy
+from databases.helpers import publications as pub
 
 
 KNOWN_RNA_TYPES = set([
@@ -189,6 +190,12 @@ def indexed(filename):
 
 
 def rna_type(entry):
+    """
+    Normalize the RNA type RGD provides. Generally this corrects the
+    capatlization to match what we expect, however it translates ncRNA to
+    other.
+    """
+
     basic = basic_rna_type(entry)
     if basic == 'rrna':
         return 'rRNA'
@@ -302,15 +309,17 @@ def xref_data(entry):
     return xrefs
 
 
-def references(entry):
+def references(accession, entry):
     refs = []
-    # refs.append(pub.as_reference(25355511))  # The general RGD citation
-    possible_ids = it.chain.from_iterable(pmids(entry))
-    for idset in possible_ids:
-        pubids = idset.split(';')
-        for _ in pubids:
-            # refernces.append(pub.as_reference
-            pass
+    refs.append(pub.reference(accession, 25355511))  # The general RGD citation
+    for pmid_set in pmids(entry):
+        print(pmid_set)
+        if not pmid_set:
+            continue
+        for pmid in pmid_set.split(';'):
+            if not pmid:
+                continue
+            refs.append(pub.reference(accession, pmid))
     return refs
 
 
@@ -343,9 +352,11 @@ def as_entries(data, seqs):
         if len(sequences) == 1:
             acc_index = None
 
+        acc = accession(data, acc_index)
+
         entries.append(Entry(
             primary_id=primary_id(data),
-            accession=accession(data, acc_index),
+            accession=acc,
             ncbi_tax_id=taxid(data),
             database='RGD',
             sequence=sequence,
@@ -361,7 +372,7 @@ def as_entries(data, seqs):
             gene_synonyms=gene_synonyms(data),
             description=description(data),
 
-            references=references(data),
+            references=references(acc, data),
         ))
     return entries
 

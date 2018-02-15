@@ -18,6 +18,7 @@ import pytest
 
 from databases.data import Exon
 from databases.data import Entry
+from databases.data import Reference
 from databases.rgd import helpers as rgd
 
 
@@ -135,6 +136,7 @@ def test_fails_without_existing_sequence(simple_entry, sequences):
 def test_can_build_correct_entry(simple_entry, sequences):
     entries = rgd.as_entries(simple_entry, sequences)
     assert len(entries) == 1
+    print(entries[0].references)
     assert attr.asdict(entries[0]) == attr.asdict(Entry(
         primary_id='5687330',
         accession='RRID:RGD_5687330',
@@ -158,6 +160,69 @@ def test_can_build_correct_entry(simple_entry, sequences):
         locus_tag='Rn18s',
         description='Rattus norvegicus 18S ribosomal RNA (Rn18s)',
         references=[
+            Reference(
+                accession='RRID:RGD_5687330',
+                authors='Shimoyama M, De Pons J, Hayman GT, Laulederkind SJ, Liu W, Nigam R, Petri V, Smith JR, Tutaj M, Wang SJ, Worthey E, Dwinell M, Jacob H.',
+                location='Nucleic Acids Res 43(database issue):D743-50 (2015)',
+                title='The Rat Genome Database 2015: genomic, phenotypic and environmental variations and disease',
+                pmid=25355511,
+                doi=u'10.1093/nar/gku1026'
+            ),
+            Reference(
+                accession='RRID:RGD_5687330',
+                authors='Girard A, Sachidanandam R, Hannon GJ, Carmell MA.', location='Nature 442(7099):199-202 (2006)',
+                title='A germline-specific class of small RNAs binds mammalian Piwi proteins',
+                pmid=16751776,
+                doi=u'10.1038/nature04917'
+            ),
+            Reference(
+                accession='RRID:RGD_5687330',
+                authors='Choi YC.',
+                location='J Biol Chem 260(23):12769-12772 (1985)',
+                title='Structural organization of ribosomal RNAs from Novikoff hepatoma. I. Characterization of fragmentation products from 40 S subunit',
+                pmid=3930503,
+                doi=None,
+            ),
+            Reference(
+                accession='RRID:RGD_5687330',
+                authors='Subrahmanyam CS, Cassidy B, Busch H, Rothblum LI.',
+                location='Nucleic Acids Res 10(12):3667-3680 (1982)',
+                title='Nucleotide sequence of the region between the 18S rRNA sequence and the 28S rRNA sequence of rat ribosomal DNA',
+                pmid=6287418,
+                doi=u'10.1093/nar/10.12.3667'
+            ),
+            Reference(
+                accession='RRID:RGD_5687330',
+                authors='Rothblum LI, Reddy R, Cassidy B.',
+                location='Nucleic Acids Res 10(22):7345-7362 (1982)',
+                title='Transcription initiation site of rat ribosomal DNA',
+                pmid=6296773,
+                doi=u'10.1093/nar/10.22.7345'
+            ),
+            Reference(
+                accession='RRID:RGD_5687330',
+                authors='Chan YL, Olvera J, Wool IG.',
+                location='Nucleic Acids Res 11(22):7819-7831 (1983)',
+                title='The structure of rat 28S ribosomal ribonucleic acid inferred from the sequence of nucleotides in a gene',
+                pmid=6316273,
+                doi=u'10.1093/nar/11.22.7819'
+            ),
+            Reference(
+                accession='RRID:RGD_5687330',
+                authors='Chan YL, Gutell R, Noller HF, Wool IG.',
+                location='J Biol Chem 259(1):224-230 (1984)',
+                title='The nucleotide sequence of a rat 18 S ribosomal ribonucleic acid gene and a proposal for the secondary structure of 18 S ribosomal ribonucleic acid',
+                pmid=6323401,
+                doi=None,
+            ),
+            Reference(
+                accession='RRID:RGD_5687330',
+                authors='Hadjiolov AA, Georgiev OI, Nosikov VV, Yavachev LP.',
+                location='Nucleic Acids Res 12(8):3677-3693 (1984)',
+                title='Primary and secondary structure of rat 28 S ribosomal RNA',
+                pmid=6328433,
+                doi=u'10.1093/nar/12.8.3677'
+            ),
         ]
     ))
 
@@ -195,8 +260,9 @@ def test_can_handle_having_multiple_locations(rat_multi_locus, sequences):
     for raw in rat_multi_locus:
         entries.extend(rgd.as_entries(raw, sequences))
 
-    print(entries[2].sequence)
     assert len(entries) == 3
+    from pprint import pprint
+    pprint(entries[1].references)
     assert attr.asdict(entries[0]) == attr.asdict(Entry(
         primary_id='7706003',
         accession='RRID:RGD_7706003:1',
@@ -220,6 +286,12 @@ def test_can_handle_having_multiple_locations(rat_multi_locus, sequences):
         gene='LOC102549948',
         locus_tag='LOC102549948',
         description='Rattus norvegicus uncharacterized LOC102549948',
+        references=[Reference(
+            accession='RRID:RGD_7706003:1',
+            authors='Shimoyama M, De Pons J, Hayman GT, Laulederkind SJ, Liu W, Nigam R, Petri V, Smith JR, Tutaj M, Wang SJ, Worthey E, Dwinell M, Jacob H.', location='Nucleic Acids Res 43(database issue):D743-50 (2015)', title='The Rat Genome Database 2015: genomic, phenotypic and environmental variations and disease',
+            pmid=25355511,
+            doi=u'10.1093/nar/gku1026',
+        )],
     ))
 
     assert attr.asdict(entries[1]) == attr.asdict(Entry(
@@ -245,6 +317,12 @@ def test_can_handle_having_multiple_locations(rat_multi_locus, sequences):
         gene='LOC102549948',
         locus_tag='LOC102549948',
         description='Rattus norvegicus uncharacterized LOC102549948',
+        references=[Reference(
+            accession='RRID:RGD_7706003:2',
+            authors='Shimoyama M, De Pons J, Hayman GT, Laulederkind SJ, Liu W, Nigam R, Petri V, Smith JR, Tutaj M, Wang SJ, Worthey E, Dwinell M, Jacob H.', location='Nucleic Acids Res 43(database issue):D743-50 (2015)', title='The Rat Genome Database 2015: genomic, phenotypic and environmental variations and disease',
+            pmid=25355511,
+            doi=u'10.1093/nar/gku1026',
+        )],
     ))
 
     assert attr.asdict(entries[2]) == attr.asdict(Entry(
@@ -270,4 +348,10 @@ def test_can_handle_having_multiple_locations(rat_multi_locus, sequences):
         gene='LOC102549948',
         locus_tag='LOC102549948',
         description='Rattus norvegicus uncharacterized LOC102549948',
+        references=[Reference(
+            accession='RRID:RGD_7706003:3',
+            authors='Shimoyama M, De Pons J, Hayman GT, Laulederkind SJ, Liu W, Nigam R, Petri V, Smith JR, Tutaj M, Wang SJ, Worthey E, Dwinell M, Jacob H.', location='Nucleic Acids Res 43(database issue):D743-50 (2015)', title='The Rat Genome Database 2015: genomic, phenotypic and environmental variations and disease',
+            pmid=25355511,
+            doi=u'10.1093/nar/gku1026',
+        )],
     ))
