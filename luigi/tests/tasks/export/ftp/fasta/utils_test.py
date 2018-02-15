@@ -59,7 +59,6 @@ def test_complains_if_no_tsv_lines():
     with pytest.raises(ValueError):
         with utils.psql_copy(db(), sql) as out:
             lines = list(utils.tsv_to_records(out))
-            print(lines)
 
 
 class SimpleFastaExportBase(utils.FastaExportBase):

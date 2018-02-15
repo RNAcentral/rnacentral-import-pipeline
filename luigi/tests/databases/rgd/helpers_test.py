@@ -136,7 +136,6 @@ def test_fails_without_existing_sequence(simple_entry, sequences):
 def test_can_build_correct_entry(simple_entry, sequences):
     entries = rgd.as_entries(simple_entry, sequences)
     assert len(entries) == 1
-    print(entries[0].references)
     assert attr.asdict(entries[0]) == attr.asdict(Entry(
         primary_id='5687330',
         accession='RRID:RGD_5687330',
@@ -261,8 +260,6 @@ def test_can_handle_having_multiple_locations(rat_multi_locus, sequences):
         entries.extend(rgd.as_entries(raw, sequences))
 
     assert len(entries) == 3
-    from pprint import pprint
-    pprint(entries[1].references)
     assert attr.asdict(entries[0]) == attr.asdict(Entry(
         primary_id='7706003',
         accession='RRID:RGD_7706003:1',
