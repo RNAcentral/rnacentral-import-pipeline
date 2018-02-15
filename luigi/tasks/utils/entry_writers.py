@@ -139,19 +139,12 @@ class ReferenceWriter(object):
         """
 
         for reference in data.references:
-            authors = reference.authors
-            if authors:
-                authors = authors.encode('ascii', 'ignore')
-            title = reference.title
-            if title:
-                title = title.encode('ascii', 'ignore')
-
             self.csv.writerow([
                 reference.md5(),
                 data.accession,
-                authors,
+                reference.authors,
                 reference.location,
-                title,
+                reference.title,
                 reference.pmid,
                 reference.doi,
             ])
