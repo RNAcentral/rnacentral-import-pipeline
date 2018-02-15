@@ -48,8 +48,7 @@ XREF_NAMING = {
 
 primary_id = op.itemgetter('GENE_RGD_ID')
 basic_rna_type = op.itemgetter('GENE_TYPE')
-pmids = op.itemgetter('CURATED_REF_RGD_ID', 'CURATED_REF_PUBMED_ID',
-                      'UNCURATED_PUBMED_ID')
+pmids = op.itemgetter('CURATED_REF_PUBMED_ID', 'UNCURATED_PUBMED_ID')
 gene = op.itemgetter('SYMBOL')
 locus_tag = op.itemgetter('SYMBOL')
 
