@@ -221,6 +221,14 @@ def taxid(_):
     return 10116
 
 
+def lineage(entry):
+    return phy.lineage(taxid(entry))
+
+
+def common_name(entry):
+    return phy.common_name(taxid(entry))
+
+
 def species(entry):
     return phy.species(taxid(entry))
 
@@ -364,6 +372,9 @@ def as_entries(data, seqs):
             seq_version=seq_version(data),
 
             xref_data=xref_data(data),
+
+            common_name=common_name(data),
+            lineage=lineage(data),
 
             gene=gene(data),
             locus_tag=locus_tag(data),

@@ -155,6 +155,13 @@ def test_can_build_correct_entry(simple_entry, sequences):
             'genbank': ['AABR07015078', 'AH001747', 'DQ623540', 'NR_046237', 'V01270'],
             'ncbi_gene': ['100861533'],
         },
+        common_name='Norway rat',
+        lineage=(
+          'Eukaryota; Metazoa; Chordata; Craniata; '
+          'Vertebrata; Euteleostomi; Mammalia; Eutheria; '
+          'Euarchontoglires; Glires; Rodentia; Myomorpha; Muroidea; '
+          'Muridae; Murinae; Rattus; Rattus norvegicus'
+        ),
         gene='Rn18s',
         locus_tag='Rn18s',
         description='Rattus norvegicus 18S ribosomal RNA (Rn18s)',
@@ -280,6 +287,13 @@ def test_can_handle_having_multiple_locations(rat_multi_locus, sequences):
             'ensembl': ['ENSRNOG00000052150'],
             'genbank': ['AABR07067034', 'AAHX01058687', 'AAHX01058688', 'XR_001839772', 'XR_348953', 'XR_356918', 'XR_356920'],
         },
+        common_name='Norway rat',
+        lineage=(
+          'Eukaryota; Metazoa; Chordata; Craniata; '
+          'Vertebrata; Euteleostomi; Mammalia; Eutheria; '
+          'Euarchontoglires; Glires; Rodentia; Myomorpha; Muroidea; '
+          'Muridae; Murinae; Rattus; Rattus norvegicus'
+        ),
         gene='LOC102549948',
         locus_tag='LOC102549948',
         description='Rattus norvegicus uncharacterized LOC102549948',
@@ -311,6 +325,13 @@ def test_can_handle_having_multiple_locations(rat_multi_locus, sequences):
             'ensembl': ['ENSRNOG00000052150'],
             'genbank': ['AABR07067034', 'AAHX01058687', 'AAHX01058688', 'XR_001839772', 'XR_348953', 'XR_356918', 'XR_356920'],
         },
+        common_name='Norway rat',
+        lineage=(
+          'Eukaryota; Metazoa; Chordata; Craniata; '
+          'Vertebrata; Euteleostomi; Mammalia; Eutheria; '
+          'Euarchontoglires; Glires; Rodentia; Myomorpha; Muroidea; '
+          'Muridae; Murinae; Rattus; Rattus norvegicus'
+        ),
         gene='LOC102549948',
         locus_tag='LOC102549948',
         description='Rattus norvegicus uncharacterized LOC102549948',
@@ -342,6 +363,13 @@ def test_can_handle_having_multiple_locations(rat_multi_locus, sequences):
             'ensembl': ['ENSRNOG00000052150'],
             'genbank': ['AABR07067034', 'AAHX01058687', 'AAHX01058688', 'XR_001839772', 'XR_348953', 'XR_356918', 'XR_356920'],
         },
+        common_name='Norway rat',
+        lineage=(
+          'Eukaryota; Metazoa; Chordata; Craniata; '
+          'Vertebrata; Euteleostomi; Mammalia; Eutheria; '
+          'Euarchontoglires; Glires; Rodentia; Myomorpha; Muroidea; '
+          'Muridae; Murinae; Rattus; Rattus norvegicus'
+        ),
         gene='LOC102549948',
         locus_tag='LOC102549948',
         description='Rattus norvegicus uncharacterized LOC102549948',
