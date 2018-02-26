@@ -41,6 +41,7 @@ def copy_ncr_task(filename):
     """
 
     conf = ena()
-    local_dir = os.path.filename(filename)
-    local_dir = conf.input_ncr_file(local_dir)
+    head, tail = os.path.split(filename)
+    _, first = os.path.split(head)
+    local_dir = conf.input_ncr_file(first, tail)
     return FetchTask(remote_path=filename, local_path=local_dir)

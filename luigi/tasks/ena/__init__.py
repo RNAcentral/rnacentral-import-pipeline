@@ -21,14 +21,14 @@ from tasks.config import ena
 
 from .single_file import SingleEnaFile
 from .directory import EnaDirectory
-from .tpa import FetchTPA
+from .utils import tpa_tasks
 
 
 class Ena(luigi.WrapperTask):
 
     def requires(self):
-        for database in ena().tpa_databases:
-            yield FetchTPA(database=database)
+        for task in tpa_tasks():
+            yield task
 
         for entry in ena().raw_ncr_files():
             if os.path.isdir(entry):
