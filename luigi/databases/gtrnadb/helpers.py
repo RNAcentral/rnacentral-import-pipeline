@@ -19,7 +19,6 @@ import urlparse
 
 import requests
 
-from databases import helpers as dbs
 from databases.data import Reference
 import databases.helpers.phylogeny as phy
 
