@@ -102,8 +102,11 @@ def extract_experiment_refs(accession, feature, known):
         pmid = int(pmid)
         if pmid in known:
             continue
+
         try:
-            found.append(pubs.reference(accession, pmid))
+            data = pubs.reference(accession, pmid)
+            if data:
+                found.append(data)
         except Exception as err:
             LOGGER.exception(err)
             LOGGER.warning("Failed to lookup reference for %s", pmid)
@@ -360,11 +363,18 @@ def comment_xrefs(comments):
     return xrefs
 
 
-def xref_data(record, feature):
+def xref_data(record, feature, refs):
     xrefs = {}
     xrefs.update(embl.xref_data(feature))
     comment = record.annotations.get('comment', '')
-    if not comment:
-        return xrefs
-    xrefs.update(comment_xrefs(comment.split('\n')))
+    if comment:
+        xrefs.update(comment_xrefs(comment.split('\n')))
+
+    ena_refs = {}
+    for ref in refs:
+        if ref.database != 'MD5':
+            ena_refs[ref.database.upper()] = (ref.primary_id, ref.secondary_id)
+    if ena_refs:
+        xrefs['ena_refs'] = ena_refs
+
     return xrefs
