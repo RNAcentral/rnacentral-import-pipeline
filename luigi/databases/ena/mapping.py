@@ -95,13 +95,20 @@ class GenericTpa(object):
         return '{accession}:{database}:{db_accession}'.format(
             accession=entry.accession,
             database=self.database,
-            db_accession=self.database_accession
+            db_accession=self.database_accession,
         )
+
+    def optional_id(self, entry):
+        xrefs = entry.xref_data.get('ena_refs', {})
+        if self.database in xrefs:
+            return xrefs[self.database][1]
+        return None
 
     def transform(self, entry):
         return attr.assoc(
             entry,
             primary_id=self.database_accession,
+            optional_id=self.optional_id(entry),
             accession=self.accession(entry),
             database=self.database,
             is_composite='Y',

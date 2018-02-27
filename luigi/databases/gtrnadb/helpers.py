@@ -14,15 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-
 import re
 import urlparse
 
 import requests
 
-import databases.helpers.phylogeny as phy
-
 from databases.data import Reference
+import databases.helpers.phylogeny as phy
 
 
 class InvalidDotBracket(Exception):
