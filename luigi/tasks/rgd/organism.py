@@ -20,7 +20,7 @@ import luigi
 from tasks.config import rgd
 from tasks.config import output
 from tasks.utils.entry_writers import Output
-from tasks.utils.fetch import Fetch as FetchTask
+from tasks.utils.fetch import FetchTask
 
 from databases.rgd import parsers
 from databases.rgd import helpers
