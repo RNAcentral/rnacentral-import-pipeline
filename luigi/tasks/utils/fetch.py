@@ -23,6 +23,11 @@ from . import ftp
 
 
 def fetch(remote_path, local_path):
+    try:
+        os.makedirs(os.path.dirname(local_path))
+    except:
+        pass
+
     if remote_path.startswith('http'):
         http.download(remote_path, local_path)
 
