@@ -232,7 +232,6 @@ class ena(luigi.Config):
         return self.tpa_url.format(db=db_name)
 
     def input_files(self, *args):
-        print(output().base)
         return os.path.join(output().base, 'ena', *args)
 
     def input_tpa_file(self, db_name):
