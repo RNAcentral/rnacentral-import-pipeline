@@ -13,12 +13,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import itertools as it
+
 from Bio import SeqIO
 
 from databases.data import Entry
 
 import databases.helpers.embl as embl
 
+from . import dr
 from . import helpers
 from . import mapping as tpa
 
@@ -37,11 +40,17 @@ def parse(handle):
     Entry objects.
     """
 
+    dr_mapping = dr.mapping(handle)
+    handle.seek(0)
     for record in SeqIO.parse(handle, 'embl'):
 
         if len(record.features) != 2:
             raise InvalidEnaFile("ENA EMBL files must have 2 features/record")
 
+        if record.id not in dr_mapping:
+            raise InvalidEnaFile("Somehow parsed DR refs are for wrong record")
+
+        record_refs = dr_mapping[record.id]
         accession = helpers.accession(record)
 
         feature = record.features[1]
@@ -57,7 +66,7 @@ def parse(handle):
             seq_version=embl.seq_version(record),
 
             note_data=helpers.note_data(feature),
-            xref_data=helpers.xref_data(record, feature),
+            xref_data=helpers.xref_data(record, feature, record_refs),
 
             chromosome=helpers.chromosome(record),
 
