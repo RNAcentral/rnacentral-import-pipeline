@@ -374,6 +374,7 @@ def as_entries(data, seqs):
             xref_data=xref_data(data),
 
             common_name=common_name(data),
+            species=species(data),
             lineage=lineage(data),
 
             gene=gene(data),
