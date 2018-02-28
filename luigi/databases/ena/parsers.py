@@ -13,8 +13,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import itertools as it
-
 from Bio import SeqIO
 
 from databases.data import Entry
@@ -23,7 +21,7 @@ import databases.helpers.embl as embl
 
 from . import dr
 from . import helpers
-from . import mapping as tpa
+from . import tpa
 
 
 class InvalidEnaFile(Exception):
@@ -103,4 +101,4 @@ def parse(handle):
 
 def parse_with_mapping_files(handle, mapping_files):
     mapping = tpa.load(mapping_files)
-    return tpa.apply(mapping, parse(handle))
+    return mapping.apply(parse(handle))

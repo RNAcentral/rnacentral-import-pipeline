@@ -18,13 +18,42 @@ import os
 import attr
 import pytest
 
-from tasks.config import ena
-
 from databases.data import Exon
 from databases.data import Entry
-from databases.ena import mapping as tpa
+from databases.data import Reference
+from databases.ena import tpa
 from databases.helpers.hashes import md5
 from databases.ena.parsers import parse
+
+
+def map_one(tpa_files, entry_file):
+    mapping = tpa.load(tpa_files)
+    with open(entry_file, 'r') as raw:
+        entries = list(parse(raw))
+    assert entries
+
+    mapped = list(mapping.apply(entries))
+    assert len(mapped) == len(entries)
+    return mapped
+
+
+def map_database_example(name):
+    tpa_files = [os.path.join('data', 'ena', 'tpa', name, 'mapping.tsv')]
+    entry_file = os.path.join('data', 'ena', 'tpa', name, 'entry.embl')
+    return map_one(tpa_files, entry_file)
+
+
+def transform_first(db_name):
+    embl_file = os.path.join('data', 'ena', 'tpa', db_name, 'entry.embl')
+    with open(embl_file, 'rb') as embl:
+        entry = next(parse(embl))
+
+    tpa_file = os.path.join('data', 'ena', 'tpa', db_name, 'mapping.tsv')
+    with open(tpa_file, 'rb') as raw:
+        tpa_entry = next(tpa.parse_tpa_file(raw))
+
+    transformer = tpa.Transformer.standard()
+    return transformer.transform(tpa_entry, entry)
 
 
 @pytest.mark.parametrize('filename,count', [
@@ -61,19 +90,19 @@ def test_can_produce_correct_number_of_tpa_keys_from_tpa_file(filename, count):
 def test_can_build_correct_lncrnadb_tpas():
     with open('data/ena/tpa/lncrnadb/mapping.tsv', 'rb') as raw:
         data = next(tpa.parse_tpa_file(raw))
-    assert data == tpa.GenericTpa(
+    assert attr.asdict(data) == attr.asdict(tpa.Tpa(
         'LNCRNADB',
         '101',
         'Kcnq1ot1',
         'HG975405',
         None,
-    )
+    ))
 
 
 def test_can_build_correct_snopy_tpas():
     with open('data/ena/tpa/snopy/mapping.tsv', 'rb') as raw:
         data = next(tpa.parse_tpa_file(raw))
-    assert data == tpa.GenericTpa(
+    assert data == tpa.Tpa(
         'SNOPY',
         'Arabidopsis_thaliana300001',
         'SnoR1b',
@@ -85,7 +114,7 @@ def test_can_build_correct_snopy_tpas():
 def test_can_build_correct_srpdb_tpas():
     with open('data/ena/tpa/srpdb/mapping.tsv', 'rb') as raw:
         data = next(tpa.parse_tpa_file(raw))
-    assert data == tpa.GenericTpa(
+    assert data == tpa.Tpa(
         'SRPDB',
         'Acin.baum._CP000521',
         None,
@@ -97,7 +126,7 @@ def test_can_build_correct_srpdb_tpas():
 def test_can_build_correct_tmrna_tpas():
     with open('data/ena/tpa/tmrna/mapping.tsv', 'rb') as raw:
         data = next(tpa.parse_tpa_file(raw))
-    assert data == tpa.GenericTpa(
+    assert data == tpa.Tpa(
         'TMRNA_WEB',
         'Acary_marin_MBIC11',
         None,
@@ -109,7 +138,7 @@ def test_can_build_correct_tmrna_tpas():
 def test_can_build_correct_wormbase_tpas():
     with open('data/ena/tpa/wormbase/mapping.tsv', 'rb') as raw:
         data = next(tpa.parse_tpa_file(raw))
-    assert data == tpa.GenericTpa(
+    assert data == tpa.Tpa(
         'WORMBASE',
         'WBGene00001734',
         'ZK643.8b',
@@ -121,7 +150,7 @@ def test_can_build_correct_wormbase_tpas():
 def test_can_build_correct_pombase_tpas():
     with open('data/ena/tpa/pombase/mapping.tsv', 'rb') as raw:
         data = next(tpa.parse_tpa_file(raw))
-    assert data == tpa.GenericTpa(
+    assert data == tpa.Tpa(
         'POMBASE',
         'ENSRNA049622790',
         'Schizosaccharomyces_pombe',
@@ -133,27 +162,13 @@ def test_can_build_correct_pombase_tpas():
 def test_can_build_correct_tair_tpas():
     with open('data/ena/tpa/tair/mapping.tsv', 'rb') as raw:
         data = next(tpa.parse_tpa_file(raw))
-    assert data == tpa.GenericTpa(
+    assert data == tpa.Tpa(
         'TAIR',
         '1000429427',
         'AT5G52495',
         'CP002688',
         None,
     )
-
-
-def transform_first(db_name):
-    embl_file = os.path.join('data', 'ena', 'tpa', db_name, 'entry.embl')
-    with open(embl_file, 'rb') as embl:
-        entry = next(parse(embl))
-
-    tpa_file = os.path.join('data', 'ena', 'tpa', db_name, 'mapping.tsv')
-    with open(tpa_file, 'rb') as raw:
-        tpa_entry = next(tpa.parse_tpa_file(raw))
-
-    urls = tpa.UrlBuilder()
-    updated = tpa_entry.transform(entry)
-    return urls.transform(updated)
 
 
 def test_can_transform_correct_lncrnadb_entry():
@@ -224,7 +239,7 @@ def test_can_transform_correct_lncrnadb_entry():
     del result['sequence']
 
     # References are too long to compare either so I check the count
-    assert len(transformed['references']) == 23
+    assert len(transformed['references']) == 24
     del transformed['references']
     del result['references']
     assert transformed == result
@@ -409,23 +424,23 @@ def test_knows_if_it_has_mappings():
     mapping = tpa.load(['data/ena/tpa/snopy/mapping.tsv'])
     with open('data/ena/tpa/snopy/entry.embl', 'rb') as raw:
         entry = next(parse(raw))
-    assert mapping.has_tpa_for(entry) is True
+    assert entry in mapping
 
 
 def test_knows_if_does_not_have_entry_for():
     mapping = tpa.load(['data/ena/tpa/snopy/mapping.tsv'])
     with open('data/ena/tpa/lncrnadb/entry.embl', 'rb') as raw:
         entry = next(parse(raw))
-    assert mapping.has_tpa_for(entry) is False
+    assert entry not in mapping
 
 
 def test_can_fetch_tpa_for_entry():
     mapping = tpa.load(['data/ena/tpa/snopy/mapping.tsv'])
     with open('data/ena/tpa/snopy/entry.embl', 'rb') as raw:
         entry = next(parse(raw))
-    tpas = list(mapping.find_tpas(entry))
+    tpas = list(mapping[entry])
     assert len(tpas) == 1
-    assert tpas[0] == tpa.GenericTpa(
+    assert tpas[0] == tpa.Tpa(
         'SNOPY',
         'Arabidopsis_thaliana300001',
         'SnoR1b',
@@ -438,75 +453,109 @@ def test_fetch_tpa_for_non_exist_returns_empty_list():
     mapping = tpa.load(['data/ena/tpa/snopy/mapping.tsv'])
     with open('data/ena/tpa/lncrnadb/entry.embl', 'rb') as raw:
         entry = next(parse(raw))
-    assert list(mapping.find_tpas(entry)) == []
+    assert list(mapping[entry]) == []
 
 
 def test_can_map_snopy_entries():
-    mapping = tpa.load(['data/ena/tpa/snopy/mapping.tsv'])
-
-    with open('data/ena/tpa/snopy/entry.embl', 'rb') as raw:
-        entries = list(parse(raw))
-
-    mapped = list(tpa.apply(mapping, entries))
+    mapped = map_database_example('snopy')
     assert len(mapped) == 1
     assert mapped[0].database == 'SNOPY'
     assert mapped[0].accession == 'LN809305.1:1..93:ncRNA:SNOPY:Arabidopsis_thaliana300001'
 
 
 def test_can_will_not_alter_entries_from_other_dbs():
-    mapping = tpa.load(['data/ena/tpa/snopy/mapping.tsv'])
-
-    with open('data/ena/tpa/lncrnadb/entry.embl', 'rb') as raw:
-        entries = list(parse(raw))
-
-    mapped = list(tpa.apply(mapping, entries))
+    mapped = map_one(
+        ['data/ena/tpa/snopy/mapping.tsv'],
+        'data/ena/tpa/lncrnadb/entry.embl'
+    )
     assert len(mapped) == 1
     assert mapped[0].database == 'ENA'
     assert mapped[0].accession == 'HG975405.1:1..32753:ncRNA'
 
 
 def test_can_apply_wormbase_tpas():
-    mapping = tpa.load(['data/ena/tpa/wormbase/mapping.tsv'])
-
-    with open('data/ena/tpa/wormbase/entry.embl', 'r') as raw:
-        entries = list(parse(raw))
-    assert entries
-
-    mapped = list(tpa.apply(mapping, entries))
-    assert len(mapped) == len(entries)
+    mapped = map_database_example('wormbase')
+    assert len(mapped) == 1
     assert mapped[0].database == 'WORMBASE'
     assert mapped[0].accession == 'BX284603.4:8962295..8965569:misc_RNA:WORMBASE:WBGene00001734'
 
 
 def test_can_apply_pombase_tpas():
-    mapping = tpa.load(['data/ena/tpa/pombase/mapping.tsv'])
-
-    with open('data/ena/tpa/pombase/entry.embl', 'r') as raw:
-        entries = list(parse(raw))
-    assert entries
-
-    mapped = list(tpa.apply(mapping, entries))
-    assert len(mapped) == len(entries)
-
+    mapped = map_database_example('pombase')
     assert mapped[0].database == 'POMBASE'
     assert mapped[0].accession == 'CU329670.1:1005499..1005710:misc_RNA:POMBASE:SPNCRNA.164'
 
 
 def test_can_apply_mirbase_tpas():
-    mapping = tpa.load(['data/ena/tpa/mirbase/mapping.tsv'])
-    with open('data/ena/tpa/mirbase/entry.embl', 'r') as raw:
-        entries = list(parse(raw))
-    assert entries
-    mapped = list(tpa.apply(mapping, entries))
-    assert len(mapped) == len(entries)
-
-    assert mapped[0].database == 'MIRBASE'
-    assert mapped[0].accession == 'LM611181.1:1..180:precursor_RNA:MIRBASE:MI0016048'
-    assert mapped[0].optional_id == 'hsa-mir-3648-1'
-
-
-@pytest.mark.parametrize(
-    'name',
-    [tpa.internal_database_name(n) for n in ena().tpa_databases])
-def test_url_builder_can_build_url(name):
-    assert hasattr(tpa.UrlBuilder(), name.lower())
+    mapped = map_database_example('mirbase')
+    assert len(mapped) == 2
+    assert attr.asdict(mapped[0]) == attr.asdict(Entry(
+        primary_id='MI0016048',
+        accession='LM611181.1:1..180:precursor_RNA:MIRBASE:MI0016048',
+        ncbi_tax_id=9606,
+        database='MIRBASE',
+        sequence=(
+            'CGCGACTGCGGCGGCGGTGGTGGGGGGAGCCGCGGGGATCGCCGAGGGCCGGTCGGCCG'
+            'CCCCGGGTGCCGCGCGGTGCCGCCGGCGGCGGTGAGGCCCCGCGCGTGTGTCCCGGCTGC'
+            'GGTCGGCCGCGCTCGAGGGGTCCCCGTGGCGTCCCCTTCCCCGCCGGCCGCCTTTCTCGCG'
+        ),
+        exons=[Exon(
+            chromosome='',
+            primary_start=1,
+            primary_end=180,
+            complement=False
+        )],
+        rna_type='precursor_RNA',
+        url='http://www.mirbase.org/cgi-bin/mirna_entry.pl?acc=MI0016048',
+        seq_version='1',
+        note_data={
+            'ontology': [
+                'ECO:0000053',
+                'GO:0035068',
+                'GO:0035195',
+                'SO:0001244'
+            ]
+        },
+        xref_data={
+            'mirbase': ['MI0016048'],
+            'ena_refs': {'MIRBASE': ('MI0016048', 'hsa-mir-3648-1')},
+        },
+        species='Homo sapiens',
+        common_name='human',
+        lineage=(
+            'Eukaryota; Metazoa; Chordata; Craniata; '
+            'Vertebrata; Euteleostomi; Mammalia; Eutheria; '
+            'Euarchontoglires; Primates; Haplorrhini; Catarrhini; '
+            'Hominidae; Homo; Homo sapiens'
+        ),
+        gene='mir-3648-1',
+        optional_id='hsa-mir-3648-1',
+        product='microRNA hsa-mir-3648-1 precursor',
+        parent_accession='LM611181',
+        non_coding_id='LM611181.1:1..180:precursor_RNA',
+        project='PRJEB4451',
+        keywords='RNAcentral; TPA; TPA:specialist_db',
+        experiment='EXISTENCE:RNA-seq',
+        description='Homo sapiens (human) microRNA hsa-mir-3648-1 precursor',
+        mol_type='transcribed RNA',
+        is_composite='Y',
+        references=[
+            Reference(
+                accession='LM611181.1:1..180:precursor_RNA',
+                authors='',
+                location='Submitted (18-JUL-2014) to the INSDC.',
+                title=None,
+                pmid=None,
+                doi=None,
+            ),
+            Reference(
+                accession='LM611181.1:1..180:precursor_RNA',
+                authors='Kozomara A., Griffiths-Jones S.',
+                location='Nucleic Acids Res. 39(Database issue):D152-D157(2011).',
+                title='miRBase: integrating microRNA annotation and deep-sequencing data',
+                pmid=21037258,
+                doi=None,
+            )
+        ],
+    ))
+    assert mapped[1].optional_id == 'hsa-mir-3648-2'
