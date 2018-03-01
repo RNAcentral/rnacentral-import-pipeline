@@ -274,19 +274,13 @@ def seq_xref_ids(entry):
 
 
 def sequences_for(entry, sequences):
-    count = 0
     seqs = set()
     for (record_id, exon) in seq_xref_ids(entry):
         if record_id not in sequences:
             continue
-        count += 1
         record = sequences[record_id]
         seqs.add((str(record.seq), exon))
 
-    # if not seqs:
-    #     raise ValueError("No sequences found for: %s" % entry)
-
-    # assert count == len(seqs), "RGD is a pita"
     return list(seqs)
 
 
