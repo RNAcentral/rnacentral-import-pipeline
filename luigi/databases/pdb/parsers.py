@@ -16,7 +16,7 @@ limitations under the License.
 import re
 import logging
 
-from . import utils
+from . import helpers
 from databases import data
 
 LOGGER = logging.getLogger(__name__)
@@ -31,7 +31,7 @@ def chain_descriptions(pdb_ids):
     }
     """
 
-    report = utils.custom_report(pdb_ids, [
+    report = helpers.custom_report(pdb_ids, [
         'structureId',
         'chainId',
         'structureTitle',
@@ -72,30 +72,30 @@ def chain_descriptions(pdb_ids):
 
 def as_entry(row, reference_mapping):
     return data.Entry(
-        primary_id=utils.primary_id(row),
-        accession=utils.accession(row),
-        ncbi_tax_id=utils.taxid(row),
+        primary_id=helpers.primary_id(row),
+        accession=helpers.accession(row),
+        ncbi_tax_id=helpers.taxid(row),
         database='PDBE',
-        sequence=utils.sequence(row),
+        sequence=helpers.sequence(row),
         exons=[],
-        rna_type=utils.rna_type(row),
-        url=utils.url(row),
+        rna_type=helpers.rna_type(row),
+        url=helpers.url(row),
         seq_version='1',
-        note_data=utils.note_data(row),
-        xref_data=utils.xref_data(row),
-        product=utils.product(row),
-        optional_id=utils.optional_id(row),
-        description=utils.description(row),
-        species=utils.species(row),
-        lineage=utils.lineage(row),
-        parent_accession=utils.parent_accession(row),
-        references=utils.references_for(row, reference_mapping),
-        location_start=utils.location_start(row),
-        location_end=utils.location_end(row),
+        note_data=helpers.note_data(row),
+        xref_data=helpers.xref_data(row),
+        product=helpers.product(row),
+        optional_id=helpers.optional_id(row),
+        description=helpers.description(row),
+        species=helpers.species(row),
+        lineage=helpers.lineage(row),
+        parent_accession=helpers.parent_accession(row),
+        references=helpers.references_for(row, reference_mapping),
+        location_start=helpers.location_start(row),
+        location_end=helpers.location_end(row),
     )
 
 
 def as_entries(pdb_ids):
-    reference_mapping = utils.reference_mapping(pdb_ids)
+    reference_mapping = helpers.reference_mapping(pdb_ids)
     for result in chain_descriptions(pdb_ids):
         yield as_entry(result, reference_mapping)

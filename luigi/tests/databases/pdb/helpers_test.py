@@ -15,7 +15,7 @@ limitations under the License.
 
 import pytest
 
-from databases.pdb import utils
+from databases.pdb import helpers
 
 
 @pytest.mark.parametrize('product,expected', [
@@ -48,12 +48,12 @@ from databases.pdb import utils
     ('60S ribosomal RNA', 'rRNA'),
 ])
 def test_can_compute_correct_rna_types(product, expected):
-    assert utils.rna_type({'compound': product}) == expected
+    assert helpers.rna_type({'compound': product}) == expected
 
 
 def test_gets_given_taxid():
-    assert(utils.taxid({'taxonomyId': '562'})) == 562
+    assert(helpers.taxid({'taxonomyId': '562'})) == 562
 
 
 def test_uses_synthenic_if_given_no_taxid():
-    assert(utils.taxid({'taxonomyId': ''})) == 32630
+    assert(helpers.taxid({'taxonomyId': ''})) == 32630

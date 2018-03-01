@@ -17,7 +17,7 @@ import attr
 import pytest
 
 from databases import data
-from databases.pdb import utils
+from databases.pdb import helpers
 from databases.pdb import parsers
 
 
@@ -123,5 +123,5 @@ def test_does_not_get_chain_infor_for_a_protein_chain(pdb, chains):
     ('1J5E', [274]),
 ])
 def test_can_get_given_taxid(pdb, expected):
-    taxids = [utils.taxid(c) for c in parsers.chain_descriptions([pdb])]
+    taxids = [helpers.taxid(c) for c in parsers.chain_descriptions([pdb])]
     assert taxids == expected
