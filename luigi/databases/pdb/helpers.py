@@ -115,14 +115,22 @@ def sequence(row):
     """
     Fetches the sequence of the row as DNA.
     """
-
     return row['sequence'].replace('U', 'T')
 
 
 def taxid(row):
+    """
+    Fetch the taxid from the row. This will deal with , or empty taxids.
+    """
+
     # if no taxonomy id, use that of the synthetic construct
     if row['taxonomyId'] == '':
         return 32630  # synthetic construct
+
+    # If there is a ',' in then that is synthetic
+    if ',' in row['taxonomyId']:
+        return 32630
+
     return int(row['taxonomyId'])
 
 
