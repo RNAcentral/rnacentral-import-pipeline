@@ -71,6 +71,12 @@ def test_can_build_correct_entry_for_rrna():
     ))
 
 
+def test_can_handle_strange_taxids():
+    entries = [e for e in parsers.as_entries(['3T4B'])]
+    assert len(entries) == 1
+    assert entries[0].ncbi_tax_id == 32630
+
+
 def test_can_build_correct_entry_for_srp_rna():
     entries = [attr.asdict(e) for e in parsers.as_entries(['1CQ5'])]
     assert len(entries) == 1
