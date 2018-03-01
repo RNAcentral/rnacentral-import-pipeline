@@ -42,6 +42,7 @@ from .gtrnadb import GtRNAdb
 from .mgi.download import MgiDownload
 from .mgi.as_json import MgiToJson
 from .mgi import Mgi
+from .ena import Ena
 
 from .release import LoadSequences
 from .release import LoadAccessions
