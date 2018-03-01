@@ -20,7 +20,7 @@ import collections as coll
 
 import requests
 
-from databases import helpers
+from databases.helpers import phylogeny as phy
 from databases.data import Reference
 
 RIBOSOMES = set([
@@ -289,8 +289,8 @@ def location_end(row):
 
 
 def lineage(row):
-    return helpers.lineage(taxid(row))
+    return phy.lineage(taxid(row))
 
 
 def species(row):
-    return helpers.species(taxid(row))
+    return phy.species(taxid(row))
