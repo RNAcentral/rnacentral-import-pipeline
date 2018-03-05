@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+IFS=$'\n\t'
+
+error()
+{
+   echo 1>&2 $@ && exit
+}
+
+workers=${1:-80}
+virtual_env=${2:-import-env}
+
+activate_sh="$virtual_env/bin/activate"
+[ -e "$activate_sh" ] || error "No virtual_env to activate"
+
+module load pgsql/pgsql-95
+source "$activate_sh"
+export PYTHONPATH="$PYTHONPATH:luigi"
+
+# Start the scheduler
+bsub \
+  -J "rnc-scheduler" \
+  -E bin/update-config \
+  luigid
+
+# Create all CSV's
+bsub \
+  -M 4000 \
+  -J "rnc-process[1-$workers]" \
+  -w 'started(rnc-scheduler)' \
+  python -m luigi --module tasks ProcessData
+
+# Update database with CSV data
+bsub \
+  -M 4000 \
+  -J "rnc-update" \
+  -w "done(rnc-process)" \
+  bin/update
