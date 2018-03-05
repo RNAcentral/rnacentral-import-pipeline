@@ -29,8 +29,10 @@ def download(url, filename):
     """
 
     dirname = os.path.dirname(filename)
-    if not os.path.exists(dirname):
+    try:
         os.makedirs(dirname)
+    except:
+        pass
 
     response = requests.get(url)
     response.raise_for_status()
