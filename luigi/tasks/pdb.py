@@ -15,7 +15,7 @@ limitations under the License.
 
 import luigi
 
-from databases.pdb import utils
+from databases.pdb import helpers as utils
 from databases.pdb.parsers import as_entries
 
 from tasks.config import output
