@@ -214,6 +214,9 @@ class ena(luigi.Config):
     tpa_url = 'https://www.ebi.ac.uk/ena/data/xref/search?source={db}&expanded=true'
 
     def raw_ncr_files(self):
+        if not os.path.exists(self.base):
+            return []
+
         files = []
         for name in os.listdir(self.base):
             directory = os.path.join(self.base, name)
