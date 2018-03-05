@@ -22,8 +22,8 @@ from databases.ena.parsers import parse
 
 
 @pytest.mark.parametrize('filename,count', [
-    ('data/ena/wgs_aacd01_fun.ncr', 188),
-    ('data/ena/wgs_abxv02_pro.ncr', 103),
+    ('data/ena/ncr/wgs/aa/wgs_aacd01_fun.ncr', 188),
+    ('data/ena/ncr/wgs/aa/wgs_abxv02_pro.ncr', 103),
     ('data/test_AS_lines.ncr', 1),
     ('data/test_example_entries.ncr', 10),
     ('data/test_feature_unclosed_parenthesis.ncr', 2),
@@ -36,7 +36,7 @@ from databases.ena.parsers import parse
     ('data/test_rfam_product.ncr', 2),  # Skipped because outdated taxon id
     ('data/test_silva_product.ncr', 3),
     ('data/test_species_patch.ncr', 1),
-    ('data/ena/wgs_acnt01_pro.ncr', 106),
+    ('data/ena/ncr/ex/wgs_acnt01_pro.ncr', 106),
 ])
 def test_can_parse_variety_of_files(filename, count):
     with open(filename, 'rb') as raw:
@@ -51,7 +51,7 @@ def test_can_parse_variety_of_files(filename, count):
 
 
 def test_creates_simple_entry():
-    with open('data/ena/wgs_aacd01_fun.ncr', 'rb') as raw:
+    with open('data/ena/ncr/wgs/aa/wgs_aacd01_fun.ncr', 'rb') as raw:
         simple_data = list(parse(raw))
 
     assert attr.asdict(simple_data[0]) == attr.asdict(Entry(
@@ -69,6 +69,7 @@ def test_creates_simple_entry():
         rna_type='tRNA',
         url='https://www.ebi.ac.uk/ena/data/view/Non-coding:AACD01000002.1:101667..101773:tRNA',
         seq_version='1',
+        xref_data={'ena_refs': {'BIOSAMPLE': ('SAMN02953587', None)}},
         chromosome='VIII',
         species='Aspergillus nidulans FGSC A4',
         lineage=(
@@ -213,7 +214,7 @@ def test_creates_simple_entry():
 
 
 def test_can_find_correct_ncRNA_type():
-    with open('data/ena/wgs_abxv02_pro.ncr', 'rb') as raw:
+    with open('data/ena/ncr/wgs/aa/wgs_abxv02_pro.ncr', 'rb') as raw:
         ncrna_data = list(parse(raw))
 
     assert attr.asdict(ncrna_data[0]) == attr.asdict(Entry(
@@ -234,6 +235,7 @@ def test_can_find_correct_ncRNA_type():
         note_data={
             'text': ['Rfam score 66']
         },
+        xref_data={'ena_refs': {'BIOSAMPLE': ('SAMN00008855', None)}},
         species="Providencia rustigianii DSM 4541",
         lineage=(
             "Bacteria; Proteobacteria; Gammaproteobacteria; Enterobacterales; "
@@ -365,6 +367,7 @@ def test_can_parse_all_example_entries():
         rna_type='misc_RNA',
         url='https://www.ebi.ac.uk/ena/data/view/Non-coding:AB330786.1:1..27:misc_RNA',
         seq_version='1',
+        xref_data={'ena_refs': {'RFAM': ('RF00005', 'tRNA')}},
         lineage=(
             'Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; '
             'Euteleostomi; Mammalia; Eutheria; Euarchontoglires; '
@@ -402,6 +405,7 @@ def test_can_parse_all_example_entries():
         rna_type='misc_RNA',
         url='https://www.ebi.ac.uk/ena/data/view/Non-coding:AB330785.1:1..34:misc_RNA',
         seq_version='1',
+        xref_data={'ena_refs': {'SRPDB': ('Xeno.laev._DC015625', None)}},
         lineage=(
             'Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; '
             'Euteleostomi; Mammalia; Eutheria; Euarchontoglires; '
@@ -440,6 +444,7 @@ def test_can_parse_all_example_entries():
         rna_type='miRNA',
         url='https://www.ebi.ac.uk/ena/data/view/Non-coding:HAAO01001079.1:1..21:ncRNA',
         seq_version='1',
+        xref_data={'ena_refs': {'MIRBASE': ('MIMAT0022742', 'hsa-miR-1273g-3p')}},
         lineage=(
             'Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; '
             'Euteleostomi; Mammalia; Eutheria; Euarchontoglires; '
@@ -500,6 +505,7 @@ def test_can_parse_all_example_entries():
         note_data={
             'text': ['Tag:(A)ANNVKFAPAYAKAA*'],
         },
+        xref_data={'ena_refs': {'TMRNA-WEBSITE': ('Campy_jejun_700819', None)}},
         lineage='unclassified sequences; unidentified',
         species='unidentified',
         division=None,
@@ -723,7 +729,7 @@ def test_can_extract_references_from_experiment(pmid):
         'ontology': ['ECO:0000305', 'GO:0006617', 'GO:0048501', 'SO:0000590'],
         'text': ['biotype:SRP_RNA'],
     }
-    assert pmid in (ref.pmid for ref in data.references)
+    assert pmid in [ref.pmid for ref in data.references]
 
 
 @pytest.mark.parametrize('pmid', [

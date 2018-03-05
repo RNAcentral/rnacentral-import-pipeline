@@ -25,18 +25,20 @@ from tasks.config import ena
 from tasks.config import output
 from tasks.utils.entry_writers import Output
 
-from .copy import CopyNcr
-from .tpa import FetchTPA
+from . import utils
 
 
 class SingleEnaFile(luigi.Task):
+    """
+    Import a Single NCR file from ENA.
+    """
+
     input_file = luigi.Parameter()
 
     def requires(self):
-        yield CopyNcr(ncr=self.input_file)
-
-        for database in ena().tpa_databases:
-            yield FetchTPA(database=database)
+        yield utils.copy_ncr_task(self.input_file)
+        for task in utils.tpa_tasks():
+            yield task
 
     def output(self):
         prefix = os.path.basename(self.input_file)
@@ -46,6 +48,4 @@ class SingleEnaFile(luigi.Task):
         files = ena().all_tpa_files()
         with self.output().writer() as writer:
             with gzip.open(self.input_file, 'rb') as handle:
-                for entry in parse_with_mapping_files(handle, files):
-                    if entry.is_valid():
-                        writer.write(entry)
+                writer.write_all(parse_with_mapping_files(handle, files))
