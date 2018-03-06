@@ -15,14 +15,13 @@ activate_sh="$virtual_env/bin/activate"
 [ -e "$activate_sh" ] || error "No virtual_env to activate"
 
 module load pgsql/pgsql-95
-source "$activate_sh"
-export PYTHONPATH="$PYTHONPATH:luigi"
+VIRTUAL_ENV_DISABLE_PROMPT=1 source "$activate_sh"
+export PYTHONPATH="${PYTHONPATH:-}:luigi"
 
 # Start the scheduler
 bsub \
   -J "rnc-scheduler" \
-  -E bin/update-config \
-  luigid
+  'bin/update-config && luigid'
 
 # Create all CSV's
 bsub \
