@@ -28,7 +28,7 @@ from .ena import Ena
 
 from .release import Load
 from .release import Update
-from .release import ProcessData
+from .release.process_data import ProcessData
 from .release.cleanup import TruncateLoadTables
 
 from .export.ftp.rfam import ExportRfamAnnotaitons
