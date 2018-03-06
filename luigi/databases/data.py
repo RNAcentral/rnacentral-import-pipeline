@@ -75,9 +75,7 @@ def is_truish():
 def optional_utf8(raw):
     if raw is None:
         return None
-    if isinstance(raw, unicode):
-        return raw
-    return raw.decode('utf8', 'ignore')
+    return raw.encode('utf8', 'ignore')
 
 
 @attr.s(frozen=True)
