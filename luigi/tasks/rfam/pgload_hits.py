@@ -16,6 +16,7 @@ limitations under the License.
 from tasks.utils.pgloader import PGLoader
 
 from tasks.rfam.hits_csv import RfamHitsCSV
+from tasks.rfam.pgload_fasta import RfamPGLoadFasta
 from tasks.rfam.pgload_families import RfamPGLoadFamilies
 
 CONTROL_FILE = """LOAD CSV
@@ -114,6 +115,23 @@ where
 );
 $$,
 $$
+update rfam_analyzed_sequences
+set
+    total_matches = counts.total,
+    total_family_matches = counts.family_count
+from (
+    select
+        upi,
+        count(*) total,
+        count(distinct rfam_model_id) family_count
+    from rfam_model_hits
+    group by upi
+) as counts
+where
+    rfam_analyzed_sequences.upi = counts.upi
+;
+$$,
+$$
 drop index ix__load_rfam_model_hits__rfam_model_id;
 $$,
 $$
@@ -141,6 +159,7 @@ class RfamPGLoadHits(PGLoader):  # pylint: disable=R0904
         return [
             RfamHitsCSV(),
             RfamPGLoadFamilies(),
+            RfamPGLoadFasta(),
         ]
 
     def control_file(self):

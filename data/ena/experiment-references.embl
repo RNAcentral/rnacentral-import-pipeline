@@ -1,0 +1,71 @@
+ID   HG975378.1:1..299:ncRNA; SV 1; linear; transcribed RNA; STD; HUM; 299 BP.
+XX
+PA   HG975378.1
+XX
+PR   Project:PRJEB6238;
+XX
+DT   07-MAY-2014 (Rel. 120, Created)
+DT   03-MAR-2015 (Rel. 124, Last updated, Version 2)
+XX
+DE   Homo sapiens (human) Small nucleolar RNA 7SL
+XX
+KW   RNAcentral; TPA; TPA:specialist_db.
+XX
+OS   Homo sapiens (human)
+OC   Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi; Mammalia;
+OC   Eutheria; Euarchontoglires; Primates; Haplorrhini; Catarrhini; Hominidae;
+OC   Homo.
+XX
+RN   [1]
+RP   1-299
+RG   lncRNAdb and RNAcentral
+RA   ;
+RT   ;
+RL   Submitted (30-APR-2014) to the INSDC.
+XX
+RN   [2]
+RX   DOI; 10.1093/nar/gkq1138.
+RX   PUBMED; 21112873.
+RA   Amaral P.P., Clark M.B., Gascoigne D.K., Dinger M.E., Mattick J.S.;
+RT   "lncRNAdb: a reference database for long noncoding RNAs";
+RL   Nucleic Acids Res. 39(Database issue):D146-D151(2011).
+XX
+DR   lncRNAdb; 140; 7SL.
+DR   MD5; 020711a90d35bb197e29e085595dd52e.
+XX
+CC   lncRNAdb; 140; 7SL.
+CC
+CC   Specialist DB   : lncRNAdb (The long non-coding RNA database)
+CC   URL             : http://www/lncrnadb.org/
+XX
+AH   LOCAL_SPAN          PRIMARY_IDENTIFIER PRIMARY_SPAN        COMP
+AS   1-299               X04248.1           1-299
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..299
+FT                   /organism="Homo sapiens"
+FT                   /mol_type="transcribed RNA"
+FT                   /db_xref="taxon:9606"
+FT   ncRNA           HG975378.1:1..299
+FT                   /gene="RN7SL1"
+FT                   /product="Small nucleolar RNA 7SL"
+FT                   /note="biotype:SRP_RNA"
+FT                   /note="ECO:0000305"
+FT                   /note="SO:0000590"
+FT                   /note="GO:0006617"
+FT                   /note="GO:0048501"
+FT                   /experiment="EXISTENCE: lncRNAdb literature review [PMID:
+FT                   12244299,6196367,6181418,6802847,3403542,6084597,10924331,
+FT                   7528809,7529207,1704372,20610725,18617187,17881443,
+FT                   17164479,8389475,10834842,10684931,15611297,20668672,
+FT                   911771,6209580]"
+FT                   /ncRNA_class="SRP_RNA"
+XX
+SQ   Sequence 299 BP; 56 A; 83 C; 105 G; 55 T; 0 other;
+     gccgggcgcg gtggcgcgtg cctgtagtcc cagctactcg ggaggctgag gctggaggat        60
+     cgcttgagtc caggagttct gggctgtagt gcgctatgcc gatcgggtgt ccgcactaag       120
+     ttcggcatca atatggtgac ctcccgggag cgggggacca ccaggttgcc taaggagggg       180
+     tgaaccggcc caggtcggaa acggagcagg tcaaaactcc cgtgctgatc agtagtggga       240
+     tcgcgcctgt gaatagccac tgcactccag cctgggcaac atagcgagac cccgtctct        299
+//

@@ -42,6 +42,7 @@ from .gtrnadb import GtRNAdb
 from .mgi.download import MgiDownload
 from .mgi.as_json import MgiToJson
 from .mgi import Mgi
+from .ena import Ena
 
 from .release import LoadSequences
 from .release import LoadAccessions
@@ -52,3 +53,6 @@ from .release import PrepareRelease
 from .release import TruncateLoadTables
 from .release import LoadRelease
 from .release import Release
+
+from .export.ftp.rfam import ExportRfamAnnotaitons
+from .export.ftp.fasta import FastaExport

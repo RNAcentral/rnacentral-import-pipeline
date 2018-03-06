@@ -221,6 +221,10 @@ sub _parse_accession_data {
     # get db_xref feature qualifiers
     $db_xrefs = _get_db_xref_feature_qualifiers($seq);
 
+    my $gene_id;
+    ($gene_id) = $db_xrefs =~ m/(GeneID\:\d+)/;
+    print "$gene_id\n";
+
     # iterate over all xrefs from the entry
     for my $xref (@{$xrefs}) {
 
@@ -276,7 +280,7 @@ sub _parse_accession_data {
                                    $non_coding_id, # source ENA id
                                    $xref->{'database'},
                                    $xref->{'primary_id'},
-                                   $xref->{'optional_id'},
+                                   $xref->{'optional_id'} || $gene_id,
                                    $project,
                                    _sanitize($seq->division),
                                    $keywords,

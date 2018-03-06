@@ -164,7 +164,7 @@ INFORMATIVE_NAMES = {
     # These two patterns are so that we don't hit tracrRNA with rRNA
     "_rRNA": "rRNA",
     "PK-G12rRNA": "rRNA",
-    "^RUF\d+$": "other",
+    r"^RUF\d+$": "other",
     '^CRISPR-': 'other',
 }
 
@@ -206,6 +206,7 @@ SO_TERM_MAPPING = {
 RFAM_RNA_TYPE_MAPPING = {
     "Cis-reg; leader": "other",
     "Cis-reg; riboswitch": "other",
+    "Gene": "other",
     "Gene; CRISPR": "other",
     "Gene; antisense": "antisense_RNA",
     "Gene; antitoxin": "other",
@@ -214,14 +215,12 @@ RFAM_RNA_TYPE_MAPPING = {
     "Gene; rRNA": "rRNA",
     "Gene; ribozyme": "ribozyme",
     "Gene; sRNA": "other",
+    "Gene; snRNA": "snRNA",
     "Gene; snRNA; snoRNA; CD-box": "snoRNA",
     "Gene; snRNA; snoRNA; HACA-box": "snoRNA",
     "Gene; snRNA; snoRNA; scaRNA": "snoRNA",
     "Gene; snRNA; splicing": "snRNA",
-    "Gene; snRNA": "snRNA",
     "Gene; tRNA": "tRNA",
-    "Gene; tRNA": "tRNA",
-    "Gene": "other",
 }
 
 DOMAIN_MAPPING = {
@@ -231,6 +230,7 @@ DOMAIN_MAPPING = {
     'RF00011': 'Bacteria',
     'RF00013': 'Bacteria',
     'RF00014': 'Bacteria',
+    'RF00017': 'Eukaryota',
     'RF00018': 'Bacteria',
     'RF00021': 'Bacteria',
     'RF00022': 'Bacteria',
@@ -245,6 +245,7 @@ DOMAIN_MAPPING = {
     'RF00040': 'Bacteria',
     'RF00042': 'Bacteria',
     'RF00043': 'Bacteria',
+    'RF00044': 'Viruses',
     'RF00050': 'Bacteria',
     'RF00066': 'Eukaryota',
     'RF00077': 'Bacteria',
@@ -336,12 +337,22 @@ DOMAIN_MAPPING = {
     'RF00557': 'Bacteria',
     'RF00558': 'Bacteria',
     'RF00559': 'Bacteria',
+    'RF01502': 'Eukaryota',
+    'RF01570': 'Eukaryota',
+    'RF01849': 'Bacteria',
+    'RF01850': 'Bacteria',
+    'RF01851': 'Bacteria',
+    'RF01854': 'Bacteria',
+    'RF01855': 'Eukaryota',
+    'RF01856': 'Eukaryota',
     'RF01857': 'Archaea',
     'RF01959': 'Archaea',
+    'RF01960': 'Eukaryota',
     'RF02540': 'Archaea',
     'RF02541': 'Bacteria',
     'RF02542': 'Eukaryota',
     'RF02543': 'Eukaryota',
+    'RF02544': 'Eukaryota',
 }
 
 
@@ -404,7 +415,7 @@ class RfamFamily(object):
 
     def guess_insdc_using_name(self):
         found = set()
-        for name, rna_type in INFORMATIVE_NAMES.items():
+        for name, _ in INFORMATIVE_NAMES.items():
             if re.search(name, self.name, re.IGNORECASE):
                 found.add(name)
 
