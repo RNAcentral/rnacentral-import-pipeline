@@ -15,6 +15,7 @@ limitations under the License.
 
 import json
 import logging
+import unicodedata
 from collections import Counter
 
 import attr
@@ -75,7 +76,9 @@ def is_truish():
 def optional_utf8(raw):
     if raw is None:
         return None
-    return raw.encode('utf8', 'ignore')
+    if isinstance(raw, unicode):
+        return unicodedata.normalize('NFC', raw)
+    return raw
 
 
 @attr.s(frozen=True)
