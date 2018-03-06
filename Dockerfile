@@ -1,5 +1,7 @@
 FROM centos:6.6
 
+RUN yum install -y https://download.postgresql.org/pub/repos/yum/9.5/redhat/rhel-6-x86_64/pgdg-centos95-9.5-3.noarch.rpm
+
 RUN yum install -y \
     curl \
     freetds \
@@ -13,6 +15,7 @@ RUN yum install -y \
     nc.x86_64 \
     openssl \
     openssl-devel \
+    postgresql95.x86_64 \
     sbcl \
     tar \
     unzip \

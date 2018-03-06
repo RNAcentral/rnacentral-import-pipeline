@@ -1,0 +1,73 @@
+ID   AL591985.1:1315182..1315258:tRNA; SV 1; linear; genomic DNA; STD; PRO; 77 BP.
+XX
+PA   AL591985.1
+XX
+PR   Project:PRJNA19;
+XX
+DT   23-JUN-2004 (Rel. 80, Created)
+DT   07-MAR-2015 (Rel. 124, Last updated, Version 7)
+XX
+DE   Sinorhizobium meliloti 1021 tRNA-ARG_CCG
+XX
+KW   .
+XX
+OS   Sinorhizobium meliloti 1021
+OC   Bacteria; Proteobacteria; Alphaproteobacteria; Rhizobiales; Rhizobiaceae;
+OC   Sinorhizobium/Ensifer group; Sinorhizobium.
+OG   Plasmid pSymB
+XX
+RN   [1]
+RG   The MELILO EU Consortium
+RA   Weidner S.;
+RT   ;
+RL   Submitted (07-JUN-2001) to the INSDC.
+RL   Weidner S., Universitaet Bielefeld, Biologie IV (Genetik) Universitaetstr
+RL   25, D-33615 Bielefeld, Germany. Submitted (07-JUN-2001) to the
+RL   EMBL/GenBank/DDBJ databases.
+XX
+RN   [2]
+RX   DOI; 10.1073/pnas.161294698.
+RX   PUBMED; 11481431.
+RA   Finan T.M., Weidner S., Wong K., Buhrmester J., Chain P., Vorholter F.J.,
+RA   Hernandez-Lucas I., Becker A., Cowie A., Gouzy J., Golding B., Puhler A.;
+RT   "The complete sequence of the 1,683-kb pSymB megaplasmid from the N2-fixing
+RT   endosymbiont Sinorhizobium meliloti";
+RL   Proc. Natl. Acad. Sci. U.S.A. 98(17):9889-9894(2001).
+XX
+DR   MD5; e53749ef14b40f927c9940cd1a4060c4.
+DR   BioSample; SAMEA3283068.
+XX
+CC   MELILO EU Consortium:
+CC   Laboratoire de Biologie Moleculaire des Relations
+CC   Plantes-Microorganismes, UMR215-CNRS-INRA, BP27, F-31326 Castanet,
+CC   France, Laboratoire de Genetique et Developpement UMR6061-CNRS,
+CC   Faculte de Medecine, 2 avenue du Pr. Leon Bernard, F-35043 Rennes,
+CC   France, GATC GmbH, Fritz-Arnold-str. 23, D-78467 Konstanz, Germany,
+CC   Universitaet Bielefeld, Biologie IV (Genetik) Universitaetstr 25,
+CC   D-33615 Bielefeld, Germany, Unite de Biochimie physiologique,
+CC   Universite Catholique de Louvain, Place Croix du Sud 2, Bte 20,
+CC   B-1348 Louvain-la-Neuve, Belgium, Unite de Microbiologie, Faculte des
+CC   Sciences Agronomiques de Gembloux, Avenue Marechal Juin 6, B-5030
+CC   Gembloux, Belgium.  E-mail:Anke.Becker@genetik.uni-bielefeld.de
+CC   http://sequence.toulouse.inra.fr/meliloti.html
+CC
+CC   join(AL591985 AL603642 AL603643 AL603644 AL603645 AL603646 AL603647)
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..77
+FT                   /organism="Sinorhizobium meliloti 1021"
+FT                   /plasmid="pSymB"
+FT                   /strain="1021"
+FT                   /mol_type="genomic DNA"
+FT                   /db_xref="taxon:266834"
+FT   tRNA            AL591985.1:1315182..1315258
+FT                   /gene="tRNA-ARG_CCG"
+FT                   /locus_tag="SM_b21712"
+FT                   /old_locus_tag="SMb21712"
+FT                   /anticodon="(pos:AL591985.1:1315216..1315218,aa:Arg)"
+XX
+SQ   Sequence 77 BP; 16 A; 20 C; 23 G; 18 T; 0 other;
+     gcacccgtag ctcagctgga tagagtgttg gattccgatt ccaaaggtca caggttcgaa        60
+     tcctgtcggg tgcgcca                                                       77
+//

@@ -35,4 +35,5 @@ def download(url, filename):
     response = requests.get(url)
     response.raise_for_status()
     with atomic_file(filename) as out:
-        out.write(response.text)
+        for chunk in response.iter_content(chunk_size=128):
+            out.write(chunk)

@@ -19,7 +19,7 @@ import logging
 from databases.data import Exon
 from databases.data import Entry
 from databases.data import SecondaryStructure
-from databases import helpers
+import databases.helpers.phylogeny as phy
 
 from .helpers import url
 from .helpers import anticodon
@@ -36,6 +36,7 @@ from .helpers import accession
 from .helpers import parent_accession
 from .helpers import seq_version
 from .helpers import references
+from .helpers import sequence
 
 LOGGER = logging.getLogger(__name__)
 
@@ -46,7 +47,11 @@ def gtrnadb_secondary_structure(data):
     will transform it into a reasonable dot-bracket string and create a
     SecondaryStructure object.
     """
-    return SecondaryStructure(dot_bracket=dot_bracket(data))
+    twod = SecondaryStructure(dot_bracket=dot_bracket(data))
+    seq = sequence(data)
+    if len(seq) != len(twod):
+        return SecondaryStructure.empty()
+    return twod
 
 
 def gtrnadb_exons(locations):
@@ -92,7 +97,7 @@ def gtrnadb_entries(data):
                 accession=accession(data, location),
                 ncbi_tax_id=int(data['ncbi_tax_id']),
                 database='GTRNADB',
-                sequence=data['sequence'],
+                sequence=sequence(data),
                 exons=gtrnadb_exons(location),
                 rna_type='tRNA',
                 url=url(data),
@@ -115,7 +120,7 @@ def gtrnadb_entries(data):
                 gene_synonyms=data.get('synonyms', []),
                 references=references(data, location),
             )
-        except helpers.UnknownTaxonId:
+        except phy.UnknownTaxonId:
             print("Unknown taxon id in %s" % data)
             break
 

@@ -139,12 +139,19 @@ class ReferenceWriter(object):
         """
 
         for reference in data.references:
+            authors = reference.authors
+            if authors:
+                authors = authors.encode('ascii', 'ignore')
+            title = reference.title
+            if title:
+                title = title.encode('ascii', 'ignore')
+
             self.csv.writerow([
                 reference.md5(),
-                reference.accession,
-                reference.authors,
+                data.accession,
+                authors,
                 reference.location,
-                reference.title,
+                title,
                 reference.pmid,
                 reference.doi,
             ])
@@ -223,14 +230,14 @@ class AccessionWriter(object):
             data.primary_id,
             data.optional_id,
             data.project,
-            data.division,
+            None,  # data.division,
             data.keywords,
             data.description,
             data.species,
             data.common_name,
             data.organelle,
             data.lineage,
-            data.allele,
+            None,  # This was data.allele,
             data.anticodon,
             data.chromosome,
             data.experiment,
@@ -239,7 +246,7 @@ class AccessionWriter(object):
             data.gene_synonym,
             data.inference,
             data.locus_tag,
-            data.map,
+            None,  # This was data.map,
             data.mol_type,
             data.ncrna_class,
             data.note,
@@ -334,6 +341,15 @@ class Writer(object):
         for field in attr.fields(self.__class__):
             writer = getattr(self, field.name)
             writer.write(data)
+
+    def write_all(self, entries):
+        """
+        Write all valid entries in the given entries iterable.
+        """
+
+        for entry in entries:
+            if entry.is_valid():
+                self.write(entry)
 
     def __enter__(self):
         return self
