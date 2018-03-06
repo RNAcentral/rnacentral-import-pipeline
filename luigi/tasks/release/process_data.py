@@ -20,6 +20,7 @@ from tasks.ensembl.ensembl import Ensembl
 from tasks.pdb import Pdb
 from tasks.rfam import RfamSequences
 from tasks.rfam import RfamFamilies
+from tasks.rgd import Rgd
 
 
 class ProcessData(luigi.WrapperTask):  # pylint: disable=R0904
@@ -34,3 +35,4 @@ class ProcessData(luigi.WrapperTask):  # pylint: disable=R0904
         yield RfamSequences()
         yield RfamFamilies()
         yield Pdb()
+        yield Rgd()
