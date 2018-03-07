@@ -36,7 +36,8 @@ def test_assigns_species_correctly(upi, ans):
     """
     Assigns species names correctly.
     """
-    assert load_data(upi).additional_fields.species == ans
+    data = load_data(upi)
+    assert data.find("./additional_fields/field[@name='species']").text == ans
 
 
 @pytest.mark.skip()  # pylint: disable=E1101
