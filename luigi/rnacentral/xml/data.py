@@ -15,17 +15,12 @@ limitations under the License.
 
 import re
 import json
-import datetime
-import itertools as it
+from datetime import datetime as dt
+import operator as op
 import collections as coll
 
-from xml.sax import saxutils
+from xml.sax import saxutils as sax
 import xml.etree.cElementTree as ET
-
-import attr
-from attr.validators import in_
-from attr.validators import instance_of as is_a
-from attr.validators import optional
 
 
 GENERIC_TYPES = set(['misc_RNA', 'misc RNA', 'other'])
@@ -48,213 +43,53 @@ POPULAR_SPECIES = set([
 INSDC_PATTERN = re.compile(r'Submitted \(\d{2}\-\w{3}\-\d{4}\) to the INSDC\. ?')
 
 
-def is_set_of(element_type):
-    """
-    A validator to check if something is a set of the correct type.
-    """
-
-    def checker(_, attribute, value):
-        """
-        The actual validator. Checks if the attribute is a set and each element
-        is of the right type.
-        """
-
-        if not isinstance(value, set):
-            raise ValueError("%s must be a set of %s" %
-                             (attribute.name, element_type))
-
-        for val in value:
-            if not isinstance(val, element_type):
-                raise ValueError("%s must be a set of %s" %
-                                 (attribute.name, element_type))
-
-    checker.type = set
-    checker.member_type = element_type
-    return checker
+def entry(spec):
+    def fn(data):
+        entry_id = '{upi}_{taxid}'.format(
+            upi=data['upi'],
+            taxid=data['taxid'],
+        )
+        root = ET.Element('entry', {'id': entry_id})
+        for func in spec:
+            func(root, data)
+        return root
+    return fn
 
 
-def unique_value(name, rows, allow_empty=False, allow_falsey=True, lowercase=False):
-    """
-    Checks that there is a unique value for the given name in all given rows.
-    The rows should be a dict of values. If there is not a unique value then an
-    exception is raised, otherwise the value is returned.
-    """
-
-    values = set(r[name] for r in rows)
-    if not allow_falsey:
-        values = set(v for v in values if v)
-
-    if lowercase:
-        values = set(str(v).lower() for v in values)
-
-    if not values:
-        if not allow_empty:
-            raise ValueError("No values for for %s" % name)
-        return None
-    if len(values) != 1:
-        raise ValueError("%s must be unique, got %s" % (name, str(values)))
-    return values.pop()
+def section(name, spec):
+    def fn(root, data):
+        element = ET.SubElement(root, name)
+        for func in spec:
+            func(element, data)
+    return fn
 
 
-def all_values(name, rows, converter=None):
-    """
-    This will fetch and convert all values into some set.
-    """
+def create_getter(final_name, given_name):
+    op_name = (final_name,)
+    if given_name is not None:
+        op_name = (given_name,)
+        if isinstance(given_name, (tuple, list)):
+            op_name = given_name
 
-    if converter is not None:
-        return set(converter(r[name]) for r in rows if r[name])
-    return set(r[name] for r in rows if r[name])
-
-
-def class_builder(cls, rows):
-    """
-    The generic builder for the attr.s() classes I use here. It assumes that
-    all attributes have a validator and uses that to determine how to build
-    each attribute. If the field has a builder entry in the metadata that is
-    used to build the data. Otherwise if there the validator requires the type
-    be a set then the raw values are placed into a set. If the type has a
-    build method then that is uesd. Finally it will them try to use the
-    unique_value function to build.
-    """
-
-    values = []
-    for field in attr.fields(cls):
-        if field.metadata.get('builder', None):
-            values.append(field.metadata['builder'](rows))
-        else:
-            validator = field.validator
-            if hasattr(validator, 'validator'):
-                validator = validator.validator
-            allowed = validator.type
-            if hasattr(allowed, 'build'):
-                values.append(allowed.build(rows))
-            elif allowed == set:
-                converter = validator.member_type
-                if converter == basestring:
-                    converter = str
-                values.append(all_values(field.name, rows, converter))
-            else:
-                kwargs = field.metadata.get('building', {})
-                values.append(unique_value(field.name, rows, **kwargs))
-    return cls(*values)  # pylint: disable=W0142
+    getter = op.itemgetter(*op_name)
+    if len(op_name) == 1:
+        return lambda d: (getter(d),)
+    return getter
 
 
-def get_status(rows):
-    """
-    Return 'Active' if a sequence has at least one active cross_reference,
-    return 'Obsolete' otherwise.
-    """
-
-    if any(r['deleted'] == 'N' for r in rows):
-        return 'Active'
-    return 'Obsolete'
+def as_active(deleted):
+    if deleted == 'Y':
+        return 'Obsolete'
+    return 'Active'
 
 
-def get_rna_type(rows):
-    """
-    Get the precomputed RNA type and then replace '_' with ' ' to be prettier.
-    """
-
-    rna_type = unique_value('rna_type', rows)
-    if rna_type is None:
-        return 'ncRNA'
-    return rna_type.replace('_', ' ')
-
-
-def get_genes(rows):
-    """
-    This will return all genes in the rows. In the case if miRBase it will use
-    the product (if needed) to determine a gene name.
-    """
-
-    genes = set()
-    product_pattern = re.compile(r'^\w{3}-')
-    for row in rows:
-        if not row['gene'] and \
-                row['product'] and \
-                re.match(product_pattern, row['product']) and \
-                row['expert_db'].lower() == 'mirbase':
-            short_gene = re.sub(product_pattern, '', row['product'])
-            genes.add(short_gene)
-        else:
-            if row['gene']:
-                genes.add(row['gene'])
-    return genes
-
-
-def is_insdc(row):
-    """
-    Check if the given row is from an INSDC submission.
-    """
-    return re.match(INSDC_PATTERN, row['location'])
-
-
-def get_journals(rows):
-    """
-    Get all journals the rows reference, this excludes INSDC publications.
-    """
-    return set(r['location'] for r in rows if not is_insdc(r))
-
-
-def get_insdc(rows):
-    """
-    Get all INSDC publications from the given rows.
-    """
-    return set(r['location'] for r in rows if is_insdc(r))
-
-
-def get_species(rows):
-    """
-    This will get the species name for all rows. If there is only one name then
-    that used. If there is more than one then the longest is used. Ideally
-    there should only be one, but that isn't how our data is organized now.
-    """
-
-    species = all_values('species', rows)
-    if len(species) == 1:
-        return species.pop()
-    return sorted(species)[0]
-
-
-def field_formatter(root, value, name, escape=False):
-    """
-    This is the basic feild formatter, which will add a field element to
-    the root. It sets the name attribute to the given name and places the
-    value as text. If escape is True then this will escape the value first.
-    """
-
-    if escape:
-        value = saxutils.escape(value)
-    ET.SubElement(root, 'field', attrib={'name': name}, text=str(value))
-
-
-def format_gene_synonym(root, value, name, **kwargs):
-    """
-    Will replace all spaces with ';' in the xml.
-    """
-    field_formatter(root, value.replace(' ', ';'), name, **kwargs)
-
-
-def format_author_field(root, value, _, **kwargs):
-    """
-    Splits the author field by ', ' and then adds each entry as an element to
-    the root object.
-    """
-
-    for author in value.split(', '):
-        field_formatter(root, author, 'author', **kwargs)
-
-
-def split_authors(rows):
-    """
-    Splits all author strings on ', ' and places them into a single set.
-    """
-
-    authors = set()
-    for row in rows:
-        if row['author']:
-            authors.update(row['author'].split(', '))
-    return set(a for a in authors if a)
+def as_authors(authors):
+    result = set()
+    for author in authors:
+        if not author:
+            continue
+        result.update(author.split(', '))
+    return {a for a in result if a}
 
 
 def parse_whitespace_note(note):
@@ -265,10 +100,10 @@ def parse_whitespace_note(note):
     """
 
     data = coll.defaultdict(set)
-    for entry in note.split(' '):
-        match = re.match(r'^(\w+):\d+$', entry)
+    for word in note.split(' '):
+        match = re.match(r'^(\w+):\d+$', word)
         if match:
-            entry[match.group(1)].add(entry)
+            data[match.group(1)].add(word)
     return dict(data)
 
 
@@ -290,309 +125,259 @@ def parse_note(note):
     return {}
 
 
-@attr.s()
-class DateRange(object):
+def is_insdc(location):
     """
-    This represents the starting and end dates that an entry has been observed
-    from.
+    Check if the given row is from an INSDC submission.
     """
-    first_seen = attr.ib(validator=is_a(datetime.datetime))
-    last_seen = attr.ib(validator=is_a(datetime.datetime))
-
-    @classmethod
-    def build(cls, rows):
-        """
-        Build a new DateRange object.
-        """
-        return cls(
-            first_seen=min(r['created'] for r in rows),
-            last_seen=min(r['last'] for r in rows),
-        )
-
-    def as_xml(self, root):
-        """
-        Adds date entry's for the first_seen and last_seen values.
-        """
-
-        for field in attr.fields(self.__class__):
-            value = getattr(self, field.name)
-            attrib = {'value': value, 'type': field.name}
-            ET.SubElement(root, 'date', attrib=attrib)
+    return re.match(INSDC_PATTERN, location)
 
 
-@attr.s()
-class AdditionalFields(object):
+def as_journals(locations):
     """
-    This represents all additional fields for the xml object. Each attribute
-    may have metadata with it. If the metadata includes export: False then it
-    will not be placed in the final xml. {'escape': True} means the value will
-    be escape before being placed in the XML. And {'builder': callable} will
-    use the given callable to initalize the value.
+    Extract the names of all actual journals from the location list.
     """
+    return {l for l in locations if not is_insdc(l)}
 
-    taxid = attr.ib(validator=is_a(long), metadata={'export': False})
-    is_active = attr.ib(
-        validator=in_(['Active', 'Obsolete']),
-        metadata={'export': False, 'builder': get_status},
+
+def as_insdc(locations):
+    """
+    Extract all INSDC titles from the location list.
+    """
+    return {l for l in locations if is_insdc(l)}
+
+
+def as_name(upi, taxid):
+    return 'Unique RNA Sequence {upi}_{taxid}'.format(
+        upi=upi,
+        taxid=taxid,
     )
-    length = attr.ib(validator=is_a(int))
-    species = attr.ib(
-        validator=is_a(basestring),
-        metadata={'escape': True, 'builder': get_species}
-    )
-    organelles = attr.ib(validator=is_set_of(basestring))
-    expert_db = attr.ib(validator=is_set_of(basestring))
-    common_name = attr.ib(
-        validator=optional(is_a(basestring)),
-        metadata={
-            'escape': True,
-            'building': {
-                'allow_falsey': False,
-                'lowercase': True,
-                'allow_empty': True
-            },
+
+
+def as_ref(name, value):
+    return {
+        'attrib': {
+            'refname': name,
+            'dbkey': str(value),
         },
-    )
-    function = attr.ib(
-        validator=is_set_of(basestring),
-        metadata={'escape': True},
-    )
-    gene = attr.ib(
-        validator=is_set_of(basestring),
-        metadata={'escape': True, 'builder': get_genes},
-    )
-    gene_synonym = attr.ib(
-        validator=optional(is_set_of(basestring)),
-        metadata={'escape': True, 'formatter': format_gene_synonym},
-    )
-    rna_type = attr.ib(
-        validator=is_a(basestring),
-        metadata={'builder': get_rna_type},
-    )
-    product = attr.ib(
-        validator=is_set_of(basestring),
-        metadata={'escape': True}
-    )
-    # has_genomic_coordinates
-    md5 = attr.ib(validator=is_a(basestring))
-    author = attr.ib(
-        validator=is_set_of(basestring),
-        metadata={'formatter': format_author_field, 'builder': split_authors},
-    )
-    journal = attr.ib(
-        validator=is_set_of(basestring),
-        metadata={'builder': get_journals},
-    )
-    insdc_submission = attr.ib(
-        validator=is_set_of(basestring),
-        metadata={'builder': get_insdc},
-    )
-    pub_title = attr.ib(validator=is_set_of(basestring))
-    pub_id = attr.ib(validator=is_set_of(basestring))
-    locus_tag = attr.ib(validator=is_set_of(basestring))
-    standard_name = attr.ib(validator=is_set_of(basestring))
-    # tax_string = attr.ib(validator=is_a(basestring))
-
-    @classmethod
-    def build(cls, rows):
-        """
-        Creates the additonal fields object from a list of dicts.
-        """
-        return class_builder(cls, rows)
-
-    @property
-    def boost(self):
-        """
-        Determine ordering in search results.
-        """
-        if self.is_active == 'Active' and 'hgnc' in self.expert_db:
-            # highest priority for HGNC entries
-            boost = 4
-        elif self.is_active == 'Active' and self.taxid == 9606:
-            # human entries have max priority
-            boost = 3
-        elif self.is_active == 'Active' and self.taxid in POPULAR_SPECIES:
-            # popular species are given priority
-            boost = 2
-        elif self.is_active == 'Obsolete':
-            # no priority for obsolete entries
-            boost = 0
-        else:
-            # basic priority level
-            boost = 1
-
-        if self.rna_type in GENERIC_TYPES:
-            boost = boost - 0.5
-
-        return boost
-
-    def as_xml(self, root):
-        """
-        Adds the entries for the additional fields to the root object.
-        """
-
-        fields = attr.fields(self.__class__)
-        field_formatter(root, self.boost, 'boost', escape=False)
-
-        for field in fields:
-            if not field.metadata.get('export', True):
-                continue
-
-            method = field.metadata.get('formatter', field_formatter)
-            value = getattr(self, field.name)
-            escape = field.name.metadata.get('escape', False)
-            if isinstance(value, (set, list, tuple)):
-                for val in sorted(value):
-                    if value:
-                        method(root, val, field.name, escape=escape)
-            else:
-                method(root, value, field.name, escape=escape)
+    }
 
 
-@attr.s(frozen=True)
-class CrossReference(object):
-    """
-    This represents a single cross reference from an RNAcentral entry to some
-    other database.
-    """
+def note_references(notes):
+    for raw_note in notes:
+        note_data = parse_note(raw_note)
+        ontology = note_data.get('ontology', note_data)
+        for key in ['GO', 'SO', 'ECO']:
+            for value in ontology.get(key, []):
+                yield as_ref(key, value)
 
-    name = attr.ib(
-        validator=is_a(basestring),
-        convert=lambda n: n.replace(' ', '_').upper(),
-    )
-    key = attr.ib(validator=is_a(basestring), convert=str)
 
-    @classmethod
-    def build(cls, result):
-        """
-        This builds all possible cross references from the given result. This
-        does more than just look at the accession and the like as it will also
-        parse the note to produce cross references if needed. It also has logic
-        to produce cross references for GO, SO, and ECO terms. This produces an
-        iterator of all cross references, not just a single one.
-        """
-
-        # skip PDB and SILVA optional_ids because for PDB it's chain id
-        # and for SILVA it's INSDC accessions
-        if result['expert_db'] not in NO_OPTIONAL_IDS \
-                and result['optional_id']:
-            yield cls(result['expert_db'], result['optional_id'])
+def standard_references(xrefs):
+    for xref in xrefs:
+        if xref['name'] not in NO_OPTIONAL_IDS \
+                and xref['optional_id']:
+            yield as_ref(xref['name'], xref['optional_id'])
 
         # an expert_db entry
-        if result['non_coding_id'] or result['expert_db']:
-            yield cls(result['expert_db'], result['external_id'])
+        if xref['non_coding_id'] or xref['name']:
+            yield as_ref(xref['name'], xref['external_id'])
         else:  # source ENA entry
             # Non-coding entry, NON-CODING is a EBeye requirement
-            yield cls('NON-CODING', result['accession'])
+            yield as_ref('NON-CODING', xref['accession'])
 
         # parent ENA entry
         # except for PDB entries which are not based on ENA accessions
-        if result['expert_db'] != 'PDBE':
-            yield cls('ENA', result['parent_accession'])
+        if xref['name'] != 'PDBE':
+            yield as_ref('ENA', xref['parent_accession'])
 
-        # HGNC entry: store a special flag and index accession
-        if result['expert_db'] == 'HGNC':
-            yield cls('HGNC', result['accession'])
+        if xref['name'] == 'HGNC':
+            yield as_ref('HGNC', xref['accession'])
 
-        # Cross reference DOI, pubmed
-        for name in ['doi', 'pubmed']:
-            if result[name]:
-                yield cls(name, result[name])
-
-        # Cross reference to selected databases in notes
-        notes = parse_note(result['note'])
-        for key in ['GO', 'SO', 'ECO']:
-            for value in notes.get(key, []):
-                yield cls(key, value)
-
-        # Create NCBI cross references
-        if result['taxid']:
-            yield cls('ncbi_taxonomy_id', result['taxid'])
-
-    def as_xml(self, root):
-        """
-        Adds a 'ref' element to the root representing this cross reference.
-        """
-
-        attrib = {'dbname': self.name, 'dbkey': self.key}
-        return ET.SubElement(root, 'ref', attrib=attrib)
+        if xref['name'] != 'PDBE':
+            yield as_ref('ENA', xref['parent_accession'])
 
 
-@attr.s(frozen=True)
-class CrossReferences(object):
+def simple_references(name, values):
+    return [as_ref(name, value) for value in values if value]
+
+
+def references(taxid, xrefs, pmids, dois, notes):
+    references = []
+    references.append(as_ref('ncbi_taxonomy_id', taxid))
+    references.extend(standard_references(xrefs))
+    references.extend(simple_references('PUBMED', pmids))
+    references.extend(simple_references('DOI', dois))
+    references.extend(note_references(notes))
+    return references
+
+
+def boost(taxid, deleted, rna_type, expert_dbs):
     """
-    This is a container for all cross references.
+    Determine ordering in search results.
     """
-    references = attr.ib(validator=is_set_of(CrossReference))
 
-    @classmethod
-    def build(cls, rows):
-        """
-        Store xrefs as (database, accession) tuples in data['xrefs'].
-        """
+    value = 0
+    is_active = deleted == 'N'
+    if is_active and 'HGNC' in expert_dbs:
+        # highest priority for HGNC entries
+        value = 4
+    elif is_active and taxid == 9606:
+        # human entries have max priority
+        value = 3
+    elif is_active and taxid in POPULAR_SPECIES:
+        # popular species are given priority
+        value = 2
+    elif not is_active:
+        # no priority for obsolete entries
+        value = 0
+    else:
+        # basic priority level
+        value = 1
 
-        references = it.imap(CrossReference.build, rows)
-        references = it.chain.from_iterable(references)
-        references = set(references)
-        return cls(references=references)
+    if rna_type in GENERIC_TYPES:
+        value = value - 0.5
 
-    def as_xml(self, root):
-        """
-        Appends the set of cross references to the given root object.
-        """
-
-        for xref in sorted(self.references):
-            xref.as_xml(root)
+    return value
 
 
-@attr.s()  # pylint: disable=R0903
-class XmlEntry(object):
+def get_genes(genes, products):
     """
-    This represents the top level xml entry object for each UPI, taxid entry.
-    It contains all cross references, dates, and other data.
+    This will produce a set of all gene names. It will provide all unique entries
+    in genes, and if the product looks like a miRBase product it will strip off
+    the leading /...-/ to produce the generic miRNA name.
     """
-    upi = attr.ib(validator=is_a(basestring))
-    taxid = attr.ib(validator=is_a(int), convert=int)
-    description = attr.ib(validator=is_a(basestring))
-    dates = attr.ib(validator=is_a(DateRange))
-    cross_references = attr.ib(validator=is_a(CrossReferences))
-    additional_fields = attr.ib(validator=is_a(AdditionalFields))
 
-    @classmethod
-    def build(cls, rows):
-        """
-        Builds this class from a list of dicts that contain the data for a
-        single UPI, taxid pair.
-        """
-        return class_builder(cls, rows)
+    genes = {g for g in genes if g}
+    product_pattern = re.compile(r'^\w{3}-')
+    for product in products:
+        if product and re.match(product_pattern, product):
+            short_gene = re.sub(product_pattern, '', product)
+            genes.add(short_gene)
+    return genes
 
-    @property
-    def entry_id(self):
-        """
-        Returns the species specific ID (upi_taxid).
-        """
-        return '{upi}_{taxid}'.format(upi=self.upi, taxid=self.taxid)
 
-    @property
-    def name(self):
-        """
-        Builds a name for any entry.
-        """
-        return 'Unique RNA Sequence {id}'.format(id=self.entry_id)
+def normalize_common_name(common_names):
+    """
+    This will produce a set normalized common names (that is they will be
+    lowercased).
+    """
+    return {n.lower() for n in common_names if n}
 
-    def as_xml(self):
-        """
-        Genereates an ElementTree.Element object that represents this data.
-        """
 
-        root = ET.Element('entry', attrib={'id': self.entry_id})
-        ET.SubElement(root, 'name', text=self.name)
-        ET.SubElement(root, 'description', text=self.description)
-
-        for field in attr.fields(self.__class__):
-            value = getattr(self, field.name)
-            if not hasattr(value, 'as_xml'):
-                continue
-            element = ET.SubElement(root, field.name)
-            value.as_xml(element)
+def create_tag(root, name, value, attrib={}):
+    if value is None:
         return root
+
+    if isinstance(value, dict):
+        assert value.get('attrib', {}) or value.get('text', None)
+        attr = value.get('attrib', {})
+        attr.update(attrib)
+        element = ET.SubElement(root, name, attr)
+        if 'text' in value:
+            element.text = value['text']
+        return element
+
+    element = ET.SubElement(root, name, attrib)
+    element.text = sax.escape(str(value))
+    return element
+
+
+def tag(name, func, attrib={}, keys=None):
+    def fn(root, data):
+        getter = create_getter(name, keys)
+        value = func(*getter(data))
+        return create_tag(root, name, value, attrib=attrib)
+    return fn
+
+
+def tags(name, func, attrib={}, keys=None):
+    def fn(root, data):
+        getter = create_getter(name, keys)
+        values = func(*getter(data))
+        for value in values:
+            create_tag(root, name, value, attrib=attrib)
+        return root
+    return fn
+
+
+def field(field_name, func, keys=None):
+    keys = keys or field_name
+    return tag('field', func, attrib={'name': field_name}, keys=keys)
+
+
+def fields(field_name, func, keys=None):
+    keys = keys or field_name
+    return tags('field', func, attrib={'name': field_name}, keys=keys)
+
+
+def date_tag(date_name, func):
+    def fn(timestamps):
+        dates = []
+        for timestamp in timestamps:
+            format_str = '%Y-%m-%dT%H:%M:%S'
+            if '.' in timestamp:
+                format_str += '.%f'
+            dates.append(dt.strptime(timestamp, format_str))
+        date = func(dates)
+
+        return {
+            'attrib': {
+                'value': date.strftime('%d %b %Y'),
+                'type': date_name,
+            },
+        }
+    return tag('date', fn, keys=date_name)
+
+
+def unique(values):
+    return {v for v in values if v}
+
+
+
+builder = entry([
+    field('upi', str),
+    field('taxid', str),
+    field('description', str),
+    tag('name', as_name, keys=('upi', 'taxid')),
+
+    section('dates', [
+        date_tag('first_seen', max),
+        date_tag('last_seen', min),
+    ]),
+
+    section('cross_references', [
+        tags('reference', references, keys=(
+            'taxid',
+            'cross_references',
+            'pub_ids',
+            'dois',
+            'notes',
+        ))
+    ]),
+
+    section('additional_fields', [
+        field('taxid', str),
+        field('is_active', as_active, keys='deleted'),
+        field('length', str),
+        field('species', str),
+        fields('organelles', unique),
+        fields('expert_dbs', unique, keys='expert_dbs'),
+        fields('common_name', normalize_common_name),
+        fields('function', unique, keys='functions'),
+        fields('gene', get_genes, keys=('genes', 'product')),
+        fields('gene_synonym', unique, keys='gene_synonyms'),
+        field('rna_type', str),
+        fields('product', unique, keys='products'),
+        field('md5', str),
+        fields('authors', as_authors),
+        fields('journal', as_journals, keys='journals'),
+        fields('insdc_submission', as_insdc, keys='journals'),
+        fields('pub_title', unique, keys='pub_titles'),
+        fields('pub_id', unique, keys='pub_ids'),
+        fields('locus_tag', unique, keys='locus_tags'),
+        fields('standard_name', unique, keys='standard_names'),
+        fields('tax_string', unique, keys='tax_strings'),
+        fields('rfam_id', unique, keys='rfam_ids'),
+        fields('rfam_clan', unique, keys='rfam_clans'),
+        fields('rfam_family_name', unique, keys='rfam_family_names'),
+    ]),
+])

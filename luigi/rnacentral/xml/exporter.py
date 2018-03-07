@@ -13,73 +13,78 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import json
 from datetime import date
-import operator as op
-import itertools as it
 
 import xml.etree.cElementTree as ET
 
-from .data import XmlEntry
+from .data import builder
 
 
 BASE_SQL = """
 SELECT
-    rna.upi,
-    rna.md5,
-    xref.taxid,
-    xref.deleted,
-    acc.species,
-    acc.organelle organelles,
-    acc.external_id,
-    acc.optional_id,
-    acc.non_coding_id,
-    acc.accession,
-    acc.function,
-    acc.gene,
-    acc.gene_synonym,
-    acc.feature_name,
-    acc.ncrna_class,
-    acc.product,
-    acc.common_name,
-    acc.note,
-    acc.parent_ac || '.' || acc.seq_version as parent_accession,
-    db.display_name as expert_db,
-    release1.timestamp as created,
-    release2.timestamp as last,
-    rna.len as length,
-    pre.rna_type,
-    pre.description,
-    acc.locus_tag,
-    acc.standard_name,
-    ref.id pub_id,
-    ref.location,
-    ref.title pub_title,
-    ref.pmid pubmed,
-    ref.doi,
-    ref.authors author,
-    acc.classification tax_string
-FROM
-    xref,
-    rnc_accessions acc,
-    rnc_database db,
-    rnc_release release1,
-    rnc_release release2,
-    rna,
-    rnc_rna_precomputed pre,
-    rnc_references ref,
-    rnc_reference_map ref_map
+  json_build_object(
+    'upi', rna.upi,
+    'taxid', xref.taxid,
+    'first_seen', array_agg(release1.timestamp),
+    'last_seen', array_agg(release2.timestamp),
+   'cross_references', array_agg(
+      json_build_object(
+         'name', acc."database",
+         'external_id', acc.external_id,
+         'optional_id', acc.optional_id,
+         'accession', acc.accession,
+         'non_coding_id', acc.non_coding_id,
+         'parent_accession', acc.parent_ac || '.' || acc.seq_version
+     )
+   ),
+   'description', (array_agg(pre.description))[1],
+   'deleted', 'N',
+  'length', (array_agg(rna.len))[1],
+  'species', (array_agg(acc.species))[1],
+  'organelles', array_agg(acc.organelle),
+  'expert_dbs', array_agg(db.display_name),
+  'rna_type', (array_agg(pre.rna_type))[1],
+  'product', array_agg(acc.product),
+  'md5', (array_agg(rna.md5))[1],
+  'authors', array_agg(refs.authors),
+  'journals', array_agg(refs.location),
+  'pub_titles', array_agg(refs.title),
+  'pub_ids', array_agg(refs.pmid),
+  'dois', array_agg(refs.doi),
+  'genome_locations', cardinality(array_remove(array_agg(distinct coord.id), null)) > 0,
+  'rfam_family_names', array_agg(models.short_name),
+  'rfam_ids', array_agg(hits.rfam_model_id),
+  'rfam_clans', array_agg(models.rfam_clan_id),
+  'rfam_status', (array_remove(array_agg(pre.rfam_problems), ''))[1]::json,
+  'tax_strings', array_agg(acc.classification),
+  'functions', array_agg(acc.function),
+  'genes', array_agg(acc.gene),
+  'gene_synonyms', array_agg(acc.gene_synonym),
+  'common_name', array_agg(acc.common_name),
+  'notes', array_agg(acc.note),
+  'parent_accessions', array_agg(acc.parent_ac || '.' || acc.seq_version),
+  'locus_tags', array_agg(acc.locus_tag),
+  'standard_names', array_agg(acc.standard_name),
+  'products', array_agg(acc.product)
+  )
+FROM xref xref
+JOIN rnc_accessions acc ON xref.ac = acc.accession
+JOIN rnc_database db ON xref.dbid = db.id
+JOIN rnc_release release1 on xref.created = release1.id
+JOIN rnc_release release2 on xref.last = release2.id
+JOIN rna rna on xref.upi = rna.upi
+JOIN rnc_rna_precomputed pre on xref.upi = pre.upi and xref.taxid = pre.taxid
+left join rnc_coordinates coord on coord.accession = acc.accession
+LEFT JOIN rnc_reference_map ref_map on ref_map.accession = acc.accession
+LEFT JOIN rnc_references refs on refs.id = ref_map.reference_id
+LEFT JOIN rfam_model_hits hits ON xref.upi = hits.upi
+LEFT JOIN rfam_models models
+ON hits.rfam_model_id = models.rfam_model_id
 WHERE
-    xref.ac = acc.accession AND
-    xref.dbid = db.id AND
-    xref.created = release1.id AND
-    xref.last = release2.id AND
-    xref.upi = rna.upi AND
-    xref.upi = pre.upi AND
-    xref.taxid = pre.taxid AND
-    xref.deleted = 'N' AND
-    xref.ac = ref_map.accession AND
-    ref_map.reference_id = ref.id AND
-    {terms}
+  xref.deleted = 'N'
+  and {terms}
+group by rna.upi, xref.taxid
 """
 
 SINGLE_SQL = BASE_SQL.format(
@@ -87,21 +92,6 @@ SINGLE_SQL = BASE_SQL.format(
 )
 
 RANGE_SQL = BASE_SQL.format(terms="rna.id BETWEEN %(min_id)s AND %(max_id)s")
-
-
-def fetch_dicts(cursor):
-    """
-    Creates a generator of all values as dicts for the results of the given
-    query.
-    """
-
-    names = [col.name for col in cursor.description]
-    while True:
-        results = cursor.fetchmany()
-        if not results:
-            break
-        for result in results:
-            yield dict(zip(names, result))
 
 
 def export_range(cursor, min_id, max_id):
@@ -112,10 +102,9 @@ def export_range(cursor, min_id, max_id):
 
     with cursor() as cur:
         cur.execute(RANGE_SQL, {'min_id': min_id, 'max_id': max_id})
-        results = fetch_dicts(cursor)
-        grouped = it.groupby(results, op.itemgetter('upi', 'taxid'))
-        for _, results in grouped:
-            yield XmlEntry.build(list(results))
+        for result in cursor:
+            data = json.loads(result[0])
+            yield builder(data)
 
 
 def export_upi(cursor, upi, taxid):
@@ -125,13 +114,13 @@ def export_upi(cursor, upi, taxid):
 
     with cursor() as cur:
         cur.execute(SINGLE_SQL, {'upi': upi, 'taxid': taxid})
-        data = list(fetch_dicts(cur))
-        if not data:
+        result = list(cur)
+        if not result:
             raise ValueError("Found no entries for %s_%s" % (upi, str(taxid)))
-        return XmlEntry.build(data)
+        return builder(result[0][0])
 
 
-def as_document(results):
+def as_document(results, handle):
     """
     This will create the required root XML element and place all the given
     XmlEntry objects as ElementTree.Element's in it. This then produces the
@@ -161,4 +150,4 @@ def as_document(results):
         raise ValueError("No entries found")
 
     count_element.text = count
-    return ET.tostring(root)
+    root.write(handle)

@@ -19,6 +19,7 @@ import luigi
 from luigi import LocalTarget
 from luigi.local_target import atomic_file
 
+from tasks.config import db
 from tasks.config import output
 
 from rnacentral.xml.exporter import export_range
@@ -45,6 +46,6 @@ class XmlExporterTask(luigi.Task):  # pylint: disable=R0904
 
     def run(self):
         with atomic_file(self.output().fn) as raw:
-            with cursor() as cur:
+            with cursor(db()) as cur:
                 results = export_range(cur, self.min, self.max)
-                raw.write(as_document(results))
+                as_document(results, raw)
