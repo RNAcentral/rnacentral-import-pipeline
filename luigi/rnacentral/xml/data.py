@@ -43,6 +43,88 @@ POPULAR_SPECIES = set([
 INSDC_PATTERN = re.compile(r'Submitted \(\d{2}\-\w{3}\-\d{4}\) to the INSDC\. ?')
 
 
+def create_tag(root, name, value, attrib={}):
+    if value is None:
+        return root
+
+    if isinstance(value, dict):
+        assert value.get('attrib', {}) or value.get('text', None)
+        attr = value.get('attrib', {})
+        attr.update(attrib)
+        element = ET.SubElement(root, name, attr)
+        if 'text' in value:
+            element.text = sax.escape(value['text'])
+        return element
+
+    element = ET.SubElement(root, name, dict(attrib))
+    element.text = sax.escape(str(value))
+    return element
+
+
+def create_getter(final_name, given_name):
+    op_name = (final_name,)
+    if given_name is not None:
+        op_name = (given_name,)
+        if isinstance(given_name, (tuple, list)):
+            op_name = given_name
+
+    getter = op.itemgetter(*op_name)
+    if len(op_name) == 1:
+        return lambda d: (getter(d),)
+    return getter
+
+
+def tag(name, func, attrib={}, keys=None):
+    def fn(root, data):
+        getter = create_getter(name, keys)
+        value = func(*getter(data))
+        return create_tag(root, name, value, attrib=attrib)
+    return fn
+
+
+def tags(name, func, attrib={}, keys=None):
+    def fn(root, data):
+        getter = create_getter(name, keys)
+        values = func(*getter(data))
+        for value in values:
+            create_tag(root, name, value, attrib=attrib)
+        return root
+    return fn
+
+
+def field(field_name, func, keys=None):
+    keys = keys or field_name
+    return tag('field', func, attrib={'name': field_name}, keys=keys)
+
+
+def fields(field_name, func, keys=None):
+    keys = keys or field_name
+    return tags('field', func, attrib={'name': field_name}, keys=keys)
+
+
+def date_tag(date_name, func):
+    def fn(timestamps):
+        dates = []
+        for timestamp in timestamps:
+            format_str = '%Y-%m-%dT%H:%M:%S'
+            if '.' in timestamp:
+                format_str += '.%f'
+            dates.append(dt.strptime(timestamp, format_str))
+        date = func(dates)
+
+        return {
+            'attrib': {
+                'value': date.strftime('%d %b %Y'),
+                'type': date_name,
+            },
+        }
+    return tag('date', fn, keys=date_name)
+
+
+def unique(values):
+    return {v for v in values if v}
+
+
 def entry(spec):
     def fn(data):
         entry_id = '{upi}_{taxid}'.format(
@@ -62,19 +144,6 @@ def section(name, spec):
         for func in spec:
             func(element, data)
     return fn
-
-
-def create_getter(final_name, given_name):
-    op_name = (final_name,)
-    if given_name is not None:
-        op_name = (given_name,)
-        if isinstance(given_name, (tuple, list)):
-            op_name = given_name
-
-    getter = op.itemgetter(*op_name)
-    if len(op_name) == 1:
-        return lambda d: (getter(d),)
-    return getter
 
 
 def as_active(deleted):
@@ -201,13 +270,13 @@ def simple_references(name, values):
 
 
 def references(taxid, xrefs, pmids, dois, notes):
-    references = []
-    references.append(as_ref('ncbi_taxonomy_id', taxid))
-    references.extend(standard_references(xrefs))
-    references.extend(simple_references('PUBMED', pmids))
-    references.extend(simple_references('DOI', dois))
-    references.extend(note_references(notes))
-    return references
+    refs = []
+    refs.append(as_ref('ncbi_taxonomy_id', taxid))
+    refs.extend(standard_references(xrefs))
+    refs.extend(simple_references('PUBMED', pmids))
+    refs.extend(simple_references('DOI', dois))
+    refs.extend(note_references(notes))
+    return refs
 
 
 def boost(taxid, deleted, rna_type, expert_dbs):
@@ -263,81 +332,21 @@ def normalize_common_name(common_names):
     return {n.lower() for n in common_names if n}
 
 
-def create_tag(root, name, value, attrib={}):
-    if value is None:
-        return root
-
-    if isinstance(value, dict):
-        assert value.get('attrib', {}) or value.get('text', None)
-        attr = value.get('attrib', {})
-        attr.update(attrib)
-        element = ET.SubElement(root, name, attr)
-        if 'text' in value:
-            element.text = value['text']
-        return element
-
-    element = ET.SubElement(root, name, attrib)
-    element.text = sax.escape(str(value))
-    return element
+def rfam_problems(problems):
+    return [p['name'] for p in problems['problems']]
 
 
-def tag(name, func, attrib={}, keys=None):
-    def fn(root, data):
-        getter = create_getter(name, keys)
-        value = func(*getter(data))
-        return create_tag(root, name, value, attrib=attrib)
-    return fn
+def problem_found(problems):
+    return problems['has_issue']
 
 
-def tags(name, func, attrib={}, keys=None):
-    def fn(root, data):
-        getter = create_getter(name, keys)
-        values = func(*getter(data))
-        for value in values:
-            create_tag(root, name, value, attrib=attrib)
-        return root
-    return fn
-
-
-def field(field_name, func, keys=None):
-    keys = keys or field_name
-    return tag('field', func, attrib={'name': field_name}, keys=keys)
-
-
-def fields(field_name, func, keys=None):
-    keys = keys or field_name
-    return tags('field', func, attrib={'name': field_name}, keys=keys)
-
-
-def date_tag(date_name, func):
-    def fn(timestamps):
-        dates = []
-        for timestamp in timestamps:
-            format_str = '%Y-%m-%dT%H:%M:%S'
-            if '.' in timestamp:
-                format_str += '.%f'
-            dates.append(dt.strptime(timestamp, format_str))
-        date = func(dates)
-
-        return {
-            'attrib': {
-                'value': date.strftime('%d %b %Y'),
-                'type': date_name,
-            },
-        }
-    return tag('date', fn, keys=date_name)
-
-
-def unique(values):
-    return {v for v in values if v}
-
+def as_popular(taxid):
+    return taxid in POPULAR_SPECIES
 
 
 builder = entry([
-    field('upi', str),
-    field('taxid', str),
-    field('description', str),
     tag('name', as_name, keys=('upi', 'taxid')),
+    field('description', str),
 
     section('dates', [
         date_tag('first_seen', max),
@@ -355,11 +364,10 @@ builder = entry([
     ]),
 
     section('additional_fields', [
-        field('taxid', str),
         field('is_active', as_active, keys='deleted'),
         field('length', str),
         field('species', str),
-        fields('organelles', unique),
+        fields('organelle', unique, keys='organelles'),
         fields('expert_dbs', unique, keys='expert_dbs'),
         fields('common_name', normalize_common_name),
         fields('function', unique, keys='functions'),
@@ -367,17 +375,27 @@ builder = entry([
         fields('gene_synonym', unique, keys='gene_synonyms'),
         field('rna_type', str),
         fields('product', unique, keys='products'),
+        field('has_genomic_coordinates', str),
         field('md5', str),
-        fields('authors', as_authors),
+        fields('author', as_authors, keys='authors'),
         fields('journal', as_journals, keys='journals'),
         fields('insdc_submission', as_insdc, keys='journals'),
         fields('pub_title', unique, keys='pub_titles'),
         fields('pub_id', unique, keys='pub_ids'),
+        field('popular_species', as_popular, keys='taxid'),
+        field('boost', boost, keys=(
+            'taxid',
+            'deleted',
+            'rna_type',
+            'expert_dbs',
+        )),
         fields('locus_tag', unique, keys='locus_tags'),
         fields('standard_name', unique, keys='standard_names'),
-        fields('tax_string', unique, keys='tax_strings'),
+        fields('rfam_family_name', unique, keys='rfam_family_names'),
         fields('rfam_id', unique, keys='rfam_ids'),
         fields('rfam_clan', unique, keys='rfam_clans'),
-        fields('rfam_family_name', unique, keys='rfam_family_names'),
+        fields('rfam_problem', rfam_problems),
+        fields('rfam_problem_found', problem_found, keys='rfam_problem'),
+        fields('tax_string', unique, keys='tax_strings'),
     ]),
 ])
