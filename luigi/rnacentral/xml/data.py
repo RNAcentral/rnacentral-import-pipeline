@@ -47,17 +47,16 @@ def create_tag(root, name, value, attrib={}):
     if value is None:
         return root
 
+    text = value
+    attr = dict(attrib)
     if isinstance(value, dict):
         assert value.get('attrib', {}) or value.get('text', None)
-        attr = value.get('attrib', {})
-        attr.update(attrib)
-        element = ET.SubElement(root, name, attr)
-        if 'text' in value:
-            element.text = sax.escape(value['text'])
-        return element
+        attr.update(value.get('attrib', {}))
+        value = value.get('text', None)
 
-    element = ET.SubElement(root, name, dict(attrib))
-    element.text = sax.escape(str(value))
+    element = ET.SubElement(root, name, attr)
+    if text:
+        element.text = sax.escape(str(text))
     return element
 
 
