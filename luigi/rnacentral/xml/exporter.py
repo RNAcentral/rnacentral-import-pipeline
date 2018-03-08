@@ -23,51 +23,50 @@ from .data import builder
 
 BASE_SQL = """
 SELECT
-  json_build_object(
-    'upi', rna.upi,
-    'taxid', xref.taxid,
-    'first_seen', array_agg(release1.timestamp),
-    'last_seen', array_agg(release2.timestamp),
-   'cross_references', array_agg(
-      json_build_object(
-         'name', acc."database",
-         'external_id', acc.external_id,
-         'optional_id', acc.optional_id,
-         'accession', acc.accession,
-         'non_coding_id', acc.non_coding_id,
-         'parent_accession', acc.parent_ac || '.' || acc.seq_version
-     )
-   ),
-   'description', (array_agg(pre.description))[1],
-   'deleted', 'N',
-  'length', (array_agg(rna.len))[1],
-  'species', (array_agg(acc.species))[1],
-  'organelles', array_agg(acc.organelle),
-  'expert_dbs', array_agg(db.display_name),
-  'rna_type', (array_agg(pre.rna_type))[1],
-  'product', array_agg(acc.product),
-  'md5', (array_agg(rna.md5))[1],
-  'authors', array_agg(refs.authors),
-  'journals', array_agg(refs.location),
-  'pub_titles', array_agg(refs.title),
-  'pub_ids', array_agg(refs.pmid),
-  'dois', array_agg(refs.doi),
-  'genome_locations', cardinality(array_remove(array_agg(distinct coord.id), null)) > 0,
-  'rfam_family_names', array_agg(models.short_name),
-  'rfam_ids', array_agg(hits.rfam_model_id),
-  'rfam_clans', array_agg(models.rfam_clan_id),
-  'rfam_status', (array_remove(array_agg(pre.rfam_problems), ''))[1]::json,
-  'tax_strings', array_agg(acc.classification),
-  'functions', array_agg(acc.function),
-  'genes', array_agg(acc.gene),
-  'gene_synonyms', array_agg(acc.gene_synonym),
-  'common_name', array_agg(acc.common_name),
-  'notes', array_agg(acc.note),
-  'parent_accessions', array_agg(acc.parent_ac || '.' || acc.seq_version),
-  'locus_tags', array_agg(acc.locus_tag),
-  'standard_names', array_agg(acc.standard_name),
-  'products', array_agg(acc.product)
-  )
+    json_build_object(
+        'upi', rna.upi,
+        'taxid', xref.taxid,
+        'first_seen', array_agg(release1.timestamp),
+        'last_seen', array_agg(release2.timestamp),
+        'cross_references', array_agg(
+            json_build_object(
+                'name', acc."database",
+                'external_id', acc.external_id,
+                'optional_id', acc.optional_id,
+                'accession', acc.accession,
+                'non_coding_id', acc.non_coding_id,
+                'parent_accession', acc.parent_ac || '.' || acc.seq_version
+                )
+            ),
+        'description', (array_agg(pre.description))[1],
+        'deleted', 'N',
+        'length', (array_agg(rna.len))[1],
+        'species', (array_agg(acc.species))[1],
+        'organelles', array_agg(acc.organelle),
+        'expert_dbs', array_agg(db.display_name),
+        'rna_type', (array_agg(pre.rna_type))[1],
+        'product', array_agg(acc.product),
+        'md5', (array_agg(rna.md5))[1],
+        'authors', array_agg(refs.authors),
+        'journals', array_agg(refs.location),
+        'pub_titles', array_agg(refs.title),
+        'pub_ids', array_agg(refs.pmid),
+        'dois', array_agg(refs.doi),
+        'has_genomic_coordinates', cardinality(array_remove(array_agg(distinct coord.id), null)) > 0,
+        'rfam_family_names', array_agg(models.short_name),
+        'rfam_ids', array_agg(hits.rfam_model_id),
+        'rfam_clans', array_agg(models.rfam_clan_id),
+        'rfam_status', (array_remove(array_agg(pre.rfam_problems), ''))[1]::json,
+        'tax_strings', array_agg(acc.classification),
+        'functions', array_agg(acc.function),
+        'genes', array_agg(acc.gene),
+        'gene_synonyms', array_agg(acc.gene_synonym),
+        'common_name', array_agg(acc.common_name),
+        'notes', array_agg(acc.note),
+        'locus_tags', array_agg(acc.locus_tag),
+        'standard_names', array_agg(acc.standard_name),
+        'products', array_agg(acc.product)
+    )
 FROM xref xref
 JOIN rnc_accessions acc ON xref.ac = acc.accession
 JOIN rnc_database db ON xref.dbid = db.id
@@ -75,7 +74,11 @@ JOIN rnc_release release1 on xref.created = release1.id
 JOIN rnc_release release2 on xref.last = release2.id
 JOIN rna rna on xref.upi = rna.upi
 JOIN rnc_rna_precomputed pre on xref.upi = pre.upi and xref.taxid = pre.taxid
-left join rnc_coordinates coord on coord.accession = acc.accession
+left join rnc_coordinates coord
+on
+    coord.accession = acc.accession
+    and coord.name is not null
+    and coord.name != ''
 LEFT JOIN rnc_reference_map ref_map on ref_map.accession = acc.accession
 LEFT JOIN rnc_references refs on refs.id = ref_map.reference_id
 LEFT JOIN rfam_model_hits hits ON xref.upi = hits.upi
