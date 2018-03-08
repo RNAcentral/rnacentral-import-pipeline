@@ -40,7 +40,7 @@ POPULAR_SPECIES = set([
     224308,  # Bacillus subtilis subsp. subtilis str. 168
 ])
 
-INSDC_PATTERN = re.compile(r'Submitted \(\d{2}\-\w{3}\-\d{4}\) to the INSDC\. ?')
+INSDC_PATTERN = re.compile(r'(Submitted \(\d{2}\-\w{3}\-\d{4}\) to the INSDC\. ?)')
 
 
 def create_tag(root, name, value, attrib={}):
@@ -52,7 +52,7 @@ def create_tag(root, name, value, attrib={}):
     if isinstance(value, dict):
         assert value.get('attrib', {}) or value.get('text', None)
         attr.update(value.get('attrib', {}))
-        value = value.get('text', None)
+        text = value.get('text', None)
 
     element = ET.SubElement(root, name, attr)
     if text:
@@ -185,7 +185,7 @@ def parse_note(note):
     if not note:
         return {}
 
-    for method in [json.load, parse_whitespace_note]:
+    for method in [json.loads, parse_whitespace_note]:
         try:
             return method(note)
         except:  # pylint: disable=W0702
@@ -204,14 +204,25 @@ def as_journals(locations):
     """
     Extract the names of all actual journals from the location list.
     """
-    return {l for l in locations if not is_insdc(l)}
+    return {l for l in locations if l and not is_insdc(l)}
 
 
 def as_insdc(locations):
     """
     Extract all INSDC titles from the location list.
     """
-    return {l for l in locations if is_insdc(l)}
+    for location in locations:
+        if not location:
+            continue
+
+        match = is_insdc(location)
+        if not match:
+            continue
+        yield location.replace(match.group(1), '')
+    # print(locations)
+    # found = {l for l in locations if l and is_insdc(l)}
+    # print(found)
+    # return found
 
 
 def as_name(upi, taxid):
@@ -222,12 +233,10 @@ def as_name(upi, taxid):
 
 
 def as_ref(name, value):
-    return {
-        'attrib': {
-            'refname': name,
-            'dbkey': str(value),
-        },
-    }
+    dbname = name.upper()
+    if name == 'ncbi_taxonomy_id':
+        dbname = name
+    return {'attrib': {'dbname': dbname, 'dbkey': str(value)}}
 
 
 def note_references(notes):
@@ -241,27 +250,28 @@ def note_references(notes):
 
 def standard_references(xrefs):
     for xref in xrefs:
-        if xref['name'] not in NO_OPTIONAL_IDS \
-                and xref['optional_id']:
-            yield as_ref(xref['name'], xref['optional_id'])
+        # expert_db should not contain spaces, EBeye requirement
+        expert_db = xref['name'].replace(' ', '_')
+
+        # skip PDB and SILVA optional_ids because for PDB it's chain id
+        # and for SILVA it's INSDC accessions
+        if expert_db not in NO_OPTIONAL_IDS and xref['optional_id']:
+            yield as_ref(expert_db, xref['optional_id'])
 
         # an expert_db entry
-        if xref['non_coding_id'] or xref['name']:
-            yield as_ref(xref['name'], xref['external_id'])
-        else:  # source ENA entry
-            # Non-coding entry, NON-CODING is a EBeye requirement
-            yield as_ref('NON-CODING', xref['accession'])
+        if xref['non_coding_id'] or expert_db and xref['external_id']:
+            yield as_ref(expert_db, xref['external_id'])
+        # else:  # source ENA entry
+        #     # Non-coding entry, NON-CODING is a EBeye requirement
+        #     yield as_ref('NON-CODING', xref['accession'])
 
         # parent ENA entry
         # except for PDB entries which are not based on ENA accessions
-        if xref['name'] != 'PDBE':
+        if expert_db != 'PDBE':
             yield as_ref('ENA', xref['parent_accession'])
 
-        if xref['name'] == 'HGNC':
+        if expert_db == 'HGNC':
             yield as_ref('HGNC', xref['accession'])
-
-        if xref['name'] != 'PDBE':
-            yield as_ref('ENA', xref['parent_accession'])
 
 
 def simple_references(name, values):
@@ -269,12 +279,20 @@ def simple_references(name, values):
 
 
 def references(taxid, xrefs, pmids, dois, notes):
+    possible = []
+    possible.extend(standard_references(xrefs))
+    possible.extend(simple_references('PUBMED', pmids))
+    possible.extend(simple_references('DOI', dois))
+    possible.extend(note_references(notes))
+    possible.append(as_ref('ncbi_taxonomy_id', taxid))
     refs = []
-    refs.append(as_ref('ncbi_taxonomy_id', taxid))
-    refs.extend(standard_references(xrefs))
-    refs.extend(simple_references('PUBMED', pmids))
-    refs.extend(simple_references('DOI', dois))
-    refs.extend(note_references(notes))
+    seen = set()
+    getter = op.itemgetter('dbname', 'dbkey')
+    for ref in possible:
+        value = getter(ref['attrib'])
+        if value not in seen:
+            refs.append(ref)
+            seen.add(value)
     return refs
 
 
@@ -316,10 +334,14 @@ def get_genes(genes, products):
 
     genes = {g for g in genes if g}
     product_pattern = re.compile(r'^\w{3}-')
+    end_pattern = re.compile(r'-[35]p$')
     for product in products:
         if product and re.match(product_pattern, product):
             short_gene = re.sub(product_pattern, '', product)
+            genes.add(product)
             genes.add(short_gene)
+            if re.search(end_pattern, short_gene):
+                genes.add(re.sub(end_pattern, '', short_gene))
     return genes
 
 
@@ -331,21 +353,23 @@ def normalize_common_name(common_names):
     return {n.lower() for n in common_names if n}
 
 
-def rfam_problems(problems):
-    return [p['name'] for p in problems['problems']]
+def rfam_problems(status):
+    return [p['name'] for p in status['problems']]
 
 
-def problem_found(problems):
-    return problems['has_issue']
+def problem_found(status):
+    return status['has_issue']
 
 
 def as_popular(taxid):
-    return taxid in POPULAR_SPECIES
+    if taxid in POPULAR_SPECIES:
+        return True
+    return None
 
 
 builder = entry([
     tag('name', as_name, keys=('upi', 'taxid')),
-    field('description', str),
+    tag('description', str),
 
     section('dates', [
         date_tag('first_seen', max),
@@ -353,7 +377,7 @@ builder = entry([
     ]),
 
     section('cross_references', [
-        tags('reference', references, keys=(
+        tags('ref', references, keys=(
             'taxid',
             'cross_references',
             'pub_ids',
@@ -363,11 +387,11 @@ builder = entry([
     ]),
 
     section('additional_fields', [
-        field('is_active', as_active, keys='deleted'),
+        field('active', as_active, keys='deleted'),
         field('length', str),
         field('species', str),
         fields('organelle', unique, keys='organelles'),
-        fields('expert_dbs', unique, keys='expert_dbs'),
+        fields('expert_db', unique, keys='expert_dbs'),
         fields('common_name', normalize_common_name),
         fields('function', unique, keys='functions'),
         fields('gene', get_genes, keys=('genes', 'product')),
@@ -393,8 +417,8 @@ builder = entry([
         fields('rfam_family_name', unique, keys='rfam_family_names'),
         fields('rfam_id', unique, keys='rfam_ids'),
         fields('rfam_clan', unique, keys='rfam_clans'),
-        fields('rfam_problem', rfam_problems),
-        fields('rfam_problem_found', problem_found, keys='rfam_problem'),
+        fields('rfam_problems', rfam_problems, keys='rfam_status'),
+        field('rfam_problem_found', problem_found, keys='rfam_status'),
         fields('tax_string', unique, keys='tax_strings'),
     ]),
 ])
