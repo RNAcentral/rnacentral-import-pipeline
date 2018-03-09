@@ -17,17 +17,15 @@ import os
 
 import luigi
 from luigi import LocalTarget
-from luigi.local_target import atomic_file
 
 from tasks.config import db
 from tasks.config import output
 
-from rnacentral.xml.exporter import export_range
-from rnacentral.xml.exporter import as_document
 from rnacentral.db import cursor
+from rnacentral.xml import exporter
 
 
-class XmlExporterTask(luigi.Task):  # pylint: disable=R0904
+class SearchChunkTask(luigi.Task):  # pylint: disable=R0904
     """
     This is a task that will create an xml export for the given range of UPI's.
     """
@@ -45,7 +43,7 @@ class XmlExporterTask(luigi.Task):  # pylint: disable=R0904
         return LocalTarget(filename)
 
     def run(self):
-        with atomic_file(self.output().fn) as raw:
+        with self.output().open(format='gzip') as raw:
             with cursor(db()) as cur:
-                results = export_range(cur, self.min, self.max)
-                as_document(results, raw)
+                results = exporter.range(cur, self.min, self.max)
+                exporter.write(raw, results)
