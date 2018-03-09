@@ -42,6 +42,7 @@ POPULAR_SPECIES = set([
 
 INSDC_PATTERN = re.compile(r'(Submitted \(\d{2}\-\w{3}\-\d{4}\) to the INSDC\. ?)')
 
+ONTOLOGIES = {'GO', 'SO', 'ECO'}
 
 def create_tag(root, name, value, attrib={}):
     if value is None:
@@ -56,7 +57,11 @@ def create_tag(root, name, value, attrib={}):
 
     element = ET.SubElement(root, name, attr)
     if text:
-        element.text = sax.escape(str(text))
+
+        if not isinstance(text, basestring):
+            text = str(text)
+
+        element.text = sax.escape(text)
     return element
 
 
@@ -67,7 +72,7 @@ def create_getter(final_name, given_name):
         if isinstance(given_name, (tuple, list)):
             op_name = given_name
 
-    getter = op.itemgetter(*op_name)
+    getter = op.itemgetter(*op_name)  # pylint: disable=star-args
     if len(op_name) == 1:
         return lambda d: (getter(d),)
     return getter
@@ -121,6 +126,9 @@ def date_tag(date_name, func):
 
 
 def unique(values):
+    """
+    Get all unique, truish values.
+    """
     return {v for v in values if v}
 
 
@@ -146,6 +154,10 @@ def section(name, spec):
 
 
 def as_active(deleted):
+    """
+    Turn the deleted flag (Y/N) into the active term (Obsolete/Active).
+    """
+
     if deleted == 'Y':
         return 'Obsolete'
     return 'Active'
@@ -211,6 +223,7 @@ def as_insdc(locations):
     """
     Extract all INSDC titles from the location list.
     """
+
     for location in locations:
         if not location:
             continue
@@ -219,13 +232,12 @@ def as_insdc(locations):
         if not match:
             continue
         yield location.replace(match.group(1), '')
-    # print(locations)
-    # found = {l for l in locations if l and is_insdc(l)}
-    # print(found)
-    # return found
 
 
 def as_name(upi, taxid):
+    """
+    Create the name of the RNA sequence using the UPI and taxid.
+    """
     return 'Unique RNA Sequence {upi}_{taxid}'.format(
         upi=upi,
         taxid=taxid,
@@ -233,6 +245,10 @@ def as_name(upi, taxid):
 
 
 def as_ref(name, value):
+    """
+    Generate the dict that represents a reference tag.
+    """
+
     dbname = name.upper()
     if name == 'ncbi_taxonomy_id':
         dbname = name
@@ -240,15 +256,25 @@ def as_ref(name, value):
 
 
 def note_references(notes):
+    """
+    Given a list of notes determine all cross refernces to selected ontologies.
+    """
+
     for raw_note in notes:
         note_data = parse_note(raw_note)
+        if not isinstance(note_data, dict):
+            continue
         ontology = note_data.get('ontology', note_data)
-        for key in ['GO', 'SO', 'ECO']:
+        for key in ONTOLOGIES:
             for value in ontology.get(key, []):
                 yield as_ref(key, value)
 
 
 def standard_references(xrefs):
+    """
+    Generate the references based off the known database cross references.
+    """
+
     for xref in xrefs:
         # expert_db should not contain spaces, EBeye requirement
         expert_db = xref['name'].replace(' ', '_')
@@ -274,15 +300,24 @@ def standard_references(xrefs):
             yield as_ref('HGNC', xref['accession'])
 
 
-def simple_references(name, values):
+def publication_references(name, values):
+    """
+    Generate a list of references using the name of publication source and list
+    of keys.
+    """
     return [as_ref(name, value) for value in values if value]
 
 
 def references(taxid, xrefs, pmids, dois, notes):
+    """
+    Create a list of all cross references using the given taxid, known database
+    cross references, pubmed ids, DOI's and note data.
+    """
+
     possible = []
     possible.extend(standard_references(xrefs))
-    possible.extend(simple_references('PUBMED', pmids))
-    possible.extend(simple_references('DOI', dois))
+    possible.extend(publication_references('PUBMED', pmids))
+    possible.extend(publication_references('DOI', dois))
     possible.extend(note_references(notes))
     possible.append(as_ref('ncbi_taxonomy_id', taxid))
     refs = []
@@ -354,14 +389,24 @@ def normalize_common_name(common_names):
 
 
 def rfam_problems(status):
+    """
+    Create a list of the names of all Rfam problems.
+    """
     return [p['name'] for p in status['problems']]
 
 
 def problem_found(status):
+    """
+    Check if there is an Rfam issue.
+    """
     return status['has_issue']
 
 
 def as_popular(taxid):
+    """
+    Detect if the taxid is a popular species and return None if it is not.
+    """
+
     if taxid in POPULAR_SPECIES:
         return True
     return None

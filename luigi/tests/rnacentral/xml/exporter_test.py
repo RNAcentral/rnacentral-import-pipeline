@@ -14,6 +14,7 @@ limitations under the License.
 """
 
 import os
+import tempfile
 import xml.etree.ElementTree as ET
 from xml.dom import minidom
 
@@ -21,14 +22,16 @@ import pytest
 import psycopg2 as pg
 
 from tasks.config import db
-from rnacentral.xml.exporter import export_upi
+from rnacentral.xml import exporter
+# from rnacentral.xml.exporter import export_upi
+# from rnacentral.xml.exporter import export_range
 
 CONNECTION = pg.connect(db().psycopg2_string())
 
 
 def load_data(upi):
     parts = upi.split('_')
-    return export_upi(CONNECTION.cursor, parts[0], parts[1])
+    return exporter.upi(CONNECTION.cursor, parts[0], parts[1])
 
 
 def as_xml_dict(element):
@@ -303,3 +306,28 @@ def test_can_assign_correct_cross_references(upi, ans):
     data = load_data(upi)
     results = data.findall('./cross_references/ref')
     assert [as_xml_dict(r) for r in results] == ans
+
+
+def test_can_create_document_with_unicode():
+    data = load_and_get_additional('URS000009EE82_562', 'product')
+    assert data == [
+        {'attrib': {'name': 'product'}, 'text': 'tRNA-Asp(gtc)'},
+        {'attrib': {'name': 'product'}, 'text': 'P-site tRNA Aspartate'},
+        {'attrib': {'name': 'product'}, 'text': 'transfer RNA-Asp'},
+        {'attrib': {'name': 'product'}, 'text': 'tRNA_Asp_GTC'},
+        {'attrib': {'name': 'product'}, 'text': 'tRNA-asp'},
+        {'attrib': {'name': 'product'}, 'text': u'tRNA Asp ⊄UC'},
+        {'attrib': {'name': 'product'}, 'text': 'tRNA-Asp'},
+        {'attrib': {'name': 'product'}, 'text': 'tRNA-Asp-GTC'},
+        {'attrib': {'name': 'product'}, 'text': 'ASPARTYL TRNA'},
+        {'attrib': {'name': 'product'}, 'text': 'tRNA-Asp (GTC)'}
+    ]
+
+
+def test_it_can_write_an_xml_document():
+    entries = exporter.range(CONNECTION.cursor, 1, 10)
+    with tempfile.NamedTemporaryFile() as out:
+        exporter.write(out, entries)
+        out.seek(0)
+        document = out.read()
+        assert document.count('<entry id=') == 8  # 2 are deleted

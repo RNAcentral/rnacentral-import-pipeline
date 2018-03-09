@@ -39,7 +39,7 @@ SELECT
                 )
             ),
         'description', (array_agg(pre.description))[1],
-        'deleted', 'N',
+        'deleted', (array_agg(xref.deleted))[1],
         'length', (array_agg(rna.len))[1],
         'species', (array_agg(acc.species))[1],
         'organelles', array_agg(acc.organelle),
@@ -52,11 +52,18 @@ SELECT
         'pub_titles', array_agg(refs.title),
         'pub_ids', array_agg(refs.pmid),
         'dois', array_agg(refs.doi),
-        'has_genomic_coordinates', cardinality(array_remove(array_agg(distinct coord.id), null)) > 0,
+        'has_genomic_coordinates',
+            cardinality(array_remove(array_agg(distinct coord.id), null)) > 0,
         'rfam_family_names', array_agg(models.short_name),
         'rfam_ids', array_agg(hits.rfam_model_id),
         'rfam_clans', array_agg(models.rfam_clan_id),
-        'rfam_status', (array_remove(array_agg(pre.rfam_problems), ''))[1]::json,
+        'rfam_status',
+            case
+                when cardinality((array_agg(pre.rfam_problems))) = 0 then '{{}}'::json
+                when (array_agg(pre.rfam_problems))[1] = '' then '{{}}'::json
+                when (array_agg(pre.rfam_problems))[1] is null then '{{}}'::json
+                else (array_agg(pre.rfam_problems))[1]::json
+            end,
         'tax_strings', array_agg(acc.classification),
         'functions', array_agg(acc.function),
         'genes', array_agg(acc.gene),
@@ -97,7 +104,7 @@ SINGLE_SQL = BASE_SQL.format(
 RANGE_SQL = BASE_SQL.format(terms="rna.id BETWEEN %(min_id)s AND %(max_id)s")
 
 
-def export_range(cursor, min_id, max_id):
+def range(cursor, min_id, max_id):
     """
     Generates a series of XML strings representing all entries in the given
     range of ids.
@@ -105,12 +112,11 @@ def export_range(cursor, min_id, max_id):
 
     with cursor() as cur:
         cur.execute(RANGE_SQL, {'min_id': min_id, 'max_id': max_id})
-        for result in cursor:
-            data = json.loads(result[0])
-            yield builder(data)
+        for result in cur:
+            yield builder(result[0])
 
 
-def export_upi(cursor, upi, taxid):
+def upi(cursor, upi, taxid):
     """
     Will create a XmlEntry object for the given upi, taxid.
     """
@@ -123,7 +129,7 @@ def export_upi(cursor, upi, taxid):
         return builder(result[0][0])
 
 
-def as_document(results, handle):
+def write(handle, results):
     """
     This will create the required root XML element and place all the given
     XmlEntry objects as ElementTree.Element's in it. This then produces the
@@ -131,26 +137,26 @@ def as_document(results, handle):
     """
 
     root = ET.Element('database')
+    tree = ET.ElementTree(root)
     ET.SubElement(root, 'name', text='RNAcentral')
     ET.SubElement(
         root,
         'description',
         text='a database for non-protein coding RNA sequences'
     )
-    ET.SubElement(root, 'release', text='1.0')
 
-    timestamp = date.today.strftime('%d/%m/%Y')
-    ET.SubElement(root, 'release_date', timestamp)
+    ET.SubElement(root, 'release', text='1.0')
+    ET.SubElement(root, 'release_date', text=date.today().strftime('%d/%m/%Y'))
 
     count = 0
     count_element = ET.SubElement(root, 'entry_count')
     entries = ET.SubElement(root, 'entries')
     for result in results:
-        entries.append(result.as_xml())
+        entries.append(result)
         count += 1
 
     if not count:
         raise ValueError("No entries found")
 
-    count_element.text = count
-    root.write(handle)
+    count_element.text = str(count)
+    tree.write(handle)
