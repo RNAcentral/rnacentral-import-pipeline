@@ -29,6 +29,17 @@ def test_create_tag_with_complete_dict():
     assert element in list(root)
 
 
+def create_tag_can_handle_unicode():
+    root = ET.Element('a')
+    entry = u'tRNA Asp ⊄UC'
+    element = data.create_tag(root, 'example', entry)
+    assert element.tag == 'example'
+    assert element.attrib == {}
+    assert element.text == u'tRNA Asp ⊄UC'
+    assert element in list(root)
+
+
+
 def test_create_tag_can_use_simple_text():
     root = ET.Element('a')
     element = data.create_tag(root, 'example', 'hi')
@@ -70,10 +81,21 @@ def test_parse_note_can_handle_json_note():
     assert data.parse_note(json.dumps(ans)) == ans
 
 
-def test_references_build_correct_data():
-    xrefs = [
-
+def test_can_build_references_with_complex_note():
+    refs = data.note_references([
+        '6911',
+        '6911',
+        'Quality score:93.74 Alignment:reference ECO:0000053 SO:0001000 GO:0003735 GO:0005840',
+    ])
+    assert sorted(refs) == [
+        {'attrib': {'dbname': 'ECO', 'dbkey': 'ECO:0000053'}},
+        {'attrib': {'dbname': 'GO', 'dbkey': 'GO:0003735'}},
+        {'attrib': {'dbname': 'GO', 'dbkey': 'GO:0005840'}},
+        {'attrib': {'dbname': 'SO', 'dbkey': 'SO:0001000'}},
     ]
+
+def test_references_build_correct_data():
+    xrefs = []
     notes = [
         '',  # Old style empty note
         'GO:3333 SO:5000 extra',  # Old style note
