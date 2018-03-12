@@ -43,7 +43,7 @@ class SearchChunkTask(luigi.Task):  # pylint: disable=R0904
         return LocalTarget(filename)
 
     def run(self):
-        with self.output().open(format='gzip') as raw:
+        with self.output().open('w') as raw:
             with cursor(db()) as cur:
                 results = exporter.range(cur, self.min, self.max)
                 exporter.write(raw, results)
