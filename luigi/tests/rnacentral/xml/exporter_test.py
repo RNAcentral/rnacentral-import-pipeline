@@ -23,15 +23,13 @@ import psycopg2 as pg
 
 from tasks.config import db
 from rnacentral.xml import exporter
-# from rnacentral.xml.exporter import export_upi
-# from rnacentral.xml.exporter import export_range
 
 CONNECTION = pg.connect(db().psycopg2_string())
 
 
 def load_data(upi):
     parts = upi.split('_')
-    return exporter.upi(CONNECTION.cursor, parts[0], parts[1])
+    return exporter.upi(CONNECTION.cursor(), parts[0], parts[1])
 
 
 def as_xml_dict(element):
@@ -324,10 +322,17 @@ def test_can_create_document_with_unicode():
     ]
 
 
-def test_it_can_write_an_xml_document():
-    entries = exporter.range(CONNECTION.cursor, 1, 10)
+# def test_it_can_write_an_xml_document():
+#     entries = exporter.range(CONNECTION.cursor(), 3890001, 3900001)
+#     with tempfile.NamedTemporaryFile() as out:
+#         exporter.write(out, entries)
+#         out.seek(0)
+#         document = out.read()
+#         assert document.count('<entry id=') == 8  # 2 are deleted
+
+
+def test_output_validates_according_to_schema():
+    entries = exporter.range(CONNECTION.cursor(), 1, 100)
     with tempfile.NamedTemporaryFile() as out:
         exporter.write(out, entries)
-        out.seek(0)
-        document = out.read()
-        assert document.count('<entry id=') == 8  # 2 are deleted
+        exporter.validate(out.name)

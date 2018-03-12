@@ -13,12 +13,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import json
+import subprocess as sp
 from datetime import date
 
 import xml.etree.cElementTree as ET
 
 from .data import builder
+
+XML_SCHEMA = 'http://www.ebi.ac.uk/ebisearch/XML4dbDumps.xsd'
 
 
 BASE_SQL = """
@@ -110,10 +112,9 @@ def range(cursor, min_id, max_id):
     range of ids.
     """
 
-    with cursor() as cur:
-        cur.execute(RANGE_SQL, {'min_id': min_id, 'max_id': max_id})
-        for result in cur:
-            yield builder(result[0])
+    cursor.execute(RANGE_SQL, {'min_id': min_id, 'max_id': max_id})
+    for result in cursor:
+        yield builder(result[0])
 
 
 def upi(cursor, upi, taxid):
@@ -121,12 +122,11 @@ def upi(cursor, upi, taxid):
     Will create a XmlEntry object for the given upi, taxid.
     """
 
-    with cursor() as cur:
-        cur.execute(SINGLE_SQL, {'upi': upi, 'taxid': taxid})
-        result = list(cur)
-        if not result:
-            raise ValueError("Found no entries for %s_%s" % (upi, str(taxid)))
-        return builder(result[0][0])
+    cursor.execute(SINGLE_SQL, {'upi': upi, 'taxid': taxid})
+    result = list(cursor)
+    if not result:
+        raise ValueError("Found no entries for %s_%s" % (upi, str(taxid)))
+    return builder(result[0][0])
 
 
 def write(handle, results):
@@ -138,15 +138,15 @@ def write(handle, results):
 
     root = ET.Element('database')
     tree = ET.ElementTree(root)
-    ET.SubElement(root, 'name', text='RNAcentral')
-    ET.SubElement(
-        root,
-        'description',
-        text='a database for non-protein coding RNA sequences'
-    )
+    name = ET.SubElement(root, 'name')
+    name.text = 'RNAcentral'
+    description = ET.SubElement(root, 'description')
+    description.text = 'a database for non-protein coding RNA sequences'
 
-    ET.SubElement(root, 'release', text='1.0')
-    ET.SubElement(root, 'release_date', text=date.today().strftime('%d/%m/%Y'))
+    release = ET.SubElement(root, 'release')
+    release.text = '1.0'
+    release_date = ET.SubElement(root, 'release_date')
+    release_date.text = date.today().strftime('%d/%m/%Y')
 
     count = 0
     count_element = ET.SubElement(root, 'entry_count')
@@ -160,3 +160,12 @@ def write(handle, results):
 
     count_element.text = str(count)
     tree.write(handle)
+
+
+def validate(filename):
+    """
+    Run xmllint validation on the given filename.
+    """
+
+    cmd = ('xmllint', filename, '--schema', XML_SCHEMA, '--stream')
+    sp.check_call(cmd)

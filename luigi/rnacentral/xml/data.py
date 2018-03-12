@@ -44,6 +44,7 @@ INSDC_PATTERN = re.compile(r'(Submitted \(\d{2}\-\w{3}\-\d{4}\) to the INSDC\. ?
 
 ONTOLOGIES = {'GO', 'SO', 'ECO'}
 
+
 def create_tag(root, name, value, attrib={}):
     if value is None:
         return root
