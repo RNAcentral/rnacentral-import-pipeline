@@ -16,7 +16,7 @@ limitations under the License.
 import json
 import xml.etree.cElementTree as ET
 
-from rnacentral.xml import data
+from rnacentral.search import data
 
 
 def test_create_tag_with_complete_dict():

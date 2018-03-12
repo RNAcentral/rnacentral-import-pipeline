@@ -22,7 +22,7 @@ import pytest
 import psycopg2 as pg
 
 from tasks.config import db
-from rnacentral.xml import exporter
+from rnacentral.search import exporter
 
 CONNECTION = pg.connect(db().psycopg2_string())
 
@@ -335,4 +335,5 @@ def test_output_validates_according_to_schema():
     entries = exporter.range(CONNECTION.cursor(), 1, 100)
     with tempfile.NamedTemporaryFile() as out:
         exporter.write(out, entries)
+        out.flush()
         exporter.validate(out.name)

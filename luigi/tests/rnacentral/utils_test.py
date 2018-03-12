@@ -19,7 +19,7 @@ from tasks.config import db
 
 def test_can_get_range_of_all_upis():
     ranges = list(upi_ranges(db(), 100000))
-    assert len(ranges) == 118
+    assert len(ranges) == 133
 
 
 def test_can_get_correct_upi_ranges():
@@ -28,4 +28,4 @@ def test_can_get_correct_upi_ranges():
         (1, 100001),
         (100001, 200001),
     ]
-    assert ranges[-1] == (11700001, 11735072)
+    assert ranges[-1] == (13100001, 13167087L)

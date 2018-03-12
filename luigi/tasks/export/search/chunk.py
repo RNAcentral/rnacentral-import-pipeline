@@ -22,7 +22,7 @@ from tasks.config import db
 from tasks.config import output
 
 from rnacentral.db import cursor
-from rnacentral.xml import exporter
+from rnacentral.search import exporter
 
 
 class SearchChunkTask(luigi.Task):  # pylint: disable=R0904
