@@ -133,6 +133,10 @@ def unique(values):
     return {v for v in values if v}
 
 
+def unique_lower(values):
+    return {v.lower() for v in values if v}
+
+
 def entry(spec):
     def fn(data):
         entry_id = '{upi}_{taxid}'.format(
@@ -188,6 +192,12 @@ def parse_whitespace_note(note):
     return dict(data)
 
 
+def parse_json_note(raw_note):
+    if not raw_note.startswith('{'):
+        raise ValueError("Not a json object")
+    return json.loads(raw_note)
+
+
 def parse_note(note):
     """
     Attempts to parse note data into a dict of {'ID': set(values...)} pairs. It
@@ -198,7 +208,7 @@ def parse_note(note):
     if not note:
         return {}
 
-    for method in [json.loads, parse_whitespace_note]:
+    for method in [parse_json_note, parse_whitespace_note]:
         try:
             return method(note)
         except:  # pylint: disable=W0702
@@ -266,6 +276,9 @@ def note_references(notes):
         if not isinstance(note_data, dict):
             continue
         ontology = note_data.get('ontology', note_data)
+        # Very hacky.
+        if isinstance(ontology, list):
+            ontology = parse_whitespace_note(' '.join(ontology))
         for key in ONTOLOGIES:
             for value in ontology.get(key, []):
                 yield as_ref(key, value)
@@ -436,7 +449,7 @@ builder = entry([
         field('active', as_active, keys='deleted'),
         field('length', str),
         field('species', str),
-        fields('organelle', unique, keys='organelles'),
+        fields('organelle', unique_lower, keys='organelles'),
         fields('expert_db', unique, keys='expert_dbs'),
         fields('common_name', normalize_common_name),
         fields('function', unique, keys='functions'),
