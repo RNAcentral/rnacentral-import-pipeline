@@ -13,21 +13,20 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import requests
+import shutil
 
-from .files import atomic_output
+import luigi
+
+from tasks.config import ensembl
 
 
-def download(url, filename):
+class Copy(luigi.Task):
     """
-    This will fetch some file over HTTP using requests. It will create the
-    required directory to save in if requried as well. Note there is a race
-    condition in the directory creation, so if that is a problem create it
-    ahead of time.
+    Copies an Ensembl files to our data store.
     """
 
-    response = requests.get(url)
-    response.raise_for_status()
-    with atomic_output(filename) as out:
-        for chunk in response.iter_content(chunk_size=128):
-            out.write(chunk)
+    def output(self):
+        return luigi.LocalTarget(ensembl.raw('homo_sapiens'))
+
+    def run(self):
+        shutil.copytree(ensembl().directory, ensembl.raw())

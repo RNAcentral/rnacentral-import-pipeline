@@ -13,21 +13,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import requests
 
-from .files import atomic_output
-
-
-def download(url, filename):
+def normalize_species_name(species):
     """
-    This will fetch some file over HTTP using requests. It will create the
-    required directory to save in if requried as well. Note there is a race
-    condition in the directory creation, so if that is a problem create it
-    ahead of time.
+    This will put species names into a standard format. That is lower case,
+    without leading or trailing whitespace and with spaces replaced by '_'.
     """
-
-    response = requests.get(url)
-    response.raise_for_status()
-    with atomic_output(filename) as out:
-        for chunk in response.iter_content(chunk_size=128):
-            out.write(chunk)
+    return species.strip().lower().replace(' ', '_')

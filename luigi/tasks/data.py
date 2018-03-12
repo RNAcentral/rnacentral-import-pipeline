@@ -13,21 +13,27 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import requests
+import luigi
 
-from .files import atomic_output
+from tasks.ena import Ena
+from tasks.ensembl.ensembl import Ensembl
+from tasks import rfam
+from tasks.gtrnadb import GtRNAdb
 
 
-def download(url, filename):
+class DataImport(luigi.WrapperTask):
     """
-    This will fetch some file over HTTP using requests. It will create the
-    required directory to save in if requried as well. Note there is a race
-    condition in the directory creation, so if that is a problem create it
-    ahead of time.
+    This runs the data import that we preform on each release. This will
+    import:
+
+    - All Ena data
+    - All Ensembl data
+    - All Rfam families, clans and sequences
     """
 
-    response = requests.get(url)
-    response.raise_for_status()
-    with atomic_output(filename) as out:
-        for chunk in response.iter_content(chunk_size=128):
-            out.write(chunk)
+    def requires(self):
+        yield Ena()
+        yield Ensembl()
+        yield rfam.RfamFamilies()
+        yield rfam.RfamSequences()
+        yield GtRNAdb()

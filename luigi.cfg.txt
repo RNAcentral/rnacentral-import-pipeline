@@ -72,3 +72,9 @@ gencode_species = Homo sapiens,Mus musculus
 # The FTP host for ensembl's files. Generally there is no need to alter this
 # value.
 ftp_host = ftp.ensembl.org
+
+
+[gtrnadb]
+# The base URL that lists out all GtRNAdb files to import. Generally this does
+# not need to be changed.
+url = http://trna.ucsc.edu/download/RNAcentral/
