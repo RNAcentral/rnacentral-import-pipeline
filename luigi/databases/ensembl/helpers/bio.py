@@ -14,14 +14,16 @@ limitations under the License.
 """
 
 import re
-import collections as coll
-
-import requests
-from functools32 import lru_cache
 
 from databases.data import Exon
-
-TAX_URL = 'https://www.ebi.ac.uk/ena/data/taxonomy/v1/taxon/tax-id/{taxon_id}'
+from databases.helpers.embl import taxid
+from databases.helpers.embl import lineage
+from databases.helpers.embl import qualifier_value
+from databases.helpers.embl import standard_name
+from databases.helpers.embl import gene
+from databases.helpers.embl import xref_data
+from databases.helpers.embl import grouped_annotations
+from databases.helpers.embl import locus_tag
 
 
 CODING_RNA_TYPES = set([
@@ -29,50 +31,6 @@ CODING_RNA_TYPES = set([
     'processed_transcript',
     'retained_intron',
 ])
-
-
-class MissingTaxId(Exception):
-    """
-    This is  raised when an operation which should have a NCBI taxon id should,
-    but does not.
-    """
-    pass
-
-
-def qualifier_value(feature, name, pattern, max_allowed=1):
-    """
-    This will parse the qualifer feild defined by the given name for the given
-    feature. This will extract all values matching the given regex pattern. If
-    max allowed is 1 then only one distinct value is allowed and a single value
-    will be returned. Otherwise all values in a set will be returned.
-    """
-
-    values = set()
-    for note in feature.qualifiers.get(name, []):
-        match = re.match(pattern, note)
-        if match:
-            values.add(match.group(1))
-    if max_allowed is not None and len(values) > max_allowed:
-        raise ValueError("Multiple values (%s) for %s",
-                         ', '.join(sorted(values)), name)
-
-    if len(values) == 0:
-        return None
-    if max_allowed == 1:
-        return values.pop()
-    return values
-
-
-def taxid(record):
-    """
-    Get the taxon id of the given record. This will pull the first feature,
-    which must be of the 'source' type to do so.
-    """
-
-    source = record.features[0]
-    if source.type == 'source':
-        return int(qualifier_value(source, 'db_xref', r'^taxon:(\d+)$'))
-    raise MissingTaxId("No taxon id found for record %s" % record)
 
 
 def organism_naming(record):
@@ -90,13 +48,6 @@ def organism_naming(record):
         common_name = match.group(1)
         species = re.sub(pattern, '', species).strip()
     return (species, common_name)
-
-
-def gene(feature):
-    """
-    Get the gene this feature is a part of.
-    """
-    return qualifier_value(feature, 'gene', '^(.+)$')
 
 
 def is_gene(feature):
@@ -135,14 +86,6 @@ def rna_type(feature):
     return notes(feature)[0]
 
 
-def locus_tag(feature):
-    """
-    Get the locus tag of this feature. If none is present then the empty string
-    is returned.
-    """
-    return feature.qualifiers.get('locus_tag', [''])[0]
-
-
 def note_data(feature):
     """
     This will parse the notes data of the feature to produce a dict of key
@@ -152,33 +95,6 @@ def note_data(feature):
     if len(notes_data) > 1:
         notes_data = notes_data[1:]
     return grouped_annotations(notes_data, '=')
-
-
-def xref_data(feature):
-    """
-    Get a dict of the xref data for this feature. This will parse the db_xref
-    qualifier to produce a key value mapping.
-    """
-    raw = feature.qualifiers.get('db_xref', [])
-    return grouped_annotations(raw, ':')
-
-
-def grouped_annotations(raw, split):
-    """
-    Parse a raw string into a dict. This will produce a key value mappign where
-    the key is everything before the first split and values is everything
-    after. The mapping values will be lists. This will correct RNACentral to
-    RNAcentral.
-    """
-    parsed = coll.defaultdict(set)
-    for entry in raw:
-        if split not in entry:
-            continue
-        key, value = entry.split(split, 1)
-        if key == 'RNACentral':
-            key = 'RNAcentral'
-        parsed[key].add(value)
-    return {k: sorted(v) for k, v in parsed.items()}
 
 
 def is_ncrna(feature):
@@ -193,13 +109,6 @@ def is_ncrna(feature):
         feature.qualifiers['note'][0].lower() not in CODING_RNA_TYPES
 
 
-def standard_name(feature):
-    """
-    Get the standard name of feature.
-    """
-    return qualifier_value(feature, 'standard_name', '^(.+)$')
-
-
 def chromosome(record):
     """
     Get the chromosome this record is from. If it is part of a scaffold then it
@@ -210,26 +119,6 @@ def chromosome(record):
         parts = basic.split(':')
         return parts[2]
     return basic.split('.')[0]
-
-
-@lru_cache()
-def lineage(record):
-    """
-    Extract the taxon id and then query a remote server for the lineage for the
-    given taxon id. Results are cached because it is common to constantly query
-    with only the same few taxon ids.
-    """
-    taxon_id = taxid(record)
-    if taxon_id <= 0:
-        return None
-
-    response = requests.get(TAX_URL.format(taxon_id=taxon_id))
-    response.raise_for_status()
-    response_data = response.json()
-    return '{lineage}{name}'.format(
-        lineage=response_data['lineage'],
-        name=response_data['scientificName']
-    )
 
 
 def product(feature):

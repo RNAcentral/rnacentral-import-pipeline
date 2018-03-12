@@ -14,14 +14,17 @@ limitations under the License.
 """
 
 import os
+import urlparse
 
 import luigi
 
 from databases.gtrnadb.parsers import parse
 
 from tasks.config import output
+from tasks.config import gtrnadb
 
-from tasks.utils.parameters import PathParameter
+from tasks.utils import compressed
+from tasks.utils.fetch import Fetch
 from tasks.utils.entry_writers import Output
 
 
@@ -30,18 +33,43 @@ class GtRNAdbJsonToCsv(luigi.Task):  # pylint: disable=R0904
     Parse all GtRNAdb JSON files and produce the files needed to import to the
     database.
     """
-    input_file = PathParameter()
+    url = luigi.Parameter()
+
+    @property
+    def filename(self):
+        """
+        Determine a filename to use for the url. This is the last part of the
+        path in the url.
+        """
+
+        urlparts = urlparse.urlsplit(self.url)
+        parts = urlparts.path.split('/')
+        return parts[-1]
+
+    def requires(self):
+        filename = gtrnadb().raw(self.filename)
+        return Fetch(remote_path=self.url, local_path=filename)
 
     def output(self):
-        prefix = os.path.basename(self.input_file)
+        prefix = os.path.basename(self.filename)
         return Output.build(output().base, 'gtrnadb', prefix)
+
+    def expanded_files(self):
+        """
+        This will expand the downloaded, compressed files and provide a list
+        the expanded filenames.
+        """
+
+        filename = self.requires().output().fn
+        dirname = os.path.dirname(filename)
+        return compressed.expand(filename, dirname)
 
     def run(self):
         """
-        Create a generator for all entries in all configured GtRNAdb JSON files.
+        Create a generator for all entries in all configured GtRNAdb JSON
+        files.
         """
 
         with self.output().writer() as writer:
-            for entry in parse(self.input_file):
-                if entry.is_valid():
-                    writer.write(entry)
+            for filename in self.expanded_files():
+                writer.write_all(parse(filename))

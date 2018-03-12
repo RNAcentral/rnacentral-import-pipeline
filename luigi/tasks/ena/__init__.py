@@ -13,21 +13,25 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import requests
+import os
 
-from .files import atomic_output
+import luigi
+
+from tasks.config import ena
+
+from .single_file import SingleEnaFile
+from .directory import EnaDirectory
+from .tpa import FetchTPA
 
 
-def download(url, filename):
-    """
-    This will fetch some file over HTTP using requests. It will create the
-    required directory to save in if requried as well. Note there is a race
-    condition in the directory creation, so if that is a problem create it
-    ahead of time.
-    """
+class Ena(luigi.WrapperTask):
 
-    response = requests.get(url)
-    response.raise_for_status()
-    with atomic_output(filename) as out:
-        for chunk in response.iter_content(chunk_size=128):
-            out.write(chunk)
+    def requires(self):
+        for database in ena().tpa_databases:
+            yield FetchTPA(database=database)
+
+        for entry in ena().raw_ncr_files():
+            if os.path.isdir(entry):
+                yield EnaDirectory(input_dir=entry)
+            elif os.path.isfile(entry):
+                yield SingleEnaFile(input_file=entry)

@@ -13,21 +13,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import requests
+import luigi
 
-from .files import atomic_output
+from tasks.config import ena
+from tasks.utils.http import download
 
+class FetchTPA(luigi.Task):
+    database = luigi.Parameter()
 
-def download(url, filename):
-    """
-    This will fetch some file over HTTP using requests. It will create the
-    required directory to save in if requried as well. Note there is a race
-    condition in the directory creation, so if that is a problem create it
-    ahead of time.
-    """
+    def output(self):
+        return luigi.LocalTarget(ena().input_tpa_file(self.database))
 
-    response = requests.get(url)
-    response.raise_for_status()
-    with atomic_output(filename) as out:
-        for chunk in response.iter_content(chunk_size=128):
-            out.write(chunk)
+    def run(self):
+        download(ena().raw_tpa_url(self.database), self.output().fn)

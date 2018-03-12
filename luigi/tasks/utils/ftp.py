@@ -13,8 +13,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import urlparse
 from ftplib import FTP
 from contextlib import contextmanager
+
+from luigi.local_target import atomic_file
 
 
 @contextmanager
@@ -30,3 +33,24 @@ def ftp_context(host, base=None):
         yield _ftp
     finally:
         _ftp.quit()
+
+
+def download(url, filename):
+    """
+    This will download some file via FTP to the given filename. It won't work
+    with fetching a directory, only a single file.
+    """
+
+    parts = urlparse.urlsplit(url)
+    assert parts.path
+    assert parts.netloc
+    path = parts.path.split('/')
+    remote = path.pop(-1)
+    path = '/'.join(path)
+    if path[0] == '/':
+        path = path[1:]
+
+    with atomic_file(filename) as out:
+        with ftp_context(parts.netloc) as ftp:
+            ftp.cwd(path)
+            ftp.retrbinary("RETR " + remote, out.write)

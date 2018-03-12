@@ -32,6 +32,52 @@ def data2():
         return json.load(raw)
 
 
+def test_can_find_all_remote_urls():
+    assert helpers.extract_download_urls('http://google.com', """
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<html>
+ <head>
+  <title>Index of /download/RNAcentral</title>
+ </head>
+ <body>
+<h1>Index of /download/RNAcentral</h1>
+<pre><img src="/icons/blank.gif" alt="Icon "> <a href="?C=N;O=D">Name</a>                    <a href="?C=M;O=A">Last modified</a>      <a href="?C=S;O=A">Size</a>  <a href="?C=D;O=A">Description</a><hr><img src="/icons/back.gif" alt="[DIR]"> <a href="/download/">Parent Directory</a>                             -
+<img src="/icons/compressed.gif" alt="[   ]"> <a href="archaea_tRNAs.json.gz">archaea_tRNAs.json.gz</a>   21-Nov-2017 08:24  934K
+<img src="/icons/compressed.gif" alt="[   ]"> <a href="bacteria_tRNAs.tar.gz">bacteria_tRNAs.tar.gz</a>   22-Aug-2017 02:29   15M
+<img src="/icons/compressed.gif" alt="[   ]"> <a href="fungi_tRNAs.tar.gz">fungi_tRNAs.tar.gz</a>      21-Nov-2017 08:25  5.7M
+<img src="/icons/compressed.gif" alt="[   ]"> <a href="model_tRNAs.tar.gz">model_tRNAs.tar.gz</a>      24-Nov-2017 00:31  126K
+<hr></pre>
+<address>Apache/2.2.15 (CentOS) Server at <a href="mailto:lowe@soe.ucsc.edu">trna.ucsc.edu</a> Port 80</address>
+</body></html>
+    """) == [
+        ("archaea_tRNAs.json.gz", 'http://google.com/archaea_tRNAs.json.gz'),
+        ("bacteria_tRNAs.tar.gz", 'http://google.com/bacteria_tRNAs.tar.gz'),
+        ("fungi_tRNAs.tar.gz", 'http://google.com/fungi_tRNAs.tar.gz'),
+        ("model_tRNAs.tar.gz", 'http://google.com/model_tRNAs.tar.gz'),
+    ]
+
+
+def test_complains_if_no_download_urls():
+    with pytest.raises(Exception):
+        assert helpers.extract_download_urls('http://google.com', """
+    <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+    <html>
+     <head>
+      <title>Index of /download/RNAcentral</title>
+     </head>
+     <body>
+    <h1>Index of /download/RNAcentral</h1>
+    <pre><img src="/icons/blank.gif" alt="Icon "> <a href="?C=N;O=D">Name</a>                    <a href="?C=M;O=A">Last modified</a>      <a href="?C=S;O=A">Size</a>  <a href="?C=D;O=A">Description</a><hr><img src="/icons/back.gif" alt="[DIR]"> <a href="/download/">Parent Directory</a>                             -
+    <img src="/icons/compressed.gif" alt="[   ]"> <a >archaea_tRNAs.json.gz</a>   21-Nov-2017 08:24  934K
+    <img src="/icons/compressed.gif" alt="[   ]"> <a >bacteria_tRNAs.tar.gz</a>   22-Aug-2017 02:29   15M
+    <img src="/icons/compressed.gif" alt="[   ]"> <a >fungi_tRNAs.tar.gz</a>      21-Nov-2017 08:25  5.7M
+    <img src="/icons/compressed.gif" alt="[   ]"> <a >model_tRNAs.tar.gz</a>      24-Nov-2017 00:31  126K
+    <hr></pre>
+    <address>Apache/2.2.15 (CentOS) Server at <a href="mailto:lowe@soe.ucsc.edu">trna.ucsc.edu</a> Port 80</address>
+    </body></html>
+        """)
+
+
 def test_url(data):
     assert helpers.url(data[0]) == "http://gtrnadb.ucsc.edu/genomes/bacteria/Acar_mari_MBIC11017/genes/tRNA-Ala-CGC-1-1.html"
 
