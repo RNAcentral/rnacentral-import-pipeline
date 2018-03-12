@@ -13,9 +13,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import shutil
 import luigi
 
-from tasks.config import export
+from rnacentral.xml.exporter import validate
 from .chunk import SearchChunkTask
 
 
@@ -33,7 +34,7 @@ class ValidateAndCompressSearchChunk(luigi.Task):
 
     def run(self):
         name = self.requires().output().fn
-        url = export().xml_schema
-        with self.output().open('w') as raw:
-            sp.check_call(('xmllint', name, '--schema', url, '--stream'),
-                          stdout=raw)
+        with self.requires.output().open('r') as raw, \
+                self.output().open('w') as out:
+            validate(name)
+            shutil.copyfileobj(raw, out)

@@ -255,7 +255,6 @@ class ena(luigi.Config):
 
 class export(luigi.Config):  # pylint: disable=C0103,R0904
     rfam_example_size = luigi.IntParameter(default=10)
-    xml_schema = 'http://www.ebi.ac.uk/ebisearch/XML4dbDumps.xsd'
 
     def ftp(self, *args):
         return os.path.join(output().base, 'ftp', *args)
