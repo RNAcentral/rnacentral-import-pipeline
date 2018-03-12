@@ -20,7 +20,7 @@ from tasks.config import rnacentral as rnac
 
 from rnacentral.utils import upi_ranges
 
-from .chunk import SearchChunkTask
+from .validate import ValidateAndCompressSearchChunk
 
 
 class Search(luigi.WrapperTask):  # pylint: disable=R0904
@@ -32,4 +32,4 @@ class Search(luigi.WrapperTask):  # pylint: disable=R0904
     def requires(self):
         config = rnac()
         for start, stop in upi_ranges(config.xml_export_size, db()):
-            yield SearchChunkTask(min=start, max=stop)
+            yield ValidateAndCompressSearchChunk(min=start, max=stop)
