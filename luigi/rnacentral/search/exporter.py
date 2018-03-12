@@ -114,7 +114,11 @@ def range(cursor, min_id, max_id):
 
     cursor.execute(RANGE_SQL, {'min_id': min_id, 'max_id': max_id})
     for result in cursor:
-        yield builder(result[0])
+        try:
+            yield builder(result[0])
+        except:
+            print(result[0])
+            raise
 
 
 def upi(cursor, upi, taxid):
@@ -136,6 +140,9 @@ def write(handle, results):
     string representation of that document which can be saved.
     """
 
+    if not results:
+        raise ValueError("No entries found")
+
     root = ET.Element('database')
     tree = ET.ElementTree(root)
     name = ET.SubElement(root, 'name')
@@ -148,17 +155,12 @@ def write(handle, results):
     release_date = ET.SubElement(root, 'release_date')
     release_date.text = date.today().strftime('%d/%m/%Y')
 
-    count = 0
     count_element = ET.SubElement(root, 'entry_count')
+    results = list(results)
+    count_element.text = str(len(results))
     entries = ET.SubElement(root, 'entries')
-    for result in results:
-        entries.append(result)
-        count += 1
+    entries.extend(results)
 
-    if not count:
-        raise ValueError("No entries found")
-
-    count_element.text = str(count)
     tree.write(handle)
 
 

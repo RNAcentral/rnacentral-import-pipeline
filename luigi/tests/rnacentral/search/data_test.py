@@ -121,3 +121,24 @@ def test_references_build_correct_data():
         {'attrib': {'dbname': 'GO', 'dbkey': 'GO:500'}},
         {'attrib': {'dbname': 'ncbi_taxonomy_id', 'dbkey': '10'}},
     ]
+
+def notes_can_parse_weird_notes():
+    notes = [
+        'Valine tRNA (tRNA-Val), predicted by tRNAscan-SE analysis; GO_component: GO:0005829 - cytosol [Evidence NAS] [PMID 9159473]; GO_function: GO:0030533 - triplet codon-amino acid adaptor activity [Evidence TAS] [PMID 9443958]; GO_process: GO:0006414 - translational elongation [Evidence NAS] [PMID 9159473]',
+        '{"text": ["Valine tRNA (tRNA-Val), predicted by tRNAscan-SE analysis; GO_component: GO:0005829 - cytosol [Evidence IC] [PMID 9023104]; GO_function: GO:0030533 - triplet codon-amino acid adaptor activity [Evidence ISM] [PMID 9023104]; GO_process: GO:0006414 - translational elongation [Evidence IC] [PMID 9023104]"]}',
+        '{"isotype": "Val", "anticodon_positions": [{"relative_stop": 37, "relative_start": 35}], "anticodon": "AAC", "url": "http://gtrnadb.ucsc.edu/genomes/eukaryota/Scere3/genes/tRNA-Val-AAC-2-1.html", "score": 66.3}',
+        'Valine tRNA (tRNA-Val), predicted by tRNAscan-SE analysis; GO_component: GO:0005829 - cytosol [Evidence NAS] [PMID 9159473]; GO_function: GO:0030533 - triplet codon-amino acid adaptor activity [Evidence TAS] [PMID 9443958]; GO_process: GO:0006414 - translational elongation [Evidence NAS] [PMID 9159473]',
+        '{"text": ["Valine tRNA (tRNA-Val), predicted by tRNAscan-SE analysis; GO_component: GO:0005829 - cytosol [Evidence IC] [PMID 9023104]; GO_function: GO:0030533 - triplet codon-amino acid adaptor activity [Evidence ISM] [PMID 9023104]; GO_process: GO:0006414 - translational elongation [Evidence IC] [PMID 9023104]"]}',
+        '{"text": ["Valine tRNA (tRNA-Val), predicted by tRNAscan-SE analysis; GO_component: GO:0005829 - cytosol [Evidence IC] [PMID 9023104]; GO_function: GO:0030533 - triplet codon-amino acid adaptor activity [Evidence ISM] [PMID 9023104]; GO_process: GO:0006414 - translational elongation [Evidence IC] [PMID 9023104]"]}',
+        '{"text": ["Covariance Model: Eukaryote; CM Score: 67.95", "Legacy ID: chrXV.trna15-ValAAC"], "ontology": ["ECO:0000202", "GO:0030533", "SO:0000253"]}',
+        'Valine tRNA (tRNA-Val), predicted by tRNAscan-SE analysis; GO_component: GO:0005829 - cytosol [Evidence NAS] [PMID 9159473]; GO_function: GO:0030533 - triplet codon-amino acid adaptor activity [Evidence TAS] [PMID 9443958]; GO_process: GO:0006414 - translational elongation [Evidence NAS] [PMID 9159473]',
+        '{"text": ["Covariance Model: Eukaryote; CM Score: 67.95", "Legacy ID: chrXV.trna15-ValAAC"], "ontology": ["ECO:0000202", "GO:0030533", "SO:0000253"]}',
+        'Valine tRNA (tRNA-Val), predicted by tRNAscan-SE analysis; GO_component: GO:0005829 - cytosol [Evidence NAS] [PMID 9159473]; GO_function: GO:0030533 - triplet codon-amino acid adaptor activity [Evidence TAS] [PMID 9443958]; GO_process: GO:0006414 - translational elongation [Evidence NAS] [PMID 9159473]',
+        '{"text": ["Valine tRNA (tRNA-Val), predicted by tRNAscan-SE analysis; GO_component: GO:0005829 - cytosol [Evidence IC] [PMID 9023104]; GO_function: GO:0030533 - triplet codon-amino acid adaptor activity [Evidence ISM] [PMID 9023104]; GO_process: GO:0006414 - translational elongation [Evidence IC] [PMID 9023104]"]}',
+        'Valine tRNA (tRNA-Val), predicted by tRNAscan-SE analysis; GO_component: GO:0005829 - cytosol [Evidence NAS] [PMID 9159473]; GO_function: GO:0030533 - triplet codon-amino acid adaptor activity [Evidence TAS] [PMID 9443958]; GO_process: GO:0006414 - translational elongation [Evidence NAS] [PMID 9159473]',
+        '{"text": ["Valine tRNA (tRNA-Val), predicted by tRNAscan-SE analysis; GO_component: GO:0005829 - cytosol [Evidence IC] [PMID 9023104]; GO_function: GO:0030533 - triplet codon-amino acid adaptor activity [Evidence ISM] [PMID 9023104]; GO_process: GO:0006414 - translational elongation [Evidence IC] [PMID 9023104]"]}',
+        '{"text": ["Valine tRNA (tRNA-Val), predicted by tRNAscan-SE analysis; GO_component: GO:0005829 - cytosol [Evidence IC] [PMID 9023104]; GO_function: GO:0030533 - triplet codon-amino acid adaptor activity [Evidence ISM] [PMID 9023104]; GO_process: GO:0006414 - translational elongation [Evidence IC] [PMID 9023104]"]}',
+        '{"text": ["Valine tRNA (tRNA-Val), predicted by tRNAscan-SE analysis; GO_component: GO:0005829 - cytosol [Evidence IC] [PMID 9023104]; GO_function: GO:0030533 - triplet codon-amino acid adaptor activity [Evidence ISM] [PMID 9023104]; GO_process: GO:0006414 - translational elongation [Evidence IC] [PMID 9023104]"]}',
+    ]
+    refs = data.note_references(notes)
+    assert refs

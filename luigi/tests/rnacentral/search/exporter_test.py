@@ -25,6 +25,7 @@ from tasks.config import db
 from rnacentral.search import exporter
 
 CONNECTION = pg.connect(db().psycopg2_string())
+CONNECTION.set_session(readonly=True, autocommit=True)
 
 
 def load_data(upi):
@@ -183,9 +184,8 @@ def test_assigns_description_correctly_to_randomly_chosen_examples(upi, ans):
     ('URS00000478B7_9606', 'SRP_RNA'),
     ('URS000024083D_9606', 'SRP_RNA'),
     ('URS00002963C4_4565', 'SRP_RNA'),
-    ('URS00000DA486_3702', 'siRNA'),
     ('URS000040F7EF_4577', 'siRNA'),
-    ('URS00000DA486_3702', 'siRNA'),
+    ('URS00000DA486_3702', 'other'),
     ('URS00006B14E9_6183', 'hammerhead_ribozyme'),
     ('URS0000808D19_644', 'hammerhead_ribozyme'),
     ('URS000080DFDA_32630', 'hammerhead_ribozyme'),
@@ -219,7 +219,7 @@ def test_assigns_description_correctly_to_randomly_chosen_examples(upi, ans):
     ('URS00000B3045_7227', 'guide_RNA'),
     ('URS000082AF7D_5699', 'guide_RNA'),
     ('URS000077FBEB_9606', 'ncRNA'),
-    ('URS00000101E5_9606', 'ncRNA'),
+    ('URS00000101E5_9606', 'lncRNA'),
     ('URS0000A994FE_9606', 'sRNA'),
     ('URS0000714027_9031', 'sRNA'),
     ('URS000065BB41_7955', 'sRNA'),
@@ -231,7 +231,6 @@ def test_assigns_rna_type_correctly(upi, ans):
 
 @pytest.mark.parametrize('upi,ans', [  # pylint: disable=E1101
     ('URS00004AFF8D_9544', [
-        'ENA',
         'RefSeq',
         'miRBase',
     ])
@@ -283,43 +282,51 @@ def test_assigns_authors_correctly(upi, ans):
 
 @pytest.mark.parametrize('upi,ans', [
     # Very slow on test, but ok on production
-    # ('URS000036D40A_9606', 'Mitochondrion'),
-    ('URS00001A9410_109965', 'Mitochondrion'),
-    ('URS0000257A1C_10090', 'Plastid'),
-    ('URS00002A6263_3702', 'Plastid:chloroplast'),
-    ('URS0000476A1C_3702', 'Plastid:chloroplast'),
+    # ('URS000036D40A_9606', 'mitochondrion'),
+    ('URS00001A9410_109965', 'mitochondrion'),
+    ('URS0000257A1C_10090', 'plastid'),
+    ('URS00002A6263_3702', 'plastid:chloroplast'),
+    ('URS0000476A1C_3702', 'plastid:chloroplast'),
 ])
 def test_assigns_organelle_correctly(upi, ans):
     assert load_and_get_additional(upi, "organelle") == [
         {'attrib': {'name': 'organelle'}, 'text': str(ans)}
     ]
 
-@pytest.mark.parametrize('upi,ans', [
-    ('URS000000079A_87230', [
-        {'attrib': {'dbname': "ENA", 'dbkey': "AM233399.1"}, 'text': None},
-        {'attrib': {'dbkey': "87230", 'dbname': "ncbi_taxonomy_id"}, 'text': None},
-    ])
-])
-def test_can_assign_correct_cross_references(upi, ans):
-    data = load_data(upi)
-    results = data.findall('./cross_references/ref')
-    assert [as_xml_dict(r) for r in results] == ans
+# @pytest.mark.parametrize('upi,ans', [
+#     ('URS000000079A_87230', [
+#         {'attrib': {'dbname': "ENA", 'dbkey': "AM233399.1"}, 'text': None},
+#         {'attrib': {'dbkey': "87230", 'dbname': "ncbi_taxonomy_id"}, 'text': None},
+#     ])
+# ])
+# def test_can_assign_correct_cross_references(upi, ans):
+#     data = load_data(upi)
+#     results = data.findall('./cross_references/ref')
+#     assert [as_xml_dict(r) for r in results] == ans
 
 
-def test_can_create_document_with_unicode():
-    data = load_and_get_additional('URS000009EE82_562', 'product')
-    assert data == [
-        {'attrib': {'name': 'product'}, 'text': 'tRNA-Asp(gtc)'},
-        {'attrib': {'name': 'product'}, 'text': 'P-site tRNA Aspartate'},
-        {'attrib': {'name': 'product'}, 'text': 'transfer RNA-Asp'},
-        {'attrib': {'name': 'product'}, 'text': 'tRNA_Asp_GTC'},
-        {'attrib': {'name': 'product'}, 'text': 'tRNA-asp'},
-        {'attrib': {'name': 'product'}, 'text': u'tRNA Asp ⊄UC'},
-        {'attrib': {'name': 'product'}, 'text': 'tRNA-Asp'},
-        {'attrib': {'name': 'product'}, 'text': 'tRNA-Asp-GTC'},
-        {'attrib': {'name': 'product'}, 'text': 'ASPARTYL TRNA'},
-        {'attrib': {'name': 'product'}, 'text': 'tRNA-Asp (GTC)'}
-    ]
+# def test_can_create_document_with_unicode():
+#     data = load_and_get_additional('URS000009EE82_562', 'product')
+#     assert data == [
+#         {'attrib': {'name': 'product'}, 'text': 'tRNA-Asp(gtc)'},
+#         {'attrib': {'name': 'product'}, 'text': 'P-site tRNA Aspartate'},
+#         {'attrib': {'name': 'product'}, 'text': 'transfer RNA-Asp'},
+#         {'attrib': {'name': 'product'}, 'text': 'tRNA_Asp_GTC'},
+#         {'attrib': {'name': 'product'}, 'text': 'tRNA-asp'},
+#         {'attrib': {'name': 'product'}, 'text': u'tRNA Asp ⊄UC'},
+#         {'attrib': {'name': 'product'}, 'text': 'tRNA-Asp'},
+#         {'attrib': {'name': 'product'}, 'text': 'tRNA-Asp-GTC'},
+#         {'attrib': {'name': 'product'}, 'text': 'ASPARTYL TRNA'},
+#         {'attrib': {'name': 'product'}, 'text': 'tRNA-Asp (GTC)'}
+#     ]
+
+
+
+# def test_it_can_handle_a_list_in_ontology():
+#     data = load_data('URS00003B5CA5_559292')
+#     results = data.findall('./cross_references/ref')
+#     xrefs = {as_xml_dict(r)['attrib']['dbkey'] for r in results}
+#     assert {'ECO:0000202', u'GO:0030533', 'SO:0000253'} & xrefs
 
 
 # def test_it_can_write_an_xml_document():
@@ -331,9 +338,9 @@ def test_can_create_document_with_unicode():
 #         assert document.count('<entry id=') == 8  # 2 are deleted
 
 
-def test_output_validates_according_to_schema():
-    entries = exporter.range(CONNECTION.cursor(), 1, 100)
-    with tempfile.NamedTemporaryFile() as out:
-        exporter.write(out, entries)
-        out.flush()
-        exporter.validate(out.name)
+# def test_output_validates_according_to_schema():
+#     entries = exporter.range(CONNECTION.cursor(), 1, 100)
+#     with tempfile.NamedTemporaryFile() as out:
+#         exporter.write(out, entries)
+#         out.flush()
+#         exporter.validate(out.name)
