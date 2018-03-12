@@ -16,7 +16,7 @@ limitations under the License.
 import shutil
 import luigi
 
-from rnacentral.xml.exporter import validate
+from rnacentral.search.exporter import validate
 from .chunk import SearchChunkTask
 
 
