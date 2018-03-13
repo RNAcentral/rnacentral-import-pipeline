@@ -48,4 +48,4 @@ class SingleEnaFile(luigi.Task):
         files = ena().all_tpa_files()
         with self.output().writer() as writer:
             with gzip.open(self.input_file, 'rb') as handle:
-                writer.write_all(parse_with_mapping_files(handle, files))
+                writer.write_valid(parse_with_mapping_files(handle, files))

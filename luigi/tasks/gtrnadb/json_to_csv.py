@@ -72,4 +72,4 @@ class GtRNAdbJsonToCsv(luigi.Task):  # pylint: disable=R0904
 
         with self.output().writer() as writer:
             for filename in self.expanded_files():
-                writer.write_all(parse(filename))
+                writer.write_valid(parse(filename))

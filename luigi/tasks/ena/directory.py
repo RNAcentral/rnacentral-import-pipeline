@@ -63,4 +63,4 @@ class EnaDirectory(luigi.Task):
         files = ena().all_tpa_files()
         with self.output().writer() as writer:
             for handle in self.handles():
-                writer.write_all(parse_with_mapping_files(handle, files))
+                writer.write_valid(parse_with_mapping_files(handle, files))
