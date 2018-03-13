@@ -62,3 +62,12 @@ class EnaTest(TestCase):
                 os.path.join(config.base, 'std', 'std_aa.ncr.gz'),
                 os.path.join(config.base, 'rel', 'rel_1.ncr.gz'),
             ])
+
+
+class RefSeqTest(TestCase):
+    def test_can_find_all_refseq_files(self):
+        config = conf.refseq()
+        config.base = 'data/refseq'
+        assert config.raw_files() == [
+            'data/refseq/biomol_ncRNA_RNase_MRP_RNA.dat'
+        ]
