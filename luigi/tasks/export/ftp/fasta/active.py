@@ -14,7 +14,7 @@ limitations under the License.
 """
 
 from tasks.config import db
-from internal.export.ftp import fasta
+from rnacentral.export.ftp import fasta
 
 from .utils import FastaExportBase
 

@@ -21,7 +21,7 @@ from tasks.release.utils.db import get_db_connection
 from tasks.config import db
 from tasks.config import export
 
-from internal.export.ftp import rfam_annotations as ann
+from rnacentral.export.ftp import rfam_annotations as ann
 
 
 class RfamAnnotations(luigi.Task):

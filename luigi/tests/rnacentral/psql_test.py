@@ -14,7 +14,7 @@ limitations under the License.
 """
 
 from tasks.config import db
-from internal.psql import PsqlWrapper
+from rnacentral.psql import PsqlWrapper
 
 
 def test_can_copy_statement_to_iterable():

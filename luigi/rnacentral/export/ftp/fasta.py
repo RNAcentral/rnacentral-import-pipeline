@@ -20,7 +20,7 @@ from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 
-from internal.psql import PsqlWrapper
+from rnacentral.psql import PsqlWrapper
 
 BASE_ACTIVE = """
 select

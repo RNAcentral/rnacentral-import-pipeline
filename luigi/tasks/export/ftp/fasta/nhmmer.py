@@ -19,7 +19,7 @@ import luigi
 
 from Bio import SeqIO
 
-from internal.export.ftp import fasta
+from rnacentral.export.ftp import fasta
 
 from tasks.config import export
 from tasks.utils.files import atomic_output
