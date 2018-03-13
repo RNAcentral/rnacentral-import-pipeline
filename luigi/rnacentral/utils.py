@@ -13,24 +13,20 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import luigi
-
-from tasks.config import db
-from rnacentral.db import cursor
-
-CREATE_INDEX = """
-create index if not exists load_rnacentral_all$database
-on rnacen.load_rnacentral_all(database)
-"""
+from .db import cursor
 
 
-class PrepareRelease(luigi.Task):  # pylint: disable=R0904
+def upi_ranges(dbconf, max_size):
     """
-    This will prepare a release in the database by calling the
-    prepare_releases('F') procedure.
+    This will create range of the ids for all UPI's in the database.
     """
 
-    def run(self):
-        with cursor(db()) as cur:
-            cur.execute(CREATE_INDEX)
-            cur.execute("select rnc_update.prepare_releases('F')")
+    with cursor(dbconf) as cur:
+        cur.execute('select max(id) from rna')
+        stop = cur.fetchone()[0]
+
+    for start in xrange(1, stop, max_size):
+        yield (start, start + max_size)
+
+    if start < stop:
+        yield (start, stop)

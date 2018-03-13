@@ -13,24 +13,19 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import luigi
-
+from rnacentral.utils import upi_ranges
 from tasks.config import db
-from rnacentral.db import cursor
-
-CREATE_INDEX = """
-create index if not exists load_rnacentral_all$database
-on rnacen.load_rnacentral_all(database)
-"""
 
 
-class PrepareRelease(luigi.Task):  # pylint: disable=R0904
-    """
-    This will prepare a release in the database by calling the
-    prepare_releases('F') procedure.
-    """
+def test_can_get_range_of_all_upis():
+    ranges = list(upi_ranges(db(), 100000))
+    assert len(ranges) == 133
 
-    def run(self):
-        with cursor(db()) as cur:
-            cur.execute(CREATE_INDEX)
-            cur.execute("select rnc_update.prepare_releases('F')")
+
+def test_can_get_correct_upi_ranges():
+    ranges = list(upi_ranges(db(), 100000))
+    assert ranges[0:2] == [
+        (1, 100001),
+        (100001, 200001),
+    ]
+    assert ranges[-1] == (13100001, 13167087L)
