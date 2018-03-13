@@ -268,3 +268,13 @@ class export(luigi.Config):  # pylint: disable=C0103,R0904
 
     def rfam(self, *args):
         return self.ftp('rfam', *args)
+
+
+class refseq(luigi.Config):  # pylint: disable=C0103,R0904
+    base = luigi.Parameter(default='/tmp')
+
+    def raw_files(self):
+        return list(iglob(os.path.join(self.base, '*.dat')))
+
+    def input_file(self, *args):
+        return os.path.join(output().base, 'refseq', *args)
