@@ -27,6 +27,7 @@ def as_entry(entry):
     return attr.evolve(
         entry,
         database='REFSEQ',
+        exons=[],
     )
 
 
