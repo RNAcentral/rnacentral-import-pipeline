@@ -18,8 +18,8 @@ import pytest
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 
-from internal.export.ftp import fasta
-from internal.psql import PsqlWrapper
+from rnacentral.export.ftp import fasta
+from rnacentral.psql import PsqlWrapper
 
 from tasks.config import db
 
@@ -48,21 +48,21 @@ def test_can_classify_sequences_for_nhmmer(sequence, accepted):
 
 
 def test_can_produce_records_from_a_query():
-    sql = "select upi as id, md5 as description, 'AAAA' as sequence from rna order by id desc limit 3"
+    sql = "select upi as id, md5 as description, 'AAAA' as sequence from rna order by id asc limit 3"
     psql = PsqlWrapper(db())
     lines = [fasta.as_record(l) for l in psql.copy_to_iterable(sql)]
     # Biopython doesn't implement SeqRecord.__eq__, ugh
     assert len(lines) == 3
-    assert lines[0].id == 'URS0000C8E9EF'
-    assert lines[0].description == 'fc30780b063695720cc37a9ce1968b7a'
+    assert lines[0].id == 'URS0000000001'
+    assert lines[0].description == '6bba097c8c39ed9a0fdf02273ee1c79a'
     assert lines[0].seq == Seq('AAAA')
 
-    assert lines[1].id == 'URS0000C8E9EE'
-    assert lines[1].description == 'f98993c13f10b65603df026553964f5e'
+    assert lines[1].id == 'URS0000000002'
+    assert lines[1].description == '1fe2f0e3c3a2d6d708ac98e9bfb1d7a8'
     assert lines[1].seq == Seq('AAAA')
 
-    assert lines[2].id == 'URS0000C8E9ED'
-    assert lines[2].description == 'ebad5a2c948b840158b6684319a826e3'
+    assert lines[2].id == 'URS0000000003'
+    assert lines[2].description == '7bb11d0572ff6bb42427ce74450ba564'
     assert lines[2].seq == Seq('AAAA')
 
 

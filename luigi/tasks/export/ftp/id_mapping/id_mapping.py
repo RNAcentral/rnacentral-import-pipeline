@@ -21,7 +21,7 @@ from tasks.config import db
 from tasks.config import export
 from tasks.utils.files import atomic_output
 
-from internal.export.ftp import id_mapping
+from rnacentral.export.ftp import id_mapping
 
 
 class IdMapping(luigi.Task):

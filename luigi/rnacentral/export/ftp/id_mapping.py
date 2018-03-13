@@ -15,7 +15,7 @@ limitations under the License.
 
 import itertools as it
 
-from internal.psql import PsqlWrapper
+from rnacentral.psql import PsqlWrapper
 
 COMPLETE_SQL = """
 SELECT

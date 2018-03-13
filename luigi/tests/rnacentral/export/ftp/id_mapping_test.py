@@ -15,10 +15,10 @@ limitations under the License.
 
 import pytest
 
-from internal.export.ftp import id_mapping as ids
+from rnacentral.export.ftp import id_mapping as ids
 
 from tasks.config import db
-from tests.tasks.export.ftp.fasta.active_test import count
+from tests.tasks.helpers import count
 
 
 def test_can_create_accession_for_pdb():

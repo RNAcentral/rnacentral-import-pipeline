@@ -16,8 +16,8 @@ limitations under the License.
 import tempfile
 import itertools as it
 
-from internal.export.ftp import fasta
-from internal.psql import PsqlWrapper
+from rnacentral.export.ftp import fasta
+from rnacentral.psql import PsqlWrapper
 
 from tasks.config import db
 from tasks.export.ftp.fasta import utils
