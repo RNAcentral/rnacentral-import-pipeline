@@ -58,4 +58,4 @@ class RgdOrganism(luigi.Task):
             with helpers.indexed(seqs_file) as indexed, \
                     open(genes_file, 'r') as handle:
 
-                writer.write_all(parsers.parse(handle, indexed))
+                writer.write_valid(parsers.parse(handle, indexed))
