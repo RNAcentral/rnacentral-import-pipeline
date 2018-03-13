@@ -21,7 +21,7 @@ from tasks.config import db, output
 from .utils.db import get_db_connection
 
 
-class DatabaseUpdater(luigi.Task):
+class DatabaseUpdater(luigi.Task):  # pylint: disable=R0904
     """
     Base class for running pgsql procedures.
     """
@@ -42,7 +42,7 @@ class DatabaseUpdater(luigi.Task):
             sentinel_file.write('Done')
 
 
-class UpdateAccessions(DatabaseUpdater):
+class UpdateAccessions(DatabaseUpdater):  # pylint: disable=R0904
     """
     Merge accessions data from loading table into main table.
     """
@@ -61,7 +61,7 @@ class UpdateAccessions(DatabaseUpdater):
         self.conn.close()
 
 
-class UpdateReferences(DatabaseUpdater):
+class UpdateReferences(DatabaseUpdater):  # pylint: disable=R0904
     """
     Merge literature references from loading table into main table.
     """
@@ -80,7 +80,7 @@ class UpdateReferences(DatabaseUpdater):
         self.conn.close()
 
 
-class UpdateCoordinates(DatabaseUpdater):
+class UpdateCoordinates(DatabaseUpdater):  # pylint: disable=R0904
     """
     Merge coordinates from loading table into main table.
     """

@@ -13,24 +13,28 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import shutil
 import luigi
 
-from tasks.config import db
-from rnacentral.db import cursor
-
-CREATE_INDEX = """
-create index if not exists load_rnacentral_all$database
-on rnacen.load_rnacentral_all(database)
-"""
+from rnacentral.search.exporter import validate
+from .chunk import SearchChunkTask
 
 
-class PrepareRelease(luigi.Task):  # pylint: disable=R0904
-    """
-    This will prepare a release in the database by calling the
-    prepare_releases('F') procedure.
-    """
+class ValidateAndCompressSearchChunk(luigi.Task):
+
+    min = luigi.IntParameter()
+    max = luigi.IntParameter()
+
+    def requires(self):
+        return SearchChunkTask(min=min, max=max)
+
+    def output(self):
+        filename = self.requires().output().fn + '.gz'
+        return luigi.LocalTarget(filename, format=luigi.format.Gzip)
 
     def run(self):
-        with cursor(db()) as cur:
-            cur.execute(CREATE_INDEX)
-            cur.execute("select rnc_update.prepare_releases('F')")
+        name = self.requires().output().fn
+        with self.requires.output().open('r') as raw, \
+                self.output().open('w') as out:
+            validate(name)
+            shutil.copyfileobj(raw, out)

@@ -16,21 +16,20 @@ limitations under the License.
 import luigi
 
 from tasks.config import db
-from rnacentral.db import cursor
+from tasks.config import rnacentral as rnac
 
-CREATE_INDEX = """
-create index if not exists load_rnacentral_all$database
-on rnacen.load_rnacentral_all(database)
-"""
+from rnacentral.utils import upi_ranges
+
+from .validate import ValidateAndCompressSearchChunk
 
 
-class PrepareRelease(luigi.Task):  # pylint: disable=R0904
+class Search(luigi.WrapperTask):  # pylint: disable=R0904
     """
-    This will prepare a release in the database by calling the
-    prepare_releases('F') procedure.
+    This is a wrapper task for all search related tasks (that is it will do an
+    xml export for all entries.
     """
 
-    def run(self):
-        with cursor(db()) as cur:
-            cur.execute(CREATE_INDEX)
-            cur.execute("select rnc_update.prepare_releases('F')")
+    def requires(self):
+        config = rnac()
+        for start, stop in upi_ranges(config.xml_export_size, db()):
+            yield ValidateAndCompressSearchChunk(min=start, max=stop)
