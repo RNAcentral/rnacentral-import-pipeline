@@ -62,7 +62,12 @@ def source_qualifier_value(record, qualifier, pattern=r'^(.+)$', **kwargs):
 
 
 def chromosome(record):
-    return source_qualifier_value(record, 'chromosome')
+    try:
+        return source_qualifier_value(record, 'chromosome')
+    except ValueError:
+        source = embl.source_feature(record)
+        chromosomes = source.qualifiers['chromosome']
+        return chromosomes[0]
 
 
 def primary_id(_):
