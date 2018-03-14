@@ -224,7 +224,7 @@ def test_can_transform_correct_lncrnadb_entry():
     del result['sequence']
 
     # References are too long to compare either so I check the count
-    assert len(transformed['references']) == 23
+    assert len(transformed['references']) == 24
     del transformed['references']
     del result['references']
     assert transformed == result
