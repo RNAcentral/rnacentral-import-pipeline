@@ -191,7 +191,7 @@ class rnacentral(luigi.Config):  # pylint: disable=C0103, R0904
     This contains configuration for RNAcentral related tasks, like search
     export
     """
-    xml_export_size = luigi.IntParameter(default=10000)
+    xml_export_size = luigi.IntParameter(default=100000)
 
 
 class mgi(luigi.Config):  # pylint: disable=C0103, R0904
