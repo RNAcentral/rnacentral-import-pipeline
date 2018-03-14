@@ -4,4 +4,4 @@ set -euo pipefail
 IFS=$'\n\t'
 
 python -m luigi --module tasks TruncateLoadTables --local-scheduler
-ython -m luigi --module tasks Update
+python -m luigi --module tasks Update --local-scheduler
