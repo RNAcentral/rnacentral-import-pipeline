@@ -26,7 +26,7 @@ class ValidateAndCompressSearchChunk(luigi.Task):
     max = luigi.IntParameter()
 
     def requires(self):
-        return SearchChunkTask(min=min, max=max)
+        return SearchChunkTask(min=self.min, max=self.max)
 
     def output(self):
         filename = self.requires().output().fn + '.gz'
@@ -34,7 +34,7 @@ class ValidateAndCompressSearchChunk(luigi.Task):
 
     def run(self):
         name = self.requires().output().fn
-        with self.requires.output().open('r') as raw, \
+        with self.requires().output().open('r') as raw, \
                 self.output().open('w') as out:
             validate(name)
             shutil.copyfileobj(raw, out)
