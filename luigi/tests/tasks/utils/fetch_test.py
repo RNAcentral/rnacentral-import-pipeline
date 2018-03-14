@@ -14,12 +14,15 @@ limitations under the License.
 """
 
 
+import os
 import tempfile
 
 import pytest
 
+from tasks.utils.fetch import fetch
 
-@pytest.mark.parameterize('filename', [
+
+@pytest.mark.parametrize('filename', [
     'ftp://ftp.sanger.ac.uk/pub/gencode/Gencode_human/_README.TXT',
     'http://www.google.com',
     'readme.md',
@@ -27,8 +30,9 @@ import pytest
 def test_can_copy_a_over(filename):
     with tempfile.NamedTemporaryFile() as tmp:
         fetch(filename, tmp.name)
-        tmp.seek(0)
-        assert tmp.read()
+        tmp.flush()
+        with open(tmp.name, 'r') as t2:
+            assert t2.read()
 
 
 @pytest.mark.skip
@@ -47,7 +51,7 @@ def test_copies_a_directory_into_another_directory():
 
 
 @pytest.mark.skip
-@pytest.mark.parameterize('filename', [
+@pytest.mark.parametrize('location', [
     'ftp://ftp.sanger.ac.uk/pub/gencode/Gencode_human/not-here.TXT'
     'a-path-that-does-not-exist/yup',
 ])
