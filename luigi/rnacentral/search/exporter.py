@@ -140,9 +140,6 @@ def write(handle, results):
     string representation of that document which can be saved.
     """
 
-    if not results:
-        raise ValueError("No entries found")
-
     root = ET.Element('database')
     tree = ET.ElementTree(root)
     name = ET.SubElement(root, 'name')
@@ -157,6 +154,9 @@ def write(handle, results):
 
     count_element = ET.SubElement(root, 'entry_count')
     results = list(results)
+    if not results:
+        raise ValueError("No entries found")
+
     count_element.text = str(len(results))
     entries = ET.SubElement(root, 'entries')
     entries.extend(results)
