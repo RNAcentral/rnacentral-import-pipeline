@@ -31,5 +31,5 @@ class Search(luigi.WrapperTask):  # pylint: disable=R0904
 
     def requires(self):
         config = rnac()
-        for start, stop in upi_ranges(config.xml_export_size, db()):
+        for start, stop in upi_ranges(db(), config.xml_export_size):
             yield ValidateAndCompressSearchChunk(min=start, max=stop)
