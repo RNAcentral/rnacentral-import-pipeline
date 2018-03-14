@@ -98,4 +98,7 @@ def as_entry(row, reference_mapping):
 def as_entries(pdb_ids):
     reference_mapping = helpers.reference_mapping(pdb_ids)
     for result in chain_descriptions(pdb_ids):
-        yield as_entry(result, reference_mapping)
+        try:
+            yield as_entry(result, reference_mapping)
+        except helpers.InvalidSequence as err:
+            LOGGER.info(str(err))

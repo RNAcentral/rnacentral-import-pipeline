@@ -13,6 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import re
 import csv
 import logging
 import itertools as it
@@ -39,6 +40,12 @@ RIBOSOMES = set([
 URL = 'https://www.ebi.ac.uk/pdbe/entry/pdb/{pdb_id}'
 
 LOGGER = logging.getLogger(__name__)
+
+ALLOWED = re.compile('^[ABCDGHKMNRSTVWXYU]+$', re.IGNORECASE)
+
+
+class InvalidSequence(Exception):
+    pass
 
 
 def grouper(iterable, n, fillvalue=None):
@@ -115,7 +122,10 @@ def sequence(row):
     """
     Fetches the sequence of the row as DNA.
     """
-    return row['sequence'].replace('U', 'T')
+    sequence = row['sequence'].replace('U', 'T')
+    if not re.match(ALLOWED, sequence):
+        raise InvalidSequence("%s appears to be mislabelled protein" % row)
+    return sequence
 
 
 def taxid(row):
