@@ -149,11 +149,10 @@ class Reference(object):
         """
         Computes the MD5 hash of the reference.
         """
-
         return md5(''.join([
-            self.authors or '',
-            self.location or '',
-            self.title or ''
+            self.authors.encode('utf-8') or '',
+            self.location.encode('utf-8') or '',
+            self.title.encode('utf-8') or ''
         ]))
 
 
@@ -295,14 +294,12 @@ class Entry(object):
         """
         Compute a CRC64 check sum for the sequence.
         """
-
         return crc64(self.sequence)
 
     def md5(self):
         """
         Compute an MD5 hash of the sequence.
         """
-
         return md5(self.sequence)
 
     def is_valid(self):
