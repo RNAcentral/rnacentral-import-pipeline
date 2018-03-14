@@ -131,3 +131,12 @@ def test_does_not_get_chain_infor_for_a_protein_chain(pdb, chains):
 def test_can_get_given_taxid(pdb, expected):
     taxids = [helpers.taxid(c) for c in parsers.chain_descriptions([pdb])]
     assert taxids == expected
+
+
+@pytest.mark.parametrize('pdbid,missing', [
+    ('5WNT', '5WNT_U_21'),
+    ('5WNP', '5WNP_U_21'),
+])
+def test_will_not_fetch_mislabeled_chains(pdbid, missing):
+    entries = {e.primary_id for e in parsers.as_entries([pdbid])}
+    assert missing not in entries
