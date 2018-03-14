@@ -70,5 +70,5 @@ def test_can_build_reference():
 
 def test_can_deal_with_unicode():
     reference = pub.reference('a', 27334534)
-    assert '\xa0' not in reference.title
+    assert u'\xa0' not in reference.title
     assert reference.md5() == 'a84bed065b6f62d0c096d8bd7547b578'
