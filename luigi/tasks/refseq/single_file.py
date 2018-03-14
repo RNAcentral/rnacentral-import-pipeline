@@ -36,8 +36,8 @@ class RefSeqFile(luigi.Task):
     def requires(self):
         basename = os.path.basename(self.input_file)
         return FetchTask(
-            remote_file=self.input_file,
-            local_file=refseq.input_file(basename),
+            remote_path=self.input_file,
+            local_path=refseq().input_file(basename),
         )
 
     def output(self):
