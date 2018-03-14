@@ -41,4 +41,4 @@ def test_active_sql_produces_correct_counts():
 @pytest.mark.slowtest
 def test_species_sql_produces_correct_counts():
     sql = SpeciesSpecificFastaExport().fetch
-    assert count(sql) == 13729588
+    assert count(sql) == 13831954
