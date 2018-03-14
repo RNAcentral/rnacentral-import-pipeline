@@ -18,7 +18,7 @@ import os
 import luigi
 
 from tasks.config import db, output
-from .utils.db import get_db_connection
+from rnacentral.db import get_db_connection
 
 
 class DatabaseUpdater(luigi.Task):  # pylint: disable=R0904

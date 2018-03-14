@@ -18,7 +18,7 @@ import os
 import luigi
 from luigi.local_target import atomic_file
 
-from tasks.release.utils.db import get_db_connection
+from rnacentral.db import get_db_connection
 from tasks.config import db
 from tasks.config import export
 
