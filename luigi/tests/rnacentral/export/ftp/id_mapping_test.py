@@ -98,25 +98,22 @@ def test_as_entry_works_correctly():
     ]
 
 
-@pytest.mark.slowtest
-def test_complete_sql_produces_correct_numbers():
-    assert count(ids.COMPLETE_SQL) == 28306193
+# @pytest.mark.slowtest
+# def test_complete_sql_produces_correct_numbers():
+#     assert count(ids.COMPLETE_SQL) == 28306193
 
 
-@pytest.mark.slowtest
-def test_complete_produces_correct_count():
-    assert len(list(ids.complete(db()))) == 28306193
+# @pytest.mark.slowtest
+# def test_complete_produces_correct_count():
+#     assert len(list(ids.complete(db()))) == 28306193
 
 
 @pytest.mark.slowtest
 def test_example_produces_correct_data():
-    from pprint import pprint
-    example = list(ids.example(db()))
-    pprint(example)
-    assert example == [
+    assert list(ids.example(db())) == [
         ['URS0000000001', 'ENA', 'GU786683.1:1..200:rRNA', '77133', 'rRNA', ''],
         ['URS0000000001', 'ENA', 'GU786868.1:1..200:rRNA', '77133', 'rRNA', ''],
         ['URS0000000001', 'ENA', 'GU786889.1:1..200:rRNA', '77133', 'rRNA', ''],
         ['URS0000000001', 'ENA', 'GU790934.1:1..200:rRNA', '77133', 'rRNA', ''],
-        ['URS0000000001', 'ENA', 'GU792481.1:1..200:rRNA', '77133', 'rRNA', '']
+        ['URS0000000001', 'ENA', 'GU792481.1:1..200:rRNA', '77133', 'rRNA', ''],
     ]

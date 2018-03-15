@@ -30,20 +30,17 @@ select
         then rna.seq_long
         else rna.seq_short
     end as sequence
-from rna_active active
-join rna on rna.upi = active.upi
-join rnc_rna_precomputed pre
-on pre.upi = rna.upi and pre.upi = active.upi
+from rnc_rna_precomputed pre
+join rna on rna.upi = pre.upi
+where
+    xref.deleted = 'N'
+    and {terms}
+order by rna.id
 """
 
-ACTIVE_SQL = BASE_ACTIVE + " where pre.taxid is null"
+ACTIVE_SQL = BASE_ACTIVE.format(terms="pre.taxid is null")
 
-
-EXAMPLE_SQL = BASE_ACTIVE + " order by pre.upi limit 10"
-
-
-ACITVE_SPECIES_SQL = BASE_ACTIVE + " where pre.taxid is not null"
-
+ACITVE_SPECIES_SQL = BASE_ACTIVE.format("pre.taxid is not null")
 
 INACTIVE_SQL = """
 select
@@ -52,7 +49,6 @@ select
     case when rna.seq_short is null
         then rna.seq_long
         else rna.seq_short end as sequence
-from rna_inactive inactive
 join rna on rna.upi = inactive.upi
 join rnc_rna_precomputed pre
 on pre.upi = rna.upi and pre.upi = inactive.upi
@@ -65,41 +61,61 @@ NHMMER_PATTERN = re.compile('^[ABCDGHKMNRSTVWXYU]+$', re.IGNORECASE)
 
 
 def as_record(entry):
+    """
+    Turns the entry into a SeqRecord for output.
+    """
     return SeqRecord(
-        Seq(entry['sequence']),
+        Seq(entry['sequence']).transcribe(),
         id=entry['id'],
         description=entry['description'],
     )
 
 
 def is_valid_nhmmer_record(record):
+    """
+    Checks if a sequence is valid for nhmmer usage.
+    """
     return bool(NHMMER_PATTERN.match(str(record.seq)))
 
 
 def active(config):
+    """
+    Extracts all active sequences and produces an iterable of SeqRecords.
+    """
+
     psql = PsqlWrapper(config)
     sql = ACTIVE_SQL + " order by pre.upi"
     return it.imap(as_record, psql.copy_to_iterable(sql))
 
 
 def species(config):
+    """
+    Extracts all active sequences and produces an iterable of SeqRecords with a
+    species specific id.
+    """
+
     psql = PsqlWrapper(config)
     sql = ACITVE_SPECIES_SQL + " order by pre.upi"
     return it.imap(as_record, psql.copy_to_iterable(sql))
 
 
-def example(config):
-    psql = PsqlWrapper(config)
-    return it.imap(as_record, psql.copy_to_iterable(EXAMPLE_SQL))
-
-
 def inactive(config):
+    """
+    Extract all inactive sequences and produce an iterable of SeqRecords.
+    """
+
     psql = PsqlWrapper(config)
     sql = INACTIVE_SQL + " order by pre.upi"
     return it.imap(as_record, psql.copy_to_iterable(sql))
 
 
-def nhmmer_records(filename, select_valid=True):
+def nhmmer(filename, select_valid=True):
+    """
+    Extract all sequences which may be written to nhmmer from the given file.
+    If select_valid is True then only valid sequences are written. If it is
+    False then only invalid sequences are written.
+    """
+
     for record in SeqIO.parse(filename, 'fasta'):
         if select_valid == is_valid_nhmmer_record(record):
             yield record
