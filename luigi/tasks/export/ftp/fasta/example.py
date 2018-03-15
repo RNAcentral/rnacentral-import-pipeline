@@ -13,6 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import itertools as it
+
 import luigi
 
 from Bio import SeqIO
@@ -33,10 +35,12 @@ class ExampleFasta(luigi.Task):
         yield ActiveFastaExport()
 
     def sequences(self):
-        with SeqIO.parse(ActiveFastaExport().output().fn, 'fasta') as records:
-            for index, record in enumerate(records):
-                if index < self.max:
-                    yield record
+        """
+        Create an iterable of all sequences to export.
+        """
+
+        with SeqIO.parse(self.requires().output().fn, 'fasta') as records:
+            return list(it.islice(records, self.max))
 
     def run(self):
         with atomic_output(self.output()) as out:
