@@ -13,8 +13,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import os
-
 import requests
 
 from .files import atomic_output
@@ -27,12 +25,6 @@ def download(url, filename):
     condition in the directory creation, so if that is a problem create it
     ahead of time.
     """
-
-    dirname = os.path.dirname(filename)
-    try:
-        os.makedirs(dirname)
-    except:
-        pass
 
     response = requests.get(url)
     response.raise_for_status()
