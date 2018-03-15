@@ -14,28 +14,23 @@ limitations under the License.
 """
 
 import os
+from contextlib import contextmanager
 
-import requests
-
-from .files import atomic_output
+from luigi.local_target import atomic_file
 
 
-def download(url, filename):
-    """
-    This will fetch some file over HTTP using requests. It will create the
-    required directory to save in if requried as well. Note there is a race
-    condition in the directory creation, so if that is a problem create it
-    ahead of time.
-    """
+@contextmanager
+def atomic_output(output):
+    filename = output
+    if hasattr(output, 'fn'):
+        filename = output.fn
 
     dirname = os.path.dirname(filename)
     try:
         os.makedirs(dirname)
-    except:
-        pass
+    except Exception as err:
+        if not os.path.exists(dirname):
+            raise err
 
-    response = requests.get(url)
-    response.raise_for_status()
-    with atomic_output(filename) as out:
-        for chunk in response.iter_content(chunk_size=128):
-            out.write(chunk)
+    with atomic_file(filename) as out:
+        yield out

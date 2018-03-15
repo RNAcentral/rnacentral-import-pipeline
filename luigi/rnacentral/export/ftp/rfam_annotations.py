@@ -13,24 +13,28 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import luigi
-from luigi.contrib.external_program import ExternalProgramTask
 
-from .rfam_annotations import RfamAnnotations
-from .examples import RfamAnnotationsExample
+QUERY = """
+select
+    hits.upi,
+    hits.rfam_model_id,
+    score,
+    e_value,
+    sequence_start,
+    sequence_stop,
+    model_start,
+    model_stop,
+    models.long_name
+from rfam_model_hits hits
+join rna_active active on active.upi = hits.upi
+join rfam_models models on models.rfam_model_id = hits.rfam_model_id
+order by hits.upi, hits.sequence_start, hits.rfam_model_id
+"""
 
 
-class CompressedRfamAnnotations(ExternalProgramTask):
-    def requires(self):
-        yield RfamAnnotations()
-        yield RfamAnnotationsExample()
-
-    def input_filename(self):
-        return next(self.requires()).output().fn
-
-    def output(self):
-        filename = self.input_filename() + '.gz'
-        return luigi.LocalTarget(filename)
-
-    def program_args(self):
-        return ['gzip', self.input_filename()]
+def write(connection, out):
+    command = "COPY ({query}) to STDOUT".format(
+        query=QUERY.replace('\n', ' '),
+    )
+    cursor = connection.cursor()
+    cursor.copy_expert(command, out)

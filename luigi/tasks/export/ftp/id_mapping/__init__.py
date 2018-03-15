@@ -15,21 +15,25 @@ limitations under the License.
 
 import luigi
 
-from tasks.utils.files import atomic_output
+from tasks.utils.compress import GenericCompressTask
 
-from rnacentral.db import get_db_connection
-from tasks.config import db
-from tasks.config import export
-
-from rnacentral.export.ftp import rfam_annotations as ann
+from .readme import Readme
+from .id_mapping import IdMapping
+from .database_mappings import DatabaseSpecificMappings
 
 
-class RfamAnnotations(luigi.Task):
-    def output(self):
-        return luigi.LocalTarget(export().rfam('rfam_annotations.tsv'))
+class Compress(GenericCompressTask):
+    def inputs(self):
+        yield IdMapping()
 
-    def run(self):
-        connection = get_db_connection(db(), connect_timeout=10 * 60)
-        with atomic_output(self.output()) as out:
-            ann.write(connection, out)
-        connection.close()
+    def requires(self):
+        for requirement in super(Compress, self).requires():
+            yield requirement
+        yield DatabaseSpecificMappings()
+
+
+class IdExport(luigi.WrapperTask):
+    def requires(self):
+        yield Readme()
+        yield DatabaseSpecificMappings()
+        yield Compress()

@@ -15,21 +15,29 @@ limitations under the License.
 
 import luigi
 
+from Bio import SeqIO
+
+from tasks.config import export
 from tasks.utils.files import atomic_output
 
-from rnacentral.db import get_db_connection
-from tasks.config import db
-from tasks.config import export
-
-from rnacentral.export.ftp import rfam_annotations as ann
+from .active import ActiveFastaExport
 
 
-class RfamAnnotations(luigi.Task):
+class ExampleFasta(luigi.Task):
+    max = 10
+
     def output(self):
-        return luigi.LocalTarget(export().rfam('rfam_annotations.tsv'))
+        return luigi.LocalTarget(export().sequences('example.txt'))
+
+    def requires(self):
+        yield ActiveFastaExport()
+
+    def sequences(self):
+        with SeqIO.parse(ActiveFastaExport().output().fn, 'fasta') as records:
+            for index, record in enumerate(records):
+                if index < self.max:
+                    yield record
 
     def run(self):
-        connection = get_db_connection(db(), connect_timeout=10 * 60)
         with atomic_output(self.output()) as out:
-            ann.write(connection, out)
-        connection.close()
+            SeqIO.write(self.sequences(), out, 'fasta')

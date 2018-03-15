@@ -13,12 +13,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import os
-
 import luigi
-from luigi.local_target import atomic_file
 
 from tasks.config import export
+from tasks.utils.files import atomic_output
 
 
 class FastaReadme(luigi.Task):
@@ -26,12 +24,7 @@ class FastaReadme(luigi.Task):
         return luigi.LocalTarget(export().sequences('readme.txt'))
 
     def run(self):
-        try:
-            os.makedirs(os.path.dirname(self.output().fn))
-        except:
-            pass
-
-        with atomic_file(self.output().fn) as out:
+        with atomic_output(self.output()) as out:
             out.write("""
 ===================================================================
 RNAcentral Sequence Data
