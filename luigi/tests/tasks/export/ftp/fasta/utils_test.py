@@ -16,49 +16,14 @@ limitations under the License.
 import tempfile
 import itertools as it
 
+import pytest
+from Bio.Seq import Seq
+
 from rnacentral.export.ftp import fasta
 from rnacentral.psql import PsqlWrapper
 
 from tasks.config import db
 from tasks.export.ftp.fasta import utils
-
-
-def test_can_produce_iterable_from_psql_copy():
-    sql = 'select upi, md5 from rna order by id asc limit 5'
-    with utils.psql_copy(db(), sql) as raw:
-        assert raw.readlines() == [
-            'URS0000000001\t6bba097c8c39ed9a0fdf02273ee1c79a\n',
-            'URS0000000002\t1fe2f0e3c3a2d6d708ac98e9bfb1d7a8\n',
-            'URS0000000003\t7bb11d0572ff6bb42427ce74450ba564\n',
-            'URS0000000004\t030c78be0f492872b95219d172e0c658\n',
-            'URS0000000005\t030c795b3b5bb84256b0fea3c10ee3aa\n',
-        ]
-
-
-def test_can_turn_tsv_lines_to_seq_records():
-    sql = "select upi, md5, 'AAAA' from rna order by id asc limit 3"
-    with utils.psql_copy(db(), sql) as tsv_file:
-        lines = list(utils.tsv_to_records(tsv_file))
-        # Biopython doesn't implement SeqRecord.__eq__, ugh
-        assert len(lines) == 3
-        assert lines[0].id == 'URS0000000001'
-        assert lines[0].description == '6bba097c8c39ed9a0fdf02273ee1c79a'
-        assert lines[0].seq == Seq('AAAA')
-
-        assert lines[1].id == 'URS0000000002'
-        assert lines[1].description == '1fe2f0e3c3a2d6d708ac98e9bfb1d7a8'
-        assert lines[1].seq == Seq('AAAA')
-
-        assert lines[2].id == 'URS0000000003'
-        assert lines[2].description == '7bb11d0572ff6bb42427ce74450ba564'
-        assert lines[2].seq == Seq('AAAA')
-
-
-def test_complains_if_no_tsv_lines():
-    sql = 'select upi, id, seq_short from rna where id < -1'
-    with pytest.raises(ValueError):
-        with utils.psql_copy(db(), sql) as out:
-            lines = list(utils.tsv_to_records(out))
 
 
 class SimpleFastaExportBase(utils.FastaExportBase):
@@ -77,7 +42,7 @@ class SimpleFastaExportBase(utils.FastaExportBase):
               md5 as description,
               'AAA' as sequence
             from rna
-            order by id desc
+            order by id asc
             limit 5
         """
         return it.imap(fasta.as_record, psql.copy_to_iterable(fetch))
