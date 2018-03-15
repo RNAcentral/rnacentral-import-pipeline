@@ -13,14 +13,22 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import pytest
+import csv
 
-from .active_test import count
+import luigi
 
-from tasks.export.ftp.fasta.inactive import InactiveFastaExport
+from tasks.config import db
+from tasks.config import export
+from tasks.utils.files import atomic_output
+
+from rnacentral.export.ftp import id_mapping
 
 
-@pytest.mark.slowtest
-def test_inactive_sql_produces_correct_counts():
-    sql = InactiveFastaExport().fetch
-    assert count(sql) == 2079637
+class ExampleIdMapping(luigi.Task):
+    def output(self):
+        return luigi.LocalTarget(export().id_mapping('id_mapping.tsv'))
+
+    def run(self):
+        with atomic_output(self.output()) as out:
+            writer = csv.writer(out, delimiter='\t')
+            writer.writerows(id_mapping.example(db()))

@@ -14,10 +14,10 @@ limitations under the License.
 """
 
 import tempfile
+import itertools as it
 
-import pytest
-
-from Bio.Seq import Seq
+from rnacentral.export.ftp import fasta
+from rnacentral.psql import PsqlWrapper
 
 from tasks.config import db
 from tasks.export.ftp.fasta import utils
@@ -62,13 +62,25 @@ def test_complains_if_no_tsv_lines():
 
 
 class SimpleFastaExportBase(utils.FastaExportBase):
-    fetch = "select upi, md5, 'AAA' from rna order by id asc limit 5"
 
     @property
     def filename(self):
         if not hasattr(self, '_handle'):
             self._handle = tempfile.NamedTemporaryFile()
         return self._handle.name
+
+    def records(self):
+        psql = PsqlWrapper(db())
+        fetch = """
+            select
+              upi as id,
+              md5 as description,
+              'AAA' as sequence
+            from rna
+            order by id desc
+            limit 5
+        """
+        return it.imap(fasta.as_record, psql.copy_to_iterable(fetch))
 
 
 def test_can_produce_correct_file():

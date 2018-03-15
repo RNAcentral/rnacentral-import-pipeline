@@ -13,12 +13,31 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import abc
+import os
+
 import luigi
 
 
-class CompressTask(luigi.Task):
-    input_filename = luigi.Parameter()
-    final_directory = luigi.Parameter()
+class GenericCompressTask(luigi.Task):
+    """
+    This will compress the files the generic FASTA export files.
+    """
+
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractmethod
+    def inputs(self):
+        return []
+
+    def requires(self):
+        for requirement in self.inputs():
+            yield requirement
 
     def output(self):
-        pass
+        for requirement in self.inputs():
+            yield luigi.LocalTarget(requirement.output().fn + '.gz')
+
+    def run(self):
+        for requirement in self.inputs():
+            os.system('gzip %s' % requirement.output().fn)

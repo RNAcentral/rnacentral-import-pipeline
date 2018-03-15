@@ -13,23 +13,22 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import csv
+
 import luigi
 
-from tasks.utils.files import atomic_output
-
-from rnacentral.db import get_db_connection
 from tasks.config import db
 from tasks.config import export
+from tasks.utils.files import atomic_output
 
-from rnacentral.export.ftp import rfam_annotations as ann
+from rnacentral.export.ftp import id_mapping
 
 
-class RfamAnnotations(luigi.Task):
+class IdMapping(luigi.Task):
     def output(self):
-        return luigi.LocalTarget(export().rfam('rfam_annotations.tsv'))
+        return luigi.LocalTarget(export().id_mapping('id_mapping.tsv'))
 
     def run(self):
-        connection = get_db_connection(db(), connect_timeout=10 * 60)
         with atomic_output(self.output()) as out:
-            ann.write(connection, out)
-        connection.close()
+            writer = csv.writer(out, delimiter='\t')
+            writer.writerows(id_mapping.complete(db()))

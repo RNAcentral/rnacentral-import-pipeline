@@ -14,22 +14,36 @@ limitations under the License.
 """
 
 import luigi
+from luigi.local_target import atomic_file
 
-from tasks.utils.files import atomic_output
-
-from rnacentral.db import get_db_connection
-from tasks.config import db
 from tasks.config import export
 
-from rnacentral.export.ftp import rfam_annotations as ann
+
+README = """
+===================================================================
+RNAcentral Id Mappings
+===================================================================
 
 
-class RfamAnnotations(luigi.Task):
+* id_mapping.tsv.gz
+Tab-separated file with RNAcentral ids, corresponding external ids,
+NCBI taxon ids, RNA types (according to INSDC classification),
+and gene names.
+
+* example.txt
+A small file showing the first few entries.
+
+CHANGELOG:
+
+* December 11, 2015
+Added two new fields: RNA type and gene name.
+"""
+
+
+class Readme(luigi.Task):
     def output(self):
-        return luigi.LocalTarget(export().rfam('rfam_annotations.tsv'))
+        return luigi.LocalTarget(export().id_mapping('readme.txt'))
 
     def run(self):
-        connection = get_db_connection(db(), connect_timeout=10 * 60)
-        with atomic_output(self.output()) as out:
-            ann.write(connection, out)
-        connection.close()
+        with atomic_file(self.output().fn) as out:
+            out.write(README)
