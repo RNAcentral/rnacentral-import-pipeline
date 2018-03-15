@@ -21,7 +21,6 @@ from luigi import LocalTarget
 from tasks.config import db
 from tasks.config import output
 
-from rnacentral.db import cursor
 from rnacentral.search import exporter
 
 
@@ -44,6 +43,5 @@ class SearchChunkTask(luigi.Task):  # pylint: disable=R0904
 
     def run(self):
         with self.output().open('w') as raw:
-            with cursor(db()) as cur:
-                results = exporter.range(cur, self.min, self.max)
-                exporter.write(raw, results)
+            results = exporter.range(db(), self.min, self.max)
+            exporter.write(raw, results)
