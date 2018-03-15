@@ -13,10 +13,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import json
 import subprocess as sp
 from datetime import date
 
 import xml.etree.cElementTree as ET
+
+from rnacentral.psql import PsqlWrapper
 
 from .data import builder
 
@@ -61,9 +64,9 @@ SELECT
         'rfam_clans', array_agg(models.rfam_clan_id),
         'rfam_status',
             case
-                when cardinality((array_agg(pre.rfam_problems))) = 0 then '{{}}'::json
-                when (array_agg(pre.rfam_problems))[1] = '' then '{{}}'::json
-                when (array_agg(pre.rfam_problems))[1] is null then '{{}}'::json
+                when cardinality((array_agg(pre.rfam_problems))) = 0 then '{{}}'
+                when (array_agg(pre.rfam_problems))[1] = '' then '{{}}'
+                when (array_agg(pre.rfam_problems))[1] is null then '{{}}'
                 else (array_agg(pre.rfam_problems))[1]::json
             end,
         'tax_strings', array_agg(acc.classification),
@@ -95,42 +98,43 @@ LEFT JOIN rfam_models models
 ON hits.rfam_model_id = models.rfam_model_id
 WHERE
   xref.deleted = 'N'
-  and {terms}
+  and %s
 group by rna.upi, xref.taxid
 """
 
-SINGLE_SQL = BASE_SQL.format(
-    terms="xref.upi = %(upi)s AND xref.taxid = %(taxid)s"
-)
+SINGLE_SQL = BASE_SQL % "xref.upi = '{upi}' AND xref.taxid = {taxid}"
 
-RANGE_SQL = BASE_SQL.format(terms="rna.id BETWEEN %(min_id)s AND %(max_id)s")
+RANGE_SQL = BASE_SQL % "rna.id BETWEEN {min_id} AND {max_id}"
 
 
-def range(cursor, min_id, max_id):
+def export(db, query, **kwargs):
+    psql = PsqlWrapper(db)
+    for result in psql.copy_to_iterable(query, **kwargs):
+        try:
+            data = json.loads(result['json_build_object'])
+            yield builder(data)
+        except:
+            raise
+
+
+def range(db, min_id, max_id):
     """
     Generates a series of XML strings representing all entries in the given
     range of ids.
     """
-
-    cursor.execute(RANGE_SQL, {'min_id': min_id, 'max_id': max_id})
-    for result in cursor:
-        try:
-            yield builder(result[0])
-        except:
-            print(result[0])
-            raise
+    return export(db, RANGE_SQL, min_id=min_id, max_id=max_id)
 
 
-def upi(cursor, upi, taxid):
+def upi(db, upi, taxid):
     """
     Will create a XmlEntry object for the given upi, taxid.
     """
 
-    cursor.execute(SINGLE_SQL, {'upi': upi, 'taxid': taxid})
-    result = list(cursor)
-    if not result:
-        raise ValueError("Found no entries for %s_%s" % (upi, str(taxid)))
-    return builder(result[0][0])
+    results = export(db, SINGLE_SQL, upi=upi, taxid=taxid)
+    try:
+        return next(results)
+    except StopIteration:
+        raise ValueError("Found no entries for %s_%i" % (upi, taxid))
 
 
 def write(handle, results):

@@ -19,18 +19,18 @@ import xml.etree.ElementTree as ET
 from xml.dom import minidom
 
 import pytest
-import psycopg2 as pg
+# import psycopg2 as pg
 
 from tasks.config import db
 from rnacentral.search import exporter
 
-CONNECTION = pg.connect(db().psycopg2_string())
-CONNECTION.set_session(readonly=True, autocommit=True)
+# CONNECTION = pg.connect(db().psycopg2_string())
+# CONNECTION.set_session(readonly=True, autocommit=True)
 
 
 def load_data(upi):
     parts = upi.split('_')
-    return exporter.upi(CONNECTION.cursor(), parts[0], parts[1])
+    return exporter.upi(db(), parts[0], parts[1])
 
 
 def as_xml_dict(element):
@@ -293,54 +293,60 @@ def test_assigns_organelle_correctly(upi, ans):
         {'attrib': {'name': 'organelle'}, 'text': str(ans)}
     ]
 
-# @pytest.mark.parametrize('upi,ans', [
-#     ('URS000000079A_87230', [
-#         {'attrib': {'dbname': "ENA", 'dbkey': "AM233399.1"}, 'text': None},
-#         {'attrib': {'dbkey': "87230", 'dbname': "ncbi_taxonomy_id"}, 'text': None},
-#     ])
-# ])
-# def test_can_assign_correct_cross_references(upi, ans):
-#     data = load_data(upi)
-#     results = data.findall('./cross_references/ref')
-#     assert [as_xml_dict(r) for r in results] == ans
+@pytest.mark.parametrize('upi,ans', [
+    ('URS000000079A_87230', [
+        {'attrib': {'dbname': "ENA", 'dbkey': "AM233399.1"}, 'text': None},
+        {'attrib': {'dbkey': "87230", 'dbname': "ncbi_taxonomy_id"}, 'text': None},
+    ])
+])
+def test_can_assign_correct_cross_references(upi, ans):
+    data = load_data(upi)
+    results = data.findall('./cross_references/ref')
+    assert [as_xml_dict(r) for r in results] == ans
 
 
-# def test_can_create_document_with_unicode():
-#     data = load_and_get_additional('URS000009EE82_562', 'product')
-#     assert data == [
-#         {'attrib': {'name': 'product'}, 'text': 'tRNA-Asp(gtc)'},
-#         {'attrib': {'name': 'product'}, 'text': 'P-site tRNA Aspartate'},
-#         {'attrib': {'name': 'product'}, 'text': 'transfer RNA-Asp'},
-#         {'attrib': {'name': 'product'}, 'text': 'tRNA_Asp_GTC'},
-#         {'attrib': {'name': 'product'}, 'text': 'tRNA-asp'},
-#         {'attrib': {'name': 'product'}, 'text': u'tRNA Asp ⊄UC'},
-#         {'attrib': {'name': 'product'}, 'text': 'tRNA-Asp'},
-#         {'attrib': {'name': 'product'}, 'text': 'tRNA-Asp-GTC'},
-#         {'attrib': {'name': 'product'}, 'text': 'ASPARTYL TRNA'},
-#         {'attrib': {'name': 'product'}, 'text': 'tRNA-Asp (GTC)'}
-#     ]
+def test_can_create_document_with_unicode():
+    data = load_and_get_additional('URS000009EE82_562', 'product')
+    assert data == [
+        {'attrib': {'name': 'product'}, 'text': u'tRNA-Asp(gtc)'},
+        {'attrib': {'name': 'product'}, 'text': u'P-site tRNA Aspartate'},
+        {'attrib': {'name': 'product'}, 'text': u'transfer RNA-Asp'},
+        {'attrib': {'name': 'product'}, 'text': u'tRNA_Asp_GTC'},
+        {'attrib': {'name': 'product'}, 'text': u'tRNA-asp'},
+        {'attrib': {'name': 'product'}, 'text': u'tRNA Asp ⊄UC'},
+        {'attrib': {'name': 'product'}, 'text': u'tRNA-Asp'},
+        {'attrib': {'name': 'product'}, 'text': u'tRNA-Asp (GTC)'},
+        {'attrib': {'name': 'product'}, 'text': u'ASPARTYL TRNA'},
+        {'attrib': {'name': 'product'}, 'text': u'tRNA-Asp-GTC'},
+    ]
 
 
 
-# def test_it_can_handle_a_list_in_ontology():
-#     data = load_data('URS00003B5CA5_559292')
-#     results = data.findall('./cross_references/ref')
-#     xrefs = {as_xml_dict(r)['attrib']['dbkey'] for r in results}
-#     assert {'ECO:0000202', u'GO:0030533', 'SO:0000253'} & xrefs
+def test_it_can_handle_a_list_in_ontology():
+    data = load_data('URS00003B5CA5_559292')
+    results = data.findall('./cross_references/ref')
+    xrefs = {as_xml_dict(r)['attrib']['dbkey'] for r in results}
+    assert {'ECO:0000202', u'GO:0030533', 'SO:0000253'} & xrefs
 
 
-# def test_it_can_write_an_xml_document():
-#     entries = exporter.range(CONNECTION.cursor(), 3890001, 3900001)
-#     with tempfile.NamedTemporaryFile() as out:
-#         exporter.write(out, entries)
-#         out.seek(0)
-#         document = out.read()
-#         assert document.count('<entry id=') == 8  # 2 are deleted
+# @pytest.mark.slowtest
+@pytest.mark.skip()
+def test_it_can_write_an_xml_document():
+    """
+    This test is really only useful when debugging issues in a specific section
+    of the export
+    """
+    entries = exporter.range(db(), 3890001, 3900001)
+    with tempfile.NamedTemporaryFile() as out:
+        exporter.write(out, entries)
+        out.seek(0)
+        document = out.read()
+        assert document.count('<entry id=') == 10680
 
 
-# def test_output_validates_according_to_schema():
-#     entries = exporter.range(CONNECTION.cursor(), 1, 100)
-#     with tempfile.NamedTemporaryFile() as out:
-#         exporter.write(out, entries)
-#         out.flush()
-#         exporter.validate(out.name)
+def test_output_validates_according_to_schema():
+    entries = exporter.range(db(), 1, 100)
+    with tempfile.NamedTemporaryFile() as out:
+        exporter.write(out, entries)
+        out.flush()
+        exporter.validate(out.name)

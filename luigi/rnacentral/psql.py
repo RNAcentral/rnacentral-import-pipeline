@@ -47,14 +47,17 @@ class PsqlWrapper(object):
             with open(out.name, 'rb') as readable:
                 yield readable
 
-    def copy_to_iterable(self, sql):
+    def copy_to_iterable(self, sql, **kwargs):
         """
         This will dump the results of a the query to a TSV file and then create
         a context manage with a file handle of that file. The file is temporary
         and is deleted once the handler exits.
         """
 
-        query = sql.replace('\n', ' ')
+        query = str(sql)
+        if kwargs:
+            query = query.format(**kwargs)
+        query = query.replace('\n', ' ')
         query = re.sub('[ ]+', ' ', query)
         command = "COPY ({query}) TO STDOUT WITH DELIMITER AS ',' CSV HEADER".format(
             query=query
