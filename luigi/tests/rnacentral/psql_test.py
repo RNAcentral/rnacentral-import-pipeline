@@ -19,7 +19,7 @@ from rnacentral.psql import PsqlWrapper
 
 def test_can_copy_statement_to_iterable():
     psql = PsqlWrapper(db())
-    iterable = psql.copy_to_iterable("select upi from rna order by id limit 3")
+    iterable = psql.copy_to_iterable("select upi from rna order by id asc limit 3")
     assert list(iterable) == [
         {'upi': 'URS0000000001'},
         {'upi': 'URS0000000002'},
@@ -34,19 +34,19 @@ def test_can_run_command_and_provide_output():
         assert lines == [
             '                           QUERY PLAN                            ',
             '-----------------------------------------------------------------',
-            ' Seq Scan on rna  (cost=0.00..1258736.79 rows=13167479 width=14)',
+            ' Seq Scan on rna  (cost=0.00..1282275.10 rows=13413710 width=14)',
             '(1 row)',
             '',
         ]
 
 
 def test_can_produce_iterable_from_psql_copy():
-    sql = 'select upi, md5 from rna order by id desc limit 5'
+    sql = 'select upi, md5 from rna order by id asc limit 5'
     psql = PsqlWrapper(db())
     assert list(psql.copy_to_iterable(sql)) == [
-        {'upi': 'URS0000C8E9EF', 'md5': 'fc30780b063695720cc37a9ce1968b7a'},
-        {'upi': 'URS0000C8E9EE', 'md5': 'f98993c13f10b65603df026553964f5e'},
-        {'upi': 'URS0000C8E9ED', 'md5': 'ebad5a2c948b840158b6684319a826e3'},
-        {'upi': 'URS0000C8E9EC', 'md5': 'e4a59b51c0426dd5fb73684fb5476537'},
-        {'upi': 'URS0000C8E9EB', 'md5': 'deec63eaa14fe3571f79a3850545be2a'},
+        {'upi': 'URS0000000001', 'md5': '6bba097c8c39ed9a0fdf02273ee1c79a'},
+        {'upi': 'URS0000000002', 'md5': '1fe2f0e3c3a2d6d708ac98e9bfb1d7a8'},
+        {'upi': 'URS0000000003', 'md5': '7bb11d0572ff6bb42427ce74450ba564'},
+        {'upi': 'URS0000000004', 'md5': '030c78be0f492872b95219d172e0c658'},
+        {'upi': 'URS0000000005', 'md5': '030c795b3b5bb84256b0fea3c10ee3aa'},
     ]
