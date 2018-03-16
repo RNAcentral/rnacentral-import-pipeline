@@ -16,7 +16,7 @@ limitations under the License.
 import luigi
 
 from tasks.config import db
-from tasks.config import rnacentral as rnac
+from tasks.config import export
 
 from rnacentral.utils import upi_ranges
 
@@ -30,6 +30,6 @@ class Search(luigi.WrapperTask):  # pylint: disable=R0904
     """
 
     def requires(self):
-        config = rnac()
-        for start, stop in upi_ranges(db(), config.xml_export_size):
+        config = export()
+        for start, stop in upi_ranges(db(), config.search_export_size):
             yield ValidateAndCompressSearchChunk(min=start, max=stop)
