@@ -189,14 +189,6 @@ class gtrnadb(luigi.Config):  # pylint: disable=C0103, R0904
         return os.path.join(output().base, 'gtrnadb', 'raw', *args)
 
 
-class rnacentral(luigi.Config):  # pylint: disable=C0103, R0904
-    """
-    This contains configuration for RNAcentral related tasks, like search
-    export
-    """
-    xml_export_size = luigi.IntParameter(default=100000)
-
-
 class mgi(luigi.Config):  # pylint: disable=C0103, R0904
     """
     This contains values for configuring the output of processing MGI.
@@ -268,6 +260,8 @@ class rgd(luigi.Config):
 
 class export(luigi.Config):  # pylint: disable=C0103,R0904
     rfam_example_size = luigi.IntParameter(default=10)
+    sequence_example_size = luigi.IntParameter(default=10)
+    search_export_size = luigi.IntParameter(default=100000)
 
     def ftp(self, *args):
         return os.path.join(output().base, 'ftp', *args)

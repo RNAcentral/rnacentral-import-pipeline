@@ -26,7 +26,6 @@ from .active import ActiveFastaExport
 
 
 class ExampleFasta(luigi.Task):
-    max = 10
 
     def output(self):
         return luigi.LocalTarget(export().sequences('example.txt'))
@@ -39,8 +38,9 @@ class ExampleFasta(luigi.Task):
         Create an iterable of all sequences to export.
         """
 
+        count = export().search_export_size
         with SeqIO.parse(self.requires().output().fn, 'fasta') as records:
-            return list(it.islice(records, self.max))
+            return list(it.islice(records, count))
 
     def run(self):
         with atomic_output(self.output()) as out:
