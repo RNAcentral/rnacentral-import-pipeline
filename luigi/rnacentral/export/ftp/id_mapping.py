@@ -13,6 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import os
+import csv
 import itertools as it
 
 from rnacentral.psql import PsqlWrapper
@@ -104,3 +106,22 @@ def example(config):
 
     psql = PsqlWrapper(config)
     return it.imap(as_entry, psql.copy_to_iterable(EXAMPLE_SQL))
+
+
+def split_by_database(raw, base_path):
+    """
+    Given
+    """
+
+    handles = {}
+    reader = csv.reader(raw, delimiter='\t')
+    for row in reader:
+        db_name = row[1].lower()
+        if db_name not in handles:
+            filename = os.path.join(base_path, db_name + '.tsv')
+            handle = open(filename, 'wb')
+            handles[db_name] = (handle, csv.writer(handle, delimiter='\t'))
+        handles[db_name][1].writerow(row)
+
+    for (handle, _) in handles.values():
+        handle.close()
