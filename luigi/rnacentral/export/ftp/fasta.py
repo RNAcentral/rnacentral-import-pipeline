@@ -23,6 +23,13 @@ from Bio.SeqRecord import SeqRecord
 from rnacentral.psql import PsqlWrapper
 
 BASE_ACTIVE = """
+with rna_status as (
+select
+    upi,
+    '{{N}}' && array_agg(deleted) is_active
+from xref
+group by upi
+)
 select
     pre.id,
     pre.description,
@@ -32,30 +39,26 @@ select
     end as sequence
 from rnc_rna_precomputed pre
 join rna on rna.upi = pre.upi
+join rna_status status on status.upi = rna.upi
 where
-    xref.deleted = 'N'
+    status.is_active = {is_active}
     and {terms}
-order by rna.id
 """
 
-ACTIVE_SQL = BASE_ACTIVE.format(terms="pre.taxid is null")
+ACTIVE_SQL = BASE_ACTIVE.format(
+    terms="pre.taxid is null",
+    is_active='true',
+)
 
-ACITVE_SPECIES_SQL = BASE_ACTIVE.format("pre.taxid is not null")
+ACITVE_SPECIES_SQL = BASE_ACTIVE.format(
+    terms="pre.taxid is not null",
+    is_active='true',
+)
 
-INACTIVE_SQL = """
-select
-    pre.id,
-    pre.description,
-    case when rna.seq_short is null
-        then rna.seq_long
-        else rna.seq_short end as sequence
-join rna on rna.upi = inactive.upi
-join rnc_rna_precomputed pre
-on pre.upi = rna.upi and pre.upi = inactive.upi
-where
-    pre.taxid is null
-"""
-
+INACTIVE_SQL = BASE_ACTIVE.format(
+    terms="pre.taxid is null",
+    is_active='false',
+)
 
 NHMMER_PATTERN = re.compile('^[ABCDGHKMNRSTVWXYU]+$', re.IGNORECASE)
 
