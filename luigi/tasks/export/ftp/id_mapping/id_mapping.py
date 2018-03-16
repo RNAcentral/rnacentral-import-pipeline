@@ -26,7 +26,10 @@ from rnacentral.export.ftp import id_mapping
 
 class IdMapping(luigi.Task):
     def output(self):
-        return luigi.LocalTarget(export().id_mapping('id_mapping.tsv'))
+        return luigi.LocalTarget(
+            export().id_mapping('id_mapping.tsv.gz'),
+            format=luigi.format.Gzip,
+        )
 
     def run(self):
         with atomic_output(self.output()) as out:
