@@ -99,13 +99,15 @@ def test_as_entry_works_correctly():
 
 
 # @pytest.mark.slowtest
-# def test_complete_sql_produces_correct_numbers():
-#     assert count(ids.COMPLETE_SQL) == 28306193
+@pytest.mark.skip()
+def test_complete_sql_produces_correct_numbers():
+    assert count(ids.COMPLETE_SQL) == 28306193
 
 
 # @pytest.mark.slowtest
-# def test_complete_produces_correct_count():
-#     assert len(list(ids.complete(db()))) == 28306193
+@pytest.mark.skip()
+def test_complete_produces_correct_count():
+    assert len(list(ids.complete(db()))) == 28306193
 
 
 @pytest.mark.slowtest
