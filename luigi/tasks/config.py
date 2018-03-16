@@ -262,6 +262,7 @@ class export(luigi.Config):  # pylint: disable=C0103,R0904
     rfam_example_size = luigi.IntParameter(default=10)
     sequence_example_size = luigi.IntParameter(default=10)
     search_export_size = luigi.IntParameter(default=100000)
+    md5_example_size = luigi.IntParameter(default=5)
 
     def ftp(self, *args):
         return os.path.join(output().base, 'ftp', *args)

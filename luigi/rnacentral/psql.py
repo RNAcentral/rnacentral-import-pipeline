@@ -21,6 +21,21 @@ from contextlib import contextmanager
 import subprocess as sp
 
 
+def query_as_copy(sql, use='csv', **kwargs):
+    query = str(sql)
+    if kwargs:
+        query = query.format(**kwargs)
+    query = query.replace('\n', ' ')
+    query = re.sub('[ ]+', ' ', query)
+    options = "DELIMITER AS ',' CSV HEADER"
+    if use == 'tsv':
+        options = "FORMAT TEXT"
+    return "COPY ({query}) TO STDOUT WITH {options}".format(
+        query=query,
+        options=options,
+    )
+
+
 class PsqlWrapper(object):
     """
     This is a class that wraps some simple psql calls. The idea is that in some
@@ -33,8 +48,8 @@ class PsqlWrapper(object):
         self.config = config
 
     @contextmanager
-    def command(self, command):
-        with tempfile.NamedTemporaryFile() as out:
+    def command(self, command, handle=None):
+        with (handle or tempfile.NamedTemporaryFile()) as out:
             process = sp.Popen(
                 [self.config.psql, '-c', command, self.config.pgloader_url()],
                 env={'PGPASSWORD': self.config.password},
@@ -47,6 +62,14 @@ class PsqlWrapper(object):
             with open(out.name, 'rb') as readable:
                 yield readable
 
+    def write_command(self, handle, command):
+        with self.command(command, handle=handle):
+            pass
+
+    def write_query(self, handle, sql, **kwargs):
+        command = query_as_copy(sql, **kwargs)
+        self.write_command(command, handle)
+
     def copy_to_iterable(self, sql, **kwargs):
         """
         This will dump the results of a the query to a TSV file and then create
@@ -54,14 +77,7 @@ class PsqlWrapper(object):
         and is deleted once the handler exits.
         """
 
-        query = str(sql)
-        if kwargs:
-            query = query.format(**kwargs)
-        query = query.replace('\n', ' ')
-        query = re.sub('[ ]+', ' ', query)
-        command = "COPY ({query}) TO STDOUT WITH DELIMITER AS ',' CSV HEADER".format(
-            query=query
-        )
+        command = query_as_copy(sql)
         with self.command(command) as out:
             csv.field_size_limit(sys.maxsize)
             for result in csv.DictReader(out):
