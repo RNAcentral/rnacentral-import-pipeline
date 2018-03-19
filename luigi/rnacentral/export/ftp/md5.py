@@ -16,10 +16,24 @@ limitations under the License.
 from rnacentral.psql import PsqlWrapper
 
 KNOWN = """
-select rna, md5 from rna order by id
+select upi, md5 from rna order by id asc
 """
 
 
 def known(config, handle):
+    """
+    Generate a file of the UPI to MD5 mappings.
+    """
+
     psql = PsqlWrapper(config)
     psql.write_query(handle, KNOWN, use='tsv')
+
+
+def example(config, handle, count):
+    """
+    Generate the example file of UPI to MD5 mappings. This will given count
+    number of the first mappings.
+    """
+
+    psql = PsqlWrapper(config)
+    psql.write_query(handle, KNOWN + " limit %s" % count, use='tsv')
