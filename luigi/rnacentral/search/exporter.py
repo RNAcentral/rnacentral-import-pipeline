@@ -59,6 +59,8 @@ SELECT
         'dois', array_agg(refs.doi),
         'has_genomic_coordinates',
             cardinality(array_remove(array_agg(distinct coord.id), null)) > 0,
+        'has_inferred_coordinates',
+            cardinality(array_remove(array_agg(distinct mapping.id), null)) > 0,
         'rfam_family_names', array_agg(models.short_name),
         'rfam_ids', array_agg(hits.rfam_model_id),
         'rfam_clans', array_agg(models.rfam_clan_id),
@@ -82,24 +84,32 @@ SELECT
 FROM xref xref
 JOIN rnc_accessions acc ON xref.ac = acc.accession
 JOIN rnc_database db ON xref.dbid = db.id
-JOIN rnc_release release1 on xref.created = release1.id
-JOIN rnc_release release2 on xref.last = release2.id
-JOIN rna rna on xref.upi = rna.upi
-JOIN rnc_rna_precomputed pre on xref.upi = pre.upi and xref.taxid = pre.taxid
-left join rnc_coordinates coord
-on
+JOIN rnc_release release1 ON xref.created = release1.id
+JOIN rnc_release release2 ON xref.last = release2.id
+JOIN rna rna ON xref.upi = rna.upi
+JOIN rnc_rna_precomputed pre
+ON
+    xref.upi = pre.upi
+    AND xref.taxid = pre.taxid
+LEFT JOIN rnc_coordinates coord
+ON
     coord.accession = acc.accession
-    and coord.name is not null
-    and coord.name != ''
-LEFT JOIN rnc_reference_map ref_map on ref_map.accession = acc.accession
-LEFT JOIN rnc_references refs on refs.id = ref_map.reference_id
+    AND coord.name IS NOT NULL
+    AND coord.name != ''
+LEFT JOIN rnc_reference_map ref_map ON ref_map.accession = acc.accession
+LEFT JOIN rnc_references refs ON refs.id = ref_map.reference_id
 LEFT JOIN rfam_model_hits hits ON xref.upi = hits.upi
 LEFT JOIN rfam_models models
-ON hits.rfam_model_id = models.rfam_model_id
+ON
+    hits.rfam_model_id = models.rfam_model_id
+LEFT JOIN rnc_genome_mapping mapping
+ON
+    mapping.upi = xref.upi
+    AND mapping.taxid = xref.taxid
 WHERE
   xref.deleted = 'N'
-  and %s
-group by rna.upi, xref.taxid
+  AND %s
+GROUP BY rna.upi, xref.taxid
 """
 
 SINGLE_SQL = BASE_SQL % "xref.upi = '{upi}' AND xref.taxid = {taxid}"

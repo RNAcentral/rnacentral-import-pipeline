@@ -426,6 +426,10 @@ def as_popular(taxid):
     return None
 
 
+def has_coordinates(given, inferred):
+    return str(given or inferred)
+
+
 builder = entry([
     tag('name', as_name, keys=('upi', 'taxid')),
     tag('description', str),
@@ -457,7 +461,8 @@ builder = entry([
         fields('gene_synonym', unique, keys='gene_synonyms'),
         field('rna_type', str),
         fields('product', unique, keys='products'),
-        field('has_genomic_coordinates', str),
+        field('has_genomic_coordinates', has_coordinates,
+              keys=('has_genomic_coordinates', 'has_inferred_coordinates')),
         field('md5', str),
         fields('author', as_authors, keys='authors'),
         fields('journal', as_journals, keys='journals'),
