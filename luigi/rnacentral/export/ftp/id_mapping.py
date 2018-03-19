@@ -110,7 +110,9 @@ def example(config):
 
 def split_by_database(raw, base_path):
     """
-    Given
+    Given a handle to a mapping file this will split the file apart by the
+    database in each line. A file for each database will be written under the
+    base_path directory, which must exist.
     """
 
     handles = {}
