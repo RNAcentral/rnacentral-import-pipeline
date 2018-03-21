@@ -34,7 +34,7 @@ class SearchChunkTask(luigi.Task):  # pylint: disable=R0904
 
     def output(self):
         config = output()
-        filepattern = 'xml4dbdumps__{min}_{max}.xml'.format(
+        filepattern = 'xml4dbdumps__{min}__{max}.xml'.format(
             min=self.min,
             max=self.max,
         )
