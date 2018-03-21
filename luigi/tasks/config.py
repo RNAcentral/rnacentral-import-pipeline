@@ -215,7 +215,7 @@ class ena(luigi.Config):
             'tmRNA-Website',
         )
     )
-    tpa_url = 'https://www.ebi.ac.uk/ena/data/xref/search?source={db}&expanded=true'
+    tpa_url = 'https://www.ebi.ac.uk/ena/data/xref/search?source={db}&expanded=true&limit=0'
 
     def raw_ncr_files(self):
         if not os.path.exists(self.base):
