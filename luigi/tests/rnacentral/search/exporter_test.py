@@ -376,7 +376,6 @@ def test_correctly_assigns_popular_species(upi, ans):
     assert load_and_get_additional(upi, "popular_species") == result
 
 
-
 @pytest.mark.parametrize('upi,problems', [  # pylint: disable=E1101
     ('URS0000001EB3_9595', ['none']),
     ('URS000014C3B0_7227', ['possible_contamination']),
@@ -386,3 +385,18 @@ def test_correctly_assigns_popular_species(upi, ans):
 def test_it_correctly_build_rfam_problems(upi, problems):
     ans = [{'attrib': {'name': 'rfam_problems'}, 'text': p} for p in problems]
     assert load_and_get_additional(upi, "rfam_problems") == ans
+
+
+@pytest.mark.parametrize('upi,status', [  # pylint: disable=E1101
+    ('URS0000000006_1317357', False),
+    ('URS000075D95B_9606', False),
+    ('URS00008C5577_77133', False),
+    ('URS0000001EB3_9595', False),
+    ('URS000014C3B0_7227', True),
+    ('URS0000010837_7227', True),
+    ('URS000052E2E9_289219', True),
+])
+def test_it_correctly_assigns_rfam_problem_found(upi, status):
+    assert load_and_get_additional(upi, "rfam_problem_found") == [
+        {'attrib': {'name': 'rfam_problem_found'}, 'text': str(status)},
+    ]
