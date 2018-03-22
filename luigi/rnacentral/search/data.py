@@ -420,14 +420,17 @@ def as_popular(taxid):
     """
     Detect if the taxid is a popular species and return None if it is not.
     """
-
     if taxid in POPULAR_SPECIES:
-        return True
+        return taxid
     return None
 
 
 def has_coordinates(given, inferred):
     return str(given or inferred)
+
+
+def normalize_rna_type(rna_type):
+    return rna_type.replace('_', ' ')
 
 
 builder = entry([
@@ -459,7 +462,7 @@ builder = entry([
         fields('function', unique, keys='functions'),
         fields('gene', get_genes, keys=('genes', 'product')),
         fields('gene_synonym', unique, keys='gene_synonyms'),
-        field('rna_type', str),
+        field('rna_type', normalize_rna_type),
         fields('product', unique, keys='products'),
         field('has_genomic_coordinates', has_coordinates,
               keys=('has_genomic_coordinates', 'has_inferred_coordinates')),
