@@ -374,3 +374,15 @@ def test_correctly_assigns_popular_species(upi, ans):
     if ans:
         result = [{'attrib': {'name': 'popular_species'}, 'text': str(ans)}]
     assert load_and_get_additional(upi, "popular_species") == result
+
+
+
+@pytest.mark.parametrize('upi,problems', [  # pylint: disable=E1101
+    ('URS0000001EB3_9595', ['none']),
+    ('URS000014C3B0_7227', ['possible_contamination']),
+    ('URS0000010837_7227', ['incomplete_sequence', 'possible_contamination']),
+    ('URS000052E2E9_289219', ['possible_contamination']),
+])
+def test_it_correctly_build_rfam_problems(upi, problems):
+    ans = [{'attrib': {'name': 'rfam_problems'}, 'text': p} for p in problems]
+    assert load_and_get_additional(upi, "rfam_problems") == ans
