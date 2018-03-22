@@ -33,3 +33,23 @@ class GetFasta(FastaExportBase):
 
     def records(self):
         return gm.export_rnacentral_fasta2(db(), taxid=self.taxid)
+
+
+
+class CleanSplitFasta(luigi.Task):
+    taxid = luigi.Parameter(default=9606)
+    chunks = luigi.Parameter(default=100)
+    min_length = luigi.Parameter(default=20)
+    max_length = luigi.Parameter(default=100000)
+
+    def requires(self):
+        return GetFasta(taxid=self.taxid)
+
+    # def output(self):
+    #     for i in xrange(1, self.chunks):
+    #         yield luigi.LocalTarget(genome_mapping().chunks('%i-%i.fa' % (self.taxid, i)))
+    #
+    def run(self):
+        fasta = self.input().path
+        out_dir = genome_mapping().chunks(self.taxid)
+        gm.clean_split(min_length=self.min_length, max_length=self.max_length, fasta=fasta, chunks=self.chunks, out_dir=out_dir, taxid=self.taxid)

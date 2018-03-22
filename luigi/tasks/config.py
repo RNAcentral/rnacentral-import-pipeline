@@ -294,6 +294,12 @@ class genome_mapping(luigi.Config):  # pylint: disable=C0103,R0904
     def rnacentral_fasta(self, *args):
         return self.genomes('rnacentral_fasta', *args)
 
+    def chunks(self, taxid, *args):
+        path = os.path.join(self.genomes(), 'split', str(taxid))
+        if not os.path.exists(path):
+            os.makedirs(path)
+        return path
+
 class refseq(luigi.Config):  # pylint: disable=C0103,R0904
     base = luigi.Parameter(default='/tmp')
 
