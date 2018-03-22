@@ -402,18 +402,20 @@ def normalize_common_name(common_names):
     return {n.lower() for n in common_names if n}
 
 
-def rfam_problems(status):
-    """
-    Create a list of the names of all Rfam problems.
-    """
-    return [p['name'] for p in status['problems']]
-
-
 def problem_found(status):
     """
     Check if there is an Rfam issue.
     """
     return status['has_issue']
+
+
+def rfam_problems(status):
+    """
+    Create a list of the names of all Rfam problems.
+    """
+    if not problem_found(status):
+        return ['none']
+    return sorted(p['name'] for p in status['problems'])
 
 
 def as_popular(taxid):
