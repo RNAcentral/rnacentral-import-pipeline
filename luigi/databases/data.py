@@ -77,7 +77,7 @@ def optional_utf8(raw):
     if raw is None:
         return None
     if isinstance(raw, unicode):
-        return unicodedata.normalize('NFC', raw)
+        return unicodedata.normalize('NFC', raw).encode('ascii', 'ignore')
     return raw
 
 
