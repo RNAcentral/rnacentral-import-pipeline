@@ -15,14 +15,20 @@ limitations under the License.
 
 import luigi
 
-from .genome_mapping_tasks import GetFasta
+from .genome_mapping_tasks import GetFasta, CleanSplitFasta
 
 
 class SpeciesFastaExport(luigi.WrapperTask):
     """
-    This is the main class to generate all FASTA file exports.
     """
 
     def requires(self):
         for taxid in [9606, 10090, 10116]:
             yield GetFasta(taxid=taxid)
+
+
+class CleanSplitWrapper(luigi.WrapperTask):
+
+    def requires(self):
+        for taxid in [9606, 10090, 10116]:
+            yield CleanSplitFasta(taxid=taxid)
