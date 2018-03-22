@@ -282,6 +282,9 @@ class export(luigi.Config):  # pylint: disable=C0103,R0904
     def database_mappings(self, *args):
         return self.id_mapping('database_mappings', *args)
 
+    def bed(self, *args):
+        return self.ftp('bed', *args)
+
 
 class refseq(luigi.Config):  # pylint: disable=C0103,R0904
     base = luigi.Parameter(default='/tmp')
