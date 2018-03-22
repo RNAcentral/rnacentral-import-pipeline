@@ -285,6 +285,14 @@ class export(luigi.Config):  # pylint: disable=C0103,R0904
     def bed(self, *args):
         return self.ftp('bed', *args)
 
+class genome_mapping(luigi.Config):  # pylint: disable=C0103,R0904
+    base = PathParameter(default='/tmp')
+
+    def genomes(self, *args):
+        return os.path.join(self.base, 'genomes', *args)
+
+    def rnacentral_fasta(self, *args):
+        return self.genomes('rnacentral_fasta', *args)
 
 class refseq(luigi.Config):  # pylint: disable=C0103,R0904
     base = luigi.Parameter(default='/tmp')
