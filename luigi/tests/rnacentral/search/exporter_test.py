@@ -50,7 +50,7 @@ def load_and_get_additional(upi, field_name):
 def pretty_xml(data):
     ugly = ET.tostring(data)
     parsed = minidom.parseString(ugly.replace('\n', ''))
-    return parsed.toprettyxml()
+    return parsed.toprettyxml().lower()
 
 
 @pytest.mark.parametrize(
