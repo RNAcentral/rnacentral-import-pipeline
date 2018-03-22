@@ -406,14 +406,14 @@ def problem_found(status):
     """
     Check if there is an Rfam issue.
     """
-    return status['has_issue']
+    return str(bool(status['has_issue']))
 
 
 def rfam_problems(status):
     """
     Create a list of the names of all Rfam problems.
     """
-    if not problem_found(status):
+    if not status['has_issue']:
         return ['none']
     return sorted(p['name'] for p in status['problems'])
 
