@@ -15,7 +15,7 @@ limitations under the License.
 
 import luigi
 
-from .genome_mapping_tasks import GetFasta, CleanSplitFasta
+from .genome_mapping_tasks import GetFasta, CleanSplitFasta, GetChromosome
 
 def get_taxids_for_genome_mapping():
     """
@@ -24,7 +24,7 @@ def get_taxids_for_genome_mapping():
     return [9606, 10090, 10116]
 
 
-class SpeciesFastaExport(luigi.WrapperTask):
+class SpeciesFastaExportWrapper(luigi.WrapperTask):
     """
     A wrapper task to export fasta files for all species that will be mapped
     to the reference genomes using blat.
@@ -42,3 +42,11 @@ class CleanSplitWrapper(luigi.WrapperTask):
     def requires(self):
         for taxid in get_taxids_for_genome_mapping():
             yield CleanSplitFasta(taxid=taxid)
+
+class GetChromosomeFastaWrapper(luigi.WrapperTask):
+    """
+    """
+    def requires(self):
+        for taxid in get_taxids_for_genome_mapping():
+            yield GetChromosome(taxid=taxid)
+
