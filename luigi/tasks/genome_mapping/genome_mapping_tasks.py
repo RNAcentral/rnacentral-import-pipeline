@@ -17,6 +17,8 @@ import os
 
 import luigi
 
+from glob import iglob
+
 from tasks.config import db
 from tasks.config import genome_mapping
 
@@ -56,3 +58,18 @@ class CleanSplitFasta(luigi.Task):
         fasta = self.input().path
         out_dir = genome_mapping().chunks(self.taxid)
         gm.clean_split(min_length=self.min_length, max_length=self.max_length, fasta=fasta, chunks=self.chunks, out_dir=out_dir, taxid=self.taxid)
+
+
+class GetChromosome(luigi.Task):
+    taxid = luigi.IntParameter(default=9606)
+
+    def output(self):
+        genomes = {
+            9606: 'GCA_000001405.25',
+            10090: 'GCA_000001635.7',
+            10116: 'GCA_000001895.4',
+        }
+        chromosomes = genome_mapping().genomes(genomes[self.taxid])
+        for filename in iglob(os.path.join(chromosomes, '*.fa')):
+            print filename
+            yield luigi.LocalTarget(filename)
