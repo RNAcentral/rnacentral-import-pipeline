@@ -26,7 +26,7 @@ from rnacentral.genome_mapping import genome_mapping as gm
 
 
 class GetFasta(FastaExportBase):
-    taxid = luigi.Parameter(default=9606)
+    taxid = luigi.IntParameter(default=9606)
 
     def output(self):
         return luigi.LocalTarget(genome_mapping().rnacentral_fasta('%i.fa' % self.taxid))
@@ -37,18 +37,21 @@ class GetFasta(FastaExportBase):
 
 
 class CleanSplitFasta(luigi.Task):
-    taxid = luigi.Parameter(default=9606)
-    chunks = luigi.Parameter(default=100)
-    min_length = luigi.Parameter(default=20)
-    max_length = luigi.Parameter(default=100000)
+    taxid = luigi.IntParameter(default=9606)
+    chunks = luigi.IntParameter(default=100)
+    min_length = luigi.IntParameter(default=20)
+    max_length = luigi.IntParameter(default=100000)
 
     def requires(self):
         return GetFasta(taxid=self.taxid)
 
-    # def output(self):
-    #     for i in xrange(1, self.chunks):
-    #         yield luigi.LocalTarget(genome_mapping().chunks('%i-%i.fa' % (self.taxid, i)))
-    #
+    def output(self):
+        for i in xrange(1, self.chunks):
+            chunk_fasta = os.path.join(genome_mapping().chunks(self.taxid),
+                                       '{taxid}-clean.part_{id}.fasta'.format(
+                                        taxid=self.taxid, id='%03d' % i))
+            yield luigi.LocalTarget(chunk_fasta)
+
     def run(self):
         fasta = self.input().path
         out_dir = genome_mapping().chunks(self.taxid)

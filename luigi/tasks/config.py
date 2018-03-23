@@ -295,7 +295,7 @@ class genome_mapping(luigi.Config):  # pylint: disable=C0103,R0904
         return self.genomes('rnacentral_fasta', *args)
 
     def chunks(self, taxid, *args):
-        path = os.path.join(self.genomes(), 'split', str(taxid))
+        path = os.path.join(self.genomes(), 'split', str(taxid), *args)
         if not os.path.exists(path):
             os.makedirs(path)
         return path
