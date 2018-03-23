@@ -15,20 +15,8 @@ limitations under the License.
 
 import itertools as it
 
-import attr
-
 from databases.ena.parsers import parse as ena
-
-
-def as_entry(entry):
-    """
-    Modify an ENA entry into an approbate RefSeq entry.
-    """
-    return attr.evolve(
-        entry,
-        database='REFSEQ',
-        exons=[],
-    )
+from . import helpers
 
 
 def parse(handle):
@@ -36,4 +24,4 @@ def parse(handle):
     Parse all entries in the handle to produce an iterable of all RefSeq
     entries.
     """
-    return it.imap(as_entry, ena(handle))
+    return it.imap(helpers.as_entry, ena(handle))
