@@ -150,9 +150,9 @@ class Reference(object):
         Computes the MD5 hash of the reference.
         """
         return md5(''.join([
-            self.authors.encode('utf-8') or '',
-            self.location.encode('utf-8') or '',
-            self.title.encode('utf-8') or ''
+            (self.authors or ''),
+            (self.location or ''),
+            (self.title or ''),
         ]))
 
 

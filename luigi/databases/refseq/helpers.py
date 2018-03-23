@@ -21,10 +21,9 @@ URL = 'https://www.ncbi.nlm.nih.gov/nuccore/{primary_id}.{version}'
 
 def optional_id(entry):
     key = 'GeneID'
-    gene_ids = entry.xref_data[key]
-    if not gene_ids:
+    if key not in entry.xref_data:
         return None
-    return key + ':%s' % gene_ids[0]
+    return key + ':%s' % entry.xref_data[key][0]
 
 
 def external_id(entry):
