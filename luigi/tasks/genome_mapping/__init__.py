@@ -15,7 +15,7 @@ limitations under the License.
 
 import luigi
 
-from .genome_mapping_tasks import GetFasta, CleanSplitFasta, GetChromosome
+from .genome_mapping_tasks import GetFasta, CleanSplitFasta, GetChromosome, BlatJob
 
 def get_taxids_for_genome_mapping():
     """
@@ -50,3 +50,14 @@ class GetChromosomeFastaWrapper(luigi.WrapperTask):
         for taxid in get_taxids_for_genome_mapping():
             yield GetChromosome(taxid=taxid)
 
+
+class BlatJobsWrapper(luigi.WrapperTask):
+    """
+    """
+    def requires(self):
+        for taxid in get_taxids_for_genome_mapping():
+            chunks = CleanSplitFasta(taxid=taxid)
+            chromosomes = GetChromosome(taxid=taxid)
+            for chunk in chunks.output():
+                for chromosome in chromosomes.output():
+                    yield BlatJob(fasta_input=chunk.path, chromosome=chromosome.path, taxid=taxid)
