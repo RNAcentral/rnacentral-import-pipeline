@@ -17,18 +17,28 @@ import luigi
 
 from .genome_mapping_tasks import GetFasta, CleanSplitFasta
 
+def get_taxids_for_genome_mapping():
+    """
+    Get taxids for genomes that are used for mapping.
+    """
+    return [9606, 10090, 10116]
+
 
 class SpeciesFastaExport(luigi.WrapperTask):
     """
+    A wrapper task to export fasta files for all species that will be mapped
+    to the reference genomes using blat.
     """
-
     def requires(self):
-        for taxid in [9606, 10090, 10116]:
+        for taxid in get_taxids_for_genome_mapping():
             yield GetFasta(taxid=taxid)
 
 
 class CleanSplitWrapper(luigi.WrapperTask):
-
+    """
+    A wrapper task to keep only sequences of certain length and split fasta
+    files in chunks.
+    """
     def requires(self):
-        for taxid in [9606, 10090, 10116]:
+        for taxid in get_taxids_for_genome_mapping():
             yield CleanSplitFasta(taxid=taxid)
