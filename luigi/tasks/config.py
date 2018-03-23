@@ -300,6 +300,12 @@ class genome_mapping(luigi.Config):  # pylint: disable=C0103,R0904
             os.makedirs(path)
         return path
 
+    def blat_output(self, *args):
+        path = self.genomes('blat_output', *args)
+        if not os.path.exists(path):
+            os.makedirs(path)
+        return path
+
 class refseq(luigi.Config):  # pylint: disable=C0103,R0904
     base = luigi.Parameter(default='/tmp')
 

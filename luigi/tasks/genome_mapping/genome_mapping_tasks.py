@@ -71,5 +71,34 @@ class GetChromosome(luigi.Task):
         }
         chromosomes = genome_mapping().genomes(genomes[self.taxid])
         for filename in iglob(os.path.join(chromosomes, '*.fa')):
-            print filename
             yield luigi.LocalTarget(filename)
+
+
+class BlatJob(luigi.Task):
+    """
+    """
+    taxid = luigi.IntParameter(default=9606)
+    fasta_input = luigi.Parameter()
+    chromosome = luigi.Parameter()
+
+    def run(self):
+        """
+        """
+        genome_path, _ = os.path.split(self.chromosome)
+        cmd = ('blat -ooc={genome_path}/11.ooc -noHead -q=rna -stepSize=5 '
+               '-repMatch=2253 -minScore=0 -minIdentity=95 '
+               '{chromosome} {fasta_input} {psl_output} ').format(
+               genome_path=genome_path,
+               chromosome=self.chromosome,
+               fasta_input=self.fasta_input,
+               psl_output=self.output().path)
+        with open(self.output().path, 'w') as out:
+            out.write(cmd)
+
+    def output(self):
+        """
+        """
+        _, fasta_name = os.path.split(self.fasta_input)
+        _, chromosome_name = os.path.split(self.chromosome)
+        filename = os.path.join(genome_mapping().blat_output(str(self.taxid)), '%s-%s.psl' % (chromosome_name, fasta_name))
+        return luigi.LocalTarget(filename)
