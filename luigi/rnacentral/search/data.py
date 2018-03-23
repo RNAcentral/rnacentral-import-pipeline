@@ -430,7 +430,7 @@ def as_popular(taxid):
 def has_coordinates(given_ids, inferred_ids):
     given = unique(given_ids)
     inferred = unique(inferred_ids)
-    return str(given or inferred)
+    return str(bool(given or inferred))
 
 
 def normalize_rna_type(rna_type):
@@ -469,7 +469,7 @@ builder = entry([
         field('rna_type', normalize_rna_type),
         fields('product', unique, keys='products'),
         field('has_genomic_coordinates', has_coordinates,
-              keys=('has_genomic_coordinates', 'has_inferred_coordinates')),
+              keys=('genomic_coordinates', 'inferred_coordinates')),
         field('md5', str),
         fields('author', as_authors, keys='authors'),
         fields('journal', as_journals, keys='journals'),

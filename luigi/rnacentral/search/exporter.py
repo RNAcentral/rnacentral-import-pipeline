@@ -58,7 +58,7 @@ SELECT
         'pub_ids', array_agg(refs.pmid),
         'dois', array_agg(refs.doi),
         'genomic_coordinates', array_agg(distinct coord.id),
-        'has_inferred_coordinates', array_agg(distinct mapping.id),
+        'inferred_coordinates', array_agg(distinct mapping.id),
         'rfam_family_names', array_agg(models.short_name),
         'rfam_ids', array_agg(hits.rfam_model_id),
         'rfam_clans', array_agg(models.rfam_clan_id),
