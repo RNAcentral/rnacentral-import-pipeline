@@ -403,7 +403,8 @@ def test_it_correctly_assigns_rfam_problem_found(upi, status):
 
 
 @pytest.mark.parametrize('upi,status', [  # pylint: disable=E1101
-    ('URS0000A77400_9606', True),
+    ('URS000075EAAC_9606', True),
+    # ('URS0000A77400_9606', True),
     ('URS0000A81C5E_9606', True),
     ('URS0000ABD87F_9606', True),
     ('URS00007F81F8_511145', False),
