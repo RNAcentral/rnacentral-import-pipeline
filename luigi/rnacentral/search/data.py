@@ -427,7 +427,9 @@ def as_popular(taxid):
     return None
 
 
-def has_coordinates(given, inferred):
+def has_coordinates(given_ids, inferred_ids):
+    given = unique(given_ids)
+    inferred = unique(inferred_ids)
     return str(given or inferred)
 
 

@@ -400,3 +400,16 @@ def test_it_correctly_assigns_rfam_problem_found(upi, status):
     assert load_and_get_additional(upi, "rfam_problem_found") == [
         {'attrib': {'name': 'rfam_problem_found'}, 'text': str(status)},
     ]
+
+
+@pytest.mark.parametrize('upi,status', [  # pylint: disable=E1101
+    ('URS0000A77400_9606', True),
+    ('URS0000A81C5E_9606', True),
+    ('URS0000ABD87F_9606', True),
+    ('URS00007F81F8_511145', False),
+    ('URS0000A16E25_198431', False),
+])
+def test_can_correctly_assign_known_locations(upi, status):
+    assert load_and_get_additional(upi, "has_genomic_coordinates") == [
+        {'attrib': {'name': 'has_genomic_coordinates'}, 'text': str(status)},
+    ]
