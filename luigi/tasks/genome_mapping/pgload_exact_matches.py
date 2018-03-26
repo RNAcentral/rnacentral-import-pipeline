@@ -92,12 +92,10 @@ class GenomeMappingPGLoadExactMatches(PGLoader):  # pylint: disable=R0904
         return ParsePslOutput(taxid=self.taxid)
 
     def control_file(self):
-        for filename in ParsePslOutput().output():
-            if 'mapping.tsv' in filename.fn:
-                break
+        filename = ParsePslOutput().output()['inexact'].fn
         table = 'load_genome_mapping'
         return CONTROL_FILE.format(
-            filename=filename.fn,
+            filename=filename,
             db_url=self.db_url(table=table),
             table=table,
             search_path=self.db_search_path(),

@@ -117,8 +117,10 @@ class ParsePslOutput(luigi.Task):
         return genome_mapping().blat_output(str(self.taxid))
 
     def output(self):
-        return [luigi.LocalTarget(os.path.join(self.get_blat_output(), 'mapping.tsv')),
-        luigi.LocalTarget(os.path.join(self.get_blat_output(), 'mapping-inexact.tsv'))]
+        return {
+            'exact': luigi.LocalTarget(os.path.join(self.get_blat_output(), 'mapping.tsv')),
+            'inexact': luigi.LocalTarget(os.path.join(self.get_blat_output(), 'mapping-inexact.tsv')),
+        }
 
     def run(self):
         cmd = 'source scripts/psl2tsv.sh {blat_output}'.format(blat_output=self.get_blat_output())
