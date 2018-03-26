@@ -17,6 +17,7 @@ import luigi
 
 from .genome_mapping_tasks import GetFasta, CleanSplitFasta, GetChromosome, BlatJob, ParsePslOutput
 from .pgload_exact_matches import GenomeMappingPGLoadExactMatches
+from .pgload_inexact_matches import GenomeMappingPGLoadInexactMatches
 
 def get_taxids_for_genome_mapping():
     """
