@@ -37,7 +37,6 @@ class GetFasta(FastaExportBase):
         return gm.export_rnacentral_fasta2(db(), taxid=self.taxid)
 
 
-
 class CleanSplitFasta(luigi.Task):
     taxid = luigi.IntParameter(default=9606)
     chunks = luigi.IntParameter(default=100)
@@ -76,6 +75,7 @@ class GetChromosome(luigi.Task):
 
 class BlatJob(luigi.Task):
     """
+    Run blat to map a fasta file with RNAcentral sequences to a chromosome.
     """
     taxid = luigi.IntParameter(default=9606)
     fasta_input = luigi.Parameter()
@@ -100,5 +100,6 @@ class BlatJob(luigi.Task):
         """
         _, fasta_name = os.path.split(self.fasta_input)
         _, chromosome_name = os.path.split(self.chromosome)
-        filename = os.path.join(genome_mapping().blat_output(str(self.taxid)), '%s-%s.psl' % (chromosome_name, fasta_name))
-        return luigi.LocalTarget(filename)
+        psl_output = genome_mapping().blat_output(str(self.taxid),
+            '%s-%s.psl' % (chromosome_name, fasta_name))
+        return luigi.LocalTarget(os.path.join(psl_output))
