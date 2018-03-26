@@ -14,6 +14,7 @@ limitations under the License.
 """
 
 import os
+import subprocess
 
 import luigi
 
@@ -92,8 +93,7 @@ class BlatJob(luigi.Task):
                chromosome=self.chromosome,
                fasta_input=self.fasta_input,
                psl_output=self.output().path)
-        with open(self.output().path, 'w') as out:
-            out.write(cmd)
+        status = subprocess.call(cmd, shell=True)
 
     def output(self):
         """
