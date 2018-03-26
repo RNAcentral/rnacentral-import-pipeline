@@ -56,8 +56,8 @@ class BlatJobsWrapper(luigi.WrapperTask):
     """
     def requires(self):
         for taxid in get_taxids_for_genome_mapping():
-            chunks = CleanSplitFasta(taxid=taxid)
-            chromosomes = GetChromosome(taxid=taxid)
-            for chunk in chunks.output():
-                for chromosome in chromosomes.output():
-                    yield BlatJob(fasta_input=chunk.path, chromosome=chromosome.path, taxid=taxid)
+            for chunk in CleanSplitFasta(taxid=taxid).output():
+                for chromosome in GetChromosome(taxid=taxid).output():
+                    yield BlatJob(fasta_input=chunk.path,
+                                  chromosome=chromosome.path,
+                                  taxid=taxid)
