@@ -13,24 +13,26 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import os
-
 import luigi
 
-from tasks.config import export
+from tasks.utils.compress import GenericCompressTask
 
-from .compressed import CompressedRfamAnnotations
+from .rfam_annotations import RfamAnnotations
 from .readme import RfamAnnotationsReadMe
 from .examples import RfamAnnotationsExample
 
 
+class Compress(GenericCompressTask):
+    def inputs(self):
+        yield RfamAnnotations()
+
+    def requires(self):
+        yield RfamAnnotations()
+        yield RfamAnnotationsExample()
+
+
 class ExportRfamAnnotaitons(luigi.WrapperTask):
     def requires(self):
-        try:
-            os.makedirs(export().rfam())
-        except:
-            pass
-
-        yield CompressedRfamAnnotations()
         yield RfamAnnotationsReadMe()
         yield RfamAnnotationsExample()
+        yield Compress()

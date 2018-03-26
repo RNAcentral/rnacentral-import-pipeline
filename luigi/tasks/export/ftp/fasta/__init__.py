@@ -15,13 +15,31 @@ limitations under the License.
 
 import luigi
 
+from tasks.utils.compress import GenericCompressTask
+
 from .active import ActiveFastaExport
 from .active import SpeciesSpecificFastaExport
 from .inactive import InactiveFastaExport
 from .nhmmer import NHmmerIncludedExport
 from .nhmmer import NHmmerExcludedExport
-from .compress import CompressExport
 from .readme import FastaReadme
+
+
+class CompressExport(GenericCompressTask):
+    """
+    This will compress the files the generic FASTA export files.
+    """
+
+    def inputs(self):
+        yield ActiveFastaExport()
+        yield InactiveFastaExport()
+        yield SpeciesSpecificFastaExport()
+
+    def requires(self):
+        for requirement in super(CompressExport, self).requires():
+            yield requirement
+        yield NHmmerExcludedExport()
+        yield NHmmerIncludedExport()
 
 
 class FastaExport(luigi.WrapperTask):

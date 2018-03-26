@@ -13,6 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import os
 import urlparse
 from ftplib import FTP
 from contextlib import contextmanager
@@ -49,6 +50,11 @@ def download(url, filename):
     path = '/'.join(path)
     if path[0] == '/':
         path = path[1:]
+
+    try:
+        os.makedirs(os.path.dirname(filename))
+    except:
+        pass
 
     with atomic_file(filename) as out:
         with ftp_context(parts.netloc) as ftp:

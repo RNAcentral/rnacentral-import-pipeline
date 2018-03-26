@@ -22,7 +22,7 @@ from tests.databases.ensembl.utils import Base
 
 @pytest.mark.slowtest
 class GencodeTests(Base):  # pylint: disable=R0904,C0111
-    filename = 'data/Homo_sapiens.GRCh38.87.chromosome.12.dat'
+    filename = 'data/ensembl/Homo_sapiens.GRCh38.87.chromosome.12.dat'
     importer_class = Gencode
 
     def test_knows_if_entry_is_gencode(self):

@@ -1,0 +1,63 @@
+ID   CP000948.1:2011661..2011909:misc_RNA; SV 1; linear; genomic DNA; STD; PRO; 249 BP.
+XX
+PA   CP000948.1
+XX
+PR   Project:PRJNA20079;
+XX
+DT   26-MAR-2008 (Rel. 95, Created)
+DT   16-MAY-2014 (Rel. 120, Last updated, Version 8)
+XX
+DE   Escherichia coli str. K-12 substr. DH10B small RNA
+XX
+KW   .
+XX
+OS   Escherichia coli str. K-12 substr. DH10B
+OC   Bacteria; Proteobacteria; Gammaproteobacteria; Enterobacterales;
+OC   Enterobacteriaceae; Escherichia.
+XX
+RN   [1]
+RX   DOI; 10.1128/JB.01695-07.
+RX   PUBMED; 18245285.
+RA   Durfee T., Nelson R., Baldwin S., Plunkett G.III., Burland V., Mau B.,
+RA   Petrosino J.F., Qin X., Muzny D.M., Ayele M., Gibbs R.A., Csorgo B.,
+RA   Posfai G., Weinstock G.M., Blattner F.R.;
+RT   "The complete genome sequence of Escherichia coli DH10B: insights into the
+RT   biology of a laboratory workhorse";
+RL   J. Bacteriol. 190(7):2597-2606(2008).
+XX
+RN   [2]
+RA   Plunkett G.III.;
+RT   ;
+RL   Submitted (20-FEB-2008) to the INSDC.
+RL   Department of Genetics and Biotechnology, University of Wisconsin, 425G
+RL   Henry Mall, Madison, WI 53706, USA
+XX
+DR   MD5; 9971e731d14a9b452613a844c1ca14f2.
+DR   BioSample; SAMN02604262.
+XX
+CC   DH10B and DH10B-T1R are available from Invitrogen Corporation
+CC   (http://www.invitrogen.com).
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..249
+FT                   /organism="Escherichia coli str. K-12 substr. DH10B"
+FT                   /strain="K-12"
+FT                   /sub_strain="DH10B"
+FT                   /mol_type="genomic DNA"
+FT                   /db_xref="taxon:316385"
+FT   misc_RNA        CP000948.1:2011661..2011909
+FT                   /gene="ryeA"
+FT                   /gene_synonym="IS091"
+FT                   /gene_synonym="sraC"
+FT                   /gene_synonym="tpke79"
+FT                   /locus_tag="ECDH10B_1978"
+FT                   /product="small RNA"
+XX
+SQ   Sequence 249 BP; 73 A; 48 C; 66 G; 62 T; 0 other;
+     aaagtcagcg aaggaaatgc ttctggcttt taacagataa aaagagaccg aacacgattc        60
+     ctgtattcgg tccagggaaa tggctcttgg gagagagccg tgcgctaaaa gttggcatta       120
+     atgcaggctt agttgccttg ccctttaaga atagatgacg acgccaggtt ttccagtttg       180
+     cgtgcaaaat ggtcaataaa aagcgtggtg gtcatcagct gaaatgttaa aaaccgcccg       240
+     ttctggtga                                                               249
+//

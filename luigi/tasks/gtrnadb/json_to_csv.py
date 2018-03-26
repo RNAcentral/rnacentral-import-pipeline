@@ -24,7 +24,7 @@ from tasks.config import output
 from tasks.config import gtrnadb
 
 from tasks.utils import compressed
-from tasks.utils.fetch import Fetch
+from tasks.utils.fetch import FetchTask
 from tasks.utils.entry_writers import Output
 
 
@@ -48,7 +48,7 @@ class GtRNAdbJsonToCsv(luigi.Task):  # pylint: disable=R0904
 
     def requires(self):
         filename = gtrnadb().raw(self.filename)
-        return Fetch(remote_path=self.url, local_path=filename)
+        return FetchTask(remote_path=self.url, local_path=filename)
 
     def output(self):
         prefix = os.path.basename(self.filename)
@@ -72,4 +72,4 @@ class GtRNAdbJsonToCsv(luigi.Task):  # pylint: disable=R0904
 
         with self.output().writer() as writer:
             for filename in self.expanded_files():
-                writer.write_all(parse(filename))
+                writer.write_valid(parse(filename))
