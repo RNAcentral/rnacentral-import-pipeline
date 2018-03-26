@@ -70,6 +70,7 @@ for i in {1..2}; do
 
 	rm $MATCHES_PSL
 	rm $MATCHES_BED
+  rm $TEMPFILE
 
 	echo 'See file ' $OUTPUT
 
