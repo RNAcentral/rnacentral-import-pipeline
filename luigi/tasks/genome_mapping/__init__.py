@@ -63,3 +63,14 @@ class BlatJobsWrapper(luigi.WrapperTask):
                     yield BlatJob(fasta_input=chunk.path,
                                   chromosome=chromosome.path,
                                   taxid=taxid)
+
+
+class LoadGenomeMappingWrapper(luigi.WrapperTask):
+    """
+    """
+    def requires(self):
+        for taxid in get_taxids_for_genome_mapping():
+            return [
+                GenomeMappingPGLoadExactMatches(taxid=taxid),
+                GenomeMappingPGLoadInexactMatches(taxid=taxid)
+            ]
