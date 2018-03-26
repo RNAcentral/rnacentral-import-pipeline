@@ -99,10 +99,10 @@ $$ insert into rfam_model_hits (
 select
     load.sequence_start,
     load.sequence_stop,
-    (load.sequence_stop - load.sequence_start)::float / rna.len::float,
+    abs((load.sequence_stop - load.sequence_start)::float) / rna.len::float,
     load.model_start,
     load.model_stop,
-    (load.model_stop - load.model_start)::float / models.length::float,
+    abs((load.model_stop - load.model_start)::float) / models.length::float,
     load.overlap,
     load.e_value,
     load.score,

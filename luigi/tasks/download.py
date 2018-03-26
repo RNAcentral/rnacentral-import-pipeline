@@ -58,8 +58,10 @@ class Download(luigi.Task):  # pylint: disable=R0904
 
         path = self.path()
         basedir = os.path.dirname(path)
-        if not os.path.exists(basedir):
+        try:
             os.makedirs(basedir)
+        except:
+            pass
 
         with self.remote.open('r') as raw, atomic_file(path) as out:
             out.writelines(r for r in raw)

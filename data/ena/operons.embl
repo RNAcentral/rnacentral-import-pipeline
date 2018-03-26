@@ -1,0 +1,59 @@
+rel_std_pro_04_r133.ncr
+ID   CP000102.1:1163547..1163662:rRNA; SV 1; linear; genomic DNA; STD; PRO; 116 BP.
+XX
+PA   CP000102.1
+XX
+PR   Project:PRJNA15579;
+XX
+DT   06-JAN-2006 (Rel. 86, Created)
+DT   15-MAY-2014 (Rel. 120, Last updated, Version 6)
+XX
+DE   Methanosphaera stadtmanae DSM 3091 5S ribosomal RNA
+XX
+KW   .
+XX
+OS   Methanosphaera stadtmanae DSM 3091
+OC   Archaea; Euryarchaeota; Methanobacteria; Methanobacteriales;
+OC   Methanobacteriaceae; Methanosphaera.
+XX
+RN   [1]
+RX   DOI; 10.1128/JB.188.2.642-658.2006.
+RX   PUBMED; 16385054.
+RA   Fricke W.F., Seedorf H., Henne A., Kruer M., Liesegang H., Hedderich R.,
+RA   Gottschalk G., Thauer R.K.;
+RT   "The genome sequence of Methanosphaera stadtmanae reveals why this human
+RT   intestinal archaeon is restricted to methanol and H2 for methane formation
+RT   and ATP synthesis";
+RL   J. Bacteriol. 188(2):642-658(2006).
+XX
+RN   [2]
+RA   Fricke W.F., Seedorf H., Henne A., Kruer M., Liesegang H., Hedderich R.,
+RA   Gottschalk G., Thauer R.K.;
+RT   ;
+RL   Submitted (05-AUG-2005) to the INSDC.
+RL   Institute of Microbiology and Genetics, Georg August University Goettingen,
+RL   Goettingen Genomics Laboratory, Grisebach Str 8, Goettingen D-37077,
+RL   Germany
+XX
+DR   SILVA-LSU; CP000102.
+DR   SILVA-SSU; CP000102.
+DR   MD5; c91e338071ca6b8e0518aa950a108ccf.
+DR   BioSample; SAMN02604180.
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..116
+FT                   /organism="Methanosphaera stadtmanae DSM 3091"
+FT                   /strain="DSM 3091"
+FT                   /mol_type="genomic DNA"
+FT                   /db_xref="taxon:339860"
+FT   rRNA            complement(CP000102.1:1163547..1163662)
+FT                   /operon="rrnD"
+FT                   /gene="rrfD"
+FT                   /locus_tag="Msp_1018"
+FT                   /product="5S ribosomal RNA"
+XX
+SQ   Sequence 116 BP; 32 A; 21 C; 28 G; 35 T; 0 other;
+     tggtacggcg accatagcga tagggtcaca tctgaactcg tctcgatctc agtaataaag        60
+     tctatccacg ttttgtttgg tactatagat ggtaagtcta tgggaatttc agaaag           116
+//

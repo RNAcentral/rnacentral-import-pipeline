@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+IFS=$'\n\t'
+
+error()
+{
+   echo 1>&2 $@ && exit
+}
+
+[ -e luigi.cfg ] || error "Must have existing config to modify"
+
+tmp=$(mktemp)
+mv luigi.cfg $tmp
+sed "s|default-scheduler-url=.*|default-scheduler-url=http://$HOSTNAME.ebi.ac.uk:8082|" $tmp > luigi.cfg
+rm $tmp

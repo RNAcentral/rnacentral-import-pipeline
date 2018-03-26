@@ -20,7 +20,6 @@ import luigi
 from tasks.config import output
 from tasks.utils.pgloader import PGLoader
 
-from .generic import file_pattern
 from tasks.release.manage_files import SplitMergedFile
 
 
@@ -77,7 +76,6 @@ class PGLoadSequences(PGLoader):  # pylint: disable=R0921,R0904
     not run further scripts.
     """
 
-    database = luigi.Parameter(default='all')
     type = luigi.ChoiceParameter(choices=['short', 'long'])
 
     def requires(self):
@@ -92,7 +90,7 @@ class PGLoadSequences(PGLoader):  # pylint: disable=R0921,R0904
 
     def control_file(self):
         return CONTROL_FILE.format(
-            pattern=file_pattern(self.database),
+            pattern='chunk_*',
             db_url=self.db_url(table='load_rnacentral_all'),
             search_path=self.db_search_path(),
             directory=os.path.join(output().base, self.type),

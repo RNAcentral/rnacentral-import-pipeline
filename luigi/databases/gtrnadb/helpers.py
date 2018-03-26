@@ -19,8 +19,8 @@ import urlparse
 
 import requests
 
-from databases import helpers as dbs
 from databases.data import Reference
+import databases.helpers.phylogeny as phy
 
 
 class InvalidDotBracket(Exception):
@@ -112,21 +112,21 @@ def common_name(data):
     """
     Get a standardized common name for the given taxon id.
     """
-    return dbs.common_name(data['ncbi_tax_id'])
+    return phy.common_name(data['ncbi_tax_id'])
 
 
 def lineage(data):
     """
     Get a standardized lineage for the given taxon id.
     """
-    return dbs.lineage(data['ncbi_tax_id'])
+    return phy.lineage(data['ncbi_tax_id'])
 
 
 def species(data):
     """
     Get a standardized species name for the given taxon id.
     """
-    return dbs.species(data['ncbi_tax_id'])
+    return phy.species(data['ncbi_tax_id'])
 
 
 def description(data):
