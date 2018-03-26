@@ -16,6 +16,7 @@ limitations under the License.
 import luigi
 
 from .genome_mapping_tasks import GetFasta, CleanSplitFasta, GetChromosome, BlatJob, ParsePslOutput
+from .pgload_exact_matches import GenomeMappingPGLoadExactMatches
 
 def get_taxids_for_genome_mapping():
     """
