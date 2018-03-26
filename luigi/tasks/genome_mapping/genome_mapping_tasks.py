@@ -102,3 +102,24 @@ class BlatJob(luigi.Task):
         _, chromosome_name = os.path.split(self.chromosome)
         psl_output = genome_mapping().blat_output(str(self.taxid))
         return luigi.LocalTarget(os.path.join(psl_output, '%s-%s.psl' % (chromosome_name, fasta_name)))
+
+
+class ParsePslOutput(luigi.Task):
+    """
+    Run a shell script to transform psl output produced by blat into tsv files
+    that can be loaded into the database.
+    """
+    taxid = luigi.IntParameter(default=4932)
+
+    def get_blat_output(self):
+        return genome_mapping().blat_output(str(self.taxid))
+
+    def output(self):
+        return [luigi.LocalTarget(os.path.join(self.get_blat_output(), 'mapping.tsv')),
+        luigi.LocalTarget(os.path.join(self.get_blat_output(), 'mapping-inexact.tsv'))]
+
+    def run(self):
+        cmd = 'source scripts/psl2tsv.sh {blat_output}'.format(blat_output=self.get_blat_output())
+        status = subprocess.call(cmd, shell=True)
+        if status != 0:
+            raise ValueError('Failed to run psl2tsv: %s' % cmd)

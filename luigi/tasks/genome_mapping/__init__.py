@@ -15,7 +15,7 @@ limitations under the License.
 
 import luigi
 
-from .genome_mapping_tasks import GetFasta, CleanSplitFasta, GetChromosome, BlatJob
+from .genome_mapping_tasks import GetFasta, CleanSplitFasta, GetChromosome, BlatJob, ParsePslOutput
 
 def get_taxids_for_genome_mapping():
     """
