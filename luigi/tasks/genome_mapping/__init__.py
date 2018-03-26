@@ -74,3 +74,15 @@ class LoadGenomeMappingWrapper(luigi.WrapperTask):
                 GenomeMappingPGLoadExactMatches(taxid=taxid),
                 GenomeMappingPGLoadInexactMatches(taxid=taxid)
             ]
+
+
+class GenomeMappingPipelineWrapper(luigi.WrapperTask):
+    """
+    A wrapper task for the entire genome mapping pipeline.
+    """
+    def requires(self):
+        yield GetChromosomeFastaWrapper()
+        yield CleanSplitWrapper()
+        yield BlatJobsWrapper()
+        yield GenomeMappingPGLoadExactMatches()
+        yield GenomeMappingPGLoadInexactMatches()
