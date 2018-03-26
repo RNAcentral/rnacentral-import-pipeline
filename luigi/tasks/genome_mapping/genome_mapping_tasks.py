@@ -100,6 +100,5 @@ class BlatJob(luigi.Task):
         """
         _, fasta_name = os.path.split(self.fasta_input)
         _, chromosome_name = os.path.split(self.chromosome)
-        psl_output = genome_mapping().blat_output(str(self.taxid),
-            '%s-%s.psl' % (chromosome_name, fasta_name))
-        return luigi.LocalTarget(os.path.join(psl_output))
+        psl_output = genome_mapping().blat_output(str(self.taxid))
+        return luigi.LocalTarget(os.path.join(psl_output, '%s-%s.psl' % (chromosome_name, fasta_name)))
