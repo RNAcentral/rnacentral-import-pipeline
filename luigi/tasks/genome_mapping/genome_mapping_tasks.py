@@ -94,6 +94,8 @@ class BlatJob(luigi.Task):
                fasta_input=self.fasta_input,
                psl_output=self.output().path)
         status = subprocess.call(cmd, shell=True)
+        if status != 0:
+            raise ValueError('Failed to run blat: %s' % cmd)
 
     def output(self):
         """
