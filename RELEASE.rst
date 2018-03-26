@@ -56,33 +56,35 @@ Changed
      list of all strings of all text that could not be recognized as an from an
      ontology. As an example:
 
-    .. code:: json
-      {
-        "ontology": [
-            "ECO:0000202",
-            "GO:0030533",
-            "SO:0000253"
-        ],
-        "text": [
-            "Covariance Model: Bacteria; CM Score: 87.61",
-            "Legacy ID: chr.trna3-GlyGCC"
-        ]
-      }
+     .. code:: json
 
-    The ``db_xref`` field will contain data from the ``db_xref`` qualifier of
-    the record. As well as data from the comment field. Additionally there with
-    will be a ``db_xref`` field which contains the information from the ``DR``
-    lines, excluding the MD5 xref. The keys will be the database in upper case,
-    and the values will be a list of primary id and secondary id will be
-    ``null`` or the secondary id for the database, if present.
+       {
+         "ontology": [
+             "ECO:0000202",
+             "GO:0030533",
+             "SO:0000253"
+         ],
+         "text": [
+             "Covariance Model: Bacteria; CM Score: 87.61",
+             "Legacy ID: chr.trna3-GlyGCC"
+         ]
+       }
 
-    .. code:: json
-      {
-        "ena_refs": {
-          "WORMBASE": ["WBGene00196009", "F19C6.9"],
-          "BIOSAMPLE": ["SAMEA3138177", null]
-        }
-      }
+     The ``db_xref`` field will contain data from the ``db_xref`` qualifier of
+     the record. As well as data from the comment field. Additionally there with
+     will be a ``db_xref`` field which contains the information from the ``DR``
+     lines, excluding the MD5 xref. The keys will be the database in upper case,
+     and the values will be a list of primary id and secondary id will be
+     ``null`` or the secondary id for the database, if present.
+
+     .. code:: json
+
+       {
+         "ena_refs": {
+           "WORMBASE": ["WBGene00196009", "F19C6.9"],
+           "BIOSAMPLE": ["SAMEA3138177", null]
+         }
+       }
 
   6. More publications are extracted. This will pull publication data from the
      ``experiment`` qualifier. Sometimes this qualifier contains a string like
