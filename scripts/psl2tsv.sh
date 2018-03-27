@@ -4,7 +4,14 @@ if [ -z "$1" ]
     return
 fi
 
+if [ -z "$2" ]
+  then
+    echo "Specify assembly id"
+    return
+fi
+
 INPUT_FOLDER=$1
+ASSEMBLY_ID=$2
 echo 'Processing files in ' $1
 
 MATCHES_PSL=${INPUT_FOLDER}/matches.psl
@@ -60,12 +67,11 @@ for i in {1..2}; do
 	  identity = $5/$7
 	  print $4, $1, $2, $3, $6, identity
 	}' $MATCHES_BED | \
-	awk -v OFS='\t' '{
+	awk -v OFS='\t' -v assembly_id="$ASSEMBLY_ID" '{
 	  split($1, a, "@");
 	  split(a[1], b, "_");
 	  start = $3+1
-	  assembly = "GCA_000001405.25"
-	  print a[1], b[1], b[2], c[1], $1, $2, start, $4, $5, assembly, $6, NR
+	  print a[1], b[1], b[2], c[1], $1, $2, start, $4, $5, assembly_id, $6, NR
 	}' > $OUTPUT
 
 	rm $MATCHES_PSL
