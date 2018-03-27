@@ -133,6 +133,13 @@ def unique(values):
     return {v for v in values if v}
 
 
+def first(values):
+    """
+    Get the first value in the list of values as a string.
+    """
+    return str(values[0])
+
+
 def unique_lower(values):
     return {v.lower() for v in values if v}
 
@@ -163,7 +170,7 @@ def as_active(deleted):
     Turn the deleted flag (Y/N) into the active term (Obsolete/Active).
     """
 
-    if deleted == 'Y':
+    if first(deleted) == 'Y':
         return 'Obsolete'
     return 'Active'
 
@@ -427,19 +434,13 @@ def as_popular(taxid):
     return None
 
 
-def has_coordinates(given_ids, inferred_ids):
-    given = unique(given_ids)
-    inferred = unique(inferred_ids)
-    return str(bool(given or inferred))
-
-
 def normalize_rna_type(rna_type):
-    return rna_type.replace('_', ' ')
+    return first(rna_type).replace('_', ' ')
 
 
 builder = entry([
     tag('name', as_name, keys=('upi', 'taxid')),
-    tag('description', str),
+    tag('description', first),
 
     section('dates', [
         date_tag('first_seen', max),
@@ -458,8 +459,8 @@ builder = entry([
 
     section('additional_fields', [
         field('active', as_active, keys='deleted'),
-        field('length', str),
-        field('species', str),
+        field('length', first),
+        field('species', first),
         fields('organelle', unique_lower, keys='organelles'),
         fields('expert_db', unique, keys='expert_dbs'),
         fields('common_name', normalize_common_name),
@@ -468,9 +469,8 @@ builder = entry([
         fields('gene_synonym', unique, keys='gene_synonyms'),
         field('rna_type', normalize_rna_type),
         fields('product', unique, keys='products'),
-        field('has_genomic_coordinates', has_coordinates,
-              keys=('genomic_coordinates', 'inferred_coordinates')),
-        field('md5', str),
+        field('has_genomic_coordinates', first),
+        field('md5', first),
         fields('author', as_authors, keys='authors'),
         fields('journal', as_journals, keys='journals'),
         fields('insdc_submission', as_insdc, keys='journals'),
