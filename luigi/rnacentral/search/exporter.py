@@ -43,22 +43,21 @@ SELECT
                 'parent_accession', acc.parent_ac || '.' || acc.seq_version
                 )
             ),
-        'description', (array_agg(pre.description))[1],
-        'deleted', (array_agg(xref.deleted))[1],
-        'length', (array_agg(rna.len))[1],
-        'species', (array_agg(acc.species))[1],
+        'description', array_agg(pre.description),
+        'deleted', array_agg(xref.deleted),
+        'length', array_agg(rna.len),
+        'species', array_agg(acc.species),
         'organelles', array_agg(acc.organelle),
         'expert_dbs', array_agg(db.display_name),
-        'rna_type', (array_agg(pre.rna_type))[1],
+        'rna_type', array_agg(pre.rna_type),
         'product', array_agg(acc.product),
-        'md5', (array_agg(rna.md5))[1],
+        'md5', array_agg(rna.md5),
         'authors', array_agg(refs.authors),
         'journals', array_agg(refs.location),
         'pub_titles', array_agg(refs.title),
         'pub_ids', array_agg(refs.pmid),
         'dois', array_agg(refs.doi),
-        'genomic_coordinates', array_agg(distinct coord.id),
-        'inferred_coordinates', array_agg(distinct mapping.id),
+        'has_coordinates', array_agg(pre.has_coordinates),
         'rfam_family_names', array_agg(models.short_name),
         'rfam_ids', array_agg(hits.rfam_model_id),
         'rfam_clans', array_agg(models.rfam_clan_id),
@@ -89,21 +88,12 @@ JOIN rnc_rna_precomputed pre
 ON
     xref.upi = pre.upi
     AND xref.taxid = pre.taxid
-LEFT JOIN rnc_coordinates coord
-ON
-    coord.accession = acc.accession
-    AND coord.name IS NOT NULL
-    AND coord.name != ''
 LEFT JOIN rnc_reference_map ref_map ON ref_map.accession = acc.accession
 LEFT JOIN rnc_references refs ON refs.id = ref_map.reference_id
 LEFT JOIN rfam_model_hits hits ON xref.upi = hits.upi
 LEFT JOIN rfam_models models
 ON
     hits.rfam_model_id = models.rfam_model_id
-LEFT JOIN rnc_genome_mapping mapping
-ON
-    mapping.upi = xref.upi
-    AND mapping.taxid = xref.taxid
 WHERE
   xref.deleted = 'N'
   AND %s
