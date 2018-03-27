@@ -28,6 +28,16 @@ from tasks.export.ftp.fasta.utils import FastaExportBase
 from rnacentral.genome_mapping import genome_mapping as gm
 
 
+def get_genome_assembly_id(taxid):
+    genomes = {
+        4932: 'GCA_000146045.2',
+        10090: 'GCA_000001635.7',
+        10116: 'GCA_000001895.4',
+        9606: 'GCA_000001405.25',
+    }
+    return genomes[taxid]
+
+
 class GetFasta(FastaExportBase):
     """
     Export RNAcentral sequences for a particular species to a FASTA file.
@@ -42,6 +52,11 @@ class GetFasta(FastaExportBase):
 
 
 class CleanSplitFasta(luigi.Task):
+    """
+    Use seqkit to split RNAcentral species-specific fasta files into chunks to
+    speed up blat searches. Filter out sequences that are too short or too long
+    to be mapped with blat.
+    """
     taxid = luigi.IntParameter(default=4932)
     num_chunks = luigi.IntParameter(default=100)
     min_length = luigi.IntParameter(default=20)
@@ -75,16 +90,13 @@ class CleanSplitFasta(luigi.Task):
 
 
 class GetChromosomes(luigi.Task):
+    """
+    Get a list of fasta files with chromosome sequences for a particular genome.
+    """
     taxid = luigi.IntParameter(default=4932)
 
     def output(self):
-        genomes = {
-            4932: 'GCA_000001405.25',
-            10090: 'GCA_000001635.7',
-            10116: 'GCA_000001895.4',
-            4932: 'GCA_000146045.2',
-        }
-        chromosomes = genome_mapping().genomes(genomes[self.taxid])
+        chromosomes = genome_mapping().genomes(get_genome_assembly_id(self.taxid))
         for filename in iglob(os.path.join(chromosomes, '*.fa')):
             yield luigi.LocalTarget(filename)
 
@@ -135,7 +147,8 @@ class ParsePslOutput(luigi.Task):
         }
 
     def run(self):
-        cmd = 'source scripts/psl2tsv.sh %s' % self.get_blat_output()
+        assembly_id = get_genome_assembly_id(self.taxid)
+        cmd = 'source scripts/psl2tsv.sh %s %s' % (self.get_blat_output(), assembly_id)
         status = subprocess.call(cmd, shell=True)
         if status != 0:
             raise ValueError('Failed to run psl2tsv: %s' % cmd)
