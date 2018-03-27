@@ -23,6 +23,15 @@ Added
 
 - Create Rfam annotation export. This is now officially part of our FTP export.
 
+- Added ``rnc_genomic_mapping`` table. This table stores the infered locations
+  for particular sequences.
+
+- Added a ``has_coordinates`` column to ``rnc_rna_precomputed``. This column is
+  meant to reflect the if a UPI/taxid pair has any known genomic locations. It
+  summarizes if there any entries in ``rnc_coordinates`` and
+  ``rnc_genomic_mapping``. It defaults to ``false`` and isn't currently updated
+  for entries where taxid is null.
+
 Changed
 ```````
 
