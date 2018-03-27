@@ -20,6 +20,7 @@ from .genome_mapping_tasks import CleanSplitFasta
 from .genome_mapping_tasks import GetChromosomes
 from .genome_mapping_tasks import BlatJob
 from .genome_mapping_tasks import ParsePslOutput
+from .genome_mapping_tasks import SpeciesBlatJob
 
 from .pgload_exact_matches import GenomeMappingPGLoadExactMatches
 from .pgload_inexact_matches import GenomeMappingPGLoadInexactMatches
@@ -74,11 +75,7 @@ class BlatJobsWrapper(luigi.WrapperTask):
     """
     def requires(self):
         for taxid in get_taxids_for_genome_mapping():
-            for chunk in CleanSplitFasta(taxid=taxid).output():
-                for chromosome in GetChromosomes(taxid=taxid).output():
-                    yield BlatJob(fasta_input=chunk.path,
-                                  chromosome=chromosome.path,
-                                  taxid=taxid)
+            SpeciesBlatJob(taxid=taxid)
 
 
 class ParsePslOutputWrapper(luigi.WrapperTask):
