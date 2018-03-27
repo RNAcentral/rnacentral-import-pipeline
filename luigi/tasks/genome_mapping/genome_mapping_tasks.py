@@ -109,6 +109,10 @@ class BlatJob(luigi.Task):
     fasta_input = luigi.Parameter()
     chromosome = luigi.Parameter()
 
+    def requires(self):
+        yield GetChromosomes(taxid=self.taxid)
+        yield CleanSplitFasta(taxid=self.taxid)
+
     def run(self):
         genome_path, _ = os.path.split(self.chromosome)
         cmd = ('blat -ooc={genome_path}/11.ooc -noHead -q=rna -stepSize=5 '
