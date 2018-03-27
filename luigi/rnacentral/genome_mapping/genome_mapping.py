@@ -60,28 +60,10 @@ def as_record(entry):
         description='',
     )
 
-def export_rnacentral_fasta2(config, taxid):
+def export_rnacentral_fasta(config, taxid):
     """
+    Return an iteratable of sequence records.
     """
     psql = PsqlWrapper(config)
     sql = FASTA.format(taxid=taxid)
     return it.imap(as_record, psql.copy_to_iterable(sql))
-
-
-def clean_split(min_length, max_length, fasta, chunks, out_dir, taxid):
-    """
-    """
-    cmd = ('seqkit seq --min-len {min_length} --max-len {max_length} {fasta} > {taxid}-clean.fasta && '
-           'seqkit split --quiet -f -p {chunks} --out-dir {out_dir} {taxid}-clean.fasta && '
-           'rm {taxid}-clean.fasta').format(
-           max_length=max_length,
-           min_length=min_length,
-           fasta=fasta,
-           chunks=chunks,
-           out_dir=out_dir,
-           taxid=taxid)
-    status = subprocess.call(cmd, shell=True)
-    if status == 0:
-        print 'OK'
-    else:
-        print 'Error'
