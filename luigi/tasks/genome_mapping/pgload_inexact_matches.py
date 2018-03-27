@@ -89,7 +89,7 @@ $$ TRUNCATE TABLE {table}; $$
 class GenomeMappingPGLoadInexactMatches(PGLoader):  # pylint: disable=R0904
     """
     """
-    taxid = luigi.IntParameter(default=4932)
+    taxid = luigi.IntParameter(default=559292)
 
     def requires(self):
         return [

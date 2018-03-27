@@ -86,7 +86,7 @@ $$ TRUNCATE TABLE {table}; $$
 class GenomeMappingPGLoadExactMatches(PGLoader):  # pylint: disable=R0904
     """
     """
-    taxid = luigi.IntParameter(default=4932)
+    taxid = luigi.IntParameter(default=559292)
 
     def requires(self):
         return ParsePslOutput(taxid=self.taxid)
