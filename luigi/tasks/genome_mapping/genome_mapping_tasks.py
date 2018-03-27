@@ -30,7 +30,7 @@ from rnacentral.genome_mapping import genome_mapping as gm
 
 def get_genome_assembly_id(taxid):
     genomes = {
-        4932: 'GCA_000146045.2',
+        559292: 'GCA_000146045.2',
         10090: 'GCA_000001635.7',
         10116: 'GCA_000001895.4',
         9606: 'GCA_000001405.25',
@@ -42,7 +42,7 @@ class GetFasta(FastaExportBase):
     """
     Export RNAcentral sequences for a particular species to a FASTA file.
     """
-    taxid = luigi.IntParameter(default=4932)
+    taxid = luigi.IntParameter(default=559292)
 
     def output(self):
         return luigi.LocalTarget(genome_mapping().rnacentral_fasta('%i.fa' % self.taxid))
@@ -57,8 +57,8 @@ class CleanSplitFasta(luigi.Task):
     speed up blat searches. Filter out sequences that are too short or too long
     to be mapped with blat.
     """
-    taxid = luigi.IntParameter(default=4932)
     num_chunks = luigi.IntParameter(default=100)
+    taxid = luigi.IntParameter(default=559292)
     min_length = luigi.IntParameter(default=20)
     max_length = luigi.IntParameter(default=100000)
 
@@ -93,7 +93,7 @@ class GetChromosomes(luigi.Task):
     """
     Get a list of fasta files with chromosome sequences for a particular genome.
     """
-    taxid = luigi.IntParameter(default=4932)
+    taxid = luigi.IntParameter(default=559292)
 
     def output(self):
         chromosomes = genome_mapping().genomes(get_genome_assembly_id(self.taxid))
@@ -105,7 +105,7 @@ class BlatJob(luigi.Task):
     """
     Run blat to map a fasta file with RNAcentral sequences to a chromosome.
     """
-    taxid = luigi.IntParameter(default=4932)
+    taxid = luigi.IntParameter(default=559292)
     fasta_input = luigi.Parameter()
     chromosome = luigi.Parameter()
 
@@ -150,7 +150,7 @@ class ParsePslOutput(luigi.Task):
     Run a shell script to transform psl output produced by blat into tsv files
     that can be loaded into the database.
     """
-    taxid = luigi.IntParameter(default=4932)
+    taxid = luigi.IntParameter(default=559292)
 
     def get_blat_output(self):
         return genome_mapping().blat_output(str(self.taxid))

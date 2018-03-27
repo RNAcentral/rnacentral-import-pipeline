@@ -31,8 +31,8 @@ def get_taxids_for_genome_mapping():
     Get taxids for genomes that are used for mapping.
     """
     return [
-        4932, # S. cerevisiae
         # 9606, # human
+        559292, # S. cerevisiae
         # 10090, # mouse
         # 10116, # rat
     ]
