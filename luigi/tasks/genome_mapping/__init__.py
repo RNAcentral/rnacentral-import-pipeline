@@ -81,6 +81,16 @@ class BlatJobsWrapper(luigi.WrapperTask):
                                   taxid=taxid)
 
 
+class ParsePslOutputWrapper(luigi.WrapperTask):
+    """
+    A wrapper task for parsing all blat output into tsv files that can be
+    loaded into the database.
+    """
+    def requires(self):
+        for taxid in get_taxids_for_genome_mapping():
+            yield ParsePslOutput(taxid=taxid)
+
+
 class PGLoadGenomeMappingWrapper(luigi.WrapperTask):
     """
     A wrapper task for loading parsed blat output into the database.
@@ -101,5 +111,6 @@ class GenomeMappingPipelineWrapper(luigi.WrapperTask):
         yield GetChromosomeFastaWrapper()
         yield SpeciesFastaCleanSplitWrapper()
         yield BlatJobsWrapper()
+        yield ParsePslOutputWrapper()
         yield GenomeMappingPGLoadExactMatches()
         yield GenomeMappingPGLoadInexactMatches()
