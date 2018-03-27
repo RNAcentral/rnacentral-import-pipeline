@@ -57,8 +57,8 @@ class CleanSplitFasta(luigi.Task):
     speed up blat searches. Filter out sequences that are too short or too long
     to be mapped with blat.
     """
-    num_chunks = luigi.IntParameter(default=100)
     taxid = luigi.IntParameter(default=559292)
+    num_chunks = luigi.IntParameter(default=50)
     min_length = luigi.IntParameter(default=20)
     max_length = luigi.IntParameter(default=100000)
 
