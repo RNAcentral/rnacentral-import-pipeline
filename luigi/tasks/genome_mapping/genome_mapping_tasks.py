@@ -134,6 +134,17 @@ class BlatJob(luigi.Task):
         return luigi.LocalTarget(os.path.join(psl_output, psl_filename))
 
 
+class SpeciesBlatJob(luigi.WrapperTask):
+    taxid = luigi.IntParameter(default=559292)
+
+    def requires(self):
+        for chunk in CleanSplitFasta(taxid=self.taxid).output():
+            for chromosome in GetChromosomes(taxid=self.taxid).output():
+                yield BlatJob(fasta_input=chunk.path,
+                              chromosome=chromosome.path,
+                              taxid=self.taxid)
+
+
 class ParsePslOutput(luigi.Task):
     """
     Run a shell script to transform psl output produced by blat into tsv files
@@ -143,6 +154,9 @@ class ParsePslOutput(luigi.Task):
 
     def get_blat_output(self):
         return genome_mapping().blat_output(str(self.taxid))
+
+    def requires(self):
+        return SpeciesBlatJob(taxid=self.taxid)
 
     def output(self):
         return {
