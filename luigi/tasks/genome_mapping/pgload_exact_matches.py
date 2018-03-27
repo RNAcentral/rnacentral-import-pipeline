@@ -77,8 +77,7 @@ $$ INSERT INTO rnc_genome_mapping (rna_id, upi, taxid, region_id, chromosome,
     (SELECT rna_id, upi, taxid, region_id, chromosome, "start", stop, strand,
             assembly_id, "identity"
 	from {table})
-; $$,
-$$ TRUNCATE TABLE {table}; $$
+; $$
 ;
 """
 

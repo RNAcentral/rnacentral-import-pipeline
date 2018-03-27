@@ -81,8 +81,7 @@ $$ insert into rnc_genome_mapping (rna_id, upi, taxid, region_id, chromosome, "s
 	where t2.rna_id is null
 );
 ; $$,
-$$ TRUNCATE TABLE {table}; $$,
-$$ VACUUM (VERBOSE, ANALYZE) {table} $$
+$$ TRUNCATE TABLE {table}; $$
 ;
 """
 
