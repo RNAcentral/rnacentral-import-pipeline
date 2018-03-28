@@ -375,7 +375,7 @@ def boost(taxid, deleted, rna_type, expert_dbs):
         # basic priority level
         value = 1
 
-    if rna_type in GENERIC_TYPES:
+    if normalize_rna_type(rna_type) in GENERIC_TYPES:
         value = value - 0.5
 
     return value
@@ -469,7 +469,7 @@ builder = entry([
         fields('gene_synonym', unique, keys='gene_synonyms'),
         field('rna_type', normalize_rna_type),
         fields('product', unique, keys='products'),
-        field('has_genomic_coordinates', first),
+        field('has_genomic_coordinates', first, keys='has_coordinates'),
         field('md5', first),
         fields('author', as_authors, keys='authors'),
         fields('journal', as_journals, keys='journals'),
