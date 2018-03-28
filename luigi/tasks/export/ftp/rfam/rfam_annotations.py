@@ -26,7 +26,10 @@ from rnacentral.export.ftp import rfam_annotations as ann
 
 class RfamAnnotations(luigi.Task):
     def output(self):
-        return luigi.LocalTarget(export().rfam('rfam_annotations.tsv'))
+        return luigi.LocalTarget(
+            export().rfam('rfam_annotations.tsv.gz'),
+            format=luigi.format.Gzip
+        )
 
     def run(self):
         connection = get_db_connection(db(), connect_timeout=10 * 60)
