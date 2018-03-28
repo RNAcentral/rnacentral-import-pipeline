@@ -13,30 +13,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import itertools as it
-
 import luigi
 
-from tasks.config import export
-from tasks.utils.files import atomic_output
-
 from .data import Md5Data
+from .readme import Readme
+from .example import Md5Example
 
 
-class Md5Example(luigi.Task):
+class Md5Export(luigi.WrapperTask):
     def requires(self):
-        return Md5Data()
-
-    def output(self):
-        return luigi.LocalTarget(export().md5('example.txt'))
-
-    def data(self):
-        count = export().md5_example_size
-        with self.requires().output().open('r') as raw:
-            return list(it.islice(raw, count))
-
-    def run(self):
-        with atomic_output(self.output()) as out:
-            for line in self.data():
-                out.write(line)
-
+        yield Md5Data()
+        yield Readme()
+        yield Md5Example()
