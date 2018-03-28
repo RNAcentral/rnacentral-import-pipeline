@@ -17,9 +17,11 @@ import luigi
 
 from .md5 import Md5Export
 from .id_mapping import IdExport
+from .rfam import RfamAnnotationExport
 
 
 class FtpExport(luigi.WrapperTask):
     def requires(self):
         yield Md5Export
         yield IdExport
+        yield RfamAnnotationExport
