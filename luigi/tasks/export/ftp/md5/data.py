@@ -29,6 +29,6 @@ class Md5Data(luigi.Task):
             format=luigi.format.Gzip,
         )
 
-   def run(self):
+    def run(self):
         with self.output().open('w') as raw:
             md5.known(db(), raw)
