@@ -13,5 +13,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import luigi
 
-from .md5 import MD5
+from .md5 import Md5Export
+from .id_mapping import IdExport
+
+
+class FtpExport(luigi.WrapperTask):
+    def requires(self):
+        yield Md5Export
+        yield IdExport
