@@ -13,11 +13,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import csv
-
-import attr
-from attr.validators import instance_of as is_a
-
 import luigi
 
 from tasks.config import export
