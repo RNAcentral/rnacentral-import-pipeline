@@ -292,7 +292,7 @@ class genome_mapping(luigi.Config):  # pylint: disable=C0103,R0904
         return os.path.join(self.base, 'genomes', *args)
 
     def rnacentral_fasta(self, *args):
-        return self.genomes('rnacentral_fasta', *args)
+        return os.path.join(self.base, 'rnacentral_fasta', *args)
 
     def chunks(self, taxid, *args):
         path = os.path.join(self.rnacentral_fasta(), '%i-split' % taxid, *args)
@@ -301,7 +301,7 @@ class genome_mapping(luigi.Config):  # pylint: disable=C0103,R0904
         return path
 
     def blat_output(self, *args):
-        path = self.genomes('blat_output', *args)
+        path = os.path.join(self.base, 'blat_output', *args)
         if not os.path.exists(path):
             os.makedirs(path)
         return path
