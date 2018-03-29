@@ -28,6 +28,5 @@ class InactiveFastaExport(FastaExportBase):
 
     filename = 'rnacentral_inactive.fasta'
 
-    @property
     def records(self):
         return fasta.inactive(db())
