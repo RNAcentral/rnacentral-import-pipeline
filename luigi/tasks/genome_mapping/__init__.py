@@ -109,5 +109,4 @@ class GenomeMappingPipelineWrapper(luigi.WrapperTask):
         yield SpeciesFastaCleanSplitWrapper()
         yield BlatJobsWrapper()
         yield ParsePslOutputWrapper()
-        yield GenomeMappingPGLoadExactMatches()
-        yield GenomeMappingPGLoadInexactMatches()
+        yield PGLoadGenomeMappingWrapper()
