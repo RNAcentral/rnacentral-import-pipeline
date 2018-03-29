@@ -26,16 +26,26 @@ from .pgload_exact_matches import GenomeMappingPGLoadExactMatches
 from .pgload_inexact_matches import GenomeMappingPGLoadInexactMatches
 
 
+GENOMES = {
+    9606: 'homo_sapiens',
+    10090: 'mus_musculus',
+    10116: 'rattus_norvegicus',
+    7227: 'drosophila_melanogaster',
+    7165: 'anopheles_gambiae',
+    # 352472: 'dictyostelium_discoideum',
+    36329: 'plasmodium_falciparum',
+    3702: 'arabidopsis_thaliana',
+    7091: 'bombyx_mori',
+    # 284812: 'schizosaccharomyces_pombe',
+    559292: 'saccharomyces_cerevisiae',
+    6239: 'caenorhabditis_elegans',
+}
+
 def get_taxids_for_genome_mapping():
     """
     Get taxids for genomes that are used for mapping.
     """
-    return [
-        # 9606, # human
-        559292, # S. cerevisiae
-        # 10090, # mouse
-        # 10116, # rat
-    ]
+    return GENOMES.keys()
 
 
 class SpeciesFastaExportWrapper(luigi.WrapperTask):
