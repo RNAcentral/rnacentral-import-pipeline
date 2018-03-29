@@ -91,7 +91,7 @@ class GenomeMappingPGLoadExactMatches(PGLoader):  # pylint: disable=R0904
         return ParsePslOutput(taxid=self.taxid)
 
     def control_file(self):
-        filename = ParsePslOutput().output()['exact'].fn
+        filename = ParsePslOutput(taxid=self.taxid).output()['exact'].fn
         table = 'load_genome_mapping'
         return CONTROL_FILE.format(
             filename=filename,
