@@ -16,6 +16,7 @@ limitations under the License.
 import collections as coll
 
 from databases import data
+from databases.helpers import phylogeny as phy
 
 
 def secondary_structure(record):
@@ -118,6 +119,22 @@ def external_id(record):
     return eid
 
 
+def species(ncrna):
+    return phy.species(taxid(ncrna))
+
+
+def common_name(ncrna):
+    return phy.common_name(taxid(ncrna))
+
+
+def add_organism_preifx(ncrna, suffix):
+    prefix = species(ncrna)
+    name = common_name(ncrna)
+    if name:
+        prefix += ' (%s)' % name
+    return prefix + ' ' + suffix
+
+
 def description(ncrna):
     """
     Generate a description for the given ncrna record. This will use a series
@@ -128,16 +145,39 @@ def description(ncrna):
         return ncrna['description']
 
     if 'name' in ncrna and ncrna['name']:
-        return ncrna['name']
+        return add_organism_preifx(ncrna, ncrna['name'])
 
     if 'gene' in ncrna:
         gene = ncrna['gene']
         if 'name' in gene:
-            return gene['name']
+            return add_organism_preifx(ncrna, gene['name'])
         if 'symbol' in gene:
-            return gene['symbol']
+            return add_organism_preifx(ncrna, gene['symbol'])
 
     raise ValueError("Could not create a name for %s" % ncrna)
+
+
+def as_entry(database, exons, record):
+    return data.Entry(
+        primary_id=external_id(record),
+        accession=record['primaryId'],
+        ncbi_tax_id=taxid(record),
+        database=database,
+        sequence=record['sequence'],
+        exons=exons,
+        rna_type=record['soTermId'],
+        url=record['url'],
+        description=description(record),
+        seq_version=record.get('version', '1'),
+        xref_data=xrefs(record),
+        species=species(record),
+        common_name=common_name(record),
+        secondary_structure=secondary_structure(record),
+        references=references(record),
+        organelle=record.get('localization', None),
+        product=record.get('product', None),
+        anticodon=anticodon(record),
+    )
 
 
 def parse(raw):
@@ -149,21 +189,4 @@ def parse(raw):
     database = raw['metaData']['dataProvider']
     for record in raw['data']:
         for exons in locations(record):
-            yield data.Entry(
-                primary_id=external_id(record),
-                accession=record['primaryId'],
-                ncbi_tax_id=taxid(record),
-                database=database,
-                sequence=record['sequence'],
-                exons=exons,
-                rna_type=record['soTermId'],
-                url=record['url'],
-                description=description(record),
-                seq_version=record.get('version', '1'),
-                xref_data=xrefs(record),
-                secondary_structure=secondary_structure(record),
-                references=references(record),
-                organelle=record.get('localization', None),
-                product=record.get('product', None),
-                anticodon=anticodon(record),
-            )
+            yield as_entry(database, exons, record)
