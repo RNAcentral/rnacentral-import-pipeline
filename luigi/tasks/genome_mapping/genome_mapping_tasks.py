@@ -26,16 +26,23 @@ from tasks.config import genome_mapping
 from tasks.export.ftp.fasta.utils import FastaExportBase
 
 from rnacentral.genome_mapping import genome_mapping as gm
+from rnacentral.psql import PsqlWrapper
 
 
-def get_genome_assembly_id(taxid):
-    genomes = {
-        559292: 'GCA_000146045.2',
-        10090: 'GCA_000001635.7',
-        10116: 'GCA_000001895.4',
-        9606: 'GCA_000001405.25',
-    }
-    return genomes[taxid]
+def get_species_name(taxid):
+    """
+    Get folder name (same as Ensembl url) based on taxid.
+    """
+    psql = PsqlWrapper(db())
+    sql = """
+    select ensembl_url as species_name
+    from ensembl_assembly
+    where blat_mapping = 1
+    and taxid = {taxid}""".format(taxid=taxid)
+    genomes = psql.copy_to_iterable(sql)
+    for genome in genomes:
+        species_name = genome['species_name'].lower()
+    return species_name
 
 
 class GetFasta(FastaExportBase):
@@ -96,7 +103,7 @@ class GetChromosomes(luigi.Task):
     taxid = luigi.IntParameter(default=559292)
 
     def output(self):
-        chromosomes = genome_mapping().genomes(get_genome_assembly_id(self.taxid))
+        chromosomes = genome_mapping().genomes(get_species_name(self.taxid))
         for filename in iglob(os.path.join(chromosomes, '*.fa')):
             yield luigi.LocalTarget(filename)
 
@@ -165,7 +172,7 @@ class ParsePslOutput(luigi.Task):
         }
 
     def run(self):
-        assembly_id = get_genome_assembly_id(self.taxid)
+        assembly_id = get_species_name(self.taxid)
         cmd = 'source scripts/psl2tsv.sh %s %s' % (self.get_blat_output(), assembly_id)
         status = subprocess.call(cmd, shell=True)
         if status != 0:
