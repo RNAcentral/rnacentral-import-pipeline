@@ -18,6 +18,7 @@ import luigi
 from .md5 import Md5Export
 from .id_mapping import IdExport
 from .rfam import RfamAnnotationExport
+from .fasta import FastaExport
 
 
 class FtpExport(luigi.WrapperTask):
@@ -25,3 +26,4 @@ class FtpExport(luigi.WrapperTask):
         yield Md5Export
         yield IdExport
         yield RfamAnnotationExport
+        yield FastaExport
