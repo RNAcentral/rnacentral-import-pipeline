@@ -98,7 +98,7 @@ class GenomeMappingPGLoadInexactMatches(PGLoader):  # pylint: disable=R0904
         ]
 
     def control_file(self):
-        filename = ParsePslOutput().output()['inexact'].fn
+        filename = ParsePslOutput(taxid=self.taxid).output()['inexact'].fn
         table = 'load_genome_mapping'
         return CONTROL_FILE.format(
             filename=filename,
