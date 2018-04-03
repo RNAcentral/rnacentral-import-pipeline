@@ -358,7 +358,8 @@ def boost(taxid, deleted, rna_type, expert_dbs):
     """
 
     value = 0
-    is_active = deleted == 'N'
+    is_active = 'N' in set(deleted)
+    expert_dbs = set(expert_dbs)
     if is_active and 'HGNC' in expert_dbs:
         # highest priority for HGNC entries
         value = 4
