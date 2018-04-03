@@ -127,6 +127,10 @@ def common_name(ncrna):
     return phy.common_name(taxid(ncrna))
 
 
+def lineage(ncrna):
+    return phy.lineage(taxid(ncrna))
+
+
 def add_organism_preifx(ncrna, suffix):
     prefix = species(ncrna)
     name = common_name(ncrna)
@@ -157,6 +161,28 @@ def description(ncrna):
     raise ValueError("Could not create a name for %s" % ncrna)
 
 
+def gene_synonyms(ncrna):
+    return ncrna.get('gene', {}).get('synonyms', [])
+
+
+def gene(ncrna):
+    gene_id = ncrna.get('gene', {}).get('geneId', None)
+    if gene_id:
+        return gene_id.split(':', 1)[1]
+    return None
+
+
+def locus_tag(ncrna):
+    return ncrna.get('gene', {}).get('locusTag', None)
+
+
+def parent_accession(ncrna):
+    locations = ncrna.get('genomeLocations', [])
+    if not locations:
+        return None
+    return locations[0]['exons'][0]['INSDC_accession'].split('.')[0]
+
+
 def as_entry(database, exons, record):
     return data.Entry(
         primary_id=external_id(record),
@@ -169,14 +195,19 @@ def as_entry(database, exons, record):
         url=record['url'],
         description=description(record),
         seq_version=record.get('version', '1'),
+        parent_accession=parent_accession(record),
         xref_data=xrefs(record),
         species=species(record),
+        lineage=lineage(record),
         common_name=common_name(record),
         secondary_structure=secondary_structure(record),
         references=references(record),
         organelle=record.get('localization', None),
         product=record.get('product', None),
         anticodon=anticodon(record),
+        gene=gene(record),
+        gene_synonyms=gene_synonyms(record),
+        locus_tag=locus_tag(record),
     )
 
 
