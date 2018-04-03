@@ -66,8 +66,8 @@ def as_location(location):
 
         exons.append(data.Exon(
             chromosome=exon['chromosome'],
-            primary_start=exon['startPosition'],
-            primary_end=exon['endPosition'],
+            primary_start=int(exon['startPosition']),
+            primary_end=int(exon['endPosition']),
             complement=complement,
         ))
     return exons
@@ -180,7 +180,11 @@ def parent_accession(ncrna):
     locations = ncrna.get('genomeLocations', [])
     if not locations:
         return None
-    return locations[0]['exons'][0]['INSDC_accession'].split('.')[0]
+
+    first_exon = locations[0]['exons'][0]
+    if 'INSDC_accession' not in first_exon:
+        return None
+    return first_exon['INSDC_accession'].split('.')[0]
 
 
 def as_entry(database, exons, record):
