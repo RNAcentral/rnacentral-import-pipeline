@@ -310,6 +310,8 @@ def test_can_assign_correct_cross_references(upi, ans):
 
 def test_can_create_document_with_unicode():
     data = load_and_get_additional('URS000009EE82_562', 'product')
+    from pprint import pprint
+    pprint(data)
     assert data == [
         {'attrib': {'name': 'product'}, 'text': u'tRNA-Asp(gtc)'},
         {'attrib': {'name': 'product'}, 'text': u'P-site tRNA Aspartate'},
@@ -318,11 +320,10 @@ def test_can_create_document_with_unicode():
         {'attrib': {'name': 'product'}, 'text': u'tRNA-asp'},
         {'attrib': {'name': 'product'}, 'text': u'tRNA Asp ⊄UC'},
         {'attrib': {'name': 'product'}, 'text': u'tRNA-Asp'},
-        {'attrib': {'name': 'product'}, 'text': u'tRNA-Asp (GTC)'},
-        {'attrib': {'name': 'product'}, 'text': u'ASPARTYL TRNA'},
         {'attrib': {'name': 'product'}, 'text': u'tRNA-Asp-GTC'},
+        {'attrib': {'name': 'product'}, 'text': u'ASPARTYL TRNA'},
+        {'attrib': {'name': 'product'}, 'text': u'tRNA-Asp (GTC)'},
     ]
-
 
 
 def test_it_can_handle_a_list_in_ontology():
@@ -413,4 +414,15 @@ def test_it_correctly_assigns_rfam_problem_found(upi, status):
 def test_can_correctly_assign_known_locations(upi, status):
     assert load_and_get_additional(upi, "has_genomic_coordinates") == [
         {'attrib': {'name': 'has_genomic_coordinates'}, 'text': str(status)},
+    ]
+
+
+@pytest.mark.parametrize('upi', [  # pylint: disable=E1101
+    'URS00004B0F34_562',
+    'URS00000ABFE9_562',
+    'URS0000049E57_562',
+])
+def test_does_not_produce_empty_rfam_warnings(upi):
+    assert load_and_get_additional(upi, 'rfam_problems') == [
+        {'attrib': {'name': 'rfam_problems'}, 'text': 'none'},
     ]
