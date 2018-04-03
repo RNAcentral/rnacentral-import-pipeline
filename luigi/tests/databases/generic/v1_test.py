@@ -18,6 +18,7 @@ import json
 import attr
 import pytest
 
+from databases import data as dat
 from databases.generic import v1
 
 
@@ -121,3 +122,67 @@ def test_can_correctly_parse_data():
         ],
         'secondary_structure': {'dot_bracket': ''},
     }
+
+
+def test_can_correctly_parse_lncipedia_data():
+    with open('data/json-schema/v020/lncipedia-5.0.json', 'r') as raw:
+        data = json.load(raw)
+        data = list(v1.parse(data))
+
+    assert len(data) == 2
+    assert attr.asdict(data[0]) == attr.asdict(dat.Entry(
+        primary_id='lnc-CLEC18B-3:5',
+        accession='LNCIPEDIA:lnc-CLEC18B-3:5',
+        ncbi_tax_id=9606,
+        database='LNCIPEDIA',
+        sequence=(
+            "GTAGATCATCATCATAACAGCTCCCAGTGAATCAATGCCTCCCTGCATCCACACCCCTT"
+            "TGTAACATGATATTGTTGCTCTTCCCATCAAGAAATGGTCTCTTTTGGCCGGGCACAGTA"
+            "GCTCACGTCATCCCAGCACTTTGGGAGGCTGAGGCAGGCAGATGGCTTGAGTGTAACAAT"
+            "ATGTTGAATTTGCCATGGGCCTTTAAAGCTTCAATGTTGTGAAGAGCTCTGCATGAAATT"
+            "TTAAAGAGACTGGACCTTTCATCTGCACAACAGCAGGGCACCTCGCTATAGGGACAAGAA"
+            "AGGAAGAGAGAGAGAGAACATTTCTGAAGTAATAGTGAAAAATAACAGCAGAAGCAATTA"
+            "TTTCATCAAAGATTGCAGGGAGAGGCTCCTCCGTGCTCCTGAGAGGCCGAACACAGGGTC"
+            "GCCAGCACAGCTTACTGCTCGGTGTCTCCTGAGCCACAGAGGAAGACGTGGCAGGAGCAC"
+            "CTGGTGCTAATATATATTCATGTCTATGGCAATGCCGACCATCTGGCTGGTCTGAACCAG"
+            "GATAAAAGTGAAGAATTCCTCTGTGAAGACCCAGCTCTTTCTTTGGCTCCTTTTTTGAAG"
+            "CCATCTTTGCTCTGCTCTCCTCTGCTGCCCAGAAAGTTCCAGAGTGAAGCTCAGCTCTAG"
+            "ATGAACAAAAACTGGTTGAGTCCAGAGATGCCTGAGTTGGAGATGAACCTTGCAAACTTT"
+            "CCTCATTACCATACTAAAAACCCCACCCAGGAAGGAGCTTATCTGCCATTTCCTACACAT"
+            "GTGACATATGGAGAAGCATGATCAGCTACTTCACAGTCTCTGCCTTTACTCTGCCTCCGC"
+            "ATACAATGGCTCAGCCAACTAGCCTAACGAAAGCTGTTTTCACCATTGTTTGGGAGGTAC"
+            "TGCTTTGGGAAACTGCCCCAGCTGTCCTCCTTACTTGTTGTAGGTAATAAAATCCCTTTG"
+            "TTAAATC"
+        ),
+        exons=[],
+        rna_type='SO:0001877',
+        url='https://lncipedia.org/db/transcript/lnc-CLEC18B-3:5',
+        seq_version='1',
+
+        xref_data={'NONCODE': ['NONHSAT143655']},
+
+        gene='lnc-CLEC18B-3',
+        gene_synonyms=[
+            "ENSG00000249447",
+            "XLOC_012007",
+            "linc-ZFHX3-2",
+            "ENSG00000261404.1",
+            "AC009120.4",
+            "OTTHUMG00000176255.2",
+            "ENSG00000261404.5",
+            "ENSG00000261404.6",
+            "AC138627.1",
+            "LOC101928035"
+        ],
+        # product='long non-coding RNA lnc-CLEC18B-3:5',
+
+        description='Homo sapiens (human) non-protein coding lnc-CLEC18B-3:5',
+        species='Homo sapiens',
+        common_name='human',
+        lineage=(
+            'Eukaryota; Metazoa; Chordata; Craniata; '
+            'Vertebrata; Euteleostomi; Mammalia; Eutheria; '
+            'Euarchontoglires; Primates; Haplorrhini; Catarrhini; '
+            'Hominidae; Homo; Homo sapiens'
+        ),
+    ))
