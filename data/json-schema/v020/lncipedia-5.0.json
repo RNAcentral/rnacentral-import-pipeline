@@ -1,0 +1,115 @@
+{
+  "data": [{
+    "crossReferenceIds": [
+      "NONCODE:NONHSAT143655"
+    ],
+    "name": "non-protein coding lnc-CLEC18B-3:5",
+    "sequence": "GTAGATCATCATCATAACAGCTCCCAGTGAATCAATGCCTCCCTGCATCCACACCCCTTTGTAACATGATATTGTTGCTCTTCCCATCAAGAAATGGTCTCTTTTGGCCGGGCACAGTAGCTCACGTCATCCCAGCACTTTGGGAGGCTGAGGCAGGCAGATGGCTTGAGTGTAACAATATGTTGAATTTGCCATGGGCCTTTAAAGCTTCAATGTTGTGAAGAGCTCTGCATGAAATTTTAAAGAGACTGGACCTTTCATCTGCACAACAGCAGGGCACCTCGCTATAGGGACAAGAAAGGAAGAGAGAGAGAGAACATTTCTGAAGTAATAGTGAAAAATAACAGCAGAAGCAATTATTTCATCAAAGATTGCAGGGAGAGGCTCCTCCGTGCTCCTGAGAGGCCGAACACAGGGTCGCCAGCACAGCTTACTGCTCGGTGTCTCCTGAGCCACAGAGGAAGACGTGGCAGGAGCACCTGGTGCTAATATATATTCATGTCTATGGCAATGCCGACCATCTGGCTGGTCTGAACCAGGATAAAAGTGAAGAATTCCTCTGTGAAGACCCAGCTCTTTCTTTGGCTCCTTTTTTGAAGCCATCTTTGCTCTGCTCTCCTCTGCTGCCCAGAAAGTTCCAGAGTGAAGCTCAGCTCTAGATGAACAAAAACTGGTTGAGTCCAGAGATGCCTGAGTTGGAGATGAACCTTGCAAACTTTCCTCATTACCATACTAAAAACCCCACCCAGGAAGGAGCTTATCTGCCATTTCCTACACATGTGACATATGGAGAAGCATGATCAGCTACTTCACAGTCTCTGCCTTTACTCTGCCTCCGCATACAATGGCTCAGCCAACTAGCCTAACGAAAGCTGTTTTCACCATTGTTTGGGAGGTACTGCTTTGGGAAACTGCCCCAGCTGTCCTCCTTACTTGTTGTAGGTAATAAAATCCCTTTGTTAAATC",
+    "primaryId": "LNCIPEDIA:lnc-CLEC18B-3:5",
+    "genomeLocations": [
+      {
+        "ucsc_accession": "hg19",
+        "gca_accession": "GCF_000001405.13",
+        "assembly": "GRCh37",
+        "exons": [
+          {
+            "startPosition": 74226290,
+            "strand": "-",
+            "endPosition": 74226625,
+            "chromosome": "chr16"
+          },
+          {
+            "startPosition": 74239803,
+            "strand": "-",
+            "endPosition": 74240064,
+            "chromosome": "chr16"
+          },
+          {
+            "startPosition": 74244204,
+            "strand": "-",
+            "endPosition": 74244404,
+            "chromosome": "chr16"
+          },
+          {
+            "startPosition": 74249250,
+            "strand": "-",
+            "endPosition": 74249420,
+            "chromosome": "chr16"
+          }
+        ]
+      },
+      {
+        "ucsc_accession": "hg38",
+        "gca_accession": "GCF_000001405.33",
+        "assembly": "GRCh38",
+        "exons": [
+          {
+            "startPosition": 74192391,
+            "INSDC_accession": "CM000678.2",
+            "strand": "-",
+            "endPosition": 74192726,
+            "chromosome": "chr16"
+          },
+          {
+            "startPosition": 74205904,
+            "INSDC_accession": "CM000678.2",
+            "strand": "-",
+            "endPosition": 74206165,
+            "chromosome": "chr16"
+          },
+          {
+            "startPosition": 74210305,
+            "INSDC_accession": "CM000678.2",
+            "strand": "-",
+            "endPosition": 74210505,
+            "chromosome": "chr16"
+          },
+          {
+            "startPosition": 74215351,
+            "INSDC_accession": "CM000678.2",
+            "strand": "-",
+            "endPosition": 74215521,
+            "chromosome": "chr16"
+          }
+        ]
+      }
+    ],
+    "soTermId": "SO:0001877",
+    "taxonId": "NCBITaxon:9606",
+    "url": "https://lncipedia.org/db/transcript/lnc-CLEC18B-3:5",
+    "version": "1",
+    "symbolSynonyms": [
+      "ENST00000510251",
+      "NR_104657.1",
+      "NR_104657",
+      "AC009120.4-001",
+      "TCONS_00024274",
+      "lnc-CLEC18B-3:5",
+      "OTTHUMT00000431686.1",
+      "ENST00000568137.1",
+      "lnc-CLEC18B-2:3"
+    ],
+    "gene": {
+      "url": "https://lncipedia.org/db/gene/lnc-CLEC18B-3",
+      "synonyms": [
+        "ENSG00000249447",
+        "XLOC_012007",
+        "linc-ZFHX3-2",
+        "ENSG00000261404.1",
+        "AC009120.4",
+        "OTTHUMG00000176255.2",
+        "ENSG00000261404.5",
+        "ENSG00000261404.6",
+        "AC138627.1",
+        "LOC101928035"
+      ],
+      "geneId": "LNCIPEDIA:lnc-CLEC18B-3"
+    }
+  }],
+  "metaData": {
+    "dateProduced": "2018-03-09T14:04:22+01:00",
+    "release": "5.0",
+    "schemaVersion": "0.2.0",
+    "dataProvider": "LNCIPEDIA"
+  }
+}
