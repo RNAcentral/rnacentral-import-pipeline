@@ -73,11 +73,11 @@ def as_location(location):
     return exons
 
 
-def locations(record):
+def locations(locs):
     """
     Get all genomic locations this record is in.
     """
-    return [as_location(location) for location in record['genomeLocations']]
+    return [as_location(location) for location in locs]
 
 
 def gene_info(_):
@@ -223,5 +223,5 @@ def parse(raw):
 
     database = raw['metaData']['dataProvider']
     for record in raw['data']:
-        for exons in locations(record):
+        for exons in locations(record['genomeLocations']):
             yield as_entry(database, exons, record)
