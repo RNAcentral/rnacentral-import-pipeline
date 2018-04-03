@@ -267,16 +267,6 @@ def test_correctly_assigns_active(upi, ans):
     assert load_data(upi).additional_fields.is_active == ans
 
 
-# Add test for:
-# HGNC/active/lncRNA    4
-# HGNC/inactive/lncRNA  0
-# HGNC/active/miscRNA   3.5
-# HGNC/inactive/miscRNA   -0.5
-@pytest.mark.skip()  # pylint: disable=E1101
-def test_computes_boost_correctly(upi, ans):
-    assert load_data(upi).additional_fields.boost == ans
-
-
 # Test that this assigns authors from > 1 publications to a single set
 @pytest.mark.skip()  # pylint: disable=E1101
 def test_assigns_authors_correctly(upi, ans):
@@ -425,4 +415,22 @@ def test_can_correctly_assign_known_locations(upi, status):
 def test_does_not_produce_empty_rfam_warnings(upi):
     assert load_and_get_additional(upi, 'rfam_problems') == [
         {'attrib': {'name': 'rfam_problems'}, 'text': 'none'},
+    ]
+
+
+@pytest.mark.parametrize('upi,boost', [  # pylint: disable=E1101
+    ('URS0000B5D04E_1457030', 1),
+    ('URS0000803319_904691', 1),
+    ('URS00009ADB88_9606', 3),
+    ('URS000049E122_9606', 2.5),
+    ('URS000047450F_1286640', 0.0),
+    ('URS0000143578_77133', 0.5),
+    ('URS000074C6E6_7227', 1.5),
+    ('URS00007B5259_3702', 2),
+    ('URS00007E35EF_9606', 4),
+    ('URS00003AF3ED_3702', 1.5),
+])
+def test_computes_valid_boost(upi, boost):
+    assert load_and_get_additional(upi, 'boost') == [
+        {'attrib': {'name': 'boost'}, 'text': str(boost)}
     ]

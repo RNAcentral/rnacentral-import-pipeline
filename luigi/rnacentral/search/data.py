@@ -352,7 +352,7 @@ def references(taxid, xrefs, pmids, dois, notes):
     return refs
 
 
-def boost(taxid, deleted, rna_type, expert_dbs):
+def boost(taxid, deleted, rna_type, expert_dbs, status):
     """
     Determine ordering in search results.
     """
@@ -379,7 +379,10 @@ def boost(taxid, deleted, rna_type, expert_dbs):
     if normalize_rna_type(rna_type) in GENERIC_TYPES:
         value = value - 0.5
 
-    return value
+    if bool(status['has_issue']):
+        value = value - 0.5
+
+    return str(value)
 
 
 def get_genes(genes, products):
@@ -483,6 +486,7 @@ builder = entry([
             'deleted',
             'rna_type',
             'expert_dbs',
+            'rfam_status',
         )),
         fields('locus_tag', unique, keys='locus_tags'),
         fields('standard_name', unique, keys='standard_names'),
