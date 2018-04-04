@@ -31,5 +31,4 @@ from .release import Update
 from .release.process_data import ProcessData
 from .release.cleanup import TruncateLoadTables
 
-from .export.ftp.rfam import ExportRfamAnnotaitons
-from .export.ftp.fasta import FastaExport
+from .export.ftp import FtpExport

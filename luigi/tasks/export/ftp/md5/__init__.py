@@ -15,13 +15,13 @@ limitations under the License.
 
 import luigi
 
+from .data import Md5Data
 from .readme import Readme
-from .id_mapping import IdMapping
-from .database_mappings import DatabaseSpecificMappings
+from .example import Md5Example
 
 
-class IdExport(luigi.WrapperTask):
+class Md5Export(luigi.WrapperTask):
     def requires(self):
+        yield Md5Data()
         yield Readme()
-        yield IdMapping()
-        yield DatabaseSpecificMappings()
+        yield Md5Example()

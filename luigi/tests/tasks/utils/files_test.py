@@ -14,6 +14,7 @@ limitations under the License.
 """
 
 import os
+import gzip
 import string
 import random
 import tempfile
@@ -72,5 +73,18 @@ def test_can_work_with_local_target():
 
     assert os.path.exists(filename)
     with open(filename, 'rb') as data:
+        assert data.read() == "hi"
+    os.remove(filename)
+
+
+def test_can_work_with_gzipped_local_target():
+    filename = tempfile.mktemp()
+    assert not os.path.exists(filename)
+    output = luigi.LocalTarget(filename, format=luigi.format.Gzip)
+    with atomic_output(output) as out:
+        out.write("hi")
+
+    assert os.path.exists(filename)
+    with gzip.open(filename, 'rb') as data:
         assert data.read() == "hi"
     os.remove(filename)
