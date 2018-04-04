@@ -1,0 +1,14 @@
+{
+  "rnacentral_id": "URS00000088B8_2095",
+  "description": "Mycoplasma capricolum transfer RNA",
+  "sequence": "GCCCAUGUAGCUCAGUAGGAUAGAGCACGCGCCUUCUAAGCGUGAGGUCGGAAGUUCGAGCCUUCUCGUGGGCACCA",
+  "md5": "046f1ed159a204270dc8d078ec847925",
+  "rna_type": "tRNA",
+  "taxon_id": 2095,
+  "xrefs": [
+    {
+      "id": "http://modomics.genesilico.pl/sequences/list/tRNA",
+      "database": "Modomics"
+    }
+  ]
+}
