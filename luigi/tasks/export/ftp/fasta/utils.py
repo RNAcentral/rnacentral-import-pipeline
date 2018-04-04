@@ -32,7 +32,10 @@ class FastaExportBase(luigi.Task):
     filename = None
 
     def output(self):
-        return luigi.LocalTarget(export().sequences(self.filename))
+        return luigi.LocalTarget(
+            export().sequences(self.filename),
+            format=luigi.format.Gzip,
+        )
 
     @abc.abstractmethod
     def records(self):

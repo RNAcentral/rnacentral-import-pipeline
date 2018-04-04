@@ -56,6 +56,10 @@ class PsqlWrapper(object):
 
     @contextmanager
     def command(self, command):
+        """
+        Execute a command and yield a filehandle that stores the results.
+        """
+
         with tempfile.NamedTemporaryFile() as out:
             process = sp.Popen(
                 [self.config.psql, '-c', command, self.config.pgloader_url()],
@@ -70,10 +74,18 @@ class PsqlWrapper(object):
                 yield readable
 
     def write_command(self, handle, command):
+        """
+        This will write the command to the given file handle.
+        """
+
         with self.command(command) as tmp:
             shutil.copyfileobj(tmp, handle)
 
     def write_query(self, handle, sql, **kwargs):
+        """
+        This will write the sql query to the given file handle.
+        """
+
         command = query_as_copy(sql, **kwargs)
         self.write_command(handle, command)
 

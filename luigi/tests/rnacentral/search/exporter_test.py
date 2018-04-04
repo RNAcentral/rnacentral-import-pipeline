@@ -267,16 +267,6 @@ def test_correctly_assigns_active(upi, ans):
     assert load_data(upi).additional_fields.is_active == ans
 
 
-# Add test for:
-# HGNC/active/lncRNA    4
-# HGNC/inactive/lncRNA  0
-# HGNC/active/miscRNA   3.5
-# HGNC/inactive/miscRNA   -0.5
-@pytest.mark.skip()  # pylint: disable=E1101
-def test_computes_boost_correctly(upi, ans):
-    assert load_data(upi).additional_fields.boost == ans
-
-
 # Test that this assigns authors from > 1 publications to a single set
 @pytest.mark.skip()  # pylint: disable=E1101
 def test_assigns_authors_correctly(upi, ans):
@@ -310,6 +300,8 @@ def test_can_assign_correct_cross_references(upi, ans):
 
 def test_can_create_document_with_unicode():
     data = load_and_get_additional('URS000009EE82_562', 'product')
+    from pprint import pprint
+    pprint(data)
     assert data == [
         {'attrib': {'name': 'product'}, 'text': u'tRNA-Asp(gtc)'},
         {'attrib': {'name': 'product'}, 'text': u'P-site tRNA Aspartate'},
@@ -318,11 +310,10 @@ def test_can_create_document_with_unicode():
         {'attrib': {'name': 'product'}, 'text': u'tRNA-asp'},
         {'attrib': {'name': 'product'}, 'text': u'tRNA Asp ⊄UC'},
         {'attrib': {'name': 'product'}, 'text': u'tRNA-Asp'},
-        {'attrib': {'name': 'product'}, 'text': u'tRNA-Asp (GTC)'},
-        {'attrib': {'name': 'product'}, 'text': u'ASPARTYL TRNA'},
         {'attrib': {'name': 'product'}, 'text': u'tRNA-Asp-GTC'},
+        {'attrib': {'name': 'product'}, 'text': u'ASPARTYL TRNA'},
+        {'attrib': {'name': 'product'}, 'text': u'tRNA-Asp (GTC)'},
     ]
-
 
 
 def test_it_can_handle_a_list_in_ontology():
@@ -413,4 +404,33 @@ def test_it_correctly_assigns_rfam_problem_found(upi, status):
 def test_can_correctly_assign_known_locations(upi, status):
     assert load_and_get_additional(upi, "has_genomic_coordinates") == [
         {'attrib': {'name': 'has_genomic_coordinates'}, 'text': str(status)},
+    ]
+
+
+@pytest.mark.parametrize('upi', [  # pylint: disable=E1101
+    'URS00004B0F34_562',
+    'URS00000ABFE9_562',
+    'URS0000049E57_562',
+])
+def test_does_not_produce_empty_rfam_warnings(upi):
+    assert load_and_get_additional(upi, 'rfam_problems') == [
+        {'attrib': {'name': 'rfam_problems'}, 'text': 'none'},
+    ]
+
+
+@pytest.mark.parametrize('upi,boost', [  # pylint: disable=E1101
+    ('URS0000B5D04E_1457030', 1),
+    ('URS0000803319_904691', 1),
+    ('URS00009ADB88_9606', 3),
+    ('URS000049E122_9606', 2.5),
+    ('URS000047450F_1286640', 0.0),
+    ('URS0000143578_77133', 0.5),
+    ('URS000074C6E6_7227', 1.5),
+    ('URS00007B5259_3702', 2),
+    ('URS00007E35EF_9606', 4),
+    ('URS00003AF3ED_3702', 1.5),
+])
+def test_computes_valid_boost(upi, boost):
+    assert load_and_get_additional(upi, 'boost') == [
+        {'attrib': {'name': 'boost'}, 'text': str(boost)}
     ]

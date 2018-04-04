@@ -30,5 +30,5 @@ class Md5Data(luigi.Task):
         )
 
     def run(self):
-        with self.output.open('w') as raw:
+        with self.output().open('w') as raw:
             md5.known(db(), raw)
