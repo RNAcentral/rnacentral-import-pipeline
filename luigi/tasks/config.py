@@ -291,3 +291,8 @@ class refseq(luigi.Config):  # pylint: disable=C0103,R0904
 
     def input_file(self, *args):
         return os.path.join(output().base, 'refseq', *args)
+
+
+class generic(luigi.Config):
+    def raw(self, *args):
+        return os.path.join(output().base, 'generic-data', *args)
