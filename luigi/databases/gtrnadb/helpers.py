@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 
 
 """
@@ -13,8 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from databases import helpers as dbs
+import re
+import urlparse
+
+import requests
+
 from databases.data import Reference
+import databases.helpers.phylogeny as phy
 
 
 class InvalidDotBracket(Exception):
@@ -23,6 +29,36 @@ class InvalidDotBracket(Exception):
     dot-bracket string.
     """
     pass
+
+
+def extract_download_urls(base_url, text):
+    """
+    Given a chunk of text returned by the main GtRNAdb RNAcentral download url
+    (http://trna.ucsc.edu/download/RNAcentral/) this can pull out the URLs that
+    represent the filenames to download.
+    """
+
+    data = []
+    for line in text.split("\n"):
+        # I am aware of how awful it is to parse HTML via regex, but I long for
+        # the return of the elder gods and I'm doing my part to bring them
+        # back.
+        if "/icons/compressed.gif" in line:
+            match = re.search('href="([^"]+)"', line)
+            assert match
+            filename = match.group(1)
+            data.append((filename, urlparse.urljoin(base_url, filename)))
+    assert data, "Given text contained now downloadable urls"
+    return data
+
+
+def downloadable_files(base_url):
+    """
+    Determine all remote files to download.
+    """
+
+    response = requests.get(base_url)
+    return extract_download_urls(base_url, response.text)
 
 
 def url(data):
@@ -47,6 +83,10 @@ def note_data(data):
 
     note = {}
     note.update(data['metadata'])
+    extra = ['mature_sequence', 'description']
+    for entry in extra:
+        if entry in note:
+            del note[entry]
     del note['organism']
     del note['pseudogene']
     for position in note['anticodon_positions']:
@@ -72,30 +112,31 @@ def common_name(data):
     """
     Get a standardized common name for the given taxon id.
     """
-    return dbs.common_name(data['ncbi_tax_id'])
+    return phy.common_name(data['ncbi_tax_id'])
 
 
 def lineage(data):
     """
     Get a standardized lineage for the given taxon id.
     """
-    return dbs.lineage(data['ncbi_tax_id'])
+    return phy.lineage(data['ncbi_tax_id'])
 
 
 def species(data):
     """
     Get a standardized species name for the given taxon id.
     """
-    return dbs.species(data['ncbi_tax_id'])
+    return phy.species(data['ncbi_tax_id'])
 
 
 def description(data):
     """
     Generate a description for the entries specified by the data.
     """
-    return '{name} {product}'.format(
+    details = data['metadata'].get('description', product(data))
+    return '{name} {details}'.format(
         name=species(data),
-        product=product(data),
+        details=details,
     )
 
 
@@ -181,3 +222,9 @@ def references(data, location):
         pmid=18984615,
         doi='10.1093/nar/gkn787.',
     )]
+
+
+def sequence(data):
+    if 'mature_sequence' in data['metadata']:
+        return data['metadata']['mature_sequence'].upper()
+    return data['sequence'].upper()

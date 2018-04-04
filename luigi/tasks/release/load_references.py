@@ -15,12 +15,9 @@ limitations under the License.
 
 import os
 
-import luigi
-
 from tasks.config import output
 from tasks.utils.pgloader import PGLoader
 
-from .utils.generic import file_pattern
 from .manage_files import SplitMergedFile
 
 
@@ -89,7 +86,6 @@ class LoadReferences(PGLoader):  # pylint: disable=R0904
     references, if a value is given then it is assumed to be the name of the
     database to load. All files that begin with that name will be loaded.
     """
-    database = luigi.Parameter(default='all')
     directory = 'refs'
 
     def requires(self):
@@ -99,7 +95,7 @@ class LoadReferences(PGLoader):  # pylint: disable=R0904
         config = output()
         directory = os.path.join(config.base, self.directory)
         return CONTROL_FILE.format(
-            pattern=file_pattern(self.database),
+            pattern='chunk_*',
             db_url=self.db_url(table='load_rnc_references'),
             search_path=self.db_search_path(),
             directory=directory,

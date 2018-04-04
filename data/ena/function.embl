@@ -1,0 +1,159 @@
+ID   EU410654.1:1..92:ncRNA; SV 1; linear; genomic DNA; STD; PLN; 92 BP.
+XX
+PA   EU410654.1
+XX
+DT   19-FEB-2008 (Rel. 94, Created)
+DT   04-JUN-2008 (Rel. 96, Last updated, Version 2)
+XX
+DE   Chlamydomonas reinhardtii CrCD10e snoRNA
+XX
+KW   .
+XX
+OS   Chlamydomonas reinhardtii
+OC   Eukaryota; Viridiplantae; Chlorophyta; Chlorophyceae; Chlamydomonadales;
+OC   Chlamydomonadaceae; Chlamydomonas.
+XX
+RN   [1]
+RP   1-92
+RX   DOI; 10.1534/genetics.107.086025.
+RX   PUBMED; 18493037.
+RA   Chen C.L., Chen C.J., Vallon O., Huang Z.P., Zhou H., Qu L.H.;
+RT   "Genomewide analysis of box C/D and box H/ACA snoRNAs in Chlamydomonas
+RT   reinhardtii reveals an extensive organization into intronic gene clusters";
+RL   Genetics 179(1):21-30(2008).
+XX
+RN   [2]
+RP   1-92
+RA   Chen C.-L., Chen C.-J., Vallon O., Huang Z.-P., Zhou H., Qu L.-H.;
+RT   ;
+RL   Submitted (18-JAN-2008) to the INSDC.
+RL   Zhongshan University, Key Laboratory of Gene Engineering of the Ministry of
+RL   Education, Biotechnology Research Center, Guangzhou 510275, People's
+RL   Republic of China
+XX
+DR   MD5; 5c4a1c47bfd172e4474c757c89f6ce6c.
+XX
+CC   Determined from Chlamydomonas reinhardtii genome in GenBank
+CC   Accession Number ABCN00000000.
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..92
+FT                   /organism="Chlamydomonas reinhardtii"
+FT                   /mol_type="genomic DNA"
+FT                   /db_xref="taxon:3055"
+FT   ncRNA           EU410654.1:1..92
+FT                   /product="CrCD10e snoRNA"
+FT                   /function="guide for 26S rRNA methylation at U1043"
+FT                   /note="C/D box snoRNA"
+FT                   /ncRNA_class="snoRNA"
+XX
+SQ   Sequence 92 BP; 22 A; 28 C; 22 G; 20 T; 0 other;
+     gcggcgatga ctgccctcga gtgcctaact cgtcttacct attttcagag tcccctcaag        60
+     gggcgcgctg ctgaaacaaa tacacaatga gc                                      92
+//
+ID   AB046489.1:221..306:tRNA; SV 1; linear; genomic DNA; STD; VRT; 86 BP.
+XX
+PA   AB046489.1
+XX
+DT   20-NOV-2003 (Rel. 77, Created)
+DT   29-DEC-2010 (Rel. 107, Last updated, Version 2)
+XX
+DE   Eurypharynx pelecanoides (pelican eel) tRNA
+XX
+KW   .
+XX
+OS   Eurypharynx pelecanoides (pelican eel)
+OC   Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi;
+OC   Actinopterygii; Neopterygii; Teleostei; Anguilliformes; Eurypharyngidae;
+OC   Eurypharynx.
+OG   Mitochondrion
+XX
+RN   [1]
+RA   Inoue J., Miya M., Tsukamoto K., Nishida M.;
+RT   ;
+RL   Submitted (23-JUL-2000) to the INSDC.
+RL   Contact:Jun Inoue Atmosphere and Ocean Research Institute, The University
+RL   of Tokyo; 5-1-5 Kashiwanoha, Kashiwa, Chiba 277-8564, Japan
+XX
+RN   [2]
+RX   DOI; 10.1093/molbev/msg206.
+RX   PUBMED; 12949142.
+RA   Inoue J., Miya M., Tsukamoto K., Nishida M.;
+RT   "Evolution of the deep-sea gulper eel mitochondrial genomes: large-scale
+RT   gene rearrangements originated within the eels";
+RL   Mol. Biol. Evol. 20(11):1917-1924(2003).
+XX
+DR   MD5; 84f7c99e40be8ba95932912d86d9ce43.
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..86
+FT                   /organism="Eurypharynx pelecanoides"
+FT                   /organelle="mitochondrion"
+FT                   /isolate="D"
+FT                   /mol_type="genomic DNA"
+FT                   /db_xref="taxon:55117"
+FT   tRNA            complement(AB046489.1:221..306)
+FT                   /function="tRNA-Pro"
+XX
+SQ   Sequence 86 BP; 16 A; 16 C; 25 G; 29 T; 0 other;
+     aagttagaga gcgatttaat ttatgacccc ggccttgggg ccttggggtc ttggggatgg        60
+     gagtttaatt tcccccctta attttg                                             86
+//
+ID   CP003783.1:1548698..1548818:ncRNA; SV 1; linear; genomic DNA; STD; PRO; 121 BP.
+XX
+PA   CP003783.1
+XX
+PR   Project:PRJNA172244;
+XX
+DT   29-AUG-2012 (Rel. 113, Created)
+DT   15-MAY-2014 (Rel. 120, Last updated, Version 6)
+XX
+DE   Bacillus subtilis QB928 sporulation-specific regulatory RNA
+XX
+KW   .
+XX
+OS   Bacillus subtilis QB928
+OC   Bacteria; Firmicutes; Bacilli; Bacillales; Bacillaceae; Bacillus.
+XX
+RN   [1]
+RX   PUBMED; 23105055.
+RA   Yu C.S., Yim K.Y., Tsui S.K., Chan T.F.;
+RT   "Complete Genome Sequence of Bacillus subtilis Strain QB928, a Strain
+RT   Widely Used in B. subtilis Genetic Studies";
+RL   J. Bacteriol. 194(22):6308-6309(2012).
+XX
+RN   [2]
+RA   Yu C.-S., Yim K.-Y., Mat W.-K., Tsui S.K., Wong J.T., Chan T.-F.;
+RT   ;
+RL   Submitted (19-AUG-2012) to the INSDC.
+RL   School of Life Sciences, The Chinese University of Hong Kong, G12, Run Run
+RL   Shaw Science Building, The Chinese University of Hong Kong, Shatin, N.T.,
+RL   Hong Kong, China
+XX
+DR   MD5; 4d454fc72801b39b5f4d10cbc60aca39.
+DR   BioSample; SAMN02603911.
+XX
+CC   Bacillus subtilis str. QB928 is available from Bacillus Genetic
+CC   Stock Center (BGSC).
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..121
+FT                   /organism="Bacillus subtilis QB928"
+FT                   /strain="QB928"
+FT                   /mol_type="genomic DNA"
+FT                   /db_xref="taxon:1220533"
+FT   ncRNA           CP003783.1:1548698..1548818
+FT                   /gene="csfG"
+FT                   /locus_tag="B657_miscRNA23"
+FT                   /product="sporulation-specific regulatory RNA"
+FT                   /function="1.8 : Sporulation"
+FT                   /ncRNA_class="other"
+XX
+SQ   Sequence 121 BP; 39 A; 23 C; 35 G; 24 T; 0 other;
+     ataaaaaaat ccccgcaggc atctgcgggg tccttctatt ccttaatatg ttaaggagaa        60
+     ggcaaaggga gaggagaaac cggaggaaga acttatgggg aaacgtaagt cttctccgcg       120
+     g                                                                       121
+//
