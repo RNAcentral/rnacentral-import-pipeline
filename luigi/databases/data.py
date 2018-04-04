@@ -15,6 +15,7 @@ limitations under the License.
 
 import json
 import logging
+import unicodedata
 from collections import Counter
 
 import attr
@@ -22,8 +23,8 @@ from attr.validators import and_
 from attr.validators import instance_of as is_a
 from attr.validators import optional
 
-from databases.helpers import md5
-from databases.helpers import crc64
+from databases.helpers.hashes import md5
+from databases.helpers.hashes import crc64
 
 LOGGER = logging.getLogger(__name__)
 
@@ -72,6 +73,14 @@ def is_truish():
     return fn
 
 
+def optional_utf8(raw):
+    if raw is None:
+        return None
+    if isinstance(raw, unicode):
+        return unicodedata.normalize('NFC', raw).encode('ascii', 'ignore')
+    return raw
+
+
 @attr.s(frozen=True)
 class Exon(object):
     chromosome = attr.ib(validator=is_a(basestring))
@@ -108,6 +117,9 @@ class SecondaryStructure(object):
         """
         return bool(self.dot_bracket)
 
+    def __len__(self):
+        return len(self.dot_bracket)
+
     @property
     def md5(self):
         """
@@ -124,21 +136,23 @@ class Reference(object):
     """
 
     accession = attr.ib(validator=is_a(basestring))
-    authors = attr.ib(validator=is_a(basestring))
+    authors = attr.ib(validator=is_a(basestring), convert=optional_utf8)
     location = attr.ib(validator=is_a(basestring))
-    title = attr.ib(validator=is_a(basestring))
-    pmid = attr.ib(validator=is_a(int))
-    doi = attr.ib(validator=is_a(basestring))
+    title = attr.ib(
+        validator=optional(is_a(basestring)),
+        convert=optional_utf8
+    )
+    pmid = attr.ib(validator=optional(is_a(int)))
+    doi = attr.ib(validator=optional(is_a(basestring)))
 
     def md5(self):
         """
         Computes the MD5 hash of the reference.
         """
-
         return md5(''.join([
-            self.authors,
-            self.location,
-            self.title
+            (self.authors or ''),
+            (self.location or ''),
+            (self.title or ''),
         ]))
 
 
@@ -280,14 +294,12 @@ class Entry(object):
         """
         Compute a CRC64 check sum for the sequence.
         """
-
         return crc64(self.sequence)
 
     def md5(self):
         """
         Compute an MD5 hash of the sequence.
         """
-
         return md5(self.sequence)
 
     def is_valid(self):
@@ -308,7 +320,7 @@ class Entry(object):
         counts = Counter(self.sequence)
         fraction = float(counts.get('N', 0)) / float(len(self.sequence))
         if fraction > 0.1:
-            LOGGER.info(
+            LOGGER.warn(
                 "%s has too many (%i/%i) N's",
                 self.accession,
                 counts['N'],

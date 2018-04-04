@@ -19,40 +19,32 @@ from .load_sequences import LoadSequences
 from .load_accessions import LoadAccessions
 from .load_references import LoadReferences
 from .load_coordinates import LoadCoordinates
-from .load_secondary_structures import LoadSecondaryStructures
+from .load_secondary_structures import UpdateSecondaryStructures
+from .ensembl_coordinates import EnsemblCoordinates
 from .store import RunRelease
-from .store import UpdateAccessions
-from .store import UpdateReferences
-from .store import UpdateCoordinates
-from .prepare import PrepareRelease
-from .cleanup import TruncateLoadTables
 
 
-class LoadRelease(luigi.WrapperTask):  # pylint: disable=R0904
+class Load(luigi.WrapperTask):  # pylint: disable=R0904
     """
     This will load all release data into the load_* tables.
     """
 
-    database = luigi.Parameter(default='all')
+    def requires(self):
+        yield LoadSequences(type='all')
+        yield LoadAccessions()
+        yield LoadReferences()
+        yield LoadCoordinates()
+
+
+class Update(luigi.WrapperTask):  # pylint: disable=R0904
+    """
+    This will run the code that moves data from load_* tables into their final
+    tables. This does no cleanup once done and depends on Load having already
+    run.
+    """
 
     def requires(self):
-        yield LoadSequences(database=self.database, type='all')
-        yield LoadAccessions(database=self.database)
-        yield LoadReferences(database=self.database)
-        yield LoadCoordinates(database=self.database)
-        yield LoadSecondaryStructures(database=self.database)
-
-
-class Release(luigi.WrapperTask):  # pylint: disable=R0904
-    """
-    This runs all steps required to build and prepare a release for RNAcentral.
-    This will not delete any data. To do that you must run the TruncateLoadTables
-    task manually afterwards.
-    """
-    database = luigi.Parameter(default='all')
-
-    def requires(self):
+        yield Load()
         yield RunRelease()
-        yield UpdateAccessions()
-        yield UpdateReferences()
-        yield UpdateCoordinates()
+        yield EnsemblCoordinates()
+        yield UpdateSecondaryStructures()

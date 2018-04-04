@@ -37,10 +37,11 @@ def lineage(data):
 def taxid(data):
     return int(data['ncbi_tax_id'])
 
+
 def feature_location_endpoints(data):
     start = int(data['feature_location_start'])
     stop = int(data['feature_location_end'])
-    return tuple(sorted([start, stop]))
+    return (start, stop)
 
 
 

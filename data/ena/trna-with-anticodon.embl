@@ -1,0 +1,113 @@
+ID   HF536610.1:1288..1686:tRNA; SV 1; linear; genomic DNA; STD; PLN; 86 BP.
+XX
+PA   HF536610.1
+XX
+DT   01-OCT-2013 (Rel. 118, Created)
+DT   01-OCT-2013 (Rel. 118, Last updated, Version 1)
+XX
+DE   Anacolia laevisphaera transfer RNA Leu
+XX
+KW   .
+XX
+OS   Anacolia laevisphaera
+OC   Eukaryota; Viridiplantae; Streptophyta; Embryophyta; Bryophyta;
+OC   Bryophytina; Bryopsida; Bryidae; Bryanae; Bartramiales; Bartramiaceae;
+OC   Anacolia.
+OG   Plastid:chloroplast
+XX
+RN   [1]
+RA   Krug M.;
+RT   ;
+RL   Submitted (01-OCT-2012) to the INSDC.
+RL   Krug M., Nees Institute for biodiversity of, plants, Systematics and
+RL   Evolution, Meckenheimer Allee170, 53115 Bonn, GERMANY.
+XX
+RN   [2]
+RA   Damayanti L., Munoz J., Wicke S., Symmank L., Frahm J.P., Quandt D.;
+RT   "Common but new: Bartramia rosamrosiae spec. nov. a 'new' widespread
+RT   species for the Mediterranean";
+RL   Unpublished.
+XX
+DR   MD5; dfdd717f47bf872cc86a2e9e93c1e0e4.
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..86
+FT                   /organism="Anacolia laevisphaera"
+FT                   /organelle="plastid:chloroplast"
+FT                   /isolate="Bs M1"
+FT                   /mol_type="genomic DNA"
+FT                   /specimen_voucher="Bs M1"
+FT                   /db_xref="taxon:188169"
+FT   tRNA            join(HF536610.1:1288..1323,HF536610.1:1637..1686)
+FT                   /gene="tRNA-Leu (UAA)"
+FT                   /product="transfer RNA Leu"
+FT                   /anticodon="(pos:join(HF536610.1:1323,HF536610.1:1637..1638),aa:Leu)"
+XX
+SQ   Sequence 86 BP; 19 A; 20 C; 25 G; 22 T; 0 other;
+     agggggtatg gcggaattgg tagacgctac ggacttaaaa tccgttggct ttattgaccg        60
+     tgagggttca agtccctcta ccccca                                             86
+//
+ID   LK008175.1:1..73:tRNA; SV 1; linear; genomic DNA; STD; PRO; 73 BP.
+XX
+PA   LK008175.1
+XX
+PR   Project:PRJEB5173;
+XX
+DT   13-MAY-2014 (Rel. 120, Created)
+DT   04-MAR-2015 (Rel. 124, Last updated, Version 2)
+XX
+DE   Gramella forsetii KT0803 tRNA-Gly-GCC-1-1
+XX
+KW   RNAcentral; TPA; TPA:specialist_db.
+XX
+OS   Gramella forsetii KT0803
+OC   Bacteria; Bacteroidetes; Flavobacteriia; Flavobacteriales;
+OC   Flavobacteriaceae; Gramella.
+XX
+RN   [1]
+RP   1-73
+RG   GtRNAdb and RNAcentral
+RA   ;
+RT   ;
+RL   Submitted (13-MAY-2014) to the INSDC.
+XX
+RN   [2]
+RX   DOI; 10.1093/nar/gkn787.
+RX   PUBMED; 18984615.
+RA   Chan P.P., Lowe T.M.;
+RT   "GtRNAdb: a database of transfer RNA genes detected in genomic sequence";
+RL   Nucleic Acids Res. 37(Database issue):D93-D97(2009).
+XX
+DR   GtRNAdb; Gram_fors_KT0803; tRNA-Gly-GCC-1-1.
+DR   MD5; 6e450af156aae7d97209b9a60616c914.
+XX
+CC   Specialist DB   : gtRNAdb (Genomic tRNA Database)
+CC   URL             : http://lowelab.ucsc.edu/GtRNAdb/
+CC   gtRNAdb; Gram_fors_KT0803/Gram_fors_KT0803-summary.
+XX
+AH   LOCAL_SPAN          PRIMARY_IDENTIFIER PRIMARY_SPAN        COMP
+AS   1-73                CU207366.1         302192-302264
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..73
+FT                   /organism="Gramella forsetii KT0803"
+FT                   /mol_type="genomic DNA"
+FT                   /db_xref="taxon:411154"
+FT   tRNA            LK008175.1:1..73
+FT                   /gene="tRNA-Gly-GCC-1-1"
+FT                   /standard_name="tRNA-Gly (GCC)"
+FT                   /product="transfer RNA-Gly (GCC)"
+FT                   /anticodon="(pos:LK008175.1:34..36,aa:Gly)"
+FT                   /note="Covariance Model: Bacteria; CM Score: 87.61"
+FT                   /note="Legacy ID: chr.trna3-GlyGCC"
+FT                   /note="ECO:0000202"
+FT                   /note="GO:0030533"
+FT                   /note="SO:0000253"
+FT                   /inference="ab initio prediction:tRNAscan-SE:1.21"
+XX
+SQ   Sequence 73 BP; 14 A; 18 C; 23 G; 18 T; 0 other;
+     gcgaaaatag ctcagttggt agagcgccac cttgccaagg tggaggtcgc gggttcgaat        60
+     cccgtttttc gct                                                           73
+//

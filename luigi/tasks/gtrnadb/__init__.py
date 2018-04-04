@@ -13,9 +13,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from glob import glob
-
 import luigi
+
+from databases.gtrnadb.helpers import downloadable_files
 
 from tasks.config import gtrnadb
 
@@ -30,10 +30,5 @@ class GtRNAdb(luigi.WrapperTask):  # pylint: disable=R0904
     """
 
     def requires(self):
-        config = gtrnadb()
-        files = glob(config.pattern)
-        if not files:
-            raise ValueError("No GtRNAdb data files file")
-
-        for filename in files:
-            yield GtRNAdbJsonToCsv(input_file=filename)
+        for _, url in downloadable_files(gtrnadb().url):
+            yield GtRNAdbJsonToCsv(url=url)
