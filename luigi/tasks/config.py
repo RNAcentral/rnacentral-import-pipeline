@@ -263,6 +263,7 @@ class export(luigi.Config):  # pylint: disable=C0103,R0904
     sequence_example_size = luigi.IntParameter(default=10)
     search_export_size = luigi.IntParameter(default=100000)
     md5_example_size = luigi.IntParameter(default=5)
+    ensembl_export_size = luigi.IntParameter(default=10000)
 
     def ftp(self, *args):
         return os.path.join(output().base, 'ftp', *args)
@@ -287,6 +288,9 @@ class export(luigi.Config):  # pylint: disable=C0103,R0904
 
     def database_mappings(self, *args):
         return self.id_mapping('database_mappings', *args)
+
+    def ensembl_export(self, *args):
+        return self.ftp('ensembl', *args)
 
 
 class refseq(luigi.Config):  # pylint: disable=C0103,R0904

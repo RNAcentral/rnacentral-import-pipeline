@@ -13,19 +13,19 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+
 import luigi
 
-from .md5 import Md5Export
-from .id_mapping import IdExport
-from .rfam import RfamAnnotationExport
-from .fasta import FastaExport
-from .ensembl import EnsemblExport
+from rnacentral.utils import upi_ranges
+
+from tasks.config import db
+from tasks.config import export
+
+from .chunk import EnsemblExportChunk
 
 
-class FtpExport(luigi.WrapperTask):
+class EnsemblExport(luigi.WrapperTask):
     def requires(self):
-        yield Md5Export
-        yield IdExport
-        yield RfamAnnotationExport
-        yield FastaExport
-        yield EnsemblExport
+        config = export()
+        for start, stop in upi_ranges(db(), config.ensembl_export_size):
+            yield EnsemblExportChunk(min=start, max=stop)
