@@ -348,3 +348,8 @@ class quickgo(luigi.Config):
     @property
     def publication_mappings(self):
         return output().to_load('quickgo', 'publication_mappings.csv')
+
+
+class generic(luigi.Config):
+    def raw(self, *args):
+        return os.path.join(output().base, 'generic-data', *args)
