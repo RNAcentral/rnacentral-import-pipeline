@@ -154,7 +154,12 @@ def test_can_correctly_parse_lncipedia_data():
             "TGCTTTGGGAAACTGCCCCAGCTGTCCTCCTTACTTGTTGTAGGTAATAAAATCCCTTTG"
             "TTAAATC"
         ),
-        exons=[],
+        exons=[
+            dat.Exon(chromosome='chr16', primary_start=74226290, primary_end=74226625, complement=True),
+            dat.Exon(chromosome='chr16', primary_start=74239803, primary_end=74240064, complement=True),
+            dat.Exon(chromosome='chr16', primary_start=74244204, primary_end=74244404, complement=True),
+            dat.Exon(chromosome='chr16', primary_start=74249250, primary_end=74249420, complement=True),
+        ],
         rna_type='SO:0001877',
         url='https://lncipedia.org/db/transcript/lnc-CLEC18B-3:5',
         seq_version='1',
