@@ -15,6 +15,7 @@ limitations under the License.
 
 import os
 import json
+import operator as op
 
 from jsonschema import validate
 
@@ -105,9 +106,15 @@ def as_xref(xref):
 def builder(data):
     result = dict(data)
     xrefs = []
+    seen = set()
+    key = op.itemgetter('database', 'id')
     for xref in data['xrefs']:
         if is_high_quality(xref):
-            xrefs.append(as_xref(xref))
+            updated = as_xref(xref)
+            value = key(updated)
+            if value in seen:
+                xrefs.append(updated)
+                seen.add(value)
 
     result['xrefs'] = xrefs
     return result
