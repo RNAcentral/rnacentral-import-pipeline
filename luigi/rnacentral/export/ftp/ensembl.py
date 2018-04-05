@@ -144,4 +144,4 @@ def write_and_validate(handle, results, schema_file=SCHEMA):
         schema = json.load(raw)
 
     validate(results, schema)
-    json.dump(handle, results)
+    json.dump(results, handle)
