@@ -110,7 +110,6 @@ def builder(data):
             xrefs.append(as_xref(xref))
 
     result['xrefs'] = xrefs
-    result['sequence'] = result['sequence'].replace('T', 'U')
     return result
 
 
