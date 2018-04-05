@@ -137,7 +137,7 @@ def range_filename(min_id, max_id):
 
 
 def range(db, min_id, max_id):
-    return export(db, RANGE_SQL, min_id=min_id, max_id=max_id)
+    return list(export(db, RANGE_SQL, min_id=min_id, max_id=max_id))
 
 
 def write_and_validate(handle, results, schema_file=SCHEMA):
