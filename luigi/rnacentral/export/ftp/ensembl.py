@@ -28,9 +28,9 @@ SCHEMA = os.path.realpath(os.path.join(
     '..',
     '..',
     '..',
-    'export',
-    'schema',
-    'ensembl.json'
+    '..',
+    'files',
+    'ensembl-schema.json'
 ))
 
 BASE_SQL = """
