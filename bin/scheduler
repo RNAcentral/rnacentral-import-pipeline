@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+IFS=$'\n\t'
+
+job_is_unknown() {
+  name="$1"
+  bjobs -ru $USER -J $"name" | grep -c '^JOBID'
+}
+
+name="/rnc/scheduler"
+
+[ $(job_is_unknown "$name") -eq 0 ] || bsub -J "$name" 'bin/update-config && luigid'
+echo $name

@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+IFS=$'\n\t'
+
+WORKERS=${1:-80}
+
+scheduler=$(bin/scheduler)
+
+# Create all CSV's
+bsub \
+  -M 4000 \
+  -J "/rnc/process[1-$workers]" \
+  -w "started($scheduler)" \
+  python -m luigi --module tasks ProcessData
+
+# Update database with CSV data
+bsub \
+  -M 4000 \
+  -J "rnc-update" \
+  -w "done(/rnc/process)" \
+  bin/update

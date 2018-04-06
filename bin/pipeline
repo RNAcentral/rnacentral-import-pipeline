@@ -20,7 +20,7 @@ export PYTHONPATH="${PYTHONPATH:-}:luigi"
 
 # Start the scheduler
 bsub \
-  -J "rnc-scheduler" \
+  -J "/rnc/scheduler" \
   'bin/update-config && luigid'
 
 # Create all CSV's
