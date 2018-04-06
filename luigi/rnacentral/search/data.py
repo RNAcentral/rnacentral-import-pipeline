@@ -455,7 +455,7 @@ builder = entry([
         tags('ref', references, keys=(
             'taxid',
             'cross_references',
-            'pub_ids',
+            'pubmed_ids',
             'dois',
             'notes',
         ))
