@@ -55,7 +55,7 @@ def pretty_xml(data):
 
 @pytest.mark.parametrize(
     "filename",
-    [os.path.join('data/xml', f) for f in os.listdir('data/xml/')]
+    [os.path.join('data/export/search', f) for f in os.listdir('data/export/search/')]
 )
 def test_it_builds_correct_xml_entries(filename):
     result = ET.parse(filename)
@@ -434,3 +434,14 @@ def test_computes_valid_boost(upi, boost):
     assert load_and_get_additional(upi, 'boost') == [
         {'attrib': {'name': 'boost'}, 'text': str(boost)}
     ]
+
+
+@pytest.mark.xfail
+@pytest.mark.parametrize('upi,pub_ids', [  # pylint: disable=E1101
+    ('URS0000BB15D5_9606', [512936]),
+    ('URS000019E0CD_9606', sorted([238832, 491042, 538386, 491041])),
+])
+def test_computes_pub_ids(upi, pub_ids):
+    ans = [{'attrib': {'name': 'pub_id'}, 'text': str(p)} for p in pub_ids]
+    val = load_and_get_additional(upi, 'pub_id')
+    assert val == ans
