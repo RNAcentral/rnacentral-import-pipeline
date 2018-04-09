@@ -25,7 +25,7 @@ for i in {1..2}; do
 	fi
 
 	echo '' > $MATCHES_PSL
-	for d in $INPUT_FOLDER/*.psl; do
+	for d in $INPUT_FOLDER/*part_*.psl; do
 
 		  TEMPFILE=tempfile.psl
 		    if [ $i -eq 1 ]; then
