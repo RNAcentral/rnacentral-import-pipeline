@@ -400,6 +400,7 @@ def test_it_correctly_assigns_rfam_problem_found(upi, status):
     ('URS0000ABD87F_9606', True),
     ('URS00007F81F8_511145', False),
     ('URS0000A16E25_198431', False),
+    ('URS0000A7ED87_7955', True),
 ])
 def test_can_correctly_assign_known_locations(upi, status):
     assert load_and_get_additional(upi, "has_genomic_coordinates") == [
@@ -436,10 +437,9 @@ def test_computes_valid_boost(upi, boost):
     ]
 
 
-@pytest.mark.xfail
 @pytest.mark.parametrize('upi,pub_ids', [  # pylint: disable=E1101
-    ('URS0000BB15D5_9606', [512936]),
-    ('URS000019E0CD_9606', sorted([238832, 491042, 538386, 491041])),
+    ('URS0000BB15D5_9606', [512936, 527789]),
+    ('URS000019E0CD_9606', [238832, 164929, 538386, 491042, 491041]),
 ])
 def test_computes_pub_ids(upi, pub_ids):
     ans = [{'attrib': {'name': 'pub_id'}, 'text': str(p)} for p in pub_ids]
