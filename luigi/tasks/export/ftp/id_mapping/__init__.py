@@ -18,10 +18,12 @@ import luigi
 from .readme import Readme
 from .id_mapping import IdMapping
 from .database_mappings import DatabaseSpecificMappings
+from .example import ExampleIdMapping
 
 
 class IdExport(luigi.WrapperTask):
     def requires(self):
         yield Readme()
         yield IdMapping()
+        yield ExampleIdMapping()
         yield DatabaseSpecificMappings()
