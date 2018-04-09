@@ -73,11 +73,11 @@ class CleanSplitFasta(luigi.Task):
         return GetFasta(taxid=self.taxid)
 
     def output(self):
-        for i in xrange(1, self.num_chunks):
-            chunk_fasta = os.path.join(genome_mapping().chunks(self.taxid),
-                                       '{taxid}-clean.part_{id}.fasta'.format(
-                                        taxid=self.taxid, id='%03d' % i))
-            yield luigi.LocalTarget(chunk_fasta)
+        chunk_fasta = os.path.join(genome_mapping().chunks(self.taxid),
+                                   '{taxid}-clean.part_*.fasta'.format(
+                                    taxid=self.taxid))
+        for filename in iglob(chunk_fasta):
+            yield luigi.LocalTarget(filename)
 
     def run(self):
         cmd = ('seqkit seq --min-len {min_length} --max-len {max_length} '
