@@ -31,13 +31,13 @@ GENOMES = {
     10090: 'mus_musculus',
     10116: 'rattus_norvegicus',
     7227: 'drosophila_melanogaster',
-    7165: 'anopheles_gambiae',
+    #7165: 'anopheles_gambiae',
     # 352472: 'dictyostelium_discoideum',
-    36329: 'plasmodium_falciparum',
+    # 36329: 'plasmodium_falciparum',
     3702: 'arabidopsis_thaliana',
     7091: 'bombyx_mori',
-    # 284812: 'schizosaccharomyces_pombe',
-    559292: 'saccharomyces_cerevisiae',
+    # 284812: 'schizosaccharomyces_pombe', # wrong taxid = need to use 4896
+    # 559292: 'saccharomyces_cerevisiae', # correct taxid but ensembl uses something else
     6239: 'caenorhabditis_elegans',
 }
 
