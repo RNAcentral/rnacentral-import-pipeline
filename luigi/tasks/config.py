@@ -301,3 +301,14 @@ class refseq(luigi.Config):  # pylint: disable=C0103,R0904
 
     def input_file(self, *args):
         return os.path.join(output().base, 'refseq', *args)
+
+
+class zfin(luigi.Config):
+    transcripts_url = 'http://zfin.org/downloads/transcripts.txt'
+    zfin_correspondence_files = [
+        'http://zfin.org/downloads/ensembl_1_to_1.txt',
+        'http://zfin.org/downloads/refseq.txt',
+        'http://zfin.org/downloads/genbank.txt',
+        'http://zfin.org/downloads/gene.txt',
+    ]
+    coordinates_url = 'http://zfin.org/downloads/E_drerio_backbone.gff3'
