@@ -62,7 +62,12 @@ def source_qualifier_value(record, qualifier, pattern=r'^(.+)$', **kwargs):
 
 
 def chromosome(record):
-    return source_qualifier_value(record, 'chromosome')
+    try:
+        return source_qualifier_value(record, 'chromosome')
+    except ValueError:
+        source = embl.source_feature(record)
+        chromosomes = source.qualifiers['chromosome']
+        return chromosomes[0]
 
 
 def primary_id(_):
@@ -102,8 +107,11 @@ def extract_experiment_refs(accession, feature, known):
         pmid = int(pmid)
         if pmid in known:
             continue
+
         try:
-            found.append(pubs.reference(accession, pmid))
+            data = pubs.reference(accession, pmid)
+            if data:
+                found.append(data)
         except Exception as err:
             LOGGER.exception(err)
             LOGGER.warning("Failed to lookup reference for %s", pmid)
@@ -275,7 +283,11 @@ def pseudogene(feature):
 
 
 def gene_synonyms(feature):
-    return feature.qualifiers.get('gene_synonym', [])
+    result = []
+    synonyms = feature.qualifiers.get('gene_synonym', [])
+    for synonym in synonyms:
+        result.extend(synonym.split('; '))
+    return result
 
 
 def non_coding_id(_):
@@ -360,11 +372,18 @@ def comment_xrefs(comments):
     return xrefs
 
 
-def xref_data(record, feature):
+def xref_data(record, feature, refs):
     xrefs = {}
     xrefs.update(embl.xref_data(feature))
     comment = record.annotations.get('comment', '')
-    if not comment:
-        return xrefs
-    xrefs.update(comment_xrefs(comment.split('\n')))
+    if comment:
+        xrefs.update(comment_xrefs(comment.split('\n')))
+
+    ena_refs = {}
+    for ref in refs:
+        if ref.database != 'MD5':
+            ena_refs[ref.database.upper()] = (ref.primary_id, ref.secondary_id)
+    if ena_refs:
+        xrefs['ena_refs'] = ena_refs
+
     return xrefs

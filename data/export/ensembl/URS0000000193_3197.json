@@ -1,0 +1,14 @@
+{
+  "rnacentral_id": "URS0000000193_3197",
+  "description": "Marchantia polymorpha tRNA",
+  "sequence": "AGGGCTATAGCTCAGCGGTAGAGCGCCTCGTTTACACCGAGAATGTCTACGGTTCAAATCCGTATAGCCCTA",
+  "md5": "6bbea9b171ca06a1510819ebfc4bc096",
+  "rna_type": "tRNA",
+  "taxon_id": 3197,
+  "xrefs": [
+    {
+      "id": "RF00005",
+      "database": "Rfam"
+    }
+  ]
+}

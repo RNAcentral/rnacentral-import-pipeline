@@ -24,18 +24,21 @@ from tasks.config import ena
 from tasks.config import output
 from tasks.utils.entry_writers import Output
 
-from .copy import CopyNcr
-from .tpa import FetchTPA
+from . import utils
 
 
 class EnaDirectory(luigi.Task):
+    """
+    Import all data in an an NCR directory from ENA. This will produce a single
+    output file for all the files directly below the directory.
+    """
+
     input_dir = luigi.Parameter()
 
     def requires(self):
-        yield CopyNcr(ncr=self.input_dir)
-
-        for database in ena().tpa_databases:
-            yield FetchTPA(database=database)
+        yield utils.copy_ncr_task(self.input_dir)
+        for task in utils.tpa_tasks():
+            yield task
 
     def output(self):
         prefix = os.path.basename(self.input_dir)
@@ -43,13 +46,15 @@ class EnaDirectory(luigi.Task):
 
     def handles(self):
         """
-        Produce an interable for all compressed non-coding product files that
+        Produce an iterable for all compressed non-coding product files that
         this task imports.
         """
 
-        base_dir = CopyNcr(ncr=self.input_dir).output().fn
+        base_dir = utils.copy_ncr_task(self.input_dir).output().fn
         files = os.listdir(base_dir)
         for filename in files:
+            if not filename.endswith('.ncr.gz'):
+                continue
             filename = os.path.join(self.input_dir, filename)
             with gzip.open(filename, 'rb') as raw:
                 yield raw
@@ -58,6 +63,4 @@ class EnaDirectory(luigi.Task):
         files = ena().all_tpa_files()
         with self.output().writer() as writer:
             for handle in self.handles():
-                for entry in parse_with_mapping_files(handle, files):
-                    if entry.is_valid():
-                        writer.write(entry)
+                writer.write_valid(parse_with_mapping_files(handle, files))

@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+IFS=$'\n\t'
+
+WORKERS="{1:-10}"
+
+scheduler=$(bin/scheduler)
+bsub \
+  -J "/rnc/export/ftp[1-$WORKERS]"
+  -w "started($scheduler)" \
+  python -m luigi --module tasks.export.ftp FtpExport

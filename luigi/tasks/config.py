@@ -16,6 +16,8 @@ limitations under the License.
 import os
 from glob import iglob
 
+from distutils.spawn import find_executable
+
 import luigi
 
 from tasks.utils.parameters import PathParameter
@@ -31,6 +33,7 @@ class output(luigi.Config):  # pylint: disable=C0103, R0904
     ``{base}/cmds/pgload_hits.ctl``.
     """
     base = PathParameter(default='/tmp')
+    search_files = PathParameter(default='/tmp')
 
 
 class db(luigi.Config):  # pylint: disable=C0103, R0904
@@ -44,6 +47,7 @@ class db(luigi.Config):  # pylint: disable=C0103, R0904
     port = luigi.Parameter(default=5432)
     db_name = luigi.Parameter(default='rnacen')
     search_path = luigi.Parameter()
+    psql = luigi.Parameter(default=find_executable('psql'))
 
     def pgloader_url(self):
         """
@@ -211,9 +215,12 @@ class ena(luigi.Config):
             'tmRNA-Website',
         )
     )
-    tpa_url = 'https://www.ebi.ac.uk/ena/data/xref/search?source={db}'
+    tpa_url = 'https://www.ebi.ac.uk/ena/data/xref/search?source={db}&expanded=true&limit=0'
 
     def raw_ncr_files(self):
+        if not os.path.exists(self.base):
+            return []
+
         files = []
         for name in os.listdir(self.base):
             directory = os.path.join(self.base, name)
@@ -244,11 +251,28 @@ class ena(luigi.Config):
         return [self.input_tpa_file(tpa_db) for tpa_db in self.tpa_databases]
 
 
+class rgd(luigi.Config):
+    host = luigi.Parameter(default='ftp.rgd.mcw.edu')
+
+    def raw(self, *args):
+        return os.path.join(output().base, 'rgd', 'raw', *args)
+
+
 class export(luigi.Config):  # pylint: disable=C0103,R0904
     rfam_example_size = luigi.IntParameter(default=10)
+    sequence_example_size = luigi.IntParameter(default=10)
+    search_export_size = luigi.IntParameter(default=100000)
+    md5_example_size = luigi.IntParameter(default=5)
+    ensembl_export_size = luigi.IntParameter(default=10000)
 
     def ftp(self, *args):
         return os.path.join(output().base, 'ftp', *args)
+
+    def json(self, *args):
+        return os.path.join(output().base, 'json', *args)
+
+    def md5(self, *args):
+        return self.ftp('md5', *args)
 
     def sequences(self, *args):
         return self.ftp('sequences', *args)
@@ -258,3 +282,22 @@ class export(luigi.Config):  # pylint: disable=C0103,R0904
 
     def rfam(self, *args):
         return self.ftp('rfam', *args)
+
+    def id_mapping(self, *args):
+        return self.ftp('id_mapping', *args)
+
+    def database_mappings(self, *args):
+        return self.id_mapping('database_mappings', *args)
+
+    def ensembl_export(self, *args):
+        return self.ftp('ensembl', *args)
+
+
+class refseq(luigi.Config):  # pylint: disable=C0103,R0904
+    base = luigi.Parameter(default='/tmp')
+
+    def raw_files(self):
+        return list(iglob(os.path.join(self.base, '*.dat')))
+
+    def input_file(self, *args):
+        return os.path.join(output().base, 'refseq', *args)

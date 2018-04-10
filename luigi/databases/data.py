@@ -15,6 +15,7 @@ limitations under the License.
 
 import json
 import logging
+import unicodedata
 from collections import Counter
 
 import attr
@@ -75,7 +76,9 @@ def is_truish():
 def optional_utf8(raw):
     if raw is None:
         return None
-    return raw.decode('utf8', 'ignore')
+    if isinstance(raw, unicode):
+        return unicodedata.normalize('NFC', raw).encode('ascii', 'ignore')
+    return raw
 
 
 @attr.s(frozen=True)
@@ -146,11 +149,10 @@ class Reference(object):
         """
         Computes the MD5 hash of the reference.
         """
-
         return md5(''.join([
-            self.authors or '',
-            self.location or '',
-            self.title or ''
+            (self.authors or ''),
+            (self.location or ''),
+            (self.title or ''),
         ]))
 
 
@@ -292,14 +294,12 @@ class Entry(object):
         """
         Compute a CRC64 check sum for the sequence.
         """
-
         return crc64(self.sequence)
 
     def md5(self):
         """
         Compute an MD5 hash of the sequence.
         """
-
         return md5(self.sequence)
 
     def is_valid(self):

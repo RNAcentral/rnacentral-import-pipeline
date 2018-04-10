@@ -24,7 +24,7 @@ from tests.databases.ensembl.utils import Base
 
 @pytest.mark.slowtest
 class HumanTests(Base):
-    filename = 'data/Homo_sapiens.GRCh38.87.chromosome.12.dat'
+    filename = 'data/ensembl/Homo_sapiens.GRCh38.87.chromosome.12.dat'
     importer_class = EnsemblParser
 
     def test_it_sets_primary_id_to_versionless_transcript_id(self):
@@ -211,7 +211,7 @@ class HumanPatchTests(Base):
 
 @pytest.mark.slowtest
 class MouseTests(Base):
-    filename = 'data/Mus_musculus.GRCm38.87.chromosome.3.dat'
+    filename = 'data/ensembl/Mus_musculus.GRCm38.87.chromosome.3.dat'
     importer_class = EnsemblParser
 
     def test_can_use_mouse_models_to_correct_rna_type(self):

@@ -139,19 +139,12 @@ class ReferenceWriter(object):
         """
 
         for reference in data.references:
-            authors = reference.authors
-            if authors:
-                authors = authors.encode('ascii', 'ignore')
-            title = reference.title
-            if title:
-                title = title.encode('ascii', 'ignore')
-
             self.csv.writerow([
                 reference.md5(),
                 data.accession,
-                authors,
+                reference.authors,
                 reference.location,
-                title,
+                reference.title,
                 reference.pmid,
                 reference.doi,
             ])
@@ -342,7 +335,7 @@ class Writer(object):
             writer = getattr(self, field.name)
             writer.write(data)
 
-    def write_all(self, entries):
+    def write_valid(self, entries):
         """
         Write all valid entries in the given entries iterable.
         """
@@ -381,6 +374,11 @@ class Output(attr.make_class("Base", Writer.outputs())):
             path = path_to(base, database, prefix, field.name)
             fields.append(LocalTarget(path))
         return cls(*fields)
+
+    def populate(self, parser, input_target):
+        with self.writer() as writer:
+            with input_target.open('r') as handle:
+                writer.write_valid(parser(handle))
 
     def exists(self):
         """

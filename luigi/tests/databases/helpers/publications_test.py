@@ -33,7 +33,7 @@ def test_can_fetch_publication():
         "pubYear": "2017",
         "journalIssn": "0065-2598; 2214-8019; ",
         "pageInfo": "253-282",
-        "pubType": "journal article; research support, n.i.h., extramural; ",
+        "pubType": "review; journal article; research support, n.i.h., extramural; ",
         "isOpenAccess": "N",
         "inEPMC": "N",
         "inPMC": "N",
@@ -66,3 +66,9 @@ def test_can_build_reference():
         pmid=27858507,
         doi='10.1080/15476286.2016.1251002'
     ))
+
+
+def test_can_deal_with_unicode():
+    reference = pub.reference('a', 27334534)
+    assert u'\xa0' not in reference.title
+    assert reference.md5() == 'a84bed065b6f62d0c096d8bd7547b578'
