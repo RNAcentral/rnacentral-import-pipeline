@@ -34,11 +34,10 @@ class Base(ut.TestCase):  # pylint: disable=R0904
             key = None
             if helpers.is_gene(feature):
                 key = helpers.gene(feature)
-            elif not helpers.is_ncrna(feature):
-                continue
+            elif helpers.is_ncrna(feature):
+                key = helpers.transcript(feature) or \
+                    helpers.standard_name(feature)
 
-            if helpers.is_transcript(feature):
-                key = helpers.transcript(feature)
             if not key:
                 continue
             cls.features[key] = feature
