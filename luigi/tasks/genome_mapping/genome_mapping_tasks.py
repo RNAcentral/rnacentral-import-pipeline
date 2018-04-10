@@ -45,6 +45,22 @@ def get_species_name(taxid):
     return species_name
 
 
+def get_assembly_id(taxid):
+    """
+    Get assembly id based on taxid.
+    """
+    psql = PsqlWrapper(db())
+    sql = """
+    select assembly_id
+    from ensembl_assembly
+    where blat_mapping = 1
+    and taxid = {taxid}""".format(taxid=taxid)
+    genomes = psql.copy_to_iterable(sql)
+    for genome in genomes:
+        assembly_id = genome['assembly_id'].lower()
+    return assembly_id
+
+
 class GetFasta(FastaExportBase):
     """
     Export RNAcentral sequences for a particular species to a FASTA file.
@@ -172,7 +188,7 @@ class ParsePslOutput(luigi.Task):
         }
 
     def run(self):
-        assembly_id = get_species_name(self.taxid)
+        assembly_id = get_assembly_id(self.taxid)
         cmd = 'source scripts/psl2tsv.sh %s %s' % (self.get_blat_output(), assembly_id)
         status = subprocess.call(cmd, shell=True)
         if status != 0:
