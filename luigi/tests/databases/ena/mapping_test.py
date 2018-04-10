@@ -111,9 +111,9 @@ def test_can_build_correct_wormbase_tpas():
         data = next(tpa.parse_tpa_file(raw))
     assert data == tpa.GenericTpa(
         'WORMBASE',
-        'WBGene00000005',
-        'T13A10.10b',
-        'BX284604',
+        'WBGene00001734',
+        'ZK643.8b',
+        'BX284603',
         None,
     )
 
@@ -184,7 +184,13 @@ def test_can_transform_correct_lncrnadb_entry():
                 'transcribed from intron 10 of the maternally expressed Kncq1 (KvLQT1) gene',
             ],
         },
-        xref_data={'lncrnadb': ['101', 'Kcnq1ot1']},
+        xref_data={
+            'lncrnadb': ['101', 'Kcnq1ot1'],
+            'ena_refs': {
+                 'LNCRNADB': ('101', 'Kcnq1ot1'),
+            }
+        },
+        optional_id='Kcnq1ot1',
 
         non_coding_id='HG975405.1:1..32753:ncRNA',
         is_composite='Y',
@@ -241,6 +247,11 @@ def test_can_transform_correct_srpdb_entry():
         rna_type='SRP_RNA',
         url='http://rnp.uthscsa.edu/rnp/SRPDB/rna/sequences/fasta/Acin.baum._CP000521',
         seq_version='1',
+        xref_data={
+            'ena_refs': {
+                'SRPDB': ('Acin.baum._CP000521', None),
+            }
+        },
         note_data={
             'ontology': ['ECO:0000305', 'GO:0006617', 'GO:0048501', 'SO:0000590'],
             'text': ["alignment group:Small 4.5S Bacteria (SB)"],
@@ -333,10 +344,17 @@ def test_can_transform_correct_wormbase_entry():
         accession='BX284603.4:8962295..8965569:misc_RNA:WORMBASE:WBGene00001734',
         ncbi_tax_id=6239,
         database='WORMBASE',
+        sequence='',
         exons=[],
         rna_type='misc_RNA',
-        url='',
-        seq_version='1',
+        url='http://www.wormbase.org/species/c_elegans/gene/WBGene00001734',
+        seq_version='4',
+        xref_data={
+            'ena_refs': {
+                'BIOSAMPLE': ('SAMEA3138177', None),
+                'WORMBASE': ('WBGene00001734', 'ZK643.8b')
+            },
+        },
         description='Caenorhabditis elegans Non-coding transcript of protein-coding gene grl-25',
         species='Caenorhabditis elegans',
         lineage=(
@@ -344,19 +362,20 @@ def test_can_transform_correct_wormbase_entry():
             ' Rhabditoidea; Rhabditidae; Peloderinae; Caenorhabditis; '
             'Caenorhabditis elegans'
         ),
-        common_name='',
-        division=None,
-        keywords='RNAcentral; TPA; TPA:specialist_db',
         mol_type='genomic DNA',
+        chromosome='III',
+        locus_tag='CELE_ZK643.8',
         gene='grl-25',
+        optional_id='ZK643.8b',
         is_composite='Y',
         non_coding_id='BX284603.4:8962295..8965569:misc_RNA',
         product='Non-coding transcript of protein-coding gene grl-25',
         project='PRJNA13758',
         parent_accession='BX284603',
+        standard_name='ZK643.8b',
     ))
 
-    assert len(transformed['references']) == 2
+    assert len(transformed['references']) == 3
     assert len(transformed['exons']) == 6
     assert len(transformed['sequence']) == 2767
     del transformed['references']
@@ -383,7 +402,7 @@ def test_builds_correct_tpa_key_for_snopy_tpa():
 def test_builds_correct_tpa_key_for_wormbase_tpa():
     with open('data/ena/tpa/wormbase/mapping.tsv', 'rb') as raw:
         data = next(tpa.parse_tpa_file(raw))
-    assert tpa.tpa_key(data) == ('BX284604', 'T13A10.10b')
+    assert tpa.tpa_key(data) == ('BX284603', 'ZK643.8b')
 
 
 def test_knows_if_it_has_mappings():
@@ -471,6 +490,19 @@ def test_can_apply_pombase_tpas():
 
     assert mapped[0].database == 'POMBASE'
     assert mapped[0].accession == 'CU329670.1:1005499..1005710:misc_RNA:POMBASE:SPNCRNA.164'
+
+
+def test_can_apply_mirbase_tpas():
+    mapping = tpa.load(['data/ena/tpa/mirbase/mapping.tsv'])
+    with open('data/ena/tpa/mirbase/entry.embl', 'r') as raw:
+        entries = list(parse(raw))
+    assert entries
+    mapped = list(tpa.apply(mapping, entries))
+    assert len(mapped) == len(entries)
+
+    assert mapped[0].database == 'MIRBASE'
+    assert mapped[0].accession == 'LM611181.1:1..180:precursor_RNA:MIRBASE:MI0016048'
+    assert mapped[0].optional_id == 'hsa-mir-3648-1'
 
 
 @pytest.mark.parametrize(

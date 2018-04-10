@@ -17,7 +17,7 @@ limitations under the License.
 from tasks.config import db
 from .store import UpdateCoordinates
 from .store import DatabaseUpdater
-from .utils.db import get_db_connection
+from rnacentral.db import get_db_connection
 
 SQL = """
 update rnc_coordinates coord

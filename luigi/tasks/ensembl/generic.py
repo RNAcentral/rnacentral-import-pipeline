@@ -65,12 +65,5 @@ class EnsemblFile(luigi.Task):  # pylint: disable=R0904
         return Output.build(output().base, 'ensembl', prefix)
 
     def run(self):
-        config = ensembl()
-        local_file = self.requires().output()
-        with self.output().writer() as writer:
-            input_target = self.requires().output()
-            with input_target.open('r') as handle:
-                parser = parser_class(config, local_file.fn)
-                for entry in parser.data(handle):
-                    if entry.is_valid():
-                        writer.write(entry)
+        parser = parser_class(ensembl(), self.requires().output().fn)
+        self.output().populate(parser, self.requires().output())

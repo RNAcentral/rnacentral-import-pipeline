@@ -50,26 +50,6 @@ class GenericFileParameter(Parameter):
         raise ValueError("Cannot build target for %s" % path)
 
 
-class CommaGenericFileParameter(Parameter):
-    def seralize(self, value):
-        return ','.join(sorted(value))
-
-    def parse(self, value):
-        if not value:
-            raise ValueError("Must provide files to deduplicate")
-
-        try:
-            self.as_targets(value)
-            return [path.strip() for path in value.split(',')]
-        except:
-            raise ValueError("Unhandable type of files %s" % value)
-
-    def as_targets(self, value, **kwargs):
-        parameter = GenericFileParameter()
-        paths = [p.strip() for p in value.split(',')]
-        return [parameter.as_target(path) for path in paths]
-
-
 class PathParameter(Parameter):
     def seralize(self, value):
         return value

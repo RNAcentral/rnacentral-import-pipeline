@@ -25,7 +25,6 @@ class LoadSequences(luigi.WrapperTask):  # pylint: disable=R0904
     both types of sequences.
     """
 
-    database = luigi.Parameter(default='all')
     type = luigi.ChoiceParameter(
         choices=['short', 'long', 'all'],
         default='all',
@@ -33,6 +32,6 @@ class LoadSequences(luigi.WrapperTask):  # pylint: disable=R0904
 
     def requires(self):
         if self.type == 'all' or self.type == 'short':
-            yield PGLoadSequences(database=self.database, type='short')
+            yield PGLoadSequences(type='short')
         if self.type == 'all' or self.type == 'long':
-            yield PGLoadSequences(database=self.database, type='long')
+            yield PGLoadSequences(type='long')

@@ -17,13 +17,10 @@ import os
 import logging
 from glob import glob
 
-import luigi
-
 from tasks.config import output
 from tasks.utils.pgloader import PGLoader
 
 from .manage_files import SplitMergedFile
-from .utils.generic import file_pattern
 
 
 LOGGER = logging.getLogger(__name__)
@@ -92,12 +89,11 @@ $$
 """
 
 
-class LoadSecondaryStructures(PGLoader):  # pylint: disable=R0904
+class UpdateSecondaryStructures(PGLoader):  # pylint: disable=R0904
     """
     This will load only the given file in the secondary structure directory.
     """
 
-    database = luigi.Parameter(default='all')
     directory = 'secondary_structure'
 
     def requires(self):
@@ -111,22 +107,10 @@ class LoadSecondaryStructures(PGLoader):  # pylint: disable=R0904
         """
         return os.path.join(output().base, self.directory)
 
-    def file_pattern(self):
-        """
-        Build the pattern of filenames to use.
-        """
-        return file_pattern(self.database)
-
-    def data_files(self):
-        """
-        Get the fill path, with pattern to the filenames to use.
-        """
-        return os.path.join(self.data_directory(), self.file_pattern())
-
     def control_file(self):
         tablename = 'rnc_secondary_structure'
         return CONTROL_FILE.format(
-            pattern=self.file_pattern(),
+            pattern='chunk_*',
             directory=self.data_directory(),
             tablename=tablename,
             db_url=self.db_url('load_%s' % tablename),
@@ -139,6 +123,7 @@ class LoadSecondaryStructures(PGLoader):  # pylint: disable=R0904
         exist. If this is the case then nothing is actually run.
         """
 
-        if glob(self.data_files()):
-            return super(LoadSecondaryStructures, self).run()
+        files = os.path.join(self.data_directory(), 'chunk_*')
+        if glob(files):
+            return super(UpdateSecondaryStructures, self).run()
         LOGGER.info("No secondary structures found, skipping")
