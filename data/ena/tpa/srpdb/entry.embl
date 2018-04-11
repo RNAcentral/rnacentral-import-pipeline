@@ -1,0 +1,70 @@
+ID   HG323367.1:1..116:ncRNA; SV 1; linear; transcribed RNA; STD; PRO; 116 BP.
+XX
+PA   HG323367.1
+XX
+PR   Project:PRJEB4384;
+XX
+DT   04-JUL-2013 (Rel. 117, Created)
+DT   10-FEB-2015 (Rel. 123, Last updated, Version 7)
+XX
+DE   Acinetobacter baumannii ATCC 17978 signal recognition particle RNA
+XX
+KW   RNAcentral; TPA; TPA:specialist_db.
+XX
+OS   Acinetobacter baumannii ATCC 17978
+OC   Bacteria; Proteobacteria; Gammaproteobacteria; Pseudomonadales;
+OC   Moraxellaceae; Acinetobacter;
+OC   Acinetobacter calcoaceticus/baumannii complex.
+XX
+RN   [1]
+RP   1-116
+RG   SRPDB and RNAcentral
+RA   ;
+RT   ;
+RL   Submitted (03-JUL-2013) to the INSDC.
+XX
+RN   [2]
+RX   PUBMED; 19838050.
+RA   Rosenblad M.A., Larsen N., Samuelsson T., Zwieb C.;
+RT   "Kinship in the SRP RNA family";
+RL   RNA Biol 6(5):508-516(2009).
+XX
+RN   [3]
+RX   DOI; 10.1093/nar/gkj142.
+RX   PUBMED; 16381838.
+RA   Andersen E.S., Rosenblad M.A., Larsen N., Westergaard J.C., Burks J.,
+RA   Wower I.K., Wower J., Gorodkin J., Samuelsson T., Zwieb C.;
+RT   "The tmRDB and SRPDB resources";
+RL   Nucleic Acids Res. 34(Database issue):D163-D168(2006).
+XX
+DR   SRPDB; Acin.baum._CP000521.
+DR   MD5; 72364b27bb4bf92d679e46532b9f55d9.
+XX
+CC   Specialist DB   : SRPDB (Signal Recognition Particle Database)
+CC   URL             : http://rnp.uthscsa.edu/rnp/SRPDB/SRPDB.html
+XX
+AH   LOCAL_SPAN          PRIMARY_IDENTIFIER PRIMARY_SPAN        COMP
+AS   1-116               CP000521.1         2275786-2275901     c
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..116
+FT                   /organism="Acinetobacter baumannii ATCC 17978"
+FT                   /strain="ATCC 17978"
+FT                   /mol_type="transcribed RNA"
+FT                   /db_xref="taxon:400667"
+FT                   /culture_collection="ATCC:17978"
+FT   ncRNA           HG323367.1:1..116
+FT                   /gene="SRP RNA"
+FT                   /product="signal recognition particle RNA"
+FT                   /note="alignment group:Small 4.5S Bacteria (SB)"
+FT                   /note="ECO:0000305"
+FT                   /note="SO:0000590"
+FT                   /note="GO:0006617"
+FT                   /note="GO:0048501"
+FT                   /ncRNA_class="SRP_RNA"
+XX
+SQ   Sequence 116 BP; 23 A; 29 C; 36 G; 28 T; 0 other;
+     ggtagccccg ctggtggctt cgcaattgta ctctgtgaac cccgccagga ccggaaggta        60
+     gcaacggtag cagatctatg atgtgccgaa gttttgctag tggggttgcc accatt           116
+//

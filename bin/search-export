@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+IFS=$'\n\t'
+
+WORKERS="{1:-6}"
+
+scheduler=$(bin/scheduler)
+bsub \
+  -J "/rnc/export/search[1-$WORKERS]"
+  -w "started($scheduler)" \
+  -M 60000 \
+  python -m luigi --module tasks.export.search Search

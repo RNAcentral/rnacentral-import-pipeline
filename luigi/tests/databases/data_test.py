@@ -138,3 +138,15 @@ def test_labels_ncrna_types_correctly(rna_type):
     )
     assert entry.feature_type == 'ncRNA'
     assert entry.ncrna_class is rna_type
+
+
+def test_reference_can_handle_non_unicode():
+    ref = data.Reference(
+        accession='KP889099.2:1..1383:rRNA',
+        authors=u'Ahn S., Jin T.E., Chang D.H., Rhee M.S., Kim H.J., Lee S.J., Park D.S., Kim B.C.',
+        location='Int. J. Syst. Evol. Microbiol. 66(9):3656-3661(2016).',
+        title=u'Agathobaculum butyriciproducens gen. nov. \xa0sp. nov., a strict anaerobic, butyrate-producing gut bacterium isolated from human faeces and reclassification of Eubacterium desmolans as Agathobaculum desmolans comb. nov',
+        pmid=27334534,
+        doi=None,
+    )
+    assert ref.md5() == '1c1aa1c716a1ae7fd6ba0747d3e166e0'

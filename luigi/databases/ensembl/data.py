@@ -29,7 +29,7 @@ LOGGER = logging.getLogger(__name__)
 class GeneInfo(object):
     gene_id = attr.ib(validator=is_a(basestring))
     description = attr.ib(validator=is_a(basestring))
-    locus_tag = attr.ib(validator=is_a(basestring))
+    locus_tag = attr.ib()
 
     @classmethod
     def id_of(cls, value):
