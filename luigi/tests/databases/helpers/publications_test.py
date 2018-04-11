@@ -72,3 +72,18 @@ def test_can_deal_with_unicode():
     reference = pub.reference('a', 27334534)
     assert u'\xa0' not in reference.title
     assert reference.md5() == 'a84bed065b6f62d0c096d8bd7547b578'
+
+
+def test_builds_correction_location():
+    assert attr.asdict(pub.reference('bob', 26184978)) == attr.asdict(Reference(
+        accession='bob',
+        authors='Xu Z, Han Y, Liu J, Jiang F, Hu H, Wang Y, Liu Q, Gong Y, Li X.',
+        location='Sci Rep 5:12276 (2015)',
+        title=(
+            'MiR-135b-5p and MiR-499a-3p Promote Cell '
+            'Proliferation and Migration in Atherosclerosis by Directly '
+            'Targeting MEF2C'
+        ),
+        pmid=26184978,
+        doi='10.1038/srep12276',
+    ))
