@@ -69,9 +69,10 @@ class GoTermAnnotation(object):
     RNAcentral sequences.
     """
 
-    upi = attr.ib()
-    qualifier = attr.ib()
-    go_id = attr.ib()
+    upi = attr.ib(validator=is_a(basestring))
+    qualifier = attr.ib(validator=is_a(basestring))
+    go_id = attr.ib(validator=is_a(basestring))
+    publications = attr.ib(validator=is_a(list))
 
     @property
     def url(self):
