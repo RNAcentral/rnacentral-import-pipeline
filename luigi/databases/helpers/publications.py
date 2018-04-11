@@ -64,7 +64,7 @@ def summary(pmid):
 
 def reference(accession, pmid):
     data = summary(pmid)
-    issue = data.get('issue', None)
+    issue = data.get('issue', '')
     if issue:
         issue = ('(%s)' % issue)
 
