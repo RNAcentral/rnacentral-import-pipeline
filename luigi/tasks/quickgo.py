@@ -17,42 +17,40 @@ import csv
 
 import attr
 import luigi
-from luigi.local_target import atomic_file
 
 from databases.quickgo.parser import parser
+
+from tasks.utils.fetch import FetchTask
 from tasks.utils.pgloader import PGLoader
+from tasks.utils.files import atomic_output
+
 from tasks.config import quickgo
 
 
 class QuickGo(luigi.WrapperTask):
     def requires(self):
-        yield FetchQuickGo()
         yield QuickGoCsv()
         yield PgLoadQuickGo()
 
 
-class FetchQuickGo(luigi.Task):
-    def output(self):
-        return luigi.LocalTarget(quickgo().raw('annotations.gpi'))
-
-    def run(self):
-        pass
-
-
 class QuickGoCsv(luigi.Task):
     def requires(self):
-        return FetchQuickGo()
+        return FetchTask(
+            remote_path=quickgo().data_file,
+            local_path=quickgo().raw('annotations.gpa'),
+        )
 
     def output(self):
         return luigi.LocalTarget(quickgo().csv())
 
     def terms(self):
-        filename = FetchQuickGo().output().fn
-        for go_term in parser(filename):
-            yield attr.asdict(go_term)
+        filename = self.requires().output().fn
+        with open(filename, 'w') as raw:
+            for go_term in parser(raw):
+                yield attr.asdict(go_term)
 
     def run(self):
-        with atomic_file(self.output().fn) as out:
+        with atomic_output(self.output()) as out:
             writer = csv.DictWriter(out, ['upi', 'go_term', 'qualifier'])
             writer.writerows(self.terms())
 
