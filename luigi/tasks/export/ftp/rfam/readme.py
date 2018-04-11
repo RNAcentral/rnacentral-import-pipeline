@@ -14,9 +14,9 @@ limitations under the License.
 """
 
 import luigi
-from luigi.local_target import atomic_file
 
 from tasks.config import export
+from tasks.utils.files import atomic_output
 
 README = """
 ===================================================================
@@ -30,7 +30,7 @@ annotations for those sequences.
     A tab separated file of all active RNAcentral sequences and their
     associated Rfam annotations. The file has the format:
 
-    UPI Rfam-Model-Id Score E-value Sequence-Start Sequence-Stop Model-Start Model-Stop Rfam-Model-Description
+    URS-Id Rfam-Model-Id Score E-value Sequence-Start Sequence-Stop Model-Start Model-Stop Rfam-Model-Description
 
     The start and stop positions are 0 indexed.
 
@@ -44,5 +44,5 @@ class RfamAnnotationsReadMe(luigi.Task):
         return luigi.LocalTarget(export().ftp('rfam', 'readme.txt'))
 
     def run(self):
-        with atomic_file(self.output().fn) as out:
+        with atomic_output(self.output()) as out:
             out.write(README)

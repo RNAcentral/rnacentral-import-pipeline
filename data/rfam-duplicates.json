@@ -1,0 +1,60 @@
+[
+    {
+    "lineage":"Eukaryota Metazoa Chordata Craniata Vertebrata Euteleostomi Mammalia Eutheria Euarchontoglires Primates Haplorrhini Catarrhini Hominidae Homo.",
+    "primary_id":"RF01061",
+    "is_seed":"0",
+    "feature_type":"ncRNA",
+    "feature_location_end":"93286321",
+    "feature_location_start":"93286238",
+    "ontology":[
+      "MIPF:MIPF0000317",
+      "SO:0001244",
+      "GO:0035068",
+      "GO:0035195"
+    ],
+    "sequence":"TATTAAGTTGATGCAAAAGTAATTGCGGTTTTTGCCATTGAAAGTAATGGCAAAAACCGCAATTACTTTTGCATCAACCTAATA",
+    "ncbi_tax_id":"9606",
+    "seq_version":"2",
+    "ncrna_class":"miRNA",
+    "common_name":"Human",
+    "references":[
+      "16505370",
+      "17604727",
+      "20459774",
+      "20733160"
+    ],
+    "species":"Homo sapiens",
+    "optional_id":"mir-548",
+    "parent_accession":"CM000677",
+    "description":"microRNA mir-548"
+  },
+  {
+    "lineage":"Eukaryota Metazoa Chordata Craniata Vertebrata Euteleostomi Mammalia Eutheria Euarchontoglires Primates Haplorrhini Catarrhini Hominidae Homo.",
+    "primary_id":"RF01061",
+    "is_seed":"0",
+    "feature_type":"ncRNA",
+    "feature_location_end":"93286238",
+    "feature_location_start":"93286321",
+    "ontology":[
+      "MIPF:MIPF0000317",
+      "SO:0001244",
+      "GO:0035068",
+      "GO:0035195"
+    ],
+    "sequence":"TATTAGGTTGATGCAAAAGTAATTGCGGTTTTTGCCATTACTTTCAATGGCAAAAACCGCAATTACTTTTGCATCAACTTAATA",
+    "ncbi_tax_id":"9606",
+    "seq_version":"2",
+    "ncrna_class":"miRNA",
+    "common_name":"Human",
+    "references":[
+      "16505370",
+      "17604727",
+      "20459774",
+      "20733160"
+    ],
+    "species":"Homo sapiens",
+    "optional_id":"mir-548",
+    "parent_accession":"CM000677",
+    "description":"microRNA mir-548"
+  }
+]

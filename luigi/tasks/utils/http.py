@@ -13,11 +13,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import os
-
 import requests
 
-from luigi.local_target import atomic_file
+from .files import atomic_output
 
 
 def download(url, filename):
@@ -28,11 +26,8 @@ def download(url, filename):
     ahead of time.
     """
 
-    dirname = os.path.dirname(filename)
-    if not os.path.exists(dirname):
-        os.makedirs(dirname)
-
     response = requests.get(url)
     response.raise_for_status()
-    with atomic_file(filename) as out:
-        out.write(response.text)
+    with atomic_output(filename) as out:
+        for chunk in response.iter_content(chunk_size=128):
+            out.write(chunk)

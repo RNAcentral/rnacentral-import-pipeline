@@ -16,9 +16,9 @@ limitations under the License.
 import subprocess as sp
 
 import luigi
-from luigi.local_target import atomic_file
 
 from tasks.config import export
+from tasks.utils.files import atomic_output
 
 from .rfam_annotations import RfamAnnotations
 
@@ -28,8 +28,7 @@ class RfamAnnotationsExample(luigi.Task):
         return RfamAnnotations()
 
     def output(self):
-        filename = export().rfam('example.txt')
-        return luigi.LocalTarget(filename)
+        return luigi.LocalTarget(export().rfam('example.txt'))
 
     def program_args(self):
         return [
@@ -40,5 +39,5 @@ class RfamAnnotationsExample(luigi.Task):
         ]
 
     def run(self):
-        with atomic_file(self.output().fn) as out:
+        with atomic_output(self.output()) as out:
             sp.Popen(self.program_args(), stdout=out)

@@ -1,0 +1,128 @@
+ID   LM611181.1:1..180:precursor_RNA; SV 1; linear; transcribed RNA; STD; HUM; 180 BP.
+XX
+PA   LM611181.1
+XX
+PR   Project:PRJEB4451;
+XX
+DT   21-JUL-2014 (Rel. 121, Created)
+DT   03-MAR-2015 (Rel. 124, Last updated, Version 2)
+XX
+DE   Homo sapiens (human) microRNA hsa-mir-3648-1 precursor
+XX
+KW   RNAcentral; TPA; TPA:specialist_db.
+XX
+OS   Homo sapiens (human)
+OC   Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi; Mammalia;
+OC   Eutheria; Euarchontoglires; Primates; Haplorrhini; Catarrhini; Hominidae;
+OC   Homo.
+XX
+RN   [1]
+RP   1-180
+RG   miRBase and RNAcentral
+RA   ;
+RT   ;
+RL   Submitted (18-JUL-2014) to the INSDC.
+XX
+RN   [2]
+RX   DOI; 10.1093/nar/gkq1027.
+RX   PUBMED; 21037258.
+RA   Kozomara A., Griffiths-Jones S.;
+RT   "miRBase: integrating microRNA annotation and deep-sequencing data";
+RL   Nucleic Acids Res. 39(Database issue):D152-D157(2011).
+XX
+DR   miRBase; MI0016048; hsa-mir-3648-1.
+DR   MD5; 08036e5a2a91e75299436501f4182050.
+XX
+CC   miRBase; MI0016048.
+CC   
+CC   Specialist DB   : miRBase (The microRNA database)
+CC   URL             : http://www.mirbase.org
+CC   Version         : Release 21
+XX
+AH   LOCAL_SPAN          PRIMARY_IDENTIFIER PRIMARY_SPAN        COMP
+AS   1-180               CM000683.2         8208473-8208652
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..180
+FT                   /organism="Homo sapiens"
+FT                   /mol_type="transcribed RNA"
+FT                   /db_xref="taxon:9606"
+FT   precursor_RNA   LM611181.1:1..180
+FT                   /gene="mir-3648-1"
+FT                   /product="microRNA hsa-mir-3648-1 precursor"
+FT                   /note="ECO:0000053"
+FT                   /note="GO:0035195"
+FT                   /note="GO:0035068"
+FT                   /note="SO:0001244"
+FT                   /experiment="EXISTENCE:RNA-seq"
+XX
+SQ   Sequence 180 BP; 6 A; 70 C; 81 G; 23 T; 0 other;
+     cgcgactgcg gcggcggtgg tggggggagc cgcggggatc gccgagggcc ggtcggccgc        60
+     cccgggtgcc gcgcggtgcc gccggcggcg gtgaggcccc gcgcgtgtgt cccggctgcg       120
+     gtcggccgcg ctcgaggggt ccccgtggcg tccccttccc cgccggccgc ctttctcgcg       180
+//
+ID   LM611890.1:1..180:precursor_RNA; SV 1; linear; transcribed RNA; STD; HUM; 180 BP.
+XX
+PA   LM611890.1
+XX
+PR   Project:PRJEB4451;
+XX
+DT   21-JUL-2014 (Rel. 121, Created)
+DT   03-MAR-2015 (Rel. 124, Last updated, Version 2)
+XX
+DE   Homo sapiens (human) microRNA hsa-mir-3648-2 precursor
+XX
+KW   RNAcentral; TPA; TPA:specialist_db.
+XX
+OS   Homo sapiens (human)
+OC   Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi; Mammalia;
+OC   Eutheria; Euarchontoglires; Primates; Haplorrhini; Catarrhini; Hominidae;
+OC   Homo.
+XX
+RN   [1]
+RP   1-180
+RG   miRBase and RNAcentral
+RA   ;
+RT   ;
+RL   Submitted (18-JUL-2014) to the INSDC.
+XX
+RN   [2]
+RX   DOI; 10.1093/nar/gkq1027.
+RX   PUBMED; 21037258.
+RA   Kozomara A., Griffiths-Jones S.;
+RT   "miRBase: integrating microRNA annotation and deep-sequencing data";
+RL   Nucleic Acids Res. 39(Database issue):D152-D157(2011).
+XX
+DR   miRBase; MI0031512; hsa-mir-3648-2.
+DR   MD5; 08036e5a2a91e75299436501f4182050.
+XX
+CC   miRBase; MI0031512.
+CC   
+CC   Specialist DB   : miRBase (The microRNA database)
+CC   URL             : http://www.mirbase.org
+CC   Version         : Release 21
+XX
+AH   LOCAL_SPAN          PRIMARY_IDENTIFIER PRIMARY_SPAN        COMP
+AS   1-180               CM000683.2         8986999-8987178
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..180
+FT                   /organism="Homo sapiens"
+FT                   /mol_type="transcribed RNA"
+FT                   /db_xref="taxon:9606"
+FT   precursor_RNA   LM611890.1:1..180
+FT                   /gene="mir-3648-2"
+FT                   /product="microRNA hsa-mir-3648-2 precursor"
+FT                   /note="ECO:0000053"
+FT                   /note="GO:0035195"
+FT                   /note="GO:0035068"
+FT                   /note="SO:0001244"
+FT                   /experiment="EXISTENCE:RNA-seq"
+XX
+SQ   Sequence 180 BP; 6 A; 70 C; 81 G; 23 T; 0 other;
+     cgcgactgcg gcggcggtgg tggggggagc cgcggggatc gccgagggcc ggtcggccgc        60
+     cccgggtgcc gcgcggtgcc gccggcggcg gtgaggcccc gcgcgtgtgt cccggctgcg       120
+     gtcggccgcg ctcgaggggt ccccgtggcg tccccttccc cgccggccgc ctttctcgcg       180
+//

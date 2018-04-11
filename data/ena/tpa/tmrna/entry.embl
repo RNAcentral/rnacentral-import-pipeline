@@ -1,0 +1,65 @@
+ID   HG525190.1:1..394:tmRNA; SV 1; linear; genomic DNA; STD; PRO; 394 BP.
+XX
+PA   HG525190.1
+XX
+PR   Project:PRJEB4570;
+XX
+DT   22-NOV-2013 (Rel. 118, Created)
+DT   02-JUN-2016 (Rel. 129, Last updated, Version 3)
+XX
+DE   Acaryochloris marina MBIC11017 transfer-messenger mRNA Acary_marin_MBIC11
+XX
+KW   RNAcentral; TPA; TPA:specialist_db.
+XX
+OS   Acaryochloris marina MBIC11017
+OC   Bacteria; Cyanobacteria; Synechococcales; Acaryochloridaceae;
+OC   Acaryochloris.
+XX
+RN   [1]
+RP   1-394
+RG   The tmRNA Website and RNAcentral
+RA   ;
+RT   ;
+RL   Submitted (13-SEP-2013) to the INSDC.
+XX
+RN   [3]
+RX   DOI; 10.1093/nar/gkh102.
+RX   PUBMED; 14681369.
+RA   Gueneau de Novoa P., Williams K.P.;
+RT   "The tmRNA website: reductive evolution of tmRNA in plastids and other
+RT   endosymbionts";
+RL   Nucleic Acids Res. 32(Database issue):D104-D108(2004).
+XX
+DR   tmRNA-Website; Acary_marin_MBIC11.
+DR   MD5; 475cc68e2ab87750e4b436a08ca975a5.
+XX
+CC   Specialist DB   : The tmRNA Website
+CC   URL             : http://bioinformatics.sandia.gov/tmrna
+XX
+AH   LOCAL_SPAN          PRIMARY_IDENTIFIER PRIMARY_SPAN        COMP
+AS   1-394               CP000828.1         1113245-1113638
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..394
+FT                   /organism="Acaryochloris marina MBIC11017"
+FT                   /mol_type="genomic DNA"
+FT                   /db_xref="taxon:329726"
+FT   tmRNA           HG525190.1:1..394
+FT                   /gene="tmRNA Acary_marin_MBIC11"
+FT                   /product="transfer-messenger mRNA Acary_marin_MBIC11"
+FT                   /note="Tag:(A)ANNIVSFARQRTATAVA*"
+FT                   /note="ECO:0000305"
+FT                   /note="SO:0000584"
+FT                   /note="GO:0070929"
+FT                   /tag_peptide=100..153
+XX
+SQ   Sequence 394 BP; 103 A; 94 C; 93 G; 104 T; 0 other;
+     ggggctgtaa cggtttcgac gttttagcaa acgtagcctc atgattcagg ccgagagtga        60
+     gtcatctctc gcaaataaaa gactcaaaac atcgtacatg cgaacaacat cgtatctttc       120
+     gctcgtcagc gcacggctac tgctgttgcc taaaaaaacc taacttggtt tgagcatctg       180
+     tagattgact ccgttaattt ctatggataa cccccaacgg atgcaccact agggtttctc       240
+     tgttgtctct aatggtaaag actttcaact gagcatccca tcgtccggga taagtggcga       300
+     ttcccgcttt gaggattaga aaagctaagc ctgtgaatga atggggagct aatagctagg       360
+     gcggacacgg gttcgactcc cgtcagctcc attt                                   394
+//
