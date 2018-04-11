@@ -15,6 +15,8 @@ limitations under the License.
 
 from Bio.UniProt.GOA import gpi_iterator
 
+from databases.data import Reference
+
 from .data import GoTermAnnotation
 
 
@@ -49,15 +51,22 @@ def qualifier(entry):
     return entry['Qualifier']
 
 
-def parser(filename):
+def publications(entry):
+    return []
+
+
+def parser(handle):
     """
     Parse the given file to produce an iterable of GoTerm objects to import.
     """
 
-    with open(filename, 'rb') as raw:
-        for gpi_entry in gpi_iterator(raw):
-            yield GoTermAnnotation(
-                upi=upi(gpi_entry),
-                qualifier=qualifier(gpi_entry),
-                go_id=go_id(gpi_entry),
-            )
+    for gpi_entry in gpi_iterator(handle):
+        if gpi_entry['DB'] != 'RNAcentral':
+            continue
+
+        yield GoTermAnnotation(
+            upi=upi(gpi_entry),
+            qualifier=qualifier(gpi_entry),
+            go_id=go_id(gpi_entry),
+            publications=publications(gpi_entry),
+        )
