@@ -15,19 +15,18 @@ limitations under the License.
 
 import luigi
 
-from .md5 import Md5Export
-from .id_mapping import IdExport
-from .rfam import RfamAnnotationExport
-from .fasta import FastaExport
-from .ensembl import EnsemblExport
-from .gpi import GpiExport
+from rnacentral.export.ftp import gpi
+
+from tasks.config import db
+from tasks.config import export
+
+from tasks.utils.files import atomic_output
 
 
-class FtpExport(luigi.WrapperTask):
-    def requires(self):
-        yield Md5Export()
-        yield IdExport()
-        yield RfamAnnotationExport()
-        yield FastaExport()
-        yield EnsemblExport()
-        yield GpiExport()
+class GpiExport(luigi.Task):
+    def output(self):
+        return export().gpi('rnacentral.gpi.gz', format=luigi.format.Gzip)
+
+    def run(self):
+        with atomic_output(self.output(), 'w') as out:
+            gpi.export(db(), out)

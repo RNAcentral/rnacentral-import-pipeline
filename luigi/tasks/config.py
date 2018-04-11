@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# -* coding: utf-8 -*-
 
 """
 Copyright [2009-2017] EMBL-European Bioinformatics Institute
@@ -290,7 +290,10 @@ class export(luigi.Config):  # pylint: disable=C0103,R0904
         return self.id_mapping('database_mappings', *args)
 
     def ensembl_export(self, *args):
-        return self.ftp('ensembl', *args)
+        return self.ftp('json', *args)
+
+    def gpi(self, *args):
+        return self.ftp('gpi', *args)
 
 
 class refseq(luigi.Config):  # pylint: disable=C0103,R0904

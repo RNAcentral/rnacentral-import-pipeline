@@ -20,9 +20,6 @@ from attr.validators import instance_of as is_a
 
 from rnacentral.psql import PsqlWrapper
 
-QUERY = """
-"""
-
 PRECUSOR_MAPPING_QUERY = """
 SELECT
     t1.upi as precursor,
@@ -49,6 +46,29 @@ WHERE
     and mature_xref.deleted = 'N'
 """
 
+
+QUERY = """
+WITH mirna_precursors as (
+{precursor_query}
+)
+SELECT
+    pre.upi,
+    pre.taxid,
+    pre.description,
+    pre.rna_type,
+    array_agg(mirna_precursors.precursor) as precursor_rnas
+FROM rnc_rna_precomputed pre
+LEFT JOIN mirna_precursors ON mirna_precursors.mature = pre.upi
+WHERE
+    taxid IS NOT NULL
+    AND rna_type IS NOT NULL
+    AND description IS NOT NULL
+group by pre.upi, pre.taxid
+;
+""".format(
+    precursor_query=PRECUSOR_MAPPING_QUERY,
+)
+
 FIELDS = [
     'database',
     'DB_Object_ID',
@@ -68,7 +88,6 @@ class GpiEntry(object):
     taxid = attr.ib(validator=is_a(int))
     description = attr.ib(validator=is_a(basestring))
     so_term = attr.ib(validator=is_a(basestring))
-
     precursor_rnas = attr.ib(validator=is_a(list), default=[])
 
     @classmethod
@@ -80,6 +99,7 @@ class GpiEntry(object):
             so_term=result['so_term'],
         )
 
+    @property
     def rna_id(self):
         return '{upi}_{taxid}'.format(upi=self.upi, taxid=self.taxid)
 
@@ -101,10 +121,6 @@ class GpiEntry(object):
             'DB_Xref': '',
             'Gene_Product_Properties': self.precursor_info(),
         }
-
-
-def mirna_precursor_mapping(db):
-    pass
 
 
 def entries(db):
