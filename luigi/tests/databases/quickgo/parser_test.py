@@ -13,12 +13,18 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from databases.quickgo.gpi import parser as gpi
+import pytest
+
+from databases.quickgo.data import GoTermAnnotation
+from databases.quickgo import parser as gpi
+
 
 def test_can_parse_a_gpa_file():
-    with open('data/quickgo/rna.gpi', 'r') as raw:
+    with open('data/quickgo/rna.gpa', 'r') as raw:
         assert len(list(gpi.parser(raw))) == 20
 
+
+@pytest.mark.skip
 def test_can_correctly_parse_a_gpa_file():
-    with open('data/quickgo/rna.gpi', 'r') as raw:
+    with open('data/quickgo/rna.gpa', 'r') as raw:
         assert next(gpi.parser(raw)) == GoTermAnnotation()

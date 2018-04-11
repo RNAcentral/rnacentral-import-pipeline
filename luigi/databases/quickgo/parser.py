@@ -13,11 +13,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from Bio.UniProt.GOA import gpi_iterator
+import re
+import itertools as it
 
-from databases.data import Reference
+from Bio.UniProt.GOA import gpa_iterator as raw_parser
 
-from .data import GoTermAnnotation
+import databases.helpers.publications as pub
+
+from . import data
 
 
 def go_id(entry):
@@ -48,25 +51,49 @@ def qualifier(entry):
     """
     Get the qualifer for this entry.
     """
-    return entry['Qualifier']
+    return entry['Qualifier'][0]
 
 
 def publications(entry):
-    return []
+    references = []
+    for reference in entry['DB:Reference']:
+        match = re.match('^PMID:(\d+)$', reference)
+        if match:
+            references.append(pub.reference('', match.group(1)))
+    return references
+
+
+def extensions(record):
+    extensions = []
+    for extension in record['Annotation Extension']:
+        for part in extension.split(','):
+            match = re.match('(\w+)\((.+)\)', part)
+            if match:
+                extensions.append(data.AnnotationExtension(
+                    qualifier=match.group(1),
+                    target=match.group(2),
+                ))
+    return extensions
+
+
+def as_annotation(record):
+    annotation = data.GoTermAnnotation(
+        upi=upi(record),
+        qualifier=qualifier(record),
+        go_id=go_id(record),
+        evidence_code=record['ECO_Evidence_code'],
+        extensions=extensions(record),
+        publications=publications(record),
+    )
+    print(record)
+    print(annotation)
+    return annotation
 
 
 def parser(handle):
     """
     Parse the given file to produce an iterable of GoTerm objects to import.
     """
-
-    for gpi_entry in gpi_iterator(handle):
-        if gpi_entry['DB'] != 'RNAcentral':
-            continue
-
-        yield GoTermAnnotation(
-            upi=upi(gpi_entry),
-            qualifier=qualifier(gpi_entry),
-            go_id=go_id(gpi_entry),
-            publications=publications(gpi_entry),
-        )
+    records = raw_parser(handle)
+    records = it.ifilter(lambda r: r['DB'] == 'RNAcentral', records)
+    return it.imap(as_annotation, records)

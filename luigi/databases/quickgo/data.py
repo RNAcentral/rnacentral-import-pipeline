@@ -14,6 +14,8 @@ limitations under the License.
 """
 
 import attr
+from attr.validators import instance_of as is_a
+
 import requests
 from functools32 import lru_cache
 
@@ -37,8 +39,8 @@ class GoTerm(object):
     @classmethod
     def from_id(cls, go_id):
         """
-        Will create a GoTerm with the associated metadata by fetching information
-        using the given GO ID.
+        Will create a GoTerm with the associated metadata by fetching
+        information using the given GO ID.
         """
 
         assert go_id
@@ -63,6 +65,12 @@ class GoTerm(object):
 
 
 @attr.s()
+class AnnotationExtension(object):
+    qualifier = attr.ib()
+    target = attr.ib()
+
+
+@attr.s()
 class GoTermAnnotation(object):
     """
     This is the simpliest possible representation of AmiGO annotations about
@@ -72,6 +80,8 @@ class GoTermAnnotation(object):
     upi = attr.ib(validator=is_a(basestring))
     qualifier = attr.ib(validator=is_a(basestring))
     go_id = attr.ib(validator=is_a(basestring))
+    evidence_code = attr.ib(validator=is_a(basestring))
+    extensions = attr.ib()
     publications = attr.ib(validator=is_a(list))
 
     @property
