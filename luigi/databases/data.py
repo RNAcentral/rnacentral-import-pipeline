@@ -13,6 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import re
 import json
 import logging
 import unicodedata
@@ -27,14 +28,6 @@ from databases.helpers.hashes import md5
 from databases.helpers.hashes import crc64
 
 LOGGER = logging.getLogger(__name__)
-
-FEATURE_TYPE_RNAS = set([
-    'rRNA',
-    'tRNA',
-    'precursor_RNA',
-    'tmRNA',
-    'misc_RNA',
-])
 
 
 def optionally(instance_type, **kwargs):
@@ -63,6 +56,12 @@ def possibly_empty(instance_type, **kwargs):
         default=attr.Factory(factory),
         **kwargs
     )
+
+
+def is_so_term():
+    def fn(instance, attribute, value):
+        return re.match('^SO:\d+$', value)
+    return fn
 
 
 def is_truish():
@@ -173,7 +172,7 @@ class Entry(object):
     )
     sequence = attr.ib(validator=is_a(basestring))
     exons = attr.ib(validator=is_a(list))
-    rna_type = attr.ib(validator=is_a(basestring))
+    rna_type = attr.ib(validator=is_so_term())
     url = attr.ib(validator=is_a(basestring))
     seq_version = attr.ib(validator=and_(is_a(basestring), is_truish()))
 
@@ -237,25 +236,6 @@ class Entry(object):
         Return a JSON encoded dictionary representing the note data.
         """
         return json.dumps(self.note_data)
-
-    @property
-    def feature_type(self):
-        """
-        Return the feature for the RNA type.
-        """
-        if self.rna_type in FEATURE_TYPE_RNAS:
-            return self.rna_type
-        return 'ncRNA'
-
-    @property
-    def ncrna_class(self):
-        """
-        The ncRNA class. If the feature type is not ncRNA this this will be the
-        empty string.
-        """
-        if self.feature_type != 'ncRNA':
-            return None
-        return self.rna_type
 
     @property
     def gene_synonym(self):
