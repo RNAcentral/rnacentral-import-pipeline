@@ -102,8 +102,8 @@ def locus_description(entry):
     return '{species} {rna_type} {locus_tag}'.format(
         species=species,
         rna_type=entry.rna_type.replace('_', ' '),
-        locus_tag=entry.locus_tag,
-    )
+        locus_tag=entry.locus_tag or '',
+    ).strip()
 
 
 def description(summary, feature, entry):
