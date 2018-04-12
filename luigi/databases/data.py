@@ -30,6 +30,38 @@ from databases.helpers.hashes import crc64
 LOGGER = logging.getLogger(__name__)
 
 
+INSDC_SO_MAPPING = {
+    "RNase_MRP_RNA": 'SO:0000385',
+    "RNase_P_RNA": 'SO:0000386',
+    "SRP_RNA": 'SO:0000590',
+    "Y_RNA": 'SO:0000405',
+    "antisense_RNA": 'SO:0000644',
+    "autocatalytically_spliced_intron": 'SO:0000588',
+    "guide_RNA": 'SO:0000602',
+    "hammerhead_ribozyme": 'SO:0000380',
+    "lncRNA": 'SO:0001877',
+    "miRNA": 'SO:0000276',
+    "ncRNA": 'SO:0000655',
+    "misc_RNA": 'SO:0000673',
+    "other": 'SO:0000655',
+    "precursor_RNA": 'SO:0000185 ',
+    "piRNA": 'SO:0001035',
+    "rasiRNA": 'SO:0000454',
+    "ribozyme": 'SO:0000374',
+    "scRNA": 'SO:0000013',
+    "siRNA": 'SO:0000646',
+    "snRNA": 'SO:0000274',
+    "snoRNA": 'SO:0000275',
+    "telomerase_RNA": 'SO:0000390',
+    "tmRNA": 'SO:0000584',
+    "vault_RNA": 'SO:0000404',
+    'rRNA': 'SO:0000252',
+    'tRNA': 'SO:0000253',
+}
+
+SO_PATTERN = re.compile('^SO:\d+$')
+
+
 class UnxpectedRnaType(Exception):
     """
     Raised when the RNA type is not an SO term and cannot be converted to one.
@@ -64,57 +96,22 @@ def possibly_empty(instance_type, **kwargs):
         **kwargs
     )
 
-INSDC_SO_MAPPING = {
-    "RNase_MRP_RNA": 'SO:0000385',
-    "RNase_P_RNA": 'SO:0000386',
-    "SRP_RNA": 'SO:0000590',
-    "Y_RNA": 'SO:0000405',
-    "antisense_RNA": 'SO:0000644',
-    "autocatalytically_spliced_intron": 'SO:0000588',
-    "guide_RNA": 'SO:0000602',
-    "hammerhead_ribozyme": 'SO:0000380',
-    "lncRNA": 'SO:0001877',
-    "miRNA": 'SO:0000276',
-    "ncRNA": 'SO:0000655',
-    "misc_RNA": 'SO:0000673',
-    "other": 'SO:0000655',
-    "precursor_RNA": 'SO:0000185 ',
-    "piRNA": 'SO:0001035',
-    "rasiRNA": 'SO:0000454',
-    "ribozyme": 'SO:0000374',
-    "scRNA": 'SO:0000013',
-    "siRNA": 'SO:0000646',
-    "snRNA": 'SO:0000274',
-    "snoRNA": 'SO:0000275',
-    "telomerase_RNA": 'SO:0000390',
-    "tmRNA": 'SO:0000584',
-    "vault_RNA": 'SO:0000404',
-    'rRNA': 'SO:0000252',
-    'tRNA': 'SO:0000253',
-}
 
-
-def is_so_term():
+def matches_pattern(pattern):
     def fn(instance, attribute, value):
-        assert re.match('^SO:\d+$', value)
+        if not re.match(pattern, value):
+            raise TypeError("Bad value (%s) for %s in %s" %
+                            (value, attribute, instance))
     return fn
 
 
 def as_so_term(rna_type):
-    if is_so_term()(None, None, rna_type):
+    if re.match(SO_PATTERN, rna_type):
         return rna_type
 
     if rna_type not in INSDC_SO_MAPPING:
         raise UnxpectedRnaType(rna_type)
     return INSDC_SO_MAPPING[rna_type]
-
-
-def is_truish():
-    def fn(instance, attribute, value):
-        if not bool(value):
-            raise TypeError("Bad value (%s) for %s in %s" %
-                            (value, attribute, instance))
-    return fn
 
 
 def optional_utf8(raw):
@@ -217,9 +214,14 @@ class Entry(object):
     )
     sequence = attr.ib(validator=is_a(basestring))
     exons = attr.ib(validator=is_a(list))
-    rna_type = attr.ib(validator=is_so_term(), convert=as_so_term)
+    rna_type = attr.ib(
+        validator=matches_pattern(SO_PATTERN),
+        convert=as_so_term,
+    )
     url = attr.ib(validator=is_a(basestring))
-    seq_version = attr.ib(validator=and_(is_a(basestring), is_truish()))
+    seq_version = attr.ib(
+        validator=and_(is_a(basestring), matches_pattern(r'^\d+$'))
+    )
 
     note_data = possibly_empty(dict)
     xref_data = possibly_empty(dict)
