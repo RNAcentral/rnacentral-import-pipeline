@@ -12,3 +12,34 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+
+import json
+
+from databases.quickgo.data import GoTermAnnotation
+from databases.quickgo.data import AnnotationExtension
+
+
+def test_can_build_correct_writeable():
+    annotation = GoTermAnnotation(
+        rna_id='a',
+        qualifier='part_of',
+        term_id='GO:01',
+        evidence_code='ECO:001',
+        extensions=[
+            AnnotationExtension(qualifier='talks_to', target='ENESMBL:1'),
+        ],
+        assigned_by='Bob',
+        publications=[],
+    )
+
+    assert annotation.as_writeable() == {
+        'rna_id': 'a',
+        'qualifier': 'part_of',
+        'term_id': 'GO:01',
+        'evidence_code': 'ECO:001',
+        'extensions': json.dumps([{
+            'qualifier': 'talks_to',
+            'target': 'ENESMBL:1',
+        }]),
+        'assigned_by': 'Bob',
+    }
