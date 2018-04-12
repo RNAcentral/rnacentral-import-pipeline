@@ -231,3 +231,12 @@ class MouseTests(Base):
     def test_it_never_has_bad_vault(self):
         for entry in self.data():
             assert entry.rna_type != 'vaultRNA'
+
+
+class OtherTests(Base):
+    filename = 'data/ensembl/Macaca_mulatta.Mmul_8.0.1.92.chromosome.1.dat'
+    importer_class = EnsemblParser
+
+    def test_does_not_append_none_to_description(self):
+        print(self.features.keys()[0:10])
+        assert self.entry_for('ENSMMUT00000062476.1').description == 'Macaca mulatta (rhesus monkey) lncRNA'
