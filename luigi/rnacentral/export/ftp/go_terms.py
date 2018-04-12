@@ -32,6 +32,7 @@ where
     and pre.rfam_problems != ''
     and '{"has_issue": false}'::jsonb <@ pre.rfam_problems::jsonb
 group by pre.id, go_terms.go_term_id
+order by pre.id
 """
 
 
