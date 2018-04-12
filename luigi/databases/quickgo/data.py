@@ -82,6 +82,7 @@ class GoTermAnnotation(object):
     go_id = attr.ib(validator=is_a(basestring))
     evidence_code = attr.ib(validator=is_a(basestring))
     extensions = attr.ib()
+    assigned_by = attr.ib(validator=is_a(basestring))
     publications = attr.ib(validator=is_a(list))
 
     @property

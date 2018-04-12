@@ -13,7 +13,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import pytest
+import attr
+
+from databases.data import Reference
 
 from databases.quickgo.data import GoTermAnnotation
 from databases.quickgo import parser as gpi
@@ -21,10 +23,27 @@ from databases.quickgo import parser as gpi
 
 def test_can_parse_a_gpa_file():
     with open('data/quickgo/rna.gpa', 'r') as raw:
-        assert len(list(gpi.parser(raw))) == 20
+        assert len(list(gpi.parser(raw))) == 21
 
 
-@pytest.mark.skip
 def test_can_correctly_parse_a_gpa_file():
     with open('data/quickgo/rna.gpa', 'r') as raw:
-        assert next(gpi.parser(raw)) == GoTermAnnotation()
+        assert attr.asdict(next(gpi.parser(raw))) == attr.asdict(GoTermAnnotation(
+            upi='URS00000064B1_559292',
+            qualifier='enables',
+            go_id='GO:0030533',
+            evidence_code='ECO:0000255',
+            extensions=[],
+            assigned_by='SGD',
+            publications=[Reference(
+                accession='',
+                authors='Lowe TM, Eddy SR.',
+                location='Nucleic Acids Res 25(5):955-964 (1997)',
+                title=(
+                    'tRNAscan-SE: a program for improved detection of '
+                    'transfer RNA genes in genomic sequence'
+                ),
+                pmid=9023104,
+                doi='10.1093/nar/25.5.0955',
+            )]
+        ))

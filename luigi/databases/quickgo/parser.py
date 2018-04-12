@@ -14,27 +14,19 @@ limitations under the License.
 """
 
 import re
+import operator as op
 import itertools as it
 
+import attr
 from Bio.UniProt.GOA import gpa_iterator as raw_parser
 
 import databases.helpers.publications as pub
 
 from . import data
 
-
-def go_id(entry):
-    """
-    Get the GO ID for the given entry.
-    """
-    return entry['GO_ID']
-
-
-def evidence(entry):
-    """
-    Get the evidence information
-    """
-    return entry['Evidence']
+go_id = op.itemgetter('GO_ID')
+evidence = op.itemgetter('Evidence')
+assigned_by = op.itemgetter('Assigned_by')
 
 
 def upi(entry):
@@ -77,17 +69,15 @@ def extensions(record):
 
 
 def as_annotation(record):
-    annotation = data.GoTermAnnotation(
+    return data.GoTermAnnotation(
         upi=upi(record),
         qualifier=qualifier(record),
         go_id=go_id(record),
         evidence_code=record['ECO_Evidence_code'],
         extensions=extensions(record),
+        assigned_by=assigned_by(record),
         publications=publications(record),
     )
-    print(record)
-    print(annotation)
-    return annotation
 
 
 def parser(handle):
