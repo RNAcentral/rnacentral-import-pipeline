@@ -13,7 +13,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from databases.rfam import utils
+from ontologies.go import to_load
+from ontologies.go import TermSources
+
+from tasks.config import quickgo
+
+from tasks.utils.fetch import FetchTask
 from tasks.utils.csv_writer import CsvWriter
 
 
@@ -21,15 +26,24 @@ class GoTermsCSV(CsvWriter):
     headers = [
         'go_term_id',
         'name',
+        'description',
     ]
 
+    def requires(self):
+        conf = quickgo()
+        return [
+            FetchTask(remote_path=conf.data_file, local_path=conf.raw('annotations.gpa'))
+        ]
+
     def data(self):
-        seen = set()
-        for family in utils.load_families():
-            for (go_term_id, name) in family.go_terms:
-                if go_term_id not in seen:
-                    seen.add(go_term_id)
-                    yield {
-                        'go_term_id': go_term_id,
-                        'name': name,
-                    }
+        source = TermSources(
+            rfam_version='CURRENT',
+            quickgo_file=self.requires()[0].output().fn,
+        )
+
+        for term in to_load(source):
+            yield {
+                'go_term_id': term.ontology_id,
+                'name': term.name,
+                'description': term.description,
+            }
