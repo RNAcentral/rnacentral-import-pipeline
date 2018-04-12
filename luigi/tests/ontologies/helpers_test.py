@@ -48,7 +48,6 @@ def test_can_fetch_an_so_term():
             'Micro RNAs may trigger the cleavage of their target '
             'molecules or act as translational repressors.'
         ),
-
         synonyms=[
             'small temporal RNA',
             'micro RNA',

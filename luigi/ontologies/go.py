@@ -13,52 +13,37 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import itertools as it
+
 import attr
 from attr.validators import instance_of as is_a
 
-import requests
-from functools32 import lru_cache
+from databases.rfam import utils as rfam
+from databases.quickgo import parser as quickgo
 
-
-TERM_URL = 'http://www.ebi.ac.uk/QuickGO/term/{go_id}'
-INFO_URL = 'http://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/{go_id}'
+from . import helpers as ont
 
 
 @attr.s()
-class GoTerm(object):
-    """
-    This represents what
-    """
+class TermSources(object):
+    rfam_version = attr.ib(validator=is_a(basestring))
+    quickgo_file = attr.ib(validator=is_a(basestring))
 
-    go_id = attr.ib(validator=is_a(basestring))
-    name = attr.ib(validator=is_a(basestring))
-    definition = attr.ib(validator=is_a(basestring))
 
-    @lru_cache
-    @classmethod
-    def from_id(cls, go_id):
-        """
-        Will create a GoTerm with the associated metadata by fetching
-        information using the given GO ID.
-        """
+def rfam_ids(source):
+    for family in rfam.load_families(source.rfam_version):
+        for (go_term_id, _) in family.go_terms:
+            yield go_term_id
 
-        assert go_id
-        response = requests.get(INFO_URL.format(go_id=go_id))
-        response.raise_for_status()
-        data = response.json()
-        assert data["numberOfHits"] == 1, "Non-unique ID, somehow"
-        data = data['results'][0]
-        assert data['id'] == go_id, "Got info about wrong term, somehow"
 
-        return cls(
-            go_id=go_id,
-            name=data['name'],
-            definition=data['definition']['text'],
-        )
+def quickgo_ids(source):
+    with open(source.quickgo_file, 'r') as handle:
+        for annotation in quickgo.parser(handle):
+            yield annotation.term_id
 
-    @property
-    def url(self):
-        """
-        Get the url for the human readable page about this GO term.
-        """
-        return TERM_URL.format(go_id=self.go_id)
+
+def to_load(source):
+    go_ids = it.chain(rfam_ids(source), quickgo_ids(source))
+    go_ids = {go_id for go_id in go_ids}
+    for go_id in go_ids:
+        yield ont.term(go_id)

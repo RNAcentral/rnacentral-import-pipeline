@@ -13,19 +13,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import attr
-from attr.validators import instance_of as is_a
-from attr.validators import optional
+from ontologies import go
 
 
-@attr.s()
-class Term(object):
-    """
-    This represents what
-    """
+def test_can_find_all_go_terms_to_load():
+    source = go.TermSources(
+        rfam_version='13.0',
+        quickgo_file='data/quickgo/rna.gpa',
+    )
 
-    ontology = attr.ib(validator=is_a(basestring))
-    ontology_id = attr.ib(validator=is_a(basestring))
-    name = attr.ib(validator=is_a(basestring))
-    definition = attr.ib(validator=optional(is_a(basestring)))
-    synonyms = attr.ib(validator=is_a(list))
+    assert len(list(go.to_load(source))) == 228
