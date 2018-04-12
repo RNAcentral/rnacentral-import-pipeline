@@ -29,9 +29,9 @@ def test_can_parse_a_gpa_file():
 def test_can_correctly_parse_a_gpa_file():
     with open('data/quickgo/rna.gpa', 'r') as raw:
         assert attr.asdict(next(gpi.parser(raw))) == attr.asdict(GoTermAnnotation(
-            upi='URS00000064B1_559292',
+            rna_id='URS00000064B1_559292',
             qualifier='enables',
-            go_id='GO:0030533',
+            term_id='GO:0030533',
             evidence_code='ECO:0000255',
             extensions=[],
             assigned_by='SGD',

@@ -29,7 +29,7 @@ evidence = op.itemgetter('Evidence')
 assigned_by = op.itemgetter('Assigned_by')
 
 
-def upi(entry):
+def rna_id(entry):
     """
     Get the UPI for the entry, or fail if there is none.
     """
@@ -70,9 +70,9 @@ def extensions(record):
 
 def as_annotation(record):
     return data.GoTermAnnotation(
-        upi=upi(record),
+        rna_id=rna_id(record),
         qualifier=qualifier(record),
-        go_id=go_id(record),
+        term_id=go_id(record),
         evidence_code=record['ECO_Evidence_code'],
         extensions=extensions(record),
         assigned_by=assigned_by(record),
