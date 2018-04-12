@@ -22,13 +22,15 @@ FROM '{filename}' WITH ENCODING ISO-8859-14
 HAVING FIELDS
 (
     go_term_id,
-    name
+    name,
+    description
 )
 INTO {db_url}
 TARGET COLUMNS
 (
     go_term_id,
-    name
+    name,
+    description
 )
 SET
     search_path = '{search_path}'
@@ -43,6 +45,7 @@ $$
 create table if not exists load_go_terms (
     go_term_id varchar(10) NOT NULL,
     name text COLLATE pg_catalog."default" NOT NULL
+    description text
 );
 $$,
 $$
@@ -52,16 +55,19 @@ $$
 AFTER LOAD DO
 $$ insert into go_terms (
     go_term_id,
-    name
+    name,
+    description
 ) (
 select
     go_term_id,
-    name
+    name,
+    description
 from load_go_terms
 )
 ON CONFLICT (go_term_id) DO UPDATE SET
     go_term_id = excluded.go_term_id,
-    name = excluded.name
+    name = excluded.name,
+    description = excluded.description
 ;
 $$,
 $$
