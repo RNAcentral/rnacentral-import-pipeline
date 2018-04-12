@@ -215,7 +215,6 @@ class AccessionWriter(object):
             data.seq_version,
             data.feature_location_start,
             data.feature_location_end,
-            data.feature_type,
             data.ordinal,
             data.is_composite,
             data.non_coding_id,
@@ -241,7 +240,6 @@ class AccessionWriter(object):
             data.locus_tag,
             None,  # This was data.map,
             data.mol_type,
-            data.ncrna_class,
             data.note,
             data.old_locus_tag,
             data.operon,
@@ -249,6 +247,7 @@ class AccessionWriter(object):
             data.pseudogene,
             data.standard_name,
             data.db_xrefs,
+            data.rna_type,
         ])
 
 
