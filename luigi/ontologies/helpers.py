@@ -24,9 +24,9 @@ INFO_URL = 'https://www.ebi.ac.uk/ols/api/ontologies/{id}'
 TERM_URL = INFO_URL + '/terms/{iri}'
 
 
-def as_iri(url):
+def as_iri(url, encode_count=2):
     iri = url
-    for _ in xrange(2):
+    for _ in xrange(encode_count):
         iri = [('', iri)]
         iri = urllib.urlencode(iri)
         iri = iri[1:]  # Strip off leading '='
@@ -46,10 +46,14 @@ def term(term):
     response.raise_for_status()
     term_info = response.json()
 
+    definition = None
+    if term_info['description']:
+        definition = ' '.join(term_info['description'] or '')
+
     return data.Term(
         ontology=ontology,
         ontology_id=term,
         name=term_info['label'],
-        definition=' '.join(term_info['description']),
-        synonyms=term_info.get('synonyms', []),
+        definition=definition,
+        synonyms=term_info.get('synonyms', None) or [],
     )
