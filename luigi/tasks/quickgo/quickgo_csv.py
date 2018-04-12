@@ -13,51 +13,31 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import csv
-
-import attr
 import luigi
 
 from databases.quickgo.parser import parser
-
-from tasks.utils.fetch import FetchTask
-from tasks.utils.pgloader import PGLoader
-from tasks.utils.files import atomic_output
+from databases.quickgo.data import WRITING_HEADERS
 
 from tasks.config import quickgo
-
-
-class QuickGo(luigi.WrapperTask):
-    def requires(self):
-        yield QuickGoCsv()
-        yield PgLoadQuickGo()
+from tasks.utils.fetch import FetchTask
 
 
 class QuickGoCsv(luigi.Task):
+    headers = WRITING_HEADERS
+
     def requires(self):
-        return FetchTask(
-            remote_path=quickgo().data_file,
-            local_path=quickgo().raw('annotations.gpa'),
-        )
+        return [
+            FetchTask(
+                remote_path=quickgo().data_file,
+                local_path=quickgo().raw('annotations.gpa'),
+            ),
+        ]
 
     def output(self):
         return luigi.LocalTarget(quickgo().csv())
 
-    def terms(self):
-        filename = self.requires().output().fn
+    def data(self):
+        filename = self.requires()[0].output().fn
         with open(filename, 'w') as raw:
             for go_term in parser(raw):
-                yield attr.asdict(go_term)
-
-    def run(self):
-        with atomic_output(self.output()) as out:
-            writer = csv.DictWriter(out, ['upi', 'go_term', 'qualifier'])
-            writer.writerows(self.terms())
-
-
-class PgLoadQuickGo(PGLoader):
-    def requires(self):
-        return QuickGoCsv()
-
-    def run(self):
-        pass
+                yield go_term.as_writeable()
