@@ -46,6 +46,13 @@ FEATURE_TYPE_RNAS = set([
 ])
 
 
+class UnxpectedRnaType(Exception):
+    """
+    Raised when the RNA type is not an SO term and cannot be converted to one.
+    """
+    pass
+
+
 def optionally(instance_type, **kwargs):
     """
     Return an attribute that is either none or of the given type.
@@ -73,11 +80,49 @@ def possibly_empty(instance_type, **kwargs):
         **kwargs
     )
 
+INSDC_SO_MAPPING = {
+    "RNase_MRP_RNA": 'SO:0000385',
+    "RNase_P_RNA": 'SO:0000386',
+    "SRP_RNA": 'SO:0000590',
+    "Y_RNA": 'SO:0000405',
+    "antisense_RNA": 'SO:0000644',
+    "autocatalytically_spliced_intron": 'SO:0000588',
+    "guide_RNA": 'SO:0000602',
+    "hammerhead_ribozyme": 'SO:0000380',
+    "lncRNA": 'SO:0001877',
+    "miRNA": 'SO:0000276',
+    "ncRNA": 'SO:0000655',
+    "misc_RNA": 'SO:0000673',
+    "other": 'SO:0000655',
+    "precursor_RNA": 'SO:0000185 ',
+    "piRNA": 'SO:0001035',
+    "rasiRNA": 'SO:0000454',
+    "ribozyme": 'SO:0000374',
+    "scRNA": 'SO:0000013',
+    "siRNA": 'SO:0000646',
+    "snRNA": 'SO:0000274',
+    "snoRNA": 'SO:0000275',
+    "telomerase_RNA": 'SO:0000390',
+    "tmRNA": 'SO:0000584',
+    "vault_RNA": 'SO:0000404',
+    'rRNA': 'SO:0000252',
+    'tRNA': 'SO:0000253',
+}
+
 
 def is_so_term():
     def fn(instance, attribute, value):
-        return re.match('^SO:\d+$', value)
+        assert re.match('^SO:\d+$', value)
     return fn
+
+
+def as_so_term(rna_type):
+    if is_so_term()(None, None, rna_type):
+        return rna_type
+
+    if rna_type not in INSDC_SO_MAPPING:
+        raise UnxpectedRnaType(rna_type)
+    return INSDC_SO_MAPPING[rna_type]
 
 
 def is_truish():
@@ -197,7 +242,7 @@ class Entry(object):
     )
     sequence = attr.ib(validator=is_a(basestring))
     exons = attr.ib(validator=is_a(list))
-    rna_type = attr.ib(validator=is_so_term())
+    rna_type = attr.ib(validator=is_so_term(), convert=as_so_term)
     url = attr.ib(validator=is_a(basestring))
     seq_version = attr.ib(validator=and_(is_a(basestring), is_truish()))
 
