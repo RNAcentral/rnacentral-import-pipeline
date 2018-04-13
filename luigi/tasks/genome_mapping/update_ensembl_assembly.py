@@ -59,7 +59,7 @@ def get_ensembl_databases(cursor, ensembl_release):
         database = result['Database']
         if database.count('_') != 4 or 'mirror' in database:
             continue
-        genus, species, database_type, release, _ = database.split('_')
+        _, _, database_type, release, _ = database.split('_')
         if release != str(ensembl_release):
             continue
         if database_type == 'core':
