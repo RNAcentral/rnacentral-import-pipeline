@@ -23,6 +23,22 @@ from tasks.config import genome_mapping
 from .example_genome_locations import example_locations
 
 
+GENOMES = [
+    'anopheles_gambiae',
+    'arabidopsis_thaliana',
+    'bombyx_mori',
+    'caenorhabditis_elegans',
+    'dictyostelium_discoideum',
+    'drosophila_melanogaster',
+    'homo_sapiens',
+    'mus_musculus',
+    'plasmodium_falciparum',
+    'rattus_norvegicus'
+    'saccharomyces_cerevisiae',
+    'schizosaccharomyces_pombe',
+]
+
+
 def get_ensembl_connection():
     """Connect to the public Ensembl MySQL database."""
     return pymysql.connect(
@@ -132,7 +148,8 @@ def store_ensembl_metadata(metadata, file):
                 domain_url(assembly['species.division']),
                 example_location['chromosome'],
                 example_location['start'],
-                example_location['end']
+                example_location['end'],
+                1 if assembly['species.url'].lower() in GENOMES else 0,
             ]
             output = io.BytesIO()
             writer = csv.writer(output, delimiter='\t')
