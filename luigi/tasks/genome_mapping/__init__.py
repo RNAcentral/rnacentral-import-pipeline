@@ -21,6 +21,7 @@ from .genome_mapping_tasks import GetChromosomes
 from .genome_mapping_tasks import BlatJob
 from .genome_mapping_tasks import ParsePslOutput
 from .genome_mapping_tasks import SpeciesBlatJob
+from .update_ensembl_assembly import RetrieveEnsemblAssemblies
 
 from .pgload_exact_matches import GenomeMappingPGLoadExactMatches
 from .pgload_inexact_matches import GenomeMappingPGLoadInexactMatches
