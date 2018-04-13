@@ -97,5 +97,5 @@ class GenomeMappingPGLoadExactMatches(PGLoader):  # pylint: disable=R0904
             filename=filename,
             db_url=self.db_url(table=table),
             table=table,
-            search_path=self.db_search_path(),
+            search_path=self.db_search_path()
         )
