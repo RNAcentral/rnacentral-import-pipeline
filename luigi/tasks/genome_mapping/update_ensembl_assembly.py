@@ -87,16 +87,18 @@ def domain_url(division):
     """Given E! division, returns E!/E! Genomes url."""
     if division == 'Ensembl':
         subdomain = 'ensembl.org'
-    elif division == 'Ensembl Plants':
+    elif division == 'EnsemblPlants':
         subdomain = 'plants.ensembl.org'
-    elif division == 'Ensembl Metazoa':
+    elif division == 'EnsemblMetazoa':
         subdomain = 'metazoa.ensembl.org'
-    elif division == 'Ensembl Bacteria':
+    elif division == 'EnsemblBacteria':
         subdomain = 'bacteria.ensembl.org'
-    elif division == 'Ensembl Fungi':
+    elif division == 'EnsemblFungi':
         subdomain = 'fungi.ensembl.org'
-    elif division == 'Ensembl Protists':
+    elif division == 'EnsemblProtists':
         subdomain = 'protists.ensembl.org'
+    else:
+        subdomain = ''
     return subdomain
 
 
