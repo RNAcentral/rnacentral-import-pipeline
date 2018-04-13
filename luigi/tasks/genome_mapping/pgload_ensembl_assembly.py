@@ -17,6 +17,7 @@ import luigi
 
 from tasks.utils.pgloader import PGLoader
 from .update_ensembl_assembly import RetrieveEnsemblAssemblies
+from .update_ensembl_assembly import RetrieveEnsemblGenomesAssemblies
 
 
 CONTROL_FILE = """LOAD CSV
@@ -119,13 +120,33 @@ $$ DROP TABLE {table}; $$
 
 class GenomeMappingPGLoadEnsemblAssembly(PGLoader):  # pylint: disable=R0904
     """
-    Update ensembl_assembly table.
+    Update ensembl_assembly table with Ensembl data.
     """
     def requires(self):
         return RetrieveEnsemblAssemblies()
 
     def control_file(self):
         filename = RetrieveEnsemblAssemblies().output().fn
+        table = 'load_ensembl_assembly'
+        permanent_table = 'ensembl_assembly'
+        return CONTROL_FILE.format(
+            filename=filename,
+            db_url=self.db_url(table=table),
+            table=table,
+            permanent_table=permanent_table,
+            search_path=self.db_search_path()
+        )
+
+
+class GenomeMappingPGLoadEnsemblGenomesAssembly(PGLoader):  # pylint: disable=R0904
+    """
+    Update ensembl_assembly table with Ensembl Genomes data.
+    """
+    def requires(self):
+        return RetrieveEnsemblGenomesAssemblies()
+
+    def control_file(self):
+        filename = self.input().fn
         table = 'load_ensembl_assembly'
         permanent_table = 'ensembl_assembly'
         return CONTROL_FILE.format(

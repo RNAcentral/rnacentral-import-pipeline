@@ -22,10 +22,12 @@ from .genome_mapping_tasks import BlatJob
 from .genome_mapping_tasks import ParsePslOutput
 from .genome_mapping_tasks import SpeciesBlatJob
 from .update_ensembl_assembly import RetrieveEnsemblAssemblies
+from .update_ensembl_assembly import RetrieveEnsemblGenomesAssemblies
 
 from .pgload_exact_matches import GenomeMappingPGLoadExactMatches
 from .pgload_inexact_matches import GenomeMappingPGLoadInexactMatches
 from .pgload_ensembl_assembly import GenomeMappingPGLoadEnsemblAssembly
+from .pgload_ensembl_assembly import GenomeMappingPGLoadEnsemblGenomesAssembly
 
 
 GENOMES = {
