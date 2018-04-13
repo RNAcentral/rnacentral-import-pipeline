@@ -34,7 +34,8 @@ HAVING FIELDS
     subdomain,
     example_chromosome,
     example_start,
-    example_end
+    example_end,
+    blat_mapping
 )
 INTO {db_url}
 TARGET COLUMNS
@@ -50,7 +51,8 @@ TARGET COLUMNS
     subdomain,
     example_chromosome,
     example_start,
-    example_end
+    example_end,
+    blat_mapping
 )
 WITH
     fields terminated by '\t'
