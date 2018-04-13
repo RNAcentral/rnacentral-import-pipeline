@@ -16,8 +16,6 @@ limitations under the License.
 import io
 import csv
 
-from collections import defaultdict
-
 import luigi
 import pymysql.cursors
 
@@ -48,33 +46,25 @@ def get_ensembl_genomes_connection():
     )
 
 
-def get_ensembl_databases(cursor):
+def get_ensembl_databases(cursor, ensembl_release):
     """
     Get a list of all available databases.
     Return a list of the most recent core databases, for example:
         homo_sapiens_core_92_38
         mus_musculus_core_92_38
     """
-    databases = defaultdict(list)
+    databases = []
     cursor.execute("show databases")
     for result in cursor.fetchall():
         database = result['Database']
         if database.count('_') != 4 or 'mirror' in database:
             continue
-        genus, species, database_type, ensembl_release, _ = database.split('_')
-        ensembl_release = int(ensembl_release)
-        if ensembl_release < 80:
+        genus, species, database_type, release, _ = database.split('_')
+        if release != str(ensembl_release):
             continue
         if database_type == 'core':
-            organism = genus + ' ' + species
-            databases[organism].append((ensembl_release, database))
-
-    to_analyse = []
-    # get the most recent database
-    for organism, dbs in databases.iteritems():
-        most_recent = max(dbs, key=lambda item: item[0])
-        to_analyse.append(most_recent[1])
-    return to_analyse
+            databases.append(database)
+    return databases
 
 
 def domain_url(division):
@@ -155,15 +145,18 @@ class RetrieveEnsemblAssemblies(luigi.Task):
     """
     Store Ensembl assemblies in a file.
     """
+    ensembl_release = luigi.IntParameter(default=92)
+
     def output(self):
-        return luigi.LocalTarget(genome_mapping().genomes('ensembl_assembly.tsv'))
+        filename = 'ensembl_%i.tsv' % self.ensembl_release
+        return luigi.LocalTarget(genome_mapping().genomes(filename))
 
     def run(self):
         data = []
         connection = get_ensembl_connection()
         try:
             with connection.cursor() as cursor:
-                databases = get_ensembl_databases(cursor)
+                databases = get_ensembl_databases(cursor, self.ensembl_release)
                 for database in databases:
                     data.append(get_ensembl_metadata(cursor, database))
         finally:
