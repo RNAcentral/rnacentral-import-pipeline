@@ -83,6 +83,26 @@ def get_ensembl_databases(cursor, ensembl_release):
     return databases
 
 
+def get_ensembl_genomes_databases(cursor, ensembl_genomes_release):
+    """
+    Get a list of all available databases.
+    Return a list of the most recent core databases, for example:
+
+    """
+    databases = []
+    cursor.execute("show databases")
+    for result in cursor.fetchall():
+        database = result['Database']
+        if database.count('_') != 5 or 'mirror' in database:
+            continue
+        _, _, database_type, release, _, _ = database.split('_')
+        if release != str(ensembl_genomes_release):
+            continue
+        if database_type == 'core':
+            databases.append(database)
+    return databases
+
+
 def domain_url(division):
     """Given E! division, returns E!/E! Genomes url."""
     if division == 'Ensembl':
@@ -143,7 +163,7 @@ def store_ensembl_metadata(metadata, file):
                 assembly['assembly.name'],
                 assembly['assembly.accession'] if 'assembly.accession' in assembly else None,
                 assembly['assembly.ucsc_alias'] if 'assembly.ucsc_alias' in assembly else None,
-                assembly['species.common_name'],
+                assembly['species.common_name'] if 'species.common_name' in assembly else assembly['species.scientific_name'],
                 assembly['species.taxonomy_id'],
                 assembly['species.url'].lower(),
                 assembly['species.division'],
@@ -176,6 +196,29 @@ class RetrieveEnsemblAssemblies(luigi.Task):
         try:
             with connection.cursor() as cursor:
                 databases = get_ensembl_databases(cursor, self.ensembl_release)
+                for database in databases:
+                    data.append(get_ensembl_metadata(cursor, database))
+        finally:
+            connection.close()
+        store_ensembl_metadata(data, self.output().fn)
+
+
+class RetrieveEnsemblGenomesAssemblies(luigi.Task):
+    """
+    Store Ensembl Genomes assemblies in a file.
+    """
+    ensembl_genomes_release = luigi.IntParameter(default=38)
+
+    def output(self):
+        filename = 'ensembl_genomes_%i.tsv' % self.ensembl_genomes_release
+        return luigi.LocalTarget(genome_mapping().genomes(filename))
+
+    def run(self):
+        data = []
+        connection = get_ensembl_genomes_connection()
+        try:
+            with connection.cursor() as cursor:
+                databases = get_ensembl_genomes_databases(cursor, self.ensembl_genomes_release)
                 for database in databases:
                     data.append(get_ensembl_metadata(cursor, database))
         finally:
