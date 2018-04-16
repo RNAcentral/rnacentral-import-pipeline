@@ -16,9 +16,10 @@ limitations under the License.
 from ontologies.eco import to_load
 from ontologies.eco import TermSources
 
-from tasks.utils.csv_writer import CsvWriter
+from tasks.config import quickgo
 
-from tasks.quickgo import utils
+from tasks.utils.fetch import FetchTask
+from tasks.utils.csv_writer import CsvWriter
 
 
 class EcoCodeCSV(CsvWriter):
@@ -29,7 +30,10 @@ class EcoCodeCSV(CsvWriter):
     ]
 
     def requires(self):
-        return [utils.fetch_task()]
+        conf = quickgo()
+        return [
+            FetchTask(remote_path=conf.data_file, local_path=conf.annotations),
+        ]
 
     def data(self):
         source = TermSources(
@@ -42,4 +46,3 @@ class EcoCodeCSV(CsvWriter):
                 'name': term.name,
                 'description': term.description,
             }
-

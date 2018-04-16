@@ -20,14 +20,17 @@ from databases.quickgo.data import WRITING_HEADERS
 
 from tasks.config import quickgo
 
-from . import utils
+from tasks.utils.fetch import FetchTask
 
 
 class QuickGoCsv(luigi.Task):
     headers = WRITING_HEADERS
 
     def requires(self):
-        return [utils.fetch_task()]
+        conf = quickgo()
+        return [
+            FetchTask(remote_path=conf.data_file, local_path=conf.annotations),
+        ]
 
     def output(self):
         return luigi.LocalTarget(quickgo().csv())
