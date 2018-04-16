@@ -20,7 +20,7 @@ QUERY = """
 select
     pre.id,
     go_terms.go_term_id,
-    hits.rfam_model_id
+    string_agg(hits.rfam_model_id, '|')
 from rnc_rna_precomputed pre
 join xref on xref.upi = pre.upi and xref.taxid = pre.taxid
 join rfam_model_hits hits on hits.upi = pre.upi
@@ -32,7 +32,6 @@ where
     and pre.rfam_problems != ''
     and '{"has_issue": false}'::jsonb <@ pre.rfam_problems::jsonb
 group by pre.id, go_terms.go_term_id
-order by pre.id
 """
 
 
