@@ -98,3 +98,14 @@ def test_can_handle_missing_volume():
         pmid=27389411,
         doi='10.1093/cvr/cvw177',
     ))
+
+
+def test_it_can_find_if_duplicate_ext_ids():
+    assert attr.asdict(pub.reference('hi', 375006)) == attr.asdict(Reference(
+        accession='hi',
+        authors='Macino G, Tzagoloff A.',
+        location='Mol Gen Genet 169(2):183-188 (1979)',
+        title='Assembly of the mitochondrial membrane system: two separate genes coding for threonyl-tRNA in the mitochondrial DNA of Saccharomyces cerevisiae.',
+        pmid=375006,
+        doi='10.1007/bf00271669',
+    ))

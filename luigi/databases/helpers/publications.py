@@ -22,7 +22,7 @@ from functools32 import lru_cache
 
 from ..data import Reference
 
-URL = 'https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=EXT_ID:{pmid}&format=json'
+URL = 'https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=EXT_ID:{pmid}+AND+SRC:MED&format=json'
 
 
 class UnknownPmid(Exception):
