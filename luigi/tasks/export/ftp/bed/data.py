@@ -23,7 +23,7 @@ from tasks.config import export
 from rnacentral.export.ftp import bed
 
 class ChromSizes(luigi.Task):
-    taxid = luigi.Parameter(default=9606)
+    taxid = luigi.IntParameter(default=9606)
 
     def output(self):
         return luigi.LocalTarget(export().bed('%s.chrom.sizes' % self.taxid))
@@ -33,20 +33,26 @@ class ChromSizes(luigi.Task):
 
 
 class BedToBigBed(luigi.Task):
-    taxid = luigi.Parameter(default=9606)
+    taxid = luigi.IntParameter(default=9606)
 
     def requires(self):
-        return [BedFile(taxid=self.taxid), ChromSizes(taxid=self.taxid)]
+        return [
+            BedFile(taxid=self.taxid),
+            ChromSizes(taxid=self.taxid)
+        ]
 
     def output(self):
-        return luigi.LocalTarget(export().bed('rnacentral-%i.bigbed' % self.taxid))
+        filename = 'rnacentral-%i.bigbed' % self.taxid
+        return luigi.LocalTarget(export().bed(filename))
 
     def run(self):
-        bed.convert_to_bigbed(BedFile(taxid=self.taxid).output().path, ChromSizes(taxid=self.taxid).output().path, self.output().path)
+        bed.convert_to_bigbed(BedFile(taxid=self.taxid).output().path,
+                              ChromSizes(taxid=self.taxid).output().path,
+                              self.output().path)
 
 
 class BedFile(luigi.Task):
-    taxid = luigi.Parameter(default=9606)
+    taxid = luigi.IntParameter(default=9606)
 
     def requires(self):
         return BedDataDump(taxid=self.taxid)
@@ -61,7 +67,7 @@ class BedFile(luigi.Task):
 
 
 class BedDataDump(luigi.Task):
-    taxid = luigi.Parameter(default=9606)
+    taxid = luigi.IntParameter(default=9606)
 
     def output(self):
         return luigi.LocalTarget(export().bed('rnacentral-%i.tsv' % self.taxid))
@@ -71,10 +77,8 @@ class BedDataDump(luigi.Task):
             bed.coordinates(db(), raw, taxid=self.taxid)
 
 
-class BedWrapper(luigi.Task):
+class BedWrapper(luigi.WrapperTask):
 
     def requires(self):
-        tasks = []
         for taxid in bed.get_taxids_with_genomic_mapping():
-            tasks.append(BedToBigBed(taxid=taxid))
-        return tasks
+            yield BedToBigBed(taxid=taxid)
