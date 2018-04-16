@@ -119,6 +119,8 @@ class GenomeMappingPipelineWrapper(luigi.WrapperTask):
     A wrapper task for the entire genome mapping pipeline.
     """
     def requires(self):
+        yield RetrieveEnsemblAssemblies()
+        yield RetrieveEnsemblGenomesAssemblies()
         yield GetChromosomeFastaWrapper()
         yield SpeciesFastaCleanSplitWrapper()
         yield BlatJobsWrapper()
