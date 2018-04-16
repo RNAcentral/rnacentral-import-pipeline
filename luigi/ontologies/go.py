@@ -13,6 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import gzip
 import itertools as it
 
 import attr
@@ -37,7 +38,7 @@ def rfam_ids(source):
 
 
 def quickgo_ids(source):
-    with open(source.quickgo_file, 'r') as handle:
+    with gzip.open(source.quickgo_file, 'r') as handle:
         for annotation in quickgo.parser(handle):
             yield annotation.term_id
 

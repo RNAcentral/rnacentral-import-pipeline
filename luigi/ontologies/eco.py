@@ -13,6 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import gzip
 
 import attr
 from attr.validators import instance_of as is_a
@@ -28,7 +29,7 @@ class TermSources(object):
 
 
 def quickgo_ids(source):
-    with open(source.quickgo_file, 'r') as handle:
+    with gzip.open(source.quickgo_file, 'r') as handle:
         for annotation in quickgo.parser(handle):
             yield annotation.evidence_code
 
