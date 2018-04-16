@@ -18,9 +18,8 @@ from ontologies.go import TermSources
 
 from tasks.config import quickgo
 
+from tasks.utils.fetch import FetchTask
 from tasks.utils.csv_writer import CsvWriter
-
-from tasks.quick.utils import fetch_task
 
 
 class GoTermsCSV(CsvWriter):
@@ -31,7 +30,10 @@ class GoTermsCSV(CsvWriter):
     ]
 
     def requires(self):
-        return [fetch_task()]
+        conf = quickgo()
+        return [
+            FetchTask(remote_path=conf.data_file, local_path=conf.annotations),
+        ]
 
     def data(self):
         source = TermSources(
