@@ -13,27 +13,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import luigi
-
-from databases.quickgo.parser import parser
-from databases.quickgo.data import WRITING_HEADERS
-
 from tasks.config import quickgo
+from tasks.utils.fetch import FetchTask
 
-from . import utils
 
-
-class QuickGoCsv(luigi.Task):
-    headers = WRITING_HEADERS
-
-    def requires(self):
-        return [utils.fetch_task()]
-
-    def output(self):
-        return luigi.LocalTarget(quickgo().csv())
-
-    def data(self):
-        filename = self.requires()[0].output().fn
-        with open(filename, 'w') as raw:
-            for go_term in parser(raw):
-                yield go_term.as_writeable()
+def fetch_task():
+    return FetchTask(
+        remote_path=quickgo().data_file,
+        local_path=quickgo().raw('annotations.gpa'),
+    )
