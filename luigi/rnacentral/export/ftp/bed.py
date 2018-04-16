@@ -62,7 +62,9 @@ def make_bed_file(handle, out):
     region_id = None
     exons = []
     for result in csv.DictReader(handle):
-        if result['region_id'] == region_id or region_id is None:
+        if result['region_id'] == 'region_id':
+            continue  # skip csv header line
+        elif result['region_id'] == region_id or region_id is None:
             exons.append(result)
             region_id = result['region_id']
         else:
@@ -73,19 +75,17 @@ def make_bed_file(handle, out):
 
 
 def sort_bed_file(out):
+    """
+    Sort bed file and replace chromosome names using UCSC format.
+    """
+    cmd = "sed -i '/[_\.]/d' {out}".format(out=out)
+    status = subprocess.call(cmd, shell=True)
+    if status != 0:
+        raise ValueError('Failed to run sed: %s' % cmd)
     cmd = 'bedSort {out} {out}'.format(out=out)
     status = subprocess.call(cmd, shell=True)
-    cmd = "sed -i 's/chrMT/chrM/g' {out}".format(out=out)
-    status = subprocess.call(cmd, shell=True)
-    print '+++++++++++++++++++++++++++\n+++++++++++++++++++++++++++++++\n'
-    if status == 0:
-        print 'OK'
-    else:
-        print 'Error'
-
-
-def get_taxids_with_genomic_mapping():
-    return [9606, 10090]
+    if status != 0:
+        raise ValueError('Failed to run bedSort: %s' % cmd)
 
 
 def format_as_bed(exons):
@@ -112,8 +112,14 @@ def format_as_bed(exons):
     BED_TEMPLATE = ('{chromosome}\t{start}\t{stop}\t{name}\t{score}\t{strand}\t'
                     '{thickStart}\t{thickEnd}\t{itemRgb}\t{blockCount}\t'
                     '{blockSizes}\t{blockStarts}\n')
+    if exons[0]['chromosome'].isdigit() or exons[0]['chromosome'] in ['X', 'Y']:
+        chromosome = 'chr' + exons[0]['chromosome']
+    elif exons[0]['chromosome'] in ['chrMT', 'MT']:
+        chromosome = 'chrM'
+    else:
+        chromosome = exons[0]['chromosome']
     bed = BED_TEMPLATE.format(
-        chromosome='chr' + exons[0]['chromosome'],
+        chromosome=chromosome,
         start=min_start,
         stop=max_stop,
         name=exons[0]['upi'],
