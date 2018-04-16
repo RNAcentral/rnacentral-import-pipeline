@@ -40,9 +40,8 @@ order by accession, primary_start, strand
 
 def coordinates(config, handle, taxid=9606):
     psql = PsqlWrapper(config)
-    # for result in psql.copy_to_iterable(COORDINATES.format(taxid=taxid)):
-    #     print format_as_bed(result)
     psql.write_query(handle, COORDINATES.format(taxid=taxid))
+
 
 def make_bed_file(handle, out):
     csv.field_size_limit(sys.maxsize)
@@ -57,6 +56,7 @@ def make_bed_file(handle, out):
             out.write(data)
             region_id = None
             exons = []
+
 
 def sort_bed_file(out):
     cmd = 'bedSort {out} {out}'.format(out=out)
@@ -114,6 +114,7 @@ def format_as_bed(exons):
     )
     return bed
 
+
 def convert_to_bigbed(bed_path, chromsizes_path, bigbed_path):
     cmd = 'bedToBigBed {bed_path} {chromsizes_path} {bigbed_path}'.format(bed_path=bed_path, chromsizes_path=chromsizes_path, bigbed_path=bigbed_path)
     print cmd
@@ -122,6 +123,7 @@ def convert_to_bigbed(bed_path, chromsizes_path, bigbed_path):
         print 'Error'
     else:
         print 'OK'
+
 
 def get_chrom_sizes(config, taxid, output):
     psql = PsqlWrapper(config)
