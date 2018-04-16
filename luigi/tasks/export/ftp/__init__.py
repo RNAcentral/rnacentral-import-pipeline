@@ -20,6 +20,7 @@ from .id_mapping import IdExport
 from .rfam import RfamAnnotationExport
 from .fasta import FastaExport
 from .ensembl import EnsemblExport
+from .go_annotations import GoAnnotationExport
 
 
 class FtpExport(luigi.WrapperTask):
@@ -29,3 +30,4 @@ class FtpExport(luigi.WrapperTask):
         yield RfamAnnotationExport
         yield FastaExport
         yield EnsemblExport
+        yield GoAnnotationExport
