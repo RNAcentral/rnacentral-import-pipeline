@@ -19,28 +19,39 @@ import sys
 
 from rnacentral.psql import PsqlWrapper
 
-COORDINATES = """
-select t1.upi, t1.taxid, t1.chromosome, t1."start", t1.stop, t1.strand, t1.region_id
-from rnc_genome_mapping t1
-where t1.taxid = {taxid}
-order by region_id, start, strand
-"""
 
-ENSEMBL = """
-select t1.upi, t1.taxid, t2.name, t2.primary_start, t2.primary_end, t2.strand, t2.accession
-from xref t1
-join rnc_coordinates t2
-on t1.ac = t2.accession
-where t2.name is not null
-and t1.taxid = {taxid}
-and t1.dbid = 25
-and t1.deleted = 'N'
-order by accession, primary_start, strand
-"""
-
-def coordinates(config, handle, taxid=9606):
+def export_ensembl_coordinates(config, handle, taxid=9606):
+    """
+    Export Ensembl coordinates.
+    """
+    sql = """
+    SELECT t1.upi, t1.taxid, t2.name as chromosome, t2.primary_start as start,
+           t2.primary_end as stop, t2.strand, t2.accession as region_id
+    FROM xref t1
+    JOIN rnc_coordinates t2
+    ON t1.ac = t2.accession
+    WHERE t2.name IS NOT NULL
+    AND t1.taxid = {taxid}
+    AND t1.dbid = 25
+    AND t1.deleted = 'N'
+    ORDER BY accession, primary_start, strand
+    """
     psql = PsqlWrapper(config)
-    psql.write_query(handle, COORDINATES.format(taxid=taxid))
+    psql.write_query(handle, sql.format(taxid=taxid))
+
+
+def export_blat_coordinates(config, handle, taxid=9606):
+    """
+    Export blat genome coordinate data that will be parsed into bed files.
+    """
+    sql = """
+    SELECT upi, taxid, chromosome, "start", stop, strand, region_id
+    FROM rnc_genome_mapping
+    WHERE taxid = {taxid}
+    ORDER BY region_id, start, strand
+    """
+    psql = PsqlWrapper(config)
+    psql.write_query(handle, sql.format(taxid=taxid))
 
 
 def make_bed_file(handle, out):

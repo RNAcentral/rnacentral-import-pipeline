@@ -46,9 +46,9 @@ class BedToBigBed(luigi.Task):
         return luigi.LocalTarget(export().bed(filename))
 
     def run(self):
-        bed.convert_to_bigbed(BedFile(taxid=self.taxid).output().path,
-                              ChromSizes(taxid=self.taxid).output().path,
-                              self.output().path)
+        with self.output().open('w') as raw:
+            bed.export_blat_coordinates(db(), raw, taxid=self.taxid)
+            bed.export_ensembl_coordinates(db(), raw, taxid=self.taxid)
 
 
 class BedFile(luigi.Task):
