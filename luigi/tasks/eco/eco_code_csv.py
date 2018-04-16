@@ -21,7 +21,7 @@ from tasks.utils.csv_writer import CsvWriter
 from tasks.quickgo import utils
 
 
-class GoTermsCSV(CsvWriter):
+class EcoCodeCSV(CsvWriter):
     headers = [
         'eco_term_id',
         'name',
