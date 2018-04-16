@@ -312,6 +312,7 @@ class quickgo(luigi.Config):
     def raw(self, *args):
         return os.path.join(self.base(), 'raw', *args)
 
+    @property
     def annotations(self):
         return self.raw('annotations.gpa')
 
