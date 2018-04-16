@@ -77,8 +77,15 @@ class BedDataDump(luigi.Task):
             bed.export_raw_coordinates(db(), raw, taxid=self.taxid)
 
 
+class BigBedWrapper(luigi.WrapperTask):
+
+    def requires(self):
+        for taxid in [9606, 10090]:
+            yield BedToBigBed(taxid=taxid)
+
+
 class BedWrapper(luigi.WrapperTask):
 
     def requires(self):
-        for taxid in bed.get_taxids_with_genomic_mapping():
-            yield BedToBigBed(taxid=taxid)
+        for taxid in [9606, 10090, 10116]:
+            yield BedFile(taxid=taxid)
