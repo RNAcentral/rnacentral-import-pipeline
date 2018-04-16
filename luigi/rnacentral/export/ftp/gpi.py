@@ -22,28 +22,29 @@ from rnacentral.psql import PsqlWrapper
 
 PRECUSOR_MAPPING_QUERY = """
 SELECT
-    t1.upi as precursor,
-    t4.upi as mature,
-    t1.taxid
+    precursor_xref.upi as precursor,
+    mature_xref.upi as mature,
+    precursor_xref.taxid
 FROM xref precursor_xref
 JOIN rnc_accessions precursor_acc
-    t2 ON precursor_xref.ac = precursor_acc.accession
+ON
+    precursor_xref.ac = precursor_acc.accession
     AND precursor_acc.feature_name = 'precursor_RNA'
 JOIN rnc_accessions mature_acc
 ON
     mature_acc.external_id = precursor_acc.external_id
     AND mature_acc.feature_name != 'precursor_RNA'
-    AND mature_xref.accession != precursor_acc.accession
 JOIN xref mature_xref
 ON
     mature_xref.ac = mature_acc.accession
-    and mature_xref.dbid = precursor_xref.dbid
+    AND mature_xref.dbid = precursor_xref.dbid
     AND precursor_xref.upi != mature_xref.upi
     AND precursor_xref.taxid = mature_xref.taxid
+    AND mature_xref.ac != precursor_acc.accession
 WHERE
-    AND precursor_xref.dbid = 4
+    precursor_xref.dbid = 4
     AND precursor_xref.deleted = 'N'
-    and mature_xref.deleted = 'N'
+    AND mature_xref.deleted = 'N'
 """
 
 
@@ -54,17 +55,16 @@ WITH mirna_precursors as (
 SELECT
     pre.upi,
     pre.taxid,
-    pre.description,
-    pre.rna_type,
+    max(pre.description),
+    max(pre.rna_type),
     array_agg(mirna_precursors.precursor) as precursor_rnas
 FROM rnc_rna_precomputed pre
 LEFT JOIN mirna_precursors ON mirna_precursors.mature = pre.upi
 WHERE
-    taxid IS NOT NULL
+    pre.taxid IS NOT NULL
     AND rna_type IS NOT NULL
     AND description IS NOT NULL
 group by pre.upi, pre.taxid
-;
 """.format(
     precursor_query=PRECUSOR_MAPPING_QUERY,
 )
