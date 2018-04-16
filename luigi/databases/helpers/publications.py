@@ -68,17 +68,19 @@ def reference(accession, pmid):
     if issue:
         issue = ('(%s)' % issue)
 
-    pages = data.get('pageInfo')
-    if 'pageInfo' in data:
+    pages = data.get('pageInfo', '')
+    if 'pageInfo' in data and pages:
         pages = ':' + pages
 
     location = '{title} {volume}{issue}{pages} ({year})'.format(
         title=data['journalTitle'],
         issue=issue,
-        volume=data['journalVolume'],
+        # volume=data.get['journalVolume'],
+        volume=data.get('journalVolume', ''),
         pages=pages,
         year=data['pubYear'],
     )
+    location = location.replace('  ', ' ')
 
     title = re.sub(r'\.$', '', data['title'])
     return Reference(
