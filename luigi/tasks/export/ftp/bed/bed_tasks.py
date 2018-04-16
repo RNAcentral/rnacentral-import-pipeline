@@ -19,8 +19,8 @@ import luigi
 
 from tasks.config import db
 from tasks.config import export
-
 from rnacentral.export.ftp import bed
+
 
 class ChromSizes(luigi.Task):
     taxid = luigi.IntParameter(default=9606)
@@ -32,18 +32,11 @@ class ChromSizes(luigi.Task):
         bed.get_chrom_sizes(db(), taxid=self.taxid, output=self.output().path)
 
 
-class BedToBigBed(luigi.Task):
+class BedDataDump(luigi.Task):
     taxid = luigi.IntParameter(default=9606)
 
-    def requires(self):
-        return [
-            BedFile(taxid=self.taxid),
-            ChromSizes(taxid=self.taxid)
-        ]
-
     def output(self):
-        filename = 'rnacentral-%i.bigbed' % self.taxid
-        return luigi.LocalTarget(export().bed(filename))
+        return luigi.LocalTarget(export().bed('rnacentral-%i.tsv' % self.taxid))
 
     def run(self):
         with self.output().open('w') as raw:
@@ -66,15 +59,23 @@ class BedFile(luigi.Task):
         bed.sort_bed_file(self.output().path)
 
 
-class BedDataDump(luigi.Task):
+class BedToBigBed(luigi.Task):
     taxid = luigi.IntParameter(default=9606)
 
+    def requires(self):
+        return [
+            BedFile(taxid=self.taxid),
+            ChromSizes(taxid=self.taxid)
+        ]
+
     def output(self):
-        return luigi.LocalTarget(export().bed('rnacentral-%i.tsv' % self.taxid))
+        filename = 'rnacentral-%i.bigbed' % self.taxid
+        return luigi.LocalTarget(export().bed(filename))
 
     def run(self):
-        with self.output().open('w') as raw:
-            bed.export_raw_coordinates(db(), raw, taxid=self.taxid)
+        bed.convert_to_bigbed(BedFile(taxid=self.taxid).output().path,
+                              ChromSizes(taxid=self.taxid).output().path,
+                              self.output().path)
 
 
 class BigBedWrapper(luigi.WrapperTask):
