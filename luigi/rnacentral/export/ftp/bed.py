@@ -44,6 +44,9 @@ def coordinates(config, handle, taxid=9606):
 
 
 def make_bed_file(handle, out):
+    """
+    Transform raw coordinate data into bed format.
+    """
     csv.field_size_limit(sys.maxsize)
     region_id = None
     exons = []
@@ -52,8 +55,8 @@ def make_bed_file(handle, out):
             exons.append(result)
             region_id = result['region_id']
         else:
-            data = format_as_bed(exons)
-            out.write(data)
+            bed_line = format_as_bed(exons)
+            out.write(bed_line)
             region_id = None
             exons = []
 
@@ -75,18 +78,19 @@ def get_taxids_with_genomic_mapping():
 
 
 def format_as_bed(exons):
+    """
+    Group exons from the same transcript into one bed record.
+    """
     block_sizes = []
     block_starts = []
     for i, exon in enumerate(exons):
         exon['start'] = int(exon['start']) - 1 # BED files are 0-based
         exon['stop'] = int(exon['stop'])
-        # import pdb; pdb.set_trace()
         block_sizes.append(exon['stop'] - exon['start'] or 1)  # equals 1 if start == end
         if i == 0:
             block_starts.append(0)
         else:
             block_starts.append(exon['start'] - exons[0]['start'])
-
     min_start = exons[0]['start']
     max_stop = exons[0]['stop']
     for exon in exons:
@@ -94,10 +98,9 @@ def format_as_bed(exons):
             min_start = exon['start']
         if exon['stop'] > max_stop:
             max_stop = exon['stop']
-
     BED_TEMPLATE = ('{chromosome}\t{start}\t{stop}\t{name}\t{score}\t{strand}\t'
-                    '{thickStart}\t{thickEnd}\t{itemRgb}\t{blockCount}\t{blockSizes}\t'
-                    '{blockStarts}\n')
+                    '{thickStart}\t{thickEnd}\t{itemRgb}\t{blockCount}\t'
+                    '{blockSizes}\t{blockStarts}\n')
     bed = BED_TEMPLATE.format(
         chromosome='chr' + exons[0]['chromosome'],
         start=min_start,
@@ -116,23 +119,27 @@ def format_as_bed(exons):
 
 
 def convert_to_bigbed(bed_path, chromsizes_path, bigbed_path):
-    cmd = 'bedToBigBed {bed_path} {chromsizes_path} {bigbed_path}'.format(bed_path=bed_path, chromsizes_path=chromsizes_path, bigbed_path=bigbed_path)
-    print cmd
+    """
+    Convert bed file to bigbed format.
+    """
+    cmd = 'bedToBigBed {bed_path} {chromsizes_path} {bigbed_path}'.format(
+                bed_path=bed_path, chromsizes_path=chromsizes_path,
+                bigbed_path=bigbed_path)
     status = subprocess.call(cmd, shell=True)
     if status != 0:
-        print 'Error'
-    else:
-        print 'OK'
+        raise ValueError('Failed to run bedToBigBed: %s' % cmd)
 
 
 def get_chrom_sizes(config, taxid, output):
+    """
+    Generate chrom sizes file using fetchChromSizes and ensembl_assembly table.
+    """
     psql = PsqlWrapper(config)
-    query = "select assembly_ucsc from ensembl_assembly where taxid = {taxid}"
+    query = "SELECT assembly_ucsc FROM ensembl_assembly WHERE taxid = {taxid}"
     for result in psql.copy_to_iterable(query.format(taxid=taxid)):
         assembly_ucsc = result['assembly_ucsc']
-    cmd = 'fetchChromSizes {assembly_ucsc} > {output}'.format(assembly_ucsc=assembly_ucsc, output=output)
+    cmd = 'fetchChromSizes {assembly_ucsc} > {output}'.format(
+            assembly_ucsc=assembly_ucsc, output=output)
     status = subprocess.call(cmd, shell=True)
     if status != 0:
-        print 'Error'
-    else:
-        print 'OK'
+        raise ValueError('Failed to run fetchChromSizes: %s' % cmd)
