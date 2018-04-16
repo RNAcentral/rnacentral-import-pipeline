@@ -16,6 +16,7 @@ limitations under the License.
 from tasks.utils.pgloader import PGLoader
 
 from tasks.go_terms import GoTerms
+from tasks.eco import EcoCodes
 
 from .quickgo_csv import QuickGoCsv
 
@@ -49,6 +50,7 @@ class PgLoadQuickGo(PGLoader):
         return [
             QuickGoCsv(),
             GoTerms(),
+            EcoCodes(),
         ]
 
     def control_file(self):

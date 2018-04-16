@@ -15,9 +15,9 @@ limitations under the License.
 
 import luigi
 
-from .pgload_eco_code import PGLoadEcoCodes
+from .pgload_eco_code import PGLoadEcoTerms
 
 
 class EcoCodes(luigi.WrapperTask):
     def requires(self):
-        yield PGLoadEcoCodes()
+        yield PGLoadEcoTerms()

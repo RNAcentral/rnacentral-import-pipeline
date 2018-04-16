@@ -78,7 +78,7 @@ $$
 """
 
 
-class PGLoadGoTerms(PGLoader):  # pylint: disable=R0904
+class PGLoadEcoTerms(PGLoader):  # pylint: disable=R0904
     """
     This will run pgloader on the Rfam family CSV file. The importing will
     update any existing families and will not produce duplicates.
