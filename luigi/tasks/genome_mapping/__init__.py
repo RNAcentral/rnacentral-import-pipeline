@@ -21,6 +21,7 @@ from .genome_mapping_tasks import GetChromosomes
 from .genome_mapping_tasks import BlatJob
 from .genome_mapping_tasks import ParsePslOutput
 from .genome_mapping_tasks import SpeciesBlatJob
+from .genome_mapping_tasks import get_genome_taxids
 from .update_ensembl_assembly import RetrieveEnsemblAssemblies
 from .update_ensembl_assembly import RetrieveEnsemblGenomesAssemblies
 
@@ -30,26 +31,11 @@ from .pgload_ensembl_assembly import GenomeMappingPGLoadEnsemblAssembly
 from .pgload_ensembl_assembly import GenomeMappingPGLoadEnsemblGenomesAssembly
 
 
-GENOMES = {
-    9606: 'homo_sapiens',
-    10090: 'mus_musculus',
-    10116: 'rattus_norvegicus',
-    7227: 'drosophila_melanogaster',
-    #7165: 'anopheles_gambiae',
-    # 352472: 'dictyostelium_discoideum',
-    # 36329: 'plasmodium_falciparum',
-    3702: 'arabidopsis_thaliana',
-    7091: 'bombyx_mori',
-    # 284812: 'schizosaccharomyces_pombe', # wrong taxid = need to use 4896
-    # 559292: 'saccharomyces_cerevisiae', # correct taxid but ensembl uses something else
-    6239: 'caenorhabditis_elegans',
-}
-
 def get_taxids_for_genome_mapping():
     """
     Get taxids for genomes that are used for mapping.
     """
-    return GENOMES.keys()
+    return get_genome_taxids()
 
 
 class SpeciesFastaExportWrapper(luigi.WrapperTask):
