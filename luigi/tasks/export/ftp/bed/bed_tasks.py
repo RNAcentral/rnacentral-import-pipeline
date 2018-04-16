@@ -74,7 +74,7 @@ class BedDataDump(luigi.Task):
 
     def run(self):
         with self.output().open('w') as raw:
-            bed.coordinates(db(), raw, taxid=self.taxid)
+            bed.export_raw_coordinates(db(), raw, taxid=self.taxid)
 
 
 class BedWrapper(luigi.WrapperTask):
