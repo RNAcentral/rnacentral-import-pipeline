@@ -21,7 +21,7 @@ from .genome_mapping_tasks import GetChromosomes
 from .genome_mapping_tasks import BlatJob
 from .genome_mapping_tasks import ParsePslOutput
 from .genome_mapping_tasks import SpeciesBlatJob
-from .genome_mapping_tasks import get_genome_taxids
+from .genome_mapping_tasks import get_mapped_assemblies
 from .update_ensembl_assembly import RetrieveEnsemblAssemblies
 from .update_ensembl_assembly import RetrieveEnsemblGenomesAssemblies
 
@@ -31,21 +31,14 @@ from .pgload_ensembl_assembly import GenomeMappingPGLoadEnsemblAssembly
 from .pgload_ensembl_assembly import GenomeMappingPGLoadEnsemblGenomesAssembly
 
 
-def get_taxids_for_genome_mapping():
-    """
-    Get taxids for genomes that are used for mapping.
-    """
-    return get_genome_taxids()
-
-
 class SpeciesFastaExportWrapper(luigi.WrapperTask):
     """
     A wrapper task to export fasta files for all species that will be mapped
     to the reference genomes using blat.
     """
     def requires(self):
-        for taxid in get_taxids_for_genome_mapping():
-            yield GetFasta(taxid=taxid)
+        for assembly in get_mapped_assemblies():
+            yield GetFasta(taxid=assembly['taxid'])
 
 
 class SpeciesFastaCleanSplitWrapper(luigi.WrapperTask):
@@ -54,8 +47,8 @@ class SpeciesFastaCleanSplitWrapper(luigi.WrapperTask):
     files in chunks.
     """
     def requires(self):
-        for taxid in get_taxids_for_genome_mapping():
-            yield CleanSplitFasta(taxid=taxid)
+        for assembly in get_mapped_assemblies():
+            yield CleanSplitFasta(taxid=assembly['taxid'])
 
 
 class GetChromosomeFastaWrapper(luigi.WrapperTask):
@@ -64,8 +57,8 @@ class GetChromosomeFastaWrapper(luigi.WrapperTask):
     that are used in parallel blat searches.
     """
     def requires(self):
-        for taxid in get_taxids_for_genome_mapping():
-            yield GetChromosomes(taxid=taxid)
+        for assembly in get_mapped_assemblies():
+            yield GetChromosomes(taxid=assembly['taxid'])
 
 
 class BlatJobsWrapper(luigi.WrapperTask):
@@ -74,8 +67,8 @@ class BlatJobsWrapper(luigi.WrapperTask):
     against all chromosomes within the same species.
     """
     def requires(self):
-        for taxid in get_taxids_for_genome_mapping():
-            SpeciesBlatJob(taxid=taxid)
+        for assembly in get_mapped_assemblies():
+            SpeciesBlatJob(taxid=assembly['taxid'])
 
 
 class ParsePslOutputWrapper(luigi.WrapperTask):
@@ -84,8 +77,8 @@ class ParsePslOutputWrapper(luigi.WrapperTask):
     loaded into the database.
     """
     def requires(self):
-        for taxid in get_taxids_for_genome_mapping():
-            yield ParsePslOutput(taxid=taxid)
+        for assembly in get_mapped_assemblies():
+            yield ParsePslOutput(taxid=assembly['taxid'])
 
 
 class PGLoadGenomeMappingWrapper(luigi.WrapperTask):
@@ -93,10 +86,10 @@ class PGLoadGenomeMappingWrapper(luigi.WrapperTask):
     A wrapper task for loading parsed blat output into the database.
     """
     def requires(self):
-        for taxid in get_taxids_for_genome_mapping():
+        for assembly in get_mapped_assemblies():
             yield [
-                GenomeMappingPGLoadExactMatches(taxid=taxid),
-                GenomeMappingPGLoadInexactMatches(taxid=taxid),
+                GenomeMappingPGLoadExactMatches(taxid=assembly['taxid']),
+                GenomeMappingPGLoadInexactMatches(taxid=assembly['taxid']),
             ]
 
 

@@ -29,20 +29,21 @@ from rnacentral.genome_mapping import genome_mapping as gm
 from rnacentral.psql import PsqlWrapper
 
 
-def get_genome_taxids():
+def get_mapped_assemblies():
     """
-    Get a list of taxids for genomes to be processed.
+    Get assembly data.
     """
     psql = PsqlWrapper(db())
     sql = """
-    select taxid
+    select *
     from ensembl_assembly
     where blat_mapping = 1
     """
-    taxids = []
-    for genome in psql.copy_to_iterable(sql):
-        taxids.append(int(genome['taxid']))
-    return taxids
+    assemblies = []
+    for assembly in psql.copy_to_iterable(sql):
+        assemblies.append(assembly)
+        assemblies[-1]['taxid'] = int(assemblies[-1]['taxid'])
+    return assemblies
 
 
 def get_species_name(taxid):

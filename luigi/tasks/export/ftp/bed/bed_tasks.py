@@ -19,6 +19,7 @@ import luigi
 
 from tasks.config import db
 from tasks.config import export
+from tasks.genome_mapping.genome_mapping_tasks import get_mapped_assemblies
 from rnacentral.export.ftp import bed
 
 
@@ -79,14 +80,13 @@ class BedToBigBed(luigi.Task):
 
 
 class BigBedWrapper(luigi.WrapperTask):
-
     def requires(self):
-        for taxid in [9606, 10090]:
-            yield BedToBigBed(taxid=taxid)
+        for assembly in get_mapped_assemblies():
+            if assembly['assembly_ucsc']:
+                yield BedToBigBed(taxid=assembly['taxid'])
 
 
 class BedWrapper(luigi.WrapperTask):
-
     def requires(self):
-        for taxid in [9606, 10090, 10116]:
-            yield BedFile(taxid=taxid)
+        for assembly in get_mapped_assemblies():
+            yield BedFile(taxid=assembly['taxid'])
