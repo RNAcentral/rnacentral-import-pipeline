@@ -1,1 +1,1 @@
-from .data import BedWrapper
+from .bed_tasks import BedWrapper
