@@ -18,13 +18,15 @@ import luigi
 from tasks.config import db
 from tasks.config import export
 
+from rnacentral.export.ftp import go_terms
+
 from tasks.utils.files import atomic_output
 
 
-class GoAnnotation(luigi.Task):
+class GoAnnotationExport(luigi.Task):
     def output(self):
         return luigi.LocalTarget(export().go('rnacentral_annotations.tsv'))
 
     def run(self):
         with atomic_output(self.output()) as out:
-            export(db(), out)
+            go_terms.export(db(), out)
