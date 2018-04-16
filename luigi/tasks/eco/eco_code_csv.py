@@ -44,5 +44,5 @@ class EcoCodeCSV(CsvWriter):
             yield {
                 'eco_term_id': term.ontology_id,
                 'name': term.name,
-                'description': term.description,
+                'description': term.definition,
             }

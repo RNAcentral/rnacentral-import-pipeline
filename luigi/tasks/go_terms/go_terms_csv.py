@@ -45,5 +45,5 @@ class GoTermsCSV(CsvWriter):
             yield {
                 'go_term_id': term.ontology_id,
                 'name': term.name,
-                'description': term.description,
+                'description': term.definition,
             }
