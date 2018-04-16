@@ -35,7 +35,7 @@ def get_mapped_assemblies():
     """
     psql = PsqlWrapper(db())
     sql = """
-    select *
+    select assembly_id, assembly_ucsc, taxid, ensembl_url as species
     from ensembl_assembly
     where blat_mapping = 1
     """

@@ -147,14 +147,10 @@ def convert_to_bigbed(bed_path, chromsizes_path, bigbed_path):
         raise ValueError('Failed to run bedToBigBed: %s' % cmd)
 
 
-def get_chrom_sizes(config, taxid, output):
+def get_chrom_sizes(config, assembly_ucsc, output):
     """
     Generate chrom sizes file using fetchChromSizes and ensembl_assembly table.
     """
-    psql = PsqlWrapper(config)
-    query = "SELECT assembly_ucsc FROM ensembl_assembly WHERE taxid = {taxid}"
-    for result in psql.copy_to_iterable(query.format(taxid=taxid)):
-        assembly_ucsc = result['assembly_ucsc']
     cmd = 'fetchChromSizes {assembly_ucsc} > {output}'.format(
             assembly_ucsc=assembly_ucsc, output=output)
     status = subprocess.call(cmd, shell=True)

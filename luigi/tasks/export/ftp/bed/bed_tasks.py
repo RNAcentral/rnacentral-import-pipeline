@@ -24,20 +24,24 @@ from rnacentral.export.ftp import bed
 
 
 class ChromSizes(luigi.Task):
-    taxid = luigi.IntParameter(default=9606)
+    assembly_ucsc = luigi.Parameter(default='hg38')
 
     def output(self):
-        return luigi.LocalTarget(export().bed('%s.chrom.sizes' % self.taxid))
+        filename = '%s.chrom.sizes' % self.assembly_ucsc
+        return luigi.LocalTarget(export().bed(filename))
 
     def run(self):
-        bed.get_chrom_sizes(db(), taxid=self.taxid, output=self.output().path)
+        bed.get_chrom_sizes(db(), assembly_ucsc=self.assembly_ucsc, output=self.output().path)
 
 
 class BedDataDump(luigi.Task):
+    assembly_id = luigi.Parameter(default='GRCh38')
+    species = luigi.Parameter(default='homo_sapiens')
     taxid = luigi.IntParameter(default=9606)
 
     def output(self):
-        return luigi.LocalTarget(export().bed('rnacentral-%i.tsv' % self.taxid))
+        filename = '{species}.{assembly_id}.tsv'.format(assembly_id=self.assembly_id, species=self.species.capitalize())
+        return luigi.LocalTarget(export().bed(filename))
 
     def run(self):
         with self.output().open('w') as raw:
@@ -46,13 +50,16 @@ class BedDataDump(luigi.Task):
 
 
 class BedFile(luigi.Task):
+    assembly_id = luigi.Parameter(default='GRCh38')
+    species = luigi.Parameter(default='homo_sapiens')
     taxid = luigi.IntParameter(default=9606)
 
     def requires(self):
-        return BedDataDump(taxid=self.taxid)
+        return BedDataDump(taxid=self.taxid, assembly_id=self.assembly_id, species=self.species)
 
     def output(self):
-        return luigi.LocalTarget(export().bed('rnacentral-%i.bed' % self.taxid))
+        filename = '{species}.{assembly_id}.bed'.format(assembly_id=self.assembly_id, species=self.species.capitalize())
+        return luigi.LocalTarget(export().bed(filename))
 
     def run(self):
         with self.input().open('r') as raw, self.output().open('w') as out:
@@ -61,21 +68,24 @@ class BedFile(luigi.Task):
 
 
 class BedToBigBed(luigi.Task):
+    assembly_ucsc = luigi.Parameter(default='hg38')
+    assembly_id = luigi.Parameter(default='GRCh38')
+    species = luigi.Parameter(default='homo_sapiens')
     taxid = luigi.IntParameter(default=9606)
 
     def requires(self):
-        return [
-            BedFile(taxid=self.taxid),
-            ChromSizes(taxid=self.taxid)
-        ]
+        return {
+            'bed': BedFile(taxid=self.taxid, assembly_id=self.assembly_id, species=self.species),
+            'chromsizes': ChromSizes(assembly_ucsc=self.assembly_ucsc),
+        }
 
     def output(self):
-        filename = 'rnacentral-%i.bigbed' % self.taxid
+        filename = '{assembly_ucsc}.bigBed'.format(assembly_ucsc=self.assembly_ucsc)
         return luigi.LocalTarget(export().bed(filename))
 
     def run(self):
-        bed.convert_to_bigbed(BedFile(taxid=self.taxid).output().path,
-                              ChromSizes(taxid=self.taxid).output().path,
+        bed.convert_to_bigbed(self.input()['bed'].path,
+                              self.input()['chromsizes'].path,
                               self.output().path)
 
 
@@ -83,10 +93,20 @@ class BigBedWrapper(luigi.WrapperTask):
     def requires(self):
         for assembly in get_mapped_assemblies():
             if assembly['assembly_ucsc']:
-                yield BedToBigBed(taxid=assembly['taxid'])
+                yield BedToBigBed(taxid=assembly['taxid'],
+                                  assembly_id=assembly['assembly_id'],
+                                  assembly_ucsc=assembly['assembly_ucsc'],
+                                  species=assembly['species'])
 
 
 class BedWrapper(luigi.WrapperTask):
     def requires(self):
         for assembly in get_mapped_assemblies():
-            yield BedFile(taxid=assembly['taxid'])
+            yield BedFile(taxid=assembly['taxid'],
+                          assembly_id=assembly['assembly_id'],
+                          species=assembly['species'])
+
+class BedAndBigBedWrapper(luigi.WrapperTask):
+    def requires(self):
+        yield BigBedWrapper()
+        yield BedWrapper()
