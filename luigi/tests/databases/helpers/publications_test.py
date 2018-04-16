@@ -87,3 +87,14 @@ def test_builds_correction_location():
         pmid=26184978,
         doi='10.1038/srep12276',
     ))
+
+
+def test_can_handle_missing_volume():
+    assert attr.asdict(pub.reference('other', 27389411)) == attr.asdict(Reference(
+        accession='other',
+        authors='Carr G, Barrese V, Stott JB, Povstyan OV, Jepps TA, Figueiredo HB, Zheng D, Jamshidi Y, Greenwood IA.',
+        location='Cardiovasc Res (2016)',
+        title='MicroRNA-153 targeting of KCNQ4 contributes to vascular dysfunction in hypertension',
+        pmid=27389411,
+        doi='10.1093/cvr/cvw177',
+    ))
