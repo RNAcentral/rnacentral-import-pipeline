@@ -141,12 +141,15 @@ class GenomeMappingPGLoadEnsemblAssembly(PGLoader):  # pylint: disable=R0904
 class GenomeMappingPGLoadEnsemblGenomesAssembly(PGLoader):  # pylint: disable=R0904
     """
     Update ensembl_assembly table with Ensembl Genomes data.
+    Load Ensembl data first, then overwrite assemblies that are common
+    between Ensembl and Ensembl Genomes.
     """
     def requires(self):
-        return RetrieveEnsemblGenomesAssemblies()
+        yield RetrieveEnsemblGenomesAssemblies()
+        yield RetrieveEnsemblAssemblies()
 
     def control_file(self):
-        filename = self.input().fn
+        filename = RetrieveEnsemblGenomesAssemblies().output().fn
         table = 'load_ensembl_assembly'
         permanent_table = 'ensembl_assembly'
         return CONTROL_FILE.format(
