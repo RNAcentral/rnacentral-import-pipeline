@@ -13,6 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import gzip
+
 import luigi
 
 from databases.quickgo.parser import parser
@@ -37,6 +39,6 @@ class QuickGoCsv(luigi.Task):
 
     def data(self):
         filename = self.requires()[0].output().fn
-        with open(filename, 'w') as raw:
+        with gzip.open(filename, 'r') as raw:
             for go_term in parser(raw):
                 yield go_term.as_writeable()
