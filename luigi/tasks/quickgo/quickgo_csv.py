@@ -23,9 +23,10 @@ from databases.quickgo.data import WRITING_HEADERS
 from tasks.config import quickgo
 
 from tasks.utils.fetch import FetchTask
+from tasks.utils.csv_writer import CsvWriter
 
 
-class QuickGoCsv(luigi.Task):
+class QuickGoCsv(CsvWriter):
     headers = WRITING_HEADERS
 
     def requires(self):
