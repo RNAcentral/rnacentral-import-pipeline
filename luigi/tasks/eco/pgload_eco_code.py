@@ -43,14 +43,14 @@ WITH
 
 BEFORE LOAD DO
 $$
-create table if not exists {table} (
-    eco_term_id varchar(10) NOT NULL,
-    name text COLLATE pg_catalog."default" NOT NULL,
-    description text
+create table if not exists load_{table} (
+    eco_term_id varchar(11) NOT NULL,
+    name text not null,
+    definition text
 );
 $$,
 $$
-truncate table {table};
+truncate table load_{table};
 $$
 
 AFTER LOAD DO
@@ -63,7 +63,7 @@ select
     eco_term_id,
     name,
     description
-from {table}
+from load_{table}
 )
 ON CONFLICT (eco_term_id) DO UPDATE SET
     eco_term_id = excluded.eco_term_id,
@@ -72,7 +72,7 @@ ON CONFLICT (eco_term_id) DO UPDATE SET
 ;
 $$,
 $$
-drop table {table};
+drop table load_{table};
 $$
 ;
 """
@@ -89,7 +89,7 @@ class PGLoadEcoTerms(PGLoader):  # pylint: disable=R0904
 
     def control_file(self):
         filename = EcoCodeCSV().output().fn
-        table = 'load_eco_codes'
+        table = 'eco_terms'
         return CONTROL_FILE.format(
             filename=filename,
             table=table,
