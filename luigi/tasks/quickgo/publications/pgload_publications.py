@@ -15,50 +15,22 @@ limitations under the License.
 
 from tasks.utils.pgloader import PGLoader
 
-from tasks.go_terms import GoTerms
-from tasks.eco import EcoCodes
-
-from .quickgo_csv import QuickGoCsv
-from .publications import QuickGoPublications
+from .publication_csv import QuickGoPublicationCsv
 
 CONTROL_FILE = """
-LOAD CSV
-FROM '{filename}'
-HAVING FIELDS
-(
-    rna_id,
-    qualifier,
-    go_term_id,
-    evidence_code,
-    assigned_by,
-) INTO {db_url}
-TARGET COLUMNS
-(
-
-)
-SET
-    search_path = '{search_path}'
-
-WITH
-    skip header = 1,
-    fields escaped by double-quote,
-    fields terminated by ','
 """
 
 
-class PgLoadQuickGo(PGLoader):
+class QuickGoPublcationLoad(PGLoader):
     def requires(self):
         return [
-            QuickGoCsv(),
-            GoTerms(),
-            EcoCodes(),
-            QuickGoPublications(),
+            QuickGoPublicationCsv()
         ]
 
     def control_file(self):
         filename = self.requires()[0].output().fn
         return CONTROL_FILE.format(
             filename=filename,
-            db_url=self.db_url(table='load_quickgo_annotations'),
+            db_url=self.db_url(table='ref_pubmed'),
             search_path=self.db_search_path(),
         )
