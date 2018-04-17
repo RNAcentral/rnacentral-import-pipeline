@@ -22,19 +22,25 @@ select
     go_terms.go_term_id,
     string_agg(hits.rfam_model_id, '|')
 from rnc_rna_precomputed pre
-join xref on xref.upi = pre.upi and xref.taxid = pre.taxid
 join rfam_model_hits hits on hits.upi = pre.upi
 join rfam_go_terms go_terms on hits.rfam_model_id = go_terms.rfam_model_id
 where
-    pre.taxid is not null
-    and xref.deleted = 'N'
-    and pre.rfam_problems is not null
-    and pre.rfam_problems != ''
-    and '{"has_issue": false}'::jsonb <@ pre.rfam_problems::jsonb
+    exists(
+        select 1
+        from qa_status qa
+        where
+            qa.upi = pre.upi
+            and qa.taxid = pre.taxid
+            and qa.has_issue = false
+    )
 group by pre.id, go_terms.go_term_id
 """
 
 
 def export(config, handle):
+    """
+    Write the Rfam based GO annotations to the given handle.
+    """
+
     psql = PsqlWrapper(config)
     psql.write_query(handle, QUERY, use='tsv')
