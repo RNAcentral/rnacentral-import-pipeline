@@ -62,16 +62,17 @@ def make_bed_file(handle, out):
     region_id = None
     exons = []
     for result in csv.DictReader(handle):
+        if not region_id:
+            region_id = result['region_id']
         if result['region_id'] == 'region_id':
             continue  # skip csv header line
-        elif result['region_id'] == region_id or region_id is None:
+        if result['region_id'] == region_id:
             exons.append(result)
-            region_id = result['region_id']
         else:
             bed_line = format_as_bed(exons)
             out.write(bed_line)
-            region_id = None
-            exons = []
+            region_id = result['region_id']
+            exons = [result]
 
 
 def sort_bed_file(out):
