@@ -25,7 +25,8 @@ def export_ensembl_coordinates(config, handle, taxid=9606):
     Export Ensembl coordinates.
     """
     sql = """
-    SELECT t1.upi, t1.taxid, t2.name as chromosome, t2.primary_start as start,
+    SELECT concat_ws('_', t1.upi, t1.taxid) as rnacentral_id,
+           t2.name as chromosome, t2.primary_start as start,
            t2.primary_end as stop, t2.strand, t2.accession as region_id
     FROM xref t1
     JOIN rnc_coordinates t2
@@ -45,7 +46,7 @@ def export_blat_coordinates(config, handle, taxid=9606):
     Export blat genome coordinate data that will be parsed into bed files.
     """
     sql = """
-    SELECT upi, taxid, chromosome, "start", stop, strand, region_id
+    SELECT rna_id as rnacentral_id, chromosome, "start", stop, strand, region_id
     FROM rnc_genome_mapping
     WHERE taxid = {taxid}
     ORDER BY region_id, start, strand
@@ -123,7 +124,7 @@ def format_as_bed(exons):
         chromosome=chromosome,
         start=min_start,
         stop=max_stop,
-        name=exons[0]['upi'],
+        name=exons[0]['rnacentral_id'],
         score=0,
         strand='+' if exons[0]['strand'] > 0 else '-',
         thickStart=min_start,
