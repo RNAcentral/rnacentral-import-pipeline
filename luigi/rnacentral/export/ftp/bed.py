@@ -71,19 +71,16 @@ def make_bed_file(handle, out):
             exons.append(result)
         else:
             bed_line = format_as_bed(exons)
-            out.write(bed_line)
+            if bed_line:
+                out.write(bed_line)
             region_id = result['region_id']
             exons = [result]
 
 
 def sort_bed_file(out):
     """
-    Sort bed file and replace chromosome names using UCSC format.
+    Sort bed file using the UCSC bedSort utility.
     """
-    cmd = "sed -i '/[_\.]/d' {out}".format(out=out)
-    status = subprocess.call(cmd, shell=True)
-    if status != 0:
-        raise ValueError('Failed to run sed: %s' % cmd)
     cmd = 'bedSort {out} {out}'.format(out=out)
     status = subprocess.call(cmd, shell=True)
     if status != 0:
@@ -94,6 +91,9 @@ def format_as_bed(exons):
     """
     Group exons from the same transcript into one bed record.
     """
+    chromosome = exons[0]['chromosome']
+    if '_' in chromosome or '.' in chromosome:
+        return None
     block_sizes = []
     block_starts = []
     for i, exon in enumerate(exons):
@@ -114,13 +114,11 @@ def format_as_bed(exons):
     BED_TEMPLATE = ('{chromosome}\t{start}\t{stop}\t{name}\t{score}\t{strand}\t'
                     '{thickStart}\t{thickEnd}\t{itemRgb}\t{blockCount}\t'
                     '{blockSizes}\t{blockStarts}\n')
-    if exons[0]['chromosome'].isdigit() or exons[0]['chromosome'] in ['X', 'Y']:
-        chromosome = 'chr' + exons[0]['chromosome']
-    elif exons[0]['chromosome'] in ['chrMT', 'MT']:
+    if chromosome.isdigit() or chromosome in ['X', 'Y']:
+        chromosome = 'chr' + chromosome
+    elif chromosome in ['chrMT', 'MT']:
         chromosome = 'chrM'
-    else:
-        chromosome = exons[0]['chromosome']
-    bed = BED_TEMPLATE.format(
+    return BED_TEMPLATE.format(
         chromosome=chromosome,
         start=min_start,
         stop=max_stop,
@@ -134,7 +132,6 @@ def format_as_bed(exons):
         blockSizes=','.join([str(x) for x in block_sizes]),
         blockStarts=','.join([str(x) for x in block_starts])
     )
-    return bed
 
 
 def convert_to_bigbed(bed_path, chromsizes_path, bigbed_path):
