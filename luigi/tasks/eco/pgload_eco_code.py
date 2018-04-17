@@ -89,8 +89,10 @@ class PGLoadEcoTerms(PGLoader):  # pylint: disable=R0904
 
     def control_file(self):
         filename = EcoCodeCSV().output().fn
+        table = 'load_eco_codes'
         return CONTROL_FILE.format(
             filename=filename,
-            db_url=self.db_url(table='load_eco_codes'),
+            table=table,
+            db_url=self.db_url(table=table),
             search_path=self.db_search_path(),
         )
