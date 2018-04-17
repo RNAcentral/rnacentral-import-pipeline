@@ -44,7 +44,7 @@ BEFORE LOAD DO
 $$
 create table if not exists load_go_terms (
     go_term_id varchar(10) NOT NULL,
-    name text COLLATE pg_catalog."default" NOT NULL
+    name text COLLATE pg_catalog."default" NOT NULL,
     description text
 );
 $$,
