@@ -150,9 +150,21 @@ def get_ensembl_metadata(cursor, database):
     return metadata
 
 
-def store_ensembl_metadata(metadata, file):
+def reconcile_taxids(taxid):
+    """
+    Sometimes Ensembl taxid and ENA/Expert Database taxid do not match,
+    so to reconcile the differences, taxids in the ensembl_assembly table
+    are overriden to match other data.
+    """
+    taxid = str(taxid)
+    if taxid == '284812':  # Ensembl assembly for Schizosaccharomyces pombe
+        return '4896'  # Pombase and ENA xrefs for Schizosaccharomyces pombe
+    return taxid
+
+
+def store_ensembl_metadata(metadata, filename):
     """Write Ensembl assembly data to a file."""
-    with open(file, 'w') as f:
+    with open(filename, 'w') as f:
         for assembly in metadata:
             try:
                 example_location = example_locations[assembly['species.url'].lower()]
@@ -164,7 +176,7 @@ def store_ensembl_metadata(metadata, file):
                 assembly['assembly.accession'] if 'assembly.accession' in assembly else None,
                 assembly['assembly.ucsc_alias'] if 'assembly.ucsc_alias' in assembly else None,
                 assembly['species.common_name'] if 'species.common_name' in assembly else assembly['species.scientific_name'],
-                assembly['species.taxonomy_id'],
+                reconcile_taxids(assembly['species.taxonomy_id']),
                 assembly['species.url'].lower(),
                 assembly['species.division'],
                 domain_url(assembly['species.division']),
