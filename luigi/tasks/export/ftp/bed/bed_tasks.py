@@ -27,7 +27,7 @@ class ChromSizes(luigi.Task):
     assembly_ucsc = luigi.Parameter(default='hg38')
 
     def output(self):
-        filename = '%s.chrom.sizes' % self.assembly_ucsc
+        filename = '{}.chrom.sizes'.format(self.assembly_ucsc)
         return luigi.LocalTarget(export().bed(filename))
 
     def run(self):
@@ -40,7 +40,7 @@ class BedDataDump(luigi.Task):
     taxid = luigi.IntParameter(default=9606)
 
     def output(self):
-        filename = '{species}.{assembly_id}.tsv'.format(assembly_id=self.assembly_id, species=self.species.capitalize())
+        filename = '{}.{}.tsv'.format(self.species.capitalize(), self.assembly_id)
         return luigi.LocalTarget(export().bed(filename))
 
     def run(self):
@@ -55,10 +55,12 @@ class BedFile(luigi.Task):
     taxid = luigi.IntParameter(default=9606)
 
     def requires(self):
-        return BedDataDump(taxid=self.taxid, assembly_id=self.assembly_id, species=self.species)
+        return BedDataDump(taxid=self.taxid,
+                           assembly_id=self.assembly_id,
+                           species=self.species)
 
     def output(self):
-        filename = '{species}.{assembly_id}.bed'.format(assembly_id=self.assembly_id, species=self.species.capitalize())
+        filename = '{}.{}.bed'.format(self.species.capitalize(), self.assembly_id)
         return luigi.LocalTarget(export().bed(filename))
 
     def run(self):
@@ -75,12 +77,14 @@ class BedToBigBed(luigi.Task):
 
     def requires(self):
         return {
-            'bed': BedFile(taxid=self.taxid, assembly_id=self.assembly_id, species=self.species),
+            'bed': BedFile(taxid=self.taxid,
+                           assembly_id=self.assembly_id,
+                           species=self.species),
             'chromsizes': ChromSizes(assembly_ucsc=self.assembly_ucsc),
         }
 
     def output(self):
-        filename = '{assembly_ucsc}.bigBed'.format(assembly_ucsc=self.assembly_ucsc)
+        filename = '{}.bigBed'.format(self.assembly_ucsc)
         return luigi.LocalTarget(export().bed(filename))
 
     def run(self):
@@ -105,6 +109,7 @@ class BedWrapper(luigi.WrapperTask):
             yield BedFile(taxid=assembly['taxid'],
                           assembly_id=assembly['assembly_id'],
                           species=assembly['species'])
+
 
 class BedAndBigBedWrapper(luigi.WrapperTask):
     def requires(self):
