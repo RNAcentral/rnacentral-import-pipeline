@@ -54,7 +54,7 @@ truncate table {table};
 $$
 
 AFTER LOAD DO
-$$ insert into go_terms (
+$$ insert into {table} (
     eco_term_id,
     name,
     description
