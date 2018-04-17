@@ -314,7 +314,7 @@ class quickgo(luigi.Config):
 
     @property
     def annotations(self):
-        return self.raw('annotations.gpa')
+        return self.raw('annotations.gpa.gz')
 
     def csv(self):
         return os.path.join(self.base(), 'csv', 'annotations.csv')
