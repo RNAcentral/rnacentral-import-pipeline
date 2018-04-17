@@ -24,14 +24,14 @@ HAVING FIELDS
 (
     eco_term_id,
     name,
-    description
+    definition
 )
 INTO {db_url}
 TARGET COLUMNS
 (
     eco_term_id,
     name,
-    description
+    definition
 )
 SET
     search_path = '{search_path}'
@@ -57,18 +57,18 @@ AFTER LOAD DO
 $$ insert into {table} (
     eco_term_id,
     name,
-    description
+    definition
 ) (
 select
     eco_term_id,
     name,
-    description
+    definition
 from load_{table}
 )
 ON CONFLICT (eco_term_id) DO UPDATE SET
     eco_term_id = excluded.eco_term_id,
     name = excluded.name,
-    description = excluded.description
+    definition = excluded.definition
 ;
 $$,
 $$
