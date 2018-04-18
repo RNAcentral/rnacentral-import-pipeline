@@ -15,11 +15,10 @@ limitations under the License.
 
 from tasks.utils.pgloader import PGLoader
 
-from tasks.go_terms import GoTerms
-from tasks.eco import EcoCodes
+from tasks.ontologies import Ontologies
 
-from .quickgo_csv import QuickGoCsv
-from .publications import QuickGoPublications
+from .quickgo_data import QuickGoData
+from tasks.publications.pubmed import PubMed
 
 CONTROL_FILE = """
 LOAD CSV
@@ -49,10 +48,9 @@ WITH
 class PgLoadQuickGo(PGLoader):
     def requires(self):
         return [
-            QuickGoCsv(),
-            GoTerms(),
-            EcoCodes(),
-            QuickGoPublications(),
+            QuickGoData(),
+            Ontologies(),
+            PubMed(),
         ]
 
     def control_file(self):

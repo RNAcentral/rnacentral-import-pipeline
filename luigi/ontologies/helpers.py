@@ -34,9 +34,9 @@ def as_iri(url, encode_count=2):
     return iri
 
 
-@lru_cache()
-def term(term):
-    ontology, rest = term.split(':')
+@lru_cache(maxsize=500)
+def term(term_id):
+    ontology, rest = term_id.split(':')
     response = requests.get(INFO_URL.format(id=ontology))
     response.raise_for_status()
     info = response.json()
@@ -52,7 +52,7 @@ def term(term):
 
     return data.Term(
         ontology=ontology,
-        ontology_id=term,
+        ontology_id=term_id,
         name=term_info['label'],
         definition=definition,
         synonyms=term_info.get('synonyms', None) or [],

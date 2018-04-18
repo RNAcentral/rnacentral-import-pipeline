@@ -17,11 +17,18 @@ import attr
 from attr.validators import instance_of as is_a
 from attr.validators import optional
 
+HEADERS = [
+    'ontology_term_id',
+    'ontology',
+    'name',
+    'definition',
+]
+
 
 @attr.s()
 class Term(object):
     """
-    This represents what
+    This represents a single term in a specific ontology.
     """
 
     ontology = attr.ib(validator=is_a(basestring))
@@ -29,3 +36,11 @@ class Term(object):
     name = attr.ib(validator=is_a(basestring))
     definition = attr.ib(validator=optional(is_a(basestring)))
     synonyms = attr.ib(validator=is_a(list))
+
+    def writeable(self):
+        return {
+            'ontology_term_id': self.ontology_id,
+            'ontology': self.ontology,
+            'name': self.name,
+            'definition': self.definition,
+        }

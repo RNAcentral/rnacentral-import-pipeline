@@ -13,26 +13,24 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+from tasks.utils.pgloader import PGLoader
 
-class QuickGoPublicationCsv(CsvWriter):
-    headers = [
-        'ref_pubmed_id',
-        'authors',
-        'location',
-        'title',
-    ]
+from .publication_csv import PubmedData
 
+CONTROL_FILE = """
+"""
+
+
+class PubmedLoader(PGLoader):
     def requires(self):
-        conf = quickgo()
         return [
-            FetchTask(remote_path=conf.data_file, local_path=conf.annotations),
+            PubmedData(),
         ]
 
-    def data(self):
+    def control_file(self):
         filename = self.requires()[0].output().fn
-        with gzip.open(filename, 'r') as raw:
-            seen = set()
-            for go_term in parser(raw):
-                publication = go_term.writable_publication()
-                if publication not in seen:
-                    yield publication
+        return CONTROL_FILE.format(
+            filename=filename,
+            db_url=self.db_url(table='ref_pubmed'),
+            search_path=self.db_search_path(),
+        )

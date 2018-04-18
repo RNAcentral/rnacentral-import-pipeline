@@ -18,15 +18,19 @@ import json
 import attr
 from attr.validators import instance_of as is_a
 
+from ontologies import helpers as ont
+from ontologies.data import HEADERS
+
 
 ANN_URL = 'http://www.ebi.ac.uk/QuickGO/annotations?geneProductId={upi}'
 
-WRITING_HEADERS = [
+ANNOTATION_HEADER = ['rna_id', 'qualifier', 'term_id', 'evidence_code', 'extensions', 'assigned_by']
+GO_HEADER = HEADERS
+ECO_HEADER = HEADERS
+PUB_HEADER = [
     'rna_id',
     'qualifier',
-    'go_term_id',
-    'evidence_code',
-    'extensions',
+    'term_id',
     'assigned_by',
     'pubmed_id',
 ]
@@ -60,12 +64,30 @@ class GoTermAnnotation(object):
         """
         return ANN_URL.format(upi=self.rna_id)
 
-    def as_writeable(self):
-        """
-        Generate a dict that can be written to a CSV for import into databases.
-        """
+    def writeable(self):
+        yield {
+            'rna_id': self.rna_id,
+            'qualifier': self.qualifier,
+            'term_id': self.term_id,
+            'evidence_code': self.evidence_code,
+            'extensions': json.dumps(attr.asdict(self.extensions)),
+            'assigned_by': self.assigned_by,
+        }
 
-        data = attr.asdict(self)
-        data['extensions'] = json.dumps(data['extensions'])
-        del data['publications']
-        return data
+    def writeable_go_terms(self):
+        term = ont.term(self.term_id)
+        yield term.writeable()
+
+    def writeable_eco_codes(self):
+        term = ont.term(self.evidence_code)
+        yield term.writeable()
+
+    def writeable_publications(self):
+        for publication in self.publications:
+            yield {
+                'rna_id': self.rna_id,
+                'qualifier': self.qualifier,
+                'term_id': self.term_id,
+                'assigned_by': self.assigned_by,
+                'pubmed_id': publication.pubmed_id,
+            }
