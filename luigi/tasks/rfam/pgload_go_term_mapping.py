@@ -15,7 +15,7 @@ limitations under the License.
 
 from tasks.utils.pgloader import PGLoader
 
-from tasks.go_terms.pgload_go_terms import PGLoadGoTerms
+from tasks.ontologies import Ontologies
 from .go_term_mapping_csv import RfamGoTermsCSV
 from .pgload_families import RfamPGLoadFamilies
 
@@ -23,13 +23,13 @@ CONTROL_FILE = """LOAD CSV
 FROM '{filename}' WITH ENCODING ISO-8859-14
 HAVING FIELDS
 (
-    go_term_id,
+    ontology_term_id,
     rfam_model_id
 )
 INTO {db_url}
 TARGET COLUMNS
 (
-    go_term_id,
+    ontology_term_id,
     rfam_model_id
 )
 SET
@@ -43,7 +43,7 @@ WITH
 BEFORE LOAD DO
 $$
 create table if not exists load_rfam_go_terms (
-    go_term_id character varying(10) COLLATE pg_catalog."default" NOT NULL,
+    ontology_term_id character varying(10) COLLATE pg_catalog."default" NOT NULL,
     rfam_model_id character varying(20) COLLATE pg_catalog."default" NOT NULL
 );
 $$,
@@ -53,16 +53,16 @@ $$
 
 AFTER LOAD DO
 $$ insert into rfam_go_terms (
-    go_term_id,
+    ontology_term_id,
     rfam_model_id
 ) (
 select
-    go_term_id,
+    ontology_term_id,
     rfam_model_id
 from load_rfam_go_terms
 )
-ON CONFLICT (go_term_id, rfam_model_id) DO UPDATE SET
-    go_term_id = excluded.go_term_id,
+ON CONFLICT (ontology_term_id, rfam_model_id) DO UPDATE SET
+    ontology_term_id = excluded.ontology_term_id,
     rfam_model_id = excluded.rfam_model_id
 ;
 $$,
@@ -82,7 +82,7 @@ class RfamPGLoadGoTerms(PGLoader):  # pylint: disable=R0904
     def requires(self):
         return [
             RfamGoTermsCSV(),
-            PGLoadGoTerms(),
+            Ontologies(),
             RfamPGLoadFamilies(),
         ]
 

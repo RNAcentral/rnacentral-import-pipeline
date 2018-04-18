@@ -54,6 +54,7 @@ class FetchTask(luigi.Task):
 
     remote_path = luigi.Parameter()
     local_path = luigi.Parameter()
+    decompress = luigi.Parameter(defualt=False)
 
     def output(self):
         return luigi.LocalTarget(self.local_path)

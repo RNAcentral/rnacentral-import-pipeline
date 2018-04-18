@@ -13,70 +13,27 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import re
-import operator as op
 import itertools as it
 
-import attr
 from Bio.UniProt.GOA import gpa_iterator as raw_parser
 
-import databases.helpers.publications as pub
-
 from . import data
-
-go_id = op.itemgetter('GO_ID')
-evidence = op.itemgetter('Evidence')
-assigned_by = op.itemgetter('Assigned_by')
-
-
-def rna_id(entry):
-    """
-    Get the UPI for the entry, or fail if there is none.
-    """
-
-    if entry['DB'] == 'RNAcentral':
-        return entry['DB_Object_ID']
-    raise ValueError("All entries are expected to come from RNAcentral")
-
-
-def qualifier(entry):
-    """
-    Get the qualifer for this entry.
-    """
-    return entry['Qualifier'][0]
-
-
-def publications(entry):
-    references = []
-    for reference in entry['DB:Reference']:
-        match = re.match('^PMID:(\d+)$', reference)
-        if match:
-            references.append(pub.reference('', match.group(1)))
-    return references
-
-
-def extensions(record):
-    extensions = []
-    for extension in record['Annotation Extension']:
-        for part in extension.split(','):
-            match = re.match('(\w+)\((.+)\)', part)
-            if match:
-                extensions.append(data.AnnotationExtension(
-                    qualifier=match.group(1),
-                    target=match.group(2),
-                ))
-    return extensions
+from . import helpers
 
 
 def as_annotation(record):
+    """
+    Turn a record into an annotation.
+    """
+
     return data.GoTermAnnotation(
-        rna_id=rna_id(record),
-        qualifier=qualifier(record),
-        term_id=go_id(record),
+        rna_id=helpers.rna_id(record),
+        qualifier=helpers.qualifier(record),
+        term_id=helpers.go_id(record),
         evidence_code=record['ECO_Evidence_code'],
-        extensions=extensions(record),
-        assigned_by=assigned_by(record),
-        publications=publications(record),
+        extensions=helpers.extensions(record),
+        assigned_by=helpers.assigned_by(record),
+        publications=helpers.publications(record),
     )
 
 

@@ -13,23 +13,29 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+from tasks.config import ontologies
+
 from tasks.utils.pgloader import PGLoader
 
-from .eco_code_csv import EcoCodeCSV
+from tasks.rfam.go_terms import RfamGoTerms
+from tasks.quickgo.quickgo_data import QuickGoData
 
 
-CONTROL_FILE = """LOAD CSV
-FROM '{filename}' WITH ENCODING ISO-8859-14
+CONTROL_FILE = """
+LOAD CSV
+FROM ALL FILENAMES MATCHING ~<{pattern}> WITH ENCODING ISO-8859-14
 HAVING FIELDS
 (
-    eco_term_id,
+    ontology_term_id,
+    ontology,
     name,
     definition
 )
 INTO {db_url}
 TARGET COLUMNS
 (
-    eco_term_id,
+    ontology_term_id,
+    ontology,
     name,
     definition
 )
@@ -43,56 +49,61 @@ WITH
 
 BEFORE LOAD DO
 $$
-create table if not exists load_{table} (
-    eco_term_id varchar(11) NOT NULL,
-    name text not null,
+evidence
+create table if not exists {load_table} (
+    ontology_term_id varchar(15),
+    ontology varchar(5),
+    name text,
     definition text
 );
 $$,
 $$
-truncate table load_{table};
+truncate table {load_table};
 $$
 
 AFTER LOAD DO
-$$ insert into {table} (
-    eco_term_id,
+$$ insert into {final_table} (
+    ontology_term_id,
+    ontology,
     name,
     definition
 ) (
 select
-    eco_term_id,
+    ontology_term_id,
+    ontology,
     name,
     definition
-from load_{table}
+from load_go_terms
 )
-ON CONFLICT (eco_term_id) DO UPDATE SET
-    eco_term_id = excluded.eco_term_id,
+ON CONFLICT (ontology_term_id) DO UPDATE SET
+    ontology_term_id = excluded.ontology_term_id,
+    ontology = excluded.ontology,
     name = excluded.name,
     definition = excluded.definition
 ;
 $$,
 $$
-drop table load_{table};
+drop table {load_table};
 $$
 ;
 """
 
 
-class PGLoadEcoTerms(PGLoader):  # pylint: disable=R0904
-    """
-    This will run pgloader on the Rfam family CSV file. The importing will
-    update any existing families and will not produce duplicates.
-    """
+class Ontologies(PGLoader):  # pylint: disable=R0904
 
     def requires(self):
-        return EcoCodeCSV()
+        return [
+            QuickGoData(),
+            RfamGoTerms(),
+        ]
 
     def control_file(self):
-        filename = EcoCodeCSV().output().fn
-        table = 'eco_terms'
+        table = 'ontology_terms'
+        load_table = 'load_' + table
         return CONTROL_FILE.format(
-            filename=filename,
-            table=table,
-            db_url=self.db_url(table=table),
+            pattern=ontologies.to_load('*'),
+            final_table=table,
+            load_table=load_table,
             search_path=self.db_search_path(),
+            db_url=self.db_url(table=load_table),
         )

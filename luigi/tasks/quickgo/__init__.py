@@ -15,14 +15,14 @@ limitations under the License.
 
 import luigi
 
-from tasks.go_terms import GoTerms
+from tasks.ontologies import Ontologies
 
-from .quickgo_csv import QuickGoCsv
+from .quickgo_data import QuickGoData
 from .pgload_quickgo import PgLoadQuickGo
 
 
-class QuickGo(luigi.WrapperTask):
+class QuickGo(luigi.WrapperTask):  # pylint: disable=R0904
     def requires(self):
-        yield GoTerms()
-        yield QuickGoCsv()
+        yield Ontologies()
+        yield QuickGoData()
         yield PgLoadQuickGo()

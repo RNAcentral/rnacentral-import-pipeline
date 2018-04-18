@@ -18,3 +18,4 @@ biopython==1.71
 functools32==3.2.3-2
 psycopg2==2.7.3.2
 jsonschema==2.6.0
+contextlib2==0.5.5

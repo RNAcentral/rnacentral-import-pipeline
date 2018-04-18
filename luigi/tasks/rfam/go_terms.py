@@ -13,33 +13,34 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import gzip
+import operator as op
 
 import luigi
 
-from databases.quickgo.parser import parser
-from databases.quickgo.data import WRITING_HEADERS
+from databases.rfam import utils
 
-from tasks.config import quickgo
+from ontologies import data
+from ontologies import helpers as ont
 
-from tasks.utils.fetch import FetchTask
-from tasks.utils.csv_writer import CsvWriter
+from tasks.config import rfam
+from tasks.utils.writers import CsvOutput
 
 
-class QuickGoCsv(CsvWriter):
-    headers = WRITING_HEADERS
-
-    def requires(self):
-        conf = quickgo()
-        return [
-            FetchTask(remote_path=conf.data_file, local_path=conf.annotations),
-        ]
-
+class RfamGoTerms(luigi.Task):
     def output(self):
-        return luigi.LocalTarget(quickgo().csv())
+        return CsvOutput(
+            rfam().go_terms,
+            data.HEADERS,
+            op.methodcaller('writeable'),
+        )
 
     def data(self):
-        filename = self.requires()[0].output().fn
-        with gzip.open(filename, 'r') as raw:
-            for go_term in parser(raw):
-                yield go_term.as_writeable()
+        terms = set()
+        for family in utils.load_families():
+            for (go_term_id, _) in family.go_terms:
+                if go_term_id not in terms:
+                    terms.add(go_term_id)
+                    yield ont.term(go_term_id)
+
+    def run(self):
+        self.output().populate(self.data())
