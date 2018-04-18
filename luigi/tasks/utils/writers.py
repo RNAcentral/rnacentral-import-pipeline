@@ -50,7 +50,7 @@ class CsvOutput(object):
         Generate the CSV options to use for writing
         """
         return {
-            'delimiter': '\t',
+            'delimiter': ',',
             'quotechar': '"',
             'quoting': csv.QUOTE_ALL,
             'lineterminator': '\n',
@@ -63,7 +63,10 @@ class CsvOutput(object):
     def writer(self):
         with atomic_output(self.filename) as out:
             writer = csv.DictWriter(out, self.headers, **self.csv_options)
-            yield lambda e: writer.writerows(self.transformer(e))
+            def func(entry):
+                writer.writerows(self.transformer(entry))
+
+            yield func
 
     def populate(self, generator):
         with self.writer() as writer:
