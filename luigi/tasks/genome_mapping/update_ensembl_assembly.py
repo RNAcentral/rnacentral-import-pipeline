@@ -23,7 +23,7 @@ from tasks.config import genome_mapping
 from .example_genome_locations import example_locations
 
 
-GENOMES = [
+BLAT_GENOMES = [
     'anopheles_gambiae',
     'arabidopsis_thaliana',
     'bombyx_mori',
@@ -183,7 +183,7 @@ def store_ensembl_metadata(metadata, filename):
                 example_location['chromosome'],
                 example_location['start'],
                 example_location['end'],
-                1 if assembly['species.url'].lower() in GENOMES else 0,
+                1 if assembly['species.url'].lower() in BLAT_GENOMES else 0,
             ]
             output = io.BytesIO()
             writer = csv.writer(output, delimiter='\t')

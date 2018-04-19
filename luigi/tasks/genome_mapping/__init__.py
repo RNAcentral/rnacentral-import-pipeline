@@ -88,10 +88,8 @@ class PGLoadGenomeMappingWrapper(luigi.WrapperTask):
     """
     def requires(self):
         for assembly in get_mapped_assemblies():
-            yield [
-                GenomeMappingPGLoadExactMatches(taxid=assembly['taxid']),
-                GenomeMappingPGLoadInexactMatches(taxid=assembly['taxid']),
-            ]
+            yield GenomeMappingPGLoadExactMatches(taxid=assembly['taxid'])
+            yield GenomeMappingPGLoadInexactMatches(taxid=assembly['taxid'])
 
 
 class GenomeMappingPipelineWrapper(luigi.WrapperTask):
