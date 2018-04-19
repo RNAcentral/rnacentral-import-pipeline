@@ -96,7 +96,7 @@ class MultiCsvOutput(object):
     @contextmanager
     def writers(self):
         with ExitStack() as stack:
-            writers = [stack.enter_context(o.writer) for o in self.outputs()]
+            writers = [stack.enter_context(o.writer()) for o in self.outputs()]
             yield writers
 
     def populate(self, generator):
