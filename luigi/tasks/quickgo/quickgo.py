@@ -16,7 +16,8 @@ limitations under the License.
 import luigi
 
 from .quickgo_data import QuickGoData
-from .pgload_quickgo import PgLoadQuickGo
+from .load_annotations import QuickGoLoadAnnotations
+from .load_mappings import QuickGoLoadPublicationMapping
 
 
 class QuickGo(luigi.WrapperTask):  # pylint: disable=R0904
@@ -26,4 +27,5 @@ class QuickGo(luigi.WrapperTask):  # pylint: disable=R0904
 
     def requires(self):
         yield QuickGoData()
-        yield PgLoadQuickGo()
+        yield QuickGoLoadAnnotations()
+        yield QuickGoLoadPublicationMapping()
