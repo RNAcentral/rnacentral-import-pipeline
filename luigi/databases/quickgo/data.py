@@ -18,16 +18,26 @@ import json
 import attr
 from attr.validators import instance_of as is_a
 
+from databases.data import GENERIC_PUBMED_HEADER
+
 from ontologies import helpers as ont
 from ontologies.data import HEADERS
 
 
 ANN_URL = 'http://www.ebi.ac.uk/QuickGO/annotations?geneProductId={upi}'
 
-ANNOTATION_HEADER = ['rna_id', 'qualifier', 'term_id', 'evidence_code', 'extensions', 'assigned_by']
+ANNOTATION_HEADER = [
+    'rna_id',
+    'qualifier',
+    'term_id',
+    'evidence_code',
+    'extensions',
+    'assigned_by'
+]
 GO_HEADER = HEADERS
 ECO_HEADER = HEADERS
-PUB_HEADER = [
+PUB_HEADER = GENERIC_PUBMED_HEADER
+PUB_MAPPING_HEADER = [
     'rna_id',
     'qualifier',
     'term_id',
@@ -84,6 +94,10 @@ class GoTermAnnotation(object):
         yield term.writeable()
 
     def writeable_publications(self):
+        for publication in self.publications:
+            yield publication.writeable_generic_pubmed()
+
+    def writeable_publication_mappings(self):
         for publication in self.publications:
             yield {
                 'rna_id': self.rna_id,

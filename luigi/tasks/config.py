@@ -344,3 +344,7 @@ class quickgo(luigi.Config):
     @property
     def publications(self):
         return publications().to_load('quickgo_publications.csv')
+
+    @property
+    def publication_mappings(self):
+        return output().to_load('quickgo', 'publication_mappings.csv')

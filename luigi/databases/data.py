@@ -28,6 +28,14 @@ from databases.helpers.hashes import crc64
 
 LOGGER = logging.getLogger(__name__)
 
+GENERIC_PUBMED_HEADER = [
+    'ref_pubmed_id',
+    'authors',
+    'location',
+    'title',
+    'doi',
+]
+
 FEATURE_TYPE_RNAS = set([
     'rRNA',
     'tRNA',
@@ -154,6 +162,15 @@ class Reference(object):
             (self.location or ''),
             (self.title or ''),
         ]))
+
+    def writeable_generic_pubmed(self):
+        return {
+            'ref_pubmed_id': self.pmid,
+            'authors': self.authors,
+            'location': self.location,
+            'title': self.title,
+            'doi': self.doi,
+        }
 
 
 @attr.s(frozen=True)

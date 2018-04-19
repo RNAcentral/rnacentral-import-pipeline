@@ -55,6 +55,12 @@ class QuickGoData(luigi.Task):  # pylint: disable=R0904
                 op.methodcaller('writeable_publications'),
             ),
 
+            publication_mappings=CsvOutput(
+                conf.publication_mappings,
+                data.PUB_MAPPING_HEADER,
+                op.methodcaller('writeable_publication_mappings'),
+            ),
+
             eco=CsvOutput(
                 conf.eco_terms,
                 data.ECO_HEADER,
