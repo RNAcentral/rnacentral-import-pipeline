@@ -14,16 +14,24 @@ limitations under the License.
 """
 
 import attr
+import pytest
 
 from databases.data import Reference
 
+from databases.helpers import publications as pub
+
 from databases.quickgo.data import GoTermAnnotation
+from databases.quickgo.data import AnnotationExtension
 from databases.quickgo import parser as gpi
 
 
-def test_can_parse_a_gpa_file():
-    with open('data/quickgo/rna.gpa', 'r') as raw:
-        assert len(list(gpi.parser(raw))) == 21
+@pytest.mark.parametrize('filename,count', [
+    ('data/quickgo/rna.gpa', 20),
+    ('data/quickgo/duplicates.gpa', 7),
+])
+def test_can_parse_a_gpa_file(filename, count):
+    with open(filename, 'r') as raw:
+        assert len(list(gpi.parser(raw))) == count
 
 
 def test_can_correctly_parse_a_gpa_file():
@@ -46,4 +54,25 @@ def test_can_correctly_parse_a_gpa_file():
                 pmid=9023104,
                 doi='10.1093/nar/25.5.0955',
             )]
+        ))
+
+
+def test_can_handle_duplicate_data():
+    with open('data/quickgo/duplicates.gpa', 'r') as raw:
+        data = list(gpi.parser(raw))
+        assert attr.asdict(data[-1]) == attr.asdict(GoTermAnnotation(
+            rna_id='URS0000783B7F_10090',
+            qualifier='part_of',
+            term_id='GO:0042382',
+            evidence_code='ECO:0000314',
+            extensions=[
+                AnnotationExtension(qualifier='part_of', target='EMAPA:18687'),
+            ],
+            assigned_by='MGI',
+            publications=[
+                pub.reference('', 19217333),
+                pub.reference('', 21444682),
+                pub.reference('', 22840402),
+                pub.reference('', 25145264),
+            ],
         ))
