@@ -13,6 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import operator as op
 import itertools as it
 
 from Bio.UniProt.GOA import gpa_iterator as raw_parser
@@ -41,6 +42,23 @@ def parser(handle):
     """
     Parse the given file to produce an iterable of GoTerm objects to import.
     """
+
+    key = op.attrgetter('rna_id', 'qualifier', 'term_id', 'evidence_code',
+                        'assigned_by')
+
     records = raw_parser(handle)
     records = it.ifilter(lambda r: r['DB'] == 'RNAcentral', records)
-    return it.imap(as_annotation, records)
+    annotations = list(it.imap(as_annotation, records))
+    annotations.sort(key=key)
+
+    for _, similar in it.groupby(annotations, key):
+        similar = list(similar)
+        if len(similar) == 1:
+            yield similar[0]
+            continue
+
+        merged = similar.pop(0)
+        for ann in similar:
+            merged.publications.extend(ann.publications)
+            merged.extensions.extend(ann.extensions)
+        yield merged
