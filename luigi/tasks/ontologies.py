@@ -24,6 +24,7 @@ from tasks.quickgo.quickgo_data import QuickGoData
 CONTROL_FILE = """
 LOAD CSV
 FROM ALL FILENAMES MATCHING ~<{pattern}> WITH ENCODING ISO-8859-14
+IN DIRECTORY '{directory}'
 HAVING FIELDS
 (
     ontology_term_id,
@@ -103,7 +104,8 @@ class Ontologies(PGLoader):  # pylint: disable=R0904
         table = 'ontology_terms'
         load_table = 'load_' + table
         return CONTROL_FILE.format(
-            pattern=ontologies().to_load('*'),
+            pattern='*.csv',
+            directory=ontologies().to_load(),
             final_table=table,
             load_table=load_table,
             search_path=self.db_search_path(),
