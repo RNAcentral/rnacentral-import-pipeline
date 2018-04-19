@@ -88,10 +88,10 @@ class QuickGoLoadPublicationMapping(PGLoader):
         output = self.requires()[0].output()
         table = 'go_term_annotations'
         load_table = 'load_' + table
-        fields = ', '.join(output.annotations.headers)
+        fields = ', '.join(output.publication_mappings.headers)
 
         return CONTROL_FILE.format(
-            pattern='.*csv',
+            filename=output.publication_mappings.filename,
             directory=publications().to_load(),
             final_table=table,
             load_table=load_table,
