@@ -56,8 +56,8 @@ def get_species_name(taxid):
     sql = """
     select ensembl_url as species_name
     from ensembl_assembly
-    where blat_mapping = 1
-    and taxid = {taxid}""".format(taxid=taxid)
+    where
+    taxid = {taxid}""".format(taxid=taxid)
     genomes = psql.copy_to_iterable(sql)
     for genome in genomes:
         species_name = genome['species_name'].lower()
@@ -72,8 +72,8 @@ def get_assembly_id(taxid):
     sql = """
     select assembly_id
     from ensembl_assembly
-    where blat_mapping = 1
-    and taxid = {taxid}""".format(taxid=taxid)
+    where
+    taxid = {taxid}""".format(taxid=taxid)
     genomes = psql.copy_to_iterable(sql)
     for genome in genomes:
         assembly_id = genome['assembly_id'].lower()
