@@ -27,7 +27,10 @@ from tasks.utils.writers import CsvOutput
 from tasks.utils.writers import MultiCsvOutput
 
 
-class QuickGoData(object):
+class QuickGoData(object):  # pylint: disable=R0904
+    """
+    Load all data from parsing QuickGo data.
+    """
 
     def requires(self):
         conf = quickgo()
