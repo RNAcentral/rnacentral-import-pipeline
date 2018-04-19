@@ -323,7 +323,7 @@ class quickgo(luigi.Config):
     data_file = luigi.Parameter(default='/ebi/ftp/pub/contrib/goa/goa_rna_all.gpa.gz')
 
     def base(self, *args):
-        return os.path.join(output().base, 'quickgo')
+        return os.path.join(output().base, 'quickgo', *args)
 
     @property
     def local_copy(self):
