@@ -73,12 +73,7 @@ FROM {load_table}
 ON CONFLICT (rna_id, qualifier, assigned_by, ontology_term_id, evidence_code)
 DO UPDATE
 SET
-    rna_id = excluded.rna_id,
-    qualifier = excluded.qualifier,
-    assigned_by = excluded.assigned_by,
     extensions = excluded.extensions,
-    ontology_term_id = excluded.ontology_term_id,
-    evidence_code = excluded.evidence_code
 ;
 $$,
 $$
