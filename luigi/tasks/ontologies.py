@@ -90,6 +90,9 @@ $$
 
 
 class Ontologies(PGLoader):  # pylint: disable=R0904
+    """
+    Load all Ontology data into the database.
+    """
 
     def requires(self):
         return [
