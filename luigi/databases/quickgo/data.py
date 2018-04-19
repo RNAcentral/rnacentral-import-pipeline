@@ -89,5 +89,5 @@ class GoTermAnnotation(object):
                 'qualifier': self.qualifier,
                 'term_id': self.term_id,
                 'assigned_by': self.assigned_by,
-                'pubmed_id': publication.pubmed_id,
+                'pubmed_id': publication.pmid,
             }
