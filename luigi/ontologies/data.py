@@ -44,3 +44,6 @@ class Term(object):
             'name': self.name,
             'definition': self.definition,
         }
+
+    def writeables(self):
+        yield self.writeable()

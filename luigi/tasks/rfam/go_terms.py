@@ -31,7 +31,7 @@ class RfamGoTerms(luigi.Task):
         return CsvOutput(
             rfam().go_terms,
             data.HEADERS,
-            op.methodcaller('writeable'),
+            op.methodcaller('writeables'),
         )
 
     def data(self):
