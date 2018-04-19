@@ -87,7 +87,7 @@ class QuickGoLoadPublicationMapping(PGLoader):
 
     def control_file(self):
         output = self.requires()[0].output()
-        table = 'go_term_annotations'
+        table = 'go_term_publication_map'
         load_table = 'load_' + table
         fields = ', '.join(output.publication_mappings.headers)
 
