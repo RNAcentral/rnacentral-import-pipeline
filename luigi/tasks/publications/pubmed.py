@@ -100,3 +100,4 @@ class PubmedLoader(PGLoader):
             fields=fields,
             search_path=self.db_search_path(),
         )
+
