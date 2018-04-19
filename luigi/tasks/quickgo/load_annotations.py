@@ -54,8 +54,23 @@ $$
 AFTER LOAD DO
 $$
 INSERT INTO {final_table} (
-SELECT *
+    rna_id,
+    qualifier,
+    assigned_by,
+    extensions,
+    ontology_term_id,
+    evidence_code
+) (
+SELECT (
+    rna_id,
+    qualifier,
+    assigned_by,
+    extensions,
+    ontology_term_id,
+    evidence_code
+)
 FROM {load_table}
+)
 ON CONFLICT (rna_id, qualifier, assigned_by, ontology_term_id, evidence_code)
 DO UPDATE
 SET
@@ -65,7 +80,6 @@ SET
     extensions = excluded.extensions,
     ontology_term_id = excluded.ontology_term_id,
     evidence_code = excluded.evidence_code
-)
 ;
 $$,
 $$
@@ -91,6 +105,8 @@ class QuickGoLoadAnnotations(PGLoader):
         return CONTROL_FILE.format(
             filename=output.annotations.filename,
             fields=fields,
+            columns=fields,
+            final_table=table,
             load_table=load_table,
             db_url=self.db_url(table=load_table),
             search_path=self.db_search_path(),
