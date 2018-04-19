@@ -53,7 +53,8 @@ truncate table {load_table};
 $$
 
 AFTER LOAD DO
-$$ insert into {final_table} (
+$$ insert into {final_table} (go_term_annotation_id, ref_pubmed_id)
+(
 select
     annotations.go_term_annotation_id,
     {load_table}.pubmed_id
