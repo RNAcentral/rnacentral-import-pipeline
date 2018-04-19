@@ -29,7 +29,7 @@ ANN_URL = 'http://www.ebi.ac.uk/QuickGO/annotations?geneProductId={upi}'
 ANNOTATION_HEADER = [
     'rna_id',
     'qualifier',
-    'term_id',
+    'ontology_term_id',
     'evidence_code',
     'extensions',
     'assigned_by'
@@ -79,7 +79,7 @@ class GoTermAnnotation(object):
         yield {
             'rna_id': self.rna_id,
             'qualifier': self.qualifier,
-            'term_id': self.term_id,
+            'ontology_term_id': self.term_id,
             'evidence_code': self.evidence_code,
             'extensions': json.dumps(extensions),
             'assigned_by': self.assigned_by,
