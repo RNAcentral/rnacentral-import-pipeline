@@ -208,6 +208,29 @@ class DownloadGenome(luigi.WrapperTask):
                                      chromosome=chromosome)
 
 
+class GenerateOOCfile(luigi.Task):
+    """
+    Generate an ooc file to speed up blat searches.
+    """
+    species = luigi.Parameter(default='homo_sapiens')
+
+    def output(self):
+        genome_path = genome_mapping().genomes(self.species)
+        return luigi.LocalTarget(os.path.join(genome_path, '11.ooc'))
+
+    def run(self):
+        cmd = ('cat {path}/*.fa > {path}/merged.fasta && '
+               'blat {path}/merged.fasta /dev/null /dev/null '
+                   '-makeOoc={ooc}-temp -stepSize=5 -repMatch=2253 -minScore=0 && '
+               'rm {path}/merged.fasta &&'
+               'mv {ooc}-temp {ooc}').format(
+                    path=genome_mapping().genomes(self.species),
+                    ooc=self.output().path)
+        status = subprocess.call(cmd, shell=True)
+        if status != 0:
+            raise ValueError('Failed to run blat ooc: %s' % cmd)
+
+
 class GetChromosomes(luigi.WrapperTask):
     """
     Get a list of fasta files with chromosome sequences for a particular genome.
@@ -229,15 +252,17 @@ class BlatJob(luigi.Task):
     def requires(self):
         yield GetChromosomes(taxid=self.taxid)
         yield CleanSplitFasta(taxid=self.taxid)
+        yield GenerateOOCfile(taxid=get_species_name(self.taxid))
 
     def run(self):
         genome_path, _ = os.path.split(self.chromosome)
-        cmd = ('blat -ooc={genome_path}/11.ooc -noHead -q=rna -stepSize=5 '
+        cmd = ('blat -ooc={ooc} -noHead -q=rna -stepSize=5 '
                '-repMatch=2253 -minScore=0 -minIdentity=95 '
                '{chromosome} {fasta_input} {psl_output} ').format(
                genome_path=genome_path,
                chromosome=self.chromosome,
                fasta_input=self.fasta_input,
+               ooc=GenerateOOCfile(taxid=get_species_name(self.taxid)),
                psl_output=self.output().path)
         status = subprocess.call(cmd, shell=True)
         if status != 0:
