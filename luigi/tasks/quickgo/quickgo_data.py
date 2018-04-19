@@ -70,6 +70,6 @@ class QuickGoData(luigi.Task):  # pylint: disable=R0904
         )
 
     def run(self):
-        filename = self.requires()[0].output()
+        filename = self.requires()[0].output().fn
         with gzip.open(filename, 'r') as raw:
             self.output().populate(parser(raw))
