@@ -25,7 +25,7 @@ CONTROL_FILE = """
 LOAD CSV
 FROM ALL FILENAMES MATCHING ~<{pattern}>
 IN DIRECTORY '{directory}'
- WITH ENCODING ISO-8859-14
+WITH ENCODING ISO-8859-14
 HAVING FIELDS
 (
     ontology_term_id,
@@ -45,7 +45,6 @@ SET
     search_path = '{search_path}'
 
 WITH
-    skip header = 1,
     fields escaped by double-quote,
     fields terminated by ','
 
