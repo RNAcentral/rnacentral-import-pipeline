@@ -65,12 +65,13 @@ class GoTermAnnotation(object):
         return ANN_URL.format(upi=self.rna_id)
 
     def writeable(self):
+        extensions = [attr.asdict(e) for e in self.extensions]
         yield {
             'rna_id': self.rna_id,
             'qualifier': self.qualifier,
             'term_id': self.term_id,
             'evidence_code': self.evidence_code,
-            'extensions': json.dumps(attr.asdict(self.extensions)),
+            'extensions': json.dumps(extensions),
             'assigned_by': self.assigned_by,
         }
 
