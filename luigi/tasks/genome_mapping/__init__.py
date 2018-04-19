@@ -22,6 +22,7 @@ from .genome_mapping_tasks import BlatJob
 from .genome_mapping_tasks import ParsePslOutput
 from .genome_mapping_tasks import SpeciesBlatJob
 from .genome_mapping_tasks import get_mapped_assemblies
+from .genome_mapping_tasks import DownloadGenome
 from .update_ensembl_assembly import RetrieveEnsemblAssemblies
 from .update_ensembl_assembly import RetrieveEnsemblGenomesAssemblies
 
