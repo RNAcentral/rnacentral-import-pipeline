@@ -276,3 +276,23 @@ class LoadingClansTest(ut.TestCase):
                 'RF02544',
             ])
         )
+
+
+@pytest.mark.parametrize('excluded', [
+    'GO:0035068',
+    'GO:0006396',
+])
+def test_does_not_incorrectly_assign_mirna_go_mapping(excluded):
+    mapping = utils.go_term_mapping()
+    terms = {m['go_term_id'] for m in mapping if m['rfam_model_id'] == 'RF01942'}
+    assert excluded not in terms
+
+
+@pytest.mark.parametrize('excluded', [
+    'GO:0008049',
+    'GO:0042981',
+    'GO:0042749',
+])
+def test_does_not_include_bad_go_terms_in_go_mapping(excluded):
+    terms = {m['go_term_id'] for m in utils.go_term_mapping()}
+    assert excluded not in terms

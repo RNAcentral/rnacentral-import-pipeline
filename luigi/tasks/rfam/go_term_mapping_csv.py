@@ -16,7 +16,6 @@ limitations under the License.
 from databases.rfam import utils
 from tasks.utils.csv_writer import CsvWriter
 
-
 class RfamGoTermsCSV(CsvWriter):  # pylint: disable=R0904
     """
     This will create a csv file of the mapping from GO term id to Rfam family
@@ -29,9 +28,4 @@ class RfamGoTermsCSV(CsvWriter):  # pylint: disable=R0904
     ]
 
     def data(self):
-        for family in utils.load_families():
-            for (go_term_id, _) in family.go_terms:
-                yield {
-                    'go_term_id': go_term_id,
-                    'rfam_model_id': family.id,
-                }
+        return utils.go_term_mapping()
