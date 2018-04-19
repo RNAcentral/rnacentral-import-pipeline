@@ -23,8 +23,9 @@ from tasks.quickgo.quickgo_data import QuickGoData
 
 CONTROL_FILE = """
 LOAD CSV
-FROM ALL FILENAMES MATCHING ~<{pattern}> WITH ENCODING ISO-8859-14
+FROM ALL FILENAMES MATCHING ~<{pattern}>
 IN DIRECTORY '{directory}'
+ WITH ENCODING ISO-8859-14
 HAVING FIELDS
 (
     ontology_term_id,
@@ -68,12 +69,12 @@ $$ insert into {final_table} (
     name,
     definition
 ) (
-select
+select distinct
     ontology_term_id,
     ontology,
     name,
     definition
-from load_go_terms
+from {load_table}
 )
 ON CONFLICT (ontology_term_id) DO UPDATE SET
     ontology_term_id = excluded.ontology_term_id,
@@ -104,7 +105,7 @@ class Ontologies(PGLoader):  # pylint: disable=R0904
         table = 'ontology_terms'
         load_table = 'load_' + table
         return CONTROL_FILE.format(
-            pattern='*.csv',
+            pattern='.*csv',
             directory=ontologies().to_load(),
             final_table=table,
             load_table=load_table,
