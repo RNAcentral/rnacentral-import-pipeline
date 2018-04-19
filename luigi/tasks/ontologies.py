@@ -49,7 +49,6 @@ WITH
 
 BEFORE LOAD DO
 $$
-evidence
 create table if not exists {load_table} (
     ontology_term_id varchar(15),
     ontology varchar(5),
