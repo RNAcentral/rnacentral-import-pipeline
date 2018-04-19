@@ -103,7 +103,7 @@ class rfam(luigi.Config):  # pylint: disable=C0103, R0904
 
     @property
     def go_terms(self):
-        return ontologies.to_load('rfam_go_terms.csv')
+        return ontologies().to_load('rfam_go_terms.csv')
 
 
 class noncode(luigi.Config):  # pylint: disable=C0103, R0904
