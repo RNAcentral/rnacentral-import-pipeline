@@ -16,6 +16,8 @@ limitations under the License.
 import gzip
 import operator as op
 
+import luigi
+
 from databases.quickgo import data
 from databases.quickgo.parser import parser
 
@@ -27,7 +29,7 @@ from tasks.utils.writers import CsvOutput
 from tasks.utils.writers import MultiCsvOutput
 
 
-class QuickGoData(object):  # pylint: disable=R0904
+class QuickGoData(luigi.Task):  # pylint: disable=R0904
     """
     Load all data from parsing QuickGo data.
     """
