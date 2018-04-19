@@ -44,6 +44,12 @@ class CsvOutput(object):
     transformer = attr.ib()
     csv_options = attr.ib(validator=is_a(dict))
 
+    @transformer.default
+    def default_transformer(self):
+        def fn(entry):
+            yield entry
+        return fn
+
     @csv_options.default
     def default_csv_options(self):
         """
