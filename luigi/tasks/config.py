@@ -289,7 +289,10 @@ class genome_mapping(luigi.Config):  # pylint: disable=C0103,R0904
     base = PathParameter(default='/tmp')
 
     def genomes(self, *args):
-        return os.path.join(self.base, 'genomes', *args)
+        path = os.path.join(self.base, 'genomes', *args)
+        if not os.path.exists(path):
+            os.makedirs(path)
+        return path
 
     def rnacentral_fasta(self, *args):
         return os.path.join(self.base, 'rnacentral_fasta', *args)

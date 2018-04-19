@@ -14,9 +14,11 @@ limitations under the License.
 """
 
 import os
+import json
 import subprocess
 
 import luigi
+import requests
 
 from glob import iglob
 
@@ -129,16 +131,91 @@ class CleanSplitFasta(luigi.Task):
             raise ValueError('Failed to run seqkit: %s' % cmd)
 
 
-class GetChromosomes(luigi.Task):
+class GetAssemblyInfoJson(luigi.Task):
+    """
+    Download assembly description from Ensembl to get a list of chromosomes.
+    """
+    species = luigi.Parameter(default='homo_sapiens')
+
+    def output(self):
+        genome_path = genome_mapping().genomes(self.species)
+        filename = os.path.join(genome_path, 'ensembl-assembly-info.json')
+        return luigi.LocalTarget(filename)
+
+    def run(self):
+        url = ('http://rest.ensembl.org/info/assembly/{}'
+               '?content-type=application/json').format(self.species)
+        data = requests.get(url).json()
+        with open(self.output().path, 'w') as outfile:
+            json.dump(data, outfile)
+
+
+class GetChromosomeList(luigi.Task):
+    """
+    Get a list of chromosome files based on Ensembl data.
+    Example: Canis_familiaris.CanFam3.1.dna.chromosome.1.fa
+    """
+    species = luigi.Parameter(default='homo_sapiens')
+
+    def output(self):
+        if not GetAssemblyInfoJson(species=self.species).complete():
+            GetAssemblyInfoJson(species=self.species).run()
+        ensembl_json = GetAssemblyInfoJson(species=self.species).output().path
+        data = json.load(open(ensembl_json, 'r'))
+        chromosomes = []
+        for chromosome in data['karyotype']:
+            filename = '{species}.{assembly}.dna.chromosome.{chromosome}.fa'.format(
+                species=self.species.capitalize(),
+                assembly=data['default_coord_system_version'],
+                chromosome=chromosome
+            )
+            chromosomes.append(filename)
+        return chromosomes
+
+
+class DownloadChromosome(luigi.Task):
+    """
+    Download and uncompress chromosome fasta file.
+    """
+    species = luigi.Parameter()
+    chromosome = luigi.Parameter()
+
+    def output(self):
+        genome_path = genome_mapping().genomes(self.species)
+        return luigi.LocalTarget(os.path.join(genome_path, self.chromosome))
+
+    def run(self):
+        cmd = ('wget -nc ftp://ftp.ensembl.org/pub/current_fasta/'
+                   '{species}/dna/{chromosome}.gz -O {path}/{chromosome}.gz && '
+               'gunzip {path}/*.gz'
+               ).format(path=genome_mapping().genomes(self.species),
+                        chromosome=self.chromosome,
+                        species=self.species)
+        status = subprocess.call(cmd, shell=True)
+        if status != 0:
+            raise ValueError('Failed to run gunzip: %s' % cmd)
+
+
+class DownloadGenome(luigi.WrapperTask):
+    """
+    A wrapper task to download all chromosomes in a genome.
+    """
+    species = luigi.Parameter(default='homo_sapiens')
+
+    def requires(self):
+        for chromosome in GetChromosomeList(species=self.species).output():
+            yield DownloadChromosome(species=self.species,
+                                     chromosome=chromosome)
+
+
+class GetChromosomes(luigi.WrapperTask):
     """
     Get a list of fasta files with chromosome sequences for a particular genome.
     """
     taxid = luigi.IntParameter(default=559292)
 
-    def output(self):
-        chromosomes = genome_mapping().genomes(get_species_name(self.taxid))
-        for filename in iglob(os.path.join(chromosomes, '*.fa')):
-            yield luigi.LocalTarget(filename)
+    def requires(self):
+        return DownloadGenome(species=get_species_name(self.taxid))
 
 
 class BlatJob(luigi.Task):
