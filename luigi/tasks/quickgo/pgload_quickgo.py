@@ -20,6 +20,7 @@ from tasks.ontologies import Ontologies
 from .quickgo_data import QuickGoData
 from tasks.publications.pubmed import PubMed
 
+
 CONTROL_FILE = """
 LOAD CSV
 FROM '{filename}'
