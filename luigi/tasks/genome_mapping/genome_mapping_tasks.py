@@ -15,6 +15,7 @@ limitations under the License.
 
 import os
 import json
+import random
 import subprocess
 
 import luigi
@@ -213,6 +214,9 @@ class GenerateOOCfile(luigi.Task):
     Generate an ooc file to speed up blat searches.
     """
     species = luigi.Parameter(default='homo_sapiens')
+
+    def requires(self):
+        return DownloadGenome(species=self.species)
 
     def output(self):
         genome_path = genome_mapping().genomes(self.species)
