@@ -104,7 +104,7 @@ class Ontologies(PGLoader):  # pylint: disable=R0904
         table = 'ontology_terms'
         load_table = 'load_' + table
         return CONTROL_FILE.format(
-            pattern=ontologies.to_load('*'),
+            pattern=ontologies().to_load('*'),
             final_table=table,
             load_table=load_table,
             search_path=self.db_search_path(),
