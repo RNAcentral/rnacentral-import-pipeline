@@ -43,7 +43,8 @@ create table if not exists {load_table} (
     ref_pubmed_id int,
     authors text,
     location varchar(4000),
-    title varchar(4000)
+    title varchar(4000),
+    doi varchar(160)
 );
 $$,
 $$
@@ -55,13 +56,15 @@ $$ insert into {final_table} (
     ref_pubmed_id,
     authors,
     location,
-    title
+    title,
+    doi
 ) (
 select distinct
     ref_pubmed_id,
     authors,
     location,
-    title
+    title,
+    doi
 from {load_table}
 )
 ON CONFLICT (ref_pubmed_id) DO UPDATE SET
