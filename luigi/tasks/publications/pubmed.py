@@ -88,7 +88,7 @@ class PubmedLoader(PGLoader):
         output = self.requires()[0].output()
         table = 'ref_pubmed'
         load_table = 'load_' + table
-        fields = ','.join(output.publications.headers)
+        fields = ', '.join(output.publications.headers)
 
         return CONTROL_FILE.format(
             pattern='.*csv',
