@@ -283,9 +283,37 @@ class SpeciesBlatJob(luigi.WrapperTask):
     def requires(self):
         for chunk in CleanSplitFasta(taxid=self.taxid).output():
             for chromosome in GetChromosomes(taxid=self.taxid).output():
+
+
+class SpeciesBlatJob(luigi.Task):
+    taxid = luigi.IntParameter(default=559292)
+
+    def requires(self):
+        chromosomes = []
+        species = get_species_name(self.taxid)
+        for chromosome in GetChromosomeList(species=species).output():
+            chromosomes.append(DownloadChromosome(species=species,
+                                                  chromosome=chromosome))
+        return {
+            'chunks': CleanSplitFasta(taxid=self.taxid),
+            'chromosomes': chromosomes,
+        }
+
+    def run(self):
+        for chunk in self.input()['chunks']:
+            for chromosome in self.input()['chromosomes']:
                 yield BlatJob(fasta_input=chunk.path,
                               chromosome=chromosome.path,
                               taxid=self.taxid)
+
+    def output(self):
+        psl_files = []
+        for chunk in self.input()['chunks']:
+            for chromosome in self.input()['chromosomes']:
+                psl_files.append(BlatJob(fasta_input=chunk.path,
+                                         chromosome=chromosome.path,
+                                         taxid=self.taxid).output())
+        return random.shuffle(psl_files)
 
 
 class ParsePslOutput(luigi.Task):
