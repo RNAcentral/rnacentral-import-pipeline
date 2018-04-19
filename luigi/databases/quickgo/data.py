@@ -40,7 +40,7 @@ PUB_HEADER = GENERIC_PUBMED_HEADER
 PUB_MAPPING_HEADER = [
     'rna_id',
     'qualifier',
-    'term_id',
+    'ontology_term_id',
     'assigned_by',
     'pubmed_id',
 ]
@@ -102,7 +102,7 @@ class GoTermAnnotation(object):
             yield {
                 'rna_id': self.rna_id,
                 'qualifier': self.qualifier,
-                'term_id': self.term_id,
+                'ontology_term_id': self.term_id,
                 'assigned_by': self.assigned_by,
                 'pubmed_id': publication.pmid,
             }
