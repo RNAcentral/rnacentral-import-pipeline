@@ -277,12 +277,17 @@ class BlatJob(luigi.Task):
         return luigi.LocalTarget(os.path.join(psl_output, psl_filename))
 
 
-class SpeciesBlatJob(luigi.WrapperTask):
-    taxid = luigi.IntParameter(default=559292)
+class SpeciesBlatJobWrapper(luigi.WrapperTask):
+    taxid = luigi.IntParameter(default=7955)
 
     def requires(self):
+        species=get_species_name(self.taxid)
+        yield CleanSplitFasta(taxid=self.taxid)
         for chunk in CleanSplitFasta(taxid=self.taxid).output():
-            for chromosome in GetChromosomes(taxid=self.taxid).output():
+            for chromosome in GetChromosomeList(species=species).output():
+                yield BlatJob(fasta_input=chunk.path,
+                              chromosome=DownloadChromosome(species=species, chromosome=chromosome).output().path,
+                              taxid=self.taxid)
 
 
 class SpeciesBlatJob(luigi.Task):
