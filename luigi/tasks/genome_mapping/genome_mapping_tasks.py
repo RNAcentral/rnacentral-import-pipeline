@@ -250,9 +250,10 @@ class BlatJob(luigi.Task):
     chromosome = luigi.Parameter()
 
     def requires(self):
-        yield GetChromosomes(taxid=self.taxid)
-        yield CleanSplitFasta(taxid=self.taxid)
-        yield GenerateOOCfile(taxid=get_species_name(self.taxid))
+        return {
+            'fasta': CleanSplitFasta(taxid=self.taxid),
+            'ooc': GenerateOOCfile(species=get_species_name(self.taxid)),
+        }
 
     def run(self):
         genome_path, _ = os.path.split(self.chromosome)
@@ -262,7 +263,7 @@ class BlatJob(luigi.Task):
                genome_path=genome_path,
                chromosome=self.chromosome,
                fasta_input=self.fasta_input,
-               ooc=GenerateOOCfile(taxid=get_species_name(self.taxid)),
+               ooc=self.input()['ooc'].path,
                psl_output=self.output().path)
         status = subprocess.call(cmd, shell=True)
         if status != 0:
