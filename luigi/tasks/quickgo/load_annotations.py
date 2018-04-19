@@ -61,14 +61,13 @@ INSERT INTO {final_table} (
     ontology_term_id,
     evidence_code
 ) (
-SELECT (
+SELECT
     rna_id,
     qualifier,
     assigned_by,
     extensions,
     ontology_term_id,
     evidence_code
-)
 FROM {load_table}
 )
 ON CONFLICT (rna_id, qualifier, assigned_by, ontology_term_id, evidence_code)
