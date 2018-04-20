@@ -28,6 +28,14 @@ GENERIC_TYPES = set(['misc_RNA', 'misc RNA', 'other'])
 
 NO_OPTIONAL_IDS = set(['SILVA', 'PDB'])
 
+KNOWN_QUALIFIERS = set([
+    'part_of',
+    'involved_in',
+    'enables',
+    'contributes_to',
+    'colocalizes_with',
+])
+
 POPULAR_SPECIES = set([
     9606,    # human
     10090,   # mouse
@@ -455,6 +463,13 @@ def from_annotation_qualifer(name):
     return fn
 
 
+def has_go_annotations(go_annotations):
+    for annotation in go_annotations:
+        if annotation['qualifier'] in KNOWN_QUALIFIERS:
+            return str(True)
+    return str(False)
+
+
 part_of = from_annotation_qualifer('part_of')
 involved_in = from_annotation_qualifer('involved_in')
 enables = from_annotation_qualifer('enables')
@@ -521,5 +536,6 @@ builder = entry([
         fields('enables', enables, keys='go_annotations'),
         fields('contributes_to', contributes_to, keys='go_annotations'),
         fields('colocalizes_with', colocalizes_with, keys='go_annotations'),
+        field('has_go_annotations', has_go_annotations, keys='go_annotations'),
     ]),
 ])

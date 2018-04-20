@@ -31,5 +31,6 @@
 <field name="rfam_problems">missing_match</field>
 <field name="rfam_problem_found">True</field>
 <field name="tax_string">Eukaryota; Fungi; Dikarya; Ascomycota; Pezizomycotina; Leotiomycetes; Helotiales; Sclerotiniaceae; Botrytis; Botrytis tulipae</field>
+<field name="has_go_annotations">False</field>
 </additional_fields>
 </entry>
