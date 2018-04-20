@@ -355,8 +355,8 @@ class ParsePslOutput(luigi.Task):
         }
 
     def run(self):
-        assembly_id = get_assembly_id(self.taxid)
-        cmd = 'source scripts/psl2tsv.sh %s %s' % (self.get_blat_output(), assembly_id)
+        cmd = 'source scripts/psl2tsv.sh {} {}'.format(self.get_blat_output(),
+                                                       self.assembly_id)
         status = subprocess.call(cmd, shell=True)
         if status != 0:
             raise ValueError('Failed to run psl2tsv: %s' % cmd)
