@@ -73,7 +73,7 @@ class CleanSplitFasta(luigi.Task):
     """
     taxid = luigi.IntParameter()
     species = luigi.Parameter()
-    num_chunks = luigi.IntParameter(default=50)
+    num_seq = luigi.IntParameter(default=1000)
     min_length = luigi.IntParameter(default=20)
     max_length = luigi.IntParameter(default=100000)
 
@@ -89,13 +89,13 @@ class CleanSplitFasta(luigi.Task):
     def run(self):
         cmd = ('seqkit seq --min-len {min_length} --max-len {max_length} '
                    '{fasta} > {temp_dir}/rnacentral-clean.fasta && '
-               'seqkit split --quiet -f -p {num_chunks} --out-dir {out_dir} '
+               'seqkit split --quiet -f -s {num_seq} --out-dir {out_dir} '
                    '{temp_dir}/rnacentral-clean.fasta && '
                'rm {temp_dir}/rnacentral-clean.fasta').format(
                max_length=self.max_length,
                min_length=self.min_length,
                fasta=self.input().path,
-               num_chunks=self.num_chunks,
+               num_seq=self.num_seq,
                out_dir=genome_mapping().chunks(self.species),
                temp_dir=genome_mapping().genome(self.species))
         status = subprocess.call(cmd, shell=True)
