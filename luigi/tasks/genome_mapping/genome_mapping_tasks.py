@@ -115,17 +115,23 @@ class GetAssemblyInfoJson(luigi.Task):
         filename = os.path.join(genome_path, 'ensembl-assembly-info.json')
         return luigi.LocalTarget(filename)
 
+    def get_url(self):
+        url = 'http://rest.{division}.org/info/assembly/{species}?content-type=application/json'
+        if self.division == 'Ensembl':
+            url = url.format(division='ensembl', species=self.species)
+        else:
+            url = url.format(division='ensemblgenomes', species=self.species)
+        return url
+
     def run(self):
-        url = ('http://rest.ensembl.org/info/assembly/{}'
-               '?content-type=application/json').format(self.species)
-        data = requests.get(url).json()
+        data = requests.get(self.get_url()).json()
         with open(self.output().path, 'w') as outfile:
             json.dump(data, outfile)
 
 
 class GetChromosomeList(luigi.Task):
     """
-    Get a list of chromosome files based on Ensembl data.
+    Get a list of chromosome files based on Ensembl assembly JSON data.
     Example: Canis_familiaris.CanFam3.1.dna.chromosome.1.fa
     """
     species = luigi.Parameter()
@@ -137,6 +143,12 @@ class GetChromosomeList(luigi.Task):
         ensembl_json = GetAssemblyInfoJson(species=self.species, division=self.division).output().path
         data = json.load(open(ensembl_json, 'r'))
         chromosomes = []
+        for region in data['top_level_region']:
+            if region['name'] not in data['karyotype']:
+                chromosomes.append('{species}.{assembly}.dna.nonchromosomal.fa'.format(
+                                    species=self.species.capitalize(),
+                                    assembly=data['default_coord_system_version']))
+                break
         for chromosome in data['karyotype']:
             filename = '{species}.{assembly}.dna.chromosome.{chromosome}.fa'.format(
                 species=self.species.capitalize(),
@@ -159,13 +171,28 @@ class DownloadChromosome(luigi.Task):
         genome_path = genome_mapping().genome(self.species)
         return luigi.LocalTarget(os.path.join(genome_path, self.chromosome))
 
+    def get_url(self):
+        url = None
+        if self.division == 'Ensembl':
+            url = 'ftp://ftp.ensembl.org/pub/current_fasta/{species}/dna/{chromosome}.gz'
+        elif self.division == 'EnsemblFungi':
+            url = 'ftp://ftp.ensemblgenomes.org/pub/current/fungi/fasta/{species}/dna/{chromosome}.gz'
+        elif self.division == 'EnsemblMetazoa':
+            url = 'ftp://ftp.ensemblgenomes.org/pub/current/metazoa/fasta/{species}/dna/{chromosome}.gz'
+        elif self.division == 'EnsemblPlants':
+            url = 'ftp://ftp.ensemblgenomes.org/pub/current/plants/fasta/{species}/dna/{chromosome}.gz'
+        elif self.division == 'EnsemblProtists':
+            url = 'ftp://ftp.ensemblgenomes.org/pub/current/protists/fasta/{species}/dna/{chromosome}.gz'
+        url = url.format(species=self.species, chromosome=self.chromosome)
+        return url
+
     def run(self):
-        cmd = ('wget -nc ftp://ftp.ensembl.org/pub/current_fasta/'
-                   '{species}/dna/{chromosome}.gz -O {path}/{chromosome}.gz && '
-               'gunzip {path}/*.gz'
-               ).format(path=genome_mapping().genomes(self.species),
+        cmd = ('wget -nc {url} -O {path}/{chromosome}.gz && '
+               'gunzip -f {path}/*.gz'
+               ).format(path=genome_mapping().genome(self.species),
                         chromosome=self.chromosome,
-                        species=self.species)
+                        species=self.species,
+                        url=self.get_url())
         status = subprocess.call(cmd, shell=True)
         if status != 0:
             raise ValueError('Failed to run gunzip: %s' % cmd)
