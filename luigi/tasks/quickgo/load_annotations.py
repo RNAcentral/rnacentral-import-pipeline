@@ -41,10 +41,10 @@ $$
 create table if not exists {load_table} (
     rna_id varchar(50),
     qualifier varchar(30),
-    assigned_by varchar(50),
-    extensions jsonb,
     ontology_term_id varchar(15),
-    evidence_code varchar(15)
+    evidence_code varchar(15),
+    assigned_by varchar(50),
+    extensions jsonb
 );
 $$,
 $$
@@ -56,29 +56,24 @@ $$
 INSERT INTO {final_table} (
     rna_id,
     qualifier,
-    assigned_by,
-    extensions,
     ontology_term_id,
-    evidence_code
+    evidence_code,
+    assigned_by,
+    extensions
 ) (
 SELECT
     rna_id,
     qualifier,
-    assigned_by,
-    extensions,
     ontology_term_id,
-    evidence_code
+    evidence_code,
+    assigned_by,
+    extensions
 FROM {load_table}
 )
-ON CONFLICT (rna_id, qualifier, assigned_by, ontology_term_id, evidence_code)
+ON CONFLICT (rna_id, qualifier, ontology_term_id, evidence_code, assigned_by)
 DO UPDATE
 SET
-    rna_id = excluded.rna_id,
-    qualifier = excluded.qualifier,
-    assigned_by = excluded.assigned_by,
-    extensions = excluded.extensions,
-    ontology_term_id = excluded.ontology_term_id,
-    evidence_code = excluded.evidence_code
+    extensions = excluded.extensions
 ;
 $$,
 $$
