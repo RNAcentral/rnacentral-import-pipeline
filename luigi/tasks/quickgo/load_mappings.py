@@ -56,7 +56,7 @@ $$
 AFTER LOAD DO
 $$ insert into {final_table} (go_term_annotation_id, ref_pubmed_id)
 (
-select
+select distinct
     annotations.go_term_annotation_id,
     {load_table}.pubmed_id
 from {load_table}
