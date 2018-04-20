@@ -20,6 +20,7 @@ from tasks.utils.pgloader import PGLoader
 from tasks.publications.pubmed import PubmedLoader
 
 from .quickgo_data import QuickGoData
+from .load_annotations import QuickGoLoadAnnotations
 
 CONTROL_FILE = """
 LOAD CSV
@@ -83,6 +84,7 @@ class QuickGoLoadPublicationMapping(PGLoader):
         return [
             QuickGoData(),
             PubmedLoader(),
+            QuickGoLoadAnnotations(),
         ]
 
     def control_file(self):
