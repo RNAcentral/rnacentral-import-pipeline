@@ -48,8 +48,10 @@ def load_and_get_additional(upi, field_name):
 
 
 def load_and_get_cross_references(upi, db_name):
-    selector = "./additional_fields/ref[@name='%s']" % db_name
-    return load_and_findall(upi, selector)
+    selector = "./cross_references/ref[@dbname='%s']" % db_name
+    results = load_and_findall(upi, selector)
+    assert results
+    return results
 
 
 def pretty_xml(data):
@@ -73,7 +75,7 @@ def test_it_builds_correct_xml_entries(filename):
 @pytest.mark.parametrize("upi,ans", [  # pylint: disable=E1101
     ('URS00008CC2A4_43179', "Ictidomys tridecemlineatus"),
     ('URS0000713CBE_408172', 'marine metagenome'),
-    ('URS000047774B_77133', 'environmental samples uncultured bacterium'),
+    ('URS000047774B_77133', 'uncultured bacterium'),
 ])
 def test_assigns_species_correctly(upi, ans):
     """
@@ -452,14 +454,13 @@ def test_computes_pub_ids(upi, pub_ids):
     assert val == ans
 
 
-
 @pytest.mark.parametrize('upi,pmid', [  # pylint: disable=E1101
     ('URS000026261D_9606', 27021683),
     ('URS0000614A9B_9606', 28111633)
 ])
 def test_can_add_publications_from_go_annotations(upi, pmid):
-    val = load_and_get_cross_references(upi, 'PUBMED')
-    assert pmid in val
+    val = {c['attrib']['dbkey'] for c in load_and_get_cross_references(upi, 'PUBMED')}
+    assert str(pmid) in val
 
 
 @pytest.mark.parametrize('upi,qualifier,ans', [  # pylint: disable=E1101
