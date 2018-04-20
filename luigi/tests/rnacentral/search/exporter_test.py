@@ -446,12 +446,11 @@ def test_computes_valid_boost(upi, boost):
 
 @pytest.mark.parametrize('upi,pub_ids', [  # pylint: disable=E1101
     ('URS0000BB15D5_9606', [512936, 527789]),
-    ('URS000019E0CD_9606', [238832, 164929, 538386, 491042, 491041]),
+    ('URS000019E0CD_9606', [238832, 538386, 164929, 491042, 491041]),
 ])
 def test_computes_pub_ids(upi, pub_ids):
-    ans = [{'attrib': {'name': 'pub_id'}, 'text': str(p)} for p in pub_ids]
-    val = load_and_get_additional(upi, 'pub_id')
-    assert val == ans
+    val = sorted(int(a['text']) for a in load_and_get_additional(upi, 'pub_id'))
+    assert val == sorted(pub_ids)
 
 
 @pytest.mark.parametrize('upi,pmid', [  # pylint: disable=E1101
@@ -465,8 +464,8 @@ def test_can_add_publications_from_go_annotations(upi, pmid):
 
 @pytest.mark.parametrize('upi,qualifier,ans', [  # pylint: disable=E1101
     ('URS000026261D_9606', 'part_of', [
-        'GO:0022625',
-        'cytosolic large ribosomal subunit'
+        'GO:0005615',
+        'extracellular space'
     ]),
     ('URS0000614A9B_9606', 'involved_in', [
         'GO:0010628',
