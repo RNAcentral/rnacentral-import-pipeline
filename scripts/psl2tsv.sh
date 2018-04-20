@@ -16,12 +16,14 @@ echo 'Processing files in ' $1
 
 MATCHES_PSL=${INPUT_FOLDER}/matches.psl
 MATCHES_BED=${INPUT_FOLDER}/matches-split.bed
+EXACT_MATCHES=${INPUT_FOLDER}/mapping-temp.tsv
+INEXACT_MATCHES=${INPUT_FOLDER}/mapping-inexact-temp.tsv
 
 for i in {1..2}; do
 	if [ $i -eq 1 ]; then
-	    OUTPUT=${INPUT_FOLDER}/mapping.tsv
+	    OUTPUT=$EXACT_MATCHES
 	else
-	    OUTPUT=${INPUT_FOLDER}/mapping-inexact.tsv
+	    OUTPUT=$INEXACT_MATCHES
 	fi
 
 	echo '' > $MATCHES_PSL
@@ -81,3 +83,6 @@ for i in {1..2}; do
 	echo 'See file ' $OUTPUT
 
 done
+
+mv $EXACT_MATCHES ${INPUT_FOLDER}/mapping.tsv
+mv $INEXACT_MATCHES ${INPUT_FOLDER}/mapping-inexact.tsv
