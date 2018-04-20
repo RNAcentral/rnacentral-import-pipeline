@@ -15,7 +15,6 @@ limitations under the License.
 
 import os
 import json
-import random
 import subprocess
 
 import luigi
@@ -327,7 +326,7 @@ class SpeciesBlatJob(luigi.Task):
                                          species=self.species,
                                          division=self.division,
                                          taxid=self.taxid).output())
-        return random.shuffle(psl_files)
+        return psl_files
 
 
 class ParseBlatOutput(luigi.Task):
