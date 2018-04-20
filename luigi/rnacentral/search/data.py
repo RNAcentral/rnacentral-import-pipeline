@@ -447,9 +447,11 @@ def from_annotation_qualifer(name):
     def fn(go_annotations):
         key = op.itemgetter('qualifier')
         annotations = it.ifilter(lambda a: key(a) == name, go_annotations)
+        values = set()
         for annotation in annotations:
-            yield annotation['go_term_id']
-            yield annotation['go_name']
+            values.add(annotation['go_term_id'])
+            values.add(annotation['go_name'])
+        return sorted(values)
     return fn
 
 

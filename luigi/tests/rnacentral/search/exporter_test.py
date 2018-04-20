@@ -47,6 +47,11 @@ def load_and_get_additional(upi, field_name):
     return load_and_findall(upi, selector)
 
 
+def load_and_get_cross_references(upi, db_name):
+    selector = "./additional_fields/ref[@name='%s']" % db_name
+    return load_and_findall(upi, selector)
+
+
 def pretty_xml(data):
     ugly = ET.tostring(data)
     parsed = minidom.parseString(ugly.replace('\n', ''))
@@ -475,4 +480,4 @@ def test_can_add_publications_from_go_annotations(upi, pmid):
 ])
 def test_can_assign_go_annotations(upi, qualifier, ans):
     val = {a['text'] for a in load_and_get_additional(upi, qualifier)}
-    assert val == ans
+    assert sorted(val) == sorted(ans)
