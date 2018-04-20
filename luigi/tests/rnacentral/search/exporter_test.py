@@ -445,3 +445,34 @@ def test_computes_pub_ids(upi, pub_ids):
     ans = [{'attrib': {'name': 'pub_id'}, 'text': str(p)} for p in pub_ids]
     val = load_and_get_additional(upi, 'pub_id')
     assert val == ans
+
+
+
+@pytest.mark.parametrize('upi,pmid', [  # pylint: disable=E1101
+    ('URS000026261D_9606', 27021683),
+    ('URS0000614A9B_9606', 28111633)
+])
+def test_can_add_publications_from_go_annotations(upi, pmid):
+    val = load_and_get_cross_references(upi, 'PUBMED')
+    assert pmid in val
+
+
+@pytest.mark.parametrize('upi,qualifier,ans', [  # pylint: disable=E1101
+    ('URS000026261D_9606', 'part_of', [
+        'GO:0022625',
+        'cytosolic large ribosomal subunit'
+    ]),
+    ('URS0000614A9B_9606', 'involved_in', [
+        'GO:0010628',
+        'GO:0010629',
+        'GO:0035195',
+        'GO:0060045',
+        'positive regulation of gene expression',
+        'negative regulation of gene expression',
+        'gene silencing by miRNA',
+        'positive regulation of cardiac muscle cell proliferation',
+    ]),
+])
+def test_can_assign_go_annotations(upi, qualifier, ans):
+    val = {a['text'] for a in load_and_get_additional(upi, qualifier)}
+    assert val == ans

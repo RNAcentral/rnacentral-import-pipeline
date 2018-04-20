@@ -56,8 +56,8 @@ SELECT
         'journals', array_agg(refs.location),
         'pub_titles', array_agg(refs.title),
         'pub_ids', array_agg(refs.id),
-        'pubmed_ids', array_agg(refs.pmid),
-        'dois', array_agg(refs.doi),
+        'pubmed_ids', array_agg(pubmed.ref_pubmed_id) || array_agg(refs.pmid),
+        'dois', array_agg(pubmed.ref_pubmed_id) || array_agg(refs.doi),
         'has_coordinates', array_agg(pre.has_coordinates),
         'rfam_family_names', array_agg(models.short_name),
         'rfam_ids', array_agg(hits.rfam_model_id),
@@ -77,7 +77,11 @@ SELECT
         'notes', array_agg(acc.note),
         'locus_tags', array_agg(acc.locus_tag),
         'standard_names', array_agg(acc.standard_name),
-        'products', array_agg(acc.product)
+        'products', array_agg(acc.product),
+        'go_annotations', json_build_object(
+            'go_term_id', anno.ontology_term_id,
+            'go_name', ont.name,
+        )
     )
 FROM xref xref
 JOIN rnc_accessions acc ON xref.ac = acc.accession
@@ -95,6 +99,14 @@ LEFT JOIN rfam_model_hits hits ON xref.upi = hits.upi
 LEFT JOIN rfam_models models
 ON
     hits.rfam_model_id = models.rfam_model_id
+LEFT JOIN go_term_annotations anno ON anno.rna_id = pre.id
+LEFT JOIN go_term_publication_map go_map
+ON
+    go_map.go_term_annotation_id = anno.go_term_annotation_id
+LEFT JOIN ref_pubmed pubmed ON pubmed.ref_pubmed_id = go_map.ref_pubmed_id
+LEFT JOIN ontology_terms ont
+ON
+    ont.ontology_term_id = anno.ontology_term_annotation_id
 WHERE
   xref.deleted = 'N'
   AND %s
