@@ -481,3 +481,15 @@ def test_can_add_publications_from_go_annotations(upi, pmid):
 def test_can_assign_go_annotations(upi, qualifier, ans):
     val = {a['text'] for a in load_and_get_additional(upi, qualifier)}
     assert sorted(val) == sorted(ans)
+
+
+@pytest.mark.parametrize('upi,has', [  # pylint: disable=E1101
+    ('URS000026261D_9606', True),
+    ('URS0000614A9B_9606', True),
+    ('URS000019E0CD_9606', False),
+    ('URS0000003085_7460', False),
+])
+def test_it_can_add_valid_annotations_flag(upi, has):
+    assert load_and_get_additional(upi, "has_go_annotations") == [
+        {'attrib': {'name': 'has_go_annotations'}, 'text': str(has)},
+    ]
