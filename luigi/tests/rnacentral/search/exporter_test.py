@@ -47,6 +47,13 @@ def load_and_get_additional(upi, field_name):
     return load_and_findall(upi, selector)
 
 
+def load_and_get_cross_references(upi, db_name):
+    selector = "./cross_references/ref[@dbname='%s']" % db_name
+    results = load_and_findall(upi, selector)
+    assert results
+    return results
+
+
 def pretty_xml(data):
     ugly = ET.tostring(data)
     parsed = minidom.parseString(ugly.replace('\n', ''))
@@ -68,7 +75,7 @@ def test_it_builds_correct_xml_entries(filename):
 @pytest.mark.parametrize("upi,ans", [  # pylint: disable=E1101
     ('URS00008CC2A4_43179', "Ictidomys tridecemlineatus"),
     ('URS0000713CBE_408172', 'marine metagenome'),
-    ('URS000047774B_77133', 'environmental samples uncultured bacterium'),
+    ('URS000047774B_77133', 'uncultured bacterium'),
 ])
 def test_assigns_species_correctly(upi, ans):
     """
@@ -439,9 +446,50 @@ def test_computes_valid_boost(upi, boost):
 
 @pytest.mark.parametrize('upi,pub_ids', [  # pylint: disable=E1101
     ('URS0000BB15D5_9606', [512936, 527789]),
-    ('URS000019E0CD_9606', [238832, 164929, 538386, 491042, 491041]),
+    ('URS000019E0CD_9606', [238832, 538386, 164929, 491042, 491041]),
 ])
 def test_computes_pub_ids(upi, pub_ids):
-    ans = [{'attrib': {'name': 'pub_id'}, 'text': str(p)} for p in pub_ids]
-    val = load_and_get_additional(upi, 'pub_id')
-    assert val == ans
+    val = sorted(int(a['text']) for a in load_and_get_additional(upi, 'pub_id'))
+    assert val == sorted(pub_ids)
+
+
+@pytest.mark.parametrize('upi,pmid', [  # pylint: disable=E1101
+    ('URS000026261D_9606', 27021683),
+    ('URS0000614A9B_9606', 28111633)
+])
+def test_can_add_publications_from_go_annotations(upi, pmid):
+    val = {c['attrib']['dbkey'] for c in load_and_get_cross_references(upi, 'PUBMED')}
+    assert str(pmid) in val
+
+
+@pytest.mark.parametrize('upi,qualifier,ans', [  # pylint: disable=E1101
+    ('URS000026261D_9606', 'part_of', [
+        'GO:0005615',
+        'extracellular space'
+    ]),
+    ('URS0000614A9B_9606', 'involved_in', [
+        'GO:0010628',
+        'GO:0010629',
+        'GO:0035195',
+        'GO:0060045',
+        'positive regulation of gene expression',
+        'negative regulation of gene expression',
+        'gene silencing by miRNA',
+        'positive regulation of cardiac muscle cell proliferation',
+    ]),
+])
+def test_can_assign_go_annotations(upi, qualifier, ans):
+    val = {a['text'] for a in load_and_get_additional(upi, qualifier)}
+    assert sorted(val) == sorted(ans)
+
+
+@pytest.mark.parametrize('upi,has', [  # pylint: disable=E1101
+    ('URS000026261D_9606', True),
+    ('URS0000614A9B_9606', True),
+    ('URS000019E0CD_9606', False),
+    ('URS0000003085_7460', False),
+])
+def test_it_can_add_valid_annotations_flag(upi, has):
+    assert load_and_get_additional(upi, "has_go_annotations") == [
+        {'attrib': {'name': 'has_go_annotations'}, 'text': str(has)},
+    ]

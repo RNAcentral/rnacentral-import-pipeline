@@ -17,6 +17,7 @@ import re
 import json
 from datetime import datetime as dt
 import operator as op
+import itertools as it
 import collections as coll
 
 from xml.sax import saxutils as sax
@@ -26,6 +27,14 @@ import xml.etree.cElementTree as ET
 GENERIC_TYPES = set(['misc_RNA', 'misc RNA', 'other'])
 
 NO_OPTIONAL_IDS = set(['SILVA', 'PDB'])
+
+KNOWN_QUALIFIERS = set([
+    'part_of',
+    'involved_in',
+    'enables',
+    'contributes_to',
+    'colocalizes_with',
+])
 
 POPULAR_SPECIES = set([
     9606,    # human
@@ -442,6 +451,32 @@ def normalize_rna_type(rna_type):
     return first(rna_type).replace('_', ' ')
 
 
+def from_annotation_qualifer(name):
+    def fn(go_annotations):
+        key = op.itemgetter('qualifier')
+        annotations = it.ifilter(lambda a: key(a) == name, go_annotations)
+        values = set()
+        for annotation in annotations:
+            values.add(annotation['go_term_id'])
+            values.add(annotation['go_name'])
+        return sorted(values)
+    return fn
+
+
+def has_go_annotations(go_annotations):
+    for annotation in go_annotations:
+        if annotation['qualifier'] in KNOWN_QUALIFIERS:
+            return str(True)
+    return str(False)
+
+
+part_of = from_annotation_qualifer('part_of')
+involved_in = from_annotation_qualifer('involved_in')
+enables = from_annotation_qualifer('enables')
+contributes_to = from_annotation_qualifer('contributes_to')
+colocalizes_with = from_annotation_qualifer('colocalizes_with')
+
+
 builder = entry([
     tag('name', as_name, keys=('upi', 'taxid')),
     tag('description', first),
@@ -496,5 +531,11 @@ builder = entry([
         fields('rfam_problems', rfam_problems, keys='rfam_status'),
         field('rfam_problem_found', problem_found, keys='rfam_status'),
         fields('tax_string', unique, keys='tax_strings'),
+        fields('involved_in', involved_in, keys='go_annotations'),
+        fields('part_of', part_of, keys='go_annotations'),
+        fields('enables', enables, keys='go_annotations'),
+        fields('contributes_to', contributes_to, keys='go_annotations'),
+        fields('colocalizes_with', colocalizes_with, keys='go_annotations'),
+        field('has_go_annotations', has_go_annotations, keys='go_annotations'),
     ]),
 ])
