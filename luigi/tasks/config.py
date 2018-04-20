@@ -289,22 +289,37 @@ class genome_mapping(luigi.Config):  # pylint: disable=C0103,R0904
     base = PathParameter(default='/tmp')
 
     def genomes(self, *args):
-        path = os.path.join(self.base, 'genomes', *args)
+        path = os.path.join(self.base, *args)
         if not os.path.exists(path):
             os.makedirs(path)
         return path
 
-    def rnacentral_fasta(self, *args):
-        return os.path.join(self.base, 'rnacentral_fasta', *args)
+    def species(self, species='homo_sapiens'):
+        path = os.path.join(self.base, species)
+        if not os.path.exists(path):
+            os.makedirs(path)
+        return path
 
-    def chunks(self, taxid, *args):
-        path = os.path.join(self.rnacentral_fasta(), '%i-split' % taxid, *args)
+    def genome(self, species='homo_sapiens'):
+        path = os.path.join(self.species(species), 'genome')
+        if not os.path.exists(path):
+            os.makedirs(path)
+        return path
+
+    def rnacentral_fasta(self, species='homo_sapiens', *args):
+        path = os.path.join(self.species(species), 'rnacentral_fasta', *args)
+        if not os.path.exists(path):
+            os.makedirs(path)
+        return path
+
+    def chunks(self, species):
+        path = os.path.join(self.rnacentral_fasta(species), 'seqkit-split')
         if not os.path.exists(path):
             os.makedirs(path)
         return path
 
     def blat_output(self, *args):
-        path = os.path.join(self.base, 'blat_output', *args)
+        path = os.path.join(self.species(*args), 'blat')
         if not os.path.exists(path):
             os.makedirs(path)
         return path
