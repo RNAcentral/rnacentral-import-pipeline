@@ -13,9 +13,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import os
 import luigi
 
 from tasks.utils.pgloader import PGLoader
+from tasks.config import genome_mapping
 from .genome_mapping_tasks import ParsePslOutput
 from .pgload_exact_matches import GenomeMappingPGLoadExactMatches
 
@@ -89,16 +91,29 @@ $$ TRUNCATE TABLE {table}; $$
 class GenomeMappingPGLoadInexactMatches(PGLoader):  # pylint: disable=R0904
     """
     """
-    taxid = luigi.IntParameter(default=559292)
+    assembly_id = luigi.Parameter()
+    species = luigi.Parameter()
+    taxid = luigi.IntParameter()
+    division = luigi.Parameter()
+
+    def control_filename(self):
+        return os.path.join(genome_mapping().species(self.species),
+                            'pgloader-inexact-matches.ctl')
 
     def requires(self):
         return [
-            ParsePslOutput(taxid=self.taxid),
-            GenomeMappingPGLoadExactMatches(taxid=self.taxid),
+            ParsePslOutput(taxid=self.taxid,
+                           species=self.species,
+                           assembly_id=self.assembly_id,
+                           division=self.division),
+            GenomeMappingPGLoadExactMatches(taxid=self.taxid,
+                           species=self.species,
+                           assembly_id=self.assembly_id,
+                           division=self.division),
         ]
 
     def control_file(self):
-        filename = ParsePslOutput(taxid=self.taxid).output()['inexact'].fn
+        filename = self.input()[0]['inexact'].path
         table = 'load_genome_mapping'
         return CONTROL_FILE.format(
             filename=filename,
