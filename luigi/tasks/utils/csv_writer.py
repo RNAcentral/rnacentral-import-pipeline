@@ -20,10 +20,10 @@ from contextlib import contextmanager
 import csv
 import luigi
 from luigi import LocalTarget
-from luigi.local_target import atomic_file
 
 from utils import snake_case
 from tasks.config import output
+from tasks.utils.files import atomic_output
 
 
 class CsvWriter(luigi.Task):
@@ -52,14 +52,7 @@ class CsvWriter(luigi.Task):
         return os.path.join(output().base, snake_case(cls.__name__))
 
     def output(self):
-        path = self.directory()
-        try:
-            os.makedirs(path)
-        except Exception as err:
-            if not os.path.exists(path):
-                raise err
-
-        return LocalTarget(os.path.join(path, 'data.csv'))
+        return LocalTarget(os.path.join(self.directory(), 'data.csv'))
 
     @contextmanager
     def writer(self):
@@ -68,9 +61,8 @@ class CsvWriter(luigi.Task):
         file, that is if the process fails for any reason there will not be a
         final file (though there may be temp files around).
         """
-        out = self.output()
-        with atomic_file(out.fn) as handle:
-            writer = csv.DictWriter(
+        with atomic_output(self.output()) as handle:
+            yield csv.DictWriter(
                 handle,
                 fieldnames=self.headers,
                 extrasaction='ignore',
@@ -79,14 +71,8 @@ class CsvWriter(luigi.Task):
                 quoting=csv.QUOTE_ALL,
                 lineterminator='\n',
             )
-            writer.writeheader()
-            yield writer
 
     def run(self):
         with self.writer() as writer:
-            for row in self.data():
-                writer.writerow(row)
-
-
-if __name__ == '__main__':
-    luigi.run(main_task_cls=CsvWriter)
+            writer.writeheader()
+            writer.writerows(self.data())

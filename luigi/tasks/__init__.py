@@ -18,8 +18,6 @@ from .rfam import RfamCSV
 from .rfam import RfamFamilies
 from .rfam import RfamSequences
 
-from .go_terms import GoTerms
-
 from .ensembl.ensembl import Ensembl
 
 from .gtrnadb import GtRNAdb
