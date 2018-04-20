@@ -42,6 +42,7 @@ PUB_MAPPING_HEADER = [
     'qualifier',
     'ontology_term_id',
     'assigned_by',
+    'evidence_code',
     'pubmed_id',
 ]
 
@@ -104,5 +105,6 @@ class GoTermAnnotation(object):
                 'qualifier': self.qualifier,
                 'ontology_term_id': self.term_id,
                 'assigned_by': self.assigned_by,
+                'evidence_code': self.evidence_code,
                 'pubmed_id': publication.pmid,
             }
