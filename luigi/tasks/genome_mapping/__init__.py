@@ -17,12 +17,12 @@ import luigi
 
 from .genome_mapping_tasks import GetFasta
 from .genome_mapping_tasks import CleanSplitFasta
-from .genome_mapping_tasks import GetChromosomes
 from .genome_mapping_tasks import BlatJob
-from .genome_mapping_tasks import ParsePslOutput
-from .genome_mapping_tasks import SpeciesBlatJob
+from .genome_mapping_tasks import ParseBlatOutput
+from .genome_mapping_tasks import SpeciesBlatJobWrapper
 from .genome_mapping_tasks import get_mapped_assemblies
 from .genome_mapping_tasks import DownloadGenome
+from .genome_mapping_tasks import GenerateOOCfile
 from .update_ensembl_assembly import RetrieveEnsemblAssemblies
 from .update_ensembl_assembly import RetrieveEnsemblGenomesAssemblies
 
@@ -32,54 +32,14 @@ from .pgload_ensembl_assembly import GenomeMappingPGLoadEnsemblAssembly
 from .pgload_ensembl_assembly import GenomeMappingPGLoadEnsemblGenomesAssembly
 
 
-class SpeciesFastaExportWrapper(luigi.WrapperTask):
-    """
-    A wrapper task to export fasta files for all species that will be mapped
-    to the reference genomes using blat.
-    """
-    def requires(self):
-        for assembly in get_mapped_assemblies():
-            yield GetFasta(taxid=assembly['taxid'])
-
-
-class SpeciesFastaCleanSplitWrapper(luigi.WrapperTask):
-    """
-    A wrapper task to keep only sequences of certain length and split fasta
-    files in chunks.
-    """
-    def requires(self):
-        for assembly in get_mapped_assemblies():
-            yield CleanSplitFasta(taxid=assembly['taxid'])
-
-
-class GetChromosomeFastaWrapper(luigi.WrapperTask):
-    """
-    A wrapper task for getting a list of all chromosome fasta files
-    that are used in parallel blat searches.
-    """
-    def requires(self):
-        for assembly in get_mapped_assemblies():
-            yield GetChromosomes(taxid=assembly['taxid'])
-
-
-class BlatJobsWrapper(luigi.WrapperTask):
-    """
-    A wrapper task for running blat searches of all split RNAcentral fasta files
-    against all chromosomes within the same species.
-    """
-    def requires(self):
-        for assembly in get_mapped_assemblies():
-            SpeciesBlatJob(taxid=assembly['taxid'])
-
-
-class ParsePslOutputWrapper(luigi.WrapperTask):
+class ParseBlatOutputWrapper(luigi.WrapperTask):
     """
     A wrapper task for parsing all blat output into tsv files that can be
     loaded into the database.
     """
     def requires(self):
         for assembly in get_mapped_assemblies():
-            yield ParsePslOutput(taxid=assembly['taxid'],
+            yield ParseBlatOutput(taxid=assembly['taxid'],
                                  species=assembly['species'],
                                  assembly_id=assembly['assembly_id'],
                                  division=assembly['division'])
@@ -96,6 +56,26 @@ class PGLoadGenomeMappingWrapper(luigi.WrapperTask):
                                  assembly_id=assembly['assembly_id'],
                                  division=assembly['division'])
 
+class DownloadGenomes(luigi.WrapperTask):
+    """
+    """
+    def requires(self):
+        for assembly in get_mapped_assemblies():
+            yield DownloadGenome(species=assembly['species'],
+                                 division=assembly['division'])
+
+
+
+class BlatWrapper(luigi.WrapperTask):
+    """
+    A wrapper task for launching all blat jobs for all species.
+    """
+    def requires(self):
+        for assembly in get_mapped_assemblies():
+            yield SpeciesBlatJobWrapper(taxid=assembly['taxid'],
+                                 species=assembly['species'],
+                                 division=assembly['division'])
+
 
 class GenomeMappingPipelineWrapper(luigi.WrapperTask):
     """
@@ -104,8 +84,4 @@ class GenomeMappingPipelineWrapper(luigi.WrapperTask):
     def requires(self):
         yield GenomeMappingPGLoadEnsemblAssembly()
         yield GenomeMappingPGLoadEnsemblGenomesAssembly()
-        yield GetChromosomeFastaWrapper()
-        yield SpeciesFastaCleanSplitWrapper()
-        yield BlatJobsWrapper()
-        yield ParsePslOutputWrapper()
         yield PGLoadGenomeMappingWrapper()
