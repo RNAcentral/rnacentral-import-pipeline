@@ -81,24 +81,23 @@ class CleanSplitFasta(luigi.Task):
         return GetFasta(taxid=self.taxid, species=self.species)
 
     def output(self):
-        chunk_fasta = os.path.join(genome_mapping().chunks(self.taxid),
-                                   '{taxid}-clean.part_*.fasta'.format(
-                                    taxid=self.taxid))
+        chunk_fasta = os.path.join(genome_mapping().chunks(self.species),
+                                   'rnacentral-clean.part_*.fasta')
         for filename in iglob(chunk_fasta):
             yield luigi.LocalTarget(filename)
 
     def run(self):
         cmd = ('seqkit seq --min-len {min_length} --max-len {max_length} '
-                   '{fasta} > {taxid}-clean.fasta && '
-               'seqkit split --quiet -f -p {chunks} --out-dir {out_dir} '
-                   '{taxid}-clean.fasta && '
-               'rm {taxid}-clean.fasta').format(
+                   '{fasta} > {temp_dir}/rnacentral-clean.fasta && '
+               'seqkit split --quiet -f -p {num_chunks} --out-dir {out_dir} '
+                   '{temp_dir}/rnacentral-clean.fasta && '
+               'rm {temp_dir}/rnacentral-clean.fasta').format(
                max_length=self.max_length,
                min_length=self.min_length,
                fasta=self.input().path,
-               chunks=self.num_chunks,
-               out_dir=genome_mapping().chunks(self.taxid),
-               taxid=self.taxid)
+               num_chunks=self.num_chunks,
+               out_dir=genome_mapping().chunks(self.species),
+               temp_dir=genome_mapping().genome(self.species))
         status = subprocess.call(cmd, shell=True)
         if status != 0:
             raise ValueError('Failed to run seqkit: %s' % cmd)
@@ -112,7 +111,7 @@ class GetAssemblyInfoJson(luigi.Task):
     division = luigi.Parameter()
 
     def output(self):
-        genome_path = genome_mapping().genomes(self.species)
+        genome_path = genome_mapping().genome(self.species)
         filename = os.path.join(genome_path, 'ensembl-assembly-info.json')
         return luigi.LocalTarget(filename)
 
@@ -157,7 +156,7 @@ class DownloadChromosome(luigi.Task):
     division = luigi.Parameter()
 
     def output(self):
-        genome_path = genome_mapping().genomes(self.species)
+        genome_path = genome_mapping().genome(self.species)
         return luigi.LocalTarget(os.path.join(genome_path, self.chromosome))
 
     def run(self):
@@ -197,7 +196,7 @@ class GenerateOOCfile(luigi.Task):
         return DownloadGenome(species=self.species, division=self.division)
 
     def output(self):
-        genome_path = genome_mapping().genomes(self.species)
+        genome_path = genome_mapping().genome(self.species)
         return luigi.LocalTarget(os.path.join(genome_path, '11.ooc'))
 
     def run(self):
@@ -206,7 +205,7 @@ class GenerateOOCfile(luigi.Task):
                    '-makeOoc={ooc}-temp -stepSize=5 -repMatch=2253 -minScore=0 && '
                'rm {path}/merged.fasta &&'
                'mv {ooc}-temp {ooc}').format(
-                    path=genome_mapping().genomes(self.species),
+                    path=genome_mapping().genome(self.species),
                     ooc=self.output().path)
         status = subprocess.call(cmd, shell=True)
         if status != 0:
@@ -314,7 +313,7 @@ class ParsePslOutput(luigi.Task):
     division = luigi.Parameter()
 
     def get_blat_output(self):
-        return genome_mapping().blat_output(str(self.taxid))
+        return genome_mapping().blat_output(self.species)
 
     def requires(self):
         return SpeciesBlatJob(taxid=self.taxid,
