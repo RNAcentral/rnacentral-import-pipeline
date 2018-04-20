@@ -35,6 +35,9 @@ class output(luigi.Config):  # pylint: disable=C0103, R0904
     base = PathParameter(default='/tmp')
     search_files = PathParameter(default='/tmp')
 
+    def to_load(self, *args):
+        return os.path.join(self.base, *args)
+
 
 class db(luigi.Config):  # pylint: disable=C0103, R0904
     """
@@ -96,8 +99,11 @@ class rfam(luigi.Config):  # pylint: disable=C0103, R0904
         This will produce an iterable of all JSON files that are in the
         json_folder.
         """
-
         return iglob(os.path.join(self.json_folder, '*.json'))
+
+    @property
+    def go_terms(self):
+        return ontologies().to_load('rfam_go_terms.csv')
 
 
 class noncode(luigi.Config):  # pylint: disable=C0103, R0904
@@ -301,3 +307,44 @@ class refseq(luigi.Config):  # pylint: disable=C0103,R0904
 
     def input_file(self, *args):
         return os.path.join(output().base, 'refseq', *args)
+
+
+class ontologies(object):
+    def to_load(self, *args):
+        return output().to_load('ontologies', *args)
+
+
+class publications(object):
+    def to_load(self, *args):
+        return output().to_load('publications', *args)
+
+
+class quickgo(luigi.Config):
+    data_file = luigi.Parameter(default='/ebi/ftp/pub/contrib/goa/goa_rna_all.gpa.gz')
+
+    def base(self, *args):
+        return os.path.join(output().base, 'quickgo', *args)
+
+    @property
+    def local_copy(self):
+        return self.base('raw', 'annotations.gpa.gz')
+
+    @property
+    def csv(self):
+        return output().to_load('quickgo', 'annotations.csv')
+
+    @property
+    def go_terms(self):
+        return ontologies().to_load('quickgo_go_terms.csv')
+
+    @property
+    def eco_terms(self):
+        return ontologies().to_load('quickgo_eco_terms.csv')
+
+    @property
+    def publications(self):
+        return publications().to_load('quickgo_publications.csv')
+
+    @property
+    def publication_mappings(self):
+        return output().to_load('quickgo', 'publication_mappings.csv')
