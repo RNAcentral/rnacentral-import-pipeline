@@ -330,7 +330,7 @@ class SpeciesBlatJob(luigi.Task):
         return random.shuffle(psl_files)
 
 
-class ParsePslOutput(luigi.Task):
+class ParseBlatOutput(luigi.Task):
     """
     Run a shell script to transform psl output produced by blat into tsv files
     that can be loaded into the database.

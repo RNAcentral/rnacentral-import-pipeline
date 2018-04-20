@@ -18,7 +18,7 @@ import luigi
 
 from tasks.utils.pgloader import PGLoader
 from tasks.config import genome_mapping
-from .genome_mapping_tasks import ParsePslOutput
+from .genome_mapping_tasks import ParseBlatOutput
 from .pgload_exact_matches import GenomeMappingPGLoadExactMatches
 
 
@@ -102,7 +102,7 @@ class GenomeMappingPGLoadInexactMatches(PGLoader):  # pylint: disable=R0904
 
     def requires(self):
         return [
-            ParsePslOutput(taxid=self.taxid,
+            ParseBlatOutput(taxid=self.taxid,
                            species=self.species,
                            assembly_id=self.assembly_id,
                            division=self.division),

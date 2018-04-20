@@ -18,7 +18,7 @@ import os
 import luigi
 
 from tasks.utils.pgloader import PGLoader
-from .genome_mapping_tasks import ParsePslOutput
+from .genome_mapping_tasks import ParseBlatOutput
 from tasks.config import genome_mapping
 
 
@@ -98,7 +98,7 @@ class GenomeMappingPGLoadExactMatches(PGLoader):  # pylint: disable=R0904
                             'pgloader-exact-matches.ctl')
 
     def requires(self):
-        return ParsePslOutput(taxid=self.taxid,
+        return ParseBlatOutput(taxid=self.taxid,
                               species=self.species,
                               assembly_id=self.assembly_id,
                               division=self.division)
