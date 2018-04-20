@@ -38,7 +38,8 @@ def get_mapped_assemblies():
     """
     psql = PsqlWrapper(db())
     sql = """
-    select assembly_id, assembly_ucsc, taxid, ensembl_url as species
+    select assembly_id, assembly_ucsc, taxid, ensembl_url as species,
+           division, subdomain
     from ensembl_assembly
     where blat_mapping = 1
     """
@@ -49,46 +50,16 @@ def get_mapped_assemblies():
     return assemblies
 
 
-def get_species_name(taxid):
-    """
-    Get folder name (same as Ensembl url) based on taxid.
-    """
-    psql = PsqlWrapper(db())
-    sql = """
-    select ensembl_url as species_name
-    from ensembl_assembly
-    where
-    taxid = {taxid}""".format(taxid=taxid)
-    genomes = psql.copy_to_iterable(sql)
-    for genome in genomes:
-        species_name = genome['species_name'].lower()
-    return species_name
-
-
-def get_assembly_id(taxid):
-    """
-    Get assembly id based on taxid.
-    """
-    psql = PsqlWrapper(db())
-    sql = """
-    select assembly_id
-    from ensembl_assembly
-    where
-    taxid = {taxid}""".format(taxid=taxid)
-    genomes = psql.copy_to_iterable(sql)
-    for genome in genomes:
-        assembly_id = genome['assembly_id'].lower()
-    return assembly_id
-
-
 class GetFasta(FastaExportBase):
     """
     Export RNAcentral sequences for a particular species to a FASTA file.
     """
-    taxid = luigi.IntParameter(default=559292)
+    taxid = luigi.IntParameter()
+    species = luigi.Parameter()
 
     def output(self):
-        return luigi.LocalTarget(genome_mapping().rnacentral_fasta('%i.fa' % self.taxid))
+        filename = os.path.join(genome_mapping().rnacentral_fasta(self.species), 'rnacentral.fa')
+        return luigi.LocalTarget(filename)
 
     def records(self):
         return gm.export_rnacentral_fasta(db(), taxid=self.taxid)
@@ -100,13 +71,14 @@ class CleanSplitFasta(luigi.Task):
     speed up blat searches. Filter out sequences that are too short or too long
     to be mapped with blat.
     """
-    taxid = luigi.IntParameter(default=559292)
+    taxid = luigi.IntParameter()
+    species = luigi.Parameter()
     num_chunks = luigi.IntParameter(default=50)
     min_length = luigi.IntParameter(default=20)
     max_length = luigi.IntParameter(default=100000)
 
     def requires(self):
-        return GetFasta(taxid=self.taxid)
+        return GetFasta(taxid=self.taxid, species=self.species)
 
     def output(self):
         chunk_fasta = os.path.join(genome_mapping().chunks(self.taxid),
@@ -136,7 +108,8 @@ class GetAssemblyInfoJson(luigi.Task):
     """
     Download assembly description from Ensembl to get a list of chromosomes.
     """
-    species = luigi.Parameter(default='homo_sapiens')
+    species = luigi.Parameter()
+    division = luigi.Parameter()
 
     def output(self):
         genome_path = genome_mapping().genomes(self.species)
@@ -156,12 +129,13 @@ class GetChromosomeList(luigi.Task):
     Get a list of chromosome files based on Ensembl data.
     Example: Canis_familiaris.CanFam3.1.dna.chromosome.1.fa
     """
-    species = luigi.Parameter(default='homo_sapiens')
+    species = luigi.Parameter()
+    division = luigi.Parameter()
 
     def output(self):
-        if not GetAssemblyInfoJson(species=self.species).complete():
-            GetAssemblyInfoJson(species=self.species).run()
-        ensembl_json = GetAssemblyInfoJson(species=self.species).output().path
+        if not GetAssemblyInfoJson(species=self.species, division=self.division).complete():
+            GetAssemblyInfoJson(species=self.species, division=self.division).run()
+        ensembl_json = GetAssemblyInfoJson(species=self.species, division=self.division).output().path
         data = json.load(open(ensembl_json, 'r'))
         chromosomes = []
         for chromosome in data['karyotype']:
@@ -180,6 +154,7 @@ class DownloadChromosome(luigi.Task):
     """
     species = luigi.Parameter()
     chromosome = luigi.Parameter()
+    division = luigi.Parameter()
 
     def output(self):
         genome_path = genome_mapping().genomes(self.species)
@@ -201,22 +176,25 @@ class DownloadGenome(luigi.WrapperTask):
     """
     A wrapper task to download all chromosomes in a genome.
     """
-    species = luigi.Parameter(default='homo_sapiens')
+    species = luigi.Parameter()
+    division = luigi.Parameter()
 
     def requires(self):
-        for chromosome in GetChromosomeList(species=self.species).output():
+        for chromosome in GetChromosomeList(species=self.species, division=self.division).output():
             yield DownloadChromosome(species=self.species,
-                                     chromosome=chromosome)
+                                     chromosome=chromosome,
+                                     division=self.division)
 
 
 class GenerateOOCfile(luigi.Task):
     """
     Generate an ooc file to speed up blat searches.
     """
-    species = luigi.Parameter(default='homo_sapiens')
+    species = luigi.Parameter()
+    division = luigi.Parameter()
 
     def requires(self):
-        return DownloadGenome(species=self.species)
+        return DownloadGenome(species=self.species, division=self.division)
 
     def output(self):
         genome_path = genome_mapping().genomes(self.species)
@@ -235,28 +213,20 @@ class GenerateOOCfile(luigi.Task):
             raise ValueError('Failed to run blat ooc: %s' % cmd)
 
 
-class GetChromosomes(luigi.WrapperTask):
-    """
-    Get a list of fasta files with chromosome sequences for a particular genome.
-    """
-    taxid = luigi.IntParameter(default=559292)
-
-    def requires(self):
-        return DownloadGenome(species=get_species_name(self.taxid))
-
-
 class BlatJob(luigi.Task):
     """
     Run blat to map a fasta file with RNAcentral sequences to a chromosome.
     """
-    taxid = luigi.IntParameter(default=559292)
+    taxid = luigi.IntParameter()
+    species = luigi.Parameter()
     fasta_input = luigi.Parameter()
     chromosome = luigi.Parameter()
+    division = luigi.Parameter()
 
     def requires(self):
         return {
-            'fasta': CleanSplitFasta(taxid=self.taxid),
-            'ooc': GenerateOOCfile(species=get_species_name(self.taxid)),
+            'fasta': CleanSplitFasta(taxid=self.taxid, species=self.species),
+            'ooc': GenerateOOCfile(species=self.species, division=self.division),
         }
 
     def run(self):
@@ -276,13 +246,15 @@ class BlatJob(luigi.Task):
     def output(self):
         _, fasta_name = os.path.split(self.fasta_input)
         _, chromosome_name = os.path.split(self.chromosome)
-        psl_output = genome_mapping().blat_output(str(self.taxid))
+        psl_output = genome_mapping().blat_output(self.species)
         psl_filename = '%s-%s.psl' % (chromosome_name, fasta_name)
         return luigi.LocalTarget(os.path.join(psl_output, psl_filename))
 
 
 class SpeciesBlatJobWrapper(luigi.WrapperTask):
-    taxid = luigi.IntParameter(default=7955)
+    taxid = luigi.IntParameter()
+    species = luigi.Parameter()
+    division = luigi.Parameter()
 
     def requires(self):
         species=get_species_name(self.taxid)
@@ -295,7 +267,9 @@ class SpeciesBlatJobWrapper(luigi.WrapperTask):
 
 
 class SpeciesBlatJob(luigi.Task):
-    taxid = luigi.IntParameter(default=559292)
+    taxid = luigi.IntParameter()
+    species = luigi.Parameter()
+    division = luigi.Parameter()
 
     def requires(self):
         chromosomes = []
@@ -313,6 +287,8 @@ class SpeciesBlatJob(luigi.Task):
             for chromosome in self.input()['chromosomes']:
                 yield BlatJob(fasta_input=chunk.path,
                               chromosome=chromosome.path,
+                              species=self.species,
+                              division=self.division,
                               taxid=self.taxid)
 
     def output(self):
@@ -321,6 +297,8 @@ class SpeciesBlatJob(luigi.Task):
             for chromosome in self.input()['chromosomes']:
                 psl_files.append(BlatJob(fasta_input=chunk.path,
                                          chromosome=chromosome.path,
+                                         species=self.species,
+                                         division=self.division,
                                          taxid=self.taxid).output())
         return random.shuffle(psl_files)
 
@@ -330,13 +308,18 @@ class ParsePslOutput(luigi.Task):
     Run a shell script to transform psl output produced by blat into tsv files
     that can be loaded into the database.
     """
-    taxid = luigi.IntParameter(default=559292)
+    assembly_id = luigi.Parameter()
+    species = luigi.Parameter()
+    taxid = luigi.IntParameter()
+    division = luigi.Parameter()
 
     def get_blat_output(self):
         return genome_mapping().blat_output(str(self.taxid))
 
     def requires(self):
-        return SpeciesBlatJob(taxid=self.taxid)
+        return SpeciesBlatJob(taxid=self.taxid,
+                              species=self.species,
+                              division=self.division)
 
     def output(self):
         return {
