@@ -1,3 +1,0 @@
-[submodule "ensembl-hive"]
-	path = ensembl-hive
-	url = https://github.com/Ensembl/ensembl-hive.git
