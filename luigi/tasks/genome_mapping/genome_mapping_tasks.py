@@ -283,12 +283,13 @@ class SpeciesBlatJobWrapper(luigi.WrapperTask):
     division = luigi.Parameter()
 
     def requires(self):
-        species=get_species_name(self.taxid)
-        yield CleanSplitFasta(taxid=self.taxid)
-        for chunk in CleanSplitFasta(taxid=self.taxid).output():
-            for chromosome in GetChromosomeList(species=species).output():
+        yield CleanSplitFasta(taxid=self.taxid, species=self.species)
+        for chunk in CleanSplitFasta(taxid=self.taxid, species=self.species).output():
+            for chromosome in GetChromosomeList(species=self.species, division=self.division).output():
                 yield BlatJob(fasta_input=chunk.path,
-                              chromosome=DownloadChromosome(species=species, chromosome=chromosome).output().path,
+                              species=self.species,
+                              division=self.division,
+                              chromosome=DownloadChromosome(species=self.species, chromosome=chromosome, division=self.division).output().path,
                               taxid=self.taxid)
 
 
@@ -299,12 +300,12 @@ class SpeciesBlatJob(luigi.Task):
 
     def requires(self):
         chromosomes = []
-        species = get_species_name(self.taxid)
-        for chromosome in GetChromosomeList(species=species).output():
-            chromosomes.append(DownloadChromosome(species=species,
-                                                  chromosome=chromosome))
+        for chromosome in GetChromosomeList(species=self.species, division=self.division).output():
+            chromosomes.append(DownloadChromosome(species=self.species,
+                                                  chromosome=chromosome,
+                                                  division=self.division))
         return {
-            'chunks': CleanSplitFasta(taxid=self.taxid),
+            'chunks': CleanSplitFasta(species=self.species, taxid=self.taxid),
             'chromosomes': chromosomes,
         }
 
