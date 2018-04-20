@@ -79,7 +79,10 @@ class ParsePslOutputWrapper(luigi.WrapperTask):
     """
     def requires(self):
         for assembly in get_mapped_assemblies():
-            yield ParsePslOutput(taxid=assembly['taxid'])
+            yield ParsePslOutput(taxid=assembly['taxid'],
+                                 species=assembly['species'],
+                                 assembly_id=assembly['assembly_id'],
+                                 division=assembly['division'])
 
 
 class PGLoadGenomeMappingWrapper(luigi.WrapperTask):
@@ -88,8 +91,10 @@ class PGLoadGenomeMappingWrapper(luigi.WrapperTask):
     """
     def requires(self):
         for assembly in get_mapped_assemblies():
-            yield GenomeMappingPGLoadExactMatches(taxid=assembly['taxid'])
-            yield GenomeMappingPGLoadInexactMatches(taxid=assembly['taxid'])
+            yield GenomeMappingPGLoadInexactMatches(taxid=assembly['taxid'],
+                                 species=assembly['species'],
+                                 assembly_id=assembly['assembly_id'],
+                                 division=assembly['division'])
 
 
 class GenomeMappingPipelineWrapper(luigi.WrapperTask):
