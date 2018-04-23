@@ -72,6 +72,7 @@ def test_can_correctly_parse_data():
             'complement': False,
             'primary_end': 49485,
             'primary_start': 46771,
+            "assembly_id": "R6",
         }],
         'rna_type': 'SO:0000252',
         'url': 'http://flybase.org/reports/FBtr0346876.html',
@@ -155,10 +156,10 @@ def test_can_correctly_parse_lncipedia_data():
             "TTAAATC"
         ),
         exons=[
-            dat.Exon(chromosome='chr16', primary_start=74226290, primary_end=74226625, complement=True),
-            dat.Exon(chromosome='chr16', primary_start=74239803, primary_end=74240064, complement=True),
-            dat.Exon(chromosome='chr16', primary_start=74244204, primary_end=74244404, complement=True),
-            dat.Exon(chromosome='chr16', primary_start=74249250, primary_end=74249420, complement=True),
+            dat.Exon(chromosome='chr16', primary_start=74226290, primary_end=74226625, assembly_id='GRCh37', complement=True),
+            dat.Exon(chromosome='chr16', primary_start=74239803, primary_end=74240064, assembly_id='GRCh37', complement=True),
+            dat.Exon(chromosome='chr16', primary_start=74244204, primary_end=74244404, assembly_id='GRCh37', complement=True),
+            dat.Exon(chromosome='chr16', primary_start=74249250, primary_end=74249420, assembly_id='GRCh37', complement=True),
         ],
         rna_type='SO:0001877',
         url='https://lncipedia.org/db/transcript/lnc-CLEC18B-3:5',
