@@ -197,7 +197,7 @@ class DownloadChromosome(luigi.Task):
     def run(self):
         cmd = ('rm -f {path}/{chromosome}.gz && '
                'wget {url} -O {path}/{chromosome}.gz && '
-               'gunzip -f {path}/*.gz'
+               'gunzip -f {path}/{chromosome}.gz'
                ).format(path=genome_mapping().genome(self.species),
                         chromosome=self.chromosome,
                         species=self.species,
