@@ -78,10 +78,6 @@ $$ CREATE TABLE rnacen.{table} (
 	CONSTRAINT {table}_pkey PRIMARY KEY (assembly_id)
 ); $$
 AFTER LOAD DO
-$$ DELETE FROM {permanent_table}
-WHERE
-assembly_id IN (SELECT assembly_id from {table});
-$$,
 $$ INSERT INTO {permanent_table} (
         assembly_id,
         assembly_full_name,
@@ -111,7 +107,21 @@ $$ INSERT INTO {permanent_table} (
         example_end,
         example_start,
         subdomain
-	FROM {table});
+	FROM {table})
+    ON CONFLICT (assembly_id) DO UPDATE
+    SET
+        assembly_full_name = excluded.assembly_full_name,
+        gca_accession = excluded.gca_accession,
+        assembly_ucsc = excluded.assembly_ucsc,
+        common_name = excluded.common_name,
+        taxid = excluded.taxid,
+        ensembl_url = excluded.ensembl_url,
+        division = excluded.division,
+        blat_mapping = excluded.blat_mapping,
+        example_chromosome = excluded.example_chromosome,
+        example_end = excluded.example_end,
+        example_start = excluded.example_start,
+        subdomain = excluded.subdomain;
 $$,
 $$ DROP TABLE {table}; $$
 ;
