@@ -143,6 +143,7 @@ class Exon(object):
     chromosome = attr.ib(validator=is_a(basestring))
     primary_start = attr.ib(validator=is_a(int))
     primary_end = attr.ib(validator=is_a(int))
+    assembly_id = attr.ib(validator=is_a(basestring))
     complement = optionally(bool)
 
     @property
@@ -192,7 +193,6 @@ class Reference(object):
     files.
     """
 
-    accession = attr.ib(validator=is_a(basestring))
     authors = attr.ib(validator=is_a(basestring), convert=optional_utf8)
     location = attr.ib(validator=is_a(basestring))
     title = attr.ib(
