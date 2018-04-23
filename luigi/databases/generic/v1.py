@@ -17,6 +17,7 @@ import collections as coll
 
 from databases import data
 from databases.helpers import phylogeny as phy
+from databases.helpers import publications as pub
 
 
 def secondary_structure(record):
@@ -53,31 +54,33 @@ def taxid(entry):
     return int(tid)
 
 
-def as_location(location):
-    exons = []
-    for exon in location['exons']:
-        complement = None
-        if exon['strand'] == '+':
-            complement = False
-        elif exon['strand'] == '-':
-            complement = True
-        else:
-            raise ValueError("Invalid strand %s" % exon)
+def as_exon(assembly, exon):
+    """
+    Turn a raw exon into one we can store in the rnc_coordinates table.
+    """
 
-        exons.append(data.Exon(
-            chromosome=exon['chromosome'],
-            primary_start=int(exon['startPosition']),
-            primary_end=int(exon['endPosition']),
-            complement=complement,
-        ))
-    return exons
+    complement = None
+    if exon['strand'] == '+':
+        complement = False
+    elif exon['strand'] == '-':
+        complement = True
+    else:
+        raise ValueError("Invalid strand %s" % exon)
+
+    return data.Exon(
+        chromosome=exon['chromosome'],
+        primary_start=int(exon['startPosition']),
+        primary_end=int(exon['endPosition']),
+        assembly_id=assembly,
+        complement=complement,
+    )
 
 
-def locations(locs):
+def exons(genome_location):
     """
     Get all genomic locations this record is in.
     """
-    return [as_location(location) for location in locs]
+    return [as_exon(genome_location['assembly'], e) for e in genome_location['exons']]
 
 
 def gene_info(_):
@@ -91,9 +94,7 @@ def as_reference(ref):
     """
     Turn a raw reference (just a pmid) into a reference we can import.
     """
-    return data.Reference(
-        pmid=ref['pubMedId'],
-    )
+    return pub.reference(pmid=ref['pubMedId'])
 
 
 def references(record):
@@ -120,18 +121,32 @@ def external_id(record):
 
 
 def species(ncrna):
+    """
+    Get the specis information using the taxid.
+    """
     return phy.species(taxid(ncrna))
 
 
 def common_name(ncrna):
+    """
+    Get the common name using the taxid.
+    """
     return phy.common_name(taxid(ncrna))
 
 
 def lineage(ncrna):
+    """
+    Look up the lineage using the taxid.
+    """
     return phy.lineage(taxid(ncrna))
 
 
 def add_organism_preifx(ncrna, suffix):
+    """
+    Add a the 'species (common name)' prefix to a generic suffix. This is
+    commonly used to build nice descriptions.
+    """
+
     prefix = species(ncrna)
     name = common_name(ncrna)
     if name:
@@ -152,20 +167,26 @@ def description(ncrna):
         return add_organism_preifx(ncrna, ncrna['name'])
 
     if 'gene' in ncrna:
-        gene = ncrna['gene']
-        if 'name' in gene:
-            return add_organism_preifx(ncrna, gene['name'])
-        if 'symbol' in gene:
-            return add_organism_preifx(ncrna, gene['symbol'])
+        raw_gene = ncrna['gene']
+        if 'name' in raw_gene:
+            return add_organism_preifx(ncrna, raw_gene['name'])
+        if 'symbol' in raw_gene:
+            return add_organism_preifx(ncrna, raw_gene['symbol'])
 
     raise ValueError("Could not create a name for %s" % ncrna)
 
 
 def gene_synonyms(ncrna):
+    """
+    Find all gene synonyms, if they exist.
+    """
     return ncrna.get('gene', {}).get('synonyms', [])
 
 
 def gene(ncrna):
+    """
+    Get the id of the gene, if possible.
+    """
     gene_id = ncrna.get('gene', {}).get('geneId', None)
     if gene_id:
         return gene_id.split(':', 1)[1]
@@ -173,33 +194,41 @@ def gene(ncrna):
 
 
 def locus_tag(ncrna):
+    """
+    Get the locus tag of the gene, if present.
+    """
     return ncrna.get('gene', {}).get('locusTag', None)
 
 
-def parent_accession(ncrna):
-    locations = ncrna.get('genomeLocations', [])
-    if not locations:
-        return None
+def parent_accession(location):
+    """
+    Find the parent accession. This will be the INSDC_accession of the first
+    exon in this location.
+    """
 
-    first_exon = locations[0]['exons'][0]
+    first_exon = location['exons'][0]
     if 'INSDC_accession' not in first_exon:
         return None
     return first_exon['INSDC_accession'].split('.')[0]
 
 
-def as_entry(database, exons, record):
+def as_entry(database, p_accession, parsed_exons, record):
+    """
+    Generate an Entry to import based off the database, exons and raw record.
+    """
+
     return data.Entry(
         primary_id=external_id(record),
         accession=record['primaryId'],
         ncbi_tax_id=taxid(record),
         database=database,
         sequence=record['sequence'],
-        exons=exons,
+        exons=parsed_exons,
         rna_type=record['soTermId'],
         url=record['url'],
         description=description(record),
         seq_version=record.get('version', '1'),
-        parent_accession=parent_accession(record),
+        parent_accession=p_accession,
         xref_data=xrefs(record),
         species=species(record),
         lineage=lineage(record),
@@ -223,5 +252,7 @@ def parse(raw):
 
     database = raw['metaData']['dataProvider']
     for record in raw['data']:
-        for exons in locations(record['genomeLocations']):
-            yield as_entry(database, exons, record)
+        for location in record['genomeLocations']:
+            parsed_exons = exons(location)
+            p_accession = parent_accession(location)
+            yield as_entry(database, p_accession, parsed_exons, record)
