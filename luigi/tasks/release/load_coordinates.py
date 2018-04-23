@@ -29,6 +29,7 @@ HAVING FIELDS (
     primary_accession,
     local_start,
     local_end,
+    assembly_id,
     strand
 )
 INTO {db_url}
@@ -37,6 +38,7 @@ TARGET COLUMNS (
     primary_accession,
     local_start,
     local_end,
+    assembly_id,
     strand
 )
 
