@@ -63,7 +63,7 @@ def get_ensembl_genomes_connection():
     )
 
 
-def get_ensembl_databases(cursor, ensembl_release):
+def get_ensembl_databases(cursor, ensembl_release_id):
     """
     Get a list of all available databases.
     Return a list of the most recent core databases, for example:
@@ -197,7 +197,7 @@ class RetrieveEnsemblAssemblies(luigi.Task):
     """
     Store Ensembl assemblies in a file.
     """
-    ensembl_release = luigi.IntParameter(default=92)
+    ensembl_release_id = luigi.IntParameter(default=92)
 
     def output(self):
         filename = 'ensembl_%i.tsv' % self.ensembl_release_id
@@ -208,7 +208,7 @@ class RetrieveEnsemblAssemblies(luigi.Task):
         connection = get_ensembl_connection()
         try:
             with connection.cursor() as cursor:
-                databases = get_ensembl_databases(cursor, self.ensembl_release)
+                databases = get_ensembl_databases(cursor, self.ensembl_release_id)
                 for database in databases:
                     data.append(get_ensembl_metadata(cursor, database))
         finally:
