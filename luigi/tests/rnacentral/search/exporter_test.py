@@ -353,6 +353,18 @@ def test_output_validates_according_to_schema():
         exporter.validate(out.name)
 
 
+def test_produces_correct_count():
+    entries = exporter.range(db(), 1, 100)
+    with tempfile.NamedTemporaryFile() as out:
+        exporter.write(out, entries)
+        out.flush()
+        with open(out.name, 'r') as raw:
+            parsed = ET.parse(raw)
+            count = parsed.find('./entry_count')
+            assert count.text == '105'
+
+
+
 @pytest.mark.parametrize('upi,ans', [  # pylint: disable=E1101
     ('URS0000759CF4_9606', 9606),
     ('URS0000724ACA_7955', 7955),
