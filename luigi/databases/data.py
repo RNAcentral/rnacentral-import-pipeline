@@ -240,8 +240,9 @@ class Entry(object):
     sequence = attr.ib(validator=is_a(basestring))
     exons = attr.ib(validator=is_a(list))
     rna_type = attr.ib(
-        validator=matches_pattern(SO_PATTERN),
-        convert=as_so_term,
+        validator=is_a(basestring),
+        # validator=matches_pattern(SO_PATTERN),
+        # convert=as_so_term,
     )
     url = attr.ib(validator=is_a(basestring))
     seq_version = attr.ib(
@@ -308,6 +309,25 @@ class Entry(object):
         Return a JSON encoded dictionary representing the note data.
         """
         return json.dumps(self.note_data)
+
+     @property
+     def feature_type(self):
+         """
+         Return the feature for the RNA type.
+         """
+         if self.rna_type in FEATURE_TYPE_RNAS:
+             return self.rna_type
+         return 'ncRNA'
+
+     @property
+     def ncrna_class(self):
+         """
+         The ncRNA class. If the feature type is not ncRNA this this will be the
+         empty string.
+         """
+         if self.feature_type != 'ncRNA':
+             return None
+         return self.rna_type
 
     @property
     def gene_synonym(self):
