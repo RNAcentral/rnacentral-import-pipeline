@@ -145,6 +145,27 @@ class GetChromosomeList(luigi.Task):
     species = luigi.Parameter()
     division = luigi.Parameter()
 
+    def get_sequence_type(self, ensembl_json, sequence_name):
+        """
+        Identify if the top level region from the karyotype is a group,
+        scaffold, or chromosome.
+        """
+        if self.species == 'triticum_aestivum':
+            return 'scaffold'
+        for region in ensembl_json['top_level_region']:
+            if region['name'] == sequence_name:
+                return region['coord_system']
+        return 'chromosome'
+
+    def get_assembly_name(self, ensembl_json):
+        """
+        Get assembly name that is used in the FTP filename.
+        """
+        if self.species == 'arabidopsis_lyrata':
+            return ensembl_json['assembly_name']
+        else:
+            return ensembl_json['default_coord_system_version']
+
     def output(self):
         if not GetAssemblyInfoJson(species=self.species, division=self.division).complete():
             GetAssemblyInfoJson(species=self.species, division=self.division).run()
@@ -155,13 +176,14 @@ class GetChromosomeList(luigi.Task):
             if region['name'] not in data['karyotype']:
                 chromosomes.append('{species}.{assembly}.dna.nonchromosomal.fa'.format(
                                     species=self.species.capitalize(),
-                                    assembly=data['default_coord_system_version']))
+                                    assembly=self.get_assembly_name(data)))
                 break
         for chromosome in data['karyotype']:
-            filename = '{species}.{assembly}.dna.chromosome.{chromosome}.fa'.format(
+            filename = '{species}.{assembly}.dna.{sequence_type}.{chromosome}.fa'.format(
                 species=self.species.capitalize(),
-                assembly=data['default_coord_system_version'],
-                chromosome=chromosome
+                assembly=self.get_assembly_name(data),
+                chromosome=chromosome,
+                sequence_type=self.get_sequence_type(data, chromosome)
             )
             chromosomes.append(filename)
         return chromosomes
