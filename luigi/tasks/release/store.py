@@ -98,6 +98,7 @@ class UpdateCoordinates(DatabaseUpdater):  # pylint: disable=R0904
       local_start,
       local_end,
       strand,
+      assembly_id,
       id
     )
     SELECT
@@ -106,9 +107,10 @@ class UpdateCoordinates(DatabaseUpdater):  # pylint: disable=R0904
       local_start,
       local_end,
       strand,
+      assembly_id,
       NEXTVAL('rnc_coordinates_pk_seq')
     FROM rnacen.load_rnc_coordinates as t2
-      ON CONFLICT (accession, primary_accession, local_start, local_end)
+      ON CONFLICT (accession, primary_accession, local_start, local_end, assembly_id)
       DO NOTHING
     """
 
