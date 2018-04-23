@@ -21,7 +21,7 @@ import itertools as it
 import collections as coll
 
 from xml.sax import saxutils as sax
-import xml.etree.cElementTree as ET
+from lxml import etree
 
 
 GENERIC_TYPES = set(['misc_RNA', 'misc RNA', 'other'])
@@ -65,7 +65,7 @@ def create_tag(root, name, value, attrib={}):
         attr.update(value.get('attrib', {}))
         text = value.get('text', None)
 
-    element = ET.SubElement(root, name, attr)
+    element = etree.SubElement(root, name, attr)
     if text:
 
         if not isinstance(text, basestring):
@@ -159,7 +159,7 @@ def entry(spec):
             upi=data['upi'],
             taxid=data['taxid'],
         )
-        root = ET.Element('entry', {'id': entry_id})
+        root = etree.Element('entry', {'id': entry_id})
         for func in spec:
             func(root, data)
         return root
@@ -168,7 +168,7 @@ def entry(spec):
 
 def section(name, spec):
     def fn(root, data):
-        element = ET.SubElement(root, name)
+        element = etree.SubElement(root, name)
         for func in spec:
             func(element, data)
     return fn
