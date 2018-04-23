@@ -110,8 +110,11 @@ class UpdateCoordinates(DatabaseUpdater):  # pylint: disable=R0904
       assembly_id,
       NEXTVAL('rnc_coordinates_pk_seq')
     FROM rnacen.load_rnc_coordinates as t2
-      ON CONFLICT (accession, primary_accession, local_start, local_end, assembly_id)
-      DO NOTHING
+    WHERE
+      t2.name is not null
+      and t2.assembly_id is not null
+    ON CONFLICT (accession, primary_accession, local_start, local_end, assembly_id)
+    DO NOTHING
     """
 
     def run(self):
