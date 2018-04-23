@@ -15,6 +15,7 @@ limitations under the License.
 
 import io
 import csv
+import os
 
 import luigi
 import pymysql.cursors
@@ -199,8 +200,8 @@ class RetrieveEnsemblAssemblies(luigi.Task):
     ensembl_release = luigi.IntParameter(default=92)
 
     def output(self):
-        filename = 'ensembl_%i.tsv' % self.ensembl_release
-        return luigi.LocalTarget(genome_mapping().genomes(filename))
+        filename = 'ensembl_%i.tsv' % self.ensembl_release_id
+        return luigi.LocalTarget(os.path.join(genome_mapping().genomes(), filename))
 
     def run(self):
         data = []
@@ -212,7 +213,7 @@ class RetrieveEnsemblAssemblies(luigi.Task):
                     data.append(get_ensembl_metadata(cursor, database))
         finally:
             connection.close()
-        store_ensembl_metadata(data, self.output().fn)
+        store_ensembl_metadata(data, self.output().path)
 
 
 class RetrieveEnsemblGenomesAssemblies(luigi.Task):
@@ -223,7 +224,7 @@ class RetrieveEnsemblGenomesAssemblies(luigi.Task):
 
     def output(self):
         filename = 'ensembl_genomes_%i.tsv' % self.ensembl_genomes_release
-        return luigi.LocalTarget(genome_mapping().genomes(filename))
+        return luigi.LocalTarget(os.path.join(genome_mapping().genomes(), filename))
 
     def run(self):
         data = []
@@ -235,4 +236,4 @@ class RetrieveEnsemblGenomesAssemblies(luigi.Task):
                     data.append(get_ensembl_metadata(cursor, database))
         finally:
             connection.close()
-        store_ensembl_metadata(data, self.output().fn)
+        store_ensembl_metadata(data, self.output().path)
