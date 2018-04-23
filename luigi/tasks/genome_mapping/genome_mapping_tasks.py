@@ -80,10 +80,19 @@ class CleanSplitFasta(luigi.Task):
         return GetFasta(taxid=self.taxid, species=self.species)
 
     def output(self):
+        prefix = 'rnacentral-clean.part_'
         chunk_fasta = os.path.join(genome_mapping().chunks(self.species),
-                                   'rnacentral-clean.part_*.fasta')
+                                   '{}*.fasta'.format(prefix))
+        fasta_files = []
         for filename in iglob(chunk_fasta):
-            yield luigi.LocalTarget(filename)
+            fasta_files.append(luigi.LocalTarget(filename))
+        if not fasta_files:  # no sequences in RNAcentral
+            filename = os.path.join(genome_mapping().chunks(self.species),
+                                    '{}empty-file.fasta'.format(prefix))
+            with open(filename, 'w') as f:
+                f.write(' ')
+            fasta_files.append(luigi.LocalTarget(filename))
+        return fasta_files
 
     def run(self):
         cmd = ('seqkit seq --min-len {min_length} --max-len {max_length} '
@@ -256,6 +265,10 @@ class BlatJob(luigi.Task):
         }
 
     def run(self):
+        if 'empty-file' in self.fasta_input:
+            with self.output().open('w') as psl_output:
+                psl_output.write(' ')
+            return
         genome_path, _ = os.path.split(self.chromosome)
         cmd = ('blat -ooc={ooc} -noHead -q=rna -stepSize=5 '
                '-repMatch=2253 -minScore=0 -minIdentity=95 '
