@@ -74,12 +74,15 @@ def get_ensembl_databases(cursor, ensembl_release_id):
     cursor.execute("show databases")
     for result in cursor.fetchall():
         database = result['Database']
-        if database.count('_') != 4 or 'mirror' in database:
+        if 'mirror' in database:
             continue
-        _, _, database_type, release, _ = database.split('_')
-        if release != str(ensembl_release):
-            continue
-        if database_type == 'core':
+        if 'mus_musculus' in database and database.count('_') != 4:
+            continue  # skip mouse strains Mouse 129S1/SvImJ
+        if 'chok1gs' in database:
+            continue  # skip golden hamster genome (same taxid as CriGri)
+        if 'female' in database:
+            continue  # skip female naked mole rat genome
+        if '_%i_' % ensembl_release_id in database and '_core_' in database:
             databases.append(database)
     return databases
 
