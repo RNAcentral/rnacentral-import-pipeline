@@ -161,7 +161,7 @@ class GetChromosomeList(luigi.Task):
         """
         Get assembly name that is used in the FTP filename.
         """
-        if self.species == 'arabidopsis_lyrata':
+        if self.species in ['arabidopsis_lyrata', 'phaeodactylum_tricornutum']:
             return ensembl_json['assembly_name']
         else:
             return ensembl_json['default_coord_system_version']
