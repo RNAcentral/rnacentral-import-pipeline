@@ -33,7 +33,7 @@ from rnacentral.psql import PsqlWrapper
 
 def get_mapped_assemblies():
     """
-    Get assembly data.
+    Get metadata about all assemblies.
     """
     psql = PsqlWrapper(db())
     sql = """
@@ -75,22 +75,16 @@ class CleanSplitFasta(luigi.Task):
     num_seq = luigi.IntParameter(default=1000)
     min_length = luigi.IntParameter(default=20)
     max_length = luigi.IntParameter(default=100000)
+    prefix = 'rnacentral-clean.part_'
 
     def requires(self):
         return GetFasta(taxid=self.taxid, species=self.species)
 
     def output(self):
-        prefix = 'rnacentral-clean.part_'
         chunk_fasta = os.path.join(genome_mapping().chunks(self.species),
-                                   '{}*.fasta'.format(prefix))
+                                   '{}*.fasta'.format(self.prefix))
         fasta_files = []
         for filename in iglob(chunk_fasta):
-            fasta_files.append(luigi.LocalTarget(filename))
-        if not fasta_files:  # no sequences in RNAcentral
-            filename = os.path.join(genome_mapping().chunks(self.species),
-                                    '{}empty-file.fasta'.format(prefix))
-            with open(filename, 'w') as f:
-                f.write(' ')
             fasta_files.append(luigi.LocalTarget(filename))
         return fasta_files
 
@@ -109,6 +103,11 @@ class CleanSplitFasta(luigi.Task):
         status = subprocess.call(cmd, shell=True)
         if status != 0:
             raise ValueError('Failed to run seqkit: %s' % cmd)
+        if not self.output():
+            filename = os.path.join(genome_mapping().chunks(self.species),
+                                    '{}empty-file.fasta'.format(self.prefix))
+            with open(filename, 'w') as f:
+                f.write(' ')
 
 
 class GetAssemblyInfoJson(luigi.Task):
