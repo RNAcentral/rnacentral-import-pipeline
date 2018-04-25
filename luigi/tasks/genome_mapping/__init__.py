@@ -32,56 +32,66 @@ from .pgload_ensembl_assembly import GenomeMappingPGLoadEnsemblAssembly
 from .pgload_ensembl_assembly import GenomeMappingPGLoadEnsemblGenomesAssembly
 
 
+class GenomeMappingPipelineWrapper(luigi.WrapperTask):
+    """
+    A wrapper task for the entire genome mapping pipeline.
+    Genome download and blat searches are triggered in the
+    GenomeMappingPGLoadInexactMatches task.
+    """
+    species = luigi.Parameter(default='')
+
+    def requires(self):
+        yield GenomeMappingPGLoadEnsemblAssembly()
+        yield GenomeMappingPGLoadEnsemblGenomesAssembly()
+        for assembly in get_mapped_assemblies():
+            if self.species and assembly['species'] != self.species:
+                continue
+            yield GenomeMappingPGLoadInexactMatches(taxid=assembly['taxid'],
+                                                    species=assembly['species'],
+                                                    assembly_id=assembly['assembly_id'],
+                                                    division=assembly['division'])
+
 class ParseBlatOutputWrapper(luigi.WrapperTask):
     """
     A wrapper task for parsing all blat output into tsv files that can be
     loaded into the database.
     """
+    species = luigi.Parameter(default='')
+
     def requires(self):
         for assembly in get_mapped_assemblies():
+            if self.species and assembly['species'] != self.species:
+                continue
             yield ParseBlatOutput(taxid=assembly['taxid'],
                                  species=assembly['species'],
                                  assembly_id=assembly['assembly_id'],
                                  division=assembly['division'])
 
 
-class PGLoadGenomeMappingWrapper(luigi.WrapperTask):
-    """
-    A wrapper task for loading parsed blat output into the database.
-    """
-    def requires(self):
-        for assembly in get_mapped_assemblies():
-            yield GenomeMappingPGLoadInexactMatches(taxid=assembly['taxid'],
-                                 species=assembly['species'],
-                                 assembly_id=assembly['assembly_id'],
-                                 division=assembly['division'])
-
 class DownloadGenomes(luigi.WrapperTask):
     """
+    A wrapper task for downloading genomes of all assemblies listed in the database.
     """
+    species = luigi.Parameter(default='')
+
     def requires(self):
         for assembly in get_mapped_assemblies():
+            if self.species and assembly['species'] != self.species:
+                continue
             yield DownloadGenome(species=assembly['species'],
                                  division=assembly['division'])
 
 
-
 class BlatWrapper(luigi.WrapperTask):
     """
-    A wrapper task for launching all blat jobs for all species.
+    A wrapper task for launching blat jobs.
     """
+    species = luigi.Parameter(default='')
+
     def requires(self):
         for assembly in get_mapped_assemblies():
+            if self.species and assembly['species'] != self.species:
+                continue
             yield SpeciesBlatJobWrapper(taxid=assembly['taxid'],
-                                 species=assembly['species'],
-                                 division=assembly['division'])
-
-
-class GenomeMappingPipelineWrapper(luigi.WrapperTask):
-    """
-    A wrapper task for the entire genome mapping pipeline.
-    """
-    def requires(self):
-        yield GenomeMappingPGLoadEnsemblAssembly()
-        yield GenomeMappingPGLoadEnsemblGenomesAssembly()
-        yield PGLoadGenomeMappingWrapper()
+                                        species=assembly['species'],
+                                        division=assembly['division'])
