@@ -38,7 +38,7 @@ def export_ensembl_coordinates(config, handle, taxid=9606):
     ORDER BY accession, primary_start, strand
     """
     psql = PsqlWrapper(config)
-    psql.write_query(handle, sql.format(taxid=taxid))
+    psql.write_query(handle, sql.format(taxid=taxid), use='tsv')
 
 
 def export_blat_coordinates(config, handle, taxid=9606):
@@ -52,7 +52,7 @@ def export_blat_coordinates(config, handle, taxid=9606):
     ORDER BY region_id, start, strand
     """
     psql = PsqlWrapper(config)
-    psql.write_query(handle, sql.format(taxid=taxid))
+    psql.write_query(handle, sql.format(taxid=taxid), use='tsv')
 
 
 def make_bed_file(handle, out):
@@ -62,11 +62,10 @@ def make_bed_file(handle, out):
     csv.field_size_limit(sys.maxsize)
     region_id = None
     exons = []
-    for result in csv.DictReader(handle):
+    fieldnames = ('rnacentral_id', 'chromosome', 'start', 'stop', 'strand', 'region_id')
+    for result in csv.DictReader(handle, fieldnames=fieldnames, delimiter='\t'):
         if not region_id:
             region_id = result['region_id']
-        if result['region_id'] == 'region_id':
-            continue  # skip csv header line
         if result['region_id'] == region_id:
             exons.append(result)
         else:
