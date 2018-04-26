@@ -107,6 +107,8 @@ class BigBedWrapper(luigi.WrapperTask):
     """
     Generate all bigbed files.
     """
+    species = luigi.Parameter(default='')
+
     def requires(self):
         for assembly in get_mapped_assemblies():
             if assembly['assembly_ucsc']:
@@ -114,14 +116,20 @@ class BigBedWrapper(luigi.WrapperTask):
                                   assembly_id=assembly['assembly_id'],
                                   assembly_ucsc=assembly['assembly_ucsc'],
                                   species=assembly['species'])
+            if self.species and self.species != assembly['species']:
+                continue
 
 
 class BedWrapper(luigi.WrapperTask):
     """
     Generate all bed files.
     """
+    species = luigi.Parameter(default='')
+
     def requires(self):
         for assembly in get_mapped_assemblies():
+            if self.species and self.species != assembly['species']:
+                continue
             yield BedFile(taxid=assembly['taxid'],
                           assembly_id=assembly['assembly_id'],
                           species=assembly['species'])
