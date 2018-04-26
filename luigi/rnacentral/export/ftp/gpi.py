@@ -49,25 +49,18 @@ WHERE
 
 
 QUERY = """
-WITH mirna_precursors as (
-{precursor_query}
-)
 SELECT
     pre.upi,
     pre.taxid,
     max(pre.description),
     max(pre.rna_type),
-    array_agg(mirna_precursors.precursor) as precursor_rnas
 FROM rnc_rna_precomputed pre
-LEFT JOIN mirna_precursors ON mirna_precursors.mature = pre.upi
 WHERE
     pre.taxid IS NOT NULL
     AND rna_type IS NOT NULL
     AND description IS NOT NULL
 group by pre.upi, pre.taxid
-""".format(
-    precursor_query=PRECUSOR_MAPPING_QUERY,
-)
+"""
 
 FIELDS = [
     'database',
@@ -123,10 +116,53 @@ class GpiEntry(object):
         }
 
 
+@attr.s()
+class MiRNAPrecusor(object):
+    precursor_upi = attr.ib(validator=is_a(basestring))
+    mature_upi = attr.ib(validator=is_a(basestring))
+    precursor_taxid = attr.ib(validator=is_a(basestring))
+
+    @classmethod
+    def build(cls, result):
+        return cls(
+            precursor_upi=result['precursor'],
+            mature_upi=result['mature'],
+            precursor_taxid=result['taxid'],
+        )
+
+    def apply(self, entry):
+        return attr.assoc(
+            entry,
+            precursor_rnas=entry.precursor_rnas + [],
+        )
+
+
+@attr.s()
+class AdditionalMapping(object):
+    simple_mapping = attr.ib(
+        default=attr.Factory(lambda: coll.defaultdict(set))
+    )
+
+    @classmethod
+    def build(cls, psql):
+        return cls(
+            load_mapping(psql, MiRNAPrecusor, PRECUSOR_MAPPING_QUERY),
+        )
+
+    def apply(self, entry):
+        pass
+
+
+def load_mapping(psql, query, cls):
+    return [cls.build(r) for r in psql.copy_to_iterable(query)]
+
+
 def entries(db):
     psql = PsqlWrapper(db)
+    mappings = AdditionalMapping.build(psql)
     for result in psql.copy_to_iterable(QUERY):
         entry = GpiEntry.build(result)
+        entry = mappings.apply(entry)
         yield entry.as_dict()
 
 
