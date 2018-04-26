@@ -35,7 +35,6 @@ join rnc_database db on db.id = xref.dbid
 join rnc_rna_precomputed pre on pre.upi = xref.upi and pre.taxid = xref.taxid
 where
     xref.deleted = 'N'
-order by upi, xref.ac
 """
 
 EXAMPLE_SQL = COMPLETE_SQL + " limit 5"
