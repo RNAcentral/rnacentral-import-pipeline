@@ -35,6 +35,10 @@ class ChromSizes(luigi.Task):
 
 
 class BedDataDump(luigi.Task):
+    """
+    Export a tsv file with genome coordinates that will be processed into bed
+    format.
+    """
     assembly_id = luigi.Parameter(default='GRCh38')
     species = luigi.Parameter(default='homo_sapiens')
     taxid = luigi.IntParameter(default=9606)
@@ -50,6 +54,9 @@ class BedDataDump(luigi.Task):
 
 
 class BedFile(luigi.Task):
+    """
+    Generate a bed file.
+    """
     assembly_id = luigi.Parameter(default='GRCh38')
     species = luigi.Parameter(default='homo_sapiens')
     taxid = luigi.IntParameter(default=9606)
@@ -70,6 +77,9 @@ class BedFile(luigi.Task):
 
 
 class BedToBigBed(luigi.Task):
+    """
+    Convert bed to bigbed format.
+    """
     assembly_ucsc = luigi.Parameter(default='hg38')
     assembly_id = luigi.Parameter(default='GRCh38')
     species = luigi.Parameter(default='homo_sapiens')
@@ -94,6 +104,9 @@ class BedToBigBed(luigi.Task):
 
 
 class BigBedWrapper(luigi.WrapperTask):
+    """
+    Generate all bigbed files.
+    """
     def requires(self):
         for assembly in get_mapped_assemblies():
             if assembly['assembly_ucsc']:
@@ -104,6 +117,9 @@ class BigBedWrapper(luigi.WrapperTask):
 
 
 class BedWrapper(luigi.WrapperTask):
+    """
+    Generate all bed files.
+    """
     def requires(self):
         for assembly in get_mapped_assemblies():
             yield BedFile(taxid=assembly['taxid'],
@@ -112,6 +128,9 @@ class BedWrapper(luigi.WrapperTask):
 
 
 class BedAndBigBedWrapper(luigi.WrapperTask):
+    """
+    A task for generating all bed and bigbed files.
+    """
     def requires(self):
         yield BigBedWrapper()
         yield BedWrapper()
