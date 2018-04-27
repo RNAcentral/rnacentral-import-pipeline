@@ -68,9 +68,9 @@ class BedDataDump(luigi.Task):
     Export a tsv file with genome coordinates that will be processed into bed
     format.
     """
-    assembly_id = luigi.Parameter(default='GRCh38')
-    species = luigi.Parameter(default='homo_sapiens')
-    taxid = luigi.IntParameter(default=9606)
+    assembly_id = luigi.Parameter()
+    species = luigi.Parameter()
+    taxid = luigi.IntParameter()
 
     def output(self):
         filename = '{}.{}.tsv'.format(self.species.capitalize(), self.assembly_id)
@@ -86,9 +86,9 @@ class BedFile(luigi.Task):
     """
     Generate a bed file.
     """
-    assembly_id = luigi.Parameter(default='GRCh38')
-    species = luigi.Parameter(default='homo_sapiens')
-    taxid = luigi.IntParameter(default=9606)
+    assembly_id = luigi.Parameter()
+    species = luigi.Parameter()
+    taxid = luigi.IntParameter()
     division = luigi.Parameter()
 
     def requires(self):
@@ -117,10 +117,10 @@ class BedToBigBed(luigi.Task):
     """
     Convert bed to bigbed format.
     """
-    assembly_ucsc = luigi.Parameter(default='hg38')
-    assembly_id = luigi.Parameter(default='GRCh38')
-    species = luigi.Parameter(default='homo_sapiens')
-    taxid = luigi.IntParameter(default=9606)
+    assembly_ucsc = luigi.Parameter()
+    assembly_id = luigi.Parameter()
+    species = luigi.Parameter()
+    taxid = luigi.IntParameter()
     division = luigi.Parameter()
 
     def requires(self):
