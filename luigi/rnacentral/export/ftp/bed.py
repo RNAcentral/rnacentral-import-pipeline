@@ -154,6 +154,13 @@ def convert_to_bigbed(bed_path, chromsizes_path, bigbed_path):
     """
     Convert bed file to bigbed format.
     """
+    num_lines = 0
+    with open(bed_path, 'r') as infile:
+        num_lines = sum(1 for line in infile)
+    if num_lines == 0:
+        with open(bigbed_path, 'w') as output:
+            output.write(' ')
+        return
     cmd = ('bedToBigBed {bed_path} {chromsizes_path} {bigbed_path}-temp && '
            'mv {bigbed_path}-temp {bigbed_path}').format(
                 bed_path=bed_path, chromsizes_path=chromsizes_path,
