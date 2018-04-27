@@ -118,7 +118,10 @@ def format_as_bed(exons, regions):
 
     if regions['karyotype'] and chromosome not in regions['karyotype']:
         return None  # export non-karyotype sequences only when no karyotype is available
-    region = regions['top_level_region'][chromosome]
+    if chromosome in regions['top_level_region']:
+        region = regions['top_level_region'][chromosome]
+    else:
+        return None
     chromosome = format_chromosome_name(chromosome, region)
 
     block_sizes = []
