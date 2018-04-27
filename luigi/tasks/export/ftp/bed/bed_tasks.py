@@ -13,6 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import csv
+import json
 import os
 
 import luigi
@@ -20,11 +22,15 @@ import luigi
 from tasks.config import db
 from tasks.config import export
 from tasks.genome_mapping.genome_mapping_tasks import get_mapped_assemblies
+from tasks.genome_mapping.genome_mapping_tasks import GetAssemblyInfoJson
 from rnacentral.export.ftp import bed
 
 
-class ChromSizes(luigi.Task):
-    assembly_ucsc = luigi.Parameter(default='hg38')
+class ChromSizesUCSC(luigi.Task):
+    """
+    Retrieve a chromosome sizes file for a genome from UCSC.
+    """
+    assembly_ucsc = luigi.Parameter()
 
     def output(self):
         filename = '{}.chrom.sizes'.format(self.assembly_ucsc)
@@ -32,6 +38,29 @@ class ChromSizes(luigi.Task):
 
     def run(self):
         bed.get_chrom_sizes(db(), assembly_ucsc=self.assembly_ucsc, output=self.output().path)
+
+
+class ChromSizesEnsembl(luigi.Task):
+    """
+    Generate a chromosome sizes file locally based on Ensembl data.
+    """
+    species = luigi.Parameter()
+    division = luigi.Parameter()
+
+    def output(self):
+        filename = '{}.chrom.sizes'.format(self.species.capitalize())
+        return luigi.LocalTarget(export().bed(filename))
+
+    def requires(self):
+        return GetAssemblyInfoJson(species=self.species, division=self.division)
+
+    def run(self):
+        data = json.load(self.input().open('r'))
+        with self.output().open('w') as outfile:
+            for region in data['top_level_region']:
+                name = bed.format_chromosome_name(region['name'], region)
+                line = '{}\t{}\n'.format(name, region['length'])
+                outfile.write(line)
 
 
 class BedDataDump(luigi.Task):
@@ -60,19 +89,27 @@ class BedFile(luigi.Task):
     assembly_id = luigi.Parameter(default='GRCh38')
     species = luigi.Parameter(default='homo_sapiens')
     taxid = luigi.IntParameter(default=9606)
+    division = luigi.Parameter()
 
     def requires(self):
-        return BedDataDump(taxid=self.taxid,
-                           assembly_id=self.assembly_id,
-                           species=self.species)
+        return {
+            'data': BedDataDump(taxid=self.taxid,
+                                assembly_id=self.assembly_id,
+                                species=self.species),
+            'chrom_sizes': ChromSizesEnsembl(species=self.species,
+                                             division=self.division),
+            'ensembl_info': GetAssemblyInfoJson(species=self.species,
+                                                division=self.division)
+        }
 
     def output(self):
         filename = '{}.{}.bed'.format(self.species.capitalize(), self.assembly_id)
         return luigi.LocalTarget(export().bed(filename))
 
     def run(self):
-        with self.input().open('r') as raw, self.output().open('w') as out:
-            bed.make_bed_file(raw, out)
+        data = json.load(self.input()['ensembl_info'].open('r'))
+        with self.input()['data'].open('r') as raw, self.output().open('w') as out:
+            bed.make_bed_file(raw, out, data)
         bed.sort_bed_file(self.output().path)
 
 
@@ -84,17 +121,20 @@ class BedToBigBed(luigi.Task):
     assembly_id = luigi.Parameter(default='GRCh38')
     species = luigi.Parameter(default='homo_sapiens')
     taxid = luigi.IntParameter(default=9606)
+    division = luigi.Parameter()
 
     def requires(self):
         return {
             'bed': BedFile(taxid=self.taxid,
                            assembly_id=self.assembly_id,
+                           division=self.division,
                            species=self.species),
-            'chromsizes': ChromSizes(assembly_ucsc=self.assembly_ucsc),
+            'chromsizes': ChromSizesEnsembl(species=self.species,
+                                            division=self.division),
         }
 
     def output(self):
-        filename = '{}.bigBed'.format(self.assembly_ucsc)
+        filename = '{}.{}.bigBed'.format(self.species.capitalize(), self.assembly_id)
         return luigi.LocalTarget(export().bed(filename))
 
     def run(self):
@@ -111,13 +151,13 @@ class BigBedWrapper(luigi.WrapperTask):
 
     def requires(self):
         for assembly in get_mapped_assemblies():
-            if assembly['assembly_ucsc']:
-                yield BedToBigBed(taxid=assembly['taxid'],
-                                  assembly_id=assembly['assembly_id'],
-                                  assembly_ucsc=assembly['assembly_ucsc'],
-                                  species=assembly['species'])
             if self.species and self.species != assembly['species']:
                 continue
+            yield BedToBigBed(taxid=assembly['taxid'],
+                              assembly_id=assembly['assembly_id'],
+                              assembly_ucsc=assembly['assembly_ucsc'],
+                              division=assembly['division'],
+                              species=assembly['species'])
 
 
 class BedWrapper(luigi.WrapperTask):
@@ -132,6 +172,7 @@ class BedWrapper(luigi.WrapperTask):
                 continue
             yield BedFile(taxid=assembly['taxid'],
                           assembly_id=assembly['assembly_id'],
+                          division=assembly['division'],
                           species=assembly['species'])
 
 

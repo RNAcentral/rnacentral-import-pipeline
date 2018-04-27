@@ -20,6 +20,23 @@ import sys
 from rnacentral.psql import PsqlWrapper
 
 
+def format_chromosome_name(chromosome, region):
+    """
+    Format chromosome names according to UCSC style.
+    `region` is an array in the following format:
+    {
+        'name': '1',
+        'length': 1000000,
+        'coord_system': 'chromosome'
+    }
+    """
+    if region['coord_system'] == 'chromosome':
+        chromosome = 'chr' + chromosome
+    if chromosome in ['MT', 'chrMT']:
+        chromosome = 'chrM'
+    return chromosome
+
+
 def export_ensembl_coordinates(config, handle, taxid=9606):
     """
     Export Ensembl coordinates.
@@ -55,7 +72,7 @@ def export_blat_coordinates(config, handle, taxid=9606):
     psql.write_query(handle, sql.format(taxid=taxid), use='tsv')
 
 
-def make_bed_file(handle, out):
+def make_bed_file(handle, out, regions):
     """
     Transform raw coordinate data into bed format.
     """
@@ -69,7 +86,7 @@ def make_bed_file(handle, out):
         if result['region_id'] == region_id:
             exons.append(result)
         else:
-            bed_line = format_as_bed(exons)
+            bed_line = format_as_bed(exons, regions)
             if bed_line:
                 out.write(bed_line)
             region_id = result['region_id']
@@ -86,13 +103,24 @@ def sort_bed_file(out):
         raise ValueError('Failed to run bedSort: %s' % cmd)
 
 
-def format_as_bed(exons):
+def format_as_bed(exons, regions):
     """
     Group exons from the same transcript into one bed record.
     """
     chromosome = exons[0]['chromosome']
-    if '_' in chromosome or '.' in chromosome:
+
+    if regions['karyotype'] and chromosome not in regions['karyotype']:
         return None
+    bed_chromosome = None
+    for region in regions['top_level_region']:
+        if region['name'] == chromosome:
+            bed_chromosome = format_chromosome_name(chromosome, region)
+            break
+    if not bed_chromosome:
+        return None
+    else:
+        chromosome = bed_chromosome
+
     block_sizes = []
     block_starts = []
     for i, exon in enumerate(exons):
@@ -113,10 +141,6 @@ def format_as_bed(exons):
     BED_TEMPLATE = ('{chromosome}\t{start}\t{stop}\t{name}\t{score}\t{strand}\t'
                     '{thickStart}\t{thickEnd}\t{itemRgb}\t{blockCount}\t'
                     '{blockSizes}\t{blockStarts}\n')
-    if chromosome.isdigit() or chromosome in ['X', 'Y']:
-        chromosome = 'chr' + chromosome
-    elif chromosome in ['chrMT', 'MT']:
-        chromosome = 'chrM'
     return BED_TEMPLATE.format(
         chromosome=chromosome,
         start=min_start,
