@@ -137,7 +137,8 @@ def convert_to_bigbed(bed_path, chromsizes_path, bigbed_path):
     """
     Convert bed file to bigbed format.
     """
-    cmd = 'bedToBigBed {bed_path} {chromsizes_path} {bigbed_path}'.format(
+    cmd = ('bedToBigBed {bed_path} {chromsizes_path} {bigbed_path}-temp && '
+           'mv {bigbed_path}-temp {bigbed_path}').format(
                 bed_path=bed_path, chromsizes_path=chromsizes_path,
                 bigbed_path=bigbed_path)
     status = subprocess.call(cmd, shell=True)
