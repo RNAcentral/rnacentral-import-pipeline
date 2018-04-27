@@ -26,7 +26,7 @@ from tasks.utils.files import atomic_output
 class GoAnnotationExport(luigi.Task):
     def output(self):
         return luigi.LocalTarget(
-            export().go('rnacentral_annotations.tsv.gz'),
+            export().go('rnacentral_rfam_annotations.tsv.gz'),
             format=luigi.format.Gzip,
         )
 
