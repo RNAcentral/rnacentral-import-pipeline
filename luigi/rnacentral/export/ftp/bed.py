@@ -44,10 +44,13 @@ def export_ensembl_coordinates(config, handle, taxid=9606):
     sql = """
     SELECT concat_ws('_', t1.upi, t1.taxid) as rnacentral_id,
            t2.name as chromosome, t2.primary_start as start,
-           t2.primary_end as stop, t2.strand, t2.accession as region_id
+           t2.primary_end as stop, t2.strand, t2.accession as region_id,
+           t3.rna_type
     FROM xref t1
     JOIN rnc_coordinates t2
     ON t1.ac = t2.accession
+    JOIN rnc_rna_precomputed t3
+    ON t1.upi = t3.upi AND t1.taxid = t3.taxid
     WHERE t2.name IS NOT NULL
     AND t1.taxid = {taxid}
     AND t1.dbid = 25
@@ -63,9 +66,12 @@ def export_blat_coordinates(config, handle, taxid=9606):
     Export blat genome coordinate data that will be parsed into bed files.
     """
     sql = """
-    SELECT rna_id as rnacentral_id, chromosome, "start", stop, strand, region_id
-    FROM rnc_genome_mapping
-    WHERE taxid = {taxid}
+    SELECT rna_id as rnacentral_id, chromosome, "start", stop, strand,
+           region_id, t2.rna_type
+    FROM rnc_genome_mapping t1
+    JOIN rnc_rna_precomputed t2
+    ON t1.rna_id = t2.id
+    WHERE t1.taxid = {taxid}
     ORDER BY region_id, start, strand
     """
     psql = PsqlWrapper(config)
@@ -79,7 +85,8 @@ def make_bed_file(handle, out, regions):
     csv.field_size_limit(sys.maxsize)
     region_id = None
     exons = []
-    fieldnames = ('rnacentral_id', 'chromosome', 'start', 'stop', 'strand', 'region_id')
+    fieldnames = ('rnacentral_id', 'chromosome', 'start', 'stop', 'strand',
+                  'region_id', 'rna_type')
     for result in csv.DictReader(handle, fieldnames=fieldnames, delimiter='\t'):
         if not region_id:
             region_id = result['region_id']
@@ -133,7 +140,8 @@ def format_as_bed(exons, regions):
             max_stop = exon['stop']
     BED_TEMPLATE = ('{chromosome}\t{start}\t{stop}\t{name}\t{score}\t{strand}\t'
                     '{thickStart}\t{thickEnd}\t{itemRgb}\t{blockCount}\t'
-                    '{blockSizes}\t{blockStarts}\n')
+                    '{blockSizes}\t{blockStarts}\t'
+                    '{optional_id}\t{rna_type}\n')
     return BED_TEMPLATE.format(
         chromosome=chromosome,
         start=min_start,
@@ -146,7 +154,9 @@ def format_as_bed(exons, regions):
         itemRgb='63,125,151',
         blockCount=len(block_sizes),
         blockSizes=','.join([str(x) for x in block_sizes]),
-        blockStarts=','.join([str(x) for x in block_starts])
+        blockStarts=','.join([str(x) for x in block_starts]),
+        optional_id='.',
+        rna_type=exons[0]['rna_type']
     )
 
 
@@ -161,7 +171,7 @@ def convert_to_bigbed(bed_path, chromsizes_path, bigbed_path):
         with open(bigbed_path, 'w') as output:
             output.write(' ')
         return
-    cmd = ('bedToBigBed {bed_path} {chromsizes_path} {bigbed_path}-temp && '
+    cmd = ('bedToBigBed -type=bed12+2 {bed_path} {chromsizes_path} {bigbed_path}-temp && '
            'mv {bigbed_path}-temp {bigbed_path}').format(
                 bed_path=bed_path, chromsizes_path=chromsizes_path,
                 bigbed_path=bigbed_path)
