@@ -159,23 +159,23 @@ def write(handle, results):
     string representation of that document which can be saved.
     """
 
-    with etree.xmlfile(handle) as xf:
-        with xf.element('database'):
-            xf.write(E.name('RNAcentral'))
-            xf.write(E.description('a database for non-protein coding RNA sequences'))
-            xf.write(E.release('1.0'))
-            xf.write(E.release_date(date.today().strftime('%d/%m/%Y')))
+    with etree.xmlfile(handle) as xml:
+        with xml.element('database'):
+            xml.write(E.name('RNAcentral'))
+            xml.write(E.description('a database for non-protein coding RNA sequences'))
+            xml.write(E.release('1.0'))
+            xml.write(E.release_date(date.today().strftime('%d/%m/%Y')))
 
             count = 0
-            with xf.element('entries'):
+            with xml.element('entries'):
                 for result in results:
                     count += 1
-                    xf.write(result)
+                    xml.write(result)
 
             if not count:
                 raise ValueError("No entries found")
 
-            xf.write(E.entry_count(str(count)))
+            xml.write(E.entry_count(str(count)))
 
 
 def validate(filename):
