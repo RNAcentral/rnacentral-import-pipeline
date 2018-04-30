@@ -15,19 +15,21 @@ limitations under the License.
 
 import luigi
 
-from .md5 import Md5Export
-from .id_mapping import IdExport
-from .rfam import RfamAnnotationExport
-from .fasta import FastaExport
-from .ensembl import EnsemblExport
-from .go_annotations import GoAnnotationExport
+from tasks.config import db
+from tasks.config import export
+
+from rnacentral.export.ftp import go_terms
+
+from tasks.utils.files import atomic_output
 
 
-class FtpExport(luigi.WrapperTask):
-    def requires(self):
-        yield Md5Export
-        yield IdExport
-        yield RfamAnnotationExport
-        yield FastaExport
-        yield EnsemblExport
-        yield GoAnnotationExport
+class GoAnnotationExport(luigi.Task):
+    def output(self):
+        return luigi.LocalTarget(
+            export().go('rnacentral_rfam_annotations.tsv.gz'),
+            format=luigi.format.Gzip,
+        )
+
+    def run(self):
+        with atomic_output(self.output()) as out:
+            go_terms.export(db(), out)

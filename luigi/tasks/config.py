@@ -298,6 +298,9 @@ class export(luigi.Config):  # pylint: disable=C0103,R0904
     def ensembl_export(self, *args):
         return self.ftp('ensembl', *args)
 
+    def go(self, *args):
+        return self.ftp('go', *args)
+
 
 class refseq(luigi.Config):  # pylint: disable=C0103,R0904
     base = luigi.Parameter(default='/tmp')
