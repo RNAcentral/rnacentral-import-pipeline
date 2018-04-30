@@ -151,7 +151,7 @@ def format_as_bed(exons, regions):
         stop=max_stop,
         name=exons[0]['rnacentral_id'],
         score=0,
-        strand='+' if exons[0]['strand'] > 0 else '-',
+        strand='+' if int(exons[0]['strand']) > 0 else '-',
         thickStart=min_start,
         thickEnd=max_stop,
         itemRgb='63,125,151',
