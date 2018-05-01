@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+o
 
 """
 Copyright [2009-2017] EMBL-European Bioinformatics Institute
@@ -311,7 +311,7 @@ class Entry(object):
         return json.dumps(self.note_data)
 
     @property
-    def feature_type(self):
+    def feature_name(self):
         """
         Return the feature for the RNA type.
         """
@@ -325,7 +325,7 @@ class Entry(object):
         The ncRNA class. If the feature type is not ncRNA this this will be the
         empty string.
         """
-        if self.feature_type != 'ncRNA':
+        if self.feature_name != 'ncRNA':
             return None
         return self.rna_type
 
