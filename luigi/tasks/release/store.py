@@ -102,17 +102,19 @@ class UpdateCoordinates(DatabaseUpdater):  # pylint: disable=R0904
       id
     )
     SELECT
-      accession,
-      primary_accession,
-      local_start,
-      local_end,
-      strand,
-      assembly_id,
+      load.accession,
+      load.primary_accession,
+      load.local_start,
+      load.local_end,
+      load.strand,
+      assemblies.assembly_id,
       NEXTVAL('rnc_coordinates_pk_seq')
-    FROM rnacen.load_rnc_coordinates as t2
+    FROM rnacen.load_rnc_coordinates as load
+    join ensembl_assembly assembly
+    on
+        assembly.assembly_id = load.assembly_id
     WHERE
-      t2.name is not null
-      and t2.assembly_id is not null
+      load.name is not null
     ON CONFLICT (accession, primary_accession, local_start, local_end, assembly_id)
     DO NOTHING
     """
