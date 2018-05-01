@@ -14,6 +14,7 @@ limitations under the License.
 """
 
 import csv
+import collections as coll
 
 import attr
 from attr.validators import instance_of as is_a
@@ -130,6 +131,10 @@ class MiRNAPrecusor(object):
             precursor_taxid=result['taxid'],
         )
 
+    @property
+    def key(self):
+        return self.precursor_upi
+
     def apply(self, entry):
         return attr.assoc(
             entry,
@@ -139,18 +144,23 @@ class MiRNAPrecusor(object):
 
 @attr.s()
 class AdditionalMapping(object):
-    simple_mapping = attr.ib(
-        default=attr.Factory(lambda: coll.defaultdict(set))
-    )
+    mapping = attr.ib()
 
     @classmethod
     def build(cls, psql):
-        return cls(
-            load_mapping(psql, MiRNAPrecusor, PRECUSOR_MAPPING_QUERY),
-        )
+        to_load = [
+            (MiRNAPrecusor, PRECUSOR_MAPPING_QUERY),
+        ]
+        mapping = coll.defaultdict(set)
+        for (klass, query) in to_load:
+            for value in load_mapping(psql, klass, query):
+                mapping[value.key] = value
+        return cls(mapping)
 
     def apply(self, entry):
-        pass
+        for additional in self.mapping.get(entry.id, []):
+            entry = additional.apply(entry)
+        return entry
 
 
 def load_mapping(psql, query, cls):
