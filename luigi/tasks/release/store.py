@@ -107,7 +107,7 @@ class UpdateCoordinates(DatabaseUpdater):  # pylint: disable=R0904
       load.local_start,
       load.local_end,
       load.strand,
-      assemblies.assembly_id,
+      assembly.assembly_id,
       NEXTVAL('rnc_coordinates_pk_seq')
     FROM rnacen.load_rnc_coordinates as load
     join ensembl_assembly assembly
