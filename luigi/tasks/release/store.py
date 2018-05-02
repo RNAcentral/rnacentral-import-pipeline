@@ -94,7 +94,7 @@ class UpdateCoordinates(DatabaseUpdater):  # pylint: disable=R0904
     sql = """
     INSERT INTO rnacen.rnc_coordinates AS t1 (
       accession,
-      primary_accession,
+      name,
       local_start,
       local_end,
       strand,
@@ -103,7 +103,7 @@ class UpdateCoordinates(DatabaseUpdater):  # pylint: disable=R0904
     )
     SELECT
       load.accession,
-      load.primary_accession,
+      load.name,
       load.local_start,
       load.local_end,
       load.strand,
@@ -115,7 +115,7 @@ class UpdateCoordinates(DatabaseUpdater):  # pylint: disable=R0904
         assembly.assembly_id = load.assembly_id
     WHERE
       load.name is not null
-    ON CONFLICT (accession, primary_accession, local_start, local_end, assembly_id)
+    ON CONFLICT (accession, name, local_start, local_end, assembly_id)
     DO NOTHING
     """
 

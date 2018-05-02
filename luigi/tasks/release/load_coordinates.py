@@ -26,7 +26,7 @@ FROM ALL FILENAMES MATCHING ~<{pattern}>
 IN DIRECTORY '{directory}'
 HAVING FIELDS (
     accession,
-    primary_accession,
+    chromosome,
     local_start,
     local_end,
     assembly_id,
@@ -35,7 +35,7 @@ HAVING FIELDS (
 INTO {db_url}
 TARGET COLUMNS (
     accession,
-    primary_accession,
+    chromosome,
     local_start,
     local_end,
     assembly_id,
@@ -58,6 +58,17 @@ SET
     search_path = '{search_path}'
 
 BEFORE LOAD DO
+$$
+CREATE TABLE IF NOT EXISTS load_rnc_coordinates (
+    accession varchar(200) NULL,
+    local_start int8 NULL,
+    local_end int8 NULL,
+    chromosome varchar(100) NULL,
+    strand int8 NULL,
+    assembly_id varchar(255) NULL
+);
+$$,
+
 $$
 ALTER TABLE rnacen.load_rnc_coordinates SET (
     autovacuum_enabled = false,
