@@ -17,8 +17,17 @@ import csv
 import itertools as it
 
 import attr
+from attr.validators import optional
+from attr.validators import instance_of as is_a
+
+from ontologies import helpers as ont
+
 
 def empty_to_none(raw):
+    """
+    Return an empty string to None otherwise return the string.
+    """
+
     if not raw:
         return None
     return raw
@@ -26,11 +35,21 @@ def empty_to_none(raw):
 
 @attr.s()
 class RfamDatabaseLink(object):
-    rfam_family = attr.ib()
-    database = attr.ib()
-    comment = attr.ib(convert=empty_to_none)
-    external_id = attr.ib()
-    other = attr.ib(convert=empty_to_none)
+    """
+    This class represents the entries in the database_link in Rfam.
+    """
+
+    rfam_family = attr.ib(validator=is_a(basestring))
+    database = attr.ib(validator=is_a(basestring))
+    comment = attr.ib(
+        convert=empty_to_none,
+        validator=optional(is_a(basestring)),
+    )
+    external_id = attr.ib(validator=is_a(basestring))
+    other = attr.ib(
+        convert=empty_to_none,
+        validator=optional(is_a(basestring)),
+    )
 
     @classmethod
     def from_row(cls, row):
@@ -39,19 +58,57 @@ class RfamDatabaseLink(object):
         database columns.
         """
 
+        database = row['db_id']
         external_id = row['db_link']
-        if row['db_id'] in {'SO', 'GO'}:
-            external_id = '%s:%s' % (row['db_id'], row['db_link'])
+        if database in {'SO', 'GO'}:
+            external_id = '%s:%s' % (database, row['db_link'])
 
         return cls(
             rfam_family=row['rfam_acc'],
-            database=row['db_id'],
+            database=database,
             comment=row['comment'],
             external_id=external_id,
             other=row['other_params'],
         )
 
+    def from_ontology(self):
+        """
+        Check if this instance comes from a known ontology (SO or GO).
+        """
+        return self.database in {'SO', 'GO'}
+
+    def ontology_term(self):
+        """
+        Create an ontology term for this instance, if the instance comes from
+        an ontology.
+        """
+
+        if not self.from_ontology():
+            return None
+        return ont.term(self.external_id)
+
 
 def parse(handle):
+    """
+    Parse the given filehandle to produce all database link objects in the
+    file.
+    """
+
     reader = csv.DictReader(handle, delimiter='\t')
     return it.imap(RfamDatabaseLink.from_row, reader)
+
+
+def ontology_terms(handle):
+    """
+    Produce an iterable of all ontology terms from Rfam.
+    """
+
+    seen = set()
+    for reference in parse(handle):
+        if not reference.from_ontology():
+            continue
+        if reference.external_id in seen:
+            continue
+        term = reference.ontology_term()
+        seen.add(term.ontology_id)
+        yield term
