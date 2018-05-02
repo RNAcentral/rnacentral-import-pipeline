@@ -80,5 +80,6 @@ def export(config, handle):
         handle,
         ['id', 'ontology_term_id', 'models'],
         extrasaction='ignore',
+        delimiter='\t',
     )
     writer.writerows(valid_annotations(config))
