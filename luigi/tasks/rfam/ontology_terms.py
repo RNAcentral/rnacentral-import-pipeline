@@ -17,16 +17,27 @@ import operator as op
 
 import luigi
 
-from databases.rfam import utils
-
 from ontologies import data
-from ontologies import helpers as ont
+from databases.rfam import cross_references as cr
 
 from tasks.config import rfam
+
+from tasks.utils.fetch import FetchTask
 from tasks.utils.writers import CsvOutput
 
 
-class RfamGoTerms(luigi.Task):
+class RfamOntologyTerms(luigi.Task):  # pylint: disable=too-many-public-methods
+    """
+    A task that will parse ontology data from Rfam to produce data to load.
+    """
+
+    def requires(self):
+        conf = rfam()
+        return FetchTask(
+            remote_path=conf.remote_table('database_link'),
+            local_path=conf.raw('database_link.tsv'),
+        )
+
     def output(self):
         return CsvOutput(
             rfam().go_terms,
@@ -34,13 +45,6 @@ class RfamGoTerms(luigi.Task):
             op.methodcaller('writeables'),
         )
 
-    def data(self):
-        terms = set()
-        for family in utils.load_families():
-            for (go_term_id, _) in family.go_terms:
-                if go_term_id not in terms:
-                    terms.add(go_term_id)
-                    yield ont.term(go_term_id)
-
     def run(self):
-        self.output().populate(self.data())
+        with self.requires().output().open('r') as raw:
+            self.output().populate(cr.ontology_terms(raw))
