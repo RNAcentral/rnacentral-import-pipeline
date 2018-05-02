@@ -67,8 +67,12 @@ def as_exon(assembly, exon):
     else:
         raise ValueError("Invalid strand %s" % exon)
 
+    chromosome = exon['chromosome']
+    if chromosome.startswith('chr'):
+        chromosome = chromosome[3:]
+
     return data.Exon(
-        chromosome_name=exon['chromosome'],
+        chromosome_name=chromosome,
         primary_start=int(exon['startPosition']),
         primary_end=int(exon['endPosition']),
         assembly_id=assembly,
