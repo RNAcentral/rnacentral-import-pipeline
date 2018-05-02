@@ -68,7 +68,7 @@ def as_exon(assembly, exon):
         raise ValueError("Invalid strand %s" % exon)
 
     return data.Exon(
-        chromosome=exon['chromosome'],
+        chromosome_name=exon['chromosome'],
         primary_start=int(exon['startPosition']),
         primary_end=int(exon['endPosition']),
         assembly_id=assembly,
@@ -80,7 +80,8 @@ def exons(genome_location):
     """
     Get all genomic locations this record is in.
     """
-    return [as_exon(genome_location['assembly'], e) for e in genome_location['exons']]
+    assembly = genome_location['assembly']
+    return [as_exon(assembly, e) for e in genome_location['exons']]
 
 
 def gene_info(_):

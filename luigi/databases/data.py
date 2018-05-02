@@ -140,7 +140,7 @@ def optional_utf8(raw):
 
 @attr.s(frozen=True)
 class Exon(object):
-    chromosome = attr.ib(validator=is_a(basestring))
+    chromosome_name = attr.ib(validator=is_a(basestring))
     primary_start = attr.ib(validator=is_a(int))
     primary_end = attr.ib(validator=is_a(int))
     assembly_id = attr.ib(validator=is_a(basestring))

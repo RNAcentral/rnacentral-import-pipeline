@@ -177,7 +177,7 @@ class ExonWriter(object):
         for exon in data.exons:
             self.csv.writerow([
                 data.accession,
-                exon.chromosome,
+                exon.chromosome_name,
                 exon.primary_start,
                 exon.primary_end,
                 exon.assembly_id,
