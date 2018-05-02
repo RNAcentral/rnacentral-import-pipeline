@@ -20,6 +20,7 @@ import luigi
 
 from . import http
 from . import ftp
+from . import mysql
 
 
 def fetch(remote_path, local_path):
@@ -33,6 +34,9 @@ def fetch(remote_path, local_path):
 
     elif remote_path.startswith('ftp:'):
         ftp.download(remote_path, local_path)
+
+    elif remote_path.startswith('mysql:'):
+        mysql.download(remote_path, local_path)
 
     elif os.path.exists(remote_path):
         if os.path.isdir(remote_path):
