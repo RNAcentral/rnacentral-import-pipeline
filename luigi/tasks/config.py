@@ -93,6 +93,20 @@ class rfam(luigi.Config):  # pylint: disable=C0103, R0904
     hits = PathParameter()
     fasta = PathParameter()
     json_folder = PathParameter()
+    mysql = luigi.Parameter(default='mysql://rfamro@mysql-rfam-public.ebi.ac.uk:4497/Rfam')
+
+    def remote_table(self, name):
+        """
+        Return a URL that refers to the given table name.
+        """
+        return self.mysql + '?' + name
+
+    def raw(self, *args):
+        """
+        A method to produce a path to a directory where raw data to process can
+        go.
+        """
+        return os.path.join(output().base, 'rfam', 'data', *args)
 
     def json_files(self):
         """
