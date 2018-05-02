@@ -40,7 +40,6 @@ def get_mapped_assemblies():
     select assembly_id, assembly_ucsc, taxid, ensembl_url as species,
            division, subdomain
     from ensembl_assembly
-    where blat_mapping = 1
     """
     assemblies = []
     for assembly in psql.copy_to_iterable(sql):
