@@ -59,7 +59,7 @@ def exclude_uncultured(annotation):
     Detect if the annotation is from an uncultured organism and thus should be
     excluded.
     """
-    return annotation['taxid'] in UNCULTURED_TAXIDS
+    return int(annotation['taxid']) not in UNCULTURED_TAXIDS
 
 
 def valid_annotations(config):
