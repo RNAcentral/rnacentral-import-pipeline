@@ -47,7 +47,7 @@ for i in {1..2}; do
 			awk '{
 			  matches = $1
 			  target_insertions = $8
-			  if (matches < 100 && target_insertions > 10) {;} else  { print }
+			  if (matches < 100 && target_insertions > 20) {;} else  { print }
 			}' | \
 			# print out modified psl with updated strand and region_id
 			awk -v OFS='\t' '{
