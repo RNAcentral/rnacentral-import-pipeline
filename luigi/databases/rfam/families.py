@@ -25,13 +25,25 @@ from .data import SO_TERM_MAPPING
 from .data import RFAM_RNA_TYPE_MAPPING
 from .data import DOMAIN_MAPPING
 
+QUERY = """
+"""
+
 
 def empty_str_from(target):
-    def fn(raw):
+    """
+    Produces a function that will turn a string into an empty string if it
+    matches the given target.
+    """
+
+    def func(raw):
+        """
+        The function which will do the conversion.
+        """
+
         if raw == target:
             return u''
         return raw
-    return fn
+    return func
 
 
 @attr.s(frozen=True)
@@ -51,6 +63,10 @@ class RfamFamily(object):
     full_count = attr.ib(validator=is_a(int))
     clan_id = attr.ib()
     length = attr.ib(validator=is_a(int))
+
+    @classmethod
+    def from_row(cls, row):
+        pass
 
     @classmethod
     def build_all(cls, clan_file, link_file, family_file):
@@ -143,8 +159,12 @@ def build_all(cls, clan_file, membership_file):
     return clans
 
 
-def load_families(version='CURRENT'):
-    family_file = get_family_file(version=version)
-    link_file = get_link_file(version=version)
-    clan_file = get_clan_membership(version=version)
+def parse(handle):
+    reader = csv.DictReader(handle)
+    for row in reader:
+        RfamFamily.from_dict(row)
+
+    # family_file = get_family_file(version=version)
+    # link_file = get_link_file(version=version)
+    # clan_file = get_clan_membership(version=version)
     return RfamFamily.build_all(clan_file, link_file, family_file)
