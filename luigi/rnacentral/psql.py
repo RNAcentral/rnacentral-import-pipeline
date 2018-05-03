@@ -78,9 +78,7 @@ class PsqlWrapper(object):
         """
         This will write the sql query to the given file handle.
         """
-
-        command = query_as_copy(sql, **kwargs)
-        self.write_command(handle, command)
+        self.write_command(handle, query_as_copy(sql, **kwargs))
 
     def copy_to_iterable(self, sql, **kwargs):
         """
@@ -89,8 +87,7 @@ class PsqlWrapper(object):
         and is deleted once the handler exits.
         """
 
-        command = query_as_copy(sql, **kwargs)
-        with self.command(command) as out:
+        with self.command(query_as_copy(sql, **kwargs)) as out:
             csv.field_size_limit(sys.maxsize)
             for result in csv.DictReader(out):
                 yield result

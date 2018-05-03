@@ -15,9 +15,10 @@ limitations under the License.
 
 import re
 import csv
-import collections as coll
+import itertools as it
 
 import attr
+from attr.validators import optional
 from attr.validators import instance_of as is_a
 
 from .data import INFORMATIVE_NAMES
@@ -26,6 +27,23 @@ from .data import RFAM_RNA_TYPE_MAPPING
 from .data import DOMAIN_MAPPING
 
 QUERY = """
+select
+    family.rfam_acc id,
+    family.rfam_id as name,
+    family.description as pretty_name,
+    group_concat(concat('SO:', dbs.db_link)) as so_terms,
+    family.type as rna_type,
+    family.comment as description,
+    family.num_seed as seed_count,
+    family.num_full as full_count,
+    group_concat(mem.clan_acc) as clan_id,
+    family.clen as length
+from family
+left join database_link dbs on dbs.rfam_acc = family.rfam_acc
+left join clan_membership mem on mem.rfam_acc = family.rfam_acc
+where
+    dbs.db_id = 'SO'
+group by family.rfam_acc
 """
 
 
@@ -41,7 +59,7 @@ def empty_str_from(target):
         """
 
         if raw == target:
-            return u''
+            return None
         return raw
     return func
 
@@ -52,58 +70,34 @@ class RfamFamily(object):
     name = attr.ib(validator=is_a(basestring))
     pretty_name = attr.ib(validator=is_a(basestring))
     so_terms = attr.ib(validator=is_a(set))
-    go_terms = attr.ib(validator=is_a(set))
     rna_type = attr.ib(validator=is_a(basestring))
     domain = attr.ib()
     description = attr.ib(
-        validator=is_a(basestring),
-        convert=empty_str_from(r'\N'),
+        validator=optional(is_a(basestring)),
+        convert=empty_str_from('NULL'),
     )
     seed_count = attr.ib(validator=is_a(int))
     full_count = attr.ib(validator=is_a(int))
-    clan_id = attr.ib()
+    clan_id = attr.ib(convert=empty_str_from('NULL'))
     length = attr.ib(validator=is_a(int))
 
     @classmethod
-    def from_row(cls, row):
-        pass
-
-    @classmethod
-    def build_all(cls, clan_file, link_file, family_file):
-        so_terms = coll.defaultdict(set)
-        go_terms = coll.defaultdict(set)
-        for line in link_file:
-            parts = line.split()
-            if parts[1] == 'SO':
-                so_terms[parts[0]].add('SO:%s' % parts[2])
-            if parts[1] == 'GO':
-                go_name = ' '.join(parts[3:])
-                go_terms[parts[0]].add(('GO:%s' % parts[2], go_name))
-
-        clans = coll.defaultdict(set)
-        for line in clan_file:
-            parts = line.split()
-            clans[parts[1]] = parts[0]
-
-        families = []
-        for row in csv.reader(family_file, delimiter='\t'):
-            family = row[0]
-            domain = DOMAIN_MAPPING.get(family, None)
-            families.append(cls(
-                id=family,
-                name=row[1],
-                pretty_name=row[3],
-                so_terms=so_terms[family],
-                go_terms=go_terms[family],
-                rna_type=row[18].strip().strip(';'),
-                domain=domain,
-                description=row[9],
-                seed_count=int(row[14]),
-                full_count=int(row[15]),
-                clan_id=clans.get(family, None),
-                length=int(row[28]),
-            ))
-        return families
+    def from_dict(cls, row):
+        family = row['id']
+        domain = DOMAIN_MAPPING.get(family, None)
+        return cls(
+            id=row['id'],
+            name=row['name'],
+            pretty_name=row['pretty_name'],
+            so_terms=set(row['so_terms'].split(',')),
+            rna_type=row['rna_type'].strip().strip(';'),
+            domain=domain,
+            description=row['description'],
+            seed_count=int(row['seed_count']),
+            full_count=int(row['full_count']),
+            clan_id=row['clan_id'],
+            length=int(row['length']),
+        )
 
     @property
     def is_suppressed(self):
@@ -112,7 +106,7 @@ class RfamFamily(object):
 
     def guess_insdc_using_name(self):
         found = set()
-        for name, _ in INFORMATIVE_NAMES.items():
+        for name in INFORMATIVE_NAMES.iterkeys():
             if re.search(name, self.name, re.IGNORECASE):
                 found.add(name)
 
@@ -139,32 +133,16 @@ class RfamFamily(object):
             self.guess_insdc_using_so_terms() or \
             self.guess_insdc_using_rna_type()
 
-
-def build_all(cls, clan_file, membership_file):
-    membership = coll.defaultdict(set)
-    for line in membership_file:
-        parts = line.split()
-        membership[parts[0]].add(parts[1])
-    membership = dict(membership)
-
-    clans = []
-    for line in clan_file:
-        parts = line.strip().split('\t')
-        clans.append(cls(
-            id=parts[0],
-            name=parts[3],
-            description=parts[5],
-            families=membership[parts[0]],
-        ))
-    return clans
+    def writeable(self):
+        data = attr.asdict(self)
+        data['short_name'] = self.name
+        data['long_name'] = self.pretty_name
+        data['is_suppressed'] = int(self.is_suppressed)
+        data['rfam_rna_type'] = data['rna_type']
+        data['rna_type'] = self.guess_insdc()
+        return data
 
 
 def parse(handle):
-    reader = csv.DictReader(handle)
-    for row in reader:
-        RfamFamily.from_dict(row)
-
-    # family_file = get_family_file(version=version)
-    # link_file = get_link_file(version=version)
-    # clan_file = get_clan_membership(version=version)
-    return RfamFamily.build_all(clan_file, link_file, family_file)
+    reader = csv.DictReader(handle, delimiter='\t')
+    return it.imap(RfamFamily.from_dict, reader)

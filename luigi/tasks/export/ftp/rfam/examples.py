@@ -13,9 +13,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import subprocess as sp
-
 import luigi
+
+from plumbum import local
 
 from tasks.config import export
 from tasks.utils.files import atomic_output
@@ -30,14 +30,10 @@ class RfamAnnotationsExample(luigi.Task):
     def output(self):
         return luigi.LocalTarget(export().rfam('example.txt'))
 
-    def program_args(self):
-        return [
-            'head',
-            '-n',
-            str(export().rfam_example_size),
-            self.requires().output().fn,
-        ]
-
     def run(self):
         with atomic_output(self.output()) as out:
-            sp.Popen(self.program_args(), stdout=out)
+            (local.head[
+                '-n',
+                str(export().rfam_example_size),
+                self.requires().output().fn
+            ] > out)()
