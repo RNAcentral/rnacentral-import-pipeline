@@ -19,7 +19,10 @@ import luigi
 
 from databases.rfam.parser import parse
 
+from tasks.config import rfam
 from tasks.config import output
+
+from tasks.utils.fetch import FetchTask
 from tasks.utils.entry_writers import Output
 
 
@@ -30,6 +33,14 @@ class RfamSequenceFile(luigi.Task):  # pylint: disable=W0232,R0904
     """
     input_file = luigi.Parameter()
 
+    def requires(self):
+        conf = rfam()
+        filename = os.path.basename(self.input_file)
+        return FetchTask(
+            remote_path=self.input_file,
+            local_path=conf.raw('sequences', filename),
+        )
+
     def output(self):
         prefix = os.path.basename(self.input_file)
         return Output.build(output().base, 'rfam', prefix)
@@ -39,8 +50,4 @@ class RfamSequenceFile(luigi.Task):  # pylint: disable=W0232,R0904
         Process json file into RNAcentralEntry objects that can be written to
         the output files using standard methods.
         """
-
-        with self.output().writer() as writer:
-            for entry in parse(self.input_file):
-                if entry.is_valid():
-                    writer.write(entry)
+        self.output().populate(parse, self.requires().output())

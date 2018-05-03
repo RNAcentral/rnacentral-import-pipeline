@@ -89,3 +89,44 @@ def test_can_extract_all_ontology_terms():
             ont.term('GO:0006396'),
             ont.term('GO:0005730'),
         ]
+
+
+@pytest.mark.parametrize('excluded', [
+    'GO:0008049',
+    'GO:0042981',
+    'GO:0042749',
+    'GO:0044005',
+])
+def test_does_not_include_bad_go_terms_in_ontologies(excluded):
+    with open('data/rfam/database_link.tsv', 'r') as raw:
+        terms = {ref.external_id for ref in cr.ontology_references(raw)}
+        assert excluded not in terms
+
+
+@pytest.mark.parametrize('model,expected,unexpected', [
+    ('RF02712', 'GO:0051819', 'GO:0044005')
+])
+def test_replaces_bad_ontology_references(model, expected, unexpected):
+    with open('data/rfam/database_link.tsv', 'r') as raw:
+        terms = {ref.external_id for ref in cr.ontology_references(raw) if ref.rfam_family == model}
+        assert expected in terms
+        assert unexpected not in terms
+
+
+@pytest.mark.parametrize('model,excluded', [
+    ('RF01942', 'GO:0035068'),
+    ('RF02338', 'GO:0006396'),
+])
+def test_does_not_incorrectly_assign_mirna_go_mapping(model, excluded):
+    with open('data/rfam/database_link.tsv', 'r') as raw:
+        terms = {ref.external_id for ref in cr.ontology_references(raw) if ref.rfam_family == model}
+        assert excluded not in terms
+
+
+@pytest.mark.parametrize('model,expected', [
+    ('RF00012', 'GO:0006396'),
+])
+def test_does_not_exclude_bad_mirna_terms_from_other_families(model, expected):
+    with open('data/rfam/database_link.tsv', 'r') as raw:
+        terms = {ref.external_id for ref in cr.ontology_references(raw) if ref.rfam_family == model}
+        assert expected in terms

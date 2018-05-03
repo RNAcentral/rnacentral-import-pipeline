@@ -13,22 +13,35 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import attr
+import operator as op
 
-from databases.rfam import utils
-from tasks.utils.csv_writer import CsvWriter
+import luigi
+
+from databases.rfam.clans import parse
+
+from tasks.config import rfam
+
+from tasks.utils.fetch import FetchTask
+from tasks.utils.writers import CsvOutput
 
 
-class RfamClansCSV(CsvWriter):
-    headers = [
-        'id',
-        'name',
-        'description',
-        'family_count',
-    ]
+class RfamClansCSV(luigi.Task):
 
-    def data(self):
-        for clan in utils.load_clans():
-            data = attr.asdict(clan)
-            data['family_count'] = clan.family_count
-            yield data
+    def requires(self):
+        conf = rfam()
+        return FetchTask(
+            remote_path=conf.query('clans.sql'),
+            local_path=conf.raw('clans.tsv'),
+        )
+
+    def output(self):
+        conf = rfam()
+        return CsvOutput(
+            conf.clans,
+            ['id', 'name', 'description', 'family_count'],
+            op.methodcaller('writeable'),
+        )
+
+    def run(self):
+        with self.requires().output.open('r') as raw:
+            self.output().populate(parse(raw))

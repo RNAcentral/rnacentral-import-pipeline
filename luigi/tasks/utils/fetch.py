@@ -14,9 +14,9 @@ limitations under the License.
 """
 
 import os
-import shutil
 
 import luigi
+from plumbum.path.utils import copy
 
 from . import http
 from . import ftp
@@ -39,15 +39,10 @@ def fetch(remote_path, local_path):
         mysql.download(remote_path, local_path)
 
     elif os.path.exists(remote_path):
-        if os.path.isdir(remote_path):
-            shutil.copytree(remote_path, local_path)
-        elif os.path.isfile(remote_path):
-            shutil.copy(remote_path, local_path)
-        else:
-            raise ValueError("Unknown type of file")
+        copy(remote_path, local_path)
 
     else:
-        raise ValueError("Remote must be http/ftp url or existing path")
+        raise ValueError("Remote must be http/ftp/mysql url or existing path")
 
 
 class FetchTask(luigi.Task):

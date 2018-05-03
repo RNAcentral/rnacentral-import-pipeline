@@ -115,6 +115,16 @@ class rfam(luigi.Config):  # pylint: disable=C0103, R0904
         """
         return iglob(os.path.join(self.json_folder, '*.json'))
 
+    def query(self, filename):
+        return query().file('rfam', filename)
+
+    @property
+    def clans(self):
+        return output().to_load('rfam', 'clans', 'clans.csv')
+
+    def families(self):
+        return output().to_load('rfam', 'families', 'families.csv')
+
     @property
     def go_terms(self):
         return ontologies().to_load('rfam_go_terms.csv')
