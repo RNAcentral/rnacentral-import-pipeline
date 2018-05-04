@@ -23,7 +23,12 @@ from databases.rfam import cross_references as cr
 from tasks.config import rfam
 
 from tasks.utils.mysql import MysqlQueryTask
+
 from tasks.utils.writers import CsvOutput
+from tasks.utils.writers import MultiCsvOutput
+
+
+HEADERS = ['go_term_id', 'rfam_model_id']
 
 
 class RfamOntologyTerms(luigi.Task):  # pylint: disable=too-many-public-methods
@@ -40,12 +45,24 @@ class RfamOntologyTerms(luigi.Task):  # pylint: disable=too-many-public-methods
         )
 
     def output(self):
-        return CsvOutput(
-            rfam().go_terms,
-            data.HEADERS,
-            op.methodcaller('writeables'),
+        conf = rfam()
+        return MultiCsvOutput(
+            go_terms=CsvOutput(conf.go_terms, data.HEADERS, self.as_go_term),
+            mapping=CsvOutput(conf.go_mapping, HEADERS, self.as_mapping),
         )
+
+    def as_mapping(self, reference):
+        if reference.database == 'GO':
+            yield {
+                'go_term_id': reference.external_id,
+                'rfam_model_id': reference.rfam_family,
+            }
+
+    def as_go_term(self, reference):
+        if reference.database != 'GO':
+            return
+        yield reference.ontology_term().writeable()
 
     def run(self):
         with self.requires().output().open('r') as raw:
-            self.output().populate(cr.ontology_terms(raw))
+            self.output().populate(cr.ontology_references(raw))
