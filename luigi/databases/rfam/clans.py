@@ -14,7 +14,6 @@ limitations under the License.
 """
 
 import csv
-import operator as op
 import itertools as it
 
 import attr
@@ -22,13 +21,15 @@ from attr.validators import instance_of as is_a
 
 QUERY = """
 select
-    clan.*,
-    membership.rfam_acc
+    clan.clan_acc 'id',
+    clan.name 'name',
+    clan.description 'description',
+    group_concat(membership.rfam_acc) 'families'
 from clan
 join clan_membership membership
 on
     membership.clan_acc = clan.clan_acc
-order by clan.clan_acc
+group by clan.clan_acc
 """
 
 
@@ -43,6 +44,15 @@ class RfamClan(object):
     description = attr.ib(validator=is_a(str))
     families = attr.ib(validator=is_a(set))
 
+    @classmethod
+    def from_dict(cls, row):
+        return cls(
+            id=row['id'],
+            name=row['name'],
+            description=row['description'],
+            families=row['families'].split(','),
+        )
+
     @property
     def family_count(self):
         """
@@ -53,8 +63,8 @@ class RfamClan(object):
 
     def writeable(self):
         data = attr.asdict(self)
-        data['family_count'] = clan.family_count
-        return data
+        data['family_count'] = self.family_count
+        yield data
 
 
 def parse(handle):
@@ -64,12 +74,4 @@ def parse(handle):
     """
 
     reader = csv.DictReader(handle, delimiter='\t')
-    grouped = it.groupby(op.itemgetter('clan_acc'), reader)
-    for clan_acc, entries in grouped:
-        entries = list(entries)
-        yield RfamClan(
-            id=clan_acc,
-            name=entries[0]['name'],
-            description=entries[0]['description'],
-            families=[e['rfam_acc'] for e in entries],
-        )
+    return it.imap(RfamClan.from_dict, reader)
