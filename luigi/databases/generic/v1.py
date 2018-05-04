@@ -73,7 +73,8 @@ def as_exon(assembly, exon):
 
     return data.Exon(
         chromosome_name=chromosome,
-        primary_start=int(exon['startPosition']),
+        # Input is 0 based, but we store 1 based
+        primary_start=int(exon['startPosition']) + 1,
         primary_end=int(exon['endPosition']),
         assembly_id=assembly,
         complement=complement,
