@@ -125,6 +125,10 @@ class rfam(luigi.Config):  # pylint: disable=C0103, R0904
     def go_terms(self):
         return ontologies().to_load('rfam_go_terms.csv')
 
+    @property
+    def go_mapping(self):
+        return output.to_load('rfam', 'go_mappings', 'go_mappings.csv')
+
 
 class noncode(luigi.Config):  # pylint: disable=C0103, R0904
     """

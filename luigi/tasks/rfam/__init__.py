@@ -21,13 +21,11 @@ from .pgload_hits import RfamPGLoadHits
 from .pgload_clans import RfamPGLoadClans
 from .pgload_families import RfamPGLoadFamilies
 from .pgload_fasta import RfamPGLoadFasta
-from .pgload_go_term_mapping import RfamPGLoadGoTerms
 
 from .clans_csv import RfamClansCSV
 from .families_csv import RfamFamiliesCSV
 from .hits_csv import RfamHitsCSV
 from .fasta_csv import RfamFastaCSV
-from .go_term_mapping_csv import RfamGoTermsCSV
 from .sequences import RfamSequenceFile
 
 
@@ -41,7 +39,6 @@ class RfamFamilies(luigi.WrapperTask):  # pylint: disable=R0904
     def requires(self):
         yield RfamPGLoadClans()
         yield RfamPGLoadFamilies()
-        yield RfamPGLoadGoTerms()
 
 
 class RfamSearches(luigi.WrapperTask):  # pylint: disable=R0904
@@ -67,7 +64,6 @@ class RfamCSV(luigi.WrapperTask):  # pylint: disable=R0904
     def requires(self):
         yield RfamClansCSV()
         yield RfamFamiliesCSV()
-        yield RfamGoTermsCSV()
         yield RfamHitsCSV()
         yield RfamFastaCSV()
 
