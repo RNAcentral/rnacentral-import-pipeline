@@ -43,8 +43,8 @@ with ensembl_ids as (
     and ensembl_ids.upi is null
 )
 select
-	concat_ws('_', t1.upi, t2.taxid) as id,
-	(CASE WHEN (t1.seq_long IS NULL) THEN t1.seq_short ELSE t1.seq_long END) as sequence
+    concat_ws('_', t1.upi, t2.taxid) as id,
+    (CASE WHEN (t1.seq_long IS NULL) THEN t1.seq_short ELSE t1.seq_long END) as sequence
 from rna t1, no_ensembl t2
 where
 t1.upi = t2.upi

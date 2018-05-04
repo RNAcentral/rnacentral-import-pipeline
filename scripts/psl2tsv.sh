@@ -20,67 +20,67 @@ EXACT_MATCHES=${INPUT_FOLDER}/mapping-temp.tsv
 INEXACT_MATCHES=${INPUT_FOLDER}/mapping-inexact-temp.tsv
 
 for i in {1..2}; do
-	if [ $i -eq 1 ]; then
-	    OUTPUT=$EXACT_MATCHES
-	else
-	    OUTPUT=$INEXACT_MATCHES
-	fi
+  if [ $i -eq 1 ]; then
+      OUTPUT=$EXACT_MATCHES
+  else
+      OUTPUT=$INEXACT_MATCHES
+  fi
 
-	echo '' > $MATCHES_PSL
-	for d in $INPUT_FOLDER/*part_*.psl; do
+  echo '' > $MATCHES_PSL
+  for d in $INPUT_FOLDER/*part_*.psl; do
 
-		  TEMPFILE=tempfile.psl
-		    if [ $i -eq 1 ]; then
-				awk '{
-				  matches = $1
-				  seqlength = $11
-				  if (matches == seqlength) { print }
-				}' $d > $TEMPFILE
-		    elif [ $i -eq 2 ]; then
-		        awk '{
-		          if ($11>15 && $1/$11>0.95 && $1/$11<1) { print }
-		        }' $d > $TEMPFILE
-		    fi
+      TEMPFILE=tempfile.psl
+        if [ $i -eq 1 ]; then
+        awk '{
+          matches = $1
+          seqlength = $11
+          if (matches == seqlength) { print }
+        }' $d > $TEMPFILE
+        elif [ $i -eq 2 ]; then
+            awk '{
+              if ($11>15 && $1/$11>0.95 && $1/$11<1) { print }
+            }' $d > $TEMPFILE
+        fi
 
-			cat $TEMPFILE | \
-			# skip long introns in short sequences
-			awk '{
-			  matches = $1
-			  target_insertions = $8
-			  if (matches < 100 && target_insertions > 20) {;} else  { print }
-			}' | \
-			# print out modified psl with updated strand and region_id
-			awk -v OFS='\t' '{
-			  psl_strand = $9
-			  if (psl_strand == "+") strand=1;
-			  else if (psl_strand == "-") strand=-1;
-			  else strand = 0;
-			  start = $16+1;
-			  region_id = $10 "@" $14 "/" start "-" $17 ":" $9
-			  print $1, $2, $3, $4, $5, $6, $7, $8, strand, region_id, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21
-			}' >> $MATCHES_PSL
-	done
+      cat $TEMPFILE | \
+      # skip long introns in short sequences
+      awk '{
+        matches = $1
+        target_insertions = $8
+        if (matches < 100 && target_insertions > 20) {;} else  { print }
+      }' | \
+      # print out modified psl with updated strand and region_id
+      awk -v OFS='\t' '{
+        psl_strand = $9
+        if (psl_strand == "+") strand=1;
+        else if (psl_strand == "-") strand=-1;
+        else strand = 0;
+        start = $16+1;
+        region_id = $10 "@" $14 "/" start "-" $17 ":" $9
+        print $1, $2, $3, $4, $5, $6, $7, $8, strand, region_id, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21
+      }' >> $MATCHES_PSL
+  done
 
-	# use bedops to convert psl to bed, use --split to convert bed blocks into separate lines for each exon
-	psl2bed --split < $MATCHES_PSL > $MATCHES_BED
+  # use bedops to convert psl to bed, use --split to convert bed blocks into separate lines for each exon
+  psl2bed --split < $MATCHES_PSL > $MATCHES_BED
 
-	# transform bed to tsv that can be loaded in the database
-	awk -v OFS='\t' '{
-	  identity = $5/$7
-	  print $4, $1, $2, $3, $6, identity
-	}' $MATCHES_BED | \
-	awk -v OFS='\t' -v assembly_id="$ASSEMBLY_ID" '{
-	  split($1, a, "@");
-	  split(a[1], b, "_");
-	  start = $3+1
-	  print a[1], b[1], b[2], c[1], $1, $2, start, $4, $5, assembly_id, $6, NR
-	}' > $OUTPUT
+  # transform bed to tsv that can be loaded in the database
+  awk -v OFS='\t' '{
+    identity = $5/$7
+    print $4, $1, $2, $3, $6, identity
+  }' $MATCHES_BED | \
+  awk -v OFS='\t' -v assembly_id="$ASSEMBLY_ID" '{
+    split($1, a, "@");
+    split(a[1], b, "_");
+    start = $3+1
+    print a[1], b[1], b[2], c[1], $1, $2, start, $4, $5, assembly_id, $6, NR
+  }' > $OUTPUT
 
-	rm $MATCHES_PSL
-	rm $MATCHES_BED
+  rm $MATCHES_PSL
+  rm $MATCHES_BED
   rm $TEMPFILE
 
-	echo 'See file ' $OUTPUT
+  echo 'See file ' $OUTPUT
 
 done
 
