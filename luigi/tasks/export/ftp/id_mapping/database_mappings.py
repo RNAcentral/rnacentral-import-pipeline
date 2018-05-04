@@ -13,10 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import csv
-
-import attr
-from attr.validators import instance_of as is_a
+import os
 
 import luigi
 
@@ -37,4 +34,5 @@ class DatabaseSpecificMappings(luigi.Task):
 
     def run(self):
         with self.requires().output().open('r') as raw:
+            os.makedirs(export().database_mappings())
             split_by_database(raw, export().database_mappings())

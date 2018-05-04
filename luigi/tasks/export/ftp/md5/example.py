@@ -28,7 +28,7 @@ class Md5Example(luigi.Task):
         return Md5Data()
 
     def output(self):
-        return luigi.LocalTarget(export().sequences('example.txt'))
+        return luigi.LocalTarget(export().md5('example.txt'))
 
     def data(self):
         count = export().md5_example_size

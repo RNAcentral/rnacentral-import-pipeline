@@ -35,6 +35,9 @@ class output(luigi.Config):  # pylint: disable=C0103, R0904
     base = PathParameter(default='/tmp')
     search_files = PathParameter(default='/tmp')
 
+    def to_load(self, *args):
+        return os.path.join(self.base, *args)
+
 
 class db(luigi.Config):  # pylint: disable=C0103, R0904
     """
@@ -96,8 +99,11 @@ class rfam(luigi.Config):  # pylint: disable=C0103, R0904
         This will produce an iterable of all JSON files that are in the
         json_folder.
         """
-
         return iglob(os.path.join(self.json_folder, '*.json'))
+
+    @property
+    def go_terms(self):
+        return ontologies().to_load('rfam_go_terms.csv')
 
 
 class noncode(luigi.Config):  # pylint: disable=C0103, R0904
@@ -215,7 +221,7 @@ class ena(luigi.Config):
             'tmRNA-Website',
         )
     )
-    tpa_url = 'https://www.ebi.ac.uk/ena/data/xref/search?source={db}&expanded=true'
+    tpa_url = 'https://www.ebi.ac.uk/ena/data/xref/search?source={db}&expanded=true&limit=0'
 
     def raw_ncr_files(self):
         if not os.path.exists(self.base):
@@ -263,9 +269,16 @@ class export(luigi.Config):  # pylint: disable=C0103,R0904
     sequence_example_size = luigi.IntParameter(default=10)
     search_export_size = luigi.IntParameter(default=100000)
     md5_example_size = luigi.IntParameter(default=5)
+    ensembl_export_size = luigi.IntParameter(default=10000)
 
     def ftp(self, *args):
         return os.path.join(output().base, 'ftp', *args)
+
+    def json(self, *args):
+        return os.path.join(output().base, 'json', *args)
+
+    def md5(self, *args):
+        return self.ftp('md5', *args)
 
     def sequences(self, *args):
         return self.ftp('sequences', *args)
@@ -282,9 +295,16 @@ class export(luigi.Config):  # pylint: disable=C0103,R0904
     def database_mappings(self, *args):
         return self.id_mapping('database_mappings', *args)
 
+    def ensembl_export(self, *args):
+        return self.ftp('ensembl', *args)
+
+    def go(self, *args):
+        return self.ftp('go', *args)
+      
     def bed(self, *args):
         return self.ftp('bed', *args)
 
+      
 class genome_mapping(luigi.Config):  # pylint: disable=C0103,R0904
     base = PathParameter(default='/tmp')
 
@@ -324,6 +344,7 @@ class genome_mapping(luigi.Config):  # pylint: disable=C0103,R0904
             os.makedirs(path)
         return path
 
+      
 class refseq(luigi.Config):  # pylint: disable=C0103,R0904
     base = luigi.Parameter(default='/tmp')
 
@@ -332,3 +353,44 @@ class refseq(luigi.Config):  # pylint: disable=C0103,R0904
 
     def input_file(self, *args):
         return os.path.join(output().base, 'refseq', *args)
+
+
+class ontologies(object):
+    def to_load(self, *args):
+        return output().to_load('ontologies', *args)
+
+
+class publications(object):
+    def to_load(self, *args):
+        return output().to_load('publications', *args)
+
+
+class quickgo(luigi.Config):
+    data_file = luigi.Parameter(default='/ebi/ftp/pub/contrib/goa/goa_rna_all.gpa.gz')
+
+    def base(self, *args):
+        return os.path.join(output().base, 'quickgo', *args)
+
+    @property
+    def local_copy(self):
+        return self.base('raw', 'annotations.gpa.gz')
+
+    @property
+    def csv(self):
+        return output().to_load('quickgo', 'annotations.csv')
+
+    @property
+    def go_terms(self):
+        return ontologies().to_load('quickgo_go_terms.csv')
+
+    @property
+    def eco_terms(self):
+        return ontologies().to_load('quickgo_eco_terms.csv')
+
+    @property
+    def publications(self):
+        return publications().to_load('quickgo_publications.csv')
+
+    @property
+    def publication_mappings(self):
+        return output().to_load('quickgo', 'publication_mappings.csv')

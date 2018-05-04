@@ -28,6 +28,14 @@ from databases.helpers.hashes import crc64
 
 LOGGER = logging.getLogger(__name__)
 
+GENERIC_PUBMED_HEADER = [
+    'ref_pubmed_id',
+    'authors',
+    'location',
+    'title',
+    'doi',
+]
+
 FEATURE_TYPE_RNAS = set([
     'rRNA',
     'tRNA',
@@ -77,7 +85,7 @@ def optional_utf8(raw):
     if raw is None:
         return None
     if isinstance(raw, unicode):
-        return unicodedata.normalize('NFC', raw)
+        return unicodedata.normalize('NFC', raw).encode('ascii', 'ignore')
     return raw
 
 
@@ -150,10 +158,19 @@ class Reference(object):
         Computes the MD5 hash of the reference.
         """
         return md5(''.join([
-            self.authors.encode('utf-8') or '',
-            self.location.encode('utf-8') or '',
-            self.title.encode('utf-8') or ''
+            (self.authors or ''),
+            (self.location or ''),
+            (self.title or ''),
         ]))
+
+    def writeable_generic_pubmed(self):
+        return {
+            'ref_pubmed_id': self.pmid,
+            'authors': self.authors,
+            'location': self.location,
+            'title': self.title,
+            'doi': self.doi,
+        }
 
 
 @attr.s(frozen=True)

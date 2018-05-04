@@ -15,25 +15,15 @@ limitations under the License.
 
 import luigi
 
-from tasks.utils.compress import GenericCompressTask
-
 from .readme import Readme
 from .id_mapping import IdMapping
 from .database_mappings import DatabaseSpecificMappings
-
-
-class Compress(GenericCompressTask):
-    def inputs(self):
-        yield IdMapping()
-
-    def requires(self):
-        for requirement in super(Compress, self).requires():
-            yield requirement
-        yield DatabaseSpecificMappings()
+from .example import ExampleIdMapping
 
 
 class IdExport(luigi.WrapperTask):
     def requires(self):
         yield Readme()
+        yield IdMapping()
+        yield ExampleIdMapping()
         yield DatabaseSpecificMappings()
-        yield Compress()

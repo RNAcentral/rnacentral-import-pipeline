@@ -17,6 +17,7 @@ import re
 import json
 from datetime import datetime as dt
 import operator as op
+import itertools as it
 import collections as coll
 
 from xml.sax import saxutils as sax
@@ -26,6 +27,14 @@ import xml.etree.cElementTree as ET
 GENERIC_TYPES = set(['misc_RNA', 'misc RNA', 'other'])
 
 NO_OPTIONAL_IDS = set(['SILVA', 'PDB'])
+
+KNOWN_QUALIFIERS = set([
+    'part_of',
+    'involved_in',
+    'enables',
+    'contributes_to',
+    'colocalizes_with',
+])
 
 POPULAR_SPECIES = set([
     9606,    # human
@@ -133,6 +142,13 @@ def unique(values):
     return {v for v in values if v}
 
 
+def first(values):
+    """
+    Get the first value in the list of values as a string.
+    """
+    return str(values[0])
+
+
 def unique_lower(values):
     return {v.lower() for v in values if v}
 
@@ -163,7 +179,7 @@ def as_active(deleted):
     Turn the deleted flag (Y/N) into the active term (Obsolete/Active).
     """
 
-    if deleted == 'Y':
+    if first(deleted) == 'Y':
         return 'Obsolete'
     return 'Active'
 
@@ -345,13 +361,14 @@ def references(taxid, xrefs, pmids, dois, notes):
     return refs
 
 
-def boost(taxid, deleted, rna_type, expert_dbs):
+def boost(taxid, deleted, rna_type, expert_dbs, status):
     """
     Determine ordering in search results.
     """
 
     value = 0
-    is_active = deleted == 'N'
+    is_active = 'N' in set(deleted)
+    expert_dbs = set(expert_dbs)
     if is_active and 'HGNC' in expert_dbs:
         # highest priority for HGNC entries
         value = 4
@@ -368,10 +385,13 @@ def boost(taxid, deleted, rna_type, expert_dbs):
         # basic priority level
         value = 1
 
-    if rna_type in GENERIC_TYPES:
+    if normalize_rna_type(rna_type) in GENERIC_TYPES:
         value = value - 0.5
 
-    return value
+    if bool(status['has_issue']):
+        value = value - 0.5
+
+    return str(value)
 
 
 def get_genes(genes, products):
@@ -402,33 +422,64 @@ def normalize_common_name(common_names):
     return {n.lower() for n in common_names if n}
 
 
-def rfam_problems(status):
-    """
-    Create a list of the names of all Rfam problems.
-    """
-    return [p['name'] for p in status['problems']]
-
-
 def problem_found(status):
     """
     Check if there is an Rfam issue.
     """
-    return status['has_issue']
+    return str(bool(status['has_issue']))
+
+
+def rfam_problems(status):
+    """
+    Create a list of the names of all Rfam problems.
+    """
+    if not status['has_issue']:
+        return ['none']
+    return sorted(p['name'] for p in status['problems'])
 
 
 def as_popular(taxid):
     """
     Detect if the taxid is a popular species and return None if it is not.
     """
-
     if taxid in POPULAR_SPECIES:
-        return True
+        return taxid
     return None
+
+
+def normalize_rna_type(rna_type):
+    return first(rna_type).replace('_', ' ')
+
+
+def from_annotation_qualifer(name):
+    def fn(go_annotations):
+        key = op.itemgetter('qualifier')
+        annotations = it.ifilter(lambda a: key(a) == name, go_annotations)
+        values = set()
+        for annotation in annotations:
+            values.add(annotation['go_term_id'])
+            values.add(annotation['go_name'])
+        return sorted(values)
+    return fn
+
+
+def has_go_annotations(go_annotations):
+    for annotation in go_annotations:
+        if annotation['qualifier'] in KNOWN_QUALIFIERS:
+            return str(True)
+    return str(False)
+
+
+part_of = from_annotation_qualifer('part_of')
+involved_in = from_annotation_qualifer('involved_in')
+enables = from_annotation_qualifer('enables')
+contributes_to = from_annotation_qualifer('contributes_to')
+colocalizes_with = from_annotation_qualifer('colocalizes_with')
 
 
 builder = entry([
     tag('name', as_name, keys=('upi', 'taxid')),
-    tag('description', str),
+    tag('description', first),
 
     section('dates', [
         date_tag('first_seen', max),
@@ -439,7 +490,7 @@ builder = entry([
         tags('ref', references, keys=(
             'taxid',
             'cross_references',
-            'pub_ids',
+            'pubmed_ids',
             'dois',
             'notes',
         ))
@@ -447,18 +498,18 @@ builder = entry([
 
     section('additional_fields', [
         field('active', as_active, keys='deleted'),
-        field('length', str),
-        field('species', str),
+        field('length', first),
+        field('species', first),
         fields('organelle', unique_lower, keys='organelles'),
         fields('expert_db', unique, keys='expert_dbs'),
         fields('common_name', normalize_common_name),
         fields('function', unique, keys='functions'),
         fields('gene', get_genes, keys=('genes', 'product')),
         fields('gene_synonym', unique, keys='gene_synonyms'),
-        field('rna_type', str),
+        field('rna_type', normalize_rna_type),
         fields('product', unique, keys='products'),
-        field('has_genomic_coordinates', str),
-        field('md5', str),
+        field('has_genomic_coordinates', first, keys='has_coordinates'),
+        field('md5', first),
         fields('author', as_authors, keys='authors'),
         fields('journal', as_journals, keys='journals'),
         fields('insdc_submission', as_insdc, keys='journals'),
@@ -470,6 +521,7 @@ builder = entry([
             'deleted',
             'rna_type',
             'expert_dbs',
+            'rfam_status',
         )),
         fields('locus_tag', unique, keys='locus_tags'),
         fields('standard_name', unique, keys='standard_names'),
@@ -479,5 +531,11 @@ builder = entry([
         fields('rfam_problems', rfam_problems, keys='rfam_status'),
         field('rfam_problem_found', problem_found, keys='rfam_status'),
         fields('tax_string', unique, keys='tax_strings'),
+        fields('involved_in', involved_in, keys='go_annotations'),
+        fields('part_of', part_of, keys='go_annotations'),
+        fields('enables', enables, keys='go_annotations'),
+        fields('contributes_to', contributes_to, keys='go_annotations'),
+        fields('colocalizes_with', colocalizes_with, keys='go_annotations'),
+        field('has_go_annotations', has_go_annotations, keys='go_annotations'),
     ]),
 ])

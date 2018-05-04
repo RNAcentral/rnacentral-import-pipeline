@@ -47,15 +47,22 @@ def load_and_get_additional(upi, field_name):
     return load_and_findall(upi, selector)
 
 
+def load_and_get_cross_references(upi, db_name):
+    selector = "./cross_references/ref[@dbname='%s']" % db_name
+    results = load_and_findall(upi, selector)
+    assert results
+    return results
+
+
 def pretty_xml(data):
     ugly = ET.tostring(data)
     parsed = minidom.parseString(ugly.replace('\n', ''))
-    return parsed.toprettyxml()
+    return parsed.toprettyxml().lower()
 
 
 @pytest.mark.parametrize(
     "filename",
-    [os.path.join('data/xml', f) for f in os.listdir('data/xml/')]
+    [os.path.join('data/export/search', f) for f in os.listdir('data/export/search/')]
 )
 def test_it_builds_correct_xml_entries(filename):
     result = ET.parse(filename)
@@ -68,7 +75,7 @@ def test_it_builds_correct_xml_entries(filename):
 @pytest.mark.parametrize("upi,ans", [  # pylint: disable=E1101
     ('URS00008CC2A4_43179', "Ictidomys tridecemlineatus"),
     ('URS0000713CBE_408172', 'marine metagenome'),
-    ('URS000047774B_77133', 'environmental samples uncultured bacterium'),
+    ('URS000047774B_77133', 'uncultured bacterium'),
 ])
 def test_assigns_species_correctly(upi, ans):
     """
@@ -165,11 +172,11 @@ def test_assigns_description_correctly_to_randomly_chosen_examples(upi, ans):
     ('URS00005F2C2D_4932', 'rRNA'),
     ('URS000019E0CD_9606', 'lncRNA'),
     ('URS00007FD8A3_7227', 'lncRNA'),
-    ('URS0000086133_9606', 'misc_RNA'),
-    ('URS00007A9FDC_6239', 'misc_RNA'),
+    ('URS0000086133_9606', 'misc RNA'),
+    ('URS00007A9FDC_6239', 'misc RNA'),
     ('URS000025C52E_9606', 'other'),
-    ('URS000075C290_9606', 'precursor_RNA'),
-    ('URS0000130A6B_3702', 'precursor_RNA'),
+    ('URS000075C290_9606', 'precursor RNA'),
+    ('URS0000130A6B_3702', 'precursor RNA'),
     ('URS0000734D8F_9606', 'snRNA'),
     ('URS000032B6B6_9606', 'snRNA'),
     ('URS000075EF5D_9606', 'snRNA'),
@@ -181,48 +188,51 @@ def test_assigns_description_correctly_to_randomly_chosen_examples(upi, ans):
     ('URS00005D0BAB_9606', 'piRNA'),
     ('URS00002AE808_10090', 'piRNA'),
     ('URS00003054F4_6239', 'piRNA'),
-    ('URS00000478B7_9606', 'SRP_RNA'),
-    ('URS000024083D_9606', 'SRP_RNA'),
-    ('URS00002963C4_4565', 'SRP_RNA'),
+    ('URS00000478B7_9606', 'SRP RNA'),
+    ('URS000024083D_9606', 'SRP RNA'),
+    ('URS00002963C4_4565', 'SRP RNA'),
     ('URS000040F7EF_4577', 'siRNA'),
     ('URS00000DA486_3702', 'other'),
-    ('URS00006B14E9_6183', 'hammerhead_ribozyme'),
-    ('URS0000808D19_644', 'hammerhead_ribozyme'),
-    ('URS000080DFDA_32630', 'hammerhead_ribozyme'),
-    ('URS000086852D_32630', 'hammerhead_ribozyme'),
-    ('URS00006C670E_30608', 'hammerhead_ribozyme'),
-    ('URS000045EBF2_9606', 'antisense_RNA'),
-    ('URS0000157BA2_4896', 'antisense_RNA'),
-    ('URS00002F216C_36329', 'antisense_RNA'),
+    ('URS00006B14E9_6183', 'hammerhead ribozyme'),
+    ('URS0000808D19_644', 'hammerhead ribozyme'),
+    ('URS000080DFDA_32630', 'hammerhead ribozyme'),
+    ('URS000086852D_32630', 'hammerhead ribozyme'),
+    ('URS00006C670E_30608', 'hammerhead ribozyme'),
+    ('URS000045EBF2_9606', 'antisense RNA'),
+    ('URS0000157BA2_4896', 'antisense RNA'),
+    ('URS00002F216C_36329', 'antisense RNA'),
     ('URS000075A336_9606', 'miRNA'),
     ('URS0000175007_7227', 'miRNA'),
     ('URS000015995E_4615', 'miRNA'),
     ('URS0000564CC6_224308', 'tmRNA'),
     ('URS000059EA49_32644', 'tmRNA'),
-    ('URS0000764CCC_1415657', 'RNase_P_RNA'),
-    ('URS00005CDD41_352472', 'RNase_P_RNA'),
-    ('URS000072A167_10141', 'Y_RNA'),
-    ('URS00004A2461_9606', 'Y_RNA'),
-    ('URS00005CF03F_9606', 'Y_RNA'),
-    ('URS000021515D_322710', 'autocatalytically_spliced_intron'),
-    ('URS000012DE89_9606', 'autocatalytically_spliced_intron'),
-    ('URS000061DECF_1235461', 'autocatalytically_spliced_intron'),
+    ('URS0000764CCC_1415657', 'RNase P RNA'),
+    ('URS00005CDD41_352472', 'RNase P RNA'),
+    ('URS000072A167_10141', 'Y RNA'),
+    ('URS00004A2461_9606', 'Y RNA'),
+    ('URS00005CF03F_9606', 'Y RNA'),
+    ('URS000021515D_322710', 'autocatalytically spliced intron'),
+    ('URS000012DE89_9606', 'autocatalytically spliced intron'),
+    ('URS000061DECF_1235461', 'autocatalytically spliced intron'),
     ('URS00006233F9_9606', 'ribozyme'),
     ('URS000080DD33_32630', 'ribozyme'),
     ('URS00006A938C_10090', 'ribozyme'),
     ('URS0000193C7E_9606', 'scRNA'),
     ('URS00004B11CA_223283', 'scRNA'),
-    ('URS000060C682_9606', 'vault_RNA'),
-    ('URS000064A09E_13616', 'vault_RNA'),
-    ('URS00003EE18C_9544', 'vault_RNA'),
+    ('URS000060C682_9606', 'vault RNA'),
+    ('URS000064A09E_13616', 'vault RNA'),
+    ('URS00003EE18C_9544', 'vault RNA'),
     ('URS000059A8B2_7227', 'rasiRNA'),
-    ('URS00000B3045_7227', 'guide_RNA'),
-    ('URS000082AF7D_5699', 'guide_RNA'),
+    ('URS00000B3045_7227', 'guide RNA'),
+    ('URS000082AF7D_5699', 'guide RNA'),
     ('URS000077FBEB_9606', 'ncRNA'),
     ('URS00000101E5_9606', 'lncRNA'),
     ('URS0000A994FE_9606', 'sRNA'),
     ('URS0000714027_9031', 'sRNA'),
     ('URS000065BB41_7955', 'sRNA'),
+    ('URS000049E122_9606', 'misc RNA'),
+    ('URS000013F331_9606', 'RNase P RNA'),
+    ('URS00005EF0FF_4577', 'siRNA'),
 ])
 def test_assigns_rna_type_correctly(upi, ans):
     assert load_and_get_additional(upi, "rna_type") == [
@@ -264,16 +274,6 @@ def test_correctly_assigns_active(upi, ans):
     assert load_data(upi).additional_fields.is_active == ans
 
 
-# Add test for:
-# HGNC/active/lncRNA    4
-# HGNC/inactive/lncRNA  0
-# HGNC/active/miscRNA   3.5
-# HGNC/inactive/miscRNA   -0.5
-@pytest.mark.skip()  # pylint: disable=E1101
-def test_computes_boost_correctly(upi, ans):
-    assert load_data(upi).additional_fields.boost == ans
-
-
 # Test that this assigns authors from > 1 publications to a single set
 @pytest.mark.skip()  # pylint: disable=E1101
 def test_assigns_authors_correctly(upi, ans):
@@ -307,6 +307,8 @@ def test_can_assign_correct_cross_references(upi, ans):
 
 def test_can_create_document_with_unicode():
     data = load_and_get_additional('URS000009EE82_562', 'product')
+    from pprint import pprint
+    pprint(data)
     assert data == [
         {'attrib': {'name': 'product'}, 'text': u'tRNA-Asp(gtc)'},
         {'attrib': {'name': 'product'}, 'text': u'P-site tRNA Aspartate'},
@@ -315,11 +317,10 @@ def test_can_create_document_with_unicode():
         {'attrib': {'name': 'product'}, 'text': u'tRNA-asp'},
         {'attrib': {'name': 'product'}, 'text': u'tRNA Asp ⊄UC'},
         {'attrib': {'name': 'product'}, 'text': u'tRNA-Asp'},
-        {'attrib': {'name': 'product'}, 'text': u'tRNA-Asp (GTC)'},
-        {'attrib': {'name': 'product'}, 'text': u'ASPARTYL TRNA'},
         {'attrib': {'name': 'product'}, 'text': u'tRNA-Asp-GTC'},
+        {'attrib': {'name': 'product'}, 'text': u'ASPARTYL TRNA'},
+        {'attrib': {'name': 'product'}, 'text': u'tRNA-Asp (GTC)'},
     ]
-
 
 
 def test_it_can_handle_a_list_in_ontology():
@@ -350,3 +351,145 @@ def test_output_validates_according_to_schema():
         exporter.write(out, entries)
         out.flush()
         exporter.validate(out.name)
+
+
+@pytest.mark.parametrize('upi,ans', [  # pylint: disable=E1101
+    ('URS0000759CF4_9606', 9606),
+    ('URS0000724ACA_7955', 7955),
+    ('URS000015E0AD_10090', 10090),
+    ('URS00005B8078_3702', 3702),
+    ('URS0000669249_6239', 6239),
+    ('URS0000377114_7227', 7227),
+    ('URS000006F31F_559292', 559292),
+    ('URS0000614AD9_4896', 4896),
+    ('URS0000AB68F4_511145', 511145),
+    ('URS0000775421_224308', 224308),
+    ('URS00009C1EFD_9595', None),
+    ('URS0000BC697F_885580', None),
+])
+def test_correctly_assigns_popular_species(upi, ans):
+    result = []
+    if ans:
+        result = [{'attrib': {'name': 'popular_species'}, 'text': str(ans)}]
+    assert load_and_get_additional(upi, "popular_species") == result
+
+
+@pytest.mark.parametrize('upi,problems', [  # pylint: disable=E1101
+    ('URS0000001EB3_9595', ['none']),
+    ('URS000014C3B0_7227', ['possible_contamination']),
+    ('URS0000010837_7227', ['incomplete_sequence', 'possible_contamination']),
+    ('URS000052E2E9_289219', ['possible_contamination']),
+])
+def test_it_correctly_build_rfam_problems(upi, problems):
+    ans = [{'attrib': {'name': 'rfam_problems'}, 'text': p} for p in problems]
+    assert load_and_get_additional(upi, "rfam_problems") == ans
+
+
+@pytest.mark.parametrize('upi,status', [  # pylint: disable=E1101
+    ('URS0000000006_1317357', False),
+    ('URS000075D95B_9606', False),
+    ('URS00008C5577_77133', False),
+    ('URS0000001EB3_9595', False),
+    ('URS000014C3B0_7227', True),
+    ('URS0000010837_7227', True),
+    ('URS000052E2E9_289219', True),
+])
+def test_it_correctly_assigns_rfam_problem_found(upi, status):
+    assert load_and_get_additional(upi, "rfam_problem_found") == [
+        {'attrib': {'name': 'rfam_problem_found'}, 'text': str(status)},
+    ]
+
+
+@pytest.mark.parametrize('upi,status', [  # pylint: disable=E1101
+    ('URS000075EAAC_9606', True),
+    # ('URS0000A77400_9606', True),
+    ('URS0000A81C5E_9606', True),
+    ('URS0000ABD87F_9606', True),
+    ('URS00007F81F8_511145', False),
+    ('URS0000A16E25_198431', False),
+    ('URS0000A7ED87_7955', True),
+])
+def test_can_correctly_assign_known_locations(upi, status):
+    assert load_and_get_additional(upi, "has_genomic_coordinates") == [
+        {'attrib': {'name': 'has_genomic_coordinates'}, 'text': str(status)},
+    ]
+
+
+@pytest.mark.parametrize('upi', [  # pylint: disable=E1101
+    'URS00004B0F34_562',
+    'URS00000ABFE9_562',
+    'URS0000049E57_562',
+])
+def test_does_not_produce_empty_rfam_warnings(upi):
+    assert load_and_get_additional(upi, 'rfam_problems') == [
+        {'attrib': {'name': 'rfam_problems'}, 'text': 'none'},
+    ]
+
+
+@pytest.mark.parametrize('upi,boost', [  # pylint: disable=E1101
+    ('URS0000B5D04E_1457030', 1),
+    ('URS0000803319_904691', 1),
+    ('URS00009ADB88_9606', 3),
+    ('URS000049E122_9606', 2.5),
+    ('URS000047450F_1286640', 0.0),
+    ('URS0000143578_77133', 0.5),
+    ('URS000074C6E6_7227', 1.5),
+    ('URS00007B5259_3702', 2),
+    ('URS00007E35EF_9606', 4),
+    ('URS00003AF3ED_3702', 1.5),
+])
+def test_computes_valid_boost(upi, boost):
+    assert load_and_get_additional(upi, 'boost') == [
+        {'attrib': {'name': 'boost'}, 'text': str(boost)}
+    ]
+
+
+@pytest.mark.parametrize('upi,pub_ids', [  # pylint: disable=E1101
+    ('URS0000BB15D5_9606', [512936, 527789]),
+    ('URS000019E0CD_9606', [238832, 538386, 164929, 491042, 491041]),
+])
+def test_computes_pub_ids(upi, pub_ids):
+    val = sorted(int(a['text']) for a in load_and_get_additional(upi, 'pub_id'))
+    assert val == sorted(pub_ids)
+
+
+@pytest.mark.parametrize('upi,pmid', [  # pylint: disable=E1101
+    ('URS000026261D_9606', 27021683),
+    ('URS0000614A9B_9606', 28111633)
+])
+def test_can_add_publications_from_go_annotations(upi, pmid):
+    val = {c['attrib']['dbkey'] for c in load_and_get_cross_references(upi, 'PUBMED')}
+    assert str(pmid) in val
+
+
+@pytest.mark.parametrize('upi,qualifier,ans', [  # pylint: disable=E1101
+    ('URS000026261D_9606', 'part_of', [
+        'GO:0005615',
+        'extracellular space'
+    ]),
+    ('URS0000614A9B_9606', 'involved_in', [
+        'GO:0010628',
+        'GO:0010629',
+        'GO:0035195',
+        'GO:0060045',
+        'positive regulation of gene expression',
+        'negative regulation of gene expression',
+        'gene silencing by miRNA',
+        'positive regulation of cardiac muscle cell proliferation',
+    ]),
+])
+def test_can_assign_go_annotations(upi, qualifier, ans):
+    val = {a['text'] for a in load_and_get_additional(upi, qualifier)}
+    assert sorted(val) == sorted(ans)
+
+
+@pytest.mark.parametrize('upi,has', [  # pylint: disable=E1101
+    ('URS000026261D_9606', True),
+    ('URS0000614A9B_9606', True),
+    ('URS000019E0CD_9606', False),
+    ('URS0000003085_7460', False),
+])
+def test_it_can_add_valid_annotations_flag(upi, has):
+    assert load_and_get_additional(upi, "has_go_annotations") == [
+        {'attrib': {'name': 'has_go_annotations'}, 'text': str(has)},
+    ]

@@ -15,24 +15,13 @@ limitations under the License.
 
 import luigi
 
-from tasks.utils.compress import GenericCompressTask
-
 from .rfam_annotations import RfamAnnotations
 from .readme import RfamAnnotationsReadMe
 from .examples import RfamAnnotationsExample
 
 
-class Compress(GenericCompressTask):
-    def inputs(self):
-        yield RfamAnnotations()
-
-    def requires(self):
-        yield RfamAnnotations()
-        yield RfamAnnotationsExample()
-
-
-class ExportRfamAnnotaitons(luigi.WrapperTask):
+class RfamAnnotationExport(luigi.WrapperTask):
     def requires(self):
         yield RfamAnnotationsReadMe()
+        yield RfamAnnotations()
         yield RfamAnnotationsExample()
-        yield Compress()

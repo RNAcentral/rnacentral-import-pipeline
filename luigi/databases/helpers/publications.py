@@ -22,7 +22,7 @@ from functools32 import lru_cache
 
 from ..data import Reference
 
-URL = 'https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=EXT_ID:{pmid}&format=json'
+URL = 'https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=EXT_ID:{pmid}+AND+SRC:MED&format=json'
 
 
 class UnknownPmid(Exception):
@@ -64,21 +64,23 @@ def summary(pmid):
 
 def reference(accession, pmid):
     data = summary(pmid)
-    issue = data.get('issue', None)
+    issue = data.get('issue', '')
     if issue:
         issue = ('(%s)' % issue)
 
-    pages = data.get('pageInfo')
-    if 'pageInfo' in data:
+    pages = data.get('pageInfo', '')
+    if 'pageInfo' in data and pages:
         pages = ':' + pages
 
     location = '{title} {volume}{issue}{pages} ({year})'.format(
         title=data['journalTitle'],
         issue=issue,
-        volume=data['journalVolume'],
+        # volume=data.get['journalVolume'],
+        volume=data.get('journalVolume', ''),
         pages=pages,
         year=data['pubYear'],
     )
+    location = location.replace('  ', ' ')
 
     title = re.sub(r'\.$', '', data['title'])
     return Reference(

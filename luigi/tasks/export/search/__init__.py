@@ -21,6 +21,7 @@ from tasks.config import export
 from rnacentral.utils import upi_ranges
 
 from .validate import ValidateAndCompressSearchChunk
+from .release_note import SearchReleaseNote
 
 
 class Search(luigi.WrapperTask):  # pylint: disable=R0904
@@ -33,3 +34,4 @@ class Search(luigi.WrapperTask):  # pylint: disable=R0904
         config = export()
         for start, stop in upi_ranges(db(), config.search_export_size):
             yield ValidateAndCompressSearchChunk(min=start, max=stop)
+        yield SearchReleaseNote()

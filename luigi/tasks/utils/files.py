@@ -14,8 +14,10 @@ limitations under the License.
 """
 
 import os
+import gzip
 from contextlib import contextmanager
 
+import luigi
 from luigi.local_target import atomic_file
 
 
@@ -33,4 +35,8 @@ def atomic_output(output):
             raise err
 
     with atomic_file(filename) as out:
-        yield out
+        if hasattr(output, 'format') and output.format == luigi.format.Gzip:
+            with gzip.GzipFile(fileobj=out, mode='wb') as compressed:
+                yield compressed
+        else:
+            yield out

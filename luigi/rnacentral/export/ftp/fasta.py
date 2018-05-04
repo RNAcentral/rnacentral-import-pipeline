@@ -112,13 +112,13 @@ def inactive(config):
     return it.imap(as_record, psql.copy_to_iterable(sql))
 
 
-def nhmmer(filename, select_valid=True):
+def nhmmer(handle, select_valid=True):
     """
     Extract all sequences which may be written to nhmmer from the given file.
     If select_valid is True then only valid sequences are written. If it is
     False then only invalid sequences are written.
     """
 
-    for record in SeqIO.parse(filename, 'fasta'):
+    for record in SeqIO.parse(handle, 'fasta'):
         if select_valid == is_valid_nhmmer_record(record):
             yield record

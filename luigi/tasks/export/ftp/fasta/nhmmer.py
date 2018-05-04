@@ -45,10 +45,10 @@ class NHmmerExportBase(luigi.Task):
         return luigi.LocalTarget(export().nhmmer(self.filename))
 
     def run(self):
-        active_file = ActiveFastaExport().output().fn
-        seqs = fasta.nhmmer_records(active_file, select_valid=self.active)
-        with atomic_output(self.output()) as out:
-            SeqIO.write(seqs, out, "fasta")
+        with ActiveFastaExport().output().open('r') as active:
+            seqs = fasta.nhmmer(active, select_valid=self.active)
+            with atomic_output(self.output()) as out:
+                SeqIO.write(seqs, out, "fasta")
 
 
 class NHmmerIncludedExport(NHmmerExportBase):

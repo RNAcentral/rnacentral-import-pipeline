@@ -29,6 +29,11 @@ This module contains utility classes and functions for fetching and parsing
 Rfam data from the FTP site.
 """
 
+EXCLUDED_TERMS = {'GO:0008049', 'GO:0042981', 'GO:0042749'}
+
+EXCLUDED_MIRNA = {'GO:0035068', 'GO:0006396'}
+
+
 
 def dash_none_or(other):
     def fn(raw):
@@ -559,3 +564,18 @@ def tbl_iterator(filename, clan_competition=False):
 def name_to_suppression(version='CURRENT'):
     families = load_families(version=version)
     return {family.name: family.is_suppressed for family in families}
+
+
+def go_term_mapping(version='CURRENT'):
+    for family in load_families(version=version):
+        for (go_term_id, _) in family.go_terms:
+            if go_term_id in EXCLUDED_TERMS:
+                continue
+
+            if family.rna_type == 'Gene; miRNA' and go_term_id in EXCLUDED_MIRNA:
+                continue
+
+            yield {
+                'go_term_id': go_term_id,
+                'rfam_model_id': family.id,
+            }
