@@ -300,8 +300,51 @@ class export(luigi.Config):  # pylint: disable=C0103,R0904
 
     def go(self, *args):
         return self.ftp('go', *args)
+      
+    def bed(self, *args):
+        return self.ftp('bed', *args)
 
+      
+class genome_mapping(luigi.Config):  # pylint: disable=C0103,R0904
+    base = PathParameter(default='/tmp')
 
+    def genomes(self, *args):
+        path = os.path.join(self.base, *args)
+        if not os.path.exists(path):
+            os.makedirs(path)
+        return path
+
+    def species(self, species='homo_sapiens'):
+        path = os.path.join(self.base, species)
+        if not os.path.exists(path):
+            os.makedirs(path)
+        return path
+
+    def genome(self, species='homo_sapiens'):
+        path = os.path.join(self.species(species), 'genome')
+        if not os.path.exists(path):
+            os.makedirs(path)
+        return path
+
+    def rnacentral_fasta(self, species='homo_sapiens', *args):
+        path = os.path.join(self.species(species), 'rnacentral_fasta', *args)
+        if not os.path.exists(path):
+            os.makedirs(path)
+        return path
+
+    def chunks(self, species):
+        path = os.path.join(self.rnacentral_fasta(species), 'seqkit-split')
+        if not os.path.exists(path):
+            os.makedirs(path)
+        return path
+
+    def blat_output(self, *args):
+        path = os.path.join(self.species(*args), 'blat')
+        if not os.path.exists(path):
+            os.makedirs(path)
+        return path
+
+      
 class refseq(luigi.Config):  # pylint: disable=C0103,R0904
     base = luigi.Parameter(default='/tmp')
 
