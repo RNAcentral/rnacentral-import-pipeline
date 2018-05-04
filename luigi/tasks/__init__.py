@@ -18,8 +18,6 @@ from .rfam import RfamCSV
 from .rfam import RfamFamilies
 from .rfam import RfamSequences
 
-from .go_terms import GoTerms
-
 from .ensembl.ensembl import Ensembl
 
 from .gtrnadb import GtRNAdb
@@ -31,5 +29,4 @@ from .release import Update
 from .release.process_data import ProcessData
 from .release.cleanup import TruncateLoadTables
 
-from .export.ftp.rfam import ExportRfamAnnotaitons
-from .export.ftp.fasta import FastaExport
+from .export.ftp import FtpExport

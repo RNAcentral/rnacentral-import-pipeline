@@ -14,9 +14,9 @@ limitations under the License.
 """
 
 import luigi
-from luigi.local_target import atomic_file
 
 from tasks.config import export
+from tasks.utils.files import atomic_output
 
 
 README = """
@@ -45,5 +45,5 @@ class Readme(luigi.Task):
         return luigi.LocalTarget(export().id_mapping('readme.txt'))
 
     def run(self):
-        with atomic_file(self.output().fn) as out:
+        with atomic_output(self.output()) as out:
             out.write(README)

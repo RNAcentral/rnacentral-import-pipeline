@@ -16,7 +16,6 @@ limitations under the License.
 import luigi
 
 from tasks.config import rfam
-from tasks.config import output
 
 from .pgload_hits import RfamPGLoadHits
 from .pgload_clans import RfamPGLoadClans

@@ -1,0 +1,40 @@
+!gpa-version: 1.1
+!Columns:
+!
+!   name                  required? cardinality   GAF column #
+!   DB                    required  1             1
+!   DB_Object_ID          required  1             2 / 17
+!   Qualifier             required  1 or greater  4
+!   GO ID                 required  1             5
+!   DB:Reference(s)       required  1 or greater  6
+!   ECO evidence code     required  1             7 + 6 (GO evidence code + reference)
+!   With                  optional  0 or greater  8
+!   Interacting taxon ID  optional  0 or 1        13
+!   Date                  required  1             14
+!   Assigned_by           required  1             15
+!   Annotation Extension  optional  0 or greater  16
+!   Annotation Properties optional  0 or 1        n/a
+!
+!Generated: 2018-04-09 07:15
+!GO-version: http://purl.obolibrary.org/obo/go/releases/2018-04-06/extensions/go-plus.owl
+RNAcentral	URS00000064B1_559292	enables	GO:0030533	PMID:9023104	ECO:0000255	With:Not_supplied		20060721	SGD		go_evidence=ISM
+RNAcentral	URS00000064B1_559292	involved_in	GO:0070125	PMID:9023104	ECO:0000305	GO:0030533		20150730	SGD		go_evidence=IC
+RNAcentral	URS00000064B1_559292	part_of	GO:0005739	PMID:9023104	ECO:0000305	GO:0030533		20030507	SGD		go_evidence=IC
+RNAcentral	URS0000007529_10090	enables	GO:0030533	PMID:7332926	ECO:0000250	With:Not_supplied		20020121	MGI		go_evidence=ISS
+RNAcentral	URS0000007529_10090	involved_in	GO:0006414	PMID:7332926	ECO:0000304			20020121	MGI		go_evidence=TAS
+RNAcentral	URS0000007529_10090	part_of	GO:0005739	PMID:7332926	ECO:0000304			20020121	MGI		go_evidence=TAS
+RNAcentral	URS0000007FBA_9606	part_of	GO:0005615	PMID:26646931	ECO:0007005			20180319	BHF-UCL	part_of(UBERON:0001969)	go_evidence=HDA
+RNAcentral	URS000000B1C9_9606	enables	GO:1903231	PMID:23426184	ECO:0000314			20171117	BHF-UCL	regulates_expression_of(ENSEMBL:ENSG00000092847)	go_evidence=IDA
+RNAcentral	URS000000B1C9_9606	involved_in	GO:0035195	PMID:23426184	ECO:0000314			20171117	BHF-UCL	regulates_expression_of(ENSEMBL:ENSG00000092847)	go_evidence=IDA
+RNAcentral	URS000000B1C9_9606	part_of	GO:0005615	PMID:26646931	ECO:0007005			20180319	BHF-UCL	part_of(UBERON:0001969)	go_evidence=HDA
+RNAcentral	URS000000EF0B_9606	part_of	GO:0005615	PMID:26646931	ECO:0007005			20180319	BHF-UCL	part_of(UBERON:0001969)	go_evidence=HDA
+RNAcentral	URS0000010D30_9606	part_of	GO:0005615	PMID:26646931	ECO:0007005			20180319	BHF-UCL	part_of(UBERON:0001969)	go_evidence=HDA
+RNAcentral	URS0000013967_10116	involved_in	GO:0010718	PMID:21704009	ECO:0000314			20170217	BHF-UCL	occurs_in(UBERON:0004810)	go_evidence=IDA
+RNAcentral	URS0000013DD8_9606	part_of	GO:0005615	PMID:26646931	ECO:0007005			20180319	BHF-UCL	part_of(UBERON:0001969)	go_evidence=HDA
+RNAcentral	URS0000014B59_559292	enables	GO:0030533	PMID:9023104	ECO:0000255			20030507	SGD		go_evidence=ISM
+RNAcentral	URS0000014B59_559292	involved_in	GO:0006414	PMID:9023104	ECO:0000305	GO:0030533		20030507	SGD		go_evidence=IC
+RNAcentral	URS0000014B59_559292	part_of	GO:0005829	PMID:9023104	ECO:0000305	GO:0030533		20030507	SGD		go_evidence=IC
+RNAcentral	URS000001C659_9606	enables	GO:1903231	PMID:26184978	ECO:0000314			20180205	BHF-UCL	has_direct_input(ENSEMBL:ENSG00000053254)	go_evidence=IDA
+RNAcentral	URS000001C659_9606	enables	GO:1903231	PMID:26184978	ECO:0000314			20180205	BHF-UCL	has_direct_input(ENSEMBL:ENSG00000081189)	go_evidence=IDA
+RNAcentral	URS000001C659_9606	involved_in	GO:0035195	PMID:26184978	ECO:0000314			20180205	BHF-UCL	regulates_expression_of(ENSEMBL:ENSG00000053254)	go_evidence=IDA
+RNAcentral	URS000001C659_9606	involved_in	GO:0035278	PMID:26184978	ECO:0000314			20180205	BHF-UCL	regulates_expression_of(ENSEMBL:ENSG00000081189),positively_regulates(GO:0043534),positively_regulates(GO:0101023)|regulates_expression_of(ENSEMBL:ENSG00000081189),positively_regulates(GO:1990874),positively_regulates(GO:1904738)	go_evidence=IDA
