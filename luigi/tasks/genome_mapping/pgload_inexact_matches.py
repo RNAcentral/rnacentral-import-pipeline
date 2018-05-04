@@ -73,17 +73,25 @@ $$ CREATE TABLE IF NOT EXISTS rnacen.{table} (
 AFTER LOAD DO
 $$ DELETE FROM rnc_genome_mapping
 WHERE identity < 1
-AND assembly_id IN (SELECT distinct assembly_id from {table});
+AND assembly_id = '{assembly_id}';
 $$,
 $$ insert into rnc_genome_mapping (rna_id, upi, taxid, region_id, chromosome, "start", stop, strand, assembly_id, "identity") (
-	select t1.rna_id, t1.upi, t1.taxid, t1.region_id, t1.chromosome, t1."start", t1.stop, t1.strand, t1.assembly_id, t1."identity"
-	from load_genome_mapping t1
-	left join rnc_genome_mapping t2
-	on t1.rna_id = t2.rna_id
-	where t2.rna_id is null
+    select t1.rna_id, t1.upi, t1.taxid, t1.region_id, t1.chromosome, t1."start", t1.stop, t1.strand, t1.assembly_id, t1."identity"
+    from load_genome_mapping t1
+    left join rnc_genome_mapping t2
+    on t1.rna_id = t2.rna_id
+    where t2.rna_id is null
 );
 ; $$,
-$$ TRUNCATE TABLE {table}; $$
+$$ TRUNCATE TABLE {table}; $$,
+$$
+UPDATE rnc_rna_precomputed t1
+SET has_coordinates = True
+FROM rnc_genome_mapping t2
+WHERE t2.assembly_id = '{assembly_id}'
+AND t1.upi = t2.upi
+AND t1.taxid = t2.taxid
+; $$
 ;
 """
 
@@ -119,5 +127,6 @@ class GenomeMappingPGLoadInexactMatches(PGLoader):  # pylint: disable=R0904
             filename=filename,
             db_url=self.db_url(table=table),
             table=table,
+            assembly_id=self.assembly_id,
             search_path=self.db_search_path()
         )
