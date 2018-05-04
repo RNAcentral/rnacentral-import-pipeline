@@ -66,8 +66,6 @@ SELECT
         'rfam_status',
             case
                 when cardinality((array_agg(pre.rfam_problems))) = 0 then '{{}}'
-                when (array_agg(pre.rfam_problems))[1] = '' then '{{}}'
-                when (array_agg(pre.rfam_problems))[1] is null then '{{}}'
                 else (array_agg(pre.rfam_problems))[1]::json
             end,
         'tax_strings', array_agg(acc.classification),
