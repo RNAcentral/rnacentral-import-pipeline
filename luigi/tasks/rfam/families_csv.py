@@ -17,12 +17,12 @@ import operator as op
 
 import luigi
 
-from databases.rfam.families import parse
+from databases.rfam import families
 
 from tasks.config import rfam
 
-from tasks.utils.fetch import FetchTask
 from tasks.utils.writers import CsvOutput
+from tasks.utils.mysql import MysqlQueryTask
 
 
 class RfamFamiliesCSV(luigi.Task):
@@ -43,8 +43,9 @@ class RfamFamiliesCSV(luigi.Task):
 
     def requires(self):
         conf = rfam()
-        return FetchTask(
-            remote_path=conf.query('families.sql'),
+        return MysqlQueryTask(
+            db=conf,
+            query=families.QUERY,
             local_path=conf.raw('clans.tsv'),
         )
 
@@ -58,4 +59,4 @@ class RfamFamiliesCSV(luigi.Task):
 
     def run(self):
         with self.requires().output.open('r') as raw:
-            self.output().populate(parse(raw))
+            self.output().populate(families.parse(raw))
