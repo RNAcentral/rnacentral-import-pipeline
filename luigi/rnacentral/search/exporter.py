@@ -82,7 +82,8 @@ SELECT
             json_build_object(
                 'go_term_id', anno.ontology_term_id,
                 'qualifier', anno.qualifier,
-                'go_name', ont.name
+                'go_name', ont.name,
+                'assigned_by', anno.assigned_by
             )
         )
     )
