@@ -20,7 +20,6 @@ from plumbum.path.utils import copy
 
 from . import http
 from . import ftp
-from . import mysql
 
 
 def fetch(remote_path, local_path):
@@ -35,14 +34,11 @@ def fetch(remote_path, local_path):
     elif remote_path.startswith('ftp:'):
         ftp.download(remote_path, local_path)
 
-    elif remote_path.startswith('mysql:'):
-        mysql.download(remote_path, local_path)
-
     elif os.path.exists(remote_path):
         copy(remote_path, local_path)
 
     else:
-        raise ValueError("Remote must be http/ftp/mysql url or existing path")
+        raise ValueError("Remote must be http/ftp url or existing path")
 
 
 class FetchTask(luigi.Task):

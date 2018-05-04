@@ -93,13 +93,11 @@ class rfam(luigi.Config):  # pylint: disable=C0103, R0904
     hits = PathParameter()
     fasta = PathParameter()
     json_folder = PathParameter()
-    mysql = luigi.Parameter(default='mysql://rfamro@mysql-rfam-public.ebi.ac.uk:4497/Rfam')
 
-    def remote_table(self, name):
-        """
-        Return a URL that refers to the given table name.
-        """
-        return self.mysql + '?' + name
+    user = luigi.Parameter(default='rfamro')
+    host = luigi.Parameter(default='mysql-rfam-public.ebi.ac.uk')
+    port = luigi.Parameter(default=4497)
+    db_name = luigi.Parameter(default='Rfam')
 
     def raw(self, *args):
         """
@@ -115,13 +113,11 @@ class rfam(luigi.Config):  # pylint: disable=C0103, R0904
         """
         return iglob(os.path.join(self.json_folder, '*.json'))
 
-    def query(self, filename):
-        return query().file('rfam', filename)
-
     @property
     def clans(self):
         return output().to_load('rfam', 'clans', 'clans.csv')
 
+    @property
     def families(self):
         return output().to_load('rfam', 'families', 'families.csv')
 
