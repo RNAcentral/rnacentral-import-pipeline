@@ -125,7 +125,7 @@ class GetAssemblyInfoJson(luigi.Task):
         url = 'http://rest.{division}.org/info/assembly/{species}?content-type=application/json'
         if self.division == 'Ensembl':
             url = url.format(division='ensembl', species=self.species)
-        else:
+        else:  # EnsemblFungi, EnsemblPlants, EnsemblMetazoa, EnsemblProtists
             url = url.format(division='ensemblgenomes', species=self.species)
         return url
 
@@ -256,6 +256,10 @@ class GenerateOOCfile(luigi.Task):
         return luigi.LocalTarget(os.path.join(genome_path, '11.ooc'))
 
     def run(self):
+        """
+        The blat parameters replicate the online UCSC blat:
+        https://genome-euro.ucsc.edu/FAQ/FAQblat#blat5
+        """
         cmd = ('cat {path}/*.fa > {path}/merged.fasta && '
                'blat {path}/merged.fasta /dev/null /dev/null '
                    '-makeOoc={ooc}-temp -stepSize=5 -repMatch=2253 -minScore=0 && '
