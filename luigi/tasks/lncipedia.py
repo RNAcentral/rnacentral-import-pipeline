@@ -15,27 +15,16 @@ limitations under the License.
 
 import luigi
 
-from tasks.ena import Ena
-from tasks.ensembl.ensembl import Ensembl
-from tasks import rfam
-from tasks.gtrnadb import GtRNAdb
-from tasks.lncipedia import Lncipedia
+from tasks.config import lncipedia
+from tasks.generic import GenericDatabase
 
 
-class DataImport(luigi.WrapperTask):
+class Lncipedia(luigi.WrapperTask):
     """
-    This runs the data import that we preform on each release. This will
-    import:
-
-    - All Ena data
-    - All Ensembl data
-    - All Rfam families, clans and sequences
+    Import all Lncipedia data. The configuration file must include the path to
+    the JSON file to import. The path may be a url to download from as well,
+    but it may not be compressed.
     """
 
-    def requires(self):
-        yield Ena()
-        yield Ensembl()
-        yield rfam.RfamFamilies()
-        yield rfam.RfamSequences()
-        yield GtRNAdb()
-        yield Lncipedia()
+    def requries(self):
+        yield GenericDatabase(input_file=lncipedia().json_file)

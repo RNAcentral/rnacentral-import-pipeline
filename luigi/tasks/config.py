@@ -353,3 +353,7 @@ class quickgo(luigi.Config):
 class generic(luigi.Config):
     def raw(self, *args):
         return os.path.join(output().base, 'generic-data', *args)
+
+
+class lncipedia(luigi.Config):
+    json_file = luigi.Parameter()
