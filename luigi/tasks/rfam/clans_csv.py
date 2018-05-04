@@ -17,20 +17,21 @@ import operator as op
 
 import luigi
 
-from databases.rfam.clans import parse
+from databases.rfam import clans
 
 from tasks.config import rfam
 
-from tasks.utils.fetch import FetchTask
 from tasks.utils.writers import CsvOutput
+from tasks.utils.mysql import MysqlQueryTask
 
 
 class RfamClansCSV(luigi.Task):
 
     def requires(self):
         conf = rfam()
-        return FetchTask(
-            remote_path=conf.query('clans.sql'),
+        return MysqlQueryTask(
+            db=conf,
+            query=clans.QUERY,
             local_path=conf.raw('clans.tsv'),
         )
 
@@ -44,4 +45,4 @@ class RfamClansCSV(luigi.Task):
 
     def run(self):
         with self.requires().output.open('r') as raw:
-            self.output().populate(parse(raw))
+            self.output().populate(clans.parse(raw))
