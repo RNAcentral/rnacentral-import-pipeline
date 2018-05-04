@@ -15,32 +15,20 @@ limitations under the License.
 
 import urlparse
 
-from plumbum import local
+import luigi
 
 from tasks.utils.files import atomic_output
 
 
-def download(uri, path):
-    """
-    Download the specific table using MySQL to a specific file. The input URI
-    should be of the form:
-        mysql://rfamro@mysql-rfam-public.ebi.ac.uk:4497/Rfam?database_link
+class MysqlQueryTask(luigi.Task):
+    db = luigi.Parameter
+    query = luigi.Parameter()
+    local_path = luigi.Parameter()
 
-    that is:
-        mysql://username@host:port/database?table
-    """
+    def output(self):
+        return luigi.LocalTarget(self.local_path)
 
-    parts = urlparse.urlparse(uri)
-    database = parts.path[1:]
-
-    mysql = local['mysql']
-    query = 'select * from %s' % parts.query
-    with atomic_output(path) as out:
-        cmd = mysql[
-            '--host', parts.hostname,
-            '--port', str(parts.port),
-            '--user', parts.username,
-            '--database', database,
-        ]
-
-        ((cmd << query) > out)()
+    def run(self):
+        mysql = MysqlWrapper(self.db)
+        with atomic_output(self.output()) as out:
+            mysql.write_query(out, self.query)

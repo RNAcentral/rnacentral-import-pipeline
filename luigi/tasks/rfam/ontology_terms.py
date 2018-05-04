@@ -22,7 +22,7 @@ from databases.rfam import cross_references as cr
 
 from tasks.config import rfam
 
-from tasks.utils.fetch import FetchTask
+from tasks.utils.mysql import MysqlQueryTask
 from tasks.utils.writers import CsvOutput
 
 
@@ -33,8 +33,9 @@ class RfamOntologyTerms(luigi.Task):  # pylint: disable=too-many-public-methods
 
     def requires(self):
         conf = rfam()
-        return FetchTask(
-            remote_path=conf.remote_table('database_link'),
+        return MysqlQueryTask(
+            db=conf,
+            query=cr.QUERY,
             local_path=conf.raw('database_link.tsv'),
         )
 
