@@ -306,10 +306,7 @@ def test_can_assign_correct_cross_references(upi, ans):
 
 
 def test_can_create_document_with_unicode():
-    data = load_and_get_additional('URS000009EE82_562', 'product')
-    from pprint import pprint
-    pprint(data)
-    assert data == [
+    assert load_and_get_additional('URS000009EE82_562', 'product') == [
         {'attrib': {'name': 'product'}, 'text': u'tRNA-Asp(gtc)'},
         {'attrib': {'name': 'product'}, 'text': u'P-site tRNA Aspartate'},
         {'attrib': {'name': 'product'}, 'text': u'transfer RNA-Asp'},
@@ -351,6 +348,18 @@ def test_output_validates_according_to_schema():
         exporter.write(out, entries)
         out.flush()
         exporter.validate(out.name)
+
+
+def test_produces_correct_count():
+    entries = exporter.range(db(), 1, 100)
+    with tempfile.NamedTemporaryFile() as out:
+        exporter.write(out, entries)
+        out.flush()
+        with open(out.name, 'r') as raw:
+            parsed = ET.parse(raw)
+            count = parsed.find('./entry_count')
+            assert count.text == '105'
+
 
 
 @pytest.mark.parametrize('upi,ans', [  # pylint: disable=E1101

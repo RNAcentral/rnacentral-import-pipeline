@@ -16,6 +16,15 @@ limitations under the License.
 from .db import cursor
 
 
+def ranges_between(start, stop, max_size):
+    for start in xrange(start, stop, max_size):
+        last = min(start + max_size, stop)
+        yield (start, last)
+
+    if last < stop:
+        yield (last, stop)
+
+
 def upi_ranges(dbconf, max_size):
     """
     This will create range of the ids for all UPI's in the database.
@@ -25,8 +34,4 @@ def upi_ranges(dbconf, max_size):
         cur.execute('select max(id) from rna')
         stop = cur.fetchone()[0]
 
-    for start in xrange(1, stop, max_size):
-        yield (start, start + max_size)
-
-    if start < stop:
-        yield (start, stop)
+    return ranges_between(1, stop, max_size)
