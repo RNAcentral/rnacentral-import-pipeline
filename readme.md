@@ -25,34 +25,9 @@ This is the main pipeline that is used internally for loading the data into the 
   python -m luigi --module tasks.release LoadRelease --local-scheduler
   ```
 
-### Installation
-
-```
-git clone https://github.com/RNAcentral/rnacentral-import-pipeline.git
-cd rnacentral-import-pipeline
-# initialize submodules
-git submodule init
-git submodule update
-# add sensitive connection details to config/hive_params
-cp config/hive_params_template config/hive_params
-```
-
-## Running in Hive mode
-
-	source scripts/hive_pipeline.sh
-
-## Running in non-Hive mode
-
-
-	perl scripts/rnac_loader.pl <options>
-
-or
-
-	source scripts/rnac_loader_wrapper.sh
-
 ## Running luigi tasks
 
-Several database are imported using the
+Several databases are imported using the
 [luigi](https://github.com/spotify/luigi) pipeline. The code for the pipeline
 is stored in `luigi` directory. The rfam search task are stored in the `tasks`
 subdirectory. These can be run with:

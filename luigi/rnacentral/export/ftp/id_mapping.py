@@ -26,18 +26,15 @@ SELECT
     xref.taxid,
     acc.external_id,
     acc.optional_id,
-    case when acc.feature_name is null
-        then acc.ncrna_class
-        else acc.feature_name
-    end as rna_type,
+    pre.rna_type,
     acc.gene,
     db.descr AS database
 FROM xref
 join rnc_accessions acc on acc.accession = xref.ac
 join rnc_database db on db.id = xref.dbid
+join rnc_rna_precomputed pre on pre.upi = xref.upi and pre.taxid = xref.taxid
 where
     xref.deleted = 'N'
-order by upi, xref.ac
 """
 
 EXAMPLE_SQL = COMPLETE_SQL + " limit 5"
