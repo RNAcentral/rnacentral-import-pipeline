@@ -32,8 +32,12 @@ def test_can_parse_known_data(stored):
 def test_can_prdouce_correct_values(stored):
     assert attr.asdict(stored[0]) == attr.asdict(clans.RfamClan(
         id='CL00001',
-        name='tRNA',
-        description='tRNA clan',
+        name='tRNA clan',
+        description=(
+            'The tRNA clan contains the RNA families tRNA and '
+            'tmRNA. Homology between these families has been established '
+            'in the published literature [1-5].'
+        ),
         families={
             'RF00005',
             'RF00023',
