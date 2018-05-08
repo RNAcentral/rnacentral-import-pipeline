@@ -13,8 +13,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import operator as op
-
 import luigi
 
 from ontologies import data
@@ -39,7 +37,7 @@ class RfamOntologyTerms(luigi.Task):  # pylint: disable=too-many-public-methods
     def requires(self):
         conf = rfam()
         return MysqlQueryTask(
-            db=conf,
+            db=conf.mysql_url(),
             query=cr.QUERY,
             local_path=conf.raw('database_link.tsv'),
         )

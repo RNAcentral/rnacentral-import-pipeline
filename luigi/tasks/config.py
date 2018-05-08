@@ -113,6 +113,9 @@ class rfam(luigi.Config):  # pylint: disable=C0103, R0904
         """
         return iglob(os.path.join(self.json_folder, '*.json'))
 
+    def mysql_url(self):
+        return 'mysql://{user}@{host}:{port}/{db_name}'
+
     @property
     def clans(self):
         return output().to_load('rfam', 'clans', 'clans.csv')
@@ -324,11 +327,11 @@ class export(luigi.Config):  # pylint: disable=C0103,R0904
 
     def go(self, *args):
         return self.ftp('go', *args)
-      
+
     def bed(self, *args):
         return self.ftp('bed', *args)
 
-      
+
 class genome_mapping(luigi.Config):  # pylint: disable=C0103,R0904
     base = PathParameter(default='/tmp')
 
@@ -368,7 +371,7 @@ class genome_mapping(luigi.Config):  # pylint: disable=C0103,R0904
             os.makedirs(path)
         return path
 
-      
+
 class refseq(luigi.Config):  # pylint: disable=C0103,R0904
     base = luigi.Parameter(default='/tmp')
 
