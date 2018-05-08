@@ -17,7 +17,8 @@ import json
 import subprocess as sp
 from datetime import date
 
-import xml.etree.cElementTree as ET
+from lxml import etree
+from lxml.builder import E
 
 from rnacentral.psql import PsqlWrapper
 
@@ -65,8 +66,6 @@ SELECT
         'rfam_status',
             case
                 when cardinality((array_agg(pre.rfam_problems))) = 0 then '{{}}'
-                when (array_agg(pre.rfam_problems))[1] = '' then '{{}}'
-                when (array_agg(pre.rfam_problems))[1] is null then '{{}}'
                 else (array_agg(pre.rfam_problems))[1]::json
             end,
         'tax_strings', array_agg(acc.classification),
@@ -158,28 +157,24 @@ def write(handle, results):
     string representation of that document which can be saved.
     """
 
-    root = ET.Element('database')
-    tree = ET.ElementTree(root)
-    name = ET.SubElement(root, 'name')
-    name.text = 'RNAcentral'
-    description = ET.SubElement(root, 'description')
-    description.text = 'a database for non-protein coding RNA sequences'
+    handle.write('<database>')
+    handle.write(etree.tostring(E.name('RNAcentral')))
+    handle.write(etree.tostring(E.description('a database for non-protein coding RNA sequences')))
+    handle.write(etree.tostring(E.release('1.0')))
+    handle.write(etree.tostring(E.release_date(date.today().strftime('%d/%m/%Y'))))
 
-    release = ET.SubElement(root, 'release')
-    release.text = '1.0'
-    release_date = ET.SubElement(root, 'release_date')
-    release_date.text = date.today().strftime('%d/%m/%Y')
+    count = 0
+    handle.write('<entries>')
+    for result in results:
+        count += 1
+        handle.write(etree.tostring(result))
+    handle.write('</entries>')
 
-    count_element = ET.SubElement(root, 'entry_count')
-    results = list(results)
-    if not results:
+    if not count:
         raise ValueError("No entries found")
 
-    count_element.text = str(len(results))
-    entries = ET.SubElement(root, 'entries')
-    entries.extend(results)
-
-    tree.write(handle)
+    handle.write(etree.tostring(E.entry_count(str(count))))
+    handle.write('</database>')
 
 
 def validate(filename):

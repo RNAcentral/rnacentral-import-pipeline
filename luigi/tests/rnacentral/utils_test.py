@@ -13,13 +13,48 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+from rnacentral.utils import ranges_between
 from rnacentral.utils import upi_ranges
 from tasks.config import db
 
 
+def test_ranges_between_handles_simple_ranges():
+    ranges = list(ranges_between(1, 10, 1))
+    assert ranges == [
+        (1, 2),
+        (2, 3),
+        (3, 4),
+        (4, 5),
+        (5, 6),
+        (6, 7),
+        (7, 8),
+        (8, 9),
+        (9, 10),
+    ]
+
+
+def test_ranges_between_handles_ranges_too_small():
+    ranges = list(ranges_between(1, 10, 3))
+    assert ranges == [
+        (1, 4),
+        (4, 7),
+        (7, 10),
+    ]
+
+
+def test_ranges_between_handles_ranges_too_big():
+    ranges = list(ranges_between(1, 11, 3))
+    assert ranges == [
+        (1, 4),
+        (4, 7),
+        (7, 10),
+        (10, 11),
+    ]
+
+
 def test_can_get_range_of_all_upis():
     ranges = list(upi_ranges(db(), 100000))
-    assert len(ranges) == 136
+    assert len(ranges) == 135
 
 
 def test_can_get_correct_upi_ranges():
@@ -28,4 +63,4 @@ def test_can_get_correct_upi_ranges():
         (1, 100001),
         (100001, 200001),
     ]
-    assert ranges[-1] == (13400001, 13458282L)
+    assert ranges[-1] == (13400001, 13437640)
