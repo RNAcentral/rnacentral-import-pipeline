@@ -13,66 +13,32 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import re
-import csv
-import gzip
-from cStringIO import StringIO
-from ftplib import FTP
-import collections as coll
-
-import attr
-from attr.validators import instance_of as is_a
-from functools32 import lru_cache
+from . import families as fam
 
 __doc__ = """
 This module contains utility classes and functions for fetching and parsing
 Rfam data from the FTP site.
 """
 
-def fetch_file(version, filename):
-    ftp = FTP('ftp.ebi.ac.uk')
-    ftp.login()
-    ftp.cwd('pub/databases/Rfam/{version}'.format(
-        version=version,
-    ))
-    command = 'RETR {filename}'.format(filename=filename)
-    raw = StringIO()
-    ftp.retrbinary(command, raw.write)
-    ftp.quit()
-    raw.seek(0)
-    if filename.endswith('.gz'):
-        raw = gzip.GzipFile(fileobj=raw, mode='rt')
-    return raw
+
+def name_to_insdc_type(handle):
+    """
+    Create a dict that maps from rfam family name (U1) to the INSDC RNA type
+    (snRNA).
+    """
+    return {family.name: family.guess_insdc() for family in fam.parse(handle)}
 
 
-def get_family_file(version='CURRENT'):
-    return fetch_file(version=version, filename='database_files/family.txt.gz')
+def id_to_insdc_type(handle):
+    """
+    Create a dict that maps from rfam id (RF00003) to INSDC RNA type (snRNA).
+    """
+    return {family.id: family.guess_insdc() for family in fam.parse(handle)}
 
 
-def get_link_file(version='CURRENT'):
-    return fetch_file(version=version,
-                      filename='database_files/database_link.txt.gz')
-
-
-def get_clan_membership(version='CURRENT'):
-    return fetch_file(version=version,
-                      filename='database_files/clan_membership.txt.gz')
-
-
-def get_clans(version='CURRENT'):
-    return fetch_file(version=version, filename='database_files/clan.txt.gz')
-
-
-def name_to_insdc_type(version='CURRENT'):
-    families = load_families(version=version)
-    return {family.name: family.guess_insdc() for family in families}
-
-
-def id_to_insdc_type(version='CURRENT'):
-    families = load_families(version=version)
-    return {family.id: family.guess_insdc() for family in families}
-
-
-def name_to_suppression(version='CURRENT'):
-    families = load_families(version=version)
-    return {family.name: family.is_suppressed for family in families}
+def name_to_suppression(handle):
+    """
+    Create a dict from the rfam family name (U1) to a flag indicating if the
+    family data should be supressed in RNAcentral.
+    """
+    return {family.name: family.is_suppressed for family in fam.parse(handle)}

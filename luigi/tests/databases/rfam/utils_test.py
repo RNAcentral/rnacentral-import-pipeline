@@ -13,24 +13,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import unittest as ut
-import hashlib
-import collections as coll
-
-import attr
 import pytest
 
 from databases.rfam import utils
-
-
-def test_fetch_file_gets_unzipped_contents():
-    contents = utils.fetch_file('12.2', 'database_files/family.txt.gz')
-    assert hashlib.md5(contents.read()).hexdigest() == "5060f63e875739dab1ae514f5ae4b775"
-
-
-def test_fetch_file_handles_uncompressed_files():
-    contents = utils.fetch_file('12.2', 'USERMAN')
-    assert hashlib.md5(contents.read()).hexdigest() == "6bb395c713e85a2db1b5d62ac96d4991"
 
 
 @pytest.mark.parametrize("name,expected", [
@@ -60,7 +45,8 @@ def test_fetch_file_handles_uncompressed_files():
     ("U2", "snRNA"),
 ])
 def test_can_fetch_a_mapping_from_name_to_isndc(name, expected):
-    mapping = utils.name_to_insdc_type()
+    with open('data/rfam/families.tsv') as raw:
+        mapping = utils.name_to_insdc_type(raw)
     assert mapping[name] == expected
 
 
@@ -107,37 +93,12 @@ def test_can_fetch_a_mapping_from_name_to_isndc(name, expected):
     ("RF02647", "other"),
 ])
 def test_can_fetch_a_mapping_from_id_to_isndc(family_id, expected):
-    mapping = utils.id_to_insdc_type()
+    with open('data/rfam/families.tsv') as raw:
+        mapping = utils.id_to_insdc_type(raw)
     assert mapping[family_id] == expected
 
 
 def test_it_maps_a_known_lncRNA():
-    mapping = utils.id_to_insdc_type()
+    with open('data/rfam/families.tsv') as raw:
+        mapping = utils.id_to_insdc_type(raw)
     assert mapping['RF01800'] == 'lncRNA'
-
-
-
-
-class LoadingClansTest(ut.TestCase):
-    def test_it_can_load_all_clans(self):
-        assert len(utils.load_clans()) == 111
-
-    def test_it_can_load_a_clan_correctly(self):
-        assert utils.load_clans()[0] == utils.RfamClan(
-            id='CL00001',
-            name='tRNA clan',
-            description=(
-                'The tRNA clan contains the RNA families tRNA and '
-                'tmRNA. Homology between these families has been established '
-                'in the published literature [1-5].'
-            ),
-            families=set([
-                'RF00005',
-                'RF00023',
-                'RF01849',
-                'RF01850',
-                'RF01851',
-                'RF01852',
-                'RF02544',
-            ])
-        )
