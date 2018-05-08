@@ -114,7 +114,12 @@ class rfam(luigi.Config):  # pylint: disable=C0103, R0904
         return iglob(os.path.join(self.json_folder, '*.json'))
 
     def mysql_url(self):
-        return 'mysql://{user}@{host}:{port}/{db_name}'
+        return 'mysql://{user}@{host}:{port}/{db_name}'.format(
+            user=self.user,
+            host=self.host,
+            port=self.port,
+            db_name=self.db_name,
+        )
 
     @property
     def clans(self):
