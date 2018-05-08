@@ -17,15 +17,40 @@ import csv
 import sys
 import shutil
 import tempfile
+from urlparse import urlparse
 from contextlib import contextmanager
 
+import attr
+
 from plumbum import local
+
+
+@attr.s()
+class MysqlSpec(object):
+    host = attr.ib()
+    port = attr.ib()
+    user = attr.ib()
+    db_name = attr.ib()
+
+    @classmethod
+    def from_url(cls, url):
+        parsed = urlparse(url)
+        return cls(
+            host=parsed.hostname,
+            port=parsed.port,
+            user=parsed.username,
+            db_name=parsed.path[1:],
+        )
 
 
 class MysqlWrapper(object):
     """
     A wrapper around the command line mysql program.
     """
+
+    @classmethod
+    def from_url(cls, url):
+        return cls(MysqlSpec.from_url(url))
 
     def __init__(self, config):
         self.config = config
