@@ -85,6 +85,7 @@ class RfamFamily(object):
     def from_dict(cls, row):
         family = row['id']
         domain = DOMAIN_MAPPING.get(family, None)
+
         clan = set(row['clan_id'].split(','))
         if len(clan) > 1:
             raise ValueError("Can only handle a single clan per family")
