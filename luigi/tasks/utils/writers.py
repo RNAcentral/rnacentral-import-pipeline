@@ -62,6 +62,10 @@ class CsvOutput(object):
 
             yield func
 
+    @property
+    def fn(self):
+        return self.filename
+
     def populate(self, generator):
         with self.writer() as writer:
             for entry in generator:
