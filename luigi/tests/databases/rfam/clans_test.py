@@ -13,13 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import tempfile
-
+import attr
 import pytest
-
-from rnacentral.mysql import MysqlWrapper
-
-from tasks.config import rfam
 
 from databases.rfam import clans
 
@@ -27,30 +22,25 @@ from databases.rfam import clans
 @pytest.fixture
 def stored():
     with open('data/rfam/clans.tsv', 'r') as raw:
-        yield raw
+        return list(clans.parse(raw))
 
 
-@pytest.fixture
-def computed():
-    with tempfile.NamedTemporaryFile() as tmp:
-        mysql = MysqlWrapper(rfam())
-        mysql.write_query(tmp, clans.QUERY)
-        tmp.flush()
-        with open(tmp.name, 'r') as raw:
-            yield raw
-
-
-
-@pytest.mark.skip()
 def test_can_parse_known_data(stored):
-    pass
+    assert len(stored) == 111
 
 
-@pytest.mark.skip()
-def test_can_parse_queried_data(computed):
-    pass
-
-
-@pytest.mark.skip()
 def test_can_prdouce_correct_values(stored):
-    pass
+    assert attr.asdict(stored[0]) == attr.asdict(clans.RfamClan(
+        id='CL00001',
+        name='tRNA',
+        description='tRNA clan',
+        families={
+            'RF00005',
+            'RF00023',
+            'RF01849',
+            'RF01850',
+            'RF01851',
+            'RF01852',
+            'RF02544',
+        },
+    ))

@@ -22,7 +22,7 @@ from attr.validators import instance_of as is_a
 QUERY = """
 select
     clan.clan_acc 'id',
-    clan.name 'name',
+    clan.id 'name',
     clan.description 'description',
     group_concat(membership.rfam_acc) 'families'
 from clan
@@ -50,7 +50,7 @@ class RfamClan(object):
             id=row['id'],
             name=row['name'],
             description=row['description'],
-            families=row['families'].split(','),
+            families=set(row['families'].split(',')),
         )
 
     @property
