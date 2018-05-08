@@ -151,7 +151,7 @@ class EnsemblParser(Parser):
             database='ENSEMBL',
             sequence=sequence,
             exons=exons,
-            rna_type=ensembl.rna_type(feature, xref_data),
+            rna_type=ensembl.rna_type(self.inference, feature, xref_data),
             url=ensembl.url(feature),
             seq_version=ensembl.seq_version(feature),
             lineage=helpers.lineage(record),

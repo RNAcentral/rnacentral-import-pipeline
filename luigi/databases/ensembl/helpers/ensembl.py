@@ -66,12 +66,11 @@ def is_pseudogene(summary, feature):
     return summary.is_pseudogene(gene)
 
 
-def rna_type(feature, xref_data):
+def rna_type(inference, feature, xref_data):
     """
     Compute the RNA type of the given feature.
     """
     base_type = helpers.rna_type(feature)
-    inference = RnaTypeInference()
     return inference.infer_rna_type(xref_data, base_type)
 
 
