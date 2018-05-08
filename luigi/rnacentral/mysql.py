@@ -33,12 +33,16 @@ class MysqlWrapper(object):
 
     @contextmanager
     def command(self, command):
+        """
+        Runs a command and yields a filehandle that contains the output.
+        """
+
         with tempfile.NamedTemporaryFile() as out:
             cmd = self.mysql[
-                '--host', self.config.hostname,
+                '--host', self.config.host,
                 '--port', str(self.config.port),
-                '--user', self.config.username,
-                '--database', self.config.database,
+                '--user', self.config.user,
+                '--database', self.config.db_name,
             ]
 
             ((cmd << command) > out)()
@@ -56,18 +60,10 @@ class MysqlWrapper(object):
             shutil.copyfileobj(tmp, handle)
 
     def write_query(self, handle, query):
+        """
+        This will write the results of a query to the given filehandle.
+        """
         self.write_command(handle, query)
-
-    def write_table(self, handle, table):
-        """
-        Download the specific table using MySQL to a specific file. The input URI
-        should be of the form:
-            mysql://rfamro@mysql-rfam-public.ebi.ac.uk:4497/Rfam?database_link
-
-        that is:
-            mysql://username@host:port/database?table
-        """
-        return self.write_query(handle, 'select * from %s' % table)
 
     def query(self, query):
         """
