@@ -13,25 +13,23 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from .db import cursor
+import luigi
+
+from tasks.config import db
+from tasks.config import export
+
+from rnacentral.export.ftp import go_terms
+
+from tasks.utils.files import atomic_output
 
 
-def ranges_between(start, stop, max_size):
-    for start in xrange(start, stop, max_size):
-        last = min(start + max_size, stop)
-        yield (start, last)
+class GoAnnotationExport(luigi.Task):
+    def output(self):
+        return luigi.LocalTarget(
+            export().go('rnacentral_rfam_annotations.tsv.gz'),
+            format=luigi.format.Gzip,
+        )
 
-    if last < stop:
-        yield (last, stop)
-
-
-def upi_ranges(dbconf, max_size):
-    """
-    This will create range of the ids for all UPI's in the database.
-    """
-
-    with cursor(dbconf) as cur:
-        cur.execute('select max(id) from rna')
-        stop = cur.fetchone()[0]
-
-    return ranges_between(1, stop, max_size)
+    def run(self):
+        with atomic_output(self.output()) as out:
+            go_terms.export(db(), out)
