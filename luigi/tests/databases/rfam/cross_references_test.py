@@ -13,9 +13,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import tempfile
 from StringIO import StringIO
 
+import attr
 import pytest
 
 import databases.rfam.cross_references as cr
@@ -35,46 +35,42 @@ def test_can_fetch_and_parse_data(data):
 
 
 def test_correctly_parses_so_data(data):
-    assert data[0] == cr.RfamDatabaseLink(
-        'RF00014',
-        'SO',
-        None,
-        'SO:0000378',
-        'DsrA_RNA',
-    )
+    assert attr.asdict(data[1]) == attr.asdict(cr.RfamDatabaseLink(
+        # RF00001	SO		0000652	rRNA_5S	Gene; rRNA;
+        rfam_family='RF00001',
+        database='SO',
+        comment=None,
+        external_id='SO:0000652',
+        other='rRNA_5S',
+        family_type='Gene; rRNA;',
+    ))
 
 
 def test_correctly_parses_other(data):
-    assert data[4] == cr.RfamDatabaseLink(
-        'RF00016',
-        'snoopy',
-        None,
-        'Mus_musculus300888;',
-        None,
-    )
+    assert attr.asdict(data[49]) == attr.asdict(cr.RfamDatabaseLink(
+        rfam_family='RF00015',
+        database='GO',
+        comment=None,
+        external_id='GO:0017070',
+        other='U6 snRNA binding',
+        family_type='Gene; snRNA; splicing;',
+    ))
 
 
 def test_can_fetch_ontology_data(data):
-    assert data[0].ontology_term() ==  Term(
+    assert attr.asdict(data[47].ontology_term()) == attr.asdict(Term(
         'SO',
-        'SO:0000378',
-        'DsrA_RNA',
-        ('DsrA RNA regulates both transcription, by overcoming '
-         'transcriptional silencing by the nucleoid-associated H-NS protein, '
-         'and translation, by promoting efficient translation of the stress '
-         'sigma factor, RpoS. These two activities of DsrA can be separated '
-         'by mutation: the first of three stem-loops of the 85 nucleotide RNA '
-         'is necessary for RpoS translation but not for anti-H-NS action, '
-         'while the second stem-loop is essential for antisilencing and less '
-         'critical for RpoS translation. The third stem-loop, which behaves '
-         'as a transcription terminator, can be substituted by the trp '
-         'transcription terminator without loss of either DsrA function. The '
-         'sequence of the first stem-loop of DsrA is complementary with the '
-         'upstream leader portion of RpoS messenger RNA, suggesting that '
-         'pairing of DsrA with the RpoS message might be important for '
-         'translational regulation.'),
-        ['DsrA RNA']
-    )
+        'SO:0000393',
+        'U4_snRNA',
+        ('U4 small nuclear RNA (U4 snRNA) is a component of '
+         'the major U2-dependent spliceosome. It forms a duplex with '
+         'U6, and with each splicing round, it is displaced from U6 '
+         '(and the spliceosome) in an ATP-dependent manner, allowing '
+         'U6 to refold and create the active site for splicing '
+         'catalysis. A recycling process involving protein Prp24 '
+         're-anneals U4 and U6.'),
+        ['U4 snRNA', 'small nuclear RNA U4', 'U4 small nuclear RNA', 'snRNA U4']
+    ))
 
 
 def test_can_extract_all_ontology_terms():
@@ -84,10 +80,11 @@ def test_can_extract_all_ontology_terms():
             sample.write(line)
         sample.seek(0)
         assert list(cr.ontology_terms(sample)) == [
-            ont.term('SO:0000378'),
-            ont.term('SO:0000593'),
-            ont.term('GO:0006396'),
-            ont.term('GO:0005730'),
+            ont.term('SO:0000652'),
+            ont.term('GO:0003735'),
+            ont.term('GO:0005840'),
+            ont.term('SO:0000375'),
+            ont.term('SO:0000391'),
         ]
 
 
