@@ -41,8 +41,8 @@ GO_REPLACEMENTS = {
 
 QUERY = """
 select distinct
-	link.*,
-	family.type
+    link.*,
+    family.type
 from database_link link
 join family on family.rfam_acc = link.rfam_acc
 ;
@@ -136,7 +136,8 @@ def correct_go_term(reference):
     if go_term_id in EXCLUDED_TERMS:
         return None
 
-    if reference.rna_type == 'Gene; miRNA;' and go_term_id in EXCLUDED_MIRNA:
+    if reference.family_type == 'Gene; miRNA;' and \
+            go_term_id in EXCLUDED_MIRNA:
         return None
 
     go_term_id = GO_REPLACEMENTS.get(go_term_id, go_term_id)
@@ -162,6 +163,11 @@ def ontology_references(handle):
 
 
 def ontology_terms(handle):
+    """
+    Parse the given handle of database cross references to extract the unique
+    ontology terms. This will produce an iterable of ontology terms.
+    """
+
     seen = set()
     for reference in ontology_references(handle):
         if reference.external_id in seen:
