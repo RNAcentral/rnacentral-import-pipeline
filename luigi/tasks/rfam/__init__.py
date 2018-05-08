@@ -27,6 +27,7 @@ from .families_csv import RfamFamiliesCSV
 from .hits_csv import RfamHitsCSV
 from .fasta_csv import RfamFastaCSV
 from .sequences import RfamSequenceFile
+from .ontology_terms import RfamOntologyTerms
 
 
 class RfamFamilies(luigi.WrapperTask):  # pylint: disable=R0904
@@ -39,6 +40,7 @@ class RfamFamilies(luigi.WrapperTask):  # pylint: disable=R0904
     def requires(self):
         yield RfamPGLoadClans()
         yield RfamPGLoadFamilies()
+        yield RfamOntologyTerms()
 
 
 class RfamSearches(luigi.WrapperTask):  # pylint: disable=R0904
