@@ -1,112 +1,112 @@
 id	name	description	families
-CL00001	tRNA	tRNA clan	RF00005,RF00023,RF01849,RF01850,RF01851,RF01852,RF02544
-CL00002	RNaseP	RNaseP clan	RF00009,RF00010,RF00011,RF00030,RF00373,RF01577
-CL00003	SRP	SRP clan	RF00017,RF00169,RF01502,RF01570,RF01854,RF01855,RF01856,RF01857
-CL00004	Telomerase	Telomerase clan	RF00024,RF00025,RF01050
-CL00005	U1	U1 clan	RF00003,RF00488,RF00548
-CL00006	U2	U2 clan	RF00004,RF00007
-CL00007	U4	U4 clan	RF00015,RF00618
-CL00008	U54	U54 clan	RF00206,RF01277
-CL00009	U6	U6 clan	RF00026,RF00619
-CL00010	Hammerhead	Hammerhead clan	RF00008,RF00163,RF02275,RF02276,RF02277
-CL00011	Glm	Glm clan	RF00083,RF00128
-CL00012	SAM	SAM clan	RF00162,RF00634,RF01725
-CL00013	7SK	7SK clan	RF00100,RF01052
-CL00014	CRISPR-1	CRISPR-1 clan	RF01315,RF01317,RF01327,RF01328,RF01338,RF01352,RF01379
-CL00015	CRISPR-2	CRISPR-2 clan	RF01318,RF01320,RF01376,RF01377
-CL00016	FinP-traJ	FinP-traJ clan	RF00107,RF00243
-CL00017	IRES1	IRES1 clan	RF00061,RF00209
-CL00018	SCARNA3	SCARNA3 clan	RF00422,RF00565
-CL00019	SCARNA4	SCARNA4 clan	RF00423,RF00426
-CL00020	SL	SL clan	RF00198,RF00199
-CL00021	SNORA2	SNORA2 clan	RF00190,RF00410,RF00544,RF01250,RF01253,RF01441
-CL00022	SNORA3	SNORA3 clan	RF00334,RF01260
-CL00023	SNORA4	SNORA4 clan	RF00394,RF01264
-CL00024	SNORA5	SNORA5 clan	RF00392,RF01240
-CL00025	SNORA7	SNORA7 clan	RF00409,RF01246
-CL00026	SNORA8	SNORA8 clan	RF00393,RF01257
-CL00027	SNORA9	SNORA9 clan	RF00411,RF01243,RF01256,RF01436
-CL00028	SNORA13	SNORA13 clan	RF00396,RF01255,RF01438
-CL00029	SNORA17	SNORA17 clan	RF00416,RF00560
-CL00030	SNORA20	SNORA20 clan	RF00401,RF00429
-CL00031	SNORA21	SNORA21 clan	RF00412,RF01258,RF01437
-CL00032	SNORA27	SNORA27 clan	RF00443,RF00568,RF01265,RF01440
-CL00033	SNORA28	SNORA28 clan	RF00400,RF00545,RF01269
-CL00034	SNORA35	SNORA35 clan	RF00407,RF00430,RF00566,RF00598
-CL00035	SNORA36	SNORA36 clan	RF00340,RF01242,RF01262,RF01439
-CL00036	SNORA44	SNORA44 clan	RF00405,RF00418,RF01237,RF01245
-CL00037	SNORA48	SNORA48 clan	RF00554,RF01272
-CL00038	SNORA52	SNORA52 clan	RF00155,RF00307,RF00419,RF00425,RF01224,RF01239,RF01252,RF01435
-CL00039	SNORA56	SNORA56 clan	RF00417,RF01248
-CL00040	SNORA62	SNORA62 clan	RF00091,RF01251,RF01261,RF01434
-CL00041	SNORA64	SNORA64 clan	RF00264,RF01267
-CL00042	SNORA65	SNORA65 clan	RF00302,RF01254,RF01292
-CL00043	SNORA74	SNORA74 clan	RF00090,RF01263
-CL00044	SNORD12	SNORD12 clan	RF00581,RF01249
-CL00045	SNORD15	SNORD15 clan	RF00067,RF01185,RF01223,RF01226
-CL00046	SNORD16	SNORD16 clan	RF00138,RF01216
-CL00047	SNORD18	SNORD18 clan	RF00093,RF01159
-CL00048	SNORD19	SNORD19 clan	RF00569,RF01183
-CL00049	SNORD25	SNORD25 clan	RF00054,RF01188
-CL00050	SNORD26	SNORD26 clan	RF00087,RF00136
-CL00051	SNORD29	SNORD29 clan	RF00049,RF00070,RF00135,RF00212,RF00475,RF00476,RF00479,RF00592,RF01198,RF01203,RF01302
-CL00052	SNORD30	SNORD30 clan	RF00088,RF01283
-CL00053	SNORD31	SNORD31 clan	RF00089,RF00266,RF01177,RF01281
-CL00054	SNORD33	SNORD33 clan	RF00133,RF00134,RF00280,RF00472,RF00532,RF00535,RF01197,RF01201
-CL00055	SNORD34	SNORD34 clan	RF00147,RF01205
-CL00056	SNORD35	SNORD35 clan	RF00211,RF00328,RF01207
-CL00057	SNORD39	SNORD39 clan	RF00157,RF00268,RF00358,RF00571,RF01178,RF01181
-CL00058	SNORD41	SNORD41 clan	RF00274,RF00588,RF01214
-CL00059	SNORD43	SNORD43 clan	RF00221,RF01238
-CL00060	SNORD44	SNORD44 clan	RF00287,RF00359
-CL00061	SNORD46	SNORD46 clan	RF00218,RF01259
-CL00062	SNORD49	SNORD49 clan	RF00277,RF00337,RF01300
-CL00063	SNORD52	SNORD52 clan	RF00276,RF00325,RF00333,RF01176
-CL00064	SNORD58	SNORD58 clan	RF00151,RF00608
-CL00065	SNORD59	SNORD59 clan	RF00160,RF00273,RF00473
-CL00066	SNORD60	SNORD60 clan	RF00271,RF00345,RF00471,RF00527,RF01194
-CL00067	SNORD61	SNORD61 clan	RF00270,RF01170,RF01200
-CL00068	SNORD62	SNORD62 clan	RF00153,RF00205,RF01218
-CL00069	SNORD74	SNORD74 clan	RF00152,RF00181,RF00284,RF00357,RF00509,RF00530,RF00570,RF01169,RF01278
-CL00070	SNORD77	SNORD77 clan	RF00309,RF00591,RF02402
-CL00071	SNORD88	SNORD88 clan	RF00604,RF01209,RF01424
-CL00072	SNORD96	SNORD96 clan	RF00055,RF01299
-CL00073	SNORD100	SNORD100 clan	RF00046,RF00609
-CL00074	SNORD101	SNORD101 clan	RF00186,RF00339
-CL00075	SNORD105	SNORD105 clan	RF00584,RF01173
-CL00076	SNORD110	SNORD110 clan	RF00610,RF01280
-CL00077	SNORND104	SNORND104 clan	RF00289,RF01199
-CL00078	snR30-U17	snR30-U17 clan	RF00045,RF01271
-CL00079	snR68	snR68 clan	RF01235,RF01287
-CL00080	snoR53	snoR53 clan	RF00338,RF01279
-CL00081	snoU13	snoU13 clan	RF00304,RF01210
-CL00082	snoU85	snoU85 clan	RF01294,RF01296
-CL00083	mir-6	mir-6 clan	RF00143,RF00813
-CL00084	mir-3	mir-3 clan	RF00716,RF00818
-CL00085	mir-15	mir-15 clan	RF00254,RF00455
-CL00086	mir-28	mir-28 clan	RF00655,RF00917
-CL00087	mir-34	mir-34 clan	RF00456,RF00711
-CL00088	mir-36	mir-36 clan	RF00685,RF00794,RF02254
-CL00089	mir-50	mir-50 clan	RF00672,RF00824
-CL00090	mir-73	mir-73 clan	RF00830,RF00831
-CL00091	mir-81	mir-81 clan	RF00727,RF00728
-CL00092	mir-137	mir-137 clan	RF00694,RF00859
-CL00093	mir-182	mir-182 clan	RF00663,RF00702,RF00706,RF00843
-CL00094	mir-216	mir-216 clan	RF00654,RF00747
-CL00095	mir-279	mir-279 clan	RF00754,RF00948
-CL00096	mir-290	mir-290 clan	RF00639,RF00665,RF00668,RF01413
-CL00097	mir-BART	mir-BART clan	RF00363,RF00866
-CL00098	MIR169	MIR169 clan	RF00645,RF00865
-CL00099	MIR171	MIR171 clan	RF00643,RF00692
-CL00100	U3	U3 clan	RF00012,RF01846,RF01847,RF01848
-CL00101	Cobalamin	Cobalamin clan	RF00174,RF01482,RF01689
-CL00102	group-II-D1D4	Group II catalytic intron D1-D4 clan	RF01998,RF01999,RF02001,RF02003,RF02004,RF02005,RF02012
-CL00103	SNORD11	SNORD11 clan	RF01182,RF01192
-CL00104	Hepadnavirus_epsilon	Hepadnavirus_epsilon clan	RF01047,RF01313
-CL00105	RyeA-RyeB	RyeA/RyeB clan	RF00101,RF00111
-CL00106	Csr_Rsm_clan	Csr-Rsm protein binding clan	RF00018,RF00084,RF00115,RF00166,RF00195,RF01731,RF02144,RF02767
-CL00108	suhB	suhB sRNA clan	RF00519,RF02345
-CL00110	mir-19	mir-19 clan	RF00245,RF01898
-CL00111	SSU	SSU clan	RF00177,RF01959,RF01960,RF02542,RF02545
-CL00112	LSU	LSU clan	RF00002,RF02540,RF02541,RF02543,RF02546
-CL00113	5S_rRNA	5S rRNA clan	RF00001,RF02547
+CL00001	tRNA clan	The tRNA clan contains the RNA families tRNA and tmRNA. Homology between these families has been established in the published literature [1-5].	RF00005,RF00023,RF01849,RF01850,RF01851,RF01852,RF02544
+CL00002	RNaseP clan	The RNaseP clan contains the RNA families RNaseP_nuc, RNaseP_bact_a, RNaseP_bact_b, RNase_MRP and RNaseP_arch. Homology between these families has been established in the published literature [1-7].	RF00009,RF00010,RF00011,RF00030,RF00373,RF01577
+CL00003	SRP clan	The SRP clan contains the RNA families for Metazoa_SRP, Bacterial_small_SRP, Bacterial_large_SRP, Fungal_SRP, Plant_SRP, Protozoa_SRP, Archaea_SRP and Dictyostelium_SRP. Homology between these families has been established in the published literature [1-8].	RF00017,RF00169,RF01502,RF01570,RF01854,RF01855,RF01856,RF01857
+CL00004	Telomerase clan	The Telomerase clan contains the RNA families Telomerase-vert, Telomerase-cil and Sacc_telomerase. Homology between these families has been established in the published literature [1-3].	RF00024,RF00025,RF01050
+CL00005	U1 clan	The U1 clan contains the RNA families U1, U1_yeast and U11. Homology between these families has been established in the published literature [1-4].	RF00003,RF00488,RF00548
+CL00006	U2 clan	The U2 clan contains the RNA families U2 and U12. Homology between these families has been established in the published literature [1-4].	RF00004,RF00007
+CL00007	U4 clan	The U4 clan contains the RNA families U4 and U4atac. Homology between these families has been established in the published literature [1-5].	RF00015,RF00618
+CL00008	U54 clan	The U54 clan contains the RNA families U54 and snoU54. The following bioinformatic methods were used to confirm the relationship between these families: HMMER3 and PRC [1,2].	RF00206,RF01277
+CL00009	U6 clan	The U6 clan contains the RNA families U6 and U6atac. Homology between these families has been established in the published literature [1-4].	RF00026,RF00619
+CL00010	Hammerhead clan	The Hammerhead clan contains the RNA families Hammerhead_3 and Hammerhead_1. Homology between these families has been established in the published literature [1,2].	RF00008,RF00163,RF02275,RF02276,RF02277
+CL00011	Glm clan	The Glm clan contains the RNA families GlmZ_SraJ and GlmY_tke1. Homology between these families has been established in the published literature [1].	RF00083,RF00128
+CL00012	SAM clan	The SAM clan contains the RNA families SAM, SAM-IV and SAM-I/IV. Homology between these families has been established in the published literature [1].	RF00162,RF00634,RF01725
+CL00013	7SK clan	The 7SK clan contains the RNA families 7SK and Arthropod_7SK. Homology between these families has been established in the published literature [1].	RF00100,RF01052
+CL00014	CRISPR-1 clan	The CRISPR-1 clan contains the RNA families CRISPR-DR2, CRISPR-DR4, CRISPR-DR14, CRISPR-DR17, CRISPR-DR25, CRISPR-DR43 and CRISPR-DR66. The following bioinformatic methods were used to confirm the relationship between these families: CMSEARCH, HMMER3 and PRC [1,2,3].	RF01315,RF01317,RF01327,RF01328,RF01338,RF01352,RF01379
+CL00015	CRISPR-2 clan	The CRISPR-2 clan contains the RNA families CRISPR-DR5, CRISPR-DR7, CRISPR-DR63 and CRISPR-DR64. The following bioinformatic methods were used to confirm the relationship between these families: CMSEARCH, HMMER3 and PRC [1,2,3].	RF01318,RF01320,RF01376,RF01377
+CL00016	FinP-traJ clan	The FinP-traJ clan contains the RNA families FinP and traJ_5. Homology between these families has been established in the published literature [1]. The following bioinformatic methods were used to confirm the relationship between these families: CMSEARCH and PRC [2,3].	RF00107,RF00243
+CL00017	IRES1 clan	The IRES1 clan contains the RNA families IRES_HCV and IRES_Pesti. The following bioinformatic methods were used to confirm the relationship between these families: CMSEARCH and PRC [1,2].	RF00061,RF00209
+CL00018	SCARNA3 clan	The SCARNA3 clan contains the RNA families SCARNA24 and SCARNA3. The following bioinformatic methods were used to confirm the relationship between these families: CMSEARCH and PRC [1,2].	RF00422,RF00565
+CL00019	SCARNA4 clan	The SCARNA4 clan contains the RNA families SCARNA4 and SCARNA15. The following bioinformatic methods were used to confirm the relationship between these families: CMSEARCH, HMMER3 and PRC [1,2,3].	RF00423,RF00426
+CL00020	SL clan	The SL clan contains the RNA families SL1 and SL2. Homology between these families has been established in the published literature [1]. The following bioinformatic methods were used to confirm the relationship between these families: HMMER3 and PRC [2,3].	RF00198,RF00199
+CL00021	SNORA2 clan	The SNORA2 clan contains the RNA families SNORA16, SNORA2, snopsi28S-3327, snR189, snR46 and S_pombe_snR46. Homology between these families has been established in the published literature [1]. Researchers at the human snoRNA database (snoRNABase) have established that the following human and S. cerevisiae snoRNAs target modifications on orthologous positions of the ribosome: SNORA2 and snR189, SNORA16 and snR46 [2].	RF00190,RF00410,RF00544,RF01250,RF01253,RF01441
+CL00022	SNORA3 clan	The SNORA3 clan contains the RNA families SNORA3 and snR11. Researchers at the human snoRNA database (snoRNABase) have established that the following human and S. cerevisiae snoRNAs target modifications on orthologous positions of the ribosome: SNORA3 and snR11 [1].	RF00334,RF01260
+CL00023	SNORA4 clan	The SNORA4 clan contains the RNA families SNORA4 and snR83. Researchers at the human snoRNA database (snoRNABase) have established that the following human and S. cerevisiae snoRNAs target modifications on orthologous positions of the ribosome: SNORA4 and snR83 [1].	RF00394,RF01264
+CL00024	SNORA5 clan	The SNORA5 clan contains the RNA families SNORA5 and snR85. Researchers at the human snoRNA database (snoRNABase) have established that the following human and S. cerevisiae snoRNAs target modifications on orthologous positions of the ribosome: SNORA5 and snR85 [1].	RF00392,RF01240
+CL00025	SNORA7 clan	The SNORA7 clan contains the RNA families SNORA7 and snR81. Researchers at the human snoRNA database (snoRNABase) have established that the following human and S. cerevisiae snoRNAs target modifications on orthologous positions of the ribosome: SNORA7 and snR81 [1].	RF00409,RF01246
+CL00026	SNORA8 clan	The SNORA8 clan contains the RNA families SNORA8 and snR31. Researchers at the human snoRNA database (snoRNABase) have established that the following human and S. cerevisiae snoRNAs target modifications on orthologous positions of the ribosome: SNORA8 and snR31 [1].	RF00393,RF01257
+CL00027	SNORA9 clan	The SNORA9 clan contains the RNA families SNORA9, snR33, snR43 and S_pombe_snR33. Homology between these families has been established in the published literature [1]. Researchers at the human snoRNA database (snoRNABase) have established that the following human and S. cerevisiae snoRNAs target modifications on orthologous positions of the ribosome: SNORA9 and snR43, SNORA9 and snR33 [2].	RF00411,RF01243,RF01256,RF01436
+CL00028	SNORA13 clan	The SNORA13 clan contains the RNA families SNORA13, snR35 and S_pombe_snR35. Homology between these families has been established in the published literature [1]. Researchers at the human snoRNA database (snoRNABase) have established that the following human and S. cerevisiae snoRNAs target modifications on orthologous positions of the ribosome: SNORA13 and snR35 [2].	RF00396,RF01255,RF01438
+CL00029	SNORA17 clan	The SNORA17 clan contains the RNA families SNORA43 and SNORA17. The following bioinformatic methods were used to confirm the relationship between these families: CMSEARCH, HMMER3 and PRC [1,2,3].	RF00416,RF00560
+CL00030	SNORA20 clan	The SNORA20 clan contains the RNA families SNORA20 and SNORA29. The following bioinformatic methods were used to confirm the relationship between these families: CMSEARCH, HMMER3 and PRC [1,2,3].	RF00401,RF00429
+CL00031	SNORA21 clan	The SNORA21 clan contains the RNA families SNORA21, snR10 and S_pombe_snR10. Homology between these families has been established in the published literature [1]. Researchers at the human snoRNA database (snoRNABase) have established that the following human and S. cerevisiae snoRNAs target modifications on orthologous positions of the ribosome: SNORA21 and snR10 [2].	RF00412,RF01258,RF01437
+CL00032	SNORA27 clan	The SNORA27 clan contains the RNA families SNORA27, SNORA26, snR42 and S_pombe_snR42. Homology between these families has been established in the published literature [1]. Researchers at the human snoRNA database (snoRNABase) have established that the following human and S. cerevisiae snoRNAs target modifications on orthologous positions of the ribosome: SNORA27 and snR42 [2].	RF00443,RF00568,RF01265,RF01440
+CL00033	SNORA28 clan	The SNORA28 clan contains the RNA families SNORA28, snopsi18S-841 and snR80. Researchers at the human snoRNA database (snoRNABase) have established that the following human and S. cerevisiae snoRNAs target modifications on orthologous positions of the ribosome: SNORA28 and snR80 [1].	RF00400,RF00545,RF01269
+CL00034	SNORA35 clan	The SNORA35 clan contains the RNA families SNORA50, SNORA54, SNORA35 and SNORA76. The following bioinformatic methods were used to confirm the relationship between these families: CMSEARCH, HMMER3 and PRC [1,2,3].	RF00407,RF00430,RF00566,RF00598
+CL00035	SNORA36 clan	The SNORA36 clan contains the RNA families SNORA36, snR36, snR44 and S_pombe_snR36. Homology between these families has been established in the published literature [1]. Researchers at the human snoRNA database (snoRNABase) have established that the following human and S. cerevisiae snoRNAs target modifications on orthologous positions of the ribosome: SNORA36 and snR36, SNORA36 and snR44 [2].	RF00340,RF01242,RF01262,RF01439
+CL00036	SNORA44 clan	The SNORA44 clan contains the RNA families SNORA44, SNORA58, snR161 and snR9. Researchers at the human snoRNA database (snoRNABase) have established that the following human and S. cerevisiae snoRNAs target modifications on orthologous positions of the ribosome: SNORA44 and snR161, SNORA58 and snR9 [1].	RF00405,RF00418,RF01237,RF01245
+CL00037	SNORA48 clan	The SNORA48 clan contains the RNA families SNORA48 and snR86. Researchers at the human snoRNA database (snoRNABase) have established that the following human and S. cerevisiae snoRNAs target modifications on orthologous positions of the ribosome: SNORA48 and snR86 [1].	RF00554,RF01272
+CL00038	SNORA52 clan	The SNORA52 clan contains the RNA families SNORA66, snoR98, SNORA52, SNORA18, snoR80, snR49, snR5 and S_pombe_snR5. Homology between these families has been established in the published literature [1]. Researchers at the human snoRNA database (snoRNABase) have established that the following human and S. cerevisiae snoRNAs target modifications on orthologous positions of the ribosome: U66 and snR49, SNORA52 and snR5 [2]. Researchers at the plant snoRNA database have established that the following arabadopsis, human and S. cerevisiae snoRNAs target modifications on orthologous positions of the ribosome: snoR80 and SnR5, snoR98 and SnR5 [3].	RF00155,RF00307,RF00419,RF00425,RF01224,RF01239,RF01252,RF01435
+CL00039	SNORA56 clan	The SNORA56 clan contains the RNA families SNORA56 and snR8. Researchers at the human snoRNA database (snoRNABase) have established that the following human and S. cerevisiae snoRNAs target modifications on orthologous positions of the ribosome: SNORA56 and snR8 [1].	RF00417,RF01248
+CL00040	SNORA62 clan	The SNORA62 clan contains the RNA families SNORA62, snR65, snR3, snR82 and S_pombe_snR3. Homology between these families has been established in the published literature [1]. Researchers at the human snoRNA database (snoRNABase) have established that the following human and S. cerevisiae snoRNAs target modifications on orthologous positions of the ribosome: SNORA62 and snR3, SNORA62 and snR65, SNORA62 and snR82 [2].	RF00091,RF01251,RF01261,RF01434
+CL00041	SNORA64 clan	The SNORA64 clan contains the RNA families SNORA64 and snR37. Researchers at the human snoRNA database (snoRNABase) have established that the following human and S. cerevisiae snoRNAs target modifications on orthologous positions of the ribosome: SNORA64 and snR37 [1].	RF00264,RF01267
+CL00042	SNORA65 clan	The SNORA65 clan contains the RNA families SNORA65, snR34 and snoR2. Researchers at the human snoRNA database (snoRNABase) have established that the following human and S. cerevisiae snoRNAs target modifications on orthologous positions of the ribosome: SNORA65 and snR34 [1]. Researchers at the plant snoRNA database have established that the following arabadopsis, human and S. cerevisiae snoRNAs target modifications on orthologous positions of the ribosome: snoR2 and U65&SnR34 [2].	RF00302,RF01254,RF01292
+CL00043	SNORA74 clan	The SNORA74 clan contains the RNA families SNORA74 and snR191. Researchers at the human snoRNA database (snoRNABase) have established that the following human and S. cerevisiae snoRNAs target modifications on orthologous positions of the ribosome: SNORA74 and snR191 [1]. The following bioinformatic methods were used to confirm the relationship between these families: HMMER3 [2].	RF00090,RF01263
+CL00044	SNORD12 clan	The SNORD12 clan contains the RNA families SNORD12 and snR190. Researchers at the human snoRNA database (snoRNABase) have established that the following human and S. cerevisiae snoRNAs target modifications on orthologous positions of the ribosome: SNORD12 and snR190 [1].	RF00581,RF01249
+CL00045	SNORD15 clan	The SNORD15 clan contains the RNA families SNORD15, snR75, snR13 and snoZ5. Researchers at the human snoRNA database (snoRNABase) have established that the following human and S. cerevisiae snoRNAs target modifications on orthologous positions of the ribosome: SNORD15 and snR13 [1]. Researchers at the plant snoRNA database have established that the following arabadopsis, human and S. cerevisiae snoRNAs target modifications on orthologous positions of the ribosome: SNORD15 and U15&SnR13, SNORD15 and SnR75 [2].	RF00067,RF01185,RF01223,RF01226
+CL00046	SNORD16 clan	The SNORD16 clan contains the RNA families SNORD16 and snR87. Researchers at the human snoRNA database (snoRNABase) have established that the following human and S. cerevisiae snoRNAs target modifications on orthologous positions of the ribosome: U16 and snR87 [1].	RF00138,RF01216
+CL00047	SNORD18 clan	The SNORD18 clan contains the RNA families SNORD18 and snoU18. Researchers at the human snoRNA database (snoRNABase) have established that the following human and S. cerevisiae snoRNAs target modifications on orthologous positions of the ribosome: SNORD18 and snoU18 [1].	RF00093,RF01159
+CL00048	SNORD19 clan	The SNORD19 clan contains the RNA families SNORD19 and SNORD19B. Homology between these families has been established in the published literature [1]. The following bioinformatic methods were used to confirm the relationship between these families: CMSEARCH, HMMER3 and PRC [2,3,4].	RF00569,RF01183
+CL00049	SNORD25 clan	The SNORD25 clan contains the RNA families SNORD25 and snR56. Researchers at the human snoRNA database (snoRNABase) have established that the following human and S. cerevisiae snoRNAs target modifications on orthologous positions of the ribosome: SNORD25 and snR56 [1]. Researchers at the plant snoRNA database have established that the following arabadopsis, human and S. cerevisiae snoRNAs target modifications on orthologous positions of the ribosome: SNORD25 and U25&SnR56 [2].	RF00054,RF01188
+CL00050	SNORD26 clan	The SNORD26 clan contains the RNA families SNORD26 and SNORD81. The following bioinformatic methods were used to confirm the relationship between these families: HMMER3 and PRC [1,2].	RF00087,RF00136
+CL00051	SNORD29 clan	The SNORD29 clan contains the RNA families SNORD36, SNORD29, snoZ223, SNORD38, snosnR69, snosnR61, snosnR71, SNORD78, snoR69Y, snR47 and snoU36a. Researchers at the human snoRNA database (snoRNABase) have established that the following human and S. cerevisiae snoRNAs target modifications on orthologous positions of the ribosome: SNORD29 and snR71, SNORD36 and snR47, SNORD38 and snR61 [1]. Researchers at the plant snoRNA database have established that the following arabadopsis, human and S. cerevisiae snoRNAs target modifications on orthologous positions of the ribosome: snoU36a and U36a&SnR47, snoR69Y and U29&SnR71, snoZ223 and U38ab&SnR61, snoR69Y and SnR69 [2].	RF00049,RF00070,RF00135,RF00212,RF00475,RF00476,RF00479,RF00592,RF01198,RF01203,RF01302
+CL00052	SNORD30 clan	The SNORD30 clan contains the RNA families SNORD30 and snoU30. Researchers at the plant snoRNA database have established that the following arabadopsis, human and S. cerevisiae snoRNAs target modifications on orthologous positions of the ribosome: snoU30 and U30 [1].	RF00088,RF01283
+CL00053	SNORD31 clan	The SNORD31 clan contains the RNA families SNORD31, snoZ17, snR67 and snoR35. Researchers at the human snoRNA database (snoRNABase) have established that the following human and S. cerevisiae snoRNAs target modifications on orthologous positions of the ribosome: SNORD31 and snR67 [1]. Researchers at the plant snoRNA database have established that the following arabadopsis, human and S. cerevisiae snoRNAs target modifications on orthologous positions of the ribosome: snoR35 and U31&SnR67 [2]. The following bioinformatic methods were used to confirm the relationship between these families: HMMER3 [3].	RF00089,RF00266,RF01177,RF01281
+CL00054	SNORD33 clan	The SNORD33 clan contains the RNA families SNORD33, snoZ196, SNORD51, snosnR55, snoMe18S-Um1356, snoMe28S-Am982, snR39, snR40 and snoR21b. Researchers at the human snoRNA database (snoRNABase) have established that the following human and S. cerevisiae snoRNAs target modifications on orthologous positions of the ribosome: SNORD33 and snosnR55 [1]. Researchers at the plant snoRNA database have established that the following arabadopsis, human and S. cerevisiae snoRNAs target modifications on orthologous positions of the ribosome: snoR21b and U32&SnR40, snoZ196 and U51&U32a&SnR39&SnR59 [2].	RF00133,RF00134,RF00280,RF00472,RF00532,RF00535,RF01197,RF01201
+CL00055	SNORD34 clan	The SNORD34 clan contains the RNA families SNORD34 and snR62. Researchers at the human snoRNA database (snoRNABase) have established that the following human and S. cerevisiae snoRNAs target modifications on orthologous positions of the ribosome: SNORD34 and snR62 [1]. Researchers at the plant snoRNA database have established that the following arabadopsis, human and S. cerevisiae snoRNAs target modifications on orthologous positions of the ribosome: SNORD34 and U34&SnR62 [2].	RF00147,RF01205
+CL00056	SNORD35 clan	The SNORD35 clan contains the RNA families SNORD35, snoZ161_228 and snR73. Researchers at the human snoRNA database (snoRNABase) have established that the following human and S. cerevisiae snoRNAs target modifications on orthologous positions of the ribosome: SNORD35 and snR73 [1]. Researchers at the plant snoRNA database have established that the following arabadopsis, human and S. cerevisiae snoRNAs target modifications on orthologous positions of the ribosome: snoZ161_228 and U35&SnR73 [2].	RF00211,RF00328,RF01207
+CL00057	SNORD39 clan	The SNORD39 clan contains the RNA families SNORD55, snoZ7, snoZ101, SNORD65, snoR77Y and snR77. Researchers at the human snoRNA database (snoRNABase) have established that the following human and S. cerevisiae snoRNAs target modifications on orthologous positions of the ribosome: SNORD65/HBII-135 and snR77 [1]. Researchers at the plant snoRNA database have established that the following arabadopsis, human and S. cerevisiae snoRNAs target modifications on orthologous positions of the ribosome: snoZ101 and U55&U39 [2].	RF00157,RF00268,RF00358,RF00571,RF01178,RF01181
+CL00058	SNORD41 clan	The SNORD41 clan contains the RNA families SNORD57, SNORD41 and snR51. Researchers at the human snoRNA database (snoRNABase) have established that the following human and S. cerevisiae snoRNAs target modifications on orthologous positions of the ribosome: U57 and snR51, SNORD41 and snR51 [1].	RF00274,RF00588,RF01214
+CL00059	SNORD43 clan	The SNORD43 clan contains the RNA families SNORD43 and snR70. Researchers at the human snoRNA database (snoRNABase) have established that the following human and S. cerevisiae snoRNAs target modifications on orthologous positions of the ribosome: SNORD43 and snR70 [1]. Researchers at the plant snoRNA database have established that the following arabadopsis, human and S. cerevisiae snoRNAs target modifications on orthologous positions of the ribosome: SNORD43 and U43&SnR70 [2].	RF00221,RF01238
+CL00060	SNORD44 clan	The SNORD44 clan contains the RNA families SNORD44 and snoZ102_R77. Researchers at the plant snoRNA database have established that the following arabadopsis, human and S. cerevisiae snoRNAs target modifications on orthologous positions of the ribosome: snoZ102_R77 and U44 [1].	RF00287,RF00359
+CL00061	SNORD46 clan	The SNORD46 clan contains the RNA families SNORD46 and snR63. Researchers at the human snoRNA database (snoRNABase) have established that the following human and S. cerevisiae snoRNAs target modifications on orthologous positions of the ribosome: SNORD46 and snR63 [1].	RF00218,RF01259
+CL00062	SNORD49 clan	The SNORD49 clan contains the RNA families SNORD49, snoZ112 and snoU49. Researchers at the plant snoRNA database have established that the following arabadopsis, human and S. cerevisiae snoRNAs target modifications on orthologous positions of the ribosome: snoU49 and U49 [1].	RF00277,RF00337,RF01300
+CL00063	SNORD52 clan	The SNORD52 clan contains the RNA families SNORD52, SNORD53, snoZ157 and snR78. Researchers at the human snoRNA database (snoRNABase) have established that the following human and S. cerevisiae snoRNAs target modifications on orthologous positions of the ribosome: SNORD52 and snR78 [1]. Researchers at the plant snoRNA database have established that the following arabadopsis, human and S. cerevisiae snoRNAs target modifications on orthologous positions of the ribosome: snoZ157 and U53, snoZ157 and U52&SnR78 [2].	RF00276,RF00325,RF00333,RF01176
+CL00064	SNORD58 clan	The SNORD58 clan contains the RNA families SNORD58 and SNORD99. The following bioinformatic methods were used to confirm the relationship between these families: HMMER3 and PRC [1,2].	RF00151,RF00608
+CL00065	SNORD59 clan	The SNORD59 clan contains the RNA families snoZ159, SNORD59 and snosnR54. Researchers at the human snoRNA database (snoRNABase) have established that the following human and S. cerevisiae snoRNAs target modifications on orthologous positions of the ribosome: SNORD59 and snosnR54 [1]. Researchers at the plant snoRNA database have established that the following arabadopsis, human and S. cerevisiae snoRNAs target modifications on orthologous positions of the ribosome: snoZ159 and U59&SnR54 [2].	RF00160,RF00273,RF00473
+CL00066	SNORD60 clan	The SNORD60 clan contains the RNA families SNORD60, snoR1, snosnR48, snoMe28S-G3255 and sn2903. Researchers at the human snoRNA database (snoRNABase) have established that the following human and S. cerevisiae snoRNAs target modifications on orthologous positions of the ribosome: SNORD60 and snR48 [1]. Researchers at the plant snoRNA database have established that the following arabadopsis, human and S. cerevisiae snoRNAs target modifications on orthologous positions of the ribosome: snoR1 and SnR48 [2].	RF00271,RF00345,RF00471,RF00527,RF01194
+CL00067	SNORD61 clan	The SNORD61 clan contains the RNA families SNORD61, snoU61 and SNORD125. Researchers at the plant snoRNA database have established that the following arabadopsis, human and S. cerevisiae snoRNAs target modifications on orthologous positions of the ribosome: snoU61 and U61 [1].	RF00270,RF01170,RF01200
+CL00068	SNORD62 clan	The SNORD62 clan contains the RNA families SNORD62, snoR41 and snR41. Researchers at the human snoRNA database (snoRNABase) have established that the following human and S. cerevisiae snoRNAs target modifications on orthologous positions of the ribosome: U62 and snR41 [1].	RF00153,RF00205,RF01218
+CL00069	SNORD74 clan	The SNORD74 clan contains the RNA families SNORD79, SNORD113, SNORD74, snoR44_J54, snosnR64, snoMe28S-Cm2645, SNORD64, SNORD112 and SNORD109A. Researchers at the human snoRNA database (snoRNABase) have established that the following human and S. cerevisiae snoRNAs target modifications on orthologous positions of the ribosome: SNORD74 and snR64 [1]. Researchers at the plant snoRNA database have established that the following arabadopsis, human and S. cerevisiae snoRNAs target modifications on orthologous positions of the ribosome: snoR44_J54 and U74&SnR64, snoR44_J54 and U79 [2]. The following bioinformatic methods were used to confirm the relationship between these families: HMMER3 [3].	RF00152,RF00181,RF00284,RF00357,RF00509,RF00530,RF00570,RF01169,RF01278
+CL00070	SNORD77 clan	The SNORD77 clan contains the RNA families snosnR60_Z15 and SNORD77. Researchers at the human snoRNA database (snoRNABase) have established that the following human and S. cerevisiae snoRNAs target modifications on orthologous positions of the ribosome: SNORD77 and snR60 [1].	RF00309,RF00591,RF02402
+CL00071	SNORD88 clan	The SNORD88 clan contains the RNA families SNORD88, snR76 and snoR118. Researchers at the human snoRNA database (snoRNABase) have established that the following human and S. cerevisiae snoRNAs target modifications on orthologous positions of the ribosome: SNORD88 and snR76 [1]. The following bioinformatic methods were used to confirm the relationship between these families: HMMER3 [2].	RF00604,RF01209,RF01424
+CL00072	SNORD96 clan	The SNORD96 clan contains the RNA families SNORD96 and snR39B. Researchers at the human snoRNA database (snoRNABase) have established that the following human and S. cerevisiae snoRNAs target modifications on orthologous positions of the ribosome: snR39B and snR39b [1].	RF00055,RF01299
+CL00073	SNORD100 clan	The SNORD100 clan contains the RNA families snoR30 and SNORD100. The following bioinformatic methods were used to confirm the relationship between these families: CMSEARCH, HMMER3 and PRC [1,2,3].	RF00046,RF00609
+CL00074	SNORD101 clan	The SNORD101 clan contains the RNA families SNORD101 and snoR60. The following bioinformatic methods were used to confirm the relationship between these families: CMSEARCH, HMMER3 and PRC [1,2,3].	RF00186,RF00339
+CL00075	SNORD105 clan	The SNORD105 clan contains the RNA families SNORD105 and snoU105B. Homology between these families has been established in the published literature [1,2]. The following bioinformatic methods were used to confirm the relationship between these families: CMSEARCH, HMMER3 and PRC [3,4,5].	RF00584,RF01173
+CL00076	SNORD110 clan	The SNORD110 clan contains the RNA families SNORD110 and snoR14. Researchers at the plant snoRNA database have established that the following arabadopsis, human and S. cerevisiae snoRNAs target modifications on orthologous positions of the ribosome: SNORD110 and snoR14 [1].	RF00610,RF01280
+CL00077	SNORND104 clan	The SNORND104 clan contains the RNA families SNORND104 and snR58. Researchers at the human snoRNA database (snoRNABase) have established that the following human and S. cerevisiae snoRNAs target modifications on orthologous positions of the ribosome: SNORND104 and snR58 [1].	RF00289,RF01199
+CL00078	snR30-U17 clan	The snR30-U17 clan contains the RNA families SNORA73 and snR30. Homology between these families has been established in the published literature [1,2]. Researchers at the human snoRNA database (snoRNABase) have established that the following human and S. cerevisiae snoRNAs target modifications on orthologous positions of the ribosome: SNORA73 and snR30 [3].	RF00045,RF01271
+CL00079	snR68 clan	The snR68 clan contains the RNA families snR68 and snoR27. Researchers at the plant snoRNA database have established that the following arabadopsis, human and S. cerevisiae snoRNAs target modifications on orthologous positions of the ribosome: snoR27 and SnR68 [1].	RF01235,RF01287
+CL00080	snoR53 clan	The snoR53 clan contains the RNA families snoR53 and snoR53Y. Researchers at the plant snoRNA database have established that the following arabadopsis, human and S. cerevisiae snoRNAs target modifications on orthologous positions of the ribosome: snoR53Y and SnR53 [1].	RF00338,RF01279
+CL00081	snoU13 clan	The snoU13 clan contains the RNA families snoZ279_R105_R108 and snoU13. The following bioinformatic methods were used to confirm the relationship between these families: HMMER3 and PRC [1,2].	RF00304,RF01210
+CL00082	snoU85 clan	The snoU85 clan contains the RNA families snoU89 and snoU85. The following bioinformatic methods were used to confirm the relationship between these families: CMSEARCH, HMMER3 and PRC [1,2,3].	RF01294,RF01296
+CL00083	mir-6 clan	The mir-6 clan contains the RNA families mir-6 and mir-11. The following bioinformatic methods were used to confirm the relationship between these families: CMSEARCH, HMMER3 and PRC [1,2,3]. The hexamer seeds of the mature miRNA sequences from these families were manually checked for similarity using sequences obtained from miRBase [4]. This clan had a previous ID of mir-2 however this family was removed from the clan and the ID updated.	RF00143,RF00813
+CL00084	mir-3 clan	The mir-3 clan contains the RNA families mir-3 and mir-318. The following bioinformatic methods were used to confirm the relationship between these families: CMSEARCH and PRC [1,2]. The hexamer seeds of the mature miRNA sequences from these families were manually checked for similarity using sequences obtained from miRBase [3].	RF00716,RF00818
+CL00085	mir-15 clan	The mir-15 clan contains the RNA families mir-16 and mir-15. The following bioinformatic methods were used to confirm the relationship between these families: CMSEARCH, HMMER3 and PRC [1,2,3]. The hexamer seeds of the mature miRNA sequences from these families were manually checked for similarity using sequences obtained from miRBase [4].	RF00254,RF00455
+CL00086	mir-28 clan	The mir-28 clan contains the RNA families mir-28 and mir-708. The following bioinformatic methods were used to confirm the relationship between these families: CMSEARCH, HMMER3 and PRC [1,2,3]. The hexamer seeds of the mature miRNA sequences from these families were manually checked for similarity using sequences obtained from miRBase [4].	RF00655,RF00917
+CL00087	mir-34 clan	The mir-34 clan contains the RNA families mir-34 and mir-449. The following bioinformatic methods were used to confirm the relationship between these families: HMMER3 and PRC [1,2]. The hexamer seeds of the mature miRNA sequences from these families were manually checked for similarity using sequences obtained from miRBase [3].	RF00456,RF00711
+CL00088	mir-36 clan	The mir-36 clan contains the RNA families mir-35, mir-36 and mir-42. The following bioinformatic methods were used to confirm the relationship between these families: CMSEARCH, HMMER3 and PRC [1,2,3]. The hexamer seeds of the mature miRNA sequences from these families were manually checked for similarity using sequences obtained from miRBase [4].	RF00685,RF00794,RF02254
+CL00089	mir-50 clan	The mir-50 clan contains the RNA families mir-190 and mir-50. The following bioinformatic methods were used to confirm the relationship between these families: CMSEARCH and PRC [1,2]. The hexamer seeds of the mature miRNA sequences from these families were manually checked for similarity using sequences obtained from miRBase [3].	RF00672,RF00824
+CL00090	mir-73 clan	The mir-73 clan contains the RNA families mir-74 and mir-73. The following bioinformatic methods were used to confirm the relationship between these families: PRC [1]. The hexamer seeds of the mature miRNA sequences from these families were manually checked for similarity using sequences obtained from miRBase [2].	RF00830,RF00831
+CL00091	mir-81 clan	The mir-81 clan contains the RNA families bantam and mir-81. The following bioinformatic methods were used to confirm the relationship between these families: CMSEARCH, HMMER3 and PRC [1,2,3]. The hexamer seeds of the mature miRNA sequences from these families were manually checked for similarity using sequences obtained from miRBase [4].	RF00727,RF00728
+CL00092	mir-137 clan	The mir-137 clan contains the RNA families mir-137 and mir-234. The following bioinformatic methods were used to confirm the relationship between these families: CMSEARCH, HMMER3 and PRC [1,2,3]. The hexamer seeds of the mature miRNA sequences from these families were manually checked for similarity using sequences obtained from miRBase [4].	RF00694,RF00859
+CL00093	mir-182 clan	The mir-182 clan contains the RNA families mir-183, mir-182, mir-263 and mir-228. The following bioinformatic methods were used to confirm the relationship between these families: CMSEARCH, HMMER3 and PRC [1,2,3]. The hexamer seeds of the mature miRNA sequences from these families were manually checked for similarity using sequences obtained from miRBase [4].	RF00663,RF00702,RF00706,RF00843
+CL00094	mir-216 clan	The mir-216 clan contains the RNA families mir-216 and mir-283. The following bioinformatic methods were used to confirm the relationship between these families: HMMER3 and PRC [1,2]. The hexamer seeds of the mature miRNA sequences from these families were manually checked for similarity using sequences obtained from miRBase [3].	RF00654,RF00747
+CL00095	mir-279 clan	The mir-279 clan contains the RNA families mir-279 and mir-996. The following bioinformatic methods were used to confirm the relationship between these families: CMSEARCH, HMMER3 and PRC [1,2,3]. The hexamer seeds of the mature miRNA sequences from these families were manually checked for similarity using sequences obtained from miRBase [4].	RF00754,RF00948
+CL00096	mir-290 clan	The mir-290 clan contains the RNA families mir-515, mir-290, mir-302 and miR-430. The following bioinformatic methods were used to confirm the relationship between these families: HMMER3 and PRC [1,2]. The hexamer seeds of the mature miRNA sequences from these families were manually checked for similarity using sequences obtained from miRBase [3].	RF00639,RF00665,RF00668,RF01413
+CL00097	mir-BART clan	The mir-BART clan contains the RNA families mir-BART1 and mir-BART3. The following bioinformatic methods were used to confirm the relationship between these families: PRC [1]. The hexamer seeds of the mature miRNA sequences from these families were manually checked for similarity using sequences obtained from miRBase [2].	RF00363,RF00866
+CL00098	MIR169 clan	The MIR169 clan contains the RNA families MIR169_2 and MIR169_5. The following bioinformatic methods were used to confirm the relationship between these families: CMSEARCH, HMMER3 and PRC [1,2,3].	RF00645,RF00865
+CL00099	MIR171 clan	The MIR171 clan contains the RNA families MIR171_1 and MIR171_2. The following bioinformatic methods were used to confirm the relationship between these families: CMSEARCH, HMMER3 and PRC [1,2,3].	RF00643,RF00692
+CL00100	U3 clan	The U3 clan contains the U3 RNA families specific to metazoa, fungi, plants and basal eukaryotes. The homology and divisions between these families has been established in the published literature [1].	RF00012,RF01846,RF01847,RF01848
+CL00101	Cobalamin clan	The Cobalamin clan contains the RNA families for Cobalamin riboswitches and the AdoCbl riboswitch from Enterobacteria. The following bioinformatic methods were used to confirm the relationship between these families: CMSEARCH [1]. The relationship and distinction between these RNA families has been noted in the published literature [2,3].	RF00174,RF01482,RF01689
+CL00102	Group II catalytic intron D1-D4 clan	The group II catalytic intron D1-D4 clan contains the diverse RNA families from the 5` region of group II catalytic intron. Homology between these families has been established in the published literature [1-6].	RF01998,RF01999,RF02001,RF02003,RF02004,RF02005,RF02012
+CL00103	SNORD11 clan	The SNORD11 clan contains the RNA families SNORD11 and SNORD11B. The following bioinformatic methods were used to confirm the relationship between these families: HMMER3 and PRC [1,2].	RF01182,RF01192
+CL00104	Hepadnavirus_epsilon clan	The Hepadnavirus_epsilon clan contains the RNA families HBV_epsilon and AHBV_epsilon. Homology between these families has been established in the published literature [1-4].	RF01047,RF01313
+CL00105	RyeA/RyeB clan	The RyeA/RyeB clan contains the RNA families RyeA and RyeB. These two families overlap as part of a bidirectional sRNA locus in E. coli	RF00101,RF00111
+CL00106	Csr-Rsm protein binding clan	The Csr-Rsm clan contains the sRNA families CsrC, RsmB, RsmX, RsmY, RsmZ and TwoAYGGAY. These families are bound by multiple regulatory proteins called CsrA or RsmA. These bind to hairpins containing the sequence motif 'GGA'. Homology between these families has been established in the published literature [1-9].	RF00018,RF00084,RF00115,RF00166,RF00195,RF01731,RF02144,RF02767
+CL00108	suhB sRNA clan	This clan includes the suhB and ar15 sRNAs. The homology between these families is restricted to the second hairpin and Rho-independent terminator of suhB [1].	RF00519,RF02345
+CL00110	mir-19 clan	The mir-19 clan contains the RNA families mir-19 and mir-363. The following bioinformatic methods were used to confirm the relationship between these families: CMSEARCH, HMMER3 and PRC [1,2,3]. 	RF00245,RF01898
+CL00111	SSU clan	This clan contains the SSU families.	RF00177,RF01959,RF01960,RF02542,RF02545
+CL00112	LSU clan	This clan contains the LSU families.	RF00002,RF02540,RF02541,RF02543,RF02546
+CL00113	5S rRNA clan	Includes 5S rRNA family with permuted secondary structure.	RF00001,RF02547

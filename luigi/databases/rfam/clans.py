@@ -22,8 +22,8 @@ from attr.validators import instance_of as is_a
 QUERY = """
 select
     clan.clan_acc 'id',
-    clan.id 'name',
-    clan.description 'description',
+    clan.description 'name',
+    clan.comment 'description',
     group_concat(membership.rfam_acc) 'families'
 from clan
 join clan_membership membership
