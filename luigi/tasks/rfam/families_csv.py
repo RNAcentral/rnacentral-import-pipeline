@@ -46,7 +46,7 @@ class RfamFamiliesCSV(luigi.Task):
         return MysqlQueryTask(
             db_url=conf.mysql_url(),
             query=families.QUERY,
-            local_path=conf.raw('clans.tsv'),
+            local_path=conf.raw('families.tsv'),
         )
 
     def output(self):
@@ -58,5 +58,5 @@ class RfamFamiliesCSV(luigi.Task):
         )
 
     def run(self):
-        with self.requires().output.open('r') as raw:
+        with self.requires().output().open('r') as raw:
             self.output().populate(families.parse(raw))

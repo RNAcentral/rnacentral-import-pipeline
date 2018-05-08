@@ -135,12 +135,13 @@ class RfamFamily(object):
 
     def writeable(self):
         data = attr.asdict(self)
-        data['short_name'] = self.name
-        data['long_name'] = self.pretty_name
+        del data['so_terms']
+        data['short_name'] = data.pop('name')
+        data['long_name'] = data.pop('pretty_name')
         data['is_suppressed'] = int(self.is_suppressed)
         data['rfam_rna_type'] = data['rna_type']
         data['rna_type'] = self.guess_insdc()
-        return data
+        yield data
 
 
 def parse(handle):
