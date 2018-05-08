@@ -37,7 +37,7 @@ class RfamOntologyTerms(luigi.Task):  # pylint: disable=too-many-public-methods
     def requires(self):
         conf = rfam()
         return MysqlQueryTask(
-            db=conf.mysql_url(),
+            db_url=conf.mysql_url(),
             query=cr.QUERY,
             local_path=conf.raw('database_link.tsv'),
         )

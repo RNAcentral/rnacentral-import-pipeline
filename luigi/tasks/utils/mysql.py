@@ -21,7 +21,7 @@ from tasks.utils.files import atomic_output
 
 
 class MysqlQueryTask(luigi.Task):
-    db = luigi.Parameter
+    db_url = luigi.Parameter()
     query = luigi.Parameter()
     local_path = luigi.Parameter()
 
@@ -29,6 +29,6 @@ class MysqlQueryTask(luigi.Task):
         return luigi.LocalTarget(self.local_path)
 
     def run(self):
-        mysql = MysqlWrapper.from_url(self.db)
+        mysql = MysqlWrapper.from_url(self.db_url)
         with atomic_output(self.output()) as out:
             mysql.write_query(out, self.query)

@@ -44,7 +44,7 @@ class RfamFamiliesCSV(luigi.Task):
     def requires(self):
         conf = rfam()
         return MysqlQueryTask(
-            db=conf.mysql_url(),
+            db_url=conf.mysql_url(),
             query=families.QUERY,
             local_path=conf.raw('clans.tsv'),
         )
