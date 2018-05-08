@@ -44,5 +44,5 @@ class RfamClansCSV(luigi.Task):
         )
 
     def run(self):
-        with self.requires().output.open('r') as raw:
+        with self.requires().output().open('r') as raw:
             self.output().populate(clans.parse(raw))

@@ -62,9 +62,12 @@ class RfamClan(object):
         return len(self.families)
 
     def writeable(self):
-        data = attr.asdict(self)
-        data['family_count'] = self.family_count
-        yield data
+        yield {
+            'id': self.id,
+            'name': self.name,
+            'description': self.description,
+            'family_count': self.family_count,
+        }
 
 
 def parse(handle):
