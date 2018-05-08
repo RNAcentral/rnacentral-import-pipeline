@@ -55,13 +55,12 @@ def as_entry(data, mapping):
     )
 
 
-def parse(filename):
+def parse(filename, mapping):
     """
     Parse the JSON file of Rfam data and produce a generator of all Entry
     objects in the file.
     """
 
-    mapping = utils.id_to_insdc_type()
     with open(filename, 'rb') as raw:
         data = json.load(raw)
         for entry in data:

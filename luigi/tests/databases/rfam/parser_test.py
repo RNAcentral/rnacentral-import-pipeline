@@ -21,7 +21,8 @@ from databases.rfam.parser import parse
 
 
 def test_it_labels_y_rna_correctly():
-    mapping = utils.id_to_insdc_type()
+    with open('data/rfam/families.tsv') as raw:
+        mapping = utils.id_to_insdc_type(raw)
     assert as_entry({
         "lineage": (
             "Eukaryota Metazoa Chordata Craniata Vertebrata Chondrichthyes "
@@ -57,11 +58,16 @@ def test_it_labels_y_rna_correctly():
 
 
 def test_it_parses_all_data():
-    assert len(list(parse('data/rfam.json'))) == 1000
+    with open('data/rfam/families.tsv') as raw:
+        mapping = utils.id_to_insdc_type(raw)
+    assert len(list(parse('data/rfam.json', mapping))) == 1000
 
 
 def test_it_builds_first_entry_correctly():
-    assert attr.asdict(next(parse('data/rfam.json'))) == {
+    with open('data/rfam/families.tsv') as raw:
+        mapping = utils.id_to_insdc_type(raw)
+
+    assert attr.asdict(next(parse('data/rfam.json', mapping))) == {
         'primary_id': 'RF00005',
         'accession': 'KK113858.1:230594..230666:rfam',
         'ncbi_tax_id': 407821,
@@ -137,7 +143,10 @@ def test_it_builds_first_entry_correctly():
 
 
 def test_it_can_parse_with_similar_accessions_correctly():
-    data = list(parse('data/rfam-duplicates.json'))
+    with open('data/rfam/families.tsv') as raw:
+        mapping = utils.id_to_insdc_type(raw)
+
+    data = list(parse('data/rfam-duplicates.json', mapping))
     assert len(data) == 2
     assert data[0].accession == 'CM000677.2:93286238..93286321:rfam'
     assert data[1].accession == 'CM000677.2:93286321..93286238:rfam'
