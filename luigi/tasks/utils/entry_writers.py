@@ -376,6 +376,12 @@ class Output(attr.make_class("Base", Writer.outputs())):
         return cls(*fields)
 
     def populate(self, parser, input_target):
+        """
+        Given a parser and an Target for input, this will write all output. The
+        parser should accept a file handle and produce an iterable of values
+        that can be written to Writer. Only valid entries will be written.
+        """
+
         with self.writer() as writer:
             with input_target.open('r') as handle:
                 writer.write_valid(parser(handle))

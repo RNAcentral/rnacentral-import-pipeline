@@ -39,6 +39,8 @@ from tasks.config import ensembl
 from tasks.download import Download
 from tasks.utils.entry_writers import Output
 
+from tasks.rfam.families_csv import RfamFamiliesCSV
+
 from .utils.ftp import species_file_path
 from .utils.generic import parser_class
 
@@ -55,15 +57,20 @@ class EnsemblFile(luigi.Task):  # pylint: disable=R0904
 
     def requires(self):
         config = ensembl()
-        return Download(remote_file='ftp://{host}/{path}'.format(
-            path=species_file_path(config, self.input_file),
-            host=config.ftp_host,
-        ))
+        return [
+            Download(remote_file='ftp://{host}/{path}'.format(
+                path=species_file_path(config, self.input_file),
+                host=config.ftp_host,
+            )),
+            RfamFamiliesCSV().requires(),
+        ]
 
     def output(self):
         prefix = os.path.basename(self.input_file)
         return Output.build(output().base, 'ensembl', prefix)
 
     def run(self):
-        parser = parser_class(ensembl(), self.requires().output().fn)
-        self.output().populate(parser, self.requires().output())
+        rfam_file = self.requires()[1].output().fn
+        ensembl_output = self.requires()[0].output()
+        parser = parser_class(ensembl(), ensembl_output.fn, rfam_file)
+        self.output().populate(parser.data, ensembl_output)

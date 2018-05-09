@@ -38,7 +38,7 @@ def test_can_run_command_and_provide_output():
         assert lines == [
             '                           QUERY PLAN                            ',
             '-----------------------------------------------------------------',
-            ' Seq Scan on rna  (cost=0.00..1282275.10 rows=13413710 width=14)',
+            ' Seq Scan on rna  (cost=0.00..1279692.68 rows=13438168 width=14)',
             '(1 row)',
             '',
         ]

@@ -95,8 +95,11 @@ class EnsemblParser(Parser):
     those cases a more specific importer must be used to get the correct data.
     """
 
-    def __init__(self):
-        self.supressed_mapping = rfutils.name_to_suppression()
+    def __init__(self, family_file):
+        with open(family_file, 'rb') as raw:
+            self.supressed_mapping = rfutils.id_to_suppression(raw)
+            raw.seek(0)
+            self.inference = RnaTypeInference(raw)
 
     def is_from_suppressed_rfam_model(self, current):
         """
@@ -110,13 +113,12 @@ class EnsemblParser(Parser):
         :return bool: True if this is entry is from a suppressed Rfam model.
         """
 
-        inference = RnaTypeInference()
-        rfam_models = inference.rfam_xref(current)
+        rfam_models = self.inference.rfam_xref(current)
         if not rfam_models:
             return False
 
         for rfam_model in rfam_models:
-            name = inference.rfam_name(rfam_model)
+            name = self.inference.rfam_name(rfam_model)
             if name is None:
                 continue
             if name not in self.supressed_mapping:
@@ -149,7 +151,7 @@ class EnsemblParser(Parser):
             database='ENSEMBL',
             sequence=sequence,
             exons=exons,
-            rna_type=ensembl.rna_type(feature, xref_data),
+            rna_type=ensembl.rna_type(self.inference, feature, xref_data),
             url=ensembl.url(feature),
             seq_version=ensembl.seq_version(feature),
             lineage=helpers.lineage(record),

@@ -94,6 +94,18 @@ class rfam(luigi.Config):  # pylint: disable=C0103, R0904
     fasta = PathParameter()
     json_folder = PathParameter()
 
+    user = luigi.Parameter(default='rfamro')
+    host = luigi.Parameter(default='mysql-rfam-public.ebi.ac.uk')
+    port = luigi.Parameter(default=4497)
+    db_name = luigi.Parameter(default='Rfam')
+
+    def raw(self, *args):
+        """
+        A method to produce a path to a directory where raw data to process can
+        go.
+        """
+        return os.path.join(output().base, 'rfam', 'data', *args)
+
     def json_files(self):
         """
         This will produce an iterable of all JSON files that are in the
@@ -101,9 +113,29 @@ class rfam(luigi.Config):  # pylint: disable=C0103, R0904
         """
         return iglob(os.path.join(self.json_folder, '*.json'))
 
+    def mysql_url(self):
+        return 'mysql://{user}@{host}:{port}/{db_name}'.format(
+            user=self.user,
+            host=self.host,
+            port=self.port,
+            db_name=self.db_name,
+        )
+
+    @property
+    def clans(self):
+        return output().to_load('rfam', 'clans', 'clans.csv')
+
+    @property
+    def families(self):
+        return output().to_load('rfam', 'families', 'families.csv')
+
     @property
     def go_terms(self):
         return ontologies().to_load('rfam_go_terms.csv')
+
+    @property
+    def go_mapping(self):
+        return output().to_load('rfam', 'go_mappings', 'go_mappings.csv')
 
 
 class noncode(luigi.Config):  # pylint: disable=C0103, R0904
@@ -300,11 +332,11 @@ class export(luigi.Config):  # pylint: disable=C0103,R0904
 
     def go(self, *args):
         return self.ftp('go', *args)
-      
+
     def bed(self, *args):
         return self.ftp('bed', *args)
 
-      
+
 class genome_mapping(luigi.Config):  # pylint: disable=C0103,R0904
     base = PathParameter(default='/tmp')
 
@@ -344,7 +376,7 @@ class genome_mapping(luigi.Config):  # pylint: disable=C0103,R0904
             os.makedirs(path)
         return path
 
-      
+
 class refseq(luigi.Config):  # pylint: disable=C0103,R0904
     base = luigi.Parameter(default='/tmp')
 

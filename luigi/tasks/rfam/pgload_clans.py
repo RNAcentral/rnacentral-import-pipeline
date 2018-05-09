@@ -92,7 +92,7 @@ class RfamPGLoadClans(PGLoader):  # pylint: disable=R0904
         ]
 
     def control_file(self):
-        filename = RfamClansCSV().output().fn
+        filename = RfamClansCSV().output().filename
         return CONTROL_FILE.format(
             filename=filename,
             db_url=self.db_url(table='load_rfam_clans'),

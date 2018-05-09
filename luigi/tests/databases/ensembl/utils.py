@@ -45,7 +45,7 @@ class Base(ut.TestCase):  # pylint: disable=R0904
     def setUp(self):
         self.importer = None
         if self.importer_class and self.filename:
-            self.importer = self.importer_class()
+            self.importer = self.importer_class('data/rfam/families.tsv')
 
     def data(self):
         with open(self.filename, 'rb') as raw:

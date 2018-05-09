@@ -25,18 +25,6 @@ from attr.validators import instance_of as is_a
 from tasks.utils.files import atomic_output
 
 
-def unique_using(getter, transformer):
-    seen = set()
-
-    def fn(entry):
-        value = getter(entry)
-        if value not in seen:
-            yield transformer(entry)
-            seen.add(value)
-    return fn
-
-
-
 @attr.s(frozen=True)  # pylint: disable=W0232
 class CsvOutput(object):
     filename = attr.ib(validator=is_a(basestring))
@@ -73,6 +61,10 @@ class CsvOutput(object):
                 writer.writerows(self.transformer(entry))
 
             yield func
+
+    @property
+    def fn(self):
+        return self.filename
 
     def populate(self, generator):
         with self.writer() as writer:

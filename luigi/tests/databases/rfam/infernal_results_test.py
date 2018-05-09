@@ -19,16 +19,16 @@ import unittest as ut
 import attr
 import pytest
 
-from databases.rfam.utils import tbl_iterator, RfamHit, RfamClanHit
+from databases.rfam.infernal_results import parse, RfamHit, RfamClanHit
 
 
 class ParsingTest(ut.TestCase):  # pylint: disable=R0904
     def test_can_parse_valid_file(self):
-        data = list(tbl_iterator('data/rfam-hits.tbl'))
+        data = list(parse('data/rfam-hits.tbl'))
         assert len(data) == 998
 
     def test_produces_expected_data(self):
-        data = list(tbl_iterator('data/rfam-hits.tbl'))
+        data = list(parse('data/rfam-hits.tbl'))
         assert attr.asdict(data[0]) == attr.asdict(RfamHit(
             target_name='URS000046C624',
             seq_acc=None,
@@ -52,20 +52,20 @@ class ParsingTest(ut.TestCase):  # pylint: disable=R0904
 
     def test_produces_nothing_on_empty_file(self):
         with tempfile.NamedTemporaryFile() as tfile:
-            assert list(tbl_iterator(tfile.name)) == []
+            assert list(parse(tfile.name)) == []
 
     def test_fails_missing_file(self):
         with pytest.raises(Exception):
-            list(tbl_iterator('/something-that/does-not/exists'))
+            list(parse('/something-that/does-not/exists'))
 
 
 class ParsingClanHitsTest(ut.TestCase):
     def test_can_parse_valid_file(self):
-        data = tbl_iterator('data/rnac7_0000.fa.tbl', clan_competition=True)
+        data = parse('data/rnac7_0000.fa.tbl', clan_competition=True)
         assert len(list(data)) == 129
 
     def test_produces_expected_data(self):
-        data = tbl_iterator('data/rnac7_0000.fa.tbl', clan_competition=True)
+        data = parse('data/rnac7_0000.fa.tbl', clan_competition=True)
         assert attr.asdict(next(data)) == attr.asdict(RfamClanHit(
             idx=1,
             rfam_name='mir-154',
@@ -97,7 +97,7 @@ class ParsingClanHitsTest(ut.TestCase):
         ))
 
     def test_can_parse_clan_specific_output(self):
-        data = tbl_iterator('data/rnac7_0000.fa.tbl', clan_competition=True)
+        data = parse('data/rnac7_0000.fa.tbl', clan_competition=True)
         data = list(data)
         assert attr.asdict(data[23]) == attr.asdict(RfamClanHit(
             idx=2,

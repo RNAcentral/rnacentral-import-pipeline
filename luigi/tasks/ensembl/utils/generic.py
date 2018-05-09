@@ -31,7 +31,7 @@ def is_gencode_file(config, input_file):
     return normalized in config.gencode_species_set()
 
 
-def parser_class(config, input_file):
+def parser_class(config, input_file, family_file):
     """
     Given a configuration object and the input filename this will determine
     which parser class to use. If it is a GENCODE organism then the GENCODE
@@ -39,8 +39,8 @@ def parser_class(config, input_file):
     """
 
     if is_gencode_file(config, input_file):
-        return GencodeParser()
-    return EnsemblParser()
+        return GencodeParser(family_file)
+    return EnsemblParser(family_file)
 
 
 def normalize_species_name(species):

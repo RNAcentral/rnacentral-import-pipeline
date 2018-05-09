@@ -13,13 +13,19 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import attr
+import operator as op
 
-from databases.rfam import utils
-from tasks.utils.csv_writer import CsvWriter
+import luigi
+
+from databases.rfam import families
+
+from tasks.config import rfam
+
+from tasks.utils.writers import CsvOutput
+from tasks.utils.mysql import MysqlQueryTask
 
 
-class RfamFamiliesCSV(CsvWriter):
+class RfamFamiliesCSV(luigi.Task):
     headers = [
         'id',
         'short_name',
@@ -35,12 +41,22 @@ class RfamFamiliesCSV(CsvWriter):
         'rfam_rna_type',
     ]
 
-    def data(self):
-        for family in utils.load_families():
-            data = attr.asdict(family)
-            data['short_name'] = family.name
-            data['long_name'] = family.pretty_name
-            data['is_suppressed'] = int(family.is_suppressed)
-            data['rfam_rna_type'] = data['rna_type']
-            data['rna_type'] = family.guess_insdc()
-            yield data
+    def requires(self):
+        conf = rfam()
+        return MysqlQueryTask(
+            db_url=conf.mysql_url(),
+            query=families.QUERY,
+            local_path=conf.raw('families.tsv'),
+        )
+
+    def output(self):
+        conf = rfam()
+        return CsvOutput(
+            conf.families,
+            self.headers,
+            op.methodcaller('writeable'),
+        )
+
+    def run(self):
+        with self.requires().output().open('r') as raw:
+            self.output().populate(families.parse(raw))
