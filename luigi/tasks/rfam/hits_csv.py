@@ -17,7 +17,7 @@ from glob import iglob
 
 import attr
 
-from databases.rfam.utils import tbl_iterator
+from databases.rfam.infernal_results import parse
 from tasks.config import rfam
 from tasks.utils.csv_writer import CsvWriter
 
@@ -43,6 +43,6 @@ class RfamHitsCSV(CsvWriter):  # pylint: disable=R0904
 
     def data(self):
         for filename in iglob(rfam().hits):
-            for hit in tbl_iterator(filename, clan_competition=True):
+            for hit in parse(filename, clan_competition=True):
                 if hit.overlap == 'unique' or hit.overlap == 'best':
                     yield attr.asdict(hit)

@@ -13,27 +13,21 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import luigi
+import tempfile
 
-from plumbum import local
-
-from tasks.config import export
-from tasks.utils.files import atomic_output
-
-from .rfam_annotations import RfamAnnotations
+from tasks.utils import mysql
 
 
-class RfamAnnotationsExample(luigi.Task):
-    def requires(self):
-        return RfamAnnotations()
+def test_can_fetch_a_table():
+    with tempfile.NamedTemporaryFile() as tmp:
+        mysql.download(
+            'mysql://rfamro@mysql-rfam-public.ebi.ac.uk:4497/Rfam?database_link',
+            tmp.name,
+        )
 
-    def output(self):
-        return luigi.LocalTarget(export().rfam('example.txt'))
-
-    def run(self):
-        with atomic_output(self.output()) as out:
-            (local.head[
-                '-n',
-                str(export().rfam_example_size),
-                self.requires().output().fn
-            ] > out)()
+        with open(tmp.name, 'r') as raw:
+            data = raw.readlines()[0:2]
+            assert data == [
+                'rfam_acc\tdb_id\tcomment\tdb_link\tother_params\n',
+                'RF00014\tSO\t\t0000378\tDsrA_RNA\n',
+            ]

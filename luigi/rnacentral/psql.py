@@ -17,9 +17,9 @@ import re
 import csv
 import sys
 import shutil
-import tempfile
 from contextlib import contextmanager
-import subprocess as sp
+
+from plumbum import local
 
 
 def query_as_copy(sql, use='csv', **kwargs):
@@ -53,6 +53,7 @@ class PsqlWrapper(object):
 
     def __init__(self, config):
         self.config = config
+        self.psql = local['psql']
 
     @contextmanager
     def command(self, command):
@@ -60,18 +61,10 @@ class PsqlWrapper(object):
         Execute a command and yield a filehandle that stores the results.
         """
 
-        with tempfile.NamedTemporaryFile() as out:
-            process = sp.Popen(
-                [self.config.psql, '-c', command, self.config.pgloader_url()],
-                env={'PGPASSWORD': self.config.password},
-                stdout=out,
-            )
-
-            if process.wait() != 0:
-                raise ValueError('Failed to run psql')
-
-            with open(out.name, 'rb') as readable:
-                yield readable
+        with local.env(PGPASSWORD=self.config.password):
+            cmd = self.psql['-c', command, self.config.pgloader_url()]
+            obj = cmd.popen()
+            yield obj.stdout
 
     def write_command(self, handle, command):
         """
@@ -85,9 +78,7 @@ class PsqlWrapper(object):
         """
         This will write the sql query to the given file handle.
         """
-
-        command = query_as_copy(sql, **kwargs)
-        self.write_command(handle, command)
+        self.write_command(handle, query_as_copy(sql, **kwargs))
 
     def copy_to_iterable(self, sql, **kwargs):
         """
@@ -96,8 +87,7 @@ class PsqlWrapper(object):
         and is deleted once the handler exits.
         """
 
-        command = query_as_copy(sql, **kwargs)
-        with self.command(command) as out:
+        with self.command(query_as_copy(sql, **kwargs)) as out:
             csv.field_size_limit(sys.maxsize)
             for result in csv.DictReader(out):
                 yield result

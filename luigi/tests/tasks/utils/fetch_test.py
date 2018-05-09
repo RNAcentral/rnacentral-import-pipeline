@@ -15,11 +15,23 @@ limitations under the License.
 
 
 import os
+import shutil
 import tempfile
+from contextlib import contextmanager
 
 import pytest
 
 from tasks.utils.fetch import fetch
+
+
+@contextmanager
+def tmp_dir():
+    dirname = tempfile.mkdtemp()
+    try:
+        yield dirname
+    finally:
+        shutil.rmtree(dirname)
+
 
 
 @pytest.mark.parametrize('filename', [
@@ -31,23 +43,32 @@ def test_can_copy_a_over(filename):
     with tempfile.NamedTemporaryFile() as tmp:
         fetch(filename, tmp.name)
         tmp.flush()
-        with open(tmp.name, 'r') as t2:
-            assert t2.read()
+        with open(tmp.name, 'r') as final:
+            assert final.read()
 
 
-@pytest.mark.skip
 def test_can_copy_a_file_into_a_directory():
-    pass
+    with tmp_dir() as tdir:
+        with tempfile.NamedTemporaryFile() as tmp:
+            tmp.write('Hello\n')
+            tmp.flush()
+            fetch(tmp.name, tdir)
+            final = os.path.join(tdir, os.path.basename(tmp.name))
+            assert os.path.exists(final)
+            with open(final, 'r') as raw:
+                assert raw.read() == 'Hello\n'
+            assert os.path.exists(tmp.name)
 
 
-@pytest.mark.skip
-def test_can_copy_a_directory(dirname):
-    pass
-
-
-@pytest.mark.skip
-def test_copies_a_directory_into_another_directory():
-    pass
+@pytest.mark.xfail(reason='Not sure what the correct test/behavior is')
+def test_can_copy_a_directory():
+    with tmp_dir() as tdir:
+        os.system('touch %s' % (os.path.join(tdir, 't')))
+        os.makedirs(os.path.join(tdir, 'a', 'b'))
+        with tmp_dir() as target_dir:
+            fetch(tdir, target_dir)
+            assert os.path.exists(os.path.join(target_dir, 't'))
+            assert os.path.exists(os.path.join(target_dir, 'a', 'b'))
 
 
 @pytest.mark.skip

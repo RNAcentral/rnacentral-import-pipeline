@@ -13,24 +13,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import unittest as ut
-import hashlib
-import collections as coll
-
-import attr
 import pytest
 
 from databases.rfam import utils
-
-
-def test_fetch_file_gets_unzipped_contents():
-    contents = utils.fetch_file('12.2', 'database_files/family.txt.gz')
-    assert hashlib.md5(contents.read()).hexdigest() == "5060f63e875739dab1ae514f5ae4b775"
-
-
-def test_fetch_file_handles_uncompressed_files():
-    contents = utils.fetch_file('12.2', 'USERMAN')
-    assert hashlib.md5(contents.read()).hexdigest() == "6bb395c713e85a2db1b5d62ac96d4991"
 
 
 @pytest.mark.parametrize("name,expected", [
@@ -60,7 +45,8 @@ def test_fetch_file_handles_uncompressed_files():
     ("U2", "snRNA"),
 ])
 def test_can_fetch_a_mapping_from_name_to_isndc(name, expected):
-    mapping = utils.name_to_insdc_type()
+    with open('data/rfam/families.tsv') as raw:
+        mapping = utils.name_to_insdc_type(raw)
     assert mapping[name] == expected
 
 
@@ -107,192 +93,12 @@ def test_can_fetch_a_mapping_from_name_to_isndc(name, expected):
     ("RF02647", "other"),
 ])
 def test_can_fetch_a_mapping_from_id_to_isndc(family_id, expected):
-    mapping = utils.id_to_insdc_type()
+    with open('data/rfam/families.tsv') as raw:
+        mapping = utils.id_to_insdc_type(raw)
     assert mapping[family_id] == expected
 
 
 def test_it_maps_a_known_lncRNA():
-    mapping = utils.id_to_insdc_type()
+    with open('data/rfam/families.tsv') as raw:
+        mapping = utils.id_to_insdc_type(raw)
     assert mapping['RF01800'] == 'lncRNA'
-
-
-class INSDCRNATypeTest(ut.TestCase):
-
-    def test_it_does_not_call_isrp_srp(self):
-        rna = utils.RfamFamily(
-            id='RF01398',
-            name='isrP',
-            pretty_name='Hfq binding RNA',
-            so_terms=set(['SO:0001263']),
-            go_terms=set([]),
-            rna_type='gene sRNA',
-            domain=None,
-            description='',
-            seed_count=-1,
-            full_count=-1,
-            clan_id=None,
-            length=148,
-        )
-        assert rna.guess_insdc_using_name() != 'SRP_RNA'
-        assert rna.guess_insdc() != 'SRP_RNA'
-
-    def test_it_does_not_call_ctrna_trna(self):
-        rna = utils.RfamFamily(
-            id='RF00236',
-            name='ctRNA_pGA1',
-            pretty_name='ctRNA',
-            so_terms=set(['SO:0000644']),
-            go_terms=set([('GO:0003729', 'mRNA binding')]),
-            rna_type='Gene; antisense',
-            domain=None,
-            description='',
-            seed_count=-1,
-            full_count=-1,
-            clan_id=None,
-            length=79,
-        )
-        assert rna.guess_insdc_using_name() != 'tRNA'
-        assert rna.guess_insdc() == 'antisense_RNA'
-
-    def test_it_does_not_label_tracrrna_rrna(self):
-        rna = utils.RfamFamily(
-            id='RF02348',
-            name='tracrRNA',
-            pretty_name='Trans-activating crRNA',
-            so_terms=set(['SO:0000655']),
-            go_terms=set([]),
-            rna_type='',
-            domain=None,
-            description='',
-            seed_count=-1,
-            full_count=-1,
-            clan_id=None,
-            length=91,
-        )
-        assert rna.guess_insdc_using_name() != 'tRNA'
-        assert rna.guess_insdc() == 'other'
-
-
-class LoadingFamiliesTest(ut.TestCase):
-    def test_it_loads_all_families(self):
-        assert len(utils.load_families()) == 2686
-
-    def test_it_can_load_family_correctly(self):
-        assert attr.asdict(utils.load_families()[0]) == attr.asdict(utils.RfamFamily(
-            id='RF00001',
-            name='5S_rRNA',
-            pretty_name='5S ribosomal RNA',
-            so_terms=set(['SO:0000652']),
-            go_terms=set([
-                ('GO:0003735', 'structural constituent of ribosome'),
-                ('GO:0005840', 'ribosome')
-            ]),
-            rna_type='Gene; rRNA',
-            domain=None,
-            description=(
-                '5S ribosomal RNA (5S rRNA) is a component of the '
-                'large ribosomal subunit in both prokaryotes and eukaryotes. '
-                'In eukaryotes, it is synthesised by RNA polymerase III (the '
-                'other eukaryotic rRNAs are cleaved from a 45S precursor '
-                'synthesised by RNA polymerase I). In Xenopus oocytes, it has '
-                'been shown that fingers 4-7 of the nine-zinc finger '
-                'transcription factor TFIIIA can bind to the central region '
-                'of 5S RNA. Thus, in addition to positively regulating 5S '
-                'rRNA transcription, TFIIIA also stabilises 5S rRNA until it '
-                'is required for transcription.'
-            ),
-            seed_count=712,
-            full_count=108778,
-            clan_id='CL00113',
-            length=119,
-        ))
-
-    def test_it_can_assign_correct_clan_ids(self):
-        clans = coll.defaultdict(set)
-        for f in utils.load_families():
-            if f.clan_id:
-                clans[f.clan_id].add(f.id)
-
-        assert len(clans) == 111
-        assert clans['CL00001'] == set([
-            'RF00005',
-            'RF00023',
-            'RF01849',
-            'RF01850',
-            'RF01851',
-            'RF01852',
-            'RF02544',
-        ])
-
-    @pytest.mark.skip()
-    def test_it_can_correctly_find_all_bacterial_families(self):
-        families = utils.load_families()
-        bacterial = set(f.id for f in families if f.domain == 'Bacteria')
-        assert bacterial == set([
-        ])
-
-    def test_it_can_set_description_to_empty(self):
-        families = utils.load_families()
-        family = next(f for f in families if f.id == 'RF02493')
-        assert family.description == ''
-
-    def test_it_does_not_supress_all_families(self):
-        families = {f.id for f in utils.load_families() if not f.is_suppressed}
-        assert len(families) == 2063
-
-    def test_it_will_supress_lncRNA(self):
-        families = {f.id for f in utils.load_families() if not f.is_suppressed}
-        assert 'RF01976' not in families
-        assert 'RF01977' not in families
-        assert 'RF01978' not in families
-        assert 'RF02255' not in families
-
-    def test_it_will_exclude_cis_reg_riboswitches(self):
-        families = {f.id for f in utils.load_families() if not f.is_suppressed}
-        assert 'RF01108' not in families
-        assert 'RF00080' not in families
-
-
-class LoadingClansTest(ut.TestCase):
-    def test_it_can_load_all_clans(self):
-        assert len(utils.load_clans()) == 111
-
-    def test_it_can_load_a_clan_correctly(self):
-        assert utils.load_clans()[0] == utils.RfamClan(
-            id='CL00001',
-            name='tRNA clan',
-            description=(
-                'The tRNA clan contains the RNA families tRNA and '
-                'tmRNA. Homology between these families has been established '
-                'in the published literature [1-5].'
-            ),
-            families=set([
-                'RF00005',
-                'RF00023',
-                'RF01849',
-                'RF01850',
-                'RF01851',
-                'RF01852',
-                'RF02544',
-            ])
-        )
-
-
-@pytest.mark.parametrize('excluded', [
-    'GO:0035068',
-    'GO:0006396',
-])
-def test_does_not_incorrectly_assign_mirna_go_mapping(excluded):
-    mapping = utils.go_term_mapping()
-    terms = {m['go_term_id'] for m in mapping if m['rfam_model_id'] == 'RF01942'}
-    assert excluded not in terms
-
-
-@pytest.mark.parametrize('excluded', [
-    'GO:0008049',
-    'GO:0042981',
-    'GO:0042749',
-])
-def test_does_not_include_bad_go_terms_in_go_mapping(excluded):
-    terms = {m['go_term_id'] for m in utils.go_term_mapping()}
-    assert excluded not in terms
