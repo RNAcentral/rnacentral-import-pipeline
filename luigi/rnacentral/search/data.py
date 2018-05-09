@@ -477,6 +477,10 @@ contributes_to = from_annotation_qualifer('contributes_to')
 colocalizes_with = from_annotation_qualifer('colocalizes_with')
 
 
+def go_annotation_source(annotations):
+    return sorted({annotation['assigned_by'] for annotation in annotations})
+
+
 builder = entry([
     tag('name', as_name, keys=('upi', 'taxid')),
     tag('description', first),
@@ -537,5 +541,6 @@ builder = entry([
         fields('contributes_to', contributes_to, keys='go_annotations'),
         fields('colocalizes_with', colocalizes_with, keys='go_annotations'),
         field('has_go_annotations', has_go_annotations, keys='go_annotations'),
+        fields('go_annotation_source', go_annotation_source, keys='go_annotations')
     ]),
 ])
