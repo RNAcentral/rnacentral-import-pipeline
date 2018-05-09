@@ -135,7 +135,7 @@ class rfam(luigi.Config):  # pylint: disable=C0103, R0904
 
     @property
     def go_mapping(self):
-        return output.to_load('rfam', 'go_mappings', 'go_mappings.csv')
+        return output().to_load('rfam', 'go_mappings', 'go_mappings.csv')
 
 
 class noncode(luigi.Config):  # pylint: disable=C0103, R0904

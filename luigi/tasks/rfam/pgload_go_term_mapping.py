@@ -16,7 +16,7 @@ limitations under the License.
 from tasks.utils.pgloader import PGLoader
 
 from tasks.ontologies import Ontologies
-from .go_term_mapping_csv import RfamGoTermsCSV
+from .ontology_terms import RfamOntologyTerms
 from .pgload_families import RfamPGLoadFamilies
 
 CONTROL_FILE = """LOAD CSV
@@ -81,13 +81,13 @@ class RfamPGLoadGoTerms(PGLoader):  # pylint: disable=R0904
 
     def requires(self):
         return [
-            RfamGoTermsCSV(),
+            RfamOntologyTerms(),
             Ontologies(),
             RfamPGLoadFamilies(),
         ]
 
     def control_file(self):
-        filename = RfamGoTermsCSV().output().fn
+        filename = RfamOntologyTerms().output().mapping.fn
         return CONTROL_FILE.format(
             filename=filename,
             db_url=self.db_url(table='load_rfam_go_terms'),
