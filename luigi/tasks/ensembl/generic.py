@@ -73,4 +73,4 @@ class EnsemblFile(luigi.Task):  # pylint: disable=R0904
         rfam_file = self.requires()[1].output().fn
         ensembl_output = self.requires()[0].output()
         parser = parser_class(ensembl(), ensembl_output.fn, rfam_file)
-        self.output().populate(parser, ensembl_output)
+        self.output().populate(parser.data, ensembl_output)

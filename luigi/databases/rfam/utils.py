@@ -42,3 +42,11 @@ def name_to_suppression(handle):
     family data should be supressed in RNAcentral.
     """
     return {family.name: family.is_suppressed for family in fam.parse(handle)}
+
+
+def id_to_suppression(handle):
+    """
+    Create a dict from the rfam family name (U1) to a flag indicating if the
+    family data should be supressed in RNAcentral.
+    """
+    return {family.id: family.is_suppressed for family in fam.parse(handle)}

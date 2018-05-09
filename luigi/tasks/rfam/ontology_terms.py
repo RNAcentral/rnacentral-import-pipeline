@@ -44,7 +44,7 @@ class RfamOntologyTerms(luigi.Task):  # pylint: disable=too-many-public-methods
 
     def output(self):
         conf = rfam()
-        return MultiCsvOutput(
+        return MultiCsvOutput.build(
             go_terms=CsvOutput(conf.go_terms, data.HEADERS, self.as_go_term),
             mapping=CsvOutput(conf.go_mapping, HEADERS, self.as_mapping),
         )

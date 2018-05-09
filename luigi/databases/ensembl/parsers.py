@@ -97,7 +97,7 @@ class EnsemblParser(Parser):
 
     def __init__(self, family_file):
         with open(family_file, 'rb') as raw:
-            self.supressed_mapping = rfutils.name_to_suppression(raw)
+            self.supressed_mapping = rfutils.id_to_suppression(raw)
             raw.seek(0)
             self.inference = RnaTypeInference(raw)
 
