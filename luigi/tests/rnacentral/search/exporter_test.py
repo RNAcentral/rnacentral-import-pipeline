@@ -508,7 +508,8 @@ def test_it_can_add_valid_annotations_flag(upi, has):
     ('URS0000160683_10090', ['BHF-UCL', 'MGI']),
     ('URS00002075FA_10116', ['BHF-UCL', 'GOC']),
     ('URS00001FCFC1_559292', ['SGD']),
+    ('URS0000759CF4_9606', ['Not Available']),
 ])
-def test_adds_field_for_soruce_of_go_annotations(upi, expected):
+def test_adds_field_for_source_of_go_annotations(upi, expected):
     data = load_and_get_additional(upi, "go_annotation_source")
     assert [d['text'] for d in data] == expected
