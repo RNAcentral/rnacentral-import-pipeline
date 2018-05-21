@@ -64,7 +64,7 @@ def parser(filename):
                 ncbi_tax_id=taxon_id(data),
                 database='MGI',
                 sequence='',
-                exons=exon(data),
+                exons=[],
                 rna_type=infer_rna_type(data) or '',
                 url='',
                 division='MUS',

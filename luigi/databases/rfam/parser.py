@@ -15,7 +15,6 @@ limitations under the License.
 
 import json
 
-from . import utils
 from ..data import Entry
 
 from . import helpers

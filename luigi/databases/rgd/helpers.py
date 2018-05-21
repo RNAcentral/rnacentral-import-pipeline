@@ -18,7 +18,6 @@ import csv
 import gzip
 import tempfile
 import operator as op
-import itertools as it
 import collections as coll
 from contextlib import contextmanager
 
@@ -360,7 +359,7 @@ def as_entries(data, seqs):
             ncbi_tax_id=taxid(data),
             database='RGD',
             sequence=sequence,
-            exons=[exons],
+            exons=[],
             rna_type=rna_type(data),
             url=url(data),
             seq_version=seq_version(data),
