@@ -13,8 +13,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import itertools as it
-
 from Bio import SeqIO
 
 from databases.data import Entry
@@ -60,7 +58,7 @@ def parse(handle):
             ncbi_tax_id=helpers.taxid(record),
             database='ENA',
             sequence=helpers.sequence(record),
-            exons=helpers.exons(record, feature),
+            exons=[],
             rna_type=helpers.rna_type(feature),
             url=helpers.url(record),
             seq_version=embl.seq_version(record),
