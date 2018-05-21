@@ -47,14 +47,7 @@ class EntryTest(GtRNAdbTest):
             ncbi_tax_id=329726,
             database='GTRNADB',
             sequence='GGGGAATTAGCTCAGCTGGTAGAGTGCTGCGATCGCACCGCAGAGGTCAGGGGTTCGAATCCCCTATTCTCCA',
-            exons=[
-                data.Exon(
-                    chromosome='chr',
-                    primary_start=603738,
-                    primary_end=603810,
-                    complement=False,
-                )
-            ],
+            exons=[],
             rna_type='tRNA',
             url='http://gtrnadb.ucsc.edu/genomes/bacteria/Acar_mari_MBIC11017/genes/tRNA-Ala-CGC-1-1.html',
             seq_version='1',
@@ -114,20 +107,7 @@ class WithExtraFieldsTest(GtRNAdbTest):
             ncbi_tax_id=673860,
             database='GTRNADB',
             sequence='GGGCCCGTGGGGTAGCTTGGATATCCTAGGGGCCTCCGGAGCCCCGGACCCGGGTTCGAATCCCGGCGGGCCCG',
-            exons=[
-                data.Exon(
-                    chromosome='chr',
-                    primary_start=421631,
-                    primary_end=421669,
-                    complement=False,
-                ),
-                data.Exon(
-                    chromosome='chr',
-                    primary_start=421719,
-                    primary_end=421753,
-                    complement=False,
-                ),
-            ],
+            exons=[],
             rna_type='tRNA',
             url='http://gtrnadb.ucsc.edu/genomes/archaea/Acid_MAR08_339/genes/tRNA-Arg-CCG-1-1.html',
             seq_version='1',

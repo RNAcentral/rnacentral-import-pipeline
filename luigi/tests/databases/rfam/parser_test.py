@@ -76,12 +76,7 @@ def test_it_builds_first_entry_correctly():
             "GCCTTCGTGGTGTAGTGGTCAGCACACTTGACGCGTAACCGAGAGGTCCGTGGTTCGATTCTCG"
             "GTGAAGGTG"
         ),
-        'exons': [{
-            'chromosome': '',
-            'primary_start': 230594,
-            'primary_end': 230666,
-            'complement': False,
-        }],
+        'exons': [],
         'rna_type': 'tRNA',
         'url': 'http://rfam.org/family/RF00005',
         'note_data': {
