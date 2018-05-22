@@ -268,7 +268,7 @@ def test_correctly_assigns_mirbase_gene_using_product(upi, ans):
         vals.append({'attrib': {'name': 'gene'}, 'text': entry})
     vals.sort()
     data = sorted(load_and_get_additional(upi, "gene"))
-    assert data == sorted(vals)
+    assert data == vals
 
 
 @pytest.mark.skip()  # pylint: disable=E1101

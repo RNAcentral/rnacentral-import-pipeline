@@ -416,6 +416,9 @@ def get_genes(genes, products):
 
                 if re.search(gene_letter, stripped):
                     genes.add(re.sub(gene_letter, '', stripped))
+            elif re.search(gene_letter, short_gene):
+                genes.add(re.sub(gene_letter, '', short_gene))
+
     return genes
 
 
