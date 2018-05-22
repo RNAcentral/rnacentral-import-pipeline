@@ -404,13 +404,18 @@ def get_genes(genes, products):
     genes = {g for g in genes if g}
     product_pattern = re.compile(r'^\w{3}-')
     end_pattern = re.compile(r'-[35]p$')
+    gene_letter = re.compile(r'\w$')
     for product in products:
         if product and re.match(product_pattern, product):
             short_gene = re.sub(product_pattern, '', product)
             genes.add(product)
             genes.add(short_gene)
             if re.search(end_pattern, short_gene):
-                genes.add(re.sub(end_pattern, '', short_gene))
+                stripped = re.sub(end_pattern, '', short_gene)
+                genes.add(stripped)
+
+                if re.search(gene_letter, stripped):
+                    genes.add(re.sub(gene_letter, '', stripped))
     return genes
 
 

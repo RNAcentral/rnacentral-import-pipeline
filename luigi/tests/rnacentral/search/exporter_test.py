@@ -259,12 +259,14 @@ def test_correctly_gets_expert_db(upi, ans):
         'mml-let-7g-5p',
         'let-7g-5p',
         'let-7g',
+        'let-7',
     ])
 ])
 def test_correctly_assigns_mirbase_gene_using_product(upi, ans):
     vals = []
     for entry in ans:
         vals.append({'attrib': {'name': 'gene'}, 'text': entry})
+    vals.sort()
     data = sorted(load_and_get_additional(upi, "gene"))
     assert data == sorted(vals)
 
