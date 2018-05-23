@@ -419,6 +419,8 @@ def test_it_correctly_assigns_rfam_problem_found(upi, status):
     ('URS00007F81F8_511145', False),
     ('URS0000A16E25_198431', False),
     ('URS0000A7ED87_7955', True),
+    ('URS000071F4D6_7955', True),
+    ('URS000071F071_7955', True),
 ])
 def test_can_correctly_assign_known_locations(upi, status):
     assert load_and_get_additional(upi, "has_genomic_coordinates") == [
