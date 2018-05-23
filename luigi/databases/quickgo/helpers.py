@@ -47,7 +47,7 @@ def publications(entry):
     for reference in entry['DB:Reference']:
         match = re.match('^PMID:(\d+)$', reference)
         if match:
-            references.append(pub.reference('', match.group(1)))
+            references.append(pub.reference(match.group(1)))
     return references
 
 
