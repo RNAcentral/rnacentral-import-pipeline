@@ -62,7 +62,7 @@ def summary(pmid):
     raise TooManyPublications(pmid)
 
 
-def reference(accession, pmid):
+def reference(pmid):
     data = summary(pmid)
     issue = data.get('issue', '')
     if issue:
@@ -84,7 +84,6 @@ def reference(accession, pmid):
 
     title = re.sub(r'\.$', '', data['title'])
     return Reference(
-        accession=accession,
         authors=data['authorString'],
         location=location,
         title=title,

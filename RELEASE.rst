@@ -6,6 +6,21 @@ process data. The format is based off of `Keep a Changelog
 <http://keepachangelog.com/en/1.0.0/>`_. Restructured text is being used because
 it provides more structure to the text.
 
+Release 10
+----------
+
+Added
+`````
+
+- JSON schema based import.
+
+  This will now import lncipedia data using our `JSON schema
+  <https://github.com/RNAcentral/rnacentral-data-schema>`_. In theory everything
+  we currently extract can be represented in it, however, it seems that not
+  everything is. Notably, we will have fewer publications and no product
+  information. On the plus side we will have coordinates for hg19 and hg38 for
+  this database.
+
 Release 9
 ---------
 

@@ -21,3 +21,4 @@ jsonschema==2.6.0
 contextlib2==0.5.5
 plumbum==1.6.6
 lxml==4.2.1
+semver==2.7.9

@@ -13,29 +13,21 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import luigi
+import pytest
 
-from tasks.ena import Ena
-from tasks.ensembl.ensembl import Ensembl
-from tasks import rfam
-from tasks.gtrnadb import GtRNAdb
-from tasks.lncipedia import Lncipedia
+from databases.generic.parser import parse
 
 
-class DataImport(luigi.WrapperTask):
-    """
-    This runs the data import that we preform on each release. This will
-    import:
+@pytest.mark.skip()
+def test_runs_validation_on_data():
+    pass
 
-    - All Ena data
-    - All Ensembl data
-    - All Rfam families, clans and sequences
-    """
 
-    def requires(self):
-        yield Ena()
-        yield Ensembl()
-        yield rfam.RfamFamilies()
-        yield rfam.RfamSequences()
-        yield GtRNAdb()
-        yield Lncipedia()
+@pytest.mark.parametrize('filename,count', [
+    ('data/json-schema/v020/flybase.json', 5),
+    ('data/json-schema/v020/lincipedia.json', 1),
+    ('data/json-schema/v020/lncipedia-5.0.json', 2)
+])
+def test_can_parse_v0_2_0_data(filename, count):
+    with open(filename, 'rb') as raw:
+        assert len(list(parse(raw))) == count
