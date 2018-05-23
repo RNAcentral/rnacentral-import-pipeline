@@ -435,3 +435,7 @@ class generic(luigi.Config):
 
 class lncipedia(luigi.Config):
     json_file = luigi.Parameter()
+
+
+class mirbase(luigi.Config):
+    json_file = luigi.Parameter()
