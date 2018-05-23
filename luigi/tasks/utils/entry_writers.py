@@ -177,9 +177,10 @@ class ExonWriter(object):
         for exon in data.exons:
             self.csv.writerow([
                 data.accession,
-                data.chromosome,
+                exon.chromosome_name,
                 exon.primary_start,
                 exon.primary_end,
+                exon.assembly_id,
                 exon.strand,
             ])
 
@@ -215,7 +216,7 @@ class AccessionWriter(object):
             data.seq_version,
             data.feature_location_start,
             data.feature_location_end,
-            data.feature_type,
+            data.feature_name,
             data.ordinal,
             data.is_composite,
             data.non_coding_id,
@@ -249,6 +250,7 @@ class AccessionWriter(object):
             data.pseudogene,
             data.standard_name,
             data.db_xrefs,
+            # data.rna_type,
         ])
 
 

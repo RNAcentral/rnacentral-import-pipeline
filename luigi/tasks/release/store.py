@@ -94,22 +94,29 @@ class UpdateCoordinates(DatabaseUpdater):  # pylint: disable=R0904
     sql = """
     INSERT INTO rnacen.rnc_coordinates AS t1 (
       accession,
-      primary_accession,
+      name,
       local_start,
       local_end,
       strand,
+      assembly_id,
       id
     )
     SELECT
-      accession,
-      primary_accession,
-      local_start,
-      local_end,
-      strand,
+      load.accession,
+      load.chromosome,
+      load.local_start,
+      load.local_end,
+      load.strand,
+      assembly.assembly_id,
       NEXTVAL('rnc_coordinates_pk_seq')
-    FROM rnacen.load_rnc_coordinates as t2
-      ON CONFLICT (accession, primary_accession, local_start, local_end)
-      DO NOTHING
+    FROM rnacen.load_rnc_coordinates as load
+    join ensembl_assembly assembly
+    on
+        assembly.assembly_id = load.assembly_id
+    WHERE
+      load.chromosome is not null
+    ON CONFLICT (accession, name, local_start, local_end, assembly_id)
+    DO NOTHING
     """
 
     def run(self):

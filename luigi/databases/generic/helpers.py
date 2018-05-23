@@ -13,29 +13,3 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import luigi
-
-from tasks.ena import Ena
-from tasks.ensembl.ensembl import Ensembl
-from tasks import rfam
-from tasks.gtrnadb import GtRNAdb
-from tasks.lncipedia import Lncipedia
-
-
-class DataImport(luigi.WrapperTask):
-    """
-    This runs the data import that we preform on each release. This will
-    import:
-
-    - All Ena data
-    - All Ensembl data
-    - All Rfam families, clans and sequences
-    """
-
-    def requires(self):
-        yield Ena()
-        yield Ensembl()
-        yield rfam.RfamFamilies()
-        yield rfam.RfamSequences()
-        yield GtRNAdb()
-        yield Lncipedia()
