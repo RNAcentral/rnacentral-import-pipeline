@@ -21,6 +21,7 @@ from tasks import rfam
 from tasks.gtrnadb import GtRNAdb
 from tasks.lncipedia import Lncipedia
 from tasks.mirbase import MirBase
+from tasks.ontologies import Ontologies
 
 
 class DataImport(luigi.WrapperTask):
@@ -41,3 +42,4 @@ class DataImport(luigi.WrapperTask):
         yield GtRNAdb()
         yield Lncipedia()
         yield MirBase()
+        yield Ontologies()
