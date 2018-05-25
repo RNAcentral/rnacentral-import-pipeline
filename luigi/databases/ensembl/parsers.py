@@ -97,8 +97,9 @@ class EnsemblParser(Parser):
 
     def __init__(self, family_file):
         with open(family_file, 'rb') as raw:
-            self.supressed_mapping = rfutils.id_to_suppression(raw)
-            raw.seek(0)
+            self.supressed_mapping = rfutils.name_to_suppression(raw)
+
+        with open(family_file, 'rb') as raw:
             self.inference = RnaTypeInference(raw)
 
     def is_from_suppressed_rfam_model(self, current):
@@ -122,7 +123,7 @@ class EnsemblParser(Parser):
             if name is None:
                 continue
             if name not in self.supressed_mapping:
-                raise ValueError("Unknown Rfam model name: %s" % name)
+                raise ValueError("Unknown Rfam model name: %s", name)
             if self.supressed_mapping[name]:
                 return True
         return False
@@ -141,8 +142,7 @@ class EnsemblParser(Parser):
         xref_data = helpers.xref_data(feature)
         accession = ensembl.accession(feature)
         chromosome = helpers.chromosome(record)
-        exons = ensembl.exons(feature)
-        exons = [attr.assoc(e, chromosome=chromosome) for e in exons]
+        exons = ensembl.exons(record, feature)
 
         entry = data.Entry(
             primary_id=ensembl.primary_id(feature),
@@ -165,7 +165,7 @@ class EnsemblParser(Parser):
             note_data=helpers.note_data(feature),
             xref_data=xref_data,
             product=helpers.product(feature),
-            references=ensembl.references(accession),
+            references=ensembl.references(),
             mol_type='genomic DNA',
             pseudogene='N',
             is_composite='N',
@@ -207,5 +207,5 @@ class GencodeParser(EnsemblParser):
                 database='GENCODE',
                 xref_data=gencode.xref_data(entry),
                 optional_id='',
-                references=gencode.references(entry),
+                references=gencode.references(),
             )

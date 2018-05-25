@@ -120,6 +120,8 @@ class RnaTypeInference(object):
             return 'snoRNA'
         if base_type == 'misc_RNA':
             return self.compute_fallback_rna_type(xref_data)
+        if base_type == 'miRNA':
+            return 'precursor_RNA'
         return base_type
 
     def correct_spelling(self, rna_type):

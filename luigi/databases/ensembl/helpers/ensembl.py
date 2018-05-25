@@ -16,12 +16,11 @@ limitations under the License.
 from databases.data import Reference
 
 from ..helpers import bio as helpers
-from ..rna_type_inference import RnaTypeInference
 
 URL = 'http://www.ensembl.org/Homo_sapiens/Transcript/Summary?t={transcript}'
 
 
-def exons(feature):
+def exons(record, feature):
     """
     Determine all Exons in this feature.
     """
@@ -29,15 +28,14 @@ def exons(feature):
     parts = [feature.location]
     if hasattr(feature.location, 'parts'):
         parts = feature.location.parts
-    return [helpers.exon(l) for l in parts]
+    return [helpers.exon(record, l) for l in parts]
 
 
-def references(accession):
+def references():
     """
     Get the standard reference for all Ensembl entries.
     """
     return [Reference(
-        accession=accession,
         authors=(
             "Aken BL, Ayling S, Barrell D, Clarke L, Curwen V, Fairley "
             "S, Fernandez Banet J, Billis K, Garci a Giro n C, Hourlier "

@@ -35,13 +35,12 @@ def primary_id(ensembl_entry):
     return ensembl_entry.primary_id
 
 
-def references(ensembl_entry):
+def references():
     """
     Get the standard GENCODE reference.
     """
 
     return [Reference(
-        accession=ensembl_entry.accession,
         authors=(
             "Harrow J, Frankish A, Gonzalez JM, Tapanari E, Diekhans M, "
             "Kokocinski F, Aken BL, Barrell D, Zadissa A, Searle S, Barnes"
