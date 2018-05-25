@@ -118,7 +118,7 @@ def gtrnadb_entries(data):
                 location_start=1,
                 location_end=len(data['sequence']),
                 gene_synonyms=data.get('synonyms', []),
-                references=references(data, location),
+                references=references(),
             )
         except phy.UnknownTaxonId:
             print("Unknown taxon id in %s" % data)

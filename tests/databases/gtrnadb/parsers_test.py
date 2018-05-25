@@ -67,7 +67,6 @@ class EntryTest(GtRNAdbTest):
                 "(((((((..((((........)))).(((((.......))))).....(((((.......))))))))))))."
             ),
             references=[data.Reference(
-                accession='CP000828.1:tRNA-Ala-CGC-1-1',
                 authors='Chan P.P., Lowe T.M.',
                 location='Nucl. Acids Res. 37(Database issue)',
                 title=(
@@ -127,7 +126,6 @@ class WithExtraFieldsTest(GtRNAdbTest):
                 "(((((((..(((............))).(((((.......)))))....(((((.......))))))))))))."
             ),
             references=[data.Reference(
-                accession='CP003168.1:tRNA-Arg-CCG-1-1',
                 authors='Chan P.P., Lowe T.M.',
                 location='Nucl. Acids Res. 37(Database issue)',
                 title=(
