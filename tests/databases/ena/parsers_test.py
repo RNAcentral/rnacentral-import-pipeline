@@ -17,7 +17,7 @@ import attr
 
 import pytest
 
-from databases.data import Entry, Exon, Reference
+from databases.data import Entry, Reference
 from databases.ena.parsers import parse
 
 
@@ -40,7 +40,6 @@ from databases.ena.parsers import parse
 ])
 def test_can_parse_variety_of_files(filename, count):
     with open(filename, 'rb') as raw:
-        print(filename)
         data = list(parse(raw))
         assert len(data) == count
         for entry in data:
@@ -60,12 +59,7 @@ def test_creates_simple_entry():
         ncbi_tax_id=227321,
         database='ENA',
         sequence='GCCCGGATGGTCTAGTGGTATGATTCTCCCTTCGGGGGCAGCGCCCGGTACATAATAACATGTATCAGAAATGGGAGAGGTCCCGCGTTCGAATCGCGGTTCGGGCC',
-        exons=[Exon(
-            chromosome='VIII',
-            complement=False,
-            primary_end=101773,
-            primary_start=101667,
-        )],
+        exons=[],
         rna_type='tRNA',
         url='https://www.ebi.ac.uk/ena/data/view/Non-coding:AACD01000002.1:101667..101773:tRNA',
         seq_version='1',
@@ -88,7 +82,6 @@ def test_creates_simple_entry():
         is_composite='N',
         references=[
             Reference(
-                accession='AACD01000002.1:101667..101773:tRNA',
                 authors=(
                     "Galagan J.E., Calvo S.E., Cuomo C., Ma L.J., Wortman J.R."
                     ", Batzoglou S., Lee S.I., Basturkmen M., Spevak C.C., "
@@ -112,7 +105,6 @@ def test_creates_simple_entry():
                 doi=None,
             ),
             Reference(
-                accession='AACD01000002.1:101667..101773:tRNA',
                 location=(
                     'Submitted (04-APR-2003) to the INSDC. Whitehead '
                     'Institute/MIT Center for Genome Research, 320 Charles '
@@ -152,7 +144,6 @@ def test_creates_simple_entry():
                 doi=None,
             ),
             Reference(
-                accession='AACD01000002.1:101667..101773:tRNA',
                 authors=(
                     "Birren B., Nusbaum C., Abebe A., Abouelleil A., Adekoya "
                     "E., Ait-zahra M., Allen N., Allen T., An P., Anderson M., "
@@ -223,12 +214,7 @@ def test_can_find_correct_ncRNA_type():
         ncbi_tax_id=500637,
         database='ENA',
         sequence='ACTGCTTTTCTTTGATGTCCCCATATTGAGGAGCCCGATAGCCATTTGATTACTTCATGCTATCGGGTTTTTTATT',
-        exons=[Exon(
-            chromosome='',
-            complement=False,
-            primary_end=33573,
-            primary_start=33498
-        )],
+        exons=[],
         rna_type='other',
         url='https://www.ebi.ac.uk/ena/data/view/Non-coding:ABXV02000002.1:33498..33573:ncRNA',
         seq_version='1',
@@ -254,7 +240,6 @@ def test_can_find_correct_ncRNA_type():
         project='PRJNA28651',
         references=[
             Reference(
-                accession='ABXV02000002.1:33498..33573:ncRNA',
                 authors=(
                     "Fulton L., Clifton S., Fulton B., Xu J., Minx P., Pepin "
                     "K.H., Johnson M., Bhonagiri V., Nash W.E., Mardis E.R., "
@@ -270,7 +255,6 @@ def test_can_find_correct_ncRNA_type():
                 doi=None,
             ),
             Reference(
-                accession='ABXV02000002.1:33498..33573:ncRNA',
                 authors=(
                     "Weinstock G., Sodergren E., Clifton S., Fulton L., Fulton "
                     "B., Courtney L., Fronick C., Harrison M., Strong C., "
@@ -289,7 +273,6 @@ def test_can_find_correct_ncRNA_type():
                 doi=None,
             ),
             Reference(
-                accession='ABXV02000002.1:33498..33573:ncRNA',
                 authors=(
                     "Weinstock G., Sodergren E., Clifton S., Fulton L., Fulton "
                     "B., Courtney L., Fronick C., Harrison M., Strong C., "
@@ -321,12 +304,7 @@ def test_can_parse_all_example_entries():
         ncbi_tax_id=9606,
         database='ENA',
         sequence="ATTGGGGAGTGAGAAGGAGAGAACGCGGTCTGAA",
-        exons=[Exon(
-            chromosome='',
-            complement=False,
-            primary_start=1,
-            primary_end=34,
-        )],
+        exons=[],
         rna_type='misc_RNA',
         url='https://www.ebi.ac.uk/ena/data/view/Non-coding:AB330787.1:1..34:misc_RNA',
         seq_version='1',
@@ -358,12 +336,7 @@ def test_can_parse_all_example_entries():
         database='ENA',
         ncbi_tax_id=9606,
         sequence='ATTGCAGTACCTCCAGGAACGGTGCAC',
-        exons=[Exon(
-            chromosome='',
-            complement=False,
-            primary_start=1,
-            primary_end=27,
-        )],
+        exons=[],
         rna_type='misc_RNA',
         url='https://www.ebi.ac.uk/ena/data/view/Non-coding:AB330786.1:1..27:misc_RNA',
         seq_version='1',
@@ -396,12 +369,7 @@ def test_can_parse_all_example_entries():
         database='ENA',
         ncbi_tax_id=9606,
         sequence='CGCGACCTCAGATCAGACGTGGCGACCCGCTGAA',
-        exons=[Exon(
-            chromosome='',
-            complement=False,
-            primary_start=1,
-            primary_end=34,
-        )],
+        exons=[],
         rna_type='misc_RNA',
         url='https://www.ebi.ac.uk/ena/data/view/Non-coding:AB330785.1:1..34:misc_RNA',
         seq_version='1',
@@ -435,12 +403,7 @@ def test_can_parse_all_example_entries():
         database='ENA',
         ncbi_tax_id=9606,
         sequence='ACCACTGCACTCCAGCCTGAG',
-        exons=[Exon(
-            chromosome='',
-            complement=False,
-            primary_start=1,
-            primary_end=21,
-        )],
+        exons=[],
         rna_type='miRNA',
         url='https://www.ebi.ac.uk/ena/data/view/Non-coding:HAAO01001079.1:1..21:ncRNA',
         seq_version='1',
@@ -469,7 +432,6 @@ def test_can_parse_all_example_entries():
         parent_accession='HAAO01001079',
         references=[
             Reference(
-                accession='HAAO01001079.1:1..21:ncRNA',
                 authors='',
                 location='Submitted (20-AUG-2013) to the INSDC.',
                 title=None,
@@ -477,7 +439,6 @@ def test_can_parse_all_example_entries():
                 doi=None,
             ),
             Reference(
-                accession='HAAO01001079.1:1..21:ncRNA',
                 authors='Kozomara A., Griffiths-Jones S.',
                 location='Nucleic Acids Res. 39(Database issue):D152-D157(2011).',
                 title='miRBase: integrating microRNA annotation and deep-sequencing data',
@@ -493,12 +454,7 @@ def test_can_parse_all_example_entries():
         database='ENA',
         ncbi_tax_id=32644,
         sequence="GGGAGCGACTTGGCTTCGACAGGAGTAAGTCTGCTTAGATGGCATGTCGCTTTGGGCAAAGCGTAAAAAGCCCAAATAAAATTAAACGCAAACAACGTTAAATTCGCTCCTGCTTACGCTAAAGCTGCGTAAGTTCAGTTGAGCCTGAAATTTAAGTCATACTATCTAGCTTAATTTTCGGTCATTTTTGATAGTGTAGCCTTGCGTTTGACAAGCGTTGAGGTGAAATAAAGTCTTAGCCTTGCTTTTGAGTTTTGGAAGATGAGCGAAGTAGGGTGAAGTAGTCATCTTTGCTAAGCATGTAGAGGTCTTTGTGGGATTATTTTTGGACAGGGGTTCGATTCCCCTCGCTTCCACCA",
-        exons=[Exon(
-            chromosome='',
-            complement=False,
-            primary_start=1,
-            primary_end=359,
-        )],
+        exons=[],
         rna_type='tmRNA',
         url='https://www.ebi.ac.uk/ena/data/view/Non-coding:HG519048.1:1..359:tmRNA',
         seq_version='1',
@@ -520,7 +476,6 @@ def test_can_parse_all_example_entries():
         is_composite='N',
         references=[
             Reference(
-                accession='HG519048.1:1..359:tmRNA',
                 authors='',
                 location='Submitted (13-SEP-2013) to the INSDC.',
                 title=None,
@@ -529,7 +484,6 @@ def test_can_parse_all_example_entries():
             ),
 
             Reference(
-                accession='HG519048.1:1..359:tmRNA',
                 authors='Gueneau de Novoa P., Williams K.P.',
                 location='Nucleic Acids Res. 32(Database issue):D104-D108(2004).',
                 title=(

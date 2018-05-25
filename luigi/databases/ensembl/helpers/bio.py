@@ -140,5 +140,6 @@ def exon(location):
         chromosome_name='',
         primary_start=location.start + 1,
         primary_end=int(location.end),
+        assembly_id=None,
         complement=location.strand == -1,
     )

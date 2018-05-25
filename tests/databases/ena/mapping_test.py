@@ -20,7 +20,6 @@ import pytest
 
 from tasks.config import ena
 
-from databases.data import Exon
 from databases.data import Entry
 from databases.ena import mapping as tpa
 from databases.helpers.hashes import md5
@@ -167,12 +166,7 @@ def test_can_transform_correct_lncrnadb_entry():
         ncbi_tax_id=9606,
         database='LNCRNADB',
         sequence='',
-        exons=[Exon(
-            chromosome='',
-            complement=False,
-            primary_start=1,
-            primary_end=32753,
-        )],
+        exons=[],
         rna_type='lncRNA',
         url='http://www.lncrnadb.org/Detail.aspx?TKeyID=101',
         seq_version='1',
@@ -238,12 +232,7 @@ def test_can_transform_correct_srpdb_entry():
         ncbi_tax_id=400667,
         database='SRPDB',
         sequence='GGTAGCCCCGCTGGTGGCTTCGCAATTGTACTCTGTGAACCCCGCCAGGACCGGAAGGTAGCAACGGTAGCAGATCTATGATGTGCCGAAGTTTTGCTAGTGGGGTTGCCACCATT',
-        exons=[Exon(
-            chromosome='',
-            complement=False,
-            primary_start=1,
-            primary_end=116,
-        )],
+        exons=[],
         rna_type='SRP_RNA',
         url='http://rnp.uthscsa.edu/rnp/SRPDB/rna/sequences/fasta/Acin.baum._CP000521',
         seq_version='1',
@@ -291,12 +280,7 @@ def test_can_transform_correct_snopy_entry():
         ncbi_tax_id=3702,
         database='SNOPY',
         sequence='GGCGAGGATGAATAATGCTAAATTTCTGACACCTCTTGTATGAGGAGAGATTGATAACCTCTCCTTTGAGCACATTATGCAATACTCTGAGCC',
-        exons=[Exon(
-            chromosome='',
-            primary_start=1,
-            primary_end=93,
-            complement=False,
-        )],
+        exons=[],
         rna_type='snoRNA',
         url='http://snoopy.med.miyazaki-u.ac.jp/snorna_db.cgi?mode=sno_info&id=Arabidopsis_thaliana300001',
         seq_version='1',
@@ -376,7 +360,7 @@ def test_can_transform_correct_wormbase_entry():
     ))
 
     assert len(transformed['references']) == 3
-    assert len(transformed['exons']) == 6
+    assert len(transformed['exons']) == 0
     assert len(transformed['sequence']) == 2767
     del transformed['references']
     del result['references']
