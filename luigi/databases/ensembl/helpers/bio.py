@@ -132,14 +132,18 @@ def product(feature):
     return None
 
 
-def exon(location):
+def exon(record, location):
     """
     Build an Exon from a biopython location object.
     """
+    accession = record.annotations['accessions'][0]
+    parts = accession.split(':')
+    assembly_id = parts[1]
+    chromosome_name = parts[2]
     return Exon(
-        chromosome_name='',
+        chromosome_name=chromosome_name,
         primary_start=location.start + 1,
         primary_end=int(location.end),
-        assembly_id=None,
+        assembly_id=assembly_id,
         complement=location.strand == -1,
     )

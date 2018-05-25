@@ -140,20 +140,25 @@ def description(record):
     return record.description
 
 
-def as_exon(location):
+def as_exon(record, location):
+    accession = record.annotations['accessions'][0]
+    parts = accession.split(':')
+    assembly_id = parts[1]
+    chromosome_name = parts[2]
     return Exon(
-        chromosome='',
+        chromosome_name=chromosome_name,
         primary_start=location.start + 1,
         primary_end=int(location.end),
+        assembly_id=assembly_id,
         complement=location.strand == -1,
     )
 
 
-def exons(feature):
+def exons(record, feature):
     parts = [feature.location]
     if hasattr(feature.location, 'parts'):
         parts = feature.location.parts
-    return [as_exon(l) for l in parts]
+    return [as_exon(record, l) for l in parts]
 
 
 def experiment(feature):

@@ -19,6 +19,7 @@ import unittest as ut
 
 from Bio import SeqIO
 
+from databases.data import Exon
 from databases.ensembl.helpers.bio import (
     gene,
     locus_tag,
@@ -28,7 +29,8 @@ from databases.ensembl.helpers.bio import (
     transcript,
     xref_data,
     is_gene,
-    is_ncrna
+    is_ncrna,
+    exon
 )
 
 
@@ -108,3 +110,14 @@ class HelpersTest(ut.TestCase):  # pylint: disable=R0904
     @pytest.mark.skip()
     def test_it_can_lookup_lineage(self):
         pass
+
+    def test_it_can_produec_an_exon(self):
+        # 851424..851782,857161..857249,859245..859375
+        feature = self.features['misc_RNA', 'ENSG00000060237.16']
+        assert exon(self.record, feature.location.parts[0]) == Exon(
+            chromosome_name='12',
+            primary_start=907720,
+            primary_end=908034,
+            assembly_id='GRCh38',
+            complement=False,
+        )

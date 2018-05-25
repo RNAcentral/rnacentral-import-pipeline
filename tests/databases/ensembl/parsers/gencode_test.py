@@ -17,7 +17,7 @@ import pytest
 
 from databases.ensembl.parsers import GencodeParser as Gencode
 
-from tests.databases.ensembl.utils import Base
+from ..utils import Base
 
 
 @pytest.mark.slowtest
