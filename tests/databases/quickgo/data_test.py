@@ -32,10 +32,12 @@ def test_can_build_correct_writeable():
         publications=[],
     )
 
-    assert annotation.as_writeable() == {
+    writeable = list(annotation.writeable())
+    assert len(writeable) == 1
+    assert writeable[0] == {
         'rna_id': 'a',
         'qualifier': 'part_of',
-        'term_id': 'GO:01',
+        'ontology_term_id': 'GO:01',
         'evidence_code': 'ECO:001',
         'extensions': json.dumps([{
             'qualifier': 'talks_to',
