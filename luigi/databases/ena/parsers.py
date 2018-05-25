@@ -95,7 +95,7 @@ def parse(handle):
             pseudogene=helpers.pseudogene(feature),
 
             gene_synonyms=helpers.gene_synonyms(feature),
-            references=helpers.references(accession, record, feature),
+            references=helpers.references(record, feature),
         )
 
 

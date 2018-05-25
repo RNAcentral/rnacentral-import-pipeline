@@ -213,7 +213,7 @@ def old_locus_tag(feature):
     return feature.qualifiers.get('old_locus_tag', [None])[0]
 
 
-def as_reference(accession, ref):
+def as_reference(ref):
     """
     Convert a biopython reference to one of our references. This will do some
     minor cleanups on the parsed reference to normalize some datatypes and
@@ -229,7 +229,6 @@ def as_reference(accession, ref):
         title = None
 
     return Reference(
-        accession=accession,
         authors=ref.authors,
         location=ref.journal,
         title=title,
@@ -238,11 +237,11 @@ def as_reference(accession, ref):
     )
 
 
-def references(accession, record):
+def references(record):
     """
     Turn all references for a record into a our type of references. This will
     assign all references to a single acecssion.
     """
 
     refs = record.annotations.get('references', [])
-    return [as_reference(accession, ref) for ref in refs]
+    return [as_reference(ref) for ref in refs]
