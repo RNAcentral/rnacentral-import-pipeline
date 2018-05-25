@@ -33,19 +33,21 @@ def test_can_fetch_publication():
         "pubYear": "2017",
         "journalIssn": "0065-2598; 2214-8019; ",
         "pageInfo": "253-282",
-        "pubType": "review; journal article; research support, n.i.h., extramural; ",
+        "pubType": "research-article; review; journal article; research support, n.i.h., extramural; ",
         "isOpenAccess": "N",
-        "inEPMC": "N",
+        "inEPMC": "Y",
         "inPMC": "N",
-        "hasPDF": "N",
+        "hasPDF": "Y",
         "hasBook": "N",
         "citedByCount": 0,
-        "hasReferences": "N",
-        "hasTextMinedTerms": "N",
+        "hasReferences": "Y",
+        "hasTextMinedTerms": "Y",
         "hasDbCrossReferences": "N",
         "hasLabsLinks": "Y",
         "hasTMAccessionNumbers": "N",
-        "firstPublicationDate": "2017-01-01"
+        "firstPublicationDate": "2017-01-01",
+        'hasSuppl': 'N',
+        'pmcid': 'PMC5890441',
     }
 
 
@@ -55,8 +57,7 @@ def test_complains_given_bad_pmid():
 
 
 def test_can_build_reference():
-    assert attr.asdict(pub.reference('a', 27858507)) == attr.asdict(Reference(
-        accession='a',
+    assert attr.asdict(pub.reference(27858507)) == attr.asdict(Reference(
         authors=u"Lünse CE, Weinberg Z, Breaker RR.",
         location='RNA Biol 14(11):1499-1507 (2017)',
         title=(
@@ -69,14 +70,13 @@ def test_can_build_reference():
 
 
 def test_can_deal_with_unicode():
-    reference = pub.reference('a', 27334534)
+    reference = pub.reference(27334534)
     assert u'\xa0' not in reference.title
     assert reference.md5() == 'a84bed065b6f62d0c096d8bd7547b578'
 
 
 def test_builds_correction_location():
-    assert attr.asdict(pub.reference('bob', 26184978)) == attr.asdict(Reference(
-        accession='bob',
+    assert attr.asdict(pub.reference(26184978)) == attr.asdict(Reference(
         authors='Xu Z, Han Y, Liu J, Jiang F, Hu H, Wang Y, Liu Q, Gong Y, Li X.',
         location='Sci Rep 5:12276 (2015)',
         title=(
@@ -90,8 +90,7 @@ def test_builds_correction_location():
 
 
 def test_can_handle_missing_volume():
-    assert attr.asdict(pub.reference('other', 27389411)) == attr.asdict(Reference(
-        accession='other',
+    assert attr.asdict(pub.reference(27389411)) == attr.asdict(Reference(
         authors='Carr G, Barrese V, Stott JB, Povstyan OV, Jepps TA, Figueiredo HB, Zheng D, Jamshidi Y, Greenwood IA.',
         location='Cardiovasc Res (2016)',
         title='MicroRNA-153 targeting of KCNQ4 contributes to vascular dysfunction in hypertension',
@@ -101,11 +100,10 @@ def test_can_handle_missing_volume():
 
 
 def test_it_can_find_if_duplicate_ext_ids():
-    assert attr.asdict(pub.reference('hi', 375006)) == attr.asdict(Reference(
-        accession='hi',
+    assert attr.asdict(pub.reference(375006)) == attr.asdict(Reference(
         authors='Macino G, Tzagoloff A.',
         location='Mol Gen Genet 169(2):183-188 (1979)',
-        title='Assembly of the mitochondrial membrane system: two separate genes coding for threonyl-tRNA in the mitochondrial DNA of Saccharomyces cerevisiae.',
+        title='Assembly of the mitochondrial membrane system: two separate genes coding for threonyl-tRNA in the mitochondrial DNA of Saccharomyces cerevisiae',
         pmid=375006,
         doi='10.1007/bf00271669',
     ))
