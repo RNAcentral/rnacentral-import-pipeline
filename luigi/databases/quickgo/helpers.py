@@ -45,20 +45,20 @@ def qualifier(entry):
 def publications(entry):
     references = []
     for reference in entry['DB:Reference']:
-        match = re.match('^PMID:(\d+)$', reference)
+        match = re.match(r'^PMID:(\d+)$', reference)
         if match:
             references.append(pub.reference(match.group(1)))
     return references
 
 
 def extensions(record):
-    extensions = []
+    result = []
     for extension in record['Annotation Extension']:
         for part in extension.split(','):
-            match = re.match('(\w+)\((.+)\)', part)
+            match = re.match(r'(\w+)\((.+)\)', part)
             if match:
-                extensions.append(data.AnnotationExtension(
+                result.append(data.AnnotationExtension(
                     qualifier=match.group(1),
                     target=match.group(2),
                 ))
-    return extensions
+    return result

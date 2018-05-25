@@ -44,7 +44,6 @@ def test_can_correctly_parse_a_gpa_file():
             extensions=[],
             assigned_by='SGD',
             publications=[Reference(
-                accession='',
                 authors='Lowe TM, Eddy SR.',
                 location='Nucleic Acids Res 25(5):955-964 (1997)',
                 title=(
@@ -70,9 +69,9 @@ def test_can_handle_duplicate_data():
             ],
             assigned_by='MGI',
             publications=[
-                pub.reference('', 19217333),
-                pub.reference('', 21444682),
-                pub.reference('', 22840402),
-                pub.reference('', 25145264),
+                pub.reference(19217333),
+                pub.reference(21444682),
+                pub.reference(22840402),
+                pub.reference(25145264),
             ],
         ))
