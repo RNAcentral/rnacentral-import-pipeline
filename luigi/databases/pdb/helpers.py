@@ -158,7 +158,6 @@ def as_reference(row):
         pmid = None
 
     return Reference(
-        accession='',
         authors=authors,
         location=row['journalName'],
         title=row['title'],
