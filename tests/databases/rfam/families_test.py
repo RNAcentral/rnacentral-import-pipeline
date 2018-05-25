@@ -121,7 +121,8 @@ def test_it_can_assign_correct_clan_ids(families):
         if f.clan_id:
             clans[f.clan_id].add(f.id)
 
-    assert len(clans) == 113
+    assert len(clans) == 111
+    assert 'NULL' not in clans
     assert clans['CL00001'] == set([
         'RF00005',
         'RF00023',

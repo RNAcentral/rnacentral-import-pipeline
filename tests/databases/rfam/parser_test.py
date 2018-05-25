@@ -91,7 +91,6 @@ def test_it_builds_first_entry_correctly():
             "Stegodyphus mimosarum"
         ),
         'references': [{
-            'accession': 'KK113858.1:230594..230666:rfam',
             'authors': (
                 'Nawrocki E.P., Burge S.W., Bateman A., Daub J., '
                 'Eberhardt R.Y., Eddy S.R., Floden E.W., Gardner P.P., '
