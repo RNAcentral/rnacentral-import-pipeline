@@ -88,7 +88,7 @@ def as_reference(accession, ref):
     )
 
 
-def extract_experiment_refs(accession, feature, known):
+def extract_experiment_refs(feature, known):
     experiment = embl.experiment(feature)
     if not experiment:
         return []
@@ -109,7 +109,7 @@ def extract_experiment_refs(accession, feature, known):
             continue
 
         try:
-            data = pubs.reference(accession, pmid)
+            data = pubs.reference(pmid)
             if data:
                 found.append(data)
         except Exception as err:
@@ -118,10 +118,10 @@ def extract_experiment_refs(accession, feature, known):
     return found
 
 
-def references(accession, record, feature):
-    refs = embl.references(accession, record)
+def references(record, feature):
+    refs = embl.references(record)
     known_pmids = {ref.pmid for ref in refs if ref.pmid}
-    experiment_refs = extract_experiment_refs(accession, feature, known_pmids)
+    experiment_refs = extract_experiment_refs(feature, known_pmids)
     refs.extend(experiment_refs)
     return refs
 
