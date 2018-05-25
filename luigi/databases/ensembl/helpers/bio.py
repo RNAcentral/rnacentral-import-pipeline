@@ -137,7 +137,7 @@ def exon(location):
     Build an Exon from a biopython location object.
     """
     return Exon(
-        chromosome='',
+        chromosome_name='',
         primary_start=location.start + 1,
         primary_end=int(location.end),
         complement=location.strand == -1,
