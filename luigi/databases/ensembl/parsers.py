@@ -100,6 +100,9 @@ class EnsemblParser(Parser):
             self.supressed_mapping = rfutils.name_to_suppression(raw)
 
         with open(family_file, 'rb') as raw:
+            self.supressed_mapping.update(rfutils.id_to_suppression(raw))
+
+        with open(family_file, 'rb') as raw:
             self.inference = RnaTypeInference(raw)
 
     def is_from_suppressed_rfam_model(self, current):
