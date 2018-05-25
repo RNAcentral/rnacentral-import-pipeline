@@ -206,13 +206,12 @@ def seq_version(_):
     return '1'
 
 
-def references(data, location):
+def references():
     """
     Returns the default accessions for GtRNAdb data.
     """
 
     return [Reference(
-        accession=accession(data, location),
         authors='Chan P.P., Lowe T.M.',
         location='Nucl. Acids Res. 37(Database issue)',
         title=(
