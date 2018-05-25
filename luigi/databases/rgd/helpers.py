@@ -263,7 +263,7 @@ def seq_xref_ids(entry):
                 key = '{xref_id}-{gene_id}-{chr}:{start}..{stop}'.format(
                     xref_id=xref_id,
                     gene_id=primary_id(entry),
-                    chr=exon.chromosome,
+                    chr=exon.chromosome_name,
                     start=exon.primary_start,
                     stop=exon.primary_end,
                 )
@@ -292,9 +292,10 @@ def exons(entry):
     for (chrom, start, stop, strand) in info.endpoints():
         complement = strand == '-'
         exons.append(Exon(
-            chromosome='chr%s' % chrom,
+            chromosome_name='chr%s' % chrom,
             primary_start=start,
             primary_end=stop,
+            assembly_id='',
             complement=complement,
         ))
     return exons
@@ -311,14 +312,14 @@ def xref_data(entry):
 
 def references(accession, entry):
     refs = []
-    refs.append(pub.reference(accession, 25355511))  # The general RGD citation
+    refs.append(pub.reference(25355511))  # The general RGD citation
     for pmid_set in pmids(entry):
         if not pmid_set:
             continue
         for pmid in pmid_set.split(';'):
             if not pmid:
                 continue
-            refs.append(pub.reference(accession, pmid))
+            refs.append(pub.reference(pmid))
     return refs
 
 
@@ -346,7 +347,7 @@ def gene_synonyms(entry):
 def as_entries(data, seqs):
     entries = []
     sequences = sequences_for(data, seqs)
-    for index, (sequence, exons) in enumerate(sequences):
+    for index, (sequence, _) in enumerate(sequences):
         acc_index = index + 1
         if len(sequences) == 1:
             acc_index = None
