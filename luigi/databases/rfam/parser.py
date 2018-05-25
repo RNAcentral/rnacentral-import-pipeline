@@ -32,7 +32,7 @@ def as_entry(data, mapping):
         ncbi_tax_id=helpers.taxid(data),
         database='RFAM',
         sequence=helpers.sequence(data),
-        exons=helpers.exons(data),
+        exons=[],
         rna_type=helpers.rna_type(data, mapping),
         url=helpers.url(data),
         note_data=helpers.note(data),
@@ -50,7 +50,7 @@ def as_entry(data, mapping):
         is_composite='N',
         location_start=location_range[0],
         location_end=location_range[1],
-        references=helpers.references(data)
+        references=helpers.references(),
     )
 
 

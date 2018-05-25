@@ -51,9 +51,8 @@ def mol_type(data):
     return 'seed'
 
 
-def references(data):
+def references():
     return [Reference(
-        accession=accession(data),
         authors=(
             'Nawrocki E.P., Burge S.W., Bateman A., Daub J., '
             'Eberhardt R.Y., Eddy S.R., Floden E.W., Gardner P.P., '
@@ -79,9 +78,10 @@ def exons(data):
     location_range = feature_location_endpoints(data)
     complement = int(data['feature_location_start']) != location_range[0]
     return [Exon(
-        chromosome='',
+        chromosome_name='',
         primary_start=location_range[0],
         primary_end=location_range[1],
+        assembly_id='',
         complement=complement,
     )]
 
