@@ -248,7 +248,6 @@ class ena(luigi.Config):
             'WormBase',
             'dictyBase',
             'lncRNAdb',
-            'miRBase',
             'snOPYdb',
             'tmRNA-Website',
         )
