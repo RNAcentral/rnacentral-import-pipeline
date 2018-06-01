@@ -39,7 +39,7 @@ class DataImport(luigi.WrapperTask):
         yield Ena()
         yield Ensembl()
         yield rfam.RfamFamilies()
-        yield rfam.RfamSequences()
+        # yield rfam.RfamSequences()
         yield Pdb()
         yield GtRNAdb()
         yield Lncipedia()
