@@ -101,9 +101,8 @@ def as_reference(ref):
     """
     Turn a raw reference (just a pmid) into a reference we can import.
     """
-    pmid = ref['pubMedId']
-    if pmid.startswith('PMID:'):
-        pmid = int(pmid[5:])
+    if ref.startswith('PMID:'):
+        pmid = int(ref[5:])
         return pub.reference(pmid=pmid)
     return None
 
@@ -264,7 +263,7 @@ def parse(raw):
 
     database = raw['metaData']['dataProvider']
     for record in raw['data']:
-        for location in record['genomeLocations']:
+        for location in record.get('genomeLocations', []):
             parsed_exons = exons(location)
             p_accession = parent_accession(location)
             yield as_entry(database, p_accession, parsed_exons, record)
