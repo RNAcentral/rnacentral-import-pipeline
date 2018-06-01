@@ -41,7 +41,7 @@ class DataImport(luigi.WrapperTask):
         yield rfam.RfamFamilies()
         # yield rfam.RfamSequences()
         yield Pdb()
-        yield GtRNAdb()
+        # yield GtRNAdb()
         yield Lncipedia()
         yield MirBase()
         yield Ontologies()
