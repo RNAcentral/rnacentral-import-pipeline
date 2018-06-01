@@ -26,5 +26,5 @@ class Lncipedia(luigi.WrapperTask):
     but it may not be compressed.
     """
 
-    def requries(self):
+    def requires(self):
         yield GenericDatabase(input_file=lncipedia().json_file)
