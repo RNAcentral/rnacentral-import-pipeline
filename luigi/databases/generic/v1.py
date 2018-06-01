@@ -13,6 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import itertools as it
 import collections as coll
 
 from databases import data
@@ -100,14 +101,19 @@ def as_reference(ref):
     """
     Turn a raw reference (just a pmid) into a reference we can import.
     """
-    return pub.reference(pmid=ref['pubMedId'])
+    pmid = ref['pubMedId']
+    if pmid.startswith('PMID:'):
+        pmid = int(pmid[5:])
+        return pub.reference(pmid=pmid)
+    return None
 
 
 def references(record):
     """
     Get a list of all References in this record.
     """
-    return [as_reference(ref) for ref in record.get('publications', [])]
+    refs = it.imap(as_reference, record.get('publications', []))
+    return list(it.ifilter(None, refs))
 
 
 def anticodon(record):
