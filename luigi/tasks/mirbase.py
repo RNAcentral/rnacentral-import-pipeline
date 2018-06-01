@@ -26,5 +26,5 @@ class MirBase(luigi.WrapperTask):
     but it may not be compressed.
     """
 
-    def requries(self):
+    def requres(self):
         yield GenericDatabase(input_file=mirbase().json_file)
