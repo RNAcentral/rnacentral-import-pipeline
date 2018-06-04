@@ -19,6 +19,8 @@ import attr
 import pytest
 
 from databases import data as dat
+from databases.helpers import publications as pub
+
 from databases.generic import v1
 
 
@@ -191,4 +193,41 @@ def test_can_correctly_parse_lncipedia_data():
             'Euarchontoglires; Primates; Haplorrhini; Catarrhini; '
             'Hominidae; Homo; Homo sapiens'
         ),
+    ))
+
+def test_can_correctly_parse_mirbase_data():
+    with open('data/json-schema/v020/missing-mirbase.json', 'r') as raw:
+        data = json.load(raw)
+        data = list(v1.parse(data))
+
+    assert len(data) == 1
+    assert attr.asdict(data[0]) == attr.asdict(dat.Entry(
+        primary_id='MI0000612',
+        accession='MIRBASE:MI0000612',
+        ncbi_tax_id=10116,
+        database='MIRBASE',
+        sequence=(
+            "TCTTTTGGGCGGGGGTCAAGAGCAATAACGAAAAATGTTTGTTTTTCGTAAACCGTTTTT"
+            "CATTATTGCTCCTGACCTCCTCTCATTTGTTATAGCCA"
+        ),
+        exons=[],
+        rna_type='SO:0001244',
+        url='http://www.mirbase.org/cgi-bin/mirna_entry.pl?acc=MI0000612',
+        seq_version='1',
+        xref_data={
+            'EntrezGene': ['Mir335'],
+        },
+        description='Rattus norvegicus miR-335 stem-loop',
+        species='Rattus norvegicus',
+        common_name='Norway rat',
+        lineage=(
+            'Eukaryota; Metazoa; Chordata; Craniata; '
+            'Vertebrata; Euteleostomi; Mammalia; Eutheria; '
+            'Euarchontoglires; Glires; Rodentia; Myomorpha; Muroidea; '
+            'Muridae; Murinae; Rattus; Rattus norvegicus'
+        ),
+        references=[
+            pub.reference(17604727),
+            pub.reference(14691248),
+        ],
     ))
