@@ -263,7 +263,11 @@ def parse(raw):
 
     database = raw['metaData']['dataProvider']
     for record in raw['data']:
-        for location in record.get('genomeLocations', []):
+        locations = record.get('genomeLocations', [])
+        if not locations:
+            yield as_entry(database, None, [], record)
+
+        for location in locations:
             parsed_exons = exons(location)
             p_accession = parent_accession(location)
             yield as_entry(database, p_accession, parsed_exons, record)
