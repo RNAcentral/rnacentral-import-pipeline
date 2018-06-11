@@ -74,6 +74,7 @@ INSDC_SO_MAPPING = {
     'rRNA': 'SO:0000252',
     'tRNA': 'SO:0000253',
     'bidirectional_promoter_lncrna': 'SO:0002185',
+    '3prime_overlapping_ncrna': 'SO:0002120',
 }
 
 SO_INSDC_MAPPING = {v: k for k, v in INSDC_SO_MAPPING.items()}
@@ -81,6 +82,12 @@ SO_INSDC_MAPPING['SO:0001244'] = "precursor_RNA"
 SO_INSDC_MAPPING['SO:0000209'] = "precursor_RNA"
 SO_INSDC_MAPPING['SO:0001904'] = "lncRNA"
 SO_INSDC_MAPPING['SO:0002095'] = "snoRNA"
+
+NORMALIZE_TO_INSDC = {
+    'sRNA': 'other',
+    'bidirectional_promoter_lncrna': 'lncRNA',
+    '3prime_overlapping_ncrna': 'other',
+}
 
 SO_PATTERN = re.compile('^SO:\d+$')
 
@@ -138,8 +145,8 @@ def as_so_term(rna_type):
 
 
 def from_so_term(so_term):
-    if so_term == 'sRNA':
-        return 'other'
+    if so_term in NORMALIZE_TO_INSDC:
+        return NORMALIZE_TO_INSDC[so_term]
     if so_term in INSDC_SO_MAPPING:
         return so_term
     if so_term in SO_INSDC_MAPPING:
