@@ -75,6 +75,8 @@ INSDC_SO_MAPPING = {
     'tRNA': 'SO:0000253',
 }
 
+SO_INSDC_MAPPING = {v: k for k, v in INSDC_SO_MAPPING.items()}
+
 SO_PATTERN = re.compile('^SO:\d+$')
 
 
@@ -128,6 +130,14 @@ def as_so_term(rna_type):
     if rna_type not in INSDC_SO_MAPPING:
         raise UnxpectedRnaType(rna_type)
     return INSDC_SO_MAPPING[rna_type]
+
+
+def from_so_term(so_term):
+    if so_term in INSDC_SO_MAPPING:
+        return so_term
+    if so_term in SO_INSDC_MAPPING:
+        return SO_INSDC_MAPPING[so_term]
+    raise UnxpectedRnaType(so_term)
 
 
 def optional_utf8(raw):
@@ -242,7 +252,7 @@ class Entry(object):
     rna_type = attr.ib(
         validator=is_a(basestring),
         # validator=matches_pattern(SO_PATTERN),
-        # convert=as_so_term,
+        convert=from_so_term,
     )
     url = attr.ib(validator=is_a(basestring))
     seq_version = attr.ib(
