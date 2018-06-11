@@ -23,6 +23,7 @@ from tasks.lncipedia import Lncipedia
 from tasks.mirbase import MirBase
 from tasks.ontologies import Ontologies
 from tasks.pdb import Pdb
+from tasks.flybase import FlyBase
 
 
 class DataImport(luigi.WrapperTask):
@@ -45,3 +46,4 @@ class DataImport(luigi.WrapperTask):
         yield Lncipedia()
         yield MirBase()
         yield Ontologies()
+        yield FlyBase()

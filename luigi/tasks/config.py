@@ -438,3 +438,7 @@ class lncipedia(luigi.Config):
 
 class mirbase(luigi.Config):
     json_file = luigi.Parameter()
+
+
+class flybase(luigi.Config):
+    json_file = luigi.Parameter()
