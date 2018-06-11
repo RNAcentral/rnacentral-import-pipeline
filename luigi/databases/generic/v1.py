@@ -217,6 +217,9 @@ def parent_accession(location):
     exon in this location.
     """
 
+    if not location['exons']:
+        return None
+
     first_exon = location['exons'][0]
     if 'INSDC_accession' not in first_exon:
         return None
