@@ -73,6 +73,7 @@ INSDC_SO_MAPPING = {
     "vault_RNA": 'SO:0000404',
     'rRNA': 'SO:0000252',
     'tRNA': 'SO:0000253',
+    'bidirectional_promoter_lncrna': 'SO:0002185',
 }
 
 SO_INSDC_MAPPING = {v: k for k, v in INSDC_SO_MAPPING.items()}
@@ -137,6 +138,8 @@ def as_so_term(rna_type):
 
 
 def from_so_term(so_term):
+    if so_term == 'sRNA':
+        return 'other'
     if so_term in INSDC_SO_MAPPING:
         return so_term
     if so_term in SO_INSDC_MAPPING:
