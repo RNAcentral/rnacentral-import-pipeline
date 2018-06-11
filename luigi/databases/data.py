@@ -76,6 +76,10 @@ INSDC_SO_MAPPING = {
 }
 
 SO_INSDC_MAPPING = {v: k for k, v in INSDC_SO_MAPPING.items()}
+SO_INSDC_MAPPING['SO:0001244'] = "precursor_RNA"
+SO_INSDC_MAPPING['SO:0000209'] = "precursor_RNA"
+SO_INSDC_MAPPING['SO:0001904'] = "lncRNA"
+SO_INSDC_MAPPING['SO:0002095'] = "snoRNA"
 
 SO_PATTERN = re.compile('^SO:\d+$')
 

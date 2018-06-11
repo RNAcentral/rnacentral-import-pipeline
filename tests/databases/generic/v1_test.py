@@ -76,7 +76,7 @@ def test_can_correctly_parse_data():
             "assembly_id": "R6",
             'complement': False,
         }],
-        'rna_type': 'SO:0000252',
+        'rna_type': 'rRNA',
         'url': 'http://flybase.org/reports/FBtr0346876.html',
         'seq_version': '1',
         'note_data': {},
