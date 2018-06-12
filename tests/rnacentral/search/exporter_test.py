@@ -517,3 +517,12 @@ def test_it_can_add_valid_annotations_flag(upi, has):
 def test_adds_field_for_source_of_go_annotations(upi, expected):
     data = load_and_get_additional(upi, "go_annotation_source")
     assert [d['text'] for d in data] == expected
+
+
+@pytest.mark.parametrize('upi,expected', [  # pylint: disable=E1101
+    ('URS0000CABCE0_1970608', ['RF00005']),
+    ('URS0000C9A3EE_384', ['RF02541', 'RF00005']),
+])
+def test_assigns_rfam_ids_to_hits(upi, expected):
+    data = load_and_get_additional(upi, "rfam_id")
+    assert [d['text'] for d in data] == expected
