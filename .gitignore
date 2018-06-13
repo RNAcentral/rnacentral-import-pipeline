@@ -68,3 +68,4 @@ data/Mus_musculus.GRCm38.87.chromosome.*.dat
 data/pub/
 luigi.cfg
 logging.cfg
+local.config
