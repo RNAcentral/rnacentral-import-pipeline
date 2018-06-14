@@ -28,7 +28,6 @@ process randomize_sequences {
 sequences_to_scan = chunks.flatMap()
 cm_files = Channel.fromPath(params.qa.rfam_scan.cm_files)
 process infernal_scan {
-  executor 'lsf'
   queue 'mpi-rh7'
   cpus params.qa.rfam_scan.cpus
   clusterOptions "-M ${params.qa.rfam_scan.cm_memory} -R 'rusage[mem=${params.qa.rfam_scan.cm_memory}]' -a openmpi"
