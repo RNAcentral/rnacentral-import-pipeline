@@ -18,6 +18,19 @@ import csv
 
 import attr
 
+CSV_COLUMNS = [
+    'seq_name',
+    'seq_from',
+    'seq_to',
+    'strand',
+    'rfam_acc',
+    'mdl_from',
+    'mdl_to',
+    'overlap',
+    'e_value',
+    'score',
+]
+
 
 def as_0_based(raw):
     """
@@ -175,7 +188,15 @@ def parse(filename, clan_competition=False):
 
 
 def as_csv(tblout, output):
-    writer = csv.DictWriter(output, [])
+    writer = csv.DictWriter(
+        output,
+        CSV_COLUMNS,
+        extrasaction='ignore',
+        delimiter=',',
+        quotechar='"',
+        quoting=csv.QUOTE_ALL,
+        lineterminator='\n',
+    )
     for hit in parse(tblout, clan_competition=True):
         if hit.overlap == 'unique' or hit.overlap == 'best':
             writer.writerow(attr.asdict(hit))

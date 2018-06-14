@@ -1,6 +1,6 @@
 #!/usr/bin/env nextflow
 
-sequences_query = Channel.from('files/qa/rfam-scan.sql')
+sequences_query = Channel.fromPath('files/qa/rfam-scan.sql')
 process fetch_sequences {
   input:
   file query from sequences_query
@@ -9,7 +9,7 @@ process fetch_sequences {
   file 'rnacentral.fasta' into sequences_to_split
 
   """
-  psql -f $query | tsv2fasta.py - rnacentral.fasta
+  psql -f "$query" "$PGDATABASE" | tsv2fasta.py - rnacentral.fasta
   """
 }
 
@@ -18,31 +18,34 @@ process randomize_sequences {
   file sequences from sequences_to_split
 
   output:
-  file('**/rnac.fa') into sequences_to_scan
+  file('rnac_*.fa') into chunks
 
   """
-  esl-randomize-sqfile.pl -O rnac.fa -L -N ${params.qa.rfam.chunk_size} $sequences 1.0
+  esl-randomize-sqfile.pl -O rnac.fa -L -N ${params.qa.rfam_scan.chunk_size} $sequences 1.0
   """
 }
 
-cm_files = Channel.fromPath(params.qa.rfam_scan.cm_file)
+sequences_to_scan = chunks.flatMap()
+cm_files = Channel.fromPath(params.qa.rfam_scan.cm_files)
 process infernal_scan {
+  executor 'lsf'
   queue 'mpi-rh7'
   cpus params.qa.rfam_scan.cpus
-  clusterOptions "-M ${params.qa.rfam_scan.cm_memory} -R 'rusage[mem=${params.qa.rfam_scan.cm_memory}]' -R 'span[hosts=1]' -a mpi mpiexec -mca btl ^openbib -np ${params.rfam_anotations.cpus}"
+  clusterOptions "-M ${params.qa.rfam_scan.cm_memory} -R 'rusage[mem=${params.qa.rfam_scan.cm_memory}]' -a openmpi"
 
   input:
-  file sequences from sequences_to_scan
-  file cm_file from cm_files
+  file 'sequences.fasta' from sequences_to_scan
+  file cm_file from cm_files.collect()
 
   output:
-  file '*.tblout' into infernal_results
+  file 'results.tblout' into infernal_results
 
   """
+  mpiexec -mca btl ^openbib -np ${params.qa.rfam_scan.cpus} \
   cmscan \
     -o output.inf \
     --tblout results.tblout \
-    --clanin ${params.qa.rfam_scan.clans}
+    --clanin ${params.qa.rfam_scan.clans} \
     --oclan \
     --fmt 2 \
     --acc \
@@ -51,8 +54,8 @@ process infernal_scan {
     --notextw \
     --nohmmonly \
     --mpi \
-    $cm_file \
-    $sequences
+    "Rfam.cm" \
+    sequences.fasta
   """
 }
 
@@ -64,16 +67,15 @@ process process_hits {
   file('hits.csv') into processed_hits
 
   """
-  cat results.tblout* > all_results.tblout
-  rnac rfam-anntotations process all_result.tblout hits.csv
+  cat results.tblout* | rnac qa tblout2csv - hits.csv
   """
 }
 
-hits_ctl = Channel.from('files/qa/rfam-scan.ctl')
+hits_ctl = Channel.fromPath('files/qa/rfam-scan.ctl')
 process import_hits {
   input:
   file('hits.csv') from processed_hits
-  file hit_ctl from hits_cl
+  file hit_ctl from hits_ctl
 
   """
   pgloader $hit_ctl
