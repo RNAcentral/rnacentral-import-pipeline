@@ -21,7 +21,7 @@ process randomize_sequences {
   file('**/rnac.fa') into sequences_to_scan
 
   """
-  esl-randomize-sqfile.pl -O rnac.fa -L -N 3000 $sequences 1.0
+  esl-randomize-sqfile.pl -O rnac.fa -L -N ${params.qa.rfam.chunk_size} $sequences 1.0
   """
 }
 
@@ -36,7 +36,7 @@ process infernal_scan {
   file cm_file from cm_files
 
   output:
-  file 'results.tblout' into infernal_results
+  file '*.tblout' into infernal_results
 
   """
   cmscan \

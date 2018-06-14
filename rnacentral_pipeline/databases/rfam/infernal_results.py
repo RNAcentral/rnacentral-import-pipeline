@@ -14,6 +14,7 @@ limitations under the License.
 """
 
 import re
+import csv
 
 import attr
 
@@ -171,3 +172,10 @@ def parse(filename, clan_competition=False):
                 continue
             parts = re.split(r'\s+', line.strip(), count)
             yield model(*parts)
+
+
+def as_csv(tblout, output):
+    writer = csv.DictWriter(output, [])
+    for hit in parse(tblout, clan_competition=True):
+        if hit.overlap == 'unique' or hit.overlap == 'best':
+            writer.writerow(attr.asdict(hit))

@@ -121,4 +121,3 @@ $$
 drop table load_rfam_model_hits;
 $$
 ;
-
