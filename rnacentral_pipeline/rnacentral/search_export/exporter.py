@@ -45,13 +45,26 @@ def write(results, handle, count_handle):
 
     if not count:
         raise ValueError("No entries found")
-    count_handle.write(count)
+    count_handle.write(str(count))
 
     handle.write(etree.tostring(E.entry_count(str(count))))
     handle.write('</database>')
 
 
 def as_xml(input_handle, output_handle, count_handle):
-    data = it.imap(json.loads, input_handle)
-    data = it.imap(builder, data)
+    def parser():
+        for line in input_handle:
+            line = line.replace('\\\\', '\\')
+            yield json.loads(line)
+    data = it.imap(builder, parser())
     write(data, output_handle, count_handle)
+
+
+def release_note(output_handle, count_handles):
+    total = 0
+    for handle in count_handles:
+        total += sum(int(line) for line in handle)
+    now = date.today().strftime('%d-%B-%Y')
+    output_handle.write("release=9.0\n")
+    output_handle.write("release_date=%s\n" % now)
+    output_handle.write("entries=%s\n" % total)

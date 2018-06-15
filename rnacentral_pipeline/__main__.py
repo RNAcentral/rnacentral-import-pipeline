@@ -9,6 +9,7 @@ from rnacentral_pipeline.databases.rfam import infernal_results
 
 from rnacentral_pipeline.rnacentral.upi_ranges import upi_ranges
 from rnacentral_pipeline.rnacentral.search_export import exporter as search
+from rnacentral_pipeline.rnacentral.ftp_export import id_mapping
 
 
 @click.group()
@@ -37,7 +38,6 @@ def process_json_schema(json_file):
     This parses our JSON schema files to produce the importable CSV files.
     """
     pass
-    # DatabaseOutput.populate(generic.parse, json_file)
 
 
 @process.command('ensembl')
@@ -47,7 +47,6 @@ def process_ensembl(json_file):
     This will parse EMBL files from Ensembl to produce the expected CSV files.
     """
     pass
-    # DatabaseOutput.populate(ensembl.parse, json_file)
 
 
 @process.command('pdb')
@@ -57,7 +56,6 @@ def process_pdb():
     files we import.
     """
     pass
-    # DatabaseOutput.populate(pdb.as_entries, pdb.rna_containing_pdb_ids())
 
 
 @cli.group('search-export')
@@ -99,12 +97,12 @@ def search_export_xml(raw_file, xml_file, count_file=None):
 @search_export.command('release-note')
 @click.argument('output', type=click.File('wb'))
 @click.argument('count_files', nargs=-1, type=click.File('rb'))
-def search_export_note(output, files):
+def search_export_note(output, count_files):
     """
     This will create the release_note.txt file that is needed for the search
     export.
     """
-    pass
+    search.release_note(output, count_files)
 
 
 @cli.group('genome-mapping')
@@ -142,6 +140,17 @@ def ftp_export():
     A group of commands dealing with producing data needed for the FTP site.
     """
     pass
+
+
+@ftp_export.command('id-mapping')
+@click.argument('tsv_file', type=click.File('rb'))
+@click.argument('output', default='-', type=click.File('wb'))
+def ftp_id_mapping(tsv_file, output):
+    """
+    This will parse the given raw tsv file and produce the final id mapping
+    file.
+    """
+    id_mapping.parse_file(tsv_file, output)
 
 
 @cli.group()
