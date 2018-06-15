@@ -1,0 +1,6 @@
+email helpdesk@rnacentral.org
+genomesFile genomes.txt
+hub rnacentral
+longLabel Unique RNAcentral sequences
+shortLabel RNAcentral Hub
+
