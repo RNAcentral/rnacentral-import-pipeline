@@ -13,16 +13,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import os
 import tempfile
 
 import pytest
 
-from tasks.config import db
-from rnacentral.psql import PsqlWrapper
+from rnacentral_pipeline.psql import PsqlWrapper
 
 
 def test_can_copy_statement_to_iterable():
-    psql = PsqlWrapper(db())
+    psql = PsqlWrapper(os.environ['PGDATABASE'])
     iterable = psql.copy_to_iterable("select upi from rna order by id asc limit 3")
     assert list(iterable) == [
         {'upi': 'URS0000000001'},
@@ -32,7 +32,7 @@ def test_can_copy_statement_to_iterable():
 
 
 def test_can_run_command_and_provide_output():
-    psql = PsqlWrapper(db())
+    psql = PsqlWrapper(os.environ['PGDATABASE'])
     with psql.command('explain select upi from rna') as out:
         lines = [line.rstrip('\n') for line in out.readlines()]
         assert lines == [
@@ -46,7 +46,7 @@ def test_can_run_command_and_provide_output():
 
 def test_can_produce_iterable_from_psql_copy():
     sql = 'select upi, md5 from rna order by id asc limit 5'
-    psql = PsqlWrapper(db())
+    psql = PsqlWrapper(os.environ['PGDATABASE'])
     assert list(psql.copy_to_iterable(sql)) == [
         {'upi': 'URS0000000001', 'md5': '6bba097c8c39ed9a0fdf02273ee1c79a'},
         {'upi': 'URS0000000002', 'md5': '1fe2f0e3c3a2d6d708ac98e9bfb1d7a8'},
@@ -58,7 +58,7 @@ def test_can_produce_iterable_from_psql_copy():
 
 def test_it_can_format_a_query():
     sql = 'select upi, md5 from rna order by id asc limit {count}'
-    psql = PsqlWrapper(db())
+    psql = PsqlWrapper(os.environ['PGDATABASE'])
     assert list(psql.copy_to_iterable(sql, count=5)) == [
         {'upi': 'URS0000000001', 'md5': '6bba097c8c39ed9a0fdf02273ee1c79a'},
         {'upi': 'URS0000000002', 'md5': '1fe2f0e3c3a2d6d708ac98e9bfb1d7a8'},
@@ -69,7 +69,7 @@ def test_it_can_format_a_query():
 
 
 def test_can_write_query_to_a_file():
-    psql = PsqlWrapper(db())
+    psql = PsqlWrapper(os.environ['PGDATABASE'])
     with tempfile.NamedTemporaryFile() as tmp:
         psql.write_query(tmp, 'select upi, md5 from rna order by id asc limit 3')
         tmp.flush()
@@ -83,7 +83,7 @@ def test_can_write_query_to_a_file():
 
 
 def test_can_write_a_tsv_file():
-    psql = PsqlWrapper(db())
+    psql = PsqlWrapper(os.environ['PGDATABASE'])
     with tempfile.NamedTemporaryFile() as tmp:
         psql.write_query(tmp, 'select upi, md5 from rna order by id asc limit 3',
                          use='tsv')

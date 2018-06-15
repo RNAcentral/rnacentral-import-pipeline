@@ -15,22 +15,40 @@ limitations under the License.
 
 import os
 import tempfile
+import itertools as it
 import xml.etree.ElementTree as ET
 from xml.dom import minidom
 
 import pytest
-# import psycopg2 as pg
 
-from tasks.config import db
-from rnacentral.search import exporter
-
-# CONNECTION = pg.connect(db().psycopg2_string())
-# CONNECTION.set_session(readonly=True, autocommit=True)
+from rnacentral_pipeline.psql import PsqlWrapper
+from rnacentral_pipeline.rnacentral.search_export import exporter
 
 
 def load_data(upi):
     parts = upi.split('_')
-    return exporter.upi(db(), parts[0], parts[1])
+    upi, taxid = parts[0], int(parts[1])
+    with tempfile.NamedTemporaryFile('w') as tmp:
+        path = os.path.join('files', 'search-export', 'query.sql')
+        with open(path, 'rb') as raw:
+            query = raw.read()
+            query = query.replace(
+                'rna.id BETWEEN :min and :max',
+                "xref.upi ='{upi}' AND xref.taxid = {taxid}".format(
+                    upi=upi,
+                    taxid=taxid,
+                )
+            )
+            tmp.write(query)
+            tmp.flush()
+        psql = PsqlWrapper(os.environ['PGDATABASE'])
+        results = psql.copy_file_to_iterable(tmp.name, json=True, upi=upi, taxid=taxid)
+        results = it.imap(exporter.builder, results)
+
+        try:
+            return next(results)
+        except StopIteration:
+            raise ValueError("Found no entries for %s_%i" % (upi, taxid))
 
 
 def as_xml_dict(element):
@@ -198,7 +216,7 @@ def test_assigns_description_correctly_to_randomly_chosen_examples(upi, ans):
     ('URS000080DFDA_32630', 'hammerhead ribozyme'),
     ('URS000086852D_32630', 'hammerhead ribozyme'),
     ('URS00006C670E_30608', 'hammerhead ribozyme'),
-    ('URS000045EBF2_9606', 'antisense RNA'),
+    ('URS000045EBF2_9606', 'lncRNA'),
     ('URS0000157BA2_4896', 'antisense RNA'),
     ('URS00002F216C_36329', 'antisense RNA'),
     ('URS000075A336_9606', 'miRNA'),
@@ -344,14 +362,7 @@ def test_it_can_write_an_xml_document():
         assert document.count('<entry id=') == 10680
 
 
-def test_output_validates_according_to_schema():
-    entries = exporter.range(db(), 1, 100)
-    with tempfile.NamedTemporaryFile() as out:
-        exporter.write(out, entries)
-        out.flush()
-        exporter.validate(out.name)
-
-
+@pytest.mark.skip()
 def test_produces_correct_count():
     entries = exporter.range(db(), 1, 100)
     with tempfile.NamedTemporaryFile() as out:
