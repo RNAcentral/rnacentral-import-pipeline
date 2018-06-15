@@ -2,23 +2,24 @@
 
 process find_chunks {
   output:
-  stdout raw_ranges
+  file('ranges.txt') into raw_ranges
 
   """
-  rnac search-export ranges ${params.search_export.chunk_size}
+  rnac search-export ranges ${params.search_export.chunk_size} ranges.txt
   """
 }
 
-ranges = raw_ranges.splitCsv()
+raw_ranges
+  .splitCsv()
+  .combine(Channel.fromPath('files/search-export/query.sql'))
+  .into { ranges }
 
-search_query = Channel.fromPath('files/search-export/query.sql')
 process export_chunk {
-  publishDir params.search_export.publish, mode: 'move'
+  publishDir params.search_export.publish, mode: 'copy'
   maxForks 6
 
   input:
-  set val(min), val(max) from ranges
-  file query from search_query
+  set val(min), val(max), file(query) from ranges
 
   output:
   file "${xml}.gz" into search_chunks
