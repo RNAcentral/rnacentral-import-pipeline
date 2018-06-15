@@ -13,31 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import os
 import csv
 import itertools as it
-
-from rnacentral.psql import PsqlWrapper
-
-COMPLETE_SQL = """
-SELECT
-    xref.upi,
-    xref.ac AS accession,
-    xref.taxid,
-    acc.external_id,
-    acc.optional_id,
-    pre.rna_type,
-    acc.gene,
-    db.descr AS database
-FROM xref
-join rnc_accessions acc on acc.accession = xref.ac
-join rnc_database db on db.id = xref.dbid
-join rnc_rna_precomputed pre on pre.upi = xref.upi and pre.taxid = xref.taxid
-where
-    xref.deleted = 'N'
-"""
-
-EXAMPLE_SQL = COMPLETE_SQL + " limit 5"
 
 
 def gene(result):
@@ -87,40 +64,8 @@ def as_entry(result):
     ]
 
 
-def complete(config):
-    """
-    Get all the id mapping data to write out.
-    """
-
-    psql = PsqlWrapper(config)
-    return it.imap(as_entry, psql.copy_to_iterable(COMPLETE_SQL))
-
-
-def example(config):
-    """
-    Produce the example data to write out.
-    """
-
-    psql = PsqlWrapper(config)
-    return it.imap(as_entry, psql.copy_to_iterable(EXAMPLE_SQL))
-
-
-def split_by_database(raw, base_path):
-    """
-    Given a handle to a mapping file this will split the file apart by the
-    database in each line. A file for each database will be written under the
-    base_path directory, which must exist.
-    """
-
-    handles = {}
-    reader = csv.reader(raw, delimiter='\t')
-    for row in reader:
-        db_name = row[1].lower()
-        if db_name not in handles:
-            filename = os.path.join(base_path, db_name + '.tsv')
-            handle = open(filename, 'wb')
-            handles[db_name] = (handle, csv.writer(handle, delimiter='\t'))
-        handles[db_name][1].writerow(row)
-
-    for (handle, _) in handles.values():
-        handle.close()
+def parse_file(tsv_file, output):
+    reader = csv.reader(tsv_file, delimiter='\t')
+    data = it.imap(as_entry, reader)
+    writer = csv.writer(output, delimiter='\t')
+    writer.writerows(data)
