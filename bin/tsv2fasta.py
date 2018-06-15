@@ -10,8 +10,12 @@ from Bio.SeqRecord import SeqRecord
 
 
 def sequences(handle):
-    for row in csv.reader(handle, delimiter='\t'):
-        yield SeqRecord(Seq(row[1]), id=row[0], description='')
+    for line in handle:
+        row = line.split('\t')
+        description = ''
+        if len(row) > 2:
+            description = row[2]
+        yield SeqRecord(Seq(row[1]), id=row[0], description=description)
 
 
 @click.command()
