@@ -16,6 +16,7 @@ limitations under the License.
 import re
 import csv
 import sys
+import json
 import shutil
 from contextlib import contextmanager
 
@@ -43,6 +44,18 @@ def query_as_copy(sql, use='csv', **kwargs):
     )
 
 
+def json_handler(out):
+    for row in out:
+        row = row.replace('\\\\', '\\')
+        yield json.loads(row)
+
+
+def csv_handler(out):
+    csv.field_size_limit(sys.maxsize)
+    for result in csv.DictReader(out):
+        yield result
+
+
 class PsqlWrapper(object):
     """
     This is a class that wraps some simple psql calls. The idea is that in some
@@ -51,20 +64,22 @@ class PsqlWrapper(object):
     reading the results from the file.
     """
 
-    def __init__(self, config):
-        self.config = config
+    def __init__(self, url):
+        self.pgloader_url = url
         self.psql = local['psql']
 
     @contextmanager
-    def command(self, command):
+    def command(self, command, options=None):
         """
         Execute a command and yield a filehandle that stores the results.
         """
 
-        with local.env(PGPASSWORD=self.config.password):
-            cmd = self.psql['-c', command, self.config.pgloader_url()]
-            obj = cmd.popen()
-            yield obj.stdout
+        cmd = self.psql['-c', command, self.pgloader_url]
+        obj = cmd.popen()
+        yield obj.stdout
+
+        if obj.returncode:
+            raise ValueError(obj.stderr.read())
 
     def write_command(self, handle, command):
         """
@@ -80,14 +95,32 @@ class PsqlWrapper(object):
         """
         self.write_command(handle, query_as_copy(sql, **kwargs))
 
-    def copy_to_iterable(self, sql, **kwargs):
+    def copy_file_to_iterable(self, filename, json=False, **kwargs):
+        handler = csv_handler
+        if json:
+            handler = json_handler
+
+        options = ['-f', filename, self.pgloader_url]
+        cmd = self.psql.bound_command(*options)
+        obj = cmd.popen()
+        for result in handler(obj.stdout):
+            yield result
+
+        if obj.returncode:
+            raise ValueError(obj.stderr.read())
+
+    def copy_to_iterable(self, sql, json=False, **kwargs):
         """
         This will dump the results of a the query to a TSV file and then create
         a context manage with a file handle of that file. The file is temporary
         and is deleted once the handler exits.
         """
 
-        with self.command(query_as_copy(sql, **kwargs)) as out:
-            csv.field_size_limit(sys.maxsize)
-            for result in csv.DictReader(out):
-                yield result
+        handler = csv_handler
+        if json:
+            kwargs['tsv'] = True
+            handler = json_handler
+
+        query = query_as_copy(sql, **kwargs)
+        with self.command(query) as out:
+            return handler(out)

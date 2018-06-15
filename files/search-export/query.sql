@@ -1,33 +1,4 @@
-# -*- coding: utf-8 -*-
-
-"""
-Copyright [2009-2017] EMBL-European Bioinformatics Institute
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-http://www.apache.org/licenses/LICENSE-2.0
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
-
-import json
-import subprocess as sp
-from datetime import date
-
-from lxml import etree
-from lxml.builder import E
-
-from rnacentral.psql import PsqlWrapper
-
-from .data import builder
-
-XML_SCHEMA = 'http://www.ebi.ac.uk/ebisearch/XML4dbDumps.xsd'
-
-
-BASE_SQL = """
+COPY (
 SELECT
     json_build_object(
         'upi', rna.upi,
@@ -65,7 +36,7 @@ SELECT
         'rfam_clans', array_agg(models.rfam_clan_id),
         'rfam_status',
             case
-                when cardinality((array_agg(pre.rfam_problems))) = 0 then '{{}}'
+                when cardinality((array_agg(pre.rfam_problems))) = 0 then '{}'
                 else (array_agg(pre.rfam_problems))[1]::json
             end,
         'tax_strings', array_agg(acc.classification),
@@ -112,76 +83,6 @@ ON
     ont.ontology_term_id = anno.ontology_term_id
 WHERE
   xref.deleted = 'N'
-  AND %s
+  AND rna.id BETWEEN :min and :max
 GROUP BY rna.upi, xref.taxid
-"""
-
-SINGLE_SQL = BASE_SQL % "xref.upi = '{upi}' AND xref.taxid = {taxid}"
-
-RANGE_SQL = BASE_SQL % "rna.id BETWEEN {min_id} AND {max_id}"
-
-
-def export(db, query, **kwargs):
-    psql = PsqlWrapper(db)
-    for result in psql.copy_to_iterable(query, **kwargs):
-        try:
-            data = json.loads(result['json_build_object'])
-            yield builder(data)
-        except:
-            raise
-
-
-def range(db, min_id, max_id):
-    """
-    Generates a series of XML strings representing all entries in the given
-    range of ids.
-    """
-    return export(db, RANGE_SQL, min_id=min_id, max_id=max_id)
-
-
-def upi(db, upi, taxid):
-    """
-    Will create a XmlEntry object for the given upi, taxid.
-    """
-
-    results = export(db, SINGLE_SQL, upi=upi, taxid=taxid)
-    try:
-        return next(results)
-    except StopIteration:
-        raise ValueError("Found no entries for %s_%i" % (upi, taxid))
-
-
-def write(handle, results):
-    """
-    This will create the required root XML element and place all the given
-    XmlEntry objects as ElementTree.Element's in it. This then produces the
-    string representation of that document which can be saved.
-    """
-
-    handle.write('<database>')
-    handle.write(etree.tostring(E.name('RNAcentral')))
-    handle.write(etree.tostring(E.description('a database for non-protein coding RNA sequences')))
-    handle.write(etree.tostring(E.release('1.0')))
-    handle.write(etree.tostring(E.release_date(date.today().strftime('%d/%m/%Y'))))
-
-    count = 0
-    handle.write('<entries>')
-    for result in results:
-        count += 1
-        handle.write(etree.tostring(result))
-    handle.write('</entries>')
-
-    if not count:
-        raise ValueError("No entries found")
-
-    handle.write(etree.tostring(E.entry_count(str(count))))
-    handle.write('</database>')
-
-
-def validate(filename):
-    """
-    Run xmllint validation on the given filename.
-    """
-
-    cmd = ('xmllint', filename, '--schema', XML_SCHEMA, '--stream')
-    sp.check_call(cmd)
+) TO STDOUT

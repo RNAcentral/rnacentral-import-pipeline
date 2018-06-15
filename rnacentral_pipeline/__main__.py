@@ -1,9 +1,14 @@
 #!/usr/bin/env python
 
 import os
+import csv
+
 import click
 
 from rnacentral_pipeline.databases.rfam import infernal_results
+
+from rnacentral_pipeline.rnacentral.upi_ranges import upi_ranges
+from rnacentral_pipeline.rnacentral.search_export import exporter as search
 
 
 @click.group()
@@ -66,14 +71,15 @@ def search_export():
 @search_export.command('ranges')
 @click.argument('chunk_size', type=int)
 @click.argument('output', default='-', type=click.File('wb'))
-# @click.option('db_url', default=os.environ.get('PGDATABASE', ''))
+@click.option('--db_url', default=os.environ.get('PGDATABASE', ''))
 def search_export_ranges(chunk_size, output, db_url=None):
     """
     This will compute the ranges to use for our each xml file in the search
     export. We want to do several chunks at once as it is faster (but not too
     man), and we want to have as large a chunk as possible.
     """
-    pass
+    writer = csv.writer(output)
+    writer.writerows(upi_ranges(db_url, chunk_size))
 
 
 @search_export.command('as-xml')
@@ -87,13 +93,13 @@ def search_export_xml(raw_file, xml_file, count_file=None):
     produces a count file which contains the number of entries in the XML file.
     This is needed for building the release_note.txt file.
     """
-    pass
+    search.as_xml(raw_file, xml_file, count_file)
 
 
 @search_export.command('release-note')
+@click.argument('output', type=click.File('wb'))
 @click.argument('count_files', nargs=-1, type=click.File('rb'))
-@click.argument('output', default='release_note.txt', type=click.File('wb'))
-def search_export_note(files, output):
+def search_export_note(output, files):
     """
     This will create the release_note.txt file that is needed for the search
     export.
