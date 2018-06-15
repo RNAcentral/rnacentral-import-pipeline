@@ -11,7 +11,7 @@ from Bio.SeqRecord import SeqRecord
 
 def sequences(handle):
     for line in handle:
-        row = line.split('\t')
+        row = line.strip().split('\t')
         description = ''
         if len(row) > 2:
             description = row[2]
