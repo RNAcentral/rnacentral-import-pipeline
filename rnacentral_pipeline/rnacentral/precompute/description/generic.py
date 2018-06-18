@@ -14,7 +14,7 @@ limitations under the License.
 """
 
 
-def description_of(rna_type, entries):
+def description_of(rna_type, sequence):
     """
     Compute a generic name that works for sequences that have no specific
     taxon id.
@@ -33,9 +33,9 @@ def description_of(rna_type, entries):
     """
 
     rna_type = rna_type.replace('_', ' ')
-    species_count = len(set(e.taxid for e in entries))
+    species_count = len(set(a.species for a in sequence.accessions))
     if species_count == 1:
-        species = entries[0].species
+        species = sequence.accessions[0].species
         return '{species} {rna_type}'.format(
             species=species,
             rna_type=rna_type

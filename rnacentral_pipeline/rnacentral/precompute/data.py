@@ -74,7 +74,7 @@ class Sequence(object):
     accessions = attr.ib(validator=is_a(list))
     xref_status = attr.ib(validator=is_a(list))
     xref_has_coordinates = attr.ib(validator=is_a(bool))
-    rna_mapping = attr.ib(validator=is_a(bool))
+    rna_was_mapped = attr.ib(validator=is_a(bool))
 
     @classmethod
     def species_to_generic(cls, sequences):
@@ -89,18 +89,18 @@ class Sequence(object):
             Get a flattend list for the given attribute name of sequence
             objects.
             """
-            getter = op.attrgetter(name)
+            getter = op.itemgetter(name)
             return list(it.chain.from_iterable(getter(s) for s in sequences))
 
-        has_coordinates = any(s.xref_has_coordinates for s in sequences)
+        has_coordinates = any(s['xref_has_coordinates'] for s in sequences)
 
         return cls(
-            upi=sequences[0].upi,
+            upi=sequences[0]['upi'],
             taxid=None,
-            accessions=get_flat('accessions'),
-            xref_status=get_flat('xref_status'),
+            accessions=[Accession.build(a) for a in get_flat('accessions')],
+            xref_status=get_flat('deleted'),
             xref_has_coordinates=has_coordinates,
-            rna_mapping=any(s.rna_mapping for s in sequences),
+            rna_was_mapped=any(s['rna_was_mapped'] for s in sequences),
         )
 
     @classmethod
@@ -109,8 +109,8 @@ class Sequence(object):
             upi=data['upi'],
             taxid=data['taxid'],
             accessions=[Accession.build(a) for a in data['accessions']],
-            xref_status=data['xref_status'],
-            xref_has_coordinates=data['known_coordinates_ids'],
+            xref_status=data['deleted'],
+            xref_has_coordinates=any(data['xref_has_coordinates']),
             rna_was_mapped=data['rna_was_mapped'],
         )
 
@@ -131,6 +131,7 @@ class UpdatedData(object):
 
     @classmethod
     def build(cls, sequence):
+        print(sequence)
         rna_type = rna_type_of(sequence)
         description = description_of(rna_type, sequence)
 

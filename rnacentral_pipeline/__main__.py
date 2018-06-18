@@ -10,6 +10,8 @@ from rnacentral_pipeline.databases.rfam import infernal_results
 from rnacentral_pipeline.rnacentral.upi_ranges import upi_ranges
 from rnacentral_pipeline.rnacentral.search_export import exporter as search
 
+from rnacentral_pipeline.rnacentral.precompute import process as pre
+
 from rnacentral_pipeline.rnacentral.ftp_export import fasta
 from rnacentral_pipeline.rnacentral.ftp_export import id_mapping
 from rnacentral_pipeline.rnacentral.ftp_export import ensembl as ensembl_json
@@ -259,14 +261,14 @@ def precompute_ranges(chunk_size, output, db_url=None):
 
 
 @precompute.command('from-file')
-@click.argument('json_file', type=click.Path(exists=True))
+@click.argument('json_file', type=click.File('rb'))
 @click.argument('output', default='-', type=click.File('wb'))
 def from_file(json_file, output):
     """
     This command will take the output produced by the precompute query and
     process the results into a CSV that can be loaded into the database.
     """
-    precompute.process_file(json_file, output)
+    pre.from_file(json_file, output)
 
 
 cli()  # pylint: disable=no-value-for-parameter

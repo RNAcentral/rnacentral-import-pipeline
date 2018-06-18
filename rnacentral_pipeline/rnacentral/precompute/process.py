@@ -42,10 +42,9 @@ def from_file(handle, output):
     object per line.
     """
 
-    sequences = it.imap(json.load, handle)
-    sequences = it.imap(as_sequences, sequences)
-    sequences = it.chain.from_iterable(sequences)
+    writer = csv.writer(output, quoting=csv.QUOTE_ALL)
+    sequences = it.imap(json.loads, handle)
+    sequences = as_sequences(sequences)
     sequences = it.imap(data.UpdatedData.build, sequences)
-    sequences = it.imap(op.methodcaller('as_writeable'))
-    writer = csv.writer(output, quote=csv.QUOTE_ALL)
+    sequences = it.imap(op.methodcaller('as_writeable'), sequences)
     writer.writerows(sequences)
