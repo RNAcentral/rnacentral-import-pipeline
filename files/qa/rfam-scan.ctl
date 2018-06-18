@@ -13,7 +13,7 @@ HAVING FIELDS
   E_VALUE,
   SCORE
 )
-INTO {{PGDATABASE}}
+INTO {{PGDATABASE}}?load_rfam_model_hits
 TARGET COLUMNS
 (
   UPI,

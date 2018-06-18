@@ -19,14 +19,12 @@ process md5 {
   """
 }
 
-id_mapping_query = Channel.fromPath('files/ftp-export/id-mapping/query.sql')
-id_mapping_readme = Channel.fromPath('files/ftp-export/id-mapping/readme.txt')
 process id_mapping {
   publishDir "${params.ftp_export}/id_maping/", mode: 'copy'
 
   input:
-  file query from id_mapping_query
-  file 'readme.txt' from id_mapping_readme
+  file query from Channel.fromPath('files/ftp-export/id-mapping/query.sql')
+  file 'readme.txt' from Channel.fromPath('files/ftp-export/id-mapping/readme.txt')
 
   output:
   file 'id_mapping.tsv.gz' into id_mapping
@@ -74,16 +72,22 @@ process rfam_annotations {
 process inactive_fasta {
   publishDir "${params.ftp_export}/sequences/", mode: 'copy'
 
+  input:
+  file query from Channel.fromPath('files/ftp-export/sequences/inactive.fasta')
+
   output:
   file 'rnacentral_inactive.fasta.gz' into __sequences
 
   """
-  rnac ftp-export sequences inactive - | gzip > rnacentral_inactive.fasta.gz
+  psql -f "$query" "$PGDATABASE" | tsv2fasta.py | gzip > rnacentral_inactive.fasta.gz
   """
 }
 
 process active_fasta {
   publishDir "${params.ftp_export}/sequences/", mode: 'copy'
+
+  input:
+  file query from Channel.fromPath('files/ftp-export/sequences/active.fasta')
 
   output:
   file 'rnacentral_active.fasta.gz' into active_sequences
@@ -91,8 +95,7 @@ process active_fasta {
   file 'readme.txt' into __sequences
 
   """
-  rnac ftp-export sequences active rnacentral_active.fasta
-  rnac ftp-export sequences readme readme.txt
+  psql -f "$query" "$PGDATABASE" | tsv2fasta.py > rnacentral_active.fasta
   head rnacentral_active.fasta > example.txt
   gzip rnacentral_active.fasta
   """
@@ -102,11 +105,14 @@ process active_fasta {
 process species_specific_fasta {
   publishDir "${params.ftp_export}/sequences/", mode: 'copy'
 
+  input:
+  file query from Channel.fromPath('files/ftp-export/sequences/species-specific.sql')
+
   output:
   file 'rnacentral_species_specific_ids.fasta.gz' into __sequences
 
   """
-  rnac ftp-export sequences species-specific - | rnacentral_species_specific_ids.fasta.gz
+  psql -f "$query" "$PGDATABASE" | tsv2fasta.py > rnacentral_active.fasta
   """
 }
 
@@ -117,10 +123,10 @@ process nhmmer_fasta {
   file 'rnacentral_active.fasta.gz' from active_sequences
 
   output:
-  file 'rnacentral_nhmmer_*.fasta' into __sequences
+  file 'rnacentral_nhmmer*.fasta' into __sequences
 
   """
-  zcat rnacentral_active.fasta.gz | rnac ftp-export sequences split-nhmmer -
+  zcat rnacentral_active.fasta.gz | rnac ftp-export sequences split-for-nhmmer -
   """
 }
 
@@ -133,118 +139,118 @@ process find_ensembl_chunks {
   """
 }
 
-ensembl_ranges = raw_ensembl_ranges.splitCsv(sep='\t')
+raw_ensembl_ranges
+  .splitCsv(sep='\t')
+  .into { ensembl_ranges }
 
 process ensembl_export_chunk {
   publishDir "${params.ftp_export}/json/", mode: 'copy'
 
   input:
   set val(min), val(max) from ensembl_ranges
+  file schema from Channel.fromPath('files/ftp-export/ensembl/schema.json')
 
   output:
   file "ensembl-xref-$min-${max}.json" into __ensembl_export
 
   """
-  rnac ftp-export ensembl $min $max ensembl-xref-$min-${max}.json
+  psql -f $query --variable min=$min --variable max=$max "$PGDATABASE" |\
+    rnac ftp-export format-ensembl --schema=$schema - ensembl-xref-$min-${max}.json
   """
 }
 
-process go_annotation {
+process rfam_go_matches {
   publishDir "${params.ftp_export}/go_annotations/", mode: 'copy'
 
   input:
-  file query from go_annotation_query
+  file query from Channel.fromPath('files/ftp-export/go-annotations/query.sql')
 
   output:
   file "rnacentral_rfam_annotations.tsv.gz" into __go_annotations
 
   """
-  psql -f "$query" "$PGDATABASE" | rnac ftp-export rfam-go-annotations - - | gzip > rnacentral_rfam_annotations.tsv.gz
+  psql -f "$query" "$PGDATABASE" |\
+  rnac ftp-export rfam-go-annotations - - |\
+  gzip > rnacentral_rfam_annotations.tsv.gz
   """
 }
 
-process genome_coordiantes {
-  publishDir "${params.ftp_export}/genome_coordinates/", mode: 'copy'
-
+process find_genome_coordinate_jobs {
   output:
-  stdout raw_coordinates
+  stdout species_to_format
 
   """
   rnac ftp-export has-coordinates
   """
 }
 
-raw_coordinates.splitCsv(sep='\t').into { coordinates }
+species_to_format
+  .splitCsv()
+  .into {
+    coordinates_to_fetch
+  }
 
-process format_coordinates {
-  publishDir "${params.ftp_export}/genome_coordinates/", mode: 'copy'
 
+process fetch_raw_coordinate_data {
   input:
-  set val format, val assembly, val species from coordinates
+  set val(assembly), val(species), val(taxid), file(query) from coordinates_to_fetch
 
   output:
-  set val(format), file(result) into formatted_coordinates
+  set val(assembly), val(species), file('result.json') into raw_coordinates
 
-  script:
-  result = "${species}.${assembly}.${format}.gz"
   """
-  rnac ftp-export coordinates $format $species $assembly - | gzip > $result
+  psql -v "taxid=$taxid" -v "assembly=$assembly" -f $query "$PGDATABASE" > result.json
   """
 }
 
+raw_coordinates.into { bed_coordinates }
 
-// formatted_coordiantes
-//   .filter(it[0] == 'bed')
-//   .map { it[1] }
-//   .into { bed_files }
+process format_bed_coordinates {
+  publishDir "${params.ftp_export}/genome_coordinates/", mode: 'copy'
 
-// process big_bed {
-//   input:
-//   file(bed_file) from bed_files
+  input:
+  set val assembly, val species, file(raw_data) from bed_coordinates
 
-//   output:
-//   file(result) into __big_bed
+  output:
+  set val(assembly), file(result) into bed_files
 
-//   script:
-//   result = "${bed_file.baseName}.bigBed"
-//   """
-//   wget -o chrom.size http://hgdownload.soe.ucsc.edu/goldenPath/$ucsc_assembly/bigZips/${ucsc_assembly}.chrom.sizes
-//   sort -k1,1 -k2,2n $bed_file > sorted.bed
-//   bedToBigBed sorted.bed chrom.size $result
-//   """
-// }
+  script:
+  result = "${species}.${assembly}.bed.gz"
+  """
+  rnac ftp-export coordiantes as-bed $raw_data |\
+  sort -k1,1 -k2,2n |\
+  gzip > $result
+  """
+}
 
-// process track_hub {
-//   publishDir "${params.ftp_export}/genome_coordinates/track_hub/", mode: 'copy'
+process generate_big_bed {
+  publishDir "${params.ftp_export}/genome_coordinates/", mode: 'copy'
 
-//   output:
-//   stdout raw_trackhub_assemblies
+  input:
+  set val assembly, file bed_file from bed_files
 
-//   """
-//   rnac ftp-export has-trackhub
-//   """
-// }
+  output:
+  file(bigBed) into big_bed_files
 
-// track_hub_assemblies = raw_trackhub_assemblies.splitCsv(sep='\t')
+  script:
+  chrom = "${bed_file.baseName}.chrom.sizes"
+  bigBed = "${bed_file.baseName}.bigBed"
+  """
+  fetchChromSizes "$assembly" > "$chrom"
+  bedToBigBed -type -type=bed12+3 bed_file $chrom > $bigBed
+  """
+}
 
-// process assembly_track_hub {
-//   publishDir "${params.ftp_export}/genome_coordinates/track_hub/$assembly/", mode: 'copy'
+process generate_gff3 {
+  input:
+  set val assembly, val species, file(raw_data) from bed_coordinates
 
-//   input:
-//   val assembly from track_hub_assemblies
+  output:
+  set file(result) into gff3_files
 
-//   """
-//   rnac ftp-export track-hub $assembly
-//   """
-// }
-
-// process gpi {
-//   publishDir "${params.ftp_export}/gpi/", mode: 'copy'
-
-//   output:
-//   file 'rnacentral.gpi.gz' into __gpi
-
-//   """
-//   rnac ftp-export gpi - | gzip > rnacentral.gpi.gz
-//   """
-// }
+  script:
+  result = "${species}.${assembly}.gff3.gz"
+  """
+  rnac ftp-export coordinates as-gff3 $raw_data | gzip > $result
+  """
+}
