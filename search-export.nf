@@ -5,7 +5,7 @@ process find_chunks {
   file('ranges.txt') into raw_ranges
 
   """
-  rnac search-export ranges ${params.search_export.chunk_size} ranges.txt
+  rnac search-export ranges ${params.search_export.max_entries} ranges.txt
   """
 }
 
