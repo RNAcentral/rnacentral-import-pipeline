@@ -16,24 +16,6 @@ limitations under the License.
 import csv
 import itertools as it
 
-from rnacentral.psql import PsqlWrapper
-
-
-QUERY = """
-select
-    pre.id,
-    pre.upi,
-    pre.taxid,
-    go_terms.ontology_term_id,
-    string_agg('Rfam:' || hits.rfam_model_id, '|') as models
-from rnc_rna_precomputed pre
-join rfam_model_hits hits on hits.upi = pre.upi
-join rfam_go_terms go_terms on hits.rfam_model_id = go_terms.rfam_model_id
-where
-    exists(select 1 from qa_status qa where qa.upi = pre.upi and qa.taxid = pre.taxid and qa.has_issue = false)
-    and exists(select 1 from xref where xref.upi = pre.upi and xref.taxid = pre.taxid and xref.deleted = 'N')
-group by pre.id, go_terms.ontology_term_id
-"""
 
 UNCULTURED_TAXIDS = {
     155900,
@@ -44,16 +26,6 @@ UNCULTURED_TAXIDS = {
 }
 
 
-def annotations(config):
-    """
-    Get the list of all annotations implied by Rfam matches.
-    """
-
-    psql = PsqlWrapper(config)
-    for annotation in psql.copy_to_iterable(QUERY):
-        yield annotation
-
-
 def exclude_uncultured(annotation):
     """
     Detect if the annotation is from an uncultured organism and thus should be
@@ -62,24 +34,17 @@ def exclude_uncultured(annotation):
     return int(annotation['taxid']) not in UNCULTURED_TAXIDS
 
 
-def valid_annotations(config):
-    """
-    Filter all annotations to select only the valid ones.
-    """
-
-    data = annotations(config)
-    return it.ifilter(exclude_uncultured, data)
-
-
-def export(config, handle):
+def export(handle, output):
     """
     Write the Rfam based GO annotations to the given handle.
     """
 
+    data = csv.DictReader(handle)
+    data = it.ifilter(exclude_uncultured, data)
     writer = csv.DictWriter(
-        handle,
+        output,
         ['id', 'ontology_term_id', 'models'],
         extrasaction='ignore',
         delimiter='\t',
     )
-    writer.writerows(valid_annotations(config))
+    writer.writerows(data)

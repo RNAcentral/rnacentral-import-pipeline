@@ -9,7 +9,11 @@ from rnacentral_pipeline.databases.rfam import infernal_results
 
 from rnacentral_pipeline.rnacentral.upi_ranges import upi_ranges
 from rnacentral_pipeline.rnacentral.search_export import exporter as search
+
+from rnacentral_pipeline.rnacentral.ftp_export import fasta
 from rnacentral_pipeline.rnacentral.ftp_export import id_mapping
+from rnacentral_pipeline.rnacentral.ftp_export import ensembl as ensembl_json
+from rnacentral_pipeline.rnacentral.ftp_export import bed
 
 
 @click.group()
@@ -23,7 +27,7 @@ def cli():
 
 
 @cli.group()
-def process():
+def external_database():
     """
     This is a group of commands for processing data from various databases into
     the CSV files that can be loaded by pgloader.
@@ -31,7 +35,7 @@ def process():
     pass
 
 
-@process.command('json-schema')
+@external_database.command('json-schema')
 @click.argument('json_file', type=click.File('rb'))
 def process_json_schema(json_file):
     """
@@ -40,7 +44,7 @@ def process_json_schema(json_file):
     pass
 
 
-@process.command('ensembl')
+@external_database.command('ensembl')
 @click.argument('ensembl_file', type=click.File('rb'))
 def process_ensembl(json_file):
     """
@@ -49,7 +53,7 @@ def process_ensembl(json_file):
     pass
 
 
-@process.command('pdb')
+@external_database.command('pdb')
 def process_pdb():
     """
     This will fetch and parse all sequence data from PDBe to produce the csv
@@ -76,8 +80,7 @@ def search_export_ranges(chunk_size, output, db_url=None):
     export. We want to do several chunks at once as it is faster (but not too
     man), and we want to have as large a chunk as possible.
     """
-    writer = csv.writer(output)
-    writer.writerows(upi_ranges(db_url, chunk_size))
+    csv.writer(output).writerows(upi_ranges(db_url, chunk_size))
 
 
 @search_export.command('as-xml')
@@ -150,7 +153,71 @@ def ftp_id_mapping(tsv_file, output):
     This will parse the given raw tsv file and produce the final id mapping
     file.
     """
-    id_mapping.parse_file(tsv_file, output)
+    id_mapping.generate_file(tsv_file, output)
+
+
+@ftp_export.group('sequences')
+def export_sequences():
+    """
+    This is a group of commands dealing with exporting sequences.
+    """
+    pass
+
+
+@export_sequences.command('split-for-nhmmer')
+@click.argument('active', type=click.File('rb'))
+@click.argument('accepted', default='rnacentral_nhmmer.fasta', type=click.File('wb'))
+@click.argument('rejected', default='rnacentral_nhmmer_excluded.fasta', type=click.File('wb'))
+def split_for_nhmmer(active, accepted, rejected):
+    fasta.nhmmer_split(active, accepted, rejected)
+
+
+@ftp_export.command('format-ensembl')
+@click.argument('raw', type=click.File('rb'))
+@click.argument('output', default='-', type=click.File('wb'))
+@click.option(
+    '--schema',
+    default='files/ftp-export/ensembl/schema.json',
+    type=click.Path('r'),
+)
+def export_ensembl(raw, output, schema=None):
+    """
+    This will reformat the results of the ensembl query into the expected JSON
+    file ensembl import. This will also validate that the data matches the
+    expected schema.
+    """
+    ensembl_json.generate_file(raw, output, schema_file=schema)
+
+
+@ftp_export.group('coordinates')
+def export_coordinates():
+    """
+    This is a group of commands for dealing with formatting coordinate
+    information to various formats.
+    """
+    pass
+
+
+@ftp_export.command('as-bed')
+@click.argument('json_file', type=click.File('rb'))
+@click.argument('output', default='-', type=click.File('wb'))
+def format_as_bed(json_file, output):
+    """
+    This will turn the json file produced by the coordiantes query into a BED
+    file.
+    """
+    bed.from_json(json_file, output)
+
+
+# @ftp_export.command('as-gff3')
+# @click.argument('json_file', type=click.File('rb'))
+# @click.argument('output', default='-', type=click.File('wb'))
+# def format_as_gff3(json_file, output):
+#     """
+#     This will turn the json file produced by the coordiantes query into a GFF3
+#     file.
+#     """
+#     gff3.from_json(json_file, output)
 
 
 @cli.group()
@@ -170,6 +237,36 @@ def process_tblout(tblout, output):
     This will overwrite the given file.
     """
     infernal_results.as_csv(tblout, output)
+
+
+@cli.group()
+def precompute():
+    """
+    This is a group of commands for dealing with our precompute steps.
+    """
+    pass
+
+
+@precompute.command('ranges')
+@click.argument('chunk_size', type=int)
+@click.argument('output', default='-', type=click.File('wb'))
+@click.option('--db_url', default=os.environ.get('PGDATABASE', ''))
+def precompute_ranges(chunk_size, output, db_url=None):
+    """
+    This will determine the chunk sizes to use for the precompute work.
+    """
+    csv.writer(output).writerows(upi_ranges(db_url, chunk_size))
+
+
+@precompute.command('from-file')
+@click.argument('json_file', type=click.Path(exists=True))
+@click.argument('output', default='-', type=click.File('wb'))
+def from_file(json_file, output):
+    """
+    This command will take the output produced by the precompute query and
+    process the results into a CSV that can be loaded into the database.
+    """
+    precompute.process_file(json_file, output)
 
 
 cli()  # pylint: disable=no-value-for-parameter
