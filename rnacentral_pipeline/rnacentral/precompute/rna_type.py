@@ -174,16 +174,16 @@ def rna_type_of(data):
         correct_by_length,
     ]
     for correction in corrections:
-        rna_type = correction(rna_type, sequence)
+        rna_type = correction(rna_type, data)
 
     LOGGER.debug("Corrected to %s rna_types", rna_type)
     if len(rna_type) == 1:
-        LOGGER.debug("Found rna_type of %s for %s", rna_type, sequence.upi)
+        LOGGER.debug("Found rna_type of %s for %s", rna_type, data.upi)
         return rna_type.pop()
 
     if not rna_type:
         LOGGER.debug("Corrections removed all rna_types")
-    LOGGER.debug("Using fallback count method for %s", sequence.upi)
+    LOGGER.debug("Using fallback count method for %s", data.upi)
 
-    counts = Counter(x.accession.get_rna_type() for x in xrefs)
+    counts = Counter(accession.rna_type for accession in data.accessions)
     return counts.most_common(1)[0][0]
