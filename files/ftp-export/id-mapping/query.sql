@@ -1,3 +1,4 @@
+COPY (
 SELECT
     xref.upi,
     xref.ac AS accession,
@@ -10,7 +11,10 @@ SELECT
 FROM xref
 join rnc_accessions acc on acc.accession = xref.ac
 join rnc_database db on db.id = xref.dbid
-join rnc_rna_precomputed pre on pre.upi = xref.upi and pre.taxid = xref.taxid
+join rnc_rna_precomputed pre
+on
+    pre.upi = xref.upi
+    and pre.taxid = xref.taxid
 where
     xref.deleted = 'N'
-
+) TO STDOUT FORMAT CSV;
