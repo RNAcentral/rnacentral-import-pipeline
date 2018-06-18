@@ -64,8 +64,8 @@ def as_entry(result):
     ]
 
 
-def parse_file(tsv_file, output):
-    reader = csv.reader(tsv_file, delimiter='\t')
+def generate_file(tsv_file, output):
+    reader = csv.DictReader(tsv_file)
     data = it.imap(as_entry, reader)
     writer = csv.writer(output, delimiter='\t')
     writer.writerows(data)

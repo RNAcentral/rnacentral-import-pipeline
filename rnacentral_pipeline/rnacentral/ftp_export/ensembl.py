@@ -13,63 +13,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import os
 import json
 import operator as op
 
 from jsonschema import validate
 
-from rnacentral.psql import PsqlWrapper
-
 
 MOD_URL = 'http://modomics.genesilico.pl/sequences/list/{id}'
 
-SCHEMA = os.path.realpath(os.path.join(
-    os.path.dirname(__file__),
-    '..',
-    '..',
-    '..',
-    '..',
-    'files',
-    'ensembl-schema.json'
-))
-
-BASE_SQL = """
-SELECT
-    json_build_object(
-        'rnacentral_id', pre.id,
-        'description', max(pre.description),
-        'sequence', max(case
-            when rna.seq_short is null then rna.seq_long
-            else rna.seq_short
-        end),
-        'md5', max(rna.md5),
-        'rna_type', max(pre.rna_type),
-        'taxon_id', max(xref.taxid),
-        'xrefs', array_agg(
-            json_build_object(
-                'database', db.display_name,
-                'external_id', acc.external_id,
-                'optional_id', acc.optional_id,
-                'molecule_type', acc.mol_type
-            )
-        )
-    )
-FROM rna
-JOIN xref ON xref.upi = rna.upi
-JOIN rnc_rna_precomputed pre ON pre.upi = xref.upi AND pre.taxid = xref.taxid
-JOIN rnc_database db ON db.id = xref.dbid
-JOIN rnc_accessions acc
-ON
-    xref.ac = acc.accession
-WHERE
-    xref.deleted = 'N'
-    AND %s
-group by pre.id
-"""
-
-SINGLE_SQL = BASE_SQL % "xref.upi = '{upi}' and xref.taxid = {taxid}"
-RANGE_SQL = BASE_SQL % "rna.id BETWEEN {min_id} AND {max_id}"
 
 TRUSTED_DB = set([
     'gtrnadb',
@@ -89,6 +40,7 @@ def external_id(data):
     if data['database'] == 'Modomics':
         return MOD_URL.format(id=data['external_id'])
     return data['external_id']
+
 
 def is_high_quality(data):
     name = data['database'].lower()
@@ -120,35 +72,11 @@ def builder(data):
     return result
 
 
-def export(db, query, **kwargs):
-    psql = PsqlWrapper(db)
-    for result in psql.copy_to_iterable(query, **kwargs):
-        try:
-            data = json.loads(result['json_build_object'])
-            yield builder(data)
-        except:
-            raise
+def generate_file(raw, output, schema_file=None):
+    results = [json.loads(l) for l in raw]
 
+    if schema_file:
+        with open(schema_file, 'r') as raw:
+            validate(results, json.load(raw))
 
-def upi(db, upi, taxid):
-    results = export(db, SINGLE_SQL, upi=upi, taxid=taxid)
-    try:
-        return next(results)
-    except StopIteration:
-        raise ValueError("Found no entries for %s_%i" % (upi, taxid))
-
-
-def range_filename(min_id, max_id):
-    return 'ensembl-xrefs-{min}-{max}.json'.format(min=min_id, max=max_id)
-
-
-def range(db, min_id, max_id):
-    return list(export(db, RANGE_SQL, min_id=min_id, max_id=max_id))
-
-
-def write_and_validate(handle, results, schema_file=SCHEMA):
-    with open(schema_file, 'r') as raw:
-        schema = json.load(raw)
-
-    validate(results, schema)
-    json.dump(results, handle)
+    json.dump(results, output)
