@@ -32,6 +32,6 @@ def upi_ranges(dbconf, max_size):
 
     with cursor(dbconf) as cur:
         cur.execute('select max(id) from rna')
-        stop = 20  # cur.fetchone()[0]
+        stop = cur.fetchone()[0]
 
     return ranges_between(1, stop, max_size)
