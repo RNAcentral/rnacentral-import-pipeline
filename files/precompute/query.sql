@@ -3,6 +3,7 @@ select
     json_build_object(
         'upi', rna.upi,
         'taxid', xref.taxid,
+        'length', rna.len,
         'accessions', array_agg(
             json_build_object(
                 'description', acc.description,
@@ -12,7 +13,8 @@ select
                 'species', acc.species,
                 'common_name', acc.common_name,
                 'feature_name', acc.feature_name,
-                'ncrna_class', acc.ncrna_class
+                'ncrna_class', acc.ncrna_class,
+                'locus_tag', acc.locus_tag
             )
         ),
         'deleted', array_agg(xref.deleted),
@@ -37,12 +39,12 @@ ON
 join rnc_database db
 ON
     db.id = xref.dbid
-LEFT JOIN rnc_accessions acc
+JOIN rnc_accessions acc
 ON
     xref.ac = acc.accession
-    and xref.deleted = 'N'
 where
-  rna.id BETWEEN :min_id AND :max_id
+  rna.id BETWEEN :min AND :max
+  AND xref.deleted = 'N'
 GROUP BY rna.upi, xref.taxid
 ORDER BY rna.upi
 ) TO STDOUT
