@@ -187,5 +187,4 @@ def rna_type_of(data):
     LOGGER.debug("Using fallback count method for %s", data.upi)
 
     counts = Counter(accession.rna_type for accession in data.accessions)
-    print(counts)
     return counts.most_common(1)[0][0]
