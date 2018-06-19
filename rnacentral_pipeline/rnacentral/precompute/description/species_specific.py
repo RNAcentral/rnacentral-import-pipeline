@@ -70,6 +70,83 @@ from each one are.
 """
 
 
+def description_order(name):
+    """
+    Computes a tuple to order descriptions by.
+    """
+    return (round(utils.entropy(name), 3), [-ord(c) for c in name])
+
+
+def select_best_description(descriptions):
+    """
+    This will generically select the best description. We select the string
+    with the maximum entropy and lowest description. The entropy constraint is
+    meant to deal with names for PDBe which include things like AP*CP*... and
+    other repetitive databases. The other constraint is to try to select things
+    that come from a lower number (if numbered) item.
+    """
+    return max(descriptions, key=description_order)
+
+
+class DatabaseSpecifcNameBuilder(object):
+
+    def mirbase(self, accessions, rna_type):
+        product_name = 'precursors'
+        if rna_type == 'miRNA':
+            product_name = 'miRNAs'
+
+        return select_with_several_genes(
+            accessions,
+            product_name,
+            r'\w+-%s',
+            description_items='optional_id',
+            max_items=5)
+
+    def gtrnadb(self, accessions, _):
+        return select_with_several_genes(
+            accessions,
+            'tRNAs',
+            r'\(%s\)$',
+            description_items='gene',
+            max_items=5)
+
+    def sgd(self, accessions, _):
+        return select_with_several_genes(
+            accessions,
+            'genes',
+            r'%s$',
+            attribute='optional_id',
+            description_items='optional_id',
+            max_items=6)
+
+    def tair(self, accessions, _):
+        return select_with_several_genes(
+            accessions,
+            'genes',
+            r'%s$',
+            attribute='locus_tag',
+            description_items='locus_tag',
+            max_items=6)
+
+    def flybase(self, accessions, _):
+        return select_with_several_genes(
+            accessions,
+            'genes',
+            r'%s$',
+            attribute='locus_tag',
+            description_items='locus_tag',
+            max_items=6)
+
+    def _fallback(self, accessions, _):
+        descriptions = [accession.description for accession in accessions]
+        return select_best_description(descriptions)
+
+    def __call__(self, database, rna_type, accessions):
+        name = database.replace(' ', '_').lower()
+        method = getattr(self, name, self._fallback)
+        return method(accessions, rna_type)
+
+
 def suitable_xref(required_rna_type):
     """
     Create a function, based upon the given rna_type, which will test if the
@@ -115,24 +192,6 @@ def suitable_xref(required_rna_type):
 
 def accept_any(db_name, accession):
     return accession.database == db_name
-
-
-def description_order(name):
-    """
-    Computes a tuple to order descriptions by.
-    """
-    return (round(utils.entropy(name), 3), [-ord(c) for c in name])
-
-
-def select_best_description(descriptions):
-    """
-    This will generically select the best description. We select the string
-    with the maximum entropy and lowest description. The entropy constraint is
-    meant to deal with names for PDBe which include things like AP*CP*... and
-    other repetitive databases. The other constraint is to try to select things
-    that come from a lower number (if numbered) item.
-    """
-    return max(descriptions, key=description_order)
 
 
 def compute_item_ranges(items):
@@ -205,7 +264,8 @@ def select_with_several_genes(accessions, name, pattern,
     if description_items is not None:
         func = op.attrgetter(description_items)
 
-    items = sorted([func(a) for a in accessions if func(a)], key=utils.item_sorter)
+    items = [func(a) for a in accessions if func(a)]
+    items = sorted(items, key=utils.item_sorter)
     if not items:
         return basic
 
@@ -251,25 +311,6 @@ def improve_mirbase_description(rna_type, accessions):
         product_name,
         r'\w+-%s',
         description_items='optional_id',
-        max_items=5)
-
-
-def is_mod(db_name):
-    """
-    Check if this database is a MOD that we can generate mulitple gene
-    descriptions.
-    """
-    return db_name in set(['HGNC', 'Ensembl', 'GENCODE'])
-
-
-def improve_mod_description(accessions):
-    """
-    Improve the description from a model organism database (MOD).
-    """
-    return select_with_several_genes(
-        accessions,
-        'genes',
-        r'\(%s\)$',
         max_items=5)
 
 
@@ -322,19 +363,8 @@ def description_of(rna_type, sequence):
     except utils.NoBestFoundException:
         db_name, accessions = utils.best(ordering, sequence.accessions, accept_any)
 
-    # It is possible that one sequence maps to several HGNC genes and we should
-    # indicate this
-    if is_mod(db_name):
-        description = improve_mod_description(accessions)
-
-    # Similar issue for miRBase sequences
-    elif db_name == 'miRBase':
-        description = improve_mirbase_description(rna_type, accessions)
-
-    # Fall back to a simple generic method
-    else:
-        descriptions = [accession.description for accession in accessions]
-        description = select_best_description(descriptions)
+    builder = DatabaseSpecifcNameBuilder()
+    description = builder(db_name, rna_type, accessions)
 
     # Sometimes we get a description that is 'predicted' from some databases.
     # It would be better to pull from Rfam which may have a more useful
