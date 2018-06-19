@@ -164,7 +164,7 @@ class RfamClanHit(object):
     description = attr.ib(convert=dash_as_none())
 
 
-def parse(filename, clan_competition=False):
+def parse(raw, clan_competition=False):
     """
     This can parse the results of an infernal scan. It can handle both the
     standard tbl format as well as the tbl produced after clan competition. To
@@ -179,12 +179,11 @@ def parse(filename, clan_competition=False):
     fields = attr.fields(model)
     count = len(fields) - 1
 
-    with open(filename, 'rb') as raw:
-        for line in raw:
-            if line.startswith('#'):
-                continue
-            parts = re.split(r'\s+', line.strip(), count)
-            yield model(*parts)
+    for line in raw:
+        if line.startswith('#'):
+            continue
+        parts = re.split(r'\s+', line.strip(), count)
+        yield model(*parts)
 
 
 def as_csv(tblout, output):
