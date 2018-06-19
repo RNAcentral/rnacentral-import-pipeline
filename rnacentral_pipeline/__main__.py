@@ -231,7 +231,7 @@ def qa():
 
 
 @qa.command('tblout2csv')
-@click.argument('tblout', type=click.Path(exists=True))
+@click.argument('tblout', default='-', type=click.File('rb'))
 @click.argument('output', default='-', type=click.File('wb'))
 def process_tblout(tblout, output):
     """
