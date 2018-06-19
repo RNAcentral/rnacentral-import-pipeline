@@ -183,10 +183,15 @@ def parse(raw, clan_competition=False):
         if line.startswith('#'):
             continue
         parts = re.split(r'\s+', line.strip(), count)
-        yield model(*parts)
+        yield model(*parts)  # pylint: disable=star-args
 
 
 def as_csv(tblout, output):
+    """
+    This will parse the givn tblout filehandle and turn the data into a CSV
+    file that can be loaded into the database.
+    """
+
     writer = csv.DictWriter(
         output,
         CSV_COLUMNS,
