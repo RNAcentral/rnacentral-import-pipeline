@@ -5,7 +5,7 @@ process find_chunks {
   file('ranges.txt') into raw_ranges
 
   """
-  rnac search-export ranges ${params.search_export.max_entries} ranges.txt
+  rnac upi-ranges ${params.search_export.max_entries} ranges.txt
   """
 }
 

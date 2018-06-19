@@ -5,7 +5,7 @@ process find_chunks {
   stdout raw_ranges
 
   """
-  rnac precompute ranges ${params.precompute.max_entries}
+  rnac upi-ranges ${params.precompute.max_entries}
   """
 }
 

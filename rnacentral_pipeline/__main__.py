@@ -28,6 +28,19 @@ def cli():
     pass
 
 
+@cli.command('upi-ranges')
+@click.argument('chunk_size', type=int)
+@click.argument('output', default='-', type=click.File('wb'))
+@click.option('--db_url', default=os.environ.get('PGDATABASE', ''))
+def search_export_ranges(chunk_size, output, db_url=None):
+    """
+    This will compute the ranges to use for our each xml file in the search
+    export. We want to do several chunks at once as it is faster (but not too
+    man), and we want to have as large a chunk as possible.
+    """
+    csv.writer(output).writerows(upi_ranges(db_url, chunk_size))
+
+
 @cli.group()
 def external_database():
     """
@@ -70,19 +83,6 @@ def search_export():
     A group of commands dealing with our search export pipeline.
     """
     pass
-
-
-@search_export.command('ranges')
-@click.argument('chunk_size', type=int)
-@click.argument('output', default='-', type=click.File('wb'))
-@click.option('--db_url', default=os.environ.get('PGDATABASE', ''))
-def search_export_ranges(chunk_size, output, db_url=None):
-    """
-    This will compute the ranges to use for our each xml file in the search
-    export. We want to do several chunks at once as it is faster (but not too
-    man), and we want to have as large a chunk as possible.
-    """
-    csv.writer(output).writerows(upi_ranges(db_url, chunk_size))
 
 
 @search_export.command('as-xml')
@@ -247,17 +247,6 @@ def precompute():
     This is a group of commands for dealing with our precompute steps.
     """
     pass
-
-
-@precompute.command('ranges')
-@click.argument('chunk_size', type=int)
-@click.argument('output', default='-', type=click.File('wb'))
-@click.option('--db_url', default=os.environ.get('PGDATABASE', ''))
-def precompute_ranges(chunk_size, output, db_url=None):
-    """
-    This will determine the chunk sizes to use for the precompute work.
-    """
-    csv.writer(output).writerows(upi_ranges(db_url, chunk_size))
 
 
 @precompute.command('from-file')
