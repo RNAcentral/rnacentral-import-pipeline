@@ -28,6 +28,7 @@ class NoBestFoundException(Exception):
     """
     Raised when it is not possible to find the 'best' xref.
     """
+    pass
 
 
 def best(ordered_choices, possible, check, default=None):
@@ -108,7 +109,7 @@ def item_sorter(name):
     if match:
         name = re.sub(r'(\d+)$', '', name)
         return (name, int(match.group(1)))
-    return (match, None)
+    return (name, '')
 
 
 def group_consecutives(data, min_size=2):
@@ -116,7 +117,13 @@ def group_consecutives(data, min_size=2):
     Modified from the python itertools docs.
     """
 
-    for _, group in it.groupby(enumerate(data), lambda ix: ix[0] - ix[1]):
+    def grouper(ix):
+        if isinstance(ix[0], int) and isinstance(ix[1], int):
+            return ix[0] - ix[1]
+        else:
+            return float('inf')
+
+    for _, group in it.groupby(enumerate(data), grouper):
         key = op.itemgetter(1)
         group = [key(g) for g in group]
         if len(group) > 1:

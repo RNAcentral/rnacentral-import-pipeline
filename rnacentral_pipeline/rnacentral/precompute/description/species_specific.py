@@ -61,7 +61,6 @@ CHOICES = {
         'noncode',
     ]
 }
-
 """
 A dict that defines the ordered choices for each type of RNA. This is the
 basis of our name selection for the rule based approach. The fallback,
@@ -90,6 +89,55 @@ def select_best_description(descriptions):
 
 class DatabaseSpecifcNameBuilder(object):
 
+    def ensembl(self, accessions, _):
+        return select_with_several_genes(
+            accessions,
+            'genes',
+            r'\(%s\)$',
+            description_items='gene',
+            max_items=5)
+
+    def flybase(self, accessions, _):
+        return select_with_several_genes(
+            accessions,
+            'genes',
+            r'%s$',
+            attribute='locus_tag',
+            description_items='locus_tag',
+            max_items=6)
+
+    def gencode(self, accessions, _):
+        return select_with_several_genes(
+            accessions,
+            'genes',
+            r'\(%s\)$',
+            description_items='gene',
+            max_items=5)
+
+    def gtrnadb(self, accessions, _):
+        return select_with_several_genes(
+            accessions,
+            'tRNAs',
+            r'\(%s\)$',
+            description_items='gene',
+            max_items=5)
+
+    def hgnc(self, accessions, _):
+        return select_with_several_genes(
+            accessions,
+            'genes',
+            r'\(%s\)$',
+            description_items='gene',
+            max_items=5)
+
+    def mgi(self, accessions, rna_type):
+        return select_with_several_genes(
+            accessions,
+            'genes',
+            r'\(%s\)$',
+            description_items='gene',
+            max_items=5)
+
     def mirbase(self, accessions, rna_type):
         product_name = 'precursors'
         if rna_type == 'miRNA':
@@ -102,14 +150,6 @@ class DatabaseSpecifcNameBuilder(object):
             description_items='optional_id',
             max_items=5)
 
-    def gtrnadb(self, accessions, _):
-        return select_with_several_genes(
-            accessions,
-            'tRNAs',
-            r'\(%s\)$',
-            description_items='gene',
-            max_items=5)
-
     def sgd(self, accessions, _):
         return select_with_several_genes(
             accessions,
@@ -120,15 +160,6 @@ class DatabaseSpecifcNameBuilder(object):
             max_items=6)
 
     def tair(self, accessions, _):
-        return select_with_several_genes(
-            accessions,
-            'genes',
-            r'%s$',
-            attribute='locus_tag',
-            description_items='locus_tag',
-            max_items=6)
-
-    def flybase(self, accessions, _):
         return select_with_several_genes(
             accessions,
             'genes',
@@ -195,20 +226,22 @@ def accept_any(db_name, accession):
 
 
 def compute_item_ranges(items):
-    names = []
     data = sorted(utils.item_sorter(item) for item in items if item)
-    for item, numbers in it.groupby(data, op.itemgetter(0)):
-        if not item:
+    grouped = it.groupby(data, op.itemgetter(0))
+    names = []
+    for gene, numbers in grouped:
+        if not gene:
             continue
 
         range_format = '%i-%i'
-        if '-' in item:
+        if '-' in gene:
             range_format = ' %i to %i'
+
         for (start, stop) in utils.group_consecutives(n[1] for n in numbers):
             if stop is None:
-                names.append(item + str(start))
+                names.append(gene + str(start))
             else:
-                prefix = item
+                prefix = gene
                 if prefix.endswith('-'):
                     prefix = prefix[:-1]
                 names.append(prefix + range_format % (start, stop))
@@ -264,7 +297,7 @@ def select_with_several_genes(accessions, name, pattern,
     if description_items is not None:
         func = op.attrgetter(description_items)
 
-    items = [func(a) for a in accessions if func(a)]
+    items = (func(a) for a in accessions if func(a))
     items = sorted(items, key=utils.item_sorter)
     if not items:
         return basic
