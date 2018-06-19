@@ -24,7 +24,7 @@ def connection(config, commit_on_leave=True):
     Opens a connection to the datbase.
     """
 
-    conn = psycopg2.connect(config.psycopg2_string())
+    conn = psycopg2.connect(config)
     conn.set_session(autocommit=False)
     try:
         yield conn
@@ -53,6 +53,14 @@ def cursor(config, commit_on_leave=True):
             cur.close()
 
 
+def run_query(url, query, **kwargs):
+
+    with cursor(url) as cur:
+        cur.execute(query, kwargs)
+        for result in cur:
+            yield result
+
+
 def get_db_connection(config, **options):
     """
     Open a database connection.
@@ -61,7 +69,8 @@ def get_db_connection(config, **options):
     because it wraps all work in a giant database transaction
     that is likely to crash.
     """
-    conn = psycopg2.connect(config.psycopg2_string(), **options)
+
+    conn = psycopg2.connect(config, **options)
     conn.set_session(autocommit=False)
     conn.set_isolation_level(0)
     return conn
