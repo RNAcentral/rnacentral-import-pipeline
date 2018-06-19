@@ -27,6 +27,11 @@ annotations from one of these databases we will always use if, assuming all
 annotations from the database agree.
 """
 
+LNC_DATABASES = {
+    'lncipedia',
+    'lncrnadb',
+}
+
 
 def correct_by_length(rna_type, sequence):
     """
@@ -41,6 +46,11 @@ def correct_by_length(rna_type, sequence):
         if 15 <= sequence.length <= 30:
             return set(['miRNA'])
         return set(['precursor_RNA'])
+
+    if 'tRNA' in rna_type and sequence.length > 700:
+        rna_type.remove('tRNA')
+        return rna_type or set(['other'])
+
     return rna_type
 
 
@@ -83,6 +93,12 @@ def remove_ribozyme_if_possible(rna_type, _):
     return rna_type
 
 
+def prefer_lnc_over_anti(rna_type, _):
+    if rna_type == set(['antisense_RNA', 'lncRNA']):
+        return set(['lncRNA'])
+    return rna_type
+
+
 def remove_ncrna_if_possible(rna_types, _):
     """
     ncRNA is always consitent with everything else, so ignore it if possible.
@@ -94,28 +110,8 @@ def remove_ncrna_if_possible(rna_types, _):
     return rna_types
 
 
-def get_rna_types_from(xrefs, name):
-    """
-    Determine the rna_types as annotated by some database.
-
-    Parameters
-    ----------
-    xrefs : iterable
-        The list of xrefs to fitler to extract the rna types from.
-    name : str
-        The name of the database to use.
-
-    Returns
-    -------
-    rna_types : set
-        A set of rna types that is annotated by the given database.
-    """
-
-    rna_types = set()
-    for xref in xrefs:
-        if xref.db.name == name:
-            rna_types.add(xref.accession.get_rna_type())
-    return rna_types
+def from_lnc_database(accessions):
+    return any(a.database in LNC_DATABASES for a in accessions)
 
 
 def rna_type_of(data):
@@ -153,7 +149,7 @@ def rna_type_of(data):
     LOGGER.debug("Found %i trusted databases", len(trusted))
     if len(trusted) == 1:
         trusted = trusted.pop()
-        rna_types = get_rna_types_from(xrefs, trusted)
+        rna_types = {acc.rna_type for acc in data.accessions}
         LOGGER.debug("Found %i rna_types from trusted dbs", len(rna_types))
         if len(rna_types) == 1:
             return rna_types.pop()
@@ -170,11 +166,16 @@ def rna_type_of(data):
         correct_other_vs_misc,
         remove_ambiguous,
         remove_ribozyme_if_possible,
-        remove_ncrna_if_possible,
         correct_by_length,
+        prefer_lnc_over_anti,
+        remove_ncrna_if_possible,
     ]
     for correction in corrections:
         rna_type = correction(rna_type, data)
+
+    if 'antisense_RNA' in rna_type and from_lnc_database(accessions):
+        rna_type.discard('antisense_RNA')
+        rna_type.add('lncRNA')
 
     LOGGER.debug("Corrected to %s rna_types", rna_type)
     if len(rna_type) == 1:
@@ -186,4 +187,5 @@ def rna_type_of(data):
     LOGGER.debug("Using fallback count method for %s", data.upi)
 
     counts = Counter(accession.rna_type for accession in data.accessions)
+    print(counts)
     return counts.most_common(1)[0][0]

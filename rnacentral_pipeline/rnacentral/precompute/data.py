@@ -32,14 +32,15 @@ class Accession(object):
     name from the accession level data for a sequence.
     """
 
-    gene = attr.ib()
-    optional_id = attr.ib()
+    gene = attr.ib(validator=optional(is_a(basestring)))
+    optional_id = attr.ib(validator=optional(is_a(basestring)))
     pretty_database = attr.ib(validator=is_a(basestring))
-    feature_name = attr.ib()
-    ncrna_class = attr.ib()
-    species = attr.ib()
-    common_name = attr.ib()
-    description = attr.ib()
+    feature_name = attr.ib(validator=is_a(basestring))
+    ncrna_class = attr.ib(validator=optional(is_a(basestring)))
+    species = attr.ib(validator=is_a(basestring))
+    common_name = attr.ib(validator=optional(is_a(basestring)))
+    description = attr.ib(validator=is_a(basestring))
+    locus_tag = attr.ib(validator=optional(is_a(basestring)))
 
     @classmethod
     def build(cls, data):
@@ -71,6 +72,7 @@ class Accession(object):
 class Sequence(object):
     upi = attr.ib(validator=is_a(basestring))
     taxid = attr.ib(validator=optional(is_a(int)))
+    length = attr.ib(validator=is_a(int))
     accessions = attr.ib(validator=is_a(list))
     xref_status = attr.ib(validator=is_a(list))
     xref_has_coordinates = attr.ib(validator=is_a(bool))
@@ -97,6 +99,7 @@ class Sequence(object):
         return cls(
             upi=sequences[0]['upi'],
             taxid=None,
+            length=sequences[0]['length'],
             accessions=[Accession.build(a) for a in get_flat('accessions')],
             xref_status=get_flat('deleted'),
             xref_has_coordinates=has_coordinates,
@@ -108,6 +111,7 @@ class Sequence(object):
         return cls(
             upi=data['upi'],
             taxid=data['taxid'],
+            length=data['length'],
             accessions=[Accession.build(a) for a in data['accessions']],
             xref_status=data['deleted'],
             xref_has_coordinates=any(data['xref_has_coordinates']),
@@ -131,7 +135,6 @@ class UpdatedData(object):
 
     @classmethod
     def build(cls, sequence):
-        print(sequence)
         rna_type = rna_type_of(sequence)
         description = description_of(rna_type, sequence)
 
