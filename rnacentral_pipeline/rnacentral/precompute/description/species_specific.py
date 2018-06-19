@@ -390,7 +390,6 @@ def description_of(rna_type, sequence):
 
     ordering = CHOICES.get(rna_type, CHOICES['__generic__'])
     selector = suitable_xref(rna_type)
-
     try:
         db_name, accessions = utils.best(ordering, sequence.accessions, selector)
     except utils.NoBestFoundException:
