@@ -24,31 +24,12 @@ import pytest
 from rnacentral_pipeline.psql import PsqlWrapper
 from rnacentral_pipeline.rnacentral.search_export import exporter
 
+from tests.helpers import run_range_as_single
+
 
 def load_data(upi):
-    parts = upi.split('_')
-    upi, taxid = parts[0], int(parts[1])
-    with tempfile.NamedTemporaryFile('w') as tmp:
-        path = os.path.join('files', 'search-export', 'query.sql')
-        with open(path, 'rb') as raw:
-            query = raw.read()
-            query = query.replace(
-                'rna.id BETWEEN :min and :max',
-                "xref.upi ='{upi}' AND xref.taxid = {taxid}".format(
-                    upi=upi,
-                    taxid=taxid,
-                )
-            )
-            tmp.write(query)
-            tmp.flush()
-        psql = PsqlWrapper(os.environ['PGDATABASE'])
-        results = psql.copy_file_to_iterable(tmp.name, json=True, upi=upi, taxid=taxid)
-        results = it.imap(exporter.builder, results)
-
-        try:
-            return next(results)
-        except StopIteration:
-            raise ValueError("Found no entries for %s_%i" % (upi, taxid))
+    path = os.path.join('files', 'search-export', 'query.sql')
+    return exporter.builder(run_range_as_single(upi, path))
 
 
 def as_xml_dict(element):

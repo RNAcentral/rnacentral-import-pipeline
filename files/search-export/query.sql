@@ -83,6 +83,6 @@ ON
     ont.ontology_term_id = anno.ontology_term_id
 WHERE
   xref.deleted = 'N'
-  AND rna.id BETWEEN :min and :max
+  AND rna.id BETWEEN :min AND :max
 GROUP BY rna.upi, xref.taxid
 ) TO STDOUT
