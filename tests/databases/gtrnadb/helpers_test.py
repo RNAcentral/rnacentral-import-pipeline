@@ -17,7 +17,7 @@ import json
 
 import pytest
 
-from databases.gtrnadb import helpers
+from rnacentral_pipeline.databases.gtrnadb import helpers
 
 
 @pytest.fixture
