@@ -17,8 +17,8 @@ import unittest as ut
 
 import attr
 
-from databases import data
-from databases.gtrnadb import parsers
+from rnacentral_pipeline.databases import data
+from rnacentral_pipeline.databases.gtrnadb import parsers
 
 
 class GtRNAdbTest(ut.TestCase):
