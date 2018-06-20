@@ -23,7 +23,7 @@ process precompute_range {
 
   """
   psql --variable min=$min --variable max=$max -f "$query" "$PGDATABASE" |\
-  rnac precompute from-file - result.tsv
+    rnac precompute from-file - result.tsv
   """
 }
 
