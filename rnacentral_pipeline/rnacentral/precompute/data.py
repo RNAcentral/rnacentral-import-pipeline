@@ -144,7 +144,7 @@ class GenericSequence(Sequence):
             accessions.extend(seq.accessions)
             inactive.extend(seq.inactive_accessions)
 
-        has_coordinates = any(s['xref_has_coordinates'] for s in sequences)
+        has_coordinates = any(s.xref_has_coordinates for s in sequences)
         return cls(
             upi=sequences[0].upi,
             taxid=None,
