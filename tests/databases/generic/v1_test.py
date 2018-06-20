@@ -18,10 +18,10 @@ import json
 import attr
 import pytest
 
-from databases import data as dat
-from databases.helpers import publications as pub
+from rnacentral_pipeline.databases import data as dat
+from rnacentral_pipeline.databases.helpers import publications as pub
 
-from databases.generic import v1
+from rnacentral_pipeline.databases.generic import v1
 
 
 @pytest.mark.parametrize('filename,taxids', [

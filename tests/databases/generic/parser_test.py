@@ -15,7 +15,7 @@ limitations under the License.
 
 import pytest
 
-from databases.generic.parser import parse
+from rnacentral_pipeline.databases.generic.parser import parse
 
 
 @pytest.mark.skip()
