@@ -5,17 +5,20 @@ import csv
 
 import click
 
+# from rnacentral_pipeline.databases.pdb import writer as pdb
 from rnacentral_pipeline.databases.rfam import infernal_results
+# from rnacentral_pipeline.databases.generic import writer as generic
+# from rnacentral_pipeline.databases.quickgo import writer as quickgo
 
 from rnacentral_pipeline.rnacentral.upi_ranges import upi_ranges
 from rnacentral_pipeline.rnacentral.search_export import exporter as search
 
 from rnacentral_pipeline.rnacentral.precompute import process as pre
 
+from rnacentral_pipeline.rnacentral.ftp_export import bed
 from rnacentral_pipeline.rnacentral.ftp_export import fasta
 from rnacentral_pipeline.rnacentral.ftp_export import id_mapping
 from rnacentral_pipeline.rnacentral.ftp_export import ensembl as ensembl_json
-from rnacentral_pipeline.rnacentral.ftp_export import bed
 
 
 @click.group()
@@ -29,10 +32,11 @@ def cli():
 
 
 @cli.command('upi-ranges')
-@click.argument('chunk_size', type=int)
 @click.argument('output', default='-', type=click.File('wb'))
-@click.option('--db_url', default=os.environ.get('PGDATABASE', ''))
-def search_export_ranges(chunk_size, output, db_url=None):
+@click.argument('--chunk_size', type=int)
+@click.argument('--max-chunks', type=int)
+@click.option('--db_url', envar='PGDATABASE')
+def search_export_ranges(output, chunk_size=None, max_chunks=None, db_url=None):
     """
     This will compute the ranges to use for our each xml file in the search
     export. We want to do several chunks at once as it is faster (but not too
@@ -52,16 +56,39 @@ def external_database():
 
 @external_database.command('json-schema')
 @click.argument('json_file', type=click.File('rb'))
-def process_json_schema(json_file):
+@click.argument('output', default='.', type=click.Path(
+    writable=True,
+    dir_okay=True,
+    file_okay=False,
+))
+def process_json_schema(json_file, output):
     """
     This parses our JSON schema files to produce the importable CSV files.
     """
+    # generic.Writer(output)(json_file)
     pass
+
+
+@external_database.command('quickgo')
+@click.argument('raw_data', type=click.File('rb'))
+@click.argument('output', default='.', type=click.Path(
+    writable=True,
+    dir_okay=True,
+    file_okay=False,
+))
+def process_quickgo(raw_data, output):
+    pass
+    # quickgo.Writer(output)(raw_data)
 
 
 @external_database.command('ensembl')
 @click.argument('ensembl_file', type=click.File('rb'))
-def process_ensembl(json_file):
+@click.argument('output', default='.', type=click.Path(
+    writable=True,
+    dir_okay=True,
+    file_okay=False,
+))
+def process_ensembl(ensembl_file, output):
     """
     This will parse EMBL files from Ensembl to produce the expected CSV files.
     """
@@ -69,7 +96,12 @@ def process_ensembl(json_file):
 
 
 @external_database.command('pdb')
-def process_pdb():
+@click.argument('output', default='.', type=click.Path(
+    writable=True,
+    dir_okay=True,
+    file_okay=False,
+))
+def process_pdb(output):
     """
     This will fetch and parse all sequence data from PDBe to produce the csv
     files we import.
@@ -252,7 +284,7 @@ def precompute():
 @precompute.command('from-file')
 @click.argument('json_file', type=click.File('rb'))
 @click.argument('output', default='-', type=click.File('wb'))
-def from_file(json_file, output):
+def precompute_from_file(json_file, output):
     """
     This command will take the output produced by the precompute query and
     process the results into a CSV that can be loaded into the database.
