@@ -16,9 +16,9 @@ limitations under the License.
 import itertools as it
 import collections as coll
 
-from databases import data
-from databases.helpers import phylogeny as phy
-from databases.helpers import publications as pub
+from rnacentral_pipeline.databases import data
+from rnacentral_pipeline.databases.helpers import phylogeny as phy
+from rnacentral_pipeline.databases.helpers import publications as pub
 
 
 def secondary_structure(record):
