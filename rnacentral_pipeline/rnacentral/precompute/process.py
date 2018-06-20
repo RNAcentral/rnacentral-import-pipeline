@@ -29,10 +29,18 @@ def as_sequences(items):
 
     grouped = it.groupby(items, op.itemgetter('upi'))
     for _, species_sequences in grouped:
-        seqs = list(species_sequences)
-        for seq in seqs:
-            yield data.Sequence.build(seq)
-        yield data.Sequence.species_to_generic(seqs)
+        seqs = []
+        for seq in species_sequences:
+            current = data.SpeciesSequence.build(seq)
+            seqs.append(current)
+            yield current
+        yield data.GenericSequence.build(seqs)
+
+
+def as_update(sequence):
+    if sequence.is_active:
+        return data.ActiveUpdate.build(sequence)
+    return data.InactiveUpdate.build(sequence)
 
 
 def from_file(handle, output):
@@ -45,6 +53,6 @@ def from_file(handle, output):
     writer = csv.writer(output, quoting=csv.QUOTE_ALL)
     sequences = it.imap(json.loads, handle)
     sequences = as_sequences(sequences)
-    sequences = it.imap(data.UpdatedData.build, sequences)
+    sequences = it.imap(as_update, sequences)
     sequences = it.imap(op.methodcaller('as_writeable'), sequences)
     writer.writerows(sequences)

@@ -25,6 +25,22 @@ from .description import description_of
 from .rna_type import rna_type_of
 
 
+def database_names(accessions):
+    names = {acc.pretty_database for acc in accessions}
+    return ','.join(sorted(names))
+
+
+def partioned_accessions(all_accessions):
+    accessions = []
+    inactive_accessions = []
+    for accession in all_accessions:
+        if accession.pop('is_active'):
+            accessions.append(Accession.build(accession))
+        else:
+            inactive_accessions.append(Accession.build(accession))
+    return accessions, inactive_accessions
+
+
 @attr.s()
 class Accession(object):
     """
@@ -37,7 +53,7 @@ class Accession(object):
     pretty_database = attr.ib(validator=is_a(basestring))
     feature_name = attr.ib(validator=is_a(basestring))
     ncrna_class = attr.ib(validator=optional(is_a(basestring)))
-    species = attr.ib(validator=is_a(basestring))
+    species = attr.ib(validator=optional(is_a(basestring)))
     common_name = attr.ib(validator=optional(is_a(basestring)))
     description = attr.ib(validator=is_a(basestring))
     locus_tag = attr.ib(validator=optional(is_a(basestring)))
@@ -74,56 +90,76 @@ class Sequence(object):
     taxid = attr.ib(validator=optional(is_a(int)))
     length = attr.ib(validator=is_a(int))
     accessions = attr.ib(validator=is_a(list))
-    xref_status = attr.ib(validator=is_a(list))
+    inactive_accessions = attr.ib(validator=is_a(list))
+    is_active = attr.ib(validator=is_a(bool))
     xref_has_coordinates = attr.ib(validator=is_a(bool))
     rna_was_mapped = attr.ib(validator=is_a(bool))
+    previous_data = attr.ib(validator=is_a(dict))
+
+    def is_species_specific(self):
+        return self.taxid is not None
+
+
+@attr.s()
+class SpeciesSequence(Sequence):
+    """
+    This represents what data is needed in order to precompute the data for a
+    species specific sequence.
+    """
 
     @classmethod
-    def species_to_generic(cls, sequences):
+    def build(cls, data):
+        """
+        Given a dictonary of result from the precompute query this will build a
+        SpeciesSequence.
+        """
+
+        active, inactive = partioned_accessions(data['accessions'])
+        return cls(
+            upi=data['upi'],
+            taxid=data['taxid'],
+            length=data['length'],
+            accessions=active,
+            inactive_accessions=inactive,
+            is_active=any(not d for d in data['deleted']),
+            xref_has_coordinates=any(data['xref_has_coordinates']),
+            rna_was_mapped=data['rna_was_mapped'],
+            previous_data=data['previous'][0],
+        )
+
+@attr.s()
+class GenericSequence(Sequence):
+
+    @classmethod
+    def build(cls, sequences):
         """
         Build a Seqeunce object which represents the generic sequence (no
         assigned taxid) given a list of species specific sequences (have an
         assigend taxid).
         """
 
-        def get_flat(name):
-            """
-            Get a flattend list for the given attribute name of sequence
-            objects.
-            """
-            getter = op.itemgetter(name)
-            return list(it.chain.from_iterable(getter(s) for s in sequences))
+        inactive = []
+        accessions = []
+        for seq in sequences:
+            accessions.extend(seq.accessions)
+            inactive.extend(seq.inactive_accessions)
 
         has_coordinates = any(s['xref_has_coordinates'] for s in sequences)
-
         return cls(
-            upi=sequences[0]['upi'],
+            upi=sequences[0].upi,
             taxid=None,
-            length=sequences[0]['length'],
-            accessions=[Accession.build(a) for a in get_flat('accessions')],
-            xref_status=get_flat('deleted'),
+            length=sequences[0].length,
+            accessions=accessions,
+            inactive_accessions=inactive,
+            is_active=any(seq.is_active for seq in sequences),
             xref_has_coordinates=has_coordinates,
-            rna_was_mapped=any(s['rna_was_mapped'] for s in sequences),
+            rna_was_mapped=any(s.rna_was_mapped for s in sequences),
+            previous_data={},
         )
 
-    @classmethod
-    def build(cls, data):
-        return cls(
-            upi=data['upi'],
-            taxid=data['taxid'],
-            length=data['length'],
-            accessions=[Accession.build(a) for a in data['accessions']],
-            xref_status=data['deleted'],
-            xref_has_coordinates=any(data['xref_has_coordinates']),
-            rna_was_mapped=data['rna_was_mapped'],
-        )
 
-    def is_species_specific(self):
-        return self.taxid is not None
-
-
-@attr.s
-class UpdatedData(object):
+@attr.s()
+class Update(object):
     upi = attr.ib(validator=is_a(basestring))
     taxid = attr.ib(validator=optional(is_a(int)))
     is_active = attr.ib(validator=is_a(bool))
@@ -132,27 +168,6 @@ class UpdatedData(object):
     databases = attr.ib(validator=is_a(basestring))
     has_coordinates = attr.ib(validator=is_a(bool))
     short_description = attr.ib(validator=is_a(basestring), default='')
-
-    @classmethod
-    def build(cls, sequence):
-        rna_type = rna_type_of(sequence)
-        description = description_of(rna_type, sequence)
-
-        has_coordinates = sequence.xref_has_coordinates or \
-            sequence.rna_was_mapped
-
-        databases = {acc.pretty_database for acc in sequence.accessions}
-        databases = ','.join(sorted(databases))
-        return cls(
-            upi=sequence.upi,
-            taxid=sequence.taxid,
-            is_active=any(d == 'N' for d in sequence.xref_status),
-            rna_type=rna_type,
-            description=description,
-            databases=databases,
-            has_coordinates=has_coordinates,
-            short_description='',
-        )
 
     @property
     def rna_id(self):
@@ -171,3 +186,40 @@ class UpdatedData(object):
             self.has_coordinates,
             self.databases,
         ]
+
+
+class ActiveUpdate(Update):
+    @classmethod
+    def build(cls, sequence):
+        rna_type = rna_type_of(sequence)
+        description = description_of(rna_type, sequence)
+
+        has_coordinates = sequence.xref_has_coordinates or \
+            sequence.rna_was_mapped
+
+        return cls(
+            upi=sequence.upi,
+            taxid=sequence.taxid,
+            is_active=True,
+            rna_type=rna_type,
+            description=description,
+            databases=database_names(sequence.accessions),
+            has_coordinates=has_coordinates,
+        )
+
+
+class InactiveUpdate(Update):
+    @classmethod
+    def build(cls, sequence):
+        has_coordinates = sequence.xref_has_coordinates or \
+            sequence.rna_was_mapped
+
+        return cls(
+            upi=sequence.upi,
+            taxid=sequence.taxid,
+            is_active=False,
+            rna_type=sequence.previous_data['rna_type'],
+            description=sequence.previous_data['description'],
+            databases=database_names(sequence.inactive_accessions),
+            has_coordinates=has_coordinates,
+        )
