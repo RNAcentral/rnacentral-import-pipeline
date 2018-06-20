@@ -35,7 +35,7 @@ def cli():
 @click.argument('output', default='-', type=click.File('wb'))
 @click.argument('--chunk_size', type=int)
 @click.argument('--max-chunks', type=int)
-@click.option('--db_url', envar='PGDATABASE')
+@click.option('--db_url', envvar='PGDATABASE')
 def search_export_ranges(output, chunk_size=None, max_chunks=None, db_url=None):
     """
     This will compute the ranges to use for our each xml file in the search
