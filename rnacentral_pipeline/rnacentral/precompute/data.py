@@ -245,9 +245,9 @@ class InactiveUpdate(Update):
         if 'description' in sequence.previous_data:
             description = sequence.previous_data['description']
         else:
-            description = '%s from %i species'.format(
-                rna_type,
-                len({acc.species for acc in sequence.inactive_accessions})
+            description = '{rna_type} from {count} species'.format(
+                rna_type=rna_type,
+                count=len({ac.species for ac in sequence.inactive_accessions})
             )
 
         return cls(
