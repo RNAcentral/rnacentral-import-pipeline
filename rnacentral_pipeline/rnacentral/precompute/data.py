@@ -192,7 +192,7 @@ class ActiveUpdate(Update):
     @classmethod
     def build(cls, sequence):
         rna_type = rna_type_of(sequence)
-        description = description_of(rna_type, sequence)
+        description = description_of(rna_type, sequence).encode('utf-8')
 
         has_coordinates = sequence.xref_has_coordinates or \
             sequence.rna_was_mapped
