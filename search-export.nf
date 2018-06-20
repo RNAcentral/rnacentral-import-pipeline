@@ -28,7 +28,8 @@ process export_chunk {
   script:
   xml = "xml4dbdumps__${min}__${max}.xml"
   """
-  psql --variable min=$min --variable max=$max -f "$query" "$PGDATABASE" | rnac search-export as-xml - $xml count
+  psql --variable min=$min --variable max=$max -f "$query" "$PGDATABASE" |\
+    rnac search-export as-xml - $xml count
   xmllint $xml --schema ${params.search_export.schema} --stream
   gzip $xml
   """
