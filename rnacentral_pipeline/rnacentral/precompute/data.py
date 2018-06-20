@@ -13,9 +13,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import operator as op
-import itertools as it
-
 import attr
 from attr.validators import optional
 from attr.validators import instance_of as is_a
@@ -26,11 +23,22 @@ from .rna_type import rna_type_of
 
 
 def database_names(accessions):
+    """
+    Generates a comma separated list of all database names in the given list of
+    accesions.
+    """
+
     names = {acc.pretty_database for acc in accessions}
     return ','.join(sorted(names))
 
 
 def partioned_accessions(all_accessions):
+    """
+    Parition the list of accessions between those athat are active and those
+    that are inactive. This returns a tuple of active, inactive Accession
+    objects.
+    """
+
     accessions = []
     inactive_accessions = []
     for accession in all_accessions:
@@ -86,6 +94,14 @@ class Accession(object):
 
 @attr.s()
 class Sequence(object):
+    """
+    The base class that SpeciesSpecific and GenericSequences inherit from. This
+    is the representation of sequences for the purpose of our precompute step.
+    A Generic sequence represents the information about a single sequence
+    across all taxids that sequence has been observed in, while a species one
+    is specific to a taxid.
+    """
+
     upi = attr.ib(validator=is_a(basestring))
     taxid = attr.ib(validator=optional(is_a(int)))
     length = attr.ib(validator=is_a(int))
@@ -97,6 +113,9 @@ class Sequence(object):
     previous_data = attr.ib(validator=is_a(dict))
 
     def is_species_specific(self):
+        """
+        Check if this sequence is specific to a species or is generic.
+        """
         return self.taxid is not None
 
 
@@ -214,12 +233,29 @@ class InactiveUpdate(Update):
         has_coordinates = sequence.xref_has_coordinates or \
             sequence.rna_was_mapped
 
+        if 'rna_type' in sequence.previous_data:
+            rna_type = sequence.previous_data['rna_type']
+        else:
+            rna_types = {acc.rna_type for acc in sequence.inactive_accessions}
+            if len(rna_types) == 1:
+                rna_type = rna_types.pop()
+            else:
+                rna_type = 'ncRNA'
+
+        if 'description' in sequence.previous_data:
+            description = sequence.previous_data['description']
+        else:
+            description = '%s from %i species'.format(
+                rna_type,
+                len({acc.species for acc in sequence.inactive_accessions})
+            )
+
         return cls(
             upi=sequence.upi,
             taxid=sequence.taxid,
             is_active=False,
-            rna_type=sequence.previous_data['rna_type'],
-            description=sequence.previous_data['description'],
+            rna_type=rna_type,
+            description=description,
             databases=database_names(sequence.inactive_accessions),
             has_coordinates=has_coordinates,
         )
