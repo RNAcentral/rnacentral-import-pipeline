@@ -16,8 +16,8 @@ limitations under the License.
 import re
 import collections as coll
 
-from databases.data import Exon, Reference
-import databases.helpers.phylogeny as phy
+from rnacentral_pipeline.databases.data import Exon, Reference
+import rnacentral_pipeline.databases.helpers.phylogeny as phy
 
 
 class MissingTaxId(Exception):

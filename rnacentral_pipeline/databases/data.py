@@ -24,8 +24,8 @@ from attr.validators import and_
 from attr.validators import instance_of as is_a
 from attr.validators import optional
 
-from databases.helpers.hashes import md5
-from databases.helpers.hashes import crc64
+from rnacentral_pipeline.databases.helpers.hashes import md5
+from rnacentral_pipeline.databases.helpers.hashes import crc64
 
 LOGGER = logging.getLogger(__name__)
 
