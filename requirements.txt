@@ -24,3 +24,4 @@ lxml==4.2.1
 semver==2.7.9
 pymysql
 click==6.7
+gffutils

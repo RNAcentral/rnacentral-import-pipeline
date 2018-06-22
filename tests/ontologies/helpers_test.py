@@ -13,8 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from ontologies import helpers as ont
-from ontologies.data import Term
+from rnacentral_pipeline.ontologies import helpers as ont
+from rnacentral_pipeline.ontologies.data import Term
 
 
 def test_can_fetch_a_go_term():

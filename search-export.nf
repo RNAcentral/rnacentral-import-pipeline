@@ -12,7 +12,7 @@ process find_chunks {
 raw_ranges
   .splitCsv()
   .combine(Channel.fromPath('files/search-export/query.sql'))
-  .into { ranges }
+    .into { ranges }
 
 process export_chunk {
   publishDir params.search_export.publish, mode: 'copy'
