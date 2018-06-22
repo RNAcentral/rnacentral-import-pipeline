@@ -20,11 +20,11 @@ import collections as coll
 
 from Bio.Seq import Seq
 
-import databases.helpers.embl as embl
-from databases.helpers.phylogeny import UnknownTaxonId
-import databases.helpers.publications as pubs
+import rnacentral_pipeline.databases.helpers.embl as embl
+from rnacentral_pipeline.databases.helpers.phylogeny import UnknownTaxonId
+import rnacentral_pipeline.databases.helpers.publications as pubs
 
-from databases.data import Reference
+from rnacentral_pipeline.databases.data import Reference
 
 LOGGER = logging.getLogger(__name__)
 

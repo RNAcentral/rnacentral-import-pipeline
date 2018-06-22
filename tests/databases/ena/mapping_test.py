@@ -20,10 +20,10 @@ import pytest
 
 from tasks.config import ena
 
-from databases.data import Entry
-from databases.ena import mapping as tpa
-from databases.helpers.hashes import md5
-from databases.ena.parsers import parse
+from rnacentral_pipeline.databases.data import Entry
+from rnacentral_pipeline.databases.ena import mapping as tpa
+from rnacentral_pipeline.databases.helpers.hashes import md5
+from rnacentral_pipeline.databases.ena.parsers import parse
 
 
 @pytest.mark.parametrize('filename,count', [

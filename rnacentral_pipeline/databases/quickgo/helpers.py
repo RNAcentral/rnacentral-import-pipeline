@@ -16,7 +16,7 @@ limitations under the License.
 import re
 import operator as op
 
-import databases.helpers.publications as pub
+import rnacentral_pipeline.databases.helpers.publications as pub
 
 from . import data
 
