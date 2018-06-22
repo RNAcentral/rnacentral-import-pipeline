@@ -21,8 +21,8 @@ import collections as coll
 
 import requests
 
-from databases.helpers import phylogeny as phy
-from databases.data import Reference
+from rnacentral_pipeline.databases.helpers import phylogeny as phy
+from rnacentral_pipeline.databases.data import Reference
 
 RIBOSOMES = set([
     '5S',

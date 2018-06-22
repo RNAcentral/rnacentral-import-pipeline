@@ -20,7 +20,7 @@ import attr
 from attr.validators import instance_of as is_a
 from attr.validators import optional
 
-from databases.data import Entry
+from rnacentral_pipeline.databases.data import Entry
 
 CHROMOSOME_LEVEL_MAPPINGS = set([
     "WORMBASE",
