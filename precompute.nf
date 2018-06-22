@@ -15,6 +15,8 @@ raw_ranges
   .into { ranges }
 
 process precompute_range {
+  maxForks params.precompute.maxForks
+
   input:
   set val(min), val(max), file(query) from ranges
 

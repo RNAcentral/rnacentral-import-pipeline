@@ -17,12 +17,14 @@ import re
 import json
 import logging
 import unicodedata
+import operator as op
+import itertools as it
 from collections import Counter
 
 import attr
 from attr.validators import and_
-from attr.validators import instance_of as is_a
 from attr.validators import optional
+from attr.validators import instance_of as is_a
 
 from rnacentral_pipeline.databases.helpers.hashes import md5
 from rnacentral_pipeline.databases.helpers.hashes import crc64
@@ -178,6 +180,16 @@ class Exon(object):
             return -1
         return 1
 
+    def writeable(self, accession):
+        yield [
+            accession,
+            self.chromosome_name,
+            self.primary_start,
+            self.primary_end,
+            self.assembly_id,
+            self.strand,
+        ]
+
 
 @attr.s(frozen=True)
 class SecondaryStructure(object):
@@ -208,6 +220,13 @@ class SecondaryStructure(object):
         Compute the MD5 of the dot_bracket string.
         """
         return md5(self.dot_bracket)
+
+    def writeable(self, accession):
+        yield [
+            accession,
+            self.dot_bracket,
+            self.md5,
+        ]
 
 
 @attr.s(frozen=True)
@@ -244,6 +263,17 @@ class Reference(object):
             'title': self.title,
             'doi': self.doi,
         }
+
+    def writeable(self, accession):
+        yield [
+            self.md5(),
+            accession,
+            self.authors,
+            self.location,
+            self.title,
+            self.pmid,
+            self.doi,
+        ]
 
 
 @attr.s(frozen=True)
@@ -425,3 +455,92 @@ class Entry(object):
             return False
 
         return True
+
+    def write_ac_info(self):
+        if not self.is_valid():
+            return
+        yield [
+            self.accession,
+            self.parent_accession,
+            self.seq_version,
+            self.feature_location_start,
+            self.feature_location_end,
+            self.feature_name,
+            self.ordinal,
+            self.is_composite,
+            self.non_coding_id,
+            self.database_name,
+            self.primary_id,
+            self.optional_id,
+            self.project,
+            None,  # self.division,
+            self.keywords,
+            self.description,
+            self.species,
+            self.common_name,
+            self.organelle,
+            self.lineage,
+            None,  # This was self.allele,
+            self.anticodon,
+            self.chromosome,
+            self.experiment,
+            self.function,
+            self.gene,
+            self.gene_synonym,
+            self.inference,
+            self.locus_tag,
+            None,  # This was self.map,
+            self.mol_type,
+            self.ncrna_class,
+            self.note,
+            self.old_locus_tag,
+            self.operon,
+            self.product,
+            self.pseudogene,
+            self.standard_name,
+            self.db_xrefs,
+            # self.rna_type,
+        ]
+
+    def write_secondary_structure(self):
+        if not self.is_valid():
+            return []
+        return self.secondary_structure.writeable(self.accession)
+
+    def write_sequence(self):
+        if not self.is_valid():
+            return
+        yield [
+            self.crc64(),
+            len(self.sequence),
+            self.sequence,
+            self.database_name,
+            self.accession,
+            self.optional_id,
+            self.seq_version,
+            self.ncbi_tax_id,
+            self.md5(),
+        ]
+
+    def write_seq_short(self):
+        if len(self.sequence) <= 4000:
+            return self.write_sequence()
+        return []
+
+    def write_seq_long(self):
+        if len(self.sequence) > 4000:
+            return self.write_sequence()
+        return []
+
+    def write_refs(self):
+        return self.__write_part__(self.references)
+
+    def write_genomic_locations(self):
+        return self.__write_part__(self.exons)
+
+    def __write_part__(self, attribute, method_name='writeable'):
+        if not self.is_valid():
+            return []
+        method = op.methodcaller(method_name, self.accession)
+        writeable = it.imap(method, attribute)
+        return it.chain.from_iterable(writeable)

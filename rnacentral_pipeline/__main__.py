@@ -1,14 +1,15 @@
 #!/usr/bin/env python
 
-import os
 import csv
+import logging
 
 import click
 
-# from rnacentral_pipeline.databases.pdb import writer as pdb
+from rnacentral_pipeline.databases.ena import parsers as ena
+from rnacentral_pipeline.databases.pdb import parsers as pdb
 from rnacentral_pipeline.databases.rfam import infernal_results
-# from rnacentral_pipeline.databases.generic import writer as generic
-# from rnacentral_pipeline.databases.quickgo import writer as quickgo
+from rnacentral_pipeline.databases.generic import parser as generic
+from rnacentral_pipeline.databases.quickgo import parser as quickgo
 
 from rnacentral_pipeline.rnacentral.upi_ranges import upi_ranges
 from rnacentral_pipeline.rnacentral.search_export import exporter as search
@@ -16,6 +17,7 @@ from rnacentral_pipeline.rnacentral.search_export import exporter as search
 from rnacentral_pipeline.rnacentral.precompute import process as pre
 
 from rnacentral_pipeline.rnacentral.ftp_export import bed
+from rnacentral_pipeline.rnacentral.ftp_export import gff3
 from rnacentral_pipeline.rnacentral.ftp_export import fasta
 from rnacentral_pipeline.rnacentral.ftp_export import id_mapping
 from rnacentral_pipeline.rnacentral.ftp_export import ensembl as ensembl_json
@@ -32,10 +34,10 @@ def cli():
 
 
 @cli.command('upi-ranges')
-@click.argument('output', default='-', type=click.File('wb'))
-@click.argument('--chunk_size', type=int)
-@click.argument('--max-chunks', type=int)
+# @click.option('--max-chunks', type=int)
 @click.option('--db_url', envvar='PGDATABASE')
+@click.argument('chunk_size', type=int)
+@click.argument('output', default='-', type=click.File('wb'))
 def search_export_ranges(output, chunk_size=None, max_chunks=None, db_url=None):
     """
     This will compute the ranges to use for our each xml file in the search
@@ -45,7 +47,7 @@ def search_export_ranges(output, chunk_size=None, max_chunks=None, db_url=None):
     csv.writer(output).writerows(upi_ranges(db_url, chunk_size))
 
 
-@cli.group()
+@cli.group('external')
 def external_database():
     """
     This is a group of commands for processing data from various databases into
@@ -65,8 +67,7 @@ def process_json_schema(json_file, output):
     """
     This parses our JSON schema files to produce the importable CSV files.
     """
-    # generic.Writer(output)(json_file)
-    pass
+    generic.from_file(json_file, output)
 
 
 @external_database.command('quickgo')
@@ -77,8 +78,7 @@ def process_json_schema(json_file, output):
     file_okay=False,
 ))
 def process_quickgo(raw_data, output):
-    pass
-    # quickgo.Writer(output)(raw_data)
+    quickgo.from_file(raw_data, output)
 
 
 @external_database.command('ensembl')
@@ -106,7 +106,19 @@ def process_pdb(output):
     This will fetch and parse all sequence data from PDBe to produce the csv
     files we import.
     """
-    pass
+    pdb.write_all(output)
+
+
+@external_database.command('ena')
+@click.argument('ena_file', type=click.File('rb'))
+@click.argument('mapping_file', type=click.File('rb'))
+@click.argument('output', default='.', type=click.Path(
+    writable=True,
+    dir_okay=True,
+    file_okay=False,
+))
+def process_ena(ena_file, mapping_file, output):
+    ena.from_file(ena_file, mapping_file, output)
 
 
 @cli.group('search-export')
@@ -206,7 +218,7 @@ def split_for_nhmmer(active, accepted, rejected):
     fasta.nhmmer_split(active, accepted, rejected)
 
 
-@ftp_export.command('format-ensembl')
+@ftp_export.command('ensembl')
 @click.argument('raw', type=click.File('rb'))
 @click.argument('output', default='-', type=click.File('wb'))
 @click.option(
@@ -243,15 +255,15 @@ def format_as_bed(json_file, output):
     bed.from_json(json_file, output)
 
 
-# @ftp_export.command('as-gff3')
-# @click.argument('json_file', type=click.File('rb'))
-# @click.argument('output', default='-', type=click.File('wb'))
-# def format_as_gff3(json_file, output):
-#     """
-#     This will turn the json file produced by the coordiantes query into a GFF3
-#     file.
-#     """
-#     gff3.from_json(json_file, output)
+@ftp_export.command('as-gff3')
+@click.argument('json_file', type=click.File('rb'))
+@click.argument('output', default='-', type=click.File('wb'))
+def format_as_gff3(json_file, output):
+    """
+    This will turn the json file produced by the coordiantes query into a GFF3
+    file.
+    """
+    gff3.from_json(json_file, output)
 
 
 @cli.group()
@@ -292,4 +304,5 @@ def precompute_from_file(json_file, output):
     pre.from_file(json_file, output)
 
 
+logging.basicConfig()
 cli()  # pylint: disable=no-value-for-parameter

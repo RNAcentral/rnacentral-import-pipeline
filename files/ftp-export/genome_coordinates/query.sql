@@ -4,11 +4,11 @@ COPY (
       'rnacentral_id', concat_ws('_', t1.upi, t1.taxid)
       'chromosome', t2.name,
       'region_id', t2.accession,
+      'strand', min(t2.strand),
       'exons': array_agg(
         json_build_object(
           'start', t2.primary_start,
-          'stop', t2.primary_end,
-          'strand', t2.strand
+          'stop', t2.primary_end
         )
       ),
       'rna_type', t3.rna_type,
@@ -33,11 +33,11 @@ UNION
       'rnacentral_id', t1.rna_id,
       'chromosome', chromosome,
       'region_id', region_id,
+      'strand', min(t2.strand),
       'exons', array_agg(
         json_build_object(
           'start', start,
-          'stop', stop,
-          'strand', strand
+          'stop', stop
         )
       )
       'rna_type', t2.rna_type,

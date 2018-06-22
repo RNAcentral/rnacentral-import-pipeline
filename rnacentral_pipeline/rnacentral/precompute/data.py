@@ -199,10 +199,10 @@ class Update(object):
             self.rna_id,
             self.upi,
             self.taxid,
-            self.is_active,
+            int(self.is_active),
             self.description,
             self.rna_type,
-            self.has_coordinates,
+            int(self.has_coordinates),
             self.databases,
         ]
 

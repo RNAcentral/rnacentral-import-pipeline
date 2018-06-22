@@ -73,7 +73,7 @@ process inactive_fasta {
   publishDir "${params.ftp_export}/sequences/", mode: 'copy'
 
   input:
-  file query from Channel.fromPath('files/ftp-export/sequences/inactive.fasta')
+  file query from Channel.fromPath('files/ftp-export/sequences/inactive.sql')
 
   output:
   file 'rnacentral_inactive.fasta.gz' into __sequences
@@ -140,7 +140,7 @@ process find_ensembl_chunks {
 }
 
 raw_ensembl_ranges
-  .splitCsv(sep='\t')
+  .splitCsv()
   .into { ensembl_ranges }
 
 process ensembl_export_chunk {
@@ -155,7 +155,7 @@ process ensembl_export_chunk {
 
   """
   psql -f $query --variable min=$min --variable max=$max "$PGDATABASE" |\
-    rnac ftp-export format-ensembl --schema=$schema - ensembl-xref-$min-${max}.json
+    rnac ftp-export ensembl --schema=$schema - ensembl-xref-$min-${max}.json
   """
 }
 
@@ -170,8 +170,8 @@ process rfam_go_matches {
 
   """
   psql -f "$query" "$PGDATABASE" |\
-  rnac ftp-export rfam-go-annotations - - |\
-  gzip > rnacentral_rfam_annotations.tsv.gz
+    rnac ftp-export rfam-go-annotations - - |\
+    gzip > rnacentral_rfam_annotations.tsv.gz
   """
 }
 
@@ -203,7 +203,7 @@ process fetch_raw_coordinate_data {
   """
 }
 
-raw_coordinates.into { bed_coordinates }
+raw_coordinates.into { bed_coordinates; gff_coordinates }
 
 process format_bed_coordinates {
   publishDir "${params.ftp_export}/genome_coordinates/", mode: 'copy'
@@ -242,11 +242,13 @@ process generate_big_bed {
 }
 
 process generate_gff3 {
+  publishDir "${params.ftp_export}/genome_coordinates/", mode: 'copy'
+
   input:
-  set val assembly, val species, file(raw_data) from bed_coordinates
+  set val assembly, val species, file(raw_data) from gff_coordinates
 
   output:
-  set file(result) into gff3_files
+  file result into gff3_files
 
   script:
   result = "${species}.${assembly}.gff3.gz"
