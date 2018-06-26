@@ -97,8 +97,9 @@ class Accession(object):
         """
         Check if this accession is mitochrondrial.
         """
-        return 'mitochondri' in self.organelle or \
-            'mitochondri' in self.description
+        return 'mitochondri' in self.description or \
+            (self.organelle and 'mitochondri' in self.organelle)
+
 
 
 @attr.s()
@@ -110,9 +111,9 @@ class RfamHit(object):
 
     model = attr.ib(validator=is_a(basestring))
     model_rna_type = attr.ib(validator=is_a(basestring))
-    model_domain = attr.ib(validator=is_a(basestring))
-    model_completeness = attr.ib(validator=is_a(float))
-    sequence_completeness = attr.ib(validator=is_a(float))
+    model_domain = attr.ib(validator=optional(is_a(basestring)))
+    model_completeness = attr.ib(validator=is_a(float), convert=float)
+    sequence_completeness = attr.ib(validator=is_a(float), convert=float)
 
     @classmethod
     def build(cls, data):
@@ -154,7 +155,7 @@ class Sequence(object):
         """
         Check if this accession is mitochrondrial.
         """
-        return any(h.is_mitochondrial() for h in self.rfam_hits)
+        return any(a.is_mitochondrial() for a in self.accessions)
 
     def domains(self):
         """
@@ -192,6 +193,11 @@ class SpeciesSequence(Sequence):
         """
 
         active, inactive = partioned_accessions(data['accessions'])
+        hits = []
+        for hit in data['hits']:
+            if hit.pop('rfam_hit_id'):
+                hits.append(RfamHit.build(hit))
+
         return cls(
             upi=data['upi'],
             taxid=data['taxid'],
@@ -202,7 +208,7 @@ class SpeciesSequence(Sequence):
             xref_has_coordinates=any(data['xref_has_coordinates']),
             rna_was_mapped=data['rna_was_mapped'],
             previous_data=data['previous'][0],
-            rfam_hits=[RfamHit.build(h) for h in data['hits']],
+            rfam_hits=hits,
         )
 
 

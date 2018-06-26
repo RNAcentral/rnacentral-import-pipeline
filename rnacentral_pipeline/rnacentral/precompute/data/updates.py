@@ -28,8 +28,7 @@ def database_names(accessions):
     accesions.
     """
 
-    names = {acc.pretty_database for acc in accessions}
-    return ','.join(sorted(names))
+    return ','.join(sorted({acc.pretty_database for acc in accessions}))
 
 
 @attr.s()
