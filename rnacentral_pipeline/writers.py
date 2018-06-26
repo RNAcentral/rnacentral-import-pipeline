@@ -73,7 +73,6 @@ class MultiCsvOutput(object):  # pylint: disable=W0232
     """
 
     parser = attr.ib(validator=is_a(basestring))
-    directory = attr.ib(validator=is_a(basestring))
 
     @classmethod
     def build(cls, parser, **specs):
@@ -101,7 +100,7 @@ class MultiCsvOutput(object):  # pylint: disable=W0232
 
     def outputs(self):
         fields = attr.fields(self.__class__)
-        ignore = ['parser', 'directory']
+        ignore = {'parser'}
         return [getattr(self, f.name) for f in fields if f.name not in ignore]
 
     @contextmanager
