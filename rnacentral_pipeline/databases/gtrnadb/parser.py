@@ -15,28 +15,14 @@ limitations under the License.
 
 import json
 import logging
+import itertools as it
 
-from databases.data import Exon
-from databases.data import Entry
-from databases.data import SecondaryStructure
-import databases.helpers.phylogeny as phy
+from rnacentral_pipeline.databases.data import Exon
+from rnacentral_pipeline.databases.data import Entry
+from rnacentral_pipeline.databases.data import SecondaryStructure
+import rnacentral_pipeline.databases.helpers.phylogeny as phy
 
-from .helpers import url
-from .helpers import anticodon
-from .helpers import note_data
-from .helpers import chromosome
-from .helpers import common_name
-from .helpers import lineage
-from .helpers import species
-from .helpers import description
-from .helpers import product
-from .helpers import primary_id
-from .helpers import dot_bracket
-from .helpers import accession
-from .helpers import parent_accession
-from .helpers import seq_version
-from .helpers import references
-from .helpers import sequence
+from . import helpers
 
 LOGGER = logging.getLogger(__name__)
 
@@ -47,8 +33,8 @@ def gtrnadb_secondary_structure(data):
     will transform it into a reasonable dot-bracket string and create a
     SecondaryStructure object.
     """
-    twod = SecondaryStructure(dot_bracket=dot_bracket(data))
-    seq = sequence(data)
+    twod = SecondaryStructure(dot_bracket=helpers.dot_bracket(data))
+    seq = helpers.sequence(data)
     if len(seq) != len(twod):
         return SecondaryStructure.empty()
     return twod
@@ -70,7 +56,7 @@ def gtrnadb_exons(locations):
             raise ValueError("Invalid strand %s" % exon)
 
         exons.append(Exon(
-            chromosome=chromosome(locations),
+            chromosome=helpers.chromosome(locations),
             primary_start=int(exon['start']),
             primary_end=int(exon['stop']),
             complement=complement,
@@ -93,46 +79,48 @@ def gtrnadb_entries(data):
     for location in data['genome_locations']:
         try:
             yield Entry(
-                primary_id=primary_id(data, location),
-                accession=accession(data, location),
+                primary_id=helpers.primary_id(data, location),
+                accession=helpers.accession(data, location),
                 ncbi_tax_id=int(data['ncbi_tax_id']),
                 database='GTRNADB',
-                sequence=sequence(data),
+                sequence=helpers.sequence(data),
                 exons=[],
                 rna_type='tRNA',
-                url=url(data),
-                seq_version=seq_version(data),
-                note_data=note_data(data),
+                url=helpers.url(data),
+                seq_version=helpers.seq_version(data),
+                note_data=helpers.note_data(data),
                 secondary_structure=two_d,
-                chromosome=chromosome(location),
-                species=species(data),
-                common_name=common_name(data),
-                anticodon=anticodon(data),
-                lineage=lineage(data),
+                chromosome=helpers.chromosome(location),
+                species=helpers.species(data),
+                common_name=helpers.common_name(data),
+                anticodon=helpers.anticodon(data),
+                lineage=helpers.lineage(data),
                 gene=data['gene'],
                 optional_id=data['gene'],
-                product=product(data),
-                parent_accession=parent_accession(location),
-                description=description(data),
+                product=helpers.product(data),
+                parent_accession=helpers.parent_accession(location),
+                description=helpers.description(data),
                 mol_type='genomic DNA',
                 location_start=1,
                 location_end=len(data['sequence']),
                 gene_synonyms=data.get('synonyms', []),
-                references=references(),
+                references=helpers.references(),
             )
         except phy.UnknownTaxonId:
             print("Unknown taxon id in %s" % data)
             break
 
 
-def parse(filename):
+def parse(raw):
     """
     This will parse a JSON file produced by GtRNAdb and yield the RNAcentral
     entries that it represents.
     """
 
-    with open(filename, 'rb') as raw:
-        data = json.load(raw)
-        for datum in data:
-            for entry in gtrnadb_entries(datum):
-                yield entry
+    data = json.load(raw)
+    data = it.imap(gtrnadb_entries, data)
+    return it.chain.from_iterable(data)
+
+
+def from_file(raw, output):
+    writer = build_entry_writer(parse)
