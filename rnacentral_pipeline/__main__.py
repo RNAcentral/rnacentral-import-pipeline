@@ -1,12 +1,19 @@
 #!/usr/bin/env python
 
+"""
+This is the main entry point to various parts of the RNAcentral pipeline. This
+is mean to provide a single point for the processing of data from external
+databases. In order for loading to be efficient is is handled by pgloader
+externally.
+"""
+
 import csv
 import logging
 
 import click
 
-from rnacentral_pipeline.databases.ena import parsers as ena
-from rnacentral_pipeline.databases.pdb import parsers as pdb
+from rnacentral_pipeline.databases.ena import parser as ena
+from rnacentral_pipeline.databases.pdb import parser as pdb
 from rnacentral_pipeline.databases.rfam import infernal_results
 from rnacentral_pipeline.databases.generic import parser as generic
 from rnacentral_pipeline.databases.quickgo import parser as quickgo
@@ -38,7 +45,7 @@ def cli():
 @click.option('--db_url', envvar='PGDATABASE')
 @click.argument('chunk_size', type=int)
 @click.argument('output', default='-', type=click.File('wb'))
-def search_export_ranges(output, chunk_size=None, max_chunks=None, db_url=None):
+def search_export_ranges(output, chunk_size=None, db_url=None):
     """
     This will compute the ranges to use for our each xml file in the search
     export. We want to do several chunks at once as it is faster (but not too
@@ -78,21 +85,45 @@ def process_json_schema(json_file, output):
     file_okay=False,
 ))
 def process_quickgo(raw_data, output):
+    """
+    This will process a quickgo file and output files into the given directory.
+    """
     quickgo.from_file(raw_data, output)
 
 
 @external_database.command('ensembl')
 @click.argument('ensembl_file', type=click.File('rb'))
+@click.argument('family_file', type=click.File('rb'))
 @click.argument('output', default='.', type=click.Path(
     writable=True,
     dir_okay=True,
     file_okay=False,
 ))
-def process_ensembl(ensembl_file, output):
+def process_ensembl(ensembl_file, family_file output):
     """
     This will parse EMBL files from Ensembl to produce the expected CSV files.
     """
+    # ensembl.from_file(ensembl_file, family_file, output)
     pass
+
+
+@external_database.command('gencode')
+@click.argument('gencode_gff', type=click.File('rb'))
+@click.argument('ensembl_file', type=click.File('rb'))
+@click.argument('family_file', type=click.File('rb'))
+@click.argument('output', default='.', type=click.Path(
+    writable=True,
+    dir_okay=True,
+    file_okay=False,
+))
+def process_ensembl(gencode_gff, ensembl_file, family_file output):
+    """
+    This will parse EMBL files from Ensembl to produce the expected CSV files.
+    """
+    # gencode.from_file(gencode_gff, ensembl_file, family_file, output)
+    pass
+
+
 
 
 @external_database.command('pdb')
