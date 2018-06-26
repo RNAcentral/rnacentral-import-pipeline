@@ -21,22 +21,27 @@ process precompute_range {
   set val(min), val(max), file(query) from ranges
 
   output:
-  file 'result.tsv' into precompute_results
+  file 'precompute.csv' into precompute_results
+  file 'qa.csv' into qa_results
 
   """
   psql --variable min=$min --variable max=$max -f "$query" "$PGDATABASE" |\
-    rnac precompute from-file - result.tsv
+    rnac precompute from-file -
   """
 }
 
 process load_precomputed_data {
   input:
-  file('result.tsv*') from precompute_results.collect()
-  file ctl from Channel.fromPath('files/precompute/load.ctl')
+  file('result*.tsv') from precompute_results.collect()
+  file('qa*.csv') from qa_results.collect()
+  file pre_ctl from Channel.fromPath('files/precompute/load.ctl')
+  file qa_ctl from Channel.fromPath('files/precompute/qa.ctl')
 
   """
-  cat result.tsv* | split -dC ${params.precompute.load_size} - chunk_
+  cat result*.csv | split -dC ${params.precompute.load_size} - pre_
+  cat qa*.csv | split -dC ${params.precompute.load_size} - qa_
 
-  pgloader $ctl
+  pgloader $pre_ctl
+  pgloader $qa_ctl
   """
 }

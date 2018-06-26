@@ -14,7 +14,9 @@ select
                 'common_name', acc.common_name,
                 'feature_name', acc.feature_name,
                 'ncrna_class', acc.ncrna_class,
-                'locus_tag', acc.locus_tag
+                'locus_tag', acc.locus_tag,
+                'organelle', acc.organelle,
+                'lineage', acc.classification
             )
         ),
         'deleted', array_agg(distinct xref.deleted = 'Y'),
@@ -31,7 +33,14 @@ select
                 mapping.upi = rna.upi
                 and mapping.taxid = xref.taxid
         ),
-        'previous', array_agg(row_to_json(prev.*))
+        'previous', array_agg(row_to_json(prev.*)),
+        'hits', array_agg(json_build_object(
+            'model', hits.rfam_model_id,
+            'model_rna_type', models.rna_type,
+            'model_domain', models.domain,
+            'model_completeness', hits.model_completeness,
+            'sequence_completeness', hits.sequence_completeness
+          ))
     )
 FROM rna
 join xref on xref.upi = rna.upi
@@ -42,6 +51,8 @@ left join rnc_rna_precomputed prev
 on
 	prev.upi = rna.upi
 	and prev.taxid = xref.taxid
+left join rfam_model_hits hits ON hits.upi = xref.upi
+left join rfam_models models ON models.rfam_model_id = hits.rfam_model_id
 join rnc_database db
 ON
     db.id = xref.dbid

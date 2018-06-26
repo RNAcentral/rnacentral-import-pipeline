@@ -13,10 +13,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import csv
 import json
 import operator as op
 import itertools as it
+
+from rnacentral_pipeline.writers import MultiCsvOutput
 
 from . import data
 
@@ -43,6 +44,13 @@ def as_update(sequence):
     return data.InactiveUpdate.build(sequence)
 
 
+def parse(handle):
+    sequences = it.imap(json.loads, handle)
+    sequences = as_sequences(sequences)
+    sequences = it.imap(as_update, sequences)
+    return sequences
+
+
 def from_file(handle, output):
     """
     Process the results of the query stored in handle and write the updated
@@ -50,9 +58,14 @@ def from_file(handle, output):
     object per line.
     """
 
-    writer = csv.writer(output, quoting=csv.QUOTE_ALL)
-    sequences = it.imap(json.loads, handle)
-    sequences = as_sequences(sequences)
-    sequences = it.imap(as_update, sequences)
-    sequences = it.imap(op.methodcaller('as_writeable'), sequences)
-    writer.writerows(sequences)
+    writer = MultiCsvOutput.build(
+        parse,
+        precompute={
+            'transformer': op.methodcaller('as_writeables')
+        },
+        qa={
+            'transformer': op.methodcaller('writeable_statuses')
+        }
+    )
+
+    writer(output, handle)

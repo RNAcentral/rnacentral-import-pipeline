@@ -17,20 +17,6 @@ import attr
 from attr.validators import optional
 from attr.validators import instance_of as is_a
 
-from .description import description_of
-
-from .rna_type import rna_type_of
-
-
-def database_names(accessions):
-    """
-    Generates a comma separated list of all database names in the given list of
-    accesions.
-    """
-
-    names = {acc.pretty_database for acc in accessions}
-    return ','.join(sorted(names))
-
 
 def partioned_accessions(all_accessions):
     """
@@ -65,6 +51,8 @@ class Accession(object):
     common_name = attr.ib(validator=optional(is_a(basestring)))
     description = attr.ib(validator=is_a(basestring))
     locus_tag = attr.ib(validator=optional(is_a(basestring)))
+    organelle = attr.ib(validator=optional(is_a(basestring)))
+    lineage = attr.ib(validator=optional(is_a(basestring)))
 
     @classmethod
     def build(cls, data):
@@ -91,6 +79,49 @@ class Accession(object):
             return self.ncrna_class
         return self.feature_name
 
+    @property
+    def domain(self):
+        """
+        Get the domain, if any, that is assigned to this accession. This will
+        not include uncultured, environmental or synthetic domains.
+        """
+
+        if 'uncultured' in self.lineage or \
+                'environmental' in self.lineage or \
+                'synthetic' in self.lineage:
+            return None
+
+        return self.lineage.split(';')[0]  # pylint: disable=no-member
+
+    def is_mitochondrial(self):
+        """
+        Check if this accession is mitochrondrial.
+        """
+        return 'mitochondri' in self.organelle or \
+            'mitochondri' in self.description
+
+
+@attr.s()
+class RfamHit(object):
+    """
+    This represents the information needed to represent an Rfam Hit to compute
+    the QA information.
+    """
+
+    model = attr.ib(validator=is_a(basestring))
+    model_rna_type = attr.ib(validator=is_a(basestring))
+    model_domain = attr.ib(validator=is_a(basestring))
+    model_completeness = attr.ib(validator=is_a(float))
+    sequence_completeness = attr.ib(validator=is_a(float))
+
+    @classmethod
+    def build(cls, data):
+        """
+        Create a new RfamHit object. This accepts a dict where all keys match
+        the attributes of this class.
+        """
+        return cls(**data)  # pylint: disable=star-args
+
 
 @attr.s()
 class Sequence(object):
@@ -111,12 +142,39 @@ class Sequence(object):
     xref_has_coordinates = attr.ib(validator=is_a(bool))
     rna_was_mapped = attr.ib(validator=is_a(bool))
     previous_data = attr.ib(validator=is_a(dict))
+    rfam_hits = attr.ib(validator=is_a(list))
 
     def is_species_specific(self):
         """
         Check if this sequence is specific to a species or is generic.
         """
         return self.taxid is not None
+
+    def is_mitochondrial(self):
+        """
+        Check if this accession is mitochrondrial.
+        """
+        return any(h.is_mitochondrial() for h in self.rfam_hits)
+
+    def domains(self):
+        """
+        Get the set of all domains assigned to this sequence. This will ignore
+        any invalid assignments (environmental samples, uncultured, or
+        synthetic).
+        """
+
+        domains = set()
+        for accession in self.accessions:
+            domain = accession.domain
+            if domain:
+                domains.add(domain)
+        return domains
+
+    def has_unique_hit(self):
+        """
+        Check if there is only one Rfam hit to this sequence.
+        """
+        return len(self.rfam_hits) == 1
 
 
 @attr.s()
@@ -144,10 +202,15 @@ class SpeciesSequence(Sequence):
             xref_has_coordinates=any(data['xref_has_coordinates']),
             rna_was_mapped=data['rna_was_mapped'],
             previous_data=data['previous'][0],
+            rfam_hits=[RfamHit.build(h) for h in data['hits']],
         )
+
 
 @attr.s()
 class GenericSequence(Sequence):
+    """
+    This represents a sequence that is not assigned to a taxid.
+    """
 
     @classmethod
     def build(cls, sequences):
@@ -174,88 +237,5 @@ class GenericSequence(Sequence):
             xref_has_coordinates=has_coordinates,
             rna_was_mapped=any(s.rna_was_mapped for s in sequences),
             previous_data={},
-        )
-
-
-@attr.s()
-class Update(object):
-    upi = attr.ib(validator=is_a(basestring))
-    taxid = attr.ib(validator=optional(is_a(int)))
-    is_active = attr.ib(validator=is_a(bool))
-    rna_type = attr.ib(validator=is_a(basestring))
-    description = attr.ib(validator=is_a(basestring))
-    databases = attr.ib(validator=is_a(basestring))
-    has_coordinates = attr.ib(validator=is_a(bool))
-    short_description = attr.ib(validator=is_a(basestring), default='')
-
-    @property
-    def rna_id(self):
-        if self.taxid is not None:
-            return '%s_%i' % (self.upi, self.taxid)
-        return self.upi
-
-    def as_writeable(self):
-        return [
-            self.rna_id,
-            self.upi,
-            self.taxid,
-            int(self.is_active),
-            self.description,
-            self.rna_type,
-            int(self.has_coordinates),
-            self.databases,
-        ]
-
-
-class ActiveUpdate(Update):
-    @classmethod
-    def build(cls, sequence):
-        rna_type = rna_type_of(sequence)
-        description = description_of(rna_type, sequence).encode('utf-8')
-
-        has_coordinates = sequence.xref_has_coordinates or \
-            sequence.rna_was_mapped
-
-        return cls(
-            upi=sequence.upi,
-            taxid=sequence.taxid,
-            is_active=True,
-            rna_type=rna_type,
-            description=description,
-            databases=database_names(sequence.accessions),
-            has_coordinates=has_coordinates,
-        )
-
-
-class InactiveUpdate(Update):
-    @classmethod
-    def build(cls, sequence):
-        has_coordinates = sequence.xref_has_coordinates or \
-            sequence.rna_was_mapped
-
-        if 'rna_type' in sequence.previous_data:
-            rna_type = sequence.previous_data['rna_type']
-        else:
-            rna_types = {acc.rna_type for acc in sequence.inactive_accessions}
-            if len(rna_types) == 1:
-                rna_type = rna_types.pop()
-            else:
-                rna_type = 'ncRNA'
-
-        if 'description' in sequence.previous_data:
-            description = sequence.previous_data['description']
-        else:
-            description = '{rna_type} from {count} species'.format(
-                rna_type=rna_type,
-                count=len({ac.species for ac in sequence.inactive_accessions})
-            )
-
-        return cls(
-            upi=sequence.upi,
-            taxid=sequence.taxid,
-            is_active=False,
-            rna_type=rna_type,
-            description=description,
-            databases=database_names(sequence.inactive_accessions),
-            has_coordinates=has_coordinates,
+            rfam_hits=[],
         )
