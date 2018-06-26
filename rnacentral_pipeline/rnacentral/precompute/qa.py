@@ -47,28 +47,15 @@ EXPECTED_MATCHES = {
 }
 
 
-def is_ignorable_mito_missing_trna(rna_type, data):
-    """
-    Check if the sequence is likely a mitochondrial tRNA so missing hits can be
-    ignored in some cases.
-    """
-
-    if 'tRNA' == rna_type:
-        return False
-
-    return data.is_mitochondrial() and not data.hits
-
-
 def is_ignorable_mito_conflict(rna_type, data):
     """
     This can ignore any conflict where the sequence probably comes from a
     mitochondria but it matches a bacterial rRNA. In that case we do not
     warn since this is expected from evolution.
     """
-
     return data.is_mitochondrial() and \
         'rRNA' == rna_type and \
-        data.hits[0].rfam_model in {
+        data.rfam_hits[0].model in {
             'RF00177',  # Bacterial small subunit ribosomal RNA
             'RF02541',  # Bacterial large subunit ribosomal RNA
             'RF01959',  # Archaeal small subunit ribosomal RNA
@@ -87,14 +74,14 @@ def possible_contamination(rna_type, data):
     if not data.has_unique_hit():
         return False
 
-    hit = data.hits[0]
+    hit = data.rfam_hits[0]
     if not hit.model_domain:
         return False
 
-    if not data.domains:
+    if not data.domains():
         return False
 
-    return hit.model_domain not in data.domains and \
+    return hit.model_domain not in data.domains() and \
         not is_ignorable_mito_conflict(rna_type, data)
 
 
@@ -104,15 +91,16 @@ def incomplete_sequence(_, data):
     the Rfam hits cover enough of the sequence and the hit is complete enough.
     """
 
-    hits = data.hits
+    hits = data.rfam_hits
     if len(hits) != 1:
         return False
 
-    if hits[0].rfam_model not in INCOMPLETE_FAMILIES:
+    hit = hits[0]
+    if hit.model not in INCOMPLETE_FAMILIES:
         return False
 
-    return hits[0].model_completeness <= 0.5 and \
-        hits[0].sequence_completeness >= 0.9
+    return hit.model_completeness <= 0.5 and \
+        hit.sequence_completeness >= 0.9
 
 
 def missing_rfam_match(rna_type, data):
@@ -121,17 +109,14 @@ def missing_rfam_match(rna_type, data):
     match.
     """
 
-    rna_types = data.rna_types
-    if len(rna_types) > 1:
-        return False
-
-    rna_type = rna_types.pop()
     if rna_type not in EXPECTED_MATCHES:
         return False
 
-    if is_ignorable_mito_missing_trna(rna_type, data):
+    if rna_type == 'tRNA' and \
+            data.is_mitochondrial() and \
+            not data.rfam_hits:
         return False
 
     required = EXPECTED_MATCHES[rna_type]
-    hits = {h.rfam_model_id for h in data.hits}
+    hits = {h.model for h in data.rfam_hits}
     return not hits.intersection(required)

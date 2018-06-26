@@ -132,12 +132,25 @@ def test_builds_correct_rna_types(rna_id, rna_type):
     assert load_data(rna_id).rna_type == rna_type
 
 
-@pytest.mark.skip()
+@pytest.mark.parametrize('rna_id,databases', [  # pylint: disable=no-member
+    ('URS0000016972_6239', 'ENA'),
+    ('URS000001E7BA_559292', 'ENA,gtRNAdb,Rfam,SGD'),
+    ('URS00000AEE53_380749', 'ENA'),
+    ('URS00000F9D45_9606', 'ENA,HGNC,PDBe,RefSeq'),
+    ('URS000018EB2E_3702', 'ENA,lncRNAdb'),
+])
 def test_build_correct_databases(rna_id, databases):
     assert load_data(rna_id).databases == databases
 
 
-@pytest.mark.skip()
+@pytest.mark.parametrize('rna_id,flag', [  # pylint: disable=no-member
+    ('URS000067237A_7955', False),
+    ('URS00006DC7D7_1871905', True),
+    ('URS00006DCB39_9606', False),
+    ('URS000075AAF7_9606', False),
+    ('URS0000C21900_3555', True),
+    ('URS0000C8E9CE_9606', True),
+])
 def test_build_correct_coordinate_flag(rna_id, flag):
     assert load_data(rna_id).has_coordinates == flag
 
