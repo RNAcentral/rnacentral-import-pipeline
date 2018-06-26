@@ -14,6 +14,9 @@ limitations under the License.
 """
 
 import json
+import itertools as it
+
+from rnacentral_pipeline.writers import build_entry_writer
 
 from ..data import Entry
 
@@ -54,13 +57,16 @@ def as_entry(data, mapping):
     )
 
 
-def parse(filename, mapping):
+def parse(handle, mapping):
     """
     Parse the JSON file of Rfam data and produce a generator of all Entry
     objects in the file.
     """
 
-    with open(filename, 'rb') as raw:
-        data = json.load(raw)
-        for entry in data:
-            yield as_entry(entry, mapping)
+    data = json.load(handle)
+    return it.imap(lambda e: as_entry(e, mapping), data)
+
+
+def from_file(handle, mapping, output):
+    writer = build_entry_writer(parse)
+    writer(output, handle, mapping)
