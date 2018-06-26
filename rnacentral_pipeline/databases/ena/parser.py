@@ -18,6 +18,7 @@ from Bio import SeqIO
 from rnacentral_pipeline.databases.data import Entry
 
 import rnacentral_pipeline.databases.helpers.embl as embl
+
 from rnacentral_pipeline.writers import build_entry_writer
 
 from . import dr
