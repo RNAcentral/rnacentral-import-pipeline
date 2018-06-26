@@ -18,7 +18,7 @@ for export to usable flat files.
 
 from rnacentral_pipeline.databases.data import Exon
 from rnacentral_pipeline.databases.data import Reference
-from rnacentral_pipeline.databases import helpers
+from rnacentral_pipeline.databases.helpers import phylogeny as helpers
 
 RNA_TYPE_MAPPING = {
     "gene": None,
@@ -83,7 +83,6 @@ def name(data):
     """
     Get the assigned name of the entry.
     """
-
     return data['marker_name']
 
 
@@ -91,7 +90,6 @@ def symbol(data):
     """
     Get the feature symbol.
     """
-
     return data['marker_symbol']
 
 
