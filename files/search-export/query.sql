@@ -34,11 +34,12 @@ SELECT
         'rfam_family_names', array_agg(models.short_name),
         'rfam_ids', array_agg(hits.rfam_model_id),
         'rfam_clans', array_agg(models.rfam_clan_id),
-        'rfam_status',
-            case
-                when cardinality((array_agg(pre.rfam_problems))) = 0 then '{}'
-                else (array_agg(pre.rfam_problems))[1]::json
-            end,
+        'qa_status', json_build_object(
+            'has_issue', bool_or(qa.has_issue),
+            'possible_contamination', bool_or(qa.possible_contamination),
+            'incomplete_sequence', bool_or(qa.incomplete_sequence),
+            'missing_rfam_match', bool_or(qa.missing_rfam_match),
+        )),
         'tax_strings', array_agg(acc.classification),
         'functions', array_agg(acc.function),
         'genes', array_agg(acc.gene),
@@ -63,6 +64,7 @@ JOIN rnc_database db ON xref.dbid = db.id
 JOIN rnc_release release1 ON xref.created = release1.id
 JOIN rnc_release release2 ON xref.last = release2.id
 JOIN rna rna ON xref.upi = rna.upi
+JOIN qa_status qa ON qa.upi = xref.upi AND qa.taxid = xref.taxid
 JOIN rnc_rna_precomputed pre
 ON
     xref.upi = pre.upi

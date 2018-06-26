@@ -441,9 +441,8 @@ def rfam_problems(status):
     """
     Create a list of the names of all Rfam problems.
     """
-    if not status['has_issue']:
-        return ['none']
-    return sorted(p['name'] for p in status['problems'])
+    problems = sorted(n for n, v in status.items() if v)
+    return problems or ['none']
 
 
 def as_popular(taxid):
@@ -537,15 +536,15 @@ builder = entry([
             'deleted',
             'rna_type',
             'expert_dbs',
-            'rfam_status',
+            'qa_status',
         )),
         fields('locus_tag', unique, keys='locus_tags'),
         fields('standard_name', unique, keys='standard_names'),
         fields('rfam_family_name', unique, keys='rfam_family_names'),
         fields('rfam_id', unique, keys='rfam_ids'),
         fields('rfam_clan', unique, keys='rfam_clans'),
-        fields('rfam_problems', rfam_problems, keys='rfam_status'),
-        field('rfam_problem_found', problem_found, keys='rfam_status'),
+        fields('rfam_problems', rfam_problems, keys='qa_status'),
+        field('rfam_problem_found', problem_found, keys='qa_status'),
         fields('tax_string', unique, keys='tax_strings'),
         fields('involved_in', involved_in, keys='go_annotations'),
         fields('part_of', part_of, keys='go_annotations'),
