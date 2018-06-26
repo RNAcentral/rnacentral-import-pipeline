@@ -17,25 +17,13 @@ for export to usable flat files.
 """
 
 import csv
+import operator as op
+import itertools as it
 
 from rnacentral_pipeline.databases.data import Entry
+from rnacentral_pipeline.writers import build_entry_writer
 
-from .helpers import primary_id
-from .helpers import accession
-from .helpers import taxon_id
-from .helpers import exon
-from .helpers import infer_rna_type
-from .helpers import xref_data
-from .helpers import chromosome
-from .helpers import lineage
-from .helpers import gene
-from .helpers import name
-from .helpers import symbol
-from .helpers import start
-from .helpers import stop
-from .helpers import references
-from .helpers import species
-from .helpers import common_name
+from . import helpers
 
 
 def lines(raw):
@@ -51,44 +39,43 @@ def lines(raw):
         yield line
 
 
-def parser(filename):
+def as_entry(data):
+    yield Entry(
+        primary_id=helpers.primary_id(data),
+        accession=helpers.accession(data),
+        ncbi_tax_id=helpers.taxon_id(data),
+        database='MGI',
+        sequence='',
+        exons=[],
+        rna_type=helpers.infer_rna_type(data) or '',
+        url='',
+        division='MUS',
+        is_composite='N',
+        xref_data=helpers.xref_data(data),
+        chromosome=helpers.chromosome(data),
+        species=helpers.species(data),
+        common_name=helpers.common_name(data),
+        lineage=helpers.lineage(data),
+        gene=helpers.gene(data),
+        optional_id=helpers.symbol(data),
+        description=helpers.name(data),
+        seq_version='1',
+        location_start=helpers.start(data),
+        location_end=helpers.stop(data),
+        references=helpers.references(data),
+    )
+
+
+def parse(raw):
     """
     Parses the file and produces an iterable of all entries as MGI objects.
     """
 
-    with open(filename, 'rb') as raw:
-        for data in csv.DictReader(lines(raw), delimiter='\t'):
-            yield Entry(
-                primary_id=primary_id(data),
-                accession=accession(data),
-                ncbi_tax_id=taxon_id(data),
-                database='MGI',
-                sequence='',
-                exons=[],
-                rna_type=infer_rna_type(data) or '',
-                url='',
-                division='MUS',
-                is_composite='N',
-                xref_data=xref_data(data),
-                chromosome=chromosome(data),
-                species=species(data),
-                common_name=common_name(data),
-                lineage=lineage(data),
-                gene=gene(data),
-                optional_id=symbol(data),
-                description=name(data),
-                seq_version='1',
-                location_start=start(data),
-                location_end=stop(data),
-                references=references(data),
-            )
+    data = csv.DictReader(lines(raw), delimiter='\t')
+    data = it.imap(as_entry, data)
+    return it.ifilter(op.attrgetter('rna_type'), data)
 
 
-def rna_entries(filename):
-    """
-    Parses the file and produces an iterable of only the RNA entries.
-    """
-
-    for entry in parser(filename):
-        if entry.rna_type:
-            yield entry
+def from_file(raw, output):
+    writer = build_entry_writer(parse)
+    writer(output, raw)
