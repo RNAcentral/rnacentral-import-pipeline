@@ -13,19 +13,5 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import csv
-import json
-import operator as op
-import itertools as it
-
-from . data import QaData
-from . data import QaStatus
-
-
-def process(handle, output):
-    writer = csv.writer(output, quoting=csv.QUOTE_ALL)
-    data = it.imap(json.loads, handle)
-    data = it.imap(QaData.build, data)
-    data = it.imap(QaStatus.build, data)
-    data = it.imap(op.methodcaller('writeable'), data)
-    writer.writerows(data)
+from .initial import *
+from .updates import *

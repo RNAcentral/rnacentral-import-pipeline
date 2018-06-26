@@ -21,6 +21,11 @@ from . import validators
 
 @attr.s()
 class RfamHit(object):
+    """
+    This represents the information needed to represent an Rfam Hit to compute
+    the QA information.
+    """
+
     model = attr.ib(validator=is_a(basestring))
     model_rna_type = attr.ib(validator=is_a(basestring))
     model_domain = attr.ib(validator=is_a(basestring))
@@ -29,7 +34,11 @@ class RfamHit(object):
 
     @classmethod
     def build(cls, data):
-        return cls(**data)
+        """
+        Create a new RfamHit object. This accepts a dict where all keys match
+        the attributes of this class.
+        """
+        return cls(**data)  # pylint: disable=star-args
 
 
 @attr.s()
@@ -64,6 +73,10 @@ class QaData(object):
         )
 
     def is_mitochondrial(self):
+        """
+        Check if
+        """
+
         return any('mitochondri' in o for o in self.organelles) or \
             any('mitochondri' in d for d in self.descriptions)
 
@@ -105,8 +118,8 @@ class QaStatus(object):
             self.rna_id,
             self.upi,
             self.taxid,
-            self.has_issue,
-            self.incomplete_sequence,
-            self.possible_contamination,
-            self.missing_rfam_match,
+            int(self.has_issue),
+            int(self.incomplete_sequence),
+            int(self.possible_contamination),
+            int(self.missing_rfam_match),
         ]

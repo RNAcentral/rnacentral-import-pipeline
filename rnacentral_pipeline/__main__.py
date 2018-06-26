@@ -14,6 +14,7 @@ import click
 
 from rnacentral_pipeline.databases.ena import parser as ena
 from rnacentral_pipeline.databases.pdb import parser as pdb
+from rnacentral_pipeline.databases.rfam import parser as rfam
 from rnacentral_pipeline.databases.rfam import infernal_results
 from rnacentral_pipeline.databases.generic import parser as generic
 from rnacentral_pipeline.databases.quickgo import parser as quickgo
@@ -122,8 +123,6 @@ def process_ensembl(gencode_gff, ensembl_file, family_file output):
     """
     # gencode.from_file(gencode_gff, ensembl_file, family_file, output)
     pass
-
-
 
 
 @external_database.command('pdb')
@@ -326,7 +325,11 @@ def precompute():
 
 @precompute.command('from-file')
 @click.argument('json_file', type=click.File('rb'))
-@click.argument('output', default='-', type=click.File('wb'))
+@click.argument('output', default='.', type=click.Path(
+    writable=True,
+    dir_okay=True,
+    file_okay=False,
+))
 def precompute_from_file(json_file, output):
     """
     This command will take the output produced by the precompute query and
