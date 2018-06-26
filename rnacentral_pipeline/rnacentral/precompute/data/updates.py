@@ -139,6 +139,7 @@ class Update(object):
         Yield arrays for all updates for qa status.
         """
 
+        # pylint: disable=no-member
         writeable = self.qa_status.writeable(self.upi, self.taxid)
         if writeable:
             yield writeable
@@ -151,6 +152,11 @@ class ActiveUpdate(Update):
 
     @classmethod
     def build(cls, sequence):
+        """
+        Build an ActiveUpdate object for the given sequence. This will compute
+        the rna_type, description and such data.
+        """
+
         rna_type = rna_type_of(sequence)
         description = description_of(rna_type, sequence).encode('utf-8')
 
@@ -176,6 +182,12 @@ class InactiveUpdate(Update):
 
     @classmethod
     def build(cls, sequence):
+        """
+        This will build InactiveUpdate for the given sequence. This will try to
+        copy over any previous data and will do very little work to create a
+        correct RNA type or useful description otherwise.
+        """
+
         has_coordinates = sequence.xref_has_coordinates or \
             sequence.rna_was_mapped
 
