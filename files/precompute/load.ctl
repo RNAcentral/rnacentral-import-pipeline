@@ -1,7 +1,8 @@
 LOAD CSV
 FROM ALL FILENAMES MATCHING ~<pre_*>
+IN DIRECTORY {{PWD}}
 HAVING FIELDS (
-  id
+  id,
   upi,
   taxid [null if ""],
   is_active,
@@ -12,7 +13,7 @@ HAVING FIELDS (
 )
 INTO {{PGDATABASE}}?load_precomputed
 TARGET COLUMNS (
-  id
+  id,
   upi,
   taxid,
   is_active,
@@ -57,6 +58,7 @@ insert into rnc_rna_precomputed (
   taxid,
   is_active,
   rna_type,
+  rfam_problems,
   description,
   databases,
   has_coordinates
@@ -67,10 +69,12 @@ SELECT
   taxid,
   is_active,
   rna_type,
+  '{}'::jsonb,
   description,
   databases,
   has_coordinates
 FROM load_precomputed
+)
 ON CONFLICT (id) DO UPDATE
 SET
   is_active = EXCLUDED.is_active,
