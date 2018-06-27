@@ -64,7 +64,7 @@ def best(ordered_choices, possible, check, default=None):
         found = [entry for entry in possible if check(choice, entry)]
         if found:
             return (choice, found)
-    raise NoBestFoundException("Could not select a best")
+    raise NoBestFoundException("Could not select a best for: %s" % str(possible))
 
 
 def entropy(data):
