@@ -193,7 +193,7 @@ class InactiveUpdate(Update):
         has_coordinates = sequence.xref_has_coordinates or \
             sequence.rna_was_mapped
 
-        if 'rna_type' in sequence.previous_data:
+        if sequence.previous_data and 'rna_type' in sequence.previous_data:
             rna_type = sequence.previous_data['rna_type']
         else:
             rna_types = {acc.rna_type for acc in sequence.inactive_accessions}
@@ -202,7 +202,7 @@ class InactiveUpdate(Update):
             else:
                 rna_type = 'ncRNA'
 
-        if 'description' in sequence.previous_data:
+        if sequence.previous_data and 'description' in sequence.previous_data:
             description = sequence.previous_data['description']
         else:
             description = '{rna_type} from {count} species'.format(

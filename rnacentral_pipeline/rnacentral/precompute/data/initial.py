@@ -142,7 +142,7 @@ class Sequence(object):
     is_active = attr.ib(validator=is_a(bool))
     xref_has_coordinates = attr.ib(validator=is_a(bool))
     rna_was_mapped = attr.ib(validator=is_a(bool))
-    previous_data = attr.ib(validator=is_a(dict))
+    previous_data = attr.ib(validator=optional(is_a(dict)))
     rfam_hits = attr.ib(validator=is_a(list))
 
     def is_species_specific(self):
