@@ -30,7 +30,7 @@ def send_msg(msg, url=None):
 @click.argument('job_name')
 def database_start(job_name, db=None, url=None):
     """
-    This will warn when an expensive job on a database has started running.
+    Warn when an expensive database job started.
     """
 
     parts = urlparse(db)
@@ -56,7 +56,7 @@ def database_start(job_name, db=None, url=None):
 @click.argument('job_name')
 def database_done(job_name, db=None, url=None):
     """
-    This will warn when an expensive job on a database has started running.
+    Message to say an expensive database is done.
     """
 
     parts = urlparse(db)
