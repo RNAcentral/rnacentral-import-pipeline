@@ -13,6 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import operator as op
+
 import attr
 from attr.validators import optional
 from attr.validators import instance_of as is_a
@@ -28,7 +30,8 @@ def database_names(accessions):
     accesions.
     """
 
-    return ','.join(sorted({acc.pretty_database for acc in accessions}))
+    databases = {acc.pretty_database for acc in accessions}
+    return ','.join(sorted(databases, key=op.methodcaller('lower')))
 
 
 @attr.s()

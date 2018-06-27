@@ -59,7 +59,7 @@ def load_data(upi):
     ('URS00006CE02F_9606', 'Homo sapiens U8 small nucleolar RNA'),
     ('URS00006D80BC_9913', 'Bos taurus (cattle) microRNA bta-mir-497 precursor'),
     ('URS00006DC8B9_6239', 'Caenorhabditis elegans tRNA-Undet'),
-    ('URS00007150F8_9913', 'Bos taurus (cattle) microRNA 431 precursor'),
+    ('URS00007150F8_9913', 'Bos taurus bta-mir-431'),
     ('URS0000759BEC_9606', 'Homo sapiens DiGeorge syndrome critical region gene 9 (DGCR9)'),
     ('URS000075A546_9606', 'Homo sapiens (human) microRNA precursor (hsa-mir-3648-1, hsa-mir-3648-2)'),
     ('URS000075C808_9606', 'Homo sapiens HOX transcript antisense RNA (HOTAIR)'),
@@ -133,7 +133,7 @@ def test_builds_correct_rna_types(rna_id, rna_type):
 
 
 @pytest.mark.parametrize('rna_id,databases', [  # pylint: disable=no-member
-    ('URS0000016972_6239', 'ENA'),
+    ('URS0000016972_6239', 'ENA,RefSeq,WormBase'),
     ('URS000001E7BA_559292', 'ENA,gtRNAdb,Rfam,SGD'),
     ('URS00000AEE53_380749', 'ENA'),
     ('URS00000F9D45_9606', 'ENA,HGNC,PDBe,RefSeq'),
