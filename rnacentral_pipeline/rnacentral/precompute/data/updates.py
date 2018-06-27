@@ -142,9 +142,10 @@ class Update(object):
         """
 
         # pylint: disable=no-member
-        writeable = self.qa_status.writeable(self.upi, self.taxid)
-        if writeable:
-            yield writeable
+        if self.taxid:
+            writeable = self.qa_status.writeable(self.upi, self.taxid)
+            if writeable:
+                yield writeable
 
 
 class ActiveUpdate(Update):
