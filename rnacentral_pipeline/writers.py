@@ -52,18 +52,17 @@ class CsvOutput(object):
     def writer(self, directory):
         path = os.path.join(directory, self.filename)
         try:
-            with open(path) as out:
+            with open(path, 'w') as out:
                 writer = csv.writer(out, **self.csv_options)
-                yield writer.writerow
+                yield lambda e: writer.writerows(self.transformer(e))
         finally:
-            if os.stat(path).st_size == 0:
+            if os.path.exists(path) and os.stat(path).st_size == 0:
                 os.remove(path)
 
     def __call__(self, directory, generator):
         with self.writer(directory) as writer:
             for entry in generator:
-                for result in self.transformer(entry):
-                    writer(result)
+                writer(entry)
 
 
 @attr.s()
@@ -72,7 +71,7 @@ class MultiCsvOutput(object):  # pylint: disable=W0232
     This is a wrapper around all outputs an entry writer can possibly create.
     """
 
-    parser = attr.ib(validator=is_a(basestring))
+    parser = attr.ib()
 
     @classmethod
     def build(cls, parser, **specs):
@@ -96,7 +95,7 @@ class MultiCsvOutput(object):  # pylint: disable=W0232
             fields,
             bases=(MultiCsvOutput,),
         )
-        return klass(**output)  # pylint: disable=star-args
+        return klass(parser, **outputs)  # pylint: disable=star-args
 
     def outputs(self):
         fields = attr.fields(self.__class__)
@@ -107,7 +106,7 @@ class MultiCsvOutput(object):  # pylint: disable=W0232
     def writers(self, directory):
         with ExitStack() as stack:
             writers = []
-            for output in self.outputs:
+            for output in self.outputs():
                 writers.append(stack.enter_context(output.writer(directory)))
             yield writers
 
