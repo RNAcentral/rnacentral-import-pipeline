@@ -100,7 +100,7 @@ def process_quickgo(raw_data, output):
     dir_okay=True,
     file_okay=False,
 ))
-def process_ensembl(ensembl_file, family_file output):
+def process_ensembl(ensembl_file, family_file, output):
     """
     This will parse EMBL files from Ensembl to produce the expected CSV files.
     """
@@ -117,7 +117,7 @@ def process_ensembl(ensembl_file, family_file output):
     dir_okay=True,
     file_okay=False,
 ))
-def process_ensembl(gencode_gff, ensembl_file, family_file output):
+def process_gencode(gencode_gff, ensembl_file, family_file, output):
     """
     This will parse EMBL files from Ensembl to produce the expected CSV files.
     """
