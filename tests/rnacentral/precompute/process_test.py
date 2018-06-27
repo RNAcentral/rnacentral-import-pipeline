@@ -144,10 +144,10 @@ def test_build_correct_databases(rna_id, databases):
 
 
 @pytest.mark.parametrize('rna_id,flag', [  # pylint: disable=no-member
-    ('URS000067237A_7955', False),
-    ('URS00006DC7D7_1871905', True),
-    ('URS00006DCB39_9606', False),
-    ('URS000075AAF7_9606', False),
+    ('URS000067237A_7955', True),
+    ('URS00006DC7D7_1871905', False),
+    ('URS00006DCB39_9606', True),
+    ('URS000075AAF7_9606', True),
     ('URS0000C21900_3555', True),
     ('URS0000C8E9CE_9606', True),
 ])

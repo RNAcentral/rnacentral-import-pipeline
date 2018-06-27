@@ -21,7 +21,6 @@ from rnacentral_pipeline.rnacentral.precompute.description import \
 from .helpers import load_data
 
 
-
 @pytest.mark.parametrize('rna_id,rna_type,name', [  # pylint: disable=no-member
     ('URS000001E7BA_559292', 'tRNA', 'Saccharomyces cerevisiae S288c tRNA-Gln (tQ(UUG)C, tQ(UUG)D1-3, tQ(UUG)E1, tQ(UUG)H, tQ(UUG)L)'),
     ('URS00000AEE53_380749', 'tmRNA', 'Hydrogenobaculum sp. Y04AAS1 tmRNA'),
