@@ -1,0 +1,54 @@
+#!/usr/bin/env python
+
+import click
+from urlparse import urlparse
+
+import requests
+
+
+@click.group()
+def cli():
+    pass
+
+
+@cli.command('msg')
+@click.option('--url', envvar="SLACK_WEBHOOK")
+@click.argument('msg', nargs=-1)
+def send_msg(msg, url=None):
+    """
+    This is the entry point that will allow posting of messages to a slack
+    channel. This requires either an env var SLACK_API_TOKEN or the --token
+    option. The mesage does not need to be quoted (unless to escape special
+    characters.
+    """
+    requests.post(url, json={'text': ' '.join(msg)})
+
+
+@cli.command('db-work')
+@click.option('--db', envvar="PGDATABASE")
+@click.option('--url', envvar="SLACK_WEBHOOK")
+@click.argument('job_name')
+def send_database_start(job_name, db=None, url=None):
+    """
+    This will warn when an expensive job on a database has started running.
+    """
+
+    parts = urlparse(db)
+    db_name = parts.path[1:]
+    msg = 'Running expensive time consuming job on *{name}*'.format(
+        name=db_name
+    )
+
+    requests.post(url, json={
+        'attachments': [{
+            'fallback': msg,
+            'color': '',
+            'title': 'Running job on %s' % db_name,
+            'author_name': job_name,
+            "text": msg,
+        }]
+    })
+
+
+if __name__ == '__main__':
+    cli()  # pylint: disable=no-value-for-parameter
