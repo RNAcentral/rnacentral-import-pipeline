@@ -35,6 +35,7 @@ select
         ),
         'previous', array_agg(row_to_json(prev.*)),
         'hits', array_agg(json_build_object(
+            'rfam_hit_id', hits.rfam_hit_id,
             'model', hits.rfam_model_id,
             'model_rna_type', models.rna_type,
             'model_domain', models.domain,

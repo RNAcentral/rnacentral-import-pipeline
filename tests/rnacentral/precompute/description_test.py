@@ -56,7 +56,7 @@ from .helpers import load_data
     ('URS00006CE02F_9606', 'snoRNA', 'Homo sapiens U8 small nucleolar RNA'),
     ('URS00006D80BC_9913', 'precursor_RNA', 'Bos taurus (cattle) microRNA bta-mir-497 precursor'),
     ('URS00006DC8B9_6239', 'tRNA', 'Caenorhabditis elegans tRNA-Undet'),
-    ('URS00007150F8_9913', 'precursor_RNA', 'Bos taurus (cattle) microRNA 431 precursor'),
+    ('URS00007150F8_9913', 'precursor_RNA', 'Bos taurus bta-mir-431'),
     ('URS0000759BEC_9606', 'lncRNA', 'Homo sapiens DiGeorge syndrome critical region gene 9 (DGCR9)'),
     ('URS000075A546_9606', 'precursor_RNA', 'Homo sapiens (human) microRNA precursor (hsa-mir-3648-1, hsa-mir-3648-2)'),
     ('URS000075C808_9606', 'lncRNA', 'Homo sapiens HOX transcript antisense RNA (HOTAIR)'),

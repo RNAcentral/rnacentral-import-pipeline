@@ -23,44 +23,36 @@ from .. import utils
 LOGGER = logging.getLogger(__name__)
 
 
-CHOICES = {
-    'miRNA': ['mirbase', 'refseq', 'hgnc', 'gencode', 'rfam', 'ensembl', 'ena'],
-    'precursor_RNA': ['mirbase', 'refseq', 'rfam', 'hgnc', 'gencode', 'ensembl', 'ena'],
-    'ribozyme': ['refseq', 'rfam', 'pdbe', 'ensembl', 'ena'],
-    'hammerhead_ribozyme': ['refseq', 'rfam', 'pdbe', 'ensembl', 'ena'],
-    'autocatalytically_spliced_intron': ['refseq', 'rfam', 'pdbe', 'ensembl', 'ena'],
-
-    '__generic__': [
-        'mirbase',
-        'wormbase',
-        'hgnc',
-        'gencode',
-        'ensembl',
-        'tair',
-        'sgd',
-        'flybase',
-        'dictbase',
-        'pombase',
-        'mgi',
-        'rgd',
-        'lncipedia',
-        'lncrnadb',
-        'gtrnadb',
-        'tmrna website',
-        'pdbe',
-        'refseq',
-        'rfam',
-        'modomics',
-        'vega',
-        'srpdb',
-        'snopy',
-        'silva',
-        'greengenes',
-        'rdp',
-        'ena',
-        'noncode',
-    ]
-}
+ORDERING = [
+    'mirbase',
+    'wormbase',
+    'hgnc',
+    'gencode',
+    'ensembl',
+    'tair',
+    'sgd',
+    'flybase',
+    'dictbase',
+    'pombase',
+    'mgi',
+    'rgd',
+    'lncipedia',
+    'lncrnadb',
+    'gtrnadb',
+    'tmrna website',
+    'pdbe',
+    'refseq',
+    'rfam',
+    'modomics',
+    'vega',
+    'srpdb',
+    'snopy',
+    'silva',
+    'greengenes',
+    'rdp',
+    'ena',
+    'noncode',
+]
 """
 A dict that defines the ordered choices for each type of RNA. This is the
 basis of our name selection for the rule based approach. The fallback,
@@ -297,7 +289,7 @@ def select_with_several_genes(accessions, name, pattern,
     if description_items is not None:
         func = op.attrgetter(description_items)
 
-    items = (func(a) for a in accessions if func(a))
+    items = {func(a) for a in accessions if func(a)}
     items = sorted(items, key=utils.item_sorter)
     if not items:
         return basic
@@ -385,15 +377,11 @@ def description_of(rna_type, sequence):
         could be selected.
     """
 
-    if rna_type not in CHOICES:
-        LOGGER.debug("Falling back to generic ordering for %s", rna_type)
-
-    ordering = CHOICES.get(rna_type, CHOICES['__generic__'])
     selector = suitable_xref(rna_type)
     try:
-        db_name, accessions = utils.best(ordering, sequence.accessions, selector)
+        db_name, accessions = utils.best(ORDERING, sequence.accessions, selector)
     except utils.NoBestFoundException:
-        db_name, accessions = utils.best(ordering, sequence.accessions, accept_any)
+        db_name, accessions = utils.best(ORDERING, sequence.accessions, accept_any)
 
     builder = DatabaseSpecifcNameBuilder()
     description = builder(db_name, rna_type, accessions)
