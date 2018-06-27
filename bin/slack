@@ -28,7 +28,7 @@ def send_msg(msg, url=None):
 @click.option('--db', envvar="PGDATABASE")
 @click.option('--url', envvar="SLACK_WEBHOOK")
 @click.argument('job_name')
-def send_database_start(job_name, db=None, url=None):
+def database_start(job_name, db=None, url=None):
     """
     This will warn when an expensive job on a database has started running.
     """
@@ -42,8 +42,34 @@ def send_database_start(job_name, db=None, url=None):
     requests.post(url, json={
         'attachments': [{
             'fallback': msg,
-            'color': '',
+            'color': 'warning',
             'title': 'Running job on %s' % db_name,
+            'author_name': job_name,
+            "text": msg,
+        }]
+    })
+
+
+@cli.command('db-done')
+@click.option('--db', envvar="PGDATABASE")
+@click.option('--url', envvar="SLACK_WEBHOOK")
+@click.argument('job_name')
+def database_done(job_name, db=None, url=None):
+    """
+    This will warn when an expensive job on a database has started running.
+    """
+
+    parts = urlparse(db)
+    db_name = parts.path[1:]
+    msg = 'Running expensive time consuming job on *{name}*'.format(
+        name=db_name
+    )
+
+    requests.post(url, json={
+        'attachments': [{
+            'fallback': msg,
+            'color': 'good',
+            'title': 'Done with job on %s' % db_name,
             'author_name': job_name,
             "text": msg,
         }]
