@@ -31,6 +31,7 @@ process infernal_scan {
   queue 'mpi-rh7'
   cpus params.qa.rfam_scan.cpus
   clusterOptions "-M ${params.qa.rfam_scan.cm_memory} -R 'rusage[mem=${params.qa.rfam_scan.cm_memory}]' -a openmpi"
+  module 'mpi/openmpi-x86_64'
 
   input:
   file 'sequences.fasta' from sequences_to_scan
