@@ -45,7 +45,8 @@ def as_update(sequence):
 
 
 def parse(handle):
-    sequences = it.imap(json.loads, handle)
+    sequences = it.imap(lambda l: l.replace('\\\\', '\\'), handle)
+    sequences = it.imap(json.loads, sequences)
     sequences = as_sequences(sequences)
     sequences = it.imap(as_update, sequences)
     return sequences
