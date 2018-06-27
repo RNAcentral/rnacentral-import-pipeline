@@ -21,6 +21,13 @@ Added
   information. On the plus side we will have coordinates for hg19 and hg38 for
   this database.
 
+- A ``qa_status`` table.
+
+  This table is where we will store all QA status. This is a generalization and
+  cleanup of the ``rfam_problems`` field from ``rnc_rna_precomputed``. This is a
+  cleaner, easier to query method of representing the same data. The old column
+  is not yet deleted, but is not being populated.
+
 Release 9
 ---------
 
