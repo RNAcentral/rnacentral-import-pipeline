@@ -1,13 +1,15 @@
 COPY (
 SELECT
-    xref.upi,
-    xref.ac AS accession,
-    xref.taxid,
-    acc.external_id,
-    acc.optional_id,
-    pre.rna_type,
-    acc.gene,
-    db.descr AS database
+    json_build_object(
+        'upi', xref.upi,
+        'accession', xref.ac,
+        'taxid', xref.taxid,
+        'external_id', acc.external_id,
+        'optional_id', acc.optional_id,
+        'rna_type', pre.rna_type,
+        'gene', acc.gene,
+        'database', db.descr
+    )
 FROM xref
 join rnc_accessions acc on acc.accession = xref.ac
 join rnc_database db on db.id = xref.dbid
@@ -17,4 +19,4 @@ on
     and pre.taxid = xref.taxid
 where
     xref.deleted = 'N'
-) TO STDOUT FORMAT CSV;
+) TO STDOUT

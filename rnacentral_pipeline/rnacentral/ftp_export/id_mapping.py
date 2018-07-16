@@ -14,6 +14,7 @@ limitations under the License.
 """
 
 import csv
+import json
 import itertools as it
 
 
@@ -21,6 +22,9 @@ def gene(result):
     """
     Convert the gene name into a standarized format.
     """
+
+    if result['database'] == 'ENSEMBL':
+        return result['optional_id']
 
     name = result['gene'] or ''
     name = name.replace('\t', ' ')
@@ -55,17 +59,20 @@ def as_entry(result):
     Produce the final result list for writing.
     """
     return [
-        result['upi'],
-        database(result),
-        accession(result),
+        str(result['upi']),
+        str(database(result)),
+        str(accession(result)),
         result['taxid'],
-        result['rna_type'],
-        gene(result),
+        str(result['rna_type']),
+        str(gene(result)),
     ]
 
 
-def generate_file(tsv_file, output):
-    reader = csv.DictReader(tsv_file)
-    data = it.imap(as_entry, reader)
-    writer = csv.writer(output, delimiter='\t')
-    writer.writerows(data)
+def generate_file(json_file, output):
+    """
+    This will generate a TSV mapping file given the input TSV.
+    """
+
+    entries = it.imap(json.loads, json_file)
+    data = it.imap(as_entry, entries)
+    csv.writer(output, delimiter='\t').writerows(data)
