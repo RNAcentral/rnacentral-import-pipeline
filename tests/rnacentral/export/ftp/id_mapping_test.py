@@ -19,10 +19,8 @@ import tempfile
 
 import pytest
 
-from rnacentral.export.ftp import id_mapping as ids
-
-from tasks.config import db
-from tests.tasks.helpers import count
+from rnacentral_pipeline.rnacentral.ftp_export import id_mapping as ids
+from tests.helpers import run_with_upi_taxid_constraint
 
 
 def test_can_create_accession_for_pdb():
@@ -71,7 +69,7 @@ def test_can_create_generic_accession():
     ('first\tsecond', 'first second'),
 ])
 def test_can_generate_gene(gene, expected):
-    assert ids.gene({'gene': gene}) == expected
+    assert ids.gene({'gene': gene, 'database': 'PDBE'}) == expected
 
 
 @pytest.mark.parametrize('name,expected', [
@@ -102,29 +100,28 @@ def test_as_entry_works_correctly():
     ]
 
 
-# @pytest.mark.slowtest
+@pytest.mark.parametrize('rna_id,expected', [
+    ('URS000018F875_9606', [
+        ['URS000018F875', 'ENSEMBL', 'ENST00000523510', 9606, 'lncRNA', 'ENSG00000254166.2'],
+        ['URS000018F875', 'GENCODE', 'ENST00000523510', 9606, 'lncRNA', 'CASC19'],
+        ['URS000018F875', 'HGNC', 'HGNC:45089', 9606, 'lncRNA', 'PCAT2'],
+        ['URS000018F875', 'LNCIPEDIA', 'lnc-FAM84B-15:108', 9606, 'lncRNA', 'lnc-FAM84B-15'],
+        ['URS000018F875', 'NONCODE', 'NONHSAT129016.2', 9606, 'lncRNA', 'NONHSAG051247.2'],
+        ['URS000018F875', 'REFSEQ', 'NR_119373', 9606, 'lncRNA', 'PCAT2'],
+        # ['URS000018F875', 'GENCODE', 'ENST00000523510', 9606, 'lncRNA', 'ENSG00000254166.2'],
+    ]),
+])
+def test_can_create_expected_exports(rna_id, expected):
+    entries = run_with_upi_taxid_constraint(
+        rna_id,
+        'files/ftp-export/id-mapping/query.sql',
+        take_all=True
+    )
+    entries = sorted(ids.as_entry(e) for e in entries)
+    assert entries == expected
+
+
 @pytest.mark.skip()
-def test_complete_sql_produces_correct_numbers():
-    assert count(ids.COMPLETE_SQL) == 28306193
-
-
-# @pytest.mark.slowtest
-@pytest.mark.skip()
-def test_complete_produces_correct_count():
-    assert len(list(ids.complete(db()))) == 28306193
-
-
-@pytest.mark.slowtest
-def test_example_produces_correct_data():
-    assert list(ids.example(db())) == [
-        ['URS0000000001', 'ENA', 'GU786683.1:1..200:rRNA', '77133', 'rRNA', ''],
-        ['URS0000000001', 'ENA', 'GU786868.1:1..200:rRNA', '77133', 'rRNA', ''],
-        ['URS0000000001', 'ENA', 'GU786889.1:1..200:rRNA', '77133', 'rRNA', ''],
-        ['URS0000000001', 'ENA', 'GU790934.1:1..200:rRNA', '77133', 'rRNA', ''],
-        ['URS0000000001', 'ENA', 'GU792481.1:1..200:rRNA', '77133', 'rRNA', ''],
-    ]
-
-
 def test_can_split_by_database():
     def entries():
         rows = [
