@@ -13,10 +13,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import os
-import csv
-import tempfile
-
 import pytest
 
 from rnacentral_pipeline.rnacentral.ftp_export import id_mapping as ids
@@ -119,57 +115,3 @@ def test_can_create_expected_exports(rna_id, expected):
     )
     entries = sorted(ids.as_entry(e) for e in entries)
     assert entries == expected
-
-
-@pytest.mark.skip()
-def test_can_split_by_database():
-    def entries():
-        rows = [
-            ['URS0000000001', 'ENA', 'GU786683.1:1..200:rRNA', '77133', 'rRNA', ''],
-            ['URS0000000001', 'ENA', 'GU786868.1:1..200:rRNA', '77133', 'rRNA', ''],
-            ['URS0000000001', 'ENA', 'GU786889.1:1..200:rRNA', '77133', 'rRNA', ''],
-            ['URS0000000001', 'ENA', 'GU790934.1:1..200:rRNA', '77133', 'rRNA', ''],
-            ['URS0000000001', 'ENA', 'GU792481.1:1..200:rRNA', '77133', 'rRNA', ''],
-        ]
-        for row in rows:
-            yield row
-            modified = list(row)
-            modified[1] = 'new_DB'
-            yield modified
-
-    with tempfile.NamedTemporaryFile(suffix='.tsv') as raw:
-        base = os.path.dirname(raw.name)
-        writer = csv.writer(raw, delimiter='\t')
-        writer.writerows(entries())
-        raw.flush()
-
-        with open(raw.name, 'r') as r2:
-            ids.split_by_database(r2, base)
-
-        ena_file = os.path.join(base, 'ena.tsv')
-        db_file = os.path.join(base, 'new_db.tsv')
-        assert os.path.exists(ena_file)
-        assert os.path.exists(db_file)
-
-        with open(ena_file, 'r') as cur:
-            reader = csv.reader(cur, delimiter='\t')
-            assert list(reader) == [
-                ['URS0000000001', 'ENA', 'GU786683.1:1..200:rRNA', '77133', 'rRNA', ''],
-                ['URS0000000001', 'ENA', 'GU786868.1:1..200:rRNA', '77133', 'rRNA', ''],
-                ['URS0000000001', 'ENA', 'GU786889.1:1..200:rRNA', '77133', 'rRNA', ''],
-                ['URS0000000001', 'ENA', 'GU790934.1:1..200:rRNA', '77133', 'rRNA', ''],
-                ['URS0000000001', 'ENA', 'GU792481.1:1..200:rRNA', '77133', 'rRNA', ''],
-            ]
-
-        with open(db_file, 'r') as cur:
-            reader = csv.reader(cur, delimiter='\t')
-            assert list(reader) == [
-                ['URS0000000001', 'new_DB', 'GU786683.1:1..200:rRNA', '77133', 'rRNA', ''],
-                ['URS0000000001', 'new_DB', 'GU786868.1:1..200:rRNA', '77133', 'rRNA', ''],
-                ['URS0000000001', 'new_DB', 'GU786889.1:1..200:rRNA', '77133', 'rRNA', ''],
-                ['URS0000000001', 'new_DB', 'GU790934.1:1..200:rRNA', '77133', 'rRNA', ''],
-                ['URS0000000001', 'new_DB', 'GU792481.1:1..200:rRNA', '77133', 'rRNA', ''],
-            ]
-
-        os.remove(ena_file)
-        os.remove(db_file)
