@@ -106,6 +106,12 @@ def test_as_entry_works_correctly():
         ['URS000018F875', 'REFSEQ', 'NR_119373', 9606, 'lncRNA', 'PCAT2'],
         # ['URS000018F875', 'GENCODE', 'ENST00000523510', 9606, 'lncRNA', 'ENSG00000254166.2'],
     ]),
+    ('URS0000672F0E_7955', [
+        ['URS0000672F0E', 'ENSEMBL', 'ENSDART00000171022', 7955, 'Y_RNA', 'ENSDARG00000100903.1'],
+        # ['URS0000672F0E', 'ENSEMBL', 'ENSDART00000171022.1', 7955, 'Y_RNA', 'ENSDARG00000100903.1'],
+        ['URS0000672F0E', 'RFAM', 'RF00019', 7955, 'Y_RNA', ''],
+        ['URS0000672F0E', 'RFAM', 'RF00019', 7955, 'Y_RNA', ''],
+    ])
 ])
 def test_can_create_expected_exports(rna_id, expected):
     entries = run_with_upi_taxid_constraint(
