@@ -59,12 +59,12 @@ def as_entry(result):
     Produce the final result list for writing.
     """
     return [
-        str(result['upi']),
-        str(database(result)),
-        str(accession(result)),
+        result['upi'],
+        database(result),
+        accession(result),
         result['taxid'],
-        str(result['rna_type']),
-        str(gene(result)),
+        result['rna_type'],
+        gene(result),
     ]
 
 
