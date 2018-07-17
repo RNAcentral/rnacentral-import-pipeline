@@ -1,6 +1,5 @@
 LOAD CSV
-FROM ALL FILENAMES MATCHING ~<pre_*>
-IN DIRECTORY {{PWD}}
+FROM stdin
 HAVING FIELDS (
   id,
   upi,
@@ -24,11 +23,7 @@ TARGET COLUMNS (
 )
 
 WITH
-    batch rows = 500,
     batch size = 32MB,
-    prefetch rows = 500,
-    workers = 2,
-    concurrency = 1,
     skip header = 0,
     fields escaped by double-quote,
     fields terminated by ','
