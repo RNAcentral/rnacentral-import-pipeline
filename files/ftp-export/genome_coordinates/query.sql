@@ -5,7 +5,7 @@ COPY (
       'chromosome', t2.name,
       'region_id', t2.accession,
       'strand', min(t2.strand),
-      'exons': array_agg(
+      'exons', array_agg(
         json_build_object(
           'start', t2.primary_start,
           'stop', t2.primary_end
