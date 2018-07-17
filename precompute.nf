@@ -34,7 +34,7 @@ process precompute_range {
 
 process load_precomputed_data {
   input:
-  file('result*.tsv') from precompute_results.collect()
+  file('result*.csv') from precompute_results.collect()
   file('qa*.csv') from qa_results.collect()
   file pre_ctl from Channel.fromPath('files/precompute/load.ctl')
   file qa_ctl from Channel.fromPath('files/precompute/qa.ctl')
