@@ -21,6 +21,7 @@ from attr.validators import instance_of as is_a
 
 from .. import qa
 from ..description import description_of
+from ..description import short_description_for
 from ..rna_type import rna_type_of
 
 
@@ -109,7 +110,7 @@ class Update(object):
     databases = attr.ib(validator=is_a(basestring))
     has_coordinates = attr.ib(validator=is_a(bool))
     qa_status = attr.ib(validator=is_a(QaStatus))
-    short_description = attr.ib(validator=is_a(basestring), default='')
+    short_description = attr.ib(validator=is_a(basestring))
 
     @property
     def rna_id(self):
@@ -162,6 +163,7 @@ class ActiveUpdate(Update):
 
         rna_type = rna_type_of(sequence)
         description = description_of(rna_type, sequence).encode('utf-8')
+        short_description = short_description_for(description, sequence)
 
         has_coordinates = sequence.xref_has_coordinates or \
             sequence.rna_was_mapped
@@ -175,6 +177,7 @@ class ActiveUpdate(Update):
             databases=database_names(sequence.accessions),
             has_coordinates=has_coordinates,
             qa_status=QaStatus.build(rna_type, sequence),
+            short_description=short_description,
         )
 
 
@@ -220,4 +223,5 @@ class InactiveUpdate(Update):
             databases=database_names(sequence.inactive_accessions),
             has_coordinates=has_coordinates,
             qa_status=QaStatus.empty(),
+            short_description='',
         )
