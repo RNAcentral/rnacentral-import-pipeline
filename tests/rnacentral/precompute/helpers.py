@@ -21,6 +21,7 @@ from rnacentral_pipeline.rnacentral.precompute.data import Sequence
 
 from tests.helpers import run_range_as_single
 
+
 def load_data(rna_id):
     path = os.path.join('files', 'precompute', 'query.sql')
     data = run_range_as_single(rna_id, path)

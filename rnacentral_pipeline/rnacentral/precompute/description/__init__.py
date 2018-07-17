@@ -15,6 +15,7 @@ limitations under the License.
 
 from . import generic
 from . import species_specific as species
+from . import short
 
 
 def description_of(rna_type, sequence):
@@ -51,3 +52,7 @@ def description_of(rna_type, sequence):
     if sequence.is_species_specific():
         return species.description_of(rna_type, sequence)
     return generic.description_of(rna_type, sequence)
+
+
+def short_description_for(description, sequence):
+    return short.short_description(description, sequence)
