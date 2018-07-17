@@ -40,12 +40,9 @@ process load_precomputed_data {
   file qa_ctl from Channel.fromPath('files/precompute/qa.ctl')
 
   """
-  cat result*.csv | split -dC ${params.precompute.load_size} - pre_
-  cat qa*.csv | split -dC ${params.precompute.load_size} - qa_
-
   slack db-work loading-precompute || true
-  pgloader $pre_ctl
-  pgloader $qa_ctl
+  cat result*.csv | pgloader $pre_ctl
+  cat qa*.csv | pgloader $qa_ctl
   slack db-done loading-precompute || true
   """
 }

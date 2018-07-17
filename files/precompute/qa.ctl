@@ -1,7 +1,7 @@
 LOAD CSV
-FROM ALL FILENAMES MATCHING ~<qa_*>
+FROM stdin
 HAVING FIELDS (
-  rna_id
+  rna_id,
   upi,
   taxid,
   has_issue,
@@ -11,7 +11,7 @@ HAVING FIELDS (
 )
 INTO {{PGDATABASE}}?load_qa_status
 TARGET COLUMNS (
-  rna_id
+  rna_id,
   upi,
   taxid,
   has_issue,
@@ -21,11 +21,7 @@ TARGET COLUMNS (
 )
 
 WITH
-    batch rows = 500,
     batch size = 32MB,
-    prefetch rows = 500,
-    workers = 2,
-    concurrency = 1,
     skip header = 0,
     fields escaped by double-quote,
     fields terminated by ','
@@ -49,7 +45,7 @@ $$
 AFTER LOAD DO
 $$
 insert into qa_status (
-  rna_id
+  rna_id,
   upi,
   taxid,
   has_issue,
@@ -57,8 +53,8 @@ insert into qa_status (
   possible_contamination,
   missing_rfam_match
 ) (
-SELECT
-  rna_id
+SELECT distinct
+  rna_id,
   upi,
   taxid,
   has_issue,
