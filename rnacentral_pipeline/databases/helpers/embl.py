@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Copyright [2009-2017] EMBL-European Bioinformatics Institute
+Copyright [2009-2018] EMBL-European Bioinformatics Institute
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -44,6 +44,7 @@ def grouped_annotations(raw, split):
     after. The mapping values will be lists. This will correct RNACentral to
     RNAcentral.
     """
+
     parsed = coll.defaultdict(set)
     for entry in raw:
         if split not in entry:
@@ -57,7 +58,7 @@ def grouped_annotations(raw, split):
 
 def qualifier_value(feature, name, pattern, max_allowed=1):
     """
-    This will parse the qualifer feild defined by the given name for the given
+    This will parse the qualifier field defined by the given name for the given
     feature. This will extract all values matching the given regex pattern. If
     max allowed is 1 then only one distinct value is allowed and a single value
     will be returned. Otherwise all values in a set will be returned.
@@ -80,6 +81,11 @@ def qualifier_value(feature, name, pattern, max_allowed=1):
 
 
 def qualifier_string(feature, name, separator=' '):
+    """
+    Extract the qualifier values and then join all results with the given
+    separator, default ' '.
+    """
+
     values = feature.qualifiers.get(name, [])
     if not values:
         return None
@@ -87,6 +93,11 @@ def qualifier_string(feature, name, separator=' '):
 
 
 def source_feature(record):
+    """
+    Get the source feature for the record. This feature must be the first
+    feature in the file.
+    """
+
     source = record.features[0]
     if source.type != 'source':
         raise MissingSource("No source for: %s" % record)
@@ -111,14 +122,25 @@ def taxid(record):
 
 
 def common_name(record):
+    """
+    Look up the common name of the record. This will use the taxid to pull an
+    annotated common_name.
+    """
     return phy.common_name(taxid(record))
 
 
 def species(record):
+    """
+    Get the species from the record. This will use the taxid to pull the
+    species, and will not use the annotated species.
+    """
     return phy.species(taxid(record))
 
 
 def organism(record):
+    """
+    Get the annotated organism in the record.
+    """
     return record.qualifiers['organism']
 
 
@@ -132,6 +154,10 @@ def lineage(record):
 
 
 def project(record):
+    """
+    Get the annotated project xref if one exists.
+    """
+
     for xref in record.dbxrefs:
         if 'Project' in xref:
             return xref.split(':', 1)[1]
@@ -139,10 +165,17 @@ def project(record):
 
 
 def description(record):
+    """
+    Get the description of this record.
+    """
     return record.description
 
 
 def as_exon(record, location):
+    """
+    Turn a Biopython location object in a record to an Exon.
+    """
+
     accession = record.annotations['accessions'][0]
     parts = accession.split(':')
     assembly_id = parts[1]
@@ -157,6 +190,10 @@ def as_exon(record, location):
 
 
 def exons(record, feature):
+    """
+    Turn all parts of the location into a list of exons to import.
+    """
+
     parts = [feature.location]
     if hasattr(feature.location, 'parts'):
         parts = feature.location.parts
@@ -164,10 +201,19 @@ def exons(record, feature):
 
 
 def experiment(feature):
+    """
+    Lookup the annotated experiment information.
+    """
+
     return qualifier_string(feature, 'experiment')
 
 
 def inference(feature):
+    """
+    Look up the annotated inference information. THis will return a single ' '
+    separate string of all inferences.
+    """
+
     values = qualifier_value(feature, 'inference', r'^(.+)$', max_allowed=None)
     if values:
         return ' '.join(values)
@@ -175,10 +221,19 @@ def inference(feature):
 
 
 def seq_version(record):
+    """
+    Get the sequence version given the record. If no sequence_version is
+    annotated in the record then None is used.
+    """
+
     return str(record.annotations.get('sequence_version', None))
 
 
 def division(record):
+    """
+    get the division given a record.
+    """
+
     return phy.division(taxid(record))
 
 
@@ -275,3 +330,10 @@ def transcripts(handle):
 
             assert gene(feature) != gene(current_gene)
             yield (record, current_gene, feature)
+
+
+def sequence(record, feature):
+    """
+    Extract the sequence from the given record and feature.
+    """
+    return str(feature.extract(record.seq))

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Copyright [2009-2017] EMBL-European Bioinformatics Institute
+Copyright [2010-2018] EMBL-European Bioinformatics Institute
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -29,25 +29,20 @@ def as_entry(record, gene, feature, context):
     """
 
     species, common_name = helpers.organism_naming(record)
-    sequence = str(feature.extract(record.seq))
-
     xref_data = embl.xref_data(feature)
-    accession = helpers.accession(feature)
-    chromosome = helpers.chromosome(record)
-    exons = helpers.exons(record, feature)
 
     entry = data.Entry(
         primary_id=helpers.primary_id(feature),
-        accession=accession,
+        accession=helpers.accession(feature),
         ncbi_tax_id=embl.taxid(record),
         database='ENSEMBL',
-        sequence=sequence,
-        exons=exons,
+        sequence=embl.sequence(record, feature),
+        exons=helpers.exons(record, feature),
         rna_type=helpers.rna_type(context.inference, feature, xref_data),
         url=helpers.url(feature),
         seq_version=helpers.seq_version(feature),
         lineage=embl.lineage(record),
-        chromosome=chromosome,
+        chromosome=helpers.chromosome(record),
         parent_accession=record.id,
         common_name=common_name,
         species=species,
@@ -65,7 +60,7 @@ def as_entry(record, gene, feature, context):
 
     return attr.assoc(
         entry,
-        description=helpers.description(context, feature, entry)
+        description=helpers.description(entry)
     )
 
 
@@ -77,5 +72,7 @@ def parse(raw, family_file):
     context = Context(family_file)
     for (record, gene, feature) in embl.transcripts(raw):
         if context.is_supressed(feature):
+            continue
+        if helpers.is_pseudogene(gene, feature):
             continue
         yield as_entry(record, gene, feature, context)
