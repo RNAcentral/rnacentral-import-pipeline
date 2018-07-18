@@ -28,6 +28,7 @@ from rnacentral_pipeline.rnacentral.ftp_export import bed
 from rnacentral_pipeline.rnacentral.ftp_export import gff3
 from rnacentral_pipeline.rnacentral.ftp_export import fasta
 from rnacentral_pipeline.rnacentral.ftp_export import id_mapping
+from rnacentral_pipeline.rnacentral.ftp_export import release_note
 from rnacentral_pipeline.rnacentral.ftp_export import ensembl as ensembl_json
 
 
@@ -219,6 +220,18 @@ def ftp_export():
     A group of commands dealing with producing data needed for the FTP site.
     """
     pass
+
+
+@ftp_export.command('release-note')
+@click.option('--db_url', envvar='PGDATABASE')
+@click.argument('template_file', type=click.File('rb'))
+@click.option('release', default=10)
+@click.argument('output', default='-', type=click.File('wb'))
+def ftp_export_release_note(template_file, release, output, db_url):
+    """
+    Write the release_note.txt file based off a given template.
+    """
+    release_note.write(template_file, release, output, db_url)
 
 
 @ftp_export.command('id-mapping')
