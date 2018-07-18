@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Copyright [2009-2017] EMBL-European Bioinformatics Institute
+Copyright [2009-2018] EMBL-European Bioinformatics Institute
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -27,6 +27,14 @@ CODING_RNA_TYPES = set([
     'processed_transcript',
     'retained_intron',
 ])
+
+
+class CouldNotTrimDescription(Exception):
+    """
+    Raised when a description could not be trimmed to only the organisms
+    suffix.
+    """
+    pass
 
 
 def exon(record, location):
@@ -77,18 +85,16 @@ def references():
     )]
 
 
-def is_pseudogene(summary, feature):
+def is_pseudogene(gene, feature):
     """
     Check if the given feature is a pseudogene. This is determined by check
     if the feature is labeled as a psuedogene or the gene it is a transcript
-    from a pseudogene. """
+    from a pseudogene.
+    """
 
-    notes = feature.qualifiers.get('note', [])
-    if any('pseudogene' in n for n in notes):
-        return True
-
-    gene = embl.gene(feature)
-    return summary.is_pseudogene(gene)
+    raw_notes = feature.qualifiers.get('note', [])
+    raw_notes.extend(gene.qualifiers.get('note', []))
+    return any('pseudogene' in n for n in raw_notes)
 
 
 def raw_rna_type(feature):
@@ -102,29 +108,17 @@ def rna_type(inference, feature, xref_data):
     """
     Compute the RNA type of the given feature.
     """
+
     base_type = raw_rna_type(feature)
     return inference.infer_rna_type(xref_data, base_type)
 
 
-def feature_description(summary, feature, entry):
-    """
-    Create a description using the feature for the given entry.
-    """
-    trimmed = summary.trimmed_description(feature)
-    if not trimmed:
-        return None
-
-    return '{species} {trimmed}'.format(
-        species=entry.species,
-        trimmed=trimmed,
-    )
-
-
-def locus_description(entry):
+def description(entry):
     """
     Generate a description for the entry based upon the locus this is a part
     of. This will be of the form 'Homo sapiens (human) lncRNA xist
     """
+
     species = entry.species
     if entry.common_name:
         species += ' (%s)' % entry.common_name
@@ -135,15 +129,6 @@ def locus_description(entry):
         rna_type=entry.rna_type.replace('_', ' '),
         locus_tag=entry.locus_tag or '',
     ).strip()
-
-
-def description(summary, feature, entry):
-    """
-    Generate a description of rthe given entry. This will use either the
-    feature description or the locus description if that required.
-    """
-    return feature_description(summary, feature, entry) or \
-        locus_description(entry)
 
 
 def seq_version(feature):
@@ -161,7 +146,7 @@ def transcript(feature):
     """
     Get the transcript id of this feature.
     """
-    return qualifier_value(feature, 'note', '^transcript_id=(.+)$')
+    return embl.qualifier_value(feature, 'note', '^transcript_id=(.+)$')
 
 
 def primary_id(feature):
@@ -173,7 +158,7 @@ def primary_id(feature):
 
     primary = transcript(feature)
     if not primary:
-        primary = helpers.standard_name(feature)
+        primary = embl.standard_name(feature)
     assert primary, "Could not generate primary id for %s" % feature
     return primary.split('.', 1)[0]
 
@@ -184,7 +169,7 @@ def accession(feature):
     the transcript id or the standard name.
     """
 
-    acc = transcript(feature) or helpers.standard_name(feature)
+    acc = transcript(feature) or embl.standard_name(feature)
     if not acc:
         raise ValueError("No accession possible for %s" % feature)
     return acc
@@ -234,6 +219,7 @@ def note_data(feature):
     This will parse the notes data of the feature to produce a dict of key
     value mappings. This will strip out the RNA type in the final dictonary.
     """
+
     notes_data = notes(feature)
     if len(notes_data) > 1:
         notes_data = notes_data[1:]
@@ -257,6 +243,7 @@ def chromosome(record):
     Get the chromosome this record is from. If it is part of a scaffold then it
     will be returned.
     """
+
     basic = record.id
     if basic.startswith('chromosome:') or basic.startswith('scaffold:'):
         parts = basic.split(':')
