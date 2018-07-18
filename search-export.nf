@@ -16,7 +16,7 @@ raw_ranges
 
 process export_chunk {
   publishDir params.search_export.publish, mode: 'copy'
-  maxForks 6
+  maxForks params.search_export.max_forks
 
   input:
   set val(min), val(max), file(query) from ranges
