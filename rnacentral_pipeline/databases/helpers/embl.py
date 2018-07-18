@@ -16,6 +16,8 @@ limitations under the License.
 import re
 import collections as coll
 
+from Bio import SeqIO
+
 from rnacentral_pipeline.databases.data import Exon, Reference
 import rnacentral_pipeline.databases.helpers.phylogeny as phy
 
@@ -250,3 +252,26 @@ def references(record):
 
     refs = record.annotations.get('references', [])
     return [as_reference(ref) for ref in refs]
+
+
+def is_gene(feature):
+    """
+    Check if this feature is a gene
+    """
+    return feature.type == 'gene'
+
+
+def transcripts(handle):
+    """
+    Fetch all the transcripts in the given EMBL file.
+    """
+
+    for record in SeqIO.parse(handle, 'embl'):
+        current_gene = None
+        for feature in record.features:
+            if is_gene(feature):
+                current_gene = feature
+                continue
+
+            assert gene(feature) != gene(current_gene)
+            yield (record, current_gene, feature)
