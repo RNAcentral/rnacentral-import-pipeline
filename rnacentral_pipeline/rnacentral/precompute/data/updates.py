@@ -45,6 +45,7 @@ class QaStatus(object):
     possible_contamination = attr.ib(validator=is_a(bool))
     missing_rfam_match = attr.ib(validator=is_a(bool))
     is_repetitive = attr.ib(validator=is_a(bool))
+    mismatching_rna_type = attr.ib(validator=is_a(bool))
     no_data = attr.ib(validator=optional(is_a(bool)), default=False)
 
     @classmethod
@@ -57,6 +58,7 @@ class QaStatus(object):
             incomplete_sequence=qa.incomplete_sequence(rna_type, data),
             possible_contamination=qa.possible_contamination(rna_type, data),
             missing_rfam_match=qa.missing_rfam_match(rna_type, data),
+            mismatching_rna_type=qa.missing_rfam_match(rna_type, data),
             is_repetitive=False,
         )
 

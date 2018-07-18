@@ -94,6 +94,13 @@ def remove_ribozyme_if_possible(rna_type, _):
 
 
 def prefer_lnc_over_anti(rna_type, _):
+    """
+    This will remove antisense_RNA to use lncRNA if we have both. This is
+    because the term antisense_RNA usually but not always means
+    antisense_lnc_RNA. Until we switch to SO terms which can express this we
+    will switch.
+    """
+
     if rna_type == set(['antisense_RNA', 'lncRNA']):
         return set(['lncRNA'])
     return rna_type
@@ -111,6 +118,10 @@ def remove_ncrna_if_possible(rna_types, _):
 
 
 def from_lnc_database(accessions):
+    """
+    Check if this data came from any database that focuses on lncRNA's.
+    """
+
     return any(a.database in LNC_DATABASES for a in accessions)
 
 

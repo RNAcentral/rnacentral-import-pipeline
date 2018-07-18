@@ -59,3 +59,14 @@ def test_can_detect_incomplete_sequence(rna_id, rna_type, flag):
 def test_can_detect_missing_rfam_match(rna_id, rna_type, flag):
     sequence = helpers.load_data(rna_id)
     assert qa.missing_rfam_match(rna_type, sequence) == flag
+
+
+@pytest.mark.parametrize('rna_id,rna_type,flag', [  # pylint: disable=no-member
+    ('URS00009ED984_77133', 'rRNA', False),
+    ('URS0000A80D0E_60711', 'rRNA', False),
+    ('URS0000A85A32_10090', 'miRNA', True),
+    ('URS0000BA5588_9606', 'precursor_RNA', True),
+])
+def test_can_detect_problems_with_mismatched_rna_types(rna_id, rna_type, flag):
+    sequence = helpers.load_data(rna_id)
+    assert qa.mismatching_rna_type(rna_type, sequence) == flag
