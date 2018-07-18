@@ -20,6 +20,10 @@ from gffutils import Feature
 
 
 def as_features(entry):
+    """
+    Convert the raw entry into a series of gff Features to output.
+    """
+
     strand = '+'
     if entry['strand'] != 1:
         strand = '-'
@@ -60,10 +64,25 @@ def as_features(entry):
         )
 
 
-def from_json(handle, output):
-    data = it.imap(json.loads, handle)
-    features = it.imap(as_features, data)
+def as_gff3(handle):
+    """
+    Format an iterable of data to produce an iterable of gff3 formatted
+    features.
+    """
+
+    features = it.imap(json.loads, handle)
+    features = it.imap(as_features, features)
     features = it.chain.from_iterable(features)
-    output.write('##gff-version 3')
-    for feature in features:
-        output.write(str(feature))
+    features = it.imap(str, features)
+    return features
+
+
+def from_json(handle, output):
+    """
+    Convert a handle of JSON formatted objects and write a GFF3 file to the
+    given output handle.
+    """
+
+    output.write('##gff-version 3\n')
+    for feature in as_gff3(handle):
+        output.write(feature)
