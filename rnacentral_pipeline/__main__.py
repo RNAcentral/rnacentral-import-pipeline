@@ -225,7 +225,7 @@ def ftp_export():
 @ftp_export.command('release-note')
 @click.option('--db_url', envvar='PGDATABASE')
 @click.argument('template_file', type=click.File('rb'))
-@click.option('release', default=10)
+@click.argument('release', default=10)
 @click.argument('output', default='-', type=click.File('wb'))
 def ftp_export_release_note(template_file, release, output, db_url):
     """
