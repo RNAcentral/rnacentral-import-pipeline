@@ -39,7 +39,7 @@ SELECT
             'possible_contamination', bool_or(qa.possible_contamination),
             'incomplete_sequence', bool_or(qa.incomplete_sequence),
             'missing_rfam_match', bool_or(qa.missing_rfam_match),
-        )),
+        ),
         'tax_strings', array_agg(acc.classification),
         'functions', array_agg(acc.function),
         'genes', array_agg(acc.gene),
