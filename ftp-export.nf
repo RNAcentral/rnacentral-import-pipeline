@@ -1,5 +1,6 @@
 md5_query = Channel.fromPath('files/ftp-export/md5/query.sql')
 md5_readme = Channel.fromPath('files/ftp-export/md5/readme.txt')
+
 process md5 {
   publishDir "${params.ftp_export}/md5/", mode: 'copy'
 
