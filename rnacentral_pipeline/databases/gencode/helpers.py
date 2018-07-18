@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Copyright [2009-2017] EMBL-European Bioinformatics Institute
+Copyright [2009-2018] EMBL-European Bioinformatics Institute
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -39,7 +39,6 @@ def references():
     """
     Get the standard GENCODE reference.
     """
-
     return [Reference(
         authors=(
             "Harrow J, Frankish A, Gonzalez JM, Tapanari E, Diekhans M, "
