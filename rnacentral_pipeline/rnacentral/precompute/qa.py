@@ -120,3 +120,16 @@ def missing_rfam_match(rna_type, data):
     required = EXPECTED_MATCHES[rna_type]
     hits = {h.model for h in data.rfam_hits}
     return not hits.intersection(required)
+
+
+def mismatching_rna_type(rna_type, data):
+    """
+    This will raise a warning if the hits have different RNA types than the
+    computed type. This indicates some annotation issue. Currently this only
+    works for miRNA's.
+    """
+
+    if rna_type != 'miRNA':
+        return None
+    rna_types = {hit.rna_type for hit in data.rfam_rfam}
+    return rna_types != {rna_type}
