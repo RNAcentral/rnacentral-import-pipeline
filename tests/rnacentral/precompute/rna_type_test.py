@@ -71,6 +71,7 @@ from .helpers import load_data
     ('URS00009E8F92_885695', 'rRNA'),
     ('URS0000A17B82_640938', 'other'),
     ('URS0000A767C0_3702', 'lncRNA'),
+    ('URS0000A85A32_10090', 'tRNA'),
     ('URS0000A86584_10090', 'lncRNA'),
     ('URS0000ABD87F_9606', 'rRNA'),
 ])
