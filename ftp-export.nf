@@ -1,6 +1,20 @@
 md5_query = Channel.fromPath('files/ftp-export/md5/query.sql')
 md5_readme = Channel.fromPath('files/ftp-export/md5/readme.txt')
 
+process release_note +
+  publishDir "${params.ftp_export}/", mode: 'copy'
+
+  input:
+  file template_file from Channel.fromPath('files/ftp-export/release_note.txt')
+
+  output:
+  file 'release_notes.txt' into __notes
+
+  """
+  rnac ftp-export release-note ${template_file} ${params.release} release_notes.txt
+  """
+}
+
 process md5 {
   publishDir "${params.ftp_export}/md5/", mode: 'copy'
 
