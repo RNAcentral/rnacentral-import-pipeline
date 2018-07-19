@@ -505,6 +505,7 @@ class Entry(object):
     def write_secondary_structure(self):
         if not self.is_valid():
             return []
+        # pylint: disable=no-member
         return self.secondary_structure.writeable(self.accession)
 
     def write_sequence(self):

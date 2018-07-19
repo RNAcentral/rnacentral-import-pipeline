@@ -24,9 +24,9 @@ from . import helpers
 def parse(raw, dbconf):
     known = helpers.known(dbconf)
     data = json.load(raw)
-    data = data['response']['data']
-    data = it.imap(helpers.as_entry, data)
-    data = it.imap(known.update, data)
+    data = data['response']['docs']
+    data = it.imap(helpers.as_partial_entry, data)
+    data = it.imap(known.as_entry, data)
     return it.ifilter(None, data)
 
 
