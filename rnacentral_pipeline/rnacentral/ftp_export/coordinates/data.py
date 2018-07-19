@@ -30,21 +30,28 @@ class ExonicSequence(object):
 
     @classmethod
     def build(cls, raw):
+        exons = []
+        if raw['known_coordinates']['region_id'] and \
+                raw['known_coordinates']['start'] is not None:
+            exons.append(Exon.build(raw['known_coordinates']))
+        if raw['mapped_coordinates']['region_id'] and \
+                raw['mapped_coordinates']['start'] is not None:
+            exons.append(Exon.build(raw['mapped_coordinates']))
+
+        assert exons, "Could build any exons"
         return cls(
             rna_id=raw['rna_id'],
             rna_type=raw['rna_type'],
             databases=raw['databases'],
-            locations=[
-                Exon.build(raw['known_coordinates']),
-                Exon.build(raw['mapped_coordinates']),
-            ],
+            exons=exons,
         )
 
 
-@attr.s()
+@attr.s(slots=True, frozen=True)
 class LocatedSequence(object):
     rna_id = attr.ib(validator=is_a(basestring))
-    annotations = attr.ib(validator=is_a(dict))
+    rna_type = attr.ib(validator=is_a(basestring))
+    databases = attr.ib(validator=is_a(basestring))
     regions = attr.ib(validator=is_a(list))
 
     @classmethod
@@ -56,37 +63,43 @@ class LocatedSequence(object):
 
         regions = []
         key = op.attrgetter('region_id')
+        exon_key = op.attrgetter('chromosome', 'start', 'stop')
         exons.sort(key=key)
+        seen = set()
         for _, exons in it.groupby(exons, key):
-            ordered = sorted(exons, key=op.attrgetter('start', 'stop'))
-            regions.append(Region.from_exons(ordered))
+            ordered = sorted(exons, key=exon_key)
+            region = Region.from_exons(ordered)
+            if region not in seen:
+                regions.append(region)
+                seen.add(region)
 
         return cls(
             rna_id=exonics[0].rna_id,
-            annotaitons=exonics[0].annotations,
+            rna_type=exonics[0].rna_type,
+            databases=exonics[0].databases,
             regions=regions,
         )
 
 
-@attr.s()
+@attr.s(hash=True, slots=True, frozen=True)
 class Region(object):
-    region_id = attr.ib(validator=is_a(basestring))
+    region_id = attr.ib(validator=is_a(basestring), hash=False, cmp=False)
     chromosome = attr.ib(validator=is_a(basestring))
     strand = attr.ib(validator=is_a(int))
-    endpoints = attr.ib(validator=is_a(list))
+    endpoints = attr.ib(validator=is_a(tuple))
 
     @classmethod
     def from_exons(cls, exons):
         region_ids = set()
         chromosomes = set()
         strands = set()
-        endpoints = []
+        endpoints = set()
 
         for exon in exons:
             region_ids.add(exon.region_id)
             chromosomes.add(exon.chromosome)
             strands.add(exon.strand)
-            endpoints.append(Endpoint.from_exon(exon))
+            endpoints.add(Endpoint.from_exon(exon))
 
         assert len(region_ids) == 1
         assert len(chromosomes) == 1
@@ -96,7 +109,7 @@ class Region(object):
             region_id=region_ids.pop(),
             chromosome=chromosomes.pop(),
             strand=strands.pop(),
-            endpoints=sorted(endpoints, key=op.attrgetter('start', 'stop'))
+            endpoints=tuple(sorted(endpoints, key=op.attrgetter('start', 'stop')))
         )
 
     @property
@@ -119,7 +132,7 @@ class Region(object):
 class Exon(object):
     region_id = attr.ib(validator=is_a(basestring))
     chromosome = attr.ib(validator=is_a(basestring))
-    strand = attr.ib(validator=is_a(basestring))
+    strand = attr.ib(validator=is_a(int), convert=int)
     start = attr.ib(validator=is_a(int))
     stop = attr.ib(validator=is_a(int))
 
@@ -128,7 +141,7 @@ class Exon(object):
         return cls(**raw)
 
 
-@attr.s()
+@attr.s(hash=True, slots=True, frozen=True)
 class Endpoint(object):
     start = attr.ib(validator=is_a(int))
     stop = attr.ib(validator=is_a(int))
@@ -138,10 +151,14 @@ class Endpoint(object):
         return cls(start=exon.start, stop=exon.stop)
 
 
-def from_file(handle):
-    data = it.imap(json.load, handle)
-    exonics = it.imap(ExonicSequence.build, data)
+def parse(iterable):
+    exonics = it.imap(ExonicSequence.build, iterable)
     grouped = it.groupby(exonics, op.attrgetter('rna_id'))
     grouped = it.imap(op.itemgetter(1), grouped)
     located = it.imap(LocatedSequence.from_exonics, grouped)
     return located
+
+
+def from_file(handle):
+    data = it.imap(json.load, handle)
+    return parse(data)

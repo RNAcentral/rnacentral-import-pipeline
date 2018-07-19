@@ -11,7 +11,7 @@ select
             'start', coord.primary_start,
             'stop', coord.primary_end
         ),
-        'mapped_coordiantes', json_build_object(
+        'mapped_coordinates', json_build_object(
             'region_id', mapping.region_id,
             'chromosome', mapping.chromosome,
             'strand', mapping.strand,
