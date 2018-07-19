@@ -1,53 +1,32 @@
 COPY (
-  SELECT
+select
     json_build_object(
-      'rnacentral_id', concat_ws('_', t1.upi, t1.taxid)
-      'chromosome', t2.name,
-      'region_id', t2.accession,
-      'strand', min(t2.strand),
-      'exons', array_agg(
-        json_build_object(
-          'start', t2.primary_start,
-          'stop', t2.primary_end
+        'rna_id', pre.id,
+        'rna_type',  pre.rna_type,
+        'databases', pre.databases,
+        'known_coordinates', json_build_object(
+            'region_id', coord.accession,
+            'chromosome', coord.name,
+            'strand', coord.strand,
+            'start', coord.primary_start,
+            'stop', coord.primary_end
+        ),
+        'mapped_coordiantes', json_build_object(
+            'region_id', mapping.region_id,
+            'chromosome', mapping.chromosome,
+            'strand', mapping.strand,
+            'start', mapping."start",
+            'stop', mapping.stop
         )
-      ),
-      'rna_type', t3.rna_type,
-      'databases', t3.databases
     )
-  FROM xref t1
-  JOIN rnc_coordinates t2
-  ON
-    t1.ac = t2.accession
-  JOIN rnc_rna_precomputed t3
-  ON
-    t1.upi = t3.upi
-    AND t1.taxid = t3.taxid
-  WHERE t2.name IS NOT NULL
-    AND t1.taxid = :taxid
-    AND t1.deleted = 'N'
-  GROUP BY accession, chromosome
-  ORDER BY accession, primary_start, strand
-UNION
-  SELECT
-    json_build_object(
-      'rnacentral_id', t1.rna_id,
-      'chromosome', chromosome,
-      'region_id', region_id,
-      'strand', min(t2.strand),
-      'exons', array_agg(
-        json_build_object(
-          'start', start,
-          'stop', stop
-        )
-      )
-      'rna_type', t2.rna_type,
-      'databases', t2.databases
-    )
-  FROM rnc_genome_mapping t1
-  JOIN rnc_rna_precomputed t2
-  ON t1.rna_id = t2.id
-  WHERE
-    t1.assembly_id = :assembly
-  GROUP BY region_id
-  ORDER BY region_id, start, strand
+from xref
+join rnc_rna_precomputed pre on pre.upi = xref.upi and pre.taxid = xref.taxid
+LEFT JOIN rnc_coordinates coord ON xref.ac = coord.accession and coord.assembly_id = :assembly_id
+LEFT JOIN rnc_genome_mapping mapping on mapping.rna_id = pre.id and mapping.assembly_id = :assembly_id
+WHERE
+    xref.taxid = :taxid
+    and pre.is_active = true
+    and xref.deleted = 'N'
+    and (mapping.region_id is not null or coord.id is not null)
+order by pre.id
 ) TO STDOUT
