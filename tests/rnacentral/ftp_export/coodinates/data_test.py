@@ -59,7 +59,7 @@ def test_can_build_correct_data_for_known():
         databases="Ensembl,GENCODE",
         regions=[
             data.Region(
-                region_id='ENST00000614956.1',
+                region_id='URS0000A78C33_9606.1',
                 chromosome='CHR_HSCHR5_1_CTG1',
                 strand=1,
                 endpoints=(
@@ -85,7 +85,7 @@ def test_can_build_correct_data_for_both_mapped_and_known():
         databases="LNCipedia,NONCODE",
         regions=[
             data.Region(
-                region_id='NONHSAT148173.1',
+                region_id='URS00008C1902_9606.1',
                 chromosome='1',
                 strand=1,
                 endpoints=(
