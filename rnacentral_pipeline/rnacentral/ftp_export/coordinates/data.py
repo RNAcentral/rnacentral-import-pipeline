@@ -66,9 +66,10 @@ class LocatedSequence(object):
         exon_key = op.attrgetter('chromosome', 'start', 'stop')
         exons.sort(key=key)
         seen = set()
-        for _, exons in it.groupby(exons, key):
+        for index, (_, exons) in enumerate(it.groupby(exons, key)):
             ordered = sorted(exons, key=exon_key)
-            region = Region.from_exons(ordered)
+            region_id = '%s.%i' % (exonics[0].rna_id, index)
+            region = Region.from_exons(region_id, ordered)
             if region not in seen:
                 regions.append(region)
                 seen.add(region)
@@ -89,7 +90,7 @@ class Region(object):
     endpoints = attr.ib(validator=is_a(tuple))
 
     @classmethod
-    def from_exons(cls, exons):
+    def from_exons(cls, region_id, exons):
         region_ids = set()
         chromosomes = set()
         strands = set()
@@ -106,7 +107,7 @@ class Region(object):
         assert len(strands) == 1
 
         return cls(
-            region_id=region_ids.pop(),
+            region_id=region_id,
             chromosome=chromosomes.pop(),
             strand=strands.pop(),
             endpoints=tuple(sorted(endpoints, key=op.attrgetter('start', 'stop')))
