@@ -23,6 +23,14 @@ from lxml.builder import E
 from .data import builder
 
 
+def write_entries(handle, results):
+    count = 0
+    for result in results:
+        count += 1
+        handle.write(etree.tostring(result))
+    return count
+
+
 def write(results, handle, count_handle):
     """
     This will create the required root XML element and place all the given
@@ -36,11 +44,8 @@ def write(results, handle, count_handle):
     handle.write(etree.tostring(E.release('1.0')))
     handle.write(etree.tostring(E.release_date(date.today().strftime('%d/%m/%Y'))))
 
-    count = 0
     handle.write('<entries>')
-    for result in results:
-        count += 1
-        handle.write(etree.tostring(result))
+    count = write_entries(handle, results)
     handle.write('</entries>')
 
     if not count:

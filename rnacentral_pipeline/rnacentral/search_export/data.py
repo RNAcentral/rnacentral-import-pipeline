@@ -146,7 +146,10 @@ def first(values):
     """
     Get the first value in the list of values as a string.
     """
-    return str(values[0])
+    value = values[0]
+    if isinstance(value, unicode):
+        return values[0]
+    return unicode(value)
 
 
 def unique_lower(values):
