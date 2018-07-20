@@ -15,13 +15,11 @@ limitations under the License.
 
 import os
 import tempfile
-import itertools as it
 import xml.etree.ElementTree as ET
 from xml.dom import minidom
 
 import pytest
 
-from rnacentral_pipeline.psql import PsqlWrapper
 from rnacentral_pipeline.rnacentral.search_export import exporter
 
 from tests.helpers import run_range_as_single
@@ -30,6 +28,15 @@ from tests.helpers import run_range_as_single
 def load_data(upi):
     path = os.path.join('files', 'search-export', 'query.sql')
     return exporter.builder(run_range_as_single(upi, path))
+
+
+def as_entry_file(upi):
+    data = load_data(upi)
+    with tempfile.NamedTemporaryFile() as tmp:
+        exporter.write_entries(tmp, data)
+        tmp.flush()
+        with open(tmp.name, 'r') as raw:
+            return raw.read()
 
 
 def as_xml_dict(element):
@@ -159,6 +166,7 @@ def test_assigns_md5_correctly(upi, ans):
     ('URS00000054D5_6239', 'Caenorhabditis elegans piwi-interacting RNA 21ur-14894'),
     ('URS0000157781_6239', 'Caenorhabditis elegans piwi-interacting RNA 21ur-13325'),
     ('URS0000005F8E_9685', 'Felis catus mir-103/107 microRNA precursor'),
+    ('URS000058FFCF_7729', u'Halocynthia roretzi tRNA Gly ÊCU'),
 ])
 def test_assigns_description_correctly_to_randomly_chosen_examples(upi, ans):
     assert [e['text'] for e in load_and_findall(upi, "./description")] == [ans]
@@ -237,6 +245,7 @@ def test_assigns_rna_type_correctly(upi, ans):
     assert load_and_get_additional(upi, "rna_type") == [
         {'attrib': {'name': 'rna_type'}, 'text': str(ans)}
     ]
+
 
 @pytest.mark.parametrize('upi,ans', [  # pylint: disable=E1101
     ('URS00004AFF8D_9544', [
