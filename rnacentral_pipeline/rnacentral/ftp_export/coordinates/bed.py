@@ -51,6 +51,7 @@ class BedEntry(object):
     databases = attr.ib(validator=is_a(basestring))
     coord_system = attr.ib(validator=is_a(basestring))
     score = attr.ib(default=0, validator=is_a(int))
+    rgb = attr.ib(default=(63, 125, 151), validator=is_a(tuple))
 
     @classmethod
     def from_region(cls, region):
@@ -100,6 +101,10 @@ class BedEntry(object):
             chromosome = 'chrM'
         return chromosome
 
+    @property
+    def bed_rgb(self):
+        return ','.join(self.rgb)
+
     def writeable(self):
         return [
             self.bed_chromosome,
@@ -110,7 +115,7 @@ class BedEntry(object):
             self.bed_strand,
             self.start,
             self.stop,
-            '63,125,151',
+            self.bed_rgb,
             len(self.blocks),
             self.bed_block_sizes(),
             self.bed_block_starts(),
