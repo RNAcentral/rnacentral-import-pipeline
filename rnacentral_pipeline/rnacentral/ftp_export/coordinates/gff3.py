@@ -18,48 +18,55 @@ from . import data as coord
 from gffutils import Feature
 
 
-def located_sequences_as_features(located):
+def located_sequences_as_features(sequences):
     """
     Convert the raw entry into a series of gff Features to output.
     """
 
-    for region in located:
-        attributes = {
-            'Name': [located.rna_id],
-            'type': [located.rna_type],
-            'databases': [located.databases],
-            'ID': [region.region_id],
-        }
-
-        yield Feature(
-            seqid=region.chromosome,
-            source='RNAcentral',
-            feature_type='transcript',
-            start=region.start,
-            end=region.stop,
-            strand=region.string_strand(),
-            frame='.',
-            attributes=attributes,
-        )
-
-        for index, endpoint in enumerate(region.endpoints):
-            exon_id = region.region_id + '_exon%i' % index
-            exon_attributes = dict(attributes)
-            exon_attributes.update({
-                'ID': [exon_id],
-                'Parent': [region.region_id],
-            })
+    for located in sequences:
+        for region in located.regions:
+            attributes = {
+                'Name': [located.rna_id],
+                'type': [located.rna_type],
+                'databases': [located.databases],
+                'ID': [region.region_id],
+            }
 
             yield Feature(
                 seqid=region.chromosome,
                 source='RNAcentral',
-                feature_type='noncoding_exon',
-                start=endpoint.start,
-                end=endpoint.stop,
+                featuretype='transcript',
+                start=region.start,
+                end=region.stop,
                 strand=region.string_strand(),
                 frame='.',
-                attributes=exon_attributes,
+                attributes=attributes,
             )
+
+            for index, endpoint in enumerate(region.endpoints):
+                exon_id = region.region_id + ':ncRNA_exon%i' % (index + 1)
+                exon_attributes = {
+                    'Name': [located.rna_id],
+                    'type': [located.rna_type],
+                    'databases': [located.databases],
+                    'ID': [exon_id],
+                    'Parent': [region.region_id],
+                }
+
+                yield Feature(
+                    seqid=region.chromosome,
+                    source='RNAcentral',
+                    featuretype='noncoding_exon',
+                    start=endpoint.start,
+                    end=endpoint.stop,
+                    strand=region.string_strand(),
+                    frame='.',
+                    attributes=exon_attributes,
+                )
+
+
+def parse(iterable):
+    return located_sequences_as_features(coord.parse(iterable))
 
 
 def from_file(handle, output):
@@ -69,6 +76,5 @@ def from_file(handle, output):
     """
 
     output.write('##gff-version 3\n')
-    data = coord.from_file(handle)
-    for feature in located_sequences_as_features(data):
+    for feature in located_sequences_as_features(coord.from_file(handle)):
         output.write(str(feature))
