@@ -19,26 +19,11 @@ import pytest
 
 from rnacentral_pipeline.rnacentral.ftp_export.coordinates import data
 
-from tests.helpers import run_with_replacements
-
-
-def fetch_raw(rna_id, assembly):
-    path = os.path.join('files', 'ftp-export', 'genome_coordinates',
-                        'query.sql')
-    _, taxid = rna_id.split('_')
-    return run_with_replacements(
-        path,
-        (':assembly_id', "'GRCh38'"),
-        (':taxid', taxid),
-        ('WHERE\n',
-         '''where
-         pre.id = '%s'
-         and''' % rna_id
-         ), take_all=True)
+from .helpers import fetch_raw, fetch_coord
 
 
 def fetch_one(rna_id, assembly):
-    return next(data.parse(fetch_raw(rna_id, assembly)))
+    return next(fetch_coord(rna_id, assembly))
 
 
 @pytest.mark.parametrize('rna_id,assembly,count', [
@@ -76,9 +61,6 @@ def test_can_build_correct_data_for_both_mapped_and_known():
 
     assert found.regions[0].start == 11869
     assert found.regions[0].stop == 14409
-    import attr
-    from pprint import pprint
-    pprint(attr.asdict(found))
     assert found == data.LocatedSequence(
         rna_id='URS00008C1902_9606',
         rna_type='lncRNA',
