@@ -76,5 +76,7 @@ def from_file(handle, output):
     """
 
     output.write('##gff-version 3\n')
-    for feature in located_sequences_as_features(coord.from_file(handle)):
+    parsed = coord.from_file(handle)
+    for feature in located_sequences_as_features(parsed):
         output.write(str(feature))
+        output.write('\n')
