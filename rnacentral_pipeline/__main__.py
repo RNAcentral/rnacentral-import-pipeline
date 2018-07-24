@@ -24,8 +24,8 @@ from rnacentral_pipeline.rnacentral.search_export import exporter as search
 
 from rnacentral_pipeline.rnacentral.precompute import process as pre
 
-from rnacentral_pipeline.rnacentral.ftp_export import bed
-from rnacentral_pipeline.rnacentral.ftp_export import gff3
+from rnacentral_pipeline.rnacentral.ftp_export.coordinates import bed
+from rnacentral_pipeline.rnacentral.ftp_export.coordinates import gff3
 from rnacentral_pipeline.rnacentral.ftp_export import fasta
 from rnacentral_pipeline.rnacentral.ftp_export import id_mapping
 from rnacentral_pipeline.rnacentral.ftp_export import release_note
@@ -306,7 +306,7 @@ def format_as_gff3(json_file, output):
     This will turn the json file produced by the coordiantes query into a GFF3
     file.
     """
-    gff3.from_json(json_file, output)
+    gff3.from_file(json_file, output)
 
 
 @cli.group()

@@ -152,8 +152,18 @@ class Endpoint(object):
         return cls(start=exon.start, stop=exon.stop)
 
 
+def is_buildable(raw):
+    return (
+        raw['known_coordinates']['region_id'] and
+        raw['known_coordinates']['start'] is not None
+    ) or (
+        raw['mapped_coordinates']['region_id'] and
+        raw['mapped_coordinates']['start'] is not None
+    )
+
 def parse(iterable):
-    exonics = it.imap(ExonicSequence.build, iterable)
+    buildable = it.ifilter(is_buildable, iterable)
+    exonics = it.imap(ExonicSequence.build, buildable)
     grouped = it.groupby(exonics, op.attrgetter('rna_id'))
     grouped = it.imap(op.itemgetter(1), grouped)
     located = it.imap(LocatedSequence.from_exonics, grouped)
@@ -161,5 +171,5 @@ def parse(iterable):
 
 
 def from_file(handle):
-    data = it.imap(json.load, handle)
+    data = it.imap(json.loads, handle)
     return parse(data)
