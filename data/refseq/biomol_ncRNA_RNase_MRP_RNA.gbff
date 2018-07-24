@@ -1,0 +1,353 @@
+LOCUS       NR_003051                277 bp    RNA     linear   PRI 22-JAN-2018
+DEFINITION  Homo sapiens RNA component of mitochondrial RNA processing
+            endoribonuclease (RMRP), RNase MRP RNA.
+ACCESSION   NR_003051
+VERSION     NR_003051.3
+KEYWORDS    RefSeq.
+SOURCE      Homo sapiens (human)
+  ORGANISM  Homo sapiens
+            Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi;
+            Mammalia; Eutheria; Euarchontoglires; Primates; Haplorrhini;
+            Catarrhini; Hominidae; Homo.
+REFERENCE   1  (bases 1 to 277)
+  AUTHORS   Aubert G, Strauss KA, Lansdorp PM and Rider NL.
+  TITLE     Defects in lymphocyte telomere homeostasis contribute to cellular
+            immune phenotype in patients with cartilage-hair hypoplasia
+  JOURNAL   J. Allergy Clin. Immunol. 140 (4), 1120-1129 (2017)
+   PUBMED   28126377
+  REMARK    GeneRIF: this study shows that telomere length and telomerase
+            activity are impaired in primary lymphocyte subsets from patients
+            with cartilage-hair hypoplasia . Notably, telomerase activity is
+            affected in a gene dose-dependent manner when comparing
+            heterozygote RMRP carriers with patients with cartilage-hair
+            hypoplasia
+REFERENCE   2  (bases 1 to 277)
+  AUTHORS   Goldfarb KC and Cech TR.
+  TITLE     Targeted CRISPR disruption reveals a role for RNase MRP RNA in
+            human preribosomal RNA processing
+  JOURNAL   Genes Dev. 31 (1), 59-71 (2017)
+   PUBMED   28115465
+  REMARK    GeneRIF: a role for RNase MRP in human pre-rRNA processing is
+            established
+REFERENCE   3  (bases 1 to 277)
+  AUTHORS   Meng Q, Ren M, Li Y and Song X.
+  TITLE     LncRNA-RMRP Acts as an Oncogene in Lung Cancer
+  JOURNAL   PLoS ONE 11 (12), e0164845 (2016)
+   PUBMED   27906963
+  REMARK    GeneRIF: Our data proved that RMRP acted as an oncogene LncRNA to
+            promote the expression of KRAS, FMNL2 and SOX9 by inhibiting
+            miR-206 expression in lung cancer. These data suggested that RMRP
+            might serve as a therapeutic target in lung adenocarcinoma
+            Publication Status: Online-Only
+REFERENCE   4  (bases 1 to 277)
+  AUTHORS   Shao Y, Ye M, Li Q, Sun W, Ye G, Zhang X, Yang Y, Xiao B and Guo J.
+  TITLE     LncRNA-RMRP promotes carcinogenesis by acting as a miR-206 sponge
+            and is used as a novel biomarker for gastric cancer
+  JOURNAL   Oncotarget 7 (25), 37812-37824 (2016)
+   PUBMED   27192121
+  REMARK    GeneRIF: RMRP plays a crucial role in gastric cancer occurrence and
+            can be used as a novel biomarker for gastric cancer
+REFERENCE   5  (bases 1 to 277)
+  AUTHORS   Dieci G, Preti M and Montanini B.
+  TITLE     Eukaryotic snoRNAs: a paradigm for gene expression flexibility
+  JOURNAL   Genomics 94 (2), 83-88 (2009)
+   PUBMED   19446021
+  REMARK    Review article
+REFERENCE   6  (bases 1 to 277)
+  AUTHORS   Ridanpaa M, van Eenennaam H, Pelin K, Chadwick R, Johnson C, Yuan
+            B, vanVenrooij W, Pruijn G, Salmela R, Rockas S, Makitie O, Kaitila
+            I and de la Chapelle A.
+  TITLE     Mutations in the RNA component of RNase MRP cause a pleiotropic
+            human disease, cartilage-hair hypoplasia
+  JOURNAL   Cell 104 (2), 195-203 (2001)
+   PUBMED   11207361
+REFERENCE   7  (bases 1 to 277)
+  AUTHORS   Makitie,O. and Kostjukovits,S.
+  TITLE     Cartilage-Hair Hypoplasia - Anauxetic Dysplasia Spectrum Disorders
+  JOURNAL   (in) Adam MP, Ardinger HH, Pagon RA, Wallace SE, Bean LJH, Stephens
+            K and Amemiya A (Eds.);
+            GENEREVIEWS((R));
+            (1993)
+   PUBMED   22420014
+REFERENCE   8  (bases 1 to 277)
+  AUTHORS   Parisi,M.A.
+  TITLE     Hirschsprung Disease Overview
+  JOURNAL   (in) Adam MP, Ardinger HH, Pagon RA, Wallace SE, Bean LJH, Stephens
+            K and Amemiya A (Eds.);
+            GENEREVIEWS((R));
+            (1993)
+   PUBMED   20301612
+REFERENCE   9  (bases 1 to 277)
+  AUTHORS   Topper JN, Bennett JL and Clayton DA.
+  TITLE     A role for RNAase MRP in mitochondrial RNA processing
+  JOURNAL   Cell 70 (1), 16-20 (1992)
+   PUBMED   1623519
+REFERENCE   10 (bases 1 to 277)
+  AUTHORS   Chang,D.D. and Clayton,D.A.
+  TITLE     A novel endoribonuclease cleaves at a priming site of mouse
+            mitochondrial DNA replication
+  JOURNAL   EMBO J. 6 (2), 409-417 (1987)
+   PUBMED   3582365
+COMMENT     REVIEWED REFSEQ: This record has been curated by NCBI staff. The
+            reference sequence was derived from DW423815.1 and DW422801.1.
+            This sequence is a reference standard in the RefSeqGene project.
+            On Mar 31, 2010 this sequence version replaced NR_003051.2.
+            
+            Summary: This gene encodes the RNA component of mitochondrial RNA
+            processing endoribonuclease, which cleaves mitochondrial RNA at a
+            priming site of mitochondrial DNA replication. This RNA also
+            interacts with the telomerase reverse transcriptase catalytic
+            subunit to form a distinct ribonucleoprotein complex that has
+            RNA-dependent RNA polymerase activity and produces double-stranded
+            RNAs that can be processed into small interfering RNA. Mutations in
+            this gene are associated with cartilage-hair hypoplasia.[provided
+            by RefSeq, Mar 2010].
+            
+            Publication Note:  This RefSeq record includes a subset of the
+            publications that are available for this gene. Please see the Gene
+            record to access additional publications.
+            
+            ##Evidence-Data-START##
+            Transcript is intronless :: DW422801.1 [ECO:0000345]
+            ##Evidence-Data-END##
+            COMPLETENESS: complete on the 3' end.
+PRIMARY     REFSEQ_SPAN         PRIMARY_IDENTIFIER PRIMARY_SPAN        COMP
+            1-249               DW423815.1         17-265
+            250-277             DW422801.1         266-293
+FEATURES             Location/Qualifiers
+     source          1..277
+                     /organism="Homo sapiens"
+                     /mol_type="transcribed RNA"
+                     /db_xref="taxon:9606"
+                     /chromosome="9"
+                     /map="9p13.3"
+     gene            1..277
+                     /gene="RMRP"
+                     /gene_synonym="CHH; NME1; RMRPR; RRP2"
+                     /note="RNA component of mitochondrial RNA processing
+                     endoribonuclease"
+                     /db_xref="GeneID:6023"
+                     /db_xref="HGNC:HGNC:10031"
+                     /db_xref="MIM:157660"
+     ncRNA           1..277
+                     /ncRNA_class="RNase_MRP_RNA"
+                     /gene="RMRP"
+                     /gene_synonym="CHH; NME1; RMRPR; RRP2"
+                     /product="RNA component of mitochondrial RNA processing
+                     endoribonuclease"
+                     /db_xref="GeneID:6023"
+                     /db_xref="HGNC:HGNC:10031"
+                     /db_xref="MIM:157660"
+     polyA_site      268
+                     /gene="RMRP"
+                     /gene_synonym="CHH; NME1; RMRPR; RRP2"
+ORIGIN      
+        1 ggttcgtgct gaaggcctgt atcctaggct acacactgag gactctgttc ctcccctttc
+       61 cgcctagggg aaagtccccg gacctcgggc agagagtgcc acgtgcatac gcacgtagac
+      121 attccccgct tcccactcca aagtccgcca agaagcgtat cccgctgagc ggcgtggcgc
+      181 gggggcgtca tccgtcagct ccctctagtt acgcaggcag tgcgtgtccg cgcaccaacc
+      241 acacggggct cattctcagc gcggctgtaa aaaaaaa
+//
+LOCUS       NR_036646                279 bp    RNA     linear   MAM 24-OCT-2017
+DEFINITION  Bos taurus RNA component of mitochondrial RNA processing
+            endoribonuclease (RMRP), RNase MRP RNA.
+ACCESSION   NR_036646
+VERSION     NR_036646.1
+KEYWORDS    RefSeq.
+SOURCE      Bos taurus (cattle)
+  ORGANISM  Bos taurus
+            Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi;
+            Mammalia; Eutheria; Laurasiatheria; Cetartiodactyla; Ruminantia;
+            Pecora; Bovidae; Bovinae; Bos.
+REFERENCE   1  (bases 1 to 279)
+  AUTHORS   Dairaghi DJ and Clayton DA.
+  TITLE     Bovine RNase MRP cleaves the divergent bovine mitochondrial RNA
+            sequence at the displacement-loop region
+  JOURNAL   J. Mol. Evol. 37 (4), 338-346 (1993)
+   PUBMED   7508515
+COMMENT     PROVISIONAL REFSEQ: This record has not yet been subject to final
+            NCBI review. The reference sequence was derived from Z25280.1.
+PRIMARY     REFSEQ_SPAN         PRIMARY_IDENTIFIER PRIMARY_SPAN        COMP
+            1-279               Z25280.1           703-981
+FEATURES             Location/Qualifiers
+     source          1..279
+                     /organism="Bos taurus"
+                     /mol_type="transcribed RNA"
+                     /db_xref="taxon:9913"
+                     /chromosome="8"
+                     /map="8"
+     gene            1..279
+                     /gene="RMRP"
+                     /note="RNA component of mitochondrial RNA processing
+                     endoribonuclease"
+                     /db_xref="GeneID:100126828"
+     ncRNA           1..279
+                     /ncRNA_class="RNase_MRP_RNA"
+                     /gene="RMRP"
+                     /product="RNA component of mitochondrial RNA processing
+                     endoribonuclease"
+                     /db_xref="GeneID:100126828"
+ORIGIN      
+        1 gttcgtgctg aaggcctgtt tcctaggcta catacggagg actagttcct tgtttgcgcc
+       61 taggggaaag tccccggacc gtgggcagag agtgccacgt gcccgtgcac gtagacttcc
+      121 cctgcttctc acgactaaac ccgccaagaa gcgatcctac cctgggggtg gggaagccga
+      181 gcggcgtgtt gcggggtgtc atccgtcagc ttctaatagt tacgcaggca gtgcctccat
+      241 gcgcaccaac ctcacggggc tcattctcag cacgtctca
+//
+LOCUS       NR_001460                275 bp    RNA     linear   ROD 26-JUN-2017
+DEFINITION  Mus musculus RNA component of mitochondrial RNAase P (Rmrp), RNase
+            MRP RNA.
+ACCESSION   NR_001460 XR_000116
+VERSION     NR_001460.1
+KEYWORDS    RefSeq.
+SOURCE      Mus musculus (house mouse)
+  ORGANISM  Mus musculus
+            Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi;
+            Mammalia; Eutheria; Euarchontoglires; Glires; Rodentia; Myomorpha;
+            Muroidea; Muridae; Murinae; Mus; Mus.
+REFERENCE   1  (bases 1 to 275)
+  AUTHORS   Huang W, Thomas B, Flynn RA, Gavzy SJ, Wu L, Kim SV, Hall JA,
+            Miraldi ER, Ng CP, Rigo F, Meadows S, Montoya NR, Herrera NG,
+            Domingos AI, Rastinejad F, Myers RM, Fuller-Pace FV, Bonneau R,
+            Chang HY, Acuto O and Littman DR.
+  TITLE     DDX5 and its associated lncRNA Rmrp modulate TH17 cell effector
+            functions
+  JOURNAL   Nature 528 (7583), 517-522 (2015)
+   PUBMED   26675721
+  REMARK    GeneRIF: Elucidation of the link between Rmrp and the
+            DDX5-RORgammat complex reveals a role for RNA helicases and lncRNAs
+            in tissue-specific transcriptional regulation, and provides new
+            opportunities for therapeutic intervention in TH17-dependent
+            diseases
+            Erratum:[Nature. 2016 May 5;533(7601):130. Rigo, Frank W [Corrected
+            to Rigo, Frank].. PMID: 26789242]
+REFERENCE   2  (bases 1 to 275)
+  AUTHORS   Rosenbluh J, Nijhawan D, Chen Z, Wong KK, Masutomi K and Hahn WC.
+  TITLE     RMRP is a non-coding RNA essential for early murine development
+  JOURNAL   PLoS ONE 6 (10), E26270 (2011)
+   PUBMED   22039455
+REFERENCE   3  (bases 1 to 275)
+  AUTHORS   Thundathil J, Filion F and Smith LC.
+  TITLE     Molecular control of mitochondrial function in preimplantation
+            mouse embryos
+  JOURNAL   Mol. Reprod. Dev. 71 (4), 405-413 (2005)
+   PUBMED   15895466
+REFERENCE   4  (bases 1 to 275)
+  AUTHORS   Sbisa E, Pesole G, Tullo A and Saccone C.
+  TITLE     The evolution of the RNase P- and RNase MRP-associated RNAs:
+            phylogenetic analysis and nucleotide substitution rate
+  JOURNAL   J. Mol. Evol. 43 (1), 46-57 (1996)
+   PUBMED   8660429
+REFERENCE   5  (bases 1 to 275)
+  AUTHORS   Li K and Williams RS.
+  TITLE     Cloning and characterization of three new murine genes encoding
+            short homologues of RNase P RNA
+  JOURNAL   J. Biol. Chem. 270 (42), 25281-25285 (1995)
+   PUBMED   7559668
+REFERENCE   6  (bases 1 to 275)
+  AUTHORS   Altman S, Wesolowski D and Puranam RS.
+  TITLE     Nucleotide sequences of the RNA subunit of RNase P from several
+            mammals
+  JOURNAL   Genomics 18 (2), 418-422 (1993)
+   PUBMED   7507079
+REFERENCE   7  (bases 1 to 275)
+  AUTHORS   Hsieh CL, Donlon TA, Darras BT, Chang DD, Topper JN, Clayton DA and
+            Francke U.
+  TITLE     The gene for the RNA component of the mitochondrial RNA-processing
+            endoribonuclease is located on human chromosome 9p and on mouse
+            chromosome 4
+  JOURNAL   Genomics 6 (3), 540-544 (1990)
+   PUBMED   2328993
+REFERENCE   8  (bases 1 to 275)
+  AUTHORS   Chang DD and Clayton DA.
+  TITLE     Mouse RNAase MRP RNA is encoded by a nuclear gene and contains a
+            decamer sequence complementary to a conserved region of
+            mitochondrial RNA substrate
+  JOURNAL   Cell 56 (1), 131-139 (1989)
+   PUBMED   2910496
+COMMENT     PROVISIONAL REFSEQ: This record has not yet been subject to final
+            NCBI review. The reference sequence was derived from J03151.1.
+            On Dec 17, 2003 this sequence version replaced XR_000116.1.
+PRIMARY     REFSEQ_SPAN         PRIMARY_IDENTIFIER PRIMARY_SPAN        COMP
+            1-275               J03151.1           845-1119
+FEATURES             Location/Qualifiers
+     source          1..275
+                     /organism="Mus musculus"
+                     /mol_type="transcribed RNA"
+                     /db_xref="taxon:10090"
+                     /chromosome="4"
+                     /map="4"
+     gene            1..275
+                     /gene="Rmrp"
+                     /gene_synonym="1110032O22Rik; Rmrpr"
+                     /note="RNA component of mitochondrial RNAase P"
+                     /db_xref="GeneID:19782"
+                     /db_xref="MGI:MGI:97937"
+     ncRNA           1..275
+                     /ncRNA_class="RNase_MRP_RNA"
+                     /gene="Rmrp"
+                     /gene_synonym="1110032O22Rik; Rmrpr"
+                     /product="RNA component of mitochondrial RNAase P"
+                     /db_xref="GeneID:19782"
+                     /db_xref="MGI:MGI:97937"
+ORIGIN      
+        1 agctcgctct gaaggcctgt ttcctaggct acatacgagg gacatgttcc ttatcctttc
+       61 gcctagggga aagtccccgg accacgggca gagagtgccg cgtgcacacg cgcgtagact
+      121 tcccccgcaa gtcactgtta gcccgccaag aagcgacccc tccggggcga gctgagcggc
+      181 gtgcagcggg gcgtcatccg tcagctcaca tagtgacgca ggcagtgcga cctggctcgc
+      241 accaaccaca cggggctcat tctcagcgcg gctac
+//
+LOCUS       NR_002703                257 bp    RNA     linear   ROD 07-MAY-2014
+DEFINITION  Rattus norvegicus RNA component of mitochondrial RNA processing
+            endoribonuclease (Rmrp), RNase MRP RNA.
+ACCESSION   NR_002703
+VERSION     NR_002703.1
+KEYWORDS    RefSeq.
+SOURCE      Rattus norvegicus (Norway rat)
+  ORGANISM  Rattus norvegicus
+            Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi;
+            Mammalia; Eutheria; Euarchontoglires; Glires; Rodentia; Myomorpha;
+            Muroidea; Muridae; Murinae; Rattus.
+REFERENCE   1  (bases 1 to 257)
+  AUTHORS   Altman S, Wesolowski D and Puranam RS.
+  TITLE     Nucleotide sequences of the RNA subunit of RNase P from several
+            mammals
+  JOURNAL   Genomics 18 (2), 418-422 (1993)
+   PUBMED   7507079
+COMMENT     PROVISIONAL REFSEQ: This record has not yet been subject to final
+            NCBI review. The reference sequence was derived from L08800.1.
+            
+            Summary: catalyzes the endonucleolytic cleavage of RNA, removing 5'
+            extra nucleotides from tRNA precursor in tRNA processing [RGD, Feb
+            2006].
+PRIMARY     REFSEQ_SPAN         PRIMARY_IDENTIFIER PRIMARY_SPAN        COMP
+            1-257               L08800.1           29-285
+FEATURES             Location/Qualifiers
+     source          1..257
+                     /organism="Rattus norvegicus"
+                     /mol_type="transcribed RNA"
+                     /db_xref="taxon:10116"
+                     /chromosome="15"
+                     /map="15p14"
+     gene            1..257
+                     /gene="Rmrp"
+                     /gene_synonym="Rmrp1"
+                     /note="RNA component of mitochondrial RNA processing
+                     endoribonuclease"
+                     /db_xref="GeneID:29536"
+                     /db_xref="RGD:3580"
+     ncRNA           1..257
+                     /ncRNA_class="RNase_MRP_RNA"
+                     /gene="Rmrp"
+                     /gene_synonym="Rmrp1"
+                     /product="RNA component of mitochondrial RNA processing
+                     endoribonuclease"
+                     /db_xref="GeneID:29536"
+                     /db_xref="RGD:3580"
+ORIGIN      
+        1 ccacgcgctg agtgctcgtc actctctcgg cccctgggaa ggtctgagac tggggcctcc
+       61 cgccgcccta accgggctct ccccgagtgg ggaggtgagt tcccagagag cagggctcca
+      121 cgcgtgggca gactgggcag gagaagcccc cgggtgggcg gatgcctccc tcgccggggc
+      181 ttggaacaga ctcacggcca gcaattcgag ttcaatggct gaggtgaggc acctcgcggg
+      241 cctcataacc caattca
+//

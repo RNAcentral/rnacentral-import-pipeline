@@ -92,6 +92,11 @@ def qualifier_string(feature, name, separator=' '):
     return separator.join(values)
 
 
+def source_qualifier_value(record, qualifier, pattern=r'^(.+)$', **kwargs):
+    source = source_feature(record)
+    return qualifier_value(source, qualifier, pattern, **kwargs)
+
+
 def source_feature(record):
     """
     Get the source feature for the record. This feature must be the first
@@ -316,6 +321,20 @@ def is_gene(feature):
     return feature.type == 'gene'
 
 
+def rna_type(feature):
+    """
+    Compute the RNA type of the given feature. This ensures that the feature
+    has a known ncRNA feature type.
+    """
+
+    if feature.type == 'ncRNA':
+        return qualifier_value(feature, 'ncRNA_class', r'^(.+)$')
+    elif feature.type in {'misc_RNA', 'rRNA', 'tRNA'}:
+        return feature.type
+
+    raise ValueError("Non-ncRNA feature type: %s" % feature.type)
+
+
 def transcripts(handle):
     """
     Fetch all the transcripts in the given EMBL file.
@@ -337,3 +356,48 @@ def sequence(record, feature):
     Extract the sequence from the given record and feature.
     """
     return str(feature.extract(record.seq))
+
+
+def mol_type(source):
+    return qualifier_value(source, 'mol_type', r'^(.+)$')
+
+
+def chromosome(source):
+    chromosomes = source.qualifiers['chromosome']
+    return chromosomes[0]
+
+
+def gene_synonyms(feature):
+    result = []
+    synonyms = feature.qualifiers.get('gene_synonym', [])
+    for synonym in synonyms:
+        result.extend(synonym.split('; '))
+    return result
+
+
+def operon(feature):
+    return qualifier_string(feature, 'operon')
+
+
+def product(feature):
+    return qualifier_string(feature, 'product', separator='; ')
+
+
+def organelle(source):
+    values = qualifier_value(source, 'organelle', r'^(.+)$', max_allowed=None)
+    if not values:
+        return None
+    if len(values) == 1:
+        return values.pop()
+    if len(values) == 2:
+        # Seems strange but there are cases where the value is
+        # ['plastid', 'plastid:chloroplast'] and in that case we want
+        # 'plastid:chloroplast' as that is more specific.
+        first, second = sorted(values, key=len)
+        if second.startswith(first):
+            return second
+    return ' '.join(sorted(values))
+
+
+def keywords(record):
+    return record.annoattions['keywords']

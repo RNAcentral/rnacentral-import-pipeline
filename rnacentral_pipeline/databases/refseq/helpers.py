@@ -13,61 +13,96 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+from rnacentral_pipeline.databases.data import Entry
 
-import attr
+import rnacentral_pipeline.databases.helpers.embl as embl
 
 URL = 'https://www.ncbi.nlm.nih.gov/nuccore/{primary_id}.{version}'
 
 
-def optional_id(entry):
-    key = 'GeneID'
-    if key not in entry.xref_data:
-        return None
-    return key + ':%s' % entry.xref_data[key][0]
+def optional_id(feature):
+    for ref in feature.qualifiers['db_xref']:
+        if ref.startswith('GeneID:'):
+            return ref
+    return None
 
 
-def external_id(entry):
-    """
-    Find the RefSeq external id.
-    """
-
-    ena_refs = entry.xref_data['ena_refs']
-    if not ena_refs:
-        raise ValueError("Must have ena_refs for %s" % entry)
-    result, _ = ena_refs['REFSEQ']
-    return result
+def parent_accession(record):
+    return record.annotations['accessions'][0]
 
 
-def general_accession(entry):
-    return entry.accession.split(':')[0].split('.')
-
-
-def seq_version(entry):
-    return general_accession(entry)[-1]
-
-
-def parent_accession(entry):
-    return general_accession(entry)[0]
-
-
-def url(entry):
+def url(record):
     return URL.format(
-        primary_id=external_id(entry),
-        version=seq_version(entry),
+        primary_id=primary_id(record),
+        version=embl.seq_version(record),
     )
 
 
-def as_entry(entry):
+def description(record):
+    return record.description
+
+
+def primary_id(record):
+    return record.annotations['accessions'][0]
+
+
+def accession(record, feature):
+    return '{primary_id}.{version}:{start}..{stop}:{feature_type}'.format(
+        versioned=primary_id(record),
+        version=embl.seq_version(record),
+        start=feature.start,
+        stop=feature.stop,
+        feature_type=feature.type,
+    )
+
+
+def as_entry(record, source, feature):
     """
     Modify an ENA entry into an approbate RefSeq entry.
     """
-    return attr.evolve(
-        entry,
+
+    # return attr.evolve(
+    #     parent_accession=parent_accession(entry),
+    # )
+
+    return Entry(
+        primary_id=primary_id(record),
+        accession=accession(record, feature),
+        ncbi_tax_id=embl.taxid(record),
         database='REFSEQ',
+        sequence=sequence(record),
         exons=[],
-        seq_version=seq_version(entry),
-        parent_accession=parent_accession(entry),
-        url=url(entry),
-        primary_id=external_id(entry),
-        optional_id=optional_id(entry),
+        rna_type=embl.rna_type(feature),
+        url=url(record),
+        seq_version=embl.seq_version(record),
+
+        optional_id=optional_id(record),
+
+        note_data=ena.note_data(feature),
+        xref_data=xref_data(record, feature, record_refs),
+
+        chromosome=embl.chromosome(source),
+
+        species=embl.species(record),
+        common_name=embl.common_name(record),
+        lineage=embl.lineage(record),
+
+        gene=embl.gene(feature),
+        locus_tag=embl.locus_tag(feature),
+        product=embl.product(feature),
+        parent_accession=parent_accession(record),
+        project=embl.project(record),
+        keywords=embl.keywords(record),
+        organelle=embl.organelle(source),
+        experiment=embl.experiment(feature),
+        inference=embl.inference(feature),
+        old_locus_tag=embl.old_locus_tag(feature),
+        operon=embl.operon(feature),
+        standard_name=embl.standard_name(feature),
+        description=description(record),
+        mol_type=embl.mol_type(source),
+        is_composite='N',
+
+        gene_synonyms=embl.gene_synonyms(feature),
+        references=embl.references(record),
     )
