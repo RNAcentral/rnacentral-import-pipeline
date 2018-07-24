@@ -13,9 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import itertools as it
+from Bio import SeqIO
 
-from rnacentral_pipeline.databases.ena.parsers import parse as ena
 from . import helpers
 
 
@@ -24,4 +23,10 @@ def parse(handle):
     Parse all entries in the handle to produce an iterable of all RefSeq
     entries.
     """
-    return it.imap(helpers.as_entry, ena(handle))
+
+    for record in SeqIO.parse(handle, "genbank"):
+        source = record.features[0]
+        assert source.type == 'source'
+        ncrna = record.features[2]
+        assert ncrna.type in {'ncRNA', 'rRNA'}
+        yield helpers.as_entry(record, source, ncrna)

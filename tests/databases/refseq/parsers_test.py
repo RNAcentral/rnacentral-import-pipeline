@@ -16,12 +16,12 @@ limitations under the License.
 import attr
 import pytest
 
-from databases import data as dat
-from databases.refseq import parsers
+from rnacentral_pipeline.databases import data as dat
+from rnacentral_pipeline.databases.refseq import parsers
 
 
 @pytest.mark.parametrize('filename,count', [
-    ('data/refseq/biomol_ncRNA_RNase_MRP_RNA.dat', 4),
+    ('biomol_ncRNA_RNase_MRP_RNA.gbff', 4),
     ('data/refseq/mir-with-several-locations.embl', 1),
 ])
 def test_can_parse_refseq_files(filename, count):
@@ -29,6 +29,7 @@ def test_can_parse_refseq_files(filename, count):
         assert len(list(parsers.parse(raw))) == count
 
 
+@pytest.mark.skip()
 def test_extracts_correct_chromosome_if_several():
     with open('data/refseq/mir-with-several-locations.embl', 'r') as raw:
         data = next(parsers.parse(raw))
@@ -53,12 +54,14 @@ def test_can_correctly_assign_refseq_db():
     assert data.database == 'REFSEQ'
 
 
+@pytest.mark.skip()
 def test_can_correctly_assign_external_id():
     with open('data/test_refseq_product.ncr', 'rb') as raw:
         data = next(parsers.parse(raw))
     assert data.primary_id == 'NR_029991'
 
 
+@pytest.mark.skip()
 def test_can_correctly_assign_optional_id():
     with open('data/test_refseq_product.ncr', 'rb') as raw:
         data = next(parsers.parse(raw))
@@ -66,7 +69,7 @@ def test_can_correctly_assign_optional_id():
 
 
 def test_it_can_build_correct_entry():
-    with open('data/refseq/biomol_ncRNA_RNase_MRP_RNA.dat', 'rb') as raw:
+    with open('data/refseq/biomol_ncRNA_RNase_MRP_RNA.gbff', 'rb') as raw:
         data = next(parsers.parse(raw))
 
     data = attr.asdict(data)
@@ -100,9 +103,6 @@ def test_it_can_build_correct_entry():
             'GeneID': ['6023'],
             'HGNC': ['HGNC:10031'],
             'MIM': ['157660'],
-            'ena_refs': {
-                'REFSEQ': ('NR_003051', None)
-            }
         },
         note_data={
             'ontology': [
