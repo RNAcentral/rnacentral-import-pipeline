@@ -49,7 +49,7 @@ class BedEntry(object):
     strand = attr.ib(validator=is_a(int))
     rna_type = attr.ib(validator=is_a(basestring))
     databases = attr.ib(validator=is_a(basestring))
-    coord_system = attr.ib(validator=is_a(basestring))
+    is_chromosomal = attr.ib(validator=is_a(bool))
     score = attr.ib(default=0, validator=is_a(int))
     rgb = attr.ib(default=(63, 125, 151), validator=is_a(tuple))
 
@@ -62,7 +62,7 @@ class BedEntry(object):
             strand=region.strand,
             rna_type=region.rna_type,
             databases=region.databases,
-            coord_system=region.coord_system,
+            is_chromosomal=region.is_chromosomal,
         )
 
     def block_sizes(self):
@@ -95,7 +95,7 @@ class BedEntry(object):
     @property
     def bed_chromosome(self):
         chromosome = self.chromosome
-        if self.coord_system == 'chromosome':
+        if self.is_chromosomal:
             chromosome = 'chr' + chromosome
         if chromosome in ['MT', 'chrMT']:
             chromosome = 'chrM'
