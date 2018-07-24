@@ -19,6 +19,7 @@ import itertools as it
 
 import attr
 from attr.validators import instance_of as is_a
+from attr.validtors import in_ as one_of
 
 
 @attr.s()
@@ -88,6 +89,7 @@ class Region(object):
     chromosome = attr.ib(validator=is_a(basestring))
     strand = attr.ib(validator=is_a(int))
     endpoints = attr.ib(validator=is_a(tuple))
+    coordinate_system = attr.ib(validator=one_of(['chromosome', 'scaffold']))
 
     @classmethod
     def from_exons(cls, region_id, exons):
@@ -127,6 +129,9 @@ class Region(object):
         if self.strand == -1:
             return '-'
         raise ValueError("Unknown type of strand")
+
+    def is_chromosomal(self):
+        return self.coordinate_system == 'chromosome'
 
 
 @attr.s()
