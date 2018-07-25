@@ -48,45 +48,41 @@ def primary_id(record):
 
 def accession(record, feature):
     return '{primary_id}.{version}:{start}..{stop}:{feature_type}'.format(
-        versioned=primary_id(record),
+        primary_id=primary_id(record),
         version=embl.seq_version(record),
-        start=feature.start,
-        stop=feature.stop,
+        start=feature.location.start + 1,
+        stop=feature.location.end,
         feature_type=feature.type,
     )
 
 
+def xref_data(feature):
+    feature_annotations = feature.qualifiers.get('db_xref', [])
+    return embl.grouped_annotations(feature_annotations, ':')
+
+
 def as_entry(record, source, feature):
     """
-    Modify an ENA entry into an approbate RefSeq entry.
+    Create an Entry based upon the record, source feature and ncRNA feature.
     """
-
-    # return attr.evolve(
-    #     parent_accession=parent_accession(entry),
-    # )
 
     return Entry(
         primary_id=primary_id(record),
         accession=accession(record, feature),
         ncbi_tax_id=embl.taxid(record),
         database='REFSEQ',
-        sequence=sequence(record),
+        sequence=embl.sequence(record, feature),
         exons=[],
         rna_type=embl.rna_type(feature),
         url=url(record),
         seq_version=embl.seq_version(record),
-
-        optional_id=optional_id(record),
-
-        note_data=ena.note_data(feature),
-        xref_data=xref_data(record, feature, record_refs),
-
+        optional_id=optional_id(feature),
+        note_data={},
+        xref_data=xref_data(feature),
         chromosome=embl.chromosome(source),
-
         species=embl.species(record),
         common_name=embl.common_name(record),
         lineage=embl.lineage(record),
-
         gene=embl.gene(feature),
         locus_tag=embl.locus_tag(feature),
         product=embl.product(feature),
@@ -102,7 +98,6 @@ def as_entry(record, source, feature):
         description=description(record),
         mol_type=embl.mol_type(source),
         is_composite='N',
-
         gene_synonyms=embl.gene_synonyms(feature),
         references=embl.references(record),
     )

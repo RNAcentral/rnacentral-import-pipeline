@@ -21,8 +21,8 @@ from rnacentral_pipeline.databases.refseq import parsers
 
 
 @pytest.mark.parametrize('filename,count', [
-    ('biomol_ncRNA_RNase_MRP_RNA.gbff', 4),
-    ('data/refseq/mir-with-several-locations.embl', 1),
+    ('data/refseq/biomol_ncRNA_RNase_MRP_RNA.gbff', 4),
+    # ('data/refseq/mir-with-several-locations.embl', 1),
 ])
 def test_can_parse_refseq_files(filename, count):
     with open(filename, 'r') as raw:
@@ -49,7 +49,7 @@ def test_extracts_correct_coordinates():
 
 
 def test_can_correctly_assign_refseq_db():
-    with open('data/refseq/biomol_ncRNA_RNase_MRP_RNA.dat', 'r') as raw:
+    with open('data/refseq/biomol_ncRNA_RNase_MRP_RNA.gbff', 'r') as raw:
         data = next(parsers.parse(raw))
     assert data.database == 'REFSEQ'
 
@@ -73,7 +73,7 @@ def test_it_can_build_correct_entry():
         data = next(parsers.parse(raw))
 
     data = attr.asdict(data)
-    assert len(data['references']) == 12
+    assert len(data['references']) == 10
     data['references'] = []
 
     assert data == attr.asdict(dat.Entry(
@@ -98,20 +98,12 @@ def test_it_can_build_correct_entry():
             'Homo sapiens RNA component of mitochondrial RNA processing '
             'endoribonuclease (RMRP), RNase MRP RNA.'
         ),
-        project='PRJEB6684',
         xref_data={
             'GeneID': ['6023'],
             'HGNC': ['HGNC:10031'],
             'MIM': ['157660'],
         },
-        note_data={
-            'ontology': [
-                'ECO:0000345',
-                'GO:0000171',
-                'GO:0000172',
-                'SO:0000385',
-            ],
-        },
+        note_data={},
         chromosome='9',
         species="Homo sapiens",
         common_name='human',
@@ -123,7 +115,7 @@ def test_it_can_build_correct_entry():
         ),
         gene="RMRP",
         gene_synonyms=["CHH", "NME1", "RMRPR", "RRP2"],
-        keywords='RefSeq; RNAcentral; TPA; TPA:specialist_db',
+        keywords='RefSeq',
         optional_id="GeneID:6023",
         product='RNA component of mitochondrial RNA processing endoribonuclease',
         mol_type="transcribed RNA",

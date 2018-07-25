@@ -400,4 +400,4 @@ def organelle(source):
 
 
 def keywords(record):
-    return record.annoattions['keywords']
+    return '; '.join(record.annotations['keywords'])
