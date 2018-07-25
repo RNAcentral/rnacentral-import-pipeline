@@ -19,7 +19,7 @@ import itertools as it
 
 import attr
 from attr.validators import instance_of as is_a
-from attr.validtors import in_ as one_of
+from attr.validators import in_ as one_of
 
 
 @attr.s()
