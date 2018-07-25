@@ -329,7 +329,7 @@ def rna_type(feature):
 
     if feature.type == 'ncRNA':
         return qualifier_value(feature, 'ncRNA_class', r'^(.+)$')
-    elif feature.type in {'misc_RNA', 'rRNA', 'tRNA'}:
+    elif feature.type in {'misc_RNA', 'rRNA', 'tRNA', 'precursor_RNA'}:
         return feature.type
 
     raise ValueError("Non-ncRNA feature type: %s" % feature.type)
