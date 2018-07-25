@@ -18,6 +18,7 @@ from rnacentral_pipeline.databases.rfam import parser as rfam
 from rnacentral_pipeline.databases.rfam import infernal_results
 from rnacentral_pipeline.databases.generic import parser as generic
 from rnacentral_pipeline.databases.quickgo import parser as quickgo
+from rnacentral_pipeline.databases.refseq import parser as refseq
 
 from rnacentral_pipeline.rnacentral.upi_ranges import upi_ranges
 from rnacentral_pipeline.rnacentral.search_export import exporter as search
@@ -150,6 +151,22 @@ def process_pdb(output):
 ))
 def process_ena(ena_file, mapping_file, output):
     ena.from_file(ena_file, mapping_file, output)
+
+
+@external_database.command('refseq')
+@click.argument('refseq_file', type=click.File('rb'))
+@click.argument('output', default='.', type=click.Path(
+    writable=True,
+    dir_okay=True,
+    file_okay=False,
+))
+def process_refseq(refseq_file, output):
+    """
+    This will parse GenBank files from refseq to produce the expected CSV files.
+    """
+    refseq.from_file(refseq_file, output)
+
+
 
 
 @cli.group('search-export')
