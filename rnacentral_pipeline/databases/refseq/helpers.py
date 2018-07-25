@@ -13,11 +13,19 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import re
+
 from rnacentral_pipeline.databases.data import Entry
 
 import rnacentral_pipeline.databases.helpers.embl as embl
 
 URL = 'https://www.ncbi.nlm.nih.gov/nuccore/{primary_id}.{version}'
+
+NCRNA = {
+    'ncRNA',
+    'precursor_RNA',
+    'rRNA',
+}
 
 
 def optional_id(feature):
@@ -38,8 +46,12 @@ def url(record):
     )
 
 
-def description(record):
-    return record.description
+def description(record, feature):
+    rna_type = embl.rna_type(feature).replace('_', ' ')
+    name = record.description
+    name = re.sub(r'\.$', '', name)
+    name = re.sub(',.+$', ', ' + rna_type, name)
+    return name
 
 
 def primary_id(record):
@@ -95,9 +107,13 @@ def as_entry(record, source, feature):
         old_locus_tag=embl.old_locus_tag(feature),
         operon=embl.operon(feature),
         standard_name=embl.standard_name(feature),
-        description=description(record),
+        description=description(record, feature),
         mol_type=embl.mol_type(source),
         is_composite='N',
         gene_synonyms=embl.gene_synonyms(feature),
         references=embl.references(record),
     )
+
+
+def ncrna_features(features):
+    return [f for f in features if f.type in NCRNA]

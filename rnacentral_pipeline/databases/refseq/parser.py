@@ -27,6 +27,5 @@ def parse(handle):
     for record in SeqIO.parse(handle, "genbank"):
         source = record.features[0]
         assert source.type == 'source'
-        ncrna = record.features[2]
-        assert ncrna.type in {'ncRNA', 'rRNA'}
-        yield helpers.as_entry(record, source, ncrna)
+        for ncrna in helpers.ncrna_features(record.features[1:]):
+            yield helpers.as_entry(record, source, ncrna)
