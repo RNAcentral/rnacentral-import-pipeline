@@ -16,13 +16,13 @@ limitations under the License.
 import attr
 import pytest
 
-from databases.data import Reference
+from rnacentral_pipeline.databases.data import Reference
 
-from databases.helpers import publications as pub
+from rnacentral_pipeline.databases.helpers import publications as pub
 
-from databases.quickgo.data import GoTermAnnotation
-from databases.quickgo.data import AnnotationExtension
-from databases.quickgo import parser as gpi
+from rnacentral_pipeline.databases.quickgo.data import GoTermAnnotation
+from rnacentral_pipeline.databases.quickgo.data import AnnotationExtension
+from rnacentral_pipeline.databases.quickgo import parser as gpi
 
 
 @pytest.mark.parametrize('filename,count', [
