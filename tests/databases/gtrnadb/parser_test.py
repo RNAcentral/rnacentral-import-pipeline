@@ -18,14 +18,15 @@ import unittest as ut
 import attr
 
 from rnacentral_pipeline.databases import data
-from rnacentral_pipeline.databases.gtrnadb import parsers
+from rnacentral_pipeline.databases.gtrnadb import parser
 
 
 class GtRNAdbTest(ut.TestCase):
     filename = None
 
     def entries(self, *indexes):
-        parsed = list(parsers.parse(self.filename))
+        with open(self.filename, 'rb') as raw:
+            parsed = list(parser.parse(raw))
         if not indexes:
             return parsed
 

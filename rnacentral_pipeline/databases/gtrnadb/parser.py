@@ -22,6 +22,8 @@ from rnacentral_pipeline.databases.data import Entry
 from rnacentral_pipeline.databases.data import SecondaryStructure
 import rnacentral_pipeline.databases.helpers.phylogeny as phy
 
+from rnacentral_pipeline.writers import build_entry_writer
+
 from . import helpers
 
 LOGGER = logging.getLogger(__name__)
@@ -122,5 +124,6 @@ def parse(raw):
     return it.chain.from_iterable(data)
 
 
-def from_file(raw, output):
+def from_file(handle, output):
     writer = build_entry_writer(parse)
+    writer(output, handle)
