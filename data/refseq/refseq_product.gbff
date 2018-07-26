@@ -1,0 +1,147 @@
+LOCUS       NR_029991                 95 bp    RNA     linear   VRT 26-JUL-2017
+DEFINITION  Danio rerio microRNA let-7i (mirlet7i), microRNA.
+ACCESSION   NR_029991
+VERSION     NR_029991.1
+KEYWORDS    RefSeq.
+SOURCE      Danio rerio (zebrafish)
+  ORGANISM  Danio rerio
+            Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi;
+            Actinopterygii; Neopterygii; Teleostei; Ostariophysi;
+            Cypriniformes; Cyprinidae; Danio.
+REFERENCE   1  (bases 1 to 95)
+  AUTHORS   Duan J, Yu Y, Li Y, Jing L, Yang M, Wang J, Li Y, Zhou X, Miller MR
+            and Sun Z.
+  TITLE     Comprehensive understanding of PM2.5 on gene and microRNA
+            expression patterns in zebrafish (Danio rerio) model
+  JOURNAL   Sci. Total Environ. 586, 666-674 (2017)
+   PUBMED   28215799
+REFERENCE   2  (bases 1 to 95)
+  AUTHORS   Kasper DM, Moro A, Ristori E, Narayanan A, Hill-Teran G, Fleming E,
+            Moreno-Mateos M, Vejnar CE, Zhang J, Lee D, Gu M, Gerstein M,
+            Giraldez A and Nicoli S.
+  TITLE     MicroRNAs Establish Uniform Traits during the Architecture of
+            Vertebrate Embryos
+  JOURNAL   Dev. Cell 40 (6), 552-565 (2017)
+   PUBMED   28350988
+REFERENCE   3  (bases 1 to 95)
+  AUTHORS   Narayanan A, Hill-Teran G, Moro A, Ristori E, Kasper DM, A Roden C,
+            Lu J and Nicoli S.
+  TITLE     In vivo mutagenesis of miRNA gene families using a scalable
+            multiplexed CRISPR/Cas9 nuclease system
+  JOURNAL   Sci Rep 6, 32386 (2016)
+   PUBMED   27572667
+  REMARK    Publication Status: Online-Only
+REFERENCE   4  (bases 1 to 95)
+  AUTHORS   Vaz C, Wee CW, Lee GP, Ingham PW, Tanavde V and Mathavan S.
+  TITLE     Deep sequencing of small RNA facilitates tissue and sex associated
+            microRNA discovery in zebrafish
+  JOURNAL   BMC Genomics 16, 950 (2015)
+   PUBMED   26574018
+  REMARK    Publication Status: Online-Only
+REFERENCE   5  (bases 1 to 95)
+  AUTHORS   Thornton JE, Du P, Jing L, Sjekloca L, Lin S, Grossi E, Sliz P, Zon
+            LI and Gregory RI.
+  TITLE     Selective microRNA uridylation by Zcchc6 (TUT7) and Zcchc11 (TUT4)
+  JOURNAL   Nucleic Acids Res. 42 (18), 11777-11791 (2014)
+   PUBMED   25223788
+REFERENCE   6  (bases 1 to 95)
+  AUTHORS   Craig TA, Zhang Y, Magis AT, Funk CC, Price ND, Ekker SC and Kumar
+            R.
+  TITLE     Detection of 1alpha,25-dihydroxyvitamin D-regulated miRNAs in
+            zebrafish by whole transcriptome sequencing
+  JOURNAL   Zebrafish 11 (3), 207-218 (2014)
+   PUBMED   24650217
+REFERENCE   7  (bases 1 to 95)
+  AUTHORS   Xu J, Zhang R, Shen Y, Liu G, Lu X and Wu CI.
+  TITLE     The evolution of evolvability in microRNA target sites in
+            vertebrates
+  JOURNAL   Genome Res. 23 (11), 1810-1816 (2013)
+   PUBMED   24077390
+REFERENCE   8  (bases 1 to 95)
+  AUTHORS   Yin VP, Lepilina A, Smith A and Poss KD.
+  TITLE     Regulation of zebrafish heart regeneration by miR-133
+  JOURNAL   Dev. Biol. 365 (2), 319-327 (2012)
+   PUBMED   22374218
+REFERENCE   9  (bases 1 to 95)
+  AUTHORS   Griffiths-Jones S, Grocock RJ, van Dongen S, Bateman A and Enright
+            AJ.
+  TITLE     miRBase: microRNA sequences, targets and gene nomenclature
+  JOURNAL   Nucleic Acids Res. 34 (DATABASE ISSUE), D140-D144 (2006)
+   PUBMED   16381832
+REFERENCE   10 (bases 1 to 95)
+  AUTHORS   Chen PY, Manninga H, Slanchev K, Chien M, Russo JJ, Ju J, Sheridan
+            R, John B, Marks DS, Gaidatzis D, Sander C, Zavolan M and Tuschl T.
+  TITLE     The developmental miRNA profiles of zebrafish as determined by
+            small RNA cloning
+  JOURNAL   Genes Dev. 19 (11), 1288-1293 (2005)
+   PUBMED   15937218
+COMMENT     PROVISIONAL REFSEQ: This record is based on preliminary annotation
+            provided by NCBI staff in collaboration with miRBase. The reference
+            sequence was derived from CR354429.17.
+            
+            Summary: microRNAs (miRNAs) are short (20-24 nt) non-coding RNAs
+            that are involved in post-transcriptional regulation of gene
+            expression in multicellular organisms by affecting both the
+            stability and translation of mRNAs. miRNAs are transcribed by RNA
+            polymerase II as part of capped and polyadenylated primary
+            transcripts (pri-miRNAs) that can be either protein-coding or
+            non-coding. The primary transcript is cleaved by the Drosha
+            ribonuclease III enzyme to produce an approximately 70-nt stem-loop
+            precursor miRNA (pre-miRNA), which is further cleaved by the
+            cytoplasmic Dicer ribonuclease to generate the mature miRNA and
+            antisense miRNA star (miRNA*) products. The mature miRNA is
+            incorporated into a RNA-induced silencing complex (RISC), which
+            recognizes target mRNAs through imperfect base pairing with the
+            miRNA and most commonly results in translational inhibition or
+            destabilization of the target mRNA. The RefSeq represents the
+            predicted microRNA stem-loop. [provided by RefSeq, Sep 2009].
+            
+            Sequence Note: This record represents a predicted microRNA
+            stem-loop as defined by miRBase. Some sequence at the 5' and 3'
+            ends may not be included in the intermediate precursor miRNA
+            produced by Drosha cleavage.
+            
+            Publication Note:  This RefSeq record includes a subset of the
+            publications that are available for this gene. Please see the Gene
+            record to access additional publications.
+            
+            ##Evidence-Data-START##
+            Transcript is intronless :: LM609091.1 [ECO:0000345]
+            ##Evidence-Data-END##
+PRIMARY     REFSEQ_SPAN         PRIMARY_IDENTIFIER PRIMARY_SPAN        COMP
+            1-95                CR354429.17        13055-13149
+FEATURES             Location/Qualifiers
+     source          1..95
+                     /organism="Danio rerio"
+                     /mol_type="transcribed RNA"
+                     /strain="Tuebingen"
+                     /db_xref="taxon:7955"
+                     /chromosome="25"
+                     /map="25"
+     gene            1..95
+                     /gene="mirlet7i"
+                     /gene_synonym="dre-let-7i; let-7i; miR-let7i"
+                     /note="microRNA let-7i"
+                     /db_xref="GeneID:100033549"
+                     /db_xref="miRBase:MI0001876"
+                     /db_xref="ZFIN:ZDB-MIRNAG-081203-23"
+     precursor_RNA   1..95
+                     /gene="mirlet7i"
+                     /gene_synonym="dre-let-7i; let-7i; miR-let7i"
+                     /product="microRNA let-7i"
+                     /db_xref="GeneID:100033549"
+                     /db_xref="miRBase:MI0001876"
+                     /db_xref="ZFIN:ZDB-MIRNAG-081203-23"
+     ncRNA           11..32
+                     /ncRNA_class="miRNA"
+                     /gene="mirlet7i"
+                     /gene_synonym="dre-let-7i; let-7i; miR-let7i"
+                     /product="dre-let-7i"
+                     /db_xref="miRBase:MIMAT0001767"
+                     /db_xref="GeneID:100033549"
+                     /db_xref="miRBase:MI0001876"
+                     /db_xref="ZFIN:ZDB-MIRNAG-081203-23"
+ORIGIN      
+        1 gtgtactggc tgaggtagta gtttgtgctg ttggttggga tgtgacattg cccgttatgg
+       61 agatgactgc gcaagctact cccttgccag tgctg
+//

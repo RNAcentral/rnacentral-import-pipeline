@@ -23,6 +23,7 @@ from rnacentral_pipeline.databases.refseq import parser
 @pytest.mark.parametrize('filename,count', [
     ('data/refseq/biomol_ncRNA_RNase_MRP_RNA.gbff', 4),
     ('data/refseq/mir-with-several-locations.gbff', 2),
+    ('data/refseq/refseq_product.gbff', 2),
 ])
 def test_can_parse_refseq_files(filename, count):
     with open(filename, 'r') as raw:
