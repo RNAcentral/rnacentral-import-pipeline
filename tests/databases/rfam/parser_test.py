@@ -15,14 +15,18 @@ limitations under the License.
 
 import attr
 
-from databases.rfam import utils
-from databases.rfam.parser import as_entry
-from databases.rfam.parser import parse
+from rnacentral_pipeline.databases.data import Entry
+from rnacentral_pipeline.databases.data import Reference
+
+from rnacentral_pipeline.databases.rfam import utils
+from rnacentral_pipeline.databases.rfam.parser import as_entry
+from rnacentral_pipeline.databases.rfam.parser import parse
 
 
 def test_it_labels_y_rna_correctly():
     with open('data/rfam/families.tsv') as raw:
         mapping = utils.id_to_insdc_type(raw)
+
     assert as_entry({
         "lineage": (
             "Eukaryota Metazoa Chordata Craniata Vertebrata Chondrichthyes "
@@ -60,87 +64,70 @@ def test_it_labels_y_rna_correctly():
 def test_it_parses_all_data():
     with open('data/rfam/families.tsv') as raw:
         mapping = utils.id_to_insdc_type(raw)
-    assert len(list(parse('data/rfam.json', mapping))) == 1000
+    with open('data/rfam.json') as handle:
+        assert len(list(parse(handle, mapping))) == 1000
 
 
 def test_it_builds_first_entry_correctly():
     with open('data/rfam/families.tsv') as raw:
         mapping = utils.id_to_insdc_type(raw)
 
-    assert attr.asdict(next(parse('data/rfam.json', mapping))) == {
-        'primary_id': 'RF00005',
-        'accession': 'KK113858.1:230594..230666:rfam',
-        'ncbi_tax_id': 407821,
-        'database': 'RFAM',
-        'sequence': (
-            "GCCTTCGTGGTGTAGTGGTCAGCACACTTGACGCGTAACCGAGAGGTCCGTGGTTCGATTCTCG"
-            "GTGAAGGTG"
-        ),
-        'exons': [],
-        'rna_type': 'tRNA',
-        'url': 'http://rfam.org/family/RF00005',
-        'note_data': {
-            "Alignment": "full",
-            "SO": ["SO:0000253"],
-            "GO": ["GO:0030533"],
-        },
-        'species': "Stegodyphus mimosarum",
-        'lineage': (
-            "Eukaryota; Metazoa; Arthropoda; Chelicerata; Arachnida; Araneae; "
-            "Araneomorphae; Entelegynae; Eresoidea; Eresidae; Stegodyphus; "
-            "Stegodyphus mimosarum"
-        ),
-        'references': [{
-            'authors': (
-                'Nawrocki E.P., Burge S.W., Bateman A., Daub J., '
-                'Eberhardt R.Y., Eddy S.R., Floden E.W., Gardner P.P., '
-                'Jones T.A., Tate J., Finn R.D.'
+    with open('data/rfam.json') as handle:
+        assert attr.asdict(next(parse(handle, mapping))) == attr.asdict(Entry(
+            primary_id='RF00005',
+            accession='KK113858.1:230594..230666:rfam',
+            ncbi_tax_id=407821,
+            database='RFAM',
+            sequence=(
+                "GCCTTCGTGGTGTAGTGGTCAGCACACTTGACGCGTAACCGAGAGGTCCGTGGTTCGATTCTCG"
+                "GTGAAGGTG"
             ),
-            'location': 'Nucleic Acids Res. 2015 Jan;43(Database issue):D130-7',
-            'title': 'Rfam 12.0: updates to the RNA families database',
-            'pmid': 25392425,
-            'doi': '10.1093/nar/gku1063',
-        }],
-        'optional_id': 'tRNA',
-        'parent_accession': "KK113858",
-        'project': 'RFAM',
-        'description': 'Stegodyphus mimosarum tRNA',
-        'mol_type': 'full',
-        'is_composite': 'N',
-        'location_start': 230594,
-        'location_end': 230666,
-        'experiment': "8256282 9023104",
-        'seq_version': '1',
-        'product': 'tRNA',
-        'allele': None,
-        'anticodon': None,
-        'chromosome': None,
-        'common_name': '',
-        'division': None,
-        'function': None,
-        'gene': None,
-        'gene_synonyms': [],
-        'inference': None,
-        'keywords': None,
-        'locus_tag': None,
-        'map': None,
-        'non_coding_id': None,
-        'old_locus_tag': None,
-        'operon': None,
-        'ordinal': None,
-        'organelle': None,
-        'pseudogene': None,
-        'standard_name': None,
-        'xref_data': {},
-        'secondary_structure': {'dot_bracket': ''},
-    }
+            exons=[],
+            rna_type='tRNA',
+            url='http://rfam.org/family/RF00005',
+            note_data={
+                "Alignment": "full",
+                "SO": ["SO:0000253"],
+                "GO": ["GO:0030533"],
+            },
+            species="Stegodyphus mimosarum",
+            lineage=(
+                "Eukaryota; Metazoa; Arthropoda; Chelicerata; Arachnida; Araneae; "
+                "Araneomorphae; Entelegynae; Eresoidea; Eresidae; Stegodyphus; "
+                "Stegodyphus mimosarum"
+            ),
+            references=[Reference(
+                authors=(
+                    'Nawrocki E.P., Burge S.W., Bateman A., Daub J., '
+                    'Eberhardt R.Y., Eddy S.R., Floden E.W., Gardner P.P., '
+                    'Jones T.A., Tate J., Finn R.D.'
+                ),
+                location='Nucleic Acids Res. 2015 Jan;43(Database issue):D130-7',
+                title='Rfam 12.0: updates to the RNA families database',
+                pmid=25392425,
+                doi='10.1093/nar/gku1063',
+            )],
+            common_name='',
+            optional_id='tRNA',
+            parent_accession="KK113858",
+            project='RFAM',
+            description='Stegodyphus mimosarum tRNA',
+            mol_type='full',
+            is_composite='N',
+            location_start=230594,
+            location_end=230666,
+            experiment="8256282 9023104",
+            seq_version='1',
+            product='tRNA',
+        ))
 
 
 def test_it_can_parse_with_similar_accessions_correctly():
     with open('data/rfam/families.tsv') as raw:
         mapping = utils.id_to_insdc_type(raw)
 
-    data = list(parse('data/rfam-duplicates.json', mapping))
+    with open('data/rfam-duplicates.json') as handle:
+        data = list(parse(handle, mapping))
     assert len(data) == 2
     assert data[0].accession == 'CM000677.2:93286238..93286321:rfam'
     assert data[1].accession == 'CM000677.2:93286321..93286238:rfam'

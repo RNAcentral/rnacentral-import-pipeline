@@ -18,10 +18,10 @@ from StringIO import StringIO
 import attr
 import pytest
 
-import databases.rfam.cross_references as cr
+import rnacentral_pipeline.databases.rfam.cross_references as cr
 
-from ontologies.data import Term
-from ontologies import helpers as ont
+from rnacentral_pipeline.ontologies.data import Term
+from rnacentral_pipeline.ontologies import helpers as ont
 
 
 @pytest.fixture
