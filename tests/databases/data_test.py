@@ -15,7 +15,7 @@ limitations under the License.
 
 import pytest
 
-from databases import data
+from rnacentral_pipeline.databases import data
 
 
 def test_cannot_build_entry_without_seq_id():
