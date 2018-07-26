@@ -18,12 +18,10 @@ import os
 import attr
 import pytest
 
-from tasks.config import ena
-
 from rnacentral_pipeline.databases.data import Entry
 from rnacentral_pipeline.databases.ena import mapping as tpa
 from rnacentral_pipeline.databases.helpers.hashes import md5
-from rnacentral_pipeline.databases.ena.parsers import parse
+from rnacentral_pipeline.databases.ena.parser import parse
 
 
 @pytest.mark.parametrize('filename,count', [
@@ -491,6 +489,6 @@ def test_can_apply_mirbase_tpas():
 
 @pytest.mark.parametrize(
     'name',
-    [tpa.internal_database_name(n) for n in ena().tpa_databases])
+    [tpa.internal_database_name(n) for n in tpa.DATABASES])
 def test_url_builder_can_build_url(name):
     assert hasattr(tpa.UrlBuilder(), name.lower())
