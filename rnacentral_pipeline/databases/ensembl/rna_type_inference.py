@@ -16,7 +16,7 @@ limitations under the License.
 import re
 import logging
 
-from databases.rfam import utils as rfutil
+from rnacentral_pipeline.databases.rfam import utils as rfutil
 
 LOGGER = logging.getLogger(__name__)
 

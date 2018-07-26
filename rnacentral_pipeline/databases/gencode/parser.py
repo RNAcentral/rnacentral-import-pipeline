@@ -17,14 +17,16 @@ import attr
 
 import gffutils
 
-from rnacentral_pipeline.writers import build_entry_writer
-
 from rnacentral_pipeline.databases.ensembl.parser import parse as \
     ensembl_parser
 
 from . import helpers
 
+
 def update_entry(entry):
+    """
+    Modify an Ensembl Entry into a GENCODE Entry.
+    """
     return attr.assoc(
         entry,
         accession=helpers.accession(entry),
@@ -34,23 +36,32 @@ def update_entry(entry):
         references=helpers.references(),
     )
 
+
 def gencode_transcripts(gff_file):
-    db = gffutils.create_db(gff_file, ':memory:')
-    return {f['ID'] for f in db.features_of_type('transcript')}
+    """
+    Get a set of all GENCODE transcripts ids in the given GFF3 file.
+    """
+
+    gff = gffutils.create_db(gff_file, ':memory:')
+    return {f['ID'] for f in gff.features_of_type('transcript')}
 
 
 def from_ensembl(known, entry):
+    """
+    Check if a given entry is in the set of known GENCODE ids.
+    """
     return entry.primary_id in known
 
 
 def parse(gff_file, ensembl, family_file):
+    """
+    Parse the given GFF3 file, Ensembl chromosome, and Rfam family file to
+    produce an iterable of GENCODE entries. GENCODE entries depend on Ensembl
+    parsing thus the inclusion of Ensembl chromosome and Rfam family file.
+    """
+
     known = gencode_transcripts(gff_file)
     for entry in ensembl_parser(ensembl, family_file):
         if not from_ensembl(known, entry):
             continue
         yield update_entry(entry)
-
-
-def from_file(gff_handle, ensembl, family_file, output):
-    writer = build_entry_writer(parse)
-    writer(output, gff_handle, ensembl, family_file)

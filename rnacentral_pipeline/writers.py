@@ -147,3 +147,8 @@ def build_entry_writer(parser):
             'transformer': op.methodcaller('write_secondary_structure'),
         }
     )
+
+
+def write_entries(parser, output, *args):
+    writer = build_entry_writer(parser)
+    writer(output, *args)
