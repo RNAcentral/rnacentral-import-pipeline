@@ -15,8 +15,8 @@ limitations under the License.
 
 import json
 
-from databases.quickgo.data import GoTermAnnotation
-from databases.quickgo.data import AnnotationExtension
+from rnacentral_pipeline.databases.quickgo.data import GoTermAnnotation
+from rnacentral_pipeline.databases.quickgo.data import AnnotationExtension
 
 
 def test_can_build_correct_writeable():
@@ -34,14 +34,14 @@ def test_can_build_correct_writeable():
 
     writeable = list(annotation.writeable())
     assert len(writeable) == 1
-    assert writeable[0] == {
-        'rna_id': 'a',
-        'qualifier': 'part_of',
-        'ontology_term_id': 'GO:01',
-        'evidence_code': 'ECO:001',
-        'extensions': json.dumps([{
+    assert writeable[0] == [
+        'a',
+        'part_of',
+        'GO:01',
+        'ECO:001',
+        json.dumps([{
             'qualifier': 'talks_to',
             'target': 'ENESMBL:1',
         }]),
-        'assigned_by': 'Bob',
-    }
+        'Bob',
+    ]
