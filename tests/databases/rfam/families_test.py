@@ -20,7 +20,7 @@ import collections as coll
 import attr
 import pytest
 
-from databases.rfam import families as rfam
+from rnacentral_pipeline.databases.rfam import families as rfam
 
 
 @pytest.fixture

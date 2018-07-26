@@ -15,7 +15,7 @@ limitations under the License.
 
 import json
 
-from databases.rfam import helpers
+from rnacentral_pipeline.databases.rfam import helpers
 
 
 def test_builds_correct_accessions():

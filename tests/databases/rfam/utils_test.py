@@ -15,7 +15,7 @@ limitations under the License.
 
 import pytest
 
-from databases.rfam import utils
+from rnacentral_pipeline.databases.rfam import utils
 
 
 @pytest.mark.parametrize("name,expected", [

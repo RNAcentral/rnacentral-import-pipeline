@@ -20,7 +20,7 @@ import attr
 from attr.validators import optional
 from attr.validators import instance_of as is_a
 
-from ontologies import helpers as ont
+from rnacentral_pipeline.ontologies import helpers as ont
 
 
 EXCLUDED_TERMS = {

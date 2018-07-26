@@ -14,58 +14,58 @@ limitations under the License.
 """
 
 import tempfile
-import unittest as ut
 
 import attr
-import pytest
 
-from databases.rfam.infernal_results import parse, RfamHit, RfamClanHit
-
-
-class ParsingTest(ut.TestCase):  # pylint: disable=R0904
-    def test_can_parse_valid_file(self):
-        data = list(parse('data/rfam-hits.tbl'))
-        assert len(data) == 998
-
-    def test_produces_expected_data(self):
-        data = list(parse('data/rfam-hits.tbl'))
-        assert attr.asdict(data[0]) == attr.asdict(RfamHit(
-            target_name='URS000046C624',
-            seq_acc=None,
-            rfam_name='5S_rRNA',
-            rfam_acc='RF00001',
-            mdl='cm',
-            mdl_from=1,
-            mdl_to=119,
-            seq_from=194,
-            seq_to=312,
-            strand=1,
-            trunc=(False, False),
-            infernal_pass=1,
-            infernal_gc=0.55,
-            bias=0.0,
-            score=131.6,
-            e_value=6.9e-29,
-            inc='!',
-            description='Avena murphyi partial 5S ribosomal RNA',
-        ))
-
-    def test_produces_nothing_on_empty_file(self):
-        with tempfile.NamedTemporaryFile() as tfile:
-            assert list(parse(tfile.name)) == []
-
-    def test_fails_missing_file(self):
-        with pytest.raises(Exception):
-            list(parse('/something-that/does-not/exists'))
+from rnacentral_pipeline.databases.rfam.infernal_results import parse, RfamHit, RfamClanHit
 
 
-class ParsingClanHitsTest(ut.TestCase):
-    def test_can_parse_valid_file(self):
-        data = parse('data/rnac7_0000.fa.tbl', clan_competition=True)
+def test_can_parse_valid_file():
+    with open('data/rfam-hits.tbl') as handle:
+        data = list(parse(handle))
+    assert len(data) == 998
+
+
+def test_produces_expected_data():
+    with open('data/rfam-hits.tbl') as handle:
+        data = list(parse(handle))
+
+    assert attr.asdict(data[0]) == attr.asdict(RfamHit(
+        target_name='URS000046C624',
+        seq_acc=None,
+        rfam_name='5S_rRNA',
+        rfam_acc='RF00001',
+        mdl='cm',
+        mdl_from=1,
+        mdl_to=119,
+        seq_from=194,
+        seq_to=312,
+        strand=1,
+        trunc=(False, False),
+        infernal_pass=1,
+        infernal_gc=0.55,
+        bias=0.0,
+        score=131.6,
+        e_value=6.9e-29,
+        inc='!',
+        description='Avena murphyi partial 5S ribosomal RNA',
+    ))
+
+
+def test_produces_nothing_on_empty_file():
+    with tempfile.NamedTemporaryFile() as tfile:
+        assert list(parse(tfile)) == []
+
+
+def test_can_parse_valid_tblout_file():
+    with open('data/rnac7_0000.fa.tbl') as handle:
+        data = parse(handle, clan_competition=True)
         assert len(list(data)) == 129
 
-    def test_produces_expected_data(self):
-        data = parse('data/rnac7_0000.fa.tbl', clan_competition=True)
+
+def test_produces_expected_data_for_tblout():
+    with open('data/rnac7_0000.fa.tbl') as handle:
+        data = parse(handle, clan_competition=True)
         assert attr.asdict(next(data)) == attr.asdict(RfamClanHit(
             idx=1,
             rfam_name='mir-154',
@@ -96,35 +96,36 @@ class ParsingClanHitsTest(ut.TestCase):
             description=None,
         ))
 
-    def test_can_parse_clan_specific_output(self):
-        data = parse('data/rnac7_0000.fa.tbl', clan_competition=True)
-        data = list(data)
-        assert attr.asdict(data[23]) == attr.asdict(RfamClanHit(
-            idx=2,
-            rfam_name='Protozoa_SRP',
-            rfam_acc='RF01856',
-            seq_name='URS0000A778BD',
-            seq_acc=None,
-            clan_name='CL00003',
-            mdl='cm',
-            mdl_from=1,
-            mdl_to=241,
-            seq_from=17,
-            seq_to=277,
-            strand=1,
-            trunc=(False, False),
-            infernal_pass=1,
-            infernal_gc=0.56,
-            bias=0.0,
-            score=96.7,
-            e_value=1.6e-20,
-            inc='!',
-            overlap='secondary',
-            anyidx=1,  # Note this is subtracted by 1 to be 0
-            afrct1=1.0,
-            afrct2=0.876,
-            winidx='"',
-            wfrct1='"',
-            wfrct2='"',
-            description=None,
-        ))
+def test_can_parse_clan_specific_output():
+    with open('data/rnac7_0000.fa.tbl') as handle:
+        data = list(parse(handle, clan_competition=True))
+
+    assert attr.asdict(data[23]) == attr.asdict(RfamClanHit(
+        idx=2,
+        rfam_name='Protozoa_SRP',
+        rfam_acc='RF01856',
+        seq_name='URS0000A778BD',
+        seq_acc=None,
+        clan_name='CL00003',
+        mdl='cm',
+        mdl_from=1,
+        mdl_to=241,
+        seq_from=17,
+        seq_to=277,
+        strand=1,
+        trunc=(False, False),
+        infernal_pass=1,
+        infernal_gc=0.56,
+        bias=0.0,
+        score=96.7,
+        e_value=1.6e-20,
+        inc='!',
+        overlap='secondary',
+        anyidx=1,  # Note this is subtracted by 1 to be 0
+        afrct1=1.0,
+        afrct2=0.876,
+        winidx='"',
+        wfrct1='"',
+        wfrct2='"',
+        description=None,
+    ))
