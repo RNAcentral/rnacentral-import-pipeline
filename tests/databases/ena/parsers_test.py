@@ -31,7 +31,6 @@ from databases.ena.parsers import parse
     ('data/test_invalid_sequences.ncr', 4),
     ('data/test_long_sequence.ncr', 1),
     ('data/test_rdp_product.ncr', 1),
-    ('data/test_refseq_product.ncr', 3),
     ('data/test_rfam_duplicates.ncr', 8),
     ('data/test_rfam_product.ncr', 2),  # Skipped because outdated taxon id
     ('data/test_silva_product.ncr', 3),
