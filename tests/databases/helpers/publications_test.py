@@ -16,8 +16,8 @@ limitations under the License.
 import attr
 import pytest
 
-from databases.data import Reference
-import databases.helpers.publications as pub
+from rnacentral_pipeline.databases.data import Reference
+import rnacentral_pipeline.databases.helpers.publications as pub
 
 
 def test_can_fetch_publication():
