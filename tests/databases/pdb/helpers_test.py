@@ -15,7 +15,7 @@ limitations under the License.
 
 import pytest
 
-from databases.pdb import helpers
+from rnacentral_pipeline.databases.pdb import helpers
 
 
 @pytest.mark.parametrize('product,expected', [
