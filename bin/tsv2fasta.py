@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-import csv
-
 import click
 
 from Bio import SeqIO
