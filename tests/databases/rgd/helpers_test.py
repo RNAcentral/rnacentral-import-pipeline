@@ -16,10 +16,10 @@ limitations under the License.
 import attr
 import pytest
 
-from databases.data import Exon
-from databases.data import Entry
-from databases.data import Reference
-from databases.rgd import helpers as rgd
+from rnacentral_pipeline.databases.data import Exon
+from rnacentral_pipeline.databases.data import Entry
+from rnacentral_pipeline.databases.data import Reference
+from rnacentral_pipeline.databases.rgd import helpers as rgd
 
 
 @pytest.fixture
