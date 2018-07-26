@@ -17,8 +17,8 @@ import attr
 
 import pytest
 
-from databases.data import Entry, Reference
-from databases.ena.parsers import parse
+from rnacentral_pipeline.databases.data import Entry, Reference
+from rnacentral_pipeline.databases.ena.parser import parse
 
 
 @pytest.mark.parametrize('filename,count', [

@@ -28,6 +28,18 @@ CHROMOSOME_LEVEL_MAPPINGS = set([
     "TAIR",
 ])
 
+DATABASES = {
+    'PomBase',
+    'SGD',
+    'SRPDB',
+    'TAIR',
+    'WormBase',
+    'dictyBase',
+    'lncRNAdb',
+    'snOPYdb',
+    'tmRNA-Website',
+}
+
 
 def tpa_key(value, database=None):
     """

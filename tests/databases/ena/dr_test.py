@@ -13,7 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from databases.ena import dr
+from rnacentral_pipeline.databases.ena import dr
 
 
 def test_can_parse_a_dr_line():
