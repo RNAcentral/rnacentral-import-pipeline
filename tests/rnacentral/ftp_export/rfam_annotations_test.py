@@ -19,9 +19,7 @@ import pytest
 import psycopg2
 import psycopg2.extras
 
-from tasks.config import db
-
-from rnacentral.export.ftp import rfam_annotations as rf
+from rnacentral_pipeline.rnacentral.ftp_export import rfam_annotations as rf
 
 from tests.tasks.helpers import count
 
