@@ -19,8 +19,8 @@ import urlparse
 
 import requests
 
-from rnacentral_pippeline.databases.data import Reference
-import rnacentral_pippeline.databases.helpers.phylogeny as phy
+from rnacentral_pipeline.databases.data import Reference
+import rnacentral_pipeline.databases.helpers.phylogeny as phy
 
 
 class InvalidDotBracket(Exception):
