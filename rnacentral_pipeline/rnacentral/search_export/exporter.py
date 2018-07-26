@@ -24,6 +24,11 @@ from .data import builder
 
 
 def write_entries(handle, results):
+    """
+    This will write all entries in the given results iterable to the given
+    handle. It then returns the number of entries written.
+    """
+
     count = 0
     for result in results:
         count += 1

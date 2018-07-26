@@ -12,6 +12,8 @@ import logging
 
 import click
 
+from rnacentral_pipeline.writers import write_entries
+
 from rnacentral_pipeline.databases.ena import parser as ena
 from rnacentral_pipeline.databases.pdb import parser as pdb
 from rnacentral_pipeline.databases.rfam import parser as rfam
@@ -19,6 +21,7 @@ from rnacentral_pipeline.databases.rfam import infernal_results
 from rnacentral_pipeline.databases.generic import parser as generic
 from rnacentral_pipeline.databases.quickgo import parser as quickgo
 from rnacentral_pipeline.databases.refseq import parser as refseq
+from rnacentral_pipeline.databases.ensembl import parser as ensembl
 
 from rnacentral_pipeline.rnacentral.upi_ranges import upi_ranges
 from rnacentral_pipeline.rnacentral.search_export import exporter as search
@@ -77,7 +80,7 @@ def process_json_schema(json_file, output):
     """
     This parses our JSON schema files to produce the importable CSV files.
     """
-    generic.from_file(json_file, output)
+    write_entries(generic.parse, output, json_file)
 
 
 @external_database.command('quickgo')
@@ -106,8 +109,7 @@ def process_ensembl(ensembl_file, family_file, output):
     """
     This will parse EMBL files from Ensembl to produce the expected CSV files.
     """
-    # ensembl.from_file(ensembl_file, family_file, output)
-    pass
+    write_entries(ensembl.parse, ensembl_file, family_file, output)
 
 
 @external_database.command('gencode')
@@ -138,7 +140,7 @@ def process_pdb(output):
     This will fetch and parse all sequence data from PDBe to produce the csv
     files we import.
     """
-    pdb.write_all(output)
+    write_entries(pdb.entries, output)
 
 
 @external_database.command('ena')
@@ -150,7 +152,7 @@ def process_pdb(output):
     file_okay=False,
 ))
 def process_ena(ena_file, mapping_file, output):
-    ena.from_file(ena_file, mapping_file, output)
+    write_entries(ena.parse, output, ena_file, mapping_file)
 
 
 @external_database.command('refseq')
@@ -164,9 +166,19 @@ def process_refseq(refseq_file, output):
     """
     This will parse GenBank files from refseq to produce the expected CSV files.
     """
-    refseq.from_file(refseq_file, output)
+    write_entries(refseq.parse, output, refseq_file)
 
 
+@external_database.command('rfam')
+@click.argument('rfam_file', type=click.File('rb'))
+@click.argument('mapping_file', type=click.File('rb'))
+@click.argument('output', default='.', type=click.Path(
+    writable=True,
+    dir_okay=True,
+    file_okay=False,
+))
+def process_rfam(rfam_file, mapping_file, output):
+    write_entries(rfam.parse, output, rfam_file, mapping_file)
 
 
 @cli.group('search-export')

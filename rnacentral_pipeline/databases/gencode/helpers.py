@@ -13,7 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from rnacentral_pipeline.databases.data import Reference
+from rnacentral_pipeline.databases.helpers import publications as pub
 
 
 def xref_data(entry):
@@ -39,25 +39,7 @@ def references():
     """
     Get the standard GENCODE reference.
     """
-    return [Reference(
-        authors=(
-            "Harrow J, Frankish A, Gonzalez JM, Tapanari E, Diekhans M, "
-            "Kokocinski F, Aken BL, Barrell D, Zadissa A, Searle S, Barnes"
-            " I, Bignell A, Boychenko V, Hunt T, Kay M, Mukherjee G, Rajan"
-            " J,  Despacio-Reyes G, Saunders G, Steward C, Harte R, Lin M,"
-            " Howald  C, Tanzer A, Derrien T, Chrast J, Walters N, "
-            "Balasubramanian S,  Pei B, Tress M, Rodriguez JM, Ezkurdia "
-            "I, van Baren J, Brent M,  Haussler D, Kellis M, Valencia A, "
-            "Reymond A, Gerstein M, Guigo  R, Hubbard TJ. "
-        ),
-        location="Genome Research",
-        title=(
-            "GENCODE: the reference human genome annotation for "
-            "The ENCODE Project"
-        ),
-        pmid=22955987,
-        doi="10.1101/gr.135350.111",
-    )]
+    return pub.reference(22955987)
 
 
 def accession(entry):

@@ -15,6 +15,7 @@ limitations under the License.
 
 import re
 import logging
+import itertools as it
 
 from rnacentral_pipeline.databases import data
 from rnacentral_pipeline.writers import build_entry_writer
@@ -106,7 +107,6 @@ def as_entries(pdb_ids):
             LOGGER.info(str(err))
 
 
-def write_all(output):
-    writer = build_entry_writer(as_entries)
+def entries():
     ids = helpers.rna_containing_pdb_ids()
-    writer(output, ids)
+    return it.imap(as_entries, ids)

@@ -75,7 +75,6 @@ def reference(pmid):
     location = '{title} {volume}{issue}{pages} ({year})'.format(
         title=data['journalTitle'],
         issue=issue,
-        # volume=data.get['journalVolume'],
         volume=data.get('journalVolume', ''),
         pages=pages,
         year=data['pubYear'],

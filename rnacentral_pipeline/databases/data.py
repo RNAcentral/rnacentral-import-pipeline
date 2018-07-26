@@ -561,6 +561,9 @@ class Entry(object):
     def write_genomic_locations(self):
         return self.__write_part__(self.exons)
 
+    def write_related_sequences(self):
+        return []
+
     def __write_part__(self, attribute, method_name='writeable'):
         if not self.is_valid():
             return []
