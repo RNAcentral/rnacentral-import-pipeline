@@ -25,6 +25,7 @@ import attr
 from attr.validators import and_
 from attr.validators import optional
 from attr.validators import instance_of as is_a
+from attr.validators import in_ as one_of
 
 from rnacentral_pipeline.databases.helpers.hashes import md5
 from rnacentral_pipeline.databases.helpers.hashes import crc64
@@ -277,6 +278,25 @@ class Reference(object):
 
 
 @attr.s(frozen=True)
+class RelatedCoordinate(object):
+    start = attr.ib(validator=is_a(int))
+    stop = attr.ib(validator=is_a(int))
+
+
+@attr.s(frozen=True)
+class RelatedEvidence(object):
+    methods = attr.ib(validator=is_a(list))
+
+
+@attr.s(frozen=True)
+class RelatedSequence(object):
+    sequence_id = attr.ib(validator=is_a(basestring))
+    relationship = attr.ib(validator=one_of(["precursor", "matureProduct", "target"]))
+    coordinates = attr.ib(validator=is_a(list), default=attr.Factory(list))
+    evidence = attr.ib(validator=is_a(list), default=attr.Factory(list))
+
+
+@attr.s(frozen=True)
 class Entry(object):
     """
     This represents an RNAcentral entry from GtRNAdb that we will write out for
@@ -305,6 +325,8 @@ class Entry(object):
 
     note_data = possibly_empty(dict)
     xref_data = possibly_empty(dict)
+
+    related_sequences = possibly_empty(list)
 
     chromosome = optionally(basestring)
     species = optionally(basestring)

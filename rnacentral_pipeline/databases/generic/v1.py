@@ -226,6 +226,27 @@ def parent_accession(location):
     return first_exon['INSDC_accession'].split('.')[0]
 
 
+def related_sequences(record):
+    sequences = []
+    for related in record.get('relatedSequences', []):
+        methods = related.get('methods', [])
+        evidence = [data.RelatedEvidence(method=m) for m in methods]
+        coordinates = []
+        for coord in related.get('coordinates', []):
+            coordinates.append(data.RelatedCoordinate(
+                start=coord['startPosition'],
+                stop=coord['endPosition'],
+            ))
+
+        sequences.append(data.RelatedSequence(
+            sequence_id=related['sequenceId'],
+            relationship=related['relationship'],
+            coordinates=coordinates,
+            evidence=evidence,
+        ))
+    return sequences
+
+
 def as_entry(database, p_accession, parsed_exons, record):
     """
     Generate an Entry to import based off the database, exons and raw record.
@@ -244,6 +265,7 @@ def as_entry(database, p_accession, parsed_exons, record):
         seq_version=record.get('version', '1'),
         parent_accession=p_accession,
         xref_data=xrefs(record),
+        related_sequences=related_sequences(record),
         species=species(record),
         lineage=lineage(record),
         common_name=common_name(record),
