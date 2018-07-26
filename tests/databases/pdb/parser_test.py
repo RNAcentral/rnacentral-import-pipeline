@@ -16,9 +16,9 @@ limitations under the License.
 import attr
 import pytest
 
-from databases import data
-from databases.pdb import helpers
-from databases.pdb import parsers
+from rnacentral_pipeline.databases import data
+from rnacentral_pipeline.databases.pdb import helpers
+from rnacentral_pipeline.databases.pdb import parsers
 
 
 def test_can_build_all_entries():
