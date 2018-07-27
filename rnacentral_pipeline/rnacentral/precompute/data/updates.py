@@ -137,6 +137,7 @@ class Update(object):
             self.rna_type,
             int(self.has_coordinates),
             self.databases,
+            self.short_description,
         ]
 
     def writeable_statuses(self):
@@ -225,5 +226,5 @@ class InactiveUpdate(Update):
             databases=database_names(sequence.inactive_accessions),
             has_coordinates=has_coordinates,
             qa_status=QaStatus.empty(),
-            short_description='',
+            short_description=description,
         )

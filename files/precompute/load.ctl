@@ -8,7 +8,8 @@ HAVING FIELDS (
   description,
   rna_type,
   has_coordinates,
-  databases
+  databases,
+  short_description
 )
 INTO {{PGDATABASE}}?load_precomputed
 TARGET COLUMNS (
@@ -19,7 +20,8 @@ TARGET COLUMNS (
   description,
   rna_type,
   has_coordinates,
-  databases
+  databases,
+  short_description
 )
 
 WITH
@@ -35,6 +37,7 @@ create table if not exists load_precomputed (
   upi varchar(26) NOT NULL,
   taxid int8 NULL,
   description varchar(500) NULL,
+  short_description varchar(500) NULL,
   rna_type varchar(500) NULL DEFAULT 'NULL'::character varying,
   has_coordinates bool NOT NULL DEFAULT false,
   databases text,
