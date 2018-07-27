@@ -67,6 +67,11 @@ from .helpers import load_data
     ('URS0000A767C0_3702', 'lncRNA', 'Arabidopsis thaliana (thale cress) other RNA (AT1G44125)'),
     ('URS0000A86584_10090', 'ncRNA', 'Mus musculus predicted gene 29254 (Gm29254)'),
     ('URS0000ABD87F_9606', 'rRNA', 'Homo sapiens RNA, 45S pre-ribosomal 4 (RNA45S4, RNA45SN1)'),
+    ('URS000041AF00_274', 'tRNA', 'TRNA-FMET from Thermus thermophilus (29 structures)'),
+    ('URS0000A7633F_9606', 'snRNA', "U4 snRNA from Homo sapiens (PDB 5H1K, chain C,D"),
+    ('URS0000D2348C_9606', 'misc_RNA', 'Homo sapiens (human) let-7 microRNA precursor (2 structures)'),
+    ('URS000080DD8D_32630', 'misc_RNA', "25-nt RNA from synthetic construct (PDB 4V8X, chain AX)"),
+    ('URS000080DE2B_274', 'rRNA', "5S rRNA from Thermus thermophilus (34 structures)"),
 ])
 def test_computes_correct_species_specific_descriptions(rna_id, rna_type, name):
     data = load_data(rna_id)
