@@ -21,12 +21,18 @@ from rnacentral_pipeline.writers import build_entry_writer
 from . import helpers
 
 
-def parse(raw, dbconf):
-    known = helpers.known(dbconf)
+def parse_partials(raw):
     data = json.load(raw)
     data = data['response']['docs']
     data = it.imap(helpers.as_partial_entry, data)
-    data = it.imap(known.as_entry, data)
+    return data
+
+
+def parse(raw, dbconf):
+    known = helpers.known(dbconf)
+    data = parse_partials(raw)
+    data = it.imap(known.as_entries, data)
+    data = it.chain.from_iterable(data)
     return it.ifilter(None, data)
 
 

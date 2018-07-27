@@ -19,21 +19,6 @@ from attr.validators import instance_of as is_a
 from rnacentral_pipeline.databases.data import Entry
 
 
-def class_without_fields(cls, *names, **kwargs):
-    """
-    Build a new class that has all the same fields as a given class, excluding
-    the listed fields. The given keywords will be used as options when building
-    the class.
-    """
-
-    ignore = set(names)
-    fields = [f for f in attr.fields(cls) if f not in ignore]
-    return attr.make_class('Simplified' + cls.__name__, fields, **kwargs)
-
-
-PartialEntry = class_without_fields(Entry, 'sequence', slots=True, frozen=True)
-
-
 @attr.s(slots=True, frozen=True)
 class MappableEntry(object):
     attribute_name = attr.ib(validator=is_a(basestring))
@@ -45,24 +30,24 @@ class MappableEntry(object):
 class KnownMapper(object):
     entries = attr.ib()
 
-    def matching_update(self, partial):
+    def matching_updates(self, partial):
         pass
 
     def store_all(self, given):
         pass
 
-    def as_entry(self, partial):
+    def as_entries(self, partial):
         """
-        Turn a partial Entry into a full Entry by finding the matching update
+        Turn a PartialEntry into a full Entry by finding the matching update
         and apply it.
         """
 
         data = []
-        updates = self.matching_update(partial)
-        extra_fields = set(f.name for f in attr.fields(updates.__class__))
-        for field in attr.fields(partial.__class__):
-            target = partial
-            if field.name in extra_fields:
-                target = updates
-            data.append(getattr(target, field.name))
-        return Entry(*data)  # pylint: disable=star-args
+        for update in self.matching_updates(partial):
+            extra_fields = set(f.name for f in attr.fields(update.__class__))
+            for field in attr.fields(Entry):
+                target = partial
+                if field.name in extra_fields:
+                    target = update
+                data.append(getattr(target, field.name))
+            yield Entry(*data)  # pylint: disable=star-args

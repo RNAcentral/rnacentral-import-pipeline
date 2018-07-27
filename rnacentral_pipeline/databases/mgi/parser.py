@@ -21,7 +21,6 @@ import operator as op
 import itertools as it
 
 from rnacentral_pipeline.databases.data import Entry
-from rnacentral_pipeline.writers import build_entry_writer
 
 from . import helpers
 
@@ -45,23 +44,17 @@ def as_entry(data):
         accession=helpers.accession(data),
         ncbi_tax_id=helpers.taxon_id(data),
         database='MGI',
-        sequence='',
         exons=[],
         rna_type=helpers.infer_rna_type(data) or '',
         url='',
-        division='MUS',
-        is_composite='N',
+        seq_version='1',
         xref_data=helpers.xref_data(data),
-        chromosome=helpers.chromosome(data),
         species=helpers.species(data),
         common_name=helpers.common_name(data),
         lineage=helpers.lineage(data),
         gene=helpers.gene(data),
         optional_id=helpers.symbol(data),
         description=helpers.name(data),
-        seq_version='1',
-        location_start=helpers.start(data),
-        location_end=helpers.stop(data),
         references=helpers.references(data),
     )
 
@@ -74,8 +67,3 @@ def parse(raw):
     data = csv.DictReader(lines(raw), delimiter='\t')
     data = it.imap(as_entry, data)
     return it.ifilter(op.attrgetter('rna_type'), data)
-
-
-def from_file(raw, output):
-    writer = build_entry_writer(parse)
-    writer(output, raw)

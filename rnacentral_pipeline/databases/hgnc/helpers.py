@@ -14,12 +14,16 @@ limitations under the License.
 """
 
 import re
+import logging
 
+from rnacentral import psql
 from rnacentral_pipeline.databases.helpers import phylogeny as phy
 from rnacentral_pipeline.databases.helpers import publications as pubs
+from rnacentral_pipeline.databases import mapping
 
-from .data import KnownMapper
-from .data import PartialEntry
+LOGGER = logging.getLogger(__name__)
+
+URL = 'https://www.genenames.org/cgi-bin/gene_symbol_report?hgnc_id={id}'
 
 
 RNA_TYPE_MAPPING = {
@@ -62,39 +66,82 @@ ONE_TO_THREE = {
     'SUP': 'Sup',
 }
 
+REFSEQ_QUERY = """
+select
+    acc.external_id key,
+    COALESCE(rna.seq_short, rna.seq_long)
+from xref
+join rnc_accessions acc on acc.accession = xref.ac
+join rna on rna.upi = xref.upi
+where
+    xref.deleted = 'N'
+    and xref.dbid = 9
+    and xref.taxid = 9606
+"""
 
-def known_refseq(dbconf):
-    pass
+ENSEMBL_QUERY = '''
+select
+    acc.optional_id key,
+    COALESCE(rna.seq_short, rna.seq_long)
+from xref
+join rnc_accessions acc on acc.accession = xref.ac
+join rna on rna.upi = xref.upi
+where
+    xref.deleted = 'N'
+    and xref.dbid = 25
+    and xref.taxid = 9606
+'''
+
+GTRNADB_QUERY = """
+select
+    acc.optional_id key,
+    COALESCE(rna.seq_short, rna.seq_long)
+from xref
+join rnc_accessions acc on acc.accession = xref.ac
+join rna on rna.upi = xref.upi
+where
+    xref.deleted = 'N'
+    and xref.dbid = 8
+    and xref.taxid = 9606
+"""
 
 
-def known_gtrnadb(dbconf):
-    pass
+def known_refseq(psql_wrapper):
+    return mapping.Matcher.from_iterable(
+        'RefSeq',
+        psql_wrapper.copy_to_iterable(REFSEQ_QUERY),
+    )
 
 
-def known_ensembl(dbconf):
-    pass
+def known_gtrnadb(psql_wrapper):
+    return mapping.Matcher.from_iterable(
+        'GtRNAdb',
+        psql_wrapper.copy_to_iterable(GTRNADB_QUERY),
+    )
 
 
-def known_ensembl_sequences(dbconf):
-    pass
+def known_ensembl(psql_wrapper):
+    return mapping.Matcher.from_iterable(
+        'optional_id',
+        psql_wrapper.copy_to_iterable(ENSEMBL_QUERY),
+        transformer=lambda g, _: g.split('.')[0]
+    )
 
 
 def known(dbconf):
-    mapper = KnownMapper()
-    mapper.store_all(known_refseq(dbconf))
-    mapper.store_all(known_gtrnadb(dbconf))
-    mapper.store_all(known_ensembl(dbconf))
-    return mapper
+    psql_wrapper = psql.PsqlWrapper(dbconf)
+    return mapping.MultiMatcher.build(
+        known_refseq(psql_wrapper),
+        known_gtrnadb(psql_wrapper),
+        known_ensembl(psql_wrapper),
+    )
 
 
 def gene_symbols(raw):
     """
     Get a list of previous symbols this gene has been known as.
     """
-
-    if raw['prev_symbol']:
-        return raw['prev_symbol']
-    return []
+    return raw.get('prev_symbol', [])
 
 
 def organelle(raw):
@@ -116,7 +163,7 @@ def description(raw):
     gene_description = ''
     if raw['symbol']:
         gene_description = ' (%s)' % raw['symbol']
-    return 'Homo sapiens (human)' + raw['name'] + gene_description
+    return 'Homo sapiens (human) ' + raw['name'] + gene_description
 
 
 def rna_type(raw):
@@ -131,7 +178,14 @@ def references(raw):
     Compute all data needed for the references that are present in the given
     HGNC reference.
     """
-    return [pubs.reference(pmid) for pmid in raw.get('pubmed_id', [])]
+
+    refs = []
+    for pmid in raw.get('pubmed_id', []):
+        try:
+            refs.append(pubs.reference(pmid))
+        except:
+            LOGGER.warn("Could not fetch publications for %i", pmid)
+    return refs
 
 
 def taxid(_):
@@ -165,18 +219,20 @@ def species(raw):
 def gtrnadb_id(raw):
 
     prefix = None
-    accession = raw['symbol']
-    match = re.match(r'TR(\S+)-(\S{3})(\d+-\d+)', accession)
-    if match:
-        prefix = 'tRNA'
-
-    # nuclear-encoded mitochondrial tRNAs
-    match = re.match(r'NMTR(\S+)-(\S{3})(\d+-\d+)', accession)
-    if match:
-        prefix = 'nmt-tRNA'
-
-    if not prefix:
+    patterns = {
+        'tRNA': r'^TR(\S+)-(\S{3})(\d+-\d+)',
+        'nmt-tRNA': r'^NMTR(\S+)-(\S{3})(\d+-\d+)',
+    }
+    for prefix, pattern in patterns.items():
+        match = re.match(pattern, raw['symbol'])
+        if match:
+            break
+    else:
         return None
+
+    if not match:
+        from pprint import pprint
+        pprint(raw)
 
     return '{prefix}-{anticodon}-{word}-{range}'.format(
         prefix=prefix,
@@ -186,14 +242,6 @@ def gtrnadb_id(raw):
     )
 
 
-def ensembl_id(raw):
-    pass
-
-
-def refseq_id(raw):
-    return raw.get('refseq_accession', None)
-
-
 def xref_data(raw):
     """
     Compute xrefs from HGNC. This will only contain the xrefs that we can map
@@ -201,16 +249,23 @@ def xref_data(raw):
     """
 
     xrefs = [
-        ('RefSeq', refseq_id),
-        ('GtRNAdb', gtrnadb_id),
-        ('Ensembl', ensembl_id),
+        ('RefSeq', 'refseq_accession'),
+        ('UCSC', 'ucsc_id'),
+        ('Ensembl', 'ensembl_gene_id'),
+        ('ENA', 'ena'),
+        ('LNCipedia', 'lncipedia'),
     ]
     data = {}
-    for name, func in xrefs:
-        value = func(raw)
-        if not value:
+    for name, item in xrefs:
+        if item not in raw:
             continue
-        data[name] = func(raw)
+        value = raw[item]
+        if not isinstance(value, list):
+            value = [value]
+        data[name] = value
+    trna_id = gtrnadb_id(raw)
+    if trna_id:
+        data['GtRNAdb'] = trna_id
     return data
 
 
@@ -222,12 +277,12 @@ def as_partial_entry(raw):
     return PartialEntry(
         primary_id=raw['symbol'],
         accession=raw['hgnc_id'],
-        ncbi_tax_id=taxid,
+        ncbi_tax_id=taxid(raw),
         database='HGNC',
         exons=[],
         rna_type=rna_type(raw),
-        url='',
-        seq_version=1,
+        url=URL.format(id=raw['hgnc_id']),
+        seq_version='1',
         note_data={},
         xref_data=xref_data(raw),
         species=species(raw),
