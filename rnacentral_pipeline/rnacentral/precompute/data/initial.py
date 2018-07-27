@@ -13,6 +13,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import re
+import string
+from collections import Counter
+
 import attr
 from attr.validators import optional
 from attr.validators import instance_of as is_a
@@ -93,13 +97,30 @@ class Accession(object):
 
         return self.lineage.split(';')[0]  # pylint: disable=no-member
 
+    @property
+    def masked_description(self):
+        """
+        Compute a masked description. This will do things like strip out
+        '10-mer' and such. The description returned is suitable for entropy
+        computation, but as the description that is displayed to the user.
+        """
+
+        raw = self.description.lower()  # pylint: disable=no-member
+        allowed = set(string.ascii_lowercase + string.digits + ' ')
+        counts = Counter(r for r in raw if r in allowed)
+        rep = counts.most_common(1)[0][0]
+        masked = re.sub(r'(\d+-mer)', lambda m: rep * len(m.groups(0)[0]), raw)
+        masked = re.sub(r"5'-(.+)-3'", '', masked)
+        masked = ''.join(m for m in masked if m in allowed)
+        masked = re.sub(r'\s+', ' ', masked)
+        return masked
+
     def is_mitochondrial(self):
         """
         Check if this accession is mitochrondrial.
         """
         return 'mitochondri' in self.description or \
             (self.organelle and 'mitochondri' in self.organelle)
-
 
 
 @attr.s()
