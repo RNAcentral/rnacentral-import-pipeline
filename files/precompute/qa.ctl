@@ -62,6 +62,7 @@ SELECT distinct
   possible_contamination,
   missing_rfam_match
 FROM load_qa_status
+)
 ON CONFLICT (rna_id) DO UPDATE
 SET
   has_issue = EXCLUDED.has_issue,
