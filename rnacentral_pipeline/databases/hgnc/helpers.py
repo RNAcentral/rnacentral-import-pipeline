@@ -16,7 +16,7 @@ limitations under the License.
 import re
 import logging
 
-from rnacentral import psql
+from rnacentral_pipeline import psql
 from rnacentral_pipeline.databases.helpers import phylogeny as phy
 from rnacentral_pipeline.databases.helpers import publications as pubs
 from rnacentral_pipeline.databases import mapping
@@ -67,9 +67,9 @@ ONE_TO_THREE = {
 }
 
 REFSEQ_QUERY = """
-select
-    acc.external_id key,
-    COALESCE(rna.seq_short, rna.seq_long)
+select distinct
+    acc.external_id as id,
+    COALESCE(rna.seq_short, rna.seq_long) as sequence
 from xref
 join rnc_accessions acc on acc.accession = xref.ac
 join rna on rna.upi = xref.upi
@@ -80,9 +80,9 @@ where
 """
 
 ENSEMBL_QUERY = '''
-select
-    acc.optional_id key,
-    COALESCE(rna.seq_short, rna.seq_long)
+select distinct
+    split_part(acc.optional_id, '.', 1) as id,
+    COALESCE(rna.seq_short, rna.seq_long) as sequence
 from xref
 join rnc_accessions acc on acc.accession = xref.ac
 join rna on rna.upi = xref.upi
@@ -93,9 +93,9 @@ where
 '''
 
 GTRNADB_QUERY = """
-select
-    acc.optional_id key,
-    COALESCE(rna.seq_short, rna.seq_long)
+select distinct
+    acc.optional_id as id,
+    COALESCE(rna.seq_short, rna.seq_long) as sequence
 from xref
 join rnc_accessions acc on acc.accession = xref.ac
 join rna on rna.upi = xref.upi
@@ -107,6 +107,9 @@ where
 
 
 def known_refseq(psql_wrapper):
+    """
+    Get a Matcher that will matcher against all RefSeq human data.
+    """
     return mapping.Matcher.from_iterable(
         'RefSeq',
         psql_wrapper.copy_to_iterable(REFSEQ_QUERY),
@@ -114,6 +117,9 @@ def known_refseq(psql_wrapper):
 
 
 def known_gtrnadb(psql_wrapper):
+    """
+    Get a Matcher that will match against all GtRNAdb human sequences.
+    """
     return mapping.Matcher.from_iterable(
         'GtRNAdb',
         psql_wrapper.copy_to_iterable(GTRNADB_QUERY),
@@ -121,14 +127,20 @@ def known_gtrnadb(psql_wrapper):
 
 
 def known_ensembl(psql_wrapper):
+    """
+    Get a Matcher that will match against known Ensembl data for humans.
+    """
     return mapping.Matcher.from_iterable(
-        'optional_id',
+        'Ensembl',
         psql_wrapper.copy_to_iterable(ENSEMBL_QUERY),
-        transformer=lambda g, _: g.split('.')[0]
     )
 
 
 def known(dbconf):
+    """
+    Get a multi matcher for all databases we can match RefSeq data against.
+    """
+
     psql_wrapper = psql.PsqlWrapper(dbconf)
     return mapping.MultiMatcher.build(
         known_refseq(psql_wrapper),
@@ -183,8 +195,10 @@ def references(raw):
     for pmid in raw.get('pubmed_id', []):
         try:
             refs.append(pubs.reference(pmid))
-        except:
+        except pubs.FailedPublicationId:
             LOGGER.warn("Could not fetch publications for %i", pmid)
+        except pubs.UnknownPmid:
+            LOGGER.error("Publication %i is not valid", pmid)
     return refs
 
 
@@ -217,6 +231,9 @@ def species(raw):
 
 
 def gtrnadb_id(raw):
+    """
+    This will generate an GtRNAdb ID given raw data from the
+    """
 
     prefix = None
     patterns = {
@@ -230,14 +247,10 @@ def gtrnadb_id(raw):
     else:
         return None
 
-    if not match:
-        from pprint import pprint
-        pprint(raw)
-
-    return '{prefix}-{anticodon}-{word}-{range}'.format(
+    return '{prefix}-{aa}-{anticodon}-{range}'.format(
         prefix=prefix,
-        anticodon=ONE_TO_THREE[match.group(1)],
-        word=match.group(2),
+        aa=ONE_TO_THREE[match.group(1)],
+        anticodon=match.group(2),
         range=match.group(3),
     )
 
@@ -263,9 +276,11 @@ def xref_data(raw):
         if not isinstance(value, list):
             value = [value]
         data[name] = value
+
     trna_id = gtrnadb_id(raw)
     if trna_id:
-        data['GtRNAdb'] = trna_id
+        data['GtRNAdb'] = [trna_id]
+
     return data
 
 
@@ -274,7 +289,7 @@ def as_partial_entry(raw):
     Create a partial Entry. This will contain everything needed to build an
     Entry but a sequence.
     """
-    return PartialEntry(
+    return mapping.SequencelessEntry(
         primary_id=raw['symbol'],
         accession=raw['hgnc_id'],
         ncbi_tax_id=taxid(raw),

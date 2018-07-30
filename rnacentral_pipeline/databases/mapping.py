@@ -49,7 +49,37 @@ def class_without_fields(cls, *names, **kwargs):
     return attr.make_class('Simplified' + cls.__name__, fields, **kwargs)
 
 
-SequencelessEntries = class_without_fields(Entry, 'sequence', frozen=True)
+@attr.s(frozen=True)
+class SequencelessEntry(class_without_fields(Entry, 'sequence')):
+    """
+    This represents an Entry object which has all possible fields, execpt the
+    'sequence' field. Generally when mapping sequences we know a lot of
+    information about the Entry execpt the Sequence. This provides a simple way
+    of representing such cases. To ensure that these data do not get written by
+    accident the is_valid method will always return False, and the writing
+    methods will all raise an Exception.
+    """
+
+    def is_valid(self):
+        return False
+
+    def write_ac_info(self):
+        raise ValueError("Not possible for SequencelessEntries")
+
+    def write_secondary_structure(self):
+        raise ValueError("Not possible for SequencelessEntries")
+
+    def write_seq_long(self):
+        raise ValueError("Not possible for SequencelessEntries")
+
+    def write_seq_short(self):
+        raise ValueError("Not possible for SequencelessEntries")
+
+    def write_refs(self):
+        raise ValueError("Not possible for SequencelessEntries")
+
+    def write_genomic_locations(self):
+        raise ValueError("Not possible for SequencelessEntries")
 
 
 @attr.s(slots=True, frozen=True)
@@ -82,17 +112,30 @@ class Matcher(object):
 
     @classmethod
     def from_iterable(cls, key, iterable):
+        updates = defaultdict(list)
+        for val in iterable:
+            update = EntryCompleter.from_dict(val)
+            updates[update.matchable_id].append(update)
+
         return cls(
             database_name=key,
-            updates=[EntryCompleter.from_dict(val) for val in iterable],
+            updates=dict(updates),
         )
+
+    def is_matchable(self, partial):
+        keys = partial.xref_data.get(self.database_name, [])
+        return any(k in self.updates for k in keys)
 
     def store(self, completer):
         self.updates[completer.value].append(completer)
 
     def matching_updates(self, partial):
-        value = partial.xref_data.get(self.database_name)
-        return self.updates.get(value, [])
+        keys = partial.xref_data.get(self.database_name, [])
+        updates = []
+        for key in keys:
+            # pylint: disable=no-member
+            updates.extend(self.updates.get(key, []))
+        return updates
 
     def as_entries(self, partial):
         for update in self.matching_updates(partial):
@@ -101,11 +144,20 @@ class Matcher(object):
 
 @attr.s()
 class MultiMatcher(object):
-    matchers = attr.ib()
+    matchers = attr.ib(validator=is_a(list))
 
     @classmethod
     def build(cls, *matchers):
         return cls(list(matchers))
+
+    def is_matchable(self, partial):
+        return any(m.is_matchable(partial) for m in self.matchers)
+
+    def matching_database_name(self, partial):
+        for matcher in self.matchers:
+            if matcher.is_matchable(partial):
+                return matcher.database_name
+        return None
 
     def as_entries(self, partial):
         for matcher in self.matchers:

@@ -16,8 +16,6 @@ limitations under the License.
 import json
 import itertools as it
 
-from rnacentral_pipeline.writers import build_entry_writer
-
 from . import helpers
 
 
@@ -34,8 +32,3 @@ def parse(raw, dbconf):
     data = it.imap(known.as_entries, data)
     data = it.chain.from_iterable(data)
     return it.ifilter(None, data)
-
-
-def from_file(raw, dbconf, output):
-    writer = build_entry_writer(parse)
-    writer(output, raw, dbconf)
