@@ -61,7 +61,7 @@ insert into rnc_rna_precomputed (
   databases,
   has_coordinates
 ) (
-SELECT
+SELECT DISTINCT
   id,
   upi,
   taxid,
