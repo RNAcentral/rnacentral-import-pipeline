@@ -18,9 +18,8 @@ import itertools as it
 
 from Bio.UniProt.GOA import gpa_iterator as raw_parser
 
-from rnacentral_pipeline.writers import MultiCsvOutput
+from rnacentral_pipeline.databases.go_annotations import GoTermAnnotation
 
-from . import data
 from . import helpers
 
 
@@ -29,7 +28,7 @@ def as_annotation(record):
     Turn a record into an annotation.
     """
 
-    return data.GoTermAnnotation(
+    return GoTermAnnotation(
         rna_id=helpers.rna_id(record),
         qualifier=helpers.qualifier(record),
         term_id=helpers.go_id(record),
@@ -64,22 +63,3 @@ def parser(handle):
             merged.publications.extend(ann.publications)
             merged.extensions.extend(ann.extensions)
         yield merged
-
-
-def from_file(handle, output):
-    writer = MultiCsvOutput.build(
-        parser,
-        annotations={
-            'transformer': op.methodcaller('writeable'),
-        },
-        publications={
-            'transformer': op.methodcaller('writeable_publications'),
-        },
-        publication_mappings={
-            'transformer': op.methodcaller('writeable_publication_mappings'),
-        },
-        terms={
-            'transformer': op.methodcaller('writeable_ontology_terms'),
-        },
-    )
-    writer(output, handle)

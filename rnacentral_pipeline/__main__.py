@@ -23,6 +23,9 @@ from rnacentral_pipeline.databases.quickgo import parser as quickgo
 from rnacentral_pipeline.databases.refseq import parser as refseq
 from rnacentral_pipeline.databases.ensembl import parser as ensembl
 
+from rnacentral_pipeline import ontologies as onto
+# from rnacentral_pipeline.databases.tair import annotations as tair
+
 from rnacentral_pipeline.rnacentral.upi_ranges import upi_ranges
 from rnacentral_pipeline.rnacentral.search_export import exporter as search
 
@@ -81,20 +84,6 @@ def process_json_schema(json_file, output):
     This parses our JSON schema files to produce the importable CSV files.
     """
     write_entries(generic.parse, output, json_file)
-
-
-@external_database.command('quickgo')
-@click.argument('raw_data', type=click.File('rb'))
-@click.argument('output', default='.', type=click.Path(
-    writable=True,
-    dir_okay=True,
-    file_okay=False,
-))
-def process_quickgo(raw_data, output):
-    """
-    This will process a quickgo file and output files into the given directory.
-    """
-    quickgo.from_file(raw_data, output)
 
 
 @external_database.command('ensembl')
@@ -179,6 +168,46 @@ def process_refseq(refseq_file, output):
 ))
 def process_rfam(rfam_file, mapping_file, output):
     write_entries(rfam.parse, output, rfam_file, mapping_file)
+
+
+@cli.group('ontologies')
+def ontologies():
+    pass
+
+
+@ontologies.command('quickgo')
+@click.argument('raw_data', type=click.File('rb'))
+@click.argument('output', default='.', type=click.Path(
+    writable=True,
+    dir_okay=True,
+    file_okay=False,
+))
+def ontologies_quickgo(raw_data, output):
+    """
+    This will process a quickgo file and output files into the given directory.
+    """
+    onto.writer.write_annotations(quickgo.parser, output, raw_data)
+
+
+# @ontologies.command('tair')
+# @click.argument('raw_data', type=click.File('rb'))
+# @click.argument('output', default='.', type=click.Path(
+#     writable=True,
+#     dir_okay=True,
+#     file_okay=False,
+# ))
+# def ontologies_tair_annotations(raw_data, output):
+#     """
+#     Process all GO anntoations from TAIR to produce the required output files.
+#     """
+#     onto.writer.write_annotations(tair.parse, output, raw_data)
+
+
+@ontologies.command('lookup-terms')
+@click.argument('raw_data', type=click.File('rb'))
+@click.argument('output', type=click.File('w'))
+def ontologies_lookup_terms(terms, output):
+    onto.helpers.process_term_file(terms, output)
 
 
 @cli.group('search-export')
