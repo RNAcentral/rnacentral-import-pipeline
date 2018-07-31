@@ -365,6 +365,10 @@ class Entry(object):
         return json.dumps(self.note_data)
 
     @property
+    def sequence_length(self):
+        return len(self.sequence)
+
+    @property
     def feature_name(self):
         """
         Return the feature for the RNA type.

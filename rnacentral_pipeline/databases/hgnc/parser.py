@@ -14,6 +14,7 @@ limitations under the License.
 """
 
 import json
+import operator as op
 import itertools as it
 
 from . import helpers
@@ -28,7 +29,9 @@ def parse_partials(raw):
 
 def parse(raw, dbconf):
     known = helpers.known(dbconf)
-    data = parse_partials(raw)
-    data = it.imap(known.as_entries, data)
-    data = it.chain.from_iterable(data)
-    return it.ifilter(None, data)
+    select_by = op.attrgetter('sequence_length', 'sequence')
+    for partial in parse_partials(raw):
+        entries = list(known.as_entries(partial))
+        if not entries:
+            continue
+        yield max(entries, key=select_by)
