@@ -20,8 +20,8 @@ from rnacentral_pipeline.databases.data import Reference
 
 from rnacentral_pipeline.databases.helpers import publications as pub
 
-from rnacentral_pipeline.databases.quickgo.data import GoTermAnnotation
-from rnacentral_pipeline.databases.quickgo.data import AnnotationExtension
+from rnacentral_pipeline.databases.go_annotations import GoTermAnnotation
+from rnacentral_pipeline.databases.go_annotations import AnnotationExtension
 from rnacentral_pipeline.databases.quickgo import parser as gpi
 
 

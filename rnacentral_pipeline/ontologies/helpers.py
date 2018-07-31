@@ -14,9 +14,12 @@ limitations under the License.
 """
 
 import urllib
+import operator as op
 
 import requests
 from functools32 import lru_cache
+
+from rnacentral_pipeline.writers import CsvOutput
 
 from . import data
 
@@ -76,3 +79,13 @@ def term(term_id):
         definition=definition,
         synonyms=term_info.get('synonyms', None) or [],
     )
+
+
+def parse_file(handle):
+    for line in handle:
+        yield term(line)
+
+
+def process_term_file(term_handle, output):
+    writer = CsvOutput(parse_file, transformer=op.methodcaller('writeables'))
+    writer(output, term_handle)

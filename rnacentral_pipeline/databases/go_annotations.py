@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Copyright [2009-2017] EMBL-European Bioinformatics Institute
+Copyright [2009-2018] EMBL-European Bioinformatics Institute
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -17,8 +17,6 @@ import json
 
 import attr
 from attr.validators import instance_of as is_a
-
-from rnacentral_pipeline.ontologies import helpers as ont
 
 
 ANN_URL = 'http://www.ebi.ac.uk/QuickGO/annotations?geneProductId={upi}'
