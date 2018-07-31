@@ -1,10 +1,14 @@
 #!/usr/bin/env nextflow
 
+temp_publish_dir = params.search_export.publish + '-temp'
+file(temp_publish_dir).mkdirs()
+
 process find_chunks {
   output:
   file('ranges.txt') into raw_ranges
 
   """
+  rm ${temp_publish_dir}/* || true
   rnac upi-ranges ${params.search_export.max_entries} ranges.txt
   """
 }
@@ -15,15 +19,16 @@ raw_ranges
     .into { ranges }
 
 process export_chunk {
-  publishDir params.search_export.publish, mode: 'copy'
+  publishDir temp_publish_dir, mode: 'copy'
   maxForks params.search_export.max_forks
+  scratch true
 
   input:
   set val(min), val(max), file(query) from ranges
 
   output:
   file "${xml}.gz" into search_chunks
-  file("count") into search_counts
+  file "count" into search_counts
 
   script:
   xml = "xml4dbdumps__${min}__${max}.xml"
@@ -36,16 +41,29 @@ process export_chunk {
 }
 
 process create_release_note {
-  publishDir params.search_export.publish, mode: 'move'
-
   input:
   file('count*') from search_counts.collect()
 
   output:
   file 'release_note.txt' into release_note
 
-  script:
   """
   rnac search-export release-note release_note.txt count*
+  """
+}
+
+process publish {
+  input:
+  file 'release_note.txt' from release_note
+
+  script:
+  publish = params.search_export.publish
+  """
+  rm ${temp_publish_dir}/*.xml.gz
+  rm ${temp_publish_dir}/release_note.txt
+
+  cp release_note.txt ${publish}/
+  mv ${temp_publish_dir}/*.xml.gz ${publish}/
+  rm -r ${temp_publish_dir}
   """
 }
