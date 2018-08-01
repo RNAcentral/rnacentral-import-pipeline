@@ -84,5 +84,8 @@ SET
 $$,
 $$
 drop table load_precomputed;
+$$,
+$$
+analyze full rnc_rna_precomputed;
 $$
 ;

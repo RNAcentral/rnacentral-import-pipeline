@@ -73,5 +73,8 @@ SET
 $$,
 $$
 drop table load_qa_status;
+$$,
+$$
+analyze full qa_status;
 $$
 ;
