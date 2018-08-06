@@ -226,3 +226,13 @@ def test_build_correct_coordinate_flag(rna_id, flag):
 ])
 def test_build_correct_active_flag(rna_id, flag):
     assert load_data(rna_id).is_active == flag
+
+
+@pytest.mark.parametrize('upi,taxids', [  # pylint: disable=no-member
+    ('URS0000CD0AEF', {29388}),
+    ('URS0000001005', {1806922}),
+])
+def test_does_not_produce_invalid_upi_taxid_pairs(upi, taxids):
+    data = helpers.load_for_upi(upi)
+    found = {d.taxid for d in data if d.taxid is not None}
+    assert found == taxids
