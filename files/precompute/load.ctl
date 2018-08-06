@@ -86,6 +86,6 @@ $$
 drop table load_precomputed;
 $$,
 $$
-analyze full rnc_rna_precomputed;
+vacuum (analyze, verbose) rnc_rna_precomputed;
 $$
 ;
