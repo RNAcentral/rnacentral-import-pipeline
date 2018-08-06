@@ -60,5 +60,5 @@ ON
 where
   rna.id BETWEEN :min AND :max
 GROUP BY rna.upi, xref.taxid
-ORDER BY rna.upi
+ORDER BY rna.upi, xref.taxid
 ) TO STDOUT

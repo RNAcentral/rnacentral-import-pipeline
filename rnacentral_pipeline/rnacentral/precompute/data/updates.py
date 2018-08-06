@@ -68,7 +68,7 @@ class QaStatus(object):
         Build a QaStatus that will not produce any writeable data. Objects
         produced by this should not be used for any updates.
         """
-        return cls(False, False, False, False, no_data=True)
+        return cls(False, False, False, False, False, no_data=True)
 
     @property
     def has_issue(self):

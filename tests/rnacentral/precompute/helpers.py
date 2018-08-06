@@ -20,9 +20,19 @@ from rnacentral_pipeline.rnacentral.precompute.process import as_sequences
 from rnacentral_pipeline.rnacentral.precompute.data import Sequence
 
 from tests.helpers import run_range_as_single
+from tests.helpers import run_with_replacements
 
 
 def load_data(rna_id):
     path = os.path.join('files', 'precompute', 'query.sql')
     data = run_range_as_single(rna_id, path)
     return next(as_sequences([data]))
+
+
+def load_for_upi(upi):
+    path = os.path.join('files', 'precompute', 'query.sql')
+    loaded = list(run_with_replacements(path, (
+        'rna.id BETWEEN :min AND :max',
+        "xref.upi ='%s'" % upi
+    ), take_all=True))
+    return list(as_sequences(loaded))
