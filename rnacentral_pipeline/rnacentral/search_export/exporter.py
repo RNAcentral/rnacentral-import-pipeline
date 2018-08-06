@@ -33,6 +33,7 @@ def write_entries(handle, results):
     for result in results:
         count += 1
         handle.write(etree.tostring(result))
+        handle.write('\n')
     return count
 
 
