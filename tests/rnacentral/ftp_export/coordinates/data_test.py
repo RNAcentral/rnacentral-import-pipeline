@@ -79,9 +79,6 @@ def test_can_build_correct_data_for_both_mapped_and_known():
         ],
     )
 
-    from pprint import pprint
-    pprint(ans.regions)
-
     assert found.regions[0].start == 11869
     assert found.regions[0].stop == 14409
     assert found.regions[0].region_id == 'URS00008C1902_9606@1/11869-14409:+'
