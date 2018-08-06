@@ -40,7 +40,8 @@ def test_can_produce_features():
                 'Name': ['URS000082BE64_9606'],
                 'type': ['snoRNA'],
                 'databases': ['snOPY'],
-                'ID': ['URS000082BE64_9606.0'],
+                'ID': ['URS000082BE64_9606@3/32676136-32676226:+'],
+                'source': ['expert-database'],
             }
         ),
         Feature(
@@ -55,9 +56,49 @@ def test_can_produce_features():
                 'Name': ['URS000082BE64_9606'],
                 'databases': ['snOPY'],
                 'type': ['snoRNA'],
-                'ID': ['URS000082BE64_9606.0:ncRNA_exon1'],
-                'Parent': ['URS000082BE64_9606.0'],
+                'ID': ['URS000082BE64_9606@3/32676136-32676226:+:ncRNA_exon1'],
+                'Parent': ['URS000082BE64_9606@3/32676136-32676226:+'],
                }
+        ),
+    ]
+    assert data == ans
+
+
+def test_can_produce_features_with_identity():
+    data = fetch_data('URS0000563942_9606', "GRCh38")
+    ans = [
+        Feature(
+            seqid='22',
+            source='RNAcentral',
+            featuretype='transcript',
+            start=40363986,
+            end=40364062,
+            strand='+',
+            frame='.',
+            attributes={
+                'Name': ['URS0000563942_9606'],
+                'databases': ['ENA'],
+                'type': ['snRNA'],
+                'ID': ['URS0000563942_9606@22/40363986-40364062:+'],
+                'source': ['alignment'],
+                'identity': ['1.00']
+            },
+        ),
+        Feature(
+            seqid='22',
+            source='RNAcentral',
+            featuretype='noncoding_exon',
+            start=40363986,
+            end=40364062,
+            strand='+',
+            frame='.',
+            attributes={
+                'Name': ['URS0000563942_9606'],
+                'databases': ['ENA'],
+                'type': ['snRNA'],
+                'ID': ['URS0000563942_9606@22/40363986-40364062:+:ncRNA_exon1'],
+                'Parent': ['URS0000563942_9606@22/40363986-40364062:+'],
+            },
         ),
     ]
     assert data == ans
