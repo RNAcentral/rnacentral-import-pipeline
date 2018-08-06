@@ -150,7 +150,7 @@ process find_ensembl_chunks {
   stdout raw_ensembl_ranges
 
   """
-  rnac ftp-export ensembl ranges
+  rnac upi-ranges ${params.ftp_export.ensembl.chunk_size}
   """
 }
 
@@ -164,6 +164,7 @@ process ensembl_export_chunk {
   input:
   set val(min), val(max) from ensembl_ranges
   file schema from Channel.fromPath('files/ftp-export/ensembl/schema.json')
+  file query from Channel.fromPath('files/ftp-export/ensembl/query.sql')
 
   output:
   file "ensembl-xref-$min-${max}.json" into __ensembl_export
