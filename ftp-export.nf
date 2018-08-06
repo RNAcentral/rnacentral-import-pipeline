@@ -102,7 +102,7 @@ process active_fasta {
   publishDir "${params.ftp_export}/sequences/", mode: 'copy'
 
   input:
-  file query from Channel.fromPath('files/ftp-export/sequences/active.fasta')
+  file query from Channel.fromPath('files/ftp-export/sequences/active.sql')
 
   output:
   file 'rnacentral_active.fasta.gz' into active_sequences
