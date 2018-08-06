@@ -27,8 +27,8 @@ process precompute_range {
   file 'qa.csv' into qa_results
 
   """
-  psql --variable min=$min --variable max=$max -f "$query" "$PGDATABASE" |\
-    rnac precompute from-file -
+  psql --variable min=$min --variable max=$max -f "$query" "$PGDATABASE" > raw-precompute.json
+  rnac precompute from-file raw-precompute.json
   """
 }
 
