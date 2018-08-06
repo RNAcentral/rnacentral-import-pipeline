@@ -23,12 +23,16 @@ def short_description(description, sequence):
     """
 
     species = {acc.species for acc in sequence.accessions}
-    common = {acc.common_name for acc in sequence.accessions}
+    common = {'(%s)' % acc.common_name for acc in sequence.accessions}
+    leading = list(species) + list(common)
 
-    for name in species:
-        description = re.sub('^' + name + ' ', '', description)
-    for name in common:
-        description = re.sub(r'^\(%s\)' % name, '', description)
+    for name in leading:
+        # This is used instead of building a regex to avoid dealing with issues
+        # due to parenthesis.
+        if description.startswith(name):
+            description = description[len(name):]
+        description = re.sub('^\s+', '', description)
+
     if description.startswith('(') and description.endswith(')'):
         description = description[1:-1]
     description = re.sub(r'^\s+', '', description)
