@@ -145,7 +145,10 @@ def build_entry_writer(parser):
         },
         secondary_structure={
             'transformer': op.methodcaller('write_secondary_structure'),
-        }
+        },
+        related_sequences={
+            'transformer': op.methodcaller('write_related_structures'),
+        },
     )
 
 
