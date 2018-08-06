@@ -98,9 +98,6 @@ class LocatedSequence(object):
             return (chromosome, region.start, region.stop)
 
         regions.sort(key=region_key)
-        from pprint import pprint
-        pprint(regions)
-
         return cls(
             rna_id=exonics[0].rna_id,
             rna_type=exonics[0].rna_type,
