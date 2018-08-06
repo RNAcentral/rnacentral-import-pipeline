@@ -75,6 +75,6 @@ $$
 drop table load_qa_status;
 $$,
 $$
-analyze full qa_status;
+vacuum (analyze, verbose) qa_status;
 $$
 ;
