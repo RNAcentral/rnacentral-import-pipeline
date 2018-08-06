@@ -30,7 +30,11 @@ def located_sequences_as_features(sequences):
                 'type': [located.rna_type],
                 'databases': [located.databases],
                 'ID': [region.region_id],
+                'source': [region.source],
             }
+
+            if region.source == 'alignment':
+                attributes['identity'] = ['%.2f' % region.identity]
 
             yield Feature(
                 seqid=region.chromosome,
