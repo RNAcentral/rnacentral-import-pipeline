@@ -61,19 +61,21 @@ def builder(data):
     seen = set()
     key = op.itemgetter('database', 'id')
     for xref in data['xrefs']:
-        if is_high_quality(xref):
-            updated = as_xref(xref)
-            value = key(updated)
-            if value in seen:
-                xrefs.append(updated)
-                seen.add(value)
+        if not is_high_quality(xref):
+            continue
+
+        updated = as_xref(xref)
+        value = key(updated)
+        if value not in seen:
+            xrefs.append(updated)
+            seen.add(value)
 
     result['xrefs'] = xrefs
     return result
 
 
 def generate_file(raw, output, schema_file=None):
-    results = [json.loads(l) for l in raw]
+    results = [builder(json.loads(l)) for l in raw]
 
     if schema_file:
         with open(schema_file, 'r') as raw:

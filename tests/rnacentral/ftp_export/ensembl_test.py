@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Copyright [2009-2017] EMBL-European Bioinformatics Institute
+Copyright [2009-2018] EMBL-European Bioinformatics Institute
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -18,23 +18,24 @@ import json
 
 import pytest
 
-from rnacentral.export.ftp import ensembl
-from tasks.config import db
+from rnacentral_pipeline.rnacentral.ftp_export import ensembl
+
+from tests import helpers
+
+
+def load_data(rna_id):
+    path = os.path.join('files', 'ftp-export', 'ensembl', 'query.sql')
+    raw = helpers.run_range_as_single(rna_id, path)
+    return ensembl.builder(raw)
 
 
 @pytest.mark.parametrize(
-    'rna_id',
+    'filename',
     os.listdir('data/export/ensembl')
 )
-def test_can_export_data_for_single_upi(rna_id):
-    with open(os.path.join('data/export/ensembl', rna_id), 'rb') as raw:
+def test_can_export_data_for_single_upi(filename):
+    with open(os.path.join('data/export/ensembl', filename), 'rb') as raw:
         ans = json.load(raw)
 
-    upi, taxid = rna_id.split('_')
-    taxid = taxid.split('.')[0]
-    assert ensembl.upi(db(), upi, int(taxid)) == ans
-
-
-@pytest.mark.skip
-def test_can_export_range_of_upis():
-    pass
+    rna_id = filename.split('.')[0]
+    assert load_data(rna_id) == ans

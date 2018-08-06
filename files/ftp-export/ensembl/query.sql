@@ -3,7 +3,7 @@ SELECT
     json_build_object(
         'rnacentral_id', pre.id,
         'description', max(pre.description),
-        'sequence', COALESCE(rna.seq_short, rna.seq_long),
+        'sequence', max(COALESCE(rna.seq_short, rna.seq_long)),
         'md5', max(rna.md5),
         'rna_type', max(pre.rna_type),
         'taxon_id', max(xref.taxid),
@@ -25,6 +25,6 @@ ON
     xref.ac = acc.accession
 WHERE
     xref.deleted = 'N'
-    AND rna.id BETWEEN {min_id} AND {max_id}
+    AND rna.id BETWEEN :min AND :max
 group by pre.id
 ) TO STDOUT
