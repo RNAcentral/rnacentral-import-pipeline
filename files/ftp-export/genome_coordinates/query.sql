@@ -16,7 +16,8 @@ select
             'chromosome', mapping.chromosome,
             'strand', mapping.strand,
             'start', mapping."start",
-            'stop', mapping.stop
+            'stop', mapping.stop,
+            'identity', mapping.identity
         )
     )
 from xref
