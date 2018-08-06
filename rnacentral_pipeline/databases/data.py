@@ -299,8 +299,11 @@ class RelatedSequence(object):
 @attr.s(frozen=True)
 class Entry(object):
     """
-    This represents an RNAcentral entry from GtRNAdb that we will write out for
-    import.
+    This represents an RNAcentral entry that will be imported into the
+    database. It should contain all the information needed to define all the
+    data that is loaded from expert databases. For example it should contain
+    information for rna (sequence), rnc_accessions, rnc_coordinates, and so
+    forth.
     """
 
     # Also known as external_id
