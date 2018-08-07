@@ -12,10 +12,14 @@ from Bio.SeqRecord import SeqRecord
 def sequences(handle):
     for line in handle:
         data = json.loads(line)
+        description = data.get('description', None)
+        if description:
+            description = unicode(description)
+
         yield SeqRecord(
             Seq(data['sequence']),
             id=data['id'],
-            description=data.get('description', None)
+            description=description,
         )
 
 
