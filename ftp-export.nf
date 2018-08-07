@@ -1,5 +1,5 @@
 process release_note {
-  publishDir "${params.ftp_export}/", mode: 'copy'
+  publishDir "${params.ftp_export.publish}/", mode: 'copy'
 
   input:
   file template_file from Channel.fromPath('files/ftp-export/release_note.txt')
@@ -13,7 +13,7 @@ process release_note {
 }
 
 process md5 {
-  publishDir "${params.ftp_export}/md5/", mode: 'copy'
+  publishDir "${params.ftp_export.publish}/md5/", mode: 'copy'
 
   input:
   file query from Channel.fromPath('files/ftp-export/md5/md5.sql')
@@ -32,7 +32,7 @@ process md5 {
 }
 
 process id_mapping {
-  publishDir "${params.ftp_export}/id_maping/", mode: 'copy'
+  publishDir "${params.ftp_export.publish}/id_maping/", mode: 'copy'
 
   input:
   file query from Channel.fromPath('files/ftp-export/id-mapping/id_mapping.sql')
@@ -52,7 +52,7 @@ process id_mapping {
 }
 
 process database_id_mapping {
-  publishDir "${params.ftp_export}/id_maping/database_mappings/", mode: 'copy'
+  publishDir "${params.ftp_export.publish}/id_maping/database_mappings/", mode: 'copy'
 
   input:
   file 'id_mapping.tsv.gz' into id_mapping
@@ -66,7 +66,7 @@ process database_id_mapping {
 }
 
 process rfam_annotations {
-  publishDir "${params.ftp_export}/rfam/", mode: 'copy'
+  publishDir "${params.ftp_export.publish}/rfam/", mode: 'copy'
 
   input:
   file query from Channel.from('files/ftp-export/rfam/rfam-annotations.sql')
@@ -82,7 +82,7 @@ process rfam_annotations {
 }
 
 process inactive_fasta {
-  publishDir "${params.ftp_export}/sequences/", mode: 'copy'
+  publishDir "${params.ftp_export.publish}/sequences/", mode: 'copy'
 
   input:
   file query from Channel.fromPath('files/ftp-export/sequences/inactive.sql')
@@ -96,7 +96,7 @@ process inactive_fasta {
 }
 
 process active_fasta {
-  publishDir "${params.ftp_export}/sequences/", mode: 'copy'
+  publishDir "${params.ftp_export.publish}/sequences/", mode: 'copy'
 
   input:
   file query from Channel.fromPath('files/ftp-export/sequences/active.sql')
@@ -115,7 +115,7 @@ process active_fasta {
 }
 
 process species_specific_fasta {
-  publishDir "${params.ftp_export}/sequences/", mode: 'copy'
+  publishDir "${params.ftp_export.publish}/sequences/", mode: 'copy'
 
   input:
   file query from Channel.fromPath('files/ftp-export/sequences/species-specific.sql')
@@ -129,7 +129,7 @@ process species_specific_fasta {
 }
 
 process nhmmer_fasta {
-  publishDir "${params.ftp_export}/sequences/.internal/", mode: 'copy'
+  publishDir "${params.ftp_export.publish}/sequences/.internal/", mode: 'copy'
 
   input:
   file 'rnacentral_active.fasta.gz' from active_sequences
@@ -156,7 +156,7 @@ raw_ensembl_ranges
   .into { ensembl_ranges }
 
 process ensembl_export_chunk {
-  publishDir "${params.ftp_export}/json/", mode: 'copy'
+  publishDir "${params.ftp_export.publish}/json/", mode: 'copy'
 
   input:
   set val(min), val(max) from ensembl_ranges
@@ -175,7 +175,7 @@ process ensembl_export_chunk {
 }
 
 process rfam_go_matches {
-  publishDir "${params.ftp_export}/go_annotations/", mode: 'copy'
+  publishDir "${params.ftp_export.publish}/go_annotations/", mode: 'copy'
 
   input:
   file query from Channel.fromPath('files/ftp-export/go_annotations/rnacentral_rfam_annotations.sql')
@@ -221,7 +221,7 @@ process rfam_go_matches {
 // raw_coordinates.into { bed_coordinates; gff_coordinates }
 
 // process format_bed_coordinates {
-//   publishDir "${params.ftp_export}/genome_coordinates/", mode: 'copy'
+//   publishDir "${params.ftp_export.publish}/genome_coordinates/", mode: 'copy'
 
 //   input:
 //   set val assembly, val species, file(raw_data) from bed_coordinates
@@ -239,7 +239,7 @@ process rfam_go_matches {
 // }
 
 // process generate_big_bed {
-//   publishDir "${params.ftp_export}/genome_coordinates/", mode: 'copy'
+//   publishDir "${params.ftp_export.publish}/genome_coordinates/", mode: 'copy'
 
 //   input:
 //   set val assembly, file bed_file from bed_files
@@ -257,7 +257,7 @@ process rfam_go_matches {
 // }
 
 // process generate_gff3 {
-//   publishDir "${params.ftp_export}/genome_coordinates/", mode: 'copy'
+//   publishDir "${params.ftp_export.publish}/genome_coordinates/", mode: 'copy'
 
 //   input:
 //   set val assembly, val species, file(raw_data) from gff_coordinates
