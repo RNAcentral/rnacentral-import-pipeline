@@ -345,7 +345,7 @@ def export_coordinates():
     pass
 
 
-@ftp_export.command('as-bed')
+@export_coordinates.command('as-bed')
 @click.argument('json_file', type=click.File('rb'))
 @click.argument('output', default='-', type=click.File('wb'))
 def format_as_bed(json_file, output):
@@ -356,7 +356,7 @@ def format_as_bed(json_file, output):
     bed.from_json(json_file, output)
 
 
-@ftp_export.command('as-gff3')
+@export_coordinates.command('as-gff3')
 @click.argument('json_file', type=click.File('rb'))
 @click.argument('output', default='-', type=click.File('wb'))
 def format_as_gff3(json_file, output):
