@@ -19,13 +19,13 @@ from rnacentral_pipeline.db import cursor
 def unique_sequences(db_url):
     with cursor(db_url) as cur:
         cur.execute("select count(distinct upi) from xref where deleted = 'N'")
-        return cur.fetchone()[0]
+        return '{:,}'.format(cur.fetchone()[0])
 
 
 def active_xrefs(db_url):
     with cursor(db_url) as cur:
         cur.execute("select count(*) from xref where deleted = 'N'")
-        return cur.fetchone()[0]
+        return '{:,}'.format(cur.fetchone()[0])
 
 
 def write(template_file, release, output, db_url):
