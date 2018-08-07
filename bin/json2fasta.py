@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+import json
+
 import click
 
 from Bio import SeqIO
@@ -9,11 +11,12 @@ from Bio.SeqRecord import SeqRecord
 
 def sequences(handle):
     for line in handle:
-        row = line.strip().split('\t')
-        description = ''
-        if len(row) > 2:
-            description = row[2]
-        yield SeqRecord(Seq(row[1]), id=row[0], description=description)
+        data = json.loads(line)
+        yield SeqRecord(
+            Seq(data['sequence']),
+            id=data['id'],
+            description=data.get('description', None)
+        )
 
 
 @click.command()

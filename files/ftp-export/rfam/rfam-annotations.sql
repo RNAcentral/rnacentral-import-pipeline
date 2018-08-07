@@ -1,5 +1,5 @@
 COPY (
-select
+SELECT
     hits.upi,
     hits.rfam_model_id,
     score,
@@ -9,8 +9,8 @@ select
     model_start,
     model_stop,
     models.long_name
-from rfam_model_hits hits
-join rna_active active on active.upi = hits.upi
-join rfam_models models on models.rfam_model_id = hits.rfam_model_id
-order by hits.upi, hits.sequence_start, hits.rfam_model_id
+FROM rfam_model_hits hits
+JOIN rna_active active ON active.upi = hits.upi
+JOIN rfam_models models ON models.rfam_model_id = hits.rfam_model_id
+ORDER BY hits.upi, hits.sequence_start, hits.rfam_model_id
 ) TO STDOUT

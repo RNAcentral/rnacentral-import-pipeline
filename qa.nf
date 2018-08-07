@@ -1,9 +1,8 @@
 #!/usr/bin/env nextflow
 
-sequences_query = Channel.fromPath('files/qa/rfam-scan.sql')
 process fetch_sequences {
   input:
-  file query from sequences_query
+  file query from Channel.fromPath('files/qa/rfam-scan.sql')
 
   output:
   file 'rnacentral.fasta' into sequences_to_split

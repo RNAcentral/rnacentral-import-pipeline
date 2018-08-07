@@ -1,5 +1,7 @@
-select
+COPY (
+SELECT
   upi,
   md5
-from rna
-order by id asc
+FROM rna
+ORDER BY id ASC
+) TO STDOUT
