@@ -78,6 +78,7 @@ process rfam_annotations {
 
   """
   psql -f "$query" "$PGDATABASE" | gzip > rfam_annotations.tsv.gz
+  zcat rfam_annotations.tsv.gz | head > example.txt
   """
 }
 
@@ -91,7 +92,7 @@ process inactive_fasta {
   file 'rnacentral_inactive.fasta.gz' into __sequences
 
   """
-  psql -f "$query" "$PGDATABASE" | json2fasta.py | gzip > rnacentral_inactive.fasta.gz
+  psql -f "$query" "$PGDATABASE" | json2fasta.py - - | gzip > rnacentral_inactive.fasta.gz
   """
 }
 
@@ -107,7 +108,7 @@ process active_fasta {
   file 'readme.txt' into __sequences
 
   """
-  psql -f "$query" "$PGDATABASE" | json2fasta.py > rnacentral_active.fasta
+  psql -f "$query" "$PGDATABASE" | json2fasta.py - rnacentral_active.fasta
   head rnacentral_active.fasta > example.txt
   gzip rnacentral_active.fasta
   """
@@ -124,7 +125,7 @@ process species_specific_fasta {
   file 'rnacentral_species_specific_ids.fasta.gz' into __sequences
 
   """
-  psql -f "$query" "$PGDATABASE" | json2fasta.py | gzip > rnacentral_active.fasta.gz
+  psql -f "$query" "$PGDATABASE" | json2fasta.py - - | gzip > rnacentral_active.fasta.gz
   """
 }
 
