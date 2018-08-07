@@ -1,11 +1,13 @@
 COPY (
-select
-    pre.id,
-    pre.description,
-    COALESCE(rna.seq_short, rna.seq_long)
-from rnc_rna_precomputed pre
-join rna on rna.upi = pre.upi
-where
+SELECT
+    json_build_object(
+      'id', pre.id,
+      'description', pre.description,
+      'sequence', COALESCE(rna.seq_short, rna.seq_long)
+    )
+FROM rnc_rna_precomputed pre
+JOIN rna ON rna.upi = pre.upi
+WHERE
     pre.is_active = true
-    and pre.taxid is null
+    AND pre.taxid is null
 ) TO STDOUT
