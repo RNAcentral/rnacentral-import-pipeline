@@ -211,6 +211,21 @@ species_to_format
   }
 
 
+process coordinate_readme {
+  publishDir "${params.ftp_export.publish}/genome_coordinates/", mode: 'copy'
+
+  input:
+  file raw from Channel.fromPath('files/ftp-export/genome_coordinates/readme.mkd')
+
+  output:
+  file('readme.txt') into __coordinate_readmes
+
+  """
+  cat $raw > readme.txt
+  """
+}
+
+
 process fetch_raw_coordinate_data {
   input:
   set val(assembly), val(species), val(taxid), file(query) from coordinates_to_fetch
