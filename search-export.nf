@@ -18,12 +18,26 @@ raw_ranges
   .combine(Channel.fromPath('files/search-export/query.sql'))
     .into { ranges }
 
-process export_chunk {
-  publishDir temp_publish_dir, mode: 'copy'
+process export_search_json {
   maxForks params.search_export.max_forks
 
   input:
   set val(min), val(max), file(query) from ranges
+
+  output:
+  set val(min), val(max), file('search.json') into search_json
+
+  script:
+  """
+  psql --variable min=$min --variable max=$max -f "$query" "$PGDATABASE" > search.json
+  """
+}
+
+process export_chunk {
+  publishDir temp_publish_dir, mode: 'copy'
+
+  input:
+  set val(min), val(max), file(json) from search_json
 
   output:
   file "${xml}.gz" into search_chunks
@@ -32,8 +46,7 @@ process export_chunk {
   script:
   xml = "xml4dbdumps__${min}__${max}.xml"
   """
-  psql --variable min=$min --variable max=$max -f "$query" "$PGDATABASE" > search.json
-  rnac search-export as-xml search.json $xml count
+  rnac search-export as-xml $json $xml count
   xmllint $xml --schema ${params.search_export.schema} --stream
   gzip $xml
   """
