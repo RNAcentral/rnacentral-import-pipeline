@@ -21,7 +21,6 @@ raw_ranges
 process export_chunk {
   publishDir temp_publish_dir, mode: 'copy'
   maxForks params.search_export.max_forks
-  scratch true
 
   input:
   set val(min), val(max), file(query) from ranges
@@ -33,8 +32,8 @@ process export_chunk {
   script:
   xml = "xml4dbdumps__${min}__${max}.xml"
   """
-  psql --variable min=$min --variable max=$max -f "$query" "$PGDATABASE" |\
-    rnac search-export as-xml - $xml count
+  psql --variable min=$min --variable max=$max -f "$query" "$PGDATABASE" > search.json
+  rnac search-export as-xml search.json $xml count
   xmllint $xml --schema ${params.search_export.schema} --stream
   gzip $xml
   """
