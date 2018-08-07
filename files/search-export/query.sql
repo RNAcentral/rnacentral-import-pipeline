@@ -59,16 +59,13 @@ SELECT
         )
     )
 FROM xref xref
+JOIN rnc_rna_precomputed pre ON xref.upi = pre.upi AND xref.taxid = pre.taxid
 JOIN rnc_accessions acc ON xref.ac = acc.accession
 JOIN rnc_database db ON xref.dbid = db.id
 JOIN rnc_release release1 ON xref.created = release1.id
 JOIN rnc_release release2 ON xref.last = release2.id
 JOIN rna rna ON xref.upi = rna.upi
-JOIN qa_status qa ON qa.upi = xref.upi AND qa.taxid = xref.taxid
-JOIN rnc_rna_precomputed pre
-ON
-    xref.upi = pre.upi
-    AND xref.taxid = pre.taxid
+JOIN qa_status qa ON qa.rna_id = pre.id
 LEFT JOIN rnc_reference_map ref_map ON ref_map.accession = acc.accession
 LEFT JOIN rnc_references refs ON refs.id = ref_map.reference_id
 LEFT JOIN rfam_model_hits hits ON xref.upi = hits.upi

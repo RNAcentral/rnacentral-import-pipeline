@@ -191,35 +191,39 @@ process rfam_go_matches {
   """
 }
 
-// process find_genome_coordinate_jobs {
-//   output:
-//   stdout species_to_format
+process find_genome_coordinate_jobs {
+  input:
+  file query from Channel.fromPath('files/ftp-export/genome_coordinates/known-coordinates.sql')
 
-//   """
-//   rnac ftp-export has-coordinates
-//   """
-// }
+  output:
+  file('coordinates.txt') into species_to_format
 
-// species_to_format
-//   .splitCsv()
-//   .into {
-//     coordinates_to_fetch
-//   }
+  """
+  psql -f $query $PGDATABASE > coordinates.txt
+  """
+}
+
+species_to_format
+  .splitCsv()
+  .combine(Channel.fromPath('files/ftp-export/genome_coordinates/query.sql'))
+  .into {
+    coordinates_to_fetch
+  }
 
 
-// process fetch_raw_coordinate_data {
-//   input:
-//   set val(assembly), val(species), val(taxid), file(query) from coordinates_to_fetch
+process fetch_raw_coordinate_data {
+  input:
+  set val(assembly), val(species), val(taxid), file(query) from coordinates_to_fetch
 
-//   output:
-//   set val(assembly), val(species), file('result.json') into raw_coordinates
+  output:
+  set val(assembly), val(species), file('result.json') into raw_coordinates
 
-//   """
-//   psql -v "taxid=$taxid" -v "assembly_id='$assembly'" -f $query "$PGDATABASE" > result.json
-//   """
-// }
+  """
+  psql -v "taxid=$taxid" -v "assembly_id='$assembly'" -f $query "$PGDATABASE" > result.json
+  """
+}
 
-// raw_coordinates.into { bed_coordinates; gff_coordinates }
+raw_coordinates.into { bed_coordinates; gff_coordinates }
 
 // process format_bed_coordinates {
 //   publishDir "${params.ftp_export.publish}/genome_coordinates/", mode: 'copy'
@@ -257,18 +261,18 @@ process rfam_go_matches {
 //   """
 // }
 
-// process generate_gff3 {
-//   publishDir "${params.ftp_export.publish}/genome_coordinates/", mode: 'copy'
+process generate_gff3 {
+  publishDir "${params.ftp_export.publish}/genome_coordinates/", mode: 'copy'
 
-//   input:
-//   set val assembly, val species, file(raw_data) from gff_coordinates
+  input:
+  set val(assembly), val(species), file(raw_data) from gff_coordinates
 
-//   output:
-//   file result into gff3_files
+  output:
+  file result into gff3_files
 
-//   script:
-//   result = "${species}.${assembly}.gff3.gz"
-//   """
-//   rnac ftp-export coordinates as-gff3 $raw_data | gzip > $result
-//   """
-// }
+  script:
+  result = "${species}.${assembly}.gff3.gz"
+  """
+  rnac ftp-export coordinates as-gff3 $raw_data - | gzip > $result
+  """
+}
