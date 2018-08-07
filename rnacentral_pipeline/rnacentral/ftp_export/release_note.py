@@ -18,7 +18,7 @@ from rnacentral_pipeline.db import cursor
 
 def unique_sequences(db_url):
     with cursor(db_url) as cur:
-        cur.execute("select count(distinct upi) from xref where deleted = 'N'")
+        cur.execute("select count(*) from rna")
         return '{:,}'.format(cur.fetchone()[0])
 
 
@@ -30,7 +30,7 @@ def active_xrefs(db_url):
 
 def active_databases(db_url):
     with cursor(db_url) as cur:
-        cur.execute("select count(*) from rnc_database where alive = 'Y'")
+        cur.execute("select count(*) from rnc_database")
         return '{:,}'.format(cur.fetchone()[0])
 
 
