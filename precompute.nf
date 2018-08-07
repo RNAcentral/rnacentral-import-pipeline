@@ -15,8 +15,8 @@ raw_ranges
   .into { ranges }
 
 process precompute_range {
-  beforeScript 'bin/slack db-work precompute-range || true'
-  afterScript 'bin/slack db-done precompute-range || true'
+  beforeScript 'slack db-work precompute-range || true'
+  afterScript 'slack db-done precompute-range || true'
   maxForks params.precompute.maxForks
 
   input:
@@ -33,8 +33,8 @@ process precompute_range {
 }
 
 process load_precomputed_data {
-  beforeScript 'bin/slack db-work loading-precompute || true'
-  afterScript 'bin/slack db-done loading-precompute || true'
+  beforeScript 'slack db-work loading-precompute || true'
+  afterScript 'slack db-done loading-precompute || true'
 
   input:
   file('result*.csv') from precompute_results.collect()
