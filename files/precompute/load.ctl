@@ -84,8 +84,5 @@ SET
 $$,
 $$
 drop table load_precomputed;
-$$,
-$$
-vacuum (analyze, verbose) rnc_rna_precomputed;
 $$
 ;
