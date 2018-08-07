@@ -61,7 +61,7 @@ process database_id_mapping {
   file '*.tsv' into __database_mappings
 
   """
-  zcat id_mapping.tsv.gz | awk '{ print >> ($1 ".tsv") }'
+  zcat id_mapping.tsv.gz | awk '{ print >> (tolower($2) ".tsv") }'
   """
 }
 
