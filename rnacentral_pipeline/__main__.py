@@ -221,7 +221,7 @@ def search_export():
 @search_export.command('as-xml')
 @click.argument('raw_file', type=click.File('rb'))
 @click.argument('xml_file', type=click.File('wb'))
-@click.argument('count_file', default='count', type=click.File('wb'))
+@click.argument('count_file', type=click.File('wb'), default='count')
 def search_export_xml(raw_file, xml_file, count_file=None):
     """
     This will parse a file with one JSON object per line to produce XML
