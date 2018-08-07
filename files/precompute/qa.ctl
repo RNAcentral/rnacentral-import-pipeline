@@ -73,8 +73,5 @@ SET
 $$,
 $$
 drop table load_qa_status;
-$$,
-$$
-vacuum (analyze, verbose) qa_status;
 $$
 ;

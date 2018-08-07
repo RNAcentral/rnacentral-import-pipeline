@@ -41,9 +41,11 @@ process load_precomputed_data {
   file('qa*.csv') from qa_results.collect()
   file pre_ctl from Channel.fromPath('files/precompute/load.ctl')
   file qa_ctl from Channel.fromPath('files/precompute/qa.ctl')
+  file post from Channel.fromPath('files/precompute/post-load.ctl')
 
   """
   cat result*.csv | pgloader $pre_ctl
   cat qa*.csv | pgloader $qa_ctl
+  psql -f $post "$PGDATABASE"
   """
 }
