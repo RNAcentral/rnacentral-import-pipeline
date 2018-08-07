@@ -32,7 +32,10 @@ WITH
 
 BEFORE LOAD DO
 $$
-create table if not exists load_precomputed (
+drop table if exists load_precomputed;
+$$,
+$$
+create table load_precomputed (
   id varchar(44) NOT NULL,
   upi varchar(26) NOT NULL,
   taxid int8 NULL,
@@ -43,9 +46,6 @@ create table if not exists load_precomputed (
   databases text,
   is_active bool
 );
-$$,
-$$
-truncate table load_precomputed;
 $$
 
 AFTER LOAD DO
