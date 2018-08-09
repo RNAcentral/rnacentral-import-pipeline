@@ -9,6 +9,7 @@ process find_chunks {
   output:
   file('ranges.txt') into raw_ranges
 
+  script:
   """
   rnac upi-ranges ${params.search_export.max_entries} ranges.txt
   """
@@ -37,7 +38,7 @@ process export_search_json {
 }
 
 process export_chunk {
-  publishDir tmp, mode: 'copy'
+  publishDir "${tmp}/", mode: 'copy'
 
   input:
   set val(min), val(max), file(json) from search_json
@@ -78,7 +79,7 @@ process atomic_publish {
   """
   rm ${params.search_export.publish}/*.xml.gz
 
-  mv ${tmp}/*.xml.gz ${params.search_export.publish}
+  mv "${tmp}/*.xml.gz" ${params.search_export.publish}
   cp $release ${params.search_export.publish}/release_note.txt
   """
 }
