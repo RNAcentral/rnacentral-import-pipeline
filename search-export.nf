@@ -3,12 +3,13 @@
 // This is used to provide a temporary directory publish to. We publish here
 // and then at the we publish everything at once. This prevents writing part of
 // the data in the case one job fails while already succeeded.
-publish = "mktemp -d -p ${workDir}".execute().text
+tmp = "mktemp -d -p ${workDir}".execute().text
 
 process find_chunks {
   output:
   file('ranges.txt') into raw_ranges
-"""
+
+  """
   rnac upi-ranges ${params.search_export.max_entries} ranges.txt
   """
 }
@@ -34,7 +35,7 @@ process export_search_json {
 }
 
 process export_chunk {
-  publishDir publish, mode: 'copy'
+  publishDir tmp, mode: 'copy'
 
   input:
   set val(min), val(max), file(json) from search_json
@@ -53,14 +54,13 @@ process export_chunk {
 }
 
 process create_release_note {
-  publishDir publish, mode: 'copy'
-
   input:
   file('count*') from search_counts.collect()
 
   output:
   file 'release_note.txt' into release_note
 
+  script:
   """
   rnac search-export release-note release_note.txt count*
   """
@@ -72,11 +72,11 @@ process atomic_publish {
   input:
   file(release) from release_note
 
+  script:
   """
   rm ${params.search_export.publish}/*.xml.gz
-  rm ${params.search_export.publish}/release_note.txt
 
-  mv ${publish}/*.xml.gz ${params.search_export.publish}
-  mv ${publish}/release_note.txt ${params.search_export.publish}
+  mv ${tmp}/*.xml.gz ${params.search_export.publish}
+  cp $release ${params.search_export.publish}/release_note.txt
   """
 }
