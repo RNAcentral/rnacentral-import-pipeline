@@ -201,6 +201,7 @@ def as_csv(tblout, output):
         quoting=csv.QUOTE_ALL,
         lineterminator='\n',
     )
+
     for hit in parse(tblout, clan_competition=True):
         if hit.overlap == 'unique' or hit.overlap == 'best':
             writer.writerow(attr.asdict(hit))
