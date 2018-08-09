@@ -1,14 +1,14 @@
 #!/usr/bin/env nextflow
 
-temp_publish_dir = params.search_export.publish + '-temp'
-file(temp_publish_dir).mkdirs()
+// This is used to provide a temporary directory publish to. We publish here
+// and then at the we publish everything at once. This prevents writing part of
+// the data in the case one job fails while already succeeded.
+publish = "mktemp -d -p ${workDir}".execute().text
 
 process find_chunks {
   output:
   file('ranges.txt') into raw_ranges
-
-  """
-  rm ${temp_publish_dir}/* || true
+"""
   rnac upi-ranges ${params.search_export.max_entries} ranges.txt
   """
 }
@@ -34,25 +34,27 @@ process export_search_json {
 }
 
 process export_chunk {
-  publishDir temp_publish_dir, mode: 'copy'
+  publishDir publish, mode: 'copy'
 
   input:
   set val(min), val(max), file(json) from search_json
 
   output:
-  file "${xml}.gz" into search_chunks
+  file("${xml}.gz") into search_chunks
   file "count" into search_counts
 
   script:
   xml = "xml4dbdumps__${min}__${max}.xml"
   """
-  rnac search-export as-xml $json $xml count
-  xmllint $xml --schema ${params.search_export.schema} --stream
-  gzip $xml
+  rnac search-export as-xml ${json} ${xml} count
+  xmllint ${xml} --schema ${params.search_export.schema} --stream
+  gzip ${xml}
   """
 }
 
 process create_release_note {
+  publishDir publish, mode: 'copy'
+
   input:
   file('count*') from search_counts.collect()
 
@@ -64,18 +66,17 @@ process create_release_note {
   """
 }
 
-process publish {
+// At this point we should be able to safely move data into the final location.
+// This deletes the old data and then moves the new data in place.
+process atomic_publish {
   input:
-  file 'release_note.txt' from release_note
+  file(release) from release_note
 
-  script:
-  publish = params.search_export.publish
   """
-  rm ${temp_publish_dir}/*.xml.gz
-  rm ${temp_publish_dir}/release_note.txt
+  rm ${params.search_export.publish}/*.xml.gz
+  rm ${params.search_export.publish}/release_note.txt
 
-  cp release_note.txt ${publish}/
-  mv ${temp_publish_dir}/*.xml.gz ${publish}/
-  rm -r ${temp_publish_dir}
+  mv ${publish}/*.xml.gz ${params.search_export.publish}
+  mv ${publish}/release_note.txt ${params.search_export.publish}
   """
 }
