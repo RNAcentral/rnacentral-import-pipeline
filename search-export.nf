@@ -20,6 +20,8 @@ raw_ranges
     .into { ranges }
 
 process export_search_json {
+  beforeScript 'slack db-work search-export || true'
+  afterScript 'slack db-done search-export || true'
   maxForks params.search_export.max_forks
 
   input:
