@@ -5,26 +5,14 @@ process fetch_sequences {
   file query from Channel.fromPath('files/qa/rfam-scan.sql')
 
   output:
-  file 'rnacentral.fasta' into sequences_to_split
+  file('rnac_*.fa') into sequences_to_scan mode flatten
 
   """
   psql -f "$query" "$PGDATABASE" | json2fasta.py - rnacentral.fasta
+  esl-randomize-sqfile.pl -O rnac.fa -L -N ${params.qa.rfam_scan.chunk_size} rnacentral.fasta 1.0
   """
 }
 
-process randomize_sequences {
-  input:
-  file sequences from sequences_to_split
-
-  output:
-  file('rnac_*.fa') into chunks
-
-  """
-  esl-randomize-sqfile.pl -O rnac.fa -L -N ${params.qa.rfam_scan.chunk_size} $sequences 1.0
-  """
-}
-
-sequences_to_scan = chunks.flatMap()
 cm_files = Channel.fromPath(params.qa.rfam_scan.cm_files)
 process infernal_scan {
   queue 'mpi-rh7'
@@ -70,13 +58,13 @@ process process_hits {
   """
 }
 
-hits_ctl = Channel.fromPath('files/qa/rfam-scan.ctl')
 process import_hits {
   input:
   file('hits.csv') from processed_hits
-  file hit_ctl from hits_ctl
+  file hit_ctl from Channel.fromPath('files/qa/rfam-scan.ctl')
 
   """
-  pgloader $hit_ctl
+  cp $hit_ctl _hit_ctl
+  pgloader _hit_ctl
   """
 }
