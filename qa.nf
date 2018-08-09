@@ -8,7 +8,7 @@ process fetch_sequences {
   file 'rnacentral.fasta' into sequences_to_split
 
   """
-  psql -f "$query" "$PGDATABASE" | tsv2fasta.py - rnacentral.fasta
+  psql -f "$query" "$PGDATABASE" | json2fasta.py - rnacentral.fasta
   """
 }
 
