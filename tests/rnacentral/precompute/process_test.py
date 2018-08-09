@@ -230,9 +230,19 @@ def test_build_correct_active_flag(rna_id, flag):
 
 @pytest.mark.parametrize('upi,taxids', [  # pylint: disable=no-member
     ('URS0000CD0AEF', {29388}),
-    ('URS0000001005', {1806922}),
+    ('URS0000001005', {1806922, 619222}),
+    ('URS0000CD2C3D', {9606}),
 ])
 def test_does_not_produce_invalid_upi_taxid_pairs(upi, taxids):
     data = helpers.load_for_upi(upi)
     found = {d.taxid for d in data if d.taxid is not None}
     assert found == taxids
+
+
+@pytest.mark.parametrize('start,stop,pairs', [  # pylint: disable=no-member
+    (13446205, 13446206, {('URS0000CD2C3D', 9606), ('URS0000CD2C3E', 77133)}),
+])
+def test_produces_expected_pairs_in_range(start, stop, pairs):
+    data = helpers.load_for_range(start, stop)
+    found = {(d.upi, d.taxid) for d in data if d.taxid is not None}
+    assert found == pairs

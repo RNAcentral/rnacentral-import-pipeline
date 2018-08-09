@@ -36,3 +36,14 @@ def load_for_upi(upi):
         "xref.upi ='%s'" % upi
     ), take_all=True))
     return list(as_sequences(loaded))
+
+
+def load_for_range(start, stop):
+    path = os.path.join('files', 'precompute', 'query.sql')
+    loaded = run_with_replacements(
+        path,
+        (':min', str(start)),
+        (':max', str(stop)),
+        take_all=True
+    )
+    return list(as_sequences(loaded))
