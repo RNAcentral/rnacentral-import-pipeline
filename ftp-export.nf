@@ -17,17 +17,18 @@ process md5 {
 
   input:
   file query from Channel.fromPath('files/ftp-export/md5/md5.sql')
-  file 'readme.txt' form Channel.fromPath('files/ftp-export/md5/readme.txt')
+  file 'template.txt' form Channel.fromPath('files/ftp-export/md5/readme.txt')
 
   output:
-  file "example.txt" into __md5_files
+  file "example.txt" into __md5_example
   file "md5.tsv.gz" into __md5_files
-  file "readme.txt" into __md5_files
+  file "readme.txt" into __md5_readme
 
   """
   psql -f "$query" "$PGDATABASE" > md5.tsv
   head -10 md5.tsv > example.tsv
   gzip md5.tsv
+  cp template.txt readme.txt
   """
 }
 
@@ -36,18 +37,19 @@ process id_mapping {
 
   input:
   file query from Channel.fromPath('files/ftp-export/id-mapping/id_mapping.sql')
-  file 'readme.txt' from Channel.fromPath('files/ftp-export/id-mapping/readme.txt')
+  file 'template.txt' from Channel.fromPath('files/ftp-export/id-mapping/readme.txt')
 
   output:
   file 'id_mapping.tsv.gz' into id_mapping
-  file "example.txt" into __id_mapping_files
-  file "readme.txt" into __id_mapping_files
+  file "example.txt" into __id_mapping_example
+  file "readme.txt" into __id_mapping_readme
 
   """
   psql -f "$query" "$PGDATABASE" > raw_id_mapping.tsv
   rnac ftp-export id-mapping raw_id_mapping.tsv id_mapping.tsv
   head id_mapping.tsv > example.tsv
   gzip id_mapping.tsv
+  cp template.txt readme.txt
   """
 }
 
@@ -70,15 +72,17 @@ process rfam_annotations {
 
   input:
   file query from Channel.from('files/ftp-export/rfam/rfam-annotations.sql')
+  file 'template.txt' from Channel.from('files/ftp-export/rfam/readme.txt')
 
   output:
   file 'rfam_annotations.tsv.gz' into __rfam_files
-  file "example.txt" into __rfam_files
-  file "readme.txt" into __rfam_files
+  file "example.txt" into __rfam_example
+  file "readme.txt" into __rfam_readme
 
   """
   psql -f "$query" "$PGDATABASE" | gzip > rfam_annotations.tsv.gz
   zcat rfam_annotations.tsv.gz | head > example.txt
+  cp template.txt readme.txt
   """
 }
 
@@ -89,7 +93,7 @@ process inactive_fasta {
   file query from Channel.fromPath('files/ftp-export/sequences/inactive.sql')
 
   output:
-  file 'rnacentral_inactive.fasta.gz' into __sequences
+  file 'rnacentral_inactive.fasta.gz' into __sequences_inactive
 
   """
   psql -f "$query" "$PGDATABASE" | json2fasta.py - - | gzip > rnacentral_inactive.fasta.gz
@@ -101,16 +105,18 @@ process active_fasta {
 
   input:
   file query from Channel.fromPath('files/ftp-export/sequences/active.sql')
+  file 'template.txt' from Channel.fromPath('files/ftp-export/sequences/readme.txt')
 
   output:
   file 'rnacentral_active.fasta.gz' into active_sequences
-  file 'example.txt' into __sequences
-  file 'readme.txt' into __sequences
+  file 'example.txt' into __sequences_example
+  file 'readme.txt' into __sequences_readme
 
   """
   psql -f "$query" "$PGDATABASE" | json2fasta.py - rnacentral_active.fasta
   head rnacentral_active.fasta > example.txt
   gzip rnacentral_active.fasta
+  cp template.txt readme.txt
   """
 
 }
@@ -122,7 +128,7 @@ process species_specific_fasta {
   file query from Channel.fromPath('files/ftp-export/sequences/species-specific.sql')
 
   output:
-  file 'rnacentral_species_specific_ids.fasta.gz' into __sequences
+  file 'rnacentral_species_specific_ids.fasta.gz' into __sequences_species
 
   """
   psql -f "$query" "$PGDATABASE" | json2fasta.py - - | gzip > rnacentral_active.fasta.gz
