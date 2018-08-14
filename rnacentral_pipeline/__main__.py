@@ -24,6 +24,7 @@ from rnacentral_pipeline.databases.refseq import parser as refseq
 from rnacentral_pipeline.databases.ensembl import parser as ensembl
 
 from rnacentral_pipeline import ontologies as onto
+from rnacentral_pipeline.ontologies import writer as onto_writer
 # from rnacentral_pipeline.databases.tair import annotations as tair
 
 from rnacentral_pipeline.rnacentral.upi_ranges import upi_ranges
@@ -186,7 +187,7 @@ def ontologies_quickgo(raw_data, output):
     """
     This will process a quickgo file and output files into the given directory.
     """
-    onto.writer.write_annotations(quickgo.parser, output, raw_data)
+    onto_writer.write_annotations(quickgo.parser, output, raw_data)
 
 
 # @ontologies.command('tair')
