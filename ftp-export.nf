@@ -17,7 +17,7 @@ process md5 {
 
   input:
   file query from Channel.fromPath('files/ftp-export/md5/md5.sql')
-  file 'template.txt' form Channel.fromPath('files/ftp-export/md5/readme.txt')
+  file 'template.txt' from Channel.fromPath('files/ftp-export/md5/readme.txt')
 
   output:
   file "example.txt" into __md5_example
@@ -26,9 +26,9 @@ process md5 {
 
   """
   psql -f "$query" "$PGDATABASE" > md5.tsv
-  head -10 md5.tsv > example.tsv
+  head -10 md5.tsv > example.txt
   gzip md5.tsv
-  cp template.txt readme.txt
+  cat template.txt > readme.txt
   """
 }
 
@@ -47,9 +47,9 @@ process id_mapping {
   """
   psql -f "$query" "$PGDATABASE" > raw_id_mapping.tsv
   rnac ftp-export id-mapping raw_id_mapping.tsv id_mapping.tsv
-  head id_mapping.tsv > example.tsv
+  head id_mapping.tsv > example.txt
   gzip id_mapping.tsv
-  cp template.txt readme.txt
+  cat template.txt > readme.txt
   """
 }
 
@@ -57,13 +57,13 @@ process database_id_mapping {
   publishDir "${params.ftp_export.publish}/id_maping/database_mappings/", mode: 'copy'
 
   input:
-  file 'id_mapping.tsv.gz' into id_mapping
+  file 'id_mapping.tsv.gz' from id_mapping
 
   output:
   file '*.tsv' into __database_mappings
 
   """
-  zcat id_mapping.tsv.gz | awk '{ print >> (tolower($2) ".tsv") }'
+  zcat id_mapping.tsv.gz | awk '{ print >> (tolower(\$2) ".tsv") }'
   """
 }
 
@@ -82,7 +82,7 @@ process rfam_annotations {
   """
   psql -f "$query" "$PGDATABASE" | gzip > rfam_annotations.tsv.gz
   zcat rfam_annotations.tsv.gz | head > example.txt
-  cp template.txt readme.txt
+  cat template.txt > readme.txt
   """
 }
 
@@ -116,7 +116,7 @@ process active_fasta {
   psql -f "$query" "$PGDATABASE" | json2fasta.py - rnacentral_active.fasta
   head rnacentral_active.fasta > example.txt
   gzip rnacentral_active.fasta
-  cp template.txt readme.txt
+  cat template.txt > readme.txt
   """
 
 }
@@ -131,7 +131,7 @@ process species_specific_fasta {
   file 'rnacentral_species_specific_ids.fasta.gz' into __sequences_species
 
   """
-  psql -f "$query" "$PGDATABASE" | json2fasta.py - - | gzip > rnacentral_active.fasta.gz
+  psql -f "$query" "$PGDATABASE" | json2fasta.py - - | gzip > rnacentral_species_specific_ids.fasta.gz
   """
 }
 
@@ -164,6 +164,7 @@ raw_ensembl_ranges
 
 process ensembl_export_chunk {
   publishDir "${params.ftp_export.publish}/json/", mode: 'copy'
+  maxForks 10
 
   input:
   set val(min), val(max) from ensembl_ranges
@@ -233,6 +234,8 @@ process coordinate_readme {
 
 
 process fetch_raw_coordinate_data {
+  maxForks 40
+
   input:
   set val(assembly), val(species), val(taxid), file(query) from coordinates_to_fetch
 
