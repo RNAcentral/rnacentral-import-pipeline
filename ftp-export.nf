@@ -118,7 +118,6 @@ process active_fasta {
   gzip rnacentral_active.fasta
   cat template.txt > readme.txt
   """
-
 }
 
 process species_specific_fasta {
@@ -160,11 +159,11 @@ process find_ensembl_chunks {
 
 raw_ensembl_ranges
   .splitCsv()
-  .into { ensembl_ranges }
+  .set { ensembl_ranges }
 
 process ensembl_export_chunk {
   publishDir "${params.ftp_export.publish}/json/", mode: 'copy'
-  maxForks 10
+  maxForks params.ftp_export.maxForks
 
   input:
   set val(min), val(max) from ensembl_ranges
@@ -213,10 +212,7 @@ process find_genome_coordinate_jobs {
 species_to_format
   .splitCsv()
   .combine(Channel.fromPath('files/ftp-export/genome_coordinates/query.sql'))
-  .into {
-    coordinates_to_fetch
-  }
-
+  .set { coordinates_to_fetch }
 
 process coordinate_readme {
   publishDir "${params.ftp_export.publish}/genome_coordinates/", mode: 'copy'
@@ -232,9 +228,8 @@ process coordinate_readme {
   """
 }
 
-
 process fetch_raw_coordinate_data {
-  maxForks 40
+  maxForks params.ftp_export.coordinate.maxForks
 
   input:
   set val(assembly), val(species), val(taxid), file(query) from coordinates_to_fetch
