@@ -32,14 +32,6 @@ from rnacentral_pipeline.databases.helpers.hashes import crc64
 
 LOGGER = logging.getLogger(__name__)
 
-GENERIC_PUBMED_HEADER = [
-    'ref_pubmed_id',
-    'authors',
-    'location',
-    'title',
-    'doi',
-]
-
 FEATURE_TYPE_RNAS = set([
     'rRNA',
     'tRNA',
@@ -257,13 +249,13 @@ class Reference(object):
         ]))
 
     def writeable_generic_pubmed(self):
-        return {
-            'ref_pubmed_id': self.pmid,
-            'authors': self.authors,
-            'location': self.location,
-            'title': self.title,
-            'doi': self.doi,
-        }
+        return [
+            self.pmid,
+            self.authors,
+            self.location,
+            self.title,
+            self.doi,
+        ]
 
     def writeable(self, accession):
         yield [

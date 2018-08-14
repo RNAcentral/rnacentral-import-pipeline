@@ -34,4 +34,4 @@ def write_annotations(parser, *args, **kwargs):
             'transformer': op.methodcaller('writeable_ontology_terms'),
         },
     )
-    writer(parser, *args, **kwargs)
+    writer(*args, **kwargs)
