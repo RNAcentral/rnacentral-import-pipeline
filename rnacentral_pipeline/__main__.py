@@ -312,12 +312,26 @@ def export_sequences():
     pass
 
 
-@export_sequences.command('split-for-nhmmer')
+@export_sequences.command('valid-nhmmer')
 @click.argument('active', type=click.File('rb'))
-@click.argument('accepted', default='rnacentral_nhmmer.fasta', type=click.File('wb'))
-@click.argument('rejected', default='rnacentral_nhmmer_excluded.fasta', type=click.File('wb'))
-def split_for_nhmmer(active, accepted, rejected):
-    fasta.nhmmer_split(active, accepted, rejected)
+@click.argument(
+    'accepted',
+    default='rnacentral_nhmmer.fasta',
+    type=click.File('wb'),
+)
+def sequences_valid_nhmmer(active, accepted):
+    fasta.valid_nhmmer(active, accepted)
+
+
+@export_sequences.command('invalid-nhmmer')
+@click.argument('active', type=click.File('rb'))
+@click.argument(
+    'rejected',
+    default='rnacentral_nhmmer_excluded.fasta',
+    type=click.File('wb'),
+)
+def sequences_invalid_nhmmer(active, rejected):
+    fasta.invalid_nhmmer(active, rejected)
 
 
 @ftp_export.command('ensembl')
