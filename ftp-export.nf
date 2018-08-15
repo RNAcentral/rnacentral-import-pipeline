@@ -175,6 +175,8 @@ process find_ensembl_chunks {
 
 raw_ensembl_ranges
   .splitCsv()
+  .combine(Channel.fromPath('files/ftp-export/ensembl/schema.json'))
+  .combine(Channel.fromPath('files/ftp-export/ensembl/ensembl-xrefs.sql'))
   .set { ensembl_ranges }
 
 process ensembl_export_chunk {
@@ -182,9 +184,7 @@ process ensembl_export_chunk {
   maxForks params.ftp_export.maxForks
 
   input:
-  set val(min), val(max) from ensembl_ranges
-  file schema from Channel.fromPath('files/ftp-export/ensembl/schema.json')
-  file query from Channel.fromPath('files/ftp-export/ensembl/ensembl-xrefs.sql')
+  set val(min), val(max), file(schema), file(query) from ensembl_ranges
 
   output:
   file(result) into __ensembl_export
