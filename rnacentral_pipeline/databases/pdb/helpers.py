@@ -41,7 +41,7 @@ URL = 'https://www.ebi.ac.uk/pdbe/entry/pdb/{pdb_id}'
 
 LOGGER = logging.getLogger(__name__)
 
-ALLOWED = re.compile('^[ABCDGHKMNRSTVWXYU]+$', re.IGNORECASE)
+ALLOWED = re.compile('^[ABCDFGHIKMNRSTVWXYU]+$', re.IGNORECASE)
 
 
 class InvalidSequence(Exception):
@@ -123,6 +123,8 @@ def sequence(row):
     Fetches the sequence of the row as DNA.
     """
     sequence = row['sequence'].replace('U', 'T')
+    # In many tRNA's there is a single last amino acid, so we ignore that and
+    # check before excluding sequences.
     if not re.match(ALLOWED, sequence):
         raise InvalidSequence("%s appears to be mislabelled protein" % row)
     return sequence
