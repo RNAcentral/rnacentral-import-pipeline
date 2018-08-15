@@ -134,17 +134,33 @@ process species_specific_fasta {
   """
 }
 
-process nhmmer_fasta {
+active_sequences into { nhmmer_valid; nhmmer_invalid }
+
+process extract_nhmmer_valid {
   publishDir "${params.ftp_export.publish}/sequences/.internal/", mode: 'copy'
 
   input:
-  file 'rnacentral_active.fasta.gz' from active_sequences
+  file(rna) from nhmmer_valid
 
   output:
-  file 'rnacentral_nhmmer*.fasta' into __sequences
+  file 'rnacentral_nhmmer.fasta' into __sequences_nhmmer
 
   """
-  zcat rnacentral_active.fasta.gz | rnac ftp-export sequences split-for-nhmmer -
+  zcat $rna | rnac ftp-export sequences valid-nhmmer -
+  """
+}
+
+process extract_nhmmer_invalid {
+  publishDir "${params.ftp_export.publish}/sequences/.internal/", mode: 'copy'
+
+  input:
+  file(rna) from nhmmer_invalid
+
+  output:
+  file 'rnacentral_nhmmer_excluded.fasta' into __sequences_invalid_nhmmer
+
+  """
+  zcat $rna | rnac ftp-export sequences invalid-nhmmer -
   """
 }
 

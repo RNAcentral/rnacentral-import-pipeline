@@ -28,16 +28,13 @@ def is_valid_nhmmer_record(record):
     return bool(NHMMER_PATTERN.match(str(record.seq)))
 
 
-def nhmmer_split(handle, accepted, rejected):
-    """
-    Extract all sequences which may be written to nhmmer from the given file.
-    If select_valid is True then only valid sequences are written. If it is
-    False then only invalid sequences are written.
-    """
-
+def valid_nhmmer(handle, output):
     sequences = SeqIO.parse(handle, 'fasta')
-    accepted, rejected = it.tee(sequences, 2)
-    accepted_seqs = it.ifilter(is_valid_nhmmer_record, accepted)
-    rejected_seqs = it.ifilterfalse(is_valid_nhmmer_record, rejected)
-    SeqIO.write(accepted_seqs, accepted, 'fasta')
-    SeqIO.write(rejected_seqs, rejected, 'fasta')
+    accepted = it.ifilter(is_valid_nhmmer_record, sequences)
+    SeqIO.write(output, accepted, 'fasta')
+
+
+def invalid_nhmmer(handle, output):
+    sequences = SeqIO.parse(handle, 'fasta')
+    accepted = it.ifilterfalse(is_valid_nhmmer_record, sequences)
+    SeqIO.write(output, accepted, 'fasta')
