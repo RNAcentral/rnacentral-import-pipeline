@@ -49,6 +49,7 @@ def parser(handle):
 
     records = raw_parser(handle)
     records = it.ifilter(lambda r: r['Assigned_by'] != 'RNAcentral', records)
+    records = it.ifilter(lambda r: r['DB:Reference'] != 'GO_REF:0000115', records)
     annotations = list(it.imap(as_annotation, records))
     annotations.sort(key=key)
 
