@@ -37,7 +37,11 @@ select
       'model_rna_type', models.rna_type,
       'model_domain', models.domain,
       'model_completeness', hits.model_completeness,
-      'sequence_completeness', hits.sequence_completeness
+      'model_start', hits.model_start,
+      'model_stop', hits.model_stop,
+      'sequence_completeness', hits.sequence_completeness,
+      'sequence_start', hits.sequence_start,
+      'sequence_stop', hits.sequence_stop
   )))
 FROM rna
 join xref on xref.upi = rna.upi

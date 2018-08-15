@@ -99,8 +99,8 @@ def incomplete_sequence(_, data):
     if hit.model not in INCOMPLETE_FAMILIES:
         return False
 
-    return hit.model_completeness <= 0.5 and \
-        hit.sequence_completeness >= 0.9
+    return hit.model_info.completeness <= 0.5 and \
+        hit.sequence_info.completeness >= 0.9
 
 
 def missing_rfam_match(rna_type, data):
@@ -131,5 +131,5 @@ def mismatching_rna_type(rna_type, data):
 
     if rna_type != 'miRNA':
         return None
-    rna_types = {hit.rna_type for hit in data.rfam_rfam}
+    rna_types = {hit.model_rna_type for hit in data.rfam_hits}
     return rna_types != {rna_type}
