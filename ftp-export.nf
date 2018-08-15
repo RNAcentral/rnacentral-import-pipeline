@@ -71,8 +71,8 @@ process rfam_annotations {
   publishDir "${params.ftp_export.publish}/rfam/", mode: 'move'
 
   input:
-  file query from Channel.from('files/ftp-export/rfam/rfam-annotations.sql')
-  file 'template.txt' from Channel.from('files/ftp-export/rfam/readme.txt')
+  file query from Channel.fromPath('files/ftp-export/rfam/rfam-annotations.sql')
+  file 'template.txt' from Channel.fromPath('files/ftp-export/rfam/readme.txt')
 
   output:
   file 'rfam_annotations.tsv.gz' into __rfam_files
