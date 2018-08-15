@@ -314,22 +314,14 @@ def export_sequences():
 
 @export_sequences.command('valid-nhmmer')
 @click.argument('active', type=click.File('r'))
-@click.argument(
-    'output',
-    default='-',
-    type=click.File('wb'),
-)
+@click.argument('output', default='-', type=click.File('wb'))
 def sequences_valid_nhmmer(active, output):
     fasta.valid_nhmmer(active, output)
 
 
 @export_sequences.command('invalid-nhmmer')
 @click.argument('active', type=click.File('r'))
-@click.argument(
-    'output',
-    default='-',
-    type=click.File('wb'),
-)
+@click.argument('output', default='-', type=click.File('wb'))
 def sequences_invalid_nhmmer(active, output):
     fasta.invalid_nhmmer(active, output)
 
