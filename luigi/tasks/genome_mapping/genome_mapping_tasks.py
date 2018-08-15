@@ -148,8 +148,6 @@ class GetChromosomeList(luigi.Task):
         Identify if the top level region from the karyotype is a group,
         scaffold, or chromosome.
         """
-        if self.species == 'triticum_aestivum':
-            return 'scaffold'
         for region in ensembl_json['top_level_region']:
             if region['name'] == sequence_name:
                 return region['coord_system']
