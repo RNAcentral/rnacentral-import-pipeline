@@ -1,5 +1,5 @@
 process release_note {
-  publishDir "${params.ftp_export.publish}/", mode: 'copy'
+  publishDir "${params.ftp_export.publish}/", mode: 'move'
 
   input:
   file template_file from Channel.fromPath('files/ftp-export/release_note.txt')
@@ -13,7 +13,7 @@ process release_note {
 }
 
 process md5 {
-  publishDir "${params.ftp_export.publish}/md5/", mode: 'copy'
+  publishDir "${params.ftp_export.publish}/md5/", mode: 'move'
 
   input:
   file query from Channel.fromPath('files/ftp-export/md5/md5.sql')
@@ -54,7 +54,7 @@ process id_mapping {
 }
 
 process database_id_mapping {
-  publishDir "${params.ftp_export.publish}/id_maping/database_mappings/", mode: 'copy'
+  publishDir "${params.ftp_export.publish}/id_maping/database_mappings/", mode: 'move'
 
   input:
   file 'id_mapping.tsv.gz' from id_mapping
@@ -68,7 +68,7 @@ process database_id_mapping {
 }
 
 process rfam_annotations {
-  publishDir "${params.ftp_export.publish}/rfam/", mode: 'copy'
+  publishDir "${params.ftp_export.publish}/rfam/", mode: 'move'
 
   input:
   file query from Channel.from('files/ftp-export/rfam/rfam-annotations.sql')
@@ -87,7 +87,7 @@ process rfam_annotations {
 }
 
 process inactive_fasta {
-  publishDir "${params.ftp_export.publish}/sequences/", mode: 'copy'
+  publishDir "${params.ftp_export.publish}/sequences/", mode: 'move'
 
   input:
   file query from Channel.fromPath('files/ftp-export/sequences/inactive.sql')
@@ -121,7 +121,7 @@ process active_fasta {
 }
 
 process species_specific_fasta {
-  publishDir "${params.ftp_export.publish}/sequences/", mode: 'copy'
+  publishDir "${params.ftp_export.publish}/sequences/", mode: 'move'
 
   input:
   file query from Channel.fromPath('files/ftp-export/sequences/species-specific.sql')
@@ -134,10 +134,10 @@ process species_specific_fasta {
   """
 }
 
-active_sequences into { nhmmer_valid; nhmmer_invalid }
+active_sequences.into { nhmmer_valid; nhmmer_invalid }
 
 process extract_nhmmer_valid {
-  publishDir "${params.ftp_export.publish}/sequences/.internal/", mode: 'copy'
+  publishDir "${params.ftp_export.publish}/sequences/.internal/", mode: 'move'
 
   input:
   file(rna) from nhmmer_valid
@@ -146,12 +146,12 @@ process extract_nhmmer_valid {
   file 'rnacentral_nhmmer.fasta' into __sequences_nhmmer
 
   """
-  zcat $rna | rnac ftp-export sequences valid-nhmmer -
+  zcat $rna | rnac ftp-export sequences valid-nhmmer - rnacentral_nhmmer.fasta
   """
 }
 
 process extract_nhmmer_invalid {
-  publishDir "${params.ftp_export.publish}/sequences/.internal/", mode: 'copy'
+  publishDir "${params.ftp_export.publish}/sequences/.internal/", mode: 'move'
 
   input:
   file(rna) from nhmmer_invalid
@@ -160,7 +160,7 @@ process extract_nhmmer_invalid {
   file 'rnacentral_nhmmer_excluded.fasta' into __sequences_invalid_nhmmer
 
   """
-  zcat $rna | rnac ftp-export sequences invalid-nhmmer -
+  zcat $rna | rnac ftp-export sequences invalid-nhmmer - rnacentral_nhmmer_excluded.fasta
   """
 }
 
@@ -178,7 +178,7 @@ raw_ensembl_ranges
   .set { ensembl_ranges }
 
 process ensembl_export_chunk {
-  publishDir "${params.ftp_export.publish}/json/", mode: 'copy'
+  publishDir "${params.ftp_export.publish}/json/", mode: 'move'
   maxForks params.ftp_export.maxForks
 
   input:
@@ -198,7 +198,7 @@ process ensembl_export_chunk {
 }
 
 process rfam_go_matches {
-  publishDir "${params.ftp_export.publish}/go_annotations/", mode: 'copy'
+  publishDir "${params.ftp_export.publish}/go_annotations/", mode: 'move'
 
   input:
   file query from Channel.fromPath('files/ftp-export/go_annotations/rnacentral_rfam_annotations.sql')
@@ -299,7 +299,7 @@ raw_coordinates.into { bed_coordinates; gff_coordinates }
 process generate_gff3 {
   memory '8 GB'
 
-  publishDir "${params.ftp_export.publish}/genome_coordinates/", mode: 'copy'
+  publishDir "${params.ftp_export.publish}/genome_coordinates/", mode: 'move'
 
   input:
   set val(assembly), val(species), file(raw_data) from gff_coordinates

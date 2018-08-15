@@ -31,10 +31,10 @@ def is_valid_nhmmer_record(record):
 def valid_nhmmer(handle, output):
     sequences = SeqIO.parse(handle, 'fasta')
     accepted = it.ifilter(is_valid_nhmmer_record, sequences)
-    SeqIO.write(output, accepted, 'fasta')
+    SeqIO.write(accepted, output, 'fasta')
 
 
 def invalid_nhmmer(handle, output):
     sequences = SeqIO.parse(handle, 'fasta')
-    accepted = it.ifilterfalse(is_valid_nhmmer_record, sequences)
-    SeqIO.write(output, accepted, 'fasta')
+    rejected = it.ifilterfalse(is_valid_nhmmer_record, sequences)
+    SeqIO.write(rejected, output, 'fasta')

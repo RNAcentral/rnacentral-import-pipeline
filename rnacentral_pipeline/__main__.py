@@ -313,25 +313,25 @@ def export_sequences():
 
 
 @export_sequences.command('valid-nhmmer')
-@click.argument('active', type=click.File('rb'))
+@click.argument('active', type=click.File('r'))
 @click.argument(
-    'accepted',
-    default='rnacentral_nhmmer.fasta',
+    'output',
+    default='-',
     type=click.File('wb'),
 )
-def sequences_valid_nhmmer(active, accepted):
-    fasta.valid_nhmmer(active, accepted)
+def sequences_valid_nhmmer(active, output):
+    fasta.valid_nhmmer(active, output)
 
 
 @export_sequences.command('invalid-nhmmer')
-@click.argument('active', type=click.File('rb'))
+@click.argument('active', type=click.File('r'))
 @click.argument(
-    'rejected',
-    default='rnacentral_nhmmer_excluded.fasta',
+    'output',
+    default='-',
     type=click.File('wb'),
 )
-def sequences_invalid_nhmmer(active, rejected):
-    fasta.invalid_nhmmer(active, rejected)
+def sequences_invalid_nhmmer(active, output):
+    fasta.invalid_nhmmer(active, output)
 
 
 @ftp_export.command('ensembl')
