@@ -175,16 +175,33 @@ process find_ensembl_chunks {
 
 raw_ensembl_ranges
   .splitCsv()
-  .combine(Channel.fromPath('files/ftp-export/ensembl/schema.json'))
   .combine(Channel.fromPath('files/ftp-export/ensembl/ensembl-xrefs.sql'))
   .set { ensembl_ranges }
 
 process ensembl_export_chunk {
-  publishDir "${params.ftp_export.publish}/json/", mode: 'move'
-  maxForks params.ftp_export.maxForks
+  maxForks params.ftp_export.ensembl.maxForks
 
   input:
-  set val(min), val(max), file(schema), file(query) from ensembl_ranges
+  set val(min), val(max), file(query) from ensembl_ranges
+
+  output:
+  set val(min), val(max) file('raw_xrefs.json') into raw_ensembl_chunks
+
+  script:
+  """
+  psql -f $query --variable min=$min --variable max=$max "$PGDATABASE" > raw_xrefs.json
+  """
+}
+
+raw_ensembl_chunks
+  .combine(Channel.fromPath('files/ftp-export/ensembl/schema.json'))
+  .set { ensembl_chunks }
+
+process ensembl_process_chunk {
+  publishDir "${params.ftp_export.publish}/json/", mode: 'move'
+
+  input:
+  set val(min), val(max) file(raw), file(schema) from raw_ensembl_chunks
 
   output:
   file(result) into __ensembl_export
@@ -192,8 +209,7 @@ process ensembl_export_chunk {
   script:
   result = "ensembl-xref-$min-${max}.json"
   """
-  psql -f $query --variable min=$min --variable max=$max "$PGDATABASE" > raw_xrefs.json
-  rnac ftp-export ensembl --schema=$schema raw_xrefs.json $result
+  rnac ftp-export ensembl --schema=$schema $raw $result
   """
 }
 
