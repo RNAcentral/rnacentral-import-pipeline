@@ -281,6 +281,8 @@ raw_coordinates.into { bed_coordinates; gff_coordinates }
 // }
 
 process generate_gff3 {
+  memory '8 GB'
+
   publishDir "${params.ftp_export.publish}/genome_coordinates/", mode: 'copy'
 
   input:
