@@ -123,7 +123,14 @@ class Accession(object):
             (self.organelle and 'mitochondri' in self.organelle)
 
 
-@attr.s()
+@attr.s(hash=True)
+class HitComponent(object):
+    completeness = attr.ib(validator=is_a(float), convert=float)
+    start = attr.ib(validator=is_a(int))
+    stop = attr.ib(validator=is_a(int))
+
+
+@attr.s(hash=True)
 class RfamHit(object):
     """
     This represents the information needed to represent an Rfam Hit to compute
@@ -133,15 +140,27 @@ class RfamHit(object):
     model = attr.ib(validator=is_a(basestring))
     model_rna_type = attr.ib(validator=is_a(basestring))
     model_domain = attr.ib(validator=optional(is_a(basestring)))
-    model_completeness = attr.ib(validator=is_a(float), convert=float)
-    sequence_completeness = attr.ib(validator=is_a(float), convert=float)
+    sequence_info = attr.ib(validator=is_a(HitComponent))
+    model_info = attr.ib(validator=is_a(HitComponent))
 
     @classmethod
-    def build(cls, data):
+    def build(cls, raw):
         """
         Create a new RfamHit object. This accepts a dict where all keys match
         the attributes of this class.
         """
+
+        data = dict(raw)
+        data['model_info'] = HitComponent(
+            completeness=data.pop('model_completeness'),
+            start=data.pop('model_start'),
+            stop=data.pop('model_stop'),
+        )
+        data['sequence_info'] = HitComponent(
+            completeness=data.pop('sequence_completeness'),
+            start=data.pop('sequence_start'),
+            stop=data.pop('sequence_stop'),
+        )
         return cls(**data)  # pylint: disable=star-args
 
 
@@ -214,10 +233,10 @@ class SpeciesSequence(Sequence):
         """
 
         active, inactive = partioned_accessions(data['accessions'])
-        hits = []
+        hits = set()
         for hit in data['hits']:
             if hit.pop('rfam_hit_id'):
-                hits.append(RfamHit.build(hit))
+                hits.add(RfamHit.build(hit))
 
         return cls(
             upi=data['upi'],
@@ -229,7 +248,7 @@ class SpeciesSequence(Sequence):
             xref_has_coordinates=any(data['xref_has_coordinates']),
             rna_was_mapped=data['rna_was_mapped'],
             previous_data=data['previous'][0],
-            rfam_hits=hits,
+            rfam_hits=list(hits),
         )
 
 
