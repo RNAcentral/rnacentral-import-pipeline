@@ -140,3 +140,16 @@ def test_can_get_given_taxid(pdb, expected):
 def test_will_not_fetch_mislabeled_chains(pdbid, missing):
     entries = {e.primary_id for e in parsers.as_entries([pdbid])}
     assert missing not in entries
+
+
+@pytest.mark.parametrize('pdbid,chains', [
+    ('4v5d', {
+        'DB', 'DA', 'CW', 'CA', 'BB', 'BA', 'AW', 'AA', 'CY', 'CV', 'AY', 'AV'
+    }),
+    ('1OB2', {'B'}),
+    ('1OB5', {'B', 'D', 'F'}),
+    ('1xnq', {'A', 'X'}),
+])
+def test_fetches_expected_chains(pdbid, chains):
+    entries = parsers.as_entries([pdbid])
+    assert set(d.optional_id for d in entries) == chains
