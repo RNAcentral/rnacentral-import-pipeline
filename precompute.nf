@@ -14,7 +14,7 @@ raw_ranges
   .combine(Channel.fromPath('files/precompute/query.sql'))
   .into { ranges }
 
-process precompute_range {
+process precompute_range_query {
   beforeScript 'slack db-work precompute-range || true'
   afterScript 'slack db-done precompute-range || true'
   maxForks params.precompute.maxForks
