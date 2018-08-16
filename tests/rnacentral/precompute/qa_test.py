@@ -42,6 +42,7 @@ def test_can_detect_possible_contamination(rna_id, rna_type, flag):
     ('URS00009F92C9_358574', 'rRNA', True),
     ('URS0000A254A0_198431', 'rRNA', True),
     ('URS00001C018D_77133', 'rRNA', True),
+    ('URS0000010837_7227', 'misc_RNA', True),
 ])
 def test_can_detect_incomplete_sequence(rna_id, rna_type, flag):
     sequence = helpers.load_data(rna_id)
