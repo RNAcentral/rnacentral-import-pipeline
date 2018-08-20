@@ -11,8 +11,7 @@ INSERT INTO rnacen.rnc_coordinates AS t1 (
     strand,
     assembly_id,
     id
-)
-SELECT
+) SELECT
     load.accession,
     load.chromosome,
     load.local_start,
@@ -21,24 +20,25 @@ SELECT
     assembly.assembly_id,
     NEXTVAL('rnc_coordinates_pk_seq')
 FROM rnacen.load_rnc_coordinates as load
-join ensembl_assembly assembly
-on
+JOIN ensembl_assembly assembly
+ON
     assembly.assembly_id = load.assembly_id
 WHERE
-    load.chromosome is not null
+    load.chromosome IS NOT null
 ON CONFLICT (accession, name, local_start, local_end, assembly_id)
 DO NOTHING;
 
-update rnc_coordinates coord
-set
+UPDATE rnc_coordinates coord
+SET
     primary_start = coord.local_start,
     primary_end = coord.local_end
-from rnc_accessions acc
-where
+FROM rnc_accessions acc
+WHERE
     acc.accession = coord.accession
-    and coord.primary_start is null
-    and coord.primary_end is null
-    and acc."database" in ('ENSEMBL', 'GENCODE', 'LNCIPEDIA', 'MIRBASE');
+    AND coord.primary_start IS NULL
+    AND coord.primary_end IS NULL
+    AND acc."database" IN ('ENSEMBL', 'GENCODE', 'LNCIPEDIA', 'MIRBASE')
+;
 
 -- DELETE FROM rnc_coordinates where name is null;
 
