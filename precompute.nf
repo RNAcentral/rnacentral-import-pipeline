@@ -31,6 +31,8 @@ process precompute_range_query {
 }
 
 process precompute_range {
+  memory '4 GB'
+
   input:
   file(raw) from precompute_raw
 
