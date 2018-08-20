@@ -18,7 +18,7 @@ process find_chunks {
 raw_ranges
   .splitCsv()
   .combine(Channel.fromPath('files/search-export/query.sql'))
-    .into { ranges }
+    .set { ranges }
 
 process export_search_json {
   beforeScript 'slack db-work search-export || true'
