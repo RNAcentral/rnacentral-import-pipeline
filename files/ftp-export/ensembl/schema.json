@@ -91,7 +91,7 @@
             "database": {
               "description": "Human readable name of the database this Xref comes from",
               "enum": [
-                "gtRNAdb",
+                "GtRNAdb",
                 "lncRNAdb",
                 "miRBase",
                 "Modomics",
