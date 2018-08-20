@@ -58,7 +58,7 @@ class QaStatus(object):
             incomplete_sequence=qa.incomplete_sequence(rna_type, data),
             possible_contamination=qa.possible_contamination(rna_type, data),
             missing_rfam_match=qa.missing_rfam_match(rna_type, data),
-            mismatching_rna_type=qa.missing_rfam_match(rna_type, data),
+            mismatching_rna_type=False,
             is_repetitive=False,
         )
 
@@ -76,8 +76,10 @@ class QaStatus(object):
         Check if this QA update indicates if there is any issue.
         """
 
-        fields = attr.fields(self.__class__)
-        return any(getattr(self, field.name) for field in fields)
+        return self.incomplete_sequence and self.possible_contamination and \
+            self.missing_rfam_match
+        # fields = attr.fields(self.__class__)
+        # return any(getattr(self, field.name) for field in fields)
 
     def writeable(self, upi, taxid):
         """

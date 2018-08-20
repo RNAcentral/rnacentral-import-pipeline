@@ -26,6 +26,7 @@ from . import helpers
     ('URS000061A10B_9606', 'tRNA', False),
     ('URS00008CF5BF_36987', 'rRNA', True),
     ('URS00009F92C9_358574', 'rRNA', False),
+    ('URS0000010837_7227', 'misc_RNA', True),
 ])
 def test_can_detect_possible_contamination(rna_id, rna_type, flag):
     sequence = helpers.load_data(rna_id)

@@ -15,6 +15,8 @@ limitations under the License.
 
 import pytest
 
+import attr
+
 from rnacentral_pipeline.rnacentral.precompute import process
 
 from . import helpers
@@ -250,3 +252,23 @@ def test_produces_expected_pairs_in_range(start, stop, pairs):
     data = helpers.load_for_range(start, stop)
     found = {(d.upi, d.taxid) for d in data if d.taxid is not None}
     assert found == pairs
+
+
+@pytest.mark.parametrize('rna_id,expected', [  # pylint: disable=no-member
+    ('URS0000010837_7227', ['possible_contamination', 'incomplete_sequence']),
+    ('URS00001C018D_77133', ['incomplete_sequence']),
+    ('URS0000400378_30527', []),
+    ('URS000061A10B_9606', []),
+    ('URS0000866382_1000416', ['missing_rfam_match']),
+    ('URS00008CF5BF_36987', ['possible_contamination']),
+    ('URS0000A80D0E_60711', ['missing_rfam_match']),
+    ('URS0000BA5588_9606', []),
+])
+def test_creates_expected_qa_udpates(rna_id, expected):
+    data = load_data(rna_id)
+    flags = []
+    qa = data.qa_status
+    for field in attr.fields(qa.__class__):
+        if getattr(qa, field.name):
+            flags.append(field.name)
+    assert sorted(flags) == sorted(expected)

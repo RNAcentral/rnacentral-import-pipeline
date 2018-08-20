@@ -400,8 +400,9 @@ def test_correctly_assigns_popular_species(upi, ans):
     ('URS00002411EE_10090', ['missing_rfam_match']),
 ])
 def test_it_correctly_build_rfam_problems(upi, problems):
-    ans = [{'attrib': {'name': 'rfam_problems'}, 'text': p} for p in problems]
-    assert load_and_get_additional(upi, "rfam_problems") == ans
+    # ans = [{'attrib': {'name': 'rfam_problems'}, 'text': p} for p in problems]
+    val = [a['text'] for a in load_and_get_additional(upi, "rfam_problems")]
+    assert sorted(val) == sorted(problems)
 
 
 @pytest.mark.parametrize('upi,status', [  # pylint: disable=E1101
