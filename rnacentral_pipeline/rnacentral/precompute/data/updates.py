@@ -76,8 +76,11 @@ class QaStatus(object):
         Check if this QA update indicates if there is any issue.
         """
 
-        return self.incomplete_sequence and self.possible_contamination and \
+        return (
+            self.incomplete_sequence or
+            self.possible_contamination or
             self.missing_rfam_match
+        )
         # fields = attr.fields(self.__class__)
         # return any(getattr(self, field.name) for field in fields)
 
