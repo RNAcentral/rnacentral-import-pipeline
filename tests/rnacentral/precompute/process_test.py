@@ -33,20 +33,20 @@ def load_data(upi):
     ('URS000019E0CD_9606', 'Homo sapiens HELLP associated long non-coding RNA (HELLPAR)'),
     ('URS00001DEEBE_562', 'Escherichia coli tRNA-Pro (CGG) (tRNA-Pro-CGG-1-1)'),
     ('URS00002F21DA_7227', 'Drosophila melanogaster (fruit fly) microRNA dme-bantam precursor'),
-    ('URS000034C5CB_7227', 'Drosophila melanogaster (fruit fly) signal recognition particle 7SL RNA CR32864 (Dmel_CR32864, Dmel_CR42652)'),
+    ('URS000034C5CB_7227', 'Drosophila melanogaster (fruit fly) Signal recognition particle 7SL RNA CR32864 (Dmel_CR32864, Dmel_CR42652)'),
     ('URS000037602E_9606', 'Homo sapiens (human) transfer-messenger RNA Esche_coli_K12'),
     ('URS00003AC4AA_3702', 'Arabidopsis thaliana (thale cress) TAS3/TASIR-ARF (TRANS-ACTING SIRNA3); other RNA (AT3G17185)'),
     ('URS00003BECAC_9606', 'Homo sapiens long intergenic non-protein coding RNA 1729 (LINC01729)'),
     ('URS00003CE153_9606', 'Homo sapiens STARD4 antisense RNA 1 (STARD4-AS1)'),
     ('URS00003EBD9A_9913', 'Bos taurus telomerase RNA component (TERC), telomerase RNA'),
-    ('URS0000466DE6_6239', 'Caenorhabditis elegans microRNA cel-miR-229-5p'),
+    ('URS0000466DE6_6239', 'Caenorhabditis elegans cel-miR-229-5p'),
     ('URS000048B30C_3702', 'Arabidopsis thaliana (thale cress) partial tRNA-Leu'),
     ('URS00004E52D3_10090', 'Mus musculus predicted gene 12238 (Gm12238)'),
-    ('URS00004E9E38_7227', 'Drosophila melanogaster (fruit fly) microRNA dme-bantam-3p'),
+    ('URS00004E9E38_7227', 'Drosophila melanogaster (fruit fly) dme-bantam-3p'),
     ('URS00004FB44B_6239', 'Caenorhabditis elegans 26s rRNA'),
     ('URS000051DCEC_10090', 'Mus musculus small nucleolar RNA, C/D box 17 (Snord17), small nucleolar RNA'),
     ('URS00005511ED_6239', 'Caenorhabditis elegans long non-coding RNA linc-125'),
-    ('URS000055786A_7227', 'Drosophila melanogaster (fruit fly) microRNA dme-bantam-5p'),
+    ('URS000055786A_7227', 'Drosophila melanogaster (fruit fly) dme-bantam-5p'),
     ('URS0000563A36_7227', 'Drosophila melanogaster (fruit fly) snoRNA:Tudor-SN-a (Dmel_CR43585)'),
     ('URS0000569A4A_9606', 'Homo sapiens small Cajal body-specific RNA 10 (SCARNA10)'),
     ('URS00005F4CAF_3702', 'Arabidopsis thaliana (thale cress) tRNA-Met(CAT)'),
@@ -76,6 +76,7 @@ def test_builds_correct_descriptions(rna_id, description):
     assert load_data(rna_id).description == description
 
 
+@pytest.mark.skip()
 @pytest.mark.parametrize('rna_id,short', [  # pylint: disable=no-member
     ('URS000001E7BA_559292', 'tRNA-Gln (tQ(UUG)C, tQ(UUG)D1-3, tQ(UUG)E1, tQ(UUG)H, tQ(UUG)L)'),
     ('URS00000AEE53_380749', 'tmRNA'),
@@ -184,8 +185,8 @@ def test_builds_correct_rna_types(rna_id, rna_type):
 
 
 @pytest.mark.parametrize('rna_id,databases', [  # pylint: disable=no-member
-    ('URS0000016972_6239', 'ENA,RefSeq,WormBase'),
-    ('URS000001E7BA_559292', 'ENA,gtRNAdb,Rfam,SGD'),
+    ('URS0000016972_6239', 'ENA,miRBase,RefSeq,WormBase'),
+    ('URS000001E7BA_559292', 'ENA,GtRNAdb,Rfam,SGD'),
     ('URS00000AEE53_380749', 'ENA'),
     ('URS00000F9D45_9606', 'ENA,HGNC,PDBe,RefSeq'),
     ('URS000018EB2E_3702', 'ENA,lncRNAdb'),
@@ -195,12 +196,15 @@ def test_build_correct_databases(rna_id, databases):
 
 
 @pytest.mark.parametrize('rna_id,flag', [  # pylint: disable=no-member
+    ('URS0000444F9B_559292', True),
     ('URS000067237A_7955', True),
     ('URS00006DC7D7_1871905', False),
     ('URS00006DCB39_9606', True),
     ('URS000075AAF7_9606', True),
     ('URS0000C21900_3555', True),
     ('URS0000C8E9CE_9606', True),
+    ('URS0000D3BA7E_3702', True),
+    ('URS0000D47880_3702', True),
 ])
 def test_build_correct_coordinate_flag(rna_id, flag):
     assert load_data(rna_id).has_coordinates == flag
