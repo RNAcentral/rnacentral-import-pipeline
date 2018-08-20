@@ -152,9 +152,7 @@ def rna_type_of(data):
 
     databases = {acc.database for acc in data.accessions}
     if not databases:
-        LOGGER.error("Could not find any database this sequence is from: %s",
-                     data)
-        return None
+        raise ValueError("Could not find any database this sequence is from: %s", data)
 
     trusted = databases.intersection(TRUSTED_DATABASES)
     LOGGER.debug("Found %i trusted databases", len(trusted))
@@ -183,6 +181,7 @@ def rna_type_of(data):
     ]
     for correction in corrections:
         rna_type = correction(rna_type, data)
+    rna_type.discard(None)
 
     if 'antisense_RNA' in rna_type and from_lnc_database(accessions):
         rna_type.discard('antisense_RNA')
@@ -197,5 +196,8 @@ def rna_type_of(data):
         LOGGER.debug("Corrections removed all rna_types")
     LOGGER.debug("Using fallback count method for %s", data.upi)
 
-    counts = Counter(accession.rna_type for accession in data.accessions)
-    return counts.most_common(1)[0][0]
+    counts = Counter(a.rna_type for a in data.accessions if a.rna_type in rna_type)
+    selected = counts.most_common(1)[0][0]
+    if not selected:
+        raise ValueError("Fallback selection failed")
+    return selected
