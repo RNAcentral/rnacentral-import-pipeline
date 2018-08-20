@@ -201,7 +201,7 @@ process ensembl_process_chunk {
   publishDir "${params.ftp_export.publish}/json/", mode: 'move'
 
   input:
-  set val(min), val(max), file(raw), file(schema) from raw_ensembl_chunks
+  set val(min), val(max), file(raw), file(schema) from ensembl_chunks
 
   output:
   file(result) into __ensembl_export
