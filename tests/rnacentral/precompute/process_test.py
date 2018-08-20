@@ -267,8 +267,9 @@ def test_produces_expected_pairs_in_range(start, stop, pairs):
 def test_creates_expected_qa_udpates(rna_id, expected):
     data = load_data(rna_id)
     flags = []
-    qa = data.qa_status
-    for field in attr.fields(qa.__class__):
-        if getattr(qa, field.name):
+    status = data.qa_status
+    for field in attr.fields(status.__class__):
+        if getattr(status, field.name):
             flags.append(field.name)
     assert sorted(flags) == sorted(expected)
+    assert status.has_issue == bool(expected)
