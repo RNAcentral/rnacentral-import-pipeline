@@ -185,7 +185,7 @@ process ensembl_export_chunk {
   set val(min), val(max), file(query) from ensembl_ranges
 
   output:
-  set val(min), val(max) file('raw_xrefs.json') into raw_ensembl_chunks
+  set val(min), val(max), file('raw_xrefs.json') into raw_ensembl_chunks
 
   script:
   """
