@@ -444,7 +444,7 @@ def rfam_problems(status):
     """
     Create a list of the names of all Rfam problems.
     """
-    problems = sorted(n for n, v in status.items() if v)
+    problems = sorted(n for n, v in status.items() if v and n != 'has_issue')
     return problems or ['none']
 
 
