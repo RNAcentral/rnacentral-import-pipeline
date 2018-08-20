@@ -12,7 +12,7 @@ process find_chunks {
 raw_ranges
   .splitCsv()
   .combine(Channel.fromPath('files/precompute/query.sql'))
-  .into { ranges }
+  .set { ranges }
 
 process precompute_range_query {
   beforeScript 'slack db-work precompute-range || true'
