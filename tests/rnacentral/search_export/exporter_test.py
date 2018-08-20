@@ -15,6 +15,7 @@ limitations under the License.
 
 import os
 import tempfile
+import operator as op
 import xml.etree.ElementTree as ET
 from xml.dom import minidom
 
@@ -157,7 +158,7 @@ def test_assigns_md5_correctly(upi, ans):
     ('URS0000062D2A_77133', 'uncultured bacterium partial contains 16S ribosomal RNA, 16S-23S ribosomal RNA intergenic spacer, and 23S ribosomal RNA'),
     ('URS00000936FF_9606', 'Homo sapiens (human) piR-56608'),
     ('URS00000C45DB_10090', 'Mus musculus (house mouse) piR-101106'),
-    ('URS0000003085_7460', 'Apis mellifera (honey bee) microRNA ame-miR-279a'),
+    ('URS0000003085_7460', 'Apis mellifera (honey bee) ame-miR-279a-3p'),
     ('URS00000C6428_980671', 'Lophanthus lipskyanus partial external transcribed spacer'),
     ('URS00007268A2_9483', 'Callithrix jacchus microRNA mir-1255'),
     ('URS0000A9662A_10020', 'Dipodomys ordii 7SK RNA'),
@@ -249,9 +250,11 @@ def test_assigns_rna_type_correctly(upi, ans):
 
 @pytest.mark.parametrize('upi,ans', [  # pylint: disable=E1101
     ('URS00004AFF8D_9544', [
+        'ENA',
         'RefSeq',
         'miRBase',
-    ])
+    ]),
+    ('URS00001DA281_9606', ['ENA', 'GtRNAdb', 'HGNC', 'PDBe']),
 ])
 def test_correctly_gets_expert_db(upi, ans):
     vals = []
@@ -316,7 +319,10 @@ def test_can_assign_correct_cross_references(upi, ans):
 
 
 def test_can_create_document_with_unicode():
-    assert load_and_get_additional('URS000009EE82_562', 'product') == [
+    key = op.itemgetter('text')
+    val = sorted(load_and_get_additional('URS000009EE82_562', 'product'),
+                 key=key)
+    assert val == sorted([
         {'attrib': {'name': 'product'}, 'text': u'tRNA-Asp(gtc)'},
         {'attrib': {'name': 'product'}, 'text': u'P-site tRNA Aspartate'},
         {'attrib': {'name': 'product'}, 'text': u'transfer RNA-Asp'},
@@ -327,7 +333,7 @@ def test_can_create_document_with_unicode():
         {'attrib': {'name': 'product'}, 'text': u'tRNA-Asp-GTC'},
         {'attrib': {'name': 'product'}, 'text': u'ASPARTYL TRNA'},
         {'attrib': {'name': 'product'}, 'text': u'tRNA-Asp (GTC)'},
-    ]
+    ], key=key)
 
 
 def test_it_can_handle_a_list_in_ontology():
@@ -391,6 +397,7 @@ def test_correctly_assigns_popular_species(upi, ans):
     ('URS000014C3B0_7227', ['possible_contamination']),
     ('URS0000010837_7227', ['incomplete_sequence', 'possible_contamination']),
     ('URS000052E2E9_289219', ['possible_contamination']),
+    ('URS00002411EE_10090', ['missing_rfam_match']),
 ])
 def test_it_correctly_build_rfam_problems(upi, problems):
     ans = [{'attrib': {'name': 'rfam_problems'}, 'text': p} for p in problems]
@@ -413,17 +420,18 @@ def test_it_correctly_assigns_rfam_problem_found(upi, status):
 
 
 @pytest.mark.parametrize('upi,status', [  # pylint: disable=E1101
-    ('URS000075EAAC_9606', True),
     # ('URS0000A77400_9606', True),
-    ('URS0000A81C5E_9606', True),
-    ('URS0000ABD87F_9606', True),
+    ('URS0000444F9B_559292', True),
+    ('URS000071F071_7955', True),
+    ('URS000071F4D6_7955', True),
+    ('URS000075EAAC_9606', True),
     ('URS00007F81F8_511145', False),
     ('URS0000A16E25_198431', False),
     ('URS0000A7ED87_7955', True),
-    ('URS000071F4D6_7955', True),
-    ('URS000071F071_7955', True),
+    ('URS0000A81C5E_9606', True),
+    ('URS0000ABD87F_9606', True),
 ])
-def test_can_correctly_assign_known_locations(upi, status):
+def test_can_correctly_assign_coordinates(upi, status):
     assert load_and_get_additional(upi, "has_genomic_coordinates") == [
         {'attrib': {'name': 'has_genomic_coordinates'}, 'text': str(status)},
     ]
