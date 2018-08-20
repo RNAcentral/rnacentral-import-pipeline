@@ -64,8 +64,8 @@ process load_precomputed_data {
   """
   cp $pre_ctl _pre.ctl
   cp $qa_ctl _qa.ctl
-  cat result*.csv | pgloader _pre_ctl
-  cat qa*.csv | pgloader _qa_ctl
+  cat result*.csv | pgloader _pre.ctl
+  cat qa*.csv | pgloader _qa.ctl
   psql -f $post "$PGDATABASE"
   """
 }
