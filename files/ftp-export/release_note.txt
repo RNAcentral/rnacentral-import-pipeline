@@ -1,5 +1,5 @@
 ===================================================================
-RNAcentral Release {release}, 11/04/2018
+RNAcentral Release {release}, {date}
 ===================================================================
 
 RNAcentral is an online resource for organising data
