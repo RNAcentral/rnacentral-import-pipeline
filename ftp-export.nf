@@ -277,7 +277,7 @@ process fetch_raw_coordinate_data {
 raw_coordinates.into { bed_coordinates; gff_coordinates }
 
 // process format_bed_coordinates {
-//   publishDir "${params.ftp_export.publish}/genome_coordinates/", mode: 'copy'
+//   publishDir "${params.ftp_export.publish}/genome_coordinates/bed/", mode: 'copy'
 
 //   input:
 //   set val assembly, val species, file(raw_data) from bed_coordinates
@@ -315,7 +315,7 @@ raw_coordinates.into { bed_coordinates; gff_coordinates }
 process generate_gff3 {
   memory '8 GB'
 
-  publishDir "${params.ftp_export.publish}/genome_coordinates/", mode: 'move'
+  publishDir "${params.ftp_export.publish}/genome_coordinates/gff3", mode: 'move'
 
   input:
   set val(assembly), val(species), file(raw_data) from gff_coordinates
