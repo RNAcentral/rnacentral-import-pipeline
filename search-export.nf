@@ -3,7 +3,7 @@
 // This is used to provide a temporary directory publish to. We publish here
 // and then at the we publish everything at once. This prevents writing part of
 // the data in the case one job fails while already succeeded.
-tmp = "mktemp -d -p ${workDir}".execute().text
+tmp = "mktemp -d -p ${workDir}".execute().text.trim()
 
 process find_chunks {
   output:
