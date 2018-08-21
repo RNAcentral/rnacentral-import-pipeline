@@ -13,6 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+from datetime import date
+
 from rnacentral_pipeline.db import cursor
 
 
@@ -33,6 +35,9 @@ def active_databases(db_url):
         cur.execute("select count(*) from rnc_database")
         return '{:,}'.format(cur.fetchone()[0])
 
+def current_date():
+    return date.today().strftime('%d/%m/%Y')
+
 
 def write(template_file, release, output, db_url):
     template = template_file.read()
@@ -41,4 +46,5 @@ def write(template_file, release, output, db_url):
         active_xrefs=active_xrefs(db_url),
         unique_sequences=unique_sequences(db_url),
         databases=active_databases(db_url),
+        date=current_date(),
     ))
