@@ -33,7 +33,7 @@ process md5 {
 }
 
 process id_mapping {
-  publishDir "${params.ftp_export.publish}/id_maping/", mode: 'copy'
+  publishDir "${params.ftp_export.publish}/id_mapping/", mode: 'copy'
 
   input:
   file query from Channel.fromPath('files/ftp-export/id-mapping/id_mapping.sql')
@@ -54,7 +54,7 @@ process id_mapping {
 }
 
 process database_id_mapping {
-  publishDir "${params.ftp_export.publish}/id_maping/database_mappings/", mode: 'move'
+  publishDir "${params.ftp_export.publish}/id_mapping/database_mappings/", mode: 'move'
 
   input:
   file 'id_mapping.tsv.gz' from id_mapping
