@@ -1,0 +1,7 @@
+COPY (
+SELECT
+  upi,
+  md5
+FROM rna
+ORDER BY id ASC
+) TO STDOUT

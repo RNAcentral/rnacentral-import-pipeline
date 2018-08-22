@@ -1,0 +1,36 @@
+{
+        "data": [{
+                "primaryId": "MIRBASE:MI0000612",
+                "name": "rno-mir-335",
+                "taxonId": "NCBITaxon:10116",
+                "soTermId": "SO:0001244",
+                "sequence": "TCTTTTGGGCGGGGGTCAAGAGCAATAACGAAAAATGTTTGTTTTTCGTAAACCGTTTTTCATTATTGCTCCTGACCTCCTCTCATTTGTTATAGCCA",
+                "description": "Rattus norvegicus miR-335 stem-loop",
+                "url": "http://www.mirbase.org/cgi-bin/mirna_entry.pl?acc=MI0000612",
+                "relatedSequences": [
+                        {
+                                "coordinates": [
+                                        {
+                                                "startPosition": 15,
+                                                "endPosition": 37
+                                        }
+                                ],
+                                "sequenceId": "MIRBASE:MIMAT0000575",
+                                "relationship": "matureProduct"
+                        }
+                ],
+                "crossReferenceIds": [
+                        "EntrezGene:Mir335"
+                ],
+                "publications": [
+                        "PMID:17604727",
+                        "PMID:14691248"
+                ]
+        }],
+        "metaData": {
+                "schemaVersion": "0.2.0",
+                "dateProduced": "2018-05-23T11:36:10+00:00",
+                "dataProvider": "MIRBASE",
+                "release": "22"
+        }
+}

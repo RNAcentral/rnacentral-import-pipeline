@@ -17,7 +17,7 @@ from tasks.config import ontologies
 
 from tasks.utils.pgloader import PGLoader
 
-from tasks.rfam.go_terms import RfamGoTerms
+from tasks.rfam.ontology_terms import RfamOntologyTerms
 from tasks.quickgo.quickgo_data import QuickGoData
 
 
@@ -97,7 +97,7 @@ class Ontologies(PGLoader):  # pylint: disable=R0904
     def requires(self):
         return [
             QuickGoData(),
-            RfamGoTerms(),
+            RfamOntologyTerms(),
         ]
 
     def control_file(self):

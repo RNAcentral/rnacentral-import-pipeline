@@ -6,6 +6,28 @@ process data. The format is based off of `Keep a Changelog
 <http://keepachangelog.com/en/1.0.0/>`_. Restructured text is being used because
 it provides more structure to the text.
 
+Release 10
+----------
+
+Added
+`````
+
+- JSON schema based import.
+
+  This will now import lncipedia data using our `JSON schema
+  <https://github.com/RNAcentral/rnacentral-data-schema>`_. In theory everything
+  we currently extract can be represented in it, however, it seems that not
+  everything is. Notably, we will have fewer publications and no product
+  information. On the plus side we will have coordinates for hg19 and hg38 for
+  this database.
+
+- A ``qa_status`` table.
+
+  This table is where we will store all QA status. This is a generalization and
+  cleanup of the ``rfam_problems`` field from ``rnc_rna_precomputed``. This is a
+  cleaner, easier to query method of representing the same data. The old column
+  is not yet deleted, but is not being populated.
+
 Release 9
 ---------
 

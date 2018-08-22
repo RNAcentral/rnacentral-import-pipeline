@@ -148,8 +148,6 @@ class GetChromosomeList(luigi.Task):
         Identify if the top level region from the karyotype is a group,
         scaffold, or chromosome.
         """
-        if self.species == 'triticum_aestivum':
-            return 'scaffold'
         for region in ensembl_json['top_level_region']:
             if region['name'] == sequence_name:
                 return region['coord_system']
@@ -201,16 +199,20 @@ class DownloadChromosome(luigi.Task):
 
     def get_url(self):
         url = None
-        if self.division == 'Ensembl':
+        division = self.division.replace(' ', '')
+        if division == 'Ensembl':
             url = 'ftp://ftp.ensembl.org/pub/current_fasta/{species}/dna/{chromosome}.gz'
-        elif self.division == 'EnsemblFungi':
+        elif division == 'EnsemblFungi':
             url = 'ftp://ftp.ensemblgenomes.org/pub/current/fungi/fasta/{species}/dna/{chromosome}.gz'
-        elif self.division == 'EnsemblMetazoa':
+        elif division == 'EnsemblMetazoa':
             url = 'ftp://ftp.ensemblgenomes.org/pub/current/metazoa/fasta/{species}/dna/{chromosome}.gz'
-        elif self.division == 'EnsemblPlants':
+        elif division == 'EnsemblPlants':
             url = 'ftp://ftp.ensemblgenomes.org/pub/current/plants/fasta/{species}/dna/{chromosome}.gz'
-        elif self.division == 'EnsemblProtists':
+        elif division == 'EnsemblProtists':
             url = 'ftp://ftp.ensemblgenomes.org/pub/current/protists/fasta/{species}/dna/{chromosome}.gz'
+        else:
+            raise ValueError("Invalid division value: %s" % self.division)
+
         url = url.format(species=self.species, chromosome=self.chromosome)
         return url
 

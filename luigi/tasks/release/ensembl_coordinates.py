@@ -22,13 +22,14 @@ from rnacentral.db import get_db_connection
 SQL = """
 update rnc_coordinates coord
 set
-    "name" = coord.primary_accession,
     primary_start = coord.local_start,
     primary_end = coord.local_end
 from rnc_accessions acc
 where
     acc.accession = coord.accession
-    and acc."database" in ('ENSEMBL', 'GENCODE')
+    and coord.primary_start is null
+    and coord.primary_end is null
+    and acc."database" in ('ENSEMBL', 'GENCODE', 'LNCIPEDIA')
 """
 
 
