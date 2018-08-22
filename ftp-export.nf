@@ -96,6 +96,7 @@ process inactive_fasta {
   file 'rnacentral_inactive.fasta.gz' into __sequences_inactive
 
   """
+  export PYTHONIOENCODING=utf8
   psql -f "$query" "$PGDATABASE" | json2fasta.py - - | gzip > rnacentral_inactive.fasta.gz
   """
 }
@@ -113,6 +114,7 @@ process active_fasta {
   file 'readme.txt' into __sequences_readme
 
   """
+  export PYTHONIOENCODING=utf8
   psql -f "$query" "$PGDATABASE" | json2fasta.py - rnacentral_active.fasta
   head rnacentral_active.fasta > example.txt
   gzip rnacentral_active.fasta
@@ -130,6 +132,7 @@ process species_specific_fasta {
   file 'rnacentral_species_specific_ids.fasta.gz' into __sequences_species
 
   """
+  export PYTHONIOENCODING=utf8
   psql -f "$query" "$PGDATABASE" | json2fasta.py - - | gzip > rnacentral_species_specific_ids.fasta.gz
   """
 }
@@ -146,6 +149,7 @@ process extract_nhmmer_valid {
   file 'rnacentral_nhmmer.fasta' into __sequences_nhmmer
 
   """
+  export PYTHONIOENCODING=utf8
   zcat $rna | rnac ftp-export sequences valid-nhmmer - rnacentral_nhmmer.fasta
   """
 }
@@ -160,6 +164,7 @@ process extract_nhmmer_invalid {
   file 'rnacentral_nhmmer_excluded.fasta' into __sequences_invalid_nhmmer
 
   """
+  export PYTHONIOENCODING=utf8
   zcat $rna | rnac ftp-export sequences invalid-nhmmer - rnacentral_nhmmer_excluded.fasta
   """
 }
