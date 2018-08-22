@@ -287,6 +287,13 @@ class RelatedSequence(object):
     coordinates = attr.ib(validator=is_a(list), default=attr.Factory(list))
     evidence = attr.ib(validator=is_a(list), default=attr.Factory(list))
 
+    def writeable(self, accession):
+        return [
+            accession,
+            self.sequence_id,
+            self.relationship,
+        ]
+
 
 @attr.s(frozen=True)
 class Entry(object):
@@ -557,7 +564,7 @@ class Entry(object):
         return self.__write_part__(self.exons)
 
     def write_related_sequences(self):
-        return []
+        return self.__write_part__(self.related_sequences)
 
     def __write_part__(self, attribute, method_name='writeable'):
         if not self.is_valid():
