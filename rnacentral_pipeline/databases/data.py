@@ -288,11 +288,25 @@ class RelatedSequence(object):
     evidence = attr.ib(validator=is_a(list), default=attr.Factory(list))
 
     def writeable(self, accession):
+        methods = ','.join('"%s"' % e.method for e in self.evidence)
+        methods = '{%s}' % methods
         return [
             accession,
             self.sequence_id,
             self.relationship,
+            methods,
         ]
+
+    def write_feature(self, accession, taxid):
+        for endpoints in self.coordinates:
+            yield [
+                accession,
+                taxid,
+                endpoints.start,
+                endpoints.stop,
+                self.relationship,
+                '{}',
+            ]
 
 
 @attr.s(frozen=True)
@@ -565,6 +579,12 @@ class Entry(object):
 
     def write_related_sequences(self):
         return self.__write_part__(self.related_sequences)
+
+    def write_sequence_features(self):
+        for related in self.related_sequences:
+            features = related.write_features(self.accession, self.ncbi_tax_id)
+            for feature in features:
+                yield feature
 
     def __write_part__(self, attribute, method_name='writeable'):
         if not self.is_valid():
