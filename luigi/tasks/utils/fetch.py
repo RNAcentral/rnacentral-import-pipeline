@@ -23,6 +23,14 @@ from . import ftp
 
 
 def fetch(remote_path, local_path):
+    """
+    This will attempt to retrive the file or directory at the remote_path and
+    place it in the local_path. This can handle paths, which will be copied, or
+    http/ftp urls. The http/ftp urls can only refer to a single file which will
+    be copied into the given path. If the remote_path is a directory it will be
+    copied over along with all contents into local_path.
+    """
+
     try:
         os.makedirs(os.path.dirname(local_path))
     except:
