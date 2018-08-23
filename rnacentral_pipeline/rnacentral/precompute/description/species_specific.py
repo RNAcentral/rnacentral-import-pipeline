@@ -18,6 +18,8 @@ import logging
 import operator as op
 import itertools as it
 
+import attr
+
 from .. import utils
 
 LOGGER = logging.getLogger(__name__)
@@ -131,16 +133,23 @@ class DatabaseSpecifcNameBuilder(object):
             max_items=5)
 
     def mirbase(self, accessions, rna_type):
-        product_name = 'precursors'
         if rna_type == 'miRNA':
-            product_name = 'miRNAs'
+            return select_with_several_genes(
+                accessions,
+                'miRNAs',
+                r'\w+-%s',
+                description_items='optional_id',
+                max_items=5,
+            )
 
+        acc = accessions_without_suffix(accessions, 'stem-loop')
         return select_with_several_genes(
-            accessions,
-            product_name,
+            acc,
+            'precursors',
             r'\w+-%s',
             description_items='optional_id',
-            max_items=5)
+            max_items=5,
+        )
 
     def sgd(self, accessions, _):
         return select_with_several_genes(
@@ -255,6 +264,14 @@ def add_term_suffix(base, additional_terms, name, max_items=3):
         basic=base.strip(),
         suffix=suffix,
     )
+
+
+def accessions_without_suffix(accessions, suffix):
+    updated = []
+    for accession in accessions:
+        description = re.sub(r'\s*%s$' % suffix, '', accession.description)
+        updated.append(attr.evolve(accession, description=description))
+    return updated
 
 
 def select_with_several_genes(accessions, name, pattern,
