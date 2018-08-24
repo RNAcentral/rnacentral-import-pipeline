@@ -438,7 +438,7 @@ class Entry(object):
         if self.location_start is not None:
             return self.location_start
         if not self.exons:
-            return None
+            return 1
         return min(e.primary_start for e in self.exons)
 
     @property
@@ -451,7 +451,7 @@ class Entry(object):
         if self.location_end is not None:
             return self.location_end
         if not self.exons:
-            return None
+            return len(self.sequence) + 1
         return max(e.primary_end for e in self.exons)
 
     def crc64(self):
