@@ -142,9 +142,20 @@ class DatabaseSpecifcNameBuilder(object):
                 max_items=5,
             )
 
-        acc = accessions_without_suffix(accessions, 'stem-loop')
+        updated = []
+        for accession in accessions:
+            description = re.sub(r'\s*stem-loop$', '', accession.description)
+            gene = description.split(' ')[-1]
+            changed = attr.evolve(
+                accession,
+                # description=description,
+                optional_id=gene,
+                gene=gene,
+            )
+            updated.append(changed)
+
         return select_with_several_genes(
-            acc,
+            updated,
             'precursors',
             r'\w+-%s',
             description_items='optional_id',
@@ -264,14 +275,6 @@ def add_term_suffix(base, additional_terms, name, max_items=3):
         basic=base.strip(),
         suffix=suffix,
     )
-
-
-def accessions_without_suffix(accessions, suffix):
-    updated = []
-    for accession in accessions:
-        description = re.sub(r'\s*%s$' % suffix, '', accession.description)
-        updated.append(attr.evolve(accession, description=description))
-    return updated
 
 
 def select_with_several_genes(accessions, name, pattern,
