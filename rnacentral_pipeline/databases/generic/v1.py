@@ -182,7 +182,11 @@ def description(ncrna):
         if 'name' in raw_gene:
             return add_organism_preifx(ncrna, raw_gene['name'])
         if 'symbol' in raw_gene:
-            return add_organism_preifx(ncrna, raw_gene['symbol'])
+            symbol = raw_gene['symbol']
+            db_prefix = ncrna['primaryId'].split(':', 1)[0]
+            if symbol.startswith(db_prefix):
+                symbol = symbol.split(':', 1)[1]
+            return add_organism_preifx(ncrna, symbol)
 
     raise ValueError("Could not create a name for %s" % ncrna)
 
@@ -229,8 +233,12 @@ def parent_accession(location):
 def related_sequences(record):
     sequences = []
     for related in record.get('relatedSequences', []):
-        methods = related.get('methods', [])
-        evidence = [data.RelatedEvidence(method=m) for m in methods]
+        evidence = related.get('evidence', {})
+        if evidence:
+            evidence = data.RelatedEvidence(**evidence)
+        else:
+            evidence = data.RelatedEvidence.empty()
+
         coordinates = []
         for coord in related.get('coordinates', []):
             coordinates.append(data.RelatedCoordinate(
