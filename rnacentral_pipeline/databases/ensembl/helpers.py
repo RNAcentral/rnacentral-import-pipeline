@@ -280,7 +280,7 @@ def generate_related(entries):
 
             related.append(RelatedSequence(
                 sequence_id=second.external_id,
-                relationship='alternative_transcript',
+                relationship='isoform',
                 coordinates=[],
                 evidence=[],
             ))
