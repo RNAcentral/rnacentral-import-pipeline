@@ -279,16 +279,25 @@ class RelatedCoordinate(object):
 class RelatedEvidence(object):
     methods = attr.ib(validator=is_a(list))
 
+    @classmethod
+    def empty(cls):
+        return cls(methods=[])
+
 
 @attr.s(frozen=True)
 class RelatedSequence(object):
     sequence_id = attr.ib(validator=is_a(basestring))
-    relationship = attr.ib(validator=one_of(["precursor", "matureProduct", "target"]))
+    relationship = attr.ib(
+        validator=one_of(["precursor", "matureProduct", "target"])
+    )
     coordinates = attr.ib(validator=is_a(list), default=attr.Factory(list))
-    evidence = attr.ib(validator=is_a(list), default=attr.Factory(list))
+    evidence = attr.ib(
+        validator=is_a(RelatedEvidence),
+        default=attr.Factory(RelatedEvidence.empty)
+    )
 
     def writeable(self, accession):
-        methods = ','.join('"%s"' % e.method for e in self.evidence)
+        methods = ','.join('"%s"' % m for m in self.evidence.methods)
         methods = '{%s}' % methods
         yield [
             accession,
