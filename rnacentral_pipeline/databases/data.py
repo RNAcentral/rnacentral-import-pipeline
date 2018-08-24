@@ -86,6 +86,13 @@ NORMALIZE_TO_INSDC = {
 
 SO_PATTERN = re.compile('^SO:\d+$')
 
+RELATIONSHIP_TYPES = {
+    "precursor",
+    "matureProduct",
+    "target",
+    "isoform",
+}
+
 
 class UnxpectedRnaType(Exception):
     """
@@ -215,6 +222,9 @@ class SecondaryStructure(object):
         return md5(self.dot_bracket)
 
     def writeable(self, accession):
+        if not self.dot_bracket:
+            return
+
         yield [
             accession,
             self.dot_bracket,
@@ -283,7 +293,7 @@ class RelatedEvidence(object):
 @attr.s(frozen=True)
 class RelatedSequence(object):
     sequence_id = attr.ib(validator=is_a(basestring))
-    relationship = attr.ib(validator=one_of(["precursor", "matureProduct", "target"]))
+    relationship = attr.ib(validator=one_of(RELATIONSHIP_TYPES))
     coordinates = attr.ib(validator=is_a(list), default=attr.Factory(list))
     evidence = attr.ib(validator=is_a(list), default=attr.Factory(list))
 
