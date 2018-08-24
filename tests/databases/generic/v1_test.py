@@ -27,6 +27,7 @@ from rnacentral_pipeline.databases.generic import v1
 @pytest.mark.parametrize('filename,taxids', [
     ('data/json-schema/v020/flybase.json', [7227, 7227, 7227, 7227, 7227]),
     ('data/json-schema/v020/lincipedia.json', [9606]),
+    ('data/json-schema/v020/tarbase.json', [9606]),
 ])
 def test_can_extract_taxid(filename, taxids):
     with open(filename, 'r') as raw:
@@ -51,6 +52,7 @@ def test_can_extract_anticodon():
 @pytest.mark.parametrize('filename,count', [
     ('data/json-schema/v020/flybase.json', 5),
     ('data/json-schema/v020/lincipedia.json', 1),
+    ('data/json-schema/v020/tarbase.json', 1),
 ])
 def test_can_parse_all_data(filename, count):
     with open(filename, 'r') as raw:
