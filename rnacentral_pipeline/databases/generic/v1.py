@@ -16,6 +16,8 @@ limitations under the License.
 import itertools as it
 import collections as coll
 
+import attr
+
 from rnacentral_pipeline.databases import data
 from rnacentral_pipeline.databases.helpers import phylogeny as phy
 from rnacentral_pipeline.databases.helpers import publications as pub
@@ -255,6 +257,26 @@ def related_sequences(record):
     return sequences
 
 
+def add_related_by_gene(entries):
+    updated = []
+    for first in entries:
+        related = []
+        for second in entries:
+            if first.accession == second.accession:
+                continue
+
+            related.append(data.RelatedSequence(
+                sequence_id=second.accession,
+                relationship='isoform',
+            ))
+
+        updated.append(attr.evolve(
+            first,
+            related_sequences=first.related_sequences + related,
+        ))
+    return updated
+
+
 def as_entry(database, p_accession, parsed_exons, record):
     """
     Generate an Entry to import based off the database, exons and raw record.
@@ -295,12 +317,25 @@ def parse(raw):
     """
 
     database = raw['metaData']['dataProvider']
-    for record in raw['data']:
-        locations = record.get('genomeLocations', [])
-        if not locations:
-            yield as_entry(database, None, [], record)
+    print('hi')
+    print(raw['data'][0])
+    ncrnas = sorted(raw['data'], key=gene)
 
-        for location in locations:
-            parsed_exons = exons(location)
-            p_accession = parent_accession(location)
-            yield as_entry(database, p_accession, parsed_exons, record)
+    print('hi')
+    for gene_id, records in it.groupby(ncrnas, gene):
+        entries = []
+        for record in records:
+            locations = record.get('genomeLocations', [])
+            if not locations:
+                entries.append(as_entry(database, None, [], record))
+
+            for location in locations:
+                parsed_exons = exons(location)
+                p_accession = parent_accession(location)
+                entries.append(as_entry(database, p_accession, parsed_exons, record))
+
+        if gene_id:
+            entries = add_related_by_gene(entries)
+
+        for entry in entries:
+            yield entry

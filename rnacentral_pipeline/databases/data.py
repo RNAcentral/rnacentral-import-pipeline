@@ -86,6 +86,13 @@ NORMALIZE_TO_INSDC = {
 
 SO_PATTERN = re.compile('^SO:\d+$')
 
+RELATIONSHIP_TYPES = {
+    "precursor",
+    "matureProduct",
+    "target",
+    "isoform",
+}
+
 
 class UnxpectedRnaType(Exception):
     """
@@ -215,6 +222,9 @@ class SecondaryStructure(object):
         return md5(self.dot_bracket)
 
     def writeable(self, accession):
+        if not self.dot_bracket:
+            return
+
         yield [
             accession,
             self.dot_bracket,
@@ -287,9 +297,7 @@ class RelatedEvidence(object):
 @attr.s(frozen=True)
 class RelatedSequence(object):
     sequence_id = attr.ib(validator=is_a(basestring))
-    relationship = attr.ib(
-        validator=one_of(["precursor", "matureProduct", "target"])
-    )
+    relationship = attr.ib(validator=one_of(RELATIONSHIP_TYPES))
     coordinates = attr.ib(validator=is_a(list), default=attr.Factory(list))
     evidence = attr.ib(
         validator=is_a(RelatedEvidence),
@@ -448,7 +456,7 @@ class Entry(object):
         if self.location_start is not None:
             return self.location_start
         if not self.exons:
-            return None
+            return 1
         return min(e.primary_start for e in self.exons)
 
     @property
@@ -461,7 +469,7 @@ class Entry(object):
         if self.location_end is not None:
             return self.location_end
         if not self.exons:
-            return None
+            return len(self.sequence) + 1
         return max(e.primary_end for e in self.exons)
 
     def crc64(self):
