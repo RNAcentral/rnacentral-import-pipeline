@@ -290,14 +290,14 @@ class RelatedSequence(object):
     def writeable(self, accession):
         methods = ','.join('"%s"' % e.method for e in self.evidence)
         methods = '{%s}' % methods
-        return [
+        yield [
             accession,
             self.sequence_id,
             self.relationship,
             methods,
         ]
 
-    def write_feature(self, accession, taxid):
+    def write_features(self, accession, taxid):
         for endpoints in self.coordinates:
             yield [
                 accession,
