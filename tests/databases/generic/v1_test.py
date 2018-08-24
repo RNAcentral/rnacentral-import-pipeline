@@ -63,6 +63,8 @@ def test_can_correctly_parse_data():
         data = json.load(raw)
         data = list(v1.parse(data))
 
+    data = [d for d in data if d.accession == 'FLYBASE:FBtr0346876']
+    assert len(data) == 1
     assert attr.asdict(data[0]) == attr.asdict(dat.Entry(
         primary_id='FBtr0346876',
         accession='FLYBASE:FBtr0346876',
@@ -207,4 +209,107 @@ def test_can_correctly_parse_mirbase_data():
             relationship='matureProduct',
             coordinates=[dat.RelatedCoordinate(start=15, stop=37)],
         )]
+    ))
+
+def test_can_correctly_find_isoforms():
+    with open('data/json-schema/v020/lncipedia-with-isoforms.json', 'r') as raw:
+        data = json.load(raw)
+        data = list(v1.parse(data))
+
+    assert len(data) == 5
+    data = [d for d in data if d.accession == "LNCIPEDIA:LINC01725:19"]
+    assert len(data) == 1
+    print(data[0].exons)
+    assert attr.asdict(data[0]) == attr.asdict(dat.Entry(
+        primary_id="LINC01725:19",
+        accession="LNCIPEDIA:LINC01725:19",
+        ncbi_tax_id=9606,
+        database='LNCIPEDIA',
+        sequence=(
+            "ACCGTTGCTCAGAGTCCAGGCCGGTTAGGACCAGAGCCTACCCCGGGTGGCATGGTGATG"
+            "ATCCAGATTCAGGAGACATGTCTGAGAAAGGATCGTTCAGACTTTTTGACCTATTTTACA"
+            "TGAGGAATAAAGGATAGAGAATCTTCTTCCCTTCTGGTCTGACTAGGAAAGCCAGAGGGA"
+            "GATGGTGAAGGAGACACAGAGAGAGTAAAAGAACAGACCATGCCCAGCCTCTCCACTGCA"
+            "GGAGCTTGGAATCAGGACTGTGAGCTTCATGGAGACAAGAAACTGTGCTTTTTTTCTCCT"
+            "TCCTGTGAATGAATCCCATTGCAGCTTTGATTGTGGTTGAATCACCTATGGAAGCCATGC"
+            "ATCTTCAGCATGTAGCACATAATGGACACTCAGCAAATGACAACTGAATGAGCAAACTAA"
+            "TTACTCTGACCTTGAGCAGTGACTTGTGTGACCTCTGGCAATTGGTTCACCATCTGAATC"
+            "CCTCAGCTAGATACCTCCCTCTAATGCTGCTCCTCCATCGACAGGCATTCCTCAGCGGTC"
+            "AGTTGTTTCCCAGCCAGAGCCCGCACTGGCACTGATGTCTGCTATTATCACTGGAGAGGC"
+            "CCCGGGACTTCACTTGATGCTATCCCACTGGGATGACTGAGAAGAAGTAGGAGAAAATCA"
+            "AGCAAAAGCGTGGGCTCGTCTAAGTGTTTCCTCATCTGTTTCTTGGTATCTTCCTTGCTT"
+            "CCCTGCTTCTCCCAGCCCCAGACTTCCTTGTCTTCTCTCTTCCATCCAGAAAGACACACA"
+            "TGCCCCTTCTAAGTATCACTTTAGGGCTGAAGTCCAAAGTCTTCTCTTAGCTGAAATTCA"
+            "CTGTGCACTTGCCACTTGGCAGAGACTGCAAACAGCTCAGTGCGTGTTTTCATAGTCAGC"
+            "ATTAAAATAATAATTGCCACAACACTATTAAAGTTTTCCTCATTGTTGTAACTGTTGGCA"
+            "AAGGCAAATGTCTGGGGAGATTGACTCCCTGGAAAGCTTCATTATGCTGCGAGAATATTT"
+            "TTGATAAAATTTCAGCAGTTCCTGACTGTCAACTTCACTATGTGGTTTTTTTTAAAGTTG"
+            "TCCCCCACCCCTCTCTAACAGGTCCTCCAATTCACAAAAACATTCAGGTCAGTTGTTGAG"
+            "TAACTGAATCTTTCCAAGTAATTAACAGGTAGAATTACCAGGTAGCAGGCAGTGTTTGCT"
+            "TGTAATCCGTCAATAGTAGTTGCAGTGGGGCTAATTGTCATCTTGAGTGGCCCTGCAACC"
+            "ACATCTAATTAAAAGTGTCAACAGAGAGTTATTTCTGTCTTTTGTTCCCACTGCTAGGTT"
+            "GTACGTGTTTACTTCAGAAATCCAGGCTCAAAGTAAGACAGATATTTGGAACATGTGAAT"
+            "ATACAGGAAAAACATTCCCCAGCAACTCAAAGTACGTAAAAGCATTTAGGCCTCATTCCT"
+            "CTGTCCACCTGACTTTTTTGGTTTGTATTAGTTTATATATTCAAGGCAGATATACAGTAT"
+            "CTGATAAATGCAAGAGGGACATGATGCCTTTTCCTAAGCAGCAAAGTTATACTTTGCCAA"
+            "CTTGACTGGGAGCTGGGCTGAAGGGACAAAGGCAGGAGTCTTTTAAGACTCACTAACACT"
+            "TACCTAGTAATGGCAGTGGCTGCCACTACAGCTAGGTTTCTTGCCTTTGATTCATATTCT"
+            "TTCTTTCTTTCTTTCTTTCTTTCTTTCTTTCTTTCTTTCTTTCTTTCTTTCTTTCTTTCT"
+            "TTCTTTCATGCTTCACTGAACTGTTTTCCAGTTCAAGGTAGGTAGATCTGCCAAAACTAA"
+            "AAAGCCTAGATTGCATATAGAACATGCCTGGATTTACAGAGCAAGGATGCAGGAACATAT"
+            "TTTTCCATCAGCAGAGTCTGGGTCTTGGCTAACTTAAAGTTTTGTGACTGTTCTTGGGAT"
+            "CAGCCCTGGGTGAAGCCTCTGTGAGGTCCAGCTGACTACTTCATTCTCATAAATACTTTC"
+            "TTTGAAATCTC"
+        ),
+        exons=[
+            dat.Exon(chromosome_name='1', primary_start=83801516, primary_end=83803251, assembly_id='GRCh38', complement=True),
+            dat.Exon(chromosome_name='1', primary_start=83849907, primary_end=83850022, assembly_id='GRCh38', complement=True),
+            dat.Exon(chromosome_name='1', primary_start=83860408, primary_end=83860546, assembly_id='GRCh38', complement=True),
+        ],
+        rna_type='SO:0001877',
+        url="https://lncipedia.org/db/transcript/LINC01725:19",
+        seq_version='1',
+
+        parent_accession='CM000663',
+        xref_data={"NONCODE": ["NONHSAT004171"]},
+
+        gene="LINC01725",
+        gene_synonyms=[
+            "ENSG00000233008",
+            "RP11-475O6.1",
+            "ENSG00000233008.1",
+            "OTTHUMG00000009930.1",
+            "ENSG00000233008.5",
+            "LINC01725",
+            "LOC101927560"
+        ],
+
+        description='Homo sapiens (human) non-protein coding LINC01725:19',
+        species='Homo sapiens',
+        common_name='human',
+        lineage=(
+            'Eukaryota; Metazoa; Chordata; Craniata; '
+            'Vertebrata; Euteleostomi; Mammalia; Eutheria; '
+            'Euarchontoglires; Primates; Haplorrhini; Catarrhini; '
+            'Hominidae; Homo; Homo sapiens'
+        ),
+        references=[],
+        related_sequences=[
+            dat.RelatedSequence(
+                sequence_id="LNCIPEDIA:LINC01725:5",
+                relationship='isoform',
+            ),
+            dat.RelatedSequence(
+                sequence_id="LNCIPEDIA:LINC01725:18",
+                relationship='isoform',
+            ),
+            dat.RelatedSequence(
+                sequence_id="LNCIPEDIA:LINC01725:17",
+                relationship='isoform',
+            ),
+            dat.RelatedSequence(
+                sequence_id="LNCIPEDIA:LINC01725:14",
+                relationship='isoform',
+            ),
+        ]
     ))
