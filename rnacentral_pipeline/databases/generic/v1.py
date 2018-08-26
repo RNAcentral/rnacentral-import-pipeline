@@ -325,11 +325,8 @@ def parse(raw):
     """
 
     database = raw['metaData']['dataProvider']
-    print('hi')
-    print(raw['data'][0])
     ncrnas = sorted(raw['data'], key=gene)
 
-    print('hi')
     for gene_id, records in it.groupby(ncrnas, gene):
         entries = []
         for record in records:
