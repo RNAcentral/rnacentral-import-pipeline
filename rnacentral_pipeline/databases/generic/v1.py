@@ -16,6 +16,8 @@ limitations under the License.
 import itertools as it
 import collections as coll
 
+import attr
+
 from rnacentral_pipeline.databases import data
 from rnacentral_pipeline.databases.helpers import phylogeny as phy
 from rnacentral_pipeline.databases.helpers import publications as pub
@@ -182,7 +184,11 @@ def description(ncrna):
         if 'name' in raw_gene:
             return add_organism_preifx(ncrna, raw_gene['name'])
         if 'symbol' in raw_gene:
-            return add_organism_preifx(ncrna, raw_gene['symbol'])
+            symbol = raw_gene['symbol']
+            db_prefix = ncrna['primaryId'].split(':', 1)[0]
+            if symbol.startswith(db_prefix):
+                symbol = symbol.split(':', 1)[1]
+            return add_organism_preifx(ncrna, symbol)
 
     raise ValueError("Could not create a name for %s" % ncrna)
 
@@ -236,8 +242,12 @@ def optional_id(record):
 def related_sequences(record):
     sequences = []
     for related in record.get('relatedSequences', []):
-        methods = related.get('methods', [])
-        evidence = [data.RelatedEvidence(method=m) for m in methods]
+        evidence = related.get('evidence', {})
+        if evidence:
+            evidence = data.RelatedEvidence(**evidence)
+        else:
+            evidence = data.RelatedEvidence.empty()
+
         coordinates = []
         for coord in related.get('coordinates', []):
             coordinates.append(data.RelatedCoordinate(
@@ -252,6 +262,26 @@ def related_sequences(record):
             evidence=evidence,
         ))
     return sequences
+
+
+def add_related_by_gene(entries):
+    updated = []
+    for first in entries:
+        related = []
+        for second in entries:
+            if first.accession == second.accession:
+                continue
+
+            related.append(data.RelatedSequence(
+                sequence_id=second.accession,
+                relationship='isoform',
+            ))
+
+        updated.append(attr.evolve(
+            first,
+            related_sequences=first.related_sequences + related,
+        ))
+    return updated
 
 
 def as_entry(database, p_accession, parsed_exons, record):
@@ -295,12 +325,25 @@ def parse(raw):
     """
 
     database = raw['metaData']['dataProvider']
-    for record in raw['data']:
-        locations = record.get('genomeLocations', [])
-        if not locations:
-            yield as_entry(database, None, [], record)
+    print('hi')
+    print(raw['data'][0])
+    ncrnas = sorted(raw['data'], key=gene)
 
-        for location in locations:
-            parsed_exons = exons(location)
-            p_accession = parent_accession(location)
-            yield as_entry(database, p_accession, parsed_exons, record)
+    print('hi')
+    for gene_id, records in it.groupby(ncrnas, gene):
+        entries = []
+        for record in records:
+            locations = record.get('genomeLocations', [])
+            if not locations:
+                entries.append(as_entry(database, None, [], record))
+
+            for location in locations:
+                parsed_exons = exons(location)
+                p_accession = parent_accession(location)
+                entries.append(as_entry(database, p_accession, parsed_exons, record))
+
+        if gene_id:
+            entries = add_related_by_gene(entries)
+
+        for entry in entries:
+            yield entry

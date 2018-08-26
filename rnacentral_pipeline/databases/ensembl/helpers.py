@@ -15,8 +15,11 @@ limitations under the License.
 
 import re
 
+import attr
+
 from rnacentral_pipeline.databases.data import Exon
 from rnacentral_pipeline.databases.data import Reference
+from rnacentral_pipeline.databases.data import RelatedSequence
 
 from rnacentral_pipeline.databases.helpers import embl
 
@@ -260,3 +263,25 @@ def product(feature):
     if raw_rna_type(feature) == 'scaRNA':
         return 'scaRNA'
     return None
+
+
+def generate_related(entries):
+    """
+    This goes through all given entries, which are assumed to all be from the
+    same gene, and thus splicing variants, and populates the related_sequences
+    feature with the required related sequence information.
+    """
+
+    for first in entries:
+        related = first.related_sequences
+        for second in entries:
+            if first == second:
+                continue
+
+            related.append(RelatedSequence(
+                sequence_id=second.external_id,
+                relationship='isoform',
+                coordinates=[],
+                evidence=[],
+            ))
+        yield attr.evolve(first, related_sequences=related)
