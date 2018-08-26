@@ -144,12 +144,21 @@ class DatabaseSpecifcNameBuilder(object):
 
         updated = []
         for accession in accessions:
-            description = re.sub(r'\s*stem-loop$', '', accession.description)
-            gene = description.split(' ')[-1]
+            gene = accession.optional_id
+            match = re.match(r'^([^-]+?-mir-[^-]+)(.+)?$', gene)
+            name = accession.description
+            if match:
+                full = match.group(1)
+                parts = match.group(1).split('-', 3)
+                trimmed = '-'.join(parts[:3])
+                name = '{species} ({common_name}) microRNA {gene} precursor'.format(
+                    species=accession.species,
+                    common_name=accession.common_name or '',
+                    gene=trimmed,
+                )
             changed = attr.evolve(
                 accession,
-                # description=description,
-                optional_id=gene,
+                description=name,
                 gene=gene,
             )
             updated.append(changed)
