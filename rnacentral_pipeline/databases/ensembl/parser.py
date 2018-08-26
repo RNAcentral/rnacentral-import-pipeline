@@ -13,6 +13,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import operator as op
+import itertools as it
+
 import attr
 
 from rnacentral_pipeline.databases import data
@@ -70,9 +73,16 @@ def parse(raw, family_file):
     """
 
     context = Context(family_file)
-    for (record, gene, feature) in embl.transcripts(raw):
-        if context.is_supressed(feature):
-            continue
-        if helpers.is_pseudogene(gene, feature):
-            continue
-        yield as_entry(record, gene, feature, context)
+    key = op.itemgetter(0, 1)
+    grouped = it.groupby(embl.transcripts(raw), key)
+    for (record, gene), features in grouped:
+        ncrnas = []
+        for feature in features:
+            if context.is_supressed(feature):
+                continue
+            if helpers.is_pseudogene(gene, feature):
+                continue
+            ncrnas.append(as_entry(record, gene, feature, context))
+
+        for entry in helpers.generate_related(ncrnas):
+            yield entry
