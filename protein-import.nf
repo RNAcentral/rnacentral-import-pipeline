@@ -41,7 +41,7 @@ process ensembl_protein_info {
 process import_ensembl_proteins {
    input:
    file('protiens*.tsv') from ensembl_proteins.collect()
-   file(ctl) from Channel.fromPath('files/protein-info/ensembl.sql')
+   file(ctl) from Channel.fromPath('files/protein-info/ensembl.ctl')
 
    """
    cat proteins*.tsv | pgloader $ctl
