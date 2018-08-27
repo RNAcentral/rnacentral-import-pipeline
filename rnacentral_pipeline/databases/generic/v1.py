@@ -232,6 +232,13 @@ def parent_accession(location):
     return first_exon['INSDC_accession'].split('.')[0]
 
 
+def optional_id(record):
+    if 'description' in record and \
+            'name' in record and ' ' not in record['name']:
+        return record['name']
+    return None
+
+
 def related_sequences(record):
     sequences = []
     for related in record.get('relatedSequences', []):
@@ -291,8 +298,9 @@ def as_entry(database, p_accession, parsed_exons, record):
         exons=parsed_exons,
         rna_type=record['soTermId'],
         url=record['url'],
-        description=description(record),
         seq_version=record.get('version', '1'),
+        optional_id=optional_id(record),
+        description=description(record),
         parent_accession=p_accession,
         xref_data=xrefs(record),
         related_sequences=related_sequences(record),
@@ -317,11 +325,8 @@ def parse(raw):
     """
 
     database = raw['metaData']['dataProvider']
-    print('hi')
-    print(raw['data'][0])
     ncrnas = sorted(raw['data'], key=gene)
 
-    print('hi')
     for gene_id, records in it.groupby(ncrnas, gene):
         entries = []
         for record in records:

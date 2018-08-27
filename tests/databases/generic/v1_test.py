@@ -193,6 +193,7 @@ def test_can_correctly_parse_mirbase_data():
         xref_data={
             'EntrezGene': ['Mir335'],
         },
+        optional_id="rno-mir-335",
         description='Rattus norvegicus miR-335 stem-loop',
         species='Rattus norvegicus',
         common_name='Norway rat',
