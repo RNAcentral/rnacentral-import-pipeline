@@ -15,7 +15,6 @@ TARGET COLUMNS (
 
 WITH
   skip header = 0,
-  fields escaped by double-quote,
   fields terminated by ','
 
 BEFORE LOAD DO
@@ -34,26 +33,26 @@ $$
 AFTER LOAD DO
 $$
 insert into protein_info (
-  potein_accession,
+  protein_accession,
   description,
   label,
-  text
+  synonym
 ) (
 select
-  accession,
+  protein_accession,
   description,
   label,
-  text
+  synonym
 from load_protein_info
 )
 ON CONFLICT (protein_accession) DO UPDATE
 SET
   description = EXCLUDED.description,
   label = EXCLUDED.label,
-  text = EXCLUDED.text
+  synonym = EXCLUDED.synonym
 ;
 $$,
 $$
-drop table load_precomputed;
+drop table load_protein_info;
 $$
 ;
