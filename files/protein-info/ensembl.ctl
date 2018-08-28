@@ -26,7 +26,7 @@ create table load_protein_info (
   protein_accession text NOT NULL,
   description text,
   label text,
-  synonym text
+  synonym text[]
 );
 $$
 

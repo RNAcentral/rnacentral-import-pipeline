@@ -34,7 +34,7 @@ process ensembl_protein_info {
     --port ${params.databases.ensembl.mysql.port} \
     --user ${params.databases.ensembl.mysql.user} \
     --database ${db} \
-    < $sql | tr '\t' ',' > proteins.tsv
+    < $sql > proteins.tsv
   """
 }
 
@@ -44,6 +44,6 @@ process import_ensembl_proteins {
    file(ctl) from Channel.fromPath('files/protein-info/ensembl.ctl')
 
    """
-   cat proteins*.tsv | pgloader $ctl
+   cat proteins*.tsv | rnac proteins ensembl - - | pgloader $ctl
    """
 }
