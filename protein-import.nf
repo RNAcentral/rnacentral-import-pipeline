@@ -44,6 +44,6 @@ process import_ensembl_proteins {
    file(ctl) from Channel.fromPath('files/protein-info/ensembl.ctl')
 
    """
-   cat proteins*.tsv | rnac proteins ensembl - - | pgloader $ctl
+   sort proteins*.tsv | rnac proteins ensembl - - | pgloader $ctl
    """
 }
