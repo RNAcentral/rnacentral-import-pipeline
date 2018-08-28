@@ -34,7 +34,7 @@ process ensembl_protein_info {
     --port ${params.databases.ensembl.mysql.port} \
     --user ${params.databases.ensembl.mysql.user} \
     --database ${db} \
-    < $sql > proteins.tsv
+    < $sql | tr '\t' ',' > proteins.tsv
   """
 }
 
