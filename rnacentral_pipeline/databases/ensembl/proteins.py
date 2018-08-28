@@ -33,7 +33,7 @@ def parse(handle):
         synonyms = ','.join('"%s"' % e[3] for e in entries)
         synonyms = '{%s}' % synonyms
         yield [
-            gene_id,
+            'ENSEMBL:%s' % gene_id,
             description,
             symbol,
             synonyms
