@@ -30,7 +30,13 @@ def parse(handle):
         entries = list(entries)
         description = only_or_fail({e[1] for e in entries}).strip()
         symbol = only_or_fail({e[2] for e in entries})
-        synonyms = ','.join('"%s"' % e[3] for e in entries)
+        synonyms = set()
+        for entry in entries:
+            value = entry[3].replace('"', '')
+            if value:
+                synonyms.add(value)
+
+        synonyms = ','.join('"%s"' % s for s in synonyms)
         synonyms = '{%s}' % synonyms
         yield [
             'ENSEMBL:%s' % gene_id,
