@@ -15,7 +15,6 @@ TARGET COLUMNS (
 
 WITH
   skip header = 0,
-  fields escaped by double-quote,
   fields terminated by ','
 
 BEFORE LOAD DO
