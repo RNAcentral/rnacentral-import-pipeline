@@ -40,7 +40,7 @@ def major(database):
 
 
 def select_max(handle):
-    databases = handle.readlines()
+    databases = [l for l in handle if '_core_' in l]
     max_major = max(database_key(d)[1] for d in databases)
     possible = it.ifilter(lambda d: major(d) == max_major, databases)
     grouped = it.groupby(possible, lambda d: database_key(d)[0])
