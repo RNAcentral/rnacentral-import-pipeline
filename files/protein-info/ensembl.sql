@@ -10,4 +10,7 @@ join `external_synonym` on external_synonym.xref_id = gene_xref.xref_id
 where
 	gene.biotype = 'protein_coding'
 	and gene.stable_id = 'ENSG00000198901'
+FIELDS TERMINATED BY ','
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
 ;

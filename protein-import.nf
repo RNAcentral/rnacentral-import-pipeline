@@ -10,7 +10,7 @@ process find_ensembl_databases {
     --host ${params.databases.ensembl.mysql.host} \
     --port ${params.databases.ensembl.mysql.port} \
     --user ${params.databases.ensembl.mysql.user} |\
-  grep '_core_' | max-ensembl-database
+  max-ensembl-database
   """
 }
 
@@ -29,7 +29,7 @@ process ensembl_protein_info {
   file('proteins.tsv') into ensembl_proteins
 
   """
-  mysql \
+  mysql -N \
     --host ${params.databases.ensembl.mysql.host} \
     --port ${params.databases.ensembl.mysql.port} \
     --user ${params.databases.ensembl.mysql.user} \
