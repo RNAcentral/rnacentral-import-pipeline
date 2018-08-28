@@ -38,6 +38,7 @@ from rnacentral_pipeline.rnacentral.ftp_export import fasta
 from rnacentral_pipeline.rnacentral.ftp_export import id_mapping
 from rnacentral_pipeline.rnacentral.ftp_export import release_note
 from rnacentral_pipeline.rnacentral.ftp_export import ensembl as ensembl_json
+from rnacentral_pipeline.rnacentral.ftp_export import go_terms
 
 
 @click.group()
@@ -341,6 +342,13 @@ def export_ensembl(raw, output, schema=None):
     expected schema.
     """
     ensembl_json.generate_file(raw, output, schema_file=schema)
+
+
+@ftp_export.command('rfam-go-annotations')
+@click.argument('filename', type=click.File('rb'))
+@click.argument('output', default='-', type=click.File('wb'))
+def export_go_temrs(filename, output):
+    go_terms.export(filename, output)
 
 
 @ftp_export.group('coordinates')
