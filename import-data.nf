@@ -275,3 +275,17 @@ process pgload_data {
   rnac run-release
   """
 }
+
+process rfam_metadata {
+  input:
+  set file(ctl), file(sql) from Channel.fromFilePairs("files/import-data/rfam/*.{ctl,sql}")
+
+  """
+  mysql \
+    --host ${params.databases.rfam.mysql.host} \
+    --port ${params.databases.rfam.mysql.port} \
+    --user ${params.databases.rfam.mysql.user} \
+    --database ${params.databases.rfam.mysql.db_name} \
+    < $sql | pgloader $ctl
+  """
+}
