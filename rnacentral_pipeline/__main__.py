@@ -22,6 +22,7 @@ from rnacentral_pipeline.databases.generic import parser as generic
 from rnacentral_pipeline.databases.quickgo import parser as quickgo
 from rnacentral_pipeline.databases.refseq import parser as refseq
 from rnacentral_pipeline.databases.ensembl import parser as ensembl
+from rnacentral_pipeline.databases.ensembl import proteins as ensembl_proteins
 
 from rnacentral_pipeline import ontologies as onto
 from rnacentral_pipeline.ontologies import writer as onto_writer
@@ -422,6 +423,27 @@ def precompute_from_file(json_file, output):
     process the results into a CSV that can be loaded into the database.
     """
     pre.from_file(json_file, output)
+
+
+@cli.group()
+def proteins():
+    """
+    This is a set of commands for dealing with processing protein information.
+    We don't have much in the way of protein summary but sometimes we do need a
+    little for display.
+    """
+    pass
+
+
+@proteins.command('ensembl')
+@click.argument('filename', default='-', type=click.File('rb'))
+@click.argument('output', default='-', type=click.File('wb'))
+def protein_ensembl(filename, output):
+    """
+    This will process the ensembl protein information files. This assumes the
+    file is sorted.
+    """
+    ensembl_proteins.from_file(filename, output)
 
 
 logging.basicConfig()
