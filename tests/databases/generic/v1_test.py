@@ -206,6 +206,7 @@ def test_can_correctly_parse_mirbase_data():
         references=[
             pub.reference(17604727),
             pub.reference(14691248),
+            pub.reference(24275495),
         ],
         related_sequences=[dat.RelatedSequence(
             sequence_id="MIRBASE:MIMAT0000575",
