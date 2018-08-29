@@ -15,8 +15,6 @@ limitations under the License.
 
 from Bio import SeqIO
 
-from rnacentral_pipeline.writers import build_entry_writer
-
 from . import helpers
 
 
@@ -31,8 +29,3 @@ def parse(handle):
         assert source.type == 'source'
         for ncrna in helpers.ncrna_features(record.features[1:]):
             yield helpers.as_entry(record, source, ncrna)
-
-
-def from_file(handle, output):
-    writer = build_entry_writer(parse)
-    writer(output, handle)
