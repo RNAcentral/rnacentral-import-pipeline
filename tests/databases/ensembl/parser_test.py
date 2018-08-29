@@ -16,8 +16,8 @@ limitations under the License.
 import pytest
 import attr
 
-from databases.ensembl.parsers import EnsemblParser
-from databases.data import Exon
+from rnacentral_pipeline.databases.ensembl.parsers import parse
+from rnacentral_pipeline.databases.data import Exon
 
 from tests.databases.ensembl.utils import Base
 
