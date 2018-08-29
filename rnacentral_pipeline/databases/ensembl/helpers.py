@@ -279,9 +279,7 @@ def generate_related(entries):
                 continue
 
             related.append(RelatedSequence(
-                sequence_id=second.external_id,
+                sequence_id=second.accession,
                 relationship='isoform',
-                coordinates=[],
-                evidence=[],
             ))
         yield attr.evolve(first, related_sequences=related)
