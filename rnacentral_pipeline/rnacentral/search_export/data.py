@@ -495,6 +495,29 @@ def go_source(annotations):
     return sorted(sources)
 
 
+def has_interacting_proteins(interacting):
+    return str(bool(any(i['id'] for i in interacting)))
+
+
+def interacting_proteins(interacting):
+    proteins = set()
+    for entry in interacting:
+        if not entry:
+            continue
+        if entry['id']:
+            proteins.add(entry['id'].split(':', 1)[1])
+        if entry['name']:
+            proteins.add(entry['name'])
+    return sorted(proteins)
+
+
+def interacting_evidence(interacting):
+    methods = set()
+    for related in interacting:
+        methods.update(related['methods'] or [])
+    return sorted(methods)
+
+
 builder = entry([
     tag('name', as_name, keys=('upi', 'taxid')),
     tag('description', first),
@@ -555,6 +578,9 @@ builder = entry([
         fields('contributes_to', contributes_to, keys='go_annotations'),
         fields('colocalizes_with', colocalizes_with, keys='go_annotations'),
         field('has_go_annotations', has_go_annotations, keys='go_annotations'),
-        fields('go_annotation_source', go_source, keys='go_annotations')
+        fields('go_annotation_source', go_source, keys='go_annotations'),
+        field('has_interacting_proteins', has_interacting_proteins, keys='interacting_proteins'),
+        fields('interacting_protein', interacting_proteins, keys='interacting_proteins'),
+        fields('evidence_for_interaction', interacting_evidence, keys='interacting_proteins'),
     ]),
 ])
