@@ -1,0 +1,896 @@
+LOCUS       NR_133496                295 bp    RNA     linear   INV 16-AUG-2018
+DEFINITION  Drosophila melanogaster ribonuclease P RNA (RNaseP:RNA),
+            RNase_P_RNA.
+ACCESSION   NR_133496
+VERSION     NR_133496.1
+DBLINK      BioProject: PRJNA164
+            BioSample: SAMN02803731
+KEYWORDS    RefSeq.
+SOURCE      Drosophila melanogaster (fruit fly)
+  ORGANISM  Drosophila melanogaster
+            Eukaryota; Metazoa; Ecdysozoa; Arthropoda; Hexapoda; Insecta;
+            Pterygota; Neoptera; Holometabola; Diptera; Brachycera;
+            Muscomorpha; Ephydroidea; Drosophilidae; Drosophila; Sophophora.
+REFERENCE   1  (bases 1 to 295)
+  AUTHORS   Matthews,B.B., Dos Santos,G., Crosby,M.A., Emmert,D.B., St
+            Pierre,S.E., Gramates,L.S., Zhou,P., Schroeder,A.J., Falls,K.,
+            Strelets,V., Russo,S.M. and Gelbart,W.M.
+  CONSRTM   FlyBase Consortium
+  TITLE     Gene Model Annotations for Drosophila melanogaster: Impact of
+            High-Throughput Data
+  JOURNAL   G3 (Bethesda) 5 (8), 1721-1736 (2015)
+   PUBMED   26109357
+  REMARK    Publication Status: Online-Only
+REFERENCE   2  (bases 1 to 295)
+  AUTHORS   Crosby,M.A., Gramates,L.S., Dos Santos,G., Matthews,B.B., St
+            Pierre,S.E., Zhou,P., Schroeder,A.J., Falls,K., Emmert,D.B.,
+            Russo,S.M. and Gelbart,W.M.
+  CONSRTM   FlyBase Consortium
+  TITLE     Gene Model Annotations for Drosophila melanogaster: The
+            Rule-Benders
+  JOURNAL   G3 (Bethesda) 5 (8), 1737-1749 (2015)
+   PUBMED   26109356
+  REMARK    Publication Status: Online-Only
+REFERENCE   3  (bases 1 to 295)
+  AUTHORS   Hoskins,R.A., Carlson,J.W., Kennedy,C., Acevedo,D., Evans-Holm,M.,
+            Frise,E., Wan,K.H., Park,S., Mendez-Lago,M., Rossi,F.,
+            Villasante,A., Dimitri,P., Karpen,G.H. and Celniker,S.E.
+  TITLE     Sequence finishing and mapping of Drosophila melanogaster
+            heterochromatin
+  JOURNAL   Science 316 (5831), 1625-1628 (2007)
+   PUBMED   17569867
+REFERENCE   4  (bases 1 to 295)
+  AUTHORS   Smith,C.D., Shu,S., Mungall,C.J. and Karpen,G.H.
+  TITLE     The Release 5.1 annotation of Drosophila melanogaster
+            heterochromatin
+  JOURNAL   Science 316 (5831), 1586-1591 (2007)
+   PUBMED   17569856
+  REMARK    Erratum:[Science. 2007 Sep 7;317(5843):1325]
+REFERENCE   5  (bases 1 to 295)
+  AUTHORS   Quesneville,H., Bergman,C.M., Andrieu,O., Autard,D., Nouaud,D.,
+            Ashburner,M. and Anxolabehere,D.
+  TITLE     Combined evidence annotation of transposable elements in genome
+            sequences
+  JOURNAL   PLoS Comput. Biol. 1 (2), 166-175 (2005)
+   PUBMED   16110336
+REFERENCE   6  (bases 1 to 295)
+  AUTHORS   Hoskins,R.A., Smith,C.D., Carlson,J.W., Carvalho,A.B., Halpern,A.,
+            Kaminker,J.S., Kennedy,C., Mungall,C.J., Sullivan,B.A.,
+            Sutton,G.G., Yasuhara,J.C., Wakimoto,B.T., Myers,E.W.,
+            Celniker,S.E., Rubin,G.M. and Karpen,G.H.
+  TITLE     Heterochromatic sequences in a Drosophila whole-genome shotgun
+            assembly
+  JOURNAL   Genome Biol. 3 (12), RESEARCH0085 (2002)
+   PUBMED   12537574
+REFERENCE   7  (bases 1 to 295)
+  AUTHORS   Kaminker,J.S., Bergman,C.M., Kronmiller,B., Carlson,J.,
+            Svirskas,R., Patel,S., Frise,E., Wheeler,D.A., Lewis,S.E.,
+            Rubin,G.M., Ashburner,M. and Celniker,S.E.
+  TITLE     The transposable elements of the Drosophila melanogaster
+            euchromatin: a genomics perspective
+  JOURNAL   Genome Biol. 3 (12), RESEARCH0084 (2002)
+   PUBMED   12537573
+REFERENCE   8  (bases 1 to 295)
+  AUTHORS   Misra,S., Crosby,M.A., Mungall,C.J., Matthews,B.B., Campbell,K.S.,
+            Hradecky,P., Huang,Y., Kaminker,J.S., Millburn,G.H., Prochnik,S.E.,
+            Smith,C.D., Tupy,J.L., Whitfied,E.J., Bayraktaroglu,L.,
+            Berman,B.P., Bettencourt,B.R., Celniker,S.E., de Grey,A.D.,
+            Drysdale,R.A., Harris,N.L., Richter,J., Russo,S., Schroeder,A.J.,
+            Shu,S.Q., Stapleton,M., Yamada,C., Ashburner,M., Gelbart,W.M.,
+            Rubin,G.M. and Lewis,S.E.
+  TITLE     Annotation of the Drosophila melanogaster euchromatic genome: a
+            systematic review
+  JOURNAL   Genome Biol. 3 (12), RESEARCH0083 (2002)
+   PUBMED   12537572
+REFERENCE   9  (bases 1 to 295)
+  AUTHORS   Celniker,S.E., Wheeler,D.A., Kronmiller,B., Carlson,J.W.,
+            Halpern,A., Patel,S., Adams,M., Champe,M., Dugan,S.P., Frise,E.,
+            Hodgson,A., George,R.A., Hoskins,R.A., Laverty,T., Muzny,D.M.,
+            Nelson,C.R., Pacleb,J.M., Park,S., Pfeiffer,B.D., Richards,S.,
+            Sodergren,E.J., Svirskas,R., Tabor,P.E., Wan,K., Stapleton,M.,
+            Sutton,G.G., Venter,C., Weinstock,G., Scherer,S.E., Myers,E.W.,
+            Gibbs,R.A. and Rubin,G.M.
+  TITLE     Finishing a whole-genome shotgun: release 3 of the Drosophila
+            melanogaster euchromatic genome sequence
+  JOURNAL   Genome Biol. 3 (12), RESEARCH0079 (2002)
+   PUBMED   12537568
+REFERENCE   10 (bases 1 to 295)
+  AUTHORS   Adams,M.D., Celniker,S.E., Holt,R.A., Evans,C.A., Gocayne,J.D.,
+            Amanatides,P.G., Scherer,S.E., Li,P.W., Hoskins,R.A., Galle,R.F.,
+            George,R.A., Lewis,S.E., Richards,S., Ashburner,M., Henderson,S.N.,
+            Sutton,G.G., Wortman,J.R., Yandell,M.D., Zhang,Q., Chen,L.X.,
+            Brandon,R.C., Rogers,Y.H., Blazej,R.G., Champe,M., Pfeiffer,B.D.,
+            Wan,K.H., Doyle,C., Baxter,E.G., Helt,G., Nelson,C.R., Gabor,G.L.,
+            Abril,J.F., Agbayani,A., An,H.J., Andrews-Pfannkoch,C., Baldwin,D.,
+            Ballew,R.M., Basu,A., Baxendale,J., Bayraktaroglu,L., Beasley,E.M.,
+            Beeson,K.Y., Benos,P.V., Berman,B.P., Bhandari,D., Bolshakov,S.,
+            Borkova,D., Botchan,M.R., Bouck,J., Brokstein,P., Brottier,P.,
+            Burtis,K.C., Busam,D.A., Butler,H., Cadieu,E., Center,A.,
+            Chandra,I., Cherry,J.M., Cawley,S., Dahlke,C., Davenport,L.B.,
+            Davies,P., de Pablos,B., Delcher,A., Deng,Z., Mays,A.D., Dew,I.,
+            Dietz,S.M., Dodson,K., Doup,L.E., Downes,M., Dugan-Rocha,S.,
+            Dunkov,B.C., Dunn,P., Durbin,K.J., Evangelista,C.C., Ferraz,C.,
+            Ferriera,S., Fleischmann,W., Fosler,C., Gabrielian,A.E., Garg,N.S.,
+            Gelbart,W.M., Glasser,K., Glodek,A., Gong,F., Gorrell,J.H., Gu,Z.,
+            Guan,P., Harris,M., Harris,N.L., Harvey,D., Heiman,T.J.,
+            Hernandez,J.R., Houck,J., Hostin,D., Houston,K.A., Howland,T.J.,
+            Wei,M.H., Ibegwam,C., Jalali,M., Kalush,F., Karpen,G.H., Ke,Z.,
+            Kennison,J.A., Ketchum,K.A., Kimmel,B.E., Kodira,C.D., Kraft,C.,
+            Kravitz,S., Kulp,D., Lai,Z., Lasko,P., Lei,Y., Levitsky,A.A.,
+            Li,J., Li,Z., Liang,Y., Lin,X., Liu,X., Mattei,B., McIntosh,T.C.,
+            McLeod,M.P., McPherson,D., Merkulov,G., Milshina,N.V., Mobarry,C.,
+            Morris,J., Moshrefi,A., Mount,S.M., Moy,M., Murphy,B., Murphy,L.,
+            Muzny,D.M., Nelson,D.L., Nelson,D.R., Nelson,K.A., Nixon,K.,
+            Nusskern,D.R., Pacleb,J.M., Palazzolo,M., Pittman,G.S., Pan,S.,
+            Pollard,J., Puri,V., Reese,M.G., Reinert,K., Remington,K.,
+            Saunders,R.D., Scheeler,F., Shen,H., Shue,B.C., Siden-Kiamos,I.,
+            Simpson,M., Skupski,M.P., Smith,T., Spier,E., Spradling,A.C.,
+            Stapleton,M., Strong,R., Sun,E., Svirskas,R., Tector,C., Turner,R.,
+            Venter,E., Wang,A.H., Wang,X., Wang,Z.Y., Wassarman,D.A.,
+            Weinstock,G.M., Weissenbach,J., Williams,S.M., WoodageT,
+            Worley,K.C., Wu,D., Yang,S., Yao,Q.A., Ye,J., Yeh,R.F.,
+            Zaveri,J.S., Zhan,M., Zhang,G., Zhao,Q., Zheng,L., Zheng,X.H.,
+            Zhong,F.N., Zhong,W., Zhou,X., Zhu,S., Zhu,X., Smith,H.O.,
+            Gibbs,R.A., Myers,E.W., Rubin,G.M. and Venter,J.C.
+  TITLE     The genome sequence of Drosophila melanogaster
+  JOURNAL   Science 287 (5461), 2185-2195 (2000)
+   PUBMED   10731132
+REFERENCE   11 (bases 1 to 295)
+  AUTHORS   Celniker,S., Carlson,J., Wan,K., Pfeiffer,B., Frise,E., George,R.,
+            Hoskins,R., Stapleton,M., Pacleb,J., Park,S., Svirskas,R.,
+            Smith,E., Yu,C. and Rubin,G.
+  CONSRTM   Berkeley Drosophila Genome Project
+  TITLE     Drosophila melanogaster release 4 sequence
+  JOURNAL   Unpublished
+REFERENCE   12 (bases 1 to 295)
+  CONSRTM   NCBI Genome Project
+  TITLE     Direct Submission
+  JOURNAL   Submitted (16-AUG-2018) National Center for Biotechnology
+            Information, NIH, Bethesda, MD 20894, USA
+REFERENCE   13 (bases 1 to 295)
+  CONSRTM   FlyBase
+  TITLE     Direct Submission
+  JOURNAL   Submitted (24-MAY-2018) FlyBase, Harvard University, Biological
+            Laboratories, 16 Divinity Ave, Cambridge, MA 02138, USA
+REFERENCE   14 (bases 1 to 295)
+  CONSRTM   FlyBase
+  TITLE     Direct Submission
+  JOURNAL   Submitted (07-DEC-2016) FlyBase, Harvard University, Biological
+            Laboratories, 16 Divinity Ave, Cambridge, MA 02138, USA
+REFERENCE   15 (bases 1 to 295)
+  CONSRTM   FlyBase
+  TITLE     Direct Submission
+  JOURNAL   Submitted (07-OCT-2015) FlyBase, Harvard University, Biological
+            Laboratories, 16 Divinity Ave, Cambridge, MA 02138, USA
+REFERENCE   16 (bases 1 to 295)
+  AUTHORS   Celniker,S., Carlson,J., Kennedy,C., Wan,K., Frise,E., Hoskins,R.,
+            Park,S., Svirskas,R. and Karpen,G.
+  TITLE     Direct Submission
+  JOURNAL   Submitted (10-AUG-2006) Berkeley Drosophila Genome Project,
+            Lawrence Berkeley National Laboratory, One #Cyclotron RoadOne
+            Cyclotron Road, MS 64-121, Berkeley, CA 94720, USA
+  REMARK    Direct Submission
+REFERENCE   17 (bases 1 to 295)
+  AUTHORS   Celniker,S., Carlson,J., Wan,K., Frise,E., Hoskins,R., Park,S.,
+            Svirskas,R. and Rubin,G.
+  TITLE     Direct Submission
+  JOURNAL   Submitted (10-AUG-2006) Berkeley Drosophila Genome Project,
+            Lawrence Berkeley National Laboratory, One Cyclotron Road, MS
+            64-121, Berkeley, CA 94720, USA
+  REMARK    Direct Submission
+REFERENCE   18 (bases 1 to 295)
+  AUTHORS   Smith,C.D., Shu,S., Mungall,C.J. and Karpen,G.H.
+  CONSRTM   Drosophila Heterochromatin Genome Project
+  TITLE     Direct Submission
+  JOURNAL   Submitted (01-AUG-2006) Drosophila Heterochromatin Genome Project,
+            Ernest Orlando Lawrence Berkeley National Laboratory, 1 Cyclotron
+            Road, Mailstop 64-121, Berkeley, CA 94720, USA
+REFERENCE   19 (bases 1 to 295)
+  AUTHORS   Adams,M.D., Celniker,S.E., Gibbs,R.A., Rubin,G.M. and Venter,C.J.
+  TITLE     Direct Submission
+  JOURNAL   Submitted (21-MAR-2000) Celera Genomics, 45 West Gude Drive,
+            Rockville, MD 20850, USA
+COMMENT     REVIEWED REFSEQ: This record has been curated by FlyBase. This
+            record is derived from an annotated genomic sequence (NT_033777).
+            
+            ##Genome-Annotation-Data-START##
+            Annotation Provider :: FlyBase
+            Annotation Status   :: Full annotation
+            Annotation Version  :: Release 6.18
+            URL                 :: http://flybase.org
+            ##Genome-Annotation-Data-END##
+FEATURES             Location/Qualifiers
+     source          1..295
+                     /organism="Drosophila melanogaster"
+                     /mol_type="transcribed RNA"
+                     /db_xref="taxon:7227"
+                     /chromosome="3R"
+                     /genotype="y[1]; Gr22b[1] Gr22d[1] cn[1] CG33964[R4.2]
+                     bw[1] sp[1]; LysC[1] MstProx[1] GstD5[1] Rh6[1]"
+     gene            1..295
+                     /gene="RNaseP:RNA"
+                     /locus_tag="Dmel_CR32868"
+                     /gene_synonym="chr3R:27043287..27043402; CR32868;
+                     Dmel\CR32868; P RNA; RNase P RNA; RNAseP; RPR RNA"
+                     /note="Ribonuclease P RNA; alternate names: RNase P RNA"
+                     /map="100B7-100B7"
+                     /db_xref="FLYBASE:FBgn0046696"
+                     /db_xref="GeneID:3772418"
+     ncRNA           1..295
+                     /ncRNA_class="RNase_P_RNA"
+                     /gene="RNaseP:RNA"
+                     /locus_tag="Dmel_CR32868"
+                     /gene_synonym="chr3R:27043287..27043402; CR32868;
+                     Dmel\CR32868; P RNA; RNase P RNA; RNAseP; RPR RNA"
+                     /product="ribonuclease P RNA"
+                     /note="RNaseP:RNA-RB; Dmel\RNaseP:RNA-RB; CR32868-RB;
+                     Dmel\CR32868-RB"
+                     /db_xref="FLYBASE:FBtr0433532"
+                     /db_xref="GeneID:3772418"
+                     /db_xref="FLYBASE:FBgn0046696"
+ORIGIN      
+        1 agttgcaaac tagcatctgg ggcccacaca acgagtatct gattactcca caaaccattg
+       61 ccccgggaag gtctgagaat cggccgagcc agctgtttgt tgcggcttca tttcccagca
+      121 ggaaacctgt gtgattgcag ggcgaaagta ccagaaatcc tgctaccagg tgttgccgtt
+      181 gcccccggtg accgccgcct ggttggcatt gaaacctttc gtggccagcg tttttagtgc
+      241 gatgtgcttg ctgcctctaa ggcagaactc aattcagact aatctgtgac tgact
+//
+LOCUS       NR_002092                299 bp    RNA     linear   INV 16-AUG-2018
+DEFINITION  Drosophila melanogaster ribonuclease P RNA (RNaseP:RNA),
+            RNase_P_RNA.
+ACCESSION   NR_002092
+VERSION     NR_002092.1
+DBLINK      BioProject: PRJNA164
+            BioSample: SAMN02803731
+KEYWORDS    RefSeq.
+SOURCE      Drosophila melanogaster (fruit fly)
+  ORGANISM  Drosophila melanogaster
+            Eukaryota; Metazoa; Ecdysozoa; Arthropoda; Hexapoda; Insecta;
+            Pterygota; Neoptera; Holometabola; Diptera; Brachycera;
+            Muscomorpha; Ephydroidea; Drosophilidae; Drosophila; Sophophora.
+REFERENCE   1  (bases 1 to 299)
+  AUTHORS   Matthews,B.B., Dos Santos,G., Crosby,M.A., Emmert,D.B., St
+            Pierre,S.E., Gramates,L.S., Zhou,P., Schroeder,A.J., Falls,K.,
+            Strelets,V., Russo,S.M. and Gelbart,W.M.
+  CONSRTM   FlyBase Consortium
+  TITLE     Gene Model Annotations for Drosophila melanogaster: Impact of
+            High-Throughput Data
+  JOURNAL   G3 (Bethesda) 5 (8), 1721-1736 (2015)
+   PUBMED   26109357
+  REMARK    Publication Status: Online-Only
+REFERENCE   2  (bases 1 to 299)
+  AUTHORS   Crosby,M.A., Gramates,L.S., Dos Santos,G., Matthews,B.B., St
+            Pierre,S.E., Zhou,P., Schroeder,A.J., Falls,K., Emmert,D.B.,
+            Russo,S.M. and Gelbart,W.M.
+  CONSRTM   FlyBase Consortium
+  TITLE     Gene Model Annotations for Drosophila melanogaster: The
+            Rule-Benders
+  JOURNAL   G3 (Bethesda) 5 (8), 1737-1749 (2015)
+   PUBMED   26109356
+  REMARK    Publication Status: Online-Only
+REFERENCE   3  (bases 1 to 299)
+  AUTHORS   Hoskins,R.A., Carlson,J.W., Kennedy,C., Acevedo,D., Evans-Holm,M.,
+            Frise,E., Wan,K.H., Park,S., Mendez-Lago,M., Rossi,F.,
+            Villasante,A., Dimitri,P., Karpen,G.H. and Celniker,S.E.
+  TITLE     Sequence finishing and mapping of Drosophila melanogaster
+            heterochromatin
+  JOURNAL   Science 316 (5831), 1625-1628 (2007)
+   PUBMED   17569867
+REFERENCE   4  (bases 1 to 299)
+  AUTHORS   Smith,C.D., Shu,S., Mungall,C.J. and Karpen,G.H.
+  TITLE     The Release 5.1 annotation of Drosophila melanogaster
+            heterochromatin
+  JOURNAL   Science 316 (5831), 1586-1591 (2007)
+   PUBMED   17569856
+  REMARK    Erratum:[Science. 2007 Sep 7;317(5843):1325]
+REFERENCE   5  (bases 1 to 299)
+  AUTHORS   Quesneville,H., Bergman,C.M., Andrieu,O., Autard,D., Nouaud,D.,
+            Ashburner,M. and Anxolabehere,D.
+  TITLE     Combined evidence annotation of transposable elements in genome
+            sequences
+  JOURNAL   PLoS Comput. Biol. 1 (2), 166-175 (2005)
+   PUBMED   16110336
+REFERENCE   6  (bases 1 to 299)
+  AUTHORS   Hoskins,R.A., Smith,C.D., Carlson,J.W., Carvalho,A.B., Halpern,A.,
+            Kaminker,J.S., Kennedy,C., Mungall,C.J., Sullivan,B.A.,
+            Sutton,G.G., Yasuhara,J.C., Wakimoto,B.T., Myers,E.W.,
+            Celniker,S.E., Rubin,G.M. and Karpen,G.H.
+  TITLE     Heterochromatic sequences in a Drosophila whole-genome shotgun
+            assembly
+  JOURNAL   Genome Biol. 3 (12), RESEARCH0085 (2002)
+   PUBMED   12537574
+REFERENCE   7  (bases 1 to 299)
+  AUTHORS   Kaminker,J.S., Bergman,C.M., Kronmiller,B., Carlson,J.,
+            Svirskas,R., Patel,S., Frise,E., Wheeler,D.A., Lewis,S.E.,
+            Rubin,G.M., Ashburner,M. and Celniker,S.E.
+  TITLE     The transposable elements of the Drosophila melanogaster
+            euchromatin: a genomics perspective
+  JOURNAL   Genome Biol. 3 (12), RESEARCH0084 (2002)
+   PUBMED   12537573
+REFERENCE   8  (bases 1 to 299)
+  AUTHORS   Misra,S., Crosby,M.A., Mungall,C.J., Matthews,B.B., Campbell,K.S.,
+            Hradecky,P., Huang,Y., Kaminker,J.S., Millburn,G.H., Prochnik,S.E.,
+            Smith,C.D., Tupy,J.L., Whitfied,E.J., Bayraktaroglu,L.,
+            Berman,B.P., Bettencourt,B.R., Celniker,S.E., de Grey,A.D.,
+            Drysdale,R.A., Harris,N.L., Richter,J., Russo,S., Schroeder,A.J.,
+            Shu,S.Q., Stapleton,M., Yamada,C., Ashburner,M., Gelbart,W.M.,
+            Rubin,G.M. and Lewis,S.E.
+  TITLE     Annotation of the Drosophila melanogaster euchromatic genome: a
+            systematic review
+  JOURNAL   Genome Biol. 3 (12), RESEARCH0083 (2002)
+   PUBMED   12537572
+REFERENCE   9  (bases 1 to 299)
+  AUTHORS   Celniker,S.E., Wheeler,D.A., Kronmiller,B., Carlson,J.W.,
+            Halpern,A., Patel,S., Adams,M., Champe,M., Dugan,S.P., Frise,E.,
+            Hodgson,A., George,R.A., Hoskins,R.A., Laverty,T., Muzny,D.M.,
+            Nelson,C.R., Pacleb,J.M., Park,S., Pfeiffer,B.D., Richards,S.,
+            Sodergren,E.J., Svirskas,R., Tabor,P.E., Wan,K., Stapleton,M.,
+            Sutton,G.G., Venter,C., Weinstock,G., Scherer,S.E., Myers,E.W.,
+            Gibbs,R.A. and Rubin,G.M.
+  TITLE     Finishing a whole-genome shotgun: release 3 of the Drosophila
+            melanogaster euchromatic genome sequence
+  JOURNAL   Genome Biol. 3 (12), RESEARCH0079 (2002)
+   PUBMED   12537568
+REFERENCE   10 (bases 1 to 299)
+  AUTHORS   Adams,M.D., Celniker,S.E., Holt,R.A., Evans,C.A., Gocayne,J.D.,
+            Amanatides,P.G., Scherer,S.E., Li,P.W., Hoskins,R.A., Galle,R.F.,
+            George,R.A., Lewis,S.E., Richards,S., Ashburner,M., Henderson,S.N.,
+            Sutton,G.G., Wortman,J.R., Yandell,M.D., Zhang,Q., Chen,L.X.,
+            Brandon,R.C., Rogers,Y.H., Blazej,R.G., Champe,M., Pfeiffer,B.D.,
+            Wan,K.H., Doyle,C., Baxter,E.G., Helt,G., Nelson,C.R., Gabor,G.L.,
+            Abril,J.F., Agbayani,A., An,H.J., Andrews-Pfannkoch,C., Baldwin,D.,
+            Ballew,R.M., Basu,A., Baxendale,J., Bayraktaroglu,L., Beasley,E.M.,
+            Beeson,K.Y., Benos,P.V., Berman,B.P., Bhandari,D., Bolshakov,S.,
+            Borkova,D., Botchan,M.R., Bouck,J., Brokstein,P., Brottier,P.,
+            Burtis,K.C., Busam,D.A., Butler,H., Cadieu,E., Center,A.,
+            Chandra,I., Cherry,J.M., Cawley,S., Dahlke,C., Davenport,L.B.,
+            Davies,P., de Pablos,B., Delcher,A., Deng,Z., Mays,A.D., Dew,I.,
+            Dietz,S.M., Dodson,K., Doup,L.E., Downes,M., Dugan-Rocha,S.,
+            Dunkov,B.C., Dunn,P., Durbin,K.J., Evangelista,C.C., Ferraz,C.,
+            Ferriera,S., Fleischmann,W., Fosler,C., Gabrielian,A.E., Garg,N.S.,
+            Gelbart,W.M., Glasser,K., Glodek,A., Gong,F., Gorrell,J.H., Gu,Z.,
+            Guan,P., Harris,M., Harris,N.L., Harvey,D., Heiman,T.J.,
+            Hernandez,J.R., Houck,J., Hostin,D., Houston,K.A., Howland,T.J.,
+            Wei,M.H., Ibegwam,C., Jalali,M., Kalush,F., Karpen,G.H., Ke,Z.,
+            Kennison,J.A., Ketchum,K.A., Kimmel,B.E., Kodira,C.D., Kraft,C.,
+            Kravitz,S., Kulp,D., Lai,Z., Lasko,P., Lei,Y., Levitsky,A.A.,
+            Li,J., Li,Z., Liang,Y., Lin,X., Liu,X., Mattei,B., McIntosh,T.C.,
+            McLeod,M.P., McPherson,D., Merkulov,G., Milshina,N.V., Mobarry,C.,
+            Morris,J., Moshrefi,A., Mount,S.M., Moy,M., Murphy,B., Murphy,L.,
+            Muzny,D.M., Nelson,D.L., Nelson,D.R., Nelson,K.A., Nixon,K.,
+            Nusskern,D.R., Pacleb,J.M., Palazzolo,M., Pittman,G.S., Pan,S.,
+            Pollard,J., Puri,V., Reese,M.G., Reinert,K., Remington,K.,
+            Saunders,R.D., Scheeler,F., Shen,H., Shue,B.C., Siden-Kiamos,I.,
+            Simpson,M., Skupski,M.P., Smith,T., Spier,E., Spradling,A.C.,
+            Stapleton,M., Strong,R., Sun,E., Svirskas,R., Tector,C., Turner,R.,
+            Venter,E., Wang,A.H., Wang,X., Wang,Z.Y., Wassarman,D.A.,
+            Weinstock,G.M., Weissenbach,J., Williams,S.M., WoodageT,
+            Worley,K.C., Wu,D., Yang,S., Yao,Q.A., Ye,J., Yeh,R.F.,
+            Zaveri,J.S., Zhan,M., Zhang,G., Zhao,Q., Zheng,L., Zheng,X.H.,
+            Zhong,F.N., Zhong,W., Zhou,X., Zhu,S., Zhu,X., Smith,H.O.,
+            Gibbs,R.A., Myers,E.W., Rubin,G.M. and Venter,J.C.
+  TITLE     The genome sequence of Drosophila melanogaster
+  JOURNAL   Science 287 (5461), 2185-2195 (2000)
+   PUBMED   10731132
+REFERENCE   11 (bases 1 to 299)
+  AUTHORS   Celniker,S., Carlson,J., Wan,K., Pfeiffer,B., Frise,E., George,R.,
+            Hoskins,R., Stapleton,M., Pacleb,J., Park,S., Svirskas,R.,
+            Smith,E., Yu,C. and Rubin,G.
+  CONSRTM   Berkeley Drosophila Genome Project
+  TITLE     Drosophila melanogaster release 4 sequence
+  JOURNAL   Unpublished
+REFERENCE   12 (bases 1 to 299)
+  CONSRTM   NCBI Genome Project
+  TITLE     Direct Submission
+  JOURNAL   Submitted (16-AUG-2018) National Center for Biotechnology
+            Information, NIH, Bethesda, MD 20894, USA
+REFERENCE   13 (bases 1 to 299)
+  CONSRTM   FlyBase
+  TITLE     Direct Submission
+  JOURNAL   Submitted (24-MAY-2018) FlyBase, Harvard University, Biological
+            Laboratories, 16 Divinity Ave, Cambridge, MA 02138, USA
+REFERENCE   14 (bases 1 to 299)
+  CONSRTM   FlyBase
+  TITLE     Direct Submission
+  JOURNAL   Submitted (07-DEC-2016) FlyBase, Harvard University, Biological
+            Laboratories, 16 Divinity Ave, Cambridge, MA 02138, USA
+REFERENCE   15 (bases 1 to 299)
+  CONSRTM   FlyBase
+  TITLE     Direct Submission
+  JOURNAL   Submitted (07-OCT-2015) FlyBase, Harvard University, Biological
+            Laboratories, 16 Divinity Ave, Cambridge, MA 02138, USA
+REFERENCE   16 (bases 1 to 299)
+  AUTHORS   Celniker,S., Carlson,J., Kennedy,C., Wan,K., Frise,E., Hoskins,R.,
+            Park,S., Svirskas,R. and Karpen,G.
+  TITLE     Direct Submission
+  JOURNAL   Submitted (10-AUG-2006) Berkeley Drosophila Genome Project,
+            Lawrence Berkeley National Laboratory, One #Cyclotron RoadOne
+            Cyclotron Road, MS 64-121, Berkeley, CA 94720, USA
+  REMARK    Direct Submission
+REFERENCE   17 (bases 1 to 299)
+  AUTHORS   Celniker,S., Carlson,J., Wan,K., Frise,E., Hoskins,R., Park,S.,
+            Svirskas,R. and Rubin,G.
+  TITLE     Direct Submission
+  JOURNAL   Submitted (10-AUG-2006) Berkeley Drosophila Genome Project,
+            Lawrence Berkeley National Laboratory, One Cyclotron Road, MS
+            64-121, Berkeley, CA 94720, USA
+  REMARK    Direct Submission
+REFERENCE   18 (bases 1 to 299)
+  AUTHORS   Smith,C.D., Shu,S., Mungall,C.J. and Karpen,G.H.
+  CONSRTM   Drosophila Heterochromatin Genome Project
+  TITLE     Direct Submission
+  JOURNAL   Submitted (01-AUG-2006) Drosophila Heterochromatin Genome Project,
+            Ernest Orlando Lawrence Berkeley National Laboratory, 1 Cyclotron
+            Road, Mailstop 64-121, Berkeley, CA 94720, USA
+REFERENCE   19 (bases 1 to 299)
+  AUTHORS   Adams,M.D., Celniker,S.E., Gibbs,R.A., Rubin,G.M. and Venter,C.J.
+  TITLE     Direct Submission
+  JOURNAL   Submitted (21-MAR-2000) Celera Genomics, 45 West Gude Drive,
+            Rockville, MD 20850, USA
+COMMENT     REVIEWED REFSEQ: This record has been curated by FlyBase. This
+            record is derived from an annotated genomic sequence (NT_033777).
+            
+            ##Genome-Annotation-Data-START##
+            Annotation Provider :: FlyBase
+            Annotation Status   :: Full annotation
+            Annotation Version  :: Release 6.18
+            URL                 :: http://flybase.org
+            ##Genome-Annotation-Data-END##
+FEATURES             Location/Qualifiers
+     source          1..299
+                     /organism="Drosophila melanogaster"
+                     /mol_type="transcribed RNA"
+                     /db_xref="taxon:7227"
+                     /chromosome="3R"
+                     /genotype="y[1]; Gr22b[1] Gr22d[1] cn[1] CG33964[R4.2]
+                     bw[1] sp[1]; LysC[1] MstProx[1] GstD5[1] Rh6[1]"
+     gene            1..299
+                     /gene="RNaseP:RNA"
+                     /locus_tag="Dmel_CR32868"
+                     /gene_synonym="chr3R:27043287..27043402; CR32868;
+                     Dmel\CR32868; P RNA; RNase P RNA; RNAseP; RPR RNA"
+                     /note="Ribonuclease P RNA; alternate names: RNase P RNA"
+                     /map="100B7-100B7"
+                     /db_xref="FLYBASE:FBgn0046696"
+                     /db_xref="GeneID:3772418"
+     ncRNA           1..299
+                     /ncRNA_class="RNase_P_RNA"
+                     /gene="RNaseP:RNA"
+                     /locus_tag="Dmel_CR32868"
+                     /gene_synonym="chr3R:27043287..27043402; CR32868;
+                     Dmel\CR32868; P RNA; RNase P RNA; RNAseP; RPR RNA"
+                     /product="ribonuclease P RNA"
+                     /note="RNaseP:RNA-RA; Dmel\RNaseP:RNA-RA; CR32868-RA;
+                     Dmel\CR32868-RA"
+                     /db_xref="FLYBASE:FBtr0085775"
+                     /db_xref="GeneID:3772418"
+                     /db_xref="FLYBASE:FBgn0046696"
+ORIGIN      
+        1 agtcagttgc aaactagcat ctggggccca cacaacgagt atctgattac tccacaaacc
+       61 attgccccgg gaaggtctga gaatcggccg agccagctgt ttgttgcggc ttcatttccc
+      121 agcaggaaac ctgtgtgatt gcagggcgaa agtaccagaa atcctgctac caggtgttgc
+      181 cgttgccccc ggtgaccgcc gcctggttgg cattgaaacc tttcgtggcc agcgttttta
+      241 gtgcgatgtg cttgctgcct ctaaggcaga actcaattca gactaatctg tgactgact
+//
+LOCUS       NR_004439                238 bp    RNA     linear   ROD 03-JUN-2018
+DEFINITION  Mus musculus ribonuclease P RNA-like 2 (Rprl2), RNase P RNA.
+ACCESSION   NR_004439
+VERSION     NR_004439.2
+KEYWORDS    RefSeq.
+SOURCE      Mus musculus (house mouse)
+  ORGANISM  Mus musculus
+            Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi;
+            Mammalia; Eutheria; Euarchontoglires; Glires; Rodentia; Myomorpha;
+            Muroidea; Muridae; Murinae; Mus; Mus.
+REFERENCE   1  (bases 1 to 238)
+  AUTHORS   Li K and Williams RS.
+  TITLE     Cloning and characterization of three new murine genes encoding
+            short homologues of RNase P RNA
+  JOURNAL   J. Biol. Chem. 270 (42), 25281-25285 (1995)
+   PUBMED   7559668
+COMMENT     VALIDATED REFSEQ: This record has undergone validation or
+            preliminary review. The reference sequence was derived from
+            AC121108.12.
+            On May 12, 2011 this sequence version replaced NR_004439.1.
+            
+            Sequence Note: The RefSeq transcript was derived from the reference
+            genome assembly. The genomic coordinates were determined from
+            alignments.
+PRIMARY     REFSEQ_SPAN         PRIMARY_IDENTIFIER PRIMARY_SPAN        COMP
+            1-238               AC121108.12        22395-22632         c
+FEATURES             Location/Qualifiers
+     source          1..238
+                     /organism="Mus musculus"
+                     /mol_type="transcribed RNA"
+                     /strain="C57BL/6"
+                     /db_xref="taxon:10090"
+                     /chromosome="3"
+                     /map="3"
+     gene            1..238
+                     /gene="Rprl2"
+                     /gene_synonym="Rmrp3; RPRH3"
+                     /note="ribonuclease P RNA-like 2"
+                     /db_xref="GeneID:19784"
+                     /db_xref="MGI:MGI:105104"
+     ncRNA           1..238
+                     /ncRNA_class="RNase_P_RNA"
+                     /gene="Rprl2"
+                     /gene_synonym="Rmrp3; RPRH3"
+                     /product="ribonuclease P RNA-like 2"
+                     /db_xref="GeneID:19784"
+                     /db_xref="MGI:MGI:105104"
+     exon            1..238
+                     /gene="Rprl2"
+                     /gene_synonym="Rmrp3; RPRH3"
+                     /inference="alignment:Splign:2.0.8"
+ORIGIN      
+        1 agtgggcgga ggaagctcat cagtggggcc acgtgctgag tgctggtcac tcttcggccc
+       61 ctgggcaggt ctgagactgg ggcctcccac ggccctaacc gggctctccc tgagtgggga
+      121 ggtgagttcc cagagagcag ggctctatgc atgggcagac tgggcagtag aagccccaag
+      181 tcggggtgga tgcctccctt gccggagctt ggaacagact cacggccagc agagcaag
+//
+LOCUS       NR_024198                238 bp    RNA     linear   ROD 26-MAY-2018
+DEFINITION  Mus musculus ribonuclease P RNA-like 3 (Rprl3), RNase P RNA.
+ACCESSION   NR_024198
+VERSION     NR_024198.2
+KEYWORDS    RefSeq.
+SOURCE      Mus musculus (house mouse)
+  ORGANISM  Mus musculus
+            Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi;
+            Mammalia; Eutheria; Euarchontoglires; Glires; Rodentia; Myomorpha;
+            Muroidea; Muridae; Murinae; Mus; Mus.
+REFERENCE   1  (bases 1 to 238)
+  AUTHORS   Li K and Williams RS.
+  TITLE     Cloning and characterization of three new murine genes encoding
+            short homologues of RNase P RNA
+  JOURNAL   J. Biol. Chem. 270 (42), 25281-25285 (1995)
+   PUBMED   7559668
+COMMENT     PROVISIONAL REFSEQ: This record has not yet been subject to final
+            NCBI review. The reference sequence was derived from U31228.1.
+            On May 12, 2011 this sequence version replaced NR_024198.1.
+PRIMARY     REFSEQ_SPAN         PRIMARY_IDENTIFIER PRIMARY_SPAN        COMP
+            1-238               U31228.1           334-571
+FEATURES             Location/Qualifiers
+     source          1..238
+                     /organism="Mus musculus"
+                     /mol_type="transcribed RNA"
+                     /strain="129/Sv"
+                     /db_xref="taxon:10090"
+                     /chromosome="8"
+                     /map="8 1.92 cM"
+     gene            1..238
+                     /gene="Rprl3"
+                     /gene_synonym="Rmrp4; RPRH4"
+                     /note="ribonuclease P RNA-like 3"
+                     /db_xref="GeneID:19785"
+                     /db_xref="MGI:MGI:105103"
+     ncRNA           1..238
+                     /ncRNA_class="RNase_P_RNA"
+                     /gene="Rprl3"
+                     /gene_synonym="Rmrp4; RPRH4"
+                     /product="ribonuclease P RNA-like 3"
+                     /db_xref="GeneID:19785"
+                     /db_xref="MGI:MGI:105103"
+ORIGIN      
+        1 gtgggcggag gaagctcatc agcagggcca cgtgctgagt gctcgtcact cttcggcccc
+       61 tgagaaggtc tgagactggg gcctcccgcg gccctaaccg ggctctcccc aagtggggag
+      121 gtgaattccc agagagcagg gctctacacg tgggcagact gggcaggagg aagtcccgag
+      181 tcggggggga tgcctccctc gccggagctt ggaacagact cacggccagc agagcgaa
+//
+LOCUS       NR_004434                238 bp    RNA     linear   ROD 26-MAY-2018
+DEFINITION  Mus musculus ribonuclease P RNA-like 1 (Rprl1), RNase P RNA.
+ACCESSION   NR_004434
+VERSION     NR_004434.3
+KEYWORDS    RefSeq.
+SOURCE      Mus musculus (house mouse)
+  ORGANISM  Mus musculus
+            Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi;
+            Mammalia; Eutheria; Euarchontoglires; Glires; Rodentia; Myomorpha;
+            Muroidea; Muridae; Murinae; Mus; Mus.
+REFERENCE   1  (bases 1 to 238)
+  AUTHORS   Li K and Williams RS.
+  TITLE     Cloning and characterization of three new murine genes encoding
+            short homologues of RNase P RNA
+  JOURNAL   J. Biol. Chem. 270 (42), 25281-25285 (1995)
+   PUBMED   7559668
+COMMENT     VALIDATED REFSEQ: This record has undergone validation or
+            preliminary review. The reference sequence was derived from
+            AC155844.2.
+            On May 12, 2011 this sequence version replaced NR_004434.2.
+            
+            Sequence Note: The RefSeq transcript was derived from the reference
+            genome assembly. The genomic coordinates were determined from
+            alignments.
+PRIMARY     REFSEQ_SPAN         PRIMARY_IDENTIFIER PRIMARY_SPAN        COMP
+            1-238               AC155844.2         117964-118201       c
+FEATURES             Location/Qualifiers
+     source          1..238
+                     /organism="Mus musculus"
+                     /mol_type="transcribed RNA"
+                     /strain="C57BL/6"
+                     /db_xref="taxon:10090"
+                     /chromosome="6"
+                     /map="6"
+     gene            1..238
+                     /gene="Rprl1"
+                     /gene_synonym="Rmrp2; Rpr; Rprh2"
+                     /note="ribonuclease P RNA-like 1"
+                     /db_xref="GeneID:19783"
+                     /db_xref="MGI:MGI:105105"
+     ncRNA           1..238
+                     /ncRNA_class="RNase_P_RNA"
+                     /gene="Rprl1"
+                     /gene_synonym="Rmrp2; Rpr; Rprh2"
+                     /product="ribonuclease P RNA-like 1"
+                     /db_xref="GeneID:19783"
+                     /db_xref="MGI:MGI:105105"
+     exon            1..238
+                     /gene="Rprl1"
+                     /gene_synonym="Rmrp2; Rpr; Rprh2"
+                     /inference="alignment:Splign:2.0.8"
+ORIGIN      
+        1 agtgggcgga agaagtttat cagtggggcc acgtgctgag tgatcgtcac tcttcggtcc
+       61 ctggcaaggt ctgagactgg ggcctcccgc agccctaacc gggctctccc cgagcgagga
+      121 gatgagttcc cagagagcag ggctctacga gtgggcagac tgggcaggag aagccctgag
+      181 tctgggcaga tgcctccctc gccagagctt ggaacagact cacagccagc agagcgag
+//
+LOCUS       NR_002142                325 bp    RNA     linear   ROD 26-MAY-2018
+DEFINITION  Mus musculus ribonuclease P RNA component H1 (Rpph1), RNase P RNA.
+ACCESSION   NR_002142
+VERSION     NR_002142.2
+KEYWORDS    RefSeq.
+SOURCE      Mus musculus (house mouse)
+  ORGANISM  Mus musculus
+            Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi;
+            Mammalia; Eutheria; Euarchontoglires; Glires; Rodentia; Myomorpha;
+            Muroidea; Muridae; Murinae; Mus; Mus.
+REFERENCE   1  (bases 1 to 325)
+  AUTHORS   Ame JC, Schreiber V, Fraulob V, Dolle P, de Murcia G and Niedergang
+            CP.
+  TITLE     A bidirectional promoter connects the poly(ADP-ribose) polymerase 2
+            (PARP-2) gene to the gene for RNase P RNA. structure and expression
+            of the mouse PARP-2 gene
+  JOURNAL   J. Biol. Chem. 276 (14), 11092-11099 (2001)
+   PUBMED   11133988
+REFERENCE   2  (bases 1 to 325)
+  AUTHORS   Li K and Williams RS.
+  TITLE     Cloning and characterization of three new murine genes encoding
+            short homologues of RNase P RNA
+  JOURNAL   J. Biol. Chem. 270 (42), 25281-25285 (1995)
+   PUBMED   7559668
+REFERENCE   3  (bases 1 to 325)
+  AUTHORS   Altman S, Wesolowski D and Puranam RS.
+  TITLE     Nucleotide sequences of the RNA subunit of RNase P from several
+            mammals
+  JOURNAL   Genomics 18 (2), 418-422 (1993)
+   PUBMED   7507079
+COMMENT     VALIDATED REFSEQ: This record has undergone validation or
+            preliminary review. The reference sequence was derived from
+            AC027184.15.
+            On May 12, 2011 this sequence version replaced NR_002142.1.
+            
+            Sequence Note: The RefSeq transcript was derived from the reference
+            genome assembly. The genomic coordinates were determined from
+            alignments.
+PRIMARY     REFSEQ_SPAN         PRIMARY_IDENTIFIER PRIMARY_SPAN        COMP
+            1-325               AC027184.15        119565-119889
+FEATURES             Location/Qualifiers
+     source          1..325
+                     /organism="Mus musculus"
+                     /mol_type="transcribed RNA"
+                     /strain="C57BL/6"
+                     /db_xref="taxon:10090"
+                     /chromosome="14"
+                     /map="14"
+     gene            1..325
+                     /gene="Rpph1"
+                     /gene_synonym="Gm24821; H1RNA; Rmrp5; Rpr"
+                     /note="ribonuclease P RNA component H1"
+                     /db_xref="GeneID:85029"
+                     /db_xref="MGI:MGI:1934664"
+     ncRNA           1..325
+                     /ncRNA_class="RNase_P_RNA"
+                     /gene="Rpph1"
+                     /gene_synonym="Gm24821; H1RNA; Rmrp5; Rpr"
+                     /product="ribonuclease P RNA component H1"
+                     /db_xref="GeneID:85029"
+                     /db_xref="MGI:MGI:1934664"
+     exon            1..325
+                     /gene="Rpph1"
+                     /gene_synonym="Gm24821; H1RNA; Rmrp5; Rpr"
+                     /inference="alignment:Splign:2.0.8"
+ORIGIN      
+        1 agtgggcgga ggaagctcat cagcggggcc acgtgctgag tgcgtgtcac tcttcggccc
+       61 ctgggaaggt ctgagacttg ggcctcccgc ggccctaacc gggctctccc cgagcgggga
+      121 ggtgagttcc cagagagcag ggctctacgc ttgggcagac tgggcaggag aagccccgag
+      181 tcggggcgga tgcctccctc gccggagcgg atgcctccct cgccggagct tggaacagac
+      241 tcacggccag cagtgcgagt tcaatggctg aggtgaggca cctcccgggc ctcataaccc
+      301 aattcagact actctccccc gccct
+//
+LOCUS       NR_002312                341 bp    RNA     linear   PRI 12-MAY-2018
+DEFINITION  Homo sapiens ribonuclease P RNA component H1 (RPPH1), RNase P RNA.
+ACCESSION   NR_002312
+VERSION     NR_002312.1
+KEYWORDS    RefSeq.
+SOURCE      Homo sapiens (human)
+  ORGANISM  Homo sapiens
+            Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi;
+            Mammalia; Eutheria; Euarchontoglires; Primates; Haplorrhini;
+            Catarrhini; Hominidae; Homo.
+REFERENCE   1  (bases 1 to 341)
+  AUTHORS   Altman S, Kirsebom L and Talbot S.
+  TITLE     Recent studies of ribonuclease P
+  JOURNAL   FASEB J. 7 (1), 7-14 (1993)
+   PUBMED   7916700
+  REMARK    Review article
+REFERENCE   2  (bases 1 to 341)
+  AUTHORS   Baer M, Nilsen TW, Costigan C and Altman S.
+  TITLE     Structure and transcription of a human gene for H1 RNA, the RNA
+            component of human RNase P
+  JOURNAL   Nucleic Acids Res. 18 (1), 97-103 (1990)
+   PUBMED   2308839
+REFERENCE   3  (bases 1 to 341)
+  AUTHORS   Bartkiewicz M, Gold H and Altman S.
+  TITLE     Identification and characterization of an RNA molecule that
+            copurifies with RNase P activity from HeLa cells
+  JOURNAL   Genes Dev. 3 (4), 488-499 (1989)
+   PUBMED   2470644
+COMMENT     VALIDATED REFSEQ: This record has undergone validation or
+            preliminary review. The reference sequence was derived from
+            DW429001.1, X15624.1, CV309337.1 and CA413366.1.
+            
+            Summary: H1RNA is the RNA component of the RNase P
+            ribonucleoprotein, an endoribonuclease that cleaves tRNA precursor
+            molecules to form the mature 5-prime termini of their tRNA
+            sequences (Baer et al., 1989 [PubMed 2308839]).[supplied by OMIM,
+            Mar 2008].
+            
+            ##Evidence-Data-START##
+            Transcript is intronless :: X15624.1 [ECO:0000345]
+            ##Evidence-Data-END##
+PRIMARY     REFSEQ_SPAN         PRIMARY_IDENTIFIER PRIMARY_SPAN        COMP
+            1-3                 DW429001.1         17-19
+            4-128               X15624.1           3-127
+            129-129             CV309337.1         47-47
+            130-323             X15624.1           129-322
+            324-324             CA413366.1         41-41               c
+            325-341             X15624.1           324-340
+FEATURES             Location/Qualifiers
+     source          1..341
+                     /organism="Homo sapiens"
+                     /mol_type="transcribed RNA"
+                     /db_xref="taxon:9606"
+                     /chromosome="14"
+                     /map="14q11.2"
+     gene            1..341
+                     /gene="RPPH1"
+                     /gene_synonym="H1RNA; RPPH1-1"
+                     /note="ribonuclease P RNA component H1"
+                     /db_xref="GeneID:85495"
+                     /db_xref="HGNC:HGNC:19273"
+                     /db_xref="MIM:608513"
+     ncRNA           1..341
+                     /ncRNA_class="RNase_P_RNA"
+                     /gene="RPPH1"
+                     /gene_synonym="H1RNA; RPPH1-1"
+                     /product="ribonuclease P RNA component H1"
+                     /db_xref="GeneID:85495"
+                     /db_xref="HGNC:HGNC:19273"
+                     /db_xref="MIM:608513"
+     exon            1..341
+                     /gene="RPPH1"
+                     /gene_synonym="H1RNA; RPPH1-1"
+                     /inference="alignment:Splign:2.1.0"
+     misc_feature    1..169
+                     /gene="RPPH1"
+                     /gene_synonym="H1RNA; RPPH1-1"
+                     /note="H2a RNA"
+     misc_feature    170..341
+                     /gene="RPPH1"
+                     /gene_synonym="H1RNA; RPPH1-1"
+                     /note="H2b RNA"
+ORIGIN      
+        1 atagggcgga gggaagctca tcagtggggc cacgagctga gtgcgtcctg tcactccact
+       61 cccatgtccc ttgggaaggt ctgagactag ggccagaggc ggccctaaca gggctctccc
+      121 tgagcttcgg ggaggtgagt tcccagagaa cggggctccg cgcgaggtca gactgggcag
+      181 gagatgccgt ggaccccgcc cttcggggag gggcccggcg gatgcctcct ttgccggagc
+      241 ttggaacaga ctcacggcca gcgaagtgag ttcaatggct gaggtgaggt accccgcagg
+      301 ggacctcata acccaattca gactactctc ctccgcccat t
+//
+LOCUS       NR_002313                675 bp    RNA     linear   MAM 24-OCT-2017
+DEFINITION  Canis lupus familiaris ribonuclease P RNA component H1 (RPPH1),
+            RNase P RNA.
+ACCESSION   NR_002313
+VERSION     NR_002313.1
+KEYWORDS    RefSeq.
+SOURCE      Canis lupus familiaris (dog)
+  ORGANISM  Canis lupus familiaris
+            Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi;
+            Mammalia; Eutheria; Laurasiatheria; Carnivora; Caniformia; Canidae;
+            Canis.
+REFERENCE   1  (bases 1 to 675)
+  AUTHORS   Bardeleben C, Moore RL and Wayne RK.
+  TITLE     Isolation and molecular evolution of the selenocysteine tRNA (Cf
+            TRSP) and RNase P RNA (Cf RPPH1) genes in the dog family, Canidae
+  JOURNAL   Mol. Biol. Evol. 22 (2), 347-359 (2005)
+   PUBMED   15496554
+COMMENT     PROVISIONAL REFSEQ: This record has not yet been subject to final
+            NCBI review. The reference sequence was derived from AY609124.1.
+PRIMARY     REFSEQ_SPAN         PRIMARY_IDENTIFIER PRIMARY_SPAN        COMP
+            1-675               AY609124.1         1-675
+FEATURES             Location/Qualifiers
+     source          1..675
+                     /organism="Canis lupus familiaris"
+                     /mol_type="transcribed RNA"
+                     /sub_species="familiaris"
+                     /db_xref="taxon:9615"
+                     /chromosome="15"
+                     /map="15"
+     gene            1..675
+                     /gene="RPPH1"
+                     /note="ribonuclease P RNA component H1"
+                     /db_xref="GeneID:552896"
+     ncRNA           1..675
+                     /ncRNA_class="RNase_P_RNA"
+                     /gene="RPPH1"
+                     /product="ribonuclease P RNA component H1"
+                     /db_xref="GeneID:552896"
+ORIGIN      
+        1 cggtatttgc atgctgctgt gtgttatggg aagtcgccgt gagcgagaag ggccgtgcgg
+       61 gcggcacctt ataagcggcg ggagggcggc gctgcgcagg gcggcgggaa gctcagcggt
+      121 ggggccacgc gcggagtgcg cgtcactctc tcggcccctg ggaaggtctg agactcgggc
+      181 cagcagcggc cctagcaggg ccctccccgc gcgcgggggg gtgagttccc agagagcggg
+      241 ccccggagag ggccttcggg caggagaggc cgcgcgcgcg gcggatgccc cctccccggg
+      301 gcttggaata gactcacggc cggcacggtg agttcaatgg ctgggccggg gcacccgagc
+      361 aggccggcgt cgggccgcgg ggctccggaa cccaattcag actactctcc cccgcccgct
+      421 tttgcccccc cgaccccgcc ctggcatggg ggcgtcctag acgcgctgag tctgagtctt
+      481 cctttcttct atttctactt tagaagtact atctcctgga ggagcgagga gagcgcgcag
+      541 gagcggggtg tgcgtgcatg tgtgtgcgcg tgtgtaaggg ggttcctcgc cgggtggggc
+      601 cgcgcctggc ctgggccgaa gccacacgct tgacctcccg ggtgccctta gcccttattt
+      661 attcctgaga gacag
+//
+LOCUS       NR_036645                307 bp    RNA     linear   VRT 16-JUL-2013
+DEFINITION  Danio rerio ribonuclease P RNA component H1 (rpph1), RNase P RNA.
+ACCESSION   NR_036645
+VERSION     NR_036645.1
+KEYWORDS    RefSeq.
+SOURCE      Danio rerio (zebrafish)
+  ORGANISM  Danio rerio
+            Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi;
+            Actinopterygii; Neopterygii; Teleostei; Ostariophysi;
+            Cypriniformes; Cyprinidae; Danio.
+REFERENCE   1  (bases 1 to 307)
+  AUTHORS   Eder,P.S., Srinivasan,A., Fishman,M.C. and Altman,S.
+  TITLE     The RNA subunit of ribonuclease P from the zebrafish, Danio rerio
+  JOURNAL   J. Biol. Chem. 271 (35), 21031-21036 (1996)
+   PUBMED   8702867
+COMMENT     PROVISIONAL REFSEQ: This record has not yet been subject to final
+            NCBI review. The reference sequence was derived from U50408.1.
+PRIMARY     REFSEQ_SPAN         PRIMARY_IDENTIFIER PRIMARY_SPAN        COMP
+            1-307               U50408.1           1-307
+FEATURES             Location/Qualifiers
+     source          1..307
+                     /organism="Danio rerio"
+                     /mol_type="transcribed RNA"
+                     /db_xref="taxon:7955"
+                     /chromosome="2"
+                     /map="2"
+     gene            1..307
+                     /gene="rpph1"
+                     /note="ribonuclease P RNA component H1"
+                     /db_xref="GeneID:494481"
+                     /db_xref="ZFIN:ZDB-GENE-041229-3"
+     ncRNA           1..307
+                     /ncRNA_class="RNase_P_RNA"
+                     /gene="rpph1"
+                     /product="ribonuclease P RNA component H1"
+                     /db_xref="GeneID:494481"
+                     /db_xref="ZFIN:ZDB-GENE-041229-3"
+ORIGIN      
+        1 agtagcggaa ggaagctcac tgtagaggtc acccactgag tgctcgtcac tcgccaacac
+       61 ctcggggaag gtctgagaca ggagccactc gctgtcctag caggacatca tctgaatgat
+      121 gagcgagtgc acagaaaatc gggtcacgcg cgcgattctc gcagcagacg ttgatgctcg
+      181 cacacattca gcggatcaac tgatgcgacg cgcgcagact tggaaacact cgcggctggc
+      241 gaatgagtgc gatgtgtgag ctagcataac atgctagaac ccaattcaga ctactctccc
+      301 tccgctc
+//
