@@ -14,6 +14,7 @@ limitations under the License.
 """
 
 import csv
+import json
 import itertools as it
 
 
@@ -34,17 +35,21 @@ def exclude_uncultured(annotation):
     return int(annotation['taxid']) not in UNCULTURED_TAXIDS
 
 
+def parse(handle):
+    data = it.imap(json.loads, handle)
+    data = it.ifilter(exclude_uncultured, data)
+    return data
+
+
 def export(handle, output):
     """
     Write the Rfam based GO annotations to the given handle.
     """
 
-    data = csv.DictReader(handle)
-    data = it.ifilter(exclude_uncultured, data)
     writer = csv.DictWriter(
         output,
         ['id', 'ontology_term_id', 'models'],
         extrasaction='ignore',
         delimiter='\t',
     )
-    writer.writerows(data)
+    writer.writerows(parse(handle))
