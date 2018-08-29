@@ -65,7 +65,7 @@ def as_entry(record, gene, feature, context):
 
     return attr.assoc(
         entry,
-        description=helpers.description(entry)
+        description=helpers.description(gene, entry)
     )
 
 

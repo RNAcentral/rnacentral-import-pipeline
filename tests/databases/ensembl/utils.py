@@ -29,7 +29,6 @@ class Base(ut.TestCase):  # pylint: disable=R0904
         if not cls.filename:
             return
 
-        cls.record = SeqIO.read(cls.filename, 'embl')
         for feature in cls.record.features:
             key = None
             if helpers.is_gene(feature):
@@ -52,10 +51,6 @@ class Base(ut.TestCase):  # pylint: disable=R0904
             for entry in self.importer.data(raw):
                 yield entry
 
-    def summary_of(self, key):
-        summary = data.Summary(sequence=self.record.seq)
-        return summary.update_gene_info(self.features[key])
-
     def entries_for(self, feature_key):
         feature = self.features[feature_key]
         summary = self.summary_of(helpers.gene(feature))
@@ -65,14 +60,5 @@ class Base(ut.TestCase):  # pylint: disable=R0904
 
     def entry_for(self, feature_key):
         entries = self.entries_for(feature_key)
-        assert len(entries) == 1
-        return entries[0]
-
-    def entries_from(self, database, feature_key):
-        entries = self.entries_for(feature_key)
-        return [e for e in entries if e.database == database]
-
-    def entry_from(self, database, feature_key):
-        entries = self.entries_from(database, feature_key)
         assert len(entries) == 1
         return entries[0]

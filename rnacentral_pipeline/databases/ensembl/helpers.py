@@ -116,7 +116,7 @@ def rna_type(inference, feature, xref_data):
     return inference.infer_rna_type(xref_data, base_type)
 
 
-def description(entry):
+def description(gene, entry):
     """
     Generate a description for the entry based upon the locus this is a part
     of. This will be of the form 'Homo sapiens (human) lncRNA xist
@@ -125,6 +125,17 @@ def description(entry):
     species = entry.species
     if entry.common_name:
         species += ' (%s)' % entry.common_name
+
+    gene_name = notes(gene)
+    if gene_name and len(gene_name) == 1:
+        gene_name = gene_name[0]
+        if gene_name.endswith(']'):
+            gene_name = re.sub(r'\s*\[.+\]$', '', gene_name)
+        gene_name.strip()
+        return '{species} {gene_name}'.format(
+            species=species,
+            gene_name=gene_name
+        )
 
     assert entry.rna_type, "Cannot build description without rna_type"
     return '{species} {rna_type} {locus_tag}'.format(
