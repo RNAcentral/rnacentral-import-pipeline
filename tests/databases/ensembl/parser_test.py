@@ -37,10 +37,19 @@ def entry_for(entries, accession):
     return val[0]
 
 
-
-@pytest.fixture(scope='module')
+@pytest.fixture(scope='module')  # pylint: disable=no-member
 def human_12():
-    return parse_with_family('data/ensembl/Homo_sapiens.GRCh38.87.chromosome.12.dat')
+    return parse_with_family('data/ensembl/Homo_sapiens.GRCh38.90.chromosome.12.dat')
+
+
+@pytest.fixture(scope='module')  # pylint: disable=no-member
+def macaca():
+    return parse_with_family('data/ensembl/Macaca_mulatta.Mmul_8.0.1.92.chromosome.1.dat')
+
+
+@pytest.fixture(scope='module')  # pylint: disable=no-member
+def mouse_3():
+    return parse_with_family('data/ensembl/Mus_musculus.GRCm38.87.chromosome.3.dat')
 
 
 def test_it_sets_primary_id_to_versionless_transcript_id(human_12):
@@ -185,7 +194,7 @@ def test_it_builds_correct_entries(human_12):
         gene='Metazoa_SRP',
         locus_tag='Metazoa_SRP',
         optional_id='ENSG00000278469.1',
-        description='Homo sapiens Metazoan signal recognition particle RNA',
+        description='Homo sapiens (human) Metazoan signal recognition particle RNA',
         note_data={
             'transcript_id': ['ENST00000620330.1']
         },
@@ -212,39 +221,52 @@ def test_it_builds_correct_entries(human_12):
     ))
 
 
-# @pytest.mark.slowtest
-# class MouseTests(Base):
-#     filename = 'data/ensembl/Mus_musculus.GRCm38.87.chromosome.3.dat'
-#     importer_class = EnsemblParser
-
-#     def test_can_use_mouse_models_to_correct_rna_type(self):
-#         assert self.entry_for('ENSMUST00000082862.1').rna_type == 'telomerase_RNA'
-
-#     def test_it_always_has_valid_rna_types(self):
-#         for entry in self.data():
-#             assert entry.rna_type in set([
-#                 'antisense_RNA',
-#                 'lncRNA',
-#                 'misc_RNA',
-#                 'precursor_RNA',
-#                 'rRNA',
-#                 'ribozyme',
-#                 'snRNA',
-#                 'snoRNA',
-#                 'tRNA',
-#                 'telomerase_RNA',
-#                 'tmRNA',
-#             ])
-
-#     def test_it_never_has_bad_vault(self):
-#         for entry in self.data():
-#             assert entry.rna_type != 'vaultRNA'
+def test_it_always_has_valid_rna_types_for_human(human_12):
+    for entry in human_12:
+        assert entry.rna_type in set([
+            'SRP_RNA',
+            'Y_RNA',
+            'antisense_RNA',
+            'lncRNA',
+            'misc_RNA',
+            'precursor_RNA',
+            'rRNA',
+            'ribozyme',
+            'snRNA',
+            'snoRNA',
+            'tRNA',
+            'telomerase_RNA',
+            'tmRNA',
+        ])
 
 
-# class OtherTests(Base):
-#     filename = 'data/ensembl/Macaca_mulatta.Mmul_8.0.1.92.chromosome.1.dat'
-#     importer_class = EnsemblParser
+def test_can_use_mouse_models_to_correct_rna_type(mouse_3):
+    assert entry_for(mouse_3, 'ENSMUST00000082862.1').rna_type == 'telomerase_RNA'
 
-#     def test_does_not_append_none_to_description(self):
-#         print(self.features.keys()[0:10])
-#         assert self.entry_for('ENSMMUT00000062476.1').description == 'Macaca mulatta (rhesus monkey) lncRNA'
+
+def test_it_always_has_valid_rna_types_for_mouse(mouse_3):
+    for entry in mouse_3:
+        assert entry.rna_type in set([
+            'SRP_RNA',
+            'Y_RNA',
+            'antisense_RNA',
+            'lncRNA',
+            'misc_RNA',
+            'precursor_RNA',
+            'rRNA',
+            'ribozyme',
+            'snRNA',
+            'snoRNA',
+            'tRNA',
+            'telomerase_RNA',
+            'tmRNA',
+        ])
+
+
+def test_it_never_has_bad_vault(mouse_3):
+    for entry in mouse_3:
+        assert entry.rna_type != 'vaultRNA'
+
+
+def test_does_not_append_none_to_description(macaca):
+    assert entry_for(macaca, 'ENSMMUT00000062476.1').description == 'Macaca mulatta (rhesus monkey) lncRNA'
