@@ -13,6 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import collections as coll
+
 from Bio import SeqIO
 
 from . import helpers
@@ -24,8 +26,20 @@ def parse(handle):
     entries.
     """
 
+    grouped = coll.defaultdict(list)
     for record in SeqIO.parse(handle, "genbank"):
         source = record.features[0]
         assert source.type == 'source'
+
         for ncrna in helpers.ncrna_features(record.features[1:]):
-            yield helpers.as_entry(record, source, ncrna)
+            entry = helpers.as_entry(record, source, ncrna)
+            grouped[entry.optional_id].append(entry)
+
+    for key, related in grouped.items():
+        if not key:
+            modified = related
+        else:
+            modified = helpers.generate_related(related)
+
+        for entry in modified:
+            yield entry

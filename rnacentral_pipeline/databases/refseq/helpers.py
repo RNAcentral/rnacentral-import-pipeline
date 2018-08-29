@@ -15,7 +15,9 @@ limitations under the License.
 
 import re
 
-from rnacentral_pipeline.databases.data import Entry
+import attr
+
+from rnacentral_pipeline.databases import data as dat
 
 import rnacentral_pipeline.databases.helpers.embl as embl
 
@@ -78,7 +80,7 @@ def as_entry(record, source, feature):
     Create an Entry based upon the record, source feature and ncRNA feature.
     """
 
-    return Entry(
+    return dat.Entry(
         primary_id=primary_id(record),
         accession=accession(record, feature),
         ncbi_tax_id=embl.taxid(record),
@@ -117,3 +119,40 @@ def as_entry(record, source, feature):
 
 def ncrna_features(features):
     return [f for f in features if f.type in NCRNA]
+
+
+def generate_related(entries):
+    """
+    This goes through all given entries, which are assumed to all be from the
+    same gene, and thus splicing variants, and populates the related_sequences
+    feature with the required related sequence information.
+    """
+
+    for first in entries:
+        related = first.related_sequences
+        for second in entries:
+            if first == second:
+                continue
+
+            relationship = 'isoform'
+            if first.rna_type == 'precursor_RNA':
+                if second.rna_type == 'miRNA':
+                    relationship = 'mature_product'
+                else:
+                    raise ValueError("Unknown type of relationship")
+
+            elif first.rna_type == 'miRNA':
+                if second.rna_type == 'precursor_RNA':
+                    relationship = "precursor"
+                elif second.rna_type == 'miRNA':
+                    continue
+                else:
+                    raise ValueError("Unknown tyoe of relationship")
+
+            related.append(dat.RelatedSequence(
+                sequence_id=second.accession,
+                relationship=relationship,
+                coordinates=[],
+                evidence=dat.RelatedEvidence.empty()
+            ))
+        yield attr.evolve(first, related_sequences=related)
