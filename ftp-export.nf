@@ -218,19 +218,31 @@ process ensembl_process_chunk {
   """
 }
 
+process fetch_rfam_go_matchces {
+  input:
+  file query from Channel.fromPath('files/ftp-export/go_annotations/rnacentral_rfam_annotations.sql')
+
+  output:
+  file "raw_go.json" into rfam_go_matches
+
+  """
+  psql -f "$query" "$PGDATABASE" > raw_go.json
+  """
+}
+
 process rfam_go_matches {
+  memory '4 GB'
   publishDir "${params.ftp_export.publish}/go_annotations/", mode: 'move'
 
   input:
-  file query from Channel.fromPath('files/ftp-export/go_annotations/rnacentral_rfam_annotations.sql')
+  file('raw_go.json') from rfam_go_matches
 
   output:
   file "rnacentral_rfam_annotations.tsv.gz" into __go_annotations
 
   """
-  psql -f "$query" "$PGDATABASE" > raw_go.tsv
-  rnac ftp-export rfam-go-annotations raw_go.tsv - |\
-    gzip > rnacentral_rfam_annotations.tsv.gz
+  rnac ftp-export rfam-go-annotations raw_go.json rnacentral_rfam_annotations.tsv
+  gzip rnacentral_rfam_annotations.tsv
   """
 }
 
