@@ -18,6 +18,8 @@ import itertools as it
 
 import attr
 
+from Bio import SeqIO
+
 from rnacentral_pipeline.databases import data
 from rnacentral_pipeline.databases.helpers import embl
 
@@ -51,7 +53,7 @@ def as_entry(record, gene, feature, context):
         species=species,
         gene=embl.locus_tag(gene),
         locus_tag=embl.locus_tag(gene),
-        optional_id=gene,
+        optional_id=embl.gene(gene),
         note_data=helpers.note_data(feature),
         xref_data=xref_data,
         product=helpers.product(feature),
@@ -72,17 +74,29 @@ def parse(raw, family_file):
     This will parse an EMBL file for all Ensembl Entries to import.
     """
 
-    context = Context(family_file)
-    key = op.itemgetter(0, 1)
-    grouped = it.groupby(embl.transcripts(raw), key)
-    for (record, gene), features in grouped:
+    context = Context.build(family_file)
+    for record in SeqIO.parse(raw, 'embl'):
+        current_gene = None
         ncrnas = []
-        for feature in features:
-            if context.is_supressed(feature):
+        for feature in record.features:
+            if feature.type == 'source':
                 continue
-            if helpers.is_pseudogene(gene, feature):
-                continue
-            ncrnas.append(as_entry(record, gene, feature, context))
 
-        for entry in helpers.generate_related(ncrnas):
-            yield entry
+            if embl.is_gene(feature):
+                current_gene = feature
+                for entry in helpers.generate_related(ncrnas):
+                    yield entry
+                ncrnas = []
+                continue
+
+            if helpers.is_pseudogene(current_gene, feature):
+                continue
+
+            if not helpers.is_ncrna(feature):
+                continue
+
+            entry = as_entry(record, current_gene, feature, context)
+            if context.is_supressed(entry):
+                continue
+
+            ncrnas.append(entry)

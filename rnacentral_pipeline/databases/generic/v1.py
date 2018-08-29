@@ -78,7 +78,7 @@ def as_exon(assembly, exon):
         chromosome_name=chromosome,
         # Input is 0 based, but we store 1 based
         primary_start=int(exon['startPosition']) + 1,
-        primary_end=int(exon['endPosition']),
+        primary_end=int(exon['endPosition']) + 1,
         assembly_id=assembly,
         complement=complement,
     )
@@ -327,6 +327,9 @@ def parse(raw):
     database = raw['metaData']['dataProvider']
     ncrnas = sorted(raw['data'], key=gene)
 
+    metadata_pubs = raw['metaData'].get('publications', [])
+    metadata_refs = [as_reference(r) for r in metadata_pubs]
+
     for gene_id, records in it.groupby(ncrnas, gene):
         entries = []
         for record in records:
@@ -343,4 +346,7 @@ def parse(raw):
             entries = add_related_by_gene(entries)
 
         for entry in entries:
-            yield entry
+            yield attr.evolve(
+                entry,
+                references=entry.references + metadata_refs,
+            )
