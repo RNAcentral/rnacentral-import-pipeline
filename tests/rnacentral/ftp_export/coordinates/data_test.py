@@ -18,18 +18,45 @@ import pytest
 
 from rnacentral_pipeline.rnacentral.ftp_export.coordinates import data
 
-from .helpers import fetch_raw, fetch_coord
+from .helpers import fetch_raw, fetch_coord, fetch_all
 
 
 def fetch_one(rna_id, assembly):
-    return next(fetch_coord(rna_id, assembly))
+    coords = list(fetch_coord(rna_id, assembly))
+    assert len(coords) == 1
+    return coords[0]
 
 
 @pytest.mark.parametrize('rna_id,assembly,count', [
     ('URS0000A78C33_9606', 'GRCh38', 4),
+    ('URS00009BF201_9606', 'GRCh38', 2),
+    ('URS00008B37EC_9606', 'GRCh38', 3)
 ])
 def test_can_fetch_all_coordinates_for_upi_taxid(rna_id, assembly, count):
     assert len(fetch_raw(rna_id, assembly)) == count
+
+
+# @pytest.mark.parametrize('taxid,assembly,count', [
+#     (9606, 'GRCh38', 305337),
+#     (7227, 'BDGP6', 36222),
+#     (6239, 'WBcel235', 29214),
+#     (3702, 'TAIR10', 276793),
+#     (10090, 'GRCm38', 955326),
+#     (4896, 'ASM294v2', 3175),
+#     (4081, 'SL2.50', 4431),
+# ])
+# def test_can_find_all_required_coordinates(taxid, assembly, count):
+#     assert len(list(fetch_all(taxid, assembly))) == count
+
+
+# @pytest.mark.parametrize('taxid,assembly,rna_id', [
+#     (9606, 'GRCh38', 'URS0000A78C33_9606'),
+#     (9606, 'GRCh38', 'URS00009BF201_9606'),
+#     (9606, 'GRCh38', 'URS00008B37EC_9606'),
+# ])
+# def test_loads_all_gets_required_data(taxid, assembly, rna_id):
+#     coords = fetch_all(taxid, assembly)
+#     assert any(c for c in coords if c.rna_id == rna_id)
 
 
 def test_can_build_correct_data_for_known():

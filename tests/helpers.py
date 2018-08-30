@@ -29,6 +29,8 @@ def run_with_replacements(path, *replacements, **kwargs):
         with open(path, 'rb') as raw:
             query = raw.read()
             for (initial, replacement) in replacements:
+                print(initial)
+                print(replacement)
                 query = query.replace(initial, replacement)
             tmp.write(query)
             tmp.flush()
