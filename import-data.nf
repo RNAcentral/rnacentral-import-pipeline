@@ -80,10 +80,12 @@ process remote_fetch {
   if (remote.startsWith('ftp:') && remote.contains('**')) {
     """
     lftp -c 'mget ${remote}'
+    find . -name '*.tar.gz' | xargs tar xvf
     """
   } else {
     """
     wget "${remote}"
+    find . -name '*.tar.gz' | xargs tar xvf
     """
   }
 }
