@@ -149,7 +149,7 @@ class DatabaseSpecifcNameBuilder(object):
             name = accession.description
             if match:
                 full = match.group(1)
-                parts = match.group(1).split('-', 3)
+                parts = full.split('-', 3)
                 trimmed = '-'.join(parts[:3])
                 name = '{species} ({common_name}) microRNA {gene} precursor'.format(
                     species=accession.species,
