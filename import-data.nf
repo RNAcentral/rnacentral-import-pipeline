@@ -73,9 +73,19 @@ process remote_fetch {
   output:
   set val(name), file("${pattern}") into remote_fetched
 
-  """
-  wget "${remote}"
-  """
+  script:
+  // wget doesn't play well with ** so we use lftp instead. Also, wget doesn't
+  // like following symlinks, but lftp does. I should find a way to indicate
+  // this to the pipeline.
+  if (remote.startsWith('ftp:') && remote.contains('**')) {
+    """
+    lftp -c 'mget ${remote}'
+    """
+  } else {
+    """
+    wget "${remote}"
+    """
+  }
 }
 
 process local_fetch {
@@ -194,6 +204,25 @@ process import_with_metadata {
 
 raw_output.mix(raw_with_metadata_output).set { raw_output }
 
+raw_output
+  .map { f -> [f.getName(), f] }
+  .groupTuple()
+  .set { to_merge }
+
+process merge_data {
+  input:
+  val(name), file('raw*.csv') from to_merge
+
+  output:
+  file("merged/${name}*.csv") into merged mode flatten
+
+  """
+  find . -name 'raw*.csv' |\
+  xargs cat |\
+  split --additional-suffix=.csv -dC ${params.import_data.chunk_size} - merged/${name}
+  """
+}
+
 accessions = Channel.create()
 locations = Channel.create()
 long_sequences = Channel.create()
@@ -203,7 +232,7 @@ secondary = Channel.create()
 related = Channel.create()
 features = Channel.create()
 
-raw_output
+merged
   .filter { filename -> IMPORTABLE_FILENAMES.contains(filename.getName()) }
   .choice(
     accessions,
@@ -219,40 +248,39 @@ raw_output
 process pgload_data {
 
   input:
-  file 'ac*' from accessions.collect()
-  file 'location*' from locations.collect()
-  file 'long*' from long_sequences.collect()
-  file 'ref*' from refs.collect()
-  file 'short*' from short_sequences.collect()
+  file 'ac_info*.csv' from accessions.collect()
+  file 'locations*.csv' from locations.collect()
+  file 'long*.csv' from long_sequences.collect()
+  file 'short*.csv' from short_sequences.collect()
+  file 'refs*.csv' from refs.collect()
+  file 'related*.csv' from related.collect()
+  file 'features*.csv' from features.collect()
 
   file acc_ctl from Channel.fromPath('files/import-data/accessions.ctl')
   file ref_ctl from Channel.fromPath('files/import-data/references.ctl')
   file coord_ctl from Channel.fromPath('files/import-data/coordinates.ctl')
   file short_ctl from Channel.fromPath('files/import-data/short-sequences.ctl')
   file long_ctl from Channel.fromPath('files/import-data/long-sequences.ctl')
+  file related_ctl from Channel.fromPath('files/import-data/related-sequences.ctl')
+  file features_ctl from Channel.fromPath('files/import-data/features.ctl')
 
   """
-  mkdir ac_info genome_locations long refs short secondary_structures
+  find . -name '.ctl' | xargs -I {} cp {} local_{}
 
-  # cat ac* | split -dC ${params.import_data.chunk_size} - ac_info/chunk_
-  # cat location* | split -dC ${params.import_data.chunk_size} - genome_locations/chunk_
-  # cat long* | split -dC ${params.import_data.chunk_size} - long/chunk_
-  # cat ref* | split -dC ${params.import_data.chunk_size} - refs/chunk_
-  # cat short* | split -dC ${params.import_data.chunk_size} - short/chunk_
-
-  cat ac* | pgloader $acc_ctl
-  cat refs* | pgloader $ref_ctl
-  cat location* | pgloader $coord_ctl
-  cat short* | pgloader $short_ctl
-  cat long* | pgloader $long_ctl
-  sort -u related* | pgloader $related_ctl
-  cat features* | pgloader $feature_ctl
+  pgloader local_${acc_ctl}
+  pgloader local_${ref_ctl}
+  pgloader local_${coord_ctl}
+  pgloader local_${short.ctl}
+  pgloader local_${long.ctl}
 
   rnac run-release
+
+  sort -u related* | pgloader local_$related_ctl
+  pgloader local_${features_ctl}
   """
 }
 
-process rfam_metadata {
+process import_rfam_metadata {
   input:
   set file(ctl), file(sql) from Channel.fromFilePairs("files/import-data/rfam/*.{ctl,sql}")
 
