@@ -13,6 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import re
 import csv
 import operator as op
 import itertools as it
@@ -23,13 +24,19 @@ def only_or_fail(possible):
     return possible.pop()
 
 
+def short_description(entries):
+    description = only_or_fail({e[1] for e in entries}).strip()
+    description = re.sub(r'\s*\[.+\]$', '', description)
+    return description
+
+
 def parse(handle):
     reader = csv.reader(handle, delimiter='\t')
     grouped = it.groupby(reader, op.itemgetter(0))
     for gene_id, entries in grouped:
         entries = list(entries)
-        description = only_or_fail({e[1] for e in entries}).strip()
         symbol = only_or_fail({e[2] for e in entries})
+        description = short_description(entries)
         synonyms = set()
         for entry in entries:
             value = entry[3].replace('"', '')
