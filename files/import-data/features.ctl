@@ -1,5 +1,5 @@
 LOAD CSV
-FROM stdin
+FROM ALL FILENAMES MATCHING ~<features*.csv>
 HAVING FIELDS (
     accession,
     taxid,
@@ -68,4 +68,3 @@ $$
 drop table load_rnc_sequence_features;
 $$
 ;
-

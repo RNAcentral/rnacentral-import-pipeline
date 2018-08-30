@@ -1,6 +1,5 @@
 LOAD CSV
-FROM ALL FILENAMES MATCHING ~<chunk_*>
-IN DIRECTORY '{{DIRECTORY}}'
+FROM ALL FILENAMES MATCHING ~<ac_info*.csv>
 HAVING FIELDS (
     accession,
     parent_ac,
@@ -42,7 +41,7 @@ HAVING FIELDS (
     standard_name,
     db_xref
 )
-INTO {{PGDATABASE}}
+INTO {{PGDATABASE}}?load_rnc_accessions
 TARGET COLUMNS (
     accession,
     parent_ac,
