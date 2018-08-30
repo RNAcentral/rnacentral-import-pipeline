@@ -26,7 +26,6 @@ def parse_with_family(filename):
         return list(parse(raw, family_file))
 
 
-
 def entries_for(entries, accession):
     return [e for e in entries if e.accession == accession]
 
@@ -108,17 +107,17 @@ def test_calls_lincRNA_lncRNA(human_12):
 
 def test_uses_gene_description_if_possible(human_12):
     assert entry_for(human_12, 'ENST00000538041.1').description == \
-        "Homo sapiens long intergenic non-protein coding RNA 1486"
+        "Homo sapiens (human) long intergenic non-protein coding RNA 1486"
 
 
 def test_description_strips_source(human_12):
     assert entry_for(human_12, 'ENST00000516089.1').description == \
-        "Homo sapiens small Cajal body-specific RNA 11"
+        "Homo sapiens (human) small Cajal body-specific RNA 11"
 
 
 def test_generated_description_includes_locus(human_12):
     assert entry_for(human_12, 'ENST00000501075.2').description == \
-        "Homo sapiens (human) antisense RNA RP5-940J5.6"
+        "Homo sapiens (human) antisense RNA AC006064.2"
 
 
 def test_can_correct_rfam_name_to_type(human_12):
@@ -126,31 +125,25 @@ def test_can_correct_rfam_name_to_type(human_12):
 
 
 def test_it_gets_simple_locations(human_12):
-    assert entry_for(human_12, 'ENST00000495392.1').exons == [
-        Exon(chromosome_name='12', assembly_id='GRCh38', primary_start=3211663, primary_end=3211917, complement=True)
+    assert entry_for(human_12, 'ENST00000546223.1').exons == [
+        dat.Exon(chromosome_name='12', assembly_id='GRCh38', primary_start=37773, primary_end=38102, complement=True),
+        dat.Exon(chromosome_name='12', assembly_id='GRCh38', primary_start=36661, primary_end=37529, complement=True),
     ]
 
 
 def test_can_get_joined_locations(human_12):
-    assert entry_for(human_12, 'ENST00000635814.1').exons == [
-        Exon(chromosome_name='12', assembly_id='GRCh38', primary_start=3337119, primary_end=3337202, complement=True),
-        Exon(chromosome_name='12', assembly_id='GRCh38', primary_start=3323324, primary_end=3323512, complement=True),
-        Exon(chromosome_name='12', assembly_id='GRCh38', primary_start=3307748, primary_end=3307818, complement=True),
-        Exon(chromosome_name='12', assembly_id='GRCh38', primary_start=3306764, primary_end=3306868, complement=True),
-        Exon(chromosome_name='12', assembly_id='GRCh38', primary_start=3303782, primary_end=3303937, complement=True),
-        Exon(chromosome_name='12', assembly_id='GRCh38', primary_start=3303337, primary_end=3303403, complement=True),
-        Exon(chromosome_name='12', assembly_id='GRCh38', primary_start=3298210, primary_end=3298262, complement=True),
+    assert entry_for(human_12, 'ENST00000543036.1').exons == [
+        dat.Exon(chromosome_name='12', assembly_id='GRCh38', primary_start=3319441, primary_end=3319726, complement=False),
+        dat.Exon(chromosome_name='12', assembly_id='GRCh38', primary_start=3323349, primary_end=3323452, complement=False),
+        dat.Exon(chromosome_name='12', assembly_id='GRCh38', primary_start=3325090, primary_end=3325340, complement=False),
     ]
 
 
 def test_it_gets_cross_references(human_12):
     assert entry_for(human_12, 'ENST00000504074.1').xref_data == {
-        "Vega_transcript": ["OTTHUMT00000397330"],
         "UCSC": ["uc010scw.2"],
-        "Clone_based_vega_transcript": ["RP11-598F7.1-001"],
-        "OTTT": ["OTTHUMT00000397330"],
         "RNAcentral": ["URS000042090E"],
-        "HGNC_trans_name": ['FAM138D-001'],
+        "HGNC_trans_name": ['FAM138D-201'],
         "RefSeq_ncRNA": ['NR_026823'],
     }
 
@@ -166,12 +159,12 @@ def test_it_does_not_import_suprressed_rfam_families(human_12):
 def test_it_builds_correct_entries(human_12):
     val = attr.asdict(entry_for(human_12, 'ENST00000620330.1'))
     del val['sequence']
-    assert val == attr.asdict(dat.Entry(
+    ans = attr.asdict(dat.Entry(
         primary_id='ENST00000620330',
         accession='ENST00000620330.1',
         ncbi_tax_id=9606,
         database='ENSEMBL',
-        sequence='',
+        sequence='A',
         exons=[dat.Exon(
             chromosome_name="12",
             primary_start=3124777,
@@ -201,6 +194,7 @@ def test_it_builds_correct_entries(human_12):
         xref_data={
             "UCSC": ["uc058jxg.1"],
             "RFAM_trans_name": ["Metazoa_SRP.190-201"],
+            "RNAcentral": ["URS0000AA28EF"],
         },
         references=[dat.Reference(
             authors=(
@@ -220,6 +214,8 @@ def test_it_builds_correct_entries(human_12):
         is_composite='N',
     ))
 
+    del ans['sequence']
+    assert val == ans
 
 def test_it_always_has_valid_rna_types_for_human(human_12):
     for entry in human_12:
@@ -229,6 +225,7 @@ def test_it_always_has_valid_rna_types_for_human(human_12):
             'antisense_RNA',
             'lncRNA',
             'misc_RNA',
+            'other',
             'precursor_RNA',
             'rRNA',
             'ribozyme',
@@ -252,6 +249,7 @@ def test_it_always_has_valid_rna_types_for_mouse(mouse_3):
             'antisense_RNA',
             'lncRNA',
             'misc_RNA',
+            'other',
             'precursor_RNA',
             'rRNA',
             'ribozyme',
