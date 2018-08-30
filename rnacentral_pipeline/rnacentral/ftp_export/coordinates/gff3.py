@@ -28,7 +28,7 @@ def located_sequences_as_features(sequences):
             attributes = {
                 'Name': [located.rna_id],
                 'type': [located.rna_type],
-                'databases': [located.databases],
+                'databases': located.databases,
                 'ID': [region.region_id],
                 'source': [region.source],
             }
@@ -52,7 +52,7 @@ def located_sequences_as_features(sequences):
                 exon_attributes = {
                     'Name': [located.rna_id],
                     'type': [located.rna_type],
-                    'databases': [located.databases],
+                    'databases': located.databases,
                     'ID': [exon_id],
                     'Parent': [region.region_id],
                 }

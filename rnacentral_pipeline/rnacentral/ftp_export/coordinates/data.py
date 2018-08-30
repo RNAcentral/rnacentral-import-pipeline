@@ -27,25 +27,26 @@ from attr.validators import instance_of as is_a
 class ExonicSequence(object):
     rna_id = attr.ib(validator=is_a(basestring))
     rna_type = attr.ib(validator=is_a(basestring))
-    databases = attr.ib(validator=is_a(basestring))
+    databases = attr.ib(validator=is_a(list))
     exons = attr.ib(validator=is_a(list))
 
     @classmethod
     def build(cls, raw):
-        exons = []
-        if raw['known_coordinates']['region_id'] and \
-                raw['known_coordinates']['start'] is not None:
-            exons.append(Exon.build('expert-database', raw['known_coordinates']))
-
-        if raw['mapped_coordinates']['region_id'] and \
-                raw['mapped_coordinates']['start'] is not None:
-            exons.append(Exon.build('alignment', raw['mapped_coordinates']))
-
+        exons = [Exon.build(e) for e in raw['exons']]
         assert exons, "Could build any exons"
+
+        if raw['rna_type'] in {'miRNA', 'piRNA'}:
+            updates = []
+            for index, exon in enumerate(exons):
+                region_id = exon.region_id + ':%s' % (index + 1)
+                updates.append(attr.evolve(exon, region_id=region_id))
+            exons = updates
+        exons = sorted(set(exons))
+
         return cls(
             rna_id=raw['rna_id'],
             rna_type=raw['rna_type'],
-            databases=raw['databases'],
+            databases=raw['databases'].split(','),
             exons=exons,
         )
 
@@ -54,20 +55,16 @@ class ExonicSequence(object):
 class LocatedSequence(object):
     rna_id = attr.ib(validator=is_a(basestring))
     rna_type = attr.ib(validator=is_a(basestring))
-    databases = attr.ib(validator=is_a(basestring))
+    databases = attr.ib(validator=is_a(list))
     regions = attr.ib(validator=is_a(list))
 
     @classmethod
-    def from_exonics(cls, exonics):
-        exons = []
-        exonics = list(exonics)
-        for exonic in exonics:
-            exons.extend(exonic.exons)
-
+    def from_exonic(cls, exonic):
+        seen = set()
         regions = []
         grouping_key = op.attrgetter('region_id')
+        exons = list(exonic.exons)
         exons.sort(key=grouping_key)
-        seen = set()
         for _, exons in it.groupby(exons, grouping_key):
             ordered = sorted(exons, key=op.attrgetter('start', 'stop'))
 
@@ -82,7 +79,7 @@ class LocatedSequence(object):
                 raise ValueError("Unknown sources in: %s" % str(sources))
 
             region = Region.from_exons(
-                exonics[0].rna_id,
+                exonic.rna_id,
                 source,
                 ordered
             )
@@ -95,13 +92,13 @@ class LocatedSequence(object):
                 chromosome = int(region.chromosome)
             except:
                 chromosome = region.chromosome
-            return (chromosome, region.start, region.stop)
+            return (chromosome, region.strand, region.start, region.stop)
 
         regions.sort(key=region_key)
         return cls(
-            rna_id=exonics[0].rna_id,
-            rna_type=exonics[0].rna_type,
-            databases=exonics[0].databases,
+            rna_id=exonic.rna_id,
+            rna_type=exonic.rna_type,
+            databases=exonic.databases,
             regions=regions,
         )
 
@@ -135,6 +132,12 @@ class Region(object):
             chromosomes.add(exon.chromosome)
             strands.add(exon.strand)
             endpoints.add(Endpoint.from_exon(exon))
+
+        if len(chromosomes) != 1:
+            from pprint import pprint
+            pprint(rna_id)
+            pprint(source)
+            pprint(exons)
 
         assert len(region_ids) == 1
         assert len(chromosomes) == 1
@@ -182,7 +185,7 @@ class Region(object):
     #     return self.coordinate_system == 'chromosome'
 
 
-@attr.s()
+@attr.s(hash=True)
 class Exon(object):
     region_id = attr.ib(validator=is_a(basestring))
     chromosome = attr.ib(validator=is_a(basestring))
@@ -193,17 +196,26 @@ class Exon(object):
     identity = attr.ib(validator=optional(is_a(float)))
 
     @classmethod
-    def build(cls, source, raw):
+    def build(cls, raw):
         identity = None
         if 'identity' in raw:
             identity = float(raw['identity'])
+
+        region_id = raw['region_id']
+        if raw['source'] == 'expert-database':
+            region_id = '{region_id}:{chr}:{strand}'.format(
+                region_id=region_id,
+                chr=raw['chromosome'],
+                strand=raw['strand'],
+            )
+
         return cls(
-            region_id=raw['region_id'],
+            region_id=region_id,
             chromosome=raw['chromosome'],
             strand=raw['strand'],
             start=raw['start'],
             stop=raw['stop'],
-            source=source,
+            source=raw['source'],
             identity=identity
         )
 
@@ -219,21 +231,32 @@ class Endpoint(object):
 
 
 def is_buildable(raw):
-    return (
-        raw['known_coordinates']['region_id'] and
-        raw['known_coordinates']['start'] is not None
-    ) or (
-        raw['mapped_coordinates']['region_id'] and
-        raw['mapped_coordinates']['start'] is not None
-    )
+    return raw['region_id'] and raw['start'] is not None
 
 def parse(iterable):
-    buildable = it.ifilter(is_buildable, iterable)
-    exonics = it.imap(ExonicSequence.build, buildable)
-    grouped = it.groupby(exonics, op.attrgetter('rna_id'))
-    grouped = it.imap(op.itemgetter(1), grouped)
-    located = it.imap(LocatedSequence.from_exonics, grouped)
-    return located
+    sources = {
+        'known_coordinates': 'expert-database',
+        'mapped_coordinates': 'alignment',
+    }
+
+    for _, entries in it.groupby(iterable, op.itemgetter('rna_id')):
+        exons = []
+        entries = list(entries)
+        for entry in entries:
+            common = {k: v for k, v in entry.items() if k not in sources}
+            for name, source in sources.items():
+                data = entry[name]
+                if not is_buildable(data):
+                    continue
+                current = {'source': source}
+                current.update(common)
+                current.update(data)
+                exons.append(current)
+
+        exonic = dict(common)
+        exonic['exons'] = exons
+        exonic = ExonicSequence.build(exonic)
+        yield LocatedSequence.from_exonic(exonic)
 
 
 def from_file(handle):
