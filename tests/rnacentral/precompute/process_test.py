@@ -274,3 +274,21 @@ def test_creates_expected_qa_udpates(rna_id, expected):
             flags.append(field.name)
     assert sorted(flags) == sorted(expected)
     assert status.has_issue == bool(expected)
+
+
+@pytest.mark.parametrize('rna_id,expected', [  # pylint: disable=no-member
+    ('URS0000010837_7227', 209),
+    ('URS00001C018D_77133', 209),
+    ('URS0000400378_30527', 209),
+    ('URS00004E52D3_10090', 222),
+    ('URS00004E9E38_7227', 220),
+    ('URS00004FB44B_6239', 217),
+    ('URS000051DCEC_10090', 209),
+    ('URS00005511ED_6239', 217),
+    ('URS000055786A_7227', 220),
+    ('URS0000563A36_7227', 220),
+    ('URS000061A10B_9606', 222),
+    ('URS0000866382_1000416', 209),
+])
+def test_computes_max_release(rna_id, expected):
+    assert load_data(rna_id).last_release == expected

@@ -118,6 +118,7 @@ class Update(object):
     has_coordinates = attr.ib(validator=is_a(bool))
     qa_status = attr.ib(validator=is_a(QaStatus))
     short_description = attr.ib(validator=is_a(basestring))
+    last_release = attr.ib(validator=is_a(int))
 
     @property
     def rna_id(self):
@@ -186,6 +187,7 @@ class ActiveUpdate(Update):
             has_coordinates=has_coordinates,
             qa_status=QaStatus.build(rna_type, sequence),
             short_description=short_description,
+            last_release=sequence.last_release,
         )
 
 
@@ -232,4 +234,5 @@ class InactiveUpdate(Update):
             has_coordinates=has_coordinates,
             qa_status=QaStatus.empty(),
             short_description=description,
+            last_release=sequence.last_release,
         )
