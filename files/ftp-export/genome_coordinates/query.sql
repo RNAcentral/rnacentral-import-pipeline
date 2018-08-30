@@ -1,9 +1,9 @@
 COPY (
-select
+SELECT
     json_build_object(
         'rna_id', pre.id,
         'rna_type',  pre.rna_type,
-        'databases', pre.databases,
+        'databases', pre."databases",
         'known_coordinates', json_build_object(
             'region_id', coord.accession,
             'chromosome', coord.name,
@@ -20,14 +20,19 @@ select
             'identity', mapping.identity
         )
     )
-from xref
-join rnc_rna_precomputed pre on pre.upi = xref.upi and pre.taxid = xref.taxid
-LEFT JOIN rnc_coordinates coord ON xref.ac = coord.accession and coord.assembly_id = :assembly_id
-LEFT JOIN rnc_genome_mapping mapping on mapping.rna_id = pre.id and mapping.assembly_id = :assembly_id
+FROM rnc_rna_precomputed pre
+JOIN xref
+ON
+    pre.upi = xref.upi AND pre.taxid = xref.taxid
+LEFT JOIN rnc_coordinates coord
+ON
+    xref.ac = coord.accession AND coord.assembly_id = :assembly_id
+LEFT JOIN rnc_genome_mapping mapping
+ON
+    mapping.rna_id = pre.id AND mapping.assembly_id = :assembly_id
 WHERE
-    xref.taxid = :taxid
-    and pre.is_active = true
-    and xref.deleted = 'N'
-    and (mapping.region_id is not null or coord.id is not null)
-order by pre.id
+    pre.is_active = true
+    AND xref.deleted = 'N'
+    AND (mapping.region_id IS NOT NULL OR coord.id IS NOT null)
+ORDER BY pre.id
 ) TO STDOUT

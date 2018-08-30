@@ -40,7 +40,7 @@ create table load_precomputed (
   upi varchar(26) NOT NULL,
   taxid int8 NULL,
   description varchar(500) NULL,
-  short_description varchar(500) NULL,
+  short_description text NULL,
   rna_type varchar(500) NULL DEFAULT 'NULL'::character varying,
   has_coordinates bool NOT NULL DEFAULT false,
   databases text,

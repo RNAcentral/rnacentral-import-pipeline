@@ -26,7 +26,7 @@ def fetch_raw(rna_id, assembly):
     _, taxid = rna_id.split('_')
     return run_with_replacements(
         path,
-        (':assembly_id', "'GRCh38'"),
+        (':assembly_id', "'%s'" % assembly),
         (':taxid', taxid),
         ('WHERE\n',
          '''where
@@ -37,3 +37,14 @@ def fetch_raw(rna_id, assembly):
 
 def fetch_coord(rna_id, assembly):
     return data.parse(fetch_raw(rna_id, assembly))
+
+
+def fetch_all(taxid, assembly):
+    path = os.path.join('files', 'ftp-export', 'genome_coordinates',
+                        'query.sql')
+    return data.parse(run_with_replacements(
+        path,
+        (':assembly_id', "'%s'" % assembly),
+        (':taxid', str(taxid)),
+        take_all=True,
+    ))

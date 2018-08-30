@@ -13,16 +13,22 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import pytest
 from gffutils import Feature
 
 from rnacentral_pipeline.rnacentral.ftp_export.coordinates import gff3
 
-from .helpers import fetch_coord
+from .helpers import fetch_coord, fetch_all
 
 
 def fetch_data(rna_id, assembly):
     data = fetch_coord(rna_id, assembly)
     return [f for f in gff3.located_sequences_as_features(data)]
+
+
+def fetch_gff_data(taxid, assembly):
+    data = fetch_all(taxid, assembly)
+    return list(gff3.located_sequences_as_features(data))
 
 
 def test_can_produce_features():
@@ -102,3 +108,16 @@ def test_can_produce_features_with_identity():
         ),
     ]
     assert data == ans
+
+
+@pytest.mark.parametrize('taxid,assembly,count', [
+    # (9606, 'GRCh38', 305337),
+    # (7227, 'BDGP6', 36222),
+    # (6239, 'WBcel235', 29214),
+    # (3702, 'TAIR10', 276793),
+    # (10090, 'GRCm38', 955326),
+    (4896, 'ASM294v2', 3175),
+    # (4081, 'SL2.50', 4431),
+])
+def test_can_find_all_required_coordinates(taxid, assembly, count):
+    assert len(list(fetch_gff_data(taxid, assembly))) == count
