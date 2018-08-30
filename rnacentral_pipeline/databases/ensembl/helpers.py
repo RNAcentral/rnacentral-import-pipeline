@@ -160,7 +160,10 @@ def transcript(feature):
     """
     Get the transcript id of this feature.
     """
-    return embl.qualifier_value(feature, 'note', '^transcript_id=(.+)$')
+    name = embl.qualifier_value(feature, 'note', '^transcript_id=(.+)$')
+    if name:
+        return name
+    return embl.qualifier_string(feature, 'standard_name')
 
 
 def primary_id(feature):
@@ -237,7 +240,10 @@ def note_data(feature):
     notes_data = notes(feature)
     if len(notes_data) > 1:
         notes_data = notes_data[1:]
-    return embl.grouped_annotations(notes_data, '=')
+    grouped = embl.grouped_annotations(notes_data, '=')
+    if 'transcript_id' not in grouped:
+        grouped['transcript_id'] = [transcript(feature)]
+    return grouped
 
 
 def is_ncrna(feature):
