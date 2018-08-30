@@ -29,8 +29,9 @@ def fetch_one(rna_id, assembly):
 
 @pytest.mark.parametrize('rna_id,assembly,count', [
     ('URS0000A78C33_9606', 'GRCh38', 4),
-    ('URS00009BF201_9606', 'GRCh38', 2),
-    ('URS00008B37EC_9606', 'GRCh38', 3)
+    # ('URS00009BF201_9606', 'GRCh38', 90),
+    # ('URS00008B37EC_9606', 'GRCh38', 3),
+    ('URS00008C1914_9606', 'GRCh38', 72),
 ])
 def test_can_fetch_all_coordinates_for_upi_taxid(rna_id, assembly, count):
     assert len(fetch_raw(rna_id, assembly)) == count
