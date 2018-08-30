@@ -207,11 +207,14 @@ process import_with_metadata {
 raw_output.mix(raw_with_metadata_output).set { raw_output }
 
 raw_output
-  .map { f -> [f.getName(), f] }
+  .map { f ->
+    filename = f.getName()
+    [filename.take(filename.lastIndexOf('.')), f]
+  }
   .groupTuple()
   .set { to_merge }
 
-process merge_data {
+process merge_csvs {
   input:
   val(name), file('raw*.csv') from to_merge
 
@@ -259,10 +262,10 @@ process pgload_data {
   file 'features*.csv' from features.collect()
 
   file acc_ctl from Channel.fromPath('files/import-data/accessions.ctl')
-  file ref_ctl from Channel.fromPath('files/import-data/references.ctl')
-  file coord_ctl from Channel.fromPath('files/import-data/coordinates.ctl')
-  file short_ctl from Channel.fromPath('files/import-data/short-sequences.ctl')
+  file locations_ctl from Channel.fromPath('files/import-data/locations.ctl')
   file long_ctl from Channel.fromPath('files/import-data/long-sequences.ctl')
+  file short_ctl from Channel.fromPath('files/import-data/short-sequences.ctl')
+  file ref_ctl from Channel.fromPath('files/import-data/references.ctl')
   file related_ctl from Channel.fromPath('files/import-data/related-sequences.ctl')
   file features_ctl from Channel.fromPath('files/import-data/features.ctl')
 
@@ -270,15 +273,15 @@ process pgload_data {
   find . -name '.ctl' | xargs -I {} cp {} local_{}
 
   pgloader local_${acc_ctl}
-  pgloader local_${ref_ctl}
-  pgloader local_${coord_ctl}
-  pgloader local_${short.ctl}
+  pgloader local_${locations_ctl}
   pgloader local_${long.ctl}
+  pgloader local_${short.ctl}
+  pgloader local_${ref_ctl}
 
   rnac run-release
 
-  sort -u related* | pgloader local_$related_ctl
   pgloader local_${features_ctl}
+  sort -u related* | pgloader local_$related_ctl
   """
 }
 
