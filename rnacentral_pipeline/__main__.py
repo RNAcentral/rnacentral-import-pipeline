@@ -40,6 +40,33 @@ from rnacentral_pipeline.rnacentral.ftp_export import release_note
 from rnacentral_pipeline.rnacentral.ftp_export import ensembl as ensembl_json
 
 
+class CustomMultiCommand(click.Group):
+    """
+    Modified from:
+    https://stackoverflow.com/questions/46641928/python-click-multiple-command-names
+    """
+
+    def command(self, *args, **kwargs):
+        """
+        Behaves the same as `click.Group.command()` except if passed
+        a list of names, all after the first will be aliases for the first.
+        """
+
+        def decorator(f):
+            builder = super(CustomMultiCommand, self).command
+            if isinstance(args[0], list):
+                names = args[0]
+                cmd_args = list(args[1:])
+                for alias in names[1:]:
+                    cmd = builder(alias, *cmd_args, **kwargs)(f)
+                    cmd = builder(f)
+                    cmd.short_help = "Alias for '%s'" % names[0]
+                return builder(names[0], *cmd_args, **kwargs)(f)
+            return builder(*args, **kwargs)(f)
+
+        return decorator
+
+
 @click.group()
 def cli():
     """
@@ -64,7 +91,7 @@ def search_export_ranges(output, chunk_size=None, db_url=None):
     csv.writer(output).writerows(upi_ranges(db_url, chunk_size))
 
 
-@cli.group('external')
+@cli.group('external', cls=CustomMultiCommand)
 def external_database():
     """
     This is a group of commands for processing data from various databases into
@@ -73,7 +100,14 @@ def external_database():
     pass
 
 
-@external_database.command('json-schema')
+@external_database.command([
+    'json-schema',
+    'flybase',
+    'lncipedia',
+    'mirbase',
+    'pombase',
+    'tarbase',
+])
 @click.argument('json_file', type=click.File('rb'))
 @click.argument('output', default='.', type=click.Path(
     writable=True,

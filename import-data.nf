@@ -21,7 +21,6 @@ IMPORTABLE_FILENAMES = [
   'features.csv',
 ]
 
-schema_imports = Channel.empty()
 dataless_imports = Channel.empty()
 remotes_to_fetch = Channel.empty()
 locals_to_fetch = Channel.empty()
@@ -35,15 +34,11 @@ for (entry in params.import_data.databases) {
   database = params.databases[name]
 
   // The custom property should be a list of directories that contain csv files to
-  // import. For example if custom was ./mirbase we would expect it to contain:
-  // ./mirbase/ac_info.csv, ./mirbase/genomic_locations.csv, etc. The files may be
-  // nested so: ./mirbase/something/ac_info.csv would also work.
+  // import. For example if custom was ./custom we would expect it to contain:
+  // ./custom/ac_info.csv, ./custom/genomic_locations.csv, etc. The files may be
+  // nested so: ./custom/mirbase/ac_info.csv would also work.
   if (name == "custom") {
     raw_output.mix(Channel.fromPath("${base}/**.csv")).flatten().set { raw_output }
-  } else if (database.containsKey('json_schema')) {
-    schema_imports
-      .mix(Channel.from(database.json_schema))
-      .set { schema_imports }
   } else if (database.containsKey('remote') && database.remote) {
     db_channel = Channel.value([name, database.remote, database.pattern])
     if (database.remote.contains('http') || database.remote.contains('ftp')) {
@@ -55,29 +50,6 @@ for (entry in params.import_data.databases) {
     dataless_imports.mix(Channel.from(name)).set { dataless_imports }
   }
 }
-
-process json_schema_import {
-  memory '4 GB'
-
-  input:
-  val(url) from schema_imports
-
-  output:
-  file "*.csv" into raw_json_output mode flatten
-
-  script:
-  if (url.contains('.gz')) {
-    """
-    curl "$url" | gzip -d | rnac external json-schema -
-    """
-  } else {
-    """
-    curl "$url" | rnac external json-schema -
-    """
-  }
-}
-
-raw_output.mix(raw_json_output).set { raw_output }
 
 process dataless {
   input:
@@ -128,6 +100,8 @@ remote_fetched
   }
 
 process external_without_metadata {
+  memory params.databases[name].get('memory', '2 GB')
+
   input:
   set val(name), file(filename) from metadataless
 
@@ -135,7 +109,7 @@ process external_without_metadata {
   file "*.csv" into raw_metadataless_output mode flatten
 
   script:
-  if (".gz" in filename) {
+  if (filename.endsWith(".gz")) {
     """
     zcat $filename | rnac external ${name} -
     """
@@ -198,6 +172,8 @@ Channel.empty()
   .set { metadata }
 
 process import_with_metadata {
+  memory params.databases[name].get('memory', '2 GB')
+
   input:
   set val(name), file(input_file), file("metadata*") from metadata
 
