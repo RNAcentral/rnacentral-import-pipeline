@@ -42,6 +42,11 @@ def human_12():
 
 
 @pytest.fixture(scope='module')  # pylint: disable=no-member
+def human_x():
+    return parse_with_family('data/ensembl/Homo_sapiens.GRCh38.92.chromosome.X.dat')
+
+
+@pytest.fixture(scope='module')  # pylint: disable=no-member
 def macaca():
     return parse_with_family('data/ensembl/Macaca_mulatta.Mmul_8.0.1.92.chromosome.1.dat')
 
@@ -216,6 +221,19 @@ def test_it_builds_correct_entries(human_12):
 
     del ans['sequence']
     assert val == ans
+
+
+def test_it_assigns_related(human_x):
+    assert entry_for(human_x, "ENST00000434938.7").related_sequences == [dat.RelatedSequence(
+        sequence_id="ENST00000430235.7",
+        relationship='isoform'
+    )]
+
+    assert entry_for(human_x, "ENST00000430235.7").related_sequences == [dat.RelatedSequence(
+        sequence_id="ENST00000434938.7",
+        relationship='isoform'
+    )]
+
 
 def test_it_always_has_valid_rna_types_for_human(human_12):
     for entry in human_12:
