@@ -72,7 +72,7 @@ def load_data(upi):
     ('URS00009E8F92_885695', 'Sinumelon nullarboricum partial 16S ribosomal RNA'),
     ('URS0000A767C0_3702', 'Arabidopsis thaliana (thale cress) other RNA (AT1G44125)'),
     ('URS0000A86584_10090', 'Mus musculus predicted gene 29254 (Gm29254)'),
-    ('URS0000ABD87F_9606', 'Homo sapiens RNA, 45S pre-ribosomal 4 (RNA45S4, RNA45SN1)'),
+    ('URS0000ABD87F_9606', 'Homo sapiens RNA, 45S pre-ribosomal N1 (RNA45SN1)'),
 ])
 def test_builds_correct_descriptions(rna_id, description):
     assert load_data(rna_id).description == description
@@ -81,7 +81,7 @@ def test_builds_correct_descriptions(rna_id, description):
 @pytest.mark.skip()
 @pytest.mark.parametrize('rna_id,short', [  # pylint: disable=no-member
     ('URS000001E7BA_559292', 'tRNA-Gln (tQ(UUG)C, tQ(UUG)D1-3, tQ(UUG)E1, tQ(UUG)H, tQ(UUG)L)'),
-    ('URS0000023341_1142511', 'tRNA-Cys (GCA) (tRNA-Cys-GCA-1-1)')
+    ('URS0000023341_1142511', 'tRNA-Cys (GCA) (tRNA-Cys-GCA-1-1)'),
     ('URS00000AEE53_380749', 'tmRNA'),
     ('URS00000F9D45_9606', 'RNA, 5S ribosomal 1 (RNA5S1-8, RNA5S10-17)'),
     ('URS000018EB2E_3702', 'Long non-coding antisense RNA COOLAIR'),
@@ -125,7 +125,7 @@ def test_builds_correct_descriptions(rna_id, description):
     ('URS00009E8F92_885695', 'partial 16S ribosomal RNA'),
     ('URS0000A767C0_3702', 'other RNA (AT1G44125)'),
     ('URS0000A86584_10090', 'predicted gene 29254 (Gm29254)'),
-    ('URS0000ABD87F_9606', 'RNA, 45S pre-ribosomal 4 (RNA45S4, RNA45SN1)'),
+    ('URS0000ABD87F_9606', 'RNA, 45S pre-ribosomal N1 (RNA45SN1)'),
 ])
 def test_strips_leading_species(rna_id, short):
     assert load_data(rna_id).short_description == short
