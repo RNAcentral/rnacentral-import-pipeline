@@ -28,13 +28,20 @@ def fetch_one(rna_id, assembly):
 
 
 @pytest.mark.parametrize('rna_id,assembly,count', [
-    ('URS0000A78C33_9606', 'GRCh38', 4),
-    # ('URS00009BF201_9606', 'GRCh38', 90),
-    # ('URS00008B37EC_9606', 'GRCh38', 3),
-    ('URS00008C1914_9606', 'GRCh38', 72),
+    # ('URS0000A78C33_9606', 'GRCh38', 4),
+    ('URS00009BF201_9606', 'GRCh38', 9),
+    ('URS00008B37EC_9606', 'GRCh38', 1),
+    ('URS00008C1914_9606', 'GRCh38', 1),
 ])
 def test_can_fetch_all_coordinates_for_upi_taxid(rna_id, assembly, count):
-    assert len(fetch_raw(rna_id, assembly)) == count
+    located = fetch_one(rna_id, assembly)
+    print(located)
+    assert len(located.regions) == count
+
+
+@pytest.mark.skip
+def test_it_does_not_export_coordinates_in_weird_chromosomes():
+    pass
 
 
 # @pytest.mark.parametrize('taxid,assembly,count', [
@@ -60,132 +67,132 @@ def test_can_fetch_all_coordinates_for_upi_taxid(rna_id, assembly, count):
 #     assert any(c for c in coords if c.rna_id == rna_id)
 
 
-def test_can_build_correct_data_for_known():
-    found = fetch_one('URS0000A78C33_9606', 'GRCh38')
+# def test_can_build_correct_data_for_known():
+#     found = fetch_one('URS0000A78C33_9606', 'GRCh38')
 
-    assert found.regions[0].start == 5126
-    assert found.regions[0].stop == 50017
-    assert found.regions[0].region_id == 'URS0000A78C33_9606@CHR_HSCHR5_1_CTG1/5126-50017:+'
-    assert attr.asdict(found) == attr.asdict(data.LocatedSequence(
-        rna_id='URS0000A78C33_9606',
-        rna_type='lncRNA',
-        databases="Ensembl,GENCODE",
-        regions=[
-            data.Region(
-                rna_id='URS0000A78C33_9606',
-                chromosome='CHR_HSCHR5_1_CTG1',
-                strand=1,
-                endpoints=(
-                    data.Endpoint(start=5126, stop=5218),
-                    data.Endpoint(start=49916, stop=50017),
-                ),
-                source='expert-database',
-            ),
-        ],
-    ))
-
-
-def test_can_build_correct_data_for_both_mapped_and_known():
-    found = fetch_one('URS00008C1902_9606', 'GRCh38')
-
-    ans = data.LocatedSequence(
-        rna_id='URS00008C1902_9606',
-        rna_type='lncRNA',
-        databases="LNCipedia,NONCODE",
-        regions=[
-            data.Region(
-                rna_id='URS00008C1902_9606',
-                chromosome='1',
-                strand=1,
-                endpoints=(
-                    data.Endpoint(start=11869, stop=12227),
-                    data.Endpoint(start=12613, stop=12721),
-                    data.Endpoint(start=13221, stop=14409),
-                ),
-                source='expert-database',
-            ),
-        ],
-    )
-
-    assert found.regions[0].start == 11869
-    assert found.regions[0].stop == 14409
-    assert found.regions[0].region_id == 'URS00008C1902_9606@1/11869-14409:+'
-    assert attr.asdict(found) == attr.asdict(ans)
+#     assert found.regions[0].start == 5126
+#     assert found.regions[0].stop == 50017
+#     assert found.regions[0].region_id == 'URS0000A78C33_9606@CHR_HSCHR5_1_CTG1/5126-50017:+'
+#     assert attr.asdict(found) == attr.asdict(data.LocatedSequence(
+#         rna_id='URS0000A78C33_9606',
+#         rna_type='lncRNA',
+#         databases=["Ensembl", "GENCODE"],
+#         regions=[
+#             data.Region(
+#                 rna_id='URS0000A78C33_9606',
+#                 chromosome='CHR_HSCHR5_1_CTG1',
+#                 strand=1,
+#                 endpoints=(
+#                     data.Endpoint(start=5126, stop=5218),
+#                     data.Endpoint(start=49916, stop=50017),
+#                 ),
+#                 source='expert-database',
+#             ),
+#         ],
+#     ))
 
 
-def test_can_build_for_only_mapped():
-    found = fetch_one('URS000012C1C6_9606', 'GRCh38')
+# def test_can_build_correct_data_for_both_mapped_and_known():
+#     found = fetch_one('URS00008C1902_9606', 'GRCh38')
 
-    ans = data.LocatedSequence(
-        rna_id='URS000012C1C6_9606',
-        rna_type='piRNA',
-        databases='ENA',
-        regions=[
-            data.Region(
-                rna_id='URS000012C1C6_9606',
-                chromosome='1',
-                strand=1,
-                endpoints=(data.Endpoint(start=165777430, stop=165777459),),
-                source='alignment',
-                identity=1.0
-            ),
-            data.Region(
-                rna_id='URS000012C1C6_9606',
-                chromosome='3',
-                strand=-1,
-                endpoints=(data.Endpoint(start=163618677, stop=163618706),),
-                source='alignment',
-                identity=1.0
-            ),
-            data.Region(
-                rna_id='URS000012C1C6_9606',
-                chromosome='8',
-                strand=-1,
-                endpoints=(data.Endpoint(start=52338512, stop=52338541),),
-                source='alignment',
-                identity=1.0
-            ),
-            data.Region(
-                rna_id='URS000012C1C6_9606',
-                chromosome='10',
-                strand=-1,
-                endpoints=(data.Endpoint(start=73941772, stop=73941801),),
-                source='alignment',
-                identity=1.0
-            ),
-            data.Region(
-                rna_id='URS000012C1C6_9606',
-                chromosome='12',
-                strand=1,
-                endpoints=(data.Endpoint(start=123897625, stop=123897654),),
-                source='alignment',
-                identity=1.0
-            ),
-            data.Region(
-                rna_id='URS000012C1C6_9606',
-                chromosome='19',
-                strand=-1,
-                endpoints=(data.Endpoint(start=3161031, stop=3161060),),
-                source='alignment',
-                identity=1.0
-            ),
-            data.Region(
-                rna_id='URS000012C1C6_9606',
-                chromosome='22',
-                strand=-1,
-                endpoints=(data.Endpoint(start=18174677, stop=18174706),),
-                source='alignment',
-                identity=1.0
-            ),
-            data.Region(
-                rna_id='URS000012C1C6_9606',
-                chromosome='22',
-                strand=1,
-                endpoints=(data.Endpoint(start=20362774, stop=20362803),),
-                source='alignment',
-                identity=1.0
-            ),
-        ]
-    )
+#     ans = data.LocatedSequence(
+#         rna_id='URS00008C1902_9606',
+#         rna_type='lncRNA',
+#         databases=["LNCipedia", "NONCODE"],
+#         regions=[
+#             data.Region(
+#                 rna_id='URS00008C1902_9606',
+#                 chromosome='1',
+#                 strand=1,
+#                 endpoints=(
+#                     data.Endpoint(start=11869, stop=12227),
+#                     data.Endpoint(start=12613, stop=12721),
+#                     data.Endpoint(start=13221, stop=14409),
+#                 ),
+#                 source='expert-database',
+#             ),
+#         ],
+#     )
 
-    assert attr.asdict(found) == attr.asdict(ans)
+#     assert found.regions[0].start == 11869
+#     assert found.regions[0].stop == 14409
+#     assert found.regions[0].region_id == 'URS00008C1902_9606@1/11869-14409:+'
+#     assert attr.asdict(found) == attr.asdict(ans)
+
+
+# def test_can_build_for_only_mapped():
+#     found = fetch_one('URS000012C1C6_9606', 'GRCh38')
+
+#     ans = data.LocatedSequence(
+#         rna_id='URS000012C1C6_9606',
+#         rna_type='piRNA',
+#         databases=['ENA'],
+#         regions=[
+#             data.Region(
+#                 rna_id='URS000012C1C6_9606',
+#                 chromosome='1',
+#                 strand=1,
+#                 endpoints=(data.Endpoint(start=165777430, stop=165777459),),
+#                 source='alignment',
+#                 identity=1.0
+#             ),
+#             data.Region(
+#                 rna_id='URS000012C1C6_9606',
+#                 chromosome='3',
+#                 strand=-1,
+#                 endpoints=(data.Endpoint(start=163618677, stop=163618706),),
+#                 source='alignment',
+#                 identity=1.0
+#             ),
+#             data.Region(
+#                 rna_id='URS000012C1C6_9606',
+#                 chromosome='8',
+#                 strand=-1,
+#                 endpoints=(data.Endpoint(start=52338512, stop=52338541),),
+#                 source='alignment',
+#                 identity=1.0
+#             ),
+#             data.Region(
+#                 rna_id='URS000012C1C6_9606',
+#                 chromosome='10',
+#                 strand=-1,
+#                 endpoints=(data.Endpoint(start=73941772, stop=73941801),),
+#                 source='alignment',
+#                 identity=1.0
+#             ),
+#             data.Region(
+#                 rna_id='URS000012C1C6_9606',
+#                 chromosome='12',
+#                 strand=1,
+#                 endpoints=(data.Endpoint(start=123897625, stop=123897654),),
+#                 source='alignment',
+#                 identity=1.0
+#             ),
+#             data.Region(
+#                 rna_id='URS000012C1C6_9606',
+#                 chromosome='19',
+#                 strand=-1,
+#                 endpoints=(data.Endpoint(start=3161031, stop=3161060),),
+#                 source='alignment',
+#                 identity=1.0
+#             ),
+#             data.Region(
+#                 rna_id='URS000012C1C6_9606',
+#                 chromosome='22',
+#                 strand=-1,
+#                 endpoints=(data.Endpoint(start=18174677, stop=18174706),),
+#                 source='alignment',
+#                 identity=1.0
+#             ),
+#             data.Region(
+#                 rna_id='URS000012C1C6_9606',
+#                 chromosome='22',
+#                 strand=1,
+#                 endpoints=(data.Endpoint(start=20362774, stop=20362803),),
+#                 source='alignment',
+#                 identity=1.0
+#             ),
+#         ]
+#     )
+
+#     assert attr.asdict(found) == attr.asdict(ans)
