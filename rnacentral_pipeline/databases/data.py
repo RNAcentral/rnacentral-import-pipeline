@@ -60,6 +60,7 @@ INSDC_SO_MAPPING = {
     "rasiRNA": 'SO:0000454',
     "ribozyme": 'SO:0000374',
     "scRNA": 'SO:0000013',
+    "scaRNA": 'SO:0002095',
     "siRNA": 'SO:0000646',
     "snRNA": 'SO:0000274',
     "snoRNA": 'SO:0000275',
@@ -76,7 +77,6 @@ SO_INSDC_MAPPING = {v: k for k, v in INSDC_SO_MAPPING.items()}
 SO_INSDC_MAPPING['SO:0001244'] = "precursor_RNA"
 SO_INSDC_MAPPING['SO:0000209'] = "precursor_RNA"
 SO_INSDC_MAPPING['SO:0001904'] = "lncRNA"
-SO_INSDC_MAPPING['SO:0002095'] = "scaRNA"
 
 NORMALIZE_TO_INSDC = {
     'sRNA': 'other',

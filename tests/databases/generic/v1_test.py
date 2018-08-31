@@ -26,6 +26,7 @@ from rnacentral_pipeline.databases.generic import v1
 
 @pytest.mark.parametrize('filename,taxids', [
     ('data/json-schema/v020/flybase.json', [7227, 7227, 7227, 7227, 7227]),
+    ('data/json-schema/v020/flybase-scaRNA.json', [7227]),
     ('data/json-schema/v020/lincipedia.json', [9606]),
     ('data/json-schema/v020/tarbase.json', [9606]),
 ])
@@ -695,7 +696,14 @@ def test_can_correctly_find_isoforms():
     assert len(data) == 5
     data = [d for d in data if d.accession == "LNCIPEDIA:LINC01725:19"]
     assert len(data) == 1
-    print(data[0].exons)
+    # from pprint import pprint
+    # pprint(data[0].exons)
+    # pprint([
+    #     dat.Exon(chromosome_name='1', primary_start=83801516, primary_end=83803251, assembly_id='GRCh38', complement=True),
+    #     dat.Exon(chromosome_name='1', primary_start=83849907, primary_end=83850022, assembly_id='GRCh38', complement=True),
+    #     dat.Exon(chromosome_name='1', primary_start=83860408, primary_end=83860546, assembly_id='GRCh38', complement=True),
+    # ])
+
     assert attr.asdict(data[0]) == attr.asdict(dat.Entry(
         primary_id="LINC01725:19",
         accession="LNCIPEDIA:LINC01725:19",
@@ -789,3 +797,13 @@ def test_can_correctly_find_isoforms():
             ),
         ]
     ))
+
+
+
+def test_it_treats_flybase_scaRNA_correctly():
+    with open('data/json-schema/v020/flybase-scaRNA.json', 'rb') as raw:
+        data = json.load(raw)
+        data = list(v1.parse(data))
+
+    assert len(data) == 1
+    assert data[0].rna_type == 'scaRNA'
