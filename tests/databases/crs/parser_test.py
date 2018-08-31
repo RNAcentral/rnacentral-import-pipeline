@@ -15,7 +15,7 @@ limitations under the License.
 
 import attr
 
-from rnacentral_pipeline.rnacentral.crs import parser as crs
+from rnacentral_pipeline.databases.crs import parser as crs
 
 
 def test_can_parse_complete_file():
