@@ -24,8 +24,4 @@ WITH
     skip header = 0,
     fields escaped by double-quote,
     fields terminated by ','
-
-SET
-    work_mem to '256 MB',
-    maintenance_work_mem to '256 GB',
 ;
