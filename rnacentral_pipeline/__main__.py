@@ -176,6 +176,10 @@ def process_rfam(rfam_file, mapping_file, output):
 
 @cli.group('extra')
 def extra():
+    """
+    This is a group of commands that cover other forms of data. Some of these
+    tasks could end up being a one off task, but maybe not.
+    """
     pass
 
 
@@ -183,6 +187,12 @@ def extra():
 @click.argument('filename', default='-', type=click.File('rb'))
 @click.argument('output', default='complete_features.csv', type=click.File('wb'))
 def extra_crs_data(filename, output):
+    """
+    This will parse the CRS file to produce a series of sequence features for
+    import. The features are different from normal sequence features because
+    these are 'complete', they already have a URS/taxid assigned and can just
+    be inserted directly into the database.
+    """
     crs.from_file(filename, output)
 
 
