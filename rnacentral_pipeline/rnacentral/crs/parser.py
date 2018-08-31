@@ -13,6 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import re
 import csv
 import json
 import operator as op
@@ -30,10 +31,11 @@ class GenomicLocation(object):
 
     @classmethod
     def build(cls, raw):
+        chromosome = re.sub('^chr', '', raw['chromosome'])
         return cls(
-            chromosome=raw['chromosome'],
-            start=raw['start'],
-            stop=raw['stop'],
+            chromosome=chromosome,
+            start=raw['CRS_start_relative_to_genome'],
+            stop=raw['CRS_end_relative_to_genome'],
         )
 
 
@@ -44,23 +46,27 @@ class CrsFeature(object):
     crs_name = attr.ib(validator=is_a(basestring))
     start = attr.ib(validator=is_a(int), convert=int)
     stop = attr.ib(validator=is_a(int), convert=int)
-    genomic_locations = attr.ib(validator=is_a(list))
+    genomic_location = attr.ib(validator=is_a(GenomicLocation))
 
     @classmethod
-    def build(cls, raw_features):
-        upi, taxid = raw_features[0]['URS_taxid'].split('_')
+    def build(cls, raw_feature):
+        upi, taxid = raw_feature['URS_taxid'].split('_')
         return cls(
             upi=upi,
             taxid=taxid,
-            crs_name=raw_features[0]['CRS_id'],
-            start=raw_features[0]['start'],
-            stop=raw_features[0]['stop'],
-            genomic_locations=[GenomicLocation.build(f) for f in raw_features],
+            crs_name=raw_feature['CRS_id'],
+            start=raw_feature['CRS_start_relative_to_URS'],
+            stop=raw_feature['CRS_end_relative_to_URS'],
+            genomic_location=GenomicLocation.build(raw_feature),
         )
 
     def writeable(self):
         metadata = attr.asdict(self)
-        metadata = {'genomic_locations': metadata['genomic_locations']}
+        metadata = {
+            'crs_id': self.crs_name,
+            'genomic_location': metadata['genomic_location']
+        }
+
         return [
             self.upi,
             self.taxid,
@@ -73,10 +79,8 @@ class CrsFeature(object):
 
 
 def parse(handle):
-    key = op.itemgetter('URS_taxid', 'CRS_id', 'start', 'stop')
-    raw = sorted(csv.DictReader(handle, delimiter='\t'), key=key)
-    for _, features in it.groupby(raw, key):
-        yield CrsFeature.build(list(features))
+    for feature in csv.DictReader(handle, delimiter='\t'):
+        yield CrsFeature.build(feature)
 
 
 def from_file(handle, output):
