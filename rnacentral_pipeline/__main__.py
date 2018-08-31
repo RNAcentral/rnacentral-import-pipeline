@@ -23,6 +23,8 @@ from rnacentral_pipeline.databases.quickgo import parser as quickgo
 from rnacentral_pipeline.databases.refseq import parser as refseq
 from rnacentral_pipeline.databases.ensembl import parser as ensembl
 
+from rnacentral_pipeline.databases.crs import parser as crs
+
 from rnacentral_pipeline import ontologies as onto
 from rnacentral_pipeline.ontologies import writer as onto_writer
 # from rnacentral_pipeline.databases.tair import annotations as tair
@@ -170,6 +172,18 @@ def process_refseq(refseq_file, output):
 ))
 def process_rfam(rfam_file, mapping_file, output):
     write_entries(rfam.parse, output, rfam_file, mapping_file)
+
+
+@cli.group('extra')
+def extra():
+    pass
+
+
+@extra.command('crs')
+@click.argument('filename', default='-', type=click.File('rb'))
+@click.argument('output', default='complete_features.csv', type=click.File('wb'))
+def extra_crs_data(filename, output):
+    crs.from_file(filename, output)
 
 
 @cli.group('ontologies')
