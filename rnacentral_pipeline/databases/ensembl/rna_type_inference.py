@@ -113,7 +113,7 @@ class RnaTypeInference(object):
         if base_type in LNC_ALIASES:
             return 'lncRNA'
         if base_type in NC_ALIASES:
-            return 'ncRNA'
+            return 'other'
         if base_type in MITO_TYPES:
             return base_type.replace('Mt_', '')
         if base_type == 'scaRNA':
