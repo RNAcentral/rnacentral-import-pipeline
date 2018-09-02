@@ -152,6 +152,10 @@ def first(values):
     return unicode(value)
 
 
+def only(value):
+    return [str(value)]
+
+
 def unique_lower(values):
     return {v.lower() for v in values if v}
 
@@ -582,5 +586,6 @@ builder = entry([
         field('has_interacting_proteins', has_interacting_proteins, keys='interacting_proteins'),
         fields('interacting_protein', interacting_proteins, keys='interacting_proteins'),
         fields('evidence_for_interaction', interacting_evidence, keys='interacting_proteins'),
+        fields('has_conserved_structure', only, keys='has_crs'),
     ]),
 ])

@@ -591,3 +591,14 @@ def test_can_methods_for_interactions(upi, expected):
     data = load_and_get_additional(upi, 'evidence_for_interaction')
     evidence = set(d['text'] for d in data)
     assert evidence == expected
+
+
+@pytest.mark.parametrize('upi,flag', [  # pylint: disable=E1101
+    ('URS00009BEE76_9606', True),
+    ('URS000019E0CD_9606', True),
+    ('URS0000ABD7E8_9606', False)
+])
+def test_knows_has_crs(upi, flag):
+    data = load_and_get_additional(upi, 'has_conserved_structure')
+    value = [d['text'] for d in data]
+    assert value == [str(flag)]
