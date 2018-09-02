@@ -56,6 +56,18 @@ SELECT
                 'go_name', ont.name,
                 'assigned_by', anno.assigned_by
             )
+        ),
+        'interacting_proteins', array_agg(
+            json_build_object(
+                'id', case
+                        when related.relationship_type = 'target_protein'
+                          then related.target_accession
+                        else null
+                      end,
+                'name', protein.description,
+                'relationship', related.relationship_type,
+                'methods', related.methods
+            )
         )
     )
 FROM xref xref
@@ -80,6 +92,13 @@ LEFT JOIN ref_pubmed pubmed ON pubmed.ref_pubmed_id = go_map.ref_pubmed_id
 LEFT JOIN ontology_terms ont
 ON
     ont.ontology_term_id = anno.ontology_term_id
+LEFT JOIN rnc_related_sequences related
+ON
+  related.source_urs_taxid = pre.id
+  and related.relationship_type = 'target_protein'
+LEFT JOIN protein_info protein
+ON
+  protein.protein_accession = related.target_accession
 WHERE
   xref.deleted = 'N'
   AND rna.id BETWEEN :min AND :max
