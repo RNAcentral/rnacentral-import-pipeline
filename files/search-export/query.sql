@@ -68,6 +68,14 @@ SELECT
                 'relationship', related.relationship_type,
                 'methods', related.methods
             )
+        ),
+        'has_crs', exists(
+            select 1
+            from rnc_sequence_features features
+            where
+                features.upi = rna.upi
+                and features.taxid = xref.taxid
+                and feature_name = 'conserved_rna_structure'
         )
     )
 FROM xref xref
