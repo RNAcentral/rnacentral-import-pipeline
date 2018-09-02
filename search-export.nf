@@ -38,6 +38,7 @@ process export_search_json {
 }
 
 process export_chunk {
+  memory '4 GB'
   publishDir "${tmp}/", mode: 'copy'
 
   input:
