@@ -16,24 +16,9 @@ limitations under the License.
 import pytest
 import attr
 
-from rnacentral_pipeline.databases.ensembl.parser import parse
 from rnacentral_pipeline.databases import data as dat
 
-
-def parse_with_family(filename):
-    family_file = 'data/rfam/families.tsv'
-    with open(filename, 'rb') as raw:
-        return list(parse(raw, family_file))
-
-
-def entries_for(entries, accession):
-    return [e for e in entries if e.accession == accession]
-
-
-def entry_for(entries, accession):
-    val = entries_for(entries, accession)
-    assert len(val) == 1
-    return val[0]
+from . helpers import parse_with_family, entries_for, entry_for
 
 
 @pytest.fixture(scope='module')  # pylint: disable=no-member
