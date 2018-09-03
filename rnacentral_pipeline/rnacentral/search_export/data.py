@@ -510,8 +510,11 @@ def interacting_proteins(interacting):
             continue
         if entry['id']:
             proteins.add(entry['id'].split(':', 1)[1])
-        if entry['name']:
-            proteins.add(entry['name'])
+        for key in ['label']:
+            if entry[key]:
+                proteins.add(entry[key])
+        for name in (entry['synonyms'] or []):
+            proteins.add(name)
     return sorted(proteins)
 
 

@@ -64,7 +64,8 @@ SELECT
                           then related.target_accession
                         else null
                       end,
-                'name', protein.description,
+                'synonyms', protein.synonyms,
+                'label', protein.label,
                 'relationship', related.relationship_type,
                 'methods', related.methods
             )
