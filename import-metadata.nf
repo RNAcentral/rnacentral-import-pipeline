@@ -1,8 +1,12 @@
 #!/usr/bin/env nextflow
 
+Channel.fromFilePairs("files/import-data/rfam/*.{ctl,sql}")
+  .map { it[1] }
+  .set { rfam_files }
+
 process import_rfam_metadata {
   input:
-  set file(ctl), file(sql) from Channel.fromFilePairs("files/import-data/rfam/*.{ctl,sql}")
+  set file(ctl), file(sql) from rfam_files
 
   """
   mysql \
