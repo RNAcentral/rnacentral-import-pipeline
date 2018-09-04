@@ -23,6 +23,8 @@ from rnacentral_pipeline.databases.quickgo import parser as quickgo
 from rnacentral_pipeline.databases.refseq import parser as refseq
 from rnacentral_pipeline.databases.ensembl import parser as ensembl
 
+from rnacentral_pipeline.databases.crs import parser as crs
+
 from rnacentral_pipeline import ontologies as onto
 from rnacentral_pipeline.ontologies import writer as onto_writer
 # from rnacentral_pipeline.databases.tair import annotations as tair
@@ -38,6 +40,7 @@ from rnacentral_pipeline.rnacentral.ftp_export import fasta
 from rnacentral_pipeline.rnacentral.ftp_export import id_mapping
 from rnacentral_pipeline.rnacentral.ftp_export import release_note
 from rnacentral_pipeline.rnacentral.ftp_export import ensembl as ensembl_json
+from rnacentral_pipeline.rnacentral.ftp_export import go_terms
 
 
 class CustomMultiCommand(click.Group):
@@ -213,6 +216,28 @@ def process_rfam(rfam_file, mapping_file, output):
     write_entries(rfam.parse, output, rfam_file, mapping_file)
 
 
+@cli.group('extra')
+def extra():
+    """
+    This is a group of commands that cover other forms of data. Some of these
+    tasks could end up being a one off task, but maybe not.
+    """
+    pass
+
+
+@extra.command('crs')
+@click.argument('filename', default='-', type=click.File('rb'))
+@click.argument('output', default='complete_features.csv', type=click.File('wb'))
+def extra_crs_data(filename, output):
+    """
+    This will parse the CRS file to produce a series of sequence features for
+    import. The features are different from normal sequence features because
+    these are 'complete', they already have a URS/taxid assigned and can just
+    be inserted directly into the database.
+    """
+    crs.from_file(filename, output)
+
+
 @cli.group('ontologies')
 def ontologies():
     pass
@@ -383,6 +408,13 @@ def export_ensembl(raw, output, schema=None):
     expected schema.
     """
     ensembl_json.generate_file(raw, output, schema_file=schema)
+
+
+@ftp_export.command('rfam-go-annotations')
+@click.argument('filename', type=click.File('rb'))
+@click.argument('output', default='-', type=click.File('wb'))
+def export_go_temrs(filename, output):
+    go_terms.export(filename, output)
 
 
 @ftp_export.group('coordinates')

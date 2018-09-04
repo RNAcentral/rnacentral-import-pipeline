@@ -21,8 +21,8 @@ raw_ranges
   .set { ranges }
 
 process export_search_json {
-  beforeScript 'slack db-work search-export || true'
-  afterScript 'slack db-done search-export || true'
+  // beforeScript 'slack db-work search-export || true'
+  // afterScript 'slack db-done search-export || true'
   maxForks params.search_export.max_forks
 
   input:
@@ -76,10 +76,12 @@ process atomic_publish {
   file(release) from release_note
 
   script:
+  dir = params.search_export.publish
   """
-  rm ${params.search_export.publish}/*.xml.gz
+  [ -d $dir ] || mkdir -p $dir
+  rm $dir/*.xml.gz || true
 
-  mv "${tmp}/*.xml.gz" ${params.search_export.publish}
-  cp $release ${params.search_export.publish}/release_note.txt
+  mv ${tmp}/*.xml.gz $dir/
+  cp $release $dir/release_note.txt
   """
 }
