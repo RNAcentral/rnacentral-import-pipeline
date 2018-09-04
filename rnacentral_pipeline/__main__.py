@@ -43,6 +43,8 @@ from rnacentral_pipeline.rnacentral.ftp_export import release_note
 from rnacentral_pipeline.rnacentral.ftp_export import ensembl as ensembl_json
 from rnacentral_pipeline.rnacentral.ftp_export import go_terms
 
+from rnacentral_pipeline.rnacentral import release
+
 
 class CustomMultiCommand(click.Group):
     """
@@ -510,6 +512,12 @@ def protein_ensembl(filename, output):
     file is sorted.
     """
     ensembl_proteins.from_file(filename, output)
+
+
+@cli.command('run-release')
+@click.option('--db_url', envvar='PGDATABASE')
+def run_release(db_url=None):
+    release.run(db_url)
 
 
 logging.basicConfig()
