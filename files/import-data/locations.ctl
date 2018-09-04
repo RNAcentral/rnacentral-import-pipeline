@@ -1,5 +1,5 @@
 LOAD CSV
-FROM ALL FILENAMES MATCHING ~<locations*.csv>
+FROM ALL FILENAMES MATCHING ~<genomic_locations*.csv>
 HAVING FIELDS (
     accession,
     chromosome,

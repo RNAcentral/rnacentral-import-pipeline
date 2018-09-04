@@ -10,15 +10,15 @@ raw_output = Channel.empty()
 // Because we use very generic globs to get files to import we have to filter
 // the filenames ot known ones. This is the list of known file names. The list
 // is also used to shorten the implementation of the .choice method below.
-IMPORTABLE_FILENAMES = [
-  'ac_info.csv',
-  'genomic_locations.csv',
-  'seq_long.csv',
-  'seq_short.csv',
-  'refs.csv',
-  'secondary_structure.csv',
-  'related_sequences.csv',
-  'features.csv',
+IMPORTABLE = [
+  /ac_info\d+.csv/,
+  /genomic_locations\d+.csv/,
+  /seq_long\d+.csv/,
+  /seq_short\d+.csv/,
+  /refs\d+.csv/,
+  /secondary_structure\d+.csv/,
+  /related_sequences\d+.csv/,
+  /features\d+.csv/,
 ]
 
 dataless_imports = Channel.empty()
@@ -32,8 +32,6 @@ for (entry in params.import_data.databases) {
 
   name = entry.key
   database = params.databases[name]
-  println(name)
-  println(database)
 
   // The custom property should be a list of directories that contain csv files to
   // import. For example if custom was ./custom we would expect it to contain:
@@ -186,8 +184,8 @@ process fetch_ena_metadata {
 
 Channel.empty()
   .mix(ena_metadata)
-  .mix(ensembl_metadata)
-  .mix(rfam_metadata)
+  // .mix(ensembl_metadata)
+  // .mix(rfam_metadata)
   .cross(with_metadata)
   .map { meta, data -> data + meta[1..-1] }
   .set { metadata }
@@ -231,6 +229,7 @@ process merge_csvs {
   file("merged/${name}*.csv") into merged mode flatten
 
   """
+  mkdir merged
   find . -name 'raw*.csv' |\
   xargs cat |\
   split --additional-suffix=.csv -dC ${params.import_data.chunk_size} - merged/${name}
@@ -247,7 +246,7 @@ related = Channel.create()
 features = Channel.create()
 
 merged
-  .filter { filename -> IMPORTABLE_FILENAMES.contains(filename.getName()) }
+  .filter { f -> IMPORTABLE.findIndexOf { p -> f.getName() ==~ p } > -1 }
   .choice(
     accessions,
     locations,
@@ -257,34 +256,43 @@ merged
     secondary,
     related,
     features,
-  ) { filename -> IMPORTABLE_FILENAMES.indexOf(filename.getName()) }
+  ) { f -> IMPORTABLE.findIndexOf { p -> f.getName() ==~ p } }
+
+
+// If one of the optional channels is empty then we must add an empty file so
+// the pipeline can work.
+empty_file = "mktemp".execute().text.trim()
+refs.ifEmpty(file(empty_file)).set { refs }
+secondary.ifEmpty(file(empty_file)).set { secondary }
+related.ifEmpty(file(empty_file)).set { related }
+features.ifEmpty(file(empty_file)).set { features }
 
 process pgload_data {
 
   input:
   file 'ac_info*.csv' from accessions.collect()
-  file 'locations*.csv' from locations.collect()
+  file 'genomic_locations*.csv' from locations.collect()
   file 'long*.csv' from long_sequences.collect()
   file 'short*.csv' from short_sequences.collect()
   file 'refs*.csv' from refs.collect()
-  file 'related*.csv' from related.collect()
   file 'features*.csv' from features.collect()
+  file 'related*.csv' from related.collect()
 
   file acc_ctl from Channel.fromPath('files/import-data/accessions.ctl')
   file locations_ctl from Channel.fromPath('files/import-data/locations.ctl')
   file long_ctl from Channel.fromPath('files/import-data/long-sequences.ctl')
   file short_ctl from Channel.fromPath('files/import-data/short-sequences.ctl')
   file ref_ctl from Channel.fromPath('files/import-data/references.ctl')
-  file related_ctl from Channel.fromPath('files/import-data/related-sequences.ctl')
   file features_ctl from Channel.fromPath('files/import-data/features.ctl')
+  file related_ctl from Channel.fromPath('files/import-data/related-sequences.ctl')
 
   """
   find . -name '.ctl' | xargs -I {} cp {} local_{}
 
   pgloader local_${acc_ctl}
   pgloader local_${locations_ctl}
-  pgloader local_${long.ctl}
-  pgloader local_${short.ctl}
+  pgloader local_${long_ctl}
+  pgloader local_${short_ctl}
   pgloader local_${ref_ctl}
 
   rnac run-release
