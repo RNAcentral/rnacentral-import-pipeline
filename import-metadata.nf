@@ -14,21 +14,52 @@ process import_rfam_metadata {
   """
 }
 
-process import_crs {
+process fetch_crs {
   input:
-  file(crs) from Channel.fromPath(params.crs.path)
+  val(remote) from Channel.from(params.crs.path)
 
   output:
-  file('complete_features.csv') into raw_crs
+  file('*.tsv.gz') into raw_crs mode flatten
+
+  script:
+  // wget doesn't play well with ** so we use lftp instead. Also, wget doesn't
+  // like following symlinks, but lftp does. I should find a way to indicate
+  // this to the pipeline.
+  if (remote.startsWith('ftp:') && remote.contains('**')) {
+    """
+    lftp -c 'mget ${remote}'
+    find . -name '*.tar.gz' | xargs -I tar xvf {}
+    """
+  } else if (remote.startsWith('ssh://')) {
+    short_remote = remote[6..-1]
+    """
+    scp '$short_remote' .
+    find . -name '*.tar.gz' | xargs -I {} tar xvf {}
+    """
+  } else {
+    """
+    wget "${remote}"
+    find . -name '*.tar.gz' | xargs -I {} tar xvf {}
+    """
+  }
+}
+
+process process_crs {
+
+  input:
+  file(crs) from raw_crs
+
+  output:
+  file('complete_features.csv') into processed_crs
 
   """
-  zcat $crs | rnc extra crs - complete_features.csv
+  zcat $crs | rnac extra crs - complete_features.csv
   """
 }
 
 process import_crs {
   input:
-  file('complete_features*.csv') from raw_crs.collect()
+  file('complete_features*.csv') from processed_crs.collect()
   file(ctl) from Channel.fromPath('files/import-metadata/crs-features.ctl')
 
   """

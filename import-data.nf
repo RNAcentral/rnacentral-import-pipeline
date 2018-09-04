@@ -41,7 +41,8 @@ for (entry in params.import_data.databases) {
     raw_output.mix(Channel.fromPath("${base}/**.csv")).flatten().set { raw_output }
   } else if (database.containsKey('remote') && database.remote) {
     db_channel = Channel.value([name, database.remote, database.pattern])
-    if (database.remote.contains('http') || database.remote.contains('ftp')) {
+    if (database.remote.startsWith('http:') || database.remote.startsWtih('ftp:')
+      || database.remote.startsWith('ssh:')) {
       remotes_to_fetch.mix(db_channel).set { remotes_to_fetch }
     } else {
       locals_to_fetch.mix(db_channel).set { locals_to_fetch }
@@ -80,12 +81,18 @@ process remote_fetch {
   if (remote.startsWith('ftp:') && remote.contains('**')) {
     """
     lftp -c 'mget ${remote}'
-    find . -name '*.tar.gz' | xargs tar xvf
+    find . -name '*.tar.gz' | xargs -I {} tar xvf {}
+    """
+  } else if (remote.startsWith('ssh://')) {
+    short_remote = remote[6..-1]
+    """
+    scp '$short_remote' .
+    find . -name '*.tar.gz' | xargs -I {} tar xvf {}
     """
   } else {
     """
     wget "${remote}"
-    find . -name '*.tar.gz' | xargs tar xvf
+    find . -name '*.tar.gz' | xargs -I {} tar xvf {}
     """
   }
 }
