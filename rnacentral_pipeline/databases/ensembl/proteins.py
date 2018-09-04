@@ -40,7 +40,7 @@ def parse(handle):
         synonyms = set()
         for entry in entries:
             value = entry[3].replace('"', '')
-            if value:
+            if value and value != 'NULL':
                 synonyms.add(value)
 
         synonyms = ','.join('"%s"' % s for s in synonyms)
