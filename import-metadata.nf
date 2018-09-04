@@ -40,9 +40,14 @@ process fetch_crs {
     scp '$short_remote' .
     find . -name '*.tar.gz' | xargs -I {} tar xvf {}
     """
-  } else {
+  } else if (remote.startsWithAny('ftp:', 'http:')) {
     """
     wget "${remote}"
+    find . -name '*.tar.gz' | xargs -I {} tar xvf {}
+    """
+  } else {
+    """
+    cp $remote .
     find . -name '*.tar.gz' | xargs -I {} tar xvf {}
     """
   }
