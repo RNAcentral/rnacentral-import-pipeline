@@ -88,8 +88,9 @@ SO_PATTERN = re.compile('^SO:\d+$')
 
 RELATIONSHIP_TYPES = {
     "precursor",
-    "mature_product",
-    "target",
+    "matureProduct",
+    "target_protein",
+    "target_rna",
     "isoform",
 }
 
