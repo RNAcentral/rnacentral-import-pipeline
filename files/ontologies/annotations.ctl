@@ -1,5 +1,5 @@
 LOAD CSV
-FROM annotations.csv
+FROM ALL FILENAMES MATCHING ~<annotations.*csv$>
 WITH ENCODING ISO-8859-14
 
 HAVING FIELDS (
