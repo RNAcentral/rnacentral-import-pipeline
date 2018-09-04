@@ -24,7 +24,7 @@ process fetch_metdata {
   input:
   file('query*.sql') from Channel.fromPath('files/search-export/metadata/*.sql').collect()
 
-  ouput:
+  output:
   file("metadata.json") into metadata
 
   """
