@@ -1,5 +1,5 @@
 LOAD CSV
-FROM ALL FILENAMES MATCHING ~<complete_features*.csv>
+FROM ALL FILENAMES MATCHING ~<complete_features.*csv$>
 HAVING FIELDS (
     upi,
     taxid,
@@ -43,7 +43,10 @@ $$
 
 AFTER LOAD DO
 $$
-INSERT INTO sequence_features (
+delete from rnc_sequence_features where feature_name = 'conserved_rna_structure';
+$$,
+$$
+INSERT INTO rnc_sequence_features (
     upi,
     taxid,
     accession,
@@ -62,9 +65,6 @@ SELECT
     metadata
 from load_crs_features
 )
-ON CONFLICT (upi, taxid, accession, start, stop, feature_name) DO UPDATE
-SET
-    metadata = EXCLUDED.metadata
 ;
 $$,
 $$
