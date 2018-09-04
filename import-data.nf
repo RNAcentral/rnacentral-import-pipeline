@@ -32,6 +32,8 @@ for (entry in params.import_data.databases) {
 
   name = entry.key
   database = params.databases[name]
+  println(name)
+  println(database)
 
   // The custom property should be a list of directories that contain csv files to
   // import. For example if custom was ./custom we would expect it to contain:
@@ -40,9 +42,9 @@ for (entry in params.import_data.databases) {
   if (name == "custom") {
     raw_output.mix(Channel.fromPath("${base}/**.csv")).flatten().set { raw_output }
   } else if (database.containsKey('remote') && database.remote) {
-    db_channel = Channel.value([name, database.remote, database.pattern])
-    if (database.remote.startsWith('http:') || database.remote.startsWtih('ftp:')
-      || database.remote.startsWith('ssh:')) {
+    remote = database.remote
+    db_channel = Channel.value([name, remote, database.pattern])
+    if (remote.startsWithAny('http:', 'ftp:', 'ssh:')) {
       remotes_to_fetch.mix(db_channel).set { remotes_to_fetch }
     } else {
       locals_to_fetch.mix(db_channel).set { locals_to_fetch }
@@ -128,7 +130,7 @@ process external_without_metadata {
   file "*.csv" into raw_metadataless_output mode flatten
 
   script:
-  if (filename.endsWith(".gz")) {
+  if (filename.toString().endsWith(".gz")) {
     """
     zcat $filename | rnac external ${name} -
     """
@@ -223,7 +225,7 @@ raw_output
 
 process merge_csvs {
   input:
-  val(name), file('raw*.csv') from to_merge
+  set val(name), file('raw*.csv') from to_merge
 
   output:
   file("merged/${name}*.csv") into merged mode flatten
