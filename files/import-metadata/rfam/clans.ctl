@@ -7,7 +7,7 @@ HAVING FIELDS
     description,
     family_count
 )
-INTO {{DB_URL}}
+INTO {{PGDATABASE}}?load_rfam_clans
 TARGET COLUMNS
 (
     rfam_clan_id,
@@ -18,10 +18,12 @@ TARGET COLUMNS
 
 WITH
     skip header = 1,
-    fields escaped by double-quote,
-    fields terminated by ','
+    fields terminated by '0x9'
 
 BEFORE LOAD DO
+$$
+drop table if exists load_rfam_clans;
+$$
 $$
 create table if not exists load_rfam_clans (
     rfam_clan_id character varying(20) COLLATE pg_catalog."default" NOT NULL,
@@ -30,9 +32,6 @@ create table if not exists load_rfam_clans (
     family_count integer NOT NULL
 );
 $$,
-$$
-truncate    table load_rfam_clans ;
-$$
 
 AFTER LOAD DO
 $$ insert into rfam_clans (
@@ -57,4 +56,3 @@ $$
 drop table load_rfam_clans;
 $$
 ;
-

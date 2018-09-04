@@ -34,8 +34,7 @@ TARGET COLUMNS
 
 WITH
     skip header = 1,
-    fields escaped by double-quote,
-    fields terminated by ','
+    fields terminated by '0x9'
 
 BEFORE LOAD DO
 $$
