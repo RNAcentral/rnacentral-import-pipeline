@@ -16,6 +16,7 @@ limitations under the License.
 import json
 import itertools as it
 from datetime import date
+import collections as coll
 
 from lxml import etree
 from lxml.builder import E
@@ -62,12 +63,23 @@ def write(results, handle, count_handle):
     handle.write('</database>')
 
 
-def as_xml(input_handle, output_handle, count_handle):
-    def parser():
-        for line in input_handle:
+def parse(input_handle, metadata_handle):
+    def parser(handle):
+        for line in handle:
             line = line.replace('\\\\', '\\')
             yield json.loads(line)
-    data = it.imap(builder, parser())
+
+    metadata = coll.defaultdict(dict)
+    for meta_entry in parser(metadata_handle):
+        metadata[meta_entry['rna_id']].update(meta_entry)
+
+    for entry in parser(input_handle):
+        entry.update(metadata[entry['rna_id']])
+        yield builder(entry)
+
+
+def as_xml(input_handle, metadata_handle, output_handle, count_handle):
+    data = parse(input_handle, metadata_handle)
     write(data, output_handle, count_handle)
 
 

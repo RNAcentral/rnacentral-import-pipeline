@@ -20,6 +20,18 @@ raw_ranges
   .combine(Channel.fromPath('files/search-export/query.sql'))
     .set { ranges }
 
+process fetch_metdata {
+  input:
+  file(query) from Channel.fromPath('files/search-export/metadata/*.sql').collect()
+
+  ouput:
+  file("metadata.json") into metadata
+
+  """
+  find . -name '*.sql' | xargs -I {} psql -f "{}" "$PGDATABASE" > metadata.json
+  """
+}
+
 process export_search_json {
   // beforeScript 'slack db-work search-export || true'
   // afterScript 'slack db-done search-export || true'
@@ -29,7 +41,7 @@ process export_search_json {
   set val(min), val(max), file(query) from ranges
 
   output:
-  set val(min), val(max), file('search.json') into search_json
+  set val(min), val(max), file('search.json') into raw_json
 
   script:
   """
@@ -37,12 +49,16 @@ process export_search_json {
   """
 }
 
+raw_json
+  .combine(metadata)
+  .set { search_json }
+
 process export_chunk {
   memory '4 GB'
   publishDir "${tmp}/", mode: 'copy'
 
   input:
-  set val(min), val(max), file(json) from search_json
+  set val(min), val(max), file(json), file(metadata) from search_json
 
   output:
   file("${xml}.gz") into search_chunks
@@ -51,7 +67,7 @@ process export_chunk {
   script:
   xml = "xml4dbdumps__${min}__${max}.xml"
   """
-  rnac search-export as-xml ${json} ${xml} count
+  rnac search-export as-xml ${json} ${metadata} ${xml} count
   xmllint ${xml} --schema ${params.search_export.schema} --stream
   gzip ${xml}
   """
