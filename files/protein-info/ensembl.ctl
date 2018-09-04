@@ -4,13 +4,13 @@ HAVING FIELDS (
   protein_accession,
   description,
   label,
-  synonym
+  synonyms
 ) INTO {{PGDATABASE}}?load_protein_info
 TARGET COLUMNS (
   protein_accession,
   description,
   label,
-  synonym
+  synonyms
 )
 
 WITH
@@ -26,7 +26,7 @@ create table load_protein_info (
   protein_accession text NOT NULL,
   description text,
   label text,
-  synonym text[]
+  synonyms text[]
 );
 $$
 
@@ -36,20 +36,20 @@ insert into protein_info (
   protein_accession,
   description,
   label,
-  synonym
+  synonyms
 ) (
 select
   protein_accession,
   description,
   label,
-  synonym
+  synonyms
 from load_protein_info
 )
 ON CONFLICT (protein_accession) DO UPDATE
 SET
   description = EXCLUDED.description,
   label = EXCLUDED.label,
-  synonym = EXCLUDED.synonym
+  synonyms = EXCLUDED.synonyms
 ;
 $$,
 $$
