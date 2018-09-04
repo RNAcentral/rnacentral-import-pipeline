@@ -69,12 +69,16 @@ def parse(input_handle, metadata_handle):
             line = line.replace('\\\\', '\\')
             yield json.loads(line)
 
+    extra_objects = set()
     metadata = coll.defaultdict(dict)
     for meta_entry in parser(metadata_handle):
+        extra_objects.update(k for k in meta_entry.keys() if k != 'rna_id')
         metadata[meta_entry['rna_id']].update(meta_entry)
 
     for entry in parser(input_handle):
-        entry.update(metadata[entry['rna_id']])
+        extra = metadata[entry['rna_id']]
+        extra.update({k: {} for k in extra_objects if k not in extra})
+        entry.update(extra)
         yield builder(entry)
 
 

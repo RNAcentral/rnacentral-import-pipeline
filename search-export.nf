@@ -22,7 +22,7 @@ raw_ranges
 
 process fetch_metdata {
   input:
-  file(query) from Channel.fromPath('files/search-export/metadata/*.sql').collect()
+  file('query*.sql') from Channel.fromPath('files/search-export/metadata/*.sql').collect()
 
   ouput:
   file("metadata.json") into metadata
