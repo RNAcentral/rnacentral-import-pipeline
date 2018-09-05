@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+IFS=$'\n\t'
+
+remote="$1"
+pattern="$2"
+
+case "$remote" in
+  ssh://* )
+    short="${remote:6}"
+    scp "$short/$pattern" .
+    ;;
+  /* )
+    find "$remote" -name "$pattern" | xargs -I {} cp {} .
+    ;;
+  http://* | https://* )
+    wget "$remote"
+    ;;
+  ftp://* )
+    lftp -c "mget $remote/$pattern"
+    ;;
+  * )
+    echo 1>&2 "Unknown remote URL to fetch: $remote"
+    exit 1;;
+esac
+
+case "$pattern" in
+  *.tar.gz )
+    find . -name "$pattern" | xargs -I {} tar xvf {}
+esac

@@ -45,8 +45,8 @@ insert into ref_pubmed (
     title,
     doi
 ) (
-select
-    ref_pubmed,
+select distinct
+    ref_pubmed_id,
     authors,
     location,
     title,
