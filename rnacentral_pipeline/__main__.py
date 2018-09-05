@@ -275,7 +275,7 @@ def ontologies_quickgo(raw_data, output):
 
 
 @ontologies.command('lookup-terms')
-@click.argument('raw_data', type=click.File('rb'))
+@click.argument('terms', type=click.File('rb'))
 @click.argument('output', type=click.File('w'))
 def ontologies_lookup_terms(terms, output):
     onto.helpers.process_term_file(terms, output)
