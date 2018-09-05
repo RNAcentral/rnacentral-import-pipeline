@@ -1,5 +1,6 @@
 LOAD CSV
-FROM '{{FILENAME}}' WITH ENCODING ISO-8859-14
+FROM stdin
+WITH ENCODING ISO-8859-14
 HAVING FIELDS
 (
     rfam_model_id,
@@ -15,7 +16,7 @@ HAVING FIELDS
     rna_type,
     rfam_rna_type
 )
-INTO {{DB_URL}}
+INTO {{PGDATABASE}}?load_rfam_models
 TARGET COLUMNS
 (
     rfam_model_id,

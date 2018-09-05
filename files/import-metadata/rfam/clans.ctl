@@ -1,5 +1,5 @@
 LOAD CSV
-FROM 'clans.tsv'
+FROM stdin
 HAVING FIELDS
 (
     rfam_clan_id,
@@ -23,7 +23,7 @@ WITH
 BEFORE LOAD DO
 $$
 drop table if exists load_rfam_clans;
-$$
+$$,
 $$
 create table if not exists load_rfam_clans (
     rfam_clan_id character varying(20) COLLATE pg_catalog."default" NOT NULL,
@@ -31,7 +31,7 @@ create table if not exists load_rfam_clans (
     description character varying(1000) COLLATE pg_catalog."default" NOT NULL,
     family_count integer NOT NULL
 );
-$$,
+$$
 
 AFTER LOAD DO
 $$ insert into rfam_clans (
