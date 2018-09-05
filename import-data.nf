@@ -287,7 +287,7 @@ process pgload_data {
   file related_ctl from Channel.fromPath('files/import-data/related-sequences.ctl')
 
   """
-  find . -name '.ctl' | xargs -I {} cp {} local_{}
+  find . -name '*.ctl' | xargs -I {} basename {} | xargs -I {} cp {} local_{}
 
   pgloader local_${acc_ctl}
   pgloader local_${locations_ctl}
