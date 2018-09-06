@@ -8,7 +8,7 @@ HAVING FIELDS (
     ontology_term_id,
     assigned_by,
     evidence_code,
-    pmid
+    pubmed_id
 )
 INTO {{PGDATABASE}}?load_go_term_publication_map
 TARGET COLUMNS (
@@ -17,7 +17,7 @@ TARGET COLUMNS (
     ontology_term_id,
     assigned_by,
     evidence_code,
-    pmid
+    pubmed_id
 )
 
 WITH
