@@ -1,6 +1,6 @@
 #!/usr/bin/env nextflow
 
-Channel.fromFilePairs("files/import-data/rfam/*.{ctl,sql}")
+Channel.fromFilePairs("files/import-metadata/rfam/*.{ctl,sql}")
   .map { it[1] }
   .set { rfam_files }
 
@@ -26,35 +26,12 @@ process fetch_crs {
   file('*.tsv.gz') into raw_crs mode flatten
 
   script:
-  // wget doesn't play well with ** so we use lftp instead. Also, wget doesn't
-  // like following symlinks, but lftp does. I should find a way to indicate
-  // this to the pipeline.
-  if (remote.startsWith('ftp:') && remote.contains('**')) {
-    """
-    lftp -c 'mget ${remote}'
-    find . -name '*.tar.gz' | xargs -I tar xvf {}
-    """
-  } else if (remote.startsWith('ssh://')) {
-    short_remote = remote[6..-1]
-    """
-    scp '$short_remote' .
-    find . -name '*.tar.gz' | xargs -I {} tar xvf {}
-    """
-  } else if (remote.startsWithAny('ftp:', 'http:')) {
-    """
-    wget "${remote}"
-    find . -name '*.tar.gz' | xargs -I {} tar xvf {}
-    """
-  } else {
-    """
-    cp $remote .
-    find . -name '*.tar.gz' | xargs -I {} tar xvf {}
-    """
-  }
+  """
+  fetch "$remote" "*.tsv.gz"
+  """
 }
 
 process process_crs {
-
   input:
   file(crs) from raw_crs
 
