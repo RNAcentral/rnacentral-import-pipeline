@@ -13,31 +13,34 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+from __future__ import print_function
+
+# pylint: disable=missing-docstring,invalid-name,line-too-long
+
 import os
-import tempfile
 import operator as op
-import xml.etree.ElementTree as ET
 from xml.dom import minidom
+import xml.etree.ElementTree as ET
 
 import pytest
+from functools32 import lru_cache
 
 from rnacentral_pipeline.rnacentral.search_export import exporter
 
 from tests.helpers import run_range_as_single
 
 
+@lru_cache()
+def load_additional():
+    return {'go_annotations': {}, 'interacting_proteins': {}}
+
+
 def load_data(upi):
     path = os.path.join('files', 'search-export', 'query.sql')
-    return exporter.builder(run_range_as_single(upi, path))
-
-
-def as_entry_file(upi):
-    data = load_data(upi)
-    with tempfile.NamedTemporaryFile() as tmp:
-        exporter.write_entries(tmp, data)
-        tmp.flush()
-        with open(tmp.name, 'r') as raw:
-            return raw.read()
+    entry = run_range_as_single(upi, path)
+    data = list(exporter.builder(load_additional(), entry))
+    assert len(data) == 1
+    return data[0]
 
 
 def as_xml_dict(element):
@@ -69,7 +72,7 @@ def pretty_xml(data):
 
 @pytest.mark.parametrize(
     "filename",
-    [os.path.join('data/export/search', f) for f in os.listdir('data/export/search/')]
+    ['data/export/search/' + f for f in os.listdir('data/export/search/')]
 )
 def test_it_builds_correct_xml_entries(filename):
     result = ET.parse(filename)
@@ -346,32 +349,16 @@ def test_it_can_handle_a_list_in_ontology():
     assert {'ECO:0000202', u'GO:0030533', 'SO:0000253'} & xrefs
 
 
-# @pytest.mark.slowtest
-@pytest.mark.skip()
-def test_it_can_write_an_xml_document():
-    """
-    This test is really only useful when debugging issues in a specific section
-    of the export
-    """
-    entries = exporter.range(db(), 3890001, 3900001)
-    with tempfile.NamedTemporaryFile() as out:
-        exporter.write(out, entries)
-        out.seek(0)
-        document = out.read()
-        assert document.count('<entry id=') == 10680
-
-
-@pytest.mark.skip()
-def test_produces_correct_count():
-    entries = exporter.range(db(), 1, 100)
-    with tempfile.NamedTemporaryFile() as out:
-        exporter.write(out, entries)
-        out.flush()
-        with open(out.name, 'r') as raw:
-            parsed = ET.parse(raw)
-            count = parsed.find('./entry_count')
-            assert count.text == '105'
-
+# @pytest.mark.skip()
+# def test_produces_correct_count():
+#     entries = exporter.range(db(), 1, 100)
+#     with tempfile.NamedTemporaryFile() as out:
+#         exporter.write(out, entries)
+#         out.flush()
+#         with open(out.name, 'r') as raw:
+#             parsed = ET.parse(raw)
+#             count = parsed.find('./entry_count')
+#             assert count.text == '105'
 
 
 @pytest.mark.parametrize('upi,ans', [  # pylint: disable=E1101

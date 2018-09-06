@@ -14,14 +14,15 @@ limitations under the License.
 """
 
 import json
-import itertools as it
 from datetime import date
 import collections as coll
 
 from lxml import etree
 from lxml.builder import E
 
-from .data import builder
+from rnacentral_pipeline import psql
+
+from .data import builder as raw_builder
 
 
 def write_entries(handle, results):
@@ -45,6 +46,7 @@ def write(results, handle, count_handle):
     string representation of that document which can be saved.
     """
 
+    # pylint: disable=no-member
     handle.write('<database>')
     handle.write(etree.tostring(E.name('RNAcentral')))
     handle.write(etree.tostring(E.description('a database for non-protein coding RNA sequences')))
@@ -57,29 +59,31 @@ def write(results, handle, count_handle):
 
     if not count:
         raise ValueError("No entries found")
-    count_handle.write(str(count))
 
+    count_handle.write(str(count))
     handle.write(etree.tostring(E.entry_count(str(count))))
     handle.write('</database>')
 
 
+def builder(extras, entry):
+    for key, data in extras.items():
+        entry[key] = data.get(entry['rna_id'], {})
+    yield raw_builder(entry)
+
+
+def parse_additions(handle):
+    extras = coll.defaultdict(dict)
+    for meta_entry in psql.json_handler(handle):
+        rna_id = meta_entry.pop('rna_id')
+        for key, value in meta_entry.items():
+            extras[key][rna_id] = value
+    return extras
+
+
 def parse(input_handle, metadata_handle):
-    def parser(handle):
-        for line in handle:
-            line = line.replace('\\\\', '\\')
-            yield json.loads(line)
-
-    extra_objects = set()
-    metadata = coll.defaultdict(dict)
-    for meta_entry in parser(metadata_handle):
-        extra_objects.update(k for k in meta_entry.keys() if k != 'rna_id')
-        metadata[meta_entry['rna_id']].update(meta_entry)
-
-    for entry in parser(input_handle):
-        extra = metadata[entry['rna_id']]
-        extra.update({k: {} for k in extra_objects if k not in extra})
-        entry.update(extra)
-        yield builder(entry)
+    extras = parse_additions(metadata_handle)
+    for entry in psql.json_handler(input_handle):
+        yield builder(extras, entry)
 
 
 def as_xml(input_handle, metadata_handle, output_handle, count_handle):
@@ -87,11 +91,11 @@ def as_xml(input_handle, metadata_handle, output_handle, count_handle):
     write(data, output_handle, count_handle)
 
 
-def release_note(output_handle, count_handles):
+def release_note(output_handle, release, count_handles):
     total = 0
     for handle in count_handles:
         total += sum(int(line) for line in handle)
     now = date.today().strftime('%d-%B-%Y')
-    output_handle.write("release=9.0\n")
+    output_handle.write("release=%s\n" % release)
     output_handle.write("release_date=%s\n" % now)
     output_handle.write("entries=%s\n" % total)
