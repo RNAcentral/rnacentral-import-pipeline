@@ -14,10 +14,9 @@ import click
 
 from rnacentral_pipeline.writers import write_entries
 
+from rnacentral_pipeline.databases import rfam
 from rnacentral_pipeline.databases.ena import parser as ena
 from rnacentral_pipeline.databases.pdb import parser as pdb
-from rnacentral_pipeline.databases.rfam import parser as rfam
-from rnacentral_pipeline.databases.rfam import infernal_results
 from rnacentral_pipeline.databases.generic import parser as generic
 from rnacentral_pipeline.databases.quickgo import parser as quickgo
 from rnacentral_pipeline.databases.refseq import parser as refseq
@@ -216,7 +215,7 @@ def process_refseq(refseq_file, output):
     file_okay=False,
 ))
 def process_rfam(rfam_file, mapping_file, output):
-    write_entries(rfam.parse, output, rfam_file, mapping_file)
+    write_entries(rfam.parser.parse, output, rfam_file, mapping_file)
 
 
 @cli.group('extra')
@@ -260,6 +259,18 @@ def ontologies_quickgo(raw_data, output):
     onto_writer.write_annotations(quickgo.parser, output, raw_data)
 
 
+@ontologies.command('rfam-terms')
+@click.argument('filename', default='-', type=click.File('rb'))
+@click.argument('output', default='.', type=click.Path(
+    writable=True,
+    dir_okay=True,
+    file_okay=False,
+))
+def ontologies_rfam_terms(filename, output):
+    print(dir(rfam))
+    rfam.cross_references.from_file(filename, output)
+
+
 # @ontologies.command('tair')
 # @click.argument('raw_data', type=click.File('rb'))
 # @click.argument('output', default='.', type=click.Path(
@@ -278,7 +289,7 @@ def ontologies_quickgo(raw_data, output):
 @click.argument('terms', type=click.File('rb'))
 @click.argument('output', type=click.File('w'))
 def ontologies_lookup_terms(terms, output):
-    onto.helpers.process_term_file(terms, output)
+    onto.lookup_terms(terms, output)
 
 
 @cli.group('search-export')
@@ -467,7 +478,7 @@ def process_tblout(tblout, output):
     Process a table out file and create a CSV for importing into our database.
     This will overwrite the given file.
     """
-    infernal_results.as_csv(tblout, output)
+    rfam.infernal_results.as_csv(tblout, output)
 
 
 @cli.group()
