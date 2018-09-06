@@ -1,5 +1,5 @@
 COPY (
-SELECT
+  SELECT
     json_build_object(
         'rna_id', rna.upi || '_' || xref.taxid,
         'upi', rna.upi,
@@ -50,31 +50,27 @@ SELECT
         'locus_tags', array_agg(acc.locus_tag),
         'standard_names', array_agg(acc.standard_name),
         'products', array_agg(acc.product),
-        'has_crs', exists(
-            select 1
-            from rnc_sequence_features features
-            where
-                features.upi = rna.upi
-                and features.taxid = xref.taxid
-                and feature_name = 'conserved_rna_structure'
-        )
+        'has_crs', bool_or(CASE WHEN features.upi IS NOT null THEN true ELSE false end)
     )
-FROM xref xref
+FROM rna rna
+join xref xref ON xref.upi = rna.upi
 JOIN rnc_rna_precomputed pre ON xref.upi = pre.upi AND xref.taxid = pre.taxid
 JOIN rnc_accessions acc ON xref.ac = acc.accession
 JOIN rnc_database db ON xref.dbid = db.id
 JOIN rnc_release release1 ON xref.created = release1.id
 JOIN rnc_release release2 ON xref.last = release2.id
-JOIN rna rna ON xref.upi = rna.upi
 JOIN qa_status qa ON qa.rna_id = pre.id
 LEFT JOIN rnc_reference_map ref_map ON ref_map.accession = acc.accession
 LEFT JOIN rnc_references refs ON refs.id = ref_map.reference_id
 LEFT JOIN rfam_model_hits hits ON xref.upi = hits.upi
-LEFT JOIN rfam_models models
+LEFT JOIN rfam_models models ON hits.rfam_model_id = models.rfam_model_id
+LEFT JOIN rnc_sequence_features features
 ON
-    hits.rfam_model_id = models.rfam_model_id
+  features.upi = rna.upi
+  AND features.taxid = xref.taxid
+  AND features.feature_name = 'conserved_rna_structure'
 WHERE
-  xref.deleted = 'N'
-  AND rna.id BETWEEN :min AND :max
+    xref.deleted = 'N'
+    AND rna.id BETWEEN :min AND :max
 GROUP BY rna.upi, xref.taxid
 ) TO STDOUT
