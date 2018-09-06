@@ -69,3 +69,5 @@ data/pub/
 luigi.cfg
 logging.cfg
 local.config
+work/
+.nextflow*
