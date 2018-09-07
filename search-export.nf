@@ -28,7 +28,7 @@ process fetch_metdata {
   file("metadata.json") into metadata
 
   """
-  find . -name '*.sql' | xargs -I {} psql -f "{}" "$PGDATABASE" > metadata.json
+  find . -name '*.sql' | xargs -I {} psql -f "{}" "$PGDATABASE" >> metadata.json
   """
 }
 
@@ -82,7 +82,7 @@ process create_release_note {
 
   script:
   """
-  rnac search-export release-note release_note.txt count*
+  rnac search-export release-note ${params.release} release_note.txt count*
   """
 }
 

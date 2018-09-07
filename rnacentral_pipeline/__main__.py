@@ -260,14 +260,15 @@ def search_export_xml(raw_file, metadata_file, xml_file, count_file=None):
 
 
 @search_export.command('release-note')
+@click.argument('release', type=str)
 @click.argument('output', type=click.File('wb'))
 @click.argument('count_files', nargs=-1, type=click.File('rb'))
-def search_export_note(output, count_files):
+def search_export_note(release, output, count_files):
     """
     This will create the release_note.txt file that is needed for the search
     export.
     """
-    search.release_note(output, count_files)
+    search.release_note(output, release, count_files)
 
 
 @cli.group('genome-mapping')
