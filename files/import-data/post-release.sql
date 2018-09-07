@@ -96,3 +96,6 @@ SET
 drop table load_rnc_related_sequences;
 drop table load_rnc_secondary_structure;
 drop table load_rnc_sequence_features;
+
+-- strips out all sequences
+truncate table load_rnacentral_all;
