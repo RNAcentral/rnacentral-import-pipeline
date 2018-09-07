@@ -1,5 +1,5 @@
 LOAD CSV
-FROM all filenames matching ~<refs*.csv>
+FROM ALL FILENAMES MATCHING ~<refs.*csv$>
 HAVING FIELDS  (
     md5,
     accession,
@@ -33,9 +33,12 @@ WITH
 
 SET
     work_mem to '256 MB',
-    maintenance_work_mem to '256 MB',
+    maintenance_work_mem to '256 MB'
 
 BEFORE LOAD DO
+$$
+truncate table load_rnc_references;
+$$,
 $$
 ALTER TABLE rnacen.load_rnc_references SET (
     autovacuum_enabled = false,

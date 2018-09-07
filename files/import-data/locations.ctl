@@ -1,5 +1,5 @@
 LOAD CSV
-FROM ALL FILENAMES MATCHING ~<genomic_locations*.csv>
+FROM ALL FILENAMES MATCHING ~<genomic_locations.*csv$>
 HAVING FIELDS (
     accession,
     chromosome,
@@ -30,9 +30,12 @@ WITH truncate,
 
 SET
     work_mem to '256 MB',
-    maintenance_work_mem to '256 GB',
+    maintenance_work_mem to '256 GB'
 
 BEFORE LOAD DO
+$$
+truncate table load_rnc_coordinates;
+$$,
 $$
 CREATE TABLE IF NOT EXISTS load_rnc_coordinates (
     accession varchar(200) NULL,

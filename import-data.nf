@@ -8,22 +8,21 @@
 raw_output = Channel.empty()
 
 // Because we use very generic globs to get files to import we have to filter
-// the filenames ot known ones. This is the list of known file names. The list
-// is also used to shorten the implementation of the .choice method below.
+// the filenames ot known ones. This maps from the allowed filenames to the
+// control files that will be used to load the data.
 IMPORTABLE = [
-  /ac_info\d+.csv/,
-  /genomic_locations\d+.csv/,
-  /seq_long\d+.csv/,
-  /seq_short\d+.csv/,
-  /refs\d+.csv/,
-  /secondary_structure\d+.csv/,
-  /related_sequences\d+.csv/,
-  /features\d+.csv/,
+  "accessions.csv": 'files/import-data/accessions.ctl',
+  "genomic_locations.csv": 'files/import-data/locations.ctl',
+  "seq_long.csv": 'files/import-data/long-sequences.ctl',
+  "seq_short.csv": 'files/import-data/short-sequences.ctl',
+  "refs.csv": 'files/import-data/references.ctl',
+  "secondary_structure.csv": 'files/import-data/secondary.ctl',
+  "related_sequences.csv": 'files/import-data/related-sequences.ctl',
+  "features.csv": 'files/import-data/features.ctl',
 ]
 
 dataless_imports = Channel.empty()
-remotes_to_fetch = Channel.empty()
-locals_to_fetch = Channel.empty()
+to_fetch = Channel.empty()
 
 for (entry in params.import_data.databases) {
   if (!entry.value) {
@@ -108,7 +107,7 @@ raw_output.mix(raw_metadataless_output). set { raw_output }
 
 process fetch_rfam_metadata {
   when:
-  params.import_data.databases.rfam or params.import_data.ensembl
+  params.import_data.databases['rfam'] || params.import_data['ensembl']
 
   input:
   file(query) from Channel.fromPath('files/import-data/rfam/families.sql')
@@ -140,7 +139,7 @@ Channel
 
 process fetch_ena_metadata {
   when:
-  params.import_data.databases.ena
+  params.import_data.databases['ena']
 
   input:
   file tpa_file from tpa_url_file
@@ -185,90 +184,47 @@ process import_with_metadata {
 raw_output.mix(raw_with_metadata_output).set { raw_output }
 
 raw_output
+  .filter { f -> IMPORTABLE.keySet().findIndexOf { p -> f.getName() ==~ p } > -1 }
   .map { f ->
     filename = f.getName()
-    [filename.take(filename.lastIndexOf('.')), f]
+    name = filename.take(filename.lastIndexOf('.'))
+    ctl = file(IMPORTABLE[filename])
+    [[name, ctl], f]
   }
   .groupTuple()
-  .set { to_merge }
+  .map { it -> [it[0][0], it[0][1], it[1]] }
+  .set { to_load }
 
 process merge_csvs {
   input:
-  set val(name), file('raw*.csv') from to_merge
+  set val(name), file(ctl), file('raw*.csv') from to_load
 
   output:
-  file("merged/${name}*.csv") into merged mode flatten
+  file(ctl) into loaded
 
   """
+  set -o pipefail
+
   mkdir merged
   find . -name 'raw*.csv' |\
   xargs cat |\
   split --additional-suffix=.csv -dC ${params.import_data.chunk_size} - merged/${name}
+
+  cp $ctl merged/$ctl
+  cd merged
+  pgloader --on-error-stop $ctl
   """
 }
 
-accessions = Channel.create()
-locations = Channel.create()
-long_sequences = Channel.create()
-short_sequences = Channel.create()
-refs = Channel.create()
-secondary = Channel.create()
-related = Channel.create()
-features = Channel.create()
-
-merged
-  .filter { f -> IMPORTABLE.findIndexOf { p -> f.getName() ==~ p } > -1 }
-  .choice(
-    accessions,
-    locations,
-    long_sequences,
-    short_sequences,
-    refs,
-    secondary,
-    related,
-    features,
-  ) { f -> IMPORTABLE.findIndexOf { p -> f.getName() ==~ p } }
-
-
-// If one of the optional channels is empty then we must add an empty file so
-// the pipeline can work.
-empty_file = "mktemp".execute().text.trim()
-refs.ifEmpty(file(empty_file)).set { refs }
-secondary.ifEmpty(file(empty_file)).set { secondary }
-related.ifEmpty(file(empty_file)).set { related }
-features.ifEmpty(file(empty_file)).set { features }
-
-process pgload_data {
-
+process release {
   input:
-  file 'ac_info*.csv' from accessions.collect()
-  file 'genomic_locations*.csv' from locations.collect()
-  file 'long*.csv' from long_sequences.collect()
-  file 'short*.csv' from short_sequences.collect()
-  file 'refs*.csv' from refs.collect()
-  file 'features*.csv' from features.collect()
-  file 'related*.csv' from related.collect()
-
-  file acc_ctl from Channel.fromPath('files/import-data/accessions.ctl')
-  file locations_ctl from Channel.fromPath('files/import-data/locations.ctl')
-  file long_ctl from Channel.fromPath('files/import-data/long-sequences.ctl')
-  file short_ctl from Channel.fromPath('files/import-data/short-sequences.ctl')
-  file ref_ctl from Channel.fromPath('files/import-data/references.ctl')
-  file features_ctl from Channel.fromPath('files/import-data/features.ctl')
-  file related_ctl from Channel.fromPath('files/import-data/related-sequences.ctl')
+  file('*.ctl') from loaded.collect()
+  file(pre) from Channel.fromPath('files/import-data/pre-release.sql')
+  file(post) from Channel.fromPath('files/import-data/post-release.sql')
 
   """
-  find . -name '*.ctl' | xargs -I {} basename {} | xargs -I {} cp {} local_{}
-
-  pgloader --on-error-stop local_${acc_ctl}
-  pgloader --on-error-stop local_${locations_ctl}
-  pgloader --on-error-stop local_${long_ctl}
-  pgloader --on-error-stop local_${short_ctl}
-  pgloader --on-error-stop local_${ref_ctl}
-
+  psql -f $pre "$PGDATABASE"
   rnac run-release
-
-  pgloader --on-error-stop local_${features_ctl}
-  sort -u related* | pgloader --on-error-stop local_$related_ctl
+  psql -f $post "$PGDATABASE"
   """
 }
