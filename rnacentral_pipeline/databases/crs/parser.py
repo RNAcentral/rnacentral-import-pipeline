@@ -47,6 +47,7 @@ class CrsFeature(object):
     start = attr.ib(validator=is_a(int), convert=int)
     stop = attr.ib(validator=is_a(int), convert=int)
     genomic_location = attr.ib(validator=is_a(GenomicLocation))
+    fdr = attr.ib(validator=is_a(float), convert=float)
 
     @classmethod
     def build(cls, raw_feature):
@@ -58,13 +59,16 @@ class CrsFeature(object):
             start=raw_feature['CRS_start_relative_to_URS'],
             stop=raw_feature['CRS_end_relative_to_URS'],
             genomic_location=GenomicLocation.build(raw_feature),
+            fdr=raw_feature['CRS_fdr'],
         )
 
     def writeable(self):
         metadata = attr.asdict(self)
         metadata = {
             'crs_id': self.crs_name,
-            'genomic_location': metadata['genomic_location']
+            'genomic_location': metadata['genomic_location'],
+            'fdr': self.fdr,
+            'should_highlight': self.fdr <= 10.0,
         }
 
         return [
