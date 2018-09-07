@@ -68,7 +68,7 @@ def write(results, handle, count_handle):
 def builder(extras, entry):
     for key, data in extras.items():
         entry[key] = data.get(entry['rna_id'], {})
-    yield raw_builder(entry)
+    return raw_builder(entry)
 
 
 def parse_additions(handle):
