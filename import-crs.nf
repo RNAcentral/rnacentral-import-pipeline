@@ -32,6 +32,6 @@ process import_crs {
 
   """
   cp $ctl crs.ctl
-  pgloader crs.ctl
+  pgloader --on-error-stop crs.ctl
   """
 }
