@@ -1,5 +1,5 @@
 LOAD CSV
-FROM ALL FILENAMES MATCHING ~<ac_info*.csv>
+FROM ALL FILENAMES MATCHING ~<accessions.*csv$>
 HAVING FIELDS (
     accession,
     parent_ac,
@@ -96,9 +96,12 @@ WITH truncate,
 
 SET
     work_mem to '256 MB',
-    maintenance_work_mem to '256 GB',
+    maintenance_work_mem to '256 GB'
 
 BEFORE LOAD DO
+$$
+truncate table load_rnc_accessions;
+$$,
 $$
 ALTER TABLE rnacen.load_rnc_accessions SET (
     autovacuum_enabled = false,
