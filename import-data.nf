@@ -40,13 +40,8 @@ for (entry in params.import_data.databases) {
   if (name == "custom") {
     raw_output.mix(Channel.fromPath("${base}/**.csv")).flatten().set { raw_output }
   } else if (database.containsKey('remote') && database.remote) {
-    remote = database.remote
-    db_channel = Channel.value([name, remote, database.pattern])
-    if (remote.startsWithAny('http:', 'ftp:', 'ssh:')) {
-      remotes_to_fetch.mix(db_channel).set { remotes_to_fetch }
-    } else {
-      locals_to_fetch.mix(db_channel).set { locals_to_fetch }
-    }
+    db_channel = Channel.value([name, database.remote, database.pattern])
+    to_fetch.mix(db_channel).set { to_fetch }
   } else {
     dataless_imports.mix(Channel.from(name)).set { dataless_imports }
   }
@@ -67,52 +62,22 @@ process dataless {
 
 raw_output.mix(raw_dataless_output).set { raw_output }
 
-process remote_fetch {
+process fetch_data {
   input:
-  set val(name), val(remote), val(pattern) from remotes_to_fetch
+  set val(name), val(remote), val(pattern) from to_fetch
 
   output:
-  set val(name), file("${pattern}") into remote_fetched
+  set val(name), file("${pattern}") into fetched
 
   script:
-  // wget doesn't play well with ** so we use lftp instead. Also, wget doesn't
-  // like following symlinks, but lftp does. I should find a way to indicate
-  // this to the pipeline.
-  if (remote.startsWith('ftp:') && remote.contains('**')) {
-    """
-    lftp -c 'mget ${remote}'
-    find . -name '*.tar.gz' | xargs -I {} tar xvf {}
-    """
-  } else if (remote.startsWith('ssh://')) {
-    short_remote = remote[6..-1]
-    """
-    scp '$short_remote' .
-    find . -name '*.tar.gz' | xargs -I {} tar xvf {}
-    """
-  } else {
-    """
-    wget "${remote}"
-    find . -name '*.tar.gz' | xargs -I {} tar xvf {}
-    """
-  }
-}
-
-process local_fetch {
-  input:
-  set val(name), val(directory), val(pattern) from locals_to_fetch
-
-  output:
-  set val(name), file("${pattern}") into local_fetched
-
   """
-  find ${directory} -name '${pattern}' | xargs -I {} cp {} .
+  fetch $remote $pattern
   """
 }
 
 metadataless = Channel.create()
 with_metadata = Channel.create()
-remote_fetched
-  .mix(local_fetched)
+fetched
   .transpose()
   .choice(metadataless, with_metadata) { it ->
     params.databases[it[0]].get('metadata', false) ? 1 : 0
@@ -142,6 +107,9 @@ process external_without_metadata {
 raw_output.mix(raw_metadataless_output). set { raw_output }
 
 process fetch_rfam_metadata {
+  when:
+  params.import_data.databases.rfam or params.import_data.ensembl
+
   input:
   file(query) from Channel.fromPath('files/import-data/rfam/families.sql')
 
@@ -171,6 +139,9 @@ Channel
   .set { tpa_url_file }
 
 process fetch_ena_metadata {
+  when:
+  params.import_data.databases.ena
+
   input:
   file tpa_file from tpa_url_file
 
@@ -178,14 +149,14 @@ process fetch_ena_metadata {
   set val('ena'), file("tpa.tsv") into ena_metadata
 
   """
-  cat $tpa_file | xargs wget -O - > tpa.tsv
+  cat $tpa_file | xargs wget -O - >> tpa.tsv
   """
 }
 
 Channel.empty()
   .mix(ena_metadata)
-  // .mix(ensembl_metadata)
-  // .mix(rfam_metadata)
+  .mix(ensembl_metadata)
+  .mix(rfam_metadata)
   .cross(with_metadata)
   .map { meta, data -> data + meta[1..-1] }
   .set { metadata }
