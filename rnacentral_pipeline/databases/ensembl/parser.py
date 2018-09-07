@@ -13,7 +13,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import operator as op
+import itertools as it
+
 import attr
+
+from Bio import SeqIO
 
 from rnacentral_pipeline.databases import data
 from rnacentral_pipeline.databases.helpers import embl
@@ -48,7 +53,7 @@ def as_entry(record, gene, feature, context):
         species=species,
         gene=embl.locus_tag(gene),
         locus_tag=embl.locus_tag(gene),
-        optional_id=gene,
+        optional_id=embl.gene(gene),
         note_data=helpers.note_data(feature),
         xref_data=xref_data,
         product=helpers.product(feature),
@@ -60,7 +65,7 @@ def as_entry(record, gene, feature, context):
 
     return attr.assoc(
         entry,
-        description=helpers.description(entry)
+        description=helpers.description(gene, entry)
     )
 
 
@@ -69,10 +74,29 @@ def parse(raw, family_file):
     This will parse an EMBL file for all Ensembl Entries to import.
     """
 
-    context = Context(family_file)
-    for (record, gene, feature) in embl.transcripts(raw):
-        if context.is_supressed(feature):
-            continue
-        if helpers.is_pseudogene(gene, feature):
-            continue
-        yield as_entry(record, gene, feature, context)
+    context = Context.build(family_file)
+    for record in SeqIO.parse(raw, 'embl'):
+        current_gene = None
+        ncrnas = []
+        for feature in record.features:
+            if feature.type == 'source':
+                continue
+
+            if embl.is_gene(feature):
+                current_gene = feature
+                for entry in helpers.generate_related(ncrnas):
+                    yield entry
+                ncrnas = []
+                continue
+
+            if helpers.is_pseudogene(current_gene, feature):
+                continue
+
+            if not helpers.is_ncrna(feature):
+                continue
+
+            entry = as_entry(record, current_gene, feature, context)
+            if context.is_supressed(entry):
+                continue
+
+            ncrnas.append(entry)

@@ -13,13 +13,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import csv
 import urllib
 import operator as op
+import itertools as it
 
 import requests
 from functools32 import lru_cache
-
-from rnacentral_pipeline.writers import CsvOutput
 
 from . import data
 
@@ -82,10 +82,14 @@ def term(term_id):
 
 
 def parse_file(handle):
-    for line in handle:
-        yield term(line)
+    reader = csv.reader(handle)
+    for line in reader:
+        yield term(line[0])
 
 
 def process_term_file(term_handle, output):
-    writer = CsvOutput(parse_file, transformer=op.methodcaller('writeables'))
-    writer(output, term_handle)
+    data = parse_file(term_handle)
+    data = it.imap(op.methodcaller('writeables'), data)
+    data = it.chain.from_iterable(data)
+    writer = csv.writer(output, quoting=csv.QUOTE_ALL)
+    writer.writerows(data)

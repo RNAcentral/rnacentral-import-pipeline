@@ -20,6 +20,7 @@ from rnacentral_pipeline.writers import build_entry_writer
 
 from ..data import Entry
 
+from . import utils
 from . import helpers
 
 
@@ -57,16 +58,12 @@ def as_entry(data, mapping):
     )
 
 
-def parse(handle, mapping):
+def parse(handle, mapping_file):
     """
     Parse the JSON file of Rfam data and produce a generator of all Entry
     objects in the file.
     """
 
     data = json.load(handle)
+    mapping = utils.id_to_insdc_type(mapping_file)
     return it.imap(lambda e: as_entry(e, mapping), data)
-
-
-def from_file(handle, mapping, output):
-    writer = build_entry_writer(parse)
-    writer(output, handle, mapping)
