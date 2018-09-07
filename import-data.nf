@@ -289,15 +289,15 @@ process pgload_data {
   """
   find . -name '*.ctl' | xargs -I {} basename {} | xargs -I {} cp {} local_{}
 
-  pgloader local_${acc_ctl}
-  pgloader local_${locations_ctl}
-  pgloader local_${long_ctl}
-  pgloader local_${short_ctl}
-  pgloader local_${ref_ctl}
+  pgloader --on-error-stop local_${acc_ctl}
+  pgloader --on-error-stop local_${locations_ctl}
+  pgloader --on-error-stop local_${long_ctl}
+  pgloader --on-error-stop local_${short_ctl}
+  pgloader --on-error-stop local_${ref_ctl}
 
   rnac run-release
 
-  pgloader local_${features_ctl}
-  sort -u related* | pgloader local_$related_ctl
+  pgloader --on-error-stop local_${features_ctl}
+  sort -u related* | pgloader --on-error-stop local_$related_ctl
   """
 }
