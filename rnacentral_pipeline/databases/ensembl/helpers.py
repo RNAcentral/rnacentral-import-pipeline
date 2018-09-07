@@ -15,8 +15,11 @@ limitations under the License.
 
 import re
 
+import attr
+
 from rnacentral_pipeline.databases.data import Exon
 from rnacentral_pipeline.databases.data import Reference
+from rnacentral_pipeline.databases.data import RelatedSequence
 
 from rnacentral_pipeline.databases.helpers import embl
 
@@ -113,7 +116,7 @@ def rna_type(inference, feature, xref_data):
     return inference.infer_rna_type(xref_data, base_type)
 
 
-def description(entry):
+def description(gene, entry):
     """
     Generate a description for the entry based upon the locus this is a part
     of. This will be of the form 'Homo sapiens (human) lncRNA xist
@@ -122,6 +125,17 @@ def description(entry):
     species = entry.species
     if entry.common_name:
         species += ' (%s)' % entry.common_name
+
+    gene_name = notes(gene)
+    if gene_name and len(gene_name) == 1:
+        gene_name = gene_name[0]
+        if gene_name.endswith(']'):
+            gene_name = re.sub(r'\s*\[.+\]$', '', gene_name)
+        gene_name.strip()
+        return '{species} {gene_name}'.format(
+            species=species,
+            gene_name=gene_name
+        )
 
     assert entry.rna_type, "Cannot build description without rna_type"
     return '{species} {rna_type} {locus_tag}'.format(
@@ -146,7 +160,10 @@ def transcript(feature):
     """
     Get the transcript id of this feature.
     """
-    return embl.qualifier_value(feature, 'note', '^transcript_id=(.+)$')
+    name = embl.qualifier_value(feature, 'note', '^transcript_id=(.+)$')
+    if name:
+        return name
+    return embl.qualifier_string(feature, 'standard_name')
 
 
 def primary_id(feature):
@@ -223,7 +240,10 @@ def note_data(feature):
     notes_data = notes(feature)
     if len(notes_data) > 1:
         notes_data = notes_data[1:]
-    return embl.grouped_annotations(notes_data, '=')
+    grouped = embl.grouped_annotations(notes_data, '=')
+    if 'transcript_id' not in grouped:
+        grouped['transcript_id'] = [transcript(feature)]
+    return grouped
 
 
 def is_ncrna(feature):
@@ -260,3 +280,23 @@ def product(feature):
     if raw_rna_type(feature) == 'scaRNA':
         return 'scaRNA'
     return None
+
+
+def generate_related(entries):
+    """
+    This goes through all given entries, which are assumed to all be from the
+    same gene, and thus splicing variants, and populates the related_sequences
+    feature with the required related sequence information.
+    """
+
+    for first in entries:
+        related = first.related_sequences
+        for second in entries:
+            if first == second:
+                continue
+
+            related.append(RelatedSequence(
+                sequence_id=second.accession,
+                relationship='isoform',
+            ))
+        yield attr.evolve(first, related_sequences=related)

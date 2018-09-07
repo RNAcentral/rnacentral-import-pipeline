@@ -57,34 +57,23 @@ def test_correctly_parses_other(data):
     ))
 
 
-def test_can_fetch_ontology_data(data):
-    assert attr.asdict(data[47].ontology_term()) == attr.asdict(Term(
-        'SO',
-        'SO:0000393',
-        'U4_snRNA',
-        ('U4 small nuclear RNA (U4 snRNA) is a component of '
-         'the major U2-dependent spliceosome. It forms a duplex with '
-         'U6, and with each splicing round, it is displaced from U6 '
-         '(and the spliceosome) in an ATP-dependent manner, allowing '
-         'U6 to refold and create the active site for splicing '
-         'catalysis. A recycling process involving protein Prp24 '
-         're-anneals U4 and U6.'),
-        ['U4 snRNA', 'small nuclear RNA U4', 'U4 small nuclear RNA', 'snRNA U4']
-    ))
-
-
 def test_can_extract_all_ontology_terms():
     with open('data/rfam/database_link.tsv', 'r') as raw:
         sample = StringIO()
         for line in raw.readlines()[:10]:
+            print(line)
             sample.write(line)
         sample.seek(0)
-        assert list(cr.ontology_terms(sample)) == [
-            ont.term('SO:0000652'),
-            ont.term('GO:0003735'),
-            ont.term('GO:0005840'),
-            ont.term('SO:0000375'),
-            ont.term('SO:0000391'),
+        references = list(cr.ontology_references(sample))
+        references = [r.external_id for r in references]
+        assert references == [
+            'SO:0000652',
+            'GO:0003735',
+            'GO:0005840',
+            'SO:0000375',
+            'GO:0003735',
+            'GO:0005840',
+            'SO:0000391',
         ]
 
 

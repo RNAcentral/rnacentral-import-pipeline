@@ -126,7 +126,7 @@ def build_entry_writer(parser):
     seq_csv = {'delimiter': ',', 'lineterminator': '\n'}
     return MultiCsvOutput.build(
         parser,
-        ac_info={
+        accessions={
             'transformer': op.methodcaller('write_ac_info'),
         },
         seq_short={

@@ -22,8 +22,8 @@ def short_description(description, sequence):
     description. This is useful for display in the genome browser.
     """
 
-    species = {acc.species for acc in sequence.accessions}
-    common = {'(%s)' % acc.common_name for acc in sequence.accessions}
+    species = {acc.species for acc in sequence.accessions if acc.species}
+    common = {'(%s)' % acc.common_name for acc in sequence.accessions if acc.common_name}
     leading = list(species) + list(common)
 
     for name in leading:
@@ -31,7 +31,7 @@ def short_description(description, sequence):
         # due to parenthesis.
         if description.startswith(name):
             description = description[len(name):]
-        description = re.sub('^\s+', '', description)
+        description = description.strip()
 
     if description.startswith('(') and description.endswith(')'):
         description = description[1:-1]

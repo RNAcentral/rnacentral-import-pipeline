@@ -14,13 +14,14 @@ limitations under the License.
 """
 
 import csv
+import operator as op
 import itertools as it
 
 import attr
 from attr.validators import optional
 from attr.validators import instance_of as is_a
 
-from rnacentral_pipeline.ontologies import helpers as ont
+from rnacentral_pipeline.writers import MultiCsvOutput
 
 
 EXCLUDED_TERMS = {
@@ -29,6 +30,9 @@ EXCLUDED_TERMS = {
     'GO:0042749',
     'GO:0050789',
     'GO:0006810',
+    'GO:0001263',
+    'SO:0004725',
+    'SO:0010039',
 }
 
 EXCLUDED_MIRNA = {'GO:0035068', 'GO:0006396'}
@@ -37,16 +41,6 @@ EXCLUDED_MIRNA = {'GO:0035068', 'GO:0006396'}
 GO_REPLACEMENTS = {
     'GO:0044005': 'GO:0051819',
 }
-
-
-QUERY = """
-select distinct
-    link.*,
-    family.type
-from database_link link
-join family on family.rfam_acc = link.rfam_acc
-;
-"""
 
 
 def empty_to_none(raw):
@@ -105,15 +99,20 @@ class RfamDatabaseLink(object):
         """
         return self.database in {'SO', 'GO'}
 
-    def ontology_term(self):
-        """
-        Create an ontology term for this instance, if the instance comes from
-        an ontology.
-        """
+    def writeable_go_mappings(self):
+        if self.database != 'GO':
+            return
 
+        yield [
+            self.rfam_family,
+            self.external_id,
+        ]
+
+    def writeable_ontology_terms(self):
         if not self.from_ontology():
-            return None
-        return ont.term(self.external_id)
+            return
+
+        yield [self.external_id]
 
 
 def parse(handle):
@@ -141,7 +140,7 @@ def correct_go_term(reference):
         return None
 
     go_term_id = GO_REPLACEMENTS.get(go_term_id, go_term_id)
-    return attr.assoc(reference, external_id=go_term_id)
+    return attr.evolve(reference, external_id=go_term_id)
 
 
 def ontology_references(handle):
@@ -153,7 +152,7 @@ def ontology_references(handle):
         if not reference.from_ontology():
             continue
 
-        if reference.database == 'GO':
+        if reference.database in {'SO', 'GO'}:
             reference = correct_go_term(reference)
 
         if not reference:
@@ -162,17 +161,14 @@ def ontology_references(handle):
         yield reference
 
 
-def ontology_terms(handle):
-    """
-    Parse the given handle of database cross references to extract the unique
-    ontology terms. This will produce an iterable of ontology terms.
-    """
-
-    seen = set()
-    for reference in ontology_references(handle):
-        if reference.external_id in seen:
-            continue
-
-        term = reference.ontology_term()
-        seen.add(term.ontology_id)
-        yield term
+def from_file(handle, output):
+    writer = MultiCsvOutput.build(
+        ontology_references,
+        terms={
+            'transformer': op.methodcaller('writeable_ontology_terms'),
+        },
+        rfam_mappings={
+            'transformer': op.methodcaller('writeable_go_mappings'),
+        }
+    )
+    writer(output, handle)
