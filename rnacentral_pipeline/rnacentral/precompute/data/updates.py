@@ -144,6 +144,7 @@ class Update(object):
             int(self.has_coordinates),
             self.databases,
             self.short_description,
+            self.last_release,
         ]
 
     def writeable_statuses(self):
