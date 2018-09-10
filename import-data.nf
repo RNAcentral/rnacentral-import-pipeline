@@ -195,7 +195,9 @@ raw_output
   .map { it -> [it[0][0], it[0][1], it[1]] }
   .set { to_load }
 
-process merge_csvs {
+process merge_and_import {
+  echo true
+
   input:
   set val(name), file(ctl), file('raw*.csv') from to_load
 
