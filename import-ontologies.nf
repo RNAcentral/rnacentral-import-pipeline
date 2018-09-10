@@ -50,6 +50,8 @@ process fetch_ontology_information {
 }
 
 process pgload_ontology_annotations {
+  echo true
+
   input:
   file('term-info.csv') from term_info.collect()
   file('annotations*.csv') from annotations.collect()

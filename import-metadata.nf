@@ -5,6 +5,8 @@ Channel.fromFilePairs("files/import-metadata/rfam/*.{ctl,sql}")
   .set { rfam_files }
 
 process import_rfam_metadata {
+  echo true
+
   input:
   set file(ctl), file(sql) from rfam_files
 
@@ -57,6 +59,8 @@ process ensembl_protein_info {
 }
 
 process import_ensembl_proteins {
+   echo true
+
    input:
    file('proteins*.tsv') from ensembl_proteins.collect()
    file(ctl) from Channel.fromPath('files/protein-info/ensembl.ctl')

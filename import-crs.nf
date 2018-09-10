@@ -26,6 +26,8 @@ process process_crs {
 }
 
 process import_crs {
+  echo true
+
   input:
   file('complete_features*.csv') from processed_crs.collect()
   file(ctl) from Channel.fromPath('files/import-metadata/crs-features.ctl')
