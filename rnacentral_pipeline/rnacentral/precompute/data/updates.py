@@ -36,74 +36,6 @@ def database_names(accessions):
 
 
 @attr.s()
-class QaStatus(object):
-    """
-    This represents an update to the QA status table.
-    """
-
-    incomplete_sequence = attr.ib(validator=is_a(bool))
-    possible_contamination = attr.ib(validator=is_a(bool))
-    missing_rfam_match = attr.ib(validator=is_a(bool))
-    is_repetitive = attr.ib(validator=is_a(bool))
-    mismatching_rna_type = attr.ib(validator=is_a(bool))
-    no_data = attr.ib(validator=optional(is_a(bool)), default=False)
-
-    @classmethod
-    def build(cls, rna_type, data):
-        """
-        This will build a new QaStatus object update given the particular RNA
-        type and a Sequence object.
-        """
-        return cls(
-            incomplete_sequence=qa.incomplete_sequence(rna_type, data),
-            possible_contamination=qa.possible_contamination(rna_type, data),
-            missing_rfam_match=qa.missing_rfam_match(rna_type, data),
-            mismatching_rna_type=False,
-            is_repetitive=False,
-        )
-
-    @classmethod
-    def empty(cls):
-        """
-        Build a QaStatus that will not produce any writeable data. Objects
-        produced by this should not be used for any updates.
-        """
-        return cls(False, False, False, False, False, no_data=True)
-
-    @property
-    def has_issue(self):
-        """
-        Check if this QA update indicates if there is any issue.
-        """
-
-        return (
-            self.incomplete_sequence or
-            self.possible_contamination or
-            self.missing_rfam_match
-        )
-        # fields = attr.fields(self.__class__)
-        # return any(getattr(self, field.name) for field in fields)
-
-    def writeable(self, upi, taxid):
-        """
-        Create a writeable array for writing CSV files.
-        """
-
-        if self.no_data:
-            return None
-
-        return [
-            '%s_%i' % (upi, taxid),
-            upi,
-            taxid,
-            int(self.has_issue),
-            int(self.incomplete_sequence),
-            int(self.possible_contamination),
-            int(self.missing_rfam_match),
-        ]
-
-
-@attr.s()
 class Update(object):
     """
     This represents the data that is an update to our precomputed data.
@@ -116,7 +48,7 @@ class Update(object):
     description = attr.ib(validator=is_a(basestring))
     databases = attr.ib(validator=is_a(basestring))
     has_coordinates = attr.ib(validator=is_a(bool))
-    qa_status = attr.ib(validator=is_a(QaStatus))
+    qa_status = attr.ib(validator=is_a(qa.QaStatus))
     short_description = attr.ib(validator=is_a(basestring))
     last_release = attr.ib(validator=is_a(int))
 
@@ -233,7 +165,7 @@ class InactiveUpdate(Update):
             description=description,
             databases=database_names(sequence.inactive_accessions),
             has_coordinates=has_coordinates,
-            qa_status=QaStatus.empty(),
+            qa_status=qa.QaStatus.empty(),
             short_description=description,
             last_release=sequence.last_release,
         )
