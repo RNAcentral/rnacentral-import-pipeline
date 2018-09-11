@@ -48,7 +48,7 @@ process export_search_json {
   """
   psql --variable min=$min --variable max=$max -f "$query" "$PGDATABASE" > search.json 2> err.log
   cat err.log
-  [ -s err.log ] || exit 1
+  [ ! -s err.log ] || exit 1
   """
 }
 
