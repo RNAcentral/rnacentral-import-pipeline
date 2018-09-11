@@ -16,7 +16,7 @@ process import_rfam_metadata {
     --port ${params.databases.rfam.mysql.port} \
     --user ${params.databases.rfam.mysql.user} \
     --database ${params.databases.rfam.mysql.db_name} \
-    < $sql | pgloader $ctl
+    < $sql | pgloader --on-error-stop $ctl
   """
 }
 
