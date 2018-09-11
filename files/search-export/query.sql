@@ -49,8 +49,7 @@ COPY (
         'notes', array_agg(acc.note),
         'locus_tags', array_agg(acc.locus_tag),
         'standard_names', array_agg(acc.standard_name),
-        'products', array_agg(acc.product),
-        'has_crs', bool_or(CASE WHEN features.upi IS NOT null THEN true ELSE false end)
+        'products', array_agg(acc.product)
     )
 FROM rna rna
 join xref xref ON xref.upi = rna.upi
@@ -64,11 +63,6 @@ LEFT JOIN rnc_reference_map ref_map ON ref_map.accession = acc.accession
 LEFT JOIN rnc_references refs ON refs.id = ref_map.reference_id
 LEFT JOIN rfam_model_hits hits ON xref.upi = hits.upi
 LEFT JOIN rfam_models models ON hits.rfam_model_id = models.rfam_model_id
-LEFT JOIN rnc_sequence_features features
-ON
-  features.upi = rna.upi
-  AND features.taxid = xref.taxid
-  AND features.feature_name = 'conserved_rna_structure'
 WHERE
     xref.deleted = 'N'
     AND rna.id BETWEEN :min AND :max

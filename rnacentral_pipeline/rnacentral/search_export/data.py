@@ -525,6 +525,10 @@ def interacting_evidence(interacting):
     return sorted(methods)
 
 
+def has_crs(crs):
+    return [str(bool(crs))]
+
+
 builder = entry([
     tag('name', as_name, keys=('upi', 'taxid')),
     tag('description', first),
@@ -589,6 +593,6 @@ builder = entry([
         field('has_interacting_proteins', has_interacting_proteins, keys='interacting_proteins'),
         fields('interacting_protein', interacting_proteins, keys='interacting_proteins'),
         fields('evidence_for_interaction', interacting_evidence, keys='interacting_proteins'),
-        fields('has_conserved_structure', only, keys='has_crs'),
+        fields('has_conserved_structure', has_crs, keys='has_crs'),
     ]),
 ])
