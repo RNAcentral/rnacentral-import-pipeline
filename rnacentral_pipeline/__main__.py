@@ -241,6 +241,27 @@ def extra_crs_data(filename, output):
     crs.from_file(filename, output)
 
 
+@cli.group('rfam')
+def rfam_commands():
+    pass
+
+
+@rfam_commands.command('families')
+@click.argument('filename', default='-', type=click.File('rb'))
+@click.argument('output', default='families.csv', type=click.File('wb'))
+def rfam_families(filename, output):
+    rfam.families.from_file(filename, output)
+
+
+@rfam_commands.command('clans')
+@click.argument('filename', default='-', type=click.File('rb'))
+@click.argument('output', default='clans.csv', type=click.File('wb'))
+def rfam_clans(filename, output):
+    writer = csv.writer(output)
+    reader = csv.reader(filename, delimiter='\t')
+    writer.writerows(reader)
+
+
 @cli.group('ontologies')
 def ontologies():
     pass

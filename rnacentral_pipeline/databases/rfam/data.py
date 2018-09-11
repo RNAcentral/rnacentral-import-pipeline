@@ -70,6 +70,10 @@ SO_TERM_MAPPING = {
     "SO:0000392": "snRNA",
     "SO:0000399": "snRNA",
     "SO:0000594": "snoRNA",
+    "SO:0000587": "other",  # G1 Intron
+    "SO:0000603": "other",  # GII Introng
+    "SO:1001274": "other",
+    "SO:0000205": "other",
 }
 
 RFAM_RNA_TYPE_MAPPING = {

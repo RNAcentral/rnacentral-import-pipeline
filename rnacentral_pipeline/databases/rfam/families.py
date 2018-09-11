@@ -15,6 +15,7 @@ limitations under the License.
 
 import re
 import csv
+import operator as op
 import itertools as it
 
 import attr
@@ -25,26 +26,6 @@ from .data import INFORMATIVE_NAMES
 from .data import SO_TERM_MAPPING
 from .data import RFAM_RNA_TYPE_MAPPING
 from .data import DOMAIN_MAPPING
-
-QUERY = """
-select
-    family.rfam_acc id,
-    family.rfam_id as name,
-    family.description as pretty_name,
-    group_concat(concat('SO:', dbs.db_link)) as so_terms,
-    family.type as rna_type,
-    family.comment as description,
-    family.num_seed as seed_count,
-    family.num_full as full_count,
-    group_concat(mem.clan_acc) as clan_id,
-    family.clen as length
-from family
-left join database_link dbs on dbs.rfam_acc = family.rfam_acc
-left join clan_membership mem on mem.rfam_acc = family.rfam_acc
-where
-    dbs.db_id = 'SO'
-group by family.rfam_acc
-"""
 
 
 def empty_str_from(target):
@@ -137,19 +118,33 @@ class RfamFamily(object):
     def guess_insdc(self):
         return self.guess_insdc_using_name() or \
             self.guess_insdc_using_so_terms() or \
-            self.guess_insdc_using_rna_type()
+            self.guess_insdc_using_rna_type() or \
+            'other'
 
     def writeable(self):
-        data = attr.asdict(self)
-        del data['so_terms']
-        data['short_name'] = data.pop('name')
-        data['long_name'] = data.pop('pretty_name')
-        data['is_suppressed'] = int(self.is_suppressed)
-        data['rfam_rna_type'] = data['rna_type']
-        data['rna_type'] = self.guess_insdc()
-        yield data
+        return [
+            self.id,
+            self.name,
+            self.pretty_name,
+            self.description,
+            self.clan_id,
+            self.seed_count,
+            self.full_count,
+            self.length,
+            self.domain,
+            int(self.is_suppressed),
+            self.guess_insdc(),
+            self.rna_type,
+        ]
 
 
 def parse(handle):
     reader = csv.DictReader(handle, delimiter='\t')
     return it.imap(RfamFamily.from_dict, reader)
+
+
+def from_file(handle, output):
+    data = parse(handle)
+    data = it.imap(op.methodcaller('writeable'), data)
+    writer = csv.writer(output)
+    writer.writerows(data)

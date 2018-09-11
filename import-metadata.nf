@@ -10,13 +10,20 @@ process import_rfam_metadata {
   input:
   set file(ctl), file(sql) from rfam_files
 
+  script:
+  name = ctl.toString().replace('.ctl', '')
   """
   mysql \
     --host ${params.databases.rfam.mysql.host} \
     --port ${params.databases.rfam.mysql.port} \
     --user ${params.databases.rfam.mysql.user} \
     --database ${params.databases.rfam.mysql.db_name} \
-    < $sql | pgloader --on-error-stop $ctl
+    < $sql > data.tsv
+
+  rnac rfam $name data.tsv
+
+  cp $ctl local_$ctl
+  pgloader --on-error-stop local_$ctl
   """
 }
 

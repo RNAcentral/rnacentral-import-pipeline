@@ -1,5 +1,5 @@
 LOAD CSV
-FROM stdin
+FROM families.csv
 WITH ENCODING ISO-8859-14
 HAVING FIELDS
 (
@@ -34,8 +34,7 @@ TARGET COLUMNS
 )
 
 WITH
-    skip header = 1,
-    fields terminated by '0x9'
+    fields terminated by ','
 
 BEFORE LOAD DO
 $$

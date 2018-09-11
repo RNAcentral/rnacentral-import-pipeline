@@ -34,7 +34,7 @@ process pombase_annotations {
 
 process rfam_ontology_terms {
   input:
-  file(sql) from Channel.fromPath('files/ontologies/rfam-ontology-terms.sql')
+  file(sql) from Channel.fromPath('files/import-ontologies/rfam-ontology-terms.sql')
 
   output:
   file('terms.csv') into rfam_terms
@@ -94,11 +94,11 @@ process pgload_ontology_annotations {
   file('publication_mappings*.csv') from pub_maps.collect()
   file('rfam_ontology_mappings*.csv') from rfam_mappings.collect()
 
-  file(terms_ctl) from Channel.fromPath('files/ontologies/terms.ctl')
-  file(ann_ctl) from Channel.fromPath('files/ontologies/annotations.ctl')
-  file(pub_ctl) from Channel.fromPath('files/ontologies/publications.ctl')
-  file(pub_map_ctl) from Channel.fromPath('files/ontologies/pub-map.ctl')
-  file(rfam_map_ctl) from Channel.fromPath('files/ontologies/rfam-map.ctl')
+  file(terms_ctl) from Channel.fromPath('files/import-ontologies/terms.ctl')
+  file(ann_ctl) from Channel.fromPath('files/import-ontologies/annotations.ctl')
+  file(pub_ctl) from Channel.fromPath('files/import-ontologies/publications.ctl')
+  file(pub_map_ctl) from Channel.fromPath('files/import-ontologies/pub-map.ctl')
+  file(rfam_map_ctl) from Channel.fromPath('files/import-ontologies/rfam-map.ctl')
 
   """
   find . -name '*.ctl' | xargs -I {} basename {} | xargs -I {} cp {} local_{}
