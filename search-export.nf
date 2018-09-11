@@ -36,6 +36,7 @@ process export_search_json {
   // beforeScript 'slack db-work search-export || true'
   // afterScript 'slack db-done search-export || true'
   maxForks params.search_export.max_forks
+  echo true
 
   input:
   set val(min), val(max), file(query) from ranges
@@ -45,7 +46,9 @@ process export_search_json {
 
   script:
   """
-  psql --variable min=$min --variable max=$max -f "$query" "$PGDATABASE" > search.json
+  psql --variable min=$min --variable max=$max -f "$query" "$PGDATABASE" > search.json 2> err.log
+  cat err.log
+  [ -s err.log ] || exit 1
   """
 }
 
