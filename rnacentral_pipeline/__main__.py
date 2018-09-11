@@ -15,6 +15,7 @@ import click
 from rnacentral_pipeline.writers import write_entries
 
 from rnacentral_pipeline.databases import rfam
+from rnacentral_pipeline.databases import pombase
 from rnacentral_pipeline.databases.ena import parser as ena
 from rnacentral_pipeline.databases.pdb import parser as pdb
 from rnacentral_pipeline.databases.generic import parser as generic
@@ -267,8 +268,19 @@ def ontologies_quickgo(raw_data, output):
     file_okay=False,
 ))
 def ontologies_rfam_terms(filename, output):
-    print(dir(rfam))
     rfam.cross_references.from_file(filename, output)
+
+
+@ontologies.command('pombase')
+@click.argument('filename', type=click.File('rb'))
+@click.argument('mapping_file', type=click.File('rb'))
+@click.argument('output', default='.', type=click.Path(
+    writable=True,
+    dir_okay=True,
+    file_okay=False,
+))
+def ontologies_pombase(filename, mapping_file, output):
+    onto_writer.write_annotations(pombase.goa, output, filename, mapping_file)
 
 
 # @ontologies.command('tair')

@@ -27,7 +27,6 @@ def as_annotation(record):
     """
     Turn a record into an annotation.
     """
-
     return GoTermAnnotation(
         rna_id=helpers.rna_id(record),
         qualifier=helpers.qualifier(record),

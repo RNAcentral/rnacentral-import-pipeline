@@ -2,17 +2,33 @@
 
 process quickgo_annotations {
   output:
-  file('annotations.csv') into annotations
-  file('publications.csv') into publications
-  file('publication_mappings.csv') into pub_maps
+  file('annotations.csv') into quickgo_annotations
+  file('publications.csv') into quickgo_publications
+  file('publication_mappings.csv') into quickgo_pub_maps
   file('terms.csv') into quickgo_terms
 
   script:
-  uncompressed = params.go_annotations.quickgo.pattern.replace('.gz', '')
   """
   fetch "${params.go_annotations.quickgo.remote}" "${params.go_annotations.quickgo.pattern}"
-  gzip -d "${params.go_annotations.quickgo.pattern}"
-  rnac ontologies quickgo $uncompressed
+  zcat "${params.go_annotations.quickgo.pattern}" | rnac ontologies quickgo -
+  """
+}
+
+process pombase_annotations {
+  input:
+  file(mapping) from Channel.fromPath('files/import-ontologies/mappings/pombase.sql')
+
+  output:
+  file('annotations.csv') into pombase_annotations
+  file('publications.csv') into pombase_publications
+  file('publication_mappings.csv') into pombase_pub_maps
+  file('terms.csv') into pombase_terms
+
+  script:
+  """
+  psql -f $mapping "$PGDATABASE" > mapping.json
+  fetch "${params.go_annotations.pombase.remote}" "${params.go_annotations.pombase.pattern}"
+  zcat "${params.go_annotations.pombase.pattern}" | rnac ontologies pombase - mapping.json
   """
 }
 
@@ -35,7 +51,11 @@ process rfam_ontology_terms {
   """
 }
 
-quickgo_terms.mix(rfam_terms).set { terms }
+Channel.empty()
+  .mix(rfam_terms)
+  .mix(quickgo_terms)
+  .mix(pombase_terms)
+  .set { terms }
 
 process fetch_ontology_information {
   input:
@@ -48,6 +68,21 @@ process fetch_ontology_information {
   sort -u terms*.csv | rnac ontologies lookup-terms - term-info.csv
   """
 }
+
+Channel.empty()
+  .mix(pombase_annotations)
+  .mix(quickgo_annotations)
+  .set { annotations }
+
+Channel.empty()
+  .mix(pombase_publications)
+  .mix(quickgo_publications)
+  .set { publications }
+
+Channel.empty()
+  .mix(pombase_pub_maps)
+  .mix(quickgo_pub_maps)
+  .set { pub_maps }
 
 process pgload_ontology_annotations {
   echo true

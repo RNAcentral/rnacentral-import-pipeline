@@ -49,7 +49,7 @@ INSERT INTO go_term_annotations (
     assigned_by,
     extensions
 ) (
-SELECT
+SELECT DISTINCT
     rna_id,
     qualifier,
     ontology_term_id,
