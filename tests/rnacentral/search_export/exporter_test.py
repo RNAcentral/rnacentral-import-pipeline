@@ -18,6 +18,7 @@ from __future__ import print_function
 # pylint: disable=missing-docstring,invalid-name,line-too-long
 
 import os
+import tempfile
 import operator as op
 from xml.dom import minidom
 import xml.etree.ElementTree as ET
@@ -25,6 +26,7 @@ import xml.etree.ElementTree as ET
 import pytest
 from functools32 import lru_cache
 
+from rnacentral_pipeline.psql import PsqlWrapper
 from rnacentral_pipeline.rnacentral.search_export import exporter
 
 from tests.helpers import run_range_as_single
@@ -32,15 +34,21 @@ from tests.helpers import run_range_as_single
 
 @lru_cache()
 def load_additional():
-    return {'go_annotations': {}, 'interacting_proteins': {}}
+    metapath = os.path.join('files', 'search-export', 'metadata')
+    psql = PsqlWrapper(os.environ['PGDATABASE'])
+    with tempfile.TemporaryFile() as tmp:
+        for filename in os.listdir(metapath):
+            query = os.path.join(metapath, filename)
+            psql.copy_file_to_handle(query, tmp)
+        tmp.seek(0)
+        return exporter.parse_additions(tmp)
 
 
 def load_data(upi):
     path = os.path.join('files', 'search-export', 'query.sql')
     entry = run_range_as_single(upi, path)
-    data = list(exporter.builder(load_additional(), entry))
-    assert len(data) == 1
-    return data[0]
+    data = exporter.builder(load_additional(), entry)
+    return data
 
 
 def as_xml_dict(element):
@@ -83,9 +91,10 @@ def test_it_builds_correct_xml_entries(filename):
 
 
 @pytest.mark.parametrize("upi,ans", [  # pylint: disable=E1101
+    ('URS0000730885_9606', 'Homo sapiens'),
     ('URS00008CC2A4_43179', "Ictidomys tridecemlineatus"),
-    ('URS0000713CBE_408172', 'marine metagenome'),
-    ('URS000047774B_77133', 'uncultured bacterium'),
+    # ('URS0000713CBE_408172', 'marine metagenome'),
+    # ('URS000047774B_77133', 'uncultured bacterium'),
 ])
 def test_assigns_species_correctly(upi, ans):
     """
@@ -101,24 +110,94 @@ def test_assigns_product_correctly(upi, ans):
     assert load_data(upi).additional_fields.product == ans
 
 
-@pytest.mark.skip()  # pylint: disable=E1101
-def test_assigns_common_name_correctly(upi, ans):
-    assert load_data(upi).additional_fields.common_name == ans
+@pytest.mark.parametrize('upi,name', [
+    ('URS0000730885_9606', 'human'),
+    ('URS000074C6E6_7227', 'fruit fly'),
+    ('URS00003164BE_77133', None),
+])
+def test_assigns_common_name_correctly(upi, name):
+    ans = []
+    if name:
+        ans = [{'attrib': {'name': 'common_name'}, 'text': name}]
+    assert load_and_get_additional(upi, 'common_name') == ans
 
 
-@pytest.mark.skip()  # pylint: disable=E1101
-def test_assigns_function_correctly(upi, ans):
-    assert load_data(upi).additional_fields.function == ans
+@pytest.mark.parametrize('upi,function', [
+    ('URS000000079A_87230', []),
+    ('URS0000044908_2242', ['tRNA-Arg']),
+])
+def test_assigns_function_correctly(upi, function):
+    ans = [{'attrib': {'name': 'function'}, 'text': f} for f in function]
+    assert load_and_get_additional(upi, 'function') == ans
 
 
-@pytest.mark.skip()  # pylint: disable=E1101
-def test_assigns_gene_correctly(upi, ans):
-    assert load_data(upi).additional_fields.gene == ans
+@pytest.mark.parametrize('upi,genes', [
+    ('URS00004A23F2_559292', ['tRNA-Ser-GCT-1-1', 'tRNA-Ser-GCT-1-2']),
+    ('URS0000547AAD_7227', ['EG:EG0002.2']),
+    ('URS00006DCF2F_387344', ['rrn']),
+    ('URS00006B19C2_77133', []),
+    ('URS0000D5E5D0_7227', ['FBgn0286039']),
+])
+def test_assigns_gene_correctly(upi, genes):
+    ans = [{'attrib': {'name': 'gene'}, 'text': g} for g in genes]
+    assert load_and_get_additional(upi, 'gene') == ans
 
 
-@pytest.mark.skip()  # pylint: disable=E1101
-def test_assigns_gene_synonym_correctly(upi, ans):
-    assert load_data(upi).additional_fields.gene_synonym == ans
+@pytest.mark.parametrize('upi,genes', [
+    ('URS00006B19C2_77133', []),
+    ('URS0000547AAD_7227', ['FBgn0019661', 'roX1']),
+    ('URS0000D5E40F_7227', ['CR46362']),
+    ('URS0000773F8D_7227', [
+        'CR46280',
+        'dme-mir-9384',
+        r'Dmel\CR46280',
+    ]),
+    ('URS0000602386_7227', [
+        '276a',
+        'CR33584',
+        'CR33585',
+        'CR43001',
+        r'Dmel\CR43001',
+        'MIR-276',
+        'MiR-276a',
+        'dme-miR-276a',
+        'dme-miR-276a-3p',
+        'dme-mir-276',
+        'dme-mir-276a',
+        'miR-276',
+        'miR-276a',
+        'miR-276aS',
+        'mir-276',
+        'mir-276aS',
+        'rosa',
+    ]),
+    ('URS000060F735_9606', [
+        'ASMTL-AS',
+        'ASMTL-AS1',
+        'ASMTLAS',
+        'CXYorf2',
+        'ENSG00000236017.2',
+        'ENSG00000236017.3',
+        'ENSG00000236017.8',
+        'ENSGR0000236017.2',
+        'NCRNA00105',
+        'OTTHUMG00000021056.2',
+    ])
+])
+def test_assigns_gene_synonym_correctly(upi, genes):
+    ans = [{'attrib': {'name': 'gene_synonym'}, 'text': g} for g in genes]
+    val = load_and_get_additional(upi, 'gene_synonym')
+    ans.sort(key=op.itemgetter('text'))
+    val.sort(key=op.itemgetter('text'))
+    assert val == ans
+
+
+@pytest.mark.parametrize('upi,transcript_ids', [
+    ('URS0000D5E5D0_7227', {'FBtr0473389'}),
+])
+def test_can_search_using_flybase_transcript_ids(upi, transcript_ids):
+    val = {c['attrib']['dbkey'] for c in load_and_get_cross_references(upi, 'FLYBASE')}
+    assert val == transcript_ids
 
 
 @pytest.mark.parametrize('upi,ans', [  # pylint: disable=E1101
@@ -164,7 +243,7 @@ def test_assigns_md5_correctly(upi, ans):
     ('URS0000003085_7460', 'Apis mellifera (honey bee) ame-miR-279a-3p'),
     ('URS00000C6428_980671', 'Lophanthus lipskyanus partial external transcribed spacer'),
     ('URS00007268A2_9483', 'Callithrix jacchus microRNA mir-1255'),
-    ('URS0000A9662A_10020', 'Dipodomys ordii 7SK RNA'),
+    ('URS0000A9662A_10020', "Dipodomys ordii (Ord's kangaroo rat) misc RNA RF00100"),
     ('URS00000F8376_10090', 'Mus musculus (house mouse) piR-6392'),
     ('URS00000F880C_9606', 'Homo sapiens (human) partial ncRNA'),
     ('URS00000054D5_6239', 'Caenorhabditis elegans piwi-interacting RNA 21ur-14894'),
@@ -197,7 +276,7 @@ def test_assigns_description_correctly_to_randomly_chosen_examples(upi, ans):
     ('URS0000A8F612_9371', 'snoRNA'),
     ('URS000092FF0A_9371', 'snoRNA'),
     ('URS00005D0BAB_9606', 'piRNA'),
-    ('URS00002AE808_10090', 'piRNA'),
+    ('URS00002AE808_10090', 'miRNA'),
     ('URS00003054F4_6239', 'piRNA'),
     ('URS00000478B7_9606', 'SRP RNA'),
     ('URS000024083D_9606', 'SRP RNA'),
@@ -230,17 +309,17 @@ def test_assigns_description_correctly_to_randomly_chosen_examples(upi, ans):
     ('URS00006A938C_10090', 'ribozyme'),
     ('URS0000193C7E_9606', 'scRNA'),
     ('URS00004B11CA_223283', 'scRNA'),
-    ('URS000060C682_9606', 'vault RNA'),
+    # ('URS000060C682_9606', 'vault RNA'),  # Not active
     ('URS000064A09E_13616', 'vault RNA'),
     ('URS00003EE18C_9544', 'vault RNA'),
     ('URS000059A8B2_7227', 'rasiRNA'),
     ('URS00000B3045_7227', 'guide RNA'),
     ('URS000082AF7D_5699', 'guide RNA'),
-    ('URS000077FBEB_9606', 'ncRNA'),
+    ('URS000077FBEB_9606', 'lncRNA'),
     ('URS00000101E5_9606', 'lncRNA'),
-    ('URS0000A994FE_9606', 'sRNA'),
-    ('URS0000714027_9031', 'sRNA'),
-    ('URS000065BB41_7955', 'sRNA'),
+    ('URS0000A994FE_9606', 'other'),
+    ('URS0000714027_9031', 'other'),
+    ('URS000065BB41_7955', 'other'),
     ('URS000049E122_9606', 'misc RNA'),
     ('URS000013F331_9606', 'RNase P RNA'),
     ('URS00005EF0FF_4577', 'siRNA'),
@@ -268,24 +347,28 @@ def test_correctly_gets_expert_db(upi, ans):
 
 
 @pytest.mark.parametrize('upi,ans', [  # pylint: disable=E1101
-    ('URS00004AFF8D_9544', [
+    ('URS00004AFF8D_9544', {
         'MIRLET7G',
         'mml-let-7g-5p',
+        'mml-let-7g',
         'let-7g-5p',
         'let-7g',
         'let-7',
-    ]),
-    ('URS00001F1DA8_9606', [
+    }),
+    ('URS00001F1DA8_9606', {
         'MIR126',
-        'hsa-miR-126-3p ',
         'hsa-miR-126',
+        'hsa-miR-126-3p',
         'miR-126',
-    ])
+        'miR-126-3p',
+    })
 ])
 def test_correctly_assigns_mirbase_gene_using_product(upi, ans):
     data = load_and_get_additional(upi, "gene")
-    val = sorted(d['text'] for d in data)
-    assert val == sorted(ans)
+    val = set(d['text'] for d in data)
+    print(val)
+    print(ans)
+    assert val == ans
 
 
 @pytest.mark.skip()  # pylint: disable=E1101
@@ -447,7 +530,7 @@ def test_does_not_produce_empty_rfam_warnings(upi):
     ('URS000049E122_9606', 2.5),
     ('URS000047450F_1286640', 0.0),
     ('URS0000143578_77133', 0.5),
-    ('URS000074C6E6_7227', 1.5),
+    ('URS000074C6E6_7227', 2),
     ('URS00007B5259_3702', 2),
     ('URS00007E35EF_9606', 4),
     ('URS00003AF3ED_3702', 1.5),
@@ -467,6 +550,7 @@ def test_computes_pub_ids(upi, pub_ids):
     assert val == sorted(pub_ids)
 
 
+@pytest.mark.xfail(reason='Changed how publications are fetched for now')
 @pytest.mark.parametrize('upi,pmid', [  # pylint: disable=E1101
     ('URS000026261D_9606', 27021683),
     ('URS0000614A9B_9606', 28111633)
@@ -585,6 +669,8 @@ def test_can_detect_if_has_interacting_proteins(upi, expected):
         "CD273",
         "PDL2",
         "PD-L2",
+        "VIM",
+        "AL365205.1",
     }),
     ('URS0000759CF4_9606', set()),
 ])
@@ -604,6 +690,7 @@ def test_can_methods_for_interactions(upi, expected):
     assert evidence == expected
 
 
+@pytest.mark.xfail(reason="No data yet")
 @pytest.mark.parametrize('upi,flag', [  # pylint: disable=E1101
     ('URS00009BEE76_9606', True),
     ('URS000019E0CD_9606', True),

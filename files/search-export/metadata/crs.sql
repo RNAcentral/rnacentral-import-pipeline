@@ -2,7 +2,7 @@ COPY (
 SELECT
   json_build_object(
     'rna_id', features.upi || '_' || features.taxid,
-    'has_crs', bool_or(CASE WHEN features.upi IS NOT null THEN true ELSE false end)
+    'has_crs', true
   )
 FROM rnc_sequence_features features
 WHERE
