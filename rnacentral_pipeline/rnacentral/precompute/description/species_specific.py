@@ -18,6 +18,8 @@ import logging
 import operator as op
 import itertools as it
 
+import attr
+
 from .. import utils
 
 LOGGER = logging.getLogger(__name__)
@@ -131,16 +133,43 @@ class DatabaseSpecifcNameBuilder(object):
             max_items=5)
 
     def mirbase(self, accessions, rna_type):
-        product_name = 'precursors'
         if rna_type == 'miRNA':
-            product_name = 'miRNAs'
+            return select_with_several_genes(
+                accessions,
+                'miRNAs',
+                r'\w+-%s',
+                description_items='optional_id',
+                max_items=5,
+            )
+
+        updated = []
+        for accession in accessions:
+            gene = accession.optional_id
+            match = re.match(r'^([^-]+?-mir-[^-]+)(.+)?$', gene)
+            name = accession.description
+            if match:
+                full = match.group(1)
+                parts = full.split('-', 3)
+                trimmed = '-'.join(parts[:3])
+                name = '{species} ({common_name}) microRNA {gene} precursor'.format(
+                    species=accession.species,
+                    common_name=accession.common_name or '',
+                    gene=trimmed,
+                )
+            changed = attr.evolve(
+                accession,
+                description=name,
+                gene=gene,
+            )
+            updated.append(changed)
 
         return select_with_several_genes(
-            accessions,
-            product_name,
+            updated,
+            'precursors',
             r'\w+-%s',
             description_items='optional_id',
-            max_items=5)
+            max_items=5,
+        )
 
     def sgd(self, accessions, _):
         return select_with_several_genes(

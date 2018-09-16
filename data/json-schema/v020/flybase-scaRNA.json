@@ -1,0 +1,54 @@
+{
+     "metaData": {
+          "schemaVersion": "0.2.0",
+          "dateProduced": "2018-08-06T20:16:56+00:00",
+          "dataProvider": "FlyBase",
+          "release": "fb_2018_04"
+     },
+     "data": [
+
+          {
+               "primaryId": "FLYBASE:FBtr0309751",
+               "symbolSynonyms": [
+                    "scaRNA:46E3-RA"
+               ],
+               "genomeLocations": [
+                    {
+                         "assembly": "R6",
+                         "gca_accession": "GCA_000001215.4",
+                         "exons": [
+                              {
+                                   "INSDC_accession": "AE013599.5",
+                                   "startPosition": 10080788,
+                                   "endPosition": 10080924,
+                                   "chromosome": "2R",
+                                   "strand": "-"
+                              }
+                         ]
+                    }
+               ],
+               "gene": {
+                    "geneId": "FLYBASE:FBgn0263201",
+                    "symbol": "scaRNA:MeU1b-A234",
+                    "locusTag": "Dmel_CR43567",
+                    "synonyms": [
+                         "scaRNA:46E3",
+                         "Dm46E1",
+                         "Dm46E3",
+                         "scaDm46E3",
+                         "snoRNA:46E1"
+                    ],
+                    "name": "small Cajal body-specific RNA : MeU1b-A234",
+                    "url": "http://flybase.org/reports/FBgn0263201.html"
+               },
+               "crossReferenceIds": [
+                    "REFSEQ:NR_048079.2"
+               ],
+               "sequence": "GGCCCCAAATGATGAGGGTTACTTTGTACGAATGTCAGTGAAATTGAATTAAACAACGAAAAATGCTTCATGGCTTAACGGAGATTTATGAGGAAAACCGAACTTGAGGCCCACGTCAGTGGCTGAAGCCAATCATT",
+               "symbol": "scaRNA:MeU1b-A234-RA",
+               "taxonId": "NCBITaxon:7227",
+               "soTermId": "SO:0002095",
+               "url": "http://flybase.org/reports/FBtr0309751.html"
+          }
+     ]
+}

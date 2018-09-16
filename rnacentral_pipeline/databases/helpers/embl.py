@@ -343,11 +343,14 @@ def transcripts(handle):
     for record in SeqIO.parse(handle, 'embl'):
         current_gene = None
         for feature in record.features:
+            if feature.type == 'source':
+                continue
+
             if is_gene(feature):
                 current_gene = feature
                 continue
 
-            assert gene(feature) != gene(current_gene)
+            assert current_gene is None or gene(feature) == gene(current_gene)
             yield (record, current_gene, feature)
 
 

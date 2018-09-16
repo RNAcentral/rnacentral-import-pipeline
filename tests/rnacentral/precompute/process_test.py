@@ -34,7 +34,7 @@ def load_data(upi):
     ('URS000018EB2E_3702', 'Arabidopsis thaliana (thale cress) Long non-coding antisense RNA COOLAIR'),
     ('URS000019E0CD_9606', 'Homo sapiens HELLP associated long non-coding RNA (HELLPAR)'),
     ('URS00001DEEBE_562', 'Escherichia coli tRNA-Pro (CGG) (tRNA-Pro-CGG-1-1)'),
-    ('URS00002F21DA_7227', 'Drosophila melanogaster (fruit fly) microRNA dme-bantam precursor'),
+    ('URS00002F21DA_7227', 'Drosophila melanogaster bantam stem-loop (dme-bantam)'),
     ('URS000034C5CB_7227', 'Drosophila melanogaster (fruit fly) Signal recognition particle 7SL RNA CR32864 (Dmel_CR32864, Dmel_CR42652)'),
     ('URS000037602E_9606', 'Homo sapiens (human) transfer-messenger RNA Esche_coli_K12'),
     ('URS00003AC4AA_3702', 'Arabidopsis thaliana (thale cress) TAS3/TASIR-ARF (TRANS-ACTING SIRNA3); other RNA (AT3G17185)'),
@@ -61,18 +61,18 @@ def load_data(upi):
     ('URS00006CE02F_9606', 'Homo sapiens U8 small nucleolar RNA'),
     ('URS00006D80BC_9913', 'Bos taurus (cattle) microRNA bta-mir-497 precursor'),
     ('URS00006DC8B9_6239', 'Caenorhabditis elegans tRNA-Undet'),
-    ('URS00007150F8_9913', 'Bos taurus bta-mir-431'),
+    ('URS00007150F8_9913', 'Bos taurus (cattle) microRNA bta-mir-431 precursor'),
     ('URS0000759BEC_9606', 'Homo sapiens DiGeorge syndrome critical region gene 9 (DGCR9)'),
-    ('URS000075A546_9606', 'Homo sapiens (human) microRNA precursor (hsa-mir-3648-1, hsa-mir-3648-2)'),
+    ('URS000075A546_9606', 'Homo sapiens (human) microRNA hsa-mir-3648 precursor (hsa-mir-3648-1, hsa-mir-3648-2)'),
     ('URS000075C808_9606', 'Homo sapiens HOX transcript antisense RNA (HOTAIR)'),
-    ('URS000075CC93_9606', 'Homo sapiens (human) microRNA precursor (hsa-mir-1302-2, hsa-mir-1302 9 to 11)'),
+    ('URS000075CC93_9606', 'Homo sapiens (human) microRNA hsa-mir-1302 precursor (hsa-mir-1302-2, hsa-mir-1302 9 to 11)'),
     ('URS000075CF25_9913', 'Bos taurus (cattle) microRNA bta-mir-10a precursor'),
     ('URS0000808D70_1478174', 'Neochlamydia sp. TUME1 tmRNA'),
     ('URS00008E3A1B_10090', 'Mus musculus predicted gene 11532 (Gm11532)'),
     ('URS00009E8F92_885695', 'Sinumelon nullarboricum partial 16S ribosomal RNA'),
     ('URS0000A767C0_3702', 'Arabidopsis thaliana (thale cress) other RNA (AT1G44125)'),
     ('URS0000A86584_10090', 'Mus musculus predicted gene 29254 (Gm29254)'),
-    ('URS0000ABD87F_9606', 'Homo sapiens RNA, 45S pre-ribosomal 4 (RNA45S4, RNA45SN1)'),
+    ('URS0000ABD87F_9606', 'Homo sapiens RNA, 45S pre-ribosomal N1 (RNA45SN1)'),
 ])
 def test_builds_correct_descriptions(rna_id, description):
     assert load_data(rna_id).description == description
@@ -81,6 +81,7 @@ def test_builds_correct_descriptions(rna_id, description):
 @pytest.mark.skip()
 @pytest.mark.parametrize('rna_id,short', [  # pylint: disable=no-member
     ('URS000001E7BA_559292', 'tRNA-Gln (tQ(UUG)C, tQ(UUG)D1-3, tQ(UUG)E1, tQ(UUG)H, tQ(UUG)L)'),
+    ('URS0000023341_1142511', 'tRNA-Cys (GCA) (tRNA-Cys-GCA-1-1)'),
     ('URS00000AEE53_380749', 'tmRNA'),
     ('URS00000F9D45_9606', 'RNA, 5S ribosomal 1 (RNA5S1-8, RNA5S10-17)'),
     ('URS000018EB2E_3702', 'Long non-coding antisense RNA COOLAIR'),
@@ -115,7 +116,7 @@ def test_builds_correct_descriptions(rna_id, description):
     ('URS00006DC8B9_6239', 'tRNA-Undet'),
     ('URS00007150F8_9913', 'bta-mir-431'),
     ('URS0000759BEC_9606', 'DiGeorge syndrome critical region gene 9 (DGCR9)'),
-    ('URS000075A546_9606', 'microRNA precursor (hsa-mir-3648-1, hsa-mir-3648-2)'),
+    ('URS000075A546_9606', 'microRNA hsa-mir-3648 precursor (hsa-mir-3648-1, hsa-mir-3648-2)'),
     ('URS000075C808_9606', 'HOX transcript antisense RNA (HOTAIR)'),
     ('URS000075CC93_9606', 'microRNA precursor (hsa-mir-1302-2, hsa-mir-1302 9 to 11)'),
     ('URS000075CF25_9913', 'microRNA bta-mir-10a precursor'),
@@ -124,7 +125,7 @@ def test_builds_correct_descriptions(rna_id, description):
     ('URS00009E8F92_885695', 'partial 16S ribosomal RNA'),
     ('URS0000A767C0_3702', 'other RNA (AT1G44125)'),
     ('URS0000A86584_10090', 'predicted gene 29254 (Gm29254)'),
-    ('URS0000ABD87F_9606', 'RNA, 45S pre-ribosomal 4 (RNA45S4, RNA45SN1)'),
+    ('URS0000ABD87F_9606', 'RNA, 45S pre-ribosomal N1 (RNA45SN1)'),
 ])
 def test_strips_leading_species(rna_id, short):
     assert load_data(rna_id).short_description == short
@@ -273,3 +274,21 @@ def test_creates_expected_qa_udpates(rna_id, expected):
             flags.append(field.name)
     assert sorted(flags) == sorted(expected)
     assert status.has_issue == bool(expected)
+
+
+@pytest.mark.parametrize('rna_id,expected', [  # pylint: disable=no-member
+    ('URS0000010837_7227', 209),
+    ('URS00001C018D_77133', 209),
+    ('URS0000400378_30527', 209),
+    ('URS00004E52D3_10090', 222),
+    ('URS00004E9E38_7227', 220),
+    ('URS00004FB44B_6239', 217),
+    ('URS000051DCEC_10090', 209),
+    ('URS00005511ED_6239', 217),
+    ('URS000055786A_7227', 220),
+    ('URS0000563A36_7227', 220),
+    ('URS000061A10B_9606', 222),
+    ('URS0000866382_1000416', 209),
+])
+def test_computes_max_release(rna_id, expected):
+    assert load_data(rna_id).last_release == expected

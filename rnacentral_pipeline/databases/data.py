@@ -60,6 +60,7 @@ INSDC_SO_MAPPING = {
     "rasiRNA": 'SO:0000454',
     "ribozyme": 'SO:0000374',
     "scRNA": 'SO:0000013',
+    "scaRNA": 'SO:0002095',
     "siRNA": 'SO:0000646',
     "snRNA": 'SO:0000274',
     "snoRNA": 'SO:0000275',
@@ -76,7 +77,6 @@ SO_INSDC_MAPPING = {v: k for k, v in INSDC_SO_MAPPING.items()}
 SO_INSDC_MAPPING['SO:0001244'] = "precursor_RNA"
 SO_INSDC_MAPPING['SO:0000209'] = "precursor_RNA"
 SO_INSDC_MAPPING['SO:0001904'] = "lncRNA"
-SO_INSDC_MAPPING['SO:0002095'] = "snoRNA"
 
 NORMALIZE_TO_INSDC = {
     'sRNA': 'other',
@@ -85,6 +85,14 @@ NORMALIZE_TO_INSDC = {
 }
 
 SO_PATTERN = re.compile('^SO:\d+$')
+
+RELATIONSHIP_TYPES = {
+    "precursor",
+    "matureProduct",
+    "target_protein",
+    "target_rna",
+    "isoform",
+}
 
 
 class UnxpectedRnaType(Exception):
@@ -215,6 +223,9 @@ class SecondaryStructure(object):
         return md5(self.dot_bracket)
 
     def writeable(self, accession):
+        if not self.dot_bracket:
+            return
+
         yield [
             accession,
             self.dot_bracket,
@@ -279,16 +290,23 @@ class RelatedCoordinate(object):
 class RelatedEvidence(object):
     methods = attr.ib(validator=is_a(list))
 
+    @classmethod
+    def empty(cls):
+        return cls(methods=[])
+
 
 @attr.s(frozen=True)
 class RelatedSequence(object):
     sequence_id = attr.ib(validator=is_a(basestring))
-    relationship = attr.ib(validator=one_of(["precursor", "matureProduct", "target"]))
+    relationship = attr.ib(validator=one_of(RELATIONSHIP_TYPES))
     coordinates = attr.ib(validator=is_a(list), default=attr.Factory(list))
-    evidence = attr.ib(validator=is_a(list), default=attr.Factory(list))
+    evidence = attr.ib(
+        validator=is_a(RelatedEvidence),
+        default=attr.Factory(RelatedEvidence.empty)
+    )
 
     def writeable(self, accession):
-        methods = ','.join('"%s"' % e.method for e in self.evidence)
+        methods = ','.join('"%s"' % m for m in self.evidence.methods)
         methods = '{%s}' % methods
         yield [
             accession,
@@ -299,13 +317,14 @@ class RelatedSequence(object):
 
     def write_features(self, accession, taxid):
         for endpoints in self.coordinates:
+            metadata = {'related': self.sequence_id}
             yield [
                 accession,
                 taxid,
                 endpoints.start,
                 endpoints.stop,
                 self.relationship,
-                '{}',
+                json.dumps(metadata),
             ]
 
 

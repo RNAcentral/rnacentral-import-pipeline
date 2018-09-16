@@ -16,6 +16,7 @@ limitations under the License.
 import pytest
 
 
+@pytest.mark.skip
 @pytest.mark.paramterize('rna_id,expected', [
     ('URS00000C777C_1231464', "Alkalibacterium sp. 3.5P*23 small subunit ribosomal RNA (16S)"),
     ('URS000080DD59_32630', "5'-R(*UP*GP*(CBV)P*(CBV)P*AP*GP*UP*UP*CP*GP*CP*UP*GP*GP*C)-3' from (PDB 1QBP, chain E)"),

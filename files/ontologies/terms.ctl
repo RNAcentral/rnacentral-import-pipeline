@@ -1,5 +1,5 @@
 LOAD CSV
-FROM FILE 'term-info.csv'
+FROM 'term-info.csv'
 WITH ENCODING ISO-8859-14
 HAVING FIELDS
 (

@@ -18,7 +18,7 @@ def sequences(handle):
 
         yield SeqRecord(
             Seq(data['sequence']),
-            id=data['id'],
+            id=data['id'].encode('utf-8'),
             description=description,
         )
 

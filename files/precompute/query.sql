@@ -42,7 +42,9 @@ select
       'sequence_completeness', hits.sequence_completeness,
       'sequence_start', hits.sequence_start,
       'sequence_stop', hits.sequence_stop
-  )))
+  )),
+  'last_release', max(xref.last)
+)
 FROM rna
 join xref on xref.upi = rna.upi
 join rnc_accessions acc
