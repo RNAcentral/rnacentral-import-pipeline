@@ -16,6 +16,8 @@ limitations under the License.
 import itertools as it
 import collections as coll
 
+import attr
+
 from rnacentral_pipeline.databases import data
 from rnacentral_pipeline.databases.helpers import phylogeny as phy
 from rnacentral_pipeline.databases.helpers import publications as pub
@@ -76,7 +78,7 @@ def as_exon(assembly, exon):
         chromosome_name=chromosome,
         # Input is 0 based, but we store 1 based
         primary_start=int(exon['startPosition']) + 1,
-        primary_end=int(exon['endPosition']),
+        primary_end=int(exon['endPosition']) + 1,
         assembly_id=assembly,
         complement=complement,
     )
@@ -182,7 +184,11 @@ def description(ncrna):
         if 'name' in raw_gene:
             return add_organism_preifx(ncrna, raw_gene['name'])
         if 'symbol' in raw_gene:
-            return add_organism_preifx(ncrna, raw_gene['symbol'])
+            symbol = raw_gene['symbol']
+            db_prefix = ncrna['primaryId'].split(':', 1)[0]
+            if symbol.startswith(db_prefix):
+                symbol = symbol.split(':', 1)[1]
+            return add_organism_preifx(ncrna, symbol)
 
     raise ValueError("Could not create a name for %s" % ncrna)
 
@@ -226,11 +232,22 @@ def parent_accession(location):
     return first_exon['INSDC_accession'].split('.')[0]
 
 
+def optional_id(record):
+    if 'description' in record and \
+            'name' in record and ' ' not in record['name']:
+        return record['name']
+    return None
+
+
 def related_sequences(record):
     sequences = []
     for related in record.get('relatedSequences', []):
-        methods = related.get('methods', [])
-        evidence = [data.RelatedEvidence(method=m) for m in methods]
+        evidence = related.get('evidence', {})
+        if evidence:
+            evidence = data.RelatedEvidence(**evidence)
+        else:
+            evidence = data.RelatedEvidence.empty()
+
         coordinates = []
         for coord in related.get('coordinates', []):
             coordinates.append(data.RelatedCoordinate(
@@ -247,6 +264,26 @@ def related_sequences(record):
     return sequences
 
 
+def add_related_by_gene(entries):
+    updated = []
+    for first in entries:
+        related = []
+        for second in entries:
+            if first.accession == second.accession:
+                continue
+
+            related.append(data.RelatedSequence(
+                sequence_id=second.accession,
+                relationship='isoform',
+            ))
+
+        updated.append(attr.evolve(
+            first,
+            related_sequences=first.related_sequences + related,
+        ))
+    return updated
+
+
 def as_entry(database, p_accession, parsed_exons, record):
     """
     Generate an Entry to import based off the database, exons and raw record.
@@ -261,8 +298,9 @@ def as_entry(database, p_accession, parsed_exons, record):
         exons=parsed_exons,
         rna_type=record['soTermId'],
         url=record['url'],
-        description=description(record),
         seq_version=record.get('version', '1'),
+        optional_id=optional_id(record),
+        description=description(record),
         parent_accession=p_accession,
         xref_data=xrefs(record),
         related_sequences=related_sequences(record),
@@ -287,12 +325,28 @@ def parse(raw):
     """
 
     database = raw['metaData']['dataProvider']
-    for record in raw['data']:
-        locations = record.get('genomeLocations', [])
-        if not locations:
-            yield as_entry(database, None, [], record)
+    ncrnas = sorted(raw['data'], key=gene)
 
-        for location in locations:
-            parsed_exons = exons(location)
-            p_accession = parent_accession(location)
-            yield as_entry(database, p_accession, parsed_exons, record)
+    metadata_pubs = raw['metaData'].get('publications', [])
+    metadata_refs = [as_reference(r) for r in metadata_pubs]
+
+    for gene_id, records in it.groupby(ncrnas, gene):
+        entries = []
+        for record in records:
+            locations = record.get('genomeLocations', [])
+            if not locations:
+                entries.append(as_entry(database, None, [], record))
+
+            for location in locations:
+                parsed_exons = exons(location)
+                p_accession = parent_accession(location)
+                entries.append(as_entry(database, p_accession, parsed_exons, record))
+
+        if gene_id:
+            entries = add_related_by_gene(entries)
+
+        for entry in entries:
+            yield attr.evolve(
+                entry,
+                references=entry.references + metadata_refs,
+            )

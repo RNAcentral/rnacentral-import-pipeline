@@ -184,6 +184,7 @@ class Sequence(object):
     rna_was_mapped = attr.ib(validator=is_a(bool))
     previous_data = attr.ib(validator=optional(is_a(dict)))
     rfam_hits = attr.ib(validator=is_a(list))
+    last_release = attr.ib(validator=is_a(int))
 
     def is_species_specific(self):
         """
@@ -249,6 +250,7 @@ class SpeciesSequence(Sequence):
             rna_was_mapped=data['rna_was_mapped'],
             previous_data=data['previous'][0],
             rfam_hits=list(hits),
+            last_release=data['last_release'],
         )
 
 
@@ -273,6 +275,7 @@ class GenericSequence(Sequence):
             inactive.extend(seq.inactive_accessions)
 
         has_coordinates = any(s.xref_has_coordinates for s in sequences)
+        last_release = max(s.last_release for s in sequences)
         return cls(
             upi=sequences[0].upi,
             taxid=None,
@@ -284,4 +287,5 @@ class GenericSequence(Sequence):
             rna_was_mapped=any(s.rna_was_mapped for s in sequences),
             previous_data={},
             rfam_hits=[],
+            last_release=last_release,
         )

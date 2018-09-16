@@ -1,0 +1,173 @@
+LOCUS       NR_000169                 98 bp    RNA     linear   INV 15-AUG-2018
+DEFINITION  Caenorhabditis elegans pre-microRNA mir-79 (mir-79), miRNA.
+ACCESSION   NR_000169
+VERSION     NR_000169.2
+DBLINK      BioProject: PRJNA158
+            BioSample: SAMEA3138177
+KEYWORDS    RefSeq.
+SOURCE      Caenorhabditis elegans
+  ORGANISM  Caenorhabditis elegans
+            Eukaryota; Metazoa; Ecdysozoa; Nematoda; Chromadorea; Rhabditida;
+            Rhabditoidea; Rhabditidae; Peloderinae; Caenorhabditis.
+REFERENCE   1  (bases 1 to 98)
+  AUTHORS   Sulson,J.E. and Waterston,R.
+  CONSRTM   Caenorhabditis elegans Sequencing Consortium
+  TITLE     Genome sequence of the nematode C. elegans: a platform for
+            investigating biology
+  JOURNAL   Science 282 (5396), 2012-2018 (1998)
+   PUBMED   9851916
+  REMARK    Erratum:[Science 1999 Jan 1;283(5398):35]
+REFERENCE   2  (bases 1 to 98)
+  CONSRTM   NCBI Genome Project
+  TITLE     Direct Submission
+  JOURNAL   Submitted (15-AUG-2018) National Center for Biotechnology
+            Information, NIH, Bethesda, MD 20894, USA
+REFERENCE   3  (bases 1 to 98)
+  AUTHORS   WormBase.
+  CONSRTM   WormBase Consortium
+  TITLE     Direct Submission
+  JOURNAL   Submitted (24-JUL-2018) WormBase Group, European Bioinformatics
+            Institute, Cambridge, CB10 1SA, UK. Email: help@wormbase.org
+REFERENCE   4  (bases 1 to 98)
+  AUTHORS   Sulson,J.E. and Waterston,R.
+  TITLE     Direct Submission
+  JOURNAL   Submitted (03-MAR-2003) Nematode Sequencing Project: Sanger
+            Institute, Hinxton, Cambridge CB10 1SA, UK and The Genome Institute
+            at Washington University, St. Louis, MO 63110, USA
+COMMENT     REVIEWED REFSEQ: This record has been curated by WormBase. This
+            record is derived from an annotated genomic sequence (NC_003279).
+            On Jun 26, 2012 this sequence version replaced NR_000169.1.
+FEATURES             Location/Qualifiers
+     source          1..98
+                     /organism="Caenorhabditis elegans"
+                     /mol_type="transcribed RNA"
+                     /strain="Bristol N2"
+                     /db_xref="taxon:6239"
+                     /chromosome="I"
+     gene            1..98
+                     /gene="mir-79"
+                     /locus_tag="CELE_C12C8.4"
+                     /db_xref="GeneID:259856"
+     precursor_RNA   1..98
+                     /gene="mir-79"
+                     /locus_tag="CELE_C12C8.4"
+                     /product="pre-microRNA mir-79"
+                     /standard_name="C12C8.4"
+                     /db_xref="GeneID:259856"
+     ncRNA           19..41
+                     /ncRNA_class="miRNA"
+                     /gene="mir-79"
+                     /locus_tag="CELE_C12C8.4"
+                     /product="microRNA mir-79,a"
+                     /standard_name="C12C8.4a"
+                     /db_xref="GeneID:259856"
+     ncRNA           61..82
+                     /ncRNA_class="miRNA"
+                     /gene="mir-79"
+                     /locus_tag="CELE_C12C8.4"
+                     /product="microRNA mir-79,b"
+                     /standard_name="C12C8.4b"
+                     /db_xref="GeneID:259856"
+ORIGIN
+        1 tagtagacat tctccgatct ttggtgattc agcttcaatg attggctaca ggtttctttc
+       61 ataaagctag gttaccaaag ctcggcgtct tgatctac
+//
+LOCUS       NR_106668                 94 bp    RNA     linear   ROD 26-AUG-2018
+DEFINITION  Rattus norvegicus microRNA 327 (Mir327), microRNA.
+ACCESSION   NR_106668
+VERSION     NR_106668.1
+KEYWORDS    RefSeq.
+SOURCE      Rattus norvegicus (Norway rat)
+  ORGANISM  Rattus norvegicus
+            Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi;
+            Mammalia; Eutheria; Euarchontoglires; Glires; Rodentia; Myomorpha;
+            Muroidea; Muridae; Murinae; Rattus.
+REFERENCE   1  (bases 1 to 94)
+  AUTHORS   Ji Y, Qiu M, Shen Y, Gao L, Wang Y, Sun W, Li X, Lu Y and Kong X.
+  TITLE     MicroRNA-327 regulates cardiac hypertrophy and fibrosis induced by
+            pressure overload
+  JOURNAL   Int. J. Mol. Med. 41 (4), 1909-1916 (2018)
+   PUBMED   29393356
+  REMARK    GeneRIF: In neonatal rat cardiac fibroblasts, induced expression of
+            miR-327 upregulated fibrosis-associated gene expression and
+            activated angiotensin II-induced differentiation into
+            myofibroblasts, as assessed via alpha-smooth muscle actin staining.
+REFERENCE   2  (bases 1 to 94)
+  AUTHORS   Griffiths-Jones S, Grocock RJ, van Dongen S, Bateman A and Enright
+            AJ.
+  TITLE     miRBase: microRNA sequences, targets and gene nomenclature
+  JOURNAL   Nucleic Acids Res. 34 (Database issue), D140-D144 (2006)
+   PUBMED   16381832
+REFERENCE   3  (bases 1 to 94)
+  AUTHORS   Kim J, Krichevsky A, Grad Y, Hayes GD, Kosik KS, Church GM and
+            Ruvkun G.
+  TITLE     Identification of many microRNAs that copurify with polyribosomes
+            in mammalian neurons
+  JOURNAL   Proc. Natl. Acad. Sci. U.S.A. 101 (1), 360-365 (2004)
+   PUBMED   14691248
+COMMENT     PROVISIONAL REFSEQ: This record is based on preliminary annotation
+            provided by NCBI staff in collaboration with miRBase. The reference
+            sequence was derived from AABR07044640.1.
+
+            Summary: microRNAs (miRNAs) are short (20-24 nt) non-coding RNAs
+            that are involved in post-transcriptional regulation of gene
+            expression in multicellular organisms by affecting both the
+            stability and translation of mRNAs. miRNAs are transcribed by RNA
+            polymerase II as part of capped and polyadenylated primary
+            transcripts (pri-miRNAs) that can be either protein-coding or
+            non-coding. The primary transcript is cleaved by the Drosha
+            ribonuclease III enzyme to produce an approximately 70-nt stem-loop
+            precursor miRNA (pre-miRNA), which is further cleaved by the
+            cytoplasmic Dicer ribonuclease to generate the mature miRNA and
+            antisense miRNA star (miRNA*) products. The mature miRNA is
+            incorporated into a RNA-induced silencing complex (RISC), which
+            recognizes target mRNAs through imperfect base pairing with the
+            miRNA and most commonly results in translational inhibition or
+            destabilization of the target mRNA. The RefSeq represents the
+            predicted microRNA stem-loop. [provided by RefSeq, Sep 2009].
+
+            Sequence Note: This record represents a predicted microRNA
+            stem-loop as defined by miRBase. Some sequence at the 5' and 3'
+            ends may not be included in the intermediate precursor miRNA
+            produced by Drosha cleavage.
+PRIMARY     REFSEQ_SPAN         PRIMARY_IDENTIFIER PRIMARY_SPAN        COMP
+            1-94                AABR07044640.1     1500-1593           c
+FEATURES             Location/Qualifiers
+     source          1..94
+                     /organism="Rattus norvegicus"
+                     /mol_type="transcribed RNA"
+                     /strain="mixed"
+                     /db_xref="taxon:10116"
+                     /chromosome="20"
+                     /map="20p12"
+     gene            1..94
+                     /gene="Mir327"
+                     /gene_synonym="rno-mir-327"
+                     /note="microRNA 327"
+                     /db_xref="GeneID:100314145"
+                     /db_xref="miRBase:MI0000600"
+                     /db_xref="RGD:7489019"
+     precursor_RNA   1..94
+                     /gene="Mir327"
+                     /gene_synonym="rno-mir-327"
+                     /product="microRNA 327"
+                     /db_xref="GeneID:100314145"
+                     /db_xref="miRBase:MI0000600"
+                     /db_xref="RGD:7489019"
+     exon            1..94
+                     /gene="Mir327"
+                     /gene_synonym="rno-mir-327"
+                     /inference="alignment:Splign:2.0.8"
+     ncRNA           16..34
+                     /ncRNA_class="miRNA"
+                     /gene="Mir327"
+                     /gene_synonym="rno-mir-327"
+                     /product="rno-miR-327"
+                     /db_xref="miRBase:MIMAT0000561"
+                     /db_xref="GeneID:100314145"
+                     /db_xref="miRBase:MI0000600"
+                     /db_xref="RGD:7489019"
+ORIGIN
+        1 gtctgatgcc ctcatccttg aggggcatga gggtagtcag tagcctgatg tccctcttga
+       61 tggcacttcg gacatgttgg aatggcttgt gagg
+//

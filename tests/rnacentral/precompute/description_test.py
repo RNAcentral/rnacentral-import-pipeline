@@ -28,7 +28,7 @@ from .helpers import load_data
     ('URS000018EB2E_3702', 'lncRNA', 'Arabidopsis thaliana (thale cress) Long non-coding antisense RNA COOLAIR'),
     ('URS000019E0CD_9606', 'lncRNA', 'Homo sapiens HELLP associated long non-coding RNA (HELLPAR)'),
     ('URS00001DEEBE_562', 'tRNA', 'Escherichia coli tRNA-Pro (CGG) (tRNA-Pro-CGG-1-1)'),
-    ('URS00002F21DA_7227', 'precursor_RNA', 'Drosophila melanogaster (fruit fly) microRNA dme-bantam precursor'),
+    ('URS00002F21DA_7227', 'precursor_RNA', 'Drosophila melanogaster bantam stem-loop (dme-bantam)'),
     ('URS000034C5CB_7227', 'SRP_RNA', 'Drosophila melanogaster (fruit fly) Signal recognition particle 7SL RNA CR32864 (Dmel_CR32864, Dmel_CR42652)'),
     ('URS000037602E_9606', 'tmRNA', 'Homo sapiens (human) transfer-messenger RNA Esche_coli_K12'),
     ('URS00003AC4AA_3702', 'siRNA', 'Arabidopsis thaliana (thale cress) TAS3/TASIR-ARF (TRANS-ACTING SIRNA3); other RNA (AT3G17185)'),
@@ -42,7 +42,7 @@ from .helpers import load_data
     ('URS00004FB44B_6239', 'rRNA', 'Caenorhabditis elegans 26s rRNA'),
     ('URS000051DCEC_10090', 'snoRNA', 'Mus musculus small nucleolar RNA, C/D box 17 (Snord17), small nucleolar RNA'),
     ('URS00005511ED_6239', 'lncRNA', 'Caenorhabditis elegans long non-coding RNA linc-125'),
-    ('URS000055786A_7227', 'miRNA', 'Drosophila melanogaster (fruit fly) microRNA dme-bantam-5p'),
+    ('URS000055786A_7227', 'miRNA', 'Drosophila melanogaster (fruit fly) dme-bantam-5p'),
     ('URS0000563A36_7227', 'snoRNA', 'Drosophila melanogaster (fruit fly) snoRNA:Tudor-SN-a (Dmel_CR43585)' ),
     ('URS0000569A4A_9606', 'snoRNA', 'Homo sapiens small Cajal body-specific RNA 10 (SCARNA10)'),
     ('URS00005F4CAF_3702', 'tRNA', 'Arabidopsis thaliana (thale cress) tRNA-Met(CAT)'),
@@ -55,11 +55,13 @@ from .helpers import load_data
     ('URS00006CE02F_9606', 'snoRNA', 'Homo sapiens (human) snoRNA RF00096'),
     ('URS00006D80BC_9913', 'precursor_RNA', 'Bos taurus (cattle) microRNA bta-mir-497 precursor'),
     ('URS00006DC8B9_6239', 'tRNA', 'Caenorhabditis elegans tRNA-Undet'),
-    ('URS00007150F8_9913', 'precursor_RNA', 'Bos taurus bta-mir-431'),
+    ('URS00007150F8_9913', 'precursor_RNA', 'Bos taurus (cattle) microRNA bta-mir-431 precursor'),
     ('URS0000759BEC_9606', 'lncRNA', 'Homo sapiens DiGeorge syndrome critical region gene 9 (DGCR9)'),
-    ('URS000075A546_9606', 'precursor_RNA', 'Homo sapiens (human) microRNA precursor (hsa-mir-3648-1, hsa-mir-3648-2)'),
+    ('URS000075A3E2_9606', 'precursor_RNA', 'Homo sapiens (human) microRNA hsa-mir-6859 precursor (hsa-mir-6859 1 to 4)'),
+    ('URS000075A546_9606', 'precursor_RNA', 'Homo sapiens (human) microRNA hsa-mir-3648 precursor (hsa-mir-3648-1, hsa-mir-3648-2)'),
+    ('URS000075B196_7955', 'precursor_RNA', 'Danio rerio (zebrafish) microRNA dre-mir-430c precursor (dre-mir-430c 1 to 18)'),
     ('URS000075C808_9606', 'lncRNA', 'Homo sapiens HOX transcript antisense RNA (HOTAIR)'),
-    ('URS000075CC93_9606', 'precursor_RNA', 'Homo sapiens (human) microRNA precursor (hsa-mir-1302-2, hsa-mir-1302 9 to 11)'),
+    ('URS000075CC93_9606', 'precursor_RNA', 'Homo sapiens (human) microRNA hsa-mir-1302 precursor (hsa-mir-1302-2, hsa-mir-1302 9 to 11)'),
     ('URS000075CF25_9913', 'precursor_RNA', 'Bos taurus (cattle) microRNA bta-mir-10a precursor'),
     ('URS0000808D70_1478174', 'tmRNA', 'Neochlamydia sp. TUME1 tmRNA'),
     ('URS00008E3A1B_10090', 'lncRNA', 'Mus musculus predicted gene 11532 (Gm11532)'),
@@ -76,7 +78,7 @@ from .helpers import load_data
 ])
 def test_computes_correct_species_specific_descriptions(rna_id, rna_type, name):
     data = load_data(rna_id)
-    assert description_of(rna_type, data) == name
+    assert name == description_of(rna_type, data)
 
 
 # @pytest.mark.parametrize('upi,rna_type,name', [

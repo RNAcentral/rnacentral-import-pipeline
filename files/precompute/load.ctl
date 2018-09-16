@@ -9,7 +9,8 @@ HAVING FIELDS (
   rna_type,
   has_coordinates,
   databases,
-  short_description
+  short_description,
+  last_release
 )
 INTO {{PGDATABASE}}?load_precomputed
 TARGET COLUMNS (
@@ -21,7 +22,8 @@ TARGET COLUMNS (
   rna_type,
   has_coordinates,
   databases,
-  short_description
+  short_description,
+  last_release
 )
 
 WITH
@@ -44,7 +46,8 @@ create table load_precomputed (
   rna_type varchar(500) NULL DEFAULT 'NULL'::character varying,
   has_coordinates bool NOT NULL DEFAULT false,
   databases text,
-  is_active bool
+  is_active bool,
+  last_release int4
 );
 $$
 
@@ -60,6 +63,8 @@ insert into rnc_rna_precomputed (
   description,
   databases,
   has_coordinates
+  short_description,
+  last_release,
 ) (
 SELECT DISTINCT
   id,
@@ -70,7 +75,9 @@ SELECT DISTINCT
   '{}'::jsonb,
   description,
   databases,
-  has_coordinates
+  has_coordinates,
+  short_description,
+  last_release
 FROM load_precomputed
 )
 ON CONFLICT (id) DO UPDATE

@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+IFS=$'\n\t'
+
+remote="$1"
+pattern="$2"
+
+case "$remote" in
+  ssh://* )
+    short="${remote:6}"
+    scp "$short/$pattern" .
+    ;;
+  /* )
+    find "$remote" -name "$pattern" | xargs -I {} cp {} .
+    ;;
+  http://* | https://* )
+    wget "$remote"
+    ;;
+  ftp://* )
+    # wget doesn't play well with ** so we use lftp instead. Also, wget doesn't
+    # like following symlinks, but lftp does. I should find a way to indicate
+    # this to the pipeline.
+    lftp -c "mget $remote/$pattern"
+    ;;
+  * )
+    echo 1>&2 "Unknown remote URL to fetch: $remote"
+    exit 1;;
+esac
+
+case "$pattern" in
+  *.tar.gz )
+    find . -name "$pattern" | xargs -I {} tar xvf {}
+esac

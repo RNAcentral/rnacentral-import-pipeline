@@ -14,14 +14,17 @@ import click
 
 from rnacentral_pipeline.writers import write_entries
 
+from rnacentral_pipeline.databases import rfam
 from rnacentral_pipeline.databases.ena import parser as ena
 from rnacentral_pipeline.databases.pdb import parser as pdb
-from rnacentral_pipeline.databases.rfam import parser as rfam
-from rnacentral_pipeline.databases.rfam import infernal_results
 from rnacentral_pipeline.databases.generic import parser as generic
 from rnacentral_pipeline.databases.quickgo import parser as quickgo
 from rnacentral_pipeline.databases.refseq import parser as refseq
 from rnacentral_pipeline.databases.ensembl import parser as ensembl
+from rnacentral_pipeline.databases.ensembl import proteins as ensembl_proteins
+from rnacentral_pipeline.databases.ensembl import coordinate_systems as ensembl_coords
+
+from rnacentral_pipeline.databases.crs import parser as crs
 
 from rnacentral_pipeline import ontologies as onto
 from rnacentral_pipeline.ontologies import writer as onto_writer
@@ -39,6 +42,35 @@ from rnacentral_pipeline.rnacentral.ftp_export import id_mapping
 from rnacentral_pipeline.rnacentral.ftp_export import release_note
 from rnacentral_pipeline.rnacentral.ftp_export import ensembl as ensembl_json
 from rnacentral_pipeline.rnacentral.ftp_export import go_terms
+
+from rnacentral_pipeline.rnacentral import release
+
+
+class CustomMultiCommand(click.Group):
+    """
+    Modified from:
+    https://stackoverflow.com/questions/46641928/python-click-multiple-command-names
+    """
+
+    def command(self, *args, **kwargs):
+        """
+        Behaves the same as `click.Group.command()` except if passed
+        a list of names, all after the first will be aliases for the first.
+        """
+
+        def decorator(f):
+            builder = super(CustomMultiCommand, self).command
+            if isinstance(args[0], list):
+                names = args[0]
+                cmd_args = list(args[1:])
+                for alias in names[1:]:
+                    cmd = builder(alias, *cmd_args, **kwargs)(f)
+                    cmd = builder(f)
+                    cmd.short_help = "Alias for '%s'" % names[0]
+                return builder(names[0], *cmd_args, **kwargs)(f)
+            return builder(*args, **kwargs)(f)
+
+        return decorator
 
 
 @click.group()
@@ -65,7 +97,7 @@ def search_export_ranges(output, chunk_size=None, db_url=None):
     csv.writer(output).writerows(upi_ranges(db_url, chunk_size))
 
 
-@cli.group('external')
+@cli.group('external', cls=CustomMultiCommand)
 def external_database():
     """
     This is a group of commands for processing data from various databases into
@@ -74,7 +106,14 @@ def external_database():
     pass
 
 
-@external_database.command('json-schema')
+@external_database.command([
+    'json-schema',
+    'flybase',
+    'lncipedia',
+    'mirbase',
+    'pombase',
+    'tarbase',
+])
 @click.argument('json_file', type=click.File('rb'))
 @click.argument('output', default='.', type=click.Path(
     writable=True,
@@ -90,7 +129,11 @@ def process_json_schema(json_file, output):
 
 @external_database.command('ensembl')
 @click.argument('ensembl_file', type=click.File('rb'))
-@click.argument('family_file', type=click.File('rb'))
+@click.argument('family_file', type=click.Path(
+    file_okay=True,
+    dir_okay=False,
+    readable=True,
+))
 @click.argument('output', default='.', type=click.Path(
     writable=True,
     dir_okay=True,
@@ -100,13 +143,17 @@ def process_ensembl(ensembl_file, family_file, output):
     """
     This will parse EMBL files from Ensembl to produce the expected CSV files.
     """
-    write_entries(ensembl.parse, ensembl_file, family_file, output)
+    write_entries(ensembl.parse, output, ensembl_file, family_file)
 
 
 @external_database.command('gencode')
 @click.argument('gencode_gff', type=click.File('rb'))
 @click.argument('ensembl_file', type=click.File('rb'))
-@click.argument('family_file', type=click.File('rb'))
+@click.argument('family_file', type=click.Path(
+    file_okay=True,
+    dir_okay=False,
+    readable=True,
+))
 @click.argument('output', default='.', type=click.Path(
     writable=True,
     dir_okay=True,
@@ -169,7 +216,29 @@ def process_refseq(refseq_file, output):
     file_okay=False,
 ))
 def process_rfam(rfam_file, mapping_file, output):
-    write_entries(rfam.parse, output, rfam_file, mapping_file)
+    write_entries(rfam.parser.parse, output, rfam_file, mapping_file)
+
+
+@cli.group('extra')
+def extra():
+    """
+    This is a group of commands that cover other forms of data. Some of these
+    tasks could end up being a one off task, but maybe not.
+    """
+    pass
+
+
+@extra.command('crs')
+@click.argument('filename', default='-', type=click.File('rb'))
+@click.argument('output', default='complete_features.csv', type=click.File('wb'))
+def extra_crs_data(filename, output):
+    """
+    This will parse the CRS file to produce a series of sequence features for
+    import. The features are different from normal sequence features because
+    these are 'complete', they already have a URS/taxid assigned and can just
+    be inserted directly into the database.
+    """
+    crs.from_file(filename, output)
 
 
 @cli.group('ontologies')
@@ -191,6 +260,18 @@ def ontologies_quickgo(raw_data, output):
     onto_writer.write_annotations(quickgo.parser, output, raw_data)
 
 
+@ontologies.command('rfam-terms')
+@click.argument('filename', default='-', type=click.File('rb'))
+@click.argument('output', default='.', type=click.Path(
+    writable=True,
+    dir_okay=True,
+    file_okay=False,
+))
+def ontologies_rfam_terms(filename, output):
+    print(dir(rfam))
+    rfam.cross_references.from_file(filename, output)
+
+
 # @ontologies.command('tair')
 # @click.argument('raw_data', type=click.File('rb'))
 # @click.argument('output', default='.', type=click.Path(
@@ -206,10 +287,10 @@ def ontologies_quickgo(raw_data, output):
 
 
 @ontologies.command('lookup-terms')
-@click.argument('raw_data', type=click.File('rb'))
+@click.argument('terms', type=click.File('rb'))
 @click.argument('output', type=click.File('w'))
 def ontologies_lookup_terms(terms, output):
-    onto.helpers.process_term_file(terms, output)
+    onto.lookup_terms(terms, output)
 
 
 @cli.group('search-export')
@@ -398,7 +479,7 @@ def process_tblout(tblout, output):
     Process a table out file and create a CSV for importing into our database.
     This will overwrite the given file.
     """
-    infernal_results.as_csv(tblout, output)
+    rfam.infernal_results.as_csv(tblout, output)
 
 
 @cli.group()
@@ -422,6 +503,44 @@ def precompute_from_file(json_file, output):
     process the results into a CSV that can be loaded into the database.
     """
     pre.from_file(json_file, output)
+
+
+@cli.group('ensembl')
+def ensembl_group():
+    """
+    This is a set of commands for dealing with processing protein information.
+    We don't have much in the way of protein summary but sometimes we do need a
+    little for display.
+    """
+    pass
+
+
+@ensembl_group.command('proteins')
+@click.argument('filename', default='-', type=click.File('rb'))
+@click.argument('output', default='-', type=click.File('wb'))
+def ensembl_proteins_cmd(filename, output):
+    """
+    This will process the ensembl protein information files. This assumes the
+    file is sorted.
+    """
+    ensembl_proteins.from_file(filename, output)
+
+
+@ensembl_group.command('coordinates')
+@click.argument('filename', default='-', type=click.File('rb'))
+@click.argument('output', default='-', type=click.File('wb'))
+def ensembl_coordinates(filename, output):
+    """
+    Turn the tsv from the ensembl query into a csv that can be imported into
+    the database.
+    """
+    ensembl_coords.from_file(filename, output)
+
+
+@cli.command('run-release')
+@click.option('--db_url', envvar='PGDATABASE')
+def run_release(db_url=None):
+    release.run(db_url)
 
 
 logging.basicConfig()
