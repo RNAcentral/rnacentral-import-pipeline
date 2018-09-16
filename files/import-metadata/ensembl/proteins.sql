@@ -9,3 +9,4 @@ LEFT JOIN `external_synonym` ON external_synonym.xref_id = gene_xref.xref_id
 WHERE
   gene.biotype = 'protein_coding'
 ;
+

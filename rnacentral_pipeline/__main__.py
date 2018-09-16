@@ -22,6 +22,7 @@ from rnacentral_pipeline.databases.quickgo import parser as quickgo
 from rnacentral_pipeline.databases.refseq import parser as refseq
 from rnacentral_pipeline.databases.ensembl import parser as ensembl
 from rnacentral_pipeline.databases.ensembl import proteins as ensembl_proteins
+from rnacentral_pipeline.databases.ensembl import coordinate_systems as ensembl_coords
 
 from rnacentral_pipeline.databases.crs import parser as crs
 
@@ -504,8 +505,8 @@ def precompute_from_file(json_file, output):
     pre.from_file(json_file, output)
 
 
-@cli.group()
-def proteins():
+@cli.group('ensembl')
+def ensembl_group():
     """
     This is a set of commands for dealing with processing protein information.
     We don't have much in the way of protein summary but sometimes we do need a
@@ -514,15 +515,26 @@ def proteins():
     pass
 
 
-@proteins.command('ensembl')
+@ensembl_group.command('proteins')
 @click.argument('filename', default='-', type=click.File('rb'))
 @click.argument('output', default='-', type=click.File('wb'))
-def protein_ensembl(filename, output):
+def ensembl_proteins_cmd(filename, output):
     """
     This will process the ensembl protein information files. This assumes the
     file is sorted.
     """
     ensembl_proteins.from_file(filename, output)
+
+
+@ensembl_group.command('coordinates')
+@click.argument('filename', default='-', type=click.File('rb'))
+@click.argument('output', default='-', type=click.File('wb'))
+def ensembl_coordinates(filename, output):
+    """
+    Turn the tsv from the ensembl query into a csv that can be imported into
+    the database.
+    """
+    ensembl_coords.from_file(filename, output)
 
 
 @cli.command('run-release')
