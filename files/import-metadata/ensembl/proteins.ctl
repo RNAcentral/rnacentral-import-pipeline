@@ -1,5 +1,5 @@
 LOAD CSV
-FROM stdin
+FROM merged.csv
 HAVING FIELDS (
   protein_accession,
   description,
@@ -56,3 +56,4 @@ $$
 drop table load_protein_info;
 $$
 ;
+
