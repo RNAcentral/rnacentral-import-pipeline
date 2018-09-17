@@ -18,7 +18,7 @@ import operator as op
 
 import rnacentral_pipeline.databases.helpers.publications as pub
 
-from rnacentral_pipeline.databases import go_annotations as data
+from rnacentral_pipeline.databases import data
 
 go_id = op.itemgetter('GO_ID')
 evidence = op.itemgetter('Evidence')

@@ -19,3 +19,4 @@ from .secondary_structure import *
 from .regions import *
 from .related import *
 from .references import *
+from .go_annotations import *
