@@ -20,14 +20,14 @@ from rnacentral_pipeline.databases.crs import parser as crs
 
 def test_can_parse_complete_file():
     with open('data/crs/hg38.tsv', 'rb') as raw:
-        assert len(list(crs.parse(raw))) == 10019
+        assert len(list(crs.parse(raw))) == 10007
 
 
 def test_builds_correct_entries():
     with open('data/crs/hg38.tsv', 'rb') as raw:
         data = list(f for f in crs.parse(raw) if f.upi == 'URS00009BF201')
 
-    assert len(data) == 23
+    assert len(data) == 9
     assert attr.asdict(data[0]) == attr.asdict(
         crs.CrsFeature(
             upi='URS00009BF201',
@@ -40,6 +40,7 @@ def test_builds_correct_entries():
                 start=18307,
                 stop=18346,
             ),
+            fdr=24.43,
         )
     )
 
@@ -55,5 +56,6 @@ def test_builds_correct_entries():
                 start=156025217,
                 stop=156025312,
             ),
+            fdr=7.37,
         )
     )
