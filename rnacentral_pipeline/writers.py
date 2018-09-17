@@ -143,6 +143,9 @@ def build_entry_writer(parser):
         genomic_locations={
             'transformer': op.methodcaller('write_genomic_locations'),
         },
+        sequence_regions={
+            'transformer': op.methodcaller('write_sequence_regions'),
+        },
         secondary_structure={
             'transformer': op.methodcaller('write_secondary_structure'),
         },
