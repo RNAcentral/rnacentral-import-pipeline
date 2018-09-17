@@ -303,27 +303,29 @@ def search_export():
 
 @search_export.command('as-xml')
 @click.argument('raw_file', type=click.File('rb'))
+@click.argument('metadata_file', type=click.File('rb'))
 @click.argument('xml_file', type=click.File('wb'))
 @click.argument('count_file', type=click.File('wb'), default='count')
-def search_export_xml(raw_file, xml_file, count_file=None):
+def search_export_xml(raw_file, metadata_file, xml_file, count_file=None):
     """
     This will parse a file with one JSON object per line to produce XML
     formatted data that is used as input to the search team. Additionally, this
     produces a count file which contains the number of entries in the XML file.
     This is needed for building the release_note.txt file.
     """
-    search.as_xml(raw_file, xml_file, count_file)
+    search.as_xml(raw_file, metadata_file, xml_file, count_file)
 
 
 @search_export.command('release-note')
+@click.argument('release', type=str)
 @click.argument('output', type=click.File('wb'))
 @click.argument('count_files', nargs=-1, type=click.File('rb'))
-def search_export_note(output, count_files):
+def search_export_note(release, output, count_files):
     """
     This will create the release_note.txt file that is needed for the search
     export.
     """
-    search.release_note(output, count_files)
+    search.release_note(output, release, count_files)
 
 
 @cli.group('genome-mapping')

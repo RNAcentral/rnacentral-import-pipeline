@@ -93,6 +93,10 @@ def tag(name, func, attrib={}, keys=None):
         getter = create_getter(name, keys)
         value = func(*getter(data))
         return create_tag(root, name, value, attrib=attrib)
+    func_name = 'tag_' + name
+    if 'name' in attrib:
+        func_name += '-' + attrib['name']
+    fn.__name__ = func_name
     return fn
 
 
@@ -103,6 +107,10 @@ def tags(name, func, attrib={}, keys=None):
         for value in values:
             create_tag(root, name, value, attrib=attrib)
         return root
+    func_name = 'tags_' + name
+    if 'name' in attrib:
+        func_name += '-' + attrib['name']
+    fn.__name__ = func_name
     return fn
 
 
@@ -152,6 +160,10 @@ def first(values):
     return unicode(value)
 
 
+def only(value):
+    return [str(value)]
+
+
 def unique_lower(values):
     return {v.lower() for v in values if v}
 
@@ -174,6 +186,7 @@ def section(name, spec):
         element = etree.SubElement(root, name)
         for func in spec:
             func(element, data)
+    fn.__name__ = 'section_' + name
     return fn
 
 
@@ -407,12 +420,22 @@ def get_genes(genes, products):
     genes = {g for g in genes if g}
     product_pattern = re.compile(r'^\w{3}-')
     end_pattern = re.compile(r'-[35]p$')
-    gene_letter = re.compile(r'\w$')
+    gene_letter = re.compile(r'[a-zA-Z]$')
+
     for product in products:
-        if product and re.match(product_pattern, product):
+        if not product:
+            continue
+
+        if product.startswith('microRNA '):
+            product = product[9:]
+
+        if re.match(product_pattern, product):
             short_gene = re.sub(product_pattern, '', product)
             genes.add(product)
             genes.add(short_gene)
+            if re.search(end_pattern, product):
+                genes.add(re.sub(end_pattern, '', product))
+
             if re.search(end_pattern, short_gene):
                 stripped = re.sub(end_pattern, '', short_gene)
                 genes.add(stripped)
@@ -506,8 +529,11 @@ def interacting_proteins(interacting):
             continue
         if entry['id']:
             proteins.add(entry['id'].split(':', 1)[1])
-        if entry['name']:
-            proteins.add(entry['name'])
+        for key in ['label']:
+            if entry[key]:
+                proteins.add(entry[key])
+        for name in (entry['synonyms'] or []):
+            proteins.add(name)
     return sorted(proteins)
 
 
@@ -516,6 +542,26 @@ def interacting_evidence(interacting):
     for related in interacting:
         methods.update(related['methods'] or [])
     return sorted(methods)
+
+
+def has_crs(crs):
+    return [str(bool(crs))]
+
+
+def gene_synonyms(synonym_set):
+    result = set()
+    for synonyms in synonym_set:
+        if not synonyms:
+            continue
+
+        if ';' in synonyms:
+            parts = synonyms.split(';')
+        elif ',' in synonyms:
+            parts = synonyms.split(',')
+        else:
+            parts = [synonyms]
+        result.update(p.strip() for p in parts)
+    return result
 
 
 builder = entry([
@@ -546,7 +592,7 @@ builder = entry([
         fields('common_name', normalize_common_name),
         fields('function', unique, keys='functions'),
         fields('gene', get_genes, keys=('genes', 'product')),
-        fields('gene_synonym', unique, keys='gene_synonyms'),
+        fields('gene_synonym', gene_synonyms, keys='gene_synonyms'),
         field('rna_type', normalize_rna_type),
         fields('product', unique, keys='products'),
         field('has_genomic_coordinates', first, keys='has_coordinates'),
@@ -582,5 +628,6 @@ builder = entry([
         field('has_interacting_proteins', has_interacting_proteins, keys='interacting_proteins'),
         fields('interacting_protein', interacting_proteins, keys='interacting_proteins'),
         fields('evidence_for_interaction', interacting_evidence, keys='interacting_proteins'),
+        # fields('has_conserved_structure', has_crs, keys='has_crs'),
     ]),
 ])
