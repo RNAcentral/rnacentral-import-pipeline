@@ -1,6 +1,7 @@
 COPY (
-SELECT
+  SELECT
     json_build_object(
+        'rna_id', rna.upi || '_' || xref.taxid,
         'upi', rna.upi,
         'taxid', xref.taxid,
         'first_seen', array_agg(release1.timestamp),
@@ -28,8 +29,8 @@ SELECT
         'journals', array_agg(refs.location),
         'pub_titles', array_agg(refs.title),
         'pub_ids', array_agg(refs.id),
-        'pubmed_ids', array_agg(pubmed.ref_pubmed_id::varchar) || array_agg(refs.pmid),
-        'dois', array_agg(pubmed.doi) || array_agg(refs.doi),
+        'pubmed_ids', array_agg(refs.pmid),
+        'dois', array_agg(refs.doi),
         'has_coordinates', array_agg(pre.has_coordinates),
         'rfam_family_names', array_agg(models.short_name),
         'rfam_ids', array_agg(hits.rfam_model_id),
@@ -48,59 +49,22 @@ SELECT
         'notes', array_agg(acc.note),
         'locus_tags', array_agg(acc.locus_tag),
         'standard_names', array_agg(acc.standard_name),
-        'products', array_agg(acc.product),
-        'go_annotations', array_agg(
-            json_build_object(
-                'go_term_id', anno.ontology_term_id,
-                'qualifier', anno.qualifier,
-                'go_name', ont.name,
-                'assigned_by', anno.assigned_by
-            )
-        ),
-        'interacting_proteins', array_agg(
-            json_build_object(
-                'id', case
-                        when related.relationship_type = 'target_protein'
-                          then related.target_accession
-                        else null
-                      end,
-                'name', protein.description,
-                'relationship', related.relationship_type,
-                'methods', related.methods
-            )
-        )
+        'products', array_agg(acc.product)
     )
-FROM xref xref
+FROM rna rna
+join xref xref ON xref.upi = rna.upi
 JOIN rnc_rna_precomputed pre ON xref.upi = pre.upi AND xref.taxid = pre.taxid
 JOIN rnc_accessions acc ON xref.ac = acc.accession
 JOIN rnc_database db ON xref.dbid = db.id
 JOIN rnc_release release1 ON xref.created = release1.id
 JOIN rnc_release release2 ON xref.last = release2.id
-JOIN rna rna ON xref.upi = rna.upi
 JOIN qa_status qa ON qa.rna_id = pre.id
 LEFT JOIN rnc_reference_map ref_map ON ref_map.accession = acc.accession
 LEFT JOIN rnc_references refs ON refs.id = ref_map.reference_id
 LEFT JOIN rfam_model_hits hits ON xref.upi = hits.upi
-LEFT JOIN rfam_models models
-ON
-    hits.rfam_model_id = models.rfam_model_id
-LEFT JOIN go_term_annotations anno ON anno.rna_id = pre.id
-LEFT JOIN go_term_publication_map go_map
-ON
-    go_map.go_term_annotation_id = anno.go_term_annotation_id
-LEFT JOIN ref_pubmed pubmed ON pubmed.ref_pubmed_id = go_map.ref_pubmed_id
-LEFT JOIN ontology_terms ont
-ON
-    ont.ontology_term_id = anno.ontology_term_id
-LEFT JOIN rnc_related_sequences related
-ON
-  related.source_urs_taxid = pre.id
-  and related.relationship_type = 'target_protein'
-LEFT JOIN protein_info protein
-ON
-  protein.protein_accession = related.target_accession
+LEFT JOIN rfam_models models ON hits.rfam_model_id = models.rfam_model_id
 WHERE
-  xref.deleted = 'N'
-  AND rna.id BETWEEN :min AND :max
+    xref.deleted = 'N'
+    AND rna.id BETWEEN :min AND :max
 GROUP BY rna.upi, xref.taxid
 ) TO STDOUT
