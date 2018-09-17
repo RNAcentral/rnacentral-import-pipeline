@@ -30,12 +30,18 @@ from attr.validators import in_ as one_of
 RELATIONSHIP_TYPES = {
     "precursor",
     "matureProduct",
+    "mature_product",
     "target",
     "target_protein",
     "target_rna",
     "isoform",
 }
 
+
+def as_relationship_type(value):
+    if value == "matureProduct":
+        return 'mature_product'
+    return value
 
 
 @attr.s(frozen=True)
@@ -56,7 +62,10 @@ class RelatedEvidence(object):
 @attr.s(frozen=True)
 class RelatedSequence(object):
     sequence_id = attr.ib(validator=is_a(basestring))
-    relationship = attr.ib(validator=one_of(RELATIONSHIP_TYPES))
+    relationship = attr.ib(
+        validator=one_of(RELATIONSHIP_TYPES),
+        convert=as_relationship_type,
+    )
     coordinates = attr.ib(validator=is_a(list), default=attr.Factory(list))
     evidence = attr.ib(
         validator=is_a(RelatedEvidence),
