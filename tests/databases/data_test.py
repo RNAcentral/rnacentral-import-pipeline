@@ -13,6 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import json
+
 import pytest
 
 from rnacentral_pipeline.databases import data
@@ -26,7 +28,7 @@ def test_cannot_build_entry_without_seq_id():
             ncbi_tax_id=1,
             database='A',
             sequence='ACCG',
-            exons=[],
+            regions=[],
             rna_type='ncRNA',
             url='http://www.google.com',
             seq_version=None,
@@ -41,7 +43,7 @@ def test_cannot_build_entry_with_empty_seq_id():
             ncbi_tax_id=1,
             database='A',
             sequence='ACCG',
-            exons=[],
+            regions=[],
             rna_type='ncRNA',
             url='http://www.google.com',
             seq_version='',
@@ -55,7 +57,7 @@ def test_can_build_with_seq_version():
         ncbi_tax_id=1,
         database='A',
         sequence='ACCG',
-        exons=[],
+        regions=[],
         rna_type='ncRNA',
         url='http://www.google.com',
         seq_version='1',
@@ -70,7 +72,7 @@ def test_it_will_always_uppercase_database():
         ncbi_tax_id=1,
         database='a_database_name',
         sequence='ACCG',
-        exons=[],
+        regions=[],
         rna_type='ncRNA',
         url='http://www.google.com',
         seq_version='1',
@@ -93,7 +95,7 @@ def test_labels_feature_type_rnas_correctly(rna_type):
         ncbi_tax_id=1,
         database='a_database_name',
         sequence='ACCG',
-        exons=[],
+        regions=[],
         rna_type=rna_type,
         url='http://www.google.com',
         seq_version='1',
@@ -131,7 +133,7 @@ def test_labels_ncrna_types_correctly(rna_type):
         ncbi_tax_id=1,
         database='a_database_name',
         sequence='ACCG',
-        exons=[],
+        regions=[],
         rna_type=rna_type,
         url='http://www.google.com',
         seq_version='1',
@@ -149,3 +151,31 @@ def test_reference_can_handle_non_unicode():
         doi=None,
     )
     assert ref.md5() == '1d0712400fea453651afca2eb6ba0f4d'
+
+
+def test_can_build_correct_writeable():
+    annotation = data.GoTermAnnotation(
+        rna_id='a',
+        qualifier='part_of',
+        term_id='GO:01',
+        evidence_code='ECO:001',
+        extensions=[
+            data.AnnotationExtension(qualifier='talks_to', target='ENESMBL:1'),
+        ],
+        assigned_by='Bob',
+        publications=[],
+    )
+
+    writeable = list(annotation.writeable())
+    assert len(writeable) == 1
+    assert writeable[0] == [
+        'a',
+        'part_of',
+        'GO:01',
+        'ECO:001',
+        json.dumps([{
+            'qualifier': 'talks_to',
+            'target': 'ENESMBL:1',
+        }]),
+        'Bob',
+    ]
