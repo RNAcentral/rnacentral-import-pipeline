@@ -24,6 +24,6 @@ def status(rna_type, sequence):
     validators = [
         incomplete.Validator(),
         missing.Validator(),
-        contamination.Validator()
+        contamination.Validator(),
     ]
-    return data.QaStatus.from_validators(validators, rna_type, sequence)
+    return QaStatus.from_validators(validators, rna_type, sequence)

@@ -32,8 +32,10 @@ def is_ignorable_mito_conflict(rna_type, data):
         data.rfam_hits[0].model in ALLOWED_MITO_FAMILIES
 
 
-
 class Validator(object):
+    """
+    Validator for checking for possible sequence contamination.
+    """
     name = 'possible_contamination'
 
     def status(self, rna_type, data):
@@ -58,9 +60,14 @@ class Validator(object):
             not is_ignorable_mito_conflict(rna_type, data)
 
     def message(self, _, data):
+        """
+        Produce a warning message about the issue detected. This assumes that
+        there was a warning.
+        """
+
         return (
             'This {sequence_name} sequence matches a {match_domain} '
-            'Rfam model: {model_name}. '
+            'Rfam model: <a href="{url}">{model_name}</a>. '
         ).format(
             sequence_name=data,
             match_domain=None,
