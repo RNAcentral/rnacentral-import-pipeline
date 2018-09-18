@@ -29,9 +29,9 @@ class QaStatus(object):
     incomplete_sequence = attr.ib(validator=is_a(bool))
     possible_contamination = attr.ib(validator=is_a(bool))
     missing_rfam_match = attr.ib(validator=is_a(bool))
-    is_repetitive = attr.ib(validator=is_a(bool))
-    mismatching_rna_type = attr.ib(validator=is_a(bool))
     messages = attr.ib(validator=is_a(list), default=attr.Factory(list))
+    mismatching_rna_type = attr.ib(validator=is_a(bool), default=False)
+    is_repetitive = attr.ib(validator=is_a(bool), default=False)
     no_data = attr.ib(validator=optional(is_a(bool)), default=False)
 
     @classmethod
@@ -46,6 +46,7 @@ class QaStatus(object):
             status[validator.name] = current
             if current:
                 status['messages'].append(validator.message(*args, **kwargs))
+        print(status)
         return cls(**status)
 
     @classmethod

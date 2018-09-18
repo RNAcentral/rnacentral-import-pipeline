@@ -30,7 +30,7 @@ from . import helpers
 ])
 def test_can_detect_possible_contamination(rna_id, rna_type, flag):
     sequence = helpers.load_data(rna_id)
-    assert qa.possible_contamination(rna_type, sequence) == flag
+    assert qa.status(rna_type, sequence).possible_contamination == flag
 
 
 @pytest.mark.parametrize('rna_id,rna_type,flag', [  # pylint: disable=no-member
@@ -47,7 +47,7 @@ def test_can_detect_possible_contamination(rna_id, rna_type, flag):
 ])
 def test_can_detect_incomplete_sequence(rna_id, rna_type, flag):
     sequence = helpers.load_data(rna_id)
-    assert qa.incomplete_sequence(rna_type, sequence) == flag
+    assert qa.status(rna_type, sequence).incomplete_sequence == flag
 
 
 @pytest.mark.parametrize('rna_id,rna_type,flag', [  # pylint: disable=no-member
@@ -61,7 +61,7 @@ def test_can_detect_incomplete_sequence(rna_id, rna_type, flag):
 ])
 def test_can_detect_missing_rfam_match(rna_id, rna_type, flag):
     sequence = helpers.load_data(rna_id)
-    assert qa.missing_rfam_match(rna_type, sequence) == flag
+    assert qa.status(rna_type, sequence).missing_rfam_match == flag
 
 
 @pytest.mark.skip
@@ -73,4 +73,4 @@ def test_can_detect_missing_rfam_match(rna_id, rna_type, flag):
 ])
 def test_can_detect_problems_with_mismatched_rna_types(rna_id, rna_type, flag):
     sequence = helpers.load_data(rna_id)
-    assert qa.mismatching_rna_type(rna_type, sequence) == flag
+    assert qa.status(rna_type, sequence).mismatching_rna_type == flag
