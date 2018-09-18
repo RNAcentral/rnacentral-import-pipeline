@@ -17,7 +17,6 @@ import attr
 import pytest
 
 from rnacentral_pipeline.databases import data as dat
-from rnacentral_pipeline.databases.helpers import publications as ref
 from rnacentral_pipeline.databases.helpers import phylogeny as phy
 from rnacentral_pipeline.databases.refseq import parser
 
