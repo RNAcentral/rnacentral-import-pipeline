@@ -13,9 +13,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import operator as op
-import itertools as it
-
 import attr
 
 from Bio import SeqIO
@@ -42,7 +39,7 @@ def as_entry(record, gene, feature, context):
         ncbi_tax_id=embl.taxid(record),
         database='ENSEMBL',
         sequence=embl.sequence(record, feature),
-        exons=helpers.exons(record, feature),
+        regions=helpers.regions(record, feature),
         rna_type=helpers.rna_type(context.inference, feature, xref_data),
         url=helpers.url(feature),
         seq_version=helpers.seq_version(feature),
