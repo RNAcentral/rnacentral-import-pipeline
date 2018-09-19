@@ -703,7 +703,7 @@ def test_knows_has_crs(upi, flag):
 
 @pytest.mark.parametrize('upi,crs_ids', [  # pylint: disable=E1101
     ('URS00009BEE76_9606', {
-        "M1412625"
+        "M1412625",
         "M2510292",
         "M0554312",
         "M2543977",
@@ -712,7 +712,7 @@ def test_knows_has_crs(upi, flag):
         "M1849369",
         "M0554307",
     }),
-    ('URS0000ABD7E8_9606', {}),
+    ('URS0000ABD7E8_9606', set([])),
 ])
 def test_assigns_correct_crs_ids(upi, crs_ids):
     data = load_and_get_additional(upi, 'conserved_structure')

@@ -549,7 +549,7 @@ def has_crs(crs):
 
 
 def crs_ids(crs):
-    return crs['crs_ids']
+    return crs.get('crs_ids', [])
 
 
 def gene_synonyms(synonym_set):
