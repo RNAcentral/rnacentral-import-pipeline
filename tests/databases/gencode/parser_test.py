@@ -15,40 +15,64 @@ limitations under the License.
 
 import pytest
 
-from databases.ensembl.parsers import GencodeParser as Gencode
+from rnacentral_pipeline.databases.gencode import parser as gencode
 
-from ..utils import Base
+from ..ensembl.helpers import parse_with_family as ensembl_parse
+from . helpers import parse, entries_for, entry_for
 
 
-@pytest.mark.slowtest
-class GencodeTests(Base):  # pylint: disable=R0904,C0111
-    filename = 'data/ensembl/Homo_sapiens.GRCh38.87.chromosome.12.dat'
-    importer_class = Gencode
+@pytest.fixture(scope='module')  # pylint: disable=no-member
+def human_12():
+    return parse('data/ensembl/Homo_sapiens.GRCh38.90.chromosome.12.dat')
 
-    def test_knows_if_entry_is_gencode(self):
-        val = self.entries_from('GENCODE', "ENST00000535849.1")
-        assert len(val) == 1
 
-    def test_it_uses_correct_primary_id(self):
-        entry = self.entry_from('GENCODE', "ENST00000400706.3")
-        assert entry.primary_id == 'ENST00000400706'
+def known():
+    with open('data/gencode/human.gff', 'rb') as raw:
+        return gencode.gencode_transcripts(raw)
 
-    def test_it_keeps_xref_to_OTT(self):
-        entry = self.entry_from('GENCODE', "ENST00000540226.1")
-        assert 'OTTT' in entry.xref_data
-        assert entry.xref_data['OTTT'] == ["OTTHUMT00000397386"]
 
-    def test_it_adds_xref_to_ensembl(self):
-        entry = self.entry_from('GENCODE', "ENST00000540226.1")
-        assert 'ENST00000540226.1' in entry.xref_data['Ensembl']
+def test_can_load_all_known_transcripts(known):
+    assert len(known) == 1000
 
-    def test_it_gets_all_gencode_entries(self):
-        assert len(list(self.data())) == 2898
 
-    def test_it_sets_accession_correctly(self):
-        val = self.entries_for("ENST00000540868.1")
-        assert len(val) == 2
-        assert {(e.accession, e.database) for e in val} == set([
-            ('ENST00000540868.1', 'ENSEMBL'),
-            ('GENCODE:ENST00000540868.1', 'GENCODE'),
-        ])
+def test_can_load_all_entries(known, human_12, family_file):
+    assert len(list(gencode.parse(known, human_12, family_file))) == 100
+
+
+@pytest.mark.parameterize('transcript,status', [  # pylint: disable=no-member
+])
+def test_knows_if_from_gencode(known, human_12, transcript_id, status):
+    entry = ensembl_entry(human_12, transcript_id)
+    assert gencode.from_gencode(known, entry) == status
+
+
+def test_can_properly_transform_an_entry(known, human_12):
+    assert entry_for(known, human_12, '') == dat.Entry()
+
+
+# @pytest.mark.parameterize('transcript,status', [  # pylint: disable=no-member
+#     ("ENST00000535849.1", True)
+# ])
+# def test_knows_if_entry_is_gencode(human_12, transcript_id, status):
+#     assert bool(entries_for(human_12, transcript_id)) == status
+
+
+# def test_it_uses_correct_primary_id(human_12):
+#     entry = entry_for(human_12, "ENST00000400706.3")
+#     assert entry.primary_id == 'ENST00000400706'
+
+
+# def test_it_adds_xref_to_ensembl(human_12):
+#     entry = entry_for(human_12, "ENST00000540226.1")
+#     assert 'ENST00000540226.1' in entry.xref_data['Ensembl']
+
+
+# def test_it_gets_all_gencode_entries(human_12):
+#     assert len(human_12) == 2898
+
+
+# @pytest.mark.parameterize('transcript,acc', [  # pylint: disable=no-member
+#     ("ENST00000540868.1", 'GENCODE:ENST00000540868.1'),
+# ])
+# def test_it_sets_accession_correctly(human_12, transcript, acc):
+#     assert entry_for(human_12, transcript).accession == acc
