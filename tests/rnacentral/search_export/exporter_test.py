@@ -690,7 +690,6 @@ def test_can_methods_for_interactions(upi, expected):
     assert evidence == expected
 
 
-@pytest.mark.xfail(reason="No data yet")
 @pytest.mark.parametrize('upi,flag', [  # pylint: disable=E1101
     ('URS00009BEE76_9606', True),
     ('URS000019E0CD_9606', True),
@@ -700,3 +699,22 @@ def test_knows_has_crs(upi, flag):
     data = load_and_get_additional(upi, 'has_conserved_structure')
     value = [d['text'] for d in data]
     assert value == [str(flag)]
+
+
+@pytest.mark.parametrize('upi,crs_ids', [  # pylint: disable=E1101
+    ('URS00009BEE76_9606', {
+        "M1412625"
+        "M2510292",
+        "M0554312",
+        "M2543977",
+        "M2513462",
+        "M1849371",
+        "M1849369",
+        "M0554307",
+    }),
+    ('URS0000ABD7E8_9606', {}),
+])
+def test_assigns_correct_crs_ids(upi, crs_ids):
+    data = load_and_get_additional(upi, 'conserved_structure')
+    value = {d['text'] for d in data}
+    assert value == crs_ids
