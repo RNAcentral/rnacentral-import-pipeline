@@ -113,7 +113,7 @@ def external_database():
     'mirbase',
     'pombase',
     'tarbase',
-    'zwc',
+    'zwd',
 ])
 @click.argument('json_file', type=click.File('rb'))
 @click.argument('output', default='.', type=click.Path(
