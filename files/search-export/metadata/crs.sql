@@ -3,7 +3,7 @@ SELECT
   json_build_object(
     'rna_id', features.upi || '_' || features.taxid,
     'crs', json_build_object(
-      'crs_ids', array_agg(distinct (features.metadata->'crs_id')::text)
+      'crs_ids', array_agg(distinct features.metadata->>'crs_id')
     )
   )
 FROM rnc_sequence_features features
