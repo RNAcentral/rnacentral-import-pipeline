@@ -219,14 +219,34 @@ process merge_and_import {
 }
 
 process release {
+  maxForks 1
+
   input:
   file('*.ctl') from loaded.collect()
-  file(pre) from Channel.fromPath('files/import-data/pre-release.sql')
-  file(post) from Channel.fromPath('files/import-data/post-release.sql')
+
+  output:
+  file('release.txt') into release_output
 
   """
-  psql -f $pre "$PGDATABASE"
   rnac run-release
+  date > release.txt
+  """
+}
+
+release_output
+  .collect()
+  .combine(Channel.fromPath('files/import-data/post/*.sql'))
+  .map { it -> it[1] }
+  .set { post_sql }
+
+process post_release {
+  echo true
+  maxForks 1
+
+  input:
+  file(post) from post_sql
+
+  """
   psql -f $post "$PGDATABASE"
   """
 }
