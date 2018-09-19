@@ -66,6 +66,7 @@ class SequenceRegion(object):
             return '-'
         raise UnknownStrand()
 
+    @property
     def name(self):
         return '@{chromosome}/{start}-{stop}:{strand}'.format(
             chromosome=self.chromosome,
@@ -92,7 +93,7 @@ class SequenceRegion(object):
                 accession,
                 self.chromosome,
                 exon.start,
-                exon.end,
+                exon.stop,
                 self.assembly_id,
                 self.strand,
             ]
