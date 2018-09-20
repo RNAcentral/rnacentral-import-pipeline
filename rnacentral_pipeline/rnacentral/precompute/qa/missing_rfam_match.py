@@ -53,3 +53,22 @@ class Validator(object):
         required = EXPECTED_MATCHES[rna_type]
         hits = {h.model for h in data.rfam_hits}
         return not hits.intersection(required)
+
+    def href(self, model_id):
+        link = '<a href="http://rfam.org/family/{model_id}">{model_id}</a>'
+        return link.format(model_id=model_id)
+
+    def message(self, rna_type, _):
+        possible = sorted(EXPECTED_MATCHES[rna_type])
+
+        article = 'the'
+        if len(possible) > 1:
+            article = 'a'
+
+        models = [self.href(p) for p in sorted(possible)]
+        raw = 'No match to {article} {rna_type} Rfam model ({possible})'
+        return raw.format(
+            rna_type=rna_type,
+            article=article,
+            possible=', '.join(models),
+        )

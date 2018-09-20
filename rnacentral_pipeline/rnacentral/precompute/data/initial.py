@@ -141,6 +141,7 @@ class RfamHit(object):
     model_rna_type = attr.ib(validator=is_a(basestring))
     model_domain = attr.ib(validator=optional(is_a(basestring)))
     model_name = attr.ib(validator=is_a(basestring))
+    model_long_name = attr.ib(validator=is_a(basestring))
     sequence_info = attr.ib(validator=is_a(HitComponent))
     model_info = attr.ib(validator=is_a(HitComponent))
 

@@ -87,6 +87,11 @@ def test_can_detect_problems_with_mismatched_rna_types(rna_id, rna_type, flag):
          u'Rfam model (<a href="http://rfam.org/family/RF00177">SSU_rRNA_bacteria</a>). '
          u'<a href="/help/rfam-annotations">Learn more &rarr;</a>'),
     ]),
+    ('URS00007D23E5_6239', 'tRNA', [
+        (u'No match to a tRNA Rfam model '
+         u'(<a href="http://rfam.org/family/RF00005">RF00005</a>,'
+         u' <a href="http://rfam.org/family/RF01852">RF01852</a>)')
+    ]),
 ])
 def test_can_add_messages(rna_id, rna_type, messages):
     sequence = helpers.load_data(rna_id)

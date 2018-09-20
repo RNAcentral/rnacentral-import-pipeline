@@ -47,3 +47,9 @@ class Validator(object):
 
         return hit.model_info.completeness <= 0.5 and \
             hit.sequence_info.completeness >= 0.9
+
+    def message(self, _, data):
+        name = data.rfam_hits[0].model_long_name
+        url = data.rfam_hits[0].url
+        message = 'Potential <a href="{url}">{name}</a> fragment'
+        return message.format(name=name, url=url)
