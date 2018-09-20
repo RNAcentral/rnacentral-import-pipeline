@@ -223,21 +223,15 @@ process release {
 
   input:
   file('*.ctl') from loaded.collect()
+  file('post*.ctl') from Channel.fromPath('files/import-data/post/*.sql').collect()
 
   output:
-  file('release.txt') into release_output
+  file('post*.ctl') into post_sql mode flatten
 
   """
   rnac run-release
-  date > release.txt
   """
 }
-
-release_output
-  .collect()
-  .combine(Channel.fromPath('files/import-data/post/*.sql'))
-  .map { it -> it[1] }
-  .set { post_sql }
 
 process post_release {
   echo true
