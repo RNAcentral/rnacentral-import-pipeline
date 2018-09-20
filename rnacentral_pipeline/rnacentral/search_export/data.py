@@ -548,6 +548,10 @@ def has_crs(crs):
     return [str(bool(crs))]
 
 
+def crs_ids(crs):
+    return crs.get('crs_ids', [])
+
+
 def gene_synonyms(synonym_set):
     result = set()
     for synonyms in synonym_set:
@@ -628,6 +632,7 @@ builder = entry([
         field('has_interacting_proteins', has_interacting_proteins, keys='interacting_proteins'),
         fields('interacting_protein', interacting_proteins, keys='interacting_proteins'),
         fields('evidence_for_interaction', interacting_evidence, keys='interacting_proteins'),
-        # fields('has_conserved_structure', has_crs, keys='has_crs'),
+        fields('has_conserved_structure', has_crs, keys='crs'),
+        fields('conserved_structure', crs_ids, keys='crs'),
     ]),
 ])

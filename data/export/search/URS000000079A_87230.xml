@@ -34,5 +34,6 @@
 <field name="has_go_annotations">False</field>
 <field name="go_annotation_source">Not Available</field>
 <field name="has_interacting_proteins">False</field>
+<field name="has_conserved_structure">False</field>
 </additional_fields>
 </entry>
