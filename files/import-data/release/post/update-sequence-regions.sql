@@ -3,6 +3,8 @@
 -- structure is different. If this happens then we will load weird stuff
 -- basically.
 
+create index ix_load_rnc_sequence_regions__accession on load_rnc_sequence_regions(accession);
+
 -- Update the table to include urs_taxid and pretty database name
 update load_rnc_sequence_regions regions
 set
@@ -50,7 +52,7 @@ delete from rnc_sequence_regions regions
 using load_rnc_sequence_regions load
 where
   load.region_name = regions.region_name
-  and region_name.was_mapped = true
+  and regions.was_mapped = true
 ;
 
 -- Upsert regions table with needed info. Note the max's (for all but
@@ -59,7 +61,7 @@ where
 -- support dealing with more than one assembly per species, ie hg19 and hg38.
 insert into rnc_sequence_regions (
   urs_taxid,
-  region_id,
+  region_name,
   chromosome,
   strand,
   region_start,
@@ -69,9 +71,9 @@ insert into rnc_sequence_regions (
 	identity,
 	providing_databases
 ) (
-select load
+select
   max(load.urs_taxid),
-  load.region_id,
+  load.region_name,
   max(load.chromosome),
   max(load.strand),
   min(load.exon_start),
@@ -79,14 +81,16 @@ select load
   load.assembly_id,
   false,
   null,
-  array_agg(load.providing_database)
+  array_agg(distinct load.providing_database)
 from load_rnc_sequence_regions load
-join ensembl_assembly ensembl on ensembl.assemby_id = load.assembly_id
-group by region_id, assembly_id
+join ensembl_assembly ensembl on ensembl.assembly_id = load.assembly_id
+group by load.region_name, load.assembly_id
 )
-ON CONFLICT (region_name, assembly_id)
-SET
-  databases = rnc_sequence_regions.providing_databases || EXCLUDED.providing_database
+ON CONFLICT (region_name, assembly_id) do UPDATE
+set
+  was_mapped = excluded.was_mapped,
+  "identity" = excluded.identity,
+  providing_databases = rnc_sequence_regions.providing_databases || excluded.providing_databases
 ;
 
 -- Populate all exons
@@ -101,6 +105,6 @@ select
   load.exon_stop
 from load_rnc_sequence_regions load
 join rnc_sequence_regions regions on regions.region_name = load.region_name
-join ensembl_assembly ensembl on ensembl.assemby_id = load.assembly_id
+join ensembl_assembly ensembl on ensembl.assembly_id = load.assembly_id
 )
 ;
