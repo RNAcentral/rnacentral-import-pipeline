@@ -76,7 +76,7 @@ def test_can_detect_problems_with_mismatched_rna_types(rna_id, rna_type, flag):
     assert qa.status(rna_type, sequence).mismatching_rna_type == flag
 
 
-@pytest.mark.parametrize('rna_id,rna_type,message', [  # pylint: disable=no-member
+@pytest.mark.parametrize('rna_id,rna_type,messages', [  # pylint: disable=no-member
     ('URS000090395E_9606', 'rRNA', [
         (u'This human sequence matches a Bacteria Rfam model '
          u'(<a href="http://rfam.org/family/RF02541">LSU_rRNA_bacteria</a>). '
@@ -91,6 +91,10 @@ def test_can_detect_problems_with_mismatched_rna_types(rna_id, rna_type, flag):
         (u'No match to a tRNA Rfam model '
          u'(<a href="http://rfam.org/family/RF00005">RF00005</a>,'
          u' <a href="http://rfam.org/family/RF01852">RF01852</a>)')
+    ]),
+    ('URS0000922E4C_6239', 'rRNA', [
+        ('Potential <a href="http://rfam.org/family/RF02543">Eukaryotic '
+         'large subunit ribosomal RNA</a> fragment')
     ]),
 ])
 def test_can_add_messages(rna_id, rna_type, messages):
