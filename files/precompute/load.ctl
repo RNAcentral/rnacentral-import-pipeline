@@ -1,5 +1,5 @@
 LOAD CSV
-FROM stdin
+FROM <precompute.*csv$>
 HAVING FIELDS (
   id,
   upi,

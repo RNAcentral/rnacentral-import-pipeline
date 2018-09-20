@@ -1,5 +1,5 @@
 LOAD CSV
-FROM stdin
+FROM <qa.*csv$>
 HAVING FIELDS (
   rna_id,
   upi,
