@@ -17,7 +17,7 @@ import pytest
 
 from rnacentral_pipeline.rnacentral.precompute import qa
 
-from . import helpers
+from .. import helpers
 
 
 @pytest.mark.parametrize('rna_id,rna_type,flag', [  # pylint: disable=no-member
@@ -74,3 +74,20 @@ def test_can_detect_missing_rfam_match(rna_id, rna_type, flag):
 def test_can_detect_problems_with_mismatched_rna_types(rna_id, rna_type, flag):
     sequence = helpers.load_data(rna_id)
     assert qa.status(rna_type, sequence).mismatching_rna_type == flag
+
+
+@pytest.mark.parametrize('rna_id,rna_type,message', [  # pylint: disable=no-member
+    ('URS000090395E_9606', 'rRNA', [
+        (u'This human sequence matches a Bacteria Rfam model '
+         u'(<a href="http://rfam.org/family/RF02541">LSU_rRNA_bacteria</a>). '
+         u'<a href="/help/rfam-annotations">Learn more &rarr;</a>'),
+    ]),
+    ('URS00002C6CD1_6239', 'rRNA', [
+        (u'This <i>Caenorhabditis elegans</i> sequence matches a Bacteria '
+         u'Rfam model (<a href="http://rfam.org/family/RF00177">SSU_rRNA_bacteria</a>). '
+         u'<a href="/help/rfam-annotations">Learn more &rarr;</a>'),
+    ]),
+])
+def test_can_add_messages(rna_id, rna_type, messages):
+    sequence = helpers.load_data(rna_id)
+    assert qa.status(rna_type, sequence).messages == messages
