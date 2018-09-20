@@ -73,7 +73,8 @@ SET
   has_issue = EXCLUDED.has_issue,
   incomplete_sequence = EXCLUDED.incomplete_sequence,
   possible_contamination = EXCLUDED.possible_contamination,
-  missing_rfam_match = EXCLUDED.missing_rfam_match
+  missing_rfam_match = EXCLUDED.missing_rfam_match,
+  messages = EXCLUDED.messages
 ;
 $$,
 $$
