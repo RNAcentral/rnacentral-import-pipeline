@@ -19,6 +19,7 @@ IMPORTABLE = [
   "secondary_structure.csv": 'files/import-data/secondary.ctl',
   "related_sequences.csv": 'files/import-data/related-sequences.ctl',
   "features.csv": 'files/import-data/features.ctl',
+  "sequence_regions.csv": 'files/import-data/regions.ctl',
 ]
 
 dataless_imports = Channel.empty()
@@ -219,14 +220,28 @@ process merge_and_import {
 }
 
 process release {
+  maxForks 1
+
   input:
   file('*.ctl') from loaded.collect()
-  file(pre) from Channel.fromPath('files/import-data/pre-release.sql')
-  file(post) from Channel.fromPath('files/import-data/post-release.sql')
+  file('post*.ctl') from Channel.fromPath('files/import-data/post/*.sql').collect()
+
+  output:
+  file('post*.ctl') into post_sql mode flatten
 
   """
-  psql -f $pre "$PGDATABASE"
   rnac run-release
+  """
+}
+
+process post_release {
+  echo true
+  maxForks 1
+
+  input:
+  file(post) from post_sql
+
+  """
   psql -f $post "$PGDATABASE"
   """
 }

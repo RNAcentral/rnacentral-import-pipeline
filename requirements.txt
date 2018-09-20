@@ -25,3 +25,4 @@ semver==2.7.9
 pymysql
 click==6.7
 gffutils==0.9
+git+https://github.com/click-contrib/click-aliases.git#egg=click-aliases
