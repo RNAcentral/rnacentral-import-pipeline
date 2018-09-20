@@ -19,6 +19,7 @@ IMPORTABLE = [
   "secondary_structure.csv": 'files/import-data/secondary.ctl',
   "related_sequences.csv": 'files/import-data/related-sequences.ctl',
   "features.csv": 'files/import-data/features.ctl',
+  "sequence_regions.csv": 'files/import-data/regions.ctl',
 ]
 
 dataless_imports = Channel.empty()
