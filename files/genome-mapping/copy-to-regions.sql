@@ -10,7 +10,7 @@ insert into rnc_sequence_regions (
 	identity,
 	providing_databases
 ) (
-select
+select distinct
 	max(rna_id),
 	region_id,
 	max(chromosome),
@@ -20,7 +20,7 @@ select
 	assembly_id,
 	true,
 	max(mapping."identity"),
-	'{}'
+	'{}'::text[]
 from rnc_genome_mapping mapping
 group by mapping.region_id, mapping.assembly_id
 ) on conflict (region_name, assembly_id) do nothing
