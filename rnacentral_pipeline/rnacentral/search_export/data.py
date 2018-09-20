@@ -287,6 +287,15 @@ def as_name(upi, taxid):
     )
 
 
+def short_urs(upi, taxid):
+    """
+    Create a truncated URS. This basically strips off the leading zeros to
+    produce a shorter identifier. It will be easier for people to copy and use.
+    """
+    name = '{upi}_{taxid}'.format(upi=upi, taxid=taxid)
+    return re.sub('^URS0+', 'URS', name)
+
+
 def as_ref(name, value):
     """
     Generate the dict that represents a reference tag.
@@ -588,6 +597,7 @@ builder = entry([
     ]),
 
     section('additional_fields', [
+        field('short_urs', short_urs, keys=('upi', 'taxid')),
         field('active', as_active, keys='deleted'),
         field('length', first),
         field('species', first),
