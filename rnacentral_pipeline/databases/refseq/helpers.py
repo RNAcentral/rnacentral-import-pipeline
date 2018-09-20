@@ -86,7 +86,7 @@ def as_entry(record, source, feature):
         ncbi_tax_id=embl.taxid(record),
         database='REFSEQ',
         sequence=embl.sequence(record, feature),
-        exons=[],
+        regions=[],
         rna_type=embl.rna_type(feature),
         url=url(record),
         seq_version=embl.seq_version(record),

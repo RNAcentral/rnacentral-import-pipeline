@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Copyright [2009-2017] EMBL-European Bioinformatics Institute
+Copyright [2009-2018] EMBL-European Bioinformatics Institute
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -13,18 +13,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import json
 
-from rnacentral_pipeline.databases.rfam import helpers
-
-
-def test_builds_correct_accessions():
-    with open('data/rfam/rfam-duplicates.json', 'r') as raw:
-        data = json.load(raw)
-
-    accessions = [helpers.accession(d) for d in data]
-
-    assert accessions == [
-        'CM000677.2:93286238..93286321:rfam',
-        'CM000677.2:93286321..93286238:rfam',
-    ]
+from .entry import *
+from .secondary_structure import *
+from .regions import *
+from .related import *
+from .references import *
+from .go_annotations import *
