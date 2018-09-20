@@ -65,11 +65,28 @@ class Validator(object):
         there was a warning.
         """
 
+        common_name = {acc.common_name for acc in data.accessions}
+        common_name = {c.lower() for c in common_name if c}
+
+        if len(common_name) == 1:
+            sequence_name = common_name.pop()
+        else:
+            sequence_name = sorted({acc.species for acc in data.accessions})
+            sequence_name = ', '.join(sequence_name)
+            sequence_name = '<i>%s</i>' % sequence_name
+
+        model_domain = data.rfam_hits[0].model_domain
+        model_url = data.rfam_hits[0].url
+        model_name = data.rfam_hits[0].model_name
+
         return (
             'This {sequence_name} sequence matches a {match_domain} '
-            'Rfam model: <a href="{url}">{model_name}</a>. '
+            'Rfam model (<a href="{model_url}">{model_name}</a>). '
+            '<a href="{help_url}">Learn more &rarr;</a>'
         ).format(
-            sequence_name=data,
-            match_domain=None,
-            model_name=None,
+            sequence_name=sequence_name,
+            match_domain=model_domain,
+            model_url=model_url,
+            model_name=model_name,
+            help_url='/help/rfam-annotations',
         )

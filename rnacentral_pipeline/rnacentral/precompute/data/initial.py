@@ -140,6 +140,7 @@ class RfamHit(object):
     model = attr.ib(validator=is_a(basestring))
     model_rna_type = attr.ib(validator=is_a(basestring))
     model_domain = attr.ib(validator=optional(is_a(basestring)))
+    model_name = attr.ib(validator=is_a(basestring))
     sequence_info = attr.ib(validator=is_a(HitComponent))
     model_info = attr.ib(validator=is_a(HitComponent))
 
@@ -162,6 +163,10 @@ class RfamHit(object):
             stop=data.pop('sequence_stop'),
         )
         return cls(**data)  # pylint: disable=star-args
+
+    @property
+    def url(self):
+        return 'http://rfam.org/family/%s' % self.model
 
 
 @attr.s()
