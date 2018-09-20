@@ -55,7 +55,7 @@ INSERT INTO rnc_sequence_features (
     feature_name,
     metadata
 ) (
-SELECT
+SELECT distinct
     upi,
     taxid,
     accession,
