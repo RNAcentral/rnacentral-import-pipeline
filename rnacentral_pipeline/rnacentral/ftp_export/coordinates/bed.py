@@ -49,7 +49,6 @@ class BedEntry(object):
     strand = attr.ib(validator=is_a(int))
     rna_type = attr.ib(validator=is_a(basestring))
     databases = attr.ib(validator=is_a(basestring))
-    is_chromosomal = attr.ib(validator=is_a(bool))
     score = attr.ib(default=0, validator=is_a(int))
     rgb = attr.ib(default=(63, 125, 151), validator=is_a(tuple))
 
@@ -62,8 +61,33 @@ class BedEntry(object):
             strand=region.strand,
             rna_type=region.rna_type,
             databases=region.databases,
-            is_chromosomal=region.is_chromosomal,
         )
+
+    @property
+    def start(self):
+        return self.blocks[0].start
+
+    @property
+    def stop(self):
+        return self.blocks[-1].stop
+
+    @property
+    def bed_strand(self):
+        if self.strand == 1:
+            return '+'
+        if self.strand == -1:
+            return '-'
+        raise ValueError('Unknown Strand')
+
+    @property
+    def bed_chromosome(self):
+        if self.chromosome in ['MT', 'chrMT']:
+            return 'chrM'
+        return 'chr' + self.chromosome
+
+    @property
+    def bed_rgb(self):
+        return ','.join(self.rgb)
 
     def block_sizes(self):
         return [b.size for b in self.blocks]
@@ -76,34 +100,6 @@ class BedEntry(object):
 
     def bed_block_starts(self):
         return ','.join(self.block_starts())
-
-    @property
-    def start(self):
-        return self.blocks[0].start
-
-    @property
-    def stop(self):
-        return self.blocks[-1].stop
-
-    def bed_strand(self):
-        if self.strand == 1:
-            return '+'
-        if self.strand == -1:
-            return '-'
-        raise ValueError('Unknown Strand')
-
-    @property
-    def bed_chromosome(self):
-        chromosome = self.chromosome
-        if self.is_chromosomal:
-            chromosome = 'chr' + chromosome
-        if chromosome in ['MT', 'chrMT']:
-            chromosome = 'chrM'
-        return chromosome
-
-    @property
-    def bed_rgb(self):
-        return ','.join(self.rgb)
 
     def writeable(self):
         return [
@@ -125,24 +121,13 @@ class BedEntry(object):
         ]
 
 
-def located_sequences_as_bed(sequences):
-    """
-    Transform the iterable of LocatedSequence into an iterable of BedEntry
-    objects.
-    """
-
-    for sequence in sequences:
-        for region in sequence.regions:
-            yield BedEntry.from_region(region)
-
-
 def from_json(handle, out):
     """
     Transform raw coordinate data into bed format.
     """
 
     data = coord.from_file(handle)
-    bed = located_sequences_as_bed(data)
-    bed = it.imap(op.methodcaller('writeable'), bed)
+    data = it.imap(BedEntry.from_region, data)
+    data = it.imap(op.methodcaller('writeable'), data)
     writer = csv.writer(out, delimiter='\t')
-    writer.writerows(bed)
+    writer.writerows(data)
