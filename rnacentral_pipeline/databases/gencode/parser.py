@@ -32,7 +32,7 @@ def update_entry(entry):
         accession=helpers.accession(entry),
         database='GENCODE',
         xref_data=helpers.xref_data(entry),
-        optional_id='',
+        optional_id=None,
         references=helpers.references(),
     )
 
@@ -46,7 +46,7 @@ def gencode_transcripts(gff_file):
     return {f['ID'] for f in gff.features_of_type('transcript')}
 
 
-def from_ensembl(known, entry):
+def from_gencode(known, entry):
     """
     Check if a given entry is in the set of known GENCODE ids.
     """
@@ -62,6 +62,6 @@ def parse(gff_file, ensembl, family_file):
 
     known = gencode_transcripts(gff_file)
     for entry in ensembl_parser(ensembl, family_file):
-        if not from_ensembl(known, entry):
+        if not from_gencode(known, entry):
             continue
         yield update_entry(entry)
