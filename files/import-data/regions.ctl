@@ -1,4 +1,4 @@
-LOAD CSV
+
 FROM ALL FILENAMES MATCHING ~<sequence_regions.*csv$>
 HAVING FIELDS (
   accession,
@@ -31,15 +31,15 @@ drop table if exists load_rnc_sequence_regions;
 $$,
 $$
 create table load_rnc_sequence_regions (
-  accession text,
-	urs_taxid text,
-	region_name text not null unique,
-	chromosome text,
-	strand int4,
-	exon_start int4,
-	exon_stop int4,
-	assembly_id varchar(255),
-  providing_database text
+    accession text,
+    urs_taxid text,
+    region_name text not null,
+    chromosome text,
+    strand int4,
+    exon_start int4,
+    exon_stop int4,
+    assembly_id varchar(255),
+    providing_database text
 );
 $$
 ;
