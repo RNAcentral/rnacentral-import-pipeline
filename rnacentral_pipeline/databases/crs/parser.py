@@ -83,7 +83,21 @@ class CrsFeature(object):
 
 
 def parse(handle):
-    for feature in csv.DictReader(handle, delimiter='\t'):
+    field_names = [
+        'URS_taxid',
+        'CRS_start_relative_to_URS',
+        'CRS_end_relative_to_URS',
+        'chromosome',
+        'CRS_start_relative_to_genome',
+        'CRS_end_relative_to_genome',
+        'CRS_id',
+        'CRS_fdr',
+    ]
+    for row in csv.reader(handle, delimiter='\t'):
+        if row[0] == 'URS_taxid':
+            continue
+        assert len(row) == len(field_names)
+        feature = dict(zip(field_names, row))
         yield CrsFeature.build(feature)
 
 

@@ -17,9 +17,7 @@ import re
 
 import attr
 
-from rnacentral_pipeline.databases.data import Exon
-from rnacentral_pipeline.databases.data import Reference
-from rnacentral_pipeline.databases.data import RelatedSequence
+from rnacentral_pipeline.databases import data
 
 from rnacentral_pipeline.databases.helpers import embl
 
@@ -40,25 +38,15 @@ class CouldNotTrimDescription(Exception):
     pass
 
 
-def exon(record, location):
+def as_exon(location):
     """
     Build an Exon from a biopython location object.
     """
 
-    acc = record.annotations['accessions'][0]
-    parts = acc.split(':')
-    assembly_id = parts[1]
-    chromosome_name = parts[2]
-    return Exon(
-        chromosome_name=chromosome_name,
-        primary_start=location.start + 1,
-        primary_end=int(location.end),
-        assembly_id=assembly_id,
-        complement=location.strand == -1,
-    )
+    return data.Exon(start=location.start + 1, stop=int(location.end))
 
 
-def exons(record, feature):
+def as_exons(feature):
     """
     Determine all Exons in this feature.
     """
@@ -66,14 +54,31 @@ def exons(record, feature):
     parts = [feature.location]
     if hasattr(feature.location, 'parts'):
         parts = feature.location.parts
-    return [exon(record, l) for l in parts]
+
+    strand = parts[0].strand
+    return strand, [as_exon(l) for l in parts]
+
+
+def regions(record, feature):
+    acc = record.annotations['accessions'][0]
+    parts = acc.split(':')
+    assembly_id = parts[1]
+    chromosome_name = parts[2]
+
+    strand, exons = as_exons(feature)
+    return [data.SequenceRegion(
+        chromosome=chromosome_name,
+        strand=strand,
+        exons=exons,
+        assembly_id=assembly_id,
+    )]
 
 
 def references():
     """
     Get the standard reference for all Ensembl entries.
     """
-    return [Reference(
+    return [data.Reference(
         authors=(
             "Aken BL, Ayling S, Barrell D, Clarke L, Curwen V, Fairley "
             "S, Fernandez Banet J, Billis K, Garci a Giro n C, Hourlier "
@@ -295,7 +300,7 @@ def generate_related(entries):
             if first == second:
                 continue
 
-            related.append(RelatedSequence(
+            related.append(data.RelatedSequence(
                 sequence_id=second.accession,
                 relationship='isoform',
             ))

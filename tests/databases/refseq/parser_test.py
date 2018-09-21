@@ -17,7 +17,6 @@ import attr
 import pytest
 
 from rnacentral_pipeline.databases import data as dat
-from rnacentral_pipeline.databases.helpers import publications as ref
 from rnacentral_pipeline.databases.helpers import phylogeny as phy
 from rnacentral_pipeline.databases.refseq import parser
 
@@ -63,7 +62,7 @@ def test_it_can_build_correct_entry():
             'GGGGGCGTCATCCGTCAGCTCCCTCTAGTTACGCAGGCAGTGCGTGTCCGCGCACCAACC'
             'ACACGGGGCTCATTCTCAGCGCGGCTGTAAAAAAAAA'
         ),
-        exons=[],
+        regions=[],
         rna_type='RNase_MRP_RNA',
         url='https://www.ncbi.nlm.nih.gov/nuccore/NR_003051.3',
         seq_version='3',
@@ -117,7 +116,7 @@ def test_can_build_correct_entries_when_multiple_present():
         sequence=(
             'CCCCGGGCCCGGCGTTCCCTCCCCTTCCGTGCGCCAGTGGAGGCCGGGGTGGGGCGGGGCGGGG'
         ),
-        exons=[],
+        regions=[],
         rna_type='precursor_RNA',
         url='https://www.ncbi.nlm.nih.gov/nuccore/NR_106737.1',
         seq_version='1',
@@ -164,7 +163,7 @@ def test_can_build_correct_entries_when_multiple_present():
         ncbi_tax_id=9606,
         database='REFSEQ',
         sequence='GGAGGCCGGGGTGGGGCGGGGCGG',
-        exons=[],
+        regions=[],
         rna_type='miRNA',
         url='https://www.ncbi.nlm.nih.gov/nuccore/NR_106737.1',
         seq_version='1',
@@ -219,7 +218,7 @@ def test_can_assign_related_sequences_for_mirnas():
         ncbi_tax_id=6239,
         database='REFSEQ',
         sequence='TAGTAGACATTCTCCGATCTTTGGTGATTCAGCTTCAATGATTGGCTACAGGTTTCTTTCATAAAGCTAGGTTACCAAAGCTCGGCGTCTTGATCTAC',
-        exons=[],
+        regions=[],
         rna_type='precursor_RNA',
         url='https://www.ncbi.nlm.nih.gov/nuccore/NR_000169.2',
         seq_version='2',
@@ -278,7 +277,7 @@ def test_can_assign_isoform_to_rnase_p():
         ncbi_tax_id=7227,
         database='REFSEQ',
         sequence='',
-        exons=[],
+        regions=[],
         rna_type="RNase_P_RNA",
         url='https://www.ncbi.nlm.nih.gov/nuccore/NR_002092.1',
         seq_version='1',

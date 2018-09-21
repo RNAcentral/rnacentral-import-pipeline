@@ -17,7 +17,7 @@ import pytest
 
 from rnacentral_pipeline.databases.ensembl import helpers
 
-from . helpers import features, feature_for
+from . helpers import features, feature_for, first_feature_for
 
 
 @pytest.fixture(scope='module')  # pylint: disable=no-member
@@ -31,18 +31,18 @@ def test_it_gets_transcript_id(human_12):
 
 
 @pytest.mark.parametrize('transcript_id,notes', [
-    ('ENST00000540907.11', [
-        "processed_transcript",
-        "transcript_id=ENST00000544511.1"
-    ]),
-    ('ENST00000540226', ["antisense_RNA"]),
+    # ('ENST00000540907.11', [
+    #     "processed_transcript",
+    #     "transcript_id=ENST00000544511.1"
+    # ]),
+    ('ENST00000540226.1', ["antisense_RNA"]),
 ])
 def test_it_can_get_notes(human_12, transcript_id, notes):
     assert helpers.notes(feature_for(human_12, transcript_id)) == notes
 
 
 @pytest.mark.parametrize('transcript_id,note_data', [
-    ('ENST00000540907.11', {'transcript_id': ['ENST00000540907.11']}),
+    # ('ENST00000540907.11', {'transcript_id': ['ENST00000540907.11']}),
     ('ENST00000544511.1', {'transcript_id': ['ENST00000544511.1']}),
 ])
 def test_it_can_get_grouped_notes(human_12, transcript_id, note_data):
@@ -64,4 +64,5 @@ def test_it_can_get_grouped_notes(human_12, transcript_id, note_data):
     ("ENST00000364606.1", True),
 ])
 def test_can_detect_if_is_noncoding(human_12, transcript_id, status):
-    assert helpers.is_ncrna(feature_for(human_12, transcript_id)) == status
+    feature = first_feature_for(human_12, transcript_id)
+    assert helpers.is_ncrna(feature) == status

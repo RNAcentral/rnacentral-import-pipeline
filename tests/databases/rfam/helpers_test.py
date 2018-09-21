@@ -19,7 +19,7 @@ from rnacentral_pipeline.databases.rfam import helpers
 
 
 def test_builds_correct_accessions():
-    with open('data/rfam-duplicates.json', 'r') as raw:
+    with open('data/rfam/rfam-duplicates.json', 'r') as raw:
         data = json.load(raw)
 
     accessions = [helpers.accession(d) for d in data]

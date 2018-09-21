@@ -16,8 +16,6 @@ limitations under the License.
 import json
 import itertools as it
 
-from rnacentral_pipeline.writers import build_entry_writer
-
 from ..data import Entry
 
 from . import utils
@@ -36,7 +34,7 @@ def as_entry(data, mapping):
         ncbi_tax_id=helpers.taxid(data),
         database='RFAM',
         sequence=helpers.sequence(data),
-        exons=[],
+        regions=[],
         rna_type=helpers.rna_type(data, mapping),
         url=helpers.url(data),
         note_data=helpers.note(data),
