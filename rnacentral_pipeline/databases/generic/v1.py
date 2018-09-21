@@ -57,39 +57,40 @@ def taxid(entry):
     return int(tid)
 
 
-def as_exon(assembly, exon):
+def as_exon(exon):
     """
     Turn a raw exon into one we can store in the rnc_coordinates table.
     """
 
-    complement = None
-    if exon['strand'] == '+':
-        complement = False
-    elif exon['strand'] == '-':
-        complement = True
-    else:
-        raise ValueError("Invalid strand %s" % exon)
-
-    chromosome = exon['chromosome']
-    if chromosome.startswith('chr'):
-        chromosome = chromosome[3:]
-
     return data.Exon(
-        chromosome_name=chromosome,
-        # Input is 0 based, but we store 1 based
-        primary_start=int(exon['startPosition']) + 1,
-        primary_end=int(exon['endPosition']) + 1,
-        assembly_id=assembly,
-        complement=complement,
+        start=int(exon['startPosition']) + 1,
+        stop=int(exon['endPosition']),
     )
 
 
-def exons(genome_location):
+def as_region(region):
+    """
+    Turn a raw region in the JSON document into a SequenceRegion object.
+    """
+
+    exons = region['exons']
+    chromosome = exons[0]['chromosome']
+    if chromosome.startswith('chr'):
+        chromosome = chromosome[3:]
+
+    return data.SequenceRegion(
+        chromosome=chromosome,
+        strand=exons[0]['strand'],
+        exons=[as_exon(e) for e in exons],
+        assembly_id=region['assembly'],
+    )
+
+
+def regions(raw_regions):
     """
     Get all genomic locations this record is in.
     """
-    assembly = genome_location['assembly']
-    return [as_exon(assembly, e) for e in genome_location['exons']]
+    return [as_region(r) for r in raw_regions.get('genomeLocations', [])]
 
 
 def gene_info(_):
@@ -103,6 +104,7 @@ def as_reference(ref):
     """
     Turn a raw reference (just a pmid) into a reference we can import.
     """
+
     if ref.startswith('PMID:'):
         pmid = int(ref[5:])
         return pub.reference(pmid=pmid)
@@ -113,6 +115,7 @@ def references(record):
     """
     Get a list of all References in this record.
     """
+
     refs = it.imap(as_reference, record.get('publications', []))
     return list(it.ifilter(None, refs))
 
@@ -204,6 +207,7 @@ def gene(ncrna):
     """
     Get the id of the gene, if possible.
     """
+
     gene_id = ncrna.get('gene', {}).get('geneId', None)
     if gene_id:
         return gene_id.split(':', 1)[1]
@@ -217,22 +221,12 @@ def locus_tag(ncrna):
     return ncrna.get('gene', {}).get('locusTag', None)
 
 
-def parent_accession(location):
-    """
-    Find the parent accession. This will be the INSDC_accession of the first
-    exon in this location.
-    """
-
-    if not location['exons']:
-        return None
-
-    first_exon = location['exons'][0]
-    if 'INSDC_accession' not in first_exon:
-        return None
-    return first_exon['INSDC_accession'].split('.')[0]
-
-
 def optional_id(record):
+    """
+    Create an optional id for mirbase entries. This basically uses the name
+    field, which will be the miRBase gene name.
+    """
+
     if 'description' in record and \
             'name' in record and ' ' not in record['name']:
         return record['name']
@@ -240,10 +234,15 @@ def optional_id(record):
 
 
 def related_sequences(record):
+    """
+    This will create a list of RelatedSequences from the given record.
+    """
+
     sequences = []
     for related in record.get('relatedSequences', []):
         evidence = related.get('evidence', {})
         if evidence:
+            # pylint: disable=star-args
             evidence = data.RelatedEvidence(**evidence)
         else:
             evidence = data.RelatedEvidence.empty()
@@ -265,6 +264,11 @@ def related_sequences(record):
 
 
 def add_related_by_gene(entries):
+    """
+    This will modify the related sequences so that it contains between all
+    transcripts that have the same gene id.
+    """
+
     updated = []
     for first in entries:
         related = []
@@ -284,24 +288,22 @@ def add_related_by_gene(entries):
     return updated
 
 
-def as_entry(database, p_accession, parsed_exons, record):
+def as_entry(record, database):
     """
     Generate an Entry to import based off the database, exons and raw record.
     """
-
     return data.Entry(
         primary_id=external_id(record),
         accession=record['primaryId'],
         ncbi_tax_id=taxid(record),
         database=database,
         sequence=record['sequence'],
-        exons=parsed_exons,
+        regions=regions(record),
         rna_type=record['soTermId'],
         url=record['url'],
         seq_version=record.get('version', '1'),
         optional_id=optional_id(record),
         description=description(record),
-        parent_accession=p_accession,
         xref_data=xrefs(record),
         related_sequences=related_sequences(record),
         species=species(record),
@@ -320,8 +322,9 @@ def as_entry(database, p_accession, parsed_exons, record):
 
 def parse(raw):
     """
-    Parses the given dict. This assumes the data is formatted according to
-    version 1.0 (or equivalent) of the RNAcentral JSON schema.
+    Parses the given dict into a Entry object. This assumes the data is
+    formatted according to version 1.0 (or equivalent) of the RNAcentral JSON
+    schema.
     """
 
     database = raw['metaData']['dataProvider']
@@ -331,22 +334,11 @@ def parse(raw):
     metadata_refs = [as_reference(r) for r in metadata_pubs]
 
     for gene_id, records in it.groupby(ncrnas, gene):
-        entries = []
-        for record in records:
-            locations = record.get('genomeLocations', [])
-            if not locations:
-                entries.append(as_entry(database, None, [], record))
-
-            for location in locations:
-                parsed_exons = exons(location)
-                p_accession = parent_accession(location)
-                entries.append(as_entry(database, p_accession, parsed_exons, record))
+        entries = [as_entry(r, database) for r in records]
 
         if gene_id:
             entries = add_related_by_gene(entries)
 
         for entry in entries:
-            yield attr.evolve(
-                entry,
-                references=entry.references + metadata_refs,
-            )
+            refs = entry.references + metadata_refs
+            yield attr.evolve(entry, references=refs)

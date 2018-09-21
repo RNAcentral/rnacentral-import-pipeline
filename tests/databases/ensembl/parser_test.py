@@ -115,17 +115,31 @@ def test_can_correct_rfam_name_to_type(human_12):
 
 
 def test_it_gets_simple_locations(human_12):
-    assert entry_for(human_12, 'ENST00000546223.1').exons == [
-        dat.Exon(chromosome_name='12', assembly_id='GRCh38', primary_start=37773, primary_end=38102, complement=True),
-        dat.Exon(chromosome_name='12', assembly_id='GRCh38', primary_start=36661, primary_end=37529, complement=True),
+    assert entry_for(human_12, 'ENST00000546223.1').regions == [
+        dat.SequenceRegion(
+            chromosome='12',
+            strand=-1,
+            exons=[
+                dat.Exon(start=37773, stop=38102),
+                dat.Exon(start=36661, stop=37529),
+            ],
+            assembly_id='GRCh38',
+        )
     ]
 
 
 def test_can_get_joined_locations(human_12):
-    assert entry_for(human_12, 'ENST00000543036.1').exons == [
-        dat.Exon(chromosome_name='12', assembly_id='GRCh38', primary_start=3319441, primary_end=3319726, complement=False),
-        dat.Exon(chromosome_name='12', assembly_id='GRCh38', primary_start=3323349, primary_end=3323452, complement=False),
-        dat.Exon(chromosome_name='12', assembly_id='GRCh38', primary_start=3325090, primary_end=3325340, complement=False),
+    assert entry_for(human_12, 'ENST00000543036.1').regions == [
+        dat.SequenceRegion(
+            chromosome='12',
+            strand=1,
+            exons=[
+                dat.Exon(start=3319441, stop=3319726),
+                dat.Exon(start=3323349, stop=3323452),
+                dat.Exon(start=3325090, stop=3325340),
+            ],
+            assembly_id='GRCh38',
+        )
     ]
 
 
@@ -155,13 +169,14 @@ def test_it_builds_correct_entries(human_12):
         ncbi_tax_id=9606,
         database='ENSEMBL',
         sequence='A',
-        exons=[dat.Exon(
-            chromosome_name="12",
-            primary_start=3124777,
-            primary_end=3125063,
-            assembly_id='GRCh38',
-            complement=False
-        )],
+        regions=[
+            dat.SequenceRegion(
+                chromosome='12',
+                strand=1,
+                exons=[dat.Exon(start=3124777, stop=3125063)],
+                assembly_id='GRCh38',
+            ),
+        ],
         rna_type='SRP_RNA',
         url='http://www.ensembl.org/Homo_sapiens/Transcript/Summary?t=ENST00000620330.1',
         seq_version='1',
