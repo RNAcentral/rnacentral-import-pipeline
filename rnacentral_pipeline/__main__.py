@@ -24,6 +24,7 @@ from rnacentral_pipeline.databases.refseq import parser as refseq
 from rnacentral_pipeline.databases.ensembl import parser as ensembl
 from rnacentral_pipeline.databases.ensembl import proteins as ensembl_proteins
 from rnacentral_pipeline.databases.ensembl import coordinate_systems as ensembl_coords
+from rnacentral_pipeline.databases.ensembl_plants import parser as ensembl_plants
 
 from rnacentral_pipeline.databases.crs import parser as crs
 
@@ -118,6 +119,21 @@ def process_ensembl(ensembl_file, family_file, output):
     This will parse EMBL files from Ensembl to produce the expected CSV files.
     """
     write_entries(ensembl.parse, output, ensembl_file, family_file)
+
+
+@external_database.command('ensembl_plants')
+@click.argument('ensembl_file', type=click.File('rb'))
+@click.argument('output', default='.', type=click.Path(
+    writable=True,
+    dir_okay=True,
+    file_okay=False,
+))
+def process_ensembl_plants(ensembl_file, output):
+    """
+    This will process the Ensembl Plant data to produce files for import. The
+    files should be in the EMBL format as provided by EnsemblPlants.
+    """
+    write_entries(ensembl_plants.parse, output, ensembl_file)
 
 
 @external_database.command('gencode')
