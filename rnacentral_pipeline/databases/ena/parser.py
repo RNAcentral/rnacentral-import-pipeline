@@ -60,7 +60,7 @@ def parse(handle):
             ncbi_tax_id=helpers.taxid(record),
             database='ENA',
             sequence=helpers.sequence(record),
-            exons=[],
+            regions=[],
             rna_type=helpers.rna_type(feature),
             url=helpers.url(record),
             seq_version=embl.seq_version(record),

@@ -26,6 +26,8 @@ def only_or_fail(possible):
 
 def short_description(entries):
     description = only_or_fail({e[1] for e in entries}).strip()
+    if description == 'NULL':
+        return None
     description = re.sub(r'\s*\[.+\]$', '', description)
     return description
 

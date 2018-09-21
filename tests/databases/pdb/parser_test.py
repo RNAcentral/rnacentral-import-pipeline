@@ -18,15 +18,15 @@ import pytest
 
 from rnacentral_pipeline.databases import data
 from rnacentral_pipeline.databases.pdb import helpers
-from rnacentral_pipeline.databases.pdb import parsers
+from rnacentral_pipeline.databases.pdb import parser
 
 
 def test_can_build_all_entries():
-    assert len(list(parsers.as_entries(['1S72']))) == 2
+    assert len(list(parser.as_entries(['1S72']))) == 2
 
 
 def test_can_build_correct_entry_for_rrna():
-    entries = [attr.asdict(e) for e in parsers.as_entries(['1J5E'])]
+    entries = [attr.asdict(e) for e in parser.as_entries(['1J5E'])]
     assert len(entries) == 1
 
     assert len(entries[0]['references']) == 3
@@ -38,7 +38,7 @@ def test_can_build_correct_entry_for_rrna():
         ncbi_tax_id=274,
         database='PDBE',
         sequence='TTTGTTGGAGAGTTTGATCCTGGCTCAGGGTGAACGCTGGCGGCGTGCCTAAGACATGCAAGTCGTGCGGGCCGCGGGGTTTTACTCCGTGGTCAGCGGCGGACGGGTGAGTAACGCGTGGGTGACCTACCCGGAAGAGGGGGACAACCCGGGGAAACTCGGGCTAATCCCCCATGTGGACCCGCCCCTTGGGGTGTGTCCAAAGGGCTTTGCCCGCTTCCGGATGGGCCCGCGTCCCATCAGCTAGTTGGTGGGGTAATGGCCCACCAAGGCGACGACGGGTAGCCGGTCTGAGAGGATGGCCGGCCACAGGGGCACTGAGACACGGGCCCCACTCCTACGGGAGGCAGCAGTTAGGAATCTTCCGCAATGGGCGCAAGCCTGACGGAGCGACGCCGCTTGGAGGAAGAAGCCCTTCGGGGTGTAAACTCCTGAACCCGGGACGAAACCCCCGACGAGGGGACTGACGGTACCGGGGTAATAGCGCCGGCCAACTCCGTGCCAGCAGCCGCGGTAATACGGAGGGCGCGAGCGTTACCCGGATTCACTGGGCGTAAAGGGCGTGTAGGCGGCCTGGGGCGTCCCATGTGAAAGACCACGGCTCAACCGTGGGGGAGCGTGGGATACGCTCAGGCTAGACGGTGGGAGAGGGTGGTGGAATTCCCGGAGTAGCGGTGAAATGCGCAGATACCGGGAGGAACGCCGATGGCGAAGGCAGCCACCTGGTCCACCCGTGACGCTGAGGCGCGAAAGCGTGGGGAGCAAACCGGATTAGATACCCGGGTAGTCCACGCCCTAAACGATGCGCGCTAGGTCTCTGGGTCTCCTGGGGGCCGAAGCTAACGCGTTAAGCGCGCCGCCTGGGGAGTACGGCCGCAAGGCTGAAACTCAAAGGAATTGACGGGGGCCCGCACAAGCGGTGGAGCATGTGGTTTAATTCGAAGCAACGCGAAGAACCTTACCAGGCCTTGACATGCTAGGGAACCCGGGTGAAAGCCTGGGGTGCCCCGCGAGGGGAGCCCTAGCACAGGTGCTGCATGGCCGTCGTCAGCTCGTGCCGTGAGGTGTTGGGTTAAGTCCCGCAACGAGCGCAACCCCCGCCGTTAGTTGCCAGCGGTTCGGCCGGGCACTCTAACGGGACTGCCCGCGAAAGCGGGAGGAAGGAGGGGACGACGTCTGGTCAGCATGGCCCTTACGGCCTGGGCGACACACGTGCTACAATGCCCACTACAAAGCGATGCCACCCGGCAACGGGGAGCTAATCGCAAAAAGGTGGGCCCAGTTCGGATTGGGGTCTGCAACCCGACCCCATGAAGCCGGAATCGCTAGTAATCGCGGATCAGCCATGCCGCGGTGAATACGTTCCCGGGCCTTGTACACACCGCCCGTCACGCCATGGGAGCGGGCTCTACCCGAAGTCGCCGGGAGCCTACGGGCAGGCGCCGAGGGTAGGGCCCGTGACTGGGGCGAAGTCGTAACAAGGTAGCTGTACCGGAAGGTGCGGCTGGATCACCTCCTTTCT',
-        exons=[],
+        regions=[],
         rna_type='rRNA',
         url='https://www.ebi.ac.uk/pdbe/entry/pdb/1j5e',
         seq_version='1',
@@ -72,13 +72,13 @@ def test_can_build_correct_entry_for_rrna():
 
 
 def test_can_handle_strange_taxids():
-    entries = [e for e in parsers.as_entries(['3T4B'])]
+    entries = [e for e in parser.as_entries(['3T4B'])]
     assert len(entries) == 1
     assert entries[0].ncbi_tax_id == 32630
 
 
 def test_can_build_correct_entry_for_srp_rna():
-    entries = [attr.asdict(e) for e in parsers.as_entries(['1CQ5'])]
+    entries = [attr.asdict(e) for e in parser.as_entries(['1CQ5'])]
     assert len(entries) == 1
 
     assert len(entries[0]['references']) == 1
@@ -90,7 +90,7 @@ def test_can_build_correct_entry_for_srp_rna():
         ncbi_tax_id=562,
         database='PDBE',
         sequence='GGCGTTTACCAGGTCAGGTCCGGAAGGAAGCAGCCAAGGCGCC',
-        exons=[],
+        regions=[],
         rna_type='SRP_RNA',
         url='https://www.ebi.ac.uk/pdbe/entry/pdb/1cq5',
         seq_version='1',
@@ -114,35 +114,35 @@ def test_can_build_correct_entry_for_srp_rna():
     ))
 
 
-@pytest.mark.parametrize('pdb,chains', [
+@pytest.mark.parametrize('pdb,chains', [  # pylint: disable=no-member
     ('4V3P', {'L3', 'S1', 'L1', 'S2', 'L2', 'S3'}),
     ('1J5E', {'A'}),
 ])
 def test_does_not_get_chain_infor_for_a_protein_chain(pdb, chains):
-    descriptions = parsers.chain_descriptions([pdb])
+    descriptions = parser.chain_descriptions([pdb])
     assert set(d['chainId'] for d in descriptions) == chains
 
 
-@pytest.mark.parametrize('pdb,expected', [
+@pytest.mark.parametrize('pdb,expected', [  # pylint: disable=no-member
     ('157D', [32630, 32630]),
     ('1A1T', [32630]),
     ('1J5E', [274]),
 ])
 def test_can_get_given_taxid(pdb, expected):
-    taxids = [helpers.taxid(c) for c in parsers.chain_descriptions([pdb])]
+    taxids = [helpers.taxid(c) for c in parser.chain_descriptions([pdb])]
     assert taxids == expected
 
 
-@pytest.mark.parametrize('pdbid,missing', [
+@pytest.mark.parametrize('pdbid,missing', [  # pylint: disable=no-member
     ('5WNT', '5WNT_U_21'),
     ('5WNP', '5WNP_U_21'),
 ])
 def test_will_not_fetch_mislabeled_chains(pdbid, missing):
-    entries = {e.primary_id for e in parsers.as_entries([pdbid])}
+    entries = {e.primary_id for e in parser.as_entries([pdbid])}
     assert missing not in entries
 
 
-@pytest.mark.parametrize('pdbid,chains', [
+@pytest.mark.parametrize('pdbid,chains', [  # pylint: disable=no-member
     ('4v5d', {
         'DB', 'DA', 'CW', 'CA', 'BB', 'BA', 'AW', 'AA', 'CY', 'CV', 'AY', 'AV'
     }),
@@ -151,5 +151,5 @@ def test_will_not_fetch_mislabeled_chains(pdbid, missing):
     ('1xnq', {'A', 'X'}),
 ])
 def test_fetches_expected_chains(pdbid, chains):
-    entries = parsers.as_entries([pdbid])
+    entries = parser.as_entries([pdbid])
     assert set(d.optional_id for d in entries) == chains

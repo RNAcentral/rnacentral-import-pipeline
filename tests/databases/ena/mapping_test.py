@@ -164,7 +164,7 @@ def test_can_transform_correct_lncrnadb_entry():
         ncbi_tax_id=9606,
         database='LNCRNADB',
         sequence='',
-        exons=[],
+        regions=[],
         rna_type='lncRNA',
         url='http://www.lncrnadb.org/Detail.aspx?TKeyID=101',
         seq_version='1',
@@ -230,7 +230,7 @@ def test_can_transform_correct_srpdb_entry():
         ncbi_tax_id=400667,
         database='SRPDB',
         sequence='GGTAGCCCCGCTGGTGGCTTCGCAATTGTACTCTGTGAACCCCGCCAGGACCGGAAGGTAGCAACGGTAGCAGATCTATGATGTGCCGAAGTTTTGCTAGTGGGGTTGCCACCATT',
-        exons=[],
+        regions=[],
         rna_type='SRP_RNA',
         url='http://rnp.uthscsa.edu/rnp/SRPDB/rna/sequences/fasta/Acin.baum._CP000521',
         seq_version='1',
@@ -278,7 +278,7 @@ def test_can_transform_correct_snopy_entry():
         ncbi_tax_id=3702,
         database='SNOPY',
         sequence='GGCGAGGATGAATAATGCTAAATTTCTGACACCTCTTGTATGAGGAGAGATTGATAACCTCTCCTTTGAGCACATTATGCAATACTCTGAGCC',
-        exons=[],
+        regions=[],
         rna_type='snoRNA',
         url='http://snoopy.med.miyazaki-u.ac.jp/snorna_db.cgi?mode=sno_info&id=Arabidopsis_thaliana300001',
         seq_version='1',
@@ -327,7 +327,7 @@ def test_can_transform_correct_wormbase_entry():
         ncbi_tax_id=6239,
         database='WORMBASE',
         sequence='',
-        exons=[],
+        regions=[],
         rna_type='misc_RNA',
         url='http://www.wormbase.org/species/c_elegans/gene/WBGene00001734',
         seq_version='4',
@@ -358,14 +358,14 @@ def test_can_transform_correct_wormbase_entry():
     ))
 
     assert len(transformed['references']) == 3
-    assert len(transformed['exons']) == 0
+    assert len(transformed['regions']) == 0
     assert len(transformed['sequence']) == 2767
     del transformed['references']
     del result['references']
     del transformed['sequence']
     del result['sequence']
-    del transformed['exons']
-    del result['exons']
+    del transformed['regions']
+    del result['regions']
     assert transformed == result
 
 
