@@ -69,3 +69,70 @@ process load_precomputed_data {
   psql -f $post "$PGDATABASE"
   """
 }
+
+process mods_for_feedback {
+  output:
+  stdout into raw_mods
+
+  """
+  rnac feedback find-mods
+  """
+}
+
+raw_mods
+  .splitCsv()
+  .combine(Channel.fromPath('files/ftp-export/genome_coordinates/query.sql'))
+  .set { mods }
+
+process generate_mod_bed {
+  input:
+  set val(assembly), val(taxid), val(mod), file(query) from mods
+
+  output:
+  file("${mod}.bed") into mod_bed_files
+
+  """
+  psql -v "taxid=$taxid" -v "assembly_id='$assembly'" -f $query "$PGDATABASE" > result.json
+  rnac ftp-export coordiantes as-bed result.json ${mod}.bed
+  """
+}
+
+process generate_feedback_report {
+  input:
+  file(genome) from mod_bed_files
+
+  output:
+  file('combined.tsv') into feedback
+
+  shell:
+  '''
+  awk '{split($15, dbs, ","); for(i in dbs) print dbs[i];}' !{genome} | sort -u > db_list.txt
+
+  # sort genome bed file
+  sort -k1,1 -k2,2n $genome > ${genome}.sorted
+
+  for db in `cat db_list.txt`; do
+      grep $db $genome > ${db}.bed
+      bedtools intersect -sorted -wa -wb -a ${db}.bed -b ${genome}.sorted > overlap-${db}.bed
+      bedtools subtract -A -a $genome -b ${db}.bed > no-overlap-${db}.bed
+      db_report=${db}-report.tsv
+
+      awk '{split($30, dbs, ","); for(i in dbs) print $4, "overlap", dbs[i];}' overlap-${db}.bed | sort -u >> $db_report
+      awk -v awk_db=$db '{print $4, "no_overlap", awk_db}' no-overlap-${db}.bed | sort -u >> $db_report
+  done
+
+  sort -u *-report.tsv > combined.tsv
+  '''
+}
+
+process import_feedback {
+  echo true
+
+  input:
+  file('combined*.tsv') from feedback.collect()
+  file(ctl) from Channel.fromPath('files/precompute/feedback.ctl')
+
+  """
+  pgloader --on-error-stop $ctl
+  """
+}
