@@ -13,12 +13,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import attr
 import pytest
 
-from rnacentral_pipeline.rnacentral.ftp_export.coordinates import data
-
-from .helpers import fetch_raw, fetch_coord, fetch_all
+from .helpers import fetch_coord, fetch_all
 
 
 def fetch_one(rna_id, assembly):
@@ -27,34 +24,33 @@ def fetch_one(rna_id, assembly):
     return coords[0]
 
 
-@pytest.mark.parametrize('rna_id,assembly,count', [
-    # ('URS0000A78C33_9606', 'GRCh38', 4),
-    ('URS00009BF201_9606', 'GRCh38', 9),
-    ('URS00008B37EC_9606', 'GRCh38', 1),
-    ('URS00008C1914_9606', 'GRCh38', 1),
-])
-def test_can_fetch_all_coordinates_for_upi_taxid(rna_id, assembly, count):
-    located = fetch_one(rna_id, assembly)
-    print(located)
-    assert len(located.regions) == count
-
-
-@pytest.mark.skip
-def test_it_does_not_export_coordinates_in_weird_chromosomes():
-    pass
-
-
-# @pytest.mark.parametrize('taxid,assembly,count', [
-#     (9606, 'GRCh38', 305337),
-#     (7227, 'BDGP6', 36222),
-#     (6239, 'WBcel235', 29214),
-#     (3702, 'TAIR10', 276793),
-#     (10090, 'GRCm38', 955326),
-#     (4896, 'ASM294v2', 3175),
-#     (4081, 'SL2.50', 4431),
+# @pytest.mark.parametrize('rna_id,assembly,count', [
+#     ('URS0000A78C33_9606', 'GRCh38', 4),
+#     ('URS00009BF201_9606', 'GRCh38', 9),
+#     ('URS00008B37EC_9606', 'GRCh38', 1),
+#     ('URS00008C1914_9606', 'GRCh38', 1),
 # ])
-# def test_can_find_all_required_coordinates(taxid, assembly, count):
-#     assert len(list(fetch_all(taxid, assembly))) == count
+# def test_can_fetch_all_coordinates_for_upi_taxid(rna_id, assembly, count):
+#     located = fetch_one(rna_id, assembly)
+#     assert len(located.regions) == count
+
+
+# @pytest.mark.skip
+# def test_it_does_not_export_coordinates_in_weird_chromosomes():
+#     pass
+
+
+@pytest.mark.parametrize('assembly,count', [  # pylint: disable=no-member
+    ('GRCh38', 305337),
+    ('BDGP6', 36222),
+    ('WBcel235', 29214),
+    ('TAIR10', 276793),
+    ('GRCm38', 955326),
+    ('ASM294v2', 3175),
+    ('SL2.50', 4431),
+])
+def test_can_find_all_required_coordinates(assembly, count):
+    assert len(list(fetch_all(assembly))) == count
 
 
 # @pytest.mark.parametrize('taxid,assembly,rna_id', [
