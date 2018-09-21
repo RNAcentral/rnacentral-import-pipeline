@@ -220,28 +220,16 @@ process merge_and_import {
 }
 
 process release {
-  maxForks 1
-
-  input:
-  file('*.ctl') from loaded.collect()
-  file('post*.ctl') from Channel.fromPath('files/import-data/post/*.sql').collect()
-
-  output:
-  file('post*.ctl') into post_sql mode flatten
-
-  """
-  rnac run-release
-  """
-}
-
-process post_release {
   echo true
   maxForks 1
 
   input:
-  file(post) from post_sql
+  file('*.ctl') from loaded.collect()
+  file(post) from Channel.fromPath('files/import-data/release/post/*.sql').collect()
 
   """
-  psql -f $post "$PGDATABASE"
+  rnac run-release
+  find . -name '*.sql' -print0 | sort -z | xargs -r0 cat > post-command
+  psql -f post-command "$PGDATABASE"
   """
 }
