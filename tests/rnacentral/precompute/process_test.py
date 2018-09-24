@@ -271,6 +271,8 @@ def test_creates_expected_qa_udpates(rna_id, expected):
     flags = []
     status = data.qa_status
     for field in attr.fields(status.__class__):
+        if field.name == 'messages':
+            continue
         if getattr(status, field.name):
             flags.append(field.name)
     assert sorted(flags) == sorted(expected)

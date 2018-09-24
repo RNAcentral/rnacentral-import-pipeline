@@ -118,7 +118,7 @@ class ActiveUpdate(Update):
             description=description,
             databases=database_names(sequence.accessions),
             has_coordinates=has_coordinates,
-            qa_status=QaStatus.build(rna_type, sequence),
+            qa_status=qa.status(rna_type, sequence),
             short_description=short_description,
             last_release=sequence.last_release,
         )
