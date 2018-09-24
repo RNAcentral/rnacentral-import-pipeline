@@ -46,7 +46,6 @@ class QaStatus(object):
             status[validator.name] = current
             if current:
                 status['messages'].append(validator.message(*args, **kwargs))
-        print(status)
         return cls(**status)
 
     @classmethod
