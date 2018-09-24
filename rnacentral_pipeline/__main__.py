@@ -11,6 +11,7 @@ import csv
 import logging
 
 import click
+from click_aliases import ClickAliasedGroup
 
 from rnacentral_pipeline.writers import write_entries
 
@@ -22,6 +23,7 @@ from rnacentral_pipeline.databases.quickgo import parser as quickgo
 from rnacentral_pipeline.databases.refseq import parser as refseq
 from rnacentral_pipeline.databases.ensembl import parser as ensembl
 from rnacentral_pipeline.databases.ensembl import proteins as ensembl_proteins
+from rnacentral_pipeline.databases.ensembl import coordinate_systems as ensembl_coords
 
 from rnacentral_pipeline.databases.crs import parser as crs
 
@@ -43,33 +45,6 @@ from rnacentral_pipeline.rnacentral.ftp_export import ensembl as ensembl_json
 from rnacentral_pipeline.rnacentral.ftp_export import go_terms
 
 from rnacentral_pipeline.rnacentral import release
-
-
-class CustomMultiCommand(click.Group):
-    """
-    Modified from:
-    https://stackoverflow.com/questions/46641928/python-click-multiple-command-names
-    """
-
-    def command(self, *args, **kwargs):
-        """
-        Behaves the same as `click.Group.command()` except if passed
-        a list of names, all after the first will be aliases for the first.
-        """
-
-        def decorator(f):
-            builder = super(CustomMultiCommand, self).command
-            if isinstance(args[0], list):
-                names = args[0]
-                cmd_args = list(args[1:])
-                for alias in names[1:]:
-                    cmd = builder(alias, *cmd_args, **kwargs)(f)
-                    cmd = builder(f)
-                    cmd.short_help = "Alias for '%s'" % names[0]
-                return builder(names[0], *cmd_args, **kwargs)(f)
-            return builder(*args, **kwargs)(f)
-
-        return decorator
 
 
 @click.group()
@@ -96,7 +71,7 @@ def search_export_ranges(output, chunk_size=None, db_url=None):
     csv.writer(output).writerows(upi_ranges(db_url, chunk_size))
 
 
-@cli.group('external', cls=CustomMultiCommand)
+@cli.group('external', cls=ClickAliasedGroup)
 def external_database():
     """
     This is a group of commands for processing data from various databases into
@@ -105,13 +80,13 @@ def external_database():
     pass
 
 
-@external_database.command([
-    'json-schema',
+@external_database.command('json-schema', aliases=[
     'flybase',
     'lncipedia',
     'mirbase',
     'pombase',
     'tarbase',
+    'zwd',
 ])
 @click.argument('json_file', type=click.File('rb'))
 @click.argument('output', default='.', type=click.Path(
@@ -302,27 +277,29 @@ def search_export():
 
 @search_export.command('as-xml')
 @click.argument('raw_file', type=click.File('rb'))
+@click.argument('metadata_file', type=click.File('rb'))
 @click.argument('xml_file', type=click.File('wb'))
 @click.argument('count_file', type=click.File('wb'), default='count')
-def search_export_xml(raw_file, xml_file, count_file=None):
+def search_export_xml(raw_file, metadata_file, xml_file, count_file=None):
     """
     This will parse a file with one JSON object per line to produce XML
     formatted data that is used as input to the search team. Additionally, this
     produces a count file which contains the number of entries in the XML file.
     This is needed for building the release_note.txt file.
     """
-    search.as_xml(raw_file, xml_file, count_file)
+    search.as_xml(raw_file, metadata_file, xml_file, count_file)
 
 
 @search_export.command('release-note')
+@click.argument('release', type=str)
 @click.argument('output', type=click.File('wb'))
 @click.argument('count_files', nargs=-1, type=click.File('rb'))
-def search_export_note(output, count_files):
+def search_export_note(release, output, count_files):
     """
     This will create the release_note.txt file that is needed for the search
     export.
     """
-    search.release_note(output, count_files)
+    search.release_note(output, release, count_files)
 
 
 @cli.group('genome-mapping')
@@ -504,8 +481,8 @@ def precompute_from_file(json_file, output):
     pre.from_file(json_file, output)
 
 
-@cli.group()
-def proteins():
+@cli.group('ensembl')
+def ensembl_group():
     """
     This is a set of commands for dealing with processing protein information.
     We don't have much in the way of protein summary but sometimes we do need a
@@ -514,15 +491,26 @@ def proteins():
     pass
 
 
-@proteins.command('ensembl')
+@ensembl_group.command('proteins')
 @click.argument('filename', default='-', type=click.File('rb'))
 @click.argument('output', default='-', type=click.File('wb'))
-def protein_ensembl(filename, output):
+def ensembl_proteins_cmd(filename, output):
     """
     This will process the ensembl protein information files. This assumes the
     file is sorted.
     """
     ensembl_proteins.from_file(filename, output)
+
+
+@ensembl_group.command('coordinates')
+@click.argument('filename', default='-', type=click.File('rb'))
+@click.argument('output', default='-', type=click.File('wb'))
+def ensembl_coordinates(filename, output):
+    """
+    Turn the tsv from the ensembl query into a csv that can be imported into
+    the database.
+    """
+    ensembl_coords.from_file(filename, output)
 
 
 @cli.command('run-release')

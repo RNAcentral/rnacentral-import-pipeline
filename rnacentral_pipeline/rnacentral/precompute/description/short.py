@@ -23,12 +23,13 @@ def short_description(description, sequence):
     """
 
     species = {acc.species for acc in sequence.accessions if acc.species}
-    common = {'(%s)' % acc.common_name for acc in sequence.accessions if acc.common_name}
+    common = {u'(%s)' % acc.common_name for acc in sequence.accessions if acc.common_name}
     leading = list(species) + list(common)
 
     for name in leading:
         # This is used instead of building a regex to avoid dealing with issues
         # due to parenthesis.
+        name = name.encode('utf-8')
         if description.startswith(name):
             description = description[len(name):]
         description = description.strip()

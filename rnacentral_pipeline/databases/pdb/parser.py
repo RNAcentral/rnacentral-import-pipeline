@@ -80,7 +80,7 @@ def as_entry(row, reference_mapping):
         ncbi_tax_id=helpers.taxid(row),
         database='PDBE',
         sequence=helpers.sequence(row),
-        exons=[],
+        regions=[],
         rna_type=helpers.rna_type(row),
         url=helpers.url(row),
         seq_version='1',

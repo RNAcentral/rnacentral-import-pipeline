@@ -86,7 +86,7 @@ def gtrnadb_entries(data):
                 ncbi_tax_id=int(data['ncbi_tax_id']),
                 database='GTRNADB',
                 sequence=helpers.sequence(data),
-                exons=[],
+                regions=[],
                 rna_type='tRNA',
                 url=helpers.url(data),
                 seq_version=helpers.seq_version(data),

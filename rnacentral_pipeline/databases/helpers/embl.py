@@ -21,6 +21,13 @@ from Bio import SeqIO
 from rnacentral_pipeline.databases.data import Exon, Reference
 import rnacentral_pipeline.databases.helpers.phylogeny as phy
 
+IGNORE_FEATURES = {
+    'source',
+    'exon',
+    'STS',
+    'misc_feature',
+}
+
 
 class MissingTaxId(Exception):
     """
@@ -343,7 +350,7 @@ def transcripts(handle):
     for record in SeqIO.parse(handle, 'embl'):
         current_gene = None
         for feature in record.features:
-            if feature.type == 'source':
+            if feature.type in IGNORE_FEATURES:
                 continue
 
             if is_gene(feature):

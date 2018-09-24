@@ -5,6 +5,8 @@ Channel.fromFilePairs("files/import-metadata/rfam/*.{ctl,sql}")
   .set { rfam_files }
 
 process import_rfam_metadata {
+  echo true
+
   input:
   set file(ctl), file(sql) from rfam_files
 
@@ -18,50 +20,76 @@ process import_rfam_metadata {
   """
 }
 
+Channel.empty()
+  .mix(Channel.from(params.databases.ensembl.mysql))
+  .mix(Channel.from(params.databases.ensembl_genomes.mysql))
+  .set { ensembl_info }
+
 process find_ensembl_databases {
+  input:
+  val(mysql) from ensembl_info
+
   output:
-  stdout into ensembl_databases
+  set val(mysql), file('selected.csv') into ensembl_databases
 
   """
   echo 'show databases' |\
   mysql \
-    --host ${params.databases.ensembl.mysql.host} \
-    --port ${params.databases.ensembl.mysql.port} \
-    --user ${params.databases.ensembl.mysql.user} |\
-  max-ensembl-database
+    --host ${mysql.host} \
+    --port ${mysql.port} \
+    --user ${mysql.user} |\
+  max-ensembl-database > selected.csv
   """
 }
 
 ensembl_databases
-  .splitCsv()
-  .combine(Channel.fromPath('files/protein-info/ensembl.sql'))
-  .set { ensembl_data }
+  .flatMap { mysql, csv ->
+    data = []
+    csv.eachLine { line -> data << ([mysql] + line.tokenize(',')) }
+    data
+  }
+  .combine(Channel.fromPath('files/import-metadata/ensembl/*.sql'))
+  .map { mysql, db, sql ->
+    filename = sql.getName()
+    name = filename.take(filename.lastIndexOf('.'))
+    [mysql, name, db, sql]
+  }
+  .set { ensembl_metadata_dbs }
 
 process ensembl_protein_info {
-  maxForks params.protein_import.ensembl.max_forks
+  maxForks params.import_metadata.ensembl.max_forks
 
   input:
-  set val(db), file(sql) from ensembl_data
+  set val(mysql), val(name), val(db), file(sql) from ensembl_metadata_dbs
 
   output:
-  file('proteins.tsv') into ensembl_proteins
+  set val(name), file('data.csv') into ensembl_metadata
 
   """
   mysql -N \
-    --host ${params.databases.ensembl.mysql.host} \
-    --port ${params.databases.ensembl.mysql.port} \
-    --user ${params.databases.ensembl.mysql.user} \
+    --host ${mysql.host} \
+    --port ${mysql.port} \
+    --user ${mysql.user} \
     --database ${db} \
-    < $sql > proteins.tsv
+    < $sql > data.tsv
+  rnac ensembl $name data.tsv data.csv
   """
 }
 
-process import_ensembl_proteins {
+ensembl_metadata
+  .groupTuple()
+  .map { it -> [file("files/import-metadata/ensembl/${it[0]}.ctl"), it[1]] }
+  .set { ensembl_loadable }
+
+process import_ensembl_data {
+   echo true
+
    input:
-   file('proteins*.tsv') from ensembl_proteins.collect()
-   file(ctl) from Channel.fromPath('files/protein-info/ensembl.ctl')
+   set file(ctl), file('data*.csv') from ensembl_loadable
 
    """
-   sort proteins*.tsv | rnac proteins ensembl - - | pgloader $ctl
+   sort -u data*.csv > merged.csv
+   cp $ctl local_$ctl
+   pgloader local_$ctl
    """
 }

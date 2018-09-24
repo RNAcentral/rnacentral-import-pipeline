@@ -101,6 +101,14 @@ class PsqlWrapper(object):
         """
         self.write_command(handle, query_as_copy(sql, **kwargs))
 
+    def copy_file_to_handle(self, filename, handle):
+        options = ['-f', filename, self.pgloader_url]
+        cmd = self.psql.bound_command(*options)
+        obj = cmd.popen(stdout=handle)
+        if obj.returncode:
+            raise ValueError(obj.stderr.read())
+        obj.wait()
+
     def copy_file_to_iterable(self, filename, json=False, **kwargs):
         handler = csv_handler
         if json:

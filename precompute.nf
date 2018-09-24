@@ -50,7 +50,7 @@ process load_precomputed_data {
   afterScript 'slack db-done loading-precompute || true'
 
   input:
-  file('result*.csv') from precompute_results.collect()
+  file('precompute*.csv') from precompute_results.collect()
   file('qa*.csv') from qa_results.collect()
   file pre_ctl from Channel.fromPath('files/precompute/load.ctl')
   file qa_ctl from Channel.fromPath('files/precompute/qa.ctl')
@@ -64,8 +64,8 @@ process load_precomputed_data {
   """
   cp $pre_ctl _pre.ctl
   cp $qa_ctl _qa.ctl
-  cat result*.csv | pgloader _pre.ctl
-  cat qa*.csv | pgloader _qa.ctl
+  pgloader _pre.ctl
+  pgloader _qa.ctl
   psql -f $post "$PGDATABASE"
   """
 }

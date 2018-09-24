@@ -1,5 +1,5 @@
 LOAD CSV
-FROM stdin
+FROM ALL FILENAMES MATCHING ~<precompute.*csv$>
 HAVING FIELDS (
   id,
   upi,
@@ -62,9 +62,9 @@ insert into rnc_rna_precomputed (
   rfam_problems,
   description,
   databases,
-  has_coordinates
+  has_coordinates,
   short_description,
-  last_release,
+  last_release
 ) (
 SELECT DISTINCT
   id,
@@ -86,7 +86,9 @@ SET
   rna_type = EXCLUDED.rna_type,
   description = EXCLUDED.description,
   databases = EXCLUDED.databases,
-  has_coordinates = EXCLUDED.has_coordinates
+  has_coordinates = EXCLUDED.has_coordinates,
+  short_description = EXCLUDED.short_description,
+  last_release = EXCLUDED.last_release
 ;
 $$,
 $$

@@ -13,25 +13,35 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from Bio import SeqIO
-
 from rnacentral_pipeline.databases.helpers import embl
+
+from rnacentral_pipeline.databases.ensembl import helpers
 from rnacentral_pipeline.databases.ensembl.parser import parse
 
 
-def parse_with_family(filename):
-    family_file = 'data/rfam/families.tsv'
+def parse_with_family(filename, family_file='data/rfam/families.tsv'):
     with open(filename, 'rb') as raw:
         return list(parse(raw, family_file))
 
 
 def features(filename):
     with open(filename, 'rb') as raw:
-        return embl.transcripts(raw)
+        return list(embl.transcripts(raw))
 
 
-def feature_for(filename, transcript_id):
-    pass
+def feature_for(parsed, transcript_id):
+    result = []
+    for (_, _, feature) in parsed:
+        if helpers.transcript(feature) == transcript_id:
+            result.append(feature)
+    assert len(result) == 1
+    return result[0]
+
+
+def first_feature_for(parsed, transcript_id):
+    for (_, _, feature) in parsed:
+        if helpers.transcript(feature) == transcript_id:
+            return feature
 
 
 def entries_for(entries, accession):
