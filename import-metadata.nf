@@ -14,7 +14,7 @@ process import_rfam_metadata {
   filename = ctl.getName()
   name = filename.take(filename.lastIndexOf('.'))
   """
-  set -o pipeline
+  set -o pipefail
 
   mysql \
     --host ${params.databases.rfam.mysql.host} \
@@ -22,7 +22,7 @@ process import_rfam_metadata {
     --user ${params.databases.rfam.mysql.user} \
     --database ${params.databases.rfam.mysql.db_name} \
     < $sql > data.tsv
-    rnac rfam $name data.tsv - | pglaoder $ctl
+    rnac rfam $name data.tsv - | pgloader $ctl
   """
 }
 
