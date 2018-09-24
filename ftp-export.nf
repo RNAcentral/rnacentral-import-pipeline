@@ -63,6 +63,8 @@ process database_id_mapping {
   file '*.tsv' into __database_mappings
 
   """
+  set -o pipefail
+
   zcat id_mapping.tsv.gz | awk '{ print >> (tolower(\$2) ".tsv") }'
   """
 }
@@ -80,6 +82,8 @@ process rfam_annotations {
   file "readme.txt" into __rfam_readme
 
   """
+  set -o pipefail
+
   psql -f "$query" "$PGDATABASE" | gzip > rfam_annotations.tsv.gz
   zcat rfam_annotations.tsv.gz | head > example.txt
   cat template.txt > readme.txt
@@ -96,6 +100,8 @@ process inactive_fasta {
   file 'rnacentral_inactive.fasta.gz' into __sequences_inactive
 
   """
+  set -o pipefail
+
   export PYTHONIOENCODING=utf8
   psql -f "$query" "$PGDATABASE" | json2fasta.py - - | gzip > rnacentral_inactive.fasta.gz
   """
@@ -114,6 +120,8 @@ process active_fasta {
   file 'readme.txt' into __sequences_readme
 
   """
+  set -o pipefail
+
   export PYTHONIOENCODING=utf8
   psql -f "$query" "$PGDATABASE" | json2fasta.py - rnacentral_active.fasta
   head rnacentral_active.fasta > example.txt
@@ -137,6 +145,40 @@ process species_specific_fasta {
   """
 }
 
+process find_db_to_export {
+  input:
+  file query from Channel.fromPath('files/ftp-export/sequences/databases.sql')
+
+  output:
+  stdout into raw_dbs
+
+  """
+  psql -f "$query" "$PGDATABASE"
+  """
+}
+
+raw_dbs
+  .splitCsv()
+  .combine(Channel.fromPath('files/ftp-export/sequences/database-specific.sql'))
+  .set { db_sequences }
+
+process database_specific_fasta {
+  publishDir "${params.ftp_export.publish}/sequences/.search", mode: 'move'
+
+  input:
+  set val(db), file(query) from db_sequences
+
+  output:
+  file "${db}.fasta.gz" into __sequences_species
+
+  """
+  set -o pipefail
+
+  export PYTHONIOENCODING=utf8
+  psql -f "$query" -v db=${db} "$PGDATABASE" | json2fasta.py - - | gzip > ${db}.fasta.gz
+  """
+}
+
 active_sequences.into { nhmmer_valid; nhmmer_invalid }
 
 process extract_nhmmer_valid {
@@ -149,6 +191,8 @@ process extract_nhmmer_valid {
   file 'rnacentral_nhmmer.fasta' into __sequences_nhmmer
 
   """
+  set -o pipefail
+
   export PYTHONIOENCODING=utf8
   zcat $rna | rnac ftp-export sequences valid-nhmmer - rnacentral_nhmmer.fasta
   """
@@ -164,6 +208,8 @@ process extract_nhmmer_invalid {
   file 'rnacentral_nhmmer_excluded.fasta' into __sequences_invalid_nhmmer
 
   """
+  set -o pipefail
+
   export PYTHONIOENCODING=utf8
   zcat $rna | rnac ftp-export sequences invalid-nhmmer - rnacentral_nhmmer_excluded.fasta
   """
