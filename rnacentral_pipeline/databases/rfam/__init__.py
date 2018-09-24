@@ -19,3 +19,5 @@ from . import parser
 from . import infernal_results
 from . import helpers
 from . import utils
+from . import clans
+from . import families
