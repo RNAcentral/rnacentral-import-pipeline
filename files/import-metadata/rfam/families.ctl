@@ -39,7 +39,10 @@ WITH
 
 BEFORE LOAD DO
 $$
-create table if not exists load_rfam_models (
+drop table if exists load_rfam_models;
+$$,
+$$
+create table load_rfam_models (
     rfam_model_id character varying(20) COLLATE pg_catalog."default" NOT NULL,
     long_name character varying(200) COLLATE pg_catalog."default" NOT NULL,
     description character varying(2000) COLLATE pg_catalog."default",
@@ -53,9 +56,6 @@ create table if not exists load_rfam_models (
     short_name character varying(50) COLLATE pg_catalog."default",
     rfam_rna_type character varying(250) COLLATE pg_catalog."default"
 );
-$$,
-$$
-truncate table load_rfam_models;
 $$
 
 AFTER LOAD DO
