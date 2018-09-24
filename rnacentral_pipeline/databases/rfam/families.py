@@ -121,14 +121,20 @@ class RfamFamily(object):
             self.guess_insdc_using_rna_type()
 
     def writeable(self):
-        data = attr.asdict(self)
-        del data['so_terms']
-        data['short_name'] = data.pop('name')
-        data['long_name'] = data.pop('pretty_name')
-        data['is_suppressed'] = int(self.is_suppressed)
-        data['rfam_rna_type'] = data['rna_type']
-        data['rna_type'] = self.guess_insdc()
-        return data
+        return [
+            self.id,
+            self.name,
+            self.pretty_name,
+            self.description,
+            self.clan_id,
+            self.seed_count,
+            self.full_count,
+            self.length,
+            self.domain,
+            self.is_suppressed,
+            self.guess_insdc(),
+            self.rna_type,
+        ]
 
 
 def parse(handle):
