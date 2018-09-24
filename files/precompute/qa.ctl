@@ -1,5 +1,5 @@
 LOAD CSV
-FROM <qa.*csv$>
+FROM ALL FILENAMES MATCHING ~<qa.*csv$>
 HAVING FIELDS (
   rna_id,
   upi,
