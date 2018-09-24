@@ -191,7 +191,7 @@ class Entry(object):
             return self.location_end
         if not self.exons:
             return len(self.sequence) + 1
-        return max(e.end for e in self.exons)
+        return max(e.stop for e in self.exons)
 
     def crc64(self):
         """

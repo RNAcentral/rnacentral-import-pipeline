@@ -41,7 +41,7 @@ where
 ;
 
 -- Delete all regions and exons where there are no providing databases
-DELETE from rnc_sequence_regions where providing_databases = '{}';
+DELETE from rnc_sequence_regions where and was_mapped = false and providing_databases = '{}';
 
 -- Delete all mapped locations that have the same region_name/assembly as a
 -- known location. It is possible that the overall region has the same endpoints

@@ -40,7 +40,7 @@ for (entry in params.import_data.databases) {
   if (name == "custom") {
     raw_output.mix(Channel.fromPath("${base}/**.csv")).flatten().set { raw_output }
   } else if (database.containsKey('remote') && database.remote) {
-    db_channel = Channel.value([name, database.remote, database.pattern])
+    db_channel = Channel.value([name, database])
     to_fetch.mix(db_channel).set { to_fetch }
   } else {
     dataless_imports.mix(Channel.from(name)).set { dataless_imports }
@@ -64,14 +64,27 @@ raw_output.mix(raw_dataless_output).set { raw_output }
 
 process fetch_data {
   input:
-  set val(name), val(remote), val(pattern) from to_fetch
+  set val(name), val(database) from to_fetch
 
   output:
   set val(name), file("${pattern}") into fetched
 
   script:
+  pattern = database.pattern
+  find_cmd = []
+  for (pattern in database.get('excluded_patterns', [])) {
+    find_cmd << "-name '${pattern}'"
+  }
+
+  if (find_cmd.size) {
+    find_cmd = "find . ${find_cmd.join(' ')} | xargs rm"
+  } else {
+    find_cmd = ''
+  }
+
   """
-  fetch $remote $pattern
+  fetch ${database.remote} $pattern
+  ${find_cmd}
   """
 }
 
@@ -220,28 +233,16 @@ process merge_and_import {
 }
 
 process release {
-  maxForks 1
-
-  input:
-  file('*.ctl') from loaded.collect()
-  file('post*.ctl') from Channel.fromPath('files/import-data/post/*.sql').collect()
-
-  output:
-  file('post*.ctl') into post_sql mode flatten
-
-  """
-  rnac run-release
-  """
-}
-
-process post_release {
   echo true
   maxForks 1
 
   input:
-  file(post) from post_sql
+  file('*.ctl') from loaded.collect()
+  file(post) from Channel.fromPath('files/import-data/release/post/*.sql').collect()
 
   """
-  psql -f $post "$PGDATABASE"
+  rnac run-release
+  find . -name '*.sql' -print0 | sort -z | xargs -r0 cat > post-command
+  psql -f post-command "$PGDATABASE"
   """
 }
