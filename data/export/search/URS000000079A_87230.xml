@@ -3,7 +3,7 @@
 <description>Botrytis tulipae partial 18S ribosomal RNA</description>
 <dates>
 <date value="29 May 2014" type="first_seen" />
-<date value="12 Jun 2018" type="last_seen" />
+<date value="02 Aug 2018" type="last_seen" />
 </dates>
 <cross_references>
 <ref dbname="ENA" dbkey="AM233399.1" />
@@ -28,10 +28,12 @@
 <field name="pub_id">231497</field>
 <field name="pub_id">269757</field>
 <field name="boost">0.5</field>
-<field name="rfam_problems">missing_match</field>
+<field name="rfam_problems">missing_rfam_match</field>
 <field name="rfam_problem_found">True</field>
 <field name="tax_string">Eukaryota; Fungi; Dikarya; Ascomycota; Pezizomycotina; Leotiomycetes; Helotiales; Sclerotiniaceae; Botrytis; Botrytis tulipae</field>
 <field name="has_go_annotations">False</field>
 <field name="go_annotation_source">Not Available</field>
+<field name="has_interacting_proteins">False</field>
+<field name="has_conserved_structure">False</field>
 </additional_fields>
 </entry>

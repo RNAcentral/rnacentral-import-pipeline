@@ -1,5 +1,5 @@
 LOAD CSV
-FROM stdin
+FROM ALL FILENAMES MATCHING ~<data.*csv$>
 HAVING FIELDS (
   protein_accession,
   description,
@@ -38,7 +38,7 @@ insert into protein_info (
   label,
   synonyms
 ) (
-select
+select distinct
   protein_accession,
   description,
   label,
@@ -56,3 +56,4 @@ $$
 drop table load_protein_info;
 $$
 ;
+

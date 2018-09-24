@@ -24,7 +24,7 @@ from rnacentral_pipeline.databases.helpers import publications as pub
 from rnacentral_pipeline.databases.generic import v1
 
 
-@pytest.mark.parametrize('filename,taxids', [
+@pytest.mark.parametrize('filename,taxids', [  # pylint: disable=no-member
     ('data/json-schema/v020/flybase.json', [7227, 7227, 7227, 7227, 7227]),
     ('data/json-schema/v020/flybase-scaRNA.json', [7227]),
     ('data/json-schema/v020/lincipedia.json', [9606]),
@@ -36,8 +36,9 @@ def test_can_extract_taxid(filename, taxids):
         assert [v1.taxid(e) for e in data] == taxids
 
 
-@pytest.mark.parametrize('filename,xrefs', [
-    ('data/json-schema/v020/lincipedia.json', [{"NONCODE": ["NONHSAT050743"]}]),
+@pytest.mark.parametrize('filename,xrefs', [  # pylint: disable=no-member
+    ('data/json-schema/v020/lincipedia.json',
+     [{"NONCODE": ["NONHSAT050743"]}]),
 ])
 def test_can_generate_xref_data(filename, xrefs):
     with open(filename, 'r') as raw:
@@ -45,12 +46,12 @@ def test_can_generate_xref_data(filename, xrefs):
         assert [v1.xrefs(e) for e in data] == xrefs
 
 
-@pytest.mark.skip()
+@pytest.mark.skip()  # pylint: disable=no-member
 def test_can_extract_anticodon():
     pass
 
 
-@pytest.mark.parametrize('filename,count', [
+@pytest.mark.parametrize('filename,count', [  # pylint: disable=no-member
     ('data/json-schema/v020/flybase.json', 5),
     ('data/json-schema/v020/lincipedia.json', 1),
     ('data/json-schema/v020/tarbase.json', 1),
@@ -73,14 +74,62 @@ def test_can_correctly_parse_data():
         accession='FLYBASE:FBtr0346876',
         ncbi_tax_id=7227,
         database='FLYBASE',
-        sequence="TTATATACAACCTCAACTCATATGGGACTACCCCCTGAATTTAAGCATATTAATTAGGGGAGGAAAAGAAACTAACAAGGATTTTCTTAGTAGCGGCGAGCGAAAAGAAAACAGTTCAGCACTAAGTCACTTTGTCTATATGGCAAATGTGAGATGCAGTGTATGGAGCGTCAATATTCTAGTATGAGAAATTAACGATTTAAGTCCTTCTTAAATGAGGCCATTTACCCATAGAGGGTGCCAGGCCCGTATAACGTTAATGATTACTAGATGATGTTTCCAAAGAGTCGTGTTGCTTGATAGTGCAGCACTAAGTGGGTGGTAAACTCCATCTAAAACTAAATATAACCATGAGACCGATAGTAAACAAGTACCGTGAGGGAAAGTTGAAAAGAACTCTGAATAGAGAGTTAAACAGTACGTGAAACTGCTTAGAGGTTAAGCCCGATGAACCTGAATATCCGTTATGGAAAATTCATCATTAAAATTGTAATATTTAAATAATATTATGAGAATAGTGTGCATTTTTTCCATATAAGGACATTGTAATCTATTAGCATATACCAAATTTATCATAAAATATAACTTATAGTTTATTCCAATTAAATTGCTTGCATTTTAACACAGAATAAATGTTATTAATTTGATAAAGTGCTGATAGATTTATATGATTACAGTGCGTTAATTTTTCGGAATTATATAATGGCATAATTATCATTGATTTTTGTGTTTATTATATGCACTTGTATGATTAACAATGCGAAAGATTCAGGATACCTTCGGGACCCGTCTTGAAACACGGACCAAGGAGTCTAACATATGTGCAAGTTATTGGGATATAAACCTAATAGCGTAATTAACTTGACTAATAATGGGATTAGTTTTTTAGCTATTTATAGCTGCTAATTAACACAATCCCGGGGCGTTCTATATAGTTATGTATAATGTATATTTATATTATTTATGCCTCTAACTGGAACGTACCTTGAGCATATATGCTGTGACCCGAAAGATGGTGAACTATACTTGATCAGGTTGAAGTCAGGGGAAACCCTGATGGAAGACCGAAACAGTTCTGACGTGCAAATCGATTGTCAGAATTGAGTATAGGGGCGAAAGACCAATCGAACCATCTAGTAGCTGGTTCCTTCCGAAGTTTCCCTCAGGATAGCTGGTGCATTTTAATATTATATAAAATAATCTTATCTGGTAAAGCGAATGATTAGAGGCCTTAGGGTCGAAACGATCTTAACCTATTCTCAAACTTTAAATGGGTAAGAACCTTAACTTTCTTGATATGAAGTTCAAGGTTATGATATAATGTGCCCAGTGGGCCACTTTTGGTAAGCAGAACTGGCGCTGTGGGATGAACCAAACGTAATGTTACGGTGCCCAAATTAACAACTCATGCAGATACCATGAAAGGCGTTGGTTGCTTAAAACAGCAGGACGGTGATCATGGAAGTCGAAATCCGCTAAGGAGTGTGTAACAACTCACCTGCCGAAGCAACTAGCCCTTAAAATGGATGGCGCTTAAGTTGTATACCTATACATTACCGCTAAAGTAGATGATTTATATTACTTGTGATATAAATTTTGAAACTTTAGTGAGTAGGAAGGTACAATGGTATGCGTAGAAGTGTTTGGCGTAAGCCTGCATGGAGCTGCCATTGGTACAGATCTTGGTGGTAGTAGCAAATAATCGAATGAGACCTTGGAGGACTGAAGTGGAGAAGGGTTTCGTGTGAACAGTGGTTGATCACGAGTTAGTCGGTCCTAAGTTCAAGGCGAAAGCCGAAAATTTTCAAGTAAAACAAAAATGCCTAACTATATAAACAAAGCGAATTATAATACACTTGAATAATTTTGAACGAAAGGGAATACGGTTCCAATTCCGTAACCTGTTGAGTATCCGTTTGTTATTAAATATGGGCCTCGTGCTCATCCTGGCAACAGGAACGACCATAAAGAAGCCGTCGAGAGATATCGGAAGAGTTTTCTTTTCTGTTTTATAGCCGTACTACCATGGAAGTCTTTCGCAGAGAGATATGGTAGATGGGCTAGAAGAGCATGACATATACTGTTGTGTCGATATTTTCTCCTCGGACCTTGAAAATTTATGGTGGGGACACGCAAACTTCTCAACAGGCCGTACCAATATCCGCAGCTGGTCTCCAAGGTGAAGAGTCTCTAGTCGATAGAATAATGTAGGTAAGGGAAGTCGGCAAATTAGATCCGTAACTTCGGGATAAGGATTGGCTCTGAAGATTGAGATAGTCGGGCTTGATTGGGAAACAATAACATGGTTTATGTGCTCGTTCTGGGTAAATAGAGTTTCTAGCATTTATGTTAGTTACTTGTTCCCCGGATAGTTTAGTTACGTAGCCAATTGTGGAACTTTCTTGCTAAAATTTTTAAGAATACTATTTGGGTTAAACCAATTAGTTCTTATTAATTATAACGATTATCAATTAACAATCAATTCAGAACTGGCACGGACTTGGGGAATCCGACTGTCTAATTAAAACAAAGCATTGTGATGGCCCTAGCGGGTGTTGACACAATGTGATTTCTGCCCAGTGCTCTGAATGTCAAAGTGAAGAAATTCAAGTAAGCGCGGGTCAACGGCGGGAGTAACTATGACTCTCTTAAGGTAGCCAAATGCCTCGTCATCTAATTAGTGACGCGCATGAATGGATTAACGAGATTCCTACT",
-        exons=[dat.Exon(
-            chromosome_name='rDNA',
-            primary_start=46772,
-            primary_end=49485,
-            assembly_id="R6",
-            complement=False,
-        )],
+        sequence=(
+            'TTATATACAACCTCAACTCATATGGGACTACCCCCTGAATTTAAGCATATTAATTAGGGG'
+            'AGGAAAAGAAACTAACAAGGATTTTCTTAGTAGCGGCGAGCGAAAAGAAAACAGTTCAGC'
+            'ACTAAGTCACTTTGTCTATATGGCAAATGTGAGATGCAGTGTATGGAGCGTCAATATTCT'
+            'AGTATGAGAAATTAACGATTTAAGTCCTTCTTAAATGAGGCCATTTACCCATAGAGGGTG'
+            'CCAGGCCCGTATAACGTTAATGATTACTAGATGATGTTTCCAAAGAGTCGTGTTGCTTGA'
+            'TAGTGCAGCACTAAGTGGGTGGTAAACTCCATCTAAAACTAAATATAACCATGAGACCGA'
+            'TAGTAAACAAGTACCGTGAGGGAAAGTTGAAAAGAACTCTGAATAGAGAGTTAAACAGTA'
+            'CGTGAAACTGCTTAGAGGTTAAGCCCGATGAACCTGAATATCCGTTATGGAAAATTCATC'
+            'ATTAAAATTGTAATATTTAAATAATATTATGAGAATAGTGTGCATTTTTTCCATATAAGG'
+            'ACATTGTAATCTATTAGCATATACCAAATTTATCATAAAATATAACTTATAGTTTATTCC'
+            'AATTAAATTGCTTGCATTTTAACACAGAATAAATGTTATTAATTTGATAAAGTGCTGATA'
+            'GATTTATATGATTACAGTGCGTTAATTTTTCGGAATTATATAATGGCATAATTATCATTG'
+            'ATTTTTGTGTTTATTATATGCACTTGTATGATTAACAATGCGAAAGATTCAGGATACCTT'
+            'CGGGACCCGTCTTGAAACACGGACCAAGGAGTCTAACATATGTGCAAGTTATTGGGATAT'
+            'AAACCTAATAGCGTAATTAACTTGACTAATAATGGGATTAGTTTTTTAGCTATTTATAGC'
+            'TGCTAATTAACACAATCCCGGGGCGTTCTATATAGTTATGTATAATGTATATTTATATTA'
+            'TTTATGCCTCTAACTGGAACGTACCTTGAGCATATATGCTGTGACCCGAAAGATGGTGAA'
+            'CTATACTTGATCAGGTTGAAGTCAGGGGAAACCCTGATGGAAGACCGAAACAGTTCTGAC'
+            'GTGCAAATCGATTGTCAGAATTGAGTATAGGGGCGAAAGACCAATCGAACCATCTAGTAG'
+            'CTGGTTCCTTCCGAAGTTTCCCTCAGGATAGCTGGTGCATTTTAATATTATATAAAATAA'
+            'TCTTATCTGGTAAAGCGAATGATTAGAGGCCTTAGGGTCGAAACGATCTTAACCTATTCT'
+            'CAAACTTTAAATGGGTAAGAACCTTAACTTTCTTGATATGAAGTTCAAGGTTATGATATA'
+            'ATGTGCCCAGTGGGCCACTTTTGGTAAGCAGAACTGGCGCTGTGGGATGAACCAAACGTA'
+            'ATGTTACGGTGCCCAAATTAACAACTCATGCAGATACCATGAAAGGCGTTGGTTGCTTAA'
+            'AACAGCAGGACGGTGATCATGGAAGTCGAAATCCGCTAAGGAGTGTGTAACAACTCACCT'
+            'GCCGAAGCAACTAGCCCTTAAAATGGATGGCGCTTAAGTTGTATACCTATACATTACCGC'
+            'TAAAGTAGATGATTTATATTACTTGTGATATAAATTTTGAAACTTTAGTGAGTAGGAAGG'
+            'TACAATGGTATGCGTAGAAGTGTTTGGCGTAAGCCTGCATGGAGCTGCCATTGGTACAGA'
+            'TCTTGGTGGTAGTAGCAAATAATCGAATGAGACCTTGGAGGACTGAAGTGGAGAAGGGTT'
+            'TCGTGTGAACAGTGGTTGATCACGAGTTAGTCGGTCCTAAGTTCAAGGCGAAAGCCGAAA'
+            'ATTTTCAAGTAAAACAAAAATGCCTAACTATATAAACAAAGCGAATTATAATACACTTGA'
+            'ATAATTTTGAACGAAAGGGAATACGGTTCCAATTCCGTAACCTGTTGAGTATCCGTTTGT'
+            'TATTAAATATGGGCCTCGTGCTCATCCTGGCAACAGGAACGACCATAAAGAAGCCGTCGA'
+            'GAGATATCGGAAGAGTTTTCTTTTCTGTTTTATAGCCGTACTACCATGGAAGTCTTTCGC'
+            'AGAGAGATATGGTAGATGGGCTAGAAGAGCATGACATATACTGTTGTGTCGATATTTTCT'
+            'CCTCGGACCTTGAAAATTTATGGTGGGGACACGCAAACTTCTCAACAGGCCGTACCAATA'
+            'TCCGCAGCTGGTCTCCAAGGTGAAGAGTCTCTAGTCGATAGAATAATGTAGGTAAGGGAA'
+            'GTCGGCAAATTAGATCCGTAACTTCGGGATAAGGATTGGCTCTGAAGATTGAGATAGTCG'
+            'GGCTTGATTGGGAAACAATAACATGGTTTATGTGCTCGTTCTGGGTAAATAGAGTTTCTA'
+            'GCATTTATGTTAGTTACTTGTTCCCCGGATAGTTTAGTTACGTAGCCAATTGTGGAACTT'
+            'TCTTGCTAAAATTTTTAAGAATACTATTTGGGTTAAACCAATTAGTTCTTATTAATTATA'
+            'ACGATTATCAATTAACAATCAATTCAGAACTGGCACGGACTTGGGGAATCCGACTGTCTA'
+            'ATTAAAACAAAGCATTGTGATGGCCCTAGCGGGTGTTGACACAATGTGATTTCTGCCCAG'
+            'TGCTCTGAATGTCAAAGTGAAGAAATTCAAGTAAGCGCGGGTCAACGGCGGGAGTAACTA'
+            'TGACTCTCTTAAGGTAGCCAAATGCCTCGTCATCTAATTAGTGACGCGCATGAATGGATT'
+            'AACGAGATTCCTACT'
+        ),
+        regions=[
+            dat.SequenceRegion(
+                chromosome='rDNA',
+                strand=1,
+                exons=[dat.Exon(start=46772, stop=49485)],
+                assembly_id="R6",
+            ),
+        ],
         rna_type='rRNA',
         url='http://flybase.org/reports/FBtr0346876.html',
         seq_version='1',
@@ -98,7 +147,6 @@ def test_can_correctly_parse_data():
         ),
         gene='FBgn0267497',
         locus_tag='Dmel_CR45837',
-        parent_accession='CP007120',
         description='Drosophila melanogaster (fruit fly) 28S ribosomal RNA:CR45837',
         gene_synonyms=["CR45837"],
     ))
@@ -109,7 +157,7 @@ def test_can_correctly_parse_lncipedia_data():
         data = json.load(raw)
         data = list(v1.parse(data))
 
-    assert len(data) == 2
+    assert len(data) == 1
     assert attr.asdict(data[0]) == attr.asdict(dat.Entry(
         primary_id='lnc-CLEC18B-3:5',
         accession='LNCIPEDIA:lnc-CLEC18B-3:5',
@@ -134,11 +182,29 @@ def test_can_correctly_parse_lncipedia_data():
             "TGCTTTGGGAAACTGCCCCAGCTGTCCTCCTTACTTGTTGTAGGTAATAAAATCCCTTTG"
             "TTAAATC"
         ),
-        exons=[
-            dat.Exon(chromosome_name='16', primary_start=74226291, primary_end=74226625, assembly_id='GRCh37', complement=True),
-            dat.Exon(chromosome_name='16', primary_start=74239804, primary_end=74240064, assembly_id='GRCh37', complement=True),
-            dat.Exon(chromosome_name='16', primary_start=74244205, primary_end=74244404, assembly_id='GRCh37', complement=True),
-            dat.Exon(chromosome_name='16', primary_start=74249251, primary_end=74249420, assembly_id='GRCh37', complement=True),
+        regions=[
+            dat.SequenceRegion(
+                chromosome='16',
+                strand=-1,
+                exons=[
+                    dat.Exon(start=74226291, stop=74226625),
+                    dat.Exon(start=74239804, stop=74240064),
+                    dat.Exon(start=74244205, stop=74244404),
+                    dat.Exon(start=74249251, stop=74249420),
+                ],
+                assembly_id='GRCh37',
+            ),
+            dat.SequenceRegion(
+                chromosome='16',
+                strand=-1,
+                exons=[
+                    dat.Exon(start=74192392, stop=74192726),
+                    dat.Exon(start=74205905, stop=74206165),
+                    dat.Exon(start=74210306, stop=74210505),
+                    dat.Exon(start=74215352, stop=74215521),
+                ],
+                assembly_id="GRCh38",
+            ),
         ],
         rna_type='SO:0001877',
         url='https://lncipedia.org/db/transcript/lnc-CLEC18B-3:5',
@@ -187,7 +253,7 @@ def test_can_correctly_parse_mirbase_data():
             "TCTTTTGGGCGGGGGTCAAGAGCAATAACGAAAAATGTTTGTTTTTCGTAAACCGTTTTT"
             "CATTATTGCTCCTGACCTCCTCTCATTTGTTATAGCCA"
         ),
-        exons=[],
+        regions=[],
         rna_type='SO:0001244',
         url='http://www.mirbase.org/cgi-bin/mirna_entry.pl?acc=MI0000612',
         seq_version='1',
@@ -216,6 +282,7 @@ def test_can_correctly_parse_mirbase_data():
         )]
     ))
 
+
 def test_can_correct_fetch_related_sequences():
     with open('data/json-schema/v020/tarbase.json', 'r') as raw:
         data = json.load(raw)
@@ -228,7 +295,7 @@ def test_can_correct_fetch_related_sequences():
         ncbi_tax_id=9606,
         database='TARBASE',
         sequence="AAGATGTGGAAAAATTGGAATC",
-        exons=[],
+        regions=[],
         rna_type="SO:0000276",
         url="http://carolina.imis.athena-innovation.gr/diana_tools/web/index.php?r=tarbasev8%2Findex&miRNAs%5B%5D=hsa-miR-576-3p",
         seq_version='1',
@@ -688,21 +755,16 @@ dat.RelatedSequence(sequence_id="ENSEMBL:ENSG00000277443", relationship="target"
         ]
     ))
 
+
 def test_can_correctly_find_isoforms():
-    with open('data/json-schema/v020/lncipedia-with-isoforms.json', 'r') as raw:
+    filename = 'data/json-schema/v020/lncipedia-with-isoforms.json'
+    with open(filename, 'r') as raw:
         data = json.load(raw)
         data = list(v1.parse(data))
 
     assert len(data) == 5
     data = [d for d in data if d.accession == "LNCIPEDIA:LINC01725:19"]
     assert len(data) == 1
-    # from pprint import pprint
-    # pprint(data[0].exons)
-    # pprint([
-    #     dat.Exon(chromosome_name='1', primary_start=83801516, primary_end=83803251, assembly_id='GRCh38', complement=True),
-    #     dat.Exon(chromosome_name='1', primary_start=83849907, primary_end=83850022, assembly_id='GRCh38', complement=True),
-    #     dat.Exon(chromosome_name='1', primary_start=83860408, primary_end=83860546, assembly_id='GRCh38', complement=True),
-    # ])
 
     assert attr.asdict(data[0]) == attr.asdict(dat.Entry(
         primary_id="LINC01725:19",
@@ -745,16 +807,22 @@ def test_can_correctly_find_isoforms():
             "CAGCCCTGGGTGAAGCCTCTGTGAGGTCCAGCTGACTACTTCATTCTCATAAATACTTTC"
             "TTTGAAATCTC"
         ),
-        exons=[
-            dat.Exon(chromosome_name='1', primary_start=83801516, primary_end=83803251, assembly_id='GRCh38', complement=True),
-            dat.Exon(chromosome_name='1', primary_start=83849907, primary_end=83850022, assembly_id='GRCh38', complement=True),
-            dat.Exon(chromosome_name='1', primary_start=83860408, primary_end=83860546, assembly_id='GRCh38', complement=True),
+        regions=[
+            dat.SequenceRegion(
+                chromosome='1',
+                strand='-1',
+                exons=[
+                    dat.Exon(start=83801516, stop=83803251),
+                    dat.Exon(start=83849907, stop=83850022),
+                    dat.Exon(start=83860408, stop=83860546),
+                ],
+                assembly_id='GRCh38',
+            ),
         ],
         rna_type='SO:0001877',
         url="https://lncipedia.org/db/transcript/LINC01725:19",
         seq_version='1',
 
-        parent_accession='CM000663',
         xref_data={"NONCODE": ["NONHSAT004171"]},
 
         gene="LINC01725",
@@ -797,7 +865,6 @@ def test_can_correctly_find_isoforms():
             ),
         ]
     ))
-
 
 
 def test_it_treats_flybase_scaRNA_correctly():

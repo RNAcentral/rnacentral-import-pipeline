@@ -145,6 +145,16 @@ class DatabaseSpecifcNameBuilder(object):
         updated = []
         for accession in accessions:
             gene = accession.optional_id
+            if not gene and accession.description.endswith('stem-loop'):
+                gene = accession.description.split(' ')[-2]
+            if not gene and accession.description.endswith('stem loop'):
+                gene = accession.description.split(' ')[-3]
+            if not gene:
+                last = accession.description.split(' ')[-1]
+                if last.endswith('-3p') or last.endswith('-5p'):
+                    last = last[:-4]
+                if re.match('^.*-mir-\d+$', last, re.IGNORECASE):
+                    gene = last
             match = re.match(r'^([^-]+?-mir-[^-]+)(.+)?$', gene)
             name = accession.description
             if match:

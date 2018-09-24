@@ -24,110 +24,106 @@ from rnacentral_pipeline.databases.rfam.parser import parse
 
 
 def test_it_labels_y_rna_correctly():
-    with open('data/rfam/families.tsv') as raw:
-        mapping = utils.id_to_insdc_type(raw)
+    with open('data/rfam/families.tsv') as mapping_handle:
+        mapping = utils.id_to_insdc_type(mapping_handle)
 
-    assert as_entry({
-        "lineage": (
-            "Eukaryota Metazoa Chordata Craniata Vertebrata Chondrichthyes "
-            "Holocephali Chimaeriformes Callorhinchidae Callorhinchus."
-        ),
-        "primary_id": "RF00019",
-        "is_seed": "1",
-        "feature_type": "ncRNA",
-        "feature_location_end": "328",
-        "feature_location_start": "220",
-        "ontology": [
-            "SO:0000405"
-        ],
-        "sequence": (
-            "GGCCGGTCCGATGGTAGTGGGTTATCGTTGATATTTGCTTACAGAGTCAGTTACAG"
-            "ATTTCCTTGTTCTCTCTTCCCCCCTTCTCACTGCTTCACTTGACTGGTCCTTT"
-        ),
-        "ncbi_tax_id": "7868",
-        "seq_version": "1",
-        "ncrna_class": "other",
-        "common_name": "Ghost shark",
-        "references": [
-            "10606662",
-            "7489501",
-            "10766734",
-            "18087752"
-        ],
-        "species": "Callorhinchus milii",
-        "optional_id": "Y_RNA",
-        "parent_accession": "AAVX01633839",
-        "description": "Y RNA"
-    }, mapping).rna_type == 'Y_RNA'
+        assert as_entry({
+            "lineage": (
+                "Eukaryota Metazoa Chordata Craniata Vertebrata Chondrichthyes"
+                " Holocephali Chimaeriformes Callorhinchidae Callorhinchus."
+            ),
+            "primary_id": "RF00019",
+            "is_seed": "1",
+            "feature_type": "ncRNA",
+            "feature_location_end": "328",
+            "feature_location_start": "220",
+            "ontology": [
+                "SO:0000405"
+            ],
+            "sequence": (
+                "GGCCGGTCCGATGGTAGTGGGTTATCGTTGATATTTGCTTACAGAGTCAGTTACAG"
+                "ATTTCCTTGTTCTCTCTTCCCCCCTTCTCACTGCTTCACTTGACTGGTCCTTT"
+            ),
+            "ncbi_tax_id": "7868",
+            "seq_version": "1",
+            "ncrna_class": "other",
+            "common_name": "Ghost shark",
+            "references": [
+                "10606662",
+                "7489501",
+                "10766734",
+                "18087752"
+            ],
+            "species": "Callorhinchus milii",
+            "optional_id": "Y_RNA",
+            "parent_accession": "AAVX01633839",
+            "description": "Y RNA"
+        }, mapping).rna_type == 'Y_RNA'
 
 
 def test_it_parses_all_data():
-    with open('data/rfam/families.tsv') as raw:
-        mapping = utils.id_to_insdc_type(raw)
-    with open('data/rfam.json') as handle:
-        assert len(list(parse(handle, mapping))) == 1000
+    with open('data/rfam/families.tsv') as mapping_handle, \
+            open('data/rfam/rfam.json') as handle:
+        assert len(list(parse(handle, mapping_handle))) == 1000
 
 
 def test_it_builds_first_entry_correctly():
-    with open('data/rfam/families.tsv') as raw:
-        mapping = utils.id_to_insdc_type(raw)
-
-    with open('data/rfam.json') as handle:
-        assert attr.asdict(next(parse(handle, mapping))) == attr.asdict(Entry(
-            primary_id='RF00005',
-            accession='KK113858.1:230594..230666:rfam',
-            ncbi_tax_id=407821,
-            database='RFAM',
-            sequence=(
-                "GCCTTCGTGGTGTAGTGGTCAGCACACTTGACGCGTAACCGAGAGGTCCGTGGTTCGATTCTCG"
-                "GTGAAGGTG"
-            ),
-            exons=[],
-            rna_type='tRNA',
-            url='http://rfam.org/family/RF00005',
-            note_data={
-                "Alignment": "full",
-                "SO": ["SO:0000253"],
-                "GO": ["GO:0030533"],
-            },
-            species="Stegodyphus mimosarum",
-            lineage=(
-                "Eukaryota; Metazoa; Arthropoda; Chelicerata; Arachnida; Araneae; "
-                "Araneomorphae; Entelegynae; Eresoidea; Eresidae; Stegodyphus; "
-                "Stegodyphus mimosarum"
-            ),
-            references=[Reference(
-                authors=(
-                    'Nawrocki E.P., Burge S.W., Bateman A., Daub J., '
-                    'Eberhardt R.Y., Eddy S.R., Floden E.W., Gardner P.P., '
-                    'Jones T.A., Tate J., Finn R.D.'
+    with open('data/rfam/families.tsv') as mapping_handle, \
+            open('data/rfam/rfam.json') as handle:
+        assert attr.asdict(next(parse(handle, mapping_handle))) == \
+            attr.asdict(Entry(
+                primary_id='RF00005',
+                accession='KK113858.1:230594..230666:rfam',
+                ncbi_tax_id=407821,
+                database='RFAM',
+                sequence=(
+                    "GCCTTCGTGGTGTAGTGGTCAGCACACTTGACGCGTAACCGAGAGGTCCGTGGTTCGATTCTCG"
+                    "GTGAAGGTG"
                 ),
-                location='Nucleic Acids Res. 2015 Jan;43(Database issue):D130-7',
-                title='Rfam 12.0: updates to the RNA families database',
-                pmid=25392425,
-                doi='10.1093/nar/gku1063',
-            )],
-            common_name='',
-            optional_id='tRNA',
-            parent_accession="KK113858",
-            project='RFAM',
-            description='Stegodyphus mimosarum tRNA',
-            mol_type='full',
-            is_composite='N',
-            location_start=230594,
-            location_end=230666,
-            experiment="8256282 9023104",
-            seq_version='1',
-            product='tRNA',
-        ))
+                regions=[],
+                rna_type='tRNA',
+                url='http://rfam.org/family/RF00005',
+                note_data={
+                    "Alignment": "full",
+                    "SO": ["SO:0000253"],
+                    "GO": ["GO:0030533"],
+                },
+                species="Stegodyphus mimosarum",
+                lineage=(
+                    "Eukaryota; Metazoa; Arthropoda; Chelicerata; Arachnida; Araneae; "
+                    "Araneomorphae; Entelegynae; Eresoidea; Eresidae; Stegodyphus; "
+                    "Stegodyphus mimosarum"
+                ),
+                references=[Reference(
+                    authors=(
+                        'Nawrocki E.P., Burge S.W., Bateman A., Daub J., '
+                        'Eberhardt R.Y., Eddy S.R., Floden E.W., Gardner P.P.,'
+                        ' Jones T.A., Tate J., Finn R.D.'
+                    ),
+                    location='Nucleic Acids Res. 2015 Jan;43(Database issue):D130-7',
+                    title='Rfam 12.0: updates to the RNA families database',
+                    pmid=25392425,
+                    doi='10.1093/nar/gku1063',
+                )],
+                common_name='',
+                optional_id='tRNA',
+                parent_accession="KK113858",
+                project='RFAM',
+                description='Stegodyphus mimosarum tRNA',
+                mol_type='full',
+                is_composite='N',
+                location_start=230594,
+                location_end=230666,
+                experiment="8256282 9023104",
+                seq_version='1',
+                product='tRNA',
+            ))
 
 
 def test_it_can_parse_with_similar_accessions_correctly():
-    with open('data/rfam/families.tsv') as raw:
-        mapping = utils.id_to_insdc_type(raw)
-
-    with open('data/rfam-duplicates.json') as handle:
-        data = list(parse(handle, mapping))
+    with open('data/rfam/families.tsv') as mapping_handle, \
+            open('data/rfam/rfam-duplicates.json') as handle:
+        data = list(parse(handle, mapping_handle))
     assert len(data) == 2
     assert data[0].accession == 'CM000677.2:93286238..93286321:rfam'
     assert data[1].accession == 'CM000677.2:93286321..93286238:rfam'
