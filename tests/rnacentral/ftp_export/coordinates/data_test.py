@@ -13,7 +13,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import attr
+
 import pytest
+
+from rnacentral_pipeline.ftp_export.coordinates import data
 
 from .helpers import fetch_coord, fetch_all
 
@@ -63,29 +67,29 @@ def test_can_find_all_required_coordinates(assembly, count):
 #     assert any(c for c in coords if c.rna_id == rna_id)
 
 
-# def test_can_build_correct_data_for_known():
-#     found = fetch_one('URS0000A78C33_9606', 'GRCh38')
+def test_can_build_correct_data_for_known():
+    found = fetch_one('URS0000A78C33_9606', 'GRCh38')
 
-#     assert found.regions[0].start == 5126
-#     assert found.regions[0].stop == 50017
-#     assert found.regions[0].region_id == 'URS0000A78C33_9606@CHR_HSCHR5_1_CTG1/5126-50017:+'
-#     assert attr.asdict(found) == attr.asdict(data.LocatedSequence(
-#         rna_id='URS0000A78C33_9606',
-#         rna_type='lncRNA',
-#         databases=["Ensembl", "GENCODE"],
-#         regions=[
-#             data.Region(
-#                 rna_id='URS0000A78C33_9606',
-#                 chromosome='CHR_HSCHR5_1_CTG1',
-#                 strand=1,
-#                 endpoints=(
-#                     data.Endpoint(start=5126, stop=5218),
-#                     data.Endpoint(start=49916, stop=50017),
-#                 ),
-#                 source='expert-database',
-#             ),
-#         ],
-#     ))
+    assert found.regions[0].start == 5126
+    assert found.regions[0].stop == 50017
+    assert found.regions[0].region_id == 'URS0000A78C33_9606@CHR_HSCHR5_1_CTG1/5126-50017:+'
+    assert attr.asdict(found) == attr.asdict(data.LocatedSequence(
+        rna_id='URS0000A78C33_9606',
+        rna_type='lncRNA',
+        databases=["Ensembl", "GENCODE"],
+        regions=[
+            data.Region(
+                rna_id='URS0000A78C33_9606',
+                chromosome='CHR_HSCHR5_1_CTG1',
+                strand=1,
+                endpoints=(
+                    data.Endpoint(start=5126, stop=5218),
+                    data.Endpoint(start=49916, stop=50017),
+                ),
+                source='expert-database',
+            ),
+        ],
+    ))
 
 
 # def test_can_build_correct_data_for_both_mapped_and_known():
@@ -116,79 +120,113 @@ def test_can_find_all_required_coordinates(assembly, count):
 #     assert attr.asdict(found) == attr.asdict(ans)
 
 
-# def test_can_build_for_only_mapped():
-#     found = fetch_one('URS000012C1C6_9606', 'GRCh38')
+def test_can_build_for_only_mapped():
+    found = fetch_one('URS000012C1C6_9606', 'GRCh38')
 
-#     ans = data.LocatedSequence(
-#         rna_id='URS000012C1C6_9606',
-#         rna_type='piRNA',
-#         databases=['ENA'],
-#         regions=[
-#             data.Region(
-#                 rna_id='URS000012C1C6_9606',
-#                 chromosome='1',
-#                 strand=1,
-#                 endpoints=(data.Endpoint(start=165777430, stop=165777459),),
-#                 source='alignment',
-#                 identity=1.0
-#             ),
-#             data.Region(
-#                 rna_id='URS000012C1C6_9606',
-#                 chromosome='3',
-#                 strand=-1,
-#                 endpoints=(data.Endpoint(start=163618677, stop=163618706),),
-#                 source='alignment',
-#                 identity=1.0
-#             ),
-#             data.Region(
-#                 rna_id='URS000012C1C6_9606',
-#                 chromosome='8',
-#                 strand=-1,
-#                 endpoints=(data.Endpoint(start=52338512, stop=52338541),),
-#                 source='alignment',
-#                 identity=1.0
-#             ),
-#             data.Region(
-#                 rna_id='URS000012C1C6_9606',
-#                 chromosome='10',
-#                 strand=-1,
-#                 endpoints=(data.Endpoint(start=73941772, stop=73941801),),
-#                 source='alignment',
-#                 identity=1.0
-#             ),
-#             data.Region(
-#                 rna_id='URS000012C1C6_9606',
-#                 chromosome='12',
-#                 strand=1,
-#                 endpoints=(data.Endpoint(start=123897625, stop=123897654),),
-#                 source='alignment',
-#                 identity=1.0
-#             ),
-#             data.Region(
-#                 rna_id='URS000012C1C6_9606',
-#                 chromosome='19',
-#                 strand=-1,
-#                 endpoints=(data.Endpoint(start=3161031, stop=3161060),),
-#                 source='alignment',
-#                 identity=1.0
-#             ),
-#             data.Region(
-#                 rna_id='URS000012C1C6_9606',
-#                 chromosome='22',
-#                 strand=-1,
-#                 endpoints=(data.Endpoint(start=18174677, stop=18174706),),
-#                 source='alignment',
-#                 identity=1.0
-#             ),
-#             data.Region(
-#                 rna_id='URS000012C1C6_9606',
-#                 chromosome='22',
-#                 strand=1,
-#                 endpoints=(data.Endpoint(start=20362774, stop=20362803),),
-#                 source='alignment',
-#                 identity=1.0
-#             ),
-#         ]
-#     )
+    ans = [
+        data.Region(
+            rna_id='URS000012C1C6_9606',
+            rna_type='piRNA',
+            databases=['ENA'],
+            chromosome='1',
+            strand=1,
+            endpoints=(data.Endpoint(start=165777430, stop=165777459),),
+            source='alignment',
+            identity=1.0
+        ),
+        data.Region(
+            rna_id='URS000012C1C6_9606',
+            rna_type='piRNA',
+            databases=['ENA'],
+            chromosome='3',
+            strand=-1,
+            endpoints=(data.Endpoint(start=163618677, stop=163618706),),
+            source='alignment',
+            identity=1.0
+        ),
+        data.Region(
+            rna_id='URS000012C1C6_9606',
+            rna_type='piRNA',
+            databases=['ENA'],
+            chromosome='8',
+            strand=-1,
+            endpoints=(data.Endpoint(start=52338512, stop=52338541),),
+            source='alignment',
+            identity=1.0
+        ),
+        data.Region(
+            rna_id='URS000012C1C6_9606',
+            rna_type='piRNA',
+            databases=['ENA'],
+            chromosome='10',
+            strand=-1,
+            endpoints=(data.Endpoint(start=73941772, stop=73941801),),
+            source='alignment',
+            identity=1.0
+        ),
+        data.Region(
+            rna_id='URS000012C1C6_9606',
+            rna_type='piRNA',
+            databases=['ENA'],
+            chromosome='12',
+            strand=1,
+            endpoints=(data.Endpoint(start=123897625, stop=123897654),),
+            source='alignment',
+            identity=1.0
+        ),
+        data.Region(
+            rna_id='URS000012C1C6_9606',
+            rna_type='piRNA',
+            databases=['ENA'],
+            chromosome='19',
+            strand=-1,
+            endpoints=(data.Endpoint(start=3161031, stop=3161060),),
+            source='alignment',
+            identity=1.0
+        ),
+        data.Region(
+            rna_id='URS000012C1C6_9606',
+            rna_type='piRNA',
+            databases=['ENA'],
+            chromosome='22',
+            strand=-1,
+            endpoints=(data.Endpoint(start=18174677, stop=18174706),),
+            source='alignment',
+            identity=1.0
+        ),
+        data.Region(
+            rna_id='URS000012C1C6_9606',
+            rna_type='piRNA',
+            databases=['ENA'],
+            chromosome='22',
+            strand=1,
+            endpoints=(data.Endpoint(start=20362774, stop=20362803),),
+            source='alignment',
+            identity=1.0
+        ),
+    ]
 
-#     assert attr.asdict(found) == attr.asdict(ans)
+    assert attr.asdict(found) == attr.asdict(ans)
+
+
+def test_can_find_correct_for_something_that_can_be_mapped():
+    found = fetch_one('URS00009BF201_9606', 'GRCh38')
+    assert found == [
+        data.Region(
+            rna_id='URS00009BF201_9606',
+            rna_type='lncRNA',
+            databases=['LNCipedia', 'NONCODE'],
+            chromosome='16',
+            strand=-1,
+            endpoints=(
+                data.Endpoint(start=14085, stop=14511),
+                data.Endpoint(start=14652, stop=14720),
+                data.Endpoint(start=15481, stop=15633),
+                data.Endpoint(start=16290, stop=16448),
+                data.Endpoint(start=16541, stop=16738),
+                data.Endpoint(start=16916, stop=17427),
+                data.Endpoint(start=17604, stop=17750),
+                data.Endpoint(start=17957, stop=18797),
+            )
+        )
+    ]
