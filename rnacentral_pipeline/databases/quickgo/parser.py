@@ -18,7 +18,7 @@ import itertools as it
 
 from Bio.UniProt.GOA import gpa_iterator as raw_parser
 
-from rnacentral_pipeline.databases.go_annotations import GoTermAnnotation
+from rnacentral_pipeline.databases.data.go_annotations import GoTermAnnotation
 
 from . import helpers
 
