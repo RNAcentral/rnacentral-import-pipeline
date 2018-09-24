@@ -215,6 +215,28 @@ def extra_crs_data(filename, output):
     crs.from_file(filename, output)
 
 
+@cli.group('rfam')
+def rfam_group():
+    """
+    A group of commands dealing with parsing the Rfam data.
+    """
+    pass
+
+
+@rfam_group.command('families')
+@click.argument('filename', default='-', type=click.File('rb'))
+@click.argument('output', default='families.csv', type=click.File('wb'))
+def rfam_group_families(filename, output):
+    rfam.families.from_file(filename, output)
+
+
+@rfam_group.command('clans')
+@click.argument('filename', default='-', type=click.File('rb'))
+@click.argument('output', default='clans.csv', type=click.File('wb'))
+def rfam_group_clans(filename, output):
+    rfam.clans.from_file(filename, output)
+
+
 @cli.group('ontologies')
 def ontologies():
     pass
@@ -242,7 +264,6 @@ def ontologies_quickgo(raw_data, output):
     file_okay=False,
 ))
 def ontologies_rfam_terms(filename, output):
-    print(dir(rfam))
     rfam.cross_references.from_file(filename, output)
 
 

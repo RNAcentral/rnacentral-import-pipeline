@@ -15,6 +15,7 @@ limitations under the License.
 
 import re
 import csv
+import operator as op
 import itertools as it
 
 import attr
@@ -127,9 +128,16 @@ class RfamFamily(object):
         data['is_suppressed'] = int(self.is_suppressed)
         data['rfam_rna_type'] = data['rna_type']
         data['rna_type'] = self.guess_insdc()
-        yield data
+        return data
 
 
 def parse(handle):
     reader = csv.DictReader(handle, delimiter='\t')
     return it.imap(RfamFamily.from_dict, reader)
+
+
+def from_file(handle, output):
+    data = parse(handle)
+    data = it.imap(op.methodcaller('writeable'), data)
+    writer = csv.writer(output)
+    writer.writerows(data)
