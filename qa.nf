@@ -8,6 +8,8 @@ process fetch_sequences {
   file('rnac_*.fa') into sequences_to_scan mode flatten
 
   """
+  set -o pipefail
+
   psql -f "$query" "$PGDATABASE" | json2fasta.py - rnacentral.fasta
   esl-randomize-sqfile.pl -O rnac.fa -L -N ${params.qa.rfam_scan.chunk_size} rnacentral.fasta 1.0
   """
@@ -49,21 +51,15 @@ process infernal_scan {
 process process_hits {
   input:
   file('results.tblout*') from infernal_results.collect()
-
-  output:
-  file('hits.csv') into processed_hits
-
-  """
-  cat results.tblout* | rnac qa tblout2csv - hits.csv
-  """
-}
-
-process import_hits {
-  input:
-  file('hits.csv') from processed_hits
   file hit_ctl from Channel.fromPath('files/qa/rfam-scan.ctl')
 
   """
+  set -o pipefail
+
+  find . -name 'results.tblout*' |\
+  xargs cat |\
+  rnac qa tblout2csv - hits.csv
+
   cp $hit_ctl _hit_ctl
   pgloader _hit_ctl
   """
