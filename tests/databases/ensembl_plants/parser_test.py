@@ -33,7 +33,7 @@ def test_can_parse_data(cress_2):
         primary_id='AT2G01010.1',
         accession='ENSEMBL_PLANTS:AT2G01010.1',
         ncbi_tax_id=3702,
-        database='ENSEMBL_PLANTS',
+        database='E_PLANTS',
         sequence=(
             'TACCTGGTTGATCCTGCCAGTAGTCATATGCTTGTCTCAAAGATTAAGCCATGCATGTGT'
             'AAGTATGAACGAATTCAGACTGTGAAACTGCGAATGGCTCATTAAATCAGTTATAGTTTG'
@@ -105,7 +105,7 @@ def test_can_get_with_odd_rna_type(cress_2):
         primary_id='AT2G03895.1',
         accession='ENSEMBL_PLANTS:AT2G03895.1',
         ncbi_tax_id=3702,
-        database='ENSEMBL_PLANTS',
+        database='E_PLANTS',
         sequence=(
             'GGTGGTCTCTGTTGGTGAATCGTCGTCATTGAGAGCTGACACCGGCCCAAAGCCTTTGCT'
             'CCGGCGTTGCGTGACGGAGTATCGGAGTCCAGCTTCCCTCCACGAATTGCAGAAAGTTAC'
@@ -148,7 +148,7 @@ def test_can_parse_a_trna(cress_2):
         primary_id='ENSRNA049492366-T1',
         accession='ENSEMBL_PLANTS:ENSRNA049492366-T1',
         ncbi_tax_id=3702,
-        database='ENSEMBL_PLANTS',
+        database='E_PLANTS',
         sequence=(
             'GCTGGAATAGCTCAGTTGGTTAGAGCGTGTGGCTGTTAACCACAAGGTCGGAGGTTCGAC'
             'CCCTCCTTCTAGCG'
@@ -185,7 +185,7 @@ def test_can_parse_gene_with_minimal_metadata(cress_2):
         primary_id='AT2G03905.1',
         accession='ENSEMBL_PLANTS:AT2G03905.1',
         ncbi_tax_id=3702,
-        database='ENSEMBL_PLANTS',
+        database='E_PLANTS',
         sequence=(
             'CGCCGTTAGTCCGTGAGGAGAAAATAGGCCCACTCTGGCACACTCTCTCTGGGTTTAGGT'
             'TTAGGTTTTTTTGGGGCTCTCTATCCTAAGAAACTAGGAGACATCACACTTCACCAAGTC'
@@ -224,7 +224,7 @@ def test_can_parse_premirna(cress_2):
         primary_id='ENSRNA049757815-T1',
         accession='ENSEMBL_PLANTS:ENSRNA049757815-T1',
         ncbi_tax_id=3702,
-        database='ENSEMBL_PLANTS',
+        database='E_PLANTS',
         sequence=(
             'CGTAAAGCAGGTGATTCACCAATTTAGGTTTACATCCACAGTGTGGAAGACACTGAAGGA'
             'CCTAAACTAACAAAGGTAAACGGCTCAGTGTGCGGGGTATTACACTCGGTTTAATGTCTG'

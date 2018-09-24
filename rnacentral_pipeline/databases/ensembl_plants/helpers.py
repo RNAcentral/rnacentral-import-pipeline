@@ -115,7 +115,7 @@ def as_entry(record, current_gene, feature):
         primary_id=primary_id(feature),
         accession='ENSEMBL_PLANTS:' + primary_id(feature),
         ncbi_tax_id=embl.taxid(record),
-        database='ENSEMBL_PLANTS',
+        database='E_PLANTS',
         sequence=embl.sequence(record, feature),
         regions=ensembl.regions(record, feature),
         rna_type=rna_type(feature),
