@@ -36,6 +36,8 @@ select
       'model', hits.rfam_model_id,
       'model_rna_type', models.rna_type,
       'model_domain', models.domain,
+      'model_name', models.short_name,
+      'model_long_name', models.long_name,
       'model_completeness', hits.model_completeness,
       'model_start', hits.model_start,
       'model_stop', hits.model_stop,
