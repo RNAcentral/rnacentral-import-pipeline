@@ -53,6 +53,7 @@ ORDERING = [
     'greengenes',
     'rdp',
     'ena',
+    'zwd',
     'noncode',
 ]
 """

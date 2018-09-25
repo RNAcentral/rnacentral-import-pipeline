@@ -8,17 +8,17 @@ queries = [
 
 precompute_upi_queries = Channel.empty()
 
-if (precompute.methods.all) {
+if (params.precompute.methods.all) {
   Channel
-    .from([file(queries.all), []])
+    .from([[file(queries.all), []]])
     .set { precompute_upi_queries }
 
-} else if (precompute.methods.using_release) {
+} else if (params.precompute.methods.using_release) {
   Channel
-    .from([file(queries.using_release), []])
+    .from([[file(queries.using_release), []]])
     .set { precompute_upi_queries }
 
-} else if (precompute.methods.by_database) {
+} else if (params.precompute.methods.by_database) {
 
   db_names = []
   params.precompute.methods.by_database.each { db ->
@@ -27,7 +27,7 @@ if (precompute.methods.all) {
   db_names = db_names.join(', ')
 
   Channel
-    .from([file(queries.by_database), [dbs: db_names]])
+    .from([[file(queries.by_database), [dbs: db_names]]])
     .set { precompute_upi_queries }
 
 } else {
@@ -39,16 +39,16 @@ process query_upis {
   set file(sql), val(variables) from precompute_upi_queries
 
   output:
-  file('ranges.txt') raw_ranges
+  file('ranges.txt') into raw_ranges
 
   script:
   variable_option = []
   variables.each { name, value ->
-    variable_option << "-v ${name}=${value}"
+    variable_option << """-v ${name}="${value}" """
   }
   """
   psql -f "$sql" ${variable_option.join(' ')} "$PGDATABASE"
-  rnac upi-ranges --table-name ${table_name} ${params.precompute.max_entries} ranges.txt
+  rnac upi-ranges --table-name upis_to_precompute ${params.precompute.max_entries} ranges.txt
   """
 }
 
@@ -112,3 +112,4 @@ process load_precomputed_data {
   psql -f $post "$PGDATABASE"
   """
 }
+
