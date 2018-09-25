@@ -46,6 +46,7 @@ select
   'last_release', max(xref.last)
 )
 FROM rna
+join upis_to_precompute todo on todo.upi = rna.todo
 join xref on xref.upi = rna.upi
 join rnc_accessions acc
 on
@@ -60,7 +61,7 @@ join rnc_database db
 ON
     db.id = xref.dbid
 where
-    rna.id BETWEEN :min AND :max
+    todo.id BETWEEN :min AND :max
 GROUP BY rna.upi, xref.taxid
 ORDER BY rna.upi, xref.taxid
 ) TO STDOUT
