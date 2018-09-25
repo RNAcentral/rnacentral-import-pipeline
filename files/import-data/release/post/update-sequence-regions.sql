@@ -41,18 +41,18 @@ where
 ;
 
 -- Delete all regions and exons where there are no providing databases
-DELETE from rnc_sequence_regions where and was_mapped = false and providing_databases = '{}';
+DELETE FROM rnc_sequence_regions WHERE was_mapped = false and providing_databases = '{}'::text[];
 
 -- Delete all mapped locations that have the same region_name/assembly as a
 -- known location. It is possible that the overall region has the same endpoints
 -- but different exon/intron boundries because of mapping. So we delete the
 -- mapped coordinates that will be overwritten by the given locations to be
 -- loaded.
-delete from rnc_sequence_regions regions
-using load_rnc_sequence_regions load
-where
+DELETE FROM rnc_sequence_regions regions
+USING load_rnc_sequence_regions load
+WHERE
   load.region_name = regions.region_name
-  and regions.was_mapped = true
+  AND regions.was_mapped = true
 ;
 
 -- Upsert regions table with needed info. Note the max's (for all but
