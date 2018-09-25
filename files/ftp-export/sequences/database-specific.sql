@@ -10,6 +10,6 @@ JOIN rna ON rna.upi = pre.upi
 WHERE
     pre.is_active = true
     AND pre.taxid is not null
-    AND pre.databases ilike '%:db%'
+    AND pre.databases ilike :'db'
 ) TO STDOUT
 
