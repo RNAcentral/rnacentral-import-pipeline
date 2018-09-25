@@ -60,7 +60,7 @@ def cli():
 @cli.command('upi-ranges')
 # @click.option('--max-chunks', type=int)
 @click.option('--db_url', envvar='PGDATABASE')
-@click.option('--table_name', default='rna')
+@click.option('--table-name', default='rna')
 @click.argument('chunk_size', type=int)
 @click.argument('output', default='-', type=click.File('wb'))
 def search_export_ranges(chunk_size, output, db_url=None, table_name=None):

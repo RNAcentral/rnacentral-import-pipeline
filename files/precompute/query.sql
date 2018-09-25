@@ -48,7 +48,7 @@ select
   'last_release', max(xref.last)
 )
 FROM rna
-join upis_to_precompute todo on todo.upi = rna.todo
+join upis_to_precompute todo on todo.upi = rna.upi
 join xref on xref.upi = rna.upi
 join rnc_accessions acc
 on
