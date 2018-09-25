@@ -163,19 +163,23 @@ raw_dbs
   .set { db_sequences }
 
 process database_specific_fasta {
+  maxForks 4
+
   publishDir "${params.ftp_export.publish}/sequences/.search", mode: 'move'
 
   input:
   set val(db), file(query) from db_sequences
 
   output:
-  file "${db}.fasta.gz" into __sequences_species
+  file(name) into __sequences_species
 
+  script:
+  name = "${db.toLowerCase()}.fasta"
   """
   set -o pipefail
 
   export PYTHONIOENCODING=utf8
-  psql -f "$query" -v db=${db} "$PGDATABASE" | json2fasta.py - - | gzip > ${db}.fasta.gz
+  psql -f "$query" -v db='%${db}%' "$PGDATABASE" | json2fasta.py - $name
   """
 }
 
