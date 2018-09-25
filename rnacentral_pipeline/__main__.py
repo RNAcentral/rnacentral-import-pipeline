@@ -60,15 +60,18 @@ def cli():
 @cli.command('upi-ranges')
 # @click.option('--max-chunks', type=int)
 @click.option('--db_url', envvar='PGDATABASE')
+@click.option('--table-name', default='rna')
 @click.argument('chunk_size', type=int)
 @click.argument('output', default='-', type=click.File('wb'))
-def search_export_ranges(output, chunk_size=None, db_url=None):
+def search_export_ranges(chunk_size, output, db_url=None, table_name=None):
     """
     This will compute the ranges to use for our each xml file in the search
     export. We want to do several chunks at once as it is faster (but not too
-    man), and we want to have as large a chunk as possible.
+    man), and we want to have as large a chunk as possible. If given an a
+    table_name value it will use that table, otherwise it will use the rna
+    table.
     """
-    csv.writer(output).writerows(upi_ranges(db_url, chunk_size))
+    csv.writer(output).writerows(upi_ranges(db_url, table_name, chunk_size))
 
 
 @cli.group('external', cls=ClickAliasedGroup)
