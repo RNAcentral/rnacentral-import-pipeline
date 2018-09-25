@@ -179,7 +179,8 @@ process database_specific_fasta {
   set -o pipefail
 
   export PYTHONIOENCODING=utf8
-  psql -f "$query" -v db='%${db}%' "$PGDATABASE" | json2fasta.py - $name
+  psql -f "$query" -v db='%${db}%' "$PGDATABASE" > raw.json
+  json2fasta.py raw.json $name
   """
 }
 
