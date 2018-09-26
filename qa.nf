@@ -5,13 +5,15 @@ process fetch_sequences {
   file query from Channel.fromPath('files/qa/rfam-scan.sql')
 
   output:
-  file('rnac_*.fa') into sequences_to_scan mode flatten
+  file('parts/*.fa') into sequences_to_scan mode flatten
 
   """
   set -o pipefail
 
-  psql -f "$query" "$PGDATABASE" | json2fasta.py - rnacentral.fasta
-  esl-randomize-sqfile.pl -O rnac.fa -L -N ${params.qa.rfam_scan.chunk_size} rnacentral.fasta 1.0
+  psql -f "$query" "$PGDATABASE" > raw.json
+  json2fasta.py raw.json rnacentral.fasta
+  seqkit shuffle --two-pass rnacentral.fasta > shuffled.fasta
+  seqkit split --two-pass --by-size ${params.qa.rfam_scan.chunk_size} -out-dir 'parts/'
   """
 }
 
