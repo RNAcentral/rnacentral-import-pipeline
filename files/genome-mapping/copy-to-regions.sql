@@ -36,6 +36,6 @@ select distinct
   mapping.start,
   mapping.stop
 from rnc_genome_mapping mapping
-join rnc_sequence_regions regions on regions.region_id = mapping.region_name and regions.assembly_id = mapping.assembly_id
+join rnc_sequence_regions regions on mapping.region_id = regions.region_name and regions.assembly_id = mapping.assembly_id
 )
 ;
