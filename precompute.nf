@@ -108,13 +108,12 @@ process generate_feedback_report {
   '''
   awk '{split($15, dbs, ","); for(i in dbs) print dbs[i];}' !{genome} | sort -u > db_list.txt
 
-  # sort genome bed file
-  sort -k1,1 -k2,2n $genome > ${genome}.sorted
+  sort -k1,1 -k2,2n !{genome} > !{genome}.sorted
 
   for db in `cat db_list.txt`; do
-      grep $db $genome > ${db}.bed
-      bedtools intersect -sorted -wa -wb -a ${db}.bed -b ${genome}.sorted > overlap-${db}.bed
-      bedtools subtract -A -a $genome -b ${db}.bed > no-overlap-${db}.bed
+      grep $db !{genome} > ${db}.bed
+      bedtools intersect -sorted -wa -wb -a ${db}.bed -b !{genome}.sorted > overlap-${db}.bed
+      bedtools subtract -A -a !{genome} -b ${db}.bed > no-overlap-${db}.bed
       db_report=${db}-report.tsv
 
       awk '{split($30, dbs, ","); for(i in dbs) print $4, "overlap", dbs[i];}' overlap-${db}.bed | sort -u >> $db_report
