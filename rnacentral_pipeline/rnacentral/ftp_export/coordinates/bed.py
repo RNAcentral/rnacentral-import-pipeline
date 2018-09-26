@@ -59,8 +59,8 @@ class BedEntry(object):
             rna_id=region.rna_id,
             blocks=[BedBlock.from_endpoint(e) for e in region.endpoints],
             strand=region.strand,
-            rna_type=region.rna_type,
-            databases=region.databases,
+            rna_type=region.metadata['rna_type'],
+            databases=','.join(region.metadata['databases']),
         )
 
     @property
@@ -87,7 +87,7 @@ class BedEntry(object):
 
     @property
     def bed_rgb(self):
-        return ','.join(self.rgb)
+        return ','.join(str(c) for c in self.rgb)
 
     def block_sizes(self):
         return [b.size for b in self.blocks]
@@ -96,10 +96,10 @@ class BedEntry(object):
         return [0] + [b.start - self.start for b in self.blocks[1:]]
 
     def bed_block_sizes(self):
-        return ','.join(self.block_sizes())
+        return ','.join(str(s) for s in self.block_sizes())
 
     def bed_block_starts(self):
-        return ','.join(self.block_starts())
+        return ','.join(str(s) for s in self.block_starts())
 
     def writeable(self):
         return [

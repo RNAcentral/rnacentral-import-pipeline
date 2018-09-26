@@ -26,11 +26,14 @@ def regions_as_features(regions):
     for region in regions:
         attributes = {
             'Name': [region.rna_id],
-            'type': [region.rna_type],
-            'databases': region.databases,
+            'type': [region.metadata['rna_type']],
+            'databases': region.metadata['databases'],
             'ID': [region.region_id],
             'source': [region.source],
         }
+
+        if region.source == 'expert-database':
+            attributes['providing_databases'] = region.metadata['providing_databases']
 
         if region.source == 'alignment':
             attributes['identity'] = ['%.2f' % region.identity]
@@ -50,11 +53,14 @@ def regions_as_features(regions):
             exon_id = region.region_id + ':ncRNA_exon%i' % (index + 1)
             exon_attributes = {
                 'Name': [region.rna_id],
-                'type': [region.rna_type],
-                'databases': region.databases,
+                'type': [region.metadata['rna_type']],
+                'databases': region.metadata['databases'],
                 'ID': [exon_id],
                 'Parent': [region.region_id],
             }
+
+            if region.source == 'expert-database':
+                exon_attributes['providing_databases'] = region.metadata['providing_databases']
 
             yield Feature(
                 seqid=region.chromosome,

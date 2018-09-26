@@ -5,7 +5,7 @@ SELECT
       'rna_id', max(pre.id),
       'rna_type',  max(pre.rna_type),
       'databases', regexp_split_to_array(max(pre."databases"), ','),
-      'providing_databases', array_agg(distinct regions.providing_databases),
+      'providing_databases', max(regions.providing_databases),
       'chromosome', max(regions.chromosome),
       'strand', max(regions.strand),
       'identity', max(regions.identity),
@@ -21,10 +21,11 @@ ON
 JOIN ensembl_coordinate_systems coords
 ON
   coords.chromosome = regions.chromosome
+  and coords.assembly_id = regions.assembly_id
 WHERE
-    pre.is_active = true
-    AND regions.assembly_id = :assembly_id
-    AND coords.is_reference = true
+  pre.is_active = true
+  AND regions.assembly_id = :'assembly_id'
+  AND coords.is_reference = true
 GROUP BY regions.id
-ORDER BY max(coords.karyotype_rank), regions.id
+ORDER BY max(coords.karyotype_rank), min(exons.start), regions.id
 ) TO STDOUT
