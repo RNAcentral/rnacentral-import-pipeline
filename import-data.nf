@@ -164,12 +164,26 @@ process fetch_ena_metadata {
   """
   cat $tpa_file | xargs wget -O - >> tpa.tsv
   """
+
+}
+
+process fetch_rgd_metadata {
+  when:
+  params.import_data.databases['rgd']
+
+  output:
+  set val('rgd'), file('genes.txt') into rgd_metadata
+
+  """
+  wget ftp://ftp.rgd.mcw.edu/pub/data_release/GENES_RAT.txt > genes.txt
+  """
 }
 
 Channel.empty()
   .mix(ena_metadata)
   .mix(ensembl_metadata)
   .mix(rfam_metadata)
+  .mix(rgd_metadata)
   .cross(with_metadata)
   .map { meta, data -> data + meta[1..-1] }
   .set { metadata }
