@@ -38,6 +38,7 @@ class Region(object):
         default=None,
         cmp=False,
     )
+    metadata = attr.ib(validator=is_a(dict), default=dict, cmp=False)
 
     @classmethod
     def build(cls, raw):
@@ -51,8 +52,13 @@ class Region(object):
             chromosome=raw['chromosome'],
             strand=raw['strand'],
             source=source,
-            endpoints=[Endpoint.build(e) for e in raw['exons']],
-            identity=raw['identity'],
+            endpoints=tuple(Endpoint.build(e) for e in raw['exons']),
+            identity=float(raw['identity']),
+            metadata={
+                'rna_type': raw['rna_type'],
+                'providing_databases': raw['providing_databases'],
+                'databases': raw['databases'],
+            }
         )
 
     @property
@@ -78,7 +84,7 @@ class Endpoint(object):
 
     @classmethod
     def build(cls, raw):
-        return cls(start=raw['start'], stop=raw['stop'])
+        return cls(start=raw['exon_start'], stop=raw['exon_stop'])
 
 
 def parse(regions):
