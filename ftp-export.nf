@@ -293,26 +293,26 @@ process fetch_raw_coordinate_data {
 
 raw_coordinates.into { bed_coordinates; gff_coordinates }
 
-// process format_bed_coordinates {
-//   publishDir "${params.ftp_export.publish}/genome_coordinates/bed/", mode: 'copy'
+process format_bed_coordinates {
+  publishDir "${params.ftp_export.publish}/genome_coordinates/bed/", mode: 'copy'
 
-//   input:
-//   set val assembly, val species, file(raw_data) from bed_coordinates
+  input:
+  set val assembly, val species, file(raw_data) from bed_coordinates
 
-//   output:
-//   set val(assembly), file(result) into bed_files
+  output:
+  set val(assembly), file(result) into bed_files
 
-//   script:
-//   result = "${species}.${assembly}.bed.gz"
-//   """
-//   rnac ftp-export coordiantes as-bed $raw_data |\
-//   sort -k1,1 -k2,2n |\
-//   gzip > $result
-//   """
-// }
+  script:
+  result = "${species}.${assembly}.bed.gz"
+  """
+  rnac ftp-export coordiantes as-bed $raw_data |\
+  sort -k1,1 -k2,2n |\
+  gzip > $result
+  """
+}
 
 // process generate_big_bed {
-//   publishDir "${params.ftp_export.publish}/genome_coordinates/", mode: 'copy'
+//   publishDir "${params.ftp_export.publish}/genome_coordinates/bed", mode: 'copy'
 
 //   input:
 //   set val assembly, file bed_file from bed_files
