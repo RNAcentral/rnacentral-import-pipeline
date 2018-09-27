@@ -112,7 +112,7 @@ def test_can_produce_features_with_identity():
 
 
 @pytest.mark.skip
-@pytest.mark.parametrize('assembly,count', [
+@pytest.mark.parametrize('assembly,count', [  # pylint: disable=no-member
     ('GRCh38', 305337),
     ('BDGP6', 36222),
     ('WBcel235', 29214),
