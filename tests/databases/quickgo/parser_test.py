@@ -36,7 +36,8 @@ def test_can_parse_a_gpa_file(filename, count):
 
 def test_can_correctly_parse_a_gpa_file():
     with open('data/quickgo/rna.gpa', 'r') as raw:
-        assert attr.asdict(next(gpi.parser(raw))) == attr.asdict(GoTermAnnotation(
+        data = attr.asdict(next(gpi.parser(raw)))
+        assert data == attr.asdict(GoTermAnnotation(
             rna_id='URS00000064B1_559292',
             qualifier='enables',
             term_id='GO:0030533',
@@ -51,7 +52,7 @@ def test_can_correctly_parse_a_gpa_file():
                     'transfer RNA genes in genomic sequence'
                 ),
                 pmid=9023104,
-                doi='10.1093/nar/25.5.0955',
+                doi=u'10.1093/nar/25.5.955',
             )]
         ))
 

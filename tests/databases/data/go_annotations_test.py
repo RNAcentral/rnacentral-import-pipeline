@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Copyright [2009-2017] EMBL-European Bioinformatics Institute
+Copyright [2009-2018] EMBL-European Bioinformatics Institute
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -15,18 +15,17 @@ limitations under the License.
 
 import json
 
-from rnacentral_pipeline.databases.quickgo.data import GoTermAnnotation
-from rnacentral_pipeline.databases.quickgo.data import AnnotationExtension
+from rnacentral_pipeline.databases import data
 
 
 def test_can_build_correct_writeable():
-    annotation = GoTermAnnotation(
+    annotation = data.GoTermAnnotation(
         rna_id='a',
         qualifier='part_of',
         term_id='GO:01',
         evidence_code='ECO:001',
         extensions=[
-            AnnotationExtension(qualifier='talks_to', target='ENESMBL:1'),
+            data.AnnotationExtension(qualifier='talks_to', target='ENESMBL:1'),
         ],
         assigned_by='Bob',
         publications=[],

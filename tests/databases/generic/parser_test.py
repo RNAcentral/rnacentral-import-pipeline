@@ -26,7 +26,7 @@ def test_runs_validation_on_data():
 @pytest.mark.parametrize('filename,count', [
     ('data/json-schema/v020/flybase.json', 5),
     ('data/json-schema/v020/lincipedia.json', 1),
-    ('data/json-schema/v020/lncipedia-5.0.json', 2),
+    ('data/json-schema/v020/lncipedia-5.0.json', 1),
     ('data/json-schema/v020/missing-mirbase.json', 1),
 ])
 def test_can_parse_v0_2_0_data(filename, count):
