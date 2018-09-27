@@ -27,5 +27,5 @@ WHERE
   AND regions.assembly_id = :'assembly_id'
   AND coords.is_reference = true
 GROUP BY regions.id
-ORDER BY max(coords.karyotype_rank), min(exons.start), regions.id
+ORDER BY max(coords.karyotype_rank), min(exons.exon_start), regions.id
 ) TO STDOUT
