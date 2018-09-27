@@ -1,11 +1,18 @@
 COPY (
-select
-	distinct regions.assembly_id, lower(db.descr)
-from rnc_database db
-join xref on xref.dbid = db.id
-join rnc_sequence_regions regions on regions.urs_taxid = xref.upi || '_' || xref.taxid
-where
-	db.descr in ('FLYBASE', 'POMBASE', 'TAIR')
+SELECT
+	DISTINCT regions.assembly_id, lower(db.descr)
+FROM rnc_database db
+JOIN xref ON xref.dbid = db.id
+JOIN rnc_sequence_regions regions
+ON
+  regions.urs_taxid = xref.upi || '_' || xref.taxid
+JOIN ensembl_coordinate_systems coords
+ON
+  coords.chromosome = regions.chromosome
+  AND coords.assembly_id = regions.assembly_id
+WHERE
+	db.descr IN ('FLYBASE', 'POMBASE', 'TAIR')
+  AND coords.is_reference = true
 ) TO STDOUT CSV
 
 -- This uses the regions and not a join on xref.taxid to the assembly table
