@@ -94,8 +94,13 @@ process import_ensembl_data {
    set file(ctl), file('data*.csv') from ensembl_loadable
 
    """
-   sort -u data*.csv > merged.csv
-   cp $ctl local_$ctl
-   pgloader local_$ctl
+   mkdir merged
+   find . -name 'data*.csv' |\
+   xargs cat |\
+   split --additional-suffix=.csv -dC ${params.import_data.chunk_size} - merged/data
+
+   cp $ctl merged/$ctl
+   cd merged
+   pgloader $ctl
    """
 }
