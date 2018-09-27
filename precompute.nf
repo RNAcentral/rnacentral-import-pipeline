@@ -77,8 +77,14 @@ process mods_for_feedback {
   output:
   file(info) into raw_mods
 
+  script:
+  names = []
+  for (name in params.precompute.feedback.database) {
+    names << "'${name.toUpperCase()}'"
+  }
+  names = names.join(', ')
   """
-  psql -f "$query" "$PGDATABASE" > info
+  psql -v names=${names} -f "$query" "$PGDATABASE" > info
   """
 }
 
