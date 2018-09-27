@@ -1,5 +1,5 @@
 LOAD CSV
-FROM ALL FILENAMES MATCHING ~<feedback.*csv$>
+FROM 'merged.tsv'
 HAVING FIELDS (
     upi_taxid,
     status,
@@ -11,6 +11,9 @@ TARGET COLUMNS (
     status,
     database
 )
+
+WITH
+    fields terminated by ' '
 
 BEFORE LOAD DO
 $$
@@ -32,18 +35,22 @@ insert into rnc_feedback_overlap (
     no_overlaps_with
 ) (
 select
-    load.upi_taxid
-    array_agg(distinct load.database) FILTER (WHERE load.status = 'overlap'),
-    array_agg(distinct no_overlaps.database) FILTER (WHERE load.status = 'no_overlap')
+    load.upi_taxid,
+    coalesce(
+        array_agg(distinct load.database) FILTER (WHERE load.status = 'overlap'),
+        '{}'::text[]
+    ),
+    coalesce(
+        array_agg(distinct load.database) FILTER (WHERE load.status = 'no_overlap'),
+        '{}'::text[]
+    )
 from load_overlaps load
+join rnc_rna_precomputed pre on pre.id = load.upi_taxid
 group by load.upi_taxid
-) ON CONFLICT DO UPDATE
+) ON CONFLICT (upi_taxid) DO UPDATE
 SET
     overlaps_with = excluded.overlaps_with,
     no_overlaps_with = excluded.no_overlaps_with
 ;
-$$,
-$$
-drop table load_overlaps;
 $$
 ;

@@ -129,5 +129,5 @@ def from_json(handle, out):
     data = coord.from_file(handle)
     data = it.imap(BedEntry.from_region, data)
     data = it.imap(op.methodcaller('writeable'), data)
-    writer = csv.writer(out, delimiter='\t')
+    writer = csv.writer(out, delimiter='\t', lineterminator='\n')
     writer.writerows(data)
