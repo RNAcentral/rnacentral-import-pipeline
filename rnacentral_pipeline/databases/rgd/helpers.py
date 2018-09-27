@@ -360,7 +360,7 @@ def as_entries(data, seqs):
             ncbi_tax_id=taxid(data),
             database='RGD',
             sequence=sequence,
-            exons=[],
+            regions=[],
             rna_type=rna_type(data),
             url=url(data),
             seq_version=seq_version(data),
