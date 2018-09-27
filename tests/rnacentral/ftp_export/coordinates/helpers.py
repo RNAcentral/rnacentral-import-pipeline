@@ -23,15 +23,13 @@ from tests.helpers import run_with_replacements
 def fetch_raw(rna_id, assembly):
     path = os.path.join('files', 'ftp-export', 'genome_coordinates',
                         'query.sql')
-    _, taxid = rna_id.split('_')
     return run_with_replacements(
         path,
-        (':assembly_id', "'%s'" % assembly),
-        (':taxid', taxid),
+        (":'assembly_id'", "'%s'" % assembly),
         ('WHERE\n',
-         '''where
-         pre.id = '%s'
-         and''' % rna_id
+         '''WHERE
+         regions.urs_taxid = '%s'
+         and ''' % rna_id
          ), take_all=True)
 
 
@@ -44,6 +42,6 @@ def fetch_all(assembly):
                         'query.sql')
     return data.parse(run_with_replacements(
         path,
-        (':assembly_id', "'%s'" % assembly),
+        (":'assembly_id'", "'%s'" % assembly),
         take_all=True,
     ))
