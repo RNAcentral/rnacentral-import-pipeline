@@ -9,7 +9,7 @@ pattern="$2"
 case "$remote" in
   ssh://* )
     short="${remote:6}"
-    scp "$short/$pattern" .
+    scp "$short" .
     ;;
   /* )
     find "$remote" -name "$pattern" | xargs -I {} cp {} .
@@ -21,14 +21,14 @@ case "$remote" in
     # wget doesn't play well with ** so we use lftp instead. Also, wget doesn't
     # like following symlinks, but lftp does. I should find a way to indicate
     # this to the pipeline.
-    lftp -c "mget $remote/$pattern"
+    lftp -c "mget $remote"
     ;;
   * )
     echo 1>&2 "Unknown remote URL to fetch: $remote"
     exit 1;;
 esac
 
-case "$pattern" in
+case "$remote" in
   *.tar.gz )
-    find . -name "$pattern" | xargs -I {} tar xvf {}
+    find . -name "*.tar.gz" | xargs -I {} tar xvf {}
 esac
