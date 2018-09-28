@@ -44,6 +44,7 @@ ORDERING = [
     'tmrna website',
     'pdbe',
     'refseq',
+    'ensembl plants',
     'rfam',
     'modomics',
     'vega',
