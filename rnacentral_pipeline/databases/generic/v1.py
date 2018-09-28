@@ -86,11 +86,16 @@ def as_region(region):
     )
 
 
-def regions(raw_regions):
+def regions(entry):
     """
     Get all genomic locations this record is in.
     """
-    return [as_region(r) for r in raw_regions.get('genomeLocations', [])]
+    result = []
+    for region in entry.get('genomeLocations', []):
+        if not region.get('exons', None):
+            continue
+        result.append(as_region(region))
+    return []
 
 
 def gene_info(_):
