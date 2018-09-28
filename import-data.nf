@@ -121,7 +121,7 @@ raw_output.mix(raw_metadataless_output). set { raw_output }
 
 process fetch_rfam_metadata {
   when:
-  params.import_data.databases['rfam'] || params.import_data['ensembl']
+  params.import_data.databases['rfam'] || params.import_data.databases['ensembl']
 
   input:
   file(query) from Channel.fromPath('files/import-data/rfam/families.sql')
