@@ -95,7 +95,7 @@ def regions(entry):
         if not region.get('exons', None):
             continue
         result.append(as_region(region))
-    return []
+    return result
 
 
 def gene_info(_):
@@ -293,6 +293,12 @@ def add_related_by_gene(entries):
     return updated
 
 
+def note_data(record):
+    return {
+        'url': record['url'],
+    }
+
+
 def as_entry(record, database):
     """
     Generate an Entry to import based off the database, exons and raw record.
@@ -309,6 +315,7 @@ def as_entry(record, database):
         seq_version=record.get('version', '1'),
         optional_id=optional_id(record),
         description=description(record),
+        note_data=note_data(record),
         xref_data=xrefs(record),
         related_sequences=related_sequences(record),
         species=species(record),
