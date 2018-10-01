@@ -23,6 +23,12 @@ from rnacentral_pipeline.databases.helpers import embl
 from . import helpers
 from .data import Context
 
+IGNORE_FEATURES = {
+    'source',
+    'STS',
+    'misc_feature',
+}
+
 
 def as_entry(record, gene, feature, context):
     """
@@ -33,12 +39,17 @@ def as_entry(record, gene, feature, context):
     species, common_name = helpers.organism_naming(record)
     xref_data = embl.xref_data(feature)
 
+    try:
+        sequence = embl.sequence(record, feature)
+    except Exception as err:
+        return None
+
     entry = data.Entry(
         primary_id=helpers.primary_id(feature),
         accession=helpers.accession(feature),
         ncbi_tax_id=embl.taxid(record),
         database='ENSEMBL',
-        sequence=embl.sequence(record, feature),
+        sequence=sequence,
         regions=helpers.regions(record, feature),
         rna_type=helpers.rna_type(context.inference, feature, xref_data),
         url=helpers.url(feature),
@@ -76,7 +87,7 @@ def parse(raw, family_file):
         current_gene = None
         ncrnas = []
         for feature in record.features:
-            if feature.type == 'source':
+            if feature.type in IGNORE_FEATURES:
                 continue
 
             if embl.is_gene(feature):
@@ -93,7 +104,7 @@ def parse(raw, family_file):
                 continue
 
             entry = as_entry(record, current_gene, feature, context)
-            if context.is_supressed(entry):
+            if not entry or context.is_supressed(entry):
                 continue
 
             ncrnas.append(entry)
