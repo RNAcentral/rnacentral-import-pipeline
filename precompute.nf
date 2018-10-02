@@ -75,16 +75,17 @@ process mods_for_feedback {
   file(query) from Channel.fromPath('files/precompute/find-mod-info.sql')
 
   output:
-  file(info) into raw_mods
+  file('info') into raw_mods
 
   script:
   names = []
-  for (name in params.precompute.feedback.database) {
+  for (name in params.precompute.feedback.databases) {
     names << "'${name.toUpperCase()}'"
   }
-  names = names.join(', ')
+  names = '(' + names.join(', ') + ')'
   """
-  psql -v names=${names} -f "$query" "$PGDATABASE" > info
+  psql -v "names=${names}" -f "$query" "$PGDATABASE" > info
+  cat info
   """
 }
 
@@ -101,19 +102,24 @@ process generate_feedback_report {
   file('combined.tsv') into feedback
 
   shell:
-  genome="${mod}.bed"
+  genome="complete-${mod}.bed"
   '''
   psql -v "assembly_id=!{assembly}" -f !{query} "$PGDATABASE" > result.json
   rnac ftp-export coordinates as-bed result.json !{genome}
-  cut -f15 !{genome} | tr ',' '\\n' | sort -u | grep -vi !{mod} > db_list.txt
+  cut -f15 !{genome} | tr ',' '\\n' | sort -u > db_list.txt
 
   for db in `cat db_list.txt`; do
+      overlap_file="overlap-${db}.bed"
       grep $db !{genome} > ${db}.bed
-      bedtools intersect -wa -wb -a ${db}.bed -b !{genome} > overlap-${db}.bed
+      bedtools intersect -wa -wb -a ${db}.bed -b !{genome} > "$overlap_file"
       bedtools subtract -A -a !{genome} -b ${db}.bed > no-overlap-${db}.bed
       db_report=${db}-report.tsv
 
-      awk '{split($30, dbs, ","); for(i in dbs) print $4, "overlap", dbs[i];}' overlap-${db}.bed | sort -u >> $db_report
+      awk -F $'\\t' '{ if ($4 != $19) print $0 }' "$overlap_file" > t
+      mv t "$overlap_file"
+
+      awk '{split($30, dbs, ","); for(i in dbs) print $4, "overlap", dbs[i];}' "$overlap_file" | sort -u >> $db_report
+      awk '{ print $4, "overlapping_id", $19 }' "$overlap_file" | sort -u >> $db_report
       awk -v awk_db=$db '{print $4, "no_overlap", awk_db}' no-overlap-${db}.bed | sort -u >> $db_report
   done
 

@@ -11,7 +11,7 @@ ON
   coords.chromosome = regions.chromosome
   AND coords.assembly_id = regions.assembly_id
 WHERE
-	db.descr IN (:names)
+	db.descr IN :names
   AND coords.is_reference = true
 ) TO STDOUT CSV
 
