@@ -22,7 +22,7 @@ IMPORTABLE = [
   "sequence_regions.csv": 'files/import-data/regions.ctl',
 ]
 
-dataless_imports = Channel.empty()
+dataless_inputs = Channel.empty()
 to_fetch = Channel.empty()
 
 for (entry in params.import_data.databases) {
@@ -43,24 +43,22 @@ for (entry in params.import_data.databases) {
     db_channel = Channel.value([name, database])
     to_fetch.mix(db_channel).set { to_fetch }
   } else {
-    dataless_imports.mix(Channel.from(name)).set { dataless_imports }
+    dataless_inputs.mix(Channel.from(name)).set { dataless_imports }
   }
 }
 
 process dataless {
   input:
-  val(name) from dataless_imports
+  val(name) from dataless_inputs
 
   output:
-  file "*.csv" into raw_dataless_output mode flatten
+  file "*.csv" into dataless_output mode flatten
 
   script:
   """
   rnac external $name
   """
 }
-
-raw_output.mix(raw_dataless_output).set { raw_output }
 
 process fetch_data {
   input:
@@ -73,51 +71,20 @@ process fetch_data {
   pattern = database.pattern
   find_cmd = []
   for (pattern in database.get('excluded_patterns', [])) {
-    find_cmd << "-name '${pattern}'"
+    find_cmd << "find . -name '${pattern}' | xargs rm"
   }
 
   if (find_cmd.size) {
-    find_cmd = "find . ${find_cmd.join(' ')} | xargs rm"
+    find_cmd = find_cmd.join('\n')
   } else {
     find_cmd = ''
   }
 
   """
-  fetch ${database.remote} $pattern
+  fetch '${database.remote}' '$pattern'
   ${find_cmd}
   """
 }
-
-metadataless = Channel.create()
-with_metadata = Channel.create()
-fetched
-  .transpose()
-  .choice(metadataless, with_metadata) { it ->
-    params.databases[it[0]].get('metadata', false) ? 1 : 0
-  }
-
-process external_without_metadata {
-  memory params.databases[name].get('memory', '2 GB')
-
-  input:
-  set val(name), file(filename) from metadataless
-
-  output:
-  file "*.csv" into raw_metadataless_output mode flatten
-
-  script:
-  if (filename.toString().endsWith(".gz")) {
-    """
-    zcat $filename | rnac external ${name} -
-    """
-  } else {
-    """
-    rnac external ${name} ${filename}
-    """
-  }
-}
-
-raw_output.mix(raw_metadataless_output). set { raw_output }
 
 process fetch_rfam_metadata {
   when:
@@ -164,7 +131,6 @@ process fetch_ena_metadata {
   """
   cat $tpa_file | xargs wget -O - >> tpa.tsv
   """
-
 }
 
 process fetch_rgd_metadata {
@@ -175,7 +141,7 @@ process fetch_rgd_metadata {
   set val('rgd'), file('genes.txt') into rgd_metadata
 
   """
-  wget ftp://ftp.rgd.mcw.edu/pub/data_release/GENES_RAT.txt > genes.txt
+  wget -O genes.txt ftp://ftp.rgd.mcw.edu/pub/data_release/GENES_RAT.txt
   """
 }
 
@@ -184,34 +150,46 @@ Channel.empty()
   .mix(ensembl_metadata)
   .mix(rfam_metadata)
   .mix(rgd_metadata)
-  .cross(with_metadata)
-  .map { meta, data -> data + meta[1..-1] }
+  .ifEmpty()
   .set { metadata }
 
-process import_with_metadata {
+fetched
+  .flatMap { name, filenames ->
+    results = []
+    filenames.each { filename ->
+      results << [name, filename]
+    }
+    results
+  }
+  .phase(metadata, remainder: true)
+  .filter { it[0] != null }
+  .map { it -> [it[0][0], it[0][1], it[1]] }
+  .set { to_import }
+
+process process_data {
   memory params.databases[name].get('memory', '2 GB')
 
   input:
-  set val(name), file(input_file), file("metadata*") from metadata
+  set val(name), file(input_file), val(extra) from to_import
 
   output:
-  file "*.csv" into raw_with_metadata_output mode flatten
+  file "*.csv" into processed_output mode flatten
 
   script:
-  if (input_file.contains(".gz")) {
+  if (input_file.toString().endsWith(".gz")) {
     """
-    zcat ${input_file} | rnac external ${name} - metadata*
+    zcat ${input_file} | rnac external ${name} - ${extra == null ? '' : file(extra)}
     """
   } else {
     """
-    rnac external ${name} ${input_file} metadata*
+    rnac external ${name} ${input_file} ${extra == null ? '' : file(extra)}
     """
   }
 }
 
-raw_output.mix(raw_with_metadata_output).set { raw_output }
-
 raw_output
+  .mix(dataless_output)
+  .mix(processed_output)
   .filter { f -> IMPORTABLE.keySet().findIndexOf { p -> f.getName() ==~ p } > -1 }
   .map { f ->
     filename = f.getName()
