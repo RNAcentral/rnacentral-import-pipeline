@@ -14,6 +14,7 @@ limitations under the License.
 """
 
 import json
+import operator as op
 import itertools as it
 
 import attr
@@ -42,18 +43,23 @@ class Region(object):
 
     @classmethod
     def build(cls, raw):
+        identity = None
         source = 'expert-database'
         if raw['identity'] is not None:
             source = 'alignment'
+            identity = float(raw['identity'])
 
+        endpoints = [Endpoint.build(e) for e in raw['exons']]
+        endpoints.sort(key=op.attrgetter('start'))
+        endpoints = tuple(endpoints)
         return cls(
             region_id=raw['region_id'],
             rna_id=raw['rna_id'],
             chromosome=raw['chromosome'],
             strand=raw['strand'],
             source=source,
-            endpoints=tuple(Endpoint.build(e) for e in raw['exons']),
-            identity=float(raw['identity']),
+            endpoints=endpoints,
+            identity=identity,
             metadata={
                 'rna_type': raw['rna_type'],
                 'providing_databases': raw['providing_databases'],
