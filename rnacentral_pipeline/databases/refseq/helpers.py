@@ -80,6 +80,11 @@ def as_entry(record, source, feature):
     Create an Entry based upon the record, source feature and ncRNA feature.
     """
 
+    try:
+        optional = optional_id(feature)
+    except:
+        optional = optional_id(source)
+
     return dat.Entry(
         primary_id=primary_id(record),
         accession=accession(record, feature),
@@ -90,10 +95,10 @@ def as_entry(record, source, feature):
         rna_type=embl.rna_type(feature),
         url=url(record),
         seq_version=embl.seq_version(record),
-        optional_id=optional_id(feature),
+        optional_id=optional,
         note_data={},
         xref_data=xref_data(feature),
-        chromosome=embl.chromosome(source),
+        # chromosome=embl.chromosome(source),
         species=embl.species(record),
         common_name=embl.common_name(record),
         lineage=embl.lineage(record),
