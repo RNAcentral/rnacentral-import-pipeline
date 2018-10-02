@@ -38,6 +38,7 @@ def load_additional():
     psql = PsqlWrapper(os.environ['PGDATABASE'])
     with tempfile.TemporaryFile() as tmp:
         for filename in os.listdir(metapath):
+            print(filename)
             query = os.path.join(metapath, filename)
             psql.copy_file_to_handle(query, tmp)
         tmp.seek(0)
@@ -718,3 +719,35 @@ def test_assigns_correct_crs_ids(upi, crs_ids):
     data = load_and_get_additional(upi, 'conserved_structure')
     value = {d['text'] for d in data}
     assert value == crs_ids
+
+
+@pytest.mark.parametrize('upi,expected', [  # pylint: disable=E1101
+    ('URS0000A59F5E_7227', set()),
+    ('URS0000014447_7240', {'ENA', 'FlyBase', 'miRBase', 'Rfam'}),
+    ('URS0000ABD7E8_9606', set()),
+])
+def test_assigns_correct_overlaps(upi, expected):
+    data = load_and_get_additional(upi, 'overlaps_with')
+    value = {d['text'] for d in data}
+    assert value == expected
+
+
+@pytest.mark.parametrize('upi,expected', [  # pylint: disable=E1101
+    ('URS0000A59F5E_7227', {
+        'FlyBase',
+        'miRBase',
+        'Modomics',
+        'PDBe',
+        'RefSeq',
+        'Rfam',
+        'SILVA',
+        'snOPY',
+        'SRPDB',
+    }),
+    ('URS0000014447_7240', set()),
+    ('URS0000ABD7E8_9606', set()),
+])
+def test_assigns_correct_no_overlaps(upi, expected):
+    data = load_and_get_additional(upi, 'no_overlaps_with')
+    value = {d['text'] for d in data}
+    assert value == expected

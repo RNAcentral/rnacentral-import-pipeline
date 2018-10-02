@@ -577,6 +577,15 @@ def gene_synonyms(synonym_set):
     return result
 
 
+def overlaps(data):
+    return data.get('overlaps_with', [])
+
+
+def no_overlaps(data):
+    print(data)
+    return data.get('no_overlaps_with', [])
+
+
 builder = entry([
     tag('name', as_name, keys=('upi', 'taxid')),
     tag('description', first),
@@ -644,5 +653,7 @@ builder = entry([
         fields('evidence_for_interaction', interacting_evidence, keys='interacting_proteins'),
         fields('has_conserved_structure', has_crs, keys='crs'),
         fields('conserved_structure', crs_ids, keys='crs'),
+        fields('overlaps_with', overlaps, keys='overlaps'),
+        fields('no_overlaps_with', no_overlaps, keys='overlaps'),
     ]),
 ])
