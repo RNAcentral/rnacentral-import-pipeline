@@ -21,7 +21,11 @@ case "$remote" in
     # wget doesn't play well with ** so we use lftp instead. Also, wget doesn't
     # like following symlinks, but lftp does. I should find a way to indicate
     # this to the pipeline.
-    lftp -c "mget $remote"
+    if [[ "$remote" =~ '**' ]]; then
+      lftp -c "mget $remote"
+    else
+      wget "$remote"
+    fi
     ;;
   * )
     echo 1>&2 "Unknown remote URL to fetch: $remote"
