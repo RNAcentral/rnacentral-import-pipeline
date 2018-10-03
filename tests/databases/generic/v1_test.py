@@ -133,7 +133,7 @@ def test_can_correctly_parse_data():
         rna_type='rRNA',
         url='http://flybase.org/reports/FBtr0346876.html',
         seq_version='1',
-        note_data={},
+        note_data={'url': 'http://flybase.org/reports/FBtr0346876.html'},
         xref_data={
             'REFSEQ': ['NR_133553.1'],
         },
@@ -211,6 +211,7 @@ def test_can_correctly_parse_lncipedia_data():
         seq_version='1',
 
         xref_data={'NONCODE': ['NONHSAT143655']},
+        note_data={'url': 'https://lncipedia.org/db/transcript/lnc-CLEC18B-3:5'},
 
         gene='lnc-CLEC18B-3',
         gene_synonyms=[
@@ -260,6 +261,9 @@ def test_can_correctly_parse_mirbase_data():
         xref_data={
             'EntrezGene': ['Mir335'],
         },
+        note_data={
+            'url': 'http://www.mirbase.org/cgi-bin/mirna_entry.pl?acc=MI0000612'
+        },
         optional_id="rno-mir-335",
         description='Rattus norvegicus miR-335 stem-loop',
         species='Rattus norvegicus',
@@ -300,6 +304,9 @@ def test_can_correct_fetch_related_sequences():
         url="http://carolina.imis.athena-innovation.gr/diana_tools/web/index.php?r=tarbasev8%2Findex&miRNAs%5B%5D=hsa-miR-576-3p",
         seq_version='1',
         xref_data={},
+        note_data={
+            'url': "http://carolina.imis.athena-innovation.gr/diana_tools/web/index.php?r=tarbasev8%2Findex&miRNAs%5B%5D=hsa-miR-576-3p",
+        },
         description='Homo sapiens (human) hsa-miR-576-3p',
         species='Homo sapiens',
         common_name='human',
@@ -824,6 +831,7 @@ def test_can_correctly_find_isoforms():
         seq_version='1',
 
         xref_data={"NONCODE": ["NONHSAT004171"]},
+        note_data={"url": "https://lncipedia.org/db/transcript/LINC01725:19"},
 
         gene="LINC01725",
         gene_synonyms=[

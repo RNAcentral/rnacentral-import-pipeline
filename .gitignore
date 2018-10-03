@@ -71,3 +71,4 @@ logging.cfg
 local.config
 work/
 .nextflow*
+data/ensembl_plants/*.dat

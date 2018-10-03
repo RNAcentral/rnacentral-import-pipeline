@@ -66,7 +66,7 @@ def from_file(handle, output):
         },
         qa={
             'transformer': op.methodcaller('writeable_statuses')
-        }
+        },
     )
 
     writer(output, handle)

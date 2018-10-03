@@ -44,6 +44,7 @@ ORDERING = [
     'tmrna website',
     'pdbe',
     'refseq',
+    'ensembl plants',
     'rfam',
     'modomics',
     'vega',
@@ -53,6 +54,7 @@ ORDERING = [
     'greengenes',
     'rdp',
     'ena',
+    'zwd',
     'noncode',
 ]
 """

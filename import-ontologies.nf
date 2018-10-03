@@ -1,6 +1,8 @@
 #!/usr/bin/env nextflow
 
 process quickgo_annotations {
+  memory '4 GB'
+
   output:
   file('annotations.csv') into annotations
   file('publications.csv') into publications
@@ -10,8 +12,10 @@ process quickgo_annotations {
   script:
   uncompressed = params.go_annotations.quickgo.pattern.replace('.gz', '')
   """
+  set -o pipefail
+
   fetch "${params.go_annotations.quickgo.remote}" "${params.go_annotations.quickgo.pattern}"
-  gzip -d "${params.go_annotations.quickgo.pattern}"
+  gzip -cd "${params.go_annotations.quickgo.pattern}" | sort > $uncompressed
   rnac ontologies quickgo $uncompressed
   """
 }
@@ -72,6 +76,6 @@ process pgload_ontology_annotations {
   pgloader --on-error-stop local_$pub_ctl
   pgloader --on-error-stop local_$ann_ctl
   pgloader --on-error-stop local_$pub_map_ctl
-  pgloader --on-error-stop local_$rfam_map_ctl
+  cat rfam_ontology_mappings*.csv | pgloader --on-error-stop local_$rfam_map_ctl
   """
 }

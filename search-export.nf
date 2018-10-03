@@ -57,7 +57,7 @@ raw_json
   .set { search_json }
 
 process export_chunk {
-  memory '4 GB'
+  memory params.search_export.memory
   publishDir "${tmp}/", mode: 'copy'
 
   input:

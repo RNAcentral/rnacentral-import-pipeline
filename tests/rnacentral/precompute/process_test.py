@@ -182,6 +182,7 @@ def test_strips_leading_species(rna_id, short):
     ('URS0000A767C0_3702', 'lncRNA'),
     ('URS0000A86584_10090', 'lncRNA'),
     ('URS0000ABD87F_9606', 'rRNA'),
+    # ('URS0000CCE163_10116', ''),
 ])
 def test_builds_correct_rna_types(rna_id, rna_type):
     assert load_data(rna_id).rna_type == rna_type
@@ -270,6 +271,8 @@ def test_creates_expected_qa_udpates(rna_id, expected):
     flags = []
     status = data.qa_status
     for field in attr.fields(status.__class__):
+        if field.name == 'messages':
+            continue
         if getattr(status, field.name):
             flags.append(field.name)
     assert sorted(flags) == sorted(expected)
