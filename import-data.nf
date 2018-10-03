@@ -40,7 +40,7 @@ for (entry in params.import_data.databases) {
   if (name == "custom") {
     raw_output.mix(Channel.fromPath("${base}/**.csv")).flatten().set { raw_output }
   } else if (database.containsKey('remote') && database.remote) {
-    db_channel = Channel.value([name, database.remote, database.pattern])
+    db_channel = Channel.value([name, database])
     to_fetch.mix(db_channel).set { to_fetch }
   } else {
     dataless_imports.mix(Channel.from(name)).set { dataless_imports }
@@ -64,14 +64,27 @@ raw_output.mix(raw_dataless_output).set { raw_output }
 
 process fetch_data {
   input:
-  set val(name), val(remote), val(pattern) from to_fetch
+  set val(name), val(database) from to_fetch
 
   output:
   set val(name), file("${pattern}") into fetched
 
   script:
+  pattern = database.pattern
+  find_cmd = []
+  for (pattern in database.get('excluded_patterns', [])) {
+    find_cmd << "-name '${pattern}'"
+  }
+
+  if (find_cmd.size) {
+    find_cmd = "find . ${find_cmd.join(' ')} | xargs rm"
+  } else {
+    find_cmd = ''
+  }
+
   """
-  fetch $remote $pattern
+  fetch ${database.remote} $pattern
+  ${find_cmd}
   """
 }
 
@@ -108,7 +121,7 @@ raw_output.mix(raw_metadataless_output). set { raw_output }
 
 process fetch_rfam_metadata {
   when:
-  params.import_data.databases['rfam'] || params.import_data['ensembl']
+  params.import_data.databases['rfam'] || params.import_data.databases['ensembl']
 
   input:
   file(query) from Channel.fromPath('files/import-data/rfam/families.sql')
@@ -151,12 +164,26 @@ process fetch_ena_metadata {
   """
   cat $tpa_file | xargs wget -O - >> tpa.tsv
   """
+
+}
+
+process fetch_rgd_metadata {
+  when:
+  params.import_data.databases['rgd']
+
+  output:
+  set val('rgd'), file('genes.txt') into rgd_metadata
+
+  """
+  wget ftp://ftp.rgd.mcw.edu/pub/data_release/GENES_RAT.txt > genes.txt
+  """
 }
 
 Channel.empty()
   .mix(ena_metadata)
   .mix(ensembl_metadata)
   .mix(rfam_metadata)
+  .mix(rgd_metadata)
   .cross(with_metadata)
   .map { meta, data -> data + meta[1..-1] }
   .set { metadata }

@@ -24,8 +24,7 @@ from contextlib import contextmanager
 import attr
 from Bio import SeqIO
 
-from rnacentral_pipeline.databases.data import Exon
-from rnacentral_pipeline.databases.data import Entry
+from rnacentral_pipeline.databases import data
 from rnacentral_pipeline.databases.helpers import phylogeny as phy
 from rnacentral_pipeline.databases.helpers import publications as pub
 
@@ -232,12 +231,6 @@ def species(entry):
     return phy.species(taxid(entry))
 
 
-def fetch_and_split(entry, name):
-    if not entry[name]:
-        return None
-    return entry[name].split(';')
-
-
 def is_ncrna(entry):
     return basic_rna_type(entry) in KNOWN_RNA_TYPES
 
@@ -250,26 +243,26 @@ def seq_version(_):
     return '1'
 
 
-def seq_xref_ids(entry):
-    """
-    This will produce the list of all ids that could be used to extract the
-    """
+# def seq_xref_ids(entry):
+#     """
+#     This will produce the list of all ids that could be used to extract the
+#     """
 
-    xref_ids = []
-    exon_data = exons(entry)
-    for ids in xref_data(entry).values():
-        for exon in exon_data:
-            for xref_id in ids:
-                key = '{xref_id}-{gene_id}-{chr}:{start}..{stop}'.format(
-                    xref_id=xref_id,
-                    gene_id=primary_id(entry),
-                    chr=exon.chromosome_name,
-                    start=exon.primary_start,
-                    stop=exon.primary_end,
-                )
-                xref_ids.append((key, exon))
+#     xref_ids = []
+#     exon_data = exons(entry)
+#     for ids in xref_data(entry).values():
+#         for exon in exon_data:
+#             for xref_id in ids:
+#                 key = '{xref_id}-{gene_id}-{chr}:{start}..{stop}'.format(
+#                     xref_id=xref_id,
+#                     gene_id=primary_id(entry),
+#                     chr=exon.chromosome_name,
+#                     start=exon.primary_start,
+#                     stop=exon.primary_end,
+#                 )
+#                 xref_ids.append((key, exon))
 
-    return xref_ids
+#     return xref_ids
 
 
 def sequences_for(entry, sequences):
@@ -283,34 +276,40 @@ def sequences_for(entry, sequences):
     return list(seqs)
 
 
-def exons(entry):
-    info = RgdLocation.from_dict(entry)
-    if info is None:
+def as_region(chromosomes, starts, stops, strands, index):
+    return data.SequenceRegion(
+        chromosome=chromosomes[index],
+        strand=strands[index],
+        exons=[data.Exon(start=starts[index], stop=stops[index])],
+        assembly_id='',
+    )
+
+
+def regions(entry, sequence):
+    if not entry['CHROMOSOME_6.0']:
         return []
 
-    exons = []
-    for (chrom, start, stop, strand) in info.endpoints():
-        complement = strand == '-'
-        exons.append(Exon(
-            chromosome_name='chr%s' % chrom,
-            primary_start=start,
-            primary_end=stop,
-            assembly_id='',
-            complement=complement,
-        ))
-    return exons
+    chromosomes = entry['CHROMOSOME_6.0'].split(';')
+    starts = [int(p) for p in entry['START_POS_6.0'].split(';')]
+    stops = [int(p) for p in entry['STOP_POS_6.0'].split(';')]
+    strands = entry['STRAND_6.0'].split(';')
+    assert len(chromosomes) == len(starts) == len(stops) == len(strands)
+
+    total = range(len(chromosomes))
+    return [as_region(chromosomes, starts, stops, strands, i) for i in total]
 
 
 def xref_data(entry):
     xrefs = {}
     for name, key in XREF_NAMING.items():
-        data = fetch_and_split(entry, key)
-        if data:
-            xrefs[name] = data
+        if not entry[key]:
+            continue
+        xrefs[name] = entry[key].split(';')
+
     return xrefs
 
 
-def references(accession, entry):
+def references(entry):
     refs = []
     refs.append(pub.reference(25355511))  # The general RGD citation
     for pmid_set in pmids(entry):
@@ -344,41 +343,67 @@ def gene_synonyms(entry):
     return []
 
 
-def as_entries(data, seqs):
-    entries = []
-    sequences = sequences_for(data, seqs)
-    for index, (sequence, _) in enumerate(sequences):
-        acc_index = index + 1
-        if len(sequences) == 1:
-            acc_index = None
+def as_entries(genes, seqs):
+    # sequences = sequences_for(data, seqs)
+    for gene in genes:
+        ncrnas = []
 
-        acc = accession(data, acc_index)
+        sequences = transcripts(gene, seqs)
+        for index, sequence in enumerate(sequences):
+            acc_index = index + 1
+            if len(sequences) == 1:
+                acc_index = None
 
-        entries.append(Entry(
-            primary_id=primary_id(data),
-            accession=acc,
-            ncbi_tax_id=taxid(data),
-            database='RGD',
-            sequence=sequence,
-            regions=[],
-            rna_type=rna_type(data),
-            url=url(data),
-            seq_version=seq_version(data),
+            ncrnas.append(data.Entry(
+                primary_id=primary_id(gene),
+                accession=accession(gene, acc_index),
+                ncbi_tax_id=taxid(gene),
+                database='RGD',
+                sequence=sequence,
+                regions=regions(gene, sequence),
+                rna_type=rna_type(gene),
+                url=url(gene),
+                seq_version=seq_version(gene),
+                xref_data=xref_data(gene),
+                common_name=common_name(gene),
+                species=species(gene),
+                lineage=lineage(gene),
+                gene=gene(gene),
+                locus_tag=locus_tag(gene),
+                gene_synonyms=gene_synonyms(gene),
+                description=description(gene),
+                references=references(gene),
+            ))
 
-            xref_data=xref_data(data),
+        for entry in data.generate_related(ncrnas):
+            yield entry
 
-            common_name=common_name(data),
-            species=species(data),
-            lineage=lineage(data),
-
-            gene=gene(data),
-            locus_tag=locus_tag(data),
-            gene_synonyms=gene_synonyms(data),
-            description=description(data),
-
-            references=references(acc, data),
-        ))
-    return entries
+    # for index, (sequence, _) in enumerate(sequences):
+        # acc_index = index + 1
+        # if len(sequences) == 1:
+        #     acc_index = None
+        # acc = accession(data, acc_index)
+        # entries.append(Entry(
+        #     primary_id=primary_id(data),
+        #     accession=acc,
+        #     ncbi_tax_id=taxid(data),
+        #     database='RGD',
+        #     sequence=sequence,
+        #     regions=[],
+        #     rna_type=rna_type(data),
+        #     url=url(data),
+        #     seq_version=seq_version(data),
+        #     xref_data=xref_data(data),
+        #     common_name=common_name(data),
+        #     species=species(data),
+        #     lineage=lineage(data),
+        #     gene=gene(data),
+        #     locus_tag=locus_tag(data),
+        #     gene_synonyms=gene_synonyms(data),
+        #     description=description(data),
+        #     references=references(acc, data),
+        # ))
+    # return entries
 
 
 def as_rows(lines):

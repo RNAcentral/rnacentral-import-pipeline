@@ -14,7 +14,7 @@ def sequences(handle):
         data = json.loads(line)
         description = data.get('description', None)
         if description:
-            description = unicode(description)
+            description = description.encode('utf-8', 'ignore')
 
         yield SeqRecord(
             Seq(data['sequence']),

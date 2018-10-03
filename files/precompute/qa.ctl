@@ -1,5 +1,5 @@
 LOAD CSV
-FROM <qa.*csv$>
+FROM ALL FILENAMES MATCHING ~<qa.*csv$>
 HAVING FIELDS (
   rna_id,
   upi,
@@ -7,7 +7,8 @@ HAVING FIELDS (
   has_issue,
   incomplete_sequence,
   possible_contamination,
-  missing_rfam_match
+  missing_rfam_match,
+  messages
 )
 INTO {{PGDATABASE}}?load_qa_status
 TARGET COLUMNS (
@@ -17,7 +18,8 @@ TARGET COLUMNS (
   has_issue,
   incomplete_sequence,
   possible_contamination,
-  missing_rfam_match
+  missing_rfam_match,
+  messages
 )
 
 WITH
@@ -35,7 +37,8 @@ create table if not exists load_qa_status (
   has_issue bool,
   incomplete_sequence bool,
   possible_contamination bool,
-  missing_rfam_match bool
+  missing_rfam_match bool,
+  messages text[]
 );
 $$,
 $$
@@ -51,7 +54,8 @@ insert into qa_status (
   has_issue,
   incomplete_sequence,
   possible_contamination,
-  missing_rfam_match
+  missing_rfam_match,
+  messages
 ) (
 SELECT distinct
   rna_id,
@@ -60,7 +64,8 @@ SELECT distinct
   has_issue,
   incomplete_sequence,
   possible_contamination,
-  missing_rfam_match
+  missing_rfam_match,
+  messages
 FROM load_qa_status
 )
 ON CONFLICT (rna_id) DO UPDATE
@@ -68,7 +73,8 @@ SET
   has_issue = EXCLUDED.has_issue,
   incomplete_sequence = EXCLUDED.incomplete_sequence,
   possible_contamination = EXCLUDED.possible_contamination,
-  missing_rfam_match = EXCLUDED.missing_rfam_match
+  missing_rfam_match = EXCLUDED.missing_rfam_match,
+  messages = EXCLUDED.messages
 ;
 $$,
 $$

@@ -25,13 +25,13 @@ def ranges_between(start, stop, max_size):
         yield (last, stop)
 
 
-def upi_ranges(dbconf, max_size):
+def upi_ranges(dbconf, table_name, max_size):
     """
     This will create range of the ids for all UPI's in the database.
     """
 
     with cursor(dbconf) as cur:
-        cur.execute('select max(id) from rna')
+        cur.execute('select max(id) from %s' % table_name)
         stop = cur.fetchone()[0]
 
     return ranges_between(1, stop, max_size)

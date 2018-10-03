@@ -36,6 +36,8 @@ select
       'model', hits.rfam_model_id,
       'model_rna_type', models.rna_type,
       'model_domain', models.domain,
+      'model_name', models.short_name,
+      'model_long_name', models.long_name,
       'model_completeness', hits.model_completeness,
       'model_start', hits.model_start,
       'model_stop', hits.model_stop,
@@ -46,6 +48,7 @@ select
   'last_release', max(xref.last)
 )
 FROM rna
+join upis_to_precompute todo on todo.upi = rna.upi
 join xref on xref.upi = rna.upi
 join rnc_accessions acc
 on
@@ -60,7 +63,7 @@ join rnc_database db
 ON
     db.id = xref.dbid
 where
-    rna.id BETWEEN :min AND :max
+    todo.id BETWEEN :min AND :max
 GROUP BY rna.upi, xref.taxid
 ORDER BY rna.upi, xref.taxid
 ) TO STDOUT
