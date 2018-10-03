@@ -1,33 +1,31 @@
 COPY (
-select
-    json_build_object(
-        'rna_id', pre.id,
-        'rna_type',  pre.rna_type,
-        'databases', pre.databases,
-        'known_coordinates', json_build_object(
-            'region_id', coord.accession,
-            'chromosome', coord.name,
-            'strand', coord.strand,
-            'start', coord.primary_start,
-            'stop', coord.primary_end
-        ),
-        'mapped_coordinates', json_build_object(
-            'region_id', mapping.region_id,
-            'chromosome', mapping.chromosome,
-            'strand', mapping.strand,
-            'start', mapping."start",
-            'stop', mapping.stop,
-            'identity', mapping.identity
-        )
-    )
-from xref
-join rnc_rna_precomputed pre on pre.upi = xref.upi and pre.taxid = xref.taxid
-LEFT JOIN rnc_coordinates coord ON xref.ac = coord.accession and coord.assembly_id = :assembly_id
-LEFT JOIN rnc_genome_mapping mapping on mapping.rna_id = pre.id and mapping.assembly_id = :assembly_id
+SELECT
+  json_build_object(
+      'region_id', max(regions.region_name),
+      'rna_id', max(pre.id),
+      'rna_type',  max(pre.rna_type),
+      'databases', regexp_split_to_array(max(pre."databases"), ','),
+      'providing_databases', max(regions.providing_databases),
+      'chromosome', max(regions.chromosome),
+      'strand', max(regions.strand),
+      'identity', max(regions.identity),
+      'exons', array_agg(distinct exons.*)
+  )
+FROM rnc_rna_precomputed pre
+JOIN rnc_sequence_regions regions
+ON
+  regions.urs_taxid = pre.id
+JOIN rnc_sequence_exons exons
+ON
+  exons.region_id = regions.id
+JOIN ensembl_coordinate_systems coords
+ON
+  coords.chromosome = regions.chromosome
+  and coords.assembly_id = regions.assembly_id
 WHERE
-    xref.taxid = :taxid
-    and pre.is_active = true
-    and xref.deleted = 'N'
-    and (mapping.region_id is not null or coord.id is not null)
-order by pre.id
+  pre.is_active = true
+  AND regions.assembly_id = :'assembly_id'
+  AND coords.is_reference = true
+GROUP BY regions.id
+ORDER BY max(coords.karyotype_rank), regions.region_start, regions.id
 ) TO STDOUT
