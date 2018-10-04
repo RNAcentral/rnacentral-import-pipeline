@@ -26,6 +26,7 @@ $$,
 $$
 create table load_rnc_related_sequences (
   source_accession varchar(100) NOT NULL,
+  soruce_urs_taxid text,
   target_accession varchar(100) NOT NULL,
   relationship_type text NOT NULL,
   methods text[]
