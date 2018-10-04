@@ -15,6 +15,7 @@ TARGET COLUMNS (
 )
 
 WITH truncate,
+  drop indexes,
   skip header = 0,
   fields escaped by double-quote,
   fields terminated by ','
@@ -26,10 +27,13 @@ $$,
 $$
 create table load_rnc_related_sequences (
   source_accession varchar(100) NOT NULL,
-  soruce_urs_taxid text,
+  source_urs_taxid text,
   target_accession varchar(100) NOT NULL,
   relationship_type text NOT NULL,
   methods text[]
 );
+$$,
+$$
+create index ix_load_rnc_related_sequences__relationship_type on load_rnc_related_sequences(relationship_type);
 $$
 ;

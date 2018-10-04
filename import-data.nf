@@ -12,14 +12,14 @@ raw_output = Channel.empty()
 // control files that will be used to load the data.
 IMPORTABLE = [
   "accessions.csv": 'files/import-data/accessions.ctl',
-  "genomic_locations.csv": 'files/import-data/locations.ctl',
-  "seq_long.csv": 'files/import-data/long-sequences.ctl',
-  "seq_short.csv": 'files/import-data/short-sequences.ctl',
-  "refs.csv": 'files/import-data/references.ctl',
-  "secondary_structure.csv": 'files/import-data/secondary.ctl',
+  "locations.csv": 'files/import-data/locations.ctl',
+  "long_sequences.csv": 'files/import-data/long-sequences.ctl',
+  "short_sequences.csv": 'files/import-data/short-sequences.ctl',
+  "references.csv": 'files/import-data/references.ctl',
+  "secondary_structure.csv": 'files/import-data/secondary-structure.ctl',
   "related_sequences.csv": 'files/import-data/related-sequences.ctl',
   "features.csv": 'files/import-data/features.ctl',
-  "sequence_regions.csv": 'files/import-data/regions.ctl',
+  "regions.csv": 'files/import-data/regions.ctl',
 ]
 
 dataless_imports = Channel.empty()
@@ -220,6 +220,7 @@ raw_output
     [[name, ctl], f]
   }
   .groupTuple()
+  .view()
   .map { it -> [it[0][0], it[0][1], it[1]] }
   .set { to_load }
 
@@ -230,7 +231,7 @@ process merge_and_import {
   set val(name), file(ctl), file('raw*.csv') from to_load
 
   output:
-  file(ctl) into loaded
+  val(name) into loaded
 
   """
   set -o pipefail
@@ -246,13 +247,19 @@ process merge_and_import {
   """
 }
 
+loaded
+  .view()
+  .map { name -> file("files/import-data/post-release/${name.replace('_', '-')}.sql") }
+  .mix(Channel.fromPath('files/import-data/post-release/cleanup.sql'))
+  .filter { f -> f.exists() }
+  .set { post_scripts }
+
 process release {
   echo true
   maxForks 1
 
   input:
-  file('*.ctl') from loaded.collect()
-  file(post) from Channel.fromPath('files/import-data/release/post/*.sql').collect()
+  file(post) from post_scripts.collect()
 
   """
   set -o pipefail
@@ -260,6 +267,6 @@ process release {
   rnac run-release
   find . -name '*.sql' -print0 |\
   sort -z |\
-  xargs -r0 -I {} psql -f {} "$PGDATABASE"
+  xargs -r0 -I {} psql -v ON_ERROR_STOP=1 -f {} "$PGDATABASE"
   """
 }
