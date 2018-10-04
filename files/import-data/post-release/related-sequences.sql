@@ -51,7 +51,7 @@ INSERT INTO rnc_related_sequences (
 select distinct
   load.source_urs_taxid,
   load.source_accession,
-  target.upi || '_' || xref.taxid,
+  target.upi || '_' || target.taxid,
   load.target_accession,
   load.relationship_type::related_sequence_relationship,
   load.methods
@@ -59,7 +59,7 @@ from load_rnc_related_sequences load
 join xref target on target.ac = load.target_accession
 where
   load.relationship_type = 'target_rna'
-  and xref.deleted = 'N'
+  and target.deleted = 'N'
 )
 ON CONFLICT (source_accession, target_accession, relationship_type) DO UPDATE
 SET
@@ -100,10 +100,10 @@ INSERT INTO rnc_related_sequences (
   relationship_type,
   methods
 ) (
-select distinct
-  load.source_urs_taxid,
+select distinct on
+  (load.source_accession, load.target_accession, load.relationship_type) load.source_urs_taxid,
   load.source_accession,
-  target.urs_taxid
+  gene.urs_taxid,
   load.target_accession,
   load.relationship_type::related_sequence_relationship,
   load.methods
@@ -120,7 +120,7 @@ SET
 ;
 
 -- Cleanup the sequences with known gene
-DELETE FROM load_rnc_related_sequences
+DELETE FROM load_rnc_related_sequences load
 USING gene_upi_mapping gene
 WHERE
   gene.versionless_gene = load.target_accession
@@ -143,7 +143,7 @@ select
   load.target_accession,
   load.relationship_type::related_sequence_relationship,
   load.methods
-from load_rnc_related_sequences
+from load_rnc_related_sequences load
 )
 ON CONFLICT (source_accession, target_accession, relationship_type) DO UPDATE
 SET
