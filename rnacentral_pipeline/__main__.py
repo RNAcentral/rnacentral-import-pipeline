@@ -86,6 +86,7 @@ def external_database():
 
 @external_database.command('json-schema', aliases=[
     'flybase',
+    'lncbase',
     'lncipedia',
     'mirbase',
     'pombase',
