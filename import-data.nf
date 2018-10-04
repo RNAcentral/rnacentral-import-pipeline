@@ -255,8 +255,11 @@ process release {
   file(post) from Channel.fromPath('files/import-data/release/post/*.sql').collect()
 
   """
+  set -o pipefail
+
   rnac run-release
-  find . -name '*.sql' -print0 | sort -z | xargs -r0 cat > post-command
-  psql -f post-command "$PGDATABASE"
+  find . -name '*.sql' -print0 |\
+  sort -z |\
+  xargs -r0 -I {} psql -f {} "$PGDATABASE"
   """
 }
