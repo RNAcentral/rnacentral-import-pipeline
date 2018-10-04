@@ -5,7 +5,7 @@ process fetch_sequences {
   file query from Channel.fromPath('files/qa/rfam-scan.sql')
 
   output:
-  file('parts/*.fa') into sequences_to_scan mode flatten
+  file('parts/*.fasta') into sequences_to_scan mode flatten
 
   """
   set -o pipefail
@@ -13,7 +13,7 @@ process fetch_sequences {
   psql -f "$query" "$PGDATABASE" > raw.json
   json2fasta.py raw.json rnacentral.fasta
   seqkit shuffle --two-pass rnacentral.fasta > shuffled.fasta
-  seqkit split --two-pass --by-size ${params.qa.rfam_scan.chunk_size} -out-dir 'parts/'
+  seqkit split --two-pass --by-size ${params.qa.rfam_scan.chunk_size} --out-dir 'parts/' shuffled.fasta
   """
 }
 
