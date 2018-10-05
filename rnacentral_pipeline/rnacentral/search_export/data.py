@@ -168,6 +168,17 @@ def unique_lower(values):
     return {v.lower() for v in values if v}
 
 
+def get_or_empty(name, missing=[]):
+    def fn(data):
+        value = data.get(name, missing)
+        if isinstance(value, bool):
+            value = str(value)
+        if not isinstance(value, (list, tuple, set)):
+            return [value]
+        return value
+    return fn
+
+
 def entry(spec):
     def fn(data):
         entry_id = '{upi}_{taxid}'.format(
@@ -547,19 +558,33 @@ def interacting_proteins(interacting):
     return sorted(proteins)
 
 
-def interacting_evidence(interacting):
+def interacting_evidence(proteins, rnas):
     methods = set()
-    for related in interacting:
+    for related in proteins:
+        methods.update(related['methods'] or [])
+    for related in rnas:
         methods.update(related['methods'] or [])
     return sorted(methods)
 
 
+def has_interacting_rnas(interacting):
+    return str(bool(any(i['id'] for i in interacting)))
+
+
+def interacting_rnas(interacting):
+    rnas = set()
+    for rna in interacting:
+        if not rna:
+            continue
+        if rna['id']:
+            rnas.add(rna['id'].split(':', 1)[1])
+        if rna['urs']:
+            rnas.add(rna['urs'])
+    return rnas
+
+
 def has_crs(crs):
     return [str(bool(crs))]
-
-
-def crs_ids(crs):
-    return crs.get('crs_ids', [])
 
 
 def gene_synonyms(synonym_set):
@@ -576,15 +601,6 @@ def gene_synonyms(synonym_set):
             parts = [synonyms]
         result.update(p.strip() for p in parts)
     return result
-
-
-def overlaps(data):
-    return data.get('overlaps_with', [])
-
-
-def no_overlaps(data):
-    print(data)
-    return data.get('no_overlaps_with', [])
 
 
 builder = entry([
@@ -651,10 +667,15 @@ builder = entry([
         fields('go_annotation_source', go_source, keys='go_annotations'),
         field('has_interacting_proteins', has_interacting_proteins, keys='interacting_proteins'),
         fields('interacting_protein', interacting_proteins, keys='interacting_proteins'),
-        fields('evidence_for_interaction', interacting_evidence, keys='interacting_proteins'),
+        field('has_interacting_rnas', has_interacting_rnas, keys='interacting_rnas'),
+        fields('interacting_rna', interacting_rnas, keys='interacting_rnas'),
+        fields('evidence_for_interaction', interacting_evidence, keys=(
+            'interacting_proteins',
+            'interacting_rnas',
+        )),
         fields('has_conserved_structure', has_crs, keys='crs'),
-        fields('conserved_structure', crs_ids, keys='crs'),
-        fields('overlaps_with', overlaps, keys='overlaps'),
-        fields('no_overlaps_with', no_overlaps, keys='overlaps'),
+        fields('conserved_structure', get_or_empty('crs_ids'), keys='crs'),
+        fields('overlaps_with', get_or_empty('overlaps_with'), keys='overlaps'),
+        fields('no_overlaps_with', get_or_empty('no_overlaps_with'), keys='overlaps'),
     ]),
 ])
