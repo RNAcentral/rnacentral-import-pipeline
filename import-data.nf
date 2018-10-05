@@ -6,22 +6,6 @@
 // import is much easier this way, as we only have to modify in a few places
 // instead of every possible process that could produce it.
 raw_output = Channel.empty()
-
-// Because we use very generic globs to get files to import we have to filter
-// the filenames ot known ones. This maps from the allowed filenames to the
-// control files that will be used to load the data.
-IMPORTABLE = [
-  "accessions.csv": 'files/import-data/accessions.ctl',
-  "locations.csv": 'files/import-data/locations.ctl',
-  "long_sequences.csv": 'files/import-data/long-sequences.ctl',
-  "short_sequences.csv": 'files/import-data/short-sequences.ctl',
-  "references.csv": 'files/import-data/references.ctl',
-  "secondary_structure.csv": 'files/import-data/secondary-structure.ctl',
-  "related_sequences.csv": 'files/import-data/related-sequences.ctl',
-  "features.csv": 'files/import-data/features.ctl',
-  "regions.csv": 'files/import-data/regions.ctl',
-]
-
 dataless_imports = Channel.empty()
 to_fetch = Channel.empty()
 
@@ -212,15 +196,14 @@ process import_with_metadata {
 raw_output.mix(raw_with_metadata_output).set { raw_output }
 
 raw_output
-  .filter { f -> IMPORTABLE.keySet().findIndexOf { p -> f.getName() ==~ p } > -1 }
   .map { f ->
     filename = f.getName()
     name = filename.take(filename.lastIndexOf('.'))
-    ctl = file(IMPORTABLE[filename])
+    ctl = file("files/import-data/${name.replace('_', '-')}.ctl")
     [[name, ctl], f]
   }
+  .filter { it[0][1].exists() }
   .groupTuple()
-  .view()
   .map { it -> [it[0][0], it[0][1], it[1]] }
   .set { to_load }
 
@@ -248,7 +231,6 @@ process merge_and_import {
 }
 
 loaded
-  .view()
   .map { name -> file("files/import-data/post-release/${name.replace('_', '-')}.sql") }
   .mix(Channel.fromPath('files/import-data/post-release/cleanup.sql'))
   .filter { f -> f.exists() }
