@@ -24,6 +24,7 @@ from rnacentral_pipeline.databases.refseq import parser as refseq
 from rnacentral_pipeline.databases.ensembl import parser as ensembl
 from rnacentral_pipeline.databases.ensembl import proteins as ensembl_proteins
 from rnacentral_pipeline.databases.ensembl import coordinate_systems as ensembl_coords
+from rnacentral_pipeline.databases.ensembl import databases as ensembl_databases
 from rnacentral_pipeline.databases.ensembl_plants import parser as ensembl_plants
 
 from rnacentral_pipeline.databases.crs import parser as crs
@@ -551,6 +552,19 @@ def ensembl_coordinates(filename, output):
     the database.
     """
     ensembl_coords.from_file(filename, output)
+
+
+@ensembl_group.command('select-databases')
+@click.option('--db_url', envvar='PGDATABASE')
+@click.argument('filename', default='-', type=click.File('rb'))
+@click.argument('output', default='-', type=click.File('wb'))
+def ensembl_select_databases(filename, output, db_url=None):
+    """
+    This will select which database names to import. It basically checsk to see
+    which is the newest assuming Ensembl's standard naming schema and see which
+    we have not already imported.
+    """
+    ensembl_databases.write_max(filename, output, db_url=db_url)
 
 
 @cli.command('run-release')

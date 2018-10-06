@@ -44,7 +44,7 @@ process find_ensembl_databases {
     --host ${mysql.host} \
     --port ${mysql.port} \
     --user ${mysql.user} |\
-  max-ensembl-database > selected.csv
+  rnc ensembl select-databases - > selected.csv
   """
 }
 
@@ -62,7 +62,7 @@ ensembl_databases
   }
   .set { ensembl_metadata_dbs }
 
-process ensembl_protein_info {
+process fetch_internal_ensembl_data {
   maxForks params.import_metadata.ensembl.max_forks
 
   input:
