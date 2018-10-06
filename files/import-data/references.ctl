@@ -1,5 +1,5 @@
 LOAD CSV
-FROM ALL FILENAMES MATCHING ~<refs.*csv$>
+FROM ALL FILENAMES MATCHING ~<references.*csv$>
 HAVING FIELDS  (
     md5,
     accession,
