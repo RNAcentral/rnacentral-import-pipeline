@@ -20,34 +20,6 @@ from ..db import connection
 LOGGER = logging.getLogger(__name__)
 
 
-UPDATE_COORDINATES = """
-INSERT INTO rnacen.rnc_coordinates AS t1 (
-  accession,
-  name,
-  local_start,
-  local_end,
-  strand,
-  assembly_id,
-  id
-)
-SELECT
-  load.accession,
-  load.chromosome,
-  load.local_start,
-  load.local_end,
-  load.strand,
-  assembly.assembly_id,
-  NEXTVAL('rnc_coordinates_pk_seq')
-FROM rnacen.load_rnc_coordinates as load
-join ensembl_assembly assembly
-on
-    assembly.assembly_id = load.assembly_id
-WHERE
-  load.chromosome is not null
-ON CONFLICT (accession, name, local_start, local_end, assembly_id)
-DO NOTHING
-"""
-
 CREATE_INDEX_SQL = """
 CREATE INDEX IF NOT EXISTS load_rnacentral_all$database
 ON rnacen.load_rnacentral_all(database)
@@ -72,7 +44,6 @@ def run(db_url):
         cursor.execute("SET work_mem TO '256MB'")
         cursor.execute('SELECT rnc_update.update_rnc_accessions()')
         cursor.execute('SELECT rnc_update.update_literature_references()')
-        cursor.execute(UPDATE_COORDINATES)
         cursor.execute(CREATE_INDEX_SQL)
         cursor.execute("SELECT rnc_update.prepare_releases('F')")
         cursor.execute(TO_RELEASE)
