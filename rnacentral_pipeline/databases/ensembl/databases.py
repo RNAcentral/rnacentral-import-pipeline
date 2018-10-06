@@ -16,6 +16,11 @@ limitations under the License.
 import re
 import itertools as it
 
+DISALLOWED_DATABASE_TERMS = {
+    'mirror',
+    'chok1gs',  # skip golden hamster genome (same taxid as CriGri)
+    'female',  # skip female naked mole rat genome
+}
 
 
 def database_key(name):
@@ -37,7 +42,15 @@ def major(database):
 
 
 def select_max(handle):
-    databases = [l for l in handle if '_core_' in l]
+    databases = []
+    for line in handle:
+        if any(t in line for t in DISALLOWED_DATABASE_TERMS):
+            continue
+        if 'mus_musculus' in line and line.count('_') != 4:
+            continue  # skip mouse strains Mouse 129S1/SvImJ
+        if '_core_' in line:
+            databases.append(line)
+
     max_major = max(database_key(d)[1] for d in databases)
     possible = it.ifilter(lambda d: major(d) == max_major, databases)
     grouped = it.groupby(possible, lambda d: database_key(d)[0])
