@@ -61,7 +61,7 @@ process fetch_data {
   }
 
   if (find_cmd.size) {
-    find_cmd = "find . ${find_cmd.join(' ')} | xargs rm"
+    find_cmd = "find . ${find_cmd.join(' -or ')} | xargs rm"
   } else {
     find_cmd = ''
   }
@@ -90,7 +90,7 @@ process external_without_metadata {
   file "*.csv" into raw_metadataless_output mode flatten
 
   script:
-  if (filename.toString().endsWith(".gz")) {
+  if (input_file.toString().endsWith(".gz")) {
     """
     zcat $filename | rnac external ${name} -
     """
@@ -182,7 +182,7 @@ process import_with_metadata {
   file "*.csv" into raw_with_metadata_output mode flatten
 
   script:
-  if (input_file.contains(".gz")) {
+  if (input_file.toString().endsWith(".gz")) {
     """
     zcat ${input_file} | rnac external ${name} - metadata*
     """
