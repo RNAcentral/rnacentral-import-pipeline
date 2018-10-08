@@ -487,7 +487,7 @@ def rfam_problems(status):
     """
     Create a list of the names of all Rfam problems.
     """
-    ignore = {'has_issues', 'messages'}
+    ignore = {'has_issues', 'messages', 'has_issue'}
     problems = sorted(n for n, v in status.items() if v and n not in ignore)
     return problems or ['none']
 
@@ -655,8 +655,8 @@ builder = entry([
         fields('rfam_family_name', unique, keys='rfam_family_names'),
         fields('rfam_id', unique, keys='rfam_ids'),
         fields('rfam_clan', unique, keys='rfam_clans'),
-        fields('rfam_problems', rfam_problems, keys='qa_status'),
-        field('rfam_problem_found', problem_found, keys='qa_status'),
+        fields('qc_warning', rfam_problems, keys='qa_status'),
+        field('qc_warning_found', problem_found, keys='qa_status'),
         fields('tax_string', unique, keys='tax_strings'),
         fields('involved_in', involved_in, keys='go_annotations'),
         fields('part_of', part_of, keys='go_annotations'),
@@ -678,4 +678,4 @@ builder = entry([
         fields('overlaps_with', get_or_empty('overlaps_with'), keys='overlaps'),
         fields('no_overlaps_with', get_or_empty('no_overlaps_with'), keys='overlaps'),
     ]),
-])
+)
