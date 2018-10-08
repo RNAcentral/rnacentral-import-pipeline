@@ -22,13 +22,13 @@ from rnacentral_pipeline.databases.data import Reference
 from rnacentral_pipeline.databases.rgd import helpers as rgd
 
 
-@pytest.fixture
+@pytest.fixture(scope='module')  # pylint: disable=no-member
 def simple_entry():
     with open('data/rgd/rat_ncrna.tsv', 'rb') as raw:
         return next(rgd.as_rows(raw))
 
 
-@pytest.fixture
+@pytest.fixture(scope='module')  # pylint: disable=no-member
 def tricky_entry():
     with open('data/rgd/rat_ncrna.tsv', 'rb') as raw:
         for entry in rgd.as_rows(raw):
@@ -37,25 +37,25 @@ def tricky_entry():
     raise ValueError("What!")
 
 
-@pytest.fixture
+@pytest.fixture(scope='module')  # pylint: disable=no-member
 def rat_ncrna():
     with open('data/rgd/rat_ncrna.tsv', 'rb') as raw:
         return list(rgd.as_rows(raw))
 
 
-@pytest.fixture
+@pytest.fixture(scope='module')  # pylint: disable=no-member
 def rat_protein():
     with open('data/rgd/rat_protein.tsv', 'rb') as raw:
         return list(rgd.as_rows(raw))
 
 
-@pytest.fixture
+@pytest.fixture(scope='module')  # pylint: disable=no-member
 def rat_multi_locus():
     with open('data/rgd/multi-locus.tsv', 'rb') as raw:
         return list(rgd.as_rows(raw))
 
 
-@pytest.fixture
+@pytest.fixture(scope='module')  # pylint: disable=no-member
 def sequences():
     with rgd.indexed('data/rgd/sequences.fa.gz') as indexed:
         yield indexed

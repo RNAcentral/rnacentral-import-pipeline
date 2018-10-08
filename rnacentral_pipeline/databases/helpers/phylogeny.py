@@ -81,7 +81,7 @@ def lineage(taxon_id):
 
     data = phylogeny(taxon_id)
     return '{lineage}{name}'.format(
-        lineage=data['lineage'],
+        lineage=data.get('lineage', None),
         name=data['scientificName']
     )
 

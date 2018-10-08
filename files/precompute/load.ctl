@@ -1,5 +1,5 @@
 LOAD CSV
-FROM <precompute.*csv$>
+FROM ALL FILENAMES MATCHING ~<precompute.*csv$>
 HAVING FIELDS (
   id,
   upi,

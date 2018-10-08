@@ -28,7 +28,7 @@ process fetch_metdata {
   file("metadata.json") into metadata
 
   """
-  find . -name '*.sql' | xargs -I {} psql -f "{}" "$PGDATABASE" >> metadata.json
+  find . -name '*.sql' | xargs -I {} psql -v ON_ERROR_STOP=1 -f "{}" "$PGDATABASE" >> metadata.json
   """
 }
 
@@ -46,7 +46,7 @@ process export_search_json {
 
   script:
   """
-  psql --variable min=$min --variable max=$max -f "$query" "$PGDATABASE" > search.json 2> err.log
+  psql -v ON_ERROR_STOP=1 --variable min=$min --variable max=$max -f "$query" "$PGDATABASE" > search.json 2> err.log
   cat err.log
   [ ! -s err.log ] || exit 1
   """
@@ -57,7 +57,7 @@ raw_json
   .set { search_json }
 
 process export_chunk {
-  memory '4 GB'
+  memory params.search_export.memory
   publishDir "${tmp}/", mode: 'copy'
 
   input:

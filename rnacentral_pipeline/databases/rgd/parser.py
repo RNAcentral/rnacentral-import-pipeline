@@ -52,7 +52,7 @@ def parse_v_2_2_5(tsv_handle, seqs):
     return it.ifilter(None, entries)
 
 
-def parse(tsv_handle, indexed):
+def parse(tsv_handle, fasta_handle):
     """
     This will parse the given file handles and produce an iterable of Entry
     objects to save. It will validate the version of the TSV handle to check
@@ -68,6 +68,7 @@ def parse(tsv_handle, indexed):
     """
 
     version = get_version(tsv_handle)
-    if version == 'genes-version-2.2.5':
-        return parse_v_2_2_5(tsv_handle, indexed)
+    with helpers.indexed(fasta_handle) as indexed:
+        if version == 'genes-version-2.2.5':
+            return parse_v_2_2_5(tsv_handle, indexed)
     raise ValueError("Unparsable RGD format version %s" % version)

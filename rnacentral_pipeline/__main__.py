@@ -24,6 +24,7 @@ from rnacentral_pipeline.databases.refseq import parser as refseq
 from rnacentral_pipeline.databases.ensembl import parser as ensembl
 from rnacentral_pipeline.databases.ensembl import proteins as ensembl_proteins
 from rnacentral_pipeline.databases.ensembl import coordinate_systems as ensembl_coords
+from rnacentral_pipeline.databases.ensembl_plants import parser as ensembl_plants
 
 from rnacentral_pipeline.databases.crs import parser as crs
 
@@ -60,15 +61,18 @@ def cli():
 @cli.command('upi-ranges')
 # @click.option('--max-chunks', type=int)
 @click.option('--db_url', envvar='PGDATABASE')
+@click.option('--table-name', default='rna')
 @click.argument('chunk_size', type=int)
 @click.argument('output', default='-', type=click.File('wb'))
-def search_export_ranges(output, chunk_size=None, db_url=None):
+def search_export_ranges(chunk_size, output, db_url=None, table_name=None):
     """
     This will compute the ranges to use for our each xml file in the search
     export. We want to do several chunks at once as it is faster (but not too
-    man), and we want to have as large a chunk as possible.
+    man), and we want to have as large a chunk as possible. If given an a
+    table_name value it will use that table, otherwise it will use the rna
+    table.
     """
-    csv.writer(output).writerows(upi_ranges(db_url, chunk_size))
+    csv.writer(output).writerows(upi_ranges(db_url, table_name, chunk_size))
 
 
 @cli.group('external', cls=ClickAliasedGroup)
@@ -82,6 +86,7 @@ def external_database():
 
 @external_database.command('json-schema', aliases=[
     'flybase',
+    'lncbase',
     'lncipedia',
     'mirbase',
     'pombase',
@@ -118,6 +123,21 @@ def process_ensembl(ensembl_file, family_file, output):
     This will parse EMBL files from Ensembl to produce the expected CSV files.
     """
     write_entries(ensembl.parse, output, ensembl_file, family_file)
+
+
+@external_database.command('ensembl_plants')
+@click.argument('ensembl_file', type=click.File('rb'))
+@click.argument('output', default='.', type=click.Path(
+    writable=True,
+    dir_okay=True,
+    file_okay=False,
+))
+def process_ensembl_plants(ensembl_file, output):
+    """
+    This will process the Ensembl Plant data to produce files for import. The
+    files should be in the EMBL format as provided by EnsemblPlants.
+    """
+    write_entries(ensembl_plants.parse, output, ensembl_file)
 
 
 @external_database.command('gencode')
@@ -215,6 +235,28 @@ def extra_crs_data(filename, output):
     crs.from_file(filename, output)
 
 
+@cli.group('rfam')
+def rfam_group():
+    """
+    A group of commands dealing with parsing the Rfam data.
+    """
+    pass
+
+
+@rfam_group.command('families')
+@click.argument('filename', default='-', type=click.File('rb'))
+@click.argument('output', default='families.csv', type=click.File('wb'))
+def rfam_group_families(filename, output):
+    rfam.families.from_file(filename, output)
+
+
+@rfam_group.command('clans')
+@click.argument('filename', default='-', type=click.File('rb'))
+@click.argument('output', default='clans.csv', type=click.File('wb'))
+def rfam_group_clans(filename, output):
+    rfam.clans.from_file(filename, output)
+
+
 @cli.group('ontologies')
 def ontologies():
     pass
@@ -242,7 +284,6 @@ def ontologies_quickgo(raw_data, output):
     file_okay=False,
 ))
 def ontologies_rfam_terms(filename, output):
-    print(dir(rfam))
     rfam.cross_references.from_file(filename, output)
 
 

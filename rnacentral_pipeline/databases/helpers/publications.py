@@ -17,7 +17,6 @@ import re
 from time import sleep
 
 import requests
-
 from functools32 import lru_cache
 
 from ..data import Reference

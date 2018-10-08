@@ -14,6 +14,7 @@ limitations under the License.
 """
 
 import json
+import operator as op
 import itertools as it
 
 import attr
@@ -48,13 +49,16 @@ class Region(object):
             source = 'alignment'
             identity = float(raw['identity'])
 
+        endpoints = [Endpoint.build(e) for e in raw['exons']]
+        endpoints.sort(key=op.attrgetter('start'))
+        endpoints = tuple(endpoints)
         return cls(
             region_id=raw['region_id'],
             rna_id=raw['rna_id'],
             chromosome=raw['chromosome'],
             strand=raw['strand'],
             source=source,
-            endpoints=tuple(Endpoint.build(e) for e in raw['exons']),
+            endpoints=endpoints,
             identity=identity,
             metadata={
                 'rna_type': raw['rna_type'],

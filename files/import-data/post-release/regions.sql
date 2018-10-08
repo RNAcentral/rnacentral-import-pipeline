@@ -41,18 +41,19 @@ where
 ;
 
 -- Delete all regions and exons where there are no providing databases
-DELETE from rnc_sequence_regions where and was_mapped = false and providing_databases = '{}';
+DELETE FROM rnc_sequence_regions WHERE was_mapped = false and providing_databases = '{}'::text[];
 
--- Delete all mapped locations that have the same region_name/assembly as a
--- known location. It is possible that the overall region has the same endpoints
--- but different exon/intron boundries because of mapping. So we delete the
--- mapped coordinates that will be overwritten by the given locations to be
--- loaded.
-delete from rnc_sequence_regions regions
-using load_rnc_sequence_regions load
-where
+-- Delete all mapped locations that are redundant with a given, but not yet
+-- loaded location. These will have the same region_name/assembly as a known
+-- location. It is possible that the overall region has the same endpoints but
+-- different exon/intron boundaries because of mapping. So we delete the mapped
+-- coordinates that will be overwritten by the given locations to be load.
+DELETE FROM rnc_sequence_regions regions
+USING load_rnc_sequence_regions load
+WHERE
   load.region_name = regions.region_name
-  and regions.was_mapped = true
+  AND load.assembly_id = regions.assembly_id
+  AND regions.was_mapped = true
 ;
 
 -- Upsert regions table with needed info. Note the max's (for all but
@@ -106,5 +107,5 @@ select
 from load_rnc_sequence_regions load
 join rnc_sequence_regions regions on regions.region_name = load.region_name
 join ensembl_assembly ensembl on ensembl.assembly_id = load.assembly_id
-)
+) ON CONFLICT (region_id, exon_start, exon_stop) DO NOTHING
 ;
