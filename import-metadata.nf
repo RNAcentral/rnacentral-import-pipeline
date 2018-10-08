@@ -1,26 +1,27 @@
 #!/usr/bin/env nextflow
 
-// Channel.fromFilePairs("files/import-metadata/rfam/*.{ctl,sql}")
-//   .map { it[1] }
-//   .set { rfam_files }
-// process import_rfam_metadata {
-//   echo true
-//   input:
-//   set file(ctl), file(sql) from rfam_files
-//   script:
-//   filename = ctl.getName()
-//   name = filename.take(filename.lastIndexOf('.'))
-//   """
-//   set -o pipefail
-//   mysql \
-//     --host ${params.databases.rfam.mysql.host} \
-//     --port ${params.databases.rfam.mysql.port} \
-//     --user ${params.databases.rfam.mysql.user} \
-//     --database ${params.databases.rfam.mysql.db_name} \
-//     < $sql > data.tsv
-//     rnac rfam $name data.tsv - | pgloader $ctl
-//   """
-// }
+Channel.fromFilePairs("files/import-metadata/rfam/*.{ctl,sql}")
+  .map { it[1] }
+  .set { rfam_files }
+
+process import_rfam_metadata {
+  input:
+  set file(ctl), file(sql) from rfam_files
+
+  script:
+  filename = ctl.getName()
+  name = filename.take(filename.lastIndexOf('.'))
+  """
+  set -o pipefail
+  mysql \
+    --host ${params.databases.rfam.mysql.host} \
+    --port ${params.databases.rfam.mysql.port} \
+    --user ${params.databases.rfam.mysql.user} \
+    --database ${params.databases.rfam.mysql.db_name} \
+    < $sql > data.tsv
+    rnac rfam $name data.tsv - | pgloader $ctl
+  """
+}
 
 Channel.fromPath('files/import-metadata/ensembl/metadata/*.sql')
   .map { f -> f.getName().take(f.getName().lastIndexOf('.')) }
