@@ -107,5 +107,5 @@ select
 from load_rnc_sequence_regions load
 join rnc_sequence_regions regions on regions.region_name = load.region_name
 join ensembl_assembly ensembl on ensembl.assembly_id = load.assembly_id
-)
+) ON CONFLICT (region_id, exon_start, exon_stop) DO NOTHING
 ;
