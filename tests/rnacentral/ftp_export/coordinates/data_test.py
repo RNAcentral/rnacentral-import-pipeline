@@ -145,7 +145,6 @@ def test_can_build_for_only_mapped():
     assert attr.asdict(found) == attr.asdict(ans)
 
 
-@pytest.mark.skip
 def test_can_find_correct_for_something_that_can_be_mapped():
     found = fetch_one('URS00009BF201_9606', 'GRCh38')
     assert found == [
