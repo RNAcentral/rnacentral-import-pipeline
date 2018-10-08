@@ -42,9 +42,11 @@ class Region(object):
 
     @classmethod
     def build(cls, raw):
+        identity = None
         source = 'expert-database'
         if raw['identity'] is not None:
             source = 'alignment'
+            identity = float(raw['identity'])
 
         return cls(
             region_id=raw['region_id'],
@@ -53,7 +55,7 @@ class Region(object):
             strand=raw['strand'],
             source=source,
             endpoints=tuple(Endpoint.build(e) for e in raw['exons']),
-            identity=float(raw['identity']),
+            identity=identity,
             metadata={
                 'rna_type': raw['rna_type'],
                 'providing_databases': raw['providing_databases'],
