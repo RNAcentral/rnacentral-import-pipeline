@@ -58,7 +58,7 @@ select distinct
 from load_rnc_related_sequences load
 join xref target on target.ac = load.target_accession
 where
-  load.relationship_type = 'target_rna'
+  load.relationship_type IN ('target_rna', 'isoform')
   and target.deleted = 'N'
 )
 ON CONFLICT (source_accession, target_accession, relationship_type) DO UPDATE
