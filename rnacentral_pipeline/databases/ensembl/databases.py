@@ -49,7 +49,7 @@ def select_max(handle):
         if 'mus_musculus' in line and line.count('_') != 4:
             continue  # skip mouse strains Mouse 129S1/SvImJ
         if '_core_' in line:
-            databases.append(line)
+            databases.append(line.strip())
 
     max_major = max(database_key(d)[1] for d in databases)
     possible = it.ifilter(lambda d: major(d) == max_major, databases)
@@ -67,3 +67,4 @@ def write_max(handle, output, db_url=None):
     for name in select_max(handle):
         if name not in known:
             output.write(name)
+            output.write('\n')
