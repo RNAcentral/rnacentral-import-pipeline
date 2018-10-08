@@ -49,7 +49,7 @@ process find_ensembl_databases {
     --host ${mysql.host} \
     --port ${mysql.port} \
     --user ${mysql.user} |\
-  rnc ensembl select-tasks - $possible done.csv > selected.csv
+  rnac ensembl select-tasks - $possible done.csv > selected.csv
   """
 }
 
