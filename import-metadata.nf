@@ -1,30 +1,26 @@
 #!/usr/bin/env nextflow
 
-Channel.fromFilePairs("files/import-metadata/rfam/*.{ctl,sql}")
-  .map { it[1] }
-  .set { rfam_files }
-
-process import_rfam_metadata {
-  echo true
-
-  input:
-  set file(ctl), file(sql) from rfam_files
-
-  script:
-  filename = ctl.getName()
-  name = filename.take(filename.lastIndexOf('.'))
-  """
-  set -o pipefail
-
-  mysql \
-    --host ${params.databases.rfam.mysql.host} \
-    --port ${params.databases.rfam.mysql.port} \
-    --user ${params.databases.rfam.mysql.user} \
-    --database ${params.databases.rfam.mysql.db_name} \
-    < $sql > data.tsv
-    rnac rfam $name data.tsv - | pgloader $ctl
-  """
-}
+// Channel.fromFilePairs("files/import-metadata/rfam/*.{ctl,sql}")
+//   .map { it[1] }
+//   .set { rfam_files }
+// process import_rfam_metadata {
+//   echo true
+//   input:
+//   set file(ctl), file(sql) from rfam_files
+//   script:
+//   filename = ctl.getName()
+//   name = filename.take(filename.lastIndexOf('.'))
+//   """
+//   set -o pipefail
+//   mysql \
+//     --host ${params.databases.rfam.mysql.host} \
+//     --port ${params.databases.rfam.mysql.port} \
+//     --user ${params.databases.rfam.mysql.user} \
+//     --database ${params.databases.rfam.mysql.db_name} \
+//     < $sql > data.tsv
+//     rnac rfam $name data.tsv - | pgloader $ctl
+//   """
+// }
 
 Channel.empty()
   .mix(Channel.from(params.databases.ensembl.mysql))
@@ -39,6 +35,8 @@ process find_ensembl_databases {
   set val(mysql), file('selected.csv') into ensembl_databases
 
   """
+  psql -f "$done" "$PGDATABASE" > done.txt
+
   echo 'show databases' |\
   mysql \
     --host ${mysql.host} \
@@ -54,12 +52,7 @@ ensembl_databases
     csv.eachLine { line -> data << ([mysql] + line.tokenize(',')) }
     data
   }
-  .combine(Channel.fromPath('files/import-metadata/ensembl/*.sql'))
-  .map { mysql, db, sql ->
-    filename = sql.getName()
-    name = filename.take(filename.lastIndexOf('.'))
-    [mysql, name, db, sql]
-  }
+  .map { mysql, name, db -> [mysql, name, db, file("files/import-metadata/ensembl/metadata/${name}.sql")] }
   .set { ensembl_metadata_dbs }
 
 process fetch_internal_ensembl_data {
@@ -70,7 +63,10 @@ process fetch_internal_ensembl_data {
 
   output:
   set val(name), file('data.csv') into ensembl_metadata
+  set val(imported) into ensembl_imports
 
+  script:
+  imported = [db, name].join(',')
   """
   mysql -N \
     --host ${mysql.host} \
@@ -101,6 +97,19 @@ process import_ensembl_data {
 
    cp $ctl merged/$ctl
    cd merged
-   pgloader $ctl
+   pgloader --on-error-stop $ctl
    """
+}
+
+process mark_imports {
+  echo true
+
+  input:
+  file('imported-data.txt') from ensembl_imports.collectFile(name: 'imported-data.txt')
+  file(ctl) from Channel.fromPath('files/import-metadata/ensembl/mark-analyzed.ctl')
+
+  """
+  cp $ctl local_$ctl
+  pgloader --on-error-stop local_$ctl
+  """
 }

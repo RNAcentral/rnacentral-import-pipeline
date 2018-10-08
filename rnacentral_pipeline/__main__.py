@@ -24,7 +24,7 @@ from rnacentral_pipeline.databases.refseq import parser as refseq
 from rnacentral_pipeline.databases.ensembl import parser as ensembl
 from rnacentral_pipeline.databases.ensembl import proteins as ensembl_proteins
 from rnacentral_pipeline.databases.ensembl import coordinate_systems as ensembl_coords
-from rnacentral_pipeline.databases.ensembl import databases as ensembl_databases
+from rnacentral_pipeline.databases.ensembl import database as ensembl_databases
 from rnacentral_pipeline.databases.ensembl import assemblies as ensembl_assemblies
 from rnacentral_pipeline.databases.ensembl_plants import parser as ensembl_plants
 
