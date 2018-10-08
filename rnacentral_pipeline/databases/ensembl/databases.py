@@ -58,13 +58,7 @@ def select_max(handle):
         yield max(databases, key=database_key)
 
 
-def load_known(url):
-    return set()
-
-
-def write_max(handle, output, db_url=None):
-    known = load_known(db_url)
+def write_max(handle, output):
     for name in select_max(handle):
-        if name not in known:
-            output.write(name)
-            output.write('\n')
+        output.write(name)
+        output.write('\n')
