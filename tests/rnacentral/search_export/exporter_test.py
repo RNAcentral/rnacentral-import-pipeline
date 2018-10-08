@@ -145,15 +145,15 @@ def test_assigns_gene_correctly(upi, genes):
 
 
 @pytest.mark.parametrize('upi,genes', [
-    ('URS00006B19C2_77133', []),
-    ('URS0000547AAD_7227', ['FBgn0019661', 'roX1']),
-    ('URS0000D5E40F_7227', ['CR46362']),
-    ('URS0000773F8D_7227', [
+    ('URS00006B19C2_77133', set([])),
+    ('URS0000547AAD_7227', {'FBgn0019661', 'roX1'}),
+    ('URS0000D5E40F_7227', {'CR46362'}),
+    ('URS0000773F8D_7227', {
         'CR46280',
         'dme-mir-9384',
         r'Dmel\CR46280',
-    ]),
-    ('URS0000602386_7227', [
+    }),
+    ('URS0000602386_7227', {
         '276a',
         'CR33584',
         'CR33585',
@@ -171,8 +171,8 @@ def test_assigns_gene_correctly(upi, genes):
         'mir-276',
         'mir-276aS',
         'rosa',
-    ]),
-    ('URS000060F735_9606', [
+    }),
+    ('URS000060F735_9606', {
         'ASMTL-AS',
         'ASMTL-AS1',
         'ASMTLAS',
@@ -183,14 +183,11 @@ def test_assigns_gene_correctly(upi, genes):
         'ENSGR0000236017.2',
         'NCRNA00105',
         'OTTHUMG00000021056.2',
-    ])
+    })
 ])
 def test_assigns_gene_synonym_correctly(upi, genes):
-    ans = [{'attrib': {'name': 'gene_synonym'}, 'text': g} for g in genes]
-    val = load_and_get_additional(upi, 'gene_synonym')
-    ans.sort(key=op.itemgetter('text'))
-    val.sort(key=op.itemgetter('text'))
-    assert val == ans
+    val = {a['text'] for a in load_and_get_additional(upi, 'gene_synonym')}
+    assert val == genes
 
 
 @pytest.mark.parametrize('upi,transcript_ids', [
@@ -473,9 +470,9 @@ def test_correctly_assigns_popular_species(upi, ans):
     ('URS000052E2E9_289219', ['possible_contamination']),
     ('URS00002411EE_10090', ['missing_rfam_match']),
 ])
-def test_it_correctly_build_rfam_problems(upi, problems):
-    # ans = [{'attrib': {'name': 'rfam_problems'}, 'text': p} for p in problems]
-    val = [a['text'] for a in load_and_get_additional(upi, "rfam_problems")]
+def test_it_correctly_build_qc_warnings(upi, problems):
+    # ans = [{'attrib': {'name': 'qc_warning'}, 'text': p} for p in problems]
+    val = [a['text'] for a in load_and_get_additional(upi, "qc_warning")]
     assert sorted(val) == sorted(problems)
 
 
@@ -488,9 +485,9 @@ def test_it_correctly_build_rfam_problems(upi, problems):
     ('URS0000010837_7227', True),
     ('URS000052E2E9_289219', True),
 ])
-def test_it_correctly_assigns_rfam_problem_found(upi, status):
-    assert load_and_get_additional(upi, "rfam_problem_found") == [
-        {'attrib': {'name': 'rfam_problem_found'}, 'text': str(status)},
+def test_it_correctly_assigns_qc_warning_found(upi, status):
+    assert load_and_get_additional(upi, "qc_warning_found") == [
+        {'attrib': {'name': 'qc_warning_found'}, 'text': str(status)},
     ]
 
 
@@ -519,8 +516,8 @@ def test_can_correctly_assign_coordinates(upi, status):
     'URS0000049E57_562',
 ])
 def test_does_not_produce_empty_rfam_warnings(upi):
-    assert load_and_get_additional(upi, 'rfam_problems') == [
-        {'attrib': {'name': 'rfam_problems'}, 'text': 'none'},
+    assert load_and_get_additional(upi, 'qc_warning') == [
+        {'attrib': {'name': 'qc_warning'}, 'text': 'none'},
     ]
 
 
@@ -637,41 +634,42 @@ def test_can_detect_if_has_interacting_proteins(upi, expected):
         "ENSG00000177189",
         "ENSG00000183283",
         "ENSG00000197646",
-        "IPCEF1",
-        "TFAM",
-        "ALOX12",
+        "12S-LOX",
+        "AFI1A",
         "AKIRIN2",
-        "EBF1",
-        "DENND6A",
-        "RPS6KA3",
+        "AL365205.1",
+        "ALOX12",
+        "B7-DC",
+        "Btdc",
+        "C6orf166",
+        "CD273",
+        "CLS",
+        "COE1",
         "DAZAP2",
-        "PDCD1LG2",
+        "DENND6A",
+        "EBF",
+        "EBF1",
+        "FAM116A",
+        "FLJ10342",
+        "FLJ34969",
+        "HU-3",
+        "IPCEF1",
+        "KIAA0058",
         "KIAA0403",
+        "MRX19",
+        "OLF1",
+        "PD-L2",
+        "PDCD1LG2",
+        "PDL2",
         "PIP3-E",
+        "RPS6KA3",
+        "RSK2",
         "TCF6",
         "TCF6L2",
-        "12S-LOX",
-        "C6orf166",
-        "dJ486L4.2",
-        "FLJ10342",
-        "EBF",
-        "OLF1",
-        "AFI1A",
-        "FAM116A",
-        "FLJ34969",
-        "CLS",
-        "HU-3",
-        "MRX19",
-        "RSK2",
-        "KIAA0058",
-        "B7-DC",
-        "bA574F11.2",
-        "Btdc",
-        "CD273",
-        "PDL2",
-        "PD-L2",
+        "TFAM",
         "VIM",
-        "AL365205.1",
+        "bA574F11.2",
+        "dJ486L4.2",
     }),
     ('URS0000759CF4_9606', set()),
 ])
