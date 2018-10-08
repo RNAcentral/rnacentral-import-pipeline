@@ -61,7 +61,7 @@ process fetch_data {
   }
 
   if (find_cmd.size) {
-    find_cmd = "find . ${find_cmd.join(' ')} | xargs rm"
+    find_cmd = "find . ${find_cmd.join(' -or ')} | xargs rm"
   } else {
     find_cmd = ''
   }
