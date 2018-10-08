@@ -38,7 +38,9 @@ class BedBlock(object):
     @property
     def size(self):
         start = self.start - 1
-        return (self.stop - start) or 1
+        size = (self.stop - start) or 1
+        assert size > 0
+        return size
 
 
 @attr.s(slots=True, frozen=True)
@@ -54,7 +56,7 @@ class BedEntry(object):
 
     @classmethod
     def from_region(cls, region):
-        return cls(
+        result = cls(
             chromosome=region.chromosome,
             rna_id=region.rna_id,
             blocks=[BedBlock.from_endpoint(e) for e in region.endpoints],
@@ -62,6 +64,7 @@ class BedEntry(object):
             rna_type=region.metadata['rna_type'],
             databases=','.join(region.metadata['databases']),
         )
+        return result
 
     @property
     def start(self):
@@ -93,7 +96,12 @@ class BedEntry(object):
         return [b.size for b in self.blocks]
 
     def block_starts(self):
-        return [0] + [b.start - self.start for b in self.blocks[1:]]
+        starts = []
+        for block in self.blocks[1:]:
+            start = block.start - self.start
+            assert start > 0, "Invalid start for %s" % (self)
+            starts.append(start)
+        return [0] + starts
 
     def bed_block_sizes(self):
         return ','.join(str(s) for s in self.block_sizes())
@@ -129,5 +137,5 @@ def from_json(handle, out):
     data = coord.from_file(handle)
     data = it.imap(BedEntry.from_region, data)
     data = it.imap(op.methodcaller('writeable'), data)
-    writer = csv.writer(out, delimiter='\t')
+    writer = csv.writer(out, delimiter='\t', lineterminator='\n')
     writer.writerows(data)

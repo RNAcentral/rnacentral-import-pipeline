@@ -1,16 +1,16 @@
 LOAD CSV
-FROM ALL FILENAMES MATCHING ~<rfam_ontology_mappings.*csv$>
+FROM stdin
 WITH ENCODING ISO-8859-14
 HAVING FIELDS
 (
-    ontology_term_id,
-    rfam_model_id
+    rfam_model_id,
+    ontology_term_id
 )
 INTO {{PGDATABASE}}?load_rfam_go_terms
 TARGET COLUMNS
 (
-    ontology_term_id,
-    rfam_model_id
+    rfam_model_id,
+    ontology_term_id
 )
 
 WITH

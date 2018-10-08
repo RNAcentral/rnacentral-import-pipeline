@@ -15,6 +15,7 @@ limitations under the License.
 
 import re
 import csv
+import operator as op
 import itertools as it
 
 import attr
@@ -120,16 +121,29 @@ class RfamFamily(object):
             self.guess_insdc_using_rna_type()
 
     def writeable(self):
-        data = attr.asdict(self)
-        del data['so_terms']
-        data['short_name'] = data.pop('name')
-        data['long_name'] = data.pop('pretty_name')
-        data['is_suppressed'] = int(self.is_suppressed)
-        data['rfam_rna_type'] = data['rna_type']
-        data['rna_type'] = self.guess_insdc()
-        yield data
+        return [
+            self.id,
+            self.name,
+            self.pretty_name,
+            self.description,
+            self.clan_id,
+            self.seed_count,
+            self.full_count,
+            self.length,
+            self.domain,
+            self.is_suppressed,
+            self.guess_insdc(),
+            self.rna_type,
+        ]
 
 
 def parse(handle):
     reader = csv.DictReader(handle, delimiter='\t')
     return it.imap(RfamFamily.from_dict, reader)
+
+
+def from_file(handle, output):
+    data = parse(handle)
+    data = it.imap(op.methodcaller('writeable'), data)
+    writer = csv.writer(output)
+    writer.writerows(data)

@@ -1,5 +1,5 @@
-
-FROM ALL FILENAMES MATCHING ~<sequence_regions.*csv$>
+LOAD CSV
+FROM ALL FILENAMES MATCHING ~<regions.*csv$>
 HAVING FIELDS (
   accession,
   region_name,

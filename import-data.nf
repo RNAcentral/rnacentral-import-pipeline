@@ -6,22 +6,6 @@
 // import is much easier this way, as we only have to modify in a few places
 // instead of every possible process that could produce it.
 raw_output = Channel.empty()
-
-// Because we use very generic globs to get files to import we have to filter
-// the filenames ot known ones. This maps from the allowed filenames to the
-// control files that will be used to load the data.
-IMPORTABLE = [
-  "accessions.csv": 'files/import-data/accessions.ctl',
-  "genomic_locations.csv": 'files/import-data/locations.ctl',
-  "seq_long.csv": 'files/import-data/long-sequences.ctl',
-  "seq_short.csv": 'files/import-data/short-sequences.ctl',
-  "refs.csv": 'files/import-data/references.ctl',
-  "secondary_structure.csv": 'files/import-data/secondary.ctl',
-  "related_sequences.csv": 'files/import-data/related-sequences.ctl',
-  "features.csv": 'files/import-data/features.ctl',
-  "sequence_regions.csv": 'files/import-data/regions.ctl',
-]
-
 dataless_imports = Channel.empty()
 to_fetch = Channel.empty()
 
@@ -40,7 +24,7 @@ for (entry in params.import_data.databases) {
   if (name == "custom") {
     raw_output.mix(Channel.fromPath("${base}/**.csv")).flatten().set { raw_output }
   } else if (database.containsKey('remote') && database.remote) {
-    db_channel = Channel.value([name, database.remote, database.pattern])
+    db_channel = Channel.value([name, database])
     to_fetch.mix(db_channel).set { to_fetch }
   } else {
     dataless_imports.mix(Channel.from(name)).set { dataless_imports }
@@ -64,14 +48,27 @@ raw_output.mix(raw_dataless_output).set { raw_output }
 
 process fetch_data {
   input:
-  set val(name), val(remote), val(pattern) from to_fetch
+  set val(name), val(database) from to_fetch
 
   output:
   set val(name), file("${pattern}") into fetched
 
   script:
+  pattern = database.pattern
+  find_cmd = []
+  for (pattern in database.get('excluded_patterns', [])) {
+    find_cmd << "-name '${pattern}'"
+  }
+
+  if (find_cmd.size) {
+    find_cmd = "find . ${find_cmd.join(' -or ')} | xargs rm"
+  } else {
+    find_cmd = ''
+  }
+
   """
-  fetch $remote $pattern
+  fetch ${database.remote} $pattern
+  ${find_cmd}
   """
 }
 
@@ -93,7 +90,7 @@ process external_without_metadata {
   file "*.csv" into raw_metadataless_output mode flatten
 
   script:
-  if (filename.toString().endsWith(".gz")) {
+  if (input_file.toString().endsWith(".gz")) {
     """
     zcat $filename | rnac external ${name} -
     """
@@ -108,7 +105,7 @@ raw_output.mix(raw_metadataless_output). set { raw_output }
 
 process fetch_rfam_metadata {
   when:
-  params.import_data.databases['rfam'] || params.import_data['ensembl']
+  params.import_data.databases['rfam'] || params.import_data.databases['ensembl']
 
   input:
   file(query) from Channel.fromPath('files/import-data/rfam/families.sql')
@@ -151,12 +148,26 @@ process fetch_ena_metadata {
   """
   cat $tpa_file | xargs wget -O - >> tpa.tsv
   """
+
+}
+
+process fetch_rgd_metadata {
+  when:
+  params.import_data.databases['rgd']
+
+  output:
+  set val('rgd'), file('genes.txt') into rgd_metadata
+
+  """
+  wget ftp://ftp.rgd.mcw.edu/pub/data_release/GENES_RAT.txt > genes.txt
+  """
 }
 
 Channel.empty()
   .mix(ena_metadata)
   .mix(ensembl_metadata)
   .mix(rfam_metadata)
+  .mix(rgd_metadata)
   .cross(with_metadata)
   .map { meta, data -> data + meta[1..-1] }
   .set { metadata }
@@ -171,7 +182,7 @@ process import_with_metadata {
   file "*.csv" into raw_with_metadata_output mode flatten
 
   script:
-  if (input_file.contains(".gz")) {
+  if (input_file.toString().endsWith(".gz")) {
     """
     zcat ${input_file} | rnac external ${name} - metadata*
     """
@@ -185,13 +196,13 @@ process import_with_metadata {
 raw_output.mix(raw_with_metadata_output).set { raw_output }
 
 raw_output
-  .filter { f -> IMPORTABLE.keySet().findIndexOf { p -> f.getName() ==~ p } > -1 }
   .map { f ->
     filename = f.getName()
     name = filename.take(filename.lastIndexOf('.'))
-    ctl = file(IMPORTABLE[filename])
+    ctl = file("files/import-data/${name.replace('_', '-')}.ctl")
     [[name, ctl], f]
   }
+  .filter { it[0][1].exists() }
   .groupTuple()
   .map { it -> [it[0][0], it[0][1], it[1]] }
   .set { to_load }
@@ -203,7 +214,7 @@ process merge_and_import {
   set val(name), file(ctl), file('raw*.csv') from to_load
 
   output:
-  file(ctl) into loaded
+  val(name) into loaded
 
   """
   set -o pipefail
@@ -219,17 +230,25 @@ process merge_and_import {
   """
 }
 
+loaded
+  .map { name -> file("files/import-data/post-release/${name.replace('_', '-')}.sql") }
+  .mix(Channel.fromPath('files/import-data/post-release/cleanup.sql'))
+  .filter { f -> f.exists() }
+  .set { post_scripts }
+
 process release {
   echo true
   maxForks 1
 
   input:
-  file('*.ctl') from loaded.collect()
-  file(post) from Channel.fromPath('files/import-data/release/post/*.sql').collect()
+  file(post) from post_scripts.collect()
 
   """
+  set -o pipefail
+
   rnac run-release
-  find . -name '*.sql' -print0 | sort -z | xargs -r0 cat > post-command
-  psql -f post-command "$PGDATABASE"
+  find . -name '*.sql' -print0 |\
+  sort -z |\
+  xargs -r0 -I {} psql -v ON_ERROR_STOP=1 -f {} "$PGDATABASE"
   """
 }
