@@ -42,7 +42,7 @@ process find_ensembl_databases {
   set val(mysql), file('selected.csv') into ensembl_databases
 
   """
-  psql -f "$imported_sql" "$PGDATABASE" > done.csv
+  psql -v ON_ERROR_STOP=1 -f "$imported_sql" "$PGDATABASE" > done.csv
 
   echo 'show databases' |\
   mysql \
