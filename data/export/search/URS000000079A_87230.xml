@@ -10,6 +10,7 @@
 <ref dbkey="87230" dbname="ncbi_taxonomy_id" />
 </cross_references>
 <additional_fields>
+<field name="short_urs">URS79A_87230</field>
 <field name="active">Active</field>
 <field name="length">37</field>
 <field name="species">Botrytis tulipae</field>
@@ -28,12 +29,13 @@
 <field name="pub_id">231497</field>
 <field name="pub_id">269757</field>
 <field name="boost">0.5</field>
-<field name="rfam_problems">missing_rfam_match</field>
-<field name="rfam_problem_found">True</field>
+<field name="qc_warning">missing_rfam_match</field>
+<field name="qc_warning_found">True</field>
 <field name="tax_string">Eukaryota; Fungi; Dikarya; Ascomycota; Pezizomycotina; Leotiomycetes; Helotiales; Sclerotiniaceae; Botrytis; Botrytis tulipae</field>
 <field name="has_go_annotations">False</field>
 <field name="go_annotation_source">Not Available</field>
 <field name="has_interacting_proteins">False</field>
+<field name="has_interacting_rnas">False</field>
 <field name="has_conserved_structure">False</field>
 </additional_fields>
 </entry>
