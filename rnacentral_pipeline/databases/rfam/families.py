@@ -118,7 +118,8 @@ class RfamFamily(object):
     def guess_insdc(self):
         return self.guess_insdc_using_name() or \
             self.guess_insdc_using_so_terms() or \
-            self.guess_insdc_using_rna_type()
+            self.guess_insdc_using_rna_type() or \
+            'other'
 
     def writeable(self):
         return [
