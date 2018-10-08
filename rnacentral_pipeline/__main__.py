@@ -22,9 +22,9 @@ from rnacentral_pipeline.databases.generic import parser as generic
 from rnacentral_pipeline.databases.quickgo import parser as quickgo
 from rnacentral_pipeline.databases.refseq import parser as refseq
 from rnacentral_pipeline.databases.ensembl import parser as ensembl
+from rnacentral_pipeline.databases.ensembl import tasks as ensembl_tasks
 from rnacentral_pipeline.databases.ensembl import proteins as ensembl_proteins
 from rnacentral_pipeline.databases.ensembl import coordinate_systems as ensembl_coords
-from rnacentral_pipeline.databases.ensembl import database as ensembl_databases
 from rnacentral_pipeline.databases.ensembl import assemblies as ensembl_assemblies
 from rnacentral_pipeline.databases.ensembl_plants import parser as ensembl_plants
 
@@ -556,17 +556,18 @@ def ensembl_coordinates(filename, output):
     ensembl_coords.from_file(filename, output)
 
 
-@ensembl_group.command('select-databases')
-@click.option('--db_url', envvar='PGDATABASE')
-@click.argument('filename', default='-', type=click.File('rb'))
+@ensembl_group.command('select-tasks')
+@click.argument('filename', type=click.File('rb'))
+@click.argument('possible', type=click.File('rb'))
+@click.argument('done', type=click.File('rb'))
 @click.argument('output', default='-', type=click.File('wb'))
-def ensembl_select_databases(filename, output, db_url=None):
+def ensembl_select_tasks(filename, possible, done, output):
     """
     This will select which database names to import. It basically checsk to see
     which is the newest assuming Ensembl's standard naming schema and see which
     we have not already imported.
     """
-    ensembl_databases.write_max(filename, output, db_url=db_url)
+    ensembl_tasks.write(filename, possible, done, output)
 
 
 @ensembl_group.command('assemblies')

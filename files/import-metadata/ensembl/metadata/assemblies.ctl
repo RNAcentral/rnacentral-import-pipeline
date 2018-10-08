@@ -75,7 +75,7 @@ INSERT INTO ensembl_assembly (
     example_chromosome,
     example_end,
     example_start,
-    subdomon
+    subdomain
 ) (
 SELECT
     assembly_id,
@@ -90,7 +90,7 @@ SELECT
     example_chromosome,
     example_end,
     example_start,
-    subdomon
+    subdomain
 from load_assemblies
 ) ON CONFLICT (assembly_id) DO UPDATE
 SET
@@ -105,5 +105,5 @@ SET
     example_chromosome = EXCLUDED.example_chromosome,
     example_end = EXCLUDED.example_end,
     example_start = EXCLUDED.example_start,
-    subdomon = EXCLUDED.subdomon
+    subdomain = EXCLUDED.subdomon
 $$

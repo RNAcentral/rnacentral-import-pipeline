@@ -22,27 +22,34 @@
 //   """
 // }
 
+Channel.fromPath('files/import-metadata/ensembl/metadata/*.sql')
+  .map { f -> f.getName().take(f.getName().lastIndexOf('.')) }
+  .collectFile(name: "possible-data.txt", newLine: true)
+  .set { ensembl_possible }
+
 Channel.empty()
   .mix(Channel.from(params.databases.ensembl.mysql))
   .mix(Channel.from(params.databases.ensembl_genomes.mysql))
+  .combine(Channel.fromPath('files/import-metadata/ensembl/analyzed.sql'))
+  .combine(ensembl_possible)
   .set { ensembl_info }
 
 process find_ensembl_databases {
   input:
-  val(mysql) from ensembl_info
+  set val(mysql), file(imported_sql), file(possible) from ensembl_info
 
   output:
   set val(mysql), file('selected.csv') into ensembl_databases
 
   """
-  psql -f "$done" "$PGDATABASE" > done.txt
+  psql -f "$imported_sql" "$PGDATABASE" > done.csv
 
   echo 'show databases' |\
   mysql \
     --host ${mysql.host} \
     --port ${mysql.port} \
     --user ${mysql.user} |\
-  rnc ensembl select-databases - > selected.csv
+  rnc ensembl select-tasks - $possible done.csv > selected.csv
   """
 }
 
@@ -80,7 +87,7 @@ process fetch_internal_ensembl_data {
 
 ensembl_metadata
   .groupTuple()
-  .map { it -> [file("files/import-metadata/ensembl/${it[0]}.ctl"), it[1]] }
+  .map { it -> [file("files/import-metadata/ensembl/metadata/${it[0]}.ctl"), it[1]] }
   .set { ensembl_loadable }
 
 process import_ensembl_data {
@@ -105,7 +112,7 @@ process mark_imports {
   echo true
 
   input:
-  file('imported-data.txt') from ensembl_imports.collectFile(name: 'imported-data.txt')
+  file('data.txt') from ensembl_imports.collectFile(name: 'data.txt')
   file(ctl) from Channel.fromPath('files/import-metadata/ensembl/mark-analyzed.ctl')
 
   """
