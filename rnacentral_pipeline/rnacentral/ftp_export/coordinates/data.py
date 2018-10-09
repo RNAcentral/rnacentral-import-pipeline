@@ -23,6 +23,10 @@ from attr.validators import in_ as one_of
 from attr.validators import instance_of as is_a
 
 
+def clean_databases(raw):
+    return [d.replace(' ', '_') for d in raw]
+
+
 @attr.s(hash=True, slots=True, frozen=True)
 class Region(object):
     region_id = attr.ib(validator=is_a(basestring))
@@ -62,8 +66,8 @@ class Region(object):
             identity=identity,
             metadata={
                 'rna_type': raw['rna_type'],
-                'providing_databases': raw['providing_databases'],
-                'databases': raw['databases'],
+                'providing_databases': clean_databases(raw['providing_databases']),
+                'databases': clean_databases(raw['databases']),
             }
         )
 
