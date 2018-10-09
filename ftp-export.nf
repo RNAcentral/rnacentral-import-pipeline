@@ -348,7 +348,7 @@ process format_bed_coordinates {
   publishDir "${params.ftp_export.publish}/genome_coordinates/bed/", mode: 'copy'
 
   input:
-  set val assembly, val species, file(raw_data) from bed_coordinates
+  set val(assembly), val(species), file(raw_data) from bed_coordinates
 
   output:
   set val(assembly), file(result) into bed_files
