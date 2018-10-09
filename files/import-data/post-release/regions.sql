@@ -107,4 +107,17 @@ join ensembl_assembly ensembl on ensembl.assembly_id = load.assembly_id
 ) ON CONFLICT (region_id, exon_start, exon_stop) DO NOTHING
 ;
 
+do $$
+declare no_exons int;
+begin
+	select into no_exons count(distinct t.id) from (
+		select regions.id
+		from rnc_sequence_regions regions
+		left join rnc_sequence_exons exons on exons.region_id = regions.id
+		group by regions.id
+		having regions.exon_count != count(exons.*)
+		) t;
+	assert no_exons = 0, 'Some regions ' || no_exons || ' are missing exons';
+end $$;
+
 drop table load_rnc_sequence_regions;
