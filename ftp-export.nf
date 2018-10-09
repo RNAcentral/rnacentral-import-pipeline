@@ -13,7 +13,6 @@ process find_genome_coordinate_jobs {
 species_to_format
   .splitCsv()
   .combine(Channel.fromPath('files/ftp-export/genome_coordinates/query.sql'))
-  .take(5)
   .set { coordinates_to_fetch }
 
 process coordinate_readme {
@@ -40,7 +39,7 @@ process fetch_raw_coordinate_data {
   set val(assembly), val(species), file('result.json') into raw_coordinates
 
   """
-  psql -v ON_ERROR_STOP=1 -v "assembly_id='$assembly'" -f $query "$PGDATABASE" > result.json
+  psql -v ON_ERROR_STOP=1 -v "assembly_id=$assembly" -f $query "$PGDATABASE" > result.json
   """
 }
 
