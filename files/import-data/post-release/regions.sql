@@ -68,6 +68,7 @@ insert into rnc_sequence_regions (
   region_start,
   region_stop,
   assembly_id,
+  exon_count,
   was_mapped,
 	identity,
 	providing_databases
@@ -80,6 +81,7 @@ select
   min(load.exon_start),
   max(load.exon_stop),
   load.assembly_id,
+  load.exon_count,
   false,
   null,
   array_agg(distinct load.providing_database)
