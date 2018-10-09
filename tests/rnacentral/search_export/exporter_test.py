@@ -198,6 +198,16 @@ def test_can_search_using_flybase_transcript_ids(upi, transcript_ids):
     assert val == transcript_ids
 
 
+@pytest.mark.parameterize('upi,gene,symbol', [
+    ('URS000013BC78_4896', 'SPSNORNA.29', 'sno52'),
+])
+def test_can_search_for_pombase_ids(upi, gene, symbol):
+    val = {x['text'] for x in load_and_get_additional(upi, 'gene')}
+    assert gene in val
+    val = {x['text'] for x in load_and_get_additional(upi, 'gene_synonym')}
+    assert symbol in val
+
+
 @pytest.mark.parametrize('upi,ans', [  # pylint: disable=E1101
     ('URS000047774B_77133', 594),
     ('URS0000000559_77133', 525),
