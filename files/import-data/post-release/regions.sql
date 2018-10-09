@@ -25,7 +25,10 @@ set
 -- mentions of the databases we have in the load table. We do this because some
 -- regions may come from more than one database and we don't update all
 -- databases at once so we have allow regions to remain if some other database
--- supports them.
+-- supports them. This has a possible edge case, if there is a case where a
+-- sequence is moved, that is the overall sequence is the same but it is found
+-- in a new location, this will not remove the old location. I suspect this to be
+-- very rare but if it happens we will end up including an outdated location.
 UPDATE rnc_sequence_regions regions
 set
   providing_databases = array_remove(regions.providing_databases, load.providing_database)
