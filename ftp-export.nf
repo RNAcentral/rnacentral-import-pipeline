@@ -338,7 +338,7 @@ process fetch_raw_coordinate_data {
   set val(assembly), val(species), file('result.json') into raw_coordinates
 
   """
-  psql -v ON_ERROR_STOP=1 -v "taxid=$taxid" -v "assembly_id='$assembly'" -f $query "$PGDATABASE" > result.json
+  psql -v ON_ERROR_STOP=1 -v "assembly_id='$assembly'" -f $query "$PGDATABASE" > result.json
   """
 }
 
