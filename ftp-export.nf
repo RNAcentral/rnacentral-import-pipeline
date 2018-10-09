@@ -25,7 +25,7 @@ process md5 {
   file "readme.txt" into __md5_readme
 
   """
-  psql -f "$query" "$PGDATABASE" > md5.tsv
+  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > md5.tsv
   head -10 md5.tsv > example.txt
   gzip md5.tsv
   cat template.txt > readme.txt
@@ -45,7 +45,7 @@ process id_mapping {
   file "readme.txt" into __id_mapping_readme
 
   """
-  psql -f "$query" "$PGDATABASE" > raw_id_mapping.tsv
+  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > raw_id_mapping.tsv
   rnac ftp-export id-mapping raw_id_mapping.tsv id_mapping.tsv
   head id_mapping.tsv > example.txt
   gzip id_mapping.tsv
@@ -84,7 +84,7 @@ process rfam_annotations {
   """
   set -o pipefail
 
-  psql -f "$query" "$PGDATABASE" | gzip > rfam_annotations.tsv.gz
+  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" | gzip > rfam_annotations.tsv.gz
   zcat rfam_annotations.tsv.gz | head > example.txt
   cat template.txt > readme.txt
   """
@@ -103,7 +103,7 @@ process inactive_fasta {
   set -o pipefail
 
   export PYTHONIOENCODING=utf8
-  psql -f "$query" "$PGDATABASE" | json2fasta.py - - | gzip > rnacentral_inactive.fasta.gz
+  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" | json2fasta.py - - | gzip > rnacentral_inactive.fasta.gz
   """
 }
 
@@ -123,7 +123,7 @@ process active_fasta {
   set -o pipefail
 
   export PYTHONIOENCODING=utf8
-  psql -f "$query" "$PGDATABASE" | json2fasta.py - rnacentral_active.fasta
+  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" | json2fasta.py - rnacentral_active.fasta
   head rnacentral_active.fasta > example.txt
   gzip rnacentral_active.fasta
   cat template.txt > readme.txt
@@ -141,7 +141,7 @@ process species_specific_fasta {
 
   """
   export PYTHONIOENCODING=utf8
-  psql -f "$query" "$PGDATABASE" | json2fasta.py - - | gzip > rnacentral_species_specific_ids.fasta.gz
+  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" | json2fasta.py - - | gzip > rnacentral_species_specific_ids.fasta.gz
   """
 }
 
@@ -153,7 +153,7 @@ process find_db_to_export {
   stdout into raw_dbs
 
   """
-  psql -f "$query" "$PGDATABASE"
+  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE"
   """
 }
 
@@ -179,7 +179,7 @@ process database_specific_fasta {
   set -o pipefail
 
   export PYTHONIOENCODING=utf8
-  psql -f "$query" -v db='%${db}%' "$PGDATABASE" > raw.json
+  psql -v ON_ERROR_STOP=1 -f "$query" -v db='%${db}%' "$PGDATABASE" > raw.json
   json2fasta.py raw.json $name
   """
 }
@@ -245,7 +245,7 @@ process ensembl_export_chunk {
 
   script:
   """
-  psql -f $query --variable min=$min --variable max=$max "$PGDATABASE" > raw_xrefs.json
+  psql -v ON_ERROR_STOP=1 -f $query --variable min=$min --variable max=$max "$PGDATABASE" > raw_xrefs.json
   """
 }
 
@@ -277,7 +277,7 @@ process fetch_rfam_go_matchces {
   file "raw_go.json" into rfam_go_matches
 
   """
-  psql -f "$query" "$PGDATABASE" > raw_go.json
+  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > raw_go.json
   """
 }
 
@@ -305,7 +305,7 @@ process find_genome_coordinate_jobs {
   file('coordinates.txt') into species_to_format
 
   """
-  psql -f $query $PGDATABASE > coordinates.txt
+  psql -v ON_ERROR_STOP=1 -f $query $PGDATABASE > coordinates.txt
   """
 }
 
@@ -338,7 +338,7 @@ process fetch_raw_coordinate_data {
   set val(assembly), val(species), file('result.json') into raw_coordinates
 
   """
-  psql -v "taxid=$taxid" -v "assembly_id='$assembly'" -f $query "$PGDATABASE" > result.json
+  psql -v ON_ERROR_STOP=1 -v "taxid=$taxid" -v "assembly_id='$assembly'" -f $query "$PGDATABASE" > result.json
   """
 }
 
@@ -356,6 +356,8 @@ process format_bed_coordinates {
   script:
   result = "${species}.${assembly}.bed.gz"
   """
+  set -o pipefail
+
   rnac ftp-export coordiantes as-bed $raw_data |\
   sort -k1,1 -k2,2n |\
   gzip > $result
