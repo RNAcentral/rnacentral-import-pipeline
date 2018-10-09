@@ -14,10 +14,28 @@ limitations under the License.
 """
 
 import csv
+import json
+
+
+BLAT_GENOMES = {
+    'anopheles_gambiae',
+    'arabidopsis_thaliana',
+    'bombyx_mori',
+    'caenorhabditis_elegans',
+    'dictyostelium_discoideum',
+    'drosophila_melanogaster',
+    'homo_sapiens',
+    'mus_musculus',
+    'plasmodium_falciparum',
+    'rattus_norvegicus'
+    'saccharomyces_cerevisiae',
+    'schizosaccharomyces_pombe',
+}
 
 
 def domain_url(division):
     """Given E! division, returns E!/E! Genomes url."""
+
     if division == 'Ensembl':
         subdomain = 'ensembl.org'
     elif division == 'EnsemblPlants':
@@ -41,45 +59,52 @@ def reconcile_taxids(taxid):
     so to reconcile the differences, taxids in the ensembl_assembly table
     are overriden to match other data.
     """
+
     taxid = str(taxid)
     if taxid == '284812':  # Ensembl assembly for Schizosaccharomyces pombe
         return 4896  # Pombase and ENA xrefs for Schizosaccharomyces pombe
     return int(taxid)
 
 
-def parse(handle):
-    reader = csv.DictReader(
-        handle,
-        fieldnames=('key', 'value'),
-        delimiter='\t'
-    )
-
-    for entry in reader:
-        assembly = {key: value for key, value in entry.items()}
-        try:
-            example_location = example_locations[assembly['species.url'].lower()]
-        except KeyError:
-            example_location = {'chromosome': None, 'start': None, 'end': None}
-
-        url = assembly['species.url'].lower()
-        is_mapped = int(url in BLAT_GENOMES)
-        yield [
-            assembly['assembly.default'],
-            assembly['assembly.name'],
-            assembly.get('assembly.accession', None),
-            assembly.get('assembly.ucsc_alias', None),
-            assembly.get('species.common_name', None),
-            reconcile_taxids(assembly['species.taxonomy_id']),
-            url,
-            assembly['species.division'],
-            domain_url(assembly['species.division']),
-            example_location['chromosome'],
-            example_location['start'],
-            example_location['end'],
-            is_mapped,
-        ]
+def load_genomes(handle):
+    return set(line.strip() for line in handle)
 
 
-def write(handle, output):
-    data = parse(handle)
-    csv.writer(output).writerows(data)
+def parse(handle, example_locations):
+    """
+    This parses the TSV file for assembly information and produces an array
+    of the data to write to the database.
+    """
+
+    reader = csv.reader(handle, delimiter='\t')
+    assembly = dict(reader)
+
+    example_location = {'chromosome': None, 'start': None, 'end': None}
+    key = assembly['species.url'].lower()
+    if key in example_locations:
+        example_location = example_locations[key]
+
+    url = assembly['species.url'].lower()
+    is_mapped = int(url in BLAT_GENOMES)
+    return [
+        assembly['assembly.default'],
+        assembly['assembly.name'],
+        assembly.get('assembly.accession', None),
+        assembly.get('assembly.ucsc_alias', None),
+        assembly.get('species.common_name', None),
+        reconcile_taxids(assembly['species.taxonomy_id']),
+        url,
+        assembly['species.division'],
+        domain_url(assembly['species.division']),
+        example_location['chromosome'],
+        example_location['start'],
+        example_location['end'],
+        is_mapped,
+    ]
+
+
+def write(handle, example_handle, output):
+
+    example_locations = json.load(example_handle)
+    data = parse(handle, example_locations)
+    csv.writer(output).writerow(data)
