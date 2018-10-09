@@ -1,8 +1,3 @@
--- This approach does have one edge case that will not be handled. That is if
--- the overall start/stop endpoints are consitent but the internal exon/intron
--- structure is different. If this happens then we will load weird stuff
--- basically.
-
 create index ix_load_rnc_sequence_regions__accession on load_rnc_sequence_regions(accession);
 
 -- Update the table to include urs_taxid and pretty database name
@@ -17,8 +12,8 @@ where
   and db.id = xref.dbid
 ;
 
--- This should have no effect but it is here for sanity.
-delete from load_rnc_sequence_regions where urs_taxid is null;
+-- Ensure we have found all URS/taxids
+alter table load_rnc_sequence_regions alter column urs_taxid set not null;
 
 -- Update name to include URS taxid
 update load_rnc_sequence_regions regions
@@ -81,7 +76,7 @@ select
   min(load.exon_start),
   max(load.exon_stop),
   load.assembly_id,
-  load.exon_count,
+  max(load.exon_count),
   false,
   null,
   array_agg(distinct load.providing_database)
@@ -111,3 +106,5 @@ join rnc_sequence_regions regions on regions.region_name = load.region_name
 join ensembl_assembly ensembl on ensembl.assembly_id = load.assembly_id
 ) ON CONFLICT (region_id, exon_start, exon_stop) DO NOTHING
 ;
+
+drop table load_rnc_sequence_regions;
