@@ -68,10 +68,15 @@ class SequenceRegion(object):
 
     @property
     def name(self):
-        return '@{chromosome}/{start}-{stop}:{strand}'.format(
+        exon_names = []
+        for exon in self.exons:
+            exon_names.append('{start}-{stop}'.format(
+                start=exon.start,
+                stop=exon.stop,
+            ))
+        return '@{chromosome}/{exons}:{strand}'.format(
             chromosome=self.chromosome,
-            start=self.start,
-            stop=self.stop,
+            exons=','.join(exon_names),
             strand=self.string_strand,
         )
 
@@ -83,6 +88,7 @@ class SequenceRegion(object):
                 self.chromosome,
                 self.strand,
                 self.assembly_id,
+                len(self.exons),
                 exon.start,
                 exon.stop,
             ]
