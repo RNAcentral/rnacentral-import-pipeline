@@ -46,7 +46,7 @@ class Region(object):
     metadata = attr.ib(validator=is_a(dict), default=dict, cmp=False)
 
     @classmethod
-    def build(cls, raw):
+    def build(cls, index, raw):
         identity = None
         source = 'expert-database'
         if raw['identity'] is not None:
@@ -56,8 +56,14 @@ class Region(object):
         endpoints = [Endpoint.build(e) for e in raw['exons']]
         endpoints.sort(key=op.attrgetter('start'))
         endpoints = tuple(endpoints)
+
+        region_id = '{rna_id}.{index}'.format(
+            rna_id=raw['rna_id'],
+            index=index
+        )
+
         return cls(
-            region_id=raw['region_id'],
+            region_id=region_id,
             rna_id=raw['rna_id'],
             chromosome=raw['chromosome'],
             strand=raw['strand'],
@@ -98,8 +104,8 @@ class Endpoint(object):
 
 
 def parse(regions):
-    for region in regions:
-        yield Region.build(region)
+    for index, region in enumerate(regions):
+        yield Region.build(index, region)
 
 
 def from_file(handle):
