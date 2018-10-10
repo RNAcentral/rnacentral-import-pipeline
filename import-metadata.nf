@@ -4,7 +4,7 @@ Channel.fromFilePairs("files/import-metadata/rfam/*.{ctl,sql}")
   .map { it[1] }
   .set { rfam_files }
 
-def as_mysql_cmd(db) = { db ->
+def as_mysql_cmd = { db ->
   "mysql --host ${db.host} --port ${db.port} --user ${db.user}"
 }
 
