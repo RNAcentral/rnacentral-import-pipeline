@@ -4,6 +4,10 @@ Channel.fromFilePairs("files/import-metadata/rfam/*.{ctl,sql}")
   .map { it[1] }
   .set { rfam_files }
 
+def as_mysql_cmd(db) = { db ->
+  "mysql --host ${db.host} --port ${db.port} --user ${db.user}"
+}
+
 process import_rfam_metadata {
   input:
   set file(ctl), file(sql) from rfam_files
@@ -13,13 +17,9 @@ process import_rfam_metadata {
   name = filename.take(filename.lastIndexOf('.'))
   """
   set -o pipefail
-  mysql \
-    --host ${params.databases.rfam.mysql.host} \
-    --port ${params.databases.rfam.mysql.port} \
-    --user ${params.databases.rfam.mysql.user} \
-    --database ${params.databases.rfam.mysql.db_name} \
-    < $sql > data.tsv
-    rnac rfam $name data.tsv - | pgloader $ctl
+
+  ${as_mysql_cmd(params.databases.rfam.mysql)} < $sql > data.tsv
+  rnac rfam $name data.tsv - | pgloader $ctl
   """
 }
 
@@ -28,9 +28,7 @@ Channel.fromPath('files/import-metadata/ensembl/metadata/*.sql')
   .collectFile(name: "possible-data.txt", newLine: true)
   .set { ensembl_possible }
 
-Channel.empty()
-  .mix(Channel.from(params.databases.ensembl.mysql))
-  .mix(Channel.from(params.databases.ensembl_genomes.mysql))
+Channel.from(params.databases.ensembl.mysql, params.databases.ensembl_genomes.mysql)
   .combine(Channel.fromPath('files/import-metadata/ensembl/analyzed.sql'))
   .combine(ensembl_possible)
   .set { ensembl_info }
@@ -43,14 +41,11 @@ process find_ensembl_databases {
   set val(mysql), file('selected.csv') into ensembl_databases
 
   """
-  psql -v ON_ERROR_STOP=1 -f "$imported_sql" "$PGDATABASE" > done.csv
+  set -o pipefail
 
-  echo 'show databases' |\
-  mysql \
-    --host ${mysql.host} \
-    --port ${mysql.port} \
-    --user ${mysql.user} |\
-  rnac ensembl select-tasks - $possible done.csv > selected.csv
+  psql -v ON_ERROR_STOP=1 -f "$imported_sql" "$PGDATABASE" > done.csv
+  echo 'show databases' | ${as_mysql_cmd(mysql)} > dbs.txt
+  rnac ensembl select-tasks dbs.txt $possible done.csv > selected.csv
   """
 }
 
@@ -71,53 +66,39 @@ process fetch_internal_ensembl_data {
 
   output:
   set val(name), file('data.csv') into ensembl_metadata
-  set val(imported) into ensembl_imports
+  set val(name), val(db) into ensembl_imported
 
   script:
-  imported = [db, name].join(',')
   """
-  mysql -N \
-    --host ${mysql.host} \
-    --port ${mysql.port} \
-    --user ${mysql.user} \
-    --database ${db} \
-    < $sql > data.tsv
+  ${as_mysql_cmd(mysql)} -N --database $db < $sql > data.tsv
   rnac ensembl $name data.tsv data.csv
   """
 }
 
+ensembl_imported
+  .collectFile { name, db -> [name, "${name},${db}"] }
+  .map { f -> [f.getName(), f] }
+  .set { ensembl_imported_files }
+
 ensembl_metadata
   .groupTuple()
-  .map { it -> [file("files/import-metadata/ensembl/metadata/${it[0]}.ctl"), it[1]] }
+  .join(ensembl_imported_files)
+  .map { [file("files/import-metadata/ensembl/metadata/${it[0]}.ctl"), it[1], it[2]] }
   .set { ensembl_loadable }
 
 process import_ensembl_data {
-   echo true
-
-   input:
-   set file(ctl), file('data*.csv') from ensembl_loadable
-
-   """
-   mkdir merged
-   find . -name 'data*.csv' |\
-   xargs cat |\
-   split --additional-suffix=.csv -dC ${params.import_data.chunk_size} - merged/data
-
-   cp $ctl merged/$ctl
-   cd merged
-   pgloader --on-error-stop $ctl
-   """
-}
-
-process mark_imports {
   echo true
 
   input:
-  file('data.txt') from ensembl_imports.collectFile(name: 'data.txt')
-  file(ctl) from Channel.fromPath('files/import-metadata/ensembl/mark-analyzed.ctl')
+  set file(ctl), file('data*.csv'), file('imported.csv') from ensembl_loadable
+  file(mark_ctl) from Channel.fromPath('files/import-metadata/ensembl/mark-analyzed.ctl')
 
+  script:
   """
-  cp $ctl local_$ctl
+  bin/split-and-load $ctl 'data*.csv' ${params.import_data.chunk_size} data
+
+  find . -name '*.ctl' | xargs -I {} basename {} | xargs -I {} cp {} local_{}
   pgloader --on-error-stop local_$ctl
+  pgloader --on-error-stop local_$mark_ctl
   """
 }
