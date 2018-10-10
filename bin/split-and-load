@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+IFS=$'\n\t'
+
+ctl="$1"
+input_name="$2"
+size="$3"
+split_name="${4:data}"
+
+ mkdir merged
+ find . -name "$input_name" |
+ xargs cat |
+ split --additional-suffix=.csv -dC $size - "merged/$split_name"
+
+ cp $ctl merged/$ctl
+ cd merged
+ pgloader --on-error-stop $ctl
