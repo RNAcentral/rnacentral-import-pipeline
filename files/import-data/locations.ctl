@@ -34,7 +34,7 @@ SET
 
 BEFORE LOAD DO
 $$
-truncate table load_rnc_coordinates;
+drop table if exists load_rnc_coordinates;
 $$,
 $$
 CREATE TABLE IF NOT EXISTS load_rnc_coordinates (
