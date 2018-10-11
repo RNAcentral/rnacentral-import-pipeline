@@ -6,13 +6,14 @@ IFS=$'\n\t'
 ctl="$1"
 input_name="$2"
 size="$3"
-split_name="${4:data}"
+split_name="${4:-data}"
 
- mkdir merged
- find . -name "$input_name" |
- xargs cat |
- split --additional-suffix=.csv -dC $size - "merged/$split_name"
+[ ! -d merged ] || rm -r merged
+mkdir merged
+find . -name "$input_name" |
+xargs cat |
+split --additional-suffix=.csv -dC $size - "merged/$split_name"
 
- cp $ctl merged/$ctl
- cd merged
- pgloader --on-error-stop $ctl
+cp $ctl merged/$ctl
+cd merged
+pgloader --on-error-stop $ctl
