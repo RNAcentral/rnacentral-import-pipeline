@@ -14,7 +14,10 @@ limitations under the License.
 """
 
 import csv
-import json
+
+import attr
+from attr.validators import optional
+from attr.validators import instance_of as is_a
 
 
 BLAT_GENOMES = {
@@ -31,26 +34,6 @@ BLAT_GENOMES = {
     'saccharomyces_cerevisiae',
     'schizosaccharomyces_pombe',
 }
-
-
-def domain_url(division):
-    """Given E! division, returns E!/E! Genomes url."""
-
-    if division == 'Ensembl':
-        subdomain = 'ensembl.org'
-    elif division == 'EnsemblPlants':
-        subdomain = 'plants.ensembl.org'
-    elif division == 'EnsemblMetazoa':
-        subdomain = 'metazoa.ensembl.org'
-    elif division == 'EnsemblBacteria':
-        subdomain = 'bacteria.ensembl.org'
-    elif division == 'EnsemblFungi':
-        subdomain = 'fungi.ensembl.org'
-    elif division == 'EnsemblProtists':
-        subdomain = 'protists.ensembl.org'
-    else:
-        subdomain = None
-    return subdomain
 
 
 EXAMPLE_LOCATIONS = {
@@ -170,8 +153,98 @@ def reconcile_taxids(taxid):
     return int(taxid)
 
 
-def load_genomes(handle):
-    return set(line.strip() for line in handle)
+class InvalidDomain(Exception):
+    """
+    Raised when we cannot compute a URL for a domain.
+    """
+    pass
+
+
+@attr.s()
+class AssemblyExample(object):
+    chromsome = attr.ib(validator=is_a(basestring))
+    start = attr.ib(validator=is_a(int))
+    end = attr.ib(validator=is_a(int))
+
+    @classmethod
+    def build(cls, raw, example_locations):
+        key = raw['species.url'].lower()
+        example = example_locations.get(key, None)
+        if not example:
+            return None
+
+        return cls(
+            chromsome=example['chromosome'],
+            start=example['start'],
+            end=example['end'],
+        )
+
+
+@attr.s()
+class AssemblyInfo(object):
+    assembly_id = attr.ib(validator=is_a(basestring))
+    assembly_full_name = attr.ib(validator=is_a(basestring))
+    gca_accession = attr.ib(validator=is_a(basestring))
+    assembly_ucsc = attr.ib(validator=optional(is_a(basestring)))
+    common_name = attr.ib(validator=optional(is_a(basestring)))
+    taxid = attr.ib(validator=is_a(int))
+    ensembl_url = attr.ib(validator=is_a(basestring))
+    division = attr.ib(validator=is_a(basestring))
+    blat_mapping = attr.ib(validator=is_a(bool))
+    example = attr.ib(validator=optional(is_a(AssemblyExample)))
+
+    @classmethod
+    def build(cls, raw, example_locations):
+        url = raw['species.url'].lower()
+        is_mapped = url in BLAT_GENOMES
+
+        return cls(
+            assembly_id=raw['assembly.default'],
+            assembly_full_name=raw['assembly.name'],
+            gca_accession=raw.get('assembly.accession', None),
+            assembly_ucsc=raw.get('assembly.ucsc_alias', None),
+            common_name=raw.get('species.common_name', None),
+            taxid=reconcile_taxids(raw['species.taxonomy_id']),
+            ensembl_url=url,
+            division=raw['species.division'],
+            blat_mapping=is_mapped,
+            example=AssemblyExample.build(raw, example_locations),
+        )
+
+    @property
+    def domain_url(self):
+        """Given E! division, returns E!/E! Genomes url."""
+
+        if self.division == 'Ensembl':
+            return 'ensembl.org'
+        if self.division == 'EnsemblPlants':
+            return 'plants.ensembl.org'
+        if self.division == 'EnsemblMetazoa':
+            return 'metazoa.ensembl.org'
+        if self.division == 'EnsemblBacteria':
+            return 'bacteria.ensembl.org'
+        if self.division == 'EnsemblFungi':
+            return 'fungi.ensembl.org'
+        if self.division == 'EnsemblProtists':
+            return 'protists.ensembl.org'
+        raise InvalidDomain()
+
+    def writeable(self):
+        return [
+            self.assembly_id,
+            self.assembly_full_name,
+            self.gca_accession,
+            self.assembly_ucsc,
+            self.common_name,
+            self.taxid,
+            self.domain_url,
+            self.division,
+            self.domain_url,
+            self.example.chromosome,
+            self.example.start,
+            self.example.end,
+            int(self.blat_mapping),
+        ]
 
 
 def parse(handle, example_locations):
@@ -181,33 +254,13 @@ def parse(handle, example_locations):
     """
 
     reader = csv.reader(handle, delimiter='\t')
-    assembly = dict(reader)
-
-    example_location = {'chromosome': None, 'start': None, 'end': None}
-    key = assembly['species.url'].lower()
-    if key in example_locations:
-        example_location = example_locations[key]
-
-    url = assembly['species.url'].lower()
-    is_mapped = int(url in BLAT_GENOMES)
-    return [
-        assembly['assembly.default'],
-        assembly['assembly.name'],
-        assembly.get('assembly.accession', None),
-        assembly.get('assembly.ucsc_alias', None),
-        assembly.get('species.common_name', None),
-        reconcile_taxids(assembly['species.taxonomy_id']),
-        url,
-        assembly['species.division'],
-        domain_url(assembly['species.division']),
-        example_location['chromosome'],
-        example_location['start'],
-        example_location['end'],
-        is_mapped,
-    ]
+    return AssemblyInfo.build(dict(reader), example_locations)
 
 
 def write(handle, output):
+    """
+    Parse the given input handle and write the readable data to the CSV.
+    """
 
     data = parse(handle, EXAMPLE_LOCATIONS)
-    csv.writer(output).writerow(data)
+    csv.writer(output).writerow(data.writeable())

@@ -13,6 +13,20 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+from rnacentral_pipeline.databases.ensembl import assemblies
+
 
 def test_can_compute_correct_assemblies():
-    pass
+    with open('data/ensembl/assembly.tsv', 'r') as raw:
+        assert assemblies.parse(raw, {}) == assemblies.AssemblyInfo(
+            assembly_id='ASM34733v1',
+            assembly_full_name='ASM34733v1',
+            gca_accession='GCA_000347335.1',
+            assembly_ucsc=None,
+            common_name="Tausch's goatgrass",
+            taxid=37682,
+            ensembl_url='aegilops_tauschii',
+            division='EnsemblPlants',
+            blat_mapping=False,
+            example=None,
+        )

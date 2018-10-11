@@ -18,7 +18,7 @@ process import_rfam_metadata {
   """
   set -o pipefail
 
-  ${as_mysql_cmd(params.databases.rfam.mysql)} < $sql > data.tsv
+  ${as_mysql_cmd(params.databases.rfam.mysql)} --database ${params.databases.rfam.mysql.db_name} < $sql > data.tsv
   rnac rfam $name data.tsv - | pgloader $ctl
   """
 }
@@ -76,7 +76,7 @@ process fetch_internal_ensembl_data {
 }
 
 ensembl_imported
-  .collectFile { name, db -> [name, "${name},${db}"] }
+  .collectFile { name, db -> [name, "${name},${db}\n"] }
   .map { f -> [f.getName(), f] }
   .set { ensembl_imported_files }
 
@@ -95,10 +95,9 @@ process import_ensembl_data {
 
   script:
   """
-  bin/split-and-load $ctl 'data*.csv' ${params.import_data.chunk_size} data
+  split-and-load $ctl 'data*.csv' ${params.import_data.chunk_size} data
 
-  find . -name '*.ctl' | xargs -I {} basename {} | xargs -I {} cp {} local_{}
-  pgloader --on-error-stop local_$ctl
+  cp $mark_ctl local_$mark_ctl
   pgloader --on-error-stop local_$mark_ctl
   """
 }

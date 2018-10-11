@@ -1,5 +1,5 @@
 LOAD CSV
-FROM data.csv
+FROM ALL FILENAMES MATCHING ~<data.*csv>
 HAVING FIELDS (
     assembly_id,
     assembly_full_name,
@@ -12,7 +12,6 @@ HAVING FIELDS (
     subdomain,
     example_chromosome,
     example_start,
-    example_stop,
     example_end,
     blat_mapping
 )
@@ -29,7 +28,6 @@ TARGET COLUMNS (
     subdomain,
     example_chromosome,
     example_start,
-    example_stop,
     example_end,
     blat_mapping
 )
@@ -48,7 +46,7 @@ CREATE TABLE load_assemblies (
 	assembly_full_name varchar(255) NOT NULL,
 	gca_accession varchar(20) NULL,
 	assembly_ucsc varchar(100) NULL,
-	common_name varchar(255) NOT NULL,
+	common_name varchar(255),
 	taxid int4 NOT NULL,
 	ensembl_url varchar(100) NULL,
 	division varchar(20) NULL,
@@ -105,5 +103,6 @@ SET
     example_chromosome = EXCLUDED.example_chromosome,
     example_end = EXCLUDED.example_end,
     example_start = EXCLUDED.example_start,
-    subdomain = EXCLUDED.subdomon
+    subdomain = EXCLUDED.subdomain
 $$
+;
