@@ -22,7 +22,6 @@ IMPORTABLE = [
   "sequence_regions.csv": 'files/import-data/regions.ctl',
 ]
 
-dataless_inputs = Channel.empty()
 to_fetch = Channel.empty()
 
 for (entry in params.import_data.databases) {
@@ -39,54 +38,51 @@ for (entry in params.import_data.databases) {
   // nested so: ./custom/mirbase/ac_info.csv would also work.
   if (name == "custom") {
     raw_output.mix(Channel.fromPath("${base}/**.csv")).flatten().set { raw_output }
-  } else if (database.containsKey('remote') && database.remote) {
+  } else
     db_channel = Channel.value([name, database])
     to_fetch.mix(db_channel).set { to_fetch }
-  } else {
-    dataless_inputs.mix(Channel.from(name)).set { dataless_imports }
   }
 }
 
-process dataless {
-  input:
-  val(name) from dataless_inputs
-
-  output:
-  file "*.csv" into dataless_output mode flatten
-
-  script:
-  """
-  rnac external $name
-  """
-}
+//=============================================================================
+// Fetch data as well as all extra data for import
+//=============================================================================
 
 process fetch_data {
   input:
   set val(name), val(database) from to_fetch
 
   output:
-  set val(name), file("${pattern}") into fetched
+  set val(name), file("${database.pattern}") into fetched
 
   script:
-  pattern = database.pattern
-  find_cmd = []
-  for (pattern in database.get('excluded_patterns', [])) {
-    find_cmd << "find . -name '${pattern}' | xargs rm"
+  clean_cmd = ''
+  for (rm_pattern in database.get('excluded_patterns', [])) {
+    clean_cmd = find_cmd + "find . -name '$rm_pattern}' | xargs rm\n"
   }
 
-  if (find_cmd.size) {
-    find_cmd = find_cmd.join('\n')
-  } else {
-    find_cmd = ''
-  }
+  fetch_cmd = database.get('fetch_cmd', 'fetch')
+  remote = database.get('fetch', '')
 
   """
-  fetch '${database.remote}' '$pattern'
-  ${find_cmd}
+  $fetch_cmd '$remote' '${database.pattern}'
+  $clean_cmd
   """
 }
 
-process fetch_rfam_metadata {
+process fetch_pdb_extra {
+  when:
+  params.import_data.databases['pdb']
+
+  output:
+  set val('pdb'), file('pdb-extra.json') into pdb_extra
+
+  """
+  rnac pdb extra pdb-extra.json
+  """
+}
+
+process fetch_rfam_extra {
   when:
   params.import_data.databases['rfam'] || params.import_data.databases['ensembl']
 
@@ -94,7 +90,8 @@ process fetch_rfam_metadata {
   file(query) from Channel.fromPath('files/import-data/rfam/families.sql')
 
   output:
-  set val('rfam'), file('families.tsv') into raw_rfam_metadata
+  set val('rfam'), file('families.tsv') into rfam_extra
+  set val('ensembl'), file('families.tsv') into ensembl_extra
 
   script:
   """
@@ -107,18 +104,12 @@ process fetch_rfam_metadata {
   """
 }
 
-raw_rfam_metadata.into { rfam_metadata; ensembl_metadata }
-
-ensembl_metadata
-  .map { ['ensembl', it[1]] }
-  .set { ensembl_metadata }
-
 Channel
   .from(params.databases.ena.tpa_urls)
   .collectFile(name: "urls", newLine: true)
   .set { tpa_url_file }
 
-process fetch_ena_metadata {
+process fetch_ena_extra {
   when:
   params.import_data.databases['ena']
 
@@ -126,19 +117,19 @@ process fetch_ena_metadata {
   file tpa_file from tpa_url_file
 
   output:
-  set val('ena'), file("tpa.tsv") into ena_metadata
+  set val('ena'), file("tpa.tsv") into ena_extra
 
   """
   cat $tpa_file | xargs wget -O - >> tpa.tsv
   """
 }
 
-process fetch_rgd_metadata {
+process fetch_rgd_extra {
   when:
   params.import_data.databases['rgd']
 
   output:
-  set val('rgd'), file('genes.txt') into rgd_metadata
+  set val('rgd'), file('genes.txt') into rgd_extra
 
   """
   wget -O genes.txt ftp://ftp.rgd.mcw.edu/pub/data_release/GENES_RAT.txt
@@ -146,12 +137,12 @@ process fetch_rgd_metadata {
 }
 
 Channel.empty()
-  .mix(ena_metadata)
-  .mix(ensembl_metadata)
-  .mix(rfam_metadata)
-  .mix(rgd_metadata)
-  .ifEmpty()
-  .set { metadata }
+  .mix(ena_extra)
+  .mix(ensembl_extra)
+  .mix(rfam_extra)
+  .mix(rgd_extra)
+  .mix(pdb_extra)
+  .set { extra }
 
 fetched
   .flatMap { name, filenames ->
@@ -161,10 +152,14 @@ fetched
     }
     results
   }
-  .phase(metadata, remainder: true)
+  .join(extra, remainder: true)
   .filter { it[0] != null }
   .map { it -> [it[0][0], it[0][1], it[1]] }
   .set { to_import }
+
+//=============================================================================
+// Process data
+//=============================================================================
 
 process process_data {
   memory params.databases[name].get('memory', '2 GB')
@@ -186,6 +181,10 @@ process process_data {
     """
   }
 }
+
+//=============================================================================
+// Import and release data
+//=============================================================================
 
 raw_output
   .mix(dataless_output)
