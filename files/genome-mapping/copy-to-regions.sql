@@ -25,3 +25,17 @@ from rnc_genome_mapping mapping
 group by mapping.region_id, mapping.assembly_id
 ) on conflict (region_name, assembly_id) do nothing
 ;
+
+insert into rnc_sequence_exons (
+  region_id,
+  exon_start,
+  exon_stop
+) (
+select distinct
+  regions.id,
+  mapping.start,
+  mapping.stop
+from rnc_genome_mapping mapping
+join rnc_sequence_regions regions on mapping.region_id = regions.region_name and regions.assembly_id = mapping.assembly_id
+)
+;

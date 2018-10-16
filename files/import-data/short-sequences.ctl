@@ -1,5 +1,5 @@
 LOAD CSV
-FROM ALL FILENAMES MATCHING ~<seq_short.*csv$>
+FROM ALL FILENAMES MATCHING ~<short_sequences.*csv$>
 HAVING FIELDS (
     CRC64,
     LEN,

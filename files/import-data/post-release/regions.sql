@@ -1,8 +1,3 @@
--- This approach does have one edge case that will not be handled. That is if
--- the overall start/stop endpoints are consitent but the internal exon/intron
--- structure is different. If this happens then we will load weird stuff
--- basically.
-
 create index ix_load_rnc_sequence_regions__accession on load_rnc_sequence_regions(accession);
 
 -- Update the table to include urs_taxid and pretty database name
@@ -17,8 +12,8 @@ where
   and db.id = xref.dbid
 ;
 
--- This should have no effect but it is here for sanity.
-delete from load_rnc_sequence_regions where urs_taxid is null;
+-- Ensure we have found all URS/taxids
+alter table load_rnc_sequence_regions alter column urs_taxid set not null;
 
 -- Update name to include URS taxid
 update load_rnc_sequence_regions regions
@@ -30,7 +25,10 @@ set
 -- mentions of the databases we have in the load table. We do this because some
 -- regions may come from more than one database and we don't update all
 -- databases at once so we have allow regions to remain if some other database
--- supports them.
+-- supports them. This has a possible edge case, if there is a case where a
+-- sequence is moved, that is the overall sequence is the same but it is found
+-- in a new location, this will not remove the old location. I suspect this to be
+-- very rare but if it happens we will end up including an outdated location.
 UPDATE rnc_sequence_regions regions
 set
   providing_databases = array_remove(regions.providing_databases, load.providing_database)
@@ -68,6 +66,7 @@ insert into rnc_sequence_regions (
   region_start,
   region_stop,
   assembly_id,
+  exon_count,
   was_mapped,
 	identity,
 	providing_databases
@@ -80,6 +79,7 @@ select
   min(load.exon_start),
   max(load.exon_stop),
   load.assembly_id,
+  max(load.exon_count),
   false,
   null,
   array_agg(distinct load.providing_database)
@@ -107,5 +107,20 @@ select
 from load_rnc_sequence_regions load
 join rnc_sequence_regions regions on regions.region_name = load.region_name
 join ensembl_assembly ensembl on ensembl.assembly_id = load.assembly_id
-)
+) ON CONFLICT (region_id, exon_start, exon_stop) DO NOTHING
 ;
+
+do $$
+declare no_exons int;
+begin
+	select into no_exons count(distinct t.id) from (
+		select regions.id
+		from rnc_sequence_regions regions
+		left join rnc_sequence_exons exons on exons.region_id = regions.id
+		group by regions.id
+		having regions.exon_count != count(exons.*)
+		) t;
+	assert no_exons = 0, 'Some regions ' || no_exons || ' are missing exons';
+end $$;
+
+drop table load_rnc_sequence_regions;

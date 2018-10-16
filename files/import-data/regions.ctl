@@ -1,11 +1,12 @@
 LOAD CSV
-FROM ALL FILENAMES MATCHING ~<sequence_regions.*csv$>
+FROM ALL FILENAMES MATCHING ~<regions.*csv$>
 HAVING FIELDS (
   accession,
   region_name,
   chromosome,
   strand,
   assembly_id,
+  exon_count,
   exon_start,
   exon_stop
 )
@@ -16,6 +17,7 @@ TARGET COLUMNS (
   chromosome,
   strand,
   assembly_id,
+  exon_count,
   exon_start,
   exon_stop
 )
@@ -39,6 +41,7 @@ create table load_rnc_sequence_regions (
     exon_start int4,
     exon_stop int4,
     assembly_id varchar(255),
+    exon_count int,
     providing_database text
 );
 $$

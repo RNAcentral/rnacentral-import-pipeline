@@ -129,21 +129,21 @@ def build_entry_writer(parser):
         accessions={
             'transformer': op.methodcaller('write_ac_info'),
         },
-        seq_short={
+        short_sequences={
             'transformer': op.methodcaller('write_seq_short'),
             'csv_options': seq_csv,
         },
-        seq_long={
+        long_sequences={
             'transformer': op.methodcaller('write_seq_long'),
             'csv_options': seq_csv,
         },
-        refs={
+        references={
             'transformer': op.methodcaller('write_refs'),
         },
-        genomic_locations={
+        locations={
             'transformer': op.methodcaller('write_genomic_locations'),
         },
-        sequence_regions={
+        regions={
             'transformer': op.methodcaller('write_sequence_regions'),
         },
         secondary_structure={
