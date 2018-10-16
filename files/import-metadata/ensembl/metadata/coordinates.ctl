@@ -1,5 +1,5 @@
 LOAD CSV
-FROM merged.csv
+FROM ALL FILENAMES MATCHING ~<data.*csv$>
 HAVING FIELDS (
   chromosome,
   coordinate_system,
