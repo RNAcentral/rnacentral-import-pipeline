@@ -86,6 +86,11 @@ def from_file(handle, output):
 
     output.write('##gff-version 3\n')
     parsed = coord.from_file(handle)
+    seen = False
     for feature in regions_as_features(parsed):
+        seen = True
         output.write(str(feature))
         output.write('\n')
+
+    if not seen:
+        raise ValueError("No features written to GFF3 file")
