@@ -25,8 +25,7 @@ from rnacentral_pipeline.databases.pdb import parser as pdb
 from rnacentral_pipeline.databases.generic import parser as generic
 from rnacentral_pipeline.databases.refseq import parser as refseq
 from rnacentral_pipeline.databases.ensembl import parser as ensembl
-from rnacentral_pipeline.databases.ensembl import proteins as ensembl_proteins
-from rnacentral_pipeline.databases.ensembl_plants import parser as ensembl_plants
+from rnacentral_pipeline.databases.ensembl_plants import parser as e_plants
 
 
 @click.group('external', cls=ClickAliasedGroup)
@@ -90,7 +89,7 @@ def process_ensembl_plants(ensembl_file, output):
     This will process the Ensembl Plant data to produce files for import. The
     files should be in the EMBL format as provided by EnsemblPlants.
     """
-    write_entries(ensembl_plants.parse, output, ensembl_file)
+    write_entries(e_plants.parse, output, ensembl_file)
 
 
 @cli.command('gencode')
@@ -137,6 +136,10 @@ def process_pdb(output):
     file_okay=False,
 ))
 def process_ena(ena_file, mapping_file, output):
+    """
+    Process ENA EMBL formatted files into CSV to import. The additional mapping
+    file is a file containing all TPA data we are using from ENA.
+    """
     write_entries(ena.parse, output, ena_file, mapping_file)
 
 
@@ -163,5 +166,7 @@ def process_refseq(refseq_file, output):
     file_okay=False,
 ))
 def process_rfam(rfam_file, mapping_file, output):
+    """
+    Process Rfam's JSON format into the files to import.
+    """
     write_entries(rfam.parser.parse, output, rfam_file, mapping_file)
-
