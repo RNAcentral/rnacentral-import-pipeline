@@ -163,6 +163,8 @@ process process_data {
   filename = compressed ? "-" : "$input_file"
   prefix = compressed ? "zcat ${input_file} |" : ''
   """
+  set -o pipefail
+
   $prefix rnac external ${name} ${filename} ${extra_data}
   """
 }
