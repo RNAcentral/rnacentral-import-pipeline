@@ -126,6 +126,7 @@ Channel.empty()
   .mix(rfam_extra)
   .mix(rgd_extra)
   .mix(pdb_extra)
+  .groupBy()
   .set { extra }
 
 fetched
@@ -136,10 +137,13 @@ fetched
     }
     results
   }
-  .join(extra, remainder: true)
-  .filter { it[0] != null }
-  .map { it -> [it[0][0], it[0][1], it[1]] }
-  .set { to_import }
+  .combine(extra)
+  .map { name, data_file, extra ->
+    // Pretty sure this is because groovy is messing with types or something
+    to_add = extra[name] ? extra[name][0][1..-1] : []
+    [name, data_file, to_add]
+  }
+  .set { to_process }
 
 //=============================================================================
 // Process data
@@ -149,21 +153,18 @@ process process_data {
   memory params.databases[name].get('memory', '2 GB')
 
   input:
-  set val(name), file(input_file), val(extra) from to_import
+  set val(name), file(input_file), val(extra) from to_process
 
   output:
   file "*.csv" into processed_output mode flatten
 
   script:
-  if (input_file.toString().endsWith(".gz")) {
-    """
-    zcat ${input_file} | rnac external ${name} - ${extra == null ? '' : file(extra)}
-    """
-  } else {
-    """
-    rnac external ${name} ${input_file} ${extra == null ? '' : file(extra)}
-    """
-  }
+  compressed = input_file.toString().endsWith('.gz')
+  filename = compressed ? "-" : "$input_file"
+  prefix = compressed ? "zcat ${input_file} |" : ''
+  """
+  $prefix rnac external ${name} ${filename} ${extra_data}
+  """
 }
 
 //=============================================================================
