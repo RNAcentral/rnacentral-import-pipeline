@@ -65,35 +65,42 @@ process fetch_internal_ensembl_data {
   set val(mysql), val(name), val(db), file(sql) from ensembl_metadata_dbs
 
   output:
-  set val(name), file('data.csv') into ensembl_metadata
-  set val(name), val(db) into ensembl_imported
+  set val(name), val(db) file('data.csv') into raw_ensembl_metadata
 
   script:
   """
   ${as_mysql_cmd(mysql)} -N --database $db < $sql > data.tsv
+  if [[ -s data.tsv ]]; then
+    if [[ "$name" -eq "coordinates" ]]; then
+      touch data.csv
+    else
+      echo 1>&2 "No data produced for $name $db"
+      exit 1
+    fi
+  fi
   rnac ensembl $name data.tsv data.csv
   """
 }
 
-ensembl_imported
-  .collectFile { name, db -> [name, "${name},${db}\n"] }
-  .map { f -> [f.getName(), f] }
-  .set { ensembl_imported_files }
-
-ensembl_metadata
+raw_ensembl_metadata
+  .filter { n, d, f -> !f.isEmpty() }
   .groupTuple()
-  .join(ensembl_imported_files)
-  .map { [file("files/import-metadata/ensembl/metadata/${it[0]}.ctl"), it[1], it[2]] }
-  .set { ensembl_loadable }
+  .map { name, dbs, data_files ->
+    [file("files/import-metadata/ensembl/metadata/${name}.ctl"), data_files, dbs]
+  }
+  .combine(Channel.fromPath('files/import-metadata/ensembl/mark-analyzed.ctl'))
+  . set { ensembl_loadable }
 
 process import_ensembl_data {
   echo true
 
   input:
-  set file(ctl), file('data*.csv'), file('imported.csv') from ensembl_loadable
-  file(mark_ctl) from Channel.fromPath('files/import-metadata/ensembl/mark-analyzed.ctl')
+  set file(ctl), file('data*.csv'), val(dbs), file(mark_ctl) from ensembl_loadable
 
   script:
+  file("imported.txt").withWriter { writer ->
+    dbs.each { db -> writer << "${name},${db}\n" }
+  }
   """
   split-and-load $ctl 'data*.csv' ${params.import_data.chunk_size} data
 
