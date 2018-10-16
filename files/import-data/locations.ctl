@@ -1,5 +1,5 @@
 LOAD CSV
-FROM ALL FILENAMES MATCHING ~<genomic_locations.*csv$>
+FROM ALL FILENAMES MATCHING ~<locations.*csv$>
 HAVING FIELDS (
     accession,
     chromosome,
@@ -34,7 +34,7 @@ SET
 
 BEFORE LOAD DO
 $$
-truncate table load_rnc_coordinates;
+drop table if exists load_rnc_coordinates;
 $$,
 $$
 CREATE TABLE IF NOT EXISTS load_rnc_coordinates (

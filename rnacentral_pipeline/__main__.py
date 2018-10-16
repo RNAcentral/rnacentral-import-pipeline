@@ -11,6 +11,5 @@ import logging
 
 from rnacentral_pipeline.cli import cli
 
-
 logging.basicConfig()
 cli()

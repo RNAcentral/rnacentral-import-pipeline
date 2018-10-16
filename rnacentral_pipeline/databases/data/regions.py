@@ -13,6 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import operator as op
+
 import attr
 from attr.validators import instance_of as is_a
 
@@ -37,6 +39,10 @@ def as_strand(value):
     raise UnknownStrand("No way to handle strand: " + str(value))
 
 
+def sort_exons(exons):
+    return sorted(exons, key=op.attrgetter('start'))
+
+
 @attr.s(frozen=True)
 class Exon(object):
     start = attr.ib(validator=is_a(int))
@@ -47,7 +53,7 @@ class Exon(object):
 class SequenceRegion(object):
     chromosome = attr.ib(validator=is_a(basestring))
     strand = attr.ib(validator=is_a(int), convert=as_strand)
-    exons = attr.ib(validator=is_a(list))
+    exons = attr.ib(validator=is_a(list), convert=sort_exons)
     assembly_id = attr.ib(validator=is_a(basestring))
 
     @property
@@ -68,10 +74,15 @@ class SequenceRegion(object):
 
     @property
     def name(self):
-        return '@{chromosome}/{start}-{stop}:{strand}'.format(
+        exon_names = []
+        for exon in self.exons:
+            exon_names.append('{start}-{stop}'.format(
+                start=exon.start,
+                stop=exon.stop,
+            ))
+        return '@{chromosome}/{exons}:{strand}'.format(
             chromosome=self.chromosome,
-            start=self.start,
-            stop=self.stop,
+            exons=','.join(exon_names),
             strand=self.string_strand,
         )
 
@@ -83,6 +94,7 @@ class SequenceRegion(object):
                 self.chromosome,
                 self.strand,
                 self.assembly_id,
+                len(self.exons),
                 exon.start,
                 exon.stop,
             ]

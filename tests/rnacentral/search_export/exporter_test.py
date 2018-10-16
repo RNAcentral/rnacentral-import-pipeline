@@ -38,6 +38,7 @@ def load_additional():
     psql = PsqlWrapper(os.environ['PGDATABASE'])
     with tempfile.TemporaryFile() as tmp:
         for filename in os.listdir(metapath):
+            print(filename)
             query = os.path.join(metapath, filename)
             psql.copy_file_to_handle(query, tmp)
         tmp.seek(0)
@@ -144,15 +145,15 @@ def test_assigns_gene_correctly(upi, genes):
 
 
 @pytest.mark.parametrize('upi,genes', [
-    ('URS00006B19C2_77133', []),
-    ('URS0000547AAD_7227', ['FBgn0019661', 'roX1']),
-    ('URS0000D5E40F_7227', ['CR46362']),
-    ('URS0000773F8D_7227', [
+    ('URS00006B19C2_77133', set([])),
+    ('URS0000547AAD_7227', {'FBgn0019661', 'roX1'}),
+    ('URS0000D5E40F_7227', {'CR46362'}),
+    ('URS0000773F8D_7227', {
         'CR46280',
         'dme-mir-9384',
         r'Dmel\CR46280',
-    ]),
-    ('URS0000602386_7227', [
+    }),
+    ('URS0000602386_7227', {
         '276a',
         'CR33584',
         'CR33585',
@@ -170,8 +171,8 @@ def test_assigns_gene_correctly(upi, genes):
         'mir-276',
         'mir-276aS',
         'rosa',
-    ]),
-    ('URS000060F735_9606', [
+    }),
+    ('URS000060F735_9606', {
         'ASMTL-AS',
         'ASMTL-AS1',
         'ASMTLAS',
@@ -182,14 +183,11 @@ def test_assigns_gene_correctly(upi, genes):
         'ENSGR0000236017.2',
         'NCRNA00105',
         'OTTHUMG00000021056.2',
-    ])
+    })
 ])
 def test_assigns_gene_synonym_correctly(upi, genes):
-    ans = [{'attrib': {'name': 'gene_synonym'}, 'text': g} for g in genes]
-    val = load_and_get_additional(upi, 'gene_synonym')
-    ans.sort(key=op.itemgetter('text'))
-    val.sort(key=op.itemgetter('text'))
-    assert val == ans
+    val = {a['text'] for a in load_and_get_additional(upi, 'gene_synonym')}
+    assert val == genes
 
 
 @pytest.mark.parametrize('upi,transcript_ids', [
@@ -198,6 +196,16 @@ def test_assigns_gene_synonym_correctly(upi, genes):
 def test_can_search_using_flybase_transcript_ids(upi, transcript_ids):
     val = {c['attrib']['dbkey'] for c in load_and_get_cross_references(upi, 'FLYBASE')}
     assert val == transcript_ids
+
+
+@pytest.mark.parameterize('upi,gene,symbol', [
+    ('URS000013BC78_4896', 'SPSNORNA.29', 'sno52'),
+])
+def test_can_search_for_pombase_ids(upi, gene, symbol):
+    val = {x['text'] for x in load_and_get_additional(upi, 'gene')}
+    assert gene in val
+    val = {x['text'] for x in load_and_get_additional(upi, 'gene_synonym')}
+    assert symbol in val
 
 
 @pytest.mark.parametrize('upi,ans', [  # pylint: disable=E1101
@@ -472,9 +480,9 @@ def test_correctly_assigns_popular_species(upi, ans):
     ('URS000052E2E9_289219', ['possible_contamination']),
     ('URS00002411EE_10090', ['missing_rfam_match']),
 ])
-def test_it_correctly_build_rfam_problems(upi, problems):
-    # ans = [{'attrib': {'name': 'rfam_problems'}, 'text': p} for p in problems]
-    val = [a['text'] for a in load_and_get_additional(upi, "rfam_problems")]
+def test_it_correctly_build_qc_warnings(upi, problems):
+    # ans = [{'attrib': {'name': 'qc_warning'}, 'text': p} for p in problems]
+    val = [a['text'] for a in load_and_get_additional(upi, "qc_warning")]
     assert sorted(val) == sorted(problems)
 
 
@@ -487,9 +495,9 @@ def test_it_correctly_build_rfam_problems(upi, problems):
     ('URS0000010837_7227', True),
     ('URS000052E2E9_289219', True),
 ])
-def test_it_correctly_assigns_rfam_problem_found(upi, status):
-    assert load_and_get_additional(upi, "rfam_problem_found") == [
-        {'attrib': {'name': 'rfam_problem_found'}, 'text': str(status)},
+def test_it_correctly_assigns_qc_warning_found(upi, status):
+    assert load_and_get_additional(upi, "qc_warning_found") == [
+        {'attrib': {'name': 'qc_warning_found'}, 'text': str(status)},
     ]
 
 
@@ -518,8 +526,8 @@ def test_can_correctly_assign_coordinates(upi, status):
     'URS0000049E57_562',
 ])
 def test_does_not_produce_empty_rfam_warnings(upi):
-    assert load_and_get_additional(upi, 'rfam_problems') == [
-        {'attrib': {'name': 'rfam_problems'}, 'text': 'none'},
+    assert load_and_get_additional(upi, 'qc_warning') == [
+        {'attrib': {'name': 'qc_warning'}, 'text': 'none'},
     ]
 
 
@@ -636,41 +644,42 @@ def test_can_detect_if_has_interacting_proteins(upi, expected):
         "ENSG00000177189",
         "ENSG00000183283",
         "ENSG00000197646",
-        "IPCEF1",
-        "TFAM",
-        "ALOX12",
+        "12S-LOX",
+        "AFI1A",
         "AKIRIN2",
-        "EBF1",
-        "DENND6A",
-        "RPS6KA3",
+        "AL365205.1",
+        "ALOX12",
+        "B7-DC",
+        "Btdc",
+        "C6orf166",
+        "CD273",
+        "CLS",
+        "COE1",
         "DAZAP2",
-        "PDCD1LG2",
+        "DENND6A",
+        "EBF",
+        "EBF1",
+        "FAM116A",
+        "FLJ10342",
+        "FLJ34969",
+        "HU-3",
+        "IPCEF1",
+        "KIAA0058",
         "KIAA0403",
+        "MRX19",
+        "OLF1",
+        "PD-L2",
+        "PDCD1LG2",
+        "PDL2",
         "PIP3-E",
+        "RPS6KA3",
+        "RSK2",
         "TCF6",
         "TCF6L2",
-        "12S-LOX",
-        "C6orf166",
-        "dJ486L4.2",
-        "FLJ10342",
-        "EBF",
-        "OLF1",
-        "AFI1A",
-        "FAM116A",
-        "FLJ34969",
-        "CLS",
-        "HU-3",
-        "MRX19",
-        "RSK2",
-        "KIAA0058",
-        "B7-DC",
-        "bA574F11.2",
-        "Btdc",
-        "CD273",
-        "PDL2",
-        "PD-L2",
+        "TFAM",
         "VIM",
-        "AL365205.1",
+        "bA574F11.2",
+        "dJ486L4.2",
     }),
     ('URS0000759CF4_9606', set()),
 ])
@@ -718,3 +727,204 @@ def test_assigns_correct_crs_ids(upi, crs_ids):
     data = load_and_get_additional(upi, 'conserved_structure')
     value = {d['text'] for d in data}
     assert value == crs_ids
+
+
+@pytest.mark.parametrize('upi,expected', [  # pylint: disable=E1101
+    ('URS0000A59F5E_7227', set()),
+    ('URS0000014447_7240', {'ENA', 'FlyBase', 'miRBase', 'Rfam'}),
+    ('URS0000ABD7E8_9606', set()),
+])
+def test_assigns_correct_overlaps(upi, expected):
+    data = load_and_get_additional(upi, 'overlaps_with')
+    value = {d['text'] for d in data}
+    assert value == expected
+
+
+@pytest.mark.parametrize('upi,expected', [  # pylint: disable=E1101
+    ('URS0000A59F5E_7227', {
+        'FlyBase',
+        'miRBase',
+        'Modomics',
+        'PDBe',
+        'RefSeq',
+        'Rfam',
+        'SILVA',
+        'snOPY',
+        'SRPDB',
+    }),
+    ('URS0000014447_7240', set()),
+    ('URS0000ABD7E8_9606', set()),
+])
+def test_assigns_correct_no_overlaps(upi, expected):
+    data = load_and_get_additional(upi, 'no_overlaps_with')
+    value = {d['text'] for d in data}
+    assert value == expected
+
+
+@pytest.mark.parametrize('upi,expected', [  # pylint: disable=E1101
+    ('URS000026261D_9606', {
+        'URS00005EB21E_9606',
+        'URS0000142654_9606',
+        'URS0000A91D1A_9606',
+        'URS000029E633_9606',
+        'URS00001D61C5_9606',
+        'URS00007D759B_9606',
+        'URS00002C6CC0_9606',
+        'URS00008BBA89_9606',
+        'URS000008C8EB_9606',
+        'URS0000A887DA_9606',
+        'URS000002964A_9606',
+        'URS0000304D5D_9606',
+        'URS00009C5E9B_9606',
+        'URS00000F38DD_9606',
+        'URS0000141778_9606',
+        'URS000044954E_9606',
+        'URS0000D61BD6_9606',
+        'URS0000AA0D63_9606',
+        'URS000035AC9C_9606',
+        'URS00007BF182_9606',
+        'URS000077BE2A_9606',
+        'URS0000543B4D_9606',
+        'URS0000D63D56_9606',
+        'URS00004E64F9_9606',
+        'URS0000264D7F_9606',
+        'URS00008C22F5_9606',
+        'URS00004CDF42_9606',
+        'URS00001ED6BE_9606',
+        'URS00002989CF_9606',
+        'URS000076891D_9606',
+        'URS00002F49FD_9606',
+        'URS000017366C_9606',
+        'URS0000783AD8_9606',
+        'URS00007716E5_9606',
+        'URS00004DBD55_9606',
+        'URS0000499E31_9606',
+        'URS0000318782_9606',
+        'URS00001118C6_9606',
+        'URS000009D1B1_9606',
+        'URS00000CE0D1_9606',
+        'URS0000784209_9606',
+        'URS000040AD32_9606',
+        'URS00001F136D_9606',
+        'URS00004942CA_9606',
+        'URS00001A182D_9606',
+        'URS00007836D4_9606',
+        'URS000077EF2F_9606',
+        'ENSG00000157306',
+        'ENSG00000177822',
+        'ENSG00000196756',
+        'ENSG00000204584',
+        'ENSG00000206337',
+        'ENSG00000214106',
+        'ENSG00000214548',
+        'ENSG00000225138',
+        'ENSG00000225733',
+        'ENSG00000229807',
+        'ENSG00000231074',
+        'ENSG00000233937',
+        'ENSG00000234456',
+        'ENSG00000235423',
+        'ENSG00000235499',
+        'ENSG00000244300',
+        'ENSG00000245532',
+        'ENSG00000247556',
+        'ENSG00000248092',
+        'ENSG00000249087',
+        'ENSG00000251209',
+        'ENSG00000251562',
+        'ENSG00000253352',
+        'ENSG00000255108',
+        'ENSG00000255175',
+        'ENSG00000255717',
+        'ENSG00000256732',
+        'ENSG00000257698',
+        'ENSG00000260032',
+        'ENSG00000260276',
+        'ENSG00000260423',
+        'ENSG00000261409',
+        'ENSG00000261428',
+        'ENSG00000262877',
+        'ENSG00000266896',
+        'ENSG00000267078',
+        'ENSG00000267263',
+        'ENSG00000267322',
+        'ENSG00000268027',
+        'ENSG00000269821',
+        'ENSG00000270006',
+        'ENSG00000270066',
+        'ENSG00000272512',
+        'ENSG00000272918',
+        'ENSG00000273001',
+        'ENSG00000274895',
+        'ENSG00000275413',
+        'ENSG00000214297',
+        'ENSG00000218980',
+        'ENSG00000219507',
+        'ENSG00000224631',
+        'ENSG00000225093',
+        'ENSG00000225674',
+        'ENSG00000225972',
+        'ENSG00000226564',
+        'ENSG00000226752',
+        'ENSG00000227081',
+        'ENSG00000227347',
+        'ENSG00000227777',
+        'ENSG00000228232',
+        'ENSG00000228834',
+        'ENSG00000229473',
+        'ENSG00000231752',
+        'ENSG00000232282',
+        'ENSG00000232573',
+        'ENSG00000234975',
+        'ENSG00000235095',
+        'ENSG00000237264',
+        'ENSG00000237350',
+        'ENSG00000237999',
+        'ENSG00000239218',
+        'ENSG00000242294',
+        'ENSG00000242299',
+        'ENSG00000243265',
+        'ENSG00000244535',
+        'ENSG00000247627',
+        'ENSG00000256211',
+        'ENSG00000257199',
+        'ENSG00000257307',
+        'ENSG00000257379',
+        'ENSG00000259751',
+        'ENSG00000259758',
+        'ENSG00000261864',
+        'ENSG00000264772',
+        'ENSG00000267482',
+        'ENSG00000269374',
+        'ENSG00000269378',
+        'ENSG00000271525',
+        'ENSG00000272578',
+        'ENSG00000277358',
+        'ENSG00000279978',
+        'ENSG00000142396',
+        'ENSG00000152117',
+        'ENSG00000172974',
+        'ENSG00000175841',
+        'ENSG00000182310',
+        'ENSG00000183298',
+        'ENSG00000188460',
+        'ENSG00000196204',
+        'ENSG00000198744',
+        'ENSG00000204623',
+    }),
+    ('URS0000759CF4_9606', set()),
+])
+def test_assigns_correct_interacting_rnas(upi, expected):
+    data = load_and_get_additional(upi, 'interacting_rna')
+    value = {d['text'] for d in data}
+    assert value == expected
+
+
+@pytest.mark.parametrize('upi,expected', [  # pylint: disable=E1101
+    ('URS000026261D_9606', True),
+    ('URS0000759CF4_9606', False),
+])
+def test_can_detect_if_has_interacting_proteins(upi, expected):
+    assert load_and_get_additional(upi, 'has_interacting_rnas') == [
+        {'attrib': {'name': 'has_interacting_rnas'}, 'text': str(expected)}
+    ]

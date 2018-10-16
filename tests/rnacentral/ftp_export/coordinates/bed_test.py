@@ -13,6 +13,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import pytest
 
+
+@pytest.mark.skip
 def test_can_build_bed_from_region():
     assert False
