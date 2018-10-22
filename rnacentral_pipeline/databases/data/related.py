@@ -13,17 +13,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import re
 import json
-import logging
-import unicodedata
-import operator as op
-import itertools as it
-from collections import Counter
 
 import attr
-from attr.validators import and_
-from attr.validators import optional
 from attr.validators import instance_of as is_a
 from attr.validators import in_ as one_of
 
