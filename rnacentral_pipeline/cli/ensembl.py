@@ -15,7 +15,9 @@ limitations under the License.
 
 import click
 
+from rnacentral_pipeline.databases.ensembl import tasks as ensembl_tasks
 from rnacentral_pipeline.databases.ensembl import proteins as ensembl_proteins
+from rnacentral_pipeline.databases.ensembl import assemblies as ensembl_assemblies
 from rnacentral_pipeline.databases.ensembl import coordinate_systems as ensembl_coords
 
 
@@ -49,3 +51,24 @@ def ensembl_coordinates(filename, output):
     the database.
     """
     ensembl_coords.from_file(filename, output)
+
+
+@cli.command('select-tasks')
+@click.argument('filename', type=click.File('rb'))
+@click.argument('possible', type=click.File('rb'))
+@click.argument('done', type=click.File('rb'))
+@click.argument('output', default='-', type=click.File('wb'))
+def ensembl_select_tasks(filename, possible, done, output):
+    """
+    This will select which database names to import. It basically checsk to see
+    which is the newest assuming Ensembl's standard naming schema and see which
+    we have not already imported.
+    """
+    ensembl_tasks.write(filename, possible, done, output)
+
+
+@cli.command('assemblies')
+@click.argument('filename', default='-', type=click.File('rb'))
+@click.argument('output', default='-', type=click.File('wb'))
+def ensembl_write_assemblies(filename, output):
+    ensembl_assemblies.write(filename, output)
