@@ -28,32 +28,4 @@ create table load_protein_info (
   label text,
   synonyms text[]
 );
-$$
-
-AFTER LOAD DO
-$$
-insert into protein_info (
-  protein_accession,
-  description,
-  label,
-  synonyms
-) (
-select distinct
-  protein_accession,
-  description,
-  label,
-  synonyms
-from load_protein_info
-)
-ON CONFLICT (protein_accession) DO UPDATE
-SET
-  description = EXCLUDED.description,
-  label = EXCLUDED.label,
-  synonyms = EXCLUDED.synonyms
 ;
-$$,
-$$
-drop table load_protein_info;
-$$
-;
-

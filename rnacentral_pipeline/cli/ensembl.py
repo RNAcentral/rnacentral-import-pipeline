@@ -42,7 +42,7 @@ def ensembl_proteins_cmd(filename, output):
     ensembl_proteins.from_file(filename, output)
 
 
-@cli.command('coordinates')
+@cli.command('coordinate-systems')
 @click.argument('filename', default='-', type=click.File('rb'))
 @click.argument('output', default='-', type=click.File('wb'))
 def ensembl_coordinates(filename, output):
