@@ -6,8 +6,6 @@ queries = [
   using_release: 'files/precompute/methods/using-release.sql'
 ]
 
-precompute_upi_queries = Channel.empty()
-
 if (params.precompute.methods.all) {
   Channel
     .from([[file(queries.all), []]])
@@ -144,30 +142,9 @@ process generate_feedback_report {
   output:
   file('combined.tsv') into feedback
 
-  shell:
-  genome="complete-${mod}.bed"
-  '''
-  psql -v "assembly_id=!{assembly}" -f !{query} "$PGDATABASE" > result.json
-  rnac ftp-export coordinates as-bed result.json !{genome}
-  cut -f15 !{genome} | tr ',' '\\n' | sort -u > db_list.txt
-
-  for db in `cat db_list.txt`; do
-      overlap_file="overlap-${db}.bed"
-      grep $db !{genome} > ${db}.bed
-      bedtools intersect -wa -wb -a ${db}.bed -b !{genome} > "$overlap_file"
-      bedtools subtract -A -a !{genome} -b ${db}.bed > no-overlap-${db}.bed
-      db_report=${db}-report.tsv
-
-      awk -F $'\\t' '{ if ($4 != $19) print $0 }' "$overlap_file" > t
-      mv t "$overlap_file"
-
-      awk '{split($30, dbs, ","); for(i in dbs) print $4, "overlap", dbs[i];}' "$overlap_file" | sort -u >> $db_report
-      awk '{ print $4, "overlapping_id", $19 }' "$overlap_file" | sort -u >> $db_report
-      awk -v awk_db=$db '{print $4, "no_overlap", awk_db}' no-overlap-${db}.bed | sort -u >> $db_report
-  done
-
-  sort -u *-report.tsv > combined.tsv
-  '''
+  """
+  find-overlaps $query complete-${mod}.bed $assembly
+  """
 }
 
 process import_feedback {
