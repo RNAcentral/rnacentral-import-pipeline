@@ -45,7 +45,7 @@ process query_upis {
     variable_option << """-v ${name}="${value}" """
   }
   """
-  psql -f "$sql" ${variable_option.join(' ')} "$PGDATABASE"
+  psql -v ON_ERROR_STOP=1 -f "$sql" ${variable_option.join(' ')} "$PGDATABASE"
   rnac upi-ranges --table-name upis_to_precompute ${params.precompute.max_entries} ranges.txt
   """
 }
@@ -67,7 +67,7 @@ process precompute_range_query {
   file 'raw-precompute.json' into precompute_raw
 
   """
-  psql --variable min=$min --variable max=$max -f "$query" '$PGDATABASE' > raw-precompute.json
+  psql -v ON_ERROR_STOP=1 --variable min=$min --variable max=$max -f "$query" '$PGDATABASE' > raw-precompute.json
   """
 }
 
@@ -107,7 +107,7 @@ process load_precomputed_data {
   cp $qa_ctl _qa.ctl
   pgloader _pre.ctl
   pgloader _qa.ctl
-  psql -f $post "$PGDATABASE"
+  psql -v ON_ERROR_STOP=1 -f $post "$PGDATABASE"
   """
 }
 
@@ -125,7 +125,7 @@ process mods_for_feedback {
   }
   names = '(' + names.join(', ') + ')'
   """
-  psql -v "names=${names}" -f "$query" "$PGDATABASE" > info
+  psql -v ON_ERROR_STOP=1 -v "names=${names}" -f "$query" "$PGDATABASE" > info
   cat info
   """
 }
