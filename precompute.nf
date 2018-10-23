@@ -136,6 +136,8 @@ raw_mods
   .set { mods }
 
 process generate_feedback_report {
+  memory '4 GB'
+
   input:
   set val(assembly), val(mod), file(query) from mods
 
