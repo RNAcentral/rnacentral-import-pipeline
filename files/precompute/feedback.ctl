@@ -3,13 +3,15 @@ FROM 'merged.tsv'
 HAVING FIELDS (
     upi_taxid,
     status,
-    result
+    result,
+    assembly_id
 )
 INTO {{PGDATABASE}}?load_overlaps
 TARGET COLUMNS (
     upi_taxid,
     status,
-    result
+    result,
+    assembly_id
 )
 
 WITH
@@ -23,7 +25,8 @@ $$
 create table load_overlaps (
     upi_taxid text,
     status text,
-    result text
+    result text,
+    assembly_id text
 );
 $$
 
@@ -33,7 +36,8 @@ insert into rnc_feedback_overlap (
     upi_taxid,
     overlaps_with,
     overlapping_upis,
-    no_overlaps_with
+    no_overlaps_with,
+    assembly_id
 ) (
 select
     load.upi_taxid,
@@ -48,11 +52,12 @@ select
     coalesce(
         array_agg(distinct load.result) FILTER (WHERE load.status = 'no_overlap'),
         '{}'::text[]
-    )
+    ),
+    load.assembly_id
 from load_overlaps load
 join rnc_rna_precomputed pre on pre.id = load.upi_taxid
 group by load.upi_taxid
-) ON CONFLICT (upi_taxid) DO UPDATE
+) ON CONFLICT (upi_taxid, assembly_id) DO UPDATE
 SET
     overlaps_with = excluded.overlaps_with,
     overlapping_upis = excluded.overlapping_upis,
