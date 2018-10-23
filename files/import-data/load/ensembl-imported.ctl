@@ -15,25 +15,4 @@ create table load_ensembl_analysis_status (
     task_name text
 );
 $$
-
-AFTER LOAD DO
-$$
-insert into ensembl_import_tracking (
-    database_name,
-    task_name,
-    was_imported
-) (
-select
-    database_name,
-    task_name,
-    true
-from load_ensembl_analysis_status
-) ON CONFLICT (database_name, task_name) DO UPDATE
-set
-    was_imported = excluded.was_imported
-;
-$$,
-$$
-drop table load_ensembl_analysis_status;
-$$
 ;

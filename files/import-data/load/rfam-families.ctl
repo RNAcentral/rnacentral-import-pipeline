@@ -35,7 +35,7 @@ TARGET COLUMNS
 
 WITH
     skip header = 1,
-    fields terminated by ','
+    fields terminated by '0x9'
 
 BEFORE LOAD DO
 $$
@@ -56,52 +56,4 @@ create table load_rfam_models (
     short_name character varying(50) COLLATE pg_catalog."default",
     rfam_rna_type character varying(250) COLLATE pg_catalog."default"
 );
-$$
-
-AFTER LOAD DO
-$$ insert into rfam_models (
-    rfam_model_id,
-    short_name,
-    long_name,
-    description,
-    seed_count,
-    full_count,
-    length,
-    is_suppressed,
-    rfam_clan_id,
-    domain,
-    rna_type,
-    rfam_rna_type
-) (
-select
-    rfam_model_id,
-    short_name,
-    long_name,
-    description,
-    seed_count,
-    full_count,
-    length,
-    is_suppressed,
-    rfam_clan_id,
-    domain,
-    rna_type,
-    rfam_rna_type
-from load_rfam_models
-)
-ON CONFLICT (rfam_model_id) DO UPDATE SET
-    short_name = excluded.short_name,
-    long_name = excluded.long_name,
-    description = excluded.description,
-    seed_count = excluded.seed_count,
-    full_count = excluded.full_count,
-    length = excluded.length,
-    is_suppressed = excluded.is_suppressed,
-    rfam_clan_id = excluded.rfam_clan_id,
-    domain = excluded.domain,
-    rna_type = excluded.rna_type,
-    rfam_rna_type = excluded.rfam_rna_type
-$$,
-$$
-drop table load_rfam_models;
-$$
 ;

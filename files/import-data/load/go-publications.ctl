@@ -35,33 +35,4 @@ create table load_ref_pubmed (
     doi text
 );
 $$
-
-AFTER LOAD DO
-$$
-insert into ref_pubmed (
-    ref_pubmed_id,
-    authors,
-    location,
-    title,
-    doi
-) (
-select distinct
-    ref_pubmed_id,
-    authors,
-    location,
-    title,
-    doi
-from load_ref_pubmed
-)
-ON CONFLICT (ref_pubmed_id) DO UPDATE
-SET
-    authors = EXCLUDED.authors,
-    location = EXCLUDED.location,
-    title = EXCLUDED.title,
-    doi = EXCLUDED.title
-;
-$$,
-$$
-drop table load_ref_pubmed;
-$$
 ;

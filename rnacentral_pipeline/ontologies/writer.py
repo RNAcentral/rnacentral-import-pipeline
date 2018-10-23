@@ -21,13 +21,13 @@ from rnacentral_pipeline.writers import MultiCsvOutput
 def write_annotations(parser, *args, **kwargs):
     writer = MultiCsvOutput.build(
         parser,
-        annotations={
+        go_annotations={
             'transformer': op.methodcaller('writeable'),
         },
-        publications={
+        go_publications={
             'transformer': op.methodcaller('writeable_publications'),
         },
-        publication_mappings={
+        go_publication_mappings={
             'transformer': op.methodcaller('writeable_publication_mappings'),
         },
         terms={

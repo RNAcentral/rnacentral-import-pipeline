@@ -1,5 +1,5 @@
 LOAD CSV
-FROM 'term-info.csv'
+FROM 'ontology_terms.csv'
 WITH ENCODING ISO-8859-14
 HAVING FIELDS
 (
@@ -32,30 +32,5 @@ create table load_ontology_terms (
   name text,
   definition text
 );
-$$
-
-AFTER LOAD DO
-$$ insert into ontology_terms (
-  ontology_term_id,
-  ontology,
-  name,
-  definition
-) (
-select distinct
-  ontology_term_id,
-  ontology,
-  name,
-  definition
-from load_ontology_terms
-)
-ON CONFLICT (ontology_term_id) DO UPDATE SET
-  ontology_term_id = excluded.ontology_term_id,
-  ontology = excluded.ontology,
-  name = excluded.name,
-  definition = excluded.definition
-;
-$$,
-$$
-drop table load_ontology_terms;
 $$
 ;

@@ -18,7 +18,7 @@ TARGET COLUMNS
 
 WITH
     skip header = 1,
-    fields terminated by ','
+    fields terminated by '0x9'
 
 BEFORE LOAD DO
 $$
@@ -31,28 +31,4 @@ create table if not exists load_rfam_clans (
     description character varying(1000) COLLATE pg_catalog."default" NOT NULL,
     family_count integer NOT NULL
 );
-$$
-
-AFTER LOAD DO
-$$ insert into rfam_clans (
-    rfam_clan_id,
-    name,
-    description,
-    family_count
-) (
-select
-    rfam_clan_id,
-    name,
-    description,
-    family_count
-from load_rfam_clans
-)
-ON CONFLICT (rfam_clan_id) DO UPDATE SET
-    name = excluded.name,
-    description = excluded.description,
-    family_count = excluded.family_count
-$$,
-$$
-drop table load_rfam_clans;
-$$
 ;
