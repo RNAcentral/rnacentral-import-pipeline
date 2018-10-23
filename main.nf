@@ -310,49 +310,47 @@ raw_output
   .map { it -> [it[0][0], it[0][1], it[1]] }
   .set { to_load }
 
-to_load.println()
+process merge_and_import {
+  echo true
 
-// process merge_and_import {
-//   echo true
+  input:
+  set val(name), file(ctl), file('raw*.csv') from to_load
 
-//   input:
-//   set val(name), file(ctl), file('raw*.csv') from to_load
+  output:
+  val(name) into loaded
 
-//   output:
-//   val(name) into loaded
+  """
+  split-and-load $ctl 'raw*.csv' ${params.import_data.chunk_size} $name
+  """
+}
 
-//   """
-//   split-and-load $ctl 'raw*.csv' ${params.import_data.chunk_size} $name
-//   """
-// }
+loaded
+  .flatMap { name -> file("files/import-data/post-release/*__${name.replace('_', '-')}.sql") }
+  .mix(Channel.fromPath('files/import-data/post-release/99__cleanup.sql'))
+  .filter { f -> f.exists() }
+  .collect()
+  .set { post_scripts }
 
-// loaded
-//   .flatMap { name -> file("files/import-data/post-release/*__${name.replace('_', '-')}.sql") }
-//   .mix(Channel.fromPath('files/import-data/post-release/99__cleanup.sql'))
-//   .filter { f -> f.exists() }
-//   .collect()
-//   .set { post_scripts }
+process release {
+  echo true
+  maxForks 1
 
-// process release {
-//   echo true
-//   maxForks 1
+  input:
+  file(post) from post_scripts
 
-//   input:
-//   file(post) from post_scripts
+  output:
+  val('done') into post_release
 
-//   output:
-//   val('done') into post_release
+  """
+  set -o pipefail
 
-//   """
-//   set -o pipefail
+  rnac run-release
+  find . -name '*.sql' -print0 |\
+  sort -z |\
+  xargs -r0 -I {} psql -v ON_ERROR_STOP=1 -f {} "$PGDATABASE"
+  """
+}
 
-//   rnac run-release
-//   find . -name '*.sql' -print0 |\
-//   sort -z |\
-//   xargs -r0 -I {} psql -v ON_ERROR_STOP=1 -f {} "$PGDATABASE"
-//   """
-// }
-
-// post_release
-//   .ifEmpty('no release')
-//   .set { sequences_to_scan }
+post_release
+  .ifEmpty('no release')
+  .set { sequences_to_scan }
