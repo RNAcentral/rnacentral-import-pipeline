@@ -12,7 +12,7 @@ from Bio.SeqRecord import SeqRecord
 def sequences(handle):
     for line in handle:
         data = json.loads(line)
-        description = data.get('description', None)
+        description = data.get('description', '')
         if description:
             description = description.encode('utf-8', 'ignore')
 
