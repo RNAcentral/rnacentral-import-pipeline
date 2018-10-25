@@ -25,6 +25,8 @@ from rnacentral_pipeline.databases.ensembl import helpers as ensembl
 
 EXCLUDED_TYPES = {
     'nontranslating_CDS',
+    'sense_intronic',
+    'transposable_element',
 }
 
 NORMALIZED_RNA_TYPES = {
@@ -94,7 +96,11 @@ def description(gene, entry):
         gene_name = gene_name[0]
         if gene_name.endswith(']'):
             gene_name = re.sub(r'\s*\[.+\]$', '', gene_name)
+
         gene_name.strip()
+        if not re.search('^U\d+', gene_name):
+            gene_name = gene_name[0].lower() + gene_name[1:]
+
         return '{species} {gene_name}'.format(
             species=species,
             gene_name=gene_name
