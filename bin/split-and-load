@@ -7,12 +7,13 @@ ctl="$1"
 input_name="$2"
 size="$3"
 split_name="${4:-data}"
+split_ext="${5:-csv}"
 
 [ ! -d merged ] || rm -r merged
 mkdir merged
 find . -name "$input_name" |
 xargs cat |
-split --additional-suffix=.csv -dC $size - "merged/$split_name"
+split --additional-suffix=".$split_ext" -dC $size - "merged/$split_name"
 
 cp $ctl merged/$ctl
 cd merged
