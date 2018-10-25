@@ -23,6 +23,7 @@ from . import ontologies
 from . import pdb
 from . import precompute
 from . import rfam
+from . import qa
 
 
 @click.group()
@@ -45,3 +46,4 @@ cli.add_command(misc.run_release)
 cli.add_command(misc.find_upi_ranges)
 cli.add_command(misc.crs_data)
 cli.add_command(pdb.cli)
+cli.add_command(qa.cli)
