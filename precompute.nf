@@ -2,7 +2,6 @@
 
 queries = [
   all: 'files/precompute/methods/all.sql',
-  by_database: 'files/precompute/methods/for-database.sql',
   using_release: 'files/precompute/methods/using-release.sql'
 ]
 
@@ -10,26 +9,10 @@ if (params.precompute.methods.all) {
   Channel
     .from([[file(queries.all), []]])
     .set { precompute_upi_queries }
-
-} else if (params.precompute.methods.using_release) {
+} else {
   Channel
     .from([[file(queries.using_release), []]])
     .set { precompute_upi_queries }
-
-} else if (params.precompute.methods.by_database) {
-
-  db_names = []
-  params.precompute.methods.by_database.each { db ->
-    db_names << "'${db.toUpperCase()}'"
-  }
-  db_names = db_names.join(', ')
-
-  Channel
-    .from([[file(queries.by_database), [dbs: db_names]]])
-    .set { precompute_upi_queries }
-
-} else {
-  error "Have to choose a way to precompute"
 }
 
 process query_upis {
