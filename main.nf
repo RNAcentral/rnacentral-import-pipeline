@@ -97,7 +97,7 @@ process fetch_data {
   set val(name), val(incomplete) from to_fetch
 
   output:
-  set val(name), file(database.pattern) into all_fetched
+  set val(name), file("${database.pattern}") into all_fetched
 
   script:
   database = ["excluded_patterns": []] + incomplete
@@ -145,6 +145,7 @@ rfam_based
           results << [db, f]
         }
         results
+      }
   }
   .set { rfam_based_extra }
 
@@ -202,7 +203,7 @@ ensembl_task_summary
   .flatMap { mysql, csv ->
     data = []
     csv.eachLine { line ->
-      name, db <- line.tokenize(',')
+      (name, db) = line.tokenize(',')
       updated = mysql + [db_name: db]
       data << [updated, name, file("files/import-data/ensembl/${name}.sql")]
     }
@@ -212,7 +213,7 @@ ensembl_task_summary
 
 Channel.empty()
   .mix(ena_extra)
-  .mix(gencode_extra}
+  .mix(gencode_extra)
   .mix(rfam_based_extra)
   .mix(rgd_extra)
   .mix(pdb_extra)
@@ -220,17 +221,14 @@ Channel.empty()
   .set { extra }
 
 fetched
-  .flatMap { name, filenames ->
-    fs = filenames.class.isArray() ? filenames : [filenames]
-    results = []
-    fs.each { f -> results << [name, f] }
-    results
-  }
-  .combine(extra, by: 0)
-  .map { name, data_file, extra ->
-    // Pretty sure this is because groovy is messing with types or something
+  .combine(extra)
+  .flatMap { name, filenames, extra ->
+    // Pretty sure this weirdness is because groovy is messing with types or something
     to_add = extra[name] ? extra[name][0][1..-1] : []
-    [name, data_file, to_add]
+    fs = [filenames].flatten()
+    results = []
+    fs.each { f -> results << [name, f, to_add] }
+    results
   }
   .set { to_process }
 
@@ -245,7 +243,7 @@ process process_data {
   set val(name), file(input_file), file(extra) from to_process
 
   output:
-  file "*.csv" into all_processed_output mode flatten
+  file "*.csv" optional true into all_processed_output mode flatten
 
   script:
   if (input_file.toString().endsWith('.gz')) {
@@ -374,11 +372,11 @@ post_release
 
 flag_for_qa
   .combine(Channel.fromPath('files/qa/rfam-scan.sql'))
-  .set { sequences_to_scan }
+  .set { qa_queries }
 
 process fetch_sequences {
   input:
-  set val(status), file(query) from sequences_to_scan
+  set val(status), file(query) from qa_queries
 
   output:
   file('parts/*.fasta') into sequences_to_scan mode flatten
