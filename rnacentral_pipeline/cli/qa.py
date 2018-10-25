@@ -15,16 +15,18 @@ limitations under the License.
 
 import click
 
+from rnacentral_pipeline.databases import rfam
 
-@cli.group()
-def qa():
+
+@click.group("qa")
+def cli():
     """
     This group of commands deal with QA work.
     """
     pass
 
 
-@qa.command('tblout2csv')
+@cli.command('tblout2csv')
 @click.argument('tblout', default='-', type=click.File('rb'))
 @click.argument('output', default='-', type=click.File('wb'))
 def process_tblout(tblout, output):
@@ -33,5 +35,3 @@ def process_tblout(tblout, output):
     This will overwrite the given file.
     """
     rfam.infernal_results.as_csv(tblout, output)
-
-
