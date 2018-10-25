@@ -32,6 +32,11 @@ def oryza_9():
     return parse('data/ensembl_plants/Oryza_barthii.O.barthii_v1.41.chromosome.9.dat')
 
 
+@pytest.fixture(scope='module')  # pylint: disable=no-member
+def hordeum_pt():
+    return parse('data/ensembl_plants/Hordeum_vulgare.IBSC_v2.41.chromosome.Pt.dat')
+
+
 def test_can_parse_data(cress_2):
     val = attr.asdict(entry_for(cress_2, 'AT2G01010.1'))
     assert val == attr.asdict(dat.Entry(
@@ -402,5 +407,39 @@ def test_can_parse_rice_u6(oryza_9):
         gene='ENSRNA049475710',
         locus_tag="U6",
         description='Oryza barthii (African wild rice) U6 spliceosomal RNA',
+        references=[pubs.reference(29092050)],
+    ))
+
+
+def test_can_parse_barley_antisense(hordeum_pt):
+    val = attr.asdict(entry_for(hordeum_pt, 'ENSRNA049483195-T1'))
+    assert val == attr.asdict(dat.Entry(
+        primary_id='ENSRNA049483195-T1',
+        accession='ENSEMBL_PLANTS:ENSRNA049483195-T1',
+        ncbi_tax_id=112509,
+        database='E_PLANTS',
+        sequence='AATAACCAAATATAACACTGGGACTAAGGGTCAAATTGGTAATTTTTCTTACATCTCCCCCCCCAGGGGCCCAGGTATCATATACACCGCCAAAATAAAGAGCCTTGAGTACTAGAAGAAAAGCACCTAGACCTAACAAAATTAAGTGAATACCCAAAATTGTAGTCATTTTATTTCTATCTTTCCA',
+        regions=[
+            dat.SequenceRegion(
+                chromosome='Pt',
+                strand=-1,
+                exons=[dat.Exon(start=10076, stop=10262)],
+                assembly_id='IBSC_v2',
+            )
+        ],
+        rna_type='antisense_RNA',
+        url='',
+        seq_version='1',
+        species='Hordeum vulgare subsp. vulgare',
+        common_name='two-rowed barley',
+        lineage=(
+            'Eukaryota; Viridiplantae; Streptophyta; Embryophyta; '
+            'Tracheophyta; Spermatophyta; Magnoliophyta; Liliopsida; '
+            'Poales; Poaceae; BOP clade; Pooideae; Triticodae; '
+            'Triticeae; Hordeinae; Hordeum; Hordeum vulgare subsp. vulgare'
+        ),
+        gene='ENSRNA049483195',
+        locus_tag='IsrR',
+        description='Hordeum vulgare subsp. vulgare (two-rowed barley) antisense RNA which regulates isiA expression',
         references=[pubs.reference(29092050)],
     ))
