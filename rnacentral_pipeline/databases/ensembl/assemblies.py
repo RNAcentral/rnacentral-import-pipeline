@@ -162,7 +162,7 @@ class InvalidDomain(Exception):
 
 @attr.s()
 class AssemblyExample(object):
-    chromsome = attr.ib(validator=is_a(basestring))
+    chromosome = attr.ib(validator=is_a(basestring))
     start = attr.ib(validator=is_a(int))
     end = attr.ib(validator=is_a(int))
 
@@ -174,7 +174,7 @@ class AssemblyExample(object):
             return None
 
         return cls(
-            chromsome=example['chromosome'],
+            chromosome=example['chromosome'],
             start=example['start'],
             end=example['end'],
         )
@@ -230,6 +230,14 @@ class AssemblyInfo(object):
         raise InvalidDomain()
 
     def writeable(self):
+        chromosome = None
+        start = None
+        end = None
+        if self.example:
+            chromosome = self.example.chromosome
+            start = self.example.start
+            end = self.example.end
+
         return [
             self.assembly_id,
             self.assembly_full_name,
@@ -240,9 +248,9 @@ class AssemblyInfo(object):
             self.domain_url,
             self.division,
             self.domain_url,
-            self.example.chromosome,
-            self.example.start,
-            self.example.end,
+            chromosome,
+            start,
+            end,
             int(self.blat_mapping),
         ]
 
