@@ -39,7 +39,10 @@ NORMALIZED_RNA_TYPES = {
 
 
 def is_pseudogene(gene, feature):
-    return ensembl.is_pseudogene(gene, feature)
+    raw_notes = feature.qualifiers.get('note', [])
+    if gene:
+        raw_notes.extend(gene.qualifiers.get('note', []))
+    return any('pseudogene' in n for n in raw_notes)
 
 
 def is_ncrna(feature):
