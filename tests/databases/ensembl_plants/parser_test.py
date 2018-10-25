@@ -27,6 +27,11 @@ def cress_2():
     return parse('data/ensembl_plants/Arabidopsis_thaliana.TAIR10.40.chromosome.2.dat')
 
 
+@pytest.fixture(scope='module')  # pylint: disable=no-member
+def oryza_9():
+    return parse('data/ensembl_plants/Oryza_barthii.O.barthii_v1.41.chromosome.9.dat')
+
+
 def test_can_parse_data(cress_2):
     val = attr.asdict(entry_for(cress_2, 'AT2G01010.1'))
     assert val == attr.asdict(dat.Entry(
@@ -254,5 +259,148 @@ def test_can_parse_premirna(cress_2):
         gene='ENSRNA049757815',
         locus_tag='ath-MIR840',
         description='Arabidopsis thaliana (thale-cress) precursor RNA ath-MIR840',
+        references=[pubs.reference(29092050)],
+    ))
+
+
+# OBART09G00240.1  transposable_elements
+# ENSRNA049475598-T1  sense_intronic
+@pytest.mark.skip()
+def test_skips_transposable_elements(oryza_9):
+    pass
+
+
+def test_can_parse_rice_trna(oryza_9):
+    val = attr.asdict(entry_for(oryza_9, "ENSRNA049456349-T1"))
+    assert val == attr.asdict(dat.Entry(
+        primary_id="ENSRNA049456349-T1",
+        accession='ENSEMBL_PLANTS:ENSRNA049456349-T1',
+        ncbi_tax_id=65489,
+        database='E_PLANTS',
+        sequence='TCCGTTGTAGTCTAGCTGGTTAGGATACTCGGCTCTCACCCGAGAGACCCGGGTTCGAGTCCCGGCAACGGAA',
+        regions=[
+            dat.SequenceRegion(
+                chromosome='9',
+                strand=1,
+                exons=[dat.Exon(start=747032, stop=747104)],
+                assembly_id='O.barthii_v1',
+            )
+        ],
+        rna_type='tRNA',
+        url='',
+        seq_version='1',
+        species='Oryza barthii',
+        common_name='African wild rice',
+        lineage=(
+            'Eukaryota; Viridiplantae; Streptophyta; '
+            'Embryophyta; Tracheophyta; Spermatophyta; Magnoliophyta; '
+            'Liliopsida; Poales; Poaceae; BOP clade; Oryzoideae; '
+            'Oryzeae; Oryzinae; Oryza; Oryza barthii'
+        ),
+        gene="ENSRNA049456349",
+        locus_tag="tRNA-Glu",
+        description='Oryza barthii (African wild rice) tRNA-Glu for anticodon CUC',
+        references=[pubs.reference(29092050)],
+    ))
+
+
+def test_can_parse_rice_snorna(oryza_9):
+    val = attr.asdict(entry_for(oryza_9, "ENSRNA049475670-T1"))
+    assert val == attr.asdict(dat.Entry(
+        primary_id="ENSRNA049475670-T1",
+        accession='ENSEMBL_PLANTS:ENSRNA049475670-T1',
+        ncbi_tax_id=65489,
+        database='E_PLANTS',
+        sequence='AAAAAAGCAGGATGCTGTGTTCTCTATAAGCAGTGTCCTCGTAAATTTTAGGAACATGTTTCATCGTTATTGGGTGAACCGTTGGGCTATTCAATGTCCATTGGTTCAGTAAATGATGGCACATTT',
+        regions=[
+            dat.SequenceRegion(
+                chromosome='9',
+                strand=-1,
+                exons=[dat.Exon(start=3344023, stop=3344148)],
+                assembly_id='O.barthii_v1',
+            )
+        ],
+        rna_type='snoRNA',
+        url='',
+        seq_version='1',
+        species='Oryza barthii',
+        common_name='African wild rice',
+        lineage=(
+            'Eukaryota; Viridiplantae; Streptophyta; '
+            'Embryophyta; Tracheophyta; Spermatophyta; Magnoliophyta; '
+            'Liliopsida; Poales; Poaceae; BOP clade; Oryzoideae; '
+            'Oryzeae; Oryzinae; Oryza; Oryza barthii'
+        ),
+        gene='ENSRNA049475670',
+        locus_tag="snoR74",
+        description='Oryza barthii (African wild rice) small nucleolar RNA snoR74',
+        references=[pubs.reference(29092050)],
+    ))
+
+
+def test_can_parse_rice_pre_mirna(oryza_9):
+    val = attr.asdict(entry_for(oryza_9, "ENSRNA049475651-T1"))
+    assert val == attr.asdict(dat.Entry(
+        primary_id='ENSRNA049475651-T1',
+        accession='ENSEMBL_PLANTS:ENSRNA049475651-T1',
+        ncbi_tax_id=65489,
+        database='E_PLANTS',
+        sequence='CCTCCCCGCCGGACCTCCCAGTGAGGAGGCTAGGGCCGCCAGGTCCGGTGATCCCATTCTCCTTGCCGGCGGATTCTGCGCCCTAGA',
+        regions=[
+            dat.SequenceRegion(
+                chromosome='9',
+                strand=-1,
+                exons=[dat.Exon(start=3622031, stop=3622117)],
+                assembly_id='O.barthii_v1',
+            )
+        ],
+        rna_type='precursor_RNA',
+        url='',
+        seq_version='1',
+        species='Oryza barthii',
+        common_name='African wild rice',
+        lineage=(
+            'Eukaryota; Viridiplantae; Streptophyta; '
+            'Embryophyta; Tracheophyta; Spermatophyta; Magnoliophyta; '
+            'Liliopsida; Poales; Poaceae; BOP clade; Oryzoideae; '
+            'Oryzeae; Oryzinae; Oryza; Oryza barthii'
+        ),
+        gene='ENSRNA049475651',
+        locus_tag='MIR1846',
+        description='Oryza barthii (African wild rice) microRNA MIR1846',
+        references=[pubs.reference(29092050)],
+    ))
+
+
+def test_can_parse_rice_u6(oryza_9):
+    val = attr.asdict(entry_for(oryza_9, 'ENSRNA049475710-T1'))
+    assert val == attr.asdict(dat.Entry(
+        primary_id='ENSRNA049475710-T1',
+        accession='ENSEMBL_PLANTS:ENSRNA049475710-T1',
+        ncbi_tax_id=65489,
+        database='E_PLANTS',
+        sequence='GTAGCTTATATACGCTGCTGTGCATAAAATTGAAACGATACAGAGAAGATTAGCATGGCCCCTGCGCAAGGAAGACGCACACAAATCGAGAAGTGGTCCAAATTTTT',
+        regions=[
+            dat.SequenceRegion(
+                chromosome='9',
+                strand=1,
+                exons=[dat.Exon(start=6092721, stop=6092827)],
+                assembly_id='O.barthii_v1',
+            )
+        ],
+        rna_type="snRNA",
+        url='',
+        seq_version='1',
+        species='Oryza barthii',
+        common_name='African wild rice',
+        lineage=(
+            'Eukaryota; Viridiplantae; Streptophyta; '
+            'Embryophyta; Tracheophyta; Spermatophyta; Magnoliophyta; '
+            'Liliopsida; Poales; Poaceae; BOP clade; Oryzoideae; '
+            'Oryzeae; Oryzinae; Oryza; Oryza barthii'
+        ),
+        gene='ENSRNA049475710',
+        locus_tag="U6",
+        description='Oryza barthii (African wild rice) U6 spliceosomal RNA',
         references=[pubs.reference(29092050)],
     ))
