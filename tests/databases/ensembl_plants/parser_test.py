@@ -37,6 +37,11 @@ def hordeum_pt():
     return parse('data/ensembl_plants/Hordeum_vulgare.IBSC_v2.41.chromosome.Pt.dat')
 
 
+@pytest.fixture(scope='module')  # pylint: disable=no-member
+def zea_7():
+    return parse('data/ensembl_plants/Zea_mays.B73_RefGen_v4.41.chromosome.7.dat')
+
+
 def test_can_parse_data(cress_2):
     val = attr.asdict(entry_for(cress_2, 'AT2G01010.1'))
     assert val == attr.asdict(dat.Entry(
@@ -441,5 +446,45 @@ def test_can_parse_barley_antisense(hordeum_pt):
         gene='ENSRNA049483195',
         locus_tag='IsrR',
         description='Hordeum vulgare subsp. vulgare (two-rowed barley) antisense RNA which regulates isiA expression',
+        references=[pubs.reference(29092050)],
+    ))
+
+
+def test_can_parse_zea_lincrna(zea_7):
+    val = attr.asdict(entry_for(zea_7, "Zm00001d001070_T001"))
+    assert val == attr.asdict(dat.Entry(
+        primary_id="Zm00001d001070_T001",
+        accession="ENSEMBL_PLANTS:Zm00001d001070_T001",
+        ncbi_tax_id=4577,
+        database='E_PLANTS',
+        sequence=(
+            'GTATGGAACACGGCCGACCCCAGGCATTGGCTTCTGGAGGTTGAAGATGGGCGCATGTCC'
+            'GAGCGATCGGATGTGAATGGCTGTGGATAGTTGCGTGGTAGTGGTGGATGGCCAATCACT'
+            'GGCGTAGCCATCGCCCTGGGTGCAGAACGTGGTCCGTATGGGGTCAGCTATGGCGCCGCC'
+            'GCGCCGGACCCTGTTCACCTCCGTGGTTGCGGCCAGTGTGGGAAGATGGGCGAGCGCCGT'
+            'TGGTATGGCCTGGAGCGGCTAGGATTAGGTGAGCACCTGGGTTGGGCGGGTTAAGTCCTG'
+            'GGCGGTTAGAT'
+        ),
+        regions=[
+            dat.SequenceRegion(
+                chromosome='7',
+                strand=-1,
+                exons=[dat.Exon(start=359423, stop=359733)],
+                assembly_id='B73_RefGen_v4',
+            )
+        ],
+        rna_type='lncRNA',
+        url='',
+        seq_version='1',
+        species='Zea mays',
+        common_name='maize',
+        lineage=(
+            'Eukaryota; Viridiplantae; Streptophyta; '
+            'Embryophyta; Tracheophyta; Spermatophyta; Magnoliophyta; '
+            'Liliopsida; Poales; Poaceae; PACMAD clade; Panicoideae; '
+            'Andropogonodae; Andropogoneae; Tripsacinae; Zea; Zea mays'
+        ),
+        gene="Zm00001d001070",
+        description='Zea mays (maize) lncRNA Zm00001d001070',
         references=[pubs.reference(29092050)],
     ))
