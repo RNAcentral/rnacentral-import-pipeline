@@ -43,17 +43,6 @@ def ontologies_quickgo(raw_data, output):
     onto_writer.write_annotations(quickgo.parser, output, raw_data)
 
 
-@cli.command('rfam-terms')
-@click.argument('filename', default='-', type=click.File('rb'))
-@click.argument('output', default='.', type=click.Path(
-    writable=True,
-    dir_okay=True,
-    file_okay=False,
-))
-def ontologies_rfam_terms(filename, output):
-    rfam.cross_references.from_file(filename, output)
-
-
 @cli.command('lookup-terms')
 @click.argument('terms', type=click.File('rb'))
 @click.argument('output', type=click.File('w'))

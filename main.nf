@@ -8,7 +8,7 @@ def as_mysql_cmd = { db ->
 }
 
 // ===========================================================================
-// Setup for running the pipeline
+// Compute initial tasks
 // ===========================================================================
 
 // This channel will store all the outputs for all data to import. Doing this
@@ -43,6 +43,51 @@ for (entry in params.import_data.databases) {
   }
 }
 
+// If we are processing Rfam, Ensembl, or GENCODE we must fetch and import some
+// Rfam based metadata. These databases use Rfam in one way or another so we
+// should stay up-to-date with the current Rfam data. For example they may be
+// creating annotations of a partial lncRNA which we do not want to import. By
+// tracking the latest Rfam we will know what is a partial lncRNA. This is done
+// by querying the Rfam MySQL database and then using the Rfam commands to
+// process the query results. We can then import the processed data as normal.
+if (any_database('rfam', 'ensembl', 'gencode')) {
+  Channel.fromPath("files/import-data/rfam/*.sql")
+    .map { query ->
+      filename = query.getName()
+      name = filename.take(filename.lastIndexOf('.'))
+      fetch = rfam_mysql + [cmd: 'mysql', query: query, pattern: 'data.tsv']
+      ["rfam $name", fetch]
+    }
+    .set { rfam_queries }
+  to_fetch.mix(rfam_queries).set { to_fetch }
+}
+
+Channel.fromPath('files/import-data/ensembl/*.sql')
+  .map { f -> f.getName().take(f.getName().lastIndexOf('.')) }
+  .collectFile(name: "possible-data.txt", newLine: true)
+  .set { ensembl_possible }
+
+Channel.from(params.databases.ensembl.mysql, params.databases.ensembl_genomes.mysql)
+  .combine(Channel.fromPath('files/import-data/ensembl-analyzed.sql'))
+  .combine(ensembl_possible)
+  .set { ensembl_info }
+
+process find_ensembl_tasks {
+  input:
+  set val(mysql), file(imported_sql), file(possible) from ensembl_info
+
+  output:
+  set val(mysql), file('selected.csv') into ensembl_task_summary
+
+  """
+  set -o pipefail
+
+  psql -v ON_ERROR_STOP=1 -f "$imported_sql" "$PGDATABASE" > done.csv
+  echo 'show databases' | ${as_mysql_cmd(mysql)} > dbs.txt
+  rnac ensembl select-tasks dbs.txt $possible done.csv > selected.csv
+  """
+}
+
 //=============================================================================
 // Fetch data as well as all extra data for import
 //=============================================================================
@@ -52,75 +97,70 @@ process fetch_data {
   set val(name), val(incomplete) from to_fetch
 
   output:
-  set val(name), file("${database.pattern}") into fetched
+  set val(name), file(database.pattern) into all_fetched
 
   script:
   database = ["excluded_patterns": []] + incomplete
-  database.cmd = database.cmd ? database.cmd : "fetch '${database.remote}' '${database.pattern}'"
-  clean_cmd = ''
-  for (rm_pattern in database['excluded_patterns']) {
-    clean_cmd = find_cmd + "find . -name '$rm_pattern}' | xargs rm\n"
+  if (database.cmd == "mysql") {
+    """
+    ${as_mysql_cmd(database)} < ${database.query} > ${database.pattern}
+    """
+  } else {
+    database.cmd = database.cmd ? database.cmd : "fetch '${database.remote}' '${database.pattern}'"
+    clean_cmd = ''
+    for (rm_pattern in database['excluded_patterns']) {
+      clean_cmd = find_cmd + "find . -name '$rm_pattern}' | xargs rm\n"
+    }
+    """
+    ${database.cmd}
+    $clean_cmd
+    """
   }
-
-  """
-  ${database.cmd}
-  $clean_cmd
-  """
 }
+
+all_fetched
+  .into { fetched; for_gencode; rfam_based }
 
 process fetch_pdb_extra {
   when:
   any_database('pdb')
 
   output:
-  set val('pdb'), file('pdb-extra.json') into pdb_extra
+  set val('external pdb'), file('pdb-extra.json') into pdb_extra
 
   """
   rnac pdb extra pdb-extra.json
   """
 }
 
-process fetch_rfam_extra {
-  when:
-  any_database('rfam', 'ensembl')
-
-  input:
-  file(sql) from Channel.fromPath("files/import-data/rfam/*.sql")
-
-  output:
-  set val(name), file('data.tsv') into all_rfam_extra
-  file(data_name) into rfam_output
-  set val(name), file(data_name) into rfam_terms
-
-  script:
-  filename = ctl.getName()
-  name = filename.take(filename.lastIndexOf('.'))
-  data_name = "rfam-${name}.csv"
-  """
-  set -o pipefail
-
-  ${as_mysql_cmd(params.databases.rfam.mysql)} < $sql > data.tsv
-  rnac rfam $name data.tsv $data_name
-  """
-}
-
-all_rfam_extra
-  .filter { n, f -> n == 'families' }
-  .flatMap { _, f ->
+// This filters the fetched data to extract the Rfam families data. This data is
+// used by the Ensembl and GENCODE processing logic later on. Thus we create a
+// channel of just that data after fetching it.
+rfam_based
+  .filter { n, f -> n == "rfam families" }
+  .flatMap { n, f ->
     results = []
-      ['rfam', 'ensembl'].each { db ->
+      ['ensembl', 'gencode'].each { db ->
         if (params.import_data.databases[db]) {
           results << [db, f]
         }
         results
-      }
   }
   .set { rfam_based_extra }
 
-rfam_terms
-  .filter { n, f -> n == "ontology-terms" }
-  .map { n, f -> f }
-  .set { rfam_terms }
+// Here we split the fetched data from ensembl to pull out all Ensembl human and
+// mouse raw data. This data is parsed both for Ensembl import and for GENCODE
+// import. The raw GENCODE GFF3 file doesn't contain all useful information like
+// sequences and names.
+for_gencode
+  .filter { n, fs -> any_database('gencode') && n == "external ensembl" }
+  .flatMap { n, fs -> fs }
+  .filter { f ->
+    species = f.getName()
+    species.startsWith('Homo_sapiens') || species.startsWith('Mus_mus')
+  }
+  .map { f -> ['external gencode', f] }
+  .set { gencode_extra }
 
 Channel
   .from(params.databases.ena.tpa_urls)
@@ -135,7 +175,7 @@ process fetch_ena_extra {
  file tpa_file from tpa_url_file
 
  output:
- set val('ena'), file("tpa.tsv") into ena_extra
+ set val('external ena'), file("tpa.tsv") into ena_extra
 
   """
   cat $tpa_file | xargs wget -O - >> tpa.tsv
@@ -147,44 +187,32 @@ process fetch_rgd_extra {
   any_database('rgd')
 
   output:
-  set val('rgd'), file('genes.txt') into rgd_extra
+  set val('external rgd'), file('genes.txt') into rgd_extra
 
   """
   wget -O genes.txt ftp://ftp.rgd.mcw.edu/pub/data_release/GENES_RAT.txt
   """
 }
 
-Channel.fromPath('files/import-data/ensembl/*.sql')
-  .map { f -> f.getName().take(f.getName().lastIndexOf('.')) }
-  .collectFile(name: "possible-data.txt", newLine: true)
-  .set { ensembl_possible }
+//=============================================================================
+// Create channels for all data processing tasks
+//=============================================================================
 
-Channel.from(params.databases.ensembl.mysql, params.databases.ensembl_genomes.mysql)
-  .combine(Channel.fromPath('files/import-data/ensembl-analyzed.sql'))
-  .combine(ensembl_possible)
-  .set { ensembl_info }
-
-process find_ensembl_tasks {
-  when:
-  any_database('ensembl')
-
-  input:
-  set val(mysql), file(imported_sql), file(possible) from ensembl_info
-
-  output:
-  set val(mysql), file('selected.csv') into ensembl_databases
-
-  """
-  set -o pipefail
-
-  psql -v ON_ERROR_STOP=1 -f "$imported_sql" "$PGDATABASE" > done.csv
-  echo 'show databases' | ${as_mysql_cmd(mysql)} > dbs.txt
-  rnac ensembl select-tasks dbs.txt $possible done.csv > selected.csv
-  """
-}
+ensembl_task_summary
+  .flatMap { mysql, csv ->
+    data = []
+    csv.eachLine { line ->
+      name, db <- line.tokenize(',')
+      updated = mysql + [db_name: db]
+      data << [updated, name, file("files/import-data/ensembl/${name}.sql")]
+    }
+    data
+  }
+  .set { ensembl_metadata_tasks }
 
 Channel.empty()
   .mix(ena_extra)
+  .mix(gencode_extra}
   .mix(rfam_based_extra)
   .mix(rgd_extra)
   .mix(pdb_extra)
@@ -193,29 +221,18 @@ Channel.empty()
 
 fetched
   .flatMap { name, filenames ->
-    filenames = filenames.class.isArray() ? filenames : [filenames]
+    fs = filenames.class.isArray() ? filenames : [filenames]
     results = []
-    filenames.each { filename ->
-      results << [name, filename]
-    }
+    fs.each { f -> results << [name, f] }
     results
   }
-  .combine(extra)
+  .combine(extra, by: 0)
   .map { name, data_file, extra ->
     // Pretty sure this is because groovy is messing with types or something
     to_add = extra[name] ? extra[name][0][1..-1] : []
     [name, data_file, to_add]
   }
   .set { to_process }
-
-ensembl_databases
-  .flatMap { mysql, csv ->
-    data = []
-    csv.eachLine { line -> data << ([mysql] + line.tokenize(',')) }
-    data
-  }
-  .map { mysql, name, db -> [mysql, name, db, file("files/import-data/ensembl/${name}.sql")] }
-  .set { ensembl_metadata_dbs }
 
 //=============================================================================
 // Process data
@@ -244,19 +261,15 @@ process process_data {
   }
 }
 
-all_processed_output
-  .view()
-  .into { processed_output; all_terms }
+processed_output = Channel.create()
+terms = Channel.create()
 
-all_terms
-  .filter { f -> f.getName() == "terms.csv" }
-  .mix(rfam_terms)
-  .collect()
-  .set { terms }
+all_processed_output
+  .choice(terms, processed_output) { f -> f.getName() == "terms.csv" ? 0 : 1 }
 
 process fetch_ontology_information {
   input:
-  file('terms*.csv') from terms
+  file('terms*.csv') from terms.collect()
 
   output:
   file('ontology_terms.csv') into term_info
@@ -272,7 +285,7 @@ process process_ensembl_metadata {
   maxForks params.import_metadata.ensembl.max_forks
 
   input:
-  set val(mysql), val(name), val(db), file(sql) from ensembl_metadata_dbs
+  set val(mysql), val(name), file(sql) from ensembl_metadata_tasks
 
   output:
   file("${name}.csv") optional true into ensembl_output
@@ -280,7 +293,7 @@ process process_ensembl_metadata {
 
   script:
   """
-  ${as_mysql_cmd(mysql)} -N --database $db < $sql > data.tsv
+  ${as_mysql_cmd(mysql)} -N < $sql > data.tsv
   rnac ensembl $name data.tsv ${name}.csv
   """
 }
@@ -353,4 +366,86 @@ process release {
 
 post_release
   .ifEmpty('no release')
+  .into { flag_for_qa; flag_for_mapping }
+
+//=============================================================================
+// QA scans
+//=============================================================================
+
+flag_for_qa
+  .combine(Channel.fromPath('files/qa/rfam-scan.sql'))
   .set { sequences_to_scan }
+
+process fetch_sequences {
+  input:
+  set val(status), file(query) from sequences_to_scan
+
+  output:
+  file('parts/*.fasta') into sequences_to_scan mode flatten
+
+  """
+  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > raw.json
+  json2fasta.py raw.json rnacentral.fasta
+  seqkit shuffle --two-pass rnacentral.fasta > shuffled.fasta
+  seqkit split --two-pass --by-size ${params.qa.rfam_scan.chunk_size} --out-dir 'parts/' shuffled.fasta
+  """
+}
+
+sequences_to_scan
+  .combine(Channel.fromPath(params.qa.rfam_scan.cm_files).collect())
+  .set { sequences_to_scan }
+
+process infernal_scan {
+  queue 'mpi-rh7'
+  cpus params.qa.rfam_scan.cpus
+  clusterOptions "-M ${params.qa.rfam_scan.cm_memory} -R 'rusage[mem=${params.qa.rfam_scan.cm_memory}]' -a openmpi"
+  module 'mpi/openmpi-x86_64'
+
+  input:
+  set file('sequences.fasta'), file(cm_file) from sequences_to_scan
+
+  output:
+  set val('rfam'), file('hits.csv') into processed_rfam_hits
+
+  """
+  mpiexec -mca btl ^openbib -np ${params.qa.rfam_scan.cpus} \
+  cmscan \
+    -o output.inf \
+    --tblout results.tblout \
+    --clanin ${params.qa.rfam_scan.clans} \
+    --oclan \
+    --fmt 2 \
+    --acc \
+    --cut_ga \
+    --rfam \
+    --notextw \
+    --nohmmonly \
+    --mpi \
+    "Rfam.cm" \
+    sequences.fasta
+  rnac qa tblout2csv results.tblout hits.csv
+  """
+}
+
+processed_rfam_hits
+  .groupTuple()
+  .combine(Channel.fromPath('files/qa/rfam-scan.ctl'))
+  .set { hits_to_import }
+
+process import_qa_data {
+  echo true
+
+  input:
+  set val(name), file('raw*.csv'), file(ctl) from hits_to_import
+
+  output:
+  val('done') into qa_imported
+
+  """
+  split-and-load $ctl 'raw*.csv' ${params.import_data.chunk_size} $name
+  """
+}
+
+qa_imported
+  .ifEmpty('no qa')
+  .set { qa_imported }
