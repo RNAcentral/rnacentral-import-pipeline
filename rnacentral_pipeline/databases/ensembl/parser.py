@@ -13,6 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import logging
+
 import attr
 
 from Bio import SeqIO
@@ -22,6 +24,8 @@ from rnacentral_pipeline.databases.helpers import embl
 
 from . import helpers
 from .data import Context
+
+LOGGER = logging.getLogger(__name__)
 
 IGNORE_FEATURES = {
     'source',
@@ -42,6 +46,7 @@ def as_entry(record, gene, feature, context):
     try:
         sequence = embl.sequence(record, feature)
     except Exception as err:
+        LOGGER.exception(err)
         return None
 
     entry = data.Entry(
