@@ -22,6 +22,7 @@ from . import misc
 from . import ontologies
 from . import pdb
 from . import precompute
+from . import publications
 from . import rfam
 from . import qa
 
@@ -47,3 +48,4 @@ cli.add_command(misc.find_upi_ranges)
 cli.add_command(misc.crs_data)
 cli.add_command(pdb.cli)
 cli.add_command(qa.cli)
+cli.add_command(publications.cli)
