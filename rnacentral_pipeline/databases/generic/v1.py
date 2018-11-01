@@ -105,24 +105,11 @@ def gene_info(_):
     pass
 
 
-def as_reference(ref):
-    """
-    Turn a raw reference (just a pmid) into a reference we can import.
-    """
-
-    if ref.startswith('PMID:'):
-        pmid = int(ref[5:])
-        return pub.reference(pmid=pmid)
-    return None
-
-
 def references(record):
     """
     Get a list of all References in this record.
     """
-
-    refs = it.imap(as_reference, record.get('publications', []))
-    return list(it.ifilter(None, refs))
+    return [pub.reference(r) for r in record.get('publications', [])]
 
 
 def anticodon(record):
@@ -343,7 +330,7 @@ def parse(raw):
     ncrnas = sorted(raw['data'], key=gene)
 
     metadata_pubs = raw['metaData'].get('publications', [])
-    metadata_refs = [as_reference(r) for r in metadata_pubs]
+    metadata_refs = [pub.reference(r) for r in metadata_pubs]
 
     for gene_id, records in it.groupby(ncrnas, gene):
         entries = [as_entry(r, database) for r in records]
