@@ -33,6 +33,6 @@ case "$remote" in
 esac
 
 case "$remote" in
-  *.tar.gz )
-    find . -name "*.tar.gz" | xargs -I {} tar xvf {}
+  *.tar.gz | *.tgz )
+    find . -name '*.tar.gz' -or -name '*.tgz' | xargs -I {} tar xvf {}
 esac
