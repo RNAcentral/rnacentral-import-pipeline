@@ -342,7 +342,13 @@ raw_output
     ctl = file("files/import-data/load/${name.replace('_', '-')}.ctl")
     [[name, ctl], f]
   }
-  .filter { it[0][1].exists() }
+  .filter {
+    status = it[0][1].exists()
+    if (!status) {
+      log.info "Skipping file ${it[0][1].getBaseName()}"
+    }
+    status
+  }
   .groupTuple()
   .map { it -> [it[0][0], it[0][1], it[1]] }
   .set { to_load }
