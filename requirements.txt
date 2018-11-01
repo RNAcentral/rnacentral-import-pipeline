@@ -26,3 +26,4 @@ pymysql
 click==6.7
 gffutils==0.9
 git+https://github.com/click-contrib/click-aliases.git#egg=click-aliases
+retry==0.9.2
