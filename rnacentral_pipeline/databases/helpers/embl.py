@@ -20,6 +20,7 @@ from Bio import SeqIO
 
 from rnacentral_pipeline.databases.data import Exon, Reference
 import rnacentral_pipeline.databases.helpers.phylogeny as phy
+import rnacentral_pipeline.databases.helpers.publications as pubs
 
 IGNORE_FEATURES = {
     'source',
@@ -296,7 +297,7 @@ def as_reference(ref):
 
     pmid = None
     if ref.pubmed_id:
-        pmid = int(ref.pubmed_id)
+        return pubs.reference(int(ref.pubmed_id))
 
     title = ref.title
     if title == ';':
