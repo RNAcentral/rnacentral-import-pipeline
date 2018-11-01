@@ -140,6 +140,9 @@ def build_entry_writer(parser):
         references={
             'transformer': op.methodcaller('write_refs'),
         },
+        ref_ids={
+            'transformer': op.methodcaller('write_ref_ids'),
+        },
         locations={
             'transformer': op.methodcaller('write_genomic_locations'),
         },
