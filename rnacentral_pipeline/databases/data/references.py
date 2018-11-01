@@ -14,12 +14,31 @@ limitations under the License.
 """
 
 import attr
+from attr.validators import in_
 from attr.validators import optional
 from attr.validators import instance_of as is_a
 
 from rnacentral_pipeline.databases.helpers.hashes import md5
 
 from . import utils
+
+PMID_URL = 'https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=EXT_ID:{pmid}+AND+SRC:MED&format=json'
+
+DOI_URL = 'https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=DOI:{doi}+AND+SRC:MED&format=json'
+
+
+KNOWN_SERVICES = {
+    'doi',
+    'pmid',
+}
+
+
+class UnknownPublicationType(Exception):
+    """
+    Raised when we are trying to build a reference but it is to an unknown type
+    of identifier.
+    """
+    pass
 
 
 @attr.s(frozen=True)
@@ -66,4 +85,35 @@ class Reference(object):
             self.title,
             self.pmid,
             self.doi,
+        ]
+
+
+@attr.s(frozen=True)
+class IdReference(object):
+    namespace = attr.ib(validator=in_(KNOWN_SERVICES))
+    external_id = attr.ib(validator=is_a(basestring))
+
+    @classmethod
+    def build(cls, ref_id):
+        if isinstance(ref_id, int):
+            return cls('pmid', str(ref_id))
+
+        if isinstance(ref_id, basestring):
+            service, eid = ref_id.split(':', 1)
+            service = service.lower()
+            if service in KNOWN_SERVICES:
+                return cls(service, eid)
+        raise UnknownPublicationType(ref_id)
+
+    def external_url(self):
+        if self.namespace == 'pmid':
+            return PMID_URL.format(pmid=self.external_id)
+        if self.namespace == 'doi':
+            return DOI_URL.format(doi=self.external_id)
+        raise ValueError("No URL for namespace %s" % self.namespace)
+
+    def writeable(self, accession):
+        yield [
+            '%s:%s' % (self.namespace, self.external_id),
+            accession,
         ]
