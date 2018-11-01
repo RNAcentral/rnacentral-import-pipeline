@@ -27,6 +27,8 @@ from rnacentral_pipeline.databases.helpers.hashes import md5
 from rnacentral_pipeline.databases.helpers.hashes import crc64
 
 from . import utils
+from .references import Reference
+from .references import IdReference
 from .secondary_structure import SecondaryStructure
 
 LOGGER = logging.getLogger(__name__)
@@ -311,7 +313,13 @@ class Entry(object):
         return []
 
     def write_refs(self):
-        return self.__write_part__(self.references)
+        refs = it.ifilter(lambda r: isinstance(r, Reference), self.references)
+        return self.__write_part__(refs)
+
+    def write_ref_ids(self):
+        refs = self.references
+        refs = it.ifilter(lambda r: isinstance(r, IdReference), refs)
+        return self.__write_part__(refs)
 
     def write_genomic_locations(self):
         return self.__write_part__(self.regions, method_name='writeable_exons')
