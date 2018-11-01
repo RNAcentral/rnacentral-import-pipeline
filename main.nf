@@ -53,8 +53,7 @@ for (entry in params.import_data.databases) {
 if (any_database('rfam', 'ensembl', 'gencode')) {
   Channel.fromPath("files/import-data/rfam/*.sql")
     .map { query ->
-      filename = query.getName()
-      name = filename.take(filename.lastIndexOf('.'))
+      name = query.getBaseName()
       fetch = rfam_mysql + [cmd: 'mysql', query: query, pattern: 'data.tsv']
       ["rfam $name", fetch]
     }
@@ -63,7 +62,7 @@ if (any_database('rfam', 'ensembl', 'gencode')) {
 }
 
 Channel.fromPath('files/import-data/ensembl/*.sql')
-  .map { f -> f.getName().take(f.getName().lastIndexOf('.')) }
+  .map { f -> f.getBaseName() }
   .collectFile(name: "possible-data.txt", newLine: true)
   .set { ensembl_possible }
 
@@ -157,7 +156,7 @@ for_gencode
   .filter { n, fs -> any_database('gencode') && n == "external ensembl" }
   .flatMap { n, fs -> fs }
   .filter { f ->
-    species = f.getName()
+    species = f.getBaseName()
     species.startsWith('Homo_sapiens') || species.startsWith('Mus_mus')
   }
   .map { f -> ['external gencode', f] }
@@ -263,7 +262,14 @@ processed_output = Channel.create()
 terms = Channel.create()
 
 all_processed_output
-  .choice(terms, processed_output) { f -> f.getName() == "terms.csv" ? 0 : 1 }
+  .choice(terms, refs, processed_output) { f ->
+    names = ["terms.csv", "refs.csv"]
+    index = names.indexOf(f.getName())
+    return index >= 0 : index : names.size()
+  }
+
+refs.collect()
+  .set { refs_to_process }
 
 process fetch_ontology_information {
   input:
@@ -276,6 +282,26 @@ process fetch_ontology_information {
   """
   sort -u terms*.csv > unique-terms.txt
   rnac ontologies lookup-terms unique-terms.txt ontology_terms.csv
+  """
+}
+
+process fetch_publications {
+  intput:
+  set file('ref_ids*.csv') from refs_to_process
+
+  output:
+  file('references.csv') into references_output
+
+  script:
+  pubs = params.import_metadata.publications
+  """
+  set -o pipeline
+
+  find . -name 'ref_ids*.csv' | xargs cat >> all-ids
+  cut -d, -f1 all-ids | uniq | sort -u > ref_ids
+
+  lines="$(wc -l ref_ids | cut -d ' ' -f1)"
+  rnac publications fetch all-ids references.csv
   """
 }
 
@@ -308,11 +334,11 @@ raw_output
   .mix(processed_output)
   .mix(rfam_output)
   .mix(term_info)
+  // .mix(references_output)
   .mix(ensembl_output)
   .mix(ensembl_imported_output)
   .map { f ->
-    filename = f.getName()
-    name = filename.take(filename.lastIndexOf('.'))
+    name = f.getBaseName()
     ctl = file("files/import-data/load/${name.replace('_', '-')}.ctl")
     [[name, ctl], f]
   }

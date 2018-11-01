@@ -14,8 +14,13 @@ limitations under the License.
 """
 
 import re
+import csv
+import json
+import sqlite3
 from time import sleep
+from xml.etree import cElementTree as ET
 
+import attr
 import requests
 from functools32 import lru_cache
 
@@ -61,8 +66,7 @@ def summary(pmid):
     raise TooManyPublications(pmid)
 
 
-def reference(pmid):
-    data = summary(pmid)
+def pretty_location(data):
     issue = data.get('issue', '')
     if issue:
         issue = ('(%s)' % issue)
@@ -79,12 +83,79 @@ def reference(pmid):
         year=data['pubYear'],
     )
     location = location.replace('  ', ' ')
+    return location
 
+
+def reference(pmid):
+    data = summary(pmid)
     title = re.sub(r'\.$', '', data['title'])
     return Reference(
         authors=data['authorString'],
-        location=location,
+        location=pretty_location(data),
         title=title,
         pmid=int(pmid),
         doi=data.get('doi', None),
     )
+
+
+def node_to_reference(node):
+    pmid = node.find('./pmid')
+    doi = node.find('./DOI')
+    if not pmid and not doi:
+        return None
+
+    if pmid:
+        pmid = int(pmid.text)
+
+    if doi:
+        doi = doi.text
+
+    data = {}
+    return Reference(
+        authors=authors,
+        location=pretty_location(data),
+        title=node.find('./title').text,
+        pmid=pmid,
+        doi=doi,
+    )
+
+
+def index_xml(output, xml_files):
+    conn = sqlite3.connect(output)
+    conn.execute('CREATE TABLE publications (id int, data text)')
+    for xml_file in xml_files:
+        tree = ET.parse(xml_file)
+        root = tree.getroot()
+        for node in root.findall('./PMC_ARTICLE'):
+            data = node_to_reference(node)
+            if not data:
+                continue
+            pmid = data['pmid']
+            data = json.dumps(attr.asdict(data))
+            conn.execute('INSERT INTO publications VALUES(?, ?)', pmid, data)
+
+
+def lookup_refs(db, handle):
+    conn = sqlite3.connect(db)
+    reader = csv.reader(handle)
+    for (pmid, accession) in reader:
+        raw_ref = conn.execute(
+            "SELECT data from publications WHERE id=?",
+            pmid
+        )
+        ref = Reference(**json.loads(raw_ref))
+        yield accession, ref
+
+
+def write_lookup(db, handle, output):
+    writer = csv.writer(output)
+    for accession, ref in lookup_refs(db, handle):
+        writer.writerows(ref.writeable(accession))
+
+
+def from_file(handle, output):
+    reader = csv.reader(handle)
+    writer = csv.writer(output)
+    for (pmid, accession) in reader:
+        ref = reference(int(pmid))
+        writer.writerows(ref.writeable(accession))
