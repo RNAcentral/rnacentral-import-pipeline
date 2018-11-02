@@ -17,6 +17,8 @@ import json
 
 import click
 
+from rnacentral_pipeline.databases import pdb
+
 
 @click.group('pdb')
 def cli():
@@ -28,13 +30,13 @@ def cli():
 
 @cli.command('data')
 @click.argument('output', default='pdb.json', type=click.File('wb'))
-def pdb_group_data(output):
-    pdb_ids = pdb.rna_containing_pdb_ids()
-    json.dump(pdb.ncrna_chain_descriptions(pdb_ids), output)
+@click.argument('pdb_ids', nargs=-1)
+def pdb_group_data(output, pdb_ids=None):
+    json.dump(pdb.chains(pdb_ids=pdb_ids), output)
 
 
 @cli.command('extra')
 @click.argument('output', default='pdb-extra.json', type=click.File('wb'))
-def pdb_group_extra(output):
-    pdb_ids = pdb.rna_containing_pdb_ids()
-    json.dump(pdb.reference_mapping(pdb_ids), output)
+@click.argument('pdb_ids', nargs=-1)
+def pdb_group_extra(output, pdb_ids=None):
+    json.dump(pdb.references(pdb_ids=pdb_ids), output)

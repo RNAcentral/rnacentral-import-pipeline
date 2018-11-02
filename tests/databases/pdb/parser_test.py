@@ -17,22 +17,37 @@ import attr
 import pytest
 
 from rnacentral_pipeline.databases import data
-from rnacentral_pipeline.databases.pdb import helpers
+from rnacentral_pipeline.databases import pdb
 from rnacentral_pipeline.databases.pdb import parser
+from rnacentral_pipeline.databases.helpers import publications as pubs
 
 
-def test_can_build_all_entries():
-    assert len(list(parser.as_entries(['1S72']))) == 2
+def load(pdb_id):
+    entries = pdb.chains(pdb_ids=[pdb_id])
+    extra = pdb.references(pdb_ids=[pdb_id])
+    return list(parser.as_entries(entries, extra))
+
+
+@pytest.mark.parametrize('pdb_id,count', [
+    ('157D', 2),
+    ('1A1T', 1),
+    ('1CQ5', 1),
+    ('1J5E', 1),
+    ('1OB2', 1),
+    ('1OB5', 3),
+    ('1S72', 2),
+    ('1XNQ', 2),
+    ('3T4B', 1),
+    ('4V3P', 6),
+    ('4V5D', 12),
+])
+def test_can_build_all_entries(pdb_id, count):
+    assert len(load(pdb_id)) == count
 
 
 def test_can_build_correct_entry_for_rrna():
-    entries = [attr.asdict(e) for e in parser.as_entries(['1J5E'])]
-    assert len(entries) == 1
-
-    assert len(entries[0]['references']) == 3
-    entries[0]['references'] = []
-
-    assert entries[0] == attr.asdict(data.Entry(
+    cur = attr.asdict(load('1J5E')[0])
+    assert cur == attr.asdict(data.Entry(
         primary_id='1J5E',
         accession='1J5E_A_1',
         ncbi_tax_id=274,
@@ -64,27 +79,29 @@ def test_can_build_correct_entry_for_rrna():
 
         location_start=1,
         location_end=1522,
-        references=[],
-
         parent_accession='1J5E',
         product='16S ribosomal RNA',
+        references=[
+            pubs.reference(11014182),
+            pubs.reference('doi:10.1038/35030019'),
+            data.Reference(
+                authors='Clemons Jr. W.M., May J.L.C., Wimberly B.T., McCutcheon J.P., Capel M.S., Ramakrishnan V.',
+                location='Nature',
+                title='Structure of a Bacterial 30S Ribosomal Subunit at 5.5 A Resolution',
+                pmid=None,
+                doi=None,
+            )
+        ],
     ))
 
 
 def test_can_handle_strange_taxids():
-    entries = [e for e in parser.as_entries(['3T4B'])]
-    assert len(entries) == 1
+    entries = [e for e in load('3T4B')]
     assert entries[0].ncbi_tax_id == 32630
 
 
 def test_can_build_correct_entry_for_srp_rna():
-    entries = [attr.asdict(e) for e in parser.as_entries(['1CQ5'])]
-    assert len(entries) == 1
-
-    assert len(entries[0]['references']) == 1
-    entries[0]['references'] = []
-
-    assert entries[0] == attr.asdict(data.Entry(
+    assert attr.asdict(load('1CQ5')[0]) == attr.asdict(data.Entry(
         primary_id='1CQ5',
         accession='1CQ5_A_1',
         ncbi_tax_id=562,
@@ -111,16 +128,10 @@ def test_can_build_correct_entry_for_srp_rna():
         description='SRP RNA DOMAIN IV from Escherichia coli (PDB 1CQ5, chain A)',
         location_start=1,
         location_end=43,
+        references=[
+            pubs.reference(10580470),
+        ],
     ))
-
-
-@pytest.mark.parametrize('pdb,chains', [  # pylint: disable=no-member
-    ('4V3P', {'L3', 'S1', 'L1', 'S2', 'L2', 'S3'}),
-    ('1J5E', {'A'}),
-])
-def test_does_not_get_chain_infor_for_a_protein_chain(pdb, chains):
-    descriptions = parser.chain_descriptions([pdb])
-    assert set(d['chainId'] for d in descriptions) == chains
 
 
 @pytest.mark.parametrize('pdb,expected', [  # pylint: disable=no-member
@@ -129,7 +140,7 @@ def test_does_not_get_chain_infor_for_a_protein_chain(pdb, chains):
     ('1J5E', [274]),
 ])
 def test_can_get_given_taxid(pdb, expected):
-    taxids = [helpers.taxid(c) for c in parser.chain_descriptions([pdb])]
+    taxids = [entry.ncbi_tax_id for entry in load(pdb)]
     assert taxids == expected
 
 
@@ -138,18 +149,20 @@ def test_can_get_given_taxid(pdb, expected):
     ('5WNP', '5WNP_U_21'),
 ])
 def test_will_not_fetch_mislabeled_chains(pdbid, missing):
-    entries = {e.primary_id for e in parser.as_entries([pdbid])}
+    entries = {e.primary_id for e in load(pdbid)}
     assert missing not in entries
 
 
-@pytest.mark.parametrize('pdbid,chains', [  # pylint: disable=no-member
+@pytest.mark.parametrize('pdb_id,chains', [  # pylint: disable=no-member
     ('4v5d', {
         'DB', 'DA', 'CW', 'CA', 'BB', 'BA', 'AW', 'AA', 'CY', 'CV', 'AY', 'AV'
     }),
     ('1OB2', {'B'}),
     ('1OB5', {'B', 'D', 'F'}),
-    ('1xnq', {'A', 'X'}),
+    ('1XNQ', {'A', 'X'}),
+    ('4V3P', {'L3', 'S1', 'L1', 'S2', 'L2', 'S3'}),
+    ('1J5E', {'A'}),
 ])
-def test_fetches_expected_chains(pdbid, chains):
-    entries = parser.as_entries([pdbid])
+def test_fetches_expected_chains(pdb_id, chains):
+    entries = load(pdb_id)
     assert set(d.optional_id for d in entries) == chains
