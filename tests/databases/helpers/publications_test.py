@@ -161,7 +161,7 @@ def test_reference_builds_a_id_ref(raw_id, namespace, external_id):
 
 def test_can_parse_xml_data_correctly():
     with open('data/publications/example.xml', 'r') as raw:
-        data = list(pub.parse_xmls([raw]))
+        data = list(pub.parse_xml(raw))
         assert len(data) == 1
         assert attr.asdict(data[0]) == attr.asdict(Reference(
             authors='Xu Z, Han Y, Liu J, Jiang F, Hu H, Wang Y, Liu Q, Gong Y, Li X.',
