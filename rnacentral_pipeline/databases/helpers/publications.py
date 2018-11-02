@@ -35,6 +35,15 @@ class UnknownReference(Exception):
 class TooManyPublications(Exception):
     pass
 
+TABLE = '''
+CREATE TABLE IF NOT EXISTS {name}s (
+    id {type} primary key,
+    data text,
+
+    UNIQUE (id) ON CONFLICT REPLACE
+)
+'''
+
 
 @lru_cache()
 @retry(requests.HTTPError, tries=5, delay=1)
@@ -54,7 +63,6 @@ def summary(id_reference):
 
 
 def pretty_location(data):
-    print(data)
     issue = data.get('issue', '')
     if issue:
         issue = ('(%s)' % issue)
@@ -63,7 +71,7 @@ def pretty_location(data):
     if 'pageInfo' in data and pages:
         pages = ':' + pages
 
-    location = '{title} {volume}{issue}{pages} ({year})'.format(
+    location = u'{title} {volume}{issue}{pages} ({year})'.format(
         title=data['journalTitle'],
         issue=issue,
         volume=data.get('journalVolume', ''),
@@ -114,8 +122,8 @@ def node_to_reference(node):
 
     authors = []
     for author in node.findall('./AuthorList/Author'):
-        last = author.find('LastName').text
-        initials = author.find('Initials').text
+        last = xml_text('LastName', author)
+        initials = xml_text('Initials', author)
         authors.append('%s %s' % (last, initials))
     authors = ', '.join(authors) + '.'
 
@@ -136,33 +144,34 @@ def node_to_reference(node):
     )
 
 
-def parse_xmls(xml_files):
-    for xml_file in xml_files:
-        tree = ET.parse(xml_file)
-        root = tree.getroot()
-        for node in root.findall('./PMC_ARTICLE'):
-            ref = node_to_reference(node)
-            if not ref:
-                continue
-            yield ref
+def parse_xml(xml_file):
+    tree = ET.parse(xml_file)
+    root = tree.getroot()
+    for node in root.findall('./PMC_ARTICLE'):
+        ref = node_to_reference(node)
+        if not ref:
+            continue
+        yield ref
 
 
 def index_xml(output, xml_files):
     conn = sqlite3.connect(output)
     tables = {'pmid': 'int', 'doi': 'text'}
     for name, pid_type in tables.items():
-        stmt = 'CREATE TABLE {name}s (id {type} primary key, data text)'
-        conn.execute(stmt.format(name=name, type=pid_type))
+        conn.execute(TABLE.format(name=name, type=pid_type))
 
-    for ref in parse_xmls(xml_files):
-        cursor = conn.cursor()
-        for table in tables.keys():
-            key = getattr(ref, table, None)
-            if not key:
-                continue
-            stmt = 'INSERT INTO %ss VALUES(?, ?)' % table
-            data = json.dumps(attr.asdict(ref))
-            cursor.execute(stmt, key, data)
+    for xml_file in xml_files:
+        for ref in parse_xml(xml_file):
+            cursor = conn.cursor()
+            for table in tables.keys():
+                key = getattr(ref, table, None)
+                if not key:
+                    continue
+                stmt = 'INSERT INTO %ss VALUES(?, ?)' % table
+                data = json.dumps(attr.asdict(ref))
+                cursor.execute(stmt, (key, data))
+        conn.commit()
+    conn.close()
 
 
 def lookup_refs(db, handle):
