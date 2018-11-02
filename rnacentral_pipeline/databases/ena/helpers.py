@@ -24,7 +24,7 @@ import rnacentral_pipeline.databases.helpers.embl as embl
 from rnacentral_pipeline.databases.helpers.phylogeny import UnknownTaxonId
 import rnacentral_pipeline.databases.helpers.publications as pubs
 
-from rnacentral_pipeline.databases.data import Reference
+from rnacentral_pipeline.databases.data import IdReference
 
 LOGGER = logging.getLogger(__name__)
 
@@ -78,16 +78,6 @@ def sequence(record):
     return str(record.seq)
 
 
-def as_reference(accession, ref):
-    return Reference(
-        accession=accession,
-        authors=ref.authors,
-        location=ref.journal,
-        title=ref.title,
-        pmid=int(ref.pubmed_id),
-    )
-
-
 def extract_experiment_refs(feature, known):
     experiment = embl.experiment(feature)
     if not experiment:
@@ -104,24 +94,17 @@ def extract_experiment_refs(feature, known):
         if not pmid:
             continue
 
-        pmid = int(pmid)
-        if pmid in known:
+        data = pubs.reference(int(pmid))
+        if data in known:
             continue
-
-        try:
-            data = pubs.reference(pmid)
-            if data:
-                found.append(data)
-        except Exception as err:
-            LOGGER.exception(err)
-            LOGGER.warning("Failed to lookup reference for %s", pmid)
+        found.append(data)
     return found
 
 
 def references(record, feature):
     refs = embl.references(record)
-    known_pmids = {ref.pmid for ref in refs if ref.pmid}
-    experiment_refs = extract_experiment_refs(feature, known_pmids)
+    known = {ref for ref in refs if isinstance(ref, IdReference)}
+    experiment_refs = extract_experiment_refs(feature, known)
     refs.extend(experiment_refs)
     return refs
 

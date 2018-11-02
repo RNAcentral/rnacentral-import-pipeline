@@ -18,6 +18,8 @@ import attr
 import pytest
 
 from rnacentral_pipeline.databases.data import Entry, Reference
+import rnacentral_pipeline.databases.helpers.publications as pubs
+
 from rnacentral_pipeline.databases.ena.parser import parse
 
 
@@ -45,6 +47,8 @@ def test_can_parse_variety_of_files(filename, count):
             assert 'TPA:' not in entry.description
             assert entry.description
             for reference in entry.references:
+                if not isinstance(reference, Reference):
+                    continue
                 assert reference.title != ';'
 
 
@@ -80,29 +84,7 @@ def test_creates_simple_entry():
         mol_type='genomic DNA',
         is_composite='N',
         references=[
-            Reference(
-                authors=(
-                    "Galagan J.E., Calvo S.E., Cuomo C., Ma L.J., Wortman J.R."
-                    ", Batzoglou S., Lee S.I., Basturkmen M., Spevak C.C., "
-                    "Clutterbuck J., Kapitonov V., Jurka J., Scazzocchio C., "
-                    "Farman M., Butler J., Purcell S., Harris S., Braus G.H., "
-                    "Draht O., Busch S., D'Enfert C., Bouchier C., Goldman "
-                    "G.H., Bell-Pedersen D., Griffiths-Jones S., Doonan J.H., "
-                    "Yu J., Vienken K., Pain A., Freitag M., Selker E.U., "
-                    "Archer D.B., Penalva M.A., Oakley B.R., Momany M., "
-                    "Tanaka T., Kumagai T., Asai K., Machida M., Nierman W.C.,"
-                    " Denning D.W., Caddick M., Hynes M., Paoletti M., "
-                    "Fischer R., Miller B., Dyer P., Sachs M.S., Osmani S.A., "
-                    "Birren B.W."
-                ),
-                location='Nature 438(7071):1105-1115(2005).',
-                title=(
-                    'Sequencing of Aspergillus nidulans and comparative '
-                    'analysis with A. fumigatus and A. oryzae'
-                ),
-                pmid=16372000,
-                doi=None,
-            ),
+            pubs.reference(16372000),
             Reference(
                 location=(
                     'Submitted (04-APR-2003) to the INSDC. Whitehead '
@@ -437,13 +419,7 @@ def test_can_parse_all_example_entries():
                 pmid=None,
                 doi=None,
             ),
-            Reference(
-                authors='Kozomara A., Griffiths-Jones S.',
-                location='Nucleic Acids Res. 39(Database issue):D152-D157(2011).',
-                title='miRBase: integrating microRNA annotation and deep-sequencing data',
-                pmid=21037258,
-                doi=None,
-            ),
+            pubs.reference(21037258),
         ]
     ))
 
@@ -481,17 +457,7 @@ def test_can_parse_all_example_entries():
                 pmid=None,
                 doi=None,
             ),
-
-            Reference(
-                authors='Gueneau de Novoa P., Williams K.P.',
-                location='Nucleic Acids Res. 32(Database issue):D104-D108(2004).',
-                title=(
-                    "The tmRNA website: reductive evolution of tmRNA in "
-                    "plastids and other endosymbionts"
-                ),
-                pmid=14681369,
-                doi=None,
-            ),
+            pubs.reference(14681369),
         ]
     ))
 
@@ -601,11 +567,16 @@ def test_can_parse_anticodon_from_note():
     assert data.locus_tag == 'Msp_0274'
 
 
-def test_can_parse_pseudogene():
-    with open('data/ena/pseudogene.embl', 'rb') as raw:
-        data = next(parse(raw))
-    assert data.accession == 'NIDN01000248.1:29758..29889:tRNA'
-    assert data.pseudogene == 'unprocessed'
+@pytest.mark.parameterize('filename,count', [
+    ('data/ena/pseudogene.embl', 0),
+    ('data/ena/pseudogene-flag.embl', 0),
+])
+def correctly_ignores_pseudogenes(filename, count):
+    with open(filename, 'rb') as raw:
+        data = list(parse(raw))
+        assert len(data) == count
+    # assert data.accession == 'NIDN01000248.1:29758..29889:tRNA'
+    # assert data.pseudogene == 'unprocessed'
 
 
 def test_can_parse_function():
@@ -614,10 +585,7 @@ def test_can_parse_function():
 
     assert data[0].accession == 'EU410654.1:1..92:ncRNA'
     assert data[0].function == 'guide for 26S rRNA methylation at U1043'
-    assert data[0].references[0].pmid == 18493037
-    # TODO: Improve biopython so it can parse DOI's from references
-    # assert data[0].references[0].doi == '10.1534/genetics.107.086025'
-
+    assert data[0].references[0] == pubs.reference(18493037)
     assert data[1].accession == 'AB046489.1:221..306:tRNA'
     assert data[1].function == 'tRNA-Pro'
     assert data[1].organelle == 'mitochondrion'
@@ -682,7 +650,7 @@ def test_can_extract_references_from_experiment(pmid):
         'ontology': ['ECO:0000305', 'GO:0006617', 'GO:0048501', 'SO:0000590'],
         'text': ['biotype:SRP_RNA'],
     }
-    assert pmid in [ref.pmid for ref in data.references]
+    assert pubs.reference(pmid) in data.references
 
 
 @pytest.mark.parametrize('pmid', [
@@ -701,7 +669,7 @@ def test_can_extract_references_from_note_or_experiment(pmid):
     assert data.experiment == 'publication(s) with functional evidences, PMID:1379177, 8288542, 9098041, 9826762, 12165569, 12547201, 1317842, 15831787'
     assert data.function == '16.3: Control'
     assert data.gene == 'tboTB'
-    assert pmid in [ref.pmid for ref in data.references]
+    assert pubs.reference(pmid) in data.references
 
 
 def test_can_handle_unclosed_parens():
