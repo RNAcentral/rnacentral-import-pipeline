@@ -18,7 +18,7 @@ import attr
 
 from rnacentral_pipeline.databases import data as dat
 
-from . helpers import parse_with_family, entries_for, entry_for
+from .helpers import parse_with_family, entries_for, entry_for
 
 
 @pytest.fixture(scope='module')  # pylint: disable=no-member
