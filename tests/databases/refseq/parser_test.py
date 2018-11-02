@@ -78,7 +78,6 @@ def test_it_can_build_correct_entry():
             'MIM': ['157660'],
         },
         note_data={},
-        chromosome='9',
         species="Homo sapiens",
         common_name='human',
         lineage=(
@@ -129,7 +128,6 @@ def test_can_build_correct_entries_when_multiple_present():
             'miRBase': ['MI0020366'],
         },
         note_data={},
-        chromosome='X',
         species="Homo sapiens",
         common_name=u'human',
         lineage=(
@@ -176,7 +174,6 @@ def test_can_build_correct_entries_when_multiple_present():
             'miRBase': ['MI0020366', 'MIMAT0023714'],
         },
         note_data={},
-        chromosome='X',
         species="Homo sapiens",
         common_name='human',
         lineage=(
@@ -229,7 +226,6 @@ def test_can_assign_related_sequences_for_mirnas():
             'GeneID': ['259856']
         },
         note_data={},
-        chromosome='I',
         species='Caenorhabditis elegans',
         lineage=phy.lineage(6239),
         gene="mir-79",
@@ -289,7 +285,6 @@ def test_can_assign_isoform_to_rnase_p():
             'FLYBASE': ['FBgn0046696', 'FBtr0085775'],
         },
         note_data={},
-        chromosome='3R',
         species='Drosophila melanogaster',
         common_name='fruit fly',
         lineage=(
