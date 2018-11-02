@@ -98,7 +98,6 @@ def as_entry(record, source, feature):
         optional_id=optional,
         note_data={},
         xref_data=xref_data(feature),
-        # chromosome=embl.chromosome(source),
         species=embl.species(record),
         common_name=embl.common_name(record),
         lineage=embl.lineage(record),
