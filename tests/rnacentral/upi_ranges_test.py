@@ -13,9 +13,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from rnacentral.utils import ranges_between
-from rnacentral.utils import upi_ranges
-from tasks.config import db
+import os
+
+import pytest
+
+from rnacentral_pipeline.rnacentral.upi_ranges import ranges_between
+from rnacentral_pipeline.rnacentral.upi_ranges import upi_ranges
 
 
 def test_ranges_between_handles_simple_ranges():
@@ -52,13 +55,15 @@ def test_ranges_between_handles_ranges_too_big():
     ]
 
 
+@pytest.mark.skip()
 def test_can_get_range_of_all_upis():
-    ranges = list(upi_ranges(db(), 100000))
-    assert len(ranges) == 135
+    ranges = list(upi_ranges(os.environ['PGDATABASE'], 'rna', 100000))
+    assert len(ranges) >= 135
 
 
+@pytest.mark.skip()
 def test_can_get_correct_upi_ranges():
-    ranges = list(upi_ranges(db(), 100000))
+    ranges = list(upi_ranges(os.environ['PGDATABASE'], 'rna', 100000))
     assert ranges[0:2] == [
         (1, 100001),
         (100001, 200001),
