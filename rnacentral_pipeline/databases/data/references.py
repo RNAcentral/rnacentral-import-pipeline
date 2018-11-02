@@ -13,6 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import re
+
 import attr
 from attr.validators import in_
 from attr.validators import optional
@@ -97,6 +99,8 @@ class IdReference(object):
             return cls('pmid', str(ref_id))
 
         if isinstance(ref_id, basestring):
+            if re.match('^\d+$', ref_id):
+                return cls('pmid', ref_id)
             service, eid = ref_id.split(':', 1)
             service = service.lower()
             if service in KNOWN_SERVICES:
