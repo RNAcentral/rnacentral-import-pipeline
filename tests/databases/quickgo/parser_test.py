@@ -20,8 +20,8 @@ from rnacentral_pipeline.databases.data import Reference
 
 from rnacentral_pipeline.databases.helpers import publications as pub
 
-from rnacentral_pipeline.databases.go_annotations import GoTermAnnotation
-from rnacentral_pipeline.databases.go_annotations import AnnotationExtension
+from rnacentral_pipeline.databases.data import GoTermAnnotation
+from rnacentral_pipeline.databases.data import AnnotationExtension
 from rnacentral_pipeline.databases.quickgo import parser as gpi
 
 
@@ -44,16 +44,7 @@ def test_can_correctly_parse_a_gpa_file():
             evidence_code='ECO:0000255',
             extensions=[],
             assigned_by='SGD',
-            publications=[Reference(
-                authors='Lowe TM, Eddy SR.',
-                location='Nucleic Acids Res 25(5):955-964 (1997)',
-                title=(
-                    'tRNAscan-SE: a program for improved detection of '
-                    'transfer RNA genes in genomic sequence'
-                ),
-                pmid=9023104,
-                doi=u'10.1093/nar/25.5.955',
-            )]
+            publications=[pub.reference(9023104)]
         ))
 
 
