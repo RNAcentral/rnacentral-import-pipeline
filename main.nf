@@ -178,6 +178,8 @@ process fetch_ena_extra {
  set val('external ena'), file("tpa.tsv") into ena_extra
 
   """
+  set -o pipefail
+
   cat $tpa_file | xargs wget -O - >> tpa.tsv
   """
 }
