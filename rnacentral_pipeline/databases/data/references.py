@@ -23,9 +23,7 @@ from rnacentral_pipeline.databases.helpers.hashes import md5
 from . import utils
 
 PMID_URL = 'https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=EXT_ID:{pmid}+AND+SRC:MED&format=json'
-
 DOI_URL = 'https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=DOI:{doi}+AND+SRC:MED&format=json'
-
 
 KNOWN_SERVICES = {
     'doi',
@@ -88,7 +86,7 @@ class Reference(object):
         ]
 
 
-@attr.s(frozen=True)
+@attr.s(frozen=True, hash=True)
 class IdReference(object):
     namespace = attr.ib(validator=in_(KNOWN_SERVICES))
     external_id = attr.ib(validator=is_a(basestring))

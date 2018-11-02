@@ -1,0 +1,42 @@
+ID   M10226.1:382..513:tRNA; SV 1; linear; genomic DNA; STD; INV; 132 BP.
+XX
+PA   M10226.1
+XX
+DT   02-APR-1988 (Rel. 15, Created)
+DT   14-NOV-2006 (Rel. 89, Last updated, Version 7)
+XX
+DE   Drosophila melanogaster (fruit fly) tRNA:H<Psi>
+XX
+KW   .
+XX
+OS   Drosophila melanogaster (fruit fly)
+OC   Eukaryota; Metazoa; Ecdysozoa; Arthropoda; Hexapoda; Insecta; Pterygota;
+OC   Neoptera; Holometabola; Diptera; Brachycera; Muscomorpha; Ephydroidea;
+OC   Drosophilidae; Drosophila; Sophophora.
+XX
+RN   [1]
+RX   PUBMED; 6570190.
+RA   Cooley L., Schaack J., Burke D.J., Thomas B., Soll D.;
+RT   "Transcription factor binding is limited by the 5'-flanking regions of a
+RT   Drosophila tRNAHis gene and a tRNAHis pseudogene";
+RL   Mol. Cell. Biol. 4(12):2714-2722(1984).
+XX
+DR   MD5; b35cd75412309f56601bdcee59a06d34.
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..132
+FT                   /organism="Drosophila melanogaster"
+FT                   /mol_type="genomic DNA"
+FT                   /clone="p48FHis"
+FT                   /db_xref="taxon:7227"
+FT   tRNA            M10226.1:382..513
+FT                   /pseudo
+FT                   /gene="tRNA:H<Psi>"
+FT                   /note="precursor"
+XX
+SQ   Sequence 132 BP; 31 A; 30 C; 36 G; 35 T; 0 other;
+     gaattgctgg gcgcaatcca atgtagccgt gatcgtctag tggttaggac cccacgttgt        60
+     gggttaccac acccaggttc gaatcctggt cacggcaatg ttcaaataaa cattgtcacg       120
+     gagttgggtt at                                                           132
+//
