@@ -14,14 +14,12 @@ limitations under the License.
 """
 
 import re
-import csv
 import logging
 import itertools as it
 import collections as coll
 
-import requests
-
 from rnacentral_pipeline.databases.helpers import phylogeny as phy
+from rnacentral_pipeline.databases.helpers import publications as pubs
 from rnacentral_pipeline.databases.data import Reference
 
 RIBOSOMES = set([
@@ -48,59 +46,20 @@ class InvalidSequence(Exception):
     pass
 
 
+def is_mrna(row):
+    if re.search('mRNA', row['compound'], re.IGNORECASE) and \
+       not re.search('tmRNA', row['compound'], re.IGNORECASE):
+        return True
+    return False
+
+
+def is_ncrna(row):
+    return 'RNA' in row['entityMacromoleculeType'] and not is_mrna(row)
+
+
 def grouper(iterable, n, fillvalue=None):
     args = [iter(iterable)] * n
     return it.izip_longest(*args, fillvalue=fillvalue)
-
-
-def rna_containing_pdb_ids():
-    """
-    Get PDB ids of all RNA-containing 3D structures
-    using the RCSB PDB REST API.
-    """
-    query = """
-    <orgPdbQuery>
-    <queryType>org.pdb.query.simple.ChainTypeQuery</queryType>
-    <containsProtein>I</containsProtein>
-    <containsDna>I</containsDna>
-    <containsRna>Y</containsRna>
-    <containsHybrid>I</containsHybrid>
-    </orgPdbQuery>
-    """
-    url = 'http://www.rcsb.org/pdb/rest/search'
-
-    # without this header the request is redirected incorrectly
-    request = requests.post(
-        url,
-        data=query,
-        headers={'content-type': 'application/x-www-form-urlencoded'}
-    )
-
-    if request.status_code == 200:
-        pdb_ids = request.text.rstrip().split('\n')
-    else:
-        pdb_ids = None
-
-    return pdb_ids
-
-
-def custom_report(pdb_ids, fields):
-    """
-    Get custom report about PDB files in a tabular format.
-    """
-
-    url = 'http://www.rcsb.org/pdb/rest/customReport.csv'
-    data = {
-        'pdbids': ','.join(pdb_ids),
-        'customReportColumns': ','.join(fields),
-        'format': 'csv',
-        'service': 'wsfile',  # Use actual CSV files
-    }
-
-    response = requests.post(url, data=data)
-    response.raise_for_status()
-    lines = response.text.split('\n')
-    return csv.DictReader(lines, delimiter=',', quotechar='"')
 
 
 def accession(row):
@@ -149,52 +108,39 @@ def taxid(row):
 def as_reference(row):
     # This is pretty dirty but it should work assuming that each name
     # always has a ',' after both the first and last name.
-    parts = row['citationAuthor'].split(',')
-    grouped = grouper(parts, 2, '')
-    authors = ','.join(''.join(p) for p in grouped)
 
-    pmid = row['pubmedId']
-    if pmid:
-        pmid = int(pmid)
-    else:
-        pmid = None
+    pmid = None
+    if row['pubmed_id']:
+        return pubs.reference(int(row['pubmed_id']))
+
+    if row['doi']:
+        doi = row['doi']
+        if not doi.lower().startswith('doi:'):
+            doi = 'doi:' + doi
+        return pubs.reference(doi)
+
+    authors = []
+    for author in row['author_list']:
+        if author['full_name']:
+            authors.append(author['full_name'].replace(',', ''))
+            continue
+
+        current = []
+        if author['last_name']:
+            current.append(author['last_name'])
+        if author['first_name']:
+            current.append(author['first_name'])
+        authors.append(' '.join(current))
+
+    journal = row['journal_info']['pdb_abbreviation']
 
     return Reference(
-        authors=authors,
-        location=row['journalName'],
+        authors=', '.join(authors),
+        location=journal,
         title=row['title'],
         pmid=pmid,
         doi=row['doi'],
     )
-
-
-def reference_mapping(pdb_ids):
-    """
-    Get literature citations for each PDB file.
-    Return a dictionary that looks like this:
-    {
-        '1S72': {'structureId': '1S72', etc}
-    }
-    """
-
-    report = custom_report(pdb_ids, [
-        'structureId',
-        'citationAuthor',
-        'firstPage',
-        'lastPage',
-        'journalName',
-        'title',
-        'volumeId',
-        'publicationYear',
-        'pubmedId',
-        'pmc',
-        'doi',
-    ])
-
-    mapping = coll.defaultdict(list)
-    for row in report:
-        mapping[reference_mapping_id(row)].append(as_reference(row))
-    return mapping
 
 
 def references_for(row, mapping):

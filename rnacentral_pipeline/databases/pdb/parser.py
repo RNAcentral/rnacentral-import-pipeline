@@ -13,64 +13,18 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import re
+import json
 import logging
-import itertools as it
+import collections as coll
+
+import attr
 
 from rnacentral_pipeline.databases import data
-from rnacentral_pipeline.writers import build_entry_writer
+from rnacentral_pipeline.databases.helpers import publications as pubs
 
 from . import helpers
 
 LOGGER = logging.getLogger(__name__)
-
-
-def chain_descriptions(pdb_ids):
-    """
-    Get per-chain information about each RNA sequence.
-    Return a dictionary that looks like this:
-    {
-        '1S72_A': {'structureId': '1S72', 'chainId': '0' etc}
-    }
-    """
-
-    report = helpers.custom_report(pdb_ids, [
-        'structureId',
-        'chainId',
-        'structureTitle',
-        'experimentalTechnique',
-        'releaseDate',
-        'ndbId',
-        'emdbId',
-        'classification',
-        'entityId',
-        'sequence',
-        'chainLength',
-        'db_id',
-        'db_name',
-        'entityMacromoleculeType',
-        'source',
-        'taxonomyId',
-        'compound',
-        'resolution',
-    ])
-
-    disqualified = {'mRNA': 0}
-
-    for row in report:
-        # skip proteins
-        if 'RNA' not in row['entityMacromoleculeType']:
-            continue
-
-        # skip mRNAs
-        if re.search('mRNA', row['compound'], re.IGNORECASE) and \
-           not re.search('tmRNA', row['compound'], re.IGNORECASE):
-            disqualified['mRNA'] += 1
-            continue
-
-        yield row
-
-    LOGGER.info('Disqualified %i mRNA chains', disqualified['mRNA'])
 
 
 def as_entry(row, reference_mapping):
@@ -98,15 +52,59 @@ def as_entry(row, reference_mapping):
     )
 
 
-def as_entries(pdb_ids):
-    reference_mapping = helpers.reference_mapping(pdb_ids)
-    for result in chain_descriptions(pdb_ids):
+def as_mapping(report):
+    mapping = coll.defaultdict(list)
+    for row in report:
+        ref = attr.asdict(helpers.as_reference(row))
+        mapping[helpers.reference_mapping_id(row)].append(ref)
+    return mapping
+
+
+def as_reference_mapping(raw):
+    mapping = coll.defaultdict(list)
+    for pdb_id, refs in raw.items():
+        for ref in refs:
+            pub = attr.asdict(helpers.as_reference(ref))
+            mapping[pdb_id.upper()].append(pub)
+    return mapping
+
+
+def as_descriptions(report):
+    disqualified = {'mRNA': 0}
+
+    descriptions = []
+    for row in report:
+        if helpers.is_mrna(row):
+            disqualified['mRNA'] += 1
+
+        if helpers.is_ncrna(row):
+            descriptions.append(row)
+
+    LOGGER.info('Disqualified %i mRNA chains', disqualified['mRNA'])
+    return descriptions
+
+
+def parse_mapping_file(handle):
+    mapping = coll.defaultdict(list)
+    for pdb_id, refs in json.load(handle):
+        for ref in refs:
+            if 'namespace' in ref:
+                ref_id = '%s:%s' % (ref['namespace'], ref['external_id'])
+                mapping[pdb_id].append(pubs.reference(ref_id))
+            else:
+                mapping[pdb_id].append(data.Reference(**ref))
+    return mapping
+
+
+def as_entries(raw_data, reference_mapping):
+    for raw in raw_data:
         try:
-            yield as_entry(result, reference_mapping)
+            yield as_entry(raw, reference_mapping)
         except helpers.InvalidSequence as err:
             LOGGER.info(str(err))
 
 
-def entries():
-    ids = helpers.rna_containing_pdb_ids()
-    return it.imap(as_entries, ids)
+def parse(handle, reference_handle):
+    raw_data = json.load(handle)
+    reference_mapping = parse_mapping_file(reference_handle)
+    return as_entries(raw_data, reference_mapping)
