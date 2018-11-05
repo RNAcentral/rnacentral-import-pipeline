@@ -107,6 +107,10 @@ class IdReference(object):
                 return cls(service, eid)
         raise UnknownPublicationType(ref_id)
 
+    @property
+    def normalized_id(self):
+        return '%s:%s' % (self.namespace, self.external_id)
+
     def external_url(self):
         if self.namespace == 'pmid':
             return PMID_URL.format(pmid=self.external_id)
@@ -115,7 +119,7 @@ class IdReference(object):
         raise ValueError("No URL for namespace %s" % self.namespace)
 
     def writeable(self, accession):
-        yield [
-            '%s:%s' % (self.namespace, self.external_id),
-            accession,
-        ]
+        yield [self.normalized_id, accession]
+
+    def writeable_id(self):
+        yield [self.normalized_id]

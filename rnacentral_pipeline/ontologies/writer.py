@@ -24,7 +24,7 @@ def write_annotations(parser, *args, **kwargs):
         go_annotations={
             'transformer': op.methodcaller('writeable'),
         },
-        go_publications={
+        ref_ids={
             'transformer': op.methodcaller('writeable_publications'),
         },
         go_publication_mappings={
