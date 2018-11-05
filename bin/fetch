@@ -58,8 +58,8 @@ function fetch_ensembl() {
 
   for fn in *.dat.gz; do
     local species="$(echo "$fn" | cut -d. -f1)"
-    local grouped="$species.dat"
-    zcat "$fn" >> "$grouped"
+    local grouped="$species.grouped.dat.gz"
+    cat "$fn" >> "$grouped"
   done
 }
 
