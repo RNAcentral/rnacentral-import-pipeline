@@ -3,36 +3,138 @@
 set -euo pipefail
 IFS=$'\n\t'
 
-remote="$1"
-pattern="$2"
+function usage() {
+  status="${1:-1}"
+  cat <<EOS
+fetch <name> [arguments...]
 
-case "$remote" in
-  ssh://* )
-    short="${remote:6}"
-    scp "$short" .
-    ;;
-  /* )
-    find "$remote" -name "$pattern" | xargs -I {} cp {} .
-    ;;
-  http://* | https://* )
-    wget "$remote"
-    ;;
-  ftp://* )
-    # wget doesn't play well with ** so we use lftp instead. Also, wget doesn't
-    # like following symlinks, but lftp does. I should find a way to indicate
-    # this to the pipeline.
-    if [[ "$remote" =~ '**' ]]; then
-      lftp -c "mget $remote"
-    else
-      wget "$remote"
-    fi
-    ;;
-  * )
-    echo 1>&2 "Unknown remote URL to fetch: $remote"
-    exit 1;;
-esac
+This is the primary script to fetching data. It will
+EOS
+  exit $status
+}
 
-case "$remote" in
-  *.tar.gz | *.tgz )
-    find . -name '*.tar.gz' -or -name '*.tgz' | xargs -I {} tar xvf {}
+function fetch_generic() {
+  local remote="$1"
+  local pattern="$2"
+
+  case "$remote" in
+    ssh://* | scp://* )
+      short="${remote:6}"
+      scp "$short" .
+      ;;
+    /* )
+      find "$remote" -name "$pattern" | xargs -I {} cp {} .
+      ;;
+    http://* | https://* )
+      wget -O "$pattern" "$remote"
+      ;;
+    ftp://* )
+      # wget doesn't play well with ** so we use lftp instead. Also, wget doesn't
+      # like following symlinks, but lftp does. I should find a way to indicate
+      # this to the pipeline.
+      if [[ "$remote" =~ '**' ]]; then
+        lftp -c "mget $remote"
+      else
+        if [[ "$pattern" =~ "*" ]]; then
+          wget "$remote"
+        else
+          wget -O "$pattern" "$remote"
+        fi
+      fi
+      ;;
+    * )
+      echo 1>&2 "Unknown remote URL to fetch: $remote"
+      exit 1;;
+  esac
+
+  case "$remote" in
+    *.tar.gz | *.tgz )
+      find . -name '*.tar.gz' -or -name '*.tgz' | xargs -I {} tar xvf {}
+  esac
+}
+
+function fetch_ensembl() {
+  fetch_generic "$1" "*.dat.gz"
+
+  for fn in *.dat.gz; do
+    local species="$(echo "$fn" | cut -d. -f1)"
+    local grouped="$species.dat"
+    zcat "$fn" >> "$grouped"
+  done
+}
+
+function fetch_pdb() {
+  rnac pdb data "$1"
+}
+
+function fetch_pdb_extra() {
+  rnac pdb extra "$1"
+}
+
+function fetch_quickgo() {
+  local remote="$1"
+  local output="$2"
+  local filename="$(basename "$remote")"
+
+  tmp="$(mktemp)"
+  fetch "$remote" "$filename"
+  gzip -cd "$filename" > "$tmp"
+
+  {
+    head -1 t
+    grep -v '^!' "$tmp"
+  } > "$output"
+  rm "$tmp"
+}
+
+function fetch_url_file() {
+  local remote_file="$1"
+  local pattern="$2"
+  if [[ "$pattern" =~ "*" ]]; then
+    cat "$remote_file" | xargs -I {} wget {}
+  else
+    cat "$remote_file" | xargs -I {} wget -O - {} >> "$pattern"
+  fi
+}
+
+[ "$#" -gt 0 ] || { usage 0; }
+
+group="$1"
+name="$2"
+shift 2
+
+case "$group" in
+  "external" )
+    case "$name" in
+      "ensembl" | "ensembl_plants" )
+        fetch_ensembl "$@" ;;
+      "gencode" )
+        fetch_url_file "$@" ;;
+      "pdb" )
+        fetch_pdb "$@" ;;
+      "quickgo" )
+        fetch_quickgo "$@" ;;
+        "ena" | "flybase" | "lncbase" | "lncipedia" | "mirbase" | "pombase" |\
+          "refseq" | "rfam" | "rgd" | "tarbase" | "zwd" )
+        fetch_generic "$@" ;;
+      "*" )
+        usage ;;
+    esac
+    ;;
+
+  "extra" )
+    case "$name" in
+      "ena" )
+        fetch_url_file "$@" ;;
+      "pdb" )
+        fetch_pdb_extra "$@" ;;
+      "rgd" )
+        fetch_generic "$@" ;;
+      "*" )
+        usage ;;
+    esac
+    ;;
+
+  "*" )
+    usage ;;
 esac
