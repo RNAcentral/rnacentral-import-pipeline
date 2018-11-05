@@ -77,11 +77,11 @@ function fetch_quickgo() {
   local filename="$(basename "$remote")"
 
   tmp="$(mktemp)"
-  fetch "$remote" "$filename"
+  fetch_generic "$remote" "$filename"
   gzip -cd "$filename" > "$tmp"
 
   {
-    head -1 t
+    head -1 "$tmp"
     grep -v '^!' "$tmp"
   } > "$output"
   rm "$tmp"
@@ -97,7 +97,7 @@ function fetch_url_file() {
   fi
 }
 
-[ "$#" -gt 0 ] || { usage 0; }
+[ $# -gt 0 ] || { usage 0; }
 
 group="$1"
 name="$2"
@@ -112,12 +112,10 @@ case "$group" in
         fetch_url_file "$@" ;;
       "pdb" )
         fetch_pdb "$@" ;;
-      "quickgo" )
-        fetch_quickgo "$@" ;;
         "ena" | "flybase" | "lncbase" | "lncipedia" | "mirbase" | "pombase" |\
           "refseq" | "rfam" | "rgd" | "tarbase" | "zwd" )
         fetch_generic "$@" ;;
-      "*" )
+      * )
         usage ;;
     esac
     ;;
@@ -130,11 +128,20 @@ case "$group" in
         fetch_pdb_extra "$@" ;;
       "rgd" )
         fetch_generic "$@" ;;
-      "*" )
+      * )
         usage ;;
     esac
     ;;
 
-  "*" )
+  "ontologies" )
+    case $name in
+      "quickgo" )
+        fetch_quickgo "$@" ;;
+      * )
+        usage ;;
+    esac
+    ;;
+
+  * )
     usage ;;
 esac

@@ -7,32 +7,35 @@ def as_mysql_cmd = { db ->
   "mysql --host ${db.host} --port ${db.port} --user ${db.user} $rest"
 }
 
-def fetch_for = { incomplete ->
-  db = ["excluded_patterns": [], "cmd": "fetch"] + incomplete
+def fetch_for(incomplete) {
+  if (!incomplete) {
+    return ''
+  }
+
+  db = ["cmd": "fetch"] + incomplete
   if (db.cmd == "mysql") {
-    """
+    cmd = """
     ${as_mysql_cmd(db)} < ${db.query} > ${db.pattern}
     """
   } else {
-    patterns = database['excluded_patterns']
+    ps = database.get('excluded_patterns', [])
     clean = ps.inject('', { agg, p -> agg + "find . -name '$p' | xargs rm\n" })
-    """
-    ${db.cmd} ${db.name} '${db.remote}' '${db.pattern}'
+    cmd = """\
+    ${db.cmd} ${db.name.join(' ')} '${db.remote}' '${db.pattern}'
     ${clean}
     """
   }
+  return cmd.stripIndent()
 }
 
 def process_using = { db ->
-  if (db.input_file.getName().endsWith('.gz')) {
-    """
-    zcat ${db.input_file} | rnac ${name} - ${db.extra}
-    """
-  } else {
-    """
-    rnac ${db.name} ${db.input_file} ${db.extra}
-    """
+  input_file = file(db.input_file)
+  name = db.name.join(' ')
+  extra = db.extra ? db.extra : ''
+  if (input_file.getName().endsWith('.gz')) {
+    return "zcat ${db.input_file} | rnac ${name} - ${extra}"
   }
+  return "rnac ${name} ${db.input_file} ${extra}"
 }
 
 // ===========================================================================
@@ -46,9 +49,12 @@ def process_using = { db ->
 raw_output = Channel.empty()
 
 // This contains what remote data sources we have to fetch. It focuses on the
-// main data files, not the 'extra' ones. As the extra ones generally need a
-// different method for each database and have few commonalities.
+// main data files, not the 'extra' ones. Separating the two makes rejoining
+// them later much easier.
 to_fetch = Channel.empty()
+
+// Here we put the 'extra' data files to fetch.
+to_fetch_extra = Channel.empty()
 
 // This contains the tasks for jobs that can be fetched and processed in a
 // single task. Some databases, like all JSON based import ones provide a single
@@ -78,37 +84,40 @@ for (entry in params.import_data.databases) {
   // nested so: ./custom/mirbase/accessions.csv would also work.
   if (name == "custom") {
     raw_output.mix(Channel.fromPath("${base}/**.csv")).flatten().set { raw_output }
-  } else {
-    rnc_cmd = "${database.get('group', 'external')} ${name}"
-    db_channel = Channel.value([rnc_cmd, database.fetch])
+    continue
+  }
 
-    if (database.extra) {
-      extra = database.extra
-      if (extra.remotes) {
-        extra.remote = file("remotes.txt").text = database.remotes.join('\n')
-      }
+  fetch = [name: [database.get('group', 'external'), name]] + database.fetch
 
-      extra_channel = Channel.value(["extra $name", extra])
-      to_fetch
-        .mix(db_channel)
-        .mix(extra_channel)
-        .set { to_fetch }
-
-    // Here we detect if a database only requires parsing a single file. This is
-    // done by ensure there are no extra files and there is no '*' in the output
-    // pattern name. So long as that is true we can then place this in a channel
-    // for fetching and processing as a single task. This also checks if the
-    // as_single_task flag is set to false. This is something that GENCODE has
-    // to set because it also uses Ensembl data. However, we don't add any
-    // extras to the configuration because then we would end up fetching things
-    // twice. We can just reuse what we fetch as seen below.
-    } else {
-      if (database.fetch.pattern.contains('*') || !database.as_single_task) {
-        to_fetch.mix(db_channel).set { to_fetch }
-      } else {
-        to_fetch_and_process.mix([db_channel]).set { to_fetch_and_process }
-      }
+  extra = null
+  if (database.extra) {
+    extra = [name: ['extra', name]] + database.extra
+    if (extra.remotes) {
+      extra.remote = file("$name-remotes.txt")
+      extra.remote.text = extra.remotes.join('\n')
     }
+  }
+
+  // Here we detect if a database only requires parsing a single file. This is
+  // done by ensure there are no extra files and there is no '*' in the output
+  // pattern name. So long as that is true we can then place this in a channel
+  // for fetching and processing as a single task. This also checks if the
+  // as_single_task flag is set to false. This is something that GENCODE has
+  // to set because it also uses Ensembl data. However, we don't add any
+  // extras to the configuration because then we would end up fetching things
+  // twice. We can just reuse what we fetch as seen below.
+  no_merge = database.fetch.pattern.contains('*') || !database.get('as_single_task', true)
+  if (no_merge) {
+    to_fetch.mix(Channel.value(fetch)).set { to_fetch }
+    to_fetch_extra = extra ? to_fetch_extra.mix(Channel.value(extra)) : to_fetch_extra
+
+  // If we can merge the fetch and process steps into a single step then we do
+  // so here.
+  } else {
+    fetch.extra = extra
+    to_fetch_and_process
+      .mix(Channel.value(fetch))
+      .set { to_fetch_and_process }
   }
 }
 
@@ -141,7 +150,10 @@ Channel.from(params.databases.ensembl.mysql, params.databases.ensembl_genomes.my
   .set { ensembl_info }
 
 process find_ensembl_tasks {
-  exectuor 'local'
+  executor 'local'
+
+  when:
+  any_database('ensembl')
 
   input:
   set val(mysql), file(imported_sql), file(possible) from ensembl_info
@@ -163,22 +175,38 @@ process find_ensembl_tasks {
 //=============================================================================
 
 process fetch_data {
+  tag name
+
   input:
-  set val(name), val(incomplete) from to_fetch
+  val(db) from to_fetch
 
   output:
   set val(name), file("${db.pattern}") into all_fetched
 
   script:
+  name = db.name.join(' ')
   """
-  ${fetch_for(incomplete)}"
+  ${fetch_for(db)}
   """
 }
 
-fetched_to_split = Channel.create()
-fetched_extra = Channel.create()
-all_fetched.choice(fetched_to_split, fetched_extra) { name, files -> name.startsWith("external") ? 0 : 1 }
-fetched_to_split.into { fetched; rfam_based; for_gencode }
+all_fetched.into { fetched; rfam_based; for_gencode }
+
+process fetch_extra_data {
+  tag name
+
+  input:
+  val(db) from to_fetch_extra
+
+  output:
+  set val(name), file("${db.pattern}") into fetched_extra
+
+  script:
+  name = "external ${db.name[1]}"
+  """
+  ${fetch_for(db)}
+  """
+}
 
 // This filters the fetched data to extract the Rfam families data. This data is
 // used by the Ensembl and GENCODE processing logic later on. Thus we create a
@@ -222,7 +250,7 @@ ensembl_task_summary
   .set { ensembl_metadata_tasks }
 
 Channel.empty()
-  .mix(fetched_extra.map { n, f -> [n.replace('extra', 'external'), f] })
+  .mix(fetched_extra)
   .mix(gencode_extra)
   .mix(rfam_based_extra)
   .groupBy()
@@ -233,8 +261,9 @@ fetched
   .flatMap { name, filenames, extra ->
     // Pretty sure this weirdness is because groovy is messing with types or something
     to_add = extra[name] ? extra[name][0][1..-1] : []
-    [filenames].flatten().inject([] { agg, f -> agg + [name, f, to_add] })
+     [filenames].flatten().inject([], { agg, f -> agg << [name, f, to_add] })
   }
+  .view { "Will process: ${it}" }
   .set { to_process }
 
 //=============================================================================
@@ -242,26 +271,29 @@ fetched
 //=============================================================================
 
 process fetch_and_process {
-  memory params.databases[name].get('memory', '2 GB')
+  tag name
+  memory { params.databases[incomplete.name[1]].get('memory', '2 GB') }
 
   input:
-  set val(name), val(incomplete) from to_fetch
+  val(incomplete) from to_fetch_and_process
 
   output:
   file "*.csv" into all_fetched_and_processed_output mode flatten
 
   script:
-  db = [input_file: incomplete.db, extra: file([])] + incomplete
+  db = [input_file: incomplete.pattern] + incomplete
   """
   set -o pipefail
 
   ${fetch_for(db)}
+  ${fetch_for(db.extra)}
   ${process_using(db)}
   """
 }
 
 process process_data {
-  memory params.databases[name].get('memory', '2 GB')
+  tag name
+  memory { params.databases[incomplete.name[1]].get('memory', '2 GB') }
 
   input:
   set val(name), file(input_file), file(extra) from to_process
@@ -279,6 +311,7 @@ process process_data {
 }
 
 processed_output = Channel.create()
+refs = Channel.create()
 terms = Channel.create()
 
 all_processed_output
@@ -286,7 +319,7 @@ all_processed_output
   .choice(terms, refs, processed_output) { f ->
     names = ["terms.csv", "ref_ids.csv"]
     index = names.indexOf(f.getName())
-    return index >= 0 : index : names.size()
+    return index >= 0 ? index : names.size()
   }
 
 process lookup_ontology_information {
@@ -304,8 +337,8 @@ process lookup_ontology_information {
 }
 
 process lookup_publications {
-  intput:
-  set file('ref_ids*.csv') from refs.collect()
+  input:
+  file('ref_ids*.csv') from refs.collect()
 
   output:
   file('references.csv') into references_output
@@ -316,9 +349,6 @@ process lookup_publications {
 
   find . -name 'ref_ids*.csv' | xargs cat | sort -u >> all-ids
 
-  # cut -d, -f1 all-ids | uniq > ref_ids
-  # lines="$(wc -l ref_ids | cut -d ' ' -f1)"
-
   rnac publications fetch all-ids references.csv
   """
 }
@@ -327,6 +357,7 @@ process lookup_publications {
 // and this cannot be set dynamically. Otherwise we could just put it into the
 // generic fetch and process channel.
 process process_ensembl_metadata {
+  tag "$name ${mysql.db_name}"
   maxForks params.import_metadata.ensembl.max_forks
 
   input:
@@ -334,7 +365,7 @@ process process_ensembl_metadata {
 
   output:
   file("${name}.csv") optional true into ensembl_output
-  val("$name,$db") into ensembl_imported
+  val("$name,$mysql.db_name") into ensembl_imported
 
   script:
   """
@@ -375,6 +406,7 @@ raw_output
 
 process merge_and_import {
   echo true
+  tag name
 
   input:
   set val(name), file(ctl), file('raw*.csv') from to_load
@@ -483,6 +515,7 @@ processed_rfam_hits
   .set { hits_to_import }
 
 process import_qa_data {
+  tag name
   echo true
 
   input:
