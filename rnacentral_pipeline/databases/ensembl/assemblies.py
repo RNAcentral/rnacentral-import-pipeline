@@ -174,7 +174,7 @@ class AssemblyExample(object):
             return None
 
         return cls(
-            chromosome=example['chromosome'],
+            chromosome=str(example['chromosome']),
             start=example['start'],
             end=example['end'],
         )
