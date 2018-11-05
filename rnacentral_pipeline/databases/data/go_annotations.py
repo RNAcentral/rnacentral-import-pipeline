@@ -67,7 +67,8 @@ class GoTermAnnotation(object):
 
     def writeable_publications(self):
         for publication in self.publications:
-            yield publication.writeable_generic_pubmed()
+            for ref in publication.writeable_id():
+                yield ref
 
     def writeable_publication_mappings(self):
         for publication in self.publications:
@@ -77,5 +78,5 @@ class GoTermAnnotation(object):
                 self.term_id,
                 self.assigned_by,
                 self.evidence_code,
-                publication.pmid,
+                publication.external_id,
             ]
