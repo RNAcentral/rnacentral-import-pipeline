@@ -14,9 +14,7 @@ def fetch_for(incomplete) {
 
   db = ["cmd": "fetch"] + incomplete
   if (db.cmd == "mysql") {
-    cmd = """
-    ${as_mysql_cmd(db)} < ${db.query} > ${db.pattern}
-    """
+    cmd = "${as_mysql_cmd(db)} < ${db.query} > ${db.pattern}"
   } else {
     ps = database.get('excluded_patterns', [])
     clean = ps.inject('', { agg, p -> agg + "find . -name '$p' | xargs rm\n" })
@@ -181,10 +179,9 @@ process fetch_data {
   val(db) from to_fetch
 
   output:
-  set val(name), file("${db.pattern}") into all_fetched
+  set val(db.name), file("${db.pattern}") into all_fetched
 
   script:
-  name = db.name.join(' ')
   """
   ${fetch_for(db)}
   """
@@ -199,10 +196,9 @@ process fetch_extra_data {
   val(db) from to_fetch_extra
 
   output:
-  set val(name), file("${db.pattern}") into fetched_extra
+  set val(["external", db.name[1]]), file("${db.pattern}") into fetched_extra
 
   script:
-  name = "external ${db.name[1]}"
   """
   ${fetch_for(db)}
   """
@@ -213,7 +209,7 @@ process fetch_extra_data {
 // channel for that data after fetching it, and make it into an extra set of
 // data.
 rfam_based
-  .filter { n, f -> n == "rfam families" }
+  .filter { n, f -> n == ["rfam", "families"] }
   .flatMap { n, f ->
     dbs = params.import_data.databases
     ['ensembl', 'gencode'].inject([], { res, db -> dbs[db] ? res + [db, f] : res })
@@ -224,13 +220,13 @@ rfam_based
 // mouse raw data. This data is reused for GENCODE import. We need the EMBL
 // files as an extra file to extract all useful information like names and such.
 for_gencode
-  .filter { n, fs -> any_database('gencode') && n == "external ensembl" }
+  .filter { n, fs -> any_database('gencode') && n == ["external", "ensembl"] }
   .flatMap { n, fs -> fs }
   .filter { f ->
     species = f.getBaseName()
     species.startsWith('Homo_sapiens') || species.startsWith('Mus_mus')
   }
-  .map { f -> ['external gencode', f] }
+  .map { f -> [['external', 'gencode'], f] }
   .set { gencode_extra }
 
 //=============================================================================
@@ -261,9 +257,10 @@ fetched
   .flatMap { name, filenames, extra ->
     // Pretty sure this weirdness is because groovy is messing with types or something
     to_add = extra[name] ? extra[name][0][1..-1] : []
-     [filenames].flatten().inject([], { agg, f -> agg << [name, f, to_add] })
+     [filenames].flatten().inject([], { agg, f ->
+       agg << [name: name, input_file: f, extra: to_add]
+     })
   }
-  .view { "Will process: ${it}" }
   .set { to_process }
 
 //=============================================================================
@@ -292,17 +289,16 @@ process fetch_and_process {
 }
 
 process process_data {
-  tag name
-  memory { params.databases[incomplete.name[1]].get('memory', '2 GB') }
+  tag db.name
+  memory { params.databases[db.name[1]].get('memory', '2 GB') }
 
   input:
-  set val(name), file(input_file), file(extra) from to_process
+  file(db) from to_process
 
   output:
   file "*.csv" into all_processed_output mode flatten
 
   script:
-  db = [name: name, input_file: input_file, extra: extra]
   """
   set -o pipefail
 
