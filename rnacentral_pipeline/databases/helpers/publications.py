@@ -16,6 +16,7 @@ limitations under the License.
 import re
 import csv
 import json
+import logging
 import sqlite3
 from xml.etree import cElementTree as ET
 
@@ -27,6 +28,8 @@ from functools32 import lru_cache
 from ..data import Reference
 from ..data import IdReference
 
+
+LOGGER = logging.getLogger(__name__)
 
 class UnknownReference(Exception):
     pass
@@ -199,5 +202,9 @@ def from_file(handle, output):
     writer = csv.writer(output)
     for (ref_id, accession) in reader:
         id_ref = IdReference.build(ref_id)
-        complete = lookup_reference(id_ref)
+        try:
+            complete = lookup_reference(id_ref)
+        except UnknownReference:
+            LOGGER.warning("Could not find reference for %s", id_ref)
+            continue
         writer.writerows(complete.writeable(accession))
