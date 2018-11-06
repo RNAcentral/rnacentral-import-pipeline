@@ -13,11 +13,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import os
 import re
 import csv
 import json
 import logging
 import sqlite3
+from glob import glob
 from xml.etree import cElementTree as ET
 
 import attr
@@ -191,10 +193,12 @@ def lookup_refs(db, handle):
         yield accession, ref
 
 
-def write_lookup(db, handle, output):
+def write_lookup(db, directory, output):
     writer = csv.writer(output)
-    for accession, ref in lookup_refs(db, handle):
-        writer.writerows(ref.writeable(accession))
+    for filename in glob(os.path.join(directory, '*.xml')):
+        with open(filename, 'r') as handle:
+            for accession, ref in lookup_refs(db, handle):
+                writer.writerows(ref.writeable(accession))
 
 
 def from_file(handle, output):

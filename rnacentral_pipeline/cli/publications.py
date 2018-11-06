@@ -50,11 +50,11 @@ def fetch(filename, output):
 
 @cli.command('lookup')
 @click.argument('db', default='references.db', type=click.Path())
-@click.argument('filename', default='-', type=click.File('r'))
+@click.argument('directory', default='out', type=click.Path())
 @click.argument('output', default='references.csv', type=click.File('w'))
-def lookup(db, filename, output):
+def lookup(db, directory, output):
     """
-    Use the database index file to lookup all reference information in the
-    given file.
+    Use the database index file to lookup all reference information for all xml
+    files in the given directory.
     """
-    publications.write_lookup(db, filename, output)
+    publications.write_lookup(db, directory, output)
