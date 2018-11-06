@@ -22,12 +22,15 @@ function fetch_generic() {
       short="${remote:6}"
       scp "$short" .
       ;;
+
     /* )
       find "$remote" -name "$pattern" | xargs -I {} cp {} .
       ;;
+
     http://* | https://* )
       wget -O "$pattern" "$remote"
       ;;
+
     ftp://* )
       # wget doesn't play well with ** so we use lftp instead. Also, wget doesn't
       # like following symlinks, but lftp does. I should find a way to indicate
@@ -42,6 +45,7 @@ function fetch_generic() {
         fi
       fi
       ;;
+
     * )
       echo 1>&2 "Unknown remote URL to fetch: $remote"
       exit 1;;
