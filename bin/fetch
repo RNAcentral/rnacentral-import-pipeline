@@ -137,6 +137,15 @@ case "$group" in
     esac
     ;;
 
+  "publications" )
+    case $name in
+      "index-xml" )
+        fetch_generic "$@" ;;
+      * )
+        usage ;;
+    esac
+    ;;
+
   "ontologies" )
     case $name in
       "quickgo" )
