@@ -49,10 +49,10 @@ raw_output = Channel.empty()
 // This contains what remote data sources we have to fetch. It focuses on the
 // main data files, not the 'extra' ones. Separating the two makes rejoining
 // them later much easier.
-to_fetch = Channel.empty()
+data_to_fetch = []
 
 // Here we put the 'extra' data files to fetch.
-to_fetch_extra = Channel.empty()
+data_to_fetch_extra = []
 
 // This contains the tasks for jobs that can be fetched and processed in a
 // single task. Some databases, like all JSON based import ones provide a single
@@ -60,7 +60,7 @@ to_fetch_extra = Channel.empty()
 // fetching and processing into separate tasks. We can do 1 task instead of 2
 // (makes the job scheduler and ITS happier) and perform a single task that does
 // both.
-to_fetch_and_process = Channel.empty()
+data_to_fetch_and_process = []
 
 // GENCODE relies upon Ensembl so ensure that Ensembl is always processed if
 // GENCODE is.
@@ -68,6 +68,8 @@ if (params.import_data.databases.gencode) {
   params.import_data.datatabases.ensembl = true
 }
 
+// Here we generate the data that will go into the channels. This is a bit
+// cleaner to work with over constantly modifying the channels in the loop.
 for (entry in params.import_data.databases) {
   if (!entry.value) {
     continue
@@ -106,16 +108,17 @@ for (entry in params.import_data.databases) {
   // twice. We can just reuse what we fetch as seen below.
   no_merge = database.fetch.pattern.contains('*') || !database.get('as_single_task', true)
   if (no_merge) {
-    to_fetch.mix(Channel.value(fetch)).set { to_fetch }
-    to_fetch_extra = extra ? to_fetch_extra.mix(Channel.value(extra)) : to_fetch_extra
+    fetch.remove('excluded_patterns')
+    data_to_fetch << fetch
+    if (extra) {
+      data_to_fetch_extra << extra
+    }
 
   // If we can merge the fetch and process steps into a single step then we do
   // so here.
   } else {
     fetch.extra = extra
-    to_fetch_and_process
-      .mix(Channel.value(fetch))
-      .set { to_fetch_and_process }
+    data_to_fetch_and_process << fetch
   }
 }
 
@@ -127,14 +130,12 @@ for (entry in params.import_data.databases) {
 // by querying the Rfam MySQL database and then using the Rfam commands to
 // process the query results. We can then import the processed data as normal.
 if (any_database('rfam', 'ensembl', 'gencode')) {
-  Channel.fromPath("files/import-data/rfam/*.sql")
-    .map { query ->
-      name = query.getBaseName()
-      fetch = rfam_mysql + [cmd: 'mysql', query: query, pattern: 'data.tsv']
-      ["rfam $name", fetch]
-    }
-    .set { rfam_queries }
-  to_fetch.mix(rfam_queries).set { to_fetch }
+  rfam_mysql = params.rfam.mysql
+  queries = file("files/import-data/rfam/*.sql").listFiles()
+  data_to_fetch = queries.inject(data_to_fetch, { acc, query ->
+    fetch = rfam_mysql + [cmd: 'mysql', query: query, pattern: 'data.tsv']
+    acc << [["rfam", query.getBaseName()], fetch]
+  })
 }
 
 Channel.fromPath('files/import-data/ensembl/*.sql')
@@ -168,6 +169,11 @@ process find_ensembl_tasks {
   """
 }
 
+// Now setup the channels with all data
+Channel.from(data_to_fetch).set { to_fetch }
+Channel.from(data_to_fetch_extra).set { to_fetch_extra }
+Channel.from(data_to_fetch_and_process).set { to_fetch_and_process }
+
 //=============================================================================
 // Fetch data as well as all extra data for import
 //=============================================================================
@@ -188,21 +194,23 @@ process fetch_data {
 }
 
 all_fetched
+  .view { "Pre: $it" }
   .map { names, files ->
     patterns = params.databases[names[1]].get('excluded_patterns', [])
-    selected = files.findAll { f -> patterns.all { pattern -> f !~ pattern } }
+    selected = [files].flatten().findAll { f -> patterns.every { pattern -> f !~ pattern } }
     [names, selected]
   }
+  .view { "Post: $it" }
   .into { fetched; rfam_based; for_gencode }
 
 process fetch_extra_data {
-  tag name
+  tag { db.name.join(' ') }
 
   input:
   val(db) from to_fetch_extra
 
   output:
-  set val(["external", db.name[1]]), file("${db.pattern}") into fetched_extra
+  set val(["external", "${db.name[1]}"]), file("${db.pattern}") into fetched_extra
 
   script:
   """
@@ -260,13 +268,13 @@ Channel.empty()
 
 fetched
   .combine(extra)
+  .view { "Combined: $it" }
   .flatMap { name, filenames, extra ->
     // Pretty sure this weirdness is because groovy is messing with types or something
     to_add = extra[name] ? extra[name][0][1..-1] : []
-     [filenames].flatten().inject([], { agg, f ->
-       agg << [name: name, input_file: f, extra: to_add]
-     })
+    filenames.inject([], { agg, f -> agg << [name, f, to_add] })
   }
+  .view { "TO process: $it" }
   .set { to_process }
 
 //=============================================================================
@@ -274,7 +282,7 @@ fetched
 //=============================================================================
 
 process fetch_and_process {
-  tag { db.name.join(' ') }
+  tag { incomplete.name.join(' ') }
   memory { params.databases[incomplete.name[1]].get('memory', '2 GB') }
 
   input:
@@ -295,16 +303,17 @@ process fetch_and_process {
 }
 
 process process_data {
-  tag { db.name.join(' ') }
-  memory { params.databases[db.name[1]].get('memory', '2 GB') }
+  tag { name.join(' ') }
+  memory { params.databases[name[1]].get('memory', '2 GB') }
 
   input:
-  file(db) from to_process
+  set val(name), file(input_file), file(extra) from to_process
 
   output:
   file "*.csv" into all_processed_output mode flatten
 
   script:
+  db = [name: name, input_file: input_file, extra: extra]
   """
   set -o pipefail
 
@@ -347,7 +356,7 @@ process lookup_publications {
 
   script:
   """
-  set -o pipeline
+  set -o pipefail
 
   find . -name 'ref_ids*.csv' | xargs cat | sort -u >> all-ids
 
