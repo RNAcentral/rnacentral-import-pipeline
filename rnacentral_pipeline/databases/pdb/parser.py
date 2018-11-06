@@ -86,7 +86,7 @@ def as_descriptions(report):
 
 def parse_mapping_file(handle):
     mapping = coll.defaultdict(list)
-    for pdb_id, refs in json.load(handle):
+    for pdb_id, refs in json.load(handle).items():
         for ref in refs:
             if 'namespace' in ref:
                 ref_id = '%s:%s' % (ref['namespace'], ref['external_id'])
