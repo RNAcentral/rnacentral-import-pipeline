@@ -274,7 +274,7 @@ fetched
 //=============================================================================
 
 process fetch_and_process {
-  tag name
+  tag { db.name.join(' ') }
   memory { params.databases[incomplete.name[1]].get('memory', '2 GB') }
 
   input:
@@ -295,7 +295,7 @@ process fetch_and_process {
 }
 
 process process_data {
-  tag db.name
+  tag { db.name.join(' ') }
   memory { params.databases[db.name[1]].get('memory', '2 GB') }
 
   input:
