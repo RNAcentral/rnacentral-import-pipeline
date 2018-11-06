@@ -115,17 +115,19 @@ def process_gencode(gencode_gff, ensembl_file, family_file, output):
 
 
 @cli.command('pdb')
+@click.argument('pdb_data', default='pdb.json', type=click.File('r'))
+@click.argument('extra', default='pdb-extra.json', type=click.File('r'))
 @click.argument('output', default='.', type=click.Path(
     writable=True,
     dir_okay=True,
     file_okay=False,
 ))
-def process_pdb(output):
+def process_pdb(pdb_data, extra, output):
     """
     This will fetch and parse all sequence data from PDBe to produce the csv
     files we import.
     """
-    write_entries(pdb.entries, output)
+    write_entries(pdb.parse, output, pdb_data, extra)
 
 
 @cli.command('ena')

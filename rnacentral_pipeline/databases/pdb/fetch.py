@@ -20,6 +20,7 @@ import requests
 from retry import retry
 
 from . import parser
+from . import helpers
 
 LOGGER = logging.getLogger(__name__)
 
@@ -87,10 +88,13 @@ def custom_report(pdb_ids, fields):
 @retry(requests.HTTPError, tries=5, delay=1)
 def pdbe_publications(pdb_ids):
     url = 'http://www.ebi.ac.uk/pdbe/api/pdb/entry/publications/'
-    data = ','.join(pdb_ids)
-    response = requests.post(url, data=data)
-    response.raise_for_status()
-    return response.json()
+    result = {}
+    for subset in helpers.grouper(pdb_ids, 100):
+        post_data = ','.join(p for p in subset if p)
+        response = requests.post(url, data=post_data)
+        response.raise_for_status()
+        result.update(response.json())
+    return result
 
 
 def chains(pdb_ids=None):
