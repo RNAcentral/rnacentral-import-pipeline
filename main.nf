@@ -187,7 +187,13 @@ process fetch_data {
   """
 }
 
-all_fetched.into { fetched; rfam_based; for_gencode }
+all_fetched
+  .map { names, files ->
+    patterns = params.databases[names[1]].get('excluded_patterns', [])
+    selected = files.findAll { f -> patterns.all { pattern -> f !~ pattern } }
+    [names, selected]
+  }
+  .into { fetched; rfam_based; for_gencode }
 
 process fetch_extra_data {
   tag name
