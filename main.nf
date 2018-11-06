@@ -18,8 +18,9 @@ def fetch_for(incomplete) {
   } else {
     ps = database.get('excluded_patterns', [])
     clean = ps.inject('', { agg, p -> agg + "find . -name '$p' | xargs rm\n" })
+    remote = db.remote ? "'${db.remote}'" : ''
     cmd = """\
-    ${db.cmd} ${db.name.join(' ')} '${db.remote}' '${db.pattern}'
+    ${db.cmd} ${db.name.join(' ')} $remote '${db.pattern}'
     ${clean}
     """
   }
@@ -29,7 +30,7 @@ def fetch_for(incomplete) {
 def process_using = { db ->
   input_file = file(db.input_file)
   name = db.name.join(' ')
-  extra = db.extra ? db.extra : ''
+  extra = db.extra ? db.extra.pattern : ''
   if (input_file.getName().endsWith('.gz')) {
     return "zcat ${db.input_file} | rnac ${name} - ${extra}"
   }
@@ -303,7 +304,7 @@ process fetch_and_process {
 }
 
 process process_data {
-  tag { name.join(' ') }
+  tag { (name + [input_file.getBaseName()]).join(' ') }
   memory { params.databases[name[1]].get('memory', '2 GB') }
 
   input:
@@ -348,6 +349,8 @@ process lookup_ontology_information {
 }
 
 process lookup_publications {
+  echo true
+
   input:
   file('ref_ids*.csv') from refs.collect()
 
