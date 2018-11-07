@@ -137,9 +137,18 @@ case "$group" in
     esac
     ;;
 
-  "publications" )
+  "europepmc" )
     case $name in
       "index-xml" )
+        fetch_generic "$@" ;;
+      * )
+        usage ;;
+    esac
+    ;;
+
+  "ncbi" )
+    case $name in
+      "taxonomy" )
         fetch_generic "$@" ;;
       * )
         usage ;;
