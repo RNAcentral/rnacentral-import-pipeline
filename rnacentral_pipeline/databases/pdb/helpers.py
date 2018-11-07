@@ -57,11 +57,6 @@ def is_ncrna(row):
     return 'RNA' in row['entityMacromoleculeType'] and not is_mrna(row)
 
 
-def grouper(iterable, n, fillvalue=None):
-    args = [iter(iterable)] * n
-    return it.izip_longest(*args, fillvalue=fillvalue)
-
-
 def accession(row):
     """
     Generates and accession for the given entry. The accession is built from

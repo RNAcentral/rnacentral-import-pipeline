@@ -18,6 +18,7 @@ import logging
 
 import requests
 from retry import retry
+from more_itertools import chunked
 
 from . import parser
 from . import helpers
@@ -89,8 +90,8 @@ def custom_report(pdb_ids, fields):
 def pdbe_publications(pdb_ids):
     url = 'http://www.ebi.ac.uk/pdbe/api/pdb/entry/publications/'
     result = {}
-    for subset in helpers.grouper(pdb_ids, 100):
-        post_data = ','.join(p for p in subset if p)
+    for subset in chunked(pdb_ids, 100):
+        post_data = ','.join(subset)
         response = requests.post(url, data=post_data)
         response.raise_for_status()
         result.update(response.json())
