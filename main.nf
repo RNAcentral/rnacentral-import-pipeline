@@ -3,7 +3,7 @@
 def any_database(String... names) { names.any { n -> params.import_data.databases[n] } }
 
 def as_mysql_cmd = { db ->
-  rest = db.db_name ? " --database ${db.db_name}" : ''
+  def rest = db.db_name ? " --database ${db.db_name}" : ''
   "mysql --host ${db.host} --port ${db.port} --user ${db.user} $rest"
 }
 
@@ -12,25 +12,24 @@ def fetch_for(incomplete) {
     return ''
   }
 
-  db = ["cmd": "fetch"] + incomplete
+  def db = ["cmd": "fetch"] + incomplete
   if (db.cmd == "mysql") {
-    cmd = "${as_mysql_cmd(db)} < ${db.query} > ${db.pattern}"
-  } else {
-    ps = database.get('excluded_patterns', [])
-    clean = ps.inject('', { agg, p -> agg + "find . -name '$p' | xargs rm\n" })
-    remote = db.remote ? "'${db.remote}'" : ''
-    cmd = """\
-    ${db.cmd} ${db.name.join(' ')} $remote '${db.pattern}'
-    ${clean}
-    """
+    return "${as_mysql_cmd(db)} < ${db.query} > ${db.pattern}"
   }
-  return cmd.stripIndent()
+
+  def ps = db.get('excluded_patterns', [])
+  def clean = ps.inject('', { agg, p -> agg + "find . -name '$p' | xargs rm\n" })
+  def remote = db.remote ? "'${db.remote}'" : ''
+  return [
+    "${db.cmd} ${db.name.join(' ')} $remote '${db.pattern}'",
+    clean,
+  ].join('\n')
 }
 
 def process_using = { db ->
-  input_file = file(db.input_file)
-  name = db.name.join(' ')
-  extra = db.extra ? db.extra.pattern : ''
+  def input_file = file(db.input_file)
+  def name = db.name.join(' ')
+  def extra = db.extra && db.extra.hasProperty('pattern') ? db.extra.pattern : ''
   if (input_file.getName().endsWith('.gz')) {
     return "zcat ${db.input_file} | rnac ${name} - ${extra}"
   }
@@ -76,8 +75,8 @@ for (entry in params.import_data.databases) {
     continue
   }
 
-  name = entry.key
-  database = params.databases[name]
+  def name = entry.key
+  def database = params.databases[name]
 
   // The custom property should be a list of directories that contain csv files to
   // import. For example if custom was ./custom we would expect it to contain:
@@ -88,9 +87,9 @@ for (entry in params.import_data.databases) {
     continue
   }
 
-  fetch = [name: [database.get('group', 'external'), name]] + database.fetch
+  def fetch = [name: [database.get('group', 'external'), name]] + database.fetch
 
-  extra = null
+  def extra = null
   if (database.extra) {
     extra = [name: ['extra', name]] + database.extra
     if (extra.remotes) {
@@ -131,12 +130,24 @@ for (entry in params.import_data.databases) {
 // by querying the Rfam MySQL database and then using the Rfam commands to
 // process the query results. We can then import the processed data as normal.
 if (any_database('rfam', 'ensembl', 'gencode')) {
-  rfam_mysql = params.rfam.mysql
-  queries = file("files/import-data/rfam/*.sql").listFiles()
-  data_to_fetch = queries.inject(data_to_fetch, { acc, query ->
-    fetch = rfam_mysql + [cmd: 'mysql', query: query, pattern: 'data.tsv']
-    acc << [["rfam", query.getBaseName()], fetch]
-  })
+  fetch = params.metadata.rfam.fetch + [pattern: 'data.tsv']
+
+  // The rfam familes query has to be fetched because the raw data is reused
+  // later by the Ensembl parsing tasks. Otherwise can do fetch and process in
+  // one step and reduce the number of jobs slightly.
+  file("files/import-data/rfam/*.sql").each { query ->
+    def spec = [name: ["rfam", query.getBaseName()], query: query] + fetch
+    if (query.getBaseName() == "families") {
+      data_to_fetch << spec
+      ['ensembl', 'gencode'].each { name ->
+        if (any_database(name)) {
+          data_to_fetch_extra << (spec + [name: ['extra', name]])
+        }
+      }
+    } else {
+      data_to_fetch_and_process << spec
+    }
+  }
 }
 
 Channel.fromPath('files/import-data/ensembl/*.sql')
@@ -180,13 +191,13 @@ Channel.from(data_to_fetch_and_process).set { to_fetch_and_process }
 //=============================================================================
 
 process fetch_data {
-  tag name
+  tag { db.name }
 
   input:
   val(db) from to_fetch
 
   output:
-  set val(db.name), file("${db.pattern}") into all_fetched
+  set val(db), file("${db.pattern}") into all_fetched
 
   script:
   """
@@ -195,14 +206,12 @@ process fetch_data {
 }
 
 all_fetched
-  .view { "Pre: $it" }
-  .map { names, files ->
-    patterns = params.databases[names[1]].get('excluded_patterns', [])
-    selected = [files].flatten().findAll { f -> patterns.every { pattern -> f !~ pattern } }
-    [names, selected]
+  .map { db, files ->
+    ps = db.get('excluded_patterns', [])
+    selected = [files].flatten().findAll { f -> !ps.any { p -> f.getName() =~ p } }
+    [db.name, selected]
   }
-  .view { "Post: $it" }
-  .into { fetched; rfam_based; for_gencode }
+  .into { fetched; for_gencode }
 
 process fetch_extra_data {
   tag { db.name.join(' ') }
@@ -218,18 +227,6 @@ process fetch_extra_data {
   ${fetch_for(db)}
   """
 }
-
-// This filters the fetched data to extract the Rfam families data. This data is
-// used by the Ensembl and GENCODE processing logic later on. Thus we create a
-// channel for that data after fetching it, and make it into an extra set of
-// data.
-rfam_based
-  .filter { n, f -> n == ["rfam", "families"] }
-  .flatMap { n, f ->
-    dbs = params.import_data.databases
-    ['ensembl', 'gencode'].inject([], { res, db -> dbs[db] ? res + [db, f] : res })
-  }
-  .set { rfam_based_extra }
 
 // Here we split the fetched data from Ensembl to pull out all Ensembl human and
 // mouse raw data. This data is reused for GENCODE import. We need the EMBL
@@ -263,19 +260,16 @@ ensembl_task_summary
 Channel.empty()
   .mix(fetched_extra)
   .mix(gencode_extra)
-  .mix(rfam_based_extra)
   .groupBy()
   .set { extra }
 
 fetched
   .combine(extra)
-  .view { "Combined: $it" }
   .flatMap { name, filenames, extra ->
     // Pretty sure this weirdness is because groovy is messing with types or something
     to_add = extra[name] ? extra[name][0][1..-1] : []
     filenames.inject([], { agg, f -> agg << [name, f, to_add] })
   }
-  .view { "TO process: $it" }
   .set { to_process }
 
 //=============================================================================
@@ -284,7 +278,7 @@ fetched
 
 process fetch_and_process {
   tag { incomplete.name.join(' ') }
-  memory { params.databases[incomplete.name[1]].get('memory', '2 GB') }
+  memory { incomplete.get('memory', 2.GB) }
 
   input:
   val(incomplete) from to_fetch_and_process
@@ -293,7 +287,7 @@ process fetch_and_process {
   file "*.csv" into all_fetched_and_processed_output mode flatten
 
   script:
-  db = [input_file: incomplete.pattern] + incomplete
+  def db = [input_file: incomplete.get('db', incomplete.pattern)] + incomplete
   """
   set -o pipefail
 
@@ -322,18 +316,30 @@ process process_data {
   """
 }
 
+process fetch_and_process_publications {
+  output:
+  file('index.db') into refs_database
+
+  script:
+  fetch = params.metadata.europepmc.fetch
+  """
+  fetch europepmc index-xml ${fetch.remote} ${fetch.pattern}.tar.gz
+  rnac europepmc index-xml ${fetch.pattern} index.db
+  """
+}
+
 processed_output = Channel.create()
 refs = Channel.create()
 terms = Channel.create()
 
 all_processed_output
   .mix(all_fetched_and_processed_output)
-  .choice(terms, refs, processed_output) { f ->
+  .choice(processed_output, terms, refs) { f ->
     names = ["terms.csv", "ref_ids.csv"]
-    index = names.indexOf(f.getName())
-    return index >= 0 ? index : names.size()
+    return names.indexOf(f.getName()) + 1
   }
 
+/*
 process lookup_ontology_information {
   input:
   file('terms*.csv') from terms.collect()
@@ -347,23 +353,39 @@ process lookup_ontology_information {
   rnac ontologies lookup-terms unique-terms.txt ontology_terms.csv
   """
 }
+*/
 
-process lookup_publications {
-  echo true
+refs
+  .collect()
+  .combine(refs_database)
+  .set { refs_to_lookup }
 
+process batch_lookup_publications {
   input:
-  file('ref_ids*.csv') from refs.collect()
+  set file("ref_ids*.csv"), file("references.db") from refs_to_lookup
 
   output:
   file('references.csv') into references_output
 
-  script:
   """
   set -o pipefail
 
   find . -name 'ref_ids*.csv' | xargs cat | sort -u >> all-ids
+  rnac europepmc lookup references.db all-ids references.csv
+  """
+}
 
-  rnac publications fetch all-ids references.csv
+// This will always fetch all taxonomic information and then produce the
+// taxonomy data to import.
+process fetch_process_taxonomy_data {
+  output:
+  file('taxonomy.csv') into taxonomy_output
+
+  script:
+  fetch = params.metadata.taxonomy.fetch
+  """
+  fetch ncbi taxonomy ${fetch.remote} ${fetch.pattern}
+  rnac ncbi taxonomy fullnamelineage.dmp names.dmp merged.dmp taxonomy.csv
   """
 }
 
@@ -372,7 +394,7 @@ process lookup_publications {
 // generic fetch and process channel.
 process process_ensembl_metadata {
   tag "$name ${mysql.db_name}"
-  maxForks params.import_metadata.ensembl.max_forks
+  maxForks params.metadata.ensembl.max_forks
 
   input:
   set val(mysql), val(name), file(sql) from ensembl_metadata_tasks
@@ -402,6 +424,7 @@ raw_output
   .mix(references_output)
   .mix(ensembl_output)
   .mix(ensembl_imported_output)
+  // .mix(taxonomy_output)
   .map { f ->
     name = f.getBaseName()
     ctl = file("files/import-data/load/${name.replace('_', '-')}.ctl")
@@ -434,7 +457,9 @@ process merge_and_import {
 }
 
 loaded
-  .flatMap { name -> file("files/import-data/post-release/*__${name.replace('_', '-')}.sql") }
+  .flatMap { name ->
+    file("files/import-data/post-release/*__${name.replace('_', '-')}.sql")
+  }
   .mix(Channel.fromPath('files/import-data/post-release/99__cleanup.sql'))
   .filter { f -> f.exists() }
   .collect()
@@ -462,7 +487,7 @@ process release {
 
 post_release
   .ifEmpty('no release')
-  .into { flag_for_qa; flag_for_mapping; flag_for_feedback }
+  .into { flag_for_qa; flag_for_feedback }
 
 //=============================================================================
 // QA scans
@@ -546,3 +571,141 @@ process import_qa_data {
 qa_imported
   .ifEmpty('no qa')
   .set { flag_for_precompute }
+
+flag_for_precompute
+  .map { flag -> [flag, file("files/precompute/methods/${params.precompute.method.replace('_', '-')}.sql")] }
+  .set { precompute_upi_queries }
+
+//=============================================================================
+// Run precompute of selected data
+//=============================================================================
+
+process query_upis {
+  input:
+  set val(flag), file(sql) from precompute_upi_queries
+
+  output:
+  file('ranges.txt') into raw_ranges
+
+  script:
+  """
+  psql -v ON_ERROR_STOP=1 -f "$sql" "$PGDATABASE"
+  rnac upi-ranges --table-name upis_to_precompute ${params.precompute.max_entries} ranges.txt
+  """
+}
+
+raw_ranges
+  .splitCsv()
+  .combine(Channel.fromPath('files/precompute/query.sql'))
+  .set { ranges }
+
+process precompute_range_query {
+  tag { "$min-$max" }
+  maxForks params.precompute.maxForks
+
+  beforeScript 'slack db-work precompute-range || true'
+  afterScript 'slack db-done precompute-range || true'
+
+  input:
+  set val(min), val(max), file(query) from ranges
+
+  output:
+  set val(min), val(max), file('raw-precompute.json') into precompute_raw
+
+  """
+  psql -v ON_ERROR_STOP=1 --variable min=$min --variable max=$max -f "$query" '$PGDATABASE' > raw-precompute.json
+  """
+}
+
+process precompute_range {
+  tag { "$min-$max" }
+  memory params.precompute.range.memory
+
+  input:
+  set val(min), val(max), file(raw) from precompute_raw
+
+  output:
+  file 'precompute.csv' into precompute_results
+  file 'qa.csv' into qa_results
+
+  """
+  rnac precompute from-file $raw
+  """
+}
+
+process load_precomputed_data {
+  echo true
+
+  beforeScript 'slack db-work loading-precompute || true'
+  afterScript 'slack db-done loading-precompute || true'
+
+  input:
+  file('precompute*.csv') from precompute_results.collect()
+  file('qa*.csv') from qa_results.collect()
+  file pre_ctl from Channel.fromPath('files/precompute/load.ctl')
+  file qa_ctl from Channel.fromPath('files/precompute/qa.ctl')
+  file post from Channel.fromPath('files/precompute/post-load.sql')
+
+  """
+  split-and-load $pre_ctl 'precompute*.csv' ${params.import_data.chunk_size} precompute
+  split-and-load $qa_ctl 'qa*.csv' ${params.import_data.chunk_size} qa
+  psql -v ON_ERROR_STOP=1 -f $post "$PGDATABASE"
+  """
+}
+
+//=============================================================================
+// Compute feedback reports
+//=============================================================================
+
+flag_for_feedback
+  .combine(Channel.fromPath('files/precompute/find-mod-info.sql'))
+  .set { feedback_queries }
+
+// process mods_for_feedback {
+//   input:
+//   set val(status), file(query) from feedback_queries
+
+//   output:
+//   file('info') into raw_mods
+
+//   script:
+//   names = []
+//   for (name in params.precompute.feedback.databases) {
+//     names << "'${name.toUpperCase()}'"
+//   }
+//   names = '(' + names.join(', ') + ')'
+//   """
+//   psql -v ON_ERROR_STOP=1 -v "names=${names}" -f "$query" "$PGDATABASE" > info
+//   """
+// }
+
+// raw_mods
+//   .splitCsv()
+//   .combine(Channel.fromPath('files/ftp-export/genome_coordinates/query.sql'))
+//   .set { mods }
+
+// process generate_feedback_report {
+//   memory params.feedback.report.memory
+
+//   input:
+//   set val(assembly), val(mod), file(query) from mods
+
+//   output:
+//   file('combined.tsv') into feedback
+
+//   """
+//   find-overlaps $query complete-${mod}.bed $assembly
+//   """
+// }
+
+// process import_feedback {
+//   echo true
+
+//   input:
+//   file('feedback*.tsv') from feedback.collect()
+//   file(ctl) from Channel.fromPath('files/precompute/feedback.ctl')
+
+//   """
+//   split-and-load $ctl 'feedback*.tsv' ${params.import_data.chunk_size} merged
+//   """
+// }
