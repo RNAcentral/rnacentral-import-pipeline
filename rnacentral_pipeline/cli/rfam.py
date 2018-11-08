@@ -26,22 +26,14 @@ def cli():
     pass
 
 
-@cli.group('rfam')
-def rfam_group():
-    """
-    A group of commands dealing with parsing the Rfam data.
-    """
-    pass
-
-
-@rfam_group.command('families')
+@cli.command('families')
 @click.argument('filename', default='-', type=click.File('rb'))
 @click.argument('output', default='families.csv', type=click.File('wb'))
 def rfam_group_families(filename, output):
     rfam.families.from_file(filename, output)
 
 
-@rfam_group.command('clans')
+@cli.command('clans')
 @click.argument('filename', default='-', type=click.File('rb'))
 @click.argument('output', default='clans.csv', type=click.File('wb'))
 def rfam_group_clans(filename, output):
