@@ -19,12 +19,13 @@ from . import ensembl
 from . import external
 from . import ftp_export
 from . import misc
+from . import ncbi
 from . import ontologies
 from . import pdb
 from . import precompute
 from . import publications
-from . import rfam
 from . import qa
+from . import rfam
 
 
 @click.group()
@@ -49,3 +50,4 @@ cli.add_command(misc.crs_data)
 cli.add_command(pdb.cli)
 cli.add_command(qa.cli)
 cli.add_command(publications.cli)
+cli.add_command(ncbi.cli)
