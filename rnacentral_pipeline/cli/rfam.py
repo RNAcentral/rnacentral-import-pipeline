@@ -28,14 +28,14 @@ def cli():
 
 @cli.command('families')
 @click.argument('filename', default='-', type=click.File('rb'))
-@click.argument('output', default='families.csv', type=click.File('wb'))
+@click.argument('output', default='rfam-families.csv', type=click.File('wb'))
 def rfam_group_families(filename, output):
     rfam.families.from_file(filename, output)
 
 
 @cli.command('clans')
 @click.argument('filename', default='-', type=click.File('rb'))
-@click.argument('output', default='clans.csv', type=click.File('wb'))
+@click.argument('output', default='rfam-clans.csv', type=click.File('wb'))
 def rfam_group_clans(filename, output):
     rfam.clans.from_file(filename, output)
 
