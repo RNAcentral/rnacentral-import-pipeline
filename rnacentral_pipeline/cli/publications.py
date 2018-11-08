@@ -18,22 +18,22 @@ import click
 from rnacentral_pipeline.databases.helpers import publications
 
 
-@click.group("publications")
+@click.group("europepmc")
 def cli():
     """
-    This group of commands deal with QA work.
+    This group of commands deal with handling publication data.
     """
     pass
 
 
 @cli.command('index-xml')
+@click.argument('directory', default='out', type=click.Path())
 @click.argument('db', default='references.db', type=click.Path())
-@click.argument('xml_files', nargs=-1, type=click.File('r'))
-def index_xml(db, xml_files):
+def index_xml(directory, db):
     """
     Index a list of XML files of publication information.
     """
-    publications.index_xml(db, xml_files)
+    publications.index_xml_directory(directory, db)
 
 
 @cli.command('fetch')
@@ -49,12 +49,13 @@ def fetch(filename, output):
 
 
 @cli.command('lookup')
+@click.option('--allow-fallback', default=False)
 @click.argument('db', default='references.db', type=click.Path())
-@click.argument('directory', default='out', type=click.Path())
+@click.argument('ref_ids', default='ref_ids.csv', type=click.File('r'))
 @click.argument('output', default='references.csv', type=click.File('w'))
-def lookup(db, directory, output):
+def lookup(db, ref_ids, output, allow_fallback=False):
     """
     Use the database index file to lookup all reference information for all xml
     files in the given directory.
     """
-    publications.write_lookup(db, directory, output)
+    publications.write_lookup(db, ref_ids, output, allow_fallback=allow_fallback)
