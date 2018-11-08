@@ -25,6 +25,7 @@ from xml.etree import cElementTree as ET
 import attr
 import requests
 from retry import retry
+from ratelimiter import RateLimiter
 from functools32 import lru_cache
 
 from ..data import Reference
@@ -52,6 +53,7 @@ CREATE TABLE IF NOT EXISTS {name}s (
 
 @lru_cache()
 @retry(requests.HTTPError, tries=5, delay=1)
+@RateLimiter(max_calls=5, period=1)
 def summary(id_reference):
     response = requests.get(id_reference.external_url())
     response.raise_for_status()
@@ -95,7 +97,7 @@ def clean_title(title):
     return re.sub(r'\.$', '', title)
 
 
-def lookup_reference(id_reference):
+def query_pmc(id_reference):
     data = summary(id_reference)
     pmid = data.get('pmid', None)
     if pmid:
@@ -159,46 +161,51 @@ def parse_xml(xml_file):
         yield ref
 
 
-def index_xml(output, xml_files):
+def index_xml_directory(directory, output):
     conn = sqlite3.connect(output)
     tables = {'pmid': 'int', 'doi': 'text'}
     for name, pid_type in tables.items():
         conn.execute(TABLE.format(name=name, type=pid_type))
 
-    for xml_file in xml_files:
-        for ref in parse_xml(xml_file):
-            cursor = conn.cursor()
-            for table in tables.keys():
-                key = getattr(ref, table, None)
-                if not key:
-                    continue
-                stmt = 'INSERT INTO %ss VALUES(?, ?)' % table
-                data = json.dumps(attr.asdict(ref))
-                cursor.execute(stmt, (key, data))
-        conn.commit()
+    for filename in glob(os.path.join(directory, '*.xml')):
+        with open(filename, 'r') as xml_file:
+            for ref in parse_xml(xml_file):
+                cursor = conn.cursor()
+                for table in tables.keys():
+                    key = getattr(ref, table, None)
+                    if not key:
+                        continue
+                    stmt = 'INSERT INTO %ss VALUES(?, ?)' % table
+                    data = json.dumps(attr.asdict(ref))
+                    cursor.execute(stmt, (key, data))
+            conn.commit()
     conn.close()
 
 
-def lookup_refs(db, handle):
+def query_database(cursor, id_ref, allow_fallback=False):
+    query = 'SELECT data from %ss WHERE id=?' % id_ref.namespace
+    raw_ref = cursor.execute(query, (id_ref.external_id,)).fetchone()
+    if not raw_ref:
+        if allow_fallback:
+            return query_pmc(id_ref)
+        raise UnknownReference(id_ref)
+    return Reference(**json.loads(raw_ref[0]))
+
+
+def write_lookup(db, handle, output, allow_fallback=False):
     conn = sqlite3.connect(db)
+    cursor = conn.cursor()
     reader = csv.reader(handle)
-    for (ref_id, accession) in reader:
-        cursor = conn.cursor()
-        id_ref = IdReference.build(ref_id)
-        query = 'SELECT data from %ss WHERE id=?' % id_ref.namespace
-        raw_ref = cursor.execute(query, id_ref.external_id).fetchone()
-        if not raw_ref:
-            raise UnknownReference(id_ref)
-        ref = Reference(**json.loads(raw_ref))
-        yield accession, ref
-
-
-def write_lookup(db, directory, output):
     writer = csv.writer(output)
-    for filename in glob(os.path.join(directory, '*.xml')):
-        with open(filename, 'r') as handle:
-            for accession, ref in lookup_refs(db, handle):
-                writer.writerows(ref.writeable(accession))
+    for (ref_id, accession) in reader:
+        id_ref = IdReference.build(ref_id)
+        try:
+            ref = query_database(cursor, id_ref, allow_fallback=allow_fallback)
+        except UnknownReference:
+            LOGGER.warning("Could not find reference for %s", id_ref)
+            continue
+        writer.writerows(ref.writeable(accession))
+    conn.close()
 
 
 def from_file(handle, output):
@@ -207,7 +214,7 @@ def from_file(handle, output):
     for (ref_id, accession) in reader:
         id_ref = IdReference.build(ref_id)
         try:
-            complete = lookup_reference(id_ref)
+            complete = query_pmc(id_ref)
         except UnknownReference:
             LOGGER.warning("Could not find reference for %s", id_ref)
             continue
