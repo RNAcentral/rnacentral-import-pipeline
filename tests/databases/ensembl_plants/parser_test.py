@@ -19,7 +19,7 @@ import pytest
 from rnacentral_pipeline.databases import data as dat
 from rnacentral_pipeline.databases.helpers import publications as pubs
 
-from . helpers import parse, entry_for
+from . helpers import parse, entry_for, has_entry_for
 
 
 @pytest.fixture(scope='module')  # pylint: disable=no-member
@@ -43,7 +43,7 @@ def zea_7():
 
 
 def test_can_parse_data(cress_2):
-    val = attr.asdict(entry_for(cress_2, 'AT2G01010.1'))
+    val = attr.asdict(entry_for(cress_2, 'ENSEMBL_PLANTS:AT2G01010.1'))
     assert val == attr.asdict(dat.Entry(
         primary_id='AT2G01010.1',
         accession='ENSEMBL_PLANTS:AT2G01010.1',
@@ -113,8 +113,159 @@ def test_can_parse_data(cress_2):
     ))
 
 
+def test_can_create_tair_entry(cress_2):
+    val = attr.asdict(entry_for(cress_2, 'TAIR:AT2G01010.1'))
+    assert val == attr.asdict(dat.Entry(
+        primary_id='AT2G01010.1',
+        accession='TAIR:AT2G01010.1',
+        ncbi_tax_id=3702,
+        database='TAIR',
+        sequence=(
+            'TACCTGGTTGATCCTGCCAGTAGTCATATGCTTGTCTCAAAGATTAAGCCATGCATGTGT'
+            'AAGTATGAACGAATTCAGACTGTGAAACTGCGAATGGCTCATTAAATCAGTTATAGTTTG'
+            'TTTGATGGTAACTACTACTCGGATAACCGTAGTAATTCTAGAGCTAATACGTGCAACAAA'
+            'CCCCGACTTATGGAAGGGACGCATTTATTAGATAAAAGGTCGACGCGGGCTCTGCCCGTT'
+            'GCTCTGATGATTCATGATAACTCGACGGATCGCATGGCCTCTGTGCTGGCGACGCATCAT'
+            'TCAAATTTCTGCCCTATCAACTTTCGATGGTAGGATAGTGGCCTACCATGGTGGTAACGG'
+            'GTGACGGAGAATTAGGGTTCGATTCCGGAGAGGGAGCCTGAGAAACGGCTACCACATCCA'
+            'AGGAAGGCAGCAGGCGCGCAAATTACCCAATCCTGACACGGGGAGGTAGTGACAATAAAT'
+            'AACAATACTGGGCTCTTTCGAGTCTGGTAATTGGAATGAGTACAATCTAAATCCCTTAAC'
+            'GAGGATCCATTGGAGGGCAAGTCTGGTGCCAGCAGCCGCGGTAATTCCAGCTCCAATAGC'
+            'GTATATTTAAGTTGTTGCAGTTAAAAAGCTCGTAGTTGAACCTTGGGATGGGTCGGCCGG'
+            'TCCGCCTTTGGTGTGCATTGGTCGGCTTGTCCCTTCGGTCGGCGATACGCTCCTGGTCTT'
+            'AATTGGCCGGGTCGTGCCTCCGGCGCTGTTACTTTGAAGAAATTAGAGTGCTCAAAGCAA'
+            'GCCTACGCTCTGGATACATTAGCATGGGATAACATCATAGGATTTCGATCCTATTGTGTT'
+            'GGCCTTCGGGATCGGAGTAATGATTAACAGGGACAGTCGGGGGCATTCGTATTTCATAGT'
+            'CAGAGGTGAAATTCTTGGATTTATGAAAGACGAACAACTGCGAAAGCATTTGCCAAGGAT'
+            'GTTTTCATTAATCAAGAACGAAAGTTGGGGGCTCGAAGACGATCAGATACCGTCCTAGTC'
+            'TCAACCATAAACGATGCCGACCAGGGATCAGCGGATGTTGCTTATAGGACTCCGCTGGCA'
+            'CCTTATGAGAAATCAAAGTTTTTGGGTTCCGGGGGGAGTATGGTCGCAAGGCTGAAACTT'
+            'AAAGGAATTGACGGAAGGGCACCACCAGGAGTGGAGCCTGCGGCTTAATTTGACTCAACA'
+            'CGGGGAAACTTACCAGGTCCAGACATAGTAAGGATTGACAGACTGAGAGCTCTTTCTTGA'
+            'TTCTATGGGTGGTGGTGCATGGCCGTTCTTAGTTGGTGGAGCGATTTGTCTGGTTAATTC'
+            'CGTTAATGAACGAGACCTCAGCCTGCTAACTAGCTACGTGGAGGCATCCCTTCACGGCCG'
+            'GCTTCTTAGAGGGACTATGGCCGTTTAGGCCAAGGAAGTTTGAGGCAATAACAGGTCTGT'
+            'GATGCCCTTAGATGTTCTGGGCCGCACGCGCGCTACACTGATGTATTCAACGAGTTCACA'
+            'CCTTGGCCGACAGGCCCGGGTAATCTTTGAAATTTCATCGTGATGGGGATAGATCATTGC'
+            'AATTGTTGGTCTTCAACGAGGAATTCCTAGTAAGCGCGAGTCATCAGCTCGCGTTGACTA'
+            'CGTCCCTGCCCTTTGTACACACCGCCCGTCGCTCCTACCGATTGAATGATCCGGTGAAGT'
+            'GTTCGGATCGCGGCGACGTGGGTGGTTCGCCGCCCGCGACGTCGCGAGAAGTCCACTAAA'
+            'CCTTATCATTTAGAGGAAGGAGAAGTCGTAACAAGGTTTCCGTAGGTGAACCTGCGGAAG'
+            'GATCATTG'
+        ),
+        regions=[
+            dat.SequenceRegion(
+                chromosome='2',
+                strand=1,
+                exons=[dat.Exon(start=3706, stop=5513)],
+                assembly_id='TAIR10',
+            )
+        ],
+        rna_type='rRNA',
+        url='',
+        seq_version='1',
+        note_data={},
+        xref_data={
+            'RefSeq': ['NR_139968.1'],
+        },
+        species='Arabidopsis thaliana',
+        common_name='thale-cress',
+        lineage=(
+            'Eukaryota; Viridiplantae; Streptophyta; '
+            'Embryophyta; Tracheophyta; Spermatophyta; Magnoliophyta; '
+            'eudicotyledons; Gunneridae; Pentapetalae; rosids; malvids; '
+            'Brassicales; Brassicaceae; Camelineae; Arabidopsis; '
+            'Arabidopsis thaliana'
+        ),
+        gene='AT2G01010',
+        description='Arabidopsis thaliana (thale-cress) rRNA',
+        references=[pubs.reference(29092050)],
+    ))
+
+
+def test_can_create_fold_atlas_entry(cress_2):
+    val = attr.asdict(entry_for(cress_2, 'FOLD_ATLAS:AT2G01010.1'))
+    assert val == attr.asdict(dat.Entry(
+        primary_id='AT2G01010.1',
+        accession='FOLD_ATLAS:AT2G01010.1',
+        ncbi_tax_id=3702,
+        database='FOLD_ATLAS',
+        sequence=(
+            'TACCTGGTTGATCCTGCCAGTAGTCATATGCTTGTCTCAAAGATTAAGCCATGCATGTGT'
+            'AAGTATGAACGAATTCAGACTGTGAAACTGCGAATGGCTCATTAAATCAGTTATAGTTTG'
+            'TTTGATGGTAACTACTACTCGGATAACCGTAGTAATTCTAGAGCTAATACGTGCAACAAA'
+            'CCCCGACTTATGGAAGGGACGCATTTATTAGATAAAAGGTCGACGCGGGCTCTGCCCGTT'
+            'GCTCTGATGATTCATGATAACTCGACGGATCGCATGGCCTCTGTGCTGGCGACGCATCAT'
+            'TCAAATTTCTGCCCTATCAACTTTCGATGGTAGGATAGTGGCCTACCATGGTGGTAACGG'
+            'GTGACGGAGAATTAGGGTTCGATTCCGGAGAGGGAGCCTGAGAAACGGCTACCACATCCA'
+            'AGGAAGGCAGCAGGCGCGCAAATTACCCAATCCTGACACGGGGAGGTAGTGACAATAAAT'
+            'AACAATACTGGGCTCTTTCGAGTCTGGTAATTGGAATGAGTACAATCTAAATCCCTTAAC'
+            'GAGGATCCATTGGAGGGCAAGTCTGGTGCCAGCAGCCGCGGTAATTCCAGCTCCAATAGC'
+            'GTATATTTAAGTTGTTGCAGTTAAAAAGCTCGTAGTTGAACCTTGGGATGGGTCGGCCGG'
+            'TCCGCCTTTGGTGTGCATTGGTCGGCTTGTCCCTTCGGTCGGCGATACGCTCCTGGTCTT'
+            'AATTGGCCGGGTCGTGCCTCCGGCGCTGTTACTTTGAAGAAATTAGAGTGCTCAAAGCAA'
+            'GCCTACGCTCTGGATACATTAGCATGGGATAACATCATAGGATTTCGATCCTATTGTGTT'
+            'GGCCTTCGGGATCGGAGTAATGATTAACAGGGACAGTCGGGGGCATTCGTATTTCATAGT'
+            'CAGAGGTGAAATTCTTGGATTTATGAAAGACGAACAACTGCGAAAGCATTTGCCAAGGAT'
+            'GTTTTCATTAATCAAGAACGAAAGTTGGGGGCTCGAAGACGATCAGATACCGTCCTAGTC'
+            'TCAACCATAAACGATGCCGACCAGGGATCAGCGGATGTTGCTTATAGGACTCCGCTGGCA'
+            'CCTTATGAGAAATCAAAGTTTTTGGGTTCCGGGGGGAGTATGGTCGCAAGGCTGAAACTT'
+            'AAAGGAATTGACGGAAGGGCACCACCAGGAGTGGAGCCTGCGGCTTAATTTGACTCAACA'
+            'CGGGGAAACTTACCAGGTCCAGACATAGTAAGGATTGACAGACTGAGAGCTCTTTCTTGA'
+            'TTCTATGGGTGGTGGTGCATGGCCGTTCTTAGTTGGTGGAGCGATTTGTCTGGTTAATTC'
+            'CGTTAATGAACGAGACCTCAGCCTGCTAACTAGCTACGTGGAGGCATCCCTTCACGGCCG'
+            'GCTTCTTAGAGGGACTATGGCCGTTTAGGCCAAGGAAGTTTGAGGCAATAACAGGTCTGT'
+            'GATGCCCTTAGATGTTCTGGGCCGCACGCGCGCTACACTGATGTATTCAACGAGTTCACA'
+            'CCTTGGCCGACAGGCCCGGGTAATCTTTGAAATTTCATCGTGATGGGGATAGATCATTGC'
+            'AATTGTTGGTCTTCAACGAGGAATTCCTAGTAAGCGCGAGTCATCAGCTCGCGTTGACTA'
+            'CGTCCCTGCCCTTTGTACACACCGCCCGTCGCTCCTACCGATTGAATGATCCGGTGAAGT'
+            'GTTCGGATCGCGGCGACGTGGGTGGTTCGCCGCCCGCGACGTCGCGAGAAGTCCACTAAA'
+            'CCTTATCATTTAGAGGAAGGAGAAGTCGTAACAAGGTTTCCGTAGGTGAACCTGCGGAAG'
+            'GATCATTG'
+        ),
+        regions=[
+            dat.SequenceRegion(
+                chromosome='2',
+                strand=1,
+                exons=[dat.Exon(start=3706, stop=5513)],
+                assembly_id='TAIR10',
+            )
+        ],
+        rna_type='rRNA',
+        url='http://www.foldatlas.com/transcript/AT2G01010.1',
+        seq_version='1',
+        note_data={},
+        xref_data={
+            'RefSeq': ['NR_139968.1'],
+            'TAIR': ['AT2G01010.1'],
+        },
+        species='Arabidopsis thaliana',
+        common_name='thale-cress',
+        lineage=(
+            'Eukaryota; Viridiplantae; Streptophyta; '
+            'Embryophyta; Tracheophyta; Spermatophyta; Magnoliophyta; '
+            'eudicotyledons; Gunneridae; Pentapetalae; rosids; malvids; '
+            'Brassicales; Brassicaceae; Camelineae; Arabidopsis; '
+            'Arabidopsis thaliana'
+        ),
+        gene='AT2G01010',
+        description='Arabidopsis thaliana (thale-cress) rRNA',
+        references=[pubs.reference(29092050)],
+    ))
+
+
+@pytest.mark.parameterize('accession,status', [
+    ('TAIR:AT2G01010.1', True),
+    ('FOLD_ATLAS:AT2G01010.1', True),
+    ('TAIR:ENSRNA049757808-T1', False),
+    ('FOLD_ATLAS:ENSRNA049757808-T1', False),
+])
+def generates_expected_inferred_entries(cress_2, accession, status):
+    assert has_entry_for(cress_2, accession) == status
+
+
 def test_can_get_with_odd_rna_type(cress_2):
-    val = attr.asdict(entry_for(cress_2, 'AT2G03895.1'))
+    val = attr.asdict(entry_for(cress_2, 'ENSEMBL_PLANTS:AT2G03895.1'))
     print(val['sequence'])
     assert val == attr.asdict(dat.Entry(
         primary_id='AT2G03895.1',
@@ -158,7 +309,7 @@ def test_can_get_with_odd_rna_type(cress_2):
 
 
 def test_can_parse_a_trna(cress_2):
-    val = attr.asdict(entry_for(cress_2, 'ENSRNA049492366-T1'))
+    val = attr.asdict(entry_for(cress_2, 'ENSEMBL_PLANTS:ENSRNA049492366-T1'))
     assert val == attr.asdict(dat.Entry(
         primary_id='ENSRNA049492366-T1',
         accession='ENSEMBL_PLANTS:ENSRNA049492366-T1',
@@ -196,7 +347,7 @@ def test_can_parse_a_trna(cress_2):
 
 
 def test_can_parse_gene_with_minimal_metadata(cress_2):
-    assert attr.asdict(entry_for(cress_2, 'AT2G03905.1')) == attr.asdict(dat.Entry(
+    assert attr.asdict(entry_for(cress_2, 'ENSEMBL_PLANTS:AT2G03905.1')) == attr.asdict(dat.Entry(
         primary_id='AT2G03905.1',
         accession='ENSEMBL_PLANTS:AT2G03905.1',
         ncbi_tax_id=3702,
@@ -234,7 +385,7 @@ def test_can_parse_gene_with_minimal_metadata(cress_2):
 
 
 def test_can_parse_premirna(cress_2):
-    val = attr.asdict(entry_for(cress_2, 'ENSRNA049757815-T1'))
+    val = attr.asdict(entry_for(cress_2, 'ENSEMBL_PLANTS:ENSRNA049757815-T1'))
     assert val == attr.asdict(dat.Entry(
         primary_id='ENSRNA049757815-T1',
         accession='ENSEMBL_PLANTS:ENSRNA049757815-T1',
@@ -281,7 +432,7 @@ def test_skips_transposable_elements(oryza_9):
 
 
 def test_can_parse_rice_trna(oryza_9):
-    val = attr.asdict(entry_for(oryza_9, "ENSRNA049456349-T1"))
+    val = attr.asdict(entry_for(oryza_9, "ENSEMBL_PLANTS:ENSRNA049456349-T1"))
     assert val == attr.asdict(dat.Entry(
         primary_id="ENSRNA049456349-T1",
         accession='ENSEMBL_PLANTS:ENSRNA049456349-T1',
@@ -315,7 +466,7 @@ def test_can_parse_rice_trna(oryza_9):
 
 
 def test_can_parse_rice_snorna(oryza_9):
-    val = attr.asdict(entry_for(oryza_9, "ENSRNA049475670-T1"))
+    val = attr.asdict(entry_for(oryza_9, "ENSEMBL_PLANTS:ENSRNA049475670-T1"))
     assert val == attr.asdict(dat.Entry(
         primary_id="ENSRNA049475670-T1",
         accession='ENSEMBL_PLANTS:ENSRNA049475670-T1',
@@ -349,7 +500,7 @@ def test_can_parse_rice_snorna(oryza_9):
 
 
 def test_can_parse_rice_pre_mirna(oryza_9):
-    val = attr.asdict(entry_for(oryza_9, "ENSRNA049475651-T1"))
+    val = attr.asdict(entry_for(oryza_9, "ENSEMBL_PLANTS:ENSRNA049475651-T1"))
     assert val == attr.asdict(dat.Entry(
         primary_id='ENSRNA049475651-T1',
         accession='ENSEMBL_PLANTS:ENSRNA049475651-T1',
@@ -383,7 +534,7 @@ def test_can_parse_rice_pre_mirna(oryza_9):
 
 
 def test_can_parse_rice_u6(oryza_9):
-    val = attr.asdict(entry_for(oryza_9, 'ENSRNA049475710-T1'))
+    val = attr.asdict(entry_for(oryza_9, 'ENSEMBL_PLANTS:ENSRNA049475710-T1'))
     assert val == attr.asdict(dat.Entry(
         primary_id='ENSRNA049475710-T1',
         accession='ENSEMBL_PLANTS:ENSRNA049475710-T1',
@@ -417,7 +568,7 @@ def test_can_parse_rice_u6(oryza_9):
 
 
 def test_can_parse_barley_antisense(hordeum_pt):
-    val = attr.asdict(entry_for(hordeum_pt, 'ENSRNA049483195-T1'))
+    val = attr.asdict(entry_for(hordeum_pt, 'ENSEMBL_PLANTS:ENSRNA049483195-T1'))
     assert val == attr.asdict(dat.Entry(
         primary_id='ENSRNA049483195-T1',
         accession='ENSEMBL_PLANTS:ENSRNA049483195-T1',
@@ -451,7 +602,7 @@ def test_can_parse_barley_antisense(hordeum_pt):
 
 
 def test_can_parse_zea_lincrna(zea_7):
-    val = attr.asdict(entry_for(zea_7, "Zm00001d001070_T001"))
+    val = attr.asdict(entry_for(zea_7, "ENSEMBL_PLANTS:Zm00001d001070_T001"))
     assert val == attr.asdict(dat.Entry(
         primary_id="Zm00001d001070_T001",
         accession="ENSEMBL_PLANTS:Zm00001d001070_T001",
@@ -488,3 +639,7 @@ def test_can_parse_zea_lincrna(zea_7):
         description='Zea mays (maize) lncRNA Zm00001d001070',
         references=[pubs.reference(29092050)],
     ))
+
+
+def test_does_not_generate_tair_for_others(zea_7):
+    assert has_entry_for(zea_7, "TAIR:Zm00001d001070_T001") is False

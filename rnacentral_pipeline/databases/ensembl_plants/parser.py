@@ -25,6 +25,7 @@ from rnacentral_pipeline.databases.ensembl import helpers as ensembl
 from . import helpers
 
 
+
 def parse(handle):
     for record in SeqIO.parse(handle, 'embl'):
         current_gene = None
@@ -37,6 +38,9 @@ def parse(handle):
                 current_gene = feature
                 for entry in ensembl.generate_related(ncrnas):
                     yield entry
+                    for entry in helpers.inferred_entries(entry):
+                        yield entry
+
                 ncrnas = []
                 continue
 
@@ -48,3 +52,8 @@ def parse(handle):
 
             entry = helpers.as_entry(record, current_gene, feature)
             ncrnas.append(entry)
+
+        for entry in ensembl.generate_related(ncrnas):
+            yield entry
+            for entry in helpers.inferred_entries(entry):
+                yield entry

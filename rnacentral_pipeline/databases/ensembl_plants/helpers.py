@@ -145,3 +145,36 @@ def as_entry(record, current_gene, feature):
         entry,
         description=description(current_gene, entry)
     )
+
+
+def as_fold_atlas_entry(entry):
+    database = 'FOLD_ATLAS'
+    return attr.evolve(
+        entry,
+        accession='%s:%s' % (database, entry.primary_id),
+        database=database,
+        url='http://www.foldatlas.com/transcript/%s' % entry.primary_id,
+    )
+
+
+def as_tair_entry(entry):
+    database = 'TAIR'
+    xrefs = dict(entry.xref_data)
+    del xrefs['TAIR']
+    return attr.evolve(
+        entry,
+        accession='%s:%s' % (database, entry.primary_id),
+        database=database,
+        xref_data=xrefs,
+    )
+
+
+def inferred_entries(entry):
+    if entry.ncbi_tax_id != 3702:
+        return
+
+    if 'TAIR' not in entry.xref_data:
+        return
+
+    for func in [as_fold_atlas_entry, as_tair_entry]:
+        yield func(entry)

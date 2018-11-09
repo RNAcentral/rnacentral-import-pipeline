@@ -22,10 +22,14 @@ def parse(filename):
 
 
 def entries_for(entries, accession):
-    return [e for e in entries if e.primary_id == accession]
+    return [e for e in entries if e.accession == accession]
 
 
 def entry_for(entries, accession):
     val = entries_for(entries, accession)
     assert len(val) == 1
     return val[0]
+
+
+def has_entry_for(entries, accession):
+    return bool(entries_for(entries, accession))
