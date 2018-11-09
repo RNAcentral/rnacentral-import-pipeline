@@ -51,11 +51,11 @@ def fetch(filename, output):
 @cli.command('lookup')
 @click.option('--allow-fallback', default=False)
 @click.argument('db', default='references.db', type=click.Path())
-@click.argument('ref_ids', default='ref_ids.csv', type=click.File('r'))
+@click.argument('ids', default='ref_ids.csv', type=click.File('r'))
 @click.argument('output', default='references.csv', type=click.File('w'))
-def lookup(db, ref_ids, output, allow_fallback=False):
+def lookup(db, ids, output, allow_fallback=False):
     """
     Use the database index file to lookup all reference information for all xml
     files in the given directory.
     """
-    publications.write_lookup(db, ref_ids, output, allow_fallback=allow_fallback)
+    publications.write_lookup(db, ids, output, allow_fallback=allow_fallback)
