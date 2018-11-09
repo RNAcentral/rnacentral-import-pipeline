@@ -25,14 +25,12 @@ from rnacentral_pipeline.databases.data import Entry
 CHROMOSOME_LEVEL_MAPPINGS = set([
     "WORMBASE",
     "POMBASE",
-    "TAIR",
 ])
 
 DATABASES = {
     'PomBase',
     'SGD',
     'SRPDB',
-    'TAIR',
     'WormBase',
     'dictyBase',
     'lncRNAdb',
@@ -137,9 +135,6 @@ class UrlBuilder(object):
 
     def srpdb(self, entry):
         return 'http://rnp.uthscsa.edu/rnp/SRPDB/rna/sequences/fasta/%s' % entry.primary_id
-
-    def tair(self, entry):
-        return 'https://www.arabidopsis.org/servlets/TairObject?id=%s&type=locus' % entry.primary_id
 
     def wormbase(self, entry):
         return 'http://www.wormbase.org/species/c_elegans/gene/%s' % entry.primary_id
