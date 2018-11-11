@@ -30,7 +30,7 @@ class DataSource {
     ]);
   }
 
-  def script(input_files) {
+  def script(List<String> input_files) {
     String prefix = ''
     List<String> arguments = []
     int gzip_count = inputs.inject(0) { a, i -> a + (i.produces.endsWith('.gz') ? 1 : 0) }
@@ -78,7 +78,7 @@ class Input {
   static Input from_string(db_name, index, input_name, input) {
     def f = new File(input)
     def produces = f.getName()
-    def spec = [arguments: [input], exclude: [], produces: produces];
+    def spec = [arguments: [input], produces: produces];
 
     return new Input(Input.defaults(db_name, index, input_name) + spec);
   }
@@ -129,6 +129,7 @@ class Input {
     spec.arguments = input.remote instanceof List ? input.remote : [input.remote];
     spec.command = input.get('command', spec.command);
     spec.directives.memory = input.get('memory', spec.directives.memory);
+    spec.exclude = input.get('exclude', spec.exclude);
 
     String produces;
     if (input.containsKey('produces')) {
@@ -147,6 +148,10 @@ class Input {
       return "$command < ${args[0]} > '$produces'"
     }
     return "$command ${args.join(' ')} '$produces'"
+  }
+
+  def is_excluded(String filename) {
+    return this.exclude.inject(false) { agg, pattern -> agg || (filename =~ pattern) }
   }
 }
 
