@@ -327,7 +327,8 @@ loaded
   .flatMap { name ->
     file("files/import-data/post-release/*__${name.replace('_', '-')}.sql")
   }
-  .mix(Channel.fromPath('files/import-data/post-release/99__cleanup.sql'))
+  .mix(Channel.fromPath('files/import-data/post-release/999__cleanup.sql'))
+  .mix(Channel.fromPath('files/import-data/post-release/000__populate_precompute.sql'))
   .filter { f -> f.exists() }
   .collect()
   .set { post_scripts }
