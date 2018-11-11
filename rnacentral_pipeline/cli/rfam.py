@@ -27,21 +27,21 @@ def cli():
 
 
 @cli.command('families')
-@click.argument('filename', default='-', type=click.File('rb'))
+@click.argument('filename', default='data.tsv', type=click.File('rb'))
 @click.argument('output', default='rfam-families.csv', type=click.File('wb'))
 def rfam_group_families(filename, output):
     rfam.families.from_file(filename, output)
 
 
 @cli.command('clans')
-@click.argument('filename', default='-', type=click.File('rb'))
+@click.argument('filename', default='data.tsv', type=click.File('rb'))
 @click.argument('output', default='rfam-clans.csv', type=click.File('wb'))
 def rfam_group_clans(filename, output):
     rfam.clans.from_file(filename, output)
 
 
 @cli.command('ontology-terms')
-@click.argument('filename', default='-', type=click.File('rb'))
+@click.argument('filename', default='data.tsv', type=click.File('rb'))
 @click.argument('output', default='.', type=click.Path(
     writable=True,
     dir_okay=True,

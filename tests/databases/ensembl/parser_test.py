@@ -263,6 +263,11 @@ def test_it_has_last_ncrna(human_12):
     }
 
 
+@pytest.mark.skip()
+def test_can_build_gencode_entries(human_12):
+    pass
+
+
 def test_can_use_mouse_models_to_correct_rna_type(mouse_3):
     assert entry_for(mouse_3, 'ENSMUST00000082862.1').rna_type == 'telomerase_RNA'
 

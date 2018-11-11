@@ -94,27 +94,6 @@ def process_ensembl_plants(ensembl_file, output):
     write_entries(e_plants.parse, output, ensembl_file)
 
 
-@cli.command('gencode')
-@click.argument('gencode_gff', type=click.File('rb'))
-@click.argument('ensembl_file', type=click.File('rb'))
-@click.argument('family_file', type=click.Path(
-    file_okay=True,
-    dir_okay=False,
-    readable=True,
-))
-@click.argument('output', default='.', type=click.Path(
-    writable=True,
-    dir_okay=True,
-    file_okay=False,
-))
-def process_gencode(gencode_gff, ensembl_file, family_file, output):
-    """
-    This will parse EMBL files from Ensembl to produce the expected CSV files.
-    """
-    # gencode.from_file(gencode_gff, ensembl_file, family_file, output)
-    pass
-
-
 @cli.command('pdb')
 @click.argument('pdb_data', default='pdb.json', type=click.File('r'))
 @click.argument('extra', default='pdb-extra.json', type=click.File('r'))

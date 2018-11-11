@@ -49,7 +49,7 @@ def fetch(filename, output):
 
 
 @cli.command('lookup')
-@click.option('--allow-fallback', default=False)
+@click.option('--allow-fallback/--no-allow-feedback', default=False)
 @click.argument('db', default='references.db', type=click.Path())
 @click.argument('ids', default='ref_ids.csv', type=click.File('r'))
 @click.argument('output', default='references.csv', type=click.File('w'))

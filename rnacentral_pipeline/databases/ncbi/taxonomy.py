@@ -13,10 +13,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import os
 import csv
 import operator as op
 import itertools as it
 import collections as col
+
+from contextlib2 import ExitStack
 
 import attr
 from attr.validators import optional
@@ -104,7 +107,11 @@ def parse(handle, names_handle, merged_handle):
             )
 
 
-def write(lineage, names, merged, output):
-    writer = csv.writer(output)
-    for tax_entry in parse(lineage, names, merged):
-        writer.writerows(tax_entry.writeable())
+def write(directory, output):
+    names = ['fullnamelineage.dmp', 'names.dmp', 'merged.dmp']
+    filenames = [os.path.join(directory, name) for name in names]
+    with ExitStack() as stack:
+        files = [stack.enter_context(open(f)) for f in filenames]
+        writer = csv.writer(output)
+        for tax_entry in parse(*files):
+            writer.writerows(tax_entry.writeable())
