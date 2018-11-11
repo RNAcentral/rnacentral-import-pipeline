@@ -82,7 +82,7 @@ def as_entry(record, gene, feature, context):
     )
 
 
-def parse(raw, family_file):
+def parse(raw, family_file, gencode_file=None):
     """
     This will parse an EMBL file for all Ensembl Entries to import.
     """
@@ -113,3 +113,6 @@ def parse(raw, family_file):
                 continue
 
             ncrnas.append(entry)
+
+        for entry in helpers.generate_related(ncrnas):
+            yield entry
