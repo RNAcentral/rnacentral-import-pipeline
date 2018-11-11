@@ -255,6 +255,14 @@ def test_it_always_has_valid_rna_types_for_human(human_12):
         ])
 
 
+def test_it_has_last_ncrna(human_12):
+    assert entry_for(human_12, "ENST00000459107.1").xref_data == {
+        'RNAcentral': ["URS00006F58F8"],
+        'RFAM_trans_name': ['Y_RNA.633-201'],
+        "UCSC": ["uc031ztg.2"],
+    }
+
+
 def test_can_use_mouse_models_to_correct_rna_type(mouse_3):
     assert entry_for(mouse_3, 'ENSMUST00000082862.1').rna_type == 'telomerase_RNA'
 

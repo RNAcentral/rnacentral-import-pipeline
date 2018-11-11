@@ -16,6 +16,10 @@ limitations under the License.
 import logging
 
 import attr
+from attr.validators import instance_of as is_a
+
+import gffutils
+
 from rnacentral_pipeline.databases.rfam import utils as rfutils
 
 from .rna_type_inference import RnaTypeInference
@@ -27,9 +31,10 @@ LOGGER = logging.getLogger(__name__)
 class Context(object):
     supressed_mapping = attr.ib()
     inference = attr.ib()
+    gencode_ids = attr.ib(validator=is_a(set))
 
     @classmethod
-    def build(cls, family_file):
+    def build(cls, family_file, gencode_file=None):
         with open(family_file, 'rb') as raw:
             supressed_mapping = rfutils.name_to_suppression(raw)
 
@@ -39,9 +44,15 @@ class Context(object):
         with open(family_file, 'rb') as raw:
             inference = RnaTypeInference(raw)
 
+        gencode_ids = set()
+        if gencode_file:
+            gff = gffutils.create_db(gencode_file, ':memory:')
+            gencode_ids = {f['ID'] for f in gff.features_of_type('transcript')}
+
         return cls(
             supressed_mapping,
             inference,
+            gencode_ids=gencode_ids,
         )
 
     def is_supressed(self, feature):
