@@ -142,10 +142,11 @@ class Input {
   }
 
   def script() {
+    def args = arguments.inject([]) { agg, a -> agg << "'$a'" }
     if (command.startsWith('mysql')) {
-      return "$command < ${arguments[0]} > $produces"
+      return "$command < ${args[0]} > '$produces'"
     }
-    return "$command ${arguments.join(' ')} $produces"
+    return "$command ${args.join(' ')} '$produces'"
   }
 }
 
