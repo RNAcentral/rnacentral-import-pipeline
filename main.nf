@@ -7,146 +7,63 @@ def as_mysql_cmd = { db ->
   "mysql --host ${db.host} --port ${db.port} --user ${db.user} $rest"
 }
 
-def fetch_for(incomplete) {
-  if (!incomplete) {
-    return ''
-  }
-
-  def db = ["cmd": "fetch"] + incomplete
-  if (db.cmd == "mysql") {
-    return "${as_mysql_cmd(db)} < ${db.query} > ${db.pattern}"
-  }
-
-  def ps = db.get('excluded_patterns', [])
-  def clean = ps.inject('', { agg, p -> agg + "find . -name '$p' | xargs rm\n" })
-  def remote = db.remote ? "'${db.remote}'" : ''
-  return [
-    "${db.cmd} ${db.name.join(' ')} $remote '${db.pattern}'",
-    clean,
-  ].join('\n')
-}
-
-def process_using = { db ->
-  def input_file = file(db.input_file)
-  def name = db.name.join(' ')
-  def extra = db.extra && db.extra.hasProperty('pattern') ? db.extra.pattern : ''
-  if (input_file.getName().endsWith('.gz')) {
-    return "zcat ${db.input_file} | rnac ${name} - ${extra}"
-  }
-  return "rnac ${name} ${db.input_file} ${extra}"
-}
-
 // ===========================================================================
 // Compute initial tasks
 // ===========================================================================
 
-// This channel will store all the outputs for all data to import. Doing this
-// prevents us from having many large duplicated blocks. Also adding a new file
-// type to import is much easier this way, as we only have to modify in a few
-// places instead of every possible process that could produce it.
-raw_output = Channel.empty()
+processed_data = []
 
 // This contains what remote data sources we have to fetch. It focuses on the
 // main data files, not the 'extra' ones. Separating the two makes rejoining
 // them later much easier.
 data_to_fetch = []
-
-// Here we put the 'extra' data files to fetch.
-data_to_fetch_extra = []
+data_to_process = []
 
 // This contains the tasks for jobs that can be fetched and processed in a
 // single task. Some databases, like all JSON based import ones provide a single
 // file that we need to process. In that case we don't have to split the
 // fetching and processing into separate tasks. We can do 1 task instead of 2
-// (makes the job scheduler and ITS happier) and perform a single task that does
-// both.
+// (makes the job scheduler and ITS happier, and may be faster if the cluser is
+// hunder heavy load) and perform a single task that does both.
 data_to_fetch_and_process = []
-
-// GENCODE relies upon Ensembl so ensure that Ensembl is always processed if
-// GENCODE is.
-if (params.import_data.databases.gencode) {
-  params.import_data.datatabases.ensembl = true
-}
 
 // Here we generate the data that will go into the channels. This is a bit
 // cleaner to work with over constantly modifying the channels in the loop.
 for (entry in params.import_data.databases) {
-  if (!entry.value) {
+  def db_name = entry.key
+  def database = params.databases[db_name]
+
+  if (!entry.value || !params.databases[db_name]) {
     continue
   }
 
-  def name = entry.key
-  def database = params.databases[name]
-
-  // The custom property should be a list of directories that contain csv files to
-  // import. For example if custom was ./custom we would expect it to contain:
-  // ./custom/accessions.csv, ./custom/genomic_locations.csv, etc. The files may be
-  // nested so: ./custom/mirbase/accessions.csv would also work.
-  if (name == "custom") {
-    raw_output.mix(Channel.fromPath("${base}/**.csv")).flatten().set { raw_output }
+  if (db_name == "custom") {
+    processed_data.addAll(files("${entry.value}/**.csv"))
     continue
   }
 
-  def fetch = [name: [database.get('group', 'external'), name]] + database.fetch
+  def source = DataSource.build(db_name, database)
 
-  def extra = null
-  if (database.extra) {
-    extra = [name: ['extra', name]] + database.extra
-    if (extra.remotes) {
-      extra.remote = file("$name-remotes.txt")
-      extra.remote.text = extra.remotes.join('\n')
-    }
-  }
-
-  // Here we detect if a database only requires parsing a single file. This is
-  // done by ensure there are no extra files and there is no '*' in the output
-  // pattern name. So long as that is true we can then place this in a channel
-  // for fetching and processing as a single task. This also checks if the
-  // as_single_task flag is set to false. This is something that GENCODE has
-  // to set because it also uses Ensembl data. However, we don't add any
-  // extras to the configuration because then we would end up fetching things
-  // twice. We can just reuse what we fetch as seen below.
-  no_merge = database.fetch.pattern.contains('*') || !database.get('as_single_task', true)
-  if (no_merge) {
-    fetch.remove('excluded_patterns')
-    data_to_fetch << fetch
-    if (extra) {
-      data_to_fetch_extra << extra
-    }
-
-  // If we can merge the fetch and process steps into a single step then we do
-  // so here.
+  if (source.is_parallel_task()) {
+    data_to_fetch.addAll(source.inputs)
+    data_to_process << [source.name, source]
   } else {
-    fetch.extra = extra
-    data_to_fetch_and_process << fetch
+    data_to_fetch_and_process << source
   }
 }
 
-// If we are processing Rfam, Ensembl, or GENCODE we must fetch and import some
+// If we are processing Rfam
 // Rfam based metadata. These databases use Rfam in one way or another so we
 // should stay up-to-date with the current Rfam data. For example they may be
 // creating annotations of a partial lncRNA which we do not want to import. By
 // tracking the latest Rfam we will know what is a partial lncRNA. This is done
 // by querying the Rfam MySQL database and then using the Rfam commands to
 // process the query results. We can then import the processed data as normal.
-if (any_database('rfam', 'ensembl', 'gencode')) {
-  fetch = params.metadata.rfam.fetch + [pattern: 'data.tsv']
-
-  // The rfam familes query has to be fetched because the raw data is reused
-  // later by the Ensembl parsing tasks. Otherwise can do fetch and process in
-  // one step and reduce the number of jobs slightly.
+if (any_database('rfam')) {
   file("files/import-data/rfam/*.sql").each { query ->
-    def spec = [name: ["rfam", query.getBaseName()], query: query] + fetch
-    if (query.getBaseName() == "families") {
-      data_to_fetch << spec
-      ['ensembl', 'gencode'].each { name ->
-        if (any_database(name)) {
-          data_to_fetch_extra << (spec + [name: ['extra', name]])
-        }
-      }
-    } else {
-      data_to_fetch_and_process << spec
-    }
+    def name = query.getBaseName()
+    def inputs = [produces: "data.tsv", query: query, cmd: 'mysql'] + params.metadata.mysql
+    data_to_fetch_and_process << DataSource.build("rfam-$name", [inputs: rfam_input])
   }
 }
 
@@ -155,7 +72,7 @@ Channel.fromPath('files/import-data/ensembl/*.sql')
   .collectFile(name: "possible-data.txt", newLine: true)
   .set { ensembl_possible }
 
-Channel.from(params.databases.ensembl.mysql, params.databases.ensembl_genomes.mysql)
+Channel.from(params.metadata.ensembl.mysql, params.metadata.ensembl_genomes.mysql)
   .combine(Channel.fromPath('files/import-data/ensembl-analyzed.sql'))
   .combine(ensembl_possible)
   .set { ensembl_info }
@@ -181,9 +98,14 @@ process find_ensembl_tasks {
   """
 }
 
+// Add the metadata tasks that must always be run
+data_to_fetch_and_process << DataSource.build('pub-info', params.metadata.europepmc)
+data_to_fetch_and_process << DataSource.build('ncbi-taxonomy', params.metadata.taxonomy)
+
 // Now setup the channels with all data
+Channel.from(processed_data).set { raw_output }
 Channel.from(data_to_fetch).set { to_fetch }
-Channel.from(data_to_fetch_extra).set { to_fetch_extra }
+Channel.from(data_to_process).set { process_specs }
 Channel.from(data_to_fetch_and_process).set { to_fetch_and_process }
 
 //=============================================================================
@@ -191,55 +113,23 @@ Channel.from(data_to_fetch_and_process).set { to_fetch_and_process }
 //=============================================================================
 
 process fetch_data {
-  tag { db.name }
+  tag { inp.directives.tag }
+  memory { inp.directives.memory }
+  clusterOptions { "-g $inp.directives.group" }
 
   input:
-  val(db) from to_fetch
+  val(inp) from to_fetch
 
   output:
-  set val(db), file("${db.pattern}") into all_fetched
+  set val(inp), file("${inp.produces}") into fetched
 
   script:
   """
-  ${fetch_for(db)}
+  set -o pipefail
+
+  ${inp.script()}
   """
 }
-
-all_fetched
-  .map { db, files ->
-    ps = db.get('excluded_patterns', [])
-    selected = [files].flatten().findAll { f -> !ps.any { p -> f.getName() =~ p } }
-    [db.name, selected]
-  }
-  .into { fetched; for_gencode }
-
-process fetch_extra_data {
-  tag { db.name.join(' ') }
-
-  input:
-  val(db) from to_fetch_extra
-
-  output:
-  set val(["external", "${db.name[1]}"]), file("${db.pattern}") into fetched_extra
-
-  script:
-  """
-  ${fetch_for(db)}
-  """
-}
-
-// Here we split the fetched data from Ensembl to pull out all Ensembl human and
-// mouse raw data. This data is reused for GENCODE import. We need the EMBL
-// files as an extra file to extract all useful information like names and such.
-for_gencode
-  .filter { n, fs -> any_database('gencode') && n == ["external", "ensembl"] }
-  .flatMap { n, fs -> fs }
-  .filter { f ->
-    species = f.getBaseName()
-    species.startsWith('Homo_sapiens') || species.startsWith('Mus_mus')
-  }
-  .map { f -> [['external', 'gencode'], f] }
-  .set { gencode_extra }
 
 //=============================================================================
 // Create channels for all data processing tasks
@@ -257,18 +147,21 @@ ensembl_task_summary
   }
   .set { ensembl_metadata_tasks }
 
-Channel.empty()
-  .mix(fetched_extra)
-  .mix(gencode_extra)
-  .groupBy()
-  .set { extra }
-
 fetched
-  .combine(extra)
-  .flatMap { name, filenames, extra ->
-    // Pretty sure this weirdness is because groovy is messing with types or something
-    to_add = extra[name] ? extra[name][0][1..-1] : []
-    filenames.inject([], { agg, f -> agg << [name, f, to_add] })
+  .map { t, fs ->
+    def ps = t.exclude
+    def selected = [fs].flatten().findAll { f -> !ps.any { p -> f.getName() =~ p } }
+    [t.source, t, selected]
+  }
+  .groupTuple(by: 0)
+  .combine(process_specs, by: 0)
+  .flatMap { name, tasks, inputs, spec ->
+    [tasks, inputs]
+      .transpose()
+      .sort { it[0].index }
+      .inject([]) { a, d -> a << d[1] }
+      .combinations()
+      .inject([]) { a, files -> a << [spec, files] }
   }
   .set { to_process }
 
@@ -276,71 +169,60 @@ fetched
 // Process data
 //=============================================================================
 
-process fetch_and_process {
-  tag { incomplete.name.join(' ') }
-  memory { incomplete.get('memory', 2.GB) }
+process fetch_and_process_data {
+  tag { spec.process.directives.tag }
+  memory { spec.process.directives.memory }
+  clusterOptions { "-g $spec.process.directives.group" }
 
   input:
-  val(incomplete) from to_fetch_and_process
+  val(spec) from to_fetch_and_process
 
   output:
-  file "*.csv" into all_fetched_and_processed_output mode flatten
+  file("${spec.process.produces}") into all_fetched_and_processed_output mode flatten
 
   script:
-  def db = [input_file: incomplete.get('db', incomplete.pattern)] + incomplete
+  def input_files = spec.inputs.inject([]) { acc, inp -> acc << inp.produces }
+  def fetches = spec.inputs.inject([]) { acc, inp -> acc << inp.script() }
   """
   set -o pipefail
 
-  ${fetch_for(db)}
-  ${fetch_for(db.extra)}
-  ${process_using(db)}
+  ${fetches.join('\n')}
+  ${spec.script(input_files)}
   """
 }
 
 process process_data {
-  tag { (name + [input_file.getBaseName()]).join(' ') }
-  memory { params.databases[name[1]].get('memory', '2 GB') }
+  tag { spec.process.directives.tag }
+  memory { spec.process.directives.memory }
+  clusterOptions { "-g $spec.process.directives.group" }
 
   input:
-  set val(name), file(input_file), file(extra) from to_process
+  set val(spec), file(input_files) from to_process
 
   output:
-  file "*.csv" into all_processed_output mode flatten
+  file("${spec.process.produces}") into all_processed_output mode flatten
 
   script:
-  db = [name: name, input_file: input_file, extra: extra]
   """
   set -o pipefail
 
-  ${process_using(db)}
-  """
-}
-
-process fetch_and_process_publications {
-  output:
-  file('index.db') into refs_database
-
-  script:
-  fetch = params.metadata.europepmc.fetch
-  """
-  fetch europepmc index-xml ${fetch.remote} ${fetch.pattern}.tar.gz
-  rnac europepmc index-xml ${fetch.pattern} index.db
+  ${spec.script(input_files)}
   """
 }
 
 processed_output = Channel.create()
 refs = Channel.create()
 terms = Channel.create()
+refs_database = Channel.create()
 
 all_processed_output
   .mix(all_fetched_and_processed_output)
-  .choice(processed_output, terms, refs) { f ->
-    names = ["terms.csv", "ref_ids.csv"]
+  .choice(processed_output, terms, refs, refs_database) { f ->
+    names = ["terms.csv", "ref_ids.csv", params.metadata.europepmc.produces]
     return names.indexOf(f.getName()) + 1
   }
 
-/*
-process lookup_ontology_information {
+process batch_lookup_ontology_information {
   input:
   file('terms*.csv') from terms.collect()
 
@@ -349,20 +231,19 @@ process lookup_ontology_information {
 
   script:
   """
-  sort -u terms*.csv > unique-terms.txt
+  set -o pipefail
+
+  find . -name 'terms*.csv' | xargs cat | sort -u >> unique-terms.txt
   rnac ontologies lookup-terms unique-terms.txt ontology_terms.csv
   """
 }
-*/
 
-refs
-  .collect()
-  .combine(refs_database)
-  .set { refs_to_lookup }
+refs.collect().set { refs_to_lookup }
 
 process batch_lookup_publications {
   input:
-  set file("ref_ids*.csv"), file("references.db") from refs_to_lookup
+  file("ref_ids*.csv") from refs_to_lookup
+  file("references.db") from refs_database
 
   output:
   file('references.csv') into references_output
@@ -371,21 +252,7 @@ process batch_lookup_publications {
   set -o pipefail
 
   find . -name 'ref_ids*.csv' | xargs cat | sort -u >> all-ids
-  rnac europepmc lookup references.db all-ids references.csv
-  """
-}
-
-// This will always fetch all taxonomic information and then produce the
-// taxonomy data to import.
-process fetch_process_taxonomy_data {
-  output:
-  file('taxonomy.csv') into taxonomy_output
-
-  script:
-  fetch = params.metadata.taxonomy.fetch
-  """
-  fetch ncbi taxonomy ${fetch.remote} ${fetch.pattern}
-  rnac ncbi taxonomy fullnamelineage.dmp names.dmp merged.dmp taxonomy.csv
+  rnac europepmc lookup --allow-fallback references.db all-ids references.csv
   """
 }
 
@@ -395,12 +262,13 @@ process fetch_process_taxonomy_data {
 process process_ensembl_metadata {
   tag "$name ${mysql.db_name}"
   maxForks params.metadata.ensembl.max_forks
+  clusterOptions { "-g /rnc/process/ensembl-metadata" }
 
   input:
   set val(mysql), val(name), file(sql) from ensembl_metadata_tasks
 
   output:
-  file("${name}.csv") optional true into ensembl_output
+  file("${name}.csv") into ensembl_output
   val("$name,$mysql.db_name") into ensembl_imported
 
   script:
@@ -424,7 +292,6 @@ raw_output
   .mix(references_output)
   .mix(ensembl_output)
   .mix(ensembl_imported_output)
-  // .mix(taxonomy_output)
   .map { f ->
     name = f.getBaseName()
     ctl = file("files/import-data/load/${name.replace('_', '-')}.ctl")
@@ -443,7 +310,7 @@ raw_output
 
 process merge_and_import {
   echo true
-  tag name
+  tag { name }
 
   input:
   set val(name), file(ctl), file('raw*.csv') from to_load

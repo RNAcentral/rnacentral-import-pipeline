@@ -53,26 +53,19 @@ function fetch_generic() {
 
   case "$remote" in
     *.tar.gz | *.tgz )
-      find . -name '*.tar.gz' -or -name '*.tgz' | xargs -I {} tar xvf {}
+      find . -name '*.tar.gz' -or -name '*.tgz' | xargs -I {} tar xvf {} ;;
   esac
 }
 
-function fetch_ensembl() {
-  fetch_generic "$1" "*.dat.gz"
+function fetch_grouped() {
+  pattern="$(basename $1)"
+  fetch_generic "$1" "$pattern"
 
-  for fn in *.dat.gz; do
+  for fn in $pattern; do
     local species="$(echo "$fn" | cut -d. -f1)"
     local grouped="$species.grouped.dat.gz"
     cat "$fn" >> "$grouped"
   done
-}
-
-function fetch_pdb() {
-  rnac pdb data "$1"
-}
-
-function fetch_pdb_extra() {
-  rnac pdb extra "$1"
 }
 
 function fetch_quickgo() {
@@ -101,68 +94,50 @@ function fetch_url_file() {
   fi
 }
 
+function fetch_taxonomy() {
+  local remote="$1"
+  local output="$2"
+
+  fetch_generic "$1" "*.dmp"
+  [ -d "$output" ] || mkdir -p "$output"
+  mv *.dmp "$output"
+}
+
+function fetch_europepmc() {
+  local remote="$1"
+  local output="$2"
+  local name="$(basename "$remote")"
+
+  fetch_generic "$remote" "$name"
+  if [[ ! -d "$output" ]]; then
+    mkdir -p "$output"
+    mv out/*.xml "$output/"
+  fi
+}
+
 [ $# -gt 0 ] || { usage 0; }
 
-group="$1"
-name="$2"
-shift 2
+name="$1"
+shift 1
 
-case "$group" in
-  "external" )
-    case "$name" in
-      "ensembl" | "ensembl_plants" )
-        fetch_ensembl "$@" ;;
-      "gencode" )
-        fetch_url_file "$@" ;;
-      "pdb" )
-        fetch_pdb "$@" ;;
-        "ena" | "flybase" | "lncbase" | "lncipedia" | "mirbase" | "pombase" |\
-          "refseq" | "rfam" | "rgd" | "tarbase" | "zwd" )
-        fetch_generic "$@" ;;
-      * )
-        usage ;;
-    esac
-    ;;
+case "$name" in
+  "ensembl" | "ensembl_plants" )
+    fetch_grouped "$@" ;;
 
-  "extra" )
-    case "$name" in
-      "ena" )
-        fetch_url_file "$@" ;;
-      "pdb" )
-        fetch_pdb_extra "$@" ;;
-      "rgd" )
-        fetch_generic "$@" ;;
-      * )
-        usage ;;
-    esac
-    ;;
+  "generic" )
+    fetch_generic "$@" ;;
+
+  "url-file" )
+    fetch_url_file "$@" ;;
+
+  "quickgo" )
+    fetch_quickgo "$@" ;;
 
   "europepmc" )
-    case $name in
-      "index-xml" )
-        fetch_generic "$@" ;;
-      * )
-        usage ;;
-    esac
-    ;;
+    fetch_europepmc "$@" ;;
 
-  "ncbi" )
-    case $name in
-      "taxonomy" )
-        fetch_generic "$@" ;;
-      * )
-        usage ;;
-    esac
-    ;;
-
-  "ontologies" )
-    case $name in
-      "quickgo" )
-        fetch_quickgo "$@" ;;
-      * )
-        usage ;;
-    esac
-    ;;
+  "taxonomy" )
+    fetch_taxonomy "$@" ;;
 
   * )
     usage ;;

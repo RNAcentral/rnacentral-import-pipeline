@@ -16,6 +16,7 @@ limitations under the License.
 import click
 
 from . import ensembl
+from . import europepmc
 from . import external
 from . import ftp_export
 from . import misc
@@ -23,7 +24,6 @@ from . import ncbi
 from . import ontologies
 from . import pdb
 from . import precompute
-from . import publications
 from . import qa
 from . import rfam
 
@@ -49,5 +49,5 @@ cli.add_command(misc.find_upi_ranges)
 cli.add_command(misc.crs_data)
 cli.add_command(pdb.cli)
 cli.add_command(qa.cli)
-cli.add_command(publications.cli)
+cli.add_command(europepmc.cli)
 cli.add_command(ncbi.cli)

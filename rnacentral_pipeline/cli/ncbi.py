@@ -27,9 +27,11 @@ def cli():
 
 
 @cli.command("taxonomy")
-@click.argument('lineage', default='fulllineage.dmp', type=click.File('r'))
-@click.argument('names', default='names.dmp', type=click.File('r'))
-@click.argument('merged', default='merged.dmp', type=click.File('r'))
+@click.argument('ncbi', default='taxonomy', type=click.Path(
+    writable=True,
+    dir_okay=True,
+    file_okay=False,
+))
 @click.argument('output', default='taxonomy.csv', type=click.File('w'))
-def parse_taxonomy(lineage, names, merged, output):
-    taxonomy.write(lineage, names, merged, output)
+def parse_taxonomy(ncbi, output):
+    taxonomy.write(ncbi, output)
