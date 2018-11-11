@@ -24,7 +24,12 @@ function fetch_generic() {
       ;;
 
     /* )
-      find "$remote" -name "$pattern" | xargs -I {} cp {} .
+      local fn_pattern="$(basename "$remote")"
+      if [[ "$fn_pattern" =~ "*" ]]; then
+        find "$remote" -name "$fn_pattern" | xargs -I {} cp {} .
+      else
+        cp "$remote" "$pattern"
+      fi
       ;;
 
     http://* | https://* )
@@ -58,7 +63,7 @@ function fetch_generic() {
 }
 
 function fetch_grouped() {
-  pattern="$(basename $1)"
+  local pattern="$(basename $1)"
   fetch_generic "$1" "$pattern"
 
   for fn in $pattern; do
