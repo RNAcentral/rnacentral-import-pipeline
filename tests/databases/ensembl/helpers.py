@@ -19,9 +19,10 @@ from rnacentral_pipeline.databases.ensembl import helpers
 from rnacentral_pipeline.databases.ensembl.parser import parse
 
 
-def parse_with_family(filename, family_file='data/rfam/families.tsv'):
+def parse_with_family(filename, family_file='data/rfam/families.tsv',
+                      gencode_file=None):
     with open(filename, 'rb') as raw:
-        return list(parse(raw, family_file))
+        return list(parse(raw, family_file, gencode_file=gencode_file))
 
 
 def features(filename):
