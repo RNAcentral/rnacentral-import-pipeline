@@ -55,6 +55,8 @@ class UnknownRnaTypeException(Exception):
 class RnaTypeInference(object):
     def __init__(self, family_handle):
         self.rfam_mapping = rfutil.name_to_insdc_type(family_handle)
+        family_handle.seek(0)
+        self.rfam_mapping.update(rfutil.id_to_insdc_type(family_handle))
         self.fallbacks = [
             ('RFAM_trans_name', self.rfam_type),
             ('MGI_trans_name', self.mouse_type),

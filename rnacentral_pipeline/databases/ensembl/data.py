@@ -32,6 +32,7 @@ class Context(object):
     supressed_mapping = attr.ib()
     inference = attr.ib()
     gencode_ids = attr.ib(validator=is_a(set))
+    rfam_names = attr.ib(validator=is_a(dict))
 
     @classmethod
     def build(cls, family_file, gencode_file=None):
@@ -44,18 +45,27 @@ class Context(object):
         with open(family_file, 'rb') as raw:
             inference = RnaTypeInference(raw)
 
+        with open(family_file, 'rb') as raw:
+            rfam_names = rfutils.id_to_pretty_name(raw)
+
+        with open(family_file, 'rb') as raw:
+            rfam_names.update(rfutils.name_to_pretty_name(raw))
+
         gencode_ids = set()
         if gencode_file:
             gff = gffutils.create_db(gencode_file, ':memory:',
                                      merge_strategy='warning')
             gencode_ids = {f['ID'][0] for f in gff.features_of_type('transcript')}
-        print(len(gencode_ids))
 
         return cls(
             supressed_mapping,
             inference,
             gencode_ids=gencode_ids,
+            rfam_names=rfam_names,
         )
+
+    def rfam_name(self, locus_tag, default=None):
+        return self.rfam_names.get(locus_tag, default)
 
     def is_supressed(self, feature):
         rfam_models = self.inference.rfam_xref(feature)

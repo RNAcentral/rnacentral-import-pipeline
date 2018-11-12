@@ -36,6 +36,14 @@ def id_to_insdc_type(handle):
     return {family.id: family.guess_insdc() for family in fam.parse(handle)}
 
 
+def id_to_pretty_name(handle):
+    return {family.id: family.pretty_name for family in fam.parse(handle)}
+
+
+def name_to_pretty_name(handle):
+    return {family.name: family.pretty_name for family in fam.parse(handle)}
+
+
 def name_to_suppression(handle):
     """
     Create a dict from the rfam family name (U1) to a flag indicating if the
