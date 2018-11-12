@@ -149,7 +149,7 @@ ensembl_task_summary
 fetched
   .map { t, fs ->
     def ps = t.exclude
-    def selected = [fs].flatten().findAll { f -> !t.is_excluded(f.getName()) }
+    def selected = [fs].flatten().findAll { f -> !Input.is_excluded(t, f.getName()) }
     [t.source, t, selected]
   }
   .groupTuple(by: 0)
