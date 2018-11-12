@@ -1,3 +1,5 @@
+TRUNCATE table ensembl_assembly;
+
 INSERT INTO ensembl_assembly (
     assembly_id,
     assembly_full_name,
@@ -27,7 +29,7 @@ SELECT
     example_end,
     example_start,
     SUBDOMAIN
-FROM LOAD_ASSEMBLIES
+FROM load_assemblies
 ) ON CONFLICT (assembly_id) DO UPDATE
 SET
     assembly_full_name = EXCLUDED.assembly_full_name,
