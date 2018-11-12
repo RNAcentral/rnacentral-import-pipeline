@@ -1,4 +1,4 @@
-class Process {
+class Parse {
   static Map defaults(db_name) {
     return [
       command: "rnac external $db_name",
@@ -11,9 +11,8 @@ class Process {
     ];
   }
 
-  static Map build(db_name, spec) {
-    def defaults = Process.defaults(db_name);
-    return defaults + spec;
+  static Map build(String db_name, Map spec) {
+    def defaults = Parse.defaults(db_name);
+    return defaults + (spec ? spec : [:]);
   }
-
 }
