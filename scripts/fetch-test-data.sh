@@ -14,23 +14,24 @@
 set -euo pipefail
 IFS=$'\n\t'
 
-get_data()
-{
-  filename="$1"
-  expected="$2"
-  test_file="$(basename $1)"
-  final="$(basename "$filename" ".gz")"
-  pushd data
-  wget -O - "$filename" | gzip -d > "$final"
-  hash="$(md5 -q "$final")"
-  [ "$hash" = "$expected" ] || {
-    echo 2>&1 "Unexpected hash for $filename";
-    echo 2>&1 "Expected: $expected"
-    echo 2>&1 "Actual: $hash"
-    exit 1
-  }
-  popd
-}
+# Fetch Ensembl
+bin/fetch generic 'ftp://ftp.ensembl.org/pub/current_embl/homo_sapiens/Homo_sapiens.GRCh38.*.chromosome.12.dat.gz' 'data/ensembl/Homo_sapiens.GRCh38.chromosome.12.dat.gz'
+bin/fetch generic 'ftp://ftp.ensembl.org/pub/current_embl/homo_sapiens/Homo_sapiens.GRCh38.*.chromosome.X.dat.gz' 'data/ensembl/Homo_sapiens.GRCh38.chromosome.X.dat.gz'
+bin/fetch generic 'ftp://ftp.ensembl.org/pub/current_embl/mus_musculus/Mus_musculus.GRCm38.*.chromosome.3.dat.gz' 'data/ensembl/Mus_musculus.GRCm38.chromosome.3.dat.gz'
+bin/fetch generic 'ftp://ftp.ensembl.org/pub/current_embl/macaca_mulatta/Macaca_mulatta.Mmul_8.0.1.*.chromosome.1.dat.gz' 'data/ensembl/Macaca_mulatta.Mmul_8.0.1.chromosome.1.dat.gz'
+gzip -fd data/ensembl/*.gz
 
-get_data 'ftp://ftp.ensembl.org/pub/release-87/embl/homo_sapiens/Homo_sapiens.GRCh38.87.chromosome.12.dat.gz' '51bbbf2516669d3b5fa39a2237833613'
-get_data 'ftp://ftp.ensembl.org/pub/release-87/embl/mus_musculus/Mus_musculus.GRCm38.87.chromosome.3.dat.gz' '7130d9ddb55ba4b95864c7809b030f19'
+# Fetch GENCODE
+gencode_urls="$(mktemp)"
+cat >$gencode_urls <<EOF
+ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_29/gencode.v29.annotation.gff3.gz
+EOF
+
+bin/fetch gencode "$gencode_urls" 'data/gencode/human-transcripts.gff3'
+
+# Fetch EnsemblPlants
+bin/fetch generic 'ftp://ftp.ensemblgenomes.org/pub/current/plants/embl/arabidopsis_thaliana/Arabidopsis_thaliana.TAIR10.*.chromosome.2.dat.gz' 'data/ensembl_plants/Arabidopsis_thaliana.TAIR10.chromosome.2.dat.gz'
+bin/fetch generic 'ftp://ftp.ensemblgenomes.org/pub/current/plants/embl/hordeum_vulgare/Hordeum_vulgare.IBSC_v2.*.chromosome.Pt.dat.gz' 'data/ensembl_plants/Hordeum_vulgare.IBSC_v2.chromosome.Pt.dat.gz'
+bin/fetch generic 'ftp://ftp.ensemblgenomes.org/pub/current/plants/embl/oryza_barthii/Oryza_barthii.O.barthii_v1.*.chromosome.9.dat.gz' 'data/ensembl_plants/Oryza_barthii.O.barthii_v1.chromosome.9.dat.gz'
+bin/fetch generic 'ftp://ftp.ensemblgenomes.org/pub/current/plants/embl/zea_mays/Zea_mays.B73_RefGen_v4.*.chromosome.7.dat.gz' 'data/ensembl_plants/Zea_mays.B73_RefGen_v4.chromosome.7.dat.gz'
+gzip -fd data/ensembl_plants/*.gz
