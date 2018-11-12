@@ -7,7 +7,7 @@ class DataSource {
       index++
     }
 
-    Map process = Process.build(db_name, database.process);
+    Map process = Parse.build(db_name, database.process);
     return [
       name: db_name,
       inputs: inputs,
