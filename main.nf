@@ -43,8 +43,7 @@ for (entry in params.import_data.databases) {
   }
 
   def source = DataSource.build(db_name, database)
-
-  if (source.is_parallel_task()) {
+  if (DataSource.is_parallel_task(source)) {
     data_to_fetch.addAll(source.inputs)
     data_to_process << [source.name, source]
   } else {
@@ -99,8 +98,8 @@ if (any_database('rfam', 'ensembl')) {
 }
 
 // Add the metadata tasks that must always be run
-data_to_fetch_and_process << DataSource.build('pub-info', params.metadata.europepmc)
-data_to_fetch_and_process << DataSource.build('ncbi-taxonomy', params.metadata.taxonomy)
+// data_to_fetch_and_process << DataSource.build('pub-info', params.metadata.europepmc)
+// data_to_fetch_and_process << DataSource.build('ncbi-taxonomy', params.metadata.taxonomy)
 
 // Now setup the channels with all data
 Channel.from(processed_data).set { raw_output }
@@ -127,7 +126,7 @@ process fetch_data {
   """
   set -o pipefail
 
-  ${inp.script()}
+  ${Input.script(inp)}
   """
 }
 
@@ -150,7 +149,7 @@ ensembl_task_summary
 fetched
   .map { t, fs ->
     def ps = t.exclude
-    def selected = [fs].flatten().findAll { f -> !t.is_excluded(f.getName())
+    def selected = [fs].flatten().findAll { f -> !t.is_excluded(f.getName()) }
     [t.source, t, selected]
   }
   .groupTuple(by: 0)
@@ -182,12 +181,12 @@ process fetch_and_process_data {
 
   script:
   def input_files = spec.inputs.inject([]) { acc, inp -> acc << inp.produces }
-  def fetches = spec.inputs.inject([]) { acc, inp -> acc << inp.script() }
+  def fetches = spec.inputs.inject([]) { acc, inp -> acc << Input.script(inp) }
   """
   set -o pipefail
 
   ${fetches.join('\n')}
-  ${spec.script(input_files)}
+  ${DataSource.process_script(spec, input_files)}
   """
 }
 
@@ -207,7 +206,7 @@ process process_data {
   """
   set -o pipefail
 
-  ${spec.script(filenames)}
+  ${DataSource.process_script(spec, filenames)}
   """
 }
 
