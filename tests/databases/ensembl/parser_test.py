@@ -23,7 +23,8 @@ from .helpers import parse_with_family, entries_for, entry_for
 
 @pytest.fixture(scope='module')  # pylint: disable=no-member
 def human_12():
-    return parse_with_family('data/ensembl/Homo_sapiens.GRCh38.90.chromosome.12.dat')
+    return parse_with_family('data/ensembl/Homo_sapiens.GRCh38.90.chromosome.12.dat',
+                             gencode_file='data/gencode/human-transcripts.gff3')
 
 
 @pytest.fixture(scope='module')  # pylint: disable=no-member
@@ -201,19 +202,7 @@ def test_it_builds_correct_entries(human_12):
             "RFAM_trans_name": ["Metazoa_SRP.190-201"],
             "RNAcentral": ["URS0000AA28EF"],
         },
-        references=[dat.Reference(
-            authors=(
-                "Aken BL, Ayling S, Barrell D, Clarke L, Curwen V, Fairley "
-                "S, Fernandez Banet J, Billis K, Garci a Giro n C, Hourlier "
-                "T, Howe K, Kahari A, Kokocinski F, Martin FJ, Murphy DN, "
-                "Nag R, Ruffier M, Schuster M, Tang YA, Vogel JH, White "
-                "S, Zadissa A, Flicek P, Searle SM."
-            ),
-            location="Database (Oxford). 2016 Jun 23",
-            title="The Ensembl gene annotation system",
-            pmid=27337980,
-            doi="10.1093/database/baw093",
-        )],
+        references=[dat.IdReference('pmid', '27337980')],
         mol_type='genomic DNA',
         pseudogene='N',
         is_composite='N',
@@ -263,9 +252,60 @@ def test_it_has_last_ncrna(human_12):
     }
 
 
-@pytest.mark.skip()
+def test_extracts_all_gencode_entries(human_12):
+    assert len([e for e in human_12 if e.database == 'GENCODE']) == 1691
+
+
 def test_can_build_gencode_entries(human_12):
-    pass
+    val = attr.asdict(entry_for(human_12, 'GENCODE:ENST00000620330.1'))
+    del val['sequence']
+    ans = attr.asdict(dat.Entry(
+        primary_id='ENST00000620330',
+        accession='GENCODE:ENST00000620330.1',
+        ncbi_tax_id=9606,
+        database='GENCODE',
+        sequence='A',
+        regions=[
+            dat.SequenceRegion(
+                chromosome='12',
+                strand=1,
+                exons=[dat.Exon(start=3124777, stop=3125063)],
+                assembly_id='GRCh38',
+            ),
+        ],
+        rna_type='SRP_RNA',
+        url='',
+        seq_version='1',
+        lineage=(
+            "Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; "
+            "Euteleostomi; Mammalia; Eutheria; Euarchontoglires; Primates; "
+            "Haplorrhini; Catarrhini; Hominidae; Homo; Homo sapiens"
+        ),
+        chromosome="12",
+        parent_accession='12.GRCh38',
+        common_name='human',
+        species='Homo sapiens',
+        gene='Metazoa_SRP',
+        locus_tag='Metazoa_SRP',
+        optional_id=None,
+        description='Homo sapiens (human) Metazoan signal recognition particle RNA',
+        note_data={
+            'transcript_id': ['ENST00000620330.1']
+        },
+        xref_data={
+            "UCSC": ["uc058jxg.1"],
+            "RFAM_trans_name": ["Metazoa_SRP.190-201"],
+            "RNAcentral": ["URS0000AA28EF"],
+            'Ensembl': ['ENST00000620330.1'],
+        },
+        references=[dat.IdReference('pmid', '22955987')],
+        mol_type='genomic DNA',
+        pseudogene='N',
+        is_composite='N',
+    ))
+
+    del ans['sequence']
+    assert val == ans
 
 
 def test_can_use_mouse_models_to_correct_rna_type(mouse_3):
@@ -299,3 +339,7 @@ def test_it_never_has_bad_vault(mouse_3):
 
 def test_does_not_append_none_to_description(macaca):
     assert entry_for(macaca, 'ENSMMUT00000062476.1').description == 'Macaca mulatta (rhesus monkey) lncRNA'
+
+
+def test_does_not_create_extra_gencode_entries(macaca):
+    assert len([e for e in macaca if e.database == 'GENCODE']) == 0

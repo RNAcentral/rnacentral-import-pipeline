@@ -20,6 +20,7 @@ import attr
 from rnacentral_pipeline.databases import data
 
 from rnacentral_pipeline.databases.helpers import embl
+from rnacentral_pipeline.databases.helpers import publications as pubs
 
 URL = 'http://www.ensembl.org/Homo_sapiens/Transcript/Summary?t={transcript}'
 
@@ -78,19 +79,7 @@ def references():
     """
     Get the standard reference for all Ensembl entries.
     """
-    return [data.Reference(
-        authors=(
-            "Aken BL, Ayling S, Barrell D, Clarke L, Curwen V, Fairley "
-            "S, Fernandez Banet J, Billis K, Garci a Giro n C, Hourlier "
-            "T, Howe K, Kahari A, Kokocinski F, Martin FJ, Murphy DN, "
-            "Nag R, Ruffier M, Schuster M, Tang YA, Vogel JH, White "
-            "S, Zadissa A, Flicek P, Searle SM."
-        ),
-        location="Database (Oxford). 2016 Jun 23",
-        title="The Ensembl gene annotation system",
-        pmid=27337980,
-        doi="10.1093/database/baw093",
-    )]
+    return [pubs.reference(27337980)]
 
 
 def is_pseudogene(gene, feature):

@@ -15,7 +15,7 @@ limitations under the License.
 
 import attr
 
-from rnacentral_pipeline.databases.helpers import publications as pub
+from rnacentral_pipeline.databases.helpers import publications as pubs
 
 
 def xref_data(entry):
@@ -41,7 +41,7 @@ def references():
     """
     Get the standard GENCODE reference.
     """
-    return pub.reference(22955987)
+    return pubs.reference(22955987)
 
 
 def accession(entry):
@@ -61,5 +61,6 @@ def update_entry(entry):
         database='GENCODE',
         xref_data=xref_data(entry),
         optional_id=None,
-        references=references(),
+        references=[references()],
+        url='',
     )

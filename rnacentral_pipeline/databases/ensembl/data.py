@@ -46,8 +46,10 @@ class Context(object):
 
         gencode_ids = set()
         if gencode_file:
-            gff = gffutils.create_db(gencode_file, ':memory:')
-            gencode_ids = {f['ID'] for f in gff.features_of_type('transcript')}
+            gff = gffutils.create_db(gencode_file, ':memory:',
+                                     merge_strategy='warning')
+            gencode_ids = {f['ID'][0] for f in gff.features_of_type('transcript')}
+        print(len(gencode_ids))
 
         return cls(
             supressed_mapping,
@@ -71,4 +73,4 @@ class Context(object):
         return False
 
     def from_gencode(self, entry):
-        return entry.primary_id in self.gencode_ids
+        return entry.accession in self.gencode_ids
