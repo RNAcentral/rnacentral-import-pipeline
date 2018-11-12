@@ -23,23 +23,24 @@ from .helpers import parse_with_family, entries_for, entry_for
 
 @pytest.fixture(scope='module')  # pylint: disable=no-member
 def human_12():
-    return parse_with_family('data/ensembl/Homo_sapiens.GRCh38.90.chromosome.12.dat',
+    return parse_with_family('data/ensembl/Homo_sapiens.GRCh38.chromosome.12.dat',
                              gencode_file='data/gencode/human-transcripts.gff3')
 
 
 @pytest.fixture(scope='module')  # pylint: disable=no-member
 def human_x():
-    return parse_with_family('data/ensembl/Homo_sapiens.GRCh38.92.chromosome.X.dat')
+    return parse_with_family('data/ensembl/Homo_sapiens.GRCh38.chromosome.X.dat')
 
 
 @pytest.fixture(scope='module')  # pylint: disable=no-member
 def macaca():
-    return parse_with_family('data/ensembl/Macaca_mulatta.Mmul_8.0.1.92.chromosome.1.dat')
+    return parse_with_family('data/ensembl/Macaca_mulatta.Mmul_8.0.1.chromosome.1.dat',
+                             gencode_file='data/gencode/human-transcripts.gff3')
 
 
 @pytest.fixture(scope='module')  # pylint: disable=no-member
 def mouse_3():
-    return parse_with_family('data/ensembl/Mus_musculus.GRCm38.87.chromosome.3.dat')
+    return parse_with_family('data/ensembl/Mus_musculus.GRCm38.chromosome.3.dat')
 
 
 def test_it_sets_primary_id_to_versionless_transcript_id(human_12):
@@ -108,7 +109,7 @@ def test_description_strips_source(human_12):
 
 def test_generated_description_includes_locus(human_12):
     assert entry_for(human_12, 'ENST00000501075.2').description == \
-        "Homo sapiens (human) antisense RNA AC006064.2"
+        "Homo sapiens (human) novel transcript, antisense to CHD4"
 
 
 def test_can_correct_rfam_name_to_type(human_12):
@@ -190,16 +191,16 @@ def test_it_builds_correct_entries(human_12):
         parent_accession='12.GRCh38',
         common_name='human',
         species='Homo sapiens',
-        gene='Metazoa_SRP',
-        locus_tag='Metazoa_SRP',
+        gene='RF00017',
+        locus_tag='RF00017',
         optional_id='ENSG00000278469.1',
-        description='Homo sapiens (human) Metazoan signal recognition particle RNA',
+        description='Homo sapiens (human) SRP RNA Metazoan signal recognition particle RNA',
         note_data={
             'transcript_id': ['ENST00000620330.1']
         },
         xref_data={
             "UCSC": ["uc058jxg.1"],
-            "RFAM_trans_name": ["Metazoa_SRP.190-201"],
+            "RFAM_trans_name": ["RF00017.190-201"],
             "RNAcentral": ["URS0000AA28EF"],
         },
         references=[dat.IdReference('pmid', '27337980')],
@@ -247,7 +248,7 @@ def test_it_always_has_valid_rna_types_for_human(human_12):
 def test_it_has_last_ncrna(human_12):
     assert entry_for(human_12, "ENST00000459107.1").xref_data == {
         'RNAcentral': ["URS00006F58F8"],
-        'RFAM_trans_name': ['Y_RNA.633-201'],
+        'RFAM_trans_name': ['RF00019.633-201'],
         "UCSC": ["uc031ztg.2"],
     }
 
@@ -285,16 +286,16 @@ def test_can_build_gencode_entries(human_12):
         parent_accession='12.GRCh38',
         common_name='human',
         species='Homo sapiens',
-        gene='Metazoa_SRP',
-        locus_tag='Metazoa_SRP',
+        gene='RF00017',
+        locus_tag='RF00017',
         optional_id=None,
-        description='Homo sapiens (human) Metazoan signal recognition particle RNA',
+        description='Homo sapiens (human) SRP RNA Metazoan signal recognition particle RNA',
         note_data={
             'transcript_id': ['ENST00000620330.1']
         },
         xref_data={
             "UCSC": ["uc058jxg.1"],
-            "RFAM_trans_name": ["Metazoa_SRP.190-201"],
+            "RFAM_trans_name": ["RF00017.190-201"],
             "RNAcentral": ["URS0000AA28EF"],
             'Ensembl': ['ENST00000620330.1'],
         },
