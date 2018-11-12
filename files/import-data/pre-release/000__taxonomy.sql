@@ -21,3 +21,4 @@ SET
 ;
 
 drop table load_taxonomy;
+

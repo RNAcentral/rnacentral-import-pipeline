@@ -323,14 +323,29 @@ process merge_and_import {
   """
 }
 
-loaded
+process pre_release {
+  input:
+  file(sql) from pre_scripts
+}
+
+loaded.into { pre_loaded; post_loaded }
+
+pre_loaded
+  .flatMap { name ->
+    file("files/import-data/pre-release/*__${name.replace('_', '-')}.sql")
+  }
+  .filter { f -> f.exists() }
+  .toSortedList()
+  .set { pre_scripts }
+
+post_loaded
   .flatMap { name ->
     file("files/import-data/post-release/*__${name.replace('_', '-')}.sql")
   }
-  .mix(Channel.fromPath('files/import-data/post-release/999__cleanup.sql'))
   .mix(Channel.fromPath('files/import-data/post-release/000__populate_precompute.sql'))
+  .mix(Channel.fromPath('files/import-data/post-release/999__cleanup.sql'))
   .filter { f -> f.exists() }
-  .collect()
+  .toSortedList()
   .set { post_scripts }
 
 process release {
@@ -338,7 +353,8 @@ process release {
   maxForks 1
 
   input:
-  file(post) from post_scripts
+  file(pre_sql) from pre_scripts
+  file(post_sql) from post_scripts
 
   output:
   val('done') into post_release
@@ -347,15 +363,14 @@ process release {
   set -o pipefail
 
   run_sql() {
-    echo "Running: \$1"
-    psql -v ON_ERROR_STOP=1 -f \$1 "$PGDATABASE"
+    echo "Running: \$1/\$2"
+    psql -v ON_ERROR_STOP=1 -f \$2 "$PGDATABASE"
   }
-
   export -f run_sql
+
+  echo "${pre_sql.join('\n')}" | xargs -r0 -I {} run_sql pre-release {}
   rnac run-release
-  find . -name '*.sql' -print0 |\
-  sort -z |\
-  xargs -r0 -I {} run_sql {}
+  echo "${post_release.join('\n')}" | xargs -r0 -I {} run_sql post-release {}
   """
 }
 
