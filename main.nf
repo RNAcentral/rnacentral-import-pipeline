@@ -52,21 +52,6 @@ for (entry in params.import_data.databases) {
   }
 }
 
-// If we are processing Rfam
-// Rfam based metadata. These databases use Rfam in one way or another so we
-// should stay up-to-date with the current Rfam data. For example they may be
-// creating annotations of a partial lncRNA which we do not want to import. By
-// tracking the latest Rfam we will know what is a partial lncRNA. This is done
-// by querying the Rfam MySQL database and then using the Rfam commands to
-// process the query results. We can then import the processed data as normal.
-if (any_database('rfam')) {
-  file("files/import-data/rfam/*.sql").each { query ->
-    def name = query.getBaseName()
-    def inputs = [produces: "data.tsv", query: query, cmd: 'mysql'] + params.metadata.mysql
-    data_to_fetch_and_process << DataSource.build("rfam-$name", [inputs: rfam_input])
-  }
-}
-
 Channel.fromPath('files/import-data/ensembl/*.sql')
   .map { f -> f.getBaseName() }
   .collectFile(name: "possible-data.txt", newLine: true)
@@ -96,6 +81,21 @@ process find_ensembl_tasks {
   echo 'show databases' | ${as_mysql_cmd(mysql)} > dbs.txt
   rnac ensembl select-tasks dbs.txt $possible done.csv > selected.csv
   """
+}
+
+// If we are processing Rfam or Ensembl we need to update the Rfam metadata.
+// These databases use Rfam in one way or another so we should stay up-to-date
+// with the current Rfam data. For example they may be creating annotations of a
+// partial lncRNA which we do not want to import. By tracking the latest Rfam we
+// will know what is a partial lncRNA. This is done by querying the Rfam MySQL
+// database and then using the Rfam commands to process the query results. We
+// can then import the processed data as normal.
+if (any_database('rfam', 'ensembl')) {
+  file("files/import-data/rfam/*.sql").each { query ->
+    def name = query.getBaseName()
+    def inputs = [produces: "data.tsv", query: query, cmd: 'mysql'] + params.metadata.mysql
+    data_to_fetch_and_process << DataSource.build("rfam-$name", [inputs: rfam_input])
+  }
 }
 
 // Add the metadata tasks that must always be run
@@ -150,7 +150,7 @@ ensembl_task_summary
 fetched
   .map { t, fs ->
     def ps = t.exclude
-    def selected = [fs].flatten().findAll { f -> !ps.any { p -> f.getName() =~ p } }
+    def selected = [fs].flatten().findAll { f -> !t.is_excluded(f.getName())
     [t.source, t, selected]
   }
   .groupTuple(by: 0)
@@ -203,10 +203,11 @@ process process_data {
   file("${spec.process.produces}") into all_processed_output mode flatten
 
   script:
+  def filenames = input_files.inject([]) { a, fn -> a << fn.getName() }
   """
   set -o pipefail
 
-  ${spec.script(input_files)}
+  ${spec.script(filenames)}
   """
 }
 
@@ -422,7 +423,7 @@ processed_rfam_hits
   .set { hits_to_import }
 
 process import_qa_data {
-  tag name
+  tag { "qa-$name" }
   echo true
 
   input:
