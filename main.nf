@@ -323,11 +323,6 @@ process merge_and_import {
   """
 }
 
-process pre_release {
-  input:
-  file(sql) from pre_scripts
-}
-
 loaded.into { pre_loaded; post_loaded }
 
 pre_loaded
