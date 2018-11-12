@@ -27,7 +27,7 @@ $$
 create teable load_taxonomy (
     taxid int,
     name text,
-    lineage, text,
+    lineage text,
     aliases json,
     replaced_by int
 );
