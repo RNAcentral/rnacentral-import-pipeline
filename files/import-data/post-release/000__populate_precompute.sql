@@ -1,6 +1,6 @@
 -- Populate rnc_rna_precomputed with partial data so we can create foreign keys
 -- into it later.
-INSERT INTO rnc_rna_precompute (id, upi, taxid, is_active) (
+INSERT INTO rnc_rna_precomputed (id, upi, taxid, is_active) (
 SELECT
   xref.upi || '_' || xref.taxid,
   xref.upi,
