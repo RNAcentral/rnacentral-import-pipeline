@@ -15,6 +15,7 @@ limitations under the License.
 
 import os
 import csv
+import json
 import operator as op
 import itertools as it
 import collections as col
@@ -25,7 +26,6 @@ import attr
 from attr.validators import optional
 from attr.validators import instance_of as is_a
 
-from rnacentral_pipeline import psql
 
 NAME_ALIASES = {
     'common name',
@@ -67,7 +67,7 @@ class TaxonomyEntry(object):
             self.tax_id,
             self.name,
             self.lineage,
-            psql.list_as_array(self.aliases),
+            json.dumps(self.aliases),
             self.replaced_by,
         ]
 
