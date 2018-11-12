@@ -23,8 +23,9 @@ class DataSource {
       index++
     }
 
-    Map update = database.subMap('command', 'produces', 'memory');
+    Map update = database.subMap('command', 'produces');
     update.inputs = inputs;
+    update.directives.memory = database.memory || updates.directives.memory;
     return DataSource.defaults(db_name) + update;
   }
 
