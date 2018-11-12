@@ -121,6 +121,17 @@ function fetch_europepmc() {
   fi
 }
 
+function fetch_gencode() {
+  local remote="$1"
+  local output="$2"
+  local tmp="$(mktemp)"
+
+  fetch_url_file "$1" "$tmp"
+  zcat "$tmp" | awk '{ if ($3 == "transcript") print $0 }' > "$output"
+
+  rm "$tmp"
+}
+
 [ $# -gt 0 ] || { usage 0; }
 
 name="$1"
@@ -129,6 +140,9 @@ shift 1
 case "$name" in
   "ensembl" | "ensembl_plants" )
     fetch_grouped "$@" ;;
+
+  "gencode" )
+    fetch_gencode "$@" ;;
 
   "generic" )
     fetch_generic "$@" ;;
