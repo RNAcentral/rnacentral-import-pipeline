@@ -346,10 +346,16 @@ process release {
   """
   set -o pipefail
 
+  run_sql() {
+    echo "Running: $1"
+    psql -v ON_ERROR_STOP=1 -f $1 "$PGDATABASE"
+  }
+
+  export -f run_sql
   rnac run-release
   find . -name '*.sql' -print0 |\
   sort -z |\
-  xargs -r0 -I {} psql -v ON_ERROR_STOP=1 -f {} "$PGDATABASE"
+  xargs -r0 -I {} run_sql {}
   """
 }
 
