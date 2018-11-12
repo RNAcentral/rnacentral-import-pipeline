@@ -1,20 +1,4 @@
 class DataSource {
-  static Map defaults(db_name) {
-    return [
-      name: db_name,
-      inputs: [],
-      process: [
-        command: "rnac external $db_name",
-        produces: '*.csv',
-        directives: [
-          memory: 2.GB,
-          tag: db_name,
-          group: "/rnc/process/$db_name"
-        ]
-      ]
-    ];
-  }
-
   static Map build(db_name, database) {
     def index = 0
     def inputs = []
@@ -23,10 +7,12 @@ class DataSource {
       index++
     }
 
-    Map update = database.subMap('command', 'produces');
-    update.inputs = inputs;
-    update.directives.memory = database.memory || updates.directives.memory;
-    return DataSource.defaults(db_name) + update;
+    Map process = Process.build(db_name, database.process);
+    return [
+      name: db_name,
+      inputs: inputs,
+      process: process
+    ];
   }
 
   static def process_script(Map source, List<String> input_files) {
