@@ -21,6 +21,7 @@ from Bio import SeqIO
 
 from rnacentral_pipeline.databases import data
 from rnacentral_pipeline.databases.helpers import embl
+from rnacentral_pipeline.databases.gencode import helpers as gencode
 
 from . import helpers
 from .data import Context
@@ -99,6 +100,8 @@ def parse(raw, family_file, gencode_file=None):
                 current_gene = feature
                 for entry in helpers.generate_related(ncrnas):
                     yield entry
+                    if context.from_gencode(entry):
+                        yield gencode.update_entry(entry)
                 ncrnas = []
                 continue
 
@@ -116,3 +119,5 @@ def parse(raw, family_file, gencode_file=None):
 
         for entry in helpers.generate_related(ncrnas):
             yield entry
+            if context.from_gencode(entry):
+                yield gencode.update_entry(entry)

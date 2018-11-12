@@ -13,6 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import attr
+
 from rnacentral_pipeline.databases.helpers import publications as pub
 
 
@@ -47,3 +49,17 @@ def accession(entry):
     This will produce an accession that is unique and specific to GENCODE.
     """
     return 'GENCODE:%s' % entry.accession
+
+
+def update_entry(entry):
+    """
+    Modify an Ensembl Entry into a GENCODE Entry.
+    """
+    return attr.assoc(
+        entry,
+        accession=accession(entry),
+        database='GENCODE',
+        xref_data=xref_data(entry),
+        optional_id=None,
+        references=references(),
+    )

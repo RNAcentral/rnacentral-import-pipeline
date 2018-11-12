@@ -69,3 +69,6 @@ class Context(object):
             if self.supressed_mapping[name]:
                 return True
         return False
+
+    def from_gencode(self, entry):
+        return entry.primary_id in self.gencode_ids
