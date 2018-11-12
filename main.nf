@@ -347,8 +347,8 @@ process release {
   set -o pipefail
 
   run_sql() {
-    echo "Running: $1"
-    psql -v ON_ERROR_STOP=1 -f $1 "$PGDATABASE"
+    echo "Running: \$1"
+    psql -v ON_ERROR_STOP=1 -f \$1 "$PGDATABASE"
   }
 
   export -f run_sql
