@@ -7,6 +7,7 @@ SELECT
   xref.taxid,
   true
 FROM xref
+JOIN load_rnc_accessions acc ON acc.accession = xref.ac
 WHERE
   xref.deleted = 'N'
 ) ON CONFLICT DO NOTHING;
