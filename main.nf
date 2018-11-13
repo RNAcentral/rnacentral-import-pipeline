@@ -326,17 +326,13 @@ process merge_and_import {
 loaded.into { pre_loaded; post_loaded }
 
 pre_loaded
-  .flatMap { name ->
-    file("files/import-data/pre-release/*__${name.replace('_', '-')}.sql")
-  }
+  .flatMap { n -> file("files/import-data/pre-release/*__${n.replace('_', '-')}.sql") }
   .filter { f -> f.exists() }
   .toSortedList()
   .set { pre_scripts }
 
 post_loaded
-  .flatMap { name ->
-    file("files/import-data/post-release/*__${name.replace('_', '-')}.sql")
-  }
+  .flatMap { n -> file("files/import-data/post-release/*__${n.replace('_', '-')}.sql") }
   .mix(Channel.fromPath('files/import-data/post-release/000__populate_precompute.sql'))
   .mix(Channel.fromPath('files/import-data/post-release/999__cleanup.sql'))
   .filter { f -> f.exists() }
@@ -354,18 +350,23 @@ process release {
   output:
   val('done') into post_release
 
+  shell:
+  file('pre-release').text = pre_sql.join('\n')
+  file('post-release').text = post_sql.join('\n')
   """
   set -o pipefail
 
   run_sql() {
-    echo "Running: \$1/\$2"
-    psql -v ON_ERROR_STOP=1 -f \$2 "$PGDATABASE"
+    local fn="$1"
+    while IFS='' read -r "script" || [[ -n "$script" ]]; do
+      echo "Running: $fn/$script"
+      psql -v ON_ERROR_STOP=1 -f $script "$PGDATABASE"
+    done < "$fn"
   }
-  export -f run_sql
 
-  echo "${pre_sql.join('\n')}" | xargs -r0 -I {} run_sql pre-release {}
+  run_sql pre-release
   rnac run-release
-  echo "${post_release.join('\n')}" | xargs -r0 -I {} run_sql post-release {}
+  run_sql post-release
   """
 }
 
