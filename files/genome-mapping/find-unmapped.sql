@@ -1,5 +1,5 @@
 COPY (
-  select
+    select
     json_build_object(
       'id', pre.id,
       'sequence', COALESCE(rna.seq_short, rna.seq_long)
@@ -11,6 +11,7 @@ COPY (
       regions.urs_taxid = pre.id
       and regions.assembly_id = :'assembly_id'
     WHERE
-      pre.taxid is not null
+      pre.taxid = :taxid
       and regions.id is null
+      and pre.is_active = true
 ) TO STDOUT
