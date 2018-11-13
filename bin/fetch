@@ -8,7 +8,33 @@ function usage() {
   cat <<EOS
 fetch <name> [arguments...]
 
-This is the primary script to fetching data. It will
+This is the primary script to fetching data. It is what is generally in charge
+of fetching data from various places.
+
+names:
+  generic url pattern
+    This will fetch data at the given url. What this does depends on the type
+    of url and the pattern. It can deal with absolute file paths, FTP, HTTP,
+    and SSH urls.
+
+  url-file <urls> <pattern>
+    Each line in <urls> should be a URL to fetch, the URLs must be http or
+    ftp. If <pattern> has a '*' in it each url will be fetched separately,
+    otherwise they will be merged into a file called <pattern>. This will not
+    decompress any compressed files.
+
+  ensembl url
+  ensembl_plants url
+    These will fetch the data at the given url and then merge all files from
+    the same species into a single <speces>.grouped.gz.
+
+    ex: fetch ensembl ftp://ftp.ensembl.org/pub/current_embl/**/*.dat.gz
+
+  gencode <url-file> <output>
+    This assumes the first argument is a url file to fetch. It fetches all data
+    in the those files and then extracts the transcript entries from the GFF3 files
+    into a single GFF3 file.
+
 EOS
   exit $status
 }
@@ -64,7 +90,7 @@ function fetch_generic() {
 }
 
 function fetch_grouped() {
-  local pattern="$(basename $1)"
+  local pattern="$(basename "$1")"
   fetch_generic "$1" "$pattern"
 
   for fn in $pattern; do
@@ -133,6 +159,15 @@ function fetch_gencode() {
   rm "$tmp"
 }
 
+function fetch_genome() {
+  local remote="$1"
+  local genome_file="${2:-genome.fasta}"
+
+  fetch_generic "$remote" '*.fa.gz'
+  gzip -d *.fa.gz
+  cat *.fa > "$genome_file"
+}
+
 [ $# -gt 0 ] || { usage 0; }
 
 name="$1"
@@ -141,6 +176,9 @@ shift 1
 case "$name" in
   "ensembl" | "ensembl_plants" )
     fetch_grouped "$@" ;;
+
+  "genome" )
+    fetch_genome "$@" ;;
 
   "gencode" )
     fetch_gencode "$@" ;;
