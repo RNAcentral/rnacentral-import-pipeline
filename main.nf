@@ -397,9 +397,9 @@ process fetch_sequences {
   """
 }
 
-sequences_to_scan
-  .combine(Channel.fromPath(params.qa.rfam_scan.cm_files).collect())
-  .set { sequences_to_scan }
+Channel.fromPath(params.qa.rfam_scan.cm_files)
+  .collect()
+  .set { rfam_cm_files }
 
 process infernal_scan {
   queue 'mpi-rh7'
@@ -408,7 +408,8 @@ process infernal_scan {
   module 'mpi/openmpi-x86_64'
 
   input:
-  set file('sequences.fasta'), file(cm_file) from sequences_to_scan
+  each file('sequences.fasta') from sequences_to_scan
+  file(rfam_cm) from rfam_cm_files
 
   output:
   set val('rfam'), file('hits.csv') into processed_rfam_hits
