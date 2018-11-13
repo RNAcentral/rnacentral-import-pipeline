@@ -66,7 +66,11 @@ def process_json_schema(json_file, output):
     dir_okay=False,
     readable=True,
 ))
-@click.argument('gencode_gff', type=click.File('rb'))
+@click.argument('gencode_gff', type=click.Path(
+    file_okay=True,
+    dir_okay=False,
+    readable=True,
+))
 @click.argument('output', default='.', type=click.Path(
     writable=True,
     dir_okay=True,
