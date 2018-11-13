@@ -8,8 +8,6 @@ process species_to_map {
 
   output:
   stdout into raw_genomes
-  // Writes: species, assembly, url_pattern
-  // ex: homo_sapiens,CRGh38,url_pattern
 
   """
   psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE"
@@ -18,22 +16,28 @@ process species_to_map {
 
 raw_genomes
   .splitCsv()
-  .into { assemblies, genomes_to_fetch }
+  .into { assemblies; genomes_to_fetch }
+
+assemblies
+  .combine(Channel.fromPath('files/genome-mapping/find-unmapped.sql'))
+  .view()
+  .set { assemblies_to_fetch }
 
 process fetch_unmapped_sequences {
+  tag { species }
   scratch true
 
   input:
-  set val(species), val(assmebly), val(division) from assemblies
+  set val(species), val(assembly_id), val(taxid), val(division), file(query) from assemblies_to_fetch
 
   output:
   set species, file('parts/*.fasta') into split_sequences
 
-  script
+  script:
   """
   set -o pipefail
 
-  psql -v ON_ERROR_STOP=1 -v assembly_id=$assembly_id -f "$query" "$PGDATABASE" > raw.json
+  psql -v ON_ERROR_STOP=1 -v taxid=$taxid -v assembly_id=$assembly_id -f "$query" "$PGDATABASE" > raw.json
   json2fasta.py raw.json rnacentral.fasta
   seqkit shuffle --two-pass rnacentral.fasta > shuffled.fasta
   seqkit split --two-pass --by-size ${params.qa.rfam_scan.chunk_size} --out-dir 'parts/' shuffled.fasta
@@ -41,35 +45,37 @@ process fetch_unmapped_sequences {
 }
 
 process download_genome {
+  tag { species }
   scratch true
 
   input:
-  set val(species), val(assembly), val(division) from genomes_to_fetch
+  set val(species), val(assembly), val(taxid), val(division) from genomes_to_fetch
 
   output:
   set val(species), file('*.fa'), file('11.ooc') into genomes
 
   script:
-  def url = GStringTemplateEngine()
+  def engine = new groovy.text.SimpleTemplateEngine()
+  def url = engine
     .createTemplate(params.genome_mapping.sources[division])
     .make([species: species])
     .toString()
   """
-  fetch genome $url $species genome.fasta
+  fetch genome '$url' ${species}.fasta
 
   blat \
     -makeOoc=11.ooc \
     -stepSize=${params.genome_mapping.blat_options.step_size} \
     -repMatch=${params.genome_mapping.blat_options.rep_match} \
     -minScore=${params.genome_mapping.blat_options.min_score} \
-    genome.fasta /dev/null /dev/null
+    ${species}.fasta /dev/null /dev/null
   """
 }
 
 genomes
   .join(split_sequences)
   .flatMap { species, chrs, ooc_file, chunks ->
-    [chrs, chunks].combinations().inject([]) { chr, chunk -> [species, ooc_file, chr, chunk] }
+    [chrs, chunks].combinations().inject([]) { acc, it -> acc << [species, ooc_file] + it }
   }
   .set { targets }
 
