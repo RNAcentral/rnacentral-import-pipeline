@@ -113,5 +113,5 @@ def write(directory, output):
     with ExitStack() as stack:
         files = [stack.enter_context(open(f)) for f in filenames]
         writer = csv.writer(output)
-        for tax_entry in parse(*files):
+        for tax_entry in parse(*files):  # pylint: disable=star-args
             writer.writerows(tax_entry.writeable())

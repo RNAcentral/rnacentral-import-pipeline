@@ -9,7 +9,7 @@ SELECT
   taxid,
   name,
   lineage,
-  ARRAY(json_array_elements_text(aliases)),
+  ARRAY(select json_array_elements_text(aliases)),
   replaced_by
 from load_taxonomy
 ) ON CONFLICT (id) DO UPDATE
