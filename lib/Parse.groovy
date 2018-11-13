@@ -13,6 +13,9 @@ class Parse {
 
   static Map build(String db_name, Map spec) {
     def data = new LinkedHashMap(Parse.defaults(db_name));
+    if (!spec) {
+      return data;
+    }
     spec.directives.each { entry ->
       data.directives[entry.key] = entry.value;
     }
