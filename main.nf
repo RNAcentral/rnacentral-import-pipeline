@@ -98,8 +98,8 @@ if (any_database('rfam', 'ensembl')) {
 }
 
 // Add the metadata tasks that must always be run
-// data_to_fetch_and_process << DataSource.build('pub-info', params.metadata.europepmc)
-// data_to_fetch_and_process << DataSource.build('ncbi-taxonomy', params.metadata.taxonomy)
+data_to_fetch_and_process << DataSource.build('pub-info', params.metadata.europepmc)
+data_to_fetch_and_process << DataSource.build('ncbi-taxonomy', params.metadata.taxonomy)
 
 // Now setup the channels with all data
 Channel.from(processed_data).set { raw_output }
@@ -350,23 +350,24 @@ process release {
   output:
   val('done') into post_release
 
-  shell:
-  file('pre-release').text = pre_sql.join('\n')
-  file('post-release').text = post_sql.join('\n')
+  script:
   """
   set -o pipefail
 
   run_sql() {
-    local fn="$1"
-    while IFS='' read -r "script" || [[ -n "$script" ]]; do
-      echo "Running: $fn/$script"
-      psql -v ON_ERROR_STOP=1 -f $script "$PGDATABASE"
-    done < "$fn"
+    local fn="\$1"
+    while IFS='' read -r "script" || [[ -n "\$script" ]]; do
+      echo "Running: \$fn/\$script"
+      psql -v ON_ERROR_STOP=1 -f \$script "\$PGDATABASE"
+    done < "\$fn"
   }
+
+  echo "${pre_sql.join('\n')}" > pre-release
+  echo "${post_sql.join('\n')}" > post-release
 
   run_sql pre-release
   rnac run-release
-  run_sql post-release
+  run_sql "post-release"
   """
 }
 
