@@ -12,7 +12,11 @@ class Parse {
   }
 
   static Map build(String db_name, Map spec) {
-    def defaults = Parse.defaults(db_name);
-    return defaults + (spec ? spec : [:]);
+    def data = new LinkedHashMap(Parse.defaults(db_name));
+    spec.directives.each { entry ->
+      data.directives[entry.key] = entry.value;
+    }
+    data += spec.subMap('command', 'produces');
+    return data;
   }
 }
