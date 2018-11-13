@@ -1,5 +1,5 @@
 LOAD CSV
-FROM ALL FILENAMES MATCHING ~<taxonomy.*csv$>
+FROM taxonomy.csv
 HAVING FIELDS (
     taxid,
     name,
@@ -24,7 +24,7 @@ $$
 drop table if exists load_taxonomy;
 $$,
 $$
-create teable load_taxonomy (
+create table load_taxonomy (
     taxid int,
     name text,
     lineage text,
