@@ -118,6 +118,7 @@ function fetch_europepmc() {
   if [[ ! -d "$output" ]]; then
     mkdir -p "$output"
     mv out/*.xml "$output/"
+    rm -r out
   fi
 }
 
