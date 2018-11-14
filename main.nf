@@ -335,8 +335,10 @@ pre_loaded
 
 post_loaded
   .flatMap { n -> file("files/import-data/post-release/*__${n.replace('_', '-')}.sql") }
-  .mix(Channel.fromPath('files/import-data/post-release/000__populate_precompute.sql'))
-  .mix(Channel.fromPath('files/import-data/post-release/999__cleanup.sql'))
+  .mix(
+    Channel.fromPath('files/import-data/post-release/000__populate_precompute.sql'),
+    Channel.fromPath('files/import-data/post-release/999__cleanup.sql')
+  )
   .filter { f -> f.exists() }
   .toSortedList()
   .set { post_scripts }
