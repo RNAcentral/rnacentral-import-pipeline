@@ -405,7 +405,9 @@ process fetch_sequences {
 }
 
 split_sequences
-  .map { name, fn -> [name, fn, file(params.qa[name].files)] }
+  .flatMap { name, fns ->
+    fns.inject([]) { fn -> [name, fn, file(params.qa[name].files)] }
+  }
   .set { sequences_to_scan }
 
 process qa_scan {
