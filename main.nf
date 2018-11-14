@@ -474,7 +474,7 @@ flag_for_precompute
 // Run precompute of selected data
 //=============================================================================
 
-process query_upis {
+process find_precompute_upis {
   input:
   set val(flag), file(sql) from precompute_upi_queries
 
