@@ -1,3 +1,5 @@
+import static nextflow.Nextflow.file
+
 class Input {
   static Map defaults(db_name, index, input_name) {
     return [
@@ -27,10 +29,16 @@ class Input {
       .inject([]) { result, entry -> result << "--$entry.key" << entry.value }
       .join(' ')
 
-    def spec = [
+    def query = new File(mysql.query);
+    def produces = query.getBaseName() + '.tsv'
+    if (mysql.containsKey('produces')) {
+      produces = mysql.produces
+    }
+
+    Map spec = [
       command: "mysql ${options}",
-      arguments: [options.query],
-      produces: mysql.produces,
+      arguments: [file(mysql.query)],
+      produces: produces,
     ];
 
     return Input.defaults(db_name, index, input_name) + spec;
@@ -56,7 +64,7 @@ class Input {
     }
 
     if (input.containsKey('command') && input.command == 'mysql') {
-      return Input.from_mysql(input);
+      return Input.from_mysql(db_name, index, input_name, input);
     }
 
     if (input.containsKey('url_file')) {
