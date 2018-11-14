@@ -35,12 +35,7 @@ process fetch_unmapped_sequences {
 
   script:
   """
-  set -o pipefail
-
-  psql -v ON_ERROR_STOP=1 -v taxid=$taxid -v assembly_id=$assembly_id -f "$query" "$PGDATABASE" > raw.json
-  json2fasta.py raw.json rnacentral.fasta
-  seqkit shuffle --two-pass rnacentral.fasta > shuffled.fasta
-  seqkit split --two-pass --by-size ${params.qa.rfam_scan.chunk_size} --out-dir 'parts/' shuffled.fasta
+  sql2json -v taxid=$taxid -v assembly_id=$assembly_id $query ${params.qa.rfam_scan.chunk_size}
   """
 }
 
