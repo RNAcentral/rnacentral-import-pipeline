@@ -287,11 +287,13 @@ ensembl_imported
 //=============================================================================
 
 raw_output
-  .mix(processed_output)
-  .mix(term_info)
-  .mix(references_output)
-  .mix(ensembl_output)
-  .mix(ensembl_imported_output)
+  .mix(
+    processed_output,
+    term_info,
+    references_output,
+    ensembl_output,
+    ensembl_imported_output
+  )
   .map { f ->
     name = f.getBaseName()
     ctl = file("files/import-data/load/${name.replace('_', '-')}.ctl")
