@@ -93,11 +93,10 @@ if (any_database('rfam', 'ensembl')) {
   file("files/import-data/rfam/*.sql").each { query ->
     def name = query.getBaseName()
     def input = [produces: "data.tsv", query: query.toString(), command: 'mysql']
-    def spec = [
+    data_to_fetch_and_process << DataSource.build("rfam-$name", [
       inputs: [data: input + params.metadata.rfam.mysql],
       process: [command: "rnac rfam $name"]
-    ]
-    data_to_fetch_and_process << DataSource.build("rfam-$name", spec)
+    ])
   }
 }
 
