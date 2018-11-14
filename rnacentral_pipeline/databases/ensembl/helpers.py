@@ -28,6 +28,7 @@ CODING_RNA_TYPES = set([
     'tec',
     'processed_transcript',
     'retained_intron',
+    'crispr',
 ])
 
 
