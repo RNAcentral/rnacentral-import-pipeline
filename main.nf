@@ -384,6 +384,9 @@ flag_for_qa
   .set { qa_queries }
 
 process fetch_sequences {
+  when:
+  params.run_rfam_qa
+
   input:
   set val(status), file(query) from qa_queries
 
