@@ -44,13 +44,24 @@ class Input {
     return Input.defaults(db_name, index, input_name) + spec;
   }
 
-  static Map url_file(db_name, index, input_name, input) {
+  static Map urls(db_name, index, input_name, input) {
 
       def url_file = file("$db_name-urls-${index}.txt")
-      url_file.text = input.url_file.join('\n')
+      url_file.text = input.urls.join('\n')
       def spec = [
         command: input.get('command', 'fetch url-file'),
         arguments: [url_file],
+        produces: input.produces,
+      ];
+
+      return Input.defaults(db_name, index, input_name) + spec;
+  }
+
+  static Map url_file(db_name, index, input_name, input) {
+
+      def spec = [
+        command: input.get('command', 'fetch url-file'),
+        arguments: [file(input.url_file)],
         produces: input.produces,
       ];
 
@@ -65,6 +76,10 @@ class Input {
 
     if (input.containsKey('command') && input.command == 'mysql') {
       return Input.from_mysql(db_name, index, input_name, input);
+    }
+
+    if (input.containsKey('urls')) {
+      return Input.urls(db_name, index, input_name, input);
     }
 
     if (input.containsKey('url_file')) {
