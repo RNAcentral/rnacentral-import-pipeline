@@ -380,50 +380,63 @@ post_release
 //=============================================================================
 
 flag_for_qa
-  .combine(Channel.fromPath('files/qa/rfam-scan.sql'))
+  .combine(Channel.fromPath('files/qa/*-scan.sql').flatten())
+  .map { flag, fn ->
+    name = fn.getBaseName()
+    [flag, name.take(name.indexOf('-')), fn]
+  }
+  .filter { f, n, fn -> params.qa[n].run }
   .set { qa_queries }
 
 process fetch_sequences {
-  when:
-  params.qa.rfam_scan.run
 
   input:
-  set val(status), file(query) from qa_queries
+  set val(status), val(name), file(query) from qa_queries
 
   output:
-  file('parts/*.fasta') into sequences_to_scan mode flatten
+  set val(name), file('parts/*.fasta') into sequences_to_scan mode flatten
 
   """
   psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > raw.json
   json2fasta.py raw.json rnacentral.fasta
   seqkit shuffle --two-pass rnacentral.fasta > shuffled.fasta
-  seqkit split --two-pass --by-size ${params.qa.rfam_scan.chunk_size} --out-dir 'parts/' shuffled.fasta
+  seqkit split --two-pass --by-size ${params.qa[name].chunk_size} --out-dir 'parts/' shuffled.fasta
   """
 }
+
+rfam_sequences = Channel.create()
+pfam_sequences = Channel.create()
+sequences_to_split
+  .choice(rfam_sequences, pfam_sequences) { ["rfam", "pfam"].indexOf(it[0]) }
+
+rfam_sequences
+  .combine(Channel.fromPath(params.qa.rfam.cm_files).collect())
+  .combine(Channel.fromPath(params.qa.rfam.clans))
+  .set { rfam_sequences }
 
 Channel.fromPath(params.qa.rfam_scan.cm_files)
   .collect()
   .set { rfam_cm_files }
 
-process infernal_scan {
+process rfam_scan {
   queue 'mpi-rh7'
-  cpus params.qa.rfam_scan.cpus
-  clusterOptions "-M ${params.qa.rfam_scan.cm_memory} -R 'rusage[mem=${params.qa.rfam_scan.cm_memory}]' -a openmpi"
+  cpus { params.qa[name].cpus }
+  clusterOptions "-M ${params.qa[name].memory} -R 'rusage[mem=${params.qa[name].memory}]' -a openmpi"
   module 'mpi/openmpi-x86_64'
 
   input:
-  each file('sequences.fasta') from sequences_to_scan
-  file(rfam_cm) from rfam_cm_files
+  set val(name), file('sequences.fasta'), file(rfam_files), file(clan_in) from rfam_sequences
 
   output:
-  set val('rfam'), file('hits.csv') into processed_rfam_hits
+  set val(name), file('hits.csv') into processed_rfam_hits
 
+  script:
   """
   mpiexec -mca btl ^openbib -np ${params.qa.rfam_scan.cpus} \
   cmscan \
     -o output.inf \
     --tblout results.tblout \
-    --clanin ${params.qa.rfam_scan.clans} \
+    --clanin $clan_in \
     --oclan \
     --fmt 2 \
     --acc \
@@ -434,13 +447,39 @@ process infernal_scan {
     --mpi \
     "Rfam.cm" \
     sequences.fasta
-  rnac qa tblout2csv results.tblout hits.csv
+  rnac qa $name results.tblout hits.csv
+  """
+}
+
+pfam_sequences
+  .combine(Channel.fromPath(params.qa.pfam.directory))
+  .set { pfam_sequences }
+
+process pfam_scan {
+  cpus { params.qa[name].cpus }
+  clusterOptions "-M ${params.qa[name].memory} -R 'rusage[mem=${params.qa[name].memory}]'"
+
+  input:
+  set val(name), file('sequences.fasta'), file(pfam_files) from pfam_sequences
+
+  output:
+  set val(name), file('hits.csv') into processed_pfam_hits
+
+  script:
+  """
+  ${params.qa.pfam.executable} \
+    -fasta sequences.fasta \
+    -dir "$pfam_files" \
+    -cpus ${params.qa[name].cpus} \
+    -json \
+    -outfile raw.json
+  rnac qa $name raw.json hits.csv
   """
 }
 
 processed_rfam_hits
   .groupTuple()
-  .combine(Channel.fromPath('files/qa/rfam-scan.ctl'))
+  .map { n, files -> [n, files, Channel.fromPath("files/qa/$n-scan.ctl")] }
   .set { hits_to_import }
 
 process import_qa_data {

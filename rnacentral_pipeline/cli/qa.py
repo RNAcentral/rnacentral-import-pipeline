@@ -26,7 +26,7 @@ def cli():
     pass
 
 
-@cli.command('tblout2csv')
+@cli.command('rfam')
 @click.argument('tblout', default='-', type=click.File('rb'))
 @click.argument('output', default='-', type=click.File('wb'))
 def process_tblout(tblout, output):
