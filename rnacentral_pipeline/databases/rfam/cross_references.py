@@ -167,7 +167,7 @@ def from_file(handle, output):
         terms={
             'transformer': op.methodcaller('writeable_ontology_terms'),
         },
-        rfam_mappings={
+        rfam_ontology_mappings={
             'transformer': op.methodcaller('writeable_go_mappings'),
         }
     )
