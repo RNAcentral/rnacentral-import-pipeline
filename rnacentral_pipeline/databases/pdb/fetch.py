@@ -19,9 +19,9 @@ import logging
 import requests
 from retry import retry
 from more_itertools import chunked
+from ratelimiter import RateLimiter
 
 from . import parser
-from . import helpers
 
 LOGGER = logging.getLogger(__name__)
 
@@ -90,11 +90,12 @@ def custom_report(pdb_ids, fields):
 def pdbe_publications(pdb_ids):
     url = 'http://www.ebi.ac.uk/pdbe/api/pdb/entry/publications/'
     result = {}
-    for subset in chunked(pdb_ids, 100):
-        post_data = ','.join(subset)
-        response = requests.post(url, data=post_data)
-        response.raise_for_status()
-        result.update(response.json())
+    with RateLimiter(max_calls=10, period=1):
+        for subset in chunked(pdb_ids, 100):
+            post_data = ','.join(subset)
+            response = requests.post(url, data=post_data)
+            response.raise_for_status()
+            result.update(response.json())
     return result
 
 
