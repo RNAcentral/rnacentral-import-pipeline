@@ -100,9 +100,11 @@ if (any_database('rfam', 'ensembl')) {
   }
 }
 
-// Add the metadata tasks that must always be run
-data_to_fetch_and_process << DataSource.build('pub-info', params.metadata.europepmc)
-data_to_fetch_and_process << DataSource.build('ncbi-taxonomy', params.metadata.taxonomy)
+// Add the metadata tasks that must always be run when importing data
+if  (data_to_fetch || data_to_fetch_and_process) {
+  data_to_fetch_and_process << DataSource.build('pub-info', params.metadata.europepmc)
+  data_to_fetch_and_process << DataSource.build('ncbi-taxonomy', params.metadata.taxonomy)
+}
 
 // Now setup the channels with all data
 Channel.from(processed_data).set { raw_output }
