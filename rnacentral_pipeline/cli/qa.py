@@ -16,6 +16,7 @@ limitations under the License.
 import click
 
 from rnacentral_pipeline.databases import rfam
+from rnacentral_pipeline.databases import dfam
 
 
 @click.group("qa")
@@ -35,3 +36,15 @@ def process_tblout(tblout, output):
     This will overwrite the given file.
     """
     rfam.infernal_results.as_csv(tblout, output)
+
+
+@cli.command('dfam')
+@click.argument('data', default='-', type=click.File('r'))
+@click.argument('output', default='-', type=click.File('w'))
+def process_dfam(data, output):
+    """
+    This will parse the results from a dfamscan.pl call and turn the results
+    into a CSV file. This assumes the results are in the space delimited
+    format.
+    """
+    dfam.as_csv(data, output)
