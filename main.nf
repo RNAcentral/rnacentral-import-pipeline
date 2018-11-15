@@ -106,11 +106,17 @@ if  (data_to_fetch || data_to_fetch_and_process) {
   data_to_fetch_and_process << DataSource.build('ncbi-taxonomy', params.metadata.taxonomy)
 }
 
+// Setup the QA files for hmmpress or whatever is needed.
+to_prepare = params.qa
+  .findAll { key, value -> value.get('run', true) }
+  .inject([]) { acc, entry -> acc << [entry.key, entry.value.files] }
+
 // Now setup the channels with all data
 Channel.from(processed_data).set { raw_output }
 Channel.from(data_to_fetch).set { to_fetch }
 Channel.from(data_to_process).set { process_specs }
 Channel.from(data_to_fetch_and_process).set { to_fetch_and_process }
+Channel.from(to_prepare).set { files_to_prepare }
 
 //=============================================================================
 // Fetch data as well as all extra data for import
@@ -410,10 +416,51 @@ process fetch_sequences {
   """
 }
 
-split_sequences
-  .flatMap { name, fns ->
-    fns.inject([]) { fn -> [name, fn, file(params.qa[name].files)] }
+process generate_qa_scan_files {
+  input:
+  set val(name), val(base) from files_to_prepare
+
+  output:
+  set val(name), file(name) into qa_scan_files
+
+  script:
+  if (name == "pfam") {
+    """
+    mkdir $name
+    cd $name
+    fetch generic "$base/Pfam-A.hmm.gz" Pfam-A.hmm.gz
+    fetch generic "$base/Pfam-A.dat.hmm.gz" Pfam-A.dat.hmm.gz
+    fetch generic "$base/active_site.dat.gz" active_site.dat.gz
+    gzip -d *.gz
+    hmmpress Pfam-A.hmm
+    cd ..
+    """
+  } else if (name == "dfam")  {
+    """
+    mkdir $name
+    cd $name
+    fetch generic "$base/Dfam.hmm.gz" Dfam.hmm.gz
+    gzip -d Dfam.hmm.gz
+    hmmpress Dfam.hmm
+    cd ..
+    """
+  } else if (name == "rfam") {
+    """
+    mkdir $name
+    fetch generic "$base/Rfam.clanin" Rfam.clanin
+    fetch generic "$base/Rfam.cm.gz Rfam.cm.gz
+    gzip -d *.gz
+    cmpress Rfam.cm
+    cd ..
+    """
+  } else {
+    error("Unknown QA to prepare: $name")
   }
+}
+
+split_sequences
+  .join(qa_scan_files)
+  .flatMap { name, fns, extra -> fns.inject([]) { fn -> [name, fn, extra] } }
   .set { sequences_to_scan }
 
 process qa_scan {
@@ -426,7 +473,7 @@ process qa_scan {
   }
 
   input:
-  set val(name), file('sequences.fasta'), file(extra_files) from sequences_to_scan
+  set val(name), file('sequences.fasta'), file(dir) from sequences_to_scan
 
   output:
   set val(name), file('hits.csv') into qa_scan_results
@@ -434,13 +481,12 @@ process qa_scan {
   script:
   def spec = params.qa[name]
   if (name == 'rfam') {
-    def clanin = files.find { f -> f.getName().endsWith('.clanin') }
     """
     mpiexec -mca btl ^openbib -np ${params.qa.rfam_scan.cpus} \
     cmscan \
       -o output.inf \
       --tblout results.tblout \
-      --clanin $clanin \
+      --clanin $dir/Rfam.clanin \
       --oclan \
       --fmt 2 \
       --acc \
@@ -449,28 +495,27 @@ process qa_scan {
       --notextw \
       --nohmmonly \
       --mpi \
-      "Rfam.cm" \
+      "$dir/Rfam.cm" \
       sequences.fasta
     rnac qa $name results.tblout hits.csv
     """
   } else if (name == 'pfam') {
     """
-    ${params.qa.pfam.executable} \
+    pfam_scan.pl \
       -fasta sequences.fasta \
-      -dir "$extra_files" \
+      -dir "$dir" \
       -cpus ${params.qa[name].cpus} \
-      -json \
-      -outfile raw.json
-    rnac qa $name raw.json hits.csv
+      -outfile raw.tsv
+    rnac qa $name raw.tsv hits.csv
     """
   } else if (name == 'dfam') {
     """
     dfamscan.pl \
       -fastafile sequences.fasta \
-      -hmmfile $extra_files \
+      --hmmfile "$dir/Dfam.hmm" \
       --cut_ga \
       --cpu ${params.qa[name].cpus} \
-      -dfam_outfile raw.txt
+      --dfam_outfile raw.txt
     rnac qa $name raw.txt hits.csv
     """
   } else {
