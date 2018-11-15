@@ -447,6 +447,7 @@ process generate_qa_scan_files {
   } else if (name == "rfam") {
     """
     mkdir $name
+    cd $name
     fetch generic "$base/Rfam.clanin" Rfam.clanin
     fetch generic "$base/Rfam.cm.gz Rfam.cm.gz
     gzip -d *.gz
@@ -479,7 +480,6 @@ process qa_scan {
   set val(name), file('hits.csv') into qa_scan_results
 
   script:
-  def spec = params.qa[name]
   if (name == 'rfam') {
     """
     mpiexec -mca btl ^openbib -np ${params.qa.rfam_scan.cpus} \
