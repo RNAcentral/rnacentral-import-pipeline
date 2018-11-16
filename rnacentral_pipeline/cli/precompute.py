@@ -18,7 +18,7 @@ import click
 from rnacentral_pipeline.rnacentral.precompute import process as pre
 
 
-@click.group()
+@click.group('precompute')
 def cli():
     """
     This is a group of commands for dealing with our precompute steps.
