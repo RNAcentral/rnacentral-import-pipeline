@@ -266,7 +266,6 @@ def generates_expected_inferred_entries(cress_2, accession, status):
 
 def test_can_get_with_odd_rna_type(cress_2):
     val = attr.asdict(entry_for(cress_2, 'ENSEMBL_PLANTS:AT2G03895.1'))
-    print(val['sequence'])
     assert val == attr.asdict(dat.Entry(
         primary_id='AT2G03895.1',
         accession='ENSEMBL_PLANTS:AT2G03895.1',
@@ -643,3 +642,4 @@ def test_can_parse_zea_lincrna(zea_7):
 
 def test_does_not_generate_tair_for_others(zea_7):
     assert has_entry_for(zea_7, "TAIR:Zm00001d001070_T001") is False
+    assert has_entry_for(zea_7, "ENSEMBL_PLANTS:Zm00001d001070_T001") is True

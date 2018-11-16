@@ -13,9 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import operator as op
 import itertools as it
-
-import attr
 
 from Bio import SeqIO
 
@@ -25,23 +24,15 @@ from rnacentral_pipeline.databases.ensembl import helpers as ensembl
 from . import helpers
 
 
-
-def parse(handle):
+def ncrnas(handle):
     for record in SeqIO.parse(handle, 'embl'):
         current_gene = None
-        ncrnas = []
         for feature in record.features:
             if feature.type == 'source':
                 continue
 
             if embl.is_gene(feature):
                 current_gene = feature
-                for entry in ensembl.generate_related(ncrnas):
-                    yield entry
-                    for entry in helpers.inferred_entries(entry):
-                        yield entry
-
-                ncrnas = []
                 continue
 
             if helpers.is_pseudogene(current_gene, feature):
@@ -50,10 +41,13 @@ def parse(handle):
             if not helpers.is_ncrna(feature):
                 continue
 
-            entry = helpers.as_entry(record, current_gene, feature)
-            ncrnas.append(entry)
+            yield helpers.as_entry(record, current_gene, feature)
 
-        for entry in ensembl.generate_related(ncrnas):
+
+def parse(handle):
+    grouped = it.groupby(ncrnas(handle), op.attrgetter('gene'))
+    for gene, related in grouped:
+        for entry in ensembl.generate_related(related):
             yield entry
             for entry in helpers.inferred_entries(entry):
                 yield entry
