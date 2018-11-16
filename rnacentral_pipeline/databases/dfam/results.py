@@ -35,8 +35,8 @@ class Result(object):
     model_start = attr.ib(validator=is_a(int))
     model_end = attr.ib(validator=is_a(int))
     strand = attr.ib(validator=is_a(int))
-    alignment_start = attr.ib(validator=is_a(int))
-    alignment_end = attr.ib(validator=is_a(int))
+    sequence_start = attr.ib(validator=is_a(int))
+    sequence_end = attr.ib(validator=is_a(int))
 
     @classmethod
     def build(cls, parts):
@@ -55,11 +55,17 @@ class Result(object):
         )
 
     def writeable(self):
-        result = []
-        for field in attr.fields(self.__class__):
-            value = getattr(self, field.name)
-            result.append(value)
-        return result
+        return [
+            self.upi,
+            self.model_accession,
+            self.sequence_start,
+            self.sequence_end,
+            self.strand,
+            self.model_start,
+            self.model_end,
+            self.e_value,
+            self.bits,
+        ]
 
 
 def parse(handle):
