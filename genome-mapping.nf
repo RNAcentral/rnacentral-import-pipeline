@@ -35,7 +35,7 @@ process fetch_unmapped_sequences {
 
   script:
   """
-  sql2json -v taxid=$taxid -v assembly_id=$assembly_id $query ${params.qa.rfam_scan.chunk_size}
+  sql2fasta -v taxid=$taxid -v assembly_id=$assembly_id $query ${params.qa.rfam_scan.chunk_size}
   """
 }
 
