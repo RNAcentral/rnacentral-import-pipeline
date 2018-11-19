@@ -5,6 +5,4 @@ SELECT
   taxid,
   division
 from ensembl_assembly
-where
-  common_name = 'human'
 ) TO STDOUT CSV;
