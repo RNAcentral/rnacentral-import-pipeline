@@ -43,6 +43,43 @@ def sort_exons(exons):
     return sorted(exons, key=op.attrgetter('start'))
 
 
+def string_strand(located):
+    if located.strand == 1 or located.strand == '+':
+        return '+'
+    if located.strand == -1 or located.strand == '-':
+        return '-'
+    raise UnknownStrand()
+
+
+def region_id(located):
+    exon_names = []
+    for exon in located.exons:
+        exon_names.append('{start}-{stop}'.format(
+            start=exon.start,
+            stop=exon.stop,
+        ))
+    return '{upi}@{chromosome}/{exons}:{strand}'.format(
+        upi=getattr(located, 'upi', ''),
+        chromosome=located.chromosome,
+        exons=','.join(exon_names),
+        strand=string_strand(located),
+    )
+
+
+def write_locations(located, accession):
+    for exon in located.exons:
+        yield [
+            accession,
+            located.name,
+            located.chromosome,
+            located.strand,
+            located.assembly_id,
+            len(located.exons),
+            exon.start,
+            exon.stop,
+        ]
+
+
 @attr.s(frozen=True)
 class Exon(object):
     start = attr.ib(validator=is_a(int))
@@ -65,14 +102,6 @@ class SequenceRegion(object):
         return max(e.stop for e in self.exons)
 
     @property
-    def string_strand(self):
-        if self.strand == 1:
-            return '+'
-        if self.strand == -1:
-            return '-'
-        raise UnknownStrand()
-
-    @property
     def name(self):
         exon_names = []
         for exon in self.exons:
@@ -87,17 +116,7 @@ class SequenceRegion(object):
         )
 
     def writeable(self, accession):
-        for exon in self.exons:
-            yield [
-                accession,
-                self.name,
-                self.chromosome,
-                self.strand,
-                self.assembly_id,
-                len(self.exons),
-                exon.start,
-                exon.stop,
-            ]
+        return write_location(self, accession)
 
     def writeable_exons(self, accession):
         for exon in self.exons:
