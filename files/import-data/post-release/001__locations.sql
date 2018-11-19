@@ -36,7 +36,7 @@ where
   acc.accession = coord.accession
   and coord.primary_start is null
   and coord.primary_end is null
-  and acc."database" in ('ENSEMBL', 'GENCODE', 'LNCIPEDIA', 'E_PLANTS')
+  and acc."database" in ('ENSEMBL', 'GENCODE', 'LNCIPEDIA', 'E_PLANTS', 'TAIR')
 ;
 
 drop table load_rnc_coordinates;
