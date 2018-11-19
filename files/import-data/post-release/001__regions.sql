@@ -94,6 +94,12 @@ set
   providing_databases = rnc_sequence_regions.providing_databases || excluded.providing_databases
 ;
 
+-- Ensure all providing databases are distinct
+UPDATE rnc_sequence_regions
+SET
+  providing_databases = ARRAY(SELECT DISTINCT unnest(providing_databases))
+;
+
 -- Populate all exons
 insert into rnc_sequence_exons (
   region_id,
