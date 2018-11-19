@@ -115,7 +115,7 @@ process select_mapped_locations {
   """
   set -o pipefail
 
-  sort -t 10 *.psl | rnac genome-mapping select-hits - locations.csv
+  sort -k 10 *.psl | rnac genome-mapping select-hits - locations.csv
   """
 }
 
