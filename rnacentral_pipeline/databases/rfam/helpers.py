@@ -17,7 +17,7 @@ import re
 import operator as op
 import collections as coll
 
-from ..data import Reference
+from rnacentral_pipeline.databases.helpers.publications import reference
 from ..data import Exon
 
 seq_version = op.itemgetter('seq_version')
@@ -51,18 +51,10 @@ def mol_type(data):
     return 'seed'
 
 
-def references():
-    return [Reference(
-        authors=(
-            'Nawrocki E.P., Burge S.W., Bateman A., Daub J., '
-            'Eberhardt R.Y., Eddy S.R., Floden E.W., Gardner P.P., '
-            'Jones T.A., Tate J., Finn R.D.'
-        ),
-        location='Nucleic Acids Res. 2015 Jan;43(Database issue):D130-7',
-        title='Rfam 12.0: updates to the RNA families database',
-        pmid=25392425,
-        doi='10.1093/nar/gku1063',
-    )]
+def references(data):
+    refs = [reference(29112718)]
+    refs.extend(reference(pmid) for pmid in data.get('references', []))
+    return refs
 
 
 def note(data):

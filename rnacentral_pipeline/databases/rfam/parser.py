@@ -52,7 +52,7 @@ def as_entry(data, mapping):
         is_composite='N',
         location_start=location_range[0],
         location_end=location_range[1],
-        references=helpers.references(),
+        references=helpers.references(data),
     )
 
 
