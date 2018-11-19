@@ -17,7 +17,6 @@ limitations under the License.
 import os
 
 from rnacentral_pipeline.rnacentral.precompute.process import as_sequences
-from rnacentral_pipeline.rnacentral.precompute.data import Sequence
 
 from tests.helpers import run_range_as_single
 from tests.helpers import run_with_replacements
@@ -25,7 +24,15 @@ from tests.helpers import run_with_replacements
 
 def load_data(rna_id):
     path = os.path.join('files', 'precompute', 'query.sql')
-    data = run_range_as_single(rna_id, path)
+    upi, taxid = rna_id.split('_')
+    data = run_with_replacements(
+        path,
+        (':tablename', 'rna'),
+        (
+            'todo.id BETWEEN :min AND :max',
+            "xref.upi ='%s' AND xref.taxid = %i" % (upi, int(taxid))
+        )
+    )
     return next(as_sequences([data]))
 
 
