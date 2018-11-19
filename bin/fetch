@@ -54,6 +54,8 @@ function fetch_generic() {
       if [[ "$fn_pattern" =~ "*" ]]; then
         local dir="$(dirname "$remote")"
         find -L "$dir" -name "$fn_pattern" | xargs -I {} cp {} .
+      elif [[ -d "$remote" ]]; then
+        cp -r "$remote" .
       else
         cp "$remote" "$pattern"
       fi
