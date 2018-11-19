@@ -136,7 +136,7 @@ INSERT INTO rnc_related_sequences (
   relationship_type,
   methods
 ) (
-select
+select distinct
   load.source_urs_taxid,
   load.source_accession,
   null,
