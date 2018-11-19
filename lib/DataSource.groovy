@@ -26,7 +26,7 @@ class DataSource {
       arguments = input_files.inject([]) { acc, fn -> acc << (fn.endsWith('.gz') ? '-' : fn) }
     } else {
       prefix = "gzip -d *.gz\n"
-      arguments = input_files.inject([]) { acc, fn -> fn.replace('.gz', '') }
+      arguments = input_files.inject([]) { acc, fn -> acc << fn.replace('.gz', '') }
     }
     return "$prefix $source.process.command ${arguments.join(' ')}".trim();
   }
