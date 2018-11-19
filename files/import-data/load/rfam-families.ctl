@@ -1,5 +1,5 @@
 LOAD CSV
-FROM stdin
+FROM ALL FILENAMES MATCHING ~<rfam-families.*csv$>
 WITH ENCODING ISO-8859-14
 HAVING FIELDS
 (
@@ -34,8 +34,9 @@ TARGET COLUMNS
 )
 
 WITH
-    skip header = 1,
-    fields terminated by '0x9'
+    fields escaped by double-quote,
+    fields terminated by ','
+
 
 BEFORE LOAD DO
 $$
@@ -56,4 +57,5 @@ create table load_rfam_models (
     short_name character varying(50) COLLATE pg_catalog."default",
     rfam_rna_type character varying(250) COLLATE pg_catalog."default"
 );
+$$
 ;

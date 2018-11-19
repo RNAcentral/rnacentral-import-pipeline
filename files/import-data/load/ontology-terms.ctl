@@ -1,5 +1,5 @@
 LOAD CSV
-FROM 'ontology_terms.csv'
+FROM ALL FILENAMES MATCHING ~<ontology_terms.*csv>
 WITH ENCODING ISO-8859-14
 HAVING FIELDS
 (

@@ -1,5 +1,5 @@
 LOAD CSV
-FROM taxonomy.csv
+FROM ALL FILENAMES MATCHING ~<taxonomy.*csv$>
 HAVING FIELDS (
     taxid,
     name,
