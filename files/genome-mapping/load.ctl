@@ -49,6 +49,14 @@ $$
 
 AFTER LOAD DO
 $$
+DELETE FROM rnc_sequence_regions regions
+USING load_genome_mapping load
+WHERE
+    regions.urs_taxid = load.urs_taxid
+    AND regions.was_mapped = true
+;
+$$,
+$$
 INSERT INTO rnc_sequence_regions (
     urs_taxid,
     region_name,
