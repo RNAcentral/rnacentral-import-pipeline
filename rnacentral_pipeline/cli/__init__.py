@@ -26,6 +26,7 @@ from . import pdb
 from . import precompute
 from . import qa
 from . import rfam
+from . import search_export
 
 
 @click.group()
@@ -39,15 +40,16 @@ def cli():
 
 
 cli.add_command(ensembl.cli)
+cli.add_command(europepmc.cli)
 cli.add_command(external.cli)
 cli.add_command(ftp_export.cli)
-cli.add_command(ontologies.cli)
-cli.add_command(precompute.cli)
-cli.add_command(rfam.cli)
-cli.add_command(misc.run_release)
-cli.add_command(misc.find_upi_ranges)
 cli.add_command(misc.crs_data)
-cli.add_command(pdb.cli)
-cli.add_command(qa.cli)
-cli.add_command(europepmc.cli)
+cli.add_command(misc.find_upi_ranges)
+cli.add_command(misc.run_release)
 cli.add_command(ncbi.cli)
+cli.add_command(ontologies.cli)
+cli.add_command(pdb.cli)
+cli.add_command(precompute.cli)
+cli.add_command(qa.cli)
+cli.add_command(rfam.cli)
+cli.add_command(search_export.cli)

@@ -19,14 +19,14 @@ from rnacentral_pipeline.rnacentral.search_export import exporter as search
 
 
 @click.group('search-export')
-def search_export():
+def cli():
     """
     A group of commands dealing with our search export pipeline.
     """
     pass
 
 
-@search_export.command('as-xml')
+@cli.command('as-xml')
 @click.argument('raw_file', type=click.File('rb'))
 @click.argument('metadata_file', type=click.File('rb'))
 @click.argument('xml_file', type=click.File('wb'))
@@ -41,7 +41,7 @@ def search_export_xml(raw_file, metadata_file, xml_file, count_file=None):
     search.as_xml(raw_file, metadata_file, xml_file, count_file)
 
 
-@search_export.command('release-note')
+@cli.command('release-note')
 @click.argument('release', type=str)
 @click.argument('output', type=click.File('wb'))
 @click.argument('count_files', nargs=-1, type=click.File('rb'))
