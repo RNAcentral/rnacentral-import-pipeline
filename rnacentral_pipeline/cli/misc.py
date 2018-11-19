@@ -13,13 +13,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import csv
-
 import click
 
 from rnacentral_pipeline.rnacentral import release
 
-from rnacentral_pipeline.rnacentral.upi_ranges import upi_ranges
+from rnacentral_pipeline.rnacentral import upi_ranges
 
 from rnacentral_pipeline.databases.crs import parser as crs
 
@@ -46,7 +44,7 @@ def find_upi_ranges(chunk_size, output, db_url=None, table_name=None):
     table_name value it will use that table, otherwise it will use the rna
     table.
     """
-    csv.writer(output).writerows(upi_ranges(db_url, table_name, chunk_size))
+    upi_ranges.to_file(db_url, table_name, chunk_size, output)
 
 
 @click.command('crs')
