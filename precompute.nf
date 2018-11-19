@@ -23,13 +23,13 @@ process query_upis {
   file('ranges.txt') into raw_ranges
 
   script:
-  variable_option = []
-  variables.each { name, value ->
-    variable_option << """-v ${name}="${value}" """
+  def tablename = params.precompute.tablename
+  def variable_option = variables.inject([]) { acc, entry ->
+    acc << """-v ${entry.key}="${entry.value}" """
   }
   """
   psql -v ON_ERROR_STOP=1 -f "$sql" ${variable_option.join(' ')} "$PGDATABASE"
-  rnac upi-ranges --table-name upis_to_precompute ${params.precompute.max_entries} ranges.txt
+  rnac upi-ranges --table-name $tablename ${params.precompute.max_entries} ranges.txt
   """
 }
 
@@ -44,13 +44,19 @@ process precompute_range_query {
   maxForks params.precompute.maxForks
 
   input:
-  set val(min), val(max), file(query) from ranges
+  set val(tablename), val(min), val(max), file(query) from ranges
 
   output:
   file 'raw-precompute.json' into precompute_raw
 
   """
-  psql -v ON_ERROR_STOP=1 --variable min=$min --variable max=$max -f "$query" '$PGDATABASE' > raw-precompute.json
+  psql \
+    --variable ON_ERROR_STOP=1 \
+    --variable tablename=$tablename \
+    --variable min=$min \
+    --variable max=$max \
+    -f "$query" \
+    '$PGDATABASE' > raw-precompute.json
   """
 }
 
@@ -80,17 +86,16 @@ process load_precomputed_data {
   file qa_ctl from Channel.fromPath('files/precompute/qa.ctl')
   file post from Channel.fromPath('files/precompute/post-load.sql')
 
-  // Use cp to copy the ctl files and not stageInMode because we don't want to
-  // have to copy a large number of large files before running this. We only
-  // need a copy of these two files in the local directory. This is because
-  // pgloader will look at the location of the end of symlink when trying to
-  // find files and not the current directory or where the symlink lives.
+
+  script:
+  def tablename = params.precompute.tablename
   """
   cp $pre_ctl _pre.ctl
   cp $qa_ctl _qa.ctl
   pgloader _pre.ctl
   pgloader _qa.ctl
-  psql -v ON_ERROR_STOP=1 -f $post "$PGDATABASE"
+  psql -v tablename=$tablename -v ON_ERROR_STOP=1 -f $post "$PGDATABASE"
+  psql -v ON_ERROR_STOP=1 -c 'DROP TABLE IF EXISTS $tablename' "$PGDATABASE"
   """
 }
 

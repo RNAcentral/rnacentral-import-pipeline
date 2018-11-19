@@ -186,8 +186,7 @@ class Sequence(object):
     accessions = attr.ib(validator=is_a(list))
     inactive_accessions = attr.ib(validator=is_a(list))
     is_active = attr.ib(validator=is_a(bool))
-    xref_has_coordinates = attr.ib(validator=is_a(bool))
-    rna_was_mapped = attr.ib(validator=is_a(bool))
+    has_coordinates = attr.ib(validator=is_a(bool))
     previous_data = attr.ib(validator=optional(is_a(dict)))
     rfam_hits = attr.ib(validator=is_a(list))
     last_release = attr.ib(validator=is_a(int))
@@ -252,8 +251,7 @@ class SpeciesSequence(Sequence):
             accessions=active,
             inactive_accessions=inactive,
             is_active=any(not d for d in data['deleted']),
-            xref_has_coordinates=any(data['xref_has_coordinates']),
-            rna_was_mapped=data['rna_was_mapped'],
+            has_coordinates=data['has_coordinates'],
             previous_data=data['previous'][0],
             rfam_hits=list(hits),
             last_release=data['last_release'],
@@ -280,7 +278,7 @@ class GenericSequence(Sequence):
             accessions.extend(seq.accessions)
             inactive.extend(seq.inactive_accessions)
 
-        has_coordinates = any(s.xref_has_coordinates for s in sequences)
+        has_coordinates = any(s.has_coordinates for s in sequences)
         last_release = max(s.last_release for s in sequences)
         return cls(
             upi=sequences[0].upi,
@@ -289,8 +287,7 @@ class GenericSequence(Sequence):
             accessions=accessions,
             inactive_accessions=inactive,
             is_active=any(seq.is_active for seq in sequences),
-            xref_has_coordinates=has_coordinates,
-            rna_was_mapped=any(s.rna_was_mapped for s in sequences),
+            has_coordinates=has_coordinates,
             previous_data={},
             rfam_hits=[],
             last_release=last_release,
