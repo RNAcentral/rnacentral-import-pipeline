@@ -21,7 +21,7 @@ class DataSource {
     int gzip_count = source.inputs.inject(0) { a, i -> a + (i.produces.endsWith('.gz') ? 1 : 0) }
     if (gzip_count == 0) {
       arguments.addAll(input_files)
-    } else if (gzip_count == 1) {
+    } else if (gzip_count == 1 && !source.process.force_decompress) {
       prefix = "zcat *.gz | "
       arguments = input_files.inject([]) { acc, fn -> acc << (fn.endsWith('.gz') ? '-' : fn) }
     } else {

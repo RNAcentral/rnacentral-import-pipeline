@@ -3,6 +3,7 @@ class Parse {
     return [
       command: "rnac external $db_name",
       produces: '*.csv',
+      force_decompress: false,
       directives: [
         memory: 2.GB,
         tag: db_name,
@@ -19,7 +20,7 @@ class Parse {
     spec.directives.each { entry ->
       data.directives[entry.key] = entry.value;
     }
-    data += spec.subMap('command', 'produces');
+    data += spec.subMap('command', 'produces', 'force_decompress');
     return data;
   }
 }
