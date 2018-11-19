@@ -170,12 +170,30 @@ function fetch_genome() {
   cat *.fa > "$genome_file"
 }
 
+function fetch_ena() {
+  local remote="$1"
+  fetch_generic "$remote" "*.ncr.dat"
+  find release/con -name '*.ncr.gz' | xargs -I {} echo {},7 > to-group
+  find release/std -name '*.ncr.gz' | xargs -I {} echo {},7 > to-group
+  find release/tsa -name '*.ncr.gz' | xargs -I {} echo {},4 > to-group
+  find release/wgs -name '*.ncr.gz' | xargs -I {} echo {},6 > to-group
+
+  while IFS=',' read -r "filename" "count" || [[ -n "$filename" ]]; do
+    local fn="$(basename $filename)"
+    local name="${fn:0:$count}.grouped.ncr.gz"
+    cat $filename >> $name
+  done < to-group
+}
+
 [ $# -gt 0 ] || { usage 0; }
 
 name="$1"
 shift 1
 
 case "$name" in
+  "ena" )
+    fetch_ena "$@" ;;
+
   "ensembl" | "ensembl_plants" )
     fetch_grouped "$@" ;;
 
