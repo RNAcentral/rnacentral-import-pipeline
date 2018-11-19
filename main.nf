@@ -586,19 +586,24 @@ raw_ranges
 
 process precompute_range_query {
   tag { "$min-$max" }
-  maxForks params.precompute.maxForks
-
   beforeScript 'slack db-work precompute-range || true'
   afterScript 'slack db-done precompute-range || true'
+  maxForks params.precompute.maxForks
 
   input:
-  set val(min), val(max), file(query) from ranges
+  set val(tablename), val(min), val(max), file(query) from ranges
 
   output:
   set val(min), val(max), file('raw-precompute.json') into precompute_raw
 
   """
-  psql -v ON_ERROR_STOP=1 --variable min=$min --variable max=$max -f "$query" '$PGDATABASE' > raw-precompute.json
+  psql \
+    --variable ON_ERROR_STOP=1 \
+    --variable tablename=${params.precompute.tablename} \
+    --variable min=$min \
+    --variable max=$max \
+    -f "$query" \
+    '$PGDATABASE' > raw-precompute.json
   """
 }
 
@@ -631,10 +636,13 @@ process load_precomputed_data {
   file qa_ctl from Channel.fromPath('files/precompute/qa.ctl')
   file post from Channel.fromPath('files/precompute/post-load.sql')
 
+  script:
+  def tablename = params.precompute.tablename
   """
   split-and-load $pre_ctl 'precompute*.csv' ${params.import_data.chunk_size} precompute
   split-and-load $qa_ctl 'qa*.csv' ${params.import_data.chunk_size} qa
   psql -v ON_ERROR_STOP=1 -f $post "$PGDATABASE"
+  psql -v ON_ERROR_STOP=1 -c 'DROP TABLE IF EXISTS $tablename' "$PGDATABASE"
   """
 }
 
