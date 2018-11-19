@@ -13,6 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import csv
+
 from ..db import cursor
 
 
@@ -35,3 +37,9 @@ def upi_ranges(dbconf, table_name, max_size):
         stop = cur.fetchone()[0]
 
     return ranges_between(1, stop, max_size)
+
+
+def to_file(dbconf, table_name, max_size, output):
+    ranges = upi_ranges(dbconf, table_name, max_size)
+    ranges = [[table_name] + r for r in ranges]
+    csv.writer(output).writerows(ranges)
