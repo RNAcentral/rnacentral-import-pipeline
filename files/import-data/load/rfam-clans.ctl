@@ -31,4 +31,5 @@ create table if not exists load_rfam_clans (
     description character varying(1000) COLLATE pg_catalog."default" NOT NULL,
     family_count integer NOT NULL
 );
+$$
 ;
