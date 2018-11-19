@@ -35,12 +35,16 @@ process fetch_unmapped_sequences {
 
   script:
   """
-  sql2fasta -v taxid=$taxid -v assembly_id=$assembly_id $query ${params.qa.rfam_scan.chunk_size}
+  psql -v ON_ERROR_STOP=1 -v taxid=$taxid -v assembly_id=$assembly_id -f "$query" "$PGDATABASE" > raw.json
+  json2fasta.py raw.json rnacentral.fasta
+  seqkit shuffle --two-pass rnacentral.fasta > shuffled.fasta
+  seqkit split --two-pass --by-size "${params.genome_mapping.chunk_size}" --out-dir 'parts/' shuffled.fasta
   """
 }
 
 process download_genome {
   tag { species }
+  memory 10.GB
   scratch true
 
   input:
@@ -79,7 +83,7 @@ process blat {
   set val(species), file(ooc), file(chromosome), file(chunk) from targets
 
   output:
-  set file(species), file('output.psl') into blat_results
+  set val(species), file('output.psl') into blat_results
 
   """
   blat \
