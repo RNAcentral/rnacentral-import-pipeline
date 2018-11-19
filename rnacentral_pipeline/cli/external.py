@@ -127,7 +127,7 @@ def process_ena(ena_file, mapping_file, output):
     Process ENA EMBL formatted files into CSV to import. The additional mapping
     file is a file containing all TPA data we are using from ENA.
     """
-    write_entries(ena.parse, output, ena_file, mapping_file)
+    write_entries(ena.from_file, output, ena_file, mapping_file)
 
 
 @cli.command('refseq')
