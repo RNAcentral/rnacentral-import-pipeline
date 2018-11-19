@@ -101,11 +101,6 @@ def parse(handle):
         )
 
 
-def parse_with_mapping_files(handle, mapping_files):
-    mapping = tpa.load(mapping_files)
+def parse_with_mapping_file(handle, mapping_handle):
+    mapping = tpa.load(mapping_handle)
     return tpa.apply(mapping, parse(handle))
-
-
-def from_file(handle, mapping_file, output):
-    writer = build_entry_writer(parse_with_mapping_files)
-    writer(output, handle, [mapping_file])

@@ -192,12 +192,15 @@ def parse_tpa_file(handle, klass=GenericTpa):
         yield klass.from_tsv(row)
 
 
-def load(filenames):
+def load(raw):
     mapping = TpaMappings()
-    for filename in filenames:
-        with open(filename, 'rb') as raw:
-            mapping.add_tpas(parse_tpa_file(raw))
+    mapping.add_tpas(parse_tpa_file(raw))
     return mapping
+
+
+def load_file(filename):
+    with open(filename, 'r') as raw:
+        return load(raw)
 
 
 def apply(mapping, entries):
