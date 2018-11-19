@@ -19,36 +19,31 @@ select
         'lineage', acc.classification
       )
     ),
-    'deleted', array_agg(distinct xref.deleted = 'Y'),
-    'xref_has_coordinates', array_agg(exists(
+    'has_coordinates', exists(
         select 1
-        from rnc_coordinates coord
-        where coord.accession = xref.ac
+        from rnc_sequence_regions
+        where urs_taxid = rna.upi || '_' || xref.taxid
+    ),
+    'deleted', array_agg(distinct xref.deleted = 'Y'),
+    'previous', array_agg(row_to_json(prev.*)),
+    'hits', array_agg(json_build_object(
+       'rfam_hit_id', hits.rfam_hit_id,
+       'model', hits.rfam_model_id,
+       'model_rna_type', models.rna_type,
+       'model_domain', models.domain,
+       'model_name', models.short_name,
+       'model_long_name', models.long_name,
+       'model_completeness', hits.model_completeness,
+       'model_start', hits.model_start,
+       'model_stop', hits.model_stop,
+       'sequence_completeness', hits.sequence_completeness,
+       'sequence_start', hits.sequence_start,
+       'sequence_stop', hits.sequence_stop
     )),
-  'rna_was_mapped', exists(
-    select 1
-    from rnc_genome_mapping mapping
-    where mapping.upi = rna.upi and mapping.taxid = xref.taxid
-  ),
-  'previous', array_agg(row_to_json(prev.*)),
-  'hits', array_agg(json_build_object(
-      'rfam_hit_id', hits.rfam_hit_id,
-      'model', hits.rfam_model_id,
-      'model_rna_type', models.rna_type,
-      'model_domain', models.domain,
-      'model_name', models.short_name,
-      'model_long_name', models.long_name,
-      'model_completeness', hits.model_completeness,
-      'model_start', hits.model_start,
-      'model_stop', hits.model_stop,
-      'sequence_completeness', hits.sequence_completeness,
-      'sequence_start', hits.sequence_start,
-      'sequence_stop', hits.sequence_stop
-  )),
-  'last_release', max(xref.last)
+    'last_release', max(xref.last)
 )
 FROM rna
-join upis_to_precompute todo on todo.upi = rna.upi
+join :tablename todo on todo.upi = rna.upi
 join xref on xref.upi = rna.upi
 join rnc_accessions acc
 on

@@ -107,8 +107,7 @@ class ActiveUpdate(Update):
         description = description_of(rna_type, sequence).encode('utf-8')
         short_description = short_description_for(description, sequence)
 
-        has_coordinates = sequence.xref_has_coordinates or \
-            sequence.rna_was_mapped
+        has_coordinates = sequence.has_coordinates
 
         return cls(
             upi=sequence.upi,
@@ -137,8 +136,7 @@ class InactiveUpdate(Update):
         correct RNA type or useful description otherwise.
         """
 
-        has_coordinates = sequence.xref_has_coordinates or \
-            sequence.rna_was_mapped
+        has_coordinates = sequence.has_coordinates
 
         if sequence.previous_data and 'rna_type' in sequence.previous_data:
             rna_type = sequence.previous_data['rna_type']
