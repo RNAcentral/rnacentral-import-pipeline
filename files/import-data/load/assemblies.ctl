@@ -1,5 +1,5 @@
 LOAD CSV
-FROM ALL FILENAMES MATCHING ~<data.*csv>
+FROM ALL FILENAMES MATCHING ~<assemblies.*csv>
 HAVING FIELDS (
     assembly_id,
     assembly_full_name,
