@@ -16,7 +16,7 @@ limitations under the License.
 import attr
 
 from rnacentral_pipeline.databases.data import Entry
-from rnacentral_pipeline.databases.data import Reference
+from rnacentral_pipeline.databases.helpers.publications import reference
 
 from rnacentral_pipeline.databases.rfam import utils
 from rnacentral_pipeline.databases.rfam.parser import as_entry
@@ -94,17 +94,11 @@ def test_it_builds_first_entry_correctly():
                     "Araneomorphae; Entelegynae; Eresoidea; Eresidae; Stegodyphus; "
                     "Stegodyphus mimosarum"
                 ),
-                references=[Reference(
-                    authors=(
-                        'Nawrocki E.P., Burge S.W., Bateman A., Daub J., '
-                        'Eberhardt R.Y., Eddy S.R., Floden E.W., Gardner P.P.,'
-                        ' Jones T.A., Tate J., Finn R.D.'
-                    ),
-                    location='Nucleic Acids Res. 2015 Jan;43(Database issue):D130-7',
-                    title='Rfam 12.0: updates to the RNA families database',
-                    pmid=25392425,
-                    doi='10.1093/nar/gku1063',
-                )],
+                references=[
+                    reference(29112718),
+                    reference(8256282),
+                    reference(9023104),
+                ],
                 common_name='',
                 optional_id='tRNA',
                 parent_accession="KK113858",
