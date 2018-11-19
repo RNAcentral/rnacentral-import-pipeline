@@ -388,17 +388,17 @@ process release {
 
 post_release
   .ifEmpty('no release')
-  .into { flag_for_qa; flag_for_feedback }
+  .into { flag_for_qa; flag_for_mapping }
 
 //=============================================================================
 // QA scans
 //=============================================================================
 
 flag_for_qa
-  .combine(Channel.fromPath('files/qa/*-scan.sql').flatten())
+  .combine(Channel.fromPath('files/qa/*.sql').flatten())
   .map { flag, fn ->
     name = fn.getBaseName()
-    [flag, name.take(name.indexOf('-')), fn]
+    [flag, name.take(name.indexOf('.')), fn]
   }
   .filter { f, n, fn -> params.qa[n].run }
   .set { qa_queries }
@@ -525,7 +525,14 @@ process qa_scan {
 
 qa_scan_results
   .groupTuple()
-  .map { n, files -> [n, files, Channel.fromPath("files/qa/$n-scan.ctl")] }
+  .map { n, files -> [n, files, Channel.fromPath("files/qa/$n.ctl")] }
+  .filter { n, fs, ctl ->
+    def status =  ctl.exists()
+    if (!status) {
+      log.error "Skipping QA results $n"
+    }
+    status
+  }
   .set { hits_to_import }
 
 process import_qa_data {

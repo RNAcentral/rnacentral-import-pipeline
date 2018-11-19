@@ -1,5 +1,5 @@
 LOAD CSV
-FROM 'hits.csv'
+FROM ALL FILENAMES MATCHING ~<rfam.*csv$>
 HAVING FIELDS
 (
   UPI,
@@ -91,20 +91,22 @@ where
 );
 $$,
 $$
-update rfam_analyzed_sequences
-set
-  total_matches = counts.total,
-  total_family_matches = counts.family_count
-from (
-  select
+INSERT INTO rfam_analyzed_sequences (
+    upi,
+    total,
+    family_count
+) (
+SELECT
     upi,
     count(*) total,
     count(distinct rfam_model_id) family_count
-  from rfam_model_hits
-  group by upi
-) as counts
-where
-  rfam_analyzed_sequences.upi = counts.upi
+FROM rfam_model_hits
+GROUP BY upi
+)
+ON CONFLICT (upi)
+SET
+  total_matches = EXCLUDED.total,
+  total_family_matches = EXCLUDED.family_count
 ;
 $$,
 $$
