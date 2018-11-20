@@ -190,7 +190,12 @@ function fetch_ena() {
   find "$remote/con" -name '*.ncr.gz' -type f | xargs -I {} echo {},7 > "$tmp"
   ena_grouper "$tmp" "$suffix"
 
-  find "$remote/std" -name '*.ncr.gz' -type f | xargs -I {} echo {},11 > "$tmp"
+  find "$remote/std" -name '*.ncr.gz' -not -name 'rel_std_env*.ncr.gz' -type f | xargs -I {} echo {},11 > "$tmp"
+  ena_grouper "$tmp" "$suffix"
+
+  # Basically doesn't group the env data as we end up with a single very large
+  # file if we do.
+  find "$remote/std" -name 'rel_std_env*.ncr.gz' -type f | xargs -I {} echo {},14 > "$tmp"
   ena_grouper "$tmp" "$suffix"
 
   find "$remote/tsa" -name '*.ncr.gz' -type f | xargs -I {} echo {},3 > "$tmp"
