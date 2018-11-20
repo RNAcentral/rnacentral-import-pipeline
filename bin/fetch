@@ -187,19 +187,31 @@ function fetch_ena() {
   local suffix="${produces:1:${#produces}}"
   local tmp="$(mktemp)"
 
-  find "$remote/con" -name '*.ncr.gz' | xargs -I {} echo {},7 > "$tmp"
+  find "$remote/con" -name '*.ncr.gz' -type f | xargs -I {} echo {},7 > "$tmp"
   ena_grouper "$tmp" "$suffix"
 
-  find "$remote/std" -name '*.ncr.gz' | xargs -I {} echo {},11 > "$tmp"
+  find "$remote/std" -name '*.ncr.gz' -type f | xargs -I {} echo {},11 > "$tmp"
   ena_grouper "$tmp" "$suffix"
 
-  find "$remote/tsa" -name '*.ncr.gz' | xargs -I {} echo {},3 > "$tmp"
+  find "$remote/tsa" -name '*.ncr.gz' -type f | xargs -I {} echo {},3 > "$tmp"
   ena_grouper "$tmp" "$suffix"
 
-  find "$remote/wgs" -name '*.ncr.gz' | xargs -I {} echo {},6 > "$tmp"
+  find "$remote/wgs" -name '*.ncr.gz' -type f | xargs -I {} echo {},6 > "$tmp"
   ena_grouper "$tmp" "$suffix"
 
   rm "$tmp"
+}
+
+function fetch_rfam() {
+  local remote="$(dirname $1)"
+  local produces="$2"
+  local group_size=8
+  local prefix="$(echo $produces | cut -f* -d1)"
+  local suffx="$(echo $produces | cut -f* -d2)"
+
+  find "$remote" -name "rfam2rnac*.json" |\
+  xargs -n $group_size -I {} jq -cs 'flatten' {} |\
+  split -edl 1 --additional-suffix "$suffix" - "$prefix"
 }
 
 [ $# -gt 0 ] || { usage 0; }
@@ -211,26 +223,29 @@ case "$name" in
   "ena" )
     fetch_ena "$@" ;;
 
+  "generic" )
+    fetch_generic "$@" ;;
+
   "ensembl" | "ensembl_plants" )
     fetch_grouped "$@" ;;
 
-  "genome" )
-    fetch_genome "$@" ;;
+  "europepmc" )
+    fetch_europepmc "$@" ;;
 
   "gencode" )
     fetch_gencode "$@" ;;
 
-  "generic" )
-    fetch_generic "$@" ;;
+  "genome" )
+    fetch_genome "$@" ;;
 
-  "url-file" )
-    fetch_url_file "$@" ;;
+  "rfam" )
+    fetch_rfam "$@" ;;
 
   "quickgo" )
     fetch_quickgo "$@" ;;
 
-  "europepmc" )
-    fetch_europepmc "$@" ;;
+  "url-file" )
+    fetch_url_file "$@" ;;
 
   "taxonomy" )
     fetch_taxonomy "$@" ;;
