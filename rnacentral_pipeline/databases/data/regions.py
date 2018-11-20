@@ -103,20 +103,10 @@ class SequenceRegion(object):
 
     @property
     def name(self):
-        exon_names = []
-        for exon in self.exons:
-            exon_names.append('{start}-{stop}'.format(
-                start=exon.start,
-                stop=exon.stop,
-            ))
-        return '@{chromosome}/{exons}:{strand}'.format(
-            chromosome=self.chromosome,
-            exons=','.join(exon_names),
-            strand=self.string_strand,
-        )
+        return region_id(self)
 
     def writeable(self, accession):
-        return write_location(self, accession)
+        return write_locations(self, accession)
 
     def writeable_exons(self, accession):
         for exon in self.exons:
