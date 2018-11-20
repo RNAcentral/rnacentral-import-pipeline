@@ -205,7 +205,7 @@ function fetch_ena() {
 function fetch_rfam() {
   local remote="$(dirname $1)"
   local produces="$2"
-  local group_size=8
+  local group_size=9
   local prefix="$(echo $produces | cut -f* -d1)"
   local suffx="$(echo $produces | cut -f* -d2)"
 
