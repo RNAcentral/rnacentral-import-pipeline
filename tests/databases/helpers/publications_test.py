@@ -58,7 +58,7 @@ def test_complains_given_bad_pmid():
 
 
 def lookup(ref_id):
-    return attr.asdict(pub.lookup_reference(IdReference.build(ref_id)))
+    return attr.asdict(pub.query_pmc(IdReference.build(ref_id)))
 
 
 def test_can_build_reference():
