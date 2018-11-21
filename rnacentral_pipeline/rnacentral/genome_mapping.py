@@ -92,8 +92,6 @@ class Hit(object):
 
 
 def select_possible(hit):
-    if hit.upi == 'URS0000584A85_9606':
-        print(hit)
     if hit.matches < 100 and hit.target_insertions > 10:
         return False
     if hit.matches == hit.sequence_length:
