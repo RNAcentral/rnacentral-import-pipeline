@@ -1,3 +1,5 @@
+drop table if exists :tablename;
+
 create table :tablename as
 select distinct
   xref.upi
