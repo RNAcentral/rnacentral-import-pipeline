@@ -571,8 +571,11 @@ process find_precompute_upis {
 
   script:
   """
-  psql -v ON_ERROR_STOP=1 -f "$sql" "$PGDATABASE"
-  rnac upi-ranges --table-name upis_to_precompute ${params.precompute.max_entries} ranges.txt
+  psql \
+    -v ON_ERROR_STOP=1 \
+    -v tablename=$params.precompute.tablename \
+    -f "$sql" "$PGDATABASE"
+  rnac upi-ranges --table-name $params.precompute.tablename ${params.precompute.max_entries} ranges.txt
   """
 }
 
