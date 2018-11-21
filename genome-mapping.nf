@@ -20,12 +20,12 @@ raw_genomes
 
 assemblies
   .combine(Channel.fromPath('files/genome-mapping/find-unmapped.sql'))
-  .view()
   .set { assemblies_to_fetch }
 
 process fetch_unmapped_sequences {
   tag { species }
   scratch true
+  maxForks 10
 
   input:
   set val(species), val(assembly_id), val(taxid), val(division), file(query) from assemblies_to_fetch
