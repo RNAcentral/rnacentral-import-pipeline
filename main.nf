@@ -7,6 +7,8 @@ def as_mysql_cmd = { db ->
   "mysql --host ${db.host} --port ${db.port} --user ${db.user} $rest"
 }
 
+assert params.precompute.tablename != 'rna' : "Should not use 'rna' table for precompute"
+
 // ===========================================================================
 // Compute initial tasks
 // ===========================================================================
