@@ -34,12 +34,22 @@ from ..data import IdReference
 
 LOGGER = logging.getLogger(__name__)
 
+
 class UnknownReference(Exception):
+    """
+    This is created when the requested reference cannot be found either in
+    EuropePMC or in the indexed data depending upon how the lookup was done.
+    """
     pass
 
 
 class TooManyPublications(Exception):
+    """
+    Raised if when we try to lookup a publication in EuropePMC and we find too
+    many (> 1) for the given reference.
+    """
     pass
+
 
 TABLE = '''
 CREATE TABLE IF NOT EXISTS {name}s (
@@ -137,7 +147,7 @@ def node_to_reference(node):
     data = {
         'journalTitle': xml_text('journalTitle', node, missing=''),
         'issue': xml_text('issue', node, missing=''),
-        'journalVolumne': xml_text('journalVolume', node, missing=''),
+        'journalVolume': xml_text('journalVolume', node, missing=''),
         'pageInfo': xml_text('pageInfo', node, missing=''),
         'pubYear': xml_text('pubYear', node, missing=''),
     }
