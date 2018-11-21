@@ -165,7 +165,7 @@ def test_can_parse_xml_data_correctly():
         assert len(data) == 1
         assert attr.asdict(data[0]) == attr.asdict(Reference(
             authors='Xu Z, Han Y, Liu J, Jiang F, Hu H, Wang Y, Liu Q, Gong Y, Li X.',
-            location='Sci Rep 5:12276 (2015)',
+            location='Scientific reports 5:12276 (2015)',
             title=(
                 'MiR-135b-5p and MiR-499a-3p Promote Cell '
                 'Proliferation and Migration in Atherosclerosis by Directly '
