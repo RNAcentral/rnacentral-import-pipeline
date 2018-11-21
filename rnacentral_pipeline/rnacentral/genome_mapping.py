@@ -92,7 +92,7 @@ class Hit(object):
 
 
 def select_possible(hit):
-    if hit.matches < 100 and hit.target_insertions > 10:
+    if hit.matches < 100 and hit.target_insertions > 25:
         return False
     if hit.matches == hit.sequence_length:
         return True
