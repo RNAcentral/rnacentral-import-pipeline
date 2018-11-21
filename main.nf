@@ -396,10 +396,7 @@ post_release
 
 flag_for_qa
   .combine(Channel.fromPath('files/qa/*.sql').flatten())
-  .map { flag, fn ->
-    name = fn.getBaseName()
-    [flag, name.take(name.indexOf('.')), fn]
-  }
+  .map { flag, fn -> [flag, fn.getBaseName(), fn] }
   .filter { f, n, fn -> params.qa[n].run }
   .set { qa_queries }
 
