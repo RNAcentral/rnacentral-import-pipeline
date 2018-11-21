@@ -10,6 +10,7 @@ COPY (
     ON
       regions.urs_taxid = pre.id
       and regions.assembly_id = :'assembly_id'
+      and regions.was_mapped = false
     WHERE
       pre.taxid = :taxid
       and regions.id is null
