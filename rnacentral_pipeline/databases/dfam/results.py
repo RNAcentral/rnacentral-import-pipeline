@@ -50,8 +50,8 @@ class Result(object):
             model_start=int(parts[6]),
             model_end=int(parts[7]),
             strand=convert_strand(parts[8]),
-            alignment_start=int(parts[9]),
-            alignment_end=int(parts[10]),
+            sequence_start=int(parts[9]),
+            sequence_end=int(parts[10]),
         )
 
     def writeable(self):
