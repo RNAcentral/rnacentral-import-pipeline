@@ -40,6 +40,6 @@ def test_can_parse_results_correctly(test_data):
         model_start=1,
         model_end=374,
         strand=1,
-        alignment_start=726,
-        alignment_end=1062,
+        sequence_start=726,
+        sequence_end=1062,
     ))
