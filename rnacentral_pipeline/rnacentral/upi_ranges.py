@@ -41,5 +41,5 @@ def upi_ranges(dbconf, table_name, max_size):
 
 def to_file(dbconf, table_name, max_size, output):
     ranges = upi_ranges(dbconf, table_name, max_size)
-    ranges = [[table_name] + r for r in ranges]
+    ranges = [[table_name] + list(r) for r in ranges]
     csv.writer(output).writerows(ranges)
