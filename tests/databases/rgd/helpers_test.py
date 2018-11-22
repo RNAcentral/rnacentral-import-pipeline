@@ -19,6 +19,8 @@ import pytest
 from rnacentral_pipeline.databases.data import Exon
 from rnacentral_pipeline.databases.data import Entry
 from rnacentral_pipeline.databases.data import Reference
+from rnacentral_pipeline.databases.data import SequenceRegion
+
 from rnacentral_pipeline.databases.rgd import helpers as rgd
 
 
@@ -92,12 +94,11 @@ def test_can_generate_url(simple_entry):
 
 
 def test_can_generate_exons(simple_entry):
-    assert rgd.exons(simple_entry) == [Exon(
-        chromosome_name='chr14',
-        primary_start=46643222,
-        primary_end=46645093,
+    assert rgd.regions(simple_entry) == [SequenceRegion(
+        chromosome='14',
+        strand=1,
+        exons=[Exon(start=46643222, stop=46645093)],
         assembly_id='',
-        complement=False,
     )]
 
 
