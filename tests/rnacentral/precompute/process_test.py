@@ -37,27 +37,27 @@ def load_data(upi):
     ('URS00002F21DA_7227', 'Drosophila melanogaster bantam stem-loop (dme-bantam)'),
     ('URS000034C5CB_7227', 'Drosophila melanogaster (fruit fly) Signal recognition particle 7SL RNA CR32864 (Dmel_CR32864, Dmel_CR42652)'),
     ('URS000037602E_9606', 'Homo sapiens (human) transfer-messenger RNA Esche_coli_K12'),
-    ('URS00003AC4AA_3702', 'Arabidopsis thaliana (thale cress) TAS3/TASIR-ARF (TRANS-ACTING SIRNA3); other RNA (AT3G17185)'),
-    ('URS00003BECAC_9606', 'Homo sapiens long intergenic non-protein coding RNA 1729 (LINC01729)'),
+    ('URS00003AC4AA_3702', 'Arabidopsis thaliana (thale-cress) TAS3/TASIR-ARF (TRANS-ACTING SIRNA3); other RNA (AT3G17185)'),
+    ('URS00003BECAC_9606', 'Homo sapiens (human) long intergenic non-protein coding RNA 1729 (LINC01729)'),
     ('URS00003CE153_9606', 'Homo sapiens STARD4 antisense RNA 1 (STARD4-AS1)'),
     ('URS00003EBD9A_9913', 'Bos taurus telomerase RNA component (TERC), telomerase RNA'),
     ('URS0000466DE6_6239', 'Caenorhabditis elegans cel-miR-229-5p'),
     ('URS000048B30C_3702', 'Arabidopsis thaliana (thale cress) partial tRNA-Leu'),
-    ('URS00004E52D3_10090', 'Mus musculus predicted gene 12238 (Gm12238)'),
+    ('URS00004E52D3_10090', 'Mus musculus (house mouse) predicted gene 12238 (Gm12238)'),
     ('URS00004E9E38_7227', 'Drosophila melanogaster (fruit fly) dme-bantam-3p'),
     ('URS00004FB44B_6239', 'Caenorhabditis elegans 26s rRNA'),
-    ('URS000051DCEC_10090', 'Mus musculus small nucleolar RNA, C/D box 17 (Snord17), small nucleolar RNA'),
+    ('URS000051DCEC_10090', 'Mus musculus (house mouse) small nucleolar RNA, C/D box 17 (Snord17), small nucleolar RNA'),
     ('URS00005511ED_6239', 'Caenorhabditis elegans long non-coding RNA linc-125'),
     ('URS000055786A_7227', 'Drosophila melanogaster (fruit fly) dme-bantam-5p'),
     ('URS0000563A36_7227', 'Drosophila melanogaster (fruit fly) snoRNA:Tudor-SN-a (Dmel_CR43585)'),
     ('URS0000569A4A_9606', 'Homo sapiens small Cajal body-specific RNA 10 (SCARNA10)'),
     ('URS00005F4CAF_3702', 'Arabidopsis thaliana (thale cress) tRNA-Met(CAT)'),
-    ('URS000060B496_10090', 'Mus musculus small nucleolar RNA, H/ACA box 3 (Snora3), small nucleolar RNA'),
+    ('URS000060B496_10090', 'Mus musculus (house mouse) small nucleolar RNA, H/ACA box 3 (Snora3), small nucleolar RNA'),
     ('URS000061F377_559292', 'Saccharomyces cerevisiae S288c (RDN25-1, RDN25-2)'),
-    ('URS00006550DA_10090', 'Mus musculus small Cajal body-specific RNA 1 (Scarna13)'),
+    ('URS00006550DA_10090', 'Mus musculus (house mouse) small Cajal body-specific RNA 1 (Scarna13)'),
     ('URS0000661037_7955', 'Danio rerio tRNA'),
     ('URS000069D7FA_6239', 'Caenorhabditis elegans tRNA-His'),
-    ('URS00006B3271_10090', 'Mus musculus small Cajal body-specific RNA 2 (Scarna2)'),
+    ('URS00006B3271_10090', 'Mus musculus (house mouse) small Cajal body-specific RNA 2 (Scarna2)'),
     ('URS00006CE02F_9606', 'Homo sapiens U8 small nucleolar RNA'),
     ('URS00006D80BC_9913', 'Bos taurus (cattle) microRNA bta-mir-497 precursor'),
     ('URS00006DC8B9_6239', 'Caenorhabditis elegans tRNA-Undet'),
@@ -78,7 +78,6 @@ def test_builds_correct_descriptions(rna_id, description):
     assert load_data(rna_id).description == description
 
 
-@pytest.mark.skip()
 @pytest.mark.parametrize('rna_id,short', [  # pylint: disable=no-member
     ('URS000001E7BA_559292', 'tRNA-Gln (tQ(UUG)C, tQ(UUG)D1-3, tQ(UUG)E1, tQ(UUG)H, tQ(UUG)L)'),
     ('URS0000023341_1142511', 'tRNA-Cys (GCA) (tRNA-Cys-GCA-1-1)'),
@@ -277,21 +276,3 @@ def test_creates_expected_qa_udpates(rna_id, expected):
             flags.append(field.name)
     assert sorted(flags) == sorted(expected)
     assert status.has_issue == bool(expected)
-
-
-@pytest.mark.parametrize('rna_id,expected', [  # pylint: disable=no-member
-    ('URS0000010837_7227', 282),
-    ('URS00001C018D_77133', 282),
-    ('URS0000400378_30527', 282),
-    ('URS00004E52D3_10090', 222),
-    ('URS00004E9E38_7227', 220),
-    ('URS00004FB44B_6239', 282),
-    ('URS000051DCEC_10090', 282),
-    ('URS00005511ED_6239', 282),
-    ('URS000055786A_7227', 220),
-    ('URS0000563A36_7227', 220),
-    ('URS000061A10B_9606', 222),
-    ('URS0000866382_1000416', 282),
-])
-def test_computes_max_release(rna_id, expected):
-    assert load_data(rna_id).last_release == expected
