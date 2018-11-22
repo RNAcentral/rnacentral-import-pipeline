@@ -24,7 +24,7 @@ from tests import helpers
 
 
 def load_data(rna_id):
-    path = os.path.join('files', 'ftp-export', 'ensembl', 'query.sql')
+    path = os.path.join('files', 'ftp-export', 'ensembl', 'ensembl-xrefs.sql')
     raw = helpers.run_range_as_single(rna_id, path)
     return ensembl.builder(raw)
 
