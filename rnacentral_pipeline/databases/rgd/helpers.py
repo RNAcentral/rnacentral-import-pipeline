@@ -148,7 +148,8 @@ def corrected_records(handle):
         given = record.id.replace(',', '')
         match = re.search('gene RGD:(\d+),', record.description)
         if not match:
-            raise ValueError("RGD fasta must state gene id")
+            raise ValueError("RGD fasta must state gene id: %s",
+                             record.description)
         gene = match.group(1)
 
         match = re.search('locus: (.+)$', record.description)
@@ -285,7 +286,7 @@ def as_region(chromosomes, starts, stops, strands, index):
     )
 
 
-def regions(entry, sequence):
+def regions(entry):
     if not entry['CHROMOSOME_6.0']:
         return []
 
