@@ -14,6 +14,8 @@ limitations under the License.
 """
 
 import logging
+import operator as op
+import itertools as it
 
 import attr
 
@@ -83,41 +85,56 @@ def as_entry(record, gene, feature, context):
     )
 
 
+def ncrnas(raw, context):
+    """
+    This will parse an EMBL file for all Ensembl Entries to import.
+    """
+
+    for record in SeqIO.parse(raw, 'embl'):
+        current_gene = None
+        for feature in record.features:
+
+            if feature.type in IGNORE_FEATURES:
+                LOGGER.debug("Skipping ignored feature type for %s", feature)
+                continue
+
+            if embl.is_gene(feature):
+                current_gene = feature
+                continue
+
+            if helpers.is_pseudogene(current_gene, feature):
+                LOGGER.debug("Skipping psuedogene %s", feature)
+                continue
+
+            if not helpers.is_ncrna(feature):
+                LOGGER.debug("Skipping feature %s because it is not ncRNA",
+                             feature)
+                continue
+
+            entry = as_entry(record, current_gene, feature, context)
+            if not entry or context.is_supressed(entry):
+                LOGGER.debug("Skipping supressed Rfam family %s", feature)
+                continue
+
+            yield entry
+
+
 def parse(raw, family_file, gencode_file=None):
     """
     This will parse an EMBL file for all Ensembl Entries to import.
     """
 
     context = Context.build(family_file, gencode_file=gencode_file)
-    for record in SeqIO.parse(raw, 'embl'):
-        current_gene = None
-        ncrnas = []
-        for feature in record.features:
-            if feature.type in IGNORE_FEATURES:
-                continue
-
-            if embl.is_gene(feature):
-                current_gene = feature
-                for entry in helpers.generate_related(ncrnas):
-                    yield entry
-                    if context.from_gencode(entry):
-                        yield gencode.update_entry(entry)
-                ncrnas = []
-                continue
-
-            if helpers.is_pseudogene(current_gene, feature):
-                continue
-
-            if not helpers.is_ncrna(feature):
-                continue
-
-            entry = as_entry(record, current_gene, feature, context)
-            if not entry or context.is_supressed(entry):
-                continue
-
-            ncrnas.append(entry)
-
-        for entry in helpers.generate_related(ncrnas):
+    loaded = ncrnas(raw, context)
+    grouped = it.groupby(loaded, op.attrgetter('gene'))
+    for _, related in grouped:
+        related = list(related)
+        for entry in helpers.generate_related(related):
             yield entry
+
+        from_gencode = []
+        for entry in related:
             if context.from_gencode(entry):
-                yield gencode.update_entry(entry)
+                from_gencode.append(gencode.update_entry(entry))
+        for entry in helpers.generate_related(from_gencode):
+            yield entry

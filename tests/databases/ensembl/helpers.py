@@ -53,3 +53,8 @@ def entry_for(entries, accession):
     val = entries_for(entries, accession)
     assert len(val) == 1
     return val[0]
+
+
+def has_entry_for(entries, accession):
+    val = entries_for(entries, accession)
+    return len(val) == 1
