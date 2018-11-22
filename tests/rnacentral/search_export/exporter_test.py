@@ -198,7 +198,7 @@ def test_can_search_using_flybase_transcript_ids(upi, transcript_ids):
     assert val == transcript_ids
 
 
-@pytest.mark.parameterize('upi,gene,symbol', [
+@pytest.mark.parametrize('upi,gene,symbol', [
     ('URS000013BC78_4896', 'SPSNORNA.29', 'sno52'),
 ])
 def test_can_search_for_pombase_ids(upi, gene, symbol):
