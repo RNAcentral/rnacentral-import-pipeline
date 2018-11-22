@@ -18,7 +18,7 @@ import attr
 
 from rnacentral_pipeline.databases import data as dat
 
-from .helpers import parse_with_family, entries_for, entry_for
+from .helpers import parse_with_family, entries_for, entry_for, has_entry_for
 
 
 @pytest.fixture(scope='module')  # pylint: disable=no-member
@@ -254,7 +254,14 @@ def test_it_has_last_ncrna(human_12):
 
 
 def test_extracts_all_gencode_entries(human_12):
-    assert len([e for e in human_12 if e.database == 'GENCODE']) == 1691
+    with open('found.txt', 'w') as raw:
+        for e in human_12:
+            if e.database != 'GENCODE':
+                continue
+            raw.write(e.primary_id)
+            raw.write('\n')
+
+    assert len([e for e in human_12 if e.database == 'GENCODE']) == 1506
 
 
 def test_can_build_gencode_entries(human_12):
