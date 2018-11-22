@@ -23,6 +23,8 @@ from .helpers import load_data
 @pytest.mark.parametrize('rna_id,rna_type', [  # pylint: disable=no-member
     # pytest.param('URS0000A85A32_10090', 'tRNA', mark=pytest.mark.xfail),
     # pytest.param('URS000060C682_9606', 'vault_RNA', mark=pytest.mark.xfail("Inactive sequence"),
+    # pytest.param('URS0000175007_7227', 'miRNA', mark=pytest.mark.xfail("Inactive sequence")),
+
     ('URS00000101E5_9606', 'lncRNA'),
     ('URS0000016972_6239', 'miRNA'),
     ('URS000001E7BA_559292', 'tRNA'),
@@ -37,7 +39,6 @@ from .helpers import load_data
     ('URS000013F331_9606', 'RNase_P_RNA'),
     ('URS0000157BA2_4896', 'antisense_RNA'),
     ('URS000015995E_4615', 'miRNA'),
-    ('URS0000175007_7227', 'miRNA'),
     ('URS000018EB2E_3702', 'lncRNA'),
     ('URS0000193C7E_9606', 'scRNA'),
     ('URS000019E0CD_9606', 'lncRNA'),
