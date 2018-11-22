@@ -30,7 +30,7 @@ RELATIONSHIP_TYPES = {
 }
 
 
-def generate_related(entries):
+def related_isoforms(entries):
     """
     This goes through all given entries, which are assumed to all be from the
     same gene, and thus splicing variants, and populates the related_sequences
