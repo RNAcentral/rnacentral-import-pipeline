@@ -35,10 +35,12 @@ def test_can_run_command_and_provide_output():
     psql = PsqlWrapper(os.environ['PGDATABASE'])
     with psql.command('explain select upi from rna') as out:
         lines = [line.rstrip('\n') for line in out.readlines()]
+        from pprint import pprint
+        pprint(lines)
         assert lines == [
-            '                           QUERY PLAN                            ',
-            '-----------------------------------------------------------------',
-            ' Seq Scan on rna  (cost=0.00..1279692.68 rows=13438168 width=14)',
+            '                                      QUERY PLAN                                       ',
+            '---------------------------------------------------------------------------------------',
+            ' Index Only Scan using rna_pkey on rna  (cost=0.56..1229364.79 rows=14468335 width=14)',
             '(1 row)',
             '',
         ]
