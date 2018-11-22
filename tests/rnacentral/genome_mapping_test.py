@@ -383,13 +383,12 @@ def test_selectes_correct_inexact_locations():
         'URS00002412DD_9606@19/43193389-43193407:-',
     ]),
     ('h', 'data/genome-mapping/results.psl', 'URS000073FCEB_9606', [
-        'URS000073FCEB_9606@14/20683273-20683309,20683326-20683361:+',
+        'URS000073FCEB_9606@14/20657464-20657499,20657521-20657557:-',
     ]),
     ('h', 'data/genome-mapping/results.psl', 'URS0000584A85_9606', [
-        'URS000073FCEB_9606@14/20657464-20657499,20657521-20657557:-',
+        'URS0000584A85_9606@17/8120925-8120961,8120976-8121012:+',
     ]),
 ])
 def test_can_produce_expected_names(assembly_id, filename, upi, region_ids):
     val = results_for(assembly_id, filename, upi)
-    print(val)
     assert [h.name for h in val] == region_ids
