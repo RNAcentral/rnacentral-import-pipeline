@@ -244,26 +244,30 @@ def seq_version(_):
     return '1'
 
 
-# def seq_xref_ids(entry):
-#     """
-#     This will produce the list of all ids that could be used to extract the
-#     """
+def seq_xref_ids(entry):
+    """
+    This will produce the list of all ids that could be used to extract the
+    """
 
-#     xref_ids = []
-#     exon_data = exons(entry)
-#     for ids in xref_data(entry).values():
-#         for exon in exon_data:
-#             for xref_id in ids:
-#                 key = '{xref_id}-{gene_id}-{chr}:{start}..{stop}'.format(
-#                     xref_id=xref_id,
-#                     gene_id=primary_id(entry),
-#                     chr=exon.chromosome_name,
-#                     start=exon.primary_start,
-#                     stop=exon.primary_end,
-#                 )
-#                 xref_ids.append((key, exon))
+    xref_ids = []
+    exon_data = exons(entry)
+    for ids in xref_data(entry).values():
+        for exon in exon_data:
+            for xref_id in ids:
+                key = '{xref_id}-{gene_id}-{chr}:{start}..{stop}'.format(
+                    xref_id=xref_id,
+                    gene_id=primary_id(entry),
+                    chr=exon.chromosome_name,
+                    start=exon.primary_start,
+                    stop=exon.primary_end,
+                )
+                xref_ids.append((key, exon))
 
-#     return xref_ids
+    return xref_ids
+
+
+def transcripts(genes, seqs):
+    return []
 
 
 def sequences_for(entry, sequences):
@@ -349,7 +353,7 @@ def as_entries(genes, seqs):
     for gene in genes:
         ncrnas = []
 
-        sequences = transcripts(gene, seqs)
+        sequences = transcripts(genes, seqs)
         for index, sequence in enumerate(sequences):
             acc_index = index + 1
             if len(sequences) == 1:
