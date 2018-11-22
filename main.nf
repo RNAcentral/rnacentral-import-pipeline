@@ -652,9 +652,9 @@ process load_precomputed_data {
 // Compute feedback reports
 //=============================================================================
 
-flag_for_feedback
-  .combine(Channel.fromPath('files/precompute/find-mod-info.sql'))
-  .set { feedback_queries }
+// flag_for_feedback
+//   .combine(Channel.fromPath('files/precompute/find-mod-info.sql'))
+//   .set { feedback_queries }
 
 // process mods_for_feedback {
 //   input:
