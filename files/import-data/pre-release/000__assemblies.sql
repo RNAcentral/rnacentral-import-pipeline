@@ -1,11 +1,11 @@
-DELETE FROM ensembl_assemblies ensembl
+DELETE FROM ensembl_assembly ensembl
 USING load_assemblies load
 WHERE
   load.taxid = ensembl.taxid
   and load.assembly_id != ensembl.assembly_id
 ;
 
-INSERT INTO ensembl_assemblies (
+INSERT INTO ensembl_assembly (
   assembly_id,
   assembly_full_name,
   gca_accession,
