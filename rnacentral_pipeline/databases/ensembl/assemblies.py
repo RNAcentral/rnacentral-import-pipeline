@@ -184,7 +184,7 @@ class AssemblyExample(object):
 class AssemblyInfo(object):
     assembly_id = attr.ib(validator=is_a(basestring))
     assembly_full_name = attr.ib(validator=is_a(basestring))
-    gca_accession = attr.ib(validator=is_a(basestring))
+    gca_accession = attr.ib(validator=optional(is_a(basestring)))
     assembly_ucsc = attr.ib(validator=optional(is_a(basestring)))
     common_name = attr.ib(validator=optional(is_a(basestring)))
     taxid = attr.ib(validator=is_a(int))
