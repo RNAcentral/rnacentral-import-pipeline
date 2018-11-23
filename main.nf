@@ -555,11 +555,7 @@ process import_qa_data {
 
 qa_imported
   .ifEmpty('no qa')
-  .set { flag_for_precompute }
-
-flag_for_precompute
-  .map { flag -> [flag, file("files/precompute/methods/${params.precompute.method.replace('_', '-')}.sql")] }
-  .set { precompute_upi_queries }
+  .set { qa_flag_for_precompute }
 
 //=============================================================================
 // Genome mapping
@@ -698,7 +694,7 @@ process load_genome_mapping {
   file(ctl) from Channel.fromPath('files/genome-mapping/load.ctl')
 
   output:
-  val('done') into mapped_genomes
+  val('done') into genome_mapping_status
 
   script:
   """
@@ -706,9 +702,18 @@ process load_genome_mapping {
   """
 }
 
+genome_mapping_status
+  .ifEmpty('no mapping')
+  .set { mapping_flag_for_precompute }
+
 //=============================================================================
 // Run precompute of selected data
 //=============================================================================
+
+qa_flag_for_precompute
+  .combine(mapping_flag_for_precompute)
+  .map { qa, gm -> file("files/precompute/methods/${params.precompute.method.replace('_', '-')}.sql") }
+  .set { precompute_upi_queries }
 
 process find_precompute_upis {
   input:
