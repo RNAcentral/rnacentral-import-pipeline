@@ -14,8 +14,15 @@ process species_to_map {
   """
 }
 
+excluded = [
+  'oryza_glumaepatula',
+  'puccinia_graminisug99',
+  'takifugu_rubripes',
+]
+
 raw_genomes
   .splitCsv()
+  .filter { s, a, t, d -> !EXCLUDED.contains(s) }
   .into { assemblies; genomes_to_fetch }
 
 assemblies
@@ -25,7 +32,7 @@ assemblies
 process fetch_unmapped_sequences {
   tag { species }
   scratch true
-  maxForks 10
+  maxForks 5
 
   input:
   set val(species), val(assembly_id), val(taxid), val(division), file(query) from assemblies_to_fetch
@@ -79,6 +86,9 @@ genomes
   .set { targets }
 
 process blat {
+  memory 10.GB
+  errorStrategy 'finish'
+
   input:
   set val(species), file(ooc), file(chromosome), file(chunk) from targets
 
