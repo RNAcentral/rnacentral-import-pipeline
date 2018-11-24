@@ -17,12 +17,15 @@ import csv
 import operator as op
 import itertools as it
 
+from . import databases as db
+
 
 def top_level_only(data):
-    grouped = it.groupby(data, op.itemgetter(0, 1, 2))
+    key = op.itemgetter('name', 'coordinate_system', 'attrib_value')
+    grouped = it.groupby(data, key)
     for (name, sys, assembly), entries in grouped:
         entries = list(entries)
-        attribs = {e[3]: e[4] for e in entries}
+        attribs = {e['attrib_name']: e['attrib_value'] for e in entries}
 
         is_ref = attribs.get('non_ref', None) != '1'
         rank = None
@@ -36,7 +39,13 @@ def top_level_only(data):
         yield [name, sys, assembly, int(is_ref), rank]
 
 
-def from_file(handle, output):
-    reader = csv.reader(handle, delimiter='\t')
-    writer = csv.writer(output)
-    writer.writerows(top_level_only(list(reader)))
+def fetch(connections, query_handle):
+    results = db.run_queries_across_databases(connections, query_handle)
+    for (_, rows) in results:
+        for entry in top_level_only(rows):
+            yield entry
+
+
+def write(connections, query, output):
+    data = fetch(connections, query)
+    csv.writer(output).writerows(data)

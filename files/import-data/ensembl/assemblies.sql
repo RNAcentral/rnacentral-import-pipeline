@@ -1,4 +1,6 @@
-SELECT meta_key, meta_value
+SELECT
+  meta_key,
+  meta_value
 FROM meta
 WHERE meta_key IN (
   'assembly.accession',
@@ -11,6 +13,6 @@ WHERE meta_key IN (
   'species.taxonomy_id',
   'species.common_name',
   'species.scientific_name',
-    'species.url',
-    'species.division'
+  'species.url',
+  'species.division'
 )

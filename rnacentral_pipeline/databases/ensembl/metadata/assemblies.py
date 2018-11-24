@@ -14,10 +14,14 @@ limitations under the License.
 """
 
 import csv
+import operator as op
+import itertools as it
 
 import attr
 from attr.validators import optional
 from attr.validators import instance_of as is_a
+
+from . import databases as db
 
 
 BLAT_GENOMES = {
@@ -255,20 +259,22 @@ class AssemblyInfo(object):
         ]
 
 
-def parse(handle, example_locations):
+def fetch(connections, query_handle, example_locations):
     """
     This parses the TSV file for assembly information and produces an array
     of the data to write to the database.
     """
+    results = db.run_queries_across_databases(connections, query_handle)
+    for (_, rows) in results:
+        raw = {r['meta_key']: r['meta_value'] for r in rows}
+        yield AssemblyInfo.build(raw, example_locations)
 
-    reader = csv.reader(handle, delimiter='\t')
-    return AssemblyInfo.build(dict(reader), example_locations)
 
-
-def write(handle, output):
+def write(connections, query, output):
     """
     Parse the given input handle and write the readable data to the CSV.
     """
 
-    data = parse(handle, EXAMPLE_LOCATIONS)
-    csv.writer(output).writerow(data.writeable())
+    data = fetch(connections, query, EXAMPLE_LOCATIONS)
+    data = it.imap(op.methodcaller('writeable'), data)
+    csv.writer(output).writerows(data)
