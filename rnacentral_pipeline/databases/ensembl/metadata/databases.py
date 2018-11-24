@@ -14,7 +14,11 @@ limitations under the License.
 """
 
 import re
+import json
 import itertools as it
+
+import pymysql
+
 
 DISALLOWED_DATABASE_TERMS = {
     'mirror',
@@ -58,7 +62,31 @@ def select_max(handle):
         yield max(databases, key=database_key)
 
 
-def write_max(handle, output):
-    for name in select_max(handle):
-        output.write(name)
-        output.write('\n')
+def databases(connection):
+    cursor = connection.cursor()
+    cursor.execute('show databases')
+    db_names = [r[0] for r in cursor.fetchall()]
+    databases = select_max(db_names)
+    cursor.close()
+    return databases
+
+
+def run_queries(connection, query):
+    for database in databases(connection):
+        connection.select_db(database)
+        cursor = connection.cursor(cursor=pymysql.cursors.DictCursor)
+        cursor.execute(query)
+        yield (database, cursor.fetchall())
+        cursor.close()
+
+
+def run_queries_across_databases(connection_handle, query_handle):
+    specs = json.load(connection_handle)
+    query = query_handle.read()
+    for name in specs.keys():
+        if not name.lower().startswith('ensembl'):
+            continue
+        spec = specs[name]
+        connection = pymysql.Connection(**spec)
+        for results in run_queries(connection, query):
+            yield results
