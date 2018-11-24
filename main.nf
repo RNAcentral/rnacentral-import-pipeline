@@ -1,11 +1,6 @@
 #!/usr/bin/env nextflow
 
-def any_database(String... names) { names.any { n -> params.import_data.databases[n] } }
-
-def as_mysql_cmd = { db ->
-  def rest = db.db_name ? " --database ${db.db_name}" : ''
-  "mysql --host ${db.host} --port ${db.port} --user ${db.user} $rest"
-}
+def any_database(String[] names) { names.any { n -> params.import_data.databases[n] } }
 
 assert params.precompute.tablename != 'rna' : "Should not use 'rna' table for precompute"
 
@@ -53,59 +48,31 @@ for (entry in params.import_data.databases) {
   }
 }
 
-Channel.fromPath('files/import-data/ensembl/*.sql')
-  .map { f -> f.getBaseName() }
-  .collectFile(name: "possible-data.txt", newLine: true)
-  .set { ensembl_possible }
+// Create all metadata tasks. We have to run metadata import
+for (entry in params.metadata) {
+  def name = entry.key
+  def info = entry.value
 
-Channel.from(params.metadata.ensembl.mysql, params.metadata.ensembl_genomes.mysql)
-  .combine(Channel.fromPath('files/import-data/ensembl-analyzed.sql'))
-  .combine(ensembl_possible)
-  .set { ensembl_info }
-
-process find_ensembl_tasks {
-  executor 'local'
-
-  when:
-  any_database('ensembl')
-
-  input:
-  set val(mysql), file(imported_sql), file(possible) from ensembl_info
-
-  output:
-  set val(mysql), file('selected.csv') into ensembl_task_summary
-
-  """
-  set -o pipefail
-
-  psql -v ON_ERROR_STOP=1 -f "$imported_sql" "$PGDATABASE" > done.csv
-  echo 'show databases' | ${as_mysql_cmd(mysql)} > dbs.txt
-  rnac ensembl select-tasks dbs.txt $possible done.csv > selected.csv
-  """
-}
-
-// If we are processing Rfam or Ensembl we need to update the Rfam metadata.
-// These databases use Rfam in one way or another so we should stay up-to-date
-// with the current Rfam data. For example they may be creating annotations of a
-// partial lncRNA which we do not want to import. By tracking the latest Rfam we
-// will know what is a partial lncRNA. This is done by querying the Rfam MySQL
-// database and then using the Rfam commands to process the query results. We
-// can then import the processed data as normal.
-if (any_database('rfam', 'ensembl')) {
-  file("files/import-data/rfam/*.sql").each { query ->
-    def name = query.getBaseName()
-    def input = [produces: "data.tsv", query: query.toString(), command: 'mysql']
-    data_to_fetch_and_process << DataSource.build("rfam-$name", [
-      inputs: [data: input + params.metadata.rfam.mysql],
-      process: [command: "rnac rfam $name"]
-    ])
+  if (!data_to_fetch && !data_to_fetch_and_process) {
+    continue
   }
-}
 
-// Add the metadata tasks that must always be run when importing data
-if  (data_to_fetch || data_to_fetch_and_process) {
-  data_to_fetch_and_process << DataSource.build('pub-info', params.metadata.europepmc)
-  data_to_fetch_and_process << DataSource.build('ncbi-taxonomy', params.metadata.taxonomy)
+  def linked_to = info.get('linked_databases', [])
+  def should_run = linked_to
+    .inject(info.get('always_run', false)) { acc, n -> acc || params.import_data.databases[n] }
+
+  if (!should_run) {
+    continue
+  }
+
+  def source = DataSource.build("metadata-$name", info)
+  source.process.group = "/rnc/metadata/$name"
+  if (DataSource.is_parallel_task(source)) {
+    data_to_fetch.addAll(source.inputs)
+    data_to_process << [source.name, source]
+  } else {
+    data_to_fetch_and_process << source
+  }
 }
 
 // Setup the QA files for hmmpress or whatever is needed.
@@ -146,18 +113,6 @@ process fetch_data {
 //=============================================================================
 // Create channels for all data processing tasks
 //=============================================================================
-
-ensembl_task_summary
-  .flatMap { mysql, csv ->
-    data = []
-    csv.eachLine { line ->
-      (name, db) = line.tokenize(',')
-      updated = mysql + [db_name: db]
-      data << [updated, name, file("files/import-data/ensembl/${name}.sql")]
-    }
-    data
-  }
-  .set { ensembl_metadata_tasks }
 
 fetched
   .map { t, fs ->
@@ -269,32 +224,6 @@ process batch_lookup_publications {
   """
 }
 
-// This must be it's own task becuase we need to have a specific number of forks
-// and this cannot be set dynamically. Otherwise we could just put it into the
-// generic fetch and process channel.
-process process_ensembl_metadata {
-  tag "$name ${mysql.db_name}"
-  maxForks params.metadata.ensembl.max_forks
-  clusterOptions { "-g /rnc/process/ensembl-metadata" }
-
-  input:
-  set val(mysql), val(name), file(sql) from ensembl_metadata_tasks
-
-  output:
-  file("${name}.csv") into ensembl_output
-  val("$name,$mysql.db_name") into ensembl_imported
-
-  script:
-  """
-  ${as_mysql_cmd(mysql)} -N < $sql > data.tsv
-  rnac ensembl $name data.tsv ${name}.csv
-  """
-}
-
-ensembl_imported
-  .collectFile(name: "ensembl_imported.csv", newLine: true)
-  .set { ensembl_imported_output }
-
 //=============================================================================
 // Import and release data
 //=============================================================================
@@ -304,8 +233,6 @@ raw_output
     processed_output,
     term_info,
     references_output,
-    ensembl_output,
-    ensembl_imported_output
   )
   .map { f ->
     name = f.getBaseName()
@@ -409,7 +336,7 @@ process fetch_sequences {
   set val(status), val(name), file(query) from qa_queries
 
   output:
-  set val(name), file('parts/*.fasta') into split_sequences mode flatten
+  set val(name), file('parts/*.fasta') into split_qa_sequences mode flatten
 
   """
   psql -v ON_ERROR_STOP=1 $pg_args -f "$query" "$PGDATABASE" > raw.json
@@ -462,7 +389,7 @@ process generate_qa_scan_files {
   }
 }
 
-split_sequences
+split_qa_sequences
   .join(qa_scan_files)
   .flatMap { name, fns, extra -> fns.inject([]) { fn -> [name, fn, extra] } }
   .set { sequences_to_scan }
@@ -594,7 +521,7 @@ process fetch_unmapped_sequences {
   set val(species), val(assembly_id), val(taxid), val(division), file(query) from assemblies_to_fetch
 
   output:
-  set species, file('parts/*.fasta') into split_sequences
+  set species, file('parts/*.fasta') into split_mappable_sequences
 
   script:
   """
@@ -635,7 +562,7 @@ process download_genome {
 }
 
 genomes
-  .join(split_sequences)
+  .join(split_mappable_sequences)
   .flatMap { species, chrs, ooc_file, chunks ->
     [chrs, chunks].combinations().inject([]) { acc, it -> acc << [species, ooc_file] + it }
   }

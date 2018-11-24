@@ -1,10 +1,7 @@
 class DataSource {
   static Map build(db_name, database) {
-    def index = 0
-    def inputs = []
-    database.inputs.each { input_entry ->
-      inputs << Input.build(db_name, index, input_entry.key, input_entry.value)
-      index++
+    def inputs = database.get('inputs', []).inject([]) { acc, input_entry ->
+      acc << Input.build(db_name, acc.length + 1, input_entry.key, input_entry.value)
     }
 
     Map process = Parse.build(db_name, database.process);
