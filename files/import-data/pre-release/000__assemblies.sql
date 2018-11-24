@@ -20,7 +20,7 @@ INSERT INTO ensembl_assembly (
   example_start,
   subdomain
 ) (
-SELECT
+SELECT DISTINCT
   assembly_id,
   assembly_full_name,
   gca_accession,
