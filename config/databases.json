@@ -1,0 +1,23 @@
+{
+  "ensembl": {
+    "command": "mysql",
+    "host":  "ensembldb.ensembl.org",
+    "port":  5306,
+    "user":  "anonymous"
+  },
+
+  "ensembl_genomes": {
+    "command": "mysql",
+    "host":  "mysql-eg-publicsql.ebi.ac.uk",
+    "port":  4157,
+    "user":  "anonymous"
+  },
+
+  "rfam": {
+    "command": "mysql",
+    "host":  "mysql-rfam-public.ebi.ac.uk",
+    "port":  4497,
+    "user":  "rfamro",
+    "database":  "Rfam"
+  }
+}

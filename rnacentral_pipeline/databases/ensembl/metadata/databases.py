@@ -87,6 +87,8 @@ def run_queries_across_databases(connection_handle, query_handle):
         if not name.lower().startswith('ensembl'):
             continue
         spec = specs[name]
+        if 'command' in spec:
+            del spec['command']
         connection = pymysql.Connection(**spec)
         for results in run_queries(connection, query):
             yield results
