@@ -1,5 +1,5 @@
 LOAD CSV
-FROM ALL FILENAMES MATCHING ~<data.*csv$>
+FROM ALL FILENAMES MATCHING ~<proteins.*csv$>
 HAVING FIELDS (
   protein_accession,
   description,
