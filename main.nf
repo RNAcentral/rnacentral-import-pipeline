@@ -473,7 +473,7 @@ process import_qa_data {
   set val(name), file('raw*.csv'), file(ctl) from hits_to_import
 
   output:
-  val('done') into qa_imported
+  val("$name done") into qa_imported
 
   """
   split-and-load $ctl 'raw*.csv' ${params.import_data.chunk_size} $name
@@ -481,6 +481,7 @@ process import_qa_data {
 }
 
 qa_imported
+  .collect()
   .ifEmpty('no qa')
   .set { qa_flag_for_precompute }
 
