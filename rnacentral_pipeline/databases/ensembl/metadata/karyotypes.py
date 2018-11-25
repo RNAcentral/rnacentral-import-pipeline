@@ -30,7 +30,7 @@ DOMAINS = {
 
 @lru_cache()
 @retry(requests.HTTPError, tries=5, delay=1)
-@RateLimiter(max_calls=10, period=1)
+@RateLimiter(max_calls=15, period=1)
 def find_species(domain):
     response = requests.get(
         'http://rest.%s.org/info/species' % domain,
@@ -46,7 +46,7 @@ def find_species(domain):
 
 @lru_cache()
 @retry(requests.HTTPError, tries=5, delay=1)
-@RateLimiter(max_calls=10, period=1)
+@RateLimiter(max_calls=15, period=1)
 def fetch(species, domain):
     response = requests.get(
         'http://rest.%s.org/info/assembly/%s?bands=1' % (domain, species),
