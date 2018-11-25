@@ -491,6 +491,9 @@ qa_imported
 process species_to_map {
   executor 'local'
 
+  when:
+  params.genome_mapping.run
+
   input:
   val(flag) from flag_for_mapping
   file(query) from Channel.fromPath('files/genome-mapping/mappable.sql')
