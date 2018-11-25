@@ -379,7 +379,7 @@ process generate_qa_scan_files {
     mkdir $name
     cd $name
     fetch generic "$base/Rfam.clanin" Rfam.clanin
-    fetch generic "$base/Rfam.cm.gz Rfam.cm.gz
+    fetch generic "$base/Rfam.cm.gz" Rfam.cm.gz
     gzip -d *.gz
     cmpress Rfam.cm
     cd ..
