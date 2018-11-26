@@ -28,4 +28,5 @@ create table load_protein_info (
   label text,
   synonyms text[]
 );
+$$
 ;
