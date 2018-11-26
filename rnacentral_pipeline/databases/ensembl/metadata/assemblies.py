@@ -23,6 +23,10 @@ from attr.validators import instance_of as is_a
 
 from . import databases as db
 
+REJECTED_TAXIDS = {
+    4932,
+    5127,
+}
 
 BLAT_GENOMES = {
     'anopheles_gambiae',
@@ -157,6 +161,20 @@ def reconcile_taxids(taxid):
     return int(taxid)
 
 
+def is_ignored_assembly(info):
+    if info.taxid in REJECTED_TAXIDS:
+        return True
+    if info.taxid == 7227 and info.division != 'Ensembl':
+        return True
+    if info.taxid == 5762 and info.assembly_id == 'V1.0':
+        return True
+    if info.taxid == 6239 and info.division != 'Ensembl':
+        return True
+    if info.taxid == 8090 and info.ensembl_url != 'oryzias_latipes':
+        return True
+    return False
+
+
 class InvalidDomain(Exception):
     """
     Raised when we cannot compute a URL for a domain.
@@ -216,7 +234,7 @@ class AssemblyInfo(object):
         )
 
     @property
-    def domain_url(self):
+    def subdomain(self):
         """Given E! division, returns E!/E! Genomes url."""
 
         if self.division == 'Ensembl':
@@ -249,9 +267,9 @@ class AssemblyInfo(object):
             self.assembly_ucsc,
             self.common_name,
             self.taxid,
-            self.domain_url,
+            self.ensembl_url,
             self.division,
-            self.domain_url,
+            self.subdomain,
             chromosome,
             start,
             end,
@@ -260,14 +278,15 @@ class AssemblyInfo(object):
 
 
 def fetch(connections, query_handle, example_locations):
-    """
-    This parses the TSV file for assembly information and produces an array
-    of the data to write to the database.
-    """
     results = db.run_queries_across_databases(connections, query_handle)
     for (_, rows) in results:
         raw = {r['meta_key']: r['meta_value'] for r in rows}
-        yield AssemblyInfo.build(raw, example_locations)
+        if raw['species.division'] == 'EnsemblBacteria':
+            continue
+        info = AssemblyInfo.build(raw, example_locations)
+        if is_ignored_assembly(info):
+            continue
+        yield info
 
 
 def write(connections, query, output):

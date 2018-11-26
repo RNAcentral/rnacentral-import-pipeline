@@ -66,8 +66,8 @@ def databases(connection):
     cursor = connection.cursor()
     cursor.execute('show databases')
     db_names = [r[0] for r in cursor.fetchall()]
-    databases = select_max(db_names)
     cursor.close()
+    databases = select_max(db_names)
     return databases
 
 
@@ -83,10 +83,9 @@ def run_queries(connection, query):
 def run_queries_across_databases(connection_handle, query_handle):
     specs = json.load(connection_handle)
     query = query_handle.read()
-    for name in specs.keys():
+    for name, spec in specs.items():
         if not name.lower().startswith('ensembl'):
             continue
-        spec = specs[name]
         if 'command' in spec:
             del spec['command']
         connection = pymysql.Connection(**spec)
