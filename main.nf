@@ -1,7 +1,5 @@
 #!/usr/bin/env nextflow
 
-def any_database(String[] names) { names.any { n -> params.import_data.databases[n] } }
-
 assert params.precompute.tablename != 'rna' : "Should not use 'rna' table for precompute"
 
 // ===========================================================================
