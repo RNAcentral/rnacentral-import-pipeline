@@ -15,6 +15,7 @@ set -euo pipefail
 IFS=$'\n\t'
 
 # Fetch Ensembl
+bin/fetch generic 'ftp://ftp.ensembl.org/pub/current_embl/homo_sapiens/Homo_sapiens.GRCh38.*.chromosome.3.dat.gz' 'data/ensembl/Homo_sapiens.GRCh38.chromosome.3.dat.gz'
 bin/fetch generic 'ftp://ftp.ensembl.org/pub/current_embl/homo_sapiens/Homo_sapiens.GRCh38.*.chromosome.12.dat.gz' 'data/ensembl/Homo_sapiens.GRCh38.chromosome.12.dat.gz'
 bin/fetch generic 'ftp://ftp.ensembl.org/pub/current_embl/homo_sapiens/Homo_sapiens.GRCh38.*.chromosome.X.dat.gz' 'data/ensembl/Homo_sapiens.GRCh38.chromosome.X.dat.gz'
 bin/fetch generic 'ftp://ftp.ensembl.org/pub/current_embl/mus_musculus/Mus_musculus.GRCm38.*.chromosome.3.dat.gz' 'data/ensembl/Mus_musculus.GRCm38.chromosome.3.dat.gz'
