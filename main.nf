@@ -336,7 +336,7 @@ process fetch_sequences {
   set val(status), val(name), file(query) from qa_queries
 
   output:
-  set val(name), file('parts/*.fasta') into split_qa_sequences mode flatten
+  set val(name), file('parts/*.fasta') into split_qa_sequences
 
   """
   psql -v ON_ERROR_STOP=1 $pg_args -f "$query" "$PGDATABASE" > raw.json
@@ -396,11 +396,11 @@ split_qa_sequences
 
 process qa_scan {
   tag { name }
-  cpus { spec.cpus }
-  queue { spec.queue }
-  module { spec.get('module', '') }
+  cpus { params.qa[name].cpus }
+  queue { params.qa[name].queue }
+  module { params.qa[name].get('module', '') }
   clusterOptions {
-    "-M ${spec.memory} -R 'rusage[mem=${spec.memory}]' ${spec.get('options', '')}"
+    "-M ${params.qa[name].memory} -R 'rusage[mem=${params.qa[name].memory}]' ${params.qa[name].get('options', '')}"
   }
 
   input:
@@ -412,7 +412,7 @@ process qa_scan {
   script:
   if (name == 'rfam') {
     """
-    mpiexec -mca btl ^openbib -np ${params.qa.rfam_scan.cpus} \
+    mpiexec -mca btl ^openbib -np ${params.qa[name].cpus} \
     cmscan \
       -o output.inf \
       --tblout results.tblout \
