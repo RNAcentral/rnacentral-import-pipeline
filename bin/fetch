@@ -62,20 +62,26 @@ function fetch_generic() {
       ;;
 
     http://* | https://* )
-      wget -O "$pattern" "$remote"
+      curl "$remote" > "$pattern"
       ;;
 
     ftp://* )
       # wget doesn't play well with ** so we use lftp instead. Also, wget doesn't
       # like following symlinks, but lftp does. I should find a way to indicate
       # this to the pipeline.
+      echo "HI"
       if [[ "$remote" =~ '**' ]]; then
+        echo 'LFTP'
         lftp -c "mget $remote"
       else
         if [[ "$pattern" =~ "*" ]]; then
           wget "$remote"
         else
-          wget -O "$pattern" "$remote"
+          local remote_pattern="$(basename "$remote")"
+          local remote_dir="$(dirname "$remote")"
+          local filename="$(curl --list-only "$remote_dir/" | grep "$remote_pattern")"
+          [ -n $filename ] || { echo 1>&2 "Failed to find remote file: $remote" && exit 1; }
+          curl "$remote_dir/$filename" > $pattern
         fi
       fi
       ;;
