@@ -328,7 +328,7 @@ flag_for_qa
   .filter { f, n, fn -> params.qa[n].run }
   .set { qa_queries }
 
-process fetch_sequences {
+process fetch_qa_sequences {
 
   input:
   set val(status), val(name), file(query) from qa_queries
