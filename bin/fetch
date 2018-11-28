@@ -155,12 +155,14 @@ function fetch_europepmc() {
 }
 
 function fetch_gencode() {
-  local remote="$1"
+  local urls="$1"
   local output="$2"
   local tmp="$(mktemp)"
 
-  fetch_url_file "$1" "$tmp"
-  zcat "$tmp" | awk '{ if ($3 == "transcript") print $0 }' > "$output"
+  cat "$urls" |\
+  xargs -I {} curl {} |\
+  gzip -d - |\
+  awk '{ if ($3 == "transcript") print $0 }' > "$output"
 
   rm "$tmp"
 }
