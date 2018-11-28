@@ -572,7 +572,6 @@ genomes
   .set { targets }
 
 process blat {
-  maxForks 400
   memory 10.GB
   errorStrategy 'finish'
 
