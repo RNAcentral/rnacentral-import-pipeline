@@ -396,10 +396,9 @@ process qa_scan {
   tag { name }
   cpus { params.qa[name].cpus }
   queue { params.qa[name].queue }
+  memory { params.qa[name].memory }
   module { params.qa[name].get('module', '') }
-  clusterOptions {
-    "-M ${params.qa[name].memory} -R 'rusage[mem=${params.qa[name].memory}]' ${params.qa[name].get('options', '')}"
-  }
+  clusterOptions { params.qa[name].get('options', '') }
 
   input:
   set val(name), file('sequences.fasta'), file(dir) from sequences_to_scan
