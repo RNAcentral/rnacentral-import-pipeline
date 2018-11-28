@@ -1,5 +1,5 @@
 LOAD CSV
-FROM ALL FILENAMES MATCHING ~<coordinate-systems.*csv$>
+FROM ALL FILENAMES MATCHING ~<coordinate_systems.*csv$>
 HAVING FIELDS (
   chromosome,
   coordinate_system,
