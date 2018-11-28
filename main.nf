@@ -337,10 +337,10 @@ process fetch_sequences {
   set val(name), file('parts/*.fasta') into split_qa_sequences
 
   """
-  psql -v ON_ERROR_STOP=1 $pg_args -f "$query" "$PGDATABASE" > raw.json
+  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > raw.json
   json2fasta.py raw.json rnacentral.fasta
   seqkit shuffle --two-pass rnacentral.fasta > shuffled.fasta
-  seqkit split --two-pass --by-size ${params.qa.rfam_scan.chunk_size} --out-dir 'parts/' shuffled.fasta
+  seqkit split --two-pass --by-size ${params.qa[name].chunk_size} --out-dir 'parts/' shuffled.fasta
   """
 }
 
