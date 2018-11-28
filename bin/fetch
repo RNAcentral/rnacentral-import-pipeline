@@ -69,9 +69,7 @@ function fetch_generic() {
       # wget doesn't play well with ** so we use lftp instead. Also, wget doesn't
       # like following symlinks, but lftp does. I should find a way to indicate
       # this to the pipeline.
-      echo "HI"
       if [[ "$remote" =~ '**' ]]; then
-        echo 'LFTP'
         lftp -c "mget $remote"
       else
         if [[ "$pattern" =~ "*" ]]; then
