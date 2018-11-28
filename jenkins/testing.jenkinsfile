@@ -24,9 +24,9 @@ pipeline {
         }
 
         stage("Run database parsing unit-tests") {
-            environment {
-                PGDATABASE = credentials("pg-${params.database.toLowerCase()}.txt")
-            }
+            /* environment { */
+            /*     PGDATABASE = credentials("pg-${params.DATABASE.toLowerCase()}.txt") */
+            /* } */
 
             steps {
                 script {
