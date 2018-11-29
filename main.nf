@@ -600,14 +600,15 @@ process blat {
  blat_results
   .groupTuple()
   .join(assembly_tracking)
-  .map { species, psl, assembly_id, taxid, division -> [psl, assembly_id] }
+  .map { species, psl, assembly_id, taxid, division -> [psl, species, assembly_id] }
   .set { species_results }
 
 process select_mapped_locations {
-  memory '10 GB'
+  tag { species }
+  memory '15 GB'
 
   input:
-  set val(assembly_id), file('output*.psl') from species_results
+  set file('output*.psl'), val(species), val(assembly_id) from species_results
 
   output:
   file 'locations.csv' into selected_locations
@@ -616,7 +617,7 @@ process select_mapped_locations {
   set -o pipefail
 
   sort -k 10 output*.psl > sorted.psl
-  genome-mapping select-hits $assembly_id sorted.psl locations.csv
+  rnac genome-mapping select-hits $assembly_id sorted.psl locations.csv
   """
 }
 
