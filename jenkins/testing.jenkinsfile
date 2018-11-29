@@ -13,7 +13,7 @@ pipeline {
             steps {
                 script {
                         sh '''
-                            source import-env/bin/activate
+                            source /net/isilonP/public/rw/homes/xfm_adm/rnacentral-import-venv/bin/activate
                             pip install --upgrade pip
                             pip install --upgrade -r requirements.txt
                             scripts/fetch-test-data.sh
@@ -31,7 +31,7 @@ pipeline {
                 script {
                     try {
                         sh '''
-                            source import-env/bin/activate
+                            source /net/isilonP/public/rw/homes/xfm_adm/rnacentral-import-venv/bin/activate
                             py.test --junitxml=reports/junit.xml tests/databases/ tests/ontologies/
                         '''
                     } catch (err) {
