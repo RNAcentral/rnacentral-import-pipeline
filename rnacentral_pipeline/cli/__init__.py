@@ -19,6 +19,7 @@ from . import ensembl
 from . import europepmc
 from . import external
 from . import ftp_export
+from . import genome_mapping
 from . import misc
 from . import ncbi
 from . import ontologies
@@ -43,6 +44,7 @@ cli.add_command(ensembl.cli)
 cli.add_command(europepmc.cli)
 cli.add_command(external.cli)
 cli.add_command(ftp_export.cli)
+cli.add_command(genome_mapping.cli)
 cli.add_command(misc.crs_data)
 cli.add_command(misc.find_upi_ranges)
 cli.add_command(misc.run_release)
