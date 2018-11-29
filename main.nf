@@ -510,7 +510,7 @@ process species_to_map {
 raw_genomes
   .splitCsv()
   .filter { s, a, t, d -> !params.genome_mapping.species_excluded_from_mapping.contains(s) }
-  .into { assemblies; genomes_to_fetch }
+  .into { assemblies; genomes_to_fetch; assembly_tracking }
 
 assemblies
   .combine(Channel.fromPath('files/genome-mapping/find-unmapped.sql'))
@@ -599,14 +599,15 @@ process blat {
 
  blat_results
   .groupTuple()
-  .map { it -> it[1] }
+  .join(assembly_tracking)
+  .map { species, psl, assembly_id, taxid, division -> [psl, assembly_id] }
   .set { species_results }
 
 process select_mapped_locations {
   memory '10 GB'
 
   input:
-  file('output*.psl') from species_results
+  set val(assembly_id), file('output*.psl') from species_results
 
   output:
   file 'locations.csv' into selected_locations
@@ -614,7 +615,8 @@ process select_mapped_locations {
   """
   set -o pipefail
 
-  sort -k 10 *.psl | rnac genome-mapping select-hits - locations.csv
+  sort -k 10 output*.psl > sorted.psl
+  genome-mapping select-hits $assembly_id sorted.psl locations.csv
   """
 }
 
