@@ -570,6 +570,7 @@ genomes
   .flatMap { species, chrs, ooc_file, chunks ->
     [chrs, chunks].combinations().inject([]) { acc, it -> acc << [species, ooc_file] + it }
   }
+  .filter { s, o, c, t -> !c.empty() }
   .filter { s, o, c, t -> !params.genome_mapping.chromosomes_excluded_from_mapping.contains(c.getBaseName()) }
   .set { targets }
 
