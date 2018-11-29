@@ -392,14 +392,14 @@ process generate_qa_scan_files {
 
 split_qa_sequences
   .join(qa_scan_files)
-  .flatMap { name, fns, extra -> fns.inject([]) { fn -> [name, fn, extra] } }
+  .flatMap { name, fns, extra -> fns.inject([]) { acc, fn -> acc << [name, fn, extra] } }
   .set { sequences_to_scan }
 
 process qa_scan {
   tag { name }
   cpus { params.qa[name].cpus }
   queue { params.qa[name].queue }
-  memory { params.qa[name].memory }
+  // memory { params.qa[name].memory }
   module { params.qa[name].get('module', '') }
   clusterOptions { params.qa[name].get('options', '') }
 
