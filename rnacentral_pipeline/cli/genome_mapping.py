@@ -32,5 +32,5 @@ def cli():
 @click.argument('assembly_id')
 @click.argument('hits', default='-', type=click.File('r'))
 @click.argument('output', default='-', type=click.File('w'))
-def mappable_species(assembly_id, hits, output):
+def select_hits(assembly_id, hits, output):
     genome_mapping.write_selected(assembly_id, hits, output)
