@@ -649,7 +649,7 @@ qa_flag_for_precompute
 
 process find_precompute_upis {
   input:
-  set val(flag), file(sql) from precompute_upi_queries
+  file(sql) from precompute_upi_queries
 
   output:
   file('ranges.txt') into raw_ranges
