@@ -606,7 +606,7 @@ process select_mapped_locations {
   memory '10 GB'
 
   input:
-  file('*.psl') from species_results
+  file('output*.psl') from species_results
 
   output:
   file 'locations.csv' into selected_locations
