@@ -4,5 +4,8 @@ SELECT
   assembly_id,
   taxid,
   division
-from ensembl_assembly
+FROM ensembl_assembly
+WHERE
+  division != 'EnsemblProtists'
+  AND division != 'EnsemblFungi'
 ) TO STDOUT CSV;
