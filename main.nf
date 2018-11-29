@@ -285,6 +285,9 @@ process release {
   echo true
   maxForks 1
 
+  when:
+  data_to_fetch_and_process || data_to_process
+
   input:
   file(pre_sql) from pre_scripts
   file(post_sql) from post_scripts
