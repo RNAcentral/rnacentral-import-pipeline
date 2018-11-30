@@ -10,7 +10,7 @@ HAVING FIELDS (
     exon_start,
     exon_stop
 )
-INTO {{DB_URL}}?load_genome_mapping
+INTO {{PGDATABASE}}?load_genome_mapping
 TARGET COLUMNS (
     accession,
     region_name,
