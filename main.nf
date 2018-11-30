@@ -298,7 +298,7 @@ process release {
   val('done') into post_release
 
   script:
-  def should_run = params.import_data.databases.inject(false) { s, e -> s || e.value }
+  def should_release = params.import_data.databases.inject(false) { s, e -> s || e.value }
   """
   set -o pipefail
 
@@ -314,7 +314,7 @@ process release {
   echo "${post_sql.join('\n')}" > post-release
 
   run_sql "pre-release"
-  ${should_run ? '' : '# ' } rnac run-release
+  ${should_release ? '' : '#' } rnac run-release
   run_sql "post-release"
   """
 }
