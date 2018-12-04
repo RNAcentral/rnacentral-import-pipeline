@@ -88,7 +88,7 @@ class Hit(object):
         return float(self.matches) / float(self.sequence_length)
 
     def writeable(self):
-        return regions.write_locations(self, None)
+        return regions.write_locations(self, self.upi)
 
 
 def select_possible(hit):
