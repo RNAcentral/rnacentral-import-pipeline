@@ -1,7 +1,7 @@
 LOAD CSV
 FROM ALL FILENAMES MATCHING ~<genome-mapping.*csv$>
 HAVING FIELDS (
-    accession,
+    urs_taxid,
     region_name,
     chromosome,
     strand,
@@ -12,7 +12,7 @@ HAVING FIELDS (
 )
 INTO {{PGDATABASE}}?load_genome_mapping
 TARGET COLUMNS (
-    accession,
+    urs_taxid,
     region_name,
     chromosome,
     strand,
@@ -33,8 +33,7 @@ drop table if exists load_genome_mapping;
 $$,
 $$
 create table load_genome_mapping (
-    accession text,
-    urs_taxid text,
+    urs_taxid text not null,
     region_name text not null,
     chromosome text,
     strand int4,
@@ -49,8 +48,14 @@ $$
 
 AFTER LOAD DO
 $$
+CREATE TABLE mapped_assemblies AS SELECT DISTINCT assembly_id FROM load_genome_mapping;
+$$,
+$$
+CREATE INDEX ix_mapped_assemblies ON mapped_assemblies (assembly_id);
+$$,
+$$
 DELETE FROM rnc_sequence_regions regions
-USING load_genome_mapping load
+USING mapped_assemblies load
 WHERE
     regions.assembly_id = load.assembly_id
     AND regions.was_mapped = true
@@ -80,12 +85,12 @@ SELECT
     load.assembly_id,
     max(load.exon_count),
     true,
-    load.identity,
+    max(load.identity),
     '{}'::text[]
 FROM load_genome_mapping load
 JOIN ensembl_assembly ensembl on ensembl.assembly_id = load.assembly_id
 GROUP BY load.region_name, load.assembly_id
-) ON CONFLICT (region_name, assembly_id) DO NOTHING
+) ON CONFLICT (MD5(region_name), assembly_id) DO NOTHING
 ;
 $$,
 $$
@@ -106,5 +111,8 @@ JOIN ensembl_assembly ensembl ON ensembl.assembly_id = load.assembly_id
 $$,
 $$
 DROP TABLE load_genome_mapping;
+$$,
+$$
+DROP TABLE mapped_assemblies;
 $$
 ;
