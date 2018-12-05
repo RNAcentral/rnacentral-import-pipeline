@@ -17,8 +17,7 @@ INTO {{PGDATABASE}}?load_rfam_model_hits
 TARGET COLUMNS
 (
   UPI,
-  SEQUENCE_START,
-  SEQUENCE_STOP,
+  SEQUENCE_START, SEQUENCE_STOP,
   RFAM_MODEL_ID,
   MODEL_START,
   MODEL_STOP,
@@ -88,25 +87,35 @@ from rna, rfam_models as models, load_rfam_model_hits as load
 where
   rna.upi = load.upi
   and models.rfam_model_id = load.rfam_model_id
-);
+)
+ON CONFLICT (sequence_start, sequence_stop, model_start, model_stop, rfam_model_id, upi)
+DO UPDATE
+SET
+  e_value = excluded.e_value,
+  score = excluded.score,
+  overlap = excluded.overlap
+;
 $$,
 $$
 INSERT INTO rfam_analyzed_sequences (
     upi,
-    total,
-    family_count
+    date,
+    total_matches,
+    total_family_matches
 ) (
 SELECT
     upi,
-    count(*) total,
-    count(distinct rfam_model_id) family_count
+    current_date date,
+    count(*) total_matches,
+    count(distinct rfam_model_id) total_family_matches
 FROM rfam_model_hits
 GROUP BY upi
 )
 ON CONFLICT (upi)
+DO UPDATE
 SET
-  total_matches = EXCLUDED.total,
-  total_family_matches = EXCLUDED.family_count
+  total_matches = EXCLUDED.total_matches,
+  total_family_matches = EXCLUDED.total_family_matches
 ;
 $$,
 $$
