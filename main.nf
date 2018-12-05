@@ -457,7 +457,7 @@ process qa_scan {
 
 qa_scan_results
   .groupTuple()
-  .map { n, files -> [n, files, Channel.fromPath("files/qa/${n}.ctl")] }
+  .map { n, files -> [n, files, file("files/qa/${n}.ctl")] }
   .filter { n, fs, ctl ->
     def status =  ctl.exists()
     if (!status) {
