@@ -17,7 +17,7 @@ import attr
 from attr.validators import optional
 from attr.validators import instance_of as is_a
 
-from rnacentral_pipeline import psql
+import json
 
 
 @attr.s()
@@ -84,5 +84,5 @@ class QaStatus(object):
             int(self.incomplete_sequence),
             int(self.possible_contamination),
             int(self.missing_rfam_match),
-            psql.list_as_array(self.messages),
+            json.dumps(self.messages),
         ]
