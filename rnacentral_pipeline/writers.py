@@ -23,6 +23,8 @@ from contextlib import contextmanager
 import attr
 from attr.validators import instance_of as is_a
 
+from boltons.fileutils import atomic_save
+
 
 @attr.s(frozen=True)  # pylint: disable=W0232
 class CsvOutput(object):
@@ -51,13 +53,9 @@ class CsvOutput(object):
     @contextmanager
     def writer(self, directory):
         path = os.path.join(directory, self.filename)
-        try:
-            with open(path, 'w') as out:
-                writer = csv.writer(out, **self.csv_options)
-                yield lambda e: writer.writerows(self.transformer(e))
-        finally:
-            if os.path.exists(path) and os.stat(path).st_size == 0:
-                os.remove(path)
+        with atomic_save(path, 'w') as out:
+            writer = csv.writer(out, **self.csv_options)
+            yield lambda e: writer.writerows(self.transformer(e))
 
     def __call__(self, directory, generator):
         with self.writer(directory) as writer:
