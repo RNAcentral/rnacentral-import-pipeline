@@ -38,7 +38,7 @@ create table if not exists load_qa_status (
   incomplete_sequence bool,
   possible_contamination bool,
   missing_rfam_match bool,
-  messages text[]
+  messages jsonb
 );
 $$,
 $$
