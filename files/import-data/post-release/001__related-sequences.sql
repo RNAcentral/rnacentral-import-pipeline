@@ -71,7 +71,7 @@ delete from load_rnc_related_sequences load
 USING xref
 WHERE
   xref.ac = load.target_accession
-  and load.relationship_type = 'N'
+  and load.relationship_type = 'target_rna'
   and xref.deleted = 'N'
 ;
 
