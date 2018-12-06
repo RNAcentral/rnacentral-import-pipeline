@@ -163,9 +163,10 @@ raw_dbs
   .set { db_sequences }
 
 process database_specific_fasta {
+  tag { db }
   maxForks 4
 
-  publishDir "${params.ftp_export.publish}/sequences/.search", mode: 'move'
+  publishDir "${params.ftp_export.publish}/sequences/by-database", mode: 'move'
 
   input:
   set val(db), file(query) from db_sequences
@@ -174,7 +175,7 @@ process database_specific_fasta {
   file(name) into __sequences_species
 
   script:
-  name = "${db.toLowerCase()}.fasta"
+  name = "${db.toLowerCase().replaceAll(' ', '_')}.fasta"
   """
   set -o pipefail
 
