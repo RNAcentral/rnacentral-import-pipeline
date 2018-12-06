@@ -23,12 +23,6 @@ from contextlib import contextmanager
 from plumbum import local
 
 
-def list_as_array(lst):
-    array = ','.join('"%s"' % m for m in lst)
-    array = '{%s}' % array
-    return array
-
-
 def query_as_copy(sql, use='csv', **kwargs):
     """
     Turn a sql query string into a a COPY command for psql. This will format
