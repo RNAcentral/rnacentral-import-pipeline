@@ -1,6 +1,6 @@
 COPY (
 select
-  descr
+  display_name
 from rnc_database
 where
   alive = 'Y'
