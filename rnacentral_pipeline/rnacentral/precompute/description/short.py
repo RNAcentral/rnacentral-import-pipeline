@@ -34,7 +34,9 @@ def short_description(description, sequence):
             description = description[len(name):]
         description = description.strip()
 
+    description = re.sub(r'^\s*(\(\))?\s*', '', description)
+
     if description.startswith('(') and description.endswith(')'):
         description = description[1:-1]
-    description = re.sub(r'^\s+', '', description)
+
     return description
