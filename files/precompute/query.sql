@@ -40,7 +40,13 @@ select
        'sequence_start', hits.sequence_start,
        'sequence_stop', hits.sequence_stop
     )),
-    'last_release', max(xref.last)
+    'last_release', max(xref.last),
+    'chromosomes', ARRAY(
+      select
+        distinct chromosome
+      from rnc_sequence_regions
+        where urs_taxid = rna.upi || '_' || xref.taxid
+    )
 )
 FROM rna
 join :tablename todo on todo.upi = rna.upi

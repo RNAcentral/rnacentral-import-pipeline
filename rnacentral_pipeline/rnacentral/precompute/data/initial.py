@@ -190,6 +190,7 @@ class Sequence(object):
     previous_data = attr.ib(validator=optional(is_a(dict)))
     rfam_hits = attr.ib(validator=is_a(list))
     last_release = attr.ib(validator=is_a(int))
+    chromosomes = attr.ib(validator=is_a(list))
 
     def is_species_specific(self):
         """
@@ -201,7 +202,8 @@ class Sequence(object):
         """
         Check if this accession is mitochrondrial.
         """
-        return any(a.is_mitochondrial() for a in self.accessions)
+        return any(a.is_mitochondrial() for a in self.accessions) or \
+            (self.taxid == 9606 and 'MT' in self.chromosomes)
 
     def domains(self):
         """
@@ -255,6 +257,7 @@ class SpeciesSequence(Sequence):
             previous_data=data['previous'][0],
             rfam_hits=list(hits),
             last_release=data['last_release'],
+            chromosomes=data['chromosomes'],
         )
 
 
@@ -291,4 +294,5 @@ class GenericSequence(Sequence):
             previous_data={},
             rfam_hits=[],
             last_release=last_release,
+            chromosomes=[],
         )
