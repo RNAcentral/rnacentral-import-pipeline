@@ -1,0 +1,303 @@
+ID   CM002910.1:6158361..6159805:misc_RNA; SV 1; linear; genomic DNA; CON; INV; 528 BP.
+XX
+PA   CM002910.1
+XX
+PR   Project:PRJNA170244;
+XX
+DT   16-SEP-2014 (Rel. 122, Created)
+DT   23-JUN-2016 (Rel. 129, Last updated, Version 3)
+XX
+DE   Drosophila simulans uncharacterized protein
+XX
+KW   .
+XX
+OS   Drosophila simulans
+OC   Eukaryota; Metazoa; Ecdysozoa; Arthropoda; Hexapoda; Insecta; Pterygota;
+OC   Neoptera; Holometabola; Diptera; Brachycera; Muscomorpha; Ephydroidea;
+OC   Drosophilidae; Drosophila; Sophophora.
+XX
+RN   [1]
+RX   DOI; 10.1101/gr.141689.112.
+RX   PUBMED; 22936249.
+RA   Hu T.T., Eisen M.B., Thornton K.R., Andolfatto P.;
+RT   "A second-generation assembly of the Drosophila simulans genome provides
+RT   new insights into patterns of lineage-specific divergence";
+RL   Genome Res. 23(1):89-98(2013).
+XX
+RN   [2]
+RA   Hu T., Eisen M.B., Thornton K.R., Andolfatto P.;
+RT   ;
+RL   Submitted (25-JUN-2014) to the INSDC.
+RL   EEB/LSI, Princeton University, 106A Guyot Hall, Princeton, NJ 08544, USA
+XX
+RN   [3]
+RG   FlyBase
+RA   ;
+RT   ;
+RL   Submitted (23-APR-2015) to the INSDC.
+RL   FlyBase, Harvard University, Biological Laboratories, 16 Divinity Ave,
+RL   Cambridge, MA 02138, USA
+XX
+DR   MD5; c71594103f8dcca8bf4ad6ddcd069aa2.
+DR   BioSample; SAMN01086904.
+DR   PubMed; 22936249.
+XX
+CC   Annotation was added in July 2015.
+CC   ##Genome-Assembly-Data-START##
+CC   Assembly Date          :: MAR-2012
+CC   Assembly Method        :: Velvet v. 1.1.04
+CC   Genome Representation  :: Full
+CC   Expected Final Version :: No
+CC   Genome Coverage        :: 75.0x
+CC   Sequencing Technology  :: Illumina; Sanger
+CC   ##Genome-Assembly-Data-END##
+CC   ##Genome-Annotation-Data-START##
+CC   Annotation Provider :: FlyBase
+CC   Annotation Status   :: Full annotation
+CC   Annotation Version  :: Release 2.01
+CC   Annotation Pipeline :: NCBI eukaryotic genome annotation pipeline
+CC   URL                 :: http://flybase.org
+CC   ##Genome-Annotation-Data-END##
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..528
+FT                   /organism="Drosophila simulans"
+FT                   /chromosome="2L"
+FT                   /strain="w501"
+FT                   /mol_type="genomic DNA"
+FT                   /db_xref="taxon:7240"
+FT   misc_RNA        complement(join(CM002910.1:6158361..6158821,
+FT                   CM002910.1:6159739..6159805))
+FT                   /gene="Dsim\GD22585"
+FT                   /gene_synonym="dsim_GLEANR_6331"
+FT                   /gene_synonym="GD22585"
+FT                   /locus_tag="Dsimw501_GD22585"
+FT                   /product="uncharacterized protein"
+FT                   /note="GD22585-RC; Dsim\GD22585-RC"
+XX
+SQ   Sequence 528 BP; 151 A; 138 C; 98 G; 141 T; 0 other;
+     ggcaaatttc atgtacatac taaggaactt attacgtttc ggttttttca gatgtccact        60
+     tgagtggccc acgccacgcc ccttttccca cgccaaagag actcgaaaag aatgcgagtc       120
+     gttaacggtt caatggcaac gcagcacttc cgcagctcca acggcacaaa catccccagt       180
+     cccatcccca tacgcatccc acctaccaac cccatccaca tctccgccag aatcccagtg       240
+     gcagctttga ccgcttcact gcatcgccgc aaaagtcgga ggacggacca tagtggcgcc       300
+     tcgatgaatt acaggtttca tttttcaaga gcgctggcca ggaaagccgt atttacatac       360
+     atccctcttt gcggagataa gagccagaat tgttggtgaa aacgtttcct ttgatcttgg       420
+     aatttgtcac ttttataaag aacttaatgt tatttcattt aatttccaac aatagtgata       480
+     atttatgaaa cacatagttc aatgtgctaa atatctagta ataaaatg                    528
+//
+ID   CM002910.1:784327..787269:misc_RNA; SV 1; linear; genomic DNA; CON; INV; 1599 BP.
+XX
+PA   CM002910.1
+XX
+PR   Project:PRJNA170244;
+XX
+DT   16-SEP-2014 (Rel. 122, Created)
+DT   23-JUN-2016 (Rel. 129, Last updated, Version 3)
+XX
+DE   Drosophila simulans uncharacterized protein
+XX
+KW   .
+XX
+OS   Drosophila simulans
+OC   Eukaryota; Metazoa; Ecdysozoa; Arthropoda; Hexapoda; Insecta; Pterygota;
+OC   Neoptera; Holometabola; Diptera; Brachycera; Muscomorpha; Ephydroidea;
+OC   Drosophilidae; Drosophila; Sophophora.
+XX
+RN   [1]
+RX   DOI; 10.1101/gr.141689.112.
+RX   PUBMED; 22936249.
+RA   Hu T.T., Eisen M.B., Thornton K.R., Andolfatto P.;
+RT   "A second-generation assembly of the Drosophila simulans genome provides
+RT   new insights into patterns of lineage-specific divergence";
+RL   Genome Res. 23(1):89-98(2013).
+XX
+RN   [2]
+RA   Hu T., Eisen M.B., Thornton K.R., Andolfatto P.;
+RT   ;
+RL   Submitted (25-JUN-2014) to the INSDC.
+RL   EEB/LSI, Princeton University, 106A Guyot Hall, Princeton, NJ 08544, USA
+XX
+RN   [3]
+RG   FlyBase
+RA   ;
+RT   ;
+RL   Submitted (23-APR-2015) to the INSDC.
+RL   FlyBase, Harvard University, Biological Laboratories, 16 Divinity Ave,
+RL   Cambridge, MA 02138, USA
+XX
+DR   MD5; 42816fc32f6236145110b5fddb88f758.
+DR   BioSample; SAMN01086904.
+DR   PubMed; 22936249.
+XX
+CC   Annotation was added in July 2015.
+CC   ##Genome-Assembly-Data-START##
+CC   Assembly Date          :: MAR-2012
+CC   Assembly Method        :: Velvet v. 1.1.04
+CC   Genome Representation  :: Full
+CC   Expected Final Version :: No
+CC   Genome Coverage        :: 75.0x
+CC   Sequencing Technology  :: Illumina; Sanger
+CC   ##Genome-Assembly-Data-END##
+CC   ##Genome-Annotation-Data-START##
+CC   Annotation Provider :: FlyBase
+CC   Annotation Status   :: Full annotation
+CC   Annotation Version  :: Release 2.01
+CC   Annotation Pipeline :: NCBI eukaryotic genome annotation pipeline
+CC   URL                 :: http://flybase.org
+CC   ##Genome-Annotation-Data-END##
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..1599
+FT                   /organism="Drosophila simulans"
+FT                   /chromosome="2L"
+FT                   /strain="w501"
+FT                   /mol_type="genomic DNA"
+FT                   /db_xref="taxon:7240"
+FT   misc_RNA        join(CM002910.1:784327..784567,CM002910.1:785792..786503,
+FT                   CM002910.1:786571..787078,CM002910.1:787132..787269)
+FT                   /gene="Dsim\GD27934"
+FT                   /gene_synonym="GD27934"
+FT                   /locus_tag="Dsimw501_GD27934"
+FT                   /product="uncharacterized protein"
+FT                   /note="GD27934-RB; Dsim\GD27934-RB"
+XX
+SQ   Sequence 1599 BP; 431 A; 427 C; 422 G; 319 T; 0 other;
+     ggagaattag agctggtcac actggcttgt ctggatccag atttcagctc gtcaacaatt        60
+     gcgcactaaa ttttcagtaa aaacaaacaa gttggtcgtg cggagacatc gagaacacag       120
+     cacacgagca gccatgacaa ttctgggaaa actgcgggga cagcccacgg accaggagaa       180
+     ggtgcccctg cccatgaacc tcaacgacga ggcgctcatg caccatggct ccctaatcgc       240
+     acccaaggtc gcttacagcg acaatgaagc cgacgcggaa tccatggtct tcaaccggcc       300
+     gcagcaccat tgcattaagt cctttctgct gttcctgatc gccgtggtcg tgatgctcct       360
+     gggtgtcctg ggcggatgga ccctgtaccg agtgtacgct ccgtcgcaca gcagcatgcg       420
+     ctaccacgcc ctgtgcgaga ttccctatcc ggaggactcg atggagatgg cgcgggtcta       480
+     cccgcgcacc gtggaaccgt tcgccctgaa ctggcgctcc ttgctgcccg agctcgcaca       540
+     accgatgccc aacagtggat cgctggacga gagccacttc cgcgaggaca tcgaactgga       600
+     cggcgacagc gatgacgagg gctacgcacg cgtggacgtg cccgacttca aggatggacg       660
+     tagaggtcgc ttcatgcacg acttcaagga gaaccagtcg gccattatcg acaccaccac       720
+     cggacggtgc ttcatcatgc ccttggatcg ggacacgacc ctgcccccga ccagcttcgt       780
+     ggatctcatg aagaagatga gcactggcta ctacaacata gatacggagc gcgtgcggcg       840
+     ccagatgcgc gtggtcacgc cccgcatcac cgatgtttcg ctcatctcgg agcggattgc       900
+     caacgagtgc ttcgatatga aggtgtacat gatggagaag ttcgtctcag gcgtctctaa       960
+     gagatcggcc gatccgctgc cggagtcagc caagtacgcc gagttcatgg gcaagggcgt      1020
+     catcgagtac gacttggcca acatcgccga ggtggatgcc tacgaggcca acgaggctag      1080
+     gcaacaggcc tgagctttgg agaaggagga tcttttaagc tacaacaccc atatgataac      1140
+     acaacctaaa caaattatta cttagaatcg atttatacat acacagagtc atgcctacaa      1200
+     gtctagatct ggttaccact ggttagcagg acacacaccc actccgggtg gatatatcat      1260
+     cattggccaa gcgagtttag caaattatag accctagtaa ggaagcataa cgaaaatgta      1320
+     cctagaacgc aatcaaaagc gatcgacgaa attgtgacaa atacgtgaaa tgtattagcc      1380
+     tcgagggcga attgagagga tgtggagaga tcggatcgga ttacggatcg gtacacgcgc      1440
+     acagacactg cggcattcca aaacggattc agatcgaagc tatttacagc aaaaacaacc      1500
+     tgagggcgga caacacggca tgcgtaagag aaacaagtaa attaatctaa atgttcttta      1560
+     aactacttac atgtattaaa cgcgaatttg tgatcttta                             1599
+//
+ID   CM002911.1:21186640..21189321:misc_RNA; SV 1; linear; genomic DNA; CON; INV; 1347 BP.
+XX
+PA   CM002911.1
+XX
+PR   Project:PRJNA170244;
+XX
+DT   16-SEP-2014 (Rel. 122, Created)
+DT   23-JUN-2016 (Rel. 129, Last updated, Version 3)
+XX
+DE   Drosophila simulans uncharacterized protein
+XX
+KW   .
+XX
+OS   Drosophila simulans
+OC   Eukaryota; Metazoa; Ecdysozoa; Arthropoda; Hexapoda; Insecta; Pterygota;
+OC   Neoptera; Holometabola; Diptera; Brachycera; Muscomorpha; Ephydroidea;
+OC   Drosophilidae; Drosophila; Sophophora.
+XX
+RN   [1]
+RX   DOI; 10.1101/gr.141689.112.
+RX   PUBMED; 22936249.
+RA   Hu T.T., Eisen M.B., Thornton K.R., Andolfatto P.;
+RT   "A second-generation assembly of the Drosophila simulans genome provides
+RT   new insights into patterns of lineage-specific divergence";
+RL   Genome Res. 23(1):89-98(2013).
+XX
+RN   [2]
+RA   Hu T., Eisen M.B., Thornton K.R., Andolfatto P.;
+RT   ;
+RL   Submitted (25-JUN-2014) to the INSDC.
+RL   EEB/LSI, Princeton University, 106A Guyot Hall, Princeton, NJ 08544, USA
+XX
+RN   [3]
+RG   FlyBase
+RA   ;
+RT   ;
+RL   Submitted (23-APR-2015) to the INSDC.
+RL   FlyBase, Harvard University, Biological Laboratories, 16 Divinity Ave,
+RL   Cambridge, MA 02138, USA
+XX
+DR   MD5; 9978ec6ed3041df3e2c13124f1ddadf7.
+DR   BioSample; SAMN01086904.
+DR   PubMed; 22936249.
+XX
+CC   Annotation was added in July 2015.
+CC   ##Genome-Assembly-Data-START##
+CC   Assembly Date          :: MAR-2012
+CC   Assembly Method        :: Velvet v. 1.1.04
+CC   Genome Representation  :: Full
+CC   Expected Final Version :: No
+CC   Genome Coverage        :: 75.0x
+CC   Sequencing Technology  :: Illumina; Sanger
+CC   ##Genome-Assembly-Data-END##
+CC   ##Genome-Annotation-Data-START##
+CC   Annotation Provider :: FlyBase
+CC   Annotation Status   :: Full annotation
+CC   Annotation Version  :: Release 2.01
+CC   Annotation Pipeline :: NCBI eukaryotic genome annotation pipeline
+CC   URL                 :: http://flybase.org
+CC   ##Genome-Annotation-Data-END##
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..1347
+FT                   /organism="Drosophila simulans"
+FT                   /chromosome="2R"
+FT                   /strain="w501"
+FT                   /mol_type="genomic DNA"
+FT                   /db_xref="taxon:7240"
+FT   misc_RNA        join(CM002911.1:21186640..21186696,
+FT                   CM002911.1:21187718..21188106,
+FT                   CM002911.1:21188164..21188301,
+FT                   CM002911.1:21188365..21188445,
+FT                   CM002911.1:21188509..21188700,
+FT                   CM002911.1:21188762..21188999,
+FT                   CM002911.1:21189070..21189321)
+FT                   /gene="Dsim\GD11907"
+FT                   /gene_synonym="dsim_GLEANR_11859"
+FT                   /gene_synonym="GD11907"
+FT                   /locus_tag="Dsimw501_GD11907"
+FT                   /product="uncharacterized protein"
+FT                   /note="GD11907-RE; Dsim\GD11907-RE"
+XX
+SQ   Sequence 1347 BP; 321 A; 348 C; 310 G; 368 T; 0 other;
+     cacactgctc agttatttca attgtttgtc ccgtttgctc gcgcacttgt tcccaacatc        60
+     aggttttgtt cgctgctcga cggggcagct gcattctttc tcgctcccac cctgcccctg       120
+     gaatcccctg cacctgttcg ttctcgaggt gcgagcgaga ggccaagagg cagaggtaga       180
+     gcggcacttg ccacgcttga cttgcagcag gtctgcaggc gacgcggaaa tgccactagg       240
+     aggcccaact acagccgccg atagccaaca gttccagtcc cgataaggaa gcgatagact       300
+     gaagtagaca gctagctgga aagacagata gcgacgggga gagcggattt atttattatt       360
+     caaattctga atggaatgac gatgtgatgg gatcgtgctc gtgtacgcgg cgacactttt       420
+     tgctgtcaat atgcttcctg caagtgataa cgattatcga gcgccaggta ttcgacttcc       480
+     tcggctacat gtgggcgccc atcctagtga actttttcca cattttgttc atcatattcg       540
+     ggttttacgg cgcctaccac tttcgcgtta aatacatcat cacctatcta atatggaact       600
+     tcctgtggat cgggtggaac accttcctca tttgcttcta cttaaatgtg gggcagttga       660
+     acagggacag tgacctgctc aacctgggca ctggcagcgt ctcctggttc gaggcgaacg       720
+     ggtacggctg caagcccacc tataacatgg ccgcggacga tacgttccgt ccccagcggc       780
+     cggagcgcgt ggaaggctgc ctgctggact acccgcttgt ggagatcaca cactcggggg       840
+     tacagtgcgc tctggcgctg ctcggcatac tcggtgcgat tctgattagt tgcatatttc       900
+     ttgacgagga cgacagatgt aagtggcgct ctctgaatgc gaataagaaa catgctcgtc       960
+     tgtcataaac accactaacc gggaacggtc attgctaacc cctctcatcc ccataagatc      1020
+     tttcactttc gggtctctct gtgcactgtg gtgtatgttt tcttttctca caaaacctga      1080
+     aatattccat tatgtgctgt cgataagaag gctcttgcct ccctacccaa aaacccgcaa      1140
+     cctgcaatgc gactgtaccc ccagaaaatt atggtttcga tttaaacata aattgtatcc      1200
+     tatattaacc attatgactt gtccatttga attgtgagca tctatacaca tgccttttaa      1260
+     aacattttac tcacatacca cataatcgta ttgttattca tgttatgtat atgtcattta      1320
+     ctcataatca agaaatcaga aacattg                                          1347
+//
