@@ -39,16 +39,14 @@ process export_search_json {
   echo true
 
   input:
-  set val(min), val(max), file(query) from ranges
+  set val(tablename), val(min), val(max), file(query) from ranges
 
   output:
   set val(min), val(max), file('search.json') into raw_json
 
   script:
   """
-  psql -v ON_ERROR_STOP=1 --variable min=$min --variable max=$max -f "$query" "$PGDATABASE" > search.json 2> err.log
-  cat err.log
-  [ ! -s err.log ] || exit 1
+  psql -v ON_ERROR_STOP=1 --variable min=$min --variable max=$max -f "$query" "$PGDATABASE" > search.json
   """
 }
 
