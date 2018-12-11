@@ -370,3 +370,9 @@ def xref_data(record, feature, refs):
         xrefs['ena_refs'] = ena_refs
 
     return xrefs
+
+
+def is_protein(feature):
+    if product(feature) == "uncharacterized protein":
+        return True
+    return False

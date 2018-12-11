@@ -38,6 +38,7 @@ from rnacentral_pipeline.databases.ena.parser import parse
     ('data/test_silva_product.ncr', 3),
     ('data/test_species_patch.ncr', 1),
     ('data/ena/ncr/ex/wgs_acnt01_pro.ncr', 106),
+    ('data/ena/protein-to-skip.embl', 0),
 ])
 def test_can_parse_variety_of_files(filename, count):
     with open(filename, 'rb') as raw:

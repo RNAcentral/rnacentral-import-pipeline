@@ -13,17 +13,19 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import logging
+
 from Bio import SeqIO
 
 from rnacentral_pipeline.databases.data import Entry
 
 import rnacentral_pipeline.databases.helpers.embl as embl
 
-from rnacentral_pipeline.writers import build_entry_writer
-
 from . import dr
 from . import helpers
 from . import mapping as tpa
+
+LOGGER = logging.getLogger(__name__)
 
 
 class InvalidEnaFile(Exception):
@@ -46,6 +48,10 @@ def parse(handle):
 
         if len(record.features) != 2:
             raise InvalidEnaFile("ENA EMBL files must have 2 features/record")
+
+        if helpers.is_protein(record.features[1]):
+            LOGGER.info("Skipping mis-annotated protein: %s", record.id)
+            continue
 
         if record.id not in dr_mapping:
             raise InvalidEnaFile("Somehow parsed DR refs are for wrong record")
