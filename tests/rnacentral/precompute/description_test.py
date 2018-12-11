@@ -70,6 +70,10 @@ from .helpers import load_data
     ('URS0000A86584_10090', 'ncRNA', 'Mus musculus (house mouse) predicted gene 29254 (Gm29254)'),
     ('URS0000ABD87F_9606', 'rRNA', 'Homo sapiens RNA, 45S pre-ribosomal N1 (RNA45SN1)'),
 
+    ('URS0000D50284_7240', 'precursor_RNA', 'Drosophila simulans microRNA dsi-mir-988 precursor'),
+    ('URS0000795103_6239', 'precursor_RNA', 'Caenorhabditis elegans microRNA cel-mir-8204 precursor'),
+    ('URS0000D5657E_7240', 'precursor_RNA', 'Drosophila simulans microRNA dsi-mir-4966 precursor (dsi-mir-4966-3)'),
+
     # ('URS000041AF00_274', 'tRNA', 'TRNA-FMET from Thermus thermophilus (29 structures)'),
     # ('URS0000A7633F_9606', 'snRNA', "U4 snRNA from Homo sapiens (PDB 5H1K, chain C,D"),
     # ('URS0000D2348C_9606', 'misc_RNA', 'Homo sapiens (human) let-7 microRNA precursor (2 structures)'),

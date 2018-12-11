@@ -361,9 +361,11 @@ def improve_predicted_description(rna_type, accessions, description):
 def cleanup(rna_type, db_name, description):
     # There are often some extra terms we need to strip
     description = utils.remove_extra_description_terms(description)
+    description = description.replace('()', '')
     if db_name == 'RefSeq':
         description = utils.trim_trailing_rna_type(rna_type, description)
 
+    description = re.sub(r'\s\s+', ' ', description)
     return description.strip()
 
 

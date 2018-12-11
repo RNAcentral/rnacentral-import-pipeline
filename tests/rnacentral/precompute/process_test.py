@@ -125,6 +125,10 @@ def test_builds_correct_descriptions(rna_id, description):
     ('URS0000A767C0_3702', 'other RNA (AT1G44125)'),
     ('URS0000A86584_10090', 'predicted gene 29254 (Gm29254)'),
     ('URS0000ABD87F_9606', 'RNA, 45S pre-ribosomal N1 (RNA45SN1)'),
+    ('URS0000D50284_7240', 'microRNA dsi-mir-988 precursor'),
+    ('URS0000795103_6239', 'microRNA cel-mir-8204 precursor'),
+    ('URS0000D5657E_7240', 'microRNA dsi-mir-4966 precursor (dsi-mir-4966-3)'),
+
 ])
 def test_strips_leading_species(rna_id, short):
     assert load_data(rna_id).short_description == short
