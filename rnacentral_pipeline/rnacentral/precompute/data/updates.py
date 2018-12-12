@@ -147,7 +147,8 @@ class InactiveUpdate(Update):
             else:
                 rna_type = 'ncRNA'
 
-        if sequence.previous_data and 'description' in sequence.previous_data:
+        if sequence.previous_data and \
+                sequence.previous_data.get('description', None):
             description = sequence.previous_data['description']
         else:
             description = '{rna_type} from {count} species'.format(
