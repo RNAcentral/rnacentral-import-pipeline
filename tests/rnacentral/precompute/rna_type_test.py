@@ -138,6 +138,9 @@ from .helpers import load_data
     ('URS0000A994FE_9606', 'other'),
     ('URS0000ABD7EF_9606', 'rRNA'),
     ('URS0000ABD87F_9606', 'rRNA'),
+    ('URS000024F0F7_4932', 'snoRNA'),
+    ('URS000013DDAE_4932', 'snoRNA'),
+    ('URS000006F31F_4932', 'snoRNA'),
 ])
 def test_computes_correct_rna_types(rna_id, rna_type):
     data = load_data(rna_id)
