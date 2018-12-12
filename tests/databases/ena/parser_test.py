@@ -38,7 +38,8 @@ from rnacentral_pipeline.databases.ena.parser import parse
     ('data/test_silva_product.ncr', 3),
     ('data/test_species_patch.ncr', 1),
     ('data/ena/ncr/ex/wgs_acnt01_pro.ncr', 106),
-    ('data/ena/protein-to-skip.embl', 0),
+    ('data/ena/protein-to-skip.embl', 0),  # Proteins that should be skipped
+    ('data/ena/mislabeled-trna.embl', 1),
 ])
 def test_can_parse_variety_of_files(filename, count):
     with open(filename, 'rb') as raw:
@@ -697,3 +698,11 @@ def test_can_extract_xrefs():
     assert data[5].xref_data == {'lncrnadb': ['190', '7SK']}
     assert data[7].accession == 'LM608264.1:7..26:ncRNA'
     assert data[7].xref_data == {'mirbase': ['MI0000182']}
+
+
+def test_can_handle_mislabled_trna():
+    with open('data/ena/mislabeled-trna.embl', 'r') as raw:
+        data = list(parse(raw))
+
+    assert len(data) == 1
+    assert data[0].rna_type == 'tRNA'
