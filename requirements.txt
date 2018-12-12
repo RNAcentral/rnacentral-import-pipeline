@@ -31,3 +31,4 @@ more-itertools==4.3.0
 ratelimiter==1.2.0.post0
 enum==0.4.7
 pytest
+boltons==18.0.1
