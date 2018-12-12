@@ -46,6 +46,8 @@ ORDERING = [
     'refseq',
     'ensembl plants',
     'rfam',
+    'tarbase',
+    'lncbase',
     'modomics',
     'vega',
     'srpdb',
