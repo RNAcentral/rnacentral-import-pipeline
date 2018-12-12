@@ -1,0 +1,42 @@
+ID   FJ200009.1:84..157:rRNA; SV 1; linear; genomic DNA; STD; VRT; 74 BP.
+XX
+PA   FJ200009.1
+XX
+DT   29-DEC-2008 (Rel. 98, Created)
+DT   26-AUG-2010 (Rel. 105, Last updated, Version 2)
+XX
+DE   Ctenophorus adelaidensis (Western heath dragon) tRNA-Gln
+XX
+KW   .
+XX
+OS   Ctenophorus adelaidensis (Western heath dragon)
+OC   Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi;
+OC   Lepidosauria; Squamata; Bifurcata; Unidentata; Episquamata; Toxicofera;
+OC   Iguania; Acrodonta; Agamidae; Amphibolurinae; Ctenophorus.
+OG   Mitochondrion
+XX
+RN   [1]
+RA   Melville J., Shoo L.P., Doughty P.;
+RT   ;
+RL   Submitted (10-SEP-2008) to the INSDC.
+RL   Department of Sciences, Museum Victoria, GPO Box 666, Melbourne, Victoria
+RL   3001, Australia
+XX
+DR   MD5; ebdb4934c74a1f7356c956d2b68cb41a.
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..74
+FT                   /organism="Ctenophorus adelaidensis"
+FT                   /organelle="mitochondrion"
+FT                   /mol_type="genomic DNA"
+FT                   /country="Australia:Muchea, WA."
+FT                   /specimen_voucher="WAM:WAMR151705"
+FT                   /db_xref="taxon:564343"
+FT   rRNA            FJ200009.1:84..157
+FT                   /product="tRNA-Gln"
+XX
+SQ   Sequence 74 BP; 26 A; 21 C; 8 G; 19 T; 0 other;
+     ctagaggaag aggactcgaa cctccattta aaaattcaaa atttctagta cttccaccta        60
+     taccaccctc taca                                                          74
+//
