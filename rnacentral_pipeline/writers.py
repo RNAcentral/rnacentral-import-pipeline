@@ -53,7 +53,7 @@ class CsvOutput(object):
     @contextmanager
     def writer(self, directory):
         path = os.path.join(directory, self.filename)
-        with atomic_save(path, 'w') as out:
+        with atomic_save(path) as out:
             writer = csv.writer(out, **self.csv_options)
             yield lambda e: writer.writerows(self.transformer(e))
 
