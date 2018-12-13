@@ -504,6 +504,7 @@ def test_it_correctly_assigns_qc_warning_found(upi, status):
 @pytest.mark.parametrize('upi,status', [  # pylint: disable=E1101
     # ('URS0000A77400_9606', True),
     ('URS0000444F9B_559292', True),
+    ('URS0000592212_7227', True),
     ('URS000071F071_7955', True),
     ('URS000071F4D6_7955', True),
     ('URS000075EAAC_9606', True),
