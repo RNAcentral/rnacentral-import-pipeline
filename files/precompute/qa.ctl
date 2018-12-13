@@ -30,7 +30,10 @@ WITH
 
 BEFORE LOAD DO
 $$
-create table if not exists load_qa_status (
+DROP TABLE IF EXISTS load_qa_status;
+$$,
+$$
+CREATE TABLE load_qa_status (
   rna_id varchar(44) NOT NULL,
   upi varchar(26) NOT NULL,
   taxid int8 NOT NULL,
@@ -40,9 +43,6 @@ create table if not exists load_qa_status (
   missing_rfam_match bool,
   messages jsonb
 );
-$$,
-$$
-truncate table load_qa_status;
 $$
 
 AFTER LOAD DO
