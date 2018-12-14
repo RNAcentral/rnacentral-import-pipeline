@@ -27,6 +27,7 @@ from .helpers import load_data
     # pytest.param('URS000072A167_10141', 'Y_RNA', mark=pytest.mark.xfail("Inactive sequence")),
     # pytest.param('URS00006B14E9_6183', 'hammerhead_ribozyme', mark=pytest.mark.xfail("Inactive sequence")),
 
+    ('URS0000000DBF_6239', 'piRNA'),
     ('URS00000101E5_9606', 'lncRNA'),
     ('URS0000016972_6239', 'miRNA'),
     ('URS000001E7BA_559292', 'tRNA'),
