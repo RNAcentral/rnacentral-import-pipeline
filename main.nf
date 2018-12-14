@@ -740,55 +740,58 @@ process load_precomputed_data {
 // Compute feedback reports
 //=============================================================================
 
-// flag_for_feedback
-//   .combine(Channel.fromPath('files/precompute/find-mod-info.sql'))
-//   .set { feedback_queries }
+flag_for_feedback
+  .combine(Channel.fromPath('files/precompute/find-mod-info.sql'))
+  .set { feedback_queries }
 
-// process mods_for_feedback {
-//   input:
-//   set val(status), file(query) from feedback_queries
+process mods_for_feedback {
+  when:
+  params.feedback.run
 
-//   output:
-//   file('info') into raw_mods
+  input:
+  set val(status), file(query) from feedback_queries
 
-//   script:
-//   names = []
-//   for (name in params.precompute.feedback.databases) {
-//     names << "'${name.toUpperCase()}'"
-//   }
-//   names = '(' + names.join(', ') + ')'
-//   """
-//   psql -v ON_ERROR_STOP=1 -v "names=${names}" -f "$query" "$PGDATABASE" > info
-//   """
-// }
+  output:
+  file('info') into raw_mods
 
-// raw_mods
-//   .splitCsv()
-//   .combine(Channel.fromPath('files/ftp-export/genome_coordinates/query.sql'))
-//   .set { mods }
+  script:
+  names = []
+  for (name in params.precompute.feedback.databases) {
+    names << "'${name.toUpperCase()}'"
+  }
+  names = '(' + names.join(', ') + ')'
+  """
+  psql -v ON_ERROR_STOP=1 -v "names=${names}" -f "$query" "$PGDATABASE" > info
+  """
+}
 
-// process generate_feedback_report {
-//   memory params.feedback.report.memory
+raw_mods
+  .splitCsv()
+  .combine(Channel.fromPath('files/ftp-export/genome_coordinates/query.sql'))
+  .set { mods }
 
-//   input:
-//   set val(assembly), val(mod), file(query) from mods
+process generate_feedback_report {
+  memory params.feedback.report.memory
 
-//   output:
-//   file('combined.tsv') into feedback
+  input:
+  set val(assembly), val(mod), file(query) from mods
 
-//   """
-//   find-overlaps $query complete-${mod}.bed $assembly
-//   """
-// }
+  output:
+  file('combined.tsv') into feedback
 
-// process import_feedback {
-//   echo true
+  """
+  find-overlaps $query complete-${mod}.bed $assembly
+  """
+}
 
-//   input:
-//   file('feedback*.tsv') from feedback.collect()
-//   file(ctl) from Channel.fromPath('files/precompute/feedback.ctl')
+process import_feedback {
+  echo true
 
-//   """
-//   split-and-load $ctl 'feedback*.tsv' ${params.import_data.chunk_size} merged
-//   """
-// }
+  input:
+  file('feedback*.tsv') from feedback.collect()
+  file(ctl) from Channel.fromPath('files/precompute/feedback.ctl')
+
+  """
+  split-and-load $ctl 'feedback*.tsv' ${params.import_data.chunk_size} merged
+  """
+}
