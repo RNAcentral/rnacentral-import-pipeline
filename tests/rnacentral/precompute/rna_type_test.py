@@ -24,11 +24,14 @@ from .helpers import load_data
     # pytest.param('URS0000A85A32_10090', 'tRNA', mark=pytest.mark.xfail),
     # pytest.param('URS000060C682_9606', 'vault_RNA', mark=pytest.mark.xfail("Inactive sequence"),
     # pytest.param('URS0000175007_7227', 'miRNA', mark=pytest.mark.xfail("Inactive sequence")),
+    # pytest.param('URS000072A167_10141', 'Y_RNA', mark=pytest.mark.xfail("Inactive sequence")),
+    # pytest.param('URS00006B14E9_6183', 'hammerhead_ribozyme', mark=pytest.mark.xfail("Inactive sequence")),
 
     ('URS00000101E5_9606', 'lncRNA'),
     ('URS0000016972_6239', 'miRNA'),
     ('URS000001E7BA_559292', 'tRNA'),
     ('URS00000478B7_9606', 'SRP_RNA'),
+    ('URS000006F31F_4932', 'snoRNA'),
     ('URS0000086133_9606', 'misc_RNA'),
     ('URS00000AEE53_380749', 'tmRNA'),
     ('URS00000B3045_7227', 'guide_RNA'),
@@ -36,6 +39,7 @@ from .helpers import load_data
     ('URS00000F9D45_9606', 'rRNA'),
     ('URS000012DE89_9606', 'autocatalytically_spliced_intron'),
     ('URS0000130A6B_3702', 'precursor_RNA'),
+    ('URS000013DDAE_4932', 'snoRNA'),
     ('URS000013F331_9606', 'RNase_P_RNA'),
     ('URS0000157BA2_4896', 'antisense_RNA'),
     ('URS000015995E_4615', 'miRNA'),
@@ -46,6 +50,7 @@ from .helpers import load_data
     ('URS00001E2C22_3702', 'rRNA'),
     ('URS000021515D_322710', 'autocatalytically_spliced_intron'),
     ('URS000024083D_9606', 'SRP_RNA'),
+    ('URS000024F0F7_4932', 'snoRNA'),
     ('URS000025C52E_9606', 'other'),
     ('URS00002963C4_4565', 'SRP_RNA'),
     ('URS00002AE808_10090', 'miRNA'),  # ENA has it as piRNA
@@ -96,7 +101,6 @@ from .helpers import load_data
     ('URS0000661037_7955', 'tRNA'),
     ('URS000069D7FA_6239', 'tRNA'),
     ('URS00006A938C_10090', 'ribozyme'),
-    ('URS00006B14E9_6183', 'hammerhead_ribozyme'),
     ('URS00006B3271_10090', 'snoRNA'),
     ('URS00006BA413_9606', 'snoRNA'),
     ('URS00006C670E_30608', 'hammerhead_ribozyme'),
@@ -105,7 +109,6 @@ from .helpers import load_data
     ('URS00006DC8B9_6239', 'tRNA'),
     ('URS0000714027_9031', 'other'),
     ('URS00007150F8_9913', 'precursor_RNA'),
-    ('URS000072A167_10141', 'Y_RNA'),
     ('URS0000732D5D_9606', 'lncRNA'),
     ('URS0000734D8F_9606', 'snRNA'),
     ('URS0000759BEC_9606', 'lncRNA'),
@@ -138,9 +141,6 @@ from .helpers import load_data
     ('URS0000A994FE_9606', 'other'),
     ('URS0000ABD7EF_9606', 'rRNA'),
     ('URS0000ABD87F_9606', 'rRNA'),
-    ('URS000024F0F7_4932', 'snoRNA'),
-    ('URS000013DDAE_4932', 'snoRNA'),
-    ('URS000006F31F_4932', 'snoRNA'),
 ])
 def test_computes_correct_rna_types(rna_id, rna_type):
     data = load_data(rna_id)

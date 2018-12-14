@@ -117,12 +117,39 @@ def remove_ncrna_if_possible(rna_types, _):
     return rna_types
 
 
-def from_lnc_database(accessions):
+def from_lnc_database(data):
     """
     Check if this data came from any database that focuses on lncRNA's.
     """
+    return any(a.database in LNC_DATABASES for a in data.accessions)
 
-    return any(a.database in LNC_DATABASES for a in accessions)
+
+def from_ensembl(data):
+    return any(a.database.lower() == 'ensembl' for a in data.accessions)
+
+
+def choose_snoRNA_over_snRNA(rna_types, _):
+    if rna_types == {'snoRNA', 'snRNA'}:
+        return {'snoRNA'}
+    return rna_types
+
+
+def change_ncrna_to_other(rna_types, _):
+    if rna_types == {'ncRNA'}:
+        return {'other'}
+    return rna_types
+
+
+def remove_anti_if_required(rna_types, data):
+    if 'antisense_RNA' in rna_types and from_lnc_database(data):
+        rna_types.discard('antisense_RNA')
+        rna_types.add('lncRNA')
+
+    if 'antisense_RNA' in rna_types and from_ensembl(data):
+        rna_types.discard('antisense_RNA')
+        rna_types.add('lncRNA')
+
+    return rna_types
 
 
 def rna_type_of(data):
@@ -178,14 +205,13 @@ def rna_type_of(data):
         correct_by_length,
         prefer_lnc_over_anti,
         remove_ncrna_if_possible,
+        change_ncrna_to_other,
+        choose_snoRNA_over_snRNA,
+        remove_anti_if_required,
     ]
     for correction in corrections:
         rna_type = correction(rna_type, data)
     rna_type.discard(None)
-
-    if 'antisense_RNA' in rna_type and from_lnc_database(accessions):
-        rna_type.discard('antisense_RNA')
-        rna_type.add('lncRNA')
 
     LOGGER.debug("Corrected to %s rna_types", rna_type)
     if len(rna_type) == 1:
