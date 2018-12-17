@@ -254,13 +254,6 @@ def test_it_has_last_ncrna(human_12):
 
 
 def test_extracts_all_gencode_entries(human_12):
-    with open('found.txt', 'w') as raw:
-        for e in human_12:
-            if e.database != 'GENCODE':
-                continue
-            raw.write(e.primary_id)
-            raw.write('\n')
-
     assert len([e for e in human_12 if e.database == 'GENCODE']) == 1506
 
 
