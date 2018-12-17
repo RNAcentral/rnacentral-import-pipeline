@@ -34,7 +34,7 @@ def test_can_fetch_publication():
         "pubYear": "2017",
         "journalIssn": "0065-2598; 2214-8019; ",
         "pageInfo": "253-282",
-        "pubType": "research-article; review; journal article; research support, n.i.h., extramural; ",
+        "pubType": "research-article; review; journal article; research support, n.i.h., extramural",
         "isOpenAccess": "N",
         "inEPMC": "Y",
         "inPMC": "N",
