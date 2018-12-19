@@ -55,11 +55,11 @@ class RfamFamily(object):
     domain = attr.ib()
     description = attr.ib(
         validator=optional(is_a(basestring)),
-        convert=empty_str_from('NULL'),
+        converter=empty_str_from('NULL'),
     )
     seed_count = attr.ib(validator=is_a(int))
     full_count = attr.ib(validator=is_a(int))
-    clan_id = attr.ib(convert=empty_str_from('NULL'))
+    clan_id = attr.ib(converter=empty_str_from('NULL'))
     length = attr.ib(validator=is_a(int))
 
     @classmethod

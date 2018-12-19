@@ -48,11 +48,11 @@ class Reference(object):
     files.
     """
 
-    authors = attr.ib(validator=is_a(basestring), convert=utils.optional_utf8)
+    authors = attr.ib(validator=is_a(basestring), converter=utils.optional_utf8)
     location = attr.ib(validator=is_a(basestring))
     title = attr.ib(
         validator=optional(is_a(basestring)),
-        convert=utils.optional_utf8
+        converter=utils.optional_utf8
     )
     pmid = attr.ib(validator=optional(is_a(int)))
     doi = attr.ib(validator=optional(is_a(basestring)))

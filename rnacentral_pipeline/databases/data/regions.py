@@ -89,8 +89,8 @@ class Exon(object):
 @attr.s()
 class SequenceRegion(object):
     chromosome = attr.ib(validator=is_a(basestring))
-    strand = attr.ib(validator=is_a(int), convert=as_strand)
-    exons = attr.ib(validator=is_a(list), convert=sort_exons)
+    strand = attr.ib(validator=is_a(int), converter=as_strand)
+    exons = attr.ib(validator=is_a(list), converter=sort_exons)
     assembly_id = attr.ib(validator=is_a(basestring))
 
     @property

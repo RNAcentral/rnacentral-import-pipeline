@@ -62,12 +62,12 @@ class RfamDatabaseLink(object):
     rfam_family = attr.ib(validator=is_a(basestring))
     database = attr.ib(validator=is_a(basestring))
     comment = attr.ib(
-        convert=empty_to_none,
+        converter=empty_to_none,
         validator=optional(is_a(basestring)),
     )
     external_id = attr.ib(validator=is_a(basestring))
     other = attr.ib(
-        convert=empty_to_none,
+        converter=empty_to_none,
         validator=optional(is_a(basestring)),
     )
     family_type = attr.ib(validator=is_a(basestring))

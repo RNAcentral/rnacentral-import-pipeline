@@ -76,7 +76,7 @@ class RelatedSequence(object):
     sequence_id = attr.ib(validator=is_a(basestring))
     relationship = attr.ib(
         validator=one_of(RELATIONSHIP_TYPES),
-        convert=as_relationship_type,
+        converter=as_relationship_type,
     )
     coordinates = attr.ib(validator=is_a(list), default=attr.Factory(list))
     evidence = attr.ib(
