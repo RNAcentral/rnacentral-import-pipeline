@@ -125,7 +125,7 @@ class Accession(object):
 
 @attr.s(hash=True)
 class HitComponent(object):
-    completeness = attr.ib(validator=is_a(float), convert=float)
+    completeness = attr.ib(validator=is_a(float), converter=float)
     start = attr.ib(validator=is_a(int))
     stop = attr.ib(validator=is_a(int))
 

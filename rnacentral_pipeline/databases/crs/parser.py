@@ -26,8 +26,8 @@ from attr.validators import instance_of as is_a
 @attr.s(frozen=True)
 class GenomicLocation(object):
     chromosome = attr.ib(validator=is_a(basestring))
-    start = attr.ib(validator=is_a(int), convert=int)
-    stop = attr.ib(validator=is_a(int), convert=int)
+    start = attr.ib(validator=is_a(int), converter=int)
+    stop = attr.ib(validator=is_a(int), converter=int)
 
     @classmethod
     def build(cls, raw):
@@ -42,12 +42,12 @@ class GenomicLocation(object):
 @attr.s(frozen=True)
 class CrsFeature(object):
     upi = attr.ib(validator=is_a(basestring))
-    taxid = attr.ib(validator=is_a(int), convert=int)
+    taxid = attr.ib(validator=is_a(int), converter=int)
     crs_name = attr.ib(validator=is_a(basestring))
-    start = attr.ib(validator=is_a(int), convert=int)
-    stop = attr.ib(validator=is_a(int), convert=int)
+    start = attr.ib(validator=is_a(int), converter=int)
+    stop = attr.ib(validator=is_a(int), converter=int)
     genomic_location = attr.ib(validator=is_a(GenomicLocation))
-    fdr = attr.ib(validator=is_a(float), convert=float)
+    fdr = attr.ib(validator=is_a(float), converter=float)
 
     @classmethod
     def build(cls, raw_feature):

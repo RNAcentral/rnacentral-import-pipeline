@@ -79,7 +79,7 @@ def as_entry(record, gene, feature, context):
         is_composite='N',
     )
 
-    return attr.assoc(
+    return attr.evolve(
         entry,
         description=helpers.description(context, gene, entry)
     )

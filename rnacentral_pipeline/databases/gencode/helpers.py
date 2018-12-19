@@ -55,7 +55,7 @@ def update_entry(entry):
     """
     Modify an Ensembl Entry into a GENCODE Entry.
     """
-    return attr.assoc(
+    return attr.evolve(
         entry,
         accession=accession(entry),
         database='GENCODE',

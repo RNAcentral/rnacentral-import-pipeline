@@ -115,7 +115,7 @@ class GenericTpa(object):
         return None
 
     def transform(self, entry):
-        return attr.assoc(
+        return attr.evolve(
             entry,
             primary_id=self.database_accession,
             optional_id=self.optional_id(entry),
@@ -156,7 +156,7 @@ class UrlBuilder(object):
 
     def transform(self, entry):
         builder = getattr(self, entry.database.lower())
-        return attr.assoc(entry, url=builder(entry))
+        return attr.evolve(entry, url=builder(entry))
 
 
 @attr.s()

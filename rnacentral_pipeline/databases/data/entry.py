@@ -58,7 +58,7 @@ class Entry(object):
     ncbi_tax_id = attr.ib(validator=is_a(int))
     database = attr.ib(
         validator=is_a(basestring),
-        convert=lambda s: s.upper(),
+        converter=lambda s: s.upper(),
     )
     sequence = attr.ib(validator=is_a(basestring))
     # exons = attr.ib(validator=is_a(list))
@@ -66,7 +66,7 @@ class Entry(object):
     rna_type = attr.ib(
         validator=is_a(basestring),
         # validator=matches_pattern(SO_PATTERN),
-        convert=utils.from_so_term,
+        converter=utils.from_so_term,
     )
     url = attr.ib(validator=is_a(basestring))
     seq_version = attr.ib(
