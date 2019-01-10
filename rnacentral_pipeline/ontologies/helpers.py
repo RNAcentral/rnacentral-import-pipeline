@@ -19,6 +19,8 @@ import operator as op
 import itertools as it
 
 import requests
+from retry import retry
+from ratelimiter import RateLimiter
 from functools32 import lru_cache
 
 from . import data
@@ -55,6 +57,8 @@ def ontology_url(ontology):
 
 
 @lru_cache(maxsize=500)
+@retry(requests.HTTPError, tries=5, delay=1)
+@RateLimiter(max_calls=5, period=1)
 def term(term_id):
     """
     Fetch information about the given term_id. The term_id's should be in the
