@@ -304,10 +304,14 @@ process release {
 
   run_sql() {
     local fn="\$1"
-    while IFS='' read -r "script" || [[ -n "\$script" ]]; do
-      echo "Running: \$fn/\$script"
-      psql -v ON_ERROR_STOP=1 -f \$script "\$PGDATABASE"
-    done < "\$fn"
+    if [[ -s "\$fn" ]]; then
+      while IFS='' read -r "script" || [[ -n "\$script" ]]; do
+        if [[ ! -z "\$script" ]]; then
+          echo "Running: \$fn/\$script"
+          psql -v ON_ERROR_STOP=1 -f \$script "$PGDATABASE"
+        fi
+      done < "\$fn"
+    fi
   }
 
   echo "${pre_sql.join('\n')}" > pre-release
