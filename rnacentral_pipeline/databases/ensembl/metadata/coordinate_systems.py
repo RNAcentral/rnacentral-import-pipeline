@@ -17,10 +17,18 @@ import csv
 import operator as op
 import itertools as it
 
+import more_itertools as more
+
 from . import databases as db
 
 
+def is_numeric(entry):
+    return isinstance(entry[4], int)
+
+
 def top_level_only(data):
+    parsed = []
+    has_name_rank = False
     key = op.itemgetter('name', 'coordinate_system', 'attrib_value')
     grouped = it.groupby(data, key)
     for (name, sys, assembly), entries in grouped:
@@ -30,13 +38,36 @@ def top_level_only(data):
         is_ref = attribs.get('non_ref', None) != '1'
         rank = None
         if 'karyotype_rank' in attribs:
-            rank = int(attribs['karyotype_rank'])
+            try:
+                rank = int(attribs['karyotype_rank'])
+            except ValueError:
+                has_name_rank = True
+                rank = attribs['karyotype_rank']
 
         # Some chromosomes have name like X_random which we don't want to
         # consider reference, these never have a karyotype_rank so we can
         # exclude them
         is_ref = is_ref and rank is not None
-        yield [name, sys, assembly, int(is_ref), rank]
+        parsed.append([name, sys, assembly, int(is_ref), rank])
+
+    if not has_name_rank:
+        for entry in parsed:
+            yield entry
+
+    else:
+        rest, numeric = more.partition(is_numeric, parsed)
+        numeric = list(numeric)
+        rest = list(rest)
+        ordered = sorted(rest, key=op.itemgetter(4)) + \
+            sorted(numeric, key=op.itemgetter(4))
+        index = -1
+        for (name, sys, assembly, is_ref, rank) in ordered:
+            updated = rank
+            if isinstance(rank, (basestring, int)):
+                index += 1
+                updated = index
+
+            yield [name, sys, assembly, is_ref, updated]
 
 
 def fetch(connections, query_handle):
