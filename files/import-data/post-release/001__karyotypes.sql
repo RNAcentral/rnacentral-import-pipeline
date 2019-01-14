@@ -1,4 +1,4 @@
-INSERT INTO ensembl_karyotypes (
+INSERT INTO ensembl_karyotype (
     assembly_id,
     karyotype
 ) (
