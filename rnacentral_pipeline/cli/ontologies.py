@@ -15,7 +15,6 @@ limitations under the License.
 
 import click
 
-from rnacentral_pipeline.databases import rfam
 from rnacentral_pipeline import ontologies as onto
 from rnacentral_pipeline.ontologies import writer as onto_writer
 from rnacentral_pipeline.databases.quickgo import parser as quickgo
