@@ -1,5 +1,15 @@
 #!/usr/bin/env nextflow
 
+def sql_script_ordering(a, b) {
+  def index = { raw ->
+    def parts = raw.split("__");
+    def num = parts[0].toInteger();
+    return [num, parts[1]];
+  };
+
+  return index(a) <=> index(b);
+}
+
 assert params.precompute.tablename != 'rna' : "Should not use 'rna' table for precompute"
 
 // ===========================================================================
@@ -268,7 +278,7 @@ loaded.into { pre_loaded; post_loaded }
 pre_loaded
   .flatMap { n -> file("files/import-data/pre-release/*__${n.replace('_', '-')}.sql") }
   .filter { f -> f.exists() }
-  .toSortedList()
+  .toSortedList(sql_script_ordering)
   .set { pre_scripts }
 
 post_loaded
@@ -280,7 +290,7 @@ post_loaded
     ])
   )
   .filter { f -> f.exists() }
-  .toSortedList()
+  .toSortedList(sql_script_ordering)
   .set { post_scripts }
 
 process release {
