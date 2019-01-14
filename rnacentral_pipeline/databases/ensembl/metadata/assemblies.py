@@ -249,7 +249,9 @@ class AssemblyInfo(object):
             return 'fungi.ensembl.org'
         if self.division == 'EnsemblProtists':
             return 'protists.ensembl.org'
-        raise InvalidDomain()
+        if self.division == 'EnsemblVertebrates':
+            return 'vertebrates.ensembl.org'
+        raise InvalidDomain(self.division)
 
     def writeable(self):
         chromosome = None
