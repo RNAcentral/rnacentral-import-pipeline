@@ -4,7 +4,7 @@ INSERT INTO protein_info (
   label,
   synonyms
 ) (
-SELECT DISTINCT
+SELECT DISTINCT ON (protein_accession)
   protein_accession,
   description,
   label,
