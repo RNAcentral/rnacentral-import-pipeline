@@ -740,6 +740,9 @@ process load_precomputed_data {
   file qa_ctl from Channel.fromPath('files/precompute/qa.ctl')
   file post from Channel.fromPath('files/precompute/post-load.sql')
 
+  output:
+  val('precompute') into post_precompute
+
   script:
   def tablename = params.precompute.tablename
   """
@@ -753,6 +756,10 @@ process load_precomputed_data {
 //=============================================================================
 // Compute feedback reports
 //=============================================================================
+
+post_precompute
+  .ifEmpty('no precompute')
+  .set { flag_for_feedback }
 
 flag_for_feedback
   .combine(Channel.fromPath('files/precompute/find-mod-info.sql'))
