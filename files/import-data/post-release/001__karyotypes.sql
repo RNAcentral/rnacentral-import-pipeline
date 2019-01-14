@@ -4,7 +4,7 @@ INSERT INTO ensembl_karyotypes (
 ) (
 select
     assembly_id,
-    karyotype
+    karyotype::json
 from load_karyotypes
 ) ON CONFLICT (assembly_id) DO UPDATE
 SET
