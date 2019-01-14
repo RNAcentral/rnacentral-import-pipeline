@@ -56,7 +56,7 @@ def parse(data):
             'ENSEMBL:%s' % gene_id,
             description,
             symbol,
-            synonyms
+            synonyms,
         ]
 
 
