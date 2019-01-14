@@ -87,7 +87,7 @@ from load_rnc_sequence_regions load
 join ensembl_assembly ensembl on ensembl.assembly_id = load.assembly_id
 group by load.region_name, load.assembly_id
 )
-ON CONFLICT (region_name, assembly_id) do UPDATE
+ON CONFLICT (md5(region_name), assembly_id) do UPDATE
 set
   was_mapped = excluded.was_mapped,
   "identity" = excluded.identity,
