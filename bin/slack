@@ -76,5 +76,30 @@ def database_done(job_name, db=None, url=None):
     })
 
 
+@cli.command('pipeline-done')
+@click.option('--success/--failure', default=True)
+@click.option('--url', envvar="SLACK_WEBHOOK")
+@click.argument('summary')
+@click.argument('report', type=click.File('r'))
+def pipeline_done(summary, report, success=True, url=None):
+
+    msg = {
+        'fallback': summary,
+        'pretext': summary,
+    }
+
+    color = 'good'
+    if not success:
+        color = 'danger'
+        msg.update({
+            'title': 'Error messages',
+            'author_name': 'Nextflow',
+            'text': report,
+        })
+    msg['color'] = color
+
+    requests.post(url, json={'attachments': [msg]})
+
+
 if __name__ == '__main__':
     cli()  # pylint: disable=no-value-for-parameter
