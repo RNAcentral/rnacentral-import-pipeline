@@ -1,15 +1,5 @@
 #!/usr/bin/env nextflow
 
-def sql_script_ordering(a, b) {
-  def index = { raw ->
-    def parts = raw.split("__");
-    def num = parts[0].toInteger();
-    return [num, parts[1]];
-  };
-
-  return index(a) <=> index(b);
-}
-
 assert params.precompute.tablename != 'rna' : "Should not use 'rna' table for precompute"
 
 // ===========================================================================
@@ -278,7 +268,7 @@ loaded.into { pre_loaded; post_loaded }
 pre_loaded
   .flatMap { n -> file("files/import-data/pre-release/*__${n.replace('_', '-')}.sql") }
   .filter { f -> f.exists() }
-  .toSortedList(sql_script_ordering)
+  .toList()
   .set { pre_scripts }
 
 post_loaded
@@ -290,7 +280,7 @@ post_loaded
     ])
   )
   .filter { f -> f.exists() }
-  .toSortedList(sql_script_ordering)
+  .toList()
   .set { post_scripts }
 
 process release {
@@ -309,6 +299,8 @@ process release {
 
   script:
   def should_release = params.import_data.databases.inject(false) { s, e -> s || e.value }
+  def pre = file("work/pre-release")
+  def post = file("work/post-release")
   """
   set -o pipefail
 
@@ -324,12 +316,9 @@ process release {
     fi
   }
 
-  echo "${pre_sql.join('\n')}" > pre-release
-  echo "${post_sql.join('\n')}" > post-release
-
-  run_sql "pre-release"
-  ${should_release ? '' : '#' } rnac run-release
-  run_sql "post-release"
+  run_sql "${ Utils.write_ordered(pre, pre_sql.inject([]) { a, fn -> a << fn.getName() }) }"
+  ${should_release ? '' : '# ' }rnac run-release
+  run_sql "${ Utils.write_ordered(post, post_sql.inject([]) { a, fn -> a << fn.getName() }) }"
   """
 }
 
@@ -536,6 +525,7 @@ process fetch_unmapped_sequences {
   tag { species }
   scratch true
   maxForks 5
+  errorStrategy 'ignore'
 
   input:
   set val(species), val(assembly_id), val(taxid), val(division), file(query) from assemblies_to_fetch
