@@ -16,7 +16,7 @@ class DataSource {
     String prefix = ''
     List<String> arguments = []
     int gzip_count = source.inputs.inject(0) { a, i -> a + (i.produces.endsWith('.gz') ? 1 : 0) }
-    if (gzip_count == 0) {
+    if (gzip_count == 0 && input_files) {
       arguments.addAll(input_files)
     } else if (gzip_count == 1 && !source.process.force_decompress) {
       prefix = "zcat *.gz | "
