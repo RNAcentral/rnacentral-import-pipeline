@@ -38,7 +38,9 @@ where
   and load.assembly_id = regions.assembly_id
 ;
 
--- Delete all regions and exons where there are no providing databases
+-- Delete all regions and exons where there are no providing databases. Note
+-- that we are relying upon cascading deletes to ensure we do not fill the exon
+-- table with orphan rows.
 DELETE FROM rnc_sequence_regions WHERE was_mapped = false and providing_databases = '{}'::text[];
 
 -- Delete all mapped locations that are redundant with a given, but not yet
