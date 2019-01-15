@@ -166,3 +166,21 @@ def test_can_find_correct_for_something_that_can_be_mapped():
             )
         )
     ]
+
+
+@pytest.mark.skip
+def test_coordinates_do_not_exceed_bounds():
+    found = fetch_one('URS00008BF974_9606', 'GRCh38')
+    assert found == [
+        data.Region(
+            rna_id='URS00008BF974_9606',
+            rna_type='lncRNA',
+            databases=['LNCipedia'],
+            chromosome='X',
+            strand=1,
+            endpoints=(
+                data.Endpoint(start=114044718, stop=114045067),
+                data.Endpoint(start=114044725, stop=114044793),
+            ),
+        ),
+    ]
