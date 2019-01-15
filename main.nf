@@ -806,3 +806,11 @@ process import_feedback {
   split-and-load $ctl 'feedback*.tsv' ${params.import_data.chunk_size} merged
   """
 }
+
+workflow.onComplete {
+  if (params.notify) {
+    def success = (workflow.success ? '--success', '--failure');
+    def summary = "${workflow.scriptName} completed ${workflow.success ? 'successfully' : 'with errors'} at ${workflow.complete}"
+    ['slack', success, summary].execute() << workflow.errorReport ?: 'No errors'
+  }
+}
