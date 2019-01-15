@@ -1,18 +1,18 @@
 COPY (
-    select
+    SELECT
     json_build_object(
       'id', pre.id,
       'sequence', COALESCE(rna.seq_short, rna.seq_long)
     )
     FROM rna
-    JOIN rnc_rna_precomputed pre on pre.upi = rna.upi
+    JOIN rnc_rna_precomputed pre ON pre.upi = rna.upi
     LEFT JOIN rnc_sequence_regions regions
     ON
       regions.urs_taxid = pre.id
-      and regions.assembly_id = :'assembly_id'
-      and regions.was_mapped = false
+      AND regions.assembly_id = :'assembly_id'
+      AND regions.was_mapped = false
     WHERE
       pre.taxid = :taxid
-      and regions.id is null
-      and pre.is_active = true
+      AND regions.id IS NULL
+      AND pre.is_active = true
 ) TO STDOUT
