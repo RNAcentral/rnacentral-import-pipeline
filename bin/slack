@@ -97,7 +97,7 @@ def pipeline_done(summary, report, success=True, url=None):
         msg.update({
             'title': 'Error messages',
             'author_name': 'Nextflow',
-            'text': report,
+            'text': report.read(),
         })
     msg['color'] = color
 

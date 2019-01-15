@@ -811,6 +811,6 @@ workflow.onComplete {
   if (params.notify) {
     def success = (workflow.success ? '--success', '--failure');
     def summary = "${workflow.scriptName} completed ${workflow.success ? 'successfully' : 'with errors'} at ${workflow.complete}"
-    ['slack', success, summary].execute() << workflow.errorReport ?: 'No errors'
+    ['slack', success, summary, '-'].execute() << workflow.errorReport ?: 'No errors'
   }
 }
