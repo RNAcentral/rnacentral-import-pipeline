@@ -103,10 +103,12 @@ class Input {
   }
 
   static String script(Map input) {
-    def args = input.arguments.inject([]) { agg, a -> agg << "'$a'" }
+    def args = input.arguments.inject([]) { agg, a -> (a ? agg << "'$a'" : agg) }
     if (input.command.startsWith('mysql')) {
       return "$input.command < ${args[0]} > '$input.produces'"
     }
+    print('ARGS: ')
+    println(args)
     return "$input.command ${args.join(' ')} '$input.produces'"
   }
 
