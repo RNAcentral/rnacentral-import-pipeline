@@ -82,6 +82,9 @@ def database_done(job_name, db=None, url=None):
 @click.argument('summary')
 @click.argument('report', type=click.File('r'))
 def pipeline_done(summary, report, success=True, url=None):
+    """
+    Send a message to slack indicating that the pipeline has completed.
+    """
 
     msg = {
         'fallback': summary,
