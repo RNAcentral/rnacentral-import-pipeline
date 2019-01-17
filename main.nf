@@ -767,7 +767,7 @@ process mods_for_feedback {
 
   script:
   names = []
-  for (name in params.precompute.feedback.databases) {
+  for (name in params.feedback.databases) {
     names << "'${name.toUpperCase()}'"
   }
   names = '(' + names.join(', ') + ')'
