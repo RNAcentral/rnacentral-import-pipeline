@@ -15,6 +15,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import os
+import json
 from collections import Counter
 
 import attr
@@ -26,8 +28,10 @@ from rnacentral_pipeline.databases.ensembl.metadata import assemblies as assem
 @pytest.fixture(scope='module')
 def assemblies():
     with open('config/databases.json', 'r') as conn, \
-            open('files/import-data/ensembl/assemblies.sql', 'r') as query:
-        return list(assem.fetch(conn, query, assem.EXAMPLE_LOCATIONS))
+            open('files/import-data/ensembl/assemblies.sql', 'r') as query, \
+            open('files/import-data/ensembl/example-locations.json', 'r') as exs:
+        examples = json.load(exs)
+        return list(assem.fetch(conn, query, examples))
 
 
 def assembly_for(assemblies, taxid):
@@ -46,7 +50,7 @@ def test_it_builds_a_valid_assembly(assemblies):
         common_name='human',
         taxid=9606,
         ensembl_url='homo_sapiens',
-        division='Ensembl',
+        division='EnsemblVertebrates',
         blat_mapping=True,
         example=assem.AssemblyExample(
             chromosome='X',
@@ -67,7 +71,7 @@ def test_it_has_one_assembly_per_taxid(assemblies):
     max_item = counts.most_common(n=1)[0]
     assert max_item[1] == 1
     for taxid in [7227, 6239, 8090]:
-        assert counts[taxid] == 1
+        assert counts[taxid] == 1, "Issue with counts for %i" % taxid
 
 
 def test_it_has_one_assembly_per_assembly_id(assemblies):
@@ -90,7 +94,7 @@ def test_it_does_not_have_unexpected_taxids(assemblies, taxid):
     (559292, 'EnsemblFungi', 'R64-1-1'),
     (6669, 'EnsemblMetazoa', 'V1.0'),
     (546991, 'EnsemblFungi', 'EF2'),
-    (8090, 'Ensembl', 'ASM223467v1'),
+    (8090, 'EnsemblVertebrates', 'ASM223467v1'),
 ])
 def test_it_uses_correct_sources_for_duplicates(assemblies, taxid, division,
                                                 assembly_id):
