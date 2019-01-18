@@ -657,6 +657,8 @@ qa_flag_for_precompute
   .set { precompute_upi_queries }
 
 process find_precompute_upis {
+  when: params.precompute.run
+
   input:
   file(sql) from precompute_upi_queries
 
@@ -743,13 +745,13 @@ process load_precomputed_data {
   """
 }
 
-//=============================================================================
-// Compute feedback reports
-//=============================================================================
-
 post_precompute
   .ifEmpty('no precompute')
   .set { flag_for_feedback }
+
+//=============================================================================
+// Compute feedback reports
+//=============================================================================
 
 flag_for_feedback
   .combine(Channel.fromPath('files/precompute/find-mod-info.sql'))
