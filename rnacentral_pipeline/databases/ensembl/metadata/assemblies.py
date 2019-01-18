@@ -14,6 +14,7 @@ limitations under the License.
 """
 
 import csv
+import json
 import operator as op
 import itertools as it
 
@@ -41,110 +42,6 @@ BLAT_GENOMES = {
     'rattus_norvegicus'
     'saccharomyces_cerevisiae',
     'schizosaccharomyces_pombe',
-}
-
-
-EXAMPLE_LOCATIONS = {
-    'homo_sapiens': {
-        'chromosome': 'X',
-        'start': 73819307,
-        'end': 73856333,
-    },
-    'mus_musculus': {
-        'chromosome': 1,
-        'start': 86351908,
-        'end': 86352200,
-    },
-    'danio_rerio': {
-        'chromosome': 9,
-        'start': 7633910,
-        'end': 7634210,
-    },
-    'bos_taurus': {
-        'chromosome': 15,
-        'start': 82197673,
-        'end': 82197837,
-    },
-    'rattus_norvegicus': {
-        'chromosome': 'X',
-        'start': 118277628,
-        'end': 118277850,
-    },
-    'felis_catus': {
-        'chromosome': 'X',
-        'start': 18058223,
-        'end': 18058546,
-    },
-    'macaca_mulatta': {
-        'chromosome': 1,
-        'start': 146238837,
-        'end': 146238946,
-    },
-    'pan_troglodytes': {
-        'chromosome': 11,
-        'start': 78369004,
-        'end': 78369219,
-    },
-    'canis_familiaris': {
-        'chromosome': 19,
-        'start': 22006909,
-        'end': 22007119,
-    },
-    'gallus_gallus': {
-        'chromosome': 9,
-        'start': 15676031,
-        'end': 15676160,
-    },
-    'xenopus_tropicalis': {
-        'chromosome': 'NC_006839',
-        'start': 11649,
-        'end': 11717,
-    },
-    'saccharomyces_cerevisiae': {
-        'chromosome': 'XII',
-        'start': 856709,
-        'end': 856919,
-    },
-    'schizosaccharomyces_pombe': {
-        'chromosome': 'I',
-        'start': 540951,
-        'end': 544327,
-    },
-    'caenorhabditis_elegans': {
-        'chromosome': 'III',
-        'start': 11467363,
-        'end': 11467705,
-    },
-    'drosophila_melanogaster': {
-        'chromosome': '3R',
-        'start': 7474331,
-        'end': 7475217,
-    },
-    'bombyx_mori': {
-        'chromosome': 'scaf16',
-        'start': 6180018,
-        'end': 6180422,
-    },
-    'anopheles_gambiae': {
-        'chromosome': '2R',
-        'start': 34644956,
-        'end': 34645131,
-    },
-    'dictyostelium_discoideum': {
-        'chromosome': 2,
-        'start': 7874546,
-        'end': 7876498,
-    },
-    'plasmodium_falciparum': {
-        'chromosome': 13,
-        'start': 2796339,
-        'end': 2798488,
-    },
-    'arabidopsis_thaliana': {
-        'chromosome': 2,
-        'start': 18819643,
-        'end': 18822629,
-    }
 }
 
 
@@ -191,10 +88,10 @@ class AssemblyExample(object):
     @classmethod
     def build(cls, raw, example_locations):
         key = raw['species.url'].lower()
-        example = example_locations.get(key, None)
-        if not example:
+        if key not in example_locations:
             return None
 
+        example = example_locations[key]
         return cls(
             chromosome=str(example['chromosome']),
             start=example['start'],
@@ -250,7 +147,7 @@ class AssemblyInfo(object):
         if self.division == 'EnsemblProtists':
             return 'protists.ensembl.org'
         if self.division == 'EnsemblVertebrates':
-            return 'vertebrates.ensembl.org'
+            return 'ensembl.org'
         raise InvalidDomain(self.division)
 
     def writeable(self):
@@ -291,11 +188,12 @@ def fetch(connections, query_handle, example_locations):
         yield info
 
 
-def write(connections, query, output):
+def write(connections, query, example_file, output):
     """
     Parse the given input handle and write the readable data to the CSV.
     """
 
-    data = fetch(connections, query, EXAMPLE_LOCATIONS)
+    examples = json.load(example_file)
+    data = fetch(connections, query, examples)
     data = it.imap(op.methodcaller('writeable'), data)
     csv.writer(output).writerows(data)
