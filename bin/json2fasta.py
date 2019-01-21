@@ -26,7 +26,7 @@ from Bio.SeqRecord import SeqRecord
 
 
 def as_record(entry):
-    description = entry.get('description', '')
+    description = entry.get('description', '') or ''
     description = description.encode('ascii', 'ignore')
 
     return SeqRecord(
