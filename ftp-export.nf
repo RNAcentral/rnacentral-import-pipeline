@@ -9,6 +9,7 @@ process release_note {
 
   """
   rnac ftp-export release-note ${template_file} ${params.release} release_notes.txt
+  mkdir -p ${params.ftp_export.publish}/help-requests
   """
 }
 
@@ -172,16 +173,15 @@ process database_specific_fasta {
   set val(db), file(query) from db_sequences
 
   output:
-  file(name) into __sequences_species
+  file('*.fasta') into __sequences_species
 
   script:
-  name = "${db.toLowerCase().replaceAll(' ', '_')}.fasta"
   """
   set -o pipefail
 
   export PYTHONIOENCODING=utf8
   psql -f "$query" -v db='%${db}%' "$PGDATABASE" > raw.json
-  json2fasta.py raw.json $name
+  json2fasta.py raw.json ${db.toLowerCase().replaceAll(' ', '_')}.fasta
   """
 }
 
@@ -222,6 +222,8 @@ process extract_nhmmer_invalid {
 }
 
 process find_ensembl_chunks {
+  executor 'local'
+
   output:
   stdout raw_ensembl_ranges
 
@@ -283,7 +285,7 @@ process fetch_rfam_go_matchces {
 }
 
 process rfam_go_matches {
-  memory '4 GB'
+  memory '8 GB'
   publishDir "${params.ftp_export.publish}/go_annotations/", mode: 'move'
 
   input:
