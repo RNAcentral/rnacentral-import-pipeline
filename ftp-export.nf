@@ -85,8 +85,9 @@ process rfam_annotations {
   """
   set -o pipefail
 
-  psql -f "$query" "$PGDATABASE" | gzip > rfam_annotations.tsv.gz
-  zcat rfam_annotations.tsv.gz | head > example.txt
+  psql -f "$query" "$PGDATABASE" > rfam_annotations.tsv
+  head rfam_annotations.tsv > example.txt
+  gzip rfam_annotations.tsv
   cat template.txt > readme.txt
   """
 }
