@@ -105,6 +105,33 @@ def test_can_does_not_infer_exon_if_no_junctions(simple):
 
 
 
+def test_will_merge_duplicate_features(simple):
+    val = attr.evolve(simple, related_sequences=[], regions=[
+            data.SequenceRegion(
+                chromosome='1',
+                strand='+',
+                exons=[data.Exon(start=1000, stop=1005)],
+                assembly_id='hg38',
+            ),
+            data.SequenceRegion(
+                chromosome='2',
+                strand='-',
+                exons=[data.Exon(start=2000, stop=2005)],
+                assembly_id='hg38',
+            )
+    ])
+
+    assert set(data.FeatureInference().features(val)) == {
+        data.InferredSequenceFeature(
+            start=0,
+            stop=5,
+            relationship='exon_junction',
+            metadata={}
+        )
+    }
+
+
+
 def test_infers_no_exon_features_when_no_regions(simple):
     val = attr.evolve(simple, regions=[], related_sequences=[])
     assert set(data.FeatureInference().features(val)) == set()
