@@ -15,7 +15,21 @@ limitations under the License.
 
 import pytest
 
+from rnacentral_pipeline.databases.ensembl.metadata import karyotypes as karyo
 
-@pytest.mark.skip
-def test_can_find_all_species():
-    pass
+
+def karyotype(domain, species):
+    raw = karyo.fetch(species, domain)
+    return karyo.process(raw)
+
+
+def test_builds_empty_karyotype_for_missing_data():
+    _, found = karyotype('ensemblgenomes', 'glycine_max')
+    assert len(found) == 1190
+    assert found['1'] == {
+        'size': 56831624,
+        'bands': [{
+            'start': 1,
+            'end': 56831624,
+        }]
+    }
