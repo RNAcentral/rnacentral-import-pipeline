@@ -85,6 +85,9 @@ class Exon(object):
     start = attr.ib(validator=is_a(int))
     stop = attr.ib(validator=is_a(int))
 
+    def length(self):
+        return self.stop - self.start
+
 
 @attr.s()
 class SequenceRegion(object):
@@ -118,3 +121,15 @@ class SequenceRegion(object):
                 self.assembly_id,
                 self.strand,
             ]
+
+    def exon_features(self, accession, taxid, size):
+        for exon in self.exons:
+            yield (
+                accession,
+                taxid,
+                start,
+                stop,
+                'exon_junction',
+                json.dumps({}),
+            )
+

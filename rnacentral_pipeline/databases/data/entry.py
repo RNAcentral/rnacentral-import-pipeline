@@ -29,6 +29,7 @@ from rnacentral_pipeline.databases.helpers.hashes import crc64
 from . import utils
 from .references import Reference
 from .references import IdReference
+from .inferred_features import FeatureInference
 from .secondary_structure import SecondaryStructure
 
 LOGGER = logging.getLogger(__name__)
@@ -328,10 +329,9 @@ class Entry(object):
         return self.__write_part__(self.related_sequences)
 
     def write_sequence_features(self):
-        for related in self.related_sequences:
-            features = related.write_features(self.accession, self.ncbi_tax_id)
-            for feature in features:
-                yield feature
+        inference = FeatureInference()
+        for writeable in inference.writeables(self):
+            yield writeable
 
     def write_sequence_regions(self):
         return self.__write_part__(self.regions)

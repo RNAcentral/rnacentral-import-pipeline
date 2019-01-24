@@ -93,15 +93,3 @@ class RelatedSequence(object):
             self.relationship,
             methods,
         ]
-
-    def write_features(self, accession, taxid):
-        for endpoints in self.coordinates:
-            metadata = {'related': self.sequence_id}
-            yield [
-                accession,
-                taxid,
-                endpoints.start,
-                endpoints.stop,
-                self.relationship,
-                json.dumps(metadata),
-            ]
