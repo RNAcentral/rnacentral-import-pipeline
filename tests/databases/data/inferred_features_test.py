@@ -13,7 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-
+import attr
 import pytest
 
 from rnacentral_pipeline.databases import data
@@ -28,13 +28,16 @@ def simple():
         database='MADE_UP_DATA',
         sequence='AAAAAAAAAA',
         regions=[
-            data.Region(
+            data.SequenceRegion(
                 chromosome='1',
                 strand='+',
-                exons=[data.Exon(start=1000, stop=1010)],
+                exons=[data.Exon(start=1000, stop=1005)],
                 assembly_id='hg38',
             )
         ],
+        rna_type='SO:0001244',
+        url='https://www.google.com',
+        seq_version='1',
         related_sequences=[
             data.RelatedSequence(
                 sequence_id='B',
@@ -54,35 +57,54 @@ def simple():
 
 
 def test_can_infer_expected_related_features(simple):
-    assert set(data.FeatureInference().features(simple)) == {
+    val = attr.evolve(simple, regions=[])
+    assert set(data.FeatureInference().features(val)) == {
         data.InferredSequenceFeature(
             start=0,
-            stop=6,
+            stop=5,
             relationship='mature_product',
-            metadata={}
+            metadata={'related': 'B'}
         ),
         data.InferredSequenceFeature(
             start=6,
             stop=10,
             relationship='mature_product',
-            metadata={},
+            metadata={'related': 'B'},
         ),
         data.InferredSequenceFeature(
             start=3,
             stop=8,
             relationship='mature_product',
-            metadata={},
+            metadata={'related': 'C'},
         ),
     }
 
 
-# def test_can_infer_expected_exon_features(simple):
-#     pass
+def test_can_infer_expected_exon_features(simple):
+    val = attr.evolve(simple, related_sequences=[])
+    assert set(data.FeatureInference().features(val)) == {
+        data.InferredSequenceFeature(
+            start=0,
+            stop=5,
+            relationship='exon_junction',
+            metadata={}
+        )
+    }
+
+def test_can_does_not_infer_exon_if_no_junctions(simple):
+    val = attr.evolve(simple, related_sequences=[], regions=[
+            data.SequenceRegion(
+                chromosome='1',
+                strand='+',
+                exons=[data.Exon(start=1000, stop=1010)],
+                assembly_id='hg38',
+            )
+    ])
+
+    assert set(data.FeatureInference().features(val)) == set()
 
 
-# def test_infers_no_exon_features_when_no_regions(simple):
-#     pass
 
-
-# def test_can_merge_exon_features_for_several_regions(simple):
-#     pass
+def test_infers_no_exon_features_when_no_regions(simple):
+    val = attr.evolve(simple, regions=[], related_sequences=[])
+    assert set(data.FeatureInference().features(val)) == set()

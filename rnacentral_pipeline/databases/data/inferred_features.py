@@ -82,10 +82,10 @@ class FeatureInference(object):
             start = (exon.start - zero) + offset
             yield InferredSequenceFeature(
                 start,
-                start + exon.length,
+                start + exon.length(),
                 "exon_junction",
             )
-            offset += exon.length
+            offset += exon.length()
 
     def infer_exon_junctions(self, entry):
         """
@@ -101,10 +101,13 @@ class FeatureInference(object):
             for feature in self.region_features(entry, region):
                 junctions[feature].add(region.name)
 
-        for junction, region_ids in junctions.items():
+        for junction, _ in junctions.items():
+            if junction.start == 0 and junction.stop == len(entry.sequence):
+                continue
+
             yield attr.evolve(
                 junction,
-                metadata={'regions': sorted(region_ids)},
+                metadata={},  # No region tracking yet
             )
 
     def features(self, entry):
