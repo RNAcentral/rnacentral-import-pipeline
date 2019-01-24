@@ -121,15 +121,3 @@ class SequenceRegion(object):
                 self.assembly_id,
                 self.strand,
             ]
-
-    def exon_features(self, accession, taxid, size):
-        for exon in self.exons:
-            yield (
-                accession,
-                taxid,
-                start,
-                stop,
-                'exon_junction',
-                json.dumps({}),
-            )
-

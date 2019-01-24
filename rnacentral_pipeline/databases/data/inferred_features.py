@@ -23,8 +23,6 @@ from attr.validators import instance_of as is_a
 
 @attr.s(frozen=True, hash=True, cmp=True)
 class InferredSequenceFeature(object):
-    accession = attr.ib(validator=is_a(basestring))
-    ncbi_tax_id = attr.ib(validator=is_a(int))
     start = attr.ib(validator=is_a(int))
     stop = attr.ib(validator=is_a(int))
     relationship = attr.ib(validator=is_a(basestring))
@@ -35,10 +33,16 @@ class InferredSequenceFeature(object):
         cmp=False,
     )
 
-    def writeable(self):
+    def writeable(self, entry):
+        """
+        Generate an array to write out to represent this
+        InferredSequenceFeature object. This is mean to be written to a file
+        and the loaded into the database.
+        """
+
         return [
-            self.accession,
-            self.ncbi_tax_id,
+            entry.accession,
+            entry.ncbi_tax_id,
             self.start,
             self.stop,
             self.relationship,
@@ -47,26 +51,36 @@ class InferredSequenceFeature(object):
 
 
 class FeatureInference(object):
-    def infer_related_locations(self, entry):
+    """
+    A class to infer sequence features for entries.
+    """
+
+    def infer_related_features(self, entry):
+        """
+        Determine the features based off the related sequences.
+        """
+
         for related in entry.related_sequences:
             for endpoints in related.coordinates:
+                metadata = {'related': related.sequence_id}
                 yield InferredSequenceFeature(
-                    entry.accession,
-                    entry.taxid,
                     endpoints.start,
                     endpoints.stop,
                     related.relationship,
-                    {'related': related.sequence_id},
+                    metadata,
                 )
 
     def region_features(self, entry, region):
+        """
+        Infer the features that represent the exon/intron junctions for a
+        particular region in an entry.
+        """
+
         offset = 0
         zero = region.start
         for exon in region.exons:
             start = (exon.start - zero) + offset
             yield InferredSequenceFeature(
-                entry.accession,
-                entry.taxid,
                 start,
                 start + exon.length,
                 "exon_junction",
@@ -74,6 +88,14 @@ class FeatureInference(object):
             offset += exon.length
 
     def infer_exon_junctions(self, entry):
+        """
+        Infer all Exon/Intron junction features. This will examine the
+        SequenceRegions to determine the correct features. Each feature will
+        represent a single exon/intron junction which occurs in one or more
+        region. If there are several regions with the same junctions only one
+        set of features will be created.
+        """
+
         junctions = coll.defaultdict(set)
         for region in entry.regions:
             for feature in self.region_features(entry, region):
@@ -86,15 +108,24 @@ class FeatureInference(object):
             )
 
     def features(self, entry):
-        infer_methods = [
-            'infer_related_locations',
-            'infer_exon_junctions',
-        ]
+        """
+        Infer all features for the given entry. This will return a iterable of
+        InferredSequenceFeature objects which represents the features for the
+        entry.
+        """
 
-        for method in infer_methods:
+        methods = [
+            self.infer_related_features,
+            self.infer_exon_junctions,
+        ]
+        for method in methods:
             for feature in method(entry):
                 yield feature
 
     def writeables(self, entry):
+        """
+        Generate an iterable of all writeable arrays of inferred features for
+        the given entry.
+        """
         for feature in self.features(entry):
-            yield feature.writeable()
+            yield feature.writeable(entry)

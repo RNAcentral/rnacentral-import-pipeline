@@ -20,3 +20,4 @@ from .regions import *
 from .related import *
 from .references import *
 from .go_annotations import *
+from .inferred_features import *
