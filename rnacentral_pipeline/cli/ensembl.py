@@ -61,12 +61,17 @@ def ensembl_coordinates(connections, query, output):
 
 @cli.command('karyotypes')
 @click.argument('output', default='karyotypes.csv', type=click.File('wb'))
-def ensembl_write_karyotypes(output):
+@click.argument('species', nargs=-1)
+def ensembl_write_karyotypes(output, species):
     """
     Fetch all the karyotype information from all Ensembl species. This will use
     the Ensembl API to fetch the data and write to the given output file.
     """
-    karyotypes.write(output)
+    if not species:
+        species = None
+    else:
+        species = set(species)
+    karyotypes.write(output, species=species)
 
 
 @cli.command('proteins')

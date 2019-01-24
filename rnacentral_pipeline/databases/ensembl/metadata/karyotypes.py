@@ -94,18 +94,19 @@ def process(raw):
     return raw['default_coord_system_version'], result
 
 
-def for_domain(domain):
+def for_domain(domain, allowed=None):
     for species in find_species(domain):
-        raw_data = fetch(species, domain)
-        yield process(raw_data)
+        if not species or (allowed and species in allowed):
+            raw_data = fetch(species, domain)
+            yield process(raw_data)
 
 
-def data():
-    results = it.imap(for_domain, DOMAINS)
+def data(species=None):
+    results = it.imap(lambda d: for_domain(d, allowed=species), DOMAINS)
     return it.chain.from_iterable(results)
 
 
-def write(output):
+def write(output, species=None):
     writer = csv.writer(output)
-    for (assembly_id, bands) in data():
+    for (assembly_id, bands) in data(species=species):
         writer.writerow([assembly_id, json.dumps(bands)])
