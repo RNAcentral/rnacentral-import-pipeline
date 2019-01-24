@@ -20,6 +20,23 @@ import attr
 from attr.validators import optional
 from attr.validators import instance_of as is_a
 
+def exonic_features(region):
+    """
+    Infer the features that represent the exon/intron junctions for a
+    particular region in an entry.
+    """
+
+    offset = 0
+    zero = region.start
+    for exon in region.exons:
+        start = (exon.start - zero) + offset
+        yield InferredSequenceFeature(
+            start,
+            start + exon.length(),
+            "exon_junction",
+        )
+        offset += exon.length()
+
 
 @attr.s(frozen=True, hash=True, cmp=True)
 class InferredSequenceFeature(object):
@@ -50,7 +67,7 @@ class InferredSequenceFeature(object):
         ]
 
 
-class FeatureInference(object):
+class EntryFeatureInference(object):
     """
     A class to infer sequence features for entries.
     """
@@ -70,23 +87,6 @@ class FeatureInference(object):
                     metadata,
                 )
 
-    def region_features(self, entry, region):
-        """
-        Infer the features that represent the exon/intron junctions for a
-        particular region in an entry.
-        """
-
-        offset = 0
-        zero = region.start
-        for exon in region.exons:
-            start = (exon.start - zero) + offset
-            yield InferredSequenceFeature(
-                start,
-                start + exon.length(),
-                "exon_junction",
-            )
-            offset += exon.length()
-
     def infer_exon_junctions(self, entry):
         """
         Infer all Exon/Intron junction features. This will examine the
@@ -98,7 +98,7 @@ class FeatureInference(object):
 
         junctions = coll.defaultdict(set)
         for region in entry.regions:
-            for feature in self.region_features(entry, region):
+            for feature in exonic_features(region):
                 junctions[feature].add(region.name)
 
         for junction, _ in junctions.items():
@@ -121,6 +121,7 @@ class FeatureInference(object):
             self.infer_related_features,
             self.infer_exon_junctions,
         ]
+
         for method in methods:
             for feature in method(entry):
                 yield feature
@@ -132,3 +133,23 @@ class FeatureInference(object):
         """
         for feature in self.features(entry):
             yield feature.writeable(entry)
+
+
+class HitFeatureInference(object):
+    def features(self, hit):
+        """
+        Infer all features for the given entry. This will return a iterable of
+        InferredSequenceFeature objects which represents the features for the
+        entry.
+        """
+        for feature in exonic_features(hit):
+            yield feature
+
+    def writeables(self, entry):
+        """
+        Generate an iterable of all writeable arrays of inferred features for
+        the given entry.
+        """
+        for feature in self.features(entry):
+            yield feature.writeable(entry)
+

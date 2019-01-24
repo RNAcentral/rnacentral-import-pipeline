@@ -31,6 +31,10 @@ def cli():
 @cli.command('select-hits')
 @click.argument('assembly_id')
 @click.argument('hits', default='-', type=click.File('r'))
-@click.argument('output', default='-', type=click.File('w'))
+@click.argument('output', default='.', type=click.Path(
+    writable=True,
+    dir_okay=True,
+    file_okay=False,
+))
 def select_hits(assembly_id, hits, output):
     genome_mapping.write_selected(assembly_id, hits, output)

@@ -21,7 +21,10 @@ import itertools as it
 import attr
 from attr.validators import instance_of as is_a
 
+from rnacentral_pipeline.writers import MultiCsvOutput
+
 from rnacentral_pipeline.databases.data import regions
+from rnacentral_pipeline.databases.data import FeatureInference
 
 FIELDS = [
     'matches',  # Number of bases that match that aren't repeats
@@ -87,8 +90,19 @@ class Hit(object):
     def match_fraction(self):
         return float(self.matches) / float(self.sequence_length)
 
+    @property
+    def start(self):
+        return self.exons[0].start
+
+    @property
+    def stop(self):
+        return self.exons[-1].stop
+
     def writeable(self):
         return regions.write_locations(self, self.upi)
+
+    def writeable_features(self):
+        return FeatureInference().writeables(self)
 
 
 def select_possible(hit):
@@ -138,7 +152,13 @@ def select_hits(assembly_id, handle):
 
 
 def write_selected(assembly_id, hits, output):
-    selected = select_hits(assembly_id, hits)
-    selected = it.imap(op.methodcaller('writeable'), selected)
-    selected = it.chain.from_iterable(selected)
-    csv.writer(output).writerows(selected)
+    writer = MultiCsvOutput.build(
+        select_hits,
+        locations={
+            'transformer': op.methodcaller('writeable')
+        },
+        features={
+            'transformer': op.methodcaller('writeable_features')
+        },
+    )
+    writer(output, assembly_id, hits)
