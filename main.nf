@@ -747,7 +747,66 @@ process load_precomputed_data {
 
 post_precompute
   .ifEmpty('no precompute')
-  .set { flag_for_feedback }
+  .set { flag_for_feedback; flag_for_secondary }
+
+//=============================================================================
+// Compute secondary structures
+//=============================================================================
+
+flag_for_secondary
+  .combine(Channel.fromPath("files/secondary-structures/find-sequences.sql"))
+  .set { secondary_query }
+
+process find_possible_secondary_sequences {
+  when:
+  params.secondary.run
+
+  input:
+  set val(flag), file(query) from secondary_query
+
+  output:
+  file('parts/*.fasta') into sequences_to_ribotype mode flatten
+
+  """
+  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > raw.json
+  json2fasta.py raw.json rnacentral.fasta
+  seqkit shuffle --two-pass rnacentral.fasta > shuffled.fasta
+  seqkit split --two-pass --by-size ${params.secondary.sequence_chunk_size} --out-dir 'parts/' shuffled.fasta
+  """
+}
+
+process ribotype_sequences {
+  input:
+  set file(sequences), file(cm_library)  from to_ribotype
+
+  output:
+  set file(sequences), file("ribotypes.txt") into ribotyped_sequences
+
+  """
+  ribotype $cm_library $sequences ribotypes.txt
+  """
+}
+
+process layout_sequences {
+  input:
+  set file(sequences), file(cm), file(crw) from to_layout
+
+  output:
+  file("data.csv") into secondary_structures
+
+  """
+  cat ribotypes.txt | parallel -d, -j1 -N2 secondary-layout-data {1} {2} $sequences $cm $crw - >> data.csv
+  """
+}
+
+process store_secondary_structures {
+  input:
+  set file(ctl), file("secondary-structure*.csv") from secondary_structures
+
+  """
+  split-and-load $ctl 'secondary-structure*.csv' ${params.secondary.data_chunk_size} merged
+  """
+}
 
 //=============================================================================
 // Compute feedback reports
