@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+IFS=$'\n\t'
+
+rnacentral_id="$1"
+model_id="$2"
+fasta="$3"
+cm_library="$4"
+traveler_library="$5"
+output="$6"
+
+sequence="$rnacentral_id.fasta"
+sto="$rnacentral_id-$model_id.sto"
+stk="$rnacentral_id-$model_id.stk"
+align="$rnacentral_id-$model_id-alignment.fasta"
+
+model_ps="$traveler_library/ps/$model_id.ps"
+model_fasta="$traveler_library/fasta/$model_id.fasta"
+traveler_out="$rnacentral_id-$model_id-traveler"
+
+esl-sfetch "$fasta" "$rnacentral_id" > "$sequence"
+cmalign "$cm/$model_id" "$sequence" > "$sto"
+esl-alimanip --sindi --outformat pfam "$sto" > "$stk"
+perl ali-pfam-sindi2dot-bracket.pl "$stk" > "$align"
+traveler \
+  --target-structure "$align" \
+  --template-structure "$model_ps" "$model_fasta" \
+  --all $traveler_out
+
+rnac secondary-structure process-svg "$traveler_out.svg" "$output"

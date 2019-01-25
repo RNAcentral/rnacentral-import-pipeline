@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+IFS=$'\n\t'
+
+cm_library="$1"
+sequences="$2"
+output="$3"
+
+ribotyper.pl -i ${cm_library}/modelinfo.txt -f $sequences results
+
+cat results/results.ribotyper.long.out |\
+  grep -v '^#' |\
+  grep -v MultipleHits |\
+  grep PASS |\
+  awk -v OFS='\t' '{print $2, $8}' > $output
