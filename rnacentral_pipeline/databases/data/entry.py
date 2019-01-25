@@ -29,7 +29,7 @@ from rnacentral_pipeline.databases.helpers.hashes import crc64
 from . import utils
 from .references import Reference
 from .references import IdReference
-from .inferred_features import FeatureInference
+from .inferred_features import EntryFeatureInference
 from .secondary_structure import SecondaryStructure
 
 LOGGER = logging.getLogger(__name__)
@@ -195,6 +195,10 @@ class Entry(object):
         if not self.exons:
             return len(self.sequence) + 1
         return max(e.stop for e in self.exons)
+
+    @property
+    def sequence_length(self):
+        return len(self.sequence)
 
     def crc64(self):
         """

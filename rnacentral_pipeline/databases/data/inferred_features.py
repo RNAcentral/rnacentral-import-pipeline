@@ -20,22 +20,33 @@ import attr
 from attr.validators import optional
 from attr.validators import instance_of as is_a
 
-def exonic_features(region):
+from more_itertools import windowed
+
+
+def exonic_features(region, sequence_length):
     """
     Infer the features that represent the exon/intron junctions for a
     particular region in an entry.
     """
 
+    if len(region.exons) <= 1:
+        return
+
     offset = 0
     zero = region.start
-    for exon in region.exons:
-        start = (exon.start - zero) + offset
+    for (first, second) in windowed(region.exons, 2):
+        start = (first.stop - zero) + offset
+        stop = start + 1
+
+        if stop > sequence_length:
+            raise ValueError("%i is beyond sequence end: %i" % (stop, sequence_length))
+
         yield InferredSequenceFeature(
             start,
-            start + exon.length(),
+            stop,
             "exon_junction",
         )
-        offset += exon.length()
+        offset += first.length()
 
 
 @attr.s(frozen=True, hash=True, cmp=True)
@@ -50,21 +61,21 @@ class InferredSequenceFeature(object):
         cmp=False,
     )
 
-    def writeable(self, entry):
+    def writeable(self, *prefix):
         """
         Generate an array to write out to represent this
         InferredSequenceFeature object. This is mean to be written to a file
         and the loaded into the database.
         """
 
-        return [
-            entry.accession,
-            entry.ncbi_tax_id,
+        data = list(prefix)
+        data.extend([
             self.start,
             self.stop,
             self.relationship,
             json.dumps(self.metadata)
-        ]
+        ])
+        return data
 
 
 class EntryFeatureInference(object):
@@ -98,7 +109,7 @@ class EntryFeatureInference(object):
 
         junctions = coll.defaultdict(set)
         for region in entry.regions:
-            for feature in exonic_features(region):
+            for feature in exonic_features(region, entry.sequence_length):
                 junctions[feature].add(region.name)
 
         for junction, _ in junctions.items():
@@ -132,24 +143,30 @@ class EntryFeatureInference(object):
         the given entry.
         """
         for feature in self.features(entry):
-            yield feature.writeable(entry)
+            yield feature.writeable(entry.accession, entry.ncbi_tax_id)
 
 
 class HitFeatureInference(object):
+    """
+    Compute sequence features based off the exon/intron structure of a sequence
+    match.
+    """
+
     def features(self, hit):
         """
         Infer all features for the given entry. This will return a iterable of
         InferredSequenceFeature objects which represents the features for the
         entry.
         """
-        for feature in exonic_features(hit):
+
+        for feature in exonic_features(hit, hit.sequence_length):
             yield feature
 
-    def writeables(self, entry):
+    def writeables(self, hit):
         """
         Generate an iterable of all writeable arrays of inferred features for
         the given entry.
         """
-        for feature in self.features(entry):
-            yield feature.writeable(entry)
 
+        for feature in self.features(hit):
+            yield feature.writeable(hit.upi)

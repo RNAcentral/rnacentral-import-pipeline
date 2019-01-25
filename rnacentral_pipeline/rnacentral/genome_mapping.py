@@ -24,7 +24,7 @@ from attr.validators import instance_of as is_a
 from rnacentral_pipeline.writers import MultiCsvOutput
 
 from rnacentral_pipeline.databases.data import regions
-from rnacentral_pipeline.databases.data import FeatureInference
+from rnacentral_pipeline.databases.data import HitFeatureInference
 
 FIELDS = [
     'matches',  # Number of bases that match that aren't repeats
@@ -102,7 +102,7 @@ class Hit(object):
         return regions.write_locations(self, self.upi)
 
     def writeable_features(self):
-        return FeatureInference().writeables(self)
+        return HitFeatureInference().writeables(self)
 
 
 def select_possible(hit):
