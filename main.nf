@@ -781,7 +781,8 @@ process fetch_traveler_data {
   """
   git clone https://github.com/RNAcentral/auto-traveler.git
   wget -O cms.tar.gz 'https://www.dropbox.com/s/q5l0s1nj5h4y6e4/cms.tar.gz?dl=0'
-  tar xvf cms.tar.gz
+  # We are going to ignore some errors due to using mac tar to build the tarball
+  tar xvf cms.tar.gz || true
   """
 }
 
