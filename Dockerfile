@@ -29,7 +29,6 @@ RUN apt-get install -y \
     pgloader \
     postgresql-9.5 \
     python \
-    python-pip \
     tar \
     unzip \
     wget
@@ -86,15 +85,16 @@ RUN \
     tar xvf seqkit_linux_amd64.tar.gz && \
     rm seqkit_linux_amd64.tar.gz
 
-# Install Python requirements
+# Install useful pip version
+RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && \
+    python get-pip.py && \
+    echo $PATH && \
+    pip --version
+
+# Install python requirements
 ADD requirements.txt $RNACENTRAL_IMPORT_PIPELINE/requirements.txt
-RUN pip install virtualenv
-RUN cd $RNA && \
-    pip install virtualenv && \
-    virtualenv pipeline-env && \
-    . pipeline-env/bin/activate && \
-    pip install --upgrade pip && \
-    pip install -r $RNACENTRAL_IMPORT_PIPELINE/requirements.txt
+RUN /usr/local/bin/pip install --upgrade pip && \
+    /usr/local/bin/pip install -r $RNACENTRAL_IMPORT_PIPELINE/requirements.txt
 
 # Setup environmental variables
 ENV RIBODIR="$RNA/ribotyper-v1" RIBOINFERNALDIR="$RNA/infernal-1.1.2/bin" RIBOEASELDIR="$RNA/infernal-1.1.2/bin"
@@ -109,5 +109,3 @@ ENV PATH="$RNA/RNAstructure/exe:$PATH"
 ENV PATH="$RNA/blatSrc/bin:$PATH"
 ENV PATH="$RNA/seqkit:$PATH"
 ENV PATH="$RNACENTRAL_IMPORT_PIPELINE:$PATH"
-
-ENTRYPOINT ["/bin/bash"]

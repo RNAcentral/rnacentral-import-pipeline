@@ -743,7 +743,7 @@ process load_precomputed_data {
 
 post_precompute
   .ifEmpty('no precompute')
-  .set { flag_for_feedback; flag_for_secondary }
+  .into { flag_for_feedback; flag_for_secondary }
 
 //=============================================================================
 // Compute secondary structures
@@ -772,6 +772,9 @@ process find_possible_secondary_sequences {
 }
 
 process fetch_traveler_data {
+  when:
+  params.secondary.run
+
   output:
   set file('auto-traveler/data/cms'), file('auto-traveler/data/crw-fasta'), file('auto-traveler/data/ps-fasta') into traveler_data
 
@@ -787,13 +790,12 @@ sequences_to_ribotype
   .set { to_layout }
 
 process layout_sequences {
-  container { params.secondary.container }
 
   input:
   set file(sequences), file(cm), file(fasta), file(ps) from to_layout
 
   output:
-  file("output/*.colored.svg") into secondary_structures mode flatten
+  file("output/*.colored.svg") into secondary_to_import mode flatten
 
   """
   auto-traveler.py --cm-library $cm --fasta-library $fasta --ps-library $ps $sequences output/
@@ -801,6 +803,7 @@ process layout_sequences {
 }
 
 secondary_to_import
+  .collect()
   .combine(Channel.fromPath("files/secondary-structures/load.ctl"))
   .set { secondary_to_import }
 
