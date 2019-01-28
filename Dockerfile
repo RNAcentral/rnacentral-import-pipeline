@@ -1,105 +1,113 @@
-FROM centos:6.6
+FROM gcc:4.9
 
-RUN yum install -y https://download.postgresql.org/pub/repos/yum/9.5/redhat/rhel-6-x86_64/pgdg-centos95-9.5-3.noarch.rpm
+ENV RNA /rna
+ENV RNACENTRAL_IMPORT_PIPELINE "$RNA/rnacentral-import-pipeline"
+RUN mkdir $RNA
+WORKDIR $RNA
 
-RUN yum install -y \
+RUN apt-get install curl ca-certificates
+RUN curl https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
+
+RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ jessie-pgdg main" > /etc/apt/sources.list.d/pgdg.list
+
+RUN apt-get update
+RUN apt-get upgrade -y
+
+# Install all required packages
+RUN apt-get install -y \
+    bedtools \
     curl \
-    freetds \
     gcc \
     git \
-    httpd \
-    httpd-devel \
-    libaio \
-    libzip \
-    mysql-devel \
-    nc.x86_64 \
+    gzip \
+    hmmer \
+    jq \
+    lftp \
+    mysql-client \
+    mysql-common \
     openssl \
-    openssl-devel \
-    postgresql95.x86_64 \
-    sbcl \
+    pgloader \
+    postgresql-9.5 \
+    python \
+    python-pip \
     tar \
     unzip \
-    zlib-devel
+    wget
 
-RUN mkdir /rnacentral
-RUN mkdir /rnacentral/local
-
-ENV LOC /rnacentral/local
-
-# Install Python
+# Install Infernal
 RUN \
-    cd $LOC && \
-    curl -OL http://www.python.org/ftp/python/2.7.11/Python-2.7.11.tgz && \
-    tar -zxvf Python-2.7.11.tgz && \
-    cd Python-2.7.11 && \
-    PREFIX=$LOC/python-2.7.11/ && \
-    export LD_RUN_PATH=$PREFIX/lib && \
-    ./configure --prefix=$PREFIX  --enable-shared && \
+    cd $RNA/ && \
+    curl -OL http://eddylab.org/infernal/infernal-1.1.2.tar.gz && \
+    tar -xvzf infernal-1.1.2.tar.gz && \
+    cd infernal-1.1.2 && \
+    ./configure --prefix=$RNA/infernal-1.1.2 && \
     make && \
     make install && \
-    cd $LOC && \
-    rm -Rf Python-2.7.11 && \
-    rm Python-2.7.11.tgz
+    cd easel && \
+    make install && \
+    cd $RNA/ && \
+    rm infernal-1.1.2.tar.gz
 
-# Install virtualenv
+# Install ribotyper
+RUN git clone https://github.com/nawrockie/epn-ofile.git && cd epn-ofile && git checkout c34244b2b9e0719c45d964cc08c147aa353532e8
+RUN git clone https://github.com/nawrockie/epn-options.git && cd epn-options && git checkout 7acc13384aedbd5efee9a62fcde71d075072b6a6
+RUN git clone https://github.com/nawrockie/epn-test.git && cd epn-test && git checkout f4a8a60153906e61bc458fa734ec7070eadf76f9
+RUN git clone https://github.com/nawrockie/ribotyper-v1.git && cd ribotyper-v1 && git checkout 4cd7fe30f402edfa4669383a46d603c60ba6f608
+
+# Install jiffy infernal hmmer scripts
+RUN git clone https://github.com/nawrockie/jiffy-infernal-hmmer-scripts.git && cd jiffy-infernal-hmmer-scripts && git checkout 45d4937385a6b694eac2d7d538e131b59527ce06
+
+# Install traveler
+RUN git clone https://github.com/davidhoksza/traveler.git && cd traveler && git checkout 0912ed5daab09bb3c38630efaf3643ea38b02dbe
+RUN cd $RNA/traveler/src && make build
+
+# Install RNAStructure
 RUN \
-    cd $LOC && \
-    curl -OL  https://pypi.python.org/packages/source/v/virtualenv/virtualenv-15.0.0.tar.gz && \
-    tar -zxvf virtualenv-15.0.0.tar.gz && \
-    cd virtualenv-15.0.0 && \
-    $LOC/python-2.7.11/bin/python setup.py install && \
-    cd $LOC && \
-    rm -Rf virtualenv-15.0.0.tar.gz && \
-    rm -Rf virtualenv-15.0.0
+    wget http://rna.urmc.rochester.edu/Releases/current/RNAstructureSource.tgz && \
+    tar -xvzf RNAstructureSource.tgz && \
+    rm RNAstructureSource.tgz && \
+    cd RNAstructure && \
+    make all
 
-# Create virtual environment
+# Install blat
 RUN \
-    cd $LOC && \
-    mkdir virtualenvs && \
-    cd virtualenvs && \
-    $LOC/python-2.7.11/bin/virtualenv rnacentral --python=$LOC/python-2.7.11/bin/python
+    wget https://users.soe.ucsc.edu/~kent/src/blatSrc35.zip && \
+    unzip blatSrc35.zip && \
+    rm blatSrc35.zip && \
+    cd blatSrc && \
+    mkdir bin && \
+    make MACHTYPE=x86_64 BINDIR=$PWD/bin
 
-# Install pgloader
+# Install seqkit
 RUN \
-  rpm --rebuilddb && \
-  yum -y install yum-utils && \
-  yum -y install rpmdevtools @"Development Tools" && \
-  yum -y install sqlite-devel && \
-  yum -y install epel-release && \
-  yum install -y sbcl.x86_64 --enablerepo=epel
-
-RUN \
-  curl -OL http://downloads.sourceforge.net/project/sbcl/sbcl/1.3.6/sbcl-1.3.6-source.tar.bz2 && \
-  tar -xvjf sbcl-1.3.6-source.tar.bz2 && \
-  cd sbcl-1.3.6 && \
-  ./make.sh --with-sb-thread --with-sb-core-compression --prefix=/usr && \
-  sh install.sh  && \
-  rpm --rebuilddb && \
-  yum -y install freetds-devel && \
-  rpmdev-setuptree
-
-RUN \
-  cd $LOC && \
-  curl -OL https://github.com/dimitri/pgloader/archive/v3.4.1.tar.gz && \
-  tar -xvzf v3.4.1.tar.gz && \
-  rm v3.4.1.tar.gz && \
-  mv pgloader-3.4.1 pgloader && \
-  cd pgloader && \
-  make pgloader
-
-RUN yum -y install gcc
+    mkdir seqkit && \
+    cd seqkit && \
+    wget https://github.com/shenwei356/seqkit/releases/download/v0.10.0/seqkit_linux_amd64.tar.gz && \
+    tar xvf seqkit_linux_amd64.tar.gz && \
+    rm seqkit_linux_amd64.tar.gz
 
 # Install Python requirements
-ADD requirements.txt $RNACENTRAL_IMPORT_PIPELINE
-RUN \
-    source $LOC/virtualenvs/rnacentral/bin/activate && \
+ADD requirements.txt $RNACENTRAL_IMPORT_PIPELINE/requirements.txt
+RUN pip install virtualenv
+RUN cd $RNA && \
+    pip install virtualenv && \
+    virtualenv pipeline-env && \
+    . pipeline-env/bin/activate && \
+    pip install --upgrade pip && \
     pip install -r $RNACENTRAL_IMPORT_PIPELINE/requirements.txt
 
-# Define container environment variables
-ENV PYTHONPATH luigi:$PYTHONPATH
-ENV PATH $LOC/pgloader/build/bin:$PATH
+# Setup environmental variables
+ENV RIBODIR="$RNA/ribotyper-v1" RIBOINFERNALDIR="$RNA/infernal-1.1.2/bin" RIBOEASELDIR="$RNA/infernal-1.1.2/bin"
+ENV EPNOPTDIR="$RNA/epn-options" EPNOFILEDIR="$RNA/epn-ofile" EPNTESTDIR="$RNA/epn-test"
+ENV PERL5LIB="$RIBODIR:$EPNOPTDIR:$EPNOFILEDIR:$EPNTESTDIR:$PERL5LIB"
+ENV DATAPATH="$RNA/RNAstructure/data_tables/"
 
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod 700 entrypoint.sh
+ENV PATH="$RNA/traveler/bin:$PATH"
+ENV PATH="$RIBODIR:$PATH"
+ENV PATH="$RIBOINFERNALDIR:$PATH"
+ENV PATH="$RNA/RNAstructure/exe:$PATH"
+ENV PATH="$RNA/blatSrc/bin:$PATH"
+ENV PATH="$RNA/seqkit:$PATH"
+ENV PATH="$RNACENTRAL_IMPORT_PIPELINE:$PATH"
 
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["/bin/bash"]
