@@ -403,10 +403,7 @@ split_qa_sequences
 process qa_scan {
   tag { name }
   cpus { params.qa[name].cpus }
-  queue { params.qa[name].queue }
-  // memory { params.qa[name].memory }
-  module { params.qa[name].get('module', '') }
-  clusterOptions { params.qa[name].get('options', '') }
+  memory { params.qa[name].memory }
 
   input:
   set val(name), file('sequences.fasta'), file(dir) from sequences_to_scan
@@ -417,7 +414,6 @@ process qa_scan {
   script:
   if (name == 'rfam') {
     """
-    mpiexec -mca btl ^openbib -np ${params.qa[name].cpus} \
     cmscan \
       -o output.inf \
       --tblout results.tblout \
@@ -775,36 +771,46 @@ process find_possible_secondary_sequences {
   """
 }
 
-process ribotype_sequences {
-  input:
-  set file(sequences), file(cm_library)  from to_ribotype
-
+process fetch_traveler_data {
   output:
-  set file(sequences), file("ribotypes.txt") into ribotyped_sequences
+  set file('auto-traveler/data/cms'), file('auto-traveler/data/crw-fasta'), file('auto-traveler/data/ps-fasta') into traveler_data
 
   """
-  ribotype $cm_library $sequences ribotypes.txt
+  git clone https://github.com/RNAcentral/auto-traveler.git
+  wget -O cms.tar.gz 'https://www.dropbox.com/s/q5l0s1nj5h4y6e4/cms.tar.gz?dl=0'
+  tar xvf cms.tar.gz
   """
 }
+
+sequences_to_ribotype
+  .combine(traveler_data)
+  .set { to_layout }
 
 process layout_sequences {
+  container { params.secondary.container }
+
   input:
-  set file(sequences), file(cm), file(crw) from to_layout
+  set file(sequences), file(cm), file(fasta), file(ps) from to_layout
 
   output:
-  file("data.csv") into secondary_structures
+  file("output/*.colored.svg") into secondary_structures mode flatten
 
   """
-  cat ribotypes.txt | parallel -d, -j1 -N2 secondary-layout-data {1} {2} $sequences $cm $crw - >> data.csv
+  auto-traveler.py --cm-library $cm --fasta-library $fasta --ps-library $ps $sequences output/
   """
 }
+
+secondary_to_import
+  .combine(Channel.fromPath("files/secondary-structures/load.ctl"))
+  .set { secondary_to_import }
 
 process store_secondary_structures {
   input:
-  set file(ctl), file("secondary-structure*.csv") from secondary_structures
+  set file("raw-secondary-structure/*.svg"), file(ctl) from secondary_to_import
 
   """
-  split-and-load $ctl 'secondary-structure*.csv' ${params.secondary.data_chunk_size} merged
+  rnac secondary process-svgs raw-secondary-structures/ data.csv
+  split-and-load $ctl data.csv ${params.secondary.data_chunk_size} merged
   """
 }
 
