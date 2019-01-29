@@ -776,13 +776,16 @@ process fetch_traveler_data {
   params.secondary.run
 
   output:
-  set file('auto-traveler/data/cms'), file('auto-traveler/data/crw-fasta'), file('auto-traveler/data/ps-fasta') into traveler_data
+  set file('auto-traveler/data/cms/'), file('auto-traveler/data/crw-fasta-no-pseudoknots/'), file('auto-traveler/data/crw-ps/') into traveler_data
 
   """
   git clone https://github.com/RNAcentral/auto-traveler.git
-  wget -O cms.tar.gz 'https://www.dropbox.com/s/q5l0s1nj5h4y6e4/cms.tar.gz?dl=0'
+  cd auto-traveler
+  git checkout "${params.secondary.auto_traveler_version}"
+  wget -O cms.tar.gz '${params.secondary.cm_library}'
   # We are going to ignore some errors due to using mac tar to build the tarball
-  tar xvf cms.tar.gz || true
+  tar xf cms.tar.gz
+  python utils/generate_model_info.py --cm-library data/cms
   """
 }
 
@@ -791,7 +794,6 @@ sequences_to_ribotype
   .set { to_layout }
 
 process layout_sequences {
-
   input:
   set file(sequences), file(cm), file(fasta), file(ps) from to_layout
 
