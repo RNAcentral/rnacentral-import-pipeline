@@ -1,0 +1,18 @@
+COPY (
+SELECT DISTINCT ON (rna.upi)
+  json_build_object(
+    'id', rna.upi,
+    'sequence', COALESCE(rna.seq_short, rna.seq_long)
+  )
+FROM rnc_rna_precomputed pre
+JOIN rna ON rna.upi = pre.upi
+JOIN qa_status qa ON qa.rna_id = pre.i
+JOIN qa_status qa ON qa.rna_id = pre.id
+LEFT JOIN rnc_secondary_structure_layout layout ON pre.id = layout.urs_taxid
+WHERE
+  pre.is_active = true
+  AND pre.databases ilike '%pdb%'
+  AND layout.id IS NULL
+  AND pre.rna_type = 'rRNA'
+  AND qa.has_issue = false
+) TO STDOUT;
