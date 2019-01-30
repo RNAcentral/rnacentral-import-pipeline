@@ -28,6 +28,7 @@ def cli():
     pass
 
 
+@cli.command('process-svgs')
 @click.argument('directory', type=click.Path(
     writable=True,
     dir_okay=True,
