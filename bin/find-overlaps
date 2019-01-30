@@ -9,7 +9,7 @@ assembly="$3"
 
 psql -v "assembly_id=${assembly}" -f "${query}" "$PGDATABASE" > result.json
 rnac ftp-export coordinates as-bed result.json ${genome}
-cut -f15 ${genome} | tr ',' '\\n' | sort -u > db_list.txt
+cut -f15 ${genome} | tr ',' '\n' | sort -u > db_list.txt
 
 for db in `cat db_list.txt`; do
     overlap_file="overlap-${db}.bed"
