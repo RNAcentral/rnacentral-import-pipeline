@@ -855,7 +855,10 @@ raw_mods
   .set { mods }
 
 process generate_feedback_report {
-  memory params.feedback.report.memory
+  tag { "${mod}-${assembly}" }
+  memory { params.feedback.report.memory * task.attempt }
+  errorStrategy 'retry'
+  maxRetries 4
 
   input:
   set val(assembly), val(mod), file(query) from mods
@@ -876,7 +879,7 @@ process import_feedback {
   file(ctl) from Channel.fromPath('files/precompute/feedback.ctl')
 
   """
-  split-and-load $ctl 'feedback*.tsv' ${params.import_data.chunk_size} merged
+  split-and-load $ctl 'feedback*.tsv' ${params.import_data.chunk_size} feedback tsv
   """
 }
 
@@ -884,6 +887,6 @@ workflow.onComplete {
   if (params.notify) {
     def success = (workflow.success ? '--success' : '--failure');
     def summary = "${workflow.scriptName} completed ${workflow.success ? 'successfully' : 'with errors'} at ${workflow.complete}"
-    ['slack', success, summary, '-'].execute() << workflow.errorReport ?: 'No errors'
+    ['slack', 'pipeline-done', success, summary, '-'].execute() << workflow.errorReport ?: 'No errors'
   }
 }
