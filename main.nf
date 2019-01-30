@@ -798,7 +798,7 @@ process layout_sequences {
   set file(sequences), file(cm), file(fasta), file(ps) from to_layout
 
   output:
-  file("output/*.colored.svg") into secondary_to_import
+  file("output") into secondary_to_import
 
   """
   auto-traveler.py --cm-library $cm --fasta-library $fasta --ps-library $ps $sequences output/
@@ -812,7 +812,7 @@ secondary_to_import
 
 process store_secondary_structures {
   input:
-  set file("raw-secondary-structure/*.svg"), file(ctl) from secondary_to_import
+  set file("raw-secondary-structure/"), file(ctl) from secondary_to_import
 
   """
   rnac secondary process-svgs raw-secondary-structures/ data.csv
