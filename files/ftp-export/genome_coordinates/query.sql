@@ -9,6 +9,7 @@ SELECT
       'chromosome', max(regions.chromosome),
       'strand', max(regions.strand),
       'identity', max(regions.identity),
+      'was_mapped', bool_or(regions.was_mapped),
       'exons', array_agg(distinct exons.*)
   )
 FROM rnc_rna_precomputed pre

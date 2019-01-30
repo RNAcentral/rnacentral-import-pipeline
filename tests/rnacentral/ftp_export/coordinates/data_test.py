@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# pylint: disable=no-member
+# pylint: disable=no-member,missing-docstring,invalid-name
 
 """
 Copyright [2009-2018] EMBL-European Bioinformatics Institute
@@ -21,7 +21,7 @@ import pytest
 
 from rnacentral_pipeline.rnacentral.ftp_export.coordinates import data
 
-from .helpers import fetch_coord, fetch_all
+from .helpers import fetch_coord
 
 
 def fetch_one(rna_id, assembly):
@@ -31,8 +31,6 @@ def fetch_one(rna_id, assembly):
 
 
 @pytest.mark.parametrize('rna_id,assembly,count', [
-    # ('URS0000A78C33_9606', 'GRCh38', 4),  # Not imported?
-    # ('URS00009BF201_9606', 'GRCh38', 9),  # What to do with mapped and given?
     ('URS00008B37EC_9606', 'GRCh38', 1),
     ('URS00008C1914_9606', 'GRCh38', 1),
     ('URS00006683B1_281687', 'GRCh38', 0),
@@ -41,146 +39,66 @@ def test_can_fetch_all_coordinates_for_upi_taxid(rna_id, assembly, count):
     assert len(list(fetch_coord(rna_id, assembly))) == count
 
 
-@pytest.mark.skip
-@pytest.mark.parametrize('assembly,count', [  # pylint: disable=no-member
-    ('GRCh38', 383001),
-    ('BDGP6', 40602),
-    ('WBcel235', 29910),
-    ('TAIR10', 277777),
-    ('GRCm38', 978299),
-    ('ASM294v2', 3310),
-    ('SL2.50', 4677),
-])
-def test_can_find_all_required_coordinates(assembly, count):
-    assert len(list(fetch_all(assembly))) == count
-
-
-@pytest.mark.skip
-def test_can_build_for_only_mapped():
-    found = fetch_one('URS000012C1C6_9606', 'GRCh38')
-
-    ans = [
-        data.Region(
-            rna_id='URS000012C1C6_9606',
-            rna_type='piRNA',
-            databases=['ENA'],
-            chromosome='1',
-            strand=1,
-            endpoints=(data.Endpoint(start=165777430, stop=165777459),),
-            source='alignment',
-            identity=1.0
-        ),
-        data.Region(
-            rna_id='URS000012C1C6_9606',
-            rna_type='piRNA',
-            databases=['ENA'],
-            chromosome='3',
-            strand=-1,
-            endpoints=(data.Endpoint(start=163618677, stop=163618706),),
-            source='alignment',
-            identity=1.0
-        ),
-        data.Region(
-            rna_id='URS000012C1C6_9606',
-            rna_type='piRNA',
-            databases=['ENA'],
-            chromosome='8',
-            strand=-1,
-            endpoints=(data.Endpoint(start=52338512, stop=52338541),),
-            source='alignment',
-            identity=1.0
-        ),
-        data.Region(
-            rna_id='URS000012C1C6_9606',
-            rna_type='piRNA',
-            databases=['ENA'],
-            chromosome='10',
-            strand=-1,
-            endpoints=(data.Endpoint(start=73941772, stop=73941801),),
-            source='alignment',
-            identity=1.0
-        ),
-        data.Region(
-            rna_id='URS000012C1C6_9606',
-            rna_type='piRNA',
-            databases=['ENA'],
-            chromosome='12',
-            strand=1,
-            endpoints=(data.Endpoint(start=123897625, stop=123897654),),
-            source='alignment',
-            identity=1.0
-        ),
-        data.Region(
-            rna_id='URS000012C1C6_9606',
-            rna_type='piRNA',
-            databases=['ENA'],
-            chromosome='19',
-            strand=-1,
-            endpoints=(data.Endpoint(start=3161031, stop=3161060),),
-            source='alignment',
-            identity=1.0
-        ),
-        data.Region(
-            rna_id='URS000012C1C6_9606',
-            rna_type='piRNA',
-            databases=['ENA'],
-            chromosome='22',
-            strand=-1,
-            endpoints=(data.Endpoint(start=18174677, stop=18174706),),
-            source='alignment',
-            identity=1.0
-        ),
-        data.Region(
-            rna_id='URS000012C1C6_9606',
-            rna_type='piRNA',
-            databases=['ENA'],
-            chromosome='22',
-            strand=1,
-            endpoints=(data.Endpoint(start=20362774, stop=20362803),),
-            source='alignment',
-            identity=1.0
-        ),
-    ]
-
-    assert attr.asdict(found) == attr.asdict(ans)
-
-
-def test_can_find_correct_for_something_that_can_be_mapped():
+def test_can_find_correct_for_something_with_several_exons():
     found = fetch_one('URS00009BF201_9606', 'GRCh38')
-    assert found == [
-        data.Region(
-            rna_id='URS00009BF201_9606',
-            rna_type='lncRNA',
-            databases=['LNCipedia', 'NONCODE'],
-            chromosome='16',
-            strand=-1,
-            endpoints=(
-                data.Endpoint(start=14085, stop=14511),
-                data.Endpoint(start=14652, stop=14720),
-                data.Endpoint(start=15481, stop=15633),
-                data.Endpoint(start=16290, stop=16448),
-                data.Endpoint(start=16541, stop=16738),
-                data.Endpoint(start=16916, stop=17427),
-                data.Endpoint(start=17604, stop=17750),
-                data.Endpoint(start=17957, stop=18797),
-            )
-        )
-    ]
+    assert attr.asdict(found) == attr.asdict(data.Region(
+        region_id='URS00009BF201_9606.0',
+        rna_id='URS00009BF201_9606',
+        chromosome='16',
+        strand=-1,
+        endpoints=(
+            data.Endpoint(start=14085, stop=14511),
+            data.Endpoint(start=14652, stop=14720),
+            data.Endpoint(start=15481, stop=15633),
+            data.Endpoint(start=16290, stop=16448),
+            data.Endpoint(start=16541, stop=16738),
+            data.Endpoint(start=16916, stop=17427),
+            data.Endpoint(start=17604, stop=17750),
+            data.Endpoint(start=17957, stop=18797),
+        ),
+        was_mapped=False,
+        identity=None,
+        metadata={
+            'rna_type': 'lncRNA',
+            'providing_databases': ['LNCipedia'],
+            'databases': ['LNCipedia', 'NONCODE'],
+        }
+    ))
 
 
-@pytest.mark.skip
 def test_coordinates_do_not_exceed_bounds():
     found = fetch_one('URS00008BF974_9606', 'GRCh38')
-    assert found == [
-        data.Region(
-            rna_id='URS00008BF974_9606',
-            rna_type='lncRNA',
-            databases=['LNCipedia'],
-            chromosome='X',
-            strand=1,
-            endpoints=(
-                data.Endpoint(start=114044718, stop=114045067),
-                data.Endpoint(start=114044725, stop=114044793),
-            ),
+    assert attr.asdict(found) == attr.asdict(data.Region(
+        region_id='URS00008BF974_9606.0',
+        rna_id='URS00008BF974_9606',
+        chromosome='X',
+        strand=1,
+        endpoints=(
+            data.Endpoint(start=114044718, stop=114045067),
+            data.Endpoint(start=114044725, stop=114044793),
         ),
-    ]
+        was_mapped=False,
+        identity=None,
+        metadata={
+            'rna_type': 'lncRNA',
+            'providing_databases': ['LNCipedia'],
+            'databases': ['LNCipedia'],
+        }
+    ))
+
+
+def test_does_assign_source_correctly():
+    found = fetch_one('URS0000000098_9606', 'GRCh38')
+    assert attr.asdict(found) == attr.asdict(data.Region(
+        region_id='URS0000000098_9606.0',
+        rna_id='URS0000000098_9606',
+        chromosome='10',
+        strand=1,
+        endpoints=(data.Endpoint(start=17403508, stop=17403618),),
+        was_mapped=True,
+        identity=None,  # TODO: This should not be None, should be 1.0
+        metadata={
+            'rna_type': 'Y_RNA',
+            'databases': ['ENA'],
+        }
+    ))

@@ -1,5 +1,6 @@
 process release_note {
   publishDir "${params.ftp_export.publish}/", mode: 'move'
+  when: params.ftp_export.release_note.run
 
   input:
   file template_file from Channel.fromPath('files/ftp-export/release_note.txt')
@@ -15,6 +16,7 @@ process release_note {
 
 process md5 {
   publishDir "${params.ftp_export.publish}/md5/", mode: 'move'
+  when: params.ftp_export.md5.run
 
   input:
   file query from Channel.fromPath('files/ftp-export/md5/md5.sql')
@@ -26,7 +28,7 @@ process md5 {
   file "readme.txt" into __md5_readme
 
   """
-  psql -f "$query" "$PGDATABASE" > md5.tsv
+  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > md5.tsv
   head -10 md5.tsv > example.txt
   gzip md5.tsv
   cat template.txt > readme.txt
@@ -35,6 +37,7 @@ process md5 {
 
 process id_mapping {
   publishDir "${params.ftp_export.publish}/id_mapping/", mode: 'copy'
+  when: params.ftp_export.id_mapping.run
 
   input:
   file query from Channel.fromPath('files/ftp-export/id-mapping/id_mapping.sql')
@@ -46,7 +49,7 @@ process id_mapping {
   file "readme.txt" into __id_mapping_readme
 
   """
-  psql -f "$query" "$PGDATABASE" > raw_id_mapping.tsv
+  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > raw_id_mapping.tsv
   rnac ftp-export id-mapping raw_id_mapping.tsv id_mapping.tsv
   head id_mapping.tsv > example.txt
   gzip id_mapping.tsv
@@ -56,6 +59,7 @@ process id_mapping {
 
 process database_id_mapping {
   publishDir "${params.ftp_export.publish}/id_mapping/database_mappings/", mode: 'move'
+  when: params.ftp_export.id_mapping.by_database.run
 
   input:
   file 'id_mapping.tsv.gz' from id_mapping
@@ -72,6 +76,7 @@ process database_id_mapping {
 
 process rfam_annotations {
   publishDir "${params.ftp_export.publish}/rfam/", mode: 'move'
+  when: params.ftp_export.rfam_annotations.run
 
   input:
   file query from Channel.fromPath('files/ftp-export/rfam/rfam-annotations.sql')
@@ -85,7 +90,7 @@ process rfam_annotations {
   """
   set -o pipefail
 
-  psql -f "$query" "$PGDATABASE" > rfam_annotations.tsv
+  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > rfam_annotations.tsv
   head rfam_annotations.tsv > example.txt
   gzip rfam_annotations.tsv
   cat template.txt > readme.txt
@@ -94,6 +99,7 @@ process rfam_annotations {
 
 process inactive_fasta {
   publishDir "${params.ftp_export.publish}/sequences/", mode: 'move'
+  when: params.ftp_export.sequences.inactive.run
 
   input:
   file query from Channel.fromPath('files/ftp-export/sequences/inactive.sql')
@@ -105,12 +111,13 @@ process inactive_fasta {
   set -o pipefail
 
   export PYTHONIOENCODING=utf8
-  psql -f "$query" "$PGDATABASE" | json2fasta.py - - | gzip > rnacentral_inactive.fasta.gz
+  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" | json2fasta.py - - | gzip > rnacentral_inactive.fasta.gz
   """
 }
 
 process active_fasta {
   publishDir "${params.ftp_export.publish}/sequences/", mode: 'copy'
+  when: params.ftp_export.sequences.active.run
 
   input:
   file query from Channel.fromPath('files/ftp-export/sequences/active.sql')
@@ -125,7 +132,7 @@ process active_fasta {
   set -o pipefail
 
   export PYTHONIOENCODING=utf8
-  psql -f "$query" "$PGDATABASE" | json2fasta.py - rnacentral_active.fasta
+  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" | json2fasta.py - rnacentral_active.fasta
   head rnacentral_active.fasta > example.txt
   gzip rnacentral_active.fasta
   cat template.txt > readme.txt
@@ -134,6 +141,7 @@ process active_fasta {
 
 process species_specific_fasta {
   publishDir "${params.ftp_export.publish}/sequences/", mode: 'move'
+  when: params.ftp_export.sequences.species.run
 
   input:
   file query from Channel.fromPath('files/ftp-export/sequences/species-specific.sql')
@@ -143,7 +151,7 @@ process species_specific_fasta {
 
   """
   export PYTHONIOENCODING=utf8
-  psql -f "$query" "$PGDATABASE" | json2fasta.py - - | gzip > rnacentral_species_specific_ids.fasta.gz
+  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" | json2fasta.py - - | gzip > rnacentral_species_specific_ids.fasta.gz
   """
 }
 
@@ -155,7 +163,7 @@ process find_db_to_export {
   stdout into raw_dbs
 
   """
-  psql -f "$query" "$PGDATABASE"
+  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE"
   """
 }
 
@@ -166,9 +174,9 @@ raw_dbs
 
 process database_specific_fasta {
   tag { db }
-  maxForks 4
-
+  maxForks params.ftp_export.sequences.by_database.max_forks
   publishDir "${params.ftp_export.publish}/sequences/by-database", mode: 'move'
+  when: params.ftp_export.sequences.by_database.run
 
   input:
   set val(db), file(query) from db_sequences
@@ -181,7 +189,7 @@ process database_specific_fasta {
   set -o pipefail
 
   export PYTHONIOENCODING=utf8
-  psql -f "$query" -v db='%${db}%' "$PGDATABASE" > raw.json
+  psql -v ON_ERROR_STOP=1 -f "$query" -v db='%${db}%' "$PGDATABASE" > raw.json
   json2fasta.py raw.json ${db.toLowerCase().replaceAll(' ', '_')}.fasta
   """
 }
@@ -190,6 +198,7 @@ active_sequences.into { nhmmer_valid; nhmmer_invalid }
 
 process extract_nhmmer_valid {
   publishDir "${params.ftp_export.publish}/sequences/.internal/", mode: 'move'
+  when: params.ftp_export.sequences.nhmmer.run
 
   input:
   file(rna) from nhmmer_valid
@@ -207,6 +216,7 @@ process extract_nhmmer_valid {
 
 process extract_nhmmer_invalid {
   publishDir "${params.ftp_export.publish}/sequences/.internal/", mode: 'move'
+  when: params.ftp_export.sequences.nhmmer.run
 
   input:
   file(rna) from nhmmer_invalid
@@ -224,6 +234,7 @@ process extract_nhmmer_invalid {
 
 process find_ensembl_chunks {
   executor 'local'
+  when: params.ftp_export.ensembl.run
 
   output:
   stdout raw_ensembl_ranges
@@ -267,7 +278,7 @@ process ensembl_process_chunk {
   file(result) into __ensembl_export
 
   script:
-  result = "ensembl-xref-$min-${max}.json"
+  def result = "ensembl-xref-$min-${max}.json"
   """
   rnac ftp-export ensembl --schema=$schema $raw $result
   """
@@ -286,8 +297,9 @@ process fetch_rfam_go_matchces {
 }
 
 process rfam_go_matches {
-  memory '8 GB'
+  memory params.ftp_export.rfam.go_annotations.memory
   publishDir "${params.ftp_export.publish}/go_annotations/", mode: 'move'
+  when: params.ftp_export.export.rfam.go_annotations.run
 
   input:
   file('raw_go.json') from rfam_go_matches
@@ -302,6 +314,8 @@ process rfam_go_matches {
 }
 
 process find_genome_coordinate_jobs {
+  when: params.ftp_export.coordinates.run
+
   input:
   file query from Channel.fromPath('files/ftp-export/genome_coordinates/known-coordinates.sql')
 
@@ -320,6 +334,7 @@ species_to_format
 
 process coordinate_readme {
   publishDir "${params.ftp_export.publish}/genome_coordinates/", mode: 'copy'
+  when: params.ftp_export.coordinates.run
 
   input:
   file raw from Channel.fromPath('files/ftp-export/genome_coordinates/readme.mkd')
@@ -333,7 +348,7 @@ process coordinate_readme {
 }
 
 process fetch_raw_coordinate_data {
-  maxForks params.ftp_export.coordinate.maxForks
+  maxForks params.ftp_export.coordinates.maxForks
 
   input:
   set val(assembly), val(species), val(taxid), file(query) from coordinates_to_fetch
@@ -350,6 +365,7 @@ raw_coordinates.into { bed_coordinates; gff_coordinates }
 
 process format_bed_coordinates {
   publishDir "${params.ftp_export.publish}/genome_coordinates/bed/", mode: 'copy'
+  when: params.ftp_export.coordinates.bed.run
 
   input:
   set val(assembly), val(species), file(raw_data) from bed_coordinates
@@ -358,7 +374,7 @@ process format_bed_coordinates {
   set val(assembly), file(result) into bed_files
 
   script:
-  result = "${species}.${assembly}.bed.gz"
+  def result = "${species}.${assembly}.bed.gz"
   """
   set -o pipefail
 
@@ -387,18 +403,18 @@ process format_bed_coordinates {
 // }
 
 process generate_gff3 {
-  memory '8 GB'
-
+  memory params.ftp_export.gff3.memory
   publishDir "${params.ftp_export.publish}/genome_coordinates/gff3", mode: 'move'
+  when: params.ftp_export.gff3.run
 
   input:
   set val(assembly), val(species), file(raw_data) from gff_coordinates
 
   output:
-  file result into gff3_files
+  file(result) into gff3_files
 
   script:
-  result = "${species}.${assembly}.gff3.gz"
+  def result = "${species}.${assembly}.gff3.gz"
   """
   rnac ftp-export coordinates as-gff3 $raw_data - | gzip > $result
   """

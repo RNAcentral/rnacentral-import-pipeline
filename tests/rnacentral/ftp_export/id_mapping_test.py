@@ -116,7 +116,7 @@ def test_as_entry_works_correctly():
 def test_can_create_expected_exports(rna_id, expected):
     entries = run_with_upi_taxid_constraint(
         rna_id,
-        'files/ftp-export/id-mapping/query.sql',
+        'files/ftp-export/id-mapping/id_mapping.sql',
         take_all=True
     )
     entries = sorted(ids.as_entry(e) for e in entries)
