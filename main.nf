@@ -798,7 +798,7 @@ process layout_sequences {
   set file(sequences), file(cm), file(fasta), file(ps) from to_layout
 
   output:
-  file("output/*.colored.svg") into secondary_to_import mode flatten
+  file("output/*.colored.svg") into secondary_to_import
 
   """
   auto-traveler.py --cm-library $cm --fasta-library $fasta --ps-library $ps $sequences output/
