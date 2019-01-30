@@ -1,5 +1,5 @@
 LOAD CSV
-FROM 'merged.tsv'
+FROM ALL FILENAMES MATCHING ~<feedback.*tsv$>
 HAVING FIELDS (
     upi_taxid,
     status,
