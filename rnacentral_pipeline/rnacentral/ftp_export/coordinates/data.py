@@ -19,7 +19,6 @@ import itertools as it
 
 import attr
 from attr.validators import optional
-from attr.validators import in_ as one_of
 from attr.validators import instance_of as is_a
 
 
@@ -34,10 +33,7 @@ class Region(object):
     chromosome = attr.ib(validator=is_a(basestring))
     strand = attr.ib(validator=is_a(int))
     endpoints = attr.ib(validator=is_a(tuple))
-    source = attr.ib(
-        validator=one_of(['expert-database', 'alignment']),
-        cmp=False,
-    )
+    was_mapped = attr.ib(validator=is_a(bool))
     identity = attr.ib(
         validator=optional(is_a(float)),
         default=None,
@@ -48,9 +44,7 @@ class Region(object):
     @classmethod
     def build(cls, index, raw):
         identity = None
-        source = 'expert-database'
         if raw['identity'] is not None:
-            source = 'alignment'
             identity = float(raw['identity'])
 
         endpoints = [Endpoint.build(e) for e in raw['exons']]
@@ -62,19 +56,23 @@ class Region(object):
             index=index
         )
 
+        metadata = {
+            'rna_type': raw['rna_type'],
+            'providing_databases': clean_databases(raw['providing_databases']),
+            'databases': clean_databases(raw['databases']),
+        }
+        if not metadata['providing_databases']:
+            del metadata['providing_databases']
+
         return cls(
             region_id=region_id,
             rna_id=raw['rna_id'],
             chromosome=raw['chromosome'],
             strand=raw['strand'],
-            source=source,
             endpoints=endpoints,
             identity=identity,
-            metadata={
-                'rna_type': raw['rna_type'],
-                'providing_databases': clean_databases(raw['providing_databases']),
-                'databases': clean_databases(raw['databases']),
-            }
+            was_mapped=raw['was_mapped'],
+            metadata=metadata,
         )
 
     @property
@@ -84,6 +82,12 @@ class Region(object):
     @property
     def stop(self):
         return self.endpoints[-1].stop
+
+    @property
+    def source(self):
+        if self.was_mapped:
+            return 'alignment'
+        return 'expert-database'
 
     def string_strand(self):
         if self.strand == 1:
