@@ -1,13 +1,13 @@
 LOAD CSV
 FROM ALL FILENAMES MATCHING ~<traveler-data.*.csv$>
 HAVING FIELDS (
-    urs_taxid,
+    urs,
     model,
     secondary_structure,
     layout
 ) INTO {{PGDATABASE}}?load_secondary_layout
 TARGET COLUMNS (
-    urs_taxid,
+    urs,
     model,
     secondary_structure,
     layout
@@ -23,7 +23,7 @@ drop table if exists load_secondary_layout;
 $$,
 $$
 create table load_secondary_layout (
-	urs_taxid text NOT NULL,
+	urs text NOT NULL,
 	secondary_structure text NOT NULL,
 	layout text NOT NULL,
         model text NOT NULL
@@ -33,18 +33,18 @@ $$
 AFTER LOAD DO
 $$
 INSERT INTO rnc_secondary_structure_layout (
-    urs_taxid,
+    urs,
     "model",
     secondary_structure,
     "layout"
 ) (
 SELECT
-    urs_taxid,
+    urs,
     "model",
     secondary_structure,
     "layout"
 FROM load_secondary_layout
-) ON CONFLICT (urs_taxid) DO UPDATE
+) ON CONFLICT (urs) DO UPDATE
 SET
     model = EXCLUDED.model,
     secondary_structure = EXCLUDED.secondary_structure,
