@@ -798,7 +798,7 @@ process layout_sequences {
   set file(sequences), file(cm), file(fasta), file(ps) from to_layout
 
   output:
-  file("output") into secondary_to_import
+  file("output/") into secondary_to_import
 
   """
   auto-traveler.py --cm-library $cm --fasta-library $fasta --ps-library $ps $sequences output/
@@ -812,11 +812,11 @@ secondary_to_import
 
 process store_secondary_structures {
   input:
-  set file("raw-secondary-structure/"), file(ctl) from secondary_to_import
+  set file(svg_dir), file(ctl) from secondary_to_import
 
   """
-  rnac secondary process-svgs raw-secondary-structures/ data.csv
-  split-and-load $ctl data.csv ${params.secondary.data_chunk_size} merged
+  rnac secondary process-svgs $svg_dir data.csv
+  split-and-load $ctl data.csv ${params.secondary.data_chunk_size} traveler-data
   """
 }
 
@@ -887,6 +887,6 @@ workflow.onComplete {
   if (params.notify) {
     def success = (workflow.success ? '--success' : '--failure');
     def summary = "${workflow.scriptName} completed ${workflow.success ? 'successfully' : 'with errors'} at ${workflow.complete}"
-    ['slack', 'pipeline-done', success, summary, '-'].execute() << workflow.errorReport ?: 'No errors'
+    ['bin/slack', 'pipeline-done', success, summary, '-'].execute() << workflow.errorReport ?: 'No errors'
   }
 }
