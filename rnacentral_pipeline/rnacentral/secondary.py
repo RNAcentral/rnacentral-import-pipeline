@@ -58,13 +58,20 @@ def models(directory, colored=True):
     if not colored:
         svg_name = '.svg'
 
+    data = []
     for filename in glob(os.path.join(directory, '*.fasta')):
         basename = os.path.basename(filename)
         pair, _ = os.path.splitext(basename)
         urs, model = pair.split('-', 1)
         fasta = os.path.join(directory, pair + '.fasta')
         svg = os.path.join(directory, pair + svg_name)
-        yield (urs, model, fasta, svg)
+        if os.path.exists(fasta) and os.path.exists(svg):
+            data.append((urs, model, fasta, svg))
+
+    if not data:
+        raise ValueError("Found no possible models in: %s" % directory)
+
+    return data
 
 
 def process_directory(directory, colored=True):
