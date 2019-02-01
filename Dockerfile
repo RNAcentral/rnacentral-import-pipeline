@@ -59,9 +59,11 @@ RUN \
     git clone https://github.com/nawrockie/jiffy-infernal-hmmer-scripts.git && \
     cd jiffy-infernal-hmmer-scripts && \
     git checkout 45d4937385a6b694eac2d7d538e131b59527ce06
+
 RUN \
     cd jiffy-infernal-hmmer-scripts && \
     echo '#!/usr/bin/env perl' | cat - ali-pfam-sindi2dot-bracket.pl | sponge ali-pfam-sindi2dot-bracket.pl
+
 RUN chmod +x $RNA/jiffy-infernal-hmmer-scripts/ali-pfam-sindi2dot-bracket.pl
 
 # Install traveler
