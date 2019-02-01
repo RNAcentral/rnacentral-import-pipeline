@@ -886,7 +886,11 @@ process import_feedback {
 workflow.onComplete {
   if (params.notify) {
     def success = (workflow.success ? '--success' : '--failure');
-    def summary = "${workflow.scriptName} completed ${workflow.success ? 'successfully' : 'with errors'} at ${workflow.complete}"
-    ['bin/slack', 'pipeline-done', success, summary, '-'].execute() << workflow.errorReport ?: 'No errors'
+    def summary = "${workflow.scriptName} completed ${workflow.success ? 'successfully' : 'with errors'} at ${workflow.complete}";
+    def msg_file = File.createTempFile("msg", ".txt");
+    msg_file << workflow.errorReport ?: 'No errors';
+    def cmd = ['bin/slack', 'pipeline-done', '--url', params.notify_url, success, "'$summary'", msg_file.getAbsolutePath()];
+    def process = cmd.execute();
+    process.waitForProcessOutput(System.out, System.err);
   }
 }
