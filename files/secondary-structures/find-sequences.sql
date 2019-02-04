@@ -10,8 +10,7 @@ JOIN qa_status qa ON qa.rna_id = pre.id
 LEFT JOIN rnc_secondary_structure_layout layout ON pre.id = layout.urs_taxid
 WHERE
   pre.is_active = true
-  AND pre.databases ilike '%pdb%'
   AND layout.id IS NULL
   AND pre.rna_type = 'rRNA'
-  AND qa.has_issue = false
+  AND qa.is_incomplete = false
 ) TO STDOUT;
