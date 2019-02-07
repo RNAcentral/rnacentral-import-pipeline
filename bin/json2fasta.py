@@ -20,6 +20,8 @@ import itertools as it
 
 import click
 
+from six.moves import map
+
 from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
@@ -41,8 +43,8 @@ def sequences(handle):
     Parse each line and create a generator of SeqRecords to write.
     """
 
-    data = it.imap(json.loads, handle)
-    return it.imap(as_record, data)
+    data = map(json.loads, handle)
+    return map(as_record, data)
 
 
 @click.command()

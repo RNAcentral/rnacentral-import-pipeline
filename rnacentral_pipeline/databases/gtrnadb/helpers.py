@@ -17,6 +17,8 @@ limitations under the License.
 import re
 import urllib
 
+import six
+
 import requests
 
 from rnacentral_pipeline.databases.data import Reference
@@ -47,7 +49,7 @@ def extract_download_urls(base_url, text):
             match = re.search('href="([^"]+)"', line)
             assert match
             filename = match.group(1)
-            data.append((filename, urllib.urljoin(base_url, filename)))
+            data.append((filename, six.moves.urllib_parse.urljoin(base_url, filename)))
     assert data, "Given text contained now downloadable urls"
     return data
 

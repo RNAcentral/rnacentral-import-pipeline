@@ -29,12 +29,12 @@ from rnacentral_pipeline.databases.helpers import phylogeny as phy
 from rnacentral_pipeline.databases.helpers import publications as pub
 
 
-KNOWN_RNA_TYPES = set([
+KNOWN_RNA_TYPES = {
     'ncrna',
     'rrna',
     'snrna',
     'trna',
-])
+}
 
 URL = 'https://rgd.mcw.edu/rgdweb/report/gene/main.html?id={id}'
 

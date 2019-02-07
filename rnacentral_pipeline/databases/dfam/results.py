@@ -18,6 +18,8 @@ import csv
 import operator as op
 import itertools as it
 
+import six
+
 import attr
 from attr.validators import instance_of as is_a
 
@@ -79,5 +81,5 @@ def parse(handle):
 def write(handle, output):
     writer = csv.writer(output)
     data = parse(handle)
-    data = it.imap(op.methodcaller('writeable'), data)
+    data = six.moves.map(op.methodcaller('writeable'), data)
     writer.writerows(data)

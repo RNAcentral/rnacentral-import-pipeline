@@ -25,7 +25,7 @@ from rnacentral_pipeline.databases.rfam import families as rfam
 
 @pytest.fixture
 def families():
-    with open('data/rfam/families.tsv') as raw:
+    with open('data/rfam/families.tsv', 'r') as raw:
         return list(rfam.parse(raw))
 
 
@@ -156,8 +156,8 @@ def test_it_does_not_supress_all_families(families):
     'RF01978',
     'RF02255',
 ])
-def test_it_will_supress_lncRNA(excluded):
-    family = next(f for f in families() if f.id == excluded)
+def test_it_will_supress_lncRNA(excluded, families):
+    family = next(f for f in families if f.id == excluded)
     assert family.is_suppressed is True
 
 
@@ -165,6 +165,6 @@ def test_it_will_supress_lncRNA(excluded):
     'RF01108',
     'RF00080',
 ])
-def test_it_will_exclude_cis_reg_riboswitches(excluded):
-    rfam_ids = {f.id for f in families() if not f.is_suppressed}
+def test_it_will_exclude_cis_reg_riboswitches(excluded, families):
+    rfam_ids = {f.id for f in families if not f.is_suppressed}
     assert excluded not in rfam_ids

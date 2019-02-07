@@ -297,10 +297,10 @@ def species(record):
     org = organism(record)
     # Strip out the common name if present
     if re.search(r'\([^()]+\)\s*$', org):
-        return re.sub('\s*\(.+$', '', org)
+        return re.sub(r'\s*\(.+$', '', org)
 
     # Add a closing quote if needed
-    match = re.search("([\"'])\w+$", org)
+    match = re.search(r"([\"'])\w+$", org)
     if match:
         org += match.group(1)
     return org
@@ -351,7 +351,7 @@ def comment_xrefs(comments):
                 continue
             rest = match.group(2)
             if ';' in rest:
-                xrefs[db_name].extend(re.split('\s*;\s*', rest))
+                xrefs[db_name].extend(re.split(r'\s*;\s*', rest))
             else:
                 xrefs[db_name].append(rest)
     return xrefs

@@ -20,6 +20,8 @@ import itertools as it
 import attr
 from attr.validators import instance_of as is_a
 
+import six
+
 from . import data as coord
 
 
@@ -135,7 +137,7 @@ def from_json(handle, out):
     """
 
     data = coord.from_file(handle)
-    data = it.imap(BedEntry.from_region, data)
-    data = it.imap(op.methodcaller('writeable'), data)
+    data = six.moves.map(BedEntry.from_region, data)
+    data = six.moves.map(op.methodcaller('writeable'), data)
     writer = csv.writer(out, delimiter='\t', lineterminator='\n')
     writer.writerows(data)

@@ -21,6 +21,8 @@ import attr
 from attr.validators import optional
 from attr.validators import instance_of as is_a
 
+import six
+
 
 def clean_databases(raw):
     return [d.replace(' ', '_') for d in raw]
@@ -113,5 +115,5 @@ def parse(regions):
 
 
 def from_file(handle):
-    data = it.imap(json.loads, handle)
+    data = six.moves.map(json.loads, handle)
     return parse(data)
