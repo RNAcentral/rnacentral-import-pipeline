@@ -39,14 +39,14 @@ RUN \
     cd $RNA/ && \
     curl -OL http://eddylab.org/infernal/infernal-1.1.2.tar.gz && \
     tar -xvzf infernal-1.1.2.tar.gz && \
+    rm infernal-1.1.2.tar.gz && \
     cd infernal-1.1.2 && \
     ./configure --prefix=$RNA/infernal-1.1.2 && \
     make && \
     make install && \
     cd easel && \
-    make install && \
-    cd $RNA/ && \
-    rm infernal-1.1.2.tar.gz
+    make install
+    
 
 # Install ribotyper
 RUN git clone https://github.com/nawrockie/epn-ofile.git && cd epn-ofile && git checkout c34244b2b9e0719c45d964cc08c147aa353532e8
