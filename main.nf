@@ -762,6 +762,7 @@ process find_possible_secondary_sequences {
 
   output:
   file('parts/*.fasta') into sequences_to_ribotype mode flatten
+  file('rnacentral.fasta') into traveler_expected_sequences
 
   """
   psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > raw.json
@@ -812,11 +813,31 @@ secondary_to_import
 
 process store_secondary_structures {
   input:
-  set file(svg_dir), file(ctl) from secondary_to_import
+  set file('output*'), file(ctl) from secondary_to_import
+
+  output:
+  file('data.csv') into traveler_success
 
   """
-  rnac secondary process-svgs $svg_dir data.csv
+  rnac secondary process-svgs output* data.csv
   split-and-load $ctl data.csv ${params.secondary.data_chunk_size} traveler-data
+  """
+}
+
+process find_traveler_failures {
+  publishDir "$baseDir/traveler"
+
+  input:
+  file('expected.fasta') from traveler_expected_sequences
+  file('built.csv') from traveler_success
+
+  output:
+  file('failures.txt') into traveler_failures
+
+  """
+  seqkit seq -ni expected.fasta | sort > expected
+  cut -d, -f1 built.csv | tr -d '"' | sort > built
+  comm -23 expected built > failures.txt
   """
 }
 
