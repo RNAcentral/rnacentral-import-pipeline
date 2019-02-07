@@ -19,6 +19,7 @@ from __future__ import print_function
 
 import os
 import tempfile
+import subprocess
 import operator as op
 from xml.dom import minidom
 import xml.etree.ElementTree as ET
@@ -26,7 +27,6 @@ import xml.etree.ElementTree as ET
 import pytest
 from functools import lru_cache
 
-from rnacentral_pipeline.psql import PsqlWrapper
 from rnacentral_pipeline.rnacentral.search_export import exporter
 
 from tests.helpers import run_range_as_single
@@ -35,14 +35,12 @@ from tests.helpers import run_range_as_single
 @lru_cache()
 def load_additional():
     metapath = os.path.join('files', 'search-export', 'metadata')
-    psql = PsqlWrapper(os.environ['PGDATABASE'])
-    with tempfile.TemporaryFile() as tmp:
-        for filename in os.listdir(metapath):
-            print(filename)
-            query = os.path.join(metapath, filename)
-            psql.copy_file_to_handle(query, tmp)
-        tmp.seek(0)
-        return exporter.parse_additions(tmp)
+    for filename in os.listdir(metapath):
+        query = os.path.join(metapath, filename)
+        cmd = subprocess.run('psql', '-f', filename, self.pgloader_url, encoding='utf-8')
+        cmd.check_returncode()
+    buf = six.moves.cStringIO(cmd.stdout)
+    return exporter.parse_additions(buf)
 
 
 def load_data(upi):
