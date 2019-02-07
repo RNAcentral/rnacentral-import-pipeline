@@ -99,3 +99,15 @@ def write(directory, output):
     it to the given file.
     """
     csv.writer(output).writerows(process_directory(directory))
+
+
+def write_all(directories, output):
+    """
+    Process all directories to produce a datafile for all computed secondary
+    structures in them.
+    """
+
+    assert directories, "Must give at least one directory"
+
+    for directory in directories:
+        write(directory)

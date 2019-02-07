@@ -29,15 +29,15 @@ def cli():
 
 
 @cli.command('process-svgs')
-@click.argument('directory', type=click.Path(
+@click.argument('directories', nargs=-1, type=click.Path(
     writable=True,
     dir_okay=True,
     file_okay=False,
 ))
 @click.argument('output', type=click.File('w'))
-def process_svgs(directory, output):
+def process_svgs(directories, output):
     """
     Process all SVG secondary structures in the given directory and produce a
     single data file that can be imported into the database.
     """
-    secondary.write(directory, output)
+    secondary.write_all(directories, output)
