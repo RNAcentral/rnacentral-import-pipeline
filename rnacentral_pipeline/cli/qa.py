@@ -28,8 +28,8 @@ def cli():
 
 
 @cli.command('rfam')
-@click.argument('tblout', default='-', type=click.File('rb'))
-@click.argument('output', default='-', type=click.File('wb'))
+@click.argument('tblout', default='-', type=click.File('r'))
+@click.argument('output', default='-', type=click.File('w'))
 def process_tblout(tblout, output):
     """
     Process a table out file and create a CSV for importing into our database.
