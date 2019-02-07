@@ -624,6 +624,8 @@ def test_assigns_rfam_ids_to_hits(upi, expected):
 
 @pytest.mark.parametrize('upi,expected', [  # pylint: disable=E1101
     ('URS000020CEC2_9606', True),
+    ('URS000026261D_9606', True),
+    ('URS0000759CF4_9606', False),
     ('URS0000759CF4_9606', False),
 ])
 def test_can_detect_if_has_interacting_proteins(upi, expected):
@@ -919,13 +921,3 @@ def test_assigns_correct_interacting_rnas(upi, expected):
     data = load_and_get_additional(upi, 'interacting_rna')
     value = {d['text'] for d in data}
     assert value == expected
-
-
-@pytest.mark.parametrize('upi,expected', [  # pylint: disable=E1101
-    ('URS000026261D_9606', True),
-    ('URS0000759CF4_9606', False),
-])
-def test_can_detect_if_has_interacting_proteins(upi, expected):
-    assert load_and_get_additional(upi, 'has_interacting_rnas') == [
-        {'attrib': {'name': 'has_interacting_rnas'}, 'text': str(expected)}
-    ]
