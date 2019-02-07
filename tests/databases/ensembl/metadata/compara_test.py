@@ -13,8 +13,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from cStringIO import StringIO
-
 import pytest
 
 from rnacentral_pipeline.databases.ensembl.metadata import compara
