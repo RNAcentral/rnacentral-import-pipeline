@@ -15,6 +15,7 @@ limitations under the License.
 
 import attr
 import pytest
+from io import open
 
 from rnacentral_pipeline.databases.data import Exon
 from rnacentral_pipeline.databases.data import Entry
@@ -79,13 +80,13 @@ def test_can_determine_taxid(simple_entry):
     assert rgd.taxid(simple_entry) == 10116
 
 
-@pytest.mark.parametrize('entry', rat_ncrna())
-def test_can_detect_if_is_ncrna(entry):
+# @pytest.mark.parametrize('entry', rat_ncrna)
+def test_can_detect_if_is_ncrna(rat_ncrna):
     assert rgd.is_ncrna(entry) is True
 
 
-@pytest.mark.parametrize('entry', rat_protein())
-def test_can_detect_if_not_ncrna(entry):
+# @pytest.mark.parametrize('entry', ())
+def test_can_detect_if_not_ncrna(rat_protein):
     assert rgd.is_ncrna(entry) is False
 
 

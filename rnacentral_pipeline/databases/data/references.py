@@ -48,14 +48,14 @@ class Reference(object):
     files.
     """
 
-    authors = attr.ib(validator=is_a(basestring), converter=utils.optional_utf8)
-    location = attr.ib(validator=is_a(basestring))
+    authors = attr.ib(validator=is_a(str), converter=utils.optional_utf8)
+    location = attr.ib(validator=is_a(str))
     title = attr.ib(
-        validator=optional(is_a(basestring)),
+        validator=optional(is_a(str)),
         converter=utils.optional_utf8
     )
     pmid = attr.ib(validator=optional(is_a(int)))
-    doi = attr.ib(validator=optional(is_a(basestring)))
+    doi = attr.ib(validator=optional(is_a(str)))
 
     def md5(self):
         """
@@ -91,15 +91,15 @@ class Reference(object):
 @attr.s(frozen=True, hash=True)
 class IdReference(object):
     namespace = attr.ib(validator=in_(KNOWN_SERVICES))
-    external_id = attr.ib(validator=is_a(basestring))
+    external_id = attr.ib(validator=is_a(str))
 
     @classmethod
     def build(cls, ref_id):
         if isinstance(ref_id, int):
             return cls('pmid', str(ref_id))
 
-        if isinstance(ref_id, basestring):
-            if re.match('^\d+$', ref_id):
+        if isinstance(ref_id, str):
+            if re.match(r'^\d+$', ref_id):
                 return cls('pmid', ref_id)
             service, eid = ref_id.split(':', 1)
             service = service.lower()

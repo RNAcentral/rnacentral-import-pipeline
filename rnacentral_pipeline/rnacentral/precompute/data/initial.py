@@ -46,17 +46,17 @@ class Accession(object):
     name from the accession level data for a sequence.
     """
 
-    gene = attr.ib(validator=optional(is_a(basestring)))
-    optional_id = attr.ib(validator=optional(is_a(basestring)))
-    pretty_database = attr.ib(validator=is_a(basestring))
-    feature_name = attr.ib(validator=is_a(basestring))
-    ncrna_class = attr.ib(validator=optional(is_a(basestring)))
-    species = attr.ib(validator=optional(is_a(basestring)))
-    common_name = attr.ib(validator=optional(is_a(basestring)))
-    description = attr.ib(validator=is_a(basestring))
-    locus_tag = attr.ib(validator=optional(is_a(basestring)))
-    organelle = attr.ib(validator=optional(is_a(basestring)))
-    lineage = attr.ib(validator=optional(is_a(basestring)))
+    gene = attr.ib(validator=optional(is_a(str)))
+    optional_id = attr.ib(validator=optional(is_a(str)))
+    pretty_database = attr.ib(validator=is_a(str))
+    feature_name = attr.ib(validator=is_a(str))
+    ncrna_class = attr.ib(validator=optional(is_a(str)))
+    species = attr.ib(validator=optional(is_a(str)))
+    common_name = attr.ib(validator=optional(is_a(str)))
+    description = attr.ib(validator=is_a(str))
+    locus_tag = attr.ib(validator=optional(is_a(str)))
+    organelle = attr.ib(validator=optional(is_a(str)))
+    lineage = attr.ib(validator=optional(is_a(str)))
 
     @classmethod
     def build(cls, data):
@@ -137,11 +137,11 @@ class RfamHit(object):
     the QA information.
     """
 
-    model = attr.ib(validator=is_a(basestring))
-    model_rna_type = attr.ib(validator=is_a(basestring))
-    model_domain = attr.ib(validator=optional(is_a(basestring)))
-    model_name = attr.ib(validator=is_a(basestring))
-    model_long_name = attr.ib(validator=is_a(basestring))
+    model = attr.ib(validator=is_a(str))
+    model_rna_type = attr.ib(validator=is_a(str))
+    model_domain = attr.ib(validator=optional(is_a(str)))
+    model_name = attr.ib(validator=is_a(str))
+    model_long_name = attr.ib(validator=is_a(str))
     sequence_info = attr.ib(validator=is_a(HitComponent))
     model_info = attr.ib(validator=is_a(HitComponent))
 
@@ -180,7 +180,7 @@ class Sequence(object):
     is specific to a taxid.
     """
 
-    upi = attr.ib(validator=is_a(basestring))
+    upi = attr.ib(validator=is_a(str))
     taxid = attr.ib(validator=optional(is_a(int)))
     length = attr.ib(validator=is_a(int))
     accessions = attr.ib(validator=is_a(list))

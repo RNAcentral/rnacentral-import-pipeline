@@ -50,9 +50,9 @@ FIELDS = [
 
 @attr.s()
 class Hit(object):
-    assembly_id = attr.ib(validator=is_a(basestring))
-    chromosome = attr.ib(validator=is_a(basestring))
-    upi = attr.ib(validator=is_a(basestring))
+    assembly_id = attr.ib(validator=is_a(str))
+    chromosome = attr.ib(validator=is_a(str))
+    upi = attr.ib(validator=is_a(str))
     sequence_length = attr.ib(validator=is_a(int))
     matches = attr.ib(validator=is_a(int))
     target_insertions = attr.ib(validator=is_a(int))

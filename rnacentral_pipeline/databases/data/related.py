@@ -73,7 +73,7 @@ class RelatedEvidence(object):
 
 @attr.s(frozen=True)
 class RelatedSequence(object):
-    sequence_id = attr.ib(validator=is_a(basestring))
+    sequence_id = attr.ib(validator=is_a(str))
     relationship = attr.ib(
         validator=one_of(RELATIONSHIP_TYPES),
         converter=as_relationship_type,

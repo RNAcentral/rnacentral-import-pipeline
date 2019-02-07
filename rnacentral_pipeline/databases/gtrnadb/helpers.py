@@ -15,7 +15,7 @@ limitations under the License.
 """
 
 import re
-import urlparse
+import urllib
 
 import requests
 
@@ -47,7 +47,7 @@ def extract_download_urls(base_url, text):
             match = re.search('href="([^"]+)"', line)
             assert match
             filename = match.group(1)
-            data.append((filename, urlparse.urljoin(base_url, filename)))
+            data.append((filename, urllib.urljoin(base_url, filename)))
     assert data, "Given text contained now downloadable urls"
     return data
 

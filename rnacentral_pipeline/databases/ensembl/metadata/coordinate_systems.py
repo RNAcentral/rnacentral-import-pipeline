@@ -63,7 +63,7 @@ def top_level_only(data):
         index = -1
         for (name, sys, assembly, is_ref, rank) in ordered:
             updated = rank
-            if isinstance(rank, (basestring, int)):
+            if isinstance(rank, (str, int)):
                 index += 1
                 updated = index
 

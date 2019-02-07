@@ -22,7 +22,7 @@ from attr.validators import optional
 from attr.validators import instance_of as is_a
 from attr.validators import in_ as one_of
 
-SO_PATTERN = re.compile('^SO:\d+$')
+SO_PATTERN = re.compile(r'^SO:\d+$')
 
 INSDC_SO_MAPPING = {
     "RNase_MRP_RNA": 'SO:0000385',

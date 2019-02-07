@@ -59,18 +59,18 @@ class RfamDatabaseLink(object):
     This class represents the entries in the database_link in Rfam.
     """
 
-    rfam_family = attr.ib(validator=is_a(basestring))
-    database = attr.ib(validator=is_a(basestring))
+    rfam_family = attr.ib(validator=is_a(str))
+    database = attr.ib(validator=is_a(str))
     comment = attr.ib(
         converter=empty_to_none,
-        validator=optional(is_a(basestring)),
+        validator=optional(is_a(str)),
     )
-    external_id = attr.ib(validator=is_a(basestring))
+    external_id = attr.ib(validator=is_a(str))
     other = attr.ib(
         converter=empty_to_none,
-        validator=optional(is_a(basestring)),
+        validator=optional(is_a(str)),
     )
-    family_type = attr.ib(validator=is_a(basestring))
+    family_type = attr.ib(validator=is_a(str))
 
     @classmethod
     def from_row(cls, row):

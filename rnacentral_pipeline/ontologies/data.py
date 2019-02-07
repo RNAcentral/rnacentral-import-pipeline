@@ -24,10 +24,10 @@ class Term(object):
     This represents a single term in a specific ontology.
     """
 
-    ontology = attr.ib(validator=is_a(basestring))
-    ontology_id = attr.ib(validator=is_a(basestring))
-    name = attr.ib(validator=is_a(basestring))
-    definition = attr.ib(validator=optional(is_a(basestring)))
+    ontology = attr.ib(validator=is_a(str))
+    ontology_id = attr.ib(validator=is_a(str))
+    name = attr.ib(validator=is_a(str))
+    definition = attr.ib(validator=optional(is_a(str)))
     synonyms = attr.ib(validator=is_a(list))
 
     def writeable(self):

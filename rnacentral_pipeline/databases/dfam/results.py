@@ -26,9 +26,9 @@ from rnacentral_pipeline.databases.rfam.infernal_results import convert_strand
 
 @attr.s()
 class Result(object):
-    model_name = attr.ib(validator=is_a(basestring))
-    model_accession = attr.ib(validator=is_a(basestring))
-    upi = attr.ib(validator=is_a(basestring))
+    model_name = attr.ib(validator=is_a(str))
+    model_accession = attr.ib(validator=is_a(str))
+    upi = attr.ib(validator=is_a(str))
     bits = attr.ib(validator=is_a(float))
     e_value = attr.ib(validator=is_a(float))
     bias = attr.ib(validator=is_a(float))

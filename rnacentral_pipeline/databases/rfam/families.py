@@ -47,14 +47,14 @@ def empty_str_from(target):
 
 @attr.s(frozen=True)
 class RfamFamily(object):
-    id = attr.ib(validator=is_a(basestring))
-    name = attr.ib(validator=is_a(basestring))
-    pretty_name = attr.ib(validator=is_a(basestring))
+    id = attr.ib(validator=is_a(str))
+    name = attr.ib(validator=is_a(str))
+    pretty_name = attr.ib(validator=is_a(str))
     so_terms = attr.ib(validator=is_a(set))
-    rna_type = attr.ib(validator=is_a(basestring))
+    rna_type = attr.ib(validator=is_a(str))
     domain = attr.ib()
     description = attr.ib(
-        validator=optional(is_a(basestring)),
+        validator=optional(is_a(str)),
         converter=empty_str_from('NULL'),
     )
     seed_count = attr.ib(validator=is_a(int))

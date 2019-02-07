@@ -28,9 +28,9 @@ def clean_databases(raw):
 
 @attr.s(hash=True, slots=True, frozen=True)
 class Region(object):
-    region_id = attr.ib(validator=is_a(basestring))
-    rna_id = attr.ib(validator=is_a(basestring))
-    chromosome = attr.ib(validator=is_a(basestring))
+    region_id = attr.ib(validator=is_a(str))
+    rna_id = attr.ib(validator=is_a(str))
+    chromosome = attr.ib(validator=is_a(str))
     strand = attr.ib(validator=is_a(int))
     endpoints = attr.ib(validator=is_a(tuple))
     was_mapped = attr.ib(validator=is_a(bool))

@@ -81,7 +81,7 @@ class InvalidDomain(Exception):
 
 @attr.s()
 class AssemblyExample(object):
-    chromosome = attr.ib(validator=is_a(basestring))
+    chromosome = attr.ib(validator=is_a(str))
     start = attr.ib(validator=is_a(int))
     end = attr.ib(validator=is_a(int))
 
@@ -101,14 +101,14 @@ class AssemblyExample(object):
 
 @attr.s()
 class AssemblyInfo(object):
-    assembly_id = attr.ib(validator=is_a(basestring))
-    assembly_full_name = attr.ib(validator=is_a(basestring))
-    gca_accession = attr.ib(validator=optional(is_a(basestring)))
-    assembly_ucsc = attr.ib(validator=optional(is_a(basestring)))
-    common_name = attr.ib(validator=optional(is_a(basestring)))
+    assembly_id = attr.ib(validator=is_a(str))
+    assembly_full_name = attr.ib(validator=is_a(str))
+    gca_accession = attr.ib(validator=optional(is_a(str)))
+    assembly_ucsc = attr.ib(validator=optional(is_a(str)))
+    common_name = attr.ib(validator=optional(is_a(str)))
     taxid = attr.ib(validator=is_a(int))
-    ensembl_url = attr.ib(validator=is_a(basestring))
-    division = attr.ib(validator=is_a(basestring))
+    ensembl_url = attr.ib(validator=is_a(str))
+    division = attr.ib(validator=is_a(str))
     blat_mapping = attr.ib(validator=is_a(bool))
     example = attr.ib(validator=optional(is_a(AssemblyExample)))
 

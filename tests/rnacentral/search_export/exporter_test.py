@@ -24,7 +24,7 @@ from xml.dom import minidom
 import xml.etree.ElementTree as ET
 
 import pytest
-from functools32 import lru_cache
+from functools import lru_cache
 
 from rnacentral_pipeline.psql import PsqlWrapper
 from rnacentral_pipeline.rnacentral.search_export import exporter

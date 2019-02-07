@@ -26,7 +26,7 @@ import attr
 import requests
 from retry import retry
 from ratelimiter import RateLimiter
-from functools32 import lru_cache
+from functools import lru_cache
 
 from ..data import Reference
 from ..data import IdReference

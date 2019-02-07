@@ -20,7 +20,7 @@ import operator as op
 import itertools as it
 import collections as col
 
-from contextlib2 import ExitStack
+from contextlib import ExitStack
 
 import attr
 from attr.validators import optional
@@ -40,8 +40,8 @@ NAME_ALIASES = {
 @attr.s(hash=True)
 class TaxonomyEntry(object):
     tax_id = attr.ib(validator=is_a(int))
-    name = attr.ib(validator=is_a(basestring))
-    lineage = attr.ib(validator=is_a(basestring))
+    name = attr.ib(validator=is_a(str))
+    lineage = attr.ib(validator=is_a(str))
     aliases = attr.ib(validator=is_a(list), hash=False)
     replaced_by = attr.ib(validator=optional(is_a(int)))
 
