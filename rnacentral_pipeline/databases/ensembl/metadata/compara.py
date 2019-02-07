@@ -15,7 +15,8 @@ limitations under the License.
 
 import csv
 import hashlib
-from cStringIO import StringIO
+
+from six.moves import cStringIO as StringIO
 
 from Bio import AlignIO
 
@@ -50,7 +51,7 @@ def data(fasta):
 
         unique = hashlib.sha256()
         for eid in ids:
-            unique.update(eid)
+            unique.update(eid.encode('utf-8'))
         yield (unique.hexdigest(), ids)
 
 
