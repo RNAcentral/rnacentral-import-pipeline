@@ -3,7 +3,7 @@
 // This is used to provide a temporary directory publish to. We publish here
 // and then at the we publish everything at once. This prevents writing part of
 // the data in the case one job fails while already succeeded.
-tmp = "mktemp -d -p ${workDir}".execute().text.trim()
+def tmp = "mktemp -d -p ${workDir}".execute().text.trim()
 
 process find_chunks {
   output:
@@ -66,7 +66,7 @@ process export_chunk {
   file "count" into search_counts
 
   script:
-  xml = "xml4dbdumps__${min}__${max}.xml"
+  def xml = "xml4dbdumps__${min}__${max}.xml"
   """
   rnac search-export as-xml ${json} ${metadata} ${xml} count
   xmllint ${xml} --schema ${params.search_export.schema} --stream
@@ -94,7 +94,7 @@ process atomic_publish {
   file(release) from release_note
 
   script:
-  dir = params.search_export.publish
+  def dir = params.search_export.publish
   """
   [ -d $dir ] || mkdir -p $dir
   rm $dir/*.xml.gz || true
