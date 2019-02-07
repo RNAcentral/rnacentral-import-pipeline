@@ -15,6 +15,8 @@ limitations under the License.
 
 import re
 
+import six
+
 import attr
 from attr.validators import in_
 from attr.validators import optional
@@ -48,24 +50,24 @@ class Reference(object):
     files.
     """
 
-    authors = attr.ib(validator=is_a(str), converter=utils.optional_utf8)
-    location = attr.ib(validator=is_a(str))
-    title = attr.ib(
-        validator=optional(is_a(str)),
-        converter=utils.optional_utf8
-    )
+    authors = attr.ib(validator=is_a(six.text_type))
+    location = attr.ib(validator=is_a(six.text_type))
+    title = attr.ib(validator=optional(is_a(six.text_type)))
     pmid = attr.ib(validator=optional(is_a(int)))
-    doi = attr.ib(validator=optional(is_a(str)))
+    doi = attr.ib(validator=optional(is_a(six.text_type)))
 
     def md5(self):
         """
         Computes the MD5 hash of the reference.
         """
-        return md5(''.join([
-            (self.authors or ''),
-            (self.location or ''),
-            (self.title or ''),
-        ]))
+        title = self.title if self.title else ''
+        data = [
+            self.authors,
+            self.location,
+            title,
+        ]
+
+        return md5(''.join(data).encode('utf-8'))
 
     def writeable_generic_pubmed(self):
         return [
@@ -91,7 +93,7 @@ class Reference(object):
 @attr.s(frozen=True, hash=True)
 class IdReference(object):
     namespace = attr.ib(validator=in_(KNOWN_SERVICES))
-    external_id = attr.ib(validator=is_a(str))
+    external_id = attr.ib(validator=is_a(six.text_type))
 
     @classmethod
     def build(cls, ref_id):

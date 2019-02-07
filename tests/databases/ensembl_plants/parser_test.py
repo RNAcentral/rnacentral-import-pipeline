@@ -19,7 +19,7 @@ import pytest
 from rnacentral_pipeline.databases import data as dat
 from rnacentral_pipeline.databases.helpers import publications as pubs
 
-from . helpers import parse, entry_for, has_entry_for
+from .helpers import parse, entry_for, has_entry_for
 
 
 @pytest.fixture(scope='module')  # pylint: disable=no-member

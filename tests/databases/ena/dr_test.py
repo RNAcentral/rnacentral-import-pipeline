@@ -13,6 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+from io import open
+
 from rnacentral_pipeline.databases.ena import dr
 
 
@@ -27,7 +29,7 @@ def test_can_parse_a_dr_line_with_only_primary():
 
 
 def test_can_extract_dr_lines():
-    with open('data/ena/tpa/mirbase/entry.embl', 'rb') as raw:
+    with open('data/ena/tpa/mirbase/entry.embl', 'r') as raw:
         data = dr.mapping(raw)
 
     assert data == {

@@ -22,6 +22,8 @@ import attr
 from attr.validators import optional
 from attr.validators import instance_of as is_a
 
+import six
+
 from . import databases as db
 
 REJECTED_TAXIDS = {
@@ -195,5 +197,5 @@ def write(connections, query, example_file, output):
 
     examples = json.load(example_file)
     data = fetch(connections, query, examples)
-    data = it.imap(op.methodcaller('writeable'), data)
+    data = six.moves.map(op.methodcaller('writeable'), data)
     csv.writer(output).writerows(data)

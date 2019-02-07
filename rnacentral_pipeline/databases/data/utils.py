@@ -16,6 +16,8 @@ limitations under the License.
 import re
 import unicodedata
 
+import six
+
 import attr
 from attr.validators import and_
 from attr.validators import optional
@@ -138,6 +140,4 @@ def from_so_term(so_term):
 def optional_utf8(raw):
     if raw is None:
         return None
-    if isinstance(raw, unicode):
-        return unicodedata.normalize('NFC', raw).encode('ascii', 'ignore')
     return raw

@@ -34,7 +34,7 @@ from rnacentral_pipeline.databases.ena.parser import parse
     ('data/ena/tpa/tair/mapping.tsv', 1290),
 ])
 def test_can_parse_complete_tpa_files(filename, count):
-    with open(filename, 'rb') as raw:
+    with open(filename, 'r') as raw:
         loaded = list(tpa.parse_tpa_file(raw))
         assert len(loaded) == count
 
@@ -49,14 +49,14 @@ def test_can_parse_complete_tpa_files(filename, count):
     # ('data/ena/tpa/tair/mapping.tsv', 1290),
 ])
 def test_can_produce_correct_number_of_tpa_keys_from_tpa_file(filename, count):
-    with open(filename, 'rb') as raw:
+    with open(filename, 'r') as raw:
         loaded = list(tpa.parse_tpa_file(raw))
         keys = set(tpa.tpa_key(t) for t in loaded)
         assert len(keys) == count
 
 
 def test_can_build_correct_lncrnadb_tpas():
-    with open('data/ena/tpa/lncrnadb/mapping.tsv', 'rb') as raw:
+    with open('data/ena/tpa/lncrnadb/mapping.tsv', 'r') as raw:
         data = next(tpa.parse_tpa_file(raw))
     assert data == tpa.GenericTpa(
         'LNCRNADB',
@@ -68,7 +68,7 @@ def test_can_build_correct_lncrnadb_tpas():
 
 
 def test_can_build_correct_snopy_tpas():
-    with open('data/ena/tpa/snopy/mapping.tsv', 'rb') as raw:
+    with open('data/ena/tpa/snopy/mapping.tsv', 'r') as raw:
         data = next(tpa.parse_tpa_file(raw))
     assert data == tpa.GenericTpa(
         'SNOPY',
@@ -80,7 +80,7 @@ def test_can_build_correct_snopy_tpas():
 
 
 def test_can_build_correct_srpdb_tpas():
-    with open('data/ena/tpa/srpdb/mapping.tsv', 'rb') as raw:
+    with open('data/ena/tpa/srpdb/mapping.tsv', 'r') as raw:
         data = next(tpa.parse_tpa_file(raw))
     assert data == tpa.GenericTpa(
         'SRPDB',
@@ -92,7 +92,7 @@ def test_can_build_correct_srpdb_tpas():
 
 
 def test_can_build_correct_tmrna_tpas():
-    with open('data/ena/tpa/tmrna/mapping.tsv', 'rb') as raw:
+    with open('data/ena/tpa/tmrna/mapping.tsv', 'r') as raw:
         data = next(tpa.parse_tpa_file(raw))
     assert data == tpa.GenericTpa(
         'TMRNA_WEB',
@@ -104,7 +104,7 @@ def test_can_build_correct_tmrna_tpas():
 
 
 def test_can_build_correct_wormbase_tpas():
-    with open('data/ena/tpa/wormbase/mapping.tsv', 'rb') as raw:
+    with open('data/ena/tpa/wormbase/mapping.tsv', 'r') as raw:
         data = next(tpa.parse_tpa_file(raw))
     assert data == tpa.GenericTpa(
         'WORMBASE',
@@ -116,7 +116,7 @@ def test_can_build_correct_wormbase_tpas():
 
 
 def test_can_build_correct_pombase_tpas():
-    with open('data/ena/tpa/pombase/mapping.tsv', 'rb') as raw:
+    with open('data/ena/tpa/pombase/mapping.tsv', 'r') as raw:
         data = next(tpa.parse_tpa_file(raw))
     assert data == tpa.GenericTpa(
         'POMBASE',
@@ -128,7 +128,7 @@ def test_can_build_correct_pombase_tpas():
 
 
 def test_can_build_correct_tair_tpas():
-    with open('data/ena/tpa/tair/mapping.tsv', 'rb') as raw:
+    with open('data/ena/tpa/tair/mapping.tsv', 'r') as raw:
         data = next(tpa.parse_tpa_file(raw))
     assert data == tpa.GenericTpa(
         'TAIR',
@@ -141,11 +141,11 @@ def test_can_build_correct_tair_tpas():
 
 def transform_first(db_name):
     embl_file = os.path.join('data', 'ena', 'tpa', db_name, 'entry.embl')
-    with open(embl_file, 'rb') as embl:
+    with open(embl_file, 'r') as embl:
         entry = next(parse(embl))
 
     tpa_file = os.path.join('data', 'ena', 'tpa', db_name, 'mapping.tsv')
-    with open(tpa_file, 'rb') as raw:
+    with open(tpa_file, 'r') as raw:
         tpa_entry = next(tpa.parse_tpa_file(raw))
 
     urls = tpa.UrlBuilder()
@@ -155,7 +155,7 @@ def transform_first(db_name):
 
 def test_can_transform_correct_lncrnadb_entry():
     transformed = attr.asdict(transform_first('lncrnadb'))
-    assert md5(transformed['sequence']) == '3b9990f42f263eb0894f92fada30273d'
+    assert md5(transformed['sequence'].encode('utf-8')) == '3b9990f42f263eb0894f92fada30273d'
     assert len(transformed['sequence']) == 32753
 
     result = attr.asdict(Entry(
@@ -370,40 +370,40 @@ def test_can_transform_correct_wormbase_entry():
 
 
 def test_build_correct_tpa_key_for_snopy_entries():
-    with open('data/ena/tpa/snopy/entry.embl', 'rb') as raw:
+    with open('data/ena/tpa/snopy/entry.embl', 'r') as raw:
         entry = next(parse(raw))
     assert tpa.tpa_key(entry) == ('LN809305', None)
 
 
 def test_builds_correct_tpa_key_for_snopy_tpa():
-    with open('data/ena/tpa/snopy/mapping.tsv', 'rb') as raw:
+    with open('data/ena/tpa/snopy/mapping.tsv', 'r') as raw:
         data = next(tpa.parse_tpa_file(raw))
     assert tpa.tpa_key(data) == ('LN809305', None)
 
 
 def test_builds_correct_tpa_key_for_wormbase_tpa():
-    with open('data/ena/tpa/wormbase/mapping.tsv', 'rb') as raw:
+    with open('data/ena/tpa/wormbase/mapping.tsv', 'r') as raw:
         data = next(tpa.parse_tpa_file(raw))
     assert tpa.tpa_key(data) == ('BX284603', 'ZK643.8b')
 
 
 def test_knows_if_it_has_mappings():
     mapping = tpa.load_file('data/ena/tpa/snopy/mapping.tsv')
-    with open('data/ena/tpa/snopy/entry.embl', 'rb') as raw:
+    with open('data/ena/tpa/snopy/entry.embl', 'r') as raw:
         entry = next(parse(raw))
     assert mapping.has_tpa_for(entry) is True
 
 
 def test_knows_if_does_not_have_entry_for():
     mapping = tpa.load_file('data/ena/tpa/snopy/mapping.tsv')
-    with open('data/ena/tpa/lncrnadb/entry.embl', 'rb') as raw:
+    with open('data/ena/tpa/lncrnadb/entry.embl', 'r') as raw:
         entry = next(parse(raw))
     assert mapping.has_tpa_for(entry) is False
 
 
 def test_can_fetch_tpa_for_entry():
     mapping = tpa.load_file('data/ena/tpa/snopy/mapping.tsv')
-    with open('data/ena/tpa/snopy/entry.embl', 'rb') as raw:
+    with open('data/ena/tpa/snopy/entry.embl', 'r') as raw:
         entry = next(parse(raw))
     tpas = list(mapping.find_tpas(entry))
     assert len(tpas) == 1
@@ -418,7 +418,7 @@ def test_can_fetch_tpa_for_entry():
 
 def test_fetch_tpa_for_non_exist_returns_empty_list():
     mapping = tpa.load_file('data/ena/tpa/snopy/mapping.tsv')
-    with open('data/ena/tpa/lncrnadb/entry.embl', 'rb') as raw:
+    with open('data/ena/tpa/lncrnadb/entry.embl', 'r') as raw:
         entry = next(parse(raw))
     assert list(mapping.find_tpas(entry)) == []
 
@@ -426,7 +426,7 @@ def test_fetch_tpa_for_non_exist_returns_empty_list():
 def test_can_map_snopy_entries():
     mapping = tpa.load_file('data/ena/tpa/snopy/mapping.tsv')
 
-    with open('data/ena/tpa/snopy/entry.embl', 'rb') as raw:
+    with open('data/ena/tpa/snopy/entry.embl', 'r') as raw:
         entries = list(parse(raw))
 
     mapped = list(tpa.apply(mapping, entries))
@@ -438,7 +438,7 @@ def test_can_map_snopy_entries():
 def test_can_will_not_alter_entries_from_other_dbs():
     mapping = tpa.load_file('data/ena/tpa/snopy/mapping.tsv')
 
-    with open('data/ena/tpa/lncrnadb/entry.embl', 'rb') as raw:
+    with open('data/ena/tpa/lncrnadb/entry.embl', 'r') as raw:
         entries = list(parse(raw))
 
     mapped = list(tpa.apply(mapping, entries))

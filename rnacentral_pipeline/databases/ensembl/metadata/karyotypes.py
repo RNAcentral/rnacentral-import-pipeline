@@ -22,6 +22,8 @@ from retry import retry
 from ratelimiter import RateLimiter
 from functools import lru_cache
 
+import six
+
 DOMAINS = {
     'ensemblgenomes',
     'ensembl',
@@ -102,7 +104,7 @@ def for_domain(domain, allowed=None):
 
 
 def data(species=None):
-    results = it.imap(lambda d: for_domain(d, allowed=species), DOMAINS)
+    results = six.moves.map(lambda d: for_domain(d, allowed=species), DOMAINS)
     return it.chain.from_iterable(results)
 
 

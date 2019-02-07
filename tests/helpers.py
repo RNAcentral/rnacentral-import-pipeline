@@ -26,7 +26,7 @@ def run_with_replacements(path, *replacements, **kwargs):
     """
 
     with tempfile.NamedTemporaryFile('w') as tmp:
-        with open(path, 'rb') as raw:
+        with open(path, 'r') as raw:
             query = raw.read()
             for (initial, replacement) in replacements:
                 query = query.replace(initial, replacement)

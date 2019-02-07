@@ -15,6 +15,8 @@ limitations under the License.
 
 import json
 
+import six
+
 import attr
 from attr.validators import instance_of as is_a
 from attr.validators import in_ as one_of
@@ -73,7 +75,7 @@ class RelatedEvidence(object):
 
 @attr.s(frozen=True)
 class RelatedSequence(object):
-    sequence_id = attr.ib(validator=is_a(str))
+    sequence_id = attr.ib(validator=is_a(six.text_type))
     relationship = attr.ib(
         validator=one_of(RELATIONSHIP_TYPES),
         converter=as_relationship_type,

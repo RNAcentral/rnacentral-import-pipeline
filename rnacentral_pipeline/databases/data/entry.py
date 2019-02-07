@@ -19,6 +19,8 @@ import operator as op
 import itertools as it
 from collections import Counter
 
+import six
+
 import attr
 from attr.validators import and_
 from attr.validators import instance_of as is_a
@@ -53,22 +55,22 @@ class Entry(object):
     """
 
     # Also known as external_id
-    primary_id = attr.ib(validator=is_a(str))
-    accession = attr.ib(validator=is_a(str))
+    primary_id = attr.ib(validator=is_a(six.text_type))
+    accession = attr.ib(validator=is_a(six.text_type))
     ncbi_tax_id = attr.ib(validator=is_a(int))
     database = attr.ib(
-        validator=is_a(str),
+        validator=is_a(six.text_type),
         converter=lambda s: s.upper(),
     )
-    sequence = attr.ib(validator=is_a(str))
+    sequence = attr.ib(validator=is_a(six.text_type))
     # exons = attr.ib(validator=is_a(list))
     regions = attr.ib(validator=is_a(list))
     rna_type = attr.ib(
-        validator=is_a(str),
+        validator=is_a(six.text_type),
         # validator=matches_pattern(SO_PATTERN),
         converter=utils.from_so_term,
     )
-    url = attr.ib(validator=is_a(str))
+    url = attr.ib(validator=is_a(six.text_type))
     seq_version = attr.ib(
         validator=and_(is_a(str), utils.matches_pattern(r'^\d+$'))
     )
@@ -313,12 +315,12 @@ class Entry(object):
         return []
 
     def write_refs(self):
-        refs = it.ifilter(lambda r: isinstance(r, Reference), self.references)
+        refs = six.moves.filter(lambda r: isinstance(r, Reference), self.references)
         return self.__write_part__(refs)
 
     def write_ref_ids(self):
         refs = self.references
-        refs = it.ifilter(lambda r: isinstance(r, IdReference), refs)
+        refs = six.moves.filter(lambda r: isinstance(r, IdReference), refs)
         return self.__write_part__(refs)
 
     def write_genomic_locations(self):
@@ -340,5 +342,5 @@ class Entry(object):
         if not self.is_valid():
             return []
         method = op.methodcaller(method_name, self.accession)
-        writeable = it.imap(method, attribute)
+        writeable = six.moves.map(method, attribute)
         return it.chain.from_iterable(writeable)

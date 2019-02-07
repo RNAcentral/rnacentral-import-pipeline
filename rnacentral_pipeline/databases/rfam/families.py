@@ -18,6 +18,8 @@ import csv
 import operator as op
 import itertools as it
 
+import six
+
 import attr
 from attr.validators import optional
 from attr.validators import instance_of as is_a
@@ -93,7 +95,7 @@ class RfamFamily(object):
 
     def guess_insdc_using_name(self):
         found = set()
-        for name in INFORMATIVE_NAMES.iterkeys():
+        for name in six.iterkeys(INFORMATIVE_NAMES):
             if re.search(name, self.name, re.IGNORECASE):
                 found.add(name)
 
@@ -140,11 +142,11 @@ class RfamFamily(object):
 
 def parse(handle):
     reader = csv.DictReader(handle, delimiter='\t')
-    return it.imap(RfamFamily.from_dict, reader)
+    return six.moves.map(RfamFamily.from_dict, reader)
 
 
 def from_file(handle, output):
     data = parse(handle)
-    data = it.imap(op.methodcaller('writeable'), data)
+    data = six.moves.map(op.methodcaller('writeable'), data)
     writer = csv.writer(output)
     writer.writerows(data)
