@@ -75,11 +75,11 @@ def internal_database_name(ena_name):
 
 @attr.s(frozen=True, slots=True)
 class GenericTpa(object):
-    database = attr.ib(validator=is_a(basestring))
-    database_accession = attr.ib(validator=is_a(basestring))
-    locus_tag = attr.ib(validator=optional(is_a(basestring)))
-    parent_accession = attr.ib(validator=is_a(basestring))
-    parent_secondary = attr.ib(validator=optional(is_a(basestring)))
+    database = attr.ib(validator=is_a(str))
+    database_accession = attr.ib(validator=is_a(str))
+    locus_tag = attr.ib(validator=optional(is_a(str)))
+    parent_accession = attr.ib(validator=is_a(str))
+    parent_secondary = attr.ib(validator=optional(is_a(str)))
 
     @classmethod
     def from_tsv(cls, row):

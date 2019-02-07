@@ -157,7 +157,7 @@ class DatabaseSpecifcNameBuilder(object):
                 last = accession.description.split(' ')[-1]
                 if last.endswith('-3p') or last.endswith('-5p'):
                     last = last[:-4]
-                if re.match('^.*-mir-\d+$', last, re.IGNORECASE):
+                if re.match(r'^.*-mir-\d+$', last, re.IGNORECASE):
                     gene = last
             match = re.match(r'^([^-]+?-mir-[^-]+)(.+)?$', gene)
             name = accession.description

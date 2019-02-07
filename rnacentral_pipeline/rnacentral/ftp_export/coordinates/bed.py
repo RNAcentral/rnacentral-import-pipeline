@@ -45,12 +45,12 @@ class BedBlock(object):
 
 @attr.s(slots=True, frozen=True)
 class BedEntry(object):
-    chromosome = attr.ib(validator=is_a(basestring))
-    rna_id = attr.ib(validator=is_a(basestring))
+    chromosome = attr.ib(validator=is_a(str))
+    rna_id = attr.ib(validator=is_a(str))
     blocks = attr.ib(validator=is_a(list))
     strand = attr.ib(validator=is_a(int))
-    rna_type = attr.ib(validator=is_a(basestring))
-    databases = attr.ib(validator=is_a(basestring))
+    rna_type = attr.ib(validator=is_a(str))
+    databases = attr.ib(validator=is_a(str))
     score = attr.ib(default=0, validator=is_a(int))
     rgb = attr.ib(default=(63, 125, 151), validator=is_a(tuple))
 

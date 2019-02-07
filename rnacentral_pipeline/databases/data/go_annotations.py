@@ -35,12 +35,12 @@ class GoTermAnnotation(object):
     RNAcentral sequences.
     """
 
-    rna_id = attr.ib(validator=is_a(basestring))
-    qualifier = attr.ib(validator=is_a(basestring))
-    term_id = attr.ib(validator=is_a(basestring))
-    evidence_code = attr.ib(validator=is_a(basestring))
+    rna_id = attr.ib(validator=is_a(str))
+    qualifier = attr.ib(validator=is_a(str))
+    term_id = attr.ib(validator=is_a(str))
+    evidence_code = attr.ib(validator=is_a(str))
     extensions = attr.ib()
-    assigned_by = attr.ib(validator=is_a(basestring))
+    assigned_by = attr.ib(validator=is_a(str))
     publications = attr.ib(validator=is_a(list))
 
     @property

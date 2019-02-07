@@ -68,7 +68,7 @@ def create_tag(root, name, value, attrib={}):
     element = etree.SubElement(root, name, attr)
     if text:
 
-        if not isinstance(text, basestring):
+        if not isinstance(text, str):
             text = str(text)
 
         element.text = sax.escape(text)

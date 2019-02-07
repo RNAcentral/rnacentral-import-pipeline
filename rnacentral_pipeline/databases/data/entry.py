@@ -53,24 +53,24 @@ class Entry(object):
     """
 
     # Also known as external_id
-    primary_id = attr.ib(validator=is_a(basestring))
-    accession = attr.ib(validator=is_a(basestring))
+    primary_id = attr.ib(validator=is_a(str))
+    accession = attr.ib(validator=is_a(str))
     ncbi_tax_id = attr.ib(validator=is_a(int))
     database = attr.ib(
-        validator=is_a(basestring),
+        validator=is_a(str),
         converter=lambda s: s.upper(),
     )
-    sequence = attr.ib(validator=is_a(basestring))
+    sequence = attr.ib(validator=is_a(str))
     # exons = attr.ib(validator=is_a(list))
     regions = attr.ib(validator=is_a(list))
     rna_type = attr.ib(
-        validator=is_a(basestring),
+        validator=is_a(str),
         # validator=matches_pattern(SO_PATTERN),
         converter=utils.from_so_term,
     )
-    url = attr.ib(validator=is_a(basestring))
+    url = attr.ib(validator=is_a(str))
     seq_version = attr.ib(
-        validator=and_(is_a(basestring), utils.matches_pattern(r'^\d+$'))
+        validator=and_(is_a(str), utils.matches_pattern(r'^\d+$'))
     )
 
     note_data = utils.possibly_empty(dict)
@@ -78,34 +78,34 @@ class Entry(object):
 
     related_sequences = utils.possibly_empty(list)
 
-    chromosome = utils.optionally(basestring)
-    species = utils.optionally(basestring)
-    common_name = utils.optionally(basestring)
-    lineage = utils.optionally(basestring)
-    gene = utils.optionally(basestring)
-    locus_tag = utils.optionally(basestring)
-    optional_id = utils.optionally(basestring)
-    product = utils.optionally(basestring)
-    parent_accession = utils.optionally(basestring)
-    ordinal = utils.optionally(basestring)
-    non_coding_id = utils.optionally(basestring)
-    project = utils.optionally(basestring)
-    keywords = utils.optionally(basestring)
-    division = utils.optionally(basestring)
-    organelle = utils.optionally(basestring)
-    allele = utils.optionally(basestring)
-    anticodon = utils.optionally(basestring)
-    experiment = utils.optionally(basestring)
-    function = utils.optionally(basestring)
-    inference = utils.optionally(basestring)
-    map = utils.optionally(basestring)
-    old_locus_tag = utils.optionally(basestring)
-    operon = utils.optionally(basestring)
-    standard_name = utils.optionally(basestring)
-    description = utils.optionally(basestring)
-    mol_type = utils.optionally(basestring)
-    is_composite = utils.optionally(basestring)
-    pseudogene = utils.optionally(basestring)
+    chromosome = utils.optionally(str)
+    species = utils.optionally(str)
+    common_name = utils.optionally(str)
+    lineage = utils.optionally(str)
+    gene = utils.optionally(str)
+    locus_tag = utils.optionally(str)
+    optional_id = utils.optionally(str)
+    product = utils.optionally(str)
+    parent_accession = utils.optionally(str)
+    ordinal = utils.optionally(str)
+    non_coding_id = utils.optionally(str)
+    project = utils.optionally(str)
+    keywords = utils.optionally(str)
+    division = utils.optionally(str)
+    organelle = utils.optionally(str)
+    allele = utils.optionally(str)
+    anticodon = utils.optionally(str)
+    experiment = utils.optionally(str)
+    function = utils.optionally(str)
+    inference = utils.optionally(str)
+    map = utils.optionally(str)
+    old_locus_tag = utils.optionally(str)
+    operon = utils.optionally(str)
+    standard_name = utils.optionally(str)
+    description = utils.optionally(str)
+    mol_type = utils.optionally(str)
+    is_composite = utils.optionally(str)
+    pseudogene = utils.optionally(str)
 
     location_start = utils.optionally(int)
     location_end = utils.optionally(int)

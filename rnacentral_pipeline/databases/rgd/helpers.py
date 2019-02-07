@@ -146,7 +146,7 @@ def corrected_records(handle):
 
         # Change given ids into a probably unique id
         given = record.id.replace(',', '')
-        match = re.search('gene RGD:(\d+),', record.description)
+        match = re.search(r'gene RGD:(\d+),', record.description)
         if not match:
             raise ValueError("RGD fasta must state gene id: %s",
                              record.description)
