@@ -773,6 +773,8 @@ process find_possible_secondary_sequences {
 }
 
 process fetch_traveler_data {
+  memory params.secondary.fetch.memory
+
   when:
   params.secondary.run
 
@@ -782,8 +784,8 @@ process fetch_traveler_data {
   """
   git clone https://github.com/RNAcentral/auto-traveler.git
   cd auto-traveler
-  git checkout "${params.secondary.auto_traveler_version}"
-  wget -O cms.tar.gz '${params.secondary.cm_library}'
+  git checkout "${params.secondary.fetch.auto_traveler_version}"
+  wget -O cms.tar.gz '${params.secondary.fetch.cm_library}'
   # We are going to ignore some errors due to using mac tar to build the tarball
   tar xf cms.tar.gz
   python utils/generate_model_info.py --cm-library data/cms
@@ -795,6 +797,8 @@ sequences_to_ribotype
   .set { to_layout }
 
 process layout_sequences {
+  memory params.secondary.layout.memory
+
   input:
   set file(sequences), file(cm), file(fasta), file(ps) from to_layout
 
