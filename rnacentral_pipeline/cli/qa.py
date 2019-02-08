@@ -16,6 +16,7 @@ limitations under the License.
 import click
 
 from rnacentral_pipeline.databases import rfam
+from rnacentral_pipeline.databases import pfam
 from rnacentral_pipeline.databases import dfam
 
 
@@ -48,3 +49,10 @@ def process_dfam(data, output):
     format.
     """
     dfam.as_csv(data, output)
+
+
+@cli.command('pfam')
+@click.argument('data', default='-', type=click.File('r'))
+@click.argument('output', default='-', type=click.File('w'))
+def process_pfam(data, output):
+    pfam.as_csv(data, output)
