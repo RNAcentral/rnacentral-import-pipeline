@@ -436,6 +436,7 @@ process qa_scan {
   } else if (name == 'pfam') {
     """
     pfam_scan.pl \
+      -translate all \
       -fasta sequences.fasta \
       -dir "$dir" \
       -cpus ${params.qa[name].cpus} \
