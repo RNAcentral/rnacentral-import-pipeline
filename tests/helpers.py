@@ -16,6 +16,7 @@ limitations under the License.
 
 import os
 import tempfile
+import subprocess
 
 from rnacentral_pipeline import psql
 
@@ -33,7 +34,8 @@ def run_with_replacements(path, *replacements, **kwargs):
             tmp.write(query)
             tmp.flush()
 
-        cmd = subprocess.run('psql', '-f', temp.name, os.environ['PGDATABASE'])
+        cmd = subprocess.run('psql', '-f', tmp.name, os.environ['PGDATABASE'])
+        print(cmd)
         cmd.check_returncode()
         buf = six.moves.cStringIO(cmd.stdout)
 
