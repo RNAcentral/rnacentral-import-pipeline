@@ -365,7 +365,7 @@ process generate_qa_scan_files {
     mkdir $name
     cd $name
     fetch generic "$base/Pfam-A.hmm.gz" Pfam-A.hmm.gz
-    fetch generic "$base/Pfam-A.dat.hmm.gz" Pfam-A.dat.hmm.gz
+    fetch generic "$base/Pfam-A.hmm.dat.gz" Pfam-A.hmm.dat.gz
     fetch generic "$base/active_site.dat.gz" active_site.dat.gz
     gzip -d *.gz
     hmmpress Pfam-A.hmm
@@ -404,7 +404,6 @@ process qa_scan {
   tag { name }
   cpus { params.qa[name].cpus }
   queue { params.qa[name].queue }
-  // memory { params.qa[name].memory }
   module { params.qa[name].get('module', '') }
   clusterOptions { params.qa[name].get('options', '') }
 
