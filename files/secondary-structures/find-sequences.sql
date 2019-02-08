@@ -7,7 +7,7 @@ SELECT DISTINCT ON (rna.upi)
 FROM rnc_rna_precomputed pre
 JOIN rna ON rna.upi = pre.upi
 JOIN qa_status qa ON qa.rna_id = pre.id
-LEFT JOIN rnc_secondary_structure_layout layout ON pre.id = layout.urs_taxid
+LEFT JOIN rnc_secondary_structure_layout layout ON pre.id = layout.urs
 WHERE
   pre.is_active = true
   AND layout.id IS NULL
