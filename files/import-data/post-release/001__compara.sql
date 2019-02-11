@@ -7,9 +7,10 @@ ALTER TABLE load_compara
 UPDATE load_compara
 SET
   urs_taxid = xref.upi || '_' || xref.taxid
-FROM xref
+JOIN rnc_accessions acc ON xref.ac = acc.accession
 WHERE
-  xref.accession = load_compara.ensembl_transcript
+  acc.external_id = load_compara.ensembl_transcript
+  and xref.deleted = 'N'
 ;
 
 -- populate the load table with the required homology ids.
@@ -37,12 +38,12 @@ TRUNCATE TABLE ensembl_compara;
 INSERT INTO ensembl_compara (
   urs_taxid,
   ensembl_transcript_id,
-  homology_group
+  homology_id
 ) (
 SELECT DISTINCT
   load.urs_taxid,
   load.ensembl_transcript,
-  load.homology_group
+  load.homology_id
 FROM load_compara load
 )
 ;
