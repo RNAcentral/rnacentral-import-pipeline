@@ -13,7 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-ALLOWED_MITO_FAMILIES = {
+ALLOWED_FAMILIES = {
     'RF00177',  # Bacterial small subunit ribosomal RNA
     'RF02541',  # Bacterial large subunit ribosomal RNA
     'RF01959',  # Archaeal small subunit ribosomal RNA
@@ -29,7 +29,13 @@ def is_ignorable_mito_conflict(rna_type, data):
     """
     return data.is_mitochondrial() and \
         'rRNA' == rna_type and \
-        data.rfam_hits[0].model in ALLOWED_MITO_FAMILIES
+        data.rfam_hits[0].model in ALLOWED_FAMILIES
+
+
+def is_ignorable_chloroplast_conflict(rna_type, data):
+    return data.is_chloroplast() and \
+        'rRNA' == rna_type and \
+        data.rfam_hits[0].model in ALLOWED_FAMILIES
 
 
 class Validator(object):
