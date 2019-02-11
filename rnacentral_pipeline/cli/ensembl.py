@@ -89,7 +89,7 @@ def ensembl_proteins_cmd(connections, query, output):
 
 @cli.command('compara')
 @click.argument('fasta', default='-', type=click.File('rb'))
-@click.argument('output', default='-', type=click.File('wb'))
+@click.argument('output', default='compara.csv', type=click.File('wb'))
 def ensembl_compara(fasta, output):
     """
     Parse the FASTA file of Ensembl compara data. This will produce a CSV file
