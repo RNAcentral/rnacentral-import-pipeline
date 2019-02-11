@@ -53,7 +53,7 @@ for (entry in params.metadata) {
 
   def linked_to = info.get('linked_databases', [])
   def should_run = info.get('run', false) ||
-        linked_to == '*' ||
+        (linked_to == '*' && params.import_data.databases) ||
         linked_to.inject(false) { acc, n -> acc || params.import_data.databases[n] }
 
   if (!should_run) {
