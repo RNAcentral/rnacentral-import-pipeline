@@ -20,7 +20,7 @@ drop table if exists load_compara;
 $$,
 $$
 CREATE TABLE load_compara (
-	homology_group text not null,
+  homology_group text not null,
   ensembl_transcript text not null
 );
 $$
