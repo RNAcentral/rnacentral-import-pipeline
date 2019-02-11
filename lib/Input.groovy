@@ -107,8 +107,6 @@ class Input {
     if (input.command.startsWith('mysql')) {
       return "$input.command < ${args[0]} > '$input.produces'"
     }
-    print('ARGS: ')
-    println(args)
     return "$input.command ${args.join(' ')} '$input.produces'"
   }
 
