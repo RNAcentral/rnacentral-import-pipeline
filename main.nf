@@ -298,7 +298,7 @@ process release {
   val('done') into post_release
 
   script:
-  def should_release = params.import_data.databases.inject(false) { s, e -> s || e.value }
+  def should_release = Utils.must_release(params.import_data, params.databases)
   def pre = file("work/pre-release")
   def post = file("work/post-release")
   """
