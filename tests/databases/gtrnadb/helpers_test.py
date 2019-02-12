@@ -22,13 +22,13 @@ from rnacentral_pipeline.databases.gtrnadb import helpers
 
 @pytest.fixture
 def data():
-    with open('data/gtrnadb.json', 'rb') as raw:
+    with open('data/gtrnadb.json', 'r') as raw:
         return json.load(raw)
 
 
 @pytest.fixture
 def data2():
-    with open('data/gtrnadb-version2.json', 'rb') as raw:
+    with open('data/gtrnadb-version2.json', 'r') as raw:
         return json.load(raw)
 
 
@@ -157,9 +157,9 @@ def test_as_dotbracket_detects_weird_strings():
         helpers.dot_bracket(data)
 
 
-def test_primary_id_is_always_unique():
+def test_primary_id_is_always_unique(data, data2):
     seen = set()
-    possible = data() + data2()
+    possible = data + data2
     for entry in possible:
         for location in entry['genome_locations']:
             pid = helpers.primary_id(entry, location)

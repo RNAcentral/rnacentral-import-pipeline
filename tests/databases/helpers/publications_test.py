@@ -40,7 +40,7 @@ def test_can_fetch_publication():
         "inPMC": "N",
         "hasPDF": "Y",
         "hasBook": "N",
-        "citedByCount": 0,
+        "citedByCount": 1,
         "hasReferences": "Y",
         "hasTextMinedTerms": "Y",
         "hasDbCrossReferences": "N",

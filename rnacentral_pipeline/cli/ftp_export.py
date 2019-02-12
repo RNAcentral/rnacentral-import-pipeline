@@ -34,9 +34,9 @@ def cli():
 
 @cli.command('release-note')
 @click.option('--db_url', envvar='PGDATABASE')
-@click.argument('template_file', type=click.File('rb'))
+@click.argument('template_file', type=click.File('r'))
 @click.argument('release', default=10)
-@click.argument('output', default='-', type=click.File('wb'))
+@click.argument('output', default='-', type=click.File('w'))
 def ftp_export_release_note(template_file, release, output, db_url):
     """
     Write the release_note.txt file based off a given template.
@@ -45,8 +45,8 @@ def ftp_export_release_note(template_file, release, output, db_url):
 
 
 @cli.command('id-mapping')
-@click.argument('tsv_file', type=click.File('rb'))
-@click.argument('output', default='-', type=click.File('wb'))
+@click.argument('tsv_file', type=click.File('r'))
+@click.argument('output', default='-', type=click.File('w'))
 def ftp_id_mapping(tsv_file, output):
     """
     This will parse the given raw tsv file and produce the final id mapping
@@ -65,21 +65,21 @@ def export_sequences():
 
 @export_sequences.command('valid-nhmmer')
 @click.argument('active', type=click.File('r'))
-@click.argument('output', default='-', type=click.File('wb'))
+@click.argument('output', default='-', type=click.File('w'))
 def sequences_valid_nhmmer(active, output):
     fasta.valid_nhmmer(active, output)
 
 
 @export_sequences.command('invalid-nhmmer')
 @click.argument('active', type=click.File('r'))
-@click.argument('output', default='-', type=click.File('wb'))
+@click.argument('output', default='-', type=click.File('w'))
 def sequences_invalid_nhmmer(active, output):
     fasta.invalid_nhmmer(active, output)
 
 
 @cli.command('ensembl')
-@click.argument('raw', type=click.File('rb'))
-@click.argument('output', default='-', type=click.File('wb'))
+@click.argument('raw', type=click.File('r'))
+@click.argument('output', default='-', type=click.File('w'))
 @click.option(
     '--schema',
     default='files/ftp-export/ensembl/schema.json',
@@ -95,8 +95,8 @@ def export_ensembl(raw, output, schema=None):
 
 
 @cli.command('rfam-go-annotations')
-@click.argument('filename', type=click.File('rb'))
-@click.argument('output', default='-', type=click.File('wb'))
+@click.argument('filename', type=click.File('r'))
+@click.argument('output', default='-', type=click.File('w'))
 def export_go_temrs(filename, output):
     go_terms.export(filename, output)
 
@@ -111,8 +111,8 @@ def export_coordinates():
 
 
 @export_coordinates.command('as-bed')
-@click.argument('json_file', type=click.File('rb'))
-@click.argument('output', default='-', type=click.File('wb'))
+@click.argument('json_file', type=click.File('r'))
+@click.argument('output', default='-', type=click.File('w'))
 def format_as_bed(json_file, output):
     """
     This will turn the json file produced by the coordiantes query into a BED
@@ -122,8 +122,8 @@ def format_as_bed(json_file, output):
 
 
 @export_coordinates.command('as-gff3')
-@click.argument('json_file', type=click.File('rb'))
-@click.argument('output', default='-', type=click.File('wb'))
+@click.argument('json_file', type=click.File('r'))
+@click.argument('output', default='-', type=click.File('w'))
 def format_as_gff3(json_file, output):
     """
     This will turn the json file produced by the coordiantes query into a GFF3

@@ -36,19 +36,19 @@ class Context(object):
 
     @classmethod
     def build(cls, family_file, gencode_file=None):
-        with open(family_file, 'rb') as raw:
+        with open(family_file, 'r') as raw:
             supressed_mapping = rfutils.name_to_suppression(raw)
 
-        with open(family_file, 'rb') as raw:
+        with open(family_file, 'r') as raw:
             supressed_mapping.update(rfutils.id_to_suppression(raw))
 
-        with open(family_file, 'rb') as raw:
+        with open(family_file, 'r') as raw:
             inference = RnaTypeInference(raw)
 
-        with open(family_file, 'rb') as raw:
+        with open(family_file, 'r') as raw:
             rfam_names = rfutils.id_to_pretty_name(raw)
 
-        with open(family_file, 'rb') as raw:
+        with open(family_file, 'r') as raw:
             rfam_names.update(rfutils.name_to_pretty_name(raw))
 
         gencode_ids = set()

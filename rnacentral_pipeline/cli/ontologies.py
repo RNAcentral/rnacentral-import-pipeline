@@ -29,7 +29,7 @@ def cli():
 
 
 @cli.command('quickgo')
-@click.argument('raw_data', type=click.File('rb'))
+@click.argument('raw_data', type=click.File('r'))
 @click.argument('output', default='.', type=click.Path(
     writable=True,
     dir_okay=True,
@@ -43,7 +43,7 @@ def ontologies_quickgo(raw_data, output):
 
 
 @cli.command('lookup-terms')
-@click.argument('terms', type=click.File('rb'))
+@click.argument('terms', type=click.File('r'))
 @click.argument('output', type=click.File('w'))
 def ontologies_lookup_terms(terms, output):
     onto.lookup_terms(terms, output)

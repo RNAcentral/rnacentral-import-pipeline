@@ -15,6 +15,8 @@ limitations under the License.
 
 import operator as op
 
+import six
+
 import attr
 from attr.validators import instance_of as is_a
 
@@ -31,7 +33,7 @@ def as_strand(value):
         return value
     elif isinstance(value, float):
         return int(value)
-    elif isinstance(value, basestring):
+    elif isinstance(value, str):
         if value == '+' or value == '1':
             return 1
         elif value == '-' or value == '-1':
@@ -88,10 +90,10 @@ class Exon(object):
 
 @attr.s()
 class SequenceRegion(object):
-    chromosome = attr.ib(validator=is_a(basestring))
+    chromosome = attr.ib(validator=is_a(six.text_type))
     strand = attr.ib(validator=is_a(int), converter=as_strand)
     exons = attr.ib(validator=is_a(list), converter=sort_exons)
-    assembly_id = attr.ib(validator=is_a(basestring))
+    assembly_id = attr.ib(validator=is_a(six.text_type))
 
     @property
     def start(self):

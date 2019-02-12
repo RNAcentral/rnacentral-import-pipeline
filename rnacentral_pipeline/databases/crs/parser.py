@@ -22,10 +22,12 @@ import itertools as it
 import attr
 from attr.validators import instance_of as is_a
 
+import six
+
 
 @attr.s(frozen=True)
 class GenomicLocation(object):
-    chromosome = attr.ib(validator=is_a(basestring))
+    chromosome = attr.ib(validator=is_a(str))
     start = attr.ib(validator=is_a(int), converter=int)
     stop = attr.ib(validator=is_a(int), converter=int)
 
@@ -41,9 +43,9 @@ class GenomicLocation(object):
 
 @attr.s(frozen=True)
 class CrsFeature(object):
-    upi = attr.ib(validator=is_a(basestring))
+    upi = attr.ib(validator=is_a(str))
     taxid = attr.ib(validator=is_a(int), converter=int)
-    crs_name = attr.ib(validator=is_a(basestring))
+    crs_name = attr.ib(validator=is_a(str))
     start = attr.ib(validator=is_a(int), converter=int)
     stop = attr.ib(validator=is_a(int), converter=int)
     genomic_location = attr.ib(validator=is_a(GenomicLocation))
@@ -103,6 +105,6 @@ def parse(handle):
 
 def from_file(handle, output):
     data = parse(handle)
-    data = it.imap(op.methodcaller('writeable'), data)
+    data = six.moves.map(op.methodcaller('writeable'), data)
     writer = csv.writer(output, delimiter=',')
     writer.writerows(data)

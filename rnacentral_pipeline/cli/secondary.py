@@ -13,30 +13,31 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import json
 
 import click
 
-from rnacentral_pipeline.databases import pdb
+from rnacentral_pipeline.rnacentral import secondary
 
 
-@click.group('pdb')
+@click.group('secondary')
 def cli():
     """
-    Commands for dealing with the fetching PDB data.
+    A group of commands for parsing data from secondary structures into an
+    importable format.
     """
     pass
 
 
-@cli.command('data')
-@click.argument('output', default='pdb.json', type=click.File('w'))
-@click.argument('pdb_ids', nargs=-1)
-def pdb_group_data(output, pdb_ids=None):
-    json.dump(pdb.chains(pdb_ids=pdb_ids), output)
-
-
-@cli.command('extra')
-@click.argument('output', default='pdb-extra.json', type=click.File('w'))
-@click.argument('pdb_ids', nargs=-1)
-def pdb_group_extra(output, pdb_ids=None):
-    json.dump(pdb.references(pdb_ids=pdb_ids), output)
+@cli.command('process-svgs')
+@click.argument('directories', nargs=-1, type=click.Path(
+    writable=True,
+    dir_okay=True,
+    file_okay=False,
+))
+@click.argument('output', type=click.File('w'))
+def process_svgs(directories, output):
+    """
+    Process all SVG secondary structures in the given directory and produce a
+    single data file that can be imported into the database.
+    """
+    secondary.write_all(directories, output)

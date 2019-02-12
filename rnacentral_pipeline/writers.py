@@ -17,7 +17,7 @@ import os
 import csv
 import operator as op
 
-from contextlib2 import ExitStack
+from contextlib import ExitStack
 from contextlib import contextmanager
 
 import attr
@@ -28,7 +28,7 @@ from boltons.fileutils import atomic_save
 
 @attr.s(frozen=True)  # pylint: disable=W0232
 class CsvOutput(object):
-    filename = attr.ib(validator=is_a(basestring))
+    filename = attr.ib(validator=is_a(str))
     transformer = attr.ib()
     csv_options = attr.ib(validator=is_a(dict))
 

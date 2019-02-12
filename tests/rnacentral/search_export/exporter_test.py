@@ -19,14 +19,14 @@ from __future__ import print_function
 
 import os
 import tempfile
+import subprocess
 import operator as op
 from xml.dom import minidom
 import xml.etree.ElementTree as ET
 
 import pytest
-from functools32 import lru_cache
+from functools import lru_cache
 
-from rnacentral_pipeline.psql import PsqlWrapper
 from rnacentral_pipeline.rnacentral.search_export import exporter
 
 from tests.helpers import run_range_as_single
@@ -35,14 +35,12 @@ from tests.helpers import run_range_as_single
 @lru_cache()
 def load_additional():
     metapath = os.path.join('files', 'search-export', 'metadata')
-    psql = PsqlWrapper(os.environ['PGDATABASE'])
-    with tempfile.TemporaryFile() as tmp:
-        for filename in os.listdir(metapath):
-            print(filename)
-            query = os.path.join(metapath, filename)
-            psql.copy_file_to_handle(query, tmp)
-        tmp.seek(0)
-        return exporter.parse_additions(tmp)
+    for filename in os.listdir(metapath):
+        query = os.path.join(metapath, filename)
+        cmd = subprocess.run('psql', '-f', filename, self.pgloader_url, encoding='utf-8')
+        cmd.check_returncode()
+    buf = six.moves.cStringIO(cmd.stdout)
+    return exporter.parse_additions(buf)
 
 
 def load_data(upi):
@@ -624,6 +622,8 @@ def test_assigns_rfam_ids_to_hits(upi, expected):
 
 @pytest.mark.parametrize('upi,expected', [  # pylint: disable=E1101
     ('URS000020CEC2_9606', True),
+    ('URS000026261D_9606', True),
+    ('URS0000759CF4_9606', False),
     ('URS0000759CF4_9606', False),
 ])
 def test_can_detect_if_has_interacting_proteins(upi, expected):
@@ -919,13 +919,3 @@ def test_assigns_correct_interacting_rnas(upi, expected):
     data = load_and_get_additional(upi, 'interacting_rna')
     value = {d['text'] for d in data}
     assert value == expected
-
-
-@pytest.mark.parametrize('upi,expected', [  # pylint: disable=E1101
-    ('URS000026261D_9606', True),
-    ('URS0000759CF4_9606', False),
-])
-def test_can_detect_if_has_interacting_proteins(upi, expected):
-    assert load_and_get_additional(upi, 'has_interacting_rnas') == [
-        {'attrib': {'name': 'has_interacting_rnas'}, 'text': str(expected)}
-    ]

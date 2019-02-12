@@ -13,29 +13,23 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import os
-import json
-
 import pytest
 
-from rnacentral_pipeline.rnacentral.ftp_export import ensembl
-
-from tests import helpers
+from rnacentral_pipeline.rnacentral import secondary as sec
 
 
-def load_data(rna_id):
-    path = os.path.join('files', 'ftp-export', 'ensembl', 'ensembl-xrefs.sql')
-    raw = helpers.run_range_as_single(rna_id, path)
-    return ensembl.builder(raw)
+@pytest.mark.parametrize('directory,count', [
+    ('data/secondary', 1),
+])
+def test_can_process_a_directory(directory, count):
+    assert len(list(sec.process_directory(directory))) == count
 
 
-@pytest.mark.parametrize(
-    'filename',
-    os.listdir('data/export/ensembl')
-)
-def test_can_export_data_for_single_upi(filename):
-    with open(os.path.join('data/export/ensembl', filename), 'r') as raw:
-        ans = json.load(raw)
-
-    rna_id = filename.split('.')[0]
-    assert load_data(rna_id) == ans
+def test_can_produce_reasonable_data():
+    val = list(sec.process_directory('data/secondary'))
+    upi, model, dot, svg = val[0]
+    assert upi == 'URS00000F9D45_9606'
+    assert model == 'd.5.e.H.sapiens.2'
+    assert len(dot) == 121
+    assert svg.startswith('<svg')
+    assert '\n' not in svg

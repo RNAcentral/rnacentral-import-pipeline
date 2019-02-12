@@ -18,7 +18,7 @@ import logging
 
 import requests
 
-from functools32 import lru_cache
+from functools import lru_cache
 
 TAX_URL = 'https://www.ebi.ac.uk/ena/data/taxonomy/v1/taxon/tax-id/{taxon_id}'
 
@@ -50,7 +50,7 @@ def phylogeny(taxon_id):
         However in the case of 400 errors this will fail on the first attempt.
     """
 
-    for count in xrange(5):
+    for count in range(5):
         response = requests.get(TAX_URL.format(taxon_id=taxon_id))
         try:
             response.raise_for_status()

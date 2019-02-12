@@ -17,6 +17,8 @@ import json
 import operator as op
 import itertools as it
 
+import six
+
 from rnacentral_pipeline.writers import MultiCsvOutput
 
 from . import data
@@ -45,10 +47,10 @@ def as_update(sequence):
 
 
 def parse(handle):
-    sequences = it.imap(lambda l: l.replace('\\\\', '\\'), handle)
-    sequences = it.imap(json.loads, sequences)
+    sequences = six.moves.map(lambda l: l.replace('\\\\', '\\'), handle)
+    sequences = six.moves.map(json.loads, sequences)
     sequences = as_sequences(sequences)
-    sequences = it.imap(as_update, sequences)
+    sequences = six.moves.map(as_update, sequences)
     return sequences
 
 
