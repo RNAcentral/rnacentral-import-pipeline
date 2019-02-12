@@ -74,3 +74,4 @@ work/
 data/ensembl_plants/*.dat
 data/ensembl/*.dat
 data/gencode/human-transcripts.gff3
+.editorconfig

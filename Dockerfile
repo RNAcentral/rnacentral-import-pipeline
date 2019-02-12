@@ -1,105 +1,128 @@
-FROM centos:6.6
+FROM gcc:4.9
 
-RUN yum install -y https://download.postgresql.org/pub/repos/yum/9.5/redhat/rhel-6-x86_64/pgdg-centos95-9.5-3.noarch.rpm
+ENV RNA /rna
+ENV RNACENTRAL_IMPORT_PIPELINE "$RNA/rnacentral-import-pipeline"
+RUN mkdir $RNA
+WORKDIR $RNA
 
-RUN yum install -y \
+RUN apt-get install curl ca-certificates
+RUN curl https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
+
+RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ jessie-pgdg main" > /etc/apt/sources.list.d/pgdg.list
+
+RUN apt-get update
+RUN apt-get upgrade -y
+
+# Install all required packages
+RUN apt-get install -y \
+    bedtools \
     curl \
-    freetds \
     gcc \
     git \
-    httpd \
-    httpd-devel \
-    libaio \
-    libzip \
-    mysql-devel \
-    nc.x86_64 \
+    gzip \
+    hmmer \
+    jq \
+    lftp \
+    moreutils \
+    mysql-client \
+    mysql-common \
     openssl \
-    openssl-devel \
-    postgresql95.x86_64 \
-    sbcl \
+    pgloader \
+    postgresql-9.5 \
+    python \
     tar \
     unzip \
-    zlib-devel
+    wget
 
-RUN mkdir /rnacentral
-RUN mkdir /rnacentral/local
-
-ENV LOC /rnacentral/local
-
-# Install Python
+# Install Infernal
 RUN \
-    cd $LOC && \
-    curl -OL http://www.python.org/ftp/python/2.7.11/Python-2.7.11.tgz && \
-    tar -zxvf Python-2.7.11.tgz && \
-    cd Python-2.7.11 && \
-    PREFIX=$LOC/python-2.7.11/ && \
-    export LD_RUN_PATH=$PREFIX/lib && \
-    ./configure --prefix=$PREFIX  --enable-shared && \
+    cd $RNA/ && \
+    curl -OL http://eddylab.org/infernal/infernal-1.1.2.tar.gz && \
+    tar -xvzf infernal-1.1.2.tar.gz && \
+    cd infernal-1.1.2 && \
+    ./configure --prefix=$RNA/infernal-1.1.2 && \
     make && \
     make install && \
-    cd $LOC && \
-    rm -Rf Python-2.7.11 && \
-    rm Python-2.7.11.tgz
+    cd easel && \
+    make install && \
+    cd $RNA/ && \
+    rm infernal-1.1.2.tar.gz
 
-# Install virtualenv
-RUN \
-    cd $LOC && \
-    curl -OL  https://pypi.python.org/packages/source/v/virtualenv/virtualenv-15.0.0.tar.gz && \
-    tar -zxvf virtualenv-15.0.0.tar.gz && \
-    cd virtualenv-15.0.0 && \
-    $LOC/python-2.7.11/bin/python setup.py install && \
-    cd $LOC && \
-    rm -Rf virtualenv-15.0.0.tar.gz && \
-    rm -Rf virtualenv-15.0.0
+# Install ribotyper
+RUN git clone https://github.com/nawrockie/epn-ofile.git && cd epn-ofile && git checkout c34244b2b9e0719c45d964cc08c147aa353532e8
+RUN git clone https://github.com/nawrockie/epn-options.git && cd epn-options && git checkout 7acc13384aedbd5efee9a62fcde71d075072b6a6
+RUN git clone https://github.com/nawrockie/epn-test.git && cd epn-test && git checkout f4a8a60153906e61bc458fa734ec7070eadf76f9
+RUN git clone https://github.com/nawrockie/ribotyper-v1.git && cd ribotyper-v1 && git checkout 4cd7fe30f402edfa4669383a46d603c60ba6f608
 
-# Create virtual environment
+# Install jiffy infernal hmmer scripts
 RUN \
-    cd $LOC && \
-    mkdir virtualenvs && \
-    cd virtualenvs && \
-    $LOC/python-2.7.11/bin/virtualenv rnacentral --python=$LOC/python-2.7.11/bin/python
-
-# Install pgloader
-RUN \
-  rpm --rebuilddb && \
-  yum -y install yum-utils && \
-  yum -y install rpmdevtools @"Development Tools" && \
-  yum -y install sqlite-devel && \
-  yum -y install epel-release && \
-  yum install -y sbcl.x86_64 --enablerepo=epel
+    git clone https://github.com/nawrockie/jiffy-infernal-hmmer-scripts.git && \
+    cd jiffy-infernal-hmmer-scripts && \
+    git checkout 45d4937385a6b694eac2d7d538e131b59527ce06
 
 RUN \
-  curl -OL http://downloads.sourceforge.net/project/sbcl/sbcl/1.3.6/sbcl-1.3.6-source.tar.bz2 && \
-  tar -xvjf sbcl-1.3.6-source.tar.bz2 && \
-  cd sbcl-1.3.6 && \
-  ./make.sh --with-sb-thread --with-sb-core-compression --prefix=/usr && \
-  sh install.sh  && \
-  rpm --rebuilddb && \
-  yum -y install freetds-devel && \
-  rpmdev-setuptree
+    cd jiffy-infernal-hmmer-scripts && \
+    echo '#!/usr/bin/env perl' | cat - ali-pfam-sindi2dot-bracket.pl | sponge ali-pfam-sindi2dot-bracket.pl
 
+RUN chmod +x $RNA/jiffy-infernal-hmmer-scripts/ali-pfam-sindi2dot-bracket.pl
+
+# Install traveler
 RUN \
-  cd $LOC && \
-  curl -OL https://github.com/dimitri/pgloader/archive/v3.4.1.tar.gz && \
-  tar -xvzf v3.4.1.tar.gz && \
-  rm v3.4.1.tar.gz && \
-  mv pgloader-3.4.1 pgloader && \
-  cd pgloader && \
-  make pgloader
+    git clone https://github.com/davidhoksza/traveler.git && \
+    cd traveler && \
+    git checkout 0912ed5daab09bb3c38630efaf3643ea38b02dbe && \
+    cd $RNA/traveler/src && \
+    make build
 
-RUN yum -y install gcc
+# Install auto-traveler.py
+RUN git clone https://github.com/RNAcentral/auto-traveler.git && cd auto-traveler && git checkout 5ad1002dc9614e0c0a9c85a0d1a1017ee5027fbe
 
-# Install Python requirements
-ADD requirements.txt $RNACENTRAL_IMPORT_PIPELINE
+# Install RNAStructure
 RUN \
-    source $LOC/virtualenvs/rnacentral/bin/activate && \
-    pip install -r $RNACENTRAL_IMPORT_PIPELINE/requirements.txt
+    wget http://rna.urmc.rochester.edu/Releases/current/RNAstructureSource.tgz && \
+    tar -xvzf RNAstructureSource.tgz && \
+    rm RNAstructureSource.tgz && \
+    cd RNAstructure && \
+    make all
 
-# Define container environment variables
-ENV PYTHONPATH luigi:$PYTHONPATH
-ENV PATH $LOC/pgloader/build/bin:$PATH
+# Install blat
+RUN \
+    wget https://users.soe.ucsc.edu/~kent/src/blatSrc35.zip && \
+    unzip blatSrc35.zip && \
+    rm blatSrc35.zip && \
+    cd blatSrc && \
+    mkdir bin && \
+    make MACHTYPE=x86_64 BINDIR=$PWD/bin
 
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod 700 entrypoint.sh
+# Install seqkit
+RUN \
+    mkdir seqkit && \
+    cd seqkit && \
+    wget https://github.com/shenwei356/seqkit/releases/download/v0.10.0/seqkit_linux_amd64.tar.gz && \
+    tar xvf seqkit_linux_amd64.tar.gz && \
+    rm seqkit_linux_amd64.tar.gz
 
-ENTRYPOINT ["/entrypoint.sh"]
+# Install useful pip version
+RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && python get-pip.py
+
+# Install python requirements
+ADD requirements.txt $RNACENTRAL_IMPORT_PIPELINE/requirements.txt
+RUN /usr/local/bin/pip install --upgrade pip && \
+    /usr/local/bin/pip install -r $RNACENTRAL_IMPORT_PIPELINE/requirements.txt
+
+# Setup environmental variables
+ENV RIBOINFERNALDIR="$RNA/infernal-1.1.2/bin" RIBOEASELDIR="$RNA/infernal-1.1.2/bin"
+ENV RIBODIR="$RNA/ribotyper-v1" EPNOPTDIR="$RNA/epn-options" EPNOFILEDIR="$RNA/epn-ofile" EPNTESTDIR="$RNA/epn-test"
+ENV PERL5LIB="$RIBODIR:$EPNOPTDIR:$EPNOFILEDIR:$EPNTESTDIR:/usr/bin/env:$PERL5LIB"
+
+ENV DATAPATH="$RNA/RNAstructure/data_tables/"
+
+ENV PATH="$RNA/traveler/bin:$PATH"
+ENV PATH="$RIBODIR:$PATH"
+ENV PATH="$RNA/infernal-1.1.2/bin:$PATH"
+ENV PATH="$RNA/RNAstructure/exe:$PATH"
+ENV PATH="$RNA/blatSrc/bin:$PATH"
+ENV PATH="$RNA/seqkit:$PATH"
+ENV PATH="$RNA/jiffy-infernal-hmmer-scripts:$PATH"
+ENV PATH="$RNA/auto-traveler:$PATH"
+ENV PATH="$RNACENTRAL_IMPORT_PIPELINE:$PATH"

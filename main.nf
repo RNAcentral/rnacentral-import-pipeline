@@ -51,13 +51,10 @@ for (entry in params.metadata) {
   def name = entry.key
   def info = entry.value
 
-  if (!data_to_fetch && !data_to_fetch_and_process) {
-    continue
-  }
-
   def linked_to = info.get('linked_databases', [])
-  def should_run = linked_to
-    .inject(info.get('always_run', false)) { acc, n -> acc || params.import_data.databases[n] }
+  def should_run = info.get('run', false) ||
+        (linked_to == '*' && params.import_data.databases) ||
+        linked_to.inject(false) { acc, n -> acc || params.import_data.databases[n] }
 
   if (!should_run) {
     continue
@@ -403,10 +400,7 @@ split_qa_sequences
 process qa_scan {
   tag { name }
   cpus { params.qa[name].cpus }
-  queue { params.qa[name].queue }
-  // memory { params.qa[name].memory }
-  module { params.qa[name].get('module', '') }
-  clusterOptions { params.qa[name].get('options', '') }
+  memory { params.qa[name].memory }
 
   input:
   set val(name), file('sequences.fasta'), file(dir) from sequences_to_scan
@@ -417,7 +411,6 @@ process qa_scan {
   script:
   if (name == 'rfam') {
     """
-    mpiexec -mca btl ^openbib -np ${params.qa[name].cpus} \
     cmscan \
       -o output.inf \
       --tblout results.tblout \
@@ -747,7 +740,82 @@ process load_precomputed_data {
 
 post_precompute
   .ifEmpty('no precompute')
-  .set { flag_for_feedback }
+  .into { flag_for_feedback; flag_for_secondary }
+
+//=============================================================================
+// Compute secondary structures
+//=============================================================================
+
+flag_for_secondary
+  .combine(Channel.fromPath("files/secondary-structures/find-sequences.sql"))
+  .set { secondary_query }
+
+process find_possible_secondary_sequences {
+  when:
+  params.secondary.run
+
+  input:
+  set val(flag), file(query) from secondary_query
+
+  output:
+  file('parts/*.fasta') into sequences_to_ribotype mode flatten
+
+  """
+  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > raw.json
+  json2fasta.py raw.json rnacentral.fasta
+  seqkit shuffle --two-pass rnacentral.fasta > shuffled.fasta
+  seqkit split --two-pass --by-size ${params.secondary.sequence_chunk_size} --out-dir 'parts/' shuffled.fasta
+  """
+}
+
+process fetch_traveler_data {
+  when:
+  params.secondary.run
+
+  output:
+  set file('auto-traveler/data/cms/'), file('auto-traveler/data/crw-fasta-no-pseudoknots/'), file('auto-traveler/data/crw-ps/') into traveler_data
+
+  """
+  git clone https://github.com/RNAcentral/auto-traveler.git
+  cd auto-traveler
+  git checkout "${params.secondary.auto_traveler_version}"
+  wget -O cms.tar.gz '${params.secondary.cm_library}'
+  # We are going to ignore some errors due to using mac tar to build the tarball
+  tar xf cms.tar.gz
+  python utils/generate_model_info.py --cm-library data/cms
+  """
+}
+
+sequences_to_ribotype
+  .combine(traveler_data)
+  .set { to_layout }
+
+process layout_sequences {
+  input:
+  set file(sequences), file(cm), file(fasta), file(ps) from to_layout
+
+  output:
+  file("output/") into secondary_to_import
+
+  """
+  auto-traveler.py --cm-library $cm --fasta-library $fasta --ps-library $ps $sequences output/
+  """
+}
+
+secondary_to_import
+  .collect()
+  .combine(Channel.fromPath("files/secondary-structures/load.ctl"))
+  .set { secondary_to_import }
+
+process store_secondary_structures {
+  input:
+  set file(svg_dir), file(ctl) from secondary_to_import
+
+  """
+  rnac secondary process-svgs $svg_dir data.csv
+  split-and-load $ctl data.csv ${params.secondary.data_chunk_size} traveler-data
+  """
+}
 
 //=============================================================================
 // Compute feedback reports
@@ -815,7 +883,11 @@ process import_feedback {
 workflow.onComplete {
   if (params.notify) {
     def success = (workflow.success ? '--success' : '--failure');
-    def summary = "${workflow.scriptName} completed ${workflow.success ? 'successfully' : 'with errors'} at ${workflow.complete}"
-    ['slack', 'pipeline-done', success, summary, '-'].execute() << workflow.errorReport ?: 'No errors'
+    def summary = "${workflow.scriptName} completed ${workflow.success ? 'successfully' : 'with errors'} at ${workflow.complete}";
+    def msg_file = File.createTempFile("msg", ".txt");
+    msg_file << workflow.errorReport ?: 'No errors';
+    def cmd = ['bin/slack', 'pipeline-done', '--url', params.notify_url, success, "'$summary'", msg_file.getAbsolutePath()];
+    def process = cmd.execute();
+    process.waitForProcessOutput(System.out, System.err);
   }
 }
