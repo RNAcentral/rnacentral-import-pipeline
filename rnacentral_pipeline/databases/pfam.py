@@ -13,32 +13,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import re
+
 from rnacentral_pipeline.databases.rfam.infernal_results import convert_strand
 
 import attr
 from attr.validators import instance_of as is_a
 
 import six
-
-# 0: <seq id>
-# 1: <alignment start>
-# 2: <alignment end>
-# 3: <envelope start>
-# 4: <envelope end>
-# 5: <hmm acc>
-# 6: <hmm name>
-# 7: <type>
-# 8: <hmm start>
-# 9: <hmm end>
-# 10: <hmm length>
-# 11: <bit score>
-# 12: <E-value>
-# 13: <significance>
-# 14: <clan>
-# 15: <strand>
-# 16: <nt start>
-# 17: <nt end>
-
 
 @attr.s()
 class SequenceComponent(object):
@@ -54,8 +36,8 @@ class SequenceComponent(object):
     def from_match_parts(cls, raw):
         return cls(
             urs=raw[0],
-            start=raw[16],
-            stop=raw[17],
+            start=raw[3],
+            stop=raw[4],
             strand=raw[15],
         )
 
@@ -67,15 +49,17 @@ class ModelComponent(object):
     clan_id = attr.ib(validator=is_a(six.text_type))
     start = attr.ib(validator=is_a(six.integer_types), converter=int)
     stop = attr.ib(validator=is_a(six.integer_types), converter=int)
+    length = attr.ib(validator=is_a(six.integer_types), converter=int)
 
     @classmethod
     def from_match_parts(cls, raw):
         return cls(
             model_id=raw[5],
             name=raw[6],
-            clan=raw[14],
+            clan_id=raw[14],
             start=raw[8],
             stop=raw[9],
+            length=raw[10],
         )
 
 
@@ -88,7 +72,7 @@ class Hit(object):
 
     @classmethod
     def from_match(cls, raw):
-        parts = line.split(' ')
+        parts = re.split(r'\s+', raw.strip())
         return Hit(
             seq=SequenceComponent.from_match_parts(parts),
             model=ModelComponent.from_match_parts(parts),
@@ -113,7 +97,7 @@ class Hit(object):
 
 def parse(handle):
     for line in handle:
-        if not line or line.startswith('#'):
+        if not line or line.startswith('#') or re.match(r'^\s*$', line):
             continue
         yield Hit.from_match(line)
 
