@@ -83,7 +83,7 @@ Channel.from(processed_data).set { raw_output }
 Channel.from(data_to_fetch).set { to_fetch }
 Channel.from(data_to_process).set { process_specs }
 Channel.from(data_to_fetch_and_process).set { to_fetch_and_process }
-Channel.from(to_prepare).set { files_to_prepare }
+Channel.from(to_prepare).set { qa_to_prepare }
 
 //=============================================================================
 // Fetch data as well as all extra data for import
@@ -354,7 +354,7 @@ process fetch_qa_sequences {
 
 process generate_qa_scan_files {
   input:
-  set val(name), val(base) from files_to_prepare
+  set val(name), val(base) from qa_to_prepare
 
   output:
   set val(name), file(name) into qa_scan_files
@@ -369,15 +369,6 @@ process generate_qa_scan_files {
     fetch generic "$base/active_site.dat.gz" active_site.dat.gz
     gzip -d *.gz
     hmmpress Pfam-A.hmm
-    cd ..
-    """
-  } else if (name == "dfam")  {
-    """
-    mkdir $name
-    cd $name
-    fetch generic "$base/Dfam.hmm.gz" Dfam.hmm.gz
-    gzip -d Dfam.hmm.gz
-    hmmpress Dfam.hmm
     cd ..
     """
   } else if (name == "rfam") {
@@ -439,16 +430,6 @@ process qa_scan {
       -cpus ${params.qa[name].cpus} \
       -outfile raw.tsv
     rnac qa $name raw.tsv hits.csv
-    """
-  } else if (name == 'dfam') {
-    """
-    dfamscan.pl \
-      -fastafile sequences.fasta \
-      --hmmfile "$dir/Dfam.hmm" \
-      --cut_ga \
-      --cpu ${params.qa[name].cpus} \
-      --dfam_outfile raw.txt
-    rnac qa $name raw.txt hits.csv
     """
   } else {
     error("Unknown type of QA scan: $name")
