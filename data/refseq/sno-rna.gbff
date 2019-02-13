@@ -1,0 +1,56 @@
+LOCUS       NR_030762                221 bp    RNA     linear   ROD 03-JUN-2018
+DEFINITION  Mus musculus small nucleolar RNA, C/D box 17 (Snord17), small
+            nucleolar RNA.
+ACCESSION   NR_030762
+VERSION     NR_030762.1
+KEYWORDS    RefSeq.
+SOURCE      Mus musculus (house mouse)
+  ORGANISM  Mus musculus
+            Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi;
+            Mammalia; Eutheria; Euarchontoglires; Glires; Rodentia; Myomorpha;
+            Muroidea; Muridae; Murinae; Mus; Mus.
+REFERENCE   1  (bases 1 to 221)
+  AUTHORS   Huttenhofer A, Kiefmann M, Meier-Ewert S, O'Brien J, Lehrach H,
+            Bachellerie JP and Brosius J.
+  TITLE     RNomics: an experimental approach that identifies 201 candidates
+            for novel, small, non-messenger RNAs in mouse
+  JOURNAL   EMBO J. 20 (11), 2943-2953 (2001)
+   PUBMED   11387227
+COMMENT     PROVISIONAL REFSEQ: This record has not yet been subject to final
+            NCBI review. The reference sequence was derived from AF357317.1.
+
+            ##Evidence-Data-START##
+            Transcript is intronless :: AF357317.1 [ECO:0000345]
+            ##Evidence-Data-END##
+PRIMARY     REFSEQ_SPAN         PRIMARY_IDENTIFIER PRIMARY_SPAN        COMP
+            1-221               AF357317.1         1-221
+FEATURES             Location/Qualifiers
+     source          1..221
+                     /organism="Mus musculus"
+                     /mol_type="transcribed RNA"
+                     /db_xref="taxon:10090"
+                     /chromosome="2"
+                     /map="2"
+     gene            1..221
+                     /gene="Snord17"
+                     /gene_synonym="MBI-43"
+                     /note="small nucleolar RNA, C/D box 17"
+                     /db_xref="GeneID:100313519"
+                     /db_xref="MGI:MGI:3819523"
+     ncRNA           1..221
+                     /ncRNA_class="snoRNA"
+                     /gene="Snord17"
+                     /gene_synonym="MBI-43"
+                     /product="small nucleolar RNA, C/D box 17"
+                     /db_xref="GeneID:100313519"
+                     /db_xref="MGI:MGI:3819523"
+     exon            1..221
+                     /gene="Snord17"
+                     /gene_synonym="MBI-43"
+                     /inference="alignment:Splign:2.0.8"
+ORIGIN
+        1 ctgtttatcc attcgctgag tacgctgctc tgaccttctt cccagtctcg gttcctgttc
+       61 tgggagcttg gggctgagta gccaccagcc ctgctctctg cagtgttcta ttgtggattg
+      121 cttgtgtgct ggcaggctac tactggtaag aatggctagt gtcagcaggg atggctcctc
+      181 tctgggttcc atctcaccaa gatgagtggt gcaaatctga t
+//

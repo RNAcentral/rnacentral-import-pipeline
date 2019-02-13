@@ -33,15 +33,8 @@ def test_can_parse_refseq_files(filename, count):
         assert len(list(parser.parse(raw))) == count
 
 
-@pytest.mark.skip()
-def test_extracts_correct_chromosome_if_several():
-    with open('data/refseq/mir-with-several-locations.gbff', 'r') as raw:
-        data = next(parser.parse(raw))
-    assert data.chromosome == 'X'
-
-
 def test_it_can_build_correct_entry():
-    with open('data/refseq/biomol_ncRNA_RNase_MRP_RNA.gbff', 'rb') as raw:
+    with open('data/refseq/biomol_ncRNA_RNase_MRP_RNA.gbff', 'r') as raw:
         data = list(parser.parse(raw))
 
     assert len(data) == 4
@@ -70,7 +63,7 @@ def test_it_can_build_correct_entry():
         is_composite='N',
         description=(
             'Homo sapiens RNA component of mitochondrial RNA processing '
-            'endoribonuclease (RMRP), RNase MRP RNA'
+            'endoribonuclease (RMRP)'
         ),
         xref_data={
             'GeneID': ['6023'],
@@ -121,7 +114,7 @@ def test_can_build_correct_entries_when_multiple_present():
         seq_version='1',
         parent_accession='NR_106737',
         is_composite='N',
-        description='Homo sapiens microRNA 6089 (MIR6089), precursor RNA',
+        description='Homo sapiens microRNA 6089 (MIR6089)',
         xref_data={
             'GeneID': ['102464837'],
             'HGNC': ['HGNC:50179'],
@@ -167,7 +160,7 @@ def test_can_build_correct_entries_when_multiple_present():
         seq_version='1',
         parent_accession='NR_106737',
         is_composite='N',
-        description='Homo sapiens microRNA 6089 (MIR6089), miRNA',
+        description='Homo sapiens hsa-miR-6089 (MIR6089)',
         xref_data={
             'GeneID': ['102464837'],
             'HGNC': ['HGNC:50179'],
@@ -221,7 +214,7 @@ def test_can_assign_related_sequences_for_mirnas():
         seq_version='2',
         parent_accession='NR_000169',
         is_composite='N',
-        description='Caenorhabditis elegans pre-microRNA mir-79 (mir-79), precursor RNA',
+        description='Caenorhabditis elegans pre-microRNA mir-79 (mir-79)',
         xref_data={
             'GeneID': ['259856']
         },
@@ -279,7 +272,7 @@ def test_can_assign_isoform_to_rnase_p():
         seq_version='1',
         parent_accession='NR_002092',
         is_composite='N',
-        description='Drosophila melanogaster ribonuclease P RNA (RNaseP:RNA), RNase P RNA',
+        description='Drosophila melanogaster ribonuclease P RNA (RNaseP:RNA)',
         xref_data={
             'GeneID': ['3772418'],
             'FLYBASE': ['FBgn0046696', 'FBtr0085775'],
@@ -316,3 +309,11 @@ def test_can_assign_isoform_to_rnase_p():
             ),
         ]
     ))
+
+
+def test_can_produce_reasonable_names_for_snorna():
+    with open('data/refseq/sno-rna.gbff', 'r') as raw:
+        data = [e for e in parser.parse(raw)]
+        assert len(data) == 1
+
+    assert data[0].description == 'Mus musculus small nucleolar RNA, C/D box 17 (Snord17)'
