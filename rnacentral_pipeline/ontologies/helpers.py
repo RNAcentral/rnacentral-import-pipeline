@@ -14,7 +14,6 @@ limitations under the License.
 """
 
 import csv
-import urllib
 import operator as op
 import itertools as it
 
@@ -40,7 +39,7 @@ def as_iri(url, encode_count=2):
     iri = url
     for _ in range(encode_count):
         iri = [('', iri)]
-        iri = urllib.urlencode(iri)
+        iri = six.moves.urllib.parse.urlencode(iri)
         iri = iri[1:]  # Strip off leading '='
 
     return iri
