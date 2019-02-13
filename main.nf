@@ -803,28 +803,29 @@ process layout_sequences {
   set file(sequences), file(cm), file(fasta), file(ps) from to_layout
 
   output:
-  file("output/") into secondary_to_import
+  file("data.csv") into secondary_to_import
 
   """
   auto-traveler.py --cm-library $cm --fasta-library $fasta --ps-library $ps $sequences output/
+  rnac secondary process-svgs output/ data.csv
   """
 }
 
 secondary_to_import
   .collect()
-  .combine(Channel.fromPath("files/secondary-structures/load.ctl"))
+  .map { [it, file("files/secondary-structures/load.ctl"] }
   .set { secondary_to_import }
 
 process store_secondary_structures {
   input:
-  set file('output*'), file(ctl) from secondary_to_import
+  set file('data*.csv'), file(ctl) from secondary_to_import
 
   output:
-  file('data.csv') into traveler_success
+  file('built') into traveler_success
 
   """
-  rnac secondary process-svgs output* data.csv
-  split-and-load $ctl data.csv ${params.secondary.data_chunk_size} traveler-data
+  split-and-load $ctl 'data*.csv' ${params.secondary.data_chunk_size} traveler-data
+  find . -name 'data*.csv' | xargs -I {} cut -d, -f1 {} | tr -d '"' | sort > built
   """
 }
 
@@ -833,14 +834,13 @@ process find_traveler_failures {
 
   input:
   file('expected.fasta') from traveler_expected_sequences
-  file('built.csv') from traveler_success
+  file('built') from traveler_success
 
   output:
   file('failures.txt') into traveler_failures
 
   """
   seqkit seq -ni expected.fasta | sort > expected
-  cut -d, -f1 built.csv | tr -d '"' | sort > built
   comm -23 expected built > failures.txt
   """
 }
