@@ -17,6 +17,7 @@ limitations under the License.
 
 from collections import OrderedDict
 
+import pytest
 from gffutils import Feature
 
 from rnacentral_pipeline.rnacentral.ftp_export.coordinates import gff3
@@ -69,8 +70,8 @@ def test_can_produce_features():
             frame='.',
             attributes=OrderedDict([
                 ('Name', ['URS000082BE64_9606']),
-                ('databases', ['snOPY']),
                 ('type', ['snoRNA']),
+                ('databases', ['snOPY']),
                 ('ID', ['URS000082BE64_9606.0:ncRNA_exon1']),
                 ('Parent', ['URS000082BE64_9606.0']),
             ])
@@ -92,8 +93,8 @@ def test_can_produce_features_with_identity():
             frame='.',
             attributes=OrderedDict([
                 ('Name', ['URS0000563942_9606']),
-                ('databases', ['ENA']),
                 ('type', ['snRNA']),
+                ('databases', ['ENA']),
                 ('ID', ['URS0000563942_9606.0']),
                 ('source', ['alignment']),
                 # 'identity': ['1.00']  FIXME This should have identity 1.0
@@ -132,10 +133,10 @@ def test_can_build_feature_for_mapped():
             frame='.',
             attributes=OrderedDict([
                 ('Name', ['URS0000000098_9606']),
-                ('databases', ['ENA']),
                 ('type', ['Y_RNA']),
-                ('source', ['alignment']),
+                ('databases', ['ENA']),
                 ('ID', ['URS0000000098_9606.0']),
+                ('source', ['alignment']),
             ])
         ),
         Feature(
@@ -148,11 +149,16 @@ def test_can_build_feature_for_mapped():
             frame='.',
             attributes=OrderedDict([
                 ('Name', ['URS0000000098_9606']),
-                ('databases', ['ENA']),
                 ('type', ['Y_RNA']),
+                ('databases', ['ENA']),
                 ('ID', ['URS0000000098_9606.0:ncRNA_exon1']),
                 ('Parent', ['URS0000000098_9606.0']),
             ])
         ),
     ]
     assert_features_equal(data, ans)
+
+
+@pytest.mark.xfail()
+def test_can_build_correct_features_for_expert_db_location():
+    assert False

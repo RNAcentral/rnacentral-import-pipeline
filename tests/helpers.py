@@ -18,6 +18,8 @@ import os
 import tempfile
 import subprocess
 
+import six
+
 from rnacentral_pipeline import psql
 
 
@@ -34,13 +36,11 @@ def run_with_replacements(path, *replacements, **kwargs):
             tmp.write(query)
             tmp.flush()
 
-        cmd = subprocess.run('psql', '-f', tmp.name, os.environ['PGDATABASE'])
-        print(cmd)
+        cmd = subprocess.run(['psql', '-f', tmp.name, os.environ['PGDATABASE']],
+                             stdout=subprocess.PIPE, encoding='utf-8')
         cmd.check_returncode()
         buf = six.moves.cStringIO(cmd.stdout)
-
-        for result in psql.json_handler(buf):
-            yield result
+        results = psql.json_handler(buf)
 
         try:
             if kwargs.get('take_all', False):
