@@ -53,6 +53,10 @@ def parse(handle):
             LOGGER.info("Skipping mis-annotated protein: %s", record.id)
             continue
 
+        if helpers.is_pseudogene(record.features[1]):
+            LOGGER.info("Skipping pseudogene")
+            continue
+
         if record.id not in dr_mapping:
             raise InvalidEnaFile("Somehow parsed DR refs are for wrong record")
 
@@ -100,7 +104,6 @@ def parse(handle):
             description=helpers.description(record),
             mol_type=helpers.mol_type(record),
             is_composite=helpers.is_composite(feature),
-            pseudogene=helpers.pseudogene(feature),
 
             gene_synonyms=helpers.gene_synonyms(feature),
             references=helpers.references(record, feature),
