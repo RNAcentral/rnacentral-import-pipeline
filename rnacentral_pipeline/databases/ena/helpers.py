@@ -263,8 +263,9 @@ def operon(feature):
     return embl.qualifier_string(feature, 'operon')
 
 
-def pseudogene(feature):
-    return embl.qualifier_string(feature, 'pseudogene')
+def is_pseudogene(feature):
+    return 'pseudogene' in feature.qualifiers or \
+        'pseudo' in feature.qualifiers
 
 
 def gene_synonyms(feature):
