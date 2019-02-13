@@ -37,7 +37,8 @@ def load_additional():
     metapath = os.path.join('files', 'search-export', 'metadata')
     for filename in os.listdir(metapath):
         query = os.path.join(metapath, filename)
-        cmd = subprocess.run('psql', '-f', filename, self.pgloader_url, encoding='utf-8')
+        url =  os.environ['PGDATABASE']
+        cmd = subprocess.run('psql', '-f', filename, url, encoding='utf-8')
         cmd.check_returncode()
     buf = six.moves.cStringIO(cmd.stdout)
     return exporter.parse_additions(buf)
