@@ -331,24 +331,32 @@ post_release
 //=============================================================================
 
 flag_for_qa
-  .combine(Channel.fromPath('files/qa/*.sql').flatten())
+  .combine(Channel.fromPath('files/qa/find-unanalyzed-sequences.sql'))
   .map { flag, fn -> [flag, fn.getBaseName(), fn] }
   .filter { f, n, fn -> params.qa[n].run }
   .set { qa_queries }
 
-process fetch_qa_sequences {
-
+process prepare_pfam_scan {
   input:
-  set val(status), val(name), file(query) from qa_queries
+  set val(status), val(qa_name), val(qa_version), file(query) from qa_queries
 
   output:
-  set val(name), file('parts/*.fasta') into split_qa_sequences
+  set val(name), val(version), file('parts/*.fasta') into all_qa_sequences
 
   """
-  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > raw.json
+  psql -v ON_ERROR_STOP=1 -v program=$qa_name -v version=$version -f "$query" "$PGDATABASE" > raw.json
   json2fasta.py raw.json rnacentral.fasta
   seqkit shuffle --two-pass rnacentral.fasta > shuffled.fasta
   seqkit split --two-pass --by-size ${params.qa[name].chunk_size} --out-dir 'parts/' shuffled.fasta
+
+  mkdir $name
+  cd $name
+  fetch generic "$base/Pfam-A.hmm.gz" Pfam-A.hmm.gz
+  fetch generic "$base/Pfam-A.hmm.dat.gz" Pfam-A.hmm.dat.gz
+  fetch generic "$base/active_site.dat.gz" active_site.dat.gz
+  gzip -d *.gz
+  hmmpress Pfam-A.hmm
+  cd ..
   """
 }
 
@@ -362,14 +370,6 @@ process generate_qa_scan_files {
   script:
   if (name == "pfam") {
     """
-    mkdir $name
-    cd $name
-    fetch generic "$base/Pfam-A.hmm.gz" Pfam-A.hmm.gz
-    fetch generic "$base/Pfam-A.hmm.dat.gz" Pfam-A.hmm.dat.gz
-    fetch generic "$base/active_site.dat.gz" active_site.dat.gz
-    gzip -d *.gz
-    hmmpress Pfam-A.hmm
-    cd ..
     """
   } else if (name == "rfam") {
     """
@@ -391,52 +391,57 @@ split_qa_sequences
   .flatMap { name, fns, extra -> fns.inject([]) { acc, fn -> acc << [name, fn, extra] } }
   .set { sequences_to_scan }
 
-process qa_scan {
-  tag { name }
-  cpus { params.qa[name].cpus }
-  memory { params.qa[name].memory }
+process rfam_scan {
+  cpus { params.qa.rfam.cpus }
+  memory { params.qa.rfam.memory }
 
   input:
-  set val(name), file('sequences.fasta'), file(dir) from sequences_to_scan
+  set val(version), file('sequences.fasta'), file(dir) from rfam_sequences_to_scan
 
   output:
-  set val(name), file('hits.csv') into qa_scan_results
+  file('rfam.csv') into rfam_scan_results
 
-  script:
-  if (name == 'rfam') {
-    """
-    cmscan \
-      -o output.inf \
-      --tblout results.tblout \
-      --clanin $dir/Rfam.clanin \
-      --oclan \
-      --fmt 2 \
-      --acc \
-      --cut_ga \
-      --rfam \
-      --notextw \
-      --nohmmonly \
-      --mpi \
-      "$dir/Rfam.cm" \
-      sequences.fasta
-    rnac qa $name results.tblout hits.csv
-    """
-  } else if (name == 'pfam') {
-    """
-    pfam_scan.pl \
-      -translate all \
-      -fasta sequences.fasta \
-      -dir "$dir" \
-      -cpus ${params.qa[name].cpus} \
-      -outfile raw.tsv
-    rnac qa $name raw.tsv hits.csv
-    """
-  } else {
-    error("Unknown type of QA scan: $name")
-  }
+  """
+  cmscan \
+    -o output.inf \
+    --tblout results.tblout \
+    --clanin $dir/Rfam.clanin \
+    --oclan \
+    --fmt 2 \
+    --acc \
+    --cut_ga \
+    --rfam \
+    --notextw \
+    --nohmmonly \
+    "$dir/Rfam.cm" \
+    sequences.fasta
+  rnac qa rfam --version $version results.tblout rfam.csv
+  """
 }
 
-qa_scan_results
+process pfam_scan {
+  cpus { params.qa.pfam.cpus }
+  memory { params.qa.pfam.memory }
+
+  input:
+  set val(version), file('sequences.fasta'), file(dir) from pfam_sequences_to_scan
+
+  output:
+  set val('pfam'), file('pfam.csv') into pfam_scan_results
+
+  """
+  pfam_scan.pl \
+    -translate all \
+    -fasta sequences.fasta \
+    -dir "$dir" \
+    -cpus ${params.qa.pfam.cpus} \
+    -outfile raw.tsv
+  rnac qa pfam --version $version raw.tsv pfam.csv
+  """
+}
+
+Channel.empty()
+  .mix(pfam_scan_results, rfam_scan_results)
   .groupTuple()
   .map { n, files -> [n, files, file("files/qa/${n}.ctl")] }
   .filter { n, fs, ctl ->
