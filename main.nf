@@ -601,7 +601,7 @@ process blat {
 
 process select_mapped_locations {
   tag { species }
-  memory '15 GB'
+  memory params.genome_mapping.select_mapped.directives.memory
 
   input:
   set file('output*.psl'), val(species), val(assembly_id) from species_results
