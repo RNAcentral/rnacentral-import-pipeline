@@ -337,19 +337,16 @@ flag_for_qa
   .set { qa_queries }
 
 process fetch_qa_sequences {
-
   input:
   set val(status), val(name), file(query) from qa_queries
 
   output:
   set val(name), file('parts/*.fasta') into split_qa_sequences
 
-  """
-  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > raw.json
-  json2fasta.py raw.json rnacentral.fasta
-  seqkit shuffle --two-pass rnacentral.fasta > shuffled.fasta
-  seqkit split --two-pass --by-size ${params.qa[name].chunk_size} --out-dir 'parts/' shuffled.fasta
-  """
+  script:
+  def chunk_size = params.qa[name].chunk_size
+  def variables = ""
+  template 'query-and-split.sh'
 }
 
 process generate_qa_scan_files {
@@ -530,12 +527,9 @@ process fetch_unmapped_sequences {
   set species, file('parts/*.fasta') into split_mappable_sequences
 
   script:
-  """
-  psql -v ON_ERROR_STOP=1 -v taxid=$taxid -v assembly_id=$assembly_id -f "$query" "$PGDATABASE" > raw.json
-  json2fasta.py raw.json rnacentral.fasta
-  seqkit shuffle --two-pass rnacentral.fasta > shuffled.fasta
-  seqkit split --two-pass --by-size "${params.genome_mapping.chunk_size}" --out-dir 'parts/' shuffled.fasta
-  """
+  def chunk_size = params.genome_mapping.chunk_size
+  def variables = "-v taxid=$taxid -v assembly_id=$assembly_id"
+  template 'query-and-split.sh'
 }
 
 process download_genome {
@@ -764,12 +758,10 @@ process find_possible_secondary_sequences {
   file('parts/*.fasta') into sequences_to_ribotype mode flatten
   file('rnacentral.fasta') into traveler_expected_sequences
 
-  """
-  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > raw.json
-  json2fasta.py raw.json rnacentral.fasta
-  seqkit shuffle --two-pass rnacentral.fasta > shuffled.fasta
-  seqkit split --two-pass --by-size ${params.secondary.sequence_chunk_size} --out-dir 'parts/' shuffled.fasta
-  """
+  script:
+  def chunk_size = params.secondary.sequence_chunk_size
+  def variables = ""
+  template 'query-and-split.sh'
 }
 
 process fetch_traveler_data {
