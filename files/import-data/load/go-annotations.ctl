@@ -37,4 +37,5 @@ create table load_go_term_annotations (
     assigned_by varchar(50),
     extensions jsonb
 );
+$$
 ;

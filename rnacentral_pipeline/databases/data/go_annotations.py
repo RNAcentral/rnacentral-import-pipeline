@@ -67,7 +67,7 @@ class GoTermAnnotation(object):
         yield [self.term_id]
         yield [self.evidence_code]
 
-    def writeable_publications(self):
+    def writeable_refs(self):
         for publication in self.publications:
             for ref in publication.writeable_id():
                 yield ref
@@ -80,5 +80,5 @@ class GoTermAnnotation(object):
                 self.term_id,
                 self.assigned_by,
                 self.evidence_code,
-                publication.external_id,
+                publication.writeable_id,
             ]

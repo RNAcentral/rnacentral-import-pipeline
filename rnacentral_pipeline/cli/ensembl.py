@@ -15,10 +15,11 @@ limitations under the License.
 
 import click
 
-from rnacentral_pipeline.databases.ensembl.metadata import proteins
 from rnacentral_pipeline.databases.ensembl.metadata import assemblies
-from rnacentral_pipeline.databases.ensembl.metadata import karyotypes
+from rnacentral_pipeline.databases.ensembl.metadata import compara
 from rnacentral_pipeline.databases.ensembl.metadata import coordinate_systems
+from rnacentral_pipeline.databases.ensembl.metadata import karyotypes
+from rnacentral_pipeline.databases.ensembl.metadata import proteins
 
 
 @click.group('ensembl')
@@ -84,3 +85,15 @@ def ensembl_proteins_cmd(connections, query, output):
     file is sorted.
     """
     proteins.write(connections, query, output)
+
+
+@cli.command('compara')
+@click.argument('fasta', default='-', type=click.File('rb'))
+@click.argument('output', default='compara.csv', type=click.File('wb'))
+def ensembl_compara(fasta, output):
+    """
+    Parse the FASTA file of Ensembl compara data. This will produce a CSV file
+    for import into the database that tracks what ensembl transcripts are
+    homologous.
+    """
+    compara.write(fasta, output)
