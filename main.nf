@@ -517,7 +517,7 @@ assemblies
 process fetch_unmapped_sequences {
   tag { species }
   scratch true
-  maxForks 5
+  maxForks { params.fetch_unmapped_sequences.directives.maxForks }
   errorStrategy 'ignore'
 
   input:
@@ -534,7 +534,7 @@ process fetch_unmapped_sequences {
 
 process download_genome {
   tag { species }
-  memory 30.GB
+  memory { params.download_genome.directives.memory }
   scratch true
 
   input:
@@ -571,7 +571,7 @@ genomes
   .set { targets }
 
 process blat {
-  memory 10.GB
+  memory { params.genome_mapping.blat.directives.memory }
   errorStrategy 'finish'
 
   input:
@@ -585,9 +585,9 @@ process blat {
     -ooc=$ooc \
     -noHead \
     -q=rna \
-    -stepSize=${params.genome_mapping.blat_options.step_size} \
-    -repMatch=${params.genome_mapping.blat_options.rep_match} \
-    -minScore=${params.genome_mapping.blat_options.min_score} \
+    -stepSize=${params.genome_mapping.blat.options.step_size} \
+    -repMatch=${params.genome_mapping.blat.options.rep_match} \
+    -minScore=${params.genome_mapping.blat.options.min_score} \
     -minIdentity=${params.genome_mapping.blat_options.min_identity} \
     $chromosome $chunk output.psl
   """
@@ -601,7 +601,7 @@ process blat {
 
 process select_mapped_locations {
   tag { species }
-  memory params.genome_mapping.select_mapped.directives.memory
+  memory { params.genome_mapping.select_mapped.directives.memory }
 
   input:
   set file('output*.psl'), val(species), val(assembly_id) from species_results
