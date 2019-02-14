@@ -4,13 +4,15 @@ HAVING FIELDS (
     urs,
     model,
     secondary_structure,
-    layout
+    layout,
+    overlaps
 ) INTO {{PGDATABASE}}?load_secondary_layout
 TARGET COLUMNS (
     urs,
     model,
     secondary_structure,
-    layout
+    layout,
+    overlaps
 )
 
 WITH
@@ -26,7 +28,8 @@ create table load_secondary_layout (
 	urs text NOT NULL,
 	secondary_structure text NOT NULL,
 	layout text NOT NULL,
-        model text NOT NULL
+        model text NOT NULL,
+        overlaps int not null
 );
 $$
 
@@ -36,19 +39,22 @@ INSERT INTO rnc_secondary_structure_layout (
     urs,
     "model",
     secondary_structure,
-    "layout"
+    "layout",
+    overlaps
 ) (
 SELECT
     urs,
     "model",
     secondary_structure,
-    "layout"
+    "layout",
+    overlaps
 FROM load_secondary_layout
 ) ON CONFLICT (urs) DO UPDATE
 SET
     model = EXCLUDED.model,
     secondary_structure = EXCLUDED.secondary_structure,
-    layout = EXCLUDED.layout
+    layout = EXCLUDED.layout,
+    overlaps = EXCLUDED.overlaps
 ;
 $$,
 $$
