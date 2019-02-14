@@ -48,7 +48,7 @@ def is_ignorable_chloroplast_conflict(rna_type, data):
 
 
 def is_generic_domain(data):
-    return data.domains().issubset(GENERIC_DOMAINS)
+    return bool(data.domains() & GENERIC_DOMAINS)
 
 
 class Validator(object):
@@ -69,16 +69,15 @@ class Validator(object):
             return False
 
         hit = data.rfam_hits[0]
-        if not hit.model_domain:
+        if not hit.model_domain or not data.domains():
             return False
 
-        if not data.domains():
+        if not data.domains() or is_generic_domain(data):
             return False
 
         return hit.model_domain not in data.domains() and \
             not is_ignorable_mito_conflict(rna_type, data) and \
-            not is_ignorable_chloroplast_conflict(rna_type, data) and \
-            not is_generic_domain(data)
+            not is_ignorable_chloroplast_conflict(rna_type, data)
 
     def message(self, _, data):
         """
@@ -113,4 +112,4 @@ class Validator(object):
             help_url='/help/rfam-annotations',
         )
 
-        return re.sub('\s+', ' ', msg)
+        return re.sub(r'\s+', ' ', msg)

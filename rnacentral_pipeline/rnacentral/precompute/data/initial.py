@@ -98,7 +98,7 @@ class Accession(object):
                 'synthetic' in self.lineage:
             return None
 
-        return self.lineage.split(';')[0]  # pylint: disable=no-member
+        return self.lineage.split(';')[0]
 
     @property
     def masked_description(self):
@@ -212,19 +212,17 @@ class Sequence(object):
         return any(a.is_mitochondrial() for a in self.accessions) or \
             (self.taxid == 9606 and 'MT' in self.chromosomes)
 
+    def is_chloroplast(self):
+        return any(a.is_chloroplast() for a in self.accessions) or \
+            self.taxid == 9606 and 'MT' in self.chromosomes
+
     def domains(self):
         """
         Get the set of all domains assigned to this sequence. This will ignore
         any invalid assignments (environmental samples, uncultured, or
         synthetic).
         """
-
-        domains = set()
-        for accession in self.accessions:
-            domain = accession.domain
-            if domain:
-                domains.add(domain)
-        return domains
+        return {a.domain for a in self.accessions if a.domain}
 
     def has_unique_hit(self):
         """
