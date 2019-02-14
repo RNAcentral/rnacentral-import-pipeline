@@ -12,5 +12,5 @@ WHERE
   pre.is_active = true
   AND layout.id IS NULL
   AND pre.rna_type = 'rRNA'
-  AND qa.is_incomplete = false
+  AND qa.incomplete_sequence = false
 ) TO STDOUT;
