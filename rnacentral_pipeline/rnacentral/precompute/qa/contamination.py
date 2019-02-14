@@ -15,11 +15,18 @@ limitations under the License.
 
 import re
 
-ALLOWED_MITO_FAMILIES = {
+ALLOWED_FAMILIES = {
     'RF00177',  # Bacterial small subunit ribosomal RNA
     'RF02541',  # Bacterial large subunit ribosomal RNA
     'RF01959',  # Archaeal small subunit ribosomal RNA
     'RF02540',  # Archaeal large subunit ribosomal RNA
+}
+
+GENERIC_DOMAINS = {
+    'unclassified sequences',
+    'artificial sequences',
+    'miscellaneous sequences',
+    'other sequences',
 }
 
 
@@ -31,7 +38,17 @@ def is_ignorable_mito_conflict(rna_type, data):
     """
     return data.is_mitochondrial() and \
         'rRNA' == rna_type and \
-        data.rfam_hits[0].model in ALLOWED_MITO_FAMILIES
+        data.rfam_hits[0].model in ALLOWED_FAMILIES
+
+
+def is_ignorable_chloroplast_conflict(rna_type, data):
+    return data.is_chloroplast() and \
+        'rRNA' == rna_type and \
+        data.rfam_hits[0].model in ALLOWED_FAMILIES
+
+
+def is_generic_domain(data):
+    return data.domains().issubset(GENERIC_DOMAINS)
 
 
 class Validator(object):
@@ -59,7 +76,9 @@ class Validator(object):
             return False
 
         return hit.model_domain not in data.domains() and \
-            not is_ignorable_mito_conflict(rna_type, data)
+            not is_ignorable_mito_conflict(rna_type, data) and \
+            not is_ignorable_chloroplast_conflict(rna_type, data) and \
+            not is_generic_domain(data)
 
     def message(self, _, data):
         """
