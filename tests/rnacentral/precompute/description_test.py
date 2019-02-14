@@ -63,15 +63,14 @@ from .helpers import load_data
     ('URS000075C808_9606', 'lncRNA', 'Homo sapiens HOX transcript antisense RNA (HOTAIR)'),
     ('URS000075CC93_9606', 'precursor_RNA', 'Homo sapiens (human) microRNA hsa-mir-1302 precursor (hsa-mir-1302-2, hsa-mir-1302 9 to 11)'),
     ('URS000075CF25_9913', 'precursor_RNA', 'Bos taurus (cattle) microRNA bta-mir-10a precursor'),
+    ('URS0000795103_6239', 'precursor_RNA', 'Caenorhabditis elegans microRNA cel-mir-8204 precursor'),
     ('URS0000808D70_1478174', 'tmRNA', 'Neochlamydia sp. TUME1 tmRNA'),
     ('URS00008E3A1B_10090', 'lncRNA', 'Mus musculus predicted gene 11532 (Gm11532)'),
     ('URS00009E8F92_885695', 'rRNA', 'Sinumelon nullarboricum partial 16S ribosomal RNA'),
     ('URS0000A767C0_3702', 'lncRNA', 'Arabidopsis thaliana (thale-cress) potential natural antisense gene, locus overlaps with AT1G44120'),
     ('URS0000A86584_10090', 'ncRNA', 'Mus musculus (house mouse) predicted gene 29254 (Gm29254)'),
     ('URS0000ABD87F_9606', 'rRNA', 'Homo sapiens RNA, 45S pre-ribosomal N1 (RNA45SN1)'),
-
     ('URS0000D50284_7240', 'precursor_RNA', 'Drosophila simulans microRNA dsi-mir-988 precursor'),
-    ('URS0000795103_6239', 'precursor_RNA', 'Caenorhabditis elegans microRNA cel-mir-8204 precursor'),
     ('URS0000D5657E_7240', 'precursor_RNA', 'Drosophila simulans microRNA dsi-mir-4966 precursor (dsi-mir-4966-3)'),
 
     # TODO: Implement the logic required below
@@ -80,6 +79,18 @@ from .helpers import load_data
     # ('URS0000D2348C_9606', 'misc_RNA', 'Homo sapiens (human) let-7 microRNA precursor (2 structures)'),
     # ('URS000080DD8D_32630', 'misc_RNA', "25-nt RNA from synthetic construct (PDB 4V8X, chain AX)"),
     # ('URS000080DE2B_274', 'rRNA', "5S rRNA from Thermus thermophilus (34 structures)"),
+    # ('URS00000C777C_1231464', "Alkalibacterium sp. 3.5P*23 small subunit ribosomal RNA (16S)"),
+    # ('URS000080DD59_32630', "5'-R(*UP*GP*(CBV)P*(CBV)P*AP*GP*UP*UP*CP*GP*CP*UP*GP*GP*C)-3' from (PDB 1QBP, chain E)"),
+    # ('URS000080DE07_32630', "RNA (5'-R(P*CP*GP*AP*UP*CP*GP*GP*GP*UP*GP*UP*C)-3') from (PDB 1RY1, chain Q)"),
+    # ('URS000080DE5B_32630', "RNA (5'-R(P*AP*UP*CP*GP*CP*GP*CP*CP*UP*GP*UP*G)-3') from (PDB 1RY1, chain R)"),
+    # ('URS000080E209_32630', "RNA (5'-R(*CP*CP*GP*CP*CP*GP*CP*GP*CP*CP*AP*(5BU)P*GP*CP*CP*UP*GP*UP*GP*GP*CP*GP... from (PDB 3MEI, chain B)"),
+    # ('URS000080E22B_308052', "tRNA (5'-D(*AP*UP*CP*CP*CP*CP*GP*UP*GP*UP*CP*CP*UP*UP*GP*GP*UP*UP*CP*G)-3') from Mitsuaria sp. 67 (PDB 4WT8, chain D2)"),
+    # ('URS000080E230_32630', "5'-D(*CP*AP*GP*CP*TP*AP*CP*TP*TP*GP*AP*GP*CP*T)-3' from (PDB 3H3V, chain P)"),
+    # ('URS0000A77852_32630', "RNA (5'-R(*(LCC)P*(LCC)P*(LCA)P*(LCG)P*AP*CP*UP*UP*AP*AP*GP*UP*CP*U)-3') from synthetic construct (PDB 5V0J, chain B)"),
+    # ('URS0000BC4693_9606', "RNA (5'-R(*GP*(CBV)P*CP*GP*GP*(6MZ)P*UP*GP*GP*C)-3') from Homo sapiens (PDB 5LR4, chain D)"),
+    # ('URS000080E10B_32630', "5'-R(*GP*CP*CP*GP*AP*AP*GP*CP*CP*(P5P)-3' from (PDB 1XV0, chain B)"),
+    # ('URS000080E135_274', "messenger RNA (5'-R(*AP*AP*UP*GP*UP*AP*G)-3') from Thermus thermophilus (PDB 4V9N, chain CV)"),
+    # ('URS000041AF00_274', 'RNA (77-MER) from Thermus thermophilus (PDB 4V7J, chain Bw)'),
 ])
 def test_computes_correct_species_specific_descriptions(rna_id, rna_type, name):
     data = load_data(rna_id)

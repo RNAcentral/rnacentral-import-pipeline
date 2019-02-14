@@ -24,4 +24,4 @@ def test_reference_can_handle_non_unicode():
         pmid=27334534,
         doi=None,
     )
-    assert ref.md5() == '1d0712400fea453651afca2eb6ba0f4d'
+    assert ref.md5() == '1c1aa1c716a1ae7fd6ba0747d3e166e0'
