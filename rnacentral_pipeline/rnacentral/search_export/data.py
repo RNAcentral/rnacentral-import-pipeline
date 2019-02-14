@@ -677,5 +677,6 @@ builder = entry([
         fields('conserved_structure', get_or_empty('crs_ids'), keys='crs'),
         fields('overlaps_with', get_or_empty('overlaps_with'), keys='overlaps'),
         fields('no_overlaps_with', get_or_empty('no_overlaps_with'), keys='overlaps'),
+        fields('has_secondary_structure', first, keys='has_secondary'),
     ]),
 ])
