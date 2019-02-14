@@ -29,7 +29,7 @@ def short_description(description, sequence):
     for name in leading:
         # This is used instead of building a regex to avoid dealing with issues
         # due to parenthesis.
-        name = name.encode('utf-8')
+        name = name
         if description.startswith(name):
             description = description[len(name):]
         description = description.strip()
