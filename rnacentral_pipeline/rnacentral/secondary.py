@@ -110,4 +110,4 @@ def write_all(directories, output):
     assert directories, "Must give at least one directory"
 
     for directory in directories:
-        write(directory)
+        write(directory, output)
