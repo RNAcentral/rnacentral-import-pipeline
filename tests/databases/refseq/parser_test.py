@@ -311,9 +311,13 @@ def test_can_assign_isoform_to_rnase_p():
     ))
 
 
-def test_can_produce_reasonable_names_for_snorna():
-    with open('data/refseq/sno-rna.gbff', 'r') as raw:
+@pytest.mark.parametrize('filename,description', [
+    ('data/refseq/sno-rna.gbff', 'Mus musculus small nucleolar RNA, C/D box 17 (Snord17)'),
+    ('data/refseq/lncrna.gbff', 'Arabidopsis thaliana Natural antisense transcript overlaps with AT1G44120 (AT1G44125)'),
+])
+def test_can_produce_reasonable_names_for_sequences(filename, description):
+    with open(filename, 'r') as raw:
         data = [e for e in parser.parse(raw)]
         assert len(data) == 1
 
-    assert data[0].description == 'Mus musculus small nucleolar RNA, C/D box 17 (Snord17)'
+    assert data[0].description == description
