@@ -125,6 +125,10 @@ class Accession(object):
         return 'mitochondri' in self.description or \
             (self.organelle and 'mitochondri' in self.organelle)
 
+    def is_chloroplast(self):
+        return 'chloroplast' in self.description or \
+            (self.organelle and 'chloroplast' in self.organelle)
+
 
 @attr.s(hash=True)
 class HitComponent(object):
