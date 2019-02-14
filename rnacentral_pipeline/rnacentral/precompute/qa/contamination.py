@@ -13,6 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import re
+
 ALLOWED_MITO_FAMILIES = {
     'RF00177',  # Bacterial small subunit ribosomal RNA
     'RF02541',  # Bacterial large subunit ribosomal RNA
@@ -73,13 +75,14 @@ class Validator(object):
         else:
             sequence_name = sorted({acc.species for acc in data.accessions})
             sequence_name = ', '.join(sequence_name)
-            sequence_name = '<i>%s</i>' % sequence_name
+            if sequence_name:
+                sequence_name = '<i>%s</i>' % sequence_name
 
         model_domain = data.rfam_hits[0].model_domain
         model_url = data.rfam_hits[0].url
         model_name = data.rfam_hits[0].model_name
 
-        return (
+        msg = (
             'This {sequence_name} sequence matches a {match_domain} '
             'Rfam model (<a href="{model_url}">{model_name}</a>). '
             '<a href="{help_url}">Learn more &rarr;</a>'
@@ -90,3 +93,5 @@ class Validator(object):
             model_name=model_name,
             help_url='/help/rfam-annotations',
         )
+
+        return re.sub('\s+', ' ', msg)
