@@ -48,6 +48,11 @@ def load_dot_bracket(filename):
         return dot_bracket
 
 
+def load_overlaps(filename):
+    with open(filename) as raw:
+        return int(raw.readline().strip())
+
+
 def models(directory, colored=True):
     """
     Look at the files in the given directory to find all the URS-model pairs
@@ -65,8 +70,9 @@ def models(directory, colored=True):
         urs, model = pair.split('-', 1)
         fasta = os.path.join(directory, pair + '.fasta')
         svg = os.path.join(directory, pair + svg_name)
+        overlap = os.path.join(directory,  pair + '.overlaps')
         if os.path.exists(fasta) and os.path.exists(svg):
-            data.append((urs, model, fasta, svg))
+            data.append((urs, model, fasta, svg, overlap))
 
     if not data:
         raise ValueError("Found no possible models in: %s" % directory)
@@ -82,14 +88,16 @@ def process_directory(directory, colored=True):
     """
 
     for found in models(directory, colored=colored):
-        urs, model, dot_filename, svg_filename = found
+        urs, model, dot_filename, svg_filename, overlap_filename = found
         dot_bracket = load_dot_bracket(dot_filename)
         svg = load_svg_data(svg_filename)
+        overlaps = load_overlaps(overlap_filename)
         yield [
             urs,
             model,
             dot_bracket,
             svg,
+            overlaps,
         ]
 
 
