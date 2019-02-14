@@ -70,12 +70,12 @@ RUN chmod +x $RNA/jiffy-infernal-hmmer-scripts/ali-pfam-sindi2dot-bracket.pl
 RUN \
     git clone https://github.com/davidhoksza/traveler.git && \
     cd traveler && \
-    git checkout 0912ed5daab09bb3c38630efaf3643ea38b02dbe && \
+    git checkout 82ee9f58238f856d128d4b44d9999a509edebdfe && \
     cd $RNA/traveler/src && \
     make build
 
 # Install auto-traveler.py
-RUN git clone https://github.com/RNAcentral/auto-traveler.git && cd auto-traveler && git checkout 5ad1002dc9614e0c0a9c85a0d1a1017ee5027fbe
+RUN git clone https://github.com/RNAcentral/auto-traveler.git && cd auto-traveler && git checkout 943c2f00664430d6b5a3dbf5eb26a7ae58840cbe
 
 # Install RNAStructure
 RUN \
