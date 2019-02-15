@@ -75,7 +75,7 @@ RUN \
     make build
 
 # Install auto-traveler.py
-RUN git clone https://github.com/RNAcentral/auto-traveler.git && cd auto-traveler && git checkout 943c2f00664430d6b5a3dbf5eb26a7ae58840cbe
+RUN git clone https://github.com/RNAcentral/auto-traveler.git && cd auto-traveler && git checkout 64ae508082b3b8e784360ab6aeb4b6777b3b0c9c
 
 # Install RNAStructure
 RUN \
