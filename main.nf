@@ -74,9 +74,14 @@ for (entry in params.metadata) {
 }
 
 // Setup the QA files for hmmpress or whatever is needed.
-to_prepare = params.qa
+def to_prepare = params.qa
   .findAll { key, value -> value.get('run', true) }
   .inject([]) { acc, entry -> acc << [entry.key, entry.value.files] }
+
+// Setup to find the sequences for QA scans
+def to_scan = params.qa
+  .findAll { key, value -> value.get('run', true) }
+  .inject([]) { acc, entry -> acc << [entry.key, file('files/qa/find-unanalyzed-sequences.sql')] }
 
 // Now setup the channels with all data
 Channel.from(processed_data).set { raw_output }
@@ -84,6 +89,7 @@ Channel.from(data_to_fetch).set { to_fetch }
 Channel.from(data_to_process).set { process_specs }
 Channel.from(data_to_fetch_and_process).set { to_fetch_and_process }
 Channel.from(to_prepare).set { qa_to_prepare }
+Channel.from(to_scan).set { qa_to_scan }
 
 //=============================================================================
 // Fetch data as well as all extra data for import
@@ -331,32 +337,21 @@ post_release
 //=============================================================================
 
 flag_for_qa
-  .combine(Channel.fromPath('files/qa/find-unanalyzed-sequences.sql'))
-  .map { flag, fn -> [flag, fn.getBaseName(), fn] }
-  .filter { f, n, fn -> params.qa[n].run }
+  .combine(qa_to_scan)
   .set { qa_queries }
 
-process prepare_pfam_scan {
+process find_sequences_for_qa {
   input:
-  set val(status), val(qa_name), val(qa_version), file(query) from qa_queries
+  set val(status), val(qa_name), file(query) from qa_queries
 
   output:
   set val(name), val(version), file('parts/*.fasta') into all_qa_sequences
 
   """
-  psql -v ON_ERROR_STOP=1 -v program=$qa_name -v version=$version -f "$query" "$PGDATABASE" > raw.json
+  psql -v ON_ERROR_STOP=1 -v program=$qa_name -f "$query" "$PGDATABASE" > raw.json
   json2fasta.py raw.json rnacentral.fasta
   seqkit shuffle --two-pass rnacentral.fasta > shuffled.fasta
   seqkit split --two-pass --by-size ${params.qa[name].chunk_size} --out-dir 'parts/' shuffled.fasta
-
-  mkdir $name
-  cd $name
-  fetch generic "$base/Pfam-A.hmm.gz" Pfam-A.hmm.gz
-  fetch generic "$base/Pfam-A.hmm.dat.gz" Pfam-A.hmm.dat.gz
-  fetch generic "$base/active_site.dat.gz" active_site.dat.gz
-  gzip -d *.gz
-  hmmpress Pfam-A.hmm
-  cd ..
   """
 }
 
@@ -370,6 +365,14 @@ process generate_qa_scan_files {
   script:
   if (name == "pfam") {
     """
+    mkdir $name
+    cd $name
+    fetch generic "$base/Pfam-A.hmm.gz" Pfam-A.hmm.gz
+    fetch generic "$base/Pfam-A.hmm.dat.gz" Pfam-A.hmm.dat.gz
+    fetch generic "$base/active_site.dat.gz" active_site.dat.gz
+    gzip -d *.gz
+    hmmpress Pfam-A.hmm
+    cd ..
     """
   } else if (name == "rfam") {
     """
@@ -389,14 +392,21 @@ process generate_qa_scan_files {
 split_qa_sequences
   .join(qa_scan_files)
   .flatMap { name, fns, extra -> fns.inject([]) { acc, fn -> acc << [name, fn, extra] } }
-  .set { sequences_to_scan }
+  .choice(rfam_sequences_to_scan, pfam_sequences_to_scan) { name, version, fn, d ->
+    def names = ["rfam", "pfam"]
+    def index = names.indexOf(name)
+    if (index == -1) {
+      error("Unexpected QA scan")
+    }
+    return index + 1
+  }
 
 process rfam_scan {
   cpus { params.qa.rfam.cpus }
   memory { params.qa.rfam.memory }
 
   input:
-  set val(version), file('sequences.fasta'), file(dir) from rfam_sequences_to_scan
+  set val(name), file('sequences.fasta'), file(dir) from rfam_sequences_to_scan
 
   output:
   file('rfam.csv') into rfam_scan_results
@@ -415,7 +425,7 @@ process rfam_scan {
     --nohmmonly \
     "$dir/Rfam.cm" \
     sequences.fasta
-  rnac qa rfam --version $version results.tblout rfam.csv
+  rnac qa rfam results.tblout rfam.csv
   """
 }
 
@@ -424,7 +434,7 @@ process pfam_scan {
   memory { params.qa.pfam.memory }
 
   input:
-  set val(version), file('sequences.fasta'), file(dir) from pfam_sequences_to_scan
+  set val(name), file('sequences.fasta'), file(dir) from pfam_sequences_to_scan
 
   output:
   set val('pfam'), file('pfam.csv') into pfam_scan_results
@@ -436,7 +446,7 @@ process pfam_scan {
     -dir "$dir" \
     -cpus ${params.qa.pfam.cpus} \
     -outfile raw.tsv
-  rnac qa pfam --version $version raw.tsv pfam.csv
+  rnac qa pfam raw.tsv pfam.csv
   """
 }
 
