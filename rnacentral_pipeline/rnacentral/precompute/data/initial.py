@@ -60,6 +60,8 @@ class Accession(object):
     locus_tag = attr.ib(validator=optional(is_a(six.text_type)))
     organelle = attr.ib(validator=optional(is_a(six.text_type)))
     lineage = attr.ib(validator=optional(is_a(six.text_type)))
+    all_species = attr.ib(validator=is_a(tuple), converter=tuple)
+    all_common_names = attr.ib(validator=is_a(tuple), converter=tuple)
 
     @classmethod
     def build(cls, data):

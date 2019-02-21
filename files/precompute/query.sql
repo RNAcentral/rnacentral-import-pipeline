@@ -16,7 +16,9 @@ select
         'ncrna_class', acc.ncrna_class,
         'locus_tag', acc.locus_tag,
         'organelle', acc.organelle,
-        'lineage', coalesce(tax.lineage, acc.classification)
+        'lineage', coalesce(tax.lineage, acc.classification),
+        'all_species', ARRAY[tax.name, acc.species::text],
+        'all_common_names', ARRAY[tax.common_name, acc.common_name::text]
       )
     ),
     'has_coordinates', exists(
