@@ -6,11 +6,19 @@ ALTER TABLE load_compara
 -- Determine all the urs_taxids to store
 UPDATE load_compara
 SET
-  urs_taxid = xref.upi || '_' || xref.taxid
-JOIN rnc_accessions acc ON xref.ac = acc.accession
+  urs_taxid = t.urs_taxid
+FROM (
+  select
+     xref.upi || '_' || xref.taxid as urs_taxid,
+     acc.external_id as transcript
+  from xref
+  join rnc_accessions acc on acc.accession = xref.ac
+  where
+    xref.deleted = 'N'
+    and xref.dbid = 25
+) t
 WHERE
-  acc.external_id = load_compara.ensembl_transcript
-  and xref.deleted = 'N'
+  t.transcript = load_compara.ensembl_transcript
 ;
 
 -- populate the load table with the required homology ids.
