@@ -24,6 +24,8 @@ import operator as op
 from xml.dom import minidom
 import xml.etree.ElementTree as ET
 
+import six
+
 import pytest
 from functools import lru_cache
 
@@ -37,8 +39,8 @@ def load_additional():
     metapath = os.path.join('files', 'search-export', 'metadata')
     for filename in os.listdir(metapath):
         query = os.path.join(metapath, filename)
-        url =  os.environ['PGDATABASE']
-        cmd = subprocess.run(['psql', '-f', filename, url], encoding='utf-8')
+        cmd = subprocess.run(['psql', '-f', query, os.environ['PGDATABASE']],
+                             stdout=subprocess.PIPE, encoding='utf-8')
         cmd.check_returncode()
     buf = six.moves.cStringIO(cmd.stdout)
     return exporter.parse_additions(buf)
