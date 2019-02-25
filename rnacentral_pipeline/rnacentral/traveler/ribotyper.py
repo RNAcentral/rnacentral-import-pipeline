@@ -13,10 +13,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import six
-
+import six 
 import attr
 from attr.validators import instance_of as is_a
+
 
 @attr.s()
 class Result(object):
@@ -69,3 +69,9 @@ def parse(filename):
             if line.startswith('#'):
                 continue
             yield Result.from_result(line)
+
+
+def as_dict(directory):
+    basename = os.path.dirname(directory)
+    filename = os.path.join(directory, basename + '.ribotyper.long.out')
+    return {p.target: p for p in parse(filename)}

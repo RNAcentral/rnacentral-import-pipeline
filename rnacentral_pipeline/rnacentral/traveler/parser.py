@@ -102,12 +102,14 @@ def models(directory, colored=True):
     that have been computed.
     """
 
+    ribo_results = ribotyper.as_dict(directory)
     seen = False
     for filename in glob(os.path.join(directory, '*.fasta')):
         basename = os.path.basename(filename)
         pair, _ = os.path.splitext(basename)
         urs, model = pair.split('-', 1)
-        result = TravelerResult.build(urs, model, directory, colored=colored)
+        ribo_result = ribo_results[urs]
+        result = TravelerResult.build(urs, model, directory, ribo_result)
         if result.is_valid():
             seen = True
             yield result
