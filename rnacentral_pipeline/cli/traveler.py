@@ -16,10 +16,10 @@ limitations under the License.
 
 import click
 
-from rnacentral_pipeline.rnacentral import secondary
+from rnacentral_pipeline.rnacentral import traveler
 
 
-@click.group('secondary')
+@click.group('traveler')
 def cli():
     """
     A group of commands for parsing data from secondary structures into an
@@ -40,4 +40,4 @@ def process_svgs(directories, output):
     Process all SVG secondary structures in the given directory and produce a
     single data file that can be imported into the database.
     """
-    secondary.write_all(directories, output)
+    traveler.write_all(directories, output)
