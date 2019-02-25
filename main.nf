@@ -744,7 +744,7 @@ post_precompute
 //=============================================================================
 
 flag_for_secondary
-  .combine(Channel.fromPath("files/secondary-structures/find-sequences.sql"))
+  .combine(Channel.fromPath("files/traveler/find-sequences.sql"))
   .set { secondary_query }
 
 process find_possible_secondary_sequences {
@@ -799,13 +799,13 @@ process layout_sequences {
 
   """
   auto-traveler.py --cm-library $cm --fasta-library $fasta --ps-library $ps $sequences output/
-  rnac secondary process-svgs output/ data.csv
+  rnac traveler process-svgs output/ data.csv
   """
 }
 
 secondary_to_import
   .collect()
-  .map { [it, file("files/secondary-structures/load.ctl"] }
+  .map { [it, file("files/traveler/load.ctl"] }
   .set { secondary_to_import }
 
 process store_secondary_structures {
