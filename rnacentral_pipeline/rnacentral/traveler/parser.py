@@ -19,8 +19,12 @@ import csv
 from glob import glob
 
 import six
-import attr
 from Bio import SeqIO
+
+import attr
+from attr.validators import instance_of as is_a
+
+from . import ribotyper
 
 
 @attr.s()
@@ -28,19 +32,16 @@ class TravelerResult(object):
     urs = attr.ib(type=six.text_type)
     model_id = attr.ib(type=six.text_type)
     directory = attr.ib(type=six.text_type)
-    basepairs = attr.ib(type=six.integer_type)
-    overlaps = attr.ib(type=six.integer_type)
-    strand = attr.ib(type=six.integer_type)
+    basepairs = attr.ib(validator=is_a(six.integer_types))
+    overlaps = attr.ib(validator=is_a(six.integer_types))
+    strand = attr.ib(validator=is_a(six.integer_types))
     model_coverage = attr.ib(type=float)
+    result = attr.ib(type=ribotyper.Result)
 
     @classmethod
-    def build(cls, urs, model_id, directory, colored=True):
-        svg_name = '.colored.svg'
-        if not colored:
-            svg_name = '.svg'
-
+    def build(cls, urs, model_id, directory, result):
         overlap_file = os.path.join(directory,  pair + '.overlaps')
-        with open(overlap_file) as raw:
+        with open(overlap_file, 'r') as raw:
             overlaps = int(raw.readline().strip())
 
         return cls(
@@ -48,13 +49,18 @@ class TravelerResult(object):
             model_id=model_id,
             directory=self.directory,
             overlaps=overlaps,
+            result=result,
         )
 
-    def svg_data(self):
+    def svg_data(self, colored=True):
         """
         Process a single SVG file into the requried data. This produce an array
         that can be written to CSV for import into the database.
         """
+
+        svg_name = '.colored.svg'
+        if not colored:
+            svg_name = '.svg'
 
         filename = os.path.join(directory, pair + svg_name)
         with open(filename) as raw:
@@ -76,6 +82,9 @@ class TravelerResult(object):
             dot_bracket = re.sub(r'^\w+', '', seq_dot)
             assert len(sequence) == len(dot_bracket)
             return dot_bracket
+
+    def is_valid(self):
+        pass
 
     def writeable(self):
         return [
@@ -105,34 +114,3 @@ def models(directory, colored=True):
 
     if not seen:
         raise ValueError("Found no possible models in: %s" % directory)
-
-
-def process_directory(directory, colored=True):
-    """
-    Process all SVG files in the given directory. By default it will process
-    all colored SVG files, if given colored=False, it will only use uncolored
-    SVGs.
-    """
-
-    for found in models(directory, colored=colored):
-        yield found.writeable() 
-
-
-def write(directory, output):
-    """
-    Parse all the secondary structure data from the given directory and write
-    it to the given file.
-    """
-    csv.writer(output).writerows(process_directory(directory))
-
-
-def write_all(directories, output):
-    """
-    Process all directories to produce a datafile for all computed secondary
-    structures in them.
-    """
-
-    assert directories, "Must give at least one directory"
-
-    for directory in directories:
-        write(directory, output)
