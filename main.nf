@@ -389,16 +389,19 @@ process generate_qa_scan_files {
   }
 }
 
-split_qa_sequences
+rfam_sequences_to_scan = Channel.create()
+pfam_sequences_to_scan = Channel.create()
+all_qa_sequences
   .join(qa_scan_files)
   .flatMap { name, fns, extra -> fns.inject([]) { acc, fn -> acc << [name, fn, extra] } }
-  .choice(rfam_sequences_to_scan, pfam_sequences_to_scan) { name, version, fn, d ->
+  .filter { n, fn, d -> !fn.isEmpty() }
+  .choice(rfam_sequences_to_scan, pfam_sequences_to_scan) { it ->
     def names = ["rfam", "pfam"]
-    def index = names.indexOf(name)
+    def index = names.indexOf(it[0])
     if (index == -1) {
       error("Unexpected QA scan")
     }
-    return index + 1
+    return index
   }
 
 process rfam_scan {
@@ -444,7 +447,7 @@ process pfam_scan {
     -translate all \
     -fasta sequences.fasta \
     -dir "$dir" \
-    -cpus ${params.qa.pfam.cpus} \
+    -cpu ${params.qa.pfam.cpus} \
     -outfile raw.tsv
   rnac qa pfam raw.tsv pfam.csv
   """
