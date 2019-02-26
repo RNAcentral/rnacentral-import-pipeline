@@ -98,9 +98,9 @@ class IdReference(object):
     @classmethod
     def build(cls, ref_id):
         if isinstance(ref_id, int):
-            return cls('pmid', str(ref_id))
+            return cls('pmid', six.text_type(ref_id))
 
-        if isinstance(ref_id, str):
+        if isinstance(ref_id, six.text_type):
             if re.match(r'^\d+$', ref_id):
                 return cls('pmid', ref_id)
             service, eid = ref_id.split(':', 1)
