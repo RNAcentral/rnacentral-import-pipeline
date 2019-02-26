@@ -18,7 +18,10 @@ import logging
 
 import requests
 
-from functools import lru_cache
+try:
+    from functools import lru_cache
+except ImportException:
+    from functools32 import lru_cache
 
 TAX_URL = 'https://www.ebi.ac.uk/ena/data/taxonomy/v1/taxon/tax-id/{taxon_id}'
 
