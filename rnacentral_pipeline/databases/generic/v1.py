@@ -192,7 +192,11 @@ def gene_synonyms(ncrna):
     """
     Find all gene synonyms, if they exist.
     """
-    return ncrna.get('gene', {}).get('synonyms', [])
+    gene = ncrna.get('gene', {})
+    synonyms = gene.get('synonyms', [])
+    if 'symbol' in gene:
+        synonyms.append(gene['symbol'])
+    return synonyms
 
 
 def gene(ncrna):
