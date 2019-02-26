@@ -40,6 +40,7 @@ def cli():
 @cli.command('json-schema', aliases=[
     'flybase',
     'lncbase',
+    'lncbook',
     'lncipedia',
     'mirbase',
     'pombase',
