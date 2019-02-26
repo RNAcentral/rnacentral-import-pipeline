@@ -18,5 +18,7 @@ import json
 
 def json_handler(out):
     for row in out:
+        if not row:
+            continue
         row = row.replace('\\\\', '\\')
         yield json.loads(row)

@@ -3,7 +3,7 @@
 <description>Botrytis tulipae partial 18S ribosomal RNA</description>
 <dates>
 <date value="29 May 2014" type="first_seen" />
-<date value="02 Aug 2018" type="last_seen" />
+<date value="21 Nov 2018" type="last_seen" />
 </dates>
 <cross_references>
 <ref dbname="ENA" dbkey="AM233399.1" />
@@ -20,9 +20,9 @@
 <field name="product">18S ribosomal RNA</field>
 <field name="has_genomic_coordinates">False</field>
 <field name="md5">1ff5338f696137f263d2b383081d2063</field>
-<field name="author">van Baarlen P.</field>
 <field name="author">Staats M.</field>
 <field name="author">van Kan J.A.L.</field>
+<field name="author">van Baarlen P.</field>
 <field name="journal">Eur. J. Plant Pathol. 117(3):219-235(2007).</field>
 <field name="insdc_submission">Staats M., Laboratory of Phytopathology, Wageningen university, Binnenhaven 5, 6709 PD, NETHERLANDS.</field>
 <field name="pub_title">AFLP analysis of genetic diversity in populations of Botrytis elliptica and Botrytis tulipae from the Netherlands</field>
