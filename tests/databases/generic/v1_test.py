@@ -256,7 +256,7 @@ def test_can_correctly_parse_mirbase_data():
         data = json.load(raw)
         data = list(v1.parse(data))
 
-    assert len(data) == 1
+    assert len(data) == 2
     assert attr.asdict(data[0]) == attr.asdict(dat.Entry(
         primary_id='MI0000612',
         accession='MIRBASE:MI0000612',
@@ -297,6 +297,7 @@ def test_can_correctly_parse_mirbase_data():
             coordinates=[dat.RelatedCoordinate(start=15, stop=37)],
         )]
     ))
+    assert data[1].optional_id == 'bdi-miR7720-3p'
 
 
 def test_can_correct_fetch_related_sequences():

@@ -26,6 +26,34 @@
                         "PMID:17604727",
                         "PMID:14691248"
                 ]
+        },
+        {
+                "primaryId" : "MIRBASE:MIMAT0030165",
+                "name" : "bdi-miR7720-3p",
+                "taxonId" : "NCBITaxon:15368",
+                "soTermId" : "SO:0000276",
+                "sequence" : "TTTTACACATGATTTGGGTTGGAC",
+                "url" : "http://www.mirbase.org/cgi-bin/mature.pl?mature_acc=MIMAT0030165",
+                "relatedSequences" : [
+                        {
+                                "relationship" : "precursor",
+                                "sequenceId" : "MIRBASE:MI0025332"
+                        }
+                ],
+                "genomeLocations" : [
+                        {
+                                "gca_accession" : "GCA_000005505.1",
+                                "assembly" : "Bd21",
+                                "exons" : [
+                                        {
+                                                "chromosome" : "5",
+                                                "startPosition" : 17999331,
+                                                "endPosition" : 17999354,
+                                                "strand" : "-"
+                                        }
+                                ]
+                        }
+                ]
         }],
         "metaData": {
                 "schemaVersion": "0.2.0",
