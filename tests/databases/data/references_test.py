@@ -13,6 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import attr
+
 from rnacentral_pipeline.databases import data
 
 
@@ -25,3 +27,23 @@ def test_reference_can_handle_non_unicode():
         doi=None,
     )
     assert ref.md5() == '1c1aa1c716a1ae7fd6ba0747d3e166e0'
+
+
+def test_can_build_id_reference_for_known_pmid():
+    assert attr.asdict(data.IdReference.build('PMID:30715521')) == attr.asdict(data.IdReference(
+        namespace='pmid',
+        external_id='30715521',
+    ))
+
+
+def test_can_build_id_reference_for_empty_pmid():
+    assert attr.asdict(data.IdReference.build('30715521')) == attr.asdict(data.IdReference(
+        namespace='pmid',
+        external_id='30715521',
+    ))
+
+def test_can_build_id_reference_for_int_pmid():
+    assert attr.asdict(data.IdReference.build(30715521)) == attr.asdict(data.IdReference(
+        namespace='pmid',
+        external_id='30715521',
+    ))

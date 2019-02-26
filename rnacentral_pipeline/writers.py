@@ -17,7 +17,11 @@ import os
 import csv
 import operator as op
 
-from contextlib import ExitStack
+try:
+    from contextlib import ExitStack
+except:
+    from contextlib2 import ExitStack
+
 from contextlib import contextmanager
 
 import attr
