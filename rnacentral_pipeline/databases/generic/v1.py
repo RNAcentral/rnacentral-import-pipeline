@@ -217,7 +217,7 @@ def locus_tag(ncrna):
     return ncrna.get('gene', {}).get('locusTag', None)
 
 
-def optional_id(record):
+def optional_id(record, database):
     """
     Create an optional id for mirbase entries. This basically uses the name
     field, which will be the miRBase gene name.
@@ -225,6 +225,8 @@ def optional_id(record):
 
     if 'description' in record and \
             'name' in record and ' ' not in record['name']:
+        return record['name']
+    if database == 'MIRBASE':
         return record['name']
     return None
 
@@ -304,7 +306,7 @@ def as_entry(record, database):
         rna_type=record['soTermId'],
         url=record['url'],
         seq_version=record.get('version', '1'),
-        optional_id=optional_id(record),
+        optional_id=optional_id(record, database),
         description=description(record),
         note_data=note_data(record),
         xref_data=xrefs(record),
@@ -330,8 +332,11 @@ def parse(raw):
     schema.
     """
 
+    def key(raw):
+        return gene(raw) or ''
+
     database = raw['metaData']['dataProvider']
-    ncrnas = sorted(raw['data'], key=gene)
+    ncrnas = sorted(raw['data'], key=key)
 
     metadata_pubs = raw['metaData'].get('publications', [])
     metadata_refs = [pub.reference(r) for r in metadata_pubs]
