@@ -16,6 +16,7 @@ limitations under the License.
 from time import sleep
 import logging
 
+import six
 import requests
 
 try:
@@ -83,10 +84,10 @@ def lineage(taxon_id):
     """
 
     data = phylogeny(taxon_id)
-    return '{lineage}{name}'.format(
+    return six.text_type('{lineage}{name}'.format(
         lineage=data.get('lineage', None),
         name=data['scientificName']
-    )
+    ))
 
 
 def common_name(taxon_id):

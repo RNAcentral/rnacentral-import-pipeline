@@ -33,7 +33,7 @@ class SecondaryStructure(object):
         """
         Create an empty secondary structure.
         """
-        return cls(dot_bracket='')
+        return cls(dot_bracket=six.text_type())
 
     def __bool__(self):
         """

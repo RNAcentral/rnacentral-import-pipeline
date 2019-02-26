@@ -101,8 +101,11 @@ class IdReference(object):
             return cls('pmid', six.text_type(ref_id))
 
         if isinstance(ref_id, six.text_type):
+            ref_id = ref_id.strip()
             if re.match(r'^\d+$', ref_id):
                 return cls('pmid', ref_id)
+            if ':' not in ref_id:
+                raise UnknownPublicationType("Could not parse: " + ref_id)
             service, eid = ref_id.split(':', 1)
             service = service.lower()
             if service in KNOWN_SERVICES:
