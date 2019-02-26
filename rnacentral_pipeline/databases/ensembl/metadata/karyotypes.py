@@ -23,7 +23,7 @@ from ratelimiter import RateLimiter
 
 try:
     from functools import lru_cache
-except ImportException:
+except ImportError:
     from functools32 import lru_cache
 
 import six
