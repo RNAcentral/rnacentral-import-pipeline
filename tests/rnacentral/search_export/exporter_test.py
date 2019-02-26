@@ -27,7 +27,10 @@ import xml.etree.ElementTree as ET
 import six
 
 import pytest
-from functools import lru_cache
+try:
+    from functools import lru_cache
+except ImportException:
+    from functools32 import lru_cache
 
 from rnacentral_pipeline.rnacentral.search_export import exporter
 

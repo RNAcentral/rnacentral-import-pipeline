@@ -22,7 +22,10 @@ import six
 import requests
 from retry import retry
 from ratelimiter import RateLimiter
-from functools import lru_cache
+try:
+    from functools import lru_cache
+except ImportException:
+    from functools32 import lru_cache
 
 from . import data
 
