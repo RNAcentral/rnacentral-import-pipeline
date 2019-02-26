@@ -1,0 +1,41 @@
+{
+        "data": [
+                {
+                        "primaryId": "PomBase:SPSNORNA.29",
+                        "taxonId": "NCBITaxon:4896",
+                        "symbol": "sno52",
+                        "symbolSynonyms": [],
+                        "soTermId": "SO:0000275",
+                        "sequence": "ATTTTGAAAATGATGAAAATAACGCGGATGAAATATATGTCCGAGAGCGCAAAAAATGTGTGGATATTTCCGTTGCCTTCCTTCTGATTCAAAAT",
+                        "url": "https://www.pombase.org/gene/SPSNORNA.29",
+                        "gene": {
+                                "geneId": "PomBase:SPSNORNA.29",
+                                "symbol": "sno52",
+                                "name": "small nucleolar RNA R52",
+                                "url": "https://www.pombase.org/gene/SPSNORNA.29",
+                                "synonyms": []
+                        },
+                        "genomeLocations": [
+                                {
+                                        "assembly": "ASM294v2",
+                                        "exons": [
+                                                {
+                                                        "chromosome": "I",
+                                                        "startPosition": 339547,
+                                                        "endPosition": 339642,
+                                                        "strand": "-"
+                                                }
+                                        ]
+                                }
+                        ]
+                }
+        ],
+        "metaData": {
+                "dateProduced": "2019-02-26T00:36:11.568643159+00:00",
+                "dataProvider": "PomBase",
+                "schemaVersion": "0.3.0",
+                "publications": [
+                        "PMID:22039153"
+                ]
+        }
+}
