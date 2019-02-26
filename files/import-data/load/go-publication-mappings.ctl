@@ -1,5 +1,5 @@
 LOAD CSV
-FROM ALL FILENAMES MATCHING ~<publication_mappings.*csv$>
+FROM ALL FILENAMES MATCHING ~<go_publication_mappings.*csv$>
 WITH ENCODING ISO-8859-14
 
 HAVING FIELDS (
