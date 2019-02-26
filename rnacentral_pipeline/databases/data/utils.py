@@ -129,11 +129,11 @@ def as_so_term(rna_type):
 
 def from_so_term(so_term):
     if so_term in NORMALIZE_TO_INSDC:
-        return NORMALIZE_TO_INSDC[so_term]
+        return six.text_type(NORMALIZE_TO_INSDC[so_term])
     if so_term in INSDC_SO_MAPPING:
-        return so_term
+        return six.text_type(so_term)
     if so_term in SO_INSDC_MAPPING:
-        return SO_INSDC_MAPPING[so_term]
+        return six.text_type(SO_INSDC_MAPPING[so_term])
     raise UnxpectedRnaType(so_term)
 
 
