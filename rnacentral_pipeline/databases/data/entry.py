@@ -57,7 +57,7 @@ class Entry(object):
     # Also known as external_id
     primary_id = attr.ib(validator=is_a(six.text_type))
     accession = attr.ib(validator=is_a(six.text_type))
-    ncbi_tax_id = attr.ib(validator=is_a(int))
+    ncbi_tax_id = attr.ib(validator=is_a(six.integer_types))
     database = attr.ib(
         validator=is_a(six.text_type),
         converter=lambda s: s.upper(),
@@ -110,8 +110,8 @@ class Entry(object):
     is_composite = utils.optionally(six.text_type)
     pseudogene = utils.optionally(six.text_type)
 
-    location_start = utils.optionally(int)
-    location_end = utils.optionally(int)
+    location_start = utils.optionally(six.integer_types)
+    location_end = utils.optionally(six.integer_types)
 
     gene_synonyms = utils.possibly_empty(list)
     references = utils.possibly_empty(list)
