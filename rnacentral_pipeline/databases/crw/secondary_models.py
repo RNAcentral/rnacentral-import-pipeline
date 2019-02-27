@@ -1,0 +1,101 @@
+# -*- coding: utf-8 -*-
+
+"""
+Copyright [2009-2018] EMBL-European Bioinformatics Institute
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+http://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+"""
+
+import re
+import csv
+import operator as op
+
+import six
+import attr
+from attr.validators import instance_of as is_a
+
+import typing
+
+SO_TERM_MAPPING = {
+    '16S': 'SO:0000650',
+    '23S': 'SO:0000651',
+    '5S': 'SO:0000652',
+    'I': 'SO:0000587',
+    'IA1': 'SO:0000587',
+    'IA2': 'SO:0000587',
+    'IB': 'SO:0000587',
+    'IB1': 'SO:0000587',
+    'IB2': 'SO:0000587',
+    'IB4': 'SO:0000587',
+    'IC1': 'SO:0000587',
+    'IC2': 'SO:0000587',
+    'IC3': 'SO:0000587',
+    'ID': 'SO:0000587',
+    'IE': 'SO:0000587',
+    'IIA': 'SO:0000603',
+    'IIB': 'SO:0000603',
+}
+
+
+def as_so_term(raw):
+    if raw in SO_TERM_MAPPING:
+        return SO_TERM_MAPPING[raw]
+    raise ValueError("Unknown RNA type: " + raw)
+
+
+@attr.s()
+class Info(object):
+    model_id = attr.ib(validator=is_a(six.text_type))
+    is_intronic = attr.ib(validator=is_a(bool))
+    so_term = attr.ib(validator=is_a(six.text_type))
+    taxid = attr.ib(validator=is_a(six.integer_types))
+    accessions = attr.ib(type=typing.List[six.text_type])
+    cell_location = attr.ib(validator=is_a(six.text_type))
+
+    @classmethod
+    def build(cls, raw):
+        intronic = raw['rna_type'] == 'I'
+        model_id = re.sub(r'\.ps$', '', raw['structure'])
+        return cls(
+            model_id=model_id,
+            is_intronic=intronic,
+            so_term=as_so_term(raw['rna_class']),
+            taxid=int(raw['tax_id']),
+            accessions=raw['accession(s)'].split(','),
+            cell_location=raw['cell_location'],
+        )
+
+    @property
+    def rna_type(self):
+        if self.so_term in {'SO:0000650', 'SO:0000651', 'SO:0000652'}:
+            return 'rRNA'
+        if self.so_term in {'SO:0000587', 'SO:0000603'}:
+            return 'autocatalytically_spliced_intron'
+        raise ValueError("No RNA type for: " + self.so_term)
+
+    def writeable(self):
+        return [
+            self.model_id,
+            self.taxid,
+            self.rna_type,
+            self.so_term,
+            self.cell_location,
+        ]
+
+
+def parse(handle):
+    for row in csv.DictReader(handle, delimiter='\t'):
+        yield Info.build(row)
+
+
+def write(handle, output):
+    data = parse(handle)
+    data = six.moves.map(op.methodcaller('writeable'), data)
+    csv.writer(output).writerows(data)
