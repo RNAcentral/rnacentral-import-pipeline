@@ -50,6 +50,20 @@ def as_so_term(raw):
     raise ValueError("Unknown RNA type: " + raw)
 
 
+def as_taxid(raw):
+    if raw == '501083':
+        return 126
+    if raw in {'600001', '600002', '600003'}:
+        return 562
+    if raw in {'600101', '600102'}:
+        return 2238
+    if raw in {'600301', '600302'}:
+        return 4932
+    if raw in {'600201', '600202'}:
+        return 274
+    return int(raw)
+
+
 @attr.s()
 class Info(object):
     model_id = attr.ib(validator=is_a(six.text_type))
@@ -67,7 +81,7 @@ class Info(object):
             model_id=model_id,
             is_intronic=intronic,
             so_term=as_so_term(raw['rna_class']),
-            taxid=int(raw['tax_id']),
+            taxid=as_taxid(raw['tax_id']),
             accessions=raw['accession(s)'].split(','),
             cell_location=raw['cell_location'],
         )
