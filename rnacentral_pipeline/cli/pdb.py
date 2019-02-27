@@ -29,14 +29,14 @@ def cli():
 
 
 @cli.command('data')
-@click.argument('output', default='pdb.json', type=click.File('wb'))
+@click.argument('output', default='pdb.json', type=click.File('w'))
 @click.argument('pdb_ids', nargs=-1)
 def pdb_group_data(output, pdb_ids=None):
     json.dump(pdb.chains(pdb_ids=pdb_ids), output)
 
 
 @cli.command('extra')
-@click.argument('output', default='pdb-extra.json', type=click.File('wb'))
+@click.argument('output', default='pdb-extra.json', type=click.File('w'))
 @click.argument('pdb_ids', nargs=-1)
 def pdb_group_extra(output, pdb_ids=None):
     json.dump(pdb.references(pdb_ids=pdb_ids), output)

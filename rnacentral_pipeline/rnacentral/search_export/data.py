@@ -20,6 +20,8 @@ import operator as op
 import itertools as it
 import collections as coll
 
+import six
+
 from xml.sax import saxutils as sax
 from lxml import etree
 
@@ -68,7 +70,7 @@ def create_tag(root, name, value, attrib={}):
     element = etree.SubElement(root, name, attr)
     if text:
 
-        if not isinstance(text, basestring):
+        if not isinstance(text, str):
             text = str(text)
 
         element.text = sax.escape(text)
@@ -155,9 +157,9 @@ def first(values):
     Get the first value in the list of values as a string.
     """
     value = values[0]
-    if isinstance(value, unicode):
+    if isinstance(value, six.string_types):
         return values[0]
-    return unicode(value)
+    return six.text_type(value)
 
 
 def only(value):
@@ -508,7 +510,7 @@ def normalize_rna_type(rna_type):
 def from_annotation_qualifer(name):
     def fn(go_annotations):
         key = op.itemgetter('qualifier')
-        annotations = it.ifilter(lambda a: key(a) == name, go_annotations)
+        annotations = six.moves.filter(lambda a: key(a) == name, go_annotations)
         values = set()
         for annotation in annotations:
             values.add(annotation['go_term_id'])

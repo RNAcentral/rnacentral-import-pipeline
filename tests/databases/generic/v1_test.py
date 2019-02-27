@@ -29,6 +29,7 @@ from rnacentral_pipeline.databases.generic import v1
     ('data/json-schema/v020/flybase-scaRNA.json', [7227]),
     ('data/json-schema/v020/lincipedia.json', [9606]),
     ('data/json-schema/v020/tarbase.json', [9606]),
+    ('data/json-schema/v020/pombase.json', [4896]),
 ])
 def test_can_extract_taxid(filename, taxids):
     with open(filename, 'r') as raw:
@@ -49,6 +50,17 @@ def test_can_generate_xref_data(filename, xrefs):
 @pytest.mark.skip()  # pylint: disable=no-member
 def test_can_extract_anticodon():
     pass
+
+
+@pytest.mark.parametrize('filename,synonyms', [  # pylint: disable=no-member
+    ('data/json-schema/v020/pombase.json', {"sno52"}),
+])
+def test_can_extract_gene_symbols_to_synonyms(filename, synonyms):
+    with open(filename, 'r') as raw:
+        data = json.load(raw)
+        data = list(v1.parse(data))
+    assert len(data) == 1
+    assert set(data[0].gene_synonyms) == synonyms
 
 
 @pytest.mark.parametrize('filename,count', [  # pylint: disable=no-member
@@ -148,7 +160,7 @@ def test_can_correctly_parse_data():
         gene='FBgn0267497',
         locus_tag='Dmel_CR45837',
         description='Drosophila melanogaster (fruit fly) 28S ribosomal RNA:CR45837',
-        gene_synonyms=["CR45837"],
+        gene_synonyms=['CR45837', '28SrRNA:CR45837'],
     ))
 
 
@@ -244,7 +256,7 @@ def test_can_correctly_parse_mirbase_data():
         data = json.load(raw)
         data = list(v1.parse(data))
 
-    assert len(data) == 1
+    assert len(data) == 2
     assert attr.asdict(data[0]) == attr.asdict(dat.Entry(
         primary_id='MI0000612',
         accession='MIRBASE:MI0000612',
@@ -285,6 +297,7 @@ def test_can_correctly_parse_mirbase_data():
             coordinates=[dat.RelatedCoordinate(start=15, stop=37)],
         )]
     ))
+    assert data[1].optional_id == 'bdi-miR7720-3p'
 
 
 def test_can_correct_fetch_related_sequences():
@@ -307,6 +320,7 @@ def test_can_correct_fetch_related_sequences():
         note_data={
             'url': "http://carolina.imis.athena-innovation.gr/diana_tools/web/index.php?r=tarbasev8%2Findex&miRNAs%5B%5D=hsa-miR-576-3p",
         },
+        gene_synonyms=['TARBASE:hsa-miR-576-3p'],
         description='Homo sapiens (human) hsa-miR-576-3p',
         species='Homo sapiens',
         common_name='human',

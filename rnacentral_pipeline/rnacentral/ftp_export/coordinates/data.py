@@ -21,6 +21,8 @@ import attr
 from attr.validators import optional
 from attr.validators import instance_of as is_a
 
+import six
+
 
 def clean_databases(raw):
     return [d.replace(' ', '_') for d in raw]
@@ -28,9 +30,9 @@ def clean_databases(raw):
 
 @attr.s(hash=True, slots=True, frozen=True)
 class Region(object):
-    region_id = attr.ib(validator=is_a(basestring))
-    rna_id = attr.ib(validator=is_a(basestring))
-    chromosome = attr.ib(validator=is_a(basestring))
+    region_id = attr.ib(validator=is_a(str))
+    rna_id = attr.ib(validator=is_a(str))
+    chromosome = attr.ib(validator=is_a(str))
     strand = attr.ib(validator=is_a(int))
     endpoints = attr.ib(validator=is_a(tuple))
     was_mapped = attr.ib(validator=is_a(bool))
@@ -113,5 +115,5 @@ def parse(regions):
 
 
 def from_file(handle):
-    data = it.imap(json.loads, handle)
+    data = six.moves.map(json.loads, handle)
     return parse(data)

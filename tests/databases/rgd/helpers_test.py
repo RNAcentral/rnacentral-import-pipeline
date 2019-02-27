@@ -15,6 +15,7 @@ limitations under the License.
 
 import attr
 import pytest
+from io import open
 
 from rnacentral_pipeline.databases.data import Exon
 from rnacentral_pipeline.databases.data import Entry
@@ -26,13 +27,13 @@ from rnacentral_pipeline.databases.rgd import helpers as rgd
 
 @pytest.fixture(scope='module')  # pylint: disable=no-member
 def simple_entry():
-    with open('data/rgd/rat_ncrna.tsv', 'rb') as raw:
+    with open('data/rgd/rat_ncrna.tsv', 'r') as raw:
         return next(rgd.as_rows(raw))
 
 
 @pytest.fixture(scope='module')  # pylint: disable=no-member
 def tricky_entry():
-    with open('data/rgd/rat_ncrna.tsv', 'rb') as raw:
+    with open('data/rgd/rat_ncrna.tsv', 'r') as raw:
         for entry in rgd.as_rows(raw):
             if entry['GENE_RGD_ID'] == '10401674':
                 return entry
@@ -41,19 +42,19 @@ def tricky_entry():
 
 @pytest.fixture(scope='module')  # pylint: disable=no-member
 def rat_ncrna():
-    with open('data/rgd/rat_ncrna.tsv', 'rb') as raw:
+    with open('data/rgd/rat_ncrna.tsv', 'r') as raw:
         return list(rgd.as_rows(raw))
 
 
 @pytest.fixture(scope='module')  # pylint: disable=no-member
 def rat_protein():
-    with open('data/rgd/rat_protein.tsv', 'rb') as raw:
+    with open('data/rgd/rat_protein.tsv', 'r') as raw:
         return list(rgd.as_rows(raw))
 
 
 @pytest.fixture(scope='module')  # pylint: disable=no-member
 def rat_multi_locus():
-    with open('data/rgd/multi-locus.tsv', 'rb') as raw:
+    with open('data/rgd/multi-locus.tsv', 'r') as raw:
         return list(rgd.as_rows(raw))
 
 
@@ -79,14 +80,14 @@ def test_can_determine_taxid(simple_entry):
     assert rgd.taxid(simple_entry) == 10116
 
 
-@pytest.mark.parametrize('entry', rat_ncrna())
-def test_can_detect_if_is_ncrna(entry):
-    assert rgd.is_ncrna(entry) is True
+# @pytest.mark.parametrize('entry', rat_ncrna)
+def test_can_detect_if_is_ncrna(rat_ncrna):
+    assert rgd.is_ncrna(rat_ncrna[0]) is True
 
 
-@pytest.mark.parametrize('entry', rat_protein())
-def test_can_detect_if_not_ncrna(entry):
-    assert rgd.is_ncrna(entry) is False
+# @pytest.mark.parametrize('entry', ())
+def test_can_detect_if_not_ncrna(rat_protein):
+    assert rgd.is_ncrna(rat_protein[0]) is False
 
 
 def test_can_generate_url(simple_entry):

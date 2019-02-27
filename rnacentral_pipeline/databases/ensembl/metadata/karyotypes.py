@@ -20,7 +20,13 @@ import itertools as it
 import requests
 from retry import retry
 from ratelimiter import RateLimiter
-from functools32 import lru_cache
+
+try:
+    from functools import lru_cache
+except ImportError:
+    from functools32 import lru_cache
+
+import six
 
 DOMAINS = {
     'ensemblgenomes',
@@ -102,7 +108,7 @@ def for_domain(domain, allowed=None):
 
 
 def data(species=None):
-    results = it.imap(lambda d: for_domain(d, allowed=species), DOMAINS)
+    results = six.moves.map(lambda d: for_domain(d, allowed=species), DOMAINS)
     return it.chain.from_iterable(results)
 
 

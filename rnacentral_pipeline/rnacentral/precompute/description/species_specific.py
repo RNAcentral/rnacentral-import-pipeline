@@ -157,7 +157,7 @@ class DatabaseSpecifcNameBuilder(object):
                 last = accession.description.split(' ')[-1]
                 if last.endswith('-3p') or last.endswith('-5p'):
                     last = last[:-4]
-                if re.match('^.*-mir-\d+$', last, re.IGNORECASE):
+                if re.match(r'^.*-mir-\d+$', last, re.IGNORECASE):
                     gene = last
             match = re.match(r'^([^-]+?-mir-[^-]+)(.+)?$', gene)
             name = accession.description
@@ -367,6 +367,8 @@ def cleanup(rna_type, db_name, description):
     if db_name == 'RefSeq':
         description = utils.trim_trailing_rna_type(rna_type, description)
 
+    if db_name == 'tarbase':
+        description = description.replace('TARBASE:', '')
     description = re.sub(r'\s\s+', ' ', description)
     return description.strip()
 

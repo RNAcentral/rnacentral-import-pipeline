@@ -51,13 +51,10 @@ for (entry in params.metadata) {
   def name = entry.key
   def info = entry.value
 
-  if (!data_to_fetch && !data_to_fetch_and_process) {
-    continue
-  }
-
   def linked_to = info.get('linked_databases', [])
-  def should_run = linked_to
-    .inject(info.get('always_run', false)) { acc, n -> acc || params.import_data.databases[n] }
+  def should_run = info.get('run', false) ||
+        (linked_to == '*' && params.import_data.databases) ||
+        linked_to.inject(false) { acc, n -> acc || params.import_data.databases[n] }
 
   if (!should_run) {
     continue
@@ -298,7 +295,7 @@ process release {
   val('done') into post_release
 
   script:
-  def should_release = params.import_data.databases.inject(false) { s, e -> s || e.value }
+  def should_release = Utils.must_release(params.import_data, params.databases)
   def pre = file("work/pre-release")
   def post = file("work/post-release")
   """

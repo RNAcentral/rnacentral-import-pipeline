@@ -224,10 +224,6 @@ def anticodon(record, feature):
     return raw_anti
 
 
-def map(_):
-    return None
-
-
 def keywords(record):
     keys = [k for k in record.annotations['keywords'] if k]
     if not keys:
@@ -237,10 +233,6 @@ def keywords(record):
 
 def parent_accession(record):
     return record.id.split('.', 1)[0]
-
-
-def ordinal(_):
-    return None
 
 
 def organelle(record):
@@ -263,8 +255,9 @@ def operon(feature):
     return embl.qualifier_string(feature, 'operon')
 
 
-def pseudogene(feature):
-    return embl.qualifier_string(feature, 'pseudogene')
+def is_pseudogene(feature):
+    return 'pseudogene' in feature.qualifiers or \
+        'pseudo' in feature.qualifiers
 
 
 def gene_synonyms(feature):
@@ -273,10 +266,6 @@ def gene_synonyms(feature):
     for synonym in synonyms:
         result.extend(synonym.split('; '))
     return result
-
-
-def non_coding_id(_):
-    return None
 
 
 def taxid(record):
@@ -297,10 +286,10 @@ def species(record):
     org = organism(record)
     # Strip out the common name if present
     if re.search(r'\([^()]+\)\s*$', org):
-        return re.sub('\s*\(.+$', '', org)
+        return re.sub(r'\s*\(.+$', '', org)
 
     # Add a closing quote if needed
-    match = re.search("([\"'])\w+$", org)
+    match = re.search(r"([\"'])\w+$", org)
     if match:
         org += match.group(1)
     return org
@@ -329,13 +318,6 @@ def lineage(record):
     return None
 
 
-def division(record):
-    # try:
-    #     return embl.division(record)
-    # except UnknownTaxonId:
-    return None
-
-
 def description(record):
     raw = embl.description(record)
     return re.sub(r'^TPA:\s*', '', raw)
@@ -351,7 +333,7 @@ def comment_xrefs(comments):
                 continue
             rest = match.group(2)
             if ';' in rest:
-                xrefs[db_name].extend(re.split('\s*;\s*', rest))
+                xrefs[db_name].extend(re.split(r'\s*;\s*', rest))
             else:
                 xrefs[db_name].append(rest)
     return xrefs

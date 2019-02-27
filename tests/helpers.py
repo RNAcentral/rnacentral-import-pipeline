@@ -16,8 +16,11 @@ limitations under the License.
 
 import os
 import tempfile
+import subprocess
 
-from rnacentral_pipeline.psql import PsqlWrapper
+import six
+
+from rnacentral_pipeline import psql
 
 
 def run_with_replacements(path, *replacements, **kwargs):
@@ -26,14 +29,18 @@ def run_with_replacements(path, *replacements, **kwargs):
     """
 
     with tempfile.NamedTemporaryFile('w') as tmp:
-        with open(path, 'rb') as raw:
+        with open(path, 'r') as raw:
             query = raw.read()
             for (initial, replacement) in replacements:
                 query = query.replace(initial, replacement)
             tmp.write(query)
             tmp.flush()
-        psql = PsqlWrapper(os.environ['PGDATABASE'])
-        results = psql.copy_file_to_iterable(tmp.name, json=True)
+
+        cmd = subprocess.run(['psql', '-f', tmp.name, os.environ['PGDATABASE']],
+                             stdout=subprocess.PIPE, encoding='utf-8')
+        cmd.check_returncode()
+        buf = six.moves.cStringIO(cmd.stdout)
+        results = psql.json_handler(buf)
 
         try:
             if kwargs.get('take_all', False):

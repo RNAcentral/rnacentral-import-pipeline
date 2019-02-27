@@ -18,6 +18,8 @@ import csv
 import operator as op
 import itertools as it
 
+import six
+
 import attr
 from attr.validators import instance_of as is_a
 
@@ -50,9 +52,9 @@ FIELDS = [
 
 @attr.s()
 class Hit(object):
-    assembly_id = attr.ib(validator=is_a(basestring))
-    chromosome = attr.ib(validator=is_a(basestring))
-    upi = attr.ib(validator=is_a(basestring))
+    assembly_id = attr.ib(validator=is_a(str))
+    chromosome = attr.ib(validator=is_a(str))
+    upi = attr.ib(validator=is_a(str))
     sequence_length = attr.ib(validator=is_a(int))
     matches = attr.ib(validator=is_a(int))
     target_insertions = attr.ib(validator=is_a(int))
@@ -129,16 +131,16 @@ def parse(assembly_id, handle):
 
 def select_hits(assembly_id, handle):
     hits = parse(assembly_id, handle)
-    hits = it.ifilter(select_possible, hits)
+    hits = six.moves.filter(select_possible, hits)
     hits = it.groupby(hits, op.attrgetter('upi'))
-    hits = it.imap(op.itemgetter(1), hits)
-    hits = it.imap(select_best, hits)
+    hits = six.moves.map(op.itemgetter(1), hits)
+    hits = six.moves.map(select_best, hits)
     hits = it.chain.from_iterable(hits)
     return hits
 
 
 def write_selected(assembly_id, hits, output):
     selected = select_hits(assembly_id, hits)
-    selected = it.imap(op.methodcaller('writeable'), selected)
+    selected = six.moves.map(op.methodcaller('writeable'), selected)
     selected = it.chain.from_iterable(selected)
     csv.writer(output).writerows(selected)

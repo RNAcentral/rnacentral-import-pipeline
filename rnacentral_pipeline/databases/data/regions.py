@@ -15,6 +15,8 @@ limitations under the License.
 
 import operator as op
 
+import six
+
 import attr
 from attr.validators import instance_of as is_a
 
@@ -27,15 +29,17 @@ class UnknownStrand(Exception):
 
 
 def as_strand(value):
-    if isinstance(value, int):
+    if isinstance(value, six.integer_types):
         return value
-    elif isinstance(value, float):
+    elif isinstance(value, float) and int(value) == value:
         return int(value)
-    elif isinstance(value, basestring):
+    elif isinstance(value, six.text_type):
         if value == '+' or value == '1':
             return 1
         elif value == '-' or value == '-1':
             return -1
+        elif value == '.':
+            return 0
     raise UnknownStrand("No way to handle strand: " + str(value))
 
 
@@ -48,6 +52,8 @@ def string_strand(located):
         return '+'
     if located.strand == -1 or located.strand == '-':
         return '-'
+    if located.strand == 0 or located.strand == '.':
+        return '.'
     raise UnknownStrand()
 
 
@@ -66,7 +72,9 @@ def region_id(located):
     )
 
 
-def write_locations(located, accession):
+def write_locations(located, accession, require_strand=True):
+    if require_strand and located.strand == 0:
+        return
     for exon in located.exons:
         yield [
             accession,
@@ -88,10 +96,10 @@ class Exon(object):
 
 @attr.s()
 class SequenceRegion(object):
-    chromosome = attr.ib(validator=is_a(basestring))
+    chromosome = attr.ib(validator=is_a(six.text_type))
     strand = attr.ib(validator=is_a(int), converter=as_strand)
     exons = attr.ib(validator=is_a(list), converter=sort_exons)
-    assembly_id = attr.ib(validator=is_a(basestring))
+    assembly_id = attr.ib(validator=is_a(six.text_type))
 
     @property
     def start(self):

@@ -20,6 +20,8 @@ import itertools as it
 import attr
 from attr.validators import instance_of as is_a
 
+import six
+
 from . import data as coord
 
 
@@ -45,12 +47,12 @@ class BedBlock(object):
 
 @attr.s(slots=True, frozen=True)
 class BedEntry(object):
-    chromosome = attr.ib(validator=is_a(basestring))
-    rna_id = attr.ib(validator=is_a(basestring))
+    chromosome = attr.ib(validator=is_a(str))
+    rna_id = attr.ib(validator=is_a(str))
     blocks = attr.ib(validator=is_a(list))
     strand = attr.ib(validator=is_a(int))
-    rna_type = attr.ib(validator=is_a(basestring))
-    databases = attr.ib(validator=is_a(basestring))
+    rna_type = attr.ib(validator=is_a(str))
+    databases = attr.ib(validator=is_a(str))
     score = attr.ib(default=0, validator=is_a(int))
     rgb = attr.ib(default=(63, 125, 151), validator=is_a(tuple))
 
@@ -135,7 +137,7 @@ def from_json(handle, out):
     """
 
     data = coord.from_file(handle)
-    data = it.imap(BedEntry.from_region, data)
-    data = it.imap(op.methodcaller('writeable'), data)
+    data = six.moves.map(BedEntry.from_region, data)
+    data = six.moves.map(op.methodcaller('writeable'), data)
     writer = csv.writer(out, delimiter='\t', lineterminator='\n')
     writer.writerows(data)

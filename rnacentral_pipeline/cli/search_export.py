@@ -27,10 +27,10 @@ def cli():
 
 
 @cli.command('as-xml')
-@click.argument('raw_file', type=click.File('rb'))
-@click.argument('metadata_file', type=click.File('rb'))
-@click.argument('xml_file', type=click.File('wb'))
-@click.argument('count_file', type=click.File('wb'), default='count')
+@click.argument('raw_file', type=click.File('r'))
+@click.argument('metadata_file', type=click.File('r'))
+@click.argument('xml_file', type=click.File('w'))
+@click.argument('count_file', type=click.File('w'), default='count')
 def search_export_xml(raw_file, metadata_file, xml_file, count_file=None):
     """
     This will parse a file with one JSON object per line to produce XML
@@ -43,8 +43,8 @@ def search_export_xml(raw_file, metadata_file, xml_file, count_file=None):
 
 @cli.command('release-note')
 @click.argument('release', type=str)
-@click.argument('output', type=click.File('wb'))
-@click.argument('count_files', nargs=-1, type=click.File('rb'))
+@click.argument('output', type=click.File('w'))
+@click.argument('count_files', nargs=-1, type=click.File('r'))
 def search_export_note(release, output, count_files):
     """
     This will create the release_note.txt file that is needed for the search

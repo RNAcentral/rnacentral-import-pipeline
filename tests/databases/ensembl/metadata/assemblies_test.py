@@ -66,34 +66,37 @@ def test_it_has_no_bacterial_assemblies(assemblies):
     assert 'EnsemblBacteria' not in divisions
 
 
-def test_it_has_one_assembly_per_taxid(assemblies):
-    counts = Counter(a.taxid for a in assemblies)
-    max_item = counts.most_common(n=1)[0]
-    assert max_item[1] == 1
-    for taxid in [7227, 6239, 8090]:
-        assert counts[taxid] == 1, "Issue with counts for %i" % taxid
-
-
-def test_it_has_one_assembly_per_assembly_id(assemblies):
-    counts = Counter(a.assembly_id for a in assemblies)
-    max_item = counts.most_common(n=1)[0]
-    assert max_item[1] == 1
-
-
-@pytest.mark.parametrize('taxid', [  # pylint: disable=no-member
-    (4932),
-    (5127),
+@pytest.mark.parametrize('taxid,count', [
+    (4932, 0),
+    (5127, 0),
+    (546991, 1),
+    (559292, 1),
+    (6239, 1),
+    (6669, 1),
+    (7227, 1),
+    (8090, 1),
 ])
-def test_it_does_not_have_unexpected_taxids(assemblies, taxid):
-    assert len([a for a in assemblies if a.taxid == taxid]) == 0
+def test_it_has_one_assembly_per_taxid(assemblies, taxid, count):
+    val = [a for a in assemblies if a.taxid == taxid]
+    assert len(val) == count, "Issue with counts for %i" % taxid
+
+
+@pytest.mark.parametrize('key', [
+    'taxid',
+    'assembly_id',
+])
+def test_it_never_has_more_than_one_assembly_unique_item(assemblies, key):
+    counts = Counter(getattr(a, key) for a in assemblies)
+    max_item = counts.most_common(n=1)[0]
+    assert max_item[1] == 1, "Too many counts for: %s, %i" % max_item
 
 
 @pytest.mark.parametrize('taxid,division,assembly_id', [
-    (7227, 'Ensembl', 'BDGP6'),
-    (6239, 'Ensembl', 'WBcel235'),
-    (559292, 'EnsemblFungi', 'R64-1-1'),
-    (6669, 'EnsemblMetazoa', 'V1.0'),
     (546991, 'EnsemblFungi', 'EF2'),
+    (559292, 'EnsemblFungi', 'R64-1-1'),
+    (6239, 'EnsemblVertebrates', 'WBcel235'),
+    (6669, 'EnsemblMetazoa', 'V1.0'),
+    (7227, 'EnsemblVertebrates', 'BDGP6'),
     (8090, 'EnsemblVertebrates', 'ASM223467v1'),
 ])
 def test_it_uses_correct_sources_for_duplicates(assemblies, taxid, division,

@@ -18,6 +18,8 @@ import csv
 import operator as op
 import itertools as it
 
+import six
+
 import attr
 from attr.validators import instance_of as is_a
 
@@ -26,9 +28,9 @@ from rnacentral_pipeline.databases.rfam.infernal_results import convert_strand
 
 @attr.s()
 class Result(object):
-    model_name = attr.ib(validator=is_a(basestring))
-    model_accession = attr.ib(validator=is_a(basestring))
-    upi = attr.ib(validator=is_a(basestring))
+    model_name = attr.ib(validator=is_a(str))
+    model_accession = attr.ib(validator=is_a(str))
+    upi = attr.ib(validator=is_a(str))
     bits = attr.ib(validator=is_a(float))
     e_value = attr.ib(validator=is_a(float))
     bias = attr.ib(validator=is_a(float))
@@ -79,5 +81,5 @@ def parse(handle):
 def write(handle, output):
     writer = csv.writer(output)
     data = parse(handle)
-    data = it.imap(op.methodcaller('writeable'), data)
+    data = six.moves.map(op.methodcaller('writeable'), data)
     writer.writerows(data)

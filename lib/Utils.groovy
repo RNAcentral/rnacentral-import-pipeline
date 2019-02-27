@@ -14,3 +14,9 @@ static def write_ordered(output, scriptNames) {
 
   return output;
 }
+
+static def must_release(to_import, databases) {
+  return databases.inject(false) { s, e -> 
+    s || (e.value && databases[e.key].get('release', true))
+  };
+}

@@ -77,11 +77,6 @@ def test_can_detect_problems_with_mismatched_rna_types(rna_id, rna_type, flag):
 
 
 @pytest.mark.parametrize('rna_id,rna_type,messages', [  # pylint: disable=no-member
-    ('URS000090395E_9606', 'rRNA', [
-        (u'This human sequence matches a Bacteria Rfam model '
-         u'(<a href="http://rfam.org/family/RF02541">LSU_rRNA_bacteria</a>). '
-         u'<a href="/help/rfam-annotations">Learn more &rarr;</a>'),
-    ]),
     ('URS00002C6CD1_6239', 'rRNA', [
         (u'This <i>Caenorhabditis elegans</i> sequence matches a Bacteria '
          u'Rfam model (<a href="http://rfam.org/family/RF00177">SSU_rRNA_bacteria</a>). '

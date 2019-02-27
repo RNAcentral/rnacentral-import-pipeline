@@ -13,11 +13,20 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-ALLOWED_MITO_FAMILIES = {
+import re
+
+ALLOWED_FAMILIES = {
     'RF00177',  # Bacterial small subunit ribosomal RNA
     'RF02541',  # Bacterial large subunit ribosomal RNA
     'RF01959',  # Archaeal small subunit ribosomal RNA
     'RF02540',  # Archaeal large subunit ribosomal RNA
+}
+
+GENERIC_DOMAINS = {
+    'unclassified sequences',
+    'artificial sequences',
+    'miscellaneous sequences',
+    'other sequences',
 }
 
 
@@ -29,7 +38,17 @@ def is_ignorable_mito_conflict(rna_type, data):
     """
     return data.is_mitochondrial() and \
         'rRNA' == rna_type and \
-        data.rfam_hits[0].model in ALLOWED_MITO_FAMILIES
+        data.rfam_hits[0].model in ALLOWED_FAMILIES
+
+
+def is_ignorable_chloroplast_conflict(rna_type, data):
+    return data.is_chloroplast() and \
+        'rRNA' == rna_type and \
+        data.rfam_hits[0].model in ALLOWED_FAMILIES
+
+
+def is_generic_domain(data):
+    return bool(data.domains() & GENERIC_DOMAINS)
 
 
 class Validator(object):
@@ -50,14 +69,15 @@ class Validator(object):
             return False
 
         hit = data.rfam_hits[0]
-        if not hit.model_domain:
+        if not hit.model_domain or not data.domains():
             return False
 
-        if not data.domains():
+        if not data.domains() or is_generic_domain(data):
             return False
 
         return hit.model_domain not in data.domains() and \
-            not is_ignorable_mito_conflict(rna_type, data)
+            not is_ignorable_mito_conflict(rna_type, data) and \
+            not is_ignorable_chloroplast_conflict(rna_type, data)
 
     def message(self, _, data):
         """
@@ -73,13 +93,14 @@ class Validator(object):
         else:
             sequence_name = sorted({acc.species for acc in data.accessions})
             sequence_name = ', '.join(sequence_name)
-            sequence_name = '<i>%s</i>' % sequence_name
+            if sequence_name:
+                sequence_name = '<i>%s</i>' % sequence_name
 
         model_domain = data.rfam_hits[0].model_domain
         model_url = data.rfam_hits[0].url
         model_name = data.rfam_hits[0].model_name
 
-        return (
+        msg = (
             'This {sequence_name} sequence matches a {match_domain} '
             'Rfam model (<a href="{model_url}">{model_name}</a>). '
             '<a href="{help_url}">Learn more &rarr;</a>'
@@ -90,3 +111,5 @@ class Validator(object):
             model_name=model_name,
             help_url='/help/rfam-annotations',
         )
+
+        return re.sub(r'\s+', ' ', msg)

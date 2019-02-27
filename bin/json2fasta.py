@@ -20,6 +20,8 @@ import json
 import click
 import six
 
+from six.moves import map
+
 from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord

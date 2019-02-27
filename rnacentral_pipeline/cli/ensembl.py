@@ -15,10 +15,11 @@ limitations under the License.
 
 import click
 
-from rnacentral_pipeline.databases.ensembl.metadata import proteins
 from rnacentral_pipeline.databases.ensembl.metadata import assemblies
-from rnacentral_pipeline.databases.ensembl.metadata import karyotypes
+from rnacentral_pipeline.databases.ensembl.metadata import compara
 from rnacentral_pipeline.databases.ensembl.metadata import coordinate_systems
+from rnacentral_pipeline.databases.ensembl.metadata import karyotypes
+from rnacentral_pipeline.databases.ensembl.metadata import proteins
 
 
 @click.group('ensembl')
@@ -33,11 +34,11 @@ def cli():
 
 @cli.command('assemblies')
 @click.option('--db_url', envvar='PGDATABASE')
-@click.argument('connections', default='databases.json', type=click.File('rb'))
-@click.argument('query', default='query.sql', type=click.File('rb'))
-@click.argument('example_file', default='example-locations.json', type=click.File('rb'))
+@click.argument('connections', default='databases.json', type=click.File('r'))
+@click.argument('query', default='query.sql', type=click.File('r'))
+@click.argument('example_file', default='example-locations.json', type=click.File('r'))
 @click.argument('example_query', default='find-examples.sql', type=click.File('r'))
-@click.argument('output', default='assemblies.csv', type=click.File('wb'))
+@click.argument('output', default='assemblies.csv', type=click.File('w'))
 def ensembl_write_assemblies(connections, query, example_file, example_query, output,
                              db_url=None):
     """
@@ -48,9 +49,9 @@ def ensembl_write_assemblies(connections, query, example_file, example_query, ou
 
 
 @cli.command('coordinate-systems')
-@click.argument('connections', default='databases.json', type=click.File('rb'))
-@click.argument('query', default='query.sql', type=click.File('rb'))
-@click.argument('output', default='coordinate_systems.csv', type=click.File('wb'))
+@click.argument('connections', default='databases.json', type=click.File('r'))
+@click.argument('query', default='query.sql', type=click.File('r'))
+@click.argument('output', default='coordinate_systems.csv', type=click.File('w'))
 def ensembl_coordinates(connections, query, output):
     """
     Turn the tsv from the ensembl query into a csv that can be imported into
@@ -60,7 +61,7 @@ def ensembl_coordinates(connections, query, output):
 
 
 @cli.command('karyotypes')
-@click.argument('output', default='karyotypes.csv', type=click.File('wb'))
+@click.argument('output', default='karyotypes.csv', type=click.File('w'))
 @click.argument('species', nargs=-1)
 def ensembl_write_karyotypes(output, species):
     """
@@ -75,12 +76,24 @@ def ensembl_write_karyotypes(output, species):
 
 
 @cli.command('proteins')
-@click.argument('connections', default='databases.json', type=click.File('rb'))
-@click.argument('query', default='query.sql-', type=click.File('rb'))
-@click.argument('output', default='proteins.csv', type=click.File('wb'))
+@click.argument('connections', default='databases.json', type=click.File('r'))
+@click.argument('query', default='query.sql-', type=click.File('r'))
+@click.argument('output', default='proteins.csv', type=click.File('w'))
 def ensembl_proteins_cmd(connections, query, output):
     """
     This will process the ensembl protein information files. This assumes the
     file is sorted.
     """
     proteins.write(connections, query, output)
+
+
+@cli.command('compara')
+@click.argument('fasta', default='-', type=click.File('rb'))
+@click.argument('output', default='compara.csv', type=click.File('wb'))
+def ensembl_compara(fasta, output):
+    """
+    Parse the FASTA file of Ensembl compara data. This will produce a CSV file
+    for import into the database that tracks what ensembl transcripts are
+    homologous.
+    """
+    compara.write(fasta, output)

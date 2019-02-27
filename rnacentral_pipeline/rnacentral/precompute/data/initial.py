@@ -17,6 +17,9 @@ import re
 import string
 from collections import Counter
 
+import six
+import typing
+
 import attr
 from attr.validators import optional
 from attr.validators import instance_of as is_a
@@ -46,17 +49,19 @@ class Accession(object):
     name from the accession level data for a sequence.
     """
 
-    gene = attr.ib(validator=optional(is_a(basestring)))
-    optional_id = attr.ib(validator=optional(is_a(basestring)))
-    pretty_database = attr.ib(validator=is_a(basestring))
-    feature_name = attr.ib(validator=is_a(basestring))
-    ncrna_class = attr.ib(validator=optional(is_a(basestring)))
-    species = attr.ib(validator=optional(is_a(basestring)))
-    common_name = attr.ib(validator=optional(is_a(basestring)))
-    description = attr.ib(validator=is_a(basestring))
-    locus_tag = attr.ib(validator=optional(is_a(basestring)))
-    organelle = attr.ib(validator=optional(is_a(basestring)))
-    lineage = attr.ib(validator=optional(is_a(basestring)))
+    gene = attr.ib(validator=optional(is_a(six.text_type)))
+    optional_id = attr.ib(validator=optional(is_a(six.text_type)))
+    pretty_database = attr.ib(validator=is_a(six.text_type))
+    feature_name = attr.ib(validator=is_a(six.text_type))
+    ncrna_class = attr.ib(validator=optional(is_a(six.text_type)))
+    species = attr.ib(validator=optional(is_a(six.text_type)))
+    common_name = attr.ib(validator=optional(is_a(six.text_type)))
+    description = attr.ib(validator=is_a(six.text_type))
+    locus_tag = attr.ib(validator=optional(is_a(six.text_type)))
+    organelle = attr.ib(validator=optional(is_a(six.text_type)))
+    lineage = attr.ib(validator=optional(is_a(six.text_type)))
+    all_species = attr.ib(validator=is_a(tuple), converter=tuple)
+    all_common_names = attr.ib(validator=is_a(tuple), converter=tuple)
 
     @classmethod
     def build(cls, data):
@@ -95,7 +100,7 @@ class Accession(object):
                 'synthetic' in self.lineage:
             return None
 
-        return self.lineage.split(';')[0]  # pylint: disable=no-member
+        return self.lineage.split(';')[0]
 
     @property
     def masked_description(self):
@@ -122,12 +127,16 @@ class Accession(object):
         return 'mitochondri' in self.description or \
             (self.organelle and 'mitochondri' in self.organelle)
 
+    def is_chloroplast(self):
+        return 'chloroplast' in self.description or \
+            (self.organelle and 'chloroplast' in self.organelle)
+
 
 @attr.s(hash=True)
 class HitComponent(object):
     completeness = attr.ib(validator=is_a(float), converter=float)
-    start = attr.ib(validator=is_a(int))
-    stop = attr.ib(validator=is_a(int))
+    start = attr.ib(validator=is_a(six.integer_types))
+    stop = attr.ib(validator=is_a(six.integer_types))
 
 
 @attr.s(hash=True)
@@ -137,11 +146,11 @@ class RfamHit(object):
     the QA information.
     """
 
-    model = attr.ib(validator=is_a(basestring))
-    model_rna_type = attr.ib(validator=is_a(basestring))
-    model_domain = attr.ib(validator=optional(is_a(basestring)))
-    model_name = attr.ib(validator=is_a(basestring))
-    model_long_name = attr.ib(validator=is_a(basestring))
+    model = attr.ib(validator=is_a(six.text_type))
+    model_rna_type = attr.ib(validator=is_a(six.text_type))
+    model_domain = attr.ib(validator=optional(is_a(six.text_type)))
+    model_name = attr.ib(validator=is_a(six.text_type))
+    model_long_name = attr.ib(validator=is_a(six.text_type))
     sequence_info = attr.ib(validator=is_a(HitComponent))
     model_info = attr.ib(validator=is_a(HitComponent))
 
@@ -180,17 +189,17 @@ class Sequence(object):
     is specific to a taxid.
     """
 
-    upi = attr.ib(validator=is_a(basestring))
-    taxid = attr.ib(validator=optional(is_a(int)))
-    length = attr.ib(validator=is_a(int))
-    accessions = attr.ib(validator=is_a(list))
-    inactive_accessions = attr.ib(validator=is_a(list))
+    upi = attr.ib(validator=is_a(six.text_type))
+    taxid = attr.ib(validator=optional(is_a(six.integer_types)))
+    length = attr.ib(validator=is_a(six.integer_types))
+    accessions = attr.ib(validator=is_a(list), type=typing.List[Accession])
+    inactive_accessions = attr.ib(validator=is_a(list), type=typing.List[Accession])
     is_active = attr.ib(validator=is_a(bool))
     has_coordinates = attr.ib(validator=is_a(bool))
     previous_data = attr.ib(validator=optional(is_a(dict)))
-    rfam_hits = attr.ib(validator=is_a(list))
-    last_release = attr.ib(validator=is_a(int))
-    chromosomes = attr.ib(validator=is_a(list))
+    rfam_hits = attr.ib(validator=is_a(list), type=typing.List[RfamHit])
+    last_release = attr.ib(validator=is_a(six.integer_types))
+    chromosomes = attr.ib(validator=is_a(list), type=typing.List[six.text_type])
 
     def is_species_specific(self):
         """
@@ -205,19 +214,17 @@ class Sequence(object):
         return any(a.is_mitochondrial() for a in self.accessions) or \
             (self.taxid == 9606 and 'MT' in self.chromosomes)
 
+    def is_chloroplast(self):
+        return any(a.is_chloroplast() for a in self.accessions) or \
+            self.taxid == 9606 and 'MT' in self.chromosomes
+
     def domains(self):
         """
         Get the set of all domains assigned to this sequence. This will ignore
         any invalid assignments (environmental samples, uncultured, or
         synthetic).
         """
-
-        domains = set()
-        for accession in self.accessions:
-            domain = accession.domain
-            if domain:
-                domains.add(domain)
-        return domains
+        return {a.domain for a in self.accessions if a.domain}
 
     def has_unique_hit(self):
         """

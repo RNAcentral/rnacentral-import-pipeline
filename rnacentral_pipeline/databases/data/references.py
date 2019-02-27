@@ -15,6 +15,8 @@ limitations under the License.
 
 import re
 
+import six
+
 import attr
 from attr.validators import in_
 from attr.validators import optional
@@ -48,24 +50,24 @@ class Reference(object):
     files.
     """
 
-    authors = attr.ib(validator=is_a(basestring), converter=utils.optional_utf8)
-    location = attr.ib(validator=is_a(basestring))
-    title = attr.ib(
-        validator=optional(is_a(basestring)),
-        converter=utils.optional_utf8
-    )
+    authors = attr.ib(validator=is_a(six.text_type))
+    location = attr.ib(validator=is_a(six.text_type))
+    title = attr.ib(validator=optional(is_a(six.text_type)))
     pmid = attr.ib(validator=optional(is_a(int)))
-    doi = attr.ib(validator=optional(is_a(basestring)))
+    doi = attr.ib(validator=optional(is_a(six.text_type)))
 
     def md5(self):
         """
         Computes the MD5 hash of the reference.
         """
-        return md5(''.join([
-            (self.authors or ''),
-            (self.location or ''),
-            (self.title or ''),
-        ]))
+        title = self.title if self.title else ''
+        data = [
+            self.authors,
+            self.location,
+            title,
+        ]
+
+        return md5(''.join(data).encode('utf-8'))
 
     def writeable_generic_pubmed(self):
         return [
@@ -91,16 +93,19 @@ class Reference(object):
 @attr.s(frozen=True, hash=True)
 class IdReference(object):
     namespace = attr.ib(validator=in_(KNOWN_SERVICES))
-    external_id = attr.ib(validator=is_a(basestring))
+    external_id = attr.ib(validator=is_a(six.text_type))
 
     @classmethod
     def build(cls, ref_id):
         if isinstance(ref_id, int):
-            return cls('pmid', str(ref_id))
+            return cls('pmid', six.text_type(ref_id))
 
-        if isinstance(ref_id, basestring):
-            if re.match('^\d+$', ref_id):
+        if isinstance(ref_id, six.text_type):
+            ref_id = ref_id.strip()
+            if re.match(r'^\d+$', ref_id):
                 return cls('pmid', ref_id)
+            if ':' not in ref_id:
+                raise UnknownPublicationType("Could not parse: " + ref_id)
             service, eid = ref_id.split(':', 1)
             service = service.lower()
             if service in KNOWN_SERVICES:
