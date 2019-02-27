@@ -13,9 +13,24 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import os
+import re
+
 import six 
 import attr
 from attr.validators import instance_of as is_a
+
+
+class UnknownStrandName(Exception):
+    pass
+
+
+def as_strand(raw):
+    if raw == 'plus':
+        return 1
+    if raw == 'minus':
+        return -1
+    raise UnknownStrandName(raw)
 
 
 @attr.s()
@@ -27,7 +42,7 @@ class Result(object):
     fam = attr.ib(type=six.text_type)
     domain = attr.ib(type=six.text_type)
     model = attr.ib(type=six.text_type)
-    starnd = attr.ib(validator=is_a(six.integer_types), converter=int)
+    strand = attr.ib(validator=is_a(six.integer_types))
     ht = attr.ib(validator=is_a(six.integer_types), converter=int)
     tscore = attr.ib(type=float, converter=float)
     bscore = attr.ib(type=float, converter=float)
@@ -39,8 +54,9 @@ class Result(object):
     mfrom = attr.ib(validator=is_a(six.integer_types), converter=int)
     mto = attr.ib(validator=is_a(six.integer_types), converter=int)
 
+    @classmethod
     def from_result(cls, row):
-        parts = re.split(r'^\s+', row, max_split=25)
+        parts = re.split(r'\s+', row, maxsplit=24)
         return cls(
             target=parts[1],
             status=parts[2],
@@ -49,7 +65,7 @@ class Result(object):
             fam=parts[5],
             domain=parts[6],
             model=parts[7],
-            starnd=parts[8],
+            strand=as_strand(parts[8]),
             ht=parts[9],
             tscore=parts[10],
             bscore=parts[11],
@@ -72,6 +88,6 @@ def parse(filename):
 
 
 def as_dict(directory):
-    basename = os.path.dirname(directory)
+    basename = os.path.basename(directory)
     filename = os.path.join(directory, basename + '.ribotyper.long.out')
     return {p.target: p for p in parse(filename)}

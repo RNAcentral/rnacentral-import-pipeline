@@ -19,10 +19,10 @@ from rnacentral_pipeline.rnacentral.traveler import ribotyper
 
 
 def test_can_parse_a_simple_result():
-    data = list(ribotyper.parse('data/traveler/ribotyper.long.out'))
-    assert len(data) == 0
+    data = list(ribotyper.parse('data/traveler/simple/simple.ribotyper.long.out'))
+    assert len(data) == 1
     assert attr.asdict(data[0]) == attr.asdict(ribotyper.Result(
-        target='URS00006E9B4D_858215',
+        target='URS00000F9D45_9606',
         status='PASS',
         length=1588,
         fm=1,
@@ -41,3 +41,29 @@ def test_can_parse_a_simple_result():
         mfrom=3,
         mto=1512,
     ))
+
+
+def test_can_produce_dict_of_results():
+    data = ribotyper.as_dict('data/traveler/simple')
+    assert data == {
+        'URS00000F9D45_9606': ribotyper.Result(
+            target='URS00000F9D45_9606',
+            status='PASS',
+            length=1588,
+            fm=1,
+            fam='SSU',
+            domain='Bacteria',
+            model='d.16.b.C.perfringens',
+            strand=1,
+            ht=1,
+            tscore=1093.0,
+            bscore=1093.0,
+            bevalue=0.0,
+            tcov=0.999,
+            bcov=0.999,
+            bfrom=3,
+            bto=1588,
+            mfrom=3,
+            mto=1512,
+        )
+    }

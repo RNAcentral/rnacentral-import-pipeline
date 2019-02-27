@@ -32,39 +32,47 @@ class TravelerResult(object):
     urs = attr.ib(type=six.text_type)
     model_id = attr.ib(type=six.text_type)
     directory = attr.ib(type=six.text_type)
-    basepairs = attr.ib(validator=is_a(six.integer_types))
-    overlaps = attr.ib(validator=is_a(six.integer_types))
-    strand = attr.ib(validator=is_a(six.integer_types))
-    model_coverage = attr.ib(type=float)
-    result = attr.ib(type=ribotyper.Result)
+    overlap_count = attr.ib(validator=is_a(six.integer_types))
+    ribotyper = attr.ib(type=ribotyper.Result)
+    colored = attr.ib(type=bool, default=True)
 
     @classmethod
-    def build(cls, urs, model_id, directory, result):
-        overlap_file = os.path.join(directory,  pair + '.overlaps')
-        with open(overlap_file, 'r') as raw:
+    def build(cls, urs, model_id, directory, result, colored=True):
+        filename = '%s-%s.overlaps' % (urs, model_id)
+        with open(os.path.join(directory, filename), 'r') as raw:
             overlaps = int(raw.readline().strip())
 
         return cls(
             urs=urs,
             model_id=model_id,
-            directory=self.directory,
-            overlaps=overlaps,
-            result=result,
+            directory=directory,
+            overlap_count=overlaps,
+            ribotyper=result,
+            colored=colored,
         )
 
-    def svg_data(self, colored=True):
+    def svg_filename(self):
+        svg_name = 'colored.svg'
+        if not self.colored:
+            svg_name = 'svg'
+
+        return self.__filename__(svg_name)
+
+    def svg(self):
         """
         Process a single SVG file into the requried data. This produce an array
         that can be written to CSV for import into the database.
         """
 
-        svg_name = '.colored.svg'
-        if not colored:
-            svg_name = '.svg'
-
-        filename = os.path.join(directory, pair + svg_name)
-        with open(filename) as raw:
+        with open(self.svg_filename()) as raw:
             return raw.read().replace('\n', '')
+
+    @property
+    def basepair_count(self):
+        return self.dot_bracket().count('(')
+
+    def dot_bracket_filename(self):
+        return self.__filename__('fasta')
 
     def dot_bracket(self):
         """
@@ -74,8 +82,10 @@ class TravelerResult(object):
         dot_bracket string which are the same length.
         """
 
-        filename = os.path.join(directory, pair + '.fasta')
-        with open(filename) as raw:
+        if hasattr(self, '_dot_bracket'):
+            return self._dot_bracket
+
+        with open(self.dot_bracket_filename()) as raw:
             record = SeqIO.read(raw, 'fasta')
             seq_dot = str(record.seq)
             sequence = re.match(r'^(\w+)', seq_dot).group(1)
@@ -84,16 +94,50 @@ class TravelerResult(object):
             return dot_bracket
 
     def is_valid(self):
-        pass
+        filenames = [
+            self.dot_bracket_filename(),
+            self.svg_filename(),
+        ]
+        return all(os.path.exists(f) for f in filenames)
+
+    @property
+    def model_start(self):
+        return self.ribotyper.mfrom
+
+    @property
+    def model_stop(self):
+        return self.ribotyper.mto
+
+    @property
+    def sequence_start(self):
+        return self.ribotyper.bfrom
+
+    @property
+    def sequence_stop(self):
+        return self.ribotyper.bto
+
+    @property
+    def sequence_coverage(self):
+        return self.ribotyper.bcov
 
     def writeable(self):
         return [
             self.urs,
-            self.model,
+            self.model_id,
             self.dot_bracket(), 
-            self.svg_data(), 
-            self.overlaps,
+            self.svg(), 
+            self.overlap_count,
+            self.basepair_count,
+            self.model_start,
+            self.model_stop,
+            self.sequence_start,
+            self.sequence_stop,
+            self.sequence_coverage,
         ]
+
+    def __filename__(self, extension):
+        fn = '%s-%s.%s' % (self.urs, self.model_id, extension)
+        return os.path.join(self.directory, fn)
 
 
 def models(directory, colored=True):
@@ -109,7 +153,7 @@ def models(directory, colored=True):
         pair, _ = os.path.splitext(basename)
         urs, model = pair.split('-', 1)
         ribo_result = ribo_results[urs]
-        result = TravelerResult.build(urs, model, directory, ribo_result)
+        result = TravelerResult.build(urs, model, directory, ribo_result, colored=colored)
         if result.is_valid():
             seen = True
             yield result
