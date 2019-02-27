@@ -19,6 +19,8 @@ import operator as op
 import itertools as it
 from collections import Counter
 
+import six
+
 import attr
 from attr.validators import and_
 from attr.validators import instance_of as is_a
@@ -53,24 +55,25 @@ class Entry(object):
     """
 
     # Also known as external_id
-    primary_id = attr.ib(validator=is_a(basestring))
-    accession = attr.ib(validator=is_a(basestring))
+    primary_id = attr.ib(validator=is_a(six.text_type))
+    accession = attr.ib(validator=is_a(six.text_type))
     ncbi_tax_id = attr.ib(validator=is_a(int))
     database = attr.ib(
-        validator=is_a(basestring),
+        validator=is_a(six.text_type),
         converter=lambda s: s.upper(),
     )
-    sequence = attr.ib(validator=is_a(basestring))
+    sequence = attr.ib(validator=is_a(six.text_type))
     # exons = attr.ib(validator=is_a(list))
     regions = attr.ib(validator=is_a(list))
     rna_type = attr.ib(
-        validator=is_a(basestring),
+        validator=is_a(six.text_type),
         # validator=matches_pattern(SO_PATTERN),
         converter=utils.from_so_term,
     )
-    url = attr.ib(validator=is_a(basestring))
+    url = attr.ib(validator=is_a(six.text_type))
     seq_version = attr.ib(
-        validator=and_(is_a(basestring), utils.matches_pattern(r'^\d+$'))
+        validator=and_(is_a(six.text_type), utils.matches_pattern(r'^\d+$')),
+        converter=six.text_type,
     )
 
     note_data = utils.possibly_empty(dict)
@@ -78,34 +81,34 @@ class Entry(object):
 
     related_sequences = utils.possibly_empty(list)
 
-    chromosome = utils.optionally(basestring)
-    species = utils.optionally(basestring)
-    common_name = utils.optionally(basestring)
-    lineage = utils.optionally(basestring)
-    gene = utils.optionally(basestring)
-    locus_tag = utils.optionally(basestring)
-    optional_id = utils.optionally(basestring)
-    product = utils.optionally(basestring)
-    parent_accession = utils.optionally(basestring)
-    ordinal = utils.optionally(basestring)
-    non_coding_id = utils.optionally(basestring)
-    project = utils.optionally(basestring)
-    keywords = utils.optionally(basestring)
-    division = utils.optionally(basestring)
-    organelle = utils.optionally(basestring)
-    allele = utils.optionally(basestring)
-    anticodon = utils.optionally(basestring)
-    experiment = utils.optionally(basestring)
-    function = utils.optionally(basestring)
-    inference = utils.optionally(basestring)
-    map = utils.optionally(basestring)
-    old_locus_tag = utils.optionally(basestring)
-    operon = utils.optionally(basestring)
-    standard_name = utils.optionally(basestring)
-    description = utils.optionally(basestring)
-    mol_type = utils.optionally(basestring)
-    is_composite = utils.optionally(basestring)
-    pseudogene = utils.optionally(basestring)
+    chromosome = utils.optionally(six.text_type)
+    species = utils.optionally(six.text_type)
+    common_name = utils.optionally(six.text_type)
+    lineage = utils.optionally(six.text_type)
+    gene = utils.optionally(six.text_type)
+    locus_tag = utils.optionally(six.text_type)
+    optional_id = utils.optionally(six.text_type)
+    product = utils.optionally(six.text_type)
+    parent_accession = utils.optionally(six.text_type)
+    ordinal = utils.optionally(six.text_type)
+    non_coding_id = utils.optionally(six.text_type)
+    project = utils.optionally(six.text_type)
+    keywords = utils.optionally(six.text_type)
+    division = utils.optionally(six.text_type)
+    organelle = utils.optionally(six.text_type)
+    allele = utils.optionally(six.text_type)
+    anticodon = utils.optionally(six.text_type)
+    experiment = utils.optionally(six.text_type)
+    function = utils.optionally(six.text_type)
+    inference = utils.optionally(six.text_type)
+    map = utils.optionally(six.text_type)
+    old_locus_tag = utils.optionally(six.text_type)
+    operon = utils.optionally(six.text_type)
+    standard_name = utils.optionally(six.text_type)
+    description = utils.optionally(six.text_type)
+    mol_type = utils.optionally(six.text_type)
+    is_composite = utils.optionally(six.text_type)
+    pseudogene = utils.optionally(six.text_type)
 
     location_start = utils.optionally(int)
     location_end = utils.optionally(int)
@@ -313,12 +316,12 @@ class Entry(object):
         return []
 
     def write_refs(self):
-        refs = it.ifilter(lambda r: isinstance(r, Reference), self.references)
+        refs = six.moves.filter(lambda r: isinstance(r, Reference), self.references)
         return self.__write_part__(refs)
 
     def write_ref_ids(self):
         refs = self.references
-        refs = it.ifilter(lambda r: isinstance(r, IdReference), refs)
+        refs = six.moves.filter(lambda r: isinstance(r, IdReference), refs)
         return self.__write_part__(refs)
 
     def write_genomic_locations(self):
@@ -340,5 +343,5 @@ class Entry(object):
         if not self.is_valid():
             return []
         method = op.methodcaller(method_name, self.accession)
-        writeable = it.imap(method, attribute)
+        writeable = six.moves.map(method, attribute)
         return it.chain.from_iterable(writeable)

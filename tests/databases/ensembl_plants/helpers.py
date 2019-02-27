@@ -17,7 +17,7 @@ from rnacentral_pipeline.databases.ensembl_plants import parser
 
 
 def parse(filename):
-    with open(filename, 'rb') as raw:
+    with open(filename, 'r') as raw:
         return list(parser.parse(raw))
 
 

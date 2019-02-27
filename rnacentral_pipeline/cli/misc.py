@@ -35,7 +35,7 @@ def run_release(db_url=None):
 @click.option('--db_url', envvar='PGDATABASE')
 @click.option('--table-name', default='rna')
 @click.argument('chunk_size', type=int)
-@click.argument('output', default='-', type=click.File('wb'))
+@click.argument('output', default='-', type=click.File('w'))
 def find_upi_ranges(chunk_size, output, db_url=None, table_name=None):
     """
     This will compute the ranges to use for our each xml file in the search
@@ -48,8 +48,8 @@ def find_upi_ranges(chunk_size, output, db_url=None, table_name=None):
 
 
 @click.command('crs')
-@click.argument('filename', default='-', type=click.File('rb'))
-@click.argument('output', default='complete_features.csv', type=click.File('wb'))
+@click.argument('filename', default='-', type=click.File('r'))
+@click.argument('output', default='complete_features.csv', type=click.File('w'))
 def crs_data(filename, output):
     """
     This will parse the CRS file to produce a series of sequence features for

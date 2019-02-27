@@ -40,13 +40,14 @@ def cli():
 @cli.command('json-schema', aliases=[
     'flybase',
     'lncbase',
+    'lncbook',
     'lncipedia',
     'mirbase',
     'pombase',
     'tarbase',
     'zwd',
 ])
-@click.argument('json_file', type=click.File('rb'))
+@click.argument('json_file', type=click.File('r'))
 @click.argument('output', default='.', type=click.Path(
     writable=True,
     dir_okay=True,
@@ -60,7 +61,7 @@ def process_json_schema(json_file, output):
 
 
 @cli.command('ensembl')
-@click.argument('ensembl_file', type=click.File('rb'))
+@click.argument('ensembl_file', type=click.File('r'))
 @click.argument('family_file', type=click.Path(
     file_okay=True,
     dir_okay=False,
@@ -84,7 +85,7 @@ def process_ensembl(ensembl_file, family_file, gencode_gff, output):
 
 
 @cli.command('ensembl_plants')
-@click.argument('ensembl_file', type=click.File('rb'))
+@click.argument('ensembl_file', type=click.File('r'))
 @click.argument('output', default='.', type=click.Path(
     writable=True,
     dir_okay=True,
@@ -115,8 +116,8 @@ def process_pdb(pdb_data, extra, output):
 
 
 @cli.command('ena')
-@click.argument('ena_file', type=click.File('rb'))
-@click.argument('mapping_file', type=click.File('rb'))
+@click.argument('ena_file', type=click.File('r'))
+@click.argument('mapping_file', type=click.File('r'))
 @click.argument('output', default='.', type=click.Path(
     writable=True,
     dir_okay=True,
@@ -131,7 +132,7 @@ def process_ena(ena_file, mapping_file, output):
 
 
 @cli.command('refseq')
-@click.argument('refseq_file', type=click.File('rb'))
+@click.argument('refseq_file', type=click.File('r'))
 @click.argument('output', default='.', type=click.Path(
     writable=True,
     dir_okay=True,
@@ -145,8 +146,8 @@ def process_refseq(refseq_file, output):
 
 
 @cli.command('rfam')
-@click.argument('rfam_file', type=click.File('rb'))
-@click.argument('mapping_file', type=click.File('rb'))
+@click.argument('rfam_file', type=click.File('r'))
+@click.argument('mapping_file', type=click.File('r'))
 @click.argument('output', default='.', type=click.Path(
     writable=True,
     dir_okay=True,

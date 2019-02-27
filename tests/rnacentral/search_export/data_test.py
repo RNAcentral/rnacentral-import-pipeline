@@ -88,7 +88,7 @@ def test_can_build_references_with_complex_note():
         '6911',
         'Quality score:93.74 Alignment:reference ECO:0000053 SO:0001000 GO:0003735 GO:0005840',
     ])
-    assert sorted(refs) == [
+    assert sorted(refs, key=lambda d: d['attrib']['dbkey']) == [
         {'attrib': {'dbname': 'ECO', 'dbkey': 'ECO:0000053'}},
         {'attrib': {'dbname': 'GO', 'dbkey': 'GO:0003735'}},
         {'attrib': {'dbname': 'GO', 'dbkey': 'GO:0005840'}},

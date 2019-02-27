@@ -38,10 +38,11 @@ def load_data(rna_id):
 
 def load_for_upi(upi):
     path = os.path.join('files', 'precompute', 'query.sql')
-    loaded = list(run_with_replacements(path, (
-        'rna.id BETWEEN :min AND :max',
-        "xref.upi ='%s'" % upi
-    ), take_all=True))
+    loaded = list(run_with_replacements(
+        path,
+        (':tablename', 'rna'),
+        ('todo.id BETWEEN :min AND :max', "xref.upi ='%s'" % upi),
+        take_all=True))
     return list(as_sequences(loaded))
 
 
@@ -51,6 +52,7 @@ def load_for_range(start, stop):
         path,
         (':min', str(start)),
         (':max', str(stop)),
-        take_all=True
+        (':tablename', 'rna'),
+        take_all=True,
     )
     return list(as_sequences(loaded))

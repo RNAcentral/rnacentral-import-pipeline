@@ -17,6 +17,8 @@ import re
 import json
 import itertools as it
 
+import six
+
 import pymysql
 
 
@@ -56,7 +58,7 @@ def select_max(handle):
             databases.append(line.strip())
 
     max_major = max(database_key(d)[1] for d in databases)
-    possible = it.ifilter(lambda d: major(d) == max_major, databases)
+    possible = six.moves.filter(lambda d: major(d) == max_major, databases)
     grouped = it.groupby(possible, lambda d: database_key(d)[0])
     for _, databases in grouped:
         yield max(databases, key=database_key)

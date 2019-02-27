@@ -14,14 +14,18 @@ limitations under the License.
 """
 
 import csv
-import urllib
 import operator as op
 import itertools as it
+
+import six
 
 import requests
 from retry import retry
 from ratelimiter import RateLimiter
-from functools32 import lru_cache
+try:
+    from functools import lru_cache
+except ImportError:
+    from functools32 import lru_cache
 
 from . import data
 
@@ -36,9 +40,9 @@ def as_iri(url, encode_count=2):
     """
 
     iri = url
-    for _ in xrange(encode_count):
+    for _ in range(encode_count):
         iri = [('', iri)]
-        iri = urllib.urlencode(iri)
+        iri = six.moves.urllib.parse.urlencode(iri)
         iri = iri[1:]  # Strip off leading '='
 
     return iri
@@ -93,7 +97,7 @@ def parse_file(handle):
 
 def process_term_file(term_handle, output):
     data = parse_file(term_handle)
-    data = it.imap(op.methodcaller('writeables'), data)
+    data = six.moves.map(op.methodcaller('writeables'), data)
     data = it.chain.from_iterable(data)
     writer = csv.writer(output, quoting=csv.QUOTE_ALL)
     writer.writerows(data)

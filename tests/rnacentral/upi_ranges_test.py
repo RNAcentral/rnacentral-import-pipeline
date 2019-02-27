@@ -17,6 +17,7 @@ import os
 
 import pytest
 
+from rnacentral_pipeline.db import cursor
 from rnacentral_pipeline.rnacentral.upi_ranges import ranges_between
 from rnacentral_pipeline.rnacentral.upi_ranges import upi_ranges
 
@@ -55,17 +56,14 @@ def test_ranges_between_handles_ranges_too_big():
     ]
 
 
-@pytest.mark.skip()
 def test_can_get_range_of_all_upis():
-    ranges = list(upi_ranges(os.environ['PGDATABASE'], 'rna', 100000))
+    size =  100000
+    dbconf = os.environ['PGDATABASE']
+    ranges = list(upi_ranges(dbconf, 'rna', size))
+
+    with cursor(dbconf) as cur:
+        cur.execute('select max(id) from rna')
+        stop = cur.fetchone()[0]
+
     assert len(ranges) >= 135
-
-
-@pytest.mark.skip()
-def test_can_get_correct_upi_ranges():
-    ranges = list(upi_ranges(os.environ['PGDATABASE'], 'rna', 100000))
-    assert ranges[0:2] == [
-        (1, 100001),
-        (100001, 200001),
-    ]
-    assert ranges[-1] == (13400001, 13437640)
+    assert ranges[-1][-1] == stop

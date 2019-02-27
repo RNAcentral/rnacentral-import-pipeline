@@ -13,6 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import six
+
 import attr
 from attr.validators import instance_of as is_a
 
@@ -24,14 +26,14 @@ class SecondaryStructure(object):
     """
     This represents the secondary structure from GtRNAdb.
     """
-    dot_bracket = attr.ib(validator=is_a(basestring))
+    dot_bracket = attr.ib(validator=is_a(six.text_type))
 
     @classmethod
     def empty(cls):
         """
         Create an empty secondary structure.
         """
-        return cls(dot_bracket='')
+        return cls(dot_bracket=six.text_type())
 
     def __bool__(self):
         """

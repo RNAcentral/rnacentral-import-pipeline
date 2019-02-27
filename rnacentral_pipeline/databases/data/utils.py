@@ -16,13 +16,15 @@ limitations under the License.
 import re
 import unicodedata
 
+import six
+
 import attr
 from attr.validators import and_
 from attr.validators import optional
 from attr.validators import instance_of as is_a
 from attr.validators import in_ as one_of
 
-SO_PATTERN = re.compile('^SO:\d+$')
+SO_PATTERN = re.compile(r'^SO:\d+$')
 
 INSDC_SO_MAPPING = {
     "RNase_MRP_RNA": 'SO:0000385',
@@ -127,17 +129,15 @@ def as_so_term(rna_type):
 
 def from_so_term(so_term):
     if so_term in NORMALIZE_TO_INSDC:
-        return NORMALIZE_TO_INSDC[so_term]
+        return six.text_type(NORMALIZE_TO_INSDC[so_term])
     if so_term in INSDC_SO_MAPPING:
-        return so_term
+        return six.text_type(so_term)
     if so_term in SO_INSDC_MAPPING:
-        return SO_INSDC_MAPPING[so_term]
+        return six.text_type(SO_INSDC_MAPPING[so_term])
     raise UnxpectedRnaType(so_term)
 
 
 def optional_utf8(raw):
     if raw is None:
         return None
-    if isinstance(raw, unicode):
-        return unicodedata.normalize('NFC', raw).encode('ascii', 'ignore')
     return raw

@@ -34,7 +34,7 @@ def load_data(rna_id):
     os.listdir('data/export/ensembl')
 )
 def test_can_export_data_for_single_upi(filename):
-    with open(os.path.join('data/export/ensembl', filename), 'rb') as raw:
+    with open(os.path.join('data/export/ensembl', filename), 'r') as raw:
         ans = json.load(raw)
 
     rna_id = filename.split('.')[0]

@@ -14,6 +14,7 @@ limitations under the License.
 """
 
 import attr
+from io import open
 
 import pytest
 
@@ -37,12 +38,12 @@ from rnacentral_pipeline.databases.ena.parser import parse
     ('data/test_rfam_product.ncr', 2),  # Skipped because outdated taxon id
     ('data/test_silva_product.ncr', 3),
     ('data/test_species_patch.ncr', 1),
-    ('data/ena/ncr/ex/wgs_acnt01_pro.ncr', 106),
+    ('data/ena/ncr/ex/wgs_acnt01_pro.ncr', 105),
     ('data/ena/protein-to-skip.embl', 0),  # Proteins that should be skipped
     ('data/ena/mislabeled-trna.embl', 1),
 ])
 def test_can_parse_variety_of_files(filename, count):
-    with open(filename, 'rb') as raw:
+    with open(filename, 'r') as raw:
         data = list(parse(raw))
         assert len(data) == count
         for entry in data:
@@ -55,7 +56,7 @@ def test_can_parse_variety_of_files(filename, count):
 
 
 def test_creates_simple_entry():
-    with open('data/ena/ncr/wgs/aa/wgs_aacd01_fun.ncr', 'rb') as raw:
+    with open('data/ena/ncr/wgs/aa/wgs_aacd01_fun.ncr', 'r') as raw:
         simple_data = list(parse(raw))
 
     assert attr.asdict(simple_data[0]) == attr.asdict(Entry(
@@ -188,7 +189,7 @@ def test_creates_simple_entry():
 
 
 def test_can_find_correct_ncRNA_type():
-    with open('data/ena/ncr/wgs/aa/wgs_abxv02_pro.ncr', 'rb') as raw:
+    with open('data/ena/ncr/wgs/aa/wgs_abxv02_pro.ncr', 'r') as raw:
         ncrna_data = list(parse(raw))
 
     assert attr.asdict(ncrna_data[0]) == attr.asdict(Entry(
@@ -278,7 +279,7 @@ def test_can_find_correct_ncRNA_type():
 
 
 def test_can_parse_all_example_entries():
-    with open('data/test_example_entries.ncr', 'rb') as raw:
+    with open('data/test_example_entries.ncr', 'r') as raw:
         examples = list(parse(raw))
 
     assert attr.asdict(examples[0]) == attr.asdict(Entry(
@@ -508,7 +509,7 @@ def test_can_parse_all_example_entries():
 
 
 def test_can_handle_file_with_invalid_fields():
-    with open('data/test_invalid_fields.ncr', 'rb') as raw:
+    with open('data/test_invalid_fields.ncr', 'r') as raw:
         data = next(parse(raw))
 
     assert data.accession == 'KM079256.1:1..1300:rRNA'
@@ -519,7 +520,7 @@ def test_can_handle_file_with_invalid_fields():
 
 
 def test_can_parse_out_anticodon_from_gene():
-    with open('data/ena/trna-with-anticodon.embl', 'rb') as raw:
+    with open('data/ena/trna-with-anticodon.embl', 'r') as raw:
         data = next(parse(raw))
 
     assert data.accession == 'HF536610.1:1288..1686:tRNA'
@@ -532,7 +533,7 @@ def test_can_parse_out_anticodon_from_gene():
 
 
 def test_can_parse_anticodon_from_gtrnadb_stype_gene():
-    with open('data/ena/trna-with-anticodon.embl', 'rb') as raw:
+    with open('data/ena/trna-with-anticodon.embl', 'r') as raw:
         data = list(parse(raw))[1]
 
     assert data.accession == 'LK008175.1:1..73:tRNA'
@@ -557,7 +558,7 @@ def test_can_parse_anticodon_from_gtrnadb_stype_gene():
 
 
 def test_can_parse_anticodon_from_note():
-    with open('data/ena/anticodon-in-note.embl', 'rb') as raw:
+    with open('data/ena/anticodon-in-note.embl', 'r') as raw:
         data = next(parse(raw))
 
     assert data.accession == 'CP000102.1:337323..337406:tRNA'
@@ -574,7 +575,7 @@ def test_can_parse_anticodon_from_note():
     ('data/ena/pseudogene-flag.embl', 0),
 ])
 def correctly_ignores_pseudogenes(filename, count):
-    with open(filename, 'rb') as raw:
+    with open(filename, 'r') as raw:
         data = list(parse(raw))
         assert len(data) == count
     # assert data.accession == 'NIDN01000248.1:29758..29889:tRNA'
@@ -582,7 +583,7 @@ def correctly_ignores_pseudogenes(filename, count):
 
 
 def test_can_parse_function():
-    with open('data/ena/function.embl', 'rb') as raw:
+    with open('data/ena/function.embl', 'r') as raw:
         data = list(parse(raw))
 
     assert data[0].accession == 'EU410654.1:1..92:ncRNA'
@@ -601,7 +602,7 @@ def test_can_parse_function():
 
 
 def test_can_parse_old_locus_tag():
-    with open('data/ena/old_locus_tag.embl', 'rb') as raw:
+    with open('data/ena/old_locus_tag.embl', 'r') as raw:
         data = next(parse(raw))
 
     assert data.accession == 'AL591985.1:1315182..1315258:tRNA'
@@ -614,7 +615,7 @@ def test_can_parse_old_locus_tag():
 
 
 def test_can_parse_operons():
-    with open('data/ena/operons.embl', 'rb') as raw:
+    with open('data/ena/operons.embl', 'r') as raw:
         data = next(parse(raw))
 
     assert data.accession == 'CP000102.1:1163547..1163662:rRNA'
@@ -622,7 +623,7 @@ def test_can_parse_operons():
 
 
 def test_can_parse_gene_synonyms():
-    with open('data/ena/gene_synonym.embl', 'rb') as raw:
+    with open('data/ena/gene_synonym.embl', 'r') as raw:
         data = next(parse(raw))
 
     assert data.accession == 'CP000948.1:2011661..2011909:misc_RNA'
@@ -639,7 +640,7 @@ def test_can_parse_gene_synonyms():
     7529207, 1704372, 20610725, 18617187, 17881443, 17164479, 8389475,
     10834842, 10684931, 15611297, 20668672, 911771, 6209580])
 def test_can_extract_references_from_experiment(pmid):
-    with open('data/ena/experiment-references.embl', 'rb') as raw:
+    with open('data/ena/experiment-references.embl', 'r') as raw:
         data = next(parse(raw))
 
     assert data.accession == 'HG975378.1:1..299:ncRNA'
@@ -659,7 +660,7 @@ def test_can_extract_references_from_experiment(pmid):
     1379177, 8288542, 9098041, 9826762, 12165569, 12547201, 1317842, 15831787
 ])
 def test_can_extract_references_from_note_or_experiment(pmid):
-    with open('data/ena/note-references.embl', 'rb') as raw:
+    with open('data/ena/note-references.embl', 'r') as raw:
         data = next(parse(raw))
 
     assert data.accession == 'AL009126.3:3856226..3856447:misc_RNA'
@@ -675,7 +676,7 @@ def test_can_extract_references_from_note_or_experiment(pmid):
 
 
 def test_can_handle_unclosed_parens():
-    with open('data/test_feature_unclosed_parenthesis.ncr', 'rb') as raw:
+    with open('data/test_feature_unclosed_parenthesis.ncr', 'r') as raw:
         data = next(parse(raw))
 
     assert data.accession == 'HE860504.1:1..14644:tRNA'
@@ -691,7 +692,7 @@ def test_can_handle_unclosed_parens():
 
 
 def test_can_extract_xrefs():
-    with open('data/test_example_entries.ncr', 'rb') as raw:
+    with open('data/test_example_entries.ncr', 'r') as raw:
         data = list(parse(raw))
 
     assert data[5].accession == 'HG975377.1:1..332:ncRNA'
