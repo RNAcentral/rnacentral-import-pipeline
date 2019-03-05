@@ -935,7 +935,7 @@ def test_assigns_correct_interacting_rnas(upi, expected):
 ])
 def test_knows_if_has_secondary_structure(upi, flag):
     assert load_and_get_additional(upi, 'has_secondary_structure') == [
-        {'attrib': {'name': 'has_secondary_structure'}, 'text': str(expected)}
+        {'attrib': {'name': 'has_secondary_structure'}, 'text': str(flag)}
 	]
 
 
