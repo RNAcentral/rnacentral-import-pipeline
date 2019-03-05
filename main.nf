@@ -341,8 +341,8 @@ process fetch_qa_sequences {
   set val(name), file('parts/*.fasta') into split_qa_sequences
 
   script:
-  def chunk_size = params.qa[name].chunk_size
-  def variables = ""
+  chunk_size = params.qa[name].chunk_size
+  variables = ""
   template 'query-and-split.sh'
 }
 
@@ -514,7 +514,7 @@ assemblies
 process fetch_unmapped_sequences {
   tag { species }
   scratch true
-  maxForks { params.fetch_unmapped_sequences.directives.maxForks }
+  maxForks params.genome_mapping.fetch_unmapped_sequences.directives.maxForks
   errorStrategy 'ignore'
 
   input:
@@ -524,14 +524,14 @@ process fetch_unmapped_sequences {
   set species, file('parts/*.fasta') into split_mappable_sequences
 
   script:
-  def chunk_size = params.genome_mapping.chunk_size
-  def variables = "-v taxid=$taxid -v assembly_id=$assembly_id"
+  chunk_size = params.genome_mapping.chunk_size
+  variables = "-v taxid=$taxid -v assembly_id=$assembly_id"
   template 'query-and-split.sh'
 }
 
 process download_genome {
   tag { species }
-  memory { params.download_genome.directives.memory }
+  memory { params.genome_mapping.download_genome.directives.memory }
   scratch true
 
   input:
@@ -745,6 +745,8 @@ flag_for_secondary
   .set { secondary_query }
 
 process find_possible_secondary_sequences {
+  memory params.secondary.find_possible.memory
+
   when:
   params.secondary.run
 
@@ -756,8 +758,8 @@ process find_possible_secondary_sequences {
   file('rnacentral.fasta') into traveler_expected_sequences
 
   script:
-  def chunk_size = params.secondary.sequence_chunk_size
-  def variables = ""
+  chunk_size = params.secondary.sequence_chunk_size
+  variables = ""
   template 'query-and-split.sh'
 }
 
@@ -802,7 +804,7 @@ process layout_sequences {
 
 secondary_to_import
   .collect()
-  .map { [it, file("files/traveler/load.ctl"] }
+  .map { [it, file("files/traveler/load.ctl")] }
   .set { secondary_to_import }
 
 process store_secondary_structures {
