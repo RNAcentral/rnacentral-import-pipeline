@@ -74,9 +74,8 @@ class Info(object):
     cell_location = attr.ib(validator=is_a(six.text_type))
 
     @classmethod
-    def build(cls, raw):
+    def build(cls, model_id, raw):
         intronic = raw['rna_type'] == 'I'
-        model_id = re.sub(r'\.ps$', '', raw['structure'])
         return cls(
             model_id=model_id,
             is_intronic=intronic,
@@ -85,6 +84,12 @@ class Info(object):
             accessions=raw['accession(s)'].split(','),
             cell_location=raw['cell_location'],
         )
+
+    @classmethod
+    def build_all(cls, raw):
+        for model_id in raw['structure'].split(' '):
+            model_id = re.sub(r'\.ps$', '', model_id)
+            yield cls.build(model_id, raw)
 
     @property
     def rna_type(self):
@@ -106,7 +111,8 @@ class Info(object):
 
 def parse(handle):
     for row in csv.DictReader(handle, delimiter='\t'):
-        yield Info.build(row)
+        for info in Info.build_all(row):
+            yield info
 
 
 def write(handle, output):
