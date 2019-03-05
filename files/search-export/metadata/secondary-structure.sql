@@ -3,23 +3,17 @@ SELECT
   json_build_object(
     'rna_id', pre.id,
     'secondary', json_build_object(
-      'has_secondary', true
+      'has_secondary', true,
+      'secondary_structure_model', models.model_name
     )
   )
 FROM rnc_secondary_structure_layout as layout
-join rnc_rna_precomputed pre on pre.upi = layout.urs
+JOIN rnc_secondary_structure_layout_models as models 
+ON 
+  layout.model_id = models.id
+JOIN rnc_rna_precomputed pre 
+ON 
+  pre.upi = layout.urs
 WHERE
   pre.taxid is not null
-UNION
-select
-  json_build_object(
-    'rna_id', xref.upi || '_' || xref.taxid
-    'secondary', json_build_object(
-      'has_secondary', true
-    )
-  )
-from rnc_secondary_structure as secondary
-join xref on xref.ac = secondary.accession
-where
-  xref.deleted = 'N'
 ) TO STDOUT

@@ -43,7 +43,7 @@ def load_additional():
     buff = six.moves.cStringIO()
     for filename in os.listdir(metapath):
         query = os.path.join(metapath, filename)
-        cmd = subprocess.run(['psql', '-f', query, os.environ['PGDATABASE']],
+        cmd = subprocess.run(['psql', '-v', 'ON_ERROR_STOP=1', '-f', query, os.environ['PGDATABASE']],
                              stdout=subprocess.PIPE, encoding='utf-8')
         cmd.check_returncode()
         buff.write(cmd.stdout)
@@ -925,3 +925,27 @@ def test_assigns_correct_interacting_rnas(upi, expected):
     data = load_and_get_additional(upi, 'interacting_rna')
     value = {d['text'] for d in data}
     assert value == expected
+
+
+@pytest.mark.parametrize('upi,flag', [
+    ('URS000047BD19_77133', True),
+	('URS00005B9F86_77133', True),
+	('URS0000239F73_77133', True),
+	('URS0000DF5B98_34613', False),
+])
+def test_knows_if_has_secondary_structure(upi, flag):
+    assert load_and_get_additional(upi, 'has_secondary_structure') == [
+        {'attrib': {'name': 'has_secondary_structure'}, 'text': str(expected)}
+	]
+
+
+@pytest.mark.parametrize('upi,models', [
+    ('URS000047BD19_77133', ['d.16.b.S.aureus.GEN']),
+	('URS00005B9F86_77133', ['d.16.b.S.pneumoniae']),
+	('URS0000239F73_77133', ['d.16.b.O.agardhii']),
+	('URS0000DF5B98_34613', []),
+])
+def test_sets_valid_model_name(upi, models):
+	ans = [{'attrib': {'name': 'secondary_structure_model'}, 'text': m} for m in models]
+	data = load_and_get_additional(upi, 'secondary_structure_model')
+	assert data == ans
