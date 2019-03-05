@@ -680,5 +680,6 @@ builder = entry([
         fields('overlaps_with', get_or_empty('overlaps_with'), keys='overlaps'),
         fields('no_overlaps_with', get_or_empty('no_overlaps_with'), keys='overlaps'),
         fields('has_secondary_structure', first, keys='has_secondary'),
+        fields('secondary_structure_model', unique, keys='secondary_structure_model'),
     ]),
 ])
