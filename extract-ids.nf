@@ -8,14 +8,36 @@ pattern_info = [
   /* ['gtrnadb', /\w{3}-\w{3}\d+-\d+/: 'files/text-mining/find-gtrnadb.sql'], */
 ]
 
-remote_files = Channel.fromPath('/nfs/ftp/pub/databases/pmc/manuscripts/PMC*.txt.tar.gz')
+process find_known_publications {
+  input:
+  file(query) from Channel.fromPath('files/text-mining/known-publications.sql')
+
+  output:
+  file('known') into found_publications
+
+  """
+  psql -v ON_ERROR_STOP=1 -f $query "$PGDATABASE" > known
+  """
+}
+
+process find_known_items {
+  input:
+  set val(name), val(pattern), file(query) from Channel.from(pattern_info)
+
+  output:
+  set val(name), file('known') into known_items
+
+  """
+  psql -v ON_ERROR_STOP=1 -f $query "$PGDATABASE" > known
+  """
+}
 
 process fetch_raw_publications {
   input:
-  file(remote) from remote_files
+  file(remote) from Channel.fromPath('/nfs/ftp/pub/databases/pmc/manuscripts/PMC*.txt.tar.gz')
 
   output:
-  file('*.txt') into publication_files
+  file('**/*.txt') into publication_files
 
   """
   cp $remote batch
@@ -33,33 +55,21 @@ process find_matches {
   set val(name), file(publication), val(pattern) from to_search
 
   output:
-  set val(name), file('matches') into matching_patterns
+  set val(name), file('matches') into matches
 
   """
-  grep -Hoiw $pattern $publication | sort -fu | sed 's/:/,/' > matches
-  """
-}
-
-process find_known {
-  input:
-  set val(name), val(pattern), file(query) from Channel.from(pattern_info)
-
-  output:
-  set val(name), file('known') into known_items
-
-  """
-  psql -v ON_ERROR_STOP=1 -f $query "$PGDATABASE" > known
+  grep -Howi $pattern $publication | sort -fu | sed 's/:/,/' > matches
   """
 }
 
-counts
-  .collect()
-  .combine(known_items)
-  .set { merged_counts }
+matches
+  .groupTuple()
+  .join(known_items)
+  .set { merged_matches }
 
 process merge_matches {
   input:
-  set val(name), file(possible), file('matches*') from merged_counts
+  set val(name), file('matches*'), file(possible) from merged_matches
 
   output:
   set val(name), file('selected-matches') to selected_matches
@@ -74,18 +84,6 @@ process merge_matches {
 
   xsv index all-matches
   xsv join 1 $possible 2 all-matches | xsv select 2,3 > selected-matches
-  """
-}
-
-process find_known_publications {
-  input:
-  file(query) from known_pubs_query
-
-  output:
-  file('known') into found_publications
-
-  """
-  psql -v ON_ERROR_STOP=1 -f $query "$PGDATABASE" > known
   """
 }
 
@@ -106,12 +104,21 @@ process find_new_publications {
   """
   set -o pipefail
 
-  sed 's|PMC[0-9]\\+XXXXX/||' $known_publications > pubs
+  # Create the required indexes
+  sed 's|PMC[0-9]\\+XXXXX/||' $filename_mapping > files
+  xsv index $known_publications
+  xsv index files
 
-  xsv index pubs
-  xsv join File pubs filename $selected |\
-  xsv select PMID,match |\
-  tee new-publications |\
+  # Join matched publications to known ones
+  xsv join File files filename $selected |\
+  xsv select PMID,match > matched-publications
+
+  # Remove all known publications
+  xsv join --left PMID matched-publications pmid $known_publications |\
+  xsv search -s 3 '^$' |\
+  xsv select 1,2 > new-publications
+
+  # Count the number of publications
   xsv select PMID |\
   sort -u |\
   wc -l > counts
