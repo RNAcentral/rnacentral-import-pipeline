@@ -34,6 +34,8 @@ RUN apt-get install -y \
     unzip \
     wget
 
+RUN apt-get install libxml2-utils
+
 # Install Infernal
 RUN \
     cd $RNA/ && \
@@ -46,7 +48,6 @@ RUN \
     make install && \
     cd easel && \
     make install
-    
 
 # Install ribotyper
 RUN git clone https://github.com/nawrockie/epn-ofile.git && cd epn-ofile && git checkout c34244b2b9e0719c45d964cc08c147aa353532e8
