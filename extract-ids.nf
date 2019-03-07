@@ -54,7 +54,7 @@ process fetch_raw_publications {
 
 
 publication_files
-  .into { for_patterns, for_names }
+  .into { for_patterns; for_names }
 
 for_patterns
   .combine(pattern_info)
@@ -137,7 +137,7 @@ process merge_matches {
 }
 
 selected_matches
-  .mix(found_names)
+  .mix(found_names.groupTuple())
   .combine(Channel.fromPath('/nfs/ftp/pub/databases/pmc/manuscripts/filelist.csv'))
   .combine(found_publications)
   .set { to_count }
