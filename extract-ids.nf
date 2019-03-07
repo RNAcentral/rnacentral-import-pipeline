@@ -9,6 +9,10 @@ pattern_info = [
   /* ['gtrnadb', /\w{3}-\w{3}[0-9]+-[0-9]+/, file('files/text-mining/find-gtrnadb.sql')], */
 ]
 
+name_info = [
+  ['hgnc', file('files/text-mining/find-hgnc.sql')],
+]
+
 process find_known_publications {
   input:
   file(query) from Channel.fromPath('files/text-mining/known-publications.sql')
@@ -48,10 +52,39 @@ process fetch_raw_publications {
   """
 }
 
+
 publication_files
+  .into { for_patterns, for_names }
+
+for_patterns
   .combine(pattern_info)
   .map { pubs, name, pattern, query -> [name, pubs, pattern] }
   .set { to_search }
+
+for_names
+  .combine(name_info)
+  .map { pubs, name, query -> [name, pubs, query, query] }
+  .set { names_to_search }
+
+process find_names { 
+  tag { name + ':' + pubs.getName() }
+
+  input:
+  set val(name), file(pubs), file(names) from names_to_search
+
+  output:
+  set val(name), file('matches') into found_names
+
+  """
+  {
+  echo match
+  find -L $pubs -name '*.txt' |\
+  xargs -I {} grep -Howf $names {} |\
+  sort -fu |\
+  sed 's/:/,/'
+  } > matches
+  """
+}
 
 process find_matches {
   tag { name + ':' + pubs.getName() }
@@ -103,6 +136,7 @@ process merge_matches {
 }
 
 selected_matches
+  .mix(found_names)
   .combine(Channel.fromPath('/nfs/ftp/pub/databases/pmc/manuscripts/filelist.csv'))
   .combine(found_publications)
   .set { to_count }
