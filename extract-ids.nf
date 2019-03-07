@@ -1,11 +1,12 @@
 #!/usr/bin/env nextflow
 
 pattern_info = [
-  ['ensembl', /ENS[A-Z]+\d+(\.\d+)?/ 'files/text-mining/find-ensembl.sql'],
-  /* ['lncipedia', /LINC\d{5}/: 'files/text-mining/find-lncipedia.sql'], */
-  /* ['mirbase', /\w{3}-let-7\w-[3|5]p/: 'files/text-mining/find-mirbase.sql'], */
-  /* ['mirbase', /\w{3}-mir-\d+\w?/: 'files/text-mining/find-mirbase.sql'], */
-  /* ['gtrnadb', /\w{3}-\w{3}\d+-\d+/: 'files/text-mining/find-gtrnadb.sql'], */
+  ['ensembl', /ENS\w+[0-9]+(\.[0-9]+)?/, file('files/text-mining/find-ensembl.sql')],
+  ['lncipedia', /LINC[0-9]{5}/, file('files/text-mining/find-lncipedia.sql')],
+  ['mirbase', /\w{3}-let-7\w-[3|5]p/, file('files/text-mining/find-mirbase.sql')],
+  ['mirbase', /\w{3}-mir-[0-9]+\w?/, file('files/text-mining/find-mirbase.sql')],
+  ['mirbase', /mir-[0-9]+\w?/, file('files/text-mining/find-mirbase.sql')],
+  /* ['gtrnadb', /\w{3}-\w{3}[0-9]+-[0-9]+/, file('files/text-mining/find-gtrnadb.sql')], */
 ]
 
 process find_known_publications {
@@ -33,11 +34,13 @@ process find_known_items {
 }
 
 process fetch_raw_publications {
+  memory 2.GB
+
   input:
   file(remote) from Channel.fromPath('/nfs/ftp/pub/databases/pmc/manuscripts/PMC*.txt.tar.gz')
 
   output:
-  file('**/*.txt') into publication_files
+  file('PMC*') into publication_files mode flatten
 
   """
   cp $remote batch
@@ -47,18 +50,24 @@ process fetch_raw_publications {
 
 publication_files
   .combine(pattern_info)
-  .map { pub, name, pattern, query -> [name, pub, pattern] }
+  .map { pubs, name, pattern, query -> [name, pubs, pattern] }
   .set { to_search }
 
 process find_matches {
+  tag { name + ':' + pubs.getName() }
+  errorStrategy 'ignore'
+
   input:
-  set val(name), file(publication), val(pattern) from to_search
+  set val(name), file(pubs), val(pattern) from to_search
 
   output:
   set val(name), file('matches') into matches
 
   """
-  grep -Howi $pattern $publication | sort -fu | sed 's/:/,/' > matches
+  find -L $pubs -name '*.txt' |\
+  xargs -I {} grep -HoiE '$pattern' {} |\
+  sort -fu |\
+  sed 's/:/,/' > matches
   """
 }
 
@@ -68,11 +77,13 @@ matches
   .set { merged_matches }
 
 process merge_matches {
+  tag { name }
+
   input:
   set val(name), file('matches*'), file(possible) from merged_matches
 
   output:
-  set val(name), file('selected-matches') to selected_matches
+  set val(name), file('selected-matches') into selected_matches
 
   """
   set -o pipefail
@@ -83,20 +94,25 @@ process merge_matches {
   } > all-matches
 
   xsv index all-matches
-  xsv join 1 $possible 2 all-matches | xsv select 2,3 > selected-matches
+  if [[ "$name" != "mirbase" ]]; then
+    xsv join 1 $possible 2 all-matches | xsv select 2,3 > selected-matches
+  else
+    cp all-matches selected-matches
+  fi
   """
 }
 
 selected_matches
-  .combine(file('/nfs/ftp/pub/databases/pmc/manuscripts/filelist.csv'))
-  .join(found_publications)
+  .combine(Channel.fromPath('/nfs/ftp/pub/databases/pmc/manuscripts/filelist.csv'))
+  .combine(found_publications)
   .set { to_count }
 
 process find_new_publications {
-  publish "$baseDir/text-mining/$name"
+  tag { name }
+  publishDir "$baseDir/text-mining/$name"
 
   input:
-  set val(name), file(known_publications), file(filename_mapping), file(selected) from to_count
+  set val(name), file(selected), file(filename_mapping), file(known_publications) from to_count
 
   output:
   set val(name), file('new-publications'), file('counts') into __matches
@@ -104,22 +120,22 @@ process find_new_publications {
   """
   set -o pipefail
 
+  # Fix the file listing (.xml -> .txt)
+  sed 's/.xml/.txt/' $filename_mapping > files
+
   # Create the required indexes
-  sed 's|PMC[0-9]\\+XXXXX/||' $filename_mapping > files
   xsv index $known_publications
   xsv index files
+  xsv index $selected
 
-  # Join matched publications to known ones
-  xsv join File files filename $selected |\
-  xsv select PMID,match > matched-publications
+  # Join matches to PMIDs
+  xsv join filename $selected File files | xsv select PMID,match > matched-publications
 
-  # Remove all known publications
-  xsv join --left PMID matched-publications pmid $known_publications |\
-  xsv search -s 3 '^$' |\
-  xsv select 1,2 > new-publications
+  # Remove all known PMIDs
+  xsv join --left PMID matched-publications pmid $known_publications | xsv search -s 3 '^\$' | xsv select PMID,match > new-publications
 
-  # Count the number of publications
-  xsv select PMID |\
+  # Count the number of new PMIDs
+  xsv select PMID new-publications |\
   sort -u |\
   wc -l > counts
   """
