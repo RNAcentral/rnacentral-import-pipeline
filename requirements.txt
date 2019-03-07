@@ -18,3 +18,4 @@ six==1.10.0
 contextlib2==0.5.5
 functools32==3.2.3-2
 typing==3.6.6
+textblob==0.15.3
