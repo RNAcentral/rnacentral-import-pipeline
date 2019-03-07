@@ -68,6 +68,7 @@ for_names
 
 process find_names { 
   tag { name + ':' + pubs.getName() }
+  errorStrategy 'ignore'
 
   input:
   set val(name), file(pubs), file(names) from names_to_search
