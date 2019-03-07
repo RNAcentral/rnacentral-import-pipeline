@@ -6,7 +6,7 @@ pattern_info = [
   ['mirbase', /\w{3}-let-7\w-[3|5]p/, file('files/text-mining/find-mirbase.sql')],
   ['mirbase', /\w{3}-mir-[0-9]+\w?/, file('files/text-mining/find-mirbase.sql')],
   ['mirbase', /mir-[0-9]+\w?/, file('files/text-mining/find-mirbase.sql')],
-  /* ['gtrnadb', /\w{3}-\w{3}[0-9]+-[0-9]+/, file('files/text-mining/find-gtrnadb.sql')], */
+  ['gtrnadb', /tRNA-\w{3}-\w{3}-[0-9]+-[0-9]+/, file('files/text-mining/find-gtrnadb.sql')],
 ]
 
 name_info = [
