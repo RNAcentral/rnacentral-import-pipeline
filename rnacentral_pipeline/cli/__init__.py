@@ -29,6 +29,7 @@ from . import qa
 from . import rfam
 from . import search_export
 from . import secondary
+from . import text_mining
 
 
 @click.group()
@@ -57,3 +58,4 @@ cli.add_command(qa.cli)
 cli.add_command(rfam.cli)
 cli.add_command(search_export.cli)
 cli.add_command(secondary.cli)
+cli.add_command(text_mining.cli)
