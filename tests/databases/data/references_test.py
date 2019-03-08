@@ -46,6 +46,8 @@ def test_can_build_id_reference_for_simple_pmids(pmid):
 @pytest.mark.parametrize('pmc', [
     'PMC4648659',
     'pmc4648659',
+    'PMCID:PMC4648659',
+    'pmcid:pmc4648659',
 ])
 def test_can_build_id_reference_for_pmcid(pmc):
     assert attr.asdict(data.IdReference.build(pmc)) == attr.asdict(data.IdReference(
