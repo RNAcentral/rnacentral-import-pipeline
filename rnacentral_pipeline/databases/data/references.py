@@ -57,6 +57,7 @@ class Reference(object):
     title = attr.ib(validator=optional(is_a(six.text_type)))
     pmid = attr.ib(validator=optional(is_a(int)))
     doi = attr.ib(validator=optional(is_a(six.text_type)))
+    pmcid = attr.ib(validator=optional(is_a(six.text_type)), default=None)
 
     def md5(self):
         """
@@ -80,16 +81,21 @@ class Reference(object):
             self.doi,
         ]
 
-    def writeable(self, accession):
-        yield [
-            self.md5(),
-            accession,
+    def writeable(self, extra):
+        data = [self.md5()]
+        if isinstance(extra, six.string_types):
+            data.append(extra)
+        else:
+            data.extend(extra)
+        data.extend([
             self.authors,
             self.location,
             self.title,
             self.pmid,
             self.doi,
-        ]
+        ])
+
+        yield data
 
 
 @attr.s(frozen=True, hash=True)
@@ -127,7 +133,7 @@ class IdReference(object):
             return PMID_URL.format(pmid=self.external_id)
         if self.namespace == 'doi':
             return DOI_URL.format(doi=self.external_id)
-        if self.namespance == 'pmcid':
+        if self.namespace == 'pmcid':
             return PMC_URL.format(pmc=self.external_id)
         raise ValueError("No URL for namespace %s" % self.namespace)
 

@@ -26,6 +26,7 @@ def test_reference_can_handle_non_unicode():
         title='Agathobaculum butyriciproducens gen. nov. \xa0sp. nov., a strict anaerobic, butyrate-producing gut bacterium isolated from human faeces and reclassification of Eubacterium desmolans as Agathobaculum desmolans comb. nov',
         pmid=27334534,
         doi=None,
+        pmcid=None,
     )
     assert ref.md5() == '1c1aa1c716a1ae7fd6ba0747d3e166e0'
 
@@ -54,4 +55,3 @@ def test_can_build_id_reference_for_pmcid(pmc):
         namespace='pmcid',
         external_id='PMC4648659'
     ))
-

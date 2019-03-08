@@ -13,6 +13,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import csv
+import sqlite3
+import tempfile
+
+import six
 import attr
 import pytest
 
@@ -21,8 +26,36 @@ from rnacentral_pipeline.databases.data import IdReference
 import rnacentral_pipeline.databases.helpers.publications as pub
 
 
-def test_can_fetch_publication():
-    assert pub.summary(IdReference.build(28815543)) == {
+def lookup(ref_id):
+    return attr.asdict(pub.query_pmc(IdReference.build(ref_id)))
+
+
+@pytest.fixture
+def indexed_db():
+    with tempfile.NamedTemporaryFile() as tmp:
+        pub.index_xml_directory('data/publications/', tmp.name)
+        yield tmp.name
+
+
+@pytest.fixture
+def indexed(scope='module'):
+    with tempfile.NamedTemporaryFile() as tmp:
+        pub.index_xml_directory('data/publications/', tmp.name)
+        conn = sqlite3.connect(tmp.name)
+        cursor = conn.cursor()
+        yield cursor
+        cursor.close()
+        conn.close()
+
+
+@pytest.mark.parametrize('raw_id', [
+    28815543,
+    '28815543',
+    'PMC5890441',
+    'doi:10.1007/978-981-10-5203-3_9',
+])
+def test_can_fetch_publication(raw_id):
+    assert pub.summary(IdReference.build(raw_id)) == {
         "id": "28815543",
         "source": "MED",
         "pmid": "28815543",
@@ -40,7 +73,7 @@ def test_can_fetch_publication():
         "inPMC": "N",
         "hasPDF": "Y",
         "hasBook": "N",
-        "citedByCount": 1,
+        "citedByCount": 2,
         "hasReferences": "Y",
         "hasTextMinedTerms": "Y",
         "hasDbCrossReferences": "N",
@@ -57,12 +90,14 @@ def test_complains_given_bad_pmid():
         pub.summary(IdReference.build(-1))
 
 
-def lookup(ref_id):
-    return attr.asdict(pub.query_pmc(IdReference.build(ref_id)))
-
-
-def test_can_build_reference():
-    assert lookup(27858507) == attr.asdict(Reference(
+@pytest.mark.parametrize('raw_id', [
+    27858507,
+    '27858507',
+    'doi:10.1080/15476286.2016.1251002',
+    'PMCID:PMC5785218',
+])
+def test_can_build_reference(raw_id):
+    assert lookup(raw_id) == attr.asdict(Reference(
         authors=u"Lünse CE, Weinberg Z, Weinberg Z, Breaker RR.",
         location='RNA Biol 14(11):1499-1507 (2017)',
         title=(
@@ -70,7 +105,8 @@ def test_can_build_reference():
             'Penelope-like retrotransposons cleave RNA as dimers'
         ),
         pmid=27858507,
-        doi='10.1080/15476286.2016.1251002'
+        doi='10.1080/15476286.2016.1251002',
+        pmcid='PMC5785218',
     ))
 
 
@@ -91,6 +127,7 @@ def test_builds_correction_location():
         ),
         pmid=26184978,
         doi='10.1038/srep12276',
+        pmcid='PMC4505325',
     ))
 
 
@@ -101,6 +138,7 @@ def test_can_handle_missing_volume():
         title='MicroRNA-153 targeting of KCNQ4 contributes to vascular dysfunction in hypertension',
         pmid=27389411,
         doi='10.1093/cvr/cvw177',
+        pmcid='PMC5079273',
     ))
 
 
@@ -111,6 +149,7 @@ def test_it_can_find_if_duplicate_ext_ids():
         title='Assembly of the mitochondrial membrane system: two separate genes coding for threonyl-tRNA in the mitochondrial DNA of Saccharomyces cerevisiae',
         pmid=375006,
         doi='10.1007/bf00271669',
+        pmcid=None,
     ))
 
 
@@ -121,6 +160,7 @@ def test_can_lookup_by_doi():
         title='Assembly of the mitochondrial membrane system: two separate genes coding for threonyl-tRNA in the mitochondrial DNA of Saccharomyces cerevisiae',
         pmid=375006,
         doi='10.1007/bf00271669',
+        pmcid=None,
     ))
 
 
@@ -142,6 +182,7 @@ def test_can_handle_several_reference_formats(ref_id):
         ),
         pmid=26184978,
         doi='10.1038/srep12276',
+        pmcid='PMC4505325',
     ))
 
 
@@ -151,6 +192,10 @@ def test_can_handle_several_reference_formats(ref_id):
     ('PMID:26184978', 'pmid', '26184978'),
     ('doi:10.1038/srep12276', 'doi', '10.1038/srep12276'),
     ('DOI:10.1038/srep12276', 'doi', '10.1038/srep12276'),
+    ('PMCID:PMC5785218', 'pmcid', 'PMC5785218'),
+    ('PMC5785218', 'pmcid', 'PMC5785218'),
+    ('pmcid:pmc5785218', 'pmcid', 'PMC5785218'),
+    ('pmc5785218', 'pmcid', 'PMC5785218'),
 ])
 def test_reference_builds_a_id_ref(raw_id, namespace, external_id):
     assert pub.reference(raw_id) == IdReference(
@@ -173,4 +218,63 @@ def test_can_parse_xml_data_correctly():
             ),
             pmid=26184978,
             doi='10.1038/srep12276',
+            pmcid='PMC4505325',
         ))
+
+
+@pytest.mark.parametrize('raw_id', [
+    ('26184978'),
+    ('DOI:10.1038/srep12276'),
+    ('PMC4505325'),
+    ('PMCID:PMC4505325'),
+    (26184978),
+])
+def test_can_query_indexed_data_correctly(indexed, raw_id):
+    assert attr.asdict(pub.query_database(indexed, pub.reference(raw_id))) == attr.asdict(Reference(
+            authors='Xu Z, Han Y, Liu J, Jiang F, Hu H, Wang Y, Liu Q, Gong Y, Li X.',
+            location='Scientific reports 5:12276 (2015)',
+            title=(
+                'MiR-135b-5p and MiR-499a-3p Promote Cell '
+                'Proliferation and Migration in Atherosclerosis by Directly '
+                'Targeting MEF2C'
+            ),
+            pmid=26184978,
+            doi='10.1038/srep12276',
+            pmcid='PMC4505325',
+        ))
+
+
+@pytest.mark.parametrize('raw_id', [
+    'doi:10.1007/bf00271669',
+    'PMID:375006',
+])
+def test_can_query_with_fallback(indexed, raw_id):
+    id_ref = pub.reference(raw_id)
+    ref = pub.query_database(indexed, id_ref, allow_fallback=True)
+    assert attr.asdict(ref) == attr.asdict(Reference(
+        authors='Macino G, Tzagoloff A.',
+        location='Mol Gen Genet 169(2):183-188 (1979)',
+        title='Assembly of the mitochondrial membrane system: two separate genes coding for threonyl-tRNA in the mitochondrial DNA of Saccharomyces cerevisiae',
+        pmid=375006,
+        doi='10.1007/bf00271669',
+        pmcid=None,
+    ))
+
+
+def test_can_write_using_specified_columns(indexed_db):
+    raw = six.moves.StringIO('something,375006,other\n')
+    out = six.moves.StringIO()
+    pub.write_query(indexed_db, raw, out, column=1, allow_fallback=True)
+    out.seek(0)
+    assert list(csv.reader(out)) == [
+        [
+            "da0c9805cab7efd21a0eed0e17a8223a", 
+            "something", 
+            "other", 
+            'Macino G, Tzagoloff A.', 
+            'Mol Gen Genet 169(2):183-188 (1979)', 
+            'Assembly of the mitochondrial membrane system: two separate genes coding for threonyl-tRNA in the mitochondrial DNA of Saccharomyces cerevisiae',
+            '375006',
+            '10.1007/bf00271669'
+        ]
+    ]
