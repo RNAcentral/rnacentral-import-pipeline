@@ -18,7 +18,7 @@ from . import patterns
 PATTERNS = [
     r'\w{3}-mir-[0-9]+\w?([35]p)?',
     r'\w{3}-let-7\w-[35]p',
-    r'mi
+    r'miRNA-\d+',
 ]
 
 def write_matches(text, output):
