@@ -16,10 +16,14 @@ limitations under the License.
 from . import patterns
 
 PATTERNS = [
-    r'\w{3}?-mir-[0-9]+\w?([35]p)?',
-    r'\w{3}-let-7\w-[35]p',
+    r'(\w{3}-)?mir-[0-9]+\w?([35]p)?',
+    r'(\w{3}-)?let-7\w-[35]p',
     r'miRNA-\d+',
 ]
 
 def write_matches(text, output):
-    patterns.write_matches(PATTERNS, text, output)
+    writer = csv.writer(output)
+    name = PurePosixPath(filename).stem
+    with open(filename, 'r') as text:
+        for match in patterns.matches(PATTERNS, text, output):
+            writer.writerows(match.writeables(name))
