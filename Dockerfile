@@ -110,6 +110,8 @@ ADD requirements.txt $RNACENTRAL_IMPORT_PIPELINE/requirements.txt
 RUN /usr/local/bin/pip install --upgrade pip && \
     /usr/local/bin/pip install -r $RNACENTRAL_IMPORT_PIPELINE/requirements.txt
 
+RUN python -m textblob.download_corpora
+
 # Setup environmental variables
 ENV RIBOINFERNALDIR="$RNA/infernal-1.1.2/bin" RIBOEASELDIR="$RNA/infernal-1.1.2/bin"
 ENV RIBODIR="$RNA/ribotyper-v1" EPNOPTDIR="$RNA/epn-options" EPNOFILEDIR="$RNA/epn-ofile" EPNTESTDIR="$RNA/epn-test"
