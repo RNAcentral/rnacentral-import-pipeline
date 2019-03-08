@@ -33,7 +33,7 @@ PMC_URL = 'https://www.ebi.ac.uk/europepmc/webservices/rest/search?query={pmc}+A
 KNOWN_SERVICES = {
     'doi',
     'pmid',
-    'pmc',
+    'pmcid',
 }
 
 
@@ -107,7 +107,7 @@ class IdReference(object):
             if re.match(r'^\d+$', ref_id):
                 return cls('pmid', ref_id)
             if re.match(r'^PMC\d+', ref_id, re.IGNORECASE):
-                return cls('pmc', ref_id.upper())
+                return cls('pmcid', ref_id.upper())
             if ':' not in ref_id:
                 raise UnknownPublicationType("Could not parse: " + ref_id)
             service, eid = ref_id.split(':', 1)
@@ -118,7 +118,7 @@ class IdReference(object):
 
     @property
     def normalized_id(self):
-        if self.namespace == 'pmc':
+        if self.namespace == 'pmcid':
             return self.external_id
         return '%s:%s' % (self.namespace, self.external_id)
 
@@ -127,7 +127,7 @@ class IdReference(object):
             return PMID_URL.format(pmid=self.external_id)
         if self.namespace == 'doi':
             return DOI_URL.format(doi=self.external_id)
-        if self.namespance == 'pmc':
+        if self.namespance == 'pmcid':
             return PMC_URL.format(pmc=self.external_id)
         raise ValueError("No URL for namespace %s" % self.namespace)
 
