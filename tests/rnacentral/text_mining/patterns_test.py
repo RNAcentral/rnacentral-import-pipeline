@@ -25,4 +25,7 @@ from rnacentral_pipeline.rnacentral.text_mining import patterns
 ])
 def test_can_find_expected_matches_in_text(pats, filename, found):
     with open(filename, 'r') as raw:
-        assert set(patterns.matches(pats, raw)) == found
+        val = set()
+        for matching in patterns.matches(pats, None, raw.read()):
+            val.update(matching.matches)
+        assert val == found

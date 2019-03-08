@@ -16,16 +16,41 @@ limitations under the License.
 import re
 import csv
 
-from textblob import TextBlob
+import six
+import attr
+import typing
+
+import textblob as tb
 
 
-def matches(patterns, text):
+@attr.s()
+class MatchingSentence(object):
+    filename = attr.ib(type=six.text_type)
+    sentence = attr.ib(type=tb.blob.Sentence)
+    matches = attr.ib(type=typing.List[tb.Word])
+
+    def writeables(self):
+        for match in self.matches:
+            return [self.filename, match]
+
+
+def select_sentences(filename, pattern, blob, word_limit=200, match_limit=25):
+    for sentence in blob.sentences:
+        if len(sentence.words) > word_limit:
+            continue
+        matches = [t for t in sentence.tokens if re.match(pattern, t)]
+        if 0 < len(matches) < match_limit:
+            yield MatchingSentence(filename, sentence, matches)
+
+
+def matches(patterns, filename, text):
     pattern = '|'.join('(:?%s$)' % p for p in patterns)
-    blob = TextBlob(text.read())
-    for word in blob.words:
-        if re.match(pattern, word, re.IGNORECASE):
-            yield word
+    blob = tb.TextBlob(text)
+    return select_sentences(filename, pattern, blob)
 
 
-def write_matches(patterns, text, output):
-    csv.writer(output).writerows(matches(patterns, text))
+def write_matches(patterns, handle, output):
+    text = handle.read()
+    writer = csv.writer(output)
+    for matching in matches(patterns, handle.name, text):
+        writer.writerows(matching.writeables())
