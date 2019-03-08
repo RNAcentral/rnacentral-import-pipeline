@@ -113,13 +113,13 @@ class IdReference(object):
             service, eid = ref_id.split(':', 1)
             service = service.lower()
             if service in KNOWN_SERVICES:
+                if service == 'pmcid':
+                    eid = eid.upper()
                 return cls(service, eid)
         raise UnknownPublicationType(ref_id)
 
     @property
     def normalized_id(self):
-        if self.namespace == 'pmcid':
-            return self.external_id
         return '%s:%s' % (self.namespace, self.external_id)
 
     def external_url(self):
