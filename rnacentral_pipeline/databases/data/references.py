@@ -107,7 +107,7 @@ class IdReference(object):
             if re.match(r'^\d+$', ref_id):
                 return cls('pmid', ref_id)
             if re.match(r'^PMC\d+', ref_id, re.IGNORECASE):
-                return cls('pmc', ref_id)
+                return cls('pmc', ref_id.upper())
             if ':' not in ref_id:
                 raise UnknownPublicationType("Could not parse: " + ref_id)
             service, eid = ref_id.split(':', 1)
