@@ -29,7 +29,7 @@ def cli():
 
 
 @cli.command('ensembl')
-@click.argument('text', type=click.File('r'))
+@click.argument('text', type=click.Path())
 @click.argument('output', default='assemblies.csv', type=click.File('w'))
 def ensembl(text, output):
     tm.ensembl.write_matches(text, output)
@@ -44,7 +44,7 @@ def fixed_patterns(names, text, output):
 
 
 @cli.command('mirbase')
-@click.argument('text', type=click.File('r'))
+@click.argument('text', type=click.Path())
 @click.argument('output', default='mined-publications.csv', type=click.File('w'))
 def mirbase(text, output):
     tm.mirbase.write_matches(text, output)

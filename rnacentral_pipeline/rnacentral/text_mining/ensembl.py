@@ -13,11 +13,20 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import csv
+
 from . import patterns
+
+from pathlib import PurePosixPath
+
 
 PATTERNS = [
     r'ENS[A-Z]+\d(\.\d+)?'
 ]
 
-def write_matches(text, output):
-    patterns.write_matches(PATTERNS, text, output)
+def write_matches(filename, output):
+    writer = csv.writer(output)
+    name = PurePosixPath(filename).stem
+    with open(filename, 'r') as text:
+        for match in patterns.matches(PATTERNS, text, output):
+            writer.writerows(match.writeables(name))
