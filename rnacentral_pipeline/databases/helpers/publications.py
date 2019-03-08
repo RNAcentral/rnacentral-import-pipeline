@@ -22,6 +22,7 @@ import sqlite3
 from glob import glob
 from xml.etree import cElementTree as ET
 
+import six
 import attr
 import requests
 from retry import retry
@@ -123,6 +124,7 @@ def query_pmc(id_reference):
         title=clean_title(data['title']),
         pmid=pmid,
         doi=data.get('doi', None),
+        pmcid=data.get('pmcid', None),
     )
 
 
@@ -140,6 +142,7 @@ def node_to_reference(node):
     doi = xml_text('DOI', node)
     if not pmid and not doi:
         return None
+    pmcid = xml_text('pmcid', node)
 
     authors = []
     for author in node.findall('./AuthorList/Author'):
@@ -162,6 +165,7 @@ def node_to_reference(node):
         title=xml_text('title', node, fn=clean_title),
         pmid=pmid,
         doi=doi,
+        pmcid=pmcid,
     )
 
 
@@ -177,7 +181,7 @@ def parse_xml(xml_file):
 
 def index_xml_directory(directory, output):
     conn = sqlite3.connect(output)
-    tables = {'pmid': 'int', 'doi': 'text'}
+    tables = {'pmid': 'int', 'doi': 'text', 'pmcid': 'text'}
     for name, pid_type in tables.items():
         conn.execute(TABLE.format(name=name, type=pid_type))
 
@@ -206,30 +210,19 @@ def query_database(cursor, id_ref, allow_fallback=False):
     return Reference(**json.loads(raw_ref[0]))
 
 
-def write_lookup(db, handle, output, allow_fallback=False):
+def write_query(db, handle, output, column=0, allow_fallback=False):
     conn = sqlite3.connect(db)
     cursor = conn.cursor()
-    reader = csv.reader(handle)
     writer = csv.writer(output)
-    for (ref_id, accession) in reader:
-        id_ref = IdReference.build(ref_id)
+    for row in csv.reader(handle):
+        raw = row[column]
+        id_ref = reference(raw)
         try:
             ref = query_database(cursor, id_ref, allow_fallback=allow_fallback)
         except UnknownReference:
-            LOGGER.warning("Could not find reference for %s", id_ref)
+            LOGGER.warning("Could not handle find reference for %s", id_ref)
             continue
-        writer.writerows(ref.writeable(accession))
+        rest = [d for i, d in enumerate(row) if i != column]
+        writer.writerows(ref.writeable(rest))
+    cursor.close()
     conn.close()
-
-
-def from_file(handle, output):
-    reader = csv.reader(handle)
-    writer = csv.writer(output)
-    for (ref_id, accession) in reader:
-        id_ref = IdReference.build(ref_id)
-        try:
-            complete = query_pmc(id_ref)
-        except UnknownReference:
-            LOGGER.warning("Could not find reference for %s", id_ref)
-            continue
-        writer.writerows(complete.writeable(accession))
