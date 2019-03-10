@@ -14,8 +14,17 @@ limitations under the License.
 """
 
 import attr
+import pytest
 
 from rnacentral_pipeline.rnacentral.traveler import ribotyper
+
+
+@pytest.mark.parametrize('filename,count', [
+    ('data/traveler/simple/simple.ribotyper.long.out', 1),
+    ('data/traveler/failed-data.ribotyper.long.out', 12),
+])
+def test_can_parse_whole_file(filename, count):
+    assert len(list(ribotyper.parse(filename))) == count
 
 
 def test_can_parse_a_simple_result():
