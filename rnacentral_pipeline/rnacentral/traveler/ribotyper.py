@@ -57,6 +57,8 @@ class Result(object):
     @classmethod
     def from_result(cls, row):
         parts = re.split(r'\s+', row, maxsplit=24)
+        if parts[2] == 'FAIL':
+            return None
         return cls(
             target=parts[1],
             status=parts[2],
@@ -84,7 +86,9 @@ def parse(filename):
         for line in raw:
             if line.startswith('#'):
                 continue
-            yield Result.from_result(line)
+            result = Result.from_result(line)
+            if result:
+                yield result
 
 
 def as_dict(directory):
