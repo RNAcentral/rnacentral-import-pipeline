@@ -1,9 +1,9 @@
 #!/usr/bin/env nextflow
 
-def searches = [
+def searches = Channel.from([
   'mirbase',
   'ensembl'
-]
+])
 
 process get_all_references {
   output:
@@ -29,9 +29,8 @@ process fetch_raw_publications {
   """
 }
 
-publication_files
-  .combine(searches)
-  .map { pubs, name -> [name, pubs] }
+searches
+  .combine(publication_files)
   .set { to_mine }
 
 process find_matches { 
