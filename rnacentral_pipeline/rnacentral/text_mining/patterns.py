@@ -21,29 +21,15 @@ import typing
 
 import textblob as tb
 
-
-@attr.s()
-class MatchingSentence(object):
-    sentence = attr.ib(type=tb.blob.Sentence)
-    matches = attr.ib(type=typing.List[tb.Word])
-
-    def writeables(self, *extra):
-        for match in self.matches:
-            data = list(extra)
-            data.extend([self.filename, match])
-            yield data
+from . import core
 
 
-def select_sentences(pattern, blob, word_limit=200, match_limit=25):
-    for sentence in blob.sentences:
-        if len(sentence.words) > word_limit:
-            continue
-        matches = [t for t in sentence.tokens if re.match(pattern, t)]
-        if 0 < len(matches) < match_limit:
-            yield MatchingSentence(sentence, matches)
-
-
-def matches(patterns, text):
+def matches(patterns, text, word_limit=200, match_limit=25):
     pattern = '|'.join('(:?%s$)' % p for p in patterns)
     blob = tb.TextBlob(text)
-    return select_sentences(pattern, blob)
+    def fn(sent):
+        return [t for t in sent.tokens if re.match(pattern, t, re.IGNORECASE)]
+
+    selector = core.SentenceSelector(words=word_limit, matches=match_limit)
+    for match in core.select_sentences(blob, selector, fn):
+        yield match

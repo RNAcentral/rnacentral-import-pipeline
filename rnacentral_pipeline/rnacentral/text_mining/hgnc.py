@@ -13,16 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import pytest
+from . import core
 
-from rnacentral_pipeline.rnacentral.text_mining import names
-
-
-@pytest.mark.parametrize('patterns,filename,found', [
-    (['HOTAIR', 'XIST'], 'data/text-mining/PMID:29141248.txt', {'HOTAIR'}),
-    (['XIST'], 'data/text-mining/PMID:30541551.txt', set()),
-    (['HOTAIR'], 'data/text-mining/PMID:30541551.txt', {'HOTAIR'}),
-])
-def test_can_find_expected_matches_in_text(patterns, filename, found):
-    with open(filename, 'r') as raw:
-        assert set(names.matches(patterns, raw)) == found
+def write_matches(filename, hgnc_names, output, **kwargs):
+    core.write_name_matches(filename, hgnc_names, output, **kwargs)

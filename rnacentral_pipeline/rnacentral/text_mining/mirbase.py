@@ -13,19 +13,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from . import patterns
-
-from pathlib import PurePosixPath
+from . import core
 
 PATTERNS = [
-    r'(\w{3}-)?mir-[0-9]+\w?([35]p)?',
-    r'(\w{3}-)?let-7\w-[35]p',
-    r'miRNA-\d+',
+    r'(?P<mature>(\w{3}-)?mir-[0-9]+\w?([35]p)?)',
+    r'(?P<let_7>(\w{3}-)?let-7\w?(-[35]p)?)',
+    r'(?P<bantam>(\w{3}-)?bantam(-[35]p)?)',
+    r'(?P<unprefixed>miRNA-\d+)',
 ]
 
-def write_matches(text, output):
-    writer = csv.writer(output)
-    name = PurePosixPath(filename).stem
-    with open(filename, 'r') as text:
-        for match in patterns.matches(PATTERNS, text, output):
-            writer.writerows(match.writeables(name))
+def write_matches(filename, output, **kwargs):
+    core.write_pattern_matches(filename, PATTERNS, output, **kwargs)
