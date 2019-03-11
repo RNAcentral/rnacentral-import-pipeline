@@ -13,18 +13,3 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import csv
-
-from textblob import TextBlob
-
-
-def matches(names, text):
-    names = set(names)
-    blob = TextBlob(text.read())
-    for word in blob.words:
-        if word in names:
-            yield word
-
-
-def write_matches(names, text, output):
-    csv.writer(output).writerows(matches(names, text))
