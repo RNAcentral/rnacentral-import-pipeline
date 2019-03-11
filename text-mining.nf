@@ -29,26 +29,59 @@ process fetch_raw_publications {
   """
 }
 
-searches
-  .combine(publication_files)
-  .set { to_mine }
+publication_files.into { pattern_publication_files; name_publication_files }
 
-process find_matches { 
+process fetch_names {
+  input:
+  file(query) from Channel.fromPath('files/text-mining/names/*.sql')
+
+  output:
+  set val(query.getBaseName()), file(known) into known_names
+
+  script:
+  """
+  psql -v ON_ERROR_STOP=1 -f $query "$PGDATABASE"
+  """
+}
+
+searches
+  .combine(pattern_publication_files)
+  .set { to_mine_patterns }
+
+process find_pattern_matches { 
   tag { name + ':' + pubs.getName() }
 
   input:
-  set val(name), file(pubs) from to_mine
+  set val(name), file(pubs) from to_mine_patterns
 
   output:
-  set val(name), file('matches') into matching_publications
+  file('matches') into matching_pattern_publications
 
   """
   rnac text-mining $name $pubs matches
   """
 }
 
-matching_publications
-  .map { n, p -> p }
+known_names
+  .combine(name_publication_files)
+  .set { to_mine_names }
+
+process find_name_matches { 
+  tag { name + ':' + pubs.getName() }
+
+  input:
+  set val(name), file(names), file(pubs) from to_mine_names
+
+  output:
+  file('matches') into matching_name_publications
+
+  """
+  rnac text-mining $name $names $pubs matches
+  """
+}
+
+Channel.empty()
+  .mix(matching_name_publications, matching_pattern_publications)
   .collect()
   .set { pmids }
 
