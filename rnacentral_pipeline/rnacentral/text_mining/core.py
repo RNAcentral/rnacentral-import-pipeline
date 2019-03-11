@@ -15,10 +15,13 @@ limitations under the License.
 
 
 import re
+import csv
 
 import six
 import attr
 import typing
+
+from pathlib import Path
 from pathlib import PurePosixPath
 
 import textblob as tb
@@ -36,9 +39,12 @@ class MatchingSentence(object):
     matches = attr.ib(type=typing.List[WordMatch])
 
     def writeables(self, *extra):
+        sentence = self.sentence.raw
+        sentence = sentence.replace('\n', ' ')
+        sentence = sentence.replace('  ', ' ')
         for match in self.matches:
             data = list(extra)
-            data.extend([match.name, match.word, self.sentence])
+            data.extend([match.name, match.word, sentence])
             yield data
 
 
@@ -111,22 +117,32 @@ def matches(blob, selector, matcher):
             yield match
 
 
-def write_matches(filename, selector, matcher, output):
-    writer = csv.writer(output)
-    name = PurePosixPath(filename).stem
+def write_file_matches(filename, selector, matcher, output):
     with open(filename, 'r') as text:
         blob = tb.TextBlob(text.read())
-        for match in matches(blob, selector, matcher):
-            writer.writerows(match.writeables(name))
+
+    writer = csv.writer(output)
+    name = PurePosixPath(filename).stem
+    for match in matches(blob, selector, matcher):
+        writer.writerows(match.writeables(name))
+
+
+def write_matches(filename, selector, matcher, output):
+    path = Path(filename)
+    if not path.is_dir():
+        write_file_matches(filename, selector, matcher, output)
+    else:
+        for subpath in path.iterdir():
+            write_file_matches(str(subpath), selector, matcher, output)
 
 
 def write_pattern_matches(filename, patterns, output, **kwargs):
-    matcher = core.PatternMatcher.build(patterns)
-    selector = core.SentenceSelector.build(**kwargs)
+    matcher = PatternMatcher.build(patterns)
+    selector = SentenceSelector.build(**kwargs)
     write_matches(filename, selector, matcher, output)
 
 
-def write_name_matches(filename, name_handle, output, **kwrags):
-    matcher = NameMatcher.from_handle(name_names)
+def write_name_matches(filename, name_handle, output, **kwargs):
+    matcher = NameMatcher.from_handle(name_handle)
     selector = SentenceSelector.build(**kwargs)
     write_matches(filename, selector, matcher, output)

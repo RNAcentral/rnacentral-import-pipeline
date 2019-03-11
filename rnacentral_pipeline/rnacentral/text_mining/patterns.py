@@ -13,23 +13,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import re
 
-import six
-import attr
-import typing
+ENSEMBL = [
+    r'(?P<simple_id>ENS[A-Z]+\d(\.\d+)?)'
+]
 
-import textblob as tb
-
-from . import core
-
-
-def matches(patterns, text, word_limit=200, match_limit=25):
-    pattern = '|'.join('(:?%s$)' % p for p in patterns)
-    blob = tb.TextBlob(text)
-    def fn(sent):
-        return [t for t in sent.tokens if re.match(pattern, t, re.IGNORECASE)]
-
-    selector = core.SentenceSelector(words=word_limit, matches=match_limit)
-    for match in core.select_sentences(blob, selector, fn):
-        yield match
+MIRBASE = [
+    r'(?P<mature>(\w{3}-)?mir-[0-9]+\w?([35]p)?)',
+    r'(?P<let_7>(\w{3}-)?let-7\w?(-[35]p)?)',
+    r'(?P<bantam>(\w{3}-)?bantam(-[35]p)?)',
+    r'(?P<unprefixed>miRNA-\d+)',
+]

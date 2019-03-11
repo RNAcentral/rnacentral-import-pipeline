@@ -15,8 +15,11 @@ limitations under the License.
 
 import click
 
-from rnacentral_pipeline.rnacentral import text_mining as tm
+from rnacentral_pipeline.rnacentral.text_mining import core
+from rnacentral_pipeline.rnacentral.text_mining import patterns as pats
 
+
+OUTPUT='mined-publications.csv'
 
 @click.group('text-mining')
 def cli():
@@ -30,21 +33,21 @@ def cli():
 
 @cli.command('ensembl')
 @click.argument('text', type=click.Path())
-@click.argument('output', default='assemblies.csv', type=click.File('w'))
+@click.argument('output', default=OUTPUT, type=click.File('w'))
 def ensembl(text, output):
-    tm.ensembl.write_matches(text, output)
+    core.write_pattern_matches(text, pats.ENSEMBL, output)
 
 
-@cli.command('fixed-patterns')
+@cli.command('hgnc')
 @click.argument('names', type=click.File('r'))
-@click.argument('text', type=click.File('r'))
-@click.argument('output', default='mined-publications.csv', type=click.File('w'))
+@click.argument('text', type=click.Path())
+@click.argument('output', default=OUTPUT, type=click.File('w'))
 def fixed_patterns(names, text, output):
-    tm.names.write_matches(names, text, output)
+    core.write_name_matches(text, names, output)
 
 
 @cli.command('mirbase')
 @click.argument('text', type=click.Path())
-@click.argument('output', default='mined-publications.csv', type=click.File('w'))
+@click.argument('output', default=OUTPUT, type=click.File('w'))
 def mirbase(text, output):
-    tm.mirbase.write_matches(text, output)
+    core.write_pattern_matches(text, pats.MIRBASE, output)
