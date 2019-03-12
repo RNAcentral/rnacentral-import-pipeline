@@ -30,8 +30,12 @@ from attr.validators import instance_of as is_a
 import typing
 import requests
 from retry import retry
-from pathlib import Path
 from ratelimiter import RateLimiter
+
+try:
+    from pathlib import Path
+except ImportError:
+    from pathlib2 import Path
 
 try:
     from functools import lru_cache
@@ -77,10 +81,7 @@ class CacheStorage(object):
         self.db[str(key)] = json_data
 
     def get(self, id_ref, allow_fallback=False):
-        print(id_ref)
         data = self.db.get(id_ref.external_id, None)
-        print(data)
-        print(allow_fallback)
         if data:
             return Reference(**json.loads(data))
         if allow_fallback:
