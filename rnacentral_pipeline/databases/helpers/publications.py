@@ -177,12 +177,12 @@ def query_pmc(id_reference):
         pmid = int(pmid)
 
     return Reference(
-        authors=data['authorString'],
-        location=pretty_location(data),
-        title=clean_title(data['title']),
+        authors=unicode(data['authorString']),
+        location=unicode(pretty_location(data)),
+        title=unicode(clean_title(data['title'])),
         pmid=pmid,
-        doi=data.get('doi', None),
-        pmcid=data.get('pmcid', None),
+        doi=unicode(data.get('doi', None)),
+        pmcid=unicode(data.get('pmcid', None)),
     )
 
 
@@ -218,12 +218,12 @@ def node_to_reference(node):
     }
 
     return Reference(
-        authors=authors,
-        location=pretty_location(data),
-        title=xml_text('title', node, fn=clean_title),
+        authors=unicode(authors),
+        location=unicode(pretty_location(data)),
+        title=unicode(xml_text('title', node, fn=clean_title)),
         pmid=pmid,
-        doi=doi,
-        pmcid=pmcid,
+        doi=unicode(doi),
+        pmcid=unicode(pmcid),
     )
 
 
