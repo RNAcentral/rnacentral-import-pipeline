@@ -16,7 +16,6 @@ limitations under the License.
 import os
 import re
 import csv
-import dbm
 import json
 import logging
 from glob import glob
@@ -90,7 +89,7 @@ class CacheStorage(object):
 
     @contextmanager
     def open(self, mode='r'):
-        self.db = dbm.open(str(self.path), mode)
+        self.db = six.moves.dbm_gnu.open(str(self.path), mode)
         yield self
         self.db.close()
 
@@ -247,7 +246,7 @@ def parse_xml(xml_file):
 def parse_xml_directory(directory):
     for filename in glob(os.path.join(directory, '*.xml')):
         with open(filename, 'r') as xml_file:
-            for ref in parse_xml(xml_file):
+            for ref in list(parse_xml(xml_file)):
                 yield ref
 
 
