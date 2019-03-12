@@ -16,22 +16,33 @@ limitations under the License.
 import os
 import re
 import csv
+import dbm
 import json
 import logging
-import sqlite3
 from glob import glob
 from xml.etree import cElementTree as ET
 
 import six
+
 import attr
+from attr.validators import instance_of as is_a
+
+import typing
 import requests
 from retry import retry
+from pathlib import Path
 from ratelimiter import RateLimiter
 
 try:
     from functools import lru_cache
 except ImportError:
     from functools32 import lru_cache
+
+from contextlib import contextmanager
+try:
+    from contextlib import ExitStack
+except:
+    from contextlib2 import ExitStack
 
 from ..data import Reference
 from ..data import IdReference
@@ -56,14 +67,61 @@ class TooManyPublications(Exception):
     pass
 
 
-TABLE = '''
-CREATE TABLE IF NOT EXISTS {name}s (
-    id {type} primary key,
-    data text,
+@attr.s()
+class CacheStorage(object):
+    db = attr.ib()
 
-    UNIQUE (id) ON CONFLICT REPLACE
-)
-'''
+    def store(self, key, json_data):
+        if not key:
+            return None
+        self.db[str(key)] = json_data
+
+    def get(self, id_ref, allow_fallback=False):
+        print(id_ref)
+        data = self.db.get(id_ref.external_id, None)
+        print(data)
+        print(allow_fallback)
+        if data:
+            return Reference(**json.loads(data))
+        if allow_fallback:
+            return query_pmc(id_ref)
+        raise UnknownReference("Never indexed %s", id_ref)
+
+
+@attr.s()
+class Cache(object):
+    filename = attr.ib(type=Path, validator=is_a(Path))
+    keys = attr.ib(
+        type=typing.List[six.text_type], 
+        default=['pmid', 'doi', 'pmcid'],
+    )
+
+    @classmethod
+    def build(cls, base_path):
+        path = Path(base_path)
+        if not path.exists():
+            path.mkdir()
+        return cls(path)
+
+    @classmethod
+    def populate_with(cls, base_path, references):
+        cache = cls.build(base_path)
+        with cache.open(mode='c') as handles:
+            for reference in references:
+                data = json.dumps(attr.asdict(reference))
+                for key_name in cache.keys:
+                    key = getattr(reference, key_name, None)
+                    handles[key_name].store(key, data)
+
+    @contextmanager
+    def open(self, mode='r'):
+        with ExitStack() as stack:
+            handles = {}
+            for key in self.keys:
+                filename = self.filename / Path(key)
+                db = stack.enter_context(dbm.open(str(filename), mode))
+                handles[key] = CacheStorage(db)
+            yield handles
 
 
 @lru_cache()
@@ -179,50 +237,32 @@ def parse_xml(xml_file):
         yield ref
 
 
-def index_xml_directory(directory, output):
-    conn = sqlite3.connect(output)
-    tables = {'pmid': 'int', 'doi': 'text', 'pmcid': 'text'}
-    for name, pid_type in tables.items():
-        conn.execute(TABLE.format(name=name, type=pid_type))
-
+def parse_xml_directory(directory):
     for filename in glob(os.path.join(directory, '*.xml')):
         with open(filename, 'r') as xml_file:
             for ref in parse_xml(xml_file):
-                cursor = conn.cursor()
-                for table in tables.keys():
-                    key = getattr(ref, table, None)
-                    if not key:
-                        continue
-                    stmt = 'INSERT INTO %ss VALUES(?, ?)' % table
-                    data = json.dumps(attr.asdict(ref))
-                    cursor.execute(stmt, (key, data))
-            conn.commit()
-    conn.close()
+                yield ref
 
 
-def query_database(cursor, id_ref, allow_fallback=False):
-    query = 'SELECT data from %ss WHERE id=?' % id_ref.namespace
-    raw_ref = cursor.execute(query, (id_ref.external_id,)).fetchone()
-    if not raw_ref:
-        if allow_fallback:
-            return query_pmc(id_ref)
-        raise UnknownReference(id_ref)
-    return Reference(**json.loads(raw_ref[0]))
+def index_xml_directory(directory, output):
+    Cache.populate_with(output, parse_xml_directory(directory))
 
 
-def write_query(db, handle, output, column=0, allow_fallback=False):
-    conn = sqlite3.connect(db)
-    cursor = conn.cursor()
-    writer = csv.writer(output)
+def id_refs_from_handle(handle, column=0):
     for row in csv.reader(handle):
         raw = row[column]
-        id_ref = reference(raw)
-        try:
-            ref = query_database(cursor, id_ref, allow_fallback=allow_fallback)
-        except UnknownReference:
-            LOGGER.warning("Could not handle find reference for %s", id_ref)
-            continue
         rest = [d for i, d in enumerate(row) if i != column]
-        writer.writerows(ref.writeable(rest))
-    cursor.close()
-    conn.close()
+        yield (reference(raw), rest)
+
+
+def write_file_lookup(cache_path, handle, output, column=0, allow_fallback=False):
+    writer = csv.writer(output)
+    with Cache.build(cache_path).open() as db:
+        for id_ref, rest in id_refs_from_handle(handle, column=column):
+            try:
+                store = db[id_ref.namespace]
+                ref = store.get(id_ref, allow_fallback=allow_fallback)
+            except UnknownReference:
+                LOGGER.warning("Could not handle find reference for %s", id_ref)
+                continue
+            writer.writerows(ref.writeable(rest))
