@@ -47,4 +47,4 @@ def lookup(db, ids, output, column=0, allow_fallback=False):
     Use the database index file to lookup all reference information for all xml
     files in the given directory.
     """
-    publications.write_query(db, ids, output, column=column, allow_fallback=allow_fallback)
+    publications.lookup_file(db, ids, output, column=column, allow_fallback=allow_fallback)

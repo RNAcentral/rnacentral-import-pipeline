@@ -20,6 +20,7 @@ import tempfile
 import six
 import attr
 import pytest
+import shutil
 
 from rnacentral_pipeline.databases.data import Reference
 from rnacentral_pipeline.databases.data import IdReference
@@ -30,22 +31,19 @@ def lookup(ref_id):
     return attr.asdict(pub.query_pmc(IdReference.build(ref_id)))
 
 
-@pytest.fixture
-def indexed_db():
-    with tempfile.NamedTemporaryFile() as tmp:
-        pub.index_xml_directory('data/publications/', tmp.name)
-        yield tmp.name
+@pytest.fixture(scope='module')
+def indexed_db_path():
+    tmp = tempfile.mkdtemp()
+    pub.index_xml_directory('data/publications/', tmp)
+    yield tmp
+    shutil.rmtree(tmp)
 
 
-@pytest.fixture
-def indexed(scope='module'):
-    with tempfile.NamedTemporaryFile() as tmp:
-        pub.index_xml_directory('data/publications/', tmp.name)
-        conn = sqlite3.connect(tmp.name)
-        cursor = conn.cursor()
-        yield cursor
-        cursor.close()
-        conn.close()
+@pytest.fixture(scope='module')
+def indexed(indexed_db_path):
+    pub.index_xml_directory('data/publications/', indexed_db_path)
+    with pub.Cache.build(indexed_db_path).open('r') as db:
+        yield db
 
 
 @pytest.mark.parametrize('raw_id', [
@@ -230,7 +228,9 @@ def test_can_parse_xml_data_correctly():
     (26184978),
 ])
 def test_can_query_indexed_data_correctly(indexed, raw_id):
-    assert attr.asdict(pub.query_database(indexed, pub.reference(raw_id))) == attr.asdict(Reference(
+    id_ref = pub.reference(raw_id)
+    db = indexed[id_ref.namespace]
+    assert attr.asdict(db.get(id_ref)) == attr.asdict(Reference(
             authors='Xu Z, Han Y, Liu J, Jiang F, Hu H, Wang Y, Liu Q, Gong Y, Li X.',
             location='Scientific reports 5:12276 (2015)',
             title=(
@@ -250,7 +250,8 @@ def test_can_query_indexed_data_correctly(indexed, raw_id):
 ])
 def test_can_query_with_fallback(indexed, raw_id):
     id_ref = pub.reference(raw_id)
-    ref = pub.query_database(indexed, id_ref, allow_fallback=True)
+    db = indexed[id_ref.namespace]
+    ref = db.get(id_ref, allow_fallback=True)
     assert attr.asdict(ref) == attr.asdict(Reference(
         authors='Macino G, Tzagoloff A.',
         location='Mol Gen Genet 169(2):183-188 (1979)',
@@ -261,10 +262,53 @@ def test_can_query_with_fallback(indexed, raw_id):
     ))
 
 
-def test_can_write_using_specified_columns(indexed_db):
-    raw = six.moves.StringIO('something,375006,other\n')
+@pytest.mark.parametrize('raw_id', [
+    26184978,
+    'pmid:26184978',
+    'PMID:26184978',
+    'doi:10.1038/srep12276',
+    'DOI:10.1038/srep12276',
+])
+def test_can_write_using_specified_columns(indexed_db_path, raw_id):
     out = six.moves.StringIO()
-    pub.write_query(indexed_db, raw, out, column=1, allow_fallback=True)
+    content = 'something,%s,other\n' % raw_id
+    raw = six.moves.StringIO(content)
+    pub.write_file_lookup(indexed_db_path, raw, out, column=1, allow_fallback=False)
+    out.seek(0)
+    assert list(csv.reader(out)) == [
+        [
+            "03ea261d3cd947fde1cc8328a4c08127", 
+            "something", 
+            "other", 
+            'Xu Z, Han Y, Liu J, Jiang F, Hu H, Wang Y, Liu Q, Gong Y, Li X.', 
+            'Scientific reports 5:12276 (2015)', 
+            (
+                'MiR-135b-5p and MiR-499a-3p Promote Cell '
+                'Proliferation and Migration in Atherosclerosis by Directly '
+                'Targeting MEF2C'
+            ),
+            '26184978',
+            '10.1038/srep12276'
+        ]
+    ]
+
+
+@pytest.mark.parametrize('raw_id', [
+    '375006',
+    'PMID:375006',
+    'DOI:10.1007/bf00271669',
+])
+def test_can_write_using_specified_columns_and_allow_fallback(indexed_db_path, raw_id):
+
+    with pytest.raises(pub.UnknownReference):
+        with pub.Cache.build(indexed_db_path).open('r') as cache:
+            id_ref = pub.reference(raw_id)
+            db = cache[id_ref.namespace]
+            ref = db.get(id_ref, allow_fallback=False)
+
+    out = six.moves.StringIO()
+    raw = six.moves.StringIO('something,%s,other\n' % raw_id)
+    pub.write_file_lookup(indexed_db_path, raw, out, column=1, allow_fallback=True)
     out.seek(0)
     assert list(csv.reader(out)) == [
         [
