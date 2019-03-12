@@ -73,7 +73,7 @@ class TooManyPublications(Exception):
 
 @attr.s()
 class CacheStorage(object):
-    db = attr.ib()
+    path = attr.ib(validator=is_a(Path))
 
     def store(self, key, json_data):
         if not key:
@@ -88,12 +88,17 @@ class CacheStorage(object):
             return query_pmc(id_ref)
         raise UnknownReference("Never indexed %s", id_ref)
 
+    @contextmanager
+    def open(self, mode='r'):
+        self.db = dbm.open(str(self.path), mode)
+        yield self
+        self.db.close()
 
 @attr.s()
 class Cache(object):
     filename = attr.ib(type=Path, validator=is_a(Path))
     keys = attr.ib(
-        type=typing.List[six.text_type], 
+        type=typing.List[six.text_type],
         default=['pmid', 'doi', 'pmcid'],
     )
 
@@ -120,8 +125,9 @@ class Cache(object):
             handles = {}
             for key in self.keys:
                 filename = self.filename / Path(key)
-                db = stack.enter_context(dbm.open(str(filename), mode))
-                handles[key] = CacheStorage(db)
+                cache = CacheStorage(filename)
+                db = stack.enter_context(cache.open(mode))
+                handles[key] = db
             yield handles
 
 
@@ -178,12 +184,12 @@ def query_pmc(id_reference):
         pmid = int(pmid)
 
     return Reference(
-        authors=unicode(data['authorString']),
-        location=unicode(pretty_location(data)),
-        title=unicode(clean_title(data['title'])),
+        authors=six.text_type(data['authorString']),
+        location=six.text_type(pretty_location(data)),
+        title=six.text_type(clean_title(data['title'])),
         pmid=pmid,
-        doi=unicode(data.get('doi', None)),
-        pmcid=unicode(data.get('pmcid', None)),
+        doi=six.text_type(data.get('doi', None)),
+        pmcid=data.get('pmcid', None),
     )
 
 
@@ -201,7 +207,7 @@ def node_to_reference(node):
     doi = xml_text('DOI', node)
     if not pmid and not doi:
         return None
-    pmcid = xml_text('pmcid', node)
+    pmcid = six.text_type(xml_text('pmcid', node))
 
     authors = []
     for author in node.findall('./AuthorList/Author'):
@@ -219,12 +225,12 @@ def node_to_reference(node):
     }
 
     return Reference(
-        authors=unicode(authors),
-        location=unicode(pretty_location(data)),
-        title=unicode(xml_text('title', node, fn=clean_title)),
+        authors=six.text_type(authors),
+        location=six.text_type(pretty_location(data)),
+        title=six.text_type(xml_text('title', node, fn=clean_title)),
         pmid=pmid,
-        doi=unicode(doi),
-        pmcid=unicode(pmcid),
+        doi=six.text_type(doi),
+        pmcid=pmcid,
     )
 
 
