@@ -122,3 +122,9 @@ def test_can_find_expected_patterns_in_text():
                 ]
             )),
         ]
+
+def test_can_parse_some_utf_8():
+    matcher = core.NameMatcher.build(['MMP-9'])
+    selector = core.SentenceSelector.build()
+    filename = 'data/text-mining/PMC6186449.txt'
+    assert list(core.file_matches(filename, selector, matcher))

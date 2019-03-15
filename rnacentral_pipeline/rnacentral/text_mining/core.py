@@ -117,13 +117,18 @@ def matches(blob, selector, matcher):
             yield match
 
 
-def write_file_matches(filename, selector, matcher, output):
+def file_matches(filename, selector, matcher):
     with open(filename, 'r') as text:
         blob = tb.TextBlob(text.read())
 
+    for match in matches(blob, selector, matcher):
+        yield match
+
+
+def write_file_matches(filename, selector, matcher, output):
     writer = csv.writer(output)
     name = PurePosixPath(filename).stem
-    for match in matches(blob, selector, matcher):
+    for match in file_matches(filename, selector, matcher):
         writer.writerows(match.writeables(name))
 
 
