@@ -77,10 +77,12 @@ class CacheStorage(object):
     def store(self, key, json_data):
         if not key:
             return None
-        self.db[str(key)] = json_data
+        k = self.__normalize_key__(key)
+        self.db[k] = json_data
 
     def get(self, id_ref, allow_fallback=False):
-        data = self.db.get(id_ref.external_id, None)
+        key = self.__normalize_key__(id_ref.external_id)
+        data = self.db.get(key, None)
         if data:
             return Reference(**json.loads(data))
         if allow_fallback:
@@ -92,6 +94,11 @@ class CacheStorage(object):
         self.db = six.moves.dbm_gnu.open(str(self.path), mode)
         yield self
         self.db.close()
+
+    def __normalize_key__(self, raw):
+        if isinstance(key, six.string_types):
+            return str(key.encode('ascii', 'ignore'))
+        return str(raw)
 
 @attr.s()
 class Cache(object):
