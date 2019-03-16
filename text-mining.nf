@@ -6,6 +6,8 @@ def searches = Channel.from([
 ])
 
 process get_all_references {
+  memory { params.text_mining.get_all_references.directives.memory }
+
   output:
   file("references.db") into all_publications
 
@@ -16,7 +18,7 @@ process get_all_references {
 }
 
 process fetch_raw_publications {
-  memory params.text_mining.known_publications.memory
+  memory { params.text_mining.known_publications.directives.memory }
 
   input:
   file(remote) from Channel.fromPath(params.text_mining.known_publications.remote)
@@ -29,18 +31,22 @@ process fetch_raw_publications {
   """
 }
 
-publication_files.into { pattern_publication_files; name_publication_files }
+publication_files
+  .filter { d -> d.isDirectory() }
+  .into { pattern_publication_files; name_publication_files }
 
 process fetch_names {
+  tag { query.getBaseName() }
+
   input:
   file(query) from Channel.fromPath('files/text-mining/names/*.sql')
 
   output:
-  set val(query.getBaseName()), file(known) into known_names
+  set val("${query.getBaseName()}"), file('known') into known_names
 
   script:
   """
-  psql -v ON_ERROR_STOP=1 -f $query "$PGDATABASE"
+  psql -v ON_ERROR_STOP=1 -f $query "$PGDATABASE" > known
   """
 }
 
@@ -48,7 +54,8 @@ searches
   .combine(pattern_publication_files)
   .set { to_mine_patterns }
 
-process find_pattern_matches { 
+process find_pattern_matches {
+  memory { params.text_mining.find_matches.directives.memory }
   tag { name + ':' + pubs.getName() }
 
   input:
@@ -66,7 +73,8 @@ known_names
   .combine(name_publication_files)
   .set { to_mine_names }
 
-process find_name_matches { 
+process find_name_matches {
+  memory { params.text_mining.find_matches.directives.memory }
   tag { name + ':' + pubs.getName() }
 
   input:
