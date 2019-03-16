@@ -41,10 +41,13 @@ def index_xml(directory, db):
 @click.option('--allow-fallback/--no-allow-feedback', default=False)
 @click.argument('db', default='references.db', type=click.Path())
 @click.argument('ids', default='ref_ids.csv', type=click.File('r'))
-@click.argument('output', default='references.csv', type=click.File('w'))
+@click.argument(
+    'output', 
+    default='references.csv', 
+    type=click.File('w', encoding='utf-8'))
 def lookup(db, ids, output, column=0, allow_fallback=False):
     """
     Use the database index file to lookup all reference information for all xml
     files in the given directory.
     """
-    publications.lookup_file(db, ids, output, column=column, allow_fallback=allow_fallback)
+    publications.write_file_lookup(db, ids, output, column=column, allow_fallback=allow_fallback)

@@ -87,12 +87,13 @@ class Reference(object):
             data.append(extra)
         else:
             data.extend(extra)
+
         data.extend([
-            self.authors,
-            self.location,
-            self.title,
+            self.authors.encode('utf-8'),
+            self.location.encode('utf-8'),
+            self.title.encode('utf-8'),
             self.pmid,
-            self.doi,
+            self.doi.encode('utf-8'),
         ])
 
         yield data
@@ -109,7 +110,7 @@ class IdReference(object):
             return cls('pmid', six.text_type(ref_id))
 
         if isinstance(ref_id, six.text_type):
-            ref_id = ref_id.strip()
+            ref_id = six.text_type(ref_id.strip())
             if re.match(r'^\d+$', ref_id):
                 return cls('pmid', ref_id)
             if re.match(r'^PMC\d+', ref_id, re.IGNORECASE):
