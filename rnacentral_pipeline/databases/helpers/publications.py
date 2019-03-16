@@ -23,6 +23,11 @@ from xml.etree import cElementTree as ET
 
 import six
 
+try:
+    import dbm
+except:
+    from six.moves import dbm_gnu as dbm
+
 import attr
 from attr.validators import instance_of as is_a
 
@@ -91,7 +96,7 @@ class CacheStorage(object):
 
     @contextmanager
     def open(self, mode='r'):
-        self.db = six.moves.dbm_gnu.open(str(self.path), mode)
+        self.db = dbm.open(str(self.path), mode)
         yield self
         self.db.close()
 

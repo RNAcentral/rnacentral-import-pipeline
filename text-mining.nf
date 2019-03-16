@@ -18,10 +18,10 @@ process get_all_references {
 }
 
 process fetch_raw_publications {
-  memory { params.text_mining.known_publications.directives.memory }
+  memory { params.text_mining.fetch_raw_publications.directives.memory }
 
   input:
-  file(remote) from Channel.fromPath(params.text_mining.known_publications.remote)
+  val(remote) from Channel.fromPath(params.text_mining.fetch_raw_publications.inputs.remote)
 
   output:
   file('PMC*') into publication_files mode flatten
@@ -55,7 +55,7 @@ searches
   .set { to_mine_patterns }
 
 process find_pattern_matches {
-  memory { params.text_mining.find_matches.directives.memory }
+  memory { params.text_mining.find_pattern_matches.directives.memory }
   tag { name + ':' + pubs.getName() }
 
   input:
@@ -74,7 +74,7 @@ known_names
   .set { to_mine_names }
 
 process find_name_matches {
-  memory { params.text_mining.find_matches.directives.memory }
+  memory { params.text_mining.find_name_matches.directives.memory }
   tag { name + ':' + pubs.getName() }
 
   input:
@@ -90,10 +90,13 @@ process find_name_matches {
 
 Channel.empty()
   .mix(matching_name_publications, matching_pattern_publications)
+  .filter { f -> !f.isEmpty() }
   .collect()
   .set { pmids }
 
 process batch_find_pmids {
+  memory { params.text_mining.batch_find_pmids.directives.memory }
+
   input:
   file('pubs*') from pmids
   file('references.db') from all_publications
@@ -105,8 +108,8 @@ process batch_find_pmids {
   set -o pipefail
 
   find . -name 'pubs*' |\
-  xargs -I {} sort -k,k 1 {} |\
-  xargs -I {} rnac europepmc lookup --column 0 --allow-fallback references.db {} - >> matched-references.csv
+  xargs -I {} sort -k 1,1 {} |\
+  rnac europepmc lookup --column 0 --allow-fallback references.db - - >> matched-references.csv
   """
 }
 

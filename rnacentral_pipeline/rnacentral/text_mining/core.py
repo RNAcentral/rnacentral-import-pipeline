@@ -16,13 +16,19 @@ limitations under the License.
 
 import re
 import csv
+import codecs
 
 import six
 import attr
+from attr.validators import instance_of as is_a
 import typing
 
-from pathlib import Path
-from pathlib import PurePosixPath
+try:
+    from pathlib import Path
+    from pathlib import PurePosixPath
+except ImportError:
+    from pathlib2 import Path
+    from pathlib2 import PurePosixPath
 
 import textblob as tb
 
@@ -67,13 +73,18 @@ class SentenceSelector(object):
 
 @attr.s()
 class PatternMatcher(object):
+    name = attr.ib(type=six.text_type, validator=is_a(six.text_type))
     patterns = attr.ib(type=typing.List[typing.Pattern])
     pattern = attr.ib(type=typing.Pattern)
 
     @classmethod
-    def build(cls, patterns):
-        pattern = '|'.join('(:?%s$)' % p for p in patterns)
+    def build(cls, name, patterns):
+        pattern = re.compile(
+            '|'.join('(:?%s$)' % p for p in patterns),
+            re.IGNORECASE)
+
         return cls(
+            name=name,
             patterns=patterns,
             pattern=pattern,
         )
@@ -81,7 +92,7 @@ class PatternMatcher(object):
     def __call__(self, sentence):
         matches = []
         for token in sentence.tokens:
-            match = re.match(self.pattern, token, re.IGNORECASE)
+            match = re.match(self.pattern, token)
             if match:
                 found = []
                 for key, value in match.groupdict().items():
@@ -111,15 +122,17 @@ class NameMatcher(object):
 
 
 def matches(blob, selector, matcher):
+    data = []
     for sentence in blob.sentences:
         match = selector.match(matcher, sentence)
         if match:
-            yield match
+            data.append(match)
+    return data
 
 
 def file_matches(filename, selector, matcher):
-    with open(filename, 'r') as text:
-        blob = tb.TextBlob(text.read())
+    with codecs.open(filename, 'r', errors='ignore') as text:
+        blob = tb.TextBlob(text.read().decode('ascii', 'ignore'))
 
     for match in matches(blob, selector, matcher):
         yield match
@@ -127,9 +140,9 @@ def file_matches(filename, selector, matcher):
 
 def write_file_matches(filename, selector, matcher, output):
     writer = csv.writer(output)
-    name = PurePosixPath(filename).stem
+    basename = PurePosixPath(filename).stem
     for match in file_matches(filename, selector, matcher):
-        writer.writerows(match.writeables(name))
+        writer.writerows(match.writeables([basename, matcher.name]))
 
 
 def write_matches(filename, selector, matcher, output):
@@ -141,8 +154,7 @@ def write_matches(filename, selector, matcher, output):
             write_file_matches(str(subpath), selector, matcher, output)
 
 
-def write_pattern_matches(filename, patterns, output, **kwargs):
-    matcher = PatternMatcher.build(patterns)
+def write_pattern_matches(filename, matcher, output, **kwargs):
     selector = SentenceSelector.build(**kwargs)
     write_matches(filename, selector, matcher, output)
 
