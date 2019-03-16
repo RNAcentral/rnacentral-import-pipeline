@@ -21,7 +21,7 @@ process fetch_raw_publications {
   memory { params.text_mining.fetch_raw_publications.directives.memory }
 
   input:
-  val(remote) from Channel.fromPath(params.text_mining.fetch_raw_publications.inputs.remote)
+  val(remote) from Channel.from(params.text_mining.fetch_raw_publications.inputs.remote)
 
   output:
   file('PMC*') into publication_files mode flatten
