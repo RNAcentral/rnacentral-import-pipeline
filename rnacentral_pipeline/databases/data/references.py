@@ -109,11 +109,11 @@ class IdReference(object):
         if isinstance(ref_id, int):
             return cls('pmid', six.text_type(ref_id))
 
-        if isinstance(ref_id, six.text_type):
+        if isinstance(ref_id, six.string_types):
             ref_id = six.text_type(ref_id.strip())
             if re.match(r'^\d+$', ref_id):
                 return cls('pmid', ref_id)
-            if re.match(r'^PMC\d+', ref_id, re.IGNORECASE):
+            if re.match(r'^PMC\d+$', ref_id, re.IGNORECASE):
                 return cls('pmcid', ref_id.upper())
             if ':' not in ref_id:
                 raise UnknownPublicationType("Could not parse: " + ref_id)
