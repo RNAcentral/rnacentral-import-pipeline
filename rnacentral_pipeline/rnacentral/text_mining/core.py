@@ -142,7 +142,7 @@ def write_file_matches(filename, selector, matcher, output):
     writer = csv.writer(output)
     basename = PurePosixPath(filename).stem
     for match in file_matches(filename, selector, matcher):
-        writer.writerows(match.writeables([basename, matcher.name]))
+        writer.writerows(match.writeables(basename, matcher.name))
 
 
 def write_matches(filename, selector, matcher, output):
