@@ -76,6 +76,8 @@ from .helpers import load_data
     ('URS0000D50284_7240', 'precursor_RNA', 'Drosophila simulans microRNA dsi-mir-988 precursor'),
     ('URS0000D5657E_7240', 'precursor_RNA', 'Drosophila simulans microRNA dsi-mir-4966 precursor (dsi-mir-4966-3)'),
     ('URS00003CF845_9606', 'miRNA', 'Homo sapiens (human) hsa-miR-1273d'),
+    pytest.param('URS0000BD9FEB_10089', 'ribozyme', 'Mus caroli (Ryukyu mouse) nuclear RNase P',
+                 marks=pytest.mark.xfail),
 
     # TODO: Implement the logic required below
     # ('URS000041AF00_274', 'tRNA', 'TRNA-FMET from Thermus thermophilus (29 structures)'),
