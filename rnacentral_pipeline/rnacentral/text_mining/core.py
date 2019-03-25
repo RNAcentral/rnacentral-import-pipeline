@@ -32,17 +32,21 @@ except ImportError:
 
 import textblob as tb
 
+from . import blob_building
+
 
 @attr.s()
 class WordMatch(object):
     word = attr.ib(type=tb.Word)
     name = attr.ib(type=six.text_type)
+    group = attr.ib(validator=is_a(six.text_type))
 
 
 @attr.s()
 class MatchingSentence(object):
     sentence = attr.ib(type=tb.blob.Sentence)
     matches = attr.ib(type=typing.List[WordMatch])
+    publication_id = attr.ib(validator=is_a(six.text_type))
 
     def writeables(self, *extra):
         sentence = self.sentence.raw
@@ -121,37 +125,26 @@ class NameMatcher(object):
         return [WordMatch(t, str(t)) for t in sentence.tokens if t in self.names]
 
 
-def matches(blob, selector, matcher):
-    data = []
-    for sentence in blob.sentences:
-        match = selector.match(matcher, sentence)
-        if match:
-            data.append(match)
-    return data
+def matches(wrapper, selector, matcher):
+    for wrapped in container.blobs():
+        for sentence in wrapper.blob.sentences:
+            match = selector.match(matcher, sentence)
+            if match:
+                data.append(match)
+            yield match
 
 
-def file_matches(filename, selector, matcher):
-    with codecs.open(filename, 'r', errors='ignore') as text:
-        blob = tb.TextBlob(text.read().decode('ascii', 'ignore'))
-
-    for match in matches(blob, selector, matcher):
-        yield match
-
-
-def write_file_matches(filename, selector, matcher, output):
+def write_matches(container, selector, matcher, output):
     writer = csv.writer(output)
     basename = PurePosixPath(filename).stem
-    for match in file_matches(filename, selector, matcher):
-        writer.writerows(match.writeables(basename, matcher.name))
+    for match in matches(container, selector, matcher):
+        writer.writerows(match.writeables(blob.pub_id, matcher.name))
 
 
 def write_matches(filename, selector, matcher, output):
     path = Path(filename)
-    if not path.is_dir():
-        write_file_matches(filename, selector, matcher, output)
-    else:
-        for subpath in path.iterdir():
-            write_file_matches(str(subpath), selector, matcher, output)
+    container = blob_building.build(path)
+    write_matches(container, selector, matcher, output)
 
 
 def write_pattern_matches(filename, matcher, output, **kwargs):

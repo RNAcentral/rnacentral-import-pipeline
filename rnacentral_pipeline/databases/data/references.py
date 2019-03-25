@@ -98,6 +98,15 @@ class Reference(object):
 
         yield data
 
+    def id_reference(self):
+        if self.pmid:
+            return IdReference(namespace='pmid', external_id=self.pmid)
+        if self.doi:
+            return IdReference(namespace='doi', external_id=self.doi)
+        if self.pmcid:
+            return IdReference(namespace='pmcid', external_id=self.pmcid)
+        raise ValueError("Cannot build IdReference for %s" % self)
+
 
 @attr.s(frozen=True, hash=True)
 class IdReference(object):
