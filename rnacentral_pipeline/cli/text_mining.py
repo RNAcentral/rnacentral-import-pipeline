@@ -43,7 +43,7 @@ def ensembl(text, output):
 @click.argument('text', type=click.Path())
 @click.argument('output', default=OUTPUT, type=click.File('w'))
 def fixed_patterns(names, text, output):
-    core.write_name_matches(text, names, output)
+    core.write_name_matches(text, 'hgnc', names, output)
 
 
 @cli.command('mirbase')

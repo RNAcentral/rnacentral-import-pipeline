@@ -21,7 +21,7 @@ ENSEMBL = core.PatternMatcher.build('ensembl', [
 ])
 
 MIRBASE = core.PatternMatcher.build('mirbase', [
-    r'(?P<mature>(\w{3}-)?mir-[0-9]+\w?([35]p)?)',
+    r'(?P<mature>(\w{3}-)?mir-[0-9]+\w?(-[35]p)?)',
     r'(?P<let_7>(\w{3}-)?let-7\w?(-[35]p)?)',
     r'(?P<bantam>(\w{3}-)?bantam(-[35]p)?)',
     r'(?P<unprefixed>miRNA-\d+)',
