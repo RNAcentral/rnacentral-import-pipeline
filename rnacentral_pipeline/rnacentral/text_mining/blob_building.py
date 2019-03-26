@@ -145,7 +145,7 @@ class TextBlobContainer(object):
         return TextBlobWrapper(pubs.reference(path.stem), blob)
 
     def __metadata_blob__(cls, path):
-        with path.open('r') as raw:
+        with open(str(path), 'r') as raw:
             for ref in pubs.parse_xml(raw):
                 id_ref = ref.id_reference()
                 blob = tb.TextBlob(ref.title)
