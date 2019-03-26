@@ -116,7 +116,7 @@ class NameMatcher(object):
 
     @classmethod
     def build(cls, group, names):
-        return cls(group=group, names=set(names))
+        return cls(group=six.text_type(group), names=set(names))
 
     @classmethod
     def from_handle(cls, name, handle):
@@ -141,7 +141,6 @@ def matches(container, selector, matcher):
 
 def write_matches(container, selector, matcher, output):
     writer = csv.writer(output)
-    basename = PurePosixPath(filename).stem
     for match in matches(container, selector, matcher):
         writer.writerows(match.writeables())
 
