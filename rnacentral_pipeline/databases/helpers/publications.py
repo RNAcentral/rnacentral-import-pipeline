@@ -101,8 +101,8 @@ class CacheStorage(object):
         self.db.close()
 
     def __normalize_key__(self, raw):
-        if isinstance(key, six.string_types):
-            return str(key.encode('ascii', 'ignore'))
+        if isinstance(raw, six.string_types):
+            return str(raw.encode('ascii', 'ignore'))
         return str(raw)
 
 @attr.s()
