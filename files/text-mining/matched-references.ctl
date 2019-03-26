@@ -38,12 +38,12 @@ CREATE TABLE IF NOT EXISTS load_rnc_text_mining (
     pattern text,
     matching_word text,
     sentence text,
-    md5,
-    authors,
-    location,
-    title,
-    pmid,
-    doi
+    md5 text,
+    authors text,
+    location text,
+    title text,
+    pmid text,
+    doi text
 );
 $$
 
@@ -65,7 +65,7 @@ INSERT INTO rnc_references (
         pmid,
         doi
     FROM load_rnc_text_mining
-) ON CONFLICT (pmid) DO NOTHING;
+) ON CONFLICT (md5) DO NOTHING;
 $$,
 
 $$
@@ -75,7 +75,7 @@ INSERT INTO rnc_text_mining_patterns (
 ) (
 SELECT
   pattern_group, 
-  pattern_name 
+  pattern
 FROM load_rnc_text_mining
 ) ON CONFLICT (pattern_group, pattern_name) DO NOTHING;
 $$,
@@ -92,7 +92,7 @@ FROM load_rnc_text_mining load
 JOIN rnc_references refs
 ON
   refs.pmid = load.pmid
-) ON CONFLICT (md5(sentence), refs.id) DO NOTHING;
+) ON CONFLICT (md5(sentence), reference_id) DO NOTHING;
 $$,
 
 $$
@@ -116,11 +116,7 @@ INSERT INTO rnc_text_mining_matches (
     JOIN rnc_text_mining_patterns patt
     ON
       patt.pattern_group = load.pattern_group
-      AND patt.pattern_name = load.pattern_name
+      AND patt.pattern_name = load.pattern
 ) ON CONFLICT (matching_word, pattern_id, sentence_id) DO NOTHING;
-$$,
-
-$$
-DROP TABLE load_rnc_text_mining
 $$
 ;
