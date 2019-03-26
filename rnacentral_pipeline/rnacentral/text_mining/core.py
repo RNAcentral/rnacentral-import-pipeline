@@ -54,8 +54,23 @@ class MatchingSentence(object):
         sentence = sentence.replace('  ', ' ')
         for match in self.matches:
             data = list(extra)
-            data.extend([match.name, match.word, sentence])
-            yield data
+            rest = [
+                self.publication_id.normalized_id,
+                match.group,
+                match.name,
+                match.word,
+                sentence
+            ]
+
+            if six.PY2:
+                rest = [
+                           self.publication_id.normalized_id,
+                           match.group.encode('ascii', 'ignore'),
+                           match.name.encode('ascii', 'ignore'),
+                           match.word.encode('ascii', 'ignore'),
+                           sentence.encode('ascii', 'ignore'),
+                ]
+            yield data + rest
 
 
 @attr.s()
