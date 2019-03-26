@@ -88,7 +88,7 @@ class PatternMatcher(object):
             re.IGNORECASE)
 
         return cls(
-            group=group,
+            group=six.text_type(group),
             patterns=patterns,
             pattern=pattern,
         )
