@@ -88,15 +88,24 @@ class Reference(object):
         else:
             data.extend(extra)
 
-        data.extend([
-            self.authors.encode('utf-8'),
-            self.location.encode('utf-8'),
-            self.title.encode('utf-8'),
-            self.pmid,
-            self.doi.encode('utf-8'),
-        ])
+        if six.PY3:
+            rest = [
+                self.authors.encode('utf-8'),
+                self.location.encode('utf-8'),
+                self.title.encode('utf-8'),
+                self.pmid,
+                self.doi.encode('utf-8'),
+            ]
+        else:
+            rest = [
+                self.authors.encode('ascii', 'ignore'),
+                self.location.encode('ascii', 'ignore'),
+                self.title.encode('ascii', 'ignore'),
+                self.pmid,
+                self.doi.encode('ascii', 'ignore'),
+            ]
 
-        yield data
+        yield data + rest
 
     def id_reference(self):
         if self.pmid:
