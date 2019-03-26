@@ -8,31 +8,36 @@ def searches = Channel.from([
 process get_all_references {
   memory { params.text_mining.get_all_references.directives.memory }
 
+  input:
+  val(remote) from Channel.from(params.metadata.europepmc.inputs.data.remote)
+
   output:
   file("references.db") into all_publications
+  file('out/PMC.*.xml') into publication_metadata mode flatten
 
   """
-  fetch europepmc 'http://europepmc.org/ftp/pmclitemetadata/PMCLiteMetadata.tgz' 'out'
+  fetch europepmc '$remote' 'out'
   rnac europepmc index-xml out references.db
   """
 }
 
-process fetch_raw_publications {
-  memory { params.text_mining.fetch_raw_publications.directives.memory }
+process fetch_full_text {
+  memory { params.text_mining.fetch_full_text.directives.memory }
 
   input:
-  val(remote) from Channel.from(params.text_mining.fetch_raw_publications.inputs.remote)
+  val(remote) from Channel.from(params.text_mining.fetch_full_text.inputs.remote)
 
   output:
-  file('PMC*') into publication_files mode flatten
+  file('PMC*') into full_text_files mode flatten
 
   """
   fetch generic '$remote' ignored
   """
 }
 
-publication_files
+full_text_files
   .filter { d -> d.isDirectory() }
+  .mix(publication_metadata)
   .into { pattern_publication_files; name_publication_files }
 
 process fetch_names {
@@ -44,7 +49,6 @@ process fetch_names {
   output:
   set val("${query.getBaseName()}"), file('known') into known_names
 
-  script:
   """
   psql -v ON_ERROR_STOP=1 -f $query "$PGDATABASE" > known
   """
