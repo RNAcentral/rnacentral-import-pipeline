@@ -44,7 +44,7 @@ def index_xml(directory, db):
 @click.argument(
     'output', 
     default='references.csv', 
-    type=click.File('w', encoding='utf-8'))
+    type=click.File('w'))
 def lookup(db, ids, output, column=0, allow_fallback=False):
     """
     Use the database index file to lookup all reference information for all xml
