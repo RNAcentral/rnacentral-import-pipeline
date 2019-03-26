@@ -100,7 +100,7 @@ class Reference(object):
 
     def id_reference(self):
         if self.pmid:
-            return IdReference(namespace='pmid', external_id=self.pmid)
+            return IdReference(namespace='pmid', external_id=six.text_type(self.pmid))
         if self.doi:
             return IdReference(namespace='doi', external_id=self.doi)
         if self.pmcid:
