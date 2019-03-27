@@ -24,6 +24,8 @@ from rnacentral_pipeline.rnacentral.precompute.description import short
     ('URS0000D50284_7240', 'Drosophila simulans () microRNA dsi-mir-988 precursor', 'microRNA dsi-mir-988 precursor'),
     ('URS0000795103_6239', 'Caenorhabditis elegans () microRNA cel-mir-8204 precursor', 'microRNA cel-mir-8204 precursor'),
     ('URS0000D5657E_7240', 'Drosophila simulans () microRNA dsi-mir-4966 precursor (dsi-mir-4966-3)', 'microRNA dsi-mir-4966 precursor (dsi-mir-4966-3)'),
+    ('URS000061F377_559292', 'Saccharomyces cerevisiae S288c (RDN25-1, RDN25-2)', 'RDN25-1, RDN25-2'),
+    ('URS000001E7BA_559292', 'Saccharomyces cerevisiae S288c tRNA-Gln (tQ(UUG)C, tQ(UUG)D1-3, tQ(UUG)E1, tQ(UUG)H, tQ(UUG)L)', 'tRNA-Gln (tQ(UUG)C, tQ(UUG)D1-3, tQ(UUG)E1, tQ(UUG)H, tQ(UUG)L)'),
 ])
 def test_computes_correct_short_descriptions(rna_id, description, expected):
     data = load_data(rna_id)

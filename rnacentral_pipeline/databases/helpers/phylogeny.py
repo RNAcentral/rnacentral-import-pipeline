@@ -16,9 +16,13 @@ limitations under the License.
 from time import sleep
 import logging
 
+import six
 import requests
 
-from functools import lru_cache
+try:
+    from functools import lru_cache
+except ImportError:
+    from functools32 import lru_cache
 
 TAX_URL = 'https://www.ebi.ac.uk/ena/data/taxonomy/v1/taxon/tax-id/{taxon_id}'
 
@@ -80,10 +84,10 @@ def lineage(taxon_id):
     """
 
     data = phylogeny(taxon_id)
-    return '{lineage}{name}'.format(
+    return six.text_type('{lineage}{name}'.format(
         lineage=data.get('lineage', None),
         name=data['scientificName']
-    )
+    ))
 
 
 def common_name(taxon_id):

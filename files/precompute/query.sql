@@ -10,13 +10,15 @@ select
         'gene', acc.gene,
         'optional_id', acc.optional_id,
         'pretty_database', db.display_name,
-        'species', acc.species,
-        'common_name', acc.common_name,
+        'species', coalesce(tax.name, acc.species),
+        'common_name', coalesce(tax.common_name, acc.common_name),
         'feature_name', acc.feature_name,
         'ncrna_class', acc.ncrna_class,
         'locus_tag', acc.locus_tag,
         'organelle', acc.organelle,
-        'lineage', acc.classification
+        'lineage', coalesce(tax.lineage, acc.classification),
+        'all_species', ARRAY[tax.name, acc.species::text],
+        'all_common_names', ARRAY[tax.common_name, acc.common_name::text]
       )
     ),
     'has_coordinates', exists(
@@ -63,6 +65,7 @@ left join rfam_models models ON models.rfam_model_id = hits.rfam_model_id
 join rnc_database db
 ON
     db.id = xref.dbid
+left join rnc_taxonomy tax on tax.id = xref.taxid
 where
     todo.id BETWEEN :min AND :max
 GROUP BY rna.upi, xref.taxid

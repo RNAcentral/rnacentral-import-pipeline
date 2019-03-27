@@ -54,7 +54,7 @@ def reconcile_taxids(taxid):
     are overriden to match other data.
     """
 
-    taxid = str(taxid)
+    taxid = six.text_type(taxid)
     if taxid == '284812':  # Ensembl assembly for Schizosaccharomyces pombe
         return 4896  # Pombase and ENA xrefs for Schizosaccharomyces pombe
     return int(taxid)
@@ -63,11 +63,11 @@ def reconcile_taxids(taxid):
 def is_ignored_assembly(info):
     if info.taxid in REJECTED_TAXIDS:
         return True
-    if info.taxid == 7227 and info.division != 'Ensembl':
+    if info.taxid == 7227 and info.division == 'EnsemblMetazoa':
         return True
     if info.taxid == 5762 and info.assembly_id == 'V1.0':
         return True
-    if info.taxid == 6239 and info.division != 'Ensembl':
+    if info.taxid == 6239 and info.division == 'EnsemblMetazoa':
         return True
     if info.taxid == 8090 and info.ensembl_url != 'oryzias_latipes':
         return True
@@ -83,9 +83,9 @@ class InvalidDomain(Exception):
 
 @attr.s()
 class AssemblyExample(object):
-    chromosome = attr.ib(validator=is_a(str))
-    start = attr.ib(validator=is_a(int))
-    end = attr.ib(validator=is_a(int))
+    chromosome = attr.ib(validator=is_a(six.text_type))
+    start = attr.ib(validator=is_a(six.integer_types))
+    end = attr.ib(validator=is_a(six.integer_types))
 
     @classmethod
     def build(cls, raw, example_locations):
@@ -95,7 +95,7 @@ class AssemblyExample(object):
 
         example = example_locations[key]
         return cls(
-            chromosome=str(example['chromosome']),
+            chromosome=six.text_type(example['chromosome']),
             start=example['start'],
             end=example['end'],
         )
@@ -103,14 +103,14 @@ class AssemblyExample(object):
 
 @attr.s()
 class AssemblyInfo(object):
-    assembly_id = attr.ib(validator=is_a(str))
-    assembly_full_name = attr.ib(validator=is_a(str))
-    gca_accession = attr.ib(validator=optional(is_a(str)))
-    assembly_ucsc = attr.ib(validator=optional(is_a(str)))
-    common_name = attr.ib(validator=optional(is_a(str)))
-    taxid = attr.ib(validator=is_a(int))
-    ensembl_url = attr.ib(validator=is_a(str))
-    division = attr.ib(validator=is_a(str))
+    assembly_id = attr.ib(validator=is_a(six.text_type))
+    assembly_full_name = attr.ib(validator=is_a(six.text_type))
+    gca_accession = attr.ib(validator=optional(is_a(six.text_type)))
+    assembly_ucsc = attr.ib(validator=optional(is_a(six.text_type)))
+    common_name = attr.ib(validator=optional(is_a(six.text_type)))
+    taxid = attr.ib(validator=is_a(six.integer_types))
+    ensembl_url = attr.ib(validator=is_a(six.text_type))
+    division = attr.ib(validator=is_a(six.text_type))
     blat_mapping = attr.ib(validator=is_a(bool))
     example = attr.ib(validator=optional(is_a(AssemblyExample)))
 

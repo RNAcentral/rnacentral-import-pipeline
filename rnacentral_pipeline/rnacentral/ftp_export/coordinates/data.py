@@ -30,10 +30,10 @@ def clean_databases(raw):
 
 @attr.s(hash=True, slots=True, frozen=True)
 class Region(object):
-    region_id = attr.ib(validator=is_a(str))
-    rna_id = attr.ib(validator=is_a(str))
-    chromosome = attr.ib(validator=is_a(str))
-    strand = attr.ib(validator=is_a(int))
+    region_id = attr.ib(validator=is_a(six.text_type))
+    rna_id = attr.ib(validator=is_a(six.text_type))
+    chromosome = attr.ib(validator=is_a(six.text_type))
+    strand = attr.ib(validator=is_a(six.integer_types))
     endpoints = attr.ib(validator=is_a(tuple))
     was_mapped = attr.ib(validator=is_a(bool))
     identity = attr.ib(
@@ -101,8 +101,8 @@ class Region(object):
 
 @attr.s(hash=True, slots=True, frozen=True)
 class Endpoint(object):
-    start = attr.ib(validator=is_a(int))
-    stop = attr.ib(validator=is_a(int))
+    start = attr.ib(validator=is_a(six.integer_types))
+    stop = attr.ib(validator=is_a(six.integer_types))
 
     @classmethod
     def build(cls, raw):

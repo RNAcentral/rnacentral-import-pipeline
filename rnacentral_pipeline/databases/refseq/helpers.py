@@ -50,10 +50,11 @@ def url(record):
 
 def description(record, feature):
     rna_type = embl.rna_type(feature).replace('_', ' ')
-    name = record.description
-    name = re.sub(r'\.$', '', name)
-    name = re.sub(',.+$', ', ' + rna_type, name)
-    return name
+    return '{organism} {product} ({gene})'.format(
+        organism=embl.organism(record.features[0])[0],
+        product=embl.product(feature),
+        gene=embl.gene(feature),
+    )
 
 
 def primary_id(record):

@@ -224,10 +224,6 @@ def anticodon(record, feature):
     return raw_anti
 
 
-def map(_):
-    return None
-
-
 def keywords(record):
     keys = [k for k in record.annotations['keywords'] if k]
     if not keys:
@@ -237,10 +233,6 @@ def keywords(record):
 
 def parent_accession(record):
     return record.id.split('.', 1)[0]
-
-
-def ordinal(_):
-    return None
 
 
 def organelle(record):
@@ -263,8 +255,9 @@ def operon(feature):
     return embl.qualifier_string(feature, 'operon')
 
 
-def pseudogene(feature):
-    return embl.qualifier_string(feature, 'pseudogene')
+def is_pseudogene(feature):
+    return 'pseudogene' in feature.qualifiers or \
+        'pseudo' in feature.qualifiers
 
 
 def gene_synonyms(feature):
@@ -273,10 +266,6 @@ def gene_synonyms(feature):
     for synonym in synonyms:
         result.extend(synonym.split('; '))
     return result
-
-
-def non_coding_id(_):
-    return None
 
 
 def taxid(record):
@@ -326,13 +315,6 @@ def lineage(record):
     if taxonomy:
         taxonomy.append(species(record))
         return '; '.join(taxonomy)
-    return None
-
-
-def division(record):
-    # try:
-    #     return embl.division(record)
-    # except UnknownTaxonId:
     return None
 
 

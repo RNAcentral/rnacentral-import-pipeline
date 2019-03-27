@@ -13,25 +13,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import operator as op
+import attr
 
-from rnacentral_pipeline.writers import MultiCsvOutput
+from rnacentral_pipeline.databases.data import secondary_structure as ss
 
-
-def write_annotations(parser, *args, **kwargs):
-    writer = MultiCsvOutput.build(
-        parser,
-        go_annotations={
-            'transformer': op.methodcaller('writeable'),
-        },
-        ref_ids={
-            'transformer': op.methodcaller('writeable_refs'),
-        },
-        go_publication_mappings={
-            'transformer': op.methodcaller('writeable_publication_mappings'),
-        },
-        terms={
-            'transformer': op.methodcaller('writeable_ontology_terms'),
-        },
+def test_can_create_empty_secondary():
+    assert attr.asdict(ss.SecondaryStructure.empty()) == attr.asdict(
+        ss.SecondaryStructure(dot_bracket='')
     )
-    writer(*args, **kwargs)

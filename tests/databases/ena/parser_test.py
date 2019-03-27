@@ -38,7 +38,7 @@ from rnacentral_pipeline.databases.ena.parser import parse
     ('data/test_rfam_product.ncr', 2),  # Skipped because outdated taxon id
     ('data/test_silva_product.ncr', 3),
     ('data/test_species_patch.ncr', 1),
-    ('data/ena/ncr/ex/wgs_acnt01_pro.ncr', 106),
+    ('data/ena/ncr/ex/wgs_acnt01_pro.ncr', 105),
     ('data/ena/protein-to-skip.embl', 0),  # Proteins that should be skipped
     ('data/ena/mislabeled-trna.embl', 1),
 ])

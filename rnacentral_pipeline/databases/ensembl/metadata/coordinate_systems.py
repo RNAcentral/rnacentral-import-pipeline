@@ -55,11 +55,15 @@ def top_level_only(data):
             yield entry
 
     else:
+        def sort_key(items):
+            if items[4] is None:
+                return ''
+            return items[4]
+
         rest, numeric = more.partition(is_numeric, parsed)
         numeric = list(numeric)
         rest = list(rest)
-        ordered = sorted(rest, key=op.itemgetter(4)) + \
-            sorted(numeric, key=op.itemgetter(4))
+        ordered = sorted(rest, key=sort_key) + sorted(numeric, key=sort_key)
         index = -1
         for (name, sys, assembly, is_ref, rank) in ordered:
             updated = rank
