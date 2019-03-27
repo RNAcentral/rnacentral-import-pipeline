@@ -41,8 +41,8 @@ create table load_secondary_layout (
     secondary_structure text NOT NULL,
     layout text NOT NULL,
     model text NOT NULL,
-    overlap_count int not null
-    basepair_count int not null
+    overlap_count int not null,
+    basepair_count int not null,
     model_start int not null,
     model_stop int not null,
     sequence_start int not null,
