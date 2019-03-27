@@ -808,6 +808,8 @@ secondary_to_import
   .set { secondary_to_import }
 
 process store_secondary_structures {
+  memory params.secondary.store.memory
+
   input:
   set file('data*.csv'), file(ctl) from secondary_to_import
 
