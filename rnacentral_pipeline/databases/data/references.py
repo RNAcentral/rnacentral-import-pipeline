@@ -26,9 +26,8 @@ from rnacentral_pipeline.databases.helpers.hashes import md5
 
 from . import utils
 
-PMID_URL = 'https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=EXT_ID:{pmid}+AND+SRC:MED&format=json'
-DOI_URL = 'https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=DOI:{doi}+AND+SRC:MED&format=json'
-PMC_URL = 'https://www.ebi.ac.uk/europepmc/webservices/rest/search?query={pmc}+AND+SRC:MED&format=json'
+PMID_URL = 'https://www.ebi.ac.uk/europepmc/webservices/rest/search?query={pmid}+AND+SRC:MED&format=json'
+TERM_URL = 'https://www.ebi.ac.uk/europepmc/webservices/rest/search?query={term}&format=json'
 
 KNOWN_SERVICES = {
     'doi',
@@ -140,6 +139,8 @@ class IdReference(object):
             if service in KNOWN_SERVICES:
                 if service == 'pmcid':
                     eid = eid.upper()
+                    if not eid.startswith('PMC'):
+                        eid = 'PMC' + eid
                 return cls(service, eid)
         raise UnknownPublicationType(ref_id)
 
@@ -150,10 +151,13 @@ class IdReference(object):
     def external_url(self):
         if self.namespace == 'pmid':
             return PMID_URL.format(pmid=self.external_id)
-        if self.namespace == 'doi':
-            return DOI_URL.format(doi=self.external_id)
-        if self.namespace == 'pmcid':
-            return PMC_URL.format(pmc=self.external_id)
+        if self.namespace in {'doi', 'pmcid'}:
+            suffix = self.external_id
+            if self.namespace == 'doi':
+                suffix = '"%s"' % suffix
+            term = self.namespace.upper() + ':' + suffix
+            quoted = six.moves.urllib.parse.quote(term, '')
+            return TERM_URL.format(term=quoted)
         raise ValueError("No URL for namespace %s" % self.namespace)
 
     def writeable(self, accession):
