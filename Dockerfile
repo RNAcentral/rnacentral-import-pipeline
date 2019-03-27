@@ -102,6 +102,27 @@ RUN \
     tar xvf seqkit_linux_amd64.tar.gz && \
     rm seqkit_linux_amd64.tar.gz
 
+# Install hmmer
+RUN \
+    mkdir hmmer && \
+    wget 'http://eddylab.org/software/hmmer/hmmer-3.0.tar.gz' && \
+    tar xvf hmmer-3.0.tar.gz && \
+    cd hmmer-3.0 && \
+    ./configure --prefix=$RNA/hmmer && \
+    make && \
+    make check && \
+    make install
+
+# Install required perl dependencies
+RUN \
+    cpan install moose
+
+# Install pfam_scan.pl
+RUN \
+    wget 'ftp://ftp.ebi.ac.uk/pub/databases/Pfam/Tools/PfamScan.tar.gz' && \
+    tar xvf PfamScan.tar.gz && \
+    mv PfamScan pfam-scan
+
 # Install useful pip version
 RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && python get-pip.py
 
@@ -113,7 +134,7 @@ RUN /usr/local/bin/pip install --upgrade pip && \
 # Setup environmental variables
 ENV RIBOINFERNALDIR="$RNA/infernal-1.1.2/bin" RIBOEASELDIR="$RNA/infernal-1.1.2/bin"
 ENV RIBODIR="$RNA/ribotyper-v1" EPNOPTDIR="$RNA/epn-options" EPNOFILEDIR="$RNA/epn-ofile" EPNTESTDIR="$RNA/epn-test"
-ENV PERL5LIB="$RIBODIR:$EPNOPTDIR:$EPNOFILEDIR:$EPNTESTDIR:/usr/bin/env:$PERL5LIB"
+ENV PERL5LIB="$RIBODIR:$EPNOPTDIR:$EPNOFILEDIR:$EPNTESTDIR:$RNA/pfam-scan:/usr/bin/env:$PERL5LIB"
 
 ENV DATAPATH="$RNA/RNAstructure/data_tables/"
 
@@ -125,4 +146,6 @@ ENV PATH="$RNA/blatSrc/bin:$PATH"
 ENV PATH="$RNA/seqkit:$PATH"
 ENV PATH="$RNA/jiffy-infernal-hmmer-scripts:$PATH"
 ENV PATH="$RNA/auto-traveler:$PATH"
+ENV PATH="$RNA/hmmer/bin:$PATH"
+ENV PATH="$RNA/pfam-scan:$PATH"
 ENV PATH="$RNACENTRAL_IMPORT_PIPELINE:$PATH"
