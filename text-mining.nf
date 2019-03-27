@@ -28,15 +28,15 @@ process fetch_full_text {
   val(remote) from Channel.from(params.text_mining.fetch_full_text.inputs.remote)
 
   output:
-  file('PMC*') into full_text_files mode flatten
+  file('PMC*.xml') into full_text_files mode flatten
 
   """
-  fetch generic '$remote' ignored
+  fetch generic '$remote' 'pmc*.xml.gz'
+  find . -name '*.gz' | xargs -I {} gzip -d {}
   """
 }
 
 full_text_files
-  .filter { d -> d.isDirectory() }
   .mix(publication_metadata)
   .into { pattern_publication_files; name_publication_files }
 
