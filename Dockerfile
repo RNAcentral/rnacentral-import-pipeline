@@ -34,19 +34,20 @@ RUN apt-get install -y \
     unzip \
     wget
 
+RUN apt-get install libxml2-utils
+
 # Install Infernal
 RUN \
     cd $RNA/ && \
     curl -OL http://eddylab.org/infernal/infernal-1.1.2.tar.gz && \
     tar -xvzf infernal-1.1.2.tar.gz && \
+    rm infernal-1.1.2.tar.gz && \
     cd infernal-1.1.2 && \
     ./configure --prefix=$RNA/infernal-1.1.2 && \
     make && \
     make install && \
     cd easel && \
-    make install && \
-    cd $RNA/ && \
-    rm infernal-1.1.2.tar.gz
+    make install
 
 # Install ribotyper
 RUN git clone https://github.com/nawrockie/epn-ofile.git && cd epn-ofile && git checkout c34244b2b9e0719c45d964cc08c147aa353532e8
@@ -70,12 +71,12 @@ RUN chmod +x $RNA/jiffy-infernal-hmmer-scripts/ali-pfam-sindi2dot-bracket.pl
 RUN \
     git clone https://github.com/davidhoksza/traveler.git && \
     cd traveler && \
-    git checkout 0912ed5daab09bb3c38630efaf3643ea38b02dbe && \
+    git checkout 82ee9f58238f856d128d4b44d9999a509edebdfe && \
     cd $RNA/traveler/src && \
     make build
 
 # Install auto-traveler.py
-RUN git clone https://github.com/RNAcentral/auto-traveler.git && cd auto-traveler && git checkout 5ad1002dc9614e0c0a9c85a0d1a1017ee5027fbe
+RUN git clone https://github.com/RNAcentral/auto-traveler.git && cd auto-traveler && git checkout 64ae508082b3b8e784360ab6aeb4b6777b3b0c9c
 
 # Install RNAStructure
 RUN \

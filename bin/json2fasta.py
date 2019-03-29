@@ -16,9 +16,9 @@ limitations under the License.
 """
 
 import json
-import itertools as it
 
 import click
+import six
 
 from six.moves import map
 
@@ -29,7 +29,6 @@ from Bio.SeqRecord import SeqRecord
 
 def as_record(entry):
     description = entry.get('description', '') or ''
-    description = description.encode('ascii', 'ignore')
 
     return SeqRecord(
         Seq(entry['sequence']),
@@ -43,8 +42,8 @@ def sequences(handle):
     Parse each line and create a generator of SeqRecords to write.
     """
 
-    data = map(json.loads, handle)
-    return map(as_record, data)
+    data = six.moves.map(json.loads, handle)
+    return six.moves.map(as_record, data)
 
 
 @click.command()
