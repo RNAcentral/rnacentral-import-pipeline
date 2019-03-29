@@ -585,7 +585,7 @@ def interacting_rnas(interacting):
     return rnas
 
 
-def has_crs(crs):
+def has_value(crs):
     return [str(bool(crs))]
 
 
@@ -675,9 +675,11 @@ builder = entry([
             'interacting_proteins',
             'interacting_rnas',
         )),
-        fields('has_conserved_structure', has_crs, keys='crs'),
+        fields('has_conserved_structure', has_value, keys='crs'),
         fields('conserved_structure', get_or_empty('crs_ids'), keys='crs'),
         fields('overlaps_with', get_or_empty('overlaps_with'), keys='overlaps'),
         fields('no_overlaps_with', get_or_empty('no_overlaps_with'), keys='overlaps'),
+        fields('has_secondary_structure', has_value, keys='secondary'),
+        fields('secondary_structure_model', get_or_empty('secondary_structure_model'), keys='secondary'),
     ]),
 ])

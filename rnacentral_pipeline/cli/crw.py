@@ -16,28 +16,23 @@ limitations under the License.
 
 import click
 
-from rnacentral_pipeline.rnacentral import secondary
+from rnacentral_pipeline.databases.crw import secondary_models
 
 
-@click.group('secondary')
+@click.group("crw")
 def cli():
     """
-    A group of commands for parsing data from secondary structures into an
-    importable format.
+    Deal with data specific from CRW.
     """
     pass
 
 
-@cli.command('process-svgs')
-@click.argument('directories', nargs=-1, type=click.Path(
-    writable=True,
-    dir_okay=True,
-    file_okay=False,
-))
-@click.argument('output', type=click.File('w'))
-def process_svgs(directories, output):
+@cli.command('model-summary')
+@click.argument('filename', default='-', type=click.File('r'))
+@click.argument('output', default='-', type=click.File('w'))
+def model_summary(filename, output):
     """
-    Process all SVG secondary structures in the given directory and produce a
-    single data file that can be imported into the database.
+    Parse the metadata file we get from CRW to produce a data file we can import
+    into the database.
     """
-    secondary.write_all(directories, output)
+    secondary_models.write(filename, output)

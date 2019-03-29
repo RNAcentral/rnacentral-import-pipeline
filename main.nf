@@ -334,19 +334,16 @@ flag_for_qa
   .set { qa_queries }
 
 process fetch_qa_sequences {
-
   input:
   set val(status), val(name), file(query) from qa_queries
 
   output:
   set val(name), file('parts/*.fasta') into split_qa_sequences
 
-  """
-  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > raw.json
-  json2fasta.py raw.json rnacentral.fasta
-  seqkit shuffle --two-pass rnacentral.fasta > shuffled.fasta
-  seqkit split --two-pass --by-size ${params.qa[name].chunk_size} --out-dir 'parts/' shuffled.fasta
-  """
+  script:
+  chunk_size = params.qa[name].chunk_size
+  variables = ""
+  template 'query-and-split.sh'
 }
 
 process generate_qa_scan_files {
@@ -517,7 +514,7 @@ assemblies
 process fetch_unmapped_sequences {
   tag { species }
   scratch true
-  maxForks 5
+  maxForks params.genome_mapping.fetch_unmapped_sequences.directives.maxForks
   errorStrategy 'ignore'
 
   input:
@@ -527,17 +524,14 @@ process fetch_unmapped_sequences {
   set species, file('parts/*.fasta') into split_mappable_sequences
 
   script:
-  """
-  psql -v ON_ERROR_STOP=1 -v taxid=$taxid -v assembly_id=$assembly_id -f "$query" "$PGDATABASE" > raw.json
-  json2fasta.py raw.json rnacentral.fasta
-  seqkit shuffle --two-pass rnacentral.fasta > shuffled.fasta
-  seqkit split --two-pass --by-size "${params.genome_mapping.chunk_size}" --out-dir 'parts/' shuffled.fasta
-  """
+  chunk_size = params.genome_mapping.chunk_size
+  variables = "-v taxid=$taxid -v assembly_id=$assembly_id"
+  template 'query-and-split.sh'
 }
 
 process download_genome {
   tag { species }
-  memory 30.GB
+  memory { params.genome_mapping.download_genome.directives.memory }
   scratch true
 
   input:
@@ -574,7 +568,7 @@ genomes
   .set { targets }
 
 process blat {
-  memory 10.GB
+  memory { params.genome_mapping.blat.directives.memory }
   errorStrategy 'finish'
 
   input:
@@ -588,9 +582,9 @@ process blat {
     -ooc=$ooc \
     -noHead \
     -q=rna \
-    -stepSize=${params.genome_mapping.blat_options.step_size} \
-    -repMatch=${params.genome_mapping.blat_options.rep_match} \
-    -minScore=${params.genome_mapping.blat_options.min_score} \
+    -stepSize=${params.genome_mapping.blat.options.step_size} \
+    -repMatch=${params.genome_mapping.blat.options.rep_match} \
+    -minScore=${params.genome_mapping.blat.options.min_score} \
     -minIdentity=${params.genome_mapping.blat_options.min_identity} \
     $chromosome $chunk output.psl
   """
@@ -604,7 +598,7 @@ process blat {
 
 process select_mapped_locations {
   tag { species }
-  memory '15 GB'
+  memory { params.genome_mapping.select_mapped.directives.memory }
 
   input:
   set file('output*.psl'), val(species), val(assembly_id) from species_results
@@ -747,10 +741,12 @@ post_precompute
 //=============================================================================
 
 flag_for_secondary
-  .combine(Channel.fromPath("files/secondary-structures/find-sequences.sql"))
+  .combine(Channel.fromPath("files/traveler/find-sequences.sql"))
   .set { secondary_query }
 
 process find_possible_secondary_sequences {
+  memory params.secondary.find_possible.memory
+
   when:
   params.secondary.run
 
@@ -761,15 +757,15 @@ process find_possible_secondary_sequences {
   file('parts/*.fasta') into sequences_to_ribotype mode flatten
   file('rnacentral.fasta') into traveler_expected_sequences
 
-  """
-  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > raw.json
-  json2fasta.py raw.json rnacentral.fasta
-  seqkit shuffle --two-pass rnacentral.fasta > shuffled.fasta
-  seqkit split --two-pass --by-size ${params.secondary.sequence_chunk_size} --out-dir 'parts/' shuffled.fasta
-  """
+  script:
+  chunk_size = params.secondary.sequence_chunk_size
+  variables = ""
+  template 'query-and-split.sh'
 }
 
 process fetch_traveler_data {
+  memory params.secondary.fetch.memory
+
   when:
   params.secondary.run
 
@@ -779,8 +775,8 @@ process fetch_traveler_data {
   """
   git clone https://github.com/RNAcentral/auto-traveler.git
   cd auto-traveler
-  git checkout "${params.secondary.auto_traveler_version}"
-  wget -O cms.tar.gz '${params.secondary.cm_library}'
+  git checkout "${params.secondary.fetch.auto_traveler_version}"
+  wget -O cms.tar.gz '${params.secondary.fetch.cm_library}'
   # We are going to ignore some errors due to using mac tar to build the tarball
   tar xf cms.tar.gz
   python utils/generate_model_info.py --cm-library data/cms
@@ -792,32 +788,37 @@ sequences_to_ribotype
   .set { to_layout }
 
 process layout_sequences {
+  memory params.secondary.layout.memory
+
   input:
   set file(sequences), file(cm), file(fasta), file(ps) from to_layout
 
   output:
-  file("output/") into secondary_to_import
+  file("data.csv") into secondary_to_import
 
   """
   auto-traveler.py --cm-library $cm --fasta-library $fasta --ps-library $ps $sequences output/
+  rnac traveler process-svgs output/ data.csv
   """
 }
 
 secondary_to_import
   .collect()
-  .combine(Channel.fromPath("files/secondary-structures/load.ctl"))
+  .map { [it, file("files/traveler/load.ctl")] }
   .set { secondary_to_import }
 
 process store_secondary_structures {
+  memory params.secondary.store.memory
+
   input:
-  set file('output*'), file(ctl) from secondary_to_import
+  set file('data*.csv'), file(ctl) from secondary_to_import
 
   output:
-  file('data.csv') into traveler_success
+  file('built') into traveler_success
 
   """
-  rnac secondary process-svgs output* data.csv
-  split-and-load $ctl data.csv ${params.secondary.data_chunk_size} traveler-data
+  split-and-load $ctl 'data*.csv' ${params.secondary.data_chunk_size} traveler-data
+  find . -name 'data*.csv' | xargs -I {} cut -d, -f1 {} | tr -d '"' | sort > built
   """
 }
 
@@ -826,14 +827,13 @@ process find_traveler_failures {
 
   input:
   file('expected.fasta') from traveler_expected_sequences
-  file('built.csv') from traveler_success
+  file('built') from traveler_success
 
   output:
   file('failures.txt') into traveler_failures
 
   """
   seqkit seq -ni expected.fasta | sort > expected
-  cut -d, -f1 built.csv | tr -d '"' | sort > built
   comm -23 expected built > failures.txt
   """
 }

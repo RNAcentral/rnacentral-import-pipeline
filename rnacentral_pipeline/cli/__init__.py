@@ -15,6 +15,7 @@ limitations under the License.
 
 import click
 
+from . import crw
 from . import ensembl
 from . import europepmc
 from . import external
@@ -28,7 +29,7 @@ from . import precompute
 from . import qa
 from . import rfam
 from . import search_export
-from . import secondary
+from . import traveler
 
 
 @click.group()
@@ -41,6 +42,7 @@ def cli():
     pass
 
 
+cli.add_command(crw.cli)
 cli.add_command(ensembl.cli)
 cli.add_command(europepmc.cli)
 cli.add_command(external.cli)
@@ -56,4 +58,4 @@ cli.add_command(precompute.cli)
 cli.add_command(qa.cli)
 cli.add_command(rfam.cli)
 cli.add_command(search_export.cli)
-cli.add_command(secondary.cli)
+cli.add_command(traveler.cli)
