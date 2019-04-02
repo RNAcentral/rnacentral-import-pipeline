@@ -23,10 +23,12 @@ RUN apt-get install -y \
     hmmer \
     jq \
     lftp \
+    libperl4-corelibs-perl \
     moreutils \
     mysql-client \
     mysql-common \
     openssl \
+    perl \
     pgloader \
     postgresql-9.5 \
     python \
@@ -114,10 +116,21 @@ RUN \
     make install
 
 # Install required perl dependencies
-RUN \
-    cpan install moose
+RUN cpan install -T Module::Build
+RUN cpan install -T Inline::MakeMaker Inline::C JSON Inline::MakeMaker Imager SVG Moose Inline::C \
+    File::Rsync Data::UUID Config::General DBD::mysql Bio::Annotation::DBLink DBIx::Class Data::Printer \
+    Lucy::Plan::Schema Data::Dump File::Slurp File::Temp XML::XPath Time::HiRes Text::Wrap SVN::Look \
+    String::Diff Redis String::CRC32 Parallel::ForkManager Net::SCP DateTime::Format::MySQL \
+    DBIx::Class::Result::Validation DBIx::Class::Result::ColumnData IPC::Run File::Touch Date::Object \
+    Date::Calc Daemon::Control Data::Compare
+
+RUN git clone https://github.com/nawrockie/Bio-Easel.git && cd Bio-Easel && mkdir src && cd src && \
+    git clone https://github.com/EddyRivasLab/easel.git easel && cd easel && git checkout tags/Bio-Easel-0.06 && \
+    cd ../.. && perl Makefile.PL && make && make install
 
 # Install pfam_scan.pl
+RUN git clone https://github.com/ProteinsWebTeam/Pfam.git
+
 RUN \
     wget 'ftp://ftp.ebi.ac.uk/pub/databases/Pfam/Tools/PfamScan.tar.gz' && \
     tar xvf PfamScan.tar.gz && \
@@ -134,7 +147,7 @@ RUN /usr/local/bin/pip install --upgrade pip && \
 # Setup environmental variables
 ENV RIBOINFERNALDIR="$RNA/infernal-1.1.2/bin" RIBOEASELDIR="$RNA/infernal-1.1.2/bin"
 ENV RIBODIR="$RNA/ribotyper-v1" EPNOPTDIR="$RNA/epn-options" EPNOFILEDIR="$RNA/epn-ofile" EPNTESTDIR="$RNA/epn-test"
-ENV PERL5LIB="$RIBODIR:$EPNOPTDIR:$EPNOFILEDIR:$EPNTESTDIR:$RNA/pfam-scan:/usr/bin/env:$PERL5LIB"
+ENV PERL5LIB="$RIBODIR:$EPNOPTDIR:$EPNOFILEDIR:$EPNTESTDIR:$RNA/Pfam/PfamScripts/PfamLib/:/usr/bin/env:$PERL5LIB"
 
 ENV DATAPATH="$RNA/RNAstructure/data_tables/"
 
@@ -147,5 +160,5 @@ ENV PATH="$RNA/seqkit:$PATH"
 ENV PATH="$RNA/jiffy-infernal-hmmer-scripts:$PATH"
 ENV PATH="$RNA/auto-traveler:$PATH"
 ENV PATH="$RNA/hmmer/bin:$PATH"
-ENV PATH="$RNA/pfam-scan:$PATH"
+ENV PATH="$RNA/Pfam/PfamScripts/search:$PATH"
 ENV PATH="$RNACENTRAL_IMPORT_PIPELINE:$PATH"
