@@ -114,13 +114,22 @@ RUN \
     make check && \
     make install
 
+# Use a very old hmmer to install translate and related commands (squid)
+RUN \
+    mkdir squid && \
+    wget 'http://eddylab.org/software/hmmer/hmmer-2.3.2.tar.gz' && \
+    tar xf hmmer-2.3.2.tar.gz && \
+    cd hmmer-2.3.2/squid && \
+    ./configure --prefix=$RNA/squid && \
+    make
+
+# Note: || true here, this is done because we don't have the man pages built
+# (or something), adding the || true makes the process not fail because of this.
+# I add it as a separate layer so we don't ignore some issue with building.
+RUN cd hmmer-2.3.2/squid && make install || true
+
 # Install required perl dependencies
 RUN cpan install -T Module::Build Moose Config::General JSON Inline::C
-# RUN cpan install -T Inline::MakeMaker Inline::C JSON Inline::MakeMaker Imager SVG Moose Inline::C \
-#     Config::General Bio::Annotation::DBLink Data::Printer \
-#     Lucy::Plan::Schema Data::Dump File::Slurp File::Temp XML::XPath Time::HiRes Text::Wrap \
-#     String::Diff String::CRC32 Parallel::ForkManager \
-#     IPC::Run File::Touch Date::Object \
 
 RUN git clone https://github.com/nawrockie/Bio-Easel.git && cd Bio-Easel && mkdir src && cd src && \
     git clone https://github.com/EddyRivasLab/easel.git easel && cd easel && git checkout tags/Bio-Easel-0.06 && \
@@ -153,5 +162,6 @@ ENV PATH="$RNA/seqkit:$PATH"
 ENV PATH="$RNA/jiffy-infernal-hmmer-scripts:$PATH"
 ENV PATH="$RNA/auto-traveler:$PATH"
 ENV PATH="$RNA/hmmer/bin:$PATH"
+ENV PATH="$RNA/squid/bin:$PATH"
 ENV PATH="$RNA/Pfam/PfamScripts/search:$PATH"
 ENV PATH="$RNACENTRAL_IMPORT_PIPELINE:$PATH"
