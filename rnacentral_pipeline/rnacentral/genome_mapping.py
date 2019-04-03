@@ -51,15 +51,12 @@ FIELDS = [
 
 
 @attr.s()
-class Hit(object):
-    assembly_id = attr.ib(validator=is_a(str))
-    chromosome = attr.ib(validator=is_a(str))
+class BlatHit(object):
     upi = attr.ib(validator=is_a(str))
     sequence_length = attr.ib(validator=is_a(int))
     matches = attr.ib(validator=is_a(int))
     target_insertions = attr.ib(validator=is_a(int))
-    strand = attr.ib(validator=is_a(int))
-    exons = attr.ib(validator=is_a(list))
+    region = attr.ib(validator=is_a(regions.Region))
 
     @classmethod
     def build(cls, assembly_id, raw):
@@ -71,14 +68,17 @@ class Hit(object):
             ))
 
         return cls(
-            assembly_id=assembly_id,
-            chromosome=raw['tName'],
             upi=raw['qName'],
             sequence_length=raw['qSize'],
             matches=raw['matches'],
             target_insertions=raw['tBaseInsert'],
-            strand=raw['strand'],
-            exons=exons,
+            region=regions.Region(
+                assembly_id=assembly_id,
+                chromosome=raw['tName'],
+                strand=raw['strand'],
+                exons=exons,
+                coordinate_system=regions.CoordinateSystem.zero_based,
+            ),
         )
 
     @property
@@ -90,7 +90,7 @@ class Hit(object):
         return float(self.matches) / float(self.sequence_length)
 
     def writeable(self):
-        return regions.write_locations(self, self.upi)
+        return regions.write_locations(self.region, self.upi)
 
 
 def select_possible(hit):
@@ -126,7 +126,7 @@ def parse(assembly_id, handle):
                 result[key] = int(value)
 
         result['strand'] = regions.as_strand(result['strand'])
-        yield Hit.build(assembly_id, result)
+        yield BlatHit.build(assembly_id, result)
 
 
 def select_hits(assembly_id, handle):
