@@ -896,3 +896,35 @@ def test_it_treats_flybase_scaRNA_correctly():
 
     assert len(data) == 1
     assert data[0].rna_type == 'scaRNA'
+
+
+def test_can_properly_handle_shifting_lncipedia_coordinates():
+    with open('data/json-schema/v020/lincipedia.json', 'r') as raw:
+        data = json.load(raw)
+        data = list(v1.parse(data))
+
+    assert len(data) == 1
+    assert data[0].regions == [
+        dat.SequenceRegion(
+            chromosome='15',
+            strand='-',
+            exons=[dat.Exon(start=97665306, stop=97670289)],
+            assembly_id="GRCh38",
+        ),
+    ]
+
+
+def test_can_properly_handle_shifting_mirbase_coordinates():
+    with open('data/json-schema/v020/shift-mirbase.json', 'r') as raw:
+        data = json.load(raw)
+        data = list(v1.parse(data))
+
+    assert len(data) == 1
+    assert data[0].regions == [
+        dat.SequenceRegion(
+            chromosome='9',
+            strand='+',
+            exons=[dat.Exon(start=136670602, stop=136670686)],
+            assembly_id="GRCh38",
+        )
+    ]

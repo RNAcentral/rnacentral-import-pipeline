@@ -1,0 +1,63 @@
+{ 
+        "data": [{
+                "primaryId" : "MIRBASE:MI0000471",
+                "name" : "hsa-mir-126",
+                "taxonId" : "NCBITaxon:9606",
+                "soTermId" : "SO:0001244",
+                "sequence" : "CGCTGGCGACGGGACATTATTACTTTTGGTACGCGCTGTGACACTTCAAACTCGTACCGTGAGTAATAATGCGCCGTCCACGGCA",
+                "description" : "Homo sapiens miR-126 stem-loop",
+                "url" : "http://www.mirbase.org/cgi-bin/mirna_entry.pl?acc=MI0000471",
+                "relatedSequences" : [
+                        {
+                                "coordinates" : [
+                                        {
+                                                "startPosition" : 14,
+                                                "endPosition" : 34
+                                        }
+                                ],
+                                "sequenceId" : "MIRBASE:MIMAT0000444",
+                                "relationship" : "matureProduct"
+                        },
+                        {
+                                "coordinates" : [
+                                        {
+                                                "startPosition" : 51,
+                                                "endPosition" : 72
+                                        }
+                                ],
+                                "sequenceId" : "MIRBASE:MIMAT0000445",
+                                "relationship" : "matureProduct"
+                        }
+                ],
+                "crossReferenceIds" : [
+                        "HGNC:MIR126",
+                        "EntrezGene:MIR126",
+                        "RNAcentral:URS0000759B6D_9606"
+                ],
+                "publications" : [
+                        "PMID:17604727",
+                        "PMID:12007417"
+                ],
+                "gene" : {
+                        "symbol" : "HGNC:MIR126"
+                },
+                "genomeLocations" : [
+                        {
+                                "gca_accession" : "GCA_000001405.15",
+                                "assembly" : "GRCh38",
+                                "exons" : [{
+                                        "chromosome" : "9",
+                                        "startPosition" : 136670601,
+                                        "endPosition" : 136670685,
+                                        "strand" : "+"
+                                }]
+                        }
+                ]
+        }],
+        "metaData": {
+                "schemaVersion": "0.2.0",
+                "dateProduced": "2018-05-23T11:36:10+00:00",
+                "dataProvider": "MIRBASE",
+                "release": "22"
+        }
+}
