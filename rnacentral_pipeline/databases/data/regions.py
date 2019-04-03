@@ -17,6 +17,8 @@ import operator as op
 
 import six
 
+import enum
+
 import attr
 from attr.validators import instance_of as is_a
 
@@ -88,6 +90,20 @@ def write_locations(located, accession, require_strand=True):
         ]
 
 
+def as_1_based(coordinate_system, exon):
+    if coordinate_system == CoordinateSystem.one_based:
+        return exon
+    elif coordinate_system == CoordinateSystem.zero_based:
+        return None
+    raise ValueError("Unknown coordinate_system: %s" % coordinate_system)
+
+
+@enum.unique
+class CoordinateSystem(enum.Enum):
+    zero_based = 0
+    one_based = 1
+
+
 @attr.s(frozen=True)
 class Exon(object):
     start = attr.ib(validator=is_a(int))
@@ -100,6 +116,7 @@ class SequenceRegion(object):
     strand = attr.ib(validator=is_a(int), converter=as_strand)
     exons = attr.ib(validator=is_a(list), converter=sort_exons)
     assembly_id = attr.ib(validator=is_a(six.text_type))
+    coordinate_system = attr.ib(validator=is_a(CoordinateSystem))
 
     @property
     def start(self):
@@ -118,11 +135,12 @@ class SequenceRegion(object):
 
     def writeable_exons(self, accession):
         for exon in self.exons:
+            normalized = as_1_based(self.coordinate_system, exon)
             yield [
                 accession,
                 self.chromosome,
-                exon.start,
-                exon.stop,
+                normalized.start,
+                normalized.stop,
                 self.assembly_id,
                 self.strand,
             ]
