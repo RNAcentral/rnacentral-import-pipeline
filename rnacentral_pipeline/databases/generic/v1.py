@@ -16,11 +16,44 @@ limitations under the License.
 import itertools as it
 import collections as coll
 
+import six
 import attr
+from attr.validators import instance_of as is_a
 
 from rnacentral_pipeline.databases import data
 from rnacentral_pipeline.databases.helpers import phylogeny as phy
 from rnacentral_pipeline.databases.helpers import publications as pub
+
+
+@attr.s()
+class CoordinateConverter(object):
+    start_shift = attr.ib(validator=is_a(six.integer_types))
+    stop_shift = attr.ib(validator=is_a(six.integer_types))
+
+    @classmethod
+    def from_name(cls, system):
+        if system == '1-start, fully-closed':
+            return cls(0, 0)
+        if system == '0-start, half-open':
+            return cls(1, 0)
+        raise ValueError("Unknown type of system %s" % system)
+
+    def convert(self, region):
+        exons = []
+        for exon in region.exons:
+            updated = attr.evolve(
+                exon, 
+                start=exon.start + self.start_shift,
+                stop=exon.stop + self.stop_shift,
+            )
+            exons.append(updated)
+        return attr.evolve(region, exons=exons)
+
+
+@attr.s()
+class Context(object):
+    database = attr.ib(validator=is_a(six.text_type))
+    coordinate_coverter = attr.ib(validator=is_a(CoordinateConverter))
 
 
 def secondary_structure(record):
@@ -217,7 +250,7 @@ def locus_tag(ncrna):
     return ncrna.get('gene', {}).get('locusTag', None)
 
 
-def optional_id(record, database):
+def optional_id(record, context):
     """
     Create an optional id for mirbase entries. This basically uses the name
     field, which will be the miRBase gene name.
@@ -226,7 +259,7 @@ def optional_id(record, database):
     if 'description' in record and \
             'name' in record and ' ' not in record['name']:
         return record['name']
-    if database == 'MIRBASE':
+    if context.database == 'MIRBASE':
         return record['name']
     return None
 
@@ -292,7 +325,14 @@ def note_data(record):
     }
 
 
-def as_entry(record, database):
+def coordinate_coverter(metadata):
+    system = metadata.get('genomicCoordinateSystem', '0-start, half-open')
+    if metadata['dataProvider'] in {'MIRBASE'}:
+        system = "1-start, fully-closed"
+    return CoordinateConverter.from_name(system)
+
+
+def as_entry(record, context):
     """
     Generate an Entry to import based off the database, exons and raw record.
     """
@@ -300,13 +340,13 @@ def as_entry(record, database):
         primary_id=external_id(record),
         accession=record['primaryId'],
         ncbi_tax_id=taxid(record),
-        database=database,
+        database=context.database,
         sequence=record['sequence'],
         regions=regions(record),
         rna_type=record['soTermId'],
         url=record['url'],
         seq_version=record.get('version', '1'),
-        optional_id=optional_id(record, database),
+        optional_id=optional_id(record, context),
         description=description(record),
         note_data=note_data(record),
         xref_data=xrefs(record),
@@ -335,14 +375,18 @@ def parse(raw):
     def key(raw):
         return gene(raw) or ''
 
-    database = raw['metaData']['dataProvider']
+    context = Context(
+        database=raw['metaData']['dataProvider'],
+        coordinate_coverter=coordinate_coverter(raw['metaData']),
+    )
+
     ncrnas = sorted(raw['data'], key=key)
 
     metadata_pubs = raw['metaData'].get('publications', [])
     metadata_refs = [pub.reference(r) for r in metadata_pubs]
 
     for gene_id, records in it.groupby(ncrnas, gene):
-        entries = [as_entry(r, database) for r in records]
+        entries = [as_entry(r, context) for r in records]
 
         if gene_id:
             entries = add_related_by_gene(entries)
