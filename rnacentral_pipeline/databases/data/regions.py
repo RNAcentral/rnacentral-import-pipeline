@@ -77,7 +77,9 @@ def region_id(located):
 def write_locations(located, accession, require_strand=True):
     if require_strand and located.strand == 0:
         return
+
     for exon in located.exons:
+        normalized = as_1_based(exon, located.coordinate_system)
         yield [
             accession,
             located.name,
@@ -85,8 +87,8 @@ def write_locations(located, accession, require_strand=True):
             located.strand,
             located.assembly_id,
             len(located.exons),
-            exon.start,
-            exon.stop,
+            normalized.start,
+            normalized.stop,
         ]
 
 
@@ -112,10 +114,10 @@ class Exon(object):
 
 @attr.s()
 class SequenceRegion(object):
+    assembly_id = attr.ib(validator=is_a(six.text_type))
     chromosome = attr.ib(validator=is_a(six.text_type))
     strand = attr.ib(validator=is_a(int), converter=as_strand)
     exons = attr.ib(validator=is_a(list), converter=sort_exons)
-    assembly_id = attr.ib(validator=is_a(six.text_type))
     coordinate_system = attr.ib(validator=is_a(CoordinateSystem))
 
     @property
@@ -132,15 +134,3 @@ class SequenceRegion(object):
 
     def writeable(self, accession):
         return write_locations(self, accession)
-
-    def writeable_exons(self, accession):
-        for exon in self.exons:
-            normalized = as_1_based(self.coordinate_system, exon)
-            yield [
-                accession,
-                self.chromosome,
-                normalized.start,
-                normalized.stop,
-                self.assembly_id,
-                self.strand,
-            ]
