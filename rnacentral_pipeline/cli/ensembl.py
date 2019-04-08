@@ -37,15 +37,14 @@ def cli():
 @click.argument('connections', default='databases.json', type=click.File('r'))
 @click.argument('query', default='query.sql', type=click.File('r'))
 @click.argument('example_file', default='example-locations.json', type=click.File('r'))
-@click.argument('example_query', default='find-examples.sql', type=click.File('r'))
 @click.argument('output', default='assemblies.csv', type=click.File('w'))
-def ensembl_write_assemblies(connections, query, example_file, example_query, output,
+def ensembl_write_assemblies(connections, query, example_file, output,
                              db_url=None):
     """
     This will query the ensembl databases in the connections file and write the
     output to the given file.
     """
-    assemblies.write(connections, query, example_file, example_query, db_url, output)
+    assemblies.write(connections, query, example_file, db_url, output)
 
 
 @cli.command('coordinate-systems')
