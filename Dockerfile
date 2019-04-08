@@ -1,4 +1,4 @@
-FROM gcc:4.9
+FROM gcc:8
 
 ENV RNA /rna
 ENV RNACENTRAL_IMPORT_PIPELINE "$RNA/rnacentral-import-pipeline"
@@ -8,7 +8,7 @@ WORKDIR $RNA
 RUN apt-get install curl ca-certificates
 RUN curl https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
 
-RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ jessie-pgdg main" > /etc/apt/sources.list.d/pgdg.list
+RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ stretch-pgdg main" > /etc/apt/sources.list.d/pgdg.list
 
 RUN apt-get update
 RUN apt-get upgrade -y
