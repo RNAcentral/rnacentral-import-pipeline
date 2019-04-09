@@ -1,5 +1,5 @@
 LOAD CSV
-FROM stdin
+FROM ALL FILENAMES MATCHING ~<rfam-clans.*csv$>
 HAVING FIELDS
 (
     rfam_clan_id,
