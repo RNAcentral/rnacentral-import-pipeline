@@ -229,6 +229,7 @@ raw_output
     term_info,
     references_output,
   )
+  .filter { f -> !f.isEmpty() }
   .map { f ->
     name = f.getBaseName()
     ctl = file("files/import-data/load/${name.replace('_', '-')}.ctl")
@@ -246,6 +247,8 @@ raw_output
   .set { to_load }
 
 process merge_and_import {
+  memory 4.GB
+
   echo true
   tag { name }
 
