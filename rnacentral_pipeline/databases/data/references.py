@@ -50,11 +50,11 @@ class Reference(object):
     files.
     """
 
-    authors = attr.ib(validator=is_a(six.text_type))
-    location = attr.ib(validator=is_a(six.text_type))
-    title = attr.ib(validator=optional(is_a(six.text_type)))
+    authors = attr.ib(validator=is_a(six.text_type), convert=six.text_type)
+    location = attr.ib(validator=is_a(six.text_type), convert=six.text_type)
+    title = attr.ib(validator=optional(is_a(six.text_type)), convert=six.text_type)
     pmid = attr.ib(validator=optional(is_a(int)))
-    doi = attr.ib(validator=optional(is_a(six.text_type)))
+    doi = attr.ib(validator=optional(is_a(six.string_types)))
 
     def md5(self):
         """
@@ -93,14 +93,14 @@ class Reference(object):
 @attr.s(frozen=True, hash=True)
 class IdReference(object):
     namespace = attr.ib(validator=in_(KNOWN_SERVICES))
-    external_id = attr.ib(validator=is_a(six.text_type))
+    external_id = attr.ib(validator=is_a(six.text_type), convert=six.text_type)
 
     @classmethod
     def build(cls, ref_id):
         if isinstance(ref_id, int):
             return cls('pmid', six.text_type(ref_id))
 
-        if isinstance(ref_id, six.text_type):
+        if isinstance(ref_id, six.string_types):
             ref_id = ref_id.strip()
             if re.match(r'^\d+$', ref_id):
                 return cls('pmid', ref_id)
