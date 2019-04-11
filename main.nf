@@ -516,7 +516,7 @@ assemblies
 
 process fetch_unmapped_sequences {
   tag { species }
-  scratch true
+  scratch '/scratch'
   maxForks params.genome_mapping.fetch_unmapped_sequences.directives.maxForks
   errorStrategy 'ignore'
 
@@ -535,22 +535,20 @@ process fetch_unmapped_sequences {
 process download_genome {
   tag { species }
   memory { params.genome_mapping.download_genome.directives.memory }
-  scratch true
+  scratch '/scratch'
 
   input:
   set val(species), val(assembly), val(taxid), val(division) from genomes_to_fetch
 
   output:
-  set val(species), file('*.fa'), file('11.ooc') into genomes
+  set val(species), file('parts/*.fasta'), file('11.ooc') into genomes
 
-  script:
-  def engine = new groovy.text.SimpleTemplateEngine()
-  def url = engine
-    .createTemplate(params.genome_mapping.sources[division])
-    .make([species: species])
-    .toString()
   """
-  fetch genome '$url' ${species}.fasta
+  rnac genome-mapping url-for $species $assembly - |\
+  xargs -I {} fetch generic '{}' ${species}.fasta.gz 
+
+  gzip -d ${species}.fasta.gz
+  seqkit split --by-id --out-dir parts ${species}.fasta
 
   blat \
     -makeOoc=11.ooc \
