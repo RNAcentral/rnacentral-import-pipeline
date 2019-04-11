@@ -55,14 +55,14 @@ class Entry(object):
     """
 
     # Also known as external_id
-    primary_id = attr.ib(validator=is_a(six.text_type), convert=six.text_type)
-    accession = attr.ib(validator=is_a(six.text_type), convert=six.text_type)
+    primary_id = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
+    accession = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
     ncbi_tax_id = attr.ib(validator=is_a(six.integer_types))
     database = attr.ib(
         validator=is_a(six.text_type),
         converter=lambda s: six.text_type(s.upper()),
     )
-    sequence = attr.ib(validator=is_a(six.text_type), convert=six.text_type)
+    sequence = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
     # exons = attr.ib(validator=is_a(list))
     regions = attr.ib(validator=is_a(list))
     rna_type = attr.ib(
@@ -70,7 +70,7 @@ class Entry(object):
         # validator=matches_pattern(SO_PATTERN),
         converter=utils.from_so_term,
     )
-    url = attr.ib(validator=is_a(six.text_type), convert=six.text_type)
+    url = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
     seq_version = attr.ib(
         validator=and_(is_a(six.text_type), utils.matches_pattern(r'^\d+$')),
         converter=six.text_type,
