@@ -181,8 +181,6 @@ def url_for(species, assembly_id, host='ftp.ensembl.org'):
         host=host,
         file='{file}'
     )
-    print(files)
-    print(primary)
     if primary in files:
         return base_result.format(file=primary)
     elif toplevel in files:
