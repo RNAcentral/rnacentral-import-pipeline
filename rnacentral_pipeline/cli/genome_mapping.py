@@ -37,7 +37,7 @@ def select_hits(assembly_id, hits, output):
 
 
 @cli.command('url-for')
-@click.option('--host', default='')
+@click.option('--host', default='ftp.ensembl.org')
 @click.argument('species')
 @click.argument('assembly_id')
 @click.argument('output', default='-', type=click.File('w'))
