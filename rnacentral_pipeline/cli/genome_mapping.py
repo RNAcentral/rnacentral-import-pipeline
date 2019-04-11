@@ -34,3 +34,13 @@ def cli():
 @click.argument('output', default='-', type=click.File('w'))
 def select_hits(assembly_id, hits, output):
     genome_mapping.write_selected(assembly_id, hits, output)
+
+
+@cli.command('url-for')
+@click.option('--host', default='')
+@click.argument('species')
+@click.argument('assembly_id')
+@click.argument('output', default='-', type=click.File('w'))
+def find_remote_url(species, assembly_id, output, host=None):
+    url = genome_mapping.url_for(species, assembly_id, host=host)
+    output.write(url)
