@@ -554,9 +554,9 @@ process download_genome {
 
   blat \
     -makeOoc=11.ooc \
-    -stepSize=${params.genome_mapping.blat_options.step_size} \
-    -repMatch=${params.genome_mapping.blat_options.rep_match} \
-    -minScore=${params.genome_mapping.blat_options.min_score} \
+    -stepSize=${params.genome_mapping.blat.options.step_size} \
+    -repMatch=${params.genome_mapping.blat.options.rep_match} \
+    -minScore=${params.genome_mapping.blat.options.min_score} \
     ${species}.fasta /dev/null /dev/null
   """
 }
@@ -588,7 +588,7 @@ process blat {
     -stepSize=${params.genome_mapping.blat.options.step_size} \
     -repMatch=${params.genome_mapping.blat.options.rep_match} \
     -minScore=${params.genome_mapping.blat.options.min_score} \
-    -minIdentity=${params.genome_mapping.blat_options.min_identity} \
+    -minIdentity=${params.genome_mapping.blat.options.min_identity} \
     $chromosome $chunk output.psl
   """
 }
