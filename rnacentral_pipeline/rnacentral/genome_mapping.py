@@ -56,9 +56,9 @@ FIELDS = [
 
 @attr.s()
 class Hit(object):
-    assembly_id = attr.ib(validator=is_a(str))
-    chromosome = attr.ib(validator=is_a(str))
-    upi = attr.ib(validator=is_a(str))
+    assembly_id = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
+    chromosome = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
+    upi = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
     sequence_length = attr.ib(validator=is_a(int))
     matches = attr.ib(validator=is_a(int))
     target_insertions = attr.ib(validator=is_a(int))
