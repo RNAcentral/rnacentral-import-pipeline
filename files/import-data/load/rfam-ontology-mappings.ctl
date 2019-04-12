@@ -1,5 +1,5 @@
 LOAD CSV
-FROM ALL FILENAMES MATCHING ~<rfam-ontology-mappings.*csv$>
+FROM ALL FILENAMES MATCHING ~<rfam_ontology_mappings.*csv$>
 WITH ENCODING ISO-8859-14
 HAVING FIELDS
 (
