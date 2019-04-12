@@ -72,14 +72,12 @@ function fetch_generic() {
       if [[ "$remote" =~ '**' ]]; then
         lftp -c "mget $remote"
       else
-        if [[ "$pattern" =~ "*" ]]; then
+        if [[ "$remote" =~ "*" ]]; then
           wget "$remote"
+        elif [[ ! "$pattern" =~ "*" ]]; then
+          wget -O "$pattern" "$remote"
         else
-          local remote_pattern="$(basename "$remote")"
-          local remote_dir="$(dirname "$remote")"
-          local filename="$(curl --list-only "$remote_dir/" | grep "$remote_pattern")"
-          [ -n $filename ] || { echo 1>&2 "Failed to find remote file: $remote" && exit 1; }
-          curl "$remote_dir/$filename" > $pattern
+          wget "$remote"
         fi
       fi
       ;;
