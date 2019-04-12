@@ -422,7 +422,6 @@ process qa_scan {
       --rfam \
       --notextw \
       --nohmmonly \
-      --mpi \
       "$dir/Rfam.cm" \
       sequences.fasta
     rnac qa $name results.tblout hits.csv
