@@ -231,7 +231,7 @@ shift 1
 
 case "$name" in
   "ena" )
-    fetch_ena "$@" ;;
+    fetch_generic "$@" ;;
 
   "generic" )
     fetch_generic "$@" ;;
@@ -249,7 +249,7 @@ case "$name" in
     fetch_genome "$@" ;;
 
   "rfam" )
-    fetch_rfam "$@" ;;
+    fetch_generic "$@" ;;
 
   "quickgo" )
     fetch_quickgo "$@" ;;
