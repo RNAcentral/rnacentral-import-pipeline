@@ -400,7 +400,7 @@ split_qa_sequences
 process qa_scan {
   tag { name }
   cpus { params.qa[name].cpus }
-  memory { params.qa[name].memory }
+  memory { params.qa[name].memory * params.qa[name].cpus }
 
   input:
   set val(name), file('sequences.fasta'), file(dir) from sequences_to_scan
