@@ -49,17 +49,17 @@ class Accession(object):
     name from the accession level data for a sequence.
     """
 
-    gene = attr.ib(validator=optional(is_a(six.text_type)))
-    optional_id = attr.ib(validator=optional(is_a(six.text_type)))
-    pretty_database = attr.ib(validator=is_a(six.text_type))
-    feature_name = attr.ib(validator=is_a(six.text_type))
-    ncrna_class = attr.ib(validator=optional(is_a(six.text_type)))
-    species = attr.ib(validator=optional(is_a(six.text_type)))
-    common_name = attr.ib(validator=optional(is_a(six.text_type)))
-    description = attr.ib(validator=is_a(six.text_type))
-    locus_tag = attr.ib(validator=optional(is_a(six.text_type)))
-    organelle = attr.ib(validator=optional(is_a(six.text_type)))
-    lineage = attr.ib(validator=optional(is_a(six.text_type)))
+    gene = attr.ib(validator=optional(is_a(six.text_type)), converter=six.text_type)
+    optional_id = attr.ib(validator=optional(is_a(six.text_type)), converter=six.text_type)
+    pretty_database = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
+    feature_name = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
+    ncrna_class = attr.ib(validator=optional(is_a(six.text_type)), converter=six.text_type)
+    species = attr.ib(validator=optional(is_a(six.text_type)), converter=six.text_type)
+    common_name = attr.ib(validator=optional(is_a(six.text_type)), converter=six.text_type)
+    description = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
+    locus_tag = attr.ib(validator=optional(is_a(six.text_type)), converter=six.text_type)
+    organelle = attr.ib(validator=optional(is_a(six.text_type)), converter=six.text_type)
+    lineage = attr.ib(validator=optional(is_a(six.text_type)), converter=six.text_type)
     all_species = attr.ib(validator=is_a(tuple), converter=tuple)
     all_common_names = attr.ib(validator=is_a(tuple), converter=tuple)
 
