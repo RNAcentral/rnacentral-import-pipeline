@@ -33,7 +33,7 @@ def as_strand(value):
         return value
     elif isinstance(value, float) and int(value) == value:
         return int(value)
-    elif isinstance(value, six.text_type):
+    else:
         if value == '+' or value == '1':
             return 1
         elif value == '-' or value == '-1':
