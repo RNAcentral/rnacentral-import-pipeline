@@ -392,3 +392,23 @@ def test_selectes_correct_inexact_locations():
 def test_can_produce_expected_names(assembly_id, filename, upi, region_ids):
     val = results_for(assembly_id, filename, upi)
     assert [h.name for h in val] == region_ids
+
+
+@pytest.mark.parametrize('species,assembly_id,expected', [
+    ('amphiprion_ocellaris', 'AmpOce1.0', 
+     'ftp://ftp.ensembl.org/pub/current_fasta/amphiprion_ocellaris/dna/Amphiprion_ocellaris.AmpOce1.0.dna.toplevel.fa.gz'),
+    ('anolis_carolinensis', 'AnoCar2.0',
+     'ftp://ftp.ensembl.org/pub/current_fasta/anolis_carolinensis/dna/Anolis_carolinensis.AnoCar2.0.dna.toplevel.fa.gz'),
+    ('homo_sapiens', 'GRCh38',
+     'ftp://ftp.ensembl.org/pub/current_fasta/homo_sapiens/dna/Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz'),
+])
+def test_can_find_correct_url_for_species(species, assembly_id, expected):
+    assert gm.url_for(species, assembly_id) == expected
+
+
+@pytest.mark.parametrize('species,assembly_id', [
+    ('anas_platyrhynchos', 'CAU_duck1.0'),  # Different species on FTP only
+])
+def test_raises_exceptions_for_weird_cases(species, assembly_id):
+    with pytest.raises(ValueError):
+        gm.url_for(species, assembly_id)

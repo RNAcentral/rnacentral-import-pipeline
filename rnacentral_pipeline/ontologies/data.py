@@ -13,6 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import six
+
 import attr
 from attr.validators import instance_of as is_a
 from attr.validators import optional
@@ -24,10 +26,10 @@ class Term(object):
     This represents a single term in a specific ontology.
     """
 
-    ontology = attr.ib(validator=is_a(str))
-    ontology_id = attr.ib(validator=is_a(str))
-    name = attr.ib(validator=is_a(str))
-    definition = attr.ib(validator=optional(is_a(str)))
+    ontology = attr.ib(validator=is_a(six.text_type), convert=six.text_type)
+    ontology_id = attr.ib(validator=is_a(six.text_type), convert=six.text_type)
+    name = attr.ib(validator=is_a(six.text_type), convert=six.text_type)
+    definition = attr.ib(validator=optional(is_a(six.string_types)))
     synonyms = attr.ib(validator=is_a(list))
 
     def writeable(self):
