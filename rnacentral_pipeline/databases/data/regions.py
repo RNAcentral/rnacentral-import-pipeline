@@ -101,6 +101,14 @@ class CoordinateSystem(object):
             return cls(basis=CoordianteStart.one, close_status=CloseStatus.closed)
         raise UnkonwnCoordianteSystemName(name)
 
+    @classmethod
+    def zero_based(cls):
+        return cls(basis=CoordianteStart.zero, close_status=CloseStatus.open)
+
+    @classmethod
+    def one_based(cls):
+        return cls(basis=CoordianteStart.one, close_status=CloseStatus.closed)
+
     def name(self):
         if self.basis is CoordianteStart.zero and \
                 self.close_status is CloseStatus.open:
