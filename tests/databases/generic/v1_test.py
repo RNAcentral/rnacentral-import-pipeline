@@ -926,5 +926,16 @@ def test_can_properly_handle_shifting_mirbase_coordinates():
             strand='+',
             exons=[dat.Exon(start=136670602, stop=136670686)],
             assembly_id="GRCh38",
+            coordinate_system=CoordinateSystem.from_name('0-start, half-open'),
         )
+    ]
+
+    assert list(data[0].regions[0].writeable()) == [
+        'MIRBASE:MI0000471',
+        '@9/136670602-136670686:+',
+        '9',
+        'GRCh38',
+        1,
+        136670602,
+        136670686 ,
     ]

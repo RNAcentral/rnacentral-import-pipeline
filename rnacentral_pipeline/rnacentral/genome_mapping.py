@@ -60,7 +60,7 @@ class BlatHit(object):
     sequence_length = attr.ib(validator=is_a(int))
     matches = attr.ib(validator=is_a(int))
     target_insertions = attr.ib(validator=is_a(int))
-    region = attr.ib(validator=is_a(regions.Region))
+    region = attr.ib(validator=is_a(regions.SequenceRegion))
 
     @classmethod
     def build(cls, assembly_id, raw):
@@ -87,14 +87,14 @@ class BlatHit(object):
 
     @property
     def name(self):
-        return regions.region_id(self)
+        return self.region.name(upi=self.upi)
 
     @property
     def match_fraction(self):
         return float(self.matches) / float(self.sequence_length)
 
     def writeable(self):
-        return regions.write_locations(self.region, self.upi)
+        return self.writeable(self.upi)
 
 
 def select_possible(hit):

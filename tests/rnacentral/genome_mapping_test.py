@@ -409,6 +409,6 @@ def test_can_find_correct_url_for_species(species, assembly_id, expected):
 @pytest.mark.parametrize('species,assembly_id', [
     ('anas_platyrhynchos', 'CAU_duck1.0'),  # Different species on FTP only
 ])
-def test_raises_exceptions_for_weird_cases(species, assembly_id):
+def test_raises_exceptions_for_weird_url_cases(species, assembly_id):
     with pytest.raises(ValueError):
         gm.url_for(species, assembly_id)

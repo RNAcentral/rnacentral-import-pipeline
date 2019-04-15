@@ -101,7 +101,7 @@ def as_exon(exon):
     )
 
 
-def as_region(region):
+def as_region(region, context):
     """
     Turn a raw region in the JSON document into a SequenceRegion object.
     """
@@ -116,10 +116,11 @@ def as_region(region):
         strand=exons[0]['strand'],
         exons=[as_exon(e) for e in exons],
         assembly_id=region['assembly'],
+        coordinate_system=context.coordinate_system
     )
 
 
-def regions(entry):
+def regions(entry, context):
     """
     Get all genomic locations this record is in.
     """
@@ -127,7 +128,7 @@ def regions(entry):
     for region in entry.get('genomeLocations', []):
         if not region.get('exons', None):
             continue
-        result.append(as_region(region))
+        result.append(as_region(region, context))
     return result
 
 
@@ -342,7 +343,7 @@ def as_entry(record, context):
         ncbi_tax_id=taxid(record),
         database=context.database,
         sequence=record['sequence'],
-        regions=regions(record),
+        regions=regions(record, context),
         rna_type=record['soTermId'],
         url=record['url'],
         seq_version=record.get('version', '1'),
