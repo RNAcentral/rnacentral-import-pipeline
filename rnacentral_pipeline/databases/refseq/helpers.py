@@ -50,10 +50,20 @@ def url(record):
 
 def description(record, feature):
     rna_type = embl.rna_type(feature).replace('_', ' ')
+    product = embl.product(feature)
+
+    gene_feature = record.features[1]
+    if product == 'other RNA':
+        product = gene_feature.qualifiers.get('note', [])
+
+    gene = embl.gene(feature)
+    if not gene:
+        gene = embl.locus_tag(feature)
+
     return '{organism} {product} ({gene})'.format(
         organism=embl.organism(record.features[0])[0],
-        product=embl.product(feature),
-        gene=embl.gene(feature),
+        product=product,
+        gene=gene,
     )
 
 
