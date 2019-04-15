@@ -55,14 +55,14 @@ class Entry(object):
     """
 
     # Also known as external_id
-    primary_id = attr.ib(validator=is_a(six.text_type))
-    accession = attr.ib(validator=is_a(six.text_type))
+    primary_id = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
+    accession = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
     ncbi_tax_id = attr.ib(validator=is_a(six.integer_types))
     database = attr.ib(
         validator=is_a(six.text_type),
-        converter=lambda s: s.upper(),
+        converter=lambda s: six.text_type(s.upper()),
     )
-    sequence = attr.ib(validator=is_a(six.text_type))
+    sequence = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
     # exons = attr.ib(validator=is_a(list))
     regions = attr.ib(validator=is_a(list))
     rna_type = attr.ib(
@@ -70,7 +70,7 @@ class Entry(object):
         # validator=matches_pattern(SO_PATTERN),
         converter=utils.from_so_term,
     )
-    url = attr.ib(validator=is_a(six.text_type))
+    url = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
     seq_version = attr.ib(
         validator=and_(is_a(six.text_type), utils.matches_pattern(r'^\d+$')),
         converter=six.text_type,
@@ -81,34 +81,34 @@ class Entry(object):
 
     related_sequences = utils.possibly_empty(list)
 
-    chromosome = utils.optionally(six.text_type)
-    species = utils.optionally(six.text_type)
-    common_name = utils.optionally(six.text_type)
-    lineage = utils.optionally(six.text_type)
-    gene = utils.optionally(six.text_type)
-    locus_tag = utils.optionally(six.text_type)
-    optional_id = utils.optionally(six.text_type)
-    product = utils.optionally(six.text_type)
-    parent_accession = utils.optionally(six.text_type)
-    ordinal = utils.optionally(six.text_type)
-    non_coding_id = utils.optionally(six.text_type)
-    project = utils.optionally(six.text_type)
-    keywords = utils.optionally(six.text_type)
-    division = utils.optionally(six.text_type)
-    organelle = utils.optionally(six.text_type)
-    allele = utils.optionally(six.text_type)
-    anticodon = utils.optionally(six.text_type)
-    experiment = utils.optionally(six.text_type)
-    function = utils.optionally(six.text_type)
-    inference = utils.optionally(six.text_type)
-    map = utils.optionally(six.text_type)
-    old_locus_tag = utils.optionally(six.text_type)
-    operon = utils.optionally(six.text_type)
-    standard_name = utils.optionally(six.text_type)
-    description = utils.optionally(six.text_type)
-    mol_type = utils.optionally(six.text_type)
-    is_composite = utils.optionally(six.text_type)
-    pseudogene = utils.optionally(six.text_type)
+    chromosome = utils.optionally(six.string_types)
+    species = utils.optionally(six.string_types)
+    common_name = utils.optionally(six.string_types)
+    lineage = utils.optionally(six.string_types)
+    gene = utils.optionally(six.string_types)
+    locus_tag = utils.optionally(six.string_types)
+    optional_id = utils.optionally(six.string_types)
+    product = utils.optionally(six.string_types)
+    parent_accession = utils.optionally(six.string_types)
+    ordinal = utils.optionally(six.string_types)
+    non_coding_id = utils.optionally(six.string_types)
+    project = utils.optionally(six.string_types)
+    keywords = utils.optionally(six.string_types)
+    division = utils.optionally(six.string_types)
+    organelle = utils.optionally(six.string_types)
+    allele = utils.optionally(six.string_types)
+    anticodon = utils.optionally(six.string_types)
+    experiment = utils.optionally(six.string_types)
+    function = utils.optionally(six.string_types)
+    inference = utils.optionally(six.string_types)
+    map = utils.optionally(six.string_types)
+    old_locus_tag = utils.optionally(six.string_types)
+    operon = utils.optionally(six.string_types)
+    standard_name = utils.optionally(six.string_types)
+    description = utils.optionally(six.string_types)
+    mol_type = utils.optionally(six.string_types)
+    is_composite = utils.optionally(six.string_types)
+    pseudogene = utils.optionally(six.string_types)
 
     location_start = utils.optionally(six.integer_types)
     location_end = utils.optionally(six.integer_types)

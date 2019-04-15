@@ -229,6 +229,7 @@ raw_output
     term_info,
     references_output,
   )
+  .filter { f -> !f.isEmpty() }
   .map { f ->
     name = f.getBaseName()
     ctl = file("files/import-data/load/${name.replace('_', '-')}.ctl")
@@ -246,6 +247,8 @@ raw_output
   .set { to_load }
 
 process merge_and_import {
+  memory 4.GB
+
   echo true
   tag { name }
 
@@ -397,7 +400,7 @@ split_qa_sequences
 process qa_scan {
   tag { name }
   cpus { params.qa[name].cpus }
-  memory { params.qa[name].memory }
+  memory { params.qa[name].memory * params.qa[name].cpus }
 
   input:
   set val(name), file('sequences.fasta'), file(dir) from sequences_to_scan
@@ -419,7 +422,6 @@ process qa_scan {
       --rfam \
       --notextw \
       --nohmmonly \
-      --mpi \
       "$dir/Rfam.cm" \
       sequences.fasta
     rnac qa $name results.tblout hits.csv
@@ -513,7 +515,7 @@ assemblies
 
 process fetch_unmapped_sequences {
   tag { species }
-  scratch true
+  scratch '/scratch'
   maxForks params.genome_mapping.fetch_unmapped_sequences.directives.maxForks
   errorStrategy 'ignore'
 
@@ -532,28 +534,26 @@ process fetch_unmapped_sequences {
 process download_genome {
   tag { species }
   memory { params.genome_mapping.download_genome.directives.memory }
-  scratch true
+  scratch '/scratch'
 
   input:
   set val(species), val(assembly), val(taxid), val(division) from genomes_to_fetch
 
   output:
-  set val(species), file('*.fa'), file('11.ooc') into genomes
+  set val(species), file('parts/*.fasta'), file('11.ooc') into genomes
 
-  script:
-  def engine = new groovy.text.SimpleTemplateEngine()
-  def url = engine
-    .createTemplate(params.genome_mapping.sources[division])
-    .make([species: species])
-    .toString()
   """
-  fetch genome '$url' ${species}.fasta
+  rnac genome-mapping url-for $species $assembly - |\
+  xargs -I {} fetch generic '{}' ${species}.fasta.gz 
+
+  gzip -d ${species}.fasta.gz
+  seqkit split --by-id --out-dir parts ${species}.fasta
 
   blat \
     -makeOoc=11.ooc \
-    -stepSize=${params.genome_mapping.blat_options.step_size} \
-    -repMatch=${params.genome_mapping.blat_options.rep_match} \
-    -minScore=${params.genome_mapping.blat_options.min_score} \
+    -stepSize=${params.genome_mapping.blat.options.step_size} \
+    -repMatch=${params.genome_mapping.blat.options.rep_match} \
+    -minScore=${params.genome_mapping.blat.options.min_score} \
     ${species}.fasta /dev/null /dev/null
   """
 }
@@ -585,7 +585,7 @@ process blat {
     -stepSize=${params.genome_mapping.blat.options.step_size} \
     -repMatch=${params.genome_mapping.blat.options.rep_match} \
     -minScore=${params.genome_mapping.blat.options.min_score} \
-    -minIdentity=${params.genome_mapping.blat_options.min_identity} \
+    -minIdentity=${params.genome_mapping.blat.options.min_identity} \
     $chromosome $chunk output.psl
   """
 }
