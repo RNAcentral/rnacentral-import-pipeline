@@ -126,6 +126,7 @@ def test_it_gets_simple_locations(human_12):
                 dat.Exon(start=36661, stop=37529),
             ],
             assembly_id='GRCh38',
+            coordinate_system=dat.CoordinateSystem.one_based(),
         )
     ]
 
@@ -141,6 +142,7 @@ def test_can_get_joined_locations(human_12):
                 dat.Exon(start=3325090, stop=3325340),
             ],
             assembly_id='GRCh38',
+            coordinate_system=dat.CoordinateSystem.one_based(),
         )
     ]
 
@@ -177,6 +179,7 @@ def test_it_builds_correct_entries(human_12):
                 strand=1,
                 exons=[dat.Exon(start=3124777, stop=3125063)],
                 assembly_id='GRCh38',
+                coordinate_system=dat.CoordinateSystem.one_based(),
             ),
         ],
         rna_type='SRP_RNA',
@@ -272,6 +275,7 @@ def test_can_build_gencode_entries(human_12):
                 strand=1,
                 exons=[dat.Exon(start=3124777, stop=3125063)],
                 assembly_id='GRCh38',
+                coordinate_system=dat.CoordinateSystem.one_based(),
             ),
         ],
         rna_type='SRP_RNA',

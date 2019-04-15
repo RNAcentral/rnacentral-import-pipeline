@@ -26,9 +26,9 @@ class Term(object):
     This represents a single term in a specific ontology.
     """
 
-    ontology = attr.ib(validator=is_a(six.text_type), convert=six.text_type)
-    ontology_id = attr.ib(validator=is_a(six.text_type), convert=six.text_type)
-    name = attr.ib(validator=is_a(six.text_type), convert=six.text_type)
+    ontology = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
+    ontology_id = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
+    name = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
     definition = attr.ib(validator=optional(is_a(six.string_types)))
     synonyms = attr.ib(validator=is_a(list))
 

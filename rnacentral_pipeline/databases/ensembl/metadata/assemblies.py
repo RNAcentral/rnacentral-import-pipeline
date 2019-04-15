@@ -71,6 +71,8 @@ def is_ignored_assembly(info):
         return True
     if info.taxid == 8090 and info.ensembl_url != 'oryzias_latipes':
         return True
+    if info.taxid == 10029 and info.assembly_id != 'CriGri_1.0':
+        return True
     return False
 
 

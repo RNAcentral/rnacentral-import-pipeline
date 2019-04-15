@@ -96,7 +96,7 @@ def test_it_never_has_more_than_one_assembly_unique_item(assemblies, key):
     (559292, 'EnsemblFungi', 'R64-1-1'),
     (6239, 'EnsemblVertebrates', 'WBcel235'),
     (6669, 'EnsemblMetazoa', 'V1.0'),
-    (7227, 'EnsemblVertebrates', 'BDGP6'),
+    (7227, 'EnsemblVertebrates', 'BDGP6.22'),
     (8090, 'EnsemblVertebrates', 'ASM223467v1'),
 ])
 def test_it_uses_correct_sources_for_duplicates(assemblies, taxid, division,

@@ -324,9 +324,6 @@ class Entry(object):
         refs = six.moves.filter(lambda r: isinstance(r, IdReference), refs)
         return self.__write_part__(refs)
 
-    def write_genomic_locations(self):
-        return self.__write_part__(self.regions, method_name='writeable_exons')
-
     def write_related_sequences(self):
         return self.__write_part__(self.related_sequences)
 

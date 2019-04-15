@@ -21,6 +21,7 @@ from rnacentral_pipeline.databases.data import Exon
 from rnacentral_pipeline.databases.data import Entry
 from rnacentral_pipeline.databases.data import Reference
 from rnacentral_pipeline.databases.data import SequenceRegion
+from rnacentral_pipeline.databases.data import CoordinateSystem
 
 from rnacentral_pipeline.databases.rgd import helpers as rgd
 
@@ -100,6 +101,7 @@ def test_can_generate_exons(simple_entry):
         strand=1,
         exons=[Exon(start=46643222, stop=46645093)],
         assembly_id='',
+        coordinate_system=CoordinateSystem.zero_based(),
     )]
 
 
