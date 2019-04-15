@@ -141,7 +141,7 @@ from .helpers import load_data
     pytest.param('URS000018B855_1270', 'rRNA', mark=pytest.mark.xfail),
     pytest.param('URS0000127C85_175245', 'rRNA', mark=pytest.mark.xfail),
     pytest.param('URS0000A85A32_10090', 'tRNA', mark=pytest.mark.xfail),
-    pytest.param('URS000060C682_9606', 'vault_RNA', mark=pytest.mark.xfail("Inactive sequence"),
+    pytest.param('URS000060C682_9606', 'vault_RNA', mark=pytest.mark.xfail("Inactive sequence")),
     pytest.param('URS0000175007_7227', 'miRNA', mark=pytest.mark.xfail("Inactive sequence")),
     pytest.param('URS000072A167_10141', 'Y_RNA', mark=pytest.mark.xfail("Inactive sequence")),
     pytest.param('URS00006B14E9_6183', 'hammerhead_ribozyme', mark=pytest.mark.xfail("Inactive sequence")),
