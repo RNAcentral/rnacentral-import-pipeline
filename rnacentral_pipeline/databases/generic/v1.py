@@ -26,34 +26,9 @@ from rnacentral_pipeline.databases.helpers import publications as pub
 
 
 @attr.s()
-class CoordinateConverter(object):
-    start_shift = attr.ib(validator=is_a(six.integer_types))
-    stop_shift = attr.ib(validator=is_a(six.integer_types))
-
-    @classmethod
-    def from_name(cls, system):
-        if system == '1-start, fully-closed':
-            return cls(0, 0)
-        if system == '0-start, half-open':
-            return cls(1, 0)
-        raise ValueError("Unknown type of system %s" % system)
-
-    def convert(self, region):
-        exons = []
-        for exon in region.exons:
-            updated = attr.evolve(
-                exon, 
-                start=exon.start + self.start_shift,
-                stop=exon.stop + self.stop_shift,
-            )
-            exons.append(updated)
-        return attr.evolve(region, exons=exons)
-
-
-@attr.s()
 class Context(object):
     database = attr.ib(validator=is_a(six.text_type))
-    coordinate_coverter = attr.ib(validator=is_a(CoordinateConverter))
+    coordinate_system = attr.ib(validator=is_a(data.CoordinateSystem))
 
 
 def secondary_structure(record):
@@ -96,7 +71,7 @@ def as_exon(exon):
     """
 
     return data.Exon(
-        start=int(exon['startPosition']) + 1,
+        start=int(exon['startPosition']),
         stop=int(exon['endPosition']),
     )
 
@@ -116,7 +91,7 @@ def as_region(region, context):
         strand=exons[0]['strand'],
         exons=[as_exon(e) for e in exons],
         assembly_id=region['assembly'],
-        coordinate_system=context.coordinate_system
+        coordinate_system=context.coordinate_system,
     )
 
 
@@ -326,11 +301,9 @@ def note_data(record):
     }
 
 
-def coordinate_coverter(metadata):
+def coordinate_system(metadata):
     system = metadata.get('genomicCoordinateSystem', '0-start, half-open')
-    if metadata['dataProvider'] in {'MIRBASE'}:
-        system = "1-start, fully-closed"
-    return CoordinateConverter.from_name(system)
+    return data.CoordinateSystem.from_name(system)
 
 
 def as_entry(record, context):
@@ -378,7 +351,7 @@ def parse(raw):
 
     context = Context(
         database=raw['metaData']['dataProvider'],
-        coordinate_coverter=coordinate_coverter(raw['metaData']),
+        coordinate_system=coordinate_system(raw['metaData']),
     )
 
     ncrnas = sorted(raw['data'], key=key)

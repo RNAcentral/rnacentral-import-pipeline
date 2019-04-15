@@ -25,7 +25,10 @@ import six
 import attr
 from attr.validators import instance_of as is_a
 
-from rnacentral_pipeline.databases.data import regions
+from rnacentral_pipeline.databases.data.regions import Exon
+from rnacentral_pipeline.databases.data.regions import Strand
+from rnacentral_pipeline.databases.data.regions import SequenceRegion
+from rnacentral_pipeline.databases.data.regions import CoordinateSystem
 
 LOGGER = logging.getLogger(__name__)
 
@@ -60,13 +63,13 @@ class BlatHit(object):
     sequence_length = attr.ib(validator=is_a(int))
     matches = attr.ib(validator=is_a(int))
     target_insertions = attr.ib(validator=is_a(int))
-    region = attr.ib(validator=is_a(regions.SequenceRegion))
+    region = attr.ib(validator=is_a(SequenceRegion))
 
     @classmethod
     def build(cls, assembly_id, raw):
         exons = []
         for (start, size) in zip(raw['tStarts'], raw['blockSizes']):
-            exons.append(regions.Exon(
+            exons.append(Exon(
                 start=start + 1,
                 stop=start+size,
             ))
@@ -76,12 +79,12 @@ class BlatHit(object):
             sequence_length=raw['qSize'],
             matches=raw['matches'],
             target_insertions=raw['tBaseInsert'],
-            region=regions.Region(
+            region=SequenceRegion(
                 assembly_id=assembly_id,
                 chromosome=raw['tName'],
                 strand=raw['strand'],
                 exons=exons,
-                coordinate_system=regions.CoordinateSystem.zero_based,
+                coordinate_system=CoordinateSystem.zero_based(),
             ),
         )
 
@@ -129,7 +132,6 @@ def parse(assembly_id, handle):
             if key not in to_split and 'Name' not in key and key != 'strand':
                 result[key] = int(value)
 
-        result['strand'] = regions.as_strand(result['strand'])
         yield BlatHit.build(assembly_id, result)
 
 
