@@ -35,7 +35,7 @@ class UnkonwnCoordianteSystemName(Exception):
 
 
 def sort_exons(exons):
-    return sorted(exons, key=op.attrgetter('start'))
+    return tuple(sorted(exons, key=op.attrgetter('start')))
 
 
 @enum.unique
@@ -81,7 +81,7 @@ class CloseStatus(enum.Enum):
     open = 1
 
 
-@attr.s()
+@attr.s(frozen=True, hash=True, slots=True)
 class CoordinateSystem(object):
     """
     This is meant to represent how a database numbers a genome. Some databases
@@ -118,7 +118,17 @@ class CoordinateSystem(object):
             return "1-start, fully-closed"
         raise ValueError("No name for %s" % self)
 
-    def normalize(self, location):
+    def length(self, location):
+        pass
+        # if self.as_one_based():
+        #     return self.stop - location.start + 1
+        # if self.is_zero_based():
+        #     return self.stop - location.start
+
+    def as_zero_based(self, location):
+        pass
+
+    def as_one_based(self, location):
         start = location.start
         stop = location.stop
         if self.basis is CoordianteStart.zero:
@@ -137,28 +147,35 @@ class CoordinateSystem(object):
 
         return attr.evolve(location, start=start, stop=stop)
 
+    def normalize(self, location):
+        return as_one_based(location)
 
-@attr.s(frozen=True)
+
+@attr.s(frozen=True, hash=True, slots=True)
 class Exon(object):
-    start = attr.ib(validator=is_a(int))
-    stop = attr.ib(validator=is_a(int))
+    start = attr.ib(validator=is_a(six.integer_types))
+    stop = attr.ib(validator=is_a(six.integer_types))
+
+    @classmethod
+    def from_dict(cls, raw):
+        return cls(start=raw['exon_start'], stop=raw['exon_stop'])
 
 
-@attr.s()
+@attr.s(frozen=True, hash=True, slots=True)
 class SequenceRegion(object):
     assembly_id = attr.ib(validator=is_a(six.text_type))
     chromosome = attr.ib(validator=is_a(six.text_type))
     strand = attr.ib(validator=is_a(Strand), converter=Strand.build)
-    exons = attr.ib(validator=is_a(list), converter=sort_exons)
+    exons = attr.ib(validator=is_a(tuple), converter=sort_exons)
     coordinate_system = attr.ib(validator=is_a(CoordinateSystem))
 
     @property
     def start(self):
-        return min(e.start for e in self.exons)
+        return self.exons[0].start
 
     @property
     def stop(self):
-        return max(e.stop for e in self.exons)
+        return self.exons[-1].stop
 
     def name(self, upi=''):
         exon_names = []
@@ -168,11 +185,31 @@ class SequenceRegion(object):
                 start=normalized.start,
                 stop=normalized.stop,
             ))
+
         return '{upi}@{chromosome}/{exons}:{strand}'.format(
             upi=upi,
             chromosome=self.chromosome,
             exons=','.join(exon_names),
             strand=self.strand.display_string(),
+        )
+
+    def lengths(self):
+        return [self.coordinate_system.length(e) for e in self.exons]
+
+    def as_one_based(self):
+        coverter = self.coordinate_system.as_one_based
+        return attr.evolve(
+            self,
+            exons=[converter(e) for e in self.exons],
+            coordinate_system=CoordinateSystem.one_based(),
+        )
+
+    def as_zero_based(self):
+        coverter = self.coordinate_system.as_zero_based
+        return attr.evolve(
+            self,
+            exons=[converter(e) for e in self.exons],
+            coordinate_system=CoordinateSystem.zero_based(),
         )
 
     def writeable(self, accession, upi=False, require_strand=True):

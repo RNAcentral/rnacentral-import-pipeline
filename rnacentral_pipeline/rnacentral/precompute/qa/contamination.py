@@ -91,7 +91,8 @@ class Validator(object):
         if len(common_name) == 1:
             sequence_name = common_name.pop()
         else:
-            sequence_name = sorted({acc.species for acc in data.accessions})
+            sequence_name = {acc.species for acc in data.accessions}
+            sequence_name = sorted(acc for acc in sequence_name if acc.species)
             sequence_name = ', '.join(sequence_name)
             if sequence_name:
                 sequence_name = '<i>%s</i>' % sequence_name
