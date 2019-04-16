@@ -67,28 +67,22 @@ class BedEntry(object):
     def bed_chromosome(self):
         if self.region.chromosome in ['MT', 'chrMT']:
             return 'chrM'
-        return 'chr' + self.chromosome
+        return 'chr' + self.region.chromosome
 
     @property
     def bed_rgb(self):
         return ','.join(str(c) for c in self.rgb)
 
-    def block_sizes(self):
+    def sizes(self):
         return [b.size for b in self.region.exons]
 
-    def block_starts(self):
+    def starts(self):
         starts = []
         for exon in self.regions.exons[1:]:
             start = exon.start - self.region.start
             assert start > 0, "Invalid start for %s" % (self)
             starts.append(start)
         return [0] + starts
-
-    def bed_block_sizes(self):
-        return ','.join(str(s) for s in self.block_sizes())
-
-    def bed_block_starts(self):
-        return ','.join(str(s) for s in self.block_starts())
 
     def writeable(self):
         return [
@@ -102,8 +96,8 @@ class BedEntry(object):
             self.region.stop,
             self.bed_rgb,
             len(self.region.exons),
-            self.bed_block_sizes(),
-            self.bed_block_starts(),
+            ','.join(str(s) for s in self.sizes()),
+            ','.join(str(s) for s in self.starts()),
             '.',
             self.rna_type,
             self.databases,
