@@ -57,11 +57,18 @@ def test_fails_with_bad_strands(raw):
 ])
 def test_can_build_coordinate_system_from_name(name, expected):
     assert CoordinateSystem.from_name(name) == expected
+
+
+@pytest.mark.parametrize('name', [
+    '0-start, half-open', 
+    '1-start, fully-closed',
+])
+def test_can_generate_coordinate_name(name):
     assert CoordinateSystem.from_name(name).name() == name
 
 
 @pytest.mark.parametrize('name,exon,expected', [
-    ('0-start, half-open', Exon(start=10, stop=12), Exon(start=11, stop=11)),
+    ('0-start, half-open', Exon(start=10, stop=12), Exon(start=11, stop=12)),
     ('1-start, fully-closed', Exon(start=10, stop=12), Exon(start=10, stop=12)),
 ])
 def test_can_correctly_normalize_an_exon(name, exon, expected):
@@ -72,9 +79,9 @@ def test_can_correctly_normalize_an_exon(name, exon, expected):
     ('0-start, half-open', Exon(start=10, stop=10), Exon(start=10, stop=10)),
     ('0-start, half-open', Exon(start=10, stop=11), Exon(start=10, stop=11)),
     ('0-start, half-open', Exon(start=10, stop=12), Exon(start=10, stop=12)),
-    ('1-start, fully-closed', Exon(start=10, stop=10), Exon(start=9, stop=11)),
-    ('1-start, fully-closed', Exon(start=10, stop=11), Exon(start=9, stop=12)),
-    ('1-start, fully-closed', Exon(start=10, stop=12), Exon(start=9, stop=13)),
+    ('1-start, fully-closed', Exon(start=10, stop=10), Exon(start=9, stop=10)),
+    ('1-start, fully-closed', Exon(start=10, stop=11), Exon(start=9, stop=11)),
+    ('1-start, fully-closed', Exon(start=10, stop=12), Exon(start=9, stop=12)),
 ])
 def test_can_correctly_switch_to_zero_based(name, exon, expected):
     assert CoordinateSystem.from_name(name).as_zero_based(exon) == expected
@@ -104,10 +111,10 @@ def test_can_correctly_compute_lengths(name, exon, expected):
 
 
 @pytest.mark.parametrize('upi,strand,coordinate_system,expected', [
-    ('', Strand.forward, CoordinateSystem.from_name('0-start, half-open'), '@4/11-21,31-39:+'),
-    ('U1', Strand.forward, CoordinateSystem.from_name('0-start, half-open'), 'U1@4/11-21,31-39:+'),
-    ('', Strand.reverse, CoordinateSystem.from_name('0-start, half-open'), '@4/11-21,31-39:-'),
-    ('U2', Strand.reverse, CoordinateSystem.from_name('0-start, half-open'), 'U2@4/11-21,31-39:-'),
+    ('', Strand.forward, CoordinateSystem.from_name('0-start, half-open'), '@4/11-22,31-40:+'),
+    ('U1', Strand.forward, CoordinateSystem.from_name('0-start, half-open'), 'U1@4/11-22,31-40:+'),
+    ('', Strand.reverse, CoordinateSystem.from_name('0-start, half-open'), '@4/11-22,31-40:-'),
+    ('U2', Strand.reverse, CoordinateSystem.from_name('0-start, half-open'), 'U2@4/11-22,31-40:-'),
     ('', Strand.forward, CoordinateSystem.from_name("1-start, fully-closed"), '@4/10-22,30-40:+'),
     ('U3', Strand.forward, CoordinateSystem.from_name("1-start, fully-closed"), 'U3@4/10-22,30-40:+'),
     ('', Strand.reverse, CoordinateSystem.from_name("1-start, fully-closed"), '@4/10-22,30-40:-'),
@@ -147,8 +154,8 @@ def test_region_can_correctly_compute_lengths(name, exon, expected):
 
 
 @pytest.mark.parametrize('name,exon,expected', [
-    ('0-start, half-open', Exon(start=10, stop=12), Exon(start=11, stop=11)),
-    ('1-start, fully-closed', Exon(start=10, stop=12), Exon(start=10, stop=12)),
+    ('0-start, half-open', Exon(start=10, stop=12), Exon(start=10, stop=12)),
+    ('1-start, fully-closed', Exon(start=10, stop=12), Exon(start=9, stop=12)),
 ])
 def test_region_can_become_zero_based(name, exon, expected):
     region = SequenceRegion(
@@ -166,7 +173,7 @@ def test_region_can_become_zero_based(name, exon, expected):
 
 
 @pytest.mark.parametrize('name,exon,expected', [
-    ('0-start, half-open', Exon(start=10, stop=12), Exon(start=11, stop=11)),
+    ('0-start, half-open', Exon(start=10, stop=12), Exon(start=11, stop=12)),
     ('1-start, fully-closed', Exon(start=10, stop=12), Exon(start=10, stop=12)),
 ])
 def test_region_can_become_one_based(name, exon, expected):
@@ -177,7 +184,7 @@ def test_region_can_become_one_based(name, exon, expected):
         exons=[exon],
         coordinate_system=CoordinateSystem.from_name(name),
     )
-    assert region.as_zero_based() == attr.evolve(
+    assert region.as_one_based() == attr.evolve(
         region, 
         exons=[expected],
         coordinate_system=CoordinateSystem.from_name('1-start, fully-closed')
@@ -187,17 +194,17 @@ def test_region_can_become_one_based(name, exon, expected):
 @pytest.mark.parametrize('accession,strand,coordinate_system,expected', [
     ('a1', Strand.unknown, CoordinateSystem.from_name('0-start, half-open'), []),
     ('a1', Strand.forward, CoordinateSystem.from_name('0-start, half-open'), [
-        ['a1', '@4/31-39:+', '4', 1, 'GRCh38', 1, 31, 39]
+        ['a1', '@4/31-40:+', '4', 1, 'GRCh38', 1, 31, 40]
     ]),
     ('U1', Strand.forward, CoordinateSystem.from_name('0-start, half-open'), [
-        ['U1', 'U1@4/31-39:+', '4', 1, 'GRCh38', 1, 31, 39]
+        ['U1', 'U1@4/31-40:+', '4', 1, 'GRCh38', 1, 31, 40]
     ]),
     ('U1', Strand.unknown, CoordinateSystem.from_name('0-start, half-open'), []),
     ('a3', Strand.reverse, CoordinateSystem.from_name('0-start, half-open'), [
-        ['a3', '@4/31-39:-', '4', -1, 'GRCh38', 1, 31, 39]
+        ['a3', '@4/31-40:-', '4', -1, 'GRCh38', 1, 31, 40]
     ]),
     ('U2', Strand.reverse, CoordinateSystem.from_name('0-start, half-open'), [
-        ['U2', 'U2@4/31-39:-', '4', -1, 'GRCh38', 1, 31, 39]
+        ['U2', 'U2@4/31-40:-', '4', -1, 'GRCh38', 1, 31, 40]
     ]),
     ('U2', Strand.unknown, CoordinateSystem.from_name('0-start, half-open'), []),
     ('a2', Strand.forward, CoordinateSystem.from_name("1-start, fully-closed"), [
