@@ -96,6 +96,32 @@ def test_coordinates_do_not_exceed_bounds():
     ))
 
 
+def test_can_handle_mulit_exon_given_coordinates():
+    found = fetch_one('URS0000001107_4896', 'ASM294v2')
+    assert attr.asdict(found) == attr.asdict(data.Region(
+        region_id='URS0000001107_4896.0',
+        rna_id='URS0000001107_4896',
+        region=regions.SequenceRegion(
+            assembly_id='ASM294v2',
+            strand=1,
+            chromosome='I',
+            exons=[
+                regions.Exon(start=776272, stop=776539),
+                regions.Exon(start=776589, stop=776758),
+                regions.Exon(start=776829, stop=777066),
+            ],
+            coordinate_system=regions.CoordinateSystem.one_based(),
+        ),
+        was_mapped=False,
+        identity=None,
+        metadata={
+            'rna_type': 'other',
+            'providing_databases': ['PomBase'],
+            'databases': ['ENA', 'PomBase'],
+        },
+    ))
+
+
 @pytest.mark.xfail()
 def test_does_assign_source_correctly():
     found = fetch_one('URS0000000098_9606', 'GRCh38')
