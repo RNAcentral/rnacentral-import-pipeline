@@ -68,13 +68,52 @@ def test_can_correctly_normalize_an_exon(name, exon, expected):
     assert CoordinateSystem.from_name(name).normalize(exon) == expected
 
 
-@pytest.mark.parametrize('strand,coordinate_system,expected', [
-    (Strand.forward, CoordinateSystem.from_name('0-start, half-open'), '@4/11-21,31-39:+'),
-    (Strand.reverse, CoordinateSystem.from_name('0-start, half-open'), '@4/11-21,31-39:-'),
-    (Strand.forward, CoordinateSystem.from_name("1-start, fully-closed"), '@4/10-22,30-40:+'),
-    (Strand.reverse, CoordinateSystem.from_name("1-start, fully-closed"), '@4/10-22,30-40:-'),
+@pytest.mark.parametrize('name,exon,expected', [
+    ('0-start, half-open', Exon(start=10, stop=10), Exon(start=10, stop=10)),
+    ('0-start, half-open', Exon(start=10, stop=11), Exon(start=10, stop=11)),
+    ('0-start, half-open', Exon(start=10, stop=12), Exon(start=10, stop=12)),
+    ('1-start, fully-closed', Exon(start=10, stop=10), Exon(start=9, stop=11)),
+    ('1-start, fully-closed', Exon(start=10, stop=11), Exon(start=9, stop=12)),
+    ('1-start, fully-closed', Exon(start=10, stop=12), Exon(start=9, stop=13)),
 ])
-def test_can_generate_correct_region_names(strand, coordinate_system, expected):
+def test_can_correctly_switch_to_zero_based(name, exon, expected):
+    assert CoordinateSystem.from_name(name).as_zero_based(exon) == expected
+
+
+@pytest.mark.parametrize('name,exon,expected', [
+    ('0-start, half-open', Exon(start=10, stop=11), Exon(start=11, stop=11)),
+    ('0-start, half-open', Exon(start=10, stop=12), Exon(start=11, stop=12)),
+    ('1-start, fully-closed', Exon(start=10, stop=10), Exon(start=10, stop=10)),
+    ('1-start, fully-closed', Exon(start=10, stop=11), Exon(start=10, stop=11)),
+    ('1-start, fully-closed', Exon(start=10, stop=12), Exon(start=10, stop=12)),
+])
+def test_can_correctly_to_one_based(name, exon, expected):
+    assert CoordinateSystem.from_name(name).normalize(exon) == expected
+
+
+@pytest.mark.parametrize('name,exon,expected', [
+    ('0-start, half-open', Exon(start=10, stop=10), 0),
+    ('0-start, half-open', Exon(start=10, stop=11), 1),
+    ('0-start, half-open', Exon(start=10, stop=12), 2),
+    ('1-start, fully-closed', Exon(start=10, stop=10), 1),
+    ('1-start, fully-closed', Exon(start=10, stop=11), 2),
+    ('1-start, fully-closed', Exon(start=10, stop=12), 3),
+])
+def test_can_correctly_compute_lengths(name, exon, expected):
+    assert CoordinateSystem.from_name(name).size(exon) == expected
+
+
+@pytest.mark.parametrize('upi,strand,coordinate_system,expected', [
+    ('', Strand.forward, CoordinateSystem.from_name('0-start, half-open'), '@4/11-21,31-39:+'),
+    ('U1', Strand.forward, CoordinateSystem.from_name('0-start, half-open'), 'U1@4/11-21,31-39:+'),
+    ('', Strand.reverse, CoordinateSystem.from_name('0-start, half-open'), '@4/11-21,31-39:-'),
+    ('U2', Strand.reverse, CoordinateSystem.from_name('0-start, half-open'), 'U2@4/11-21,31-39:-'),
+    ('', Strand.forward, CoordinateSystem.from_name("1-start, fully-closed"), '@4/10-22,30-40:+'),
+    ('U3', Strand.forward, CoordinateSystem.from_name("1-start, fully-closed"), 'U3@4/10-22,30-40:+'),
+    ('', Strand.reverse, CoordinateSystem.from_name("1-start, fully-closed"), '@4/10-22,30-40:-'),
+    ('U2', Strand.reverse, CoordinateSystem.from_name("1-start, fully-closed"), 'U2@4/10-22,30-40:-'),
+])
+def test_can_generate_correct_region_names(upi, strand, coordinate_system, expected):
     region = SequenceRegion(
         assembly_id='GRCh38',
         chromosome='4',
@@ -85,24 +124,100 @@ def test_can_generate_correct_region_names(strand, coordinate_system, expected):
         ],
         coordinate_system=coordinate_system,
     )
-    assert region.name() == expected
+    assert region.name(upi=upi) == expected
 
 
-@pytest.mark.parametrize('strand,coordinate_system,expected', [
-    (Strand.forward, CoordinateSystem.from_name('0-start, half-open'), [
-        ['', '@4/31-39:+', '4', 1, 'GRCh38', 1, 31, 39]
-    ]),
-    (Strand.reverse, CoordinateSystem.from_name('0-start, half-open'), [
-        ['', '@4/31-39:-', '4', -1, 'GRCh38', 1, 31, 39]
-    ]),
-    (Strand.forward, CoordinateSystem.from_name("1-start, fully-closed"), [
-        ['', '@4/30-40:+', '4', 1, 'GRCh38', 1, 30, 40]
-    ]),
-    (Strand.reverse, CoordinateSystem.from_name("1-start, fully-closed"), [
-        ['', '@4/30-40:-', '4', -1, 'GRCh38', 1, 30, 40]
-    ]),
+@pytest.mark.parametrize('name,exon,expected', [
+    ('0-start, half-open', Exon(start=10, stop=10), 0),
+    ('0-start, half-open', Exon(start=10, stop=11), 1),
+    ('0-start, half-open', Exon(start=10, stop=12), 2),
+    ('1-start, fully-closed', Exon(start=10, stop=10), 1),
+    ('1-start, fully-closed', Exon(start=10, stop=11), 2),
+    ('1-start, fully-closed', Exon(start=10, stop=12), 3),
 ])
-def test_can_generate_correct_writeable(strand, coordinate_system, expected):
+def test_region_can_correctly_compute_lengths(name, exon, expected):
+    region = SequenceRegion(
+        assembly_id='GRCh38',
+        chromosome='4',
+        strand=-1,
+        exons=[exon],
+        coordinate_system=CoordinateSystem.from_name(name),
+    )
+    assert region.sizes() == [expected]
+
+
+@pytest.mark.parametrize('name,exon,expected', [
+    ('0-start, half-open', Exon(start=10, stop=12), Exon(start=11, stop=11)),
+    ('1-start, fully-closed', Exon(start=10, stop=12), Exon(start=10, stop=12)),
+])
+def test_region_can_become_zero_based(name, exon, expected):
+    region = SequenceRegion(
+        assembly_id='GRCh38',
+        chromosome='4',
+        strand=-1,
+        exons=[exon],
+        coordinate_system=CoordinateSystem.from_name(name),
+    )
+    assert region.as_zero_based() == attr.evolve(
+        region, 
+        exons=[expected],
+        coordinate_system=CoordinateSystem.from_name('0-start, half-open')
+    )
+
+
+@pytest.mark.parametrize('name,exon,expected', [
+    ('0-start, half-open', Exon(start=10, stop=12), Exon(start=11, stop=11)),
+    ('1-start, fully-closed', Exon(start=10, stop=12), Exon(start=10, stop=12)),
+])
+def test_region_can_become_one_based(name, exon, expected):
+    region = SequenceRegion(
+        assembly_id='GRCh38',
+        chromosome='4',
+        strand=1,
+        exons=[exon],
+        coordinate_system=CoordinateSystem.from_name(name),
+    )
+    assert region.as_zero_based() == attr.evolve(
+        region, 
+        exons=[expected],
+        coordinate_system=CoordinateSystem.from_name('1-start, fully-closed')
+    )
+
+
+@pytest.mark.parametrize('accession,strand,coordinate_system,expected', [
+    ('a1', Strand.unknown, CoordinateSystem.from_name('0-start, half-open'), []),
+    ('a1', Strand.forward, CoordinateSystem.from_name('0-start, half-open'), [
+        ['a1', '@4/31-39:+', '4', 1, 'GRCh38', 1, 31, 39]
+    ]),
+    ('U1', Strand.forward, CoordinateSystem.from_name('0-start, half-open'), [
+        ['U1', 'U1@4/31-39:+', '4', 1, 'GRCh38', 1, 31, 39]
+    ]),
+    ('U1', Strand.unknown, CoordinateSystem.from_name('0-start, half-open'), []),
+    ('a3', Strand.reverse, CoordinateSystem.from_name('0-start, half-open'), [
+        ['a3', '@4/31-39:-', '4', -1, 'GRCh38', 1, 31, 39]
+    ]),
+    ('U2', Strand.reverse, CoordinateSystem.from_name('0-start, half-open'), [
+        ['U2', 'U2@4/31-39:-', '4', -1, 'GRCh38', 1, 31, 39]
+    ]),
+    ('U2', Strand.unknown, CoordinateSystem.from_name('0-start, half-open'), []),
+    ('a2', Strand.forward, CoordinateSystem.from_name("1-start, fully-closed"), [
+        ['a2', '@4/30-40:+', '4', 1, 'GRCh38', 1, 30, 40]
+    ]),
+    ('a2', Strand.unknown, CoordinateSystem.from_name("1-start, fully-closed"), []),
+    ('U3', Strand.forward, CoordinateSystem.from_name("1-start, fully-closed"), [
+        ['U3', 'U3@4/30-40:+', '4', 1, 'GRCh38', 1, 30, 40]
+    ]),
+    ('U3', Strand.unknown, CoordinateSystem.from_name("1-start, fully-closed"), []),
+    ('A1', Strand.reverse, CoordinateSystem.from_name("1-start, fully-closed"), [
+        ['A1', '@4/30-40:-', '4', -1, 'GRCh38', 1, 30, 40]
+    ]),
+    ('A1', Strand.unknown, CoordinateSystem.from_name("1-start, fully-closed"), []),
+    ('U1', Strand.reverse, CoordinateSystem.from_name("1-start, fully-closed"), [
+        ['U1', 'U1@4/30-40:-', '4', -1, 'GRCh38', 1, 30, 40]
+    ]),
+    ('U1', Strand.unknown, CoordinateSystem.from_name("1-start, fully-closed"), []),
+])
+def test_can_generate_correct_writeable(accession, strand, coordinate_system, expected):
     region = SequenceRegion(
         assembly_id='GRCh38',
         chromosome='4',
@@ -110,4 +225,5 @@ def test_can_generate_correct_writeable(strand, coordinate_system, expected):
         exons=[Exon(start=30, stop=40)],
         coordinate_system=coordinate_system,
     )
-    assert list(region.writeable('')) == expected
+    upi = accession.startswith('U')
+    assert list(region.writeable(accession, is_upi=upi)) == expected
