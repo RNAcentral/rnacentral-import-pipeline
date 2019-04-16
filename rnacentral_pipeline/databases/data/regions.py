@@ -103,11 +103,11 @@ class CoordinateSystem(object):
 
     @classmethod
     def zero_based(cls):
-        return cls(basis=CoordianteStart.zero, close_status=CloseStatus.open)
+        return cls.from_name('0-start, half-open')
 
     @classmethod
     def one_based(cls):
-        return cls(basis=CoordianteStart.one, close_status=CloseStatus.closed)
+        return cls.from_name("1-start, fully-closed")
 
     def name(self):
         if self.basis is CoordianteStart.zero and \
@@ -118,15 +118,36 @@ class CoordinateSystem(object):
             return "1-start, fully-closed"
         raise ValueError("No name for %s" % self)
 
-    def length(self, location):
-        pass
-        # if self.as_one_based():
-        #     return self.stop - location.start + 1
-        # if self.is_zero_based():
-        #     return self.stop - location.start
+    def size(self, location):
+        size = None
+        if self.close_status == CloseStatus.closed:
+            size = location.stop - location.start + 1
+        elif self.close_status == CloseStatus.open:
+            size = location.stop - location.start
+        else:
+            raise ValueError("Could not find the size for %s" % location)
+
+        assert size >= 0, "Somehow computed negative exon size %s" % location
+        return size
 
     def as_zero_based(self, location):
-        pass
+        start = location.start
+        stop = location.stop
+        if self.basis is CoordianteStart.zero:
+            pass
+        elif self.basis is CoordianteStart.one:
+            start = start - 1
+        else:
+            raise ValueError("Unknown type of start: %s" % self.basis)
+
+        if self.close_status is CloseStatus.closed:
+            stop = stop - 1
+        elif self.close_status is CloseStatus.open:
+            pass
+        else:
+            raise ValueError("Unknown type of shift: %s" % self.shift)
+
+        return attr.evolve(location, start=start, stop=stop)
 
     def as_one_based(self, location):
         start = location.start
@@ -148,7 +169,7 @@ class CoordinateSystem(object):
         return attr.evolve(location, start=start, stop=stop)
 
     def normalize(self, location):
-        return as_one_based(location)
+        return self.as_one_based(location)
 
 
 @attr.s(frozen=True, hash=True, slots=True)
@@ -159,6 +180,12 @@ class Exon(object):
     @classmethod
     def from_dict(cls, raw):
         return cls(start=raw['exon_start'], stop=raw['exon_stop'])
+
+    @stop.validator
+    def greater_than_start(self, attribute, value):
+        if value < self.start:
+            raise ValueError("stop (%i) must be >= start (%i)" % 
+                             (value, self.start))
 
 
 @attr.s(frozen=True, hash=True, slots=True)
@@ -193,11 +220,11 @@ class SequenceRegion(object):
             strand=self.strand.display_string(),
         )
 
-    def lengths(self):
-        return [self.coordinate_system.length(e) for e in self.exons]
+    def sizes(self):
+        return [self.coordinate_system.size(e) for e in self.exons]
 
     def as_one_based(self):
-        coverter = self.coordinate_system.as_one_based
+        converter = self.coordinate_system.as_one_based
         return attr.evolve(
             self,
             exons=[converter(e) for e in self.exons],
@@ -205,19 +232,20 @@ class SequenceRegion(object):
         )
 
     def as_zero_based(self):
-        coverter = self.coordinate_system.as_zero_based
+        converter = self.coordinate_system.as_zero_based
         return attr.evolve(
             self,
             exons=[converter(e) for e in self.exons],
             coordinate_system=CoordinateSystem.zero_based(),
         )
 
-    def writeable(self, accession, upi=False, require_strand=True):
+    def writeable(self, accession, is_upi=False, require_strand=True):
+        assert accession, 'Must given an accession to write %s' % self
         if require_strand and self.strand is Strand.unknown:
             return
 
         name = self.name()
-        if upi:
+        if is_upi:
             name = self.name(upi=accession)
 
         for exon in self.exons:
