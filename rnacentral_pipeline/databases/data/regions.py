@@ -30,12 +30,16 @@ class UnknownStrand(Exception):
     pass
 
 
-class UnkonwnCoordianteSystemName(Exception):
+class UnknownCoordinateStart(Exception):
     pass
 
 
-def sort_exons(exons):
-    return tuple(sorted(exons, key=op.attrgetter('start')))
+class UnknownCloseStatus(Exception):
+    pass
+
+
+class UnknownCoordinateSystem(Exception):
+    pass
 
 
 @enum.unique
@@ -69,16 +73,42 @@ class Strand(enum.Enum):
         return self.value
 
 
-@enum.unique
+# @enum.unique
 class CoordianteStart(enum.Enum):
     zero = 0
     one = 1
 
+    @classmethod
+    def from_name(cls, name):
+        if name == '0-start':
+            return cls.zero
+        if name == '1-start':
+            return cls.one
+        raise UnknownCoordinateStart(name)
 
-@enum.unique
+    def __str__(self):
+        return '%i-start' % self.value
+
+
+# @enum.unique
 class CloseStatus(enum.Enum):
     closed = 0
     open = 1
+
+    @classmethod
+    def from_name(cls, name):
+        if name == 'fully-closed':
+            return cls.closed
+        if name == 'half-open':
+            return cls.open
+        raise UnknownCloseStatus(name)
+
+    def __str__(self):
+        if self is CloseStatus.closed:
+            return 'fully-closed'
+        if self is CloseStatus.open:
+            return 'half-open'
+        raise ValueError("No name for %s" % self)
 
 
 @attr.s(frozen=True, hash=True, slots=True)
@@ -87,7 +117,11 @@ class CoordinateSystem(object):
     This is meant to represent how a database numbers a genome. Some databases
     will start counting at zeros and others one, this is called the basis here.
     If the stop endpoint is open or closed changes the value of the close_status
-    here.
+    here. This is really only meant to cover the two main systems 0 based and
+    1 based. The logic of how to represent things and deal with the two systems
+    is taken from:
+
+    http://genome.ucsc.edu/blog/the-ucsc-genome-browser-coordinate-counting-systems/
     """
 
     basis = attr.ib(validator=is_a(CoordianteStart))
@@ -95,28 +129,40 @@ class CoordinateSystem(object):
 
     @classmethod
     def from_name(cls, name):
-        if name == '0-start, half-open':
-            return cls(basis=CoordianteStart.zero, close_status=CloseStatus.open)
-        if name == "1-start, fully-closed":
-            return cls(basis=CoordianteStart.one, close_status=CloseStatus.closed)
-        raise UnkonwnCoordianteSystemName(name)
+        """
+        Create a CoordinateSystem from a given name. The name must be formatted
+        like 'basis, close_status'. Examples are: 
+
+        - '0-start, half-open', 
+        - '1-start, fully-closed'
+        """
+
+        try:
+            basis_name, close_name = name.split(', ', 1)
+        except:
+            raise UnknownCoordinateSystem(name)
+
+        return cls(
+            basis=CoordianteStart.from_name(basis_name),
+            close_status=CloseStatus.from_name(close_name),
+        )
 
     @classmethod
     def zero_based(cls):
+        """
+        Just a short cut for '0-start, half-open'.
+        """
         return cls.from_name('0-start, half-open')
 
     @classmethod
     def one_based(cls):
+        """
+        Just a short cut for '1-start, fully-closed'.
+        """
         return cls.from_name("1-start, fully-closed")
 
     def name(self):
-        if self.basis is CoordianteStart.zero and \
-                self.close_status is CloseStatus.open:
-            return '0-start, half-open'
-        if self.basis is CoordianteStart.one and \
-                self.close_status is CloseStatus.closed:
-            return "1-start, fully-closed"
-        raise ValueError("No name for %s" % self)
+        return '%s, %s' % (self.basis, self.close_status)
 
     def size(self, location):
         size = None
@@ -132,7 +178,6 @@ class CoordinateSystem(object):
 
     def as_zero_based(self, location):
         start = location.start
-        stop = location.stop
         if self.basis is CoordianteStart.zero:
             pass
         elif self.basis is CoordianteStart.one:
@@ -140,18 +185,10 @@ class CoordinateSystem(object):
         else:
             raise ValueError("Unknown type of start: %s" % self.basis)
 
-        if self.close_status is CloseStatus.closed:
-            stop = stop - 1
-        elif self.close_status is CloseStatus.open:
-            pass
-        else:
-            raise ValueError("Unknown type of shift: %s" % self.shift)
-
-        return attr.evolve(location, start=start, stop=stop)
+        return attr.evolve(location, start=start)
 
     def as_one_based(self, location):
         start = location.start
-        stop = location.stop
         if self.basis is CoordianteStart.zero:
             start = start + 1
         elif self.basis is CoordianteStart.one:
@@ -159,14 +196,7 @@ class CoordinateSystem(object):
         else:
             raise ValueError("Unknown type of start: %s" % self.basis)
 
-        if self.close_status is CloseStatus.closed:
-            pass
-        elif self.close_status is CloseStatus.open:
-            stop = stop - 1
-        else:
-            raise ValueError("Unknown type of shift: %s" % self.shift)
-
-        return attr.evolve(location, start=start, stop=stop)
+        return attr.evolve(location, start=start)
 
     def normalize(self, location):
         return self.as_one_based(location)
@@ -193,7 +223,10 @@ class SequenceRegion(object):
     assembly_id = attr.ib(validator=is_a(six.text_type))
     chromosome = attr.ib(validator=is_a(six.text_type))
     strand = attr.ib(validator=is_a(Strand), converter=Strand.build)
-    exons = attr.ib(validator=is_a(tuple), converter=sort_exons)
+    exons = attr.ib(
+        validator=is_a(tuple), 
+        converter=lambda es: tuple(sorted(es, key=op.attrgetter('start'))),
+    )
     coordinate_system = attr.ib(validator=is_a(CoordinateSystem))
 
     @property
