@@ -25,7 +25,8 @@ def regions_as_features(regions):
     Convert the raw entry into a series of gff Features to output.
     """
 
-    for region in regions:
+    for raw_region in regions:
+        region = raw_region.as_one_based()
         attributes = OrderedDict([
             ('Name', [region.rna_id]),
             ('type', [region.metadata['rna_type']]),

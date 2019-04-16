@@ -23,6 +23,8 @@ from attr.validators import instance_of as is_a
 
 import six
 
+from rnacentral_pipeline.databases.data import regions
+
 
 def clean_databases(raw):
     return [d.replace(' ', '_') for d in raw]
@@ -32,9 +34,7 @@ def clean_databases(raw):
 class Region(object):
     region_id = attr.ib(validator=is_a(six.text_type))
     rna_id = attr.ib(validator=is_a(six.text_type))
-    chromosome = attr.ib(validator=is_a(six.text_type))
-    strand = attr.ib(validator=is_a(six.integer_types))
-    endpoints = attr.ib(validator=is_a(tuple))
+    region = attr.ib(validator=is_a(regions.SequenceRegion))
     was_mapped = attr.ib(validator=is_a(bool))
     identity = attr.ib(
         validator=optional(is_a(float)),
@@ -49,9 +49,12 @@ class Region(object):
         if raw['identity'] is not None:
             identity = float(raw['identity'])
 
-        endpoints = [Endpoint.build(e) for e in raw['exons']]
-        endpoints.sort(key=op.attrgetter('start'))
-        endpoints = tuple(endpoints)
+        exons = []
+        for exon in raw['exons']:
+            exons.append(regions.Exon(
+                start=exon['exon_start'], 
+                stop=exon['exon_stop'], 
+            ))
 
         region_id = '{rna_id}.{index}'.format(
             rna_id=raw['rna_id'],
@@ -69,9 +72,13 @@ class Region(object):
         return cls(
             region_id=region_id,
             rna_id=raw['rna_id'],
-            chromosome=raw['chromosome'],
-            strand=raw['strand'],
-            endpoints=endpoints,
+            region=regions.SequenceRegion(
+                assembly_id=raw['assembly_id'],
+                chromosome=raw['chromosome'],
+                strand=raw['strand'],
+                exons=exons,
+                coordinate_system=regions.CoordinateSystem.one_based(),
+            ),
             identity=identity,
             was_mapped=raw['was_mapped'],
             metadata=metadata,
@@ -79,11 +86,11 @@ class Region(object):
 
     @property
     def start(self):
-        return self.endpoints[0].start
+        return self.region.start
 
     @property
     def stop(self):
-        return self.endpoints[-1].stop
+        return self.region.stop
 
     @property
     def source(self):
@@ -92,21 +99,7 @@ class Region(object):
         return 'expert-database'
 
     def string_strand(self):
-        if self.strand == 1:
-            return '+'
-        if self.strand == -1:
-            return '-'
-        raise ValueError("Unknown type of strand")
-
-
-@attr.s(hash=True, slots=True, frozen=True)
-class Endpoint(object):
-    start = attr.ib(validator=is_a(six.integer_types))
-    stop = attr.ib(validator=is_a(six.integer_types))
-
-    @classmethod
-    def build(cls, raw):
-        return cls(start=raw['exon_start'], stop=raw['exon_stop'])
+        return self.region.strand.display_string()
 
 
 def parse(regions):

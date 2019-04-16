@@ -1,6 +1,7 @@
 COPY (
 SELECT
   json_build_object(
+      'assembly_id', :'assembly_id',
       'region_id', max(regions.region_name),
       'rna_id', max(pre.id),
       'rna_type',  max(pre.rna_type),
