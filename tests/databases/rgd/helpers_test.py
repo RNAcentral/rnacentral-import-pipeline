@@ -126,7 +126,7 @@ def test_can_fetch_sequence(simple_entry):
         # assert exons == []
 
 
-@pytest.mark.xfail
+@pytest.mark.skip()
 def test_fails_without_existing_sequence(simple_entry, sequences):
     entry = dict(simple_entry)
     entry['GENE_RGD_ID'] = 'something-made-up'

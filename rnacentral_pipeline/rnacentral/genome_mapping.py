@@ -67,12 +67,8 @@ class BlatHit(object):
 
     @classmethod
     def build(cls, assembly_id, raw):
-        exons = []
-        for (start, size) in zip(raw['tStarts'], raw['blockSizes']):
-            exons.append(Exon(
-                start=start + 1,
-                stop=start+size,
-            ))
+        parts = six.moves.zip(raw['tStarts'], raw['blockSizes'])
+        exons = [Exon(s, s+l) for (s, l) in parts]
 
         return cls(
             upi=raw['qName'],
