@@ -42,6 +42,30 @@ def partioned_accessions(all_accessions):
     return accessions, inactive_accessions
 
 
+def fix_hgnc_data(accessions):
+    hgnc_entries = []
+    ref_seq_entry = []
+    result = []
+    for accession in accessions:
+        if accession.database == 'hgnc':
+            hgnc_entries.append(accession)
+        else:
+            result.append(accession)
+            if accession.database == 'refseq':
+                ref_seq_entry.append(accession)
+
+    if not hgnc_entries or len(ref_seq_entry) != 1:
+        return accessions
+
+    for accession in hgnc_entries:
+        result.append(attr.evolve(
+            accession,
+            feature_name=ref_seq_entry[0].feature_name,
+            ncrna_class=ref_seq_entry[0].ncrna_class,
+        ))
+    return result
+
+
 @attr.s()
 class Accession(object):
     """
@@ -248,6 +272,7 @@ class SpeciesSequence(Sequence):
         """
 
         active, inactive = partioned_accessions(data['accessions'])
+        active = fix_hgnc_data(active)
         hits = set()
         for hit in data['hits']:
             if hit.pop('rfam_hit_id'):
