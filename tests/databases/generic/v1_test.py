@@ -201,7 +201,7 @@ def test_can_correctly_parse_lncipedia_data():
                     dat.Exon(start=74249250, stop=74249420),
                 ],
                 assembly_id='GRCh37',
-                coordinate_system=dat.CoordinateSystem.from_name('0-start, half-open'),
+                coordinate_system=dat.CoordinateSystem.from_name('1-start, fully-closed'),
             ),
             dat.SequenceRegion(
                 chromosome='16',
@@ -213,7 +213,7 @@ def test_can_correctly_parse_lncipedia_data():
                     dat.Exon(start=74215351, stop=74215521),
                 ],
                 assembly_id="GRCh38",
-                coordinate_system=dat.CoordinateSystem.from_name('0-start, half-open'),
+                coordinate_system=dat.CoordinateSystem.from_name('1-start, fully-closed'),
             ),
         ],
         rna_type='SO:0001877',
@@ -836,7 +836,7 @@ def test_can_correctly_find_isoforms():
                     dat.Exon(start=83860407, stop=83860546),
                 ],
                 assembly_id='GRCh38',
-                coordinate_system=dat.CoordinateSystem.from_name('0-start, half-open'),
+                coordinate_system=dat.CoordinateSystem.from_name('1-start, fully-closed'),
             ),
         ],
         rna_type='SO:0001877',
@@ -909,9 +909,20 @@ def test_can_properly_handle_shifting_lncipedia_coordinates():
             strand='-',
             exons=[dat.Exon(start=97665305, stop=97670289)],
             assembly_id="GRCh38",
-            coordinate_system=dat.CoordinateSystem.from_name('0-start, half-open'),
+            coordinate_system=dat.CoordinateSystem.from_name('1-start, fully-closed'),
         ),
     ]
+
+    assert list(data[0].regions[0].writeable(data[0].accession)) == [[
+        "LNCIPEDIA:LINC00923:10",
+        '@15/97665305-97670289:-',
+        '15',
+        -1,
+        'GRCh38',
+        1,
+        97665305,
+        97670289,
+    ]]
 
 
 def test_can_properly_handle_shifting_mirbase_coordinates():
@@ -924,18 +935,18 @@ def test_can_properly_handle_shifting_mirbase_coordinates():
     assert attr.asdict(data[0].regions[0]) == attr.asdict(dat.SequenceRegion(
         chromosome='9',
         strand='+',
-        exons=[dat.Exon(start=136670601, stop=136670685)],
+        exons=[dat.Exon(start=136670602, stop=136670686)],
         assembly_id="GRCh38",
-        coordinate_system=dat.CoordinateSystem.from_name('0-start, half-open'),
+        coordinate_system=dat.CoordinateSystem.from_name('1-start, fully-closed'),
     ))
 
     assert list(data[0].regions[0].writeable(data[0].accession)) == [[
         'MIRBASE:MI0000471',
-        '@9/136670602-136670684:+',
+        '@9/136670602-136670686:+',
         '9',
         1,
         'GRCh38',
         1,
         136670602,
-        136670684,
+        136670686,
     ]]

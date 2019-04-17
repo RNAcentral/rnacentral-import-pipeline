@@ -18,6 +18,7 @@ import collections as coll
 
 import six
 import attr
+from attr.validators import optional
 from attr.validators import instance_of as is_a
 
 from rnacentral_pipeline.databases import data
@@ -25,10 +26,18 @@ from rnacentral_pipeline.databases.helpers import phylogeny as phy
 from rnacentral_pipeline.databases.helpers import publications as pub
 
 
+class UnexpectedCoordinates(Exception):
+    """
+    Raised if we get coordinates to store but we do not know what the coordinate
+    system used is.
+    """
+    pass
+
+
 @attr.s()
 class Context(object):
     database = attr.ib(validator=is_a(six.text_type))
-    coordinate_system = attr.ib(validator=is_a(data.CoordinateSystem))
+    coordinate_system = attr.ib(validator=optional(is_a(data.CoordinateSystem)))
 
 
 def secondary_structure(record):
@@ -65,14 +74,20 @@ def taxid(entry):
     return int(tid)
 
 
-def as_exon(exon):
+def as_exon(exon, context):
     """
     Turn a raw exon into one we can store in the rnc_coordinates table.
     """
 
+    start_fix = 0
+    stop_fix = 0
+    if context.database == 'MIRBASE':
+        start_fix = 1
+        stop_fix = 1
+
     return data.Exon(
-        start=int(exon['startPosition']),
-        stop=int(exon['endPosition']),
+        start=int(exon['startPosition']) + start_fix,
+        stop=int(exon['endPosition']) + stop_fix,
     )
 
 
@@ -89,7 +104,7 @@ def as_region(region, context):
     return data.SequenceRegion(
         chromosome=chromosome,
         strand=exons[0]['strand'],
-        exons=[as_exon(e) for e in exons],
+        exons=[as_exon(e, context) for e in exons],
         assembly_id=region['assembly'],
         coordinate_system=context.coordinate_system,
     )
@@ -99,10 +114,15 @@ def regions(entry, context):
     """
     Get all genomic locations this record is in.
     """
+
     result = []
     for region in entry.get('genomeLocations', []):
         if not region.get('exons', None):
             continue
+
+        if not context.coordinate_system:
+            raise UnexpectedCoordinates(region)
+
         result.append(as_region(region, context))
     return result
 
@@ -302,7 +322,32 @@ def note_data(record):
 
 
 def coordinate_system(metadata):
-    system = metadata.get('genomicCoordinateSystem', '0-start, half-open')
+    system = None
+    database = metadata['dataProvider']
+    if 'genomicCoordinateSystem' in metadata:
+        system = metadata['genomicCoordinateSystem']
+    elif database == 'FLYBASE':
+        system = '1-start, fully-closed'
+    elif database == 'LNCIPEDIA':
+        system = '1-start, fully-closed'
+    elif database == 'MIRBASE':
+        system = '1-start, fully-closed'
+    elif database == 'LNCBOOK':
+        system = "1-start, fully-closed"
+    elif database == 'LNCBASE':
+        pass
+    elif database == 'TARBASE':
+        pass
+    elif database == 'ZWD':
+        pass
+    elif database == 'POMBASE':
+        system = '1-start, fully-closed'
+    else:
+        raise ValueError("Could not determine coordinate system")
+
+    if not system:
+        return None
+
     return data.CoordinateSystem.from_name(system)
 
 
