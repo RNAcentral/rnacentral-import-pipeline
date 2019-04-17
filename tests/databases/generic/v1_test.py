@@ -135,7 +135,7 @@ def test_can_correctly_parse_data():
                 strand=1,
                 exons=[dat.Exon(start=46771, stop=49485)],
                 assembly_id="R6",
-                coordinate_system=dat.CoordinateSystem.from_name('0-start, half-open'),
+                coordinate_system=dat.CoordinateSystem.from_name('1-start, fully-closed'),
             ),
         ],
         rna_type='rRNA',

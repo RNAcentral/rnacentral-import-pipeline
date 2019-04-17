@@ -273,7 +273,7 @@ def test_can_build_correct_data_structures():
             assembly_id='human',
             chromosome='MT',
             strand=1,
-            exons=[regions.Exon(start=15935, stop=15953)],
+            exons=[regions.Exon(start=15934, stop=15953)],
             coordinate_system=regions.CoordinateSystem.zero_based(),
         ),
     ))
@@ -290,7 +290,7 @@ def test_can_build_correct_for_minus_strand():
             assembly_id='human',
             chromosome='Y',
             strand=-1,
-            exons=[regions.Exon(start=17624526, stop=17624541)],
+            exons=[regions.Exon(start=17624525, stop=17624541)],
             coordinate_system=regions.CoordinateSystem.zero_based(),
         ),
     ))
@@ -310,12 +310,12 @@ def test_can_correctly_parse_with_several_exons():
             chromosome='21',
             strand=1,
             exons=[
-                regions.Exon(start=44506807, stop=44507099),
-                regions.Exon(start=44508037, stop=44508309),
-                regions.Exon(start=44508727, stop=44508929),
-                regions.Exon(start=44509252, stop=44509406),
-                regions.Exon(start=44509823, stop=44509927),
-                regions.Exon(start=44515497, stop=44515855),
+                regions.Exon(start=44506806, stop=44507099),
+                regions.Exon(start=44508036, stop=44508309),
+                regions.Exon(start=44508726, stop=44508929),
+                regions.Exon(start=44509251, stop=44509406),
+                regions.Exon(start=44509822, stop=44509927),
+                regions.Exon(start=44515496, stop=44515855),
             ],
             coordinate_system=regions.CoordinateSystem.zero_based(),
         ),
@@ -349,12 +349,12 @@ def test_it_selects_correct_exact_locations():
             chromosome='21',
             strand=1,
             exons=[
-                regions.Exon(start=44506807, stop=44507099),
-                regions.Exon(start=44508037, stop=44508309),
-                regions.Exon(start=44508727, stop=44508929),
-                regions.Exon(start=44509252, stop=44509406),
-                regions.Exon(start=44509823, stop=44509927),
-                regions.Exon(start=44515497, stop=44515855),
+                regions.Exon(start=44506806, stop=44507099),
+                regions.Exon(start=44508036, stop=44508309),
+                regions.Exon(start=44508726, stop=44508929),
+                regions.Exon(start=44509251, stop=44509406),
+                regions.Exon(start=44509822, stop=44509927),
+                regions.Exon(start=44515496, stop=44515855),
             ],
             coordinate_system=regions.CoordinateSystem.zero_based(),
         ),
@@ -373,11 +373,15 @@ def test_selectes_correct_inexact_locations():
             assembly_id='human',
             chromosome='15',
             strand=-1,
-            exons=[regions.Exon(start=82478089, stop=82478242)],
+            exons=[regions.Exon(start=82478088, stop=82478242)],
             coordinate_system=regions.CoordinateSystem.zero_based(),
         ),
     ))
     assert round(val[0].match_fraction, 6) == 0.993506
+
+    assert list(val[0].region.writeable('URS000093C0D6_9606')) == [
+        ['URS000093C0D6_9606', '@15/82478089-82478242:-', '15', -1, 'human', 1, 82478089, 82478242]
+    ]
 
 
 @pytest.mark.parametrize('assembly_id,filename,upi,region_ids', [
