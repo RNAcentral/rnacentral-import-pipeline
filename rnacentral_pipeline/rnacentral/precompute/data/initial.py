@@ -66,6 +66,12 @@ def fix_hgnc_data(accessions):
     return result
 
 
+def maybe_text(value):
+    if value is None:
+        return None
+    return six.text_type(value)
+
+
 @attr.s()
 class Accession(object):
     """
@@ -74,16 +80,16 @@ class Accession(object):
     """
 
     gene = attr.ib(validator=optional(is_a(six.text_type)), converter=six.text_type)
-    optional_id = attr.ib(validator=optional(is_a(six.text_type)), converter=six.text_type)
+    optional_id = attr.ib(validator=optional(is_a(six.text_type)), converter=maybe_text)
     pretty_database = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
     feature_name = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
-    ncrna_class = attr.ib(validator=optional(is_a(six.text_type)), converter=six.text_type)
-    species = attr.ib(validator=optional(is_a(six.text_type)), converter=six.text_type)
-    common_name = attr.ib(validator=optional(is_a(six.text_type)), converter=six.text_type)
+    ncrna_class = attr.ib(validator=optional(is_a(six.text_type)), converter=maybe_text)
+    species = attr.ib(validator=optional(is_a(six.text_type)), converter=maybe_text)
+    common_name = attr.ib(validator=optional(is_a(six.text_type)), converter=maybe_text)
     description = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
-    locus_tag = attr.ib(validator=optional(is_a(six.text_type)), converter=six.text_type)
-    organelle = attr.ib(validator=optional(is_a(six.text_type)), converter=six.text_type)
-    lineage = attr.ib(validator=optional(is_a(six.text_type)), converter=six.text_type)
+    locus_tag = attr.ib(validator=optional(is_a(six.text_type)), converter=maybe_text)
+    organelle = attr.ib(validator=optional(is_a(six.text_type)), converter=maybe_text)
+    lineage = attr.ib(validator=optional(is_a(six.text_type)), converter=maybe_text)
     all_species = attr.ib(validator=is_a(tuple), converter=tuple)
     all_common_names = attr.ib(validator=is_a(tuple), converter=tuple)
 
@@ -119,12 +125,20 @@ class Accession(object):
         not include uncultured, environmental or synthetic domains.
         """
 
-        if 'uncultured' in self.lineage or \
-                'environmental' in self.lineage or \
-                'synthetic' in self.lineage:
+        if self.lineage.startswith('other sequences'):
             return None
 
-        return self.lineage.split(';')[0]
+        parts = [p.strip() for p in self.lineage.split(';')]
+        domain = parts[0]
+        if domain == 'cellular organisms':
+            domain = parts[1]
+
+        if 'uncultured' in domain or 'environmental' in domain or \
+                'synthetic' in domain or 'artificial' in domain or \
+                'unclassified' in domain:
+            return None
+
+        return domain
 
     @property
     def masked_description(self):

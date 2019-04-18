@@ -85,6 +85,7 @@ class Validator(object):
         there was a warning.
         """
 
+        print(data)
         common_name = {acc.common_name for acc in data.accessions}
         common_name = {c.lower() for c in common_name if c}
 
@@ -92,7 +93,8 @@ class Validator(object):
             sequence_name = common_name.pop()
         else:
             sequence_name = {acc.species for acc in data.accessions}
-            sequence_name = sorted(acc for acc in sequence_name if acc.species)
+            sequence_name = sorted(s for s in sequence_name if s)
+            print(sequence_name)
             sequence_name = ', '.join(sequence_name)
             if sequence_name:
                 sequence_name = '<i>%s</i>' % sequence_name
