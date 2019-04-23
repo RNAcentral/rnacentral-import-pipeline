@@ -93,6 +93,14 @@ class Region(object):
         return self.region.stop
 
     @property
+    def chromosome(self):
+        return self.region.chromosome
+
+    @property
+    def exons(self):
+        return self.region.exons
+
+    @property
     def source(self):
         if self.was_mapped:
             return 'alignment'
@@ -100,6 +108,12 @@ class Region(object):
 
     def string_strand(self):
         return self.region.strand.display_string()
+
+    def as_one_based(self):
+        return attr.evolve(self, region=self.region.as_one_based())
+
+    def as_zero_based(self):
+        return attr.evolve(self, region=self.region.as_zero_based())
 
 
 def parse(regions):
