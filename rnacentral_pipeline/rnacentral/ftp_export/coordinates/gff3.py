@@ -26,6 +26,7 @@ def regions_as_features(regions):
     """
 
     for raw_region in regions:
+        print(raw_region)
         region = raw_region.as_one_based()
         attributes = OrderedDict([
             ('Name', [region.rna_id]),
@@ -52,7 +53,7 @@ def regions_as_features(regions):
             attributes=attributes,
         )
 
-        for index, endpoint in enumerate(region.endpoints):
+        for index, endpoint in enumerate(region.exons):
             exon_id = region.region_id + ':ncRNA_exon%i' % (index + 1)
             exon_attributes = OrderedDict([
                 ('Name', [region.rna_id]),
