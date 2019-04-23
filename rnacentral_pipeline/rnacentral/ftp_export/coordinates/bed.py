@@ -27,24 +27,6 @@ from rnacentral_pipeline.databases.data import regions
 from . import data as coord
 
 
-# @attr.s(frozen=True)
-# class BedBlock(object):
-#     start = attr.ib(validator=is_a(int))
-#     stop = attr.ib(validator=is_a(int))
-#     @classmethod
-#     def from_endpoint(cls, endpoint):
-#         return cls(
-#             start=endpoint.start,
-#             stop=endpoint.stop,
-#         )
-#     @property
-#     def size(self):
-#         start = self.start - 1
-#         size = (self.stop - start) or 1
-#         assert size > 0
-#         return size
-
-
 @attr.s(slots=True, frozen=True)
 class BedEntry(object):
     rna_id = attr.ib(validator=is_a(str))
@@ -60,7 +42,7 @@ class BedEntry(object):
             rna_id=coordinate.rna_id,
             rna_type=coordinate.metadata['rna_type'],
             databases=','.join(coordinate.metadata['databases']),
-            region=coordiante.region.as_zero_based(),
+            region=coordinate.region.as_zero_based(),
         )
 
     @property
@@ -74,12 +56,13 @@ class BedEntry(object):
         return ','.join(str(c) for c in self.rgb)
 
     def sizes(self):
-        return [b.size for b in self.region.exons]
+        return self.region.sizes()
 
     def starts(self):
         starts = []
-        for exon in self.regions.exons[1:]:
-            start = exon.start - self.region.start
+        end = self.region.exons[0].start
+        for exon in self.region.exons[1:]:
+            start = exon.start - end
             assert start > 0, "Invalid start for %s" % (self)
             starts.append(start)
         return [0] + starts
