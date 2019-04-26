@@ -534,7 +534,6 @@ process fetch_unmapped_sequences {
 process download_genome {
   tag { species }
   memory { params.genome_mapping.download_genome.directives.memory }
-  scratch '/scratch'
 
   input:
   set val(species), val(assembly), val(taxid), val(division) from genomes_to_fetch
@@ -543,7 +542,7 @@ process download_genome {
   set val(species), file('parts/*.fasta'), file('11.ooc') into genomes
 
   """
-  rnac genome-mapping url-for $species $assembly - |\
+  rnac genome-mapping url-for --host=$division $species $assembly - |\
   xargs -I {} fetch generic '{}' ${species}.fasta.gz 
 
   gzip -d ${species}.fasta.gz
