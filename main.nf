@@ -542,6 +542,8 @@ process download_genome {
   set val(species), file('parts/*.fasta'), file('11.ooc') into genomes
 
   """
+  set -o pipefail
+
   rnac genome-mapping url-for --host=$division $species $assembly - |\
   xargs -I {} fetch generic '{}' ${species}.fasta.gz 
 
