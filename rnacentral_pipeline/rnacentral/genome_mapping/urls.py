@@ -42,13 +42,13 @@ VERTEBRATES = {'ensembl', 'ensemblvertebrates', 'ensembl_vertebrates'}
 
 @enum.unique
 class FtpHost(enum.Enum):
-    ensembl = enum.auto()
-    ensembl_plants = enum.auto()
-    ensembl_metazoa = enum.auto()
-    ensembl_protists = enum.auto()
-    ensembl_bacteria = enum.auto()
-    ensembl_genomes = enum.auto()
-    unknown = enum.auto()
+    ensembl = 0
+    ensembl_plants = 1
+    ensembl_metazoa = 2
+    ensembl_protists = 3
+    ensembl_bacteria = 4
+    ensembl_genomes = 5
+    unknown = 6
 
     @classmethod
     def from_string(cls, raw):
