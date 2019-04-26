@@ -33,14 +33,21 @@ def cli():
 @click.argument('hits', default='-', type=click.File('r'))
 @click.argument('output', default='-', type=click.File('w'))
 def select_hits(assembly_id, hits, output):
-    genome_mapping.write_selected(assembly_id, hits, output)
+    genome_mapping.blat.write_selected(assembly_id, hits, output)
 
 
 @cli.command('url-for')
-@click.option('--host', default='ftp.ensembl.org')
+@click.option('--host', default='ensembl')
 @click.argument('species')
 @click.argument('assembly_id')
 @click.argument('output', default='-', type=click.File('w'))
 def find_remote_url(species, assembly_id, output, host=None):
-    url = genome_mapping.url_for(species, assembly_id, host=host)
+    url = genome_mapping.urls.url_for(species, assembly_id, host=host)
     output.write(url)
+
+
+@cli.command('urls-for')
+@click.argument('filename', default='-', type=click.File('r'))
+@click.argument('output', default='-', type=click.File('w'))
+def find_remote_urls(filename, output):
+    genome_mapping.urls.write_urls_for(filename, output)
