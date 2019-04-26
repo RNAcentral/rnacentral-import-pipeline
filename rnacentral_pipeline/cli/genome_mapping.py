@@ -16,7 +16,8 @@ limitations under the License.
 
 import click
 
-from rnacentral_pipeline.rnacentral import genome_mapping
+from rnacentral_pipeline.rnacentral.genome_mapping import urls
+from rnacentral_pipeline.rnacentral.genome_mapping import blat
 
 
 @click.group('genome-mapping')
@@ -33,7 +34,7 @@ def cli():
 @click.argument('hits', default='-', type=click.File('r'))
 @click.argument('output', default='-', type=click.File('w'))
 def select_hits(assembly_id, hits, output):
-    genome_mapping.blat.write_selected(assembly_id, hits, output)
+    blat.write_selected(assembly_id, hits, output)
 
 
 @cli.command('url-for')
@@ -42,7 +43,7 @@ def select_hits(assembly_id, hits, output):
 @click.argument('assembly_id')
 @click.argument('output', default='-', type=click.File('w'))
 def find_remote_url(species, assembly_id, output, host=None):
-    url = genome_mapping.urls.url_for(species, assembly_id, host=host)
+    url = urls.url_for(species, assembly_id, host=host)
     output.write(url)
 
 
@@ -50,4 +51,4 @@ def find_remote_url(species, assembly_id, output, host=None):
 @click.argument('filename', default='-', type=click.File('r'))
 @click.argument('output', default='-', type=click.File('w'))
 def find_remote_urls(filename, output):
-    genome_mapping.urls.write_urls_for(filename, output)
+    urls.write_urls_for(filename, output)
