@@ -13,9 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-
 import csv
-from ftplib import FTP
 import operator as op
 import itertools as it
 import logging
@@ -146,41 +144,3 @@ def write_selected(assembly_id, hits, output):
     selected = six.moves.map(op.methodcaller('writeable'), selected)
     selected = it.chain.from_iterable(selected)
     csv.writer(output).writerows(selected)
-
-
-def url_for(species, assembly_id, host='ftp.ensembl.org'):
-    ftp = FTP(host)
-    ftp.login()
-    directory = 'pub/current_fasta/{species}/dna'.format(species=species)
-    try:
-        ftp.cwd(directory)
-    except:
-        raise ValueError("Could find species files")
-
-    files = set(ftp.nlst())
-
-    try:
-        ftp.quit()
-    except Exception as err:
-        LOGGER.info("Failed to close Ensembl FTP connection")
-        LOGGER.exception(err)
-
-    upper_species = species[0].upper() + species[1:]
-    base = '{species}.{assembly}.dna.{type}.fa.gz'.format(
-        species=upper_species,
-        assembly=assembly_id,
-        type='{type}'
-    )
-    primary = base.format(type='primary_assembly')
-    toplevel = base.format(type='toplevel')
-
-    base_result = 'ftp://{host}/{directory}/{file}'.format(
-        directory=directory, 
-        host=host,
-        file='{file}'
-    )
-    if primary in files:
-        return base_result.format(file=primary)
-    elif toplevel in files:
-        return base_result.format(file=toplevel)
-    raise ValueError("Could not find any top level files")
