@@ -135,9 +135,9 @@ end $$;
 update rnc_rna_precomputed pre
 set
   has_coordinates = true
-from rnc_sequence_regions regions
+from load_rnc_sequence_regions load
 where
-  regions.urs_taxid = pre.id
+  load.urs_taxid = pre.id
 ;
 
 drop table load_rnc_sequence_regions;
