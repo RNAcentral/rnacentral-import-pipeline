@@ -131,4 +131,13 @@ begin
 	assert no_exons = 0, 'Some regions ' || no_exons || ' are missing exons';
 end $$;
 
+-- Mark all regions as having a coordinate in rnc_rna_precomputed for later
+update rnc_rna_precomputed pre
+set
+  has_coordinates = true
+from rnc_sequence_regions regions
+where
+  regions.urs_taxid = pre.id
+;
+
 drop table load_rnc_sequence_regions;
