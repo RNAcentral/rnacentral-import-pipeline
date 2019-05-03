@@ -539,7 +539,7 @@ process download_genome {
   set val(species), val(assembly), val(taxid), val(division) from genomes_to_fetch
 
   output:
-  set val(species), file('parts/*.fasta'), file('11.ooc') into genomes
+  set val(species), file("${species}.2bit"), file('11.ooc') into genomes
 
   """
   set -o pipefail
@@ -548,7 +548,8 @@ process download_genome {
   xargs -I {} fetch generic '{}' ${species}.fasta.gz 
 
   gzip -d ${species}.fasta.gz
-  seqkit split --by-id --out-dir parts ${species}.fasta
+
+  faToTwoBit -noMask ${species}.fasta ${species}.2bit
 
   blat \
     -makeOoc=11.ooc \
@@ -561,11 +562,10 @@ process download_genome {
 
 genomes
   .join(split_mappable_sequences)
-  .flatMap { species, chrs, ooc_file, chunks ->
-    [chrs, chunks].combinations().inject([]) { acc, it -> acc << [species, ooc_file] + it }
+  .flatMap { species, genome, ooc_file, chunks ->
+    [[genome], chunks].combinations().inject([]) { acc, it -> acc << [species, ooc_file] + it }
   }
-  .filter { s, o, c, t -> !c.empty() }
-  .filter { s, o, c, t -> !params.genome_mapping.chromosomes_excluded_from_mapping.contains(c.getBaseName()) }
+  .filter { s, o, g, t -> !g.empty() && !t.empty() }
   .set { targets }
 
 process blat {
@@ -573,7 +573,7 @@ process blat {
   errorStrategy 'finish'
 
   input:
-  set val(species), file(ooc), file(chromosome), file(chunk) from targets
+  set val(species), file(ooc), file(genome), file(chunk) from targets
 
   output:
   set val(species), file('output.psl') into blat_results
@@ -587,7 +587,7 @@ process blat {
     -repMatch=${params.genome_mapping.blat.options.rep_match} \
     -minScore=${params.genome_mapping.blat.options.min_score} \
     -minIdentity=${params.genome_mapping.blat.options.min_identity} \
-    $chromosome $chunk output.psl
+    $genome $chunk output.psl
   """
 }
 
