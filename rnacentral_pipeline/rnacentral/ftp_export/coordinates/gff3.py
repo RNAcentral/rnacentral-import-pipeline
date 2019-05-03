@@ -26,7 +26,6 @@ def regions_as_features(regions):
     """
 
     for raw_region in regions:
-        print(raw_region)
         region = raw_region.as_one_based()
         attributes = OrderedDict([
             ('Name', [region.rna_id]),
