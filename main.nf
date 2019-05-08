@@ -539,33 +539,37 @@ process download_genome {
   set val(species), val(assembly), val(taxid), val(division) from genomes_to_fetch
 
   output:
-  set val(species), file("${species}.2bit"), file('11.ooc') into genomes
+  set val(species), file('parts/*.{2bit,ooc}') into genomes
 
   """
   set -o pipefail
 
   rnac genome-mapping url-for --host=$division $species $assembly - |\
-  xargs -I {} fetch generic '{}' ${species}.fasta.gz 
+    xargs -I {} fetch generic '{}' ${species}.fasta.gz 
 
   gzip -d ${species}.fasta.gz
+  split-sequences ${species}.fasta ${params.genome_mapping.download_genome.chunk_size} parts
+  find parts -name '*.fasta' |\
+    xargs -I {} faToTwoBit -noMask {}.fasta {}.2bit
 
-  faToTwoBit -noMask ${species}.fasta ${species}.2bit
-
-  blat \
-    -makeOoc=11.ooc \
-    -stepSize=${params.genome_mapping.blat.options.step_size} \
-    -repMatch=${params.genome_mapping.blat.options.rep_match} \
-    -minScore=${params.genome_mapping.blat.options.min_score} \
-    ${species}.fasta /dev/null /dev/null
+  find parts -name '*.fasta' |\
+  xargs -I {} \
+    blat \
+      -makeOoc={}.ooc \
+      -stepSize=${params.genome_mapping.blat.options.step_size} \
+      -repMatch=${params.genome_mapping.blat.options.rep_match} \
+      -minScore=${params.genome_mapping.blat.options.min_score} \
+      {} /dev/null /dev/null
   """
 }
 
 genomes
   .join(split_mappable_sequences)
-  .flatMap { species, genome, ooc_file, chunks ->
-    [[genome], chunks].combinations().inject([]) { acc, it -> acc << [species, ooc_file] + it }
+  .flatMap { species, genome_chunks, chunks ->
+    [genome_chunks.collate(2), chunks]
+      .combinations()
+      .inject([]) { acc, it -> acc << [species] + it.flatten() }
   }
-  .filter { s, o, g, t -> !g.empty() && !t.empty() }
   .set { targets }
 
 process blat {
@@ -573,7 +577,7 @@ process blat {
   errorStrategy 'finish'
 
   input:
-  set val(species), file(ooc), file(genome), file(chunk) from targets
+  set val(species), file(genome), file(ooc), file(chunk) from targets
 
   output:
   set val(species), file('output.psl') into blat_results
