@@ -550,7 +550,7 @@ process download_genome {
   gzip -d ${species}.fasta.gz
   split-sequences ${species}.fasta ${params.genome_mapping.download_genome.chunk_size} parts
   find parts -name '*.fasta' |\
-    xargs -I {} faToTwoBit -noMask {}.fasta {}.2bit
+    xargs -I {} faToTwoBit -noMask {} {}.2bit
 
   find parts -name '*.fasta' |\
   xargs -I {} \
