@@ -235,12 +235,12 @@ raw_output
   )
   .filter { f -> !f.isEmpty() }
   .map { f ->
-    name = f.getBaseName()
-    ctl = file("files/import-data/load/${name.replace('_', '-')}.ctl")
+    def name = f.getBaseName()
+    def ctl = file("files/import-data/load/${name.replace('_', '-')}.ctl")
     [[name, ctl], f]
   }
   .filter {
-    status = it[0][1].exists()
+    def status = it[0][1].exists()
     if (!status) {
       log.info "Skipping data ${it[0][1].getBaseName()}"
     }
