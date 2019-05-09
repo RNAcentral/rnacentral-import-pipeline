@@ -220,8 +220,8 @@ class Exon(object):
 
 @attr.s(frozen=True, hash=True, slots=True)
 class SequenceRegion(object):
-    assembly_id = attr.ib(validator=is_a(six.text_type))
-    chromosome = attr.ib(validator=is_a(six.text_type))
+    assembly_id = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
+    chromosome = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
     strand = attr.ib(validator=is_a(Strand), converter=Strand.build)
     exons = attr.ib(
         validator=is_a(tuple), 
