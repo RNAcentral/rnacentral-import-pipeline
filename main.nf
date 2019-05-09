@@ -25,19 +25,23 @@ data_to_fetch_and_process = []
 // Here we generate the data that will go into the channels. This is a bit
 // cleaner to work with over constantly modifying the channels in the loop.
 for (entry in params.import_data.databases) {
-  def db_name = entry.key
-  def database = params.databases[db_name]
-
-  if (!entry.value || !params.databases[db_name]) {
+  if (!entry.value) {
     continue
   }
 
-  if (db_name == "custom") {
+  if (entry.key == "custom") {
     processed_data.addAll(files("${entry.value}/**.csv"))
     continue
   }
 
+  def db_name = entry.key
+  if (!params.databases[db_name]) {
+    error "Database ${db_name} is not configured"
+  }
+
+  def database = params.databases[db_name]
   def source = DataSource.build(db_name, database)
+
   if (DataSource.is_parallel_task(source)) {
     data_to_fetch.addAll(source.inputs)
     data_to_process << [source.name, source]
