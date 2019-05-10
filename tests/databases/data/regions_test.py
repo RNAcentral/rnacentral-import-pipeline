@@ -13,6 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import six.moves.cPickle as pickle
+
 import pytest
 
 from rnacentral_pipeline.databases.data.regions import *
@@ -46,12 +48,12 @@ def test_fails_with_bad_strands(raw):
 @pytest.mark.parametrize('name,expected', [
     ('0-start, half-open', 
      CoordinateSystem(
-         basis=CoordianteStart.zero, 
+         basis=CoordinateStart.zero, 
          close_status=CloseStatus.open)
      ),
     ('1-start, fully-closed', 
      CoordinateSystem(
-         basis=CoordianteStart.one,
+         basis=CoordinateStart.one,
          close_status=CloseStatus.closed)
      ),
 ])
@@ -234,3 +236,40 @@ def test_can_generate_correct_writeable(accession, strand, coordinate_system, ex
     )
     upi = accession.startswith('U')
     assert list(region.writeable(accession, is_upi=upi)) == expected
+
+
+@pytest.mark.parametrize('data', [
+    (Strand.reverse),
+    (Strand.unknown),
+    (Strand.forward),
+    (CoordinateStart.zero),
+    (CoordinateStart.one),
+    (CloseStatus.closed),
+    (CloseStatus.open),
+])
+def test_can_serialize_enums_to_and_from_pickle(data):
+    assert pickle.loads(pickle.dumps(data)) is data
+
+
+@pytest.mark.parametrize('region', [
+    (SequenceRegion(
+        assembly_id='GRCh38',
+        chromosome='1',
+        strand=Strand.unknown,
+        exons=[Exon(start=100000, stop=2000000), Exon(start=-1, stop=10000)],
+        coordinate_system=CoordinateSystem.from_name('0-start, half-open')
+    )),
+    (SequenceRegion(
+        assembly_id='GRCh38',
+        chromosome='MT',
+        strand=Strand.forward,
+        exons=[Exon(start=10, stop=200), Exon(start=-1, stop=10000)],
+        coordinate_system=CoordinateSystem.from_name('1-start, fully-closed')
+    )),
+])
+def test_can_serialize_regions_to_and_from_pickle(region):
+    data = attr.asdict(region)
+    loaded = pickle.loads(pickle.dumps(data)) 
+    assert loaded == data
+    assert SequenceRegion(**loaded) == region
+    assert pickle.loads(pickle.dumps(region)) == region

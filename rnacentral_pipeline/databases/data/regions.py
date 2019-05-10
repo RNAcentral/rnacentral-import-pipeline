@@ -74,7 +74,7 @@ class Strand(enum.Enum):
 
 
 # @enum.unique
-class CoordianteStart(enum.Enum):
+class CoordinateStart(enum.Enum):
     zero = 0
     one = 1
 
@@ -124,8 +124,18 @@ class CoordinateSystem(object):
     http://genome.ucsc.edu/blog/the-ucsc-genome-browser-coordinate-counting-systems/
     """
 
-    basis = attr.ib(validator=is_a(CoordianteStart))
+    basis = attr.ib(validator=is_a(CoordinateStart))
     close_status = attr.ib(validator=is_a(CloseStatus))
+
+    @classmethod
+    def build(cls, value):
+        if isinstance(value, six.text_type):
+            return cls.from_name(value)
+        if isinstance(value, dict):
+            return cls(**value)
+        if isinstance(value, cls):
+            return value
+        raise ValueError("Cannot build CoordinateSystem from %s" % str(value))
 
     @classmethod
     def from_name(cls, name):
@@ -143,7 +153,7 @@ class CoordinateSystem(object):
             raise UnknownCoordinateSystem(name)
 
         return cls(
-            basis=CoordianteStart.from_name(basis_name),
+            basis=CoordinateStart.from_name(basis_name),
             close_status=CloseStatus.from_name(close_name),
         )
 
@@ -178,9 +188,9 @@ class CoordinateSystem(object):
 
     def as_zero_based(self, location):
         start = location.start
-        if self.basis is CoordianteStart.zero:
+        if self.basis is CoordinateStart.zero:
             pass
-        elif self.basis is CoordianteStart.one:
+        elif self.basis is CoordinateStart.one:
             start = start - 1
         else:
             raise ValueError("Unknown type of start: %s" % self.basis)
@@ -189,9 +199,9 @@ class CoordinateSystem(object):
 
     def as_one_based(self, location):
         start = location.start
-        if self.basis is CoordianteStart.zero:
+        if self.basis is CoordinateStart.zero:
             start = start + 1
-        elif self.basis is CoordianteStart.one:
+        elif self.basis is CoordinateStart.one:
             pass
         else:
             raise ValueError("Unknown type of start: %s" % self.basis)
@@ -218,16 +228,26 @@ class Exon(object):
                              (value, self.start))
 
 
+def as_sorted_exons(raw):
+    exons = []
+    for entry in raw:
+        if isinstance(entry, dict):
+           exons.append(Exon(**entry))
+        else:
+            exons.append(entry)
+    return tuple(sorted(exons, key=op.attrgetter('start')))
+
+
 @attr.s(frozen=True, hash=True, slots=True)
 class SequenceRegion(object):
     assembly_id = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
     chromosome = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
     strand = attr.ib(validator=is_a(Strand), converter=Strand.build)
-    exons = attr.ib(
-        validator=is_a(tuple), 
-        converter=lambda es: tuple(sorted(es, key=op.attrgetter('start'))),
+    exons = attr.ib(validator=is_a(tuple), converter=as_sorted_exons)
+    coordinate_system = attr.ib(
+        validator=is_a(CoordinateSystem),
+        converter=CoordinateSystem.build,
     )
-    coordinate_system = attr.ib(validator=is_a(CoordinateSystem))
 
     @property
     def start(self):
