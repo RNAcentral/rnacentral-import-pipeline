@@ -29,12 +29,49 @@ def cli():
     pass
 
 
-@cli.command('select-hits')
+@cli.group('blat')
+def hits():
+    """
+    A series of commands for working with blat hits.
+    """
+    pass
+
+
+@hits.command('as-json')
 @click.argument('assembly_id')
 @click.argument('hits', default='-', type=click.File('r'))
 @click.argument('output', default='-', type=click.File('w'))
-def select_hits(assembly_id, hits, output):
-    blat.write_selected(assembly_id, hits, output)
+def hits_json(assembly_id, hits, output):
+    """
+    Convert the PSL file into a JSON-line file (one object per line). This is a
+    lossy operation but keeps everything needed for selecting later.
+    """
+    blat.as_json(assembly_id, hits, output)
+
+
+@cli.command('as-importable')
+@click.argument('hits', default='-', type=click.File('r'))
+@click.argument('output', default='-', type=click.File('w'))
+def as_importable(raw, output):
+    """
+    Convert a json-line file into a CSV that can be used for import by pgloader.
+    This is lossy as it only keeps the things needed for the database.
+    """
+    blat.as_importable(raw, output)
+
+
+@hits.command('select')
+@click.option('--sort', default=False)
+@click.argument('hits', default='-', type=click.File('r'))
+@click.argument('output', default='-', type=click.File('w'))
+def select_hits(hits, output, sort=False):
+    """
+    Parse a JSON-line file and select the best hits in the file. The best hits
+    are written to the output file. This assumes the file is sorted by
+    urs_taxid unless --sort is given in which case the data is sorted in memory.
+    That may be very expensive.
+    """
+    blat.select_json(hits, output, sort=sort)
 
 
 @cli.command('url-for')
@@ -43,6 +80,10 @@ def select_hits(assembly_id, hits, output):
 @click.argument('assembly_id')
 @click.argument('output', default='-', type=click.File('w'))
 def find_remote_url(species, assembly_id, output, host=None):
+    """
+    Determine the remote URL to fetch a the genome for a given species/assembly.
+    The url is written to the output file and may include '*'.
+    """
     url = urls.url_for(species, assembly_id, host=host)
     output.write(url)
 
@@ -51,4 +92,9 @@ def find_remote_url(species, assembly_id, output, host=None):
 @click.argument('filename', default='-', type=click.File('r'))
 @click.argument('output', default='-', type=click.File('w'))
 def find_remote_urls(filename, output):
+    """
+    Determine the remote URL to fetch a the genomes for all entries in a file,
+    where the file is a csv of species,assembly. The urls is written to the
+    output file and may include '*'.
+    """
     urls.write_urls_for(filename, output)

@@ -511,7 +511,7 @@ process species_to_map {
 raw_genomes
   .splitCsv()
   .filter { s, a, t, d -> !params.genome_mapping.species_excluded_from_mapping.contains(s) }
-  .into { assemblies; genomes_to_fetch; assembly_tracking }
+  .into { assemblies; genomes_to_fetch }
 
 assemblies
   .combine(Channel.fromPath('files/genome-mapping/find-unmapped.sql'))
@@ -543,13 +543,13 @@ process download_genome {
   set val(species), val(assembly), val(taxid), val(division) from genomes_to_fetch
 
   output:
-  set val(species), file('parts/*.{2bit,ooc}') into genomes
+  set val(species), val(assembly), file('parts/*.{2bit,ooc}') into genomes
 
   """
   set -o pipefail
 
   rnac genome-mapping url-for --host=$division $species $assembly - |\
-    xargs -I {} fetch generic '{}' ${species}.fasta.gz 
+    xargs -I {} fetch generic '{}' ${species}.fasta.gz
 
   gzip -d ${species}.fasta.gz
   split-sequences ${species}.fasta ${params.genome_mapping.download_genome.chunk_size} parts
@@ -569,10 +569,10 @@ process download_genome {
 
 genomes
   .join(split_mappable_sequences)
-  .flatMap { species, genome_chunks, chunks ->
+  .flatMap { species, assembly, genome_chunks, chunks ->
     [genome_chunks.collate(2), chunks]
       .combinations()
-      .inject([]) { acc, it -> acc << [species] + it.flatten() }
+      .inject([]) { acc, it -> acc << [species, assembly] + it.flatten() }
   }
   .set { targets }
 
@@ -581,12 +581,14 @@ process blat {
   errorStrategy 'finish'
 
   input:
-  set val(species), file(genome), file(ooc), file(chunk) from targets
+  set val(species), val(assembly), file(genome), file(ooc), file(chunk) from targets
 
   output:
-  set val(species), file('output.psl') into blat_results
+  set val(species), file('selected.json') into blat_results
 
   """
+  set -o pipefail
+
   blat \
     -ooc=$ooc \
     -noHead \
@@ -596,13 +598,15 @@ process blat {
     -minScore=${params.genome_mapping.blat.options.min_score} \
     -minIdentity=${params.genome_mapping.blat.options.min_identity} \
     $genome $chunk output.psl
+
+  sort -k 10 output.psl |\
+    rnac genome-mapping blat as-json $assembly - - |\
+    rnac genome-mapping blat select - selected.json
   """
 }
 
  blat_results
   .groupTuple()
-  .join(assembly_tracking)
-  .map { species, psl, assembly_id, taxid, division -> [psl, species, assembly_id] }
   .set { species_results }
 
 process select_mapped_locations {
@@ -610,24 +614,30 @@ process select_mapped_locations {
   memory { params.genome_mapping.select_mapped.directives.memory }
 
   input:
-  set file('output*.psl'), val(species), val(assembly_id) from species_results
+  set val(species), file('selected*.json') from species_results
 
   output:
-  file 'locations.csv' into selected_locations
+  file('locations.csv') into selected_locations
 
   """
   set -o pipefail
 
-  sort -k 10 output*.psl > sorted.psl
-  rnac genome-mapping select-hits $assembly_id sorted.psl locations.csv
+  find . -name 'selected*.json' |\
+    xargs cat |\
+    rnac genome-mapping blat select --sort - - |\
+    rnac genome-mapping blat as-importable - locations.csv
   """
 }
+
+selected_locations
+  .collect()
+  .set { blat_to_import }
 
 process load_genome_mapping {
   maxForks 1
 
   input:
-  file('raw*.csv') from selected_locations.collect()
+  file('raw*.csv') from blat_to_import
   file(ctl) from Channel.fromPath('files/genome-mapping/load.ctl')
 
   output:
