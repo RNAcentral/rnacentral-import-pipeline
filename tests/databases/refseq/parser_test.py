@@ -322,3 +322,9 @@ def test_can_produce_reasonable_names_for_sequences(filename, description):
         assert len(data) == 1
 
     assert data[0].description == description
+
+
+def test_can_handle_weird_precursors():
+    with open('data/refseq/weird-mirna.gbff', 'r') as raw:
+        data = list(parser.parse(raw))
+        assert len(data) == 2

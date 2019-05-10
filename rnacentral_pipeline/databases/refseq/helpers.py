@@ -146,7 +146,10 @@ def generate_related(entries):
     for first in entries:
         related = first.related_sequences
         for second in entries:
-            if first == second:
+            # We have to test the object and accession in the case that there
+            # are duplicate LOCUS entries and one of them is already processed
+            # and has a related mature product. 
+            if first == second or first.accession == second.accession:
                 continue
 
             relationship = 'isoform'
@@ -154,7 +157,8 @@ def generate_related(entries):
                 if second.rna_type == 'miRNA':
                     relationship = 'mature_product'
                 else:
-                    raise ValueError("Unknown type of relationship")
+                    msg = "Unknown type of relationship between %s\t%s"
+                    raise ValueError(msg % (first, second))
 
             elif first.rna_type == 'miRNA':
                 if second.rna_type == 'precursor_RNA':
@@ -162,7 +166,8 @@ def generate_related(entries):
                 elif second.rna_type == 'miRNA':
                     continue
                 else:
-                    raise ValueError("Unknown tyoe of relationship")
+                    msg = "Unknown type of relationship between %s\t%s"
+                    raise ValueError(msg % (first, second))
 
             related.append(dat.RelatedSequence(
                 sequence_id=second.accession,

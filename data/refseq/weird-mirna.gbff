@@ -1,0 +1,273 @@
+LOCUS       NR_031055                111 bp    RNA     linear   MAM 29-MAR-2019
+DEFINITION  Bos taurus microRNA mir-448 (MIR448), microRNA.
+ACCESSION   NR_031055
+VERSION     NR_031055.1
+KEYWORDS    RefSeq.
+SOURCE      Bos taurus (cattle)
+  ORGANISM  Bos taurus
+            Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi;
+            Mammalia; Eutheria; Laurasiatheria; Cetartiodactyla; Ruminantia;
+            Pecora; Bovidae; Bovinae; Bos.
+REFERENCE   1  (bases 1 to 111)
+  AUTHORS   Strozzi F, Mazza R, Malinverni R and Williams JL.
+  TITLE     Annotation of 390 bovine miRNA genes by sequence similarity with
+            other species
+  JOURNAL   Anim. Genet. 40 (1), 125 (2009)
+   PUBMED   18945293
+REFERENCE   2  (bases 1 to 111)
+  AUTHORS   Artzi S, Kiezun A and Shomron N.
+  TITLE     miRNAminer: a tool for homologous microRNA gene search
+  JOURNAL   BMC Bioinformatics 9, 39 (2008)
+   PUBMED   18215311
+  REMARK    Publication Status: Online-Only
+REFERENCE   3  (bases 1 to 111)
+  AUTHORS   Griffiths-Jones S, Grocock RJ, van Dongen S, Bateman A and Enright
+            AJ.
+  TITLE     miRBase: microRNA sequences, targets and gene nomenclature
+  JOURNAL   Nucleic Acids Res. 34 (Database issue), D140-D144 (2006)
+   PUBMED   16381832
+COMMENT     PROVISIONAL REFSEQ: This record is based on preliminary annotation
+            provided by NCBI staff in collaboration with miRBase. The reference
+            sequence was derived from NKLS02000030.1.
+            
+            Summary: microRNAs (miRNAs) are short (20-24 nt) non-coding RNAs
+            that are involved in post-transcriptional regulation of gene
+            expression in multicellular organisms by affecting both the
+            stability and translation of mRNAs. miRNAs are transcribed by RNA
+            polymerase II as part of capped and polyadenylated primary
+            transcripts (pri-miRNAs) that can be either protein-coding or
+            non-coding. The primary transcript is cleaved by the Drosha
+            ribonuclease III enzyme to produce an approximately 70-nt stem-loop
+            precursor miRNA (pre-miRNA), which is further cleaved by the
+            cytoplasmic Dicer ribonuclease to generate the mature miRNA and
+            antisense miRNA star (miRNA*) products. The mature miRNA is
+            incorporated into a RNA-induced silencing complex (RISC), which
+            recognizes target mRNAs through imperfect base pairing with the
+            miRNA and most commonly results in translational inhibition or
+            destabilization of the target mRNA. The RefSeq represents the
+            predicted microRNA stem-loop. [provided by RefSeq, Sep 2009].
+            
+            Sequence Note: This record represents a predicted microRNA
+            stem-loop as defined by miRBase. Some sequence at the 5' and 3'
+            ends may not be included in the intermediate precursor miRNA
+            produced by Drosha cleavage.
+PRIMARY     REFSEQ_SPAN         PRIMARY_IDENTIFIER PRIMARY_SPAN        COMP
+            1-111               NKLS02000030.1     63159355-63159465
+FEATURES             Location/Qualifiers
+     source          1..111
+                     /organism="Bos taurus"
+                     /mol_type="transcribed RNA"
+                     /db_xref="taxon:9913"
+                     /chromosome="X"
+                     /map="X"
+                     /breed="Hereford"
+     gene            1..111
+                     /gene="MIR448"
+                     /gene_synonym="bta-mir-448"
+                     /note="microRNA mir-448"
+                     /db_xref="GeneID:100313049"
+                     /db_xref="miRBase:MI0009833"
+     precursor_RNA   1..111
+                     /gene="MIR448"
+                     /gene_synonym="bta-mir-448"
+                     /product="microRNA mir-448"
+                     /db_xref="GeneID:100313049"
+                     /db_xref="miRBase:MI0009833"
+     exon            1..111
+                     /gene="MIR448"
+                     /gene_synonym="bta-mir-448"
+                     /inference="alignment:Splign:2.1.0"
+     ncRNA           72..93
+                     /ncRNA_class="miRNA"
+                     /gene="MIR448"
+                     /gene_synonym="bta-mir-448"
+                     /product="bta-miR-448"
+                     /db_xref="miRBase:MIMAT0009319"
+                     /db_xref="GeneID:100313049"
+                     /db_xref="miRBase:MI0009833"
+ORIGIN      
+        1 gcggggaggt tgaacatcct gcatagtgct gccaggaaat ccctatttta tactaagggg
+       61 gggttggctg gttgcatatg taggatgtcc catctcccca cccacatcat c
+//
+LOCUS       NR_031055                111 bp    RNA     linear   MAM 29-MAR-2019
+DEFINITION  Bos taurus microRNA mir-448 (MIR448), microRNA.
+ACCESSION   NR_031055
+VERSION     NR_031055.1
+KEYWORDS    RefSeq.
+SOURCE      Bos taurus (cattle)
+  ORGANISM  Bos taurus
+            Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi;
+            Mammalia; Eutheria; Laurasiatheria; Cetartiodactyla; Ruminantia;
+            Pecora; Bovidae; Bovinae; Bos.
+REFERENCE   1  (bases 1 to 111)
+  AUTHORS   Strozzi F, Mazza R, Malinverni R and Williams JL.
+  TITLE     Annotation of 390 bovine miRNA genes by sequence similarity with
+            other species
+  JOURNAL   Anim. Genet. 40 (1), 125 (2009)
+   PUBMED   18945293
+REFERENCE   2  (bases 1 to 111)
+  AUTHORS   Artzi S, Kiezun A and Shomron N.
+  TITLE     miRNAminer: a tool for homologous microRNA gene search
+  JOURNAL   BMC Bioinformatics 9, 39 (2008)
+   PUBMED   18215311
+  REMARK    Publication Status: Online-Only
+REFERENCE   3  (bases 1 to 111)
+  AUTHORS   Griffiths-Jones S, Grocock RJ, van Dongen S, Bateman A and Enright
+            AJ.
+  TITLE     miRBase: microRNA sequences, targets and gene nomenclature
+  JOURNAL   Nucleic Acids Res. 34 (Database issue), D140-D144 (2006)
+   PUBMED   16381832
+COMMENT     PROVISIONAL REFSEQ: This record is based on preliminary annotation
+            provided by NCBI staff in collaboration with miRBase. The reference
+            sequence was derived from NKLS02000030.1.
+            
+            Summary: microRNAs (miRNAs) are short (20-24 nt) non-coding RNAs
+            that are involved in post-transcriptional regulation of gene
+            expression in multicellular organisms by affecting both the
+            stability and translation of mRNAs. miRNAs are transcribed by RNA
+            polymerase II as part of capped and polyadenylated primary
+            transcripts (pri-miRNAs) that can be either protein-coding or
+            non-coding. The primary transcript is cleaved by the Drosha
+            ribonuclease III enzyme to produce an approximately 70-nt stem-loop
+            precursor miRNA (pre-miRNA), which is further cleaved by the
+            cytoplasmic Dicer ribonuclease to generate the mature miRNA and
+            antisense miRNA star (miRNA*) products. The mature miRNA is
+            incorporated into a RNA-induced silencing complex (RISC), which
+            recognizes target mRNAs through imperfect base pairing with the
+            miRNA and most commonly results in translational inhibition or
+            destabilization of the target mRNA. The RefSeq represents the
+            predicted microRNA stem-loop. [provided by RefSeq, Sep 2009].
+            
+            Sequence Note: This record represents a predicted microRNA
+            stem-loop as defined by miRBase. Some sequence at the 5' and 3'
+            ends may not be included in the intermediate precursor miRNA
+            produced by Drosha cleavage.
+PRIMARY     REFSEQ_SPAN         PRIMARY_IDENTIFIER PRIMARY_SPAN        COMP
+            1-111               NKLS02000030.1     63159355-63159465
+FEATURES             Location/Qualifiers
+     source          1..111
+                     /organism="Bos taurus"
+                     /mol_type="transcribed RNA"
+                     /db_xref="taxon:9913"
+                     /chromosome="X"
+                     /map="X"
+                     /breed="Hereford"
+     gene            1..111
+                     /gene="MIR448"
+                     /gene_synonym="bta-mir-448"
+                     /note="microRNA mir-448"
+                     /db_xref="GeneID:100313049"
+                     /db_xref="miRBase:MI0009833"
+     precursor_RNA   1..111
+                     /gene="MIR448"
+                     /gene_synonym="bta-mir-448"
+                     /product="microRNA mir-448"
+                     /db_xref="GeneID:100313049"
+                     /db_xref="miRBase:MI0009833"
+     exon            1..111
+                     /gene="MIR448"
+                     /gene_synonym="bta-mir-448"
+                     /inference="alignment:Splign:2.1.0"
+     ncRNA           72..93
+                     /ncRNA_class="miRNA"
+                     /gene="MIR448"
+                     /gene_synonym="bta-mir-448"
+                     /product="bta-miR-448"
+                     /db_xref="miRBase:MIMAT0009319"
+                     /db_xref="GeneID:100313049"
+                     /db_xref="miRBase:MI0009833"
+ORIGIN      
+        1 gcggggaggt tgaacatcct gcatagtgct gccaggaaat ccctatttta tactaagggg
+       61 gggttggctg gttgcatatg taggatgtcc catctcccca cccacatcat c
+//
+LOCUS       NR_031055                111 bp    RNA     linear   MAM 29-MAR-2019
+DEFINITION  Bos taurus microRNA mir-448 (MIR448), microRNA.
+ACCESSION   NR_031055
+VERSION     NR_031055.1
+KEYWORDS    RefSeq.
+SOURCE      Bos taurus (cattle)
+  ORGANISM  Bos taurus
+            Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi;
+            Mammalia; Eutheria; Laurasiatheria; Cetartiodactyla; Ruminantia;
+            Pecora; Bovidae; Bovinae; Bos.
+REFERENCE   1  (bases 1 to 111)
+  AUTHORS   Strozzi F, Mazza R, Malinverni R and Williams JL.
+  TITLE     Annotation of 390 bovine miRNA genes by sequence similarity with
+            other species
+  JOURNAL   Anim. Genet. 40 (1), 125 (2009)
+   PUBMED   18945293
+REFERENCE   2  (bases 1 to 111)
+  AUTHORS   Artzi S, Kiezun A and Shomron N.
+  TITLE     miRNAminer: a tool for homologous microRNA gene search
+  JOURNAL   BMC Bioinformatics 9, 39 (2008)
+   PUBMED   18215311
+  REMARK    Publication Status: Online-Only
+REFERENCE   3  (bases 1 to 111)
+  AUTHORS   Griffiths-Jones S, Grocock RJ, van Dongen S, Bateman A and Enright
+            AJ.
+  TITLE     miRBase: microRNA sequences, targets and gene nomenclature
+  JOURNAL   Nucleic Acids Res. 34 (Database issue), D140-D144 (2006)
+   PUBMED   16381832
+COMMENT     PROVISIONAL REFSEQ: This record is based on preliminary annotation
+            provided by NCBI staff in collaboration with miRBase. The reference
+            sequence was derived from NKLS02000030.1.
+            
+            Summary: microRNAs (miRNAs) are short (20-24 nt) non-coding RNAs
+            that are involved in post-transcriptional regulation of gene
+            expression in multicellular organisms by affecting both the
+            stability and translation of mRNAs. miRNAs are transcribed by RNA
+            polymerase II as part of capped and polyadenylated primary
+            transcripts (pri-miRNAs) that can be either protein-coding or
+            non-coding. The primary transcript is cleaved by the Drosha
+            ribonuclease III enzyme to produce an approximately 70-nt stem-loop
+            precursor miRNA (pre-miRNA), which is further cleaved by the
+            cytoplasmic Dicer ribonuclease to generate the mature miRNA and
+            antisense miRNA star (miRNA*) products. The mature miRNA is
+            incorporated into a RNA-induced silencing complex (RISC), which
+            recognizes target mRNAs through imperfect base pairing with the
+            miRNA and most commonly results in translational inhibition or
+            destabilization of the target mRNA. The RefSeq represents the
+            predicted microRNA stem-loop. [provided by RefSeq, Sep 2009].
+            
+            Sequence Note: This record represents a predicted microRNA
+            stem-loop as defined by miRBase. Some sequence at the 5' and 3'
+            ends may not be included in the intermediate precursor miRNA
+            produced by Drosha cleavage.
+PRIMARY     REFSEQ_SPAN         PRIMARY_IDENTIFIER PRIMARY_SPAN        COMP
+            1-111               NKLS02000030.1     63159355-63159465
+FEATURES             Location/Qualifiers
+     source          1..111
+                     /organism="Bos taurus"
+                     /mol_type="transcribed RNA"
+                     /db_xref="taxon:9913"
+                     /chromosome="X"
+                     /map="X"
+                     /breed="Hereford"
+     gene            1..111
+                     /gene="MIR448"
+                     /gene_synonym="bta-mir-448"
+                     /note="microRNA mir-448"
+                     /db_xref="GeneID:100313049"
+                     /db_xref="miRBase:MI0009833"
+     precursor_RNA   1..111
+                     /gene="MIR448"
+                     /gene_synonym="bta-mir-448"
+                     /product="microRNA mir-448"
+                     /db_xref="GeneID:100313049"
+                     /db_xref="miRBase:MI0009833"
+     exon            1..111
+                     /gene="MIR448"
+                     /gene_synonym="bta-mir-448"
+                     /inference="alignment:Splign:2.1.0"
+     ncRNA           72..93
+                     /ncRNA_class="miRNA"
+                     /gene="MIR448"
+                     /gene_synonym="bta-mir-448"
+                     /product="bta-miR-448"
+                     /db_xref="miRBase:MIMAT0009319"
+                     /db_xref="GeneID:100313049"
+                     /db_xref="miRBase:MI0009833"
+ORIGIN      
+        1 gcggggaggt tgaacatcct gcatagtgct gccaggaaat ccctatttta tactaagggg
+       61 gggttggctg gttgcatatg taggatgtcc catctcccca cccacatcat c
+//
