@@ -14,6 +14,7 @@ limitations under the License.
 """
 
 import csv
+import json
 import operator as op
 import itertools as it
 import logging
@@ -23,6 +24,7 @@ import six
 import attr
 from attr.validators import instance_of as is_a
 
+from rnacentral_pipeline import utils
 from rnacentral_pipeline.databases.data.regions import Exon
 from rnacentral_pipeline.databases.data.regions import Strand
 from rnacentral_pipeline.databases.data.regions import SequenceRegion
@@ -129,12 +131,6 @@ def parse_psl(assembly_id, handle):
         yield BlatHit.build(assembly_id, result)
 
 
-def parse_json(handle):
-    for line in handle:
-        data = json.loads(line)
-        yield BlatHit(**data)
-
-
 def select_hits(hits):
     hits = six.moves.filter(select_possible, hits)
     hits = it.groupby(hits, op.attrgetter('upi'))
@@ -144,27 +140,21 @@ def select_hits(hits):
     return hits
 
 
-def write_json(hits, output):
-    for hit in hits:
-        output.write(json.dumps(hit))
-        output.write('\n')
-
-
-def write_importable(hits, output):
+def write_importable(handle, output):
+    hits = utils.unpickle_stream(handle)
     writeable = six.moves.map(op.methodcaller('writeable'), hits)
-    writeable = it.chain.from_iterable(hits)
+    writeable = it.chain.from_iterable(writeable)
     csv.writer(output).writerows(writeable)
 
 
-def as_json(assembly_id, hits, output):
+def as_pickle(assembly_id, hits, output):
     parsed = parse_psl(assembly_id, hits)
-    parsed = six.moves.map(attr.asdict, selected)
-    write_json(parsed, output)
+    utils.pickle_stream(parsed, output)
 
 
-def select_json(hits, output, sort=False):
-    parsed = parse_json(hits)
+def select_pickle(handle, output, sort=False):
+    hits = utils.unpickle_stream(handle)
     if sort:
-        parsed = sorted(parsed, key=op.itemgetter('upi'))
-    selected = select_hits(parsed)
-    write_json(selected, output)
+        hits = sorted(hits, key=op.attrgetter('upi'))
+    selected = select_hits(hits)
+    utils.pickle_stream(selected, output)

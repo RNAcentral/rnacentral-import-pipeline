@@ -37,33 +37,34 @@ def hits():
     pass
 
 
-@hits.command('as-json')
+@hits.command('serialize')
 @click.argument('assembly_id')
 @click.argument('hits', default='-', type=click.File('r'))
-@click.argument('output', default='-', type=click.File('w'))
+@click.argument('output', default='-', type=click.File('wb'))
 def hits_json(assembly_id, hits, output):
     """
-    Convert the PSL file into a JSON-line file (one object per line). This is a
-    lossy operation but keeps everything needed for selecting later.
+    Serialize the PSL file into something that python can later process. This is
+    a lossy operation but keeps everything needed for selecting later. This
+    exists so we can do mulitple select steps and still merge the results.
     """
-    blat.as_json(assembly_id, hits, output)
+    blat.as_pickle(assembly_id, hits, output)
 
 
-@cli.command('as-importable')
-@click.argument('hits', default='-', type=click.File('r'))
+@hits.command('as-importable')
+@click.argument('hits', default='-', type=click.File('rb'))
 @click.argument('output', default='-', type=click.File('w'))
-def as_importable(raw, output):
+def as_importable(hits, output):
     """
     Convert a json-line file into a CSV that can be used for import by pgloader.
     This is lossy as it only keeps the things needed for the database.
     """
-    blat.as_importable(raw, output)
+    blat.write_importable(hits, output)
 
 
 @hits.command('select')
-@click.option('--sort', default=False)
-@click.argument('hits', default='-', type=click.File('r'))
-@click.argument('output', default='-', type=click.File('w'))
+@click.option('--sort', is_flag=True, default=False)
+@click.argument('hits', default='-', type=click.File('rb'))
+@click.argument('output', default='-', type=click.File('wb'))
 def select_hits(hits, output, sort=False):
     """
     Parse a JSON-line file and select the best hits in the file. The best hits
@@ -71,7 +72,7 @@ def select_hits(hits, output, sort=False):
     urs_taxid unless --sort is given in which case the data is sorted in memory.
     That may be very expensive.
     """
-    blat.select_json(hits, output, sort=sort)
+    blat.select_pickle(hits, output, sort=sort)
 
 
 @cli.command('url-for')
