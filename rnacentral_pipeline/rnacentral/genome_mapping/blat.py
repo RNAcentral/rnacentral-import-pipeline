@@ -84,14 +84,14 @@ class BlatHit(object):
 
     @property
     def name(self):
-        return self.region.name(upi=self.upi)
+        return self.region.name(self.upi, is_upi=True)
 
     @property
     def match_fraction(self):
         return float(self.matches) / float(self.sequence_length)
 
     def writeable(self):
-        return self.writeable(self.upi)
+        return self.region.writeable(self.upi, is_upi=True)
 
 
 def select_possible(hit):
@@ -113,7 +113,7 @@ def select_best(hits):
     return hits
 
 
-def parse(assembly_id, handle):
+def parse_psl(assembly_id, handle):
     to_split = ['blockSizes', 'qStarts', 'tStarts']
     for row in csv.reader(handle, delimiter='\t'):
         result = dict(zip(FIELDS, row))
@@ -129,8 +129,13 @@ def parse(assembly_id, handle):
         yield BlatHit.build(assembly_id, result)
 
 
-def select_hits(assembly_id, handle):
-    hits = parse(assembly_id, handle)
+def parse_json(handle):
+    for line in handle:
+        data = json.loads(line)
+        yield BlatHit(**data)
+
+
+def select_hits(hits):
     hits = six.moves.filter(select_possible, hits)
     hits = it.groupby(hits, op.attrgetter('upi'))
     hits = six.moves.map(op.itemgetter(1), hits)
@@ -139,8 +144,27 @@ def select_hits(assembly_id, handle):
     return hits
 
 
-def write_selected(assembly_id, hits, output):
-    selected = select_hits(assembly_id, hits)
-    selected = six.moves.map(op.methodcaller('writeable'), selected)
-    selected = it.chain.from_iterable(selected)
-    csv.writer(output).writerows(selected)
+def write_json(hits, output):
+    for hit in hits:
+        output.write(json.dumps(hit))
+        output.write('\n')
+
+
+def write_importable(hits, output):
+    writeable = six.moves.map(op.methodcaller('writeable'), hits)
+    writeable = it.chain.from_iterable(hits)
+    csv.writer(output).writerows(writeable)
+
+
+def as_json(assembly_id, hits, output):
+    parsed = parse_psl(assembly_id, hits)
+    parsed = six.moves.map(attr.asdict, selected)
+    write_json(parsed, output)
+
+
+def select_json(hits, output, sort=False):
+    parsed = parse_json(hits)
+    if sort:
+        parsed = sorted(parsed, key=op.itemgetter('upi'))
+    selected = select_hits(parsed)
+    write_json(selected, output)
