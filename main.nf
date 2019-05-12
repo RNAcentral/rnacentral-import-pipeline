@@ -185,7 +185,7 @@ refs_database = Channel.create()
 all_processed_output
   .mix(all_fetched_and_processed_output)
   .choice(processed_output, terms, refs, refs_database) { f ->
-    names = ["terms.csv", "ref_ids.csv", params.metadata.europepmc.produces]
+    def names = ["terms.csv", "ref_ids.csv", params.metadata.europepmc.process.produces]
     return names.indexOf(f.getName()) + 1
   }
 
@@ -252,8 +252,6 @@ raw_output
 
 process merge_and_import {
   memory 4.GB
-
-  echo true
   tag { name }
 
   input:
@@ -288,7 +286,6 @@ post_loaded
   .set { post_scripts }
 
 process release {
-  echo true
   maxForks 1
 
   when:
@@ -468,7 +465,6 @@ qa_scan_results
 
 process import_qa_data {
   tag { "qa-$name" }
-  echo true
 
   input:
   set val(name), file('raw*.csv'), file(ctl) from hits_to_import
@@ -726,8 +722,6 @@ process precompute_range {
 }
 
 process load_precomputed_data {
-  echo true
-
   beforeScript 'slack db-work loading-precompute || true'
   afterScript 'slack db-done loading-precompute || true'
 
@@ -909,8 +903,6 @@ process generate_feedback_report {
 }
 
 process import_feedback {
-  echo true
-
   input:
   file('feedback*.tsv') from feedback.collect()
   file(ctl) from Channel.fromPath('files/precompute/feedback.ctl')
