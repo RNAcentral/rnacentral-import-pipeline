@@ -147,7 +147,6 @@ class Cache(object):
 @RateLimiter(max_calls=5, period=1)
 def summary(id_reference):
     LOGGER.info("Fetching remote summary for %s", id_reference)
-    print(id_reference.external_url())
     response = requests.get(id_reference.external_url())
     response.raise_for_status()
 
