@@ -85,7 +85,7 @@ def test_can_fetch_publication(raw_id):
 
 
 def test_complains_given_bad_pmid():
-    with pytest.raises(pub.UnknownReference):
+    with pytest.raises(Exception):
         pub.summary(IdReference.build(-1))
 
 
