@@ -22,109 +22,65 @@ from attr.validators import instance_of as is_a
 
 import six
 
+from rnacentral_pipeline.databases.data import regions
+
 from . import data as coord
-
-
-@attr.s(frozen=True)
-class BedBlock(object):
-    start = attr.ib(validator=is_a(int))
-    stop = attr.ib(validator=is_a(int))
-
-    @classmethod
-    def from_endpoint(cls, endpoint):
-        return cls(
-            start=endpoint.start,
-            stop=endpoint.stop,
-        )
-
-    @property
-    def size(self):
-        start = self.start - 1
-        size = (self.stop - start) or 1
-        assert size > 0
-        return size
 
 
 @attr.s(slots=True, frozen=True)
 class BedEntry(object):
-    chromosome = attr.ib(validator=is_a(str))
     rna_id = attr.ib(validator=is_a(str))
-    blocks = attr.ib(validator=is_a(list))
-    strand = attr.ib(validator=is_a(int))
     rna_type = attr.ib(validator=is_a(str))
     databases = attr.ib(validator=is_a(str))
+    region = attr.ib(validator=is_a(regions.SequenceRegion))
     score = attr.ib(default=0, validator=is_a(int))
     rgb = attr.ib(default=(63, 125, 151), validator=is_a(tuple))
 
     @classmethod
-    def from_region(cls, region):
-        result = cls(
-            chromosome=region.chromosome,
-            rna_id=region.rna_id,
-            blocks=[BedBlock.from_endpoint(e) for e in region.endpoints],
-            strand=region.strand,
-            rna_type=region.metadata['rna_type'],
-            databases=','.join(region.metadata['databases']),
+    def from_coordinate(cls, coordinate):
+        return cls(
+            rna_id=coordinate.rna_id,
+            rna_type=coordinate.metadata['rna_type'],
+            databases=','.join(coordinate.metadata['databases']),
+            region=coordinate.region.as_zero_based(),
         )
-        return result
-
-    @property
-    def start(self):
-        return self.blocks[0].start
-
-    @property
-    def stop(self):
-        return self.blocks[-1].stop
-
-    @property
-    def bed_strand(self):
-        if self.strand == 1:
-            return '+'
-        if self.strand == -1:
-            return '-'
-        raise ValueError('Unknown Strand')
 
     @property
     def bed_chromosome(self):
-        if self.chromosome in ['MT', 'chrMT']:
+        if self.region.chromosome in ['MT', 'chrMT']:
             return 'chrM'
-        return 'chr' + self.chromosome
+        return 'chr' + self.region.chromosome
 
     @property
     def bed_rgb(self):
         return ','.join(str(c) for c in self.rgb)
 
-    def block_sizes(self):
-        return [b.size for b in self.blocks]
+    def sizes(self):
+        return self.region.sizes()
 
-    def block_starts(self):
+    def starts(self):
         starts = []
-        for block in self.blocks[1:]:
-            start = block.start - self.start
+        end = self.region.exons[0].start
+        for exon in self.region.exons[1:]:
+            start = exon.start - end
             assert start > 0, "Invalid start for %s" % (self)
             starts.append(start)
         return [0] + starts
 
-    def bed_block_sizes(self):
-        return ','.join(str(s) for s in self.block_sizes())
-
-    def bed_block_starts(self):
-        return ','.join(str(s) for s in self.block_starts())
-
     def writeable(self):
         return [
             self.bed_chromosome,
-            self.start,
-            self.stop,
+            self.region.start,
+            self.region.stop,
             self.rna_id,
             self.score,
-            self.bed_strand,
-            self.start,
-            self.stop,
+            self.region.strand.display_string(),
+            self.region.start,
+            self.region.stop,
             self.bed_rgb,
-            len(self.blocks),
-            self.bed_block_sizes(),
-            self.bed_block_starts(),
+            len(self.region.exons),
+            ','.join(str(s) for s in self.sizes()),
+            ','.join(str(s) for s in self.starts()),
             '.',
             self.rna_type,
             self.databases,
@@ -137,7 +93,7 @@ def from_json(handle, out):
     """
 
     data = coord.from_file(handle)
-    data = six.moves.map(BedEntry.from_region, data)
+    data = six.moves.map(BedEntry.from_coordinate, data)
     data = six.moves.map(op.methodcaller('writeable'), data)
     writer = csv.writer(out, delimiter='\t', lineterminator='\n')
     writer.writerows(data)

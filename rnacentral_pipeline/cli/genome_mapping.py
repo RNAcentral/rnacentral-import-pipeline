@@ -16,7 +16,8 @@ limitations under the License.
 
 import click
 
-from rnacentral_pipeline.rnacentral import genome_mapping
+from rnacentral_pipeline.rnacentral.genome_mapping import urls
+from rnacentral_pipeline.rnacentral.genome_mapping import blat
 
 
 @click.group('genome-mapping')
@@ -28,9 +29,73 @@ def cli():
     pass
 
 
-@cli.command('select-hits')
+@cli.group('blat')
+def hits():
+    """
+    A series of commands for working with blat hits.
+    """
+    pass
+
+
+@hits.command('serialize')
 @click.argument('assembly_id')
 @click.argument('hits', default='-', type=click.File('r'))
+@click.argument('output', default='-', type=click.File('wb'))
+def hits_json(assembly_id, hits, output):
+    """
+    Serialize the PSL file into something that python can later process. This is
+    a lossy operation but keeps everything needed for selecting later. This
+    exists so we can do mulitple select steps and still merge the results.
+    """
+    blat.as_pickle(assembly_id, hits, output)
+
+
+@hits.command('as-importable')
+@click.argument('hits', default='-', type=click.File('rb'))
 @click.argument('output', default='-', type=click.File('w'))
-def select_hits(assembly_id, hits, output):
-    genome_mapping.write_selected(assembly_id, hits, output)
+def as_importable(hits, output):
+    """
+    Convert a json-line file into a CSV that can be used for import by pgloader.
+    This is lossy as it only keeps the things needed for the database.
+    """
+    blat.write_importable(hits, output)
+
+
+@hits.command('select')
+@click.option('--sort', is_flag=True, default=False)
+@click.argument('hits', default='-', type=click.File('rb'))
+@click.argument('output', default='-', type=click.File('wb'))
+def select_hits(hits, output, sort=False):
+    """
+    Parse a JSON-line file and select the best hits in the file. The best hits
+    are written to the output file. This assumes the file is sorted by
+    urs_taxid unless --sort is given in which case the data is sorted in memory.
+    That may be very expensive.
+    """
+    blat.select_pickle(hits, output, sort=sort)
+
+
+@cli.command('url-for')
+@click.option('--host', default='ensembl')
+@click.argument('species')
+@click.argument('assembly_id')
+@click.argument('output', default='-', type=click.File('w'))
+def find_remote_url(species, assembly_id, output, host=None):
+    """
+    Determine the remote URL to fetch a the genome for a given species/assembly.
+    The url is written to the output file and may include '*'.
+    """
+    url = urls.url_for(species, assembly_id, host=host)
+    output.write(url)
+
+
+@cli.command('urls-for')
+@click.argument('filename', default='-', type=click.File('r'))
+@click.argument('output', default='-', type=click.File('w'))
+def find_remote_urls(filename, output):
+    """
+    Determine the remote URL to fetch a the genomes for all entries in a file,
+    where the file is a csv of species,assembly. The urls is written to the
+    output file and may include '*'.
+    """
+    urls.write_urls_for(filename, output)

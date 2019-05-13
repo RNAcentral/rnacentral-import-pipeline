@@ -88,6 +88,7 @@ def test_can_parse_data(cress_2):
                 strand=1,
                 exons=[dat.Exon(start=3706, stop=5513)],
                 assembly_id='TAIR10',
+                coordinate_system=dat.CoordinateSystem.one_based(),
             )
         ],
         rna_type='rRNA',
@@ -159,6 +160,7 @@ def test_can_create_tair_entry(cress_2):
                 strand=1,
                 exons=[dat.Exon(start=3706, stop=5513)],
                 assembly_id='TAIR10',
+                coordinate_system=dat.CoordinateSystem.one_based(),
             )
         ],
         rna_type='rRNA',
@@ -210,6 +212,7 @@ def test_can_get_with_odd_rna_type(cress_2):
                 strand=1,
                 exons=[dat.Exon(start=84873, stop=85086)],
                 assembly_id='TAIR10',
+                coordinate_system=dat.CoordinateSystem.one_based(),
             )
         ],
         rna_type='lncRNA',
@@ -251,6 +254,7 @@ def test_can_parse_a_trna(cress_2):
                 strand=1,
                 exons=[dat.Exon(start=102065, stop=102138)],
                 assembly_id='TAIR10',
+                coordinate_system=dat.CoordinateSystem.one_based(),
             )
         ],
         rna_type='tRNA',
@@ -290,6 +294,7 @@ def test_can_parse_gene_with_minimal_metadata(cress_2):
                 strand=-1,
                 exons=[dat.Exon(start=122882, stop=123086)],
                 assembly_id='TAIR10',
+                coordinate_system=dat.CoordinateSystem.one_based(),
             )
         ],
         rna_type='lncRNA',
@@ -329,6 +334,7 @@ def test_can_parse_premirna(cress_2):
                 strand=-1,
                 exons=[dat.Exon(start=771337, stop=771562)],
                 assembly_id='TAIR10',
+                coordinate_system=dat.CoordinateSystem.one_based(),
             )
         ],
         rna_type='precursor_RNA',
@@ -371,6 +377,7 @@ def test_can_parse_rice_trna(oryza_9):
                 strand=1,
                 exons=[dat.Exon(start=747032, stop=747104)],
                 assembly_id='O.barthii_v1',
+                coordinate_system=dat.CoordinateSystem.one_based(),
             )
         ],
         rna_type='tRNA',
@@ -405,6 +412,7 @@ def test_can_parse_rice_snorna(oryza_9):
                 strand=-1,
                 exons=[dat.Exon(start=3344023, stop=3344148)],
                 assembly_id='O.barthii_v1',
+                coordinate_system=dat.CoordinateSystem.one_based(),
             )
         ],
         rna_type='snoRNA',
@@ -439,6 +447,7 @@ def test_can_parse_rice_pre_mirna(oryza_9):
                 strand=-1,
                 exons=[dat.Exon(start=3622031, stop=3622117)],
                 assembly_id='O.barthii_v1',
+                coordinate_system=dat.CoordinateSystem.one_based(),
             )
         ],
         rna_type='precursor_RNA',
@@ -473,6 +482,7 @@ def test_can_parse_rice_u6(oryza_9):
                 strand=1,
                 exons=[dat.Exon(start=6092721, stop=6092827)],
                 assembly_id='O.barthii_v1',
+                coordinate_system=dat.CoordinateSystem.one_based(),
             )
         ],
         rna_type="snRNA",
@@ -507,6 +517,7 @@ def test_can_parse_barley_antisense(hordeum_pt):
                 strand=-1,
                 exons=[dat.Exon(start=10076, stop=10262)],
                 assembly_id='IBSC_v2',
+                coordinate_system=dat.CoordinateSystem.one_based(),
             )
         ],
         rna_type='antisense_RNA',
@@ -548,6 +559,7 @@ def test_can_parse_zea_lincrna(zea_7):
                 strand=-1,
                 exons=[dat.Exon(start=359423, stop=359733)],
                 assembly_id='B73_RefGen_v4',
+                coordinate_system=dat.CoordinateSystem.one_based(),
             )
         ],
         rna_type='lncRNA',

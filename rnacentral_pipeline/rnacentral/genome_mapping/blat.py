@@ -13,17 +13,24 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-
 import csv
+import json
 import operator as op
 import itertools as it
+import logging
 
 import six
 
 import attr
 from attr.validators import instance_of as is_a
 
-from rnacentral_pipeline.databases.data import regions
+from rnacentral_pipeline import utils
+from rnacentral_pipeline.databases.data.regions import Exon
+from rnacentral_pipeline.databases.data.regions import Strand
+from rnacentral_pipeline.databases.data.regions import SequenceRegion
+from rnacentral_pipeline.databases.data.regions import CoordinateSystem
+
+LOGGER = logging.getLogger(__name__)
 
 FIELDS = [
     'matches',  # Number of bases that match that aren't repeats
@@ -51,46 +58,42 @@ FIELDS = [
 
 
 @attr.s()
-class Hit(object):
-    assembly_id = attr.ib(validator=is_a(str))
-    chromosome = attr.ib(validator=is_a(str))
-    upi = attr.ib(validator=is_a(str))
+class BlatHit(object):
+    upi = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
     sequence_length = attr.ib(validator=is_a(int))
     matches = attr.ib(validator=is_a(int))
     target_insertions = attr.ib(validator=is_a(int))
-    strand = attr.ib(validator=is_a(int))
-    exons = attr.ib(validator=is_a(list))
+    region = attr.ib(validator=is_a(SequenceRegion))
 
     @classmethod
     def build(cls, assembly_id, raw):
-        exons = []
-        for (start, size) in zip(raw['tStarts'], raw['blockSizes']):
-            exons.append(regions.Exon(
-                start=start + 1,
-                stop=start+size,
-            ))
+        parts = six.moves.zip(raw['tStarts'], raw['blockSizes'])
+        exons = [Exon(s, s+l) for (s, l) in parts]
 
         return cls(
-            assembly_id=assembly_id,
-            chromosome=raw['tName'],
             upi=raw['qName'],
             sequence_length=raw['qSize'],
             matches=raw['matches'],
             target_insertions=raw['tBaseInsert'],
-            strand=raw['strand'],
-            exons=exons,
+            region=SequenceRegion(
+                assembly_id=assembly_id,
+                chromosome=raw['tName'],
+                strand=raw['strand'],
+                exons=exons,
+                coordinate_system=CoordinateSystem.zero_based(),
+            ),
         )
 
     @property
     def name(self):
-        return regions.region_id(self)
+        return self.region.name(self.upi, is_upi=True)
 
     @property
     def match_fraction(self):
         return float(self.matches) / float(self.sequence_length)
 
     def writeable(self):
-        return regions.write_locations(self, self.upi)
+        return self.region.writeable(self.upi, is_upi=True)
 
 
 def select_possible(hit):
@@ -112,7 +115,7 @@ def select_best(hits):
     return hits
 
 
-def parse(assembly_id, handle):
+def parse_psl(assembly_id, handle):
     to_split = ['blockSizes', 'qStarts', 'tStarts']
     for row in csv.reader(handle, delimiter='\t'):
         result = dict(zip(FIELDS, row))
@@ -125,12 +128,10 @@ def parse(assembly_id, handle):
             if key not in to_split and 'Name' not in key and key != 'strand':
                 result[key] = int(value)
 
-        result['strand'] = regions.as_strand(result['strand'])
-        yield Hit.build(assembly_id, result)
+        yield BlatHit.build(assembly_id, result)
 
 
-def select_hits(assembly_id, handle):
-    hits = parse(assembly_id, handle)
+def select_hits(hits):
     hits = six.moves.filter(select_possible, hits)
     hits = it.groupby(hits, op.attrgetter('upi'))
     hits = six.moves.map(op.itemgetter(1), hits)
@@ -139,8 +140,21 @@ def select_hits(assembly_id, handle):
     return hits
 
 
-def write_selected(assembly_id, hits, output):
-    selected = select_hits(assembly_id, hits)
-    selected = six.moves.map(op.methodcaller('writeable'), selected)
-    selected = it.chain.from_iterable(selected)
-    csv.writer(output).writerows(selected)
+def write_importable(handle, output):
+    hits = utils.unpickle_stream(handle)
+    writeable = six.moves.map(op.methodcaller('writeable'), hits)
+    writeable = it.chain.from_iterable(writeable)
+    csv.writer(output).writerows(writeable)
+
+
+def as_pickle(assembly_id, hits, output):
+    parsed = parse_psl(assembly_id, hits)
+    utils.pickle_stream(parsed, output)
+
+
+def select_pickle(handle, output, sort=False):
+    hits = utils.unpickle_stream(handle)
+    if sort:
+        hits = sorted(hits, key=op.attrgetter('upi'))
+    selected = select_hits(hits)
+    utils.pickle_stream(selected, output)

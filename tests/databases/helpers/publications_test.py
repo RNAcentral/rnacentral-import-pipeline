@@ -71,7 +71,7 @@ def test_can_fetch_publication(raw_id):
         "inPMC": "N",
         "hasPDF": "Y",
         "hasBook": "N",
-        "citedByCount": 2,
+        "citedByCount": 3,
         "hasReferences": "Y",
         "hasTextMinedTerms": "Y",
         "hasDbCrossReferences": "N",
@@ -80,6 +80,7 @@ def test_can_fetch_publication(raw_id):
         "firstPublicationDate": "2017-01-01",
         'hasSuppl': 'N',
         'pmcid': 'PMC5890441',
+        'firstIndexDate': '2017-08-18',
     }
 
 

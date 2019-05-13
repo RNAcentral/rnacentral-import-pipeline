@@ -43,15 +43,15 @@ class Update(object):
     This represents the data that is an update to our precomputed data.
     """
 
-    upi = attr.ib(validator=is_a(six.text_type))
+    upi = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
     taxid = attr.ib(validator=optional(is_a(six.integer_types)))
     is_active = attr.ib(validator=is_a(bool))
-    rna_type = attr.ib(validator=is_a(six.text_type))
-    description = attr.ib(validator=is_a(six.text_type))
-    databases = attr.ib(validator=is_a(six.text_type))
+    rna_type = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
+    description = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
+    databases = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
     has_coordinates = attr.ib(validator=is_a(bool))
     qa_status = attr.ib(validator=is_a(qa.QaStatus))
-    short_description = attr.ib(validator=is_a(six.text_type))
+    short_description = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
     last_release = attr.ib(validator=is_a(six.integer_types))
 
     @property

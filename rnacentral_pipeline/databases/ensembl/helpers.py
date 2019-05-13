@@ -73,6 +73,7 @@ def regions(record, feature):
         strand=strand,
         exons=exons,
         assembly_id=assembly_id,
+        coordinate_system=data.CoordinateSystem.one_based(),
     )]
 
 

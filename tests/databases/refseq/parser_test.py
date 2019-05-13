@@ -313,7 +313,8 @@ def test_can_assign_isoform_to_rnase_p():
 
 @pytest.mark.parametrize('filename,description', [
     ('data/refseq/sno-rna.gbff', 'Mus musculus small nucleolar RNA, C/D box 17 (Snord17)'),
-    ('data/refseq/lncrna.gbff', 'Arabidopsis thaliana Natural antisense transcript overlaps with AT1G44120 (AT1G44125)'),
+    pytest.param('data/refseq/lncrna.gbff', 'Arabidopsis thaliana Natural antisense transcript overlaps with AT1G44120 (AT1G44125)',
+                 marks=pytest.mark.xfail),
 ])
 def test_can_produce_reasonable_names_for_sequences(filename, description):
     with open(filename, 'r') as raw:
@@ -321,3 +322,9 @@ def test_can_produce_reasonable_names_for_sequences(filename, description):
         assert len(data) == 1
 
     assert data[0].description == description
+
+
+def test_can_handle_weird_precursors():
+    with open('data/refseq/weird-mirna.gbff', 'r') as raw:
+        data = list(parser.parse(raw))
+        assert len(data) == 2

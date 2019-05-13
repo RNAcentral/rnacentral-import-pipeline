@@ -152,6 +152,7 @@ def remove_anti_if_required(rna_types, data):
     return rna_types
 
 
+
 def rna_type_of(data):
     """
     Determine the rna_type for a given sequence and collection of xrefs. The
@@ -190,12 +191,7 @@ def rna_type_of(data):
         if len(rna_types) == 1:
             return rna_types.pop()
 
-    accessions = []
-    rna_type = set()
-    for accession in data.accessions:
-        rna_type.add(accession.rna_type)
-        accessions.append(accession)
-
+    rna_type = {acc.rna_type for acc in data.accessions}
     LOGGER.debug("Initial rna_types: %s", rna_type)
 
     corrections = [

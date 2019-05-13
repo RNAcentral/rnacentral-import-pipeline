@@ -21,12 +21,6 @@ from .helpers import load_data
 
 
 @pytest.mark.parametrize('rna_id,rna_type', [  # pylint: disable=no-member
-    # pytest.param('URS0000A85A32_10090', 'tRNA', mark=pytest.mark.xfail),
-    # pytest.param('URS000060C682_9606', 'vault_RNA', mark=pytest.mark.xfail("Inactive sequence"),
-    # pytest.param('URS0000175007_7227', 'miRNA', mark=pytest.mark.xfail("Inactive sequence")),
-    # pytest.param('URS000072A167_10141', 'Y_RNA', mark=pytest.mark.xfail("Inactive sequence")),
-    # pytest.param('URS00006B14E9_6183', 'hammerhead_ribozyme', mark=pytest.mark.xfail("Inactive sequence")),
-
     ('URS0000000DBF_6239', 'piRNA'),
     ('URS00000101E5_9606', 'lncRNA'),
     ('URS0000016972_6239', 'miRNA'),
@@ -124,24 +118,35 @@ from .helpers import load_data
     ('URS000077FBEB_9606', 'lncRNA'),
     ('URS00007A9FDC_6239', 'misc_RNA'),
     ('URS00007FD8A3_7227', 'lncRNA'),
-    ('URS0000808D19_644', 'hammerhead_ribozyme'),
-    ('URS0000808D70_1478174', 'tmRNA'),
     ('URS000080DD33_32630', 'ribozyme'),
     ('URS000080DFDA_32630', 'hammerhead_ribozyme'),
     ('URS000082AF7D_5699', 'guide_RNA'),
-    ('URS000083F182_242161', 'other'),
     ('URS000086852D_32630', 'hammerhead_ribozyme'),
     ('URS00008E398A_9606', 'snoRNA'),
     ('URS00008E3A1B_10090', 'lncRNA'),
     ('URS000092FF0A_9371', 'snoRNA'),
     ('URS00009E8F92_885695', 'rRNA'),
-    ('URS0000A17B82_640938', 'other'),
     ('URS0000A767C0_3702', 'lncRNA'),
     ('URS0000A86584_10090', 'lncRNA'),
     ('URS0000A8F612_9371', 'snoRNA'),
     ('URS0000A994FE_9606', 'other'),
     ('URS0000ABD7EF_9606', 'rRNA'),
     ('URS0000ABD87F_9606', 'rRNA'),
+    ('URS000018B855_1270', 'misc_RNA'),
+    ('URS0000127C85_175245', 'misc_RNA'),
+
+    # pytest.param('URS00007CD270_1872691', 'rRNA', mark=pytest.mark.xfail("Rfam")),
+    # pytest.param('URS0000A85A32_10090', 'tRNA', mark=pytest.mark.xfail("Rfam")),
+
+    # pytest.param('URS000060C682_9606', 'vault_RNA', mark=pytest.mark.xfail("Inactive sequence")),
+    # pytest.param('URS0000175007_7227', 'miRNA', mark=pytest.mark.xfail("Inactive sequence")),
+    # pytest.param('URS000072A167_10141', 'Y_RNA', mark=pytest.mark.xfail("Inactive sequence")),
+    # pytest.param('URS00006B14E9_6183', 'hammerhead_ribozyme', mark=pytest.mark.xfail("Inactive sequence")),
+    # pytest.param('URS0000A17B82_640938', 'other', mark=pytest.mark.xfail("Inactive sequence")),
+    # pyest.param('URS000083F182_242161', 'other', mark=pytest.mark.xfail("Inactive sequence")),
+    # pytest.param('URS0000808D19_644', 'hammerhead_ribozyme', mark=pytest.mark.xfail("Inactive sequence")),
+    # pytest.mark('URS0000808D70_1478174', 'tmRNA', mark=pytest.mark.xfail("Inactive sequence"),
+
 ])
 def test_computes_correct_rna_types(rna_id, rna_type):
     data = load_data(rna_id)

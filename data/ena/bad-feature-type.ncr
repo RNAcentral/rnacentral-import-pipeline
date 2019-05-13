@@ -1,0 +1,110 @@
+ID   F14557.1:1..162:rRNA; SV 1; linear; mRNA; EST; MAM; 162 BP.
+XX
+PA   F14557.1
+XX
+DT   30-AUG-1995 (Rel. 45, Created)
+DT   03-SEP-1996 (Rel. 49, Last updated, Version 3)
+XX
+DE   Sus scrofa (pig) partial 28S rRNA 3' end
+XX
+KW   EST; expressed sequence tag.
+XX
+OS   Sus scrofa (pig)
+OC   Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi; Mammalia;
+OC   Eutheria; Laurasiatheria; Cetartiodactyla; Suina; Suidae; Sus.
+XX
+RN   [1]
+RP   1-162
+RX   DOI; 10.1007/s003359900153.
+RX   PUBMED; 8672129.
+RA   Winteroe A.K., Fredholm M., Davies W.;
+RT   "Evaluation and characterization of a porcine small intestine cDNA
+RT   library";
+RL   Mamm. Genome 7(7):509-517(1996).
+XX
+RN   [2]
+RP   1-162
+RA   Winteroe A.K.;
+RT   ;
+RL   Submitted (26-JUL-1995) to the INSDC.
+RL   Winteroe A.K., The Royal Veterinary and Agricultural University, Department
+RL   of Animal Science and Animal Health, Division of Animal Genetics, Bulowsvej
+RL   13, 1870 Frederiksberg C, DENMARK
+XX
+DR   MD5; 9adefbe78322f5599308cb568e3ae741.
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..162
+FT                   /organism="Sus scrofa"
+FT                   /mol_type="mRNA"
+FT                   /clone_lib="directionally cloned cDNA in XL1-blue MRF'"
+FT                   /clone="c2d09"
+FT                   /tissue_type="small intestine"
+FT                   /db_xref="taxon:9823"
+FT                   /db_xref="UNILIB:300"
+FT   rRNA            F14557.1:<1..>162
+FT                   /gene="28S rRNA 3' end"
+FT                   /note="expressed sequence tag"
+XX
+SQ   Sequence 162 BP; 35 A; 33 C; 45 G; 44 T; 5 other;
+     accgtcgtga gcactgttag ttttacccta ctgatgatgt gttgttgcca tggnaatcct        60
+     gctcagtacg agaggaaccg cagtnaagac atttggtgta tgtncttggc tgaggagcca       120
+     atggggcgaa gtaccatctg tgggattatg actnancgcc tc                          162
+//
+ID   F14841.1:1..195:rRNA; SV 1; linear; mRNA; EST; MAM; 195 BP.
+XX
+PA   F14841.1
+XX
+DT   30-AUG-1995 (Rel. 45, Created)
+DT   03-SEP-1996 (Rel. 49, Last updated, Version 3)
+XX
+DE   Sus scrofa (pig) partial mitochondrial 12S and 16S ribosomal RNA
+XX
+KW   EST; expressed sequence tag.
+XX
+OS   Sus scrofa (pig)
+OC   Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi; Mammalia;
+OC   Eutheria; Laurasiatheria; Cetartiodactyla; Suina; Suidae; Sus.
+XX
+RN   [1]
+RP   1-195
+RX   DOI; 10.1007/s003359900153.
+RX   PUBMED; 8672129.
+RA   Winteroe A.K., Fredholm M., Davies W.;
+RT   "Evaluation and characterization of a porcine small intestine cDNA
+RT   library";
+RL   Mamm. Genome 7(7):509-517(1996).
+XX
+RN   [2]
+RP   1-195
+RA   Winteroe A.K.;
+RT   ;
+RL   Submitted (26-JUL-1995) to the INSDC.
+RL   Winteroe A.K., The Royal Veterinary and Agricultural University, Department
+RL   of Animal Science and Animal Health, Division of Animal Genetics, Bulowsvej
+RL   13, 1870 Frederiksberg C, DENMARK
+XX
+DR   MD5; 045be3b3a68ad8a921e3a884a61994b5.
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..195
+FT                   /organism="Sus scrofa"
+FT                   /mol_type="mRNA"
+FT                   /clone_lib="directionally cloned cDNA in XL1-blue MRF'"
+FT                   /clone="c24d12"
+FT                   /tissue_type="small intestine"
+FT                   /db_xref="taxon:9823"
+FT                   /db_xref="UNILIB:300"
+FT   rRNA            F14841.1:<1..>195
+FT                   /product="mitochondrial 12S and 16S ribosomal RNA"
+FT                   /note="expressed sequence tag"
+FT                   /note="Oryx gazella homolog"
+XX
+SQ   Sequence 195 BP; 94 A; 31 C; 25 G; 45 T; 0 other;
+     acgagtcaac atactaaaca aatacaaaaa tacaccaaaa taaaataaaa cattcaccta        60
+     acattaaagt ataggagata gaaattttta tcctgacgct atagagatag taccgtaagg       120
+     gaaagatgaa agaataaaat aaaagtaaaa aaaagcaaag attacccctt ctaccttttg       180
+     cataatggtt taacc                                                        195
+//

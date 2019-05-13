@@ -51,9 +51,9 @@ class Reference(object):
     files.
     """
 
-    authors = attr.ib(validator=is_a(six.text_type))
-    location = attr.ib(validator=is_a(six.text_type))
-    title = attr.ib(validator=optional(is_a(six.text_type)))
+    authors = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
+    location = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
+    title = attr.ib(validator=optional(is_a(six.text_type)), converter=six.text_type)
     pmid = attr.ib(validator=optional(is_a(int)))
     doi = attr.ib(validator=optional(is_a(six.text_type)))
     pmcid = attr.ib(validator=optional(is_a(six.text_type)), default=None)
@@ -119,7 +119,7 @@ class Reference(object):
 @attr.s(frozen=True, hash=True)
 class IdReference(object):
     namespace = attr.ib(validator=in_(KNOWN_SERVICES))
-    external_id = attr.ib(validator=is_a(six.text_type))
+    external_id = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
 
     @classmethod
     def build(cls, ref_id):

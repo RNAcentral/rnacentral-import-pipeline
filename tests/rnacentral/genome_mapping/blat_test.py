@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-# pylint: disable=no-member
-
 """
 Copyright [2009-2018] EMBL-European Bioinformatics Institute
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -264,29 +262,35 @@ def test_gets_correct_upis():
 def test_can_build_correct_data_structures():
     val = parse_of('human', 'data/genome-mapping/results.psl', 'URS0000032237_9606')
     assert len(val) == 1
-    assert attr.asdict(val[0]) == attr.asdict(gm.Hit(
-        assembly_id='human',
-        chromosome='MT',
+    assert attr.asdict(val[0]) == attr.asdict(gm.BlatHit(
         upi='URS0000032237_9606',
         sequence_length=19,
         matches=19,
         target_insertions=0,
-        strand=1,
-        exons=[regions.Exon(start=15935, stop=15953)]
+        region=regions.SequenceRegion(
+            assembly_id='human',
+            chromosome='MT',
+            strand=1,
+            exons=[regions.Exon(start=15934, stop=15953)],
+            coordinate_system=regions.CoordinateSystem.zero_based(),
+        ),
     ))
 
 def test_can_build_correct_for_minus_strand():
     val = parse_of('human', 'data/genome-mapping/results.psl', 'URS00000CF258_9606')
     assert len(val) == 1
-    assert attr.asdict(val[0]) == attr.asdict(gm.Hit(
-        assembly_id='human',
-        chromosome='Y',
+    assert attr.asdict(val[0]) == attr.asdict(gm.BlatHit(
         upi='URS00000CF258_9606',
         sequence_length=16,
         matches=16,
         target_insertions=0,
-        strand=-1,
-        exons=[regions.Exon(start=17624526, stop=17624541)]
+        region=regions.SequenceRegion(
+            assembly_id='human',
+            chromosome='Y',
+            strand=-1,
+            exons=[regions.Exon(start=17624525, stop=17624541)],
+            coordinate_system=regions.CoordinateSystem.zero_based(),
+        ),
     ))
 
 
@@ -294,22 +298,25 @@ def test_can_build_correct_for_minus_strand():
 def test_can_correctly_parse_with_several_exons():
     val = parse_of('human', 'data/genome-mapping/results.psl', 'URS000007D899_9606')
     assert len(val) == 29
-    assert attr.asdict(val[0]) == attr.asdict(gm.Hit(
-        assembly_id='human',
-        chromosome='21',
+    assert attr.asdict(val[0]) == attr.asdict(gm.BlatHit(
         upi='URS000007D899_9606',
         sequence_length=1388,
         matches=1388,
         target_insertions=7661,
-        strand=1,
-        exons=[
-            regions.Exon(start=44506807, stop=44507099),
-            regions.Exon(start=44508037, stop=44508309),
-            regions.Exon(start=44508727, stop=44508929),
-            regions.Exon(start=44509252, stop=44509406),
-            regions.Exon(start=44509823, stop=44509927),
-            regions.Exon(start=44515497, stop=44515855),
-        ]
+        region=regions.SequenceRegion(
+            assembly_id='human',
+            chromosome='21',
+            strand=1,
+            exons=[
+                regions.Exon(start=44506806, stop=44507099),
+                regions.Exon(start=44508036, stop=44508309),
+                regions.Exon(start=44508726, stop=44508929),
+                regions.Exon(start=44509251, stop=44509406),
+                regions.Exon(start=44509822, stop=44509927),
+                regions.Exon(start=44515496, stop=44515855),
+            ],
+            coordinate_system=regions.CoordinateSystem.zero_based(),
+        ),
     ))
 
 
@@ -330,39 +337,49 @@ def test_it_does_not_give_data_for_poorly_mapped(assembly_id, filename, bad):
 
 def test_it_selects_correct_exact_locations():
     val = result_for('human', 'data/genome-mapping/results.psl', 'URS000007D899_9606')
-    assert attr.asdict(val) == attr.asdict(gm.Hit(
-        assembly_id='human',
-        chromosome='21',
+    assert attr.asdict(val) == attr.asdict(gm.BlatHit(
         upi='URS000007D899_9606',
         sequence_length=1388,
         matches=1388,
         target_insertions=7661,
-        strand=1,
-        exons=[
-            regions.Exon(start=44506807, stop=44507099),
-            regions.Exon(start=44508037, stop=44508309),
-            regions.Exon(start=44508727, stop=44508929),
-            regions.Exon(start=44509252, stop=44509406),
-            regions.Exon(start=44509823, stop=44509927),
-            regions.Exon(start=44515497, stop=44515855),
-        ]
+        region=regions.SequenceRegion(
+            assembly_id='human',
+            chromosome='21',
+            strand=1,
+            exons=[
+                regions.Exon(start=44506806, stop=44507099),
+                regions.Exon(start=44508036, stop=44508309),
+                regions.Exon(start=44508726, stop=44508929),
+                regions.Exon(start=44509251, stop=44509406),
+                regions.Exon(start=44509822, stop=44509927),
+                regions.Exon(start=44515496, stop=44515855),
+            ],
+            coordinate_system=regions.CoordinateSystem.zero_based(),
+        ),
     ))
 
 
 def test_selectes_correct_inexact_locations():
     val = results_for('human', 'data/genome-mapping/results.psl', 'URS000093C0D6_9606')
     assert len(val) == 4
-    assert attr.asdict(val[0]) == attr.asdict(gm.Hit(
-        assembly_id='human',
-        chromosome='15',
+    assert attr.asdict(val[0]) == attr.asdict(gm.BlatHit(
         upi='URS000093C0D6_9606',
         sequence_length=154,
         matches=153,
         target_insertions=0,
-        strand=-1,
-        exons=[regions.Exon(start=82478089, stop=82478242)],
+        region=regions.SequenceRegion(
+            assembly_id='human',
+            chromosome='15',
+            strand=-1,
+            exons=[regions.Exon(start=82478088, stop=82478242)],
+            coordinate_system=regions.CoordinateSystem.zero_based(),
+        ),
     ))
     assert round(val[0].match_fraction, 6) == 0.993506
+
+    assert list(val[0].region.writeable('URS000093C0D6_9606')) == [
+        ['URS000093C0D6_9606', '@15/82478089-82478242:-', '15', -1, 'human', 1, 82478089, 82478242]
+    ]
 
 
 @pytest.mark.parametrize('assembly_id,filename,upi,region_ids', [

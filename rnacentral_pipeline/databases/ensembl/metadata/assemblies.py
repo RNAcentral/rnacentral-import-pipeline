@@ -71,6 +71,8 @@ def is_ignored_assembly(info):
         return True
     if info.taxid == 8090 and info.ensembl_url != 'oryzias_latipes':
         return True
+    if info.taxid == 10029 and info.assembly_id != 'CriGri_1.0':
+        return True
     return False
 
 
@@ -181,7 +183,7 @@ class AssemblyInfo(object):
 def fetch(connections, query_handle, example_locations):
     results = db.run_queries_across_databases(connections, query_handle)
     for (_, rows) in results:
-        raw = {r['meta_key']: r['meta_value'] for r in rows}
+        raw = {r['meta_key']: six.text_type(r['meta_value']) for r in rows}
         if raw['species.division'] == 'EnsemblBacteria':
             continue
         info = AssemblyInfo.build(raw, example_locations)

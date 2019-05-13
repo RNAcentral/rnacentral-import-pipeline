@@ -112,8 +112,10 @@ def references(record, feature):
 def rna_type(feature):
     if feature.type == 'ncRNA':
         return embl.qualifier_value(feature, 'ncRNA_class', r'^(.+)$')
-    if feature.type == 'rRNA' and 'tRNA' in product(feature):
-        return 'tRNA'
+    if feature.type == 'rRNA':
+        found =  product(feature) or ''
+        if 'tRNA' in found:
+            return 'tRNA'
     return feature.type
 
 

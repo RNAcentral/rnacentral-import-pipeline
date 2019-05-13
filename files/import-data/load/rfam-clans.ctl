@@ -1,5 +1,5 @@
 LOAD CSV
-FROM stdin
+FROM ALL FILENAMES MATCHING ~<rfam-clans.*csv$>
 HAVING FIELDS
 (
     rfam_clan_id,
@@ -17,8 +17,8 @@ TARGET COLUMNS
 )
 
 WITH
-    skip header = 1,
-    fields terminated by '0x9'
+    fields escaped by double-quote,
+    fields terminated by ','
 
 BEFORE LOAD DO
 $$
