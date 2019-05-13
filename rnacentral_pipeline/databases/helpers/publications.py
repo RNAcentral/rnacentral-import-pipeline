@@ -92,7 +92,7 @@ class CacheStorage(object):
             return Reference(**json.loads(data))
         if allow_fallback:
             return query_pmc(id_ref)
-        raise UnknownReference("Never indexed %s", id_ref)
+        raise UnknownReference("Never indexed %s" % id_ref)
 
     @contextmanager
     def open(self, mode='r'):
