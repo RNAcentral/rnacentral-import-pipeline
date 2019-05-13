@@ -80,9 +80,10 @@ class CacheStorage(object):
     path = attr.ib(validator=is_a(Path))
 
     def store(self, key, json_data):
-        if not key:
-            return None
+        assert key, "Provided no key for index of: %s" % json_data
+        assert json_data
         k = self.__normalize_key__(key)
+        assert k, "Failed to get normalized key of %s" % key
         self.db[k] = json_data
 
     def get(self, id_ref, allow_fallback=False):
