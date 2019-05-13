@@ -1,0 +1,51 @@
+CONTEXT: COPY load_go_term_publication_map, line 1, column pubmed_id: "pmid:15235603"
+2019-04-25T15:52:28.162000Z ERROR PostgreSQL ["\"rnacen\".\"load_go_term_publication_map\""] Database error 22P02: invalid input syntax for integer: "pmid:17982445"
+CONTEXT: COPY load_go_term_publication_map, line 1, column pubmed_id: "pmid:17982445"
+2019-04-25T15:52:28.202000Z ERROR PostgreSQL ["\"rnacen\".\"load_go_term_publication_map\""] Database error 22P02: invalid input syntax for integer: "pmid:11381263"
+CONTEXT: COPY load_go_term_publication_map, line 1, column pubmed_id: "pmid:11381263"
+2019-04-25T15:52:28.231000Z ERROR PostgreSQL ["\"rnacen\".\"load_go_term_publication_map\""] Database error 22P02: invalid input syntax for integer: "pmid:17554309"
+CONTEXT: COPY load_go_term_publication_map, line 1, column pubmed_id: "pmid:17554309"
+2019-04-25T15:52:28.260000Z ERROR PostgreSQL ["\"rnacen\".\"load_go_term_publication_map\""] Database error 22P02: invalid input syntax for integer: "pmid:9335332"
+CONTEXT: COPY load_go_term_publication_map, line 1, column pubmed_id: "pmid:9335332"
+2019-04-25T15:52:28.292000Z ERROR PostgreSQL ["\"rnacen\".\"load_go_term_publication_map\""] Database error 22P02: invalid input syntax for integer: "pmid:17982445"
+CONTEXT: COPY load_go_term_publication_map, line 1, column pubmed_id: "pmid:17982445"
+2019-04-25T15:52:28.324000Z ERROR PostgreSQL ["\"rnacen\".\"load_go_term_publication_map\""] Database error 22P02: invalid input syntax for integer: "pmid:9335332"
+CONTEXT: COPY load_go_term_publication_map, line 1, column pubmed_id: "pmid:9335332"
+2019-04-25T15:52:28.358000Z ERROR PostgreSQL ["\"rnacen\".\"load_go_term_publication_map\""] Database error 22P02: invalid input syntax for integer: "pmid:2431280"
+CONTEXT: COPY load_go_term_publication_map, line 1, column pubmed_id: "pmid:2431280"
+2019-04-25T15:52:28.396000Z ERROR PostgreSQL ["\"rnacen\".\"load_go_term_publication_map\""] Database error 22P02: invalid input syntax for integer: "pmid:2431280"
+CONTEXT: COPY load_go_term_publication_map, line 1, column pubmed_id: "pmid:2431280"
+2019-04-25T15:52:28.431000Z ERROR PostgreSQL ["\"rnacen\".\"load_go_term_publication_map\""] Database error 22P02: invalid input syntax for integer: "pmid:27516619"
+CONTEXT: COPY load_go_term_publication_map, line 1, column pubmed_id: "pmid:27516619"
+2019-04-25T15:52:28.465000Z ERROR PostgreSQL ["\"rnacen\".\"load_go_term_publication_map\""] Database error 22P02: invalid input syntax for integer: "pmid:27516619"
+CONTEXT: COPY load_go_term_publication_map, line 1, column pubmed_id: "pmid:27516619"
+2019-04-25T15:52:28.489000Z ERROR PostgreSQL ["\"rnacen\".\"load_go_term_publication_map\""] Database error 22P02: invalid input syntax for integer: "pmid:27516619"
+CONTEXT: COPY load_go_term_publication_map, line 1, column pubmed_id: "pmid:27516619"
+2019-04-25T15:52:28.510000Z ERROR PostgreSQL ["\"rnacen\".\"load_go_term_publication_map\""] Database error 22P02: invalid input syntax for integer: "pmid:27516619"
+CONTEXT: COPY load_go_term_publication_map, line 1, column pubmed_id: "pmid:27516619"
+2019-04-25T15:52:28.537000Z ERROR PostgreSQL ["\"rnacen\".\"load_go_term_publication_map\""] Database error 22P02: invalid input syntax for integer: "pmid:27516619"
+CONTEXT: COPY load_go_term_publication_map, line 1, column pubmed_id: "pmid:27516619"
+2019-04-25T15:52:28.565000Z ERROR PostgreSQL ["\"rnacen\".\"load_go_term_publication_map\""] Database error 22P02: invalid input syntax for integer: "pmid:27516619"
+CONTEXT: COPY load_go_term_publication_map, line 1, column pubmed_id: "pmid:27516619"
+2019-04-25T15:52:28.583000Z ERROR PostgreSQL ["\"rnacen\".\"load_go_term_publication_map\""] Database error 22P02: invalid input syntax for integer: "pmid:22815348"
+CONTEXT: COPY load_go_term_publication_map, line 1, column pubmed_id: "pmid:22815348"
+2019-04-25T15:52:28.602000Z ERROR PostgreSQL ["\"rnacen\".\"load_go_term_publication_map\""] Database error 22P02: invalid input syntax for integer: "pmid:22815348"
+CONTEXT: COPY load_go_term_publication_map, line 1, column pubmed_id: "pmid:22815348"
+2019-04-25T15:52:28.621000Z ERROR PostgreSQL ["\"rnacen\".\"load_go_term_publication_map\""] Database error 22P02: invalid input syntax for integer: "pmid:22815348"
+CONTEXT: COPY load_go_term_publication_map, line 1, column pubmed_id: "pmid:22815348"
+2019-04-25T15:52:28.638000Z ERROR PostgreSQL ["\"rnacen\".\"load_go_term_publication_map\""] Database error 22P02: invalid input syntax for integer: "pmid:22815348"
+CONTEXT: COPY load_go_term_publication_map, line 1, column pubmed_id: "pmid:22815348"
+2019-04-25T15:52:28.659000Z ERROR PostgreSQL ["\"rnacen\".\"load_go_term_publication_map\""] Database error 22P02: invalid input syntax for integer: "pmid:27516619"
+CONTEXT: COPY load_go_term_publication_map, line 1, column pubmed_id: "pmid:27516619"
+2019-04-25T15:52:28.660000Z LOG report summary reset
+                             table name     errors       rows      bytes      total time
+---------------------------------------  ---------  ---------  ---------  --------------
+                                  fetch          0          0                     0.005s
+                            before load          0          2                     0.380s
+---------------------------------------  ---------  ---------  ---------  --------------
+"rnacen"."load_go_term_publication_map"      10684          0   806.7 kB        6m5.972s
+---------------------------------------  ---------  ---------  ---------  --------------
+                        Files Processed          0          1                     0.021s
+                COPY Threads Completion          0          2                   6m5.972s
+---------------------------------------  ---------  ---------  ---------  --------------
+                      Total import time      10684          0   806.7 kB        6m5.993s
