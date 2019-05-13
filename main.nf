@@ -206,21 +206,41 @@ process batch_lookup_ontology_information {
   """
 }
 
-refs.collect().set { refs_to_lookup }
+refs
+  .collect()
+  .set { refs_to_split }
 
-process batch_lookup_publications {
+process merge_and_split_all_publications {
   input:
-  file("ref_ids*.csv") from refs_to_lookup
-  file("references.db") from refs_database
+  file("ref_ids*.csv") from refs_to_split
 
   output:
-  file('references.csv') into references_output
+  file('split-refs/*.csv') into split_references
 
   """
   set -o pipefail
 
-  find . -name 'ref_ids*.csv' | xargs cat | sort -u >> all-ids
-  rnac europepmc lookup --allow-fallback references.db all-ids references.csv
+  find . -name 'ref_ids*.csv' | xargs cat | sort -u > all-ids
+  split --additional-suffix=".csv" --number l/${params.lookup_publications.maxForks} all-ids split-refs/refs
+  """
+}
+
+split_references
+  .combine(refs_database)
+  .set { refs_to_lookup }
+
+process lookup_publications {
+  maxForks params.lookup_publications.maxForks
+
+  input:
+  set file(refs), file(db) from refs_to_lookup
+
+  output:
+  file("references.csv") into references_output
+
+  script:
+  """
+  rnac europepmc lookup --allow-fallback $db $refs references.csv
   """
 }
 
