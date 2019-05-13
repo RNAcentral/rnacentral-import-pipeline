@@ -184,6 +184,7 @@ refs_database = Channel.create()
 
 all_processed_output
   .mix(all_fetched_and_processed_output)
+  .filter { f -> !f.isEmpty() }
   .choice(processed_output, terms, refs, refs_database) { f ->
     def names = ["terms.csv", "ref_ids.csv", params.metadata.europepmc.process.produces]
     return names.indexOf(f.getName()) + 1
@@ -205,21 +206,41 @@ process batch_lookup_ontology_information {
   """
 }
 
-refs.collect().set { refs_to_lookup }
+refs
+  .collect()
+  .set { refs_to_split }
 
-process batch_lookup_publications {
+process merge_and_split_all_publications {
   input:
-  file("ref_ids*.csv") from refs_to_lookup
-  file("references.db") from refs_database
+  file("ref_ids*.csv") from refs_to_split
 
   output:
-  file('references.csv') into references_output
+  file('split-refs/*.csv') into split_references
 
   """
   set -o pipefail
 
-  find . -name 'ref_ids*.csv' | xargs cat | sort -u >> all-ids
-  rnac europepmc lookup --allow-fallback references.db all-ids references.csv
+  find . -name 'ref_ids*.csv' | xargs cat | sort -u > all-ids
+  split --additional-suffix=".csv" --number l/${params.lookup_publications.maxForks} all-ids split-refs/refs
+  """
+}
+
+split_references
+  .combine(refs_database)
+  .set { refs_to_lookup }
+
+process lookup_publications {
+  maxForks params.lookup_publications.maxForks
+
+  input:
+  set file(refs), file(db) from refs_to_lookup
+
+  output:
+  file("references.csv") into references_output
+
+  script:
+  """
+  rnac europepmc lookup --allow-fallback $db $refs references.csv
   """
 }
 
@@ -258,14 +279,12 @@ process merge_and_import {
   set val(name), file(ctl), file('raw*.csv') from to_load
 
   output:
-  val(name) into loaded
+  val(name) into (pre_loaded, post_loaded)
 
   """
   split-and-load $ctl 'raw*.csv' ${params.import_data.chunk_size} $name
   """
 }
-
-loaded.into { pre_loaded; post_loaded }
 
 pre_loaded
   .flatMap { n -> file("files/import-data/pre-release/*__${n.replace('_', '-')}.sql") }

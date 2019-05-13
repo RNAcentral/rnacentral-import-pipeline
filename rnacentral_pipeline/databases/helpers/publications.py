@@ -18,19 +18,39 @@ import re
 import csv
 import json
 import logging
-import sqlite3
 from glob import glob
 from xml.etree import cElementTree as ET
 
+import six
+
+try:
+    import dbm
+except:
+    from six.moves import dbm_gnu as dbm
+
 import attr
+from attr.validators import instance_of as is_a
+
+import typing
 import requests
 from retry import retry
 from ratelimiter import RateLimiter
 
 try:
+    from pathlib import Path
+except ImportError:
+    from pathlib2 import Path
+
+try:
     from functools import lru_cache
 except ImportError:
     from functools32 import lru_cache
+
+from contextlib import contextmanager
+try:
+    from contextlib import ExitStack
+except:
+    from contextlib2 import ExitStack
 
 from ..data import Reference
 from ..data import IdReference
@@ -55,20 +75,79 @@ class TooManyPublications(Exception):
     pass
 
 
-TABLE = '''
-CREATE TABLE IF NOT EXISTS {name}s (
-    id {type} primary key,
-    data text,
+@attr.s()
+class CacheStorage(object):
+    path = attr.ib(validator=is_a(Path))
 
-    UNIQUE (id) ON CONFLICT REPLACE
-)
-'''
+    def store(self, key, json_data):
+        assert key, "Provided no key for index of: %s" % json_data
+        assert json_data
+        k = self.__normalize_key__(key)
+        assert k, "Failed to get normalized key of %s" % key
+        self.db[k] = json_data
+
+    def get(self, id_ref, allow_fallback=False):
+        key = self.__normalize_key__(id_ref.external_id)
+        data = self.db.get(key, None)
+        if data:
+            return Reference(**json.loads(data))
+        if allow_fallback:
+            return query_pmc(id_ref)
+        raise UnknownReference("Never indexed %s" % id_ref)
+
+    @contextmanager
+    def open(self, mode='r'):
+        self.db = dbm.open(str(self.path), mode)
+        yield self
+        self.db.close()
+
+    def __normalize_key__(self, raw):
+        if isinstance(raw, six.string_types):
+            return raw.encode('ascii', 'ignore')
+        return str(raw)
+
+@attr.s()
+class Cache(object):
+    filename = attr.ib(type=Path, validator=is_a(Path))
+    keys = attr.ib(
+        type=typing.List[six.text_type],
+        default=['pmid', 'doi', 'pmcid'],
+    )
+
+    @classmethod
+    def build(cls, base_path):
+        path = Path(base_path)
+        if not path.exists():
+            path.mkdir()
+        return cls(path)
+
+    @classmethod
+    def populate_with(cls, base_path, references):
+        cache = cls.build(base_path)
+        with cache.open(mode='c') as handles:
+            for reference in references:
+                data = json.dumps(attr.asdict(reference))
+                for key_name in cache.keys:
+                    key = getattr(reference, key_name, None)
+                    handles[key_name].store(key, data)
+
+    @contextmanager
+    def open(self, mode='r'):
+        with ExitStack() as stack:
+            handles = {}
+            for key in self.keys:
+                filename = self.filename / Path(key)
+                cache = CacheStorage(filename)
+                db = stack.enter_context(cache.open(mode))
+                handles[key] = db
+            yield handles
 
 
 @lru_cache()
 @retry(requests.HTTPError, tries=5, delay=1)
 @RateLimiter(max_calls=5, period=1)
 def summary(id_reference):
+    LOGGER.info("Fetching remote summary for %s", id_reference)
     response = requests.get(id_reference.external_url())
     response.raise_for_status()
 
@@ -78,6 +157,12 @@ def summary(id_reference):
         raise UnknownReference(id_reference)
 
     if data['hitCount'] > 1:
+        possible = []
+        for result in data['resultList']['result']:
+            if six.text_type(result[id_reference.namespace]) == id_reference.external_id:
+                possible.append(result)
+        if len(possible) == 1:
+            return possible[0]
         raise TooManyPublications(id_reference)
 
     return data['resultList']['result'][0]
@@ -118,11 +203,12 @@ def query_pmc(id_reference):
         pmid = int(pmid)
 
     return Reference(
-        authors=data['authorString'],
-        location=pretty_location(data),
-        title=clean_title(data['title']),
+        authors=six.text_type(data['authorString']),
+        location=six.text_type(pretty_location(data)),
+        title=six.text_type(clean_title(data['title'])),
         pmid=pmid,
-        doi=data.get('doi', None),
+        doi=six.text_type(data.get('doi', None)),
+        pmcid=data.get('pmcid', None),
     )
 
 
@@ -140,6 +226,7 @@ def node_to_reference(node):
     doi = xml_text('DOI', node)
     if not pmid and not doi:
         return None
+    pmcid = six.text_type(xml_text('pmcid', node))
 
     authors = []
     for author in node.findall('./AuthorList/Author'):
@@ -157,11 +244,12 @@ def node_to_reference(node):
     }
 
     return Reference(
-        authors=authors,
-        location=pretty_location(data),
-        title=xml_text('title', node, fn=clean_title),
+        authors=six.text_type(authors),
+        location=six.text_type(pretty_location(data)),
+        title=six.text_type(xml_text('title', node, fn=clean_title)),
         pmid=pmid,
-        doi=doi,
+        doi=six.text_type(doi),
+        pmcid=pmcid,
     )
 
 
@@ -175,61 +263,32 @@ def parse_xml(xml_file):
         yield ref
 
 
-def index_xml_directory(directory, output):
-    conn = sqlite3.connect(output)
-    tables = {'pmid': 'int', 'doi': 'text'}
-    for name, pid_type in tables.items():
-        conn.execute(TABLE.format(name=name, type=pid_type))
-
+def parse_xml_directory(directory):
     for filename in glob(os.path.join(directory, '*.xml')):
         with open(filename, 'r') as xml_file:
-            for ref in parse_xml(xml_file):
-                cursor = conn.cursor()
-                for table in tables.keys():
-                    key = getattr(ref, table, None)
-                    if not key:
-                        continue
-                    stmt = 'INSERT INTO %ss VALUES(?, ?)' % table
-                    data = json.dumps(attr.asdict(ref))
-                    cursor.execute(stmt, (key, data))
-            conn.commit()
-    conn.close()
+            for ref in list(parse_xml(xml_file)):
+                yield ref
 
 
-def query_database(cursor, id_ref, allow_fallback=False):
-    query = 'SELECT data from %ss WHERE id=?' % id_ref.namespace
-    raw_ref = cursor.execute(query, (id_ref.external_id,)).fetchone()
-    if not raw_ref:
-        if allow_fallback:
-            return query_pmc(id_ref)
-        raise UnknownReference(id_ref)
-    return Reference(**json.loads(raw_ref[0]))
+def index_xml_directory(directory, output):
+    Cache.populate_with(output, parse_xml_directory(directory))
 
 
-def write_lookup(db, handle, output, allow_fallback=False):
-    conn = sqlite3.connect(db)
-    cursor = conn.cursor()
-    reader = csv.reader(handle)
+def id_refs_from_handle(handle, column=0):
+    for row in csv.reader(handle):
+        raw = row[column]
+        rest = [d for i, d in enumerate(row) if i != column]
+        yield (reference(raw), rest)
+
+
+def write_file_lookup(cache_path, handle, output, column=0, allow_fallback=False):
     writer = csv.writer(output)
-    for (ref_id, accession) in reader:
-        id_ref = IdReference.build(ref_id)
-        try:
-            ref = query_database(cursor, id_ref, allow_fallback=allow_fallback)
-        except UnknownReference:
-            LOGGER.warning("Could not find reference for %s", id_ref)
-            continue
-        writer.writerows(ref.writeable(accession))
-    conn.close()
-
-
-def from_file(handle, output):
-    reader = csv.reader(handle)
-    writer = csv.writer(output)
-    for (ref_id, accession) in reader:
-        id_ref = IdReference.build(ref_id)
-        try:
-            complete = query_pmc(id_ref)
-        except UnknownReference:
-            LOGGER.warning("Could not find reference for %s", id_ref)
-            continue
-        writer.writerows(complete.writeable(accession))
+    with Cache.build(cache_path).open() as db:
+        for id_ref, rest in id_refs_from_handle(handle, column=column):
+            try:
+                store = db[id_ref.namespace]
+                ref = store.get(id_ref, allow_fallback=allow_fallback)
+            except UnknownReference:
+                LOGGER.warning("Could not handle find reference for %s", id_ref)
+                continue
+            writer.writerows(ref.writeable(rest))

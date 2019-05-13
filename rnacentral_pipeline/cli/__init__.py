@@ -29,6 +29,7 @@ from . import precompute
 from . import qa
 from . import rfam
 from . import search_export
+from . import text_mining
 from . import traveler
 
 
@@ -58,4 +59,5 @@ cli.add_command(precompute.cli)
 cli.add_command(qa.cli)
 cli.add_command(rfam.cli)
 cli.add_command(search_export.cli)
+cli.add_command(text_mining.cli)
 cli.add_command(traveler.cli)

@@ -36,26 +36,18 @@ def index_xml(directory, db):
     publications.index_xml_directory(directory, db)
 
 
-@cli.command('fetch')
-@click.argument('filename', default='-', type=click.File('r'))
-@click.argument('output', default='references.csv', type=click.File('w'))
-def fetch(filename, output):
-    """
-    This will parse the csv file and query an API for information on all
-    references. It caches as it works so having many duplicate PMIDS is ok.
-    This assumes that each line in the file is: 'pmid,accession'.
-    """
-    publications.from_file(filename, output)
-
-
 @cli.command('lookup')
+@click.option('--column', default=0)
 @click.option('--allow-fallback/--no-allow-feedback', default=False)
 @click.argument('db', default='references.db', type=click.Path())
 @click.argument('ids', default='ref_ids.csv', type=click.File('r'))
-@click.argument('output', default='references.csv', type=click.File('w'))
-def lookup(db, ids, output, allow_fallback=False):
+@click.argument(
+    'output', 
+    default='references.csv', 
+    type=click.File('w'))
+def lookup(db, ids, output, column=0, allow_fallback=False):
     """
     Use the database index file to lookup all reference information for all xml
     files in the given directory.
     """
-    publications.write_lookup(db, ids, output, allow_fallback=allow_fallback)
+    publications.write_file_lookup(db, ids, output, column=column, allow_fallback=allow_fallback)

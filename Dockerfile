@@ -103,6 +103,12 @@ RUN \
     tar xvf seqkit_linux_amd64.tar.gz && \
     rm seqkit_linux_amd64.tar.gz
 
+RUN \
+    mkdir -p xsv && \
+    cd xsv && \
+    wget https://github.com/BurntSushi/xsv/releases/download/0.13.0/xsv-0.13.0-x86_64-unknown-linux-musl.tar.gz && \
+    tar xf xsv-0.13.0-x86_64-unknown-linux-musl.tar.gz
+
 # Install useful pip version
 RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && python get-pip.py
 
@@ -110,6 +116,8 @@ RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && python get-pip.py
 ADD requirements.txt $RNACENTRAL_IMPORT_PIPELINE/requirements.txt
 RUN /usr/local/bin/pip install --upgrade pip && \
     /usr/local/bin/pip install -r $RNACENTRAL_IMPORT_PIPELINE/requirements.txt
+
+RUN python -m textblob.download_corpora
 
 # Setup environmental variables
 ENV RIBOINFERNALDIR="$RNA/infernal-1.1.2/bin" RIBOEASELDIR="$RNA/infernal-1.1.2/bin"
@@ -126,4 +134,5 @@ ENV PATH="$RNA/blatSrc/bin:$PATH"
 ENV PATH="$RNA/seqkit:$PATH"
 ENV PATH="$RNA/jiffy-infernal-hmmer-scripts:$PATH"
 ENV PATH="$RNA/auto-traveler:$PATH"
+ENV PATH="$RNA/xsv:$PATH"
 ENV PATH="$RNACENTRAL_IMPORT_PIPELINE:$PATH"
