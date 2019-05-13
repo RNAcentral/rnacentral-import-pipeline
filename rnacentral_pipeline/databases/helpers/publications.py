@@ -129,7 +129,8 @@ class Cache(object):
                 data = json.dumps(attr.asdict(reference))
                 for key_name in cache.keys:
                     key = getattr(reference, key_name, None)
-                    handles[key_name].store(key, data)
+                    if key:
+                        handles[key_name].store(key, data)
 
     @contextmanager
     def open(self, mode='r'):
@@ -203,9 +204,9 @@ def query_pmc(id_reference):
         pmid = int(pmid)
 
     return Reference(
-        authors=six.text_type(data('authorString', '')),
+        authors=six.text_type(data.get('authorString', '')),
         location=six.text_type(pretty_location(data)),
-        title=six.text_type(clean_title(data('title', ''))),
+        title=six.text_type(clean_title(data.get('title', ''))),
         pmid=pmid,
         doi=six.text_type(data.get('doi', None)),
         pmcid=data.get('pmcid', None),
@@ -290,5 +291,8 @@ def write_file_lookup(cache_path, handle, output, column=0, allow_fallback=False
                 ref = store.get(id_ref, allow_fallback=allow_fallback)
             except UnknownReference:
                 LOGGER.warning("Could not handle find reference for %s", id_ref)
+                continue
+            except TooManyPublications:
+                LOGGER.warning("Found too many publications for %s", id_ref)
                 continue
             writer.writerows(ref.writeable(rest))

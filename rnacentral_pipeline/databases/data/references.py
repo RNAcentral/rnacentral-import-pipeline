@@ -96,12 +96,15 @@ class Reference(object):
                 self.doi,
             ]
         else:
+            doi = self.doi
+            if doi:
+                doi = doi.encode('ascii', 'ignore')
             rest = [
                 self.authors.encode('ascii', 'ignore'),
                 self.location.encode('ascii', 'ignore'),
                 self.title.encode('ascii', 'ignore'),
                 self.pmid,
-                self.doi.encode('ascii', 'ignore'),
+                doi,
             ]
 
         yield data + rest
