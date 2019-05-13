@@ -147,6 +147,7 @@ class Cache(object):
 @RateLimiter(max_calls=5, period=1)
 def summary(id_reference):
     LOGGER.info("Fetching remote summary for %s", id_reference)
+    print(id_reference.external_url())
     response = requests.get(id_reference.external_url())
     response.raise_for_status()
 
@@ -156,6 +157,12 @@ def summary(id_reference):
         raise UnknownReference(id_reference)
 
     if data['hitCount'] > 1:
+        possible = []
+        for result in data['resultList']['result']:
+            if six.text_type(result[id_reference.namespace]) == id_reference.external_id:
+                possible.append(result)
+        if len(possible) == 1:
+            return possible[0]
         raise TooManyPublications(id_reference)
 
     return data['resultList']['result'][0]
