@@ -24,7 +24,7 @@ def karyotype(domain, species):
 
 
 def test_builds_empty_karyotype_for_missing_data():
-    _, found = karyotype('ensemblgenomes', 'glycine_max')
+    _, found = karyotype('ensembl', 'glycine_max')
     assert len(found) == 1190
     assert found['1'] == {
         'size': 56831624,
