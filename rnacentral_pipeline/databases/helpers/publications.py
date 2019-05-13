@@ -155,7 +155,7 @@ def summary(id_reference):
 
     data = response.json()
     assert data, "Somehow got no data"
-    if data['hitCount'] == 0:
+    if data.get('hitCount', 0) == 0:
         raise UnknownReference(id_reference)
 
     if data['hitCount'] == 1:
