@@ -26,12 +26,13 @@ from rnacentral_pipeline.databases.helpers.hashes import md5
 
 from . import utils
 
-PMID_URL = 'https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=EXT_ID:{pmid}+AND+SRC:MED&format=json'
-DOI_URL = 'https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=DOI:{doi}+AND+SRC:MED&format=json'
+PMID_URL = 'https://www.ebi.ac.uk/europepmc/webservices/rest/search?query={pmid}+AND+SRC:MED&format=json'
+TERM_URL = 'https://www.ebi.ac.uk/europepmc/webservices/rest/search?query={term}&format=json'
 
 KNOWN_SERVICES = {
     'doi',
     'pmid',
+    'pmcid',
 }
 
 
@@ -54,7 +55,8 @@ class Reference(object):
     location = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
     title = attr.ib(validator=optional(is_a(six.text_type)), converter=six.text_type)
     pmid = attr.ib(validator=optional(is_a(int)))
-    doi = attr.ib(validator=optional(is_a(six.string_types)))
+    doi = attr.ib(validator=optional(is_a(six.text_type)))
+    pmcid = attr.ib(validator=optional(is_a(six.text_type)), default=None)
 
     def md5(self):
         """
@@ -78,16 +80,40 @@ class Reference(object):
             self.doi,
         ]
 
-    def writeable(self, accession):
-        yield [
-            self.md5(),
-            accession,
-            self.authors,
-            self.location,
-            self.title,
-            self.pmid,
-            self.doi,
-        ]
+    def writeable(self, extra):
+        data = [self.md5()]
+        if isinstance(extra, six.string_types):
+            data.append(extra)
+        else:
+            data.extend(extra)
+
+        if six.PY3:
+            rest = [
+                self.authors,
+                self.location,
+                self.title,
+                self.pmid,
+                self.doi,
+            ]
+        else:
+            rest = [
+                self.authors.encode('ascii', 'ignore'),
+                self.location.encode('ascii', 'ignore'),
+                self.title.encode('ascii', 'ignore'),
+                self.pmid,
+                self.doi.encode('ascii', 'ignore'),
+            ]
+
+        yield data + rest
+
+    def id_reference(self):
+        if self.pmid:
+            return IdReference(namespace='pmid', external_id=six.text_type(self.pmid))
+        if self.doi:
+            return IdReference(namespace='doi', external_id=self.doi)
+        if self.pmcid:
+            return IdReference(namespace='pmcid', external_id=self.pmcid)
+        raise ValueError("Cannot build IdReference for %s" % self)
 
 
 @attr.s(frozen=True, hash=True)
@@ -101,14 +127,20 @@ class IdReference(object):
             return cls('pmid', six.text_type(ref_id))
 
         if isinstance(ref_id, six.string_types):
-            ref_id = ref_id.strip()
+            ref_id = six.text_type(ref_id.strip())
             if re.match(r'^\d+$', ref_id):
                 return cls('pmid', ref_id)
+            if re.match(r'^PMC\d+$', ref_id, re.IGNORECASE):
+                return cls('pmcid', ref_id.upper())
             if ':' not in ref_id:
                 raise UnknownPublicationType("Could not parse: " + ref_id)
             service, eid = ref_id.split(':', 1)
             service = service.lower()
             if service in KNOWN_SERVICES:
+                if service == 'pmcid':
+                    eid = eid.upper()
+                    if not eid.startswith('PMC'):
+                        eid = 'PMC' + eid
                 return cls(service, eid)
         raise UnknownPublicationType(ref_id)
 
@@ -119,8 +151,13 @@ class IdReference(object):
     def external_url(self):
         if self.namespace == 'pmid':
             return PMID_URL.format(pmid=self.external_id)
-        if self.namespace == 'doi':
-            return DOI_URL.format(doi=self.external_id)
+        if self.namespace in {'doi', 'pmcid'}:
+            suffix = self.external_id
+            if self.namespace == 'doi':
+                suffix = '"%s"' % suffix
+            term = self.namespace.upper() + ':' + suffix
+            quoted = six.moves.urllib.parse.quote(term, '')
+            return TERM_URL.format(term=quoted)
         raise ValueError("No URL for namespace %s" % self.namespace)
 
     def writeable(self, accession):
