@@ -26,7 +26,7 @@ from rnacentral_pipeline.databases.helpers.hashes import md5
 
 from . import utils
 
-PMID_URL = 'https://www.ebi.ac.uk/europepmc/webservices/rest/search?query={pmid}+AND+SRC:MED&format=json'
+PMID_URL = 'https://www.ebi.ac.uk/europepmc/webservices/rest/search?query={pmid}+AND+SRC:MED&format=json&pageSize=1000'
 TERM_URL = 'https://www.ebi.ac.uk/europepmc/webservices/rest/search?query={term}&format=json'
 
 KNOWN_SERVICES = {

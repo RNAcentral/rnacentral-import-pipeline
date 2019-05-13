@@ -365,3 +365,18 @@ def test_caching_works_as_expected():
         assert lookup('PMID:375006')
         assert pub.summary.cache_info().hits == count + 1
         assert pub.summary.cache_info().misses == 1
+
+
+def test_can_find_unidexable_publication():
+    ref = lookup("1903816")
+    assert ref == attr.asdict(Reference(
+        authors='Leung J, Sinclair DA, Hayashi S, Tener GM, Grigliatti TA.',
+        location='J Mol Biol 219(2):175-188 (1991)',
+        title=(
+            'Informational redundancy of tRNA(4Ser) and tRNA(7Ser) genes in '
+            'Drosophila melanogaster and evidence for intergenic recombination'
+        ),
+        pmid=1903816,
+        doi='10.1016/0022-2836(91)90560-s',
+        pmcid=None,
+    ))
