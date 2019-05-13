@@ -86,7 +86,7 @@ class BlatHit(object):
 
     @property
     def name(self):
-        return self.region.name(self.upi, is_upi=True)
+        return self.region.name(upi=self.upi)
 
     @property
     def match_fraction(self):
