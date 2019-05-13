@@ -259,14 +259,12 @@ process merge_and_import {
   set val(name), file(ctl), file('raw*.csv') from to_load
 
   output:
-  val(name) into loaded
+  val(name) into (pre_loaded, post_loaded)
 
   """
   split-and-load $ctl 'raw*.csv' ${params.import_data.chunk_size} $name
   """
 }
-
-loaded.into { pre_loaded; post_loaded }
 
 pre_loaded
   .flatMap { n -> file("files/import-data/pre-release/*__${n.replace('_', '-')}.sql") }
