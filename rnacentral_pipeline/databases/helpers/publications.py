@@ -178,7 +178,7 @@ def pretty_location(data):
         pages = ':' + pages
 
     location = u'{title} {volume}{issue}{pages} ({year})'.format(
-        title=data['journalTitle'],
+        title=data.get('journalTitle', ''),
         issue=issue,
         volume=data.get('journalVolume', ''),
         pages=pages,
@@ -203,9 +203,9 @@ def query_pmc(id_reference):
         pmid = int(pmid)
 
     return Reference(
-        authors=six.text_type(data['authorString']),
+        authors=six.text_type(data('authorString', '')),
         location=six.text_type(pretty_location(data)),
-        title=six.text_type(clean_title(data['title'])),
+        title=six.text_type(clean_title(data('title', ''))),
         pmid=pmid,
         doi=six.text_type(data.get('doi', None)),
         pmcid=data.get('pmcid', None),
