@@ -12,16 +12,23 @@ if [[ "$name" = "master" ]]; then
   sif="main.sif"
 fi
 
+docker="bsweeneyebi/rnacentral-import-pipeline:$tag"
+
 # Build docker image
 cp ../requirements.txt .
-docker build -t "bsweeneyebi/rnacentral-import-pipeline:$tag" .
-docker push "bsweeneyebi/rnacentral-import-pipeline:$tag"
+docker build -t "$docker" .
+docker push "$docker"
 
 # Build singuarlity image
 vagrant up
-vagrant ssh -c "sudo singularity build $sif docker://bsweeneyebi/rnacentral-import-pipeline:$tag"
-vagrant ssh -c "cat /home/vagrant/$sif" > "$sif"
-vagrant halt
-chmod +x "$sif"
+vagrant ssh -c "su -; sudo singularity build $sif docker://$docker"
 
-# scp main.sif "$USER@yoda-login:/nfs/leia/production/xfam/users/bsweeney/containers/"
+expect <<EOF
+spawn scp -P 2222 vagrant@127.0.0.1:/home/vagrant/$sif . 
+expect {
+  password: {send "vagrant\r"; exp_continue}
+}
+EOF
+vagrant halt
+
+scp $sif "$USER@yoda-login:/hps/nobackup2/xfam/rnacentral/containers/"
