@@ -103,7 +103,7 @@ class CacheStorage(object):
 
     def __normalize_key__(self, raw):
         if isinstance(raw, six.string_types):
-            return str(raw.encode('ascii', 'ignore'))
+            return raw.encode('ascii', 'ignore')
         return str(raw)
 
 @attr.s()

@@ -270,6 +270,35 @@ def test_can_query_with_fallback(indexed, raw_id):
     'doi:10.1038/srep12276',
     'DOI:10.1038/srep12276',
 ])
+def test_produces_expected_writeables(indexed, raw_id):
+    id_ref = pub.reference(raw_id)
+    db = indexed[id_ref.namespace]
+    ref = db.get(id_ref, allow_fallback=True)
+    assert list(ref.writeable(['something', 'other'])) == [
+        [
+            "03ea261d3cd947fde1cc8328a4c08127", 
+            "something", 
+            "other", 
+            'Xu Z, Han Y, Liu J, Jiang F, Hu H, Wang Y, Liu Q, Gong Y, Li X.', 
+            'Scientific reports 5:12276 (2015)', 
+            (
+                'MiR-135b-5p and MiR-499a-3p Promote Cell '
+                'Proliferation and Migration in Atherosclerosis by Directly '
+                'Targeting MEF2C'
+            ),
+            26184978,
+            '10.1038/srep12276'
+        ]
+    ]
+
+
+@pytest.mark.parametrize('raw_id', [
+    26184978,
+    'pmid:26184978',
+    'PMID:26184978',
+    'doi:10.1038/srep12276',
+    'DOI:10.1038/srep12276',
+])
 def test_can_write_using_specified_columns(indexed_db_path, raw_id):
     out = six.moves.StringIO()
     content = 'something,%s,other\n' % raw_id

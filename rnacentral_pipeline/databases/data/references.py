@@ -89,11 +89,11 @@ class Reference(object):
 
         if six.PY3:
             rest = [
-                self.authors.encode('utf-8'),
-                self.location.encode('utf-8'),
-                self.title.encode('utf-8'),
+                self.authors,
+                self.location,
+                self.title,
                 self.pmid,
-                self.doi.encode('utf-8'),
+                self.doi,
             ]
         else:
             rest = [
