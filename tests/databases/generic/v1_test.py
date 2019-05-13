@@ -47,11 +47,6 @@ def test_can_generate_xref_data(filename, xrefs):
         assert [v1.xrefs(e) for e in data] == xrefs
 
 
-@pytest.mark.skip()  # pylint: disable=no-member
-def test_can_extract_anticodon():
-    pass
-
-
 @pytest.mark.parametrize('filename,synonyms', [  # pylint: disable=no-member
     ('data/json-schema/v020/pombase.json', {"sno52"}),
 ])
@@ -138,8 +133,9 @@ def test_can_correctly_parse_data():
             dat.SequenceRegion(
                 chromosome='rDNA',
                 strand=1,
-                exons=[dat.Exon(start=46772, stop=49485)],
+                exons=[dat.Exon(start=46771, stop=49485)],
                 assembly_id="R6",
+                coordinate_system=dat.CoordinateSystem.from_name('1-start, fully-closed'),
             ),
         ],
         rna_type='rRNA',
@@ -199,23 +195,25 @@ def test_can_correctly_parse_lncipedia_data():
                 chromosome='16',
                 strand=-1,
                 exons=[
-                    dat.Exon(start=74226291, stop=74226625),
-                    dat.Exon(start=74239804, stop=74240064),
-                    dat.Exon(start=74244205, stop=74244404),
-                    dat.Exon(start=74249251, stop=74249420),
+                    dat.Exon(start=74226290, stop=74226625),
+                    dat.Exon(start=74239803, stop=74240064),
+                    dat.Exon(start=74244204, stop=74244404),
+                    dat.Exon(start=74249250, stop=74249420),
                 ],
                 assembly_id='GRCh37',
+                coordinate_system=dat.CoordinateSystem.from_name('1-start, fully-closed'),
             ),
             dat.SequenceRegion(
                 chromosome='16',
                 strand=-1,
                 exons=[
-                    dat.Exon(start=74192392, stop=74192726),
-                    dat.Exon(start=74205905, stop=74206165),
-                    dat.Exon(start=74210306, stop=74210505),
-                    dat.Exon(start=74215352, stop=74215521),
+                    dat.Exon(start=74192391, stop=74192726),
+                    dat.Exon(start=74205904, stop=74206165),
+                    dat.Exon(start=74210305, stop=74210505),
+                    dat.Exon(start=74215351, stop=74215521),
                 ],
                 assembly_id="GRCh38",
+                coordinate_system=dat.CoordinateSystem.from_name('1-start, fully-closed'),
             ),
         ],
         rna_type='SO:0001877',
@@ -833,11 +831,12 @@ def test_can_correctly_find_isoforms():
                 chromosome='1',
                 strand='-1',
                 exons=[
-                    dat.Exon(start=83801516, stop=83803251),
-                    dat.Exon(start=83849907, stop=83850022),
-                    dat.Exon(start=83860408, stop=83860546),
+                    dat.Exon(start=83801515, stop=83803251),
+                    dat.Exon(start=83849906, stop=83850022),
+                    dat.Exon(start=83860407, stop=83860546),
                 ],
                 assembly_id='GRCh38',
+                coordinate_system=dat.CoordinateSystem.from_name('1-start, fully-closed'),
             ),
         ],
         rna_type='SO:0001877',
@@ -896,3 +895,58 @@ def test_it_treats_flybase_scaRNA_correctly():
 
     assert len(data) == 1
     assert data[0].rna_type == 'scaRNA'
+
+
+def test_can_properly_handle_shifting_lncipedia_coordinates():
+    with open('data/json-schema/v020/lincipedia.json', 'r') as raw:
+        data = json.load(raw)
+        data = list(v1.parse(data))
+
+    assert len(data) == 1
+    assert data[0].regions == [
+        dat.SequenceRegion(
+            chromosome='15',
+            strand='-',
+            exons=[dat.Exon(start=97665305, stop=97670289)],
+            assembly_id="GRCh38",
+            coordinate_system=dat.CoordinateSystem.from_name('1-start, fully-closed'),
+        ),
+    ]
+
+    assert list(data[0].regions[0].writeable(data[0].accession)) == [[
+        "LNCIPEDIA:LINC00923:10",
+        '@15/97665305-97670289:-',
+        '15',
+        -1,
+        'GRCh38',
+        1,
+        97665305,
+        97670289,
+    ]]
+
+
+def test_can_properly_handle_shifting_mirbase_coordinates():
+    with open('data/json-schema/v020/shift-mirbase.json', 'r') as raw:
+        data = json.load(raw)
+        data = list(v1.parse(data))
+
+    assert len(data) == 1
+    assert len(data[0].regions) == 1
+    assert attr.asdict(data[0].regions[0]) == attr.asdict(dat.SequenceRegion(
+        chromosome='9',
+        strand='+',
+        exons=[dat.Exon(start=136670602, stop=136670686)],
+        assembly_id="GRCh38",
+        coordinate_system=dat.CoordinateSystem.from_name('1-start, fully-closed'),
+    ))
+
+    assert list(data[0].regions[0].writeable(data[0].accession)) == [[
+        'MIRBASE:MI0000471',
+        '@9/136670602-136670686:+',
+        '9',
+        1,
+        'GRCh38',
+        1,
+        136670602,
+        136670686,
+    ]]

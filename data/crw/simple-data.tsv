@@ -1,0 +1,50 @@
+structure	rna_type	rna_class	tax_id	accession(s)	cell_location
+a.I1.e.C.luteoviridis.B.C1.SSU.1052.ps	I	IC1	31301	X73998	Nucleus
+d.16.e.C.luteoviridis.ps	R	16S	31301	X73998	Nucleus
+a.I1.e.C.mirabilis.C1.SSU.1506.ps	I	IC1	3083	X74000	Nucleus
+b.I1.e.C.saccharophila.C1.SSU.156.ps	I	IC1	3082	AB058310	Nucleus
+a.I1.m.A.castellanii.B4.LSU.1931.ps	I	IB	5755	U03732	Mitochondrion
+b.16.m.A.castellanii.ps	R	16S	5755	U03732	Mitochondrion
+d.16.e.A.castellanii.ps	R	16S	5755	U07413	Nucleus
+b.I1.e.A.griffini.2.C1.SSU.516.ps	I	IC1	29195	S81337	Nucleus
+b.I1.e.A.griffini.1.C1.SSU.516.ps	I	IC1	29195	U02540 U07412	Nucleus
+d.5.e.A.tabira.ps	R	5S	78079	AB015591	Nucleus
+d.5.e.A.domesticus.ps	R	5S	6997	M16074	Nucleus
+d.16.e.A.bongranii.ps	R	16S	216896	AJ535150	Nucleus
+d.5.b.A.ferrooxidans.1.ps	R	5S	920	M11715	Nucleus
+d.5.b.A.ferrooxidans.2.ps	R	5S	920	M11542	Nucleus
+d.5.b.A.thiooxidans.ps	R	5S	930	M11541	Nucleus
+d.16.b.A.capsulatum.ps	R	16S	33075		Nucleus
+d.16.b.A.calcoaceticus.ps	R	16S	471		Nucleus
+d.235.b.A.calcoaceticus.ps d.233.b.A.calcoaceticus.ps	R	23S	471	X87280	Nucleus
+d.16.m.A.cahirinus.ps	R	16S	10068	X84387	Mitochondrion
+d.5.e.A.equina.ps	R	5S	6106	X05233	Nucleus
+d.5.b.A.madurae.ps	R	5S	1993	D13615	Nucleus
+d.16.b.A.israelii.ps	R	16S	1659		Nucleus
+d.5.e.A.magnoliae.ps	R	5S	7030	X01518	Nucleus
+d.16.b.A.hydrophila.ps	R	16S	644		Nucleus
+d.233.b.A.hydrophila.ps d.235.b.A.hydrophila.ps	R	23S	644	X87281	Nucleus
+d.16.a.A.pernix.K1.ps	R	16S	56636		Nucleus
+d.5.b.A.tumefaciens.ps	R	5S	358	X02627	Nucleus
+d.16.b.A.tumefaciens.ps	R	16S	358		Nucleus
+a.I1.m.A.aegerita.C2.SSU.ps	I	IC2	5400	U54637	Mitochondrion
+a.I2.m.A.aegerita.B.LSU.2059.ps	I	IIB	5400	AF087656	Mitochondrion
+d.16.e.A.plicata.ps	R	16S	28023	Z14139	Nucleus
+d.16.m.A.fulgens.ps	R	16S	9649	Y08511	Mitochondrion
+a.I1.e.A.capsulatus.G184B.C1.SSU.ps	I	IC1	5037	U57102	Nucleus
+a.I1.e.A.capsulatus.G186B.C1.SSU.ps	I	IC1	5037	U57103	Nucleus
+a.I1.e.A.capsulatus.CBS213.53.C1.SSU.943.ps	I	IC1	5037	Z75305	Nucleus
+a.I1.e.A.capsulatus.FLs1.C1.SSU.ps	I	IC1	5037	U57101	Nucleus
+d.235.m.A.caerulea.ps d.233.m.A.caerulea.ps	R	23S	42349	X83390	Mitochondrion
+d.233.m.A.turrita.ps d.235.m.A.turrita.ps	R	23S	27820	X71393 X71394	Mitochondrion
+d.5.b.A.faecalis.1.ps	R	5S	511	X05517	Nucleus
+d.16.e.A.fundyense.ps	R	16S	2932	U09048	Nucleus
+b.16.m.A.mississippiensis.ps	R	16S	8496	L28074	Mitochondrion
+d.16.b.A.vinosum.ps	R	16S	1049		Nucleus
+d.16.e.A.macrogynus.ps	R	16S	28583	U23936	Nucleus
+d.16.e.A.bracteata.ps	R	16S	191599	AY090068	Nucleus
+d.16.e.A.connecticus.ps	R	16S	67759	AF025685	Nucleus
+d.16.e.A.ferocious.ps	R	16S	191597	AY090062	Nucleus
+d.16.e.A.khaliulini.ps	R	16S	191589	AY090045	Nucleus
+d.16.e.Amblyospora.sp.ps	R	16S	33688	U68474	Nucleus
+b.16.m.A.hottentotus.ps	R	16S	9391	M95108	Mitochondrion

@@ -707,3 +707,12 @@ def test_can_handle_mislabled_trna():
 
     assert len(data) == 1
     assert data[0].rna_type == 'tRNA'
+
+
+def test_can_handle_weird_feature():
+    with open('data/ena/bad-feature-type.ncr', 'r') as raw:
+        data = list(parse(raw))
+
+    assert len(data) == 2
+    assert data[0].rna_type == 'rRNA'
+    assert data[1].rna_type == 'rRNA'

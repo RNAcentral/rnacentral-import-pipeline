@@ -156,6 +156,7 @@ def test_can_write_valid_sequence_regions():
                     data.Exon(start=12, stop=14),
                 ],
                 assembly_id='hg19',
+                coordinate_system=data.CoordinateSystem.one_based(),
             ),
             data.SequenceRegion(
                 chromosome='12',
@@ -165,6 +166,7 @@ def test_can_write_valid_sequence_regions():
                     data.Exon(start=24, stop=33),
                 ],
                 assembly_id='hg38',
+                coordinate_system=data.CoordinateSystem.one_based(),
             )
         ],
         rna_type='snoRNA',
@@ -177,44 +179,4 @@ def test_can_write_valid_sequence_regions():
         ['b', '@1/1-10,12-14:-', '1', -1, 'hg19', 2, 12, 14],
         ['b', '@12/20-22,24-33:+', '12', 1, 'hg38', 2, 20, 22],
         ['b', '@12/20-22,24-33:+', '12', 1, 'hg38', 2, 24, 33],
-    ]
-
-
-def test_can_write_valid_exons():
-    entry = data.Entry(
-        primary_id='a',
-        accession='b',
-        ncbi_tax_id=1,
-        database='a_database_name',
-        sequence='ACCGGGGGGGGGGGGGGGGGGGGGGGG',
-        regions=[
-            data.SequenceRegion(
-                chromosome='1',
-                strand=-1,
-                exons=[
-                    data.Exon(start=1, stop=10),
-                    data.Exon(start=12, stop=14),
-                ],
-                assembly_id='hg19',
-            ),
-            data.SequenceRegion(
-                chromosome='12',
-                strand=1,
-                exons=[
-                    data.Exon(start=20, stop=22),
-                    data.Exon(start=24, stop=33),
-                ],
-                assembly_id='hg38',
-            )
-        ],
-        rna_type='snoRNA',
-        url='http://www.google.com',
-        seq_version='1',
-    )
-
-    assert list(entry.write_genomic_locations()) == [
-        ['b', '1', 1, 10, 'hg19', -1],
-        ['b', '1', 12, 14, 'hg19', -1],
-        ['b', '12', 20, 22, 'hg38', 1],
-        ['b', '12', 24, 33, 'hg38', 1],
     ]

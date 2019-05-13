@@ -42,6 +42,36 @@ def partioned_accessions(all_accessions):
     return accessions, inactive_accessions
 
 
+def fix_hgnc_data(accessions):
+    hgnc_entries = []
+    ref_seq_entry = []
+    result = []
+    for accession in accessions:
+        if accession.database == 'hgnc':
+            hgnc_entries.append(accession)
+        else:
+            result.append(accession)
+            if accession.database == 'refseq':
+                ref_seq_entry.append(accession)
+
+    if not hgnc_entries or len(ref_seq_entry) != 1:
+        return accessions
+
+    for accession in hgnc_entries:
+        result.append(attr.evolve(
+            accession,
+            feature_name=ref_seq_entry[0].feature_name,
+            ncrna_class=ref_seq_entry[0].ncrna_class,
+        ))
+    return result
+
+
+def maybe_text(value):
+    if value is None:
+        return None
+    return six.text_type(value)
+
+
 @attr.s()
 class Accession(object):
     """
@@ -49,17 +79,17 @@ class Accession(object):
     name from the accession level data for a sequence.
     """
 
-    gene = attr.ib(validator=optional(is_a(six.text_type)))
-    optional_id = attr.ib(validator=optional(is_a(six.text_type)))
-    pretty_database = attr.ib(validator=is_a(six.text_type))
-    feature_name = attr.ib(validator=is_a(six.text_type))
-    ncrna_class = attr.ib(validator=optional(is_a(six.text_type)))
-    species = attr.ib(validator=optional(is_a(six.text_type)))
-    common_name = attr.ib(validator=optional(is_a(six.text_type)))
-    description = attr.ib(validator=is_a(six.text_type))
-    locus_tag = attr.ib(validator=optional(is_a(six.text_type)))
-    organelle = attr.ib(validator=optional(is_a(six.text_type)))
-    lineage = attr.ib(validator=optional(is_a(six.text_type)))
+    gene = attr.ib(validator=optional(is_a(six.text_type)), converter=six.text_type)
+    optional_id = attr.ib(validator=optional(is_a(six.text_type)), converter=maybe_text)
+    pretty_database = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
+    feature_name = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
+    ncrna_class = attr.ib(validator=optional(is_a(six.text_type)), converter=maybe_text)
+    species = attr.ib(validator=optional(is_a(six.text_type)), converter=maybe_text)
+    common_name = attr.ib(validator=optional(is_a(six.text_type)), converter=maybe_text)
+    description = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
+    locus_tag = attr.ib(validator=optional(is_a(six.text_type)), converter=maybe_text)
+    organelle = attr.ib(validator=optional(is_a(six.text_type)), converter=maybe_text)
+    lineage = attr.ib(validator=optional(is_a(six.text_type)), converter=maybe_text)
     all_species = attr.ib(validator=is_a(tuple), converter=tuple)
     all_common_names = attr.ib(validator=is_a(tuple), converter=tuple)
 
@@ -95,12 +125,20 @@ class Accession(object):
         not include uncultured, environmental or synthetic domains.
         """
 
-        if 'uncultured' in self.lineage or \
-                'environmental' in self.lineage or \
-                'synthetic' in self.lineage:
+        if self.lineage.startswith('other sequences'):
             return None
 
-        return self.lineage.split(';')[0]
+        parts = [p.strip() for p in self.lineage.split(';')]
+        domain = parts[0]
+        if domain == 'cellular organisms':
+            domain = parts[1]
+
+        if 'uncultured' in domain or 'environmental' in domain or \
+                'synthetic' in domain or 'artificial' in domain or \
+                'unclassified' in domain:
+            return None
+
+        return domain
 
     @property
     def masked_description(self):
@@ -248,6 +286,7 @@ class SpeciesSequence(Sequence):
         """
 
         active, inactive = partioned_accessions(data['accessions'])
+        active = fix_hgnc_data(active)
         hits = set()
         for hit in data['hits']:
             if hit.pop('rfam_hit_id'):

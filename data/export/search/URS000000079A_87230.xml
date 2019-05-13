@@ -37,5 +37,6 @@
 <field name="has_interacting_proteins">False</field>
 <field name="has_interacting_rnas">False</field>
 <field name="has_conserved_structure">False</field>
+<field name="has_secondary_structure">False</field>
 </additional_fields>
 </entry>

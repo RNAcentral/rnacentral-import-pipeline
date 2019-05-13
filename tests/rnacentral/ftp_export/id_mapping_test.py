@@ -108,6 +108,7 @@ def test_as_entry_works_correctly():
     ]),
     ('URS0000672F0E_7955', [
         ['URS0000672F0E', 'ENSEMBL', 'ENSDART00000171022', 7955, 'Y_RNA', 'ENSDARG00000100903.1'],
+        ['URS0000672F0E', 'RFAM', 'RF00019', 7955, 'Y_RNA', ''],
     ])
 ])
 def test_can_create_expected_exports(rna_id, expected):

@@ -34,7 +34,7 @@ ORDERING = [
     'tair',
     'sgd',
     'flybase',
-    'dictbase',
+    'dictybase',
     'pombase',
     'mgi',
     'rgd',

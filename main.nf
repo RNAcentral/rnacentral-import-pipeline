@@ -25,19 +25,23 @@ data_to_fetch_and_process = []
 // Here we generate the data that will go into the channels. This is a bit
 // cleaner to work with over constantly modifying the channels in the loop.
 for (entry in params.import_data.databases) {
-  def db_name = entry.key
-  def database = params.databases[db_name]
-
-  if (!entry.value || !params.databases[db_name]) {
+  if (!entry.value) {
     continue
   }
 
-  if (db_name == "custom") {
+  if (entry.key == "custom") {
     processed_data.addAll(files("${entry.value}/**.csv"))
     continue
   }
 
+  def db_name = entry.key
+  if (!params.databases[db_name]) {
+    error "Database ${db_name} is not configured"
+  }
+
+  def database = params.databases[db_name]
   def source = DataSource.build(db_name, database)
+
   if (DataSource.is_parallel_task(source)) {
     data_to_fetch.addAll(source.inputs)
     data_to_process << [source.name, source]
@@ -180,8 +184,9 @@ refs_database = Channel.create()
 
 all_processed_output
   .mix(all_fetched_and_processed_output)
+  .filter { f -> !f.isEmpty() }
   .choice(processed_output, terms, refs, refs_database) { f ->
-    names = ["terms.csv", "ref_ids.csv", params.metadata.europepmc.produces]
+    def names = ["terms.csv", "ref_ids.csv", params.metadata.europepmc.process.produces]
     return names.indexOf(f.getName()) + 1
   }
 
@@ -201,21 +206,41 @@ process batch_lookup_ontology_information {
   """
 }
 
-refs.collect().set { refs_to_lookup }
+refs
+  .collect()
+  .set { refs_to_split }
 
-process batch_lookup_publications {
+process merge_and_split_all_publications {
   input:
-  file("ref_ids*.csv") from refs_to_lookup
-  file("references.db") from refs_database
+  file("ref_ids*.csv") from refs_to_split
 
   output:
-  file('references.csv') into references_output
+  file('split-refs/*.csv') into split_references
 
   """
   set -o pipefail
 
-  find . -name 'ref_ids*.csv' | xargs cat | sort -u >> all-ids
-  rnac europepmc lookup --allow-fallback references.db all-ids references.csv
+  find . -name 'ref_ids*.csv' | xargs cat | sort -u > all-ids
+  split --additional-suffix=".csv" --number l/${params.lookup_publications.maxForks} all-ids split-refs/refs
+  """
+}
+
+split_references
+  .combine(refs_database)
+  .set { refs_to_lookup }
+
+process lookup_publications {
+  maxForks params.lookup_publications.maxForks
+
+  input:
+  set file(refs), file(db) from refs_to_lookup
+
+  output:
+  file("references.csv") into references_output
+
+  script:
+  """
+  rnac europepmc lookup --allow-fallback $db $refs references.csv
   """
 }
 
@@ -229,13 +254,14 @@ raw_output
     term_info,
     references_output,
   )
+  .filter { f -> !f.isEmpty() }
   .map { f ->
-    name = f.getBaseName()
-    ctl = file("files/import-data/load/${name.replace('_', '-')}.ctl")
+    def name = f.getBaseName()
+    def ctl = file("files/import-data/load/${name.replace('_', '-')}.ctl")
     [[name, ctl], f]
   }
   .filter {
-    status = it[0][1].exists()
+    def status = it[0][1].exists()
     if (!status) {
       log.info "Skipping data ${it[0][1].getBaseName()}"
     }
@@ -246,21 +272,19 @@ raw_output
   .set { to_load }
 
 process merge_and_import {
-  echo true
+  memory 4.GB
   tag { name }
 
   input:
   set val(name), file(ctl), file('raw*.csv') from to_load
 
   output:
-  val(name) into loaded
+  val(name) into (pre_loaded, post_loaded)
 
   """
   split-and-load $ctl 'raw*.csv' ${params.import_data.chunk_size} $name
   """
 }
-
-loaded.into { pre_loaded; post_loaded }
 
 pre_loaded
   .flatMap { n -> file("files/import-data/pre-release/*__${n.replace('_', '-')}.sql") }
@@ -281,7 +305,6 @@ post_loaded
   .set { post_scripts }
 
 process release {
-  echo true
   maxForks 1
 
   when:
@@ -334,19 +357,16 @@ flag_for_qa
   .set { qa_queries }
 
 process fetch_qa_sequences {
-
   input:
   set val(status), val(name), file(query) from qa_queries
 
   output:
   set val(name), file('parts/*.fasta') into split_qa_sequences
 
-  """
-  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > raw.json
-  json2fasta.py raw.json rnacentral.fasta
-  seqkit shuffle --two-pass rnacentral.fasta > shuffled.fasta
-  seqkit split --two-pass --by-size ${params.qa[name].chunk_size} --out-dir 'parts/' shuffled.fasta
-  """
+  script:
+  chunk_size = params.qa[name].chunk_size
+  variables = ""
+  template 'query-and-split.sh'
 }
 
 process generate_qa_scan_files {
@@ -400,7 +420,7 @@ split_qa_sequences
 process qa_scan {
   tag { name }
   cpus { params.qa[name].cpus }
-  memory { params.qa[name].memory }
+  memory { params.qa[name].memory * params.qa[name].cpus }
 
   input:
   set val(name), file('sequences.fasta'), file(dir) from sequences_to_scan
@@ -422,7 +442,6 @@ process qa_scan {
       --rfam \
       --notextw \
       --nohmmonly \
-      --mpi \
       "$dir/Rfam.cm" \
       sequences.fasta
     rnac qa $name results.tblout hits.csv
@@ -465,7 +484,6 @@ qa_scan_results
 
 process import_qa_data {
   tag { "qa-$name" }
-  echo true
 
   input:
   set val(name), file('raw*.csv'), file(ctl) from hits_to_import
@@ -508,7 +526,7 @@ process species_to_map {
 raw_genomes
   .splitCsv()
   .filter { s, a, t, d -> !params.genome_mapping.species_excluded_from_mapping.contains(s) }
-  .into { assemblies; genomes_to_fetch; assembly_tracking }
+  .into { assemblies; genomes_to_fetch }
 
 assemblies
   .combine(Channel.fromPath('files/genome-mapping/find-unmapped.sql'))
@@ -516,9 +534,7 @@ assemblies
 
 process fetch_unmapped_sequences {
   tag { species }
-  scratch true
-  maxForks 5
-  errorStrategy 'ignore'
+  maxForks params.genome_mapping.fetch_unmapped_sequences.directives.maxForks
 
   input:
   set val(species), val(assembly_id), val(taxid), val(division), file(query) from assemblies_to_fetch
@@ -526,105 +542,117 @@ process fetch_unmapped_sequences {
   output:
   set species, file('parts/*.fasta') into split_mappable_sequences
 
-  script:
   """
   psql -v ON_ERROR_STOP=1 -v taxid=$taxid -v assembly_id=$assembly_id -f "$query" "$PGDATABASE" > raw.json
   json2fasta.py raw.json rnacentral.fasta
   seqkit shuffle --two-pass rnacentral.fasta > shuffled.fasta
-  seqkit split --two-pass --by-size "${params.genome_mapping.chunk_size}" --out-dir 'parts/' shuffled.fasta
+  seqkit split --two-pass --by-size ${params.genome_mapping.chunk_size} --out-dir 'parts/' shuffled.fasta
   """
 }
 
 process download_genome {
   tag { species }
-  memory 30.GB
-  scratch true
+  memory { params.genome_mapping.download_genome.directives.memory }
 
   input:
   set val(species), val(assembly), val(taxid), val(division) from genomes_to_fetch
 
   output:
-  set val(species), file('*.fa'), file('11.ooc') into genomes
+  set val(species), val(assembly), file('parts/*.{2bit,ooc}') into genomes
 
-  script:
-  def engine = new groovy.text.SimpleTemplateEngine()
-  def url = engine
-    .createTemplate(params.genome_mapping.sources[division])
-    .make([species: species])
-    .toString()
   """
-  fetch genome '$url' ${species}.fasta
+  set -o pipefail
 
-  blat \
-    -makeOoc=11.ooc \
-    -stepSize=${params.genome_mapping.blat_options.step_size} \
-    -repMatch=${params.genome_mapping.blat_options.rep_match} \
-    -minScore=${params.genome_mapping.blat_options.min_score} \
-    ${species}.fasta /dev/null /dev/null
+  rnac genome-mapping url-for --host=$division $species $assembly - |\
+    xargs -I {} fetch generic '{}' ${species}.fasta.gz
+
+  gzip -d ${species}.fasta.gz
+  split-sequences ${species}.fasta ${params.genome_mapping.download_genome.chunk_size} parts
+  find parts -name '*.fasta' |\
+    xargs -I {} faToTwoBit -noMask {} {}.2bit
+
+  find parts -name '*.fasta' |\
+  xargs -I {} \
+    blat \
+      -makeOoc={}.ooc \
+      -stepSize=${params.genome_mapping.blat.options.step_size} \
+      -repMatch=${params.genome_mapping.blat.options.rep_match} \
+      -minScore=${params.genome_mapping.blat.options.min_score} \
+      {} /dev/null /dev/null
   """
 }
 
 genomes
   .join(split_mappable_sequences)
-  .flatMap { species, chrs, ooc_file, chunks ->
-    [chrs, chunks].combinations().inject([]) { acc, it -> acc << [species, ooc_file] + it }
+  .flatMap { species, assembly, genome_chunks, chunks ->
+    [genome_chunks.collate(2), chunks]
+      .combinations()
+      .inject([]) { acc, it -> acc << [species, assembly] + it.flatten() }
   }
-  .filter { s, o, c, t -> !c.empty() }
-  .filter { s, o, c, t -> !params.genome_mapping.chromosomes_excluded_from_mapping.contains(c.getBaseName()) }
   .set { targets }
 
 process blat {
-  memory 10.GB
+  memory { params.genome_mapping.blat.directives.memory }
   errorStrategy 'finish'
 
   input:
-  set val(species), file(ooc), file(chromosome), file(chunk) from targets
+  set val(species), val(assembly), file(genome), file(ooc), file(chunk) from targets
 
   output:
-  set val(species), file('output.psl') into blat_results
+  set val(species), file('selected.json') into blat_results
 
   """
+  set -o pipefail
+
   blat \
     -ooc=$ooc \
     -noHead \
     -q=rna \
-    -stepSize=${params.genome_mapping.blat_options.step_size} \
-    -repMatch=${params.genome_mapping.blat_options.rep_match} \
-    -minScore=${params.genome_mapping.blat_options.min_score} \
-    -minIdentity=${params.genome_mapping.blat_options.min_identity} \
-    $chromosome $chunk output.psl
+    -stepSize=${params.genome_mapping.blat.options.step_size} \
+    -repMatch=${params.genome_mapping.blat.options.rep_match} \
+    -minScore=${params.genome_mapping.blat.options.min_score} \
+    -minIdentity=${params.genome_mapping.blat.options.min_identity} \
+    $genome $chunk output.psl
+
+  sort -k 10 output.psl |\
+    rnac genome-mapping blat as-json $assembly - - |\
+    rnac genome-mapping blat select - selected.json
   """
 }
 
  blat_results
   .groupTuple()
-  .join(assembly_tracking)
-  .map { species, psl, assembly_id, taxid, division -> [psl, species, assembly_id] }
   .set { species_results }
 
 process select_mapped_locations {
   tag { species }
-  memory '15 GB'
+  memory { params.genome_mapping.select_mapped.directives.memory }
 
   input:
-  set file('output*.psl'), val(species), val(assembly_id) from species_results
+  set val(species), file('selected*.json') from species_results
 
   output:
-  file 'locations.csv' into selected_locations
+  file('locations.csv') into selected_locations
 
   """
   set -o pipefail
 
-  sort -k 10 output*.psl > sorted.psl
-  rnac genome-mapping select-hits $assembly_id sorted.psl locations.csv
+  find . -name 'selected*.json' |\
+    xargs cat |\
+    rnac genome-mapping blat select --sort - - |\
+    rnac genome-mapping blat as-importable - locations.csv
   """
 }
+
+selected_locations
+  .collect()
+  .set { blat_to_import }
 
 process load_genome_mapping {
   maxForks 1
 
   input:
-  file('raw*.csv') from selected_locations.collect()
+  file('raw*.csv') from blat_to_import
   file(ctl) from Channel.fromPath('files/genome-mapping/load.ctl')
 
   output:
@@ -713,8 +741,6 @@ process precompute_range {
 }
 
 process load_precomputed_data {
-  echo true
-
   beforeScript 'slack db-work loading-precompute || true'
   afterScript 'slack db-done loading-precompute || true'
 
@@ -747,10 +773,12 @@ post_precompute
 //=============================================================================
 
 flag_for_secondary
-  .combine(Channel.fromPath("files/secondary-structures/find-sequences.sql"))
+  .combine(Channel.fromPath("files/traveler/find-sequences.sql"))
   .set { secondary_query }
 
 process find_possible_secondary_sequences {
+  memory params.secondary.find_possible.memory
+
   when:
   params.secondary.run
 
@@ -761,15 +789,15 @@ process find_possible_secondary_sequences {
   file('parts/*.fasta') into sequences_to_ribotype mode flatten
   file('rnacentral.fasta') into traveler_expected_sequences
 
-  """
-  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > raw.json
-  json2fasta.py raw.json rnacentral.fasta
-  seqkit shuffle --two-pass rnacentral.fasta > shuffled.fasta
-  seqkit split --two-pass --by-size ${params.secondary.sequence_chunk_size} --out-dir 'parts/' shuffled.fasta
-  """
+  script:
+  chunk_size = params.secondary.sequence_chunk_size
+  variables = ""
+  template 'query-and-split.sh'
 }
 
 process fetch_traveler_data {
+  memory params.secondary.fetch.memory
+
   when:
   params.secondary.run
 
@@ -779,8 +807,8 @@ process fetch_traveler_data {
   """
   git clone https://github.com/RNAcentral/auto-traveler.git
   cd auto-traveler
-  git checkout "${params.secondary.auto_traveler_version}"
-  wget -O cms.tar.gz '${params.secondary.cm_library}'
+  git checkout "${params.secondary.fetch.auto_traveler_version}"
+  wget -O cms.tar.gz '${params.secondary.fetch.cm_library}'
   # We are going to ignore some errors due to using mac tar to build the tarball
   tar xf cms.tar.gz
   python utils/generate_model_info.py --cm-library data/cms
@@ -792,32 +820,37 @@ sequences_to_ribotype
   .set { to_layout }
 
 process layout_sequences {
+  memory params.secondary.layout.memory
+
   input:
   set file(sequences), file(cm), file(fasta), file(ps) from to_layout
 
   output:
-  file("output/") into secondary_to_import
+  file("data.csv") into secondary_to_import
 
   """
   auto-traveler.py --cm-library $cm --fasta-library $fasta --ps-library $ps $sequences output/
+  rnac traveler process-svgs output/ data.csv
   """
 }
 
 secondary_to_import
   .collect()
-  .combine(Channel.fromPath("files/secondary-structures/load.ctl"))
+  .map { [it, file("files/traveler/load.ctl")] }
   .set { secondary_to_import }
 
 process store_secondary_structures {
+  memory params.secondary.store.memory
+
   input:
-  set file('output*'), file(ctl) from secondary_to_import
+  set file('data*.csv'), file(ctl) from secondary_to_import
 
   output:
-  file('data.csv') into traveler_success
+  file('built') into traveler_success
 
   """
-  rnac secondary process-svgs output* data.csv
-  split-and-load $ctl data.csv ${params.secondary.data_chunk_size} traveler-data
+  split-and-load $ctl 'data*.csv' ${params.secondary.data_chunk_size} traveler-data
+  find . -name 'data*.csv' | xargs -I {} cut -d, -f1 {} | tr -d '"' | sort > built
   """
 }
 
@@ -826,14 +859,13 @@ process find_traveler_failures {
 
   input:
   file('expected.fasta') from traveler_expected_sequences
-  file('built.csv') from traveler_success
+  file('built') from traveler_success
 
   output:
   file('failures.txt') into traveler_failures
 
   """
   seqkit seq -ni expected.fasta | sort > expected
-  cut -d, -f1 built.csv | tr -d '"' | sort > built
   comm -23 expected built > failures.txt
   """
 }
@@ -890,8 +922,6 @@ process generate_feedback_report {
 }
 
 process import_feedback {
-  echo true
-
   input:
   file('feedback*.tsv') from feedback.collect()
   file(ctl) from Channel.fromPath('files/precompute/feedback.ctl')

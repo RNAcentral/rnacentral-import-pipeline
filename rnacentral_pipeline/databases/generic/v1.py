@@ -16,11 +16,28 @@ limitations under the License.
 import itertools as it
 import collections as coll
 
+import six
 import attr
+from attr.validators import optional
+from attr.validators import instance_of as is_a
 
 from rnacentral_pipeline.databases import data
 from rnacentral_pipeline.databases.helpers import phylogeny as phy
 from rnacentral_pipeline.databases.helpers import publications as pub
+
+
+class UnexpectedCoordinates(Exception):
+    """
+    Raised if we get coordinates to store but we do not know what the coordinate
+    system used is.
+    """
+    pass
+
+
+@attr.s()
+class Context(object):
+    database = attr.ib(validator=is_a(six.text_type))
+    coordinate_system = attr.ib(validator=optional(is_a(data.CoordinateSystem)))
 
 
 def secondary_structure(record):
@@ -57,18 +74,24 @@ def taxid(entry):
     return int(tid)
 
 
-def as_exon(exon):
+def as_exon(exon, context):
     """
     Turn a raw exon into one we can store in the rnc_coordinates table.
     """
 
+    start_fix = 0
+    stop_fix = 0
+    if context.database == 'MIRBASE':
+        start_fix = 1
+        stop_fix = 1
+
     return data.Exon(
-        start=int(exon['startPosition']) + 1,
-        stop=int(exon['endPosition']),
+        start=int(exon['startPosition']) + start_fix,
+        stop=int(exon['endPosition']) + stop_fix,
     )
 
 
-def as_region(region):
+def as_region(region, context):
     """
     Turn a raw region in the JSON document into a SequenceRegion object.
     """
@@ -81,20 +104,26 @@ def as_region(region):
     return data.SequenceRegion(
         chromosome=chromosome,
         strand=exons[0]['strand'],
-        exons=[as_exon(e) for e in exons],
+        exons=[as_exon(e, context) for e in exons],
         assembly_id=region['assembly'],
+        coordinate_system=context.coordinate_system,
     )
 
 
-def regions(entry):
+def regions(entry, context):
     """
     Get all genomic locations this record is in.
     """
+
     result = []
     for region in entry.get('genomeLocations', []):
         if not region.get('exons', None):
             continue
-        result.append(as_region(region))
+
+        if not context.coordinate_system:
+            raise UnexpectedCoordinates(region)
+
+        result.append(as_region(region, context))
     return result
 
 
@@ -217,7 +246,7 @@ def locus_tag(ncrna):
     return ncrna.get('gene', {}).get('locusTag', None)
 
 
-def optional_id(record, database):
+def optional_id(record, context):
     """
     Create an optional id for mirbase entries. This basically uses the name
     field, which will be the miRBase gene name.
@@ -226,7 +255,7 @@ def optional_id(record, database):
     if 'description' in record and \
             'name' in record and ' ' not in record['name']:
         return record['name']
-    if database == 'MIRBASE':
+    if context.database == 'MIRBASE':
         return record['name']
     return None
 
@@ -292,7 +321,37 @@ def note_data(record):
     }
 
 
-def as_entry(record, database):
+def coordinate_system(metadata):
+    system = None
+    database = metadata['dataProvider'].lower()
+    if 'genomicCoordinateSystem' in metadata:
+        system = metadata['genomicCoordinateSystem']
+    elif database == 'flybase':
+        system = '1-start, fully-closed'
+    elif database == 'lncipedia':
+        system = '1-start, fully-closed'
+    elif database == 'mirbase':
+        system = '1-start, fully-closed'
+    elif database == 'lncbook':
+        system = "1-start, fully-closed"
+    elif database == 'lncbase':
+        pass
+    elif database == 'tarbase':
+        pass
+    elif database == 'zwd':
+        pass
+    elif database == 'pombase':
+        system = '1-start, fully-closed'
+    else:
+        raise ValueError("Could not determine coordinate system")
+
+    if not system:
+        return None
+
+    return data.CoordinateSystem.from_name(system)
+
+
+def as_entry(record, context):
     """
     Generate an Entry to import based off the database, exons and raw record.
     """
@@ -300,13 +359,13 @@ def as_entry(record, database):
         primary_id=external_id(record),
         accession=record['primaryId'],
         ncbi_tax_id=taxid(record),
-        database=database,
+        database=context.database,
         sequence=record['sequence'],
-        regions=regions(record),
+        regions=regions(record, context),
         rna_type=record['soTermId'],
         url=record['url'],
         seq_version=record.get('version', '1'),
-        optional_id=optional_id(record, database),
+        optional_id=optional_id(record, context),
         description=description(record),
         note_data=note_data(record),
         xref_data=xrefs(record),
@@ -335,14 +394,18 @@ def parse(raw):
     def key(raw):
         return gene(raw) or ''
 
-    database = raw['metaData']['dataProvider']
+    context = Context(
+        database=raw['metaData']['dataProvider'],
+        coordinate_system=coordinate_system(raw['metaData']),
+    )
+
     ncrnas = sorted(raw['data'], key=key)
 
     metadata_pubs = raw['metaData'].get('publications', [])
     metadata_refs = [pub.reference(r) for r in metadata_pubs]
 
     for gene_id, records in it.groupby(ncrnas, gene):
-        entries = [as_entry(r, database) for r in records]
+        entries = [as_entry(r, context) for r in records]
 
         if gene_id:
             entries = add_related_by_gene(entries)

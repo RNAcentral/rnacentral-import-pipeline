@@ -13,23 +13,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import pytest
+import six.moves.cPickle as pickle
 
-from rnacentral_pipeline.rnacentral import secondary as sec
-
-
-@pytest.mark.parametrize('directory,count', [
-    ('data/secondary', 1),
-])
-def test_can_process_a_directory(directory, count):
-    assert len(list(sec.process_directory(directory))) == count
+def pickle_stream(stream, handle, *args, **kwargs):
+    for entry in stream:
+        pickle.dump(entry, handle, *args, **kwargs)
 
 
-def test_can_produce_reasonable_data():
-    val = list(sec.process_directory('data/secondary'))
-    upi, model, dot, svg = val[0]
-    assert upi == 'URS00000F9D45_9606'
-    assert model == 'd.5.e.H.sapiens.2'
-    assert len(dot) == 121
-    assert svg.startswith('<svg')
-    assert '\n' not in svg
+def unpickle_stream(handle, *args, **kwargs):
+    try:
+        while True:
+            yield pickle.load(handle)
+    except EOFError:
+        raise StopIteration()
