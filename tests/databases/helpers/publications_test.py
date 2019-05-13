@@ -323,3 +323,16 @@ def test_can_write_using_specified_columns_and_allow_fallback(indexed_db_path, r
             '10.1007/bf00271669'
         ]
     ]
+
+
+def test_caching_works_as_expected():
+    pub.summary.cache_clear()
+    assert pub.summary.cache_info().hits == 0
+    assert pub.summary.cache_info().misses == 0
+    assert lookup('PMID:375006')
+    assert pub.summary.cache_info().hits == 0
+    assert pub.summary.cache_info().misses == 1
+    for count in range(10):
+        assert lookup('PMID:375006')
+        assert pub.summary.cache_info().hits == count + 1
+        assert pub.summary.cache_info().misses == 1
