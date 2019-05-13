@@ -184,6 +184,7 @@ refs_database = Channel.create()
 
 all_processed_output
   .mix(all_fetched_and_processed_output)
+  .filter { f -> !f.isEmpty() }
   .choice(processed_output, terms, refs, refs_database) { f ->
     def names = ["terms.csv", "ref_ids.csv", params.metadata.europepmc.process.produces]
     return names.indexOf(f.getName()) + 1
