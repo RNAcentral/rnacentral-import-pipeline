@@ -18,13 +18,13 @@ import attr
 
 import pytest
 
-from rnacentral_pipeline.rnacentral import genome_mapping as gm
+from rnacentral_pipeline.rnacentral.genome_mapping import blat as gm
 from rnacentral_pipeline.databases.data import regions
 
 
 def parse(assembly_id, filename):
     with open(filename, 'r') as raw:
-        return list(gm.parse(assembly_id, raw))
+        return list(gm.parse_psl(assembly_id, raw))
 
 
 def parse_of(assembly_id, filename, upi):
@@ -33,7 +33,8 @@ def parse_of(assembly_id, filename, upi):
 
 def select_hits(assembly_id, filename):
     with open(filename, 'r') as raw:
-        return list(gm.select_hits(assembly_id, raw))
+        data = parse(assembly_id, filename)
+        return list(gm.select_hits(data))
 
 
 def results_for(assembly_id, filename, upi):
