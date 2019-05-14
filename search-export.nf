@@ -91,15 +91,20 @@ process create_release_note {
 // This deletes the old data and then moves the new data in place.
 process atomic_publish {
   input:
-  file(release) from release_note
+  file('release_note.txt') from release_note
 
   script:
-  def dir = params.search_export.publish
+  def publish = params.search_export.publish
+  def remote = (publish.host ? "$publish.host:" : "") + publish.path
   """
-  [ -d $dir ] || mkdir -p $dir
-  rm $dir/*.xml.gz || true
+  if [[ -n "$publish.host" ]]; then
+    ssh "$publish.host" 'mkdir -p $publish.path' || true
+    ssh "$publish.host" 'rm -r $publish.path/*' || true
+  else
+    mkdir -p "$publish.path" || true
+    rm "$publish.path/*"
+  fi
 
-  mv ${tmp}/*.xml.gz $dir/
-  cp $release $dir/release_note.txt
+  scp ${tmp}/*.xml.gz 'release_note.txt' $remote
   """
 }
