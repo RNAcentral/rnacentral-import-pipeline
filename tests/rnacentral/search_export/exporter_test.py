@@ -17,7 +17,9 @@ from __future__ import print_function
 
 # pylint: disable=missing-docstring,invalid-name,line-too-long
 
+import re
 import os
+import json
 import tempfile
 import subprocess
 import operator as op
@@ -35,26 +37,72 @@ except ImportException:
 from rnacentral_pipeline.rnacentral.search_export import exporter
 
 from tests.helpers import run_range_as_single
+from tests.helpers import run_with_replacements
 
+# Parse out all UPIs
+# Create temp table of UPI to get metadata for
+# Run queries generating all metadata for those UPIs
+# Delete UPI table
+
+METADATA = None
+
+META_REPLACEMENTS = {
+    'crs.sql': (
+        'WHERE', 
+        "WHERE features.upi || '_' || features.taxid IN ({urs})\nAND",
+    ),
+    'feedback.sql': (
+        'FROM rnc_feedback_overlap overlap',
+        'FROM rnc_feedback_overlap overlap\n WHERE overlap.upi_taxid IN ({urs})',
+    ),
+    'go_annotations.sql': (
+        'GROUP BY anno.rna_id',
+        'WHERE anno.rna_id IN ({urs})\nGROUP BY anno.rna_id',
+    ),
+    'interacting-proteins.sql': (
+        'WHERE',
+        'WHERE related.source_urs_taxid in ({urs})\n AND'
+    ),
+    'interacting-rnas.sql': (
+        'WHERE',
+        'WHERE related.source_urs_taxid in ({urs})\n AND'
+    ),
+    'secondary-structure.sql': (
+        'WHERE',
+        'WHERE pre.id in ({urs})\n AND'
+    ),
+}
 
 @lru_cache()
-def load_additional():
+def load_metadata():
+    # I am using this parse the test file and pull out all URS ids that are in a
+    # test. We then use this list to only extract metadata for the selected
+    # sequences. This is much faster and easier on the memory requiremens
+    # than trying to get all data.
+    with open(__file__, 'r') as raw:
+        urs = re.findall('URS\w+', raw.read())
+        print(len(urs))
+
+    urs_string = ', '.join("'%s'" % u for u in urs)
+
     metapath = os.path.join('files', 'search-export', 'metadata')
-    buff = six.moves.cStringIO()
+    buf = six.moves.cStringIO()
     for filename in os.listdir(metapath):
-        query = os.path.join(metapath, filename)
-        cmd = subprocess.run(['psql', '-v', 'ON_ERROR_STOP=1', '-f', query, os.environ['PGDATABASE']],
-                             stdout=subprocess.PIPE, encoding='utf-8')
-        cmd.check_returncode()
-        buff.write(cmd.stdout)
-    buff.seek(0)
-    return exporter.parse_additions(buff)
+        path = os.path.join(metapath, filename)
+        raw, replace = META_REPLACEMENTS[filename]
+        replacements = (raw, replace.format(urs=urs_string))
+        data = run_with_replacements(path, replacements, take_all=True)
+        for entry in data:
+            buf.write(json.dumps(entry))
+            buf.write('\n')
+    buf.seek(0)
+    return exporter.parse_additions(buf)
 
 
 def load_data(upi):
     path = os.path.join('files', 'search-export', 'query.sql')
     entry = run_range_as_single(upi, path)
-    data = exporter.builder(load_additional(), entry)
+    data = exporter.builder(load_metadata(), entry)
     return data
 
 
