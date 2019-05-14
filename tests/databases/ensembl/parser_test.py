@@ -149,7 +149,7 @@ def test_can_get_joined_locations(human_12):
 
 def test_it_gets_cross_references(human_12):
     assert entry_for(human_12, 'ENST00000504074.1').xref_data == {
-        "UCSC": ["uc010scw.2"],
+        "UCSC": ["ENST00000504074.1"],
         "RNAcentral": ["URS000042090E"],
         "HGNC_trans_name": ['FAM138D-201'],
         "RefSeq_ncRNA": ['NR_026823'],
@@ -202,7 +202,7 @@ def test_it_builds_correct_entries(human_12):
             'transcript_id': ['ENST00000620330.1']
         },
         xref_data={
-            "UCSC": ["uc058jxg.1"],
+            "UCSC": ["ENST00000620330.1"],
             "RFAM_trans_name": ["RF00017.190-201"],
             "RNAcentral": ["URS0000AA28EF"],
         },
@@ -252,12 +252,12 @@ def test_it_has_last_ncrna(human_12):
     assert entry_for(human_12, "ENST00000459107.1").xref_data == {
         'RNAcentral': ["URS00006F58F8"],
         'RFAM_trans_name': ['RF00019.633-201'],
-        "UCSC": ["uc031ztg.2"],
+        "UCSC": ["ENST00000459107.1"],
     }
 
 
 def test_extracts_all_gencode_entries(human_12):
-    assert len([e for e in human_12 if e.database == 'GENCODE']) == 1506
+    assert len([e for e in human_12 if e.database == 'GENCODE']) == 1497
 
 
 def test_can_build_gencode_entries(human_12):
@@ -298,7 +298,7 @@ def test_can_build_gencode_entries(human_12):
             'transcript_id': ['ENST00000620330.1']
         },
         xref_data={
-            "UCSC": ["uc058jxg.1"],
+            "UCSC": ["ENST00000620330.1"],
             "RFAM_trans_name": ["RF00017.190-201"],
             "RNAcentral": ["URS0000AA28EF"],
             'Ensembl': ['ENST00000620330.1'],
