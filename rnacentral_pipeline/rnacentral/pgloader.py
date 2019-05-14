@@ -16,7 +16,7 @@ limitations under the License.
 import re
 
 
-SUCCESS_PATTERN = re.compile(r'^\s+Total import time\s+\?')
+SUCCESS_PATTERN = re.compile(r'^\s+Total import time\s+[?✓]')
 FAILED_PATTERN = re.compile(r'^\s+Total import time\s+\d+')
 
 
