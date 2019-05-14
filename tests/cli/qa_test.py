@@ -30,4 +30,4 @@ def test_can_parse_rfam_output():
 
         with open('rfam.csv', 'r') as raw:
             data = raw.readlines()
-            assert len(data) == 129
+            assert len(data) == 126
