@@ -38,16 +38,24 @@ def index_xml(directory, db):
 
 @cli.command('lookup')
 @click.option('--column', default=0)
-@click.option('--allow-fallback/--no-allow-feedback', default=False)
+@click.option('--allow-fallback/--no-allow-fallback', default=False)
+@click.option('--ignore-missing/--no-ignore-missing', default=True)
 @click.argument('db', default='references.db', type=click.Path())
 @click.argument('ids', default='ref_ids.csv', type=click.File('r'))
 @click.argument(
     'output', 
     default='references.csv', 
     type=click.File('w'))
-def lookup(db, ids, output, column=0, allow_fallback=False):
+def lookup(db, ids, output, column=0, allow_fallback=False, ignore_missing=True):
     """
     Use the database index file to lookup all reference information for all xml
     files in the given directory.
     """
-    publications.write_file_lookup(db, ids, output, column=column, allow_fallback=allow_fallback)
+    publications.write_file_lookup(
+        db, 
+        ids, 
+        output, 
+        column=column, 
+        allow_fallback=allow_fallback,
+        ignore_missing=ignore_missing,
+    )
