@@ -40,7 +40,7 @@ def hits():
 @hits.command('serialize')
 @click.argument('assembly_id')
 @click.argument('hits', default='-', type=click.File('r'))
-@click.argument('output', default='-', type=click.File('wb'))
+@click.argument('output', default='-', type=click.File('wb', lazy=False))
 def hits_json(assembly_id, hits, output):
     """
     Serialize the PSL file into something that python can later process. This is
@@ -52,7 +52,7 @@ def hits_json(assembly_id, hits, output):
 
 @hits.command('as-importable')
 @click.argument('hits', default='-', type=click.File('rb'))
-@click.argument('output', default='-', type=click.File('w'))
+@click.argument('output', default='-', type=click.File('w', lazy=False))
 def as_importable(hits, output):
     """
     Convert a json-line file into a CSV that can be used for import by pgloader.
@@ -64,7 +64,7 @@ def as_importable(hits, output):
 @hits.command('select')
 @click.option('--sort', is_flag=True, default=False)
 @click.argument('hits', default='-', type=click.File('rb'))
-@click.argument('output', default='-', type=click.File('wb'))
+@click.argument('output', default='-', type=click.File('wb', lazy=False))
 def select_hits(hits, output, sort=False):
     """
     Parse a JSON-line file and select the best hits in the file. The best hits

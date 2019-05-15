@@ -49,6 +49,7 @@ def result_for(assembly_id, filename, upi):
 
 @pytest.mark.parametrize('assembly_id,filename,count', [
     ('human', 'data/genome-mapping/results.psl', 47195),
+    ('stegastes_partitus', 'data/genome-mapping/stegastes_partitus.psl', 728),
 ])
 def test_parses_correct_data(assembly_id, filename, count):
     assert len(parse(assembly_id, filename)) == count
@@ -323,6 +324,7 @@ def test_can_correctly_parse_with_several_exons():
 
 @pytest.mark.parametrize('assembly_id,filename,count', [
     ('human', 'data/genome-mapping/results.psl', 275),
+    ('human', 'data/genome-mapping/stegastes_partitus.psl', 0),
 ])
 def test_produces_correct_number_of_results(assembly_id, filename, count):
     assert len(select_hits(assembly_id, filename)) == count
