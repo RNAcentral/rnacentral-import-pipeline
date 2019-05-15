@@ -594,6 +594,7 @@ genomes
   .set { targets }
 
 process blat {
+  tag { "${species}-${genome.baseName}-${chunk.baseName}" }
   memory { params.genome_mapping.blat.directives.memory }
   errorStrategy 'finish'
 
