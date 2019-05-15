@@ -61,7 +61,6 @@ def test_can_extract_all_ontology_terms():
     with open('data/rfam/database_link.tsv', 'r') as raw:
         sample = StringIO()
         for line in raw.readlines()[:10]:
-            print(line)
             sample.write(line)
         sample.seek(0)
         references = list(cr.ontology_references(sample))

@@ -50,7 +50,6 @@ def test_can_do_lookup_with_fallback():
     ]
     cmd = ['lookup', '--allow-fallback', 'references.db', '-']
     with run_indexed_command(cmd, input='\n'.join(ids)) as result:
-        print(result.output)
         assert result.exit_code == 0
         assert os.path.exists('references.csv')
         with open('references.csv') as raw:

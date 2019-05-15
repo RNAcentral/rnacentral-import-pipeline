@@ -66,6 +66,5 @@ def test_can_extract_expected_svg_data():
 def test_can_extract_expected_dot_bracket_data():
     val = list(sec.models('data/traveler/simple'))
     assert len(val) == 1
-    print(val[0])
     assert val[0].dot_bracket() == '(((((((((....((((((((.....((((((............))))..))....)))))).)).(((((......((.((.(((....))))).)).....))))).)))))))))...'
     assert val[0].basepair_count == 35
