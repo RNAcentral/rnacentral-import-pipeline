@@ -617,7 +617,7 @@ process blat {
     $genome $chunk output.psl
 
   sort -k 10 output.psl |\
-    rnac genome-mapping blat as-json $assembly - - |\
+    rnac genome-mapping blat serialize $assembly - - |\
     rnac genome-mapping blat select - selected.json
   """
 }
