@@ -92,6 +92,7 @@ process create_release_note {
 process atomic_publish {
   input:
   file('release_note.txt') from release_note
+  file(xml) from search_chunks.collect()
 
   script:
   def publish = params.search_export.publish
@@ -105,6 +106,6 @@ process atomic_publish {
     rm "$publish.path/*"
   fi
 
-  scp ${tmp}/*.xml.gz 'release_note.txt' $remote
+  scp ${xml} 'release_note.txt' $remote
   """
 }
