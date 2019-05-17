@@ -73,11 +73,11 @@ class Update(object):
             self.upi,
             self.taxid,
             int(self.is_active),
-            self.description,
+            self.description.encode('ascii', 'ignore'),
             self.rna_type,
             int(self.has_coordinates),
             self.databases,
-            self.short_description,
+            self.short_description.encode('ascii', 'ignore'),
             self.last_release,
         ]
 
