@@ -208,16 +208,12 @@ def write_file_lookup(cache_path, handle, output, column=0, allow_fallback=False
     writer = csv.writer(output)
     with Cache.build(cache_path).open() as db:
         for id_ref, rest in id_refs_from_handle(handle, column=column):
+            store = db[id_ref.namespace.name]
             try:
-                store = db[id_ref.namespace]
                 ref = store.get(id_ref, allow_fallback=allow_fallback)
-            except UnknownReference as err:
-                LOGGER.warning("Could not handle find reference for %s", id_ref)
-                if not ignore_missing:
-                    raise err
-                continue
-            except TooManyPublications as err:
-                LOGGER.warning("Found too many publications for %s", id_ref)
+            except Exception as err:
+                LOGGER.warning("Failed to lookup: %s", id_ref)
+                LOGGER.exception(err)
                 if not ignore_missing:
                     raise err
                 continue

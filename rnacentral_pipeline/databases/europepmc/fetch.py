@@ -41,7 +41,9 @@ LOGGER = logging.getLogger(__name__)
 def summary(id_reference):
     """
     Get the summary data from EuropePMC for the given id reference. This will
-    retry as needed and cache the data.
+    retry as needed and cache the data. This will return the dict receieved from
+    the EuropePMC or raise an exception if the data cannot be found. It is an
+    error if multiple matches are found, or if no match is found.
     """
 
     LOGGER.info("Fetching remote summary for %s", id_reference)
@@ -55,11 +57,19 @@ def summary(id_reference):
         raise UnknownReference(id_reference)
 
     if data['hitCount'] == 1:
+        if not data['resultList']['result'][0]:
+            raise UnknownReference(id_reference)
+
         return data['resultList']['result'][0]
 
+    # TODO: Implement proper usage of pagination.
     possible = []
     for result in data['resultList']['result']:
-        if six.text_type(result[id_reference.namespace.name]) == id_reference.external_id:
+        if not result:
+            continue
+
+        external_id = six.text_type(result[id_reference.namespace.name])
+        if external_id == id_reference.external_id:
             possible.append(result)
 
     if len(possible) == 1:

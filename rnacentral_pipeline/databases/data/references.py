@@ -27,6 +27,8 @@ try:
 except ImportError:
     from enum32 import enum
 
+from furl import furl
+
 from rnacentral_pipeline.databases.helpers.hashes import md5
 
 from . import utils
@@ -41,15 +43,6 @@ class KnownServices(enum.Enum):
     @classmethod
     def from_name(cls, name):
         return getattr(cls, name.lower())
-
-    def base_url(self):
-        if self is KnownServices.pmid:
-            return 'https://www.ebi.ac.uk/europepmc/webservices/rest/search?query={pmid}+AND+SRC:MED&format=json&pageSize=1000'
-        if self is KnownServices.doi: 
-            return 'https://www.ebi.ac.uk/europepmc/webservices/rest/search?query={term}&format=json'
-        if self is KnownServices.pmcid:
-            return 'https://www.ebi.ac.uk/europepmc/webservices/rest/search?query={term}&format=json'
-        raise ValueError("Cannot produce URL for %s" % self)
 
 
 class UnknownPublicationType(Exception):
@@ -78,6 +71,7 @@ class Reference(object):
         """
         Computes the MD5 hash of the reference.
         """
+
         title = self.title if self.title else ''
         data = [
             self.authors,
@@ -134,6 +128,16 @@ class Reference(object):
             return IdReference(namespace='pmcid', external_id=self.pmcid)
         raise ValueError("Cannot build IdReference for %s" % self)
 
+    def id_references(self):
+        refs = []
+        for namespace in KnownServices:
+            value = getattr(self, namespace.name)
+            if not value:
+                continue
+            eid = six.text_type(value)
+            refs.append(IdReference(namespace=namespace, external_id=eid))
+        return tuple(refs)
+
 
 @attr.s(frozen=True, hash=True)
 class IdReference(object):
@@ -172,18 +176,21 @@ class IdReference(object):
         return '%s:%s' % (self.namespace.name, self.external_id)
 
     def external_url(self):
-        base = self.namespace.base_url()
+        base = furl('https://www.ebi.ac.uk/europepmc/webservices/rest/search')
+        base.args['format'] = 'json'
+        base.args['pageSize'] = 1000
 
         if self.namespace is KnownServices.pmid:
-            return base.format(pmid=self.external_id)
+            query = '{pmid} AND SRC:MED'.format(pmid=self.external_id)
+            base.args['query'] = query
+            return base.url
 
         if self.namespace is KnownServices.doi or self.namespace is KnownServices.pmcid:
             suffix = self.external_id
             if self.namespace is KnownServices.doi:
                 suffix = '"%s"' % suffix
-            term = self.namespace.name.upper() + ':' + suffix
-            quoted = six.moves.urllib.parse.quote(term, '')
-            return base.format(term=quoted)
+            base.args['query'] = '%s:%s' % (self.namespace.name.upper(), suffix)
+            return base.url
 
         raise ValueError("No URL for namespace %s" % self.namespace)
 
