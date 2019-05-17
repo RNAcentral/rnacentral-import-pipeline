@@ -66,7 +66,7 @@ process export_chunk {
   file "count" into search_counts
 
   script:
-  def xml = "xml4dbdumps__${min}__${max}.xml"
+  xml = "xml4dbdumps__${min}__${max}.xml"
   """
   rnac search-export as-xml ${json} ${metadata} ${xml} count
   xmllint ${xml} --schema ${params.search_export.schema} --stream
