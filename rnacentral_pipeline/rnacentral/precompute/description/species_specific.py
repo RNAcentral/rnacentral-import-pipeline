@@ -40,6 +40,7 @@ ORDERING = [
     'rgd',
     'lncipedia',
     'lncrnadb',
+    'lncbook',
     'gtrnadb',
     'tmrna website',
     'pdbe',
