@@ -40,7 +40,7 @@ def test_reference_can_handle_non_unicode():
 ])
 def test_can_build_id_reference_for_simple_pmids(pmid):
     assert attr.asdict(data.IdReference.build(pmid)) == attr.asdict(data.IdReference(
-        namespace='pmid',
+        namespace=data.KnownServices.pmid,
         external_id='30715521',
     ))
 
@@ -53,7 +53,7 @@ def test_can_build_id_reference_for_simple_pmids(pmid):
 ])
 def test_can_build_id_reference_for_pmcid(pmc):
     assert attr.asdict(data.IdReference.build(pmc)) == attr.asdict(data.IdReference(
-        namespace='pmcid',
+        namespace=data.KnownServices.pmcid,
         external_id='PMC4648659'
     ))
 
