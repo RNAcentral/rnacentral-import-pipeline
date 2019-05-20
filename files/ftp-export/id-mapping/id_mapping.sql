@@ -8,6 +8,7 @@ SELECT
         'optional_id', acc.optional_id,
         'rna_type', pre.rna_type,
         'gene', acc.gene,
+        'product', acc.product,
         'database', db.descr
     )
 FROM xref
