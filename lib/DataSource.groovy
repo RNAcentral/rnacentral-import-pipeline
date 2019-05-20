@@ -22,7 +22,7 @@ class DataSource {
       prefix = "zcat *.gz | "
       arguments = input_files.inject([]) { acc, fn -> acc << (fn.endsWith('.gz') ? '-' : fn) }
     } else if (gzip_count > 1 || source.process.force_decompress) {
-      prefix = "gzip -fd *.gz\n"
+      prefix = "gzip --keep -fd *.gz\n"
       arguments = input_files.inject([]) { acc, fn -> acc << fn.replace('.gz', '') }
     }
     return "$prefix $source.process.command ${arguments.join(' ')}".trim();
