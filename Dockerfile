@@ -5,10 +5,10 @@ ENV RNACENTRAL_IMPORT_PIPELINE "$RNA/rnacentral-import-pipeline"
 RUN mkdir $RNA
 WORKDIR $RNA
 
-RUN apt-get install curl ca-certificates
-RUN curl https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
+# RUN apt-get install curl ca-certificates
+# RUN curl https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
 
-RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ stretch-pgdg main" > /etc/apt/sources.list.d/pgdg.list
+# RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ stretch-pgdg main" > /etc/apt/sources.list.d/pgdg.list
 
 RUN apt-get update
 RUN apt-get upgrade -y
@@ -16,25 +16,44 @@ RUN apt-get upgrade -y
 # Install all required packages
 RUN apt-get install -y \
     bedtools \
+    ca-certificates \
+    cl-babel \
+    cl-ironclad \
     curl \
+    devscripts \
+    freetds-dev \
     gcc \
     git \
     gzip \
     hmmer \
     jq \
     lftp \
+    libsqlite3-dev \
     moreutils \
     mysql-client \
     mysql-common \
     openssl \
-    pgloader \
+    pandoc \
+    patch \
     postgresql-9.5 \
     python \
+    rsync \
+    sbcl \
     tar \
     unzip \
     wget
 
 RUN apt-get install libxml2-utils
+
+# Install a new enough version of pgloader
+RUN \
+    cd $RNA && \
+    wget https://github.com/dimitri/pgloader/archive/v3.6.1.tar.gz && \
+    tar -xvf v3.6.1.tar.gz && \
+    rm v3.6.1.tar.gz && \
+    cd pgloader-3.6.1 && \
+    make && \
+    cp build/bin/pgloader /usr/local/bin/
 
 # Install Infernal
 RUN \
