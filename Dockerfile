@@ -35,7 +35,8 @@ RUN apt-get install -y \
     openssl \
     pandoc \
     patch \
-    postgresql-9.5 \
+    postgresql-9.6 \
+    postgresql-client-9.6 \
     python \
     rsync \
     sbcl \
