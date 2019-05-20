@@ -11,10 +11,12 @@ singularity/ssh-config: singularity/Vagrantfile
 
 docker: Dockerfile requirements.txt .dockerignore 
 	docker build -t "$(docker)" .
+
+publish: docker
 	docker push "$(docker)"
 
-singularity/$(sif): singularity/ssh-config Dockerfile requirements.txt
-	ssh -F singularity/ssh-config default "sudo singularity build $(sif) docker://$(docker)"
-	scp -F singularity/ssh-config "default:$(sif)" $@
+singularity/$(sif): singularity/ssh-config publish
+	ssh -F $< default "sudo singularity build $(sif) docker://$(docker)"
+	scp -F $< "default:$(sif)" $@
 
-.PHONY: docker
+.PHONY: docker publish
