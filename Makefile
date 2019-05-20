@@ -12,6 +12,9 @@ singularity/ssh-config: singularity/Vagrantfile
 docker: Dockerfile requirements.txt .dockerignore 
 	docker build -t "$(docker)" .
 
+shell:
+	docker run -i -t "$(docker)" bash
+
 publish: docker
 	docker push "$(docker)"
 
