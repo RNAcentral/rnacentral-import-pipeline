@@ -15,11 +15,17 @@ limitations under the License.
 
 
 import attr
+import random
+import tempfile
+import operator as op
+from contextlib import contextmanager
 
 import pytest
 
 from rnacentral_pipeline.rnacentral.genome_mapping import blat as gm
 from rnacentral_pipeline.databases.data import regions
+from rnacentral_pipeline.utils import pickle_stream
+from rnacentral_pipeline.utils import unpickle_stream
 
 
 def parse(assembly_id, filename):
@@ -45,6 +51,21 @@ def result_for(assembly_id, filename, upi):
     results = results_for(assembly_id, filename, upi)
     assert len(results) == 1
     return results[0]
+
+
+@contextmanager
+def as_pickle(assembly_id, filename, randomize=False):
+    data = parse(assembly_id, filename)
+    if randomize:
+        random.shuffle(data)
+
+    with tempfile.NamedTemporaryFile('wb') as tmp:
+        pickle_stream(data, tmp)
+        tmp.flush()
+
+        with open(tmp.name, 'rb') as raw:
+            yield raw
+
 
 
 @pytest.mark.parametrize('assembly_id,filename,count', [
@@ -412,3 +433,61 @@ def test_selectes_correct_inexact_locations():
 def test_can_produce_expected_names(assembly_id, filename, upi, region_ids):
     val = results_for(assembly_id, filename, upi)
     assert [h.name for h in val] == region_ids
+
+
+@pytest.mark.parametrize('randomize', [
+    False,
+    True,
+])
+def test_can_parse_pickled_data(randomize):
+    with as_pickle('human', 'data/genome-mapping/results.psl', randomize=randomize) as pickled:
+        data = unpickle_stream(pickled)
+        selected = gm.select_hits(data, sort=randomize)
+        upi = 'URS000007D899_9606'
+        val = next(h for h in selected if h.upi == upi)
+        assert attr.asdict(val) == attr.asdict(gm.BlatHit(
+            upi=upi,
+            sequence_length=1388,
+            matches=1388,
+            target_insertions=7661,
+            region=regions.SequenceRegion(
+                assembly_id='human',
+                chromosome='21',
+                strand=1,
+                exons=[
+                    regions.Exon(start=44506806, stop=44507099),
+                    regions.Exon(start=44508036, stop=44508309),
+                    regions.Exon(start=44508726, stop=44508929),
+                    regions.Exon(start=44509251, stop=44509406),
+                    regions.Exon(start=44509822, stop=44509927),
+                    regions.Exon(start=44515496, stop=44515855),
+                ],
+                coordinate_system=regions.CoordinateSystem.zero_based(),
+            ),
+        ))
+
+
+@pytest.mark.parametrize('randomize', [
+    False,
+    True,
+])
+def test_pickle_and_psl_produce_same_results(randomize):
+    with as_pickle('human', 'data/genome-mapping/results.psl',
+                   randomize=randomize) as pickled:
+        data = unpickle_stream(pickled)
+        from_pickle = set(gm.select_hits(data, sort=randomize))
+
+    from_psl = set(select_hits('human', 'data/genome-mapping/results.psl'))
+    assert from_psl == from_pickle
+
+
+def test_produces_same_results_for_sorted_or_not():
+    with as_pickle('human', 'data/genome-mapping/results.psl') as pickled:
+        data = unpickle_stream(pickled)
+        ordered = set(gm.select_hits(data))
+
+    with as_pickle('human', 'data/genome-mapping/results.psl', randomize=True) as pickled:
+        data = unpickle_stream(pickled)
+        randomized = set(gm.select_hits(data, sort=True))
+
+    assert ordered == randomized

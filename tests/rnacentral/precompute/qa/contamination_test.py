@@ -21,21 +21,26 @@ from .. import helpers
 
 
 @pytest.mark.parametrize('rna_id,rna_type,flag', [  # pylint: disable=no-member
-    ('URS0000400378_30527', 'tRNA', False),
-    ('URS000058E89C_39432', 'rRNA', False),
-    ('URS000061A10B_9606', 'tRNA', False),
-    ('URS00008CF5BF_36987', 'rRNA', True),
-    ('URS00009F92C9_358574', 'rRNA', False),
-    ('URS0000010837_7227', 'misc_RNA', True),
+    # ('URS0000400378_30527', 'tRNA', False),
+    # ('URS000058E89C_39432', 'rRNA', False),
+    # ('URS000061A10B_9606', 'tRNA', False),
+    # ('URS00008CF5BF_36987', 'rRNA', True),
+    # ('URS00009F92C9_358574', 'rRNA', False),
+    # ('URS0000010837_7227', 'misc_RNA', True),
+
     ('URS000080E357_9606', 'rRNA', False),
-    ('URS00007659A3_9606', 'rRNA', False),
-    ('URS00005F2BD6_3702', 'rRNA', False),
-    ('URS0000D6974D_12908', 'other', False),
-    ('URS00003EA5AC_9606', 'rRNA', False),
+
+    # ('URS00007659A3_9606', 'rRNA', False),
+    # ('URS00005F2BD6_3702', 'rRNA', False),
+    # ('URS0000D6974D_12908', 'other', False),
+    # ('URS00003EA5AC_9606', 'rRNA', False),
 ])
 def test_can_detect_possible_contamination(rna_id, rna_type, flag):
     sequence = helpers.load_data(rna_id)
     validator = cont.Validator()
+    from pprint import pprint
+    import attr
+    pprint(attr.asdict(sequence))
     assert validator.status(rna_type, sequence) == flag
 
 

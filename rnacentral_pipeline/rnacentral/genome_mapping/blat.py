@@ -57,7 +57,7 @@ FIELDS = [
 ]
 
 
-@attr.s()
+@attr.s(frozen=True)
 class BlatHit(object):
     upi = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
     sequence_length = attr.ib(validator=is_a(int))
@@ -131,7 +131,9 @@ def parse_psl(assembly_id, handle):
         yield BlatHit.build(assembly_id, result)
 
 
-def select_hits(hits):
+def select_hits(hits, sort=False):
+    if sort:
+        hits = sorted(hits, key=op.attrgetter('upi'))
     hits = six.moves.filter(select_possible, hits)
     hits = it.groupby(hits, op.attrgetter('upi'))
     hits = six.moves.map(op.itemgetter(1), hits)
@@ -154,7 +156,5 @@ def as_pickle(assembly_id, hits, output):
 
 def select_pickle(handle, output, sort=False):
     hits = utils.unpickle_stream(handle)
-    if sort:
-        hits = sorted(hits, key=op.attrgetter('upi'))
-    selected = select_hits(hits)
+    selected = select_hits(hits, sort=sort)
     utils.pickle_stream(selected, output)
