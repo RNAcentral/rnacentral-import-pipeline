@@ -55,6 +55,10 @@ def description(record, feature):
     gene_feature = record.features[1]
     if product == 'other RNA':
         product = gene_feature.qualifiers.get('note', [])
+        if len(product) == 1:
+            product = product[0]
+            product = product[product.index(';') + 1:].strip()
+            product = product[0].lower() + product[1:]
 
     gene = embl.gene(feature)
     if not gene:
