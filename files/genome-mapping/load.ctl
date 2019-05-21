@@ -54,14 +54,6 @@ $$
 CREATE INDEX ix_mapped_assemblies ON mapped_assemblies (assembly_id);
 $$,
 $$
-DELETE FROM rnc_sequence_regions regions
-USING mapped_assemblies load
-WHERE
-    regions.assembly_id = load.assembly_id
-    AND regions.was_mapped = true
-;
-$$,
-$$
 INSERT INTO rnc_sequence_regions (
     urs_taxid,
     region_name,
