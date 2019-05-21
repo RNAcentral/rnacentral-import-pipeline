@@ -174,6 +174,9 @@ def trim_trailing_rna_type(rna_type, description):
     if rna_type == 'lncRNA' or 'antisense' in rna_type:
         trailing.append('long non-coding RNA')
 
+    if rna_type == 'telomerase_RNA':
+        trailing.append('telomerase RNA')
+
     for value in trailing:
         pattern = r'[, ]*%s$' % value
         description = re.sub(pattern, '', description, re.IGNORECASE)
