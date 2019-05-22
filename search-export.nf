@@ -1,10 +1,5 @@
 #!/usr/bin/env nextflow
 
-// This is used to provide a temporary directory publish to. We publish here
-// and then at the we publish everything at once. This prevents writing part of
-// the data in the case one job fails while already succeeded.
-def tmp = "mktemp -d -p ${workDir}".execute().text.trim()
-
 process find_chunks {
   output:
   file('ranges.txt') into raw_ranges
@@ -35,6 +30,7 @@ process fetch_metdata {
 process export_search_json {
   // beforeScript 'slack db-work search-export || true'
   // afterScript 'slack db-done search-export || true'
+  tag { "$min-$max" }
   maxForks params.search_export.max_forks
   echo true
 
@@ -55,8 +51,8 @@ raw_json
   .set { search_json }
 
 process export_chunk {
+  tag { "$min-$max" }
   memory params.search_export.memory
-  publishDir "${tmp}/", mode: 'copy'
 
   input:
   set val(min), val(max), file(json), file(metadata) from search_json
