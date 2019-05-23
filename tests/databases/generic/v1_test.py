@@ -954,6 +954,32 @@ def test_can_properly_handle_shifting_mirbase_coordinates():
     ]]
 
 
+def test_can_properly_handle_shifting_mirbase_coordinates():
+    with open('data/json-schema/v020/shift-mirbase-2.json', 'r') as raw:
+        data = json.load(raw)
+        data = list(v1.parse(data)) 
+    assert len(data) == 1
+    assert len(data[0].regions) == 1
+    assert attr.asdict(data[0].regions[0]) == attr.asdict(dat.SequenceRegion(
+        chromosome='12',
+        strand='-',
+        exons=[dat.Exon(start=121444279, stop=121444305)],
+        assembly_id="GRCh38",
+        coordinate_system=dat.CoordinateSystem.from_name('1-start, fully-closed'),
+    ))
+
+    assert list(data[0].regions[0].writeable(data[0].accession)) == [[
+        'MIRBASE:MIMAT0028112',
+        '@12/121444279-121444305:-',
+        '12',
+        -1,
+        'GRCh38',
+        1,
+        121444279,
+        121444305,
+    ]]
+
+
 def test_does_get_correct_lncbook_genes():
     with open('data/json-schema/v020/lncbook.json', 'r') as raw:
         data = json.load(raw)
