@@ -13,9 +13,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import csv
 import shutil
 import tempfile
 
+import six
 import attr
 import pytest
 
@@ -87,8 +89,7 @@ def test_can_query_indexed_data_correctly(indexed, raw_id):
 ])
 def test_can_query_with_fallback(indexed, raw_id):
     id_ref = reference(raw_id)
-    db = indexed[id_ref.namespace]
-    ref = db.get(id_ref, allow_fallback=True)
+    ref = indexed.get(id_ref, allow_fallback=True)
     assert attr.asdict(ref) == attr.asdict(Reference(
         authors='Macino G, Tzagoloff A.',
         location='Mol Gen Genet 169(2):183-188 (1979)',
@@ -108,8 +109,7 @@ def test_can_query_with_fallback(indexed, raw_id):
 ])
 def test_produces_expected_writeables(indexed, raw_id):
     id_ref = reference(raw_id)
-    db = indexed[id_ref.namespace]
-    ref = db.get(id_ref, allow_fallback=True)
+    ref = indexed.get(id_ref, allow_fallback=True)
     assert list(ref.writeable(['something', 'other'])) == [
         [
             "03ea261d3cd947fde1cc8328a4c08127", 
@@ -166,11 +166,10 @@ def test_can_write_using_specified_columns(indexed_db_path, raw_id):
 ])
 def test_can_write_using_specified_columns_and_allow_fallback(indexed_db_path, raw_id):
 
-    with pytest.raises(xml.UnknownReference):
+    with pytest.raises(xml.UncachedReference):
         with xml.Cache.build(indexed_db_path).open('r') as cache:
             id_ref = reference(raw_id)
-            db = cache[id_ref.namespace]
-            ref = db.get(id_ref, allow_fallback=False)
+            ref = cache.get(id_ref, allow_fallback=False)
 
     out = six.moves.StringIO()
     raw = six.moves.StringIO('something,%s,other\n' % raw_id)
