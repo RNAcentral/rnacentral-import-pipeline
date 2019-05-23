@@ -15,8 +15,9 @@ limitations under the License.
 
 
 from .entry import *
-from .secondary_structure import *
+from .go_annotations import *
+from .ontology_term import *
+from .references import *
 from .regions import *
 from .related import *
-from .references import *
-from .go_annotations import *
+from .secondary_structure import *
