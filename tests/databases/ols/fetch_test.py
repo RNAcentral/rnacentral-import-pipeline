@@ -13,12 +13,36 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from rnacentral_pipeline.ontologies import helpers as ont
-from rnacentral_pipeline.ontologies.data import Term
+import pytest
+
+from rnacentral_pipeline.databases.ols import fetch as ols
+from rnacentral_pipeline.databases.data import OntologyTerm
+
+
+@pytest.mark.parametrize('ontology,url', [
+    ('SO', 'http://purl.obolibrary.org/obo/SO_'),
+    ('so', 'http://purl.obolibrary.org/obo/SO_'),
+    ('go', 'http://purl.obolibrary.org/obo/GO_'),
+])
+def test_can_get_correct_base_url(ontology, url):
+    assert ols.ontology_url(ontology) == url
+
+
+def test_getting_base_url_uses_cache():
+    ols.ontology_url.cache_clear()
+    assert ols.ontology_url.cache_info().hits == 0
+    assert ols.ontology_url.cache_info().misses == 0
+    assert ols.ontology_url('SO') == 'http://purl.obolibrary.org/obo/SO_'
+    assert ols.ontology_url.cache_info().hits == 0
+    assert ols.ontology_url.cache_info().misses == 1
+    for count in range(10):
+        assert ols.ontology_url('SO') == 'http://purl.obolibrary.org/obo/SO_'
+        assert ols.ontology_url.cache_info().hits == count + 1
+        assert ols.ontology_url.cache_info().misses == 1
 
 
 def test_can_fetch_a_go_term():
-    assert ont.term('GO:0005739') == Term(
+    assert ols.term('GO:0005739') == OntologyTerm(
         ontology='GO',
         ontology_id='GO:0005739',
         name='mitochondrion',
@@ -29,11 +53,12 @@ def test_can_fetch_a_go_term():
             'respiration.'
         ),
         synonyms=['mitochondria'],
+        insdc_qualifier=None,
     )
 
 
 def test_can_fetch_an_so_term():
-    assert ont.term('SO:0000276') == Term(
+    assert ols.term('SO:0000276') == OntologyTerm(
         ontology='SO',
         ontology_id='SO:0000276',
         name='miRNA',
@@ -53,6 +78,19 @@ def test_can_fetch_an_so_term():
             'micro RNA',
             'microRNA',
             'stRNA',
-            'INSDC_qualifier:miRNA',
-        ]
+        ],
+        insdc_qualifier='miRNA',
     )
+
+
+def test_caching_works_as_expected():
+    ols.term.cache_clear()
+    assert ols.term.cache_info().hits == 0
+    assert ols.term.cache_info().misses == 0
+    assert ols.term('SO:0000276').name == 'miRNA'
+    assert ols.term.cache_info().hits == 0
+    assert ols.term.cache_info().misses == 1
+    for count in range(10):
+        assert ols.term('SO:0000276').insdc_qualifier == 'miRNA'
+        assert ols.term.cache_info().hits == count + 1
+        assert ols.term.cache_info().misses == 1
