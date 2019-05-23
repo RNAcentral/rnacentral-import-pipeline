@@ -30,6 +30,7 @@ from rnacentral_pipeline.databases.generic import v1
     ('data/json-schema/v020/lincipedia.json', [9606]),
     ('data/json-schema/v020/tarbase.json', [9606]),
     ('data/json-schema/v020/pombase.json', [4896]),
+    ('data/json-schema/v020/lncbook.json', [9606, 9606, 9606]),
 ])
 def test_can_extract_taxid(filename, taxids):
     with open(filename, 'r') as raw:
@@ -62,6 +63,7 @@ def test_can_extract_gene_symbols_to_synonyms(filename, synonyms):
     ('data/json-schema/v020/flybase.json', 5),
     ('data/json-schema/v020/lincipedia.json', 1),
     ('data/json-schema/v020/tarbase.json', 1),
+    ('data/json-schema/v020/lncbook.json', 3),
 ])
 def test_can_parse_all_data(filename, count):
     with open(filename, 'r') as raw:
@@ -950,3 +952,95 @@ def test_can_properly_handle_shifting_mirbase_coordinates():
         136670602,
         136670686,
     ]]
+
+
+def test_can_properly_handle_shifting_mirbase_coordinates():
+    with open('data/json-schema/v020/shift-mirbase-2.json', 'r') as raw:
+        data = json.load(raw)
+        data = list(v1.parse(data)) 
+    assert len(data) == 1
+    assert len(data[0].regions) == 1
+    assert attr.asdict(data[0].regions[0]) == attr.asdict(dat.SequenceRegion(
+        chromosome='12',
+        strand='-',
+        exons=[dat.Exon(start=121444279, stop=121444305)],
+        assembly_id="GRCh38",
+        coordinate_system=dat.CoordinateSystem.from_name('1-start, fully-closed'),
+    ))
+
+    assert list(data[0].regions[0].writeable(data[0].accession)) == [[
+        'MIRBASE:MIMAT0028112',
+        '@12/121444279-121444305:-',
+        '12',
+        -1,
+        'GRCh38',
+        1,
+        121444279,
+        121444305,
+    ]]
+
+
+def test_does_get_correct_lncbook_genes():
+    with open('data/json-schema/v020/lncbook.json', 'r') as raw:
+        data = json.load(raw)
+        data = list(v1.parse(data))
+
+    assert len(data) == 3
+    assert attr.asdict(data[0]) == attr.asdict(dat.Entry(
+        primary_id='HSALNT0000002',
+        accession='LncBook:HSALNT0000002',
+        ncbi_tax_id=9606,
+        database='LNCBOOK',
+        sequence="CGCGGCCCCTGTAGGCCAAGGCGCCAGGCAGGACGACAGCAGCAGCAGCGCGTCTCCTTCAGCTTCACTGCTGTGTCTCCCAGTGTAACCCTAGCATCCAGAAGTGGCACAAAACCCCTCTGCTGGCTCGTGTGTGCAACTGAGACTGTCAGAGCATGGCTAGCTCAGGGGTCCAGCTCTGCAGGGTGGGGGCTAGAGAGGAAGCAGGGAGTATCTGCACACAGGATGCCCGCGCTCAGGTGGTTGCAGAAGTCAGTGCCCAGGCCCCCACACACAGTCTCCAAAGGTCCGGCCTCCCCAGCGCAGGGCTCCTCGTTTGAGGGGAGGTGACTTCCCTCCATCGGCAAGGCCAAGCTGCGCAGCATGAAGGAGCGAAAGCTGGAGAAGCAGCAGCAGAAGGAGCAGGAGCAAGTTGATGTCGGATCTCTTCAACAAGCTGGTCATGAGGCGCAAGGGCATCTCTGGGAAAGGACCTGGGGCTGGTGAGGGGCCCGGAGGAGCCTTTGC",
+        regions=[
+            dat.SequenceRegion(
+                chromosome='1',
+                strand='-',
+                exons=[
+                    dat.Exon(start=14778, stop=14829),
+                    dat.Exon(start=14970, stop=15012),
+                    dat.Exon(start=15796, stop=15869),
+                    dat.Exon(start=16035, stop=16310),
+                    dat.Exon(start=16607, stop=16668),
+                ],
+                assembly_id="GRCh37",
+                coordinate_system=dat.CoordinateSystem.from_name('1-start, fully-closed'),
+            ),
+        ],
+        rna_type='lncRNA',
+        url="http://bigd.big.ac.cn/lncbook/transcript?transid=HSALNT0000002",
+        seq_version='1',
+        note_data={
+            'url': "http://bigd.big.ac.cn/lncbook/transcript?transid=HSALNT0000002",
+        },
+        xref_data={
+            'NONCODE': ["NONHSAT000005.2"],
+        },
+        species='Homo sapiens',
+        common_name='human',
+        lineage=(
+            'Eukaryota; Metazoa; Chordata; Craniata; '
+            'Vertebrata; Euteleostomi; Mammalia; Eutheria; '
+            'Euarchontoglires; Primates; Haplorrhini; Catarrhini; '
+            'Hominidae; Homo; Homo sapiens'
+        ),
+        gene="HSALNG0000002",
+        description='Homo sapiens (human) HSALNT0000002',
+        references=[
+            dat.IdReference.build("PMID:30715521"),
+        ],
+        related_sequences=[
+            dat.RelatedSequence(
+                sequence_id='LncBook:HSALNT0000003',
+                relationship='isoform',
+                coordinates=[],
+                evidence=dat.RelatedEvidence.empty(),
+            ),
+            dat.RelatedSequence(
+                sequence_id='LncBook:HSALNT0000004',
+                relationship='isoform',
+                coordinates=[],
+                evidence=dat.RelatedEvidence.empty(),
+            ),
+        ],
+    ))

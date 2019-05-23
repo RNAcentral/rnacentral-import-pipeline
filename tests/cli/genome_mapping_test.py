@@ -14,9 +14,11 @@ limitations under the License.
 """
 
 import os
+import random
 from contextlib import contextmanager
 
 import pytest
+from more_itertools import chunked
 from click.testing import CliRunner
 
 from rnacentral_pipeline.cli import genome_mapping as gm
@@ -73,3 +75,28 @@ def test_always_produces_output(filename):
         runner.invoke(gm.cli, cmd)
         assert result.exit_code == 0
         assert os.path.exists('selected.csv')
+
+
+def test_sorting_works_correctly():
+    runner = CliRunner()
+    filename = os.path.abspath('data/genome-mapping/results.psl')
+    parts = 1000
+    with open(filename, 'r') as raw:
+        lines = raw.readline()
+        lines = random.shuffle(lines)
+
+    with runner.isolated_filesystem():
+        for index, chunk in enumerate(chunked(lines, parts)):
+            chunk_name = 'results-%i' % index
+            psl = '%s.psl'
+            stored = '%s.pickle'
+            selected='%s-selected.pickle'
+            with open(psl, 'w') as out:
+                out.writelines(chunk)
+
+            cmd = ['blat', 'serialize', chunk_name, stored]
+            runner.invoke(gm.cli, cmd)
+            assert result.exit_code == 0
+            assert os.path.exists(stored)
+
+
