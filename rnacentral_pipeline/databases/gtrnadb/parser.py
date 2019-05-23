@@ -111,7 +111,7 @@ def gtrnadb_entries(data):
                 references=helpers.references(),
             )
         except phy.UnknownTaxonId:
-            print("Unknown taxon id in %s" % data)
+            LOGGER.warning("Unknown taxon id in %s", data)
             break
 
 
