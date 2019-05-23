@@ -15,6 +15,8 @@ limitations under the License.
 
 import re
 
+from six.moves import html_parser
+
 
 def pretty_location(data):
     """
@@ -37,6 +39,8 @@ def pretty_location(data):
         year=data['pubYear'],
     )
     location = location.replace('  ', ' ')
+    if location.endswith('.'):
+        return location[0:-1]
     return location
 
 
@@ -44,4 +48,6 @@ def clean_title(title):
     """
     Cleanup the title into a normalized setup.
     """
-    return re.sub(r'\.$', '', title)
+    stripped = re.sub(r'\.$', '', title)
+    parser = html_parser.HTMLParser()
+    return parser.unescape(stripped)

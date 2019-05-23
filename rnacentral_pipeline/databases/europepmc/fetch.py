@@ -35,6 +35,14 @@ from .utils import pretty_location
 LOGGER = logging.getLogger(__name__)
 
 
+class UnknownReference(Exception):
+    """
+    This is raised when EuropePMC does not have any information on the given
+    reference.
+    """
+    pass
+
+
 @lru_cache()
 @retry(requests.HTTPError, tries=5, delay=1)
 @RateLimiter(max_calls=5, period=1)
