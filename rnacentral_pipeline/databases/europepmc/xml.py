@@ -19,6 +19,7 @@ import csv
 import json
 import logging
 from glob import glob
+import functools as ft
 from xml.etree import cElementTree as ET
 
 import six
@@ -46,11 +47,13 @@ except:
 
 from .utils import clean_title
 from .utils import pretty_location
+from .utils import write_lookup
 from .fetch import lookup
 
-from ..data import Reference
-from ..data import IdReference
-from ..data import KnownServices
+from rnacentral_pipeline.databases.data import Reference
+from rnacentral_pipeline.databases.data import IdReference
+from rnacentral_pipeline.databases.data import KnownServices
+from rnacentral_pipeline.databases.helpers.publications import reference
 
 
 LOGGER = logging.getLogger(__name__)
@@ -134,9 +137,11 @@ class Cache(object):
     def get(self, id_reference, allow_fallback=False):
         storage = self.__storage__(id_reference.namespace)
         data = storage.get(id_reference)
-        if not data and allow_fallback:
-            return lookup(id_ref)
-        return data
+        if data:
+            return data
+        elif allow_fallback:
+            return lookup(id_reference)
+        raise UncachedReference(id_reference)
 
     def store(self, reference):
         data = json.dumps(attr.asdict(reference))
@@ -229,15 +234,11 @@ def id_refs_from_handle(handle, column=0):
 
 def write_file_lookup(cache_path, handle, output, column=0, allow_fallback=False,
                       ignore_missing=True):
-    writer = csv.writer(output)
     with Cache.build(cache_path).open() as db:
-        for id_ref, rest in id_refs_from_handle(handle, column=column):
-            try:
-                ref = db.get(id_ref, allow_fallback=allow_fallback)
-            except Exception as err:
-                LOGGER.warning("Failed to lookup: %s", id_ref)
-                LOGGER.exception(err)
-                if not ignore_missing:
-                    raise err
-                continue
-            writer.writerows(ref.writeable(rest))
+        write_lookup(
+            ft.partial(db.get, allow_fallback=allow_fallback),
+            handle,
+            output,
+            column=column,
+            ignore_errors=ignore_missing,
+        )

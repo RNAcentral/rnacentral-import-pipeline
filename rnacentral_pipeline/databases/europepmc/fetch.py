@@ -30,6 +30,7 @@ from rnacentral_pipeline.databases.data import Reference
 
 from .utils import clean_title
 from .utils import pretty_location
+from .utils import write_lookup
 
 
 LOGGER = logging.getLogger(__name__)
@@ -104,4 +105,14 @@ def lookup(id_reference):
         pmid=pmid,
         doi=data.get('doi', None),
         pmcid=data.get('pmcid', None),
+    )
+
+
+def write_file_lookup(handle, output, column=0, ignore_missing=False):
+    write_lookup(
+        lookup, 
+        handle, 
+        output, 
+        column=column,
+        ignore_errors=ignore_missing,
     )
