@@ -57,7 +57,7 @@ FIELDS = [
 ]
 
 
-@attr.s()
+@attr.s(frozen=True)
 class BlatHit(object):
     upi = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
     sequence_length = attr.ib(validator=is_a(int))
@@ -131,13 +131,24 @@ def parse_psl(assembly_id, handle):
         yield BlatHit.build(assembly_id, result)
 
 
-def select_hits(hits):
-    hits = six.moves.filter(select_possible, hits)
-    hits = it.groupby(hits, op.attrgetter('upi'))
-    hits = six.moves.map(op.itemgetter(1), hits)
-    hits = six.moves.map(select_best, hits)
-    hits = it.chain.from_iterable(hits)
-    return hits
+def select_hits(hits, sort=False):
+    key = op.attrgetter('upi')
+    if sort:
+        hits = sorted(hits, key=key)
+
+    for upi, subhits in it.groupby(hits, key=key):
+        selected = list(six.moves.filter(select_possible, subhits))
+
+        if not selected:
+            LOGGER.warn("No possible matches for %s", upi)
+            continue
+
+        best = select_best(selected)
+        if not best:
+            raise ValueError("Failed to select a best hit for %s" % upi)
+
+        for hit in best:
+            yield hit
 
 
 def write_importable(handle, output):
@@ -154,7 +165,5 @@ def as_pickle(assembly_id, hits, output):
 
 def select_pickle(handle, output, sort=False):
     hits = utils.unpickle_stream(handle)
-    if sort:
-        hits = sorted(hits, key=op.attrgetter('upi'))
-    selected = select_hits(hits)
+    selected = select_hits(hits, sort=sort)
     utils.pickle_stream(selected, output)

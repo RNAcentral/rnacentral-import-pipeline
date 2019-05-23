@@ -365,7 +365,7 @@ def cleanup(rna_type, db_name, description):
     # There are often some extra terms we need to strip
     description = utils.remove_extra_description_terms(description)
     description = description.replace('()', '')
-    if db_name == 'RefSeq':
+    if db_name == 'refseq':
         description = utils.trim_trailing_rna_type(rna_type, description)
 
     if db_name == 'tarbase':

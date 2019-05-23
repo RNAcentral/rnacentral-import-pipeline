@@ -7,6 +7,7 @@ class Input {
       index: index,
       command: 'fetch generic',
       exclude: [],
+      complete_command: false,
       directives: [
         memory: 2.GB,
         tag: "$db_name $input_name",
@@ -94,6 +95,9 @@ class Input {
     String produces;
     if (input.containsKey('produces')) {
       spec.produces = input.produces
+    }
+    if (input.containsKey('complete_command')) {
+      spec.complete_command = input.complete_command;
     } else {
       def f = new File(input.remote)
       spec.produces = f.getName()
@@ -107,7 +111,11 @@ class Input {
     if (input.command.startsWith('mysql')) {
       return "$input.command < ${args[0]} > '$input.produces'"
     }
-    return "$input.command ${args.join(' ')} '$input.produces'"
+
+    if (!input.complete_command) {
+      return "$input.command ${args.join(' ')} '$input.produces'";
+    }
+    return "$input.command ${args.join(' ')}";
   }
 
   // String scripts(List<UnmodifiableMap> inputs) {
