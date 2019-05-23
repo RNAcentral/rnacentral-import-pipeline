@@ -27,7 +27,7 @@ try:
 except ImportError:
     from functools32 import lru_cache
 
-from . import data
+from rnacentral_pipeline.databases import data
 
 INFO_URL = 'https://www.ebi.ac.uk/ols/api/ontologies/{id}'
 TERM_URL = INFO_URL + '/terms/{iri}'
@@ -80,7 +80,7 @@ def term(term_id):
     if term_info['description']:
         definition = ' '.join(term_info['description'] or '')
 
-    return data.Term(
+    return data.OntologyTerm(
         ontology=ontology,
         ontology_id=term_id,
         name=term_info['label'],

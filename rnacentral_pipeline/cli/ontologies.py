@@ -15,8 +15,8 @@ limitations under the License.
 
 import click
 
-from rnacentral_pipeline import ontologies as onto
-from rnacentral_pipeline.ontologies import writer as onto_writer
+from rnacentral_pipeline.databases.ols import helpers as ols
+from rnacentral_pipeline.writers import write_ontology_annotations as onto_writer
 from rnacentral_pipeline.databases.quickgo import parser as quickgo
 
 
@@ -39,11 +39,11 @@ def ontologies_quickgo(raw_data, output):
     """
     This will process a quickgo file and output files into the given directory.
     """
-    onto_writer.write_annotations(quickgo.parser, output, raw_data)
+    onto_writer(quickgo.parser, output, raw_data)
 
 
 @cli.command('lookup-terms')
 @click.argument('terms', type=click.File('r'))
 @click.argument('output', type=click.File('w'))
 def ontologies_lookup_terms(terms, output):
-    onto.lookup_terms(terms, output)
+    ols.lookup_terms(terms, output)
