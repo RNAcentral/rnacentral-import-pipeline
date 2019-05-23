@@ -76,6 +76,15 @@ def test_parses_correct_data(assembly_id, filename, count):
     assert len(parse(assembly_id, filename)) == count
 
 
+@pytest.mark.parametrize('assembly_id,filename', [
+    ('human', 'data/genome-mapping/results.psl'),
+])
+def test_always_has_good_enough_hits(assembly_id, filename):
+    hits = select_hits(assembly_id, filename)
+    assert hits
+    assert min(hits, key=lambda h: h.match_fraction).match_fraction >= 0.95
+
+
 def test_gets_correct_upis():
     hits = select_hits('human', 'data/genome-mapping/results.psl')
     val = set(h.upi for h in hits)
