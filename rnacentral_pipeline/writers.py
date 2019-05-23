@@ -160,6 +160,29 @@ def build_entry_writer(parser):
     )
 
 
+def build_ontology_annotation_writer(parser):
+    writer = MultiCsvOutput.build(
+        parser,
+        go_annotations={
+            'transformer': op.methodcaller('writeable'),
+        },
+        ref_ids={
+            'transformer': op.methodcaller('writeable_refs'),
+        },
+        go_publication_mappings={
+            'transformer': op.methodcaller('writeable_publication_mappings'),
+        },
+        terms={
+            'transformer': op.methodcaller('writeable_ontology_terms'),
+        },
+    )
+
+
 def write_entries(parser, output, *args):
     writer = build_entry_writer(parser)
     writer(output, *args)
+
+
+def write_ontology_annotations(parser, *args, **kwargs):
+    writer = build_ontology_annotation_writer(parser)
+    writer(*args, **kwargs)

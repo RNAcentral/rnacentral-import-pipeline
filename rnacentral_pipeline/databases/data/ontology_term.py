@@ -21,7 +21,7 @@ from attr.validators import optional
 
 
 @attr.s()
-class Term(object):
+class OntologyTerm(object):
     """
     This represents a single term in a specific ontology.
     """
@@ -42,3 +42,4 @@ class Term(object):
 
     def writeables(self):
         yield self.writeable()
+
