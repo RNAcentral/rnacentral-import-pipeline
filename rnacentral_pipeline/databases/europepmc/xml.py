@@ -46,48 +46,45 @@ except:
 
 from .utils import clean_title
 from .utils import pretty_location
+from .fetch import lookup
 
 from ..data import Reference
+from ..data import IdReference
+from ..data import KnownServices
 
 
 LOGGER = logging.getLogger(__name__)
 
 
-class UnknownReference(Exception):
+class UncachedReference(Exception):
     """
-    This is created when the requested reference cannot be found either in
-    EuropePMC or in the indexed data depending upon how the lookup was done.
-    """
-    pass
-
-
-class TooManyPublications(Exception):
-    """
-    Raised if when we try to lookup a publication in EuropePMC and we find too
-    many (> 1) for the given reference.
+    This is created when the requested reference was never indexed. This may be
+    because it is not an open access publication, or it does not exist at all.
     """
     pass
 
 
 @attr.s()
-class CacheStorage(object):
+class Storage(object):
+    namespace = attr.ib(validator=is_a(KnownServices))
     path = attr.ib(validator=is_a(Path))
 
-    def store(self, key, json_data):
-        assert key, "Provided no key for index of: %s" % json_data
-        assert json_data
-        k = self.__normalize_key__(key)
-        assert k, "Failed to get normalized key of %s" % key
-        self.db[k] = json_data
+    @classmethod
+    def build(cls, service, base_path):
+        return Storage(service, base_path / service.name)
 
-    def get(self, id_ref, allow_fallback=False):
+    def store(self, id_ref, json_data):
+        assert id_ref.namespace is self.namespace
+        key = self.__normalize_key__(id_ref.external_id)
+        self.db[key] = json_data
+
+    def get(self, id_ref):
+        assert id_ref.namespace is self.namespace
         key = self.__normalize_key__(id_ref.external_id)
         data = self.db.get(key, None)
-        if data:
-            return Reference(**json.loads(data))
-        if allow_fallback:
-            return query_pmc(id_ref)
-        raise UnknownReference("Never indexed %s" % id_ref)
+        if not data:
+            return None
+        return Reference(**json.loads(data))
 
     @contextmanager
     def open(self, mode='r'):
@@ -96,42 +93,69 @@ class CacheStorage(object):
         self.db.close()
 
     def __normalize_key__(self, raw):
+        encoded = str(raw)
         if isinstance(raw, six.string_types):
-            return raw.encode('ascii', 'ignore')
-        return str(raw)
+            encoded = raw.encode('ascii', 'ignore')
+        assert encoded
+        return encoded
 
 @attr.s()
 class Cache(object):
-    filename = attr.ib(type=Path, validator=is_a(Path))
+    _path = attr.ib(type=Path, validator=is_a(Path))
+    _pmid = attr.ib(validator=is_a(Storage))
+    _doi = attr.ib(validator=is_a(Storage))
+    _pmcid = attr.ib(validator=is_a(Storage))
 
     @classmethod
     def build(cls, base_path):
         path = Path(base_path)
         if not path.exists():
             path.mkdir()
-        return cls(path)
+        kwargs = {}
+        for service in KnownServices:
+            kwargs[service.name] = Storage.build(service, path)
+        return cls(path=path, **kwargs)
 
     @classmethod
     def populate_with(cls, base_path, references):
         cache = cls.build(base_path)
-        with cache.open(mode='c') as handles:
+        with cache.open(mode='c') as cache:
             for reference in references:
-                data = json.dumps(attr.asdict(reference))
-                for key_name in KnownServices:
-                    key = getattr(reference, key_name, None)
-                    if key:
-                        handles[key_name].store(key, data)
+                cache.store(reference)
 
     @contextmanager
     def open(self, mode='r'):
         with ExitStack() as stack:
-            handles = {}
-            for key in self.keys:
-                filename = self.filename / Path(key)
-                cache = CacheStorage(filename)
-                db = stack.enter_context(cache.open(mode))
-                handles[key] = db
-            yield handles
+            for service in KnownServices:
+                storage = self.__storage__(service)
+                db = stack.enter_context(storage.open(mode))
+            yield self
+
+    def get(self, id_reference, allow_fallback=False):
+        storage = self.__storage__(id_reference.namespace)
+        data = storage.get(id_reference)
+        if not data and allow_fallback:
+            return lookup(id_ref)
+        return data
+
+    def store(self, reference):
+        data = json.dumps(attr.asdict(reference))
+        for id_reference in reference.id_references:
+            storage = self.__storage__(id_reference)
+            storage.store(id_reference, data)
+
+    def __storage__(self, ref):
+        if isinstance(ref, KnownServices):
+            name = ref.name
+        elif isinstance(ref, IdReference):
+            name = ref.namespace.name
+        else:
+            raise ValueError("Unknown type: %s" % ref)
+
+        key = '_' + name
+        if not hasattr(self, key):
+            raise ValueError("Never cached references for: %s" % name)
+        return getattr(self, key)
 
 
 def xml_text(tag, node, missing=None, fn=None):
@@ -175,7 +199,7 @@ def node_to_reference(node):
     )
 
 
-def parse_xml(xml_file):
+def parse(xml_file):
     tree = ET.parse(xml_file)
     root = tree.getroot()
     for node in root.findall('./PMC_ARTICLE'):
@@ -185,15 +209,15 @@ def parse_xml(xml_file):
         yield ref
 
 
-def parse_xml_directory(directory):
+def parse_directory(directory):
     for filename in glob(os.path.join(directory, '*.xml')):
         with open(filename, 'r') as xml_file:
-            for ref in list(parse_xml(xml_file)):
+            for ref in list(parse(xml_file)):
                 yield ref
 
 
-def index_xml_directory(directory, output):
-    Cache.populate_with(output, parse_xml_directory(directory))
+def index_directory(directory, output):
+    Cache.populate_with(output, parse_directory(directory))
 
 
 def id_refs_from_handle(handle, column=0):
@@ -208,9 +232,8 @@ def write_file_lookup(cache_path, handle, output, column=0, allow_fallback=False
     writer = csv.writer(output)
     with Cache.build(cache_path).open() as db:
         for id_ref, rest in id_refs_from_handle(handle, column=column):
-            store = db[id_ref.namespace.name]
             try:
-                ref = store.get(id_ref, allow_fallback=allow_fallback)
+                ref = db.get(id_ref, allow_fallback=allow_fallback)
             except Exception as err:
                 LOGGER.warning("Failed to lookup: %s", id_ref)
                 LOGGER.exception(err)

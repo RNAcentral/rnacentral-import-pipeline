@@ -13,25 +13,36 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import shutil
+import tempfile
+
+import attr
 import pytest
+
+from rnacentral_pipeline.databases.data import Reference
+
+from rnacentral_pipeline.databases.europepmc import xml
+from rnacentral_pipeline.databases.helpers.publications import reference
 
 
 @pytest.fixture(scope='module')
 def indexed_db_path():
     tmp = tempfile.mkdtemp()
-    pub.index_xml_directory('data/publications/', tmp)
+    xml.index_directory('data/publications/', tmp)
     yield tmp
     shutil.rmtree(tmp)
 
 
 @pytest.fixture(scope='module')
 def indexed(indexed_db_path):
-    pub.index_xml_directory('data/publications/', indexed_db_path)
-    with pub.Cache.build(indexed_db_path).open('r') as db:
+    xml.index_directory('data/publications/', indexed_db_path)
+    with xml.Cache.build(indexed_db_path).open('r') as db:
         yield db
+
+
 def test_can_parse_xml_data_correctly():
     with open('data/publications/example.xml', 'r') as raw:
-        data = list(pub.parse_xml(raw))
+        data = list(xml.parse(raw))
         assert len(data) == 1
         assert attr.asdict(data[0]) == attr.asdict(Reference(
             authors='Xu Z, Han Y, Liu J, Jiang F, Hu H, Wang Y, Liu Q, Gong Y, Li X.',
@@ -55,9 +66,8 @@ def test_can_parse_xml_data_correctly():
     (26184978),
 ])
 def test_can_query_indexed_data_correctly(indexed, raw_id):
-    id_ref = pub.reference(raw_id)
-    db = indexed[id_ref.namespace]
-    assert attr.asdict(db.get(id_ref)) == attr.asdict(Reference(
+    id_ref = reference(raw_id)
+    assert attr.asdict(indexed.get(id_ref)) == attr.asdict(Reference(
             authors='Xu Z, Han Y, Liu J, Jiang F, Hu H, Wang Y, Liu Q, Gong Y, Li X.',
             location='Scientific reports 5:12276 (2015)',
             title=(
@@ -76,7 +86,7 @@ def test_can_query_indexed_data_correctly(indexed, raw_id):
     'PMID:375006',
 ])
 def test_can_query_with_fallback(indexed, raw_id):
-    id_ref = pub.reference(raw_id)
+    id_ref = reference(raw_id)
     db = indexed[id_ref.namespace]
     ref = db.get(id_ref, allow_fallback=True)
     assert attr.asdict(ref) == attr.asdict(Reference(
@@ -97,7 +107,7 @@ def test_can_query_with_fallback(indexed, raw_id):
     'DOI:10.1038/srep12276',
 ])
 def test_produces_expected_writeables(indexed, raw_id):
-    id_ref = pub.reference(raw_id)
+    id_ref = reference(raw_id)
     db = indexed[id_ref.namespace]
     ref = db.get(id_ref, allow_fallback=True)
     assert list(ref.writeable(['something', 'other'])) == [
@@ -129,7 +139,7 @@ def test_can_write_using_specified_columns(indexed_db_path, raw_id):
     out = six.moves.StringIO()
     content = 'something,%s,other\n' % raw_id
     raw = six.moves.StringIO(content)
-    pub.write_file_lookup(indexed_db_path, raw, out, column=1, allow_fallback=False)
+    xml.write_file_lookup(indexed_db_path, raw, out, column=1, allow_fallback=False)
     out.seek(0)
     assert list(csv.reader(out)) == [
         [
@@ -156,15 +166,15 @@ def test_can_write_using_specified_columns(indexed_db_path, raw_id):
 ])
 def test_can_write_using_specified_columns_and_allow_fallback(indexed_db_path, raw_id):
 
-    with pytest.raises(pub.UnknownReference):
-        with pub.Cache.build(indexed_db_path).open('r') as cache:
-            id_ref = pub.reference(raw_id)
+    with pytest.raises(xml.UnknownReference):
+        with xml.Cache.build(indexed_db_path).open('r') as cache:
+            id_ref = reference(raw_id)
             db = cache[id_ref.namespace]
             ref = db.get(id_ref, allow_fallback=False)
 
     out = six.moves.StringIO()
     raw = six.moves.StringIO('something,%s,other\n' % raw_id)
-    pub.write_file_lookup(indexed_db_path, raw, out, column=1, allow_fallback=True)
+    xml.write_file_lookup(indexed_db_path, raw, out, column=1, allow_fallback=True)
     out.seek(0)
     assert list(csv.reader(out)) == [
         [

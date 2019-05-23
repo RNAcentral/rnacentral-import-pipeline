@@ -20,7 +20,7 @@ from attr.validators import instance_of as is_a
 from attr.validators import optional
 
 
-@attr.s()
+@attr.s(frozen=True)
 class OntologyTerm(object):
     """
     This represents a single term in a specific ontology.
@@ -31,6 +31,10 @@ class OntologyTerm(object):
     name = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
     definition = attr.ib(validator=optional(is_a(six.string_types)))
     synonyms = attr.ib(validator=is_a(list))
+    insdc_qualifier = attr.ib(
+        validator=optional(is_a(six.text_type)),
+        default=None,
+    )
 
     def writeable(self):
         return [
@@ -42,4 +46,3 @@ class OntologyTerm(object):
 
     def writeables(self):
         yield self.writeable()
-

@@ -119,24 +119,35 @@ class Reference(object):
 
         yield data + rest
 
+    @property
     def id_reference(self):
         if self.pmid:
-            return IdReference(namespace='pmid', external_id=six.text_type(self.pmid))
+            return IdReference(
+                namespace=KnownServices.pmid, 
+                external_id=six.text_type(self.pmid),
+            )
         if self.doi:
-            return IdReference(namespace='doi', external_id=self.doi)
+            return IdReference(
+                namespace=KnownServices.doi, 
+                external_id=self.doi,
+            )
         if self.pmcid:
-            return IdReference(namespace='pmcid', external_id=self.pmcid)
+            return IdReference(
+                namespace=KnownServices.pmcid, 
+                external_id=self.pmcid,
+            )
         raise ValueError("Cannot build IdReference for %s" % self)
 
+    @property
     def id_references(self):
-        refs = []
+        refs = set()
         for namespace in KnownServices:
             value = getattr(self, namespace.name)
             if not value:
                 continue
             eid = six.text_type(value)
-            refs.append(IdReference(namespace=namespace, external_id=eid))
-        return tuple(refs)
+            refs.add(IdReference(namespace=namespace, external_id=six.text_type(eid)))
+        return refs
 
 
 @attr.s(frozen=True, hash=True)
@@ -185,7 +196,8 @@ class IdReference(object):
             base.args['query'] = query
             return base.url
 
-        if self.namespace is KnownServices.doi or self.namespace is KnownServices.pmcid:
+        if self.namespace is KnownServices.doi or \
+                self.namespace is KnownServices.pmcid:
             suffix = self.external_id
             if self.namespace is KnownServices.doi:
                 suffix = '"%s"' % suffix

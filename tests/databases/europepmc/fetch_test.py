@@ -90,14 +90,13 @@ def test_can_build_reference(raw_id):
 
 
 def test_can_deal_with_unicode():
-    reference = lookup(27334534)
-    assert u'\xa0' not in reference['title']
-    assert reference == {
-        'authors': 'Ahn S., Jin T.E., Chang D.H., Rhee M.S., Kim H.J., Lee S.J., Park D.S., Kim B.C.',
-        'location': 'Int. J. Syst. Evol. Microbiol. 66(9):3656-3661(2016).',
+    data = fetch.lookup(IdReference.build(27334534))
+    assert attr.asdict(data) == {
+        'authors': 'Ahn S, Jin TE, Chang DH, Rhee MS, Kim HJ, Lee SJ, Park DS, Kim BC.',
+        'location': 'Int J Syst Evol Microbiol 66(9):3656-3661 (2016)',
         'title': 'Agathobaculum butyriciproducens gen. nov. \xa0sp. nov., a strict anaerobic, butyrate-producing gut bacterium isolated from human faeces and reclassification of Eubacterium desmolans as Agathobaculum desmolans comb. nov',
         'pmid': 27334534,
-        'doi': None,
+        'doi': '10.1099/ijsem.0.001195',
         'pmcid': None,
     }
 
