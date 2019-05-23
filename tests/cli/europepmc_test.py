@@ -21,6 +21,9 @@ import pytest
 from click.testing import CliRunner
 
 from rnacentral_pipeline.cli import europepmc
+from rnacentral_pipeline.databases.data import IdReference
+from rnacentral_pipeline.databases.data import KnownServices
+from rnacentral_pipeline.databases.europepmc.xml import UncachedReference
 
 
 @contextmanager
@@ -81,15 +84,29 @@ def test_will_fail_with_badly_formmated_ref_id():
 
 def test_will_ignore_lookup_failures():
     ids = [ 'PMID:26184978,b', 'PMID:1903816,a']
-    cmd = ['lookup', '--no-allow-fallback', 'references.db', '-']
+    cmd = ['lookup', '--ignore-missing', '--no-allow-fallback', 'references.db', '-']
     with run_indexed_command(cmd, input='\n'.join(ids)) as result:
         assert result.exit_code == 0
         assert os.path.exists('references.csv')
+        with open('references.csv') as raw:
+            assert len(raw.readlines()) == 1
 
 
 def test_will_fail_lookup_faiures_if_requested():
     ids = ['PMID:26184978,b', 'PMID:1903816,a']
     cmd = ['lookup', '--no-allow-fallback', '--no-ignore-missing', 'references.db', '-']
     with run_indexed_command(cmd, input='\n'.join(ids)) as result:
-        assert result.exit_code == -1
+        assert result.exit_code == 1
         assert os.path.exists('references.csv')
+
+
+def test_can_query_a_file():
+    ids = ['FIRST,PMID:375006,SECOND']
+    cmd = ['query', '--column=1', '-']
+    with run_indexed_command(cmd, input='\n'.join(ids)) as result:
+        assert result.exit_code == 0
+        assert os.path.exists('references.csv')
+        with open('references.csv') as raw:
+            assert raw.readlines() == [
+                'da0c9805cab7efd21a0eed0e17a8223a,FIRST,SECOND,"Macino G, Tzagoloff A.",Mol Gen Genet 169(2):183-188 (1979),Assembly of the mitochondrial membrane system: two separate genes coding for threonyl-tRNA in the mitochondrial DNA of Saccharomyces cerevisiae,375006,10.1007/bf00271669\n'
+            ]

@@ -15,7 +15,8 @@ limitations under the License.
 
 import click
 
-from rnacentral_pipeline.databases.helpers import publications
+from rnacentral_pipeline.databases.europepmc import xml
+from rnacentral_pipeline.databases.europepmc import fetch
 
 
 @click.group("europepmc")
@@ -33,7 +34,26 @@ def index_xml(directory, db):
     """
     Index a list of XML files of publication information.
     """
-    publications.index_xml_directory(directory, db)
+    xml.index_directory(directory, db)
+
+
+@cli.command('query')
+@click.option('--column', default=0)
+@click.option('--ignore-missing/--no-ignore-missing', default=True)
+@click.argument('references', default='-', type=click.File('r'))
+@click.argument('output', default='references.csv', type=click.File('w'))
+def query(references, output, column=0, ignore_missing=True):
+    """
+    Query EuropePMC API for all references in the references file. This will be
+    subject to rate limits to ensure we do not overload the API so it will take
+    a long time for large files.
+    """
+    fetch.write_file_lookup(
+        references,
+        output,
+        column=column,
+        ignore_missing=ignore_missing,
+    )
 
 
 @cli.command('lookup')
@@ -43,19 +63,19 @@ def index_xml(directory, db):
 @click.argument('db', default='references.db', type=click.Path())
 @click.argument('ids', default='ref_ids.csv', type=click.File('r'))
 @click.argument(
-    'output', 
-    default='references.csv', 
+    'output',
+    default='references.csv',
     type=click.File('w'))
 def lookup(db, ids, output, column=0, allow_fallback=False, ignore_missing=True):
     """
     Use the database index file to lookup all reference information for all xml
     files in the given directory.
     """
-    publications.write_file_lookup(
-        db, 
-        ids, 
-        output, 
-        column=column, 
+    xml.write_file_lookup(
+        db,
+        ids,
+        output,
+        column=column,
         allow_fallback=allow_fallback,
         ignore_missing=ignore_missing,
     )
