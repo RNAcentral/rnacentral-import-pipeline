@@ -19,10 +19,12 @@ import itertools as it
 
 import six
 
+from . import fetch
+
 def parse_file(handle):
     reader = csv.reader(handle)
     for line in reader:
-        yield term(line[0])
+        yield fetch.term(line[0])
 
 
 def process_term_file(term_handle, output):

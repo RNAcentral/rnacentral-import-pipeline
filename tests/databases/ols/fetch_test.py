@@ -14,6 +14,7 @@ limitations under the License.
 """
 
 import pytest
+from furl import furl
 
 from rnacentral_pipeline.databases.ols import fetch as ols
 from rnacentral_pipeline.databases.data import OntologyTerm
@@ -25,20 +26,15 @@ from rnacentral_pipeline.databases.data import OntologyTerm
     ('go', 'http://purl.obolibrary.org/obo/GO_'),
 ])
 def test_can_get_correct_base_url(ontology, url):
-    assert ols.ontology_url(ontology) == url
+    assert ols.ontology_url(ontology) == furl(url)
 
 
-def test_getting_base_url_uses_cache():
-    ols.ontology_url.cache_clear()
-    assert ols.ontology_url.cache_info().hits == 0
-    assert ols.ontology_url.cache_info().misses == 0
-    assert ols.ontology_url('SO') == 'http://purl.obolibrary.org/obo/SO_'
-    assert ols.ontology_url.cache_info().hits == 0
-    assert ols.ontology_url.cache_info().misses == 1
-    for count in range(10):
-        assert ols.ontology_url('SO') == 'http://purl.obolibrary.org/obo/SO_'
-        assert ols.ontology_url.cache_info().hits == count + 1
-        assert ols.ontology_url.cache_info().misses == 1
+@pytest.mark.parametrize('term,url', [
+    ('GO:0043226', r'https://www.ebi.ac.uk/ols/api/ontologies/GO/terms/http%253A%252F%252Fpurl.obolibrary.org%252Fobo%252FGO_0043226'),
+])
+def test_can_get_correct_term_url(term, url):
+    val = ols.term_url(term)
+    assert val == furl(url)
 
 
 def test_can_fetch_a_go_term():
@@ -91,6 +87,8 @@ def test_caching_works_as_expected():
     assert ols.term.cache_info().hits == 0
     assert ols.term.cache_info().misses == 1
     for count in range(10):
+        print(ols.term.cache_info())
+        print(count)
         assert ols.term('SO:0000276').insdc_qualifier == 'miRNA'
         assert ols.term.cache_info().hits == count + 1
         assert ols.term.cache_info().misses == 1
