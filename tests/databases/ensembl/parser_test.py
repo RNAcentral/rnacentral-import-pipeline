@@ -43,6 +43,11 @@ def mouse_3():
     return parse_with_family('data/ensembl/Mus_musculus.GRCm38.chromosome.3.dat')
 
 
+@pytest.fixture(scope='module')  # pylint: disable=no-member
+def cow_8():
+    return parse_with_family('data/ensembl/Bos_taurus.ARS-UCD1.2.primary_assembly.8.dat')
+
+
 def test_it_sets_primary_id_to_versionless_transcript_id(human_12):
     assert entry_for(human_12, 'ENST00000516089.1').primary_id == \
         'ENST00000516089'
@@ -206,7 +211,7 @@ def test_it_builds_correct_entries(human_12):
             "RFAM_trans_name": ["RF00017.190-201"],
             "RNAcentral": ["URS0000AA28EF"],
         },
-        references=[dat.IdReference('pmid', '27337980')],
+        references=[dat.IdReference(dat.KnownServices.pmid, '27337980')],
         mol_type='genomic DNA',
         pseudogene='N',
         is_composite='N',
@@ -303,7 +308,7 @@ def test_can_build_gencode_entries(human_12):
             "RNAcentral": ["URS0000AA28EF"],
             'Ensembl': ['ENST00000620330.1'],
         },
-        references=[dat.IdReference('pmid', '22955987')],
+        references=[dat.IdReference(dat.KnownServices.pmid, '22955987')],
         mol_type='genomic DNA',
         pseudogene='N',
         is_composite='N',
@@ -348,3 +353,7 @@ def test_does_not_append_none_to_description(macaca):
 
 def test_does_not_create_extra_gencode_entries(macaca):
     assert len([e for e in macaca if e.database == 'GENCODE']) == 0
+
+
+def can_build_reasonable_descriptions_when_locus_is_rfam(cow_8):
+    assert entry_for('ENSBTAT00000060095.2').description == 'Bos taurus (cattle) snoRNA Small nucleolar RNA SNORA8 (ENSBTAG00000043103)'

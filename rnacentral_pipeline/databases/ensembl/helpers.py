@@ -134,6 +134,8 @@ def description(context, gene, entry):
         )
 
     locus_tag = context.rfam_name(entry.locus_tag, entry.locus_tag or '')
+    if locus_tag.startswith('RF') and entry.optional_id:
+        locus_tag = entry.optional_id.split('.')[0]
 
     assert entry.rna_type, "Cannot build description without rna_type"
     return '{species} {rna_type} {locus_tag}'.format(
