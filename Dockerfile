@@ -123,11 +123,20 @@ RUN \
     tar xvf seqkit_linux_amd64.tar.gz && \
     rm seqkit_linux_amd64.tar.gz
 
+# Install xsv
 RUN \
     mkdir -p xsv && \
     cd xsv && \
     wget https://github.com/BurntSushi/xsv/releases/download/0.13.0/xsv-0.13.0-x86_64-unknown-linux-musl.tar.gz && \
     tar xf xsv-0.13.0-x86_64-unknown-linux-musl.tar.gz
+
+# Install R-scape
+RUN wget http://eddylab.org/software/rscape/rscape.tar.gz && \
+    tar -xvzf rscape.tar.gz && \
+    rm rscape.tar.gz && \
+    cd rscape_* && \
+    ./configure && make && make install && \
+    cd .. && mv rscape_* rscape
 
 # Install useful pip version
 RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && python get-pip.py
@@ -155,4 +164,5 @@ ENV PATH="$RNA/seqkit:$PATH"
 ENV PATH="$RNA/jiffy-infernal-hmmer-scripts:$PATH"
 ENV PATH="$RNA/auto-traveler:$PATH"
 ENV PATH="$RNA/xsv:$PATH"
+ENV PATH="$RNA/rscape/bin:$PATH"
 ENV PATH="$RNACENTRAL_IMPORT_PIPELINE:$PATH"
