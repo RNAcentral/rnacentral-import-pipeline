@@ -30,3 +30,4 @@ fetch 'ftp://ftp.ensemblgenomes.org/pub/current/plants/embl/arabidopsis_thaliana
 fetch 'ftp://ftp.ensemblgenomes.org/pub/current/plants/embl/hordeum_vulgare/Hordeum_vulgare.IBSC_v2.*.chromosome.Pt.dat.gz' 'data/ensembl_plants/Hordeum_vulgare.IBSC_v2.chromosome.Pt.dat'
 fetch 'ftp://ftp.ensemblgenomes.org/pub/current/plants/embl/oryza_barthii/Oryza_barthii.O.barthii_v1.*.chromosome.9.dat.gz' 'data/ensembl_plants/Oryza_barthii.O.barthii_v1.chromosome.9.dat'
 fetch 'ftp://ftp.ensemblgenomes.org/pub/current/plants/embl/zea_mays/Zea_mays.B73_RefGen_v4.*.chromosome.7.dat.gz' 'data/ensembl_plants/Zea_mays.B73_RefGen_v4.chromosome.7.dat'
+fetch 'ftp://ftp.ensembl.org/pub/release-96/embl/bos_taurus/Bos_taurus.ARS-UCD1.2.96.primary_assembly.8.dat.gz' 'data/ensembl/Bos_taurus.ARS-UCD1.2.primary_assembly.8.dat'
