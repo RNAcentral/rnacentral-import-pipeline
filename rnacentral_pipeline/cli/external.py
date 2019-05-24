@@ -18,6 +18,7 @@ import click
 from click_aliases import ClickAliasedGroup
 
 from rnacentral_pipeline.writers import write_entries
+from rnacentral_pipeline.writers import write_ontology_annotations as onto_writer
 
 from rnacentral_pipeline.databases import rfam
 from rnacentral_pipeline.databases.ena import parser as ena
@@ -26,6 +27,7 @@ from rnacentral_pipeline.databases.generic import parser as generic
 from rnacentral_pipeline.databases.refseq import parser as refseq
 from rnacentral_pipeline.databases.ensembl import parser as ensembl
 from rnacentral_pipeline.databases.ensembl_plants import parser as e_plants
+from rnacentral_pipeline.databases.quickgo import parser as quickgo
 
 
 @click.group('external', cls=ClickAliasedGroup)
@@ -129,6 +131,20 @@ def process_ena(ena_file, mapping_file, output):
     file is a file containing all TPA data we are using from ENA.
     """
     write_entries(ena.parse_with_mapping_file, output, ena_file, mapping_file)
+
+
+@cli.command('quickgo')
+@click.argument('raw_data', type=click.File('r'))
+@click.argument('output', default='.', type=click.Path(
+    writable=True,
+    dir_okay=True,
+    file_okay=False,
+))
+def ontologies_quickgo(raw_data, output):
+    """
+    This will process a quickgo file and output files into the given directory.
+    """
+    onto_writer(quickgo.parser, output, raw_data)
 
 
 @cli.command('refseq')
