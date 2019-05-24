@@ -18,6 +18,7 @@ import six
 import requests
 from furl import furl
 from retry import retry
+from retry.api import retry_call
 from ratelimiter import RateLimiter
 
 try:
@@ -25,40 +26,23 @@ try:
 except ImportError:
     from functools32 import lru_cache
 
-
 from rnacentral_pipeline.databases.data import OntologyTerm
 
 BASE = 'https://www.ebi.ac.uk/ols/api/ontologies'
 
-INFO_URL = 'https://www.ebi.ac.uk/ols/api/ontologies/'
-TERM_URL = INFO_URL + '/terms/{iri}'
-
-
-def as_iri(url, encode_count=2):
-    """
-    Encode a URL as an IRI for the OLS. This means we have to double URL encode
-    the URL.
-    """
-
-    iri = url
-    for _ in range(encode_count):
-        iri = [('', iri)]
-        iri = six.moves.urllib.parse.urlencode(iri)
-        iri = iri[1:]  # Strip off leading '='
-
-    return iri
-
 
 @lru_cache(maxsize=500)
-@retry(requests.HTTPError, tries=5, delay=1)
-@RateLimiter(max_calls=10, period=1)
+# @retry(requests.HTTPError, tries=5, delay=1)
+# @RateLimiter(max_calls=10, period=1)
 def query_ols(url):
-    response = requests.get(url)
-    response.raise_for_status()
-    return response.json()
+    def limited(url):
+        with RateLimiter(max_calls=10, period=1):
+            response = requests.get(url)
+        response.raise_for_status()
+        return response.json()
+    return retry_call(limited, fargs=[url])
 
 
-@lru_cache()
 def ontology_url(ontology):
     """
     This will fetch the base URL to use with the given ontology name.
@@ -70,6 +54,17 @@ def ontology_url(ontology):
     return furl(info['config']['baseUris'][0])
 
 
+def term_url(term_id):
+    ontology, rest = term_id.split(':', 1)
+    ont_url = ontology_url(ontology)
+    ont_url.path.segments[-1] += rest
+    iri = six.moves.urllib.parse.quote_plus(ont_url.url)
+
+    url = furl(BASE)
+    url.path.segments.extend([ontology, 'terms', iri])
+    return url
+
+
 @lru_cache()
 def term(term_id):
     """
@@ -78,28 +73,23 @@ def term(term_id):
     OLS.
     """
 
-    ontology, rest = term_id.split(':')
-    ont_url = ontology_url(ontology)
-    ont_url.path.segments.append(rest)
-    iri = as_iri(ont_url.url)
-
-    url = furl(BASE)
-    url.path.segments.extend([ontology, 'terms', iri])
+    ontology, _ = term_id.split(':', 1)
+    url = term_url(term_id)
     term_info = query_ols(url.url)
 
     definition = None
     if term_info['description']:
         definition = ' '.join(term_info['description'] or '')
 
-    insdc_qualifier = None
+    qualifier = None
     synonyms = []
     given = term_info.get('synonyms', None) or []
     leader = 'INSDC_qualifier:'
     for synonym in given:
         if synonym.startswith(leader):
-            if insdc_qualifier:
+            if qualifier:
                 raise ValueError("Multiple INSDC qualifiers found")
-            insdc_qualifier = synonym[leader + 1:]
+            qualifier = synonym[len(leader):]
         else:
             synonyms.append(synonym)
 
