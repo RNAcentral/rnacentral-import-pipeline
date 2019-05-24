@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import absolute_import
+
 """
 Copyright [2009-2017] EMBL-European Bioinformatics Institute
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -45,15 +47,16 @@ try:
 except:
     from contextlib2 import ExitStack
 
-from .utils import clean_title
-from .utils import pretty_location
-from .utils import write_lookup
-from .fetch import lookup
-
 from rnacentral_pipeline.databases.data import Reference
 from rnacentral_pipeline.databases.data import IdReference
 from rnacentral_pipeline.databases.data import KnownServices
 from rnacentral_pipeline.databases.helpers.publications import reference
+
+from rnacentral_pipeline.databases.europepmc.utils import clean_title
+from rnacentral_pipeline.databases.europepmc.utils import pretty_location
+from rnacentral_pipeline.databases.europepmc.utils import write_lookup
+from rnacentral_pipeline.databases.europepmc.fetch import lookup
+
 
 
 LOGGER = logging.getLogger(__name__)
