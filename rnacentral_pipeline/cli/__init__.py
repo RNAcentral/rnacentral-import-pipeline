@@ -23,7 +23,7 @@ from . import ftp_export
 from . import genome_mapping
 from . import misc
 from . import ncbi
-from . import ontologies
+from . import ols
 from . import pdb
 from . import precompute
 from . import qa
@@ -54,7 +54,7 @@ cli.add_command(misc.find_upi_ranges)
 cli.add_command(misc.run_release)
 cli.add_command(misc.validate_pgloader)
 cli.add_command(ncbi.cli)
-cli.add_command(ontologies.cli)
+cli.add_command(ols.cli)
 cli.add_command(pdb.cli)
 cli.add_command(precompute.cli)
 cli.add_command(qa.cli)

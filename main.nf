@@ -202,7 +202,7 @@ process batch_lookup_ontology_information {
   set -o pipefail
 
   find . -name 'terms*.csv' | xargs cat | sort -u >> unique-terms.txt
-  rnac ontologies lookup-terms unique-terms.txt ontology_terms.csv
+  rnac ols lookup-terms unique-terms.txt ontology_terms.csv
   """
 }
 
