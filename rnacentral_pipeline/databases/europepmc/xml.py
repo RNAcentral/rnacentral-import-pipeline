@@ -99,9 +99,10 @@ class Storage(object):
         self.db.close()
 
     def __normalize_key__(self, raw):
-        encoded = str(raw)
         if isinstance(raw, six.string_types):
             encoded = raw.encode('ascii', 'ignore')
+        else:
+            encoded = str(raw)
         assert encoded
         return encoded
 
