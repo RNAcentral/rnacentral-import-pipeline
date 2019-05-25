@@ -1,0 +1,168 @@
+LOCUS       NR_002835               2300 bp    RNA     linear   PRI 07-MAY-2019
+DEFINITION  Homo sapiens HAS2 antisense RNA 1 (HAS2-AS1), antisense RNA.
+ACCESSION   NR_002835
+VERSION     NR_002835.2
+KEYWORDS    RefSeq.
+SOURCE      Homo sapiens (human)
+  ORGANISM  Homo sapiens
+            Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi;
+            Mammalia; Eutheria; Euarchontoglires; Primates; Haplorrhini;
+            Catarrhini; Hominidae; Homo.
+REFERENCE   1  (bases 1 to 2300)
+  AUTHORS   Yung Y, Ophir L, Yerushalmi GM, Baum M, Hourvitz A and Maman E.
+  TITLE     HAS2-AS1 is a novel LH/hCG target gene regulating HAS2 expression
+            and enhancing cumulus cells migration
+  JOURNAL   J Ovarian Res 12 (1), 21 (2019)
+   PUBMED   30819231
+  REMARK    GeneRIF: Hyaluronan synthase 2 (HAS2) antisense RNA 1 (HAS2-AS1)
+            shows low expression in immature cumulus cells (CCs) and a
+            significant increase expression in mature CCs. Functional studies
+            reveal that inhibition of HAS2-AS1 by siRNA causes decreased
+            expression of HAS2. Inhibition of HAS2-AS1 by siRNA results in
+            decreased migration of granulosa cells.
+            Publication Status: Online-Only
+REFERENCE   2  (bases 1 to 2300)
+  AUTHORS   Zhu G, Wang S, Chen J, Wang Z, Liang X, Wang X, Jiang J, Lang J and
+            Li L.
+  TITLE     Long noncoding RNA HAS2-AS1 mediates hypoxia-induced invasiveness
+            of oral squamous cell carcinoma
+  JOURNAL   Mol. Carcinog. 56 (10), 2210-2222 (2017)
+   PUBMED   28485478
+  REMARK    GeneRIF: Results suggest that hypoxia would induce an
+            overexpression of HAS2-AS1 in an HIF-1alpha dependent manner. The
+            increase of HAS2-AS1 plays important roles mediating the
+            hypoxia-regulated EMT and invasiveness of oral squamous cell
+            carcinoma.
+REFERENCE   3  (bases 1 to 2300)
+  AUTHORS   Neill,T. and Zoeller,J.
+  TITLE     Makin' sense of the antisense: HA expression and synthesis requires
+            HAS2-AS1 and O-GlcNAcylation
+  JOURNAL   Matrix Biol. 41, 1 (2015)
+   PUBMED   25645084
+REFERENCE   4  (bases 1 to 2300)
+  AUTHORS   Vigetti D, Deleonibus S, Moretto P, Bowen T, Fischer JW, Grandoch
+            M, Oberhuber A, Love DC, Hanover JA, Cinquetti R, Karousou E, Viola
+            M, D'Angelo ML, Hascall VC, De Luca G and Passi A.
+  TITLE     Natural antisense transcript for hyaluronan synthase 2 (HAS2-AS1)
+            induces transcription of HAS2 via protein O-GlcNAcylation
+  JOURNAL   J. Biol. Chem. 289 (42), 28816-28826 (2014)
+   PUBMED   25183006
+  REMARK    GeneRIF: HAS2 transcription can be finely regulated not only by
+            recruiting transcription factors to the promoter as previously
+            described but also by modulating chromatin accessibility by
+            epigenetic modifications
+REFERENCE   5  (bases 1 to 2300)
+  AUTHORS   Michael DR, Phillips AO, Krupa A, Martin J, Redman JE, Altaher A,
+            Neville RD, Webber J, Kim MY and Bowen T.
+  TITLE     The human hyaluronan synthase 2 (HAS2) gene and its natural
+            antisense RNA exhibit coordinated expression in the renal proximal
+            tubular epithelial cell
+  JOURNAL   J. Biol. Chem. 286 (22), 19523-19532 (2011)
+   PUBMED   21357421
+REFERENCE   6  (bases 1 to 2300)
+  AUTHORS   Chao H and Spicer AP.
+  TITLE     Natural antisense mRNAs to hyaluronan synthase 2 inhibit hyaluronan
+            biosynthesis and cell proliferation
+  JOURNAL   J. Biol. Chem. 280 (30), 27513-27522 (2005)
+   PUBMED   15843373
+COMMENT     VALIDATED REFSEQ: This record has undergone validation or
+            preliminary review. The reference sequence was derived from
+            AY941178.1, AC104233.2 and BX101304.1.
+            On Jun 30, 2010 this sequence version replaced NR_002835.1.
+            
+            Sequence Note: This RefSeq record was created from transcript and
+            genomic sequence data to make the sequence consistent with the
+            reference genome assembly. The genomic coordinates used for the
+            transcript record were based on transcript alignments.
+            
+            ##Evidence-Data-START##
+            Transcript exon combination :: AY941178.1 [ECO:0000332]
+            RNAseq introns              :: mixed/partial sample support
+                                           SAMEA1965299, SAMEA1968540
+                                           [ECO:0000350]
+            ##Evidence-Data-END##
+PRIMARY     REFSEQ_SPAN         PRIMARY_IDENTIFIER PRIMARY_SPAN        COMP
+            1-51                AY941178.1         1-51
+            52-72               AC104233.2         80002-80022
+            73-1656             AY941178.1         73-1656
+            1657-1808           AC104233.2         85299-85450
+            1809-2300           BX101304.1         1-492
+FEATURES             Location/Qualifiers
+     source          1..2300
+                     /organism="Homo sapiens"
+                     /mol_type="transcribed RNA"
+                     /db_xref="taxon:9606"
+                     /chromosome="8"
+                     /map="8q24.13"
+     gene            1..2300
+                     /gene="HAS2-AS1"
+                     /gene_synonym="HAS2-AS; HAS2AS; HASNT; NCRNA00077"
+                     /note="HAS2 antisense RNA 1"
+                     /db_xref="GeneID:594842"
+                     /db_xref="HGNC:HGNC:34340"
+                     /db_xref="MIM:614353"
+     ncRNA           1..2300
+                     /ncRNA_class="antisense_RNA"
+                     /gene="HAS2-AS1"
+                     /gene_synonym="HAS2-AS; HAS2AS; HASNT; NCRNA00077"
+                     /product="HAS2 antisense RNA 1"
+                     /db_xref="GeneID:594842"
+                     /db_xref="HGNC:HGNC:34340"
+                     /db_xref="MIM:614353"
+     exon            1..823
+                     /gene="HAS2-AS1"
+                     /gene_synonym="HAS2-AS; HAS2AS; HASNT; NCRNA00077"
+                     /inference="alignment:Splign:2.1.0"
+     exon            824..1080
+                     /gene="HAS2-AS1"
+                     /gene_synonym="HAS2-AS; HAS2AS; HASNT; NCRNA00077"
+                     /inference="alignment:Splign:2.1.0"
+     exon            1081..1228
+                     /gene="HAS2-AS1"
+                     /gene_synonym="HAS2-AS; HAS2AS; HASNT; NCRNA00077"
+                     /inference="alignment:Splign:2.1.0"
+     exon            1229..2288
+                     /gene="HAS2-AS1"
+                     /gene_synonym="HAS2-AS; HAS2AS; HASNT; NCRNA00077"
+                     /inference="alignment:Splign:2.1.0"
+ORIGIN      
+        1 aattgctcct gagacccaac aggcagcaac ggtcccaagg gtgagggagt gggcagggag
+       61 aggctgatgg ggcttctaca cgttccctcc cgtagctggg ctgctgcagc tcgttcgccc
+      121 cagaggcgcg cggtgtcctt gagtccaagt attcagcgcg gacgtttggg ggacggaggg
+      181 agaggcgcta ggggaactgg cacctaagac tgtgtaatag gacacaggtc ttgcaagtcc
+      241 tcctccccag gcaccgcccc tgtgctccca gcgcctcttt gcagctttaa ttatcctttc
+      301 agcgccgttc ccccgcggct gcgtttccgt ggtcagagga aaaaggctct ttcgcctccc
+      361 ggttctcacc ctcatacaga ccctcctttc agacccgccc tcctgttcac agggacccat
+      421 ttcggagccc tggctcacgc tgggcgggaa ctgccgtgac gaattccccc caaggtgttg
+      481 attatccatc ccaacccagc ctctggcttc cctcccacct ccaccccagc tcccacaggc
+      541 ccctcgcccc gttcatcggc tgggcgctcg agacggcgcc cccagatctc ccaccgggca
+      601 gtgtccccag ctgcagctga ggagagaagc gccggcgtgc gcggtgccac gtcggaattg
+      661 gctctgggga cgccgcagct gccgaagcgc agcgcgcggt ccccacgcac gccctgcctc
+      721 cgggcggccg gcgggctggc ccggcgagga gaggagggat gcgcgccctc ctcccgctcc
+      781 tatctgcggg tgccaccgcc tgcgtcaggg acccctggcc cgatctttct gcccccgata
+      841 acagaaaatc tctttttcgt cttaaaaaaa aaaaaaaaaa aaaaaaaagc ctgtggaaga
+      901 ctcagcagaa cccaggaagc gcagaattgg gagaaaagtc tttggctggg gctgtttcaa
+      961 gtctctggtt caatgggctg ctcgaagcca ggactgggta attctttcca gacgtcttga
+     1021 cttctccttc cccgccgttg ttgcccttct gcctcctcca acttaagggg gtcttaacaa
+     1081 gatcttctga ggggtggact tctttggaac tcgacaggac cttgaagact gggttcttag
+     1141 tccttatcac atatatgggc tataatgaat aagtctaaac agaaaagtcg aataaactgg
+     1201 aaatgatgct ttcatcacgt cgcacaagga gctgtttgga tcagaagatg acatcctttc
+     1261 acccatccct ttcaggtttt gacatcctaa aatgtacctt atggaaccca tacctgttat
+     1321 gttttcacct gtacaaggca acagagaaaa catggtagtt tttacttgag tagatgtgac
+     1381 ttagcaatat gttgttgctg acctccatcc cacagcacaa aacatatgtt tatatgtctg
+     1441 acagacaaag tatccagaac aaggatttag taccttcata atcctctgta tatgtggttc
+     1501 tagaactttt ggtaaagaaa ctctttatac tcttattaat tattgagaac ctcaaaaaaa
+     1561 gtttatatgt tatatgtatc aatatttacc acattagaca ttaaagctga cttaaaaagt
+     1621 taaaatactt aagtcatttg aagtaataat aaatgcagtt acataccaac ttaataacat
+     1681 tttgcgaaaa tagctatttt tcaaaaccta aagtgagaaa agtggcagtt ttccattttt
+     1741 gcaaatctct ttgctgtcta gctgatagaa gacagctgga ttctcctatt tgcttttgca
+     1801 ttcaattgtt gttttgattg aagtatatga aaaaaaatct ggtgtcatac acatatataa
+     1861 ttgggaaatg gaagagtatt tacacaggct tttttagata ttcttccttt atactacatc
+     1921 aaaacttgat aagttgcaat gttgtgaatt ggcccagggc ttggccctct gaagatttgc
+     1981 tgaaaatcac tgacatgaag tagattaata ggataaaagg catatacatt tatttaatgt
+     2041 gtatacacag cggcctttag aatgaagacc caaagataca gaagaaattg tctgttttta
+     2101 tgcttaagtt taacaaagaa tgggcagccg tgtagagata ggataggaca aaaagggcat
+     2161 aatctaatgc tagctgactg agtgaggaag cccagcaagg cctgtcagtg tctcctcagt
+     2221 atgagtgaat tttgtgtact ctgataatac attaaaatct gtttatgtac tctgataaca
+     2281 cattcaaaaa aaaaaaaaaa
+//

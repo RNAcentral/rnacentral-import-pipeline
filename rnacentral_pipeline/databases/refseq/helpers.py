@@ -57,8 +57,11 @@ def description(record, feature):
         product = gene_feature.qualifiers.get('note', [])
         if len(product) == 1:
             product = product[0]
-            product = product[product.index(';') + 1:].strip()
-            product = product[0].lower() + product[1:]
+            if ';' in product:
+                product = product[product.index(';') + 1:].strip()
+            # Only lower case things that do not look like genes
+            if product[0].isupper() and product[1].islower():
+                product = product[0].lower() + product[1:]
 
     gene = embl.gene(feature)
     if not gene:
