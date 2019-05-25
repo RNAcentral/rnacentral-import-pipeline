@@ -29,7 +29,6 @@ except ImportError:
 import six
 
 DOMAINS = {
-    'ensemblgenomes',
     'ensembl',
 }
 
