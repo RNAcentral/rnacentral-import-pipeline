@@ -144,17 +144,3 @@ def references(pdb_ids=None):
     if not pdb_ids:
         pdb_ids = rna_containing_pdb_ids()
     return parser.as_reference_mapping(pdbe_publications(pdb_ids))
-
-    # return parser.as_mapping(custom_report(pdb_ids, [
-    #     'structureId',
-    #     'citationAuthor',
-    #     'firstPage',
-    #     'lastPage',
-    #     'journalName',
-    #     'title',
-    #     'volumeId',
-    #     'publicationYear',
-    #     'pubmedId',
-    #     'pmc',
-    #     'doi',
-    # ]))
