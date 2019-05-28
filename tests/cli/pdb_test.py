@@ -34,7 +34,6 @@ def test_can_fetch_expected_data(command, output, pdbs):
         assert result.exit_code == 0, result.output
         assert not result.exception
 
-        with open(output, 'r') as raw:
-            data = json.load(raw)
-            assert data
+        with open(output, 'rb') as raw:
+            assert raw.read()
 
