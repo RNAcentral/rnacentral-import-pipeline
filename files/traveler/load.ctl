@@ -28,9 +28,7 @@ TARGET COLUMNS (
 )
 
 WITH
-    batch rows = 500,
-    batch size = 32MB,
-    prefetch rows = 500,
+    batch rows = 300,
     FIELDS ESCAPED BY double-quote,
     FIELDS TERMINATED BY ','
 
