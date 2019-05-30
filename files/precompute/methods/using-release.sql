@@ -11,6 +11,7 @@ on
 where
   pre.id is null
   or xref.last > pre.last_release
+  or pre.last_release is null
 ;
 
 alter table :tablename
