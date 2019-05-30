@@ -32,15 +32,14 @@ BASE = 'https://www.ebi.ac.uk/ols/api/ontologies'
 
 
 @lru_cache(maxsize=500)
-# @retry(requests.HTTPError, tries=5, delay=1)
-# @RateLimiter(max_calls=10, period=1)
+@retry(requests.HTTPError, tries=5, delay=1)
+@RateLimiter(max_calls=10, period=1)
 def query_ols(url):
-    def limited(url):
-        with RateLimiter(max_calls=10, period=1):
-            response = requests.get(url)
-        response.raise_for_status()
-        return response.json()
-    return retry_call(limited, fargs=[url])
+    if isinstance(url, furl):
+        url = url.url
+    response = requests.get(url)
+    response.raise_for_status()
+    return response.json()
 
 
 def ontology_url(ontology):
