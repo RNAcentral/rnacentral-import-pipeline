@@ -10,6 +10,6 @@ ON
   pre.upi = rna.upi
 WHERE
   pre.taxid = :taxid
-  AND pre.has_coordinates IS false
-  AND pre.is_active = true
+  AND (pre.has_coordinates IS false or pre.has_coordinates IS NULL)
+  AND (pre.is_active = true OR pre.is_active IS NULL)
 ) TO STDOUT
