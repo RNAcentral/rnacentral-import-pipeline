@@ -85,7 +85,7 @@ ON
   models.model_name = load.model
 ) ON CONFLICT (urs) DO UPDATE
 SET
-    model = EXCLUDED.model,
+    model_id = EXCLUDED.model_id,
     secondary_structure = EXCLUDED.secondary_structure,
     layout = EXCLUDED.layout,
     overlap_count = EXCLUDED.overlap_count,
