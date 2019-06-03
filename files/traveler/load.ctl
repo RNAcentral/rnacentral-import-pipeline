@@ -81,7 +81,7 @@ SELECT
     sequence_stop,
     sequence_coverage
 FROM load_secondary_layout load
-JOIN rnc_secondary_models models
+JOIN rnc_secondary_structure_layout_models models
 ON 
   models.model_name = load.model
 ) ON CONFLICT (urs) DO UPDATE
