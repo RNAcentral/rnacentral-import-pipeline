@@ -76,7 +76,6 @@ SELECT
     basepair_count,
     model_start,
     model_stop,
-    abs((model.stop - model.stop)::float) / models.length::float as model_coverage,
     sequence_start,
     sequence_stop,
     sequence_coverage
