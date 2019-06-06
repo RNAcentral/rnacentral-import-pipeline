@@ -813,7 +813,7 @@ process find_traveler_families {
   """
   psql -f ON_ERROR_STOP=1 -f $setup "$PGDATABASE"
   psql -f ON_ERROR_STOP=1 -f $query "$PGDATABASE" > all-families.txt
-  auto-traveler.py blacklisted > blacklist.txt
+  auto-traveler.py --blacklisted > blacklist.txt
   grep -vf blacklist.txt all-families.txt > families.txt
   """
 }
@@ -830,8 +830,8 @@ process find_possible_traveler_sequences {
   set val(rfam_family), file(query) from rfam_for_traveler
 
   output:
-  file('parts/*.fasta') into sequences_for_traveler mode flatten
-  file('rnacentral.fasta') into traveler_expected_sequences
+  set file('parts/*.fasta'), val(rfam_family), val(false) into sequences_for_traveler mode flatten
+  set val(family), file('rnacentral.fasta') into traveler_expected_sequences
 
   script:
   def chunk_size = params.secondary.sequence_chunk_size
@@ -845,19 +845,26 @@ process find_possible_traveler_sequences {
 
 sequences_for_traveler
   .combine(traveler_data)
+  .mix(
+    Channel.from(
+      ['RF00001', file('files/traveler/find-rrna-sequences.sql'), true]
+    ),
+  )
   .set { to_layout }
 
 process layout_sequences {
   memory params.secondary.layout.memory
 
   input:
-  set file(sequences), file(cm), file(fasta), file(ps) from to_layout
+  set file(sequences), file(family), val(flag) file(cm), file(fasta), file(ps) from to_layout
 
   output:
   file("data.csv") into secondary_to_import
 
+  script:
+  def opt = ["RF0001"].contains(family) ? "" : "--rfam-accession ${family}"
   """
-  auto-traveler-rfam.py --cm-library $cm --fasta-library $fasta --ps-library $ps $sequences output/
+  auto-traveler.py _$opt --cm-library $cm --fasta-library $fasta --ps-library $ps $sequences output/
   rnac traveler process-svgs output/ data.csv
   """
 }
