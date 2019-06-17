@@ -1,0 +1,379 @@
+ID   JQ963645.1:1..140:ncRNA; SV 1; linear; transcribed RNA; STD; INV; 140 BP.
+XX
+PA   JQ963645.1
+XX
+DT   17-JUL-2012 (Rel. 113, Created)
+DT   01-MAR-2017 (Rel. 132, Last updated, Version 2)
+XX
+DE   Drosophila melanogaster (fruit fly) scaRNA pugU2-45
+XX
+KW   .
+XX
+OS   Drosophila melanogaster (fruit fly)
+OC   Eukaryota; Metazoa; Ecdysozoa; Arthropoda; Hexapoda; Insecta; Pterygota;
+OC   Neoptera; Holometabola; Diptera; Brachycera; Muscomorpha; Ephydroidea;
+OC   Drosophilidae; Drosophila; Sophophora.
+XX
+RN   [1]
+RP   1-140
+RX   DOI; 10.1261/rna.042028.113.
+RX   PUBMED; 24149844.
+RA   Deryusheva S., Gall J.G.;
+RT   "Novel small Cajal-body-specific RNAs identified in Drosophila: probing
+RT   guide RNA function";
+RL   RNA 19(12):1802-1814(2013).
+XX
+RN   [2]
+RP   1-140
+RA   Deryusheva S., Gall J.G.;
+RT   ;
+RL   Submitted (21-APR-2012) to the INSDC.
+RL   Department of Embryology, Carnegie Institution, 3520 San Martin Drive,
+RL   Baltimore, MD 21218, USA
+XX
+DR   MD5; c473d52f50b8957320a38624c62fb5cb.
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..140
+FT                   /organism="Drosophila melanogaster"
+FT                   /mol_type="transcribed RNA"
+FT                   /db_xref="taxon:7227"
+FT   ncRNA           JQ963645.1:1..140
+FT                   /product="scaRNA pugU2-45"
+FT                   /ncRNA_class="guide_RNA"
+XX
+SQ   Sequence 140 BP; 50 A; 28 C; 32 G; 30 T; 0 other;
+     aaacgtgttc ggataccgct gtagagataa gagactgtag ctctatggcc accaagagca        60
+     cggataacaa aaacaatgta ttcttcgatg agcctgcctg aatgagtttc aaagcaggca       120
+     cagatacgga atatacaata                                                   140
+//
+ID   AE013599.5:5765180..5765319:ncRNA; SV 5; linear; genomic DNA; STD; INV; 140 BP.
+XX
+PA   AE013599.5
+XX
+PR   Project:PRJNA13812;
+XX
+DT   13-SEP-2006 (Rel. 89, Created)
+DT   10-MAY-2019 (Rel. 140, Last updated, Version 13)
+XX
+DE   Drosophila melanogaster (fruit fly) small cajal body-specific RNA :
+DE   PsiU2-35.45
+XX
+KW   .
+XX
+OS   Drosophila melanogaster (fruit fly)
+OC   Eukaryota; Metazoa; Ecdysozoa; Arthropoda; Hexapoda; Insecta; Pterygota;
+OC   Neoptera; Holometabola; Diptera; Brachycera; Muscomorpha; Ephydroidea;
+OC   Drosophilidae; Drosophila; Sophophora.
+XX
+RN   [1]
+RX   DOI; 10.1126/science.287.5461.2185.
+RX   PUBMED; 10731132.
+RA   Adams M.D., Celniker S.E., Holt R.A., Evans C.A., Gocayne J.D.,
+RA   Amanatides P.G., Scherer S.E., Li P.W., Hoskins R.A., Galle R.F.,
+RA   George R.A., Lewis S.E., Richards S., Ashburner M., Henderson S.N.,
+RA   Sutton G.G., Wortman J.R., Yandell M.D., Zhang Q., Chen L.X., Brandon R.C.,
+RA   Rogers Y.H., Blazej R.G., Champe M., Pfeiffer B.D., Wan K.H., Doyle C.,
+RA   Baxter E.G., Helt G., Nelson C.R., Gabor G.L., Abril J.F., Agbayani A.,
+RA   An H.J., Andrews-Pfannkoch C., Baldwin D., Ballew R.M., Basu A.,
+RA   Baxendale J., Bayraktaroglu L., Beasley E.M., Beeson K.Y., Benos P.V.,
+RA   Berman B.P., Bhandari D., Bolshakov S., Borkova D., Botchan M.R., Bouck J.,
+RA   Brokstein P., Brottier P., Burtis K.C., Busam D.A., Butler H., Cadieu E.,
+RA   Center A., Chandra I., Cherry J.M., Cawley S., Dahlke C., Davenport L.B.,
+RA   Davies P., de Pablos B., Delcher A., Deng Z., Mays A.D., Dew I.,
+RA   Dietz S.M., Dodson K., Doup L.E., Downes M., Dugan-Rocha S., Dunkov B.C.,
+RA   Dunn P., Durbin K.J., Evangelista C.C., Ferraz C., Ferriera S.,
+RA   Fleischmann W., Fosler C., Gabrielian A.E., Garg N.S., Gelbart W.M.,
+RA   Glasser K., Glodek A., Gong F., Gorrell J.H., Gu Z., Guan P., Harris M.,
+RA   Harris N.L., Harvey D., Heiman T.J., Hernandez J.R., Houck J., Hostin D.,
+RA   Houston K.A., Howland T.J., Wei M.H., Ibegwam C., Jalali M., Kalush F.,
+RA   Karpen G.H., Ke Z., Kennison J.A., Ketchum K.A., Kimmel B.E., Kodira C.D.,
+RA   Kraft C., Kravitz S., Kulp D., Lai Z., Lasko P., Lei Y., Levitsky A.A.,
+RA   Li J., Li Z., Liang Y., Lin X., Liu X., Mattei B., McIntosh T.C.,
+RA   McLeod M.P., McPherson D., Merkulov G., Milshina N.V., Mobarry C.,
+RA   Morris J., Moshrefi A., Mount S.M., Moy M., Murphy B., Murphy L.,
+RA   Muzny D.M., Nelson D.L., Nelson D.R., Nelson K.A., Nixon K., Nusskern D.R.,
+RA   Pacleb J.M., Palazzolo M., Pittman G.S., Pan S., Pollard J., Puri V.,
+RA   Reese M.G., Reinert K., Remington K., Saunders R.D., Scheeler F., Shen H.,
+RA   Shue B.C., Siden-Kiamos I., Simpson M., Skupski M.P., Smith T., Spier E.,
+RA   Spradling A.C., Stapleton M., Strong R., Sun E., Svirskas R., Tector C.,
+RA   Turner R., Venter E., Wang A.H., Wang X., Wang Z.Y., Wassarman D.A.,
+RA   Weinstock G.M., Weissenbach J., Williams S.M., WoodageT, Worley K.C.,
+RA   Wu D., Yang S., Yao Q.A., Ye J., Yeh R.F., Zaveri J.S., Zhan M., Zhang G.,
+RA   Zhao Q., Zheng L., Zheng X.H., Zhong F.N., Zhong W., Zhou X., Zhu S.,
+RA   Zhu X., Smith H.O., Gibbs R.A., Myers E.W., Rubin G.M., Venter J.C.;
+RT   "The genome sequence of Drosophila melanogaster";
+RL   Science, e1252229 287(5461):2185-2195(2000).
+XX
+RN   [2]
+RX   PUBMED; 12537568.
+RA   Celniker S.E., Wheeler D.A., Kronmiller B., Carlson J.W., Halpern A.,
+RA   Patel S., Adams M., Champe M., Dugan S.P., Frise E., Hodgson A.,
+RA   George R.A., Hoskins R.A., Laverty T., Muzny D.M., Nelson C.R.,
+RA   Pacleb J.M., Park S., Pfeiffer B.D., Richards S., Sodergren E.J.,
+RA   Svirskas R., Tabor P.E., Wan K., Stapleton M., Sutton G.G., Venter C.,
+RA   Weinstock G., Scherer S.E., Myers E.W., Gibbs R.A., Rubin G.M.;
+RT   "Finishing a whole-genome shotgun: release 3 of the Drosophila melanogaster
+RT   euchromatic genome sequence";
+RL   Genome Biol. 3(12):.
+XX
+RN   [3]
+RX   PUBMED; 12537572.
+RA   Misra S., Crosby M.A., Mungall C.J., Matthews B.B., Campbell K.S.,
+RA   Hradecky P., Huang Y., Kaminker J.S., Millburn G.H., Prochnik S.E.,
+RA   Smith C.D., Tupy J.L., Whitfied E.J., Bayraktaroglu L., Berman B.P.,
+RA   Bettencourt B.R., Celniker S.E., de Grey A.D., Drysdale R.A., Harris N.L.,
+RA   Richter J., Russo S., Schroeder A.J., Shu S.Q., Stapleton M., Yamada C.,
+RA   Ashburner M., Gelbart W.M., Rubin G.M., Lewis S.E.;
+RT   "Annotation of the Drosophila melanogaster euchromatic genome: a systematic
+RT   review";
+RL   Genome Biol. 3(12):.
+XX
+RN   [4]
+RX   PUBMED; 12537573.
+RA   Kaminker J.S., Bergman C.M., Kronmiller B., Carlson J., Svirskas R.,
+RA   Patel S., Frise E., Wheeler D.A., Lewis S.E., Rubin G.M., Ashburner M.,
+RA   Celniker S.E.;
+RT   "The transposable elements of the Drosophila melanogaster euchromatin: a
+RT   genomics perspective";
+RL   Genome Biol. 3(12):.
+XX
+RN   [5]
+RX   PUBMED; 12537574.
+RA   Hoskins R.A., Smith C.D., Carlson J.W., Carvalho A.B., Halpern A.,
+RA   Kaminker J.S., Kennedy C., Mungall C.J., Sullivan B.A., Sutton G.G.,
+RA   Yasuhara J.C., Wakimoto B.T., Myers E.W., Celniker S.E., Rubin G.M.,
+RA   Karpen G.H.;
+RT   "Heterochromatic sequences in a Drosophila whole-genome shotgun assembly";
+RL   Genome Biol. 3(12):.
+XX
+RN   [6]
+RX   DOI; 10.1371/journal.pcbi.0010022.
+RX   PUBMED; 16110336.
+RA   Quesneville H., Bergman C.M., Andrieu O., Autard D., Nouaud D.,
+RA   Ashburner M., Anxolabehere D.;
+RT   "Combined evidence annotation of transposable elements in genome
+RT   sequences";
+RL   PLoS Comput. Biol. 1(2):166-175(2005).
+XX
+RN   [7]
+RC   Erratum:[Science. 2007 Sep 7;317(5843):1325]
+RX   DOI; 10.1126/science.1139815.
+RX   PUBMED; 17569856.
+RA   Smith C.D., Shu S., Mungall C.J., Karpen G.H.;
+RT   "The Release 5.1 annotation of Drosophila melanogaster heterochromatin";
+RL   Science, e1252229 316(5831):1586-1591(2007).
+XX
+RN   [8]
+RX   DOI; 10.1126/science.1139816.
+RX   PUBMED; 17569867.
+RA   Hoskins R.A., Carlson J.W., Kennedy C., Acevedo D., Evans-Holm M.,
+RA   Frise E., Wan K.H., Park S., Mendez-Lago M., Rossi F., Villasante A.,
+RA   Dimitri P., Karpen G.H., Celniker S.E.;
+RT   "Sequence finishing and mapping of Drosophila melanogaster
+RT   heterochromatin";
+RL   Science, e1252229 316(5831):1625-1628(2007).
+XX
+RN   [9]
+RC   Publication Status: Online-Only
+RX   DOI; .1534/g3.115.018937.
+RX   PUBMED; 26109356.
+RG   FlyBase Consortium
+RA   Crosby M.A., Gramates L.S., Dos Santos G., Matthews B.B., St Pierre S.E.,
+RA   Zhou P., Schroeder A.J., Falls K., Emmert D.B., Russo S.M., Gelbart W.M.;
+RT   "Gene Model Annotations for Drosophila melanogaster: The Rule-Benders";
+RL   G3 (Bethesda, Md.) 5(8):1737-1749(2015).
+XX
+RN   [10]
+RC   Publication Status: Online-Only
+RX   DOI; .1534/g3.115.018929.
+RX   PUBMED; 26109357.
+RG   FlyBase Consortium
+RA   Matthews B.B., Dos Santos G., Crosby M.A., Emmert D.B., St Pierre S.E.,
+RA   Gramates L.S., Zhou P., Schroeder A.J., Falls K., Strelets V., Russo S.M.,
+RA   Gelbart W.M.;
+RT   "Gene Model Annotations for Drosophila melanogaster: Impact of
+RT   High-Throughput Data";
+RL   G3 (Bethesda, Md.) 5(8):1721-1736(2015).
+XX
+RN   [11]
+RG   Berkeley Drosophila Genome Project
+RA   Celniker S., Carlson J., Wan K., Pfeiffer B., Frise E., George R.,
+RA   Hoskins R., Stapleton M., Pacleb J., Park S., Svirskas R., Smith E., Yu C.,
+RA   Rubin G.;
+RT   "Drosophila melanogaster release 4 sequence";
+RL   Unpublished.
+XX
+RN   [12]
+RA   Adams M.D., Celniker S.E., Gibbs R.A., Rubin G.M., Venter C.J.;
+RT   ;
+RL   Submitted (21-MAR-2000) to the INSDC.
+RL   Celera Genomics, 45 West Gude Drive, Rockville, MD 20850, USA
+XX
+RN   [13]
+RG   Drosophila Heterochromatin Genome Project
+RA   Smith C.D., Shu S., Mungall C.J., Karpen G.H.;
+RT   ;
+RL   Submitted (01-AUG-2006) to the INSDC.
+RL   Drosophila Heterochromatin Genome Project, Ernest Orlando Lawrence Berkeley
+RL   National Laboratory, 1 Cyclotron Road, Mailstop 64-121, Berkeley, CA 94720,
+RL   USA
+XX
+RN   [14]
+RC   Direct Submission
+RA   Celniker S., Carlson J., Kennedy C., Wan K., Frise E., Hoskins R., Park S.,
+RA   Svirskas R., Karpen G.;
+RT   ;
+RL   Submitted (10-AUG-2006) to the INSDC.
+RL   Berkeley Drosophila Genome Project, Lawrence Berkeley National Laboratory,
+RL   One #Cyclotron RoadOne Cyclotron Road, MS 64-121, Berkeley, CA 94720, USA
+XX
+RN   [15]
+RC   Direct Submission
+RA   Celniker S., Carlson J., Wan K., Frise E., Hoskins R., Park S.,
+RA   Svirskas R., Rubin G.;
+RT   ;
+RL   Submitted (10-AUG-2006) to the INSDC.
+RL   Berkeley Drosophila Genome Project, Lawrence Berkeley National Laboratory,
+RL   One Cyclotron Road, MS 64-121, Berkeley, CA 94720, USA
+XX
+RN   [16]
+RG   FlyBase
+RA   ;
+RT   ;
+RL   Submitted (07-OCT-2015) to the INSDC.
+RL   FlyBase, Harvard University, Biological Laboratories, 16 Divinity Ave,
+RL   Cambridge, MA 02138, USA
+XX
+RN   [17]
+RG   FlyBase
+RA   ;
+RT   ;
+RL   Submitted (07-DEC-2016) to the INSDC.
+RL   FlyBase, Harvard University, Biological Laboratories, 16 Divinity Ave,
+RL   Cambridge, MA 02138, USA
+XX
+RN   [18]
+RG   FlyBase
+RA   ;
+RT   ;
+RL   Submitted (24-MAY-2018) to the INSDC.
+RL   FlyBase, Harvard University, Biological Laboratories, 16 Divinity Ave,
+RL   Cambridge, MA 02138, USA
+XX
+RN   [19]
+RG   FlyBase
+RA   ;
+RT   ;
+RL   Submitted (22-APR-2019) to the INSDC.
+RL   FlyBase, Harvard University, Biological Laboratories, 16 Divinity Ave,
+RL   Cambridge, MA 02138, USA
+XX
+DR   MD5; c473d52f50b8957320a38624c62fb5cb.
+DR   BioSample; SAMN02803731.
+DR   PubMed; 12537572.
+DR   PubMed; 10731132.
+DR   PubMed; 12537568.
+DR   PubMed; 12537574.
+DR   PubMed; 12537573.
+DR   PubMed; 16110336.
+DR   PubMed; 17569856.
+DR   PubMed; 17569867.
+DR   PubMed; 26109356.
+DR   PubMed; 26109357.
+XX
+CC   On or before Jul 24, 2014 this sequence version replaced
+CC   CM000457.1, DS483543.1, DS483549.1, AE013599.4.
+CC   This is Release 6 of the Drosophila melanogaster genome, produced
+CC   jointly by the Berkeley Drosophila Genome Project, Celera Genomics,
+CC   and the Drosophila Heterochromatin Genome Project. The gene
+CC   annotation is based on Release 6.26 provided by FlyBase. Additional
+CC   information about this assembly and annotation can be found at
+CC   http://www.fruitfly.org and http://flybase.org.
+CC   
+CC   ##Genome-Annotation-Data-START##
+CC   Annotation Provider :: FlyBase
+CC   Annotation Status   :: Full annotation
+CC   Annotation Version  :: Release 6.26
+CC   URL                 :: http://flybase.org
+CC   ##Genome-Annotation-Data-END##
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..140
+FT                   /organism="Drosophila melanogaster"
+FT                   /chromosome="2R"
+FT                   /mol_type="genomic DNA"
+FT                   /db_xref="taxon:7227"
+FT   ncRNA           AE013599.5:5765180..5765319
+FT                   /gene="scaRNA:PsiU2-35.45"
+FT                   /gene_synonym="CR43594"
+FT                   /gene_synonym="Dmel\CR43594"
+FT                   /gene_synonym="pugU2-35/45"
+FT                   /gene_synonym="snoRNA:gp210-a"
+FT                   /locus_tag="Dmel_CR43594"
+FT                   /product="small cajal body-specific RNA : PsiU2-35.45"
+FT                   /note="scaRNA:PsiU2-35.45-RA; Dmel\scaRNA:PsiU2-35.45-RA;
+FT                   CR43594-RA; Dmel\CR43594-RA"
+FT                   /ncRNA_class="snoRNA"
+XX
+SQ   Sequence 140 BP; 50 A; 28 C; 32 G; 30 T; 0 other;
+     aaacgtgttc ggataccgct gtagagataa gagactgtag ctctatggcc accaagagca        60
+     cggataacaa aaacaatgta ttcttcgatg agcctgcctg aatgagtttc aaagcaggca       120
+     cagatacgga atatacaata                                                   140
+//
+ID   BK006792.1:1..147:ncRNA; SV 1; linear; genomic DNA; STD; INV; 147 BP.
+XX
+PA   BK006792.1
+XX
+DT   10-JUL-2009 (Rel. 101, Created)
+DT   10-MAY-2014 (Rel. 120, Last updated, Version 3)
+XX
+DE   Drosophila melanogaster (fruit fly) scaRNA mgU4-65
+XX
+KW   TPA; TPA:experimental.
+XX
+OS   Drosophila melanogaster (fruit fly)
+OC   Eukaryota; Metazoa; Ecdysozoa; Arthropoda; Hexapoda; Insecta; Pterygota;
+OC   Neoptera; Holometabola; Diptera; Brachycera; Muscomorpha; Ephydroidea;
+OC   Drosophilidae; Drosophila; Sophophora.
+XX
+RN   [1]
+RP   1-147
+RX   DOI; 10.1016/j.molcel.2009.02.020.
+RX   PUBMED; 19285445.
+RA   Tycowski K.T., Shu M.D., Kukoyi A., Steitz J.A.;
+RT   "A conserved WD40 protein binds the Cajal body localization signal of
+RT   scaRNP particles";
+RL   Mol. Cell 34(1):47-57(2009).
+XX
+RN   [2]
+RP   1-147
+RA   Tycowski K.T.;
+RT   ;
+RL   Submitted (18-FEB-2009) to the INSDC.
+RL   Molecular Biophysics and Biochemistry, Yale University, 295 Congress
+RL   Avenue, New Haven, CT 06536, USA
+XX
+DR   MD5; 571f112ec6990e00cd7ff7fd65eb68f9.
+XX
+AH   LOCAL_SPAN          PRIMARY_IDENTIFIER PRIMARY_SPAN        COMP
+AS   1-147               AC010054.7         62125-62271
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..147
+FT                   /organism="Drosophila melanogaster"
+FT                   /mol_type="genomic DNA"
+FT                   /db_xref="taxon:7227"
+FT   ncRNA           BK006792.1:1..147
+FT                   /product="scaRNA mgU4-65"
+FT                   /note="small Cajal body-specific RNA"
+FT                   /ncRNA_class="guide_RNA"
+XX
+SQ   Sequence 147 BP; 52 A; 23 C; 25 G; 47 T; 0 other;
+     aaataatgat gatagaccta tatgcatttg aagagttaat caaaacctgt cgcgtctttg        60
+     gtttaggttt ggtaaaagtt aataaaccat cctgagccac ttatagacag ttcctaaaat       120
+     gatgtaccaa aagttttcaa tctgata                                           147
+//

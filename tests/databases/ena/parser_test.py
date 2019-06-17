@@ -716,3 +716,13 @@ def test_can_handle_weird_feature():
     assert len(data) == 2
     assert data[0].rna_type == 'rRNA'
     assert data[1].rna_type == 'rRNA'
+
+
+def test_can_get_scarna_feature():
+    with open('data/ena/scarna.ncr', 'r') as raw:
+        data = list(parse(raw))
+
+    assert len(data) == 3
+    assert data[0].rna_type == 'scaRNA'
+    assert data[1].rna_type == 'scaRNA'
+    assert data[2].rna_type == 'scaRNA'
