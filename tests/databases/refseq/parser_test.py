@@ -335,3 +335,10 @@ def test_can_handle_product_based_description():
         data = list(parser.parse(raw))
     assert len(data) == 1
     assert data[0].description == 'Homo sapiens HAS2 antisense RNA 1 (HAS2-AS1)'
+
+
+def test_can_extract_correct_scarna_annotation():
+    with open('data/refseq/scarna-example.gbff', 'r') as raw:
+        data = list(parser.parse(raw))
+    assert len(data) == 1
+    assert data[0].description == 'SO:0002095'
