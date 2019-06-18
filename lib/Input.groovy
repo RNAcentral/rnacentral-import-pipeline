@@ -98,7 +98,7 @@ class Input {
     }
     if (input.containsKey('complete_command')) {
       spec.complete_command = input.complete_command;
-    } else {
+    } else if (input.remote && !input.containsKey('produces')) {
       def f = new File(input.remote)
       spec.produces = f.getName()
     }
@@ -112,10 +112,10 @@ class Input {
       return "$input.command < ${args[0]} > '$input.produces'"
     }
 
-    if (!input.complete_command) {
-      return "$input.command ${args.join(' ')} '$input.produces'";
+    if (input.complete_command) {
+      return input.command;
     }
-    return "$input.command ${args.join(' ')}";
+    return "$input.command ${args.join(' ')} '$input.produces'";
   }
 
   // String scripts(List<UnmodifiableMap> inputs) {
