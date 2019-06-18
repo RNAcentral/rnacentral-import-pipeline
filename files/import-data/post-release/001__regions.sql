@@ -1,4 +1,4 @@
-create index ix_load_rnc_sequence_regions__accession on load_rnc_sequence_regions(accession);
+create index if not exists ix_load_rnc_sequence_regions__accession on load_rnc_sequence_regions(accession);
 
 -- Update the table to include urs_taxid and pretty database name
 update load_rnc_sequence_regions regions
