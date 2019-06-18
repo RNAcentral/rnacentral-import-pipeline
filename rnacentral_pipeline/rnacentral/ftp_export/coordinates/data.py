@@ -32,8 +32,8 @@ def clean_databases(raw):
 
 @attr.s(hash=True, slots=True, frozen=True)
 class Region(object):
-    region_id = attr.ib(validator=is_a(six.text_type))
-    rna_id = attr.ib(validator=is_a(six.text_type))
+    region_id = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
+    rna_id = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
     region = attr.ib(validator=is_a(regions.SequenceRegion))
     was_mapped = attr.ib(validator=is_a(bool))
     identity = attr.ib(
