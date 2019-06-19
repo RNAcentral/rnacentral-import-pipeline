@@ -236,7 +236,7 @@ case "$name" in
   "generic" )
     fetch_generic "$@" ;;
 
-  "ensembl" | "ensembl_plants" )
+  "ensembl" | "ensembl_plants" | "ensembl_fungi" )
     fetch_grouped "$@" ;;
 
   "europepmc" )
