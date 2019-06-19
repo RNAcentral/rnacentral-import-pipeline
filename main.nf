@@ -780,26 +780,6 @@ flag_for_secondary
   .map { flag, query -> query }
   .set { traveler_setup }
 
-process fetch_traveler_data {
-  memory params.secondary.fetch.memory
-
-  when:
-  params.secondary.run
-
-  output:
-  set file('auto-traveler/data/cms/'), file('auto-traveler/data/crw-fasta-no-pseudoknots/'), file('auto-traveler/data/crw-ps/') into traveler_data
-
-  """
-  git clone https://github.com/RNAcentral/auto-traveler.git
-  cd auto-traveler
-  git checkout "${params.secondary.fetch.auto_traveler_version}"
-  wget -O cms.tar.gz '${params.secondary.fetch.cm_library}'
-  # We are going to ignore some errors due to using mac tar to build the tarball
-  tar xf cms.tar.gz
-  python utils/generate_model_info.py --cm-library data/cms
-  """
-}
-
 process find_traveler_families {
   when:
   params.secondary.run
@@ -821,6 +801,7 @@ process find_traveler_families {
 families_for_traveler
   .splitCsv()
   .combine(Channel.fromPath("files/traveler/find-rfam-sequences.sql"))
+  .mix(['RF00001', file('files/traveler/find-rrna-sequences.sql')])
   .set { rfam_for_traveler }
 
 process find_possible_traveler_sequences {
@@ -830,7 +811,7 @@ process find_possible_traveler_sequences {
   set val(rfam_family), file(query) from rfam_for_traveler
 
   output:
-  set file('parts/*.fasta'), val(rfam_family), val(false) into sequences_for_traveler mode flatten
+  set file('parts/*.fasta'), val(rfam_family) into to_layout mode flatten
   set val(family), file('rnacentral.fasta') into traveler_expected_sequences
 
   script:
@@ -843,28 +824,22 @@ process find_possible_traveler_sequences {
   """
 }
 
-sequences_for_traveler
-  .combine(traveler_data)
-  .mix(
-    Channel.from(
-      ['RF00001', file('files/traveler/find-rrna-sequences.sql'), true]
-    ),
-  )
-  .set { to_layout }
-
 process layout_sequences {
   memory params.secondary.layout.memory
 
   input:
-  set file(sequences), file(family), val(flag) file(cm), file(fasta), file(ps) from to_layout
+  set file(family) file(sequences) from to_layout
 
   output:
   file("data.csv") into secondary_to_import
 
   script:
-  def opt = ["RF0001"].contains(family) ? "" : "--rfam-accession ${family}"
+  def default_famililes = ["RF0001"]
+  def opt = default_famililes.contains(family) ? "" : "--rfam-accession ${family}"
   """
-  auto-traveler.py _$opt --cm-library $cm --fasta-library $fasta --ps-library $ps $sequences output/
+  auto-traveler.py $opt \
+    --fasta-input $sequences \
+    --output-folder output/
   rnac traveler process-svgs output/ data.csv
   """
 }
