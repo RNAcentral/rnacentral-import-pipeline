@@ -785,13 +785,12 @@ process find_traveler_families {
   params.secondary.run
 
   input:
-  set file(setup), file(query) from traveler_setup
+  file(query) from traveler_setup
 
   output:
   file("families.txt") into families_for_traveler
 
   """
-  psql -f ON_ERROR_STOP=1 -f $setup "$PGDATABASE"
   psql -f ON_ERROR_STOP=1 -f $query "$PGDATABASE" > all-families.txt
   auto-traveler.py --blacklisted > blacklist.txt
   grep -vf blacklist.txt all-families.txt > families.txt
@@ -801,7 +800,7 @@ process find_traveler_families {
 families_for_traveler
   .splitCsv()
   .combine(Channel.fromPath("files/traveler/find-rfam-sequences.sql"))
-  .mix(['RF00001', file('files/traveler/find-rrna-sequences.sql')])
+  .mix(['rRNA', file('files/traveler/find-rrna-sequences.sql')])
   .set { rfam_for_traveler }
 
 process find_possible_traveler_sequences {
@@ -834,8 +833,7 @@ process layout_sequences {
   file("data.csv") into secondary_to_import
 
   script:
-  def default_famililes = ["RF0001"]
-  def opt = default_famililes.contains(family) ? "" : "--rfam-accession ${family}"
+  def opt = family == "rRNA" ? "" : "--rfam-accession ${family}"
   """
   auto-traveler.py $opt \
     --fasta-input $sequences \
