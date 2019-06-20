@@ -29,6 +29,9 @@ def correct_rna_type(entry):
     if re.match(r'^LMJF_\d+_snRNA_\d+$', entry.gene):
         return attr.evolve(entry, rna_type='snRNA')
 
+    if entry.rna_type == 'snRNA' and 'snoRNA' in entry.description:
+        return attr.evolve(entry, rna_type='snoRNA')
+
     return entry
 
 
