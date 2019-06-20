@@ -13,7 +13,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from rnacentral_pipeline.databases.ensembl_genomes import core
+import attr
+
+from rnacentral_pipeline.databases.ensembl_genomes.core import parser
+from rnacentral_pipeline.databases.ensembl_genomes.core.data import Context
 from rnacentral_pipeline.databases.helpers import publications as pubs
 
 
@@ -37,12 +40,12 @@ def inferred_entries(entry):
 
 
 def parse(handle):
-    context = core.data.Context(
+    context = Context(
         database='ENSEMBL_PLANTS',
         references=[pubs.reference(29092050)],
     )
 
-    for entry in core.parser.parse(context, handle):
+    for entry in parser.parse(context, handle):
         yield entry
-        for entry in helpers.inferred_entries(entry):
+        for entry in inferred_entries(entry):
             yield entry

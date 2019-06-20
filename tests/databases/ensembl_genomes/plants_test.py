@@ -18,11 +18,15 @@ import pytest
 
 from rnacentral_pipeline.databases import data as dat
 from rnacentral_pipeline.databases.helpers import publications as pubs
+from rnacentral_pipeline.databases.ensembl_genomes import plants
 
 
 def parse(filename):
     with open(filename, 'r') as raw:
-        return list(parser.parse(raw))
+        data = list(plants.parse(raw))
+        # from pprint import pprint
+        # pprint([d.accession for d in data])
+        return data
 
 
 def entries_for(entries, accession):
@@ -120,7 +124,7 @@ def test_can_parse_data(cress_2):
         common_name='thale-cress',
         lineage=(
             'Eukaryota; Viridiplantae; Streptophyta; '
-            'Embryophyta; Tracheophyta; Spermatophyta; Magnoliophyta; '
+            'Embryophyta; Tracheophyta; Spermatophyta; Magnoliopsida; '
             'eudicotyledons; Gunneridae; Pentapetalae; rosids; malvids; '
             'Brassicales; Brassicaceae; Camelineae; Arabidopsis; '
             'Arabidopsis thaliana'
@@ -191,7 +195,7 @@ def test_can_create_tair_entry(cress_2):
         common_name='thale-cress',
         lineage=(
             'Eukaryota; Viridiplantae; Streptophyta; '
-            'Embryophyta; Tracheophyta; Spermatophyta; Magnoliophyta; '
+            'Embryophyta; Tracheophyta; Spermatophyta; Magnoliopsida; '
             'eudicotyledons; Gunneridae; Pentapetalae; rosids; malvids; '
             'Brassicales; Brassicaceae; Camelineae; Arabidopsis; '
             'Arabidopsis thaliana'
@@ -243,7 +247,7 @@ def test_can_get_with_odd_rna_type(cress_2):
         common_name='thale-cress',
         lineage=(
             'Eukaryota; Viridiplantae; Streptophyta; '
-            'Embryophyta; Tracheophyta; Spermatophyta; Magnoliophyta; '
+            'Embryophyta; Tracheophyta; Spermatophyta; Magnoliopsida; '
             'eudicotyledons; Gunneridae; Pentapetalae; rosids; malvids; '
             'Brassicales; Brassicaceae; Camelineae; Arabidopsis; '
             'Arabidopsis thaliana'
@@ -281,7 +285,7 @@ def test_can_parse_a_trna(cress_2):
         common_name='thale-cress',
         lineage=(
             'Eukaryota; Viridiplantae; Streptophyta; '
-            'Embryophyta; Tracheophyta; Spermatophyta; Magnoliophyta; '
+            'Embryophyta; Tracheophyta; Spermatophyta; Magnoliopsida; '
             'eudicotyledons; Gunneridae; Pentapetalae; rosids; malvids; '
             'Brassicales; Brassicaceae; Camelineae; Arabidopsis; '
             'Arabidopsis thaliana'
@@ -321,7 +325,7 @@ def test_can_parse_gene_with_minimal_metadata(cress_2):
         common_name='thale-cress',
         lineage=(
             'Eukaryota; Viridiplantae; Streptophyta; '
-            'Embryophyta; Tracheophyta; Spermatophyta; Magnoliophyta; '
+            'Embryophyta; Tracheophyta; Spermatophyta; Magnoliopsida; '
             'eudicotyledons; Gunneridae; Pentapetalae; rosids; malvids; '
             'Brassicales; Brassicaceae; Camelineae; Arabidopsis; '
             'Arabidopsis thaliana'
@@ -361,7 +365,7 @@ def test_can_parse_premirna(cress_2):
         common_name='thale-cress',
         lineage=(
             'Eukaryota; Viridiplantae; Streptophyta; '
-            'Embryophyta; Tracheophyta; Spermatophyta; Magnoliophyta; '
+            'Embryophyta; Tracheophyta; Spermatophyta; Magnoliopsida; '
             'eudicotyledons; Gunneridae; Pentapetalae; rosids; malvids; '
             'Brassicales; Brassicaceae; Camelineae; Arabidopsis; '
             'Arabidopsis thaliana'
@@ -404,7 +408,7 @@ def test_can_parse_rice_trna(oryza_9):
         common_name='African wild rice',
         lineage=(
             'Eukaryota; Viridiplantae; Streptophyta; '
-            'Embryophyta; Tracheophyta; Spermatophyta; Magnoliophyta; '
+            'Embryophyta; Tracheophyta; Spermatophyta; Magnoliopsida; '
             'Liliopsida; Poales; Poaceae; BOP clade; Oryzoideae; '
             'Oryzeae; Oryzinae; Oryza; Oryza barthii'
         ),
@@ -439,7 +443,7 @@ def test_can_parse_rice_snorna(oryza_9):
         common_name='African wild rice',
         lineage=(
             'Eukaryota; Viridiplantae; Streptophyta; '
-            'Embryophyta; Tracheophyta; Spermatophyta; Magnoliophyta; '
+            'Embryophyta; Tracheophyta; Spermatophyta; Magnoliopsida; '
             'Liliopsida; Poales; Poaceae; BOP clade; Oryzoideae; '
             'Oryzeae; Oryzinae; Oryza; Oryza barthii'
         ),
@@ -474,7 +478,7 @@ def test_can_parse_rice_pre_mirna(oryza_9):
         common_name='African wild rice',
         lineage=(
             'Eukaryota; Viridiplantae; Streptophyta; '
-            'Embryophyta; Tracheophyta; Spermatophyta; Magnoliophyta; '
+            'Embryophyta; Tracheophyta; Spermatophyta; Magnoliopsida; '
             'Liliopsida; Poales; Poaceae; BOP clade; Oryzoideae; '
             'Oryzeae; Oryzinae; Oryza; Oryza barthii'
         ),
@@ -509,7 +513,7 @@ def test_can_parse_rice_u6(oryza_9):
         common_name='African wild rice',
         lineage=(
             'Eukaryota; Viridiplantae; Streptophyta; '
-            'Embryophyta; Tracheophyta; Spermatophyta; Magnoliophyta; '
+            'Embryophyta; Tracheophyta; Spermatophyta; Magnoliopsida; '
             'Liliopsida; Poales; Poaceae; BOP clade; Oryzoideae; '
             'Oryzeae; Oryzinae; Oryza; Oryza barthii'
         ),
@@ -544,7 +548,7 @@ def test_can_parse_barley_antisense(hordeum_pt):
         common_name='two-rowed barley',
         lineage=(
             'Eukaryota; Viridiplantae; Streptophyta; Embryophyta; '
-            'Tracheophyta; Spermatophyta; Magnoliophyta; Liliopsida; '
+            'Tracheophyta; Spermatophyta; Magnoliopsida; Liliopsida; '
             'Poales; Poaceae; BOP clade; Pooideae; Triticodae; '
             'Triticeae; Hordeinae; Hordeum; Hordeum vulgare subsp. vulgare'
         ),
@@ -586,7 +590,7 @@ def test_can_parse_zea_lincrna(zea_7):
         common_name='maize',
         lineage=(
             'Eukaryota; Viridiplantae; Streptophyta; '
-            'Embryophyta; Tracheophyta; Spermatophyta; Magnoliophyta; '
+            'Embryophyta; Tracheophyta; Spermatophyta; Magnoliopsida; '
             'Liliopsida; Poales; Poaceae; PACMAD clade; Panicoideae; '
             'Andropogonodae; Andropogoneae; Tripsacinae; Zea; Zea mays'
         ),
