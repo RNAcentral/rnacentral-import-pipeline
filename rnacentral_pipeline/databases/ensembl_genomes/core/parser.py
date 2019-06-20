@@ -24,7 +24,7 @@ from rnacentral_pipeline.databases.ensembl import helpers as ensembl
 from . import helpers
 
 
-def ncrnas(handle):
+def ncrnas(context, handle):
     for record in SeqIO.parse(handle, 'embl'):
         current_gene = None
         for feature in record.features:
@@ -41,13 +41,12 @@ def ncrnas(handle):
             if not helpers.is_ncrna(feature):
                 continue
 
-            yield helpers.as_entry(record, current_gene, feature)
+            yield helpers.as_entry(context, record, current_gene, feature)
 
 
 def parse(context, handle):
-    grouped = it.groupby(ncrnas(handle), op.attrgetter('gene'))
+    data = ncrnas(context, handle)
+    grouped = it.groupby(data, op.attrgetter('gene'))
     for gene, related in grouped:
         for entry in ensembl.generate_related(related):
             yield entry
-            for entry in helpers.inferred_entries(entry):
-                yield entry

@@ -13,23 +13,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from rnacentral_pipeline.databases.ensembl_plants import parser
+import six
+
+import attr
+from attr.validators import instance_of as is_a
 
 
-def parse(filename):
-    with open(filename, 'r') as raw:
-        return list(parser.parse(raw))
+class Context(object):
+    database = attr.ib(validator=is_a(six.text_type))
+    references = attr.ib(validator=is_a(list))
 
-
-def entries_for(entries, accession):
-    return [e for e in entries if e.accession == accession]
-
-
-def entry_for(entries, accession):
-    val = entries_for(entries, accession)
-    assert len(val) == 1
-    return val[0]
-
-
-def has_entry_for(entries, accession):
-    return bool(entries_for(entries, accession))
+    def accession(self, primary_id):
+        return '%s:%s' % (self.database, primary_id),
