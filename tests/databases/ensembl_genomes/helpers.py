@@ -14,15 +14,22 @@ limitations under the License.
 """
 
 
-from rnacentral_pipeline.databases.ensembl_genomes.core import parser
-from rnacentral_pipeline.databases.ensembl_genomes.core.data import Context
-from rnacentral_pipeline.databases.helpers import publications as pubs
+def parse(parser, filename):
+    with open(filename, 'r') as raw:
+        return list(parser(raw))
 
 
-def parse(handle):
-    context = Context(
-        database='ENSEMBL_FUNGI',
-        references=[pubs.reference('doi:10.1093/nar/gkx1011')],
-    )
+def entries_for(entries, accession):
+    return [e for e in entries if e.accession == accession]
 
-    return parser.parse(context, handle)
+
+def entry_for(entries, accession):
+    val = entries_for(entries, accession)
+    assert len(val) == 1
+    return val[0]
+
+
+def has_entry_for(entries, accession):
+    return bool(entries_for(entries, accession))
+
+
