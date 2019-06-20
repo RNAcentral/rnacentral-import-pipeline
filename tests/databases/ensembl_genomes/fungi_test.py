@@ -98,3 +98,8 @@ def test_can_produce_correct_data(asp_1):
         description='Aspergillus nidulans FGSC A4 snRNA U2',
         references=[pubs.reference('doi:10.1093/nar/gkx1011')],
     ))
+
+
+def test_does_not_create_ncRNA_rna_type(asp_1):
+    for entry in asp_1:
+        assert entry.rna_type != 'ncRNA'
