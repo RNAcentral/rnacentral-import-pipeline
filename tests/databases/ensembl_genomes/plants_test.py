@@ -583,3 +583,21 @@ def test_can_parse_zea_lincrna(zea_7):
 def test_does_not_generate_tair_for_others(zea_7):
     assert helpers.has_entry_for(zea_7, "TAIR:Zm00001d001070_T001") is False
     assert helpers.has_entry_for(zea_7, "ENSEMBL_PLANTS:Zm00001d001070_T001") is True
+
+
+def test_does_not_create_ncRNA_rna_type_zea_7(zea_7):
+    for entry in zea_7:
+        assert entry.rna_type != 'ncRNA'
+
+def test_does_not_create_ncRNA_rna_type_cress_2(cress_2):
+    for entry in cress_2:
+        assert entry.rna_type != 'ncRNA'
+
+def test_does_not_create_ncRNA_rna_type_oryza_9(oryza_9):
+    for entry in oryza_9:
+        assert entry.rna_type != 'ncRNA'
+
+
+def test_does_not_create_ncRNA_rna_type_hordeum_pt(hordeum_pt):
+    for entry in hordeum_pt:
+        assert entry.rna_type != 'ncRNA'

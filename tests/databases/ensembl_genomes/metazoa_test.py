@@ -127,3 +127,8 @@ def test_can_get_expected_data(apis_1):
         description='Apis mellifera (European honey bee) precursor RNA ame-mir-193',
         references=[pubs.reference('doi:10.1093/nar/gkx1011')],
     ))
+
+
+def test_does_not_create_ncRNA_rna_type(apis_1):
+    for entry in apis_1:
+        assert entry.rna_type != 'ncRNA'
