@@ -13,14 +13,29 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from rnacentral_pipeline.databases.ensembl_genomes import core
+import re
+
+import attr
+
+from rnacentral_pipeline.databases.ensembl_genomes.core import parser
+from rnacentral_pipeline.databases.ensembl_genomes.core.data import Context
 from rnacentral_pipeline.databases.helpers import publications as pubs
 
 
+def correct_rna_type(entry):
+    if re.match(r'^LMJF_\d+_snoRNA_?\d+$', entry.gene):
+        return attr.evolve(entry, rna_type='snoRNA')
+
+    if re.match(r'^LMJF_\d+_snRNA_\d+$', entry.gene):
+        return attr.evolve(entry, rna_type='snRNA')
+
+    return entry
+
+
 def parse(handle):
-    context = core.data.Context(
+    context = Context(
         database='ENSEMBL_PROTISTS',
         references=[pubs.reference('doi:10.1093/nar/gkx1011')],
     )
 
-    return core.parser.parse(context, handle)
+    return map(correct_rna_type, parser.parse(context, handle))
