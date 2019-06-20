@@ -19,7 +19,24 @@ import pytest
 from rnacentral_pipeline.databases import data as dat
 from rnacentral_pipeline.databases.helpers import publications as pubs
 
-from .helpers import parse, entry_for, has_entry_for
+
+def parse(filename):
+    with open(filename, 'r') as raw:
+        return list(parser.parse(raw))
+
+
+def entries_for(entries, accession):
+    return [e for e in entries if e.accession == accession]
+
+
+def entry_for(entries, accession):
+    val = entries_for(entries, accession)
+    assert len(val) == 1
+    return val[0]
+
+
+def has_entry_for(entries, accession):
+    return bool(entries_for(entries, accession))
 
 
 @pytest.fixture(scope='module')  # pylint: disable=no-member
@@ -48,7 +65,7 @@ def test_can_parse_data(cress_2):
         primary_id='AT2G01010.1',
         accession='ENSEMBL_PLANTS:AT2G01010.1',
         ncbi_tax_id=3702,
-        database='E_PLANTS',
+        database='ENSEMBL_PLANTS',
         sequence=(
             'TACCTGGTTGATCCTGCCAGTAGTCATATGCTTGTCTCAAAGATTAAGCCATGCATGTGT'
             'AAGTATGAACGAATTCAGACTGTGAAACTGCGAATGGCTCATTAAATCAGTTATAGTTTG'
@@ -199,7 +216,7 @@ def test_can_get_with_odd_rna_type(cress_2):
         primary_id='AT2G03895.1',
         accession='ENSEMBL_PLANTS:AT2G03895.1',
         ncbi_tax_id=3702,
-        database='E_PLANTS',
+        database='ENSEMBL_PLANTS',
         sequence=(
             'GGTGGTCTCTGTTGGTGAATCGTCGTCATTGAGAGCTGACACCGGCCCAAAGCCTTTGCT'
             'CCGGCGTTGCGTGACGGAGTATCGGAGTCCAGCTTCCCTCCACGAATTGCAGAAAGTTAC'
@@ -243,7 +260,7 @@ def test_can_parse_a_trna(cress_2):
         primary_id='ENSRNA049492366-T1',
         accession='ENSEMBL_PLANTS:ENSRNA049492366-T1',
         ncbi_tax_id=3702,
-        database='E_PLANTS',
+        database='ENSEMBL_PLANTS',
         sequence=(
             'GCTGGAATAGCTCAGTTGGTTAGAGCGTGTGGCTGTTAACCACAAGGTCGGAGGTTCGAC'
             'CCCTCCTTCTAGCG'
@@ -281,7 +298,7 @@ def test_can_parse_gene_with_minimal_metadata(cress_2):
         primary_id='AT2G03905.1',
         accession='ENSEMBL_PLANTS:AT2G03905.1',
         ncbi_tax_id=3702,
-        database='E_PLANTS',
+        database='ENSEMBL_PLANTS',
         sequence=(
             'CGCCGTTAGTCCGTGAGGAGAAAATAGGCCCACTCTGGCACACTCTCTCTGGGTTTAGGT'
             'TTAGGTTTTTTTGGGGCTCTCTATCCTAAGAAACTAGGAGACATCACACTTCACCAAGTC'
@@ -321,7 +338,7 @@ def test_can_parse_premirna(cress_2):
         primary_id='ENSRNA049757815-T1',
         accession='ENSEMBL_PLANTS:ENSRNA049757815-T1',
         ncbi_tax_id=3702,
-        database='E_PLANTS',
+        database='ENSEMBL_PLANTS',
         sequence=(
             'CGTAAAGCAGGTGATTCACCAATTTAGGTTTACATCCACAGTGTGGAAGACACTGAAGGA'
             'CCTAAACTAACAAAGGTAAACGGCTCAGTGTGCGGGGTATTACACTCGGTTTAATGTCTG'
@@ -369,7 +386,7 @@ def test_can_parse_rice_trna(oryza_9):
         primary_id="ENSRNA049456349-T1",
         accession='ENSEMBL_PLANTS:ENSRNA049456349-T1',
         ncbi_tax_id=65489,
-        database='E_PLANTS',
+        database='ENSEMBL_PLANTS',
         sequence='TCCGTTGTAGTCTAGCTGGTTAGGATACTCGGCTCTCACCCGAGAGACCCGGGTTCGAGTCCCGGCAACGGAA',
         regions=[
             dat.SequenceRegion(
@@ -404,7 +421,7 @@ def test_can_parse_rice_snorna(oryza_9):
         primary_id="ENSRNA049475670-T1",
         accession='ENSEMBL_PLANTS:ENSRNA049475670-T1',
         ncbi_tax_id=65489,
-        database='E_PLANTS',
+        database='ENSEMBL_PLANTS',
         sequence='AAAAAAGCAGGATGCTGTGTTCTCTATAAGCAGTGTCCTCGTAAATTTTAGGAACATGTTTCATCGTTATTGGGTGAACCGTTGGGCTATTCAATGTCCATTGGTTCAGTAAATGATGGCACATTT',
         regions=[
             dat.SequenceRegion(
@@ -439,7 +456,7 @@ def test_can_parse_rice_pre_mirna(oryza_9):
         primary_id='ENSRNA049475651-T1',
         accession='ENSEMBL_PLANTS:ENSRNA049475651-T1',
         ncbi_tax_id=65489,
-        database='E_PLANTS',
+        database='ENSEMBL_PLANTS',
         sequence='CCTCCCCGCCGGACCTCCCAGTGAGGAGGCTAGGGCCGCCAGGTCCGGTGATCCCATTCTCCTTGCCGGCGGATTCTGCGCCCTAGA',
         regions=[
             dat.SequenceRegion(
@@ -474,7 +491,7 @@ def test_can_parse_rice_u6(oryza_9):
         primary_id='ENSRNA049475710-T1',
         accession='ENSEMBL_PLANTS:ENSRNA049475710-T1',
         ncbi_tax_id=65489,
-        database='E_PLANTS',
+        database='ENSEMBL_PLANTS',
         sequence='GTAGCTTATATACGCTGCTGTGCATAAAATTGAAACGATACAGAGAAGATTAGCATGGCCCCTGCGCAAGGAAGACGCACACAAATCGAGAAGTGGTCCAAATTTTT',
         regions=[
             dat.SequenceRegion(
@@ -509,7 +526,7 @@ def test_can_parse_barley_antisense(hordeum_pt):
         primary_id='ENSRNA049483195-T1',
         accession='ENSEMBL_PLANTS:ENSRNA049483195-T1',
         ncbi_tax_id=112509,
-        database='E_PLANTS',
+        database='ENSEMBL_PLANTS',
         sequence='AATAACCAAATATAACACTGGGACTAAGGGTCAAATTGGTAATTTTTCTTACATCTCCCCCCCCAGGGGCCCAGGTATCATATACACCGCCAAAATAAAGAGCCTTGAGTACTAGAAGAAAAGCACCTAGACCTAACAAAATTAAGTGAATACCCAAAATTGTAGTCATTTTATTTCTATCTTTCCA',
         regions=[
             dat.SequenceRegion(
@@ -544,7 +561,7 @@ def test_can_parse_zea_lincrna(zea_7):
         primary_id="Zm00001d001070_T001",
         accession="ENSEMBL_PLANTS:Zm00001d001070_T001",
         ncbi_tax_id=4577,
-        database='E_PLANTS',
+        database='ENSEMBL_PLANTS',
         sequence=(
             'GTATGGAACACGGCCGACCCCAGGCATTGGCTTCTGGAGGTTGAAGATGGGCGCATGTCC'
             'GAGCGATCGGATGTGAATGGCTGTGGATAGTTGCGTGGTAGTGGTGGATGGCCAATCACT'

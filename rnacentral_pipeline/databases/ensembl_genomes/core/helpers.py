@@ -104,14 +104,24 @@ def description(gene, entry):
     ).strip()
 
 
-def as_entry(record, current_gene, feature):
+def xref_data(feature):
+    result = {}
+    for key, values in embl.xref_data(feature).items():
+        if key == 'RefSeq_dna':
+            result['RefSeq'] = values
+        elif key == 'TAIR_LOCUS_MODEL':
+            result['TAIR'] = values
+    return result
+
+
+def as_entry(context, record, current_gene, feature):
     species, common_name = ensembl.organism_naming(record)
 
     entry = data.Entry(
         primary_id=primary_id(feature),
-        accession='ENSEMBL_PLANTS:' + primary_id(feature),
+        accession=context.accession(primary_id(feature)),
         ncbi_tax_id=embl.taxid(record),
-        database='E_PLANTS',
+        database=context.database,
         sequence=embl.sequence(record, feature),
         regions=ensembl.regions(record, feature),
         rna_type=rna_type(feature),
@@ -124,7 +134,7 @@ def as_entry(record, current_gene, feature):
         locus_tag=embl.locus_tag(current_gene),
         xref_data=xref_data(feature),
         product=ensembl.product(feature),
-        references=references(),
+        references=context.references,
     )
 
     return attr.evolve(
