@@ -16,7 +16,7 @@ IFS=$'\n\t'
 
 fetch()
 {
-  echo $2
+  echo "$1 -> $2"
   dir="$(dirname $2)"
   [ -d "$dir" ] || mkdir -p "$dir"
   wget -q -O - $1 | gzip -d - > $2
@@ -35,4 +35,5 @@ fetch 'ftp://ftp.ensemblgenomes.org/pub/current/plants/embl/hordeum_vulgare/Hord
 fetch 'ftp://ftp.ensemblgenomes.org/pub/current/plants/embl/oryza_barthii/Oryza_barthii.O.barthii_v1.*.chromosome.9.dat.gz' 'data/ensembl_plants/Oryza_barthii.O.barthii_v1.chromosome.9.dat'
 fetch 'ftp://ftp.ensemblgenomes.org/pub/current/plants/embl/zea_mays/Zea_mays.B73_RefGen_v4.*.chromosome.7.dat.gz' 'data/ensembl_plants/Zea_mays.B73_RefGen_v4.chromosome.7.dat'
 fetch 'ftp://ftp.ensemblgenomes.org/pub/current/fungi/embl/aspergillus_nidulans//Aspergillus_nidulans.ASM1142v1.43.chromosome.I.dat.gz' 'data/ensembl_fungi/Aspergillus_nidulans.chromosome.I.dat'
-fetch 'ftp://ftp.ensemblgenomes.org/pub/release-43/metazoa/embl/apis_mellifera/Apis_mellifera.Amel_4.5.43.chromosome_group.1.dat.gz' 'data/ensembl_metazoa/Apis_mellifera.Amel_4.5.chromosome_group.1.dat'
+fetch 'ftp://ftp.ensemblgenomes.org/pub/current/metazoa/embl/apis_mellifera/Apis_mellifera.Amel_4.5.43.chromosome_group.1.dat.gz' 'data/ensembl_metazoa/Apis_mellifera.Amel_4.5.chromosome_group.1.dat'
+fetch 'ftp://ftp.ensemblgenomes.org/pub/current/protists/embl/leishmania_major/Leishmania_major.ASM272v2.43.chromosome.36.dat.gz' 'data/ensembl_protists/Leishmania_major.ASM272v2.chromosome.36.dat'
