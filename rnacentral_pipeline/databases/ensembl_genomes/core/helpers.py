@@ -111,6 +111,8 @@ def xref_data(feature):
             result['RefSeq'] = values
         elif key == 'TAIR_LOCUS_MODEL':
             result['TAIR'] = values
+        else:
+            result[key] = values
     return result
 
 
