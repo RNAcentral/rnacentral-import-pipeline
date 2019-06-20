@@ -20,51 +20,31 @@ from rnacentral_pipeline.databases import data as dat
 from rnacentral_pipeline.databases.helpers import publications as pubs
 from rnacentral_pipeline.databases.ensembl_genomes import plants
 
-
-def parse(filename):
-    with open(filename, 'r') as raw:
-        data = list(plants.parse(raw))
-        # from pprint import pprint
-        # pprint([d.accession for d in data])
-        return data
-
-
-def entries_for(entries, accession):
-    return [e for e in entries if e.accession == accession]
-
-
-def entry_for(entries, accession):
-    val = entries_for(entries, accession)
-    assert len(val) == 1
-    return val[0]
-
-
-def has_entry_for(entries, accession):
-    return bool(entries_for(entries, accession))
+from . import helpers
 
 
 @pytest.fixture(scope='module')  # pylint: disable=no-member
 def cress_2():
-    return parse('data/ensembl_plants/Arabidopsis_thaliana.TAIR10.40.chromosome.2.dat')
+    return helpers.parse(plants.parse, 'data/ensembl_plants/Arabidopsis_thaliana.TAIR10.40.chromosome.2.dat')
 
 
 @pytest.fixture(scope='module')  # pylint: disable=no-member
 def oryza_9():
-    return parse('data/ensembl_plants/Oryza_barthii.O.barthii_v1.41.chromosome.9.dat')
+    return helpers.parse(plants.parse, 'data/ensembl_plants/Oryza_barthii.O.barthii_v1.41.chromosome.9.dat')
 
 
 @pytest.fixture(scope='module')  # pylint: disable=no-member
 def hordeum_pt():
-    return parse('data/ensembl_plants/Hordeum_vulgare.IBSC_v2.41.chromosome.Pt.dat')
+    return helpers.parse(plants.parse, 'data/ensembl_plants/Hordeum_vulgare.IBSC_v2.41.chromosome.Pt.dat')
 
 
 @pytest.fixture(scope='module')  # pylint: disable=no-member
 def zea_7():
-    return parse('data/ensembl_plants/Zea_mays.B73_RefGen_v4.41.chromosome.7.dat')
+    return helpers.parse(plants.parse, 'data/ensembl_plants/Zea_mays.B73_RefGen_v4.41.chromosome.7.dat')
 
 
 def test_can_parse_data(cress_2):
-    val = attr.asdict(entry_for(cress_2, 'ENSEMBL_PLANTS:AT2G01010.1'))
+    val = attr.asdict(helpers.entry_for(cress_2, 'ENSEMBL_PLANTS:AT2G01010.1'))
     assert val == attr.asdict(dat.Entry(
         primary_id='AT2G01010.1',
         accession='ENSEMBL_PLANTS:AT2G01010.1',
@@ -136,7 +116,7 @@ def test_can_parse_data(cress_2):
 
 
 def test_can_create_tair_entry(cress_2):
-    val = attr.asdict(entry_for(cress_2, 'TAIR:AT2G01010.1'))
+    val = attr.asdict(helpers.entry_for(cress_2, 'TAIR:AT2G01010.1'))
     assert val == attr.asdict(dat.Entry(
         primary_id='AT2G01010.1',
         accession='TAIR:AT2G01010.1',
@@ -211,11 +191,11 @@ def test_can_create_tair_entry(cress_2):
     ('TAIR:ENSRNA049757808-T1', False),
 ])
 def generates_expected_inferred_entries(cress_2, accession, status):
-    assert has_entry_for(cress_2, accession) == status
+    assert helpers.has_entry_for(cress_2, accession) == status
 
 
 def test_can_get_with_odd_rna_type(cress_2):
-    val = attr.asdict(entry_for(cress_2, 'ENSEMBL_PLANTS:AT2G03895.1'))
+    val = attr.asdict(helpers.entry_for(cress_2, 'ENSEMBL_PLANTS:AT2G03895.1'))
     assert val == attr.asdict(dat.Entry(
         primary_id='AT2G03895.1',
         accession='ENSEMBL_PLANTS:AT2G03895.1',
@@ -259,7 +239,7 @@ def test_can_get_with_odd_rna_type(cress_2):
 
 
 def test_can_parse_a_trna(cress_2):
-    val = attr.asdict(entry_for(cress_2, 'ENSEMBL_PLANTS:ENSRNA049492366-T1'))
+    val = attr.asdict(helpers.entry_for(cress_2, 'ENSEMBL_PLANTS:ENSRNA049492366-T1'))
     assert val == attr.asdict(dat.Entry(
         primary_id='ENSRNA049492366-T1',
         accession='ENSEMBL_PLANTS:ENSRNA049492366-T1',
@@ -298,7 +278,7 @@ def test_can_parse_a_trna(cress_2):
 
 
 def test_can_parse_gene_with_minimal_metadata(cress_2):
-    assert attr.asdict(entry_for(cress_2, 'ENSEMBL_PLANTS:AT2G03905.1')) == attr.asdict(dat.Entry(
+    assert attr.asdict(helpers.entry_for(cress_2, 'ENSEMBL_PLANTS:AT2G03905.1')) == attr.asdict(dat.Entry(
         primary_id='AT2G03905.1',
         accession='ENSEMBL_PLANTS:AT2G03905.1',
         ncbi_tax_id=3702,
@@ -337,7 +317,7 @@ def test_can_parse_gene_with_minimal_metadata(cress_2):
 
 
 def test_can_parse_premirna(cress_2):
-    val = attr.asdict(entry_for(cress_2, 'ENSEMBL_PLANTS:ENSRNA049757815-T1'))
+    val = attr.asdict(helpers.entry_for(cress_2, 'ENSEMBL_PLANTS:ENSRNA049757815-T1'))
     assert val == attr.asdict(dat.Entry(
         primary_id='ENSRNA049757815-T1',
         accession='ENSEMBL_PLANTS:ENSRNA049757815-T1',
@@ -385,7 +365,7 @@ def test_skips_transposable_elements(oryza_9):
 
 
 def test_can_parse_rice_trna(oryza_9):
-    val = attr.asdict(entry_for(oryza_9, "ENSEMBL_PLANTS:ENSRNA049456349-T1"))
+    val = attr.asdict(helpers.entry_for(oryza_9, "ENSEMBL_PLANTS:ENSRNA049456349-T1"))
     assert val == attr.asdict(dat.Entry(
         primary_id="ENSRNA049456349-T1",
         accession='ENSEMBL_PLANTS:ENSRNA049456349-T1',
@@ -420,7 +400,7 @@ def test_can_parse_rice_trna(oryza_9):
 
 
 def test_can_parse_rice_snorna(oryza_9):
-    val = attr.asdict(entry_for(oryza_9, "ENSEMBL_PLANTS:ENSRNA049475670-T1"))
+    val = attr.asdict(helpers.entry_for(oryza_9, "ENSEMBL_PLANTS:ENSRNA049475670-T1"))
     assert val == attr.asdict(dat.Entry(
         primary_id="ENSRNA049475670-T1",
         accession='ENSEMBL_PLANTS:ENSRNA049475670-T1',
@@ -455,7 +435,7 @@ def test_can_parse_rice_snorna(oryza_9):
 
 
 def test_can_parse_rice_pre_mirna(oryza_9):
-    val = attr.asdict(entry_for(oryza_9, "ENSEMBL_PLANTS:ENSRNA049475651-T1"))
+    val = attr.asdict(helpers.entry_for(oryza_9, "ENSEMBL_PLANTS:ENSRNA049475651-T1"))
     assert val == attr.asdict(dat.Entry(
         primary_id='ENSRNA049475651-T1',
         accession='ENSEMBL_PLANTS:ENSRNA049475651-T1',
@@ -490,7 +470,7 @@ def test_can_parse_rice_pre_mirna(oryza_9):
 
 
 def test_can_parse_rice_u6(oryza_9):
-    val = attr.asdict(entry_for(oryza_9, 'ENSEMBL_PLANTS:ENSRNA049475710-T1'))
+    val = attr.asdict(helpers.entry_for(oryza_9, 'ENSEMBL_PLANTS:ENSRNA049475710-T1'))
     assert val == attr.asdict(dat.Entry(
         primary_id='ENSRNA049475710-T1',
         accession='ENSEMBL_PLANTS:ENSRNA049475710-T1',
@@ -525,7 +505,7 @@ def test_can_parse_rice_u6(oryza_9):
 
 
 def test_can_parse_barley_antisense(hordeum_pt):
-    val = attr.asdict(entry_for(hordeum_pt, 'ENSEMBL_PLANTS:ENSRNA049483195-T1'))
+    val = attr.asdict(helpers.entry_for(hordeum_pt, 'ENSEMBL_PLANTS:ENSRNA049483195-T1'))
     assert val == attr.asdict(dat.Entry(
         primary_id='ENSRNA049483195-T1',
         accession='ENSEMBL_PLANTS:ENSRNA049483195-T1',
@@ -560,7 +540,7 @@ def test_can_parse_barley_antisense(hordeum_pt):
 
 
 def test_can_parse_zea_lincrna(zea_7):
-    val = attr.asdict(entry_for(zea_7, "ENSEMBL_PLANTS:Zm00001d001070_T001"))
+    val = attr.asdict(helpers.entry_for(zea_7, "ENSEMBL_PLANTS:Zm00001d001070_T001"))
     assert val == attr.asdict(dat.Entry(
         primary_id="Zm00001d001070_T001",
         accession="ENSEMBL_PLANTS:Zm00001d001070_T001",
@@ -601,5 +581,5 @@ def test_can_parse_zea_lincrna(zea_7):
 
 
 def test_does_not_generate_tair_for_others(zea_7):
-    assert has_entry_for(zea_7, "TAIR:Zm00001d001070_T001") is False
-    assert has_entry_for(zea_7, "ENSEMBL_PLANTS:Zm00001d001070_T001") is True
+    assert helpers.has_entry_for(zea_7, "TAIR:Zm00001d001070_T001") is False
+    assert helpers.has_entry_for(zea_7, "ENSEMBL_PLANTS:Zm00001d001070_T001") is True
