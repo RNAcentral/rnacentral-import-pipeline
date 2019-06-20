@@ -17,6 +17,8 @@ IFS=$'\n\t'
 fetch()
 {
   echo $2
+  dir="$(dirname $2)"
+  [ -d "$dir" ] || mkdir -p "$dir"
   wget -q -O - $1 | gzip -d - > $2
 }
 
