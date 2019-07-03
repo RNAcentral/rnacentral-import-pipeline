@@ -28,7 +28,7 @@ from rnacentral_pipeline.databases.refseq import parser as refseq
 from rnacentral_pipeline.databases.ensembl import parser as ensembl
 from rnacentral_pipeline.databases.ensembl_genomes import plants as e_plants
 from rnacentral_pipeline.databases.ensembl_genomes import fungi as e_fungi
-from rnacentral_pipeline.databases.ensembl_genomes import metazoa as e_meta
+from rnacentral_pipeline.databases.ensembl_genomes import metazoa as e_metazoa
 from rnacentral_pipeline.databases.ensembl_genomes import protists as e_protists
 from rnacentral_pipeline.databases.quickgo import parser as quickgo
 
