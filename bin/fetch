@@ -236,8 +236,11 @@ case "$name" in
   "generic" )
     fetch_generic "$@" ;;
 
-  "ensembl" | "ensembl_plants" | "ensembl_fungi" )
+  "ensembl" )
     fetch_grouped "$@" ;;
+
+  "ensembl_plants" | "ensembl_fungi" | "ensembl_metazoa" | "ensembl_protists" )
+    fetch_generic "$@" ;;
 
   "europepmc" )
     fetch_europepmc "$@" ;;
