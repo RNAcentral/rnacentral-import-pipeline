@@ -34,6 +34,7 @@ NORMALIZED_RNA_TYPES = {
     'atlncRNA': 'lncRNA',
     'sense_intronic': 'lncRNA',
     'atRNA': 'antisense_RNA',
+    'antisense': 'antisense_RNA',
     'otherRNA': 'other',
     'lincRNA': 'lncRNA',
 }
