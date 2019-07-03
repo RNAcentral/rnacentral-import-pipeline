@@ -21,7 +21,10 @@ from attr.validators import instance_of as is_a
 
 @attr.s()
 class Context(object):
-    database = attr.ib(validator=is_a(six.text_type))
+    database = attr.ib(
+        validator=is_a(six.text_type), 
+        converter=six.text_type,
+    )
     references = attr.ib(validator=is_a(list))
 
     def accession(self, primary_id):
