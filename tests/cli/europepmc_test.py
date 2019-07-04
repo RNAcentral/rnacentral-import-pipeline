@@ -89,7 +89,9 @@ def test_will_ignore_lookup_failures():
         assert result.exit_code == 0
         assert os.path.exists('references.csv')
         with open('references.csv') as raw:
-            assert len(raw.readlines()) == 1
+            assert raw.readlines() == [
+                '03ea261d3cd947fde1cc8328a4c08127,b,"Xu Z, Han Y, Liu J, Jiang F, Hu H, Wang Y, Liu Q, Gong Y, Li X.",Scientific reports 5:12276 (2015),MiR-135b-5p and MiR-499a-3p Promote Cell Proliferation and Migration in Atherosclerosis by Directly Targeting MEF2C,26184978,10.1038/srep12276\n',
+            ]
 
 
 def test_will_fail_lookup_faiures_if_requested():
@@ -98,6 +100,10 @@ def test_will_fail_lookup_faiures_if_requested():
     with run_indexed_command(cmd, input='\n'.join(ids)) as result:
         assert result.exit_code == 1
         assert os.path.exists('references.csv')
+        with open('references.csv') as raw:
+            assert raw.readlines() == [
+                '03ea261d3cd947fde1cc8328a4c08127,b,"Xu Z, Han Y, Liu J, Jiang F, Hu H, Wang Y, Liu Q, Gong Y, Li X.",Scientific reports 5:12276 (2015),MiR-135b-5p and MiR-499a-3p Promote Cell Proliferation and Migration in Atherosclerosis by Directly Targeting MEF2C,26184978,10.1038/srep12276\n',
+            ]
 
 
 def test_can_query_a_file():

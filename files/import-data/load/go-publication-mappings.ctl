@@ -35,7 +35,12 @@ create table if not exists load_go_term_publication_map (
     assigned_by varchar(50),
     ontology_term_id varchar(15),
     evidence_code varchar(15),
-    pubmed_id int
+    pubmed_id text
 );
+$$
+AFTER LOAD DO
+$$
+update load_go_term_publication_map
+set pubmed_id = trim(leading 'pmid:' from pubmed_id)
 $$
 ;
