@@ -80,5 +80,5 @@ class GoTermAnnotation(object):
                 self.term_id,
                 self.assigned_by,
                 self.evidence_code,
-                publication.normalized_id,
+                publication.external_id,
             ]

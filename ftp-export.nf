@@ -76,7 +76,7 @@ process database_id_mapping {
 
 process rfam_annotations {
   publishDir "${params.ftp_export.publish}/rfam/", mode: 'move'
-  when: params.ftp_export.rfam_annotations.run
+  when: params.ftp_export.rfam.annotations.run
 
   input:
   file query from Channel.fromPath('files/ftp-export/rfam/rfam-annotations.sql')
@@ -182,7 +182,7 @@ process database_specific_fasta {
   set val(db), file(query) from db_sequences
 
   output:
-  file('*.fasta') into __sequences_species
+  file('*.fasta') into __database_sequences_species
 
   script:
   """
@@ -253,7 +253,7 @@ process ensembl_export_chunk {
   maxForks params.ftp_export.ensembl.maxForks
 
   input:
-  set val(min), val(max), file(query) from ensembl_ranges
+  set val(table), val(min), val(max), file(query) from ensembl_ranges
 
   output:
   set val(min), val(max), file('raw_xrefs.json') into raw_ensembl_chunks
@@ -275,7 +275,7 @@ process ensembl_process_chunk {
   set val(min), val(max), file(raw), file(schema) from ensembl_chunks
 
   output:
-  file(result) into __ensembl_export
+  file("ensembl-xref-$min-${max}.json") into __ensembl_export
 
   script:
   def result = "ensembl-xref-$min-${max}.json"
@@ -299,7 +299,7 @@ process fetch_rfam_go_matchces {
 process rfam_go_matches {
   memory params.ftp_export.rfam.go_annotations.memory
   publishDir "${params.ftp_export.publish}/go_annotations/", mode: 'move'
-  when: params.ftp_export.export.rfam.go_annotations.run
+  when: params.ftp_export.rfam.go_annotations.run
 
   input:
   file('raw_go.json') from rfam_go_matches
@@ -371,7 +371,7 @@ process format_bed_coordinates {
   set val(assembly), val(species), file(raw_data) from bed_coordinates
 
   output:
-  set val(assembly), file(result) into bed_files
+  set val(assembly), file("${species}.${assembly}.bed.gz") into bed_files
 
   script:
   def result = "${species}.${assembly}.bed.gz"
@@ -403,15 +403,15 @@ process format_bed_coordinates {
 // }
 
 process generate_gff3 {
-  memory params.ftp_export.gff3.memory
+  memory params.ftp_export.coordinates.gff3.memory
   publishDir "${params.ftp_export.publish}/genome_coordinates/gff3", mode: 'move'
-  when: params.ftp_export.gff3.run
+  when: params.ftp_export.coordinates.gff3.run
 
   input:
   set val(assembly), val(species), file(raw_data) from gff_coordinates
 
   output:
-  file(result) into gff3_files
+  file("${species}.${assembly}.gff3.gz") into gff3_files
 
   script:
   def result = "${species}.${assembly}.gff3.gz"

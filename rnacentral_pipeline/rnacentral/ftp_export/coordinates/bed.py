@@ -29,9 +29,9 @@ from . import data as coord
 
 @attr.s(slots=True, frozen=True)
 class BedEntry(object):
-    rna_id = attr.ib(validator=is_a(str))
-    rna_type = attr.ib(validator=is_a(str))
-    databases = attr.ib(validator=is_a(str))
+    rna_id = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
+    rna_type = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
+    databases = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
     region = attr.ib(validator=is_a(regions.SequenceRegion))
     score = attr.ib(default=0, validator=is_a(int))
     rgb = attr.ib(default=(63, 125, 151), validator=is_a(tuple))

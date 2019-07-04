@@ -161,7 +161,7 @@ def build_entry_writer(parser):
 
 
 def build_ontology_annotation_writer(parser):
-    writer = MultiCsvOutput.build(
+    return MultiCsvOutput.build(
         parser,
         go_annotations={
             'transformer': op.methodcaller('writeable'),

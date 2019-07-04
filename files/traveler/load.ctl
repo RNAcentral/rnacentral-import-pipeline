@@ -28,9 +28,7 @@ TARGET COLUMNS (
 )
 
 WITH
-    batch rows = 500,
-    batch size = 32MB,
-    prefetch rows = 500,
+    batch rows = 300,
     FIELDS ESCAPED BY double-quote,
     FIELDS TERMINATED BY ','
 
@@ -78,17 +76,16 @@ SELECT
     basepair_count,
     model_start,
     model_stop,
-    abs((model.stop - model.stop)::float) / models.length::float as model_coverage,
     sequence_start,
     sequence_stop,
     sequence_coverage
 FROM load_secondary_layout load
-JOIN rnc_secondary_models models
+JOIN rnc_secondary_structure_layout_models models
 ON 
   models.model_name = load.model
 ) ON CONFLICT (urs) DO UPDATE
 SET
-    model = EXCLUDED.model,
+    model_id = EXCLUDED.model_id,
     secondary_structure = EXCLUDED.secondary_structure,
     layout = EXCLUDED.layout,
     overlap_count = EXCLUDED.overlap_count,
