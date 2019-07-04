@@ -79,7 +79,7 @@ def seq_version(feature):
     if '-' in version:
         return version.split('-')[-1]
     if '.' in version:
-        version.split('.')[-1]
+        return version.split('.')[-1]
     return version
 
 
