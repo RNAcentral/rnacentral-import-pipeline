@@ -76,10 +76,10 @@ def rna_type(feature):
 
 def seq_version(feature):
     version = ensembl.seq_version(feature) or '1'
-    if '-' in version:
-        return version.split('-')[-1]
     if '.' in version:
         return version.split('.')[-1]
+    if '-' in version:
+        return version.split('-')[-1]
     return version
 
 
