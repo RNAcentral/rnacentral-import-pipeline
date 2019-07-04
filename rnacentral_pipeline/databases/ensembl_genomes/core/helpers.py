@@ -76,7 +76,7 @@ def rna_type(feature):
 
 def seq_version(feature):
     version = ensembl.seq_version(feature) or '1'
-    trna_version_match = re.match(r'.(\d+)-\w+-\w+', version)
+    trna_version_match = re.match(r'\.?(\d+)-\w+-\w+', version)
     if trna_version_match:
         return trna_version_match.group(1)
     if '.' in version:
