@@ -35,6 +35,7 @@ class TravelerResult(object):
     overlap_count = attr.ib(validator=is_a(six.integer_types))
     ribotyper = attr.ib(type=ribotyper.Result)
     colored = attr.ib(type=bool, default=True)
+    is_rfam = attr.ib(type=bool, default=False)
 
     @classmethod
     def build(cls, urs, model_id, directory, result, colored=True):
@@ -102,23 +103,28 @@ class TravelerResult(object):
 
     @property
     def model_start(self):
-        return self.ribotyper.mfrom
+        if self.ribotyper:
+            return self.ribotyper.mfrom
 
     @property
     def model_stop(self):
-        return self.ribotyper.mto
+        if self.ribotyper:
+            return self.ribotyper.mto
 
     @property
     def sequence_start(self):
-        return self.ribotyper.bfrom
+        if self.ribotyper:
+            return self.ribotyper.bfrom
 
     @property
     def sequence_stop(self):
-        return self.ribotyper.bto
+        if self.ribotyper:
+            return self.ribotyper.bto
 
     @property
     def sequence_coverage(self):
-        return self.ribotyper.bcov
+        if self.ribotyper:
+            return self.ribotyper.bcov
 
     def writeable(self):
         return [
@@ -137,10 +143,12 @@ class TravelerResult(object):
 
     def __filename__(self, extension):
         fn = '%s-%s.%s' % (self.urs, self.model_id, extension)
+        if self.is_rfam:
+            fn = os.path.join(self.model_id, '%s.%s' (self.urs, extension))
         return os.path.join(self.directory, fn)
 
 
-def models(directory, colored=True):
+def ribotyper_models(directory, colored=True):
     """
     Look at the files in the given directory to find all the URS-model pairs
     that have been computed.
@@ -160,3 +168,32 @@ def models(directory, colored=True):
 
     if not seen:
         raise ValueError("Found no possible models in: %s" % directory)
+
+
+def rfam_models(directory, colored=True):
+    ribo_results = ribotyper.as_dict(directory)
+    seen = False
+    for model_directory in glob(os.path.join(directory, '*')):
+        model = os.path.basename(model_directory)
+        for filename in glob(os.path.join(model_directory, '*.svg')):
+            basename = os.path.basename(filename)
+            urs, _ = os.path.splitext(basename)
+            result = TravelerResult.build(urs, model, directory, None, colored=colored)
+            if result.is_valid():
+                seen = True
+                yield result
+
+    if not seen:
+        raise ValueError("Found no possible models in: %s" % directory)
+
+
+def models(directory, colored=True):
+    has_fasta = bool(glob(os.path.join(directory, '*.fasta')))
+    if has_fasta:
+        return ribotyper_models(directory, colored=colored)
+
+    has_rfam = bool(glob(os.path.join(directory, '*')))
+    if has_rfam:
+        return rfam_models(directory, colored=colored)
+
+    raise ValueError("Do not know how to parse contents of: %s" % directory)
