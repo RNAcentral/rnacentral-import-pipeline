@@ -95,16 +95,6 @@ RUN \
     cd $RNA/traveler/src && \
     make build
 
-# Install auto-traveler.py
-RUN git clone https://github.com/RNAcentral/auto-traveler.git && cd auto-traveler && git checkout 64ae508082b3b8e784360ab6aeb4b6777b3b0c9c
-
-# Install auo-traveler data 
-RUN \
-    cd traveler && \
-    wget -O cms.tar.gz 'https://www.dropbox.com/s/q5l0s1nj5h4y6e4/cms.tar.gz?dl=0' && \
-    tar xf cms.tar.gz && \
-    python utils/generate_model_info.py --cm-library data/cms
-
 # Install RNAStructure
 RUN \
     wget http://rna.urmc.rochester.edu/Releases/current/RNAstructureSource.tgz && \
@@ -138,6 +128,9 @@ RUN wget http://eddylab.org/software/rscape/rscape.tar.gz && \
     ./configure && make && make install && \
     cd .. && mv rscape_* rscape
 
+# Install auto-traveler.py
+RUN git clone https://github.com/RNAcentral/auto-traveler.git && cd auto-traveler && git checkout b571ba9c1ca72a8bad3befd4f86d6e182d54ce8b
+
 # Install useful pip version
 RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && python get-pip.py
 
@@ -145,6 +138,14 @@ RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && python get-pip.py
 ADD requirements.txt $RNACENTRAL_IMPORT_PIPELINE/requirements.txt
 RUN /usr/local/bin/pip install --upgrade pip && \
     /usr/local/bin/pip install -r $RNACENTRAL_IMPORT_PIPELINE/requirements.txt
+
+# Install auo-traveler data 
+RUN \
+    cd auto-traveler && \
+    /usr/local/bin/pip install -r requirements.txt && \
+    wget -O cms.tar.gz 'https://www.dropbox.com/s/q5l0s1nj5h4y6e4/cms.tar.gz?dl=0' && \
+    tar xf cms.tar.gz && \
+    python utils/generate_model_info.py --cm-library data/cms
 
 RUN python -m textblob.download_corpora
 
