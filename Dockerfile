@@ -124,9 +124,8 @@ RUN \
 RUN wget http://eddylab.org/software/rscape/rscape.tar.gz && \
     tar -xvzf rscape.tar.gz && \
     rm rscape.tar.gz && \
-    cd rscape_* && \
-    ./configure && make && make install && \
-    cd .. && mv rscape_* rscape
+    cd rscape_v1.2.3 && \
+    ./configure && make && make install
 
 # Install auto-traveler.py
 RUN git clone https://github.com/RNAcentral/auto-traveler.git && cd auto-traveler && git checkout c81b1d58a300e4e41ef5ff0a6d8dee018061e5ec
@@ -164,5 +163,5 @@ ENV PATH="$RNA/blatSrc/bin:$PATH"
 ENV PATH="$RNA/seqkit:$PATH"
 ENV PATH="$RNA/jiffy-infernal-hmmer-scripts:$PATH"
 ENV PATH="$RNA/auto-traveler:$PATH"
-ENV PATH="$RNA/rscape/bin:$PATH"
+ENV PATH="$RNA/rscape_v1.2.3/bin:$PATH"
 ENV PATH="$RNACENTRAL_IMPORT_PIPELINE:$PATH"
