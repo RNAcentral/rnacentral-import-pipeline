@@ -129,7 +129,7 @@ RUN wget http://eddylab.org/software/rscape/rscape.tar.gz && \
     cd .. && mv rscape_* rscape
 
 # Install auto-traveler.py
-RUN git clone https://github.com/RNAcentral/auto-traveler.git && cd auto-traveler && git checkout b571ba9c1ca72a8bad3befd4f86d6e182d54ce8b
+RUN git clone https://github.com/RNAcentral/auto-traveler.git && cd auto-traveler && git checkout c81b1d58a300e4e41ef5ff0a6d8dee018061e5ec
 
 # Install useful pip version
 RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && python get-pip.py
