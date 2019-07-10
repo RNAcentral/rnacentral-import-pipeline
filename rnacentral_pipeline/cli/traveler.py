@@ -28,11 +28,11 @@ def cli():
     pass
 
 
-@cli.command('partition-sequences')
-@click.argument('filename', default='-', type=click.File('r'))
-@click.argument('directory', default='partitioned', type=click.Path())
-def traveler_partition(filename, directory):
-
+# @cli.command('partition-sequences')
+# @click.argument('filename', default='-', type=click.File('r'))
+# @click.argument('directory', default='partitioned', type=click.Path())
+# def traveler_partition(filename, directory):
+#     pass
 
 
 @cli.command('process-svgs')

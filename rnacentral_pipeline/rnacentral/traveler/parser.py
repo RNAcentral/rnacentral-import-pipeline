@@ -38,8 +38,11 @@ class TravelerResult(object):
     is_rfam = attr.ib(type=bool, default=False)
 
     @classmethod
-    def build(cls, urs, model_id, directory, result, colored=True):
+    def build(cls, urs, model_id, directory, result, colored=True, is_rfam=False):
         filename = '%s-%s.overlaps' % (urs, model_id)
+        if is_rfam:
+            filename = os.path.join(model_id, urs + '.overlaps')
+
         with open(os.path.join(directory, filename), 'r') as raw:
             overlaps = int(raw.readline().strip())
 
@@ -50,6 +53,7 @@ class TravelerResult(object):
             overlap_count=overlaps,
             ribotyper=result,
             colored=colored,
+            is_rfam=is_rfam
         )
 
     def svg_filename(self):
@@ -144,7 +148,7 @@ class TravelerResult(object):
     def __filename__(self, extension):
         fn = '%s-%s.%s' % (self.urs, self.model_id, extension)
         if self.is_rfam:
-            fn = os.path.join(self.model_id, '%s.%s' (self.urs, extension))
+            fn = os.path.join(self.model_id, '%s.%s' % (self.urs, extension))
         return os.path.join(self.directory, fn)
 
 
@@ -161,7 +165,13 @@ def ribotyper_models(directory, colored=True):
         pair, _ = os.path.splitext(basename)
         urs, model = pair.split('-', 1)
         ribo_result = ribo_results[urs]
-        result = TravelerResult.build(urs, model, directory, ribo_result, colored=colored)
+        result = TravelerResult.build(
+            urs,
+            model,
+            directory,
+            ribo_result,
+            colored=colored,
+        )
         if result.is_valid():
             seen = True
             yield result
@@ -171,14 +181,26 @@ def ribotyper_models(directory, colored=True):
 
 
 def rfam_models(directory, colored=True):
-    ribo_results = ribotyper.as_dict(directory)
     seen = False
+    pattern = '*.svg'
+    if colored:
+        pattern = '*.colored.svg'
     for model_directory in glob(os.path.join(directory, '*')):
         model = os.path.basename(model_directory)
-        for filename in glob(os.path.join(model_directory, '*.svg')):
+        for filename in glob(os.path.join(model_directory, pattern)):
+            if not colored and '.colored' in filename:
+                continue
             basename = os.path.basename(filename)
             urs, _ = os.path.splitext(basename)
-            result = TravelerResult.build(urs, model, directory, None, colored=colored)
+            urs = urs.replace('.colored', '')
+            result = TravelerResult.build(
+                urs,
+                model,
+                directory,
+                None,
+                colored=colored,
+                is_rfam=True,
+            )
             if result.is_valid():
                 seen = True
                 yield result
