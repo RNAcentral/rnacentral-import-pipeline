@@ -21,9 +21,9 @@ CREATE INDEX ix_urs_with_one_rfam__upi ON urs_with_one_rfam(upi);
 CREATE INDEX ix_urs_with_one_rfam__rfam_hit_id ON urs_with_one_rfam(rfam_hit_id);
 
 COPY (
-  SELECT 
+  SELECT distinct
     rfam_model_id 
-  FROM rfam_models
+  FROM urs_with_one_rfam
   WHERE
     rfam_rna_type != 'Gene; rRNA'
-) TO STDOUT;
+) TO STDOUT
