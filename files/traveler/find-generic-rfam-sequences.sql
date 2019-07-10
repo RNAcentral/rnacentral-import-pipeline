@@ -6,4 +6,6 @@ SELECT
   )
 FROM urs_with_one_rfam rfam 
 JOIN rna ON rna.upi = rfam.upi
+where
+  rfam.rfam_model_id = :'family'
 ) TO STDOUT;
