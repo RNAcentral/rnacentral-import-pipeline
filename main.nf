@@ -776,8 +776,9 @@ post_precompute
 //=============================================================================
 
 flag_for_secondary
+  .combine(Channel.fromPath("files/traveler/setup.sql"))
   .combine(Channel.fromPath("files/traveler/find-families.sql"))
-  .map { flag, query -> query }
+  .map { flag, setup, query -> [setup, query] }
   .set { traveler_setup }
 
 process find_traveler_families {
@@ -785,14 +786,15 @@ process find_traveler_families {
   params.secondary.run
 
   input:
-  file(query) from traveler_setup
+  set file(setup), file(query) from traveler_setup
 
   output:
   file("families.txt") into families_for_traveler
 
   """
-  psql -f ON_ERROR_STOP=1 -f $query "$PGDATABASE" > all-families.txt
-  auto-traveler.py --blacklisted > blacklist.txt
+  psql -v ON_ERROR_STOP=1 -f $setup "$PGDATABASE" 
+  psql -v ON_ERROR_STOP=1 -f $query "$PGDATABASE" > all-families.txt
+  auto-traveler.py rfam blacklist > blacklist.txt
   grep -vf blacklist.txt all-families.txt > families.txt
   """
 }
