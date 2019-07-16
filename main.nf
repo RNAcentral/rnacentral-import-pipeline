@@ -829,17 +829,17 @@ process layout_sequences {
   memory params.secondary.layout.memory
 
   input:
-  set file(family) file(sequences) from to_layout
+  set val(family), file(sequences) from to_layout
 
   output:
   file("data.csv") into secondary_to_import
 
   script:
-  def opt = family == "rRNA" ? "" : "--rfam-accession ${family}"
+  def opt = family == "rRNA" ? "" : "rfam draw --rfam-data=rfam ${family}"
   """
   auto-traveler.py $opt \
-    --fasta-input $sequences \
-    --output-folder output/
+    $sequences \
+    output/
   rnac traveler process-svgs output/ data.csv
   """
 }
