@@ -812,8 +812,8 @@ process find_possible_traveler_sequences {
   set val(rfam_family), file(query) from rfam_for_traveler
 
   output:
-  set file('parts/*.fasta'), val(rfam_family) into to_layout mode flatten
-  set val(family), file('rnacentral.fasta') into traveler_expected_sequences
+  set val(rfam_family), file('parts/*.fasta') into to_layout mode flatten
+  set val(rfam_family), file('rnacentral.fasta') into traveler_expected_sequences
 
   script:
   def chunk_size = params.secondary.sequence_chunk_size
