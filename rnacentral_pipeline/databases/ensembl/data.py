@@ -33,9 +33,10 @@ class Context(object):
     inference = attr.ib()
     gencode_ids = attr.ib(validator=is_a(set))
     rfam_names = attr.ib(validator=is_a(dict))
+    excluded = attr.ib(validator=is_a(set))
 
     @classmethod
-    def build(cls, family_file, gencode_file=None):
+    def build(cls, family_file, gencode_file=None, excluded_file=None):
         with open(family_file, 'r') as raw:
             supressed_mapping = rfutils.name_to_suppression(raw)
 
@@ -57,11 +58,17 @@ class Context(object):
                                      merge_strategy='warning')
             gencode_ids = {f['ID'][0] for f in gff.features_of_type('transcript')}
 
+        excluded = set()
+        if excluded_file:
+            with open(excluded_file, 'r') as raw:
+                excluded = set(l.strip() for l in raw)
+
         return cls(
             supressed_mapping,
             inference,
             gencode_ids=gencode_ids,
             rfam_names=rfam_names,
+            excluded=excluded,
         )
 
     def rfam_name(self, locus_tag, default=None):
@@ -83,4 +90,5 @@ class Context(object):
         return False
 
     def from_gencode(self, entry):
-        return entry.accession in self.gencode_ids
+        return entry.accession in self.gencode_ids and \
+            entry.accession not in self.excluded
