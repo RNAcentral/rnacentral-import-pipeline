@@ -93,17 +93,6 @@ function fetch_generic() {
   esac
 }
 
-function fetch_grouped() {
-  local pattern="$(basename "$1")"
-  fetch_generic "$1" "$pattern"
-
-  for fn in $pattern; do
-    local species="$(echo "$fn" | cut -d. -f1)"
-    local grouped="$species.grouped.dat.gz"
-    cat "$fn" >> "$grouped"
-  done
-}
-
 function fetch_quickgo() {
   local remote="$1"
   local output="$2"
@@ -174,43 +163,6 @@ function fetch_genome() {
   cat *.fa > "$genome_file"
 }
 
-function ena_grouper() {
-  local to_group="$1"
-  local suffix="$2"
-
-  while IFS=',' read -r "filename" "count" || [[ -n "$filename" ]]; do
-    local fn="$(basename $filename)"
-    local group="${fn:0:$count}$suffix"
-    cat $filename >> $group
-  done < "$to_group"
-}
-
-function fetch_ena() {
-  local remote="$1"
-  local produces="$2"
-  local suffix="${produces:1:${#produces}}"
-  local tmp="$(mktemp)"
-
-  find "$remote/con" -name '*.ncr.gz' -type f | xargs -I {} echo {},7 > "$tmp"
-  ena_grouper "$tmp" "$suffix"
-
-  find "$remote/std" -name '*.ncr.gz' -not -name 'rel_std_env*.ncr.gz' -type f | xargs -I {} echo {},11 > "$tmp"
-  ena_grouper "$tmp" "$suffix"
-
-  # Basically doesn't group the env data as we end up with a single very large
-  # file if we do.
-  find "$remote/std" -name 'rel_std_env*.ncr.gz' -type f | xargs -I {} echo {},14 > "$tmp"
-  ena_grouper "$tmp" "$suffix"
-
-  find "$remote/tsa" -name '*.ncr.gz' -type f | xargs -I {} echo {},3 > "$tmp"
-  ena_grouper "$tmp" "$suffix"
-
-  find "$remote/wgs" -name '*.ncr.gz' -type f | xargs -I {} echo {},6 > "$tmp"
-  ena_grouper "$tmp" "$suffix"
-
-  rm "$tmp"
-}
-
 function fetch_rfam() {
   local remote="$(dirname "$1")"
   local pattern="$(basename "$1")"
@@ -237,7 +189,7 @@ case "$name" in
     fetch_generic "$@" ;;
 
   "ensembl" )
-    fetch_grouped "$@" ;;
+    fetch_generic "$@" ;;
 
   "ensembl_plants" | "ensembl_fungi" | "ensembl_metazoa" | "ensembl_protists" )
     fetch_generic "$@" ;;
