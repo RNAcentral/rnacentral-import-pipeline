@@ -124,7 +124,11 @@ def parse(raw, family_file, gencode_file=None):
     This will parse an EMBL file for all Ensembl Entries to import.
     """
 
-    context = Context.build(family_file, gencode_file=gencode_file)
+    context = Context.build(
+        family_file,
+        gencode_file=gencode_file,
+        excluded_file=excluded_file,
+    )
     loaded = ncrnas(raw, context)
     grouped = it.groupby(loaded, op.attrgetter('gene'))
     for _, related in grouped:
