@@ -789,18 +789,34 @@ process find_traveler_families {
   set file(setup), file(query) from traveler_setup
 
   output:
-  file("families.txt") into families_for_traveler
+  file("families.txt") into possible_rfam_families
 
   """
-  psql -v ON_ERROR_STOP=1 -f $setup "$PGDATABASE" 
+  psql -v ON_ERROR_STOP=1 -f $setup "$PGDATABASE"
   psql -v ON_ERROR_STOP=1 -f $query "$PGDATABASE" > all-families.txt
   auto-traveler.py rfam blacklist > blacklist.txt
   grep -vf blacklist.txt all-families.txt > families.txt
   """
 }
 
-families_for_traveler
+possible_rfam_families
   .splitCsv()
+  .set { families_to_validate }
+
+process compute_rfam_layout_overlap {
+  input:
+  val(family) from families_to_validate
+
+  output:
+  file("validation.txt") into family_validations
+
+  """
+  auto-traveler.py rfam validate $family validation.txt
+  """
+}
+
+family_validations
+  .map { file -> file.text.trim() }
   .combine(Channel.fromPath("files/traveler/find-rfam-sequences.sql"))
   .mix(['rRNA', file('files/traveler/find-rrna-sequences.sql')])
   .set { rfam_for_traveler }
