@@ -79,10 +79,10 @@ def seq_version(feature):
     trna_version_match = re.match(r'\.?(\d+)-\w+-\w+', version)
     if trna_version_match:
         return trna_version_match.group(1)
-    if '.' in version:
-        return version.split('.')[-1]
-    if '-' in version:
-        return version.split('-')[-1]
+    splits = ['.', '-']
+    for split in splits:
+        if split in version:
+            version = version.split(split)[-1]
     return version
 
 
