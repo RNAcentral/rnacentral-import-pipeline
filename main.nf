@@ -822,6 +822,7 @@ family_validations
   .set { rfam_for_traveler }
 
 process find_possible_traveler_sequences {
+  errorStrategy 'ignore'
   memory params.secondary.find_possible.memory
 
   input:
