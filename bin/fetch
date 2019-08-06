@@ -176,6 +176,17 @@ function fetch_rfam() {
   split -edl 1 --additional-suffix "$suffix" - "$prefix"
 }
 
+function fetch_ena() {
+  rsync \
+    -avP \
+    --prune-empty-dirs \
+    --include='*/' \
+    --include='**/*.ncr.gz' \
+    --exclude='*.fasta.gz' \
+    "$1" .
+  join-ena-files --max-size 1GB '*.ncr.gz' "$2"
+}
+
 [ $# -gt 0 ] || { usage 0; }
 
 name="$1"
@@ -183,7 +194,7 @@ shift 1
 
 case "$name" in
   "ena" )
-    fetch_generic "$@" ;;
+    fetch_ena "$@" ;;
 
   "generic" )
     fetch_generic "$@" ;;
