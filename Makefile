@@ -13,7 +13,7 @@ singularity/Vagrantfile:
 singularity/ssh-config: singularity/Vagrantfile
 	cd singularity && vagrant up && vagrant ssh-config > ssh-config
 
-docker: Dockerfile requirements.txt .dockerignore 
+docker: Dockerfile requirements.txt .dockerignore
 	docker build -t "$(docker)" .
 
 shell:
@@ -22,4 +22,7 @@ shell:
 publish: docker
 	docker push "$(docker)"
 
-.PHONY: docker publish
+clean:
+	rm singularity/Vagrantfile singularity/ssh-config
+
+.PHONY: docker publish clean

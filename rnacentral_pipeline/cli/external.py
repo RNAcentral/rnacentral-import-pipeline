@@ -26,7 +26,10 @@ from rnacentral_pipeline.databases.pdb import parser as pdb
 from rnacentral_pipeline.databases.generic import parser as generic
 from rnacentral_pipeline.databases.refseq import parser as refseq
 from rnacentral_pipeline.databases.ensembl import parser as ensembl
-from rnacentral_pipeline.databases.ensembl_plants import parser as e_plants
+from rnacentral_pipeline.databases.ensembl_genomes import plants as e_plants
+from rnacentral_pipeline.databases.ensembl_genomes import fungi as e_fungi
+from rnacentral_pipeline.databases.ensembl_genomes import metazoa as e_metazoa
+from rnacentral_pipeline.databases.ensembl_genomes import protists as e_protists
 from rnacentral_pipeline.databases.quickgo import parser as quickgo
 
 
@@ -99,6 +102,39 @@ def process_ensembl_plants(ensembl_file, output):
     files should be in the EMBL format as provided by EnsemblPlants.
     """
     write_entries(e_plants.parse, output, ensembl_file)
+
+
+@cli.command('ensembl_fungi')
+@click.argument('ensembl_file', type=click.File('r'))
+@click.argument('output', default='.', type=click.Path(
+    writable=True,
+    dir_okay=True,
+    file_okay=False,
+))
+def process_ensembl_fungi(ensembl_file, output):
+    write_entries(e_fungi.parse, output, ensembl_file)
+
+
+@cli.command('ensembl_metazoa')
+@click.argument('ensembl_file', type=click.File('r'))
+@click.argument('output', default='.', type=click.Path(
+    writable=True,
+    dir_okay=True,
+    file_okay=False,
+))
+def process_ensembl_metazoa(ensembl_file, output):
+    write_entries(e_metazoa.parse, output, ensembl_file)
+
+
+@cli.command('ensembl_protists')
+@click.argument('ensembl_file', type=click.File('r'))
+@click.argument('output', default='.', type=click.Path(
+    writable=True,
+    dir_okay=True,
+    file_okay=False,
+))
+def process_ensembl_protists(ensembl_file, output):
+    write_entries(e_protists.parse, output, ensembl_file)
 
 
 @cli.command('pdb')

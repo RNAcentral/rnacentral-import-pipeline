@@ -537,6 +537,7 @@ assemblies
 process fetch_unmapped_sequences {
   tag { species }
   maxForks params.genome_mapping.fetch_unmapped_sequences.directives.maxForks
+  clusterOptions '-sp 100'
 
   input:
   set val(species), val(assembly_id), val(taxid), val(division), file(query) from assemblies_to_fetch
@@ -545,10 +546,17 @@ process fetch_unmapped_sequences {
   set species, file('parts/*.fasta') into split_mappable_sequences
 
   """
-  psql -v ON_ERROR_STOP=1 -v taxid=$taxid -v assembly_id=$assembly_id -f "$query" "$PGDATABASE" > raw.json
+  psql \
+    -v ON_ERROR_STOP=1 \
+    -v taxid=$taxid \
+    -v assembly_id=$assembly_id \
+    -v min_length=${params.genome_mapping.min_length} \
+    -v max_length=${params.genome_mapping.max_length} \
+    -f "$query" \
+    "$PGDATABASE" > raw.json
   json2fasta.py raw.json rnacentral.fasta
   seqkit shuffle --two-pass rnacentral.fasta > shuffled.fasta
-  seqkit split --two-pass --by-size ${params.genome_mapping.chunk_size} --out-dir 'parts/' shuffled.fasta
+  split-sequences shuffled.fasta ${params.genome_mapping.fetch_unmapped_sequences.nucleotides_per_chunk parts} parts
   """
 }
 
