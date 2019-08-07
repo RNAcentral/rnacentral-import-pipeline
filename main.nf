@@ -537,6 +537,7 @@ assemblies
 process fetch_unmapped_sequences {
   tag { species }
   maxForks params.genome_mapping.fetch_unmapped_sequences.directives.maxForks
+  clusterOptions '-sp 100'
 
   input:
   set val(species), val(assembly_id), val(taxid), val(division), file(query) from assemblies_to_fetch
