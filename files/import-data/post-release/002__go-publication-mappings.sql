@@ -15,7 +15,7 @@ ON
     AND annotations.evidence_code = load.evidence_code
 JOIN rnc_references refs
 ON
-  refs.pubmed_id = load.pubmed_id
+  refs.pmdi = load.pubmed_id
 )
 ON CONFLICT (go_term_annotation_id, reference_id)
 DO NOTHING
