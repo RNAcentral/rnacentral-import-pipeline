@@ -13,12 +13,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from rnacentral_pipeline.databases.ensembl_plants import parser
 
-
-def parse(filename):
+def parse(parser, filename):
     with open(filename, 'r') as raw:
-        return list(parser.parse(raw))
+        return list(parser(raw))
 
 
 def entries_for(entries, accession):
@@ -33,3 +31,5 @@ def entry_for(entries, accession):
 
 def has_entry_for(entries, accession):
     return bool(entries_for(entries, accession))
+
+

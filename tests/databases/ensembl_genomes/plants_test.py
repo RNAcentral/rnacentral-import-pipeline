@@ -18,37 +18,38 @@ import pytest
 
 from rnacentral_pipeline.databases import data as dat
 from rnacentral_pipeline.databases.helpers import publications as pubs
+from rnacentral_pipeline.databases.ensembl_genomes import plants
 
-from .helpers import parse, entry_for, has_entry_for
+from . import helpers
 
 
 @pytest.fixture(scope='module')  # pylint: disable=no-member
 def cress_2():
-    return parse('data/ensembl_plants/Arabidopsis_thaliana.TAIR10.40.chromosome.2.dat')
+    return helpers.parse(plants.parse, 'data/ensembl_plants/Arabidopsis_thaliana.TAIR10.40.chromosome.2.dat')
 
 
 @pytest.fixture(scope='module')  # pylint: disable=no-member
 def oryza_9():
-    return parse('data/ensembl_plants/Oryza_barthii.O.barthii_v1.41.chromosome.9.dat')
+    return helpers.parse(plants.parse, 'data/ensembl_plants/Oryza_barthii.O.barthii_v1.41.chromosome.9.dat')
 
 
 @pytest.fixture(scope='module')  # pylint: disable=no-member
 def hordeum_pt():
-    return parse('data/ensembl_plants/Hordeum_vulgare.IBSC_v2.41.chromosome.Pt.dat')
+    return helpers.parse(plants.parse, 'data/ensembl_plants/Hordeum_vulgare.IBSC_v2.41.chromosome.Pt.dat')
 
 
 @pytest.fixture(scope='module')  # pylint: disable=no-member
 def zea_7():
-    return parse('data/ensembl_plants/Zea_mays.B73_RefGen_v4.41.chromosome.7.dat')
+    return helpers.parse(plants.parse, 'data/ensembl_plants/Zea_mays.B73_RefGen_v4.41.chromosome.7.dat')
 
 
 def test_can_parse_data(cress_2):
-    val = attr.asdict(entry_for(cress_2, 'ENSEMBL_PLANTS:AT2G01010.1'))
+    val = attr.asdict(helpers.entry_for(cress_2, 'ENSEMBL_PLANTS:AT2G01010.1'))
     assert val == attr.asdict(dat.Entry(
         primary_id='AT2G01010.1',
         accession='ENSEMBL_PLANTS:AT2G01010.1',
         ncbi_tax_id=3702,
-        database='E_PLANTS',
+        database='ENSEMBL_PLANTS',
         sequence=(
             'TACCTGGTTGATCCTGCCAGTAGTCATATGCTTGTCTCAAAGATTAAGCCATGCATGTGT'
             'AAGTATGAACGAATTCAGACTGTGAAACTGCGAATGGCTCATTAAATCAGTTATAGTTTG'
@@ -103,7 +104,7 @@ def test_can_parse_data(cress_2):
         common_name='thale-cress',
         lineage=(
             'Eukaryota; Viridiplantae; Streptophyta; '
-            'Embryophyta; Tracheophyta; Spermatophyta; Magnoliophyta; '
+            'Embryophyta; Tracheophyta; Spermatophyta; Magnoliopsida; '
             'eudicotyledons; Gunneridae; Pentapetalae; rosids; malvids; '
             'Brassicales; Brassicaceae; Camelineae; Arabidopsis; '
             'Arabidopsis thaliana'
@@ -115,7 +116,7 @@ def test_can_parse_data(cress_2):
 
 
 def test_can_create_tair_entry(cress_2):
-    val = attr.asdict(entry_for(cress_2, 'TAIR:AT2G01010.1'))
+    val = attr.asdict(helpers.entry_for(cress_2, 'TAIR:AT2G01010.1'))
     assert val == attr.asdict(dat.Entry(
         primary_id='AT2G01010.1',
         accession='TAIR:AT2G01010.1',
@@ -174,7 +175,7 @@ def test_can_create_tair_entry(cress_2):
         common_name='thale-cress',
         lineage=(
             'Eukaryota; Viridiplantae; Streptophyta; '
-            'Embryophyta; Tracheophyta; Spermatophyta; Magnoliophyta; '
+            'Embryophyta; Tracheophyta; Spermatophyta; Magnoliopsida; '
             'eudicotyledons; Gunneridae; Pentapetalae; rosids; malvids; '
             'Brassicales; Brassicaceae; Camelineae; Arabidopsis; '
             'Arabidopsis thaliana'
@@ -190,16 +191,16 @@ def test_can_create_tair_entry(cress_2):
     ('TAIR:ENSRNA049757808-T1', False),
 ])
 def generates_expected_inferred_entries(cress_2, accession, status):
-    assert has_entry_for(cress_2, accession) == status
+    assert helpers.has_entry_for(cress_2, accession) == status
 
 
 def test_can_get_with_odd_rna_type(cress_2):
-    val = attr.asdict(entry_for(cress_2, 'ENSEMBL_PLANTS:AT2G03895.1'))
+    val = attr.asdict(helpers.entry_for(cress_2, 'ENSEMBL_PLANTS:AT2G03895.1'))
     assert val == attr.asdict(dat.Entry(
         primary_id='AT2G03895.1',
         accession='ENSEMBL_PLANTS:AT2G03895.1',
         ncbi_tax_id=3702,
-        database='E_PLANTS',
+        database='ENSEMBL_PLANTS',
         sequence=(
             'GGTGGTCTCTGTTGGTGAATCGTCGTCATTGAGAGCTGACACCGGCCCAAAGCCTTTGCT'
             'CCGGCGTTGCGTGACGGAGTATCGGAGTCCAGCTTCCCTCCACGAATTGCAGAAAGTTAC'
@@ -226,7 +227,7 @@ def test_can_get_with_odd_rna_type(cress_2):
         common_name='thale-cress',
         lineage=(
             'Eukaryota; Viridiplantae; Streptophyta; '
-            'Embryophyta; Tracheophyta; Spermatophyta; Magnoliophyta; '
+            'Embryophyta; Tracheophyta; Spermatophyta; Magnoliopsida; '
             'eudicotyledons; Gunneridae; Pentapetalae; rosids; malvids; '
             'Brassicales; Brassicaceae; Camelineae; Arabidopsis; '
             'Arabidopsis thaliana'
@@ -238,12 +239,12 @@ def test_can_get_with_odd_rna_type(cress_2):
 
 
 def test_can_parse_a_trna(cress_2):
-    val = attr.asdict(entry_for(cress_2, 'ENSEMBL_PLANTS:ENSRNA049492366-T1'))
+    val = attr.asdict(helpers.entry_for(cress_2, 'ENSEMBL_PLANTS:ENSRNA049492366-T1'))
     assert val == attr.asdict(dat.Entry(
         primary_id='ENSRNA049492366-T1',
         accession='ENSEMBL_PLANTS:ENSRNA049492366-T1',
         ncbi_tax_id=3702,
-        database='E_PLANTS',
+        database='ENSEMBL_PLANTS',
         sequence=(
             'GCTGGAATAGCTCAGTTGGTTAGAGCGTGTGGCTGTTAACCACAAGGTCGGAGGTTCGAC'
             'CCCTCCTTCTAGCG'
@@ -264,7 +265,7 @@ def test_can_parse_a_trna(cress_2):
         common_name='thale-cress',
         lineage=(
             'Eukaryota; Viridiplantae; Streptophyta; '
-            'Embryophyta; Tracheophyta; Spermatophyta; Magnoliophyta; '
+            'Embryophyta; Tracheophyta; Spermatophyta; Magnoliopsida; '
             'eudicotyledons; Gunneridae; Pentapetalae; rosids; malvids; '
             'Brassicales; Brassicaceae; Camelineae; Arabidopsis; '
             'Arabidopsis thaliana'
@@ -277,11 +278,11 @@ def test_can_parse_a_trna(cress_2):
 
 
 def test_can_parse_gene_with_minimal_metadata(cress_2):
-    assert attr.asdict(entry_for(cress_2, 'ENSEMBL_PLANTS:AT2G03905.1')) == attr.asdict(dat.Entry(
+    assert attr.asdict(helpers.entry_for(cress_2, 'ENSEMBL_PLANTS:AT2G03905.1')) == attr.asdict(dat.Entry(
         primary_id='AT2G03905.1',
         accession='ENSEMBL_PLANTS:AT2G03905.1',
         ncbi_tax_id=3702,
-        database='E_PLANTS',
+        database='ENSEMBL_PLANTS',
         sequence=(
             'CGCCGTTAGTCCGTGAGGAGAAAATAGGCCCACTCTGGCACACTCTCTCTGGGTTTAGGT'
             'TTAGGTTTTTTTGGGGCTCTCTATCCTAAGAAACTAGGAGACATCACACTTCACCAAGTC'
@@ -304,7 +305,7 @@ def test_can_parse_gene_with_minimal_metadata(cress_2):
         common_name='thale-cress',
         lineage=(
             'Eukaryota; Viridiplantae; Streptophyta; '
-            'Embryophyta; Tracheophyta; Spermatophyta; Magnoliophyta; '
+            'Embryophyta; Tracheophyta; Spermatophyta; Magnoliopsida; '
             'eudicotyledons; Gunneridae; Pentapetalae; rosids; malvids; '
             'Brassicales; Brassicaceae; Camelineae; Arabidopsis; '
             'Arabidopsis thaliana'
@@ -316,12 +317,12 @@ def test_can_parse_gene_with_minimal_metadata(cress_2):
 
 
 def test_can_parse_premirna(cress_2):
-    val = attr.asdict(entry_for(cress_2, 'ENSEMBL_PLANTS:ENSRNA049757815-T1'))
+    val = attr.asdict(helpers.entry_for(cress_2, 'ENSEMBL_PLANTS:ENSRNA049757815-T1'))
     assert val == attr.asdict(dat.Entry(
         primary_id='ENSRNA049757815-T1',
         accession='ENSEMBL_PLANTS:ENSRNA049757815-T1',
         ncbi_tax_id=3702,
-        database='E_PLANTS',
+        database='ENSEMBL_PLANTS',
         sequence=(
             'CGTAAAGCAGGTGATTCACCAATTTAGGTTTACATCCACAGTGTGGAAGACACTGAAGGA'
             'CCTAAACTAACAAAGGTAAACGGCTCAGTGTGCGGGGTATTACACTCGGTTTAATGTCTG'
@@ -344,7 +345,7 @@ def test_can_parse_premirna(cress_2):
         common_name='thale-cress',
         lineage=(
             'Eukaryota; Viridiplantae; Streptophyta; '
-            'Embryophyta; Tracheophyta; Spermatophyta; Magnoliophyta; '
+            'Embryophyta; Tracheophyta; Spermatophyta; Magnoliopsida; '
             'eudicotyledons; Gunneridae; Pentapetalae; rosids; malvids; '
             'Brassicales; Brassicaceae; Camelineae; Arabidopsis; '
             'Arabidopsis thaliana'
@@ -364,12 +365,12 @@ def test_skips_transposable_elements(oryza_9):
 
 
 def test_can_parse_rice_trna(oryza_9):
-    val = attr.asdict(entry_for(oryza_9, "ENSEMBL_PLANTS:ENSRNA049456349-T1"))
+    val = attr.asdict(helpers.entry_for(oryza_9, "ENSEMBL_PLANTS:ENSRNA049456349-T1"))
     assert val == attr.asdict(dat.Entry(
         primary_id="ENSRNA049456349-T1",
         accession='ENSEMBL_PLANTS:ENSRNA049456349-T1',
         ncbi_tax_id=65489,
-        database='E_PLANTS',
+        database='ENSEMBL_PLANTS',
         sequence='TCCGTTGTAGTCTAGCTGGTTAGGATACTCGGCTCTCACCCGAGAGACCCGGGTTCGAGTCCCGGCAACGGAA',
         regions=[
             dat.SequenceRegion(
@@ -387,7 +388,7 @@ def test_can_parse_rice_trna(oryza_9):
         common_name='African wild rice',
         lineage=(
             'Eukaryota; Viridiplantae; Streptophyta; '
-            'Embryophyta; Tracheophyta; Spermatophyta; Magnoliophyta; '
+            'Embryophyta; Tracheophyta; Spermatophyta; Magnoliopsida; '
             'Liliopsida; Poales; Poaceae; BOP clade; Oryzoideae; '
             'Oryzeae; Oryzinae; Oryza; Oryza barthii'
         ),
@@ -399,12 +400,12 @@ def test_can_parse_rice_trna(oryza_9):
 
 
 def test_can_parse_rice_snorna(oryza_9):
-    val = attr.asdict(entry_for(oryza_9, "ENSEMBL_PLANTS:ENSRNA049475670-T1"))
+    val = attr.asdict(helpers.entry_for(oryza_9, "ENSEMBL_PLANTS:ENSRNA049475670-T1"))
     assert val == attr.asdict(dat.Entry(
         primary_id="ENSRNA049475670-T1",
         accession='ENSEMBL_PLANTS:ENSRNA049475670-T1',
         ncbi_tax_id=65489,
-        database='E_PLANTS',
+        database='ENSEMBL_PLANTS',
         sequence='AAAAAAGCAGGATGCTGTGTTCTCTATAAGCAGTGTCCTCGTAAATTTTAGGAACATGTTTCATCGTTATTGGGTGAACCGTTGGGCTATTCAATGTCCATTGGTTCAGTAAATGATGGCACATTT',
         regions=[
             dat.SequenceRegion(
@@ -422,7 +423,7 @@ def test_can_parse_rice_snorna(oryza_9):
         common_name='African wild rice',
         lineage=(
             'Eukaryota; Viridiplantae; Streptophyta; '
-            'Embryophyta; Tracheophyta; Spermatophyta; Magnoliophyta; '
+            'Embryophyta; Tracheophyta; Spermatophyta; Magnoliopsida; '
             'Liliopsida; Poales; Poaceae; BOP clade; Oryzoideae; '
             'Oryzeae; Oryzinae; Oryza; Oryza barthii'
         ),
@@ -434,12 +435,12 @@ def test_can_parse_rice_snorna(oryza_9):
 
 
 def test_can_parse_rice_pre_mirna(oryza_9):
-    val = attr.asdict(entry_for(oryza_9, "ENSEMBL_PLANTS:ENSRNA049475651-T1"))
+    val = attr.asdict(helpers.entry_for(oryza_9, "ENSEMBL_PLANTS:ENSRNA049475651-T1"))
     assert val == attr.asdict(dat.Entry(
         primary_id='ENSRNA049475651-T1',
         accession='ENSEMBL_PLANTS:ENSRNA049475651-T1',
         ncbi_tax_id=65489,
-        database='E_PLANTS',
+        database='ENSEMBL_PLANTS',
         sequence='CCTCCCCGCCGGACCTCCCAGTGAGGAGGCTAGGGCCGCCAGGTCCGGTGATCCCATTCTCCTTGCCGGCGGATTCTGCGCCCTAGA',
         regions=[
             dat.SequenceRegion(
@@ -457,7 +458,7 @@ def test_can_parse_rice_pre_mirna(oryza_9):
         common_name='African wild rice',
         lineage=(
             'Eukaryota; Viridiplantae; Streptophyta; '
-            'Embryophyta; Tracheophyta; Spermatophyta; Magnoliophyta; '
+            'Embryophyta; Tracheophyta; Spermatophyta; Magnoliopsida; '
             'Liliopsida; Poales; Poaceae; BOP clade; Oryzoideae; '
             'Oryzeae; Oryzinae; Oryza; Oryza barthii'
         ),
@@ -469,12 +470,12 @@ def test_can_parse_rice_pre_mirna(oryza_9):
 
 
 def test_can_parse_rice_u6(oryza_9):
-    val = attr.asdict(entry_for(oryza_9, 'ENSEMBL_PLANTS:ENSRNA049475710-T1'))
+    val = attr.asdict(helpers.entry_for(oryza_9, 'ENSEMBL_PLANTS:ENSRNA049475710-T1'))
     assert val == attr.asdict(dat.Entry(
         primary_id='ENSRNA049475710-T1',
         accession='ENSEMBL_PLANTS:ENSRNA049475710-T1',
         ncbi_tax_id=65489,
-        database='E_PLANTS',
+        database='ENSEMBL_PLANTS',
         sequence='GTAGCTTATATACGCTGCTGTGCATAAAATTGAAACGATACAGAGAAGATTAGCATGGCCCCTGCGCAAGGAAGACGCACACAAATCGAGAAGTGGTCCAAATTTTT',
         regions=[
             dat.SequenceRegion(
@@ -492,7 +493,7 @@ def test_can_parse_rice_u6(oryza_9):
         common_name='African wild rice',
         lineage=(
             'Eukaryota; Viridiplantae; Streptophyta; '
-            'Embryophyta; Tracheophyta; Spermatophyta; Magnoliophyta; '
+            'Embryophyta; Tracheophyta; Spermatophyta; Magnoliopsida; '
             'Liliopsida; Poales; Poaceae; BOP clade; Oryzoideae; '
             'Oryzeae; Oryzinae; Oryza; Oryza barthii'
         ),
@@ -504,12 +505,12 @@ def test_can_parse_rice_u6(oryza_9):
 
 
 def test_can_parse_barley_antisense(hordeum_pt):
-    val = attr.asdict(entry_for(hordeum_pt, 'ENSEMBL_PLANTS:ENSRNA049483195-T1'))
+    val = attr.asdict(helpers.entry_for(hordeum_pt, 'ENSEMBL_PLANTS:ENSRNA049483195-T1'))
     assert val == attr.asdict(dat.Entry(
         primary_id='ENSRNA049483195-T1',
         accession='ENSEMBL_PLANTS:ENSRNA049483195-T1',
         ncbi_tax_id=112509,
-        database='E_PLANTS',
+        database='ENSEMBL_PLANTS',
         sequence='AATAACCAAATATAACACTGGGACTAAGGGTCAAATTGGTAATTTTTCTTACATCTCCCCCCCCAGGGGCCCAGGTATCATATACACCGCCAAAATAAAGAGCCTTGAGTACTAGAAGAAAAGCACCTAGACCTAACAAAATTAAGTGAATACCCAAAATTGTAGTCATTTTATTTCTATCTTTCCA',
         regions=[
             dat.SequenceRegion(
@@ -527,7 +528,7 @@ def test_can_parse_barley_antisense(hordeum_pt):
         common_name='two-rowed barley',
         lineage=(
             'Eukaryota; Viridiplantae; Streptophyta; Embryophyta; '
-            'Tracheophyta; Spermatophyta; Magnoliophyta; Liliopsida; '
+            'Tracheophyta; Spermatophyta; Magnoliopsida; Liliopsida; '
             'Poales; Poaceae; BOP clade; Pooideae; Triticodae; '
             'Triticeae; Hordeinae; Hordeum; Hordeum vulgare subsp. vulgare'
         ),
@@ -539,12 +540,12 @@ def test_can_parse_barley_antisense(hordeum_pt):
 
 
 def test_can_parse_zea_lincrna(zea_7):
-    val = attr.asdict(entry_for(zea_7, "ENSEMBL_PLANTS:Zm00001d001070_T001"))
+    val = attr.asdict(helpers.entry_for(zea_7, "ENSEMBL_PLANTS:Zm00001d001070_T001"))
     assert val == attr.asdict(dat.Entry(
         primary_id="Zm00001d001070_T001",
         accession="ENSEMBL_PLANTS:Zm00001d001070_T001",
         ncbi_tax_id=4577,
-        database='E_PLANTS',
+        database='ENSEMBL_PLANTS',
         sequence=(
             'GTATGGAACACGGCCGACCCCAGGCATTGGCTTCTGGAGGTTGAAGATGGGCGCATGTCC'
             'GAGCGATCGGATGTGAATGGCTGTGGATAGTTGCGTGGTAGTGGTGGATGGCCAATCACT'
@@ -569,7 +570,7 @@ def test_can_parse_zea_lincrna(zea_7):
         common_name='maize',
         lineage=(
             'Eukaryota; Viridiplantae; Streptophyta; '
-            'Embryophyta; Tracheophyta; Spermatophyta; Magnoliophyta; '
+            'Embryophyta; Tracheophyta; Spermatophyta; Magnoliopsida; '
             'Liliopsida; Poales; Poaceae; PACMAD clade; Panicoideae; '
             'Andropogonodae; Andropogoneae; Tripsacinae; Zea; Zea mays'
         ),
@@ -580,5 +581,23 @@ def test_can_parse_zea_lincrna(zea_7):
 
 
 def test_does_not_generate_tair_for_others(zea_7):
-    assert has_entry_for(zea_7, "TAIR:Zm00001d001070_T001") is False
-    assert has_entry_for(zea_7, "ENSEMBL_PLANTS:Zm00001d001070_T001") is True
+    assert helpers.has_entry_for(zea_7, "TAIR:Zm00001d001070_T001") is False
+    assert helpers.has_entry_for(zea_7, "ENSEMBL_PLANTS:Zm00001d001070_T001") is True
+
+
+def test_does_not_create_ncRNA_rna_type_zea_7(zea_7):
+    for entry in zea_7:
+        assert entry.rna_type != 'ncRNA'
+
+def test_does_not_create_ncRNA_rna_type_cress_2(cress_2):
+    for entry in cress_2:
+        assert entry.rna_type != 'ncRNA'
+
+def test_does_not_create_ncRNA_rna_type_oryza_9(oryza_9):
+    for entry in oryza_9:
+        assert entry.rna_type != 'ncRNA'
+
+
+def test_does_not_create_ncRNA_rna_type_hordeum_pt(hordeum_pt):
+    for entry in hordeum_pt:
+        assert entry.rna_type != 'ncRNA'
