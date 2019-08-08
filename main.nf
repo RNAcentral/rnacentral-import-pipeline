@@ -812,6 +812,8 @@ possible_rfam_families
   .set { families_to_validate }
 
 process compute_rfam_layout_overlap {
+  tag { "${family}" }
+
   input:
   val(family) from families_to_validate
 
@@ -830,6 +832,7 @@ family_validations
   .set { rfam_for_traveler }
 
 process find_possible_traveler_sequences {
+  tag { "${rfam_family}" }
   errorStrategy 'ignore'
   memory params.secondary.find_possible.memory
 
@@ -851,6 +854,7 @@ process find_possible_traveler_sequences {
 }
 
 process layout_sequences {
+  tag { "${family}-${sequences}" }
   memory params.secondary.layout.memory
 
   input:
