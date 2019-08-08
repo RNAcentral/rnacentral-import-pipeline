@@ -780,67 +780,97 @@ post_precompute
   .into { flag_for_feedback; flag_for_secondary }
 
 //=============================================================================
-// Compute secondary structures
+// Run traveler structures
 //=============================================================================
 
 flag_for_secondary
-  .combine(Channel.fromPath("files/traveler/find-sequences.sql"))
-  .set { secondary_query }
+  .combine(Channel.fromPath("files/traveler/setup.sql"))
+  .combine(Channel.fromPath("files/traveler/find-families.sql"))
+  .map { flag, setup, query -> [setup, query] }
+  .set { traveler_setup }
 
-process find_possible_secondary_sequences {
-  memory params.secondary.find_possible.memory
-
+process find_traveler_families {
   when:
   params.secondary.run
 
   input:
-  set val(flag), file(query) from secondary_query
+  set file(setup), file(query) from traveler_setup
 
   output:
-  file('parts/*.fasta') into sequences_to_ribotype mode flatten
-  file('rnacentral.fasta') into traveler_expected_sequences
+  file("families.txt") into possible_rfam_families
+
+  """
+  psql -v ON_ERROR_STOP=1 -f $setup "$PGDATABASE"
+  psql -v ON_ERROR_STOP=1 -f $query "$PGDATABASE" > all-families.txt
+  auto-traveler.py rfam blacklist > blacklist.txt
+  grep -vf blacklist.txt all-families.txt > families.txt
+  """
+}
+
+possible_rfam_families
+  .splitCsv()
+  .map { it[0] }
+  .set { families_to_validate }
+
+process compute_rfam_layout_overlap {
+  tag { "${family}" }
+
+  input:
+  val(family) from families_to_validate
+
+  output:
+  file("validation.txt") into family_validations
+
+  """
+  auto-traveler.py rfam validate $family validation.txt
+  """
+}
+
+family_validations
+  .map { file -> file.text.trim() }
+  .combine(Channel.fromPath("files/traveler/find-generic-rfam-sequences.sql"))
+  .mix(Channel.from([['rRNA', file('files/traveler/find-rrna-sequences.sql')]]))
+  .set { rfam_for_traveler }
+
+process find_possible_traveler_sequences {
+  tag { "${rfam_family}" }
+  memory params.secondary.find_possible.memory
+  maxForks params.secondary.find_possible.maxForks
+
+  input:
+  set val(rfam_family), file(query) from rfam_for_traveler
+
+  output:
+  set val(rfam_family), file('parts/*.fasta') into to_layout mode flatten
+  set val(rfam_family), file('rnacentral.fasta') into traveler_expected_sequences
 
   script:
-  chunk_size = params.secondary.sequence_chunk_size
-  variables = ""
-  template 'query-and-split.sh'
-}
-
-process fetch_traveler_data {
-  memory params.secondary.fetch.memory
-
-  when:
-  params.secondary.run
-
-  output:
-  set file('auto-traveler/data/cms/'), file('auto-traveler/data/crw-fasta-no-pseudoknots/'), file('auto-traveler/data/crw-ps/') into traveler_data
-
+  def chunk_size = params.secondary.sequence_chunk_size
   """
-  git clone https://github.com/RNAcentral/auto-traveler.git
-  cd auto-traveler
-  git checkout "${params.secondary.fetch.auto_traveler_version}"
-  wget -O cms.tar.gz '${params.secondary.fetch.cm_library}'
-  # We are going to ignore some errors due to using mac tar to build the tarball
-  tar xf cms.tar.gz
-  python utils/generate_model_info.py --cm-library data/cms
+  psql -v ON_ERROR_STOP=1 -v 'family=$rfam_family' -f "$query" "$PGDATABASE" > raw.json
+  json2fasta.py raw.json rnacentral.fasta
+  seqkit shuffle --two-pass rnacentral.fasta > shuffled.fasta
+  seqkit split --two-pass --by-size ${chunk_size} --out-dir 'parts/' shuffled.fasta
   """
 }
-
-sequences_to_ribotype
-  .combine(traveler_data)
-  .set { to_layout }
 
 process layout_sequences {
+  tag { "${family}-${sequences}" }
+  errorStrategy 'ignore'
   memory params.secondary.layout.memory
 
   input:
-  set file(sequences), file(cm), file(fasta), file(ps) from to_layout
+  set val(family), file(sequences) from to_layout
 
   output:
   file("data.csv") into secondary_to_import
 
+  script:
+  def opt = family == "rRNA" ? "" : "rfam draw --rfam-data=rfam ${family}"
   """
-  auto-traveler.py --cm-library $cm --fasta-library $fasta --ps-library $ps $sequences output/
+  auto-traveler.py $opt \
+    $sequences \
+    output/
   rnac traveler process-svgs output/ data.csv
   """
 }
@@ -862,6 +892,7 @@ process store_secondary_structures {
   """
   split-and-load $ctl 'data*.csv' ${params.secondary.data_chunk_size} traveler-data
   find . -name 'data*.csv' | xargs -I {} cut -d, -f1 {} | tr -d '"' | sort > built
+  psql -c 'DROP TABLE urs_with_one_rfam' "$PGDATABASE"
   """
 }
 
@@ -869,17 +900,19 @@ process find_traveler_failures {
   publishDir "$baseDir/traveler"
 
   input:
-  file('expected.fasta') from traveler_expected_sequences
+  file('expected*.fasta') from traveler_expected_sequences.collect()
   file('built') from traveler_success
 
   output:
   file('failures.txt') into traveler_failures
 
   """
-  seqkit seq -ni expected.fasta | sort > expected
+  find . -name 'expected*.fasta' |\
+  xargs -I {} seqkit seq -ni {} | sort -u > expected
   comm -23 expected built > failures.txt
   """
 }
+
 
 //=============================================================================
 // Compute feedback reports
