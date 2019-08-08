@@ -1,0 +1,2 @@
+ftp://ftp.ensembl.org/pub//release-96/fasta/homo_sapiens/cdna/Homo_sapiens.GRCh38.cdna.all.fa.gz
+ftp://ftp.ensembl.org/pub//release-96/fasta/mus_musculus/cdna/Mus_musculus.GRCm38.cdna.all.fa.gz

@@ -119,7 +119,7 @@ def ncrnas(raw, context):
             yield entry
 
 
-def parse(raw, family_file, gencode_file=None):
+def parse(raw, family_file, gencode_file=None, excluded_file=None):
     """
     This will parse an EMBL file for all Ensembl Entries to import.
     """
