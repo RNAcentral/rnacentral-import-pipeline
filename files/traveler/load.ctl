@@ -44,11 +44,11 @@ create table load_secondary_layout (
     model text NOT NULL,
     overlap_count int not null,
     basepair_count int not null,
-    model_start int not null,
-    model_stop int not null,
-    sequence_start int not null,
-    sequence_stop int not null,
-    sequence_coverage float not null
+    model_start int,
+    model_stop int,
+    sequence_start int,
+    sequence_stop int,
+    sequence_coverage float
 );
 $$
 
