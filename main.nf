@@ -809,6 +809,7 @@ process find_traveler_families {
 
 possible_rfam_families
   .splitCsv()
+  .map { it[0] }
   .set { families_to_validate }
 
 process compute_rfam_layout_overlap {
@@ -827,14 +828,14 @@ process compute_rfam_layout_overlap {
 
 family_validations
   .map { file -> file.text.trim() }
-  .combine(Channel.fromPath("files/traveler/find-rfam-sequences.sql"))
-  .mix(['rRNA', file('files/traveler/find-rrna-sequences.sql')])
+  .combine(Channel.fromPath("files/traveler/find-generic-rfam-sequences.sql"))
+  .mix(Channel.from([['rRNA', file('files/traveler/find-rrna-sequences.sql')]]))
   .set { rfam_for_traveler }
 
 process find_possible_traveler_sequences {
   tag { "${rfam_family}" }
-  errorStrategy 'ignore'
   memory params.secondary.find_possible.memory
+  maxForks params.secondary.find_possible.maxForks
 
   input:
   set val(rfam_family), file(query) from rfam_for_traveler
@@ -855,6 +856,7 @@ process find_possible_traveler_sequences {
 
 process layout_sequences {
   tag { "${family}-${sequences}" }
+  errorStrategy 'ignore'
   memory params.secondary.layout.memory
 
   input:
