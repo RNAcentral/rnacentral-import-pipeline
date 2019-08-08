@@ -95,9 +95,6 @@ RUN \
     cd $RNA/traveler/src && \
     make build
 
-# Install auto-traveler.py
-RUN git clone https://github.com/RNAcentral/auto-traveler.git && cd auto-traveler && git checkout 64ae508082b3b8e784360ab6aeb4b6777b3b0c9c
-
 # Install RNAStructure
 RUN \
     wget http://rna.urmc.rochester.edu/Releases/current/RNAstructureSource.tgz && \
@@ -123,11 +120,15 @@ RUN \
     tar xvf seqkit_linux_amd64.tar.gz && \
     rm seqkit_linux_amd64.tar.gz
 
-RUN \
-    mkdir -p xsv && \
-    cd xsv && \
-    wget https://github.com/BurntSushi/xsv/releases/download/0.13.0/xsv-0.13.0-x86_64-unknown-linux-musl.tar.gz && \
-    tar xf xsv-0.13.0-x86_64-unknown-linux-musl.tar.gz
+# Install R-scape
+RUN wget http://eddylab.org/software/rscape/rscape.tar.gz && \
+    tar -xvzf rscape.tar.gz && \
+    rm rscape.tar.gz && \
+    cd rscape_v1.2.3 && \
+    ./configure && make && make install
+
+# Install auto-traveler.py
+RUN git clone https://github.com/RNAcentral/auto-traveler.git && cd auto-traveler && git checkout 5fbc547c06b64589109046165d5919e6e4c5d4d8
 
 # Install useful pip version
 RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && python get-pip.py
@@ -136,6 +137,14 @@ RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && python get-pip.py
 ADD requirements.txt $RNACENTRAL_IMPORT_PIPELINE/requirements.txt
 RUN /usr/local/bin/pip install --upgrade pip && \
     /usr/local/bin/pip install -r $RNACENTRAL_IMPORT_PIPELINE/requirements.txt
+
+# Install auo-traveler data 
+RUN \
+    cd auto-traveler && \
+    /usr/local/bin/pip install -r requirements.txt && \
+    wget -O cms.tar.gz 'https://www.dropbox.com/s/q5l0s1nj5h4y6e4/cms.tar.gz?dl=0' && \
+    tar xf cms.tar.gz && \
+    python utils/generate_model_info.py --cm-library data/cms
 
 RUN python -m textblob.download_corpora
 
@@ -154,5 +163,5 @@ ENV PATH="$RNA/blatSrc/bin:$PATH"
 ENV PATH="$RNA/seqkit:$PATH"
 ENV PATH="$RNA/jiffy-infernal-hmmer-scripts:$PATH"
 ENV PATH="$RNA/auto-traveler:$PATH"
-ENV PATH="$RNA/xsv:$PATH"
+ENV PATH="$RNA/rscape_v1.2.3/bin:$PATH"
 ENV PATH="$RNACENTRAL_IMPORT_PIPELINE:$PATH"
