@@ -77,16 +77,24 @@ def process_json_schema(json_file, output):
     dir_okay=False,
     readable=True,
 ))
+@click.argument('exclude', type=click.File('r'))
 @click.argument('output', default='.', type=click.Path(
     writable=True,
     dir_okay=True,
     file_okay=False,
 ))
-def process_ensembl(ensembl_file, family_file, gencode_gff, output):
+def process_ensembl(ensembl_file, family_file, gencode_gff, exclude, output):
     """
     This will parse EMBL files from Ensembl to produce the expected CSV files.
     """
-    write_entries(ensembl.parse, output, ensembl_file, family_file, gencode_gff)
+    write_entries(
+        ensembl.parse, 
+        output, 
+        ensembl_file, 
+        family_file, 
+        gencode_gff,
+        exclude,
+    )
 
 
 @cli.command('ensembl_plants')
