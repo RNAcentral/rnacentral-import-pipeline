@@ -116,6 +116,10 @@ def ncrnas(raw, context):
                 LOGGER.debug("Skipping supressed Rfam family %s", feature)
                 continue
 
+            if context.is_excluded(entry):
+                LOGGER.debug("Skipping excluded entry %s", feature)
+                continue
+
             yield entry
 
 

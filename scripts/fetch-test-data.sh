@@ -37,3 +37,5 @@ fetch 'ftp://ftp.ensemblgenomes.org/pub/current/plants/embl/zea_mays/Zea_mays.B7
 fetch 'ftp://ftp.ensemblgenomes.org/pub/current/fungi/embl/aspergillus_nidulans//Aspergillus_nidulans.ASM1142v1.*.chromosome.I.dat.gz' 'data/ensembl_fungi/Aspergillus_nidulans.chromosome.I.dat'
 fetch 'ftp://ftp.ensemblgenomes.org/pub/current/metazoa/embl/apis_mellifera/Apis_mellifera.Amel_4.5.*.chromosome_group.1.dat.gz' 'data/ensembl_metazoa/Apis_mellifera.Amel_4.5.chromosome_group.1.dat'
 fetch 'ftp://ftp.ensemblgenomes.org/pub/current/protists/embl/leishmania_major/Leishmania_major.ASM272v2.*.chromosome.36.dat.gz' 'data/ensembl_protists/Leishmania_major.ASM272v2.chromosome.36.dat'
+
+bin/fetch ensembl_exclude files/import-data/ensembl/exclude-urls.txt 'data/ensembl/excluded.txt'
