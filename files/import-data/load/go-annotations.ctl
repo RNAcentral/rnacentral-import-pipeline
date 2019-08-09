@@ -31,7 +31,7 @@ $$,
 $$
 create table load_go_term_annotations (
     rna_id varchar(50),
-    qualifier,
+    qualifier text,
     ontology_term_id varchar(15),
     evidence_code varchar(15),
     assigned_by varchar(50),

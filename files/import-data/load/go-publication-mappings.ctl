@@ -31,7 +31,7 @@ $$,
 $$
 create table if not exists load_go_term_publication_map (
     rna_id varchar(50),
-    qualifier,
+    qualifier text,
     assigned_by varchar(50),
     ontology_term_id varchar(15),
     evidence_code varchar(15),
