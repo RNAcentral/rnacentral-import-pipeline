@@ -24,7 +24,8 @@ from .helpers import parse_with_family, entries_for, entry_for, has_entry_for
 @pytest.fixture(scope='module')  # pylint: disable=no-member
 def human_12():
     return parse_with_family('data/ensembl/Homo_sapiens.GRCh38.chromosome.12.dat',
-                             gencode_file='data/gencode/human-transcripts.gff3')
+                             gencode_file='data/gencode/human-transcripts.gff3',
+                             excluded_file='data/ensembl/excluded.txt')
 
 
 @pytest.fixture(scope='module')  # pylint: disable=no-member
@@ -316,6 +317,21 @@ def test_can_build_gencode_entries(human_12):
 
     del ans['sequence']
     assert val == ans
+
+
+def test_it_does_not_have_excluded_ids(human_12):
+    with open('data/ensembl/excluded.txt', 'r') as raw:
+        excluded = {l.strip() for l in raw}
+
+    # Sanity check
+    assert 'ENST00000550091.5' in excluded
+    assert len(excluded) == 46265
+
+    for entry in human_12:
+        name = entry.accession
+        if entry.database.lower() == 'gencode':
+            name = entry.accession.split(':')[1]
+        assert entry.accession not in excluded
 
 
 def test_can_use_mouse_models_to_correct_rna_type(mouse_3):

@@ -189,7 +189,7 @@ function fetch_ena() {
 
 fetch_exclude()
 {
-  local sequences="all-sequences.fasta"
+  local sequences="$(mktemp XXXXXX.fa.gz)"
   fetch_url_file "$1" "$sequences"
   gzip -dc "$sequences" |\
   grep '^>' |\

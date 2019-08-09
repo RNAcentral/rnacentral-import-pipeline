@@ -90,5 +90,7 @@ class Context(object):
         return False
 
     def from_gencode(self, entry):
-        return entry.accession in self.gencode_ids and \
-            entry.accession not in self.excluded
+        return entry.accession in self.gencode_ids
+
+    def is_excluded(self, entry):
+        return entry.accession in self.excluded
