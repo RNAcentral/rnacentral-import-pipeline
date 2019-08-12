@@ -17,9 +17,8 @@ RUN apt-get upgrade -y
 RUN apt-get install -y \
     bedtools \
     ca-certificates \
-    cl-babel \
-    cl-ironclad \
     curl \
+    default-mysql-client \
     devscripts \
     freetds-dev \
     gcc \
@@ -29,32 +28,23 @@ RUN apt-get install -y \
     jq \
     lftp \
     libsqlite3-dev \
+    libssl1.1 \
+    libxml2-utils \
+    libzip-dev \
     moreutils \
-    mysql-client \
     mysql-common \
     openssl \
     pandoc \
     patch \
-    postgresql-9.6 \
-    postgresql-client-9.6 \
+    pgloader \
+    postgresql-11 \
+    postgresql-client-11 \
     python \
     rsync \
     sbcl \
     tar \
     unzip \
     wget
-
-RUN apt-get install libxml2-utils
-
-# Install a new enough version of pgloader
-RUN \
-    cd $RNA && \
-    wget https://github.com/dimitri/pgloader/archive/v3.6.1.tar.gz && \
-    tar -xvf v3.6.1.tar.gz && \
-    rm v3.6.1.tar.gz && \
-    cd pgloader-3.6.1 && \
-    make && \
-    cp build/bin/pgloader /usr/local/bin/
 
 # Install Infernal
 RUN \
@@ -138,7 +128,7 @@ ADD requirements.txt $RNACENTRAL_IMPORT_PIPELINE/requirements.txt
 RUN /usr/local/bin/pip install --upgrade pip && \
     /usr/local/bin/pip install -r $RNACENTRAL_IMPORT_PIPELINE/requirements.txt
 
-# Install auo-traveler data 
+# Install auo-traveler data
 RUN \
     cd auto-traveler && \
     /usr/local/bin/pip install -r requirements.txt && \
