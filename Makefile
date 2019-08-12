@@ -17,7 +17,7 @@ docker: Dockerfile requirements.txt .dockerignore
 	docker build -t "$(docker)" .
 
 shell:
-	docker run -i -t "$(docker)" bash
+	docker run -v `pwd`:/rna/import-pipeline -i -t "$(docker)" bash
 
 publish: docker
 	docker push "$(docker)"
