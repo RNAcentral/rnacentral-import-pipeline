@@ -157,7 +157,7 @@ def seq_version(feature):
     acc = accession(feature)
     if '.' in acc:
         return acc.split('.', 1)[1]
-    return None
+    return '1'
 
 
 def transcript(feature):
