@@ -60,8 +60,7 @@ class Context(object):
 
         excluded = set()
         if excluded_file:
-            with open(excluded_file, 'r') as raw:
-                excluded = set(l.strip() for l in raw)
+            excluded = set(l.strip() for l in excluded_file)
 
         return cls(
             supressed_mapping,
