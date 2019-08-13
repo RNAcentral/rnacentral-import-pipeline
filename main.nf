@@ -830,6 +830,7 @@ family_validations
   .map { file -> file.text.trim() }
   .combine(Channel.fromPath("files/traveler/find-generic-rfam-sequences.sql"))
   .mix(Channel.from([['rRNA', file('files/traveler/find-rrna-sequences.sql')]]))
+  .filter { params.secondary.run }
   .set { rfam_for_traveler }
 
 process find_possible_traveler_sequences {
