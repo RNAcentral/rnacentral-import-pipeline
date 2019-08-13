@@ -62,7 +62,11 @@ def as_exons(feature):
 
 
 def regions(record, feature):
-    acc = record.annotations['accessions'][0]
+    accessions = record.annotations['accessions']
+    if len(accessions) > 1 and accessions[0][-1] == '-':
+        accessions = [''.join(accessions)]
+    acc = accessions[0]
+    assert ':' in acc, "Invalid accession (%s) for %s" % (acc, record)
     parts = acc.split(':')
     assembly_id = parts[1]
     chromosome_name = parts[2]
