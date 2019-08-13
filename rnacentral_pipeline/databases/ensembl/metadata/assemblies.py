@@ -73,6 +73,10 @@ def is_ignored_assembly(info):
         return True
     if info.taxid == 10029 and info.assembly_id != 'CriGri_1.0':
         return True
+    if info.taxid == 30522 and info.assembly_id != 'UOA_Brahman_1':
+        return True
+    if info.taxid == 9823 and not info.gca_accession.startswith('GCA_000003025'):
+        return True
     return False
 
 
