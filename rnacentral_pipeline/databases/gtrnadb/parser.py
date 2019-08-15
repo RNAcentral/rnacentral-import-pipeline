@@ -124,8 +124,3 @@ def parse(raw):
     data = json.load(raw)
     data = six.moves.map(gtrnadb_entries, data)
     return it.chain.from_iterable(data)
-
-
-def from_file(handle, output):
-    writer = build_entry_writer(parse)
-    writer(output, handle)

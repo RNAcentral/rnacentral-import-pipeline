@@ -117,6 +117,7 @@ class Entry(object):
     references = utils.possibly_empty(list)
 
     secondary_structure = utils.possibly_empty(SecondaryStructure)
+    feature = utils.possibly_empty(list)
 
     @property
     def database_name(self):
