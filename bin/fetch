@@ -198,6 +198,16 @@ fetch_exclude()
     tr -d '>' > "$2"
 }
 
+fetch_gtrnadb()
+{
+  local compressed="$1"
+  fetch_generic "$compressed" '*.gz'
+  gzip -d *.json.gz
+  gzip -d bacteria_tRNAs.tar.gz
+  mv bacteria_tRNAs.tar bacteria_tRNAs.json
+  ls *.tar.gz | xargs -I {} --verbose tar -xzvf {}
+}
+
 
 [ $# -gt 0 ] || { usage 0; }
 
@@ -228,6 +238,9 @@ case "$name" in
 
   "genome" )
     fetch_genome "$@" ;;
+
+  "gtrnadb" )
+    fetch_gtrnadb "$@" ;;
 
   "rfam" )
     fetch_generic "$@" ;;
