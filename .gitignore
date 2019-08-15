@@ -75,3 +75,4 @@ data/ensembl_*/*.dat
 data/ensembl/*.dat
 data/gencode/human-transcripts.gff3
 .editorconfig
+data/ensembl/excluded.txt
