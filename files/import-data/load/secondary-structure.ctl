@@ -4,7 +4,7 @@ HAVING FIELDS (
     rnc_accession_id,
     secondary_structure,
     md5
-) INTO {{PGDATABASE}}
+) INTO {{PGDATABASE}}?load_rnc_secondary_structure
 TARGET COLUMNS (
     rnc_accession_id,
     secondary_structure,
@@ -13,7 +13,6 @@ TARGET COLUMNS (
 
 WITH
     drop indexes,
-    SKIP HEADER = 1,
     FIELDS ESCAPED BY double-quote,
     FIELDS TERMINATED BY ','
 
@@ -28,3 +27,4 @@ create table load_rnc_secondary_structure (
     md5 varchar(32)
 );
 $$
+;
