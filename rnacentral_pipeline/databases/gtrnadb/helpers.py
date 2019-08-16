@@ -221,7 +221,7 @@ def references():
             'genomic sequence'
         ),
         pmid=18984615,
-        doi='10.1093/nar/gkn787.',
+        doi=u'10.1093/nar/gkn787.',
     )]
 
 
