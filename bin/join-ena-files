@@ -3,7 +3,12 @@
 
 import os
 import shutil
-from glob import iglob
+from glob import glob
+
+try:
+    from pathlib import Path
+except ImportError:
+    from pathlib2 import Path
 
 import click
 import humanfriendly
@@ -12,7 +17,8 @@ import humanfriendly
 def grouped(pattern, max_size):
     total = 0
     group = []
-    for filename in iglob(pattern):
+    for path in list(Path('.').glob(pattern)):
+        filename = str(path)
         size = os.stat(filename).st_size
         if total + size < max_size:
             total += size
