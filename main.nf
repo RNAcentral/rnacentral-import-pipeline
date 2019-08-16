@@ -804,6 +804,7 @@ process find_traveler_families {
   psql -v ON_ERROR_STOP=1 -f $query "$PGDATABASE" > all-families.txt
   auto-traveler.py rfam blacklist > blacklist.txt
   grep -vf blacklist.txt all-families.txt > families.txt
+  echo rRNA >> families.txt
   """
 }
 
@@ -829,7 +830,9 @@ process compute_rfam_layout_overlap {
 family_validations
   .map { file -> file.text.trim() }
   .combine(Channel.fromPath("files/traveler/find-generic-rfam-sequences.sql"))
-  .mix(Channel.from([['rRNA', file('files/traveler/find-rrna-sequences.sql')]]))
+  .map { family, query ->
+    family == 'rRNA' ? [family, file('files/traveler/find-rrna-sequences.sql')] : [family, query];
+  }
   .filter { params.secondary.run }
   .set { rfam_for_traveler }
 
