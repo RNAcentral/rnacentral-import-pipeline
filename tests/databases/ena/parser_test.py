@@ -41,6 +41,9 @@ from rnacentral_pipeline.databases.ena.parser import parse
     ('data/ena/ncr/ex/wgs_acnt01_pro.ncr', 105),
     ('data/ena/protein-to-skip.embl', 0),  # Proteins that should be skipped
     ('data/ena/mislabeled-trna.embl', 1),
+    ('data/ena/too-long-description.ncr', 1),
+    ('data/ena/scarna.ncr', 3),
+    ('data/ena/bad-feature-type.ncr', 2),
 ])
 def test_can_parse_variety_of_files(filename, count):
     with open(filename, 'r') as raw:
@@ -705,24 +708,67 @@ def test_can_handle_mislabled_trna():
     with open('data/ena/mislabeled-trna.embl', 'r') as raw:
         data = list(parse(raw))
 
-    assert len(data) == 1
     assert data[0].rna_type == 'tRNA'
 
 
-def test_can_handle_weird_feature():
+@pytest.mark.parametrize('index,rna_type', [
+    (0, 'rRNA'),
+    (1, 'rRNA'),
+])
+def test_can_handle_weird_feature(index, rna_type):
     with open('data/ena/bad-feature-type.ncr', 'r') as raw:
         data = list(parse(raw))
 
-    assert len(data) == 2
-    assert data[0].rna_type == 'rRNA'
-    assert data[1].rna_type == 'rRNA'
+    assert data[index].rna_type == rna_type
 
 
-def test_can_get_scarna_feature():
+@pytest.mark.parametrize('index,rna_type', [
+    (0, 'guide_RNA'),
+    (1, 'snoRNA'),
+    (2, 'guide_RNA'),
+])
+def test_can_get_scarna_feature(index, rna_type):
     with open('data/ena/scarna.ncr', 'r') as raw:
         data = list(parse(raw))
 
-    assert len(data) == 3
-    assert data[0].rna_type == 'scaRNA'
-    assert data[1].rna_type == 'scaRNA'
-    assert data[2].rna_type == 'scaRNA'
+    assert data[index].rna_type == rna_type
+
+
+def test_deals_with_crazy_long_name():
+    with open('data/ena/too-long-description.ncr', 'r') as raw:
+        data = list(parse(raw))
+
+    assert data[0].rna_type == 'snoRNA'
+    assert data[0].description == 'Leishmania donovani snoRNA.05.001'
+    assert data[0].locus_tag == "LDHU3_LDHU3_05.T1400"
+    # assert data[0].product == 'snoRNA'
+    # assert data[0].gene == 'snoRNA.05.001'
+    # assert data[0].gene_synonyms == [
+    #     'snoRNA.05.002',
+    #     'snoRNA.05.003',
+    #     'snoRNA.05.004',
+    #     'snoRNA.05.005',
+    #     'snoRNA.05.006',
+    #     'snoRNA.05.007',
+    #     'snoRNA.05.008',
+    #     'snoRNA.05.009',
+    #     'snoRNA.05.010',
+    #     'snoRNA.05.011',
+    #     'snoRNA.05.012',
+    #     'snoRNA.05.013',
+    #     'snoRNA.05.014',
+    #     'snoRNA.05.014',
+    #     'snoRNA.05.015',
+    #     'snoRNA.05.016',
+    #     'snoRNA.05.017',
+    #     'snoRNA.05.018',
+    #     'snoRNA.05.019',
+    #     'snoRNA.05.020',
+    #     'snoRNA.05.021',
+    #     'snoRNA.05.022',
+    #     'snoRNA.05.023',
+    #     'snoRNA.05.024',
+    #     'snoRNA.05.025',
+    #     'snoRNA.05.026',
+    #     'snoRNA.05.027',
+    # ]
