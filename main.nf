@@ -809,9 +809,6 @@ process find_traveler_families {
   """
   psql -v ON_ERROR_STOP=1 -f $setup "$PGDATABASE"
   psql -v ON_ERROR_STOP=1 -f $query "$PGDATABASE" > all-families.txt
-  auto-traveler.py rfam blacklist > blacklist.txt
-  grep -vf blacklist.txt all-families.txt > families.txt
-  echo rRNA >> families.txt
   """
 }
 
@@ -827,7 +824,7 @@ process compute_rfam_layout_overlap {
   val(family) from families_to_validate
 
   output:
-  file("validation.txt") into family_validations
+  file("validation.txt") into family_validations optional true
 
   """
   auto-traveler.py rfam validate $family validation.txt
@@ -837,9 +834,7 @@ process compute_rfam_layout_overlap {
 family_validations
   .map { file -> file.text.trim() }
   .combine(Channel.fromPath("files/traveler/find-generic-rfam-sequences.sql"))
-  .map { family, query ->
-    family == 'rRNA' ? [family, file('files/traveler/find-rrna-sequences.sql')] : [family, query];
-  }
+  .mix(Channel.from([['rRNA', file('files/traveler/find-rrna-sequences.sql')]]))
   .filter { params.secondary.run }
   .set { rfam_for_traveler }
 
@@ -877,33 +872,32 @@ process layout_sequences {
   file("data.csv") into secondary_to_import
 
   script:
-  def opt = family == "rRNA" ? "" : "rfam draw --rfam-data=rfam ${family}"
+  def opt = family == "rRNA" ? "rrna draw" : "rfam draw --rfam-data rfam-data ${family}"
   """
-  auto-traveler.py $opt \
-    $sequences \
-    output/
+  auto-traveler.py $opt $sequences output/
   rnac traveler process-svgs output/ data.csv
   """
 }
 
 secondary_to_import
   .collect()
-  .map { [it, file("files/traveler/load.ctl")] }
+  .map { [it, file("files/traveler/load.ctl"), file("files/traveler/update-secondary-hits.sql")] }
   .set { secondary_to_import }
 
 process store_secondary_structures {
   memory params.secondary.store.memory
 
   input:
-  set file('data*.csv'), file(ctl) from secondary_to_import
+  set file('data*.csv'), file(ctl), file(should_show) from secondary_to_import
 
   output:
   file('built') into traveler_success
 
   """
   split-and-load $ctl 'data*.csv' ${params.secondary.data_chunk_size} traveler-data
+  psql -v ON_ERROR_STOP=1 -c 'DROP TABLE urs_with_one_rfam' "$PGDATABASE"
+  psql -v ON_ERROR_STOP=1 -f "$should_show "$PGDATABASE"
   find . -name 'data*.csv' | xargs -I {} cut -d, -f1 {} | tr -d '"' | sort > built
-  psql -c 'DROP TABLE urs_with_one_rfam' "$PGDATABASE"
   """
 }
 
