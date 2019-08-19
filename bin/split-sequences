@@ -23,14 +23,14 @@ import click
 from Bio import SeqIO
 
 
-def chunked(handle, max_size):
+def chunked(handle, max_nucleotides, max_sequences):
     size = 0
     grouped = []
     sequences = SeqIO.parse(handle, 'fasta')
     for sequence in sequences:
         grouped.append(sequence)
         size += len(sequence)
-        if size >= max_size:
+        if size >= max_nucleotides or len(grouped) >= max_sequences:
             yield grouped
             size = len(sequence)
             grouped = []
@@ -41,10 +41,17 @@ def chunked(handle, max_size):
 
 @click.command()
 @click.argument('fasta', type=click.File('r'))
-@click.argument('max-size', type=float)
+@click.option('max-nucleotides', type=float, default=1e6)
+@click.option('max-sequences', type=float, default=2000)
 @click.argument('output', type=click.Path())
-def main(fasta, max_size, output):
-    for index, sequences in enumerate(chunked(fasta, max_size)):
+def main(fasta, output, max_nucleotides=None, max_sequences=None):
+    """
+    Split a fasta file by both number of sequences and total numbers of
+    nucleotides per chunk.
+    """
+
+    chunks = chunked(fasta, max_nucleotides, max_sequences)
+    for index, sequences in enumerate(chunks):
         if not os.path.exists(output):
             os.makedirs(output)
 
