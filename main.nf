@@ -556,7 +556,10 @@ process fetch_unmapped_sequences {
     "$PGDATABASE" > raw.json
   json2fasta.py raw.json rnacentral.fasta
   seqkit shuffle --two-pass rnacentral.fasta > shuffled.fasta
-  split-sequences shuffled.fasta ${params.genome_mapping.fetch_unmapped_sequences.nucleotides_per_chunk parts} parts
+  split-sequences \
+    --max-nucleotides ${params.genome_mapping.fetch_unmapped_sequences.nucleotides_per_chunk} \
+    --max-sequences ${params.genome_mapping.fetch_unmapped_sequences.sequences_per_chunk} \
+      shuffled.fasta parts
   """
 }
 
@@ -577,7 +580,11 @@ process download_genome {
     xargs -I {} fetch generic '{}' ${species}.fasta.gz
 
   gzip -d ${species}.fasta.gz
-  split-sequences ${species}.fasta ${params.genome_mapping.download_genome.chunk_size} parts
+  split-sequences \
+    --max-nucleotides ${params.genome_mapping.download_genome.nucleotides_per_chunk} \
+    --max-sequences ${params.genome_mapping.download_genome.sequences_per_chunk} \
+    ${species}.fasta parts
+
   find parts -name '*.fasta' |\
     xargs -I {} faToTwoBit -noMask {} {}.2bit
 
