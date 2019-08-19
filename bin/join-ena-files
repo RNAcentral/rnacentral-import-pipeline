@@ -3,7 +3,6 @@
 
 import os
 import shutil
-from glob import glob
 
 try:
     from pathlib import Path
