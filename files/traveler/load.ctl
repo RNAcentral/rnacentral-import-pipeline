@@ -46,6 +46,7 @@ create table load_secondary_layout (
     basepair_count int not null,
     model_start int,
     model_stop int,
+    model_coverate float,
     sequence_start int,
     sequence_stop int,
     sequence_coverage float
@@ -54,6 +55,21 @@ $$
 
 AFTER LOAD DO
 $$
+UPDATE load_secondary_layout layout
+SET
+  model_start = hit.model_start,
+  model_stop = hit.model_stop,
+  model_coverage = hit.model_completeness,
+  sequence_start = hit.sequence_start,
+  sequence_stop = hit.sequence_stop,
+  sequence_coverage = hit.sequence_completeness
+FROM rfam_model_hits hit
+ON
+  hit.upi = load.urs 
+  AND load.model ilike 'RF%'
+;
+$$,
+$$
 INSERT INTO rnc_secondary_structure_layout (
     urs,
     "model_id",
@@ -61,11 +77,12 @@ INSERT INTO rnc_secondary_structure_layout (
     "layout",
     overlap_count,
     basepair_count,
-    model_start,
-    model_stop,
-    sequence_start,
-    sequence_stop,
-    sequence_coverage
+    load.model_start,
+    load.model_stop,
+    load.model_coverage,
+    load.sequence_start,
+    load.sequence_stop,
+    load.sequence_coverage
 ) (
 SELECT
     urs,
@@ -76,6 +93,7 @@ SELECT
     basepair_count,
     model_start,
     model_stop,
+    model_coverage,
     sequence_start,
     sequence_stop,
     sequence_coverage

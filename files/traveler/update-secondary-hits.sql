@@ -1,21 +1,3 @@
--- Update layout with Rfam hit information
-UPDATE rnc_secondary_structure_layout layout
-SET
-  model_start = hit.model_start,
-  model_stop = hit.model_stop,
-  model_coverage = hit.model_overage
-  sequence_start = hit.sequence_start,
-  sequence_stop = hit.sequence_stop,
-  sequence_coverage = hit.sequence_coverage
-FROM rnc_secondary_structure_layout_models models
-JOIN rfam_model_hits hit
-ON
-  hit.upi = layout.urs
-WHERE
-  models.id = layout.model_id
-  AND models.model_name ilike 'RF%'
-;
-
 -- Update layout to hide any sequences with too small sequence coverage
 UPDATE rnc_secondary_structure_layout layout
 SET
