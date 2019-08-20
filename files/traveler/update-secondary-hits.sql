@@ -10,7 +10,7 @@ WHERE
 ;
 
 -- Hide all bad SSU
-UPDATE rnc_secondary_structure_layout
+UPDATE rnc_secondary_structure_layout layout
 SET
   should_show = false
 FROM rnc_secondary_structure_layout_models models
@@ -21,7 +21,7 @@ WHERE
 ;
 
 -- Hide all introns
-UPDATE rnc_secondary_structure_layout
+UPDATE rnc_secondary_structure_layout layout
 SET
   should_show = false
 FROM rnc_secondary_structure_layout_models models
@@ -31,7 +31,7 @@ WHERE
 ;
 
 -- Hide bad 5S
-UPDATE rnc_secondary_structure_layout
+UPDATE rnc_secondary_structure_layout layout
 SET
   should_show = false
 FROM rnc_secondary_structure_layout_models models
@@ -42,12 +42,12 @@ WHERE
 ;
 
 -- Hide all Rfam families with many overlaps
-UPDATE rnc_secondary_structure_layout
+UPDATE rnc_secondary_structure_layout layout
 SET
   should_show = false
 FROM rnc_secondary_structure_layout_models models
 WHERE
   models.id = layout.model_id
-  AND model.model_name ilike 'RF%'
+  AND models.model_name ilike 'RF%'
   AND layout.overlap_count >= 15
 ;
