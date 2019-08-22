@@ -28,13 +28,6 @@ def cli():
     pass
 
 
-# @cli.command('partition-sequences')
-# @click.argument('filename', default='-', type=click.File('r'))
-# @click.argument('directory', default='partitioned', type=click.Path())
-# def traveler_partition(filename, directory):
-#     pass
-
-
 @cli.command('process-svgs')
 @click.option('--colored/--no-colored', default=True)
 @click.argument('directories', nargs=-1, type=click.Path(
@@ -49,3 +42,16 @@ def process_svgs(directories, output, colored=True):
     single data file that can be imported into the database.
     """
     traveler.write_all(directories, output, colored=colored)
+
+
+@cli.command('should-show')
+@click.argument('rna_type')
+@click.argument('filename', type=click.File('r'))
+@click.argument('output', type=click.File('w'))
+def should_show(rna_type, filename, output):
+    """
+    Compute the should show value for the given rna_type. This will write out a
+    file listing the urs and a flag for if the given secondary structure should
+    be shown.
+    """
+    traveler.write_should_show(rna_type, filename, output)
