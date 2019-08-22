@@ -22,11 +22,16 @@ from .helpers import parse_with_family, entries_for, entry_for, has_entry_for
 
 
 @pytest.fixture(scope='module')  # pylint: disable=no-member
+def human_1():
+    return parse_with_family('data/ensembl/Homo_sapiens.GRCh38.chromosome.1.dat',
+                             gencode_file='data/gencode/human-transcripts.gff3')
+
+
+@pytest.fixture(scope='module')  # pylint: disable=no-member
 def human_12():
     return parse_with_family('data/ensembl/Homo_sapiens.GRCh38.chromosome.12.dat',
                              gencode_file='data/gencode/human-transcripts.gff3',
                              excluded_file='data/ensembl/excluded.txt')
-
 
 @pytest.fixture(scope='module')  # pylint: disable=no-member
 def human_x():
@@ -356,6 +361,10 @@ def test_it_always_has_valid_rna_types_for_mouse(mouse_3):
             'telomerase_RNA',
             'tmRNA',
         ])
+
+
+def test_correctly_builds_names(human_1):
+    assert entry_for(human_1, 'ENST00000516935.1').description == 'Homo sapiens (human) Y RNA'
 
 
 def test_it_never_has_bad_vault(mouse_3):
