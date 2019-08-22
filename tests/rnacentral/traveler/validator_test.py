@@ -13,47 +13,79 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import os
+
 import pytest
 
+from tests import helpers
 
-@pytest.mark.parametrize('filename,urs,should_show', [
-    ('rfam', 'RNase_P_RNA', 'URS0000764CCC', False),
-    ('rfam', 'lnc_RNA', 'URS000016073B', False),
-    ('rfam', 'lnc_RNA', 'URS000075B5B7', False),
-    ('rfam', 'lnc_RNA', 'URS000075EE86', False),
-    ('rfam', 'lnc_RNA', 'URS000075F0E1', False),
-    ('rfam', 'lnc_RNA', 'URS00007E36BD', False),
-    ('rfam', 'lnc_RNA', 'URS0000812201', False),
-    ('rfam', 'lnc_RNA', 'URS0000A7736C', False),
-    ('rfam', 'lnc_RNA', 'URS0000A8C125', False),
-    ('rfam', 'lnc_RNA', 'URS0000BC450F', False),
-    ('rfam', 'pre_miRNA', 'URS00002AE618', False),
-    ('rfam', 'snRNA', 'URS0000035E8E', False),
-    ('rfam', 'snRNA', 'URS00002CF2FA', False),
-    ('rfam', 'snRNA', 'URS00002CF2FA', False),
-    ('rfam', 'snRNA', 'URS00005675F6', False),
-    ('rfam', 'snoRNA', 'URS000023DE4C', True),
-    ('rfam', 'snoRNA', 'URS00006BA413', True),
-    ('rfam', 'snoRNA', 'URS000075B5A7', True),
-    ('rfam', 'snoRNA', 'URS000075E772', True),
-    ('rfam', 'tRNA', 'URS00003038DA', False),
-    ('rfam', 'tRNA', 'URS0000572B72', False),
-    ('rfam', 'tRNA', 'URS0000733374', False),
-    ('rfam', 'tRNA', 'URS0000AF6E70', False),
-    ('rfam', 'tRNA', 'URS0000B0A39A', False),
-    ('rfam', 'tRNA', 'URS0000E1DA4D', False),
-    ('rfam', 'telomerase_RNA', 'URS00004A7003', True),
-    ('rrna', 'small_subunit_rRNA', 'URS000044DFF6', False),
-    ('rrna', 'small_subunit_rRNA', 'URS0000704D22', True),
-    ('rrna', 'small_subunit_rRNA', 'URS0000726FAB', True),
+from rnacentral_pipeline.rnacentral.traveler import validator
+
+
+def get_data(model_type, rna_type):
+    path = os.path.join('files', 'traveler', 'export-hits.sql')
+    return helpers.run_with_replacements(
+        path, 
+        (":'model_type'", model_type),
+        (":'rna_type'", rna_type),
+        take_all=True,
+    )
+
+
+
+@pytest.mark.parametrize('model_type,rna_type,values', [
+    ('rfam', 'RNase_P_RNA', {
+        'URS0000764CCC': False
+    }),
+    ('rfam', 'lnc_RNA', {
+        'URS000016073B': False,
+        'URS000075B5B7': False,
+        'URS000075EE86': False,
+        'URS000075F0E1': False,
+        'URS00007E36BD': False,
+        'URS0000812201': False,
+        'URS0000A7736C': False,
+        'URS0000A8C125': False,
+        'URS0000BC450F': False,
+    }),
+    ('rfam', 'pre_miRNA', {
+        'URS00002AE618': False,
+    }),
+    ('rfam', 'snRNA', {
+        'URS0000035E8E': False,
+        'URS00002CF2FA': False,
+        'URS00002CF2FA': False,
+        'URS00005675F6': False,
+    }),
+    ('rfam', 'snoRNA', {
+        'URS000023DE4C': True,
+        'URS00006BA413': True,
+        'URS000075B5A7': True,
+        'URS000075E772': True,
+    }),
+    ('rfam', 'tRNA', {
+        'URS00003038DA': False,
+        'URS0000572B72': False,
+        'URS0000733374': False,
+        'URS0000AF6E70': False,
+        'URS0000B0A39A': False,
+        'URS0000E1DA4D': False,
+    }),
+    ('rfam', 'telomerase_RNA', {
+        'URS00004A7003': True
+    }),
+    ('rrna', 'small_subunit_rRNA', {
+        'URS000044DFF6': False,
+        'URS0000704D22': True,
+        'URS0000726FAB': True,
+    }),
 ])
-def test_can_correctly_reject_things(model_type, rna_type, urs, should_show):
-    name = rna_type.lower() + '.txt'
-    filename = os.path.join('data', 'traveler', 'validate', name)
-    with open(filename, 'r') as raw:
-        for entry in validator.should_show(model_type, rna_type, raw):
-            if entry.urs == urs:
-                assert entry.should_show == should_show
-                break
-        else:
-            assert False, "Did not find %s" % urs
+def test_can_correctly_reject_things(model_type, rna_type, values):
+    data = get_data(model_type, rna_type)
+    for entry in validator.should_show(model_type, rna_type, data):
+        if entry.urs in values:
+            assert entry.should_show == values[entry.urs]
+            del values[entry.urs]
+
+    if entry:
+        assert False, "Did not find all entries %s" % values

@@ -22,7 +22,9 @@ from attr.validators import optional
 from attr.validators import instance_of as is_a
 
 import numpy as np
-import scipy
+from scipy import stats
+
+from rnacentral_pipeline import psql
 
 
 REJECTED_RRNAS = {
@@ -102,34 +104,27 @@ class ShouldShow(object):
         ]
 
 
-def zscores(data):
-    """
-    Compute the zscores that we will ues to categorize secondary stuctures as
-    being worth showing or not. These are based on the ratio of sequence_length
-    to model_length.
-    """
-
-    ratios = []
-    for row in data:
-        ratio = float(raw['sequence_length']) / float(raw['model_length'])
-        ratios.append(ratio)
-    ratios = np.array(ratios)
-    return scipy.stats.zscore(ratios)
+def parse_results(raw):
+    return psql.json_handler(raw)
 
 
-def should_show(model_type, rna_type, raw):
+def should_show(model_type, rna_type, data):
     """
     Compute the should_show values for all entries int he given file assuming
     the given RNA type.
     """
 
-    data = csv.DictReader(raw)
-    scores = None
-    if is_rfam(rna_type):
-        scores = zscores(data)
+    print(data)
+    sequence_lengths = np.array([d['sequence_length'] for d in data], dtype=np.float)
+    model_lengths = np.array([d['model_length'] for d in data], dtype=np.float)
+    zscores = stats.zscore(sequence_lengths / model_lengths)
 
     for index, entry in enumerate(data):
         score = None
-        if scores:
-            score = scores[inex]
+        if not np.isnan(zscores).any():
+            score = scores[index]
         yield ShouldShow.build(rna_type, entry, score)
+
+
+def from_file(raw, model_type, rna_type):
+    return should_show(model_type, rna_type, parse_results(raw))
