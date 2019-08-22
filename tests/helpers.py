@@ -32,6 +32,8 @@ def run_with_replacements(path, *replacements, **kwargs):
         with open(path, 'r') as raw:
             query = raw.read()
             for (initial, replacement) in replacements:
+                if initial.startswith(":'"):
+                    replacement = "'" + replacement + "'"
                 query = query.replace(initial, replacement)
             tmp.write(query)
             tmp.flush()
