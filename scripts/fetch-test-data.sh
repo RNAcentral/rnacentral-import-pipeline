@@ -22,6 +22,7 @@ fetch()
   wget -q -O - $1 | gzip -d - > $2
 }
 
+fetch 'ftp://ftp.ensembl.org/pub/current_embl/homo_sapiens/Homo_sapiens.GRCh38.*.chromosome.1.dat.gz' 'data/ensembl/Homo_sapiens.GRCh38.chromosome.1.dat'
 fetch 'ftp://ftp.ensembl.org/pub/current_embl/homo_sapiens/Homo_sapiens.GRCh38.*.chromosome.3.dat.gz' 'data/ensembl/Homo_sapiens.GRCh38.chromosome.3.dat'
 fetch 'ftp://ftp.ensembl.org/pub/current_embl/homo_sapiens/Homo_sapiens.GRCh38.*.chromosome.12.dat.gz' 'data/ensembl/Homo_sapiens.GRCh38.chromosome.12.dat'
 fetch 'ftp://ftp.ensembl.org/pub/current_embl/homo_sapiens/Homo_sapiens.GRCh38.*.chromosome.X.dat.gz' 'data/ensembl/Homo_sapiens.GRCh38.chromosome.X.dat'
