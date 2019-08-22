@@ -807,8 +807,14 @@ process find_traveler_families {
   file("families.txt") into possible_rfam_families
 
   """
-  psql -v ON_ERROR_STOP=1 -f $setup "$PGDATABASE"
-  psql -v ON_ERROR_STOP=1 -f $query "$PGDATABASE" > all-families.txt
+  psql \
+    -v ON_ERROR_STOP=1 \
+    -v 'tablename=${params.secondary.tablename}' \
+    -f $setup "$PGDATABASE"
+  psql \
+    -v ON_ERROR_STOP=1 \
+    -v 'tablename=${params.secondary.tablename}' \
+    -f $query "$PGDATABASE" > all-families.txt
   """
 }
 
@@ -818,42 +824,51 @@ possible_rfam_families
   .set { families_to_validate }
 
 process compute_rfam_layout_overlap {
-  tag { "${family}" }
+  tag { "${model}" }
 
   input:
-  val(family) from families_to_validate
+  val(model) from families_to_validate
 
   output:
   file("validation.txt") into family_validations optional true
 
-  """
-  auto-traveler.py rfam validate $family validation.txt
-  """
+  script:
+  if (model == 'rRNA') {
+    """
+    echo $model > validation.txt
+    """
+  } else {
+    """
+    auto-traveler.py rfam validate $model validation.txt
+    """
+  }
 }
 
 family_validations
   .map { file -> file.text.trim() }
-  .combine(Channel.fromPath("files/traveler/find-generic-rfam-sequences.sql"))
-  .mix(Channel.from([['rRNA', file('files/traveler/find-rrna-sequences.sql')]]))
-  .filter { params.secondary.run }
+  .combine(Channel.fromPath("files/traveler/find-sequences.sql"))
   .set { rfam_for_traveler }
 
 process find_possible_traveler_sequences {
-  tag { "${rfam_family}" }
+  tag { "${model}" }
   memory params.secondary.find_possible.memory
   maxForks params.secondary.find_possible.maxForks
 
   input:
-  set val(rfam_family), file(query) from rfam_for_traveler
+  set val(model), file(query) from rfam_for_traveler
 
   output:
-  set val(rfam_family), file('parts/*.fasta') into to_layout mode flatten
-  set val(rfam_family), file('rnacentral.fasta') into traveler_expected_sequences
+  set val(model), file('parts/*.fasta') into to_layout mode flatten
+  set val(model), file('rnacentral.fasta') into traveler_expected_sequences
 
   script:
   def chunk_size = params.secondary.sequence_chunk_size
   """
-  psql -v ON_ERROR_STOP=1 -v 'family=$rfam_family' -f "$query" "$PGDATABASE" > raw.json
+  psql \
+    -v ON_ERROR_STOP=1 \
+    -v 'model=$model' \
+    -v 'tablename=${params.secondary.tablename}' \
+    -f "$query" "$PGDATABASE" > raw.json
   json2fasta.py raw.json rnacentral.fasta
   seqkit shuffle --two-pass rnacentral.fasta > shuffled.fasta
   seqkit split --two-pass --by-size ${chunk_size} --out-dir 'parts/' shuffled.fasta
@@ -881,23 +896,56 @@ process layout_sequences {
 
 secondary_to_import
   .collect()
-  .map { [it, file("files/traveler/load.ctl"), file("files/traveler/update-secondary-hits.sql")] }
+  .map { [it, file("files/traveler/load.ctl"), file("files/traveler/find-rna-types.sql")] }
   .set { secondary_to_import }
 
 process store_secondary_structures {
   memory params.secondary.store.memory
 
   input:
-  set file('data*.csv'), file(ctl), file(should_show) from secondary_to_import
+  set file('data*.csv'), file(ctl), file(rna_types_sql) from secondary_to_import
 
   output:
   file('built') into traveler_success
+  val('rna-types.txt') into traveler_rna_types
 
   """
   split-and-load $ctl 'data*.csv' ${params.secondary.data_chunk_size} traveler-data
-  psql -v ON_ERROR_STOP=1 -c 'DROP TABLE urs_with_one_rfam' "$PGDATABASE"
-  psql -v ON_ERROR_STOP=1 -f "$should_show "$PGDATABASE"
   find . -name 'data*.csv' | xargs -I {} cut -d, -f1 {} | tr -d '"' | sort > built
+  psql -v ON_ERROR_STOP=1 -f $rna_types_sql $PGDATABASE > rna-types.txt
+  """
+}
+
+traveler_rna_types
+  .splitCsv()
+  .combine(Channel.fromPath("files/traveler/export-hits.sql"))
+  .set { traveler_to_score }
+
+process traveler_compute_should_show {
+  input:
+  set val(model_type), val(rna_type), file(export) from traveler_to_score
+
+  output:
+  file('should-show.csv') into traveler_should_show
+
+  """
+  psql \
+    -v ON_ERROR_STOP=1 \
+    -v model=$rna_type \
+    -v model_type=$model_type \
+    -f $export $PGDATABASE > data.csv
+  rnac traveler should-show $model_type $rna_type data.csv should-show.csv
+  """
+}
+
+process traveler_load_should_show {
+  input:
+  file('raw*.csv') from traveler_load_should_show.collect()
+  file(ctl) from Channel.fromPath('files/traveler/update-should-show.ctl')
+
+  """
+  split-and-load $ctl 'raw*.csv' ${params.secondary.data_chunk_size} traveler-data
+  psql -v ON_ERROR_STOP=1 'DROP TABLE ${params.secondary.tablename}' $PGDATABASE
   """
 }
 

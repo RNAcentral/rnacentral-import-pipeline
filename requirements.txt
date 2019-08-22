@@ -22,3 +22,4 @@ textblob==0.15.3
 pathlib2==2.3.3
 furl==2.0.0
 humanfriendly==4.18
+scipy

@@ -4,8 +4,8 @@ SELECT
     'id', rna.upi,
     'sequence', COALESCE(rna.seq_short, rna.seq_long)
   )
-FROM urs_with_one_rfam rfam 
-JOIN rna ON rna.upi = rfam.upi
+FROM :tablename
+JOIN rna ON rna.upi = seqs.upi
 where
-  rfam.rfam_model_id = :'family'
+  seqs.model = :'model'
 ) TO STDOUT;
