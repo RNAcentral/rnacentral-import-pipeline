@@ -922,6 +922,8 @@ traveler_rna_types
   .set { traveler_to_score }
 
 process traveler_compute_should_show {
+  memory params.secondary.should_show.memory
+
   input:
   set val(model_type), val(rna_type), file(export) from traveler_to_score
 
@@ -934,7 +936,7 @@ process traveler_compute_should_show {
     -v model=$rna_type \
     -v model_type=$model_type \
     -f $export $PGDATABASE > data.csv
-  rnac traveler should-show $model_type $rna_type data.csv should-show.csv
+  rnac traveler should-show data.csv should-show.csv
   """
 }
 
