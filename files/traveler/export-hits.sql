@@ -6,12 +6,8 @@ SELECT
     'rna_type', :'rna_type',
     'overlap_count', layout.overlap_count,
     'sequence_length', rna.len,
-    'model_type',
-      CASE :'model_type' = 'rfam'
-      WHEN true THEN rfam.length
-      WHEN false THEN null
-      END
-    )
+    'model_length', rfam.length
+  )
 FROM rnc_secondary_structure_layout layout
 JOIN rnc_secondary_structure_layout_models models ON models.id = layout.model_id
 JOIN rna ON rna.upi = layout.urs

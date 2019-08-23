@@ -45,7 +45,6 @@ def process_svgs(directories, output, colored=True):
 
 
 @cli.command('should-show')
-@click.argument('rna_type')
 @click.argument('filename', type=click.File('r'))
 @click.argument('output', type=click.File('w'))
 def should_show(rna_type, filename, output):
@@ -54,4 +53,4 @@ def should_show(rna_type, filename, output):
     file listing the urs and a flag for if the given secondary structure should
     be shown.
     """
-    traveler.write_should_show(rna_type, filename, output)
+    traveler.write_should_show(filename, output)
