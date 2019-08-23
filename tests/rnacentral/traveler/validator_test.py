@@ -37,55 +37,58 @@ def get_data(model_type, rna_type):
     ('rfam', 'RNase_P_RNA', {
         'URS0000764CCC': False
     }),
-    ('rfam', 'lnc_RNA', {
-        'URS000016073B': False,
-        'URS000075B5B7': False,
-        'URS000075EE86': False,
-        'URS000075F0E1': False,
-        'URS00007E36BD': False,
-        'URS0000812201': False,
-        'URS0000A7736C': False,
-        'URS0000A8C125': False,
-        'URS0000BC450F': False,
-    }),
-    ('rfam', 'pre_miRNA', {
-        'URS00002AE618': False,
-    }),
-    ('rfam', 'snRNA', {
-        'URS0000035E8E': False,
-        'URS00002CF2FA': False,
-        'URS00002CF2FA': False,
-        'URS00005675F6': False,
-    }),
-    ('rfam', 'snoRNA', {
-        'URS000023DE4C': True,
-        'URS00006BA413': True,
-        'URS000075B5A7': True,
-        'URS000075E772': True,
-    }),
-    ('rfam', 'tRNA', {
-        'URS00003038DA': False,
-        'URS0000572B72': False,
-        'URS0000733374': False,
-        'URS0000AF6E70': False,
-        'URS0000B0A39A': False,
-        'URS0000E1DA4D': False,
-    }),
-    ('rfam', 'telomerase_RNA', {
-        'URS00004A7003': True
-    }),
-    ('rrna', 'small_subunit_rRNA', {
-        'URS000044DFF6': False,
-        'URS0000704D22': True,
-        'URS0000726FAB': True,
-    }),
+    # ('rfam', 'lnc_RNA', {
+    #     'URS000016073B': False,
+    #     'URS000075B5B7': False,
+    #     'URS000075EE86': False,
+    #     'URS000075F0E1': False,
+    #     'URS00007E36BD': False,
+    #     'URS0000812201': False,
+    #     'URS0000A7736C': False,
+    #     'URS0000A8C125': False,
+    #     'URS0000BC450F': False,
+    # }),
+    # ('rfam', 'pre_miRNA', {
+    #     'URS00002AE618': False,
+    # }),
+    # ('rfam', 'snRNA', {
+    #     'URS0000035E8E': False,
+    #     'URS00002CF2FA': False,
+    #     'URS00002CF2FA': False,
+    #     'URS00005675F6': False,
+    # }),
+    # ('rfam', 'snoRNA', {
+    #     'URS000023DE4C': True,
+    #     'URS00006BA413': True,
+    #     'URS000075B5A7': True,
+    #     'URS000075E772': True,
+    # }),
+    # ('rfam', 'tRNA', {
+    #     'URS00003038DA': False,
+    #     'URS0000572B72': False,
+    #     'URS0000733374': False,
+    #     'URS0000AF6E70': False,
+    #     'URS0000B0A39A': False,
+    #     'URS0000E1DA4D': False,
+    # }),
+    # ('rfam', 'telomerase_RNA', {
+    #     'URS00004A7003': True
+    # }),
+    # ('rrna', 'small_subunit_rRNA', {
+    #     'URS000044DFF6': False,
+    #     'URS0000704D22': True,
+    #     'URS0000726FAB': True,
+    # }),
 ])
 def test_can_correctly_reject_things(model_type, rna_type, values):
     data = get_data(model_type, rna_type)
-    for entry in validator.should_show(model_type, rna_type, data):
+    for entry in validator.should_show(data):
+        if not values:
+            break
+
         if entry.urs in values:
             assert entry.should_show == values[entry.urs]
             del values[entry.urs]
 
-    if entry:
-        assert False, "Did not find all entries %s" % values
+    if values:
+        assert False, "Did not find all entries in %s" % values

@@ -45,7 +45,7 @@ def write_all(directories, output, colored=True):
         write(directory, output, colored=colored)
 
 
-def write_should_show(rna_type, filename, output):
-    data = validator.should_show(rna_type, filename)
+def write_should_show(filename, output):
+    data = validator.from_file(filename)
     data = six.moves.map(op.methodcaller('writeable'), data)
     csv.writer(output).writerows(data)

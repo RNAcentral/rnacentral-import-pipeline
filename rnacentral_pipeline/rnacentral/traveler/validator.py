@@ -63,11 +63,11 @@ class ShouldShow(object):
     zscore = attr.ib(validator=optional(is_a(float)))
 
     @classmethod
-    def build(cls, model_type, rna_type, data, zscore):
+    def build(cls, data, zscore):
         return cls(
             urs=data['urs'],
-            model_type=model_type,
-            rna_type=rna_type,
+            model_type=data['model_type'],
+            rna_type=data['rna_type'],
             overlap_count=int(data['overlap_count']),
             zscore=zscore,
         )
@@ -108,13 +108,12 @@ def parse_results(raw):
     return psql.json_handler(raw)
 
 
-def should_show(model_type, rna_type, data):
+def should_show(data):
     """
     Compute the should_show values for all entries int he given file assuming
     the given RNA type.
     """
 
-    print(data)
     sequence_lengths = np.array([d['sequence_length'] for d in data], dtype=np.float)
     model_lengths = np.array([d['model_length'] for d in data], dtype=np.float)
     zscores = stats.zscore(sequence_lengths / model_lengths)
@@ -123,8 +122,8 @@ def should_show(model_type, rna_type, data):
         score = None
         if not np.isnan(zscores).any():
             score = scores[index]
-        yield ShouldShow.build(rna_type, entry, score)
+        yield ShouldShow.build(entry, score)
 
 
-def from_file(raw, model_type, rna_type):
-    return should_show(model_type, rna_type, parse_results(raw))
+def from_file(raw):
+    return should_show(parse_results(raw))
