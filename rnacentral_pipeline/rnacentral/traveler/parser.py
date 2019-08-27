@@ -16,6 +16,7 @@ limitations under the License.
 import re
 import os
 import csv
+import logging
 from glob import glob
 
 import six
@@ -25,6 +26,8 @@ import attr
 from attr.validators import instance_of as is_a
 
 from . import ribotyper
+
+LOGGER = logging.getLogger(__name__)
 
 
 @attr.s()
@@ -152,7 +155,7 @@ class TravelerResult(object):
         return os.path.join(self.directory, fn)
 
 
-def ribotyper_models(directory, colored=True):
+def ribotyper_models(directory, colored=True, allow_missing=False):
     """
     Look at the files in the given directory to find all the URS-model pairs
     that have been computed.
@@ -177,10 +180,13 @@ def ribotyper_models(directory, colored=True):
             yield result
 
     if not seen:
-        raise ValueError("Found no possible models in: %s" % directory)
+        msg = "Found no possible models in: %s" % directory
+        if not allow_missing:
+            raise ValueError(msg)
+        LOGGER.error(msg)
 
 
-def rfam_models(directory, colored=True):
+def rfam_models(directory, colored=True, allow_missing=False):
     seen = False
     pattern = '*.svg'
     if colored:
@@ -206,16 +212,27 @@ def rfam_models(directory, colored=True):
                 yield result
 
     if not seen:
-        raise ValueError("Found no possible models in: %s" % directory)
+        msg = "Found no possible models in: %s" % directory
+        if not allow_missing:
+            raise ValueError(msg)
+        LOGGER.error(msg)
 
 
-def models(directory, colored=True):
+def models(directory, colored=True, allow_missing=False):
     has_fasta = bool(glob(os.path.join(directory, '*.fasta')))
     if has_fasta:
-        return ribotyper_models(directory, colored=colored)
+        return ribotyper_models(
+            directory, 
+            colored=colore,
+            allow_missing=allow_missing,
+        )
 
-    has_rfam = bool(glob(os.path.join(directory, '*')))
+    has_rfam = bool(glob(os.path.join(directory, 'RF*')))
     if has_rfam:
-        return rfam_models(directory, colored=colored)
+        return rfam_models(
+            directory, 
+            colored=colored,
+            allow_missing=allow_missing,
+        )
 
     raise ValueError("Do not know how to parse contents of: %s" % directory)
