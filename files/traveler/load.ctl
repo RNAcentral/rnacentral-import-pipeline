@@ -46,7 +46,7 @@ create table load_secondary_layout (
     basepair_count int not null,
     model_start int,
     model_stop int,
-    model_coverate float,
+    model_coverage float,
     sequence_start int,
     sequence_stop int,
     sequence_coverage float
@@ -55,7 +55,7 @@ $$
 
 AFTER LOAD DO
 $$
-UPDATE load_secondary_layout layout
+UPDATE load_secondary_layout load
 SET
   model_start = hit.model_start,
   model_stop = hit.model_stop,
@@ -64,8 +64,8 @@ SET
   sequence_stop = hit.sequence_stop,
   sequence_coverage = hit.sequence_completeness
 FROM rfam_model_hits hit
-ON
-  hit.upi = load.urs 
+WHERE
+  hit.upi = load.urs
   AND load.model ilike 'RF%'
 ;
 $$,
@@ -77,12 +77,12 @@ INSERT INTO rnc_secondary_structure_layout (
     "layout",
     overlap_count,
     basepair_count,
-    load.model_start,
-    load.model_stop,
-    load.model_coverage,
-    load.sequence_start,
-    load.sequence_stop,
-    load.sequence_coverage
+    model_start,
+    model_stop,
+    model_coverage,
+    sequence_start,
+    sequence_stop,
+    sequence_coverage
 ) (
 SELECT
     urs,
@@ -99,7 +99,7 @@ SELECT
     sequence_coverage
 FROM load_secondary_layout load
 JOIN rnc_secondary_structure_layout_models models
-ON 
+ON
   models.model_name = load.model
 ) ON CONFLICT (urs) DO UPDATE
 SET

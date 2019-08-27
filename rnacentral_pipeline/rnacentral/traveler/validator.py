@@ -105,7 +105,7 @@ class ShouldShow(object):
 
 
 def parse_results(raw):
-    return psql.json_handler(raw)
+    return list(psql.json_handler(raw))
 
 
 def should_show(data):
@@ -116,7 +116,10 @@ def should_show(data):
 
     sequence_lengths = np.array([d['sequence_length'] for d in data], dtype=np.float)
     model_lengths = np.array([d['model_length'] for d in data], dtype=np.float)
-    zscores = stats.zscore(sequence_lengths / model_lengths)
+
+    zscores = np.array([np.nan])
+    if len(model_lengths) == len(sequence_lengths):
+        zscores = stats.zscore(sequence_lengths / model_lengths)
 
     for index, entry in enumerate(data):
         score = None

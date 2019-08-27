@@ -33,7 +33,10 @@ WHERE
   pre.is_active = true
   AND pre.rna_type = 'rRNA'
   AND qa.incomplete_sequence = false
-);
+) ON CONFLICT (upi) DO UPDATE
+SET
+  model = excluded.model
+;
 
 CREATE INDEX ix_traveler_sequences_to_analyze__model ON :tablename(model);
 
