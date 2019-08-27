@@ -814,7 +814,7 @@ process find_traveler_families {
   psql \
     -v ON_ERROR_STOP=1 \
     -v 'tablename=${params.secondary.tablename}' \
-    -f $query "$PGDATABASE" > all-families.txt
+    -f $query "$PGDATABASE" > families.txt
   """
 }
 
@@ -907,7 +907,7 @@ process store_secondary_structures {
 
   output:
   file('built') into traveler_success
-  val('rna-types.txt') into traveler_rna_types
+  file('rna-types.txt') into traveler_rna_types
 
   """
   split-and-load $ctl 'data*.csv' ${params.secondary.data_chunk_size} traveler-data
@@ -933,7 +933,7 @@ process traveler_compute_should_show {
   """
   psql \
     -v ON_ERROR_STOP=1 \
-    -v model=$rna_type \
+    -v rna_type=$rna_type \
     -v model_type=$model_type \
     -f $export $PGDATABASE > data.csv
   rnac traveler should-show data.csv should-show.csv
@@ -942,7 +942,7 @@ process traveler_compute_should_show {
 
 process traveler_load_should_show {
   input:
-  file('raw*.csv') from traveler_load_should_show.collect()
+  file('raw*.csv') from traveler_should_show.collect()
   file(ctl) from Channel.fromPath('files/traveler/update-should-show.ctl')
 
   """

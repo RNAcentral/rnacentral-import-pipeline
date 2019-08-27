@@ -4,7 +4,7 @@ SELECT
     'id', rna.upi,
     'sequence', COALESCE(rna.seq_short, rna.seq_long)
   )
-FROM :tablename
+FROM :tablename seqs
 JOIN rna ON rna.upi = seqs.upi
 where
   seqs.model = :'model'
