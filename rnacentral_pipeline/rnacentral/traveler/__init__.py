@@ -34,7 +34,7 @@ def write(directory, output, colored=True):
     csv.writer(output).writerows(data)
 
 
-def write_all(directories, output, colored=True):
+def write_all(directories, output, colored=True, allow_missing=False):
     """
     Process all directories to produce a datafile for all computed secondary
     structures in them.
