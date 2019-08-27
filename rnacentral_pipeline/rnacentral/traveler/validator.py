@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Copyright [2009-2018] EMBL-European Bioinformatics Institute
+Copyright [2009-2019] EMBL-European Bioinformatics Institute
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -117,14 +117,14 @@ def should_show(data):
     sequence_lengths = np.array([d['sequence_length'] for d in data], dtype=np.float)
     model_lengths = np.array([d['model_length'] for d in data], dtype=np.float)
 
-    zscores = np.array([np.nan])
+    zscores = np.array([np.nan for i in xrange(len(sequence_lengths))])
     if len(model_lengths) == len(sequence_lengths):
         zscores = stats.zscore(sequence_lengths / model_lengths)
 
     for index, entry in enumerate(data):
-        score = None
-        if not np.isnan(zscores).any():
-            score = scores[index]
+        score = scores[index]
+        if not np.isnan(score):
+            score = None
         yield ShouldShow.build(entry, score)
 
 
