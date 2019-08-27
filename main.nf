@@ -922,6 +922,7 @@ traveler_rna_types
   .set { traveler_to_score }
 
 process traveler_compute_should_show {
+  tag { "${model_type}-${rna_type}" }
   memory params.secondary.should_show.memory
 
   input:
