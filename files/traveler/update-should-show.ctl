@@ -35,7 +35,7 @@ SET
   should_show = load.should_show
 FROM rnc_secondary_structure_layout layout
 WHERE
-  layout.urs = urs
+  layout.urs = load.urs
 ;
 $$,
 $$
