@@ -948,7 +948,7 @@ process traveler_load_should_show {
 
   """
   split-and-load $ctl 'raw*.csv' ${params.secondary.data_chunk_size} traveler-data
-  psql -v ON_ERROR_STOP=1 'DROP TABLE ${params.secondary.tablename}' $PGDATABASE
+  psql -v ON_ERROR_STOP=1 -c 'DROP TABLE ${params.secondary.tablename}' $PGDATABASE
   """
 }
 
@@ -968,7 +968,6 @@ process find_traveler_failures {
   comm -23 expected built > failures.txt
   """
 }
-
 
 //=============================================================================
 // Compute feedback reports
