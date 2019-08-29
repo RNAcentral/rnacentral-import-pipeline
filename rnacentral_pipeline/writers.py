@@ -166,9 +166,9 @@ def build_ontology_annotation_writer(parser):
         go_annotations={
             'transformer': op.methodcaller('writeable'),
         },
-        ref_ids={
-            'transformer': op.methodcaller('writeable_refs'),
-        },
+        # ref_ids={
+        #     'transformer': op.methodcaller('writeable_refs'),
+        # },
         go_publication_mappings={
             'transformer': op.methodcaller('writeable_publication_mappings'),
         },
