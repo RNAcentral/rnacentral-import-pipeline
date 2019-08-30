@@ -41,8 +41,8 @@ def chunked(handle, max_nucleotides, max_sequences):
 
 @click.command()
 @click.argument('fasta', type=click.File('r'))
-@click.option('max-nucleotides', type=float, default=1e6)
-@click.option('max-sequences', type=float, default=2000)
+@click.option('--max-nucleotides', type=float, default=1e6)
+@click.option('--max-sequences', type=float, default=2000)
 @click.argument('output', type=click.Path())
 def main(fasta, output, max_nucleotides=None, max_sequences=None):
     """
