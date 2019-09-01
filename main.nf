@@ -853,6 +853,7 @@ process find_possible_traveler_sequences {
   tag { "${model}" }
   memory params.secondary.find_possible.memory
   maxForks params.secondary.find_possible.maxForks
+  clusterOptions '-sp 100'
 
   input:
   set val(model), file(query) from rfam_for_traveler
