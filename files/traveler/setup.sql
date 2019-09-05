@@ -40,8 +40,17 @@ SET
 
 CREATE INDEX ix_traveler_sequences_to_analyze__model ON :tablename(model);
 
+-- Delete already computed
 DELETE FROM :tablename urs
 USING rnc_secondary_structure_layout layout
 WHERE
   layout.urs = urs.upi
+;
+
+-- Delete all lncRNAs
+DELETE FROM :tablename urs
+USING rnc_rna_precomputed pre
+WHERE
+  layout.urs = pre.upi
+  and pre.rna_type = 'lncRNA'
 ;
