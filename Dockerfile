@@ -33,6 +33,7 @@ RUN apt-get install -y \
     pgloader \
     postgresql-11 \
     postgresql-client-11 \
+    procps \
     python \
     rsync \
     sbcl \
