@@ -348,6 +348,7 @@ process coordinate_readme {
 }
 
 process fetch_raw_coordinate_data {
+  tag { "${assembly}-${species}" }
   maxForks params.ftp_export.coordinates.maxForks
 
   input:
@@ -361,9 +362,12 @@ process fetch_raw_coordinate_data {
   """
 }
 
-raw_coordinates.into { bed_coordinates; gff_coordinates }
+raw_coordinates
+  .filter { result -> !result.isEmpty() }
+  .into { bed_coordinates; gff_coordinates }
 
 process format_bed_coordinates {
+  tag { "${assembly}-${species}" }
   publishDir "${params.ftp_export.publish}/genome_coordinates/bed/", mode: 'copy'
   when: params.ftp_export.coordinates.bed.run
 
@@ -403,6 +407,7 @@ process format_bed_coordinates {
 // }
 
 process generate_gff3 {
+  tag { "${assembly}-${species}" }
   memory params.ftp_export.coordinates.gff3.memory
   publishDir "${params.ftp_export.publish}/genome_coordinates/gff3", mode: 'move'
   when: params.ftp_export.coordinates.gff3.run
