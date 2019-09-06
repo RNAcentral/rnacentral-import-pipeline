@@ -148,6 +148,7 @@ process species_specific_fasta {
 
   output:
   file 'rnacentral_species_specific_ids.fasta.gz' into __sequences_species
+  file('rnacentral_species_specific_ids.fasta.gz') into to_index
 
   """
   export PYTHONIOENCODING=utf8
@@ -164,6 +165,19 @@ process find_db_to_export {
 
   """
   psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE"
+  """
+}
+
+process prepare_search {
+  input:
+  file(sequences) from to_index
+
+  output:
+  file('rnacentral_species_specific_ids.fasta.ssi') into __indexed
+
+  """
+  zcat $sequences > rnacentral_species_specific_ids.fasta
+  esl-sfetch --index rnacentral_species_specific_ids.fasta
   """
 }
 
