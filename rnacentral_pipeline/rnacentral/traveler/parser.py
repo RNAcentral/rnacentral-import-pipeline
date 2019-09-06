@@ -223,7 +223,7 @@ def models(directory, colored=True, allow_missing=False):
     if has_fasta:
         return ribotyper_models(
             directory, 
-            colored=colore,
+            colored=colored,
             allow_missing=allow_missing,
         )
 
