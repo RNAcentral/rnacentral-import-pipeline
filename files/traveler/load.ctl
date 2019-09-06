@@ -29,6 +29,7 @@ TARGET COLUMNS (
 
 WITH
     batch rows = 300,
+    batch concurrency = 3,
     FIELDS ESCAPED BY double-quote,
     FIELDS TERMINATED BY ','
 
