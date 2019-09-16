@@ -116,6 +116,7 @@ ENV AUTO_TRAVELER_PY="$RNA/auto-traveler"
 RUN git clone https://github.com/RNAcentral/auto-traveler.git $AUTO_TRAVELER_PY
 
 WORKDIR $AUTO_TRAVELER_PY
+ARG CACHE_DATE=not_a_date
 RUN \
     git checkout rscape-templates && \
     /usr/local/bin/pip install -r requirements.txt && \
