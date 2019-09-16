@@ -14,7 +14,7 @@ singularity/ssh-config: singularity/Vagrantfile
 	cd singularity && vagrant up && vagrant ssh-config > ssh-config
 
 docker: Dockerfile requirements.txt .dockerignore
-	docker build -t "$(docker)" .
+	docker build --build-arg CACHE_DATE="$(date)" -t "$(docker)" .
 
 shell:
 	docker run -v `pwd`:/rna/import-pipeline -i -t "$(docker)" bash
