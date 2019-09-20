@@ -16,6 +16,9 @@ limitations under the License.
 import operator as op
 import collections as coll
 
+from Bio import SeqIO
+from Bio import Entrez
+
 from rnacentral_pipeline.databases.helpers import phylogeny as phy
 from rnacentral_pipeline.databases.helpers import publications as pub
 
@@ -117,3 +120,10 @@ def lineage(row):
 
 def common_name(row):
     return phy.common_name(taxid(row))
+
+
+def ncrnas(rows):
+    for row in reader:
+        if helpers.row_is_ncrna(row):
+            continue
+        yield row
