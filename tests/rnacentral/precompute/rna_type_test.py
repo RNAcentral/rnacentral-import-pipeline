@@ -139,6 +139,8 @@ from .helpers import load_data
     ('URS00008E39F3_7227', 'scaRNA'),
     ('URS0000508014_7227', 'scaRNA'),
     ('URS000049EC81_7227', 'scaRNA'),
+    ('URS00001F11B5_6239', 'misc_RNA'),
+    ('URS00000490A3_6239', 'miRNA'),
 
     # pytest.param('URS00007CD270_1872691', 'rRNA', mark=pytest.mark.xfail("Rfam")),
     # pytest.param('URS0000A85A32_10090', 'tRNA', mark=pytest.mark.xfail("Rfam")),
