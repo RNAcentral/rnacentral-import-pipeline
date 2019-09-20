@@ -13,6 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import csv
 import operator as op
 import collections as coll
 
@@ -30,6 +31,7 @@ ALLOWED_RNA = {
     'scRNA',
     'snRNA',
     'snoRNA',
+    'tRNA',
 }
 
 taxid = op.itemgetter('#tax_id')
@@ -122,8 +124,13 @@ def common_name(row):
     return phy.common_name(taxid(row))
 
 
-def ncrnas(rows):
+def ncrnas(handle):
+    found = False
+    reader = csv.DictReader(handle, delimiter='\t')
     for row in reader:
-        if helpers.row_is_ncrna(row):
-            continue
-        yield row
+        if row_is_ncrna(row):
+            found = True
+            yield row
+
+    if not found:
+        raise ValueError("No ncRNAs found")

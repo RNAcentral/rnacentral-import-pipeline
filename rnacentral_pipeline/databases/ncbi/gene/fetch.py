@@ -13,8 +13,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import io
+import tempfile
 from ftplib import FTP
+import subprocess as sp
+from contextlib import contextmanager
 
 from Bio import SeqIO
 from Bio import Entrez
@@ -28,33 +30,51 @@ from . import helpers
 BATCH_SIZE = 200
 
 
-def ncrnas():
-    ftp = FTP('ftp://ftp.ncbi.nih.gov/gene/')
+@contextmanager
+def raw():
+    ftp = FTP('ftp.ncbi.nih.gov')
     ftp.login()
-    handle = io.StringIO()
-    ftp.retrbinary('RETR %s' % filename, handle.write)
-    ftp.quit()
-    handle.seek(0)
-    return helpers.ncrnas(handle)
+    ftp.cwd('gene/DATA')
+    with tempfile.NamedTemporaryFile(suffix='.gz') as gz:
+        ftp.retrbinary('RETR gene_info.gz', gz.write)
+        gz.flush()
+        ftp.quit()
+        with tempfile.NamedTemporaryFile(mode='w+') as tmp:
+            sp.run(['gzip', '-cd', gz.name], check=True, stdout=tmp)
+            tmp.flush()
+            tmp.seek(0)
+            yield tmp
+
+
+def ncrnas():
+    with raw() as handle:
+        for ncrna in helpers.ncrnas(handle):
+            yield ncrna
 
 
 def sequences(ncrna_ids):
     return {}
-    # Entrez.esearch('
 
 
-def fetch():
-    found = {helpers.gene_id(ncrna): ncrna for ncrna in ncrnas()}
-    batches = iterutils.chunked_iter(found.values(), BATCH_SIZE)
+def data():
+    found = 0
+    total = 0
+    batches = iterutils.chunked_iter(ncrnas(), BATCH_SIZE)
     for batch in batches:
         seqs = sequences(batch)
-        for gene_id, ncrna in batch:
+        for ncrna in batch:
+            total += 1
+            gene_id = helpers.gene_id(ncrna)
             if gene_id not in seqs:
                 LOGGER.warn("No sequence found for %s" % gene_id)
                 continue
+            found += 1
             ncrna['sequence'] = seqs[gene_id]
             yield ncrna
 
+    if float(found) / float(total) <= 0.95:
+        raise ValueError("Not enough sequences found")
+
 
 def write(output):
-    return pickle_stream(fetch(), handle)
+    return pickle_stream(data(), output)
