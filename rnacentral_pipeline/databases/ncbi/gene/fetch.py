@@ -27,7 +27,9 @@ from rnacentral_pipeline.utils import pickle_stream
 
 from . import helpers
 
-BATCH_SIZE = 200
+BATCH_SIZE = 300
+
+Entrez.email = 'rnacentral@gmail.com'
 
 
 @contextmanager
@@ -52,8 +54,76 @@ def ncrnas():
             yield ncrna
 
 
-def sequences(ncrna_ids):
+def find_nucleotide_id(entry):
+    seq_id = None
+    cur_id = entry['Entrezgene_track-info']['Gene-track']['Gene-track_geneid']
+    for locus in entry['Entrezgene_locus']:
+        for product in locus.get('Gene-commentary_products', []):
+            if 'Gene-commentary_rna' in product \
+                    and 'Gene-commentary_accession' in product:
+                if seq_id is not None:
+                    raise ValueError("Found duplicate sequence id for: %s" % cur_id)
+                seq_id = product['Gene-commentary_accession']
+    return seq_id
+
+
+def find_genome_id(entry):
+    seq_id = None
+    start = None
+    stop = None
+    cur_id = entry['Entrezgene_track-info']['Gene-track']['Gene-track_geneid']
+    for locus in entry['Entrezgene_locus']:
+        pass
+    if seq_id is None or start is None or stop is None:
+        return None
+    return (seq_id, start, stop)
+
+
+def lookup_by_nt(mapping):
+    handle = Entrez.efetch(
+        db='nucleotide', 
+        id=','.join(mapping.keys()), 
+        rettype="gb",
+        retmode="text",
+    )
+    data = {}
+    for sequence in SeqIO.parse(handle, 'genbank'):
+        # The ID has a version ID, which we do not want, while name does not.
+        gene_id = mapping[sequence.name]
+        data[gene_id] = sequence
+    handle.close()
+    assert len(data) == len(mapping)
+    return data
+
+
+def lookup_by_genome(mapping):
     return {}
+
+
+def sequences(batch):
+    ids = [ncrna['GeneID'] for ncrna in batch]
+    handle = Entrez.efetch(db='gene', id=ids, retmode='xml')
+    ncrna_ids = {}
+    genomic_ids = {}
+    for entry in Entrez.read(handle):
+        cur_id = entry['Entrezgene_track-info']['Gene-track']['Gene-track_geneid']
+        nt_id = find_nucleotide_id(entry)
+        if not nt_id:
+            genome_id = find_genome_id(entry)
+
+        genome_id = None
+        if nt_id:
+            ncrna_ids[nt_id] = cur_id
+        elif genome_id:
+            genomic_ids[genome_id] = cur_id
+        else:
+            print("Could not find sequence id for: %s" % cur_id)
+            # raise ValueError("Could not find sequence id for: %s" % cur_id)
+
+    data = {}
+    data.update(lookup_by_nt(ncrna_ids))
+    data.update(lookup_by_genome(genomic_ids))
+    return data
 
 
 def data():
