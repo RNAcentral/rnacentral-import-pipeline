@@ -17,20 +17,37 @@ import pytest
 
 from rnacentral_pipeline.databases.ncbi.gene import helpers
 
-@pytest.mark.paramterize('filename,count', [
-    ('data/ncbi_gene/simple.txt', 3),
-    ('data/ncbi_gene/ncrna.txt', 5),
+@pytest.mark.parametrize('filename,count', [
+    ('data/ncbi_gene/simple.txt', 11),
 ])
 def test_can_find_expected_ncrnas(filename, count):
     with open(filename) as raw:
-        with len(list(helpers.ncrnas(raw))) == count
+        assert len(list(helpers.ncrnas(raw))) == count
 
 
-@pytest.mark.paramterize('filename', [
+@pytest.mark.parametrize('filename', [
     ('data/ncbi_gene/proteins.txt'),
     ('data/ncbi_gene/empty.txt'),
 ])
 def test_complains_if_no_ncrnas(filename):
     with pytest.raises(Exception):
         with open(filename) as raw:
-            with list(helpers.ncrnas(raw))
+            assert list(helpers.ncrnas(raw))
+
+
+@pytest.mark.parametrize('filename,index,description', [
+    ('data/ncbi_gene/simple.txt', 1, 'Empidonax traillii (willow flycatcher) LOC114058594'),
+])
+def test_can_generate_description(filename, index, description):
+    with open(filename) as raw:
+        data = list(helpers.ncrnas(raw))
+        assert helpers.description(data[index]) == description
+
+
+@pytest.mark.parametrize('filename,index,rna_type', [
+    ('data/ncbi_gene/simple.txt', 0, 'snoRNA'),
+])
+def test_can_generate_description(filename, index, rna_type):
+    with open(filename) as raw:
+        data = list(helpers.ncrnas(raw))
+        assert helpers.rna_type(data[index]) == rna_type
