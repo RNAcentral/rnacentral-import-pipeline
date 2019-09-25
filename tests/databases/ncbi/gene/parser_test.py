@@ -25,14 +25,15 @@ from rnacentral_pipeline.databases.ncbi.gene import parser
 def parse(filename):
     with tempfile.NamedTemporaryFile() as tmp:
         with open(filename, 'r') as raw:
-            ncrnas = helpers.ncrnas(raw)
+            ncrnas = list(helpers.ncrnas(raw))
             fetch.fetch_and_write(ncrnas, tmp)
+        tmp.flush()
         tmp.seek(0)
-        yield parser.parse(tmp)
+        return list(parser.parse(tmp))
 
 
 @pytest.mark.parametrize('filename,count', [
     ('data/ncbi_gene/simple.txt', 11),
 ])
 def test_parses_all_data(filename, count):
-    assert len(list(parse(filename))) == count
+    assert len(parse(filename)) == count
