@@ -166,27 +166,25 @@ def sequences(batch):
     return data
 
 
-def data():
-    found = 0
-    total = 0
-    batches = iterutils.chunked_iter(ncrnas(), BATCH_SIZE)
+def data(raw_ncrnas):
+    batches = iterutils.chunked_iter(raw_ncrnas, BATCH_SIZE)
     for batch in batches:
         seqs = sequences(batch)
         for ncrna in batch:
-            total += 1
             gene_id = helpers.gene_id(ncrna)
             if gene_id not in seqs:
                 LOGGER.warn("No sequence found for %s" % gene_id)
                 continue
-            found += 1
             ncrna['sequence'] = seqs[gene_id]
             yield ncrna
 
-    if float(found) / float(total) <= 0.95:
-        raise ValueError("Not enough sequences found")
 
-
-def write(output, api_id=None):
+def fetch_and_write(raw_ncrnas, output, api_key=None):
     if api_key:
         Entrez.api_key = api_key
-    return pickle_stream(data(), output)
+    fetched = data(raw_ncrnas)
+    return pickle_stream(fetched, output)
+
+
+def write(output, api_key=None):
+    return fetch_and_write(ncrnas(), output, api_key=api_key)

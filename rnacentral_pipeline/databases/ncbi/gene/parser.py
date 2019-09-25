@@ -17,36 +17,32 @@ import csv
 
 from boltons import iterutils
 
+from rnacentral_pipeline.utils import unpickle_stream
+
 from . import helpers
 
 BATCH_SIZE = 200
 
 
 def parse(handle):
-    reader = csv.DictReader(handle, delimiter='\t')
-    batches = iterutils.chunked_iter(ncrnas(reader), BATCH_SIZE)
-    for batch in batches:
-        raw = list(batch)
-        indexed = helpers.fetch_sequences(raw)
-
-        for row in raw:
-            yield Entry(
-                primary_id=helpers.primary_id(row),
-                accession=helpers.accession(row),
-                ncbi_tax_id=helpers.tax_id(row),
-                database='NCBI_GENE',
-                sequence=helpers.sequence(row, indexed),
-                regions=[],
-                rna_type=helpers.rna_type(row),
-                url=helpers.url(row),
-                seq_version=helpers.seq_version(row),
-                xref_data=helpers.xref_data(row),
-                species=helpers.species(row),
-                common_name=helpers.common_name(row),
-                lineage=helpers.lineage(row),
-                gene=helpers.gene(row),
-                locus_tag=helpers.locus_tag(feature),
-                description=helpers.description(record),
-                gene_synonyms=helpers.gene_synonyms(feature),
-                references=helpers.references(record, feature),
-            )
+    for row in unpickle_stream(handle):
+        yield Entry(
+            primary_id=helpers.primary_id(row),
+            accession=helpers.accession(row),
+            ncbi_tax_id=helpers.tax_id(row),
+            database='NCBI_GENE',
+            sequence=helpers.sequence(row, indexed),
+            regions=[],
+            rna_type=helpers.rna_type(row),
+            url=helpers.url(row),
+            seq_version=helpers.seq_version(row),
+            xref_data=helpers.xref_data(row),
+            species=helpers.species(row),
+            common_name=helpers.common_name(row),
+            lineage=helpers.lineage(row),
+            gene=helpers.gene(row),
+            locus_tag=helpers.locus_tag(feature),
+            description=helpers.description(record),
+            gene_synonyms=helpers.gene_synonyms(feature),
+            references=helpers.references(record, feature),
+        )
