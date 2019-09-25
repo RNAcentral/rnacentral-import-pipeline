@@ -32,6 +32,7 @@ from rnacentral_pipeline.databases.ensembl_genomes import metazoa as e_metazoa
 from rnacentral_pipeline.databases.ensembl_genomes import protists as e_protists
 from rnacentral_pipeline.databases.quickgo import parser as quickgo
 from rnacentral_pipeline.databases.gtrnadb import parser as gtrnadb
+from rnacentral_pipeline.databases.ncbi.gene import parser as ncbi_gene
 
 
 @click.group('external', cls=ClickAliasedGroup)
@@ -176,6 +177,17 @@ def process_ena(ena_file, mapping_file, output):
     file is a file containing all TPA data we are using from ENA.
     """
     write_entries(ena.parse_with_mapping_file, output, ena_file, mapping_file)
+
+
+@cli.command('ncbi-gene')
+@click.argument('data-file', type=click.File('r'))
+@click.argument('output', default='.', type=click.Path(
+    writable=True,
+    dir_okay=True,
+    file_okay=False,
+))
+def process_ncbi_gene(data_file, output):
+    write_entries(ncbi_gene.parse, output, data_file)
 
 
 @cli.command('quickgo')
