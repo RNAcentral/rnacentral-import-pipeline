@@ -18,6 +18,7 @@ import csv
 from boltons import iterutils
 
 from rnacentral_pipeline.utils import unpickle_stream
+from rnacentral_pipeline.databases.data import Entry
 
 from . import helpers
 
@@ -29,9 +30,9 @@ def parse(handle):
         yield Entry(
             primary_id=helpers.primary_id(row),
             accession=helpers.accession(row),
-            ncbi_tax_id=helpers.tax_id(row),
+            ncbi_tax_id=helpers.taxid(row),
             database='NCBI_GENE',
-            sequence=helpers.sequence(row, indexed),
+            sequence=helpers.sequence(row),
             regions=[],
             rna_type=helpers.rna_type(row),
             url=helpers.url(row),
@@ -41,8 +42,8 @@ def parse(handle):
             common_name=helpers.common_name(row),
             lineage=helpers.lineage(row),
             gene=helpers.gene(row),
-            locus_tag=helpers.locus_tag(feature),
-            description=helpers.description(record),
-            gene_synonyms=helpers.gene_synonyms(feature),
-            references=helpers.references(record, feature),
+            locus_tag=helpers.locus_tag(row),
+            description=helpers.description(row),
+            gene_synonyms=helpers.gene_synonyms(row),
+            references=helpers.references(row),
         )

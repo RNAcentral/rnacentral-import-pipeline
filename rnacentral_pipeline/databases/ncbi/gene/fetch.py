@@ -32,7 +32,6 @@ BATCH_SIZE = 300
 Entrez.email = 'rnacentral@gmail.com'
 
 
-@contextmanager
 def raw():
     ftp = FTP('ftp.ncbi.nih.gov')
     ftp.login()
@@ -45,13 +44,8 @@ def raw():
             sp.run(['gzip', '-cd', gz.name], check=True, stdout=tmp)
             tmp.flush()
             tmp.seek(0)
-            yield tmp
-
-
-def ncrnas():
-    with raw() as handle:
-        for ncrna in helpers.ncrnas(handle):
-            yield ncrna
+            for ncrna in helpers.ncrnas(tmp):
+                yield ncrna
 
 
 def get_strand(interval):
@@ -187,4 +181,4 @@ def fetch_and_write(raw_ncrnas, output, api_key=None):
 
 
 def write(output, api_key=None):
-    return fetch_and_write(ncrnas(), output, api_key=api_key)
+    return fetch_and_write(raw(), output, api_key=api_key)

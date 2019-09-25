@@ -34,7 +34,6 @@ ALLOWED_RNA = {
     'tRNA',
 }
 
-taxid = op.itemgetter('#tax_id')
 rna_type = op.itemgetter('type_of_gene')
 
 
@@ -51,6 +50,10 @@ def gene_id(row):
     return value(row, 'GeneID', required=True)
 
 
+def taxid(row):
+    return int(value(row, '#tax_id', required=True))
+
+
 def row_is_ncrna(row):
     return rna_type(row) in ALLOWED_RNA
 
@@ -63,8 +66,8 @@ def accession(row):
     return 'NCBI_GENE:' + gene_id(row)
 
 
-def sequence(row, sequences):
-    return sequences[gene_id(row)]
+def sequence(row):
+    return str(row['sequence'].seq)
 
 
 def seq_version(_):
@@ -78,8 +81,11 @@ def url(row):
 def xref_data(row):
     data = coll.defaultdict(list)
     given = value(row, 'dbXrefs') or ''
+    if not given:
+        return {}
     for dbid in given.split(','):
-        db, _ = dbid.split(':', 1)
+        parts = dbid.split(':', 1)
+        assert len(parts) == 2, "Invalid DB id: " + dbid
         data[db].append(key)
     return data
 
@@ -100,7 +106,7 @@ def gene_synonyms(row):
 
 
 def references(row):
-    return pub.reference(25355515)
+    return [pub.reference(25355515)]
 
 
 def description(row):
