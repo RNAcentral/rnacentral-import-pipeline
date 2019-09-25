@@ -54,9 +54,26 @@ def ncrnas():
             yield ncrna
 
 
-def find_nucleotide_id(entry):
+def get_strand(interval):
+    raw = interval['Seq-interval_strand']['Na-strand'].attributes['value']
+    if raw == 'minus':
+        return '2'
+    elif raw == 'plus':
+        return '1'
+    raise ValueError("Invalid type of strand %s" % raw)
+
+
+def extract_coords(interval):
+    return {
+        'id': interval['Seq-interval_id']['Seq-id']['Seq-id_gi'],
+        'seq_start':  interval['Seq-interval_from'],
+        'seq_stop': interval['Seq-interval_to'],
+        'strand': get_strand(interval),
+    }
+
+
+def find_nucleotide_id(cur_id, entry):
     seq_id = None
-    cur_id = entry['Entrezgene_track-info']['Gene-track']['Gene-track_geneid']
     for locus in entry['Entrezgene_locus']:
         for product in locus.get('Gene-commentary_products', []):
             if 'Gene-commentary_rna' in product \
@@ -67,22 +84,34 @@ def find_nucleotide_id(entry):
     return seq_id
 
 
-def find_genome_id(entry):
-    seq_id = None
-    start = None
-    stop = None
-    cur_id = entry['Entrezgene_track-info']['Gene-track']['Gene-track_geneid']
+def find_genome_id(cur_id, entry):
+    result = None
     for locus in entry['Entrezgene_locus']:
-        pass
-    if seq_id is None or start is None or stop is None:
-        return None
-    return (seq_id, start, stop)
+        if 'Gene-commentary_type' in locus and \
+                locus['Gene-commentary_type'].attributes['value'] == 'genomic':
+            coords = locus['Gene-commentary_seqs']
+            if result is not None or len(coords) > 1:
+                raise ValueError("Duplicate coordinates for: %s" % cur_id)
+
+            interval = coords[0]['Seq-loc_int']['Seq-interval']
+            result = extract_coords(interval)
+        else:
+            for product in locus.get('Gene-commentary_products', []):
+                if 'Gene-commentary_genomic-coords' in product:
+                    coords = product['Gene-commentary_genomic-coords']
+                    if result is not None or len(coords) > 1:
+                        raise ValueError("Duplicate coordinates for: %s" % cur_id)
+
+                    interval = coords[0]['Seq-loc_int']['Seq-interval']
+                    result = extract_coords(interval)
+
+    return result
 
 
 def lookup_by_nt(mapping):
     handle = Entrez.efetch(
-        db='nucleotide', 
-        id=','.join(mapping.keys()), 
+        db='nucleotide',
+        id=','.join(mapping.keys()),
         rettype="gb",
         retmode="text",
     )
@@ -97,7 +126,17 @@ def lookup_by_nt(mapping):
 
 
 def lookup_by_genome(mapping):
-    return {}
+    data = {}
+    for gene_id, coord in mapping.items():
+        handle = Entrez.efetch(
+            db='nuccore',
+            rettype='gb',
+            retmode='text',
+            **coord,
+        )
+        data[gene_id] = SeqIO.read(handle, 'genbank')
+        handle.close()
+    return data
 
 
 def sequences(batch):
@@ -106,19 +145,20 @@ def sequences(batch):
     ncrna_ids = {}
     genomic_ids = {}
     for entry in Entrez.read(handle):
+        found = False
         cur_id = entry['Entrezgene_track-info']['Gene-track']['Gene-track_geneid']
-        nt_id = find_nucleotide_id(entry)
-        if not nt_id:
-            genome_id = find_genome_id(entry)
-
-        genome_id = None
+        nt_id = find_nucleotide_id(cur_id, entry)
         if nt_id:
             ncrna_ids[nt_id] = cur_id
-        elif genome_id:
-            genomic_ids[genome_id] = cur_id
-        else:
-            print("Could not find sequence id for: %s" % cur_id)
-            # raise ValueError("Could not find sequence id for: %s" % cur_id)
+            found = True
+        elif not nt_id:
+            coord = find_genome_id(cur_id, entry)
+            if coord:
+                genomic_ids[cur_id] = coord
+                found = True
+
+        if not found:
+            raise ValueError("Could not find sequence id for: %s" % cur_id)
 
     data = {}
     data.update(lookup_by_nt(ncrna_ids))
@@ -146,5 +186,7 @@ def data():
         raise ValueError("Not enough sequences found")
 
 
-def write(output):
+def write(output, api_id=None):
+    if api_key:
+        Entrez.api_key = api_key
     return pickle_stream(data(), output)
