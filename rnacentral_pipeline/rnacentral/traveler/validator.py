@@ -117,12 +117,12 @@ def should_show(data):
     sequence_lengths = np.array([d['sequence_length'] for d in data], dtype=np.float)
     model_lengths = np.array([d['model_length'] for d in data], dtype=np.float)
 
-    zscores = np.array([np.nan for i in xrange(len(sequence_lengths))])
+    zscores = np.array([np.nan for i in range(len(sequence_lengths))])
     if len(model_lengths) == len(sequence_lengths):
         zscores = stats.zscore(sequence_lengths / model_lengths)
 
     for index, entry in enumerate(data):
-        score = scores[index]
+        score = zscores[index]
         if not np.isnan(score):
             score = None
         yield ShouldShow.build(entry, score)
