@@ -78,13 +78,6 @@ RUN \
 # Install useful pip version
 RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && python get-pip.py
 
-ENV NCBI="$RNA/ncbi"
-WORKDIR $NCBI
-RUN curl -s ftp://ftp.ncbi.nlm.nih.gov/entrez/entrezdirect/edirect.tar.gz |\
-    tar xzf - && \
-    cpanm HTML::Entities && \
-    edirect/setup.sh
-
 # Install python requirements
 ENV RNACENTRAL_IMPORT_PIPELINE "$RNA/rnacentral-import-pipeline"
 
@@ -120,7 +113,6 @@ ENV PATH="$AUTO_TRAVELER_PY:$PATH"
 ENV PATH="$RSCAPE/bin:$PATH"
 ENV PATH="$RIBODIR:$PATH"
 ENV PATH="$RNA_STRUCTURE/exe:$PATH"
-ENV PATH="$NCBI/edirect:$PATH"
 
 # Install auto-traveler and related data
 WORKDIR /
