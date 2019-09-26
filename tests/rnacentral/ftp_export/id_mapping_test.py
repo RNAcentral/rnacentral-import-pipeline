@@ -122,7 +122,7 @@ def test_as_entry_works_correctly():
 
 @pytest.mark.parametrize('rna_id,expected', [
     ('URS000018F875_9606', [
-        ['URS000018F875', 'ENSEMBL', 'ENST00000523510', 9606, 'lncRNA', 'ENSG00000254166.2'],
+        ['URS000018F875', 'ENSEMBL', 'ENST00000523510', 9606, 'lncRNA', 'ENSG00000254166.3'],
         ['URS000018F875', 'GENCODE', 'ENST00000523510', 9606, 'lncRNA', 'CASC19'],
         ['URS000018F875', 'HGNC', 'HGNC:45089', 9606, 'lncRNA', 'PCAT2'],
         ['URS000018F875', 'LNCIPEDIA', 'lnc-FAM84B-15:133', 9606, 'lncRNA', 'lnc-FAM84B-15'],
@@ -132,7 +132,7 @@ def test_as_entry_works_correctly():
     ]),
     ('URS0000672F0E_7955', [
         ['URS0000672F0E', 'ENSEMBL', 'ENSDART00000171022', 7955, 'Y_RNA', 'ENSDARG00000100903.1'],
-        # ['URS0000672F0E', 'RFAM', 'RF00019', 7955, 'Y_RNA', ''],
+        ['URS0000672F0E', 'RFAM', 'RF00019', 7955, 'Y_RNA', ''],
     ]),
     ('URS0000000096_9606', [
         ['URS0000000096', 'ENA', 'DQ583192.1:1..30:ncRNA', 9606, 'piRNA', 'piR-50304'],
