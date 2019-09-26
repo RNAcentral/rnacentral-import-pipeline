@@ -20,6 +20,7 @@ import collections as coll
 from Bio import SeqIO
 from Bio import Entrez
 
+from rnacentral_pipeline.databases.helpers import embl
 from rnacentral_pipeline.databases.helpers import phylogeny as phy
 from rnacentral_pipeline.databases.helpers import publications as pub
 
@@ -34,7 +35,7 @@ ALLOWED_RNA = {
     'tRNA',
 }
 
-rna_type = op.itemgetter('type_of_gene')
+row_rna_type = op.itemgetter('type_of_gene')
 
 
 def value(row, name, required=False):
@@ -55,7 +56,25 @@ def taxid(row):
 
 
 def row_is_ncrna(row):
-    return rna_type(row) in ALLOWED_RNA
+    return row_rna_type(row) in ALLOWED_RNA
+
+
+def ncrna_feature(row):
+    ncrna = None
+    for feature in row['sequence'].features:
+        if feature.type in {'ncRNA', 'misc_RNA'}:
+            if ncrna is not None:
+                raise ValueError("Multiple ncRNAs")
+            ncrna = feature
+    return ncrna
+
+
+def rna_type(row):
+    rna_type = row_rna_type(row)
+    feature = ncrna_feature(row)
+    if not feature:
+        return rna_type
+    return embl.rna_type(feature)
 
 
 def primary_id(row):
@@ -128,6 +147,13 @@ def lineage(row):
 
 def common_name(row):
     return phy.common_name(taxid(row))
+
+
+def product(row):
+    feature = ncrna_feature(row)
+    if feature:
+        return embl.product(feature)
+    return None
 
 
 def ncrnas(handle):

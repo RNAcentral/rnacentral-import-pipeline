@@ -66,12 +66,21 @@ def extract_coords(interval):
     }
 
 
+def is_ncrna_product(product):
+    if 'Gene-commentary_rna' in product and \
+            'Gene-commentary_accession' in product:
+        return True
+    if 'Gene-commentary_type' in product and \
+            product['Gene-commentary_type'].attributes['value'] == 'ncRNA':
+        return True
+    return False
+
+
 def find_nucleotide_id(cur_id, entry):
     seq_id = None
     for locus in entry['Entrezgene_locus']:
         for product in locus.get('Gene-commentary_products', []):
-            if 'Gene-commentary_rna' in product \
-                    and 'Gene-commentary_accession' in product:
+            if is_ncrna_product(product):
                 if seq_id is not None:
                     raise ValueError("Found duplicate sequence id for: %s" % cur_id)
                 seq_id = product['Gene-commentary_accession']

@@ -35,19 +35,10 @@ def test_complains_if_no_ncrnas(filename):
             assert list(helpers.ncrnas(raw))
 
 
-@pytest.mark.parametrize('filename,index,description', [
-    ('data/ncbi_gene/simple.txt', 1, 'Empidonax traillii (willow flycatcher) LOC114058594'),
-])
-def test_can_generate_description(filename, index, description):
-    with open(filename) as raw:
-        data = list(helpers.ncrnas(raw))
-        assert helpers.description(data[index]) == description
-
-
 @pytest.mark.parametrize('filename,index,rna_type', [
     ('data/ncbi_gene/simple.txt', 0, 'snoRNA'),
 ])
-def test_can_generate_description(filename, index, rna_type):
+def test_can_generate_rna_type(filename, index, rna_type):
     with open(filename) as raw:
         data = list(helpers.ncrnas(raw))
-        assert helpers.rna_type(data[index]) == rna_type
+        assert helpers.row_rna_type(data[index]) == rna_type

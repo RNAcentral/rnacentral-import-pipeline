@@ -42,6 +42,7 @@ def parse(handle):
             common_name=helpers.common_name(row),
             lineage=helpers.lineage(row),
             gene=helpers.gene(row),
+            product=helpers.product(row),
             locus_tag=helpers.locus_tag(row),
             description=helpers.description(row),
             gene_synonyms=helpers.gene_synonyms(row),
