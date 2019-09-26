@@ -24,19 +24,20 @@ import shutil
 
 from rnacentral_pipeline.databases.data import Reference
 from rnacentral_pipeline.databases.data import IdReference
+from rnacentral_pipeline.databases.data import KnownServices
 import rnacentral_pipeline.databases.helpers.publications as pub
 
 
 @pytest.mark.parametrize('raw_id,namespace,external_id', [
-    (26184978, 'pmid', '26184978'),
-    ('pmid:26184978', 'pmid', '26184978'),
-    ('PMID:26184978', 'pmid', '26184978'),
-    ('doi:10.1038/srep12276', 'doi', '10.1038/srep12276'),
-    ('DOI:10.1038/srep12276', 'doi', '10.1038/srep12276'),
-    ('PMCID:PMC5785218', 'pmcid', 'PMC5785218'),
-    ('PMC5785218', 'pmcid', 'PMC5785218'),
-    ('pmcid:pmc5785218', 'pmcid', 'PMC5785218'),
-    ('pmc5785218', 'pmcid', 'PMC5785218'),
+    (26184978, KnownServices.pmid, '26184978'),
+    ('pmid:26184978', KnownServices.pmid, '26184978'),
+    ('PMID:26184978', KnownServices.pmid, '26184978'),
+    ('doi:10.1038/srep12276', KnownServices.doi, '10.1038/srep12276'),
+    ('DOI:10.1038/srep12276', KnownServices.doi, '10.1038/srep12276'),
+    ('PMCID:PMC5785218', KnownServices.pmcid, 'PMC5785218'),
+    ('PMC5785218', KnownServices.pmcid, 'PMC5785218'),
+    ('pmcid:pmc5785218', KnownServices.pmcid, 'PMC5785218'),
+    ('pmc5785218', KnownServices.pmcid, 'PMC5785218'),
 ])
 def test_reference_builds_a_id_ref(raw_id, namespace, external_id):
     assert pub.reference(raw_id) == IdReference(
