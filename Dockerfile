@@ -4,14 +4,13 @@ ENV RNA /rna
 
 WORKDIR $RNA
 
-RUN apt-get update -m
+RUN apt-get update
 RUN apt-get upgrade -y
 
 # Install all required packages
 RUN apt-get install -y \
     bedtools \
     ca-certificates \
-    cpanminus \
     curl \
     default-mysql-client \
     devscripts \
@@ -22,11 +21,8 @@ RUN apt-get install -y \
     hmmer \
     jq \
     lftp \
-    libnet-perl \
     libsqlite3-dev \
     libssl1.1 \
-    libwww-perl \
-    libxml-simple-perl \
     libxml2-utils \
     libzip-dev \
     moreutils \
