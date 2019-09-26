@@ -4,13 +4,14 @@ ENV RNA /rna
 
 WORKDIR $RNA
 
-RUN apt-get update
+RUN apt-get update -m
 RUN apt-get upgrade -y
 
 # Install all required packages
 RUN apt-get install -y \
     bedtools \
     ca-certificates \
+    cpanminus \
     curl \
     default-mysql-client \
     devscripts \
@@ -21,8 +22,11 @@ RUN apt-get install -y \
     hmmer \
     jq \
     lftp \
+    libnet-perl \
     libsqlite3-dev \
     libssl1.1 \
+    libwww-perl \
+    libxml-simple-perl \
     libxml2-utils \
     libzip-dev \
     moreutils \
@@ -74,6 +78,13 @@ RUN \
 # Install useful pip version
 RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && python get-pip.py
 
+ENV NCBI="$RNA/ncbi"
+WORKDIR $NCBI
+RUN curl -s ftp://ftp.ncbi.nlm.nih.gov/entrez/entrezdirect/edirect.tar.gz |\
+    tar xzf - && \
+    cpanm HTML::Entities && \
+    edirect/setup.sh
+
 # Install python requirements
 ENV RNACENTRAL_IMPORT_PIPELINE "$RNA/rnacentral-import-pipeline"
 
@@ -84,11 +95,11 @@ RUN /usr/local/bin/pip install --upgrade pip && \
 RUN python -m textblob.download_corpora
 
 # Copy everything that auto-traveler needs into place. This mimicks the same
-# directory structure as the auto-traveler Dockerfile. 
+# directory structure as the auto-traveler Dockerfile.
 WORKDIR /
-ENV RIBODIR="$RNA/ribotyper-v1" 
-ENV EPNOPTDIR="$RNA/epn-options" 
-ENV EPNOFILEDIR="$RNA/epn-ofile" 
+ENV RIBODIR="$RNA/ribotyper-v1"
+ENV EPNOPTDIR="$RNA/epn-options"
+ENV EPNOFILEDIR="$RNA/epn-ofile"
 ENV EPNTESTDIR="$RNA/epn-test"
 ENV JIFFY_SCRIPTS="$RNA/jiffy-infernal-hmmer-scripts"
 ENV TRAVELER="$RNA/traveler"
@@ -109,6 +120,7 @@ ENV PATH="$AUTO_TRAVELER_PY:$PATH"
 ENV PATH="$RSCAPE/bin:$PATH"
 ENV PATH="$RIBODIR:$PATH"
 ENV PATH="$RNA_STRUCTURE/exe:$PATH"
+ENV PATH="$NCBI/edirect:$PATH"
 
 # Install auto-traveler and related data
 WORKDIR /
