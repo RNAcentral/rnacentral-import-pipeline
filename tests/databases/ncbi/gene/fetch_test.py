@@ -27,13 +27,12 @@ def simple_sequences():
 
 
 def test_can_get_expected_sequences(simple_sequences):
-        assert len(simple_sequences) == len(simple_sequences)
-        # assert set(simple_sequences.keys()) == ncrnas
-        # assert set(simple_sequences.keys()) == set(n['GeneID'] for n in ncrnas)
+    assert len(simple_sequences) == 11
 
 
 @pytest.mark.parametrize('gene_id,sequence_id', {
     ('108869573', 'NC_024802.1'),
+    ('107303968', 'XR_001549991.1'),
 })
 def test_can_fetch_correct_sequence_data(simple_sequences, gene_id, sequence_id):
     assert simple_sequences[gene_id].id == sequence_id
