@@ -15,8 +15,10 @@ limitations under the License.
 
 import csv
 import json
+import logging
 import operator as op
 import itertools as it
+import collections as coll
 
 import attr
 from attr.validators import optional
@@ -45,6 +47,8 @@ BLAT_GENOMES = {
     'saccharomyces_cerevisiae',
     'schizosaccharomyces_pombe',
 }
+
+LOGGER = logging.getLogger(__name__)
 
 
 def reconcile_taxids(taxid):
@@ -138,6 +142,10 @@ class AssemblyInfo(object):
             example=AssemblyExample.build(raw, example_locations),
         )
 
+    @classmethod
+    def from_existing(cls, raw):
+        return None
+
     @property
     def subdomain(self):
         """Given E! division, returns E!/E! Genomes url."""
@@ -184,24 +192,41 @@ class AssemblyInfo(object):
         ]
 
 
-def fetch(connections, query_handle, example_locations):
+def load_known(handle):
+    data = coll.defualtdict(list)
+    for line in handle:
+        entry = AssemblyInfo.from_existing(json.loads(line))
+        data[entry.taxid].append(entry)
+    return data
+
+
+def fetch(connections, query_handle, example_locations, known):
+    seen = set()
     results = db.run_queries_across_databases(connections, query_handle)
     for (_, rows) in results:
         raw = {r['meta_key']: six.text_type(r['meta_value']) for r in rows}
         if raw['species.division'] == 'EnsemblBacteria':
             continue
         info = AssemblyInfo.build(raw, example_locations)
-        if is_ignored_assembly(info):
-            continue
-        yield info
+        if info.assembly_id in known:
+            yield known[info.assembly_id]
+        else:
+            if is_ignored_assembly(info):
+                continue
+            if info.taxid in seen:
+                LOGGER.warn("Duplicate genome %s found for %i", info.assembly_id, info.taxid)
+                continue
+            yield info
+            seen.add(info.taxid)
 
 
-def write(connections, query, example_file, output):
+def write(connections, query, example_file, known_handle, output):
     """
     Parse the given input handle and write the readable data to the CSV.
     """
 
     examples = json.load(example_file)
-    data = fetch(connections, query, examples)
+    known = load_known(known_handle)
+    data = fetch(connections, query, examples, known)
     data = six.moves.map(op.methodcaller('writeable'), data)
     csv.writer(output).writerows(data)
