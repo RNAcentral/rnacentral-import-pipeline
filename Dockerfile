@@ -34,7 +34,9 @@ RUN apt-get install -y \
     postgresql-11 \
     postgresql-client-11 \
     procps \
-    python \
+    python3 \
+    python3-dev \
+    python3-pip \
     rsync \
     sbcl \
     tar \
@@ -78,10 +80,10 @@ RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && python get-pip.py
 ENV RNACENTRAL_IMPORT_PIPELINE "$RNA/rnacentral-import-pipeline"
 
 ADD requirements.txt $RNACENTRAL_IMPORT_PIPELINE/requirements.txt
-RUN /usr/local/bin/pip install --upgrade pip && \
-    /usr/local/bin/pip install -r $RNACENTRAL_IMPORT_PIPELINE/requirements.txt
+RUN pip3 install --upgrade pip && \
+    pip3 install -r $RNACENTRAL_IMPORT_PIPELINE/requirements.txt
 
-RUN python -m textblob.download_corpora
+RUN python3 -m textblob.download_corpora
 
 # Copy everything that auto-traveler needs into place. This mimicks the same
 # directory structure as the auto-traveler Dockerfile.
@@ -118,7 +120,6 @@ RUN git clone https://github.com/RNAcentral/auto-traveler.git $AUTO_TRAVELER_PY
 WORKDIR $AUTO_TRAVELER_PY
 ARG CACHE_DATE=not_a_date
 RUN \
-    git checkout rscape-templates && \
     /usr/local/bin/pip install -r requirements.txt && \
     ./auto-traveler.py rrna setup && \
     python utils/generate_model_info.py --cm-library data/cms
