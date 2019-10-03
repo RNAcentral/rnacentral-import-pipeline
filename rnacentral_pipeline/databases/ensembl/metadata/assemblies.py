@@ -25,6 +25,8 @@ from attr.validators import optional
 from attr.validators import instance_of as is_a
 
 import six
+import psycopg2 as pg
+from psycopg2.extras import DictCursor
 
 from . import databases as db
 
@@ -201,11 +203,16 @@ class AssemblyInfo(object):
         ]
 
 
-def load_known(handle):
+def load_known(db_url, query_handle):
     data = coll.defualtdict(list)
-    for line in handle:
-        entry = AssemblyInfo.from_existing(json.loads(line))
+    conn = pg.connect(db_url)
+    cur = conn.cursor(cursor_factory=DictCursor)
+    cur.execute(query_handle.read())
+    for record in cursor:
+        entry = AssemblyInfo.from_existing(record)
         data[entry.taxid].append(entry)
+    cur.close()
+    conn.close()
     return data
 
 
@@ -229,7 +236,7 @@ def fetch(connections, query_handle, example_locations, known):
             seen.add(info.taxid)
 
 
-def write(connections, query, example_file, known_handle, output):
+def write(connections, query, example_file, known_query, output):
     """
     Parse the given input handle and write the readable data to the CSV.
     """
