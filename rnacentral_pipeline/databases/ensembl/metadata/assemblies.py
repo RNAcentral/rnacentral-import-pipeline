@@ -77,6 +77,8 @@ def is_ignored_assembly(info):
         return True
     if info.taxid == 9823 and not info.gca_accession.startswith('GCA_000003025'):
         return True
+    if info.taxid == 7994 and info.assembly_id != 'Astyanax_mexicanus-2.0':
+        return True
     return False
 
 
