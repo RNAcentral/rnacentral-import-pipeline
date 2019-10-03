@@ -110,6 +110,10 @@ class AssemblyExample(object):
             end=example['end'],
         )
 
+    @classmethod
+    def from_existing(cls, raw):
+        return cls(**raw)
+
 
 @attr.s()
 class AssemblyInfo(object):
@@ -144,7 +148,12 @@ class AssemblyInfo(object):
 
     @classmethod
     def from_existing(cls, raw):
-        return None
+        to_use = dict(raw)
+        if to_use['example']['chromosome']:
+            to_use['example'] = AssemblyExample.from_existing(raw['example'])
+        else:
+            to_use['example'] = None
+        return cls(**to_use)
 
     @property
     def subdomain(self):
