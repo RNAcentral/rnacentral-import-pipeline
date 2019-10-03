@@ -127,7 +127,7 @@ class AssemblyInfo(object):
     taxid = attr.ib(validator=is_a(six.integer_types))
     ensembl_url = attr.ib(validator=is_a(six.text_type))
     division = attr.ib(validator=is_a(six.text_type))
-    blat_mapping = attr.ib(validator=is_a(bool))
+    blat_mapping = attr.ib(validator=is_a(bool), converter=bool)
     example = attr.ib(validator=optional(is_a(AssemblyExample)))
 
     @classmethod
@@ -151,10 +151,18 @@ class AssemblyInfo(object):
     @classmethod
     def from_existing(cls, raw):
         to_use = dict(raw)
-        if to_use['example']['chromosome']:
-            to_use['example'] = AssemblyExample.from_existing(raw['example'])
+        chromosome  = to_use.pop('example_chromosome')
+        start  = to_use.pop('example_start')
+        end  = to_use.pop('example_end')
+        if chromosome:
+            to_use['example'] = AssemblyExample.from_existing({
+                'chromosome': chromosome,
+                'start': start,
+                'end': end,
+            })
         else:
             to_use['example'] = None
+
         return cls(**to_use)
 
     @property
@@ -204,12 +212,12 @@ class AssemblyInfo(object):
 
 
 def load_known(db_url, query_handle):
-    data = coll.defualtdict(list)
+    data = coll.defaultdict(list)
     conn = pg.connect(db_url)
     cur = conn.cursor(cursor_factory=DictCursor)
     cur.execute(query_handle.read())
-    for record in cursor:
-        entry = AssemblyInfo.from_existing(record)
+    for record in cur:
+        entry = AssemblyInfo.from_existing(dict(record))
         data[entry.taxid].append(entry)
     cur.close()
     conn.close()
@@ -236,13 +244,13 @@ def fetch(connections, query_handle, example_locations, known):
             seen.add(info.taxid)
 
 
-def write(connections, query, example_file, known_query, output):
+def write(connections, query, example_file, known_query, output, db_url=None):
     """
     Parse the given input handle and write the readable data to the CSV.
     """
 
     examples = json.load(example_file)
-    known = load_known(known_handle)
+    known = load_known(db_url, known_handle)
     data = fetch(connections, query, examples, known)
     data = six.moves.map(op.methodcaller('writeable'), data)
     csv.writer(output).writerows(data)
