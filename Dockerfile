@@ -115,14 +115,17 @@ ENV PATH="$RNA_STRUCTURE/exe:$PATH"
 # Install auto-traveler and related data
 WORKDIR /
 ENV AUTO_TRAVELER_PY="$RNA/auto-traveler"
-RUN git clone https://github.com/RNAcentral/auto-traveler.git $AUTO_TRAVELER_PY
+RUN \
+    git clone https://github.com/RNAcentral/auto-traveler.git $AUTO_TRAVELER_PY && \
+    cd $AUTO_TRAVELER_PY && \
+    git checkout python3-update
 
 WORKDIR $AUTO_TRAVELER_PY
 ARG CACHE_DATE=not_a_date
 RUN \
     /usr/local/bin/pip install -r requirements.txt && \
-    ./auto-traveler.py rrna setup && \
-    python utils/generate_model_info.py --cm-library data/cms
+    python3 ./auto-traveler.py rrna setup && \
+    python3 utils/generate_model_info.py --cm-library data/cms
 
 ENV PATH="$AUTO_TRAVELER_PY:$PATH"
 
