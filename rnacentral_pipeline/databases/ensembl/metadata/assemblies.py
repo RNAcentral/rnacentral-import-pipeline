@@ -246,7 +246,7 @@ def fetch(connections, query_handle, example_locations, known):
             seen.add(info.taxid)
 
 
-def write(connections, query, example_file, known_query, output, db_url=None):
+def write(connections, query, example_file, known_handle, output, db_url=None):
     """
     Parse the given input handle and write the readable data to the CSV.
     """
