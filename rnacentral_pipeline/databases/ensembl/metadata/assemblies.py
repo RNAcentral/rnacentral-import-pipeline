@@ -15,14 +15,18 @@ limitations under the License.
 
 import csv
 import json
+import logging
 import operator as op
 import itertools as it
+import collections as coll
 
 import attr
 from attr.validators import optional
 from attr.validators import instance_of as is_a
 
 import six
+import psycopg2 as pg
+from psycopg2.extras import DictCursor
 
 from . import databases as db
 
@@ -45,6 +49,8 @@ BLAT_GENOMES = {
     'saccharomyces_cerevisiae',
     'schizosaccharomyces_pombe',
 }
+
+LOGGER = logging.getLogger(__name__)
 
 
 def reconcile_taxids(taxid):
@@ -108,6 +114,10 @@ class AssemblyExample(object):
             end=example['end'],
         )
 
+    @classmethod
+    def from_existing(cls, raw):
+        return cls(**raw)
+
 
 @attr.s()
 class AssemblyInfo(object):
@@ -119,7 +129,7 @@ class AssemblyInfo(object):
     taxid = attr.ib(validator=is_a(six.integer_types))
     ensembl_url = attr.ib(validator=is_a(six.text_type))
     division = attr.ib(validator=is_a(six.text_type))
-    blat_mapping = attr.ib(validator=is_a(bool))
+    blat_mapping = attr.ib(validator=is_a(bool), converter=bool)
     example = attr.ib(validator=optional(is_a(AssemblyExample)))
 
     @classmethod
@@ -139,6 +149,23 @@ class AssemblyInfo(object):
             blat_mapping=is_mapped,
             example=AssemblyExample.build(raw, example_locations),
         )
+
+    @classmethod
+    def from_existing(cls, raw):
+        to_use = dict(raw)
+        chromosome  = to_use.pop('example_chromosome')
+        start  = to_use.pop('example_start')
+        end  = to_use.pop('example_end')
+        if chromosome:
+            to_use['example'] = AssemblyExample.from_existing({
+                'chromosome': chromosome,
+                'start': start,
+                'end': end,
+            })
+        else:
+            to_use['example'] = None
+
+        return cls(**to_use)
 
     @property
     def subdomain(self):
@@ -186,24 +213,46 @@ class AssemblyInfo(object):
         ]
 
 
-def fetch(connections, query_handle, example_locations):
+def load_known(db_url, query_handle):
+    data = coll.defaultdict(list)
+    conn = pg.connect(db_url)
+    cur = conn.cursor(cursor_factory=DictCursor)
+    cur.execute(query_handle.read())
+    for record in cur:
+        entry = AssemblyInfo.from_existing(dict(record))
+        data[entry.taxid].append(entry)
+    cur.close()
+    conn.close()
+    return data
+
+
+def fetch(connections, query_handle, example_locations, known):
+    seen = set()
     results = db.run_queries_across_databases(connections, query_handle)
     for (_, rows) in results:
         raw = {r['meta_key']: six.text_type(r['meta_value']) for r in rows}
         if raw['species.division'] == 'EnsemblBacteria':
             continue
         info = AssemblyInfo.build(raw, example_locations)
-        if is_ignored_assembly(info):
-            continue
-        yield info
+        if info.assembly_id in known:
+            yield known[info.assembly_id]
+        else:
+            if is_ignored_assembly(info):
+                continue
+            if info.taxid in seen:
+                LOGGER.warn("Duplicate genome %s found for %i", info.assembly_id, info.taxid)
+                continue
+            yield info
+            seen.add(info.taxid)
 
 
-def write(connections, query, example_file, output):
+def write(connections, query, example_file, known_query, output, db_url=None):
     """
     Parse the given input handle and write the readable data to the CSV.
     """
 
     examples = json.load(example_file)
-    data = fetch(connections, query, examples)
+    known = load_known(db_url, known_handle)
+    data = fetch(connections, query, examples, known)
     data = six.moves.map(op.methodcaller('writeable'), data)
     csv.writer(output).writerows(data)
