@@ -27,7 +27,7 @@ from .helpers import load_data
     ('URS00000F9D45_9606', 'rRNA', 'Homo sapiens RNA, 5S ribosomal 1 (RNA5S1-8, RNA5S10-17)'),
     ('URS000018EB2E_3702', 'lncRNA', 'Arabidopsis thaliana (thale cress) Long non-coding antisense RNA COOLAIR'),
     ('URS000019E0CD_9606', 'lncRNA', 'Homo sapiens HELLP associated long non-coding RNA (HELLPAR)'),
-    ('URS00001DEEBE_562', 'tRNA', 'Escherichia coli tRNA-Pro (CGG) (tRNA-Pro-CGG-1-1)'),
+    ('URS00001DEEBE_562', 'tRNA', 'P-site tRNA from Escherichia coli (PDB 5MGP, chain x)'),
     ('URS00002F21DA_7227', 'precursor_RNA', 'Drosophila melanogaster bantam stem-loop (dme-bantam)'),
     ('URS000034C5CB_7227', 'SRP_RNA', 'Drosophila melanogaster (fruit fly) Signal recognition particle 7SL RNA CR32864 (Dmel_CR32864, Dmel_CR42652)'),
     ('URS000037602E_9606', 'tmRNA', 'Homo sapiens (human) transfer-messenger RNA Esche_coli_K12'),
