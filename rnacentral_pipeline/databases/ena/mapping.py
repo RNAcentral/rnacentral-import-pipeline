@@ -161,15 +161,17 @@ class UrlBuilder(object):
 
 @attr.s()
 class TpaMappings(object):
-    databases = attr.ib(default=attr.Factory(set))
+    databases: set = attr.ib(default=attr.Factory(set))
     simple_mapping = attr.ib(
         default=attr.Factory(lambda: coll.defaultdict(set))
     )
+    counts = attr.ib(default=attr.Factory(coll.Counter))
 
     def add_tpas(self, tpas):
         for tpa in tpas:
             self.simple_mapping[tpa_key(tpa)].add(tpa)
             self.databases.add(tpa.database)
+            self.counts[tpa.database] += 1
 
     def has_tpa_for(self, entry):
         return any(self.find_tpas(entry))
@@ -182,6 +184,13 @@ class TpaMappings(object):
                 yield tpa
             if tpas:
                 break
+
+    def validate(self):
+        dbs = [internal_database_name(db) for db in DATABASES]
+        failed = [db for db in dbs if not self.counts[db]]
+        if failed:
+            raise ValueError("No TPAs found for: %s" % ', '.join(failed))
+        return True
 
 
 def parse_tpa_file(handle, klass=GenericTpa):
