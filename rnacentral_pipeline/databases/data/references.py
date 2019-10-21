@@ -22,17 +22,27 @@ from attr.validators import in_
 from attr.validators import optional
 from attr.validators import instance_of as is_a
 
+try:
+    import enum
+except ImportError:
+    from enum32 import enum
+
+from furl import furl
+
 from rnacentral_pipeline.databases.helpers.hashes import md5
 
 from . import utils
 
-PMID_URL = 'https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=EXT_ID:{pmid}+AND+SRC:MED&format=json'
-DOI_URL = 'https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=DOI:{doi}+AND+SRC:MED&format=json'
 
-KNOWN_SERVICES = {
-    'doi',
-    'pmid',
-}
+@enum.unique
+class KnownServices(enum.Enum):
+    doi = 0
+    pmid = 1
+    pmcid = 2
+
+    @classmethod
+    def from_name(cls, name):
+        return getattr(cls, name.lower())
 
 
 class UnknownPublicationType(Exception):
@@ -50,16 +60,18 @@ class Reference(object):
     files.
     """
 
-    authors = attr.ib(validator=is_a(six.text_type))
-    location = attr.ib(validator=is_a(six.text_type))
-    title = attr.ib(validator=optional(is_a(six.text_type)))
+    authors = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
+    location = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
+    title = attr.ib(validator=optional(is_a(six.text_type)), converter=six.text_type)
     pmid = attr.ib(validator=optional(is_a(int)))
     doi = attr.ib(validator=optional(is_a(six.text_type)))
+    pmcid = attr.ib(validator=optional(is_a(six.text_type)), default=None)
 
     def md5(self):
         """
         Computes the MD5 hash of the reference.
         """
+
         title = self.title if self.title else ''
         data = [
             self.authors,
@@ -78,49 +90,120 @@ class Reference(object):
             self.doi,
         ]
 
-    def writeable(self, accession):
-        yield [
-            self.md5(),
-            accession,
-            self.authors,
-            self.location,
-            self.title,
-            self.pmid,
-            self.doi,
-        ]
+    def writeable(self, extra):
+        data = [self.md5()]
+        if isinstance(extra, six.string_types):
+            data.append(extra)
+        else:
+            data.extend(extra)
+
+        if six.PY3:
+            rest = [
+                self.authors,
+                self.location,
+                self.title,
+                self.pmid,
+                self.doi,
+            ]
+        else:
+            doi = self.doi
+            if doi:
+                doi = doi.encode('ascii', 'ignore')
+            rest = [
+                self.authors.encode('ascii', 'ignore'),
+                self.location.encode('ascii', 'ignore'),
+                self.title.encode('ascii', 'ignore'),
+                self.pmid,
+                doi,
+            ]
+
+        yield data + rest
+
+    @property
+    def id_reference(self):
+        if self.pmid:
+            return IdReference(
+                namespace=KnownServices.pmid, 
+                external_id=six.text_type(self.pmid),
+            )
+        if self.doi:
+            return IdReference(
+                namespace=KnownServices.doi, 
+                external_id=self.doi,
+            )
+        if self.pmcid:
+            return IdReference(
+                namespace=KnownServices.pmcid, 
+                external_id=self.pmcid,
+            )
+        raise ValueError("Cannot build IdReference for %s" % self)
+
+    @property
+    def id_references(self):
+        refs = set()
+        for namespace in KnownServices:
+            value = getattr(self, namespace.name)
+            if not value:
+                continue
+            eid = six.text_type(value)
+            refs.add(IdReference(namespace=namespace, external_id=six.text_type(eid)))
+        return refs
 
 
 @attr.s(frozen=True, hash=True)
 class IdReference(object):
-    namespace = attr.ib(validator=in_(KNOWN_SERVICES))
-    external_id = attr.ib(validator=is_a(six.text_type))
+    namespace = attr.ib(validator=is_a(KnownServices))
+    external_id = attr.ib(validator=is_a(six.text_type)) 
 
     @classmethod
     def build(cls, ref_id):
         if isinstance(ref_id, int):
-            return cls('pmid', six.text_type(ref_id))
+            return cls(KnownServices.pmid, six.text_type(ref_id))
 
-        if isinstance(ref_id, six.text_type):
-            ref_id = ref_id.strip()
-            if re.match(r'^\d+$', ref_id):
-                return cls('pmid', ref_id)
-            if ':' not in ref_id:
-                raise UnknownPublicationType("Could not parse: " + ref_id)
-            service, eid = ref_id.split(':', 1)
-            service = service.lower()
-            if service in KNOWN_SERVICES:
-                return cls(service, eid)
-        raise UnknownPublicationType(ref_id)
+        if not isinstance(ref_id, six.string_types):
+            raise UnknownPublicationType(ref_id)
+
+        ref_id = six.text_type(ref_id.strip())
+        if re.match(r'^\d+$', ref_id):
+            return cls(KnownServices.pmid, ref_id)
+
+        if re.match(r'^PMC\d+$', ref_id, re.IGNORECASE):
+            return cls(KnownServices.pmcid, ref_id.upper())
+
+        if ':' not in ref_id:
+            raise UnknownPublicationType("Could not parse: " + ref_id)
+
+        service, eid = ref_id.split(':', 1)
+        service = service.lower()
+        service = KnownServices.from_name(service)
+        if service is KnownServices.pmcid:
+            eid = eid.upper()
+            if not eid.startswith('PMC'):
+                eid = 'PMC' + eid
+        return cls(service, eid)
 
     @property
     def normalized_id(self):
-        return '%s:%s' % (self.namespace, self.external_id)
+        return '%s:%s' % (self.namespace.name, self.external_id)
 
     def external_url(self):
-        if self.namespace == 'pmid':
-            return PMID_URL.format(pmid=self.external_id)
-        if self.namespace == 'doi':
-            return DOI_URL.format(doi=self.external_id)
+        base = furl('https://www.ebi.ac.uk/europepmc/webservices/rest/search')
+        base.args['format'] = 'json'
+        base.args['pageSize'] = 1000
+
+        if self.namespace is KnownServices.pmid:
+            query = '{pmid} AND SRC:MED'.format(pmid=self.external_id)
+            base.args['query'] = query
+            return base.url
+
+        if self.namespace is KnownServices.doi or \
+                self.namespace is KnownServices.pmcid:
+            suffix = self.external_id
+            if self.namespace is KnownServices.doi:
+                suffix = '"%s"' % suffix
+            base.args['query'] = '%s:%s' % (self.namespace.name.upper(), suffix)
+            return base.url
+
         raise ValueError("No URL for namespace %s" % self.namespace)
 
     def writeable(self, accession):

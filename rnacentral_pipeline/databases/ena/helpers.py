@@ -18,6 +18,8 @@ import attr
 import logging
 import collections as coll
 
+import six
+
 from Bio.Seq import Seq
 
 import rnacentral_pipeline.databases.helpers.embl as embl
@@ -112,6 +114,13 @@ def references(record, feature):
 def rna_type(feature):
     if feature.type == 'ncRNA':
         return embl.qualifier_value(feature, 'ncRNA_class', r'^(.+)$')
+    if feature.type == 'misc_RNA':
+        prod = product(feature) or ''
+        if prod.startswith('gene:'):
+            gene = prod.split(':')[1].split('.')[0]
+            if gene in {'rRNA', 'snoRNA', 'tRNA', 'snRNA'}:
+                return gene
+        return 'misc_RNA'
     if feature.type == 'rRNA':
         found =  product(feature) or ''
         if 'tRNA' in found:
@@ -322,6 +331,9 @@ def lineage(record):
 
 def description(record):
     raw = embl.description(record)
+    if '|' in raw:
+        first = raw.split('|')[0].replace('gene:', '')
+        return first.split('(')[0]
     return re.sub(r'^TPA:\s*', '', raw)
 
 

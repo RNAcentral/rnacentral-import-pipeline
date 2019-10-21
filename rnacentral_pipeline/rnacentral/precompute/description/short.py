@@ -27,7 +27,7 @@ def short_description(description, sequence):
     for acc in sequence.accessions:
         species.update(acc.all_species)
         common.update(u'(%s)' % c for c in acc.all_common_names)
-    leading = list(species) + list(common)
+    leading = [l for l in list(species) + list(common) if l]
 
     for name in leading:
         # This is used instead of building a regex to avoid dealing with issues

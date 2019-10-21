@@ -26,20 +26,22 @@ def parse(handle):
     entries.
     """
 
-    grouped = coll.defaultdict(list)
+    grouped = coll.defaultdict(coll.OrderedDict)
     for record in SeqIO.parse(handle, "genbank"):
         source = record.features[0]
         assert source.type == 'source'
 
         for ncrna in helpers.ncrna_features(record.features[1:]):
             entry = helpers.as_entry(record, source, ncrna)
-            grouped[entry.optional_id].append(entry)
+            if entry.accession in grouped[entry.optional_id]:
+                continue
+            grouped[entry.optional_id][entry.accession] = entry
 
     for key, related in grouped.items():
         if not key:
-            modified = related
+            modified = related.values()
         else:
-            modified = helpers.generate_related(related)
+            modified = helpers.generate_related(related.values())
 
         for entry in modified:
             yield entry

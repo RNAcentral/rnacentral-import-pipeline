@@ -1,0 +1,57 @@
+#!/usr/bin/env python3
+
+
+import os
+import shutil
+
+try:
+    from pathlib import Path
+except ImportError:
+    from pathlib2 import Path
+
+import click
+import humanfriendly
+
+
+def grouped(pattern, max_size):
+    total = 0
+    group = []
+    for path in list(Path('.').glob(pattern)):
+        filename = str(path)
+        size = os.stat(filename).st_size
+        if total + size < max_size:
+            total += size
+            group.append(filename)
+        else:
+            yield group
+            group = [filename]
+            total = size
+    if group:
+        yield group
+
+
+def write_group(index, group, output_pattern):
+    filename = output_pattern.replace('*', '%05i' % index)
+    with open(filename, 'a') as output:
+        for name in group:
+            with open(name, 'r') as raw:
+                shutil.copyfileobj(raw, output)
+
+
+@click.command()
+@click.option('--max-size', default='4GB')
+@click.argument('input_pattern')
+@click.argument('output_pattern')
+def main(input_pattern, output_pattern, max_size=None):
+    """
+    Group the files matching the given pattern into files of no more than
+    max-size.
+    """
+
+    max_bytes = humanfriendly.parse_size(max_size)
+    for index, group in enumerate(grouped(input_pattern, max_bytes)):
+        write_group(index, group, output_pattern)
+
+
+if __name__ == "__main__":
+    main()

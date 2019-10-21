@@ -15,19 +15,12 @@ limitations under the License.
 
 
 import csv
+import operator as op
+
+import six
 
 from . import parser
-
-
-def process_directory(directory, colored=True):
-    """
-    Process all SVG files in the given directory. By default it will process
-    all colored SVG files, if given colored=False, it will only use uncolored
-    SVGs.
-    """
-
-    for found in parser.models(directory, colored=colored):
-        yield found.writeable() 
+from . import validator
 
 
 def write(directory, output, colored=True):
@@ -35,10 +28,13 @@ def write(directory, output, colored=True):
     Parse all the secondary structure data from the given directory and write
     it to the given file.
     """
-    csv.writer(output).writerows(process_directory(directory, colored=colored))
+
+    data = parser.models(directory, colored=colored)
+    data = six.moves.map(op.methodcaller('writeable'), data)
+    csv.writer(output).writerows(data)
 
 
-def write_all(directories, output, colored=True):
+def write_all(directories, output, colored=True, allow_missing=False):
     """
     Process all directories to produce a datafile for all computed secondary
     structures in them.
@@ -47,3 +43,9 @@ def write_all(directories, output, colored=True):
     assert directories, "Must give at least one directory"
     for directory in directories:
         write(directory, output, colored=colored)
+
+
+def write_should_show(filename, output):
+    data = validator.from_file(filename)
+    data = six.moves.map(op.methodcaller('writeable'), data)
+    csv.writer(output).writerows(data)

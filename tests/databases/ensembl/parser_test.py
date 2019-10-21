@@ -22,10 +22,16 @@ from .helpers import parse_with_family, entries_for, entry_for, has_entry_for
 
 
 @pytest.fixture(scope='module')  # pylint: disable=no-member
-def human_12():
-    return parse_with_family('data/ensembl/Homo_sapiens.GRCh38.chromosome.12.dat',
+def human_1():
+    return parse_with_family('data/ensembl/Homo_sapiens.GRCh38.chromosome.1.dat',
                              gencode_file='data/gencode/human-transcripts.gff3')
 
+
+@pytest.fixture(scope='module')  # pylint: disable=no-member
+def human_12():
+    return parse_with_family('data/ensembl/Homo_sapiens.GRCh38.chromosome.12.dat',
+                             gencode_file='data/gencode/human-transcripts.gff3',
+                             excluded_file='data/ensembl/excluded.txt')
 
 @pytest.fixture(scope='module')  # pylint: disable=no-member
 def human_x():
@@ -41,6 +47,11 @@ def macaca():
 @pytest.fixture(scope='module')  # pylint: disable=no-member
 def mouse_3():
     return parse_with_family('data/ensembl/Mus_musculus.GRCm38.chromosome.3.dat')
+
+
+@pytest.fixture(scope='module')  # pylint: disable=no-member
+def cow_8():
+    return parse_with_family('data/ensembl/Bos_taurus.ARS-UCD1.2.primary_assembly.8.dat')
 
 
 def test_it_sets_primary_id_to_versionless_transcript_id(human_12):
@@ -126,6 +137,7 @@ def test_it_gets_simple_locations(human_12):
                 dat.Exon(start=36661, stop=37529),
             ],
             assembly_id='GRCh38',
+            coordinate_system=dat.CoordinateSystem.one_based(),
         )
     ]
 
@@ -141,13 +153,14 @@ def test_can_get_joined_locations(human_12):
                 dat.Exon(start=3325090, stop=3325340),
             ],
             assembly_id='GRCh38',
+            coordinate_system=dat.CoordinateSystem.one_based(),
         )
     ]
 
 
 def test_it_gets_cross_references(human_12):
     assert entry_for(human_12, 'ENST00000504074.1').xref_data == {
-        "UCSC": ["uc010scw.2"],
+        "UCSC": ["ENST00000504074.1"],
         "RNAcentral": ["URS000042090E"],
         "HGNC_trans_name": ['FAM138D-201'],
         "RefSeq_ncRNA": ['NR_026823'],
@@ -177,6 +190,7 @@ def test_it_builds_correct_entries(human_12):
                 strand=1,
                 exons=[dat.Exon(start=3124777, stop=3125063)],
                 assembly_id='GRCh38',
+                coordinate_system=dat.CoordinateSystem.one_based(),
             ),
         ],
         rna_type='SRP_RNA',
@@ -199,11 +213,11 @@ def test_it_builds_correct_entries(human_12):
             'transcript_id': ['ENST00000620330.1']
         },
         xref_data={
-            "UCSC": ["uc058jxg.1"],
+            "UCSC": ["ENST00000620330.1"],
             "RFAM_trans_name": ["RF00017.190-201"],
             "RNAcentral": ["URS0000AA28EF"],
         },
-        references=[dat.IdReference('pmid', '27337980')],
+        references=[dat.IdReference(dat.KnownServices.pmid, '27337980')],
         mol_type='genomic DNA',
         pseudogene='N',
         is_composite='N',
@@ -249,12 +263,12 @@ def test_it_has_last_ncrna(human_12):
     assert entry_for(human_12, "ENST00000459107.1").xref_data == {
         'RNAcentral': ["URS00006F58F8"],
         'RFAM_trans_name': ['RF00019.633-201'],
-        "UCSC": ["uc031ztg.2"],
+        "UCSC": ["ENST00000459107.1"],
     }
 
 
 def test_extracts_all_gencode_entries(human_12):
-    assert len([e for e in human_12 if e.database == 'GENCODE']) == 1506
+    assert len([e for e in human_12 if e.database == 'GENCODE']) == 1497
 
 
 def test_can_build_gencode_entries(human_12):
@@ -272,6 +286,7 @@ def test_can_build_gencode_entries(human_12):
                 strand=1,
                 exons=[dat.Exon(start=3124777, stop=3125063)],
                 assembly_id='GRCh38',
+                coordinate_system=dat.CoordinateSystem.one_based(),
             ),
         ],
         rna_type='SRP_RNA',
@@ -294,12 +309,12 @@ def test_can_build_gencode_entries(human_12):
             'transcript_id': ['ENST00000620330.1']
         },
         xref_data={
-            "UCSC": ["uc058jxg.1"],
+            "UCSC": ["ENST00000620330.1"],
             "RFAM_trans_name": ["RF00017.190-201"],
             "RNAcentral": ["URS0000AA28EF"],
             'Ensembl': ['ENST00000620330.1'],
         },
-        references=[dat.IdReference('pmid', '22955987')],
+        references=[dat.IdReference(dat.KnownServices.pmid, '22955987')],
         mol_type='genomic DNA',
         pseudogene='N',
         is_composite='N',
@@ -307,6 +322,21 @@ def test_can_build_gencode_entries(human_12):
 
     del ans['sequence']
     assert val == ans
+
+
+def test_it_does_not_have_excluded_ids(human_12):
+    with open('data/ensembl/excluded.txt', 'r') as raw:
+        excluded = {l.strip() for l in raw}
+
+    # Sanity check
+    assert 'ENST00000550091.5' in excluded
+    assert len(excluded) == 46265
+
+    for entry in human_12:
+        name = entry.accession
+        if entry.database.lower() == 'gencode':
+            name = entry.accession.split(':')[1]
+        assert entry.accession not in excluded
 
 
 def test_can_use_mouse_models_to_correct_rna_type(mouse_3):
@@ -333,6 +363,10 @@ def test_it_always_has_valid_rna_types_for_mouse(mouse_3):
         ])
 
 
+def test_correctly_builds_names(human_1):
+    assert entry_for(human_1, 'ENST00000516935.1').description == 'Homo sapiens (human) Y RNA'
+
+
 def test_it_never_has_bad_vault(mouse_3):
     for entry in mouse_3:
         assert entry.rna_type != 'vaultRNA'
@@ -344,3 +378,7 @@ def test_does_not_append_none_to_description(macaca):
 
 def test_does_not_create_extra_gencode_entries(macaca):
     assert len([e for e in macaca if e.database == 'GENCODE']) == 0
+
+
+def can_build_reasonable_descriptions_when_locus_is_rfam(cow_8):
+    assert entry_for('ENSBTAT00000060095.2').description == 'Bos taurus (cattle) snoRNA Small nucleolar RNA SNORA8 (ENSBTAG00000043103)'

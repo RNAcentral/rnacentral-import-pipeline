@@ -72,14 +72,12 @@ function fetch_generic() {
       if [[ "$remote" =~ '**' ]]; then
         lftp -c "mget $remote"
       else
-        if [[ "$pattern" =~ "*" ]]; then
+        if [[ "$remote" =~ "*" ]]; then
           wget "$remote"
+        elif [[ ! "$pattern" =~ "*" ]]; then
+          wget -O "$pattern" "$remote"
         else
-          local remote_pattern="$(basename "$remote")"
-          local remote_dir="$(dirname "$remote")"
-          local filename="$(curl --list-only "$remote_dir/" | grep "$remote_pattern")"
-          [ -n $filename ] || { echo 1>&2 "Failed to find remote file: $remote" && exit 1; }
-          curl "$remote_dir/$filename" > $pattern
+          wget "$remote"
         fi
       fi
       ;;
@@ -93,17 +91,6 @@ function fetch_generic() {
     *.tar.gz | *.tgz )
       find . -name '*.tar.gz' -or -name '*.tgz' | xargs -I {} tar xvf {} ;;
   esac
-}
-
-function fetch_grouped() {
-  local pattern="$(basename "$1")"
-  fetch_generic "$1" "$pattern"
-
-  for fn in $pattern; do
-    local species="$(echo "$fn" | cut -d. -f1)"
-    local grouped="$species.grouped.dat.gz"
-    cat "$fn" >> "$grouped"
-  done
 }
 
 function fetch_quickgo() {
@@ -176,43 +163,6 @@ function fetch_genome() {
   cat *.fa > "$genome_file"
 }
 
-function ena_grouper() {
-  local to_group="$1"
-  local suffix="$2"
-
-  while IFS=',' read -r "filename" "count" || [[ -n "$filename" ]]; do
-    local fn="$(basename $filename)"
-    local group="${fn:0:$count}$suffix"
-    cat $filename >> $group
-  done < "$to_group"
-}
-
-function fetch_ena() {
-  local remote="$1"
-  local produces="$2"
-  local suffix="${produces:1:${#produces}}"
-  local tmp="$(mktemp)"
-
-  find "$remote/con" -name '*.ncr.gz' -type f | xargs -I {} echo {},7 > "$tmp"
-  ena_grouper "$tmp" "$suffix"
-
-  find "$remote/std" -name '*.ncr.gz' -not -name 'rel_std_env*.ncr.gz' -type f | xargs -I {} echo {},11 > "$tmp"
-  ena_grouper "$tmp" "$suffix"
-
-  # Basically doesn't group the env data as we end up with a single very large
-  # file if we do.
-  find "$remote/std" -name 'rel_std_env*.ncr.gz' -type f | xargs -I {} echo {},14 > "$tmp"
-  ena_grouper "$tmp" "$suffix"
-
-  find "$remote/tsa" -name '*.ncr.gz' -type f | xargs -I {} echo {},3 > "$tmp"
-  ena_grouper "$tmp" "$suffix"
-
-  find "$remote/wgs" -name '*.ncr.gz' -type f | xargs -I {} echo {},6 > "$tmp"
-  ena_grouper "$tmp" "$suffix"
-
-  rm "$tmp"
-}
-
 function fetch_rfam() {
   local remote="$(dirname "$1")"
   local pattern="$(basename "$1")"
@@ -226,6 +176,39 @@ function fetch_rfam() {
   split -edl 1 --additional-suffix "$suffix" - "$prefix"
 }
 
+function fetch_ena() {
+  rsync \
+    -avP \
+    --prune-empty-dirs \
+    --include='*/' \
+    --include='**/*.ncr.gz' \
+    --exclude='*.fasta.gz' \
+    "$1" .
+  join-ena-files --max-size 1GB '**/*.ncr.gz' "$2"
+}
+
+fetch_exclude()
+{
+  local sequences="$(mktemp XXXXXX.fa.gz)"
+  fetch_url_file "$1" "$sequences"
+  gzip -dc "$sequences" |\
+  grep '^>' |\
+    grep 'processed_transcript' |\
+    cut -d ' ' -f1 |\
+    tr -d '>' > "$2"
+}
+
+fetch_gtrnadb()
+{
+  local compressed="$1"
+  fetch_generic "$compressed" '*.gz'
+  gzip -d *.json.gz
+  gzip -d bacteria_tRNAs.tar.gz
+  mv bacteria_tRNAs.tar bacteria_tRNAs.json
+  ls *.tar.gz | xargs -I {} --verbose tar -xzvf {}
+}
+
+
 [ $# -gt 0 ] || { usage 0; }
 
 name="$1"
@@ -238,8 +221,14 @@ case "$name" in
   "generic" )
     fetch_generic "$@" ;;
 
-  "ensembl" | "ensembl_plants" )
-    fetch_grouped "$@" ;;
+  "ensembl" )
+    fetch_generic "$@" ;;
+
+  "ensembl_exclude" )
+    fetch_exclude "$@" ;;
+
+  "ensembl_plants" | "ensembl_fungi" | "ensembl_metazoa" | "ensembl_protists" )
+    fetch_generic "$@" ;;
 
   "europepmc" )
     fetch_europepmc "$@" ;;
@@ -250,8 +239,11 @@ case "$name" in
   "genome" )
     fetch_genome "$@" ;;
 
+  "gtrnadb" )
+    fetch_gtrnadb "$@" ;;
+
   "rfam" )
-    fetch_rfam "$@" ;;
+    fetch_generic "$@" ;;
 
   "quickgo" )
     fetch_quickgo "$@" ;;

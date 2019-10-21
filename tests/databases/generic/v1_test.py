@@ -30,6 +30,7 @@ from rnacentral_pipeline.databases.generic import v1
     ('data/json-schema/v020/lincipedia.json', [9606]),
     ('data/json-schema/v020/tarbase.json', [9606]),
     ('data/json-schema/v020/pombase.json', [4896]),
+    ('data/json-schema/v020/lncbook.json', [9606, 9606, 9606]),
 ])
 def test_can_extract_taxid(filename, taxids):
     with open(filename, 'r') as raw:
@@ -47,11 +48,6 @@ def test_can_generate_xref_data(filename, xrefs):
         assert [v1.xrefs(e) for e in data] == xrefs
 
 
-@pytest.mark.skip()  # pylint: disable=no-member
-def test_can_extract_anticodon():
-    pass
-
-
 @pytest.mark.parametrize('filename,synonyms', [  # pylint: disable=no-member
     ('data/json-schema/v020/pombase.json', {"sno52"}),
 ])
@@ -67,6 +63,7 @@ def test_can_extract_gene_symbols_to_synonyms(filename, synonyms):
     ('data/json-schema/v020/flybase.json', 5),
     ('data/json-schema/v020/lincipedia.json', 1),
     ('data/json-schema/v020/tarbase.json', 1),
+    ('data/json-schema/v020/lncbook.json', 3),
 ])
 def test_can_parse_all_data(filename, count):
     with open(filename, 'r') as raw:
@@ -138,8 +135,9 @@ def test_can_correctly_parse_data():
             dat.SequenceRegion(
                 chromosome='rDNA',
                 strand=1,
-                exons=[dat.Exon(start=46772, stop=49485)],
+                exons=[dat.Exon(start=46771, stop=49485)],
                 assembly_id="R6",
+                coordinate_system=dat.CoordinateSystem.from_name('1-start, fully-closed'),
             ),
         ],
         rna_type='rRNA',
@@ -199,23 +197,25 @@ def test_can_correctly_parse_lncipedia_data():
                 chromosome='16',
                 strand=-1,
                 exons=[
-                    dat.Exon(start=74226291, stop=74226625),
-                    dat.Exon(start=74239804, stop=74240064),
-                    dat.Exon(start=74244205, stop=74244404),
-                    dat.Exon(start=74249251, stop=74249420),
+                    dat.Exon(start=74226290, stop=74226625),
+                    dat.Exon(start=74239803, stop=74240064),
+                    dat.Exon(start=74244204, stop=74244404),
+                    dat.Exon(start=74249250, stop=74249420),
                 ],
                 assembly_id='GRCh37',
+                coordinate_system=dat.CoordinateSystem.from_name('1-start, fully-closed'),
             ),
             dat.SequenceRegion(
                 chromosome='16',
                 strand=-1,
                 exons=[
-                    dat.Exon(start=74192392, stop=74192726),
-                    dat.Exon(start=74205905, stop=74206165),
-                    dat.Exon(start=74210306, stop=74210505),
-                    dat.Exon(start=74215352, stop=74215521),
+                    dat.Exon(start=74192391, stop=74192726),
+                    dat.Exon(start=74205904, stop=74206165),
+                    dat.Exon(start=74210305, stop=74210505),
+                    dat.Exon(start=74215351, stop=74215521),
                 ],
                 assembly_id="GRCh38",
+                coordinate_system=dat.CoordinateSystem.from_name('1-start, fully-closed'),
             ),
         ],
         rna_type='SO:0001877',
@@ -833,11 +833,12 @@ def test_can_correctly_find_isoforms():
                 chromosome='1',
                 strand='-1',
                 exons=[
-                    dat.Exon(start=83801516, stop=83803251),
-                    dat.Exon(start=83849907, stop=83850022),
-                    dat.Exon(start=83860408, stop=83860546),
+                    dat.Exon(start=83801515, stop=83803251),
+                    dat.Exon(start=83849906, stop=83850022),
+                    dat.Exon(start=83860407, stop=83860546),
                 ],
                 assembly_id='GRCh38',
+                coordinate_system=dat.CoordinateSystem.from_name('1-start, fully-closed'),
             ),
         ],
         rna_type='SO:0001877',
@@ -896,3 +897,150 @@ def test_it_treats_flybase_scaRNA_correctly():
 
     assert len(data) == 1
     assert data[0].rna_type == 'scaRNA'
+
+
+def test_can_properly_handle_shifting_lncipedia_coordinates():
+    with open('data/json-schema/v020/lincipedia.json', 'r') as raw:
+        data = json.load(raw)
+        data = list(v1.parse(data))
+
+    assert len(data) == 1
+    assert data[0].regions == [
+        dat.SequenceRegion(
+            chromosome='15',
+            strand='-',
+            exons=[dat.Exon(start=97665305, stop=97670289)],
+            assembly_id="GRCh38",
+            coordinate_system=dat.CoordinateSystem.from_name('1-start, fully-closed'),
+        ),
+    ]
+
+    assert list(data[0].regions[0].writeable(data[0].accession)) == [[
+        "LNCIPEDIA:LINC00923:10",
+        '@15/97665305-97670289:-',
+        '15',
+        -1,
+        'GRCh38',
+        1,
+        97665305,
+        97670289,
+    ]]
+
+
+def test_can_properly_handle_shifting_mirbase_coordinates():
+    with open('data/json-schema/v020/shift-mirbase.json', 'r') as raw:
+        data = json.load(raw)
+        data = list(v1.parse(data))
+
+    assert len(data) == 1
+    assert len(data[0].regions) == 1
+    assert attr.asdict(data[0].regions[0]) == attr.asdict(dat.SequenceRegion(
+        chromosome='9',
+        strand='+',
+        exons=[dat.Exon(start=136670602, stop=136670686)],
+        assembly_id="GRCh38",
+        coordinate_system=dat.CoordinateSystem.from_name('1-start, fully-closed'),
+    ))
+
+    assert list(data[0].regions[0].writeable(data[0].accession)) == [[
+        'MIRBASE:MI0000471',
+        '@9/136670602-136670686:+',
+        '9',
+        1,
+        'GRCh38',
+        1,
+        136670602,
+        136670686,
+    ]]
+
+
+def test_can_properly_handle_shifting_mirbase_coordinates():
+    with open('data/json-schema/v020/shift-mirbase-2.json', 'r') as raw:
+        data = json.load(raw)
+        data = list(v1.parse(data)) 
+    assert len(data) == 1
+    assert len(data[0].regions) == 1
+    assert attr.asdict(data[0].regions[0]) == attr.asdict(dat.SequenceRegion(
+        chromosome='12',
+        strand='-',
+        exons=[dat.Exon(start=121444279, stop=121444305)],
+        assembly_id="GRCh38",
+        coordinate_system=dat.CoordinateSystem.from_name('1-start, fully-closed'),
+    ))
+
+    assert list(data[0].regions[0].writeable(data[0].accession)) == [[
+        'MIRBASE:MIMAT0028112',
+        '@12/121444279-121444305:-',
+        '12',
+        -1,
+        'GRCh38',
+        1,
+        121444279,
+        121444305,
+    ]]
+
+
+def test_does_get_correct_lncbook_genes():
+    with open('data/json-schema/v020/lncbook.json', 'r') as raw:
+        data = json.load(raw)
+        data = list(v1.parse(data))
+
+    assert len(data) == 3
+    assert attr.asdict(data[0]) == attr.asdict(dat.Entry(
+        primary_id='HSALNT0000002',
+        accession='LncBook:HSALNT0000002',
+        ncbi_tax_id=9606,
+        database='LNCBOOK',
+        sequence="CGCGGCCCCTGTAGGCCAAGGCGCCAGGCAGGACGACAGCAGCAGCAGCGCGTCTCCTTCAGCTTCACTGCTGTGTCTCCCAGTGTAACCCTAGCATCCAGAAGTGGCACAAAACCCCTCTGCTGGCTCGTGTGTGCAACTGAGACTGTCAGAGCATGGCTAGCTCAGGGGTCCAGCTCTGCAGGGTGGGGGCTAGAGAGGAAGCAGGGAGTATCTGCACACAGGATGCCCGCGCTCAGGTGGTTGCAGAAGTCAGTGCCCAGGCCCCCACACACAGTCTCCAAAGGTCCGGCCTCCCCAGCGCAGGGCTCCTCGTTTGAGGGGAGGTGACTTCCCTCCATCGGCAAGGCCAAGCTGCGCAGCATGAAGGAGCGAAAGCTGGAGAAGCAGCAGCAGAAGGAGCAGGAGCAAGTTGATGTCGGATCTCTTCAACAAGCTGGTCATGAGGCGCAAGGGCATCTCTGGGAAAGGACCTGGGGCTGGTGAGGGGCCCGGAGGAGCCTTTGC",
+        regions=[
+            dat.SequenceRegion(
+                chromosome='1',
+                strand='-',
+                exons=[
+                    dat.Exon(start=14778, stop=14829),
+                    dat.Exon(start=14970, stop=15012),
+                    dat.Exon(start=15796, stop=15869),
+                    dat.Exon(start=16035, stop=16310),
+                    dat.Exon(start=16607, stop=16668),
+                ],
+                assembly_id="GRCh37",
+                coordinate_system=dat.CoordinateSystem.from_name('1-start, fully-closed'),
+            ),
+        ],
+        rna_type='lncRNA',
+        url="http://bigd.big.ac.cn/lncbook/transcript?transid=HSALNT0000002",
+        seq_version='1',
+        note_data={
+            'url': "http://bigd.big.ac.cn/lncbook/transcript?transid=HSALNT0000002",
+        },
+        xref_data={
+            'NONCODE': ["NONHSAT000005.2"],
+        },
+        species='Homo sapiens',
+        common_name='human',
+        lineage=(
+            'Eukaryota; Metazoa; Chordata; Craniata; '
+            'Vertebrata; Euteleostomi; Mammalia; Eutheria; '
+            'Euarchontoglires; Primates; Haplorrhini; Catarrhini; '
+            'Hominidae; Homo; Homo sapiens'
+        ),
+        gene="HSALNG0000002",
+        description='Homo sapiens (human) HSALNT0000002',
+        references=[
+            dat.IdReference.build("PMID:30715521"),
+        ],
+        related_sequences=[
+            dat.RelatedSequence(
+                sequence_id='LncBook:HSALNT0000003',
+                relationship='isoform',
+                coordinates=[],
+                evidence=dat.RelatedEvidence.empty(),
+            ),
+            dat.RelatedSequence(
+                sequence_id='LncBook:HSALNT0000004',
+                relationship='isoform',
+                coordinates=[],
+                evidence=dat.RelatedEvidence.empty(),
+            ),
+        ],
+    ))

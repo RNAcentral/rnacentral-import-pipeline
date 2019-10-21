@@ -14,6 +14,7 @@ limitations under the License.
 """
 
 import json
+import pickle
 import logging
 import collections as coll
 
@@ -84,27 +85,16 @@ def as_descriptions(report):
     return descriptions
 
 
-def parse_mapping_file(handle):
-    mapping = coll.defaultdict(list)
-    for pdb_id, refs in json.load(handle).items():
-        for ref in refs:
-            if 'namespace' in ref:
-                ref_id = '%s:%s' % (ref['namespace'], ref['external_id'])
-                mapping[pdb_id].append(pubs.reference(ref_id))
-            else:
-                mapping[pdb_id].append(data.Reference(**ref))
-    return mapping
-
-
 def as_entries(raw_data, reference_mapping):
     for raw in raw_data:
         try:
             yield as_entry(raw, reference_mapping)
         except helpers.InvalidSequence as err:
-            LOGGER.info(str(err))
+            LOGGER.warn("Invalid sequence")
+            LOGGER.exception(err)
 
 
 def parse(handle, reference_handle):
     raw_data = json.load(handle)
-    reference_mapping = parse_mapping_file(reference_handle)
+    reference_mapping = pickle.load(reference_handle)
     return as_entries(raw_data, reference_mapping)

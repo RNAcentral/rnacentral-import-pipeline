@@ -28,6 +28,8 @@ TARGET COLUMNS (
 )
 
 WITH
+    batch rows = 300,
+    batch concurrency = 3,
     FIELDS ESCAPED BY double-quote,
     FIELDS TERMINATED BY ','
 
@@ -43,15 +45,31 @@ create table load_secondary_layout (
     model text NOT NULL,
     overlap_count int not null,
     basepair_count int not null,
-    model_start int not null,
-    model_stop int not null,
-    sequence_start int not null,
-    sequence_stop int not null,
-    sequence_coverage float not null
+    model_start int,
+    model_stop int,
+    model_coverage float,
+    sequence_start int,
+    sequence_stop int,
+    sequence_coverage float
 );
 $$
 
 AFTER LOAD DO
+$$
+UPDATE load_secondary_layout load
+SET
+  model_start = hit.model_start,
+  model_stop = hit.model_stop,
+  model_coverage = hit.model_completeness,
+  sequence_start = hit.sequence_start,
+  sequence_stop = hit.sequence_stop,
+  sequence_coverage = hit.sequence_completeness
+FROM rfam_model_hits hit
+WHERE
+  hit.upi = load.urs
+  AND load.model ilike 'RF%'
+;
+$$,
 $$
 INSERT INTO rnc_secondary_structure_layout (
     urs,
@@ -62,6 +80,7 @@ INSERT INTO rnc_secondary_structure_layout (
     basepair_count,
     model_start,
     model_stop,
+    model_coverage,
     sequence_start,
     sequence_stop,
     sequence_coverage
@@ -75,17 +94,17 @@ SELECT
     basepair_count,
     model_start,
     model_stop,
-    abs((model.stop - model.stop)::float) / models.length::float as model_coverage,
+    model_coverage,
     sequence_start,
     sequence_stop,
     sequence_coverage
 FROM load_secondary_layout load
-JOIN rnc_secondary_models models
-ON 
+JOIN rnc_secondary_structure_layout_models models
+ON
   models.model_name = load.model
 ) ON CONFLICT (urs) DO UPDATE
 SET
-    model = EXCLUDED.model,
+    model_id = EXCLUDED.model_id,
     secondary_structure = EXCLUDED.secondary_structure,
     layout = EXCLUDED.layout,
     overlap_count = EXCLUDED.overlap_count,
