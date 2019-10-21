@@ -64,6 +64,10 @@ def parse(handle):
         accession = helpers.accession(record)
 
         feature = record.features[1]
+        prod = helpers.product(feature)
+        if prod:
+            prod = prod[0:500]
+
         yield Entry(
             primary_id=helpers.primary_id(feature),
             accession=accession,
@@ -86,7 +90,7 @@ def parse(handle):
 
             gene=embl.gene(feature),
             locus_tag=embl.locus_tag(feature),
-            product=helpers.product(feature),
+            product=prod,
             parent_accession=helpers.parent_accession(record),
             project=embl.project(record),
             keywords=helpers.keywords(record),
@@ -109,4 +113,5 @@ def parse(handle):
 
 def parse_with_mapping_file(handle, mapping_handle):
     mapping = tpa.load(mapping_handle)
+    mapping.validate()
     return tpa.apply(mapping, parse(handle))

@@ -62,7 +62,11 @@ def as_exons(feature):
 
 
 def regions(record, feature):
-    acc = record.annotations['accessions'][0]
+    accessions = record.annotations['accessions']
+    if len(accessions) > 1 and accessions[0][-1] == '-':
+        accessions = [''.join(accessions)]
+    acc = accessions[0]
+    assert ':' in acc, "Invalid accession (%s) for %s" % (acc, record)
     parts = acc.split(':')
     assembly_id = parts[1]
     chromosome_name = parts[2]
@@ -73,6 +77,7 @@ def regions(record, feature):
         strand=strand,
         exons=exons,
         assembly_id=assembly_id,
+        coordinate_system=data.CoordinateSystem.one_based(),
     )]
 
 
@@ -133,11 +138,16 @@ def description(context, gene, entry):
         )
 
     locus_tag = context.rfam_name(entry.locus_tag, entry.locus_tag or '')
+    if locus_tag.startswith('RF') and entry.optional_id:
+        locus_tag = entry.optional_id.split('.')[0]
 
     assert entry.rna_type, "Cannot build description without rna_type"
+    rna_type = entry.rna_type.replace('_', ' ')
+    if rna_type == locus_tag:
+        locus_tag = ''
     return '{species} {rna_type} {locus_tag}'.format(
         species=species,
-        rna_type=entry.rna_type.replace('_', ' '),
+        rna_type=rna_type,
         locus_tag=locus_tag,
     ).strip()
 
@@ -150,7 +160,7 @@ def seq_version(feature):
     acc = accession(feature)
     if '.' in acc:
         return acc.split('.', 1)[1]
-    return None
+    return '1'
 
 
 def transcript(feature):

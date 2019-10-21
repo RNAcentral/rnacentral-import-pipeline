@@ -16,6 +16,7 @@ limitations under the License.
 import re
 import os
 import csv
+import logging
 from glob import glob
 
 import six
@@ -26,6 +27,8 @@ from attr.validators import instance_of as is_a
 
 from . import ribotyper
 
+LOGGER = logging.getLogger(__name__)
+
 
 @attr.s()
 class TravelerResult(object):
@@ -35,10 +38,14 @@ class TravelerResult(object):
     overlap_count = attr.ib(validator=is_a(six.integer_types))
     ribotyper = attr.ib(type=ribotyper.Result)
     colored = attr.ib(type=bool, default=True)
+    is_rfam = attr.ib(type=bool, default=False)
 
     @classmethod
-    def build(cls, urs, model_id, directory, result, colored=True):
+    def build(cls, urs, model_id, directory, result, colored=True, is_rfam=False):
         filename = '%s-%s.overlaps' % (urs, model_id)
+        if is_rfam:
+            filename = os.path.join(model_id, urs + '.overlaps')
+
         with open(os.path.join(directory, filename), 'r') as raw:
             overlaps = int(raw.readline().strip())
 
@@ -49,6 +56,7 @@ class TravelerResult(object):
             overlap_count=overlaps,
             ribotyper=result,
             colored=colored,
+            is_rfam=is_rfam
         )
 
     def svg_filename(self):
@@ -102,23 +110,28 @@ class TravelerResult(object):
 
     @property
     def model_start(self):
-        return self.ribotyper.mfrom
+        if self.ribotyper:
+            return self.ribotyper.mfrom
 
     @property
     def model_stop(self):
-        return self.ribotyper.mto
+        if self.ribotyper:
+            return self.ribotyper.mto
 
     @property
     def sequence_start(self):
-        return self.ribotyper.bfrom
+        if self.ribotyper:
+            return self.ribotyper.bfrom
 
     @property
     def sequence_stop(self):
-        return self.ribotyper.bto
+        if self.ribotyper:
+            return self.ribotyper.bto
 
     @property
     def sequence_coverage(self):
-        return self.ribotyper.bcov
+        if self.ribotyper:
+            return self.ribotyper.bcov
 
     def writeable(self):
         return [
@@ -137,10 +150,12 @@ class TravelerResult(object):
 
     def __filename__(self, extension):
         fn = '%s-%s.%s' % (self.urs, self.model_id, extension)
+        if self.is_rfam:
+            fn = os.path.join(self.model_id, '%s.%s' % (self.urs, extension))
         return os.path.join(self.directory, fn)
 
 
-def models(directory, colored=True):
+def ribotyper_models(directory, colored=True, allow_missing=False):
     """
     Look at the files in the given directory to find all the URS-model pairs
     that have been computed.
@@ -153,10 +168,71 @@ def models(directory, colored=True):
         pair, _ = os.path.splitext(basename)
         urs, model = pair.split('-', 1)
         ribo_result = ribo_results[urs]
-        result = TravelerResult.build(urs, model, directory, ribo_result, colored=colored)
+        result = TravelerResult.build(
+            urs,
+            model,
+            directory,
+            ribo_result,
+            colored=colored,
+        )
         if result.is_valid():
             seen = True
             yield result
 
     if not seen:
-        raise ValueError("Found no possible models in: %s" % directory)
+        msg = "Found no possible models in: %s" % directory
+        if not allow_missing:
+            raise ValueError(msg)
+        LOGGER.error(msg)
+
+
+def rfam_models(directory, colored=True, allow_missing=False):
+    seen = False
+    pattern = '*.svg'
+    if colored:
+        pattern = '*.colored.svg'
+    for model_directory in glob(os.path.join(directory, '*')):
+        model = os.path.basename(model_directory)
+        for filename in glob(os.path.join(model_directory, pattern)):
+            if not colored and '.colored' in filename:
+                continue
+            basename = os.path.basename(filename)
+            urs, _ = os.path.splitext(basename)
+            urs = urs.replace('.colored', '')
+            result = TravelerResult.build(
+                urs,
+                model,
+                directory,
+                None,
+                colored=colored,
+                is_rfam=True,
+            )
+            if result.is_valid():
+                seen = True
+                yield result
+
+    if not seen:
+        msg = "Found no possible models in: %s" % directory
+        if not allow_missing:
+            raise ValueError(msg)
+        LOGGER.error(msg)
+
+
+def models(directory, colored=True, allow_missing=False):
+    has_fasta = bool(glob(os.path.join(directory, '*.fasta')))
+    if has_fasta:
+        return ribotyper_models(
+            directory, 
+            colored=colored,
+            allow_missing=allow_missing,
+        )
+
+    has_rfam = bool(glob(os.path.join(directory, 'RF*')))
+    if has_rfam:
+        return rfam_models(
+            directory, 
+            colored=colored,
+            allow_missing=allow_missing,
+        )
+
+    raise ValueError("Do not know how to parse contents of: %s" % directory)

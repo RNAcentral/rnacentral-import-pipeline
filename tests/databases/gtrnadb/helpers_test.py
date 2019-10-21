@@ -22,13 +22,13 @@ from rnacentral_pipeline.databases.gtrnadb import helpers
 
 @pytest.fixture
 def data():
-    with open('data/gtrnadb.json', 'r') as raw:
+    with open('data/gtrnadb/simple.json', 'r') as raw:
         return json.load(raw)
 
 
 @pytest.fixture
 def data2():
-    with open('data/gtrnadb-version2.json', 'r') as raw:
+    with open('data/gtrnadb/version2.json', 'r') as raw:
         return json.load(raw)
 
 

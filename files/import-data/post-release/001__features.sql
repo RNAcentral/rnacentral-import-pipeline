@@ -19,6 +19,6 @@ select distinct
   load.metadata
 from load_rnc_sequence_features load
 join xref on xref.ac = load.accession
-);
+) ON CONFLICT (upi, taxid, accession, start, stop, feature_name) DO NOTHING;
 
 drop table load_rnc_sequence_features;

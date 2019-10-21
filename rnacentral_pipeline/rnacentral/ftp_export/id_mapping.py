@@ -28,6 +28,9 @@ def gene(result):
     if result['database'] == 'ENSEMBL':
         return result['optional_id']
 
+    if result['rna_type'] == 'piRNA' and result['database'] == 'ENA':
+        return result['product']
+
     name = result['gene'] or ''
     name = name.replace('\t', ' ')
     return name

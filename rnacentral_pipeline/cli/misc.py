@@ -21,6 +21,8 @@ from rnacentral_pipeline.rnacentral import upi_ranges
 
 from rnacentral_pipeline.databases.crs import parser as crs
 
+from rnacentral_pipeline.rnacentral import pgloader
+
 
 @click.command('run-release')
 @click.option('--db_url', envvar='PGDATABASE')
@@ -58,3 +60,15 @@ def crs_data(filename, output):
     be inserted directly into the database.
     """
     crs.from_file(filename, output)
+
+
+@click.command('validate-pgloader')
+@click.argument('filename', default='-', type=click.File('r'))
+def validate_pgloader(filename):
+    """
+    Check if pgloader ran without errors. Pgloader doesn't seem to crash when it
+    should so we use this to parse the output and determine if there were any
+    issues when loading. This is safer then continuing.
+    """
+    if not pgloader.validate(filename):
+        raise click.ClickException("Pgloader produced errors")

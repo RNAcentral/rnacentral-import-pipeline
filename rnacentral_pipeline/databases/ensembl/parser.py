@@ -116,15 +116,23 @@ def ncrnas(raw, context):
                 LOGGER.debug("Skipping supressed Rfam family %s", feature)
                 continue
 
+            if context.is_excluded(entry):
+                LOGGER.debug("Skipping excluded entry %s", feature)
+                continue
+
             yield entry
 
 
-def parse(raw, family_file, gencode_file=None):
+def parse(raw, family_file, gencode_file=None, excluded_file=None):
     """
     This will parse an EMBL file for all Ensembl Entries to import.
     """
 
-    context = Context.build(family_file, gencode_file=gencode_file)
+    context = Context.build(
+        family_file,
+        gencode_file=gencode_file,
+        excluded_file=excluded_file,
+    )
     loaded = ncrnas(raw, context)
     grouped = it.groupby(loaded, op.attrgetter('gene'))
     for _, related in grouped:

@@ -111,7 +111,7 @@ def gtrnadb_entries(data):
                 references=helpers.references(),
             )
         except phy.UnknownTaxonId:
-            print("Unknown taxon id in %s" % data)
+            LOGGER.warning("Unknown taxon id in %s", data)
             break
 
 
@@ -124,8 +124,3 @@ def parse(raw):
     data = json.load(raw)
     data = six.moves.map(gtrnadb_entries, data)
     return it.chain.from_iterable(data)
-
-
-def from_file(handle, output):
-    writer = build_entry_writer(parse)
-    writer(output, handle)

@@ -33,10 +33,10 @@ class RecordRefs(object):
 
 def parse_line(line):
     line = line[5:].strip()
-    if line.endswith('.'):
+    if line.endswith("."):
         line = line[:-1]
 
-    parts = line.split(';')
+    parts = line.split(";")
     assert len(parts) == 2 or len(parts) == 3
     name = parts[0]
     ids = [i.strip() for i in parts[1:]]
@@ -46,11 +46,7 @@ def parse_line(line):
     if len(ids) == 2:
         secondary_id = ids[1]
 
-    return DBRef(
-        name,
-        primary_id,
-        secondary_id,
-    )
+    return DBRef(name, primary_id, secondary_id)
 
 
 def mapping(lines):
@@ -58,10 +54,10 @@ def mapping(lines):
     refs = []
     current_id = None
     for index, line in enumerate(lines):
-        if line.startswith('ID'):
+        if line.startswith("ID"):
             if index:
                 data[current_id] = refs
-            current_id = line[5:].split(';')[0]
+            current_id = line[5:].split(";")[0]
             refs = []
 
         if line.startswith('DR'):

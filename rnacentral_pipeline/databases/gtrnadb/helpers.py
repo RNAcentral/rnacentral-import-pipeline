@@ -221,7 +221,7 @@ def references():
             'genomic sequence'
         ),
         pmid=18984615,
-        doi='10.1093/nar/gkn787.',
+        doi=u'10.1093/nar/gkn787.',
     )]
 
 
@@ -229,3 +229,25 @@ def sequence(data):
     if 'mature_sequence' in data['metadata']:
         return data['metadata']['mature_sequence'].upper()
     return data['sequence'].upper()
+
+
+def features(data):
+    return []
+
+
+def regions(data):
+    # ['genome_locations']
+    pass
+
+
+def secondary_structure(data):
+    """
+    Generate a secondary structure from the raw angle bracket string. This
+    will transform it into a reasonable dot-bracket string and create a
+    SecondaryStructure object.
+    """
+    twod = SecondaryStructure(dot_bracket=helpers.dot_bracket(data))
+    seq = helpers.sequence(data)
+    if len(seq) != len(twod):
+        return SecondaryStructure.empty()
+    return twod

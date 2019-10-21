@@ -21,13 +21,13 @@ from rnacentral_pipeline.databases.rfam.infernal_results import parse, RfamHit, 
 
 
 def test_can_parse_valid_file():
-    with open('data/rfam-hits.tbl') as handle:
+    with open('data/qa/rfam/no-clan-competition.tbl') as handle:
         data = list(parse(handle))
     assert len(data) == 998
 
 
 def test_produces_expected_data():
-    with open('data/rfam-hits.tbl') as handle:
+    with open('data/qa/rfam/no-clan-competition.tbl') as handle:
         data = list(parse(handle))
 
     assert attr.asdict(data[0]) == attr.asdict(RfamHit(
@@ -58,13 +58,13 @@ def test_produces_nothing_on_empty_file():
 
 
 def test_can_parse_valid_tblout_file():
-    with open('data/rnac7_0000.fa.tbl') as handle:
+    with open('data/qa/rfam/scan.tbl') as handle:
         data = parse(handle, clan_competition=True)
         assert len(list(data)) == 129
 
 
 def test_produces_expected_data_for_tblout():
-    with open('data/rnac7_0000.fa.tbl') as handle:
+    with open('data/qa/rfam/scan.tbl') as handle:
         data = parse(handle, clan_competition=True)
         assert attr.asdict(next(data)) == attr.asdict(RfamClanHit(
             idx=1,
@@ -97,7 +97,7 @@ def test_produces_expected_data_for_tblout():
         ))
 
 def test_can_parse_clan_specific_output():
-    with open('data/rnac7_0000.fa.tbl') as handle:
+    with open('data/qa/rfam/scan.tbl') as handle:
         data = list(parse(handle, clan_competition=True))
 
     assert attr.asdict(data[23]) == attr.asdict(RfamClanHit(

@@ -1,0 +1,42 @@
+{
+  "metaData": {
+    "schemaVersion": "0.2.0",
+    "dateProduced": "2018-05-23T11:36:10+00:00",
+    "dataProvider": "MIRBASE",
+    "release": "22"
+  },
+  "data": [
+    {
+      "primaryId": "MIRBASE:MIMAT0028112",
+      "name": "hsa-miR-7107-3p",
+      "taxonId": "NCBITaxon:9606",
+      "soTermId": "SO:0000276",
+      "sequence": "TGGTCTGTTCATTCTCTCTTTTTGGCC",
+      "url": "http://www.mirbase.org/cgi-bin/mature.pl?mature_acc=MIMAT0028112",
+      "relatedSequences": [
+        {
+          "relationship": "precursor",
+          "sequenceId": "MIRBASE:MI0022958"
+        }
+      ],
+      "crossReferenceIds": [
+        "TargetScanVert:hsa-miR-7107-3p",
+        "miRDB:hsa-miR-7107-3p"
+      ],
+      "genomeLocations": [
+        {
+          "gca_accession": "GCA_000001405.15",
+          "assembly": "GRCh38",
+          "exons": [
+            {
+              "chromosome": "12",
+              "startPosition": 121444278,
+              "endPosition": 121444304,
+              "strand": "-"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

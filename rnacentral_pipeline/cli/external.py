@@ -18,6 +18,7 @@ import click
 from click_aliases import ClickAliasedGroup
 
 from rnacentral_pipeline.writers import write_entries
+from rnacentral_pipeline.writers import write_ontology_annotations as onto_writer
 
 from rnacentral_pipeline.databases import rfam
 from rnacentral_pipeline.databases.ena import parser as ena
@@ -25,7 +26,13 @@ from rnacentral_pipeline.databases.pdb import parser as pdb
 from rnacentral_pipeline.databases.generic import parser as generic
 from rnacentral_pipeline.databases.refseq import parser as refseq
 from rnacentral_pipeline.databases.ensembl import parser as ensembl
-from rnacentral_pipeline.databases.ensembl_plants import parser as e_plants
+from rnacentral_pipeline.databases.ensembl_genomes import plants as e_plants
+from rnacentral_pipeline.databases.ensembl_genomes import fungi as e_fungi
+from rnacentral_pipeline.databases.ensembl_genomes import metazoa as e_metazoa
+from rnacentral_pipeline.databases.ensembl_genomes import protists as e_protists
+from rnacentral_pipeline.databases.quickgo import parser as quickgo
+from rnacentral_pipeline.databases.gtrnadb import parser as gtrnadb
+from rnacentral_pipeline.databases.ncbi.gene import parser as ncbi_gene
 
 
 @click.group('external', cls=ClickAliasedGroup)
@@ -72,16 +79,24 @@ def process_json_schema(json_file, output):
     dir_okay=False,
     readable=True,
 ))
+@click.argument('exclude', type=click.File('r'))
 @click.argument('output', default='.', type=click.Path(
     writable=True,
     dir_okay=True,
     file_okay=False,
 ))
-def process_ensembl(ensembl_file, family_file, gencode_gff, output):
+def process_ensembl(ensembl_file, family_file, gencode_gff, exclude, output):
     """
     This will parse EMBL files from Ensembl to produce the expected CSV files.
     """
-    write_entries(ensembl.parse, output, ensembl_file, family_file, gencode_gff)
+    write_entries(
+        ensembl.parse, 
+        output, 
+        ensembl_file, 
+        family_file, 
+        gencode_gff,
+        exclude,
+    )
 
 
 @cli.command('ensembl_plants')
@@ -97,6 +112,39 @@ def process_ensembl_plants(ensembl_file, output):
     files should be in the EMBL format as provided by EnsemblPlants.
     """
     write_entries(e_plants.parse, output, ensembl_file)
+
+
+@cli.command('ensembl_fungi')
+@click.argument('ensembl_file', type=click.File('r'))
+@click.argument('output', default='.', type=click.Path(
+    writable=True,
+    dir_okay=True,
+    file_okay=False,
+))
+def process_ensembl_fungi(ensembl_file, output):
+    write_entries(e_fungi.parse, output, ensembl_file)
+
+
+@cli.command('ensembl_metazoa')
+@click.argument('ensembl_file', type=click.File('r'))
+@click.argument('output', default='.', type=click.Path(
+    writable=True,
+    dir_okay=True,
+    file_okay=False,
+))
+def process_ensembl_metazoa(ensembl_file, output):
+    write_entries(e_metazoa.parse, output, ensembl_file)
+
+
+@cli.command('ensembl_protists')
+@click.argument('ensembl_file', type=click.File('r'))
+@click.argument('output', default='.', type=click.Path(
+    writable=True,
+    dir_okay=True,
+    file_okay=False,
+))
+def process_ensembl_protists(ensembl_file, output):
+    write_entries(e_protists.parse, output, ensembl_file)
 
 
 @cli.command('pdb')
@@ -131,6 +179,31 @@ def process_ena(ena_file, mapping_file, output):
     write_entries(ena.parse_with_mapping_file, output, ena_file, mapping_file)
 
 
+@cli.command('ncbi-gene')
+@click.argument('data-file', type=click.File('r'))
+@click.argument('output', default='.', type=click.Path(
+    writable=True,
+    dir_okay=True,
+    file_okay=False,
+))
+def process_ncbi_gene(data_file, output):
+    write_entries(ncbi_gene.parse, output, data_file)
+
+
+@cli.command('quickgo')
+@click.argument('raw_data', type=click.File('r'))
+@click.argument('output', default='.', type=click.Path(
+    writable=True,
+    dir_okay=True,
+    file_okay=False,
+))
+def ontologies_quickgo(raw_data, output):
+    """
+    This will process a quickgo file and output files into the given directory.
+    """
+    onto_writer(quickgo.parser, output, raw_data)
+
+
 @cli.command('refseq')
 @click.argument('refseq_file', type=click.File('r'))
 @click.argument('output', default='.', type=click.Path(
@@ -158,3 +231,14 @@ def process_rfam(rfam_file, mapping_file, output):
     Process Rfam's JSON format into the files to import.
     """
     write_entries(rfam.parser.parse, output, rfam_file, mapping_file)
+
+
+@cli.command('gtrnadb')
+@click.argument('data_file', type=click.File('r'))
+@click.argument('output', default='.', type=click.Path(
+    writable=True,
+    dir_okay=True,
+    file_okay=False,
+))
+def process_gtrnadb(data_file, output):
+    write_entries(gtrnadb.parse, output, data_file)

@@ -20,5 +20,7 @@ split --additional-suffix=".$split_ext" -dC $size - "$merged/$split_name"
 cp $ctl "$merged/$ctl"
 cd "$merged"
 if compgen -G "$split_name*.$split_ext" > /dev/null; then
-  pgloader --on-error-stop $ctl
+  tmp="pgloader-output"
+  pgloader --on-error-stop $ctl | tee "$tmp"
+  rnac validate-pgloader "$tmp"
 fi

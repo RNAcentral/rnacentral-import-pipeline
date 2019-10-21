@@ -287,6 +287,7 @@ def as_region(chromosomes, starts, stops, strands, index):
         strand=strands[index],
         exons=[data.Exon(start=starts[index], stop=stops[index])],
         assembly_id='',
+        coordinate_system=data.CoordinateSystem.zero_based(),
     )
 
 

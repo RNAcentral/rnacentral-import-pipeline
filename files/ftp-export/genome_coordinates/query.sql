@@ -1,6 +1,7 @@
 COPY (
 SELECT
   json_build_object(
+      'assembly_id', :'assembly_id',
       'region_id', max(regions.region_name),
       'rna_id', max(pre.id),
       'rna_type',  max(pre.rna_type),
@@ -19,14 +20,9 @@ ON
 JOIN rnc_sequence_exons exons
 ON
   exons.region_id = regions.id
-JOIN ensembl_coordinate_systems coords
-ON
-  coords.chromosome = regions.chromosome
-  and coords.assembly_id = regions.assembly_id
 WHERE
   pre.is_active = true
   AND regions.assembly_id = :'assembly_id'
-  AND coords.is_reference = true
 GROUP BY regions.id
-ORDER BY max(coords.karyotype_rank), regions.region_start, regions.id
+ORDER BY max(regions.chromosome), regions.region_start, regions.id
 ) TO STDOUT

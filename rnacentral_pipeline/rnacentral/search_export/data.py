@@ -69,9 +69,8 @@ def create_tag(root, name, value, attrib={}):
 
     element = etree.SubElement(root, name, attr)
     if text:
-
-        if not isinstance(text, str):
-            text = str(text)
+        if not isinstance(text, six.string_types):
+            text = six.text_type(text).encode('ascii', 'ignore')
 
         element.text = sax.escape(text)
     return element
