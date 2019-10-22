@@ -16,48 +16,127 @@ limitations under the License.
 """
 
 import os
-import six
+import typing as ty
+
+import attr
+from attr.validators import optional
+from attr.validators import instance_of as is_a
 
 import click
+import humanfriendly
 
 from Bio import SeqIO
 
 
-def chunked(handle, max_nucleotides, max_sequences):
-    size = 0
-    grouped = []
-    sequences = SeqIO.parse(handle, 'fasta')
-    for sequence in sequences:
-        grouped.append(sequence)
-        size += len(sequence)
-        if size >= max_nucleotides or len(grouped) >= max_sequences:
-            yield grouped
-            size = len(sequence)
-            grouped = []
+@attr.s()
+class Chunk:
+    sequences: ty.List[SeqIO.SeqRecord] = attr.ib(default=[], validator=is_a(list))
+    nucleotide_count: int = attr.ib(default=0, validator=is_a(int))
+    file_size: int = attr.ib(default=0, validator=is_a(int))
 
-    if grouped:
-        yield grouped
+    def add(self, sequence):
+        self.sequences.append(sequence)
+        self.nucleotide_count += len(sequence)
+        self.file_size += 1  # Length of > in bytes
+        self.file_size += len(sequence.id.encode('utf-8'))
+        self.file_size += len(sequence.description.encode('utf-8'))
+        self.file_size += len(str(sequence.seq).encode('utf-8'))
+
+    def empty(self):
+        self.sequences = []
+        self.file_size = 0
+        self.nucleotide_count = 0
+
+    @property
+    def sequence_count(self):
+        return len(self.sequences)
+
+
+@attr.s(frozen=True)
+class Limit:
+    max_sequences: ty.Optional[int] = attr.ib(validator=optional(is_a(int)))
+    max_nucleotides: ty.Optional[int] = attr.ib(validator=optional(is_a(int)))
+    max_file_size: ty.Optional[int] = attr.ib(validator=optional(is_a(int)))
+
+    @classmethod
+    def build(cls, max_sequences, max_nucleotides, max_file_size):
+        def parse_existing(parser, value, **kwargs):
+            if value:
+                return parser(value, **kwargs)
+            return None
+
+        def parse_int(value):
+            return int(float(value))
+
+        return cls(
+            max_sequences=parse_existing(parse_int, max_sequences),
+            max_nucleotides=parse_existing(parse_int, max_nucleotides),
+            max_file_size=parse_existing(humanfriendly.parse_size, max_file_size,
+                                         binary=True),
+        )
+
+    def is_too_large(self, chunk):
+        if self.max_sequences:
+            if chunk.sequence_count >= self.max_sequences:
+                print("BY COUNT")
+                return True
+        if self.max_nucleotides:
+            if chunk.nucleotide_count >= self.max_nucleotides:
+                print("BY NT")
+                return True
+        if self.max_file_size:
+            if chunk.file_size >= self.max_file_size:
+                print("BY SIZE")
+                print(self)
+                print(chunk.file_size)
+                return True
+        return False
+
+
+def chunked(handle, limit):
+    chunk = Chunk()
+    for sequence in SeqIO.parse(handle, 'fasta'):
+        chunk.add(sequence)
+        if limit.is_too_large(chunk):
+            yield chunk.sequences
+            chunk.empty()
+
+    if chunk.sequences:
+        yield chunk.sequences
 
 
 @click.command()
 @click.argument('fasta', type=click.File('r'))
-@click.option('--max-nucleotides', type=float, default=1e6)
-@click.option('--max-sequences', type=float, default=2000)
+@click.option('--max-nucleotides')
+@click.option('--max-sequences')
+@click.option('--max-file-size')
 @click.argument('output', type=click.Path())
-def main(fasta, output, max_nucleotides=None, max_sequences=None):
+def main(fasta, 
+         output, 
+         max_nucleotides=None, 
+         max_sequences=None, 
+         max_file_size=None, 
+         ):
     """
-    Split a fasta file by both number of sequences and total numbers of
-    nucleotides per chunk.
+    Split a fasta file in several ways. Any combination of the maximum number of
+    sequences and maximum number of nucleotides or total file size per chunk.
+    The file size limit is really the size of sequences in the file as it does
+    not count newlines that will be part of the fasta file. Additionally, it is
+    parsed as powers of 2, so 1KB is 1024 not 1000 bytes.
     """
 
-    chunks = chunked(fasta, max_nucleotides, max_sequences)
+    base = os.path.basename(fasta.name)
+    basename, _ = os.path.splitext(base)
+    limits = Limit.build(max_sequences, max_nucleotides, max_file_size)
+    chunks = chunked(fasta, limits)
     for index, sequences in enumerate(chunks):
         if not os.path.exists(output):
             os.makedirs(output)
 
-        with open(os.path.join(output, 'part-%i.fasta' % index), 'w') as out:
+        filename = os.path.join(output, '%s-%i.fasta' % (basename, index))
+        with open(filename, 'w') as out:
             SeqIO.write(sequences, out, 'fasta')
-
+            
 
 if __name__ == "__main__":
     main()
