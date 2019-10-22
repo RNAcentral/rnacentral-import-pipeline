@@ -1,5 +1,9 @@
 #!/usr/bin/env nextflow
 
+Channel.fromPath('files/sequence-search/*.sql')
+  .map { fn -> [file(fn).baseName, file(fn), ''] }
+  .set { simple_queries }
+
 process find_db_to_export {
   input:
   file query from Channel.fromPath('files/ftp-export/sequences/databases.sql')
@@ -15,42 +19,24 @@ process find_db_to_export {
 raw_dbs
   .splitCsv()
   .combine(Channel.fromPath('files/ftp-export/sequences/database-specific.sql'))
-  .set { db_sequences }
+  .map { db, query -> [db, query, "-v db='%${db}%'"] }
+  .mix { simple_queries }
+  .set { queries }
 
-process database_specific_fasta {
-  tag { db }
+process query_database {
+  tag { name }
   maxForks params.sequence_search.query.max_forks
 
   input:
-  set val(db), file(query) from db_sequences
+  set val(name), file(query), val(parameters) from db_to_export
 
   output:
-  set val("${db}.fasta"), file('raw.json') into database_json
-
-  script:
-  """
-  psql -v ON_ERROR_STOP=1 -f "$query" -v db='%${db}%' "$PGDATABASE" > raw.json
-  """
-}
-
-process fetch_simple {
-  tag { query.baseName }
-  maxForks params.sequence_search.query.max_forks
-
-  input:
-  file(query) from Channel.fromPath('files/sequence-search/*.sql')
-
-  output:
-  set val("${query.baseName}.fasta"), file('raw.json') into simple_json
+  set val(name), file('raw.json') into for_fasta
 
   """
-  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > raw.json
+  psql -v ON_ERROR_STOP=1 -f "$query" $parameters "$PGDATABASE" > raw.json
   """
 }
-
-simple_json
-  .mix(database_json)
-  .set { for_fasta }
 
 process create_fasta {
   input:
@@ -60,13 +46,14 @@ process create_fasta {
   file("splits/$name*.fasta") into sequences
   file("${name}.hash") into hashes
 
+  ordered = "${name}-ordered.fasta"
   """
-  json2fasta.py ${json} ${name}-ordered.fasta
-  md5hash ${name}-ordered.fasta > ${name}.hash
-  seqkit shuffle --two-pass ${name}-ordered.fasta > $name
+  json2fasta.py ${json} ${ordered}
+  md5hash ${ordered} > ${name}.hash
+  seqkit shuffle --two-pass ${ordered} > ${name}.fasta
   split-sequences \
     --max-file-size ${params.sequence_search.max_file_size} \
-    ${name} splits/
+    ${name}.fasta splits/
   """
 }
 
