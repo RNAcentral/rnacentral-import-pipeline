@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Copyright [2009-2018] EMBL-European Bioinformatics Institute
+Copyright [2009-2019] EMBL-European Bioinformatics Institute
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -13,13 +13,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from rnacentral_pipeline.databases.psi_mi import tab
+import csv
 
-from . import helpers
+from . import data
 
 
 def parse(handle):
-    rows = tab.parse(handle)
-    rows = filter(helpers.involves_rnacentral, rows)
-    rows = map(helpers.as_annotations, rows)
-    return rows
+    rows = csv.DictReader(handle, delimiter='\t')
+    return map(data.Interaction.from_tab, rows)
