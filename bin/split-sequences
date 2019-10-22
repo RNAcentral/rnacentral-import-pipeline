@@ -78,17 +78,12 @@ class Limit:
     def is_too_large(self, chunk):
         if self.max_sequences:
             if chunk.sequence_count >= self.max_sequences:
-                print("BY COUNT")
                 return True
         if self.max_nucleotides:
             if chunk.nucleotide_count >= self.max_nucleotides:
-                print("BY NT")
                 return True
         if self.max_file_size:
             if chunk.file_size >= self.max_file_size:
-                print("BY SIZE")
-                print(self)
-                print(chunk.file_size)
                 return True
         return False
 
