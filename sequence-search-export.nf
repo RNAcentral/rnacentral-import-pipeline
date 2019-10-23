@@ -1,6 +1,6 @@
 #!/usr/bin/env nextflow
 
-Channel.fromPath('files/sequence-search/*.sql')
+Channel.fromPath('files/sequence-search-export/*.sql')
   .map { fn -> [file(fn).baseName, file(fn), ''] }
   .set { simple_queries }
 
