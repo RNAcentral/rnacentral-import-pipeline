@@ -20,7 +20,10 @@ raw_dbs
   .splitCsv()
   .combine(Channel.fromPath('files/ftp-export/sequences/database-specific.sql'))
   .map { db, query -> [db, query, "-v db='%${db}%'"] }
-  .mix { simple_queries }
+  .set { db_queries }
+
+simple_queries
+  .mix { db_queries }
   .set { queries }
 
 process query_database {
@@ -46,7 +49,8 @@ process create_fasta {
   file("splits/$name*.fasta") into sequences
   file("${name}.hash") into hashes
 
-  ordered = "${name}-ordered.fasta"
+  script:
+  def ordered = "${name}-ordered.fasta"
   """
   json2fasta.py ${json} ${ordered}
   md5hash ${ordered} > ${name}.hash
