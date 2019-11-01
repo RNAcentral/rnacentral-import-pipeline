@@ -20,18 +20,15 @@ raw_dbs
   .splitCsv()
   .combine(Channel.fromPath('files/ftp-export/sequences/database-specific.sql'))
   .map { db, query -> [db, query, "-v db='%${db}%'"] }
-  .set { db_queries }
-
-simple_queries
-  .mix { db_queries }
+  .mix(simple_queries)
   .set { queries }
 
 process query_database {
   tag { name }
-  maxForks params.sequence_search.query.max_forks
+  maxForks params.sequence_search.max_forks
 
   input:
-  set val(name), file(query), val(parameters) from db_to_export
+  set val(name), file(query), val(parameters) from queries
 
   output:
   set val(name), file('raw.json') into for_fasta
@@ -42,6 +39,8 @@ process query_database {
 }
 
 process create_fasta {
+  tag { name }
+
   input:
   set val(name), file(json) from for_fasta
 
