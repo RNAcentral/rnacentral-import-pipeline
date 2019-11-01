@@ -52,7 +52,7 @@ process create_fasta {
   def ordered = "${name}-ordered.fasta"
   """
   json2fasta.py ${json} ${ordered}
-  md5hash ${ordered} > ${name}.hash
+  md5sum ${ordered} > ${name}.hash
   seqkit shuffle --two-pass ${ordered} > ${name}.fasta
   split-sequences \
     --max-file-size ${params.sequence_search.max_file_size} \
