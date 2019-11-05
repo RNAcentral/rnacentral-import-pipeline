@@ -97,14 +97,14 @@ ENV TRAVELER="$RNA/traveler"
 ENV RNA_STRUCTURE="$RNA/RNAstructure"
 ENV RSCAPE="$RNA/rscape_v1.2.3"
 
-COPY --from=rnacentral/auto-traveler:rscape-templates $EPNOFILEDIR $EPNOFILEDIR
-COPY --from=rnacentral/auto-traveler:rscape-templates $EPNOPTDIR $EPNOPTDIR
-COPY --from=rnacentral/auto-traveler:rscape-templates $EPNTESTDIR $EPNTESTDIR
-COPY --from=rnacentral/auto-traveler:rscape-templates $RIBODIR $RIBODIR
-COPY --from=rnacentral/auto-traveler:rscape-templates $JIFFY_SCRIPTS $JIFFY_SCRIPTS
-COPY --from=rnacentral/auto-traveler:rscape-templates $TRAVELER $TRAVELER
-COPY --from=rnacentral/auto-traveler:rscape-templates $RNA_STRUCTURE $RNA_STRUCTURE
-COPY --from=rnacentral/auto-traveler:rscape-templates $RSCAPE $RSCAPE
+COPY --from=rnacentral/auto-traveler:single-entry-point $EPNOFILEDIR $EPNOFILEDIR
+COPY --from=rnacentral/auto-traveler:single-entry-point $EPNOPTDIR $EPNOPTDIR
+COPY --from=rnacentral/auto-traveler:single-entry-point $EPNTESTDIR $EPNTESTDIR
+COPY --from=rnacentral/auto-traveler:single-entry-point $RIBODIR $RIBODIR
+COPY --from=rnacentral/auto-traveler:single-entry-point $JIFFY_SCRIPTS $JIFFY_SCRIPTS
+COPY --from=rnacentral/auto-traveler:single-entry-point $TRAVELER $TRAVELER
+COPY --from=rnacentral/auto-traveler:single-entry-point $RNA_STRUCTURE $RNA_STRUCTURE
+COPY --from=rnacentral/auto-traveler:single-entry-point $RSCAPE $RSCAPE
 
 ENV PATH="$JIFFY_SCRIPTS:$PATH"
 ENV PATH="$AUTO_TRAVELER_PY:$PATH"
