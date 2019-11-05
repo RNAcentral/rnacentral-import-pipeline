@@ -833,7 +833,7 @@ process compute_rfam_layout_overlap {
   file("validation.txt") into family_validations optional true
 
   script:
-  if (model == 'rRNA') {
+  if (model == 'crw' || model == 'ribovision') {
     """
     echo $model > validation.txt
     """
@@ -888,7 +888,7 @@ process layout_sequences {
   file("data.csv") into secondary_to_import
 
   script:
-  def opt = family == "rRNA" ? "rrna draw" : "rfam draw --rfam-data rfam-data ${family}"
+  def opt = family == "rfam" ? "rfam draw --rfam-data rfam-data ${family}" : "${family} draw"
   """
   auto-traveler.py $opt $sequences output/
   rnac traveler process-svgs output/ data.csv
