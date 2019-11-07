@@ -16,7 +16,8 @@ limitations under the License.
 import os
 import re
 
-import six 
+from pathlib import Path
+
 import attr
 from attr.validators import instance_of as is_a
 
@@ -35,24 +36,24 @@ def as_strand(raw):
 
 @attr.s()
 class Result(object):
-    target = attr.ib(type=six.text_type)
-    status = attr.ib(type=six.text_type)
-    length = attr.ib(validator=is_a(six.integer_types), converter=int)
-    fm = attr.ib(validator=is_a(six.integer_types), converter=int)
-    fam = attr.ib(type=six.text_type)
-    domain = attr.ib(type=six.text_type)
-    model = attr.ib(type=six.text_type)
-    strand = attr.ib(validator=is_a(six.integer_types))
-    ht = attr.ib(validator=is_a(six.integer_types), converter=int)
-    tscore = attr.ib(type=float, converter=float)
-    bscore = attr.ib(type=float, converter=float)
-    bevalue = attr.ib(type=float, converter=float)
-    tcov = attr.ib(type=float, converter=float)
-    bcov = attr.ib(type=float, converter=float)
-    bfrom = attr.ib(validator=is_a(six.integer_types), converter=int)
-    bto = attr.ib(validator=is_a(six.integer_types), converter=int)
-    mfrom = attr.ib(validator=is_a(six.integer_types), converter=int)
-    mto = attr.ib(validator=is_a(six.integer_types), converter=int)
+    target: str = attr.ib(validator=is_a(str))
+    status: str = attr.ib(validator=is_a(str))
+    length: int = attr.ib(validator=is_a(int), converter=int)
+    fm: int = attr.ib(validator=is_a(int), converter=int)
+    fam: str = attr.ib(validator=is_a(str))
+    domain: str = attr.ib(validator=is_a(str))
+    model: str = attr.ib(validator=is_a(str))
+    strand: int = attr.ib(validator=is_a(int))
+    ht: int = attr.ib(validator=is_a(int), converter=int)
+    tscore: float = attr.ib(validator=is_a(float), converter=float)
+    bscore: float = attr.ib(validator=is_a(float), converter=float)
+    bevalue: float = attr.ib(validator=is_a(float), converter=float)
+    tcov: float = attr.ib(validator=is_a(float), converter=float)
+    bcov: float = attr.ib(validator=is_a(float), converter=float)
+    bfrom: int = attr.ib(validator=is_a(int), converter=int)
+    bto: int = attr.ib(validator=is_a(int), converter=int)
+    mfrom: int = attr.ib(validator=is_a(int), converter=int)
+    mto: int = attr.ib(validator=is_a(int), converter=int)
 
     @classmethod
     def from_result(cls, row):
@@ -91,7 +92,14 @@ def parse(filename):
                 yield result
 
 
-def as_dict(directory):
-    basename = os.path.basename(directory)
-    filename = os.path.join(directory, basename + '.ribotyper.long.out')
+def as_dict(directory: Path):
+    ribotyper_fn = '.ribotyper.long.out'
+    basename = directory.name
+    filenames = [Path(basename + ribotyper_fn), Path(ribotyper_fn)]
+    for fn in filenames:
+        filename = directory / fn
+        if filename.exists():
+            break
+    else:
+        raise ValueError("No fribotyper result file in: %s " % directory)
     return {p.target: p for p in parse(filename)}

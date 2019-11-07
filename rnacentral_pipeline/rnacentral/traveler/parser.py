@@ -19,10 +19,13 @@ import csv
 import logging
 from glob import glob
 
-import six
+import typing as ty
+from pathlib import Path
+
 from Bio import SeqIO
 
 import attr
+from attr.validators import optional
 from attr.validators import instance_of as is_a
 
 from . import ribotyper
@@ -32,13 +35,13 @@ LOGGER = logging.getLogger(__name__)
 
 @attr.s()
 class TravelerResult(object):
-    urs = attr.ib(type=six.text_type)
-    model_id = attr.ib(type=six.text_type)
-    directory = attr.ib(type=six.text_type)
-    overlap_count = attr.ib(validator=is_a(six.integer_types))
-    ribotyper = attr.ib(type=ribotyper.Result)
-    colored = attr.ib(type=bool, default=True)
-    is_rfam = attr.ib(type=bool, default=False)
+    urs: str = attr.ib(validator=is_a(str))
+    model_id: str = attr.ib(validator=is_a(str))
+    directory: str = attr.ib(validator=is_a(str))
+    overlap_count: int = attr.ib(validator=is_a(int))
+    ribotyper = attr.ib(validator=optional(is_a(ribotyper.Result)))
+    colored: bool = attr.ib(validator=is_a(bool), default=True)
+    is_rfam: bool = attr.ib(validator=is_a(bool), default=False)
 
     @classmethod
     def build(cls, urs, model_id, directory, result, colored=True, is_rfam=False):
@@ -161,9 +164,10 @@ def ribotyper_models(directory, colored=True, allow_missing=False):
     that have been computed.
     """
 
-    ribo_results = ribotyper.as_dict(directory)
+    dir_path = Path(directory)
+    ribo_results = ribotyper.as_dict(dir_path)
     seen = False
-    for filename in glob(os.path.join(directory, '*.fasta')):
+    for filename in dir_path.glob('*.fasta'):
         basename = os.path.basename(filename)
         pair, _ = os.path.splitext(basename)
         urs, model = pair.split('-', 1)
