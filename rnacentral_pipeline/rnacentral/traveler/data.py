@@ -13,9 +13,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import os
 import re
 
 import typing as ty
+
+from Bio import SeqIO
 
 import attr
 from attr.validators import optional
@@ -77,13 +80,15 @@ class RibotyperResult(object):
     @classmethod
     def from_result(cls, row):
         parts = re.split(r'\s+', row, maxsplit=24)
+        if parts[2] == 'FAIL':
+            return None
         strand = None
         if parts[8] == 'plus':
             strand = 1
         elif parts[8] == 'minus':
             strand = -1
         else:
-            raise UnknownStrandName(raw)
+            raise UnknownStrandName(parts[8])
 
         return cls(
             target=parts[1],

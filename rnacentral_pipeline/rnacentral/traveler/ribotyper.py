@@ -30,7 +30,7 @@ def parse(filename):
             if line.startswith('#'):
                 continue
             result = RibotyperResult.from_result(line)
-            if result.status != 'FAIL':
+            if result and result.status != 'FAIL':
                 yield result
 
 

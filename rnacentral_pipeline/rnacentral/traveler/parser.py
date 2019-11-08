@@ -13,20 +13,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import re
 import os
-import csv
 import logging
 from glob import glob
 
 import typing as ty
 from pathlib import Path
-
-from Bio import SeqIO
-
-import attr
-from attr.validators import optional
-from attr.validators import instance_of as is_a
 
 from . import ribotyper
 from .data import TravelerResult
