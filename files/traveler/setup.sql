@@ -36,18 +36,17 @@ WHERE
 ;
 
 DELETE FROM :tablename to_draw
-JOIN qa_status qa 
-ON 
-  qa.upi = to_draw.upi
+USING qa_status qa 
 WHERE
-  to_draw.model in ('crw', 'ribovision')
+  qa.upi = to_draw.upi
+  AND to_draw.model in ('crw', 'ribovision')
   AND qa.incomplete_sequence = true
 ;
 
 -- Delete all lncRNAs
-DELETE FROM :tablename urs
+DELETE FROM :tablename to_draw
 USING rnc_rna_precomputed pre
 WHERE
-  layout.urs = pre.upi
+  to_draw.upi = pre.upi
   and pre.rna_type = 'lncRNA'
 ;
