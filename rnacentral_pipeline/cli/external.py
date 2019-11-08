@@ -45,12 +45,15 @@ def cli():
 
 
 @cli.command('json-schema', aliases=[
+    '5srnadb',
     'flybase',
     'lncbase',
     'lncbook',
     'lncipedia',
     'mirbase',
+    'mirgenedb',
     'pombase',
+    'snodb',
     'tarbase',
     'zwd',
 ])
