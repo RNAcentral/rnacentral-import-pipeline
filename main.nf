@@ -888,7 +888,7 @@ process layout_sequences {
   file("data.csv") into secondary_to_import
 
   script:
-  def opt = family == "rfam" ? "rfam draw --rfam-data rfam-data ${family}" : "${family} draw"
+  def opt = family =~ /^RF/ ? "rfam draw ${family}" : "${family} draw"
   """
   auto-traveler.py $opt $sequences output/
   rnac traveler process-svgs output/ data.csv
