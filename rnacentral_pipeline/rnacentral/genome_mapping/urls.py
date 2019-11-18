@@ -14,6 +14,7 @@ limitations under the License.
 """
 
 import csv
+import enum
 import logging
 import operator as op
 import itertools as it
@@ -22,11 +23,6 @@ from contextlib import contextmanager
 
 
 LOGGER = logging.getLogger(__name__)
-
-try:
-    import enum
-except ImportError:
-    from enum32 import enum
 
 
 class NoTopLevelFiles(Exception):
