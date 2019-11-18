@@ -44,7 +44,7 @@ ORDERING = [
     'lncbook',
     'gtrnadb',
     'tmrna website',
-    '5srnadb',
+    '5srrnadb',
     'pdbe',
     'refseq',
     'ensembl plants',

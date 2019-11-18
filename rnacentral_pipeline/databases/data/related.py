@@ -22,13 +22,17 @@ from attr.validators import instance_of as is_a
 from attr.validators import in_ as one_of
 
 RELATIONSHIP_TYPES = {
-    "precursor",
+    "host_gene",
+    "isoform",
     "matureProduct",
     "mature_product",
+    "ortholog",
+    "paralog",
+    "paralogue",
+    "precursor",
     "target",
     "target_protein",
     "target_rna",
-    "isoform",
 }
 
 
