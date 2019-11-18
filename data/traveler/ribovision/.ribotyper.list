@@ -1,0 +1,5 @@
+# Output printed to screen saved in:                                               .ribotyper.log
+# List of executed commands saved in:                                              .ribotyper.cmd
+# esl-seqstat -a output for shuffled.part_178.fasta saved in:                      .ribotyper.seqstat
+# Short (6 column) output saved in:                                                .ribotyper.short.out
+# Long (25 column) output saved in:                                                .ribotyper.long.out

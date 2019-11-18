@@ -15,7 +15,6 @@ limitations under the License.
 
 import click
 
-from . import crw
 from . import ensembl
 from . import europepmc
 from . import external
@@ -43,7 +42,6 @@ def cli():
     pass
 
 
-cli.add_command(crw.cli)
 cli.add_command(ensembl.cli)
 cli.add_command(europepmc.cli)
 cli.add_command(external.cli)
