@@ -23,6 +23,7 @@ from rnacentral_pipeline.databases.helpers.hashes import md5
 @pytest.mark.parametrize('directory,count', [
     ('data/traveler/simple', 1),
     ('data/traveler/rfam', 2),
+    ('data/traveler/ribovision', 2),
 ])
 def test_can_process_a_directory(directory, count):
     assert len(list(sec.models(directory))) == count
@@ -86,6 +87,39 @@ def test_produces_valid_data_for_rfam():
         None,
         None,
     ]
+
+
+def test_parses_ribovision_results():
+    vals = list(sec.models('data/traveler/ribovision'))
+    val = next(v for v in vals if v.urs == 'URS0000C5FF65')
+    val = attr.asdict(val)
+    from pprint import pprint
+    pprint(val)
+    assert val == attr.asdict(sec.TravelerResult(
+        urs='URS0000C5FF65',
+        model_id='EC_LSU_3D',
+        directory='data/traveler/ribovision',
+        overlap_count=3,
+        ribotyper=sec.ribotyper.Result(
+            target='URS0000C5FF65',
+            status='PASS',
+            length=2892,
+            fm=1,
+            fam='LSU',
+            domain='Bacteria',
+            model='EC_LSU_3D',
+            strand=1,
+            ht=1,
+            tscore=2197.9,
+            bscore=2197.9,
+            bevalue=0.0,
+            tcov=0.999,
+            bcov=0.999,
+            bfrom=2,
+            bto=2890,
+            mfrom=2,
+            mto=2902,
+        )))
 
 
 @pytest.mark.parametrize('directory,index,md5_hash', [
