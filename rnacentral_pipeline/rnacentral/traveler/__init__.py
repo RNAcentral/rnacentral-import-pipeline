@@ -17,8 +17,6 @@ limitations under the License.
 import csv
 import operator as op
 
-import six
-
 from . import parser
 from . import validator
 
@@ -30,7 +28,7 @@ def write(directory, output, colored=True):
     """
 
     data = parser.models(directory, colored=colored)
-    data = six.moves.map(op.methodcaller('writeable'), data)
+    data = map(op.methodcaller('writeable'), data)
     csv.writer(output).writerows(data)
 
 
@@ -47,5 +45,5 @@ def write_all(directories, output, colored=True, allow_missing=False):
 
 def write_should_show(filename, output):
     data = validator.from_file(filename)
-    data = six.moves.map(op.methodcaller('writeable'), data)
+    data = map(op.methodcaller('writeable'), data)
     csv.writer(output).writerows(data)

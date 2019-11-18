@@ -14,18 +14,12 @@ limitations under the License.
 """
 
 import re
-
-import six
+import enum
 
 import attr
 from attr.validators import in_
 from attr.validators import optional
 from attr.validators import instance_of as is_a
-
-try:
-    import enum
-except ImportError:
-    from enum32 import enum
 
 from furl import furl
 
@@ -60,12 +54,12 @@ class Reference(object):
     files.
     """
 
-    authors = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
-    location = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
-    title = attr.ib(validator=optional(is_a(six.text_type)), converter=six.text_type)
+    authors = attr.ib(validator=is_a(str), converter=str)
+    location = attr.ib(validator=is_a(str), converter=str)
+    title = attr.ib(validator=optional(is_a(str)), converter=str)
     pmid = attr.ib(validator=optional(is_a(int)))
-    doi = attr.ib(validator=optional(is_a(six.text_type)))
-    pmcid = attr.ib(validator=optional(is_a(six.text_type)), default=None)
+    doi = attr.ib(validator=optional(is_a(str)))
+    pmcid = attr.ib(validator=optional(is_a(str)), default=None)
 
     def md5(self):
         """
@@ -92,31 +86,18 @@ class Reference(object):
 
     def writeable(self, extra):
         data = [self.md5()]
-        if isinstance(extra, six.string_types):
+        if isinstance(extra, str):
             data.append(extra)
         else:
             data.extend(extra)
 
-        if six.PY3:
-            rest = [
-                self.authors,
-                self.location,
-                self.title,
-                self.pmid,
-                self.doi,
-            ]
-        else:
-            doi = self.doi
-            if doi:
-                doi = doi.encode('ascii', 'ignore')
-            rest = [
-                self.authors.encode('ascii', 'ignore'),
-                self.location.encode('ascii', 'ignore'),
-                self.title.encode('ascii', 'ignore'),
-                self.pmid,
-                doi,
-            ]
-
+        rest = [
+            self.authors,
+            self.location,
+            self.title,
+            self.pmid,
+            self.doi,
+        ]
         yield data + rest
 
     @property
@@ -124,7 +105,7 @@ class Reference(object):
         if self.pmid:
             return IdReference(
                 namespace=KnownServices.pmid, 
-                external_id=six.text_type(self.pmid),
+                external_id=str(self.pmid),
             )
         if self.doi:
             return IdReference(
@@ -145,25 +126,25 @@ class Reference(object):
             value = getattr(self, namespace.name)
             if not value:
                 continue
-            eid = six.text_type(value)
-            refs.add(IdReference(namespace=namespace, external_id=six.text_type(eid)))
+            eid = str(value)
+            refs.add(IdReference(namespace=namespace, external_id=str(eid)))
         return refs
 
 
 @attr.s(frozen=True, hash=True)
 class IdReference(object):
     namespace = attr.ib(validator=is_a(KnownServices))
-    external_id = attr.ib(validator=is_a(six.text_type)) 
+    external_id = attr.ib(validator=is_a(str)) 
 
     @classmethod
     def build(cls, ref_id):
         if isinstance(ref_id, int):
-            return cls(KnownServices.pmid, six.text_type(ref_id))
+            return cls(KnownServices.pmid, str(ref_id))
 
-        if not isinstance(ref_id, six.string_types):
+        if not isinstance(ref_id, str):
             raise UnknownPublicationType(ref_id)
 
-        ref_id = six.text_type(ref_id.strip())
+        ref_id = str(ref_id.strip())
         if re.match(r'^\d+$', ref_id):
             return cls(KnownServices.pmid, ref_id)
 

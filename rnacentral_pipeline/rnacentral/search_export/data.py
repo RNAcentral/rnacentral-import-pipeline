@@ -20,8 +20,6 @@ import operator as op
 import itertools as it
 import collections as coll
 
-import six
-
 from lxml import etree
 
 
@@ -68,7 +66,7 @@ def create_tag(root, name, value, attrib={}):
 
     element = etree.SubElement(root, name, attr)
     if text:
-        if not isinstance(text, six.string_types):
+        if not isinstance(text, str):
             text = str(text)
 
         element.text = text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;'")
@@ -155,9 +153,9 @@ def first(values):
     Get the first value in the list of values as a string.
     """
     value = values[0]
-    if isinstance(value, six.string_types):
+    if isinstance(value, str):
         return values[0]
-    return six.text_type(value)
+    return str(value)
 
 
 def only(value):
@@ -508,7 +506,7 @@ def normalize_rna_type(rna_type):
 def from_annotation_qualifer(name):
     def fn(go_annotations):
         key = op.itemgetter('qualifier')
-        annotations = six.moves.filter(lambda a: key(a) == name, go_annotations)
+        annotations = filter(lambda a: key(a) == name, go_annotations)
         values = set()
         for annotation in annotations:
             values.add(annotation['go_term_id'])

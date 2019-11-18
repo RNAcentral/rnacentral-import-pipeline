@@ -15,8 +15,6 @@ limitations under the License.
 
 import json
 
-import six
-
 import attr
 from attr.validators import instance_of as is_a
 
@@ -37,12 +35,12 @@ class GoTermAnnotation(object):
     RNAcentral sequences.
     """
 
-    rna_id = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
-    qualifier = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
-    term_id = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
-    evidence_code = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
+    rna_id = attr.ib(validator=is_a(str), converter=str)
+    qualifier = attr.ib(validator=is_a(str), converter=str)
+    term_id = attr.ib(validator=is_a(str), converter=str)
+    evidence_code = attr.ib(validator=is_a(str), converter=str)
     extensions = attr.ib()
-    assigned_by = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
+    assigned_by = attr.ib(validator=is_a(str), converter=str)
     publications = attr.ib(validator=is_a(list))
 
     @property

@@ -16,8 +16,6 @@ limitations under the License.
 import re
 import unicodedata
 
-import six
-
 import attr
 from attr.validators import and_
 from attr.validators import optional
@@ -133,11 +131,11 @@ def as_so_term(rna_type):
 
 def from_so_term(so_term):
     if so_term in NORMALIZE_TO_INSDC:
-        return six.text_type(NORMALIZE_TO_INSDC[so_term])
+        return str(NORMALIZE_TO_INSDC[so_term])
     if so_term in INSDC_SO_MAPPING:
-        return six.text_type(so_term)
+        return str(so_term)
     if so_term in SO_INSDC_MAPPING:
-        return six.text_type(SO_INSDC_MAPPING[so_term])
+        return str(SO_INSDC_MAPPING[so_term])
     raise UnxpectedRnaType(so_term)
 
 

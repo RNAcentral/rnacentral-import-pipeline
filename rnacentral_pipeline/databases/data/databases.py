@@ -13,12 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import six
-
-try:
-    import enum
-except ImportError:
-    from enum32 import enum
+import enum
 
 
 @enum.unique

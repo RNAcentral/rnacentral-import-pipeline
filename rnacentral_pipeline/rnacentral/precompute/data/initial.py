@@ -15,10 +15,9 @@ limitations under the License.
 
 import re
 import string
+import typing
 from collections import Counter
 
-import six
-import typing
 
 import attr
 from attr.validators import optional
@@ -69,7 +68,7 @@ def fix_hgnc_data(accessions):
 def maybe_text(value):
     if value is None:
         return None
-    return six.text_type(value)
+    return str(value)
 
 
 @attr.s()
@@ -79,17 +78,17 @@ class Accession(object):
     name from the accession level data for a sequence.
     """
 
-    gene = attr.ib(validator=optional(is_a(six.text_type)), converter=six.text_type)
-    optional_id = attr.ib(validator=optional(is_a(six.text_type)), converter=maybe_text)
-    pretty_database = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
-    feature_name = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
-    ncrna_class = attr.ib(validator=optional(is_a(six.text_type)), converter=maybe_text)
-    species = attr.ib(validator=optional(is_a(six.text_type)), converter=maybe_text)
-    common_name = attr.ib(validator=optional(is_a(six.text_type)), converter=maybe_text)
-    description = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
-    locus_tag = attr.ib(validator=optional(is_a(six.text_type)), converter=maybe_text)
-    organelle = attr.ib(validator=optional(is_a(six.text_type)), converter=maybe_text)
-    lineage = attr.ib(validator=optional(is_a(six.text_type)), converter=maybe_text)
+    gene = attr.ib(validator=optional(is_a(str)), converter=str)
+    optional_id = attr.ib(validator=optional(is_a(str)), converter=maybe_text)
+    pretty_database = attr.ib(validator=is_a(str), converter=str)
+    feature_name = attr.ib(validator=is_a(str), converter=str)
+    ncrna_class = attr.ib(validator=optional(is_a(str)), converter=maybe_text)
+    species = attr.ib(validator=optional(is_a(str)), converter=maybe_text)
+    common_name = attr.ib(validator=optional(is_a(str)), converter=maybe_text)
+    description = attr.ib(validator=is_a(str), converter=str)
+    locus_tag = attr.ib(validator=optional(is_a(str)), converter=maybe_text)
+    organelle = attr.ib(validator=optional(is_a(str)), converter=maybe_text)
+    lineage = attr.ib(validator=optional(is_a(str)), converter=maybe_text)
     all_species = attr.ib(validator=is_a(tuple), converter=tuple)
     all_common_names = attr.ib(validator=is_a(tuple), converter=tuple)
 
@@ -173,8 +172,8 @@ class Accession(object):
 @attr.s(hash=True)
 class HitComponent(object):
     completeness = attr.ib(validator=is_a(float), converter=float)
-    start = attr.ib(validator=is_a(six.integer_types))
-    stop = attr.ib(validator=is_a(six.integer_types))
+    start = attr.ib(validator=is_a(int))
+    stop = attr.ib(validator=is_a(int))
 
 
 @attr.s(hash=True)
@@ -184,11 +183,11 @@ class RfamHit(object):
     the QA information.
     """
 
-    model = attr.ib(validator=is_a(six.text_type))
-    model_rna_type = attr.ib(validator=is_a(six.text_type))
-    model_domain = attr.ib(validator=optional(is_a(six.text_type)))
-    model_name = attr.ib(validator=is_a(six.text_type))
-    model_long_name = attr.ib(validator=is_a(six.text_type))
+    model = attr.ib(validator=is_a(str))
+    model_rna_type = attr.ib(validator=is_a(str))
+    model_domain = attr.ib(validator=optional(is_a(str)))
+    model_name = attr.ib(validator=is_a(str))
+    model_long_name = attr.ib(validator=is_a(str))
     sequence_info = attr.ib(validator=is_a(HitComponent))
     model_info = attr.ib(validator=is_a(HitComponent))
 
@@ -227,17 +226,17 @@ class Sequence(object):
     is specific to a taxid.
     """
 
-    upi = attr.ib(validator=is_a(six.text_type))
-    taxid = attr.ib(validator=optional(is_a(six.integer_types)))
-    length = attr.ib(validator=is_a(six.integer_types))
+    upi = attr.ib(validator=is_a(str))
+    taxid = attr.ib(validator=optional(is_a(int)))
+    length = attr.ib(validator=is_a(int))
     accessions = attr.ib(validator=is_a(list), type=typing.List[Accession])
     inactive_accessions = attr.ib(validator=is_a(list), type=typing.List[Accession])
     is_active = attr.ib(validator=is_a(bool))
     has_coordinates = attr.ib(validator=is_a(bool))
     previous_data = attr.ib(validator=optional(is_a(dict)))
     rfam_hits = attr.ib(validator=is_a(list), type=typing.List[RfamHit])
-    last_release = attr.ib(validator=is_a(six.integer_types))
-    chromosomes = attr.ib(validator=is_a(list), type=typing.List[six.text_type])
+    last_release = attr.ib(validator=is_a(int))
+    chromosomes = attr.ib(validator=is_a(list), type=typing.List[str])
 
     def is_species_specific(self):
         """
