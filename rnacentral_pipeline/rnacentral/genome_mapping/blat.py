@@ -19,8 +19,6 @@ import operator as op
 import itertools as it
 import logging
 
-import six
-
 import attr
 from attr.validators import instance_of as is_a
 
@@ -59,7 +57,7 @@ FIELDS = [
 
 @attr.s(frozen=True)
 class BlatHit(object):
-    upi = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
+    upi = attr.ib(validator=is_a(str), converter=str)
     sequence_length = attr.ib(validator=is_a(int))
     matches = attr.ib(validator=is_a(int))
     target_insertions = attr.ib(validator=is_a(int))
@@ -67,7 +65,7 @@ class BlatHit(object):
 
     @classmethod
     def build(cls, assembly_id, raw):
-        parts = six.moves.zip(raw['tStarts'], raw['blockSizes'])
+        parts = zip(raw['tStarts'], raw['blockSizes'])
         exons = [Exon(s, s+l) for (s, l) in parts]
 
         return cls(
@@ -137,7 +135,7 @@ def select_hits(hits, sort=False):
         hits = sorted(hits, key=key)
 
     for upi, subhits in it.groupby(hits, key=key):
-        selected = list(six.moves.filter(select_possible, subhits))
+        selected = list(filter(select_possible, subhits))
 
         if not selected:
             LOGGER.warn("No possible matches for %s", upi)
@@ -153,7 +151,7 @@ def select_hits(hits, sort=False):
 
 def write_importable(handle, output):
     hits = utils.unpickle_stream(handle)
-    writeable = six.moves.map(op.methodcaller('writeable'), hits)
+    writeable = map(op.methodcaller('writeable'), hits)
     writeable = it.chain.from_iterable(writeable)
     csv.writer(output).writerows(writeable)
 

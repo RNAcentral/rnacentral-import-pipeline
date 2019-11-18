@@ -24,7 +24,6 @@ import attr
 from attr.validators import optional
 from attr.validators import instance_of as is_a
 
-import six
 import psycopg2 as pg
 from psycopg2.extras import DictCursor
 
@@ -60,7 +59,7 @@ def reconcile_taxids(taxid):
     are overriden to match other data.
     """
 
-    taxid = six.text_type(taxid)
+    taxid = str(taxid)
     if taxid == '284812':  # Ensembl assembly for Schizosaccharomyces pombe
         return 4896  # Pombase and ENA xrefs for Schizosaccharomyces pombe
     return int(taxid)
@@ -97,9 +96,9 @@ class InvalidDomain(Exception):
 
 @attr.s()
 class AssemblyExample(object):
-    chromosome = attr.ib(validator=is_a(six.text_type))
-    start = attr.ib(validator=is_a(six.integer_types))
-    end = attr.ib(validator=is_a(six.integer_types))
+    chromosome = attr.ib(validator=is_a(str))
+    start = attr.ib(validator=is_a(int))
+    end = attr.ib(validator=is_a(int))
 
     @classmethod
     def build(cls, raw, example_locations):
@@ -109,7 +108,7 @@ class AssemblyExample(object):
 
         example = example_locations[key]
         return cls(
-            chromosome=six.text_type(example['chromosome']),
+            chromosome=str(example['chromosome']),
             start=example['start'],
             end=example['end'],
         )
@@ -121,14 +120,14 @@ class AssemblyExample(object):
 
 @attr.s()
 class AssemblyInfo(object):
-    assembly_id = attr.ib(validator=is_a(six.text_type))
-    assembly_full_name = attr.ib(validator=is_a(six.text_type))
-    gca_accession = attr.ib(validator=optional(is_a(six.text_type)))
-    assembly_ucsc = attr.ib(validator=optional(is_a(six.text_type)))
-    common_name = attr.ib(validator=optional(is_a(six.text_type)))
-    taxid = attr.ib(validator=is_a(six.integer_types))
-    ensembl_url = attr.ib(validator=is_a(six.text_type))
-    division = attr.ib(validator=is_a(six.text_type))
+    assembly_id = attr.ib(validator=is_a(str))
+    assembly_full_name = attr.ib(validator=is_a(str))
+    gca_accession = attr.ib(validator=optional(is_a(str)))
+    assembly_ucsc = attr.ib(validator=optional(is_a(str)))
+    common_name = attr.ib(validator=optional(is_a(str)))
+    taxid = attr.ib(validator=is_a(int))
+    ensembl_url = attr.ib(validator=is_a(str))
+    division = attr.ib(validator=is_a(str))
     blat_mapping = attr.ib(validator=is_a(bool), converter=bool)
     example = attr.ib(validator=optional(is_a(AssemblyExample)))
 
@@ -230,7 +229,7 @@ def fetch(connections, query_handle, example_locations, known):
     seen = set()
     results = db.run_queries_across_databases(connections, query_handle)
     for (_, rows) in results:
-        raw = {r['meta_key']: six.text_type(r['meta_value']) for r in rows}
+        raw = {r['meta_key']: str(r['meta_value']) for r in rows}
         if raw['species.division'] == 'EnsemblBacteria':
             continue
         info = AssemblyInfo.build(raw, example_locations)
@@ -254,5 +253,5 @@ def write(connections, query, example_file, known_handle, output, db_url=None):
     examples = json.load(example_file)
     known = load_known(db_url, known_handle)
     data = fetch(connections, query, examples, known)
-    data = six.moves.map(op.methodcaller('writeable'), data)
+    data = map(op.methodcaller('writeable'), data)
     csv.writer(output).writerows(data)

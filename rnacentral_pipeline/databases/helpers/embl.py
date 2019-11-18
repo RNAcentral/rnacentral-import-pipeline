@@ -16,8 +16,6 @@ limitations under the License.
 import re
 import collections as coll
 
-import six
-
 from Bio import SeqIO
 
 from rnacentral_pipeline.databases.data import Exon, Reference
@@ -305,11 +303,11 @@ def as_reference(ref):
     if title == ';':
         title = None
     else:
-        title = six.text_type(title)
+        title = str(title)
 
     return Reference(
-        authors=six.text_type(ref.authors),
-        location=six.text_type(ref.journal),
+        authors=str(ref.authors),
+        location=str(ref.journal),
         title=title,
         pmid=pmid,
         doi=None,

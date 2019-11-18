@@ -13,10 +13,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from time import sleep
 import logging
+from time import sleep
 
-import six
 import requests
 
 try:
@@ -84,7 +83,7 @@ def lineage(taxon_id):
     """
 
     data = phylogeny(taxon_id)
-    return six.text_type('{lineage}{name}'.format(
+    return str('{lineage}{name}'.format(
         lineage=data.get('lineage', None),
         name=data['scientificName']
     ))

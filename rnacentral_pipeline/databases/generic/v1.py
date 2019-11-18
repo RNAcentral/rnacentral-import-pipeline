@@ -16,7 +16,6 @@ limitations under the License.
 import itertools as it
 import collections as coll
 
-import six
 import attr
 from attr.validators import optional
 from attr.validators import instance_of as is_a
@@ -36,7 +35,7 @@ class UnexpectedCoordinates(Exception):
 
 @attr.s()
 class Context(object):
-    database = attr.ib(validator=is_a(six.text_type))
+    database = attr.ib(validator=is_a(str))
     coordinate_system = attr.ib(validator=optional(is_a(data.CoordinateSystem)))
 
 
