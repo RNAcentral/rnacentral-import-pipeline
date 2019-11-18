@@ -18,6 +18,9 @@ import click
 
 from rnacentral_pipeline.rnacentral import traveler
 
+from rnacentral_pipeline.databases.crw import secondary_models as crw
+from rnacentral_pipeline.databases.ribovision import secondary_models as ribovision
+
 
 @click.group('traveler')
 def cli():
@@ -61,3 +64,32 @@ def should_show(filename, output):
     be shown.
     """
     traveler.write_should_show(filename, output)
+
+
+@cli.group('model-info')
+def model_info():
+    """
+    Commands for parsing and generating data files we can import into the
+    database as model info files.
+    """
+
+
+@model_info.command('crw')
+@click.argument('filename', type=click.File('r'))
+@click.argument('output', default='-', type=click.File('w'))
+def crw_model_info(filename, output):
+    """
+    Parse the CRW metadata file and produce 
+    """
+    crw.write(filename, output)
+
+
+@model_info.command('ribovision')
+@click.argument('filename', type=click.File('r'))
+@click.argument('output', default='-', type=click.File('w'))
+def ribovision_model_info(filename, output):
+    """
+    Parse the metadata.tsv file from auto-traveler for Ribovision models to
+    produce something we can put in our database.
+    """
+    ribovision.write(filename, output)

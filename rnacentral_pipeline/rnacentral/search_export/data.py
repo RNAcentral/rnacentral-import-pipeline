@@ -22,7 +22,6 @@ import collections as coll
 
 import six
 
-from xml.sax import saxutils as sax
 from lxml import etree
 
 
@@ -70,9 +69,9 @@ def create_tag(root, name, value, attrib={}):
     element = etree.SubElement(root, name, attr)
     if text:
         if not isinstance(text, six.string_types):
-            text = six.text_type(text).encode('ascii', 'ignore')
+            text = str(text)
 
-        element.text = sax.escape(text)
+        element.text = text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;'")
     return element
 
 
