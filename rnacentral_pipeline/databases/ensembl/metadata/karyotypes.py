@@ -21,10 +21,7 @@ import requests
 from retry import retry
 from ratelimiter import RateLimiter
 
-try:
-    from functools import lru_cache
-except ImportError:
-    from functools32 import lru_cache
+from functools import lru_cache
 
 
 DOMAINS = {
