@@ -322,32 +322,9 @@ def note_data(record):
 
 
 def coordinate_system(metadata):
-    system = None
-    database = metadata['dataProvider'].lower()
-    if 'genomicCoordinateSystem' in metadata:
-        system = metadata['genomicCoordinateSystem']
-    elif database == 'flybase':
-        system = '1-start, fully-closed'
-    elif database == 'lncipedia':
-        system = '1-start, fully-closed'
-    elif database == 'mirbase':
-        system = '1-start, fully-closed'
-    elif database == 'lncbook':
-        system = "1-start, fully-closed"
-    elif database == 'lncbase':
-        pass
-    elif database == 'tarbase':
-        pass
-    elif database == 'zwd':
-        pass
-    elif database == 'pombase':
-        system = '1-start, fully-closed'
-    else:
-        raise ValueError("Could not determine coordinate system")
-
+    system = metadata.get('genomicCoordinateSystem', '1-start, fully-closed')
     if not system:
-        return None
-
+        raise ValueError("Could not find coordinate system for: %s" % metadata)
     return data.CoordinateSystem.from_name(system)
 
 

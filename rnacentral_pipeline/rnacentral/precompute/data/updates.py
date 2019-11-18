@@ -15,8 +15,6 @@ limitations under the License.
 
 import operator as op
 
-import six
-
 import attr
 from attr.validators import optional
 from attr.validators import instance_of as is_a
@@ -43,16 +41,16 @@ class Update(object):
     This represents the data that is an update to our precomputed data.
     """
 
-    upi = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
-    taxid = attr.ib(validator=optional(is_a(six.integer_types)))
+    upi = attr.ib(validator=is_a(str))
+    taxid = attr.ib(validator=optional(is_a(int)))
     is_active = attr.ib(validator=is_a(bool))
-    rna_type = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
-    description = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
-    databases = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
+    rna_type = attr.ib(validator=is_a(str))
+    description = attr.ib(validator=is_a(str))
+    databases = attr.ib(validator=is_a(str))
     has_coordinates = attr.ib(validator=is_a(bool))
     qa_status = attr.ib(validator=is_a(qa.QaStatus))
-    short_description = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
-    last_release = attr.ib(validator=is_a(six.integer_types))
+    short_description = attr.ib(validator=is_a(str))
+    last_release = attr.ib(validator=is_a(int))
 
     @property
     def rna_id(self):
