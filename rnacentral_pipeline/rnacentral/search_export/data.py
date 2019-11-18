@@ -604,6 +604,10 @@ def gene_synonyms(synonym_set):
     return result
 
 
+def pdb_ids(pdb_id, chain):
+    pass
+
+
 builder = entry([
     tag('name', as_name, keys=('upi', 'taxid')),
     tag('description', first),
@@ -680,5 +684,6 @@ builder = entry([
         fields('no_overlaps_with', get_or_empty('no_overlaps_with'), keys='overlaps'),
         fields('has_secondary_structure', has_value, keys='secondary'),
         fields('secondary_structure_model', get_or_empty('secondary_structure_model'), keys='secondary'),
+        fields('pdbid_entityid', pdb_ids, keys='cross_references'),
     ]),
 ])
