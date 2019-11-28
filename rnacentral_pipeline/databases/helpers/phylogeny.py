@@ -49,7 +49,7 @@ def phylogeny(taxon_id):
         However in the case of 400 errors this will fail on the first attempt.
     """
 
-    for count in range(5):
+    for count in range(10):
         response = requests.get(TAX_URL.format(taxon_id=taxon_id))
         try:
             response.raise_for_status()
@@ -57,7 +57,7 @@ def phylogeny(taxon_id):
             break
         except requests.HTTPError as err:
             if response.status_code == 500:
-                sleep(0.15 * (count + 1))
+                sleep(0.15 * (count + 1) ** 2)
                 continue
             elif response.status_code == 404:
                 raise UnknownTaxonId(taxon_id)
