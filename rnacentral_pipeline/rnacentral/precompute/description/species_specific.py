@@ -454,4 +454,10 @@ def description_of(rna_type, sequence):
     if description.endswith(' null'):
         description = replace_nulls(rna_type, description)
 
-    return cleanup(rna_type, db_name, description)
+    result = cleanup(rna_type, db_name, description)
+    if isinstance(result, bytes):
+        return result.decode('utf-8')
+    elif isinstance(result, str):
+        return result
+    else:
+        raise ValueError("Unknown type of description")
