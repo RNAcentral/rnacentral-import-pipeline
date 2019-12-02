@@ -5,7 +5,7 @@ SELECT
 	t.upi,
   case
   when clans.rfam_clan_id = 'CL00111' or clans.rfam_clan_id = 'CL00113' THEN 'crw'
-  when clans.rfam_clan_id = 'CL00112' and models.rfam_model_id != 'CL00112' THEN 'ribovision'
+  when clans.rfam_clan_id = 'CL00112' and models.rfam_model_id != 'RF00002' THEN 'ribovision'
   else models.rfam_model_id
   end as model
 FROM (
