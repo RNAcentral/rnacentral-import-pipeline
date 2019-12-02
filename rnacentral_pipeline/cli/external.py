@@ -245,3 +245,27 @@ def process_rfam(rfam_file, mapping_file, output):
 ))
 def process_gtrnadb(data_file, output):
     write_entries(gtrnadb.parse, output, data_file)
+
+
+@cli.command('genecards')
+@click.argument('data_file', type=click.File('r'))
+@click.argument('known_sequences', type=click.File('r'))
+@click.argument('output', default='.', type=click.Path(
+    writable=True,
+    dir_okay=True,
+    file_okay=False,
+))
+def process_genecarrds(data_file, known_sequences, output):
+    write_entries(genecards.parse, output, data_file, known_sequences)
+
+
+@cli.command('malacards')
+@click.argument('data_file', type=click.File('r'))
+@click.argument('known_sequences', type=click.File('r'))
+@click.argument('output', default='.', type=click.Path(
+    writable=True,
+    dir_okay=True,
+    file_okay=False,
+))
+def process_malacards(data_file, known_sequences, output):
+    write_entries(malacards.parse, output, data_file, known_sequences)
