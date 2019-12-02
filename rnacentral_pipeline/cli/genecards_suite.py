@@ -28,9 +28,9 @@ def cli():
 
 @cli.command('lookup')
 @click.option('--db-url', envvar='PGDATABASE')
-@click.argument('filename', type=click.File('r'))
 @click.argument('urs-field')
-@click.argument('output', type=click.File('wb'))
+@click.argument('filename', type=click.File('r'))
+@click.argument('output', default='urs-info.pickle', type=click.File('wb'))
 def lookup(filename, urs_field, output, db_url):
     """
     Lookup the required information for all URS ids in the given file and write

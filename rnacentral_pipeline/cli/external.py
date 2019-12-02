@@ -249,7 +249,7 @@ def process_gtrnadb(data_file, output):
 
 @cli.command('genecards')
 @click.argument('data_file', type=click.File('r'))
-@click.argument('known_sequences', type=click.File('r'))
+@click.argument('known_sequences', type=click.File('rb'))
 @click.argument('output', default='.', type=click.Path(
     writable=True,
     dir_okay=True,
@@ -261,7 +261,7 @@ def process_genecarrds(data_file, known_sequences, output):
 
 @cli.command('malacards')
 @click.argument('data_file', type=click.File('r'))
-@click.argument('known_sequences', type=click.File('r'))
+@click.argument('known_sequences', type=click.File('rb'))
 @click.argument('output', default='.', type=click.Path(
     writable=True,
     dir_okay=True,
