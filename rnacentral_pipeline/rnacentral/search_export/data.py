@@ -604,8 +604,14 @@ def gene_synonyms(synonym_set):
     return result
 
 
-def pdb_ids(pdb_id, chain):
-    pass
+def pdb_ids(xrefs):
+    pdb_ids = []
+    for xref in xrefs: 
+        if xref['name'] != 'PDBE':
+            continue
+        parts = xref.split('_')
+        pdb_ids.append('%s_%s' % parts[0], parts[2])
+    return pdb_ids
 
 
 builder = entry([
