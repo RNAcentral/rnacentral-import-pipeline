@@ -29,6 +29,7 @@ def alignments(fasta):
 
     buff = StringIO()
     for line in fasta:
+        line = str(line)
         if line.startswith('//'):
             buff.seek(0)
             yield AlignIO.read(buff, "fasta")

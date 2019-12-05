@@ -4,10 +4,7 @@
 import os
 import shutil
 
-try:
-    from pathlib import Path
-except ImportError:
-    from pathlib2 import Path
+from pathlib import Path
 
 import click
 import humanfriendly
@@ -21,10 +18,10 @@ def grouped(pattern, max_size):
         size = os.stat(filename).st_size
         if total + size < max_size:
             total += size
-            group.append(filename)
+            group.append(path)
         else:
             yield group
-            group = [filename]
+            group = [path]
             total = size
     if group:
         yield group
@@ -32,9 +29,9 @@ def grouped(pattern, max_size):
 
 def write_group(index, group, output_pattern):
     filename = output_pattern.replace('*', '%05i' % index)
-    with open(filename, 'a') as output:
-        for name in group:
-            with open(name, 'r') as raw:
+    with Path(filename).open('ab') as output:
+        for path in group:
+            with path.open('rb') as raw:
                 shutil.copyfileobj(raw, output)
 
 

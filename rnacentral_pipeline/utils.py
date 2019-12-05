@@ -25,4 +25,4 @@ def unpickle_stream(handle, *args, **kwargs):
         while True:
             yield pickle.load(handle)
     except EOFError:
-        raise StopIteration()
+        return
