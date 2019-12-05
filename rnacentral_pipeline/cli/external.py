@@ -45,7 +45,7 @@ def cli():
 
 
 @cli.command('json-schema', aliases=[
-    '5srnadb',
+    '5srrnadb',
     'flybase',
     'lncbase',
     'lncbook',
