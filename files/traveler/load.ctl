@@ -11,7 +11,8 @@ HAVING FIELDS (
     model_stop,
     sequence_start,
     sequence_stop,
-    sequence_coverage
+    sequence_coverage,
+    stk
 ) INTO {{PGDATABASE}}?load_secondary_layout
 TARGET COLUMNS (
     urs,
@@ -24,7 +25,8 @@ TARGET COLUMNS (
     model_stop,
     sequence_start,
     sequence_stop,
-    sequence_coverage
+    sequence_coverage,
+    stk
 )
 
 WITH
@@ -50,7 +52,8 @@ create table load_secondary_layout (
     model_coverage float,
     sequence_start int,
     sequence_stop int,
-    sequence_coverage float
+    sequence_coverage float,
+    stk text NOT NULL
 );
 $$
 
@@ -83,7 +86,8 @@ INSERT INTO rnc_secondary_structure_layout (
     model_coverage,
     sequence_start,
     sequence_stop,
-    sequence_coverage
+    sequence_coverage,
+    stk
 ) (
 SELECT
     urs,
@@ -97,7 +101,8 @@ SELECT
     model_coverage,
     sequence_start,
     sequence_stop,
-    sequence_coverage
+    sequence_coverage,
+    stk
 FROM load_secondary_layout load
 JOIN rnc_secondary_structure_layout_models models
 ON
@@ -114,7 +119,8 @@ SET
     model_coverage = EXCLUDED.model_coverage,
     sequence_start = EXCLUDED.sequence_start,
     sequence_stop = EXCLUDED.sequence_stop,
-    sequence_coverage = EXCLUDED.sequence_coverage
+    sequence_coverage = EXCLUDED.sequence_coverage,
+    stk = EXCLUDED.stk
 ;
 $$,
 $$
