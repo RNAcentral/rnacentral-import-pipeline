@@ -15,6 +15,7 @@ limitations under the License.
 
 import os
 import re
+from pathlib import Path
 
 import typing as ty
 
@@ -150,6 +151,9 @@ class TravelerResult(object):
 
         return self.__filename__(svg_name)
 
+    def stk_path(self):
+        return Path(self.__filename__('stk'))
+
     def svg(self):
         """
         Process a single SVG file into the requried data. This produce an array
@@ -158,6 +162,13 @@ class TravelerResult(object):
 
         with open(self.svg_filename()) as raw:
             return raw.read().replace('\n', '')
+
+    def stk(self):
+        stk = self.stk_path()
+        if not stk.exists():
+            return ''
+        with stk.open('r') as raw:
+            return raw.read().replace('\n', '%')
 
     @property
     def basepair_count(self):
@@ -230,6 +241,7 @@ class TravelerResult(object):
             self.sequence_start,
             self.sequence_stop,
             self.sequence_coverage,
+            self.stk(),
         ]
 
     def __filename__(self, extension):
