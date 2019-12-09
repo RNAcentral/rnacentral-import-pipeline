@@ -601,6 +601,16 @@ def gene_synonyms(synonym_set):
     return result
 
 
+def pdb_ids(xrefs):
+    pdb_ids = []
+    for xref in xrefs: 
+        if xref['name'] != 'PDBE':
+            continue
+        parts = xref.split('_')
+        pdb_ids.append('%s_%s' % parts[0], parts[2])
+    return pdb_ids
+
+
 builder = entry([
     tag('name', as_name, keys=('upi', 'taxid')),
     tag('description', first),
@@ -677,5 +687,6 @@ builder = entry([
         fields('no_overlaps_with', get_or_empty('no_overlaps_with'), keys='overlaps'),
         fields('has_secondary_structure', has_value, keys='secondary'),
         fields('secondary_structure_model', get_or_empty('secondary_structure_model'), keys='secondary'),
+        fields('pdbid_entityid', pdb_ids, keys='cross_references'),
     ]),
 ])
