@@ -27,6 +27,7 @@ from rnacentral_pipeline.databases.refseq import parser
     ('data/refseq/refseq_product.gbff', 2),
     ('data/refseq/related.gbff', 5),
     ('data/refseq/biomol_ncRNA_RNase_P_RNA.gbff', 9),
+    ('data/refseq/with_none.gbff', 1),
 ])
 def test_can_parse_refseq_files(filename, count):
     with open(filename, 'r') as raw:
@@ -338,3 +339,10 @@ def test_can_extract_correct_scarna_annotation():
         data = list(parser.parse(raw))
     assert len(data) == 1
     assert data[0].description == 'SO:0002095'
+
+
+def test_can_deal_with_weird_description():
+    with open('data/refseq/with_none.gbff', 'r') as raw:
+        data = list(parser.parse(raw))
+    assert len(data) == 1
+    assert data[0].description == 'Brevibacillus halotolerans 16S ribosomal RNA'
