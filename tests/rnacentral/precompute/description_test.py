@@ -64,6 +64,7 @@ from .helpers import load_data
     ('URS000075C808_9606', 'lncRNA', 'Homo sapiens HOX transcript antisense RNA (HOTAIR)'),
     ('URS000075CC93_9606', 'precursor_RNA', 'Homo sapiens (human) microRNA hsa-mir-1302 precursor (hsa-mir-1302-2, hsa-mir-1302 9 to 11)'),
     ('URS000075CF25_9913', 'precursor_RNA', 'Bos taurus (cattle) microRNA bta-mir-10a precursor'),
+    ('URS0000769D1B_1507437', 'rRNA', 'Brevibacillus halotolerans 16S ribosomal RNA')
     ('URS0000795103_6239', 'precursor_RNA', 'Caenorhabditis elegans microRNA cel-mir-8204 precursor'),
     ('URS0000808D70_1478174', 'tmRNA', 'Neochlamydia sp. TUME1 tmRNA'),
     ('URS00008E3A1B_10090', 'lncRNA', 'Mus musculus predicted gene 11532 (Gm11532)'),
