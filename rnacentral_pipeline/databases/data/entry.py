@@ -78,6 +78,7 @@ class Entry(object):
     xref_data = utils.possibly_empty(dict)
 
     related_sequences = utils.possibly_empty(list)
+    related_diseases = utils.possibly_empty(list)
 
     chromosome: str = utils.optionally(str)
     species: str = utils.optionally(str)

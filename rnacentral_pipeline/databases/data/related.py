@@ -93,3 +93,14 @@ class RelatedSequence(object):
                 self.relationship,
                 json.dumps(metadata),
             ]
+
+
+@attr.s()
+class RelatedDisease(object):
+    disease = attr.ib(validator=is_a(str))
+
+    def writeable(self, accession):
+        yield [
+            accession,
+            self.disease,
+        ]
