@@ -71,11 +71,11 @@ class Update(object):
             self.upi,
             self.taxid,
             int(self.is_active),
-            self.description.encode('ascii', 'ignore'),
+            self.description,
             self.rna_type,
             int(self.has_coordinates),
             self.databases,
-            self.short_description.encode('ascii', 'ignore'),
+            self.short_description,
             self.last_release,
         ]
 
@@ -108,7 +108,6 @@ class ActiveUpdate(Update):
         short_description = short_description_for(description, sequence)
 
         has_coordinates = sequence.has_coordinates
-
         return cls(
             upi=sequence.upi,
             taxid=sequence.taxid,
