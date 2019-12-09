@@ -81,8 +81,8 @@ RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && python get-pip.py
 ENV RNACENTRAL_IMPORT_PIPELINE "$RNA/rnacentral-import-pipeline"
 
 ADD requirements.txt $RNACENTRAL_IMPORT_PIPELINE/requirements.txt
-RUN pip3 install --upgrade pip && \
-    pip3 install -r $RNACENTRAL_IMPORT_PIPELINE/requirements.txt
+RUN pip3 install --upgrade pip
+RUN pip3 install -r $RNACENTRAL_IMPORT_PIPELINE/requirements.txt
 
 RUN python3 -m textblob.download_corpora
 
@@ -98,14 +98,14 @@ ENV TRAVELER="$RNA/traveler"
 ENV RNA_STRUCTURE="$RNA/RNAstructure"
 ENV RSCAPE="$RNA/rscape"
 
-COPY --from=rnacentral/auto-traveler:dev $EPNOFILEDIR $EPNOFILEDIR
-COPY --from=rnacentral/auto-traveler:dev $EPNOPTDIR $EPNOPTDIR
-COPY --from=rnacentral/auto-traveler:dev $EPNTESTDIR $EPNTESTDIR
-COPY --from=rnacentral/auto-traveler:dev $RIBODIR $RIBODIR
-COPY --from=rnacentral/auto-traveler:dev $JIFFY_SCRIPTS $JIFFY_SCRIPTS
-COPY --from=rnacentral/auto-traveler:dev $TRAVELER $TRAVELER
-COPY --from=rnacentral/auto-traveler:dev $RNA_STRUCTURE $RNA_STRUCTURE
-COPY --from=rnacentral/auto-traveler:dev $RSCAPE $RSCAPE
+COPY --from=rnacentral/auto-traveler:latest $EPNOFILEDIR $EPNOFILEDIR
+COPY --from=rnacentral/auto-traveler:latest $EPNOPTDIR $EPNOPTDIR
+COPY --from=rnacentral/auto-traveler:latest $EPNTESTDIR $EPNTESTDIR
+COPY --from=rnacentral/auto-traveler:latest $RIBODIR $RIBODIR
+COPY --from=rnacentral/auto-traveler:latest $JIFFY_SCRIPTS $JIFFY_SCRIPTS
+COPY --from=rnacentral/auto-traveler:latest $TRAVELER $TRAVELER
+COPY --from=rnacentral/auto-traveler:latest $RNA_STRUCTURE $RNA_STRUCTURE
+COPY --from=rnacentral/auto-traveler:latest $RSCAPE $RSCAPE
 
 ENV PATH="$JIFFY_SCRIPTS:$PATH"
 ENV PATH="$AUTO_TRAVELER_PY:$PATH"
@@ -120,8 +120,8 @@ ENV AUTO_TRAVELER_PY="$RNA/auto-traveler"
 RUN \
     git clone https://github.com/RNAcentral/auto-traveler.git $AUTO_TRAVELER_PY && \
     cd $AUTO_TRAVELER_PY && \
-    git checkout single-entry-point && \
-    git pull origin single-entry-point && \
+    git checkout keep-stk && \
+    git pull origin keep-stk && \
     /usr/local/bin/pip3 install -r requirements.txt
 
 WORKDIR $AUTO_TRAVELER_PY
