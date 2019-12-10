@@ -51,6 +51,8 @@ ORDERING = [
     'ensembl metazoa',
     'ensembl protists',
     'ensembl fungi',
+    'genecards',
+    'malacards',
     'rfam',
     'tarbase',
     'lncbase',
