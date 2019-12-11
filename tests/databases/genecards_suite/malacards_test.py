@@ -112,5 +112,13 @@ def test_can_create_correct_data(simple_data):
         seq_version=1,
         gene='DEC1',
         description='Homo sapiens (human) deleted in esophageal cancer 1 (DEC1)',
+        species='Homo sapiens',
+        common_name='human',
+        lineage=(
+            'Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; '
+            'Euteleostomi; Mammalia; Eutheria; Euarchontoglires; '
+            'Primates; Haplorrhini; Catarrhini; Hominidae; Homo; '
+            'Homo sapiens'
+        ),
     )
 
