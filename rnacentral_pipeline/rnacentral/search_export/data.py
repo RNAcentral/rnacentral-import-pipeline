@@ -611,6 +611,14 @@ def pdb_ids(xrefs):
     return pdb_ids
 
 
+def diseases(notes):
+    diseases = []
+    for note in notes:
+        data = parse_note(note)
+        diseases.extend(data.get('diseases', []))
+    return diseases
+
+
 builder = entry([
     tag('name', as_name, keys=('upi', 'taxid')),
     tag('description', first),
@@ -688,5 +696,6 @@ builder = entry([
         fields('has_secondary_structure', has_value, keys='secondary'),
         fields('secondary_structure_model', get_or_empty('secondary_structure_model'), keys='secondary'),
         fields('pdbid_entityid', pdb_ids, keys='cross_references'),
+        fields('disease', diseases, keys='notes'),
     ]),
 ])
