@@ -14,8 +14,13 @@ limitations under the License.
 """
 
 import typing as ty
+import operator as op
+import itertools as it
+
+import attr
 
 from rnacentral_pipeline.databases import data
+from rnacentral_pipeline.databases.helpers import publications as pub
 
 from .core.data import Context
 from .core import parser
@@ -28,5 +33,15 @@ def parse(handle, known_handle) -> ty.Iterator[data.Entry]:
         url_data_field='slug',
         gene_field='gene_symbol',
         urs_field='sourceAccession',
+        references=[pub.reference(27899610)]
     )
-    yield from parser.parse(context, handle, known_handle)
+    data = parser.parse(context, handle, known_handle)
+    grouped = it.groupby(data, lambda d: d[0].primary_id)
+    disease = op.itemgetter('Diseae name')
+    for _, items in grouped:
+        entries = list(items)
+        entry = entries[0][0]
+        diseases = sorted({disease(e[1]) for e in entries})
+        note_data = entry.note_data
+        note_data['diseases'] = diseases
+        yield attr.evolve(entry, note_data=note_data)

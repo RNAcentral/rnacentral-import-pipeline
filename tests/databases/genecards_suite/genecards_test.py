@@ -20,6 +20,7 @@ from contextlib import contextmanager
 import pytest
 
 from rnacentral_pipeline.databases import data
+from rnacentral_pipeline.databases.helpers import publications as pub
 from rnacentral_pipeline.databases.genecards_suite.genecards import parse
 from rnacentral_pipeline.databases.genecards_suite.core import lookup
 
@@ -37,7 +38,11 @@ def simple_data():
     with open('data/genecards/data.tsv', 'r') as raw:
         with known(raw) as indexed:
             raw.seek(0)
-            return list(parse(raw, indexed))
+            entries = {}
+            for entry in parse(raw, indexed):
+                assert entry.primary_id not in entries
+                entries[entry.primary_id] = entry
+            return entries
 
 
 def test_can_parse_all_entries(simple_data):
@@ -45,17 +50,17 @@ def test_can_parse_all_entries(simple_data):
 
 
 def test_can_create_unique_primary_ids(simple_data):
-    data = [d.primary_id for d in simple_data]
+    data = [d.primary_id for d in simple_data.values()]
     assert len(data) == 100
 
 
 def test_can_create_unique_accessions(simple_data):
-    data = [d.accession for d in simple_data]
+    data = [d.accession for d in simple_data.values()]
     assert len(data) == 100
 
 
 def test_can_create_correct_data(simple_data):
-    assert simple_data[0] == data.Entry(
+    assert simple_data['GENECARDS:1A9N_Q-015:URS00001EE9F1_9606'] == data.Entry(
         primary_id='GENECARDS:1A9N_Q-015:URS00001EE9F1_9606',
         accession='GENECARDS:1A9N_Q-015:URS00001EE9F1_9606',
         ncbi_tax_id=9606,
@@ -75,4 +80,5 @@ def test_can_create_correct_data(simple_data):
             'Primates; Haplorrhini; Catarrhini; Hominidae; Homo; '
             'Homo sapiens'
         ),
+        references=[pub.reference(27322403)],
     )

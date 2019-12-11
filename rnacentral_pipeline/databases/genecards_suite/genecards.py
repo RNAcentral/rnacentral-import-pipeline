@@ -14,8 +14,11 @@ limitations under the License.
 """
 
 import typing as ty
+import operator as op
+import itertools as it
 
 from rnacentral_pipeline.databases import data
+from rnacentral_pipeline.databases.helpers import publications as pub
 
 from .core.data import Context
 from .core import parser
@@ -28,5 +31,7 @@ def parse(handle, known_handle) -> ty.Iterator[data.Entry]:
         url_data_field='GeneCardsSymbol',
         gene_field='GeneCardsSymbol',
         urs_field='URSid',
+        references=[pub.reference(27322403)],
     )
-    yield from parser.parse(context, handle, known_handle)
+    entries = parser.parse(context, handle, known_handle)
+    return map(op.itemgetter(0), entries)
