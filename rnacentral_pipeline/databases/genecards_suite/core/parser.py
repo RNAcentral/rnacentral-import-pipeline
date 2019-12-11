@@ -40,12 +40,14 @@ def as_entry(context: Context, row, matching: KnownSequence) -> data.Entry:
         species=helpers.species(context, row),
         lineage=helpers.lineage(context, row),
         common_name=helpers.common_name(context, row),
+        references=context.references,
     )
 
 
-def parse(context: Context, handle, known_handle) -> ty.Iterable[data.Entry]:
+def parse(context: Context, handle, known_handle):
     indexed = lookup.load(known_handle)
     reader = csv.DictReader(handle, delimiter='\t')
-    for row in reader:
+    rows = sorted(reader, key=context.urs)
+    for row in rows:
         matching = indexed[context.urs(row)]
-        yield as_entry(context, row, matching)
+        yield (as_entry(context, row, matching), row)

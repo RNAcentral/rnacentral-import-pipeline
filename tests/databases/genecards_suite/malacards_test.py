@@ -19,8 +19,9 @@ import tempfile
 from contextlib import contextmanager
 
 from rnacentral_pipeline.databases import data
+from rnacentral_pipeline.databases.helpers import publications as pub
 from rnacentral_pipeline.databases.genecards_suite.malacards import parse
-from rnacentral_pipeline.databases.genecards_suite.core import lookup 
+from rnacentral_pipeline.databases.genecards_suite.core import lookup
 
 
 @contextmanager
@@ -36,25 +37,29 @@ def simple_data():
     with open('data/malacards/data.tsv', 'r') as raw:
         with known(raw) as indexed:
             raw.seek(0)
-            return list(parse(raw, indexed))
+            entries = {}
+            for entry in parse(raw, indexed):
+                assert entry.primary_id not in entries
+                entries[entry.primary_id] = entry
+            return entries
 
 
 def test_can_parse_all_entries(simple_data):
-    assert len(simple_data) == 100
+    assert len(simple_data) == 58
 
 
 def test_can_create_unique_primary_ids(simple_data):
-    data = [d.primary_id for d in simple_data]
-    assert len(data) == 100
+    data = [d.primary_id for d in simple_data.values()]
+    assert len(data) == 58
 
 
 def test_can_create_unique_accessions(simple_data):
-    data = [d.accession for d in simple_data]
-    assert len(data) == 100
+    data = [d.accession for d in simple_data.values()]
+    assert len(data) == 58
 
 
 def test_can_create_correct_data(simple_data):
-    assert simple_data[0] == data.Entry(
+    assert simple_data['MALACARDS:DEC1:URS00008BD1D3_9606'] == data.Entry(
         primary_id='MALACARDS:DEC1:URS00008BD1D3_9606',
         accession='MALACARDS:DEC1:URS00008BD1D3_9606',
         ncbi_tax_id=9606,
@@ -120,5 +125,82 @@ def test_can_create_correct_data(simple_data):
             'Primates; Haplorrhini; Catarrhini; Hominidae; Homo; '
             'Homo sapiens'
         ),
+        references=[pub.reference(27899610)],
+        note_data={'diseases': ['esophageal cancer']},
     )
 
+
+def test_correctly_groups_sequences(simple_data):
+    assert simple_data['MALACARDS:ACTA2-AS1:URS00008C0BBE_9606'] == data.Entry(
+        primary_id='MALACARDS:ACTA2-AS1:URS00008C0BBE_9606',
+        accession='MALACARDS:ACTA2-AS1:URS00008C0BBE_9606',
+        ncbi_tax_id=9606,
+        database='MALACARDS',
+        sequence=(
+            'GACTGGGAGGAGGGTGCTTAGGCACTGCAGTTGAGTGGCTCACAAGGAGCTAAAATTTCA'
+            'CTAATGCGTATTCAGTGGGTGGTTCTGGTTTGCCTGATTTTTGCCTCTGGGCATGGCTGT'
+            'TTCAGCCTGAGAGGCTGTTCCAAGAATGTTGCTTTACTAGGAGCTCATGCCGCCTGGTGG'
+            'TAAATATGAAGTACAGCAGTGCAACAGACCAGTTTTACTCCAAGGAAACCCTGTAGAGAT'
+            'GACAGCAATGGTTGGTGATTTCTGCCTCAATTATGAAAGTGATCTGGTGTTACAGGGCCA'
+            'GAGAAGACTAGGGGAGTTCGGGTTTTCTAGACCAAACAGACACTCAGTCCTGGGCCTGGA'
+            'GGTCTCTGCAGTGAGGTGCTGCCACAGACAGAGCCACCTTAACTCCTCAGGACAACCAGT'
+            'GGCTTCCGACACACACTATGCACTGGAGGGCAAGCAGCTCTCAGCTTGGGAGCAACTGAG'
+            'GATGGTGAACAGCCTGGGCAAGGAGTGCTCTGAGGCTAAGACCCTGAACAGCAGGAACCG'
+            'AAGTGCAGCTCCCCACTTCAGGTAATGTGATTCTACCCTTTGCCTGAGAAACATATCCAT'
+            'CCTAATTGCCATGTGCTCAGCTGGACCACTAGAGGGAGCCATCCTGTAACGGGTGAGGTC'
+            'AACCTAACAAATGGTATCAGTCGAGTATTGATCGGAGGCCAACGCAAGAAGTTACCAGTA'
+            'GCCTATTTCAGATTTATTAAAAAACACATAGGTAACGAGTCAGAGCTTTGGCTAGGAATG'
+            'ATTTGGAAAAGAACTGAAGGCATAATTCCACAGGACATTCACAGTTGTGTGCTAGAGACA'
+            'GAGAGGAGCAGGAAAGTGTTTTAGAAGCATTTGCGGTGGACAATGGAAGGCCCGGCTTCA'
+            'TCGTATTCCTGTTTGCTGATCCACATCTGCTGGAAGGTGGACAGAGAGGCCAGGATGGAG'
+            'CCACCGATCCAGACAGAGTATTTGCGCTCCGGAGGGGCAATGATCTGTCAGTCAAGATGA'
+            'AAAAGAATGGTCATTAATGTCATCATTAGTGCAGTCGTTAGTGCGGTAGGACAGAGCCTG'
+            'GATGTTCTACCATGGCCTAGTTTCTTGTTCAGCAGGGACACAGGCTTGTCTGTTAGATGC'
+            'CAATTGTGTCCTAATTGTGTCATGTTCTTGGCAGGACCGCCAGAGGGAGCCATGGATTTA'
+            'GAAATTCTTCAGTGGTTTCATGGATGCCAGCAGACTCCATCCCTGGAAAAGAGACACAGG'
+            'CCATGGTCCTTAAGTGGAGAGTAAAACCCAGGCTAGACATGGAAGACCAGACTTGAACAT'
+            'CTGGATGATCTTGCAGTGGACTGAGGCTGGGAAGACATAATAATCTAGGAACCACCTGTC'
+            'TGAGAGACAAAAGGGTCTTGTTATGCTCTATGTCTTCCTGCCTGCCTTCTAATGAGGAAG'
+            'GCCTGCTGCAGCATCCTGAGGTGTGGGCTACAACAGAAATGCTTTTGGTCTTGGGGCAAC'
+            'CGTCACTTGTCTCCATGTTCTGGAGGCTGGCTTGATATGGAAGAAGACAATGACTCCCCT'
+            'TCCCAGGAAAAGGGCGTTTGTTGCCTACCGATGAAGGATGGCTGGAACAGGGTCTCTGGG'
+            'CAGCGGAAACGTTCATTTCCGATGGTGATCACTTGCCCATCAGGCAACTCGTAACTCTTC'
+            'TCAAGGGAGGATGAGGATGCGGCAGTGGCCATCTCATTTTCAAAGTCCAGAGCTACATAA'
+            'CACAGTTTCTCCTTGATGTCCCGGACAATCTCACGCTCAGCTGTCAACCAGATACAAACA'
+            'TTGTGGCAAACATTAGGGTCTGCACAGGTGGCAAAGATTCACCTGCCCTACTGCAGTCTC'
+            'TCCCTCAAGACATGTGCCATCAAAAAATGTGTCAGTTCAATATTCTGCAATCCAAAATCC'
+            'ACAATGATAATGACGTAGTAGGGCCACCAGGGAACCACCTCTGTTCCTAGGACAGTGTCT'
+            'CATGCATAGTAGGCCCTCAGCATGCATTGTCTGGGAAATGCATAACAAGAATAAAATGAG'
+            'CTAGCTAGAGAAAGGCACACAGTAGCGGATCCTTTTGTACCATAACATTTTTTGGGGTGG'
+            'GTGGGCAGGATAACTACTCTGTGTTATAATTATTTTATGACAGAAAGTTTGTTATATTGT'
+            'ATTTTCAGTTAACCAGGATATCTTATGCTGAATCAGCTCCTCAGGGGCCTCACAATTTTC'
+            'AAAAAGTCTGAGATCCTGTTGCCTGGGCCAGTGGATAGCAGGTTAAACCTTTGGCACATT'
+            'TCTCACCCTCCAGGAAAGAGGTGGTGCTGTCTCAGGACCAGGCCTAGTCCAGAAGGTTTC'
+            'AGCGGTGCATACTGAACGAGATACGGAAGAAGTGGGCAGGGAGAGACCTTTCAGACTTCT'
+            'GCTCTCTGAAGTTCTAGGCTAT'
+        ),
+        regions=[],
+        rna_type='lncRNA',
+        url='https://www.malacards.org/card/aortic_aneurysm_familial_thoracic_6',
+        seq_version=1,
+        gene='ACTA2-AS1',
+        description='Homo sapiens long non-coding RNA NONHSAT015482.2',
+        species='Homo sapiens',
+        common_name='human',
+        lineage=(
+            'Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; '
+            'Euteleostomi; Mammalia; Eutheria; Euarchontoglires; '
+            'Primates; Haplorrhini; Catarrhini; Hominidae; Homo; '
+            'Homo sapiens'
+        ),
+        references=[pub.reference(27899610)],
+        note_data={
+            'diseases': [
+                'aortic aneurysm, familial thoracic 6',
+                'hepatocellular carcinoma',
+                'lung cancer susceptibility 3',
+                'moyamoya disease 5',
+                'multisystemic smooth muscle dysfunction syndrome',
+            ],
+        },
+    )

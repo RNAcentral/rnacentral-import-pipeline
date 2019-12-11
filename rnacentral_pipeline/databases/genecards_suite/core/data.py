@@ -18,6 +18,8 @@ import operator as op
 import attr
 from attr.validators import instance_of as is_a
 
+from rnacentral_pipeline.databases.data import IdReference
+
 
 @attr.s(frozen=True)
 class KnownSequence(object):
@@ -38,6 +40,7 @@ class Context(object):
     url_data_field = attr.ib(validator=is_a(str))
     gene_field = attr.ib(validator=is_a(str))
     urs_field = attr.ib(validator=is_a(str))
+    references = attr.ib(validator=is_a(list))
 
     def gene(self, row):
         fn = op.itemgetter(self.gene_field)
