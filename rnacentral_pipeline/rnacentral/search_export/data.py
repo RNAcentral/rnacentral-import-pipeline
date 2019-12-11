@@ -606,8 +606,8 @@ def pdb_ids(xrefs):
     for xref in xrefs: 
         if xref['name'] != 'PDBE':
             continue
-        parts = xref.split('_')
-        pdb_ids.append('%s_%s' % parts[0], parts[2])
+        parts = xref['accession'].split('_')
+        pdb_ids.append('%s_%s' % (parts[0], parts[2]))
     return pdb_ids
 
 
