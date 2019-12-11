@@ -37,6 +37,9 @@ def as_entry(context: Context, row, matching: KnownSequence) -> data.Entry:
         seq_version=1,
         gene=context.gene(row),
         description=matching.description,
+        species=helpers.species(context, row),
+        lineage=helpers.lineage(context, row),
+        common_name=helpers.common_name(context, row),
     )
 
 
