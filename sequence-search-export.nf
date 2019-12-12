@@ -82,9 +82,7 @@ process atomic_publish {
     mkdir -p "$publish.path" || true
   fi
 
-  mkdir ${sequences}
-  cp ${fasta} ${sequences}
-  tar -czvf $compressed $sequences
+  tar -czvf $compressed ${fasta}
   sort $hash | md5sum - > ${compressed}.hash
   scp ${compressed} $remote
   scp ${compressed}.hash $remote
