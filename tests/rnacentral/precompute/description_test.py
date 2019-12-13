@@ -76,6 +76,7 @@ from .helpers import load_data
     ('URS0000BD9FEB_10089', 'ribozyme', 'Mus caroli (Ryukyu mouse) ribozyme'),
     ('URS0000D50284_7240', 'precursor_RNA', 'Drosophila simulans microRNA dsi-mir-988 precursor'),
     ('URS0000D5657E_7240', 'precursor_RNA', 'Drosophila simulans microRNA dsi-mir-4966 precursor (dsi-mir-4966-3)'),
+    ('URS0000C8520A_1196083', 'Snodgrassella alvi strain wkB2 16S ribosomal RNA'),
 
     # TODO: Implement the logic required below
     # ('URS000041AF00_274', 'tRNA', 'TRNA-FMET from Thermus thermophilus (29 structures)'),
