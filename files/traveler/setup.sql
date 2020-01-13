@@ -28,6 +28,21 @@ ON
 CREATE UNIQUE INDEX un_traveler_sequences_to_analyze__upi ON :tablename(upi);
 CREATE INDEX ix_traveler_sequences_to_analyze__model ON :tablename(model);
 
+-- Add all tRNA as GtRNAdb sequences
+INSERT INTO :tablename (upi, model) (
+  SELECT distinct
+    pre.upi,
+    'gtrnadb'
+  FROM rna_rna_precomputed pre
+  WHERE 
+    pre.rna_type = 'tRNA'
+    and pre.is_active = true
+  )
+ON CONFLICT (upi) DO UPDATE
+SET 
+  model = excluded.model
+;
+
 -- Delete already computed
 DELETE FROM :tablename urs
 USING rnc_secondary_structure_layout layout
@@ -35,6 +50,7 @@ WHERE
   layout.urs = urs.upi
 ;
 
+-- Delete incomplete sequences
 DELETE FROM :tablename to_draw
 USING qa_status qa 
 WHERE
