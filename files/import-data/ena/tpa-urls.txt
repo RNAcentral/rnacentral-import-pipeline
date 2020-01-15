@@ -1,4 +1,3 @@
-https://www.ebi.ac.uk/ena/data/xref/search?source=SGD&expanded=true&limit=0
 https://www.ebi.ac.uk/ena/data/xref/search?source=SRPDB&expanded=true&limit=0
 https://www.ebi.ac.uk/ena/data/xref/search?source=WormBase&expanded=true&limit=0
 https://www.ebi.ac.uk/ena/data/xref/search?source=dictyBase&expanded=true&limit=0
