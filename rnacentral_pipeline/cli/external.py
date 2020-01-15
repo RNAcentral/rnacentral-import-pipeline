@@ -54,6 +54,7 @@ def cli():
     'mirgenedb',
     'pombase',
     'snodb',
+    'sgd',
     'tarbase',
     'zwd',
 ])
