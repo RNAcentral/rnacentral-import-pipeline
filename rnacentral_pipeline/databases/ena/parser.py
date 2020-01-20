@@ -68,7 +68,7 @@ def parse(handle):
         if prod:
             prod = prod[0:500]
 
-        yield Entry(
+        entry = Entry(
             primary_id=helpers.primary_id(feature),
             accession=accession,
             ncbi_tax_id=helpers.taxid(record),
@@ -109,6 +109,11 @@ def parse(handle):
             gene_synonyms=helpers.gene_synonyms(feature),
             references=helpers.references(record, feature),
         )
+
+        if helpers.is_skippable_sequence(entry):
+            continue
+
+        yield entry
 
 
 def parse_with_mapping_file(handle, mapping_handle):
