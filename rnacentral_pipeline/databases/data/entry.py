@@ -144,7 +144,10 @@ class Entry(object):
         """
         Return a JSON encoded dictionary representing the note data.
         """
-        return json.dumps(self.note_data)
+        data = self.note_data
+        if 'url' not in data:
+            data['url'] = self.url
+        return json.dumps(data)
 
     @property
     def feature_name(self):
