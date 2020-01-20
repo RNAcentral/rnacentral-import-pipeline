@@ -619,6 +619,13 @@ def diseases(notes):
     return diseases
 
 
+def urls(notes):
+    data = []
+    for note in notes:
+        data.extend(v for k, v in parse_note(note).items() if k == 'url')
+    return data
+
+
 builder = entry([
     tag('name', as_name, keys=('upi', 'taxid')),
     tag('description', first),
@@ -697,5 +704,6 @@ builder = entry([
         fields('secondary_structure_model', get_or_empty('secondary_structure_model'), keys='secondary'),
         fields('pdbid_entityid', pdb_ids, keys='cross_references'),
         fields('disease', diseases, keys='notes'),
+        fields('url', urls, keys='notes'),
     ]),
 ])
