@@ -33,7 +33,7 @@ INSERT INTO :tablename (upi, model) (
   SELECT distinct
     pre.upi,
     'gtrnadb'
-  FROM rna_rna_precomputed pre
+  FROM rnc_rna_precomputed pre
   WHERE 
     pre.rna_type = 'tRNA'
     and pre.is_active = true
