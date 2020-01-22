@@ -702,6 +702,7 @@ builder = entry([
         fields('no_overlaps_with', get_or_empty('no_overlaps_with'), keys='overlaps'),
         fields('has_secondary_structure', has_value, keys='secondary'),
         fields('secondary_structure_model', get_or_empty('secondary_structure_model'), keys='secondary'),
+        fields('secondary_structure_source', get_or_empty('secondary_structure_source'), keys='secondary'),
         fields('pdbid_entityid', pdb_ids, keys='cross_references'),
         fields('disease', diseases, keys='notes'),
         fields('url', urls, keys='notes'),
