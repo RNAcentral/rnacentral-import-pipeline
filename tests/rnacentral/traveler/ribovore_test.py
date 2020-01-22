@@ -16,21 +16,24 @@ limitations under the License.
 import attr
 import pytest
 
-from rnacentral_pipeline.rnacentral.traveler import ribotyper
+from pathlib import Path
+
+from rnacentral_pipeline.rnacentral.traveler import ribovore
 
 
 @pytest.mark.parametrize('filename,count', [
-    ('data/traveler/simple/simple.ribotyper.long.out', 1),
+    ('data/traveler/crw/crw.ribotyper.long.out', 1),
     ('data/traveler/failed-data.ribotyper.long.out', 12),
 ])
 def test_can_parse_whole_file(filename, count):
-    assert len(list(ribotyper.parse(filename))) == count
+    assert len(list(ribovore.parse(Path(filename)))) == count
 
 
 def test_can_parse_a_simple_result():
-    data = list(ribotyper.parse('data/traveler/simple/simple.ribotyper.long.out'))
+    path = Path('data/traveler/crw/crw.ribotyper.long.out')
+    data = list(ribovore.parse(path))
     assert len(data) == 1
-    assert attr.asdict(data[0]) == attr.asdict(ribotyper.Result(
+    assert attr.asdict(data[0]) == attr.asdict(ribovore.RibovoreResult(
         target='URS00000F9D45_9606',
         status='PASS',
         length=1588,
@@ -53,9 +56,9 @@ def test_can_parse_a_simple_result():
 
 
 def test_can_produce_dict_of_results():
-    data = ribotyper.as_dict('data/traveler/simple')
+    data = ribovore.as_dict(Path('data/traveler/crw'))
     assert data == {
-        'URS00000F9D45_9606': ribotyper.Result(
+        'URS00000F9D45_9606': ribovore.RibovoreResult(
             target='URS00000F9D45_9606',
             status='PASS',
             length=1588,
@@ -76,3 +79,4 @@ def test_can_produce_dict_of_results():
             mto=1512,
         )
     }
+
