@@ -14,97 +14,81 @@ limitations under the License.
 """
 
 import os
+import re
 import logging
 from glob import glob
 
 import typing as ty
 from pathlib import Path
 
-from . import ribotyper
-from .data import TravelerResult
+from rnacentral_pipeline.databases.rfam.traveler import results as rfam
+from rnacentral_pipeline.databases.gtrnadb.traveler import results as gtrnadb
+
+from . import data
+from . import ribovore
 
 LOGGER = logging.getLogger(__name__)
 
 
-def ribotyper_models(directory, colored=True, allow_missing=False):
-    """
-    Look at the files in the given directory to find all the URS-model pairs
-    that have been computed.
-    """
+def standard_paths(directory: Path):
+    pattern = '^URS[A-F0-9_]+-.+$'
+    for path in directory.glob('URS*.fasta'):
+        if not re.match(pattern, path.stem):
+            continue
+        urs, model = path.stem.split('-', 1)
+        yield {
+            'fasta': path,
+            'model': model,
+            'urs': urs,
+            'ribovore': None
+        }
 
-    dir_path = Path(directory)
-    ribo_results = ribotyper.as_dict(dir_path)
-    seen = False
-    for filename in dir_path.glob('*.fasta'):
-        basename = os.path.basename(filename)
-        pair, _ = os.path.splitext(basename)
-        urs, model = pair.split('-', 1)
-        ribo_result = ribo_results[urs]
-        result = TravelerResult.build(
-            urs,
-            model,
-            directory,
-            ribo_result,
-            colored=colored,
+
+def paths_with_ribovore(directory: Path):
+    ribo = ribovore.as_dict(directory)
+    for entry in standard_paths(directory):
+        entry['ribovore'] = ribo[entry['urs']]
+        yield entry
+
+
+def parse_paths(paths: ty.Iterable[ty.Dict[str, ty.Any]], source: data.Source, colored: bool):
+    for entry in paths:
+        yield data.TravelerResult(
+            entry['urs'],
+            entry['model'],
+            entry['fasta'].with_suffix(''),
+            source,
+            ribovore=entry['ribovore'],
+            colored=colored
         )
-        if result.is_valid():
+
+
+def parse(source: data.Source,
+          directory: Path,
+          colored=True,
+          allow_missing=False) -> ty.Iterator[data.TravelerResult]:
+
+    if not directory.exists():
+        raise ValueError("Cannot parse data from missing directory: %s" %
+                         directory)
+
+    if source == data.Source.crw or source == data.Source.ribovision:
+        paths = paths_with_ribovore(directory)
+    elif source == data.Source.rfam:
+        paths = rfam.paths(directory)
+    elif source == data.Source.gtrnadb:
+        paths = standard_paths(directory)
+    else:
+        raise ValueError("Unknown source: %s" % source)
+
+    seen = False
+    for entry in parse_paths(paths, source, colored):
+        if entry.is_valid():
             seen = True
-            yield result
+            yield entry
 
     if not seen:
-        msg = "Found no possible models in: %s" % directory
+        msg = "Found nothing to parse in %s" % directory
         if not allow_missing:
             raise ValueError(msg)
-        LOGGER.error(msg)
-
-
-def rfam_models(directory, colored=True, allow_missing=False):
-    seen = False
-    pattern = '*.svg'
-    if colored:
-        pattern = '*.colored.svg'
-    for model_directory in glob(os.path.join(directory, '*')):
-        model = os.path.basename(model_directory)
-        for filename in glob(os.path.join(model_directory, pattern)):
-            if not colored and '.colored' in filename:
-                continue
-            basename = os.path.basename(filename)
-            urs, _ = os.path.splitext(basename)
-            urs = urs.replace('.colored', '')
-            result = TravelerResult.build(
-                urs,
-                model,
-                directory,
-                None,
-                colored=colored,
-                is_rfam=True,
-            )
-            if result.is_valid():
-                seen = True
-                yield result
-
-    if not seen:
-        msg = "Found no possible models in: %s" % directory
-        if not allow_missing:
-            raise ValueError(msg)
-        LOGGER.error(msg)
-
-
-def models(directory, colored=True, allow_missing=False):
-    has_fasta = bool(glob(os.path.join(directory, '*.fasta')))
-    if has_fasta:
-        return ribotyper_models(
-            directory, 
-            colored=colored,
-            allow_missing=allow_missing,
-        )
-
-    has_rfam = bool(glob(os.path.join(directory, 'RF*')))
-    if has_rfam:
-        return rfam_models(
-            directory, 
-            colored=colored,
-            allow_missing=allow_missing,
-        )
-
-    raise ValueError("Do not know how to parse contents of: %s" % directory)
+        LOGGER.warn(msg)

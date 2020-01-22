@@ -15,28 +15,32 @@ limitations under the License.
 
 import attr
 import pytest
+from pathlib import Path
 
-from rnacentral_pipeline.rnacentral.traveler import parser as sec
+from rnacentral_pipeline.rnacentral.traveler import parser
+from rnacentral_pipeline.rnacentral.traveler import data
+
 from rnacentral_pipeline.databases.helpers.hashes import md5
 
 
-@pytest.mark.parametrize('directory,count', [
-    ('data/traveler/simple', 1),
-    ('data/traveler/rfam', 2),
-    ('data/traveler/ribovision', 2),
+@pytest.mark.parametrize('directory,source,count', [
+    ('data/traveler/crw', data.Source.crw, 1),
+    ('data/traveler/rfam', data.Source.rfam, 2),
+    ('data/traveler/ribovision', data.Source.ribovision, 2),
 ])
-def test_can_process_a_directory(directory, count):
-    assert len(list(sec.models(directory))) == count
+def test_can_process_a_directory(directory, source, count):
+    path = Path(directory)
+    assert len(list(parser.parse(source, path))) == count
 
 
 def test_can_produce_reasonable_data():
-    val = list(sec.models('data/traveler/simple'))
-    assert attr.asdict(val[0]) == attr.asdict(sec.TravelerResult(
+    val = list(parser.parse(data.Source.crw, Path('data/traveler/crw')))
+    assert attr.asdict(val[0]) == attr.asdict(data.TravelerResult(
         urs='URS00000F9D45_9606',
         model_id='d.5.e.H.sapiens.2',
-        directory='data/traveler/simple',
-        overlap_count=0,
-        ribotyper=sec.ribotyper.Result(
+        basepath=Path('data/traveler/crw/URS00000F9D45_9606-d.5.e.H.sapiens.2'),
+        source=data.Source.crw,
+        ribovore=data.RibovoreResult(
             target='URS00000F9D45_9606',
             status='PASS',
             length=1588,
@@ -57,24 +61,44 @@ def test_can_produce_reasonable_data():
             mto=1512,
         )))
 
+
+@pytest.mark.parametrize('directory,source,index,attr,expected', [
+    ('data/traveler/crw', data.Source.crw, 0, 'dot_bracket_path', 'data/traveler/crw/URS00000F9D45_9606-d.5.e.H.sapiens.2.fasta'),
+    ('data/traveler/crw', data.Source.crw, 0, 'svg_path', 'data/traveler/crw/URS00000F9D45_9606-d.5.e.H.sapiens.2.colored.svg'),
+])
+def test_can_produce_correct_paths(directory, source, index, attr, expected):
+    val = list(parser.parse(source, Path(directory)))
+    assert getattr(val[index], attr) == Path(expected)
+
+
+def test_gets_correct_count():
+    val = list(parser.parse(data.Source.rfam, Path('data/traveler/rfam')))
+    v = next(v for v in val if v.urs == 'URS0000A7635A')
+    assert v.overlap_count() == 0
+    assert v.basepair_count() == 24
+
+
 def test_produces_valid_data_for_rfam():
-    val = list(sec.models('data/traveler/rfam'))
-    assert attr.asdict(val[0]) == attr.asdict(sec.TravelerResult(
+    val = parser.parse(data.Source.rfam, Path('data/traveler/rfam'))
+    v = next(v for v in val if v.urs == 'URS0000A7635A')
+    assert attr.asdict(v) == attr.asdict(data.TravelerResult(
         urs='URS0000A7635A',
         model_id='RF00162',
-        directory='data/traveler/rfam',
-        overlap_count=0,
-        ribotyper=None,
-        is_rfam=True,
+        basepath=Path('data/traveler/rfam/RF00162/URS0000A7635A'),
+        source=data.Source.rfam,
+        ribovore=None,
     ))
 
-    writeable = val[0].writeable() 
+    assert v.svg_path == Path('data/traveler/rfam/RF00162/URS0000A7635A.colored.svg')
+    writeable = v.writeable()
 
-    # This is too long to include in the file so I just test the hash and delete
-    # it
-    assert md5(writeable[3].encode()) == '9504c4b9a1cea77fa2c4ef8082d7b996'
+    # This is too long to include in the file so I just compare to the file it
+    # is meant to read.
+    with Path('data/traveler/rfam/RF00162/URS0000A7635A.colored.svg').open('r') as raw:
+        d = raw.read().replace('\n', '')
+        assert d == writeable[3]
     del writeable[3]
-    
+
     assert writeable == [
        'URS0000A7635A' ,
         'RF00162',
@@ -86,21 +110,19 @@ def test_produces_valid_data_for_rfam():
         None,
         None,
         None,
+        '',
     ]
 
 
 def test_parses_ribovision_results():
-    vals = list(sec.models('data/traveler/ribovision'))
+    vals = parser.parse(data.Source.ribovision, Path('data/traveler/ribovision'))
     val = next(v for v in vals if v.urs == 'URS0000C5FF65')
-    val = attr.asdict(val)
-    from pprint import pprint
-    pprint(val)
-    assert val == attr.asdict(sec.TravelerResult(
+    assert attr.asdict(val) == attr.asdict(data.TravelerResult(
         urs='URS0000C5FF65',
         model_id='EC_LSU_3D',
-        directory='data/traveler/ribovision',
-        overlap_count=3,
-        ribotyper=sec.ribotyper.Result(
+        basepath=Path('data/traveler/ribovision/URS0000C5FF65-EC_LSU_3D'),
+        source=data.Source.ribovision,
+        ribovore=data.RibovoreResult(
             target='URS0000C5FF65',
             status='PASS',
             length=2892,
@@ -122,24 +144,25 @@ def test_parses_ribovision_results():
         )))
 
 
-@pytest.mark.parametrize('directory,index,md5_hash', [
-    ('data/traveler/simple', 0, '2204b2f0ac616b8366a3b5f37aa123b8'),
-    ('data/traveler/rfam', 0, '9504c4b9a1cea77fa2c4ef8082d7b996'),
+@pytest.mark.parametrize('directory,source,urs,md5_hash', [
+    ('data/traveler/crw', data.Source.crw, 'URS00000F9D45_9606', '2204b2f0ac616b8366a3b5f37aa123b8'),
+    ('data/traveler/rfam', data.Source.rfam, 'URS0000A7635A', '9504c4b9a1cea77fa2c4ef8082d7b996'),
 ])
-def test_can_extract_expected_svg_data(directory, index, md5_hash):
-    val = list(sec.models(directory))
-    svg = val[index].svg()
+def test_can_extract_expected_svg_data(directory, source, urs, md5_hash):
+    val = list(parser.parse(source, Path(directory)))
+    svg = next(v for v in val if v.urs == urs).svg()
     assert '\n' not in svg
     assert svg.startswith('<svg')
     assert md5(svg.encode()) == md5_hash
 
 
-@pytest.mark.parametrize('directory,index,secondary,bp_count', [
-    ('data/traveler/simple', 0, '(((((((((....((((((((.....((((((............))))..))....)))))).)).(((((......((.((.(((....))))).)).....))))).)))))))))...', 35),
-    ('data/traveler/rfam', 1, '((((((((......(((...(((.....)))......))).(((.(((......))))))........((((......))))...)))))))).', 24),
+@pytest.mark.parametrize('directory,source,urs,secondary,bp_count', [
+    ('data/traveler/crw', data.Source.crw, 'URS00000F9D45_9606', '(((((((((....((((((((.....((((((............))))..))....)))))).)).(((((......((.((.(((....))))).)).....))))).)))))))))...', 35),
+    ('data/traveler/rfam', data.Source.rfam, 'URS0000A7635B', '((((((((......(((...(((.....)))......))).(((.(((......))))))........((((......))))...)))))))).', 24),
 ])
-def test_can_extract_expected_dot_bracket_data(directory, index, secondary,
+def test_can_extract_expected_dot_bracket_data(directory, source, urs, secondary,
                                                bp_count):
-    val = list(sec.models(directory))
-    assert val[index].dot_bracket() == secondary
-    assert val[index].basepair_count == bp_count
+    val = parser.parse(source, Path(directory))
+    v = next(v for v in val if v.urs == urs)
+    assert v.dot_bracket() == secondary
+    assert v.basepair_count() == bp_count
