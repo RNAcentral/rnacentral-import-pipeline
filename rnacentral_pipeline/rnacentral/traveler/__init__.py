@@ -15,24 +15,29 @@ limitations under the License.
 
 
 import csv
+import typing as ty
 import operator as op
+from pathlib import Path
 
+from . import data
 from . import parser
 from . import validator
 
 
-def write(directory, output, colored=True):
+def write(kind: data.Source, directory: str, output: ty.TextIO, colored=True, allow_missing=False):
     """
     Parse all the secondary structure data from the given directory and write
     it to the given file.
     """
 
-    data = parser.models(directory, colored=colored)
-    data = map(op.methodcaller('writeable'), data)
-    csv.writer(output).writerows(data)
+    path = Path(directory)
+    parsed = parser.parse(kind, path, colored=colored, 
+                        allow_missing=allow_missing)
+    parsed = map(op.methodcaller('writeable'), parsed)
+    csv.writer(output).writerows(parsed)
 
 
-def write_all(directories, output, colored=True, allow_missing=False):
+def write_all(kind: data.Source, directories: ty.List[str], output: ty.TextIO, colored=True, allow_missing=False):
     """
     Process all directories to produce a datafile for all computed secondary
     structures in them.
@@ -40,10 +45,11 @@ def write_all(directories, output, colored=True, allow_missing=False):
 
     assert directories, "Must give at least one directory"
     for directory in directories:
-        write(directory, output, colored=colored)
+        write(kind, directory, output, colored=colored,
+              allow_missing=allow_missing)
 
 
-def write_should_show(filename, output):
+def write_should_show(kind: data.Source, filename, output: ty.TextIO):
     data = validator.from_file(filename)
     data = map(op.methodcaller('writeable'), data)
     csv.writer(output).writerows(data)

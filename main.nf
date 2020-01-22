@@ -905,7 +905,7 @@ process parse_layout {
   file("data.csv") into secondary_to_import
 
   """
-  rnac traveler process-svgs $to_parse data.csv
+  rnac traveler process-svgs $family $to_parse data.csv
   """
 }
 
