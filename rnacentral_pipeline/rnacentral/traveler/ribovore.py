@@ -18,30 +18,30 @@ import re
 
 from pathlib import Path
 
+import typing as ty
+
 import attr
 from attr.validators import instance_of as is_a
 
-from .data import RibotyperResult
+from .data import RibovoreResult
 
 
-def parse(filename):
-    with open(filename, 'r') as raw:
+def parse(path: Path) -> ty.Iterator[RibovoreResult]:
+    with path.open('r') as raw:
         for line in raw:
             if line.startswith('#'):
                 continue
-            result = RibotyperResult.from_result(line)
+            result = RibovoreResult.from_result(line)
             if result and result.status != 'FAIL':
                 yield result
 
 
-def as_dict(directory: Path):
-    ribotyper_fn = '.ribotyper.long.out'
-    basename = directory.name
-    filenames = [Path(basename + ribotyper_fn), Path(ribotyper_fn)]
-    for fn in filenames:
-        filename = directory / fn
-        if filename.exists():
-            break
-    else:
-        raise ValueError("No fribotyper result file in: %s " % directory)
-    return {p.target: p for p in parse(filename)}
+def as_dict(directory: Path) -> ty.Dict[str, RibovoreResult]:
+    possible = [
+        directory / '.ribotyper.long.out',
+        directory / (directory.name + '.ribotyper.long.out'),
+    ]
+    for path in possible:
+        if path.exists():
+            return {p.target: p for p in parse(path)}
+    raise ValueError("No ribovore result file in: %s " % directory)
