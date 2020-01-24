@@ -878,7 +878,6 @@ process find_possible_traveler_sequences {
 
 process layout_sequences {
   tag { "${family}-${sequences}" }
-  errorStrategy 'ignore'
   memory params.secondary.layout.memory
   container 'rnacentral/auto-traveler:dev'
 
@@ -886,7 +885,7 @@ process layout_sequences {
   set val(family), file(sequences) from to_layout
 
   output:
-  file('output') into secondary_to_parse 
+  set val(family), file('output') into secondary_to_parse
 
   script:
   def opt = family =~ /^RF/ ? "rfam draw ${family}" : "${family} draw"
@@ -899,7 +898,7 @@ process layout_sequences {
 process parse_layout {
 
   input:
-  file(to_parse) from secondary_to_parse
+  set val(family), file(to_parse) from secondary_to_parse
 
   output:
   file("data.csv") into secondary_to_import
