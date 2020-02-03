@@ -59,6 +59,7 @@ process create_fasta {
   json2fasta.py ${json} ${ordered}
   md5sum ${ordered} > ${name}.hash
   seqkit shuffle --two-pass ${ordered} > ${name}.fasta
+  esl-seqstat ${name}.fasta > ${name}.seqstat
   split-sequences \
     --max-file-size ${params.sequence_search.max_file_size} \
     ${name}.fasta splits/
