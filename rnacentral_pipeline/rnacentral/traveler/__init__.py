@@ -20,7 +20,7 @@ import operator as op
 from pathlib import Path
 
 from . import data
-from . import parser
+from . import results
 from . import validator
 
 
@@ -31,7 +31,7 @@ def write(kind: data.Source, directory: str, output: ty.TextIO, colored=True, al
     """
 
     path = Path(directory)
-    parsed = parser.parse(kind, path, colored=colored, 
+    parsed = results.parse(kind, path, colored=colored, 
                         allow_missing=allow_missing)
     parsed = map(op.methodcaller('writeable'), parsed)
     csv.writer(output).writerows(parsed)
