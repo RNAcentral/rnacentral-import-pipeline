@@ -52,6 +52,7 @@ process create_fasta {
   output:
   file("splits/$name*.fasta") into sequences
   file("${name}.hash") into hashes
+  file("${name}.seqstat") into stats
 
   script:
   def ordered = "${name}-ordered.fasta"
@@ -70,6 +71,7 @@ process atomic_publish {
   input:
   file(fasta) from sequences.collect()
   file(hash) from hashes.collect()
+  file(stats) from stats.collect()
 
   script:
   def publish = params.sequence_search.publish
@@ -83,7 +85,7 @@ process atomic_publish {
     mkdir -p "$publish.path" || true
   fi
 
-  tar -czvf $compressed ${fasta}
+  tar -czvf $compressed ${fasta} ${stats}
   sort $hash | md5sum - > ${compressed}.hash
   scp ${compressed} $remote
   scp ${compressed}.hash $remote
