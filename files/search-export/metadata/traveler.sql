@@ -4,7 +4,7 @@ SELECT
     'rna_id', pre.id,
     'secondary', json_build_object(
       'has_secondary', true,
-      'secondary_structure_model', models.model_name
+      'secondary_structure_model', models.model_name,
       'secondary_structure_source', models.model_source
     )
   )
