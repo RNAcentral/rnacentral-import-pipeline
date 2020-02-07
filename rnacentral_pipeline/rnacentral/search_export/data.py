@@ -615,7 +615,8 @@ def diseases(notes):
     diseases = []
     for note in notes:
         data = parse_note(note)
-        diseases.extend(data.get('diseases', []))
+        known = data.get('diseases', [])
+        diseases.extend(k['name'] for k in known)
     return diseases
 
 
