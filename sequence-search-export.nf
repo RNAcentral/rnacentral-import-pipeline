@@ -57,7 +57,7 @@ process create_fasta {
   script:
   def ordered = "${name}-ordered.fasta"
   """
-  json2fasta.py ${json} ${ordered}
+  json2fasta.py ${json} - | rnac ftp-export sequences valid-nhmmer - ${ordered}
   md5sum ${ordered} > ${name}.hash
   seqkit shuffle --two-pass ${ordered} > ${name}.fasta
   esl-seqstat ${name}.fasta > ${name}.seqstat
