@@ -22,7 +22,6 @@ import typing as ty
 from pathlib import Path
 
 from rnacentral_pipeline.databases.rfam.traveler import results as rfam
-from rnacentral_pipeline.databases.gtrnadb.traveler import results as gtrnadb
 
 from . import data
 from . import ribovore
@@ -31,13 +30,11 @@ LOGGER = logging.getLogger(__name__)
 
 
 def standard_paths(directory: Path):
-    pattern = '^URS[A-F0-9_]+-.+$'
-    for path in directory.glob('URS*.fasta'):
-        if not re.match(pattern, path.stem):
-            continue
-        urs, model = path.stem.split('-', 1)
+    for path in directory.glob('URS*.colored.svg'):
+        urs, model = path.stem.replace('.colored', '').split('-', 1)
+        fasta_path = path.with_name(urs).with_suffix('.fasta')
         yield {
-            'fasta': path,
+            'fasta': fasta_path,
             'model': model,
             'urs': urs,
             'ribovore': None
