@@ -29,6 +29,34 @@ from attr.validators import optional
 from attr.validators import instance_of as is_a
 
 
+TRNAS = {
+    'SO:0000254',
+    'SO:0000259',
+    'SO:0000268',
+    'SO:0000260',
+    'SO:0000266',
+    'SO:0000256',
+    'SO:0000270',
+    'SO:0000261',
+    'SO:0000273',
+    'SO:0000272',
+    'SO:0000258',
+    'SO:0000263',
+    'SO:0000269',
+    'SO:0000264',
+    'SO:0000271',
+    'SO:0005857',
+    'SO:0000766',
+    'SO:0000265',
+    'SO:0000257',
+    'SO:0001036',
+    'SO:0000262',
+    'SO:0001172',
+    'SO:0002129',
+    'SO:0000267',
+}
+
+
 class UnknownStrandName(Exception):
     pass
 
@@ -49,6 +77,8 @@ class ModelInfo(object):
     so_term: str = attr.ib(validator=is_a(str))
     taxid: int = attr.ib(validator=is_a(int))
     accessions: ty.List[str] = attr.ib(validator=is_a(list))
+    source: Source = attr.ib(validator=is_a(Source))
+    length: int = attr.ib(validator=is_a(int))
     cell_location: ty.Optional[str] = attr.ib(validator=optional(is_a(str)))
 
     @property
@@ -57,7 +87,9 @@ class ModelInfo(object):
             return 'rRNA'
         if self.so_term in {'SO:0000587', 'SO:0000603'}:
             return 'autocatalytically_spliced_intron'
-        raise ValueError("No RNA type for: " + self.so_term)
+        if self.so_term in TRNAS:
+            return 'tRNA'
+        raise ValueError("No RNA type for: %s" % self)
 
     def writeable(self):
         return [
@@ -66,6 +98,8 @@ class ModelInfo(object):
             self.rna_type,
             self.so_term,
             self.cell_location,
+            self.source.name,
+            self.length,
         ]
 
 

@@ -20,6 +20,7 @@ from rnacentral_pipeline.rnacentral import traveler
 
 from rnacentral_pipeline.databases.crw.traveler import models as crw
 from rnacentral_pipeline.databases.ribovision.traveler import models as ribovision
+from rnacentral_pipeline.databases.gtrnadb.traveler import models as gtrnadb
 
 from . import parameters as params
 
@@ -98,3 +99,14 @@ def ribovision_model_info(filename, output):
     produce something we can put in our database.
     """
     ribovision.write(filename, output)
+
+
+@model_info.command('gtrnadb')
+@click.argument('filename', type=click.File('r'))
+@click.argument('output', default='-', type=click.File('w'))
+def gtrnadb_model_info(filename, output):
+    """
+    Parse the metadata.tsv file from auto-traveler for gtrnadb models to
+    produce something we can put in our database.
+    """
+    gtrnadb.write(filename, output)
