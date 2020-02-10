@@ -22,7 +22,6 @@ from pathlib import Path
 
 from rnacentral_pipeline.databases.crw.traveler import results as crw
 from rnacentral_pipeline.databases.rfam.traveler import results as rfam
-from rnacentral_pipeline.databases.gtrnadb.traveler import results as gtrnadb
 from rnacentral_pipeline.databases.ribovision.traveler import results as ribovision
 
 from . import data

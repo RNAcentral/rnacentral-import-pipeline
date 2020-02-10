@@ -173,7 +173,8 @@ class TravelerResult(object):
         suffix = '.svg'
         if self.colored:
             suffix = '.colored.svg'
-        return self.path(suffix)
+        name = self.basepath.name
+        return self.basepath.with_name(name + '-' + self.model_id + suffix)
 
     @property
     def dot_bracket_path(self):
@@ -215,7 +216,10 @@ class TravelerResult(object):
             return dot_bracket
 
     def overlap_count(self):
-        with self.path('.overlaps').open('r') as raw:
+        name = self.basepath.name
+        suffix = '.overlaps'
+        overlap_path = self.basepath.with_name(name + '-' + self.model_id + suffix)
+        with overlap_path.open('r') as raw:
             return int(raw.readline().strip())
 
     def is_valid(self):

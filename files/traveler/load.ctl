@@ -53,7 +53,7 @@ create table load_secondary_layout (
     sequence_start int,
     sequence_stop int,
     sequence_coverage float,
-    stk text NOT NULL
+    stk text
 );
 $$
 
