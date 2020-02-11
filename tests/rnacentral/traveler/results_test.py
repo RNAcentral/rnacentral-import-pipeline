@@ -17,7 +17,7 @@ import attr
 import pytest
 from pathlib import Path
 
-from rnacentral_pipeline.rnacentral.traveler import parser
+from rnacentral_pipeline.rnacentral.traveler import results
 from rnacentral_pipeline.rnacentral.traveler import data
 
 from rnacentral_pipeline.databases.helpers.hashes import md5
@@ -25,20 +25,43 @@ from rnacentral_pipeline.databases.helpers.hashes import md5
 
 @pytest.mark.parametrize('directory,source,count', [
     ('data/traveler/crw', data.Source.crw, 1),
+    ('data/traveler/ribovision', data.Source.ribovision, 2),
+])
+def test_can_get_allpaths(directory, source, count):
+    path = Path(directory)
+    assert len(list(results.standard_paths(source, path))) == count
+
+
+def test_can_get_expected_paths():
+    base = Path('data/traveler/crw')
+    paths = list(results.standard_paths(data.Source.crw, base))
+    path = next(p for p in paths if p.urs == 'URS00000F9D45_9606')
+    assert path == data.TravelerPaths('URS00000F9D45_9606', 'd.5.e.H.sapiens.2', data.Source.crw, base)
+
+
+@pytest.mark.parametrize('directory,source,count', [
+    ('data/traveler/crw', data.Source.crw, 1),
     ('data/traveler/rfam', data.Source.rfam, 2),
     ('data/traveler/ribovision', data.Source.ribovision, 2),
+    ('data/traveler/gtrnadb', data.Source.gtrnadb, 3),
 ])
 def test_can_process_a_directory(directory, source, count):
     path = Path(directory)
-    assert len(list(parser.parse(source, path))) == count
+    assert len(list(results.parse(source, path))) == count
 
 
+@pytest.mark.xfail()
 def test_can_produce_reasonable_data():
-    val = list(parser.parse(data.Source.crw, Path('data/traveler/crw')))
+    val = list(results.parse(data.Source.crw, Path('data/traveler/crw')))
     assert attr.asdict(val[0]) == attr.asdict(data.TravelerResult(
         urs='URS00000F9D45_9606',
         model_id='d.5.e.H.sapiens.2',
-        basepath=Path('data/traveler/crw/URS00000F9D45_9606-d.5.e.H.sapiens.2'),
+        paths=data.TravelerPaths(
+            urs='URS00000F9D45_9606',
+            model_id='d.5.e.H.sapiens.2',
+            source=data.Source.crw,
+            basepath=Path('data/traveler/crw/'),
+        ),
         source=data.Source.crw,
         ribovore=data.RibovoreResult(
             target='URS00000F9D45_9606',
@@ -47,7 +70,7 @@ def test_can_produce_reasonable_data():
             fm=1,
             fam='SSU',
             domain='Bacteria',
-            model='d.16.b.C.perfringens',
+            model='d.5.e.H.sapiens.2',
             strand=1,
             ht=1,
             tscore=1093.0,
@@ -62,34 +85,44 @@ def test_can_produce_reasonable_data():
         )))
 
 
-@pytest.mark.parametrize('directory,source,index,attr,expected', [
-    ('data/traveler/crw', data.Source.crw, 0, 'dot_bracket_path', 'data/traveler/crw/URS00000F9D45_9606-d.5.e.H.sapiens.2.fasta'),
-    ('data/traveler/crw', data.Source.crw, 0, 'svg_path', 'data/traveler/crw/URS00000F9D45_9606-d.5.e.H.sapiens.2.colored.svg'),
+@pytest.mark.parametrize('directory,source,urs,attr,expected', [
+    ('data/traveler/crw', data.Source.crw, 'URS00000F9D45_9606', 'fasta', 'data/traveler/crw/URS00000F9D45_9606-d.5.e.H.sapiens.2.fasta'),
+    ('data/traveler/crw', data.Source.crw, 'URS00000F9D45_9606', 'svg', 'data/traveler/crw/URS00000F9D45_9606-d.5.e.H.sapiens.2.colored.svg'),
+    ('data/traveler/rfam/', data.Source.rfam, 'URS0000A7635A', 'fasta', 'data/traveler/rfam/RF00162/URS0000A7635A.fasta'),
+    ('data/traveler/rfam/', data.Source.rfam, 'URS0000A7635A', 'svg', 'data/traveler/rfam/RF00162/URS0000A7635A.colored.svg'),
+    ('data/traveler/gtrnadb/', data.Source.gtrnadb, 'URS0000A0BF23', 'fasta', 'data/traveler/gtrnadb/URS0000A0BF23.fasta'),
+    ('data/traveler/gtrnadb/', data.Source.gtrnadb, 'URS0000A0BF23', 'svg', 'data/traveler/gtrnadb/URS0000A0BF23-E-Gln.colored.svg'),
 ])
-def test_can_produce_correct_paths(directory, source, index, attr, expected):
-    val = list(parser.parse(source, Path(directory)))
-    assert getattr(val[index], attr) == Path(expected)
+def test_can_produce_correct_paths(directory, source, urs, attr, expected):
+    val = list(results.parse(source, Path(directory)))
+    v = next(v for v in val if v.urs == urs)
+    assert getattr(v.paths, attr) == Path(expected)
 
 
 def test_gets_correct_count():
-    val = list(parser.parse(data.Source.rfam, Path('data/traveler/rfam')))
+    val = list(results.parse(data.Source.rfam, Path('data/traveler/rfam')))
     v = next(v for v in val if v.urs == 'URS0000A7635A')
     assert v.overlap_count() == 0
     assert v.basepair_count() == 24
 
 
 def test_produces_valid_data_for_rfam():
-    val = parser.parse(data.Source.rfam, Path('data/traveler/rfam'))
+    val = results.parse(data.Source.rfam, Path('data/traveler/rfam'))
     v = next(v for v in val if v.urs == 'URS0000A7635A')
     assert attr.asdict(v) == attr.asdict(data.TravelerResult(
         urs='URS0000A7635A',
         model_id='RF00162',
-        basepath=Path('data/traveler/rfam/RF00162/URS0000A7635A'),
+        paths=data.TravelerPaths(
+            urs='URS0000A7635A',
+            model_id='RF00162',
+            source=data.Source.rfam,
+            basepath=Path('data/traveler/rfam/RF00162/'),
+        ),
         source=data.Source.rfam,
         ribovore=None,
     ))
 
-    assert v.svg_path == Path('data/traveler/rfam/RF00162/URS0000A7635A.colored.svg')
+    assert v.paths.svg == Path('data/traveler/rfam/RF00162/URS0000A7635A.colored.svg')
     writeable = v.writeable()
 
     # This is too long to include in the file so I just compare to the file it
@@ -115,12 +148,17 @@ def test_produces_valid_data_for_rfam():
 
 
 def test_parses_ribovision_results():
-    vals = parser.parse(data.Source.ribovision, Path('data/traveler/ribovision'))
+    vals = results.parse(data.Source.ribovision, Path('data/traveler/ribovision'))
     val = next(v for v in vals if v.urs == 'URS0000C5FF65')
     assert attr.asdict(val) == attr.asdict(data.TravelerResult(
         urs='URS0000C5FF65',
         model_id='EC_LSU_3D',
-        basepath=Path('data/traveler/ribovision/URS0000C5FF65-EC_LSU_3D'),
+        paths=data.TravelerPaths(
+            urs='URS0000C5FF65',
+            model_id='EC_LSU_3D',
+            source=data.Source.ribovision,
+            basepath=Path('data/traveler/ribovision/'),
+        ),
         source=data.Source.ribovision,
         ribovore=data.RibovoreResult(
             target='URS0000C5FF65',
@@ -149,7 +187,7 @@ def test_parses_ribovision_results():
     ('data/traveler/rfam', data.Source.rfam, 'URS0000A7635A', '9504c4b9a1cea77fa2c4ef8082d7b996'),
 ])
 def test_can_extract_expected_svg_data(directory, source, urs, md5_hash):
-    val = list(parser.parse(source, Path(directory)))
+    val = list(results.parse(source, Path(directory)))
     svg = next(v for v in val if v.urs == urs).svg()
     assert '\n' not in svg
     assert svg.startswith('<svg')
@@ -162,7 +200,7 @@ def test_can_extract_expected_svg_data(directory, source, urs, md5_hash):
 ])
 def test_can_extract_expected_dot_bracket_data(directory, source, urs, secondary,
                                                bp_count):
-    val = parser.parse(source, Path(directory))
+    val = results.parse(source, Path(directory))
     v = next(v for v in val if v.urs == urs)
     assert v.dot_bracket() == secondary
     assert v.basepair_count() == bp_count

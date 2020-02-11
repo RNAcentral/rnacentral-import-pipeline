@@ -13,20 +13,24 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import re
-import typing as ty
+import pytest
 
 from pathlib import Path
 
 from rnacentral_pipeline.rnacentral.traveler import data
+from rnacentral_pipeline.databases.rfam.traveler import results
 
 
-def paths(directory: Path):
-    model_pattern = re.compile('^RF\d+$')
-    for model_directory in directory.glob('RF*'):
-        if not re.match(model_pattern, model_directory.name):
-            continue
+@pytest.mark.parametrize('directory,count', [
+    ('data/traveler/rfam', 2),
+])
+def test_finds_all_paths(directory, count):
+    paths = list(results.paths(Path(directory)))
+    assert len(paths) == count
 
-        model_id = model_directory.stem
-        for path in model_directory.glob('*.fasta'):
-            yield data.TravelerPaths(path.stem, model_id, data.Source.rfam, model_directory)
+
+def test_finds_expected_paths():
+    base = Path('data/traveler/rfam')
+    paths = list(results.paths(base))
+    path = next(p for p in paths if p.urs == 'URS0000A7635A')
+    assert path == data.TravelerPaths('URS0000A7635A', 'RF00162', base / 'RF00162')

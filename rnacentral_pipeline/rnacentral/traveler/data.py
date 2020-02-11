@@ -160,25 +160,50 @@ class RibovoreResult(object):
 
 
 @attr.s()
+class TravelerPaths(object):
+    urs = attr.ib(validator=is_a(str))
+    model_id = attr.ib(validator=is_a(str))
+    source  = attr.ib(validator=is_a(Source))
+    basepath = attr.ib(validator=is_a(Path))
+
+    @property
+    def svg(self) -> Path:
+        with_model = self.source not in {Source.rfam}
+        return self.__path__('.colored.svg', with_model=with_model)
+
+    @property
+    def fasta(self) -> Path:
+        with_model = self.source not in {Source.rfam, Source.gtrnadb}
+        return self.__path__('.fasta', with_model=with_model)
+
+    @property
+    def overlaps(self) -> Path:
+        if self.source == Source.rfam:
+            return self.__path__('.overlaps')
+        return self.__path__('.overlaps', with_model=True)
+
+    @property
+    def stk(self) -> Path:
+        return self.__path__('.stk')
+
+    def __path__(self, suffix: str, with_model=False) -> Path:
+        name = self.urs + suffix
+        if with_model:
+            name = '%s-%s%s' % (self.urs, self.model_id, suffix)
+        return self.basepath / name
+
+
+@attr.s()
 class TravelerResult(object):
-    urs: str = attr.ib(validator=is_a(str))
-    model_id: str = attr.ib(validator=is_a(str))
-    basepath: Path = attr.ib(validator=is_a(Path))
-    source: Source = attr.ib(validator=is_a(Source))
-    ribovore: ty.Optional[RibovoreResult] = attr.ib(validator=optional(is_a(RibovoreResult)), default=None)
-    colored: bool = attr.ib(validator=is_a(bool), default=True)
+    urs = attr.ib(validator=is_a(str))
+    model_id = attr.ib(validator=is_a(str))
+    paths = attr.ib(validator=is_a(TravelerPaths))
+    source = attr.ib(validator=is_a(Source))
+    ribovore = attr.ib(validator=optional(is_a(RibovoreResult)), default=None)
 
-    @property
-    def svg_path(self):
-        suffix = '.svg'
-        if self.colored:
-            suffix = '.colored.svg'
-        name = self.basepath.name
-        return self.basepath.with_name(name + '-' + self.model_id + suffix)
-
-    @property
-    def dot_bracket_path(self):
-        return self.path('.fasta')
+    @classmethod
+    def from_paths(cls, source: Source, path: TravelerPaths, ribovore=None):
+        return cls(path.urs, path.model_id, path, source, ribovore=ribovore)
 
     def svg(self):
         """
@@ -186,18 +211,15 @@ class TravelerResult(object):
         that can be written to CSV for import into the database.
         """
 
-        with self.svg_path.open('r') as raw:
+        with self.paths.svg.open('r') as raw:
             return raw.read().replace('\n', '')
 
     def stk(self):
-        path = self.path('.stk')
+        path = self.paths.stk
         if not path.exists():
             return ''
         with path.open('r') as raw:
             return raw.read()
-
-    def basepair_count(self):
-        return self.dot_bracket().count('(')
 
     def dot_bracket(self):
         """
@@ -207,7 +229,7 @@ class TravelerResult(object):
         dot_bracket string which are the same length.
         """
 
-        with self.dot_bracket_path.open('r') as raw:
+        with self.paths.fasta.open('r') as raw:
             record = SeqIO.read(raw, 'fasta')
             seq_dot = str(record.seq)
             sequence = re.match(r'^(\w+)', seq_dot).group(1)
@@ -215,11 +237,11 @@ class TravelerResult(object):
             assert len(sequence) == len(dot_bracket)
             return dot_bracket
 
+    def basepair_count(self):
+        return self.dot_bracket().count('(')
+
     def overlap_count(self):
-        name = self.basepath.name
-        suffix = '.overlaps'
-        overlap_path = self.basepath.with_name(name + '-' + self.model_id + suffix)
-        with overlap_path.open('r') as raw:
+        with self.paths.overlaps.open('r') as raw:
             return int(raw.readline().strip())
 
     def is_valid(self):
@@ -227,34 +249,20 @@ class TravelerResult(object):
             if not self.ribovore:
                 return False
 
-        return all(p.exists() for p in [self.dot_bracket_path, self.svg_path])
-
-    @property
-    def model_start(self):
-        if self.ribovore:
-            return self.ribovore.mfrom
-
-    @property
-    def model_stop(self):
-        if self.ribovore:
-            return self.ribovore.mto
-
-    @property
-    def sequence_start(self):
-        if self.ribovore:
-            return self.ribovore.bfrom
-
-    @property
-    def sequence_stop(self):
-        if self.ribovore:
-            return self.ribovore.bto
-
-    @property
-    def sequence_coverage(self):
-        if self.ribovore:
-            return self.ribovore.bcov
+        required = [
+            self.paths.fasta, 
+            self.paths.svg,
+            self.paths.overlaps,
+        ]
+        return all(p.exists() for p in required)
 
     def writeable(self):
+        model_start = None if not self.ribovore else self.ribovore.mfrom
+        model_stop = None if not self.ribovore else self.ribovore.mto
+        sequence_start = None if not self.ribovore else self.ribovore.bfrom
+        sequence_stop = None if not self.ribovore else self.ribovore.bto
+        sequence_coverage = None if not self.ribovore else self.ribovore.bcov
+
         return [
             self.urs,
             self.model_id,
@@ -262,14 +270,10 @@ class TravelerResult(object):
             self.svg(),
             self.overlap_count(),
             self.basepair_count(),
-            self.model_start,
-            self.model_stop,
-            self.sequence_start,
-            self.sequence_stop,
-            self.sequence_coverage,
+            model_start,
+            model_stop,
+            sequence_start,
+            sequence_stop,
+            sequence_coverage,
             self.stk(),
         ]
-
-    def path(self, suffix):
-        name = self.basepath.name
-        return self.basepath.with_name(name + suffix)
