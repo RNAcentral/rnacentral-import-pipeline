@@ -14,46 +14,53 @@ limitations under the License.
 """
 
 import os
+import re
 import logging
 from glob import glob
 
 import typing as ty
 from pathlib import Path
 
-from rnacentral_pipeline.databases.crw.traveler import results as crw
 from rnacentral_pipeline.databases.rfam.traveler import results as rfam
-from rnacentral_pipeline.databases.ribovision.traveler import results as ribovision
 
 from . import data
+from . import ribovore
 
 LOGGER = logging.getLogger(__name__)
 
 
-def parse(source: data.Source, 
-          directory: Path, 
-          colored=True, 
+def standard_paths(source: data.Source, directory: Path) -> ty.Iterator[data.TravelerPaths]:
+    for path in directory.glob('URS*.colored.svg'):
+        urs, model = path.stem.replace('.colored', '').split('-', 1)
+        yield data.TravelerPaths(urs, model, source, directory)
+
+
+def parse(source: data.Source,
+          directory: Path,
           allow_missing=False) -> ty.Iterator[data.TravelerResult]:
 
-    svg_suffix = 'svg'
-    if colored:
-        svg_suffix = '.colored.svg'
+    if not directory.exists():
+        raise ValueError("Cannot parse data from missing directory: %s" %
+                         directory)
 
-    if source == data.Source.crw:
-        parsed = crw.parse(directory, svg_suffix)
-    elif source == data.Source.ribovision:
-        parsed = ribovision.parse(directory, svg_suffix)
+    ribo: ty.Dict[str, data.RibovoreResult] = {}
+    if source in {data.Source.crw, data.Source.ribovision}:
+        paths = standard_paths(source, directory)
+        ribo = ribovore.as_dict(directory)
     elif source == data.Source.rfam:
-        parsed = rfam.parse(directory, svg_suffix)
+        paths = rfam.paths(directory)
     elif source == data.Source.gtrnadb:
-        parsed = gtrnadb.parse(directory, svg_suffix)
+        paths = standard_paths(source, directory)
     else:
         raise ValueError("Unknown source: %s" % source)
 
     seen = False
-    for entry in parsed:
-        if entry.is_valid():
+    for path in paths:
+        r = ribo.get(path.urs, None)
+        result = data.TravelerResult.from_paths(source, path, ribovore=r)
+        if result.is_valid():
             seen = True
-            yield entry
+            yield result
 
     if not seen:
         msg = "Found nothing to parse in %s" % directory
