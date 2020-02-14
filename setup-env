@@ -1,0 +1,4 @@
+module use modules
+
+module load cluster
+module load singularity/3.5.0

@@ -16,8 +16,6 @@ limitations under the License.
 import json
 import itertools as it
 
-import six
-
 from ..data import Entry
 
 from . import utils
@@ -66,4 +64,4 @@ def parse(handle, mapping_file):
 
     data = json.load(handle)
     mapping = utils.id_to_insdc_type(mapping_file)
-    return six.moves.map(lambda e: as_entry(e, mapping), data)
+    return map(lambda e: as_entry(e, mapping), data)

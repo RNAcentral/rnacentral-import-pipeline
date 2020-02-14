@@ -15,16 +15,11 @@ limitations under the License.
 
 import re
 import logging
+from functools import lru_cache
 
-import six
 import requests
 from retry import retry
 from ratelimiter import RateLimiter
-
-try:
-    from functools import lru_cache
-except ImportError:
-    from functools32 import lru_cache
 
 from rnacentral_pipeline.databases.data import Reference
 
@@ -77,7 +72,7 @@ def summary(id_reference):
         if not result:
             continue
 
-        external_id = six.text_type(result[id_reference.namespace.name])
+        external_id = str(result[id_reference.namespace.name])
         if external_id == id_reference.external_id:
             possible.append(result)
 
@@ -99,9 +94,9 @@ def lookup(id_reference):
         pmid = int(pmid)
 
     return Reference(
-        authors=six.text_type(data.get('authorString', '')),
-        location=six.text_type(pretty_location(data)),
-        title=six.text_type(clean_title(data.get('title', ''))),
+        authors=str(data.get('authorString', '')),
+        location=str(pretty_location(data)),
+        title=str(clean_title(data.get('title', ''))),
         pmid=pmid,
         doi=data.get('doi', None),
         pmcid=data.get('pmcid', None),

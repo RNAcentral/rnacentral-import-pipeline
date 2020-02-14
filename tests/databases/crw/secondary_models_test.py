@@ -16,6 +16,7 @@ limitations under the License.
 import pytest
 
 from rnacentral_pipeline.databases.crw import secondary_models as crw
+from rnacentral_pipeline.rnacentral.traveler.data import ModelInfo
 
 
 @pytest.fixture()
@@ -33,7 +34,7 @@ def test_parses_whole_file(filename, count):
 
 
 def test_can_build_correct_data(parsed):
-    assert parsed['a.I1.m.A.aegerita.C2.SSU'] == crw.Info(
+    assert parsed['a.I1.m.A.aegerita.C2.SSU'] == ModelInfo(
         model_id='a.I1.m.A.aegerita.C2.SSU',
         is_intronic=True,
         so_term='SO:0000587',
@@ -50,7 +51,7 @@ def test_can_handle_multiple_filenames(parsed):
     assert 'd.235.b.A.calcoaceticus.ps d.233.b.A.calcoaceticus' not in parsed
     assert 'd.235.b.A.calcoaceticus' in parsed 
     assert 'd.233.b.A.calcoaceticus' in parsed
-    assert parsed['d.235.b.A.calcoaceticus'] == crw.Info(
+    assert parsed['d.235.b.A.calcoaceticus'] == ModelInfo(
         model_id='d.235.b.A.calcoaceticus',
         is_intronic=False,
         so_term='SO:0000651',
@@ -59,7 +60,7 @@ def test_can_handle_multiple_filenames(parsed):
         cell_location='Nucleus',
     )
 
-    assert parsed['d.233.b.A.calcoaceticus'] == crw.Info(
+    assert parsed['d.233.b.A.calcoaceticus'] == ModelInfo(
         model_id='d.233.b.A.calcoaceticus',
         is_intronic=False,
         so_term='SO:0000651',

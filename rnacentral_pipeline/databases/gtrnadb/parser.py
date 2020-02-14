@@ -17,8 +17,6 @@ import json
 import logging
 import itertools as it
 
-import six
-
 from rnacentral_pipeline.databases.data import Exon
 from rnacentral_pipeline.databases.data import Entry
 from rnacentral_pipeline.databases.data import SecondaryStructure
@@ -122,5 +120,5 @@ def parse(raw):
     """
 
     data = json.load(raw)
-    data = six.moves.map(gtrnadb_entries, data)
+    data = map(gtrnadb_entries, data)
     return it.chain.from_iterable(data)

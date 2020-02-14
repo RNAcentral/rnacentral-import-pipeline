@@ -40,6 +40,7 @@ RUN apt-get install -y \
     rsync \
     sbcl \
     tar \
+    time \
     unzip \
     wget
 
@@ -80,37 +81,38 @@ RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && python get-pip.py
 ENV RNACENTRAL_IMPORT_PIPELINE "$RNA/rnacentral-import-pipeline"
 
 ADD requirements.txt $RNACENTRAL_IMPORT_PIPELINE/requirements.txt
-RUN pip3 install --upgrade pip && \
-    pip3 install -r $RNACENTRAL_IMPORT_PIPELINE/requirements.txt
+RUN pip3 install --upgrade pip
+RUN pip3 install -r $RNACENTRAL_IMPORT_PIPELINE/requirements.txt
 
 RUN python3 -m textblob.download_corpora
 
 # Copy everything that auto-traveler needs into place. This mimicks the same
 # directory structure as the auto-traveler Dockerfile.
 WORKDIR /
-ENV RIBODIR="$RNA/ribotyper-v1"
+ENV RIBODIR="$RNA/ribovore"
 ENV EPNOPTDIR="$RNA/epn-options"
 ENV EPNOFILEDIR="$RNA/epn-ofile"
 ENV EPNTESTDIR="$RNA/epn-test"
 ENV JIFFY_SCRIPTS="$RNA/jiffy-infernal-hmmer-scripts"
 ENV TRAVELER="$RNA/traveler"
 ENV RNA_STRUCTURE="$RNA/RNAstructure"
-ENV RSCAPE="$RNA/rscape_v1.2.3"
+ENV RSCAPE="$RNA/rscape"
 
-COPY --from=rnacentral/auto-traveler:rscape-templates $EPNOFILEDIR $EPNOFILEDIR
-COPY --from=rnacentral/auto-traveler:rscape-templates $EPNOPTDIR $EPNOPTDIR
-COPY --from=rnacentral/auto-traveler:rscape-templates $EPNTESTDIR $EPNTESTDIR
-COPY --from=rnacentral/auto-traveler:rscape-templates $RIBODIR $RIBODIR
-COPY --from=rnacentral/auto-traveler:rscape-templates $JIFFY_SCRIPTS $JIFFY_SCRIPTS
-COPY --from=rnacentral/auto-traveler:rscape-templates $TRAVELER $TRAVELER
-COPY --from=rnacentral/auto-traveler:rscape-templates $RNA_STRUCTURE $RNA_STRUCTURE
-COPY --from=rnacentral/auto-traveler:rscape-templates $RSCAPE $RSCAPE
+COPY --from=rnacentral/auto-traveler:latest $EPNOFILEDIR $EPNOFILEDIR
+COPY --from=rnacentral/auto-traveler:latest $EPNOPTDIR $EPNOPTDIR
+COPY --from=rnacentral/auto-traveler:latest $EPNTESTDIR $EPNTESTDIR
+COPY --from=rnacentral/auto-traveler:latest $RIBODIR $RIBODIR
+COPY --from=rnacentral/auto-traveler:latest $JIFFY_SCRIPTS $JIFFY_SCRIPTS
+COPY --from=rnacentral/auto-traveler:latest $TRAVELER $TRAVELER
+COPY --from=rnacentral/auto-traveler:latest $RNA_STRUCTURE $RNA_STRUCTURE
+COPY --from=rnacentral/auto-traveler:latest $RSCAPE $RSCAPE
 
 ENV PATH="$JIFFY_SCRIPTS:$PATH"
 ENV PATH="$AUTO_TRAVELER_PY:$PATH"
 ENV PATH="$RSCAPE/bin:$PATH"
 ENV PATH="$RIBODIR:$PATH"
 ENV PATH="$RNA_STRUCTURE/exe:$PATH"
+ENV PATH="$RNA/infernal-1.1.2/bin:$PATH"
 
 # Install auto-traveler and related data
 WORKDIR /
@@ -118,14 +120,12 @@ ENV AUTO_TRAVELER_PY="$RNA/auto-traveler"
 RUN \
     git clone https://github.com/RNAcentral/auto-traveler.git $AUTO_TRAVELER_PY && \
     cd $AUTO_TRAVELER_PY && \
-    git checkout python3-update
+    git checkout keep-stk && \
+    git pull origin keep-stk && \
+    /usr/local/bin/pip3 install -r requirements.txt
 
 WORKDIR $AUTO_TRAVELER_PY
-ARG CACHE_DATE=not_a_date
-RUN \
-    /usr/local/bin/pip install -r requirements.txt && \
-    python3 ./auto-traveler.py rrna setup && \
-    python3 utils/generate_model_info.py --cm-library data/cms
+RUN python3 ./auto-traveler.py setup
 
 ENV PATH="$AUTO_TRAVELER_PY:$PATH"
 
@@ -134,6 +134,7 @@ WORKDIR $RNA
 # Setup environmental variables
 ENV PERL5LIB="$RIBODIR:$EPNOPTDIR:$EPNOFILEDIR:$EPNTESTDIR:/usr/bin/env:$PERL5LIB"
 
+ENV RIBOTIMEDIR="/usr/bin"
 ENV RIBOINFERNALDIR="$RNA/infernal-1.1.2/bin" RIBOEASELDIR="$RNA/infernal-1.1.2/bin"
 ENV DATAPATH="$RNA_STRUCTURE/data_tables/"
 

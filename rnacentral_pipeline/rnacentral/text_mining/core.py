@@ -17,17 +17,12 @@ import re
 import csv
 import codecs
 
-import six
 import attr
-from attr.validators import instance_of as is_a
 import typing
+from pathlib import Path
+from pathlib import PurePosixPath
 
-try:
-    from pathlib import Path
-    from pathlib import PurePosixPath
-except ImportError:
-    from pathlib2 import Path
-    from pathlib2 import PurePosixPath
+from attr.validators import instance_of as is_a
 
 import textblob as tb
 
@@ -37,15 +32,15 @@ from . import blob_building
 
 @attr.s()
 class WordMatch(object):
-    word = attr.ib(type=tb.Word)
-    name = attr.ib(type=six.text_type)
-    group = attr.ib(validator=is_a(six.text_type))
+    word = attr.ib(validator=is_a(tb.Word))
+    name: str = attr.ib(validator=is_a(str))
+    group: str = attr.ib(validator=is_a(str))
 
 
 @attr.s()
 class MatchingSentence(object):
-    sentence = attr.ib(type=tb.blob.Sentence)
-    matches = attr.ib(type=typing.List[WordMatch])
+    sentence: tb.blob.Sentence = attr.ib(validator=is_a(tb.blob.Sentence))
+    matches: typing.List[WordMatch] = attr.ib(validator=is_a(list))
     publication_id = attr.ib(validator=is_a(IdReference))
 
     def writeables(self, *extra):
@@ -62,14 +57,6 @@ class MatchingSentence(object):
                 sentence
             ]
 
-            if six.PY2:
-                rest = [
-                           self.publication_id.normalized_id,
-                           match.group.encode('ascii', 'ignore'),
-                           match.name.encode('ascii', 'ignore'),
-                           match.word.encode('ascii', 'ignore'),
-                           sentence.encode('ascii', 'ignore'),
-                ]
             yield data + rest
 
 
@@ -92,9 +79,9 @@ class SentenceSelector(object):
 
 @attr.s()
 class PatternMatcher(object):
-    group = attr.ib(type=six.text_type, validator=is_a(six.text_type))
-    patterns = attr.ib(type=typing.List[typing.Pattern])
-    pattern = attr.ib(type=typing.Pattern)
+    group = attr.ib(validator=is_a(str))
+    patterns: typing.List[typing.Pattern] = attr.ib()
+    pattern: typing.Pattern = attr.ib()
 
     @classmethod
     def build(cls, group, patterns):
@@ -103,7 +90,7 @@ class PatternMatcher(object):
             re.IGNORECASE)
 
         return cls(
-            group=six.text_type(group),
+            group=str(group),
             patterns=patterns,
             pattern=pattern,
         )
@@ -126,12 +113,12 @@ class PatternMatcher(object):
 
 @attr.s()
 class NameMatcher(object):
-    group = attr.ib(validator=is_a(six.text_type))
+    group = attr.ib(validator=is_a(str))
     names = attr.ib(validator=is_a(set), type=typing.Set[typing.Text])
 
     @classmethod
     def build(cls, group, names):
-        return cls(group=six.text_type(group), names=set(names))
+        return cls(group=str(group), names=set(names))
 
     @classmethod
     def from_handle(cls, name, handle):
@@ -142,7 +129,7 @@ class NameMatcher(object):
         for token in sentence.tokens:
             if token not in self.names:
                 continue
-            matches.append(WordMatch(token, six.text_type(token), self.group))
+            matches.append(WordMatch(token, str(token), self.group))
         return matches
 
 

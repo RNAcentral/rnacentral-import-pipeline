@@ -34,7 +34,7 @@ def write_entries(handle, results):
     count = 0
     for result in results:
         count += 1
-        handle.write(etree.tostring(result))
+        handle.write(etree.tostring(result).decode())
         handle.write('\n')
     return count
 
@@ -48,10 +48,10 @@ def write(results, handle, count_handle):
 
     # pylint: disable=no-member
     handle.write('<database>')
-    handle.write(etree.tostring(E.name('RNAcentral')))
-    handle.write(etree.tostring(E.description('a database for non-protein coding RNA sequences')))
-    handle.write(etree.tostring(E.release('1.0')))
-    handle.write(etree.tostring(E.release_date(date.today().strftime('%d/%m/%Y'))))
+    handle.write(etree.tostring(E.name('RNAcentral')).decode())
+    handle.write(etree.tostring(E.description('a database for non-protein coding RNA sequences')).decode())
+    handle.write(etree.tostring(E.release('1.0')).decode())
+    handle.write(etree.tostring(E.release_date(date.today().strftime('%d/%m/%Y'))).decode())
 
     handle.write('<entries>')
     count = write_entries(handle, results)
@@ -61,7 +61,7 @@ def write(results, handle, count_handle):
         raise ValueError("No entries found")
 
     count_handle.write(str(count))
-    handle.write(etree.tostring(E.entry_count(str(count))))
+    handle.write(etree.tostring(E.entry_count(str(count))).decode())
     handle.write('</database>')
 
 

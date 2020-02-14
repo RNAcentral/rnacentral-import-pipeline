@@ -16,8 +16,6 @@ limitations under the License.
 import re
 import unicodedata
 
-import six
-
 import attr
 from attr.validators import and_
 from attr.validators import optional
@@ -73,6 +71,10 @@ SO_INSDC_MAPPING['SO:0005836'] = 'ncRNA'
 SO_INSDC_MAPPING['SO:0000035'] = 'ncRNA'
 SO_INSDC_MAPPING['SO:0000077'] = 'antisense_RNA'
 SO_INSDC_MAPPING['SO:0000204'] = 'ncRNA'
+SO_INSDC_MAPPING['SO:0000594'] = 'snoRNA'
+SO_INSDC_MAPPING['SO:0000593'] = 'snoRNA'
+SO_INSDC_MAPPING['SO:0000652'] = 'rRNA'
+SO_INSDC_MAPPING['SO:0001643'] = 'telomerase_RNA'
 
 
 class UnxpectedRnaType(Exception):
@@ -129,11 +131,11 @@ def as_so_term(rna_type):
 
 def from_so_term(so_term):
     if so_term in NORMALIZE_TO_INSDC:
-        return six.text_type(NORMALIZE_TO_INSDC[so_term])
+        return str(NORMALIZE_TO_INSDC[so_term])
     if so_term in INSDC_SO_MAPPING:
-        return six.text_type(so_term)
+        return str(so_term)
     if so_term in SO_INSDC_MAPPING:
-        return six.text_type(SO_INSDC_MAPPING[so_term])
+        return str(SO_INSDC_MAPPING[so_term])
     raise UnxpectedRnaType(so_term)
 
 
