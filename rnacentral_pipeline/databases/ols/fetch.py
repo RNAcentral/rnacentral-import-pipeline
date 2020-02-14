@@ -21,10 +21,7 @@ from retry import retry
 from retry.api import retry_call
 from ratelimiter import RateLimiter
 
-try:
-    from functools import lru_cache
-except ImportError:
-    from functools32 import lru_cache
+from functools import lru_cache
 
 from rnacentral_pipeline.databases.data import OntologyTerm
 

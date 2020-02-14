@@ -15,7 +15,6 @@ requests==2.20.0
 retry==0.9.2
 semver==2.7.9
 six==1.10.0
-contextlib2==0.5.5
 typing==3.6.6
 textblob==0.15.3
 furl==2.0.0

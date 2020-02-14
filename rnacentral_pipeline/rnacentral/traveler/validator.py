@@ -15,8 +15,6 @@ limitations under the License.
 
 import csv
 
-import six
-
 import attr
 from attr.validators import optional
 from attr.validators import instance_of as is_a
@@ -56,9 +54,9 @@ ALLOWED_RFAM = {
 
 @attr.s()
 class ShouldShow(object):
-    urs = attr.ib(validator=is_a(six.text_type))
-    model_type = attr.ib(validator=is_a(six.text_type))
-    rna_type = attr.ib(validator=is_a(six.text_type))
+    urs = attr.ib(validator=is_a(str))
+    model_type = attr.ib(validator=is_a(str))
+    rna_type = attr.ib(validator=is_a(str))
     overlap_count = attr.ib(validator=is_a(int))
     zscore = attr.ib(validator=optional(is_a(float)))
 

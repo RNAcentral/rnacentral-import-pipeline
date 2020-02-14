@@ -15,8 +15,6 @@ limitations under the License.
 
 import itertools as it
 
-import six
-
 from . import helpers
 
 
@@ -25,7 +23,7 @@ def lines(raw):
     This will strip out all lines that start with a '#' from the given iterable
     of lines. This returns an iterable (not a list) of the lines.
     """
-    return six.moves.filterfalse(lambda s: s.startswith('#'), raw)
+    return filterfalse(lambda s: s.startswith('#'), raw)
 
 
 def get_version(raw):
@@ -48,10 +46,10 @@ def parse_v_2_2_5(tsv_handle, seqs):
     """
 
     entries = helpers.as_rows(lines(tsv_handle))
-    ncrna = six.moves.filter(helpers.is_ncrna, entries)
-    entries = six.moves.map(lambda e: helpers.as_entries(e, seqs), ncrna)
+    ncrna = filter(helpers.is_ncrna, entries)
+    entries = map(lambda e: helpers.as_entries(e, seqs), ncrna)
     entries = it.chain.from_iterable(entries)
-    return six.moves.filter(None, entries)
+    return filter(None, entries)
 
 
 def parse(tsv_handle, fasta_handle):

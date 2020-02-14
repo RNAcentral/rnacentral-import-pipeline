@@ -17,11 +17,7 @@ import re
 import csv
 import operator as op
 
-import six
-import attr
-from attr.validators import instance_of as is_a
-
-import typing
+from rnacentral_pipeline.rnacentral.traveler.data import ModelInfo
 
 SO_TERM_MAPPING = {
     '16S': 'SO:0000650',
@@ -64,58 +60,29 @@ def as_taxid(raw):
     return int(raw)
 
 
-@attr.s()
-class Info(object):
-    model_id = attr.ib(validator=is_a(six.text_type))
-    is_intronic = attr.ib(validator=is_a(bool))
-    so_term = attr.ib(validator=is_a(six.text_type))
-    taxid = attr.ib(validator=is_a(six.integer_types))
-    accessions = attr.ib(type=typing.List[six.text_type])
-    cell_location = attr.ib(validator=is_a(six.text_type))
-
-    @classmethod
-    def build(cls, model_id, raw):
-        intronic = raw['rna_type'] == 'I'
-        return cls(
-            model_id=model_id,
-            is_intronic=intronic,
-            so_term=as_so_term(raw['rna_class']),
-            taxid=as_taxid(raw['tax_id']),
-            accessions=raw['accession(s)'].split(','),
-            cell_location=raw['cell_location'],
-        )
-
-    @classmethod
-    def build_all(cls, raw):
-        for model_id in raw['structure'].split(' '):
-            model_id = re.sub(r'\.ps$', '', model_id)
-            yield cls.build(model_id, raw)
-
-    @property
-    def rna_type(self):
-        if self.so_term in {'SO:0000650', 'SO:0000651', 'SO:0000652'}:
-            return 'rRNA'
-        if self.so_term in {'SO:0000587', 'SO:0000603'}:
-            return 'autocatalytically_spliced_intron'
-        raise ValueError("No RNA type for: " + self.so_term)
-
-    def writeable(self):
-        return [
-            self.model_id,
-            self.taxid,
-            self.rna_type,
-            self.so_term,
-            self.cell_location,
-        ]
+def models(raw):
+    for model_id in raw['structure'].split(' '):
+        data = dict(raw)
+        model_id = re.sub(r'\.ps$', '', model_id)
+        data['model_id'] = model_id
+        yield data
 
 
 def parse(handle):
     for row in csv.DictReader(handle, delimiter='\t'):
-        for info in Info.build_all(row):
-            yield info
+        for info in models(row):
+            intronic = info['rna_type'] == 'I'
+            yield ModelInfo(
+                model_id=info['model_id'],
+                is_intronic=intronic,
+                so_term=as_so_term(info['rna_class']),
+                taxid=as_taxid(info['tax_id']),
+                accessions=row['accession(s)'].split(','),
+                cell_location=info['cell_location'],
+            )
 
 
 def write(handle, output):
     data = parse(handle)
-    data = six.moves.map(op.methodcaller('writeable'), data)
+    data = map(op.methodcaller('writeable'), data)
     csv.writer(output).writerows(data)

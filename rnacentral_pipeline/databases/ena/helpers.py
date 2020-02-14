@@ -18,14 +18,13 @@ import attr
 import logging
 import collections as coll
 
-import six
-
 from Bio.Seq import Seq
 
 import rnacentral_pipeline.databases.helpers.embl as embl
 from rnacentral_pipeline.databases.helpers.phylogeny import UnknownTaxonId
 import rnacentral_pipeline.databases.helpers.publications as pubs
 
+from rnacentral_pipeline.databases.data import Entry
 from rnacentral_pipeline.databases.data import IdReference
 
 LOGGER = logging.getLogger(__name__)
@@ -34,6 +33,13 @@ ONTOLOGIES = set([
     'ECO',
     'SO',
     'GO',
+])
+
+MAY_SKIP = set([
+    77133,
+    506600,
+    410658,
+    1169740,
 ])
 
 
@@ -374,3 +380,9 @@ def is_protein(feature):
     if product(feature) == "uncharacterized protein":
         return True
     return False
+
+
+def is_skippable_sequence(entry: Entry) -> bool:
+    return len(entry.sequence) < 500 and \
+        entry.rna_type == 'rRNA' and \
+        entry.ncbi_tax_id in MAY_SKIP

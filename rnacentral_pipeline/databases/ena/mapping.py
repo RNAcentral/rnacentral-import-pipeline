@@ -24,11 +24,9 @@ from rnacentral_pipeline.databases.data import Entry
 
 CHROMOSOME_LEVEL_MAPPINGS = set([
     "WORMBASE",
-    "POMBASE",
 ])
 
 DATABASES = {
-    'PomBase',
     'SGD',
     'SRPDB',
     'WormBase',
@@ -56,10 +54,7 @@ def tpa_key(value, database=None):
                 return (value.parent_accession, value.locus_tag)
 
         elif isinstance(value, GenericTpa):
-            if db_name == 'POMBASE':
-                return (value.parent_accession, value.database_accession)
-            else:
-                return (value.parent_accession, value.locus_tag)
+            return (value.parent_accession, value.locus_tag)
 
     return (value.parent_accession, None)
 
@@ -127,9 +122,6 @@ class GenericTpa(object):
 
 
 class UrlBuilder(object):
-    def pombase(self, entry):
-        return 'http://www.pombase.org/spombe/result/%s' % entry.primary_id
-
     def sgd(self, entry):
         return 'http://www.yeastgenome.org/locus/%s/overview' % entry.primary_id
 

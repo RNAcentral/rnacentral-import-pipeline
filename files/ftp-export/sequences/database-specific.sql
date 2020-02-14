@@ -11,5 +11,5 @@ WHERE
     pre.is_active = true
     AND pre.taxid is not null
     AND pre.databases ilike :'db'
+ORDER BY pre.id
 ) TO STDOUT
-

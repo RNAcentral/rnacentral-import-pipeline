@@ -27,7 +27,7 @@ def cli():
 
 
 @cli.command('from-file')
-@click.argument('json_file', type=click.File('r'))
+@click.argument('json_file', type=click.File('r', encoding='utf-8'))
 @click.argument('output', default='.', type=click.Path(
     writable=True,
     dir_okay=True,
