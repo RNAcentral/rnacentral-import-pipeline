@@ -17,6 +17,8 @@ import csv
 import json
 import itertools as it
 
+import six
+
 
 def gene(result):
     """
@@ -76,6 +78,6 @@ def generate_file(json_file, output):
     This will generate a TSV mapping file given the input TSV.
     """
 
-    entries = map(json.loads, json_file)
-    data = map(as_entry, entries)
+    entries = six.moves.map(json.loads, json_file)
+    data = six.moves.map(as_entry, entries)
     csv.writer(output, delimiter='\t').writerows(data)

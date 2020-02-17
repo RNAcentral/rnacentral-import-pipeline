@@ -14,4 +14,3 @@ module-whatis   $msg
 
 append-path -d " " NXF_OPTS -Dnxf.pool.type=sync
 append-path -d " " NXF_OPTS -Dnxf.pool.maxThreads=10000
-append-path -d " " SINGULARITY_TMPDIR /scratch

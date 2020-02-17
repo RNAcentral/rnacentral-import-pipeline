@@ -21,6 +21,8 @@ import attr
 from attr.validators import optional
 from attr.validators import instance_of as is_a
 
+import six
+
 from rnacentral_pipeline.databases.data import regions
 
 
@@ -30,8 +32,8 @@ def clean_databases(raw):
 
 @attr.s(hash=True, slots=True, frozen=True)
 class Region(object):
-    region_id = attr.ib(validator=is_a(str), converter=str)
-    rna_id = attr.ib(validator=is_a(str), converter=str)
+    region_id = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
+    rna_id = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
     region = attr.ib(validator=is_a(regions.SequenceRegion))
     was_mapped = attr.ib(validator=is_a(bool))
     identity = attr.ib(
@@ -120,5 +122,5 @@ def parse(regions):
 
 
 def from_file(handle):
-    data = map(json.loads, handle)
+    data = six.moves.map(json.loads, handle)
     return parse(data)

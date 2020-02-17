@@ -15,11 +15,13 @@ limitations under the License.
 
 import csv
 
+import six
+
 from ..db import cursor
 
 
 def ranges_between(start, stop, max_size):
-    for start in range(start, stop, max_size):
+    for start in six.moves.range(start, stop, max_size):
         last = min(start + max_size, stop)
         yield (start, last)
 

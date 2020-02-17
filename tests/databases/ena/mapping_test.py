@@ -492,23 +492,3 @@ def test_can_apply_mirbase_tpas():
     [tpa.internal_database_name(n) for n in tpa.DATABASES])
 def test_url_builder_can_build_url(name):
     assert hasattr(tpa.UrlBuilder(), name.lower())
-
-
-@pytest.mark.parametrize('filename,fails', [
-    ('data/ena/tpa/lncrnadb/mapping.tsv', True),
-    ('data/ena/tpa/mirbase/mapping.tsv', True),
-    ('data/ena/tpa/pombase/mapping.tsv', True),
-    ('data/ena/tpa/snopy/mapping.tsv', True),
-    ('data/ena/tpa/srpdb/mapping.tsv', True),
-    ('data/ena/tpa/tair/mapping.tsv', True),
-    ('data/ena/tpa/tmrna/mapping.tsv', True),
-    ('data/ena/tpa/wormbase/mapping.tsv', True),
-    pytest.param('data/ena/tpa/combined/mapping.tsv', False,
-                 marks=pytest.mark.skip(reason="SGD is broken")),
-])
-def test_fails_to_parse_if_no_tpas(filename, fails):
-    if fails:
-        with pytest.raises(Exception):
-            tpa.load_file(filename).validate()
-    else:
-        assert tpa.load_file(filename).validate() is True

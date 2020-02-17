@@ -16,6 +16,8 @@ limitations under the License.
 import re
 import itertools as it
 
+import six
+
 from Bio import SeqIO
 
 NHMMER_PATTERN = re.compile('^[ABCDGHKMNRSTVWXYU]+$', re.IGNORECASE)
@@ -30,11 +32,11 @@ def is_valid_nhmmer_record(record):
 
 def valid_nhmmer(handle, output):
     sequences = SeqIO.parse(handle, 'fasta')
-    accepted = filter(is_valid_nhmmer_record, sequences)
+    accepted = six.moves.filter(is_valid_nhmmer_record, sequences)
     SeqIO.write(accepted, output, 'fasta')
 
 
 def invalid_nhmmer(handle, output):
     sequences = SeqIO.parse(handle, 'fasta')
-    rejected = filterfalse(is_valid_nhmmer_record, sequences)
+    rejected = six.moves.filterfalse(is_valid_nhmmer_record, sequences)
     SeqIO.write(rejected, output, 'fasta')
