@@ -36,7 +36,6 @@ def cli():
 
 @cli.command('process-svgs')
 @click.option('--allow-missing', default=False)
-@click.option('--colored/--no-colored', default=True)
 @click.argument('kind', type=params.TravelerSourceParam())
 @click.argument('directories', nargs=-1, type=click.Path(
     writable=True,
@@ -44,7 +43,7 @@ def cli():
     file_okay=False,
 ))
 @click.argument('output', type=click.File('w'))
-def process_svgs(kind, directories, output, colored=True, allow_missing=False):
+def process_svgs(kind, directories, output, allow_missing=False):
     """
     Process all SVG secondary structures in the given directory and produce a
     single data file that can be imported into the database.
@@ -53,7 +52,6 @@ def process_svgs(kind, directories, output, colored=True, allow_missing=False):
         kind,
         directories,
         output,
-        colored=colored,
         allow_missing=allow_missing,
     )
 
