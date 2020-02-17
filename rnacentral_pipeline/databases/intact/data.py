@@ -19,17 +19,15 @@ import attr
 from attr.validators import optional
 from attr.validators import instance_of as is_a
 
-import six
-
 from rnacentral_pipeline.databases.data import IdReference
 
 IDENTIFIER_PATTERN = re.compile(r'^(.+?):"?(.+?)"?(?\((.+?)\))?$')
 
 
 class Identifier(object):
-    key = attr.ib(validator=is_a(six.text_type))
-    value = attr.ib(validator=is_a(six.text_type))
-    name  = attr.ib(validator=optional(is_a(six.text_type)))
+    key = attr.ib(validator=is_a(str))
+    value = attr.ib(validator=is_a(str))
+    name  = attr.ib(validator=optional(is_a(str)))
 
     def full_id(self):
         pass
@@ -58,7 +56,7 @@ class Identifier(object):
 
 class Interactor(object):
     identifier = attr.ib(validator=is_a(Identifier))
-    taxonomy_id = attr.ib(validator=is_a(six.integer_types))
+    taxonomy_id = attr.ib(validator=is_a(str))
     alternatives = attr.ib(validator=is_a(list))
     aliases = attr.ib(validator=is_a(list))
     xrefs = attr.ib(validator=is_a(list))
@@ -79,7 +77,7 @@ class Interactor(object):
 class Interaction(object):
     interactor = attr.ib(validator=is_a(Interactor))
     urs = attr.ib(validator=is_a(Interactor))
-    interaction = attr.ib(validator=is_a(six.text_type))
+    interaction = attr.ib(validator=is_a(str))
     publications = attr.ib(validator=is_a(list))
     is_negative = attr.ib(validator=is_a(bool))
 

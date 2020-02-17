@@ -20,7 +20,7 @@ import attr
 from attr.validators import optional
 from attr.validators import instance_of as is_a
 
-IDENTIFIER_PATTERN = re.compile(r'^(.+?):"?(.+?)"?(?\((.+?)\))?$')
+IDENTIFIER_PATTERN = re.compile(r'^(.+?):"?(.+?)"?(\((.+?)\))?$')
 
 
 @attr.s()
@@ -29,21 +29,25 @@ class InteractionAnnotation:
 
 
 @attr.s()
-class Identifier(object):
-    key: str = attr.ib(validator=is_a(str))
-    value: str = attr.ib(validator=is_a(str))
-    name: ty.Optional[str]  = attr.ib(validator=optional(is_a(str)))
+class Identifier:
+    key = attr.ib(validator=is_a(str))
+    value = attr.ib(validator=is_a(str))
+    name = attr.ib(validator=optional(is_a(str)))
 
     @classmethod
-    def bulid(cls, raw):
+    def build(cls, raw):
         matches = re.match(IDENTIFIER_PATTERN, raw)
         if not matches:
             raise ValueError("Invalid identifier format: %s" % raw)
 
+        name = matches.group(3)
+        if name:
+            name = name.replace('(', '').replace(')', '')
+
         return cls(
             key=matches.group(1), 
             value=matches.group(2),
-            name=matches.group(3),
+            name=name,
         )
 
     def full_id(self):
@@ -118,21 +122,30 @@ class SourceDatabase:
     id: str = attr.ib(validator=is_a(str))
     name: str = attr.ib(validator=is_a(str))
 
+    @classmethod
+    def build(cls, raw):
+        return cls(
+
 
 @attr.s()
 class Interaction:
     ids: ty.List[str] = attr.ib()
-    interactor1: Interactor = attr.ib(validator=is_a(Interactor))
-    interactor2: Interactor = attr.ib(validator=is_a(Interactor))
-    methods: ty.List[str] = attr.ib()
-    reference: ty.List[str] = attr.ib()
+    interactor1 = attr.ib(validator=is_a(Interactor))
+    interactor2 = attr.ib(validator=is_a(Interactor))
+    methods: ty.List[str] = attr.ib(validator=is_a(list))
+    reference: ty.List[str] = attr.ib(validator=is_a(list))
     interaction_types: ty.List[str] = attr.ib()
     source_database: ty.List[SourceDatabase] = attr.ib()
-    is_negative: bool = attr.ib(validator=is_a(bool))
+    is_negative = attr.ib(validator=is_a(bool))
     publications = attr.ib(validator=is_a(list))
 
     @classmethod
     def from_tab(cls, row):
         return cls(
             ids=[],
+            interactor1=Interactor.from_tab(row, 1),
+            interactor1=Interactor.from_tab(row, 2),
+            methods=[],
+            reference=[],
+            source_database=SourceDatabase.build(row
         )
