@@ -1,0 +1,347 @@
+#idx  target         classification  strnd   p/f  unexpected_features
+#---  -------------  --------------  -----  ----  -------------------
+1     URS000083FA52  LSU.Bacteria    plus   FAIL  *DuplicateRegion:(1049-1124)_hits_1_and_2(M:1049.1407,926.1124,S:1781.2177,151.352);LowScore:(0.03<0.50);LowCoverage:(0.287<0.860);MultipleHits:(3:SI[M:-76(1049..1124),S:1428(353..1780)],NH[M:235(1408..1642),S:123(2178..2300)]);
+2     URS0000C3EA9A  LSU.Bacteria    plus   PASS  LowScore:(0.44<0.50);LowCoverage:(0.808<0.860);
+3     URS0000D409C5  -               -      FAIL  *NoHits;
+4     URS00008CD979  LSU.Bacteria    plus   PASS  -
+5     URS00002AF18C  LSU.Bacteria    plus   PASS  LowScore:(0.46<0.50);
+6     URS0000EE662D  LSU.Bacteria    plus   PASS  -
+7     URS00002FE3B9  LSU.Bacteria    plus   PASS  LowScore:(0.34<0.50);
+8     URS000044349B  LSU.Bacteria    plus   PASS  -
+9     URS000032FC9D  LSU.Bacteria    plus   PASS  -
+10    URS0000724FE4  LSU.Bacteria    plus   PASS  LowScore:(0.46<0.50);
+11    URS00009DF1B3  LSU.Bacteria    plus   PASS  LowScore:(0.37<0.50);LowCoverage:(0.826<0.860);
+12    URS00008C7538  LSU.Bacteria    plus   PASS  -
+13    URS00003DE1CA  LSU.Bacteria    plus   PASS  LowScore:(0.36<0.50);
+14    URS000013AB68  LSU.Bacteria    plus   PASS  LowScore:(0.23<0.50);LowCoverage:(0.319<0.860);
+15    URS0000557C1B  LSU.Bacteria    plus   PASS  LowScore:(0.23<0.50);LowCoverage:(0.317<0.860);
+16    URS0000237B79  LSU.Bacteria    plus   PASS  LowScore:(0.23<0.50);
+17    URS0000730A48  LSU.Bacteria    plus   PASS  LowScore:(0.19<0.50);LowCoverage:(0.278<0.860);
+18    URS00008CB07B  LSU.Bacteria    plus   PASS  -
+19    URS00005F8BC8  LSU.Bacteria    plus   PASS  LowScore:(0.42<0.50);
+20    URS00009AC20F  LSU.Bacteria    plus   PASS  LowScore:(0.27<0.50);LowCoverage:(0.476<0.860);
+21    URS00005E5E33  LSU.Bacteria    plus   PASS  LowScore:(0.14<0.50);LowCoverage:(0.502<0.860);
+22    URS00005A7D3F  LSU.Bacteria    plus   PASS  LowScore:(0.35<0.50);
+23    URS000052C27F  -               -      FAIL  *NoHits;
+24    URS00006C8504  LSU.Bacteria    plus   PASS  -
+25    URS00002C92BC  LSU.Bacteria    plus   PASS  LowScore:(0.25<0.50);LowCoverage:(0.354<0.860);
+26    URS0000346596  LSU.Bacteria    plus   PASS  LowScore:(0.25<0.50);LowCoverage:(0.360<0.860);
+27    URS00006995E3  LSU.Bacteria    plus   PASS  LowScore:(0.47<0.50);
+28    URS00000FC8AF  LSU.Bacteria    plus   PASS  LowScore:(0.38<0.50);
+29    URS00006DABCB  -               -      FAIL  *NoHits;
+30    URS0000465FDA  LSU.Bacteria    plus   PASS  -
+31    URS00003C46D5  LSU.Bacteria    plus   PASS  LowScore:(0.21<0.50);
+32    URS0000A66029  LSU.Bacteria    plus   PASS  LowScore:(0.11<0.50);LowCoverage:(0.229<0.860);
+33    URS000028D480  -               -      FAIL  *NoHits;
+34    URS0000452528  -               -      FAIL  *NoHits;
+35    URS0000D9BD32  LSU.Bacteria    plus   PASS  LowScore:(0.50<0.50);
+36    URS000052EC7B  LSU.Bacteria    plus   PASS  LowScore:(0.14<0.50);LowCoverage:(0.317<0.860);
+37    URS00002DE642  LSU.Bacteria    plus   PASS  LowScore:(0.19<0.50);LowCoverage:(0.261<0.860);
+38    URS0000EDCAC2  LSU.Bacteria    plus   PASS  -
+39    URS00000E4C5B  LSU.Bacteria    plus   PASS  -
+40    URS0000D2C4B4  LSU.Bacteria    plus   PASS  LowScore:(0.25<0.50);
+41    URS00008019FF  LSU.Bacteria    plus   PASS  LowScore:(0.21<0.50);
+42    URS0000621494  LSU.Bacteria    plus   PASS  LowScore:(0.17<0.50);LowCoverage:(0.395<0.860);
+43    URS0000BC0B07  LSU.Bacteria    plus   PASS  -
+44    URS0000304245  LSU.Bacteria    plus   PASS  LowScore:(0.05<0.50);LowCoverage:(0.199<0.860);
+45    URS0000DC092F  LSU.Bacteria    plus   FAIL  *DuplicateRegion:(1359-2361)_hits_1_and_2(M:552.2361,1359.2904,S:2.1811,1813.3358);MultipleHits:(2:SI[M:-1003(1359..2361),S:1(1812..1812)]);
+46    URS0000C7D7DD  LSU.Bacteria    plus   PASS  LowScore:(0.38<0.50);LowCoverage:(0.808<0.860);MultipleHits:(4:MD[M:207(225..431),S:0(64..65)],NH[M:143(918..1060),S:11(498..508)],NH[M:1045(2273..3317),S:729(1772..2500)]);
+47    URS00001C0A11  LSU.Bacteria    plus   PASS  LowScore:(0.19<0.50);MultipleHits:(2:NH[M:195(1017..1211),S:39(97..135)]);
+48    URS00000A193F  LSU.Bacteria    plus   PASS  LowScore:(0.13<0.50);LowCoverage:(0.192<0.860);
+49    URS00002321D8  LSU.Bacteria    plus   PASS  LowScore:(0.24<0.50);LowCoverage:(0.471<0.860);
+50    URS0000EC3439  LSU.Bacteria    minus  PASS  MinusStrand;LowScore:(0.10<0.50);LowCoverage:(0.242<0.860);
+51    URS00005EF3DE  LSU.Bacteria    plus   PASS  LowScore:(0.45<0.50);
+52    URS000061D1D7  LSU.Bacteria    plus   PASS  LowScore:(0.24<0.50);LowCoverage:(0.384<0.860);MultipleHits:(2:SI[M:-10(161..170),S:162(355..516)]);
+53    URS000099452D  LSU.Bacteria    plus   PASS  LowScore:(0.40<0.50);
+54    URS0000AF4DA0  LSU.Bacteria    plus   PASS  -
+55    URS0000D8CA25  LSU.Bacteria    plus   PASS  -
+56    URS000038F14D  LSU.Bacteria    plus   PASS  LowScore:(0.12<0.50);LowCoverage:(0.265<0.860);
+57    URS0000EE3CC0  LSU.Bacteria    plus   PASS  -
+58    URS0000DCB630  LSU.Bacteria    plus   PASS  -
+59    URS0000750438  LSU.Bacteria    plus   PASS  LowScore:(0.18<0.50);LowCoverage:(0.252<0.860);
+60    URS0000C1560D  LSU.Bacteria    plus   PASS  -
+61    URS00001829DB  LSU.Bacteria    plus   PASS  LowScore:(0.19<0.50);LowCoverage:(0.272<0.860);
+62    URS00009F1508  LSU.Bacteria    plus   PASS  -
+63    URS000058B027  -               -      FAIL  *NoHits;
+64    URS00003DCC9A  LSU.Bacteria    plus   PASS  LowScore:(0.16<0.50);
+65    URS000004CF83  LSU.Bacteria    plus   PASS  LowScore:(0.13<0.50);LowCoverage:(0.481<0.860);
+66    URS0000383296  LSU.Bacteria    plus   PASS  LowScore:(0.16<0.50);LowCoverage:(0.357<0.860);
+67    URS00007336B2  LSU.Bacteria    plus   PASS  LowScore:(0.23<0.50);
+68    URS00004DC6A2  LSU.Bacteria    plus   PASS  LowScore:(0.35<0.50);LowCoverage:(0.483<0.860);
+69    URS0000594829  LSU.Bacteria    plus   PASS  -
+70    URS00000AB873  LSU.Bacteria    plus   PASS  LowScore:(0.24<0.50);LowCoverage:(0.308<0.860);
+71    URS0000454BD1  LSU.Bacteria    plus   PASS  LowScore:(0.16<0.50);LowCoverage:(0.345<0.860);
+72    URS0000386652  -               -      FAIL  *NoHits;
+73    URS000070C175  LSU.Bacteria    plus   PASS  -
+74    URS00001643AC  LSU.Bacteria    plus   PASS  LowScore:(0.20<0.50);LowCoverage:(0.313<0.860);
+75    URS00005191A7  LSU.Bacteria    plus   PASS  LowScore:(0.22<0.50);LowCoverage:(0.371<0.860);MultipleHits:(2:SI[M:1(159..159),S:204(302..505)]);
+76    URS0000292E1E  LSU.Bacteria    plus   PASS  LowScore:(0.27<0.50);LowCoverage:(0.390<0.860);
+77    URS00009EFB1E  LSU.Bacteria    plus   PASS  LowScore:(0.44<0.50);
+78    URS00005CFC8B  LSU.Bacteria    plus   PASS  -
+79    URS0000B4D751  LSU.Bacteria    plus   PASS  -
+80    URS00003E06A9  -               -      FAIL  *NoHits;
+81    URS000015375A  LSU.Bacteria    plus   PASS  -
+82    URS00003915CD  LSU.Bacteria    plus   PASS  LowScore:(0.26<0.50);LowCoverage:(0.349<0.860);
+83    URS000044D694  -               -      FAIL  *NoHits;
+84    URS00003A71C1  -               -      FAIL  *NoHits;
+85    URS0000360D6A  -               -      FAIL  *NoHits;
+86    URS0000E33F12  LSU.Bacteria    plus   PASS  -
+87    URS00004396EA  LSU.Bacteria    plus   PASS  LowScore:(0.21<0.50);LowCoverage:(0.664<0.860);
+88    URS000074D1FC  LSU.Bacteria    plus   PASS  LowScore:(0.26<0.50);LowCoverage:(0.381<0.860);
+89    URS0000C5FF65  LSU.Bacteria    plus   PASS  -
+90    URS0000117E46  LSU.Bacteria    plus   PASS  LowScore:(0.35<0.50);
+91    URS000018DC25  LSU.Bacteria    plus   PASS  LowScore:(0.19<0.50);LowCoverage:(0.271<0.860);
+92    URS0000762522  LSU.Bacteria    plus   PASS  LowScore:(0.23<0.50);LowCoverage:(0.346<0.860);
+93    URS000047AF88  LSU.Bacteria    plus   PASS  LowScore:(0.12<0.50);LowCoverage:(0.294<0.860);
+94    URS000005E66D  LSU.Bacteria    plus   PASS  LowScore:(0.27<0.50);LowCoverage:(0.385<0.860);
+95    URS0000E23A91  LSU.Bacteria    plus   PASS  LowScore:(0.50<0.50);
+96    URS0000B1B36E  LSU.Bacteria    plus   PASS  LowScore:(0.21<0.50);LowCoverage:(0.677<0.860);
+97    URS0000901414  LSU.Bacteria    plus   PASS  LowScore:(0.39<0.50);
+98    URS00008CFE1C  LSU.Bacteria    plus   PASS  -
+99    URS0000CEB151  LSU.Bacteria    plus   PASS  LowScore:(0.23<0.50);
+100   URS00007A9F9C  LSU.Bacteria    plus   PASS  LowScore:(0.25<0.50);LowCoverage:(0.320<0.860);
+101   URS000030701F  -               -      FAIL  *NoHits;
+102   URS0000668EE7  LSU.Bacteria    plus   PASS  -
+103   URS0000DA3D8D  LSU.Bacteria    plus   PASS  -
+104   URS0000ADD181  LSU.Bacteria    plus   PASS  -
+105   URS00009F0F07  LSU.Bacteria    plus   PASS  LowScore:(0.39<0.50);LowCoverage:(0.710<0.860);MultipleHits:(2:NH[M:484(809..1292),S:45(537..581)]);
+106   URS0000DD2A21  LSU.Bacteria    plus   PASS  -
+107   URS0000C41CED  LSU.Bacteria    plus   PASS  -
+108   URS00000154B3  -               -      FAIL  *NoHits;
+109   URS0000243B23  -               -      FAIL  *NoHits;
+110   URS0000B06E37  LSU.Bacteria    plus   PASS  LowScore:(0.18<0.50);LowCoverage:(0.283<0.860);
+111   URS0000EDF202  LSU.Bacteria    plus   PASS  -
+112   URS00003EC553  LSU.Bacteria    plus   PASS  -
+113   URS0000396065  LSU.Bacteria    plus   PASS  LowScore:(0.20<0.50);LowCoverage:(0.406<0.860);
+114   URS0000204AE9  LSU.Bacteria    plus   PASS  -
+115   URS00007CDAB5  LSU.Bacteria    plus   PASS  LowScore:(0.12<0.50);LowCoverage:(0.236<0.860);
+116   URS0000EDBE58  LSU.Bacteria    plus   PASS  LowScore:(0.44<0.50);
+117   URS000009610F  LSU.Bacteria    plus   PASS  LowScore:(0.44<0.50);
+118   URS00002B1BDD  -               -      FAIL  *NoHits;
+119   URS0000376201  LSU.Bacteria    plus   PASS  LowScore:(0.14<0.50);LowCoverage:(0.276<0.860);
+120   URS0000EE8755  LSU.Bacteria    plus   PASS  -
+121   URS000071F4ED  LSU.Bacteria    plus   PASS  -
+122   URS00006E672D  LSU.Bacteria    plus   PASS  -
+123   URS00005FED3A  LSU.Bacteria    plus   PASS  -
+124   URS0000577D97  LSU.Bacteria    plus   FAIL  *DuplicateRegion:(156-177)_hits_1_and_2(M:1.177,156.216,S:163.337,474.534);LowScore:(0.26<0.50);LowCoverage:(0.442<0.860);MultipleHits:(2:SI[M:-22(156..177),S:136(338..473)]);
+125   URS00008D1822  LSU.Bacteria    plus   PASS  MultipleHits:(2:SI[M:-3(2809..2811),S:97(2812..2908)]);
+126   URS00008F5F80  LSU.Bacteria    plus   PASS  LowScore:(0.50<0.50);LowCoverage:(0.853<0.860);MultipleHits:(4:NH[M:811(631..1441),S:381(403..783)],NH[M:177(2243..2419),S:14(1559..1572)],NH[M:614(3115..3728),S:116(2273..2388)]);
+127   URS0000B1F4A1  LSU.Bacteria    plus   PASS  -
+128   URS0000494D9E  -               -      FAIL  *NoHits;
+129   URS00003F5097  LSU.Bacteria    plus   PASS  LowScore:(0.20<0.50);LowCoverage:(0.311<0.860);
+130   URS00000AE423  LSU.Bacteria    plus   PASS  LowScore:(0.43<0.50);
+131   URS0000AE0B7C  LSU.Bacteria    plus   PASS  -
+132   URS000020D236  LSU.Bacteria    plus   PASS  LowScore:(0.12<0.50);LowCoverage:(0.253<0.860);
+133   URS0000002C92  -               -      FAIL  *NoHits;
+134   URS00008C5DE3  LSU.Bacteria    plus   PASS  -
+135   URS0000DD072B  LSU.Bacteria    plus   PASS  -
+136   URS0000495056  -               -      FAIL  *NoHits;
+137   URS0000297A05  LSU.Bacteria    plus   PASS  -
+138   URS0000217F08  LSU.Bacteria    plus   PASS  LowScore:(0.40<0.50);LowCoverage:(0.692<0.860);MultipleHits:(2:SI[M:-13(156..168),S:148(354..501)]);
+139   URS000050A25A  LSU.Bacteria    plus   PASS  LowScore:(0.12<0.50);LowCoverage:(0.244<0.860);
+140   URS0000389DBA  LSU.Bacteria    plus   PASS  LowScore:(0.20<0.50);LowCoverage:(0.467<0.860);
+141   URS000060F035  -               -      FAIL  *NoHits;
+142   URS0000E0DDDF  LSU.Bacteria    plus   PASS  LowScore:(0.39<0.50);LowCoverage:(0.830<0.860);MultipleHits:(3:NH[M:686(604..1289),S:359(369..727)],NH[M:156(2259..2414),S:31(1690..1720)]);
+143   URS00006EE514  LSU.Bacteria    plus   PASS  -
+144   URS00007029A2  LSU.Bacteria    plus   PASS  LowScore:(0.47<0.50);
+145   URS00004BE758  LSU.Bacteria    plus   PASS  LowScore:(0.18<0.50);LowCoverage:(0.252<0.860);
+146   URS000046B139  LSU.Bacteria    plus   PASS  LowScore:(0.46<0.50);
+147   URS0000580332  LSU.Bacteria    plus   PASS  LowCoverage:(0.781<0.860);
+148   URS00003010EC  -               -      FAIL  *NoHits;
+149   URS00001D2CBC  LSU.Bacteria    plus   PASS  LowScore:(0.48<0.50);LowCoverage:(0.822<0.860);MultipleHits:(2:SI[M:-5(155..159),S:154(131..284)]);
+150   URS000029EB13  LSU.Bacteria    plus   PASS  -
+151   URS0000ED50F0  LSU.Bacteria    plus   PASS  -
+152   URS00005E5B9F  -               -      FAIL  *NoHits;
+153   URS00001CE77C  LSU.Bacteria    plus   PASS  LowScore:(0.22<0.50);LowCoverage:(0.329<0.860);
+154   URS0000561A45  LSU.Bacteria    plus   PASS  -
+155   URS000076FAFD  LSU.Bacteria    plus   PASS  LowScore:(0.13<0.50);LowCoverage:(0.260<0.860);
+156   URS000099FBC6  LSU.Bacteria    plus   PASS  -
+157   URS00006F66D9  LSU.Bacteria    plus   PASS  LowScore:(0.44<0.50);
+158   URS0000652EE7  LSU.Bacteria    plus   PASS  LowScore:(0.49<0.50);
+159   URS0000DD8BA2  LSU.Bacteria    plus   PASS  -
+160   URS000043801A  LSU.Bacteria    plus   PASS  LowScore:(0.13<0.50);LowCoverage:(0.253<0.860);
+161   URS0000B83C6E  LSU.Bacteria    plus   PASS  -
+162   URS000072CDE0  LSU.Bacteria    plus   PASS  -
+163   URS000029A396  LSU.Bacteria    plus   PASS  LowScore:(0.48<0.50);
+164   URS0000D2306A  LSU.Bacteria    plus   PASS  -
+165   URS00005752B9  LSU.Bacteria    plus   PASS  -
+166   URS000064E249  LSU.Bacteria    plus   PASS  -
+167   URS0000AB5E89  LSU.Bacteria    plus   PASS  -
+168   URS0000E33979  LSU.Bacteria    plus   PASS  -
+169   URS000004795C  LSU.Bacteria    plus   PASS  LowScore:(0.12<0.50);LowCoverage:(0.243<0.860);
+170   URS00004BE5EC  LSU.Bacteria    plus   PASS  LowScore:(0.48<0.50);
+171   URS0000515426  LSU.Bacteria    plus   PASS  LowScore:(0.27<0.50);LowCoverage:(0.463<0.860);MultipleHits:(2:SI[M:-19(155..173),S:125(308..432)]);
+172   URS000052C942  LSU.Bacteria    plus   PASS  LowScore:(0.12<0.50);LowCoverage:(0.249<0.860);
+173   URS00005589BA  LSU.Bacteria    plus   PASS  LowScore:(0.08<0.50);LowCoverage:(0.177<0.860);
+174   URS00005C5B53  LSU.Bacteria    plus   PASS  LowScore:(0.23<0.50);LowCoverage:(0.347<0.860);
+175   URS00005182A9  LSU.Bacteria    plus   PASS  LowScore:(0.12<0.50);LowCoverage:(0.256<0.860);
+176   URS00004C7103  LSU.Bacteria    plus   PASS  -
+177   URS0000081C14  -               -      FAIL  *NoHits;
+178   URS00004FBEF5  -               -      FAIL  *NoHits;
+179   URS00004CFF3D  LSU.Bacteria    plus   PASS  LowScore:(0.20<0.50);LowCoverage:(0.299<0.860);
+180   URS0000D8D1E0  LSU.Bacteria    plus   PASS  -
+181   URS00002B744D  -               -      FAIL  *NoHits;
+182   URS00002C2C77  LSU.Bacteria    plus   PASS  LowScore:(0.09<0.50);LowCoverage:(0.251<0.860);
+183   URS0000244B20  -               -      FAIL  *NoHits;
+184   URS0000055430  LSU.Bacteria    plus   PASS  LowScore:(0.39<0.50);LowCoverage:(0.810<0.860);MultipleHits:(2:NH[M:263(633..895),S:414(395..808)]);
+185   URS00006A9B69  LSU.Bacteria    plus   PASS  -
+186   URS000029A1B7  LSU.Bacteria    plus   PASS  LowScore:(0.40<0.50);LowCoverage:(0.669<0.860);MultipleHits:(2:SI[M:-13(158..170),S:144(251..394)]);
+187   URS0000EC54C0  LSU.Bacteria    plus   PASS  -
+188   URS0000321E54  LSU.Bacteria    plus   PASS  -
+189   URS00001A81CB  LSU.Bacteria    plus   PASS  LowScore:(0.23<0.50);LowCoverage:(0.316<0.860);
+190   URS00007E8323  LSU.Bacteria    plus   PASS  LowScore:(0.34<0.50);
+191   URS00005FF0AC  -               -      FAIL  *NoHits;
+192   URS000073EDE4  LSU.Bacteria    plus   PASS  LowScore:(0.25<0.50);LowCoverage:(0.400<0.860);MultipleHits:(2:SI[M:-11(161..171),S:163(333..495)]);
+193   URS000071B540  LSU.Bacteria    plus   PASS  -
+194   URS0000244756  -               -      FAIL  *NoHits;
+195   URS00006CBEB1  LSU.Bacteria    plus   PASS  LowScore:(0.35<0.50);
+196   URS00006CA5F7  LSU.Bacteria    plus   PASS  LowScore:(0.18<0.50);LowCoverage:(0.784<0.860);
+197   URS000019ADE2  -               -      FAIL  *NoHits;
+198   URS00004A488B  LSU.Bacteria    plus   PASS  LowScore:(0.19<0.50);LowCoverage:(0.286<0.860);
+199   URS000012249F  LSU.Bacteria    plus   PASS  -
+200   URS0000C4F268  LSU.Bacteria    plus   PASS  -
+201   URS0000CA71D1  LSU.Bacteria    plus   PASS  -
+202   URS0000165D48  LSU.Bacteria    plus   PASS  -
+203   URS0000529F24  -               -      FAIL  *NoHits;
+204   URS00001026F5  LSU.Bacteria    plus   PASS  -
+205   URS0000815ED8  LSU.Bacteria    plus   PASS  LowScore:(0.32<0.50);LowCoverage:(0.449<0.860);
+206   URS00003A975E  LSU.Bacteria    plus   PASS  LowScore:(0.48<0.50);
+207   URS0000E20802  LSU.Bacteria    plus   PASS  LowScore:(0.13<0.50);LowCoverage:(0.513<0.860);
+208   URS000023A689  LSU.Bacteria    plus   PASS  -
+209   URS00000D7872  LSU.Bacteria    plus   PASS  LowScore:(0.25<0.50);LowCoverage:(0.408<0.860);MultipleHits:(2:SI[M:-5(156..160),S:151(320..470)]);
+210   URS00002A83A8  LSU.Bacteria    plus   PASS  -
+211   URS00000FD5D1  -               -      FAIL  *NoHits;
+212   URS0000D16A2E  LSU.Bacteria    plus   PASS  LowScore:(0.16<0.50);LowCoverage:(0.346<0.860);
+213   URS000055AF9C  -               -      FAIL  *NoHits;
+214   URS00001DC488  LSU.Bacteria    plus   PASS  -
+215   URS00000831E3  LSU.Bacteria    plus   PASS  LowScore:(0.39<0.50);LowCoverage:(0.648<0.860);MultipleHits:(2:SI[M:-1(158..158),S:201(366..566)]);
+216   URS000046A69A  LSU.Bacteria    plus   PASS  LowScore:(0.17<0.50);LowCoverage:(0.289<0.860);
+217   URS000021A66B  LSU.Bacteria    plus   PASS  LowScore:(0.17<0.50);LowCoverage:(0.239<0.860);
+218   URS00006398A3  LSU.Bacteria    plus   PASS  LowScore:(0.47<0.50);
+219   URS000080E401  LSU.Bacteria    plus   PASS  LowScore:(0.07<0.50);LowCoverage:(0.461<0.860);
+220   URS000033B679  LSU.Bacteria    plus   PASS  -
+221   URS000074C968  LSU.Bacteria    plus   PASS  LowScore:(0.25<0.50);LowCoverage:(0.365<0.860);
+222   URS000000EB5E  LSU.Bacteria    plus   PASS  LowScore:(0.16<0.50);LowCoverage:(0.334<0.860);
+223   URS0000847D19  LSU.Bacteria    plus   PASS  LowScore:(0.45<0.50);
+224   URS0000573A28  -               -      FAIL  *NoHits;
+225   URS0000ABAF2A  LSU.Bacteria    plus   PASS  -
+226   URS0000E4116F  LSU.Bacteria    plus   PASS  LowScore:(0.09<0.50);LowCoverage:(0.823<0.860);
+227   URS000013E8B9  -               -      FAIL  *NoHits;
+228   URS0000122F80  LSU.Bacteria    plus   PASS  -
+229   URS00003093CB  LSU.Bacteria    plus   PASS  -
+230   URS000097F9DE  LSU.Bacteria    plus   PASS  LowScore:(0.31<0.50);LowCoverage:(0.812<0.860);
+231   URS00001BFE57  LSU.Bacteria    plus   PASS  LowScore:(0.20<0.50);
+232   URS0000322684  LSU.Bacteria    plus   PASS  LowScore:(0.15<0.50);LowCoverage:(0.255<0.860);MultipleHits:(2:SI[M:-2(157..158),S:160(494..653)]);
+233   URS0000ABBBB6  LSU.Bacteria    plus   PASS  -
+234   URS00005B05C4  -               -      FAIL  *NoHits;
+235   URS00006E623E  LSU.Bacteria    plus   PASS  -
+236   URS00006191E0  -               -      FAIL  *NoHits;
+237   URS0000BA8BB6  LSU.Bacteria    plus   PASS  LowScore:(0.45<0.50);
+238   URS0000291695  -               -      FAIL  *NoHits;
+239   URS00004BA259  -               -      FAIL  *NoHits;
+240   URS0000183A90  LSU.Bacteria    plus   PASS  LowScore:(0.47<0.50);
+241   URS00001A353B  LSU.Bacteria    plus   PASS  LowScore:(0.20<0.50);LowCoverage:(0.859<0.860);MultipleHits:(2:NH[M:178(609..786),S:99(557..655)]);
+242   URS0000225B1A  LSU.Bacteria    plus   PASS  LowCoverage:(0.837<0.860);
+243   URS00006CE929  LSU.Bacteria    plus   PASS  LowScore:(0.50<0.50);
+244   URS0000B854F5  LSU.Bacteria    plus   PASS  LowScore:(0.49<0.50);LowCoverage:(0.833<0.860);
+245   URS0000EC3F48  LSU.Bacteria    plus   PASS  -
+246   URS0000134621  LSU.Bacteria    plus   PASS  LowScore:(0.28<0.50);LowCoverage:(0.425<0.860);MultipleHits:(2:SI[M:-4(156..159),S:144(298..441)]);
+247   URS000057860B  LSU.Bacteria    plus   PASS  -
+248   URS0000C4C0F1  LSU.Bacteria    plus   PASS  MultipleHits:(2:SI[M:-16(526..541),S:88(542..629)]);
+249   URS00005C636A  -               -      FAIL  *NoHits;
+250   URS0000214716  LSU.Bacteria    plus   PASS  LowScore:(0.10<0.50);LowCoverage:(0.459<0.860);
+251   URS00003B6071  -               -      FAIL  *NoHits;
+252   URS0000768DCF  LSU.Bacteria    plus   PASS  LowScore:(0.28<0.50);LowCoverage:(0.401<0.860);
+253   URS0000EE0C05  LSU.Bacteria    plus   PASS  -
+254   URS00002474EA  LSU.Bacteria    plus   PASS  LowScore:(0.13<0.50);LowCoverage:(0.271<0.860);
+255   URS0000BF9DF4  LSU.Bacteria    plus   PASS  MultipleHits:(2:MD[M:87(1535..1621),S:7(1529..1535)]);
+256   URS0000039EF6  LSU.Bacteria    plus   PASS  -
+257   URS0000449C3D  LSU.Bacteria    plus   PASS  LowScore:(0.39<0.50);
+258   URS0000DCC797  LSU.Bacteria    plus   PASS  -
+259   URS000061F7DA  LSU.Bacteria    plus   PASS  LowScore:(0.12<0.50);LowCoverage:(0.247<0.860);
+260   URS0000986963  LSU.Bacteria    plus   PASS  -
+261   URS00002485A9  -               -      FAIL  *NoHits;
+262   URS0000755391  LSU.Bacteria    plus   PASS  LowScore:(0.47<0.50);
+263   URS000033F658  LSU.Bacteria    plus   PASS  LowScore:(0.37<0.50);
+264   URS00006ECA7A  LSU.Bacteria    plus   PASS  LowScore:(0.47<0.50);
+265   URS00004EE934  LSU.Bacteria    plus   PASS  LowScore:(0.06<0.50);LowCoverage:(0.235<0.860);
+266   URS0000DEEEBE  LSU.Bacteria    plus   PASS  -
+267   URS0000A1B018  LSU.Bacteria    plus   PASS  MultipleHits:(4:NH[M:599(676..1274),S:185(481..665)],MD[M:167(2244..2410),S:8(1542..1549)],NH[M:560(3116..3675),S:18(2266..2283)]);
+268   URS0000835CD6  LSU.Bacteria    plus   PASS  LowScore:(0.11<0.50);LowCoverage:(0.221<0.860);
+269   URS0000EC857D  LSU.Bacteria    plus   PASS  -
+270   URS000002ECEC  LSU.Bacteria    plus   PASS  LowScore:(0.11<0.50);LowCoverage:(0.238<0.860);
+271   URS00004BC440  -               -      FAIL  *NoHits;
+272   URS0000B11F12  LSU.Bacteria    plus   PASS  LowScore:(0.21<0.50);
+273   URS00001E6361  LSU.Bacteria    plus   PASS  -
+274   URS000039F68B  LSU.Bacteria    plus   FAIL  *DuplicateRegion:(477-554)_hits_1_and_2(M:477.2903,4.554,S:647.3072,2.551);MultipleHits:(2:SI[M:-78(477..554),S:95(552..646)]);
+275   URS00000C56EF  -               -      FAIL  *NoHits;
+276   URS0000C08BA3  LSU.Bacteria    plus   PASS  LowScore:(0.38<0.50);LowCoverage:(0.840<0.860);MultipleHits:(5:NH[M:493(822..1314),S:303(696..998)],NH[M:176(2250..2425),S:67(2040..2106)],NH[M:618(3117..3734),S:186(2909..3094)],NH[M:49(4249..4297),S:174(3576..3749)]);
+277   URS0000850E6C  LSU.Bacteria    plus   PASS  -
+278   URS0000DC2E8B  LSU.Bacteria    plus   PASS  -
+279   URS00004C2607  -               -      FAIL  *NoHits;
+280   URS000005CF96  -               -      FAIL  *NoHits;
+281   URS000029A611  -               -      FAIL  *NoHits;
+282   URS000020541D  LSU.Bacteria    plus   PASS  LowScore:(0.13<0.50);LowCoverage:(0.254<0.860);
+283   URS0000655CFD  LSU.Bacteria    plus   PASS  LowScore:(0.42<0.50);
+284   URS00001DC6B3  LSU.Bacteria    plus   PASS  LowScore:(0.22<0.50);LowCoverage:(0.369<0.860);MultipleHits:(2:SI[M:-3(158..160),S:174(367..540)]);
+285   URS00009D717A  LSU.Bacteria    plus   PASS  LowScore:(0.35<0.50);
+286   URS00003C1663  LSU.Bacteria    plus   PASS  -
+287   URS0000096948  -               -      FAIL  *NoHits;
+288   URS000071FFF8  LSU.Bacteria    plus   PASS  LowScore:(0.30<0.50);
+289   URS00004262BA  -               -      FAIL  *NoHits;
+290   URS00003E2D5A  LSU.Bacteria    plus   PASS  LowScore:(0.09<0.50);LowCoverage:(0.270<0.860);
+291   URS0000691D64  LSU.Bacteria    plus   PASS  -
+292   URS00004FEBDD  LSU.Bacteria    plus   PASS  LowScore:(0.11<0.50);LowCoverage:(0.238<0.860);
+293   URS00003C96A7  LSU.Bacteria    plus   FAIL  *DuplicateRegion:(987-1024)_hits_1_and_2(M:987.4057,196.1024,S:894.4126,2.840);MultipleHits:(2:SI[M:-38(987..1024),S:53(841..893)]);
+294   URS000064805B  LSU.Bacteria    plus   PASS  LowScore:(0.47<0.50);
+295   URS0000169C88  LSU.Bacteria    plus   PASS  LowScore:(0.20<0.50);LowCoverage:(0.294<0.860);MultipleHits:(2:SI[M:-8(155..162),S:233(433..665)]);
+296   URS00006796C5  LSU.Bacteria    plus   PASS  -
+297   URS0000532EB2  LSU.Bacteria    plus   PASS  LowScore:(0.12<0.50);LowCoverage:(0.254<0.860);
+298   URS00006B2C41  LSU.Bacteria    plus   PASS  -
+299   URS00004599D3  LSU.Bacteria    plus   PASS  LowScore:(0.12<0.50);LowCoverage:(0.231<0.860);
+300   URS00003D41D2  LSU.Bacteria    plus   PASS  LowScore:(0.16<0.50);LowCoverage:(0.303<0.860);
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+# Explanation of columns:
+#
+# Column 1 [idx]:                 index of sequence in input sequence file
+# Column 2 [target]:              name of target sequence
+# Column 3 [classification]:      classification of sequence
+# Column 4 [strnd]:               strand ('plus' or 'minus') of best-scoring hit
+# Column 5 [p/f]:                 PASS or FAIL (reasons for failure begin with '*' in rightmost column)
+# Column 6 [unexpected_features]: unexpected/unusual features of sequence (see below)
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+#
+# Explanation of possible values in unexpected_features column:
+#
+# This column will include a '-' if none of the features listed below are detected.
+# Or it will contain one or more of the following types of messages. There are no
+# whitespaces in this field, to make parsing easier.
+#
+# Values that begin with "*" automatically cause a sequence to FAIL.
+# Values that do not begin with "*" do not cause a sequence to FAIL.
+#
+#  1.  *NoHits                 No primary hits to any models above the minimum primary score
+#                              threshold of 20 bits (--minpsc) were found.
+#  2.  *MultipleFamilies       One or more primary hits to two or more "families" (e.g. SSU
+#                              or LSU) exists for the same sequence.
+#  3.  *BothStrands            One or more primary hits above the minimum primary score threshold
+#                              of 20 bits (--minpsc) were found on each strand.
+#  4.  *DuplicateRegion        At least two hits (primary or secondary) on the same strand overlap
+#                              in model coordinates by 20 (--maxoverlap) positions or more
+#  5.  *InconsistentHits       Not all hits (primary or secondary) are in the same order in the
+#                              sequence and in the model.
+#  6.  MinusStrand             Best hit is on the minus strand.
+#  7.  LowScore                The bits per nucleotide (total bit score divided by total length
+#                              of sequence) is below threshold of 0.5 (--lowppossc).
+#  8.  LowCoverage             The total coverage of all hits (primary and secondary) to the best
+#                              model (summed length of all hits divided by total length of sequence)
+#                              is below threshold of 0.86 (--tcov).
+#  9.  LowScoreDifference      The difference between the top two domains is below the 'low'
+#                              threshold of 0.10 (--lowpdiff) bits per position (total bit score
+#                              divided by summed length of all hits).
+# 10.  VeryLowScoreDifference  The difference between the top two domains is below the 'very low'
+#                              threshold of 0.04 (--vlowpdiff) bits per position (total bit score
+#                              divided by summed length of all hits).
+# 11.  MultipleHits            There is more than one hit to the best scoring model on the same strand.
+#

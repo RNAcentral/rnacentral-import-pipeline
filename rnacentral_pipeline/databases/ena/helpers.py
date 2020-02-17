@@ -18,8 +18,6 @@ import attr
 import logging
 import collections as coll
 
-import six
-
 from Bio.Seq import Seq
 
 import rnacentral_pipeline.databases.helpers.embl as embl

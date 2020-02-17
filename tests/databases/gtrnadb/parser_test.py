@@ -133,7 +133,7 @@ def test_it_creates_correct_entries(version2):
         species='Aciduliprofundum sp. MAR08-339',
         common_name=None,
         anticodon='CCG',
-        lineage='Archaea; Euryarchaeota; Diaforarchaea group; DHVE2 group; Aciduliprofundum; Aciduliprofundum sp. MAR08-339',
+        lineage='Archaea; Euryarchaeota; Diaforarchaea group; DHVE2 group; Aciduliprofundum; unclassified Aciduliprofundum; Aciduliprofundum sp. MAR08-339',
         gene='tRNA-Arg-CCG-1-1',
         optional_id='tRNA-Arg-CCG-1-1',
         product='tRNA-Arg (CCG)',

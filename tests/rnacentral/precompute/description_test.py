@@ -27,7 +27,7 @@ from .helpers import load_data
     ('URS00000F9D45_9606', 'rRNA', 'Homo sapiens RNA, 5S ribosomal 1 (RNA5S1-8, RNA5S10-17)'),
     ('URS000018EB2E_3702', 'lncRNA', 'Arabidopsis thaliana (thale cress) Long non-coding antisense RNA COOLAIR'),
     ('URS000019E0CD_9606', 'lncRNA', 'Homo sapiens HELLP associated long non-coding RNA (HELLPAR)'),
-    ('URS00001DEEBE_562', 'tRNA', 'Escherichia coli tRNA-Pro (CGG) (tRNA-Pro-CGG-1-1)'),
+    ('URS00001DEEBE_562', 'tRNA', 'P-site tRNA from Escherichia coli (PDB 5MGP, chain x)'),
     ('URS00002F21DA_7227', 'precursor_RNA', 'Drosophila melanogaster bantam stem-loop (dme-bantam)'),
     ('URS000034C5CB_7227', 'SRP_RNA', 'Drosophila melanogaster (fruit fly) Signal recognition particle 7SL RNA CR32864 (Dmel_CR32864, Dmel_CR42652)'),
     ('URS000037602E_9606', 'tmRNA', 'Homo sapiens (human) transfer-messenger RNA Esche_coli_K12'),
@@ -64,6 +64,7 @@ from .helpers import load_data
     ('URS000075C808_9606', 'lncRNA', 'Homo sapiens HOX transcript antisense RNA (HOTAIR)'),
     ('URS000075CC93_9606', 'precursor_RNA', 'Homo sapiens (human) microRNA hsa-mir-1302 precursor (hsa-mir-1302-2, hsa-mir-1302 9 to 11)'),
     ('URS000075CF25_9913', 'precursor_RNA', 'Bos taurus (cattle) microRNA bta-mir-10a precursor'),
+    ('URS0000769D1B_1507437', 'rRNA', 'Brevibacillus halotolerans 16S ribosomal RNA')
     ('URS0000795103_6239', 'precursor_RNA', 'Caenorhabditis elegans microRNA cel-mir-8204 precursor'),
     ('URS0000808D70_1478174', 'tmRNA', 'Neochlamydia sp. TUME1 tmRNA'),
     ('URS00008E3A1B_10090', 'lncRNA', 'Mus musculus predicted gene 11532 (Gm11532)'),
@@ -75,6 +76,7 @@ from .helpers import load_data
     ('URS0000BD9FEB_10089', 'ribozyme', 'Mus caroli (Ryukyu mouse) ribozyme'),
     ('URS0000D50284_7240', 'precursor_RNA', 'Drosophila simulans microRNA dsi-mir-988 precursor'),
     ('URS0000D5657E_7240', 'precursor_RNA', 'Drosophila simulans microRNA dsi-mir-4966 precursor (dsi-mir-4966-3)'),
+    ('URS0000C8520A_1196083', 'Snodgrassella alvi strain wkB2 16S ribosomal RNA'),
 
     # TODO: Implement the logic required below
     # ('URS000041AF00_274', 'tRNA', 'TRNA-FMET from Thermus thermophilus (29 structures)'),

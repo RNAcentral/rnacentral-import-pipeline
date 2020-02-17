@@ -29,9 +29,11 @@ from rnacentral_pipeline.databases.ensembl.metadata import assemblies as assem
 def assemblies():
     with open('config/databases.json', 'r') as conn, \
             open('files/import-data/ensembl/assemblies.sql', 'r') as query, \
-            open('files/import-data/ensembl/example-locations.json', 'r') as exs:
+            open('files/import-data/ensembl/example-locations.json', 'r') as exs, \
+            open('files/import-data/ensembl/known-assemblies.sql', 'r') as kn:
         examples = json.load(exs)
-        return list(assem.fetch(conn, query, examples))
+        known = assem.load_known(os.environ['PGDATABASE'], kn)
+        return list(assem.fetch(conn, query, examples, known))
 
 
 def assembly_for(assemblies, taxid):
@@ -40,12 +42,35 @@ def assembly_for(assemblies, taxid):
     return found[0]
 
 
+def test_it_can_load_known():
+    with open('files/import-data/ensembl/known-assemblies.sql', 'r') as kn:
+        known = assem.load_known(os.environ['PGDATABASE'], kn)
+    assert len(known) >= 440
+    assert len(known[9606]) == 1
+    assert attr.asdict(known[9606][0]) == attr.asdict(assem.AssemblyInfo(
+        assembly_id='GRCh38',
+        assembly_full_name='GRCh38.p12',
+        gca_accession='GCA_000001405.27',
+        assembly_ucsc='hg38',
+        common_name='human',
+        taxid=9606,
+        ensembl_url='homo_sapiens',
+        division='EnsemblVertebrates',
+        blat_mapping=True,
+        example=assem.AssemblyExample(
+            chromosome='X',
+            start=73819307,
+            end=73856333,
+        ),
+    ))
+
+
 def test_it_builds_a_valid_assembly(assemblies):
     val = assembly_for(assemblies, 9606)
     assert attr.asdict(val) == attr.asdict(assem.AssemblyInfo(
         assembly_id='GRCh38',
-        assembly_full_name='GRCh38.p12',
-        gca_accession='GCA_000001405.27',
+        assembly_full_name='GRCh38.p13',
+        gca_accession='GCA_000001405.28',
         assembly_ucsc='hg38',
         common_name='human',
         taxid=9606,

@@ -17,8 +17,6 @@ import csv
 import json
 import itertools as it
 
-import six
-
 
 UNCULTURED_TAXIDS = {
     155900,
@@ -38,8 +36,8 @@ def exclude_uncultured(annotation):
 
 
 def parse(handle):
-    data = six.moves.map(json.loads, handle)
-    data = six.moves.filter(exclude_uncultured, data)
+    data = map(json.loads, handle)
+    data = filter(exclude_uncultured, data)
     return data
 
 

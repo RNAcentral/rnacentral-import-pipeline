@@ -13,7 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import six.moves.cPickle as pickle
+import pickle
 
 def pickle_stream(stream, handle, *args, **kwargs):
     for entry in stream:
@@ -25,4 +25,4 @@ def unpickle_stream(handle, *args, **kwargs):
         while True:
             yield pickle.load(handle)
     except EOFError:
-        raise StopIteration()
+        return

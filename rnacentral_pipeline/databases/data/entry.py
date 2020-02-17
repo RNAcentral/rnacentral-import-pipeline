@@ -19,8 +19,6 @@ import operator as op
 import itertools as it
 from collections import Counter
 
-import six
-
 import attr
 from attr.validators import and_
 from attr.validators import instance_of as is_a
@@ -55,63 +53,64 @@ class Entry(object):
     """
 
     # Also known as external_id
-    primary_id = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
-    accession = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
-    ncbi_tax_id = attr.ib(validator=is_a(six.integer_types))
+    primary_id = attr.ib(validator=is_a(str), converter=str)
+    accession = attr.ib(validator=is_a(str), converter=str)
+    ncbi_tax_id = attr.ib(validator=is_a(int))
     database = attr.ib(
-        validator=is_a(six.text_type),
-        converter=lambda s: six.text_type(s.upper()),
+        validator=is_a(str),
+        converter=lambda s: str(s.upper()),
     )
-    sequence = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
+    sequence = attr.ib(validator=is_a(str), converter=str)
     # exons = attr.ib(validator=is_a(list))
     regions = attr.ib(validator=is_a(list))
     rna_type = attr.ib(
-        validator=is_a(six.text_type),
+        validator=is_a(str),
         # validator=matches_pattern(SO_PATTERN),
         converter=utils.from_so_term,
     )
-    url = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
+    url = attr.ib(validator=is_a(str), converter=str)
     seq_version = attr.ib(
-        validator=and_(is_a(six.text_type), utils.matches_pattern(r'^\d+$')),
-        converter=six.text_type,
+        validator=and_(is_a(str), utils.matches_pattern(r'^\d+$')),
+        converter=lambda r: str(int(float(r))),
     )
 
     note_data = utils.possibly_empty(dict)
     xref_data = utils.possibly_empty(dict)
 
     related_sequences = utils.possibly_empty(list)
+    related_diseases = utils.possibly_empty(list)
 
-    chromosome = utils.optionally(six.string_types)
-    species = utils.optionally(six.string_types)
-    common_name = utils.optionally(six.string_types)
-    lineage = utils.optionally(six.string_types)
-    gene = utils.optionally(six.string_types)
-    locus_tag = utils.optionally(six.string_types)
-    optional_id = utils.optionally(six.string_types)
-    product = utils.optionally(six.string_types)
-    parent_accession = utils.optionally(six.string_types)
-    ordinal = utils.optionally(six.string_types)
-    non_coding_id = utils.optionally(six.string_types)
-    project = utils.optionally(six.string_types)
-    keywords = utils.optionally(six.string_types)
-    division = utils.optionally(six.string_types)
-    organelle = utils.optionally(six.string_types)
-    allele = utils.optionally(six.string_types)
-    anticodon = utils.optionally(six.string_types)
-    experiment = utils.optionally(six.string_types)
-    function = utils.optionally(six.string_types)
-    inference = utils.optionally(six.string_types)
-    map = utils.optionally(six.string_types)
-    old_locus_tag = utils.optionally(six.string_types)
-    operon = utils.optionally(six.string_types)
-    standard_name = utils.optionally(six.string_types)
-    description = utils.optionally(six.string_types)
-    mol_type = utils.optionally(six.string_types)
-    is_composite = utils.optionally(six.string_types)
-    pseudogene = utils.optionally(six.string_types)
+    chromosome: str = utils.optionally(str)
+    species: str = utils.optionally(str)
+    common_name: str = utils.optionally(str)
+    lineage: str = utils.optionally(str)
+    gene: str = utils.optionally(str)
+    locus_tag: str = utils.optionally(str)
+    optional_id: str = utils.optionally(str)
+    product: str = utils.optionally(str)
+    parent_accession: str = utils.optionally(str)
+    ordinal: str = utils.optionally(str)
+    non_coding_id: str = utils.optionally(str)
+    project: str = utils.optionally(str)
+    keywords: str = utils.optionally(str)
+    division: str = utils.optionally(str)
+    organelle: str = utils.optionally(str)
+    allele: str = utils.optionally(str)
+    anticodon: str = utils.optionally(str)
+    experiment: str = utils.optionally(str)
+    function: str = utils.optionally(str)
+    inference: str = utils.optionally(str)
+    map: str = utils.optionally(str)
+    old_locus_tag: str = utils.optionally(str)
+    operon: str = utils.optionally(str)
+    standard_name: str = utils.optionally(str)
+    description: str = utils.optionally(str)
+    mol_type: str = utils.optionally(str)
+    is_composite: str = utils.optionally(str)
+    pseudogene: str = utils.optionally(str)
 
-    location_start = utils.optionally(six.integer_types)
-    location_end = utils.optionally(six.integer_types)
+    location_start = utils.optionally(int)
+    location_end = utils.optionally(int)
 
     gene_synonyms = utils.possibly_empty(list)
     references = utils.possibly_empty(list)
@@ -203,13 +202,13 @@ class Entry(object):
         """
         Compute a CRC64 check sum for the sequence.
         """
-        return crc64(self.sequence)
+        return str(crc64(self.sequence))
 
     def md5(self):
         """
         Compute an MD5 hash of the sequence.
         """
-        return md5(self.sequence)
+        return str(md5(self.sequence.encode('utf-8')))
 
     def is_valid(self):
         """
@@ -317,12 +316,12 @@ class Entry(object):
         return []
 
     def write_refs(self):
-        refs = six.moves.filter(lambda r: isinstance(r, Reference), self.references)
+        refs = filter(lambda r: isinstance(r, Reference), self.references)
         return self.__write_part__(refs)
 
     def write_ref_ids(self):
         refs = self.references
-        refs = six.moves.filter(lambda r: isinstance(r, IdReference), refs)
+        refs = filter(lambda r: isinstance(r, IdReference), refs)
         return self.__write_part__(refs)
 
     def write_related_sequences(self):
@@ -341,5 +340,5 @@ class Entry(object):
         if not self.is_valid():
             return []
         method = op.methodcaller(method_name, self.accession)
-        writeable = six.moves.map(method, attribute)
+        writeable = map(method, attribute)
         return it.chain.from_iterable(writeable)
