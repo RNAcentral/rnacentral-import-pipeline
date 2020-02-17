@@ -1,0 +1,23 @@
+#tax_id	GeneID	Symbol	LocusTag	Synonyms	dbXrefs	chromosome	map_location	description	type_of_gene	Symbol_from_nomenclature_authority	Full_name_from_nomenclature_authority	Nomenclature_status	Other_designations	Modification_date	Feature_type
+7	5692769	NEWENTRY	-	-	-	-	-	Record to support submission of GeneRIFs for a gene not in Gene (Azotirhizobium caulinodans.  Use when strain, subtype, isolate, etc. is unspecified, or when different from all specified ones in Gene.).	other	-	-	-	-	20190202	-
+9	1246500	repA1	pLeuDn_01	-	-	-	-	putative replication-associated protein	protein-coding	-	-	-	-	20180129	-
+10090	61688	D6Mit258	-	-	MGI:MGI:100336	6	6 66.53 cM	DNA segment, Chr 6, Massachusetts Institute of Technology 258	unknown	D6Mit258	DNA segment, Chr 6, Massachusetts Institute of Technology 258	O	-	20170408	-
+3469	113344155	LOC113344155	-	-	-	Un	-	small nucleolar RNA Z223	snoRNA	-	-	-	-	20190601	-
+164674	114058594	LOC114058594	-	-	-	Un	-	uncharacterized LOC114058594	ncRNA	-	-	-	-	20190126	-
+3818	112780674	LOC112780674	-	-	-	Arahy.19	-	small nucleolar RNA R71	snoRNA	-	-	-	-	20190601	-
+9913	112442518	TRNAL-UAA	-	-	-	18	-	transfer RNA leucine (anticodon UAA)	tRNA	-	-	-	-	20180515	-
+29073	103672764	LOC103672764	-	-	-	Un	-	methionine-R-sulfoxide reductase B1 pseudogene	pseudo	-	-	-	-	20170408	-
+4555	101772254	LOC101772254	-	-	-	VIII	-	uncharacterized LOC101772254	pseudo	-	-	-	-	20190603	-
+173247	115038462	trnae-uuc	-	-	-	Un	-	transfer RNA glutamic acid (anticodon UUC)	tRNA	-	-	-	-	20190618	-
+4096	104234448	LOC104234448	-	-	-	Un	-	uncharacterized LOC104234448	pseudo	-	-	-	-	20190602	-
+3711	108869573	TRNAG-GCC	-	-	-	A8	-	transfer RNA glycine (anticodon GCC)	tRNA	-	-	-	-	20190601	-
+1305785	34399170	QX78_RS00220	QX78_RS00220	-	-	-	-	tRNA	tRNA	-	-	-	-	20171022	-
+10090	62735	D18Mit184	-	-	MGI:MGI:100792	18	18 39.7 cM	DNA segment, Chr 18, Massachusetts Institute of Technology 184	unknown	D18Mit184	DNA segment, Chr 18, Massachusetts Institute of Technology 184	O	-	20170408	-
+3469	113275511	LOC113275511	-	-	-	4	-	uncharacterized LOC113275511	ncRNA	-	-	-	-	20190601	-
+176868	38465973	trnP-TGG	EI089_pgt022	-	-	-	-	tRNA	tRNA	-	-	-	-	20190127	-
+9925	106502795	LOC106502795	-	-	-	13	-	cytochrome c pseudogene	pseudo	-	-	-	-	20170408	-
+4533	107303968	LOC107303968	-	-	-	4	-	uncharacterized LOC107303968	ncRNA	-	-	-	-	20190603	-
+201611	31217049	trnV(tac)	B4458_mgt22	-	-	MT	-	tRNA	tRNA	-	-	-	-	20170310	-
+178133	115756924	LOC115756924	-	-	-	Un	-	uncharacterized LOC115756924	pseudo	-	-	-	-	20190903	-
+3712	106299561	LOC106299561	-	-	-	C6	-	glutaredoxin-C11-like	pseudo	-	-	-	-	20190601	-
+38626	110203438	LOC110203438	-	-	-	Un	-	eukaryotic translation initiation factor 1 pseudogene	pseudo	-	-	-	-	20170512	-

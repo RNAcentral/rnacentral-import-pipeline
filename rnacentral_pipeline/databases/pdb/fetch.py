@@ -88,10 +88,10 @@ def custom_report(pdb_ids, fields):
 
 @retry(requests.HTTPError, tries=5, delay=1)
 def pdbe_publications(pdb_ids):
-    url = 'http://www.ebi.ac.uk/pdbe/api/pdb/entry/publications/'
+    url = 'https://www.ebi.ac.uk/pdbe/api/pdb/entry/publications/'
     result = {}
     with RateLimiter(max_calls=10, period=1):
-        for subset in chunked(pdb_ids, 100):
+        for subset in chunked(pdb_ids, 1000):
             post_data = ','.join(subset)
             response = requests.post(url, data=post_data)
             response.raise_for_status()

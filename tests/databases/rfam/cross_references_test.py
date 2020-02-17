@@ -20,8 +20,7 @@ import pytest
 
 import rnacentral_pipeline.databases.rfam.cross_references as cr
 
-from rnacentral_pipeline.ontologies.data import Term
-from rnacentral_pipeline.ontologies import helpers as ont
+from rnacentral_pipeline.databases.data.ontology_term import OntologyTerm as Term
 
 
 @pytest.fixture

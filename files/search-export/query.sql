@@ -66,5 +66,6 @@ LEFT JOIN rfam_models models ON hits.rfam_model_id = models.rfam_model_id
 WHERE
     xref.deleted = 'N'
     AND rna.id BETWEEN :min AND :max
+    AND pre.is_fragment = false
 GROUP BY rna.upi, xref.taxid
 ) TO STDOUT

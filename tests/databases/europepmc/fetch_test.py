@@ -51,7 +51,7 @@ def test_can_fetch_publication(raw_id):
         "inPMC": "N",
         "hasPDF": "Y",
         "hasBook": "N",
-        "citedByCount": 3,
+        "citedByCount": 4,
         "hasReferences": "Y",
         "hasTextMinedTerms": "Y",
         "hasDbCrossReferences": "N",

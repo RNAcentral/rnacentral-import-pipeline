@@ -16,6 +16,7 @@ limitations under the License.
 import click
 
 from rnacentral_pipeline.databases.ncbi import taxonomy
+from rnacentral_pipeline.databases.ncbi.gene import fetch as gene
 
 
 @click.group("ncbi")
@@ -35,3 +36,9 @@ def cli():
 @click.argument('output', default='taxonomy.csv', type=click.File('w'))
 def parse_taxonomy(ncbi, output):
     taxonomy.write(ncbi, output)
+
+
+@cli.command('fetch-genes')
+@click.argument('output', default='ncbi-genes.pickle', type=click.File('w'))
+def fetch_genes(output):
+    gene.write(output)

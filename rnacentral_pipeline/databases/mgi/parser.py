@@ -20,8 +20,6 @@ import csv
 import operator as op
 import itertools as it
 
-import six
-
 from rnacentral_pipeline.databases.data import Entry
 from rnacentral_pipeline.writers import build_entry_writer
 
@@ -74,8 +72,8 @@ def parse(raw):
     """
 
     data = csv.DictReader(lines(raw), delimiter='\t')
-    data = six.moves.map(as_entry, data)
-    return six.moves.filter(op.attrgetter('rna_type'), data)
+    data = map(as_entry, data)
+    return filter(op.attrgetter('rna_type'), data)
 
 
 def from_file(raw, output):

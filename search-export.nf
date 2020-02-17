@@ -47,6 +47,7 @@ process export_search_json {
 }
 
 raw_json
+  .filter { fn -> !fn.empty() }
   .combine(metadata)
   .set { search_json }
 

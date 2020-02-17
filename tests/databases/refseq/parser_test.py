@@ -27,6 +27,7 @@ from rnacentral_pipeline.databases.refseq import parser
     ('data/refseq/refseq_product.gbff', 2),
     ('data/refseq/related.gbff', 5),
     ('data/refseq/biomol_ncRNA_RNase_P_RNA.gbff', 9),
+    ('data/refseq/with_none.gbff', 1),
 ])
 def test_can_parse_refseq_files(filename, count):
     with open(filename, 'r') as raw:
@@ -316,6 +317,8 @@ def test_can_assign_isoform_to_rnase_p():
     ('data/refseq/lncrna.gbff', 'Arabidopsis thaliana potential natural antisense gene, locus overlaps with AT1G44120 (AT1G44125)'),
     ('data/refseq/weird-mirna.gbff', 'Bos taurus microRNA mir-448 (MIR448)'),
     ('data/refseq/biomol_ncRNA_RNase_P_RNA.gbff', 'Drosophila melanogaster ribonuclease P RNA (RNaseP:RNA)'),
+    ('data/refseq/has2-antisense.gbff', 'Homo sapiens HAS2 antisense RNA 1 (HAS2-AS1)'),
+    ('data/refseq/scarna-example.gbff', 'Drosophila melanogaster small cajal body-specific RNA : MeU4-A65 (scaRNA:MeU4-A65)'),
 ])
 def test_can_produce_reasonable_names_for_sequences(filename, description):
     with open(filename, 'r') as raw:
@@ -330,15 +333,16 @@ def test_can_handle_weird_precursors():
         assert len(data) == 2
 
 
-def test_can_handle_product_based_description():
-    with open('data/refseq/has2-antisense.gbff', 'r') as raw:
-        data = list(parser.parse(raw))
-    assert len(data) == 1
-    assert data[0].description == 'Homo sapiens HAS2 antisense RNA 1 (HAS2-AS1)'
-
-
+@pytest.mark.skip(reason="Not sure what this test was meant to do")
 def test_can_extract_correct_scarna_annotation():
     with open('data/refseq/scarna-example.gbff', 'r') as raw:
         data = list(parser.parse(raw))
     assert len(data) == 1
     assert data[0].description == 'SO:0002095'
+
+
+def test_can_deal_with_weird_description():
+    with open('data/refseq/with_none.gbff', 'r') as raw:
+        data = list(parser.parse(raw))
+    assert len(data) == 1
+    assert data[0].description == 'Brevibacillus halotolerans 16S ribosomal RNA'

@@ -16,18 +16,13 @@ limitations under the License.
 import os
 import csv
 import operator as op
+from pathlib import Path
 
-try:
-    from contextlib import ExitStack
-except:
-    from contextlib2 import ExitStack
-
+from contextlib import ExitStack
 from contextlib import contextmanager
 
 import attr
 from attr.validators import instance_of as is_a
-
-from boltons.fileutils import atomic_save
 
 
 @attr.s(frozen=True)  # pylint: disable=W0232
@@ -56,8 +51,8 @@ class CsvOutput(object):
 
     @contextmanager
     def writer(self, directory):
-        path = os.path.join(directory, self.filename)
-        with atomic_save(path) as out:
+        path = Path(directory) / self.filename
+        with path.open('w') as out:
             writer = csv.writer(out, **self.csv_options)
             yield lambda e: writer.writerows(self.transformer(e))
 

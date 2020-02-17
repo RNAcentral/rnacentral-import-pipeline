@@ -32,6 +32,7 @@ from rnacentral_pipeline.databases.ensembl_genomes import metazoa as e_metazoa
 from rnacentral_pipeline.databases.ensembl_genomes import protists as e_protists
 from rnacentral_pipeline.databases.quickgo import parser as quickgo
 from rnacentral_pipeline.databases.gtrnadb import parser as gtrnadb
+from rnacentral_pipeline.databases.ncbi.gene import parser as ncbi_gene
 
 
 @click.group('external', cls=ClickAliasedGroup)
@@ -44,12 +45,15 @@ def cli():
 
 
 @cli.command('json-schema', aliases=[
+    '5srrnadb',
     'flybase',
     'lncbase',
     'lncbook',
     'lncipedia',
     'mirbase',
+    'mirgenedb',
     'pombase',
+    'snodb',
     'tarbase',
     'zwd',
 ])
@@ -178,6 +182,17 @@ def process_ena(ena_file, mapping_file, output):
     write_entries(ena.parse_with_mapping_file, output, ena_file, mapping_file)
 
 
+@cli.command('ncbi-gene')
+@click.argument('data-file', type=click.File('r'))
+@click.argument('output', default='.', type=click.Path(
+    writable=True,
+    dir_okay=True,
+    file_okay=False,
+))
+def process_ncbi_gene(data_file, output):
+    write_entries(ncbi_gene.parse, output, data_file)
+
+
 @cli.command('quickgo')
 @click.argument('raw_data', type=click.File('r'))
 @click.argument('output', default='.', type=click.Path(
@@ -230,3 +245,27 @@ def process_rfam(rfam_file, mapping_file, output):
 ))
 def process_gtrnadb(data_file, output):
     write_entries(gtrnadb.parse, output, data_file)
+
+
+@cli.command('genecards')
+@click.argument('data_file', type=click.File('r'))
+@click.argument('known_sequences', type=click.File('rb'))
+@click.argument('output', default='.', type=click.Path(
+    writable=True,
+    dir_okay=True,
+    file_okay=False,
+))
+def process_genecarrds(data_file, known_sequences, output):
+    write_entries(genecards.parse, output, data_file, known_sequences)
+
+
+@cli.command('malacards')
+@click.argument('data_file', type=click.File('r'))
+@click.argument('known_sequences', type=click.File('rb'))
+@click.argument('output', default='.', type=click.Path(
+    writable=True,
+    dir_okay=True,
+    file_okay=False,
+))
+def process_malacards(data_file, known_sequences, output):
+    write_entries(malacards.parse, output, data_file, known_sequences)

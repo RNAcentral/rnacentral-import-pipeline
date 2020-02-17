@@ -13,18 +13,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import six
-
 import attr
 from attr.validators import instance_of as is_a
 
 
 @attr.s()
 class Context(object):
-    database = attr.ib(
-        validator=is_a(six.text_type), 
-        converter=six.text_type,
-    )
+    database = attr.ib(validator=is_a(str), converter=str)
     references = attr.ib(validator=is_a(list))
 
     def accession(self, primary_id):

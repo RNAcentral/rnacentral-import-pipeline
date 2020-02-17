@@ -17,8 +17,6 @@ import csv
 import operator as op
 import itertools as it
 
-import six
-
 import attr
 from attr.validators import optional
 from attr.validators import instance_of as is_a
@@ -124,7 +122,7 @@ def parse(handle):
     """
 
     reader = csv.DictReader(handle, delimiter='\t')
-    return six.moves.map(RfamDatabaseLink.from_row, reader)
+    return map(RfamDatabaseLink.from_row, reader)
 
 
 def correct_go_term(reference):
