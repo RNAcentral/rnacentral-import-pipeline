@@ -22,6 +22,8 @@ import itertools as it
 import attr
 from attr.validators import instance_of as is_a
 
+import six
+
 
 @attr.s(frozen=True)
 class GenomicLocation(object):
@@ -103,6 +105,6 @@ def parse(handle):
 
 def from_file(handle, output):
     data = parse(handle)
-    data = map(op.methodcaller('writeable'), data)
+    data = six.moves.map(op.methodcaller('writeable'), data)
     writer = csv.writer(output, delimiter=',')
     writer.writerows(data)

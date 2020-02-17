@@ -20,6 +20,9 @@ import operator as op
 import itertools as it
 import collections as coll
 
+import six
+
+from xml.sax import saxutils as sax
 from lxml import etree
 
 
@@ -66,10 +69,10 @@ def create_tag(root, name, value, attrib={}):
 
     element = etree.SubElement(root, name, attr)
     if text:
-        if not isinstance(text, str):
-            text = str(text)
+        if not isinstance(text, six.string_types):
+            text = six.text_type(text).encode('ascii', 'ignore')
 
-        element.text = text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;'")
+        element.text = sax.escape(text)
     return element
 
 
@@ -153,9 +156,9 @@ def first(values):
     Get the first value in the list of values as a string.
     """
     value = values[0]
-    if isinstance(value, str):
+    if isinstance(value, six.string_types):
         return values[0]
-    return str(value)
+    return six.text_type(value)
 
 
 def only(value):
@@ -506,7 +509,7 @@ def normalize_rna_type(rna_type):
 def from_annotation_qualifer(name):
     def fn(go_annotations):
         key = op.itemgetter('qualifier')
-        annotations = filter(lambda a: key(a) == name, go_annotations)
+        annotations = six.moves.filter(lambda a: key(a) == name, go_annotations)
         values = set()
         for annotation in annotations:
             values.add(annotation['go_term_id'])
@@ -601,24 +604,6 @@ def gene_synonyms(synonym_set):
     return result
 
 
-def pdb_ids(xrefs):
-    pdb_ids = []
-    for xref in xrefs: 
-        if xref['name'] != 'PDBE':
-            continue
-        parts = xref['accession'].split('_')
-        pdb_ids.append('%s_%s' % (parts[0], parts[2]))
-    return pdb_ids
-
-
-def diseases(notes):
-    diseases = []
-    for note in notes:
-        data = parse_note(note)
-        diseases.extend(data.get('diseases', []))
-    return diseases
-
-
 builder = entry([
     tag('name', as_name, keys=('upi', 'taxid')),
     tag('description', first),
@@ -695,7 +680,5 @@ builder = entry([
         fields('no_overlaps_with', get_or_empty('no_overlaps_with'), keys='overlaps'),
         fields('has_secondary_structure', has_value, keys='secondary'),
         fields('secondary_structure_model', get_or_empty('secondary_structure_model'), keys='secondary'),
-        fields('pdbid_entityid', pdb_ids, keys='cross_references'),
-        fields('disease', diseases, keys='notes'),
     ]),
 ])

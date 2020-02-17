@@ -20,6 +20,8 @@ import itertools as it
 import attr
 from attr.validators import instance_of as is_a
 
+import six
+
 from rnacentral_pipeline.databases.data import regions
 
 from . import data as coord
@@ -27,9 +29,9 @@ from . import data as coord
 
 @attr.s(slots=True, frozen=True)
 class BedEntry(object):
-    rna_id = attr.ib(validator=is_a(str), converter=str)
-    rna_type = attr.ib(validator=is_a(str), converter=str)
-    databases = attr.ib(validator=is_a(str), converter=str)
+    rna_id = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
+    rna_type = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
+    databases = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
     region = attr.ib(validator=is_a(regions.SequenceRegion))
     score = attr.ib(default=0, validator=is_a(int))
     rgb = attr.ib(default=(63, 125, 151), validator=is_a(tuple))
@@ -91,7 +93,7 @@ def from_json(handle, out):
     """
 
     data = coord.from_file(handle)
-    data = map(BedEntry.from_coordinate, data)
-    data = map(op.methodcaller('writeable'), data)
+    data = six.moves.map(BedEntry.from_coordinate, data)
+    data = six.moves.map(op.methodcaller('writeable'), data)
     writer = csv.writer(out, delimiter='\t', lineterminator='\n')
     writer.writerows(data)

@@ -24,9 +24,11 @@ from rnacentral_pipeline.databases.data import Entry
 
 CHROMOSOME_LEVEL_MAPPINGS = set([
     "WORMBASE",
+    "POMBASE",
 ])
 
 DATABASES = {
+    'PomBase',
     'SGD',
     'SRPDB',
     'WormBase',
@@ -54,7 +56,10 @@ def tpa_key(value, database=None):
                 return (value.parent_accession, value.locus_tag)
 
         elif isinstance(value, GenericTpa):
-            return (value.parent_accession, value.locus_tag)
+            if db_name == 'POMBASE':
+                return (value.parent_accession, value.database_accession)
+            else:
+                return (value.parent_accession, value.locus_tag)
 
     return (value.parent_accession, None)
 
@@ -122,6 +127,9 @@ class GenericTpa(object):
 
 
 class UrlBuilder(object):
+    def pombase(self, entry):
+        return 'http://www.pombase.org/spombe/result/%s' % entry.primary_id
+
     def sgd(self, entry):
         return 'http://www.yeastgenome.org/locus/%s/overview' % entry.primary_id
 
@@ -153,17 +161,15 @@ class UrlBuilder(object):
 
 @attr.s()
 class TpaMappings(object):
-    databases: set = attr.ib(default=attr.Factory(set))
+    databases = attr.ib(default=attr.Factory(set))
     simple_mapping = attr.ib(
         default=attr.Factory(lambda: coll.defaultdict(set))
     )
-    counts = attr.ib(default=attr.Factory(coll.Counter))
 
     def add_tpas(self, tpas):
         for tpa in tpas:
             self.simple_mapping[tpa_key(tpa)].add(tpa)
             self.databases.add(tpa.database)
-            self.counts[tpa.database] += 1
 
     def has_tpa_for(self, entry):
         return any(self.find_tpas(entry))
@@ -176,13 +182,6 @@ class TpaMappings(object):
                 yield tpa
             if tpas:
                 break
-
-    def validate(self):
-        dbs = [internal_database_name(db) for db in DATABASES]
-        failed = [db for db in dbs if not self.counts[db]]
-        if failed:
-            raise ValueError("No TPAs found for: %s" % ', '.join(failed))
-        return True
 
 
 def parse_tpa_file(handle, klass=GenericTpa):

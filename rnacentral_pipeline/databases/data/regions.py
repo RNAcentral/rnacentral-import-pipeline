@@ -15,6 +15,8 @@ limitations under the License.
 
 import operator as op
 
+import six
+
 import enum
 
 import attr
@@ -56,7 +58,7 @@ class Strand(enum.Enum):
             return cls.reverse
         if value in {0, '.', 0, Strand.unknown}:
             return cls.unknown
-        raise UnknownStrand("No way to handle raw strand: " + str(value))
+        raise UnknownStrand("No way to handle raw strand: " + six.text_type(value))
 
     def display_string(self):
         if self is Strand.reverse:
@@ -127,7 +129,7 @@ class CoordinateSystem(object):
 
     @classmethod
     def build(cls, value):
-        if isinstance(value, str):
+        if isinstance(value, six.text_type):
             return cls.from_name(value)
         if isinstance(value, dict):
             return cls(**value)
@@ -212,8 +214,8 @@ class CoordinateSystem(object):
 
 @attr.s(frozen=True, hash=True, slots=True)
 class Exon(object):
-    start = attr.ib(validator=is_a(int))
-    stop = attr.ib(validator=is_a(int))
+    start = attr.ib(validator=is_a(six.integer_types))
+    stop = attr.ib(validator=is_a(six.integer_types))
 
     @classmethod
     def from_dict(cls, raw):
@@ -238,8 +240,8 @@ def as_sorted_exons(raw):
 
 @attr.s(frozen=True, hash=True, slots=True)
 class SequenceRegion(object):
-    assembly_id = attr.ib(validator=is_a(str), converter=str)
-    chromosome = attr.ib(validator=is_a(str), converter=str)
+    assembly_id = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
+    chromosome = attr.ib(validator=is_a(six.text_type), converter=six.text_type)
     strand = attr.ib(validator=is_a(Strand), converter=Strand.build)
     exons = attr.ib(validator=is_a(tuple), converter=as_sorted_exons)
     coordinate_system = attr.ib(

@@ -15,8 +15,22 @@ limitations under the License.
 
 import json
 
+import six
+
 import attr
 from attr.validators import instance_of as is_a
+from attr.validators import in_ as one_of
+
+RELATIONSHIP_TYPES = {
+    "precursor",
+    "matureProduct",
+    "mature_product",
+    "target",
+    "target_protein",
+    "target_rna",
+    "isoform",
+}
+
 
 def related_isoforms(entries):
     """
@@ -61,9 +75,9 @@ class RelatedEvidence(object):
 
 @attr.s(frozen=True)
 class RelatedSequence(object):
-    sequence_id = attr.ib(validator=is_a(str))
+    sequence_id = attr.ib(validator=is_a(six.text_type))
     relationship = attr.ib(
-        validator=is_a(str),
+        validator=one_of(RELATIONSHIP_TYPES),
         converter=as_relationship_type,
     )
     coordinates = attr.ib(validator=is_a(list), default=attr.Factory(list))
@@ -93,14 +107,3 @@ class RelatedSequence(object):
                 self.relationship,
                 json.dumps(metadata),
             ]
-
-
-@attr.s()
-class RelatedDisease(object):
-    disease = attr.ib(validator=is_a(str))
-
-    def writeable(self, accession):
-        yield [
-            accession,
-            self.disease,
-        ]

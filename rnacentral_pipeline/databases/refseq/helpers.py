@@ -63,13 +63,11 @@ def description(record, feature):
             if product[0].isupper() and product[1].islower():
                 product = product[0].lower() + product[1:]
 
-    gene = embl.gene(feature) or embl.locus_tag(feature)
-    if gene:
-        gene = ' (%s)' % gene
-    else:
-        gene = ''
+    gene = embl.gene(feature)
+    if not gene:
+        gene = embl.locus_tag(feature)
 
-    return '{organism} {product}{gene}'.format(
+    return '{organism} {product} ({gene})'.format(
         organism=embl.organism(record.features[0])[0],
         product=product,
         gene=gene,
@@ -157,7 +155,7 @@ def generate_related(entries):
         for second in entries:
             # We have to test the object and accession in the case that there
             # are duplicate LOCUS entries and one of them is already processed
-            # and has a related mature product.
+            # and has a related mature product. 
             if first == second or first.accession == second.accession:
                 continue
 
