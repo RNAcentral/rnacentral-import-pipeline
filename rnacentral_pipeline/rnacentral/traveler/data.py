@@ -15,7 +15,10 @@ limitations under the License.
 
 import os
 import re
+import enum
+import functools
 from pathlib import Path
+from contextlib import contextmanager
 
 import typing as ty
 
@@ -26,8 +29,45 @@ from attr.validators import optional
 from attr.validators import instance_of as is_a
 
 
+TRNAS = {
+    'SO:0000254',
+    'SO:0000259',
+    'SO:0000268',
+    'SO:0000260',
+    'SO:0000266',
+    'SO:0000256',
+    'SO:0000270',
+    'SO:0000261',
+    'SO:0000273',
+    'SO:0000272',
+    'SO:0000258',
+    'SO:0000263',
+    'SO:0000269',
+    'SO:0000264',
+    'SO:0000271',
+    'SO:0005857',
+    'SO:0000766',
+    'SO:0000265',
+    'SO:0000257',
+    'SO:0001036',
+    'SO:0000262',
+    'SO:0001172',
+    'SO:0002129',
+    'SO:0000267',
+}
+
+
 class UnknownStrandName(Exception):
     pass
+
+
+@enum.unique
+class Source(enum.Enum):
+    crw = enum.auto()
+    ribovision = enum.auto()
+    rfam = enum.auto()
+    gtrnadb = enum.auto()
+
 
 
 @attr.s()
@@ -37,6 +77,8 @@ class ModelInfo(object):
     so_term: str = attr.ib(validator=is_a(str))
     taxid: int = attr.ib(validator=is_a(int))
     accessions: ty.List[str] = attr.ib(validator=is_a(list))
+    source: Source = attr.ib(validator=is_a(Source))
+    length: int = attr.ib(validator=is_a(int))
     cell_location: ty.Optional[str] = attr.ib(validator=optional(is_a(str)))
 
     @property
@@ -45,7 +87,9 @@ class ModelInfo(object):
             return 'rRNA'
         if self.so_term in {'SO:0000587', 'SO:0000603'}:
             return 'autocatalytically_spliced_intron'
-        raise ValueError("No RNA type for: " + self.so_term)
+        if self.so_term in TRNAS:
+            return 'tRNA'
+        raise ValueError("No RNA type for: %s" % self)
 
     def writeable(self):
         return [
@@ -54,11 +98,13 @@ class ModelInfo(object):
             self.rna_type,
             self.so_term,
             self.cell_location,
+            self.source.name,
+            self.length,
         ]
 
 
 @attr.s()
-class RibotyperResult(object):
+class RibovoreResult(object):
     target: str = attr.ib(validator=is_a(str))
     status: str = attr.ib(validator=is_a(str))
     length: int = attr.ib(validator=is_a(int), converter=int)
@@ -113,46 +159,51 @@ class RibotyperResult(object):
         )
 
 
+@attr.s()
+class TravelerPaths(object):
+    urs = attr.ib(validator=is_a(str))
+    model_id = attr.ib(validator=is_a(str))
+    source  = attr.ib(validator=is_a(Source))
+    basepath = attr.ib(validator=is_a(Path))
+
+    @property
+    def svg(self) -> Path:
+        with_model = self.source not in {Source.rfam}
+        return self.__path__('.colored.svg', with_model=with_model)
+
+    @property
+    def fasta(self) -> Path:
+        with_model = self.source not in {Source.rfam, Source.gtrnadb}
+        return self.__path__('.fasta', with_model=with_model)
+
+    @property
+    def overlaps(self) -> Path:
+        if self.source == Source.rfam:
+            return self.__path__('.overlaps')
+        return self.__path__('.overlaps', with_model=True)
+
+    @property
+    def stk(self) -> Path:
+        return self.__path__('.stk')
+
+    def __path__(self, suffix: str, with_model=False) -> Path:
+        name = self.urs + suffix
+        if with_model:
+            name = '%s-%s%s' % (self.urs, self.model_id, suffix)
+        return self.basepath / name
 
 
 @attr.s()
 class TravelerResult(object):
-    urs: str = attr.ib(validator=is_a(str))
-    model_id: str = attr.ib(validator=is_a(str))
-    directory: str = attr.ib(validator=is_a(str))
-    overlap_count: int = attr.ib(validator=is_a(int))
-    ribotyper = attr.ib(validator=optional(is_a(RibotyperResult)))
-    colored: bool = attr.ib(validator=is_a(bool), default=True)
-    is_rfam: bool = attr.ib(validator=is_a(bool), default=False)
+    urs = attr.ib(validator=is_a(str))
+    model_id = attr.ib(validator=is_a(str))
+    paths = attr.ib(validator=is_a(TravelerPaths))
+    source = attr.ib(validator=is_a(Source))
+    ribovore = attr.ib(validator=optional(is_a(RibovoreResult)), default=None)
 
     @classmethod
-    def build(cls, urs, model_id, directory, result, colored=True, is_rfam=False):
-        filename = '%s-%s.overlaps' % (urs, model_id)
-        if is_rfam:
-            filename = os.path.join(model_id, urs + '.overlaps')
-
-        with open(os.path.join(directory, filename), 'r') as raw:
-            overlaps = int(raw.readline().strip())
-
-        return cls(
-            urs=urs,
-            model_id=model_id,
-            directory=directory,
-            overlap_count=overlaps,
-            ribotyper=result,
-            colored=colored,
-            is_rfam=is_rfam
-        )
-
-    def svg_filename(self):
-        svg_name = 'colored.svg'
-        if not self.colored:
-            svg_name = 'svg'
-
-        return self.__filename__(svg_name)
-
-    def stk_path(self):
-        return Path(self.__filename__('stk'))
+    def from_paths(cls, source: Source, path: TravelerPaths, ribovore=None):
+        return cls(path.urs, path.model_id, path, source, ribovore=ribovore)
 
     def svg(self):
         """
@@ -160,22 +211,15 @@ class TravelerResult(object):
         that can be written to CSV for import into the database.
         """
 
-        with open(self.svg_filename()) as raw:
+        with self.paths.svg.open('r') as raw:
             return raw.read().replace('\n', '')
 
     def stk(self):
-        stk = self.stk_path()
-        if not stk.exists():
+        path = self.paths.stk
+        if not path.exists():
             return ''
-        with stk.open('r') as raw:
-            return raw.read().replace('\n', '%')
-
-    @property
-    def basepair_count(self):
-        return self.dot_bracket().count('(')
-
-    def dot_bracket_filename(self):
-        return self.__filename__('fasta')
+        with path.open('r') as raw:
+            return raw.read()
 
     def dot_bracket(self):
         """
@@ -185,10 +229,7 @@ class TravelerResult(object):
         dot_bracket string which are the same length.
         """
 
-        if hasattr(self, '_dot_bracket'):
-            return self._dot_bracket
-
-        with open(self.dot_bracket_filename()) as raw:
+        with self.paths.fasta.open('r') as raw:
             record = SeqIO.read(raw, 'fasta')
             seq_dot = str(record.seq)
             sequence = re.match(r'^(\w+)', seq_dot).group(1)
@@ -196,56 +237,43 @@ class TravelerResult(object):
             assert len(sequence) == len(dot_bracket)
             return dot_bracket
 
+    def basepair_count(self):
+        return self.dot_bracket().count('(')
+
+    def overlap_count(self):
+        with self.paths.overlaps.open('r') as raw:
+            return int(raw.readline().strip())
+
     def is_valid(self):
-        filenames = [
-            self.dot_bracket_filename(),
-            self.svg_filename(),
+        if self.source in {Source.crw, Source.ribovision}:
+            if not self.ribovore:
+                return False
+
+        required = [
+            self.paths.fasta, 
+            self.paths.svg,
+            self.paths.overlaps,
         ]
-        return all(os.path.exists(f) for f in filenames)
-
-    @property
-    def model_start(self):
-        if self.ribotyper:
-            return self.ribotyper.mfrom
-
-    @property
-    def model_stop(self):
-        if self.ribotyper:
-            return self.ribotyper.mto
-
-    @property
-    def sequence_start(self):
-        if self.ribotyper:
-            return self.ribotyper.bfrom
-
-    @property
-    def sequence_stop(self):
-        if self.ribotyper:
-            return self.ribotyper.bto
-
-    @property
-    def sequence_coverage(self):
-        if self.ribotyper:
-            return self.ribotyper.bcov
+        return all(p.exists() for p in required)
 
     def writeable(self):
+        model_start = None if not self.ribovore else self.ribovore.mfrom
+        model_stop = None if not self.ribovore else self.ribovore.mto
+        sequence_start = None if not self.ribovore else self.ribovore.bfrom
+        sequence_stop = None if not self.ribovore else self.ribovore.bto
+        sequence_coverage = None if not self.ribovore else self.ribovore.bcov
+
         return [
             self.urs,
             self.model_id,
-            self.dot_bracket(), 
-            self.svg(), 
-            self.overlap_count,
-            self.basepair_count,
-            self.model_start,
-            self.model_stop,
-            self.sequence_start,
-            self.sequence_stop,
-            self.sequence_coverage,
+            self.dot_bracket(),
+            self.svg(),
+            self.overlap_count(),
+            self.basepair_count(),
+            model_start,
+            model_stop,
+            sequence_start,
+            sequence_stop,
+            sequence_coverage,
             self.stk(),
         ]
-
-    def __filename__(self, extension):
-        fn = '%s-%s.%s' % (self.urs, self.model_id, extension)
-        if self.is_rfam:
-            fn = os.path.join(self.model_id, '%s.%s' % (self.urs, extension))
-        return os.path.join(self.directory, fn)

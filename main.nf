@@ -833,13 +833,13 @@ process compute_rfam_layout_overlap {
   file("validation.txt") into family_validations optional true
 
   script:
-  if (model == 'crw' || model == 'ribovision') {
+  if (model == 'rfam') {
     """
-    echo $model > validation.txt
+    auto-traveler.py rfam validate $model validation.txt
     """
   } else {
     """
-    auto-traveler.py rfam validate $model validation.txt
+    echo $model > validation.txt
     """
   }
 }
@@ -878,20 +878,33 @@ process find_possible_traveler_sequences {
 
 process layout_sequences {
   tag { "${family}-${sequences}" }
-  errorStrategy 'ignore'
   memory params.secondary.layout.memory
+  container 'rnacentral/auto-traveler:dev'
 
   input:
   set val(family), file(sequences) from to_layout
 
   output:
-  file("data.csv") into secondary_to_import
+  set val(family), file('output') into secondary_to_parse
 
   script:
   def opt = family =~ /^RF/ ? "rfam draw ${family}" : "${family} draw"
   """
   auto-traveler.py $opt $sequences output/
-  rnac traveler process-svgs output/ data.csv
+  """
+}
+
+
+process parse_layout {
+
+  input:
+  set val(family), file(to_parse) from secondary_to_parse
+
+  output:
+  file("data.csv") into secondary_to_import
+
+  """
+  rnac traveler process-svgs $family $to_parse data.csv
   """
 }
 
