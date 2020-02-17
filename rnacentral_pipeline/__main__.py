@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 """
 This is the main entry point to various parts of the RNAcentral pipeline. This

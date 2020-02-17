@@ -19,7 +19,11 @@ import json
 import operator as op
 import itertools as it
 import collections as col
-from contextlib import ExitStack
+
+try:
+    from contextlib import ExitStack
+except ImportError:
+    from contextlib2 import ExitStack
 
 import attr
 from attr.validators import optional

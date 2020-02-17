@@ -18,10 +18,14 @@ import codecs
 import itertools as it
 from xml.etree import cElementTree as ET
 
+import six
 import attr
 from attr.validators import instance_of as is_a
 
-from pathlib import Path
+try:
+    from pathlib import Path
+except ImportError:
+    from pathlib2 import Path
 
 import textblob as tb
 
@@ -44,7 +48,11 @@ def itertext(node):
 
 
 def extract_node_text(node):
-    lines = list(node.itertext())
+    if six.PY2:
+        lines =  list(itertext(node))
+    else:
+        lines = list(node.itertext())
+
     if not lines:
         return None
 
@@ -131,6 +139,8 @@ class TextBlobContainer(object):
     def __text_blob__(self, path):
         with codecs.open(path, 'r', errors='ignore') as raw:
             text = raw.read()
+            if six.PY2:
+                text = text.decode('ascii', 'ignore')
             blob = tb.TextBlob(text)
         return TextBlobWrapper(pubs.reference(path.stem), blob)
 
@@ -152,6 +162,6 @@ class TextBlobContainer(object):
 
 
 def build(path):
-    if isinstance(path, str):
+    if isinstance(path, six.string_types):
         return TextBlobContainer(Path(path))
     return TextBlobContainer(path)

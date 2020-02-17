@@ -17,6 +17,8 @@ import csv
 import operator as op
 import itertools as it
 
+import six
+
 from . import fetch
 
 def parse_file(handle):
@@ -27,7 +29,7 @@ def parse_file(handle):
 
 def process_term_file(term_handle, output):
     data = parse_file(term_handle)
-    data = map(op.methodcaller('writeables'), data)
+    data = six.moves.map(op.methodcaller('writeables'), data)
     data = it.chain.from_iterable(data)
     writer = csv.writer(output, quoting=csv.QUOTE_ALL)
     writer.writerows(data)

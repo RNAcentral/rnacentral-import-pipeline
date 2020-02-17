@@ -113,5 +113,4 @@ def parse(handle):
 
 def parse_with_mapping_file(handle, mapping_handle):
     mapping = tpa.load(mapping_handle)
-    mapping.validate()
     return tpa.apply(mapping, parse(handle))

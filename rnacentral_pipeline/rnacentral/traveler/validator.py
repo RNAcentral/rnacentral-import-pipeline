@@ -15,6 +15,8 @@ limitations under the License.
 
 import csv
 
+import six
+
 import attr
 from attr.validators import optional
 from attr.validators import instance_of as is_a
@@ -54,9 +56,9 @@ ALLOWED_RFAM = {
 
 @attr.s()
 class ShouldShow(object):
-    urs = attr.ib(validator=is_a(str))
-    model_type = attr.ib(validator=is_a(str))
-    rna_type = attr.ib(validator=is_a(str))
+    urs = attr.ib(validator=is_a(six.text_type))
+    model_type = attr.ib(validator=is_a(six.text_type))
+    rna_type = attr.ib(validator=is_a(six.text_type))
     overlap_count = attr.ib(validator=is_a(int))
     zscore = attr.ib(validator=optional(is_a(float)))
 
@@ -115,12 +117,12 @@ def should_show(data):
     sequence_lengths = np.array([d['sequence_length'] for d in data], dtype=np.float)
     model_lengths = np.array([d['model_length'] for d in data], dtype=np.float)
 
-    zscores = np.array([np.nan for i in range(len(sequence_lengths))])
+    zscores = np.array([np.nan for i in xrange(len(sequence_lengths))])
     if len(model_lengths) == len(sequence_lengths):
         zscores = stats.zscore(sequence_lengths / model_lengths)
 
     for index, entry in enumerate(data):
-        score = zscores[index]
+        score = scores[index]
         if not np.isnan(score):
             score = None
         yield ShouldShow.build(entry, score)

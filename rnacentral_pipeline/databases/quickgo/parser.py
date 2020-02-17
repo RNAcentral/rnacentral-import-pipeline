@@ -16,6 +16,8 @@ limitations under the License.
 import operator as op
 import itertools as it
 
+import six
+
 from Bio.UniProt.GOA import gpa_iterator as raw_parser
 
 from rnacentral_pipeline.databases.data.go_annotations import GoTermAnnotation
@@ -48,9 +50,9 @@ def parser(handle):
                         'assigned_by')
 
     records = raw_parser(handle)
-    records = filter(lambda r: r['Assigned_by'] != 'RNAcentral', records)
-    records = filter(lambda r: r['DB:Reference'] != 'GO_REF:0000115', records)
-    annotations = list(map(as_annotation, records))
+    records = six.moves.filter(lambda r: r['Assigned_by'] != 'RNAcentral', records)
+    records = six.moves.filter(lambda r: r['DB:Reference'] != 'GO_REF:0000115', records)
+    annotations = list(six.moves.map(as_annotation, records))
     annotations.sort(key=key)
 
     for _, similar in it.groupby(annotations, key):
