@@ -14,15 +14,20 @@ limitations under the License.
 """
 
 import csv
-import enum
 import logging
 import operator as op
 import itertools as it
 from ftplib import FTP
 from contextlib import contextmanager
 
+import six
 
 LOGGER = logging.getLogger(__name__)
+
+try:
+    import enum
+except ImportError:
+    from enum32 import enum
 
 
 class NoTopLevelFiles(Exception):
@@ -131,7 +136,7 @@ def toplevel_file(host, species, assembly_id, directory, files):
 
 def url_for(species, assembly_id, host=FtpHost.ensembl):
 
-    if isinstance(host, str):
+    if isinstance(host, six.string_types):
         return url_for(species, assembly_id, host=FtpHost.from_string(host))
     elif isinstance(host, FtpHost):
         if host is not FtpHost.unknown:

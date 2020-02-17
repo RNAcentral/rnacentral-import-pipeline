@@ -18,19 +18,34 @@ limitations under the License.
 import os
 import re
 import csv
-import dbm
 import json
-import typing
 import logging
 from glob import glob
 import functools as ft
-from pathlib import Path
-from contextlib import ExitStack
-from contextlib import contextmanager
 from xml.etree import cElementTree as ET
+
+import six
+
+try:
+    import dbm
+except:
+    from six.moves import dbm_gnu as dbm
 
 import attr
 from attr.validators import instance_of as is_a
+
+import typing
+
+try:
+    from pathlib import Path
+except ImportError:
+    from pathlib2 import Path
+
+from contextlib import contextmanager
+try:
+    from contextlib import ExitStack
+except:
+    from contextlib2 import ExitStack
 
 from rnacentral_pipeline.databases.data import Reference
 from rnacentral_pipeline.databases.data import IdReference
@@ -41,6 +56,7 @@ from rnacentral_pipeline.databases.europepmc.utils import clean_title
 from rnacentral_pipeline.databases.europepmc.utils import pretty_location
 from rnacentral_pipeline.databases.europepmc.utils import write_lookup
 from rnacentral_pipeline.databases.europepmc.fetch import lookup
+
 
 
 LOGGER = logging.getLogger(__name__)
@@ -83,7 +99,7 @@ class Storage(object):
         self.db.close()
 
     def __normalize_key__(self, raw):
-        if isinstance(raw, str):
+        if isinstance(raw, six.string_types):
             encoded = raw.encode('ascii', 'ignore')
         else:
             encoded = str(raw)
@@ -165,7 +181,7 @@ def node_to_reference(node):
     doi = xml_text('DOI', node)
     if not pmid and not doi:
         return None
-    pmcid = str(xml_text('pmcid', node))
+    pmcid = six.text_type(xml_text('pmcid', node))
 
     authors = []
     for author in node.findall('./AuthorList/Author'):
@@ -183,11 +199,11 @@ def node_to_reference(node):
     }
 
     return Reference(
-        authors=str(authors),
-        location=str(pretty_location(data)),
-        title=str(xml_text('title', node, fn=clean_title)),
+        authors=six.text_type(authors),
+        location=six.text_type(pretty_location(data)),
+        title=six.text_type(xml_text('title', node, fn=clean_title)),
         pmid=pmid,
-        doi=str(doi),
+        doi=six.text_type(doi),
         pmcid=pmcid,
     )
 

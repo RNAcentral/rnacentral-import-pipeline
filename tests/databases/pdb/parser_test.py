@@ -154,8 +154,9 @@ def test_will_not_fetch_mislabeled_chains(pdbid, missing):
 
 
 @pytest.mark.parametrize('pdb_id,chains', [  # pylint: disable=no-member
-    ('4v5d',
-     {'DB', 'DA', 'CW', 'CA', 'BB', 'BA', 'AW', 'AA', 'CY', 'CV', 'AY', 'AV'}),
+    ('4v5d', {
+        'DB', 'DA', 'CW', 'CA', 'BB', 'BA', 'AW', 'AA', 'CY', 'CV', 'AY', 'AV'
+    }),
     ('1OB2', {'B'}),
     ('1OB5', {'B', 'D', 'F'}),
     ('1XNQ', {'A', 'X'}),

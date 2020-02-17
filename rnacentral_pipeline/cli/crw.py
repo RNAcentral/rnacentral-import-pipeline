@@ -13,29 +13,26 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+
 import click
 
-from rnacentral_pipeline.rnacentral.precompute import process as pre
+from rnacentral_pipeline.databases.crw import secondary_models
 
 
-@click.group('precompute')
+@click.group("crw")
 def cli():
     """
-    This is a group of commands for dealing with our precompute steps.
+    Deal with data specific from CRW.
     """
     pass
 
 
-@cli.command('from-file')
-@click.argument('json_file', type=click.File('r'))
-@click.argument('output', default='.', type=click.Path(
-    writable=True,
-    dir_okay=True,
-    file_okay=False,
-))
-def precompute_from_file(json_file, output):
+@cli.command('model-summary')
+@click.argument('filename', default='-', type=click.File('r'))
+@click.argument('output', default='-', type=click.File('w'))
+def model_summary(filename, output):
     """
-    This command will take the output produced by the precompute query and
-    process the results into a CSV that can be loaded into the database.
+    Parse the metadata file we get from CRW to produce a data file we can import
+    into the database.
     """
-    pre.from_file(json_file, output)
+    secondary_models.write(filename, output)
