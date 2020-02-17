@@ -33,6 +33,7 @@ from rnacentral_pipeline.databases.ensembl_genomes import protists as e_protists
 from rnacentral_pipeline.databases.quickgo import parser as quickgo
 from rnacentral_pipeline.databases.gtrnadb import parser as gtrnadb
 from rnacentral_pipeline.databases.ncbi.gene import parser as ncbi_gene
+from rnacentral_pipeline.databases.silva import parser as silva
 
 
 @click.group('external', cls=ClickAliasedGroup)
@@ -235,6 +236,17 @@ def process_rfam(rfam_file, mapping_file, output):
     Process Rfam's JSON format into the files to import.
     """
     write_entries(rfam.parser.parse, output, rfam_file, mapping_file)
+
+
+@cli.command('silva')
+@click.argument('silva-file', type=click.File('r'))
+@click.argument('output', default='.', type=click.Path(
+    writable=True,
+    dir_okay=True,
+    file_okay=False,
+))
+def process_silva(silva_file, output):
+    write_entries(silva.parse, output, silva_file)
 
 
 @cli.command('gtrnadb')
