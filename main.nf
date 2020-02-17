@@ -821,31 +821,6 @@ process find_traveler_families {
 possible_rfam_families
   .splitCsv()
   .map { it[0] }
-  .set { families_to_validate }
-
-process compute_rfam_layout_overlap {
-  tag { "${model}" }
-
-  input:
-  val(model) from families_to_validate
-
-  output:
-  file("validation.txt") into family_validations optional true
-
-  script:
-  if (model == 'rfam') {
-    """
-    auto-traveler.py rfam validate $model validation.txt
-    """
-  } else {
-    """
-    echo $model > validation.txt
-    """
-  }
-}
-
-family_validations
-  .map { file -> file.text.trim() }
   .combine(Channel.fromPath("files/traveler/find-sequences.sql"))
   .set { rfam_for_traveler }
 
