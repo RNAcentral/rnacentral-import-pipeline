@@ -34,6 +34,7 @@ from rnacentral_pipeline.databases.quickgo import parser as quickgo
 from rnacentral_pipeline.databases.gtrnadb import parser as gtrnadb
 from rnacentral_pipeline.databases.ncbi.gene import parser as ncbi_gene
 from rnacentral_pipeline.databases.silva import parser as silva
+from rnacentral_pipeline.databases.intact import parser as intact
 
 
 @click.group('external', cls=ClickAliasedGroup)
@@ -282,3 +283,10 @@ def process_genecarrds(data_file, known_sequences, output):
 ))
 def process_malacards(data_file, known_sequences, output):
     write_entries(malacards.parse, output, data_file, known_sequences)
+
+
+@cli.command('intact')
+@click.argument('data_file', type=click.File('r'))
+@click.argument('output', default='interactions.csv', type=click.File('w'))
+def process_intact(data_file, output):
+    intact.parse_and_write(data_file, output)
