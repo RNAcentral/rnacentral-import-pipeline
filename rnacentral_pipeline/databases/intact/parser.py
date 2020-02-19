@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Copyright [2009-2020] EMBL-European Bioinformatics Institute
+Copyright [2009-2018] EMBL-European Bioinformatics Institute
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -13,12 +13,18 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import csv
+import operator as op
 
-from .entry import *
-from .go_annotations import *
-from .ontology_term import *
-from .references import *
-from .regions import *
-from .related import *
-from .secondary_structure import *
-from .psi_mi import *
+from rnacentral_pipeline.databases.psi_mi import tab
+
+
+def parse(handle):
+    rows = tab.parse(handle)
+    rows = filter(op.methodcaller('involves_rnacentral'), rows)
+    return rows
+
+
+def parse_and_write(handle, output):
+    data = (i.writeable() for i in parse(handle))
+    csv.writer(output).writerows(data)
