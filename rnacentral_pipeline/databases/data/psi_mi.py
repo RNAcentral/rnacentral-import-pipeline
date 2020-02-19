@@ -15,6 +15,7 @@ limitations under the License.
 
 import re
 import enum
+import json
 import typing as ty
 from datetime import date
 
@@ -37,22 +38,11 @@ class InteractionIdentifier:
     value = attr.ib(validator=is_a(str))
     name = attr.ib(validator=optional(is_a(str)))
 
-    def full_id(self) -> str:
-        name = ''
-        if self.name:
-            name = ' (%s)' % self.name
-        return "%s%s" % (self.unique_id(), name)
+    def from_rnacentral(self) -> bool:
+        return self.key == 'rnacentral'
 
-    def unique_id(self) -> str:
-        quote = ''
-        if ':' in self.value:
-            quote = '"'
-
-        return '{key}:{quote}{value}{quote}'.format(
-            key=self.key,
-            value=self.value,
-            quote=quote,
-        )
+    def simple_id(self) -> str:
+        return '%s:%s' % (self.key, self.value)
 
 
 @attr.s(frozen=True)
@@ -78,6 +68,34 @@ class Interactor:
     def external_id(self):
         return self.id.value
 
+    def from_rnacentral(self) -> bool:
+        if self.id.from_rnacentral():
+            return True
+        return any(a.from_rnacentral() for a in self.alt_ids) or \
+            any(a.from_rnacentral() for a in self.aliases)
+
+    def all_ids(self):
+        return [self.id] + self.alt_ids + self.aliases
+
+    def urs_taxid(self) -> str:
+        found = set()
+        for id in self.all_ids():
+            if id.from_rnacentral():
+                found.add(id.value)
+
+        if len(found) == 1:
+            return found.pop()
+
+        if len(found) > 1:
+            raise ValueError("Found more than one URS/taxid")
+
+        raise ValueError("Could not find a URS/taxid")
+
+    def names(self) -> ty.List[str]:
+        names = set()
+        names.update(id.value for id in self.all_ids())
+        return sorted(names)
+
 
 @attr.s(frozen=True)
 class Interaction:
@@ -96,5 +114,35 @@ class Interaction:
     update_date = attr.ib(validator=is_a(date))
     host_organisms = attr.ib(validator=is_a(int))
 
-    def writeables(self):
-        yield []
+    def involves_rnacentral(self) -> bool:
+        return self.interactor1.from_rnacentral() or \
+            self.interactor2.from_rnacentral()
+
+    def intact_id(self):
+        for id in self.ids:
+            if id.key == 'intact':
+                return id
+        return None
+
+    def writeable(self):
+        other = None
+        urs_taxid = None
+        if self.interactor1.from_rnacentral():
+            urs_taxid = self.interactor1.urs_taxid()
+            other = self.interactor2
+        elif self.interactor2.from_rnacentral():
+            urs_taxid = self.interactor2.urs_taxid()
+            other = self.interactor1
+        else:
+            raise ValueError("Cannot write iteraction")
+
+        intact_id = self.intact_id()
+        if intact_id:
+            intact_id = intact_id.value
+        return [
+            intact_id,
+            urs_taxid,
+            other.id.simple_id(),
+            json.dumps(other.names()),
+            other.taxid,
+        ]
