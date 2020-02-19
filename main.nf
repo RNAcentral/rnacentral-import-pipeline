@@ -861,6 +861,8 @@ process layout_sequences {
 
   output:
   set val(family), file('output') into secondary_to_parse
+  file('output/hits.txt') optional true into secondary_hits
+  file('output/*.stk') optional true into secondary_stk
 
   script:
   def opt = family =~ /^RF/ ? "rfam draw ${family}" : "${family} draw"
