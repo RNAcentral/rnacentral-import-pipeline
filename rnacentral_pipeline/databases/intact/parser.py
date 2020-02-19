@@ -13,17 +13,18 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from rnacentral_pipeline.databases.psi_mi import tab
+import csv
+import operator as op
 
-from . import helpers
+from rnacentral_pipeline.databases.psi_mi import tab
 
 
 def parse(handle):
     rows = tab.parse(handle)
-    rows = filter(helpers.involves_rnacentral, rows)
+    rows = filter(op.methodcaller('involves_rnacentral'), rows)
     return rows
 
 
 def parse_and_write(handle, output):
-    data = parse(handle)
-    return None
+    data = (i.writeable() for i in parse(handle))
+    csv.writer(output).writerows(data)

@@ -275,10 +275,6 @@ def process_malacards(data_file, known_sequences, output):
 
 @cli.command('intact')
 @click.argument('data_file', type=click.File('r'))
-@click.argument('output', default='.', type=click.Path(
-    writable=True,
-    dir_okay=True,
-    file_okay=False,
-))
+@click.argument('output', default='interactions.csv', type=click.File('w'))
 def process_intact(data_file, output):
-    intact.parse_and_write(output, data_file)
+    intact.parse_and_write(data_file, output)
