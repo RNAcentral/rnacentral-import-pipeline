@@ -21,5 +21,9 @@ from . import helpers
 def parse(handle):
     rows = tab.parse(handle)
     rows = filter(helpers.involves_rnacentral, rows)
-    rows = map(helpers.as_annotations, rows)
     return rows
+
+
+def parse_and_write(handle, output):
+    data = parse(handle)
+    return None
