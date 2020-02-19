@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Copyright [2009-2018] EMBL-European Bioinformatics Institute
+Copyright [2009-2020] EMBL-European Bioinformatics Institute
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -21,3 +21,4 @@ from .references import *
 from .regions import *
 from .related import *
 from .secondary_structure import *
+from .psi_mi import *
