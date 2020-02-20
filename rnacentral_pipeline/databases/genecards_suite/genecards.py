@@ -15,7 +15,6 @@ limitations under the License.
 
 import typing as ty
 import operator as op
-import itertools as it
 
 from rnacentral_pipeline.databases import data
 from rnacentral_pipeline.databases.helpers import publications as pub
@@ -25,6 +24,11 @@ from .core import parser
 
 
 def parse(handle, known_handle) -> ty.Iterator[data.Entry]:
+    """
+    Parse the given handle of genecard data and the handle of known sequences.
+    This will create a iterable of the entries that are in the file.
+    """
+
     context = Context(
         database='GENECARDS',
         base_url='https://www.genecards.org/cgi-bin/carddisp.pl?gene=%s',
