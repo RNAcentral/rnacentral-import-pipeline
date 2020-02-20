@@ -35,8 +35,8 @@ def parse(handle, known_handle) -> ty.Iterator[data.Entry]:
         urs_field='sourceAccession',
         references=[pub.reference(27899610)]
     )
-    data = parser.parse(context, handle, known_handle)
-    grouped = it.groupby(data, lambda d: d[0].primary_id)
+    parsed = parser.parse(context, handle, known_handle)
+    grouped = it.groupby(parsed, lambda d: d[0].primary_id)
     disease = op.itemgetter('Diseae name')
     for _, items in grouped:
         entries = list(items)
