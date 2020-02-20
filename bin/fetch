@@ -90,6 +90,10 @@ function fetch_generic() {
   case "$remote" in
     *.tar.gz | *.tgz )
       find . -name '*.tar.gz' -or -name '*.tgz' | xargs -I {} tar xvf {} ;;
+    *.gzip )
+      find . -name '*.gzip' | xargs -I {} gunzip {} ;;
+    *.zip )
+      find . -name '*.zip' | xargs -I {} unzip {} ;;
   esac
 }
 
