@@ -62,7 +62,7 @@ function fetch_generic() {
       ;;
 
     http://* | https://* )
-      curl "$remote" > "$pattern"
+      curl -L "$remote" > "$pattern"
       ;;
 
     ftp://* )
