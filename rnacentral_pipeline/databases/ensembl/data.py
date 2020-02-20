@@ -37,6 +37,12 @@ class Context(object):
 
     @classmethod
     def build(cls, family_file, gencode_file=None, excluded_file=None):
+        """
+        Create a Context, by parsing the family file (families from Rfam), and
+        the gencode_file (gff3 file from GENCODE) and excluded_file a list of
+        Ensembl Ids to ignore.
+        """
+
         with open(family_file, 'r') as raw:
             supressed_mapping = rfutils.name_to_suppression(raw)
 
