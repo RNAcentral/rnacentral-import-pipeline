@@ -13,17 +13,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import itertools as it
 import logging
 import operator as op
-import itertools as it
 
 import attr
-
 from Bio import SeqIO
 
 from rnacentral_pipeline.databases import data
-from rnacentral_pipeline.databases.helpers import embl
 from rnacentral_pipeline.databases.gencode import helpers as gencode
+from rnacentral_pipeline.databases.helpers import embl
 
 from . import helpers
 from .data import Context
@@ -31,9 +30,9 @@ from .data import Context
 LOGGER = logging.getLogger(__name__)
 
 IGNORE_FEATURES = {
-    'source',
-    'STS',
-    'misc_feature',
+    "source",
+    "STS",
+    "misc_feature",
 }
 
 
@@ -56,7 +55,7 @@ def as_entry(record, gene, feature, context):
         primary_id=helpers.primary_id(feature),
         accession=helpers.accession(feature),
         ncbi_tax_id=embl.taxid(record),
-        database='ENSEMBL',
+        database="ENSEMBL",
         sequence=sequence,
         regions=helpers.regions(record, feature),
         rna_type=helpers.rna_type(context.inference, feature, xref_data),
@@ -74,15 +73,12 @@ def as_entry(record, gene, feature, context):
         xref_data=xref_data,
         product=helpers.product(feature),
         references=helpers.references(),
-        mol_type='genomic DNA',
-        pseudogene='N',
-        is_composite='N',
+        mol_type="genomic DNA",
+        pseudogene="N",
+        is_composite="N",
     )
 
-    return attr.evolve(
-        entry,
-        description=helpers.description(context, gene, entry)
-    )
+    return attr.evolve(entry, description=helpers.description(context, gene, entry))
 
 
 def ncrnas(raw, context):
@@ -90,7 +86,7 @@ def ncrnas(raw, context):
     This will parse an EMBL file for all Ensembl Entries to import.
     """
 
-    for record in SeqIO.parse(raw, 'embl'):
+    for record in SeqIO.parse(raw, "embl"):
         current_gene = None
         for feature in record.features:
 
@@ -107,7 +103,7 @@ def ncrnas(raw, context):
                 continue
 
             if not helpers.is_ncrna(feature):
-                LOGGER.debug("Skipping feature %s because it is not ncRNA",
+                LOGGER.debug("Skipping feature %s because it is not ncRNA", 
                              feature)
                 continue
 
@@ -129,12 +125,10 @@ def parse(raw, family_file, gencode_file=None, excluded_file=None):
     """
 
     context = Context.build(
-        family_file,
-        gencode_file=gencode_file,
-        excluded_file=excluded_file,
+        family_file, gencode_file=gencode_file, excluded_file=excluded_file,
     )
     loaded = ncrnas(raw, context)
-    grouped = it.groupby(loaded, op.attrgetter('gene'))
+    grouped = it.groupby(loaded, op.attrgetter("gene"))
     for _, related in grouped:
         related = list(related)
         for entry in helpers.generate_related(related):
