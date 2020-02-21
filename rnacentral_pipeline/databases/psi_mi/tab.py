@@ -131,7 +131,7 @@ def as_interactor(row, interactor: data.InteractorType) -> ty.Optional[data.Inte
         'Experimental role(s) interactor': ('experimental_role', identifiers),
         'Type(s) interactor': ('interactor_type', identifiers),
         'Xref(s) interactor': ('xrefs', identifiers),
-        'Annotation(s) interactor': ('annotations', identifiers),
+        'Annotation(s) interactor': ('annotations', str),
         'Feature(s) interactor': ('features', identifiers),
         'Stoichiometry(s) interactor': ('stoichiometry', stoichiometry),
         'Identification method participant': ('participant_identification',
