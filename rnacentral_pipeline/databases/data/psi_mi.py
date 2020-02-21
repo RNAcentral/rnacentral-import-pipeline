@@ -55,7 +55,7 @@ class Interactor:
     experimental_role: ty.List[InteractionIdentifier] = attr.ib(validator=is_a(list))
     interactor_type: ty.List[InteractionIdentifier] = attr.ib(validator=is_a(list))
     xrefs: ty.List[InteractionIdentifier] = attr.ib(validator=is_a(list))
-    annotations: ty.List[InteractionIdentifier] = attr.ib(validator=is_a(list))
+    annotations = attr.ib(validator=is_a(str))
     features: ty.List[InteractionIdentifier] = attr.ib(validator=is_a(list))
     stoichiometry = attr.ib(validator=optional(is_a(int)))
     participant_identification: ty.List[InteractionIdentifier] = attr.ib(validator=is_a(list))
@@ -92,7 +92,7 @@ class Interactor:
         raise ValueError("Could not find a URS/taxid")
 
     def names(self) -> ty.List[str]:
-        names = set()
+        names: ty.Set[str] = set()
         names.update(id.value for id in self.all_ids())
         return sorted(names)
 

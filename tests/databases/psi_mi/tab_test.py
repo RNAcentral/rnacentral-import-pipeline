@@ -24,6 +24,7 @@ from rnacentral_pipeline.databases.psi_mi import tab
     ('psi-mi:q94533_drome(display_long)', 1),
     ('psi-mi:q94533_drome(display_long)|uniprotkb:S6k(gene name)', 2),
     ('psi-mi:q94533_drome(display_long)|uniprotkb:S6k(gene name)|psi-mi:S6k(display_short)|uniprotkb:S6k-RA(gene name synonym)|uniprotkb:10539(gene name synonym)|uniprotkb:7-10(gene name synonym)|uniprotkb:7084(gene name synonym)|uniprotkb:DS6K(gene name synonym)|uniprotkb:Dmel\CG10539(gene name synonym)|uniprotkb:Dp70S6k(gene name synonym)|uniprotkb:Dp70[s6k](gene name synonym)|uniprotkb:Dp70s6k(gene name synonym)|uniprotkb:Pk64F(gene name synonym)|uniprotkb:Pk?6(gene name synonym)|uniprotkb:S6K(gene name synonym)|uniprotkb:S6K1(gene name synonym)|uniprotkb:"S6k|S6K"(gene name synonym)|uniprotkb:dS6K(gene name synonym)|uniprotkb:dS6k(gene name synonym)|uniprotkb:dp70[S6k](gene name synonym)|uniprotkb:dp70s6k(gene name synonym)|uniprotkb:dps6k(gene name synonym)|uniprotkb:ds6k(gene name synonym)|uniprotkb:"fs(3)07084"(gene name synonym)|uniprotkb:"l(3)07084"(gene name synonym)|uniprotkb:p-S6K(gene name synonym)|uniprotkb:p70(gene name synonym)|uniprotkb:p70 S6K(gene name synonym)|uniprotkb:p70S6K(gene name synonym)|uniprotkb:p70[S6 kinase](gene name synonym)|uniprotkb:p70[S6K](gene name synonym)|uniprotkb:p70[S6k](gene name synonym)|uniprotkb:p70[S6kinase](gene name synonym)|uniprotkb:p70s6K(gene name synonym)|uniprotkb:s6k(gene name synonym)|uniprotkb:s6k11(gene name synonym)|uniprotkb:Dmel_CG10539(orf name)|uniprotkb:CG10539(orf name)|uniprotkb:d-S6K(gene name synonym)|uniprotkb:dP70S6K(gene name synonym)|uniprotkb:dS6K1(gene name synonym)', 41),
+    ('"mimix:comment":not sure if the protein origin is right determined, my suggestion is based on fig.1c and 1d description|comment:"DIP protein Q05769 original sequence version: 98"', 2),
 ])
 def test_parses_complex_field(raw, count):
     value = tab.identifiers(raw)
@@ -74,6 +75,7 @@ def test_parses_data_correctly(raw, expected):
 
 @pytest.mark.parametrize('filename,count', [
     ('data/intact/sample.txt', 106),
+    ('data/intact/problems.txt', 6),
 ])
 def test_can_parse_all_data(filename, count):
     with open(filename, 'r') as raw:
