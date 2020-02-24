@@ -27,10 +27,13 @@ import functools as ft
 from pathlib import Path
 from contextlib import ExitStack
 from contextlib import contextmanager
-from xml.etree import cElementTree as ET
 
 import attr
 from attr.validators import instance_of as is_a
+
+from boltons import iterutils
+
+from lxml import etree as ET
 
 from rnacentral_pipeline.databases.data import Reference
 from rnacentral_pipeline.databases.data import IdReference
@@ -44,6 +47,8 @@ from rnacentral_pipeline.databases.europepmc.fetch import lookup
 
 
 LOGGER = logging.getLogger(__name__)
+
+COMMIT_SIZE = 100000
 
 
 class UncachedReference(Exception):
@@ -80,6 +85,7 @@ class Storage(object):
     def open(self, mode='r'):
         self.db = dbm.open(str(self.path), mode)
         yield self
+        self.db.sync()
         self.db.close()
 
     def __normalize_key__(self, raw):
@@ -110,16 +116,18 @@ class Cache(object):
     @classmethod
     def populate_with(cls, base_path, references):
         cache = cls.build(base_path)
-        with cache.open(mode='c') as cache:
-            for reference in references:
-                cache.store(reference)
+        chunks = iterutils.chunked_iter(references, COMMIT_SIZE)
+        for index, chunk in enumerate(chunks):
+            with cache.open(mode='cf') as cache:
+                for reference in chunk:
+                    cache.store(reference)
 
     @contextmanager
     def open(self, mode='r'):
         with ExitStack() as stack:
             for service in KnownServices:
                 storage = self.__storage__(service)
-                db = stack.enter_context(storage.open(mode))
+                stack.enter_context(storage.open(mode))
             yield self
 
     def get(self, id_reference, allow_fallback=False):
@@ -193,9 +201,7 @@ def node_to_reference(node):
 
 
 def parse(xml_file):
-    tree = ET.parse(xml_file)
-    root = tree.getroot()
-    for node in root.findall('./PMC_ARTICLE'):
+    for _, node in ET.iterparse(xml_file, events=('end',), tag='PMC_ARTICLE'):
         ref = node_to_reference(node)
         if not ref:
             continue
@@ -204,8 +210,8 @@ def parse(xml_file):
 
 def parse_directory(directory):
     for filename in glob(os.path.join(directory, '*.xml')):
-        with open(filename, 'r') as xml_file:
-            for ref in list(parse(xml_file)):
+        with open(filename, 'rb') as xml_file:
+            for ref in parse(xml_file):
                 yield ref
 
 
