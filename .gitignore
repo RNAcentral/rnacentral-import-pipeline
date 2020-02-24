@@ -77,3 +77,4 @@ data/gencode/human-transcripts.gff3
 .editorconfig
 data/ensembl/excluded.txt
 data/intact/intact.txt
+*.nix
