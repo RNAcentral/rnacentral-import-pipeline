@@ -77,6 +77,9 @@ from .helpers import load_data
     ('URS0000D50284_7240', 'precursor_RNA', 'Drosophila simulans microRNA dsi-mir-988 precursor'),
     ('URS0000D5657E_7240', 'precursor_RNA', 'Drosophila simulans microRNA dsi-mir-4966 precursor (dsi-mir-4966-3)'),
     ('URS0000C8520A_1196083', 'Snodgrassella alvi strain wkB2 16S ribosomal RNA'),
+    ('URS00001D1383_1299', 'Deinococcus radiodurans Yrn1'),
+    ('URS0000210B3E_216597', 'Salmonella Typhimurium YrlA'),
+    ('URS00002078D9_216597', 'Salmonella Typhimurium YrlB'),
 
     # TODO: Implement the logic required below
     # ('URS000041AF00_274', 'tRNA', 'TRNA-FMET from Thermus thermophilus (29 structures)'),
