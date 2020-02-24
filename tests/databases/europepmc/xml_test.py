@@ -43,7 +43,7 @@ def indexed(indexed_db_path):
 
 
 def test_can_parse_xml_data_correctly():
-    with open('data/publications/example.xml', 'r') as raw:
+    with open('data/publications/example.xml', 'rb') as raw:
         data = list(xml.parse(raw))
         assert len(data) == 1
         assert attr.asdict(data[0]) == attr.asdict(Reference(
