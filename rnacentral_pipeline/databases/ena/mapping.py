@@ -27,7 +27,6 @@ CHROMOSOME_LEVEL_MAPPINGS = set([
 ])
 
 DATABASES = {
-    'SGD',
     'SRPDB',
     'WormBase',
     'dictyBase',
