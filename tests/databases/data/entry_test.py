@@ -34,7 +34,7 @@ def test_cannot_build_entry_without_seq_id():
 
 
 def test_cannot_build_entry_with_empty_seq_id():
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         data.Entry(
             primary_id='a',
             accession='b',
