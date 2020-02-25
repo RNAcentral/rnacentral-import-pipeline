@@ -16,6 +16,7 @@ limitations under the License.
 import csv
 import operator as op
 
+from rnacentral_pipeline.rnacentral.traveler.data import Source
 from rnacentral_pipeline.rnacentral.traveler.data import ModelInfo
 
 
@@ -82,6 +83,7 @@ def parse(handle):
             so_term=so_term,
             taxid=taxid,
             accessions=[],
+            source=Source.ribovision,
             cell_location=location,
         )
 
