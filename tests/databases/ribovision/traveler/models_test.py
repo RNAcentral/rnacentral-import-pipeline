@@ -16,13 +16,13 @@ limitations under the License.
 import pytest
 
 from rnacentral_pipeline.rnacentral.traveler.data import ModelInfo
-from rnacentral_pipeline.databases.ribovision import secondary_models
+from rnacentral_pipeline.databases.ribovision.traveler import models
 
 
 @pytest.fixture()
 def models():
     with open('data/traveler/ribovision/metadata.tsv', 'r') as raw:
-        return list(secondary_models.parse(raw))
+        return list(models.parse(raw))
 
 
 def test_can_parse_data_file(models):
@@ -53,3 +53,4 @@ def test_has_correct_rrna_types(models):
 def test_can_get_correct_cell_location(models, model_id, location):
     model = next(m for m in models if m.model_id == model_id)
     assert model.cell_location == location
+

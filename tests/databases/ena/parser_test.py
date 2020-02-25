@@ -573,7 +573,7 @@ def test_can_parse_anticodon_from_note():
     assert data.locus_tag == 'Msp_0274'
 
 
-@pytest.mark.parameterize('filename,count', [
+@pytest.mark.parametrize('filename,count', [
     ('data/ena/pseudogene.embl', 0),
     ('data/ena/pseudogene-flag.embl', 0),
 ])

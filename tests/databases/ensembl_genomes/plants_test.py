@@ -186,7 +186,7 @@ def test_can_create_tair_entry(cress_2):
     ))
 
 
-@pytest.mark.parameterize('accession,status', [
+@pytest.mark.parametrize('accession,status', [
     ('TAIR:AT2G01010.1', True),
     ('TAIR:ENSRNA049757808-T1', False),
 ])
