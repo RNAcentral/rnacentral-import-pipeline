@@ -17,6 +17,7 @@ import pytest
 
 from rnacentral_pipeline.databases.crw.traveler import models as crw
 from rnacentral_pipeline.rnacentral.traveler.data import ModelInfo
+from rnacentral_pipeline.rnacentral.traveler.data import Source
 
 
 @pytest.fixture()
@@ -40,6 +41,8 @@ def test_can_build_correct_data(parsed):
         so_term='SO:0000587',
         taxid=5400,
         accessions=['U54637'],
+        source=Source.crw,
+        length=-1,
         cell_location='Mitochondrion',
     )
 
@@ -57,6 +60,8 @@ def test_can_handle_multiple_filenames(parsed):
         so_term='SO:0000651',
         taxid=471,
         accessions=['X87280'],
+        source=Source.crw,
+        length=-1,
         cell_location='Nucleus',
     )
 
@@ -66,6 +71,8 @@ def test_can_handle_multiple_filenames(parsed):
         so_term='SO:0000651',
         taxid=471,
         accessions=['X87280'],
+        source=Source.crw,
+        length=-1,
         cell_location='Nucleus',
     )
 

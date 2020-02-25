@@ -16,13 +16,13 @@ limitations under the License.
 import pytest
 
 from rnacentral_pipeline.rnacentral.traveler.data import ModelInfo
-from rnacentral_pipeline.databases.ribovision.traveler import models
+from rnacentral_pipeline.databases.ribovision.traveler import models as parser
 
 
 @pytest.fixture()
 def models():
     with open('data/traveler/ribovision/metadata.tsv', 'r') as raw:
-        return list(models.parse(raw))
+        return list(parser.parse(raw))
 
 
 def test_can_parse_data_file(models):
@@ -36,6 +36,8 @@ def test_can_produce_correct_data(models):
         so_term='SO:0000651',
         taxid=1299,
         accessions=[],
+        source=Source.ribovision,
+        length=-1,
         cell_location=None,
     )
 

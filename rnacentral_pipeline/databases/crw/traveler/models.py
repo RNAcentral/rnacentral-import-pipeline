@@ -18,6 +18,7 @@ import csv
 import operator as op
 
 from rnacentral_pipeline.rnacentral.traveler.data import ModelInfo
+from rnacentral_pipeline.rnacentral.traveler.data import Source
 
 SO_TERM_MAPPING = {
     '16S': 'SO:0000650',
@@ -78,6 +79,7 @@ def parse(handle):
                 so_term=as_so_term(info['rna_class']),
                 taxid=as_taxid(info['tax_id']),
                 accessions=row['accession(s)'].split(','),
+                source=Source.crw,
                 cell_location=info['cell_location'],
             )
 
