@@ -206,13 +206,16 @@ def parse(xml_file):
         if not ref:
             continue
         yield ref
+        # Prevents building the whole XML tree in memory.
+        # https://stackoverflow.com/questions/9809469/python-sax-to-lxml-for-80gb-xml/9814580#9814580
+        # Could remove more things but this is ok.
+        node.clear()
 
 
 def parse_directory(directory):
     for filename in glob(os.path.join(directory, '*.xml')):
-        with open(filename, 'rb') as xml_file:
-            for ref in parse(xml_file):
-                yield ref
+        for ref in parse(filename):
+            yield ref
 
 
 def index_directory(directory, output):

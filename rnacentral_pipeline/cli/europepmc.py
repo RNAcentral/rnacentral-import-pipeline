@@ -15,8 +15,7 @@ limitations under the License.
 
 import click
 
-from rnacentral_pipeline.databases.europepmc import xml
-from rnacentral_pipeline.databases.europepmc import fetch
+from rnacentral_pipeline.databases.europepmc import fetch, stream, xml
 
 
 @click.group("europepmc")
@@ -79,3 +78,21 @@ def lookup(db, ids, output, column=0, allow_fallback=False, ignore_missing=True)
         allow_fallback=allow_fallback,
         ignore_missing=ignore_missing,
     )
+
+
+@cli.command('stream-lookup')
+@click.option('--column', default=0)
+@click.option('--allow-fallback/--no-allow-fallback', default=False)
+@click.option('--ignore-missing/--no-ignore-missing', default=True)
+@click.argument('directory', default='out', type=click.Path())
+@click.argument('ids', default='ref_ids.csv', type=click.File('r'))
+@click.argument(
+    'output',
+    default='references.csv',
+    type=click.File('w'))
+def stream_lookup(directory, ids, output, column=0, allow_fallback=False, ignore_missing=True):
+    """
+    Load all ids to write in 
+    """
+    stream.write_lookup(ids, directory, output, column=column,
+                        allow_fallback=allow_fallback)
