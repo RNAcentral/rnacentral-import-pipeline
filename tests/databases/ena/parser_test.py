@@ -69,7 +69,7 @@ def test_creates_simple_entry():
         database='ENA',
         sequence='GCCCGGATGGTCTAGTGGTATGATTCTCCCTTCGGGGGCAGCGCCCGGTACATAATAACATGTATCAGAAATGGGAGAGGTCCCGCGTTCGAATCGCGGTTCGGGCC',
         regions=[],
-        rna_type='tRNA',
+        rna_type='SO:0000253',  # Ideally SO:0000268
         url='https://www.ebi.ac.uk/ena/data/view/Non-coding:AACD01000002.1:101667..101773:tRNA',
         seq_version='1',
         xref_data={'ena_refs': {'BIOSAMPLE': ('SAMN02953587', None)}},
@@ -292,7 +292,7 @@ def test_can_parse_all_example_entries():
         database='ENA',
         sequence="ATTGGGGAGTGAGAAGGAGAGAACGCGGTCTGAA",
         regions=[],
-        rna_type='misc_RNA',
+        rna_type='SO:0000673',
         url='https://www.ebi.ac.uk/ena/data/view/Non-coding:AB330787.1:1..34:misc_RNA',
         seq_version='1',
         lineage=(
@@ -324,7 +324,7 @@ def test_can_parse_all_example_entries():
         ncbi_tax_id=9606,
         sequence='ATTGCAGTACCTCCAGGAACGGTGCAC',
         regions=[],
-        rna_type='misc_RNA',
+        rna_type='SO:0000673',
         url='https://www.ebi.ac.uk/ena/data/view/Non-coding:AB330786.1:1..27:misc_RNA',
         seq_version='1',
         xref_data={'ena_refs': {'RFAM': ('RF00005', 'tRNA')}},
@@ -357,7 +357,7 @@ def test_can_parse_all_example_entries():
         ncbi_tax_id=9606,
         sequence='CGCGACCTCAGATCAGACGTGGCGACCCGCTGAA',
         regions=[],
-        rna_type='misc_RNA',
+        rna_type='SO:0000673',
         url='https://www.ebi.ac.uk/ena/data/view/Non-coding:AB330785.1:1..34:misc_RNA',
         seq_version='1',
         xref_data={'ena_refs': {'SRPDB': ('Xeno.laev._DC015625', None)}},
@@ -489,7 +489,7 @@ def test_can_parse_all_example_entries():
     #     primary_id='',
     #     accession='BX284601.5:1693190..1693457:ncRNA',
     #     database='ENA',
-    #     rna_type='snoRNA',
+    #     rna_type='SO:0000275',
     #     product="RNA transcript Y71G12B.41",
     #     standard_name="Y71G12B.41",
     #     locus_tag="CELE_Y71G12B.41",
@@ -503,7 +503,7 @@ def test_can_parse_all_example_entries():
     #     accession='CU329672.1:1601457..1602924:misc_RNA',
     #     database='ENA',
     #     ncbi_tax_id=4896,
-    #     rna_type='misc_RNA'
+    #     rna_type='SO:0000673'
     #     mol_type='genomic DNA',
     #     locus_tag="SPNCRNA.1210",
     #     chromosome='III',
@@ -647,7 +647,7 @@ def test_can_extract_references_from_experiment(pmid):
         data = next(parse(raw))
 
     assert data.accession == 'HG975378.1:1..299:ncRNA'
-    assert data.rna_type == 'SRP_RNA'
+    assert data.rna_type == 'SO:0000590'
     assert data.experiment == 'EXISTENCE: lncRNAdb literature review [PMID: 12244299,6196367,6181418,6802847,3403542,6084597,10924331, 7528809,7529207,1704372,20610725,18617187,17881443, 17164479,8389475,10834842,10684931,15611297,20668672, 911771,6209580]'
     assert data.gene == 'RN7SL1'
     assert data.mol_type == 'transcribed RNA'
@@ -708,12 +708,12 @@ def test_can_handle_mislabled_trna():
     with open('data/ena/mislabeled-trna.embl', 'r') as raw:
         data = list(parse(raw))
 
-    assert data[0].rna_type == 'tRNA'
+    assert data[0].rna_type == 'SO:0000253'
 
 
 @pytest.mark.parametrize('index,rna_type', [
-    (0, 'rRNA'),
-    (1, 'rRNA'),
+    (0, 'SO:0000252'),
+    (1, 'SO:0000252'),
 ])
 def test_can_handle_weird_feature(index, rna_type):
     with open('data/ena/bad-feature-type.ncr', 'r') as raw:
@@ -723,9 +723,9 @@ def test_can_handle_weird_feature(index, rna_type):
 
 
 @pytest.mark.parametrize('index,rna_type', [
-    (0, 'guide_RNA'),
-    (1, 'snoRNA'),
-    (2, 'guide_RNA'),
+    (0, 'SO:0000602'),
+    (1, 'SO:0000275'),
+    (2, 'SO:0000602'),
 ])
 def test_can_get_scarna_feature(index, rna_type):
     with open('data/ena/scarna.ncr', 'r') as raw:
@@ -738,7 +738,7 @@ def test_deals_with_crazy_long_name():
     with open('data/ena/too-long-description.ncr', 'r') as raw:
         data = list(parse(raw))
 
-    assert data[0].rna_type == 'snoRNA'
+    assert data[0].rna_type == 'SO:0000275'
     assert data[0].description == 'Leishmania donovani snoRNA.05.001'
     assert data[0].locus_tag == "LDHU3_LDHU3_05.T1400"
     # assert data[0].product == 'snoRNA'
