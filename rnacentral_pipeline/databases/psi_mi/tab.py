@@ -111,7 +111,11 @@ def as_pubs(value):
     refs = []
     for ident in identifiers(value):
         if ident.key == 'pubmed':
-            refs.append(pubs.reference(ident.value))
+            try:
+                refs.append(pubs.reference(ident.value))
+            except data.UnknownPublicationType:
+                LOGGER.warn("Could not handle publication %s", ident)
+                pass
     return refs
 
 
