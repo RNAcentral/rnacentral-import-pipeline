@@ -180,13 +180,12 @@ process process_data {
 processed_output = Channel.create()
 refs = Channel.create()
 terms = Channel.create()
-refs_database = Channel.create()
 
 all_processed_output
   .mix(all_fetched_and_processed_output)
   .filter { f -> !f.isEmpty() }
-  .choice(processed_output, terms, refs, refs_database) { f ->
-    def names = ["terms.csv", "ref_ids.csv", params.metadata.europepmc.process.produces]
+  .choice(processed_output, terms, refs) { f ->
+    def names = ["terms.csv", "ref_ids.csv"]
     return names.indexOf(f.getName()) + 1
   }
 
@@ -226,6 +225,15 @@ process merge_and_split_all_publications {
   """
 }
 
+process fetch_publications {
+  output:
+  file('out') into refs_database
+
+  """
+  fetch europepmc http://europepmc.org/ftp/pmclitemetadata/PMCLiteMetadata.tgz out
+  """
+}
+
 split_references
   .flatten()
   .combine(refs_database)
@@ -235,14 +243,14 @@ process lookup_publications {
   maxForks params.lookup_publications.maxForks
 
   input:
-  set file(refs), file(db) from refs_to_lookup
+  set file(refs), file(pubs) from refs_to_lookup
 
   output:
   file("references.csv") into references_output
 
   script:
   """
-  rnac europepmc lookup --allow-fallback $db $refs references.csv
+  rnac europepmc stream-lookup --allow-fallback $pubs $refs references.csv
   """
 }
 
