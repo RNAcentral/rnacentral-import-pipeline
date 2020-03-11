@@ -14,13 +14,10 @@ limitations under the License.
 """
 
 import re
-import unicodedata
 
 import attr
-from attr.validators import and_
 from attr.validators import optional
 from attr.validators import instance_of as is_a
-from attr.validators import in_ as one_of
 
 SO_PATTERN = re.compile(r'^SO:\d+$')
 
@@ -125,26 +122,10 @@ def matches_pattern(pattern):
     return fn
 
 
-def as_so_term(rna_type):
+def as_so_term(rna_type: str) -> str:
     if re.match(SO_PATTERN, rna_type):
         return rna_type
 
     if rna_type not in INSDC_SO_MAPPING:
         raise UnxpectedRnaType(rna_type)
     return INSDC_SO_MAPPING[rna_type]
-
-
-def from_so_term(so_term):
-    if so_term in NORMALIZE_TO_INSDC:
-        return str(NORMALIZE_TO_INSDC[so_term])
-    if so_term in INSDC_SO_MAPPING:
-        return str(so_term)
-    if so_term in SO_INSDC_MAPPING:
-        return str(SO_INSDC_MAPPING[so_term])
-    raise UnxpectedRnaType(so_term)
-
-
-def optional_utf8(raw):
-    if raw is None:
-        return None
-    return raw
