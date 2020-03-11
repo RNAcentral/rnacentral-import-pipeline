@@ -34,11 +34,11 @@ from .secondary_structure import SecondaryStructure
 LOGGER = logging.getLogger(__name__)
 
 FEATURE_TYPE_RNAS = set([
-    'rRNA',
-    'tRNA',
-    'precursor_RNA',
-    'tmRNA',
-    'misc_RNA',
+    'SO:0000252',
+    'SO:0000253',
+    # 'precursor_RNA',
+    'SO:0000584',
+    'SO:0000673',
 ])
 
 
@@ -64,9 +64,8 @@ class Entry(object):
     # exons = attr.ib(validator=is_a(list))
     regions = attr.ib(validator=is_a(list))
     rna_type = attr.ib(
-        validator=is_a(str),
-        # validator=matches_pattern(SO_PATTERN),
-        converter=utils.from_so_term,
+        validator=utils.matches_pattern(utils.SO_PATTERN),
+        converter=utils.as_so_term,
     )
     url = attr.ib(validator=is_a(str), converter=str)
     seq_version = attr.ib(
@@ -155,7 +154,7 @@ class Entry(object):
         Return the feature for the RNA type.
         """
         if self.rna_type in FEATURE_TYPE_RNAS:
-            return self.rna_type
+            return utils.SO_INSDC_MAPPING[self.rna_type]
         return 'ncRNA'
 
     @property
@@ -166,7 +165,7 @@ class Entry(object):
         """
         if self.feature_name != 'ncRNA':
             return None
-        return self.rna_type
+        return utils.SO_INSDC_MAPPING[self.rna_type]
 
     @property
     def gene_synonym(self):
@@ -284,7 +283,7 @@ class Entry(object):
             self.pseudogene,
             self.standard_name,
             self.db_xrefs,
-            # self.rna_type,
+            self.rna_type,
         ]
 
     def write_secondary_structure(self):
