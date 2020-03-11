@@ -30,7 +30,6 @@ from rnacentral_pipeline.databases.ena.parser import parse
     ('data/ena/tpa/srpdb/mapping.tsv', 855),
     ('data/ena/tpa/tmrna/mapping.tsv', 21318),
     ('data/ena/tpa/wormbase/mapping.tsv', 27665),
-    ('data/ena/tpa/pombase/mapping.tsv', 4292),
     ('data/ena/tpa/tair/mapping.tsv', 1290),
 ])
 def test_can_parse_complete_tpa_files(filename, count):
@@ -45,7 +44,6 @@ def test_can_parse_complete_tpa_files(filename, count):
     ('data/ena/tpa/srpdb/mapping.tsv', 855),
     ('data/ena/tpa/tmrna/mapping.tsv', 21318),
     ('data/ena/tpa/wormbase/mapping.tsv', 27665),
-    ('data/ena/tpa/pombase/mapping.tsv', 4292),
     # ('data/ena/tpa/tair/mapping.tsv', 1290),
 ])
 def test_can_produce_correct_number_of_tpa_keys_from_tpa_file(filename, count):
@@ -111,18 +109,6 @@ def test_can_build_correct_wormbase_tpas():
         'WBGene00001734',
         'ZK643.8b',
         'BX284603',
-        None,
-    )
-
-
-def test_can_build_correct_pombase_tpas():
-    with open('data/ena/tpa/pombase/mapping.tsv', 'r') as raw:
-        data = next(tpa.parse_tpa_file(raw))
-    assert data == tpa.GenericTpa(
-        'POMBASE',
-        'ENSRNA049622790',
-        'Schizosaccharomyces_pombe',
-        'CU329672',
         None,
     )
 
@@ -460,20 +446,6 @@ def test_can_apply_wormbase_tpas():
     assert mapped[0].accession == 'BX284603.4:8962295..8965569:misc_RNA:WORMBASE:WBGene00001734'
 
 
-def test_can_apply_pombase_tpas():
-    mapping = tpa.load_file('data/ena/tpa/pombase/mapping.tsv')
-
-    with open('data/ena/tpa/pombase/entry.embl', 'r') as raw:
-        entries = list(parse(raw))
-    assert entries
-
-    mapped = list(tpa.apply(mapping, entries))
-    assert len(mapped) == len(entries)
-
-    assert mapped[0].database == 'POMBASE'
-    assert mapped[0].accession == 'CU329670.1:1005499..1005710:misc_RNA:POMBASE:SPNCRNA.164'
-
-
 def test_can_apply_mirbase_tpas():
     mapping = tpa.load_file('data/ena/tpa/mirbase/mapping.tsv')
     with open('data/ena/tpa/mirbase/entry.embl', 'r') as raw:
@@ -497,7 +469,6 @@ def test_url_builder_can_build_url(name):
 @pytest.mark.parametrize('filename,fails', [
     ('data/ena/tpa/lncrnadb/mapping.tsv', True),
     ('data/ena/tpa/mirbase/mapping.tsv', True),
-    ('data/ena/tpa/pombase/mapping.tsv', True),
     ('data/ena/tpa/snopy/mapping.tsv', True),
     ('data/ena/tpa/srpdb/mapping.tsv', True),
     ('data/ena/tpa/tair/mapping.tsv', True),
