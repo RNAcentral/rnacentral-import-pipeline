@@ -162,17 +162,17 @@ def generate_related(entries):
                 continue
 
             relationship = 'isoform'
-            if first.rna_type == 'precursor_RNA':
-                if second.rna_type == 'miRNA':
+            if first.rna_type == 'SO:0001244':
+                if second.rna_type == 'SO:0000276':
                     relationship = 'mature_product'
                 else:
                     msg = "Unknown type of relationship between %s\t%s"
                     raise ValueError(msg % (first, second))
 
-            elif first.rna_type == 'miRNA':
-                if second.rna_type == 'precursor_RNA':
+            elif first.rna_type == 'SO:0000276':
+                if second.rna_type == 'SO:0001244':
                     relationship = "precursor"
-                elif second.rna_type == 'miRNA':
+                elif second.rna_type == 'SO:0000276':
                     continue
                 else:
                     msg = "Unknown type of relationship between %s\t%s"
