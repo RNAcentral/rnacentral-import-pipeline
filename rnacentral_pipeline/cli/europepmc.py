@@ -95,4 +95,5 @@ def stream_lookup(directory, ids, output, column=0, allow_fallback=False, ignore
     Load all ids to write in 
     """
     stream.write_lookup(ids, directory, output, column=column,
+                        ignore_missing=ignore_missing,
                         allow_fallback=allow_fallback)
