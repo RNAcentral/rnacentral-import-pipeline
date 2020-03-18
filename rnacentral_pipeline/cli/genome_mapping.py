@@ -18,6 +18,7 @@ import click
 
 from rnacentral_pipeline.rnacentral.genome_mapping import urls
 from rnacentral_pipeline.rnacentral.genome_mapping import blat
+from rnacentral_pipeline.rnacentral.genome_mapping import attempted
 
 
 @click.group('genome-mapping')
@@ -99,3 +100,12 @@ def find_remote_urls(filename, output):
     output file and may include '*'.
     """
     urls.write_urls_for(filename, output)
+
+
+@cli.command('create-attempted')
+@click.argument('filename', type=click.File('r'))
+@click.argument('taxid')
+@click.argument('assembly_id')
+@click.argument('output', type=click.File('w'))
+def parse_attempted_sequences(filename, taxid, assembly_id, output):
+    attempted.write(filename, taxid, assembly_id, output)
