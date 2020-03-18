@@ -552,6 +552,7 @@ process fetch_unmapped_sequences {
 
   output:
   set species, file('parts/*.fasta') into split_mappable_sequences
+  file('attempted.csv') into genome_mapping_attempted_sequences
 
   """
   psql \
@@ -568,6 +569,8 @@ process fetch_unmapped_sequences {
     --max-nucleotides ${params.genome_mapping.fetch_unmapped_sequences.nucleotides_per_chunk} \
     --max-sequences ${params.genome_mapping.fetch_unmapped_sequences.sequences_per_chunk} \
       shuffled.fasta parts
+
+  rnac genome-mapping create-attempted raw.json $assembly_id attempted.csv
   """
 }
 
@@ -674,12 +677,18 @@ selected_locations
   .collect()
   .set { blat_to_import }
 
+genome_mapping_attempted_sequences
+  .collect()
+  .combine(Channel.fromPath('files/genome-mapping/attempted.ctl'))
+  .set { genome_mapping_attempted }
+
 process load_genome_mapping {
   maxForks 1
 
   input:
   file('raw*.csv') from blat_to_import
   file(ctl) from Channel.fromPath('files/genome-mapping/load.ctl')
+  tuple file('attempted*.csv'), file(attempted_ctl) from genome_mapping_attempted
 
   output:
   val('done') into genome_mapping_status
@@ -687,6 +696,7 @@ process load_genome_mapping {
   script:
   """
   split-and-load $ctl 'raw*.csv' ${params.import_data.chunk_size} genome-mapping
+  split-and-load $attempted_ctl 'attempted*.csv' ${params.import_data.chunk_size} genome-mapping-attempted
   """
 }
 
