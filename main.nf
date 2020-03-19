@@ -372,6 +372,7 @@ process fetch_qa_sequences {
 
   output:
   set val(name), file('parts/*.fasta') into split_qa_sequences
+  set val(name), file('attempted.csv') into qa_track_attempted
 
   script:
   """
@@ -379,6 +380,8 @@ process fetch_qa_sequences {
   json2fasta.py raw.json rnacentral.fasta
   seqkit shuffle --two-pass rnacentral.fasta > shuffled.fasta
   seqkit split --two-pass --by-size ${params.qa[name].chunk_size} --out-dir 'parts/' shuffled.fasta
+
+  rnac qa create-attempted raw.json $name attempted.csv
   """
 }
 
@@ -493,19 +496,24 @@ qa_scan_results
     }
     status
   }
+  .join(qa_track_attempted)
+  .map { n, files, ctl, attempted -> 
+    [n, files, ctl, attempted, file("files/qa/attempted/${n}.ctl")]
+  }
   .set { hits_to_import }
 
 process import_qa_data {
   tag { "qa-$name" }
 
   input:
-  set val(name), file('raw*.csv'), file(ctl) from hits_to_import
+  set val(name), file('raw*.csv'), file(ctl), file('attempted*.csv'), file(attempted_ctl) from hits_to_import
 
   output:
   val("$name done") into qa_imported
 
   """
   split-and-load $ctl 'raw*.csv' ${params.import_data.chunk_size} $name
+  split-and-load $attempted_ctl 'attempted*.csv' ${params.import_data.chunk_size} attempted-$name
   """
 }
 
