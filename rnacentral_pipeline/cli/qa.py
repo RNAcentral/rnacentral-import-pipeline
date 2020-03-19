@@ -17,6 +17,7 @@ import click
 
 from rnacentral_pipeline.databases import rfam
 from rnacentral_pipeline.databases import dfam
+from rnacentral_pipeline.rnacentral import attempted
 
 
 @click.group("qa")
@@ -48,3 +49,11 @@ def process_dfam(data, output):
     format.
     """
     dfam.as_csv(data, output)
+
+
+@cli.command('create-attempted')
+@click.argument('filename', type=click.File('r'))
+@click.argument('name')
+@click.argument('output', type=click.File('w'))
+def track_attempted(filename, name, output):
+    attempted.qa(filename, name, output)
