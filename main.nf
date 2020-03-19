@@ -374,9 +374,12 @@ process fetch_qa_sequences {
   set val(name), file('parts/*.fasta') into split_qa_sequences
 
   script:
-  chunk_size = params.qa[name].chunk_size
-  variables = ""
-  template 'query-and-split.sh'
+  """
+  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > raw.json
+  json2fasta.py raw.json rnacentral.fasta
+  seqkit shuffle --two-pass rnacentral.fasta > shuffled.fasta
+  seqkit split --two-pass --by-size ${params.qa[name].chunk_size} --out-dir 'parts/' shuffled.fasta
+  """
 }
 
 process generate_qa_scan_files {
