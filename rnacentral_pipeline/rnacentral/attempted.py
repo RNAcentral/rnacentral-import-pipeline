@@ -18,12 +18,30 @@ import csv
 from rnacentral_pipeline import psql
 
 
-def parse(handle, taxid, assembly_id):
+def access_id(entry):
+    return entry['id']
+
+
+def append_taxid(taxid):
+    def fn(entry):
+        urs = access_id(entry)
+        return f"{urs}_{taxid}"
+    return fn
+
+
+def parse(handle, id_generator, extra_fields=[]):
     for entry in psql.json_handler(handle):
-        urs_taxid = f"{entry['id']}_{taxid}"
-        yield [urs_taxid, assembly_id]
+        yield [id_generator(entry)] + extra_fields
 
 
-def write(handle, taxid, assembly_id, output):
+def write(handle, id_generator, output, extra_fields=[]):
     writer = csv.writer(output)
-    writer.writerows(parse(handle, assembly_id))
+    writer.writerows(parse(handle, id_generator, extra_fields=extra_fields))
+
+
+def genome_mapping(handle, taxid, assembly_id, output):
+    write(handle, append_taxid(taxid), output, extra_fields=[assembly_id])
+
+
+def qa(handle, name, output):
+    write(handle, access_id, output, extra_fields=[name])
