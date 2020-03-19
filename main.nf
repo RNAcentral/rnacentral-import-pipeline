@@ -515,21 +515,30 @@ qa_imported
 // Genome mapping
 //=============================================================================
 
-process species_to_map {
-  executor 'local'
-
+process genome_mapping_setup {
   when:
   params.genome_mapping.run
 
   input:
   val(flag) from flag_for_mapping
-  file(query) from Channel.fromPath('files/genome-mapping/mappable.sql')
+  file(setup) from Channel.fromPath('files/genome-mapping/setup.sql')
+  file(query) from Channel.fromPath('files/genome-mapping/find-species.sql')
 
   output:
-  stdout into raw_genomes
+  file('species.csv') into raw_genomes
 
   """
-  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE"
+  psql \
+    -v ON_ERROR_STOP=1 \
+    -v tablename=${params.genome_mapping.to_map_table} \
+    -v species_to_map=${params.genome_mapping.species_table} \
+    -v min_length=${params.genome_mapping.min_length} \
+    -v max_length=${params.genome_mapping.max_length} \
+    -f "$setup" "$PGDATABASE"
+  psql \
+    -v ON_ERROR_STOP=1 \
+    -v species_to_map=${params.genome_mapping.species_table} \
+    -f "$query" "$PGDATABASE" > species.csv
   """
 }
 
@@ -559,8 +568,6 @@ process fetch_unmapped_sequences {
     -v ON_ERROR_STOP=1 \
     -v taxid=$taxid \
     -v assembly_id=$assembly_id \
-    -v min_length=${params.genome_mapping.min_length} \
-    -v max_length=${params.genome_mapping.max_length} \
     -f "$query" \
     "$PGDATABASE" > raw.json
   json2fasta.py raw.json rnacentral.fasta
@@ -697,6 +704,7 @@ process load_genome_mapping {
   """
   split-and-load $ctl 'raw*.csv' ${params.import_data.chunk_size} genome-mapping
   split-and-load $attempted_ctl 'attempted*.csv' ${params.import_data.chunk_size} genome-mapping-attempted
+  psql -v ON_ERROR_STOP=1 -v tablename=params.genome_mapping.to_map_table -c 'DROP TABLE :tablename' $PGDATABASE
   """
 }
 
