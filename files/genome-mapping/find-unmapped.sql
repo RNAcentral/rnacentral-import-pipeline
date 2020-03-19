@@ -7,4 +7,5 @@ json_build_object(
 FROM :tablename to_map
 WHERE
   to_map.taxid = :taxid
+  AND to_map.assembly_id = :assembly_id
 ) TO STDOUT
