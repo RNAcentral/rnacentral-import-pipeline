@@ -43,13 +43,6 @@ SET
   model = excluded.model
 ;
 
--- Delete already computed
-DELETE FROM :tablename urs
-USING rnc_secondary_structure_layout layout
-WHERE
-  layout.urs = urs.upi
-;
-
 -- Delete incomplete sequences
 DELETE FROM :tablename to_draw
 USING qa_status qa 
@@ -65,4 +58,11 @@ USING rnc_rna_precomputed pre
 WHERE
   to_draw.upi = pre.upi
   and pre.rna_type = 'lncRNA'
+;
+
+-- Delete all attempted sequences
+DELETE FROM :tablename to_draw
+USING pipeline_tracking_traveler done
+WHERE 
+  to_draw.upi = done.urs
 ;
