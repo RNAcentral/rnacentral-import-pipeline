@@ -17,22 +17,7 @@ WITH
     fields escaped by double-quote,
     fields terminated by ','
 
-BEFORE LOAD DO
-$$
-drop table if exists load_genome_mapping_attempted;
-$$,
-$$
-create table load_genome_mapping_attempted (
-    urs_taxid text not null,
-    assembly_id text not null,
-    last_run datetime not null
-);
-$$
-
 AFTER LOAD DO
-$$
-CREATE INDEX ix_mapped_assemblies ON mapped_assemblies (assembly_id);
-$$,
 $$
 INSERT INTO pipeline_tracking_genome_mapping (
     urs_taxid,
@@ -48,8 +33,5 @@ FROM load_genome_mapping_attempted load
 SET 
         last_run = EXCLUDED.last_run
 ;
-$$,
-$$
-DROP TABLE load_genome_mapping_attempted;
 $$
 ;

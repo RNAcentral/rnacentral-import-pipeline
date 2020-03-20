@@ -885,7 +885,7 @@ process find_possible_traveler_sequences {
 
   output:
   set val(model), file('parts/*.fasta') into to_layout mode flatten
-  set val(model), file('rnacentral.fasta') into traveler_expected_sequences
+  file('attempted.csv') into traveler_attempted_sequences
 
   script:
   def chunk_size = params.secondary.sequence_chunk_size
@@ -898,6 +898,8 @@ process find_possible_traveler_sequences {
   json2fasta.py raw.json rnacentral.fasta
   seqkit shuffle --two-pass rnacentral.fasta > shuffled.fasta
   seqkit split --two-pass --by-size ${chunk_size} --out-dir 'parts/' shuffled.fasta
+
+  rnac traveler create-attempted raw.json attempted.csv
   """
 }
 
@@ -923,7 +925,6 @@ process layout_sequences {
 
 
 process parse_layout {
-
   input:
   set val(family), file(to_parse) from secondary_to_parse
 
@@ -940,73 +941,21 @@ secondary_to_import
   .map { [it, file("files/traveler/load.ctl"), file("files/traveler/find-rna-types.sql")] }
   .set { secondary_to_import }
 
+traveler_attempted_sequences
+  .collect()
+  .combine(Channel.fromPath('files/traveler/attempted.ctl'))
+  .set { traveler_attempted }
+
 process store_secondary_structures {
   memory params.secondary.store.memory
 
   input:
   set file('data*.csv'), file(ctl), file(rna_types_sql) from secondary_to_import
-
-  output:
-  file('built') into traveler_success
-  file('rna-types.txt') into traveler_rna_types
+  set file('attempted*.csv'), file(attempted_ctl) from traveler_attempted
 
   """
   split-and-load $ctl 'data*.csv' ${params.secondary.data_chunk_size} traveler-data
-  find . -name 'data*.csv' | xargs -I {} cut -d, -f1 {} | tr -d '"' | sort > built
-  psql -v ON_ERROR_STOP=1 -f $rna_types_sql $PGDATABASE > rna-types.txt
-  """
-}
-
-traveler_rna_types
-  .splitCsv()
-  .combine(Channel.fromPath("files/traveler/export-hits.sql"))
-  .set { traveler_to_score }
-
-process traveler_compute_should_show {
-  tag { "${model_type}-${rna_type}" }
-  memory params.secondary.should_show.memory
-
-  input:
-  set val(model_type), val(rna_type), file(export) from traveler_to_score
-
-  output:
-  file('should-show.csv') into traveler_should_show
-
-  """
-  psql \
-    -v ON_ERROR_STOP=1 \
-    -v rna_type=$rna_type \
-    -v model_type=$model_type \
-    -f $export $PGDATABASE > data.csv
-  rnac traveler should-show data.csv should-show.csv
-  """
-}
-
-process traveler_load_should_show {
-  input:
-  file('raw*.csv') from traveler_should_show.collect()
-  file(ctl) from Channel.fromPath('files/traveler/update-should-show.ctl')
-
-  """
-  split-and-load $ctl 'raw*.csv' ${params.secondary.data_chunk_size} traveler-data
-  psql -v ON_ERROR_STOP=1 -c 'DROP TABLE ${params.secondary.tablename}' $PGDATABASE
-  """
-}
-
-process find_traveler_failures {
-  publishDir "$baseDir/traveler"
-
-  input:
-  file('expected*.fasta') from traveler_expected_sequences.collect()
-  file('built') from traveler_success
-
-  output:
-  file('failures.txt') into traveler_failures
-
-  """
-  find . -name 'expected*.fasta' |\
-  xargs -I {} seqkit seq -ni {} | sort -u > expected
-  comm -23 expected built > failures.txt
+  split-and-load $attempted_ctl 'attemped*.csv' ${params.secondary.data_chunk_size} traveler-attempted
   """
 }
 
