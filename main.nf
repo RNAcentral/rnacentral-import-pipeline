@@ -240,6 +240,7 @@ split_references
   .set { refs_to_lookup }
 
 process lookup_publications {
+  memory 4.GB
   maxForks params.lookup_publications.maxForks
 
   input:
@@ -250,7 +251,7 @@ process lookup_publications {
 
   script:
   """
-  rnac europepmc stream-lookup --allow-fallback $pubs $refs references.csv
+  rnac europepmc stream-lookup --ignore-missing --allow-fallback $pubs $refs references.csv
   """
 }
 
@@ -380,6 +381,8 @@ flag_for_qa
   .set { qa_queries }
 
 process fetch_qa_sequences {
+  memory 12.GB
+
   input:
   set val(status), val(name), file(query) from qa_queries
 
@@ -608,6 +611,7 @@ process fetch_unmapped_sequences {
 process download_genome {
   tag { species }
   memory { params.genome_mapping.download_genome.directives.memory }
+  errorStrategy 'ignore'
 
   input:
   set val(species), val(assembly), val(taxid), val(division) from genomes_to_fetch
