@@ -254,6 +254,18 @@ process lookup_publications {
   """
 }
 
+process create_load_tables {
+  input:
+  file(create) from Channel.fromPath('files/schema/create_load.sql')
+
+  output:
+  val(flag) into created_tables
+
+  """
+  psql -v ON_ERROR_STOP=1 -f $create "$PGDATABASE"
+  """
+}
+
 //=============================================================================
 // Import and release data
 //=============================================================================
@@ -279,6 +291,7 @@ raw_output
   }
   .groupTuple()
   .map { it -> [it[0][0], it[0][1], it[1]] }
+  .combine(created_tables)
   .set { to_load }
 
 process merge_and_import {
@@ -286,7 +299,7 @@ process merge_and_import {
   tag { name }
 
   input:
-  set val(name), file(ctl), file('raw*.csv') from to_load
+  set val(name), file(ctl), file('raw*.csv'), val(flag) from to_load
 
   output:
   val(name) into (pre_loaded, post_loaded)
