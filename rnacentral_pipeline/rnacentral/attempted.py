@@ -45,3 +45,7 @@ def genome_mapping(handle, taxid, assembly_id, output):
 
 def qa(handle, name, output):
     write(handle, access_id, output, extra_fields=[name])
+
+
+def traveler(handle, output):
+    write(handle, access_id, output)
