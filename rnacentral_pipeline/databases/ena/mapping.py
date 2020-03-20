@@ -29,7 +29,6 @@ CHROMOSOME_LEVEL_MAPPINGS = set([
 DATABASES = {
     'SRPDB',
     'WormBase',
-    'dictyBase',
     'lncRNAdb',
     'snOPYdb',
     'tmRNA-Website',
