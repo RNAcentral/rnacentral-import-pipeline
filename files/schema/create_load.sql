@@ -18,7 +18,7 @@ CREATE TABLE load_assemblies (
   subdomain varchar(100) NOT NULL
 );
 
-DROP TABLE IF NOT EXISTS load_compara;
+DROP TABLE IF EXISTS load_compara;
 CREATE TABLE load_compara (
   homology_group text not null,
   ensembl_transcript text not null
@@ -43,7 +43,7 @@ DROP TABLE IF EXISTS load_genome_mapping_attempted;
 CREATE TABLE load_genome_mapping_attempted (
   urs_taxid text not null,
   assembly_id text not null,
-  last_run datetime not null
+  last_run timestamp not null
 );
 
 DROP TABLE IF EXISTS load_assemblies;
@@ -82,7 +82,7 @@ DROP TABLE IF EXISTS load_rfam_model_hits;
 CREATE TABLE load_rfam_model_hits (
   urs text PRIMARY KEY REFERENCES rna(upi),
   qa_analysis text NOT NULL,
-  last_done datetime NOT NULL
+  last_done timestamp NOT NULL
 );
 
 DROP TABLE IF EXISTS load_rnc_sequence_features;
@@ -294,8 +294,8 @@ CREATE TABLE load_rfam_model_hits (
   upi character varying(13) COLLATE pg_catalog."default" NOT NULL
 );
 
-DROP TABLE IF EXISTS IF NOT EXISTS load_rnc_text_mining;
-CREATE TABLE IF NOT EXISTS load_rnc_text_mining (
+DROP TABLE IF EXISTS load_rnc_text_mining;
+CREATE TABLE load_rnc_text_mining (
     pattern_group text,
     pattern text,
     matching_word text,
