@@ -260,7 +260,7 @@ process create_load_tables {
   file(create) from Channel.fromPath('files/schema/create_load.sql')
 
   output:
-  val(flag) into created_tables
+  val('done') into created_tables
 
   """
   psql -v ON_ERROR_STOP=1 -f $create "$PGDATABASE"
