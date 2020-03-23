@@ -34,6 +34,14 @@ def parse(handle, id_generator, extra_fields=[]):
         yield [id_generator(entry)] + extra_fields
 
 
+def parse_rfam_version(handle):
+    for line in handle:
+        if line.startswith('Release'):
+            parts = line.split(' ')
+            return parts[1].strip()
+    raise ValueError("Could not find version in file")
+
+
 def write(handle, id_generator, output, extra_fields=[]):
     writer = csv.writer(output)
     writer.writerows(parse(handle, id_generator, extra_fields=extra_fields))
@@ -43,8 +51,12 @@ def genome_mapping(handle, taxid, assembly_id, output):
     write(handle, append_taxid(taxid), output, extra_fields=[assembly_id])
 
 
-def qa(handle, name, output):
-    write(handle, access_id, output, extra_fields=[name])
+def qa(handle, name, version_file, output):
+    if name == 'rfam':
+        version = parse_rfam_version(version_file)
+    else:
+        raise ValueError(f"Unknown QA type: {name}")
+    write(handle, access_id, output, extra_fields=[name, version])
 
 
 def traveler(handle, output):
