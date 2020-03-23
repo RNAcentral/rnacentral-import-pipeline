@@ -423,8 +423,8 @@ process generate_qa_scan_files {
 
 flag_for_qa
   .combine(Channel.fromPath('files/qa/*.sql').flatten())
-  .map { flag, fn -> [flag, fn.getBaseName(), fn] }
-  .filter { f, n, fn -> params.qa[n].run }
+  .map { flag, fn -> [fn.getBaseName(), fn] }
+  .filter { n, fn -> params.qa[n].run }
   .join(qa_version_files)
   .set { qa_queries }
 
@@ -432,7 +432,7 @@ process fetch_qa_sequences {
   memory 12.GB
 
   input:
-  set val(status), val(name), file(query), file(version) from qa_queries
+  set val(name), file(query), file(version) from qa_queries
 
   output:
   set val(name), file('parts/*.fasta') into split_qa_sequences
