@@ -374,39 +374,13 @@ post_release
 // QA scans
 //=============================================================================
 
-flag_for_qa
-  .combine(Channel.fromPath('files/qa/*.sql').flatten())
-  .map { flag, fn -> [flag, fn.getBaseName(), fn] }
-  .filter { f, n, fn -> params.qa[n].run }
-  .set { qa_queries }
-
-process fetch_qa_sequences {
-  memory 12.GB
-
-  input:
-  set val(status), val(name), file(query) from qa_queries
-
-  output:
-  set val(name), file('parts/*.fasta') into split_qa_sequences
-  set val(name), file('attempted.csv') into qa_track_attempted
-
-  script:
-  """
-  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > raw.json
-  json2fasta.py raw.json rnacentral.fasta
-  seqkit shuffle --two-pass rnacentral.fasta > shuffled.fasta
-  seqkit split --two-pass --by-size ${params.qa[name].chunk_size} --out-dir 'parts/' shuffled.fasta
-
-  rnac qa create-attempted raw.json $name attempted.csv
-  """
-}
-
 process generate_qa_scan_files {
   input:
   set val(name), val(base) from files_to_prepare
 
   output:
   set val(name), file(name) into qa_scan_files
+  set val(name), file('version_file') into qa_version_files
 
   script:
   if (name == "pfam") {
@@ -438,10 +412,39 @@ process generate_qa_scan_files {
     gzip -d *.gz
     cmpress Rfam.cm
     cd ..
+    fetch generic "$base/README" version_file
     """
   } else {
     error("Unknown QA to prepare: $name")
   }
+}
+
+flag_for_qa
+  .combine(Channel.fromPath('files/qa/*.sql').flatten())
+  .map { flag, fn -> [flag, fn.getBaseName(), fn] }
+  .filter { f, n, fn -> params.qa[n].run }
+  .join(qa_version_files)
+  .set { qa_queries }
+
+process fetch_qa_sequences {
+  memory 12.GB
+
+  input:
+  set val(status), val(name), file(query), file(version) from qa_queries
+
+  output:
+  set val(name), file('parts/*.fasta') into split_qa_sequences
+  set val(name), file('attempted.csv') into qa_track_attempted
+
+  script:
+  """
+  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > raw.json
+  json2fasta.py raw.json rnacentral.fasta
+  seqkit shuffle --two-pass rnacentral.fasta > shuffled.fasta
+  seqkit split --two-pass --by-size ${params.qa[name].chunk_size} --out-dir 'parts/' shuffled.fasta
+
+  rnac qa create-attempted raw.json $name $version attempted.csv
+  """
 }
 
 split_qa_sequences
