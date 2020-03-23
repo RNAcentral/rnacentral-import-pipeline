@@ -226,6 +226,8 @@ process merge_and_split_all_publications {
 }
 
 process fetch_publications {
+  when { params.import_data.length > 0 }
+
   output:
   file('out') into refs_database
 
