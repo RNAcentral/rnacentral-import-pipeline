@@ -1,16 +1,18 @@
 LOAD CSV
-FROM ALL FILENAMES MATCHING ~<rfam.*csv$>
+FROM ALL FILENAMES MATCHING ~<attempted.*csv$>
 HAVING FIELDS
 (
   urs,
-  qa_analysis,
+  model_source,
+  source_version,
   last_done
 )
 INTO {{PGDATABASE}}?load_qa_rfam_attempted
 TARGET COLUMNS
 (
   urs,
-  qa_analysis,
+  model_source,
+  source_version,
   last_done
 )
 WITH fields escaped by double-quote,
@@ -26,12 +28,14 @@ AFTER LOAD DO
 $$
 INSERT INTO pipeline_tracking_qa_rfam (
   urs,
-  qa_analysis,
+  model_source,
+  source_version,
   last_done
 ) (
 select 
   urs,
-  qa_analysis,
+  model_source,
+  source_version,
   last_done
 FROM load_qa_rfam_attempted
 ) ON CONFLICT (urs) DO UPDATE
