@@ -202,7 +202,7 @@ def test_can_find_correct_ncRNA_type():
         database='ENA',
         sequence='ACTGCTTTTCTTTGATGTCCCCATATTGAGGAGCCCGATAGCCATTTGATTACTTCATGCTATCGGGTTTTTTATT',
         regions=[],
-        rna_type='other',
+        rna_type='SO:0000655',
         url='https://www.ebi.ac.uk/ena/data/view/Non-coding:ABXV02000002.1:33498..33573:ncRNA',
         seq_version='1',
         note_data={
@@ -601,7 +601,7 @@ def test_can_parse_function():
     assert data[2].gene == "csfG"
     assert data[2].product == "sporulation-specific regulatory RNA"
     assert data[2].locus_tag == "B657_miscRNA23"
-    assert data[2].rna_type == 'other'
+    assert data[2].rna_type == 'SO:0000655'
 
 
 def test_can_parse_old_locus_tag():
