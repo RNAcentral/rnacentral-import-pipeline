@@ -51,6 +51,7 @@ INSDC_SO_MAPPING = {
     'tRNA': 'SO:0000253',
     'bidirectional_promoter_lncrna': 'SO:0002185',
     '3prime_overlapping_ncrna': 'SO:0002120',
+    'pre_miRNA': 'SO:0001244',
 }
 
 NORMALIZE_TO_INSDC = {
@@ -60,7 +61,7 @@ NORMALIZE_TO_INSDC = {
 }
 
 SO_INSDC_MAPPING = {v: k for k, v in INSDC_SO_MAPPING.items()}
-SO_INSDC_MAPPING['SO:0001244'] = "precursor_RNA"
+SO_INSDC_MAPPING['SO:0001244'] = "pre_miRNA"
 SO_INSDC_MAPPING['SO:0000209'] = "precursor_RNA"
 SO_INSDC_MAPPING['SO:0001904'] = "lncRNA"
 SO_INSDC_MAPPING['SO:0000370'] = 'ncRNA'
