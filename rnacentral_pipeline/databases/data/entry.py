@@ -239,6 +239,9 @@ class Entry(object):
 
         return True
 
+    def human_rna_type(self):
+        return utils.SO_INSDC_MAPPING[self.rna_type].replace('_', ' ')
+
     def write_ac_info(self):
         if not self.is_valid():
             return
