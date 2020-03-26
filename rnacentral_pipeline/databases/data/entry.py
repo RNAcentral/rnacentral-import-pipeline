@@ -61,7 +61,6 @@ class Entry(object):
         converter=lambda s: str(s.upper()),
     )
     sequence = attr.ib(validator=is_a(str), converter=str)
-    # exons = attr.ib(validator=is_a(list))
     regions = attr.ib(validator=is_a(list))
     rna_type = attr.ib(
         validator=utils.matches_pattern(utils.SO_PATTERN),

@@ -95,6 +95,17 @@ def xref_data(feature):
     return embl.grouped_annotations(feature_annotations, ':')
 
 
+def rna_type(record, feature):
+    rna_type = embl.rna_type(feature)
+    if rna_type != 'precursor_RNA':
+        return rna_type
+    genes = feature.qualifiers.get('gene', [])
+    for gene in genes:
+        if gene.lower().startswith('mir'):
+            return 'SO:0001244'
+    return rna_type
+
+
 def as_entry(record, source, feature):
     """
     Create an Entry based upon the record, source feature and ncRNA feature.
@@ -112,7 +123,7 @@ def as_entry(record, source, feature):
         database='REFSEQ',
         sequence=embl.sequence(record, feature),
         regions=[],
-        rna_type=embl.rna_type(feature),
+        rna_type=rna_type(record, feature),
         url=url(record),
         seq_version=embl.seq_version(record),
         optional_id=optional,
@@ -175,6 +186,8 @@ def generate_related(entries):
                 elif second.rna_type == 'SO:0000276':
                     continue
                 else:
+                    print(first.rna_type)
+                    print(second.rna_type)
                     msg = "Unknown type of relationship between %s\t%s"
                     raise ValueError(msg % (first, second))
 
