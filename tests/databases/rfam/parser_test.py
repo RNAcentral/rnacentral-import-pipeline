@@ -24,41 +24,38 @@ from rnacentral_pipeline.databases.rfam.parser import parse
 
 
 def test_it_labels_y_rna_correctly():
-    with open('data/rfam/families.tsv') as mapping_handle:
-        mapping = utils.id_to_insdc_type(mapping_handle)
-
-        assert as_entry({
-            "lineage": (
-                "Eukaryota Metazoa Chordata Craniata Vertebrata Chondrichthyes"
-                " Holocephali Chimaeriformes Callorhinchidae Callorhinchus."
-            ),
-            "primary_id": "RF00019",
-            "is_seed": "1",
-            "feature_type": "ncRNA",
-            "feature_location_end": "328",
-            "feature_location_start": "220",
-            "ontology": [
-                "SO:0000405"
-            ],
-            "sequence": (
-                "GGCCGGTCCGATGGTAGTGGGTTATCGTTGATATTTGCTTACAGAGTCAGTTACAG"
-                "ATTTCCTTGTTCTCTCTTCCCCCCTTCTCACTGCTTCACTTGACTGGTCCTTT"
-            ),
-            "ncbi_tax_id": "7868",
-            "seq_version": "1",
-            "ncrna_class": "other",
-            "common_name": "Ghost shark",
-            "references": [
-                "10606662",
-                "7489501",
-                "10766734",
-                "18087752"
-            ],
-            "species": "Callorhinchus milii",
-            "optional_id": "Y_RNA",
-            "parent_accession": "AAVX01633839",
-            "description": "Y RNA"
-        }, mapping).rna_type == 'Y_RNA'
+    assert as_entry({
+        "lineage": (
+            "Eukaryota Metazoa Chordata Craniata Vertebrata Chondrichthyes"
+            " Holocephali Chimaeriformes Callorhinchidae Callorhinchus."
+        ),
+        "primary_id": "RF00019",
+        "is_seed": "1",
+        "feature_type": "ncRNA",
+        "feature_location_end": "328",
+        "feature_location_start": "220",
+        "ontology": [
+            "SO:0000405"
+        ],
+        "sequence": (
+            "GGCCGGTCCGATGGTAGTGGGTTATCGTTGATATTTGCTTACAGAGTCAGTTACAG"
+            "ATTTCCTTGTTCTCTCTTCCCCCCTTCTCACTGCTTCACTTGACTGGTCCTTT"
+        ),
+        "ncbi_tax_id": "7868",
+        "seq_version": "1",
+        "ncrna_class": "other",
+        "common_name": "Ghost shark",
+        "references": [
+            "10606662",
+            "7489501",
+            "10766734",
+            "18087752"
+        ],
+        "species": "Callorhinchus milii",
+        "optional_id": "SO:0000405",
+        "parent_accession": "AAVX01633839",
+        "description": "Y RNA"
+    }).rna_type == 'SO:0000405'
 
 
 def test_it_parses_all_data():
@@ -81,7 +78,7 @@ def test_it_builds_first_entry_correctly():
                     "GTGAAGGTG"
                 ),
                 regions=[],
-                rna_type='tRNA',
+                rna_type='SO:0000253',
                 url='http://rfam.org/family/RF00005',
                 note_data={
                     "Alignment": "full",
