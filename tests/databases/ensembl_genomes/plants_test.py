@@ -338,7 +338,7 @@ def test_can_parse_premirna(cress_2):
                 coordinate_system=dat.CoordinateSystem.one_based(),
             )
         ],
-        rna_type='precursor_RNA',
+        rna_type='pre_miRNA',
         url='',
         seq_version='1',
         species='Arabidopsis thaliana',
@@ -352,7 +352,7 @@ def test_can_parse_premirna(cress_2):
         ),
         gene='ENSRNA049757815',
         locus_tag='ath-MIR840',
-        description='Arabidopsis thaliana (thale-cress) precursor RNA ath-MIR840',
+        description='Arabidopsis thaliana (thale-cress) pre miRNA ath-MIR840',
         references=[pubs.reference(29092050)],
     ))
 
@@ -451,7 +451,7 @@ def test_can_parse_rice_pre_mirna(oryza_9):
                 coordinate_system=dat.CoordinateSystem.one_based(),
             )
         ],
-        rna_type='precursor_RNA',
+        rna_type='pre_miRNA',
         url='',
         seq_version='1',
         species='Oryza barthii',
