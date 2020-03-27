@@ -33,4 +33,4 @@ def test_finds_expected_paths():
     base = Path('data/traveler/rfam')
     paths = list(results.paths(base))
     path = next(p for p in paths if p.urs == 'URS0000A7635A')
-    assert path == data.TravelerPaths('URS0000A7635A', 'RF00162', base / 'RF00162')
+    assert path == data.TravelerPaths('URS0000A7635A', 'RF00162', data.Source.rfam, base / 'RF00162')
