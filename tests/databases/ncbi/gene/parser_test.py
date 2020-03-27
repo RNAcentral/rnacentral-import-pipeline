@@ -86,17 +86,17 @@ def test_produces_correct_data(simple):
 
 
 @pytest.mark.parametrize('gene_id,rna_type', [
-    ('NCBI_GENE:113344155', 'snoRNA'),
-    ('NCBI_GENE:107303968', 'lncRNA'),
-    ('NCBI_GENE:114058594', 'lncRNA'),
-    ('NCBI_GENE:112780674', 'snoRNA'),
-    ('NCBI_GENE:112442518', 'tRNA'),
-    ('NCBI_GENE:115038462', 'tRNA'),
-    ('NCBI_GENE:113275511', 'lncRNA'),
-    ('NCBI_GENE:34399170', 'tRNA'),
-    ('NCBI_GENE:108869573', 'tRNA'),
-    ('NCBI_GENE:31217049', 'tRNA'),
-    ('NCBI_GENE:38465973', 'tRNA'),
+    ('NCBI_GENE:113344155', 'SO:0000275'),
+    ('NCBI_GENE:107303968', 'SO:0001877'),
+    ('NCBI_GENE:114058594', 'SO:0001877'),
+    ('NCBI_GENE:112780674', 'SO:0000275'),
+    ('NCBI_GENE:112442518', 'SO:0000253'),
+    ('NCBI_GENE:115038462', 'SO:0000253'),
+    ('NCBI_GENE:113275511', 'SO:0001877'),
+    ('NCBI_GENE:34399170', 'SO:0000253'),
+    ('NCBI_GENE:108869573', 'SO:0000253'),
+    ('NCBI_GENE:31217049', 'SO:0000253'),
+    ('NCBI_GENE:38465973', 'SO:0000253'),
 ])
 def test_assigns_correct_rna_types(simple, gene_id, rna_type):
     assert simple[gene_id].rna_type == rna_type
