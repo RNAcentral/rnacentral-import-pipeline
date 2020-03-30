@@ -13,9 +13,32 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import csv
+import io
+
+import pytest
+
 from rnacentral_pipeline.rnacentral import attempted
 
+
+@pytest.fixture()
+def genome_mapping():
+    with open('data/genome-mapping/raw.json', 'r') as raw:
+        temp = io.StringIO()
+        attempted.genome_mapping(raw, 'HanXRQr1.0', temp)
+        temp.flush()
+        temp.seek(0)
+        data = csv.reader(temp)
+        yield list(data)
 
 def test_can_get_rfam_version():
     with open('data/attempted/rfam/readme', 'r') as raw:
         assert attempted.parse_rfam_version(raw) == '14.1'
+
+
+def test_can_produce_all_genome_mapping(genome_mapping):
+    assert len(genome_mapping) == 10
+
+
+def test_can_produce_valid_genome_mapping_entries(genome_mapping):
+    assert genome_mapping[0] == ['URS00004AE028_4232', 'HanXRQr1.0']
