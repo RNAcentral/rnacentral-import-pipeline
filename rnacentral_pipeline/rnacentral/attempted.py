@@ -47,8 +47,8 @@ def write(handle, id_generator, output, extra_fields=[]):
     writer.writerows(parse(handle, id_generator, extra_fields=extra_fields))
 
 
-def genome_mapping(handle, taxid, assembly_id, output):
-    write(handle, append_taxid(taxid), output, extra_fields=[assembly_id])
+def genome_mapping(handle, assembly_id, output):
+    write(handle, access_id, output, extra_fields=[assembly_id])
 
 
 def qa(handle, name, version_file, output):
