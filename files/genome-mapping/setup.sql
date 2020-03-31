@@ -74,6 +74,6 @@ WHERE
 
 DELETE FROM :tablename to_map
 USING rnc_sequence_regions coord
-ON 
+WHERE
   coord.urs_taxid = to_map.urs_taxid
 ;
