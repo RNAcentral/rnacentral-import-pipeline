@@ -54,7 +54,7 @@ def process_dfam(data, output):
 @cli.command('create-attempted')
 @click.argument('filename', type=click.File('r'))
 @click.argument('name')
-@click.argument('version_file', type=click.File('r')))
+@click.argument('version_file', type=click.File('r'))
 @click.argument('output', type=click.File('w'))
-def track_attempted(filename, name, output):
+def track_attempted(filename, name, version_file, output):
     attempted.qa(filename, name, version_file, output)
