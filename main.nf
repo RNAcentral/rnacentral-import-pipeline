@@ -569,6 +569,7 @@ process genome_mapping_setup {
     -f "$setup" "$PGDATABASE"
   psql \
     -v ON_ERROR_STOP=1 \
+    -v tablename=${params.genome_mapping.to_map_table} \
     -v species_to_map=${params.genome_mapping.species_table} \
     -f "$query" "$PGDATABASE" > species.csv
   """
@@ -600,6 +601,8 @@ process fetch_unmapped_sequences {
     -v ON_ERROR_STOP=1 \
     -v taxid=$taxid \
     -v assembly_id=$assembly_id \
+    -v tablename=${params.genome_mapping.to_map_table} \
+    -v species_to_map=${params.genome_mapping.species_table} \
     -f "$query" \
     "$PGDATABASE" > raw.json
   json2fasta.py raw.json rnacentral.fasta
@@ -695,7 +698,7 @@ process blat {
 
 process select_mapped_locations {
   tag { species }
-  memory { params.genome_mapping.select_mapped.directives.memory }
+  memory { '20GB' }
 
   input:
   set val(species), file('selected*.json') from species_results
