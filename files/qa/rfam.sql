@@ -10,5 +10,5 @@ on
   analyzed.urs = rna.upi
   and analyzed.model_source = 'rfam'
 where
-  analyzed.upi is null
+  analyzed.urs is null
 ) TO STDOUT
