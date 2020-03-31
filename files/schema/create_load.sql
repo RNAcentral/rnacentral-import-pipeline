@@ -280,7 +280,7 @@ CREATE TABLE load_qa_status (
 );
 
 DROP TABLE IF EXISTS load_qa_rfam_attempted;
-CREATE TABLE load_qa_status (
+CREATE TABLE load_qa_rfam_attempted (
   urs text NOT NULL,
   model_source text NOT NULL,
   source_version text NOT NULL,
