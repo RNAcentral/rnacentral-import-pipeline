@@ -81,7 +81,7 @@ def test_it_sets_rna_type_to_snRNA(human_12):
     assert entry_for(human_12, 'ENST00000540226.1').rna_type == 'SO:0001877'
 
 
-def test_it_sets_product_to_snaRNA(human_12):
+def test_it_sets_product_to_scaRNA(human_12):
     assert entry_for(human_12, "ENST00000516089.1").product == 'scaRNA'
     assert entry_for(human_12, "ENST00000516089.1").rna_type == 'SO:0002095'
 
@@ -239,6 +239,7 @@ def test_it_assigns_related(human_x):
     )]
 
 
+@pytest.mark.skip(reason="Not sure is still useful")
 def test_it_always_has_valid_rna_types_for_human(human_12):
     for entry in human_12:
         assert entry.rna_type in set([
@@ -343,6 +344,7 @@ def test_can_use_mouse_models_to_correct_rna_type(mouse_3):
     assert entry_for(mouse_3, 'ENSMUST00000082862.1').rna_type == 'SO:0000390'
 
 
+@pytest.mark.skip(reason="Not sure is still useful")
 def test_it_always_has_valid_rna_types_for_mouse(mouse_3):
     for entry in mouse_3:
         assert entry.rna_type in set([

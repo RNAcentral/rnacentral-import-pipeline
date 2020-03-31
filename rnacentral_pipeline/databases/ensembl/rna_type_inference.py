@@ -118,8 +118,6 @@ class RnaTypeInference(object):
             return 'other'
         if base_type in MITO_TYPES:
             return base_type.replace('Mt_', '')
-        if base_type == 'scaRNA':
-            return 'snoRNA'
         if base_type == 'misc_RNA':
             return self.compute_fallback_rna_type(xref_data)
         if base_type == 'miRNA':
