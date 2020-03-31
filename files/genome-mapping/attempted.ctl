@@ -2,14 +2,12 @@ LOAD CSV
 FROM ALL FILENAMES MATCHING ~<genome-mapping-attempted.*csv$>
 HAVING FIELDS (
     urs_taxid,
-    assembly,
-    last_run
+    assembly_id
 )
 INTO {{PGDATABASE}}?load_genome_mapping_attempted
 TARGET COLUMNS (
     urs_taxid,
-    assembly,
-    last_run
+    assembly_id
 )
 
 WITH
@@ -27,10 +25,10 @@ INSERT INTO pipeline_tracking_genome_mapping (
 SELECT
     load.urs_taxid,
     load.assembly_id,
-    load.last_run
+    NOW()
 FROM load_genome_mapping_attempted load
 ) ON CONFLICT (urs_taxid, assembly_id) DO UPDATE
-SET 
+SET
         last_run = EXCLUDED.last_run
 ;
 $$
