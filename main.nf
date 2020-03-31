@@ -429,7 +429,7 @@ flag_for_qa
   .set { qa_queries }
 
 process fetch_qa_sequences {
-  memory 12.GB
+  memory 20.GB
 
   input:
   set val(name), file(query), file(version) from qa_queries
