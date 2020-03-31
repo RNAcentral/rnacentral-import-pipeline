@@ -142,7 +142,7 @@ def description(context, gene, entry):
         locus_tag = entry.optional_id.split('.')[0]
 
     assert entry.rna_type, "Cannot build description without rna_type"
-    rna_type = entry.rna_type.replace('_', ' ')
+    rna_type = entry.human_rna_type()
     if rna_type == locus_tag:
         locus_tag = ''
     return '{species} {rna_type} {locus_tag}'.format(
