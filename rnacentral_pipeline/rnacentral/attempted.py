@@ -14,24 +14,32 @@ limitations under the License.
 """
 
 import csv
+import operator as op
+
+from Bio import SeqIO
 
 from rnacentral_pipeline import psql
 
 
-def access_id(entry):
-    return entry['id']
+id_attribute = op.attrgetter('id')
+id_key = op.itemgetter('id')
 
 
-def append_taxid(taxid):
+def append_taxid(taxid, getter=id_key):
     def fn(entry):
-        urs = access_id(entry)
+        urs = getter(entry)
         return f"{urs}_{taxid}"
     return fn
 
 
-def parse(handle, id_generator, extra_fields=[]):
+def json_parser(handle, id_generator=id_key, extra_fields=[]):
     for entry in psql.json_handler(handle):
         yield [id_generator(entry)] + extra_fields
+
+
+def fasta_parser(handle, id_generator=id_attribute, extra_fields=[]):
+    for record in SeqIO.parse(handle, 'fasta'):
+        yield [id_generator(record)] + extra_fields
 
 
 def parse_rfam_version(handle):
@@ -42,13 +50,14 @@ def parse_rfam_version(handle):
     raise ValueError("Could not find version in file")
 
 
-def write(handle, id_generator, output, extra_fields=[]):
+def write(data, output):
     writer = csv.writer(output)
-    writer.writerows(parse(handle, id_generator, extra_fields=extra_fields))
+    writer.writerows(data)
 
 
 def genome_mapping(handle, assembly_id, output):
-    write(handle, access_id, output, extra_fields=[assembly_id])
+    data = json_parser(handle, extra_fields=[assembly_id])
+    write(data, output)
 
 
 def qa(handle, name, version_file, output):
@@ -56,8 +65,10 @@ def qa(handle, name, version_file, output):
         version = parse_rfam_version(version_file)
     else:
         raise ValueError(f"Unknown QA type: {name}")
-    write(handle, access_id, output, extra_fields=[name, version])
+    data = json_parser(handle, extra_fields=[name, version])
+    write(data, output)
 
 
 def traveler(handle, output):
-    write(handle, access_id, output)
+    data = fasta_parser(handle)
+    write(data, output)
