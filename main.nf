@@ -853,38 +853,9 @@ post_precompute
 //=============================================================================
 
 flag_for_secondary
-  .combine(Channel.fromPath("files/traveler/setup.sql"))
-  .combine(Channel.fromPath("files/traveler/find-families.sql"))
-  .map { flag, setup, query -> [setup, query] }
-  .set { traveler_setup }
-
-process find_traveler_families {
-  when:
-  params.secondary.run
-
-  input:
-  set file(setup), file(query) from traveler_setup
-
-  output:
-  file("families.txt") into possible_rfam_families
-
-  """
-  psql \
-    -v ON_ERROR_STOP=1 \
-    -v 'tablename=${params.secondary.tablename}' \
-    -f $setup "$PGDATABASE"
-  psql \
-    -v ON_ERROR_STOP=1 \
-    -v 'tablename=${params.secondary.tablename}' \
-    -f $query "$PGDATABASE" > families.txt
-  """
-}
-
-possible_rfam_families
-  .splitCsv()
-  .map { it[0] }
   .combine(Channel.fromPath("files/traveler/find-sequences.sql"))
-  .set { rfam_for_traveler }
+  .map { flag, query -> query }
+  .set { traveler_setup }
 
 process find_possible_traveler_sequences {
   tag { "${model}" }
@@ -893,11 +864,10 @@ process find_possible_traveler_sequences {
   clusterOptions '-sp 100'
 
   input:
-  set val(model), file(query) from rfam_for_traveler
+  file(query) from traveler_setup
 
   output:
-  set val(model), file('parts/*.fasta') into to_layout mode flatten
-  file('attempted.csv') into traveler_attempted_sequences
+  set file('parts/*.fasta') into to_layout mode flatten
 
   script:
   def chunk_size = params.secondary.sequence_chunk_size
@@ -910,47 +880,44 @@ process find_possible_traveler_sequences {
   json2fasta.py raw.json rnacentral.fasta
   seqkit shuffle --two-pass rnacentral.fasta > shuffled.fasta
   seqkit split --two-pass --by-size ${chunk_size} --out-dir 'parts/' shuffled.fasta
-
-  rnac traveler create-attempted raw.json attempted.csv
   """
 }
 
 process layout_sequences {
-  tag { "${family}-${sequences}" }
+  tag { "${sequences}" }
   memory params.secondary.layout.memory
   container 'rnacentral/auto-traveler:dev'
 
   input:
-  set val(family), file(sequences) from to_layout
+  file(sequences) from to_layout
 
   output:
-  set val(family), file('output') into secondary_to_parse
+  set file("$sequences"), file('output') into secondary_to_parse
   file('output/hits.txt') optional true into secondary_hits
   file('output/*.stk') optional true into secondary_stk
 
-  script:
-  def opt = family =~ /^RF/ ? "rfam draw ${family}" : "${family} draw"
   """
-  auto-traveler.py $opt $sequences output/
+  auto-traveler.py draw $sequences output/
   """
 }
 
-
 process parse_layout {
   input:
-  set val(family), file(to_parse) from secondary_to_parse
+  set file('sequences.fasta'), file(to_parse) from secondary_to_parse
 
   output:
   file("data.csv") into secondary_to_import
+  file('attempted.csv') into traveler_attempted_sequences
 
   """
   rnac traveler process-svgs $family $to_parse data.csv
+  rnac traveler create-attempted $sequences attempted.csv
   """
 }
 
 secondary_to_import
   .collect()
-  .map { [it, file("files/traveler/load.ctl"), file("files/traveler/find-rna-types.sql")] }
+  .combine(Channel.fromPath("files/traveler/load.ctl"))
   .set { secondary_to_import }
 
 traveler_attempted_sequences
