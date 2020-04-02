@@ -24,7 +24,7 @@ from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 
-EASEL_PATTERN = re.compile(r'^[ACGUN]$'
+EASEL_PATTERN = re.compile(r'^[ACGUN]$')
 
 
 def as_record(entry):
