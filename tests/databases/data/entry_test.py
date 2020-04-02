@@ -222,3 +222,23 @@ def test_can_write_valid_sequence_regions():
         ['b', '@12/20-22,24-33:+', '12', 1, 'hg38', 2, 20, 22],
         ['b', '@12/20-22,24-33:+', '12', 1, 'hg38', 2, 24, 33],
     ]
+
+
+@pytest.mark.parametrize('rna_type,ans', [
+    ('SO:0000590', 'SRP RNA'),
+    ('SO:0001244', 'pre miRNA'),
+    ('SO:0001268', 'snRNA'),
+])
+def test_can_build_expected_rna_type_names(rna_type, ans):
+    entry = data.Entry(
+        primary_id='a',
+        accession='b',
+        ncbi_tax_id=1,
+        database='a_database_name',
+        sequence='ACCGGGGGGGGGGGGGGGGGGGGGGGG',
+        regions=[],
+        rna_type=rna_type,
+        url='http://www.google.com',
+        seq_version='1',
+    )
+    assert entry.human_rna_type() == ans
