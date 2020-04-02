@@ -4,16 +4,14 @@ HAVING FIELDS
 (
   urs,
   model_source,
-  source_version,
-  last_done
+  source_version
 )
 INTO {{PGDATABASE}}?load_qa_rfam_attempted
 TARGET COLUMNS
 (
   urs,
   model_source,
-  source_version,
-  last_done
+  source_version
 )
 WITH fields escaped by double-quote,
   fields terminated by ','
@@ -36,7 +34,7 @@ select
   urs,
   model_source,
   source_version,
-  last_done
+  NOW()
 FROM load_qa_rfam_attempted
 ) ON CONFLICT (urs) DO UPDATE
 SET 

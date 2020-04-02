@@ -20,3 +20,6 @@ indent_size = 4
 
 [*.config,*.nf]
 indent_size = 2
+
+[*.ctl]
+indent_size = 2
