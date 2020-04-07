@@ -296,15 +296,3 @@ def generate_related(entries):
     feature with the required related sequence information.
     """
     return data.related_isoforms(entries)
-
-    # for first in entries:
-    #     related = first.related_sequences
-    #     for second in entries:
-    #         if first == second:
-    #             continue
-
-    #         related.append(data.RelatedSequence(
-    #             sequence_id=second.accession,
-    #             relationship='isoform',
-    #         ))
-    #     yield attr.evolve(first, related_sequences=related)
