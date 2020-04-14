@@ -91,7 +91,7 @@ def pdbe_publications(pdb_ids):
     url = 'https://www.ebi.ac.uk/pdbe/api/pdb/entry/publications/'
     result = {}
     with RateLimiter(max_calls=10, period=1):
-        for subset in chunked(pdb_ids, 1000):
+        for subset in chunked(pdb_ids, 200):
             post_data = ','.join(subset)
             response = requests.post(url, data=post_data)
             response.raise_for_status()
