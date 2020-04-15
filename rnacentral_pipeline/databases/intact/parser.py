@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Copyright [2009-2018] EMBL-European Bioinformatics Institute
+Copyright [2009-current] EMBL-European Bioinformatics Institute
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -15,16 +15,22 @@ limitations under the License.
 
 import csv
 import operator as op
+import itertools as it
 
+from rnacentral_pipeline.writers import write_entries
 from rnacentral_pipeline.databases.psi_mi import tab
 
-
-def parse(handle):
-    rows = tab.parse(handle)
-    rows = filter(op.methodcaller('involves_rnacentral'), rows)
-    return rows
+from . import lookup
 
 
-def parse_and_write(handle, output):
-    data = (i.writeable() for i in parse(handle))
-    csv.writer(output).writerows(data)
+def parse(handle, db_url):
+    key = op.attrgetter('rnacentral_iteractor')
+    interactions = tab.parse(handle)
+    interactions = filter(op.methodcaller('involves_rnacentral'), rows)
+    interactions = sorted(interactions, key=key)
+    mapping = lookup.mapping(db_url, rows)
+    grouped = it.groupby(interactions, key)
+    for urs_taxid, interactions in grouped:
+        interactions = list(interactions)
+        entry = helpers.as_entry(urs_taxid, interactions, mapping)
+        yield entry

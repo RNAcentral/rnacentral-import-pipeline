@@ -151,6 +151,9 @@ def build_entry_writer(parser):
         },
         features={
             'transformer': op.methodcaller('write_sequence_features'),
+        },
+        interactions={
+            'transformer': op.methodcaller('write_interactions'),
         }
     )
 
