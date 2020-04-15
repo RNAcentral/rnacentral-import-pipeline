@@ -124,6 +124,18 @@ class Interaction:
                 return id
         return None
 
+    @property
+    def rnacentral_iteractor(self):
+        if self.interactor1.from_rnacentral():
+            return self.interactor1
+        elif self.interactor2.from_rnacentral():
+            return self.interactor2
+        raise ValueError("No rnacentral iteractor")
+
+    @property
+    def urs_taxid(self):
+        return self.rnacentral_iteractor.urs_taxid()
+
     def writeable(self):
         other = None
         urs_taxid = None
