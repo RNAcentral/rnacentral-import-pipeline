@@ -23,15 +23,16 @@ import more_itertools as more
 CHUNK_SIZE = 100
 
 
-def lookup(db_url, data, query, chunk_size=CHUNK_SIZE):
+def lookup(db_url, all_ids, query, chunk_size=CHUNK_SIZE):
+    assert all_ids, "Must give ids to lookup"
     data = {}
     conn = psycopg2.connect(db_url)
-    for chunk in more.chunked(data, chunk_size):
+    for chunk in more.chunked(all_ids, chunk_size):
         count = 0
         ids = tuple(chunk)
         assert sorted(set(ids)) == sorted(ids)
         cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        cur.execute(QUERY, (ids,))
+        cur.execute(query, (ids,))
         for result in cur:
             yield result
             count += 1
