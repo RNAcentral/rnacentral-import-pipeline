@@ -1,101 +1,106 @@
-sourceAccession	gene_symbol	Diseae name	slug				
-URS00008BD1D3_9606	DEC1	esophageal cancer	esophageal_cancer				
-URS00008BFDC0_9606	DEC1	esophageal cancer	esophageal_cancer				
-URS0000DB6AF3_9606	DEC1	esophageal cancer	esophageal_cancer				
-URS0000DB7334_9606	DEC1	esophageal cancer	esophageal_cancer				
-URS0000DB7E65_9606	DEC1	esophageal cancer	esophageal_cancer				
-URS0000DB888B_9606	DEC1	esophageal cancer	esophageal_cancer				
-URS0000DB88E4_9606	DEC1	esophageal cancer	esophageal_cancer				
-URS0000DB8CC6_9606	DEC1	esophageal cancer	esophageal_cancer				
-URS0000DBA9DF_9606	DEC1	esophageal cancer	esophageal_cancer				
-URS00001F234A_9606	A2M-AS1	gastric cancer	gastric_cancer				
-URS00007680D3_9606	A2M-AS1	gastric cancer	gastric_cancer				
-URS00008B7368_9606	A2M-AS1	gastric cancer	gastric_cancer				
-URS00009AEBDA_9606	A2M-AS1	gastric cancer	gastric_cancer				
-URS00009C23C6_9606	A2M-AS1	gastric cancer	gastric_cancer				
-URS0000A7685D_9606	A2M-AS1	gastric cancer	gastric_cancer				
-URS0000A76BDE_9606	A2M-AS1	gastric cancer	gastric_cancer				
-URS0000D57634_9606	A2M-AS1	gastric cancer	gastric_cancer				
-URS0000D58B85_9606	A2M-AS1	gastric cancer	gastric_cancer				
-URS0000D58C59_9606	A2M-AS1	gastric cancer	gastric_cancer				
-URS0000D5C590_9606	A2M-AS1	gastric cancer	gastric_cancer				
-URS0000DB9A35_9606	A2M-AS1	gastric cancer	gastric_cancer				
-URS0000217CE8_9606	AATBC	bladder cancer	bladder_cancer				
-URS0000242586_9606	AATBC	bladder cancer	bladder_cancer				
-URS00002B6F1D_9606	AATBC	bladder cancer	bladder_cancer				
-URS000075DB22_9606	AATBC	bladder cancer	bladder_cancer				
-URS00008B5534_9606	AATBC	bladder cancer	bladder_cancer				
-URS00008B7EA6_9606	AATBC	bladder cancer	bladder_cancer				
-URS00008BAF47_9606	AATBC	bladder cancer	bladder_cancer				
-URS00008BFA13_9606	AATBC	bladder cancer	bladder_cancer				
-URS00008C1970_9606	AATBC	bladder cancer	bladder_cancer				
-URS00008C3501_9606	AATBC	bladder cancer	bladder_cancer				
-URS00009AD07F_9606	AATBC	bladder cancer	bladder_cancer				
-URS00009B14D6_9606	AATBC	bladder cancer	bladder_cancer				
-URS00009BCAF5_9606	AATBC	bladder cancer	bladder_cancer				
-URS0000D57E2D_9606	AATBC	bladder cancer	bladder_cancer				
-URS0000D580BC_9606	AATBC	bladder cancer	bladder_cancer				
-URS0000D5884C_9606	AATBC	bladder cancer	bladder_cancer				
-URS0000D5893A_9606	AATBC	bladder cancer	bladder_cancer				
-URS0000D59039_9606	AATBC	bladder cancer	bladder_cancer				
-URS0000D5B67E_9606	AATBC	bladder cancer	bladder_cancer				
-URS0000EBC2BD_9606	AATBC	bladder cancer	bladder_cancer				
-URS000047716D_9606	ABALON	melanoma	melanoma				
-URS0000E99F19_9606	ABALON	melanoma	melanoma				
-URS000023AD70_9606	ABHD11-AS1	bladder cancer	bladder_cancer				
-URS000023AD70_9606	ABHD11-AS1	gastric cancer	gastric_cancer				
-URS000023AD70_9606	ABHD11-AS1	williams-beuren syndrome	williams_beuren_syndrome				
-URS000075D729_9606	ABHD11-AS1	bladder cancer	bladder_cancer				
-URS000075D729_9606	ABHD11-AS1	gastric cancer	gastric_cancer				
-URS000075D729_9606	ABHD11-AS1	williams-beuren syndrome	williams_beuren_syndrome				
-URS00009BF188_9606	ABHD11-AS1	bladder cancer	bladder_cancer				
-URS00009BF188_9606	ABHD11-AS1	gastric cancer	gastric_cancer				
-URS00009BF188_9606	ABHD11-AS1	williams-beuren syndrome	williams_beuren_syndrome				
-URS00009C2A0D_9606	ABHD11-AS1	bladder cancer	bladder_cancer				
-URS00009C2A0D_9606	ABHD11-AS1	gastric cancer	gastric_cancer				
-URS00009C2A0D_9606	ABHD11-AS1	williams-beuren syndrome	williams_beuren_syndrome				
-URS0000D57275_9606	ABHD11-AS1	bladder cancer	bladder_cancer				
-URS0000D57275_9606	ABHD11-AS1	gastric cancer	gastric_cancer				
-URS0000D57275_9606	ABHD11-AS1	williams-beuren syndrome	williams_beuren_syndrome				
-URS0000D5DFA4_9606	ABHD11-AS1	bladder cancer	bladder_cancer				
-URS0000D5DFA4_9606	ABHD11-AS1	gastric cancer	gastric_cancer				
-URS0000D5DFA4_9606	ABHD11-AS1	williams-beuren syndrome	williams_beuren_syndrome				
-URS0000E929F0_9606	ABHD11-AS1	bladder cancer	bladder_cancer				
-URS0000E929F0_9606	ABHD11-AS1	gastric cancer	gastric_cancer				
-URS0000E929F0_9606	ABHD11-AS1	williams-beuren syndrome	williams_beuren_syndrome				
-URS000003400C_9606	ACTA2-AS1	"aortic aneurysm, familial thoracic 6"	aortic_aneurysm_familial_thoracic_6				
-URS000003400C_9606	ACTA2-AS1	hepatocellular carcinoma	hepatocellular_carcinoma				
-URS000003400C_9606	ACTA2-AS1	lung cancer susceptibility 3	lung_cancer_susceptibility_3				
-URS000003400C_9606	ACTA2-AS1	moyamoya disease 5	moyamoya_disease_5				
-URS000003400C_9606	ACTA2-AS1	multisystemic smooth muscle dysfunction syndrome	multisystemic_smooth_muscle_dysfunction_syndrome				
-URS0000113AE9_9606	ACTA2-AS1	"aortic aneurysm, familial thoracic 6"	aortic_aneurysm_familial_thoracic_6				
-URS0000113AE9_9606	ACTA2-AS1	hepatocellular carcinoma	hepatocellular_carcinoma				
-URS0000113AE9_9606	ACTA2-AS1	lung cancer susceptibility 3	lung_cancer_susceptibility_3				
-URS0000113AE9_9606	ACTA2-AS1	moyamoya disease 5	moyamoya_disease_5				
-URS0000113AE9_9606	ACTA2-AS1	multisystemic smooth muscle dysfunction syndrome	multisystemic_smooth_muscle_dysfunction_syndrome				
-URS00007E505A_9606	ACTA2-AS1	"aortic aneurysm, familial thoracic 6"	aortic_aneurysm_familial_thoracic_6				
-URS00007E505A_9606	ACTA2-AS1	hepatocellular carcinoma	hepatocellular_carcinoma				
-URS00007E505A_9606	ACTA2-AS1	lung cancer susceptibility 3	lung_cancer_susceptibility_3				
-URS00007E505A_9606	ACTA2-AS1	moyamoya disease 5	moyamoya_disease_5				
-URS00007E505A_9606	ACTA2-AS1	multisystemic smooth muscle dysfunction syndrome	multisystemic_smooth_muscle_dysfunction_syndrome				
-URS0000811A93_9606	ACTA2-AS1	"aortic aneurysm, familial thoracic 6"	aortic_aneurysm_familial_thoracic_6				
-URS0000811A93_9606	ACTA2-AS1	hepatocellular carcinoma	hepatocellular_carcinoma				
-URS0000811A93_9606	ACTA2-AS1	lung cancer susceptibility 3	lung_cancer_susceptibility_3				
-URS0000811A93_9606	ACTA2-AS1	moyamoya disease 5	moyamoya_disease_5				
-URS0000811A93_9606	ACTA2-AS1	multisystemic smooth muscle dysfunction syndrome	multisystemic_smooth_muscle_dysfunction_syndrome				
-URS0000811F77_9606	ACTA2-AS1	"aortic aneurysm, familial thoracic 6"	aortic_aneurysm_familial_thoracic_6				
-URS0000811F77_9606	ACTA2-AS1	hepatocellular carcinoma	hepatocellular_carcinoma				
-URS0000811F77_9606	ACTA2-AS1	lung cancer susceptibility 3	lung_cancer_susceptibility_3				
-URS0000811F77_9606	ACTA2-AS1	moyamoya disease 5	moyamoya_disease_5				
-URS0000811F77_9606	ACTA2-AS1	multisystemic smooth muscle dysfunction syndrome	multisystemic_smooth_muscle_dysfunction_syndrome				
-URS00008B7356_9606	ACTA2-AS1	"aortic aneurysm, familial thoracic 6"	aortic_aneurysm_familial_thoracic_6				
-URS00008B7356_9606	ACTA2-AS1	hepatocellular carcinoma	hepatocellular_carcinoma				
-URS00008B7356_9606	ACTA2-AS1	lung cancer susceptibility 3	lung_cancer_susceptibility_3				
-URS00008B7356_9606	ACTA2-AS1	moyamoya disease 5	moyamoya_disease_5				
-URS00008B7356_9606	ACTA2-AS1	multisystemic smooth muscle dysfunction syndrome	multisystemic_smooth_muscle_dysfunction_syndrome				
-URS00008C0BBE_9606	ACTA2-AS1	"aortic aneurysm, familial thoracic 6"	aortic_aneurysm_familial_thoracic_6				
-URS00008C0BBE_9606	ACTA2-AS1	hepatocellular carcinoma	hepatocellular_carcinoma				
-URS00008C0BBE_9606	ACTA2-AS1	lung cancer susceptibility 3	lung_cancer_susceptibility_3				
-URS00008C0BBE_9606	ACTA2-AS1	moyamoya disease 5	moyamoya_disease_5				
-URS00008C0BBE_9606	ACTA2-AS1	multisystemic smooth muscle dysfunction syndrome	multisystemic_smooth_muscle_dysfunction_syndrome				
-URS00009B3AC7_9606	ACTA2-AS1	"aortic aneurysm, familial thoracic 6"	aortic_aneurysm_familial_thoracic_6				
+URSid	GeneCardsSymbol	DiseaseName	DiseaseSlug
+URS0000001A7A_9606	MIR625	colorectal cancer	colorectal_cancer
+URS0000001EB3_9606	MIR31	bladder disease	bladder_disease
+URS0000001EB3_9606	MIR31	gastrointestinal system benign neoplasm	gastrointestinal_system_benign_neoplasm
+URS0000001EB3_9606	MIR31	prostate disease	prostate_disease
+URS0000002F79_9606	MT-RNR1	mitochondrial encephalomyopathy	mitochondrial_encephalomyopathy
+URS0000002F79_9606	MT-RNR1	myoclonic epilepsy associated with ragged-red fibers	myoclonic_epilepsy_associated_with_ragged_red_fibers
+URS0000003515_9606	MT-RNR1	deafness, autosomal dominant 51	deafness_autosomal_dominant_51
+URS0000003515_9606	MT-RNR1	nonsyndromic deafness	nonsyndromic_deafness
+URS0000003515_9606	MT-RNR1	restrictive cardiomyopathy	restrictive_cardiomyopathy
+URS00000035FF_9606	MT-RNR1	hodgkin's lymphoma, nodular sclerosis	hodgkins_lymphoma_nodular_sclerosis
+URS0000003B66_9606	MT-TP	mitochondrial myopathy, encephalopathy, lactic acidosis, and stroke-like episodes	mitochondrial_myopathy_encephalopathy_lactic_acidosis_and_stroke_like_episodes
+URS0000004133_9606	CDKN2B-AS1	hepatocellular carcinoma	hepatocellular_carcinoma
+URS0000004133_9606	CDKN2B-AS1	ovarian cancer	ovarian_cancer
+URS0000004133_9606	CDKN2B-AS1	plexiform neurofibroma	plexiform_neurofibroma
+URS0000004133_9606	CDKN2B-AS1	stroke, ischemic	stroke_ischemic
+URS000000462C_9606	MT-RNR1	hodgkin's lymphoma, nodular sclerosis	hodgkins_lymphoma_nodular_sclerosis
+URS0000004905_9606	MT-RNR2	chronic progressive external ophthalmoplegia	chronic_progressive_external_ophthalmoplegia
+URS00000053E8_9606	MT-RNR1	mitochondrial non-syndromic sensorineural deafness	mitochondrial_non_syndromic_sensorineural_deafness
+URS00008C0BBE_9606	ACTA2-AS1	multisystemic smooth muscle dysfunction syndrome	multisystemic_smooth_muscle_dysfunction_syndrome
+URS00008C0BBE_9606	ACTA2-AS1	lung cancer susceptibility 3	lung_cancer_susceptibility_3
+URS00008C0BBE_9606	ACTA2-AS1	hepatocellular carcinoma	hepatocellular_carcinoma
+URS00008C0BBE_9606	ACTA2-AS1	moyamoya disease 5	moyamoya_disease_5
+URS00008C0BBE_9606	ACTA2-AS1	aortic aneurysm, familial thoracic 6	aortic_aneurysm_familial_thoracic_6
+URS00000063DA_9606	GACAT1	gastric cancer	gastric_cancer
+URS0000006998_9606	MT-TS1	mitochondrial non-syndromic sensorineural deafness	mitochondrial_non_syndromic_sensorineural_deafness
+URS0000006998_9606	MT-TS1	rare genetic deafness	rare_genetic_deafness
+URS0000006A47_9606	MIR99A	nasopharyngeal disease	nasopharyngeal_disease
+URS0000007340_9606	MIR127	gastrointestinal system disease	gastrointestinal_system_disease
+URS0000007340_9606	MIR127	lipid storage disease	lipid_storage_disease
+URS0000007340_9606	MIR127	nemaline myopathy	nemaline_myopathy
+URS00000074F0_9606	MT-RNR1	autosomal dominant nonsyndromic deafness	autosomal_dominant_nonsyndromic_deafness
+URS00000074F0_9606	MT-RNR1	mitochondrial myopathy, encephalopathy, lactic acidosis, and stroke-like episodes	mitochondrial_myopathy_encephalopathy_lactic_acidosis_and_stroke_like_episodes
+URS0000008A99_9606	MIR143	cervix disease	cervix_disease
+URS0000008A99_9606	MIR143	esophageal disease	esophageal_disease
+URS0000008F09_9606	MT-RNR1	nonsyndromic hearing loss and deafness, mitochondrial	nonsyndromic_hearing_loss_and_deafness_mitochondrial
+URS0000009074_9606	MT-RNR1	inner ear disease	inner_ear_disease
+URS0000009074_9606	MT-RNR1	myoclonic epilepsy associated with ragged-red fibers	myoclonic_epilepsy_associated_with_ragged_red_fibers
+URS0000009699_9606	MT-RNR2	leber optic atrophy	leber_optic_atrophy
+URS0000009DD1_9606	MT-RNR1	congenital cytomegalovirus	congenital_cytomegalovirus
+URS0000009DD1_9606	MT-RNR1	deafness, aminoglycoside-induced	deafness_aminoglycoside_induced
+URS0000009DD1_9606	MT-RNR1	restrictive cardiomyopathy	restrictive_cardiomyopathy
+URS000000A142_9606	RNU11	isolated growth hormone deficiency, type ia	isolated_growth_hormone_deficiency_type_ia
+URS000000A4B3_9606	SOX2-OT	squamous cell carcinoma	squamous_cell_carcinoma
+URS000000A699_9606	MT-TV	pthirus pubis infestation	pthirus_pubis_infestation
+URS000000B1C9_9606	MIRLET7E	inflammatory bowel disease	inflammatory_bowel_disease
+URS000000B1C9_9606	MIRLET7E	psoriasis	psoriasis
+URS000000B1C9_9606	MIRLET7E	thoracic cancer	thoracic_cancer
+URS000000B424_9606	MEG8	noonan syndrome 4	noonan_syndrome_4
+URS000000C73C_9606	MIR152	retinitis pigmentosa 60	retinitis_pigmentosa_60
+URS000000CDA1_9606	MT-RNR2	leber optic atrophy	leber_optic_atrophy
+URS000000CEF8_9606	CYTOR	breast cancer	breast_cancer
+URS000000CEF8_9606	CYTOR	tongue squamous cell carcinoma	tongue_squamous_cell_carcinoma
+URS000000D93F_9606	CDKN2B-AS1	alzheimer disease	alzheimer_disease
+URS000000D93F_9606	CDKN2B-AS1	aneurysm	aneurysm
+URS000000D93F_9606	CDKN2B-AS1	gastric cancer	gastric_cancer
+URS000000D93F_9606	CDKN2B-AS1	peripheral artery disease	peripheral_artery_disease
+URS000000D95D_9606	SOX2-OT	cholangiocarcinoma	cholangiocarcinoma
+URS000000DC32_9606	MT-TI	deafness, nonsyndromic sensorineural, mitochondrial	deafness_nonsyndromic_sensorineural_mitochondrial
+URS000000DC32_9606	MT-TI	lactic acidosis	lactic_acidosis
+URS000000EAE4_9606	MT-TT	cardiomyopathy, infantile histiocytoid	cardiomyopathy_infantile_histiocytoid
+URS000000EAE4_9606	MT-TT	mitochondrial myopathy, encephalopathy, lactic acidosis, and stroke-like episodes	mitochondrial_myopathy_encephalopathy_lactic_acidosis_and_stroke_like_episodes
+URS000000EC74_9606	MT-RNR1	inner ear disease	inner_ear_disease
+URS000000EE2E_9606	MT-TK	3-methylglutaconic aciduria, type iii	3_methylglutaconic_aciduria_type_iii
+URS000000EE2E_9606	MT-TK	diabetes and deafness, maternally inherited	diabetes_and_deafness_maternally_inherited
+URS000000EE2E_9606	MT-TK	mitochondrial encephalomyopathy	mitochondrial_encephalomyopathy
+URS000000EE2E_9606	MT-TK	myoclonic epilepsy associated with ragged-red fibers	myoclonic_epilepsy_associated_with_ragged_red_fibers
+URS000000EE2E_9606	MT-TK	pearson marrow-pancreas syndrome	pearson_marrow_pancreas_syndrome
+URS000000F4FD_9606	MT-RNR2	leber optic atrophy	leber_optic_atrophy
+URS000000F66C_9606	DNMBP-AS1	cataract 48	cataract_48
+URS000000FFB4_9606	SNHG31	autosomal recessive congenital ichthyosis	autosomal_recessive_congenital_ichthyosis
+URS000001006F_9606	MIR19A	thyroid gland anaplastic carcinoma	thyroid_gland_anaplastic_carcinoma
+URS0000010932_9606	SOX2-OT	squamous cell carcinoma	squamous_cell_carcinoma
+URS0000010D8C_9606	MT-RNR2	mitochondrial myopathy, encephalopathy, lactic acidosis, and stroke-like episodes	mitochondrial_myopathy_encephalopathy_lactic_acidosis_and_stroke_like_episodes
+URS0000010D8C_9606	MT-RNR2	neuropathy, hereditary sensory, type ie	neuropathy_hereditary_sensory_type_ie
+URS0000010F9B_9606	MT-RNR2	chronic progressive external ophthalmoplegia	chronic_progressive_external_ophthalmoplegia
+URS000001113F_9606	MIAT	dilated cardiomyopathy	dilated_cardiomyopathy
+URS0000013BF6_9606	MT-RNR2	bare lymphocyte syndrome, type ii	bare_lymphocyte_syndrome_type_ii
+URS0000013C59_9606	MT-TH	endometrial stromal sarcoma	endometrial_stromal_sarcoma
+URS00000002D9_9606	SNHG7	glioma susceptibility 1	glioma_susceptibility_1
+URS00000012EC_9606	MT-TI	leigh syndrome	leigh_syndrome_nuclear_dna_mutation
+URS0000001A7A_9606	MIR625	cell type cancer	cell_type_cancer
+URS0000001A7A_9606	MIR625	cervix carcinoma	cervix_carcinoma
+URS0000001EB3_9606	MIR31	intestinal disease	intestinal_disease
+URS0000001EB3_9606	MIR31	nasopharyngeal disease	nasopharyngeal_disease
+URS0000001EB3_9606	MIR31	paget disease, extramammary	paget_disease_extramammary
+URS0000001EB3_9606	MIR31	pancreatic ductal adenocarcinoma	pancreatic_ductal_adenocarcinoma
+URS0000001EB3_9606	MIR31	pharynx cancer	pharynx_cancer
+URS0000001EB3_9606	MIR31	thoracic cancer	thoracic_cancer
+URS0000002F79_9606	MT-RNR1	deafness, aminoglycoside-induced	deafness_aminoglycoside_induced
+URS0000002F79_9606	MT-RNR1	restrictive cardiomyopathy	restrictive_cardiomyopathy
+URS0000003515_9606	MT-RNR1	mitochondrial myopathy, encephalopathy, lactic acidosis, and stroke-like episodes	mitochondrial_myopathy_encephalopathy_lactic_acidosis_and_stroke_like_episodes
+URS0000003515_9606	MT-RNR1	nonsyndromic hearing loss and deafness, mitochondrial	nonsyndromic_hearing_loss_and_deafness_mitochondrial
+URS00000035FF_9606	MT-RNR1	nonsyndromic hearing loss and deafness, mitochondrial	nonsyndromic_hearing_loss_and_deafness_mitochondrial
+URS000000368F_9606	MT-RNR2	myoclonic epilepsy associated with ragged-red fibers	myoclonic_epilepsy_associated_with_ragged_red_fibers
+URS0000003F61_9606	ZFHX4-AS1	peters-plus syndrome	peters_plus_syndrome_2
+URS0000004133_9606	CDKN2B-AS1	lung cancer	lung_cancer
+URS0000004133_9606	CDKN2B-AS1	melanoma	melanoma
+URS000000462C_9606	MT-RNR1	inner ear disease	inner_ear_disease
+URS000000462C_9606	MT-RNR1	nonsyndromic hearing loss and deafness, mitochondrial	nonsyndromic_hearing_loss_and_deafness_mitochondrial
+URS000000512B_9606	MEG8	microvascular complications of diabetes 3	microvascular_complications_of_diabetes_3
+URS000000512B_9606	MEG8	noonan syndrome 4	noonan_syndrome_4
+URS00000053E8_9606	MT-RNR1	nonsyndromic hearing loss and deafness, mitochondrial	nonsyndromic_hearing_loss_and_deafness_mitochondrial
+URS0000006998_9606	MT-TS1	nonsyndromic hearing loss and deafness, mitochondrial	nonsyndromic_hearing_loss_and_deafness_mitochondrial
+URS0000006A47_9606	MIR99A	bladder disease	bladder_disease
+URS00008BD1D3_9606	DELEC1	esophageal cancer	esophageal_cancer
