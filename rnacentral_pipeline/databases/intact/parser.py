@@ -21,16 +21,24 @@ from rnacentral_pipeline.writers import write_entries
 from rnacentral_pipeline.databases.psi_mi import tab
 
 from . import lookup
+from . import helpers
+
+
+def parse_interactions(handle):
+    data = tab.parse(handle)
+    return filter(op.methodcaller('involves_rnacentral'), data)
 
 
 def parse(handle, db_url):
-    key = op.attrgetter('rnacentral_iteractor')
-    interactions = tab.parse(handle)
-    interactions = filter(op.methodcaller('involves_rnacentral'), interactions)
-    interactions = sorted(interactions, key=key)
+    key = op.attrgetter('urs_taxid')
+    interactions = sorted(parse_interactions(handle), key=key)
     mapping = lookup.mapping(db_url, interactions)
+    interactions = sorted(interactions, key=key)
     grouped = it.groupby(interactions, key)
     for urs_taxid, interactions in grouped:
-        interactions = list(interactions)
-        entry = helpers.as_entry(urs_taxid, interactions, mapping)
+        if urs_taxid not in mapping:
+            raise ValueError("Found no sequence info for %s" % urs_taxid)
+
+        info = mapping[urs_taxid]
+        entry = helpers.as_entry(urs_taxid, list(interactions), info)
         yield entry

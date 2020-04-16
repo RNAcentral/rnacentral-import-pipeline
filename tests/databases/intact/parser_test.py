@@ -15,6 +15,7 @@ limitations under the License.
 
 import os
 from datetime import date
+import collections as coll
 
 import attr
 import pytest
@@ -44,8 +45,19 @@ def test_creates_entries_with_expected_ids(sample):
     ]
 
 
+def test_correctly_groups_data(sample):
+    val = {e.primary_id: len(e.interactions) for e in sample}
+    assert val == {
+        'INTACT:URS0000077671_559292': 1,
+        'INTACT:URS0000182FAB_559292': 1,
+        'INTACT:URS000020D517_559292': 1,
+        'INTACT:URS00002AFD52_559292': 4,
+    }
+
+
 def test_produces_correct_data(sample):
-    val = next(e for e in sample if e.primary_id == 'INTACT:URS00002AFD52_559292')
+    with open('data/intact/sample.txt', 'r') as raw:
+        val = next(parser.parse_interactions(raw))
     i1 = data.Interactor(
         id=data.InteractionIdentifier('intact', 'EBI-10921362', None),
         alt_ids=[data.InteractionIdentifier('rnacentral', 'URS00002AFD52_559292', None)],
@@ -121,38 +133,19 @@ def test_produces_correct_data(sample):
         participant_identification=[data.InteractionIdentifier('psi-mi', 'MI:0396', 'predetermined participant')],
     )
 
-    assert attr.asdict(val) == attr.asdict(data.Entry(
-        primary_id='INTACT:URS00002AFD52_559292',
-        accession='INTACT:URS00002AFD52_559292',
-        ncbi_tax_id=559292,
-        database='INTACT',
-        sequence='GTGAATGATGAATTTAATTCTTTGGTCCGTGTTTATGATGGGAAGTAAGACCCCCGATATGAGTGACAAAAGAGATGTGGTTGACTATCACAGTATCTGACG',
-        regions=[],
-        rna_type='snoRNA',
-        url='https://www.ebi.ac.uk/intact/query/URS00002AFD52_559292',
-        seq_version='1',
-        description='Saccharomyces cerevisiae S288c SNR18 (snR18)',
-        references=[
-            pubs.reference(11726521),
-            pubs.reference(24234451),
-        ],
-        species='Saccharomyces cerevisiae S288C',
-        lineage='',
-        interactions=[
-            data.Interaction(
-                ids=[data.InteractionIdentifier('intact', 'EBI-11665247', None)],
-                interactor1=i1,
-                interactor2=i2,
-                methods=[],
-                types=[data.InteractionIdentifier('psi-mi', "MI:0915", "physical association")],
-                xrefs=[],
-                annotations=[data.InteractionIdentifier('figure legend', 'Fig 2, Fig 3B', None)],
-                confidence=[data.InteractionIdentifier('intact-miscore', '0.74', None)],
-                source_database=[data.InteractionIdentifier('psi-mi', "MI:0471", "MINT")],
-                is_negative=False,
-                publications=[pubs.reference(11726521)],
-                create_date=date(2003, 7, 8),
-                update_date=date(2016, 3, 23),
-                host_organisms=-1,
-            )]
+    assert attr.asdict(val) == attr.asdict(data.Interaction(
+        ids=[data.InteractionIdentifier('intact', 'EBI-11665247', None)],
+        interactor1=i1,
+        interactor2=i2,
+        methods=[],
+        types=[data.InteractionIdentifier('psi-mi', "MI:0915", "physical association")],
+        xrefs=[],
+        annotations=[data.InteractionIdentifier('figure legend', 'Fig 2, Fig 3B', None)],
+        confidence=[data.InteractionIdentifier('intact-miscore', '0.74', None)],
+        source_database=[data.InteractionIdentifier('psi-mi', "MI:0471", "MINT")],
+        is_negative=False,
+        publications=[pubs.reference(11726521)],
+        create_date=date(2003, 7, 8),
+        update_date=date(2016, 3, 23),
+        host_organisms=-1,
     ))
