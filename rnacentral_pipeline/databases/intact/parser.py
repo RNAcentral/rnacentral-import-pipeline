@@ -26,9 +26,9 @@ from . import lookup
 def parse(handle, db_url):
     key = op.attrgetter('rnacentral_iteractor')
     interactions = tab.parse(handle)
-    interactions = filter(op.methodcaller('involves_rnacentral'), rows)
+    interactions = filter(op.methodcaller('involves_rnacentral'), interactions)
     interactions = sorted(interactions, key=key)
-    mapping = lookup.mapping(db_url, rows)
+    mapping = lookup.mapping(db_url, interactions)
     grouped = it.groupby(interactions, key)
     for urs_taxid, interactions in grouped:
         interactions = list(interactions)
