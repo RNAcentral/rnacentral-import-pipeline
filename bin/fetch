@@ -218,7 +218,8 @@ fetch_intact()
   pushd intact-data
   fetch_generic "$1" "intact.zip"
   popd
-  grep -i rnacentral intact-data/intact.txt > "$2"
+  head -1 intact-data/intact.txt > "$2"
+  grep -i rnacentral intact-data/intact.txt >> "$2"
 }
 
 

@@ -340,7 +340,7 @@ class Entry(object):
     def write_sequence_regions(self):
         return self.__write_part__(self.regions)
 
-    def write_iteractions(self):
+    def write_interactions(self):
         return self.__write_part__(self.interactions)
 
     def __write_part__(self, attribute, method_name='writeable'):
