@@ -23,3 +23,6 @@ indent_size = 2
 
 [*.ctl]
 indent_size = 2
+
+[bin/fetch]
+indent_size = 2
