@@ -33,11 +33,10 @@ where
 """
 
 
-def ids(handle):
+def ids(interactions):
     getter = op.attrgetter('urs_taxid')
-    reader = utils.unpickle_stream(handle)
-    return {getter(r) for r in reader}
+    return {getter(r) for r in interactions}
 
 
 def mapping(db_url, data):
-    return lookup.as_mapping(db_url, data, QUERY)
+    return lookup.as_mapping(db_url, ids(data), QUERY)

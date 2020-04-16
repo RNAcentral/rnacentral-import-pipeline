@@ -18,7 +18,7 @@ from rnacentral_pipeline.databases.helpers import phylogeny as phy
 from rnacentral_pipeline.databases.helpers import publications as pubs
 
 
-def accession(interaction):
+def accession(urs_taxid):
     return 'INTACT:' + urs_taxid
 
 
@@ -55,11 +55,7 @@ def references(interactions):
     return list(refs)
 
 
-def as_entry(urs_taxid, iteractions, mapping):
-    if urs_taxid not in mapping:
-        raise ValueError("Found no sequence info for %s" % urs_taxid)
-
-    info = mapping[urs_taxid]
+def as_entry(urs_taxid, interactions, info):
     return data.Entry(
         primary_id=primary_id(urs_taxid),
         accession=accession(urs_taxid),
