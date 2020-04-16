@@ -42,7 +42,7 @@ def parse_urs(handle, field: str):
 
 def write(handle, db_url, field_name, output):
     data = parse_urs(handle, field_name)
-    lookup.write_mapping(data, db_url, output, key='rna_id')
+    lookup.write_mapping(db_url, data, QUERY, output, key='rna_id')
 
 
 def load(handle):

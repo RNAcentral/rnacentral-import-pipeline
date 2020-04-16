@@ -20,14 +20,14 @@ from contextlib import contextmanager
 
 from rnacentral_pipeline.databases import data
 from rnacentral_pipeline.databases.helpers import publications as pub
-from rnacentral_pipeline.databases.genecards_suite.malacards import parse
+from rnacentral_pipeline.databases.genecards_suite import malacards as mala
 from rnacentral_pipeline.databases.genecards_suite.core import lookup
 
 
 @contextmanager
 def known(handle):
     with tempfile.NamedTemporaryFile() as tmp:
-        lookup.write(handle, os.environ['PGDATABASE'], 'sourceAccession', tmp)
+        lookup.write(handle, os.environ['PGDATABASE'], mala.CONTEXT.urs_field, tmp)
         tmp.seek(0)
         yield tmp
 
@@ -38,30 +38,30 @@ def simple_data():
         with known(raw) as indexed:
             raw.seek(0)
             entries = {}
-            for entry in parse(raw, indexed):
+            for entry in mala.parse(raw, indexed):
                 assert entry.primary_id not in entries
                 entries[entry.primary_id] = entry
             return entries
 
 
 def test_can_parse_all_entries(simple_data):
-    assert len(simple_data) == 58
+    assert len(simple_data) == 51
 
 
 def test_can_create_unique_primary_ids(simple_data):
     data = [d.primary_id for d in simple_data.values()]
-    assert len(data) == 58
+    assert len(data) == 51
 
 
 def test_can_create_unique_accessions(simple_data):
     data = [d.accession for d in simple_data.values()]
-    assert len(data) == 58
+    assert len(data) == 51
 
 
 def test_can_create_correct_data(simple_data):
-    assert simple_data['MALACARDS:DEC1:URS00008BD1D3_9606'] == data.Entry(
-        primary_id='MALACARDS:DEC1:URS00008BD1D3_9606',
-        accession='MALACARDS:DEC1:URS00008BD1D3_9606',
+    assert simple_data['MALACARDS:DELEC1:URS00008BD1D3_9606'] == data.Entry(
+        primary_id='MALACARDS:DELEC1:URS00008BD1D3_9606',
+        accession='MALACARDS:DELEC1:URS00008BD1D3_9606',
         ncbi_tax_id=9606,
         database='MALACARDS',
         sequence=(
@@ -115,7 +115,7 @@ def test_can_create_correct_data(simple_data):
         rna_type='lncRNA',
         url='https://www.malacards.org/card/esophageal_cancer',
         seq_version=1,
-        gene='DEC1',
+        gene='DELEC1',
         description='Homo sapiens (human) deleted in esophageal cancer 1 (DEC1)',
         species='Homo sapiens',
         common_name='human',
@@ -181,7 +181,7 @@ def test_correctly_groups_sequences(simple_data):
         ),
         regions=[],
         rna_type='lncRNA',
-        url='https://www.malacards.org/card/aortic_aneurysm_familial_thoracic_6',
+        url='https://www.malacards.org/card/multisystemic_smooth_muscle_dysfunction_syndrome',
         seq_version=1,
         gene='ACTA2-AS1',
         description='Homo sapiens long non-coding RNA NONHSAT015482.2',

@@ -36,7 +36,8 @@ def lookup(db_url, all_ids, query, chunk_size=CHUNK_SIZE):
         for result in cur:
             yield result
             count += 1
-        assert count == len(ids)
+        if count != len(ids):
+            raise ValueError("Found %i of %i" % (count, len(ids)))
         cur.close()
     conn.close()
 
@@ -51,7 +52,7 @@ def as_mapping(db_url, data, query, key='id', **kwargs):
 
 
 def write_mapping(db_url, data, query, handle, **kwargs):
-    values = lookup.as_mapping(db_url, data, query, **kwargs)
+    values = as_mapping(db_url, data, query, **kwargs)
     pickle.dump(values, handle)
 
 

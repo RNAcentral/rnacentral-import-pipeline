@@ -23,19 +23,20 @@ from .core.data import Context
 from .core import parser
 
 
+CONTEXT = Context(
+    database='GENECARDS',
+    base_url='https://www.genecards.org/cgi-bin/carddisp.pl?gene=%s',
+    url_data_field='GeneCardsSymbol',
+    gene_field='GeneCardsSymbol',
+    urs_field='URSid',
+    references=[pub.reference(27322403)],
+)
+
+
 def parse(handle, known_handle) -> ty.Iterator[data.Entry]:
     """
     Parse the given handle of genecard data and the handle of known sequences.
     This will create a iterable of the entries that are in the file.
     """
-
-    context = Context(
-        database='GENECARDS',
-        base_url='https://www.genecards.org/cgi-bin/carddisp.pl?gene=%s',
-        url_data_field='GeneCardsSymbol',
-        gene_field='GeneCardsSymbol',
-        urs_field='URSid',
-        references=[pub.reference(27322403)],
-    )
-    entries = parser.parse(context, handle, known_handle)
+    entries = parser.parse(CONTEXT, handle, known_handle)
     return map(op.itemgetter(0), entries)

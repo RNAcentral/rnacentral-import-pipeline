@@ -25,19 +25,20 @@ from rnacentral_pipeline.databases.helpers import publications as pub
 from .core.data import Context
 from .core import parser
 
+CONTEXT = Context(
+    database='MALACARDS',
+    base_url='https://www.malacards.org/card/%s',
+    url_data_field='DiseaseSlug',
+    gene_field='GeneCardsSymbol',
+    urs_field='URSid',
+    references=[pub.reference(27899610)]
+)
+
 
 def parse(handle, known_handle) -> ty.Iterator[data.Entry]:
-    context = Context(
-        database='MALACARDS',
-        base_url='https://www.malacards.org/card/%s',
-        url_data_field='slug',
-        gene_field='gene_symbol',
-        urs_field='sourceAccession',
-        references=[pub.reference(27899610)]
-    )
-    parsed = parser.parse(context, handle, known_handle)
+    parsed = parser.parse(CONTEXT, handle, known_handle)
     grouped = it.groupby(parsed, lambda d: d[0].primary_id)
-    disease = op.itemgetter('Diseae name')
+    disease = op.itemgetter('DiseaseName')
     for _, items in grouped:
         entries = list(items)
         entry = entries[0][0]
