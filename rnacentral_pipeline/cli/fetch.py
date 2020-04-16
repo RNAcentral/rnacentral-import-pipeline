@@ -21,7 +21,7 @@ import click
 from rnacentral_pipeline.databases import pdb
 
 
-@cli.group('fetch')
+@click.group('fetch')
 def cli():
     """
     Commands for dealing with the fetching PDB data.
