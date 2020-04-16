@@ -212,6 +212,15 @@ fetch_gtrnadb()
   ls *.tar.gz | xargs -I {} --verbose tar -xzvf {}
 }
 
+fetch_intact()
+{
+  mkdir intact-data
+  pushd intact-data
+  fetch_generic "$1" "intact.zip"
+  popd
+  grep -i rnacentral intact-data/intact.txt > "$2"
+}
+
 
 [ $# -gt 0 ] || { usage 0; }
 
@@ -245,6 +254,9 @@ case "$name" in
 
   "gtrnadb" )
     fetch_gtrnadb "$@" ;;
+
+  "intact" )
+    fetch_intact "$@" ;;
 
   "rfam" )
     fetch_generic "$@" ;;
