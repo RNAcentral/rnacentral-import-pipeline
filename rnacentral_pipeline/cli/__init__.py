@@ -18,13 +18,13 @@ import click
 from . import ensembl
 from . import europepmc
 from . import external
+from . import fetch
 from . import ftp_export
 from . import genome_mapping
 from . import lookup
 from . import misc
 from . import ncbi
 from . import ols
-from . import pdb
 from . import precompute
 from . import qa
 from . import rfam
@@ -46,6 +46,7 @@ def cli():
 cli.add_command(ensembl.cli)
 cli.add_command(europepmc.cli)
 cli.add_command(external.cli)
+cli.add_command(fetch.cli)
 cli.add_command(ftp_export.cli)
 cli.add_command(genome_mapping.cli)
 cli.add_command(lookup.cli)
@@ -55,7 +56,6 @@ cli.add_command(misc.run_release)
 cli.add_command(misc.validate_pgloader)
 cli.add_command(ncbi.cli)
 cli.add_command(ols.cli)
-cli.add_command(pdb.cli)
 cli.add_command(precompute.cli)
 cli.add_command(qa.cli)
 cli.add_command(rfam.cli)
