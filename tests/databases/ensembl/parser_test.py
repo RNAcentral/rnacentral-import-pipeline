@@ -29,9 +29,10 @@ def human_1():
 
 @pytest.fixture(scope='module')  # pylint: disable=no-member
 def human_12():
-    return parse_with_family('data/ensembl/Homo_sapiens.GRCh38.chromosome.12.dat',
-                             gencode_file='data/gencode/human-transcripts.gff3',
-                             excluded_file='data/ensembl/excluded.txt')
+    with open('data/ensembl/excluded.txt', 'r') as ex:
+        return parse_with_family('data/ensembl/Homo_sapiens.GRCh38.chromosome.12.dat',
+                                 gencode_file='data/gencode/human-transcripts.gff3',
+                                 excluded_file=ex)
 
 @pytest.fixture(scope='module')  # pylint: disable=no-member
 def human_x():
@@ -168,7 +169,7 @@ def test_it_gets_cross_references(human_12):
 
 
 def test_it_uses_correct_antisense_type(human_12):
-    assert entry_for(human_12, 'ENST00000605233.2').rna_type == 'SO:0001904'
+    assert entry_for(human_12, 'ENST00000605233.3').rna_type == 'SO:0001877'
 
 
 def test_it_does_not_import_suprressed_rfam_families(human_12):
@@ -269,7 +270,7 @@ def test_it_has_last_ncrna(human_12):
 
 
 def test_extracts_all_gencode_entries(human_12):
-    assert len([e for e in human_12 if e.database == 'GENCODE']) == 1497
+    assert len([e for e in human_12 if e.database == 'GENCODE']) == 2378
 
 
 def test_can_build_gencode_entries(human_12):
