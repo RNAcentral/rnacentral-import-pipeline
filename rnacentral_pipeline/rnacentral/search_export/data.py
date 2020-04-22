@@ -615,8 +615,11 @@ def diseases(notes):
     diseases = []
     for note in notes:
         data = parse_note(note)
-        known = data.get('diseases', [])
-        diseases.extend(k['name'] for k in known)
+        for value in data.get('diseases', []):
+            if isinstance(value, str):
+                diseases.append(value)
+            elif isinstance(value, dict):
+                diseases.append(value['name'])
     return diseases
 
 
