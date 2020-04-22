@@ -34,15 +34,20 @@ CONTEXT = Context(
     references=[pub.reference(27899610)]
 )
 
+def diesase_url(slug):
+    return 'https://www.malacards.org/card/' + slug
+
 
 def parse(handle, known_handle) -> ty.Iterator[data.Entry]:
     parsed = parser.parse(CONTEXT, handle, known_handle)
     grouped = it.groupby(parsed, lambda d: d[0].primary_id)
     disease = op.itemgetter('DiseaseName')
+    slug = op.itemgetter('DiseaseSlug')
     for _, items in grouped:
         entries = list(items)
         entry = entries[0][0]
-        diseases = sorted({disease(e[1]) for e in entries})
+        diseases = sorted({(disease(e[1]), slug(e[1])) for e in entries})
+        diseases = [{'name': d, 'url': diesase_url(s)} for (d, s) in diseases]
         note_data = entry.note_data
         note_data['diseases'] = diseases
         yield attr.evolve(entry, note_data=note_data)

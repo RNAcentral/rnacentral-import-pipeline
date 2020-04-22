@@ -14,14 +14,15 @@ limitations under the License.
 """
 
 import os
-import pytest
 import tempfile
 from contextlib import contextmanager
 
+import pytest
+
 from rnacentral_pipeline.databases import data
-from rnacentral_pipeline.databases.helpers import publications as pub
 from rnacentral_pipeline.databases.genecards_suite import malacards as mala
 from rnacentral_pipeline.databases.genecards_suite.core import lookup
+from rnacentral_pipeline.databases.helpers import publications as pub
 
 
 @contextmanager
@@ -126,7 +127,7 @@ def test_can_create_correct_data(simple_data):
             'Homo sapiens'
         ),
         references=[pub.reference(27899610)],
-        note_data={'diseases': ['esophageal cancer']},
+        note_data={'diseases': [{'name': 'esophageal cancer', 'url': 'https://www.malacards.org/card/esophageal_cancer'}]},
     )
 
 
@@ -196,11 +197,11 @@ def test_correctly_groups_sequences(simple_data):
         references=[pub.reference(27899610)],
         note_data={
             'diseases': [
-                'aortic aneurysm, familial thoracic 6',
-                'hepatocellular carcinoma',
-                'lung cancer susceptibility 3',
-                'moyamoya disease 5',
-                'multisystemic smooth muscle dysfunction syndrome',
+                {'name': 'aortic aneurysm, familial thoracic 6', 'url': 'https://www.malacards.org/card/aortic_aneurysm_familial_thoracic_6'},
+                {'name': 'hepatocellular carcinoma', 'url': 'https://www.malacards.org/card/hepatocellular_carcinoma'},
+                {'name': 'lung cancer susceptibility 3', 'url': 'https://www.malacards.org/card/lung_cancer_susceptibility_3'},
+                {'name': 'moyamoya disease 5', 'url': 'https://www.malacards.org/card/moyamoya_disease_5'},
+                {'name': 'multisystemic smooth muscle dysfunction syndrome', 'url': 'https://www.malacards.org/card/multisystemic_smooth_muscle_dysfunction_syndrome'},
             ],
         },
     )
