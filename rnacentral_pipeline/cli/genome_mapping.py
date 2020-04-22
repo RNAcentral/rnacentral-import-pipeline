@@ -106,5 +106,5 @@ def find_remote_urls(filename, output):
 @click.argument('filename', type=click.File('r'))
 @click.argument('assembly_id')
 @click.argument('output', type=click.File('w'))
-def parse_attempted_sequences(filename, taxid, assembly_id, output):
-    attempted.genome_mapping(filename, taxid, assembly_id, output)
+def parse_attempted_sequences(filename, assembly_id, output):
+    attempted.genome_mapping(filename, assembly_id, output)
