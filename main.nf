@@ -722,7 +722,6 @@ selected_locations
 
 genome_mapping_attempted_sequences
   .collect()
-  .combine(Channel.fromPath('files/genome-mapping/attempted.ctl'))
   .set { genome_mapping_attempted }
 
 process load_genome_mapping {
@@ -731,7 +730,8 @@ process load_genome_mapping {
   input:
   file('raw*.csv') from blat_to_import
   file(ctl) from Channel.fromPath('files/genome-mapping/load.ctl')
-  tuple file('attempted*.csv'), file(attempted_ctl) from genome_mapping_attempted
+  file('attempted*.csv') from genome_mapping_attempted
+  file(attempted_ctl) from Channel.fromPath('files/genome-mapping/attempted.ctl')
 
   output:
   val('done') into genome_mapping_status
