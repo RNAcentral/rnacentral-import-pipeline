@@ -5,12 +5,6 @@ INSERT INTO rnc_interactions (
   names,
   taxid
 ) (
-select
-  intact_id,
-  urs_taxid,
-  interacting_id,
-  names,
-  taxid
 select distinct on (load.intact_id)
   load.intact_id,
   load.urs_taxid,
