@@ -53,6 +53,7 @@ ORDERING = [
     'ensembl fungi',
     'genecards',
     'malacards',
+    'intact',
     'rfam',
     'tarbase',
     'lncbase',
