@@ -25,7 +25,7 @@ INSERT INTO pipeline_tracking_genome_mapping (
 SELECT
     load.urs_taxid,
     load.assembly_id,
-    NOW()
+    NOW() as last_run
 FROM load_genome_mapping_attempted load
 ) ON CONFLICT (urs_taxid, assembly_id) DO UPDATE
 SET
