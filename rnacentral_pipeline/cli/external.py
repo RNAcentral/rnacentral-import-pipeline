@@ -158,8 +158,8 @@ def process_ensembl_protists(ensembl_file, output):
 
 
 @cli.command("pdb")
-@click.argument("pdb_data", default="pdb.json", type=click.File("r"))
-@click.argument("extra", default="pdb-extra.json", type=click.File("r"))
+@click.argument("pdb_data", default="pdb.json", type=click.File("rb"))
+@click.argument("extra", default="pdb-extra.json", type=click.File("rb"))
 @click.argument(
     "output",
     default=".",
