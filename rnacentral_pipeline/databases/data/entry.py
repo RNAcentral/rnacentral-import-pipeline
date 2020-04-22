@@ -341,7 +341,8 @@ class Entry(object):
         return self.__write_part__(self.regions)
 
     def write_interactions(self):
-        return self.__write_part__(self.interactions)
+        for interaction in self.interactions:
+            yield interaction.writeable()
 
     def __write_part__(self, attribute, method_name='writeable'):
         if not self.is_valid():
