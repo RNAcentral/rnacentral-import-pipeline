@@ -33,6 +33,13 @@ def run_release(db_url=None):
     release.run(db_url)
 
 
+@click.command('check-release')
+@click.option('--db_url', envvar='PGDATABASE')
+@click.argument('limit_file', type=click.File('r'))
+def check_release(limit_file, db_url=None):
+    release.check(limit_file, db_url)
+
+
 @click.command('upi-ranges')
 @click.option('--db_url', envvar='PGDATABASE')
 @click.option('--table-name', default='rna')

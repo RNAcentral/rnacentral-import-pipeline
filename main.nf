@@ -339,6 +339,7 @@ process release {
   input:
   file(pre_sql) from pre_scripts
   file(post_sql) from post_scripts
+  file(limits) from Channel.fromPath('files/import-data/limits.json')
 
   output:
   val('done') into post_release
@@ -362,6 +363,7 @@ process release {
     fi
   }
 
+  ${should_release ? '' : '# ' }rnac check-release $limits
   run_sql "${ Utils.write_ordered(pre, pre_sql.inject([]) { a, fn -> a << fn.getName() }) }"
   ${should_release ? '' : '# ' }rnac run-release
   run_sql "${ Utils.write_ordered(post, post_sql.inject([]) { a, fn -> a << fn.getName() }) }"
