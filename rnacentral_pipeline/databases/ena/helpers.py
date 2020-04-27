@@ -36,10 +36,14 @@ ONTOLOGIES = set([
 ])
 
 MAY_SKIP = set([
-    77133,
-    506600,
-    410658,
     1169740,
+    1202446,
+    1325974,
+    408170,
+    410658,
+    506600,
+    77133,
+    939928,
 ])
 
 
@@ -383,6 +387,6 @@ def is_protein(feature):
 
 
 def is_skippable_sequence(entry: Entry) -> bool:
-    return len(entry.sequence) < 500 and \
+    return len(entry.sequence) < 1000 and \
         entry.rna_type == 'rRNA' and \
         entry.ncbi_tax_id in MAY_SKIP
