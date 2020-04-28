@@ -76,6 +76,7 @@ def test_parses_data_correctly(raw, expected):
 @pytest.mark.parametrize('filename,count', [
     ('data/intact/sample.txt', 106),
     ('data/intact/problems.txt', 6),
+    ('data/intact/quoting-issue.txt', 2),
 ])
 def test_can_parse_all_data(filename, count):
     with open(filename, 'r') as raw:

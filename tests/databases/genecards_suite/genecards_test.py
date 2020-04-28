@@ -21,14 +21,14 @@ import pytest
 
 from rnacentral_pipeline.databases import data
 from rnacentral_pipeline.databases.helpers import publications as pub
-from rnacentral_pipeline.databases.genecards_suite.genecards import parse
+from rnacentral_pipeline.databases.genecards_suite import genecards as gene
 from rnacentral_pipeline.databases.genecards_suite.core import lookup
 
 
 @contextmanager
 def known(handle):
     with tempfile.NamedTemporaryFile() as tmp:
-        lookup.write(handle, os.environ['PGDATABASE'], 'URSid', tmp)
+        lookup.write(handle, os.environ['PGDATABASE'], gene.CONTEXT.urs_field, tmp)
         tmp.seek(0)
         yield tmp
 
@@ -39,7 +39,7 @@ def simple_data():
         with known(raw) as indexed:
             raw.seek(0)
             entries = {}
-            for entry in parse(raw, indexed):
+            for entry in gene.parse(raw, indexed):
                 assert entry.primary_id not in entries
                 entries[entry.primary_id] = entry
             return entries

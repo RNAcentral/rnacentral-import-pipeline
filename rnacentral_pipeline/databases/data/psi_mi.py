@@ -48,17 +48,17 @@ class InteractionIdentifier:
 @attr.s(frozen=True)
 class Interactor:
     id = attr.ib(validator=is_a(InteractionIdentifier))
-    alt_ids: ty.List[InteractionIdentifier] = attr.ib(validator=is_a(list))
-    aliases: ty.List[InteractionIdentifier] = attr.ib(validator=is_a(list))
+    alt_ids: ty.Tuple[InteractionIdentifier] = attr.ib(validator=is_a(tuple), converter=tuple)
+    aliases: ty.Tuple[InteractionIdentifier] = attr.ib(validator=is_a(tuple), converter=tuple)
     taxid = attr.ib(validator=optional(is_a(int)))
-    biological_role: ty.List[InteractionIdentifier] = attr.ib(validator=is_a(list))
-    experimental_role: ty.List[InteractionIdentifier] = attr.ib(validator=is_a(list))
-    interactor_type: ty.List[InteractionIdentifier] = attr.ib(validator=is_a(list))
-    xrefs: ty.List[InteractionIdentifier] = attr.ib(validator=is_a(list))
+    biological_role: ty.Tuple[InteractionIdentifier] = attr.ib(validator=is_a(tuple), converter=tuple)
+    experimental_role: ty.Tuple[InteractionIdentifier] = attr.ib(validator=is_a(tuple), converter=tuple)
+    interactor_type: ty.Tuple[InteractionIdentifier] = attr.ib(validator=is_a(tuple), converter=tuple)
+    xrefs: ty.Tuple[InteractionIdentifier] = attr.ib(validator=is_a(tuple), converter=tuple)
     annotations = attr.ib(validator=is_a(str))
-    features: ty.List[InteractionIdentifier] = attr.ib(validator=is_a(list))
+    features: ty.Tuple[InteractionIdentifier] = attr.ib(validator=is_a(tuple), converter=tuple)
     stoichiometry = attr.ib(validator=optional(is_a(int)))
-    participant_identification: ty.List[InteractionIdentifier] = attr.ib(validator=is_a(list))
+    participant_identification: ty.Tuple[InteractionIdentifier] = attr.ib(validator=is_a(tuple), converter=tuple)
 
     @property
     def database(self):
@@ -75,7 +75,10 @@ class Interactor:
             any(a.from_rnacentral() for a in self.aliases)
 
     def all_ids(self):
-        return [self.id] + self.alt_ids + self.aliases
+        ids = [self.id] 
+        ids.extend(self.alt_ids)
+        ids.extend(self.aliases)
+        return ids
 
     def urs_taxid(self) -> str:
         found = set()
@@ -99,17 +102,17 @@ class Interactor:
 
 @attr.s(frozen=True)
 class Interaction:
-    ids: ty.List[InteractionIdentifier] = attr.ib(validator=is_a(list))
+    ids: ty.Tuple[InteractionIdentifier] = attr.ib(validator=is_a(tuple), converter=tuple)
     interactor1 = attr.ib(validator=is_a(Interactor))
     interactor2 = attr.ib(validator=is_a(Interactor))
-    methods: ty.List[str] = attr.ib(validator=is_a(list))
-    types: ty.List[str] = attr.ib(validator=is_a(list))
-    xrefs: ty.List[InteractionIdentifier] = attr.ib(validator=is_a(list))
-    annotations: ty.List[InteractionIdentifier] = attr.ib(validator=is_a(list))
-    confidence: ty.List[InteractionIdentifier] = attr.ib(validator=is_a(list))
-    source_database: ty.List[InteractionIdentifier] = attr.ib(validator=is_a(list))
+    methods: ty.Tuple[str] = attr.ib(validator=is_a(tuple), converter=tuple)
+    types: ty.Tuple[str] = attr.ib(validator=is_a(tuple), converter=tuple)
+    xrefs: ty.Tuple[InteractionIdentifier] = attr.ib(validator=is_a(tuple), converter=tuple)
+    annotations: ty.Tuple[InteractionIdentifier] = attr.ib(validator=is_a(tuple), converter=tuple)
+    confidence: ty.Tuple[InteractionIdentifier] = attr.ib(validator=is_a(tuple), converter=tuple)
+    source_database: ty.Tuple[InteractionIdentifier] = attr.ib(validator=is_a(tuple), converter=tuple)
     is_negative = attr.ib(validator=is_a(bool))
-    publications: ty.List[IdReference] = attr.ib(validator=is_a(list))
+    publications: ty.Tuple[IdReference] = attr.ib(validator=is_a(tuple), converter=tuple)
     create_date = attr.ib(validator=is_a(date))
     update_date = attr.ib(validator=is_a(date))
     host_organisms = attr.ib(validator=is_a(int))
@@ -123,6 +126,18 @@ class Interaction:
             if id.key == 'intact':
                 return id
         return None
+
+    @property
+    def rnacentral_iteractor(self):
+        if self.interactor1.from_rnacentral():
+            return self.interactor1
+        elif self.interactor2.from_rnacentral():
+            return self.interactor2
+        raise ValueError("No rnacentral iteractor")
+
+    @property
+    def urs_taxid(self):
+        return self.rnacentral_iteractor.urs_taxid()
 
     def writeable(self):
         other = None

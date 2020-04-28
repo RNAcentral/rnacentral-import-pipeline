@@ -115,6 +115,7 @@ class Entry(object):
 
     secondary_structure = utils.possibly_empty(SecondaryStructure)
     feature = utils.possibly_empty(list)
+    interactions = utils.possibly_empty(list)
 
     @property
     def database_name(self):
@@ -339,6 +340,10 @@ class Entry(object):
 
     def write_sequence_regions(self):
         return self.__write_part__(self.regions)
+
+    def write_interactions(self):
+        for interaction in self.interactions:
+            yield interaction.writeable()
 
     def __write_part__(self, attribute, method_name='writeable'):
         if not self.is_valid():

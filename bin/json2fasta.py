@@ -15,16 +15,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import re
 import json
 
 import click
-import six
-
-from six.moves import map
 
 from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
+
+EASEL_PATTERN = re.compile(r'^[ACGUN]$')
 
 
 def as_record(entry):
@@ -37,24 +37,32 @@ def as_record(entry):
     )
 
 
-def sequences(handle):
+def select_easel(sequence):
+    return re.match(EASEL_PATTERN, entry['sequence'])
+
+
+def sequences(handle, filter_sequences=False):
     """
     Parse each line and create a generator of SeqRecords to write.
     """
 
-    data = six.moves.map(json.loads, handle)
-    return six.moves.map(as_record, data)
+    data = map(json.loads, handle)
+    if filter_sequences:
+        data = filter(select_easel, data)
+    return map(as_record, data)
 
 
 @click.command()
+@click.option('--filter-sequences', default=False)
 @click.argument('tsv_file', type=click.File('rb'))
 @click.argument('output', default='-', type=click.File('w'))
-def cli(tsv_file, output=None):
+def cli(tsv_file, output=None, filter_sequences=False):
     """
     Turn a file with JSON lines into a FASTA file. Each line must be an object
     with an id and sequence entry and an optional description entry.
     """
-    SeqIO.write(sequences(tsv_file), output, "fasta")
+    seqs = sequences(tsv_file, filter_sequences=filter_sequences)
+    SeqIO.write(seqs, output, "fasta")
 
 
 if __name__ == '__main__':

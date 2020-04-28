@@ -158,8 +158,8 @@ def process_ensembl_protists(ensembl_file, output):
 
 
 @cli.command("pdb")
-@click.argument("pdb_data", default="pdb.json", type=click.File("r"))
-@click.argument("extra", default="pdb-extra.json", type=click.File("r"))
+@click.argument("pdb_data", default="pdb.json", type=click.File("rb"))
+@click.argument("extra", default="pdb-extra.json", type=click.File("rb"))
 @click.argument(
     "output",
     default=".",
@@ -290,7 +290,12 @@ def process_malacards(data_file, known_sequences, output):
 
 
 @cli.command("intact")
+@click.option('--db-url', envvar='PGDATABASE')
 @click.argument("data_file", type=click.File("r"))
-@click.argument("output", default="interactions.csv", type=click.File("w"))
-def process_intact(data_file, output):
-    intact.parse_and_write(data_file, output)
+@click.argument(
+    "output",
+    default=".",
+    type=click.Path(writable=True, dir_okay=True, file_okay=False,),
+)
+def process_intact(data_file, output, db_url):
+    write_entries(intact.parse, output, data_file, db_url)

@@ -1,16 +1,11 @@
 COPY (
 SELECT
 json_build_object(
-  'id', pre.id,
-  'sequence', COALESCE(rna.seq_short, rna.seq_long)
+  'id', to_map.urs_taxid,
+  'sequence', to_map.seq
 )
-FROM rna
-JOIN rnc_rna_precomputed pre 
-ON 
-  pre.upi = rna.upi
+FROM :tablename to_map
 WHERE
-  pre.taxid = :taxid
-  AND rna.len BETWEEN :min_length AND :max_length
-  AND (pre.has_coordinates IS false or pre.has_coordinates IS NULL)
-  AND (pre.is_active = true OR pre.is_active IS NULL)
+  to_map.taxid = :taxid
+  AND to_map.assembly_id = :'assembly_id'
 ) TO STDOUT

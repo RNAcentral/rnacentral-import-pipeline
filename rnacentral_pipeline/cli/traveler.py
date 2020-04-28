@@ -17,6 +17,7 @@ limitations under the License.
 import click
 
 from rnacentral_pipeline.rnacentral import traveler
+from rnacentral_pipeline.rnacentral import attempted
 
 from rnacentral_pipeline.databases.crw.traveler import models as crw
 from rnacentral_pipeline.databases.ribovision.traveler import models as ribovision
@@ -108,3 +109,10 @@ def gtrnadb_model_info(filename, output):
     produce something we can put in our database.
     """
     gtrnadb.write(filename, output)
+
+
+@cli.command('create-attempted')
+@click.argument('filename', type=click.File('r'))
+@click.argument('output', default='-', type=click.File('w'))
+def traveler_create_attempted(filename, output):
+    attempted.traveler(filename, output)
