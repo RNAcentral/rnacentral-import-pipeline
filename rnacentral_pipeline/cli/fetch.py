@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Copyright [2009-2018] EMBL-European Bioinformatics Institute
+Copyright [2009-current] EMBL-European Bioinformatics Institute
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -21,7 +21,7 @@ import click
 from rnacentral_pipeline.databases import pdb
 
 
-@click.group('pdb')
+@click.group('fetch')
 def cli():
     """
     Commands for dealing with the fetching PDB data.
@@ -29,14 +29,22 @@ def cli():
     pass
 
 
-@cli.command('data')
+@cli.group('pdb')
+def pdb_cli():
+    """
+    Commands for dealing with the fetching PDB data.
+    """
+    pass
+
+
+@pdb_cli.command('data')
 @click.argument('output', default='pdb.json', type=click.File('w'))
 @click.argument('pdb_ids', nargs=-1)
 def pdb_group_data(output, pdb_ids=None):
     json.dump(pdb.chains(pdb_ids=pdb_ids), output)
 
 
-@cli.command('extra')
+@pdb_cli.command('extra')
 @click.argument('output', default='pdb-extra.json', type=click.File('wb'))
 @click.argument('pdb_ids', nargs=-1)
 def pdb_group_extra(output, pdb_ids=None):

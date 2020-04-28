@@ -25,23 +25,29 @@ from rnacentral_pipeline.databases.helpers import publications as pub
 from .core.data import Context
 from .core import parser
 
+CONTEXT = Context(
+    database='MALACARDS',
+    base_url='https://www.malacards.org/card/%s',
+    url_data_field='DiseaseSlug',
+    gene_field='GeneCardsSymbol',
+    urs_field='URSid',
+    references=[pub.reference(27899610)]
+)
+
+def diesase_url(slug):
+    return 'https://www.malacards.org/card/' + slug
+
 
 def parse(handle, known_handle) -> ty.Iterator[data.Entry]:
-    context = Context(
-        database='MALACARDS',
-        base_url='https://www.malacards.org/card/%s',
-        url_data_field='slug',
-        gene_field='gene_symbol',
-        urs_field='sourceAccession',
-        references=[pub.reference(27899610)]
-    )
-    parsed = parser.parse(context, handle, known_handle)
+    parsed = parser.parse(CONTEXT, handle, known_handle)
     grouped = it.groupby(parsed, lambda d: d[0].primary_id)
-    disease = op.itemgetter('Diseae name')
+    disease = op.itemgetter('DiseaseName')
+    slug = op.itemgetter('DiseaseSlug')
     for _, items in grouped:
         entries = list(items)
         entry = entries[0][0]
-        diseases = sorted({disease(e[1]) for e in entries})
+        diseases = sorted({(disease(e[1]), slug(e[1])) for e in entries})
+        diseases = [{'name': d, 'url': diesase_url(s)} for (d, s) in diseases]
         note_data = entry.note_data
         note_data['diseases'] = diseases
         yield attr.evolve(entry, note_data=note_data)

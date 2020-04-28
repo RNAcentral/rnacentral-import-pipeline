@@ -4,8 +4,7 @@ SELECT
     'id', rna.upi,
     'sequence', COALESCE(rna.seq_short, rna.seq_long)
   )
-FROM :tablename seqs
-JOIN rna ON rna.upi = seqs.upi
-where
-  seqs.model = :'model'
+FROM rna
+WHERE 
+  not exists(select 1 from pipeline_tracking_traveler track where track.urs = rna.upi)
 ) TO STDOUT;

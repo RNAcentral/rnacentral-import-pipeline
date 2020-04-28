@@ -226,6 +226,8 @@ process merge_and_split_all_publications {
 }
 
 process fetch_publications {
+  when { params.import_data.length > 0 }
+
   output:
   file('out') into refs_database
 
@@ -240,6 +242,7 @@ split_references
   .set { refs_to_lookup }
 
 process lookup_publications {
+  memory 4.GB
   maxForks params.lookup_publications.maxForks
 
   input:
@@ -250,7 +253,19 @@ process lookup_publications {
 
   script:
   """
-  rnac europepmc stream-lookup --allow-fallback $pubs $refs references.csv
+  rnac europepmc stream-lookup --ignore-missing --allow-fallback $pubs $refs references.csv
+  """
+}
+
+process create_load_tables {
+  input:
+  file(create) from Channel.fromPath('files/schema/create_load.sql')
+
+  output:
+  val('done') into created_tables
+
+  """
+  psql -v ON_ERROR_STOP=1 -f $create "$PGDATABASE"
   """
 }
 
@@ -279,6 +294,7 @@ raw_output
   }
   .groupTuple()
   .map { it -> [it[0][0], it[0][1], it[1]] }
+  .combine(created_tables)
   .set { to_load }
 
 process merge_and_import {
@@ -286,7 +302,7 @@ process merge_and_import {
   tag { name }
 
   input:
-  set val(name), file(ctl), file('raw*.csv') from to_load
+  set val(name), file(ctl), file('raw*.csv'), val(flag) from to_load
 
   output:
   val(name) into (pre_loaded, post_loaded)
@@ -323,6 +339,7 @@ process release {
   input:
   file(pre_sql) from pre_scripts
   file(post_sql) from post_scripts
+  file(limits) from Channel.fromPath('files/import-data/limits.json')
 
   output:
   val('done') into post_release
@@ -346,6 +363,7 @@ process release {
     fi
   }
 
+  ${should_release ? '' : '# ' }rnac check-release $limits
   run_sql "${ Utils.write_ordered(pre, pre_sql.inject([]) { a, fn -> a << fn.getName() }) }"
   ${should_release ? '' : '# ' }rnac run-release
   run_sql "${ Utils.write_ordered(post, post_sql.inject([]) { a, fn -> a << fn.getName() }) }"
@@ -360,31 +378,13 @@ post_release
 // QA scans
 //=============================================================================
 
-flag_for_qa
-  .combine(Channel.fromPath('files/qa/*.sql').flatten())
-  .map { flag, fn -> [flag, fn.getBaseName(), fn] }
-  .filter { f, n, fn -> params.qa[n].run }
-  .set { qa_queries }
-
-process fetch_qa_sequences {
-  input:
-  set val(status), val(name), file(query) from qa_queries
-
-  output:
-  set val(name), file('parts/*.fasta') into split_qa_sequences
-
-  script:
-  chunk_size = params.qa[name].chunk_size
-  variables = ""
-  template 'query-and-split.sh'
-}
-
 process generate_qa_scan_files {
   input:
   set val(name), val(base) from files_to_prepare
 
   output:
   set val(name), file(name) into qa_scan_files
+  set val(name), file('version_file') into qa_version_files
 
   script:
   if (name == "pfam") {
@@ -416,10 +416,39 @@ process generate_qa_scan_files {
     gzip -d *.gz
     cmpress Rfam.cm
     cd ..
+    fetch generic "$base/README" version_file
     """
   } else {
     error("Unknown QA to prepare: $name")
   }
+}
+
+flag_for_qa
+  .combine(Channel.fromPath('files/qa/*.sql').flatten())
+  .map { flag, fn -> [fn.getBaseName(), fn] }
+  .filter { n, fn -> params.qa[n].run }
+  .join(qa_version_files)
+  .set { qa_queries }
+
+process fetch_qa_sequences {
+  memory 20.GB
+
+  input:
+  set val(name), file(query), file(version) from qa_queries
+
+  output:
+  set val(name), file('parts/*.fasta') into split_qa_sequences
+  set val(name), file('attempted.csv') into qa_track_attempted
+
+  script:
+  """
+  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > raw.json
+  json2fasta.py raw.json rnacentral.fasta
+  seqkit shuffle --two-pass rnacentral.fasta > shuffled.fasta
+  seqkit split --two-pass --by-size ${params.qa[name].chunk_size} --out-dir 'parts/' shuffled.fasta
+
+  rnac qa create-attempted raw.json $name $version attempted.csv
+  """
 }
 
 split_qa_sequences
@@ -490,19 +519,24 @@ qa_scan_results
     }
     status
   }
+  .join(qa_track_attempted)
+  .map { n, files, ctl, attempted -> 
+    [n, files, ctl, attempted, file("files/qa/attempted/${n}.ctl")]
+  }
   .set { hits_to_import }
 
 process import_qa_data {
   tag { "qa-$name" }
 
   input:
-  set val(name), file('raw*.csv'), file(ctl) from hits_to_import
+  set val(name), file('raw*.csv'), file(ctl), file('attempted*.csv'), file(attempted_ctl) from hits_to_import
 
   output:
   val("$name done") into qa_imported
 
   """
   split-and-load $ctl 'raw*.csv' ${params.import_data.chunk_size} $name
+  split-and-load $attempted_ctl 'attempted*.csv' ${params.import_data.chunk_size} attempted-$name
   """
 }
 
@@ -515,21 +549,31 @@ qa_imported
 // Genome mapping
 //=============================================================================
 
-process species_to_map {
-  executor 'local'
-
+process genome_mapping_setup {
   when:
   params.genome_mapping.run
 
   input:
   val(flag) from flag_for_mapping
-  file(query) from Channel.fromPath('files/genome-mapping/mappable.sql')
+  file(setup) from Channel.fromPath('files/genome-mapping/setup.sql')
+  file(query) from Channel.fromPath('files/genome-mapping/find-species.sql')
 
   output:
-  stdout into raw_genomes
+  file('species.csv') into raw_genomes
 
   """
-  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE"
+  psql \
+    -v ON_ERROR_STOP=1 \
+    -v tablename=${params.genome_mapping.to_map_table} \
+    -v species_to_map=${params.genome_mapping.species_table} \
+    -v min_length=${params.genome_mapping.min_length} \
+    -v max_length=${params.genome_mapping.max_length} \
+    -f "$setup" "$PGDATABASE"
+  psql \
+    -v ON_ERROR_STOP=1 \
+    -v tablename=${params.genome_mapping.to_map_table} \
+    -v species_to_map=${params.genome_mapping.species_table} \
+    -f "$query" "$PGDATABASE" > species.csv
   """
 }
 
@@ -552,14 +596,15 @@ process fetch_unmapped_sequences {
 
   output:
   set species, file('parts/*.fasta') into split_mappable_sequences
+  file('attempted.csv') into genome_mapping_attempted_sequences
 
   """
   psql \
     -v ON_ERROR_STOP=1 \
     -v taxid=$taxid \
     -v assembly_id=$assembly_id \
-    -v min_length=${params.genome_mapping.min_length} \
-    -v max_length=${params.genome_mapping.max_length} \
+    -v tablename=${params.genome_mapping.to_map_table} \
+    -v species_to_map=${params.genome_mapping.species_table} \
     -f "$query" \
     "$PGDATABASE" > raw.json
   json2fasta.py raw.json rnacentral.fasta
@@ -568,12 +613,15 @@ process fetch_unmapped_sequences {
     --max-nucleotides ${params.genome_mapping.fetch_unmapped_sequences.nucleotides_per_chunk} \
     --max-sequences ${params.genome_mapping.fetch_unmapped_sequences.sequences_per_chunk} \
       shuffled.fasta parts
+
+  rnac genome-mapping create-attempted raw.json $assembly_id attempted.csv
   """
 }
 
 process download_genome {
   tag { species }
   memory { params.genome_mapping.download_genome.directives.memory }
+  errorStrategy 'ignore'
 
   input:
   set val(species), val(assembly), val(taxid), val(division) from genomes_to_fetch
@@ -652,7 +700,7 @@ process blat {
 
 process select_mapped_locations {
   tag { species }
-  memory { params.genome_mapping.select_mapped.directives.memory }
+  memory { '20GB' }
 
   input:
   set val(species), file('selected*.json') from species_results
@@ -674,12 +722,18 @@ selected_locations
   .collect()
   .set { blat_to_import }
 
+genome_mapping_attempted_sequences
+  .collect()
+  .set { genome_mapping_attempted }
+
 process load_genome_mapping {
   maxForks 1
 
   input:
   file('raw*.csv') from blat_to_import
   file(ctl) from Channel.fromPath('files/genome-mapping/load.ctl')
+  file('attempted*.csv') from genome_mapping_attempted
+  file(attempted_ctl) from Channel.fromPath('files/genome-mapping/attempted.ctl')
 
   output:
   val('done') into genome_mapping_status
@@ -687,6 +741,8 @@ process load_genome_mapping {
   script:
   """
   split-and-load $ctl 'raw*.csv' ${params.import_data.chunk_size} genome-mapping
+  split-and-load $attempted_ctl 'attempted*.csv' ${params.import_data.chunk_size} genome-mapping-attempted
+  psql -v ON_ERROR_STOP=1 -v tablename=params.genome_mapping.to_map_table -c 'DROP TABLE :tablename' $PGDATABASE
   """
 }
 
@@ -799,38 +855,9 @@ post_precompute
 //=============================================================================
 
 flag_for_secondary
-  .combine(Channel.fromPath("files/traveler/setup.sql"))
-  .combine(Channel.fromPath("files/traveler/find-families.sql"))
-  .map { flag, setup, query -> [setup, query] }
-  .set { traveler_setup }
-
-process find_traveler_families {
-  when:
-  params.secondary.run
-
-  input:
-  set file(setup), file(query) from traveler_setup
-
-  output:
-  file("families.txt") into possible_rfam_families
-
-  """
-  psql \
-    -v ON_ERROR_STOP=1 \
-    -v 'tablename=${params.secondary.tablename}' \
-    -f $setup "$PGDATABASE"
-  psql \
-    -v ON_ERROR_STOP=1 \
-    -v 'tablename=${params.secondary.tablename}' \
-    -f $query "$PGDATABASE" > families.txt
-  """
-}
-
-possible_rfam_families
-  .splitCsv()
-  .map { it[0] }
   .combine(Channel.fromPath("files/traveler/find-sequences.sql"))
-  .set { rfam_for_traveler }
+  .map { flag, query -> query }
+  .set { traveler_setup }
 
 process find_possible_traveler_sequences {
   tag { "${model}" }
@@ -839,11 +866,10 @@ process find_possible_traveler_sequences {
   clusterOptions '-sp 100'
 
   input:
-  set val(model), file(query) from rfam_for_traveler
+  file(query) from traveler_setup
 
   output:
-  set val(model), file('parts/*.fasta') into to_layout mode flatten
-  set val(model), file('rnacentral.fasta') into traveler_expected_sequences
+  set file('parts/*.fasta') into to_layout mode flatten
 
   script:
   def chunk_size = params.secondary.sequence_chunk_size
@@ -860,111 +886,57 @@ process find_possible_traveler_sequences {
 }
 
 process layout_sequences {
-  tag { "${family}-${sequences}" }
+  tag { "${sequences}" }
   memory params.secondary.layout.memory
   container 'rnacentral/auto-traveler:dev'
 
   input:
-  set val(family), file(sequences) from to_layout
+  file(sequences) from to_layout
 
   output:
-  set val(family), file('output') into secondary_to_parse
+  set file("$sequences"), file('output') into secondary_to_parse
   file('output/hits.txt') optional true into secondary_hits
   file('output/*.stk') optional true into secondary_stk
 
-  script:
-  def opt = family =~ /^RF/ ? "rfam draw ${family}" : "${family} draw"
   """
-  auto-traveler.py $opt $sequences output/
+  auto-traveler.py draw $sequences output/
   """
 }
 
-
 process parse_layout {
-
   input:
-  set val(family), file(to_parse) from secondary_to_parse
+  set file('sequences.fasta'), file(to_parse) from secondary_to_parse
 
   output:
   file("data.csv") into secondary_to_import
+  file('attempted.csv') into traveler_attempted_sequences
 
   """
   rnac traveler process-svgs $family $to_parse data.csv
+  rnac traveler create-attempted $sequences attempted.csv
   """
 }
 
 secondary_to_import
   .collect()
-  .map { [it, file("files/traveler/load.ctl"), file("files/traveler/find-rna-types.sql")] }
+  .combine(Channel.fromPath("files/traveler/load.ctl"))
   .set { secondary_to_import }
+
+traveler_attempted_sequences
+  .collect()
+  .combine(Channel.fromPath('files/traveler/attempted.ctl'))
+  .set { traveler_attempted }
 
 process store_secondary_structures {
   memory params.secondary.store.memory
 
   input:
   set file('data*.csv'), file(ctl), file(rna_types_sql) from secondary_to_import
-
-  output:
-  file('built') into traveler_success
-  file('rna-types.txt') into traveler_rna_types
+  set file('attempted*.csv'), file(attempted_ctl) from traveler_attempted
 
   """
   split-and-load $ctl 'data*.csv' ${params.secondary.data_chunk_size} traveler-data
-  find . -name 'data*.csv' | xargs -I {} cut -d, -f1 {} | tr -d '"' | sort > built
-  psql -v ON_ERROR_STOP=1 -f $rna_types_sql $PGDATABASE > rna-types.txt
-  """
-}
-
-traveler_rna_types
-  .splitCsv()
-  .combine(Channel.fromPath("files/traveler/export-hits.sql"))
-  .set { traveler_to_score }
-
-process traveler_compute_should_show {
-  tag { "${model_type}-${rna_type}" }
-  memory params.secondary.should_show.memory
-
-  input:
-  set val(model_type), val(rna_type), file(export) from traveler_to_score
-
-  output:
-  file('should-show.csv') into traveler_should_show
-
-  """
-  psql \
-    -v ON_ERROR_STOP=1 \
-    -v rna_type=$rna_type \
-    -v model_type=$model_type \
-    -f $export $PGDATABASE > data.csv
-  rnac traveler should-show data.csv should-show.csv
-  """
-}
-
-process traveler_load_should_show {
-  input:
-  file('raw*.csv') from traveler_should_show.collect()
-  file(ctl) from Channel.fromPath('files/traveler/update-should-show.ctl')
-
-  """
-  split-and-load $ctl 'raw*.csv' ${params.secondary.data_chunk_size} traveler-data
-  psql -v ON_ERROR_STOP=1 -c 'DROP TABLE ${params.secondary.tablename}' $PGDATABASE
-  """
-}
-
-process find_traveler_failures {
-  publishDir "$baseDir/traveler"
-
-  input:
-  file('expected*.fasta') from traveler_expected_sequences.collect()
-  file('built') from traveler_success
-
-  output:
-  file('failures.txt') into traveler_failures
-
-  """
-  find . -name 'expected*.fasta' |\
-  xargs -I {} seqkit seq -ni {} | sort -u > expected
-  comm -23 expected built > failures.txt
+  split-and-load $attempted_ctl 'attemped*.csv' ${params.secondary.data_chunk_size} traveler-attempted
   """
 }
 

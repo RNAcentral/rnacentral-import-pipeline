@@ -187,7 +187,7 @@ def as_interaction(row) -> ty.Optional[data.Interaction]:
 
 
 def parse(handle) -> ty.Iterator[data.Interaction]:
-    rows = csv.DictReader(handle, delimiter='\t')
+    rows = csv.DictReader(handle, delimiter='\t', quoting=csv.QUOTE_NONE)
     interactions = map(as_interaction, rows)
     valid = filter(None, interactions)
     return valid

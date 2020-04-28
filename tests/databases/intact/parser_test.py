@@ -13,9 +13,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import os
+from datetime import date
+import collections as coll
+
 import attr
 import pytest
-from datetime import date
 
 from rnacentral_pipeline.databases import data
 from rnacentral_pipeline.databases.intact import parser
@@ -25,15 +28,36 @@ from rnacentral_pipeline.databases.helpers import publications as pubs
 @pytest.fixture(scope='module')
 def sample():
     with open('data/intact/sample.txt', 'r') as raw:
-        return list(parser.parse(raw))
+        return list(parser.parse(raw, os.environ['PGDATABASE']))
 
 
 def test_can_parse_all_data(sample):
-    assert len(sample) == 7
+    assert len(sample) == 4
+
+
+def test_creates_entries_with_expected_ids(sample):
+    ids = sorted(e.primary_id for e in sample)
+    assert ids == [
+        'INTACT:URS0000077671_559292',
+        'INTACT:URS0000182FAB_559292',
+        'INTACT:URS000020D517_559292',
+        'INTACT:URS00002AFD52_559292',
+    ]
+
+
+def test_correctly_groups_data(sample):
+    val = {e.primary_id: len(e.interactions) for e in sample}
+    assert val == {
+        'INTACT:URS0000077671_559292': 1,
+        'INTACT:URS0000182FAB_559292': 1,
+        'INTACT:URS000020D517_559292': 1,
+        'INTACT:URS00002AFD52_559292': 4,
+    }
 
 
 def test_produces_correct_data(sample):
-    val = next(i for i in sample)
+    with open('data/intact/sample.txt', 'r') as raw:
+        val = next(parser.parse_interactions(raw))
     i1 = data.Interactor(
         id=data.InteractionIdentifier('intact', 'EBI-10921362', None),
         alt_ids=[data.InteractionIdentifier('rnacentral', 'URS00002AFD52_559292', None)],
