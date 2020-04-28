@@ -10,7 +10,8 @@ HAVING FIELDS (
   has_coordinates,
   databases,
   short_description,
-  last_release
+  last_release,
+  so_rna_type
 )
 INTO {{PGDATABASE}}?load_precomputed
 TARGET COLUMNS (
@@ -23,7 +24,8 @@ TARGET COLUMNS (
   has_coordinates,
   databases,
   short_description,
-  last_release
+  last_release,
+  so_rna_type
 )
 
 WITH
@@ -31,25 +33,6 @@ WITH
     skip header = 0,
     fields escaped by double-quote,
     fields terminated by ','
-
-BEFORE LOAD DO
-$$
-drop table if exists load_precomputed;
-$$,
-$$
-create table load_precomputed (
-  id varchar(44) NOT NULL,
-  upi varchar(26) NOT NULL,
-  taxid int8 NULL,
-  description varchar(500) NULL,
-  short_description text NULL,
-  rna_type varchar(500) NULL DEFAULT 'NULL'::character varying,
-  has_coordinates bool NOT NULL DEFAULT false,
-  databases text,
-  is_active bool,
-  last_release int4
-);
-$$
 
 AFTER LOAD DO
 $$
@@ -64,7 +47,8 @@ insert into rnc_rna_precomputed (
   databases,
   has_coordinates,
   short_description,
-  last_release
+  last_release,
+  so_rna_type
 ) (
 SELECT DISTINCT
   id,
@@ -77,7 +61,8 @@ SELECT DISTINCT
   databases,
   has_coordinates,
   short_description,
-  last_release
+  last_release,
+  so_rna_type
 FROM load_precomputed
 )
 ON CONFLICT (id) DO UPDATE
@@ -88,7 +73,8 @@ SET
   databases = EXCLUDED.databases,
   has_coordinates = EXCLUDED.has_coordinates,
   short_description = EXCLUDED.short_description,
-  last_release = EXCLUDED.last_release
+  last_release = EXCLUDED.last_release,
+  so_rna_type = EXCLUDED.so_rna_type
 ;
 $$,
 $$
