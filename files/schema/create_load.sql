@@ -264,7 +264,8 @@ CREATE TABLE load_precomputed (
   has_coordinates bool NOT NULL DEFAULT false,
   databases text,
   is_active bool,
-  last_release int4
+  last_release int4,
+  so_rna_type text NOT NULL
 );
 
 DROP TABLE IF EXISTS load_qa_status;
