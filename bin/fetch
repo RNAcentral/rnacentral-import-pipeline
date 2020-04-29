@@ -188,7 +188,7 @@ function fetch_ena() {
     --include='**/*.ncr.gz' \
     --exclude='*.fasta.gz' \
     "$1" .
-  # join-ena-files --max-size 1GB '**/*.ncr.gz' "$2"
+  join-ena-files --max-size '200MB' '**/*.ncr.gz' "$2"
 }
 
 fetch_exclude()
