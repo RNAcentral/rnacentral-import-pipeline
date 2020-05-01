@@ -220,7 +220,7 @@ process merge_and_split_all_publications {
   set -o pipefail
 
   mkdir split-refs
-  find . -name 'ref_ids*.csv' | xargs cat | sort -u > all-ids
+  find . -name 'ref_ids*.csv' | xargs cat > all-ids
   split --additional-suffix=".csv" --number l/${params.lookup_publications.maxForks} all-ids split-refs/refs
   """
 }
