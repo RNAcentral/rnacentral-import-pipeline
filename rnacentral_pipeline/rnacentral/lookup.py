@@ -20,7 +20,7 @@ import psycopg2.extras
 
 import more_itertools as more
 
-CHUNK_SIZE = 100
+CHUNK_SIZE = 300
 
 
 def lookup(db_url, all_ids, query, chunk_size=CHUNK_SIZE):
