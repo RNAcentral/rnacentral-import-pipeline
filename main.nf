@@ -443,7 +443,7 @@ process fetch_qa_sequences {
   script:
   """
   psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > raw.json
-  json2fasta.py raw.json rnacentral.fasta
+  json2fasta.py --only-valid-easel raw.json rnacentral.fasta
   seqkit shuffle --two-pass rnacentral.fasta > shuffled.fasta
   seqkit split --two-pass --by-size ${params.qa[name].chunk_size} --out-dir 'parts/' shuffled.fasta
 
