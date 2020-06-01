@@ -50,7 +50,7 @@ process id_mapping {
 
   """
   psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > raw_id_mapping.tsv
-  rnac ftp-export id-mapping raw_id_mapping.tsv id_mapping.tsv
+  rnac ftp-export id-mapping raw_id_mapping.tsv - | sort -u > id_mapping.tsv
   head id_mapping.tsv > example.txt
   gzip id_mapping.tsv
   cat template.txt > readme.txt
