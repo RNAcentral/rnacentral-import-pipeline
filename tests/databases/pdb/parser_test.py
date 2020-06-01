@@ -83,14 +83,8 @@ def test_can_build_correct_entry_for_rrna():
         product='16S ribosomal RNA',
         references=[
             pubs.reference(11014182),
-            pubs.reference('doi:10.1038/35030019'),
-            data.Reference(
-                authors='Clemons Jr. W.M., May J.L.C., Wimberly B.T., McCutcheon J.P., Capel M.S., Ramakrishnan V.',
-                location='Nature',
-                title='Structure of a Bacterial 30S Ribosomal Subunit at 5.5 A Resolution',
-                pmid=None,
-                doi=None,
-            )
+            pubs.reference(11014183),
+            pubs.reference(10476960),
         ],
     ))
 
