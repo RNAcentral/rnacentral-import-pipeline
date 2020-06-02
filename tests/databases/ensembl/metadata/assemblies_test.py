@@ -49,8 +49,8 @@ def test_it_can_load_known():
     assert len(known[9606]) == 1
     assert attr.asdict(known[9606][0]) == attr.asdict(assem.AssemblyInfo(
         assembly_id='GRCh38',
-        assembly_full_name='GRCh38.p12',
-        gca_accession='GCA_000001405.27',
+        assembly_full_name='GRCh38.p13',
+        gca_accession='GCA_000001405.28',
         assembly_ucsc='hg38',
         common_name='human',
         taxid=9606,
@@ -121,7 +121,7 @@ def test_it_never_has_more_than_one_assembly_unique_item(assemblies, key):
     (559292, 'EnsemblFungi', 'R64-1-1'),
     (6239, 'EnsemblVertebrates', 'WBcel235'),
     (6669, 'EnsemblMetazoa', 'V1.0'),
-    (7227, 'EnsemblVertebrates', 'BDGP6.22'),
+    (7227, 'EnsemblVertebrates', 'BDGP6.28'),
     (8090, 'EnsemblVertebrates', 'ASM223467v1'),
 ])
 def test_it_uses_correct_sources_for_duplicates(assemblies, taxid, division,

@@ -78,8 +78,13 @@ def exons(data):
     )]
 
 
-def rna_type(data, mapping):
-    return mapping.get(data['primary_id'], None) or data['ncrna_class']
+def rna_type(data):
+    possible = [t for t in data['ontology'] if t.startswith('SO:')]
+    if not possible:
+        raise ValueError(f"Missing SO term for {data}")
+    if len(possible) > 1:
+        raise ValueError(f"Too many SO terms for {data}")
+    return possible[0]
 
 
 def sequence(data):

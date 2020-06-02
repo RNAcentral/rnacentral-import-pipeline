@@ -31,7 +31,7 @@ def test_can_get_expected_sequences(simple_sequences):
 
 
 @pytest.mark.parametrize('gene_id,sequence_id', {
-    ('108869573', 'NC_024802.1'),
+    ('108869573', 'NC_024802.2'),
     ('107303968', 'XR_001549991.1'),
 })
 def test_can_fetch_correct_sequence_data(simple_sequences, gene_id, sequence_id):

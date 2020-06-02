@@ -112,10 +112,10 @@ def test_can_parse_expected_accounts(leis_36):
 
 
 @pytest.mark.parametrize('accession,rna_type', [
-    ('ENSEMBL_PROTISTS:EPrT00049906997', 'snoRNA'),
-    ('ENSEMBL_PROTISTS:ENSRNAT00049766004', 'snoRNA'),
-    ('ENSEMBL_PROTISTS:EPrT00049907002', 'tRNA'),
-    ('ENSEMBL_PROTISTS:EPrT00049906963', 'snRNA'),
+    ('ENSEMBL_PROTISTS:EPrT00049906997', 'SO:0000275'),
+    ('ENSEMBL_PROTISTS:ENSRNAT00049766004', 'SO:0000274'),
+    ('ENSEMBL_PROTISTS:EPrT00049907002', 'SO:0000253'),
+    ('ENSEMBL_PROTISTS:EPrT00049906963', 'SO:0000274'),
 ])
 def test_can_get_expected_rna_types(leis_36, accession, rna_type):
     val = helpers.entry_for(leis_36, accession)
@@ -126,7 +126,7 @@ def test_only_has_expected_ncrna_as_rna_type(leis_36):
     for entry in leis_36:
         if entry.primary_id == 'EPrT00049906996':
             continue
-        assert entry.rna_type != 'ncRNA'
+        assert entry.rna_type != 'SO:0000655'
 
 
 def test_can_parse_expected_data(leis_36):
@@ -145,7 +145,7 @@ def test_can_parse_expected_data(leis_36):
                 coordinate_system=dat.CoordinateSystem.one_based(),
             ),
         ],
-        rna_type='tRNA',
+        rna_type='SO:0000253',
         url='',
         seq_version='1',
         note_data={},
@@ -153,9 +153,9 @@ def test_can_parse_expected_data(leis_36):
         species='Leishmania major',
         common_name=None,
         lineage=(
-            'Eukaryota; Euglenozoa; Kinetoplastida; '
-            'Trypanosomatidae; Leishmaniinae; Leishmania; Leishmania '
-            'major strain Friedlin'
+            'Eukaryota; Discoba; Euglenozoa; Kinetoplastea; Metakinetoplastina; '
+            'Trypanosomatida; Trypanosomatidae; Leishmaniinae; Leishmania; '
+            'Leishmania major strain Friedlin'
         ),
         gene='LMJF_36_TRNAGLY_01',
         locus_tag='LMJF_36_TRNAGLY_01',

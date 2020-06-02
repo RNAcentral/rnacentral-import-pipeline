@@ -27,7 +27,7 @@ def test_cannot_build_entry_without_seq_id():
             database='A',
             sequence='ACCG',
             regions=[],
-            rna_type='ncRNA',
+            rna_type='SO:0000655',
             url='http://www.google.com',
             seq_version=None,
         )
@@ -42,7 +42,7 @@ def test_cannot_build_entry_with_empty_seq_id():
             database='A',
             sequence='ACCG',
             regions=[],
-            rna_type='ncRNA',
+            rna_type='SO:0000655',
             url='http://www.google.com',
             seq_version='',
         )
@@ -56,7 +56,7 @@ def test_can_build_with_seq_version():
         database='A',
         sequence='ACCG',
         regions=[],
-        rna_type='ncRNA',
+        rna_type='SO:0000655',
         url='http://www.google.com',
         seq_version='1',
     )
@@ -71,7 +71,7 @@ def test_it_will_always_uppercase_database():
         database='a_database_name',
         sequence='ACCG',
         regions=[],
-        rna_type='ncRNA',
+        rna_type='SO:0000655',
         url='http://www.google.com',
         seq_version='1',
     )
@@ -79,12 +79,54 @@ def test_it_will_always_uppercase_database():
     assert entry.database_name == 'A_DATABASE_NAME'
 
 
+@pytest.mark.parametrize('so_term,rna_type', [
+    ('SO:0000385', 'RNase_MRP_RNA'),
+    ('SO:0000386', 'RNase_P_RNA'),
+    ('SO:0000590', 'SRP_RNA'),
+    ('SO:0000405', 'Y_RNA'),
+    ('SO:0000644', 'antisense_RNA'),
+    ('SO:0000588', 'autocatalytically_spliced_intron'),
+    ('SO:0000602', 'guide_RNA'),
+    ('SO:0000380', 'hammerhead_ribozyme'),
+    ('SO:0001877', 'lncRNA'),
+    ('SO:0000276', 'miRNA'),
+    ('SO:0000655', 'other'),
+    ('SO:0001035', 'piRNA'),
+    ('SO:0000454', 'rasiRNA'),
+    ('SO:0000374', 'ribozyme'),
+    ('SO:0000013', 'scRNA'),
+    ('SO:0000646', 'siRNA'),
+    ('SO:0000274', 'snRNA'),
+    ('SO:0000275', 'snoRNA'),
+    ('SO:0000390', 'telomerase_RNA'),
+    ('SO:0000404', 'vault_RNA'),
+    ('SO:0000253', 'tRNA'),
+    ('SO:0000252', 'rRNA'),
+    ('SO:0000584', 'tmRNA'),
+    ('SO:0000673', 'misc_RNA'),
+    # 'precursor_RNA',
+])
+def test_convertes_rna_types_correctl(rna_type, so_term):
+    entry = data.Entry(
+        primary_id='a',
+        accession='b',
+        ncbi_tax_id=1,
+        database='a_database_name',
+        sequence='ACCG',
+        regions=[],
+        rna_type=rna_type,
+        url='http://www.google.com',
+        seq_version='1',
+    )
+    assert entry.rna_type == so_term
+
+
 @pytest.mark.parametrize('rna_type', [
     'tRNA',
     'rRNA',
     'tmRNA',
     'misc_RNA',
-    'precursor_RNA',
+    # 'precursor_RNA',
 ])
 def test_labels_feature_type_rnas_correctly(rna_type):
     entry = data.Entry(
@@ -180,3 +222,23 @@ def test_can_write_valid_sequence_regions():
         ['b', '@12/20-22,24-33:+', '12', 1, 'hg38', 2, 20, 22],
         ['b', '@12/20-22,24-33:+', '12', 1, 'hg38', 2, 24, 33],
     ]
+
+
+@pytest.mark.parametrize('rna_type,ans', [
+    ('SO:0000590', 'SRP RNA'),
+    ('SO:0001244', 'pre miRNA'),
+    ('SO:0001268', 'snRNA'),
+])
+def test_can_build_expected_rna_type_names(rna_type, ans):
+    entry = data.Entry(
+        primary_id='a',
+        accession='b',
+        ncbi_tax_id=1,
+        database='a_database_name',
+        sequence='ACCGGGGGGGGGGGGGGGGGGGGGGGG',
+        regions=[],
+        rna_type=rna_type,
+        url='http://www.google.com',
+        seq_version='1',
+    )
+    assert entry.human_rna_type() == ans
