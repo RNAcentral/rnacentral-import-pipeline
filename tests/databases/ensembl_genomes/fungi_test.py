@@ -90,7 +90,8 @@ def test_can_produce_correct_data(asp_1):
         lineage=(
             'Eukaryota; Fungi; Dikarya; Ascomycota; Pezizomycotina; '
             'Eurotiomycetes; Eurotiomycetidae; Eurotiales; Aspergillaceae; '
-            'Aspergillus; Nidulantes; Aspergillus nidulans FGSC A4'
+            'Aspergillus; Aspergillus subgen. Nidulantes; '
+            'Aspergillus nidulans FGSC A4'
         ),
         gene="EBG00005235662",
         locus_tag='U2',
