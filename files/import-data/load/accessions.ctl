@@ -39,7 +39,8 @@ HAVING FIELDS (
     product,
     pseudogene,
     standard_name,
-    db_xref
+    db_xref,
+    so_term
 )
 INTO {{PGDATABASE}}?load_rnc_accessions
 TARGET COLUMNS (
@@ -81,7 +82,8 @@ TARGET COLUMNS (
     product,
     pseudogene,
     standard_name,
-    db_xref
+    db_xref,
+    so_term
 )
 
 WITH truncate,
