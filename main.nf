@@ -387,40 +387,16 @@ process generate_qa_scan_files {
   set val(name), file('version_file') into qa_version_files
 
   script:
-  if (name == "pfam") {
-    """
-    mkdir $name
-    cd $name
-    fetch generic "$base/Pfam-A.hmm.gz" Pfam-A.hmm.gz
-    fetch generic "$base/Pfam-A.dat.hmm.gz" Pfam-A.dat.hmm.gz
-    fetch generic "$base/active_site.dat.gz" active_site.dat.gz
-    gzip -d *.gz
-    hmmpress Pfam-A.hmm
-    cd ..
-    """
-  } else if (name == "dfam")  {
-    """
-    mkdir $name
-    cd $name
-    fetch generic "$base/Dfam.hmm.gz" Dfam.hmm.gz
-    gzip -d Dfam.hmm.gz
-    hmmpress Dfam.hmm
-    cd ..
-    """
-  } else if (name == "rfam") {
-    """
-    mkdir $name
-    cd $name
-    fetch generic "$base/Rfam.clanin" Rfam.clanin
-    fetch generic "$base/Rfam.cm.gz" Rfam.cm.gz
-    gzip -d *.gz
-    cmpress Rfam.cm
-    cd ..
-    fetch generic "$base/README" version_file
-    """
-  } else {
-    error("Unknown QA to prepare: $name")
-  }
+  """
+  mkdir $name
+  cd $name
+  fetch generic "$base/Rfam.clanin" Rfam.clanin
+  fetch generic "$base/Rfam.cm.gz" Rfam.cm.gz
+  gzip -d *.gz
+  cmpress Rfam.cm
+  cd ..
+  fetch generic "$base/README" version_file
+  """
 }
 
 flag_for_qa
@@ -438,7 +414,6 @@ process fetch_qa_sequences {
 
   output:
   set val(name), file('parts/*.fasta') into split_qa_sequences
-  set val(name), file('attempted.csv') into qa_track_attempted
 
   script:
   """
@@ -446,8 +421,6 @@ process fetch_qa_sequences {
   json2fasta.py --only-valid-easel raw.json rnacentral.fasta
   seqkit shuffle --two-pass rnacentral.fasta > shuffled.fasta
   seqkit split --two-pass --by-size ${params.qa[name].chunk_size} --out-dir 'parts/' shuffled.fasta
-
-  rnac qa create-attempted raw.json $name $version attempted.csv
   """
 }
 
@@ -460,53 +433,34 @@ process qa_scan {
   tag { name }
   cpus { params.qa[name].cpus }
   memory { params.qa[name].memory * params.qa[name].cpus }
+  errorStrategy 'ignore'
 
   input:
   set val(name), file('sequences.fasta'), file(dir) from sequences_to_scan
 
   output:
   set val(name), file('hits.csv') into qa_scan_results
+  set val(name), file('attempted.csv') into qa_track_attempted
 
   script:
-  if (name == 'rfam') {
-    """
-    cmscan \
-      -o output.inf \
-      --tblout results.tblout \
-      --clanin $dir/Rfam.clanin \
-      --oclan \
-      --fmt 2 \
-      --acc \
-      --cut_ga \
-      --rfam \
-      --notextw \
-      --nohmmonly \
-      "$dir/Rfam.cm" \
-      sequences.fasta
-    rnac qa $name results.tblout hits.csv
-    """
-  } else if (name == 'pfam') {
-    """
-    pfam_scan.pl \
-      -fasta sequences.fasta \
-      -dir "$dir" \
-      -cpus ${params.qa[name].cpus} \
-      -outfile raw.tsv
-    rnac qa $name raw.tsv hits.csv
-    """
-  } else if (name == 'dfam') {
-    """
-    dfamscan.pl \
-      -fastafile sequences.fasta \
-      --hmmfile "$dir/Dfam.hmm" \
-      --cut_ga \
-      --cpu ${params.qa[name].cpus} \
-      --dfam_outfile raw.txt
-    rnac qa $name raw.txt hits.csv
-    """
-  } else {
-    error("Unknown type of QA scan: $name")
-  }
+  """
+  cmscan \
+    -o output.inf \
+    --tblout results.tblout \
+    --clanin $dir/Rfam.clanin \
+    --oclan \
+    --fmt 2 \
+    --acc \
+    --cut_ga \
+    --rfam \
+    --notextw \
+    --nohmmonly \
+    "$dir/Rfam.cm" \
+    sequences.fasta
+  rnac qa $name results.tblout hits.csv
+
+  rnac qa create-attempted sequences.fasta $name $version attempted.csv
+  """
 }
 
 qa_scan_results
@@ -519,7 +473,7 @@ qa_scan_results
     }
     status
   }
-  .join(qa_track_attempted)
+  .join(qa_track_attempted.groupTuple())
   .map { n, files, ctl, attempted -> 
     [n, files, ctl, attempted, file("files/qa/attempted/${n}.ctl")]
   }

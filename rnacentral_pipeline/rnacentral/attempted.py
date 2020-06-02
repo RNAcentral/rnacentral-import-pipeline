@@ -65,7 +65,7 @@ def qa(handle, name, version_file, output):
         version = parse_rfam_version(version_file)
     else:
         raise ValueError(f"Unknown QA type: {name}")
-    data = json_parser(handle, extra_fields=[name, version])
+    data = fasta_parser(handle, extra_fields=[name, version])
     write(data, output)
 
 
