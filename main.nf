@@ -529,14 +529,14 @@ process import_qa_data {
   tag { "qa-$name" }
 
   input:
-  set val(name), file('raw*.csv'), file(ctl), file('attempted*.csv'), file(attempted_ctl) from hits_to_import
+  set val(name), file('raw*.csv'), file(ctl), file('attempted*.csv'), file('attempted.ctl') from hits_to_import
 
   output:
   val("$name done") into qa_imported
 
   """
   split-and-load $ctl 'raw*.csv' ${params.import_data.chunk_size} $name
-  split-and-load $attempted_ctl 'attempted*.csv' ${params.import_data.chunk_size} attempted-$name
+  split-and-load attempted.ctl 'attempted*.csv' ${params.import_data.chunk_size} attempted-$name
   """
 }
 
