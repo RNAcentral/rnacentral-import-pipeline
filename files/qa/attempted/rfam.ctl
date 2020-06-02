@@ -19,7 +19,6 @@ WITH fields escaped by double-quote,
 BEFORE LOAD DO
 $$
 set work_mem='512MB';
-$$,
 $$
 
 AFTER LOAD DO
