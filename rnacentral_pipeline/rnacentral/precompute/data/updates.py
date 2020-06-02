@@ -19,6 +19,8 @@ import attr
 from attr.validators import optional
 from attr.validators import instance_of as is_a
 
+from rnacentral_pipeline.databases.data.utils import INSDC_SO_MAPPING
+
 from .. import qa
 from ..description import description_of
 from ..description import short_description_for
@@ -62,6 +64,10 @@ class Update(object):
             return '%s_%i' % (self.upi, self.taxid)
         return self.upi
 
+    @property
+    def so_rna_type(self):
+        return INSDC_SO_MAPPING.get(self.rna_type, 'SO:0000655')
+
     def as_writeables(self):
         """
         Yield the arrays that will be written out for updates.
@@ -77,6 +83,7 @@ class Update(object):
             self.databases,
             self.short_description,
             self.last_release,
+            self.so_rna_type,
         ]
 
     def writeable_statuses(self):

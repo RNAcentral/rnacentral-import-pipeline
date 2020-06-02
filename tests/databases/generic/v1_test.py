@@ -140,7 +140,7 @@ def test_can_correctly_parse_data():
                 coordinate_system=dat.CoordinateSystem.from_name('1-start, fully-closed'),
             ),
         ],
-        rna_type='rRNA',
+        rna_type='SO:0000252',
         url='http://flybase.org/reports/FBtr0346876.html',
         seq_version='1',
         note_data={'url': 'http://flybase.org/reports/FBtr0346876.html'},
@@ -896,7 +896,7 @@ def test_it_treats_flybase_scaRNA_correctly():
         data = list(v1.parse(data))
 
     assert len(data) == 1
-    assert data[0].rna_type == 'scaRNA'
+    assert data[0].rna_type == 'SO:0002095'
 
 
 def test_can_properly_handle_shifting_lncipedia_coordinates():
@@ -1007,7 +1007,7 @@ def test_does_get_correct_lncbook_genes():
                 coordinate_system=dat.CoordinateSystem.from_name('1-start, fully-closed'),
             ),
         ],
-        rna_type='lncRNA',
+        rna_type='SO:0001904',
         url="http://bigd.big.ac.cn/lncbook/transcript?transid=HSALNT0000002",
         seq_version='1',
         note_data={

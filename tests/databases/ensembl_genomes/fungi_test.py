@@ -88,10 +88,9 @@ def test_can_produce_correct_data(asp_1):
         species='Aspergillus nidulans FGSC A4',
         common_name=None,
         lineage=(
-            'Eukaryota; Fungi; Dikarya; Ascomycota; '
-            'Pezizomycotina; Eurotiomycetes; Eurotiomycetidae; '
-            'Eurotiales; Aspergillaceae; Aspergillus; Aspergillus '
-            'nidulans FGSC A4'
+            'Eukaryota; Fungi; Dikarya; Ascomycota; Pezizomycotina; '
+            'Eurotiomycetes; Eurotiomycetidae; Eurotiales; Aspergillaceae; '
+            'Aspergillus; Nidulantes; Aspergillus nidulans FGSC A4'
         ),
         gene="EBG00005235662",
         locus_tag='U2',

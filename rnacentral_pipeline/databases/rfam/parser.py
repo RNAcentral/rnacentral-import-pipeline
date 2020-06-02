@@ -22,7 +22,7 @@ from . import utils
 from . import helpers
 
 
-def as_entry(data, mapping):
+def as_entry(data):
     """
     Turn an entry from the JSON file into a Entry object for writing.
     """
@@ -35,7 +35,7 @@ def as_entry(data, mapping):
         database='RFAM',
         sequence=helpers.sequence(data),
         regions=[],
-        rna_type=helpers.rna_type(data, mapping),
+        rna_type=helpers.rna_type(data),
         url=helpers.url(data),
         note_data=helpers.note(data),
         species=helpers.species(data),
@@ -63,5 +63,4 @@ def parse(handle, mapping_file):
     """
 
     data = json.load(handle)
-    mapping = utils.id_to_insdc_type(mapping_file)
-    return map(lambda e: as_entry(e, mapping), data)
+    return map(lambda e: as_entry(e), data)

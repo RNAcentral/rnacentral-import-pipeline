@@ -30,7 +30,7 @@ EXCLUDED_TYPES = {
 }
 
 NORMALIZED_RNA_TYPES = {
-    'pre_miRNA': 'precursor_RNA',
+    'pre_miRNA': 'pre_miRNA',
     'atlncRNA': 'lncRNA',
     'sense_intronic': 'lncRNA',
     'atRNA': 'antisense_RNA',
@@ -109,7 +109,7 @@ def description(gene, entry):
     assert entry.rna_type, "Cannot build description without rna_type"
     return '{species} {rna_type} {locus_tag}'.format(
         species=species,
-        rna_type=entry.rna_type.replace('_', ' '),
+        rna_type=entry.human_rna_type(),
         locus_tag=entry.locus_tag or entry.gene or '',
     ).strip()
 

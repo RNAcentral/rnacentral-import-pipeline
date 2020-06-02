@@ -78,9 +78,9 @@ def test_gets_all_ids(apis_1):
 
 
 @pytest.mark.parametrize('accession,rna_type', [
-    ('ENSEMBL_METAZOA:ENSRNA022717521-T1', 'precursor_RNA'),  # TODO: pre_miRNA
-    ("ENSEMBL_METAZOA:ENSRNA022712925-T1", 'tRNA'),
-    ("ENSEMBL_METAZOA:ENSRNA022717829-T1", 'snoRNA'),
+    ('ENSEMBL_METAZOA:ENSRNA022717521-T1', 'SO:0001244'),
+    ("ENSEMBL_METAZOA:ENSRNA022712925-T1", 'SO:0000253'),
+    ("ENSEMBL_METAZOA:ENSRNA022717829-T1", 'SO:0000275'),
 ])
 def test_can_assign_expected_rna_types(apis_1, accession, rna_type):
     assert helpers.entry_for(apis_1, accession).rna_type == rna_type
@@ -109,7 +109,7 @@ def test_can_get_expected_data(apis_1):
                 coordinate_system=dat.CoordinateSystem.one_based(),
             ),
         ],
-        rna_type='precursor_RNA',
+        rna_type='SO:0001244',
         url='',
         seq_version='1',
         note_data={},
@@ -124,7 +124,7 @@ def test_can_get_expected_data(apis_1):
         ),
         gene='ENSRNA022717521',
         locus_tag='ame-mir-193',
-        description='Apis mellifera (European honey bee) precursor RNA ame-mir-193',
+        description='Apis mellifera (European honey bee) pre miRNA ame-mir-193',
         references=[pubs.reference('doi:10.1093/nar/gkx1011')],
     ))
 

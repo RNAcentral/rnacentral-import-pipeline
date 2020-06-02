@@ -14,13 +14,10 @@ limitations under the License.
 """
 
 import re
-import unicodedata
 
 import attr
-from attr.validators import and_
 from attr.validators import optional
 from attr.validators import instance_of as is_a
-from attr.validators import in_ as one_of
 
 SO_PATTERN = re.compile(r'^SO:\d+$')
 
@@ -38,7 +35,7 @@ INSDC_SO_MAPPING = {
     "ncRNA": 'SO:0000655',
     "misc_RNA": 'SO:0000673',
     "other": 'SO:0000655',
-    "precursor_RNA": 'SO:0000185 ',
+    "precursor_RNA": 'SO:0000185',
     "piRNA": 'SO:0001035',
     "rasiRNA": 'SO:0000454',
     "ribozyme": 'SO:0000374',
@@ -54,6 +51,7 @@ INSDC_SO_MAPPING = {
     'tRNA': 'SO:0000253',
     'bidirectional_promoter_lncrna': 'SO:0002185',
     '3prime_overlapping_ncrna': 'SO:0002120',
+    'pre_miRNA': 'SO:0001244',
 }
 
 NORMALIZE_TO_INSDC = {
@@ -63,7 +61,7 @@ NORMALIZE_TO_INSDC = {
 }
 
 SO_INSDC_MAPPING = {v: k for k, v in INSDC_SO_MAPPING.items()}
-SO_INSDC_MAPPING['SO:0001244'] = "precursor_RNA"
+SO_INSDC_MAPPING['SO:0001244'] = "pre_miRNA"
 SO_INSDC_MAPPING['SO:0000209'] = "precursor_RNA"
 SO_INSDC_MAPPING['SO:0001904'] = "lncRNA"
 SO_INSDC_MAPPING['SO:0000370'] = 'ncRNA'
@@ -125,26 +123,10 @@ def matches_pattern(pattern):
     return fn
 
 
-def as_so_term(rna_type):
+def as_so_term(rna_type: str) -> str:
     if re.match(SO_PATTERN, rna_type):
         return rna_type
 
     if rna_type not in INSDC_SO_MAPPING:
         raise UnxpectedRnaType(rna_type)
     return INSDC_SO_MAPPING[rna_type]
-
-
-def from_so_term(so_term):
-    if so_term in NORMALIZE_TO_INSDC:
-        return str(NORMALIZE_TO_INSDC[so_term])
-    if so_term in INSDC_SO_MAPPING:
-        return str(so_term)
-    if so_term in SO_INSDC_MAPPING:
-        return str(SO_INSDC_MAPPING[so_term])
-    raise UnxpectedRnaType(so_term)
-
-
-def optional_utf8(raw):
-    if raw is None:
-        return None
-    return raw
