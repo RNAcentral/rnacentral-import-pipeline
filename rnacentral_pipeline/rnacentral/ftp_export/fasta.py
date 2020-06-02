@@ -36,5 +36,5 @@ def valid_nhmmer(handle, output):
 
 def invalid_nhmmer(handle, output):
     sequences = SeqIO.parse(handle, 'fasta')
-    rejected = filterfalse(is_valid_nhmmer_record, sequences)
+    rejected = it.filterfalse(is_valid_nhmmer_record, sequences)
     SeqIO.write(rejected, output, 'fasta')
