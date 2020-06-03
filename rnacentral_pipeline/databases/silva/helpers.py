@@ -25,11 +25,11 @@ url = op.itemgetter('silvaUri')
 CLASS_PATTERN = re.compile(r';\s*$')
 
 KNOWN_TYPES = {
-    'rRNA', 
-    'rRNA_12S', 
-    'rRNA_16S', 
-    'rRNA_18S', 
-    'small_subunit_rRNA',
+    'rRNA': 'SO:0000252',
+    'rRNA_12S': 'SO:0002128',
+    'rRNA_16S': 'SO:0001000',
+    'rRNA_18S': 'SO:0000407',
+    'small_subunit_rRNA': 'SO:0000650',
 }
 
 
@@ -59,7 +59,7 @@ def version(row):
 def rna_type(row):
     given = row['type']
     if given in KNOWN_TYPES:
-        return 'rRNA'
+        return KNOWN_TYPES[given]
     raise ValueError("Unknown RNA type")
 
 
