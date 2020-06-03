@@ -58,7 +58,7 @@ def test_parses_data_correctly():
             'GGAGTTGCTAATATATCGGCTGGGTCAGCCCCCCGCAGGGATTTCGTTTCCCCGCCC'
         ),
         regions=[],
-        rna_type='rRNA',
+        rna_type='SO:0001000',
         url='https://www.arb-silva.de/browser/ssu/FN662328',
         seq_version='1',
         inference='Bacteria; Chloroflexi; TK10',

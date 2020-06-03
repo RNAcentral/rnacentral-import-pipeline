@@ -15,29 +15,27 @@ limitations under the License.
 
 from __future__ import print_function
 
-# pylint: disable=missing-docstring,invalid-name,line-too-long
-
-import re
-import os
 import json
-import tempfile
-import subprocess
 import operator as op
-from xml.dom import minidom
+import os
+import re
+import subprocess
+import tempfile
 import xml.etree.ElementTree as ET
-
-import six
+from xml.dom import minidom
 
 import pytest
+import six
+
+from rnacentral_pipeline.rnacentral.search_export import exporter
+from tests.helpers import run_range_as_single, run_with_replacements
+
 try:
     from functools import lru_cache
 except ImportException:
     from functools32 import lru_cache
 
-from rnacentral_pipeline.rnacentral.search_export import exporter
 
-from tests.helpers import run_range_as_single
-from tests.helpers import run_with_replacements
 
 # Parse out all UPIs
 # Create temp table of UPI to get metadata for
@@ -997,3 +995,11 @@ def test_sets_valid_model_name(upi, models):
 	ans = [{'attrib': {'name': 'secondary_structure_model'}, 'text': m} for m in models]
 	data = load_and_get_additional(upi, 'secondary_structure_model')
 	assert data == ans
+
+
+@pytest.mark.parametrize("upi,url", [
+    ('URS000075A546_9606', 'http://www.mirbase.org/cgi-bin/mirna_entry.pl?acc=MI0031512'),
+])
+def test_computes_correct_urls(upi, url):
+	data = load_and_get_additional(upi, 'secondary_structure_model')
+    assert data == [{'attrib': {'name': 'url'}, 'text': url}]
