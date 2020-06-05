@@ -35,7 +35,7 @@ ORDER BY id
 
 COUNT_QUERY = """
 SELECT
-    db.descr(*),
+    db.descr,
     count(distinct xref.upi)
 from xref
 join rnc_database db 
@@ -50,7 +50,7 @@ LOAD_COUNT_QUERY = """
 SELECT
     load.database,
     count(distinct load.md5)
-from load_rnacentral
+from load_rnacentral load
 group by database
 """
 
@@ -81,10 +81,7 @@ def check(limit_file, db_url, default_allowed_change=0.30):
     Check the load tables for reasonable looking sequence counts.
     """
 
-    limits = {}
-    with open(limit_file, 'r') as raw:
-        limits = json.load(raw)
-
+    limits = json.load(raw)
     cur_counts = {}
     new_counts = {}
     with connection(db_url) as conn:
