@@ -98,11 +98,11 @@ process atomic_publish {
   if [[ -n "$publish.host" ]]; then
     ssh "$publish.host" 'mkdir -p $publish.path' || true
     ssh "$publish.host" 'rm -r $publish.path/*' || true
+    scp ${xml} 'release_note.txt' $remote
   else
     mkdir -p "$publish.path" || true
     rm "$publish.path/*"
+    cp ${xml} 'release_note.txt' $remote
   fi
-
-  scp ${xml} 'release_note.txt' $remote
   """
 }
