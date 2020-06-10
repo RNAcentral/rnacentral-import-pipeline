@@ -19,7 +19,7 @@ select
         'lineage', coalesce(tax.lineage, acc.classification),
         'all_species', ARRAY[tax.name, acc.species::text],
         'all_common_names', ARRAY[tax.common_name, acc.common_name::text],
-        'rna_type', acc.rna_type
+        'so_rna_type', acc.rna_type
       )
     ),
     'has_coordinates', exists(

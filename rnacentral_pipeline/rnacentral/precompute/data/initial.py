@@ -91,7 +91,7 @@ class Accession(object):
     lineage = attr.ib(validator=optional(is_a(str)), converter=maybe_text)
     all_species = attr.ib(validator=is_a(tuple), converter=tuple)
     all_common_names = attr.ib(validator=is_a(tuple), converter=tuple)
-    rna_type = attr.ib(validator=is_a(str), converter=str)
+    so_rna_type = attr.ib(validator=is_a(str), converter=str)
 
     @classmethod
     def build(cls, data):
