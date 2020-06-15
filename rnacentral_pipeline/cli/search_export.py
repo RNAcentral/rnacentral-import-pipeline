@@ -15,7 +15,9 @@ limitations under the License.
 
 import click
 
+from rnacentral_pipeline.databases.sequence_ontology import tree as so
 from rnacentral_pipeline.rnacentral.search_export import exporter as search
+from rnacentral_pipeline.rnacentral.search_export import metadata
 
 
 @click.group('search-export')
@@ -50,4 +52,29 @@ def search_export_note(release, output, count_files):
     This will create the release_note.txt file that is needed for the search
     export.
     """
-    search.release_note(output, release, count_files)
+   search.release_note(output, release, count_files)
+
+
+@cli.command('so-term-tree')
+@click.argument('filename', type=click.File('r'))
+@click.argument('output', default='-', type=click.File('w'))
+def merge_metadata(filename, output):
+    """
+    A command to merge the individual metadata lines into a the form that can be
+    used for search export.
+    """
+    metadata.write_merge(filename, output)
+
+
+@cli.command('so-term-tree')
+@click.option('--ontology', default=so.REMOTE_ONTOLOGY)
+@click.argument('filename', type=click.File('r'))
+@click.argument('output', default='-', type=click.File('w'))
+def so_term_tree(filename, output, ontology=None):
+    """
+    A command to generate the SO RNA type tree for search export. The file
+    should be a JSON object per line, with rna_id: URS_taxid and so_rna_type:
+    so_term_id entries. This will write a metadata file suitable for loading into
+    search metadata.
+    """
+    metadata.write_so_tree(filename, ontology, output)

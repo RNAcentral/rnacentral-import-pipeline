@@ -24,6 +24,8 @@ from rnacentral_pipeline import psql
 
 from .data import builder as raw_builder
 
+from . import metadata
+
 
 def write_entries(handle, results):
     """
@@ -71,17 +73,8 @@ def builder(extras, entry):
     return raw_builder(entry)
 
 
-def parse_additions(handle):
-    extras = coll.defaultdict(dict)
-    for meta_entry in psql.json_handler(handle):
-        rna_id = meta_entry.pop('rna_id')
-        for key, value in meta_entry.items():
-            extras[key][rna_id] = value
-    return extras
-
-
 def parse(input_handle, metadata_handle):
-    extras = parse_additions(metadata_handle)
+    extras = metadata.load_merge(metadata_handle)
     for entry in psql.json_handler(input_handle):
         yield builder(extras, entry)
 
