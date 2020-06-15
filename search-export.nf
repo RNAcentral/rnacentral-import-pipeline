@@ -20,10 +20,13 @@ process fetch_metdata {
   file('query*.sql') from Channel.fromPath('files/search-export/metadata/*.sql').collect()
 
   output:
-  file("metadata.json") into metadata
+  file("merged.json") into metadata
 
   """
   find . -name '*.sql' | xargs -I {} psql -v ON_ERROR_STOP=1 -f "{}" "$PGDATABASE" >> metadata.json
+  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > raw.json
+  rnac search-export so-term-tree raw.json - >> metadata.json
+  rnac search-export merge-metadata metadata.json merged.json
   """
 }
 

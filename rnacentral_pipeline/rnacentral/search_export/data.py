@@ -22,6 +22,9 @@ import collections as coll
 
 from lxml import etree
 
+import networkx as nx
+import obonet
+
 
 GENERIC_TYPES = set(['misc_RNA', 'misc RNA', 'other'])
 
@@ -122,6 +125,7 @@ def fields(field_name, func, keys=None):
     return tags('field', func, attrib={'name': field_name}, keys=keys)
 
 
+
 def date_tag(date_name, func):
     def fn(timestamps):
         dates = []
@@ -196,6 +200,21 @@ def section(name, spec):
         for func in spec:
             func(element, data)
     fn.__name__ = 'section_' + name
+    return fn
+
+
+def tree(name, generator):
+    def fn(root, data):
+        to_store = generator(data)
+        if not to_store or len(to_store) == 1:
+            return 
+        parent = etree.SubElement(root, 'hierarchical_field', {'name': name})
+        tree_root = etree.SubElement(parent, 'root')
+        tree_root.text = to_store[0]
+        for child in to_store[1:]:
+            node = etree.SubElement(parent, 'child')
+            node.text = child
+    fn.__name__ = 'tree_' + name
     return fn
 
 
@@ -630,6 +649,14 @@ def urls(notes):
     return data
 
 
+def so_rna_type_tree(rna_tree):
+    (_so_id, name) = rna_tree[0]
+    if name == 'ncRNA':
+        return None
+
+    return [name for (_, name) in rna_tree[0:]]
+
+
 builder = entry([
     tag('name', as_name, keys=('upi', 'taxid')),
     tag('description', first),
@@ -710,5 +737,7 @@ builder = entry([
         fields('pdbid_entityid', pdb_ids, keys='cross_references'),
         fields('disease', diseases, keys='notes'),
         fields('url', urls, keys='notes'),
+        field('so_rna_type_name', first, keys='so_rna_type'),
+        tree('so_rna_type', so_rna_type_tree, keys='so_rna_type_tree'),
     ]),
 ])
