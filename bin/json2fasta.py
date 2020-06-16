@@ -41,13 +41,13 @@ def select_easel(sequence):
     return re.match(EASEL_PATTERN, entry['sequence'])
 
 
-def sequences(handle, filter_sequences=False):
+def sequences(handle, only_valid_easel=False):
     """
     Parse each line and create a generator of SeqRecords to write.
     """
 
     data = map(json.loads, handle)
-    if filter_sequences:
+    if only_valid_easel:
         data = filter(select_easel, data)
     return map(as_record, data)
 
@@ -56,12 +56,12 @@ def sequences(handle, filter_sequences=False):
 @click.option('--only-valid-easel', default=False)
 @click.argument('tsv_file', type=click.File('rb'))
 @click.argument('output', default='-', type=click.File('w'))
-def cli(tsv_file, output=None, filter_sequences=False):
+def cli(tsv_file, output=None, only_valid_easel=False):
     """
     Turn a file with JSON lines into a FASTA file. Each line must be an object
     with an id and sequence entry and an optional description entry.
     """
-    seqs = sequences(tsv_file, filter_sequences=filter_sequences)
+    seqs = sequences(tsv_file, only_valid_easel=only_valid_easel)
     SeqIO.write(seqs, output, "fasta")
 
 
