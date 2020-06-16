@@ -24,7 +24,7 @@ from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 
-EASEL_PATTERN = re.compile(r'^[ACGUN]$')
+EASEL_PATTERN = re.compile(r'^[ACGTN]+$', re.IGNORECASE)
 
 
 def as_record(entry):
@@ -37,7 +37,7 @@ def as_record(entry):
     )
 
 
-def select_easel(sequence):
+def select_easel(entry):
     return re.match(EASEL_PATTERN, entry['sequence'])
 
 
