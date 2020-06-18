@@ -30,7 +30,7 @@ def cli():
 
 @cli.command('as-xml')
 @click.argument('raw_file', type=click.File('r'))
-@click.argument('metadata_file', type=click.File('r'))
+@click.argument('metadata_file', type=click.Path())
 @click.argument('xml_file', type=click.File('w'))
 @click.argument('count_file', type=click.File('w'), default='count')
 def search_export_xml(raw_file, metadata_file, xml_file, count_file=None):
@@ -57,7 +57,7 @@ def search_export_note(release, output, count_files):
 
 @cli.command('merge-metadata')
 @click.argument('filename', type=click.File('r'))
-@click.argument('output', default='-', type=click.File('w'))
+@click.argument('output', default='-', type=click.Path())
 def merge_metadata(filename, output):
     """
     A command to merge the individual metadata lines into a the form that can be
