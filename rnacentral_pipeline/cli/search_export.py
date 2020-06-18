@@ -52,10 +52,10 @@ def search_export_note(release, output, count_files):
     This will create the release_note.txt file that is needed for the search
     export.
     """
-   search.release_note(output, release, count_files)
+    search.release_note(output, release, count_files)
 
 
-@cli.command('so-term-tree')
+@cli.command('merge-metadata')
 @click.argument('filename', type=click.File('r'))
 @click.argument('output', default='-', type=click.File('w'))
 def merge_metadata(filename, output):
