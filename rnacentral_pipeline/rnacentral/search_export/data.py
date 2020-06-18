@@ -203,9 +203,11 @@ def section(name, spec):
     return fn
 
 
-def tree(name, generator):
+def tree(name, generator, key=None):
+    if not key:
+        raise ValueError("Invalid key name")
     def fn(root, data):
-        to_store = generator(data)
+        to_store = generator(data[key])
         if not to_store or len(to_store) == 1:
             return 
         parent = etree.SubElement(root, 'hierarchical_field', {'name': name})
@@ -738,6 +740,6 @@ builder = entry([
         fields('disease', diseases, keys='notes'),
         fields('url', urls, keys='notes'),
         field('so_rna_type_name', first, keys='so_rna_type'),
-        tree('so_rna_type', so_rna_type_tree, keys='so_rna_type_tree'),
+        tree('so_rna_type', so_rna_type_tree, key='so_rna_type_tree'),
     ]),
 ])

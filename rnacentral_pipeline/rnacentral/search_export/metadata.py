@@ -13,7 +13,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import json
 import pickle
+import collections as coll
 
 from rnacentral_pipeline import psql
 
@@ -30,7 +32,7 @@ def merge(handle):
 
 
 def write_merge(handle, output):
-    pickle.dump(merge(handle))
+    pickle.dump(merge(handle), output)
 
 
 def load_merge(handle):
@@ -40,5 +42,6 @@ def load_merge(handle):
 def write_so_term_tree(handle, ontology, output):
     ont = so.load_ontology(ontology)
     for data in psql.json_handler(handle):
-        data['so_term_tree'] = so.tree(ont, data['so_rna_type'])
+        data['so_term_tree'] = so.rna_type_tree(ont, data['so_rna_type'])
         json.dump(data, output)
+        output.write('\n')
