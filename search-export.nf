@@ -15,18 +15,51 @@ raw_ranges
   .combine(Channel.fromPath('files/search-export/query.sql'))
   .set { ranges }
 
+Channel.fromPath('files/search-export/metadata/*.sql')
+  .set { metadata_queries }
+
 process fetch_metdata {
+  maxForks 2
+
   input:
-  file('query*.sql') from Channel.fromPath('files/search-export/metadata/*.sql').collect()
+  file(query) from metadata_queries
 
   output:
-  file("merged.json") into metadata
+  file("${query.baseName}.json") into standard_metadata
 
   """
-  find . -name '*.sql' | xargs -I {} psql -v ON_ERROR_STOP=1 -f "{}" "$PGDATABASE" >> metadata.json
+  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > "${query.baseName}.json"
+  """
+}
+
+process fetch_so_tree {
+  input:
+  file(query) from Channel.fromPath('files/search-export/so-rna-types.sql')
+
+  output:
+  file('so-term-tree.json') into so_term_tree_metadata
+
+  """
   psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > raw.json
-  rnac search-export so-term-tree raw.json - >> metadata.json
-  rnac search-export merge-metadata metadata.json merged.json
+  rnac search-export so-term-tree raw.json so-tree.json
+  """
+}
+
+standard_metadata
+  .mix(so_term_tree_metadata)
+  .collect()
+  .set { unmerged_metdata }
+
+process merge_metadata {
+  input:
+  file(metadata) from unmerged_metdata
+
+  output:
+  file('merged.db') into metadata
+
+  """
+  cat $metadata > metadata.json
+  rnac search-export merge-metadata metadata.json merged.db
   """
 }
 
