@@ -41,7 +41,7 @@ process fetch_so_tree {
 
   """
   psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > raw.json
-  rnac search-export so-term-tree raw.json so-tree.json
+  rnac search-export so-term-tree raw.json so-term-tree.json
   """
 }
 

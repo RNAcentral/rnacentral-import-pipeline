@@ -67,16 +67,16 @@ def write(results, handle, count_handle):
     handle.write('</database>')
 
 
-def builder(extras, entry):
-    for key, data in extras.items():
-        entry[key] = data.get(entry['rna_id'], {})
+def builder(entry, cache):
+    for key, value in cache.lookup(entry['rna_id']):
+        entry[key] = value
     return raw_builder(entry)
 
 
-def parse(input_handle, metadata_handle):
-    extras = metadata.load_merge(metadata_handle)
-    for entry in psql.json_handler(input_handle):
-        yield builder(extras, entry)
+def parse(input_handle, metadata_file):
+    with metadata.open(metadata_file) as cache:
+        for entry in psql.json_handler(input_handle):
+            yield builder(entry, cache)
 
 
 def as_xml(input_handle, metadata_handle, output_handle, count_handle):
