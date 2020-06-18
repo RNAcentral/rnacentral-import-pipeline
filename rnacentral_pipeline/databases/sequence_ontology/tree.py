@@ -14,12 +14,15 @@ limitations under the License.
 """
 
 import json
+import logging
 
 import networkx as nx
 import obonet
 
 
 REMOTE_ONTOLOGY = 'https://raw.githubusercontent.com/The-Sequence-Ontology/SO-Ontologies/master/Ontology_Files/so-simple.obo'
+
+LOGGER = logging.getLogger(__name__)
 
 
 def load_ontology(filename):
@@ -33,7 +36,10 @@ def compute_rna_type_tree(ontology, child, parent):
     paths = nx.all_simple_paths(ontology, source=child, target=parent)
     paths = list(paths)
     if not paths:
-        raise ValueError("Assumes all SO terms are ncRNA's currently")
+        LOGGER.error("Assumes all SO terms are ncRNA's currently: %s -> %s",
+                     child, parent)
+        return [(child, ontology.nodes[child]['name'])]
+
     if len(paths) > 1:
         raise ValueError("Too many paths currently")
 

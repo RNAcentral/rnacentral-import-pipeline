@@ -31,6 +31,7 @@ import pytest
         ('SO:0001877', 'lnc_RNA'),
         ('SO:0001463', 'lincRNA'),
     ]),
+    ('group_I_intron', [('SO:0000587', 'group_I_intron')])
 ])
 def test_can_compute_some_simple_paths(so_term_id, expected):
     data = so.load_ontology(so.REMOTE_ONTOLOGY)
