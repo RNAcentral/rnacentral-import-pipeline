@@ -23,6 +23,7 @@ COPY (
         'organelles', array_agg(acc.organelle),
         'expert_dbs', array_agg(db.display_name),
         'rna_type', array_agg(pre.rna_type),
+        'so_rna_type', array_agg(pre.so_rna_type),
         'product', array_agg(acc.product),
         'md5', array_agg(rna.md5),
         'authors', array_agg(refs.authors),

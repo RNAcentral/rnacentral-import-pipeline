@@ -18,7 +18,7 @@ import json
 import sqlite3
 from contextlib import contextmanager
 
-from more_itertools import ichunked
+from boltons import iterutils
 
 from rnacentral_pipeline import psql
 from rnacentral_pipeline.databases.sequence_ontology import tree as so
@@ -28,33 +28,47 @@ INSERT_SIZE = 10000
 CREATE = '''CREATE TABLE IF NOT EXISTS metadata (
     metadata_type TEXT NOT NULL,
     urs_taxid TEXT NOT NULL,
-    data BLOB NOT NULL,
+    data TEXT NOT NULL,
     UNIQUE (metadata_type, urs_taxid)
 );
 
 CREATE INDEX IF NOT EXISTS ix_metadata__type ON metadata(metadata_type);
 CREATE INDEX IF NOT EXISTS ix_metadata__urs_taxid ON metadata(urs_taxid);
+
+CREATE TABLE IF NOT EXISTS so_tree (
+    so_rna_type TEXT PRIMARY KEY,
+    tree TEXT NOT NULL
+);
 '''
 
-INSERT_TEXT = 'INSERT INTO metadata(metadata_type, urs_taxid, data) values(?, ?, ?)'
+INSERT_TEXT = 'INSERT OR IGNORE INTO metadata(metadata_type, urs_taxid, data) values(?, ?, ?)'
 
 QUERY = 'SELECT metadata_type, data from metadata where urs_taxid = ?'
 
 META_QUERY = 'SELECT distinct metadata_type from metadata'
 
+SO_QUERY = 'SELECT tree from so_tree where so_rna_type = ?'
+
 
 class Cache:
-    def __init__(filename):
+    def __init__(self, filename):
         self.conn = sqlite3.connect(filename)
-        self.conn.execute(CREATE)
+        self.conn.executescript(CREATE)
         self._known_metadata_types = []
 
     def index(self, generator, size=INSERT_SIZE):
-        for chunk in ichunked(generator, size):
+        for index, chunk in enumerate(iterutils.chunked_iter(generator, size)):
             storable = []
             for (mtype, urs_taxid, raw) in chunk:
                 storable.append((mtype, urs_taxid, json.dumps(raw)))
             self.conn.executemany(INSERT_TEXT, storable)
+            if index % 100 == 0:
+                self.conn.commit()
+
+    def index_so_tree(self, terms):
+        storable = [t, json.dumps(v) for (t, v) in terms]
+        self.conn.executemany(SO_INSERT, storable)
+        self.conn.commit()
 
     @property
     def known_metadata_types(self):
@@ -66,7 +80,14 @@ class Cache:
         self._known_metadata_types = [r['metadata_type'] for row in found]
         return self._known_metadata_types
 
-    def lookup(self, urs_taxid, missing=None):
+    def lookup_so(self, so_term):
+        if not so_term:
+            return [('SO:0000655', 'ncRNA')]
+        self.conn.execute(SO_QUERY, so_rna_type)
+        result = self.conn.fetchone()
+        return result['tree']
+
+    def lookup(self, urs_taxid, so_rna_type, missing=None):
         data = {}
         missing = missing or {}
         possible = self.known_metadata_types
@@ -75,6 +96,7 @@ class Cache:
         self.conn.execute(QUERY, urs_taxid)
         for row in self.conn.fetchall():
             data.update(row['data'])
+
         return data
 
 
@@ -90,14 +112,25 @@ def merge(handle):
             yield (key, rna_id, value)
 
 
-def write_merge(handle, output):
+def load_so_terms(handle):
+    for line in handle:
+        data = json.loads(line)
+        yield (data['so_rna_type'], data['so_term_tree'])
+
+
+def write_merge(handle, so_tree, output):
     with open(output) as cache:
         cache.index(merge(handle))
+        cache.index_so_terms(load_so_terms(so_tree))
 
 
 def write_so_term_tree(handle, ontology, output):
     ont = so.load_ontology(ontology)
-    for data in psql.json_handler(handle):
-        data['so_term_tree'] = so.rna_type_tree(ont, data['so_rna_type'])
+    for line in handle:
+        so_rna_type = line.strip()
+        data = {
+            'so_rna_type': so_rna_type,
+            'so_term_tree': so.rna_type_tree(ont, so_rna_type),
+        }
         json.dump(data, output)
         output.write('\n')

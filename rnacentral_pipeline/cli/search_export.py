@@ -57,13 +57,14 @@ def search_export_note(release, output, count_files):
 
 @cli.command('merge-metadata')
 @click.argument('filename', type=click.File('r'))
+@click.argument('so_tree', type=click.File('r'))
 @click.argument('output', default='-', type=click.Path())
-def merge_metadata(filename, output):
+def merge_metadata(filename, so_tree, output):
     """
     A command to merge the individual metadata lines into a the form that can be
     used for search export.
     """
-    metadata.write_merge(filename, output)
+    metadata.write_merge(filename, so_tree, output)
 
 
 @cli.command('so-term-tree')
