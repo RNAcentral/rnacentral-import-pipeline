@@ -46,20 +46,20 @@ process fetch_so_tree {
 }
 
 standard_metadata
-  .mix(so_term_tree_metadata)
   .collect()
+  .combine(so_term_tree_metadata)
   .set { unmerged_metdata }
 
 process merge_metadata {
   input:
-  file(metadata) from unmerged_metdata
+  set file(metadata), file(so_data) from unmerged_metdata
 
   output:
   file('merged.db') into metadata
 
   """
   cat $metadata > metadata.json
-  rnac search-export merge-metadata metadata.json merged.db
+  rnac search-export merge-metadata metadata.json $so_data merged.db
   """
 }
 

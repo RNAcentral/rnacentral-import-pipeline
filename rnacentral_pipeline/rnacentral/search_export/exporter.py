@@ -70,6 +70,7 @@ def write(results, handle, count_handle):
 def builder(entry, cache):
     for key, value in cache.lookup(entry['rna_id']):
         entry[key] = value
+    entry['so_rna_type_tree'] = cache.lookup_so(entry['so_rna_type'])
     return raw_builder(entry)
 
 
