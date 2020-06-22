@@ -66,7 +66,7 @@ class Cache:
                 self.conn.commit()
 
     def index_so_tree(self, terms):
-        storable = [t, json.dumps(v) for (t, v) in terms]
+        storable = [(t, json.dumps(v)) for (t, v) in terms]
         self.conn.executemany(SO_INSERT, storable)
         self.conn.commit()
 
