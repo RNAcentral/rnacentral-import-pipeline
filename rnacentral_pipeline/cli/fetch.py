@@ -18,7 +18,7 @@ import pickle
 
 import click
 
-from rnacentral_pipeline.databases import pdb
+from rnacentral_pipeline.databases import pdb, zfin
 
 
 @click.group('fetch')
@@ -49,3 +49,14 @@ def pdb_group_data(output, pdb_ids=None):
 @click.argument('pdb_ids', nargs=-1)
 def pdb_group_extra(output, pdb_ids=None):
     pickle.dump(pdb.references(pdb_ids=pdb_ids), output)
+
+
+@cli.command('zfin')
+@click.argument('url')
+@click.argument('output', default='zfin.json', type=click.File('w'))
+def fetch_zfin(url, output):
+    """
+    Fetches ZFIN data and strips out some bad entries and fixes a few issues
+    with their formatting.
+    """
+    json.dump(zfin.fetch(url), output)
