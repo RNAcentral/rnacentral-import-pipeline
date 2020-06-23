@@ -238,6 +238,10 @@ class Entry(object):
             )
             return False
 
+        if self.rna_type == 'SO:0000234':
+            LOGGER.warn("Skipping a mRNA")
+            return False
+
         return True
 
     def human_rna_type(self):
