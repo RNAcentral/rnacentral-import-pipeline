@@ -13,6 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import logging
 import collections as coll
 import json
 import sqlite3
@@ -22,6 +23,8 @@ from boltons import iterutils
 
 from rnacentral_pipeline import psql
 from rnacentral_pipeline.databases.sequence_ontology import tree as so
+
+LOGGER = logging.getLogger(__name__)
 
 INSERT_SIZE = 10000
 
@@ -43,6 +46,8 @@ CREATE TABLE IF NOT EXISTS so_tree (
 
 INSERT_TEXT = 'INSERT OR IGNORE INTO metadata(metadata_type, urs_taxid, data) values(?, ?, ?)'
 
+INSERT_SO = 'INSERT INTO so_tree(so_rna_type, tree) values (?, ?)'
+
 QUERY = 'SELECT metadata_type, data from metadata where urs_taxid = ?'
 
 META_QUERY = 'SELECT distinct metadata_type from metadata'
@@ -54,6 +59,7 @@ class Cache:
     def __init__(self, filename):
         self.conn = sqlite3.connect(filename)
         self.conn.executescript(CREATE)
+        self.conn.row_factory = sqlite3.Row
         self._known_metadata_types = []
 
     def index(self, generator, size=INSERT_SIZE):
@@ -75,27 +81,31 @@ class Cache:
         if self._known_metadata_types:
             return self._known_metadata_types
 
-        self.conn.execute(META_QUERY)
-        found = self.conn.fetchall()
-        self._known_metadata_types = [r['metadata_type'] for row in found]
+        cur = self.conn.execute(META_QUERY)
+        found = cur.fetchall()
+        self._known_metadata_types = [row['metadata_type'] for row in found]
         return self._known_metadata_types
 
     def lookup_so(self, so_term):
         if not so_term:
             return [('SO:0000655', 'ncRNA')]
-        self.conn.execute(SO_QUERY, so_rna_type)
-        result = self.conn.fetchone()
-        return result['tree']
+        try:
+            cur = self.conn.execute(SO_QUERY, (so_term,))
+            result = cur.conn.fetchone()
+        except Exception as err:
+            LOGGER.warn("Failed to get indexed data for %s" % so_term)
+        return json.loads(result['tree'])
 
-    def lookup(self, urs_taxid, so_rna_type, missing=None):
+    def lookup(self, urs_taxid, missing=None):
         data = {}
         missing = missing or {}
         possible = self.known_metadata_types
         for name in possible:
             data[name] = missing
-        self.conn.execute(QUERY, urs_taxid)
-        for row in self.conn.fetchall():
-            data.update(row['data'])
+        cur = self.conn.execute(QUERY, (urs_taxid,))
+        for row in cur.fetchall():
+            new_data = json.loads(row['data'])
+            data[row['metadata_type']] = new_data
 
         return data
 
@@ -121,7 +131,7 @@ def load_so_terms(handle):
 def write_merge(handle, so_tree, output):
     with open(output) as cache:
         cache.index(merge(handle))
-        cache.index_so_terms(load_so_terms(so_tree))
+        cache.index_so_tree(load_so_terms(so_tree))
 
 
 def write_so_term_tree(handle, ontology, output):

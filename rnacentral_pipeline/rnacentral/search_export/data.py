@@ -208,7 +208,7 @@ def tree(name, generator, key=None):
         raise ValueError("Invalid key name")
     def fn(root, data):
         to_store = generator(data[key])
-        if not to_store or len(to_store) == 1:
+        if not to_store:
             return 
         parent = etree.SubElement(root, 'hierarchical_field', {'name': name})
         tree_root = etree.SubElement(parent, 'root')
@@ -652,11 +652,7 @@ def urls(notes):
 
 
 def so_rna_type_tree(rna_tree):
-    (_so_id, name) = rna_tree[0]
-    if name == 'ncRNA':
-        return None
-
-    return [name for (_, name) in rna_tree[0:]]
+    return [name for (_, name) in rna_tree]
 
 
 builder = entry([

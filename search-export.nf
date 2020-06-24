@@ -47,12 +47,12 @@ process fetch_so_tree {
 
 standard_metadata
   .collect()
-  .combine(so_term_tree_metadata)
   .set { unmerged_metdata }
 
 process merge_metadata {
   input:
-  set file(metadata), file(so_data) from unmerged_metdata
+  file(metadata) from unmerged_metdata
+  file(so_data) from so_term_tree_metadata
 
   output:
   file('merged.db') into metadata
@@ -129,16 +129,15 @@ process atomic_publish {
 
   script:
   def publish = params.search_export.publish
-  def remote = (publish.host ? "$publish.host:" : "") + publish.path
-  """
-  if [[ -n "$publish.host" ]]; then
+  if (params.search_export.publish.host)
+    """
     ssh "$publish.host" 'mkdir -p $publish.path' || true
     ssh "$publish.host" 'rm -r $publish.path/*' || true
-    scp ${xml} 'release_note.txt' $remote
+    scp ${xml} 'release_note.txt' $publish.host:$publish.path
+    """
   else
-    mkdir -p "$publish.path" || true
-    rm "$publish.path/*"
-    cp ${xml} 'release_note.txt' $remote
-  fi
-  """
+    """
+    rm $publish.path/*
+    cp ${xml} 'release_note.txt' $publish.path
+    """
 }
