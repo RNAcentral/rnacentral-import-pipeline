@@ -78,4 +78,4 @@ def so_term_tree(filename, output, ontology=None):
     so_term_id entries. This will write a metadata file suitable for loading into
     search metadata.
     """
-    metadata.write_so_tree(filename, ontology, output)
+    metadata.write_so_term_tree(filename, ontology, output)
