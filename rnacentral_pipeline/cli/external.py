@@ -60,6 +60,7 @@ def cli():
         "pombase",
         "sgd",
         "snodb",
+        "snorna_database",
         "tarbase",
         "zwd",
         "zfin",
