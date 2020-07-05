@@ -28,6 +28,8 @@ import attr
 from attr.validators import optional
 from attr.validators import instance_of as is_a
 
+from rnacentral_pipeline import psql
+
 
 TRNAS = {
     'SO:0000254',
@@ -61,13 +63,13 @@ class UnknownStrandName(Exception):
     pass
 
 
+
 @enum.unique
 class Source(enum.Enum):
     crw = enum.auto()
     ribovision = enum.auto()
     rfam = enum.auto()
     gtrnadb = enum.auto()
-
 
 
 @attr.s()
@@ -160,66 +162,65 @@ class RibovoreResult(object):
 
 
 @attr.s()
-class TravelerPaths(object):
+class TravelerResultInfo(object):
     urs = attr.ib(validator=is_a(str))
     model_id = attr.ib(validator=is_a(str))
     source  = attr.ib(validator=is_a(Source))
-    basepath = attr.ib(validator=is_a(Path))
+    svg_path = attr.ib(validator=is_a(Path))
+    data_path = attr.ib(validator=is_a(Path))
 
     @property
     def svg(self) -> Path:
-        with_model = self.source not in {Source.rfam}
-        return self.__path__('.colored.svg', with_model=with_model)
+        return self.svg_path / self.__filename__('colored.svg')
 
     @property
     def fasta(self) -> Path:
-        with_model = self.source not in {Source.rfam, Source.gtrnadb}
-        return self.__path__('.fasta', with_model=with_model)
+        return self.data_path / self.__filename__('fasta')
 
     @property
     def overlaps(self) -> Path:
-        if self.source == Source.rfam:
-            return self.__path__('.overlaps')
-        return self.__path__('.overlaps', with_model=True)
+        return self.data_path / self.__filename__('overlaps')
 
     @property
     def stk(self) -> Path:
-        return self.__path__('.stk')
+        return self.data_path / self.__filename__('stk')
 
-    def __path__(self, suffix: str, with_model=False) -> Path:
-        name = self.urs + suffix
-        if with_model:
-            name = '%s-%s%s' % (self.urs, self.model_id, suffix)
-        return self.basepath / name
+    def __filename__(self, extension):
+        if self.source == Source.rfam:
+            return f'{self.urs}.{extension}'
+        if self.source == Source.gtrnadb and extension == 'fasta':
+            return f'{self.urs}.{extension}'
+        return f'{self.urs}-{self.model_id}.{extension}'
 
 
 @attr.s()
 class TravelerResult(object):
-    urs = attr.ib(validator=is_a(str))
-    model_id = attr.ib(validator=is_a(str))
-    paths = attr.ib(validator=is_a(TravelerPaths))
-    source = attr.ib(validator=is_a(Source))
+    info = attr.ib(validator=is_a(TravelerResultInfo))
     ribovore = attr.ib(validator=optional(is_a(RibovoreResult)), default=None)
 
     @classmethod
-    def from_paths(cls, source: Source, path: TravelerPaths, ribovore=None):
-        return cls(path.urs, path.model_id, path, source, ribovore=ribovore)
+    def from_info(cls, info: TravelerResultInfo, ribovore=None):
+        return cls(info, ribovore=ribovore)
+
+    @property
+    def urs(self):
+        return self.info.urs
+
+    @property
+    def model_id(self):
+        return self.info.model_id
+
+    @property
+    def source(self):
+        return self.info.source
 
     def svg(self):
         """
         Process a single SVG file into the requried data. This produce an array
         that can be written to CSV for import into the database.
         """
-
-        with self.paths.svg.open('r') as raw:
+        with self.info.svg.open('r') as raw:
             return raw.read().replace('\n', '')
-
-    def stk(self):
-        path = self.paths.stk
-        if not path.exists():
-            return ''
-        with path.open('r') as raw:
-            return raw.read()
 
     def dot_bracket(self):
         """
@@ -228,8 +229,7 @@ class TravelerResult(object):
         that there is only a single record in the file and it has a sequence then
         dot_bracket string which are the same length.
         """
-
-        with self.paths.fasta.open('r') as raw:
+        with self.info.fasta.open('r') as raw:
             record = SeqIO.read(raw, 'fasta')
             seq_dot = str(record.seq)
             sequence = re.match(r'^(\w+)', seq_dot).group(1)
@@ -241,20 +241,8 @@ class TravelerResult(object):
         return self.dot_bracket().count('(')
 
     def overlap_count(self):
-        with self.paths.overlaps.open('r') as raw:
+        with self.info.overlaps.open('r') as raw:
             return int(raw.readline().strip())
-
-    def is_valid(self):
-        if self.source in {Source.crw, Source.ribovision}:
-            if not self.ribovore:
-                return False
-
-        required = [
-            self.paths.fasta, 
-            self.paths.svg,
-            self.paths.overlaps,
-        ]
-        return all(p.exists() for p in required)
 
     def writeable(self):
         model_start = None if not self.ribovore else self.ribovore.mfrom
@@ -275,5 +263,4 @@ class TravelerResult(object):
             sequence_start,
             sequence_stop,
             sequence_coverage,
-            self.stk(),
         ]

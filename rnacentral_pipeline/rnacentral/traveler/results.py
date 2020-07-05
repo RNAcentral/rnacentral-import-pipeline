@@ -13,57 +13,117 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import csv
+import logging
 import os
 import re
-import logging
-from glob import glob
-
 import typing as ty
+from glob import glob
+from itertools import islice
 from pathlib import Path
 
 from rnacentral_pipeline.databases.rfam.traveler import results as rfam
 
-from . import data
-from . import ribovore
+from . import data, ribovore
 
 LOGGER = logging.getLogger(__name__)
 
 
-def standard_paths(source: data.Source, directory: Path) -> ty.Iterator[data.TravelerPaths]:
-    for path in directory.glob('URS*.colored.svg'):
-        urs, model = path.stem.replace('.colored', '').split('-', 1)
-        yield data.TravelerPaths(urs, model, source, directory)
+def load_from_hit_file(source: data.Source, path: Path):
+    filename = path / 'hits.txt'
+    if not filename.exists():
+        raise ValueError("Could not find required hits file %s" % filename)
+
+    basepath = path / '..'
+    basepath.resolve()
+    with filename.open('r') as raw:
+        reader = csv.reader(raw, delimiter='\t')
+        for row in reader:
+            if row[2] != 'PASS':
+                continue
+            urs = row[0]
+            model = row[1]
+            yield data.TravelerResultInfo(urs, model, source, basepath, path)
 
 
-def parse(source: data.Source,
-          directory: Path,
-          allow_missing=False) -> ty.Iterator[data.TravelerResult]:
+def load_gtrnadb(path: Path):
+    filenames = [
+        ('A', 'A-subset.txt'),
+        ('B', 'B-subset.txt'),
+        ('E', 'E-subset.txt'),
+    ]
+    basepath = (path / '..').resolve()
+    seen = set()
+    # TODO: Parse out the hit info from gtrnadb
+    for (prefix, filename) in filenames:
+        subset_path = path / filename
+        with subset_path.open('r') as raw:
+            reader = csv.reader(raw, delimiter='\t')
+            reader = islice(reader, 3, None)
+            for row in reader:
+                urs = row[0].strip()
+                model_name = row[4]
+                model = f'{prefix}-{model_name}'
+                filename = basepath / f'{urs}-{model}.colored.svg'
+                if not filename.exists():
+                    continue
+                if urs in seen:
+                    raise ValueError(f"Found duplicate gtrnadb result for {urs}")
+                seen.add(urs)
+                yield data.TravelerResultInfo(urs, model, data.Source.gtrnadb, basepath,
+                                              path)
 
-    if not directory.exists():
-        raise ValueError("Cannot parse data from missing directory: %s" %
-                         directory)
 
-    ribo: ty.Dict[str, data.RibovoreResult] = {}
-    if source in {data.Source.crw, data.Source.ribovision}:
-        paths = standard_paths(source, directory)
-        ribo = ribovore.as_dict(directory)
-    elif source == data.Source.rfam:
-        paths = rfam.paths(directory)
-    elif source == data.Source.gtrnadb:
-        paths = standard_paths(source, directory)
-    else:
-        raise ValueError("Unknown source: %s" % source)
+def load_hit_info(source: data.Source, path: Path):
+    if source == data.Source.gtrnadb:
+        return load_gtrnadb(path)
+    return load_from_hit_file(source, path)
 
-    seen = False
-    for path in paths:
-        r = ribo.get(path.urs, None)
-        result = data.TravelerResult.from_paths(source, path, ribovore=r)
-        if result.is_valid():
-            seen = True
+
+def possible(base: Path):
+    paths = base.glob('*.colored.svg')
+    return {p.name[0:13] for p in paths}
+
+
+def parse(base: Path, allow_missing=False) -> ty.Iterator[data.TravelerResult]:
+
+    if not base.exists():
+        raise ValueError("Cannot parse missing directory: %s" % base)
+
+    directories = [
+        (base / 'crw', data.Source.crw), 
+        (base / 'gtrnadb', data.Source.gtrnadb), 
+        (base / 'rfam', data.Source.rfam), 
+        (base / 'ribovision-lsu', data.Source.ribovision), 
+        (base / 'ribovision-ssu', data.Source.ribovision),
+    ]
+
+    parsed = set()
+    required = possible(base)
+    for (directory, source) in directories:
+        ribo = {}
+        if directory.name not in {'gtrnadb'}:
+            ribo = ribovore.as_dict(directory)
+
+        for info in load_hit_info(source, directory):
+            if info.urs in parsed:
+                raise ValueError("Found duplicate URS hit for %s", info.urs)
+            if info.urs not in required:
+                LOGGER.info("Skipping %s which has no final hit", info.urs)
+                continue
+
+            r = ribo.get(info.urs, None)
+            result = data.TravelerResult.from_info(info, ribovore=r)
+            parsed.add(info.urs)
+            required.remove(result.urs)
             yield result
 
-    if not seen:
-        msg = "Found nothing to parse in %s" % directory
+    if not parsed:
+        msg = "Found nothing to parse in %s" % base
         if not allow_missing:
             raise ValueError(msg)
         LOGGER.warn(msg)
+
+    if required:
+        missing = ', '.join(required)
+        raise ValueError(f"Did not parse results for {missing}")

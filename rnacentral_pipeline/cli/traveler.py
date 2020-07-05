@@ -37,37 +37,18 @@ def cli():
 
 @cli.command('process-svgs')
 @click.option('--allow-missing', default=False)
-@click.argument('kind', type=params.TravelerSourceParam())
 @click.argument('directories', nargs=-1, type=click.Path(
     writable=True,
     dir_okay=True,
     file_okay=False,
 ))
 @click.argument('output', type=click.File('w'))
-def process_svgs(kind, directories, output, allow_missing=False):
+def process_svgs(directories, output, allow_missing=False):
     """
     Process all SVG secondary structures in the given directory and produce a
     single data file that can be imported into the database.
     """
-    traveler.write_all(
-        kind,
-        directories,
-        output,
-        allow_missing=allow_missing,
-    )
-
-
-@cli.command('should-show')
-@click.argument('kind', type=params.TravelerSourceParam())
-@click.argument('filename', type=click.File('r'))
-@click.argument('output', type=click.File('w'))
-def should_show(kind, output):
-    """
-    Compute the should show value for the given rna_type. This will write out a
-    file listing the urs and a flag for if the given secondary structure should
-    be shown.
-    """
-    traveler.write_should_show(kind, filename, output)
+    traveler.write_all(directories, output, allow_missing=allow_missing)
 
 
 @cli.group('model-info')
