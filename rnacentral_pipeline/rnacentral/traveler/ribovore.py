@@ -36,7 +36,7 @@ def parse(path: Path) -> ty.Iterator[RibovoreResult]:
                 yield result
 
 
-def as_dict(directory: Path) -> ty.Dict[str, RibovoreResult]:
+def as_dict(directory: Path, allow_missing=False) -> ty.Dict[str, RibovoreResult]:
     possible = [
         directory / '.ribotyper.long.out',
         directory / (directory.name + '.ribotyper.long.out'),
@@ -44,4 +44,5 @@ def as_dict(directory: Path) -> ty.Dict[str, RibovoreResult]:
     for path in possible:
         if path.exists():
             return {p.target: p for p in parse(path)}
-    raise ValueError("No ribovore result file in: %s " % directory)
+    if not allow_missing:
+        raise ValueError("No ribovore result file in: %s " % directory)

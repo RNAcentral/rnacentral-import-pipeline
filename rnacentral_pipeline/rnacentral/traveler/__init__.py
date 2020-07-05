@@ -23,23 +23,19 @@ from . import results
 from . import validator
 
 
-def write(kind: data.Source, directory: str, output: ty.TextIO, allow_missing=False):
+def write(directory: str, output: ty.TextIO, allow_missing=False):
     """
     Parse all the secondary structure data from the given directory and write
     it to the given file.
     """
 
     path = Path(directory)
-    parsed = results.parse(
-        kind, 
-        path, 
-        allow_missing=allow_missing,
-    )
+    parsed = results.parse(path, allow_missing=allow_missing)
     writeable = map(op.methodcaller('writeable'), parsed)
     csv.writer(output).writerows(writeable)
 
 
-def write_all(kind: data.Source, directories: ty.List[str], output: ty.TextIO, allow_missing=False):
+def write_all(directories: ty.List[str], output: ty.TextIO, allow_missing=False):
     """
     Process all directories to produce a datafile for all computed secondary
     structures in them.
@@ -47,15 +43,4 @@ def write_all(kind: data.Source, directories: ty.List[str], output: ty.TextIO, a
 
     assert directories, "Must give at least one directory"
     for directory in directories:
-        write(
-            kind, 
-            directory, 
-            output, 
-            allow_missing=allow_missing,
-        )
-
-
-def write_should_show(kind: data.Source, filename, output: ty.TextIO):
-    data = validator.from_file(filename)
-    data = map(op.methodcaller('writeable'), data)
-    csv.writer(output).writerows(data)
+        write(directory, output, allow_missing=allow_missing)
