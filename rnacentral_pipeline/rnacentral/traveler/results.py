@@ -53,7 +53,7 @@ def load_gtrnadb(path: Path):
         ('E', 'E-subset.txt'),
     ]
     basepath = (path / '..').resolve()
-    seen = set()
+    seen = {}
     # TODO: Parse out the hit info from gtrnadb
     for (prefix, filename) in filenames:
         subset_path = path / filename
@@ -68,8 +68,11 @@ def load_gtrnadb(path: Path):
                 if not filename.exists():
                     continue
                 if urs in seen:
+                    if seen[urs] == prefix:
+                        LOGGER.warn("Two hits to URS %s" % urs)
+                        continue
                     raise ValueError(f"Found duplicate gtrnadb result for {urs}")
-                seen.add(urs)
+                seen[urs] = prefix
                 yield data.TravelerResultInfo(urs, model, data.Source.gtrnadb, basepath,
                                               path)
 
