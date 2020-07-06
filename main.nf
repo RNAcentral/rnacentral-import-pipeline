@@ -811,6 +811,7 @@ post_precompute
 flag_for_secondary
   .combine(Channel.fromPath("files/traveler/find-sequences.sql"))
   .map { flag, query -> query }
+  .filter { params.secondary.run }
   .set { traveler_setup }
 
 process find_possible_traveler_sequences {
