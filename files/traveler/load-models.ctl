@@ -59,15 +59,7 @@ SELECT
     model_source,
     model_length
 FROM load_secondary_layout_models load
-) ON CONFLICT (model_name) DO UPDATE
-SET
-    model_name = EXCLUDED.model_name,
-    taxid = EXCLUDED.taxid,
-    rna_type = EXCLUDED.rna_type,
-    so_term = EXCLUDED.so_term,
-    cell_location = EXCLUDED.cell_location,
-    model_source = EXCLUDED.model_source,
-    model_length = EXCLUDED.model_length
+) ON CONFLICT (model_name) DO NOTHING
 ;
 $$,
 $$

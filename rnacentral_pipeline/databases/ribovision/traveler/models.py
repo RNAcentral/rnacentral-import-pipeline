@@ -53,7 +53,11 @@ def lookup_taxid(species):
         return 5911
     if species == 'Thermus thermophilus':
         return 274
-    raise ValueError("Unknown species name")
+    if species == 'Drosophila melanogaster':
+        return 7227
+    if species == 'Trypanosoma brucei':
+        return 5691
+    raise ValueError("Unknown species name: " + species)
 
 
 def as_location(raw):
@@ -66,25 +70,37 @@ def as_location(raw):
     raise ValueError("Unknown raw location: " + raw)
 
 
+def so_term(row):
+    if row['model_name'] == 'DR_LSU_3D':
+        return 'SO:0001001'
+    if 'LSU' in row['model_name'] or '23S' in row['model_name'] or \
+            '28S' in row['model_name'] or row['model_name'] == 'F3H4_G_18380' \
+            or row['model_name'] == 'GC14_75':
+        return 'SO:0000651'
+    if 'SSU' in row['model_name']:
+        return 'SO:0000650'
+    raise ValueError("Could not figure out SO term for: %s" % row)
+
+
 def parse(handle):
     for row in csv.DictReader(handle, delimiter='\t'):
-        so_term = None
-        if 'LSU' in row['model_name'] or '23S' in row['model_name'] or \
-                '28S' in row['model_name']:
-            so_term = 'SO:0000651'
-        else:
-            raise ValueError("Could not figure out SO term for: %s" % row)
+        so_term_id = so_term(row)
 
-        taxid = lookup_taxid(row['species'])
+        if not row['taxid']:
+            taxid = lookup_taxid(row['species'])
+        else:
+            taxid = int(row['taxid'])
+
         location = as_location(row['cellular_location'])
         yield ModelInfo(
             model_id=row['model_name'],
             is_intronic=False,
-            so_term=so_term,
+            so_term=so_term_id,
             taxid=taxid,
             accessions=[],
             source=Source.ribovision,
             cell_location=location,
+            length=None,
         )
 
 

@@ -80,12 +80,13 @@ class ModelInfo(object):
     taxid: int = attr.ib(validator=is_a(int))
     accessions: ty.List[str] = attr.ib(validator=is_a(list))
     source: Source = attr.ib(validator=is_a(Source))
-    length: int = attr.ib(validator=is_a(int))
+    length: int = attr.ib(validator=optional(is_a(int)))
     cell_location: ty.Optional[str] = attr.ib(validator=optional(is_a(str)))
 
     @property
     def rna_type(self):
-        if self.so_term in {'SO:0000650', 'SO:0000651', 'SO:0000652'}:
+        if self.so_term in {'SO:0000650', 'SO:0000651', 'SO:0000652',
+                            'SO:0001001'}:
             return 'rRNA'
         if self.so_term in {'SO:0000587', 'SO:0000603'}:
             return 'autocatalytically_spliced_intron'
