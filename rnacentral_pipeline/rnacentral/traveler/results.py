@@ -104,6 +104,9 @@ def parse(base: Path, allow_missing=False) -> ty.Iterator[data.TravelerResult]:
     parsed = set()
     required = possible(base)
     for (directory, source) in directories:
+        if not directory.exists():
+            LOGGER.info("No results for %s", source)
+            continue
         ribo = {}
         if directory.name not in {'gtrnadb'}:
             ribo = ribovore.as_dict(directory)
