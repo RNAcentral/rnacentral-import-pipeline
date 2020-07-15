@@ -815,7 +815,6 @@ flag_for_secondary
   .set { traveler_setup }
 
 process find_possible_traveler_sequences {
-  tag { "${model}" }
   memory params.secondary.find_possible.memory
   maxForks params.secondary.find_possible.maxForks
   clusterOptions '-sp 100'
@@ -831,7 +830,6 @@ process find_possible_traveler_sequences {
   """
   psql \
     -v ON_ERROR_STOP=1 \
-    -v 'model=$model' \
     -v 'tablename=${params.secondary.tablename}' \
     -f "$query" "$PGDATABASE" > raw.json
   json2fasta.py raw.json rnacentral.fasta
