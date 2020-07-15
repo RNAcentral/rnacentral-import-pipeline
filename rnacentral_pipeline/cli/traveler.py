@@ -36,7 +36,7 @@ def cli():
 
 
 @cli.command('process-svgs')
-@click.option('--allow-missing', default=False)
+@click.option('--allow-missing', is_flag=True, default=False)
 @click.argument('directories', nargs=-1, type=click.Path(
     writable=True,
     dir_okay=True,
