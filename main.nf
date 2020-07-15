@@ -865,7 +865,7 @@ process parse_layout {
   file('attempted.csv') into traveler_attempted_sequences
 
   """
-  rnac traveler process-svgs $family $to_parse data.csv
+  rnac traveler process-svgs $to_parse data.csv
   rnac traveler create-attempted $sequences attempted.csv
   """
 }
