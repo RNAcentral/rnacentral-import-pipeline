@@ -872,20 +872,20 @@ process parse_layout {
 
 secondary_to_import
   .collect()
-  .combine(Channel.fromPath("files/traveler/load.ctl"))
   .set { secondary_to_import }
 
 traveler_attempted_sequences
   .collect()
-  .combine(Channel.fromPath('files/traveler/attempted.ctl'))
   .set { traveler_attempted }
 
 process store_secondary_structures {
   memory params.secondary.store.memory
 
   input:
-  set file('data*.csv'), file(ctl), file(rna_types_sql) from secondary_to_import
-  set file('attempted*.csv'), file(attempted_ctl) from traveler_attempted
+  file('data*.csv') from secondary_to_import
+  file(ctl) from Channel.fromPath('files/traveler/load.ctl')
+  file('attempted*.csv') from traveler_attempted
+  file(attempted_ctl) from Channel.fromPath('files/traveler/attempted.ctl')
 
   """
   split-and-load $ctl 'data*.csv' ${params.secondary.data_chunk_size} traveler-data
