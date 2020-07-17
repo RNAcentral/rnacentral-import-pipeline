@@ -841,7 +841,7 @@ process find_possible_traveler_sequences {
 process layout_sequences {
   tag { "${sequences}" }
   memory params.secondary.layout.memory
-  container 'rnacentral/auto-traveler:dev'
+  container 'rnacentral/r2dt:latest'
 
   input:
   file(sequences) from to_layout
@@ -852,7 +852,7 @@ process layout_sequences {
   file('output/*.stk') optional true into secondary_stk
 
   """
-  auto-traveler.py draw $sequences output/
+  r2dt.py draw $sequences output/
   """
 }
 
