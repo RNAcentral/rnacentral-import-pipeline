@@ -19,28 +19,17 @@ import operator as op
 from pathlib import Path
 
 from . import data
-from . import results
+from . import parser
 from . import validator
 
 
-def write(directory: str, output: ty.TextIO, allow_missing=False):
+def write(directory: str, model_mapping: ty.TextIO, output: ty.TextIO, allow_missing=False):
     """
     Parse all the secondary structure data from the given directory and write
     it to the given file.
     """
 
     path = Path(directory)
-    parsed = results.parse(path, allow_missing=allow_missing)
+    parsed = parser.parse(path, model_mapping, allow_missing=allow_missing)
     writeable = map(op.methodcaller('writeable'), parsed)
     csv.writer(output).writerows(writeable)
-
-
-def write_all(directories: ty.List[str], output: ty.TextIO, allow_missing=False):
-    """
-    Process all directories to produce a datafile for all computed secondary
-    structures in them.
-    """
-
-    assert directories, "Must give at least one directory"
-    for directory in directories:
-        write(directory, output, allow_missing=allow_missing)

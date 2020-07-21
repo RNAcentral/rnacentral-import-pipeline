@@ -22,3 +22,4 @@ from .regions import *
 from .related import *
 from .secondary_structure import *
 from .psi_mi import *
+from .ribovore import *
