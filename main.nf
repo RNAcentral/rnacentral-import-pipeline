@@ -838,6 +838,18 @@ process find_possible_traveler_sequences {
   """
 }
 
+process find_traveler_model_mapping {
+  input:
+  file(query) from Channel.fromPath('files/traveler/model_mapping.sql')
+
+  output:
+  file('mapping.tsv') into traveler_model_mapping
+
+  """
+  psql -v ON_ERROR_STOP=1 -f $query $PGDATABASE" > mapping.tsv
+  """
+}
+
 process layout_sequences {
   tag { "${sequences}" }
   memory params.secondary.layout.memory
@@ -847,25 +859,27 @@ process layout_sequences {
   file(sequences) from to_layout
 
   output:
-  set file("$sequences"), file('output') into secondary_to_parse
-  file('output/hits.txt') optional true into secondary_hits
-  file('output/*.stk') optional true into secondary_stk
+  set file("$sequences"), file('output') into r2dt_output
 
   """
   r2dt.py draw $sequences output/
   """
 }
 
+r2dt_output
+  .combine(traveler_model_mapping)
+  .into { secondary_to_parse }
+
 process parse_layout {
   input:
-  set file('sequences.fasta'), file(to_parse) from secondary_to_parse
+  set file('sequences.fasta'), file(to_parse), file(mapping) from secondary_to_parse
 
   output:
   file("data.csv") into secondary_to_import
   file('attempted.csv') into traveler_attempted_sequences
 
   """
-  rnac traveler process-svgs $to_parse data.csv
+  rnac traveler process-svgs $mapping $to_parse data.csv
   rnac traveler create-attempted $sequences attempted.csv
   """
 }
