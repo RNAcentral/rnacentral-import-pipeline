@@ -31,7 +31,7 @@ def parse(path: Path) -> ty.Iterator[RibovoreResult]:
         for line in raw:
             if line.startswith('#'):
                 continue
-            result = RibovoreResult.from_result(line)
+            result = RibovoreResult.from_result_dict(line)
             if result and result.status != 'FAIL':
                 yield result
 

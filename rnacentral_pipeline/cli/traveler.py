@@ -37,18 +37,19 @@ def cli():
 
 @cli.command('process-svgs')
 @click.option('--allow-missing', is_flag=True, default=False)
-@click.argument('directories', nargs=-1, type=click.Path(
-    writable=True,
+@click.argument('model_info', type=click.File('r'))
+@click.argument('directory', type=click.Path(
+    writable=False,
     dir_okay=True,
     file_okay=False,
 ))
 @click.argument('output', type=click.File('w'))
-def process_svgs(directories, output, allow_missing=False):
+def process_svgs(model_info, directory, output, allow_missing=False):
     """
     Process all SVG secondary structures in the given directory and produce a
     single data file that can be imported into the database.
     """
-    traveler.write_all(directories, output, allow_missing=allow_missing)
+    traveler.write(directory, model_info, output, allow_missing=allow_missing)
 
 
 @cli.group('model-info')
