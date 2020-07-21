@@ -868,7 +868,18 @@ process layout_sequences {
 
 r2dt_output
   .combine(traveler_model_mapping)
-  .into { secondary_to_parse }
+  .into { secondary_to_parse; secondary_to_publish }
+
+process publish_layout {
+  maxForks 5
+
+  input:
+  set file(sequences), file(output), file(mapping) from secondary_to_publish
+
+  """
+  rnac traveler publish $mapping $output $params.secondary.publish
+  """
+}
 
 process parse_layout {
   input:

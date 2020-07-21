@@ -49,7 +49,7 @@ def process_svgs(model_info, directory, output, allow_missing=False):
     Process all SVG secondary structures in the given directory and produce a
     single data file that can be imported into the database.
     """
-    traveler.write(directory, model_info, output, allow_missing=allow_missing)
+    traveler.write(model_info, directory, output, allow_missing=allow_missing)
 
 
 @cli.group('model-info')
@@ -98,3 +98,20 @@ def gtrnadb_model_info(filename, output):
 @click.argument('output', default='-', type=click.File('w'))
 def traveler_create_attempted(filename, output):
     attempted.traveler(filename, output)
+
+
+@cli.command('publish')
+@click.option('--allow-missing', is_flag=True, default=False)
+@click.argument('model_info', type=click.File('r'))
+@click.argument('directory', type=click.Path(
+    writable=False,
+    dir_okay=True,
+    file_okay=False,
+))
+@click.argument('output', type=click.Path(
+    writable=True,
+    dir_okay=True,
+    file_okay=False,
+))
+def traveler_publish(model_info, directory, output, allow_missing):
+    traveler.publish(model_info, directory, output, allow_missing=allow_missing)

@@ -14,6 +14,7 @@ limitations under the License.
 """
 
 import csv
+import shutil
 import typing as ty
 import operator as op
 from pathlib import Path
@@ -23,13 +24,32 @@ from . import parser
 from . import validator
 
 
-def write(directory: str, model_mapping: ty.TextIO, output: ty.TextIO, allow_missing=False):
+def parse(model_mapping: ty.TextIO, directory: str, allow_missing=False):
+    path = Path(directory)
+    return parser.parse(model_mapping, path, allow_missing=allow_missing)
+
+
+def write(model_mapping: ty.TextIO, directory: str, output: ty.TextIO, allow_missing=False):
     """
     Parse all the secondary structure data from the given directory and write
     it to the given file.
     """
 
-    path = Path(directory)
-    parsed = parser.parse(path, model_mapping, allow_missing=allow_missing)
+    parsed = parse(model_mapping, directory, allow_missing=allow_missing)
     writeable = map(op.methodcaller('writeable'), parsed)
     csv.writer(output).writerows(writeable)
+
+
+def publish(model_mapping: ty.TextIO, directory: str, output: str, allow_missing=False):
+    out_path = Path(output)
+    for result in parse(model_mapping, directory, allow_missing=allow_missing):
+        publish_path = out_path / result.publish_path
+        try:
+            publish_path.parent.mkdir(parents=True, exist_ok=True)
+        except FileExistsError:
+            if not publish_path.parent.exists():
+                raise ValueError("Could not create publishing directory")
+
+        with publish_path.open('w') as out:
+            with result.info.svg.open('r') as inp:
+                shutil.copyfileobj(inp, out)
