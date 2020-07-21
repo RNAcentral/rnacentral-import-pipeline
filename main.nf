@@ -846,7 +846,7 @@ process find_traveler_model_mapping {
   file('mapping.tsv') into traveler_model_mapping
 
   """
-  psql -v ON_ERROR_STOP=1 -f $query $PGDATABASE" > mapping.tsv
+  psql -v ON_ERROR_STOP=1 -f $query "$PGDATABASE" > mapping.tsv
   """
 }
 
