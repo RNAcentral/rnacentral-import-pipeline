@@ -137,6 +137,13 @@ class TravelerResultInfo(object):
     def overlaps(self) -> Path:
         return self.source_directory / self.__filename__('overlaps')
 
+    @property
+    def publish_path(self) -> Path:
+        publish = Path(self.urs[0:3])
+        for start in range(4, 11, 2):
+            publish = publish / self.urs[start:(start+2)]
+        return publish / f'{self.urs}.colored.svg'
+
     def validate(self):
         assert self.svg.exists(), "Missing SVG file for %s" % self
         assert self.fasta.exists(), "Missing FASTA file for %s" % self
@@ -181,6 +188,10 @@ class TravelerResult(object):
     @property
     def source(self):
         return self.info.source
+
+    @property
+    def publish_path(self):
+        return self.info.publish_path
 
     def svg(self):
         """

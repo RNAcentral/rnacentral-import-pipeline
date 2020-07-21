@@ -59,7 +59,7 @@ def load_hit_info(base: Path, allow_missing):
     return hit_info
 
 
-def parse(base: Path, info_path: ty.TextIO, allow_missing=False) -> ty.Iterator[data.TravelerResult]:
+def parse(info_path: ty.TextIO, base: Path, allow_missing=False) -> ty.Iterator[data.TravelerResult]:
 
     if not base.exists():
         raise ValueError("Cannot parse missing directory: %s" % base)
