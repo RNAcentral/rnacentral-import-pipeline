@@ -883,7 +883,7 @@ process publish_layout {
 
 process parse_layout {
   input:
-  set file('sequences.fasta'), file(to_parse), file(mapping) from secondary_to_parse
+  set file(sequences), file(to_parse), file(mapping) from secondary_to_parse
 
   output:
   file("data.csv") into secondary_to_import
