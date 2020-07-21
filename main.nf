@@ -823,7 +823,7 @@ process find_possible_traveler_sequences {
   file(query) from traveler_setup
 
   output:
-  set file('parts/*.fasta') into to_layout mode flatten
+  file('parts/*.fasta') into to_layout mode flatten
 
   script:
   def chunk_size = params.secondary.sequence_chunk_size
