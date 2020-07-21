@@ -79,7 +79,16 @@ def parse(info_path: ty.TextIO, base: Path, allow_missing=False) -> ty.Iterator[
             model_db_id = model_info[model_name]
             info = data.TravelerResultInfo(urs, model_name, model_db_id, source,
                                            result_base)
-            info.validate()
+            try:
+                info.validate()
+            except Exception as e:
+                if allow_missing:
+                    LOGGER.warn("Did not find all required files for %s", urs)
+                    LOGGER.exception(e)
+                    continue
+                else:
+                    raise e
+
             hit = None
             if info.has_hit_info():
                 hit = hit_info[urs]
