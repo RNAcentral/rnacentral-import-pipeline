@@ -137,12 +137,17 @@ class R2DTResultInfo(object):
     def overlaps(self) -> Path:
         return self.source_directory / self.__filename__('overlaps')
 
-    @property
-    def publish_path(self) -> Path:
+    def publish_path(self, suffix='', compressed=False) -> Path:
         publish = Path(self.urs[0:3])
         for start in range(4, 11, 2):
             publish = publish / self.urs[start:(start+2)]
-        return publish / f'{self.urs}.colored.svg'
+        append = ''
+        if suffix:
+            append = f'-{suffix}'
+        extension = '.svg'
+        if compressed:
+            extension += '.gz'
+        return publish / f'{self.urs}{append}.{extension}'
 
     def validate(self):
         assert self.svg.exists(), "Missing SVG file for %s" % self

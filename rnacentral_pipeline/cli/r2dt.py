@@ -95,6 +95,7 @@ def r2dt_create_attempted(filename, output):
 
 
 @cli.command('publish')
+@click.option('--suffix', default='')
 @click.option('--allow-missing', is_flag=True, default=False)
 @click.argument('model_info', type=click.File('r'))
 @click.argument('directory', type=click.Path(
@@ -107,5 +108,6 @@ def r2dt_create_attempted(filename, output):
     dir_okay=True,
     file_okay=False,
 ))
-def r2dt_publish(model_info, directory, output, allow_missing):
-    r2dt.publish(model_info, directory, output, allow_missing=allow_missing)
+def r2dt_publish(model_info, directory, output, allow_missing, suffix=''):
+    r2dt.publish(model_info, directory, output, allow_missing=allow_missing,
+                 suffix=suffix)
