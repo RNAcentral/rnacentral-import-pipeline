@@ -43,10 +43,12 @@ def write(model_mapping: ty.TextIO, directory: str, output: ty.TextIO, allow_mis
     csv.writer(output).writerows(writeable)
 
 
-def publish(model_mapping: ty.TextIO, directory: str, output: str, allow_missing=False):
+def publish(model_mapping: ty.TextIO, directory: str, output: str, allow_missing=False,
+            suffix=''):
     out_path = Path(output)
     for result in parse(model_mapping, directory, allow_missing=allow_missing):
-        publish_path = out_path / result.publish_path
+        publish_path = out_path / result.publish_path(suffix=suffix,
+                                                      compressed=True)
         try:
             publish_path.parent.mkdir(parents=True, exist_ok=True)
         except FileExistsError:
