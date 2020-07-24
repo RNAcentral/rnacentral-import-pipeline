@@ -18,8 +18,8 @@ import csv
 import typing as ty
 import operator as op
 
-from rnacentral_pipeline.rnacentral.traveler.data import Source
-from rnacentral_pipeline.rnacentral.traveler.data import ModelInfo
+from rnacentral_pipeline.rnacentral.r2dt.data import Source
+from rnacentral_pipeline.rnacentral.r2dt.data import ModelInfo
 
 DOMAINS = {
     'arch': ('A', 2157),

@@ -69,6 +69,6 @@ def qa(handle, name, version_file, output):
     write(data, output)
 
 
-def traveler(handle, output):
+def r2dt(handle, output):
     data = fasta_parser(handle)
     write(data, output)

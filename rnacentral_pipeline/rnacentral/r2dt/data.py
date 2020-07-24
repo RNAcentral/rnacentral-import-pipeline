@@ -103,7 +103,7 @@ class ModelInfo(object):
 
 
 @attr.s()
-class TravelerResultInfo(object):
+class R2DTResultInfo(object):
     urs = attr.ib(validator=is_a(str))
     model_name = attr.ib(validator=is_a(str))
     model_db_id = attr.ib(validator=is_a(int))
@@ -169,12 +169,12 @@ class TravelerResultInfo(object):
 
 
 @attr.s()
-class TravelerResult(object):
-    info = attr.ib(validator=is_a(TravelerResultInfo))
+class R2DTResult(object):
+    info = attr.ib(validator=is_a(R2DTResultInfo))
     hit_info = attr.ib(validator=optional(is_a(RibovoreResult)), default=None)
 
     @classmethod
-    def from_info(cls, info: TravelerResultInfo, hit_info=None):
+    def from_info(cls, info: R2DTResultInfo, hit_info=None):
         return cls(info, hit_info=hit_info)
 
     @property
