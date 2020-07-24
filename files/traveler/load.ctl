@@ -4,29 +4,25 @@ HAVING FIELDS (
     urs,
     model,
     secondary_structure,
-    layout,
     overlap_count,
     basepair_count,
     model_start,
     model_stop,
     sequence_start,
     sequence_stop,
-    sequence_coverage,
-    stk
+    sequence_coverage
 ) INTO {{PGDATABASE}}?rnc_secondary_structure_layout
 TARGET COLUMNS (
     urs,
     model,
     secondary_structure,
-    layout,
     overlap_count,
     basepair_count,
     model_start,
     model_stop,
     sequence_start,
     sequence_stop,
-    sequence_coverage,
-    stk
+    sequence_coverage
 )
 
 WITH
