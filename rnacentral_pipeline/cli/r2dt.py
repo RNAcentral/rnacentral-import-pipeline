@@ -16,17 +16,11 @@ limitations under the License.
 
 import click
 
-from rnacentral_pipeline.rnacentral import traveler
+from rnacentral_pipeline.rnacentral import r2dt
 from rnacentral_pipeline.rnacentral import attempted
 
-from rnacentral_pipeline.databases.crw.traveler import models as crw
-from rnacentral_pipeline.databases.ribovision.traveler import models as ribovision
-from rnacentral_pipeline.databases.gtrnadb.traveler import models as gtrnadb
 
-from . import parameters as params
-
-
-@click.group('traveler')
+@click.group('r2dt')
 def cli():
     """
     A group of commands for parsing data from secondary structures into an
@@ -49,7 +43,7 @@ def process_svgs(model_info, directory, output, allow_missing=False):
     Process all SVG secondary structures in the given directory and produce a
     single data file that can be imported into the database.
     """
-    traveler.write(model_info, directory, output, allow_missing=allow_missing)
+    r2dt.write(model_info, directory, output, allow_missing=allow_missing)
 
 
 @cli.group('model-info')
@@ -68,7 +62,7 @@ def crw_model_info(filename, output):
     """
     Parse the CRW metadata file and produce 
     """
-    crw.write(filename, output)
+    r2dt.write_crw(filename, output)
 
 
 @model_info.command('ribovision')
@@ -76,10 +70,10 @@ def crw_model_info(filename, output):
 @click.argument('output', default='-', type=click.File('w'))
 def ribovision_model_info(filename, output):
     """
-    Parse the metadata.tsv file from auto-traveler for Ribovision models to
+    Parse the metadata.tsv file from R2DT for Ribovision models to
     produce something we can put in our database.
     """
-    ribovision.write(filename, output)
+    r2dt.write_ribovision(filename, output)
 
 
 @model_info.command('gtrnadb')
@@ -87,17 +81,17 @@ def ribovision_model_info(filename, output):
 @click.argument('output', default='-', type=click.File('w'))
 def gtrnadb_model_info(filename, output):
     """
-    Parse the metadata.tsv file from auto-traveler for gtrnadb models to
+    Parse the metadata.tsv file from R2DT for gtrnadb models to
     produce something we can put in our database.
     """
-    gtrnadb.write(filename, output)
+    r2dt.write_gtrnadb(filename, output)
 
 
 @cli.command('create-attempted')
 @click.argument('filename', type=click.File('r'))
 @click.argument('output', default='-', type=click.File('w'))
-def traveler_create_attempted(filename, output):
-    attempted.traveler(filename, output)
+def r2dt_create_attempted(filename, output):
+    attempted.r2dt(filename, output)
 
 
 @cli.command('publish')
@@ -113,5 +107,5 @@ def traveler_create_attempted(filename, output):
     dir_okay=True,
     file_okay=False,
 ))
-def traveler_publish(model_info, directory, output, allow_missing):
-    traveler.publish(model_info, directory, output, allow_missing=allow_missing)
+def r2dt_publish(model_info, directory, output, allow_missing):
+    r2dt.publish(model_info, directory, output, allow_missing=allow_missing)

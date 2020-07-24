@@ -30,7 +30,7 @@ from . import qa
 from . import rfam
 from . import search_export
 from . import text_mining
-from . import traveler
+from . import r2dt
 
 
 @click.group()
@@ -62,4 +62,4 @@ cli.add_command(qa.cli)
 cli.add_command(rfam.cli)
 cli.add_command(search_export.cli)
 cli.add_command(text_mining.cli)
-cli.add_command(traveler.cli)
+cli.add_command(r2dt.cli)

@@ -809,14 +809,14 @@ post_precompute
 //=============================================================================
 
 flag_for_secondary
-  .combine(Channel.fromPath("files/traveler/find-sequences.sql"))
+  .combine(Channel.fromPath("files/r2dt/find-sequences.sql"))
   .map { flag, query -> query }
-  .filter { params.secondary.run }
+  .filter { params.r2dt.run }
   .set { traveler_setup }
 
 process find_possible_traveler_sequences {
-  memory params.secondary.find_possible.memory
-  maxForks params.secondary.find_possible.maxForks
+  memory params.r2dt.find_possible.memory
+  maxForks params.r2dt.find_possible.maxForks
   clusterOptions '-sp 100'
 
   input:
@@ -826,11 +826,11 @@ process find_possible_traveler_sequences {
   file('parts/*.fasta') into to_layout mode flatten
 
   script:
-  def chunk_size = params.secondary.sequence_chunk_size
+  def chunk_size = params.r2dt.sequence_chunk_size
   """
   psql \
     -v ON_ERROR_STOP=1 \
-    -v 'tablename=${params.secondary.tablename}' \
+    -v 'tablename=${params.r2dt.tablename}' \
     -f "$query" "$PGDATABASE" > raw.json
   json2fasta.py raw.json rnacentral.fasta
   seqkit shuffle --two-pass rnacentral.fasta > shuffled.fasta
@@ -840,7 +840,7 @@ process find_possible_traveler_sequences {
 
 process find_traveler_model_mapping {
   input:
-  file(query) from Channel.fromPath('files/traveler/model_mapping.sql')
+  file(query) from Channel.fromPath('files/r2dt/model_mapping.sql')
 
   output:
   file('mapping.tsv') into traveler_model_mapping
@@ -852,8 +852,9 @@ process find_traveler_model_mapping {
 
 process layout_sequences {
   tag { "${sequences}" }
-  memory params.secondary.layout.memory
-  container 'rnacentral/r2dt:latest'
+  memory params.r2dt.layout.memory
+  container params.r2dt.container
+  errorStrategy 'ignore'
 
   input:
   file(sequences) from to_layout
@@ -877,7 +878,7 @@ process publish_layout {
   set file(sequences), file(output), file(mapping) from secondary_to_publish
 
   """
-  rnac traveler publish --allow-missing $mapping $output $params.secondary.publish
+  rnac r2dt publish --allow-missing $mapping $output $params.r2dt.publish
   """
 }
 
@@ -890,8 +891,8 @@ process parse_layout {
   file('attempted.csv') into traveler_attempted_sequences
 
   """
-  rnac traveler process-svgs --allow-missing $mapping $to_parse data.csv
-  rnac traveler create-attempted $sequences attempted.csv
+  rnac r2dt process-svgs --allow-missing $mapping $to_parse data.csv
+  rnac r2dt create-attempted $sequences attempted.csv
   """
 }
 
@@ -904,17 +905,17 @@ traveler_attempted_sequences
   .set { traveler_attempted }
 
 process store_secondary_structures {
-  memory params.secondary.store.memory
+  memory params.r2dt.store.memory
 
   input:
   file('data*.csv') from secondary_to_import
-  file(ctl) from Channel.fromPath('files/traveler/load.ctl')
+  file(ctl) from Channel.fromPath('files/r2dt/load.ctl')
   file('attempted*.csv') from traveler_attempted
-  file(attempted_ctl) from Channel.fromPath('files/traveler/attempted.ctl')
+  file(attempted_ctl) from Channel.fromPath('files/r2dt/attempted.ctl')
 
   """
-  split-and-load $ctl 'data*.csv' ${params.secondary.data_chunk_size} traveler-data
-  split-and-load $attempted_ctl 'attemped*.csv' ${params.secondary.data_chunk_size} traveler-attempted
+  split-and-load $ctl 'data*.csv' ${params.r2dt.data_chunk_size} traveler-data
+  split-and-load $attempted_ctl 'attemped*.csv' ${params.r2dt.data_chunk_size} traveler-attempted
   """
 }
 

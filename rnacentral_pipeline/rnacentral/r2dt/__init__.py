@@ -22,7 +22,9 @@ from pathlib import Path
 
 from . import data
 from . import parser
-from . import validator
+from .models import crw
+from .models import gtrnadb
+from .models import ribovision
 
 
 def parse(model_mapping: ty.TextIO, directory: str, allow_missing=False):
@@ -54,3 +56,21 @@ def publish(model_mapping: ty.TextIO, directory: str, output: str, allow_missing
         with gzip.open(publish_path, 'wb') as out:
             with result.info.svg.open('rb') as inp:
                 shutil.copyfileobj(inp, out)
+
+
+def write_model(generator, handle, output):
+    data = generator(handle)
+    data = map(op.methodcaller('writeable'), data)
+    csv.writer(output).writerows(data)
+
+
+def write_gtrnadb(handle, output):
+    return write_model(gtrnadb.parse, handle, output)
+
+
+def write_ribovision(handle, output):
+    return write_model(ribovision.parse, handle, output)
+
+
+def write_crw(handle, output):
+    return write_model(crw.parse, handle, output)

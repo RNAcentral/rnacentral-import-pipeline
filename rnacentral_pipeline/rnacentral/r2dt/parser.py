@@ -22,8 +22,6 @@ from glob import glob
 from itertools import islice
 from pathlib import Path
 
-from rnacentral_pipeline.databases.rfam.traveler import results as rfam
-
 from . import data, ribovore
 
 LOGGER = logging.getLogger(__name__)
@@ -59,7 +57,7 @@ def load_hit_info(base: Path, allow_missing):
     return hit_info
 
 
-def parse(info_path: ty.TextIO, base: Path, allow_missing=False) -> ty.Iterator[data.TravelerResult]:
+def parse(info_path: ty.TextIO, base: Path, allow_missing=False) -> ty.Iterator[data.R2DTResult]:
 
     if not base.exists():
         raise ValueError("Cannot parse missing directory: %s" % base)
@@ -77,8 +75,8 @@ def parse(info_path: ty.TextIO, base: Path, allow_missing=False) -> ty.Iterator[
             if source == data.Source.gtrnadb:
                 model_name = model_name.replace('_', '-')
             model_db_id = model_info[model_name]
-            info = data.TravelerResultInfo(urs, model_name, model_db_id, source,
-                                           result_base)
+            info = data.R2DTResultInfo(urs, model_name, model_db_id, source,
+                                       result_base)
             try:
                 info.validate()
             except Exception as e:
@@ -92,4 +90,4 @@ def parse(info_path: ty.TextIO, base: Path, allow_missing=False) -> ty.Iterator[
             hit = None
             if info.has_hit_info():
                 hit = hit_info[urs]
-            yield data.TravelerResult.from_info(info, hit_info=hit)
+            yield data.R2DTResult.from_info(info, hit_info=hit)

@@ -16,8 +16,8 @@ limitations under the License.
 import csv
 import operator as op
 
-from rnacentral_pipeline.rnacentral.traveler.data import Source
-from rnacentral_pipeline.rnacentral.traveler.data import ModelInfo
+from rnacentral_pipeline.rnacentral.r2dt.data import Source
+from rnacentral_pipeline.rnacentral.r2dt.data import ModelInfo
 
 
 def lookup_taxid(species):
@@ -102,9 +102,3 @@ def parse(handle):
             cell_location=location,
             length=None,
         )
-
-
-def write(handle, output):
-    data = parse(handle)
-    data = map(op.methodcaller('writeable'), data)
-    csv.writer(output).writerows(data)

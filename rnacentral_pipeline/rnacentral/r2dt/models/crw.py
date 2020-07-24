@@ -17,8 +17,8 @@ import re
 import csv
 import operator as op
 
-from rnacentral_pipeline.rnacentral.traveler.data import ModelInfo
-from rnacentral_pipeline.rnacentral.traveler.data import Source
+from rnacentral_pipeline.rnacentral.r2dt.data import ModelInfo
+from rnacentral_pipeline.rnacentral.r2dt.data import Source
 
 SO_TERM_MAPPING = {
     '16S': 'SO:0000650',
@@ -82,9 +82,3 @@ def parse(handle):
                 source=Source.crw,
                 cell_location=info['cell_location'],
             )
-
-
-def write(handle, output):
-    data = parse(handle)
-    data = map(op.methodcaller('writeable'), data)
-    csv.writer(output).writerows(data)
