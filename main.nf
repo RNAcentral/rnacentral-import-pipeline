@@ -877,7 +877,7 @@ process publish_layout {
   set file(sequences), file(output), file(mapping) from secondary_to_publish
 
   """
-  rnac traveler publish $mapping $output $params.secondary.publish
+  rnac traveler publish --allow-missing $mapping $output $params.secondary.publish
   """
 }
 
@@ -890,7 +890,7 @@ process parse_layout {
   file('attempted.csv') into traveler_attempted_sequences
 
   """
-  rnac traveler process-svgs $mapping $to_parse data.csv
+  rnac traveler process-svgs --allow-missing $mapping $to_parse data.csv
   rnac traveler create-attempted $sequences attempted.csv
   """
 }
