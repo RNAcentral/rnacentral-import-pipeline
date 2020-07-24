@@ -234,7 +234,6 @@ class TravelerResult(object):
             self.urs,
             self.model_id,
             self.dot_bracket(),
-            self.svg(),
             self.overlap_count(),
             self.basepair_count(),
             model_start,
