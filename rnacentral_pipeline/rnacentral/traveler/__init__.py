@@ -14,6 +14,7 @@ limitations under the License.
 """
 
 import csv
+import gzip
 import shutil
 import typing as ty
 import operator as op
@@ -50,6 +51,6 @@ def publish(model_mapping: ty.TextIO, directory: str, output: str, allow_missing
             if not publish_path.parent.exists():
                 raise ValueError("Could not create publishing directory")
 
-        with publish_path.open('w') as out:
-            with result.info.svg.open('r') as inp:
+        with gzip.open(publish_path, 'wb') as out:
+            with result.info.svg.open('rb') as inp:
                 shutil.copyfileobj(inp, out)
