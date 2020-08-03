@@ -20,7 +20,6 @@ import typing as ty
 import operator as op
 from pathlib import Path
 
-from . import data
 from . import parser
 from .models import crw
 from .models import gtrnadb
@@ -32,7 +31,8 @@ def parse(model_mapping: ty.TextIO, directory: str, allow_missing=False):
     return parser.parse(model_mapping, path, allow_missing=allow_missing)
 
 
-def write(model_mapping: ty.TextIO, directory: str, output: ty.TextIO, allow_missing=False):
+def write(model_mapping: ty.TextIO, directory: str, output: ty.TextIO,
+          allow_missing=False):
     """
     Parse all the secondary structure data from the given directory and write
     it to the given file.
@@ -43,8 +43,8 @@ def write(model_mapping: ty.TextIO, directory: str, output: ty.TextIO, allow_mis
     csv.writer(output).writerows(writeable)
 
 
-def publish(model_mapping: ty.TextIO, directory: str, output: str, allow_missing=False,
-            suffix=''):
+def publish(model_mapping: ty.TextIO, directory: str, output: str,
+            allow_missing=False, suffix=''):
     out_path = Path(output)
     for result in parse(model_mapping, directory, allow_missing=allow_missing):
         publish_path = out_path / result.publish_path(suffix=suffix,
