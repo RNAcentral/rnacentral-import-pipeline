@@ -654,6 +654,10 @@ def urls(notes):
 def so_rna_type_tree(rna_tree):
     return [name for (_, name) in rna_tree]
 
+def so_rna_type_tree(rna_tree):
+    return rna_tree[0][1]
+
+
 
 builder = entry([
     tag('name', as_name, keys=('upi', 'taxid')),
@@ -735,7 +739,7 @@ builder = entry([
         fields('pdbid_entityid', pdb_ids, keys='cross_references'),
         fields('disease', diseases, keys='notes'),
         fields('url', urls, keys='notes'),
-        field('so_rna_type_name', first, keys='so_rna_type'),
+        field('so_rna_type_name', so_rna_type_name, keys='so_rna_type'),
         tree('so_rna_type', so_rna_type_tree, key='so_rna_type_tree'),
     ]),
 ])
