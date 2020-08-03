@@ -13,12 +13,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import os
 import re
 import enum
-import functools
 from pathlib import Path
-from contextlib import contextmanager
 
 import typing as ty
 
@@ -28,7 +25,6 @@ import attr
 from attr.validators import optional
 from attr.validators import instance_of as is_a
 
-from rnacentral_pipeline import psql
 from rnacentral_pipeline.databases.data import RibovoreResult
 
 
@@ -107,7 +103,7 @@ class R2DTResultInfo(object):
     urs = attr.ib(validator=is_a(str))
     model_name = attr.ib(validator=is_a(str))
     model_db_id = attr.ib(validator=is_a(int))
-    source  = attr.ib(validator=is_a(Source))
+    source = attr.ib(validator=is_a(Source))
     path = attr.ib(validator=is_a(Path))
 
     @property
@@ -127,7 +123,7 @@ class R2DTResultInfo(object):
                 return base / 'ribovision-lsu'
             elif parts[1] == 'SSU':
                 return base / 'ribovision-ssu'
-            raise ValueError("Could not find correct data path: %s" % row)
+            raise ValueError("Could not find correct data path: %s" % parts)
 
         if self.source == Source.rfam and self.model_name == 'RF00005':
             return base / 'RF00005'
