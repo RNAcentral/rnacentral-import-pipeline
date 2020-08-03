@@ -53,7 +53,8 @@ def load_hit_info(base: Path, allow_missing):
         if source in has_ribovision \
                 and path.name != 'RF00005':
             update = ribovore.as_dict(path, allow_missing=True)
-            hit_info.update(update)
+            if update:
+                hit_info.update(update)
     return hit_info
 
 
@@ -74,6 +75,9 @@ def parse(info_path: ty.TextIO, base: Path, allow_missing=False) -> ty.Iterator[
             source = data.Source[row[2].lower()]
             if source == data.Source.gtrnadb:
                 model_name = model_name.replace('_', '-')
+            if model_name not in model_info:
+                LOGGER.warning("No info for model %s", model_name)
+                continue
             model_db_id = model_info[model_name]
             info = data.R2DTResultInfo(urs, model_name, model_db_id, source,
                                        result_base)
