@@ -372,7 +372,7 @@ process release {
 
 post_release
   .ifEmpty('no release')
-  .into { flag_for_qa; flag_for_mapping }
+  .into { flag_for_qa; flag_for_mapping; flag_for_secondary }
 
 //=============================================================================
 // QA scans
@@ -705,112 +705,12 @@ genome_mapping_status
   .set { mapping_flag_for_precompute }
 
 //=============================================================================
-// Run precompute of selected data
-//=============================================================================
-
-qa_flag_for_precompute
-  .combine(mapping_flag_for_precompute)
-  .map { qa, gm -> file("files/precompute/methods/${params.precompute.method.replace('_', '-')}.sql") }
-  .set { precompute_upi_queries }
-
-process find_precompute_upis {
-  when: params.precompute.run
-
-  input:
-  file(sql) from precompute_upi_queries
-
-  output:
-  file('ranges.txt') into raw_ranges
-
-  script:
-  """
-  psql \
-    -v ON_ERROR_STOP=1 \
-    -v tablename=$params.precompute.tablename \
-    -f "$sql" "$PGDATABASE"
-  rnac upi-ranges --table-name $params.precompute.tablename ${params.precompute.max_entries} ranges.txt
-  """
-}
-
-raw_ranges
-  .splitCsv()
-  .combine(Channel.fromPath('files/precompute/query.sql'))
-  .set { ranges }
-
-process precompute_range_query {
-  tag { "$min-$max" }
-  beforeScript 'slack db-work precompute-range || true'
-  afterScript 'slack db-done precompute-range || true'
-  maxForks params.precompute.maxForks
-
-  input:
-  set val(tablename), val(min), val(max), file(query) from ranges
-
-  output:
-  set val(min), val(max), file('raw-precompute.json') into precompute_raw
-
-  """
-  psql \
-    --variable ON_ERROR_STOP=1 \
-    --variable tablename=${params.precompute.tablename} \
-    --variable min=$min \
-    --variable max=$max \
-    -f "$query" \
-    '$PGDATABASE' > raw-precompute.json
-  """
-}
-
-process precompute_range {
-  tag { "$min-$max" }
-  memory params.precompute.range.memory
-
-  input:
-  set val(min), val(max), file(raw) from precompute_raw
-
-  output:
-  file 'precompute.csv' into precompute_results
-  file 'qa.csv' into qa_results
-
-  """
-  rnac precompute from-file $raw
-  """
-}
-
-process load_precomputed_data {
-  beforeScript 'slack db-work loading-precompute || true'
-  afterScript 'slack db-done loading-precompute || true'
-
-  input:
-  file('precompute*.csv') from precompute_results.collect()
-  file('qa*.csv') from qa_results.collect()
-  file pre_ctl from Channel.fromPath('files/precompute/load.ctl')
-  file qa_ctl from Channel.fromPath('files/precompute/qa.ctl')
-  file post from Channel.fromPath('files/precompute/post-load.sql')
-
-  output:
-  val('precompute') into post_precompute
-
-  script:
-  def tablename = params.precompute.tablename
-  """
-  split-and-load $pre_ctl 'precompute*.csv' ${params.import_data.chunk_size} precompute
-  split-and-load $qa_ctl 'qa*.csv' ${params.import_data.chunk_size} qa
-  psql -v ON_ERROR_STOP=1 -f $post "$PGDATABASE"
-  psql -v ON_ERROR_STOP=1 -c 'DROP TABLE IF EXISTS $tablename' "$PGDATABASE"
-  """
-}
-
-post_precompute
-  .ifEmpty('no precompute')
-  .into { flag_for_feedback; flag_for_secondary }
-
-//=============================================================================
 // Run traveler structures
 //=============================================================================
 
 flag_for_secondary
   .combine(Channel.fromPath("files/r2dt/find-sequences.sql"))
-  .map { flag, query -> query }
+  .map { _, query -> query }
   .filter { params.r2dt.run }
   .set { traveler_setup }
 
@@ -913,11 +813,115 @@ process store_secondary_structures {
   file('attempted*.csv') from traveler_attempted
   file(attempted_ctl) from Channel.fromPath('files/r2dt/attempted.ctl')
 
+  output:
+  val('done') into r2dt_flag_for_precompute
+
   """
   split-and-load $ctl 'data*.csv' ${params.r2dt.data_chunk_size} traveler-data
   split-and-load $attempted_ctl 'attemped*.csv' ${params.r2dt.data_chunk_size} traveler-attempted
   """
 }
+
+//=============================================================================
+// Run precompute of selected data
+//=============================================================================
+
+qa_flag_for_precompute
+  .combine(mapping_flag_for_precompute)
+  .combine(r2dt_flag_for_precompute)
+  .map { file("files/precompute/methods/${params.precompute.method.replace('_', '-')}.sql") }
+  .set { precompute_upi_queries }
+
+process find_precompute_upis {
+  when: params.precompute.run
+
+  input:
+  file(sql) from precompute_upi_queries
+
+  output:
+  file('ranges.txt') into raw_ranges
+
+  script:
+  """
+  psql \
+    -v ON_ERROR_STOP=1 \
+    -v tablename=$params.precompute.tablename \
+    -f "$sql" "$PGDATABASE"
+  rnac upi-ranges --table-name $params.precompute.tablename ${params.precompute.max_entries} ranges.txt
+  """
+}
+
+raw_ranges
+  .splitCsv()
+  .combine(Channel.fromPath('files/precompute/query.sql'))
+  .set { ranges }
+
+process precompute_range_query {
+  tag { "$min-$max" }
+  beforeScript 'slack db-work precompute-range || true'
+  afterScript 'slack db-done precompute-range || true'
+  maxForks params.precompute.maxForks
+
+  input:
+  set val(tablename), val(min), val(max), file(query) from ranges
+
+  output:
+  set val(min), val(max), file('raw-precompute.json') into precompute_raw
+
+  """
+  psql \
+    --variable ON_ERROR_STOP=1 \
+    --variable tablename=${params.precompute.tablename} \
+    --variable min=$min \
+    --variable max=$max \
+    -f "$query" \
+    '$PGDATABASE' > raw-precompute.json
+  """
+}
+
+process precompute_range {
+  tag { "$min-$max" }
+  memory params.precompute.range.memory
+
+  input:
+  set val(min), val(max), file(raw) from precompute_raw
+
+  output:
+  file 'precompute.csv' into precompute_results
+  file 'qa.csv' into qa_results
+
+  """
+  rnac precompute from-file $raw
+  """
+}
+
+process load_precomputed_data {
+  beforeScript 'slack db-work loading-precompute || true'
+  afterScript 'slack db-done loading-precompute || true'
+
+  input:
+  file('precompute*.csv') from precompute_results.collect()
+  file('qa*.csv') from qa_results.collect()
+  file pre_ctl from Channel.fromPath('files/precompute/load.ctl')
+  file qa_ctl from Channel.fromPath('files/precompute/qa.ctl')
+  file post from Channel.fromPath('files/precompute/post-load.sql')
+
+  output:
+  val('precompute') into post_precompute
+
+  script:
+  def tablename = params.precompute.tablename
+  """
+  split-and-load $pre_ctl 'precompute*.csv' ${params.import_data.chunk_size} precompute
+  split-and-load $qa_ctl 'qa*.csv' ${params.import_data.chunk_size} qa
+  psql -v ON_ERROR_STOP=1 -f $post "$PGDATABASE"
+  psql -v ON_ERROR_STOP=1 -c 'DROP TABLE IF EXISTS $tablename' "$PGDATABASE"
+  """
+}
+
+post_precompute
+  .ifEmpty('no precompute')
+  .set { flag_for_feedback }
 
 //=============================================================================
 // Compute feedback reports
