@@ -73,7 +73,7 @@ class Cache:
 
     def index_so_tree(self, terms):
         storable = [(t, json.dumps(v)) for (t, v) in terms]
-        self.conn.executemany(SO_INSERT, storable)
+        self.conn.executemany(INSERT_SO, storable)
         self.conn.commit()
 
     @property
@@ -91,9 +91,11 @@ class Cache:
             return [('SO:0000655', 'ncRNA')]
         try:
             cur = self.conn.execute(SO_QUERY, (so_term,))
-            result = cur.conn.fetchone()
+            result = cur.fetchone()
+            assert result
         except Exception as err:
             LOGGER.warn("Failed to get indexed data for %s" % so_term)
+            raise err
         return json.loads(result['tree'])
 
     def lookup(self, urs_taxid, missing=None):
@@ -107,6 +109,8 @@ class Cache:
             new_data = json.loads(row['data'])
             data[row['metadata_type']] = new_data
 
+        if 'secondary' not in data:
+            data['secondary'] = {}
         return data
 
 
