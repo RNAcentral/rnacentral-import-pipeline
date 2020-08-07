@@ -76,21 +76,24 @@ def common_name(row):
 
 
 def as_entry(row):
-    return data.Entry(
-        primary_id=primary_id(row),
-        accession=primary_id(row),
-        ncbi_tax_id=taxid(row),
-        database='SILVA',
-        sequence=sequence(row),
-        regions=[],
-        rna_type=rna_type(row),
-        url=url(row),
-        seq_version=version(row),
-        common_name=common_name(row),
-        species=species(row),
-        lineage=lineage(row),
-        references=[
-            pubs.reference('doi:10.1093/nar/gks1219'),
-        ],
-        inference=inference(row),
-    )
+    try:
+        return data.Entry(
+            primary_id=primary_id(row),
+            accession=primary_id(row),
+            ncbi_tax_id=taxid(row),
+            database='SILVA',
+            sequence=sequence(row),
+            regions=[],
+            rna_type=rna_type(row),
+            url=url(row),
+            seq_version=version(row),
+            common_name=common_name(row),
+            species=species(row),
+            lineage=lineage(row),
+            references=[
+                pubs.reference('doi:10.1093/nar/gks1219'),
+            ],
+            inference=inference(row),
+        )
+    except phy.UnknownTaxonId:
+        return None

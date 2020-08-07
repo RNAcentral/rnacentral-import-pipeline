@@ -35,11 +35,7 @@ def gtrnadb_secondary_structure(data):
     will transform it into a reasonable dot-bracket string and create a
     SecondaryStructure object.
     """
-    twod = SecondaryStructure(dot_bracket=helpers.dot_bracket(data))
-    seq = helpers.sequence(data)
-    if len(seq) != len(twod):
-        return SecondaryStructure.empty()
-    return twod
+    return SecondaryStructure.empty()
 
 
 def gtrnadb_exons(locations):

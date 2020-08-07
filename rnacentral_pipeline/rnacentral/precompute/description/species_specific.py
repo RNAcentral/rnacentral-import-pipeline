@@ -38,6 +38,7 @@ ORDERING = [
     'pombase',
     'mgi',
     'rgd',
+    'zfin',
     'mirgenedb',
     'lncipedia',
     'lncrnadb',
@@ -58,6 +59,7 @@ ORDERING = [
     'tarbase',
     'lncbase',
     'snodb',
+    'snorna database'
     'modomics',
     'vega',
     'srpdb',

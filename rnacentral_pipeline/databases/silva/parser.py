@@ -20,4 +20,5 @@ from . import helpers
 
 def parse(handle):
     reader = csv.DictReader(handle, delimiter='\t')
-    return map(helpers.as_entry, reader)
+    entries = map(helpers.as_entry, reader)
+    return filter(None, entries)
