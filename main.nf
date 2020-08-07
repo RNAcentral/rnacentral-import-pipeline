@@ -413,7 +413,7 @@ process fetch_qa_sequences {
   set val(name), file(query), file(version) from qa_queries
 
   output:
-  set val(name), file('parts/*.fasta') into split_qa_sequences
+  set val(name), file(version), file('parts/*.fasta') into split_qa_sequences
 
   script:
   """
@@ -426,7 +426,7 @@ process fetch_qa_sequences {
 
 split_qa_sequences
   .join(qa_scan_files)
-  .flatMap { name, fns, extra -> fns.inject([]) { acc, fn -> acc << [name, fn, extra] } }
+  .flatMap { name, version, fns, extra -> fns.inject([]) { acc, fn -> acc << [name, version, fn, extra] } }
   .set { sequences_to_scan }
 
 process qa_scan {
@@ -436,7 +436,7 @@ process qa_scan {
   errorStrategy 'ignore'
 
   input:
-  set val(name), file('sequences.fasta'), file(dir) from sequences_to_scan
+  set val(name), file(version), file('sequences.fasta'), file(dir) from sequences_to_scan
 
   output:
   set val(name), file('hits.csv') into qa_scan_results
@@ -696,7 +696,7 @@ process load_genome_mapping {
   """
   split-and-load $ctl 'raw*.csv' ${params.import_data.chunk_size} genome-mapping
   split-and-load $attempted_ctl 'attempted*.csv' ${params.import_data.chunk_size} genome-mapping-attempted
-  psql -v ON_ERROR_STOP=1 -v tablename=params.genome_mapping.to_map_table -c 'DROP TABLE :tablename' $PGDATABASE
+  psql -v ON_ERROR_STOP=1 -c 'DROP TABLE ${params.genome_mapping.to_map_table}' $PGDATABASE
   """
 }
 
