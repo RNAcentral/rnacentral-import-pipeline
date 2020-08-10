@@ -27,18 +27,19 @@ INSERT INTO pipeline_tracking_qa_rfam (
   urs,
   model_source,
   source_version,
-  last_done
+  last_run
 ) (
 select 
   urs,
   model_source,
   source_version,
-  NOW()
+  last_run
 FROM load_qa_rfam_attempted
-) ON CONFLICT (urs) DO UPDATE
+) ON CONFLICT (urs, model_source) DO UPDATE
 SET 
-  qa_analysis = EXCLUDED.qa_analysis,
-  last_done = EXCLUDED.last_done
+  model_source = EXCLUDED.model_source,
+  source_version = EXCLUDED.source_version,
+  last_run = EXCLUDED.last_run
 $$
 ;
 

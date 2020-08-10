@@ -43,7 +43,7 @@ DROP TABLE IF EXISTS load_genome_mapping_attempted;
 CREATE TABLE load_genome_mapping_attempted (
   urs_taxid text not null,
   assembly_id text not null,
-  last_run timestamp not null
+  last_run timestamp not null default CURRENT_TIMESTAMP
 );
 
 DROP TABLE IF EXISTS load_assemblies;
@@ -82,7 +82,7 @@ DROP TABLE IF EXISTS load_rfam_model_hits;
 CREATE TABLE load_rfam_model_hits (
   urs text PRIMARY KEY REFERENCES rna(upi),
   qa_analysis text NOT NULL,
-  last_done timestamp NOT NULL
+  last_run timestamp NOT NULL
 );
 
 DROP TABLE IF EXISTS load_rnc_sequence_features;
@@ -284,7 +284,8 @@ DROP TABLE IF EXISTS load_qa_rfam_attempted;
 CREATE TABLE load_qa_rfam_attempted (
   urs text NOT NULL,
   model_source text NOT NULL,
-  source_version text NOT NULL
+  source_version text NOT NULL,
+  last_run timestamp default CURRENT_TIMESTAMP
 );
 
 DROP TABLE IF EXISTS load_rfam_model_hits;
