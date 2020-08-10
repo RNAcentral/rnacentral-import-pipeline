@@ -11,4 +11,5 @@ on
   and analyzed.model_source = 'rfam'
 where
   analyzed.urs is null
+  and exists(select 1 from xref where xref.deleted = 'N' and rna.upi = xref.upi)
 ) TO STDOUT
