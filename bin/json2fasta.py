@@ -53,7 +53,7 @@ def sequences(handle, only_valid_easel=False):
 
 
 @click.command()
-@click.option('--only-valid-easel', default=False)
+@click.option('--only-valid-easel', is_flag=True, default=False)
 @click.argument('tsv_file', type=click.File('rb'))
 @click.argument('output', default='-', type=click.File('w'))
 def cli(tsv_file, output=None, only_valid_easel=False):
