@@ -81,7 +81,7 @@ def check(limit_file, db_url, default_allowed_change=0.30):
     Check the load tables for reasonable looking sequence counts.
     """
 
-    limits = json.load(raw)
+    limits = json.load(limit_file)
     cur_counts = {}
     new_counts = {}
     with connection(db_url) as conn:
