@@ -23,7 +23,7 @@ $$
 
 AFTER LOAD DO
 $$
-INSERT INTO pipeline_tracking_qa_rfam (
+INSERT INTO pipeline_tracking_qa_scan (
   urs,
   model_source,
   source_version,
