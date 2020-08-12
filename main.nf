@@ -814,13 +814,17 @@ process store_secondary_structures {
   file(attempted_ctl) from Channel.fromPath('files/r2dt/attempted.ctl')
 
   output:
-  val('done') into r2dt_flag_for_precompute
+  val('done') into r2dt_flag
 
   """
   split-and-load $ctl 'data*.csv' ${params.r2dt.data_chunk_size} traveler-data
   split-and-load $attempted_ctl 'attemped*.csv' ${params.r2dt.data_chunk_size} traveler-attempted
   """
 }
+
+r2dt_flag
+  .ifEmpty('no r2dt')
+  .set { r2dt_flag_for_precompute }
 
 //=============================================================================
 // Run precompute of selected data
