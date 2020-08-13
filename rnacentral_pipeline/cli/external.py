@@ -34,6 +34,7 @@ from rnacentral_pipeline.databases.pdb import parser as pdb
 from rnacentral_pipeline.databases.quickgo import parser as quickgo
 from rnacentral_pipeline.databases.refseq import parser as refseq
 from rnacentral_pipeline.databases.silva import parser as silva
+from rnacentral_pipeline.databases.crw import parser as crw
 from rnacentral_pipeline.writers import write_entries
 from rnacentral_pipeline.writers import \
     write_ontology_annotations as onto_writer
@@ -301,3 +302,15 @@ def process_malacards(data_file, known_sequences, output):
 )
 def process_intact(data_file, output, db_url):
     write_entries(intact.parse, output, data_file, db_url)
+
+
+@cli.command("crw")
+@click.argument("metadata_file", type=click.File('r'))
+@click.argument("sequence_directory", type=click.Path(dir_okay=True))
+@click.argument(
+    "output",
+    default=".",
+    type=click.Path(writable=True, dir_okay=True, file_okay=False,),
+)
+def process_crw(metadata_file, sequence_directory, output):
+    write_entries(crw.parse, output, metadata_file, sequence_directory)
