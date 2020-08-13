@@ -222,7 +222,6 @@ fetch_intact()
   grep -i rnacentral intact-data/intact.txt >> "$2"
 }
 
-
 [ $# -gt 0 ] || { usage 0; }
 
 name="$1"
