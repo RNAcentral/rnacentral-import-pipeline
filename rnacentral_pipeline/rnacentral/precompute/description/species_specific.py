@@ -59,7 +59,7 @@ ORDERING = [
     'tarbase',
     'lncbase',
     'snodb',
-    'snorna database'
+    'snorna database',
     'modomics',
     'vega',
     'srpdb',
