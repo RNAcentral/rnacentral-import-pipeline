@@ -78,6 +78,8 @@ def exons(data):
 
 def rna_type(data):
     so_id = data['ontology']['SO']
+    if so_id == '0010039':
+        so_id = '0000655'
     return 'SO:' + so_id
 
 

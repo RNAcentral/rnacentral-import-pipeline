@@ -349,6 +349,9 @@ class Entry(object):
         for interaction in self.interactions:
             yield interaction.writeable()
 
+    def write_ontology_terms(self):
+        yield [self.rna_type]
+
     def __write_part__(self, attribute, method_name='writeable'):
         if not self.is_valid():
             return []
