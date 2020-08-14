@@ -182,7 +182,7 @@ function fetch_rfam() {
 
 function fetch_ena() {
   rsync \
-    -avP \
+    -avPL \
     --prune-empty-dirs \
     --include='*/' \
     --include='**/*.ncr.gz' \
