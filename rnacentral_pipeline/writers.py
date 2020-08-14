@@ -154,6 +154,9 @@ def build_entry_writer(parser):
         },
         interactions={
             'transformer': op.methodcaller('write_interactions'),
+        },
+        terms={
+            'transformer': op.methodcaller('write_ontology_terms'),
         }
     )
 
