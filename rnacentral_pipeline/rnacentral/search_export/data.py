@@ -657,7 +657,7 @@ def so_rna_type_tree(rna_tree):
 def so_rna_type_name(rna_tree):
     if not rna_tree:
         return None
-    return rna_tree[-1][1]
+    return [n for (_, n) in rna_tree]
 
 
 
