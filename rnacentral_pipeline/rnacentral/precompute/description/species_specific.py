@@ -64,6 +64,7 @@ ORDERING = [
     'vega',
     'srpdb',
     'snopy',
+    'crw',
     'silva',
     'greengenes',
     'rdp',

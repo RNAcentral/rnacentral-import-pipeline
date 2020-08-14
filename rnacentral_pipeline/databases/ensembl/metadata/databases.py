@@ -52,7 +52,7 @@ def select_max(handle):
             continue
         if 'mus_musculus' in line and line.count('_') != 4:
             continue  # skip mouse strains Mouse 129S1/SvImJ
-        if bacteria in line:
+        if 'bacteria' in line:
             continue
         if '_core_' in line:
             databases.append(line.strip())

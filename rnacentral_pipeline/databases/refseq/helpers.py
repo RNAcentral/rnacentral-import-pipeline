@@ -99,10 +99,22 @@ def rna_type(record, feature):
     rna_type = embl.rna_type(feature)
     if rna_type != 'precursor_RNA':
         return rna_type
+
+    
+    products = feature.qualifiers.get('product', [])
+    if products:
+        prod = products[0].lower()
+        if prod.startswith('microrna') or prod.startswith('pre-microrna'):
+            return 'SO:0001244'
+
     genes = feature.qualifiers.get('gene', [])
     for gene in genes:
         if gene.lower().startswith('mir'):
             return 'SO:0001244'
+
+    syn = feature.qualifiers.get('gene_synonym', [])
+    if syn and any('mir' in s.lower() for s in syn):
+        return 'SO:0001244'
     return rna_type
 
 

@@ -52,6 +52,7 @@ INSDC_SO_MAPPING = {
     'bidirectional_promoter_lncrna': 'SO:0002185',
     '3prime_overlapping_ncrna': 'SO:0002120',
     'pre_miRNA': 'SO:0001244',
+    'sRNA': 'SO:0000655',
 }
 
 NORMALIZE_TO_INSDC = {
