@@ -190,6 +190,20 @@ def add_organism_preifx(ncrna, suffix):
     return prefix + ' ' + suffix
 
 
+def features(record):
+    if not record['sequenceFeatures']:
+        return []
+    features = []
+    for key, feature in record['sequenceFeatures'].items():
+        features.append(data.SequenceFeature(
+            name=key,
+            feature_type=key,
+            location=features['indexes'],
+            sequence=features['sequence'],
+        ))
+    return features
+
+
 def description(ncrna):
     """
     Generate a description for the given ncrna record. This will use a series
@@ -357,6 +371,7 @@ def as_entry(record, context):
         gene=gene(record),
         gene_synonyms=gene_synonyms(record),
         locus_tag=locus_tag(record),
+        features=features(record),
     )
 
 

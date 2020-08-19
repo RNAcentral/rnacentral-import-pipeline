@@ -337,6 +337,9 @@ class Entry(object):
         return self.__write_part__(self.related_sequences)
 
     def write_sequence_features(self):
+        for feature in self.features:
+            yield feature.writeable()
+
         for related in self.related_sequences:
             features = related.write_features(self.accession, self.ncbi_tax_id)
             for feature in features:

@@ -13,14 +13,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import typing as ty
 
-from .entry import *
-from .go_annotations import *
-from .ontology_term import *
-from .references import *
-from .regions import *
-from .related import *
-from .secondary_structure import *
-from .psi_mi import *
-from .ribovore import *
-from .features import *
+@attr.s()
+class SequenceFeature:
+    name: str = attr.ib()
+    feature_type: str = attr.ib()
+    location: ty.List[int] = attr.ib()
+    sequence: str = attr.ib()
+
+    def writeable(self, accession, taxid):
+        return [accession, taxid, self.location[0], self.location[-1], self.feature_type,
+                '{}']
