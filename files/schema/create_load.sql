@@ -234,17 +234,6 @@ CREATE TABLE load_taxonomy (
     replaced_by int
 );
 
-DROP TABLE IF EXISTS load_crs_features;
-CREATE TABLE load_crs_features (
-    upi text,
-    taxid int,
-    accession text,
-    start int,
-    stop int,
-    feature_name text,
-    metadata jsonb
-);
-
 DROP TABLE IF EXISTS load_overlaps;
 CREATE TABLE load_overlaps (
     upi_taxid text,
