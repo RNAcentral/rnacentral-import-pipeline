@@ -30,7 +30,7 @@ raw_crs
   .set { crs_bed_with_assemblies }
 
 for_rfam_fetch
-  .combine(Channel.fromPath("files/crs/fetch-rfam.sql")
+  .combine(Channel.fromPath("files/crs/fetch-rfam.sql"))
   .set { rfam_to_fetch }
 
 process fetch_rfam_locations {
@@ -48,8 +48,8 @@ process fetch_rfam_locations {
 }
 
 for_rnacentral_fetch
-  .combine(Channel.fromPath("files/crs/fetch-rnacentral.sql")
-  .set { rfam_to_fetch }
+  .combine(Channel.fromPath("files/crs/fetch-rnacentral.sql"))
+  .set { rnacentral_assemblies_to_fetch }
 
 process fetch_rnacentral_bed {
   input:
