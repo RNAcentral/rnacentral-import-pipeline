@@ -6,10 +6,10 @@ process fetch_crs_bed {
 
   output:
   file('*.bed') into raw_crs mode flatten
-  file("cfs.cfg") into raw_crs_config
+  file("crs.cfg") into raw_crs_config
 
   """
-  cp "$remote/data/*.bed.gz" .
+  cp $remote/data/*.bed.gz .
   gzip -d *.bed.gz
   cp "$remote/crs_filtered_bedfiles.cfg" "crs.cfg"
   """
@@ -60,7 +60,7 @@ process fetch_rnacentral_bed {
   set val(assembly), file(query) from rnacentral_assemblies_to_fetch
 
   output:
-  set val(assembly), file("{$assembly}.bed") into rnacentral_locations
+  set val(assembly), file("${assembly}.bed") into rnacentral_locations
 
   """
   psql -v ON_ERROR_STOP=1 -v "assembly_id=$assembly" -f $query "$PGDATABASE" > result.json
