@@ -21,7 +21,7 @@ raw_crs_config
   .into { for_rfam_fetch; for_rnacentral_fetch }
 
 raw_crs
-  .map { f -> 
+  .map { f ->
     def assembly =  file(f).name
       .replace("cmf_extend.", "")
       .replace(".fdr10.nonredundant.bed", "")
@@ -34,6 +34,8 @@ for_rfam_fetch
   .set { rfam_to_fetch }
 
 process fetch_rfam_locations {
+  maxForks 4
+
   input:
   set val(assembly), file(query) from rfam_to_fetch
 
@@ -52,6 +54,8 @@ for_rnacentral_fetch
   .set { rnacentral_assemblies_to_fetch }
 
 process fetch_rnacentral_bed {
+  maxForks 4
+
   input:
   set val(assembly), file(query) from rnacentral_assemblies_to_fetch
 
@@ -71,29 +75,48 @@ crs_bed_with_assemblies
 
 process remove_rfam_crs {
   input:
-  set val(assembly), file(crs), file(rfam) from crs_to_clean
+  set val(assembly), file(crs), file(rfam), file(rnacentral) from crs_to_clean
 
   output:
-  set val(assembly), file("cleaned.bed") into cleaned_crs
+  set val(assembly), file("selected_crs.tsv") into selected_crs
 
   """
-  bedtools intersect -va $crs -b $rfam > cleaned.bed
-  """
-}
+  bedtools intersect -va $crs -b $rfam | bedtools sort -i > cleaned.bed
 
-cleaned_crs
-  .join(rnacentral_locations)
-  .set { crs_to_select }
+  bed12ToBed6 -i $rnacentral |\
+  awk 'BEGIN { OFS="\t" } { print $1,$2,$3,$4":"$1":"$2":"$3":"$11,$5,$6,$7,$8,$9,$10,$11,$12 }' -n |\
+  awk 'BEGIN { OFS="\t" } {
+    split($4,a,":");
+    split(a[length(a)],b,",");
+    offset=0;
+    if($5!=1) {
+      for(i=1;i<$5;i++) {
+        if ($6=="+") {
+          offset+=b[i]
+        } else {
+          offset=offset+b[length(b)-i+1]
+        }
+      }
+    };
+    print $1,$2,$3,$4":"offset,$5,$6
+  }' | bedtools sort -i > exons.bed
 
-process select_rnacentral_crs {
-  input:
-  set val(assembly), file(crs), file(rnacentral_bed) from crs_to_select
-
-  output:
-  set val(assembly), file("selected.bed") into selected_crs
-
-  """
-  bedtools -a $crs -b $rnacentral > selected.bed
+  bedtools intersect -a cleaned.bed -b exons.bed -wo > intersect_exon.bed
+  awk 'BEGIN {
+    OFS="\t";
+    print "URS_taxid","CRS_start_relative_to_URS","CRS_end_relative_to_URS","chromosome","CRS_start_relative_to_genome","CRS_end_relative_to_genome","CRS_id","CRS_fdr"
+  } {
+    split($10,a,":");
+  if ($12=="+") {
+    start=$2-$8+1+a[$6];
+    end=$3-$8+a[$6]
+  }
+  else {
+    start=$9-$3+1+a[$6];
+    end=$9-$2+a[$6]
+  };
+  print a[1],start,end,$1,$2+1,$3,$4,$5
+  }' intersect_exon.bed > selected_crs.tsv
   """
 }
 
