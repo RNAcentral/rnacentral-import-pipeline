@@ -9,6 +9,7 @@ RUN apt-get upgrade -y
 
 # Install all required packages
 RUN apt-get install -y \
+    gawk \
     bedtools \
     ca-certificates \
     curl \
