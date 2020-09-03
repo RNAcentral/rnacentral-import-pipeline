@@ -71,7 +71,7 @@ crs_bed_with_assemblies
   .join(rnacentral_locations)
   .set { crs_to_clean }
 
-process remove_rfam_crs {
+process find_rnacentral_crs_features {
   input:
   set val(assembly), file(crs), file(rfam), file(rnacentral) from crs_to_clean
 
