@@ -76,61 +76,13 @@ process remove_rfam_crs {
   set val(assembly), file(crs), file(rfam), file(rnacentral) from crs_to_clean
 
   output:
-  set val(assembly), file("selected_crs.tsv") into selected_crs
-
-  shell:
-  '''
-  bedtools intersect -a !{crs} -b !{rfam} -v > crs-no-rfam.bed
-  bedtools sort -i crs-no-rfam.bed > cleaned.bed
-
-  bed12ToBed6 -i !{rnacentral} |\
-  awk -n 'BEGIN { OFS="\t" } { print $1,$2,$3,$4":"$1":"$2":"$3":"$11,$5,$6,$7,$8,$9,$10,$11,$12 }' |\
-  awk 'BEGIN { OFS="\t" } {
-    split($4,a,":");
-    split(a[length(a)],b,",");
-    offset=0;
-    if($5!=1) {
-      for(i=1;i<$5;i++) {
-        if ($6=="+") {
-          offset+=b[i]
-        } else {
-          offset=offset+b[length(b)-i+1]
-        }
-      }
-    };
-    print $1,$2,$3,$4":"offset,$5,$6
-  }' > unsorted-exons.bed
-
-  bedtools sort -i unsorted-exons.bed > exons.bed
-
-  bedtools intersect -a cleaned.bed -b exons.bed -wo > intersect_exon.bed
-  awk 'BEGIN {
-    OFS="\t";
-    print "URS_taxid","CRS_start_relative_to_URS","CRS_end_relative_to_URS","chromosome","CRS_start_relative_to_genome","CRS_end_relative_to_genome","CRS_id","CRS_fdr"
-  } {
-    split($10,a,":");
-  if ($12=="+") {
-    start=$2-$8+1+a[$6];
-    end=$3-$8+a[$6]
-  }
-  else {
-    start=$9-$3+1+a[$6];
-    end=$9-$2+a[$6]
-  };
-  print a[1],start,end,$1,$2+1,$3,$4,$5
-  }' intersect_exon.bed > selected_crs.tsv
-  '''
-}
-
-process process_crs {
-  input:
-  set val(assembly), file(crs) from selected_crs
-
-  output:
   file('complete_features.csv') into processed_crs
 
+  script:
+  def must_clean = params.crs.must_clean_bed.contains(assembly) ? '1' : '0';
   """
-  rnac crs $crs complete_features.csv
+  crs-overlaps $crs $rfam $rnacentral $must_clean
+  rnac crs selected_crs.tsv complete_features.csv
   """
 }
 
