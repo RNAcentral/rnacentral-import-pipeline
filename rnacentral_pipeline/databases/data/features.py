@@ -15,6 +15,9 @@ limitations under the License.
 
 import typing as ty
 
+import attr
+
+
 @attr.s()
 class SequenceFeature:
     name: str = attr.ib()
