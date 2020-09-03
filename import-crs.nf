@@ -6,19 +6,12 @@ process fetch_crs_bed {
 
   output:
   file('*.bed') into raw_crs mode flatten
-  file("crs.cfg") into raw_crs_config
 
   """
   cp $remote/data/*.bed.gz .
   gzip -d *.bed.gz
-  cp "$remote/crs_filtered_bedfiles.cfg" "crs.cfg"
   """
 }
-
-raw_crs_config
-  .splitCsv(sep: "\t")
-  .map { row -> row[0] }
-  .into { for_rfam_fetch; for_rnacentral_fetch }
 
 raw_crs
   .map { f ->
@@ -27,7 +20,11 @@ raw_crs
       .replace(".fdr10.nonredundant.bed", "")
     [ assembly, f ]
   }
-  .set { crs_bed_with_assemblies }
+  .into { crs_bed_with_assemblies; pre_fetch }
+
+pre_fetch
+  .map { assembly, _ -> [assembly, params.crs.assembly_rnacentral_mapping[assembly]] }
+  .into { for_rfam_fetch; for_rnacentral_fetch }
 
 for_rfam_fetch
   .combine(Channel.fromPath("files/crs/fetch-rfam.sql"))
@@ -37,15 +34,15 @@ process fetch_rfam_locations {
   maxForks 4
 
   input:
-  set val(assembly), file(query) from rfam_to_fetch
+  set val(crs_assembly), val(assembly), file(query) from rfam_to_fetch
 
   output:
-  set val(assembly), file("${assembly}.bed") into rfam_coordinates
+  set val(crs_assembly), file("rfam-${assembly}.bed") into rfam_coordinates
 
   """
-  psql -v ON_ERROR_STOP=1 -v "assembly_id=$assembly" -f $query "$PGDATABASE" > result.json
-  rnac ftp-export coordinates as-bed result.json |\
-  sort -k1,1 -k2,2n > ${assembly}.bed
+  psql -v ON_ERROR_STOP=1 -v "assembly_id=$crs_assembly" -f $query "$PGDATABASE" > result.json
+  rnac ftp-export coordinates as-bed result.json result.bed
+  bedtools sort -i result.bed > rfam-${assembly}.bed
   """
 }
 
@@ -57,20 +54,21 @@ process fetch_rnacentral_bed {
   maxForks 4
 
   input:
-  set val(assembly), file(query) from rnacentral_assemblies_to_fetch
+  set val(crs_assembly), val(assembly), file(query) from rnacentral_assemblies_to_fetch
 
   output:
-  set val(assembly), file("${assembly}.bed") into rnacentral_locations
+  set val(crs_assembly), file("rnacentral-${assembly}.bed") into rnacentral_locations
 
   """
   psql -v ON_ERROR_STOP=1 -v "assembly_id=$assembly" -f $query "$PGDATABASE" > result.json
-  rnac ftp-export coordinates as-bed result.json |\
-  sort -k1,1 -k2,2n > ${assembly}.bed
+  rnac ftp-export coordinates as-bed result.json > result.bed
+  bedtools sort -i result.bed > rnacentral-${assembly}.bed
   """
 }
 
 crs_bed_with_assemblies
   .join(rfam_coordinates)
+  .join(rnacentral_locations)
   .set { crs_to_clean }
 
 process remove_rfam_crs {
@@ -80,11 +78,13 @@ process remove_rfam_crs {
   output:
   set val(assembly), file("selected_crs.tsv") into selected_crs
 
-  """
-  bedtools intersect -va $crs -b $rfam | bedtools sort -i > cleaned.bed
+  shell:
+  '''
+  bedtools intersect -a !{crs} -b !{rfam} -v > crs-no-rfam.bed
+  bedtools sort -i crs-no-rfam.bed > cleaned.bed
 
-  bed12ToBed6 -i $rnacentral |\
-  awk 'BEGIN { OFS="\t" } { print $1,$2,$3,$4":"$1":"$2":"$3":"$11,$5,$6,$7,$8,$9,$10,$11,$12 }' -n |\
+  bed12ToBed6 -i !{rnacentral} |\
+  awk -n 'BEGIN { OFS="\t" } { print $1,$2,$3,$4":"$1":"$2":"$3":"$11,$5,$6,$7,$8,$9,$10,$11,$12 }' |\
   awk 'BEGIN { OFS="\t" } {
     split($4,a,":");
     split(a[length(a)],b,",");
@@ -99,7 +99,9 @@ process remove_rfam_crs {
       }
     };
     print $1,$2,$3,$4":"offset,$5,$6
-  }' | bedtools sort -i > exons.bed
+  }' > unsorted-exons.bed
+
+  bedtools sort -i unsorted-exons.bed > exons.bed
 
   bedtools intersect -a cleaned.bed -b exons.bed -wo > intersect_exon.bed
   awk 'BEGIN {
@@ -117,7 +119,7 @@ process remove_rfam_crs {
   };
   print a[1],start,end,$1,$2+1,$3,$4,$5
   }' intersect_exon.bed > selected_crs.tsv
-  """
+  '''
 }
 
 process process_crs {
