@@ -404,23 +404,26 @@ flag_for_qa
   .map { flag, fn -> [fn.getBaseName(), fn] }
   .filter { n, fn -> params.qa[n].run }
   .join(qa_version_files)
+  .combine(Channel.fromPath('files/find-active-xref-urs.sql'))
+  .combine(Channel.fromPath('files/qa/computed.sql'))
+  .combine(Channel.fromPath('files/qa/compute-required.sql'))
   .set { qa_queries }
 
 process fetch_qa_sequences {
-  memory 20.GB
-
   input:
-  set val(name), file(query), file(version) from qa_queries
+  tuple val(name), path(query), path(version), path(active_xrefs), path(computed), path(compute_missing) from qa_queries
 
   output:
-  set val(name), file(version), file('parts/*.fasta') into split_qa_sequences
+  set val(name), path(version), file('parts/*.fasta') into split_qa_sequences
 
   script:
   """
-  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > raw.json
-  json2fasta.py --only-valid-easel raw.json rnacentral.fasta
-  seqkit shuffle --two-pass rnacentral.fasta > shuffled.fasta
-  seqkit split --two-pass --by-size ${params.qa[name].chunk_size} --out-dir 'parts/' shuffled.fasta
+  psql -v ON_ERROR_STOP=1 -f "$active_xrefs" "$PGDATABASE" | sort -u > active-urs
+  psql -v ON_ERROR_STOP=1 -v 'name=$name' -f "$computed" "$PGDATABASE" | sort > computed
+  comm -23 active-urs computed > urs-to-compute
+  psql -q -v ON_ERROR_STOP=1 -f "$compute_missing" <(urs-to-compute) > raw.json
+  mkdir parts
+  split --filter 'json2fasta.py --only-valid-easel - $FILE.fasta' --lines ${params.qa[name].chunk_size} raw.json parts/
   """
 }
 
