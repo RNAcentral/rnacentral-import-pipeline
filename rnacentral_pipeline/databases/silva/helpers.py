@@ -32,6 +32,14 @@ KNOWN_TYPES = {
     'small_subunit_rRNA': 'SO:0000650',
 }
 
+RRNA_NAME_MAPPING = {
+    'rRNA': 'rRNA',
+    'rRNA_12S': 'mitochondrial SSU rRNA',
+    'rRNA_16S': 'bacterial SSU rRNA',
+    'rRNA_18S': 'SSU rRNA',
+    'small_subunit_rRNA': 'SSU rRNA',
+    
+}
 
 def primary_id(row):
     return 'SILVA:%s:%s' % (row['insdcAccession'], row['location'])
@@ -75,6 +83,15 @@ def common_name(row):
     return phy.common_name(taxid(row))
 
 
+def description(row):
+    organism = species(row)
+    common = common_name(row)
+    if common:
+        organism += f' {common}'
+    rrna = RRNA_NAME_MAPPING[row['type']]
+    return f'{organism} {rrna}'
+
+
 def as_entry(row):
     try:
         return data.Entry(
@@ -94,6 +111,7 @@ def as_entry(row):
                 pubs.reference('doi:10.1093/nar/gks1219'),
             ],
             inference=inference(row),
+            description=description(row),
         )
     except phy.UnknownTaxonId:
         return None
