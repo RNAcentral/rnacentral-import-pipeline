@@ -30,6 +30,7 @@ from . import utils
 from .references import Reference
 from .references import IdReference
 from .secondary_structure import SecondaryStructure
+from .features import SequenceFeature
 
 LOGGER = logging.getLogger(__name__)
 
@@ -114,7 +115,7 @@ class Entry(object):
     references = utils.possibly_empty(list)
 
     secondary_structure = utils.possibly_empty(SecondaryStructure)
-    feature = utils.possibly_empty(list)
+    features = utils.possibly_empty(list)
     interactions = utils.possibly_empty(list)
 
     @property
