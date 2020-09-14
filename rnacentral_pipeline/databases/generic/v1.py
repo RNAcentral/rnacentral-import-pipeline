@@ -191,7 +191,7 @@ def add_organism_preifx(ncrna, suffix):
 
 
 def features(record):
-    if not record['sequenceFeatures']:
+    if not record.get('sequenceFeatures', None):
         return []
     features = []
     for key, feature in record['sequenceFeatures'].items():
