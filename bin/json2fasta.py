@@ -15,30 +15,25 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import re
 import json
-
-import click
+import re
 
 from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 
-EASEL_PATTERN = re.compile(r'^[ACGTN]+$', re.IGNORECASE)
+import click
+
+EASEL_PATTERN = re.compile(r"^[ACGTN]+$", re.IGNORECASE)
 
 
 def as_record(entry):
-    description = entry.get('description', '') or ''
-
-    return SeqRecord(
-        Seq(entry['sequence']),
-        id=entry['id'],
-        description=description,
-    )
+    description = entry.get("description", "") or ""
+    return SeqRecord(Seq(entry["sequence"]), id=entry["id"], description=description,)
 
 
 def select_easel(entry):
-    return re.match(EASEL_PATTERN, entry['sequence'])
+    return re.match(EASEL_PATTERN, entry["sequence"])
 
 
 def sequences(handle, only_valid_easel=False):
@@ -53,9 +48,9 @@ def sequences(handle, only_valid_easel=False):
 
 
 @click.command()
-@click.option('--only-valid-easel', is_flag=True, default=False)
-@click.argument('tsv_file', type=click.File('rb'))
-@click.argument('output', default='-', type=click.File('w'))
+@click.option("--only-valid-easel", is_flag=True, default=False)
+@click.argument("tsv_file", type=click.File("rb"))
+@click.argument("output", default="-", type=click.File("w"))
 def cli(tsv_file, output=None, only_valid_easel=False):
     """
     Turn a file with JSON lines into a FASTA file. Each line must be an object
@@ -65,5 +60,5 @@ def cli(tsv_file, output=None, only_valid_easel=False):
     SeqIO.write(seqs, output, "fasta")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     cli()  # pylint: disable=no-value-for-parameter
