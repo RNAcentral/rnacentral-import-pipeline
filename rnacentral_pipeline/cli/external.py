@@ -38,6 +38,7 @@ from rnacentral_pipeline.databases.crw import parser as crw
 from rnacentral_pipeline.writers import write_entries
 from rnacentral_pipeline.writers import \
     write_ontology_annotations as onto_writer
+from rnacentral_pipeline.databases.lncbook import parser as lncbook
 
 
 @click.group("external", cls=ClickAliasedGroup)
@@ -54,7 +55,6 @@ def cli():
         "5srrnadb",
         "flybase",
         "lncbase",
-        "lncbook",
         "lncipedia",
         "mirbase",
         "mirgenedb",
@@ -314,3 +314,18 @@ def process_intact(data_file, output, db_url):
 )
 def process_crw(metadata_file, sequence_directory, output):
     write_entries(crw.parse, output, metadata_file, sequence_directory)
+
+@cli.command("lncbook")
+@click.argument("json_file", type=click.File("r"))
+@click.argument(
+    "output",
+    default=".",
+    type=click.Path(writable=True, dir_okay=True, file_okay=False),
+)
+def process_json_schema(json_file, output):
+    """
+    This parses our JSON files from LncBook to produce the importable CSV files.
+    LncBook has some special logic around sequences (only include hg38), that
+    other JSON databases do not have.
+    """
+    write_entries(lncbook.parse, output, json_file)
