@@ -1,41 +1,55 @@
 <PMCSet>
-<PMC_ARTICLE><id>26184978</id><source>MED</source><pmid>26184978</pmid><pmcid>PMC4505325</pmcid><DOI>10.1038/srep12276</DOI><title>MiR-135b-5p and MiR-499a-3p Promote Cell Proliferation and Migration in Atherosclerosis by Directly Targeting MEF2C.</title><AuthorList CompleteYN="Y">
-<Author ValidYN="Y">
-<LastName>Xu</LastName>
-<Initials>Z</Initials>
-</Author>
-<Author ValidYN="Y">
-<LastName>Han</LastName>
-<Initials>Y</Initials>
-</Author>
-<Author ValidYN="Y">
-<LastName>Liu</LastName>
-<Initials>J</Initials>
-</Author>
-<Author ValidYN="Y">
-<LastName>Jiang</LastName>
-<Initials>F</Initials>
-</Author>
-<Author ValidYN="Y">
-<LastName>Hu</LastName>
-<Initials>H</Initials>
-</Author>
-<Author ValidYN="Y">
-<LastName>Wang</LastName>
-<Initials>Y</Initials>
-</Author>
-<Author ValidYN="Y">
-<LastName>Liu</LastName>
-<Initials>Q</Initials>
-</Author>
-<Author ValidYN="Y">
-<LastName>Gong</LastName>
-<Initials>Y</Initials>
-</Author>
-<Author ValidYN="Y">
-<LastName>Li</LastName>
-<Initials>X</Initials>
-</Author>
-</AuthorList>
-<journalTitle>Scientific reports</journalTitle><issue></issue><journalVolume>5</journalVolume><pubYear>2015</pubYear><journalIssn></journalIssn><pageInfo>12276</pageInfo><pubType>&quot;Journal Article&quot;, &quot;Research Support, Non-U.S. Gov&apos;t&quot;</pubType></PMC_ARTICLE>
+        <PMC_ARTICLE>
+                <id>26184978</id>
+                <source>MED</source>
+                <pmid>26184978</pmid>
+                <pmcid>PMC4505325</pmcid>
+                <DOI>10.1038/srep12276</DOI>
+                <title>MiR-135b-5p and MiR-499a-3p Promote Cell Proliferation and Migration in Atherosclerosis by Directly Targeting MEF2C.</title>
+                <AuthorList CompleteYN="Y">
+                        <Author ValidYN="Y">
+                                <LastName>Xu</LastName>
+                                <Initials>Z</Initials>
+                        </Author>
+                        <Author ValidYN="Y">
+                                <LastName>Han</LastName>
+                                <Initials>Y</Initials>
+                        </Author>
+                        <Author ValidYN="Y">
+                                <LastName>Liu</LastName>
+                                <Initials>J</Initials>
+                        </Author>
+                        <Author ValidYN="Y">
+                                <LastName>Jiang</LastName>
+                                <Initials>F</Initials>
+                        </Author>
+                        <Author ValidYN="Y">
+                                <LastName>Hu</LastName>
+                                <Initials>H</Initials>
+                        </Author>
+                        <Author ValidYN="Y">
+                                <LastName>Wang</LastName>
+                                <Initials>Y</Initials>
+                        </Author>
+                        <Author ValidYN="Y">
+                                <LastName>Liu</LastName>
+                                <Initials>Q</Initials>
+                        </Author>
+                        <Author ValidYN="Y">
+                                <LastName>Gong</LastName>
+                                <Initials>Y</Initials>
+                        </Author>
+                        <Author ValidYN="Y">
+                                <LastName>Li</LastName>
+                                <Initials>X</Initials>
+                        </Author>
+                </AuthorList>
+                <journalTitle>Scientific reports</journalTitle>
+                <issue></issue>
+                <journalVolume>5</journalVolume>
+                <pubYear>2015</pubYear>
+                <journalIssn></journalIssn>
+                <pageInfo>12276</pageInfo>
+                <pubType>&quot;Journal Article&quot;, &quot;Research Support, Non-U.S. Gov&apos;t&quot;</pubType>
+        </PMC_ARTICLE>
 </PMCSet>
