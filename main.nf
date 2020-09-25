@@ -729,15 +729,15 @@ process find_possible_traveler_sequences {
   file('parts/*.fasta') into to_layout mode flatten
 
   script:
-  def chunk_size = params.r2dt.sequence_chunk_size
+  def chunks = params.r2dt.sequence_chunks
   """
   psql \
     -v ON_ERROR_STOP=1 \
     -v 'tablename=${params.r2dt.tablename}' \
     -f "$query" "$PGDATABASE" > raw.json
   json2fasta.py raw.json rnacentral.fasta
-  seqkit shuffle --two-pass rnacentral.fasta > shuffled.fasta
-  seqkit split --two-pass --by-size ${chunk_size} --out-dir 'parts/' shuffled.fasta
+  mkdir parts
+  split --number=l/${chunks} --additional-suffix='.fasta' --filter 'json2fasta.py - - >> \$FILE' raw.json parts/
   """
 }
 
