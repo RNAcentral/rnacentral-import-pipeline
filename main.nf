@@ -735,7 +735,6 @@ process find_possible_traveler_sequences {
     -v ON_ERROR_STOP=1 \
     -v 'tablename=${params.r2dt.tablename}' \
     -f "$query" "$PGDATABASE" > raw.json
-  json2fasta.py raw.json rnacentral.fasta
   mkdir parts
   split --number=l/${chunks} --additional-suffix='.fasta' --filter 'json2fasta.py - - >> \$FILE' raw.json parts/
   """
@@ -841,6 +840,7 @@ qa_flag_for_precompute
 
 process find_precompute_upis {
   when: params.precompute.run
+  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
   file(sql) from precompute_upi_queries
@@ -868,6 +868,7 @@ process precompute_range_query {
   beforeScript 'slack db-work precompute-range || true'
   afterScript 'slack db-done precompute-range || true'
   maxForks params.precompute.maxForks
+  container ''
 
   input:
   set val(tablename), val(min), val(max), file(query) from ranges
@@ -889,6 +890,7 @@ process precompute_range_query {
 process precompute_range {
   tag { "$min-$max" }
   memory params.precompute.range.memory
+  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
   set val(min), val(max), file(raw) from precompute_raw
@@ -912,6 +914,7 @@ process load_precomputed_data {
   file pre_ctl from Channel.fromPath('files/precompute/load.ctl')
   file qa_ctl from Channel.fromPath('files/precompute/qa.ctl')
   file post from Channel.fromPath('files/precompute/post-load.sql')
+  container ''
 
   output:
   val('precompute') into post_precompute
