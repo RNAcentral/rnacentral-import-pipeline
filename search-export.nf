@@ -1,6 +1,8 @@
 #!/usr/bin/env nextflow
 
 process find_chunks {
+  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
+
   output:
   file('ranges.txt') into raw_ranges
 
@@ -20,6 +22,7 @@ Channel.fromPath('files/search-export/metadata/*.sql')
 
 process fetch_metdata {
   maxForks 2
+  container ''
 
   input:
   file(query) from metadata_queries
@@ -33,6 +36,8 @@ process fetch_metdata {
 }
 
 process fetch_so_tree {
+  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
+
   input:
   file(query) from Channel.fromPath('files/search-export/so-rna-types.sql')
 
@@ -50,6 +55,8 @@ standard_metadata
   .set { unmerged_metdata }
 
 process merge_metadata {
+  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
+
   input:
   file(metadata) from unmerged_metdata
   file(so_data) from so_term_tree_metadata
@@ -69,6 +76,7 @@ process export_search_json {
   tag { "$min-$max" }
   maxForks params.search_export.max_forks
   echo true
+  container ''
 
   input:
   set val(tablename), val(min), val(max), file(query) from ranges
@@ -90,6 +98,7 @@ raw_json
 process export_chunk {
   tag { "$min-$max" }
   memory params.search_export.memory
+  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
   set val(min), val(max), file(json), file(metadata) from search_json
@@ -108,6 +117,8 @@ process export_chunk {
 }
 
 process create_release_note {
+  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
+
   input:
   file('count*') from search_counts.collect()
 
@@ -123,6 +134,8 @@ process create_release_note {
 // At this point we should be able to safely move data into the final location.
 // This deletes the old data and then moves the new data in place.
 process atomic_publish {
+  container ''
+
   input:
   file('release_note.txt') from release_note
   file(xml) from search_chunks.collect()
