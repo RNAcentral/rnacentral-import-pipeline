@@ -734,6 +734,7 @@ process find_possible_traveler_sequences {
   psql \
     -v ON_ERROR_STOP=1 \
     -v 'tablename=${params.r2dt.tablename}' \
+    -v 'max_len=${params.r2dt.find_possible.max_len}'
     -f "$query" "$PGDATABASE" > raw.json
   mkdir parts
   split --number=l/${chunks} --additional-suffix='.fasta' --filter 'json2fasta.py - - >> \$FILE' raw.json parts/
