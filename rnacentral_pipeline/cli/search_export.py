@@ -18,9 +18,10 @@ import click
 from rnacentral_pipeline.databases.sequence_ontology import tree as so
 from rnacentral_pipeline.rnacentral.search_export import exporter as search
 from rnacentral_pipeline.rnacentral.search_export import metadata
+from rnacentral_pipeline.rnacentral.search_export import queries
 
 
-@click.group('search-export')
+@click.group("search-export")
 def cli():
     """
     A group of commands dealing with our search export pipeline.
@@ -28,11 +29,11 @@ def cli():
     pass
 
 
-@cli.command('as-xml')
-@click.argument('raw_file', type=click.File('r'))
-@click.argument('metadata_file', type=click.Path())
-@click.argument('xml_file', type=click.File('w'))
-@click.argument('count_file', type=click.File('w'), default='count')
+@cli.command("as-xml")
+@click.argument("raw_file", type=click.File("r"))
+@click.argument("metadata_file", type=click.Path())
+@click.argument("xml_file", type=click.File("w"))
+@click.argument("count_file", type=click.File("w"), default="count")
 def search_export_xml(raw_file, metadata_file, xml_file, count_file=None):
     """
     This will parse a file with one JSON object per line to produce XML
@@ -43,10 +44,10 @@ def search_export_xml(raw_file, metadata_file, xml_file, count_file=None):
     search.as_xml(raw_file, metadata_file, xml_file, count_file)
 
 
-@cli.command('release-note')
-@click.argument('release', type=str)
-@click.argument('output', type=click.File('w'))
-@click.argument('count_files', nargs=-1, type=click.File('r'))
+@cli.command("release-note")
+@click.argument("release", type=str)
+@click.argument("output", type=click.File("w"))
+@click.argument("count_files", nargs=-1, type=click.File("r"))
 def search_export_note(release, output, count_files):
     """
     This will create the release_note.txt file that is needed for the search
@@ -55,10 +56,10 @@ def search_export_note(release, output, count_files):
     search.release_note(output, release, count_files)
 
 
-@cli.command('merge-metadata')
-@click.argument('filename', type=click.File('r'))
-@click.argument('so_tree', type=click.File('r'))
-@click.argument('output', default='-', type=click.Path())
+@cli.command("merge-metadata")
+@click.argument("filename", type=click.File("r"))
+@click.argument("so_tree", type=click.File("r"))
+@click.argument("output", default="-", type=click.Path())
 def merge_metadata(filename, so_tree, output):
     """
     A command to merge the individual metadata lines into a the form that can be
@@ -67,10 +68,10 @@ def merge_metadata(filename, so_tree, output):
     metadata.write_merge(filename, so_tree, output)
 
 
-@cli.command('so-term-tree')
-@click.option('--ontology', default=so.REMOTE_ONTOLOGY)
-@click.argument('filename', type=click.File('r'))
-@click.argument('output', default='-', type=click.File('w'))
+@cli.command("so-term-tree")
+@click.option("--ontology", default=so.REMOTE_ONTOLOGY)
+@click.argument("filename", type=click.File("r"))
+@click.argument("output", default="-", type=click.File("w"))
 def so_term_tree(filename, output, ontology=None):
     """
     A command to generate the SO RNA type tree for search export. The file
@@ -79,3 +80,19 @@ def so_term_tree(filename, output, ontology=None):
     search metadata.
     """
     metadata.write_so_term_tree(filename, ontology, output)
+
+
+@cli.command("generate-queries")
+@click.option('--db-url', envvar='PGDATABASE')
+@click.argument("base", type=click.Path(writable=True, dir_okay=True, file_okay=False))
+@click.argument(
+    "output",
+    default=".",
+    type=click.Path(writable=True, dir_okay=True, file_okay=False),
+)
+def generate_queries(base, output, db_url):
+    """
+    Basically create a series of queries to extract the search data from the
+    database
+    """
+    queries.write(base, db_url, output)
