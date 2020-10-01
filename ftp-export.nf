@@ -1,4 +1,6 @@
 process release_note {
+  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
+
   publishDir "${params.ftp_export.publish}/", mode: 'move'
   when: params.ftp_export.release_note.run
 
@@ -16,6 +18,8 @@ process release_note {
 
 process md5 {
   publishDir "${params.ftp_export.publish}/md5/", mode: 'move'
+  container ''
+
   when: params.ftp_export.md5.run
 
   input:
@@ -37,6 +41,8 @@ process md5 {
 
 process id_mapping {
   publishDir "${params.ftp_export.publish}/id_mapping/", mode: 'copy'
+  container ''
+
   when: params.ftp_export.id_mapping.run
 
   input:
@@ -61,6 +67,8 @@ process id_mapping {
 
 process database_id_mapping {
   publishDir "${params.ftp_export.publish}/id_mapping/database_mappings/", mode: 'move'
+  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
+
   when: params.ftp_export.id_mapping.by_database.run
 
   input:
