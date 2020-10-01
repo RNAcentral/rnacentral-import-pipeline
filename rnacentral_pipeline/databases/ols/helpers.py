@@ -21,8 +21,12 @@ from . import fetch
 
 def parse_file(handle):
     reader = csv.reader(handle)
+    seen = set()
     for line in reader:
+        if line[0] in seen:
+            continue
         yield fetch.term(line[0])
+        seen.add(line[0])
 
 
 def process_term_file(term_handle, output):
