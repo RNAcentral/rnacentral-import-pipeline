@@ -1,8 +1,8 @@
 CREATE TEMP TABLE urs_to_compute (
-  urs text PRIMARY KEY REFERENCES rna(upi)
+  urs text PRIMARY KEY
 );
 
-COPY urs_to_compute (urs) FROM STDIN WITH (FORMAT CSV);
+\copy urs_to_compute from 'urs-to-compute'
 
 COPY (
 SELECT
