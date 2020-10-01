@@ -17,12 +17,10 @@ import logging
 
 from Bio import SeqIO
 
+import rnacentral_pipeline.databases.helpers.embl as embl
 from rnacentral_pipeline.databases.data import Entry
 
-import rnacentral_pipeline.databases.helpers.embl as embl
-
-from . import dr
-from . import helpers
+from . import dr, helpers
 from . import mapping as tpa
 
 LOGGER = logging.getLogger(__name__)
@@ -32,6 +30,7 @@ class InvalidEnaFile(Exception):
     """
     This is raised when there is something wrong with the ENA EMBL file.
     """
+
     pass
 
 
@@ -44,10 +43,15 @@ def parse(handle):
 
     dr_mapping = dr.mapping(handle)
     handle.seek(0)
-    for record in SeqIO.parse(handle, 'embl'):
+    for record in SeqIO.parse(handle, "embl"):
+        if len(record.features) == 0:
+            LOGGER.warn("Skipping record %s with no features" % record.id)
+            continue
 
         if len(record.features) != 2:
-            raise InvalidEnaFile("ENA EMBL files must have 2 features/record")
+            raise InvalidEnaFile(
+                "ENA EMBL files must have 2 features/record %s" % record
+            )
 
         if helpers.is_protein(record.features[1]):
             LOGGER.info("Skipping mis-annotated protein: %s", record.id)
@@ -72,22 +76,18 @@ def parse(handle):
             primary_id=helpers.primary_id(feature),
             accession=accession,
             ncbi_tax_id=helpers.taxid(record),
-            database='ENA',
+            database="ENA",
             sequence=helpers.sequence(record),
             regions=[],
             rna_type=helpers.rna_type(feature),
             url=helpers.url(record),
             seq_version=embl.seq_version(record),
-
             note_data=helpers.note_data(feature),
             xref_data=helpers.xref_data(record, feature, record_refs),
-
             chromosome=helpers.chromosome(record),
-
             species=helpers.species(record),
             common_name=helpers.common_name(record),
             lineage=helpers.lineage(record),
-
             gene=embl.gene(feature),
             locus_tag=embl.locus_tag(feature),
             product=prod,
@@ -105,7 +105,6 @@ def parse(handle):
             description=helpers.description(record),
             mol_type=helpers.mol_type(record),
             is_composite=helpers.is_composite(feature),
-
             gene_synonyms=helpers.gene_synonyms(feature),
             references=helpers.references(record, feature),
         )
