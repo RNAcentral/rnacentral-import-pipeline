@@ -96,7 +96,7 @@ def check(limit_file, db_url, default_allowed_change=0.30):
 
     problems = False
     for name, previous in cur_counts.items():
-        current = new_counts[name]
+        current = new_counts.get(name, default_allowed_change)
         change = (current - previous) / float(current)
         if change > limits.get(name, default_allowed_change):
             LOGGER.error("Database %s increased by %f", name, change)
