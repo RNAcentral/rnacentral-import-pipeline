@@ -742,6 +742,8 @@ process find_possible_traveler_sequences {
 }
 
 process find_traveler_model_mapping {
+  when params.r2dt.run
+
   input:
   file(query) from Channel.fromPath('files/r2dt/model_mapping.sql')
 
