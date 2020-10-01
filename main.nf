@@ -757,7 +757,8 @@ process layout_sequences {
   tag { "${sequences}" }
   memory params.r2dt.layout.memory
   container params.r2dt.container
-  errorStrategy 'ignore'
+  containerOptions "--bind $baseDir/singularity/bind/r2dt/data/cms:/rna/r2dt/data/cms" 
+  errorStrategy { task.exitStatus = 130 ? 'ignore' : 'terminate' }
 
   input:
   file(sequences) from to_layout
@@ -766,6 +767,7 @@ process layout_sequences {
   set file("$sequences"), file('output') into r2dt_output
 
   """
+  esl-sfetch --index $sequences
   r2dt.py draw $sequences output/
   """
 }
