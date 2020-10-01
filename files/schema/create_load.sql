@@ -321,7 +321,6 @@ DROP TABLE IF EXISTS load_secondary_layout;
 CREATE TABLE load_secondary_layout (
     urs text NOT NULL,
     secondary_structure text NOT NULL,
-    layout text NOT NULL,
     model text NOT NULL,
     overlap_count int not null,
     basepair_count int not null,
