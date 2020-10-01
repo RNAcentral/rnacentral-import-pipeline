@@ -1,6 +1,6 @@
-drop table if exists upis_to_precompute;
+drop table if exists :tablename;
 
-CREATE TABLE upis_to_precompute as
+CREATE TABLE :tablename as
 select distinct
   upi
 from xref
@@ -9,7 +9,7 @@ where
   db.descr in (:dbs)
 ;
 
-alter table upis_to_precompute
+alter table :tablename
   add constraint fk_to_precompute__upi FOREIGN KEY (upi) REFERENCES rna(upi),
   add column id bigserial primary key
 ;
