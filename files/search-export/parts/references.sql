@@ -17,4 +17,3 @@ COPY (
   ON
     refs.id = ref_map.reference_id
 ) TO STDOUT
-

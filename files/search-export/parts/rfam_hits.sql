@@ -1,7 +1,7 @@
 COPY (
   SELECT
     json_build_object(
-      'upi', hits.upi,
+      'urs', hits.upi,
       'rfam_ids', hits.rfam_model_id,
       'rfam_family_names', models.short_name,
       'rfam_clans', models.rfam_clan_id,

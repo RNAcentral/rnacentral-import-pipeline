@@ -1,7 +1,7 @@
 COPY (
   SELECT
     json_build_object(
-      'upi', rna.upid,
+      'urs', rna.upid,
       'length', rna.len,
       'md5', rna.md5
     )

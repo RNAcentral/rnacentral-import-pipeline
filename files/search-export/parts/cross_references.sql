@@ -13,4 +13,6 @@ COPY (
   JOIN rnc_accessions acc
   ON
     xref.ac = acc.accession
+  WHERE
+    xref.deleted = 'N'
 ) TO STDOUT
