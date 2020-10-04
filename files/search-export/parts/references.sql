@@ -3,11 +3,11 @@ COPY (
     json_build_object(
       'id', xref.upi || '_' || xref.taxid,
       'authors', refs.authors,
-      'journals', refs.location,
-      'pub_titles', refs.title,
-      'pub_ids', refs.id,
-      'pubmed_ids', refs.pmid,
-      'dois', refs.doi
+      'journal', refs.location,
+      'pub_title', refs.title,
+      'pub_id', refs.id,
+      'pubmed_id', refs.pmid,
+      'doi', refs.doi
     )
   FROM xref xref
   JOIN rnc_reference_map ref_map
