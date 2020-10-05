@@ -20,6 +20,7 @@ from . import europepmc
 from . import external
 from . import fetch
 from . import ftp_export
+from . import genes
 from . import genome_mapping
 from . import lookup
 from . import misc
@@ -27,10 +28,10 @@ from . import ncbi
 from . import ols
 from . import precompute
 from . import qa
+from . import r2dt
 from . import rfam
 from . import search_export
 from . import text_mining
-from . import r2dt
 
 
 @click.group()
@@ -48,6 +49,7 @@ cli.add_command(europepmc.cli)
 cli.add_command(external.cli)
 cli.add_command(fetch.cli)
 cli.add_command(ftp_export.cli)
+cli.add_command(genes.cli)
 cli.add_command(genome_mapping.cli)
 cli.add_command(lookup.cli)
 cli.add_command(misc.check_release)
@@ -59,7 +61,7 @@ cli.add_command(ncbi.cli)
 cli.add_command(ols.cli)
 cli.add_command(precompute.cli)
 cli.add_command(qa.cli)
+cli.add_command(r2dt.cli)
 cli.add_command(rfam.cli)
 cli.add_command(search_export.cli)
 cli.add_command(text_mining.cli)
-cli.add_command(r2dt.cli)

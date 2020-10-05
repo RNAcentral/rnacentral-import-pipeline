@@ -1,9 +1,20 @@
+process get_species {
+  input:
+  path(query)
+
+  output:
+  path('species.csv')
+
+  """
+  """
+}
+
 process extract_sequences {
   input:
   tuple val(assembly_id), path(query)
 
   output:
-  tuple val(assembly_id), path('sequences/*.json')
+  path('sequences/*.json')
 
   """
   psql -v ON_ERROR_STOP=1 -v assembly_id=$assembly_id $query $PGDATABASE > raw.json
@@ -13,10 +24,10 @@ process extract_sequences {
 
 process build_genes {
   input:
-  tuple val(assembly_id), path(data_file)
+  path(data_file)
 
   output:
-  tuple path('genes.csv')
+  path('genes.csv')
 
   """
   rnc genes build $assembly_id $data_file genes.csv
