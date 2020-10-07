@@ -1,3 +1,5 @@
+nextflow.enable.dsl=2
+
 process get_species {
   input:
   path(query)
@@ -6,6 +8,7 @@ process get_species {
   path('species.csv')
 
   """
+  psql -v ON_ERROR_STOP=1 $query $PGDATABASE > species.csv
   """
 }
 
@@ -44,15 +47,18 @@ process load_data {
 }
 
 workflow build_genes {
-  get_species.output.set { species }
 
-  species
-    .combine(Channel.fromPath('files/genes/get_species.sql'))
-    .set { to_extract }
+  Channel.fromPath('files/genes/species.sql') \
+    | get_species \
+    | splitCsv \
+    | extract_sequences \
+    | build_genes \
+    | collect \
+    | combine(Channel.fromPath('files/genes/load.ctl')) \
+    | combine(Channel.fromPath('files/genes/post.ctl')) \
+    | load_data
+}
 
-  extract_sequences(to_extract).output | build_genes | collect()
-
-  combine(Channel.fromPath('files/genes/load.ctl'))
-  combine(Channel.fromPath('files/genes/post.ctl'))
-  load_data
+workflow {
+  build_genes()
 }
