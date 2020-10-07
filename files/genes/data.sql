@@ -30,5 +30,5 @@ WHERE
   pre.is_active = true
   AND regions.assembly_id = :'assembly_id'
 GROUP BY regions.id
-ORDER BY max(regions.chromosome), regions.region_start, regions.id
+ORDER BY max(regions.chromosome), max(regions.strand), max(pre.rna_type)
 ) TO STDOUT
