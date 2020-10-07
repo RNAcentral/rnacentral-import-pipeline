@@ -26,22 +26,6 @@ def cli():
     pass
 
 
-@cli.command('split-coordinates')
-@click.argument('data_file', type=click.File('r'))
-@click.argument(
-    "output",
-    default=".",
-    type=click.Path(writable=True, dir_okay=True, file_okay=False),
-)
-def split_coordinates(data_file, output):
-    """
-    Take a json file that represents all sequences to possibly into genes in a
-    species and split the data by RNA type and chromosomes. Each individual file
-    can then be processed separately.
-    """
-    split.write_split(data_file, output)
-
-
 @cli.command('build')
 @click.argument('data_file', type=click.File('r'))
 @click.argument('output', type=click.File('2'))

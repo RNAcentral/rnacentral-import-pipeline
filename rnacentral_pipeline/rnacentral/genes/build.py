@@ -16,22 +16,34 @@ limitations under the License.
 import json
 
 
+def split(handle):
+    output = Path(out)
+    key = op.itemgetter("rna_type", "chromosome", "strand")
+    entries = sorted(psql.json_handle(handle), key=key)
+    for (key, locations) in it.groupby(entries, key):
+        if key[0] != "rRNA":
+            continue
+
+        yield list(locations)
+
+
 def build(data):
-    for entry in data:
-        yield [
-            entry['taxid'],
-            entry['assembly_id'],
-            entry['chromosome'],
-            entry['strand'],
-            entry['exons'][0]['exon_start'],
-            entry['exons'][-1]['exon_stop'],
-            entry['urs_taxid'],
-            entry['region_id'],
-            entry['qa']['has_issue'],
-        ]
+    for group in data:
+        for entry in group:
+            yield [
+                entry["taxid"],
+                entry["assembly_id"],
+                entry["chromosome"],
+                entry["strand"],
+                entry["exons"][0]["exon_start"],
+                entry["exons"][-1]["exon_stop"],
+                entry["urs_taxid"],
+                entry["region_id"],
+                entry["qa"]["has_issue"],
+            ]
 
 
 def write_genes(raw, output):
-    data = json.load(raw)
+    data = split(raw)
     writer = csv.writer(output)
     writer.writerows(build(data))

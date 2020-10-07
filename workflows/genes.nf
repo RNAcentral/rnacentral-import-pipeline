@@ -14,11 +14,10 @@ process extract_sequences {
   tuple val(assembly_id), path(query)
 
   output:
-  path('sequences/*.json')
+  path('sequences.json')
 
   """
-  psql -v ON_ERROR_STOP=1 -v assembly_id=$assembly_id $query $PGDATABASE > raw.json
-  rnc genes split raw.json sequences/
+  psql -v ON_ERROR_STOP=1 -v assembly_id=$assembly_id $query $PGDATABASE > sequences.json
   """
 }
 
@@ -30,7 +29,7 @@ process build_genes {
   path('genes.csv')
 
   """
-  rnc genes build $assembly_id $data_file genes.csv
+  rnc genes build $data_file genes.csv
   """
 }
 
