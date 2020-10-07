@@ -36,19 +36,24 @@ process build_genes {
 
 process load_data {
   input:
-  tuple path('genes*.csv'), path(ctl)
+  tuple path('genes*.csv'), path(ctl), path(post)
 
   """
   split-and-load $ctl 'genes*.csv' ${params.import_data.chunk_size} gene-data
+  psql -v ON_ERROR_STOP=1 -f $post $PGDATABASE
   """
 }
 
 workflow build_genes {
   get_species.output.set { species }
 
-  species.combine(Channel.fromPath('files/genes/get_species.sql')) |\
-  extract_sequences |\
-  build_genes |\
-  collect() |\
+  species
+    .combine(Channel.fromPath('files/genes/get_species.sql'))
+    .set { to_extract }
+
+  extract_sequences(to_extract).output | build_genes | collect()
+
+  combine(Channel.fromPath('files/genes/load.ctl'))
+  combine(Channel.fromPath('files/genes/post.ctl'))
   load_data
 }
