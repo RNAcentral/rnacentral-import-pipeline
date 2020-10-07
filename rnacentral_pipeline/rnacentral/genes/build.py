@@ -18,7 +18,7 @@ import json
 
 def split(handle):
     output = Path(out)
-    key = op.itemgetter("rna_type", "chromosome", "strand")
+    key = op.itemgetter("chromosome", "strand", "rna_type")
     entries = sorted(psql.json_handle(handle), key=key)
     for (key, locations) in it.groupby(entries, key):
         if key[0] != "rRNA":
