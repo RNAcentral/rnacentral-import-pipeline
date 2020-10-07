@@ -33,6 +33,7 @@ def build(data):
             yield [
                 entry["taxid"],
                 entry["assembly_id"],
+                entry["region_name"],
                 entry["chromosome"],
                 entry["strand"],
                 entry["exons"][0]["exon_start"],

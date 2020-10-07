@@ -28,7 +28,7 @@ def cli():
 
 @cli.command('build')
 @click.argument('data_file', type=click.File('r'))
-@click.argument('output', type=click.File('2'))
+@click.argument('output', type=click.File('w'))
 def build(data_file, output):
     """
     Build the genes for the given data file. This assumes that the file is

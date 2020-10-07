@@ -5,7 +5,7 @@ HAVING FIELDS (
   assembly_id,
   locus_name,
   chromosome,
-  strand text,
+  strand,
   gene_start,
   gene_stop,
   urs_taxid,
