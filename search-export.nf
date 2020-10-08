@@ -1,13 +1,15 @@
 #!/usr/bin/env nextflow
 
-process find_chunks {
+nextflow.enable.dsl=2
+
+process find_taxids {
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
-  path(query) from Channel.fromPath('files/find-active-xrefs-urs-taxids.sql')
+  path(query)
 
   output:
-  path('parts/*') into ids
+  path('parts/*')
 
   script:
   """
@@ -22,7 +24,7 @@ process fetch_parts {
   container ''
 
   input:
-  path(query) from query_parts
+  path(query)
 
   output:
   path("${query.baseName}.json") into Channel.fromPath('files/search-export/parts/*.sql')
@@ -36,10 +38,10 @@ process fetch_so_tree {
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
-  path(query) from Channel.fromPath('files/search-export/so-rna-types.sql')
+  path(query)
 
   output:
-  path('so-term-tree.json') into so_term_tree_metadata
+  path('so-term-tree.json')
 
   """
   psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > raw.json
@@ -51,20 +53,15 @@ process index_parts {
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
-  path('*.json') from query_parts.collect()
+  path('*.json')
 
   output:
-  path('merged.db') into index
+  path('merged.db')
 
   """
   find . -name '*.json' | kv index-files - merged.db
   """
 }
-
-ids
-  .combine(so_term_tree_metadata)
-  .combine(index)
-  .set { search_data }
 
 process export_chunk {
   tag { "$min-$max" }
@@ -72,11 +69,11 @@ process export_chunk {
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
-  tuple path(id_file), path(so_tree), path(database) from search_data
+  tuple path(id_file), path(database), path(so_tree)
 
   output:
-  path("${xml}.gz") into search_chunks
-  path("count") into search_counts
+  path("${xml}.gz") emit: xml
+  path("count") emit: counts
 
   script:
   xml = "xml4dbdumps__${min}__${max}.xml"
@@ -91,7 +88,7 @@ process create_release_note {
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
-  path('count*') from search_counts.collect()
+  path('count*')
 
   output:
   path('release_note.txt') into release_note
@@ -107,8 +104,8 @@ process atomic_publish {
   container ''
 
   input:
-  path('release_note.txt') from release_note
-  path(xml) from search_chunks.collect()
+  path('release_note.txt')
+  path(xml)
 
   script:
   def publish = params.search_export.publish
@@ -123,4 +120,32 @@ process atomic_publish {
     rm $publish.path/*
     cp ${xml} 'release_note.txt' $publish.path
     """
+}
+
+workflow search_export {
+ Channel.fromPath('files/search-export/so-rna-types.sql') \
+ | fetch_so_tree \
+ | set { so_tree }
+
+ Channel.fromPath('files/search-export/parts/*.sql') \
+ | fetch-parts \
+ | collect \
+ | index_parts \
+ | combine(so_tree) \
+ | set { data }
+
+  Channel.fromPath('files/find-active-xrefs-urs-taxids.sql') \
+  | find_chunks \
+  | splitCsv \
+  | combine(data) \
+  | export_chunk
+
+  export_chunk.out.count | collect | create_release_note | set { release_note }
+  export_chunk.out.xml | collect | set { xml }
+
+  atomic_publish(release_note, xml)
+}
+
+workflow {
+  search_export()
 }
