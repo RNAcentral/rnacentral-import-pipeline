@@ -1,6 +1,8 @@
 COPY (
   select
   json_build_object(
+    'taxid', max(pre.taxid),
+    'urs_taxid', max(pre.id),
     'assembly_id', :'assembly_id',
     'region_id', max(regions.id),
     'region_name', max(regions.region_name),
