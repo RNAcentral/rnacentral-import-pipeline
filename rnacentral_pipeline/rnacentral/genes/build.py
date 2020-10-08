@@ -13,15 +13,20 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import csv
+import itertools as it
 import json
+import operator as op
+
+from rnacentral_pipeline import psql
 
 
 def split(handle):
     output = Path(out)
     key = op.itemgetter("chromosome", "strand", "rna_type")
-    entries = sorted(psql.json_handle(handle), key=key)
+    entries = psql.json_handle(handle)
     for (key, locations) in it.groupby(entries, key):
-        if key[0] != "rRNA":
+        if key[-1] != "rRNA":
             continue
 
         yield list(locations)
@@ -40,7 +45,7 @@ def build(data):
                 entry["exons"][-1]["exon_stop"],
                 entry["urs_taxid"],
                 entry["region_id"],
-                entry["qa"]["has_issue"],
+                not entry["qa"]["has_issue"],
             ]
 
 

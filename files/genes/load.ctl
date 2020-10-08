@@ -6,8 +6,8 @@ HAVING FIELDS (
   locus_name,
   chromosome,
   strand,
-  gene_start,
-  gene_stop,
+  locus_start,
+  locus_stop,
   urs_taxid,
   region_id,
   is_representative
@@ -19,8 +19,8 @@ TARGET COLUMNS (
   locus_name,
   chromosome,
   strand text,
-  gene_start,
-  gene_stop,
+  locus_start,
+  locus_stop,
   urs_taxid,
   region_id,
   is_representative
