@@ -4,12 +4,13 @@ process get_species {
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
-  path(query)
+  tuple path(query), path(setup)
 
   output:
   path('species.csv')
 
   """
+  psql -v ON_ERROR_STOP=1 -f $setup $PGDATABASE
   psql -v ON_ERROR_STOP=1 -f $query $PGDATABASE > species.csv
   """
 }
@@ -59,6 +60,7 @@ process load_data {
 
 workflow build_genes {
   Channel.fromPath('files/genes/species.sql') \
+    | combine(Channel.fromPath('files/genes/schema.sql')) \
     | get_species \
     | splitCsv \
     | map { row -> row[0] } \
