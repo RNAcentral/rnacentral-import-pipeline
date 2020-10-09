@@ -20,11 +20,21 @@ import operator as op
 
 from rnacentral_pipeline import psql
 
+from . import data, rrna
+
+
+def load(handle):
+    for entry in psql.json_handle(handle):
+        yield data.UnboundLocation.build(entry)
+
+
+def split_key(value: data.UnboundLocation):
+    extent = value.extent
+    return (extent.chromosome, extent.strand, extent.insdc_rna_type)
+
 
 def split(handle):
-    output = Path(out)
-    key = op.itemgetter("chromosome", "strand", "rna_type")
-    entries = psql.json_handle(handle)
+    entries = load(data)
     for (key, locations) in it.groupby(entries, key):
         if key[-1] != "rRNA":
             continue
@@ -34,19 +44,10 @@ def split(handle):
 
 def build(data):
     for group in data:
-        for entry in group:
-            yield [
-                entry["taxid"],
-                entry["assembly_id"],
-                entry["region_name"],
-                entry["chromosome"],
-                entry["strand"],
-                entry["exons"][0]["exon_start"],
-                entry["exons"][-1]["exon_stop"],
-                entry["urs_taxid"],
-                entry["region_id"],
-                not entry["qa"]["has_issue"],
-            ]
+        genes = rrna.build(group)
+        for gene in genes:
+            for writeable in gene.writeable():
+                yield writeable
 
 
 def write_genes(raw, output):
