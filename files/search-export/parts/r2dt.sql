@@ -1,7 +1,7 @@
 COPY (
 SELECT
   json_build_object(
-    'urs', pre.id,
+    'id', pre.id,
     'secondary_structure_model', models.model_name,
     'secondary_structure_source', models.model_source
   )

@@ -9,4 +9,7 @@ COPY (
       'databases', pre.databases
     )
   FROM rnc_rna_precomputed pre
+  WHERE
+    pre.taxid is not null
+    and pre.is_active = true
 ) TO STDOUT
