@@ -123,16 +123,16 @@ process atomic_publish {
 }
 
 workflow search_export {
- Channel.fromPath('files/search-export/so-rna-types.sql') \
- | fetch_so_tree \
- | set { so_tree }
+  Channel.fromPath('files/search-export/so-rna-types.sql') \
+  | fetch_so_tree \
+  | set { so_tree }
 
- Channel.fromPath('files/search-export/parts/*.sql') \
- | fetch-parts \
- | collect \
- | index_parts \
- | combine(so_tree) \
- | set { data }
+  Channel.fromPath('files/search-export/parts/*.sql') \
+  | fetch-parts \
+  | collect \
+  | index_parts \
+  | combine(so_tree) \
+  | set { data }
 
   Channel.fromPath('files/find-active-xrefs-urs-taxids.sql') \
   | find_chunks \
