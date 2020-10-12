@@ -19,6 +19,10 @@ import typing as ty
 import attr
 from intervaltree import Interval
 
+from rnacentral_pipeline.databases.data.regions import Exon, SequenceRegion
+from rnacentral_pipeline.rnacentral.ftp_export.coordinates.bed import (
+    BedEntry, Strand)
+
 
 @attr.s(auto_attribs=True, frozen=True)
 class Extent:
@@ -52,14 +56,13 @@ class Extent:
         return attr.assoc(self, start=min(self.start, other.start),
                           stop=max(self.stop, other.stop))
 
-
-@attr.s(auto_attribs=True, frozen=True)
-class Exon:
-    start: int
-    stop: int
-
-    def build(cls, raw):
-        return cls(start=raw["exon_start"], stop=raw["exon_stop"],)
+    def as_region(self):
+        return SequenceRegion(
+            assembly_id=self.assembly,
+            chromosome=self.chromosome,
+            strand=Strand.build(self.strand),
+            exons=Exon(start=self.start, stop=self.stop),
+        )
 
 
 @attr.s(auto_attribs=True, frozen=True)
@@ -80,6 +83,7 @@ class UnboundLocation:
     insdc_rna_type: str
     so_rna_type: str
     qa: QaInfo
+    providing_databases: ty.List[str]
 
     @classmethod
     def build(cls, raw):
@@ -91,6 +95,7 @@ class UnboundLocation:
             insdc_rna_type=raw["insdc_rna_type"],
             so_rna_type=raw["so_rna_type"],
             qa=QaInfo.build(raw["qa"]),
+            providing_databases=raw['providing_databases'],
         )
 
     @property
@@ -117,6 +122,16 @@ class LocusMember:
             info=location,
             extent=location.extent,
             is_representative=False,
+        )
+
+    def as_bed(self):
+        region = self.extent.as_region()
+        region = attr.assoc(region, exons=self.exons)
+        return BedEntry(
+            rna_id=self.info.urs_taxid,
+            rna_type=self.info.so_rna_type,
+            databases=self.info.providing_databases,
+            region=region,
         )
 
 
@@ -152,11 +167,13 @@ class Locus:
             members=members
         )
 
-    def locus_name(self):
+    def id_hash(self):
         ids = {m.info.urs_taxid for m in self.members}
         ids = sorted(ids)
-        value = hashlib.sha256(''.join(ids))
-        return self.extent.region_name(value)
+        return hashlib.sha256(''.join(ids))
+
+    def locus_name(self):
+        return self.extent.region_name(self.id_hash())
 
     def writeable(self):
         for member in self.members:
@@ -172,3 +189,19 @@ class Locus:
                 member.region_database_id,
                 member.is_representative,
             ]
+
+    def as_bed(self, include_gene=True, include_representaive=True,
+               include_members=False) -> ty.List[BedEntry]:
+        if include_gene:
+            yield BedEntry(
+                rna_id=self.id_hash(),
+                rna_type='gene',
+                databases='RNAcentral',
+                region=self.extent.as_region(),
+            )
+        for member in self.members:
+            if include_representative:
+                if member.is_representative:
+                    yield member.as_bed()
+            elif include_members:
+                yield member.as_bed()

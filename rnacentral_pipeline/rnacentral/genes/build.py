@@ -19,12 +19,14 @@ import json
 import operator as op
 
 from rnacentral_pipeline import psql
+from rnacentral_pipeline.rnacentral.ftp_export.coordinates.bed import \
+    write_bed_text
 
 from . import data, rrna
 
 
 def load(handle):
-    for entry in psql.json_handle(handle):
+    for entry in psql.json_handler(handle):
         yield data.UnboundLocation.build(entry)
 
 
@@ -54,3 +56,16 @@ def write_genes(raw, output):
     data = split(raw)
     writer = csv.writer(output)
     writer.writerows(build(data))
+
+
+def write_bed(raw, output):
+    data = split(raw)
+    bed = map(d.as_bed() for d in data)
+    write_bed_text(bed, output)
+
+
+def write(raw, output, as_bed):
+    if as_bed:
+        write_bed(raw, output)
+    else:
+        write_genes(raw, output)

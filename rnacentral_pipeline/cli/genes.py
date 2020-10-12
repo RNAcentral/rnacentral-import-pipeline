@@ -27,11 +27,12 @@ def cli():
 
 
 @cli.command("build")
+@click.option('--as-bed', is_flag=True)
 @click.argument("data_file", type=click.File("r"))
 @click.argument("output", type=click.File("w"))
-def build(data_file, output):
+def build(data_file, output, as_bed=None):
     """
     Build the genes for the given data file. This assumes that the file is
     already split into reasonable chunks.
     """
-    genes.write_genes(data, output)
+    genes.write(data, output, as_bed)
