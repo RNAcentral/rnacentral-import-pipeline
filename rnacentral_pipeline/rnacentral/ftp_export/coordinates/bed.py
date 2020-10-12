@@ -26,7 +26,7 @@ from . import data as coord
 
 
 @attr.s(slots=True, frozen=True)
-class BedEntry(object):
+class BedEntry:
     rna_id = attr.ib(validator=is_a(str), converter=str)
     rna_type = attr.ib(validator=is_a(str), converter=str)
     databases = attr.ib(validator=is_a(str), converter=str)
@@ -85,6 +85,12 @@ class BedEntry(object):
         ]
 
 
+def write_bed_text(entries, out):
+    data = map(op.methodcaller('writeable'), data)
+    writer = csv.writer(out, delimiter='\t', lineterminator='\n')
+    writer.writerows(data)
+
+
 def from_json(handle, out):
     """
     Transform raw coordinate data into bed format.
@@ -92,6 +98,7 @@ def from_json(handle, out):
 
     data = coord.from_file(handle)
     data = map(BedEntry.from_coordinate, data)
-    data = map(op.methodcaller('writeable'), data)
-    writer = csv.writer(out, delimiter='\t', lineterminator='\n')
-    writer.writerows(data)
+    write_bed_text(data, out)
+    # data = map(op.methodcaller('writeable'), data)
+    # writer = csv.writer(out, delimiter='\t', lineterminator='\n')
+    # writer.writerows(data)
