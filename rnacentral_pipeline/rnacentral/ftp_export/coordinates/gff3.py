@@ -13,6 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import typing as ty
 from collections import OrderedDict
 
 from gffutils import Feature
@@ -20,59 +21,67 @@ from gffutils import Feature
 from . import data as coord
 
 
-def regions_as_features(regions):
+def regions_as_features(
+    regions: ty.Iterable[coord.Region],
+) -> ty.Iterable[Feature]:
     """
     Convert the raw entry into a series of gff Features to output.
     """
 
     for raw_region in regions:
         region = raw_region.as_one_based()
-        attributes = OrderedDict([
-            ('Name', [region.rna_id]),
-            ('type', [region.metadata['rna_type']]),
-            ('databases', region.metadata['databases']),
-            ('ID', [region.region_id]),
-            ('source', [region.source]),
-        ])
+        attributes = OrderedDict(
+            [
+                ("Name", [region.rna_id]),
+                ("type", [region.metadata["rna_type"]]),
+                ("databases", region.metadata["databases"]),
+                ("ID", [region.region_id]),
+                ("source", [region.source]),
+            ]
+        )
 
-        if region.source == 'expert-database':
-            attributes['providing_databases'] = region.metadata['providing_databases']
+        if region.source == "expert-database":
+            attributes["providing_databases"] = region.metadata["providing_databases"]
 
-        if region.source == 'alignment' and region.identity:
-            attributes['identity'] = ['%.2f' % region.identity]
+        if region.source == "alignment" and region.identity:
+            attributes["identity"] = ["%.2f" % region.identity]
 
         yield Feature(
             seqid=region.chromosome,
-            source='RNAcentral',
-            featuretype='transcript',
+            source="RNAcentral",
+            featuretype="transcript",
             start=region.start,
             end=region.stop,
             strand=region.string_strand(),
-            frame='.',
+            frame=".",
             attributes=attributes,
         )
 
         for index, endpoint in enumerate(region.exons):
-            exon_id = region.region_id + ':ncRNA_exon%i' % (index + 1)
-            exon_attributes = OrderedDict([
-                ('Name', [region.rna_id]),
-                ('type', [region.metadata['rna_type']]),
-                ('databases', region.metadata['databases']),
-                ('ID', [exon_id]),
-                ('Parent', [region.region_id]),
-            ])
+            exon_id = region.region_id + ":ncRNA_exon%i" % (index + 1)
+            exon_attributes = OrderedDict(
+                [
+                    ("Name", [region.rna_id]),
+                    ("type", [region.metadata["rna_type"]]),
+                    ("databases", region.metadata["databases"]),
+                    ("ID", [exon_id]),
+                    ("Parent", [region.region_id]),
+                ]
+            )
 
-            if region.source == 'expert-database':
-                exon_attributes['providing_databases'] = region.metadata['providing_databases']
+            if region.source == "expert-database":
+                exon_attributes["providing_databases"] = region.metadata[
+                    "providing_databases"
+                ]
 
             yield Feature(
                 seqid=region.chromosome,
-                source='RNAcentral',
-                featuretype='noncoding_exon',
+                source="RNAcentral",
+                featuretype="noncoding_exon",
                 start=endpoint.start,
                 end=endpoint.stop,
                 strand=region.string_strand(),
-                frame='.',
+                frame=".",
                 attributes=exon_attributes,
             )
 
@@ -81,19 +90,23 @@ def parse(iterable):
     return regions_as_features(coord.parse(iterable))
 
 
+def write_gff_text(features, output):
+    output.write("##gff-version 3\n")
+    for feature in features:
+        seen = True
+        output.write(str(feature))
+        output.write("\n")
+
+    if not seen:
+        raise ValueError("No features written to GFF3 file")
+
+
 def from_file(handle, output):
     """
     Convert a handle of JSON formatted objects and write a GFF3 file to the
     given output handle.
     """
 
-    output.write('##gff-version 3\n')
     parsed = coord.from_file(handle)
-    seen = False
-    for feature in regions_as_features(parsed):
-        seen = True
-        output.write(str(feature))
-        output.write('\n')
-
-    if not seen:
-        raise ValueError("No features written to GFF3 file")
+    features = regions_as_features(parsed)
+    write_gff_text(features, output)

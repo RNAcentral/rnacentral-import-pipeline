@@ -16,9 +16,11 @@ limitations under the License.
 import hashlib
 import operator as op
 import typing as ty
+from collections import OrderedDict
 
 import attr
 from attr.validators import instance_of as is_a
+from gffutils import Feature
 from intervaltree import Interval
 
 from rnacentral_pipeline.databases.data.regions import (CoordinateSystem, Exon,
@@ -26,7 +28,7 @@ from rnacentral_pipeline.databases.data.regions import (CoordinateSystem, Exon,
 from rnacentral_pipeline.rnacentral.ftp_export.coordinates.bed import BedEntry
 
 
-@attr.s(frozen=True)
+@attr.s(frozen=True, slots=True)
 class Extent:
     region_name = attr.ib(validator=is_a(str))
     assembly = attr.ib(validator=is_a(str))
@@ -46,6 +48,9 @@ class Extent:
             start=raw["region_start"],
             stop=raw["region_stop"],
         )
+
+    def string_strand(self):
+        return Strand.build(self.strand).display_string()
 
     def region_name(self, primary) -> str:
         return f"{primary}@{self.chromosome}/{self.start}-{self.stop}:{self.strand}"
@@ -69,7 +74,7 @@ class Extent:
         )
 
 
-@attr.s(auto_attribs=True, frozen=True)
+@attr.s(auto_attribs=True, frozen=True, slots=True)
 class QaInfo:
     has_issue: bool
 
@@ -78,7 +83,7 @@ class QaInfo:
         return cls(has_issue=raw["has_issue"],)
 
 
-@attr.s(auto_attribs=True, frozen=True)
+@attr.s(auto_attribs=True, frozen=True, slots=True)
 class UnboundLocation:
     urs_taxid: str
     extent: Extent
@@ -113,8 +118,42 @@ class UnboundLocation:
     def as_interval(self) -> Interval:
         return Interval(self.extent.start, self.extent.stop, self)
 
+    def as_features(self):
+        transcript_name = self.urs_taxid
+        yield Feature(
+            seqid=self.extent.chromosome,
+            source="RNAcentral",
+            featuretype="transcript",
+            start=self.extent.start,
+            end=self.extent.stop,
+            strand=self.extent.string_strand(),
+            frame=".",
+            attributes=OrderedDict(
+                [("Name", [transcript_name]), ("type", [self.so_rna_type]),]
+            ),
+        )
 
-@attr.s(auto_attribs=True, frozen=True)
+        for index, exon in enumerate(self.exons):
+            exon_name = transcript_name + f":ncRNA_exon{index + 1}"
+            yield Feature(
+                seqid=self.extent.chromosome,
+                source="RNAcentral",
+                featuretype="noncoding_exon",
+                start=exon.start,
+                end=exon.stop,
+                strand=self.extent.string_strand(),
+                frame=".",
+                attributes=OrderedDict(
+                    [
+                        ("Name", [exon_name]),
+                        ("Parent", [transcript_name]),
+                        ("type", [self.so_rna_type]),
+                    ]
+                ),
+            )
+
+
+@attr.s(auto_attribs=True, frozen=True, slots=True)
 class LocusMember:
     info: UnboundLocation
     extent: Extent
@@ -134,8 +173,11 @@ class LocusMember:
             region=region,
         )
 
+    def as_features(self):
+        return self.info.as_features()
 
-@attr.s(auto_attribs=True, frozen=True)
+
+@attr.s(auto_attribs=True, frozen=True, slots=True)
 class Locus:
     extent: Extent
     members: ty.List[LocusMember]
@@ -189,22 +231,52 @@ class Locus:
                     member.is_representative,
                 ]
 
+    def __writeable_members__(self, include_representaive=True, include_members=False):
+        for member in self.members:
+            if include_representaive:
+                if member.is_representative:
+                    yield member
+            elif include_members:
+                yield member
+
     def as_bed(
         self, include_gene=True, include_representaive=True, include_members=False
     ) -> ty.List[BedEntry]:
         write_gene = False
-        for member in self.members:
-            if include_representaive:
-                if member.is_representative:
-                    write_gene = True
-                    yield member.as_bed()
-            elif include_members:
-                write_gene = True
-                yield member.as_bed()
+        members = self.__writeable_members__(
+            include_representaive=include_representaive, include_members=include_members
+        )
+        for member in members:
+            write_gene = True
+            yield member.as_bed()
         if include_gene and write_gene:
             yield BedEntry(
                 rna_id=self.id_hash(),
                 rna_type="gene",
                 databases="RNAcentral",
                 region=self.extent.as_region(),
+            )
+
+    def as_features(
+        self, include_gene=True, include_representaive=True, include_members=False
+    ) -> ty.Iterable[Feature]:
+        write_gene = False
+        members = self.__writeable_members__(
+            include_representaive=include_representaive, include_members=include_members
+        )
+        for member in self.members:
+            write_gene = True
+            for feature in member.as_features():
+                yield feature
+
+        if include_gene and write_gene:
+            yield Feature(
+                seqid=self.extent.chromosome,
+                source="RNAcentral",
+                featuretype="gene",
+                start=self.extent.start,
+                end=self.extent.stop,
+                strand=self.extent.string_strand(),
+                frame=".",
+                attributes=None,
             )

@@ -65,7 +65,7 @@ class BedEntry:
             starts.append(start)
         return [0] + starts
 
-    def writeable(self, extend=True):
+    def writeable(self, extended=True):
         data = [
             self.bed_chromosome,
             self.region.start,

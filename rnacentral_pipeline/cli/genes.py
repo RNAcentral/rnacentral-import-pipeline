@@ -15,7 +15,7 @@ limitations under the License.
 
 import click
 
-from rnacentral_pipeline.rnacentral.genes import build as genes
+from rnacentral_pipeline.rnacentral.genes import build, write
 
 
 @click.group("genes")
@@ -27,12 +27,13 @@ def cli():
 
 
 @cli.command("build")
-@click.option('--as-bed', is_flag=True)
+@click.option("--format", type=click.Choice(write.Format.names(), case_sensitive=False))
 @click.argument("data_file", type=click.File("r"))
 @click.argument("output", type=click.File("w"))
-def build(data_file, output, as_bed=None):
+def build_genes(data_file, output, format=None):
     """
     Build the genes for the given data file. This assumes that the file is
     already split into reasonable chunks.
     """
-    genes.write(data_file, output, as_bed)
+    data = build.from_json(data_file)
+    write.write(data, write.Format.from_name(format), output)

@@ -19,8 +19,6 @@ import json
 import operator as op
 
 from rnacentral_pipeline import psql
-from rnacentral_pipeline.rnacentral.ftp_export.coordinates.bed import \
-    write_bed_text
 
 from . import data, rrna
 
@@ -51,21 +49,6 @@ def build(data):
             yield gene
 
 
-def write_genes(data, output):
-    rows = it.chain.from_iterable(d.writeable() for d in data)
-    writer = csv.writer(output)
-    writer.writerows(rows)
-
-
-def write_bed(data, output, extended=False):
-    bed = it.chain.from_iterable(d.as_bed() for d in data)
-    write_bed_text(bed, output, extended=extended)
-
-
-def write(raw, output, as_bed):
-    data = split(raw)
-    data = build(data)
-    if as_bed:
-        write_bed(data, output)
-    else:
-        write_genes(data, output)
+def from_json(handle):
+    parts = split(handle)
+    return build(parts)
