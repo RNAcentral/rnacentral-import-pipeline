@@ -16,16 +16,20 @@ limitations under the License.
 import attr
 from intervaltree import IntervalTree
 
+from .data import Locus
+
 
 def intervals(locations) -> IntervalTree:
     tree = IntervalTree()
     for location in locations:
+        locus = Locus.singleton(location)
         current = tree.overlap(location.start, location.stop)
-        locus_interval = Locus.singleton(location)
-        if current:
+        if not current:
+            tree.add(locus.as_interval())
+        elif len(current) > 1:
             other = [i.data for i in current]
-            locus = locus_interval.merge(other)
-        tree.add(locus.interval())
+            current = locus.merge(other)
+            tree.add(current.as_interval())
     return tree
 
 

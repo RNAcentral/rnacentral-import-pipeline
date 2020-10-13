@@ -14,25 +14,27 @@ limitations under the License.
 """
 
 import hashlib
+import operator as op
 import typing as ty
 
 import attr
+from attr.validators import instance_of as is_a
 from intervaltree import Interval
 
-from rnacentral_pipeline.databases.data.regions import Exon, SequenceRegion
-from rnacentral_pipeline.rnacentral.ftp_export.coordinates.bed import (
-    BedEntry, Strand)
+from rnacentral_pipeline.databases.data.regions import (CoordinateSystem, Exon,
+                                                        SequenceRegion, Strand)
+from rnacentral_pipeline.rnacentral.ftp_export.coordinates.bed import BedEntry
 
 
-@attr.s(auto_attribs=True, frozen=True)
+@attr.s(frozen=True)
 class Extent:
-    region_name: str
-    assembly: str
-    taxid: int
-    chromosome: str
-    strand: str
-    start: int
-    stop: int
+    region_name = attr.ib(validator=is_a(str))
+    assembly = attr.ib(validator=is_a(str))
+    taxid = attr.ib(validator=is_a(int))
+    chromosome = attr.ib(validator=is_a(str))
+    strand = attr.ib(validator=is_a(int))
+    start = attr.ib(validator=is_a(int))
+    stop = attr.ib(validator=is_a(int))
 
     @classmethod
     def build(cls, raw):
@@ -41,27 +43,29 @@ class Extent:
             taxid=raw["taxid"],
             chromosome=raw["chromosome"],
             strand=raw["strand"],
-            start=raw["start"],
-            stop=raw["stop"],
+            start=raw["region_start"],
+            stop=raw["region_stop"],
         )
 
     def region_name(self, primary) -> str:
-        return f'{primary}@{self.chromosome}/{self.start}-{self.stop}:{self.strand}'
+        return f"{primary}@{self.chromosome}/{self.start}-{self.stop}:{self.strand}"
 
-    def merge(self, other: Extent):
+    def merge(self, other: "Extent"):
         assert other.assembly == self.assembly
         assert other.taxid == self.taxid
         assert other.strand == self.strand
-        assert other.chromosome = self.chromosome
-        return attr.assoc(self, start=min(self.start, other.start),
-                          stop=max(self.stop, other.stop))
+        assert other.chromosome == self.chromosome
+        return attr.assoc(
+            self, start=min(self.start, other.start), stop=max(self.stop, other.stop)
+        )
 
     def as_region(self):
         return SequenceRegion(
             assembly_id=self.assembly,
             chromosome=self.chromosome,
             strand=Strand.build(self.strand),
-            exons=Exon(start=self.start, stop=self.stop),
+            exons=[Exon(start=self.start, stop=self.stop)],
+            coordinate_system=CoordinateSystem.zero_based(),
         )
 
 
@@ -78,24 +82,24 @@ class QaInfo:
 class UnboundLocation:
     urs_taxid: str
     extent: Extent
-    exons: ty.List[Exon]
+    exons: ty.Tuple[Exon]
     region_database_id: int
     insdc_rna_type: str
     so_rna_type: str
     qa: QaInfo
-    providing_databases: ty.List[str]
+    providing_databases: ty.Tuple[str]
 
     @classmethod
     def build(cls, raw):
         return cls(
             urs_taxid=raw["urs_taxid"],
-            extent=Exten.build(raw),
-            exons=[Exon.build(e) for e in raw["exons"]],
+            extent=Extent.build(raw),
+            exons=tuple(sorted(Exon.from_dict(e) for e in raw["exons"])),
             region_database_id=raw["region_id"],
             insdc_rna_type=raw["insdc_rna_type"],
             so_rna_type=raw["so_rna_type"],
-            qa=QaInfo.build(raw["qa"]),
-            providing_databases=raw['providing_databases'],
+            qa=QaInfo.build(raw["qa"][0]),
+            providing_databases=tuple(raw["providing_databases"]),
         )
 
     @property
@@ -118,19 +122,15 @@ class LocusMember:
 
     @classmethod
     def from_location(cls, location):
-        return cls(
-            info=location,
-            extent=location.extent,
-            is_representative=False,
-        )
+        return cls(info=location, extent=location.extent, is_representative=False,)
 
     def as_bed(self):
         region = self.extent.as_region()
-        region = attr.assoc(region, exons=self.exons)
+        region = attr.assoc(region, exons=self.info.exons)
         return BedEntry(
             rna_id=self.info.urs_taxid,
             rna_type=self.info.so_rna_type,
-            databases=self.info.providing_databases,
+            databases=",".join(self.info.providing_databases),
             region=region,
         )
 
@@ -143,34 +143,32 @@ class Locus:
     @classmethod
     def singleton(cls, location):
         return cls(
-            extent=location.extent,
-            members=[LocusMember.from_location(location)],
+            extent=location.extent, members=[LocusMember.from_location(location)],
         )
 
     def as_interval(self) -> Interval:
         return Interval(self.extent.start, self.extent.stop, self)
 
-    def merge(self, other: ty.List[Locus]) -> Locus:
+    def merge(self, other: ty.List["Locus"]) -> "Locus":
         extent = self.extent
-        mreged_members = set(self.members)
+        merged_members = set(self.members)
         for locus in other:
             extent.merge(locus.extent)
-            members.update(locus.members)
+            merged_members.update(locus.members)
 
         members = []
-        merged_members = sorted(merged_members, key=op.attrgetter('extent'))
+        merged_members = sorted(merged_members, key=op.attrgetter("extent"))
         for member in merged_members:
             members.append(attr.assoc(member, is_representative=False))
 
-        return Locus(
-            extent=extent,
-            members=members
-        )
+        return Locus(extent=extent, members=members)
 
     def id_hash(self):
         ids = {m.info.urs_taxid for m in self.members}
         ids = sorted(ids)
-        return hashlib.sha256(''.join(ids))
+        ids = "".join(ids)
+        hash = hashlib.sha256(ids.encode("ascii", "ignore"))
+        return hash.hexdigest()
 
     def locus_name(self):
         return self.extent.region_name(self.id_hash())
@@ -178,7 +176,7 @@ class Locus:
     def writeable(self):
         for member in self.members:
             yield [
-                self.extent.taxid
+                self.extent.taxid,
                 self.extent.assembly_id,
                 self.locus_name,
                 self.extent.chromosome,
@@ -190,17 +188,18 @@ class Locus:
                 member.is_representative,
             ]
 
-    def as_bed(self, include_gene=True, include_representaive=True,
-               include_members=False) -> ty.List[BedEntry]:
+    def as_bed(
+        self, include_gene=True, include_representaive=True, include_members=False
+    ) -> ty.List[BedEntry]:
         if include_gene:
             yield BedEntry(
                 rna_id=self.id_hash(),
-                rna_type='gene',
-                databases='RNAcentral',
+                rna_type="gene",
+                databases="RNAcentral",
                 region=self.extent.as_region(),
             )
         for member in self.members:
-            if include_representative:
+            if include_representaive:
                 if member.is_representative:
                     yield member.as_bed()
             elif include_members:

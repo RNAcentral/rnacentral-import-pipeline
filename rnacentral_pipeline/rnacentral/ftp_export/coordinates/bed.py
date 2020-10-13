@@ -86,7 +86,7 @@ class BedEntry:
 
 
 def write_bed_text(entries, out):
-    data = map(op.methodcaller('writeable'), data)
+    data = map(op.methodcaller('writeable'), entries)
     writer = csv.writer(out, delimiter='\t', lineterminator='\n')
     writer.writerows(data)
 
@@ -99,6 +99,3 @@ def from_json(handle, out):
     data = coord.from_file(handle)
     data = map(BedEntry.from_coordinate, data)
     write_bed_text(data, out)
-    # data = map(op.methodcaller('writeable'), data)
-    # writer = csv.writer(out, delimiter='\t', lineterminator='\n')
-    # writer.writerows(data)
