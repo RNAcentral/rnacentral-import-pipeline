@@ -35,4 +35,4 @@ def build(data_file, output, as_bed=None):
     Build the genes for the given data file. This assumes that the file is
     already split into reasonable chunks.
     """
-    genes.write(data, output, as_bed)
+    genes.write(data_file, output, as_bed)

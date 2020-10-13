@@ -32,12 +32,12 @@ def load(handle):
 
 def split_key(value: data.UnboundLocation):
     extent = value.extent
-    return (extent.chromosome, extent.strand, extent.insdc_rna_type)
+    return (extent.chromosome, extent.strand, value.insdc_rna_type)
 
 
 def split(handle):
-    entries = load(data)
-    for (key, locations) in it.groupby(entries, key):
+    entries = load(handle)
+    for (key, locations) in it.groupby(entries, split_key):
         if key[-1] != "rRNA":
             continue
 
@@ -48,24 +48,24 @@ def build(data):
     for group in data:
         genes = rrna.build(group)
         for gene in genes:
-            for writeable in gene.writeable():
-                yield writeable
+            yield gene
 
 
-def write_genes(raw, output):
-    data = split(raw)
+def write_genes(data, output):
+    rows = it.chain.from_iterable(d.writeable() for d in data)
     writer = csv.writer(output)
-    writer.writerows(build(data))
+    writer.writerows(rows)
 
 
-def write_bed(raw, output):
-    data = split(raw)
-    bed = map(d.as_bed() for d in data)
+def write_bed(data, output):
+    bed = it.chain.from_iterable(d.as_bed() for d in data)
     write_bed_text(bed, output)
 
 
 def write(raw, output, as_bed):
+    data = split(raw)
+    data = build(data)
     if as_bed:
-        write_bed(raw, output)
+        write_bed(data, output)
     else:
-        write_genes(raw, output)
+        write_genes(data, output)

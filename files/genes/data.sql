@@ -6,6 +6,8 @@ COPY (
     'assembly_id', :'assembly_id',
     'region_id', max(regions.id),
     'region_name', max(regions.region_name),
+    'region_start', max(regions.region_start),
+    'region_stop', max(regions.region_stop),
     'insdc_rna_type',  max(pre.rna_type),
     'so_rna_type', max(pre.so_rna_type),
     'databases', regexp_split_to_array(max(pre."databases"), ','),
