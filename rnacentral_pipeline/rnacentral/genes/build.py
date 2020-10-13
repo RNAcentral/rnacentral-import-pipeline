@@ -57,9 +57,9 @@ def write_genes(data, output):
     writer.writerows(rows)
 
 
-def write_bed(data, output):
+def write_bed(data, output, extended=False):
     bed = it.chain.from_iterable(d.as_bed() for d in data)
-    write_bed_text(bed, output)
+    write_bed_text(bed, output, extended=extended)
 
 
 def write(raw, output, as_bed):

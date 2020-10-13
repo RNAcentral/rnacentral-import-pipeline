@@ -173,34 +173,38 @@ class Locus:
     def locus_name(self):
         return self.extent.region_name(self.id_hash())
 
-    def writeable(self):
+    def writeable(self, include_representaive=True, include_members=True):
         for member in self.members:
-            yield [
-                self.extent.taxid,
-                self.extent.assembly_id,
-                self.locus_name,
-                self.extent.chromosome,
-                self.extent.strand,
-                self.extent.start,
-                self.extent.stop,
-                member.urs_taxid,
-                member.region_database_id,
-                member.is_representative,
-            ]
+            if include_members or (include_representaive and member.is_representative):
+                yield [
+                    self.extent.taxid,
+                    self.extent.assembly_id,
+                    self.locus_name,
+                    self.extent.chromosome,
+                    self.extent.strand,
+                    self.extent.start,
+                    self.extent.stop,
+                    member.urs_taxid,
+                    member.region_database_id,
+                    member.is_representative,
+                ]
 
     def as_bed(
         self, include_gene=True, include_representaive=True, include_members=False
     ) -> ty.List[BedEntry]:
-        if include_gene:
+        write_gene = False
+        for member in self.members:
+            if include_representaive:
+                if member.is_representative:
+                    write_gene = True
+                    yield member.as_bed()
+            elif include_members:
+                write_gene = True
+                yield member.as_bed()
+        if include_gene and write_gene:
             yield BedEntry(
                 rna_id=self.id_hash(),
                 rna_type="gene",
                 databases="RNAcentral",
                 region=self.extent.as_region(),
             )
-        for member in self.members:
-            if include_representaive:
-                if member.is_representative:
-                    yield member.as_bed()
-            elif include_members:
-                yield member.as_bed()
