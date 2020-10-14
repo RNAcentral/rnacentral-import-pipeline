@@ -1,0 +1,109 @@
+nextflow.enable.dsl=2
+
+include { simple_query } from './utils/psql'
+
+process find_possible_traveler_sequences {
+  memory params.r2dt.find_possible.memory
+  maxForks params.r2dt.find_possible.maxForks
+  clusterOptions '-sp 100'
+
+  input:
+  file(query)
+
+  output:
+  file('parts/*.fasta')
+
+  script:
+  def chunks = params.r2dt.sequence_chunks
+  """
+  psql \
+    -v ON_ERROR_STOP=1 \
+    -v 'tablename=${params.r2dt.tablename}' \
+    -v 'max_len=${params.r2dt.find_possible.max_len}'
+    -f "$query" "$PGDATABASE" > raw.json
+  mkdir parts
+  split --number=l/${chunks} --additional-suffix='.fasta' --filter 'json2fasta.py - - >> \$FILE' raw.json parts/
+  """
+}
+
+process layout_sequences {
+  tag { "${sequences}" }
+  memory params.r2dt.layout.memory
+  container params.r2dt.container
+  containerOptions "--bind ${params.r2dt.cms_path}:/rna/r2dt/data/cms" 
+  errorStrategy { task.exitStatus = 130 ? 'ignore' : 'terminate' }
+
+  input:
+  path(sequences)
+
+  output:
+  tuple path("$sequences"), path('output')
+
+  """
+  esl-sfetch --index $sequences
+  r2dt.py draw $sequences output/
+  """
+}
+
+process publish_layout {
+  maxForks 5
+
+  input:
+  tuple path(sequences), path(output), path(mapping)
+
+  """
+  rnac r2dt publish --allow-missing $mapping $output $params.r2dt.publish
+  """
+}
+
+process parse_layout {
+  input:
+  tuple path(sequences), path(to_parse), path(mapping)
+
+  output:
+  path("data.csv") emit: data
+  path('attempted.csv') emit: attempted
+
+  """
+  rnac r2dt process-svgs --allow-missing $mapping $to_parse data.csv
+  rnac r2dt create-attempted $sequences attempted.csv
+  """
+}
+
+process store_secondary_structures {
+  memory params.r2dt.store.memory
+
+  input:
+  tuple path('data*.csv'), path(ctl)
+  tuple path('attempted*.csv'), path(attempted_ctl)
+
+  """
+  split-and-load $ctl 'data*.csv' ${params.r2dt.data_chunk_size} traveler-data
+  split-and-load $attempted_ctl 'attemped*.csv' ${params.r2dt.data_chunk_size} traveler-attempted
+  """
+}
+
+workflow r2dt {
+  Channel.fromPath('files/r2dt/model_mapping.sql') \
+  | simple_query \
+  | set { model_mapping }
+
+  Channel.fromPath("files/r2dt/find-sequences.sql") \
+  | find_possible_traveler_sequences \
+  | flatten \
+  | layout_sequences \
+  | combine(model_mapping) \
+  | set { data }
+
+  data | parse_layout 
+  parse_layout.out.data | collect | combine(Channel.fromPath('files/r2dt/load.ctl')) | set { to_load }
+  parse_layout.out.attempted | collect | combine(Channel.fromPath('files/r2dt/attempted.ctl')) | set { attempted }
+
+  store_secondary_structures(to_load, attempted)
+
+  combine(data, model_mapping) | publish_layout
+}
+
+workflow {
+  r2dt()
+}
