@@ -18,6 +18,7 @@ import click
 from click_aliases import ClickAliasedGroup
 
 from rnacentral_pipeline.databases import rfam
+from rnacentral_pipeline.databases.crw import parser as crw
 from rnacentral_pipeline.databases.ena import parser as ena
 from rnacentral_pipeline.databases.ensembl import parser as ensembl
 from rnacentral_pipeline.databases.ensembl_genomes import fungi as e_fungi
@@ -29,16 +30,15 @@ from rnacentral_pipeline.databases.genecards_suite import genecards, malacards
 from rnacentral_pipeline.databases.generic import parser as generic
 from rnacentral_pipeline.databases.gtrnadb import parser as gtrnadb
 from rnacentral_pipeline.databases.intact import parser as intact
+from rnacentral_pipeline.databases.lncbook import parser as lncbook
 from rnacentral_pipeline.databases.ncbi.gene import parser as ncbi_gene
 from rnacentral_pipeline.databases.pdb import parser as pdb
 from rnacentral_pipeline.databases.quickgo import parser as quickgo
 from rnacentral_pipeline.databases.refseq import parser as refseq
 from rnacentral_pipeline.databases.silva import parser as silva
-from rnacentral_pipeline.databases.crw import parser as crw
 from rnacentral_pipeline.writers import write_entries
 from rnacentral_pipeline.writers import \
     write_ontology_annotations as onto_writer
-from rnacentral_pipeline.databases.lncbook import parser as lncbook
 
 
 @click.group("external", cls=ClickAliasedGroup)
@@ -293,7 +293,7 @@ def process_malacards(data_file, known_sequences, output):
 
 
 @cli.command("intact")
-@click.option('--db-url', envvar='PGDATABASE')
+@click.option("--db-url", envvar="PGDATABASE")
 @click.argument("data_file", type=click.File("r"))
 @click.argument(
     "output",
@@ -305,7 +305,7 @@ def process_intact(data_file, output, db_url):
 
 
 @cli.command("crw")
-@click.argument("metadata_file", type=click.File('r'))
+@click.argument("metadata_file", type=click.File("r"))
 @click.argument("sequence_directory", type=click.Path(dir_okay=True))
 @click.argument(
     "output",
@@ -314,6 +314,7 @@ def process_intact(data_file, output, db_url):
 )
 def process_crw(metadata_file, sequence_directory, output):
     write_entries(crw.parse, output, metadata_file, sequence_directory)
+
 
 @cli.command("lncbook")
 @click.argument("json_file", type=click.File("r"))
