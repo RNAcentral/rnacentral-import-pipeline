@@ -14,6 +14,7 @@ limitations under the License.
 """
 
 import logging
+from pathlib import Path
 
 from Bio import SeqIO
 
@@ -26,11 +27,24 @@ from . import mapping as tpa
 LOGGER = logging.getLogger(__name__)
 
 
+class InvalidPath(Exception):
+    """
+    This is raised when we are given a path that we cannot parse.
+    """
+    pass
+
+
+class EmptyDirectory(Exception):
+    """
+    Raised when we are trying to parse an empty directory.
+    """
+    pass
+
+
 class InvalidEnaFile(Exception):
     """
     This is raised when there is something wrong with the ENA EMBL file.
     """
-
     pass
 
 
@@ -115,7 +129,23 @@ def parse(handle):
         yield entry
 
 
-def parse_with_mapping_file(handle, mapping_handle):
+def parse_file(path: Path, mapping):
+    with path.open('r') as handle:
+        return tpa.apply(mapping, parse(handle))
+
+
+def parse_directory(path: Path, mapping):
+    for path in path.glob("*/*.ncr.gz"):
+        for result in parse_file(path, mapping):
+            yield result
+
+
+def parse_with_mapping_file(path, mapping_handle):
     mapping = tpa.load(mapping_handle)
     mapping.validate()
-    return tpa.apply(mapping, parse(handle))
+    path = Path(path)
+    if path.is_dir():
+        parse_directory(path, mapping)
+    elif path.is_file():
+        return parse_file(path, mapping)
+    raise InvalidPath(f"Unknown type of path {path}")

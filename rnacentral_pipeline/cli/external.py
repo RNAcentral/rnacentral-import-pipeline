@@ -177,7 +177,7 @@ def process_pdb(pdb_data, extra, output):
 
 
 @cli.command("ena")
-@click.argument("ena_file", type=click.File("r"))
+@click.argument("ena_file", type=click.Path(dir_okay=True, file_okay=True))
 @click.argument("mapping_file", type=click.File("r"))
 @click.argument(
     "output",
