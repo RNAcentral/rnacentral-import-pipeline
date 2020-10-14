@@ -2,27 +2,42 @@ nextflow.enable.dsl=2
 
 include { simple_query } from './utils/psql'
 
-process find_possible_traveler_sequences {
-  memory params.r2dt.find_possible.memory
-  maxForks params.r2dt.find_possible.maxForks
+process extract_sequences {
   clusterOptions '-sp 100'
+  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
   file(query)
 
   output:
-  file('parts/*.fasta')
+  file('parts/*.json')
 
   script:
-  def chunks = params.r2dt.sequence_chunks
   """
   psql \
     -v ON_ERROR_STOP=1 \
     -v 'tablename=${params.r2dt.tablename}' \
-    -v 'max_len=${params.r2dt.find_possible.max_len}'
     -f "$query" "$PGDATABASE" > raw.json
-  mkdir parts
-  split --number=l/${chunks} --additional-suffix='.fasta' --filter 'json2fasta.py - - >> \$FILE' raw.json parts/
+  mkdir parts/
+  split --number=l/4000 --additional-suffix='.json' parts/
+  """
+}
+
+process split_sequences {
+  clusterOptions '-sp 100'
+  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
+
+  input:
+  path("raw.json")
+
+  output:
+  file('parts/*.fasta')
+
+  script:
+  def chunk_size = params.r2dt.sequence_chunk_size
+  """
+  mkdir parts/
+  split --lines=${chunk_size} --additional-suffix='.fasta' --filter 'json2fasta.py - - >> \$FILE' raw.json parts/
   """
 }
 
@@ -89,7 +104,9 @@ workflow r2dt {
   | set { model_mapping }
 
   Channel.fromPath("files/r2dt/find-sequences.sql") \
-  | find_possible_traveler_sequences \
+  | extract_sequences \
+  | flatten \
+  | split_sequences \
   | flatten \
   | layout_sequences \
   | combine(model_mapping) \
