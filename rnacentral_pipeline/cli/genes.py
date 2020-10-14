@@ -27,13 +27,17 @@ def cli():
 
 
 @cli.command("build")
-@click.option("--format", type=click.Choice(write.Format.names(), case_sensitive=False))
+@click.option(
+    "--format",
+    default="csv",
+    type=click.Choice(write.Format.names(), case_sensitive=False),
+)
 @click.argument("data_file", type=click.File("r"))
 @click.argument("output", type=click.File("w"))
 def build_genes(data_file, output, format=None):
     """
-    Build the genes for the given data file. This assumes that the file is
-    already split into reasonable chunks.
+    Build the genes for the given data file. The file can contain all data for a
+    specific assembly.
     """
     data = build.from_json(data_file)
     write.write(data, write.Format.from_name(format), output)
