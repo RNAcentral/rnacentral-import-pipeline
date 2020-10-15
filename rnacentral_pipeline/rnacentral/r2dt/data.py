@@ -140,7 +140,7 @@ class R2DTResultInfo(object):
         append = ''
         if suffix:
             append = f'-{suffix}'
-        extension = '.svg'
+        extension = 'svg'
         if compressed:
             extension += '.gz'
         return publish / f'{self.urs}{append}.{extension}'
