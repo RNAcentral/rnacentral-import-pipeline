@@ -1,37 +1,46 @@
 nextflow.enable.dsl=2
 
-include { simple_query } from './utils/psql'
+process fetch_model_mapping {
+  input:
+  path(query)
+
+  output:
+  path('mapping.json')
+
+  """
+  psql -v ON_ERROR_STOP=1 -f $query "$PGDATABASE" > mapping.json
+  """
+}
 
 process extract_sequences {
   clusterOptions '-sp 100'
-  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
-  file(query)
+  path(query)
 
   output:
-  file('parts/*.json')
+  path('parts/*.json')
 
   script:
   """
   psql \
     -v ON_ERROR_STOP=1 \
     -v 'tablename=${params.r2dt.tablename}' \
+    -v max_len=10000 \
     -f "$query" "$PGDATABASE" > raw.json
   mkdir parts/
-  split --number=l/4000 --additional-suffix='.json' parts/
+  split --number=l/4000 --additional-suffix='.json' raw.json parts/
   """
 }
 
 process split_sequences {
   clusterOptions '-sp 100'
-  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
   path("raw.json")
 
   output:
-  file('parts/*.fasta')
+  path('parts/*.fasta')
 
   script:
   def chunk_size = params.r2dt.sequence_chunk_size
@@ -76,8 +85,8 @@ process parse_layout {
   tuple path(sequences), path(to_parse), path(mapping)
 
   output:
-  path("data.csv") emit: data
-  path('attempted.csv') emit: attempted
+  path("data.csv"), emit: data
+  path('attempted.csv'), emit: attempted
 
   """
   rnac r2dt process-svgs --allow-missing $mapping $to_parse data.csv
@@ -100,7 +109,7 @@ process store_secondary_structures {
 
 workflow r2dt {
   Channel.fromPath('files/r2dt/model_mapping.sql') \
-  | simple_query \
+  | fetch_model_mapping \
   | set { model_mapping }
 
   Channel.fromPath("files/r2dt/find-sequences.sql") \
@@ -112,13 +121,12 @@ workflow r2dt {
   | combine(model_mapping) \
   | set { data }
 
+  data | publish_layout
   data | parse_layout 
   parse_layout.out.data | collect | combine(Channel.fromPath('files/r2dt/load.ctl')) | set { to_load }
   parse_layout.out.attempted | collect | combine(Channel.fromPath('files/r2dt/attempted.ctl')) | set { attempted }
 
   store_secondary_structures(to_load, attempted)
-
-  combine(data, model_mapping) | publish_layout
 }
 
 workflow {
