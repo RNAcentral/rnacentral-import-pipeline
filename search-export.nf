@@ -3,8 +3,6 @@
 nextflow.enable.dsl=2
 
 process find_taxids {
-  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
-
   input:
   path(query)
 
@@ -128,7 +126,7 @@ workflow search_export {
   | set { so_tree }
 
   Channel.fromPath('files/search-export/parts/*.sql') \
-  | fetch-parts \
+  | fetch_parts \
   | collect \
   | index_parts \
   | combine(so_tree) \

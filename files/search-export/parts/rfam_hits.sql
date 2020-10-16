@@ -4,7 +4,7 @@ COPY (
       'urs', hits.upi,
       'rfam_id', hits.rfam_model_id,
       'rfam_family_name', models.short_name,
-      'rfam_clan', models.rfam_clan_id,
+      'rfam_clan', models.rfam_clan_id
     )
   FROM rfam_model_hits hits 
   JOIN rfam_models models 

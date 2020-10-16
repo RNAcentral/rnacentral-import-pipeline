@@ -1,7 +1,7 @@
 COPY (
   SELECT
     json_build_object(
-      'id', qa.urs_taxid,
+      'id', qa.rna_id,
       'has_issue', qa.has_issue,
       'possible_contamination', qa.possible_contamination,
       'incomplete_sequence', qa.incomplete_sequence,

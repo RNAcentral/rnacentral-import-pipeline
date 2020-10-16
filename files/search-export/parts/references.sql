@@ -16,4 +16,6 @@ COPY (
   JOIN rnc_references refs
   ON
     refs.id = ref_map.reference_id
+  WHERE
+    xref.deleted = 'N'
 ) TO STDOUT
