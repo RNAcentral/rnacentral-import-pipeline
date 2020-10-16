@@ -93,6 +93,7 @@ class UnboundLocation:
     so_rna_type: str
     qa: QaInfo
     providing_databases: ty.Tuple[str]
+    databases: ty.Tuple[str]
 
     @classmethod
     def build(cls, raw):
@@ -105,6 +106,7 @@ class UnboundLocation:
             so_rna_type=raw["so_rna_type"],
             qa=QaInfo.build(raw["qa"][0]),
             providing_databases=tuple(raw["providing_databases"]),
+            databases=tuple(raw['databases']),
         )
 
     @property
@@ -114,6 +116,9 @@ class UnboundLocation:
     @property
     def stop(self):
         return self.extent.stop
+
+    def has_introns(self):
+        return len(self.exons) > 1
 
     def as_interval(self) -> Interval:
         return Interval(self.extent.start, self.extent.stop, self)
@@ -174,7 +179,12 @@ class LocusMember:
         )
 
     def as_features(self):
-        return self.info.as_features()
+        features = self.info.as_features()
+        transcript = next(features)
+        transcript.attributes["representative"] = [str(self.is_representative)]
+        yield transcript
+        for feature in features:
+            yield feature
 
 
 @attr.s(auto_attribs=True, frozen=True, slots=True)
@@ -264,9 +274,12 @@ class Locus:
         members = self.__writeable_members__(
             include_representaive=include_representaive, include_members=include_members
         )
+        gene_id = self.id_hash()
         for member in self.members:
             write_gene = True
             for feature in member.as_features():
+                if feature.featuretype == "transcript":
+                    feature.attributes["Parent"] = [gene_id]
                 yield feature
 
         if include_gene and write_gene:
@@ -278,5 +291,7 @@ class Locus:
                 end=self.extent.stop,
                 strand=self.extent.string_strand(),
                 frame=".",
-                attributes=None,
+                attributes=OrderedDict([
+                    ("ID", [gene_id]),
+                ])
             )
