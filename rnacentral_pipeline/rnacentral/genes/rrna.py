@@ -13,38 +13,76 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import typing as ty
+
 import attr
+from attr.validators import instance_of as is_a
 from intervaltree import IntervalTree
 
-from .data import Locus
+from .data import Locus, LocusMember, UnboundLocation
+
+REP_DBS = {
+    "pdbe",
+    "refseq",
+    "ensembl",
+    "hgnc",
+}
 
 
-def intervals(locations) -> IntervalTree:
-    tree = IntervalTree()
+@attr.s()
+class State:
+    tree = attr.ib(validator=is_a(IntervalTree), factory=IntervalTree)
+    rejected: ty.List[UnboundLocation] = attr.ib(validator=is_a(list), factory=list)
+
+    def reject(self, location: UnboundLocation):
+        self.rejected.append(location)
+
+    def overlaps(self, location: UnboundLocation):
+        return self.tree.overlap(location.start, location.stop)
+
+    def add(self, locus: Locus):
+        self.tree.add(locus.as_interval())
+
+
+def should_reject(location: UnboundLocation) -> bool:
+    if "PDBe" in location.databases:
+        return False
+    return location.qa.has_issue
+
+
+def intervals(locations: ty.Iterable[UnboundLocation]) -> IntervalTree:
+    state = State()
     for location in locations:
+        if should_reject(location):
+            state.reject(location)
+            continue
         locus = Locus.singleton(location)
-        current = tree.overlap(location.start, location.stop)
+        current = state.overlaps(location)
         if not current:
-            tree.add(locus.as_interval())
+            state.add(locus)
         elif len(current) > 1:
             other = [i.data for i in current]
             current = locus.merge(other)
-            tree.add(current.as_interval())
-    return tree
+            state.add(current)
+    return state
 
 
-def mark_representative(members):
+def mark_representative(members) -> ty.List[LocusMember]:
     updates = []
     for member in members:
         qa = member.info.qa
-        is_representative = not qa.has_issue
+        is_representative = False
+        if any(d.lower() in REP_DBS for d in member.info.databases):
+            is_representative = True
+        elif not qa.has_issue and not member.info.has_introns():
+            is_representative = True
         updates.append(attr.assoc(member, is_representative=is_representative))
     return updates
 
 
 def build(locations):
-    tree = intervals(locations)
-    for interval in tree:
+    state = intervals(locations)
+    for interval in state.tree:
         locus = interval.data
         updated = mark_representative(locus.members)
         locus = attr.assoc(locus, members=updated)

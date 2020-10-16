@@ -9,7 +9,7 @@ COPY (
     'region_start', max(regions.region_start),
     'region_stop', max(regions.region_stop),
     'insdc_rna_type',  max(pre.rna_type),
-    'so_rna_type', max(pre.so_rna_type),
+    'so_rna_type', max(ont.name),
     'databases', regexp_split_to_array(max(pre."databases"), ','),
     'providing_databases', max(regions.providing_databases),
     'chromosome', max(regions.chromosome),
@@ -29,6 +29,9 @@ ON
 JOIN qa_status qa
 ON
   qa.rna_id = pre.id
+JOIN ontology_terms ont
+ON
+  ont.ontology_term_id = pre.so_rna_type
 WHERE
   pre.is_active = true
   AND regions.assembly_id = :'assembly_id'
