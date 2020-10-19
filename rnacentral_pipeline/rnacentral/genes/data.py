@@ -167,7 +167,7 @@ class UnboundLocation:
                 ),
             )
 
-        def writeable(self):
+        def as_writeable(self):
             return [
                 self.extent.taxid,
                 self.extent.assembly_id,
@@ -193,7 +193,7 @@ class LocusMember:
         return cls(info=location, extent=location.extent, is_representative=False,)
 
     def as_bed(self):
-        return self.info.as_bed()
+        yield self.info.as_bed()
 
     def as_features(self):
         features = self.info.as_features()
@@ -203,7 +203,7 @@ class LocusMember:
         for feature in features:
             yield feature
 
-    def writeable(self):
+    def as_writeable(self):
         return self.info.writeable()
 
 
@@ -245,7 +245,7 @@ class Locus:
     def locus_name(self):
         return self.extent.region_name(self.id_hash())
 
-    def writeable(self, include_representaive=True, include_members=True):
+    def as_writeable(self, include_representaive=True, include_members=True):
         for member in self.members:
             if include_members or (include_representaive and member.is_representative):
                 yield [
