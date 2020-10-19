@@ -21,7 +21,7 @@ from collections import OrderedDict
 import attr
 from attr.validators import instance_of as is_a
 from gffutils import Feature
-from intervaltree import Interval
+from intervaltree import Interval, IntervalTree
 
 from rnacentral_pipeline.databases.data.regions import (CoordinateSystem, Exon,
                                                         SequenceRegion, Strand)
@@ -106,7 +106,7 @@ class UnboundLocation:
             so_rna_type=raw["so_rna_type"],
             qa=QaInfo.build(raw["qa"][0]),
             providing_databases=tuple(raw["providing_databases"]),
-            databases=tuple(raw['databases']),
+            databases=tuple(raw["databases"]),
         )
 
     @property
@@ -122,6 +122,16 @@ class UnboundLocation:
 
     def as_interval(self) -> Interval:
         return Interval(self.extent.start, self.extent.stop, self)
+
+    def as_bed(self):
+        region = self.extent.as_region()
+        region = attr.assoc(region, exons=self.exons)
+        return BedEntry(
+            rna_id=self.urs_taxid,
+            rna_type=self.so_rna_type,
+            databases=",".join(self.providing_databases),
+            region=region,
+        )
 
     def as_features(self):
         transcript_name = self.urs_taxid
@@ -157,6 +167,20 @@ class UnboundLocation:
                 ),
             )
 
+        def writeable(self):
+            return [
+                self.extent.taxid,
+                self.extent.assembly_id,
+                self.locus_name,
+                self.extent.chromosome,
+                self.extent.strand,
+                self.extent.start,
+                self.extent.stop,
+                self.urs_taxid,
+                self.region_database_id,
+                self.is_representative,
+            ]
+
 
 @attr.s(auto_attribs=True, frozen=True, slots=True)
 class LocusMember:
@@ -169,14 +193,7 @@ class LocusMember:
         return cls(info=location, extent=location.extent, is_representative=False,)
 
     def as_bed(self):
-        region = self.extent.as_region()
-        region = attr.assoc(region, exons=self.info.exons)
-        return BedEntry(
-            rna_id=self.info.urs_taxid,
-            rna_type=self.info.so_rna_type,
-            databases=",".join(self.info.providing_databases),
-            region=region,
-        )
+        return self.info.as_bed()
 
     def as_features(self):
         features = self.info.as_features()
@@ -185,6 +202,9 @@ class LocusMember:
         yield transcript
         for feature in features:
             yield feature
+
+    def writeable(self):
+        return self.info.writeable()
 
 
 @attr.s(auto_attribs=True, frozen=True, slots=True)
@@ -291,7 +311,26 @@ class Locus:
                 end=self.extent.stop,
                 strand=self.extent.string_strand(),
                 frame=".",
-                attributes=OrderedDict([
-                    ("ID", [gene_id]),
-                ])
+                attributes=OrderedDict([("ID", [gene_id]),]),
             )
+
+
+@attr.s()
+class State:
+    tree = attr.ib(validator=is_a(IntervalTree), factory=IntervalTree)
+    rejected: ty.List[UnboundLocation] = attr.ib(validator=is_a(list), factory=list)
+
+    def reject(self, location: UnboundLocation):
+        self.rejected.append(location)
+
+    def overlaps(self, location: UnboundLocation):
+        return self.tree.overlap(location.start, location.stop)
+
+    def add(self, locus: Locus):
+        self.tree.add(locus.as_interval())
+
+
+@attr.s()
+class Finalized:
+    locuses: ty.List[Locus] = attr.ib(validator=is_a(list))
+    rejected: ty.List[UnboundLocation] = attr.ib(validator=is_a(list), factory=list)

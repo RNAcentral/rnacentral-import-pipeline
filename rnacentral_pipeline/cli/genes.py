@@ -13,6 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+from pathlib import Path
+
 import click
 
 from rnacentral_pipeline.rnacentral.genes import build, write
@@ -32,12 +34,40 @@ def cli():
     default="csv",
     type=click.Choice(write.Format.names(), case_sensitive=False),
 )
+@click.option("--include-genes/--no-genes", default=True)
+@click.option("--include-representative/--no-representatives", default=True)
+@click.option("--include-members/--no-members", default=True)
+@click.option("--include-rejected/--no-rejected", default=True)
+@click.option("--extended-bed/--simple-bed", default=False)
 @click.argument("data_file", type=click.File("r"))
-@click.argument("output", type=click.File("w"))
-def build_genes(data_file, output, format=None):
+@click.argument(
+    "output",
+    default=".",
+    type=click.Path(writable=True, dir_okay=True, file_okay=False),
+)
+def build_genes(
+    data_file,
+    output,
+    format=None,
+    include_genes=None,
+    include_representative=None,
+    include_members=None,
+    include_rejected=None,
+    extended_bed=None,
+):
     """
     Build the genes for the given data file. The file can contain all data for a
     specific assembly.
     """
     data = build.from_json(data_file)
-    write.write(data, write.Format.from_name(format), output)
+    format = write.Format.from_name(format)
+    write.write(
+        data,
+        format,
+        Path(output),
+        include_genes=include_genes,
+        include_representative=include_representative,
+        include_members=include_members,
+        extended_bed=extended_bed,
+        include_rejected=include_rejected,
+    )
