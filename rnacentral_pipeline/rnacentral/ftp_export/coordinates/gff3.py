@@ -13,6 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import logging
 import typing as ty
 from collections import OrderedDict
 
@@ -20,10 +21,10 @@ from gffutils import Feature
 
 from . import data as coord
 
+LOGGER = logging.getLogger(__name__)
 
-def regions_as_features(
-    regions: ty.Iterable[coord.Region],
-) -> ty.Iterable[Feature]:
+
+def regions_as_features(regions: ty.Iterable[coord.Region]) -> ty.Iterable[Feature]:
     """
     Convert the raw entry into a series of gff Features to output.
     """
@@ -90,15 +91,21 @@ def parse(iterable):
     return regions_as_features(coord.parse(iterable))
 
 
-def write_gff_text(features, output):
+def write_gff_text(features, output, allow_no_features=False) -> bool:
+    first_feature = next(features, None)
+    if first_feature is None:
+        if not allow_no_features:
+            raise ValueError("No features written to GFF3 file")
+        LOGGER.warn("No features written to GFF3 file")
+        return False
+
     output.write("##gff-version 3\n")
+    output.write(str(first_feature))
+    output.write("\n")
     for feature in features:
-        seen = True
         output.write(str(feature))
         output.write("\n")
-
-    if not seen:
-        raise ValueError("No features written to GFF3 file")
+    return True
 
 
 def from_file(handle, output):

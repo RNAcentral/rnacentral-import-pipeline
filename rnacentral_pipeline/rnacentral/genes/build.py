@@ -17,6 +17,7 @@ import csv
 import itertools as it
 import json
 import operator as op
+import typing as ty
 
 from rnacentral_pipeline import psql
 
@@ -39,16 +40,19 @@ def split(handle):
         if key[-1] != "rRNA":
             continue
 
-        yield list(locations)
+        yield (key, list(locations))
 
 
-def build(data):
-    for group in data:
-        genes = rrna.build(group)
-        for gene in genes:
-            yield gene
+def build(data) -> ty.Iterable[data.Finalized]:
+    for (key, group) in data:
+        if key[-1] == "rRNA":
+            data = rrna.build(group)
+        else:
+            raise ValueError(f"Cannot build a gene for {key[-1]}")
+
+        yield data
 
 
-def from_json(handle):
+def from_json(handle) -> ty.Iterable[data.Finalized]:
     parts = split(handle)
     return build(parts)

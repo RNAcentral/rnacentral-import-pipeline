@@ -17,9 +17,10 @@ import typing as ty
 
 import attr
 from attr.validators import instance_of as is_a
+
 from intervaltree import IntervalTree
 
-from .data import Locus, LocusMember, UnboundLocation
+from . import data
 
 REP_DBS = {
     "pdbe",
@@ -29,34 +30,19 @@ REP_DBS = {
 }
 
 
-@attr.s()
-class State:
-    tree = attr.ib(validator=is_a(IntervalTree), factory=IntervalTree)
-    rejected: ty.List[UnboundLocation] = attr.ib(validator=is_a(list), factory=list)
-
-    def reject(self, location: UnboundLocation):
-        self.rejected.append(location)
-
-    def overlaps(self, location: UnboundLocation):
-        return self.tree.overlap(location.start, location.stop)
-
-    def add(self, locus: Locus):
-        self.tree.add(locus.as_interval())
-
-
-def should_reject(location: UnboundLocation) -> bool:
-    if "PDBe" in location.databases:
+def should_reject(location: data.UnboundLocation) -> bool:
+    if any(d.lower() in REP_DBS for d in location.databases):
         return False
     return location.qa.has_issue
 
 
-def intervals(locations: ty.Iterable[UnboundLocation]) -> IntervalTree:
-    state = State()
+def intervals(locations: ty.Iterable[data.UnboundLocation]) -> IntervalTree:
+    state = data.State()
     for location in locations:
         if should_reject(location):
             state.reject(location)
             continue
-        locus = Locus.singleton(location)
+        locus = data.Locus.singleton(location)
         current = state.overlaps(location)
         if not current:
             state.add(locus)
@@ -67,7 +53,7 @@ def intervals(locations: ty.Iterable[UnboundLocation]) -> IntervalTree:
     return state
 
 
-def mark_representative(members) -> ty.List[LocusMember]:
+def mark_representative(members) -> ty.List[data.LocusMember]:
     updates = []
     for member in members:
         qa = member.info.qa
@@ -80,10 +66,12 @@ def mark_representative(members) -> ty.List[LocusMember]:
     return updates
 
 
-def build(locations):
+def build(locations) -> data.Finalized:
     state = intervals(locations)
+    locuses = []
     for interval in state.tree:
         locus = interval.data
         updated = mark_representative(locus.members)
         locus = attr.assoc(locus, members=updated)
-        yield locus
+        locuses.append(locus)
+    return data.Finalized(locuses, state.rejected)
