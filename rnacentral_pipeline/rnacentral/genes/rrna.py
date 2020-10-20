@@ -17,7 +17,6 @@ import typing as ty
 
 import attr
 from attr.validators import instance_of as is_a
-
 from intervaltree import IntervalTree
 
 from . import data
@@ -36,42 +35,21 @@ def should_reject(location: data.UnboundLocation) -> bool:
     return location.qa.has_issue
 
 
-def intervals(locations: ty.Iterable[data.UnboundLocation]) -> IntervalTree:
-    state = data.State()
-    for location in locations:
-        if should_reject(location):
-            state.reject(location)
-            continue
-        locus = data.Locus.singleton(location)
-        current = state.overlaps(location)
-        if not current:
-            state.add(locus)
-        elif len(current) > 1:
-            other = [i.data for i in current]
-            current = locus.merge(other)
-            state.add(current)
-    return state
-
-
-def mark_representative(members) -> ty.List[data.LocusMember]:
+def highlight_members(
+    members: ty.List[data.ClusterMember],
+) -> ty.List[data.ClusterMember]:
     updates = []
     for member in members:
         qa = member.info.qa
-        is_representative = False
+        member_type = data.MemberType.member
         if any(d.lower() in REP_DBS for d in member.info.databases):
-            is_representative = True
+            member_type = data.MemberType.highlighted
         elif not qa.has_issue and not member.info.has_introns():
-            is_representative = True
-        updates.append(attr.assoc(member, is_representative=is_representative))
+            member_type = data.MemberType.highlighted
+        updates.append(attr.assoc(member, member_type=member_type))
     return updates
 
 
-def build(locations) -> data.Finalized:
-    state = intervals(locations)
-    locuses = []
-    for interval in state.tree:
-        locus = interval.data
-        updated = mark_representative(locus.members)
-        locus = attr.assoc(locus, members=updated)
-        locuses.append(locus)
-    return data.Finalized(locuses, state.rejected)
+def classify(cluster: data.Cluster) -> ty.List[data.Cluster]:
+    cluster = attr.assoc(cluster, members=highlight_members(cluster.members))
+    return [cluster]

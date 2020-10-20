@@ -15,6 +15,7 @@ limitations under the License.
 
 import json
 import logging
+from functools import lru_cache
 
 import networkx as nx
 import obonet
@@ -50,6 +51,7 @@ def compute_rna_type_tree(ontology, child, parent):
     return tree
 
 
+@lru_cache()
 def rna_type_tree(ontology, child):
     nid = None
     node = None 
