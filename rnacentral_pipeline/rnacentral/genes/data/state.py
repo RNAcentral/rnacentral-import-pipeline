@@ -22,12 +22,35 @@ from intervaltree import Interval, IntervalTree
 from . import Cluster, UnboundLocation
 
 
+@attr.s(frozen=True, auto_attribs=True)
+class StateUpdate:
+    reject: ty.Set[UnboundLocation] = set()
+    ignore: ty.Set[UnboundLocation] = set()
+    new_clusters: ty.List[Cluster] = []
+    old_clusters: ty.List[Cluster] = []
+
+    @classmethod
+    def no_op(cls):
+        return cls(reject={}, ignore={}, new_clusters=[], old_clusters=[])
+
+    def validate(self):
+        for new_cluster in self.new_clusters:
+            new_cluster.validate_members()
+
+
 @attr.s(frozen=True)
 class FinalizedState:
     chromosome = attr.ib(validator=is_a(str))
     clusters: ty.List[Cluster] = attr.ib(validator=is_a(list))
     rejected: ty.List[UnboundLocation] = attr.ib(validator=is_a(list), factory=list)
     ignored: ty.List[UnboundLocation] = attr.ib(validator=is_a(list), factory=list)
+
+    def data_types(self):
+        return [
+            ("genes", self.clusters),
+            ("rejected", self.rejected),
+            ("ignored", self.ignored),
+        ]
 
 
 @attr.s()
@@ -37,27 +60,28 @@ class State:
     rejected: ty.List[UnboundLocation] = attr.ib(validator=is_a(list), factory=list)
     ignored: ty.List[UnboundLocation] = attr.ib(validator=is_a(list), factory=list)
 
+    def overlaps(self, location: UnboundLocation):
+        return self.tree.overlap(location.start, location.stop)
+
     def reject(self, location: UnboundLocation):
         self.rejected.append(location)
-
-    def reject_all(self, locations: UnboundLocation):
-        self.rejected.extend(locations)
 
     def ignore(self, location: UnboundLocation):
         self.ignored.append(location)
 
-    def ignore_all(self, locations: UnboundLocation):
-        self.ignored.extend(locations)
-
-    def overlaps(self, location: UnboundLocation):
-        return self.tree.overlap(location.start, location.stop)
-
     def remove_interval(self, interval: Interval):
         self.tree.remove(interval)
 
-    def add_clusters(self, clusters: ty.List[Cluster]):
-        for cluster in clusters:
-            self.tree.add(cluster.as_interval())
+    def update(self, update):
+        self.rejected.extend(update.reject)
+        self.ignored.extend(update.ignore)
+
+        for old in update.old_clusters:
+            tree.remove(old.as_interval())
+        tree.update(u.as_interval for u in update.new_clusters)
+
+    def has_clusters(self) -> bool:
+        return bool(len(self.tree))
 
     def clusters(self) -> ty.Iterable[Cluster]:
         for interval in self.tree:

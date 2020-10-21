@@ -16,6 +16,7 @@ limitations under the License.
 import csv
 import itertools as it
 import json
+import logging
 import operator as op
 import typing as ty
 
@@ -26,6 +27,8 @@ from rnacentral_pipeline import psql
 from rnacentral_pipeline.databases.sequence_ontology import tree as so_tree
 
 from . import data, rrna
+
+LOGGER = logging.getLogger(__name__)
 
 Key = str
 
@@ -46,6 +49,7 @@ def always_bad_location(location: data.UnboundLocation) -> bool:
             state = location.qa.as_tuple()
             # If the only issue is contamination, it is actually good as we
             # misclassified mito sequences sometimes.
+            LOGGER.debug("State: %s", state)
             return state != (True, False, True, False)
         return True
     return False
@@ -60,43 +64,51 @@ def cluster(handle) -> ty.Iterable[data.State]:
     for (chromosome, locations) in it.groupby(entries, cluster_key):
         state = data.State(chromosome=chromosome)
         for location in locations:
+            LOGGER.debug("Testing %s", location.name)
             if always_ignorable_location(location):
+                LOGGER.debug("Always Ignoring: %s", location.name)
                 state.ignore(location)
                 continue
 
             if always_bad_location(location):
+                LOGGER.debug("Always Rejected: %s", location.name)
                 state.reject(location)
                 continue
 
             locus = data.Locus.singleton(location)
             overlaps = state.overlaps(location)
             if not overlaps:
-                state.add(locus)
+                LOGGER.debug("Add singleton %s", location.name)
+                update = data.StateUpdate(
+                    reject=[], ignore=[], new_clusters=[locus], old_clusers=[]
+                )
+                state.update(update)
             else:
+                logger.debug("Merging into %s", [o.data.name for o in overlaps])
                 other = []
                 for interval in overlaps:
-                    state.remove_interval(interval)
                     other.append(interval.data)
                 locus = locus.merge(other)
-                state.add(locus)
+                update = data.StateUpdate(new_clusters=[locus], old_clusters=[other])
+                state.update(update)
 
         yield state
 
 
-def split_cluster(cluster):
+def split_cluster(cluster: data.Cluster) -> ty.List[data.Cluster]:
     """
     The idea is to split the locus into different locus depending upon RNA type
     and other factors.
     """
-    pass
+    return [cluster]
 
 
-def handle_rfam_only(cluster):
+def handle_rfam_only(cluster) -> data.StateUpdate:
     rfam_only, rest = partition(lambda m: m.info.is_rfam_only(), cluster.members)
     rfam_only = list(rfam_only)
     rest = list(rest)
     if not rfam_only:
-        return (cluster, [], [])
+        return StateUpdate.no_op()
     ignored = []
     rejected = []
     allowed = [m.info for m in rest]
@@ -108,29 +120,39 @@ def handle_rfam_only(cluster):
         else:
             allowed.append(rfam.info)
     updated_cluster = Cluster.from_locations(allowed)
-    return (updated_cluster, ignored, rejected)
+    return StateUpdate(
+        reject=rejected,
+        ignore=ignored,
+        new_clusters=[updated_cluster],
+        old_clusters=[cluster],
+    )
+
+
+def reject_pseudogenes(cluster, pseudo) -> data.StateUpdate:
+    return data.StateUpdate.no_op()
 
 
 def build(
     clusters: ty.Iterable[data.State], pseudogenes: IntervalTree
 ) -> ty.Iterable[data.FinalizedState]:
     for cluster in clusters:
+        if not cluster.has_clusters():
+            yield cluster.finalize()
+            continue
+
         state = data.State(chromosome=cluster.chromosome)
         for cluster in cluster.clusters():
-            cluster_interval = cluster.as_interval()
-            overlaping_pseudo = psuedogenes.overlaps(cluster_interval)
-            if overlaping_pseudo:
-                (cluster, rejected, ignored) = handle_pseudogenes(overlapping_pseudo)
-            split_clusters, misc = split_cluster(cluster)
-            for cluster in split_clusters:
-                cluster, rejected, ignored = handle_rfam_only(cluster)
-                cluster.validate_members()
-                state.reject_all(rejected)
-                state.ignore_all(ignored)
+            update = reject_pseudogenes(cluster, pseudo)
+            state.update(update)
+
+            for cluster in split_cluster(cluster):
+                update = handle_rfam_only(cluster)
+                update.validate()
+                state.update(update)
 
                 if cluster.rna_type.is_a("rRNA"):
-                    clusters = rrna.classify_cluster(cluster)
-                    state.add_clusters(cluster)
+                    update = rrna.classify_cluster(cluster)
+                    state.apply_update(update)
                 else:
                     state.ignore_all(cluster.locations())
         yield state.finalize()

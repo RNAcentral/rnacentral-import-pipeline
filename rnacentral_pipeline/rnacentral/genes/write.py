@@ -47,20 +47,26 @@ class Format(enum.Enum):
         return [x.name for x in cls]
 
 
-def write_csv(rows, output: Path, name: str):
+def write_csv(rows, output: Path, name: str) -> bool:
     out = output / f"{name}.csv"
     with out.open("w") as out:
         writer = csv.writer(out)
+        first = next(rows, None)
+        if first is None:
+            return False
+        writer.writerow(first)
         writer.writerows(rows)
+    return True
 
 
-def write_bed(bed, output: Path, name: str, extended=False):
+def write_bed(bed, output: Path, name: str, extended=False) -> bool:
     out = output / f"{name}.bed"
     with out.open("w") as out:
         write_bed_text(bed, out, extended=extended)
+    return True
 
 
-def write_gff(gff, output: Path, name: str):
+def write_gff(gff, output: Path, name: str) -> bool:
     out = output / f"{name}.gff"
     with out.open("w") as out:
         return write_gff_text(gff, out, allow_no_features=True)
@@ -68,23 +74,22 @@ def write_gff(gff, output: Path, name: str):
 
 def apply_handlers(
     finished: ty.Iterable[data.FinalizedState],
-    locus_handler,
-    rejected_handler,
-    path,
+    handlers,
+    path: Path,
     writer,
+    allowed={"genes", "rejected", "ignored"},
 ):
     written = False
     for finalized in finished:
-        print(finalized)
-        for locus in finalized.clusters:
-            result = locus_handler(locus)
-            locus_written = writer(result, path, "genes")
-            writen = written or locus_written
-
-        for rejected in finalized.rejected:
-            result = rejected_handler(rejected)
-            rejected_written = writer(result, path, "rejected")
-            written = written or rejected_written
+        for (name, data) in finalized.data_types():
+            if name not in allowed:
+                continue
+            if not data:
+                continue
+            handler = handlers[name]
+            result = (handler(d) for d in data)
+            data_written = writer(result, path, name)
+            written = written or data_written
     return written
 
 
@@ -93,44 +98,35 @@ def write(
     format: Format,
     path: Path,
     include_genes=None,
-    include_representative=None,
-    include_members=None,
+    allowed_members=None,
+    allowed_data_types={"genes", "rejected", "ignored"},
     extended_bed=None,
-    include_rejected=False,
 ):
+    writer = None
+    method_name = None
     if format == Format.Csv:
-        locus_method = op.methodcaller(
-            "as_writeable",
-            include_representative=include_representative,
-            include_members=include_members,
-        )
-        rejected_method = op.methodcaller("as_writeable")
-        apply_handlers(data, locus_method, rejected_method, path, write_csv)
-        return True
+        method_name = "as_writeable"
+        writer = write_csv
 
     elif format == Format.Bed:
-        locus_method = op.methodcaller(
-            "as_bed",
-            include_gene=include_genes,
-            include_representative=include_representative,
-            include_members=include_members,
-        )
-        rejected_method = op.methodcaller("as_bed")
+        method_name = "as_bed"
         writer = partial(write_bed, extended=extended_bed)
-        apply_handlers(data, locus_method, rejected_method, path, writer)
-        return True
 
     elif format == Format.Gff:
-        locus_method = op.methodcaller(
-            "as_features",
-            include_gene=include_genes,
-            include_representative=include_representative,
-            include_members=include_members,
-        )
-        rejected_method = op.methodcaller("as_features")
-        written = apply_handlers(data, locus_method, rejected_method, path, write_gff)
-        if not written:
-            raise ValueError("No features of any time written")
-        return True
+        method_name = "as_features"
+        writer = write_gff
 
-    raise ValueError("Cannot write to format: %s" % format)
+    else:
+        raise ValueError("Cannot write to format: %s" % format)
+
+    handlers = {
+        "genes": op.methodcaller(
+            method_name, include_gene=include_genes, allowed_members=allowed_members,
+        ),
+        "rejected": op.methodcaller(method_name),
+        "ignored": op.methodcaller(method_name),
+    }
+    written = apply_handlers(data, handlers, path, writer, allowed=allowed_data_types)
+    if not written:
+        raise ValueError("No features of any type written")
+    return True
