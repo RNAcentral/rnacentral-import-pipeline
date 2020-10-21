@@ -18,6 +18,7 @@ from pathlib import Path
 import click
 
 from rnacentral_pipeline.rnacentral.genes import build, write
+from rnacentral_pipeline.rnacentral.genes.data import MemberType
 
 
 @click.group("genes")
@@ -36,6 +37,7 @@ def cli():
 )
 @click.option("--include-genes/--no-genes", default=True)
 @click.option("--include-representative/--no-representatives", default=True)
+@click.option("--include-ignored/--no-ignored", default=True)
 @click.option("--include-members/--no-members", default=True)
 @click.option("--include-rejected/--no-rejected", default=True)
 @click.option("--extended-bed/--simple-bed", default=False)
@@ -52,6 +54,7 @@ def build_genes(
     include_genes=None,
     include_representative=None,
     include_members=None,
+    include_ignored=None,
     include_rejected=None,
     extended_bed=None,
 ):
@@ -61,13 +64,24 @@ def build_genes(
     """
     data = build.from_json(data_file)
     format = write.Format.from_name(format)
+    allowed_members = set()
+    if include_representative:
+        allowed_members.add(MemberType.highlighted)
+    if include_members:
+        allowed_members.add(MemberType.member)
+
+    allowed_data_types = {"genes"}
+    if include_rejected:
+        allowed_data_types.add("rejected")
+    if include_ignored:
+        allowed_data_types.add("ignored")
+
     write.write(
         data,
         format,
         Path(output),
         include_genes=include_genes,
-        include_representative=include_representative,
-        include_members=include_members,
+        allowed_members=allowed_members,
         extended_bed=extended_bed,
-        include_rejected=include_rejected,
+        allowed_data_types=allowed_data_types,
     )

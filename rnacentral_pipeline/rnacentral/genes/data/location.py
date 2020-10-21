@@ -58,6 +58,7 @@ class UnboundLocation:
     urs_taxid: str
     extent: Extent
     exons: ty.Tuple[Exon]
+    region_name: str
     region_database_id: int
     rna_type: RnaType
     qa: QaInfo
@@ -75,6 +76,7 @@ class UnboundLocation:
             urs_taxid=raw["urs_taxid"],
             extent=Extent.build(raw),
             exons=tuple(sorted(Exon.from_dict(e) for e in raw["exons"])),
+            region_name=raw['region_name'],
             region_database_id=raw["region_id"],
             rna_type=rna_type,
             qa=QaInfo.build(raw["qa"][0]),
@@ -89,6 +91,10 @@ class UnboundLocation:
     @property
     def stop(self):
         return self.extent.stop
+
+    @property
+    def name(self):
+        return self.region_name
 
     def has_introns(self):
         return len(self.exons) > 1
@@ -143,16 +149,16 @@ class UnboundLocation:
                 ),
             )
 
-        def as_writeable(self):
-            return [
-                self.extent.taxid,
-                self.extent.assembly_id,
-                self.locus_name,
-                self.extent.chromosome,
-                self.extent.strand,
-                self.extent.start,
-                self.extent.stop,
-                self.urs_taxid,
-                self.region_database_id,
-                self.is_representative,
-            ]
+    def as_writeable(self):
+        return [
+            self.extent.taxid,
+            self.extent.assembly,
+            self.region_name,
+            self.extent.chromosome,
+            self.extent.strand,
+            self.extent.start,
+            self.extent.stop,
+            self.urs_taxid,
+            self.region_database_id,
+            False,
+        ]

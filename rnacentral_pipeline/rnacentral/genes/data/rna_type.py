@@ -43,7 +43,7 @@ class RnaType:
             or any(p.is_a(so_name) for p in self.ontology_terms)
         )
 
-    def common(self, other: 'RnaType') -> ty.Optional[SoTermInfo]:
+    def common(self, other: "RnaType") -> ty.Optional[SoTermInfo]:
         zipped = zip(self.ontology_terms, other.ontology_terms)
         common = list(it.takewhile(lambda z: z[0] == z[1], zipped))
         if not common:
