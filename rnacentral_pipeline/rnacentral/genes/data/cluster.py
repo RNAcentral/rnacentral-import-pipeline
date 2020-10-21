@@ -140,7 +140,7 @@ class Cluster:
     def __writeable_members__(self, allowed_members) -> ty.List[ClusterMember]:
         return [m for m in self.members if m.member_type in allowed_members]
 
-    def as_writeable(self, allowed_members={MemberType.Highlighted}):
+    def as_writeable(self, allowed_members={MemberType.highlighted}):
         members = self.__writeable_members__(allowed_members)
         for member in members:
             yield [
@@ -157,7 +157,7 @@ class Cluster:
             ]
 
     def as_bed(
-        self, include_gene=True, allowed_members={MemberType.Highlighted}
+        self, include_gene=True, allowed_members={MemberType.highlighted}
     ) -> ty.List[BedEntry]:
         written_gene = not include_gene
         members = self.__writeable_members__(allowed_members)
@@ -172,7 +172,7 @@ class Cluster:
             yield member.as_bed()
 
     def as_features(
-        self, include_gene=True, allowed_members={MemberType.Highlighted}
+        self, include_gene=True, allowed_members={MemberType.highlighted}
     ) -> ty.Iterable[Feature]:
         gene_id = self.id_hash()
         members = self.__writeable_members__(allowed_members)

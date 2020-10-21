@@ -67,11 +67,16 @@ def write_gff(gff, output: Path, name: str):
 
 
 def apply_handlers(
-    finished: ty.Iterable[data.Finalized], locus_handler, rejected_handler, path, writer
+    finished: ty.Iterable[data.FinalizedState],
+    locus_handler,
+    rejected_handler,
+    path,
+    writer,
 ):
     written = False
     for finalized in finished:
-        for locus in finalized.locuses:
+        print(finalized)
+        for locus in finalized.clusters:
             result = locus_handler(locus)
             locus_written = writer(result, path, "genes")
             writen = written or locus_written
@@ -84,7 +89,7 @@ def apply_handlers(
 
 
 def write(
-    data: ty.Iterable[data.Finalized],
+    data: ty.Iterable[data.FinalizedState],
     format: Format,
     path: Path,
     include_genes=None,
