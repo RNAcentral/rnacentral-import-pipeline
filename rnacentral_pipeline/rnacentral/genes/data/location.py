@@ -18,8 +18,10 @@ from collections import OrderedDict
 
 import attr
 from gffutils import Feature
+from intervaltree import Interval
 
 from rnacentral_pipeline.databases.data.regions import Exon
+from rnacentral_pipeline.databases.sequence_ontology import tree as so_tree
 from rnacentral_pipeline.rnacentral.ftp_export.coordinates.bed import BedEntry
 
 from .extent import Extent

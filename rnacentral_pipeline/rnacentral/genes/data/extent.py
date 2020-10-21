@@ -13,6 +13,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import attr
+from attr.validators import instance_of as is_a
+
 from rnacentral_pipeline.databases.data.regions import (CoordinateSystem, Exon,
                                                         SequenceRegion, Strand)
 

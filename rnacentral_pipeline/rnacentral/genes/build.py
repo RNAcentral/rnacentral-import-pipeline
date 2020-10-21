@@ -19,6 +19,7 @@ import json
 import operator as op
 import typing as ty
 
+from intervaltree import IntervalTree
 from more_itertools import partition
 
 from rnacentral_pipeline import psql
@@ -26,20 +27,22 @@ from rnacentral_pipeline.databases.sequence_ontology import tree as so_tree
 
 from . import data, rrna
 
+Key = str
 
-def load(handle):
+
+def load(handle) -> ty.Iterable[data.UnboundLocation]:
     ontology = so_tree.load_ontology(so_tree.REMOTE_ONTOLOGY)
     for entry in psql.json_handler(handle):
         yield data.UnboundLocation.build(entry, ontology)
 
 
-def cluster_key(value: data.UnboundLocation):
+def cluster_key(value: data.UnboundLocation) -> Key:
     return value.extent.chromosome
 
 
-def always_bad_location(location: data.Location):
+def always_bad_location(location: data.UnboundLocation) -> bool:
     if location.qa.has_issue:
-        if location.chromosome == 'MT':
+        if location.extent.chromosome == "MT":
             state = location.qa.as_tuple()
             # If the only issue is contamination, it is actually good as we
             # misclassified mito sequences sometimes.
@@ -48,11 +51,11 @@ def always_bad_location(location: data.Location):
     return False
 
 
-def always_ignorable_location(location: data.UnboundLocation): 
-    return location.insdc_rna_type in {'antisense_RNA', 'lncRNA'}:
+def always_ignorable_location(location: data.UnboundLocation) -> bool:
+    return location.rna_type.insdc in {"antisense_RNA", "lncRNA"}
 
 
-def cluster(handle) -> ty.Iterable(data.State):
+def cluster(handle) -> ty.Iterable[data.State]:
     entries = load(handle)
     for (chromosome, locations) in it.groupby(entries, cluster_key):
         state = data.State(chromosome=chromosome)
@@ -108,26 +111,31 @@ def handle_rfam_only(cluster):
     return (updated_cluster, ignored, rejected)
 
 
-def build(clusters) -> ty.Iterable[data.Finalized]:
-    for (key, cluster) in clusters:
-        final = data.State(chromosome=cluster.chromosome)
+def build(
+    clusters: ty.Iterable[data.State], pseudogenes: IntervalTree
+) -> ty.Iterable[data.FinalizedState]:
+    for cluster in clusters:
+        state = data.State(chromosome=cluster.chromosome)
         for cluster in cluster.clusters():
-            split_clusters, misc = split_cluster(locus)
+            cluster_interval = cluster.as_interval()
+            overlaping_pseudo = psuedogenes.overlaps(cluster_interval)
+            if overlaping_pseudo:
+                (cluster, rejected, ignored) = handle_pseudogenes(overlapping_pseudo)
+            split_clusters, misc = split_cluster(cluster)
             for cluster in split_clusters:
                 cluster, rejected, ignored = handle_rfam_only(cluster)
                 cluster.validate_members()
                 state.reject_all(rejected)
                 state.ignore_all(ignored)
 
-                if cluster.rna_type.is_a('rRNA'):
+                if cluster.rna_type.is_a("rRNA"):
                     clusters = rrna.classify_cluster(cluster)
                     state.add_clusters(cluster)
                 else:
                     state.ignore_all(cluster.locations())
-                else:
         yield state.finalize()
 
 
-def from_json(handle) -> ty.Iterable[data.Finalized]:
+def from_json(handle) -> ty.Iterable[data.FinalizedState]:
     clusters = cluster(handle)
-    return build(clusters)
+    return build(clusters, IntervalTree())

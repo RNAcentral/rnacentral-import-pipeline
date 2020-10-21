@@ -13,10 +13,22 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import typing as ty
+
 import attr
 from attr.validators import instance_of as is_a
+from intervaltree import Interval, IntervalTree
 
-from . import Cluster
+from . import Cluster, UnboundLocation
+
+
+@attr.s(frozen=True)
+class FinalizedState:
+    chromosome = attr.ib(validator=is_a(str))
+    clusters: ty.List[Cluster] = attr.ib(validator=is_a(list))
+    rejected: ty.List[UnboundLocation] = attr.ib(validator=is_a(list), factory=list)
+    ignored: ty.List[UnboundLocation] = attr.ib(validator=is_a(list), factory=list)
+
 
 @attr.s()
 class State:
@@ -48,13 +60,13 @@ class State:
             self.tree.add(cluster.as_interval())
 
     def clusters(self) -> ty.Iterable[Cluster]:
-        for interval in tree:
+        for interval in self.tree:
             yield interval.data
 
-
-@attr.s(frozen=True)
-class FinalizedState:
-    clusters: ty.List[Locus] = attr.ib(validator=is_a(list))
-    rejected: ty.List[UnboundLocation] = attr.ib(validator=is_a(list), factory=list)
-    ignored: ty.List[UnboundLocation] = attr.ib(validator=is_a(list), factory=list)
-
+    def finalize(self) -> FinalizedState:
+        return FinalizedState(
+            chromosome=self.chromosome,
+            clusters=list(self.tree),
+            rejected=self.rejected,
+            ignored=self.ignored,
+        )
