@@ -17,7 +17,12 @@ COPY (
     'identity', max(regions.identity),
     'was_mapped', bool_or(regions.was_mapped),
     'exons', array_agg(distinct exons.*),
-    'qa', array_agg(distinct qa.*)
+    'qa', array_agg(json_build_object(
+      'has_issue', qa.has_issue,
+      'incomplete_sequence', qa.incomplete_sequence,
+      'possible_contamination', qa.possible_contamination,
+      'missing_rfam_match', qa.missing_rfam_match
+    ))
   ) 
 FROM rnc_rna_precomputed pre
 JOIN rnc_sequence_regions regions
