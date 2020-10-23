@@ -21,7 +21,7 @@ from attr.validators import instance_of as is_a
 from attr.validators import optional
 from intervaltree import IntervalTree
 
-from . import Cluster, ClusterMember, LocationInfo
+from . import Cluster, ClusteringKey, ClusterMember, LocationInfo
 
 
 @enum.unique
@@ -63,7 +63,7 @@ class LocationStatus:
 
 @attr.s()
 class State:
-    chromosome = attr.ib(validator=is_a(str))
+    key = attr.ib(validator=is_a(ClusteringKey))
     _tree = attr.ib(validator=is_a(IntervalTree), factory=IntervalTree)
     _locations: ty.Dict[int, LocationStatus] = attr.ib(
         validator=is_a(dict), factory=dict
@@ -84,7 +84,7 @@ class State:
     def ignore_location(self, location: LocationInfo):
         self.__remove_location_from_clusters__(location, (DataType.ignored, None))
 
-    def merge_clusters(self, clusters: ty.List[int], additional=None):
+    def merge_clusters(self, clusters: ty.List[Cluster], additional=None):
         locations = additional or []
         tmp_cluster = Cluster.from_locations(locations)
         new_cluster = tmp_cluster.merge(clusters)
