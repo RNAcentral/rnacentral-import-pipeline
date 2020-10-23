@@ -19,6 +19,7 @@ import click
 
 from rnacentral_pipeline.rnacentral.genes import build, write
 from rnacentral_pipeline.rnacentral.genes.data import MemberType
+from rnacentral_pipeline.rnacentral.genes.data import DataType
 
 
 @click.group("genes")
@@ -70,16 +71,20 @@ def build_genes(
     if include_members:
         allowed_members.add(MemberType.member)
 
-    allowed_data_types = {"genes"}
-    if include_rejected:
-        allowed_data_types.add("rejected")
-    if include_ignored:
-        allowed_data_types.add("ignored")
+    allowed_data_types = DataType.all()
+    if not include_rejected:
+        allowed_data_types.pop(DataType.rejected)
+    if not include_ignored:
+        allowed_data_types.pop(DataType.ignored)
+
+    output = Path(output)
+    if not output.exists():
+        output.mkdir()
 
     write.write(
         data,
         format,
-        Path(output),
+        output,
         include_genes=include_genes,
         allowed_members=allowed_members,
         extended_bed=extended_bed,

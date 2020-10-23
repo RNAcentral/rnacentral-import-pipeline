@@ -91,7 +91,7 @@ def parse(iterable):
     return regions_as_features(coord.parse(iterable))
 
 
-def write_gff_text(features, output, allow_no_features=False) -> bool:
+def write_gff_text(features, output, allow_no_features=False, header=True) -> bool:
     first_feature = next(features, None)
     if first_feature is None:
         if not allow_no_features:
@@ -99,7 +99,8 @@ def write_gff_text(features, output, allow_no_features=False) -> bool:
         LOGGER.warn("No features written to GFF3 file")
         return False
 
-    output.write("##gff-version 3\n")
+    if header:
+        utput.write("##gff-version 3\n")
     output.write(str(first_feature))
     output.write("\n")
     for feature in features:
