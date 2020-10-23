@@ -13,15 +13,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import csv
 import itertools as it
-import json
 import logging
-import operator as op
 import typing as ty
 
 from intervaltree import IntervalTree
-from more_itertools import partition
 
 from rnacentral_pipeline import psql
 from rnacentral_pipeline.databases.sequence_ontology import tree as so_tree
@@ -32,18 +28,20 @@ LOGGER = logging.getLogger(__name__)
 
 Key = str
 
+HIGH_LEVEL_SO_TERMS = {"SSU", "LSU", "5S_rRNA"}
 
-def load(handle) -> ty.Iterable[data.UnboundLocation]:
+
+def load(handle) -> ty.Iterable[data.LocationInfo]:
     ontology = so_tree.load_ontology(so_tree.REMOTE_ONTOLOGY)
     for entry in psql.json_handler(handle):
-        yield data.UnboundLocation.build(entry, ontology)
+        yield data.LocationInfo.build(entry, ontology)
 
 
-def cluster_key(value: data.UnboundLocation) -> Key:
+def cluster_key(value: data.LocationInfo) -> Key:
     return value.extent.chromosome
 
 
-def always_bad_location(location: data.UnboundLocation) -> bool:
+def always_bad_location(location: data.LocationInfo) -> bool:
     if location.qa.has_issue:
         if location.extent.chromosome == "MT":
             state = location.qa.as_tuple()
@@ -55,109 +53,108 @@ def always_bad_location(location: data.UnboundLocation) -> bool:
     return False
 
 
-def always_ignorable_location(location: data.UnboundLocation) -> bool:
+def always_ignorable_location(location: data.LocationInfo) -> bool:
     return location.rna_type.insdc in {"antisense_RNA", "lncRNA"}
 
 
-def cluster(handle) -> ty.Iterable[data.State]:
-    entries = load(handle)
-    for (chromosome, locations) in it.groupby(entries, cluster_key):
+def has_compatible_rna_types(
+    location: data.LocationInfo, cluster: data.Cluster
+) -> bool:
+    rna_types = cluster.rna_types()
+    if not rna_types:
+        raise ValueError("This should be impossible")
+
+    if len(rna_types) != 1:
+        return False
+    rna_type = rna_types.pop()
+    return rna_type.normalized_term == location.rna_type.normalized_term
+
+
+def select_mergable(
+    location: data.LocationInfo, clusters: ty.List[data.Cluster]
+) -> ty.Optional[ty.List[data.Cluster]]:
+    to_merge = []
+    for cluster in clusters:
+        if not cluster.as_interval().overlaps(location.as_interval()):
+            continue
+        if not has_compatible_rna_types(location, cluster):
+            continue
+        to_merge.append(cluster)
+
+    if not to_merge:
+        return None
+    return to_merge
+
+
+def handle_rfam_only(state: data.State, cluster: int):
+    members = state.members_of(cluster)
+    if len(members) == 1:
+        return
+
+    for member in members:
+        if member.location.is_rfam_only():
+            state.reject_location(member)
+
+
+def overlaps_pseudogene(location: data.LocationInfo, pseudo: IntervalTree) -> bool:
+    return pseudo.overlaps(location.as_interval())
+
+
+def build(
+    locations: ty.Iterable[data.LocationInfo], pseudogenes: IntervalTree
+) -> ty.Iterable[data.FinalizedState]:
+    for (chromosome, locations) in it.groupby(locations, cluster_key):
         state = data.State(chromosome=chromosome)
         for location in locations:
+            state.add_location(location)
             LOGGER.debug("Testing %s", location.name)
+
             if always_ignorable_location(location):
                 LOGGER.debug("Always Ignoring: %s", location.name)
-                state.ignore(location)
+                state.ignore_location(location)
                 continue
 
             if always_bad_location(location):
                 LOGGER.debug("Always Rejected: %s", location.name)
-                state.reject(location)
+                state.reject_location(location)
                 continue
 
-            locus = data.Locus.singleton(location)
+            if overlaps_pseudogene(location, pseudogenes):
+                LOGGER.debug("Rejecting Pseudogene: %s", location.name)
+                state.reject_location(location)
+                continue
+
             overlaps = state.overlaps(location)
             if not overlaps:
-                LOGGER.debug("Add singleton %s", location.name)
-                update = data.StateUpdate(
-                    reject=[], ignore=[], new_clusters=[locus], old_clusers=[]
-                )
-                state.update(update)
-            else:
-                logger.debug("Merging into %s", [o.data.name for o in overlaps])
-                other = []
-                for interval in overlaps:
-                    other.append(interval.data)
-                locus = locus.merge(other)
-                update = data.StateUpdate(new_clusters=[locus], old_clusters=[other])
-                state.update(update)
+                LOGGER.debug("Adding singleton cluster of %s", location)
+                state.add_singleton_cluster(location)
+                continue
 
-        yield state
+            possible = [i.data for i in overlaps]
+            to_merge = select_mergable(location, possible)
+            if to_merge is None:
+                LOGGER.debug("Adding singleton cluster of %s", location)
+                state.add_singleton_cluster(location)
+                continue
 
+            LOGGER.debug("Merging into %s", [l.name for l in to_merge])
+            state.merge_clusters(to_merge, additional=[location])
 
-def split_cluster(cluster: data.Cluster) -> ty.List[data.Cluster]:
-    """
-    The idea is to split the locus into different locus depending upon RNA type
-    and other factors.
-    """
-    return [cluster]
-
-
-def handle_rfam_only(cluster) -> data.StateUpdate:
-    rfam_only, rest = partition(lambda m: m.info.is_rfam_only(), cluster.members)
-    rfam_only = list(rfam_only)
-    rest = list(rest)
-    if not rfam_only:
-        return StateUpdate.no_op()
-    ignored = []
-    rejected = []
-    allowed = [m.info for m in rest]
-    for rfam in rfam_only:
-        for other in rest:
-            if rfam.overlaps(other):
-                rejected.append(rfam)
-                break
-        else:
-            allowed.append(rfam.info)
-    updated_cluster = Cluster.from_locations(allowed)
-    return StateUpdate(
-        reject=rejected,
-        ignore=ignored,
-        new_clusters=[updated_cluster],
-        old_clusters=[cluster],
-    )
-
-
-def reject_pseudogenes(cluster, pseudo) -> data.StateUpdate:
-    return data.StateUpdate.no_op()
-
-
-def build(
-    clusters: ty.Iterable[data.State], pseudogenes: IntervalTree
-) -> ty.Iterable[data.FinalizedState]:
-    for cluster in clusters:
-        if not cluster.has_clusters():
-            yield cluster.finalize()
+        if not state.has_clusters():
+            yield state.finalize()
             continue
 
-        state = data.State(chromosome=cluster.chromosome)
-        for cluster in cluster.clusters():
-            update = reject_pseudogenes(cluster, pseudo)
-            state.update(update)
+        for cluster_id in state.clusters():
+            handle_rfam_only(state, cluster_id)
 
-            for cluster in split_cluster(cluster):
-                update = handle_rfam_only(cluster)
-                update.validate()
-                state.update(update)
-
-                if cluster.rna_type.is_a("rRNA"):
-                    update = rrna.classify_cluster(cluster)
-                    state.apply_update(update)
-                else:
-                    state.ignore_all(cluster.locations())
+            members = state.members_of(cluster_id)
+            if any(m.location.rna_type.is_a("rRNA") for m in members):
+                rrna.classify_cluster(state, cluster_id)
+            else:
+                state.ignore_cluster(cluster_id)
         yield state.finalize()
 
 
 def from_json(handle) -> ty.Iterable[data.FinalizedState]:
-    clusters = cluster(handle)
-    return build(clusters, IntervalTree())
+    locations = load(handle)
+    return build(locations, IntervalTree())

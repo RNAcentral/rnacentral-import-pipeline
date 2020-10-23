@@ -13,12 +13,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import typing as ty
-
-import attr
-from attr.validators import instance_of as is_a
-from intervaltree import IntervalTree
-
 from . import data
 
 REP_DBS = {
@@ -29,27 +23,22 @@ REP_DBS = {
 }
 
 
-def should_reject(location: data.UnboundLocation) -> bool:
+def should_reject(location: data.LocationInfo) -> bool:
     if any(d.lower() in REP_DBS for d in location.databases):
         return False
     return location.qa.has_issue
 
 
-def highlight_members(
-    members: ty.List[data.ClusterMember],
-) -> ty.List[data.ClusterMember]:
-    updates = []
-    for member in members:
-        qa = member.info.qa
-        member_type = data.MemberType.member
-        if any(d.lower() in REP_DBS for d in member.info.databases):
-            member_type = data.MemberType.highlighted
-        elif not qa.has_issue and not member.info.has_introns():
-            member_type = data.MemberType.highlighted
-        updates.append(attr.assoc(member, member_type=member_type))
-    return updates
+def should_highlight(member: data.ClusterMember) -> bool:
+    qa = member.location.qa
+    if any(d.lower() in REP_DBS for d in member.location.databases):
+        return True
+    if not qa.has_issue and not member.location.has_introns():
+        return True
+    return False
 
 
-def classify(cluster: data.Cluster) -> ty.List[data.Cluster]:
-    cluster = attr.assoc(cluster, members=highlight_members(cluster.members))
-    return [cluster]
+def classify_cluster(state: data.State, cluster: int):
+    for member in state.members_of(cluster):
+        if should_highlight(member):
+            state.highlight_location(member.location.id)

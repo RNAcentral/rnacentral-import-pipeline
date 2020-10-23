@@ -54,12 +54,12 @@ class QaInfo:
 
 
 @attr.s(auto_attribs=True, frozen=True, slots=True)
-class UnboundLocation:
+class LocationInfo:
+    id: int
     urs_taxid: str
     extent: Extent
     exons: ty.Tuple[Exon]
     region_name: str
-    region_database_id: int
     rna_type: RnaType
     qa: QaInfo
     providing_databases: ty.Tuple[str]
@@ -67,17 +67,13 @@ class UnboundLocation:
 
     @classmethod
     def build(cls, raw, ontology):
-        rna_type = RnaType(
-            insdc=raw["insdc_rna_type"],
-            so_term=raw["so_rna_type"],
-            ontology_terms=so_tree.rna_type_tree(ontology, raw["so_rna_type"]),
-        )
+        rna_type = RnaType.build(raw["insdc_rna_type"], raw["so_rna_type"], ontology)
         return cls(
+            id=raw["region_id"],
             urs_taxid=raw["urs_taxid"],
             extent=Extent.build(raw),
             exons=tuple(sorted(Exon.from_dict(e) for e in raw["exons"])),
-            region_name=raw['region_name'],
-            region_database_id=raw["region_id"],
+            region_name=raw["region_name"],
             rna_type=rna_type,
             qa=QaInfo.build(raw["qa"][0]),
             providing_databases=tuple(raw["providing_databases"]),
@@ -108,9 +104,9 @@ class UnboundLocation:
     def as_bed(self):
         region = self.extent.as_region()
         region = attr.assoc(region, exons=self.exons)
-        return BedEntry(
+        yield BedEntry(
             rna_id=self.urs_taxid,
-            rna_type=self.so_rna_type,
+            rna_type=self.rna_type.so_term,
             databases=",".join(self.providing_databases),
             region=region,
         )
@@ -126,7 +122,7 @@ class UnboundLocation:
             strand=self.extent.string_strand(),
             frame=".",
             attributes=OrderedDict(
-                [("Name", [transcript_name]), ("type", [self.so_rna_type]),]
+                [("Name", [transcript_name]), ("type", [self.rna_type.so_term]),]
             ),
         )
 
@@ -144,13 +140,13 @@ class UnboundLocation:
                     [
                         ("Name", [exon_name]),
                         ("Parent", [transcript_name]),
-                        ("type", [self.so_rna_type]),
+                        ("type", [self.rna_type.so_term]),
                     ]
                 ),
             )
 
     def as_writeable(self):
-        return [
+        yield [
             self.extent.taxid,
             self.extent.assembly,
             self.region_name,
@@ -159,6 +155,6 @@ class UnboundLocation:
             self.extent.start,
             self.extent.stop,
             self.urs_taxid,
-            self.region_database_id,
+            self.id,
             False,
         ]
