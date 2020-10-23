@@ -21,24 +21,15 @@ from intervaltree import IntervalTree
 
 from rnacentral_pipeline import psql
 from rnacentral_pipeline.databases.sequence_ontology import tree as so_tree
-
-from . import data, rrna
+from rnacentral_pipeline.rnacentral.genes import data, rrna
 
 LOGGER = logging.getLogger(__name__)
-
-Key = str
-
-HIGH_LEVEL_SO_TERMS = {"SSU", "LSU", "5S_rRNA"}
 
 
 def load(handle) -> ty.Iterable[data.LocationInfo]:
     ontology = so_tree.load_ontology(so_tree.REMOTE_ONTOLOGY)
     for entry in psql.json_handler(handle):
         yield data.LocationInfo.build(entry, ontology)
-
-
-def cluster_key(value: data.LocationInfo) -> Key:
-    return value.extent.chromosome
 
 
 def always_bad_location(location: data.LocationInfo) -> bool:
@@ -54,7 +45,7 @@ def always_bad_location(location: data.LocationInfo) -> bool:
 
 
 def always_ignorable_location(location: data.LocationInfo) -> bool:
-    return location.rna_type.insdc in {"antisense_RNA", "lncRNA"}
+    return False
 
 
 def has_compatible_rna_types(
@@ -93,7 +84,7 @@ def handle_rfam_only(state: data.State, cluster: int):
 
     for member in members:
         if member.location.is_rfam_only():
-            state.reject_location(member)
+            state.reject_location(member.location)
 
 
 def overlaps_pseudogene(location: data.LocationInfo, pseudo: IntervalTree) -> bool:
@@ -103,8 +94,8 @@ def overlaps_pseudogene(location: data.LocationInfo, pseudo: IntervalTree) -> bo
 def build(
     locations: ty.Iterable[data.LocationInfo], pseudogenes: IntervalTree
 ) -> ty.Iterable[data.FinalizedState]:
-    for (chromosome, locations) in it.groupby(locations, cluster_key):
-        state = data.State(chromosome=chromosome)
+    for (key, locations) in it.groupby(locations, data.ClusteringKey.from_location):
+        state = data.State(key=key)
         for location in locations:
             state.add_location(location)
             LOGGER.debug("Testing %s", location.name)
@@ -137,7 +128,7 @@ def build(
                 state.add_singleton_cluster(location)
                 continue
 
-            LOGGER.debug("Merging into %s", [l.name for l in to_merge])
+            LOGGER.debug("Merging into %s", [c.name for c in to_merge])
             state.merge_clusters(to_merge, additional=[location])
 
         if not state.has_clusters():

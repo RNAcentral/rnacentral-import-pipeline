@@ -57,6 +57,16 @@ class MemberType(enum.Enum):
     member = enum.auto()
 
 
+@attr.s()
+class ClusteringKey:
+    chromosome = attr.ib(validator=is_a(str))
+    strand = attr.ib(validator=is_a(str))
+
+    @classmethod
+    def from_location(cls, location: LocationInfo):
+        return cls(chromosome=location.extent.chromosome, strand=location.extent.strand)
+
+
 @attr.s(auto_attribs=True, frozen=True, slots=True, hash=True)
 class ClusterMember:
     location: LocationInfo
