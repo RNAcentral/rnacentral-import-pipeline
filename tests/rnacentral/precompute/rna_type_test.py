@@ -193,6 +193,7 @@ from .helpers import load_data
     ('URS0000ABD8C6_9606', 'rRNA_primary_transcript'),
     ('URS0000D56C46_9606', 'pre_miRNA'),
     ('URS0000EF7A6A_6945', 'U12_snRNA'),
+    ('URS000075CEC3_9606', 'miRNA'),
 
     # # Not sure SO term
     # ('URS000018B855_1270', 'misc_RNA'),
