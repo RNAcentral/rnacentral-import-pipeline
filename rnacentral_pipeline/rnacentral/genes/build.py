@@ -13,7 +13,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import gc
 import itertools as it
 import logging
 import typing as ty
@@ -96,7 +95,12 @@ def handle_rfam_only(state: data.State, cluster: int):
 
 def overlaps_pseudogene(location: data.LocationInfo, pseudo: IntervalTree) -> bool:
     LOGGER.debug("Checking %s for overlaps to pseudogenes", location.id)
-    return pseudo.overlaps(location.as_interval())
+    overlaps = pseudo.overlaps(location.as_interval())
+    if overlaps:
+        LOGGER.debug("Overlaps %s", overlaps)
+        return True
+    LOGGER.debug("None found")
+    return False
 
 
 def build(
@@ -108,6 +112,7 @@ def build(
         for location in locations:
             LOGGER.debug("Testing %s", location.id)
             state.add_location(location)
+            LOGGER.debug("Lengths, locations: %i, tree: %i, clusters: %i", *state.lengths())
 
             if always_ignorable_location(location):
                 LOGGER.debug("Always Ignoring: %s", location.id)

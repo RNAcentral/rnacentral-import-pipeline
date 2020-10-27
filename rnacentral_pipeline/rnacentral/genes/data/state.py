@@ -101,21 +101,19 @@ class State:
         if cluster_id not in self._clusters:
             raise ValueError(f"Unknown cluster {cluster_id}")
 
+        if location.id not in self._locations:
+            raise ValueError(f"Unknown location {location}")
+
         cluster = self._clusters[cluster_id]
-        del self._clusters[cluster_id]
         if cluster.as_interval() not in self._tree:
             raise ValueError(f"Cluster {cluster} is not indexed")
         self._tree.remove(cluster.as_interval())
-        new_cluster = cluster.add_location(location)
-        for member in new_cluster.members:
-            location = member.location
-            assert location.id in self._locations, "Unknown location {location}"
-            del self._locations[location.id]
-            self._locations[location.id] = LocationStatus(
-                location, DataType.clustered, new_cluster.id
-            )
-        self._clusters[new_cluster.id] = new_cluster
-        self._tree.add(new_cluster.as_interval())
+        cluster.add_location(location)
+        self._locations[location.id] = LocationStatus(
+            location, DataType.clustered, cluster.id
+        )
+        self._tree.add(cluster.as_interval())
+        assert len(self._tree) == len(self._clusters)
 
     def merge_clusters(self, clusters: ty.List[Cluster]) -> int:
         assert len(clusters) > 1
@@ -143,6 +141,7 @@ class State:
             )
         assert new_cluster.id in self._clusters
         assert new_cluster.as_interval() in self._tree
+        assert len(self._tree) == len(self._clusters)
         return new_cluster.id
 
     def add_singleton_cluster(self, location: LocationInfo):
@@ -256,6 +255,9 @@ class State:
             if info.data not in self._clusters:
                 raise ValueError("Location %s is in missing cluster", info)
 
+    def lengths(self):
+        return (len(self._locations), len(self._tree), len(self._clusters))
+
     def __remove_location_from_clusters__(self, location: LocationInfo, new_status):
         if location.id not in self._locations:
             raise ValueError(f"Unknown location: {location}")
@@ -282,3 +284,4 @@ class State:
                 self._tree.add(new_cluster.as_interval())
         else:
             raise ValueError(f"Unknown status {status} for {location}")
+        assert len(self._tree) == len(self._clusters)
