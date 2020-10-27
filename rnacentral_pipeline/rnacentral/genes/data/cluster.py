@@ -138,8 +138,8 @@ class Cluster:
         return attr.assoc(self, members=kept, extent=extent)
 
     def add_location(self, location: LocationInfo) -> "Cluster":
-        locations = [m.location for m in self.members] + [location]
-        return self.__class__.from_locations(locations)
+        self.members.append(ClusterMember.from_location(location))
+        self.extent = self.extent.merge(location.extent)
 
     def highlight_location(self, location: LocationInfo) -> "Cluster":
         updated = []
