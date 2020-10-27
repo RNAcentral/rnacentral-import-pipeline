@@ -32,6 +32,7 @@ class Extent:
 
     @classmethod
     def build(cls, raw):
+        assert raw['region_start'] < raw['region_stop']
         return cls(
             assembly=raw["assembly_id"],
             taxid=raw["taxid"],
@@ -52,9 +53,11 @@ class Extent:
         assert other.taxid == self.taxid
         assert other.strand == self.strand
         assert other.chromosome == self.chromosome
-        return attr.assoc(
+        updated = attr.assoc(
             self, start=min(self.start, other.start), stop=max(self.stop, other.stop)
         )
+        assert updated.start < updated.stop
+        return updated
 
     def as_region(self):
         return SequenceRegion(

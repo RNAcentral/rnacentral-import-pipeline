@@ -18,6 +18,7 @@ import hashlib
 import operator as op
 import typing as ty
 import uuid
+import logging
 from collections import OrderedDict
 
 import attr
@@ -25,10 +26,13 @@ from attr.validators import instance_of as is_a
 from gffutils import Feature
 from intervaltree import Interval
 
+from rnacentral_pipeline.databases.helpers.hashes import crc64
 from rnacentral_pipeline.rnacentral.ftp_export.coordinates.bed import BedEntry
 
 from .extent import Extent
 from .location import LocationInfo
+
+LOGGER = logging.getLogger(__name__)
 
 
 class EmptyCluster(Exception):
@@ -60,7 +64,7 @@ class MemberType(enum.Enum):
 @attr.s()
 class ClusteringKey:
     chromosome = attr.ib(validator=is_a(str))
-    strand = attr.ib(validator=is_a(str))
+    strand = attr.ib(validator=is_a(int))
 
     @classmethod
     def from_location(cls, location: LocationInfo):
@@ -122,7 +126,20 @@ class Cluster:
         return cls(extent=extent, members=members,)
 
     def as_interval(self) -> Interval:
-        return Interval(self.extent.start, self.extent.stop, self)
+        return Interval(self.extent.start, self.extent.stop, self.id)
+
+    def remove_location(self, location: LocationInfo) -> ty.Optional["Cluster"]:
+        kept = [m for m in self.members if m.location.id != location.id]
+        if len(kept) == 0:
+            return None
+        extent = kept[0].extent
+        for member in kept[1:]:
+            extent = extent.merge(member.extent)
+        return attr.assoc(self, members=kept, extent=extent)
+
+    def add_location(self, location: LocationInfo) -> "Cluster":
+        locations = [m.location for m in self.members] + [location]
+        return self.__class__.from_locations(locations)
 
     def highlight_location(self, location: LocationInfo) -> "Cluster":
         updated = []
@@ -134,12 +151,11 @@ class Cluster:
 
         return attr.evolve(self, members=updated)
 
-    def merge(self, other: ty.List["Cluster"]) -> "Cluster":
+    def merge(self, cluster: "Cluster") -> "Cluster":
         extent = self.extent
         merged_members = set(self.members)
-        for cluster in other:
-            extent.merge(cluster.extent)
-            merged_members.update(cluster.members)
+        extent.merge(cluster.extent)
+        merged_members.update(cluster.members)
 
         members = []
         sorted_members = sorted(merged_members, key=op.attrgetter("extent"))
@@ -166,8 +182,8 @@ class Cluster:
     def cluster_name(self):
         return self.extent.region_name(self.id_hash())
 
-    def remove_member(self, location):
-        pass
+    def cluster_hash(self):
+        return crc64(self.cluster_name())
 
     def validate_members(self):
         if not self.members:
@@ -186,13 +202,14 @@ class Cluster:
         members = self.__writeable_members__(allowed_members)
         for member in members:
             yield [
-                self.extent.taxid,
                 self.extent.assembly,
                 self.cluster_name(),
+                self.cluster_hash(),
                 self.extent.chromosome,
                 self.extent.strand,
                 self.extent.start,
                 self.extent.stop,
+                len(self.members),
                 member.location.urs_taxid,
                 member.location.id,
                 member.member_type.name,
@@ -233,3 +250,6 @@ class Cluster:
                 if feature.featuretype == "transcript":
                     feature.attributes["Parent"] = [gene_id]
                 yield feature
+
+    def __len__(self):
+        return len(self.members)
