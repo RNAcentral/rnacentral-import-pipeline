@@ -13,6 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import gc
 import itertools as it
 import logging
 import typing as ty
@@ -29,7 +30,8 @@ LOGGER = logging.getLogger(__name__)
 def load(handle) -> ty.Iterable[data.LocationInfo]:
     ontology = so_tree.load_ontology(so_tree.REMOTE_ONTOLOGY)
     for entry in psql.json_handler(handle):
-        yield data.LocationInfo.build(entry, ontology)
+        location = data.LocationInfo.build(entry, ontology)
+        yield location
 
 
 def always_bad_location(location: data.LocationInfo) -> bool:
@@ -65,8 +67,9 @@ def select_mergable(
     location: data.LocationInfo, clusters: ty.List[data.Cluster]
 ) -> ty.Optional[ty.List[data.Cluster]]:
     to_merge = []
+    target = location.as_interval()
     for cluster in clusters:
-        if not cluster.as_interval().overlaps(location.as_interval()):
+        if not cluster.as_interval().overlaps(target):
             continue
         if not has_compatible_rna_types(location, cluster):
             continue
@@ -78,16 +81,21 @@ def select_mergable(
 
 
 def handle_rfam_only(state: data.State, cluster: int):
+    LOGGER.debug("Checking cluster %i for Rfam only exclusions", cluster)
     members = state.members_of(cluster)
     if len(members) == 1:
+        LOGGER.debug("Singleton cluster has no Rfam")
         return
 
     for member in members:
+        LOGGER.debug("Checking %s for Rfam exclusions", member.location.id)
         if member.location.is_rfam_only():
+            LOGGER.debug("Rejecting %s as it is Rfam only", member.location.id)
             state.reject_location(member.location)
 
 
 def overlaps_pseudogene(location: data.LocationInfo, pseudo: IntervalTree) -> bool:
+    LOGGER.debug("Checking %s for overlaps to pseudogenes", location.id)
     return pseudo.overlaps(location.as_interval())
 
 
@@ -95,47 +103,56 @@ def build(
     locations: ty.Iterable[data.LocationInfo], pseudogenes: IntervalTree
 ) -> ty.Iterable[data.FinalizedState]:
     for (key, locations) in it.groupby(locations, data.ClusteringKey.from_location):
+        LOGGER.debug("Building clusters for %s", key)
         state = data.State(key=key)
         for location in locations:
+            LOGGER.debug("Testing %s", location.id)
             state.add_location(location)
-            LOGGER.debug("Testing %s", location.name)
 
             if always_ignorable_location(location):
-                LOGGER.debug("Always Ignoring: %s", location.name)
+                LOGGER.debug("Always Ignoring: %s", location.id)
                 state.ignore_location(location)
                 continue
 
             if always_bad_location(location):
-                LOGGER.debug("Always Rejected: %s", location.name)
+                LOGGER.debug("Always Rejected: %s", location.id)
                 state.reject_location(location)
                 continue
 
             if overlaps_pseudogene(location, pseudogenes):
-                LOGGER.debug("Rejecting Pseudogene: %s", location.name)
+                LOGGER.debug("Rejecting Pseudogene: %s", location.id)
                 state.reject_location(location)
                 continue
 
             overlaps = state.overlaps(location)
             if not overlaps:
-                LOGGER.debug("Adding singleton cluster of %s", location)
+                LOGGER.debug("Adding singleton cluster of %s", location.id)
                 state.add_singleton_cluster(location)
                 continue
 
-            possible = [i.data for i in overlaps]
-            to_merge = select_mergable(location, possible)
+            to_merge = select_mergable(location, overlaps)
             if to_merge is None:
-                LOGGER.debug("Adding singleton cluster of %s", location)
+                LOGGER.debug("Adding singleton cluster of %s", location.id)
                 state.add_singleton_cluster(location)
                 continue
+            elif len(to_merge) == 1:
+                cluster = to_merge[0]
+                LOGGER.debug("Adding location %i to cluster %i", location.id, cluster.id)
+                state.add_to_cluster(location, cluster.id)
+            else:
+                LOGGER.debug("Merging into %s", [c.id for c in to_merge])
+                cluster_id = state.merge_clusters(to_merge)
+                state.add_to_cluster(location, cluster_id)
 
-            LOGGER.debug("Merging into %s", [c.name for c in to_merge])
-            state.merge_clusters(to_merge, additional=[location])
-
+        state.validate()
+        LOGGER.debug("Done building clusters for %s", key)
         if not state.has_clusters():
+            LOGGER.debug("No clusters to analyze")
             yield state.finalize()
             continue
 
         for cluster_id in state.clusters():
+            LOGGER.debug("Analyzing cluster %i", cluster_id)
             handle_rfam_only(state, cluster_id)
 
             members = state.members_of(cluster_id)

@@ -99,7 +99,7 @@ class LocationInfo:
         return self.databases == ("Rfam",)
 
     def as_interval(self) -> Interval:
-        return Interval(self.extent.start, self.extent.stop, self)
+        return Interval(self.extent.start, self.extent.stop, self.id)
 
     def as_bed(self):
         region = self.extent.as_region()
@@ -145,16 +145,10 @@ class LocationInfo:
                 ),
             )
 
-    def as_writeable(self):
+    def as_writeable(self, status=None):
         yield [
-            self.extent.taxid,
             self.extent.assembly,
-            self.region_name,
-            self.extent.chromosome,
-            self.extent.strand,
-            self.extent.start,
-            self.extent.stop,
-            self.urs_taxid,
             self.id,
-            False,
+            self.urs_taxid,
+            status,
         ]

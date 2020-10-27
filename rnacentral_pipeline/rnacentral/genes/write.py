@@ -16,6 +16,7 @@ limitations under the License.
 import csv
 import enum
 import itertools as it
+import logging
 import operator as op
 import typing as ty
 from functools import partial
@@ -25,8 +26,9 @@ from rnacentral_pipeline.rnacentral.ftp_export.coordinates.bed import \
     write_bed_text
 from rnacentral_pipeline.rnacentral.ftp_export.coordinates.gff3 import \
     write_gff_text
+from rnacentral_pipeline.rnacentral.genes import data
 
-from . import data
+LOGGER = logging.getLogger(__name__)
 
 
 @enum.unique
@@ -49,24 +51,28 @@ class Format(enum.Enum):
 
 def write_csv(rows, output, data_type: data.DataType, **kwargs) -> bool:
     out = output / f"{data_type.name}.csv"
-    with out.open("a") as out:
-        writer = csv.writer(out)
+    with out.open("a") as handle:
+        writer = csv.writer(handle)
         rows = list(it.chain.from_iterable(rows))
         writer.writerows(rows)
     return True
 
 
-def write_bed(bed, output: Path, data_type: data.DataType, extended=False, **kwargs) -> bool:
+def write_bed(
+    bed, output: Path, data_type: data.DataType, extended=False, **kwargs
+) -> bool:
     out = output / f"{data_type.name}.bed"
-    with out.open("a") as out:
-        write_bed_text(it.chain.from_iterable(bed), out, extended=extended)
+    with out.open("a") as handle:
+        write_bed_text(it.chain.from_iterable(bed), handle, extended=extended)
     return True
 
 
 def write_gff(gff, output: Path, data_type: data.DataType, header=True) -> bool:
     out = output / f"{data_type.name}.gff"
-    with out.open("a") as out:
-        return write_gff_text(it.chain.from_iterable(gff), out, header=header, allow_no_features=True)
+    with out.open("a") as handle:
+        return write_gff_text(
+            it.chain.from_iterable(gff), handle, header=header, allow_no_features=True
+        )
 
 
 def write(
@@ -83,7 +89,9 @@ def write(
     for result in results:
         for (name, locations) in result.data_types():
             if name not in allowed_data_types:
-                LOGGER.debug("Skipping %s/%s since it is ignored", result.chromosome, name.name)
+                LOGGER.debug(
+                    "Skipping %s/%s since it is ignored", result.chromosome, name.name
+                )
                 continue
 
             if not data:
@@ -95,21 +103,29 @@ def write(
             if format == Format.Csv:
                 kwargs = {}
                 if name == data.DataType.clustered:
-                    kwargs['allowed_members'] = allowed_members
-                method = op.methodcaller('as_writeable', **kwargs)
+                    kwargs["allowed_members"] = allowed_members
+                else:
+                    kwargs['status'] = name.name
+                method = op.methodcaller("as_writeable", **kwargs)
                 writer = write_csv
 
             elif format == Format.Bed:
                 kwargs = {}
                 if name == data.DataType.clustered:
-                    kwargs = {'allowed_members': allowed_members, 'include_gene': include_genes}
+                    kwargs = {
+                        "allowed_members": allowed_members,
+                        "include_gene": include_genes,
+                    }
                 method = op.methodcaller("as_bed", **kwargs)
                 writer = partial(write_bed, extended=extended_bed)
 
             elif format == Format.Gff:
                 kwargs = {}
                 if name == data.DataType.clustered:
-                    kwargs = {'allowed_members': allowed_members, 'include_gene': include_genes}
+                    kwargs = {
+                        "allowed_members": allowed_members,
+                        "include_gene": include_genes,
+                    }
                 method = op.methodcaller("as_features", **kwargs)
                 writer = partial(write_gff, header=first)
             else:
