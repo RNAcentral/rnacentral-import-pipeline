@@ -15,10 +15,9 @@ limitations under the License.
 
 import enum
 import hashlib
-import operator as op
+import logging
 import typing as ty
 import uuid
-import logging
 from collections import OrderedDict
 
 import attr
@@ -31,6 +30,7 @@ from rnacentral_pipeline.rnacentral.ftp_export.coordinates.bed import BedEntry
 
 from .extent import Extent
 from .location import LocationInfo
+from .rna_type import RnaType
 
 LOGGER = logging.getLogger(__name__)
 
@@ -71,24 +71,116 @@ class ClusteringKey:
         return cls(chromosome=location.extent.chromosome, strand=location.extent.strand)
 
 
-@attr.s(auto_attribs=True, frozen=True, slots=True, hash=True)
+@attr.s(slots=True)
 class ClusterMember:
-    location: LocationInfo
-    member_type: MemberType = MemberType.member
+    location_id = attr.ib(validator=is_a(int))
+    rna_type = attr.ib(validator=is_a(RnaType))
+    extent = attr.ib(validator=is_a(Extent))
+    member_type = attr.ib(validator=is_a(MemberType))
 
     @classmethod
-    def from_location(cls, location: LocationInfo):
-        return cls(location=location)
+    def from_location(
+        cls, location: LocationInfo, member_type=MemberType.member
+    ) -> "ClusterMember":
+        return cls(
+            location_id=location.id,
+            rna_type=location.rna_type,
+            extent=location.extent,
+            member_type=member_type,
+        )
 
-    @property
-    def extent(self):
-        return self.location.extent
+    @classmethod
+    def from_member(
+        cls, member: "ClusterMember", member_type=MemberType.member
+    ) -> "ClusterMember":
+        return cls(
+            location_id=member.location_id,
+            rna_type=member.rna_type,
+            extent=member.extent,
+            member_type=member_type,
+        )
+
+
+@attr.s(slots=True)
+class Cluster:
+    extent: Extent = attr.ib(validator=is_a(Extent))
+    _members: ty.Dict[int, ClusterMember] = attr.ib(validator=is_a(dict), factory=dict)
+    id: int = attr.ib(validator=is_a(int), factory=next_id)
+
+    @classmethod
+    def from_locations(cls, locations: ty.List[LocationInfo]) -> "Cluster":
+        if not locations:
+            raise ValueError("Cannot build with empty members")
+
+        members = {l.id: ClusterMember.from_location(l) for l in locations}
+        if len(members) != len(locations):
+            raise ValueError("Cannot build cluster with duplicate locations")
+
+        if len(locations) == 1:
+            return cls(extent=locations[0].extent, members=members)
+
+        extent = locations[0].extent
+        for location in locations[1:]:
+            extent = extent.merge(location.extent)
+        return cls(extent=extent, members=members,)
 
     def as_interval(self) -> Interval:
-        return Interval(self.location.start, self.location.stop, self)
+        return Interval(self.extent.start, self.extent.stop, self.id)
 
-    def overlaps(self, other: "ClusterMember") -> bool:
-        return self.as_interval().overlaps(other.as_interval())
+    def remove_location(self, location: LocationInfo):
+        if location.id not in self._members:
+            raise ValueError(f"Location {location} not part of cluster")
+
+        if len(self._members) == 1:
+            raise ValueError("Cannot create empty cluster")
+
+        del self._members[location.id]
+        first = next(iter(self._members.values()))
+        self.extent = first.extent
+        for member in self._members.values():
+            self.extent = self.extent.merge(member.extent)
+
+    def add_location(self, location: LocationInfo):
+        if location.id in self._members:
+            raise ValueError(f"Cannot add duplicate location {location}")
+
+        self._members[location.id] = ClusterMember.from_location(location)
+        self.extent = self.extent.merge(location.extent)
+
+    def highlight_location(self, location: LocationInfo):
+        if location.id not in self._members:
+            raise ValueError(f"Unknown location {location}")
+
+        self._members[location.id].member_type = MemberType.highlighted
+
+    def merge(self, cluster: "Cluster"):
+        for lid in self._members.keys():
+            self._members[lid].member_type = MemberType.member
+
+        for lid, member in cluster._members.items():
+            if lid in self._members:
+                raise ValueError(f"Illegal state, location {lid} in two clusters")
+            self._members[lid] = ClusterMember.from_member(member)
+            self.extent = self.extent.merge(member.extent)
+
+    def rna_types(self) -> ty.Set[RnaType]:
+        return {m.rna_type for m in self._members.values()}
+
+    def location_ids(self) -> ty.List[int]:
+        return list(self._members.keys())
+
+    def __len__(self):
+        return len(self._members)
+
+
+@attr.s(frozen=True, slots=True)
+class WriteableClusterMember:
+    location = attr.ib(validator=is_a(LocationInfo))
+    member_type = attr.ib(validator=is_a(MemberType))
+
+    @classmethod
+    def build(cls, member: ClusterMember, location: LocationInfo) -> "WriteableClusterMember":
+        return cls(location=location, member_type=member.member_type)
 
     def as_bed(self) -> ty.Iterable[BedEntry]:
         yield from self.location.as_bed()
@@ -105,64 +197,18 @@ class ClusterMember:
         return self.location.writeable()
 
 
-@attr.s(slots=True)
-class Cluster:
+@attr.s(slots=True, frozen=True)
+class WriteableCluster:
     extent: Extent = attr.ib(validator=is_a(Extent))
-    members: ty.List[ClusterMember] = attr.ib(validator=is_a(list), factory=list)
-    id: int = attr.ib(validator=is_a(int), factory=next_id)
+    members: ty.Set[WriteableClusterMember] = attr.ib(validator=is_a(set), factory=set)
 
     @classmethod
-    def from_locations(cls, locations: ty.List[LocationInfo]) -> "Cluster":
-        if not locations:
-            raise ValueError("Cannot build with empty members")
-
-        members = [ClusterMember.from_location(l) for l in locations]
-        if len(locations) == 1:
-            return cls(extent=locations[0].extent, members=members)
-        extent = locations[0].extent
-        for location in locations[1:]:
-            extent = extent.merge(location.extent)
-            members.append(ClusterMember.from_location(location))
-        return cls(extent=extent, members=members,)
-
-    def as_interval(self) -> Interval:
-        return Interval(self.extent.start, self.extent.stop, self.id)
-
-    def remove_location(self, location: LocationInfo) -> ty.Optional["Cluster"]:
-        kept = [m for m in self.members if m.location.id != location.id]
-        if len(kept) == 0:
-            return None
-        extent = kept[0].extent
-        for member in kept[1:]:
-            extent = extent.merge(member.extent)
-        return attr.assoc(self, members=kept, extent=extent)
-
-    def add_location(self, location: LocationInfo) -> "Cluster":
-        self.members.append(ClusterMember.from_location(location))
-        self.extent = self.extent.merge(location.extent)
-
-    def highlight_location(self, location: LocationInfo) -> "Cluster":
-        updated = []
-        for member in self.members:
-            if member.location == location:
-                updated.append(attr.evolve(member, member_type=MemberType.highlighted))
-            else:
-                updated.append(member)
-
-        return attr.evolve(self, members=updated)
-
-    def merge(self, cluster: "Cluster") -> "Cluster":
-        extent = self.extent
-        merged_members = set(self.members)
-        extent.merge(cluster.extent)
-        merged_members.update(cluster.members)
-
-        members = []
-        sorted_members = sorted(merged_members, key=op.attrgetter("extent"))
-        for member in sorted_members:
-            members.append(attr.assoc(member, member_type=MemberType.member))
-
-        return Cluster(extent=extent, members=members)
+    def build(cls, cluster: Cluster, mapping: ty.Dict[int, LocationInfo]) -> "WriteableCluster":
+        members = set()
+        for lid, member in cluster._members.items():
+            location = mapping[lid]
+            members.add(WriteableClusterMember.build(member, location))
+        return cls(extent=cluster.extent, members=members)
 
     def id_hash(self):
         ids = {m.location.urs_taxid for m in self.members}
@@ -175,27 +221,13 @@ class Cluster:
     def name(self):
         return self.cluster_name()
 
-    def rna_types(self):
-        types = {m.location.rna_type for m in self.members}
-        return types
-
     def cluster_name(self):
         return self.extent.region_name(self.id_hash())
 
     def cluster_hash(self):
         return crc64(self.cluster_name())
 
-    def validate_members(self):
-        if not self.members:
-            raise EmptyCluster(self)
-        if len(self.members) == 1:
-            return True
-        return True
-
-    def locations(self) -> ty.List[LocationInfo]:
-        return [m.location for m in self.members]
-
-    def __writeable_members__(self, allowed_members) -> ty.List[ClusterMember]:
+    def __writeable_members__(self, allowed_members) -> ty.List[WriteableClusterMember]:
         return [m for m in self.members if m.member_type in allowed_members]
 
     def as_writeable(self, allowed_members={MemberType.highlighted}):

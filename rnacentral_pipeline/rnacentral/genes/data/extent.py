@@ -20,9 +20,8 @@ from rnacentral_pipeline.databases.data.regions import (CoordinateSystem, Exon,
                                                         SequenceRegion, Strand)
 
 
-@attr.s(frozen=True, slots=True)
+@attr.s(frozen=True, slots=True, hash=True)
 class Extent:
-    region_name = attr.ib(validator=is_a(str))
     assembly = attr.ib(validator=is_a(str))
     taxid = attr.ib(validator=is_a(int))
     chromosome = attr.ib(validator=is_a(str))
@@ -31,7 +30,7 @@ class Extent:
     stop = attr.ib(validator=is_a(int))
 
     @classmethod
-    def build(cls, raw):
+    def build(cls, raw) -> "Extent":
         assert raw['region_start'] < raw['region_stop']
         return cls(
             assembly=raw["assembly_id"],
@@ -42,7 +41,7 @@ class Extent:
             stop=raw["region_stop"],
         )
 
-    def string_strand(self):
+    def string_strand(self) -> str:
         return Strand.build(self.strand).display_string()
 
     def region_name(self, primary) -> str:
@@ -59,7 +58,7 @@ class Extent:
         assert updated.start < updated.stop
         return updated
 
-    def as_region(self):
+    def as_region(self) -> SequenceRegion:
         return SequenceRegion(
             assembly_id=self.assembly,
             chromosome=self.chromosome,
