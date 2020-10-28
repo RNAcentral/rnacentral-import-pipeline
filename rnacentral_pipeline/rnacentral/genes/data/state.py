@@ -23,8 +23,8 @@ from attr.validators import optional
 from intervaltree import IntervalTree
 
 from rnacentral_pipeline.rnacentral.genes.data import (Cluster, ClusteringKey,
-                                                       ClusterMember,
-                                                       LocationInfo)
+                                                       LocationInfo,
+                                                       WriteableCluster)
 
 LOGGER = logging.getLogger(__name__)
 
@@ -47,7 +47,7 @@ class DataType(enum.Enum):
 @attr.s(frozen=True)
 class FinalizedState:
     key = attr.ib(validator=is_a(ClusteringKey))
-    clusters: ty.List[Cluster] = attr.ib(validator=is_a(list))
+    clusters: ty.List[WriteableCluster] = attr.ib(validator=is_a(list))
     rejected: ty.List[LocationInfo] = attr.ib(validator=is_a(list), factory=list)
     ignored: ty.List[LocationInfo] = attr.ib(validator=is_a(list), factory=list)
 
@@ -90,14 +90,16 @@ class State:
 
     def reject_location(self, location: LocationInfo):
         LOGGER.debug("Rejecting location %s", location.id)
-        self.__remove_location_from_clusters__(location, (DataType.rejected, None))
+        self.__remove_location_from_clusters__(location, DataType.rejected)
+        assert len(self._clusters) == len(self._tree)
 
     def ignore_location(self, location: LocationInfo):
         LOGGER.debug("Ignoring location %s", location.id)
-        self.__remove_location_from_clusters__(location, (DataType.ignored, None))
+        self.__remove_location_from_clusters__(location, DataType.ignored)
+        assert len(self._clusters) == len(self._tree)
 
     def add_to_cluster(self, location: LocationInfo, cluster_id: int):
-        LOGGER.debug("Adding location %i to cluster %i", location.id, cluster_id)
+        LOGGER.debug("Updating cluster %i with location %i", cluster_id, location.id)
         if cluster_id not in self._clusters:
             raise ValueError(f"Unknown cluster {cluster_id}")
 
@@ -105,43 +107,53 @@ class State:
             raise ValueError(f"Unknown location {location}")
 
         cluster = self._clusters[cluster_id]
-        if cluster.as_interval() not in self._tree:
+        del self._clusters[cluster_id]
+        interval = cluster.as_interval()
+        if interval not in self._tree:
             raise ValueError(f"Cluster {cluster} is not indexed")
-        self._tree.remove(cluster.as_interval())
+        self._tree.remove(interval)
+        assert len(self._clusters) == len(self._tree)
+
         cluster.add_location(location)
         self._locations[location.id] = LocationStatus(
             location, DataType.clustered, cluster.id
         )
+        self._clusters[cluster.id] = cluster
         self._tree.add(cluster.as_interval())
-        assert len(self._tree) == len(self._clusters)
+        if len(self._tree) != len(self._clusters):
+            raise ValueError(f"Tree and cluster mismatch {len(self._tree)} vs {len(self._clusters)}")
 
     def merge_clusters(self, clusters: ty.List[Cluster]) -> int:
         assert len(clusters) > 1
-        LOGGER.debug("Merging clusters: %s", [c.id for c in clusters])
         new_cluster = clusters[0]
+        if new_cluster.id not in self._clusters:
+            raise ValueError(f"Unknown cluster {new_cluster}")
+        if new_cluster.as_interval() not in self._tree:
+            raise ValueError(f"Unindexed cluster {new_cluster}")
+        del self._clusters[new_cluster.id]
+        self._tree.remove(new_cluster.as_interval())
+
         for cluster in clusters[1:]:
-            assert cluster.id != new_cluster.id
+            LOGGER.debug("Merging cluster {cluster.id} into {new_cluster.id}")
             if cluster.id not in self._clusters:
                 raise ValueError(f"Unknown cluster {cluster}")
             if cluster.as_interval() not in self._tree:
                 raise ValueError(f"Unindexed cluster {cluster}")
-            new_cluster = new_cluster.merge(cluster)
+            new_cluster.merge(cluster)
             del self._clusters[cluster.id]
             self._tree.remove(cluster.as_interval())
-
+            for lid in cluster._members.keys():
+                if lid not in self._locations:
+                    raise ValueError(f"Unknown location {lid} in cluster {cluster}")
+                info = self._locations[lid]
+                assert info.data == cluster.id
+                del self._locations[lid]
+                self._locations[info.location.id] = LocationStatus(
+                    info.location, DataType.clustered, new_cluster.id
+                )
         self._clusters[new_cluster.id] = new_cluster
         self._tree.add(new_cluster.as_interval())
-        for member in new_cluster.members:
-            location = member.location
-            if location.id not in self._locations:
-                raise ValueError(f"Unknown location {location}")
-            del self._locations[location.id]
-            self._locations[location.id] = LocationStatus(
-                location, DataType.clustered, new_cluster.id
-            )
-        assert new_cluster.id in self._clusters
-        assert new_cluster.as_interval() in self._tree
-        assert len(self._tree) == len(self._clusters)
+        assert len(self._clusters) == len(self._tree)
         return new_cluster.id
 
     def add_singleton_cluster(self, location: LocationInfo):
@@ -180,14 +192,14 @@ class State:
             raise ValueError(f"Cluster {cluster} not indexed")
 
         self._tree.remove(cluster.as_interval())
-        for member in cluster.members:
-            location = member.location
-            LOGGER.debug("Ignoring location %s", location.id)
-            if location.id not in self._locations:
-                raise ValueError(f"Somehow location {location} is unknown")
-            del self._locations[location.id]
-            self._locations[location.id] = LocationStatus(
-                location, DataType.ignored, None
+        for lid, member in cluster._members.items():
+            if lid not in self._locations:
+                raise ValueError(f"Somehow location {lid} is unknown")
+            info = self._locations[lid]
+            del self._locations[lid]
+            LOGGER.debug("Ignoring location %s", info.location.id)
+            self._locations[lid] = LocationStatus(
+                info.location, DataType.ignored, None
             )
 
     def highlight_location(self, location_id: int):
@@ -202,17 +214,27 @@ class State:
         if not cluster:
             raise ValueError(f"Illegal State, missing cluster for {info}")
 
-        new_cluster = cluster.highlight_location(info.location)
-        assert new_cluster.id == cluster.id
-        self._clusters[cluster.id] = new_cluster
+        cluster.highlight_location(info.location)
 
-    def members_of(self, cluster: int) -> ty.List[ClusterMember]:
-        if cluster not in self._clusters:
-            raise ValueError(f"Unknown cluster {cluster}")
-        return self._clusters[cluster].members
+    def members_of(self, cluster_id: int) -> ty.List[LocationInfo]:
+        if cluster_id not in self._clusters:
+            raise ValueError(f"Unknown cluster {cluster_id}")
+        members = []
+        cluster = self._clusters[cluster_id]
+        for lid in cluster.location_ids():
+            if lid not in self._locations:
+                raise ValueError("Unknown location id {lid} in cluster {cluster}")
+            info = self._locations[lid]
+            if info.status != DataType.clustered or info.data != cluster_id:
+                raise ValueError(f"Info {info} does not show clustered to {cluster_id}")
+            members.append(info.location)
+        return members
 
     def has_clusters(self) -> bool:
         return bool(self.clusters)
+
+    def has_cluster(self, cluster_id: int) -> bool:
+        return cluster_id in self._clusters
 
     def clusters(self) -> ty.List[int]:
         return list(self._clusters.keys())
@@ -232,11 +254,13 @@ class State:
             else:
                 raise ValueError(f"Unknown status state {data}")
 
+        clusters: ty.List[WriteableCluster] = []
+        for cid, cluster in self._clusters.items():
+            locations = {lid: self._locations[lid].location for lid in cluster.location_ids()}
+            clusters.append(WriteableCluster.build(cluster, locations))
+
         return FinalizedState(
-            key=self.key,
-            clusters=list(self._clusters.values()),
-            rejected=rejected,
-            ignored=ignored,
+            key=self.key, clusters=clusters, rejected=rejected, ignored=ignored,
         )
 
     def validate(self):
@@ -258,30 +282,33 @@ class State:
     def lengths(self):
         return (len(self._locations), len(self._tree), len(self._clusters))
 
-    def __remove_location_from_clusters__(self, location: LocationInfo, new_status):
+    def __remove_location_from_clusters__(self, location: LocationInfo, new_status: DataType):
         if location.id not in self._locations:
             raise ValueError(f"Unknown location: {location}")
 
         info = self._locations[location.id]
+        del self._locations[location.id]
+
         status = info.status
         if status is None or status in {DataType.ignored, DataType.rejected}:
-            del self._locations[location.id]
-            self._locations[location.id] = LocationStatus(location, *new_status)
+            self._locations[location.id] = LocationStatus(location, new_status, None)
+
         elif status == DataType.clustered:
             cluster = self._clusters[info.data]
-            self._tree.remove(cluster.as_interval())
-            new_cluster = cluster.remove_location(location)
-            if new_cluster is None:
+            self._locations[location.id] = LocationStatus(location, new_status, None)
+            if len(cluster) == 1:
+                LOGGER.debug(f"Cluster {info.data} has only one member, removing it completely")
                 del self._clusters[info.data]
-                del self._locations[location.id]
-                self._locations[location.id] = LocationStatus(location, *new_status)
+                self._tree.remove(cluster.as_interval())
+                assert info.data not in self._clusters
             else:
-                assert new_cluster.id == cluster.id
-                del self._clusters[cluster.id]
-                del self._locations[location.id]
+                assert location.id in cluster._members
+                del self._clusters[info.data]
+                self._tree.remove(cluster.as_interval())
+                cluster.remove_location(location)
+                self._tree.add(cluster.as_interval())
                 self._clusters[cluster.id] = cluster
-                self._locations[location.id] = LocationStatus(location, *new_status)
-                self._tree.add(new_cluster.as_interval())
+                assert location.id not in cluster._members
         else:
             raise ValueError(f"Unknown status {status} for {location}")
         assert len(self._tree) == len(self._clusters)

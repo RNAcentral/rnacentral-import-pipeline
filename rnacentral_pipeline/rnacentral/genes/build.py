@@ -86,11 +86,11 @@ def handle_rfam_only(state: data.State, cluster: int):
         LOGGER.debug("Singleton cluster has no Rfam")
         return
 
-    for member in members:
-        LOGGER.debug("Checking %s for Rfam exclusions", member.location.id)
-        if member.location.is_rfam_only():
-            LOGGER.debug("Rejecting %s as it is Rfam only", member.location.id)
-            state.reject_location(member.location)
+    for location in members:
+        LOGGER.debug("Checking %s for Rfam exclusions", location.id)
+        if location.is_rfam_only():
+            LOGGER.debug("Rejecting %s as it is Rfam only", location.id)
+            state.reject_location(location)
 
 
 def overlaps_pseudogene(location: data.LocationInfo, pseudo: IntervalTree) -> bool:
@@ -112,7 +112,9 @@ def build(
         for location in locations:
             LOGGER.debug("Testing %s", location.id)
             state.add_location(location)
-            LOGGER.debug("Lengths, locations: %i, tree: %i, clusters: %i", *state.lengths())
+            LOGGER.debug(
+                "Lengths, locations: %i, tree: %i, clusters: %i", *state.lengths()
+            )
 
             if always_ignorable_location(location):
                 LOGGER.debug("Always Ignoring: %s", location.id)
@@ -142,7 +144,9 @@ def build(
                 continue
             elif len(to_merge) == 1:
                 cluster = to_merge[0]
-                LOGGER.debug("Adding location %i to cluster %i", location.id, cluster.id)
+                LOGGER.debug(
+                    "Adding location %i to cluster %i", location.id, cluster.id
+                )
                 state.add_to_cluster(location, cluster.id)
             else:
                 LOGGER.debug("Merging into %s", [c.id for c in to_merge])
@@ -160,8 +164,11 @@ def build(
             LOGGER.debug("Analyzing cluster %i", cluster_id)
             handle_rfam_only(state, cluster_id)
 
+            if not state.has_cluster(cluster_id):
+                continue
+
             members = state.members_of(cluster_id)
-            if any(m.location.rna_type.is_a("rRNA") for m in members):
+            if any(l.rna_type.is_a("rRNA") for l in members):
                 rrna.classify_cluster(state, cluster_id)
             else:
                 state.ignore_cluster(cluster_id)

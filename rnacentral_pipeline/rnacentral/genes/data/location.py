@@ -53,7 +53,7 @@ class QaInfo:
         )
 
 
-@attr.s(auto_attribs=True, frozen=True, slots=True)
+@attr.s(auto_attribs=True, frozen=True, slots=True, hash=True)
 class LocationInfo:
     id: int
     urs_taxid: str

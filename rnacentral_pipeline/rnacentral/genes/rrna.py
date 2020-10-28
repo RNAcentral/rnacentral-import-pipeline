@@ -29,16 +29,16 @@ def should_reject(location: data.LocationInfo) -> bool:
     return location.qa.has_issue
 
 
-def should_highlight(member: data.ClusterMember) -> bool:
-    qa = member.location.qa
-    if any(d.lower() in REP_DBS for d in member.location.databases):
+def should_highlight(location: data.LocationInfo) -> bool:
+    qa = location.qa
+    if any(d.lower() in REP_DBS for d in location.databases):
         return True
-    if not qa.has_issue and not member.location.has_introns():
+    if not qa.has_issue and not location.has_introns():
         return True
     return False
 
 
 def classify_cluster(state: data.State, cluster: int):
-    for member in state.members_of(cluster):
-        if should_highlight(member):
-            state.highlight_location(member.location.id)
+    for location in state.members_of(cluster):
+        if should_highlight(location):
+            state.highlight_location(location.id)
