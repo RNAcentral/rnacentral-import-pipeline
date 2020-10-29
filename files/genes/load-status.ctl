@@ -1,5 +1,5 @@
 LOAD CSV
-FROM ALL FILENAMES MATCHING ~<{{status}}.*csv$>
+FROM ALL FILENAMES MATCHING ~<{{STATUS}}.*csv$>
 HAVING FIELDS (
   assembly_id,
   region_id,

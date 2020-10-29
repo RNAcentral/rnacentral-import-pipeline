@@ -19,14 +19,14 @@ WHERE
 INSERT INTO rnc_locus (
   assembly_id,
   locus_name,
-  locus_public_name,
+  public_locus_name,
   chromosome,
   strand,
   locus_start,
   locus_stop,
-  member_count,
+  member_count
 ) ( 
-SELECT DSTINCT
+SELECT DISTINCT
   assembly_id,
   locus_name,
   locus_public_name,
@@ -35,14 +35,14 @@ SELECT DSTINCT
   locus_start,
   locus_stop,
   member_count,
-FROM load_locus
+FROM load_locu
 ) ON CONFLICT (assembly_id, locus_name) DO NOTHING;
 
 INSERT INTO rnc_locus_members (
   urs_taxid,
   region_id,
   locus_id,
-  member_type
+  membership_status
 ) ( 
 SELECT DISTINCT
   load.urs_taxid,
@@ -55,20 +55,21 @@ ON
   locus.locus_name = load.locus_name
 );
 
-DROP TABLE load_locus;
-
 INSERT INTO rnc_gene_status (
   urs_taxid,
   region_id,
   assembly_id,
-  cluster_status
+  status
 ) (
 SELECT
   load.urs_taxid,
   load.region_id,
   load.assembly_id,
-  load.cluster_status
-FROM load_gene_status
+  load.status
+FROM load_gene_status load
 );
+
+DROP TABLE load_locus;
+DROP TABLE load_gene_status;
 
 COMMIT;
