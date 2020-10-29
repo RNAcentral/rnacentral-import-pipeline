@@ -11,7 +11,7 @@ HAVING FIELDS (
   member_count,
   urs_taxid,
   region_id,
-  member_status
+  member_type
 )
 INTO {{PGDATABASE}}?load_locus
 TARGET COLUMNS (
@@ -25,7 +25,7 @@ TARGET COLUMNS (
   member_count,
   urs_taxid,
   region_id,
-  member_status
+  member_type
 )
 
 WITH truncate,
