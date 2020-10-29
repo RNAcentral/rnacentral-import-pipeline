@@ -1,29 +1,31 @@
 LOAD CSV
-FROM ALL FILENAMES MATCHING ~<genes.*csv$>
+FROM ALL FILENAMES MATCHING ~<locus.*csv$>
 HAVING FIELDS (
-  taxid,
   assembly_id,
   locus_name,
+  locus_public_name,
   chromosome,
   strand,
   locus_start,
   locus_stop,
+  member_count,
   urs_taxid,
   region_id,
-  is_representative
+  member_status
 )
 INTO {{PGDATABASE}}?load_locus
 TARGET COLUMNS (
-  taxid,
   assembly_id,
   locus_name,
+  locus_public_name,
   chromosome,
-  strand text,
+  strand,
   locus_start,
   locus_stop,
+  member_count,
   urs_taxid,
   region_id,
-  is_representative
+  member_status
 )
 
 WITH truncate,
