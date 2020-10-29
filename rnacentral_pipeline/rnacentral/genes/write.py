@@ -49,8 +49,8 @@ class Format(enum.Enum):
         return [x.name for x in cls]
 
 
-def write_csv(rows, output, data_type: data.DataType, **kwargs) -> bool:
-    out = output / f"{data_type.name}.csv"
+def write_csv(rows, output, name: str, **kwargs) -> bool:
+    out = output / f"{name}.csv"
     with out.open("a") as handle:
         writer = csv.writer(handle)
         rows = list(it.chain.from_iterable(rows))
@@ -58,17 +58,15 @@ def write_csv(rows, output, data_type: data.DataType, **kwargs) -> bool:
     return True
 
 
-def write_bed(
-    bed, output: Path, data_type: data.DataType, extended=False, **kwargs
-) -> bool:
-    out = output / f"{data_type.name}.bed"
+def write_bed(bed, output: Path, name: str, extended=False, **kwargs) -> bool:
+    out = output / f"{name}.bed"
     with out.open("a") as handle:
         write_bed_text(it.chain.from_iterable(bed), handle, extended=extended)
     return True
 
 
-def write_gff(gff, output: Path, data_type: data.DataType, header=True) -> bool:
-    out = output / f"{data_type.name}.gff"
+def write_gff(gff, output: Path, name: str, header=True) -> bool:
+    out = output / f"{name}.gff"
     with out.open("a") as handle:
         return write_gff_text(
             it.chain.from_iterable(gff), handle, header=header, allow_no_features=True
@@ -87,31 +85,34 @@ def write(
     first = True
     written = False
     for result in results:
-        for (name, locations) in result.data_types():
-            if name not in allowed_data_types:
+        for (data_type, locations) in result.data_types():
+            if data_type not in allowed_data_types:
                 LOGGER.debug(
-                    "Skipping %s/%s since it is ignored", result.chromosome, name.name
+                    "Skipping %s/%s since it is ignored", result.key, data_type.name
                 )
                 continue
 
             if not data:
-                LOGGER.debug("No entries in %s/%s", result.chromosome, name.name)
+                LOGGER.debug("No entries in %s/%s", result.key, data_type.name)
                 continue
 
             method = None
             writer = None
+            name = data_type.name
+            if data_type == data.DataType.clustered:
+                name = "locus"
             if format == Format.Csv:
                 kwargs = {}
-                if name == data.DataType.clustered:
+                if data_type == data.DataType.clustered:
                     kwargs["allowed_members"] = allowed_members
                 else:
-                    kwargs['status'] = name.name
+                    kwargs["status"] = data_type.name
                 method = op.methodcaller("as_writeable", **kwargs)
                 writer = write_csv
 
             elif format == Format.Bed:
                 kwargs = {}
-                if name == data.DataType.clustered:
+                if data_type == data.DataType.clustered:
                     kwargs = {
                         "allowed_members": allowed_members,
                         "include_gene": include_genes,
@@ -121,7 +122,7 @@ def write(
 
             elif format == Format.Gff:
                 kwargs = {}
-                if name == data.DataType.clustered:
+                if data_type == data.DataType.clustered:
                     kwargs = {
                         "allowed_members": allowed_members,
                         "include_gene": include_genes,
