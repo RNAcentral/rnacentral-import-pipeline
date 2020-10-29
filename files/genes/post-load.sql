@@ -1,65 +1,74 @@
 BEGIN TRANSACTION;
 
-INSERT INTO rnc_locus (
-  taxid,
-  assembly_id,
-  chromosome,
-  strand,
-  locus_name,
-  locus_start,
-  locus_stop
-) ( 
-SELECT DSTINCT
-  taxid,
-  assembly_id,
-  chromosome,
-  strand,
-  locus_name,
-  locus_start,
-  locus_stop
-FROM load_locus
-) ON CONFLICT (assembly_id, locus_name) DO NOTHING;
-
--- We remove all existing assignments because it is possible that a sequence
--- will get moved from one locus to another. This 
-DELETE 
-FROM rnc_locus_members members
+-- DELETE all assignments from the assemblies to be loaded. This is needed
+-- because
+DELETE
+FROM rnc_locus locus
 USING load_locus load
 WHERE
-  load.urs_taxid = members.urs_taxid
+  load.assembly_id = locus.assembly_id
 ;
+
+DELETE
+FROM rnc_gene_status status
+USING load_gene_status load
+WHERE
+  load.urs_taxid = status.urs_taxid
+;
+
+INSERT INTO rnc_locus (
+  assembly_id,
+  locus_name,
+  locus_public_name,
+  chromosome,
+  strand,
+  locus_start,
+  locus_stop,
+  member_count,
+) ( 
+SELECT DSTINCT
+  assembly_id,
+  locus_name,
+  locus_public_name,
+  chromosome,
+  strand,
+  locus_start,
+  locus_stop,
+  member_count,
+FROM load_locus
+) ON CONFLICT (assembly_id, locus_name) DO NOTHING;
 
 INSERT INTO rnc_locus_members (
   urs_taxid,
   region_id,
   locus_id,
-  is_representative
+  member_type
 ) ( 
 SELECT DISTINCT
   load.urs_taxid,
   load.region_id,
   locus.id,
-  load.is_representative
+  load.member_type
 FROM load_locus load
 JOIN rnc_locus locus
 ON
   locus.locus_name = load.locus_name
 );
 
-UPDATE rnc_rna_precomputed pre
-SET
-  is_locus_representative = t.is_representative
-FROM (
-  SELECT 
-    urs_taxid urs_taxid,
-    bool_or(is_representative) is_representative
-  FROM rnc_locus_members members
-  GROUP BY members.urs_taxid
-) t
-WHERE
-  t.urs_taxid = pre.id
-;
-
 DROP TABLE load_locus;
+
+INSERT INTO rnc_gene_status (
+  urs_taxid,
+  region_id,
+  assembly_id,
+  cluster_status
+) (
+SELECT
+  load.urs_taxid,
+  load.region_id,
+  load.assembly_id,
+  load.cluster_status
+FROM load_gene_status
+);
 
 COMMIT;
