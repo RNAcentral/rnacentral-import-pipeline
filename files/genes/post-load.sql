@@ -69,6 +69,22 @@ SELECT
 FROM load_gene_status load
 );
 
+INSERT INTO rnc_gene_status (
+  assembly_id, 
+  urs_taxid, 
+  region_id, 
+  status
+) (
+SELECT 
+  locus.assembly_id, 
+  member.urs_taxid, 
+  member.region_id, 
+  'clustered' 
+FROM rnc_locus locus 
+JOIN rnc_locus_members member 
+ON member.locus_id = locus.id
+);
+
 DROP TABLE load_locus;
 DROP TABLE load_gene_status;
 
