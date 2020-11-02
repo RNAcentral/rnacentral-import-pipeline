@@ -3,6 +3,12 @@ tag=latest
 sif=$(tag).sif
 docker=$(image):$(tag)
 
+requirements.txt: requirements.in
+	pip-compile -o requirements.txt requirements.in
+
+requirements-dev.txt: requirements-dev.in
+	pip-compile -o requirements-dev.txt requirements-dev.in
+
 docker: Dockerfile requirements.txt .dockerignore
 	docker build --build-arg CACHE_DATE="$(date)" -t "$(docker)" .
 
