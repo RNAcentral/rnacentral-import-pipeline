@@ -237,7 +237,7 @@ def as_sorted_exons(raw):
 
 
 @attr.s(frozen=True, hash=True, slots=True)
-class SequenceRegion(object):
+class SequenceRegion:
     assembly_id = attr.ib(validator=is_a(str), converter=str)
     chromosome = attr.ib(validator=is_a(str), converter=str)
     strand = attr.ib(validator=is_a(Strand), converter=Strand.build)
