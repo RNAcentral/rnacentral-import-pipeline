@@ -32,7 +32,7 @@ psycopg2==2.8.6
 py==1.9.0                 # via retry
 pyfaidx==0.5.9.1          # via gffutils
 pymysql==0.10.1
-pypika==0.43.0
+pypika==0.39.1
 pyrsistent==0.17.3        # via jsonschema
 ratelimiter==1.2.0.post0
 regex==2020.10.28         # via nltk
