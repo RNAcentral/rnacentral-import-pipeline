@@ -80,3 +80,4 @@ data/intact/intact.txt
 *.nix
 Procfile
 nix
+.vim
