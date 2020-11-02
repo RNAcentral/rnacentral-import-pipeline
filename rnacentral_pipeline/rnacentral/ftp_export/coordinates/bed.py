@@ -14,8 +14,8 @@ limitations under the License.
 """
 
 import csv
-import operator as op
 import itertools as it
+import operator as op
 
 import attr
 from attr.validators import instance_of as is_a
@@ -26,7 +26,7 @@ from . import data as coord
 
 
 @attr.s(slots=True, frozen=True)
-class BedEntry(object):
+class BedEntry:
     rna_id = attr.ib(validator=is_a(str), converter=str)
     rna_type = attr.ib(validator=is_a(str), converter=str)
     databases = attr.ib(validator=is_a(str), converter=str)
@@ -38,20 +38,20 @@ class BedEntry(object):
     def from_coordinate(cls, coordinate):
         return cls(
             rna_id=coordinate.rna_id,
-            rna_type=coordinate.metadata['rna_type'],
-            databases=','.join(coordinate.metadata['databases']),
+            rna_type=coordinate.metadata["rna_type"],
+            databases=",".join(coordinate.metadata["databases"]),
             region=coordinate.region.as_zero_based(),
         )
 
     @property
     def bed_chromosome(self):
-        if self.region.chromosome in ['MT', 'chrMT']:
-            return 'chrM'
-        return 'chr' + self.region.chromosome
+        if self.region.chromosome in ["MT", "chrMT"]:
+            return "chrM"
+        return "chr" + self.region.chromosome
 
     @property
     def bed_rgb(self):
-        return ','.join(str(c) for c in self.rgb)
+        return ",".join(str(c) for c in self.rgb)
 
     def sizes(self):
         return self.region.sizes()
@@ -65,8 +65,8 @@ class BedEntry(object):
             starts.append(start)
         return [0] + starts
 
-    def writeable(self):
-        return [
+    def writeable(self, extended=True):
+        data = [
             self.bed_chromosome,
             self.region.start,
             self.region.stop,
@@ -77,12 +77,22 @@ class BedEntry(object):
             self.region.stop,
             self.bed_rgb,
             len(self.region.exons),
-            ','.join(str(s) for s in self.sizes()),
-            ','.join(str(s) for s in self.starts()),
-            '.',
-            self.rna_type,
-            self.databases,
+            ",".join(str(s) for s in self.sizes()),
+            ",".join(str(s) for s in self.starts()),
         ]
+        if extended:
+            data += [
+                ".",
+                self.rna_type,
+                self.databases,
+            ]
+        return data
+
+
+def write_bed_text(entries, out, extended=True):
+    data = map(op.methodcaller("writeable", extended=extended), entries)
+    writer = csv.writer(out, delimiter="\t", lineterminator="\n")
+    writer.writerows(data)
 
 
 def from_json(handle, out):
@@ -92,6 +102,4 @@ def from_json(handle, out):
 
     data = coord.from_file(handle)
     data = map(BedEntry.from_coordinate, data)
-    data = map(op.methodcaller('writeable'), data)
-    writer = csv.writer(out, delimiter='\t', lineterminator='\n')
-    writer.writerows(data)
+    write_bed_text(data, out)
