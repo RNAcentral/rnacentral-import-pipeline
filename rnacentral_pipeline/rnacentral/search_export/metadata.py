@@ -19,7 +19,7 @@ import json
 import sqlite3
 from contextlib import contextmanager
 
-from boltons import iterutils
+from more_itertools import chunked
 
 from rnacentral_pipeline import psql
 from rnacentral_pipeline.databases.sequence_ontology import tree as so
@@ -63,7 +63,7 @@ class Cache:
         self._known_metadata_types = []
 
     def index(self, generator, size=INSERT_SIZE):
-        for index, chunk in enumerate(iterutils.chunked_iter(generator, size)):
+        for index, chunk in enumerate(chunked(generator, size)):
             storable = []
             for (mtype, urs_taxid, raw) in chunk:
                 storable.append((mtype, urs_taxid, json.dumps(raw)))
