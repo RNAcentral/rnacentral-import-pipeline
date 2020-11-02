@@ -3,6 +3,8 @@ tag=latest
 sif=$(tag).sif
 docker=$(image):$(tag)
 
+env: requirements.txt requirements-dev.txt
+
 requirements.txt: requirements.in
 	pip-compile -o requirements.txt requirements.in
 
@@ -18,4 +20,4 @@ shell:
 publish: docker
 	docker push "$(docker)"
 
-.PHONY: docker publish clean
+.PHONY: docker publish clean env
