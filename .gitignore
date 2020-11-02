@@ -79,3 +79,4 @@ data/ensembl/excluded.txt
 data/intact/intact.txt
 *.nix
 Procfile
+nix
