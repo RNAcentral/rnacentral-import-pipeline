@@ -2,8 +2,43 @@
 
 nextflow.enable.dsl=2
 
+process find_genomes_with_repeats {
+  input:
+  path(query)
+
+  output:
+  path("repeat-file")
+
+  """
+  psql -f $query "$PGDATABASE" > repeat-file
+  """
+}
+
+process fetch_repeats {
+  input:
+  val(assembly)
+
+  output:
+  path("repeat-${assembly}.json")
+
+  """
+  rnac repeats fetch repeat-${assembly}.json
+  """
+}
+
+process build_repeat_tree {
+  input:
+  path('repeats*.json')
+
+  output:
+  path('repeat-tree')
+
+  """
+  rnac repeats build-tree $repeats repeat-tree
+  """
+}
+
 process find_precompute_upis {
-  when: params.precompute.run
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
@@ -52,14 +87,14 @@ process process_range {
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
-  tuple val(min), val(max), path(raw)
+  tuple val(min), val(max), path(raw), path(repeats)
 
   output:
   path('precompute.csv'), emit: data
   path('qa.csv'), emit: qa
 
   """
-  rnac precompute from-file $raw
+  rnac precompute from-file $raw $repeats
   """
 }
 
@@ -81,16 +116,23 @@ process load_precomputed_data {
   """
 }
 
-
 workflow precompute {
   take:
-    path(setup)
+    path(method)
 
   main:
-    find_ranges(setup) \
+    find_genomes_with_repeats \
+    | splitCsv() \
+    | fetch_repeats \
+    | collect \
+    | build_repeat_tree \
+    | set { repeats }
+
+    find_ranges(method) \
     | splitCsv() \
     | combine(Channel.fromPath('files/precompute/query.sql')) \
     | query_range \
+    | combine(repeats) \
     | process_range \
 
     process_range.out.data | collect | set { data }
