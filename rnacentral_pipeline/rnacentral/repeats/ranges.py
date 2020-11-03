@@ -85,7 +85,8 @@ def from_ensembl_fasta(assembly: str, path: Path) -> RepeatRanges:
         chromosome = record.id
         nts = enumerate(record.seq, start=1)
         masked = more.split_at(nts, lambda nt: nt[1].upper() == nt[1])
-        compressed = ((m[0][0], m[-1][0]) for m in masked)
+        filtered = filter(None, masked)
+        compressed = ((m[0][0], m[-1][0]) for m in filtered)
         for (start, stop) in compressed:
             ranges.insert(chromosome, start, stop)
     return ranges
