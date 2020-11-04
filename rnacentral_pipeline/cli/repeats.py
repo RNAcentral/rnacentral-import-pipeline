@@ -18,9 +18,10 @@ from pathlib import Path
 import click
 
 from rnacentral_pipeline.rnacentral import repeats
+from rnacentral_pipeline.rnacentral.genome_mapping import urls
 
 
-@click.group("repeat")
+@click.group("repeats")
 def cli():
     """
     This is a group of commands for building the repeat data we use later in
@@ -29,11 +30,12 @@ def cli():
     pass
 
 
-@cli.command("fetch")
-@click.option('--temp-directory')
+@cli.command("url-for")
+@click.argument("species")
 @click.argument("assembly")
-@click.argument("output", type=click.Path())
-def fetch_repeats(assembly, output, temp_directory=None):
+@click.argument("host")
+@click.argument("output", default="-", type=click.File("w"))
+def find_url(species, assembly, host, output, temp_directory=None):
     """
     Given an assembly fetch the repeat information from Ensembl's FTP and build
     a summary of the repetitive regions in the given output file. This will
@@ -41,8 +43,16 @@ def fetch_repeats(assembly, output, temp_directory=None):
     temp directory, defaulting to the current one.
     """
 
-    data = repeats.fetch.get_ensembl_sm(assembly, temp_directory)
-    ranges = repeats.ranges.from_ensembl_fasta(assembly, data)
+    url = urls.url_for(species, assembly, host, soft_mapped=True)
+    output.write(url)
+    output.write("\n")
+
+@cli.command('compute-ranges')
+@click.argument("assembly")
+@click.argument("filename", type=click.Path(file_okay=True))
+@click.argument("output", type=click.Path(file_okay=True, dir_okay=False))
+def compute_ranges(assembly: str, filename, output):
+    ranges = repeats.ranges.from_ensembl_fasta(assembly, Path(filename))
     ranges.dump(Path(output))
 
 

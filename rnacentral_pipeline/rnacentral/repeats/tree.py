@@ -55,6 +55,18 @@ class RepeatTree:
 
         return self._assemblies[assembly].overlaps(chromosome, start, stop)
 
+    def envelops(
+        self, assembly: str, chromosome: str, start: int, stop: int
+    ) -> ty.Set[Interval]:
+        """
+        Find all regions that enclose the given assembly/chromosome/start/stop.
+        """
+
+        if assembly not in self._assemblies:
+            raise ValueError(f"Unknown assembly {assembly}")
+
+        return self._assemblies[assembly].envelops(chromosome, start, stop)
+
     def add(self, value: ranges.RepeatRanges):
         """
         Add a given RepeatRange to this tree. This fails if the assembly is

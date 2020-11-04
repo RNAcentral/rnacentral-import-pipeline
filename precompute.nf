@@ -7,22 +7,24 @@ process find_genomes_with_repeats {
   path(query)
 
   output:
-  path("repeat-file")
+  path("assemblies.csv")
 
   """
-  psql -f $query "$PGDATABASE" > repeat-file
+  psql -f $query "$PGDATABASE" > assemblies.csv
   """
 }
 
 process fetch_repeats {
   input:
-  val(assembly)
+  tuple val(species), val(assembly), val(host)
 
   output:
   path("repeat-${assembly}.json")
 
   """
-  rnac repeats fetch repeat-${assembly}.json
+  rnac repeats url-for $species $assembly $host - | xargs -I {} fetch generic '{}' ${species}.fasta.gz
+  gzip -d ${species}.fasta.gz
+  rnac repeats compute-ranges $assembly ${species}.fasta repeat-${assembly}.json
   """
 }
 
@@ -121,7 +123,7 @@ workflow precompute {
     path(method)
 
   main:
-    find_genomes_with_repeats \
+    find_genomes_with_repeats(Channel.fromPath('files/repeat/find-assembiles.sql')) \
     | splitCsv() \
     | fetch_repeats \
     | collect \

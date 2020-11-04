@@ -14,42 +14,34 @@ limitations under the License.
 """
 
 
+from rnacentral_pipeline.rnacentral.precompute.data.context import Context
+from rnacentral_pipeline.rnacentral.precompute.data.sequence import Sequence
+from rnacentral_pipeline.rnacentral.precompute.qa.data import QaResult
+
 FAMILIES_TO_CHECK = {
-    'RF00001',  # 5S ribosomal RNA
-    'RF00002',  # 5.8S ribosomal RNA
-    'RF00005',  # tRNA
-    'RF00177',  # Bacterial small subunit ribosomal RNA
-    'RF01959',  # Archaeal small subunit ribosomal RNA
-    'RF01960',  # Eukaryotic small subunit ribosomal RNA
-    'RF02540',  # Archaeal large subunit ribosomal RNA
-    'RF02541',  # Bacterial large subunit ribosomal RNA
-    'RF02542',  # Microsporidia small subunit ribosomal RNA
-    'RF02543',  # Eukaryotic large subunit ribosomal RNA
+    "RF00001",  # 5S ribosomal RNA
+    "RF00002",  # 5.8S ribosomal RNA
+    "RF00005",  # tRNA
+    "RF00177",  # Bacterial small subunit ribosomal RNA
+    "RF01959",  # Archaeal small subunit ribosomal RNA
+    "RF01960",  # Eukaryotic small subunit ribosomal RNA
+    "RF02540",  # Archaeal large subunit ribosomal RNA
+    "RF02541",  # Bacterial large subunit ribosomal RNA
+    "RF02542",  # Microsporidia small subunit ribosomal RNA
+    "RF02543",  # Eukaryotic large subunit ribosomal RNA
 }
 
 
-class Validator(object):
-    name = 'incomplete_sequence'
+def validate(context: Context, rna_type: str, sequence: Sequence) -> QaResult:
+    hits = sequence.rfam_hits
+    if len(hits) != 1:
+        return QaResult.ok("incomplete_sequence")
 
-    def status(self, _, data):
-        """
-        Detect if the given sequence is incomplete. This will work by checking if
-        the Rfam hits cover enough of the sequence and the hit is complete enough.
-        """
+    hit = hits[0]
+    if hit.model not in FAMILIES_TO_CHECK:
+        return QaResult.ok("incomplete_sequence")
 
-        hits = data.rfam_hits
-        if len(hits) != 1:
-            return False
-
-        hit = hits[0]
-        if hit.model not in FAMILIES_TO_CHECK:
-            return False
-
-        return hit.model_info.completeness <= 0.5 and \
-            hit.sequence_info.completeness >= 0.9
-
-    def message(self, _, data):
-        name = data.rfam_hits[0].model_long_name
-        url = data.rfam_hits[0].url
-        message = 'Potential <a href="{url}">{name}</a> fragment'
-        return message.format(name=name, url=url)
+    if hit.model_info.completeness <= 0.5 and hit.sequence_info.completeness >= 0.9:
+        message = f'Potential <a href="{hit.url}">{hit.model_long_name}</a> fragment'
+        return QaResult.not_ok("incomplete_sequence", message)
+    return QaResult.ok("incomplete_sequence")

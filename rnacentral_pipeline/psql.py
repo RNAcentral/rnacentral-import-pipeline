@@ -14,11 +14,12 @@ limitations under the License.
 """
 
 import json
+import typing as ty
 
 
-def json_handler(out):
+def json_handler(out) -> ty.Iterable[ty.Any]:
     for row in out:
         if not row:
             continue
-        row = row.replace('\\\\', '\\')
+        row = row.replace("\\\\", "\\")
         yield json.loads(row)
