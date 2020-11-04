@@ -15,102 +15,105 @@ limitations under the License.
 
 import re
 
+from rnacentral_pipeline.rnacentral.precompute.data.context import Context
+from rnacentral_pipeline.rnacentral.precompute.data.sequence import Sequence
+from rnacentral_pipeline.rnacentral.precompute.qa.data import QaResult
+
 ALLOWED_FAMILIES = {
-    'RF00177',  # Bacterial small subunit ribosomal RNA
-    'RF02541',  # Bacterial large subunit ribosomal RNA
-    'RF01959',  # Archaeal small subunit ribosomal RNA
-    'RF02540',  # Archaeal large subunit ribosomal RNA
+    "RF00177",  # Bacterial small subunit ribosomal RNA
+    "RF02541",  # Bacterial large subunit ribosomal RNA
+    "RF01959",  # Archaeal small subunit ribosomal RNA
+    "RF02540",  # Archaeal large subunit ribosomal RNA
 }
 
 GENERIC_DOMAINS = {
-    'unclassified sequences',
-    'artificial sequences',
-    'miscellaneous sequences',
-    'other sequences',
+    "unclassified sequences",
+    "artificial sequences",
+    "miscellaneous sequences",
+    "other sequences",
 }
 
 
-def is_ignorable_mito_conflict(rna_type, data):
+def is_ignorable_mito_conflict(rna_type: str, data: Sequence) -> bool:
     """
     This can ignore any conflict where the sequence probably comes from a
     mitochondria but it matches a bacterial rRNA. In that case we do not
     warn since this is expected from evolution.
     """
-    return data.is_mitochondrial() and \
-        'rRNA' == rna_type and \
-        data.rfam_hits[0].model in ALLOWED_FAMILIES
+    return (
+        data.is_mitochondrial()
+        and rna_type == "rRNA"
+        and data.rfam_hits[0].model in ALLOWED_FAMILIES
+    )
 
 
-def is_ignorable_chloroplast_conflict(rna_type, data):
-    return data.is_chloroplast() and \
-        'rRNA' == rna_type and \
-        data.rfam_hits[0].model in ALLOWED_FAMILIES
+def is_ignorable_chloroplast_conflict(rna_type: str, data: Sequence) -> bool:
+    return (
+        data.is_chloroplast()
+        and rna_type == "rRNA"
+        and data.rfam_hits[0].model in ALLOWED_FAMILIES
+    )
 
 
-def is_generic_domain(data):
+def is_generic_domain(data: Sequence) -> bool:
+    """
+    Check if any domain for the given sequence object is a generic domain (ie
+    unclassified sequences, etc).
+    """
     return bool(data.domains() & GENERIC_DOMAINS)
 
 
-class Validator(object):
+def message(data: Sequence) -> str:
     """
-    Validator for checking for possible sequence contamination.
+    Produce a warning message about the issue detected. This assumes that
+    there was a warning.
     """
-    name = 'possible_contamination'
 
-    def status(self, rna_type, data):
-        """
-        Check if the given sequence with the given RNA type is likely
-        contamination. This checks if the domain of the sequence and the domain
-        of the hits disagree.
-        """
+    common_name = {acc.common_name for acc in data.accessions}
+    common_name = {c.lower() for c in common_name if c}
 
-        # if not hits or len(hits) > 1:
-        if not data.has_unique_hit():
-            return False
+    if len(common_name) == 1:
+        sequence_name = common_name.pop()
+    else:
+        species = {acc.species for acc in data.accessions if acc.species}
+        if species:
+            sequence_name = ", ".join(sorted(species))
+            sequence_name = f"<i>{sequence_name}</i>"
 
-        hit = data.rfam_hits[0]
-        if not hit.model_domain or not data.domains():
-            return False
+    model_domain = data.rfam_hits[0].model_domain
+    model_url = data.rfam_hits[0].url
+    model_name = data.rfam_hits[0].model_name
 
-        if not data.domains() or is_generic_domain(data):
-            return False
+    msg = (
+        "This {sequence_name} sequence matches a {match_domain} "
+        'Rfam model (<a href="{model_url}">{model_name}</a>). '
+        '<a href="{help_url}">Learn more &rarr;</a>'
+    ).format(
+        sequence_name=sequence_name,
+        match_domain=model_domain,
+        model_url=model_url,
+        model_name=model_name,
+        help_url="/help/rfam-annotations",
+    )
 
-        return hit.model_domain not in data.domains() and \
-            not is_ignorable_mito_conflict(rna_type, data) and \
-            not is_ignorable_chloroplast_conflict(rna_type, data)
+    return re.sub(r"\s+", " ", msg)
 
-    def message(self, _, data):
-        """
-        Produce a warning message about the issue detected. This assumes that
-        there was a warning.
-        """
 
-        common_name = {acc.common_name for acc in data.accessions}
-        common_name = {c.lower() for c in common_name if c}
+def validate(context: Context, rna_type: str, sequence: Sequence) -> QaResult:
+    if not sequence.has_unique_hit():
+        return QaResult.ok("possible_contamination")
 
-        if len(common_name) == 1:
-            sequence_name = common_name.pop()
-        else:
-            sequence_name = {acc.species for acc in data.accessions}
-            sequence_name = sorted(s for s in sequence_name if s)
-            sequence_name = ', '.join(sequence_name)
-            if sequence_name:
-                sequence_name = '<i>%s</i>' % sequence_name
+    hit = sequence.rfam_hits[0]
+    if not hit.model_domain or not sequence.domains():
+        return QaResult.ok("possible_contamination")
 
-        model_domain = data.rfam_hits[0].model_domain
-        model_url = data.rfam_hits[0].url
-        model_name = data.rfam_hits[0].model_name
+    if not sequence.domains() or is_generic_domain(sequence):
+        return QaResult.ok("possible_contamination")
 
-        msg = (
-            'This {sequence_name} sequence matches a {match_domain} '
-            'Rfam model (<a href="{model_url}">{model_name}</a>). '
-            '<a href="{help_url}">Learn more &rarr;</a>'
-        ).format(
-            sequence_name=sequence_name,
-            match_domain=model_domain,
-            model_url=model_url,
-            model_name=model_name,
-            help_url='/help/rfam-annotations',
-        )
-
-        return re.sub(r'\s+', ' ', msg)
+    if (
+        hit.model_domain not in sequence.domains()
+        and not is_ignorable_mito_conflict(rna_type, sequence)
+        and not is_ignorable_chloroplast_conflict(rna_type, sequence)
+    ):
+        return QaResult.not_ok("possible_contamination", message(sequence))
+    return QaResult.ok("possible_contamination")

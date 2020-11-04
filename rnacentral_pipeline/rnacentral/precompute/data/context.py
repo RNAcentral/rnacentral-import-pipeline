@@ -13,10 +13,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from .rna_type import *
-from .extent import *
-from .location import *
-from .cluster import *
-from .state import *
-from .rfam import *
-from .accession import *
+
+import attr
+from attr.validators import instance_of as is_a
+
+from rnacentral_pipeline.rnacentral.repeats import tree
+
+
+@attr.s(frozen=True)
+class Context:
+    repeats = attr.ib(validator=is_a(tree.RepeatTree))

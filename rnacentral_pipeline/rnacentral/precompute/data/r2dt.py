@@ -13,14 +13,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import ftplib
+import attr
+from attr.validators import instance_of as is_a
 
-from pathlib import Path
 
-
-def get_ensembl_sm(assembly: str, directory: Path) -> Path:
-    """
-    For the given assembly fetch a softmasked fasta file of repeats. This will
-    write the file into the given directory.
-    """
-    pass
+@attr.s()
+class R2dtHit:
+    model_id = attr.ib(validator=is_a(int))
+    model_name = attr.ib(validator=is_a(int))
+    model_so_term = attr.ib(validator=is_a(int))

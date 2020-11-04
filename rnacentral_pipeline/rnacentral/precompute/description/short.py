@@ -14,32 +14,29 @@ limitations under the License.
 """
 
 import re
+import typing as ty
+
+from rnacentral_pipeline.rnacentral.precompute.data.sequence import Sequence
 
 
-def short_description(description, sequence):
+def short_description(description: str, sequence: Sequence) -> str:
     """
     Shorten a description to remove the leading species (common name) from
     description. This is useful for display in the genome browser.
     """
 
-    common = set()
-    species = set()
+    patterns: ty.Set[str] = set()
     for acc in sequence.accessions:
-        species.update(acc.all_species)
-        common.update(u'(%s)' % c for c in acc.all_common_names)
-    leading = [l for l in list(species) + list(common) if l]
+        patterns.update(re.escape(str(s)) for s in acc.all_species if s)
+        patterns.update(re.escape(f"({c})") for c in acc.all_common_names if c)
 
-    for name in leading:
-        # This is used instead of building a regex to avoid dealing with issues
-        # due to parenthesis.
-        name = name
-        if description.startswith(name):
-            description = description[len(name):]
+    for pattern in patterns:
+        description = re.sub("^" + pattern, "", description, flags=re.IGNORECASE)
         description = description.strip()
 
-    description = re.sub(r'^\s*(\(\))?\s*', '', description)
+    description = re.sub(r"^\s*(\(\))?\s*", "", description)
 
-    if description.startswith('(') and description.endswith(')'):
+    if description.startswith("(") and description.endswith(")"):
         description = description[1:-1]
 
     return description

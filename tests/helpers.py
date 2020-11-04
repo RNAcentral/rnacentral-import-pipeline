@@ -18,7 +18,7 @@ import os
 import tempfile
 import subprocess
 
-import six
+from io import StringIO
 
 from rnacentral_pipeline import psql
 
@@ -41,7 +41,7 @@ def run_with_replacements(path, *replacements, **kwargs):
         cmd = subprocess.run(['psql', '-f', tmp.name, os.environ['PGDATABASE']],
                              stdout=subprocess.PIPE, encoding='utf-8')
         cmd.check_returncode()
-        buf = six.moves.cStringIO(cmd.stdout)
+        buf = StringIO(cmd.stdout)
         results = psql.json_handler(buf)
 
         try:

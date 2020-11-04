@@ -14,16 +14,29 @@ limitations under the License.
 """
 
 
-from . import incomplete_sequence as incomplete
-from . import missing_rfam_match as missing
-from . import contamination
-from .data import QaStatus
+from rnacentral_pipeline.rnacentral.precompute.data.sequence import Sequence
+from rnacentral_pipeline.rnacentral.precompute.data.context import Context
+from rnacentral_pipeline.rnacentral.precompute.qa import contamination
+from rnacentral_pipeline.rnacentral.precompute.qa import \
+    incomplete_sequence as incomplete
+from rnacentral_pipeline.rnacentral.precompute.qa import \
+    missing_rfam_match as missing
+from rnacentral_pipeline.rnacentral.precompute.qa import \
+    repetitive_regions as repetitive
+from rnacentral_pipeline.rnacentral.precompute.qa.data import QaStatus
+
+VALIDATORS = [
+    contamination.validate,
+    incomplete.validate,
+    missing.validate,
+    repetitive.validate,
+]
 
 
-def status(rna_type, sequence):
-    validators = [
-        incomplete.Validator(),
-        missing.Validator(),
-        contamination.Validator(),
-    ]
-    return QaStatus.from_validators(validators, rna_type, sequence)
+def status(context: Context, sequence: Sequence, rna_type: str) -> QaStatus:
+    """
+    Generate the QaStatus for a given Sequence object
+    """
+
+    results = [v(context, rna_type, sequence) for v in VALIDATORS]
+    return QaStatus.from_results(results)

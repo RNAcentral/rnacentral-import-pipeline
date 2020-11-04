@@ -64,6 +64,16 @@ class RepeatRanges:
         tree = self._chromosomes[chromosome]
         return tree.overlaps(Interval(start, stop))
 
+    def envelops(self, chromosome: str, start: int, stop: int) -> ty.Set[Interval]:
+        """
+        Find all intervals which envelop the given start/stop.
+        """
+
+        if chromosome not in self._chromosomes:
+            raise ValueError(f"Unknown chromosome {chromosome}")
+        tree = self._chromosomes[chromosome]
+        return tree.envelop(start, stop)
+
     def dump(self, output: Path):
         """
         Dump this object to the given path as a pickle file.
@@ -82,11 +92,10 @@ def from_ensembl_fasta(assembly: str, path: Path) -> RepeatRanges:
 
     ranges = RepeatRanges(assembly=assembly)
     for record in SeqIO.parse(path, "fasta"):
-        chromosome = record.id
         nts = enumerate(record.seq, start=1)
         masked = more.split_at(nts, lambda nt: nt[1].upper() == nt[1])
         filtered = filter(None, masked)
         compressed = ((m[0][0], m[-1][0]) for m in filtered)
         for (start, stop) in compressed:
-            ranges.insert(chromosome, start, stop)
+            ranges.insert(record.id, start, stop)
     return ranges
