@@ -21,22 +21,22 @@ process extract_sequences {
   maxForks params.genes.extract_sequences.maxForks
 
   input:
-  tuple val(assembly_id), path(query)
+  tuple val(assembly_id), val(taxid), path(query)
 
   output:
   tuple val(assembly_id), path('sequences.json')
 
   """
-  psql -v ON_ERROR_STOP=1 -v assembly_id=$assembly_id -f $query $PGDATABASE > sequences.json
+  psql -v ON_ERROR_STOP=1 -v assembly_id=$assembly_id -v taxid=$taxid -f $query $PGDATABASE > sequences.json
   """
 }
 
 process build {
-  tag { "$assembly_id" }
+  tag { "$assembly_id/$taxid" }
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
-  tuple val(assembly_id), path(data_file)
+  tuple val(assembly_id), val(taxid), path(data_file)
 
   output:
   path('locus.csv'), emit: locus
