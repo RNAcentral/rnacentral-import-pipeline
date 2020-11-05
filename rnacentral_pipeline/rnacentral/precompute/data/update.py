@@ -21,7 +21,8 @@ from attr.validators import instance_of as is_a
 from attr.validators import optional
 
 from rnacentral_pipeline.databases.data.utils import INSDC_SO_MAPPING
-from rnacentral_pipeline.rnacentral.precompute import qa
+from rnacentral_pipeline.rnacentral.precompute.qa import status as qa
+from rnacentral_pipeline.rnacentral.precompute.qa.data import QaStatus
 from rnacentral_pipeline.rnacentral.precompute.data.context import Context
 from rnacentral_pipeline.rnacentral.precompute.data.sequence import Sequence
 from rnacentral_pipeline.rnacentral.precompute.description import (
@@ -41,7 +42,7 @@ class SequenceUpdate:
     so_rna_type = attr.ib(validator=is_a(str))
     description = attr.ib(validator=is_a(str))
     short_description = attr.ib(validator=is_a(str))
-    qa_status = attr.ib(validator=is_a(qa.QaStatus))
+    qa_status = attr.ib(validator=optional(is_a(QaStatus)))
 
     @classmethod
     def active(cls, context: Context, sequence: Sequence) -> "SequenceUpdate":
@@ -100,7 +101,12 @@ class SequenceUpdate:
     def is_active(self):
         return self.sequence.is_active
 
-    def database_names(self) -> str:
+    @property
+    def has_coordinates(self):
+        return self.sequence.has_coordinates
+
+    @property
+    def databases(self) -> str:
         """
         Generates a comma separated list of all database names in the given list of
         accesions.
@@ -121,8 +127,8 @@ class SequenceUpdate:
             str(int(self.sequence.is_active)),
             self.description,
             self.insdc_rna_type,
-            str(int(self.sequence.has_coordinates)),
-            self.database_names(),
+            str(int(self.has_coordinates)),
+            self.databases,
             self.short_description,
             str(self.sequence.last_release),
             self.so_rna_type,
@@ -132,6 +138,8 @@ class SequenceUpdate:
         """
         Yield arrays for all updates for qa status.
         """
+        if not self.qa_status:
+            return
 
         yield self.qa_status.writeable(self.sequence.upi, self.sequence.taxid)
 

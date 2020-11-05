@@ -13,17 +13,25 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+from functools import lru_cache
+
 import attr
 import pytest
 
+from rnacentral_pipeline.rnacentral.precompute.data.update import SequenceUpdate
+from rnacentral_pipeline.rnacentral.precompute.data.context import Context
 from rnacentral_pipeline.rnacentral.precompute import process
 
 from . import helpers
 
+@lru_cache()
+def context():
+    return Context()
+
 
 def load_data(upi):
     sequence = helpers.load_data(upi)
-    return process.as_update(sequence)
+    return SequenceUpdate.from_sequence(context(), sequence)
 
 
 @pytest.mark.parametrize(
@@ -282,7 +290,7 @@ def test_strips_leading_species(rna_id, short):
     ],
 )
 def test_builds_correct_rna_types(rna_id, rna_type):
-    assert load_data(rna_id).rna_type == rna_type
+    assert load_data(rna_id).insdc_rna_type == rna_type
 
 
 @pytest.mark.parametrize(
