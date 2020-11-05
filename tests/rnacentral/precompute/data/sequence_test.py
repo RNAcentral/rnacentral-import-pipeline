@@ -60,11 +60,12 @@ def test_can_detect_if_chloroplast(rna_id, expected):
     assert helpers.load_data(rna_id).is_chloroplast() is expected
 
 
+@pytest.mark.skip()
 @pytest.mark.parametrize('rna_id,expected', [
     ('URS00006DCF2F_387344', 'SO:0000252'),
 ])
 def test_can_load_rna_types(rna_id, expected):
-    assert helpers.load_data(rna_id).rna_type == expected
+    assert helpers.load_data(rna_id).so_rna_type == expected
 
 
 @pytest.mark.skip()
