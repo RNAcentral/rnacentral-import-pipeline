@@ -15,6 +15,7 @@ limitations under the License.
 
 import pytest
 
+from rnacentral_pipeline.rnacentral.precompute.data import context as ctx
 import rnacentral_pipeline.rnacentral.precompute.qa.incomplete_sequence as inco
 
 from .. import helpers
@@ -34,8 +35,8 @@ from .. import helpers
 ])
 def test_can_detect_incomplete_sequence(rna_id, rna_type, flag):
     sequence = helpers.load_data(rna_id)
-    validator = inco.Validator()
-    assert validator.status(rna_type, sequence) == flag
+    context = ctx.Context()
+    assert inco.validate(context, rna_type, sequence).has_issue == flag
 
 
 @pytest.mark.parametrize('rna_id,rna_type,message', [  # pylint: disable=no-member
@@ -46,5 +47,5 @@ def test_can_detect_incomplete_sequence(rna_id, rna_type, flag):
 ])
 def test_can_produce_correct_contamination_warnings(rna_id, rna_type, message):
     sequence = helpers.load_data(rna_id)
-    validator = inco.Validator()
-    assert validator.message(rna_type, sequence) == message
+    context = ctx.Context()
+    assert inco.validate(ctx, rna_type, sequence).message == message

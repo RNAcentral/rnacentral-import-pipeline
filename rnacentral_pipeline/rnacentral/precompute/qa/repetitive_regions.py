@@ -21,6 +21,8 @@ from rnacentral_pipeline.rnacentral.precompute.qa.data import QaResult
 def validate(context: Context, rna_type: str, sequence: Sequence) -> QaResult:
     repeats = context.repeats
     for coordinate in sequence.coordinates:
+        if not repeats.has_assembly(coordinate.assembly_id):
+            continue
         enclosed = repeats.envelops(
             coordinate.assembly_id,
             coordinate.chromosome,
@@ -29,6 +31,6 @@ def validate(context: Context, rna_type: str, sequence: Sequence) -> QaResult:
         )
         if enclosed:
             return QaResult.not_ok(
-                "repetitive_regions", "This sequence overlaps a repetitive region"
+                "from_repetitive_region", "This sequence overlaps a repetitive region"
             )
-    return QaResult.ok("repetitive_regions")
+    return QaResult.ok("from_repetitive_region")
