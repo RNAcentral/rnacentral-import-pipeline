@@ -29,37 +29,28 @@ from rnacentral_pipeline.writers import MultiCsvOutput
 AnUpdate = ty.Union[SequenceUpdate, GenericUpdate]
 
 
-def parse(handle, repeat_path: Path) -> ty.Iterable[AnUpdate]:
+def parse(context_path: Path, data_path: Path) -> ty.Iterable[AnUpdate]:
     """
     Parse the given json file (handle) using the repeat tree at `repeat_path`,
     and produce an iterable of updates for the database.
     """
 
-    repeats = tree.RepeatTree.load(repeat_path)
-    context = Context(repeats=repeats)
-    raw = psql.json_handler(handle)
-    grouped = it.groupby(raw, op.itemgetter("upi"))
-    for _, sequences in grouped:
-        updates = []
-        for sequence in sequences:
-            sequence = Sequence.build(sequence)
-            update = SequenceUpdate.from_sequence(context, sequence)
-            updates.append(update)
-            yield update
-        yield GenericUpdate.from_updates(context, updates)
+    context = Context.load(context_path)
+    with data_path.open("r") as handle:
+        raw = psql.json_handler(handle)
+        grouped = it.groupby(raw, op.itemgetter("upi"))
+        for _, sequences in grouped:
+            updates = []
+            for sequence in sequences:
+                sequence = Sequence.build(sequence)
+                update = SequenceUpdate.from_sequence(context, sequence)
+                updates.append(update)
+                yield update
+            yield GenericUpdate.from_updates(context, updates)
 
 
-def from_file(handle, repeat_tree: Path, output):
-    """
-    Process the results of the query stored in handle and write the updated
-    data to the given output handle. This assumes that handle contains one JSON
-    object per line.
-    """
-
-    writer = MultiCsvOutput.build(
-        parse,
-        precompute={"transformer": op.methodcaller("as_writeables")},
-        qa={"transformer": op.methodcaller("writeable_statuses")},
-    )
-
-    writer(output, handle, repeat_tree)
+writer = MultiCsvOutput.build(
+    parse,
+    precompute={"transformer": op.methodcaller("as_writeables")},
+    qa={"transformer": op.methodcaller("writeable_statuses")},
+)
