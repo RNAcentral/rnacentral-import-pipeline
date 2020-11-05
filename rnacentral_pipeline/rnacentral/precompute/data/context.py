@@ -24,7 +24,7 @@ from rnacentral_pipeline.rnacentral.repeats import tree
 
 @attr.s(frozen=True)
 class Context:
-    repeats = attr.ib(validator=is_a(tree.RepeatTree))
+    repeats = attr.ib(validator=is_a(tree.RepeatTree), factory=tree.RepeatTree)
 
     @classmethod
     def load(cls, path: Path) -> "Context":

@@ -15,6 +15,7 @@ limitations under the License.
 
 import pytest
 
+from rnacentral_pipeline.rnacentral.precompute.data import context as ctx
 import rnacentral_pipeline.rnacentral.precompute.qa.contamination as cont
 
 from .. import helpers
@@ -33,9 +34,10 @@ from .. import helpers
     ('URS0000D6974D_12908', 'other', False),
     ('URS00003EA5AC_9606', 'rRNA', False),
 ])
-def test_can_detect_possible_contamination(rna_id, rna_type, flag):
+def test_can_detect_possible_contamination(rna_id: str, rna_type: str, flag: bool):
     sequence = helpers.load_data(rna_id)
-    assert cont.validate(rna_type, sequence).has_issue == flag
+    context = ctx.Context()
+    assert cont.validate(context, rna_type, sequence).has_issue == flag
 
 
 @pytest.mark.parametrize('rna_id,rna_type,message', [
@@ -45,6 +47,7 @@ def test_can_detect_possible_contamination(rna_id, rna_type, flag):
         u'<a href="/help/rfam-annotations">Learn more &rarr;</a>'
     ))
 ])
-def test_can_produce_correct_contamination_warnings(rna_id, rna_type, message):
+def test_can_produce_correct_contamination_warnings(rna_id: str, rna_type: str, message: str):
     sequence = helpers.load_data(rna_id)
-    assert cont.validate(rna_type, sequence).message == message
+    context = ctx.Context()
+    assert cont.validate(context, rna_type, sequence).message == message

@@ -15,7 +15,8 @@ limitations under the License.
 
 import pytest
 
-from rnacentral_pipeline.rnacentral.precompute import qa
+from rnacentral_pipeline.rnacentral.precompute.data import context as ctx
+from rnacentral_pipeline.rnacentral.precompute.qa import status as qa
 
 from .. import helpers
 
@@ -30,7 +31,8 @@ from .. import helpers
 ])
 def test_can_detect_possible_contamination(rna_id, rna_type, flag):
     sequence = helpers.load_data(rna_id)
-    assert qa.status(rna_type, sequence).possible_contamination == flag
+    context = ctx.Context()
+    assert qa.status(context, sequence, rna_type).possible_contamination.has_issue == flag
 
 
 @pytest.mark.parametrize('rna_id,rna_type,flag', [  # pylint: disable=no-member
@@ -47,7 +49,8 @@ def test_can_detect_possible_contamination(rna_id, rna_type, flag):
 ])
 def test_can_detect_incomplete_sequence(rna_id, rna_type, flag):
     sequence = helpers.load_data(rna_id)
-    assert qa.status(rna_type, sequence).incomplete_sequence == flag
+    context = ctx.Context()
+    assert qa.status(context, sequence, rna_type).incomplete_sequence.has_issue == flag
 
 
 @pytest.mark.parametrize('rna_id,rna_type,flag', [  # pylint: disable=no-member
@@ -61,7 +64,8 @@ def test_can_detect_incomplete_sequence(rna_id, rna_type, flag):
 ])
 def test_can_detect_missing_rfam_match(rna_id, rna_type, flag):
     sequence = helpers.load_data(rna_id)
-    assert qa.status(rna_type, sequence).missing_rfam_match == flag
+    context = ctx.Context()
+    assert qa.status(context, sequence, rna_type).missing_rfam_match.has_issue == flag
 
 
 @pytest.mark.skip
@@ -73,7 +77,8 @@ def test_can_detect_missing_rfam_match(rna_id, rna_type, flag):
 ])
 def test_can_detect_problems_with_mismatched_rna_types(rna_id, rna_type, flag):
     sequence = helpers.load_data(rna_id)
-    assert qa.status(rna_type, sequence).mismatching_rna_type == flag
+    context = ctx.Context()
+    assert qa.status(context, sequence, rna_type).mismatching_rna_type == flag
 
 
 @pytest.mark.parametrize('rna_id,rna_type,messages', [  # pylint: disable=no-member
@@ -94,4 +99,5 @@ def test_can_detect_problems_with_mismatched_rna_types(rna_id, rna_type, flag):
 ])
 def test_can_add_messages(rna_id, rna_type, messages):
     sequence = helpers.load_data(rna_id)
-    assert qa.status(rna_type, sequence).messages == messages
+    context = ctx.Context()
+    assert qa.status(context, sequence, rna_type).messages() == messages

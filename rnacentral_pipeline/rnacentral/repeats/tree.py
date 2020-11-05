@@ -43,6 +43,9 @@ class RepeatTree:
         with path.open("rb") as raw:
             return pickle.load(raw)
 
+    def has_assembly(self, assembly_id):
+        return assembly_id in self._assemblies
+
     def overlaps(
         self, assembly: str, chromosome: str, start: int, stop: int
     ) -> ty.Set[Interval]:
