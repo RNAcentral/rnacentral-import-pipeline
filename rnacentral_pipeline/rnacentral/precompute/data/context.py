@@ -13,6 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import pickle
+from pathlib import Path
 
 import attr
 from attr.validators import instance_of as is_a
@@ -23,3 +25,17 @@ from rnacentral_pipeline.rnacentral.repeats import tree
 @attr.s(frozen=True)
 class Context:
     repeats = attr.ib(validator=is_a(tree.RepeatTree))
+
+    @classmethod
+    def load(cls, path: Path) -> "Context":
+        with path.open('rb') as raw:
+            return pickle.load(raw)
+
+    def dump(self, path: Path):
+        with path.open('wb') as out:
+            pickle.dump(self, out)
+
+
+def from_files(repeat_path: Path) -> Context:
+    repeats = tree.RepeatTree.load(repeat_path)
+    return Context(repeats=repeats)

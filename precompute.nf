@@ -28,15 +28,17 @@ process fetch_repeats {
   """
 }
 
-process build_repeat_tree {
+process build_precompute_context {
   input:
   path('repeats*.json')
 
   output:
-  path('repeat-tree')
+  path('context.pickle')
 
   """
   rnac repeats build-tree $repeats repeat-tree
+
+  rnac precompute build-context repeat-tree context.pickle
   """
 }
 
@@ -49,7 +51,6 @@ process find_precompute_upis {
   output:
   path('ranges.txt')
 
-  script:
   """
   psql \
     -v ON_ERROR_STOP=1 \
@@ -89,14 +90,14 @@ process process_range {
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
-  tuple val(min), val(max), path(raw), path(repeats)
+  tuple val(min), val(max), path(raw), path(context)
 
   output:
   path('precompute.csv'), emit: data
   path('qa.csv'), emit: qa
 
   """
-  rnac precompute from-file $raw $repeats
+  rnac precompute from-file $context $raw
   """
 }
 
@@ -127,14 +128,14 @@ workflow precompute {
     | splitCsv() \
     | fetch_repeats \
     | collect \
-    | build_repeat_tree \
-    | set { repeats }
+    | build_precompute_context \
+    | set { context }
 
     find_ranges(method) \
     | splitCsv() \
     | combine(Channel.fromPath('files/precompute/query.sql')) \
     | query_range \
-    | combine(repeats) \
+    | combine(context) \
     | process_range \
 
     process_range.out.data | collect | set { data }
