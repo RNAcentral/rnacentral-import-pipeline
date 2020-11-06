@@ -17,8 +17,8 @@ from pathlib import Path
 
 import click
 
-from rnacentral_pipeline.rnacentral import repeats
 from rnacentral_pipeline.rnacentral.genome_mapping import urls
+from rnacentral_pipeline.rnacentral.repeats import ranges, tree
 
 
 @click.group("repeats")
@@ -47,13 +47,17 @@ def find_url(species, assembly, host, output, temp_directory=None):
     output.write(url)
     output.write("\n")
 
-@cli.command('compute-ranges')
+
+@cli.command("compute-ranges")
 @click.argument("assembly")
 @click.argument("filename", type=click.Path(file_okay=True))
 @click.argument("output", type=click.Path(file_okay=True, dir_okay=False))
 def compute_ranges(assembly: str, filename, output):
-    ranges = repeats.ranges.from_ensembl_fasta(assembly, Path(filename))
-    ranges.dump(Path(output))
+    """
+    Compute a range of repeat regions based upon the the soft masked fasta file
+    from Ensembl.
+    """
+    ranges.from_ensembl_fasta(assembly, Path(filename)).dump(Path(output))
 
 
 @cli.command("build-tree")
@@ -64,6 +68,4 @@ def build_tree(files, output):
     Process all files, which should represent repeats in unique assemblies, into
     a single repeat tree.
     """
-
-    tree = repeats.tree.from_ranges(files)
-    tree.dump(Path(output))
+    tree.from_ranges(files).dump(Path(output))
