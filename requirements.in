@@ -10,10 +10,9 @@ intervaltree
 jsonschema
 lxml
 more-itertools
-numpy
 obonet
 psycopg2
-pypika==0.39.1
+pypika
 ratelimiter
 requests
 retry
