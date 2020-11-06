@@ -14,31 +14,30 @@ process find_genomes_with_repeats {
   """
 }
 
-process fetch_repeats {
+process fetch_ensembl_data {
   input:
   tuple val(species), val(assembly), val(host)
 
   output:
-  path("repeat-${assembly}.json")
+  path("repeat-${assembly}.pickle"), emit: repeats
 
   """
   rnac repeats url-for $species $assembly $host - | xargs -I {} fetch generic '{}' ${species}.fasta.gz
   gzip -d ${species}.fasta.gz
-  rnac repeats compute-ranges $assembly ${species}.fasta repeat-${assembly}.json
+  rnac repeats compute-ranges $assembly ${species}.fasta repeat-${assembly}.pickle
   """
 }
 
 process build_precompute_context {
   input:
-  path('repeats*.json')
+  path('repeats*.pickle')
 
   output:
   path('context.pickle')
 
   """
-  rnac repeats build-tree $repeats repeat-tree
-
-  rnac precompute build-context repeat-tree context.pickle
+  rnac repeats build-tree repeats*.pickle repeat-tree.pickle
+  rnac precompute build-context repeat-tree.pickle pseudo-tree.pickle context.pickle
   """
 }
 
@@ -126,10 +125,11 @@ workflow precompute {
   main:
     find_genomes_with_repeats(Channel.fromPath('files/repeat/find-assembiles.sql')) \
     | splitCsv() \
-    | fetch_repeats \
-    | collect \
-    | build_precompute_context \
-    | set { context }
+    | fetch_repeats
+
+    fetch_ensembl_data.repeats | collect | set { repeats }
+
+    build_precompute_context(repeats) | set { context }
 
     find_ranges(method) \
     | splitCsv() \
