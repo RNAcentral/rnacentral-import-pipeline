@@ -1,4 +1,6 @@
 process fetch_rfam {
+  when { params.databases.ensembl.run }
+
   input:
   path(query)
 
@@ -16,6 +18,8 @@ process fetch_rfam {
 }
 
 process fetch_gencode {
+  when { params.databases.ensembl.run }
+
   output:
   path('transcripts.gff')
 
@@ -28,6 +32,8 @@ process fetch_gencode {
 }
 
 process fetch_excludes {
+  when { params.databases.ensembl.run }
+
   input:
   path(urls)
 
@@ -46,6 +52,7 @@ process fetch_excludes {
 
 process find_species {
   executor 'local'
+  when { params.databases.ensembl.run }
 
   output:
   path('species.txt')
