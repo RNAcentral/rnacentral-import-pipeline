@@ -18,8 +18,8 @@ import logging
 import click
 
 from . import (ensembl, europepmc, external, fetch, ftp_export, genes,
-               genome_mapping, lookup, misc, ncbi, ols, precompute, qa, r2dt,
-               rfam, search_export, text_mining)
+               genome_mapping, lookup, misc, ncbi, ols, pirbase, precompute,
+               qa, r2dt, rfam, search_export, text_mining)
 
 
 @click.group()
@@ -57,6 +57,7 @@ cli.add_command(misc.run_release)
 cli.add_command(misc.validate_pgloader)
 cli.add_command(ncbi.cli)
 cli.add_command(ols.cli)
+cli.add_command(pirbase.cli)
 cli.add_command(precompute.cli)
 cli.add_command(qa.cli)
 cli.add_command(r2dt.cli)
