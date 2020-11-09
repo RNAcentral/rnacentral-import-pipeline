@@ -16,10 +16,10 @@ limitations under the License.
 import typing as ty
 
 import ijson
-
-from rnacentral_pipeline.databases.generic import v1
 from rnacentral_pipeline.databases import data
+from rnacentral_pipeline.databases.generic import v1
+
 
 def parse(handle) -> ty.Iterable[data.Entry]:
-    for entry in ijson.items(handle, 'data'):
+    for entry in ijson.items(handle, "data"):
         yield v1.as_ncrna(entry)
