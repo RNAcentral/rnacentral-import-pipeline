@@ -323,7 +323,7 @@ def process_crw(metadata_file, sequence_directory, output):
     default=".",
     type=click.Path(writable=True, dir_okay=True, file_okay=False),
 )
-def process_json_schema(json_file, output):
+def process_lncbook(json_file, output):
     """
     This parses our JSON files from LncBook to produce the importable CSV files.
     LncBook has some special logic around sequences (only include hg38), that
