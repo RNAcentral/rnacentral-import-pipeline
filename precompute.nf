@@ -3,6 +3,8 @@
 nextflow.enable.dsl=2
 
 process find_genomes_with_repeats {
+  when { params.precompute.run }
+
   input:
   path(query)
 
@@ -10,11 +12,15 @@ process find_genomes_with_repeats {
   path("assemblies.csv")
 
   """
-  psql -f $query "$PGDATABASE" > assemblies.csv
+  psql -v ON_ERROR_STOP=1 -f $query "$PGDATABASE" > assemblies.csv
   """
 }
 
 process fetch_ensembl_data {
+  tag { "$species-$assembly" }
+  errorStrategy 'ignore'
+  memory '6GB'
+
   input:
   tuple val(species), val(assembly), val(host)
 
@@ -29,6 +35,8 @@ process fetch_ensembl_data {
 }
 
 process build_precompute_context {
+  memory '8GB'
+
   input:
   path('repeats*.pickle')
 
@@ -41,7 +49,8 @@ process build_precompute_context {
   """
 }
 
-process find_precompute_upis {
+process find_ranges {
+  when { params.precompute.run }
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
@@ -59,7 +68,7 @@ process find_precompute_upis {
   """
 }
 
-process precompute_range_query {
+process query_range {
   tag { "$min-$max" }
   beforeScript 'slack db-work precompute-range || true'
   afterScript 'slack db-done precompute-range || true'
@@ -100,7 +109,7 @@ process process_range {
   """
 }
 
-process load_precomputed_data {
+process load_data {
   beforeScript 'slack db-work loading-precompute || true'
   afterScript 'slack db-done loading-precompute || true'
   container ''
@@ -119,20 +128,21 @@ process load_precomputed_data {
 }
 
 workflow precompute {
-  take:
-    path(method)
+  take: method
 
   main:
-    find_genomes_with_repeats(Channel.fromPath('files/repeat/find-assembiles.sql')) \
-    | splitCsv() \
-    | fetch_repeats
+    Channel.fromPath('files/repeats/find-assemblies.sql') \
+    | find_genomes_with_repeats \
+    | splitCsv \
+    | fetch_ensembl_data
 
-    fetch_ensembl_data.repeats | collect | set { repeats }
+    fetch_ensembl_data.out.repeats | collect | set { repeats }
 
     build_precompute_context(repeats) | set { context }
 
-    find_ranges(method) \
-    | splitCsv() \
+    method \
+    | find_ranges \
+    | splitCsv \
     | combine(Channel.fromPath('files/precompute/query.sql')) \
     | query_range \
     | combine(context) \

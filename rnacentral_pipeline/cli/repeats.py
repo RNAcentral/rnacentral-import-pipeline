@@ -43,7 +43,7 @@ def find_url(species, assembly, host, output, temp_directory=None):
     temp directory, defaulting to the current one.
     """
 
-    url = urls.url_for(species, assembly, host, soft_mapped=True)
+    url = urls.url_for(species, assembly, host, soft_masked=True)
     output.write(url)
     output.write("\n")
 
@@ -61,11 +61,12 @@ def compute_ranges(assembly: str, filename, output):
 
 
 @cli.command("build-tree")
-@click.argument("files", nargs=-1, type=click.File("rb"))
+@click.argument("files", nargs=-1, type=click.Path())
 @click.argument("output", type=click.Path())
 def build_tree(files, output):
     """
     Process all files, which should represent repeats in unique assemblies, into
     a single repeat tree.
     """
-    tree.from_ranges(files).dump(Path(output))
+    paths = [Path(f) for f in files]
+    tree.from_ranges(paths).dump(Path(output))
