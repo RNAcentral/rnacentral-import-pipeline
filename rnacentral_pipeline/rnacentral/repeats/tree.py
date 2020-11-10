@@ -88,14 +88,15 @@ class RepeatTree:
             pickle.dump(self, out)
 
 
-def from_ranges(handles) -> RepeatTree:
+def from_ranges(paths: ty.List[Path]) -> RepeatTree:
     """
     Build a repeat tree from a list of file handles that contain individual
     RepeatRanges.
     """
 
     tree = RepeatTree()
-    for handle in handles:
-        loaded = ranges.RepeatRanges.load(handle)
+    for path in paths:
+        loaded = ranges.RepeatRanges.load(path)
         tree.add(loaded)
+        del loaded
     return tree

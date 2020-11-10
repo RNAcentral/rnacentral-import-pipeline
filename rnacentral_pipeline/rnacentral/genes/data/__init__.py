@@ -18,5 +18,3 @@ from .extent import *
 from .location import *
 from .cluster import *
 from .state import *
-from .rfam import *
-from .accession import *
