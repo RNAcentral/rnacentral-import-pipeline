@@ -69,4 +69,4 @@ def build_tree(files, output):
     a single repeat tree.
     """
     paths = [Path(f) for f in files]
-    tree.from_ranges(paths).dump(Path(output))
+    tree.from_ranges(Path(output), paths).dump()
