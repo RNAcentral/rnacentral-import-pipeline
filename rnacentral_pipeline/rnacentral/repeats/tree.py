@@ -13,7 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import pickle
+import shelve
+import tempfile
 import typing as ty
 from pathlib import Path
 
@@ -24,15 +25,17 @@ from intervaltree import Interval
 from rnacentral_pipeline.rnacentral.repeats import ranges
 
 
-@attr.s()
 class RepeatTree:
     """
     This represents repeats across several assemblies.
     """
 
-    _assemblies: ty.Dict[str, ranges.RepeatRanges] = attr.ib(
-        validator=is_a(dict), factory=dict
-    )
+    def __init__(self, output: ty.Optional[Path]):
+        if output:
+            filename = str(output)
+        else:
+            filename = tempfile.mktemp()
+        self.store = shelve.open(filename)
 
     @classmethod
     def load(cls, path: Path) -> "RepeatTree":
@@ -40,11 +43,10 @@ class RepeatTree:
         Load the tree from the given file. This assumes that the format is the
         one used by `dump`.
         """
-        with path.open("rb") as raw:
-            return pickle.load(raw)
+        return cls(path)
 
     def has_assembly(self, assembly_id):
-        return assembly_id in self._assemblies
+        return assembly_id in self.store
 
     def overlaps(
         self, assembly: str, chromosome: str, start: int, stop: int
@@ -53,10 +55,10 @@ class RepeatTree:
         Find the overlaps for the given assembly/chromosome/start/stop.
         """
 
-        if assembly not in self._assemblies:
+        if not self.has_assembly(assembly):
             raise ValueError(f"Unknown assembly {assembly}")
 
-        return self._assemblies[assembly].overlaps(chromosome, start, stop)
+        return self.store[assembly].overlaps(chromosome, start, stop)
 
     def envelops(
         self, assembly: str, chromosome: str, start: int, stop: int
@@ -65,10 +67,10 @@ class RepeatTree:
         Find all regions that enclose the given assembly/chromosome/start/stop.
         """
 
-        if assembly not in self._assemblies:
+        if not self.has_assembly(assembly):
             raise ValueError(f"Unknown assembly {assembly}")
 
-        return self._assemblies[assembly].envelops(chromosome, start, stop)
+        return self.store[assembly].envelops(chromosome, start, stop)
 
     def add(self, value: ranges.RepeatRanges):
         """
@@ -76,25 +78,25 @@ class RepeatTree:
         already stored in the tree.
         """
 
-        if value.assembly in self._assemblies:
+        if self.has_assembly(value.assembly):
             raise ValueError(f"Duplicate assmebly {value.assembly}")
-        self._assemblies[value.assembly] = value
+        self.store[value.assembly] = value
 
-    def dump(self, output: Path):
+    def dump(self):
         """
         Write the tree to a file in a format suitable for RepeatTree.load.
         """
-        with output.open("wb") as out:
-            pickle.dump(self, out)
+        self.store.sync()
+        self.close()
 
 
-def from_ranges(paths: ty.List[Path]) -> RepeatTree:
+def from_ranges(output: Path, paths: ty.List[Path]) -> RepeatTree:
     """
     Build a repeat tree from a list of file handles that contain individual
     RepeatRanges.
     """
 
-    tree = RepeatTree()
+    tree = RepeatTree(output)
     for path in paths:
         loaded = ranges.RepeatRanges.load(path)
         tree.add(loaded)
