@@ -12,10 +12,10 @@ requirements-dev.txt: requirements-dev.in
 	pip-compile -o requirements-dev.txt requirements-dev.in
 
 docker: Dockerfile requirements.txt .dockerignore
-	docker build --build-arg CACHE_DATE="$(date)" -t "$(docker)" .
+	docker build -t "$(docker)" .
 
-shell:
-	docker run -v `pwd`:/rna/import-pipeline -i -t "$(docker)" bash
+shell: docker
+	docker run -v `pwd`:/rna/import-pipeline -i -t "$(docker)"
 
 publish: docker
 	docker push "$(docker)"
