@@ -13,7 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import shelve
+import pickle
 import tempfile
 import typing as ty
 from pathlib import Path
@@ -25,80 +25,58 @@ from intervaltree import Interval
 from rnacentral_pipeline.rnacentral.repeats import ranges
 
 
+@attr.s()
 class RepeatTree:
     """
     This represents repeats across several assemblies.
     """
 
-    def __init__(self, output: ty.Optional[Path]):
-        if output:
-            filename = str(output)
-        else:
-            filename = tempfile.mktemp()
-        self.store = shelve.open(filename)
+    store: ty.Dict[str, ranges.Info] = attr.ib(validator=is_a(dict), factory=dict)
 
     @classmethod
-    def load(cls, path: Path) -> "RepeatTree":
+    def from_file(cls, path: Path) -> "RepeatTree":
         """
         Load the tree from the given file. This assumes that the format is the
         one used by `dump`.
         """
-        return cls(path)
+        with path.open("rb") as raw:
+            tree = pickle.load(raw)
+            tree.validate()
+            return tree
 
-    def has_assembly(self, assembly_id):
+    @classmethod
+    def from_directory(cls, path: Path) -> "RepeatTree":
+        return cls.from_file(path / "info.pickle")
+
+    def add_info(self, info: ranges.Info):
+        self.store[info.assembly_id] = info
+
+    def has_assembly(self, assembly_id) -> bool:
         return assembly_id in self.store
 
-    def overlaps(
-        self, assembly: str, chromosome: str, start: int, stop: int
-    ) -> ty.Set[Interval]:
-        """
-        Find the overlaps for the given assembly/chromosome/start/stop.
-        """
+    def assembly(self, assembly_id: str) -> ranges.RepeatRanges:
+        return ranges.RepeatRanges.from_info(self.store[assembly_id])
 
-        if not self.has_assembly(assembly):
-            raise ValueError(f"Unknown assembly {assembly}")
+    def validate(self):
+        for info in self.store.values():
+            info.validate()
 
-        return self.store[assembly].overlaps(chromosome, start, stop)
-
-    def envelops(
-        self, assembly: str, chromosome: str, start: int, stop: int
-    ) -> ty.Set[Interval]:
-        """
-        Find all regions that enclose the given assembly/chromosome/start/stop.
-        """
-
-        if not self.has_assembly(assembly):
-            raise ValueError(f"Unknown assembly {assembly}")
-
-        return self.store[assembly].envelops(chromosome, start, stop)
-
-    def add(self, value: ranges.RepeatRanges):
-        """
-        Add a given RepeatRange to this tree. This fails if the assembly is
-        already stored in the tree.
-        """
-
-        if self.has_assembly(value.assembly):
-            raise ValueError(f"Duplicate assmebly {value.assembly}")
-        self.store[value.assembly] = value
-
-    def dump(self):
+    def dump(self, output: Path):
         """
         Write the tree to a file in a format suitable for RepeatTree.load.
         """
-        self.store.sync()
-        self.close()
+        assert output.is_dir(), f"{output} must be a directory"
+        path = output / "info.pickle"
+        with path.open("wb") as out:
+            pickle.dump(attr.asdict(self), out)
 
 
-def from_ranges(output: Path, paths: ty.List[Path]) -> RepeatTree:
-    """
-    Build a repeat tree from a list of file handles that contain individual
-    RepeatRanges.
-    """
-
-    tree = RepeatTree(output)
-    for path in paths:
-        loaded = ranges.RepeatRanges.load(path)
-        tree.add(loaded)
-        del loaded
-    return tree
+def from_directories(output: Path):
+    tree = RepeatTree()
+    for path in output.glob("*/"):
+        assert path.is_dir()
+        info = ranges.Info.from_directory(path)
+        info.validate()
+        tree.add_info(info)
+    tree.validate()
+    tree.dump(output)

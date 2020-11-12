@@ -27,15 +27,15 @@ class Context:
     repeats = attr.ib(validator=is_a(tree.RepeatTree), factory=tree.RepeatTree)
 
     @classmethod
-    def load(cls, path: Path) -> "Context":
-        with path.open('rb') as raw:
-            return pickle.load(raw)
+    def from_directory(cls, path: Path) -> "Context":
+        repeats = tree.RepeatTree.from_directory(path / "repeat-tree")
+        ctx = cls(repeats=repeats)
+        ctx.validate()
+        return ctx
+
+    def validate(self):
+        self.repeats.validate()
 
     def dump(self, path: Path):
         with path.open('wb') as out:
             pickle.dump(self, out)
-
-
-def from_files(repeat_path: Path) -> Context:
-    repeats = tree.RepeatTree.load(repeat_path)
-    return Context(repeats=repeats)

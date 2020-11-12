@@ -13,8 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from rnacentral_pipeline.rnacentral.precompute.data.sequence import Sequence
 from rnacentral_pipeline.rnacentral.precompute.data.context import Context
+from rnacentral_pipeline.rnacentral.precompute.data.sequence import Sequence
 from rnacentral_pipeline.rnacentral.precompute.qa.data import QaResult
 
 
@@ -23,11 +23,9 @@ def validate(context: Context, rna_type: str, sequence: Sequence) -> QaResult:
     for coordinate in sequence.coordinates:
         if not repeats.has_assembly(coordinate.assembly_id):
             continue
-        enclosed = repeats.envelops(
-            coordinate.assembly_id,
-            coordinate.chromosome,
-            coordinate.start,
-            coordinate.stop,
+        assem_reps = repeats.assembly(coordinate.assembly_id)
+        enclosed = assem_reps.is_enveloped(
+            coordinate.chromosome, coordinate.start, coordinate.stop,
         )
         if enclosed:
             return QaResult.not_ok(

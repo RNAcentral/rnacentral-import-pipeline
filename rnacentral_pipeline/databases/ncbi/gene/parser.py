@@ -15,8 +15,6 @@ limitations under the License.
 
 import csv
 
-from boltons import iterutils
-
 from rnacentral_pipeline.utils import unpickle_stream
 from rnacentral_pipeline.databases.data import Entry
 
