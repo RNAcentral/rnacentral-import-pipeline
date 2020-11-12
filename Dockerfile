@@ -1,4 +1,4 @@
-FROM python:3.7.6-buster
+FROM python:3.7-buster
 
 ENV RNA /rna
 
@@ -9,13 +9,13 @@ RUN apt-get upgrade -y
 
 # Install all required packages
 RUN apt-get install -y \
-    gawk \
     bedtools \
     ca-certificates \
     curl \
     default-mysql-client \
     devscripts \
     freetds-dev \
+    gawk \
     gcc \
     git \
     gzip \
@@ -40,6 +40,7 @@ RUN apt-get install -y \
     python3-pip \
     rsync \
     sbcl \
+    tabix \
     tar \
     time \
     unzip \
