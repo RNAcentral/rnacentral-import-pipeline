@@ -1,8 +1,8 @@
 PyMySQL
 attrs
 biopython
-click-aliases
 click
+click-aliases
 furl
 gffutils
 humanfriendly
