@@ -35,7 +35,7 @@ def parse(context_path: Path, data_path: Path) -> ty.Iterable[AnUpdate]:
     and produce an iterable of updates for the database.
     """
 
-    context = Context.load(context_path)
+    context = Context.from_directory(context_path)
     with data_path.open("r") as handle:
         raw = psql.json_handler(handle)
         grouped = it.groupby(raw, op.itemgetter("upi"))

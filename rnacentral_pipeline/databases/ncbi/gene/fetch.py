@@ -21,7 +21,7 @@ from contextlib import contextmanager
 from Bio import SeqIO
 from Bio import Entrez
 
-from boltons import iterutils
+import more_itertools as more
 
 from rnacentral_pipeline.utils import pickle_stream
 
@@ -170,7 +170,7 @@ def sequences(batch):
 
 
 def data(raw_ncrnas):
-    batches = iterutils.chunked_iter(raw_ncrnas, BATCH_SIZE)
+    batches = more.chunked(raw_ncrnas, BATCH_SIZE)
     for batch in batches:
         seqs = sequences(batch)
         for ncrna in batch:

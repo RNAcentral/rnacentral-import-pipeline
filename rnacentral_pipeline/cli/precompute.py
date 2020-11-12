@@ -30,7 +30,7 @@ def cli():
 
 
 @cli.command("from-file")
-@click.argument("context", type=click.Path(dir_okay=False, file_okay=True))
+@click.argument("context", type=click.Path(dir_okay=True, file_okay=True))
 @click.argument("json_file", type=click.Path(dir_okay=False, file_okay=True))
 @click.argument(
     "output",
@@ -44,14 +44,3 @@ def precompute_from_file(context, json_file, output):
     """
     data = pre.parse(Path(context), Path(json_file))
     pre.writer.write(data, output)
-
-
-@cli.command("build-context")
-@click.argument("repeats", type=click.Path(dir_okay=False, file_okay=True))
-@click.argument("output", type=click.Path(dir_okay=False, file_okay=True))
-def build_context(repeats):
-    """
-    Build and serialize a context for use in precomputing.
-    """
-    context = ctx.from_files(Path(repeats))
-    context.dump(Path(output))

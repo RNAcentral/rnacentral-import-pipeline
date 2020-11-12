@@ -6,46 +6,57 @@ process find_genomes_with_repeats {
   when { params.precompute.run }
 
   input:
-  path(query)
+  tuple path(connections), path(query)
 
   output:
-  path("assemblies.csv")
+  path("info.csv")
 
   """
   psql -v ON_ERROR_STOP=1 -f $query "$PGDATABASE" > assemblies.csv
+  rnac repeats find-databases $connections assemblies.csv info.csv
   """
 }
 
 process fetch_ensembl_data {
   tag { "$species-$assembly" }
-  errorStrategy 'ignore'
-  memory '6GB'
+  maxForks 10
 
   input:
-  tuple val(species), val(assembly), val(host)
+  tuple val(conn_name), val(assembly), val(database), path(query)
 
   output:
-  path("repeat-${assembly}.pickle"), emit: repeats
+  path("$assembly-repeats"), emit: repeats
 
+  script:
+  def conn = params.connections[conn_name]
+  def out = "$assembly-repeats"
+  def coord = "${assembly}.bed.bgz"
   """
-  rnac repeats url-for $species $assembly $host - | xargs -I {} fetch generic '{}' ${species}.fasta.gz
-  gzip -d ${species}.fasta.gz
-  rnac repeats compute-ranges $assembly ${species}.fasta repeat-${assembly}.pickle
+  mysql -N --host $conn.host --port $conn.port --user $conn.user --database $database < $query > raw.bed
+  mkdir $out
+  pushd $out
+  bedtools merge -i ../raw.bed | sort -k1V -k2n -k3n | bgzip > $coord
+  tabix -s 1 -b 2 -e 3 $coord
+  rnac repeats build-info-directory --chromosome-column 1 --start-column -2 --stop-column 3 $assembly .
+  popd
   """
 }
 
 process build_precompute_context {
-  memory '8GB'
-
   input:
-  path('repeats*.pickle')
+  path('species-repeats*')
 
   output:
-  path('context.pickle')
+  path('context')
 
   """
-  rnac repeats build-tree repeats*.pickle repeat-tree.pickle
-  rnac precompute build-context repeat-tree.pickle pseudo-tree.pickle context.pickle
+  mkdir repeat-tree
+  mv species-repeats* repeat-tree
+  pushd repeat-tree
+  rnc repeats build-tree .
+  popd
+  mkdir context
+  mv repeat-tree context
   """
 }
 
@@ -134,6 +145,7 @@ workflow precompute {
     Channel.fromPath('files/repeats/find-assemblies.sql') \
     | find_genomes_with_repeats \
     | splitCsv \
+    | combine(Channel.fromPath('files/repeats/extract-repeats.sql'))
     | fetch_ensembl_data
 
     fetch_ensembl_data.out.repeats | collect | set { repeats }

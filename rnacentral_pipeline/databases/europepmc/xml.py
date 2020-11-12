@@ -31,7 +31,7 @@ from contextlib import contextmanager
 import attr
 from attr.validators import instance_of as is_a
 
-from boltons import iterutils
+import more_itertools as more
 
 from lxml import etree as ET
 
@@ -116,7 +116,7 @@ class Cache(object):
     @classmethod
     def populate_with(cls, base_path, references):
         cache = cls.build(base_path)
-        chunks = iterutils.chunked_iter(references, COMMIT_SIZE)
+        chunks = more.chunked(references, COMMIT_SIZE)
         for index, chunk in enumerate(chunks):
             with cache.open(mode='cf') as cache:
                 for reference in chunk:

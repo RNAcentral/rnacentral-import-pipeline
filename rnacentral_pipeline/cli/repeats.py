@@ -13,6 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import csv
 from pathlib import Path
 
 import click
@@ -48,20 +49,42 @@ def find_url(species, assembly, host, output, temp_directory=None):
     output.write("\n")
 
 
-@cli.command("compute-ranges")
+@cli.command("find-databases")
+@click.argument("connections", type=click.File("r"))
+@click.argument("assembly_file", type=click.File("r"))
+@click.argument("output", default="-", type=click.Path(dir_okay=True, file_okay=False))
+def find_databases(connections, assembly_file, output):
+    """
+    Given a CSV file of assembly,species find the name of the database in the
+    latest Ensembl databases to access data for it.
+    """
+    info = ranges.find_databases(connections, assembly_file)
+    writer = csv.writer(output)
+    writer.writerows(info)
+
+
+@cli.command("build-info-directory")
+@click.option("--chromosome", default=1)
+@click.option("--start", default=2)
+@click.option("--stop", default=3)
 @click.argument("assembly")
-@click.argument("filename", type=click.Path(file_okay=True))
-@click.argument("output", type=click.Path(file_okay=True, dir_okay=False))
-def compute_ranges(assembly: str, filename, output):
+@click.argument("directory", type=click.Path(dir_okay=True, exists=True))
+def ranges_from_bed(assembly, directory, chromosome=None, start=None, stop=None):
     """
-    Compute a range of repeat regions based upon the the soft masked fasta file
-    from Ensembl.
+    Build a ranges object from a bed like file. The file should be compressed
+    and indexed for 
     """
-    ranges.from_ensembl_fasta(assembly, Path(filename)).dump(Path(output))
+    ranges.build_bed_directory(
+        assembly,
+        Path(directory),
+        chromosome_column=chromosome,
+        start_column=start,
+        stop_column=stop,
+    )
 
 
 @cli.command("build-tree")
-@click.argument("files", nargs=-1, type=click.Path())
+@click.argument("files", nargs=-1, type=click.Path(exists=True))
 @click.argument("output", type=click.Path())
 def build_tree(files, output):
     """
@@ -69,4 +92,4 @@ def build_tree(files, output):
     a single repeat tree.
     """
     paths = [Path(f) for f in files]
-    tree.from_ranges(Path(output), paths).dump()
+    tree.from_directories(paths, Path(output)).dump()
