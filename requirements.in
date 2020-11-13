@@ -1,8 +1,9 @@
 PyMySQL
 attrs
+beautifulsoup4
 biopython
-click-aliases
 click
+click-aliases
 furl
 gffutils
 humanfriendly

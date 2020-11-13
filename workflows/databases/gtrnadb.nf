@@ -5,11 +5,9 @@ process fetch_data {
   path('*.json')
 
   """
-  scp $params.databases.gtrnadb.remote .
+  rnac gtrnadb urls-for $params.gtrnadb.remote | xargs -I {} wget {}
   gzip -d *.json.gz
-  gzip -d bacteria_tRNAs.tar.gz
-  mv bacteria_tRNAs.tar bacteria_tRNAs.json
-  ls *.tar.gz | xargs -I {} --verbose tar -xzvf {}
+  find . -name '*.tar.gz' | xargs -I {} --verbose tar -xzvf {}
   """
 }
 

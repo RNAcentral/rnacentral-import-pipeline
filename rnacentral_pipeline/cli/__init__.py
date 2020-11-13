@@ -18,8 +18,8 @@ import logging
 import click
 
 from . import (ensembl, europepmc, external, fetch, ftp_export, genes,
-               genome_mapping, lookup, misc, ncbi, ols, precompute, qa, r2dt,
-               rfam, search_export, text_mining)
+               genome_mapping, gtrnadb, lookup, misc, ncbi, ols, precompute,
+               qa, r2dt, rfam, search_export, text_mining)
 
 
 @click.group()
@@ -49,6 +49,7 @@ cli.add_command(fetch.cli)
 cli.add_command(ftp_export.cli)
 cli.add_command(genes.cli)
 cli.add_command(genome_mapping.cli)
+cli.add_command(gtrnadb.cli)
 cli.add_command(lookup.cli)
 cli.add_command(misc.check_release)
 cli.add_command(misc.crs_data)
