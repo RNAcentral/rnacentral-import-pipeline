@@ -40,6 +40,7 @@ ON
 WHERE
   pre.is_active = true
   AND regions.assembly_id = :'assembly_id'
+  AND pre.taxid = :taxid
 GROUP BY regions.id
 ORDER BY max(regions.chromosome), max(regions.strand), max(pre.rna_type)
 ) TO STDOUT

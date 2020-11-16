@@ -1,5 +1,6 @@
 PyMySQL
 attrs
+beautifulsoup4
 biopython
 click
 click-aliases
@@ -10,10 +11,9 @@ intervaltree
 jsonschema
 lxml
 more-itertools
-numpy
 obonet
 psycopg2
-pypika==0.39.1
+pypika
 ratelimiter
 requests
 retry
