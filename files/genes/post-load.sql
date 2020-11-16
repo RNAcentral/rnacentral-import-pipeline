@@ -34,8 +34,8 @@ SELECT DISTINCT
   strand,
   locus_start,
   locus_stop,
-  member_count,
-FROM load_locu
+  member_count
+FROM load_locus
 ) ON CONFLICT (assembly_id, locus_name) DO NOTHING;
 
 INSERT INTO rnc_locus_members (

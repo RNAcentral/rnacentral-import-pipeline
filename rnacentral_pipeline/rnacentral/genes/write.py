@@ -40,7 +40,7 @@ class Format(enum.Enum):
     @classmethod
     def from_name(cls, name):
         for value in cls:
-            if value.name.lower() == name:
+            if value.name.lower() == name.lower():
                 return value
         raise ValueError("Unknown Format %s" % name)
 
