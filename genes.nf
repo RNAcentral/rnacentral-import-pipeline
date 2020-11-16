@@ -67,7 +67,7 @@ process load_data {
   """
 }
 
-workflow build_genes {
+workflow genes {
   Channel.fromPath('files/genes/load-status.ctl').set { load_status }
   Channel.fromPath('files/genes/load.ctl').set { load }
   Channel.fromPath('files/genes/post-load.sql').set { post_load }
@@ -89,5 +89,5 @@ workflow build_genes {
 }
 
 workflow {
-  build_genes()
+  genes()
 }
