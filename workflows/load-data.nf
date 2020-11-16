@@ -54,12 +54,12 @@ process release {
 }
 
 workflow load_data {
-  take: output
+  take: parsed
   emit: released
   main:
     Channel.fromPath('files/import-data/limits.json') | set { limits }
 
-    output \
+    parsed \
     | filter { f -> !f.isEmpty() }
     | map { f ->
       def name = f.getBaseName()
@@ -73,7 +73,7 @@ workflow load_data {
       }
       status
     } \
-    | groupTuple() \
+    | groupTuple \
     | map { it -> [it[0][0], it[0][1], it[1]] } \
     | combine(created_tables) \
     | merge_and_import \
