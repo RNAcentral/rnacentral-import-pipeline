@@ -8,7 +8,7 @@ workflow import_data {
   emit: post_release
   main:
     parse_data() \
-    | mix(parse_metdata()) \
+    | mix(parse_metadata()) \
     | branch {
       terms: it.name == "terms.csv"
       ref_ids: it.name == "ref_ids.csv"
