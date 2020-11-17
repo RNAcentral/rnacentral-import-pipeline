@@ -27,6 +27,8 @@ process fetch_compara {
 }
 
 process process_compara {
+  memory '20GB'
+
   input:
   path(gz)
 
@@ -69,13 +71,14 @@ process coordinate_systems {
 }
 
 process karyotypes {
+  memory '8GB'
   when { params.databases.ensembl.run }
 
   output:
   path('karyotypes.csv')
 
   """
-  rnac ensembl karyotypes
+  rnac ensembl karyotypes karyotypes.csv
   """
 }
 

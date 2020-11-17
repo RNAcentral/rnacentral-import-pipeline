@@ -7,8 +7,11 @@ include { load_data } from './workflows/load-data'
 workflow import_data {
   emit: post_release
   main:
-    parse_data() \
-    | mix(parse_metadata()) \
+    Channel.empty() \
+    | mix(
+      parse_data(),
+      parse_metadata(),
+    ) \
     | branch {
       terms: it.name == "terms.csv"
       ref_ids: it.name == "ref_ids.csv"

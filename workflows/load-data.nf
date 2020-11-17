@@ -15,9 +15,7 @@ process merge_and_import {
 
 process release {
   maxForks 1
-
-  when:
-  params.should_release
+  when { params.should_release }
 
   input:
   path(pre_sql)
