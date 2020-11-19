@@ -14,15 +14,20 @@ limitations under the License.
 """
 
 import csv
+import json
 import pickle
+import logging
 import subprocess as sp
 import typing as ty
 from pathlib import Path
 
 import attr
 from attr.validators import instance_of as is_a
+import pymysql
 
 from rnacentral_pipeline.databases.ensembl.metadata import databases as db
+
+LOGGER = logging.getLogger(__name__)
 
 
 @attr.s(slots=True)
@@ -59,7 +64,7 @@ class Info:
     def dump(self):
         self.validate()
         with open("info.pickle", "wb") as out:
-            pickle.dump(data, out)
+            pickle.dump(self, out)
 
 
 @attr.s(frozen=True, slots=True)
@@ -137,13 +142,15 @@ def find_databases(connection_handle, assembly_file):
     for conn_name, spec in specs.items():
         if not conn_name.lower().startswith("ensembl"):
             continue
+        del spec['command']
         connection = pymysql.Connection(**spec)
         seen = set()
         for db_name in db.databases(connection):
             for key, info in assemblies.items():
                 if db_name.startswith(key):
                     if info["assembly_id"] in seen:
-                        raise ValueError(f"Dupcliateion assembly {info['assembly_id']}")
+                        LOGGER.warn("Duplicated assembly %s", info['assembly_id'])
+                        continue
                     yield [info["assembly_id"], conn_name, db_name]
                     seen.add(info["assembly_id"])
                     break

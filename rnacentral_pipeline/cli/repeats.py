@@ -52,7 +52,7 @@ def find_url(species, assembly, host, output, temp_directory=None):
 @cli.command("find-databases")
 @click.argument("connections", type=click.File("r"))
 @click.argument("assembly_file", type=click.File("r"))
-@click.argument("output", default="-", type=click.Path(dir_okay=True, file_okay=False))
+@click.argument("output", default="-", type=click.File("w"))
 def find_databases(connections, assembly_file, output):
     """
     Given a CSV file of assembly,species find the name of the database in the
@@ -64,12 +64,12 @@ def find_databases(connections, assembly_file, output):
 
 
 @cli.command("build-info-directory")
-@click.option("--chromosome", default=1)
-@click.option("--start", default=2)
-@click.option("--stop", default=3)
+@click.option("--chromosome-column", default=1)
+@click.option("--start-column", default=2)
+@click.option("--stop-column", default=3)
 @click.argument("assembly")
 @click.argument("directory", type=click.Path(dir_okay=True, exists=True))
-def ranges_from_bed(assembly, directory, chromosome=None, start=None, stop=None):
+def ranges_from_bed(assembly, directory, chromosome_column=None, start_column=None, stop_column=None):
     """
     Build a ranges object from a bed like file. The file should be compressed
     and indexed for 
@@ -77,9 +77,9 @@ def ranges_from_bed(assembly, directory, chromosome=None, start=None, stop=None)
     ranges.build_bed_directory(
         assembly,
         Path(directory),
-        chromosome_column=chromosome,
-        start_column=start,
-        stop_column=stop,
+        chromosome_column=chromosome_column,
+        start_column=start_column,
+        stop_column=stop_column,
     )
 
 
