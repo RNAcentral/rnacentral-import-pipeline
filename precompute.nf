@@ -6,7 +6,7 @@ process find_genomes_with_repeats {
   when { params.precompute.run }
 
   input:
-  tuple path(connections), path(query)
+  tuple path(query), path(connections)
 
   output:
   path("info.csv")
@@ -20,9 +20,11 @@ process find_genomes_with_repeats {
 process fetch_ensembl_data {
   tag { "$species-$assembly" }
   maxForks 10
+  memory '4GB'
+  errorStrategy 'ignore'
 
   input:
-  tuple val(conn_name), val(assembly), val(database), path(query)
+  tuple val(assembly), val(conn_name), val(database), path(query)
 
   output:
   path("$assembly-repeats"), emit: repeats
@@ -53,7 +55,7 @@ process build_precompute_context {
   mkdir repeat-tree
   mv species-repeats* repeat-tree
   pushd repeat-tree
-  rnc repeats build-tree .
+  rnac repeats build-tree .
   popd
   mkdir context
   mv repeat-tree context
@@ -143,9 +145,10 @@ workflow precompute {
 
   main:
     Channel.fromPath('files/repeats/find-assemblies.sql') \
+    | combine(Channel.fromPath('config/databases.json')) \
     | find_genomes_with_repeats \
     | splitCsv \
-    | combine(Channel.fromPath('files/repeats/extract-repeats.sql'))
+    | combine(Channel.fromPath('files/repeats/extract-repeats.sql')) \
     | fetch_ensembl_data
 
     fetch_ensembl_data.out.repeats | collect | set { repeats }
