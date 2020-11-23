@@ -176,22 +176,6 @@ def process_pdb(pdb_data, extra, output):
     write_entries(pdb.parse, output, pdb_data, extra)
 
 
-@cli.command("ena")
-@click.argument("ena_file", type=click.Path(dir_okay=True, file_okay=True))
-@click.argument("mapping_file", type=click.File("r"))
-@click.argument(
-    "output",
-    default=".",
-    type=click.Path(writable=True, dir_okay=True, file_okay=False,),
-)
-def process_ena(ena_file, mapping_file, output):
-    """
-    Process ENA EMBL formatted files into CSV to import. The additional mapping
-    file is a file containing all TPA data we are using from ENA.
-    """
-    write_entries(ena.parse_with_mapping_file, output, ena_file, mapping_file)
-
-
 @cli.command("ncbi-gene")
 @click.argument("data-file", type=click.File("r"))
 @click.argument(

@@ -24,6 +24,7 @@ import rnacentral_pipeline.databases.helpers.embl as embl
 from rnacentral_pipeline.databases.helpers.phylogeny import UnknownTaxonId
 import rnacentral_pipeline.databases.helpers.publications as pubs
 
+from rnacentral_pipeline import ribovore
 from rnacentral_pipeline.databases.data import Entry
 from rnacentral_pipeline.databases.data import IdReference
 
@@ -386,7 +387,7 @@ def is_protein(feature):
     return False
 
 
-def is_skippable_sequence(entry: Entry) -> bool:
+def is_skippable_sequence(entry: Entry, status: ribovore.RibovoreResult) -> bool:
     return len(entry.sequence) < 1000 and \
         entry.rna_type == 'rRNA' and \
         entry.ncbi_tax_id in MAY_SKIP
