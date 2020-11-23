@@ -13,6 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import typing as ty
 import logging
 from pathlib import Path
 
@@ -21,8 +22,8 @@ from Bio import SeqIO
 import rnacentral_pipeline.databases.helpers.embl as embl
 from rnacentral_pipeline.databases.data import Entry
 
-from . import dr, helpers
-from . import mapping as tpa
+from rnacentral_pipeline.databases.ena import dr, helpers, ribovore
+from rnacentral_pipeline.databases.ena import mapping as tpa
 
 LOGGER = logging.getLogger(__name__)
 
@@ -48,12 +49,14 @@ class InvalidEnaFile(Exception):
     pass
 
 
-def parse(handle):
+def parse(handle, ribotyper_results: Path) -> ty.Iterable[Entry]:
     """
     Parse a file like object into an iterable of Entry objects. This will parse
     each feature in all records of the given EMBL formatted file to produce the
     Entry objects.
     """
+
+    analysis = ribovore.load(ribotyper_results)
 
     dr_mapping = dr.mapping(handle)
     handle.seek(0)
@@ -78,6 +81,7 @@ def parse(handle):
         if record.id not in dr_mapping:
             raise InvalidEnaFile("Somehow parsed DR refs are for wrong record")
 
+        ribo_result = analysis[record.id]
         record_refs = dr_mapping[record.id]
         accession = helpers.accession(record)
 
@@ -123,29 +127,30 @@ def parse(handle):
             references=helpers.references(record, feature),
         )
 
-        if helpers.is_skippable_sequence(entry):
+        if helpers.is_skippable_sequence(entry, ribo_result):
+            LOGGER.info(f"Skipping record ({record.id}) excluded by ribotyper")
             continue
 
         yield entry
 
 
-def parse_file(path: Path, mapping):
+def parse_file(path: Path, mapping, ribotyper_results: Path):
     with path.open('r') as handle:
-        return tpa.apply(mapping, parse(handle))
+        return tpa.apply(mapping, parse(handle, ribotyper_results))
 
 
-def parse_directory(path: Path, mapping):
+def parse_directory(path: Path, mapping, ribotyper_results: Path):
     for path in path.glob("*/*.ncr.gz"):
-        for result in parse_file(path, mapping):
+        for result in parse_file(path, mapping, ribotyper_results):
             yield result
 
 
-def parse_with_mapping_file(path, mapping_handle):
+def parse_with_mapping_file(path, mapping_handle, ribotyper_results: Path):
     mapping = tpa.load(mapping_handle)
     mapping.validate()
     path = Path(path)
     if path.is_dir():
-        parse_directory(path, mapping)
+        parse_directory(path, mapping, ribotyper_results)
     elif path.is_file():
-        return parse_file(path, mapping)
+        return parse_file(path, mapping, ribotyper_results)
     raise InvalidPath(f"Unknown type of path {path}")

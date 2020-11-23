@@ -14,14 +14,30 @@ process fetch_data {
     --include='*/' \
     --include='**/*.ncr.gz' \
     --exclude='*.fasta.gz' \
-    "$remote/con-std_latest" "$remote/tls/public" "$remote/tsa/public" .
+    "$remote/con-std_latest" con-std
+
+  rsync \
+    -avPL \
+    --prune-empty-dirs \
+    --include='*/' \
+    --include='**/*.ncr.gz' \
+    --exclude='*.fasta.gz' \
+    "$remote/tls/public" tls
+
+  rsync \
+    -avPL \
+    --prune-empty-dirs \
+    --include='*/' \
+    --include='**/*.ncr.gz' \
+    --exclude='*.fasta.gz' \
+    "$remote/tsa/public" tsa
 
   rsync \
     -avPL \
     --prune-empty-dirs \
     --include='**/*.ncr.gz' \
     --exclude='*.fasta.gz' \
-    "$remote/wgs/public/*" .
+    "$remote/wgs/public/*" wgs
   """
 }
 
@@ -51,7 +67,7 @@ process process_data {
   """
   ena2fasta.py $raw sequences.fasta
   ribotyper.pl sequences.fasta ribotyper-results
-  rnac external ena $raw $tpa ribotyper-results
+  rnac ena parse $raw $tpa ribotyper-results
   """
 }
 

@@ -14,6 +14,7 @@ limitations under the License.
 """
 
 import re
+import typing as ty
 
 import attr
 from attr.validators import instance_of as is_a
@@ -43,7 +44,7 @@ class RibovoreResult(object):
     mto: int = attr.ib(validator=is_a(int), converter=int)
 
     @classmethod
-    def from_result_dict(cls, row):
+    def from_result_line(cls, row: str) -> ty.Optional["RibovoreResult"]:
         parts = re.split(r'\s+', row, maxsplit=24)
         if parts[2] == 'FAIL':
             return None

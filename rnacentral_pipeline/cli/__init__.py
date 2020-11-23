@@ -17,7 +17,7 @@ import logging
 
 import click
 
-from . import (ensembl, europepmc, external, fetch, ftp_export, genes,
+from . import (ena, ensembl, europepmc, external, fetch, ftp_export, genes,
                genome_mapping, gtrnadb, lookup, misc, ncbi, ols, precompute,
                qa, r2dt, rfam, search_export, text_mining)
 
@@ -42,6 +42,7 @@ def cli(log_level):
     pass
 
 
+cli.add_command(ena.cli)
 cli.add_command(ensembl.cli)
 cli.add_command(europepmc.cli)
 cli.add_command(external.cli)
