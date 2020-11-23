@@ -54,11 +54,14 @@ process find_species {
   executor 'local'
   when { params.databases.ensembl.run }
 
+  input:
+  val(remote)
+
   output:
   path('species.txt')
 
   """
-  curl --list-only $params.ensembl.ftp > species.txt
+  curl --list-only $remote/ | xargs -I {} echo '$remote,{}' >> species.txt
   """
 }
 
@@ -66,13 +69,13 @@ process fetch_species_data {
   tag { "$name" }
 
   input:
-  val(name)
+  tuple val(ftp), val(name)
 
   output:
   path("*.dat.gz')
 
   """
-  wget "${params.ensembl.ftp}/$name/*.dat.gz" .
+  wget "${ftp}/$name/*.dat.gz" .
   """
 }
 
@@ -97,11 +100,10 @@ workflow ensembl {
     fetch_gencode | set { gencode }
     Channel.fromPath('files/import-data/rfam/families.sql') | fetch_rfam | set { rfam }
     Channel.fromPath('files/import-data/ensembl/exclude-urls.txt') | fetch_excludes | set { excludes}
-
-    fetch_species \
+    Channel.of(params.ensembl.ftp, params.ensembl.rapid_release.ftp) \
+    | find_species \
     | splitCsv \
-    | map { row -> row[0] } \
-    | filter { filename ->
+    | filter { _, filename ->
       params.ensembl.data_file.exclude.inject(false) { agg, p -> agg || (filename =~ p) }
     } \
     | fetch_species_data \
