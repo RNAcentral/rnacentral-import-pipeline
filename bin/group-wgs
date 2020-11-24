@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+IFS=$'\n\t'
+
+filename="$1"
+directory="$2"
+
+base="$(basename "$filename")"
+
+cat "$filename" | xargs -I {} zcat {} > "$directory/$base.ncr"
