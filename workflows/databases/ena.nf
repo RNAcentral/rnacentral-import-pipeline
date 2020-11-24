@@ -51,9 +51,8 @@ process fetch_wgs_directories {
   path(to_fetch)
 
   output:
-  path('files/*.ncr')
+  path('files/*')
 
-  script:
   """
   rsync \
     -avPL \
@@ -66,7 +65,7 @@ process fetch_wgs_directories {
   mkdir chunks
   find raw -type f > ids
   split -n l/4000 ids chunks/chunk-
-  find chunks/ -type f | xargs -I {} paste -sd ' ' {} | xargs -I {} sh -c 'zcat {} > "$(mktemp -p files chunk-XXXXX.ncr)"'
+  find chunks/ -type f | xargs -I {} group-wgs {} files
   """
 }
 
@@ -109,7 +108,7 @@ workflow ena {
     find_wgs_directories | fetch_wgs_directories | set { wgs_files }
 
     fetch_single_files \
-    | mix(wgs_files)
+    | mix(wgs_files) \
     | flatten \
     | combine(tpa) \
     | process_file \
