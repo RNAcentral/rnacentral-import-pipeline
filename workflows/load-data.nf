@@ -75,15 +75,15 @@ workflow load_data {
     | map { it -> [it[0][0], it[0][1], it[1]] } \
     | combine(created_tables) \
     | merge_and_import \
-    | set { names }
+    | set { imported_names }
 
-    names
+    imported_names
       .flatMap { n -> file("files/import-data/pre-release/*__${n.replace('_', '-')}.sql") }
       .filter { f -> f.exists() }
       .toList()
       .set { pre_scripts }
 
-    names
+    imported_names
       .flatMap { n -> file("files/import-data/post-release/*__${n.replace('_', '-')}.sql") }
       .mix(
         Channel.fromPath([

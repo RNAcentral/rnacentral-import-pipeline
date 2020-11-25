@@ -23,12 +23,13 @@ process fetch_gencode {
   output:
   path('transcripts.gff')
 
-  """
+  shell:
+  '''
   rnac gencode urls |\
   xargs -I {} wget -O - {} |\
   gzip -d |\
   awk '{ if ($3 == "transcript") print $0 }' > transcripts.gff
-  """
+  '''
 }
 
 process fetch_excludes {

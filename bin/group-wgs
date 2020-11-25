@@ -8,4 +8,4 @@ directory="$2"
 
 base="$(basename "$filename")"
 
-cat "$filename" | xargs -I {} zcat {} > "$directory/$base.ncr"
+cat "$filename" | xargs -I {} cat {} > "$directory/$base.ncr.gz"
