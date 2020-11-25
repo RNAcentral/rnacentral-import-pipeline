@@ -1,5 +1,9 @@
+#!/usr/bin/env nextflow
+
+nextflow.enable.dsl=2
+
 include { lookup_ref_ids } from './workflows/lookup-references'
-include { lookup_ontology_info } from './workflows/lookup-ontology-info'
+include { batch_lookup_ontology_information } from './workflows/lookup-ontology-info'
 include { parse_databases } from './workflows/parse-databases'
 include { parse_metadata } from './workflows/parse-metadata'
 include { load_data } from './workflows/load-data'
@@ -9,7 +13,7 @@ workflow import_data {
   main:
     Channel.empty() \
     | mix(
-      parse_data(),
+      parse_databases(),
       parse_metadata(),
     ) \
     | branch {
@@ -19,8 +23,8 @@ workflow import_data {
     } \
     | set { results }
 
-    results.out.terms | lookup_ontology_terms | set { term_info }
-    results.out.ref_ids | lookup_ref_ids | set { references }
+    results.terms | batch_lookup_ontology_information | set { term_info }
+    results.ref_ids | lookup_ref_ids | set { references }
 
     results.csv \
     | mix(term_info, references) \

@@ -47,7 +47,7 @@ workflow lookup_ref_ids {
   emit: publications
 
   main:
-    fetch_publicates | set { xml_publications }
+    fetch_publications | set { xml_publications }
 
     ref_ids \
     | merge_and_split_all_publications \

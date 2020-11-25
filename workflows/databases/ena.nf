@@ -2,7 +2,7 @@ process fetch_single_files {
   when { params.databases.ena.run }
 
   output:
-  path("**/*.ncr")
+  path("**/*.ncr.gz")
 
   script:
   def remote = params.databases.ena.remote
@@ -30,10 +30,15 @@ process fetch_single_files {
     --include='**/*.ncr.gz' \
     --exclude='*.fasta.gz' \
     "$remote/tsa/public/" tsa
+
+  find . -type f -empty -delete
+  find . -type f | xargs -I {} gzip --quiet  -l {} | awk '{ if (\$2 == 0) print \$4 }' | xargs -I {} rm {}.gz
   """
 }
 
 process find_wgs_directories {
+  memory '2GB'
+
   when { params.databases.ena.run }
 
   output:
@@ -95,7 +100,7 @@ process process_file {
   """
   zcat $raw > sequences.dat
   ena2fasta.py sequences.dat sequences.fasta
-  ribotyper.pl sequences.fasta ribotyper-results
+  /rna/ribovore/ribotyper.pl sequences.fasta ribotyper-results
   rnac ena parse sequences.dat $tpa ribotyper-results
   """
 }
@@ -105,12 +110,16 @@ workflow ena {
   main:
     Channel.fromPath('files/import-data/ena/tpa-urls.txt') | fetch_tpa | set { tpa }
 
-    find_wgs_directories | fetch_wgs_directories | set { wgs_files }
+    find_wgs_directories \
+    | splitCsv \
+    | map { row -> row[0] } \
+    | fetch_wgs_directories \
+    | set { wgs_files }
 
     fetch_single_files \
     | mix(wgs_files) \
     | flatten \
     | combine(tpa) \
     | process_file \
-    | set { processed_wgs }
+    | set { data }
 }
