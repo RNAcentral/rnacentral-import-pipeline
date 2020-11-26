@@ -1,4 +1,4 @@
-process fetch_and_process {
+process mirbase {
   when { params.databases.mirbase.run }
 
   output:
@@ -8,10 +8,4 @@ process fetch_and_process {
   scp $params.databases.mirbase.remote mirbase.json
   rnac external mirbase mirbase.json .
   """
-}
-
-workflow mirbase {
-  emit: data
-  main:
-    fetch_and_process | set { data }
 }

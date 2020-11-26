@@ -1,4 +1,4 @@
-process fetch_and_process {
+process tarbase {
   when: { params.databases.tarbase.run }
 
   output:
@@ -9,10 +9,3 @@ process fetch_and_process {
   rnac external tarbase tarbase.json .
   """
 }
-
-workflow tarbase {
-  emit: fetch_and_process.out
-  main: 
-    fetch_and_process()
-}
-

@@ -1,4 +1,4 @@
-process fetch_and_process {
+process quickgo {
   when { params.databases.quickgo.run }
 
   output:
@@ -9,10 +9,4 @@ process fetch_and_process {
   gzip -d data.gpa
   rnac external quickgo data.gpa .
   """
-}
-
-workflow quickgo {
-  emit: data
-  main:
-    fetch_and_process | set { data }
 }

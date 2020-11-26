@@ -1,4 +1,4 @@
-process fetch_and_process {
+process intact {
   when { params.databases.intact.run }
 
   output:
@@ -15,10 +15,4 @@ process fetch_and_process {
 
   rnac external intact intact.txt .
   """
-}
-
-workflow intact {
-  emit: data
-  main:
-    fetch_and_process | set { data }
 }

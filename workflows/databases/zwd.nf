@@ -1,4 +1,4 @@
-process fetch_and_process {
+process zwd {
   when: { params.databases.zwd.run }
 
   output:
@@ -8,10 +8,4 @@ process fetch_and_process {
   curl $params.databases.zwd.remote > zwd.json
   rnac external zwd zwd.json .
   """
-}
-
-workflow zwd {
-  emit: fetch_and_process.out
-  main: 
-    fetch_and_process()
 }

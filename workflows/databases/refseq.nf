@@ -1,4 +1,6 @@
 process fetch {
+  when { params.databases.refseq.run }
+
   output:
   path('*.gbff')
 

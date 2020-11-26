@@ -1,4 +1,4 @@
-process fetch_and_process {
+process flybase {
   when: { params.databases.flybase.run }
 
   output:
@@ -8,10 +8,4 @@ process fetch_and_process {
   wget -O - ${params.databases.flybase.remote} | gzip -d > flybase.json
   rnac external flybase flybase.json .
   """
-}
-
-workflow flybase {
-  emit: fetch_and_process.out
-  main: 
-    fetch_and_process()
 }
