@@ -1,0 +1,58 @@
+ID   KDVK01017574.1:1..441:rRNA; SV 1; linear; genomic DNA; TLS; ENV; 441 BP.
+XX
+PA   KDVK01017574.1
+XX
+PR   Project:PRJNA603635;
+XX
+DT   12-MAR-2020 (Rel. 144, Created)
+DT   12-MAR-2020 (Rel. 144, Last updated, Version 1)
+XX
+DE   soil metagenome partial 16S ribosomal RNA
+XX
+KW   Targeted Locus Study; TLS.
+XX
+OS   soil metagenome
+OC   unclassified sequences; metagenomes; ecological metagenomes.
+XX
+RN   [1]
+RP   1-441
+RA   Fan S.;
+RT   ;
+RL   Submitted (09-FEB-2020) to the INSDC.
+RL   Department of Environmental Science and Engineering, Sichuan University,
+RL   Southern Frist Ring Road, Chengdu, Sichuan 610065, China
+XX
+DR   MD5; 367afbe34c75278d244fbb3962c326cb.
+DR   BioSample; SAMN13946334.
+XX
+CC   ##Assembly-Data-START##
+CC   Assembly Method       :: FLASH v. 2016
+CC   Sequencing Technology :: Illumina
+CC   ##Assembly-Data-END##
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..441
+FT                   /organism="soil metagenome"
+FT                   /environmental_sample
+FT                   /mol_type="genomic DNA"
+FT                   /country="China:Zoige wetland"
+FT                   /lat_lon="33.21 N 102.56 E"
+FT                   /isolation_source="LowMeadow3"
+FT                   /collection_date="2015-08"
+FT                   /note="metagenomic"
+FT                   /db_xref="taxon:410658"
+FT                   /submitter_seqid="C22.20690"
+FT   rRNA            KDVK01017574.1:<1..>441
+FT                   /product="16S ribosomal RNA"
+XX
+SQ   Sequence 441 BP; 108 A; 106 C; 141 G; 86 T; 0 other;
+     ccaagattcg ccgtgccagc cgccgcggta atacgtaggg tgcgagcgtt aatcggaatt        60
+     actgggcgta aagcgtgcgc aggcggttat gcaagacaga tgtgaaatcc ccgggctcaa       120
+     cctgggaact gcatttgtga ctgcatggct ggagtgcggc agagggggat ggaattccgc       180
+     gtgtagcagt gaaatgcgta gatatgcgga ggaacaccga tggcgaaggc aatcccctgg       240
+     gcctgcactg acgctcatgc acgaaagcgt ggggagcaaa caggattaga taccctggta       300
+     gtccacgccc taaacgatgt caactggttg ttggacggct tgctgttcag taacgaagct       360
+     aacgcgtgaa gttgaccgcc tggggagtac ggccgcaagg ttgaaactca ataattccgg       420
+     acagcgcttg ccacctacgt a                                                 441
+//

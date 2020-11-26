@@ -28,13 +28,10 @@ from rnacentral_pipeline.databases.data import RibovoreResult
 
 
 def as_dict(directory: Path, allow_missing=False) -> ty.Dict[str, RibovoreResult]:
-    possible = [
-        directory / '.ribotyper.long.out',
-        directory / (directory.name + '.ribotyper.long.out'),
-    ]
-    for path in possible:
-        if path.exists():
-            return {p.target: p for p in ribovore.parse_file(path)}
-    if not allow_missing:
-        raise ValueError("No ribovore result file in: %s " % directory)
-    return {}
+    try:
+        results = ribovore.parse_directory(path)
+        return {p.target: p for p in results if p.status != 'FAIL'}
+    except ValueError as e:
+        if not allow_missing:
+            raise ValueError("No ribovore result file in: %s " % directory)
+        return {}

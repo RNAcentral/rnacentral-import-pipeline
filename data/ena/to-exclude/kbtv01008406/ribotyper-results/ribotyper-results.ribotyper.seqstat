@@ -1,0 +1,13 @@
+= LAZR01007255.1:2..3402:rRNA     3401 marine sediment metagenome 23S ribosomal RNA
+= HAQP01000579.1:18..191:rRNA      174 Chrysocystis fragilis partial Bacterial large subunit ribosomal RNA
+= KBTV01008406.1:1..998:rRNA      998 insect gut metagenome partial 16S ribosomal RNA
+= SNRY01001410.1:2783..5704:rRNA     2922 termite gut metagenome 23S ribosomal RNA
+= KDVK01017574.1:1..441:rRNA      441 soil metagenome partial 16S ribosomal RNA
+= KDHV01000321.1:1..277:rRNA      277 invertebrate gut metagenome partial 16S ribosomal RNA
+Format:              FASTA
+Alphabet type:       DNA
+Number of sequences: 6
+Total # residues:    8213
+Smallest:            174
+Largest:             3401
+Average length:      1368.8
