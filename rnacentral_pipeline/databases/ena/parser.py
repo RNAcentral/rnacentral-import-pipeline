@@ -49,14 +49,12 @@ class InvalidEnaFile(Exception):
     pass
 
 
-def parse(handle, ribotyper_results: Path) -> ty.Iterable[Entry]:
+def parse(handle, ribo_analysis: ribovore.Results) -> ty.Iterable[Entry]:
     """
     Parse a file like object into an iterable of Entry objects. This will parse
     each feature in all records of the given EMBL formatted file to produce the
     Entry objects.
     """
-
-    analysis = ribovore.load(ribotyper_results)
 
     dr_mapping = dr.mapping(handle)
     handle.seek(0)
@@ -81,7 +79,7 @@ def parse(handle, ribotyper_results: Path) -> ty.Iterable[Entry]:
         if record.id not in dr_mapping:
             raise InvalidEnaFile("Somehow parsed DR refs are for wrong record")
 
-        ribo_result = analysis[record.id]
+        ribo_result = ribo_analysis.get(record.id, None)
         record_refs = dr_mapping[record.id]
         accession = helpers.accession(record)
 
@@ -134,23 +132,23 @@ def parse(handle, ribotyper_results: Path) -> ty.Iterable[Entry]:
         yield entry
 
 
-def parse_file(path: Path, mapping, ribotyper_results: Path):
+def parse_file(path: Path, mapping, ribo):
     with path.open('r') as handle:
-        return tpa.apply(mapping, parse(handle, ribotyper_results))
+        return tpa.apply(mapping, parse(handle, ribo))
 
 
-def parse_directory(path: Path, mapping, ribotyper_results: Path):
-    for path in path.glob("*/*.ncr.gz"):
-        for result in parse_file(path, mapping, ribotyper_results):
-            yield result
+def parse_directory(path: Path, mapping, ribo):
+    for path in path.glob("*/*.ncr"):
+        yield from parse_file(path, mapping, ribo)
 
 
-def parse_with_mapping_file(path, mapping_handle, ribotyper_results: Path):
+def parse_with_mapping_file(path, mapping_handle, ribotyper_path: Path, model_length: Path):
     mapping = tpa.load(mapping_handle)
     mapping.validate()
     path = Path(path)
+    ribo = ribovore.load(ribotyper_path, model_length)
     if path.is_dir():
-        parse_directory(path, mapping, ribotyper_results)
+        parse_directory(path, mapping, ribo)
     elif path.is_file():
-        return parse_file(path, mapping, ribotyper_results)
+        return parse_file(path, mapping, ribo)
     raise InvalidPath(f"Unknown type of path {path}")

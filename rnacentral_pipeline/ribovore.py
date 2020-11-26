@@ -13,29 +13,35 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import csv
 import typing as ty
 from pathlib import Path
 
 from rnacentral_pipeline.databases.data import RibovoreResult
 
 
-def parse_file(path: Path) -> ty.Iterator[RibovoreResult]:
+def parse_file(path: Path, length_file=None) -> ty.Iterator[RibovoreResult]:
     """
     Parse a ribotyper result file and return an iterable of RibovoreResults.
     """
 
     assert path.is_file()
+    lengths = {}
+    if length_file:
+        with lengh_file.open('r') as raw:
+            lengths = {row[0]: row[1] for row in csv.reader(raw)}
+
     with path.open('r') as raw:
         for line in raw:
             if line.startswith('#'):
                 continue
-            result = RibovoreResult.from_result_line(line)
-            if result and result.status != 'FAIL':
-                yield result
+            result = RibovoreResult.from_result_line(line, lengths=lengths)
+            if result is None:
+                continue
+            yield result
 
 
-def parse_directory(directory: Path) -> ty.Iterator[RibovoreResult]:
-    assert directory.is_dir()
+def parse_directory(directory: Path, length_file=None) -> ty.Iterator[RibovoreResult]:
     possible = [
         directory / '.ribotyper.long.out',
         directory / (directory.name + '.ribotyper.long.out'),
