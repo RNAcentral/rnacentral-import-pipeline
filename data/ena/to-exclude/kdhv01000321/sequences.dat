@@ -1,0 +1,66 @@
+ID   KDHV01000321.1:1..277:rRNA; SV 1; linear; genomic DNA; TLS; ENV; 277 BP.
+XX
+PA   KDHV01000321.1
+XX
+PR   Project:PRJNA577421;
+XX
+DT   05-FEB-2020 (Rel. 143, Created)
+DT   15-MAY-2020 (Rel. 144, Last updated, Version 2)
+XX
+DE   invertebrate gut metagenome partial 16S ribosomal RNA
+XX
+KW   Targeted Locus Study; TLS.
+XX
+OS   invertebrate gut metagenome
+OC   unclassified sequences; metagenomes; organismal metagenomes.
+XX
+RN   [1]
+RC   Publication Status: Available-Online prior to print
+RP   1-277
+RX   PUBMED; 31676854.
+RA   Holt C.C., van der Giezen M., Daniels C.L., Stentiford G.D., Bass D.;
+RT   "Spatial and temporal axes impact ecology of the gut microbiome in juvenile
+RT   European lobster (Homarus gammarus)";
+RL   ISME J 0:.
+XX
+RN   [2]
+RP   1-277
+RA   Holt C.C., van der Giezen M., Daniels C.L., Stentiford G.D., Bass D.;
+RT   ;
+RL   Submitted (25-OCT-2019) to the INSDC.
+RL   AHH, Centre for Environment, Fisheries And Aquaculture Science, Barrack
+RL   Road, Weymouth DT4 8UB, United Kingdom
+XX
+DR   MD5; 84bf1dfcd7858e2cad593e59605ff18a.
+DR   BioSample; SAMN13025409.
+XX
+CC   Sequences were screened for chimeras by the submitter using DADA2
+CC   1.10.1.
+CC   ##Assembly-Data-START##
+CC   Assembly Method       :: dada2 v. 1.10.1
+CC   Sequencing Technology :: Illumina
+CC   ##Assembly-Data-END##
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..277
+FT                   /organism="invertebrate gut metagenome"
+FT                   /host="Homarus gammarus"
+FT                   /environmental_sample
+FT                   /mol_type="genomic DNA"
+FT                   /country="United Kingdom"
+FT                   /lat_lon="50.32 N 4.73 W"
+FT                   /collection_date="2016/2017"
+FT                   /note="metagenomic"
+FT                   /db_xref="taxon:1775950"
+FT                   /submitter_seqid="ASV_7798"
+FT   rRNA            KDHV01000321.1:<1..>277
+FT                   /product="16S ribosomal RNA"
+XX
+SQ   Sequence 277 BP; 81 A; 48 C; 82 G; 66 T; 0 other;
+     tacataggtg gcgagcgtta tccggattta ttgggcgtaa agagtgcaca ggtggtttgt        60
+     caagtcgatt gttaaagccc ggagctcaac tccggttcgc agttgaaact gacagactag       120
+     aatatcggtg ggagtagtag aattcgatgt gtagcggtgg aatgcataaa tatatcgagg       180
+     aataccaatg gcgaaggcag ctacttgaac gattattgac acttaagcac gaaagcgtgg       240
+     ggagcaaata ggattagaaa ccctcgtagt ccggctg                                277
+//

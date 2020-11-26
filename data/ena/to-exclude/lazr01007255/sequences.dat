@@ -1,0 +1,121 @@
+ID   LAZR01007255.1:2..3402:rRNA; SV 1; linear; genomic DNA; WGS; ENV; 3401 BP.
+XX
+PA   LAZR01007255.1
+XX
+PR   Project:PRJNA259156;
+XX
+DT   20-MAY-2015 (Rel. 124, Created)
+DT   20-MAY-2015 (Rel. 124, Last updated, Version 1)
+XX
+DE   marine sediment metagenome 23S ribosomal RNA
+XX
+KW   WGS.
+XX
+OS   marine sediment metagenome
+OC   unclassified sequences; metagenomes; ecological metagenomes.
+XX
+RN   [1]
+RX   DOI; 10.1038/nature14447.
+RX   PUBMED; 25945739.
+RA   Spang A., Saw J.H., Jorgensen S.L., Zaremba-Niedzwiedzka K., Martijn J.,
+RA   Lind A.E., van Eijk R., Schleper C., Guy L., Ettema T.J.;
+RT   "Complex archaea that bridge the gap between prokaryotes and eukaryotes";
+RL   Nature 521(7551):173-179(2015).
+XX
+RN   [2]
+RA   Spang A., Saw J.H., Jorgensen S., Zaremba-Niedzwiedzka K., Martijn J.,
+RA   Lind A.E., van Eijk R., Schleper C., Guy L., Ettema T.J.;
+RT   ;
+RL   Submitted (31-MAR-2015) to the INSDC.
+RL   Department of Cell and Molecular Biology, Uppsala University, Box 596,
+RL   Uppsala SE-75123, Sweden
+XX
+DR   SILVA-LSU; LAZR01007255.
+DR   MD5; 3934b72c1800fa14217d27699e5965e9.
+DR   BioSample; SAMN03002196.
+XX
+CC   ##Genome-Assembly-Data-START##
+CC   Assembly Date         :: OCT-2014
+CC   Assembly Method       :: Spades v. 3.0.0
+CC   Genome Coverage       :: Not Applicable
+CC   Sequencing Technology :: Illumina HiSeq
+CC   ##Genome-Assembly-Data-END##
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..3401
+FT                   /organism="marine sediment metagenome"
+FT                   /environmental_sample
+FT                   /mol_type="genomic DNA"
+FT                   /country="Arctic Ocean:Gakkel Ridge"
+FT                   /lat_lon="73.76 N 8.46 E"
+FT                   /isolation_source="Loki non-amplified sample from Loki's
+FT                   castle hydrothermal vent sediment"
+FT                   /collection_date="2010"
+FT                   /note="metagenomic"
+FT                   /db_xref="taxon:412755"
+FT                   /altitude="-3283m"
+FT   rRNA            LAZR01007255.1:2..3402
+FT                   /locus_tag="LCGC14_1278840"
+FT                   /product="23S ribosomal RNA"
+FT                   /inference="COORDINATES:profile:RNAmmer:1.2"
+XX
+SQ   Sequence 3401 BP; 870 A; 736 C; 1052 G; 743 T; 0 other;
+     accatgacaa aacttttgac aatcacgcgc ttctagcgaa tttagataaa ttgcacagac        60
+     aatggcgcat tcgaaagaat gtacgcggaa cggatgaaaa tccggcatag aagacaaccc       120
+     ataataagca agatcgcaac ttgttcgcgt gagaaagtca tttcattaat tggagatttt       180
+     ttagtgattt tggtggtgca ccgggggttg taggaccgcg atgtggtatg tagaagctta       240
+     gccaaagtgg gctggaaagc cccaccgaag agggtgatag tcccgtaggc gaaaggctga       300
+     tatggcctag cggtatcctg agtaccatgg gacacgagaa atcctgtggg aatctggggg       360
+     gaccaccctc caaggctaaa tatcttccga tgaccgatag tgaaccagta ccgtgaggga       420
+     aaggtgaaaa gaaccccggc gaggggagtg aaatagaacc tgaaaccgtg tgcctacaag       480
+     ctatcggagc gggacttcgg tcccgtgacg gtgtgccttt tgattaatga gccggcgagt       540
+     tactggctgt ggcgaggtta agtctttacg ggacggagcc gcagggaaac cgagtctgaa       600
+     cagggcgaat gagtcacggt cagtagaccc gaagccaggt gatctaccca tggtcagggt       660
+     gaagtgcggg taaaaccgca tggaggcccg aaccgttgtt cgttgcaaag agctcggatg       720
+     aactgtgggt aggggtgaaa ggccaatcaa acctggtgat agctggtact ccccgaaatg       780
+     tatttaggta cagcctcgag ttaatatctg cgtgggggta gggcactgga tgggctaggg       840
+     ggcctcacag cctaccaaac ccaaccaaac ctcgaatacc gcgtatgagt ttctcgggag       900
+     tgagactgcg ggtgctaaga ttcgtagtcg agagggaaac agcccagacc gtcagctaag       960
+     gtccccaaga cagtgctaag tgggaaagga tgtggtgttg cccagacagc caggaggttg      1020
+     gcttagaagc agccaccctt taaggaaagc gtaacagctc actggtcaag cgacactgcg      1080
+     ccgaaaatgt aacggggctc aagcactgca ccgaagctac gggactagag actagatact      1140
+     agagactgga aactaggaga agattcatgc cataccatcg acttgacgta tatcgcaagg      1200
+     cgtatgatct ggctttggaa gtccaccgca agagcgtgga gtttcccaag caggagcaat      1260
+     acgaactggc gcagcagtta aggaagtcga gcaagtccat cgcggctaat atagccgaag      1320
+     ggatgggcaa gcaggagagc aaggccgacg taaggcgttt tatacgcatt gcggttggtt      1380
+     cttgtgatga gtgcagggta tggttggatt tcgcaagaga ccttggttac ataagcccta      1440
+     aggagcacga tgcattagac gcacgctatc gtgaagttgg gcggatgttg accgggttat      1500
+     tgaagcgata tggacaggac aaatcaaagg acaaatgagg attttttctt attggagctt      1560
+     ttgtcttttg agtttgaagt ttaagtgcct atagctttaa gagccttttg tttaaggttt      1620
+     taagcttttg aggctttaag actttaaggt tttgtctttt gttttagctt cttctagtat      1680
+     ctgttttcta gtatctagtc tctagtcggt aggggagcat tgcgtggact gttgaaggtg      1740
+     tggcgtgagc catgctggag gggacgcaag agagtatgcc ggcataagta gcgtaaattc      1800
+     tgatgaaaag tcaggacgcc gaaagcctaa ggtttcctgg ggaaggcaaa tccgcccagg      1860
+     gttagtcggg cctaagacga ggccgaaggg cgtagtcgat ggacaactgg ttaatattcc      1920
+     agtaccgctc gcatggtgtt tgaccgaagg ggggacgcag taggatagat cgagcctggt      1980
+     gatggttcag gtccaagtac cgaggctggt gcgtaggcaa atccgcgcgc cattaaggct      2040
+     gaggtacgat ggggaaagca attgcgctga actcgattga tttcacactg acgagaaaaa      2100
+     cctcgtaggg aatcatgtgt gcgcccgtac cgcaaaccga cacaggtagg caagtagagg      2160
+     atactaaggc gttcgagtta actctcgcta aggaactcgg caaattaacc ccgtaacttc      2220
+     gggagaaggg gtcctcacgc aagtgaggcg cagtgacatg gcccaggcga ctgtttacca      2280
+     aaaacatagg tgtctgctaa ctcgaaagag gatgtataga cactgacgcc tgcccggtgc      2340
+     cggaaggtta acaggagggg ttaggcttcg ggcgaagctc tgaatcgaag ccccggtaaa      2400
+     cggcggccgt aactataacg gtcctaaggt agcgaaattc cttgtcgggt aagttccgac      2460
+     ctgcacgaat ggcgtaacga tctgggcgct gtctcggcga gagactcggc gaacttgaga      2520
+     taccggtgaa gacgccggtt acccgcagca agacggaaag accccgtgca cctttactgc      2580
+     agcttggcag tgagttttgg ttatgtatgt gtaggatagg tgggaggcta tgaagtcccg      2640
+     gcgctagctg gggtggagcc aaccttgaaa taccaccctt atatgattgg gactctaacc      2700
+     tgctcccgta atccgggaga gggacactgt ctggcgggta gtttgactgg ggcggtcgcc      2760
+     tcccaaagag taacggaggc gcccaaaggt ctcctcaggc tggacggaaa ccagcctttg      2820
+     agtgcaaagg cataaggagg cttgactgtg agaccgacag gtcgagcagg tgcgaaagca      2880
+     gggcttagtg atccggtggt tccgcgtgga agggccatcg ctcaacggat aaaaggtacg      2940
+     ccggggataa caggctgata gcatccaaga gttcatatcg acgatgctgt ttggcacctc      3000
+     gatgtcggct tatcacatcc tggggctgaa gcaggtccca agggttcggc tgttcgccga      3060
+     ttaaagtggt acgcgagctg ggttcagaac gtcgtgagac agttcggtcc ctatctgctg      3120
+     tgggcgtagg agatttgaga ggagctgtcc ctagtacgag aggaccggga tggacggacc      3180
+     tctggtgttc cggttgtcat gccagtggca acgccgggta gccatgtccg gttgggataa      3240
+     acgctgaaag catctaagcg tgaagcccgc ctcgagatta gatctccctg tggcttcgtg      3300
+     ccacctgaag gtccgtggaa gactaccacg ttgataggct ggaagtgtaa gcatggcgac      3360
+     atgttcagct taccagtact aatagaccgt gaggcttgac c                          3401
+//

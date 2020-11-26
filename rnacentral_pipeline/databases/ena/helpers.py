@@ -389,17 +389,14 @@ def is_protein(feature):
 
 
 def is_skippable_sequence(entry: Entry, status: ty.Optional[ribovore.RibovoreResult]) -> bool:
-    if not status:
+    if entry.rna_type != 'SO:0000252' or 'metagenome' not in entry.lineage:
         return False
 
-    if entry.rna_type != 'rRNA':
-        return False
-
-    if 'metagenome' not in entry.lineage:
-        return False
+    if not status or status.status == 'FAIL':
+        return True
 
     model_coverage = status.model_coverage
     if model_coverage is None:
         return False
 
-    return model_coverage <= 80
+    return model_coverage <= 0.90

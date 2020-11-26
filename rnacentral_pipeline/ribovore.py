@@ -20,6 +20,11 @@ from pathlib import Path
 from rnacentral_pipeline.databases.data import RibovoreResult
 
 
+def load_lengths(path: Path):
+    with path.open('r') as raw:
+        return {row[0]: int(row[1]) for row in csv.reader(raw)}
+
+
 def parse_file(path: Path, length_file=None) -> ty.Iterator[RibovoreResult]:
     """
     Parse a ribotyper result file and return an iterable of RibovoreResults.
@@ -28,8 +33,7 @@ def parse_file(path: Path, length_file=None) -> ty.Iterator[RibovoreResult]:
     assert path.is_file()
     lengths = {}
     if length_file:
-        with lengh_file.open('r') as raw:
-            lengths = {row[0]: row[1] for row in csv.reader(raw)}
+        lengths = load_lengths(length_file)
 
     with path.open('r') as raw:
         for line in raw:
@@ -48,7 +52,7 @@ def parse_directory(directory: Path, length_file=None) -> ty.Iterator[RibovoreRe
     ]
     for path in possible:
         if path.exists():
-            yield from parse_file(path)
+            yield from parse_file(path, length_file=length_file)
             break
     else:
         raise ValueError("No ribovore result file in: %s " % directory)
