@@ -10,9 +10,3 @@ process fetch_and_process {
   rnac external pdb pdb.json pdb-extra.json .
   """
 }
-
-workflow mirbase {
-  emit: data
-  main:
-    fetch_and_process | set { data }
-}

@@ -1,4 +1,4 @@
-process fetch_and_process {
+process lncbook {
   when: { params.databases.lncbook.run }
 
   output:
@@ -9,11 +9,3 @@ process fetch_and_process {
   rnac external lncbook lncbook.json .
   """
 }
-
-workflow lncbook {
-  emit: fetch_and_process.out
-  main: 
-    fetch_and_process()
-}
-
-

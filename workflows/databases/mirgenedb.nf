@@ -1,4 +1,4 @@
-process fetch_and_process {
+process mirgenedb {
   when { params.databases.mirgenedb.run }
 
   output:
@@ -8,10 +8,4 @@ process fetch_and_process {
   scp $params.databases.mirgenedb.remote mirgenedb.json
   rnac external mirgenedb mirgenedb.json .
   """
-}
-
-workflow mirgenedb {
-  emit: data
-  main:
-    fetch_and_process | set { data }
 }
