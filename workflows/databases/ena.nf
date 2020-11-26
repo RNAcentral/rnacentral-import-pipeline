@@ -81,8 +81,7 @@ process fetch_metadata {
   path(urls)
 
   output:
-  path('tpa.tsv'), emit: tpa
-  path('model-lengths.csv'), emit: model_lengths
+  tuple path('tpa.tsv'), path('model-lengths.csv')
 
   """
   cat $urls | xargs -I {} wget -O - {} >> tpa.tsv
@@ -123,7 +122,7 @@ workflow ena {
     fetch_single_files \
     | mix(wgs_files) \
     | flatten \
-    | combine(meta.out.tpa, meta.out.model_lengths) \
+    | combine(meta) \
     | process_file \
     | set { data }
 }
