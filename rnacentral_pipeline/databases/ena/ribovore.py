@@ -21,14 +21,10 @@ import attr
 from rnacentral_pipeline import ribovore
 
 
-@attr.s(auto_attribs=True)
-class Status:
-    id: str
-    has_hit: bool
+Results = ty.Dict[str, ribovore.RibovoreResult]
 
-
-def load(directory: Path) -> ty.Dict[str, ribovore.RibovoreResult]:
+def load(directory: Path, lengths: Path) -> Results:
     loaded: ty.Dict[str, ribovore.RibovoreResult] = {}
-    for result in ribovore.parse_directory(directory):
+    for result in ribovore.parse_directory(directory, length_file=lengths):
         loaded[result.target] = result
     return loaded

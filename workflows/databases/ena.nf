@@ -74,17 +74,19 @@ process fetch_wgs_directories {
   """
 }
 
-process fetch_tpa {
+process fetch_metadata {
   when { params.databases.ena.run }
 
   input:
   path(urls)
 
   output:
-  path('tpa.tsv')
+  path('tpa.tsv'), emit: tpa
+  path('model-lengths.csv'), emit: model_lengths
 
   """
   cat $urls | xargs -I {} wget -O - {} >> tpa.tsv
+  cmstat \$RIBODIR/models/ribo.0p20.extra.cm | grep -v '^#' | awk '{ printf("%s,%d\n", \$2, \$6); }' > model_lengths.csv
   """
 }
 
@@ -92,7 +94,7 @@ process process_file {
   tag { "$raw" }
 
   input:
-  tuple path(raw), path(tpa)
+  tuple path(raw), path(tpa), path(model_lengths)
 
   output:
   path('*.csv')
@@ -101,14 +103,16 @@ process process_file {
   zcat $raw > sequences.dat
   ena2fasta.py sequences.dat sequences.fasta
   /rna/ribovore/ribotyper.pl sequences.fasta ribotyper-results
-  rnac ena parse sequences.dat $tpa ribotyper-results
+  rnac ena parse sequences.dat $tpa ribotyper-results $model_lengths .
   """
 }
 
 workflow ena {
   emit: data
   main:
-    Channel.fromPath('files/import-data/ena/tpa-urls.txt') | fetch_tpa | set { tpa }
+    Channel.fromPath('files/import-data/ena/tpa-urls.txt') \
+    | fetch_metadata \
+    | set { meta }
 
     find_wgs_directories \
     | splitCsv \
@@ -119,7 +123,7 @@ workflow ena {
     fetch_single_files \
     | mix(wgs_files) \
     | flatten \
-    | combine(tpa) \
+    | combine(meta.out.tpa, meta.out.model_lengths) \
     | process_file \
     | set { data }
 }

@@ -42,9 +42,10 @@ class RibovoreResult(object):
     bto: int = attr.ib(validator=is_a(int), converter=int)
     mfrom: int = attr.ib(validator=is_a(int), converter=int)
     mto: int = attr.ib(validator=is_a(int), converter=int)
+    model_length = attr.ib(validator=optional(is_a(int)), default=None)
 
     @classmethod
-    def from_result_line(cls, row: str) -> ty.Optional["RibovoreResult"]:
+    def from_result_line(cls, row: str, lengths=None) -> ty.Optional["RibovoreResult"]:
         parts = re.split(r'\s+', row, maxsplit=24)
         if parts[2] == 'FAIL':
             return None
@@ -55,6 +56,10 @@ class RibovoreResult(object):
             strand = -1
         else:
             raise UnknownStrand(parts[8])
+
+        model_length = None
+        if lengths:
+            model_length = lengths.get(parts[7], None)
 
         return cls(
             target=parts[1],
@@ -75,4 +80,15 @@ class RibovoreResult(object):
             bto=parts[17],
             mfrom=parts[18],
             mto=parts[19],
+            model_length=model_length,
         )
+
+    @property
+    def model_coverage(self) -> ty.Optional[float]:
+        if self.model_length:
+            return float(self.mto - self.mfrom) / float(self.model_length)
+        return None
+
+    @property
+    def sequence_coverage(self):
+        return self.tcov

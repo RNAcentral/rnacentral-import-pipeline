@@ -30,15 +30,16 @@ def cli():
 @click.argument("ena_file", type=click.Path(dir_okay=True, file_okay=True))
 @click.argument("mapping_file", type=click.File("r"))
 @click.argument('ribotyper', type=click.Path(dir_okay=True))
+@click.argument('model_lengths', type=click.File('r'))
 @click.argument(
     "output",
     default=".",
     type=click.Path(writable=True, dir_okay=True, file_okay=False,),
 )
-def process_ena(ena_file, mapping_file, ribotyper, output):
+def process_ena(ena_file, mapping_file, ribotyper, model_lengths, output):
     """
     Process ENA EMBL formatted files into CSV to import. The additional mapping
     file is a file containing all TPA data we are using from ENA.
     """
     write_entries(parser.parse_with_mapping_file, output, ena_file, mapping_file,
-            ribotyper)
+            ribotyper, model_lengths)

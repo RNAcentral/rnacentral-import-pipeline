@@ -17,6 +17,7 @@ import re
 import attr
 import logging
 import collections as coll
+import typing as ty
 
 from Bio.Seq import Seq
 
@@ -387,7 +388,18 @@ def is_protein(feature):
     return False
 
 
-def is_skippable_sequence(entry: Entry, status: ribovore.RibovoreResult) -> bool:
-    return len(entry.sequence) < 1000 and \
-        entry.rna_type == 'rRNA' and \
-        entry.ncbi_tax_id in MAY_SKIP
+def is_skippable_sequence(entry: Entry, status: ty.Optional[ribovore.RibovoreResult]) -> bool:
+    if not status:
+        return False
+
+    if entry.rna_type != 'rRNA':
+        return False
+
+    if 'metagenome' not in entry.lineage:
+        return False
+
+    model_coverage = status.model_coverage
+    if model_coverage is None:
+        return False
+
+    return model_coverage <= 80
