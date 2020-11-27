@@ -44,6 +44,7 @@ simplejson==3.17.2        # via gffutils
 six==1.15.0               # via furl, gffutils, jsonschema, orderedmultidict, pyfaidx
 sortedcontainers==2.2.2   # via intervaltree
 soupsieve==2.0.1          # via beautifulsoup4
+sqlitedict==1.7.0
 tatsu==4.4.0
 textblob==0.15.3
 tqdm==4.51.0              # via nltk
