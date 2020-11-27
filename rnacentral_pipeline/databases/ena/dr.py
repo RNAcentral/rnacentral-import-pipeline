@@ -20,8 +20,6 @@ import attr
 from attr.validators import instance_of as is_a
 from attr.validators import optional
 
-from sqlitedict import SqliteDict
-
 
 @attr.s()
 class DBRef(object):
@@ -63,11 +61,3 @@ def mappings(lines: ty.Iterable[str]) -> ty.Iterable[ty.Tuple[str, ty.List[DBRef
 
     if current_id:
         yield (current_id, refs)
-
-
-def mapping(lines: ty.Iterable[str], cache_filename='./dr-cache.sqlite') -> SqliteDict:
-    cache = SqliteDict(cache_filename)
-    for (record_id, dbrefs) in mappings(lines):
-        cache[record_id] = dbrefs
-    cache.commit()
-    return cache

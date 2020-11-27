@@ -13,9 +13,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+from pathlib import Path
+
 import click
 
-from rnacentral_pipeline.databases.ena import parser
+from rnacentral_pipeline.databases.ena import context, parser
 from rnacentral_pipeline.writers import write_entries
 
 
@@ -29,17 +31,19 @@ def cli():
 @cli.command("parse")
 @click.argument("ena_file", type=click.Path(dir_okay=True, file_okay=True))
 @click.argument("mapping_file", type=click.File("r"))
-@click.argument('ribotyper', type=click.Path(dir_okay=True))
-@click.argument('model_lengths', type=click.File('r'))
+@click.argument('ribovore_path', type=click.Path(dir_okay=True))
+@click.argument('model_lengths', type=click.Path())
 @click.argument(
     "output",
     default=".",
     type=click.Path(writable=True, dir_okay=True, file_okay=False,),
 )
-def process_ena(ena_file, mapping_file, ribotyper, model_lengths, output):
+def process_ena(ena_file, mapping_file, ribovore_path, model_lengths, output):
     """
     Process ENA EMBL formatted files into CSV to import. The additional mapping
     file is a file containing all TPA data we are using from ENA.
     """
-    write_entries(parser.parse_with_mapping_file, output, ena_file, mapping_file,
-            ribotyper, model_lengths)
+
+    ena_file = Path(ena_file)
+    ctx = context.Context.from_files(Path(ribovore_path), Path(model_lengths), Path(tpa_path), ena_file)
+    write_entries(parser.parse_with_context, output, ctx, ena_file)

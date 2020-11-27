@@ -330,7 +330,7 @@ def common_name(record):
     return None
 
 
-def lineage(record):
+def lineage(record) -> ty.Optional[str]:
     # try:
     #     return embl.lineage(record)
     # except UnknownTaxonId:
@@ -341,7 +341,7 @@ def lineage(record):
     return None
 
 
-def description(record):
+def description(record) -> str:
     raw = embl.description(record)
     if '|' in raw:
         first = raw.split('|')[0].replace('gene:', '')
@@ -382,7 +382,7 @@ def xref_data(record, feature, refs):
     return xrefs
 
 
-def is_protein(feature):
+def is_protein(feature) -> bool:
     if product(feature) == "uncharacterized protein":
         return True
     return False
@@ -400,3 +400,47 @@ def is_skippable_sequence(entry: Entry, status: ty.Optional[ribovore.RibovoreRes
         return False
 
     return model_coverage <= 0.90
+
+
+def as_entry(ctx, record, feature) -> Entry:
+    prod = product(feature)
+    if prod:
+        prod = prod[0:500]
+
+    record_refs = ctx.dr[record.id]
+    return Entry(
+        primary_id=primary_id(feature),
+        accession=accession(record),
+        ncbi_tax_id=taxid(record),
+        database="ENA",
+        sequence=sequence(record),
+        regions=[],
+        rna_type=rna_type(feature),
+        url=url(record),
+        seq_version=embl.seq_version(record),
+        note_data=note_data(feature),
+        xref_data=xref_data(record, feature, record_refs),
+        chromosome=chromosome(record),
+        species=species(record),
+        common_name=common_name(record),
+        lineage=lineage(record),
+        gene=embl.gene(feature),
+        locus_tag=embl.locus_tag(feature),
+        product=prod,
+        parent_accession=parent_accession(record),
+        project=embl.project(record),
+        keywords=keywords(record),
+        organelle=organelle(record),
+        anticodon=anticodon(record, feature),
+        experiment=embl.experiment(feature),
+        function=function(feature),
+        inference=embl.inference(feature),
+        old_locus_tag=embl.old_locus_tag(feature),
+        operon=operon(feature),
+        standard_name=embl.standard_name(feature),
+        description=description(record),
+        mol_type=mol_type(record),
+        is_composite=is_composite(feature),
+        gene_synonyms=gene_synonyms(feature),
+        references=references(record, feature),
+    )
