@@ -85,7 +85,7 @@ process fetch_metadata {
 
   """
   cat $urls | xargs -I {} wget -O - {} >> tpa.tsv
-  cmstat \$RIBODIR/models/ribo.0p20.extra.cm | grep -v '^#' | awk '{ printf("%s,%d\n", \$2, \$6); }' > model_lengths.csv
+  cmstat \$RIBODIR/models/ribo.0p20.extra.cm | grep -v '^#' | awk '{ printf("%s,%d\\n", \$2, \$6); }' > model_lengths.csv
   """
 }
 
