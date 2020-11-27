@@ -49,16 +49,18 @@ class InvalidEnaFile(Exception):
     pass
 
 
-def parse(handle, ribo_analysis: ribovore.Results) -> ty.Iterable[Entry]:
+def parse(path: Path, ribo_analysis: ribovore.Results) -> ty.Iterable[Entry]:
     """
     Parse a file like object into an iterable of Entry objects. This will parse
     each feature in all records of the given EMBL formatted file to produce the
     Entry objects.
     """
 
-    dr_mapping = dr.mapping(handle)
-    handle.seek(0)
-    for record in SeqIO.parse(handle, "embl"):
+    cache = f"{path}.sqlite"
+    with path.open('r') as handle:
+        dr_mapping = dr.mapping(handle, cache_filename=cache)
+
+    for record in SeqIO.parse(str(path), "embl"):
         if len(record.features) == 0:
             LOGGER.warn("Skipping record %s with no features" % record.id)
             continue
@@ -133,8 +135,7 @@ def parse(handle, ribo_analysis: ribovore.Results) -> ty.Iterable[Entry]:
 
 
 def parse_file(path: Path, mapping, ribo):
-    with path.open('r') as handle:
-        return tpa.apply(mapping, parse(handle, ribo))
+    return tpa.apply(mapping, parse(path, ribo))
 
 
 def parse_directory(path: Path, mapping, ribo):
