@@ -5,8 +5,8 @@ process fetch_and_process {
   path('*.csv')
 
   """
-  rnac fetch pdb data pdb.json
-  rnac fetch pdb extra pdb-extra.json
-  rnac external pdb pdb.json pdb-extra.json .
+  rnac pdb fetch data pdb.json
+  rnac pdb fetch extra pdb-extra.json
+  rnac pdb parse pdb.json pdb-extra.json .
   """
 }

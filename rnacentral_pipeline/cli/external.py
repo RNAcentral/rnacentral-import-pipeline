@@ -32,7 +32,6 @@ from rnacentral_pipeline.databases.gtrnadb import parser as gtrnadb
 from rnacentral_pipeline.databases.intact import parser as intact
 from rnacentral_pipeline.databases.lncbook import parser as lncbook
 from rnacentral_pipeline.databases.ncbi.gene import parser as ncbi_gene
-from rnacentral_pipeline.databases.pdb import parser as pdb
 from rnacentral_pipeline.databases.quickgo import parser as quickgo
 from rnacentral_pipeline.databases.refseq import parser as refseq
 from rnacentral_pipeline.databases.silva import parser as silva
@@ -158,22 +157,6 @@ def process_ensembl_protists(ensembl_file, output):
     Process data from Ensembl!Protists and produces files for import.
     """
     write_entries(e_protists.parse, output, ensembl_file)
-
-
-@cli.command("pdb")
-@click.argument("pdb_data", default="pdb.json", type=click.File("rb"))
-@click.argument("extra", default="pdb-extra.json", type=click.File("rb"))
-@click.argument(
-    "output",
-    default=".",
-    type=click.Path(writable=True, dir_okay=True, file_okay=False,),
-)
-def process_pdb(pdb_data, extra, output):
-    """
-    This will fetch and parse all sequence data from PDBe to produce the csv
-    files we import.
-    """
-    write_entries(pdb.parse, output, pdb_data, extra)
 
 
 @cli.command("ncbi-gene")
