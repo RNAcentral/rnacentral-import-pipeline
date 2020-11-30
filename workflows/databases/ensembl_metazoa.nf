@@ -18,7 +18,7 @@ process fetch_species_data {
   val(name)
 
   output:
-  path("*.dat.gz')
+  path("*.dat.gz")
 
   """
   wget "${params.ensembl_metazoa.ftp}/$name/*.dat.gz" .

@@ -73,7 +73,7 @@ process fetch_species_data {
   tuple val(ftp), val(name)
 
   output:
-  path("*.dat.gz')
+  path("*.dat.gz")
 
   """
   wget "${ftp}/$name/*.dat.gz" .
