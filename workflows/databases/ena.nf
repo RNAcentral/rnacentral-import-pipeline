@@ -50,8 +50,10 @@ process find_wgs_directories {
 }
 
 process fetch_wgs_directories {
+  tag { "${file(to_fetch).name}" }
+
   input:
-  path(to_fetch)
+  val(to_fetch)
 
   output:
   path('files/*')
@@ -67,7 +69,8 @@ process fetch_wgs_directories {
   mkdir files
   mkdir chunks
   find raw -type f > ids
-  split -n l/4000 ids chunks/chunk-
+  split -n l/30 ids chunks/chunk-
+  find chunks -type f -empty -delete
   find chunks/ -type f | xargs -I {} group-wgs {} files
   """
 }
