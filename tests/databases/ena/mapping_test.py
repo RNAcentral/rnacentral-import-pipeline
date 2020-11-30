@@ -22,7 +22,15 @@ import pytest
 from rnacentral_pipeline.databases.data import Entry
 from rnacentral_pipeline.databases.ena import mapping as tpa
 from rnacentral_pipeline.databases.helpers.hashes import md5
-from rnacentral_pipeline.databases.ena.parser import parse
+from rnacentral_pipeline.databases.ena import parser
+from rnacentral_pipeline.databases.ena import context
+
+
+def parse(path):
+    builder = context.ContextBuilder()
+    builder.with_dr(path)
+    ctx = builder.context()
+    return parser.parse(ctx, path)
 
 
 @pytest.mark.parametrize('filename,count', [
@@ -129,7 +137,7 @@ def test_can_build_correct_tair_tpas():
 def transform_first(db_name):
     embl_file = os.path.join('data', 'ena', 'tpa', db_name, 'entry.embl')
     embl = Path(embl_file)
-    entry = next(parse(embl, {}))
+    entry = next(parse(embl))
 
     tpa_file = os.path.join('data', 'ena', 'tpa', db_name, 'mapping.tsv')
     with open(tpa_file, 'r') as raw:
@@ -358,7 +366,7 @@ def test_can_transform_correct_wormbase_entry():
 
 def test_build_correct_tpa_key_for_snopy_entries():
     raw = Path('data/ena/tpa/snopy/entry.embl')
-    entry = next(parse(raw, {}))
+    entry = next(parse(raw))
     assert tpa.tpa_key(entry) == ('LN809305', None)
 
 
@@ -377,21 +385,21 @@ def test_builds_correct_tpa_key_for_wormbase_tpa():
 def test_knows_if_it_has_mappings():
     mapping = tpa.load_file('data/ena/tpa/snopy/mapping.tsv')
     raw = Path('data/ena/tpa/snopy/entry.embl')
-    entry = next(parse(raw, {}))
+    entry = next(parse(raw))
     assert mapping.has_tpa_for(entry) is True
 
 
 def test_knows_if_does_not_have_entry_for():
     mapping = tpa.load_file('data/ena/tpa/snopy/mapping.tsv')
     raw = Path('data/ena/tpa/lncrnadb/entry.embl')
-    entry = next(parse(raw, {}))
+    entry = next(parse(raw))
     assert mapping.has_tpa_for(entry) is False
 
 
 def test_can_fetch_tpa_for_entry():
     mapping = tpa.load_file('data/ena/tpa/snopy/mapping.tsv')
     raw = Path('data/ena/tpa/snopy/entry.embl')
-    entry = next(parse(raw, {}))
+    entry = next(parse(raw))
     tpas = list(mapping.find_tpas(entry))
     assert len(tpas) == 1
     assert tpas[0] == tpa.GenericTpa(
@@ -406,7 +414,7 @@ def test_can_fetch_tpa_for_entry():
 def test_fetch_tpa_for_non_exist_returns_empty_list():
     mapping = tpa.load_file('data/ena/tpa/snopy/mapping.tsv')
     raw = Path('data/ena/tpa/lncrnadb/entry.embl')
-    entry = next(parse(raw, {}))
+    entry = next(parse(raw))
     assert list(mapping.find_tpas(entry)) == []
 
 
@@ -414,7 +422,7 @@ def test_can_map_snopy_entries():
     mapping = tpa.load_file('data/ena/tpa/snopy/mapping.tsv')
 
     raw = Path('data/ena/tpa/snopy/entry.embl')
-    entries = list(parse(raw, {}))
+    entries = list(parse(raw))
 
     mapped = list(tpa.apply(mapping, entries))
     assert len(mapped) == 1
@@ -426,7 +434,7 @@ def test_can_will_not_alter_entries_from_other_dbs():
     mapping = tpa.load_file('data/ena/tpa/snopy/mapping.tsv')
 
     raw = Path('data/ena/tpa/lncrnadb/entry.embl')
-    entries = list(parse(raw, {}))
+    entries = list(parse(raw))
 
     mapped = list(tpa.apply(mapping, entries))
     assert len(mapped) == 1
@@ -438,7 +446,7 @@ def test_can_apply_wormbase_tpas():
     mapping = tpa.load_file('data/ena/tpa/wormbase/mapping.tsv')
 
     raw = Path('data/ena/tpa/wormbase/entry.embl')
-    entries = list(parse(raw, {}))
+    entries = list(parse(raw))
     assert entries
 
     mapped = list(tpa.apply(mapping, entries))
@@ -450,7 +458,7 @@ def test_can_apply_wormbase_tpas():
 def test_can_apply_mirbase_tpas():
     mapping = tpa.load_file('data/ena/tpa/mirbase/mapping.tsv')
     raw = Path('data/ena/tpa/mirbase/entry.embl')
-    entries = list(parse(raw, {}))
+    entries = list(parse(raw))
     assert entries
     mapped = list(tpa.apply(mapping, entries))
     assert len(mapped) == len(entries)

@@ -17,38 +17,68 @@ import typing as ty
 from pathlib import Path
 
 import attr
+from attr.validators import optional
 from attr.validators import instance_of as is_a
 
 from sqlitedict import SqliteDict
 
 from rnacentral_pipeline.databases.data import Entry
-from rnacentral_pipeline.databases.ena import dr, ribovore
+from rnacentral_pipeline.databases.ena import dr
+from rnacentral_pipeline.databases.ena import ribovore as ribo
 from rnacentral_pipeline.databases.ena import mapping as tpa
 
 
 @attr.s()
 class Context:
-    ribovore: ribovore.Results = attr.ib(validator=is_a(dict))
+    ribovore: ribo.Results = attr.ib(validator=is_a(dict))
     tpa = attr.ib(validator=is_a(tpa.TpaMappings))
     dr = attr.ib(validator=is_a(SqliteDict))
 
-    @classmethod
-    def from_files(cls, ribo_path: Path, lengths_path: Path, tpa_path: Path, ncr: Path, cache_filename=None) -> "Context":
-        with tpa_path.open('r') as raw:
-            tpa_mapping = tpa.load(raw)
-        tpa_mapping.validate()
-
-        dr = SqliteDict(filename=cache_filename)
-        with ncr.open('r') as raw:
-            for (record_id, dbrefs) in dr.mappings(raw):
-                dr[record_id] = dbrefs
-            dr.commit()
-
-        return cls(
-           ribovore=ribovore.load(ribo_path, lengths_path),
-           tpa=tpa_mapping,
-           dr=dr,
-        )
-
     def expand_tpa(self, entries: ty.Iterable[Entry]) -> ty.Iterable[Entry]:
         yield from tpa.apply(self.tpa, entries)
+
+@attr.s()
+class ContextBuilder:
+    ribovore_path = attr.ib(validator=optional(is_a(Path)), default=None)
+    lengths_path = attr.ib(validator=optional(is_a(Path)), default=None)
+    tpa_path = attr.ib(validator=optional(is_a(Path)), default=None)
+    dr_path = attr.ib(validator=optional(is_a(Path)), default=None) 
+    cache_filename = attr.ib(validator=optional(is_a(Path)), default=None) 
+
+    def with_ribovore(self, ribovore_path: Path, lengths_path: Path):
+        self.ribovore_path = ribovore_path
+        self.lengths_path = lengths_path
+        return self
+
+    def with_tpa(self, tpa_path: Path):
+        self.tpa_path = tpa_path
+        return self
+
+    def with_dr(self, dr_path: Path, cache_filename=None):
+        self.dr_path = dr_path
+        self.cache_filename = cache_filename
+        return self
+
+    def context(self) -> Context:
+        tpa_mapping = tpa.TpaMappings()
+        if self.tpa_path:
+            with self.tpa_path.open('r') as raw:
+                tpa_mapping = tpa.load(raw)
+            tpa_mapping.validate()
+
+        dr_map = SqliteDict(filename=self.cache_filename)
+        if self.dr_path:
+            with self.dr_path.open('r') as raw:
+                for (record_id, dbrefs) in dr.mappings(raw):
+                    dr_map[record_id] = dbrefs
+                dr_map.commit()
+
+        ribovore: ribo.Results = {}
+        if self.ribovore_path and self.lengths_path:
+           ribovore = ribo.load(self.ribovore_path, self.lengths_path)
+
+        return Context(
+            ribovore=ribovore,
+            tpa=tpa_mapping,
+            dr=dr_map,
+        )
