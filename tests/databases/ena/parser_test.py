@@ -22,8 +22,15 @@ import pytest
 from rnacentral_pipeline.databases.data import Entry, Reference
 import rnacentral_pipeline.databases.helpers.publications as pubs
 
-from rnacentral_pipeline.databases.ena.parser import parse
+from rnacentral_pipeline.databases.ena import parser
 from rnacentral_pipeline.databases.ena import ribovore
+from rnacentral_pipeline.databases.ena import context
+
+def simple_parse(path):
+    builder = context.ContextBuilder()
+    builder.with_dr(path)
+    ctx = builder.context()
+    return parser.parse(ctx, path)
 
 
 @pytest.mark.parametrize('filename,count', [
@@ -48,7 +55,7 @@ from rnacentral_pipeline.databases.ena import ribovore
     ('data/ena/bad-feature-type.ncr', 2),
 ])
 def test_can_parse_variety_of_files(filename, count):
-    data = list(parse(Path(filename), {}))
+    data = list(simple_parse(Path(filename)))
     assert len(data) == count
     for entry in data:
         assert 'TPA:' not in entry.description
@@ -61,7 +68,7 @@ def test_can_parse_variety_of_files(filename, count):
 
 def test_creates_simple_entry():
     path = Path('data/ena/ncr/wgs/aa/wgs_aacd01_fun.ncr')
-    simple_data = list(parse(path, {}))
+    simple_data = list(simple_parse(path))
 
     assert attr.asdict(simple_data[0]) == attr.asdict(Entry(
         primary_id='',
@@ -194,7 +201,7 @@ def test_creates_simple_entry():
 
 def test_can_find_correct_ncRNA_type():
     path = Path('data/ena/ncr/wgs/aa/wgs_abxv02_pro.ncr')
-    ncrna_data = list(parse(path, {}))
+    ncrna_data = list(simple_parse(path))
 
     assert attr.asdict(ncrna_data[0]) == attr.asdict(Entry(
         primary_id='',
@@ -284,7 +291,7 @@ def test_can_find_correct_ncRNA_type():
 
 def test_can_parse_all_example_entries():
     path = Path('data/test_example_entries.ncr')
-    examples = list(parse(path, {}))
+    examples = list(simple_parse(path))
 
     assert attr.asdict(examples[0]) == attr.asdict(Entry(
         primary_id='',
@@ -514,7 +521,7 @@ def test_can_parse_all_example_entries():
 
 def test_can_handle_file_with_invalid_fields():
     raw = Path('data/test_invalid_fields.ncr')
-    data = next(parse(raw, {}))
+    data = next(simple_parse(raw))
 
     assert data.accession == 'KM079256.1:1..1300:rRNA'
     assert data.mol_type == 'genomic DNA'
@@ -525,7 +532,7 @@ def test_can_handle_file_with_invalid_fields():
 
 def test_can_parse_out_anticodon_from_gene():
     raw = Path('data/ena/trna-with-anticodon.embl')
-    data = next(parse(raw, {}))
+    data = next(simple_parse(raw))
 
     assert data.accession == 'HF536610.1:1288..1686:tRNA'
     assert data.ncbi_tax_id == 188169
@@ -538,7 +545,7 @@ def test_can_parse_out_anticodon_from_gene():
 
 def test_can_parse_anticodon_from_gtrnadb_stype_gene():
     raw = Path('data/ena/trna-with-anticodon.embl')
-    data = list(parse(raw, {}))[1]
+    data = list(simple_parse(raw))[1]
 
     assert data.accession == 'LK008175.1:1..73:tRNA'
     assert data.ncbi_tax_id == 411154
@@ -563,7 +570,7 @@ def test_can_parse_anticodon_from_gtrnadb_stype_gene():
 
 def test_can_parse_anticodon_from_note():
     raw = Path('data/ena/anticodon-in-note.embl')
-    data = next(parse(raw, {}))
+    data = next(simple_parse(raw))
 
     assert data.accession == 'CP000102.1:337323..337406:tRNA'
     assert data.note_data == {'text': ['codon recognized: CUA']}
@@ -580,7 +587,7 @@ def test_can_parse_anticodon_from_note():
 ])
 def correctly_ignores_pseudogenes(filename, count):
     raw = Path(filename)
-    data = list(parse(raw, {}))
+    data = list(simple_parse(raw))
     assert len(data) == count
     # assert data.accession == 'NIDN01000248.1:29758..29889:tRNA'
     # assert data.pseudogene == 'unprocessed'
@@ -588,7 +595,7 @@ def correctly_ignores_pseudogenes(filename, count):
 
 def test_can_parse_function():
     raw = Path('data/ena/function.embl')
-    data = list(parse(raw, {}))
+    data = list(simple_parse(raw))
 
     assert data[0].accession == 'EU410654.1:1..92:ncRNA'
     assert data[0].function == 'guide for 26S rRNA methylation at U1043'
@@ -607,7 +614,7 @@ def test_can_parse_function():
 
 def test_can_parse_old_locus_tag():
     raw = Path('data/ena/old_locus_tag.embl')
-    data = next(parse(raw, {}))
+    data = next(simple_parse(raw))
 
     assert data.accession == 'AL591985.1:1315182..1315258:tRNA'
     assert data.parent_accession == 'AL591985'
@@ -620,7 +627,7 @@ def test_can_parse_old_locus_tag():
 
 def test_can_parse_operons():
     raw = Path('data/ena/operons.embl')
-    data = next(parse(raw, {}))
+    data = next(simple_parse(raw))
 
     assert data.accession == 'CP000102.1:1163547..1163662:rRNA'
     assert data.operon == 'rrnD'
@@ -628,7 +635,7 @@ def test_can_parse_operons():
 
 def test_can_parse_gene_synonyms():
     raw = Path('data/ena/gene_synonym.embl')
-    data = next(parse(raw, {}))
+    data = next(simple_parse(raw))
 
     assert data.accession == 'CP000948.1:2011661..2011909:misc_RNA'
     assert data.gene_synonyms == ['IS091', 'sraC', 'tpke79']
@@ -645,7 +652,7 @@ def test_can_parse_gene_synonyms():
     10834842, 10684931, 15611297, 20668672, 911771, 6209580])
 def test_can_extract_references_from_experiment(pmid):
     raw = Path('data/ena/experiment-references.embl')
-    data = next(parse(raw, {}))
+    data = next(simple_parse(raw))
 
     assert data.accession == 'HG975378.1:1..299:ncRNA'
     assert data.rna_type == 'SO:0000590'
@@ -665,7 +672,7 @@ def test_can_extract_references_from_experiment(pmid):
 ])
 def test_can_extract_references_from_note_or_experiment(pmid):
     raw = Path('data/ena/note-references.embl')
-    data = next(parse(raw, {}))
+    data = next(simple_parse(raw))
 
     assert data.accession == 'AL009126.3:3856226..3856447:misc_RNA'
     assert data.note_data == {
@@ -681,7 +688,7 @@ def test_can_extract_references_from_note_or_experiment(pmid):
 
 def test_can_handle_unclosed_parens():
     raw = Path('data/test_feature_unclosed_parenthesis.ncr')
-    data = next(parse(raw, {}))
+    data = next(simple_parse(raw))
 
     assert data.accession == 'HE860504.1:1..14644:tRNA'
     assert data.mol_type == 'genomic DNA'
@@ -697,7 +704,7 @@ def test_can_handle_unclosed_parens():
 
 def test_can_extract_xrefs():
     raw = Path('data/test_example_entries.ncr')
-    data = list(parse(raw, {}))
+    data = list(simple_parse(raw))
 
     assert data[5].accession == 'HG975377.1:1..332:ncRNA'
     assert data[5].xref_data == {'lncrnadb': ['190', '7SK']}
@@ -707,7 +714,7 @@ def test_can_extract_xrefs():
 
 def test_can_handle_mislabled_trna():
     raw = Path('data/ena/mislabeled-trna.embl')
-    data = list(parse(raw, {}))
+    data = list(simple_parse(raw))
 
     assert data[0].rna_type == 'SO:0000253'
 
@@ -718,7 +725,7 @@ def test_can_handle_mislabled_trna():
 ])
 def test_can_handle_weird_feature(index, rna_type):
     raw = Path('data/ena/bad-feature-type.ncr')
-    data = list(parse(raw, {}))
+    data = list(simple_parse(raw))
 
     assert data[index].rna_type == rna_type
 
@@ -730,14 +737,14 @@ def test_can_handle_weird_feature(index, rna_type):
 ])
 def test_can_get_scarna_feature(index, rna_type):
     raw = Path('data/ena/scarna.ncr')
-    data = list(parse(raw, {}))
+    data = list(simple_parse(raw))
 
     assert data[index].rna_type == rna_type
 
 
 def test_deals_with_crazy_long_name():
     raw = Path('data/ena/too-long-description.ncr')
-    data = list(parse(raw, {}))
+    data = list(simple_parse(raw))
 
     assert data[0].rna_type == 'SO:0000275'
     assert data[0].description == 'Leishmania donovani snoRNA.05.001'
@@ -789,7 +796,10 @@ def test_knows_how_to_exclude_or_not(path, id, included):
     raw = path / 'sequences.dat'
     ribotyper = path / 'ribotyper-results'
     model_lengths = Path('data/ena/to-exclude/model-lengths.csv')
-    ribo = ribovore.load(ribotyper, model_lengths)
-    data = list(parse(raw, ribo))
+    builder = context.ContextBuilder()
+    builder.with_dr(raw)
+    builder.with_ribovore(ribotyper, model_lengths)
+    ctx = builder.context()
+    data = list(parser.parse(ctx, raw))
     was_emitted = any(e.accession == id for e in data)
     assert was_emitted == included
