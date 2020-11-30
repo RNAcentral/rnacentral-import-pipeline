@@ -1,4 +1,4 @@
-process fetch_and_process {
+process pdbe {
   when { params.databases.pdb.run }
 
   output:

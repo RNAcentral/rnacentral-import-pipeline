@@ -20,6 +20,6 @@ workflow genecards_suite {
       ['genecards', params.databases.genecards.remote, params.databases.genecards.column],
       ['malacards', params.databases.malacards.remote, params.databases.malacards.column],
     ]) \
-    fetch_and_process \
+    | fetch_and_process \
     | set { data }
 }
