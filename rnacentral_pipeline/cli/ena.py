@@ -29,10 +29,10 @@ def cli():
 
 
 @cli.command("parse")
-@click.argument("ena_file", type=click.Path(dir_okay=True, file_okay=True))
-@click.argument("mapping_file", type=click.File("r"))
+@click.argument("ena_file", type=click.Path(file_okay=True))
+@click.argument("mapping_file", type=click.Path(file_okay=True))
 @click.argument('ribovore_path', type=click.Path(dir_okay=True))
-@click.argument('model_lengths', type=click.Path())
+@click.argument('model_lengths', type=click.Path(file_okay=True))
 @click.argument(
     "output",
     default=".",
