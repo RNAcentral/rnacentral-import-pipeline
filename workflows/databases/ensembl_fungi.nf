@@ -43,7 +43,7 @@ process parse_data {
 workflow ensembl_fungi {
   emit: data
   main:
-    fetch_species \
+    find_species \
     | splitCsv \
     | map { row -> row[0] } \
     | filter { filename ->

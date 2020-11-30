@@ -101,15 +101,17 @@ workflow ensembl {
     fetch_gencode | set { gencode }
     Channel.fromPath('files/import-data/rfam/families.sql') | fetch_rfam | set { rfam }
     Channel.fromPath('files/import-data/ensembl/exclude-urls.txt') | fetch_excludes | set { excludes}
-    Channel.of(params.ensembl.ftp, params.ensembl.rapid_release.ftp) \
+    Channel.of(params.databases.ensembl.ftp, params.databases.ensembl.rapid_release.ftp) \
     | find_species \
     | splitCsv \
     | filter { _, filename ->
-      params.ensembl.data_file.exclude.inject(false) { agg, p -> agg || (filename =~ p) }
+      params.databases.ensembl.data_file.exclude.inject(false) { agg, p -> agg || (filename =~ p) }
     } \
     | fetch_species_data \
     | flatten \
-    | combine(rfam, gencode, excludes) \
+    | combine(rfam) \
+    | combine(gencode) \
+    | combine(excludes) \
     | parse_data \
     | set { data }
 }
