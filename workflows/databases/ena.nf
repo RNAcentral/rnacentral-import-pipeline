@@ -37,8 +37,6 @@ process fetch_single_files {
 }
 
 process find_wgs_directories {
-  memory '2GB'
-
   when { params.databases.ena.run }
 
   output:
@@ -47,7 +45,7 @@ process find_wgs_directories {
   script:
   def remote = params.databases.ena.remote
   """
-  find $remote/wgs/public -mindepth 1 -maxdepth 1 > paths
+  find $remote/wgs/public -mindepth 1 -maxdepth 1 -not -empty > paths
   """
 }
 
