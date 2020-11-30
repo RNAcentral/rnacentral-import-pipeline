@@ -47,12 +47,11 @@ workflow lookup_ref_ids {
   emit: publications
 
   main:
-    fetch_publications | set { xml_publications }
-
     ref_ids \
+    | collect() \
     | merge_and_split_all_publications \
     | flatten \
-    | combine(xml_publications) \
+    | combine(fetch_publications()) \
     | lookup_publications \
     | set { publications }
 }
