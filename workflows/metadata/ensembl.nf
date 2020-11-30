@@ -107,7 +107,7 @@ workflow ensembl {
       proteins(conn, protein_sql),
       karyotypes(),
       compara(),
-    } \
+    ) \
     | flatten \
     | set { data }
 }
