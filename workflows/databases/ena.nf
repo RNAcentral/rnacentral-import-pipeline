@@ -111,9 +111,7 @@ process process_file {
 workflow ena {
   emit: data
   main:
-    Channel.fromPath('files/import-data/ena/tpa-urls.txt') \
-    | fetch_metadata \
-    | set { meta }
+    Channel.fromPath('files/import-data/ena/tpa-urls.txt') | set { urls }
 
     find_wgs_directories \
     | splitCsv \
@@ -124,7 +122,7 @@ workflow ena {
     fetch_single_files \
     | mix(wgs_files) \
     | flatten \
-    | combine(meta) \
+    | combine(fetch_metadata(urls)) \
     | process_file \
     | set { data }
 }
