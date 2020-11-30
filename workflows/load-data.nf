@@ -1,3 +1,15 @@
+process create_load_tables {
+  input:
+  file(create)
+
+  output:
+  val('done')
+
+  """
+  psql -v ON_ERROR_STOP=1 -f $create "$PGDATABASE"
+  """
+}
+
 process merge_and_import {
   memory 4.GB
   tag { name }
@@ -56,6 +68,7 @@ workflow load_data {
   emit: released
   main:
     Channel.fromPath('files/import-data/limits.json') | set { limits }
+    Channel.fromPath('files/schema/create_load.sql') | set { schema }
 
     parsed \
     | filter { f -> !f.isEmpty() }
@@ -73,7 +86,7 @@ workflow load_data {
     } \
     | groupTuple \
     | map { it -> [it[0][0], it[0][1], it[1]] } \
-    | combine(created_tables) \
+    | combine(create_load_tables(schema)) \
     | merge_and_import \
     | set { imported_names }
 
