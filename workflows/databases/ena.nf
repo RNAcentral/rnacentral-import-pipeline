@@ -91,6 +91,7 @@ process fetch_metadata {
 }
 
 process process_file {
+  memory '4GB'
   tag { "$raw" }
 
   input:
