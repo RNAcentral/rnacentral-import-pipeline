@@ -13,6 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import csv
+
 import click
 
 from rnacentral_pipeline.databases.ensembl.metadata import assemblies
@@ -20,6 +22,7 @@ from rnacentral_pipeline.databases.ensembl.metadata import compara
 from rnacentral_pipeline.databases.ensembl.metadata import coordinate_systems
 from rnacentral_pipeline.databases.ensembl.metadata import karyotypes
 from rnacentral_pipeline.databases.ensembl.metadata import proteins
+from rnacentral_pipeline.databases.ensembl import urls
 
 
 @click.group('ensembl')
@@ -30,6 +33,46 @@ def cli():
     little for display.
     """
     pass
+
+
+@cli.group('vertebrates')
+def verts():
+    """
+    A set of commands for dealing with Ensembl vertebrate data (ensembl.org).
+    """
+    pass
+
+
+@verts.command('urls-for')
+@click.argument('ftp')
+@click.argument('output', default='-', type=click.File('w'))
+def vert_url(ftp, output):
+    writer = csv.writer(output)
+    writer.writerows(urls.urls_for(ftp))
+
+
+@verts.command('parse')
+@click.argument("embl_file", type=click.File("r"))
+@click.argument("gff_file", type=click.File("r"))
+@click.argument(
+    "family_file", type=click.Path(file_okay=True, dir_okay=False, readable=True)
+)
+@click.argument(
+    "gencode_gff", type=click.Path(file_okay=True, dir_okay=False, readable=True)
+)
+@click.argument("exclude", type=click.File("r"))
+@click.argument(
+    "output",
+    default=".",
+    type=click.Path(writable=True, dir_okay=True, file_okay=False,),
+)
+def parse_data(embl_file, gff_file, family_file, gencode_gff, exclude, output):
+    """
+    This will parse EMBL files from Ensembl to produce the expected CSV files.
+    """
+    write_entries(
+        ensembl.parse, output, embl_file, gff_file, family_file, gencode_gff, exclude,
+    )
 
 
 @cli.command('assemblies')

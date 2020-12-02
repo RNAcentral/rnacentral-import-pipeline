@@ -51,7 +51,7 @@ process fetch_excludes {
   """
 }
 
-process find_species {
+process find_urls {
   executor 'local'
   when { params.databases.ensembl.run }
 
@@ -62,7 +62,7 @@ process find_species {
   path('species.txt')
 
   """
-  curl --list-only $remote/ | xargs -I {} echo '$remote,{}' >> species.txt
+  rnac ensembl vertebrates urls-for $remote > species.txt
   """
 }
 
@@ -70,28 +70,29 @@ process fetch_species_data {
   tag { "$name" }
 
   input:
-  tuple val(ftp), val(name)
+  tuple val(name), val(dat_path), val(gff_path)
 
   output:
-  path("*.dat.gz")
+  tuple val(name), path("*.dat"), path('*.gff')
 
   """
-  wget "${ftp}/$name/*.dat.gz" .
+  wget '$dat_path'
+  wget '$gff_path'
+  gzip -d *.gz
   """
 }
 
 process parse_data {
-  tag { "${embl.basename}" }
+  tag { "$name" }
 
   input:
-  tuple path(embl), path(rfam), path(gencode), path(exclude)
+  tuple val(name), path(embl), path(gff), path(rfam), path(gencode), path(exclude)
 
   output:
   path('*.csv')
 
   """
-  zcat $embl > data.dat
-  rnac external ensembl data.dat $rfam $gencode $exclude .
+  rnac ensembl vertebrates parse $embl $gff $rfam $gencode $exclude .
   """
 }
 
@@ -101,14 +102,17 @@ workflow ensembl {
     fetch_gencode | set { gencode }
     Channel.fromPath('files/import-data/rfam/families.sql') | fetch_rfam | set { rfam }
     Channel.fromPath('files/import-data/ensembl/exclude-urls.txt') | fetch_excludes | set { excludes}
-    Channel.of(params.databases.ensembl.ftp, params.databases.ensembl.rapid_release.ftp) \
-    | find_species \
+
+    Channel.of(params.databases.ensembl.ftp) \
+    | find_urls \
     | splitCsv \
-    | filter { _, filename ->
-      params.databases.ensembl.data_file.exclude.inject(false) { agg, p -> agg || (filename =~ p) }
+    | filter { name, dat_url, gff_url ->
+      params.databases.ensembl.data_file.exclude.any { p -> name =~ p }
     } \
     | fetch_species_data \
-    | flatten \
+    | map { name, dat_files, gff_file -> 
+      dat_files.collect { [name, it, gff_file] }
+    } \
     | combine(rfam) \
     | combine(gencode) \
     | combine(excludes) \
