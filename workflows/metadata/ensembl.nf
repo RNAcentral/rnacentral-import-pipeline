@@ -85,7 +85,7 @@ process karyotypes {
 workflow compara {
   emit: data
   main:
-    fetch_compara | process_compara | set { data }
+    fetch_compara | flatten | process_compara | set { data }
 }
 
 workflow ensembl {
