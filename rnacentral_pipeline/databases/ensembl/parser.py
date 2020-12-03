@@ -52,14 +52,19 @@ def as_entry(record, gene, feature, context: Context) -> data.Entry:
         LOGGER.exception(err)
         return None
 
+    pid = primary_id(feature)
+    if pid not in context.gff:
+        raise ValueError(f"Cannot find transcript info for {feature}")
+    info = context.gff[pid]
+
     entry = data.Entry(
-        primary_id=helpers.primary_id(feature),
+        primary_id=pid,
         accession=helpers.accession(feature),
         ncbi_tax_id=embl.taxid(record),
         database="ENSEMBL",
         sequence=sequence,
-        regions=helpers.regions(context, feature),
-        rna_type=helpers.rna_type(context.inference, feature, xref_data),
+        regions=info.regions,
+        rna_type=info.so_rna_type,
         url=helpers.url(feature),
         seq_version=helpers.seq_version(feature),
         lineage=embl.lineage(record),

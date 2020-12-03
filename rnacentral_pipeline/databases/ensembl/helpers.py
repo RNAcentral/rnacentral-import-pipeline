@@ -42,13 +42,6 @@ class CouldNotTrimDescription(Exception):
     pass
 
 
-def regions(context: Context, feature) -> ty.List[data.SequenceRegion]:
-    pid = primary_id(feature)
-    if pid not in context.coordinates:
-        raise ValueError(f"Could not find coordinates for {pid}")
-    return [context.coordinates[pid]]
-
-
 def references():
     """
     Get the standard reference for all Ensembl entries.
