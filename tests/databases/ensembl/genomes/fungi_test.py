@@ -18,7 +18,7 @@ import pytest
 
 from rnacentral_pipeline.databases import data as dat
 from rnacentral_pipeline.databases.helpers import publications as pubs
-from rnacentral_pipeline.databases.ensembl_genomes import fungi
+from rnacentral_pipeline.databases.ensembl.genomes import fungi
 
 from . import helpers
 
