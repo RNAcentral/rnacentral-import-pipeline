@@ -79,63 +79,6 @@ def process_json_schema(json_file, output):
     write_entries(generic.parse, output, json_file)
 
 
-@cli.command("ensembl_plants")
-@click.argument("ensembl_file", type=click.File("r"))
-@click.argument(
-    "output",
-    default=".",
-    type=click.Path(writable=True, dir_okay=True, file_okay=False,),
-)
-def process_ensembl_plants(ensembl_file, output):
-    """
-    This will process the Ensembl Plant data to produce files for import. The
-    files should be in the EMBL format as provided by EnsemblPlants.
-    """
-    write_entries(e_plants.parse, output, ensembl_file)
-
-
-@cli.command("ensembl_fungi")
-@click.argument("ensembl_file", type=click.File("r"))
-@click.argument(
-    "output",
-    default=".",
-    type=click.Path(writable=True, dir_okay=True, file_okay=False,),
-)
-def process_ensembl_fungi(ensembl_file, output):
-    """
-    Process data from Ensembl!Fungi and produces files for import.
-    """
-    write_entries(e_fungi.parse, output, ensembl_file)
-
-
-@cli.command("ensembl_metazoa")
-@click.argument("ensembl_file", type=click.File("r"))
-@click.argument(
-    "output",
-    default=".",
-    type=click.Path(writable=True, dir_okay=True, file_okay=False,),
-)
-def process_ensembl_metazoa(ensembl_file, output):
-    """
-    Process data from Ensembl!Metazoa and produces files for import.
-    """
-    write_entries(e_metazoa.parse, output, ensembl_file)
-
-
-@cli.command("ensembl_protists")
-@click.argument("ensembl_file", type=click.File("r"))
-@click.argument(
-    "output",
-    default=".",
-    type=click.Path(writable=True, dir_okay=True, file_okay=False,),
-)
-def process_ensembl_protists(ensembl_file, output):
-    """
-    Process data from Ensembl!Protists and produces files for import.
-    """
-    write_entries(e_protists.parse, output, ensembl_file)
-
-
 @cli.command("ncbi-gene")
 @click.argument("data-file", type=click.File("r"))
 @click.argument(

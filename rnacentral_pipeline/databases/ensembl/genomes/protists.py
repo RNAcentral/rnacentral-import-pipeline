@@ -13,6 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import re
+
 import attr
 
 from rnacentral_pipeline.databases.ensembl_genomes.core import parser
@@ -20,32 +22,24 @@ from rnacentral_pipeline.databases.ensembl_genomes.core.data import Context
 from rnacentral_pipeline.databases.helpers import publications as pubs
 
 
-def as_tair_entry(entry):
-    database = 'TAIR'
-    xrefs = dict(entry.xref_data)
-    if database in xrefs:
-        del xrefs[database]
-    return attr.evolve(
-        entry,
-        accession='%s:%s' % (database, entry.primary_id),
-        database=database,
-        xref_data=xrefs,
+def correct_rna_type(entry):
+    if re.match(r'^LMJF_\d+_snoRNA_?\d+$', entry.gene):
+        return attr.evolve(entry, rna_type='snoRNA')
+
+    if re.match(r'^LMJF_\d+_snRNA_\d+$', entry.gene):
+        return attr.evolve(entry, rna_type='snRNA')
+
+    if entry.rna_type == 'snRNA' and 'snoRNA' in entry.description:
+        return attr.evolve(entry, rna_type='snoRNA')
+
+    return entry
+
+
+def parse(handle, gff_file):
+    context = Context.build(
+        'ENSEMBL_PROTISTS',
+        [pubs.reference('doi:10.1093/nar/gkx1011')],
+        gff_file,
     )
 
-
-def inferred_entries(entry):
-    if entry.ncbi_tax_id != 3702 or not entry.primary_id.startswith('AT'):
-        return
-    yield as_tair_entry(entry)
-
-
-def parse(handle):
-    context = Context(
-        database='ENSEMBL_PLANTS',
-        references=[pubs.reference(29092050)],
-    )
-
-    for entry in parser.parse(context, handle):
-        yield entry
-        for entry in inferred_entries(entry):
-            yield entry
+    return map(correct_rna_type, parser.parse(context, handle))

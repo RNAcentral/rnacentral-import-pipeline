@@ -39,7 +39,7 @@ def species_info(ftp: FTP, release: str):
         yield tmp
 
 
-def generate_paths(base: str, release: str, handle) -> ty.Iterable[str]:
+def generate_paths(base: str, release: str, handle) -> ty.Iterable[ty.Tuple[str, str, str]]:
     _, release_id = release.split('-', 1)
     data = json.load(handle)
     data_types = ['gff3', 'embl']
@@ -47,14 +47,14 @@ def generate_paths(base: str, release: str, handle) -> ty.Iterable[str]:
         info = entry['organism']
         name = info['name']
         url_name = info['url_name']
-        assembly = entry['assembly']['assembly_name']
+        assembly = entry['assembly']['assembly_default']
         organism_name = f"{url_name}.{assembly}.{release_id}"
         gff_path = f"{base}/pub/{release}/gff3/{name}/{organism_name}.gff3.gz"
         data_files = f"{base}/pub/{release}/embl/{name}/{organism_name}.*.dat.gz"
         yield (name, data_files, gff_path)
 
 
-def urls_for(url: str) -> ty.List[str]:
+def urls_for(url: str) -> ty.Iterable[ty.Tuple[str, str, str]]:
     with FTP(url[6:]) as ftp:
         ftp.login()
         ftp.cwd('pub')

@@ -16,6 +16,7 @@ limitations under the License.
 import itertools as it
 import logging
 import operator as op
+import typing as ty
 
 import attr
 from Bio import SeqIO
@@ -36,7 +37,7 @@ IGNORE_FEATURES = {
 }
 
 
-def as_entry(record, gene, feature, context):
+def as_entry(record, gene, feature, context: Context) -> data.Entry:
     """
     Turn the Record, Gene feature, transcript feature and Context into a Entry
     object for output.
@@ -57,7 +58,7 @@ def as_entry(record, gene, feature, context):
         ncbi_tax_id=embl.taxid(record),
         database="ENSEMBL",
         sequence=sequence,
-        regions=helpers.regions(record, feature),
+        regions=helpers.regions(context, feature),
         rna_type=helpers.rna_type(context.inference, feature, xref_data),
         url=helpers.url(feature),
         seq_version=helpers.seq_version(feature),
@@ -81,7 +82,7 @@ def as_entry(record, gene, feature, context):
     return attr.evolve(entry, description=helpers.description(context, gene, entry))
 
 
-def ncrnas(raw, context):
+def ncrnas(raw, context: Context) -> ty.Iterable[data.Entry]:
     """
     This will parse an EMBL file for all Ensembl Entries to import.
     """
@@ -119,13 +120,13 @@ def ncrnas(raw, context):
             yield entry
 
 
-def parse(raw, family_file, gencode_file=None, excluded_file=None):
+def parse(raw, family_file, gff_file, gencode_file=None, excluded_file=None) -> ty.Iterable[data.Entry]:
     """
     This will parse an EMBL file for all Ensembl Entries to import.
     """
 
     context = Context.build(
-        family_file, gencode_file=gencode_file, excluded_file=excluded_file,
+        family_file, gff_file, gencode_file=gencode_file, excluded_file=excluded_file,
     )
     loaded = ncrnas(raw, context)
     grouped = it.groupby(loaded, op.attrgetter("gene"))

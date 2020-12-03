@@ -16,11 +16,22 @@ limitations under the License.
 import attr
 from attr.validators import instance_of as is_a
 
+from sqlitedict import SqliteDict
+
 
 @attr.s()
-class Context(object):
+class Context:
     database = attr.ib(validator=is_a(str), converter=str)
     references = attr.ib(validator=is_a(list))
+    gff = attr.ib(validator=is_a(SqliteDict))
 
-    def accession(self, primary_id):
+    @classmethod
+    def build(cls, database, references, assembly_id, gff_file):
+        return cls(
+            database=database,
+            references=references,
+            gff=load_coordinates(assembly_id, gff_file)
+        )
+
+    def accession(self, primary_id: str) -> str:
         return '%s:%s' % (self.database, primary_id)

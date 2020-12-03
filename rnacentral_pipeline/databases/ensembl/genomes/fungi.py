@@ -13,15 +13,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from rnacentral_pipeline.databases.ensembl_genomes.core import parser
-from rnacentral_pipeline.databases.ensembl_genomes.core.data import Context
+
+from rnacentral_pipeline.databases.ensembl.genomes.core import parser
+from rnacentral_pipeline.databases.ensembl.genomes.core.data import Context
 from rnacentral_pipeline.databases.helpers import publications as pubs
 
 
-def parse(handle):
-    context = Context(
-        database='ENSEMBL_METAZOA',
-        references=[pubs.reference('doi:10.1093/nar/gkx1011')],
+def parse(handle, gff_file):
+    context = Context.build(
+        'ENSEMBL_FUNGI',
+        [pubs.reference('doi:10.1093/nar/gkx1011')],
+        gff_file,
     )
 
     return parser.parse(context, handle)
