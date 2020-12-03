@@ -22,7 +22,10 @@ from rnacentral_pipeline.databases.ensembl.metadata import compara
 from rnacentral_pipeline.databases.ensembl.metadata import coordinate_systems
 from rnacentral_pipeline.databases.ensembl.metadata import karyotypes
 from rnacentral_pipeline.databases.ensembl.metadata import proteins
+from rnacentral_pipeline.databases.ensembl import parser
 from rnacentral_pipeline.databases.ensembl import urls
+from rnacentral_pipeline.databases.gencode import urls as gencode_urls
+from rnacentral_pipeline.writers import write_entries
 
 
 @click.group('ensembl')
@@ -47,7 +50,7 @@ def verts():
 @click.argument('ftp')
 @click.argument('output', default='-', type=click.File('w'))
 def vert_url(ftp, output):
-    writer = csv.writer(output)
+    writer = csv.writer(output, lineterminator='\n')
     writer.writerows(urls.urls_for(ftp))
 
 
@@ -71,8 +74,78 @@ def parse_data(embl_file, gff_file, family_file, gencode_gff, exclude, output):
     This will parse EMBL files from Ensembl to produce the expected CSV files.
     """
     write_entries(
-        ensembl.parse, output, embl_file, gff_file, family_file, gencode_gff, exclude,
+        parser.parse, output, embl_file, gff_file, family_file, gencode_gff, exclude,
     )
+
+
+@cli.group('gencode')
+def gencode():
+    """
+    Commands for dealing with GENCODE data.
+    """
+    pass
+
+
+@gencode.command('urls-for')
+@click.argument('ftp')
+@click.argument('output', default='-', type=click.File('w'))
+def gencode_url(ftp, output):
+    """
+    Get the URLs for the latest GENCODE data
+    """
+    writer = csv.writer(output, lineterminator='\n')
+    writer.writerows(gencode_urls.urls_for(ftp))
+
+
+@cli.group('species')
+def species_cli():
+    """
+    A group of commands dealing for working with E!Plants data.
+    """
+    pass
+
+
+@species_cli.command('urls-for')
+@click.argument("species")
+@click.argument('ftp')
+@click.argument('output', default='-', type=click.File('w'))
+def species_url(species, ftp, output):
+    """
+    Find the urls to download for the given species from Ensembl Species.
+    """
+    pass
+    # writer = csv.writer(output, lineterminator='\n')
+    # writer.writerows(plants_urls.urls_for(ftp))
+
+
+@species_cli.command("parse")
+@click.argument("species", type=click.Choice(['plants', 'fungi', 'protists', 'metazoa'], case_sensitive=False))
+@click.argument("ensembl_file", type=click.File("r"))
+@click.argument('gff_file', type=click.File('r'))
+@click.argument(
+    "output",
+    default=".",
+    type=click.Path(writable=True, dir_okay=True, file_okay=False,),
+)
+def parse_species_data(species, ensembl_file, gff_file, output):
+    """
+    This will process the Ensembl Species data to produce files for import. The
+    files should be in the EMBL format as provided by the particular part of
+    E!Species.
+    """
+    parser = None
+    if species.lower() == 'plants':
+        parser = e_plants.parse
+    elif species.lower() == 'fungi':
+        parser = e_fungi.parse
+    elif species.lower() == 'metazoa':
+        parser = e_metazoa.parse
+    elif species.lower() == 'protists':
+        parser = e_protists.parse
+    else:
+        raise ValueError(f"Unknown species {species}")
+
+    write_entries(parser, output, ensembl_file, gff_file)
 
 
 @cli.command('assemblies')
@@ -83,7 +156,7 @@ def parse_data(embl_file, gff_file, family_file, gencode_gff, exclude, output):
 @click.argument('known_file', default='known-assemblies.sql',
                 type=click.File('r'))
 @click.argument('output', default='assemblies.csv', type=click.File('w'))
-def ensembl_write_assemblies(connections, query, example_file, known_file, 
+def ensembl_write_assemblies(connections, query, example_file, known_file,
                              output, db_url=None):
     """
     This will query the ensembl databases in the connections file and write the

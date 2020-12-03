@@ -69,9 +69,8 @@ def primary_id(feature):
     return primary
 
 
-def rna_type(feature):
-    raw = ensembl.raw_rna_type(feature)
-    return NORMALIZED_RNA_TYPES.get(raw, raw)
+def rna_type(context, primary_id: str) -> str:
+    return context[primary_id].so_rna_type
 
 
 def seq_version(feature):
@@ -129,14 +128,19 @@ def xref_data(feature):
 def as_entry(context, record, current_gene, feature):
     species, common_name = ensembl.organism_naming(record)
 
+    pid = primary_id(feature)
+    if pid not in context.gff:
+        raise ValueError(f"Cannot find transcript info for {feature}")
+
+    info = context.gff[pid]
     entry = data.Entry(
-        primary_id=primary_id(feature),
+        primary_id=pid,
         accession=context.accession(primary_id(feature)),
         ncbi_tax_id=embl.taxid(record),
         database=context.database,
         sequence=embl.sequence(record, feature),
-        regions=ensembl.regions(record, feature),
-        rna_type=rna_type(feature),
+        regions=info.regions,
+        so_rna_type=info.so_rna_type,
         url='',
         seq_version=seq_version(feature),
         lineage=embl.lineage(record),

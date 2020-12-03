@@ -1,58 +1,39 @@
-process fetch_rfam {
+process fetch_metadata {
   when { params.databases.ensembl.run }
 
   input:
-  path(query)
+  path(exclude_urls)
+  path(rfam_query)
 
   output:
-  path('families.tsv')
-
-  """
-  mysql \
-    --host $params.connections.rfam.host \
-    --port $params.connections.rfam.port \
-    --user $params.connections.rfam.user \
-    --database $params.connections.rfam.database \
-    $query > families.tsv
-  """
-}
-
-process fetch_gencode {
-  when { params.databases.ensembl.run }
-
-  output:
-  path('transcripts.gff')
+  tuple path('families.tsv'), path('transcripts.gff'), path('ids')
 
   shell:
   '''
-  rnac gencode urls |\
+  set -euo pipefail
+
+  rnac ensembl gencode urls-for !{params.databases.ensembl.gencode.ftp_host} |\
   xargs -I {} wget -O - {} |\
   gzip -d |\
   awk '{ if ($3 == "transcript") print $0 }' > transcripts.gff
-  '''
-}
 
-process fetch_excludes {
-  when { params.databases.ensembl.run }
-
-  input:
-  path(urls)
-
-  output:
-  path('ids')
-
-  """
-  cat $urls |\
+  cat !{exclude_urls} |\
   xargs -I {} wget -O - {} |\
   zgrep '^>' |\
   grep 'processed_transcript' |\
   cut -d ' ' -f1 |\
   tr -d '>' > ids
-  """
+
+  mysql \
+    --host !{params.connections.rfam.host} \
+    --port !{params.connections.rfam.port} \
+    --user !{params.connections.rfam.user} \
+    --database !{params.connections.rfam.database} \
+    !{query} > families.tsv
+  '''
 }
 
 process find_urls {
-  executor 'local'
   when { params.databases.ensembl.run }
 
   input:
@@ -99,23 +80,20 @@ process parse_data {
 workflow ensembl {
   emit: data
   main:
-    fetch_gencode | set { gencode }
-    Channel.fromPath('files/import-data/rfam/families.sql') | fetch_rfam | set { rfam }
-    Channel.fromPath('files/import-data/ensembl/exclude-urls.txt') | fetch_excludes | set { excludes}
+    Channel.fromPath('files/import-data/ensembl/exclude-urls.txt') | set { excludes }
+    Channel.fromPath('files/import-data/rfam/families.sql') | set { rfam }
 
     Channel.of(params.databases.ensembl.ftp) \
     | find_urls \
     | splitCsv \
     | filter { name, dat_url, gff_url ->
-      params.databases.ensembl.data_file.exclude.any { p -> name =~ p }
+      params.databases.ensembl.vertebrates.exclude.any { p -> name =~ p }
     } \
     | fetch_species_data \
-    | map { name, dat_files, gff_file -> 
+    | flatMap { name, dat_files, gff_file ->
       dat_files.collect { [name, it, gff_file] }
     } \
-    | combine(rfam) \
-    | combine(gencode) \
-    | combine(excludes) \
+    | combine(fetch_metadata(excludes, rfam)) \
     | parse_data \
     | set { data }
 }

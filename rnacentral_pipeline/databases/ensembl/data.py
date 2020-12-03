@@ -13,30 +13,35 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import tempfile
 import logging
 
 import attr
 from attr.validators import instance_of as is_a
 
 import gffutils
+from sqlitedict import SqliteDict
 
+from rnacentral_pipeline.databases import data
 from rnacentral_pipeline.databases.rfam import utils as rfutils
 
+from .gff import load_coordinates
 from .rna_type_inference import RnaTypeInference
 
 LOGGER = logging.getLogger(__name__)
 
 
 @attr.s(frozen=True, slots=True)
-class Context(object):
+class Context:
     supressed_mapping = attr.ib()
-    inference = attr.ib()
+    inference = attr.ib(validator=is_a(RnaTypeInference))
     gencode_ids = attr.ib(validator=is_a(set))
     rfam_names = attr.ib(validator=is_a(dict))
     excluded = attr.ib(validator=is_a(set))
+    coordinates = attr.ib(validator=is_a(SqliteDict))
 
     @classmethod
-    def build(cls, family_file, gencode_file=None, excluded_file=None):
+    def build(cls, family_file, gff_file, gencode_file=None, excluded_file=None):
         """
         Create a Context, by parsing the family file (families from Rfam), and
         the gencode_file (gff3 file from GENCODE) and excluded_file a list of
@@ -74,6 +79,7 @@ class Context(object):
             gencode_ids=gencode_ids,
             rfam_names=rfam_names,
             excluded=excluded,
+            coordinates=load_coordinates(gff_file),
         )
 
     def rfam_name(self, locus_tag, default=None):
