@@ -58,7 +58,7 @@ def update_entry(entry):
     return attr.evolve(
         entry,
         accession=accession(entry),
-        database='GENCODE',
+        database='Ensembl/GENCODE',
         xref_data=xref_data(entry),
         optional_id=None,
         references=[references()],
