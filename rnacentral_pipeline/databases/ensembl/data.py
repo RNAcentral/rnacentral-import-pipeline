@@ -38,7 +38,7 @@ class Context:
     gencode_ids = attr.ib(validator=is_a(set))
     rfam_names = attr.ib(validator=is_a(dict))
     excluded = attr.ib(validator=is_a(set))
-    coordinates = attr.ib(validator=is_a(SqliteDict))
+    gff = attr.ib(validator=is_a(SqliteDict))
 
     @classmethod
     def build(cls, family_file, gff_file, gencode_file=None, excluded_file=None):
