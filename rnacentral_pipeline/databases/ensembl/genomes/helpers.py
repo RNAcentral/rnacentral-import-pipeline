@@ -21,7 +21,7 @@ from rnacentral_pipeline.databases import data
 from rnacentral_pipeline.databases.helpers import embl
 from rnacentral_pipeline.databases.helpers import publications as pubs
 
-from rnacentral_pipeline.databases.ensembl import helpers as ensembl
+from rnacentral_pipeline.databases.ensembl.vertebrates import helpers as ensembl
 
 EXCLUDED_TYPES = {
     'nontranslating_CDS',

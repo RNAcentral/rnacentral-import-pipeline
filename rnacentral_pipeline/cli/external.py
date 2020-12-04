@@ -20,12 +20,6 @@ from click_aliases import ClickAliasedGroup
 from rnacentral_pipeline.databases import rfam
 from rnacentral_pipeline.databases.crw import parser as crw
 from rnacentral_pipeline.databases.ena import parser as ena
-from rnacentral_pipeline.databases.ensembl import parser as ensembl
-from rnacentral_pipeline.databases.ensembl_genomes import fungi as e_fungi
-from rnacentral_pipeline.databases.ensembl_genomes import metazoa as e_metazoa
-from rnacentral_pipeline.databases.ensembl_genomes import plants as e_plants
-from rnacentral_pipeline.databases.ensembl_genomes import \
-    protists as e_protists
 from rnacentral_pipeline.databases.genecards_suite import genecards, malacards
 from rnacentral_pipeline.databases.generic import parser as generic
 from rnacentral_pipeline.databases.gtrnadb import parser as gtrnadb

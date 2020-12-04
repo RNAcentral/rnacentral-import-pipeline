@@ -15,8 +15,8 @@ limitations under the License.
 
 import attr
 
-from rnacentral_pipeline.databases.ensembl.genomes.core import parser
-from rnacentral_pipeline.databases.ensembl.genomes.core.data import Context
+from rnacentral_pipeline.databases.ensembl.genomes import parser
+from rnacentral_pipeline.databases.ensembl.genomes.data import Context
 from rnacentral_pipeline.databases.helpers import publications as pubs
 
 

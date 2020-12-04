@@ -19,7 +19,7 @@ import itertools as it
 from Bio import SeqIO
 
 from rnacentral_pipeline.databases.helpers import embl
-from rnacentral_pipeline.databases.ensembl import helpers as ensembl
+from rnacentral_pipeline.databases.ensembl.vertebrates import helpers as ensembl
 
 from . import helpers
 

@@ -13,25 +13,23 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import attr
-from attr.validators import instance_of as is_a
+import typing as ty
 
-from sqlitedict import SqliteDict
+from rnacentral_pipeline.databases.ensembl.genomes import parser
+from rnacentral_pipeline.databases.ensembl.genomes.data import Context
+from rnacentral_pipeline.databases.helpers import publications as pubs
+from rnacentral_pipeline.databases.data import Entry
 
 
-@attr.s()
-class Context:
-    database = attr.ib(validator=is_a(str), converter=str)
-    references = attr.ib(validator=is_a(list))
-    gff = attr.ib(validator=is_a(SqliteDict))
+def urls_for(base: str) -> ty.List[ty.Tuple[str, str, str]]:
+    return []
 
-    @classmethod
-    def build(cls, database, references, assembly_id, gff_file):
-        return cls(
-            database=database,
-            references=references,
-            gff=load_coordinates(assembly_id, gff_file)
-        )
 
-    def accession(self, primary_id: str) -> str:
-        return '%s:%s' % (self.database, primary_id)
+def parse(handle, gff_file) -> ty.Iterable[Entry]:
+    context = Context.build(
+        'ENSEMBL_FUNGI',
+        [pubs.reference('doi:10.1093/nar/gkx1011')],
+        gff_file,
+    )
+
+    return parser.parse(context, handle)
