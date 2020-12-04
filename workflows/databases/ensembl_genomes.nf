@@ -42,7 +42,7 @@ process parse_data {
   """
 }
 
-workflow ensembl_fungi {
+workflow ensembl_genomes {
   emit: data
   main:
     Channel.fromList([

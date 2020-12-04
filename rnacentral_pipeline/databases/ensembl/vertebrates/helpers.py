@@ -19,10 +19,11 @@ import typing as ty
 import attr
 
 from rnacentral_pipeline.databases import data
-from rnacentral_pipeline.databases.ensembl.data import Context
 
 from rnacentral_pipeline.databases.helpers import embl
 from rnacentral_pipeline.databases.helpers import publications as pubs
+
+from rnacentral_pipeline.databases.ensembl.vertebrates.context import Context
 
 URL = 'http://www.ensembl.org/Homo_sapiens/Transcript/Summary?t={transcript}'
 

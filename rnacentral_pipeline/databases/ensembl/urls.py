@@ -15,50 +15,27 @@ limitations under the License.
 
 import json
 import tempfile
-from ftplib import FTP
 import typing as ty
+from ftplib import FTP
 
 from contextlib import contextmanager
 
+from rnacentral_pipeline.databases.ensembl.genomes import urls
+from rnacentral_pipeline.databases.ensembl import vertebrates
 
-def list_releases(ftp: FTP) -> ty.List[str]:
-    return [f for f in ftp.nlst() if f.startswith('release-')]
-
-
-def latest_release(releases: ty.List[str]) -> str:
-    return max(releases, key=lambda r: int(r.split('-')[1]))
+from rnacentral_pipeline.databases.ensembl.data import Division
 
 
-@contextmanager
-def species_info(ftp: FTP, release: str):
-    info_path = f'{release}/species_metadata_EnsemblVertebrates.json'
-    with tempfile.NamedTemporaryFile() as tmp:
-        ftp.retrbinary(f"RETR {info_path}", tmp.write)
-        tmp.flush()
-        tmp.seek(0)
-        yield tmp
-
-
-def generate_paths(base: str, release: str, handle) -> ty.Iterable[ty.Tuple[str, str, str]]:
-    _, release_id = release.split('-', 1)
-    data = json.load(handle)
-    data_types = ['gff3', 'embl']
-    for entry in data:
-        info = entry['organism']
-        name = info['name']
-        url_name = info['url_name']
-        assembly = entry['assembly']['assembly_default']
-        organism_name = f"{url_name}.{assembly}.{release_id}"
-        gff_path = f"{base}/pub/{release}/gff3/{name}/{organism_name}.gff3.gz"
-        data_files = f"{base}/pub/{release}/embl/{name}/{organism_name}.*.dat.gz"
-        yield (name, data_files, gff_path)
-
-
-def urls_for(url: str) -> ty.Iterable[ty.Tuple[str, str, str]]:
-    with FTP(url[6:]) as ftp:
-        ftp.login()
-        ftp.cwd('pub')
-        releases = list_releases(ftp)
-        latest = latest_release(releases)
-        with species_info(ftp, latest) as info:
-            yield from generate_paths(url, latest, info)
+def urls_for(division: Division, base: str) -> ty.Iterable[ty.Tuple[str, str, str]]:
+    if division == Division.fungi:
+        yield from urls.urls_for(division, base)
+    elif division == Division.metazoa:
+        yield from urls.urls_for(division, base)
+    elif division == Division.plants:
+        yield from urls.urls_for(division, base)
+    elif division == Division.protists:
+        yield from urls.urls_for(division, base)
+    elif division == Division.vertebrates:
+        yield from vertebrates.urls_for(base)
+    else:
+        raise ValueError(f"Unknown division {division}")

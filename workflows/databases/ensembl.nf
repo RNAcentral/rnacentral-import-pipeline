@@ -2,35 +2,19 @@ process fetch_metadata {
   when { params.databases.ensembl.run }
 
   input:
-  path(exclude_urls)
   path(rfam_query)
 
   output:
-  tuple path('families.tsv'), path('transcripts.gff'), path('ids')
+  path('families.tsv')
 
-  shell:
-  '''
-  set -euo pipefail
-
-  rnac ensembl gencode urls-for !{params.databases.ensembl.gencode.ftp_host} |\
-  xargs -I {} wget -O - {} |\
-  gzip -d |\
-  awk '{ if ($3 == "transcript") print $0 }' > transcripts.gff
-
-  cat !{exclude_urls} |\
-  xargs -I {} wget -O - {} |\
-  zgrep '^>' |\
-  grep 'processed_transcript' |\
-  cut -d ' ' -f1 |\
-  tr -d '>' > ids
-
+  """
   mysql \
-    --host !{params.connections.rfam.host} \
-    --port !{params.connections.rfam.port} \
-    --user !{params.connections.rfam.user} \
-    --database !{params.connections.rfam.database} \
-    !{query} > families.tsv
-  '''
+    --host ${params.connections.rfam.host} \
+    --port ${params.connections.rfam.port} \
+    --user ${params.connections.rfam.user} \
+    --database ${params.connections.rfam.database} \
+    ${query} > families.tsv
+  """
 }
 
 process find_urls {
@@ -43,7 +27,7 @@ process find_urls {
   path('species.txt')
 
   """
-  rnac ensembl vertebrates urls-for $remote > species.txt
+  rnac ensembl urls-for vertebrates $remote > species.txt
   """
 }
 
@@ -67,20 +51,19 @@ process parse_data {
   tag { "$name" }
 
   input:
-  tuple val(name), path(embl), path(gff), path(rfam), path(gencode), path(exclude)
+  tuple val(name), path(embl), path(gff), path(rfam)
 
   output:
   path('*.csv')
 
   """
-  rnac ensembl vertebrates parse $embl $gff $rfam $gencode $exclude .
+  rnac ensembl vertebrates parse $embl $gff $rfam .
   """
 }
 
 workflow ensembl {
   emit: data
   main:
-    Channel.fromPath('files/import-data/ensembl/exclude-urls.txt') | set { excludes }
     Channel.fromPath('files/import-data/rfam/families.sql') | set { rfam }
 
     Channel.of(params.databases.ensembl.ftp) \
@@ -93,7 +76,7 @@ workflow ensembl {
     | flatMap { name, dat_files, gff_file ->
       dat_files.collect { [name, it, gff_file] }
     } \
-    | combine(fetch_metadata(excludes, rfam)) \
+    | combine(fetch_metadata(rfam)) \
     | parse_data \
     | set { data }
 }

@@ -1,10 +1,7 @@
 include { five_s_rrnadb } from './databases/5srrnadb'
 include { ena } from './databases/ena'
 include { ensembl } from './databases/ensembl'
-include { ensembl_fungi } from './databases/ensembl_fungi'
-include { ensembl_metazoa } from './databases/ensembl_metazoa'
-include { ensembl_plants } from './databases/ensembl_plants'
-include { ensembl_protists } from './databases/ensembl_protists'
+include { ensembl_genomes } from './databases/ensembl_genomes'
 include { flybase } from './databases/flybase'
 include { genecards_suite } from './databases/genecards_suite'
 include { gtrnadb } from './databases/gtrnadb'
@@ -36,10 +33,7 @@ workflow parse_databases {
       five_s_rrnadb(),
       ena(),
       ensembl(),
-      ensembl_fungi(),
-      ensembl_metazoa(),
-      ensembl_plants(),
-      ensembl_protists(),
+      ensembl_genomes(),
       flybase(),
       genecards_suite(),
       gtrnadb(),

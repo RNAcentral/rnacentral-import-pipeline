@@ -13,17 +13,25 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import attr
+from attr.validators import instance_of as is_a
 
-from rnacentral_pipeline.databases.ensembl.genomes.core import parser
-from rnacentral_pipeline.databases.ensembl.genomes.core.data import Context
-from rnacentral_pipeline.databases.helpers import publications as pubs
+from sqlitedict import SqliteDict
 
 
-def parse(handle, gff_file):
-    context = Context.build(
-        'ENSEMBL_FUNGI',
-        [pubs.reference('doi:10.1093/nar/gkx1011')],
-        gff_file,
-    )
+@attr.s()
+class Context:
+    database = attr.ib(validator=is_a(str), converter=str)
+    references = attr.ib(validator=is_a(list))
+    gff = attr.ib(validator=is_a(SqliteDict))
 
-    return parser.parse(context, handle)
+    @classmethod
+    def build(cls, assembly_id, database, references, gff_file):
+        return cls(
+            database=database,
+            references=references,
+            gff=load_coordinates(assembly_id, gff_file)
+        )
+
+    def accession(self, primary_id: str) -> str:
+        return '%s:%s' % (self.database, primary_id)
