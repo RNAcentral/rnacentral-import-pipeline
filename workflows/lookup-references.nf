@@ -48,7 +48,7 @@ workflow lookup_ref_ids {
 
   main:
     ref_ids \
-    | collect() \
+    | collect \
     | merge_and_split_all_publications \
     | flatten \
     | combine(fetch_publications()) \
