@@ -13,13 +13,35 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+from pathlib import Path
 import typing as ty
 
 import ijson
+from sqlitedict import SqliteDict
+
 from rnacentral_pipeline.databases import data
 from rnacentral_pipeline.databases.generic import v1
 
 
-def parse(handle) -> ty.Iterable[data.Entry]:
-    for entry in ijson.items(handle, "data"):
-        yield v1.as_ncrna(entry)
+def load_known(path: Path) -> SqliteDict:
+    known = SqliteDict()
+    with path.open('r') as raw:
+        for line in raw:
+            known[line.strip()] = True
+    known.commit()
+    return known
+
+
+def parse(path: Path, known_path: Path) -> ty.Iterable[data.Entry]:
+    known = load_known(known_path)
+    ctx = v1.Context(
+        database='PIRBASE',
+        coordinate_system=data.CoordinateSystem.zero_based(),
+    )
+
+    with path.open('r') as handle:
+        for raw in ijson.items(handle, "data"):
+            entry = v1.as_entry(raw, ctx)
+            if entry.md5() in known:
+                yield entry
+    known.close()

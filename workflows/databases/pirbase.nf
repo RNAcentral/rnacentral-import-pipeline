@@ -1,7 +1,6 @@
 process find_urls {
-  executor 'local'
-
   when { params.databases.pirbase.run }
+  executor 'local'
 
   output:
   path("urls.txt")
@@ -11,9 +10,23 @@ process find_urls {
   """
 }
 
-process fetch_and_parse {
+process find_known {
+  when { params.databases.pirbase.run }
+
   input:
-  val(url)
+  path(query)
+
+  output:
+  path(known)
+
+  """
+  psql -v ON_ERROR_STOP=1 -f $query $PGDATABASE > known
+  """
+}
+
+process parse_data {
+  input:
+  tuple val(url), path(known)
 
   output:
   path("*.csv")
@@ -21,18 +34,20 @@ process fetch_and_parse {
   """
   wget -O data.json.gz $url
   gzip -d data.json.gz
-  rnac pirbase parse data.json .
+  rnac pirbase parse data.json $known .
   """
 }
-
 
 workflow pirbase {
   emit: data_files
   main:
-    | find_urls \
+    Channel.fromPath('files/import-data/pirbase/known-md5.sql') | set { query }
+
+    find_urls \
     | spltCsv \
     | map { row -> row[0] } \
-    | fetch_and_parse \
+    | combine(find_known(query)) \
+    | parse_data \
     | flatten \
     | set { data_files }
 }
