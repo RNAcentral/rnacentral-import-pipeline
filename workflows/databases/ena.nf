@@ -32,7 +32,15 @@ process fetch_single_files {
     "$remote/tsa/public/" tsa
 
   find . -type f -empty -delete
-  find . -type f | xargs -I {} gzip --quiet  -l {} | awk '{ if (\$2 == 0) print \$4 }' | xargs -I {} rm {}.gz
+  find . -type f | xargs -I {} gzip --quiet -l {} | awk '{ if (\$2 == 0) print \$4 }' | xargs -I {} rm {}.gz
+
+  find . -type f |\
+  xargs -I {} zgrep -Hc '^ID' {} |\
+  awk -F ':' '{ if (\$2 > 100000) print \$1 }' > too-large
+
+  mkdir large-splits
+  xargs -a too-large -I {} split-sequences --max-sequences 20000 --format-name='ncr' --remove-file {} large-splits
+  find large-splits -type f | xargs -I {} gzip {}
   """
 }
 

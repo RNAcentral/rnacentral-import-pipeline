@@ -61,7 +61,7 @@ class Limit:
     @classmethod
     def build(cls, max_sequences, max_nucleotides, max_file_size):
         def parse_existing(parser, value, **kwargs):
-            if value:
+            if value is not None:
                 return parser(value, **kwargs)
             return None
 
@@ -75,7 +75,7 @@ class Limit:
                                          binary=True),
         )
 
-    def is_too_large(self, chunk):
+    def is_too_large(self, chunk) -> bool:
         if self.max_sequences:
             if chunk.sequence_count >= self.max_sequences:
                 return True
@@ -88,9 +88,11 @@ class Limit:
         return False
 
 
-def chunked(handle, limit):
+def chunked(handle, limit, format_name='fasta'):
     chunk = Chunk()
-    for sequence in SeqIO.parse(handle, 'fasta'):
+    if format_name == 'ncr':
+        format_name = 'embl'
+    for sequence in SeqIO.parse(handle, format_name):
         chunk.add(sequence)
         if limit.is_too_large(chunk):
             yield chunk.sequences
@@ -101,16 +103,20 @@ def chunked(handle, limit):
 
 
 @click.command()
-@click.argument('fasta', type=click.File('r'))
+@click.option('--format-name', default='fasta')
 @click.option('--max-nucleotides')
 @click.option('--max-sequences')
 @click.option('--max-file-size')
+@click.option('--remove-file/--no-remove-file')
+@click.argument('sequences', type=click.File('r'))
 @click.argument('output', type=click.Path())
-def main(fasta, 
-         output, 
-         max_nucleotides=None, 
-         max_sequences=None, 
-         max_file_size=None, 
+def main(sequences,
+         output,
+         max_nucleotides=None,
+         max_sequences=None,
+         max_file_size=None,
+         format_name=None,
+         remove_file=False,
          ):
     """
     Split a fasta file in several ways. Any combination of the maximum number of
@@ -120,18 +126,24 @@ def main(fasta,
     parsed as powers of 2, so 1KB is 1024 not 1000 bytes.
     """
 
-    base = os.path.basename(fasta.name)
+    base = os.path.basename(sequences.name)
     basename, _ = os.path.splitext(base)
     limits = Limit.build(max_sequences, max_nucleotides, max_file_size)
-    chunks = chunked(fasta, limits)
-    for index, sequences in enumerate(chunks):
-        if not os.path.exists(output):
-            os.makedirs(output)
+    chunks = chunked(sequences, limits, format_name=format_name)
 
-        filename = os.path.join(output, '%s-%i.fasta' % (basename, index))
+    if not os.path.exists(output):
+        os.makedirs(output)
+
+    for index, seqs in enumerate(chunks):
+        filename = os.path.join(output, f"{basename}-{index}.{format}")
+        if os.path.exists(filename):
+            raise ValueError(f"Will not overwrite existing file {filename}")
         with open(filename, 'w') as out:
-            SeqIO.write(sequences, out, 'fasta')
-            
+            SeqIO.write(seqs, out, format_name)
+
+    if remove_file:
+        os.remove(sequences.name)
+
 
 if __name__ == "__main__":
     main()
