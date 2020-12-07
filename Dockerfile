@@ -75,6 +75,12 @@ RUN \
     tar xvf seqkit_linux_amd64.tar.gz && \
     rm seqkit_linux_amd64.tar.gz
 
+# Install ribovore
+RUN git clone https://github.com/nawrockie/epn-ofile.git && cd epn-ofile && git fetch && git fetch --tags && git checkout ribovore-0.40
+RUN git clone https://github.com/nawrockie/epn-options.git && cd epn-options && git fetch && git fetch --tags && git checkout ribovore-0.40
+RUN git clone https://github.com/nawrockie/epn-test.git && cd epn-test && git fetch && git fetch --tags && git checkout ribovore-0.40
+RUN git clone https://github.com/nawrockie/ribovore.git && cd ribovore && git fetch && git fetch --tags && git checkout ribovore-0.40
+
 # Install useful pip version
 RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && python get-pip.py
 
@@ -95,6 +101,14 @@ WORKDIR $RNA
 ENV PERL5LIB="/usr/bin/env:$PERL5LIB"
 
 ENV RIBOINFERNALDIR="$RNA/infernal-1.1.2/bin"
+ENV RIBODIR="$RNA/ribovore" 
+ENV RIBOEASELDIR="$RNA/infernal-1.1.2/bin"
+ENV EPNOPTDIR="$RNA/epn-options" 
+ENV EPNOFILEDIR="$RNA/epn-ofile" 
+ENV EPNTESTDIR="$RNA/epn-test"
+ENV RIBOTIMEDIR="/usr/bin"
+ENV BIOEASELDIR="$RNA/Bio-Easel/blib/lib:$RNA/Bio-Easel/blib/arch:$RNA/Bio-Easel:$RNA/Bio-Easel/lib"
+ENV PERL5LIB="$BIOEASELDIR:$RIBODIR:$EPNOPTDIR:$EPNOFILEDIR:$EPNTESTDIR:$PERL5LIB"
 
 ENV PATH="$RNA/infernal-1.1.2/bin:$PATH"
 ENV PATH="$RNA/blatSrc/bin:$PATH"

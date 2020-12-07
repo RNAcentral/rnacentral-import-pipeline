@@ -29,28 +29,6 @@ def cli():
     pass
 
 
-@cli.group('pdb')
-def pdb_cli():
-    """
-    Commands for dealing with the fetching PDB data.
-    """
-    pass
-
-
-@pdb_cli.command('data')
-@click.argument('output', default='pdb.json', type=click.File('w'))
-@click.argument('pdb_ids', nargs=-1)
-def pdb_group_data(output, pdb_ids=None):
-    json.dump(pdb.chains(pdb_ids=pdb_ids), output)
-
-
-@pdb_cli.command('extra')
-@click.argument('output', default='pdb-extra.json', type=click.File('wb'))
-@click.argument('pdb_ids', nargs=-1)
-def pdb_group_extra(output, pdb_ids=None):
-    pickle.dump(pdb.references(pdb_ids=pdb_ids), output)
-
-
 @cli.command('zfin')
 @click.argument('url')
 @click.argument('output', default='zfin.json', type=click.File('w'))

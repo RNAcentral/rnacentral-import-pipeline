@@ -14,64 +14,92 @@ limitations under the License.
 """
 
 import re
+import typing as ty
 
 import attr
+from attr.validators import optional
 from attr.validators import instance_of as is_a
 
 from .regions import UnknownStrand
 
+def maybe(convert):
+    def fn(value):
+        if value is None or value == '-':
+            return None
+        return convert(value)
+    return fn
+
+maybe_int = maybe(int)
+maybe_float = maybe(float)
+
 
 @attr.s()
 class RibovoreResult(object):
-    target: str = attr.ib(validator=is_a(str))
-    status: str = attr.ib(validator=is_a(str))
-    length: int = attr.ib(validator=is_a(int), converter=int)
-    fm: int = attr.ib(validator=is_a(int), converter=int)
-    fam: str = attr.ib(validator=is_a(str))
-    domain: str = attr.ib(validator=is_a(str))
-    model: str = attr.ib(validator=is_a(str))
-    strand: int = attr.ib(validator=is_a(int))
-    ht: int = attr.ib(validator=is_a(int), converter=int)
-    tscore: float = attr.ib(validator=is_a(float), converter=float)
-    bscore: float = attr.ib(validator=is_a(float), converter=float)
-    bevalue: float = attr.ib(validator=is_a(float), converter=float)
-    tcov: float = attr.ib(validator=is_a(float), converter=float)
-    bcov: float = attr.ib(validator=is_a(float), converter=float)
-    bfrom: int = attr.ib(validator=is_a(int), converter=int)
-    bto: int = attr.ib(validator=is_a(int), converter=int)
-    mfrom: int = attr.ib(validator=is_a(int), converter=int)
-    mto: int = attr.ib(validator=is_a(int), converter=int)
+    target = attr.ib(validator=is_a(str))
+    status = attr.ib(validator=is_a(str))
+    length = attr.ib(validator=is_a(int))
+    fm = attr.ib(validator=is_a(int))
+    fam = attr.ib(validator=is_a(str))
+    domain = attr.ib(validator=is_a(str))
+    model = attr.ib(validator=is_a(str))
+    strand = attr.ib(validator=optional(is_a(int)))
+    ht = attr.ib(validator=optional(is_a(int)))
+    tscore = attr.ib(validator=optional(is_a(float)))
+    bscore = attr.ib(validator=optional(is_a(float)))
+    bevalue = attr.ib(validator=optional(is_a(float)))
+    tcov = attr.ib(validator=optional(is_a(float)))
+    bcov = attr.ib(validator=optional(is_a(float)))
+    bfrom = attr.ib(validator=optional(is_a(int)))
+    bto = attr.ib(validator=optional(is_a(int)))
+    mfrom = attr.ib(validator=optional(is_a(int)))
+    mto = attr.ib(validator=optional(is_a(int)))
+    model_length = attr.ib(validator=optional(is_a(int)), default=None)
 
     @classmethod
-    def from_result_dict(cls, row):
+    def from_result_line(cls, row: str, lengths=None) -> "RibovoreResult":
         parts = re.split(r'\s+', row, maxsplit=24)
-        if parts[2] == 'FAIL':
-            return None
         strand = None
         if parts[8] == 'plus':
             strand = 1
         elif parts[8] == 'minus':
             strand = -1
+        elif parts[8] == '-':
+            strand = None
         else:
             raise UnknownStrand(parts[8])
+
+        model_length = None
+        if lengths:
+            model_length = lengths.get(parts[7], None)
 
         return cls(
             target=parts[1],
             status=parts[2],
-            length=parts[3],
-            fm=parts[4],
+            length=int(parts[3]),
+            fm=int(parts[4]),
             fam=parts[5],
             domain=parts[6],
             model=parts[7],
             strand=strand,
-            ht=parts[9],
-            tscore=parts[10],
-            bscore=parts[11],
-            bevalue=parts[13],
-            tcov=parts[14],
-            bcov=parts[15],
-            bfrom=parts[16],
-            bto=parts[17],
-            mfrom=parts[18],
-            mto=parts[19],
+            ht=maybe_int(parts[9]),
+            tscore=maybe_float(parts[10]),
+            bscore=maybe_float(parts[11]),
+            bevalue=maybe_float(parts[13]),
+            tcov=maybe_float(parts[14]),
+            bcov=maybe_float(parts[15]),
+            bfrom=maybe_int(parts[16]),
+            bto=maybe_int(parts[17]),
+            mfrom=maybe_int(parts[18]),
+            mto=maybe_int(parts[19]),
+            model_length=model_length,
         )
+
+    @property
+    def model_coverage(self) -> ty.Optional[float]:
+        if self.model_length:
+            return float(self.mto - self.mfrom) / float(self.model_length)
+        return None
+
+    @property
+    def sequence_coverage(self):
+        return self.tcov

@@ -179,9 +179,9 @@ def build_ontology_annotation_writer(parser):
     )
 
 
-def write_entries(parser, output, *args):
+def write_entries(parser, output, *args, **kwargs):
     writer = build_entry_writer(parser)
-    writer(output, *args)
+    writer(output, *args, **kwargs)
 
 
 def write_ontology_annotations(parser, *args, **kwargs):
