@@ -1,0 +1,116 @@
+ID   SNRY01001410.1:2783..5704:rRNA; SV 1; linear; genomic DNA; WGS; ENV; 2922 BP.
+XX
+PA   SNRY01001410.1
+XX
+PR   Project:PRJNA524138;
+XX
+DT   30-SEP-2019 (Rel. 142, Created)
+DT   15-NOV-2019 (Rel. 142, Last updated, Version 2)
+XX
+DE   termite gut metagenome 23S ribosomal RNA
+XX
+KW   WGS.
+XX
+OS   termite gut metagenome
+OC   unclassified sequences; metagenomes; organismal metagenomes.
+XX
+RN   [1]
+RA   Treitli S.C., Kolisko M., Husnik F., Keeling P., Hampl V.;
+RT   "Single cell metagenomics reveals metabolic interactions within the
+RT   superorganism composed of flagellate Streblomastix strix and complex
+RT   community of Bacteroidetes bacteria on its surface";
+RL   Unpublished.
+XX
+RN   [2]
+RA   Treitli S.C., Kolisko M., Husnik F., Keeling P., Hampl V.;
+RT   ;
+RL   Submitted (18-MAR-2019) to the INSDC.
+RL   Department of Parasitology, Faculty of Science, Charles University, Vinicna
+RL   7, Praha 12800, Czech Republic
+XX
+DR   MD5; 0fed645d339f5f42abce2008d1c21881.
+DR   BioSample; SAMN11003215.
+XX
+CC   ##Genome-Assembly-Data-START##
+CC   Assembly Method        :: SPAdes v. 3.11.1
+CC   Assembly Name          :: CUNI_SBM_1.0
+CC   Genome Representation  :: Full
+CC   Expected Final Version :: Yes
+CC   Genome Coverage        :: 120.0x
+CC   Sequencing Technology  :: Illumina HiSeq; Illumina MiSeq; Oxford
+CC                             Nanopore
+CC   ##Genome-Assembly-Data-END##
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..2922
+FT                   /organism="termite gut metagenome"
+FT                   /host="Streblomastix strix"
+FT                   /environmental_sample
+FT                   /isolate="STM"
+FT                   /mol_type="genomic DNA"
+FT                   /country="Canada:Devina Drive, Southern Gulf Islands
+FT                   Electoral Area, BC"
+FT                   /lat_lon="49 N 123.58 W"
+FT                   /isolation_source="Bacteroidetes bacterial symbionts from
+FT                   single cell of protist host amplifed by MDA from
+FT                   Zootermopsis angusticollis gut"
+FT                   /collection_date="15-May-2015"
+FT                   /note="metagenomic"
+FT                   /db_xref="taxon:433724"
+FT                   /submitter_seqid="scaffold1410-6539"
+FT   rRNA            complement(SNRY01001410.1:2783..5704)
+FT                   /locus_tag="EZS27_020227"
+FT                   /product="23S ribosomal RNA"
+XX
+SQ   Sequence 2922 BP; 782 A; 610 C; 860 G; 670 T; 0 other;
+     aagtaattaa gggcgcatgg tggatgcctt ggctctcgga ggcgatgaag gacgtgataa        60
+     gctgcgaaaa gctgcggtta ggtgcaaata acctttgacc cgcggatatc cgaatgggac       120
+     aacccgtacg gctgaaggtc gtacatcccc tgttaaaggg gaggcgaacg tggggaactg       180
+     aaacatctta gtacccatag gagaagaaaa taaataatga ttccgttagt agcggcgagc       240
+     gaatgcggac aagcccaaac cgtatgtgtt gcggcatgta cggggttgta ggagcgcatc       300
+     atgtaggttg tgggaaacgc gaagaagaaa ggtctggaaa gtcctgccat agagcgtgat       360
+     agccgtgtat ttgcaataag tttccccctt acgcgttatc ctgagtaggt cgggacacga       420
+     gtaatcccgt ctgaatctgc cgggtccatc cggtaaggct aaatactccc gagagaccga       480
+     tagtgaatag taccgtgagg gaaaggtgaa aagcacttca aatcgaagag tgaaatagtt       540
+     cctgaaccca tgcgcctaca agcggtcgga gcagtttcgt gctgtgacgg cgtgcctttt       600
+     gcataatgaa cctgcgagtt gtccgttccg gctgaaaggt taagggtctt gagacctgta       660
+     gccatagcga aagcgagtcc taaccaggcg tcaattgtcg gaacgggcag acgcgaaacc       720
+     aagtgatcta ccctttgcca ggttgaagac cgggtaacac ctgttggagg accgaaccga       780
+     taagcgttga aaagcttccg gatgagcaga gggtaggggt gaaaggctaa tcaaacttgg       840
+     agatagctcg tactccccga aatgcattta ggtgcagcct catatgatta tcctgtaagg       900
+     tagagctacc gataagatgc gagggcttca ccgcctgtca agtcttgacg aactccgaat       960
+     gtgcatgatt acagtatggg agtgagggca cgggtgctaa ggtccgtgtc cgaaaggaga      1020
+     agaatccgga ccgccggcta aggtccccaa atggatgtta agttgatcta acgcagtggg      1080
+     attgcccaga cagctaggat gttggcttgg aagcagccat tcgtttaaag agtgcgtaac      1140
+     agctcactag tcgaggaatc ctgcacggat aatactcggg cataaacatc ttaccgaagc      1200
+     cgcgggattg gtattattac caatcggtag gggagcattc catatcgcct cgaaggtgat      1260
+     ccgtgagggt ttctggagcg tatggaaaag caaatgcagg tataagtaac gataaaggag      1320
+     gcgtgaaacc tcctcgccgt aagaccaagg tttcctgatc aacgctaatc ggatcagggt      1380
+     cagtcgggtc ctaaggctgt gcctatggca aggtcgatgg tcgaaccggt taatattccg      1440
+     gtacttgctt gtggcagtga tgtggagacg gagaagtgaa agtacagcgg catgacggaa      1500
+     ttatgtcgtt taagagtgta ggtgttgata ggtacaggca aatccgtatc ttgagccgac      1560
+     cttgaaagta tgatgcgtct attaggcaaa tcaaatgtat gtaatcaggc tcccaagaaa      1620
+     atccgctaaa cgttttaacc ctcaagcaac ccgtaccgta aacggacaca cgtggtcggg      1680
+     tagagcatac taaggcgctc gagtgaatca cggttaagga actaggcaaa ttaaccccgt      1740
+     aacttcggga taaggggtcc ttttcactgc aaggtggaaa ggcgcagaga aatggtccag      1800
+     gcaactgttt aacaaaaaca cagggctgtg caaaatcgaa agatgcggta tacagcctga      1860
+     cacctgcccg gtgctggaag gttaagagga gagcttatcg ctcagtaatg tgtgagaagg      1920
+     tttgaattga agccccagta aacggcggcc gtaactataa cggtcctaag gtagcgaaat      1980
+     tccttgtcgg gtaagttccg acctgcacga atggtgtaat gatctggaca ctgtctcaac      2040
+     cgtgagctcg gtgaaattgt agtatcggtg aagatgccga ttacccgcga tgggacgaaa      2100
+     agaccccgtg aacctttact atagcttaac attgaatccg ggtaattgat gtgtaggata      2160
+     ggtcggagac tgtgaagcat gtacgccagt atgtgtggag tcatcgttga aatacgaccc      2220
+     tttggttatt tgggttctaa cttgatatta tcaaggacat tgtttggtgg gtagtttgac      2280
+     tggggtggtc gcctccaaaa gcgtaacgga ggcttcttaa ggtaccctct ggacgattgg      2340
+     taaccgtctt aattgagtgt aatggcataa gggtgcttga ccgtgagacg gacaggtcga      2400
+     acgggtagga aactagagca tagtgatccg gtgtttccgc atggaaggga catcgctcaa      2460
+     aggataaaag gtactccggg gataacaggc tgatccctcc caagagctca catcgacgga      2520
+     ggggtttggc acctcgatgt cggctcgtca catcccgggg ctggagaagg tcccaagggt      2580
+     tgggctgttc gcccattaaa gtggcacgcg agctgggttc agaacgtcgt gagacagttc      2640
+     ggtctctatc tatcgcgggc gtttgagaaa tttgagcggg tctgtcacta gtacgagagg      2700
+     accgtgttgg accgacctcc ggtttaccgg ttgtgccgcc aggtgcattg ccgggtatcc      2760
+     gcgtcgggaa aatggataag tgctgaaagc atctaagcac gaagccttcc gcaagattag      2820
+     atttcttata taagggtcgt tgtagaccac aacgtagata ggtcgcaggt gtaggagcag      2880
+     tgatgtttat agccgagcga tactaattgc ccgtgaactt tc                         2922
+//

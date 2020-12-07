@@ -20,19 +20,12 @@ from click_aliases import ClickAliasedGroup
 from rnacentral_pipeline.databases import rfam
 from rnacentral_pipeline.databases.crw import parser as crw
 from rnacentral_pipeline.databases.ena import parser as ena
-from rnacentral_pipeline.databases.ensembl import parser as ensembl
-from rnacentral_pipeline.databases.ensembl_genomes import fungi as e_fungi
-from rnacentral_pipeline.databases.ensembl_genomes import metazoa as e_metazoa
-from rnacentral_pipeline.databases.ensembl_genomes import plants as e_plants
-from rnacentral_pipeline.databases.ensembl_genomes import \
-    protists as e_protists
 from rnacentral_pipeline.databases.genecards_suite import genecards, malacards
 from rnacentral_pipeline.databases.generic import parser as generic
 from rnacentral_pipeline.databases.gtrnadb import parser as gtrnadb
 from rnacentral_pipeline.databases.intact import parser as intact
 from rnacentral_pipeline.databases.lncbook import parser as lncbook
 from rnacentral_pipeline.databases.ncbi.gene import parser as ncbi_gene
-from rnacentral_pipeline.databases.pdb import parser as pdb
 from rnacentral_pipeline.databases.quickgo import parser as quickgo
 from rnacentral_pipeline.databases.refseq import parser as refseq
 from rnacentral_pipeline.databases.silva import parser as silva
@@ -79,118 +72,6 @@ def process_json_schema(json_file, output):
     This parses our JSON schema files to produce the importable CSV files.
     """
     write_entries(generic.parse, output, json_file)
-
-
-@cli.command("ensembl")
-@click.argument("ensembl_file", type=click.File("r"))
-@click.argument(
-    "family_file", type=click.Path(file_okay=True, dir_okay=False, readable=True)
-)
-@click.argument(
-    "gencode_gff", type=click.Path(file_okay=True, dir_okay=False, readable=True)
-)
-@click.argument("exclude", type=click.File("r"))
-@click.argument(
-    "output",
-    default=".",
-    type=click.Path(writable=True, dir_okay=True, file_okay=False,),
-)
-def process_ensembl(ensembl_file, family_file, gencode_gff, exclude, output):
-    """
-    This will parse EMBL files from Ensembl to produce the expected CSV files.
-    """
-    write_entries(
-        ensembl.parse, output, ensembl_file, family_file, gencode_gff, exclude,
-    )
-
-
-@cli.command("ensembl_plants")
-@click.argument("ensembl_file", type=click.File("r"))
-@click.argument(
-    "output",
-    default=".",
-    type=click.Path(writable=True, dir_okay=True, file_okay=False,),
-)
-def process_ensembl_plants(ensembl_file, output):
-    """
-    This will process the Ensembl Plant data to produce files for import. The
-    files should be in the EMBL format as provided by EnsemblPlants.
-    """
-    write_entries(e_plants.parse, output, ensembl_file)
-
-
-@cli.command("ensembl_fungi")
-@click.argument("ensembl_file", type=click.File("r"))
-@click.argument(
-    "output",
-    default=".",
-    type=click.Path(writable=True, dir_okay=True, file_okay=False,),
-)
-def process_ensembl_fungi(ensembl_file, output):
-    """
-    Process data from Ensembl!Fungi and produces files for import.
-    """
-    write_entries(e_fungi.parse, output, ensembl_file)
-
-
-@cli.command("ensembl_metazoa")
-@click.argument("ensembl_file", type=click.File("r"))
-@click.argument(
-    "output",
-    default=".",
-    type=click.Path(writable=True, dir_okay=True, file_okay=False,),
-)
-def process_ensembl_metazoa(ensembl_file, output):
-    """
-    Process data from Ensembl!Metazoa and produces files for import.
-    """
-    write_entries(e_metazoa.parse, output, ensembl_file)
-
-
-@cli.command("ensembl_protists")
-@click.argument("ensembl_file", type=click.File("r"))
-@click.argument(
-    "output",
-    default=".",
-    type=click.Path(writable=True, dir_okay=True, file_okay=False,),
-)
-def process_ensembl_protists(ensembl_file, output):
-    """
-    Process data from Ensembl!Protists and produces files for import.
-    """
-    write_entries(e_protists.parse, output, ensembl_file)
-
-
-@cli.command("pdb")
-@click.argument("pdb_data", default="pdb.json", type=click.File("rb"))
-@click.argument("extra", default="pdb-extra.json", type=click.File("rb"))
-@click.argument(
-    "output",
-    default=".",
-    type=click.Path(writable=True, dir_okay=True, file_okay=False,),
-)
-def process_pdb(pdb_data, extra, output):
-    """
-    This will fetch and parse all sequence data from PDBe to produce the csv
-    files we import.
-    """
-    write_entries(pdb.parse, output, pdb_data, extra)
-
-
-@cli.command("ena")
-@click.argument("ena_file", type=click.Path(dir_okay=True, file_okay=True))
-@click.argument("mapping_file", type=click.File("r"))
-@click.argument(
-    "output",
-    default=".",
-    type=click.Path(writable=True, dir_okay=True, file_okay=False,),
-)
-def process_ena(ena_file, mapping_file, output):
-    """
-    Process ENA EMBL formatted files into CSV to import. The additional mapping
-    file is a file containing all TPA data we are using from ENA.
-    """
-    write_entries(ena.parse_with_mapping_file, output, ena_file, mapping_file)
 
 
 @cli.command("ncbi-gene")
@@ -324,7 +205,7 @@ def process_crw(metadata_file, sequence_directory, output):
     default=".",
     type=click.Path(writable=True, dir_okay=True, file_okay=False),
 )
-def process_json_schema(json_file, output):
+def process_lncbook(json_file, output):
     """
     This parses our JSON files from LncBook to produce the importable CSV files.
     LncBook has some special logic around sequences (only include hg38), that

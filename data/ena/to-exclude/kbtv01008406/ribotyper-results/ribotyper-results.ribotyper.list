@@ -1,0 +1,5 @@
+# Output printed to screen saved in:                                               ribotyper-results.ribotyper.log
+# List of executed commands saved in:                                              ribotyper-results.ribotyper.cmd
+# esl-seqstat -a output for seqs.fasta saved in:                                   ribotyper-results.ribotyper.seqstat
+# Short (6 column) output saved in:                                                ribotyper-results.ribotyper.short.out
+# Long (25 column) output saved in:                                                ribotyper-results.ribotyper.long.out

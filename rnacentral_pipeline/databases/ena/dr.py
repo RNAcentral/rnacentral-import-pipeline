@@ -13,25 +13,22 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import typing as ty
 import collections as coll
 
 import attr
+from attr.validators import instance_of as is_a
+from attr.validators import optional
 
 
 @attr.s()
 class DBRef(object):
-    database = attr.ib()
-    primary_id = attr.ib()
-    secondary_id = attr.ib()
+    database = attr.ib(validator=is_a(str))
+    primary_id = attr.ib(validator=is_a(str))
+    secondary_id = attr.ib(validator=optional(is_a(str)))
 
 
-@attr.s()
-class RecordRefs(object):
-    id = attr.ib()
-    references = attr.ib()
-
-
-def parse_line(line):
+def parse_line(line: str) -> DBRef:
     line = line[5:].strip()
     if line.endswith("."):
         line = line[:-1]
@@ -49,19 +46,18 @@ def parse_line(line):
     return DBRef(name, primary_id, secondary_id)
 
 
-def mapping(lines):
-    data = {}
-    refs = []
+def mappings(lines: ty.Iterable[str]) -> ty.Iterable[ty.Tuple[str, ty.List[DBRef]]]:
+    refs: ty.List[DBRef] = []
     current_id = None
     for index, line in enumerate(lines):
         if line.startswith("ID"):
-            if index:
-                data[current_id] = refs
+            if index and current_id:
+                yield (current_id, refs)
             current_id = line[5:].split(";")[0]
             refs = []
 
         if line.startswith('DR'):
             refs.append(parse_line(line))
 
-    data[current_id] = refs
-    return data
+    if current_id:
+        yield (current_id, refs)

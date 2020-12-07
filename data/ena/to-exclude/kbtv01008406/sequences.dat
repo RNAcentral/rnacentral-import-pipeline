@@ -1,0 +1,132 @@
+ID   KBTV01008406.1:1..998:rRNA; SV 1; linear; genomic DNA; TLS; ENV; 998 BP.
+XX
+PA   KBTV01008406.1
+XX
+PR   Project:PRJNA412111;
+XX
+DT   18-JUN-2019 (Rel. 141, Created)
+DT   12-MAR-2020 (Rel. 144, Last updated, Version 2)
+XX
+DE   insect gut metagenome partial 16S ribosomal RNA
+XX
+KW   Targeted Locus Study; TLS.
+XX
+OS   insect gut metagenome
+OC   unclassified sequences; metagenomes; organismal metagenomes.
+XX
+RN   [1]
+RP   1-998
+RA   Riegler M., Reynolds O.L., Chapman T.;
+RT   "Near Full-length 16S rDNA Next-Generation Sequencing Revealed Asaia as a
+RT   Common Midgut Bacterium of Wild and Domesticated Queensland Fruit Fly
+RT   Larvae";
+RL   Unpublished.
+XX
+RN   [2]
+RP   1-998
+RA   Burke C., Darling A., Deutscher A.;
+RT   ;
+RL   Submitted (06-NOV-2017) to the INSDC.
+RL   School of Life Sciences, University of Technology Sydney, Harris Street,
+RL   Ultimo, New South Wales 2007, Australia
+XX
+DR   MD5; 3a4ff8aff45f3358b763e32bcf6d52e7.
+DR   BioSample; SAMN07701186.
+DR   BioSample; SAMN07701187.
+DR   BioSample; SAMN07701189.
+DR   BioSample; SAMN07701190.
+DR   BioSample; SAMN07701191.
+DR   BioSample; SAMN07701192.
+DR   BioSample; SAMN07701193.
+DR   BioSample; SAMN07701194.
+DR   BioSample; SAMN07701195.
+DR   BioSample; SAMN07701196.
+DR   BioSample; SAMN07701197.
+DR   BioSample; SAMN07701198.
+DR   BioSample; SAMN07701199.
+DR   BioSample; SAMN07701200.
+DR   BioSample; SAMN07701201.
+DR   BioSample; SAMN07701202.
+DR   BioSample; SAMN07701203.
+DR   BioSample; SAMN07701204.
+DR   BioSample; SAMN07701205.
+DR   BioSample; SAMN07701206.
+DR   BioSample; SAMN07701207.
+DR   BioSample; SAMN07701209.
+DR   BioSample; SAMN07701210.
+DR   BioSample; SAMN07701211.
+DR   BioSample; SAMN07701212.
+DR   BioSample; SAMN07701213.
+DR   BioSample; SAMN07701214.
+DR   BioSample; SAMN07701215.
+DR   BioSample; SAMN07701216.
+DR   BioSample; SAMN07701217.
+DR   BioSample; SAMN07701218.
+DR   BioSample; SAMN07701219.
+DR   BioSample; SAMN07701220.
+DR   BioSample; SAMN07701221.
+DR   BioSample; SAMN07701222.
+DR   BioSample; SAMN07701223.
+DR   BioSample; SAMN07701224.
+DR   BioSample; SAMN07701225.
+DR   BioSample; SAMN07701226.
+DR   BioSample; SAMN07701227.
+DR   BioSample; SAMN07701228.
+DR   BioSample; SAMN07701229.
+DR   BioSample; SAMN07701230.
+DR   BioSample; SAMN07701231.
+DR   BioSample; SAMN07701232.
+DR   BioSample; SAMN07701233.
+DR   BioSample; SAMN07701234.
+DR   BioSample; SAMN07701235.
+DR   BioSample; SAMN07701236.
+DR   BioSample; SAMN07701237.
+DR   BioSample; SAMN07701238.
+DR   BioSample; SAMN07701239.
+DR   BioSample; SAMN07701240.
+DR   BioSample; SAMN07701241.
+DR   BioSample; SAMN07701242.
+DR   BioSample; SAMN07701243.
+DR   BioSample; SAMN07701244.
+XX
+CC   ##Assembly-Data-START##
+CC   Assembly Method       :: Custom algorithm v. 2015
+CC   Sequencing Technology :: Illumina
+CC   ##Assembly-Data-END##
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..998
+FT                   /organism="insect gut metagenome"
+FT                   /host="Bactrocera tryoni"
+FT                   /environmental_sample
+FT                   /mol_type="genomic DNA"
+FT                   /country="Australia:New South Wales,Ryde"
+FT                   /lat_lon="33.48 S 151.6 E"
+FT                   /isolation_source="control"
+FT                   /collection_date="Jun-2015"
+FT                   /note="metagenomic"
+FT                   /db_xref="taxon:1202446"
+FT                   /submitter_seqid="L151_10096"
+FT   rRNA            KBTV01008406.1:<1..>998
+FT                   /product="16S ribosomal RNA"
+XX
+SQ   Sequence 998 BP; 278 A; 207 C; 303 G; 210 T; 0 other;
+     ctcggtcgag cgagagtttg atcatggctc aggatgaacg ctggcggcgt gcctaataca        60
+     tgcaagtcga acgcacagcg aaaggtgctt gcacctttca agtgagtggc gaacgggtga       120
+     gtaacacgtg gacaacctgc ctcaaggctg gggataacat ttggaaacag atgctaatac       180
+     cgaataaaac tcagtgtcgc atgacacaaa gttaaaaggc gctttggcgt cacctagaga       240
+     tggatccgcg gtgcattagt tagttggtgg ggtaaaggcc taccaagaca atgatgcata       300
+     gccgagttga gagactgatc ggccacattg ggactgagac acggcccaaa ctcctacggg       360
+     aggctgcagt agggaatctt ccacaatggg cgaaagcctg atggagcaac gccgcgtgtg       420
+     tgatgaaggc tttcgggtcg taaagcactg ttgtatggga agaacagcta gaatagggaa       480
+     tgattttagt ttgacggtac cataccagaa agggacggct aaatacgtgc cagcagccgc       540
+     ggtaatacgt atgtcccgag cgttatccgg atttattggg cgtaaagcga gcgcagacgg       600
+     ttgattaagt ctgatgtgaa agcccggagc tcaactccgg aatggcattg gaaactggtt       660
+     aacttgagtg cagtagaggt aagtggaact ccatgtgtag cggtggaatg cgtagatata       720
+     tggaagaaca ccagtggcga aggcggctta ctggactgta actgacgttg aggctcgaaa       780
+     gtgtgggtag caaacaggat tagataccct ggtagtccac accgtaaacg atgaacacta       840
+     ggtgttagga ggtttccgcc tcttagtgcc gaagctaacg cattaagtgt tccgcctggg       900
+     gagtacgacc gcaaggttga aactcaaagg aattgacggg cacccgcaca agcggtggag       960
+     catgtggttt aattcgaagc aacgcgaaga accttacc                               998
+//

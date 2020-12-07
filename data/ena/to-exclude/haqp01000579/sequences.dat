@@ -1,0 +1,54 @@
+ID   HAQP01000579.1:18..191:rRNA; SV 1; linear; transcribed RNA; TSA; PLN; 174 BP.
+XX
+PA   HAQP01000579.1
+XX
+PR   Project:PRJEB37117;
+XX
+DT   20-JUL-2020 (Rel. 144, Created)
+DT   20-JUL-2020 (Rel. 144, Last updated, Version 1)
+XX
+DE   Chrysocystis fragilis partial Bacterial large subunit ribosomal RNA
+XX
+KW   TSA; Transcriptome Shotgun Assembly.
+XX
+OS   Chrysocystis fragilis
+OC   Eukaryota; Sar; Stramenopiles; Pelagophyceae; Sarcinochrysidales;
+OC   Chrysocystaceae; Chrysocystis.
+XX
+RN   [1]
+RA   Corre E., Pelletier E., Niang G., Scheremetjew M., Finn R., Kale V.,
+RA   Holt S., Cochrane G., Meng A., Brown T., Johnson (cohen) L.;
+RT   ;
+RL   Submitted (01-JUN-2020) to the INSDC.
+RL   ELIXIR Workflow Implementation Study, CNRS / Sorbonne Universite, STATION
+RL   BIOLOGIQUE DE ROSCOFF, Place Georges Teissier, 29680 Roscoff, France
+XX
+DR   MD5; 68eba16ec91c59ec4a4bec78e0b75e14.
+DR   BioSample; SAMN02740262.
+XX
+CC   Assembly Name: 713f9c87d79ba0cdf96dc91b3fb6959d
+CC   Assembly Method: Illumina HiSeq 2000
+CC   Sequencing Technology: Trinity-V2.6.5
+CC   Chrysocystis fragilis, TSA
+XX
+FH   Key             Location/Qualifiers
+FH
+FT   source          1..174
+FT                   /organism="Chrysocystis fragilis"
+FT                   /strain="CCMP3189"
+FT                   /mol_type="transcribed RNA"
+FT                   /db_xref="taxon:1411660"
+FT   rRNA            HAQP01000579.1:<18..>191
+FT                   /gene="LSU rRNA bacteria"
+FT                   /locus_tag="CFRA1165_RF02541R435"
+FT                   /product="Bacterial large subunit ribosomal RNA"
+FT                   /inference="similar to RNA sequence, Bacterial large
+FT                   subunit ribosomal RNA:RFAM:RF02541"
+FT                   /inference="ab initio prediction:Infernal
+FT                   cmsearch:1.1.2:Rfam 14.0"
+XX
+SQ   Sequence 174 BP; 41 A; 47 C; 40 G; 46 T; 0 other;
+     cggctgtcgt atcattggtc ctaaggtagc agaattcctt gacaggtaaa ttccgtccag        60
+     catgagcggt gttacgactt cctcactgtc actagcccgg tctttcagaa attgagtcat       120
+     ccttgattac gaggaagcca acggcctgac gataagaccc tgagcacctt tcct             174
+//

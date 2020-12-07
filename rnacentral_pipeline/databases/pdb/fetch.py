@@ -21,7 +21,7 @@ from retry import retry
 from more_itertools import chunked
 from ratelimiter import RateLimiter
 
-from . import parser
+from rnacentral_pipeline.databases.pdb import parser
 
 LOGGER = logging.getLogger(__name__)
 
@@ -40,6 +40,7 @@ def rna_containing_pdb_ids():
     Get PDB ids of all RNA-containing 3D structures
     using the RCSB PDB REST API.
     """
+
     query = """
     <orgPdbQuery>
     <queryType>org.pdb.query.simple.ChainTypeQuery</queryType>
@@ -99,6 +100,8 @@ def pdbe_publications(pdb_ids):
     return result
 
 
+
+
 def chains(pdb_ids=None):
     """
     Get per-chain information about each RNA sequence.
@@ -110,12 +113,60 @@ def chains(pdb_ids=None):
 
     if not pdb_ids:
         pdb_ids = rna_containing_pdb_ids()
+    query = """
+entries(entry_ids:{pdb_id_list}) {
+    entry {
+      id
+    }
+    struct {
+      title
+    }
+    rcsb_primary_citation {
+      pdbx_database_id_PubMed
+      rcsb_authors
+    }
+    pubmed {
+      rcsb_pubmed_central_id
+    }
+    rcsb_entry_info {
+      experimental_method
+      polymer_entity_count
+    }
+    refine {
+      ls_d_res_high
+    }
+    pdbx_database_PDB_obs_spr {
+      replace_pdb_id
+    }
+    struct_keywords {
+      pdbx_keywords
+    }
+    rcsb_entry_info {
+      entity_count
+      polymer_entity_count
+      deposited_polymer_monomer_count
+      deposited_atom_count
+    }
+    rcsb_accession_info {
+      deposit_date
+      initial_release_date
+      revision_date
+    }
+    audit_author {
+      name
+    }
+    pdbx_database_related {
+      db_id
+      content_type
+      details
+    }
+    pdbx_database_status {
+      pdb_format_compatible
+    }
+  }
+    """
     return parser.as_descriptions(custom_report(pdb_ids, [
-        'structureId',
         'chainId',
-        'structureTitle',
-        'experimentalTechnique',
-        'releaseDate',
         'ndbId',
         'emdbId',
         'classification',

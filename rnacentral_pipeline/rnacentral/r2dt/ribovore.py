@@ -23,26 +23,15 @@ import typing as ty
 import attr
 from attr.validators import instance_of as is_a
 
-from .data import RibovoreResult
-
-
-def parse(path: Path) -> ty.Iterator[RibovoreResult]:
-    with path.open('r') as raw:
-        for line in raw:
-            if line.startswith('#'):
-                continue
-            result = RibovoreResult.from_result_dict(line)
-            if result and result.status != 'FAIL':
-                yield result
+from rnacentral_pipeline import ribovore
+from rnacentral_pipeline.databases.data import RibovoreResult
 
 
 def as_dict(directory: Path, allow_missing=False) -> ty.Dict[str, RibovoreResult]:
-    possible = [
-        directory / '.ribotyper.long.out',
-        directory / (directory.name + '.ribotyper.long.out'),
-    ]
-    for path in possible:
-        if path.exists():
-            return {p.target: p for p in parse(path)}
-    if not allow_missing:
-        raise ValueError("No ribovore result file in: %s " % directory)
+    try:
+        results = ribovore.parse_directory(path)
+        return {p.target: p for p in results if p.status != 'FAIL'}
+    except ValueError as e:
+        if not allow_missing:
+            raise ValueError("No ribovore result file in: %s " % directory)
+        return {}
