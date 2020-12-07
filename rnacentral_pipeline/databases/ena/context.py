@@ -13,8 +13,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import typing as ty
+import csv
+from collections import Counter
 from pathlib import Path
+import typing as ty
 
 import attr
 from attr.validators import optional
@@ -33,9 +35,31 @@ class Context:
     ribovore: ribo.Results = attr.ib(validator=is_a(dict))
     tpa = attr.ib(validator=is_a(tpa.TpaMappings))
     dr = attr.ib(validator=is_a(SqliteDict))
+    counts = attr.ib(validator=is_a(Counter), factory=Counter)
 
     def expand_tpa(self, entries: ty.Iterable[Entry]) -> ty.Iterable[Entry]:
         yield from tpa.apply(self.tpa, entries)
+
+    def add_skipped_protein(self):
+        self.counts['skipped_protein'] += 1
+
+    def add_skipped_pseudogene(self):
+        self.counts['skipped_pseudogene'] += 1
+
+    def add_riboytper_skip(self):
+        self.counts['ribotyper_skipped'] += 1
+
+    def add_total(self):
+        self.counts['total'] += 1
+
+    def add_parsed(self):
+        self.counts['parsed'] += 1
+
+    def dump_counts(self, path: Path):
+        with path.open('w') as out:
+            writer = csv.DictWriter(out, fieldnames=self.counts.keys())
+            writer.writeheader()
+            writer.writerow(self.counts)
 
 @attr.s()
 class ContextBuilder:
