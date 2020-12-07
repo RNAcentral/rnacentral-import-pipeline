@@ -47,6 +47,7 @@ def parse(ctx: context.Context, path: Path) -> ty.Iterable[Entry]:
             LOGGER.warn("Skipping record %s with no features" % record.id)
             continue
 
+        ctx.add_total()
         if len(record.features) != 2:
             raise InvalidEnaFile(
                 "ENA EMBL files must have 2 features/record %s" % record
@@ -55,10 +56,12 @@ def parse(ctx: context.Context, path: Path) -> ty.Iterable[Entry]:
         feature = record.features[1]
         if helpers.is_protein(feature):
             LOGGER.info("Skipping mis-annotated protein: %s", record.id)
+            ctx.add_skipped_protein()
             continue
 
         if helpers.is_pseudogene(feature):
             LOGGER.info("Skipping pseudogene")
+            ctx.add_skipped_pseudogene()
             continue
 
         if record.id not in ctx.dr:
@@ -68,8 +71,10 @@ def parse(ctx: context.Context, path: Path) -> ty.Iterable[Entry]:
         ribo_result = ctx.ribovore.get(record.id, None)
         if helpers.is_skippable_sequence(entry, ribo_result):
             LOGGER.info(f"Skipping record ({record.id}) excluded by ribotyper")
+            ctx.add_riboytper_skip()
             continue
 
+        ctx.add_parsed()
         yield entry
 
 

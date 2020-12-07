@@ -29,6 +29,7 @@ def cli():
 
 
 @cli.command("parse")
+@click.option('--counts', default='processing-results.txt')
 @click.argument("ena_file", type=click.Path(file_okay=True))
 @click.argument("mapping_file", type=click.Path(file_okay=True))
 @click.argument('ribovore_path', type=click.Path(dir_okay=True))
@@ -38,7 +39,8 @@ def cli():
     default=".",
     type=click.Path(writable=True, dir_okay=True, file_okay=False,),
 )
-def process_ena(ena_file, mapping_file, ribovore_path, model_lengths, output):
+def process_ena(ena_file, mapping_file, ribovore_path, model_lengths, output,
+        counts=None):
     """
     Process ENA EMBL formatted files into CSV to import. The additional mapping
     file is a file containing all TPA data we are using from ENA.
@@ -51,3 +53,4 @@ def process_ena(ena_file, mapping_file, ribovore_path, model_lengths, output):
     builder.with_dr(ena_file)
     ctx = builder.context()
     write_entries(parser.parse_with_context, output, ctx, ena_file)
+    ctx.dump_counts(Path(counts))
