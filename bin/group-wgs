@@ -4,8 +4,9 @@ set -euo pipefail
 IFS=$'\n\t'
 
 filename="$1"
-directory="$2"
+original="$2"
+directory="$3"
 
 base="$(basename "$filename")"
 
-cat "$filename" | xargs -I {} cat {} > "$directory/$base.ncr.gz"
+cat "$filename" | xargs -I {} cat {} > "$directory/$original-$base.ncr.gz"

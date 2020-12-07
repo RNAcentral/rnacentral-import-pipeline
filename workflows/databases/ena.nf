@@ -79,7 +79,7 @@ process fetch_wgs_directories {
   find raw -type f > ids
   split -n l/30 ids chunks/chunk-
   find chunks -type f -empty -delete
-  find chunks/ -type f | xargs -I {} group-wgs {} files
+  find chunks/ -type f | xargs -I {} group-wgs {} "$to_fetch" files
   """
 }
 
