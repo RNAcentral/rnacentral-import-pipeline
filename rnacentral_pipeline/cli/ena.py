@@ -49,7 +49,7 @@ def process_ena(ena_file, mapping_file, ribovore_path, model_lengths, output,
     ena_file = Path(ena_file)
     builder = context.ContextBuilder()
     builder.with_ribovore(Path(ribovore_path), Path(model_lengths))
-    builder.with_tpa(Path(mapping_path))
+    builder.with_tpa(Path(mapping_file))
     builder.with_dr(ena_file)
     ctx = builder.context()
     write_entries(parser.parse_with_context, output, ctx, ena_file)
