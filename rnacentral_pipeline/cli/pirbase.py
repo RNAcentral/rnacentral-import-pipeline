@@ -41,11 +41,12 @@ def urls_for(url, output):
 
 
 @cli.command("parse")
-@click.argument("data")
+@click.argument("data", type=click.Path())
+@click.argument("md5s", type=click.Path())
 @click.argument(
     "output",
     default=".",
     type=click.Path(writable=True, dir_okay=True, file_okay=False),
 )
-def parse(data, output):
-    write_entries(parser.parse, output, data)
+def parse(data, output, md5s):
+    write_entries(parser.parse, output, Path(data), Path(md5s))
