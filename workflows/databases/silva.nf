@@ -11,6 +11,8 @@ process fetch {
 
 
 process parse {
+  tag { "$raw.name" }
+
   input:
   path(raw)
 
