@@ -2,3 +2,5 @@ module use modules
 
 module load cluster
 module load singularity/3.5.0
+
+export LSF_JOB_STARTER="ulimit -n 12288;"
