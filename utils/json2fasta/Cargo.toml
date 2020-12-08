@@ -1,0 +1,17 @@
+[package]
+name = "json2fasta"
+version = "0.1.0"
+authors = ["Blake Sweeney <bsweeney@ebi.ac.uk>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+structopt = "0.3"
+anyhow = "1.0"
+log = "0.4"
+bio = "0.32.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+rnc-core = { path = "../rnc-core" }
+rnc-utils = { path = "../rnc-utils" }

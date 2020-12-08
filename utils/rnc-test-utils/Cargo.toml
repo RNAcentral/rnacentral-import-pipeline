@@ -1,0 +1,11 @@
+[package]
+name = "rnc-test-utils"
+version = "0.1.0"
+authors = ["Blake Sweeney <bsweeney@ebi.ac.uk>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+tempfile = "3"
+serde_json = "1.0"

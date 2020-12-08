@@ -1,0 +1,8 @@
+[workspace]
+members = [
+  "utils/json2fasta",
+  "utils/split-ena",
+  "utils/rnc-core",
+  "utils/rnc-utils",
+  "utils/rnc-test-utils",
+]
