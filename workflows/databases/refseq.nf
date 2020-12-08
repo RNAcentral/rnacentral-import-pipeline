@@ -11,11 +11,13 @@ process fetch {
 }
 
 process parse {
+  tag { "$data.name" }
+
   input:
   path(data)
 
   output:
-  path('.csv')
+  path('*.csv')
 
   """
   rnac external refseq $data .
