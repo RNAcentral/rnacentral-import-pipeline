@@ -17,9 +17,29 @@ import logging
 
 import click
 
-from . import (ena, ensembl, europepmc, external, ftp_export, genes,
-               genome_mapping, gtrnadb, lookup, misc, ncbi, ols, pdb, pirbase,
-               precompute, qa, r2dt, rfam, search_export, text_mining, zfin)
+from rnacentral_pipeline.cli import (
+    ena,
+    ensembl,
+    europepmc,
+    external,
+    ftp_export,
+    genes,
+    genome_mapping,
+    gtrnadb,
+    lookup,
+    misc,
+    ncbi,
+    ols,
+    pdb,
+    pirbase,
+    precompute,
+    qa,
+    r2dt,
+    rfam,
+    search_export,
+    text_mining,
+    zfin,
+)
 
 
 @click.group()
@@ -58,8 +78,8 @@ cli.add_command(misc.run_release)
 cli.add_command(misc.validate_pgloader)
 cli.add_command(ncbi.cli)
 cli.add_command(ols.cli)
-cli.add_command(pirbase.cli)
 cli.add_command(pdb.cli)
+cli.add_command(pirbase.cli)
 cli.add_command(precompute.cli)
 cli.add_command(qa.cli)
 cli.add_command(r2dt.cli)
