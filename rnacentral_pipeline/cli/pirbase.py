@@ -22,7 +22,7 @@ from rnacentral_pipeline.databases.pirbase import fetch, parser
 from rnacentral_pipeline.writers import write_entries
 
 
-@click.group("genes")
+@click.group("pirbase")
 def cli():
     """
     A group of commands dealing with piRBase data.
@@ -36,7 +36,7 @@ def cli():
 def urls_for(url, output):
     urls = fetch.find_urls(furl(url))
     for url in urls:
-        output.write(url)
+        output.write(str(url))
         output.write("\n")
 
 
