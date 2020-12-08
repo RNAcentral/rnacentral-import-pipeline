@@ -11,6 +11,11 @@ requirements.txt: requirements.in
 requirements-dev.txt: requirements-dev.in
 	pip-compile -o requirements-dev.txt requirements-dev.in
 
+rust:
+	cargo build --release
+	cp target/release/json2fasta bin
+	cp target/release/ena-split bin
+
 docker: Dockerfile requirements.txt .dockerignore
 	docker build --build-arg CACHE_DATE="$(date)" -t "$(docker)" .
 
@@ -20,4 +25,4 @@ shell:
 publish: docker
 	docker push "$(docker)"
 
-.PHONY: docker publish clean env
+.PHONY: docker publish clean env rust

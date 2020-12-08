@@ -36,11 +36,11 @@ process fetch_single_files {
 
   find . -type f |\
   xargs -I {} zgrep -Hc '^ID' {} |\
-  awk -F ':' '{ if (\$2 > 100000) print \$1 }' > too-large
-  xargs -a too-large -I {} gzip -d {}
+  awk -F ':' '{ if (\$2 > 100000) print \$1 }' |\
+  xargs -I {} gzip -d {}
 
   mkdir large-splits
-  find . -type f -name '*.ncr' | xargs -I {} split-sequences --max-sequences 20000 --format-name='ncr' --remove-file {} large-splits
+  find . -type f -name '*.ncr' | xargs -I {} split-ena --max-sequences 20000 --remove-file {} large-splits
   find large-splits -type f | xargs -I {} gzip {}
   """
 }

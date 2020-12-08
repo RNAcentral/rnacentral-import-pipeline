@@ -81,3 +81,6 @@ data/intact/intact.txt
 Procfile
 nix
 .vim
+target/
+bin/json2fasta
+bin/split-ena
