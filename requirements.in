@@ -7,6 +7,7 @@ click-aliases
 furl
 gffutils
 humanfriendly
+ijson
 intervaltree
 jsonschema
 lxml
