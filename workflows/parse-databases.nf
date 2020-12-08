@@ -12,6 +12,7 @@ include { lncipedia } from './databases/lncipedia'
 include { mirbase } from './databases/mirbase'
 include { mirgenedb } from './databases/mirgenedb'
 include { pdbe } from './databases/pdbe'
+include { pirbase } from './databases/pirbase'
 include { pombase } from './databases/pombase'
 include { quickgo } from './databases/quickgo'
 include { refseq } from './databases/refseq'
@@ -44,6 +45,7 @@ workflow parse_databases {
       mirbase(),
       mirgenedb(),
       pdbe(),
+      pirbase(),
       pombase(),
       quickgo(),
       refseq(),

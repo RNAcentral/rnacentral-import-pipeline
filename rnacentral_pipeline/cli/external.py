@@ -52,6 +52,7 @@ def cli():
         "mirbase",
         "mirgenedb",
         "pombase",
+        "pirbase",
         "sgd",
         "snodb",
         "snorna_database",
