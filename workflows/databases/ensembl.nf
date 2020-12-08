@@ -70,7 +70,7 @@ workflow ensembl {
     | find_urls \
     | splitCsv \
     | filter { name, dat_url, gff_url ->
-      params.databases.ensembl.vertebrates.exclude.any { p -> name =~ p }
+      params.databases.ensembl.vertebrates.exclude.any { p -> name.toLowerCase() =~ p }
     } \
     | fetch_species_data \
     | flatMap { name, dat_files, gff_file ->
