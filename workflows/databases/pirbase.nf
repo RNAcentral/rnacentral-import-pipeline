@@ -25,6 +25,7 @@ process find_known {
 }
 
 process parse_data {
+  tag { "${url.split('/').last()}" }
   input:
   tuple val(url), path(known)
 
