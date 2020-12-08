@@ -5,7 +5,7 @@ process fetch {
   path('*.rnac.gz')
 
   """
-  wget $params.silva.remote
+  wget $params.databases.silva.remote
   """
 }
 
@@ -26,5 +26,5 @@ process parse {
 workflow silva {
   emit: data
   main:
-    fetch | parse | set { data }
+    fetch | flatten | parse | set { data }
 }

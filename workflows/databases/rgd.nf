@@ -1,4 +1,4 @@
-process fetch_and_process {
+process rgd {
   when { params.databases.rgd.run }
 
   output:
@@ -12,10 +12,3 @@ process fetch_and_process {
   rnac external rgd sequences.fasta genes.txt .
   """
 }
-
-workflow rgd {
-  emit: data
-  main:
-    fetch_and_process | set { data }
-}
-

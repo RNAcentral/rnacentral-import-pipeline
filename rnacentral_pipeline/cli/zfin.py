@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Copyright [2009-current] EMBL-European Bioinformatics Institute
+Copyright [2009-2020] EMBL-European Bioinformatics Institute
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -14,22 +14,22 @@ limitations under the License.
 """
 
 import json
-import pickle
-
 import click
 
-from rnacentral_pipeline.databases import pdb, zfin
+from rnacentral_pipeline.databases import zfin
+from rnacentral_pipeline.databases.generic import parser as generic
+from rnacentral_pipeline.writers import write_entries
 
 
-@click.group('fetch')
+@click.group('zfin')
 def cli():
     """
-    Commands for dealing with the fetching PDB data.
+    Commands for dealing with ZFIN data.
     """
     pass
 
 
-@cli.command('zfin')
+@cli.command('fetch')
 @click.argument('url')
 @click.argument('output', default='zfin.json', type=click.File('w'))
 def fetch_zfin(url, output):
@@ -38,3 +38,17 @@ def fetch_zfin(url, output):
     with their formatting.
     """
     json.dump(zfin.fetch(url), output)
+
+
+@cli.command('parse')
+@click.argument("json_file", type=click.File("r"))
+@click.argument(
+    "output",
+    default=".",
+    type=click.Path(writable=True, dir_okay=True, file_okay=False),
+)
+def process_json_schema(json_file, output):
+    """
+    This parses our JSON schema files to produce the importable CSV files.
+    """
+    write_entries(generic.parse, output, json_file)

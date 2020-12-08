@@ -58,7 +58,6 @@ def cli():
         "snorna_database",
         "tarbase",
         "zwd",
-        "zfin",
     ],
 )
 @click.argument("json_file", type=click.File("r"))
