@@ -38,7 +38,7 @@ process release {
   val('done')
 
   script:
-  def should_release = Utils.must_release(params.import_data, params.databases)
+  def should_release = params.should_release
   def pre = file("work/pre-release")
   def post = file("work/post-release")
   """
