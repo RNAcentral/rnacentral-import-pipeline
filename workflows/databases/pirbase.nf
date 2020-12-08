@@ -6,7 +6,7 @@ process find_urls {
   path("urls.txt")
 
   """
-  rnac pirbase urls-for $params.databases.pirbase.url urls.txt
+  rnac pirbase urls-for $params.databases.pirbase.remote urls.txt
   """
 }
 
