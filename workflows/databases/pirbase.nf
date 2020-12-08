@@ -44,7 +44,7 @@ workflow pirbase {
     Channel.fromPath('files/import-data/pirbase/known-md5.sql') | set { query }
 
     find_urls \
-    | spltCsv \
+    | splitCsv \
     | map { row -> row[0] } \
     | combine(find_known(query)) \
     | parse_data \

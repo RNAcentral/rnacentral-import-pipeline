@@ -17,9 +17,9 @@ import logging
 
 import click
 
-from . import (ena, ensembl, europepmc, external, fetch, ftp_export, genes,
+from . import (ena, ensembl, europepmc, external, ftp_export, genes,
                genome_mapping, gtrnadb, lookup, misc, ncbi, ols, pdb, pirbase,
-               precompute, qa, r2dt, rfam, search_export, text_mining)
+               precompute, qa, r2dt, rfam, search_export, text_mining, zfin)
 
 
 @click.group()
@@ -46,7 +46,6 @@ cli.add_command(ena.cli)
 cli.add_command(ensembl.cli)
 cli.add_command(europepmc.cli)
 cli.add_command(external.cli)
-cli.add_command(fetch.cli)
 cli.add_command(ftp_export.cli)
 cli.add_command(genes.cli)
 cli.add_command(genome_mapping.cli)
@@ -67,3 +66,4 @@ cli.add_command(r2dt.cli)
 cli.add_command(rfam.cli)
 cli.add_command(search_export.cli)
 cli.add_command(text_mining.cli)
+cli.add_command(zfin.cli)
