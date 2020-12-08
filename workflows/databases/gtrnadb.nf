@@ -12,14 +12,16 @@ process fetch_data {
 }
 
 process process_data {
+  tag { "$raw.name" }
+
   input:
-  path('raw.json')
+  path(raw)
 
   output:
   path('*.csv')
 
   """
-  rnac external gtrnadb raw.json .
+  rnac external gtrnadb $raw .
   """
 }
 
