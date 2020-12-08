@@ -126,20 +126,25 @@ def main(sequences,
     parsed as powers of 2, so 1KB is 1024 not 1000 bytes.
     """
 
+    bio_format = format_name
+    if format_name == 'ncr':
+        bio_format = 'embl'
+
     base = os.path.basename(sequences.name)
     basename, _ = os.path.splitext(base)
     limits = Limit.build(max_sequences, max_nucleotides, max_file_size)
-    chunks = chunked(sequences, limits, format_name=format_name)
+    chunks = chunked(sequences, limits, format_name=bio_format)
 
     if not os.path.exists(output):
         os.makedirs(output)
 
+
     for index, seqs in enumerate(chunks):
-        filename = os.path.join(output, f"{basename}-{index}.{format}")
+        filename = os.path.join(output, f"{basename}-{index}.{format_name}")
         if os.path.exists(filename):
             raise ValueError(f"Will not overwrite existing file {filename}")
         with open(filename, 'w') as out:
-            SeqIO.write(seqs, out, format_name)
+            SeqIO.write(seqs, out, bio_format)
 
     if remove_file:
         os.remove(sequences.name)
