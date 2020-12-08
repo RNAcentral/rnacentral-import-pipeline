@@ -17,6 +17,7 @@ import logging
 from time import sleep
 
 import requests
+import simplejson
 from functools import lru_cache
 
 TAX_URL = 'https://www.ebi.ac.uk/ena/data/taxonomy/v1/taxon/tax-id/{taxon_id}'
@@ -55,6 +56,9 @@ def phylogeny(taxon_id):
             response.raise_for_status()
             data = response.json()
             break
+        except simplejson.errors.JSONDecodeError:
+            sleep(0.15 * (count + 1) ** 2)
+            continue
         except requests.HTTPError as err:
             if response.status_code == 500:
                 sleep(0.15 * (count + 1) ** 2)
