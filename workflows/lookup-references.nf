@@ -21,7 +21,7 @@ process fetch_publications {
   path('out')
 
   """
-  curl -L http://europepmc.org/ftp/pmclitemetadata/PMCLiteMetadata.tgz
+  curl -L http://europepmc.org/ftp/pmclitemetadata/PMCLiteMetadata.tgz > PMCLiteMetadata.tgz
   tar xvf PMCLiteMetadata.tgz
   """
 }
