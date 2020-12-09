@@ -112,7 +112,11 @@ process process_file {
   """
   zcat $raw > sequences.dat
   ena2fasta.py sequences.dat sequences.fasta
-  /rna/ribovore/ribotyper.pl sequences.fasta ribotyper-results
+  if [[ -e sequences.fasta ]]; then
+    /rna/ribovore/ribotyper.pl sequences.fasta ribotyper-results
+  else
+    mkdir ribotyper-results
+  fi
   rnac ena parse --counts $raw-counts.txt sequences.dat $tpa ribotyper-results $model_lengths .
 
   if [[ -e $baseDir/ena-counts/$raw-counts.txt ]]; then

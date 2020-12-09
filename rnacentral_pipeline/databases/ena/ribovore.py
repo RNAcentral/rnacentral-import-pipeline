@@ -15,16 +15,24 @@ limitations under the License.
 
 import typing as ty
 from pathlib import Path
+import logging
 
 import attr
 
 from rnacentral_pipeline import ribovore
 
 
+LOGGER = logging.getLogger(__name__)
+
 Results = ty.Dict[str, ribovore.RibovoreResult]
 
-def load(directory: Path, lengths: Path) -> Results:
+
+def load(directory: Path, lengths: Path) -> ty.Optional[Results]:
     loaded: ty.Dict[str, ribovore.RibovoreResult] = {}
-    for result in ribovore.parse_directory(directory, length_file=lengths):
-        loaded[result.target] = result
-    return loaded
+    try:
+        for result in ribovore.parse_directory(directory, length_file=lengths):
+            loaded[result.target] = result
+        return loaded
+    except ribovore.MissingRibotyperDataException:
+        LOGGER.warn("No ribotyper data in %s", directory)
+        return None

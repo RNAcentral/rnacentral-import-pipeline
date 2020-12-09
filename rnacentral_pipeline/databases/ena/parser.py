@@ -68,11 +68,12 @@ def parse(ctx: context.Context, path: Path) -> ty.Iterable[Entry]:
             raise InvalidEnaFile("Somehow parsed DR refs are for wrong record")
         
         entry = helpers.as_entry(ctx, record, feature)
-        ribo_result = ctx.ribovore.get(record.id, None)
-        if helpers.is_skippable_sequence(entry, ribo_result):
-            LOGGER.info(f"Skipping record ({record.id}) excluded by ribotyper")
-            ctx.add_riboytper_skip()
-            continue
+        if ctx.ribovore is not None:
+            ribo_result = ctx.ribovore.get(record.id, None)
+            if helpers.is_skippable_sequence(entry, ribo_result):
+                LOGGER.info(f"Skipping record ({record.id}) excluded by ribotyper")
+                ctx.add_riboytper_skip()
+                continue
 
         ctx.add_parsed()
         yield entry
