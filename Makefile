@@ -14,7 +14,7 @@ requirements-dev.txt: requirements-dev.in
 rust:
 	cargo build --release
 	cp target/release/json2fasta bin
-	cp target/release/ena-split bin
+	cp target/release/split-ena bin
 
 docker: Dockerfile requirements.txt .dockerignore
 	docker build --build-arg CACHE_DATE="$(date)" -t "$(docker)" .
