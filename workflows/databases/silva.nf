@@ -9,7 +9,6 @@ process fetch {
   """
 }
 
-
 process parse {
   tag { "$raw.name" }
 
@@ -23,7 +22,6 @@ process parse {
   zcat $raw | rnac external silva - .
   """
 }
-
 
 workflow silva {
   emit: data
