@@ -26,6 +26,8 @@ process find_known {
 
 process parse_data {
   tag { "${url.split('/').last()}" }
+  memory '5GB'
+
   input:
   tuple val(url), path(known)
 
