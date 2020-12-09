@@ -46,7 +46,7 @@ process split_sequences {
   def chunk_size = params.r2dt.sequence_chunk_size
   """
   mkdir parts/
-  split --lines=${chunk_size} --additional-suffix='.fasta' --filter 'json2fasta.py - - >> \$FILE' raw.json parts/
+  split --lines=${chunk_size} --additional-suffix='.fasta' --filter 'json2fasta - - >> \$FILE' raw.json parts/
   """
 }
 
