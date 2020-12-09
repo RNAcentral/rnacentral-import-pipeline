@@ -15,6 +15,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import os
 from os.path import getsize
 
 import click
@@ -22,9 +23,16 @@ import click
 from Bio import SeqIO
 
 
+def lineage(record) -> str:
+    taxonomy = record.annotations.get('taxonomy', [])
+    organism = record.annotations.get('organism', '')
+    taxonomy.append(organism)
+    return '; '.join(taxonomy).lower()
+
+
 def records(filename):
     for record in SeqIO.parse(filename, "embl"):
-        if 'metagenome' in lineage(record).lower():
+        if 'metagenome' in lineage(record):
             yield record
 
 
@@ -35,7 +43,7 @@ def main(filename, output):
     """
     Convert a ENA EMBL file into a fasta file suitable for ribotyper analysis.
     """
-    SeqIO.write(sequences(filename), output, "fasta")
+    SeqIO.write(records(filename), output, "fasta")
     output.flush()
 
     if not getsize(output.name):
