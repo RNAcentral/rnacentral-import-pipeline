@@ -1,6 +1,3 @@
-use std::error::Error;
-use std::io::prelude::*;
-
 use bio::io::fasta;
 
 use serde::{Deserialize, Serialize};
