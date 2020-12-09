@@ -1,11 +1,12 @@
 process fetch_single_files {
-  when { params.databases.ena.run }
+  tag { "$name" }
+
+  input:
+  tuple val(name), val(remote)
 
   output:
   path("**/*.ncr.gz")
 
-  script:
-  def remote = params.databases.ena.remote
   """
   rsync \
     -avPL \
@@ -13,23 +14,7 @@ process fetch_single_files {
     --include='*/' \
     --include='**/*.ncr.gz' \
     --exclude='*.fasta.gz' \
-    "$remote/con-std_latest/" con-std
-
-  rsync \
-    -avPL \
-    --prune-empty-dirs \
-    --include='*/' \
-    --include='**/*.ncr.gz' \
-    --exclude='*.fasta.gz' \
-    "$remote/tls/public/" tls
-
-  rsync \
-    -avPL \
-    --prune-empty-dirs \
-    --include='*/' \
-    --include='**/*.ncr.gz' \
-    --exclude='*.fasta.gz' \
-    "$remote/tsa/public/" tsa
+    "$remote" "$name"
 
   find . -type f -empty -delete
   find . -type f | xargs -I {} gzip --quiet -l {} | awk '{ if (\$2 == 0) print \$4 }' | xargs -I {} rm {}.gz
@@ -138,7 +123,12 @@ workflow ena {
     | fetch_wgs_directories \
     | set { wgs_files }
 
-    fetch_single_files \
+    Channel.fromList([
+      ['con-std', "$params.databases.ena.remote/con-std_latest/"],
+      ['tls', "$params.databases.ena.remote/tls/public/"],
+      ['tsa', "$params.databases.ena.remote/tsa/public/"],
+    ]) \
+    | fetch_single_files \
     | mix(wgs_files) \
     | flatten \
     | combine(fetch_metadata(urls)) \
