@@ -40,7 +40,7 @@ def parse(path: Path, known_path: Path) -> ty.Iterable[data.Entry]:
     )
 
     with path.open('r') as handle:
-        for raw in ijson.items(handle, "data"):
+        for raw in ijson.items(handle, "data.item"):
             entry = v1.as_entry(raw, ctx)
             if entry.md5() in known:
                 yield entry
