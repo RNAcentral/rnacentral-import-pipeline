@@ -20,6 +20,12 @@ from pathlib import Path
 from rnacentral_pipeline.databases.data import RibovoreResult
 
 
+class MissingRibotyperDataException(Exception):
+    """
+    Raised when this cannot find any ribotyper data to parse
+    """
+
+
 def load_lengths(path: Path):
     with path.open('r') as raw:
         return {row[0]: int(row[1]) for row in csv.reader(raw)}
@@ -55,4 +61,4 @@ def parse_directory(directory: Path, length_file=None) -> ty.Iterator[RibovoreRe
             yield from parse_file(path, length_file=length_file)
             break
     else:
-        raise ValueError("No ribovore result file in: %s " % directory)
+        raise MissingRibotyperDataException("No ribovore result file in: %s " % directory)

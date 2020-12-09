@@ -32,7 +32,7 @@ from rnacentral_pipeline.databases.ena import mapping as tpa
 
 @attr.s()
 class Context:
-    ribovore: ribo.Results = attr.ib(validator=is_a(dict))
+    ribovore: ty.Optional[ribo.Results] = attr.ib(validator=optional(is_a(dict)))
     tpa = attr.ib(validator=is_a(tpa.TpaMappings))
     dr = attr.ib(validator=is_a(SqliteDict))
     counts = attr.ib(validator=is_a(Counter), factory=Counter)
@@ -97,7 +97,7 @@ class ContextBuilder:
                     dr_map[record_id] = dbrefs
                 dr_map.commit()
 
-        ribovore: ribo.Results = {}
+        ribovore: ty.Optional[ribo.Results] = None
         if self.ribovore_path and self.lengths_path:
            ribovore = ribo.load(self.ribovore_path, self.lengths_path)
 
