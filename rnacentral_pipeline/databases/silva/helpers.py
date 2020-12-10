@@ -32,6 +32,10 @@ KNOWN_TYPES = {
     'rRNA_16S': 'SO:0001000',
     'rRNA_18S': 'SO:0000407',
     'small_subunit_rRNA': 'SO:0000650',
+    'large_subunit_rRNA': 'SO:0000651',
+    'rRNA_23S': 'SO:0001001',
+    'rRNA_26S': 'SO:0000653',  # TODO: Get a better term
+    'rRNA_28S': 'SO:0000653',
 }
 
 RRNA_NAME_MAPPING = {
@@ -40,7 +44,10 @@ RRNA_NAME_MAPPING = {
     'rRNA_16S': 'bacterial SSU rRNA',
     'rRNA_18S': 'SSU rRNA',
     'small_subunit_rRNA': 'SSU rRNA',
-    
+    'large_subunit_rRNA': 'LSU rRNA',
+    'rRNA_23S': 'bacterial LSU rRNA',
+    'rRNA_26S': 'eukaryotic LSU rRNA',
+    'rRNA_28S': 'eukaryotic LSU rRNA',
 }
 
 LOGGER = logging.getLogger(__name__)
