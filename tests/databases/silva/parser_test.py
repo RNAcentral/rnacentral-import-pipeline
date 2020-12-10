@@ -67,5 +67,6 @@ def test_parses_data_correctly():
         lineage='Eukaryota; environmental samples; uncultured eukaryote',
         references=[
             pubs.reference('doi:10.1093/nar/gks1219'),
-        ]
+        ],
+        description = 'uncultured eukaryote bacterial SSU rRNA',
     )
