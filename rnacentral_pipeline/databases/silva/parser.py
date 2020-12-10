@@ -14,11 +14,13 @@ limitations under the License.
 """
 
 import csv
+import typing as ty
 
-from . import helpers
+from rnacentral_pipeline.databases.data import Entry
+from rnacentral_pipeline.databases.silva import helpers
 
 
-def parse(handle):
+def parse(handle) -> ty.Iterable[Entry]:
     reader = csv.DictReader(handle, delimiter='\t')
     entries = map(helpers.as_entry, reader)
     return filter(None, entries)

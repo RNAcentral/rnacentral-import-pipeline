@@ -14,6 +14,7 @@ limitations under the License.
 """
 
 import re
+import typing as ty
 import operator as op
 
 from rnacentral_pipeline.databases import data
@@ -41,15 +42,15 @@ RRNA_NAME_MAPPING = {
     
 }
 
-def primary_id(row):
+def primary_id(row) -> str:
     return 'SILVA:%s:%s' % (row['insdcAccession'], row['location'])
 
 
-def taxid(row):
+def taxid(row) -> int:
     return int(row['ncbiTaxId'])
 
 
-def sequence(row):
+def sequence(row) -> str:
     return row['sequence'].replace('U', 'T')
 
 
@@ -59,31 +60,31 @@ def inference(row):
     return re.sub(CLASS_PATTERN, '', value)
 
 
-def version(row):
+def version(row) -> str:
     _, version = row['insdcAccession'].split('.', 1)
     return version
 
 
-def rna_type(row):
+def rna_type(row) -> str:
     given = row['type']
     if given in KNOWN_TYPES:
         return KNOWN_TYPES[given]
     raise ValueError("Unknown RNA type")
 
 
-def lineage(row):
+def lineage(row) -> str:
     return phy.lineage(taxid(row))
 
 
-def species(row):
+def species(row) -> str:
     return phy.species(taxid(row))
 
 
-def common_name(row):
+def common_name(row) -> str:
     return phy.common_name(taxid(row))
 
 
-def description(row):
+def description(row) -> str:
     organism = species(row)
     common = common_name(row)
     if common:
@@ -92,7 +93,7 @@ def description(row):
     return f'{organism} {rrna}'
 
 
-def as_entry(row):
+def as_entry(row) -> ty.Optional[data.Entry]:
     try:
         return data.Entry(
             primary_id=primary_id(row),
