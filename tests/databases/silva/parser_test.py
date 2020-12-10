@@ -23,7 +23,8 @@ from rnacentral_pipeline.databases.silva import parser
 
 
 @pytest.mark.parametrize('filename,count', [
-    ('data/silva/sample.tsv', 9),
+    ('data/silva/sample.tsv', 8),
+    ('data/silva/lsu.tsv', 9),
 ])
 def test_parses_all_data(filename, count):
     with open(filename, 'r') as raw:
@@ -69,4 +70,48 @@ def test_parses_data_correctly():
             pubs.reference('doi:10.1093/nar/gks1219'),
         ],
         description = 'uncultured eukaryote bacterial SSU rRNA',
+    )
+
+
+def test_can_parse_lsu_data_correctly():
+    with open('data/silva/lsu.tsv', 'r') as raw:
+        val = next(parser.parse(raw))
+
+    assert val == data.Entry(
+        primary_id='SILVA:KF848653.1:<1..>566',
+        accession='SILVA:KF848653.1:<1..>566',
+        ncbi_tax_id=1928361,
+        database='SILVA',
+        sequence=(
+            'AAGCGCCGCAAGGTGCACCCAGAAACCCTTTGTGAACTTATACCTACATCGTTGCCTCGG'
+            'CGCTGGCTGCCCCTCCCGCCCTGGGAGGGGGCCCGCCTCTGGTCGTAAAAACCCAGGGGA'
+            'GGACAGCAGGCCCGCCGGCGGCCCAATTAACTCTTGTATTTACTGAGTAAAATCTGAGTA'
+            'AGCTTCTAAATGAATCAAAACTTTCAACAACGGATCTCTTGGTTCTGGCATCGATGAAGA'
+            'ACGCAGCGAAATGCGATAAGTAATGTGAATTGCAGAATTCAGTGAATCATCGAATCTTTG'
+            'AACGCACATTGCGCCCTCTGGTATTCCAGAGGGCATGCCTGTTCGAGCGTCATTTCAACC'
+            'CTCAAGCCTTGCTTGGTGTTGGGGCATTACCTGAGACCGCCTCCGGGCGGGCCGGGTAAG'
+            'CCCTGAAATTTAGTGGCGAGCTCGCCAGGACTCCGAGCGCAGTAGTAAAACCCTCGCTTT'
+            'GGACTGTACTGGCGCGGCCCTGCCGTAAAACCCCCAACTTCTGAAAATTTGACCTCGGAT'
+            'CAGGTAGGAATACCCGCTGAACTTAA'
+        ),
+        regions=[],
+        rna_type='SO:0000653',
+        url='https://www.arb-silva.de/browser/lsu/KF848653',
+        seq_version='1',
+        inference=(
+            'Eukaryota; Amorphea; Obazoa; Opisthokonta; Nucletmycea; Fungi; '
+            'Dikarya; Ascomycota; Pezizomycotina; Sordariomycetes; Hypocreales; '
+            'Nectriaceae; Fusarium'
+        ),
+        common_name=None,
+        species='Cytospora ceratosperma',
+        lineage=(
+            'Eukaryota; Fungi; Dikarya; Ascomycota; Pezizomycotina; '
+            'Sordariomycetes; Sordariomycetidae; Diaporthales; Valsaceae; '
+            'Cytospora; Cytospora ceratosperma'
+        ),
+        references=[
+            pubs.reference('doi:10.1093/nar/gks1219'),
+        ],
+        description='Cytospora ceratosperma eukaryotic LSU rRNA',
     )
