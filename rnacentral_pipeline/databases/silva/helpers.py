@@ -14,6 +14,7 @@ limitations under the License.
 """
 
 import re
+import logging
 import typing as ty
 import operator as op
 
@@ -41,6 +42,9 @@ RRNA_NAME_MAPPING = {
     'small_subunit_rRNA': 'SSU rRNA',
     
 }
+
+LOGGER = logging.getLogger(__name__)
+
 
 def primary_id(row) -> str:
     return 'SILVA:%s:%s' % (row['insdcAccession'], row['location'])
@@ -114,5 +118,8 @@ def as_entry(row) -> ty.Optional[data.Entry]:
             inference=inference(row),
             description=description(row),
         )
+    except phy.FailedTaxonId:
+        LOGGER.warning("Could not get phylogeny info for %s", row)
+        return None
     except phy.UnknownTaxonId:
         return None

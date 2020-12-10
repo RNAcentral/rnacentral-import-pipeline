@@ -104,6 +104,9 @@ def gtrnadb_entries(data):
                 gene_synonyms=data.get('synonyms', []),
                 references=helpers.references(),
             )
+        except phy.FailedTaxonId:
+            LOGGER.warning("Could not get phylogeny info for %s", data)
+            break
         except phy.UnknownTaxonId:
             LOGGER.warning("Unknown taxon id in %s", data)
             break
