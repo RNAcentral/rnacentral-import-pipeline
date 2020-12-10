@@ -1,5 +1,6 @@
 process fetch_single_files {
   tag { "$name" }
+  clusterOptions '-sp 100'
 
   input:
   tuple val(name), val(remote)
@@ -32,6 +33,7 @@ process fetch_single_files {
 
 process find_wgs_directories {
   when { params.databases.ena.run }
+  clusterOptions '-sp 100'
 
   output:
   path('paths')
@@ -45,6 +47,7 @@ process find_wgs_directories {
 
 process fetch_wgs_directories {
   tag { "${file(to_fetch).name}" }
+  clusterOptions '-sp 90'
 
   input:
   val(to_fetch)
@@ -71,6 +74,7 @@ process fetch_wgs_directories {
 
 process fetch_metadata {
   when { params.databases.ena.run }
+  clusterOptions '-sp 100'
 
   input:
   path(urls)
