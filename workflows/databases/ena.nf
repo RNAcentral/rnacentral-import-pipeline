@@ -1,5 +1,6 @@
 process fetch_single_files {
   tag { "$name" }
+  when { params.databases.ena.run }
   clusterOptions '-sp 100'
 
   input:
