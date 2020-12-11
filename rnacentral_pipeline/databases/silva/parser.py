@@ -20,7 +20,7 @@ from rnacentral_pipeline.databases.data import Entry
 from rnacentral_pipeline.databases.silva import helpers
 
 
-def parse(handle) -> ty.Iterable[Entry]:
+def parse(handle, taxonomy) -> ty.Iterable[Entry]:
     reader = csv.DictReader(handle, delimiter='\t')
-    entries = map(helpers.as_entry, reader)
+    entries = map(lambda r: helpers.as_entry(taxonomy, r), reader)
     return filter(None, entries)

@@ -28,7 +28,6 @@ from rnacentral_pipeline.databases.lncbook import parser as lncbook
 from rnacentral_pipeline.databases.ncbi.gene import parser as ncbi_gene
 from rnacentral_pipeline.databases.quickgo import parser as quickgo
 from rnacentral_pipeline.databases.refseq import parser as refseq
-from rnacentral_pipeline.databases.silva import parser as silva
 from rnacentral_pipeline.writers import write_entries
 from rnacentral_pipeline.writers import \
     write_ontology_annotations as onto_writer
@@ -125,17 +124,6 @@ def process_rfam(rfam_file, mapping_file, output):
     Process Rfam's JSON format into the files to import.
     """
     write_entries(rfam.parser.parse, output, rfam_file, mapping_file)
-
-
-@cli.command("silva")
-@click.argument("silva-file", type=click.File("r"))
-@click.argument(
-    "output",
-    default=".",
-    type=click.Path(writable=True, dir_okay=True, file_okay=False,),
-)
-def process_silva(silva_file, output):
-    write_entries(silva.parse, output, silva_file)
 
 
 @cli.command("gtrnadb")

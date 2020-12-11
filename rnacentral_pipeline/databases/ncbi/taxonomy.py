@@ -25,6 +25,8 @@ import attr
 from attr.validators import optional
 from attr.validators import instance_of as is_a
 
+from sqlitedict import SqliteDict
+
 
 NAME_ALIASES = {
     'common name',
@@ -106,11 +108,23 @@ def parse(handle, names_handle, merged_handle):
             )
 
 
-def write(directory, output):
+def parse_directory(directory):
     names = ['fullnamelineage.dmp', 'names.dmp', 'merged.dmp']
     filenames = [os.path.join(directory, name) for name in names]
     with ExitStack() as stack:
         files = [stack.enter_context(open(f)) for f in filenames]
-        writer = csv.writer(output)
         for tax_entry in parse(*files):  # pylint: disable=star-args
-            writer.writerows(tax_entry.writeable())
+            yield tax_entry
+
+
+def write(directory, output):
+    writer = csv.writer(output)
+    for entry in parse_directory(directory):
+        writer.writerows(tax_entry.writeable())
+
+
+def index(directory, output):
+    mapping = SqliteDict(filename=output)
+    for entry in parse_directory(directory):
+        mapping[str(entry.taxid)] = mapping
+    mapping.commit()
