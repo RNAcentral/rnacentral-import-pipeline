@@ -13,6 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import logging
 from pathlib import Path
 import typing as ty
 
@@ -20,8 +21,10 @@ import ijson
 from sqlitedict import SqliteDict
 
 from rnacentral_pipeline.databases import data
+import rnacentral_pipeline.databases.helpers.phylogeny as phy
 from rnacentral_pipeline.databases.generic import v1
 
+LOGGER = logging.getLogger(__name__)
 
 def load_known(path: Path) -> SqliteDict:
     known = SqliteDict()
@@ -41,7 +44,11 @@ def parse(path: Path, known_path: Path) -> ty.Iterable[data.Entry]:
 
     with path.open('r') as handle:
         for raw in ijson.items(handle, "data.item"):
-            entry = v1.as_entry(raw, ctx)
+            try:
+                entry = v1.as_entry(raw, ctx)
+            except phy.FailedTaxonId:
+                LOGGER.warn("Could not fetch taxonomic info for %s", raw)
+                continue
             if entry.md5() in known:
                 yield entry
     known.close()

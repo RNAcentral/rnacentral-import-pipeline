@@ -14,6 +14,7 @@ limitations under the License.
 """
 
 import csv
+from pathlib import Path
 
 import click
 
@@ -53,10 +54,10 @@ def vert_url(division, ftp, output):
 
 
 @cli.command('parse')
-@click.option("--family-file", type=click.Path(file_okay=True, dir_okay=False, readable=True))
+@click.option("--family-file", default=None, type=click.Path(file_okay=True, dir_okay=False, readable=True))
 @click.argument('division', type=click.Choice(Division.names(), case_sensitive=False))
 @click.argument("embl_file", type=click.File("r"))
-@click.argument("gff_file", type=click.File("r"))
+@click.argument("gff_file", type=click.Path())
 @click.argument(
     "output",
     default=".",
@@ -67,6 +68,9 @@ def parse_data(division, embl_file, gff_file, output, family_file=None):
     This will parse EMBL files from Ensembl to produce the expected CSV files.
     """
     division = Division.from_name(division)
+    gff_file = Path(gff_file)
+    if family_file:
+        family_file = Path(family_file)
     write_entries(
         parser.parse, output, division, embl_file, gff_file, family_file=family_file,
     )

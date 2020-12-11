@@ -12,8 +12,7 @@ process fetch_metadata {
     --host ${params.connections.rfam.host} \
     --port ${params.connections.rfam.port} \
     --user ${params.connections.rfam.user} \
-    --database ${params.connections.rfam.database} \
-    ${query} > families.tsv
+    --database ${params.connections.rfam.database} < ${query} > families.tsv
   """
 }
 
@@ -38,11 +37,13 @@ process fetch_species_data {
   tuple val(name), val(dat_path), val(gff_path)
 
   output:
-  tuple val(name), path("*.dat"), path('*.gff')
+  tuple val(name), path("*.dat"), path("${name}.gff")
 
   """
   wget '$dat_path'
   wget '$gff_path'
+  zgrep '^#' *.gff.gz | grep -v '^###$' > $name.gff
+  zcat *.gff.gz | awk '{ if (\$3 !~ /CDS/) { print \$0 } }' >> ${name}.gff
   gzip -d *.gz
   """
 }
@@ -57,7 +58,7 @@ process parse_data {
   path('*.csv')
 
   """
-  rnac ensembl vertebrates parse $embl $gff $rfam .
+  rnac ensembl vertebrates parse --family-file $rfam $embl $gff .
   """
 }
 

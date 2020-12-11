@@ -42,12 +42,15 @@ class Context:
     gff = attr.ib(validator=is_a(SqliteDict))
 
     @classmethod
-    def build(cls, family_file, gff_file, excluded_file=None):
+    def build(cls, gff_file, family_file=None, excluded_file=None):
         """
         Create a Context, by parsing the family file (families from Rfam), and
         the gencode_file (gff3 file from GENCODE) and excluded_file a list of
         Ensembl Ids to ignore.
         """
+
+        if not family_file:
+            raise ValueError("Must give family file for E!vert")
 
         with open(family_file, 'r') as raw:
             supressed_mapping = rfutils.name_to_suppression(raw)
@@ -95,7 +98,7 @@ class Context:
         return False
 
     def from_gencode(self, entry: data.Entry) -> bool:
-        return self.gff[entry.accession].from_gencode
+        return self.gff[entry.primary_id].from_gencode
 
     def is_excluded(self, entry: data.Entry) -> bool:
         return entry.accession in self.excluded

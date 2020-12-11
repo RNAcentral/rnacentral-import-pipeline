@@ -37,7 +37,7 @@ IGNORE_FEATURES = {
 }
 
 
-def as_entry(record, gene, feature, context: Context) -> data.Entry:
+def as_entry(record, gene, feature, context: Context) -> ty.Optional[data.Entry]:
     """
     Turn the Record, Gene feature, transcript feature and Context into a Entry
     object for output.
@@ -52,9 +52,9 @@ def as_entry(record, gene, feature, context: Context) -> data.Entry:
         LOGGER.exception(err)
         return None
 
-    pid = primary_id(feature)
+    pid = helpers.primary_id(feature)
     if pid not in context.gff:
-        raise ValueError(f"Cannot find transcript info for {feature}")
+        raise ValueError(f"Cannot find transcript info for {pid}: {feature}")
     info = context.gff[pid]
 
     entry = data.Entry(
@@ -114,7 +114,11 @@ def ncrnas(raw, context: Context) -> ty.Iterable[data.Entry]:
                 continue
 
             entry = as_entry(record, current_gene, feature, context)
-            if not entry or context.is_supressed(entry):
+            if not entry:
+                LOGGER.warn("COuld not parse %s" % feature)
+                continue
+
+            if context.is_supressed(entry):
                 LOGGER.debug("Skipping supressed Rfam family %s", feature)
                 continue
 
@@ -125,18 +129,16 @@ def ncrnas(raw, context: Context) -> ty.Iterable[data.Entry]:
             yield entry
 
 
-def parse(raw, family_file, gff_file, gencode_file=None, excluded_file=None) -> ty.Iterable[data.Entry]:
+def parse(raw, gff_file, family_file=None, excluded_file=None) -> ty.Iterable[data.Entry]:
     """
     This will parse an EMBL file for all Ensembl Entries to import.
     """
 
-    context = Context.build(
-        family_file, gff_file, gencode_file=gencode_file, excluded_file=excluded_file,
-    )
+    context = Context.build(gff_file, family_file=family_file, excluded_file=excluded_file)
     loaded = ncrnas(raw, context)
     grouped = it.groupby(loaded, op.attrgetter("gene"))
-    for _, related in grouped:
-        related = list(related)
+    for _, entries in grouped:
+        related = list(entries)
         for entry in helpers.generate_related(related):
             yield entry
 
