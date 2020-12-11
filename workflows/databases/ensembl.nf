@@ -1,5 +1,5 @@
 process fetch_metadata {
-  when { params.databases.ensembl.run }
+  when { params.databases.ensembl.vertebrates.run }
 
   input:
   path(rfam_query)
@@ -17,7 +17,7 @@ process fetch_metadata {
 }
 
 process find_urls {
-  when { params.databases.ensembl.run }
+  when { params.databases.ensembl.vertebrates.run }
 
   input:
   val(remote)

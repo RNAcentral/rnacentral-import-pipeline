@@ -1,5 +1,5 @@
 process assemblies {
-  when { params.databases.ensembl.run }
+  when { params.databases.ensembl.vertebrates.run }
 
   input:
   path(connections)
@@ -16,7 +16,7 @@ process assemblies {
 }
 
 process fetch_compara {
-  when { params.databases.ensembl.run }
+  when { params.databases.ensembl.vertebrates.run }
 
   output:
   path('*.nt.fasta.gz')
@@ -41,7 +41,7 @@ process process_compara {
 }
 
 process proteins {
-  when { params.databases.ensembl.run || params.databases.tarbase.run || params.databases.lncbase.run }
+  when { params.databases.ensembl.vertebrates.run || params.databases.tarbase.run || params.databases.lncbase.run }
 
   input:
   path(connections)
@@ -56,7 +56,7 @@ process proteins {
 }
 
 process coordinate_systems {
-  when { params.databases.ensembl.run }
+  when { params.databases.ensembl.vertebrates.run }
 
   input:
   path(connections)
@@ -72,7 +72,7 @@ process coordinate_systems {
 
 process karyotypes {
   memory '8GB'
-  when { params.databases.ensembl.run }
+  when { params.databases.ensembl.vertebrates.run }
 
   output:
   path('karyotypes.csv')
