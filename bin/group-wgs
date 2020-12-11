@@ -7,6 +7,7 @@ filename="$1"
 original="$2"
 directory="$3"
 
-base="$(basename "$filename")"
+hash="$(md5sum "$filename" | awk '{ print $1 }')"
+final_name="$original-$hash.ncr.gz"
 
-cat "$filename" | xargs -I {} cat {} > "$directory/$original-$base.ncr.gz"
+xargs -a "$filename" -I {} cat {} > "$directory/$final_name"
