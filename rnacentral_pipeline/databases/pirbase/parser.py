@@ -44,11 +44,7 @@ def parse(path: Path, known_path: Path) -> ty.Iterable[data.Entry]:
 
     with path.open('r') as handle:
         for raw in ijson.items(handle, "data.item"):
-            try:
-                entry = v1.as_entry(raw, ctx)
-            except phy.FailedTaxonId:
-                LOGGER.warn("Could not fetch taxonomic info for %s", raw)
-                continue
+            entry = v1.as_entry(raw, ctx)
             if entry.md5() in known:
                 yield entry
     known.close()

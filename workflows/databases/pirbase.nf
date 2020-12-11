@@ -27,6 +27,7 @@ process find_known {
 process parse_data {
   tag { "${url.split('/').last()}" }
   memory '5GB'
+  errorStrategy 'ignore'
 
   input:
   tuple val(url), path(known)
@@ -49,6 +50,7 @@ workflow pirbase {
     find_urls \
     | splitCsv \
     | map { row -> row[0] } \
+    | filter { url -> url.contains('piRBase_tbe.json') } \
     | combine(find_known(query)) \
     | parse_data \
     | flatten \
