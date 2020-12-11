@@ -2,10 +2,11 @@ process fetch {
   when { params.databases.silva.run }
 
   output:
-  path('*.rnac.gz')
+  path('*.rnac')
 
   """
   wget $params.databases.silva.remote
+  gzip -d '*.gz'
   """
 }
 
@@ -19,7 +20,7 @@ process parse {
   path('*.csv')
 
   """
-  zcat $raw | rnac external silva - .
+  rnac external silva $raw .
   """
 }
 
