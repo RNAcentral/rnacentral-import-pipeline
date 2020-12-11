@@ -83,28 +83,27 @@ def rna_type(row) -> str:
     raise ValueError("Unknown RNA type")
 
 
-def lineage(row) -> str:
-    return phy.lineage(taxid(row))
+def lineage(taxonomy, row) -> str:
+    tid = taxid(row)
+    if tid in taxonomy:
+        return taxonomy[tid].lineage
+    return phy.lineage(tid)
 
 
-def species(row) -> str:
-    return phy.species(taxid(row))
+def species(taxonomy, row) -> str:
+    tid = taxid(row)
+    if tid in taxonomy:
+        return taxonomy[tid].name
+    return phy.species(tid)
 
 
-def common_name(row) -> str:
-    return phy.common_name(taxid(row))
-
-
-def description(row) -> str:
-    organism = species(row)
-    common = common_name(row)
-    if common:
-        organism += f' {common}'
+def description(taxonomy, row) -> str:
+    organism = species(taxonomy, row)
     rrna = RRNA_NAME_MAPPING[row['type']]
     return f'{organism} {rrna}'
 
 
-def as_entry(row) -> ty.Optional[data.Entry]:
+def as_entry(taxonomy, row) -> ty.Optional[data.Entry]:
     try:
         return data.Entry(
             primary_id=primary_id(row),
@@ -116,14 +115,13 @@ def as_entry(row) -> ty.Optional[data.Entry]:
             rna_type=rna_type(row),
             url=url(row),
             seq_version=version(row),
-            common_name=common_name(row),
-            species=species(row),
-            lineage=lineage(row),
+            species=species(taxonomy, row),
+            lineage=lineage(taxonomy, row),
             references=[
                 pubs.reference('doi:10.1093/nar/gks1219'),
             ],
             inference=inference(row),
-            description=description(row),
+            description=description(taxonomy, row),
         )
     except phy.FailedTaxonId:
         LOGGER.warning("Could not get phylogeny info for %s", row)
