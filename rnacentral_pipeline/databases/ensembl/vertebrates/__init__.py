@@ -24,5 +24,5 @@ def urls_for(base: str) -> ty.Iterable[ty.Tuple[str, str, str]]:
     return urls.urls_for(base)
 
 
-def parse(raw, family_file, gff_file)-> ty.Iterable[Entry]:
-    return parser.parse(raw, family_file, gff_file)
+def parse(raw, gff_file, family_file=None)-> ty.Iterable[Entry]:
+    return parser.parse(raw, gff_file, family_file=family_file)
