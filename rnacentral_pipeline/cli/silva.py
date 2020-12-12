@@ -34,9 +34,8 @@ def cli():
     default=".",
     type=click.Path(writable=True, dir_okay=True, file_okay=False,),
 )
-def process_silva(silva_file, taxonomy output):
+def process_silva(silva_file, taxonomy, output):
     write_entries(silva.parse, output, silva_file, taxonomy)
-
 
 
 @cli.command('index-taxonomy')
