@@ -42,7 +42,7 @@ process fetch_species_data {
   """
   wget '$dat_path'
   wget '$gff_path'
-  zgrep '^#' *.gff.gz | grep -v '^###$' > $name.gff
+  zgrep '^#' *.gff.gz | grep -v '^###\$' > $name.gff
   zcat *.gff.gz | awk '{ if (\$3 !~ /CDS/) { print \$0 } }' >> ${name}.gff
   gzip -d *.gz
   """
