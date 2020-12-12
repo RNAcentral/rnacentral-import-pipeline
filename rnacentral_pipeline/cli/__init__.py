@@ -37,6 +37,7 @@ from rnacentral_pipeline.cli import (
     r2dt,
     rfam,
     search_export,
+    silva,
     text_mining,
     zfin,
 )
@@ -85,5 +86,6 @@ cli.add_command(qa.cli)
 cli.add_command(r2dt.cli)
 cli.add_command(rfam.cli)
 cli.add_command(search_export.cli)
+cli.add_command(sliva.cli)
 cli.add_command(text_mining.cli)
 cli.add_command(zfin.cli)
