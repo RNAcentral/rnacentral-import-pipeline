@@ -22,7 +22,7 @@ process fetch_compara {
   path('*.nt.fasta.gz')
 
   """
-  wget '$params.metadata.ensembl_compara.inputs.fasta'
+  wget '$params.databases.ensembl.compara.remote'
   """
 }
 
