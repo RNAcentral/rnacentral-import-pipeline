@@ -50,7 +50,7 @@ workflow pirbase {
     find_urls \
     | splitCsv \
     | map { row -> row[0] } \
-    | filter { url -> url.contains('piRBase_tbe.json') } \
+    | filter { url -> !url.contains('piRBase_tbe.json') } \
     | combine(find_known(query)) \
     | parse_data \
     | flatten \
