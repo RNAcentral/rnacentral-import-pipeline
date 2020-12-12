@@ -1,5 +1,5 @@
 process generic {
-  when { params.databases.ensembl.run || params.databases.rfam.run }
+  when { params.databases.ensembl.vertebrates.run || params.databases.rfam.run }
 
   input:
   tuple val(name), path(query)
