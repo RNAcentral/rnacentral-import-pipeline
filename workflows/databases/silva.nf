@@ -6,7 +6,7 @@ process fetch {
 
   """
   wget $params.databases.silva.remote
-  gzip -d '*.gz'
+  gzip -d *.gz
   """
 }
 

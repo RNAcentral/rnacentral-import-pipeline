@@ -14,9 +14,11 @@ limitations under the License.
 """
 
 import click
+from pathlib import Path
 
 from rnacentral_pipeline.databases.ncbi import taxonomy
 from rnacentral_pipeline.databases.silva import parser as silva
+from rnacentral_pipeline.writers import write_entries
 
 
 @click.group("silva")
@@ -46,4 +48,4 @@ def process_silva(silva_file, taxonomy, output):
 ))
 @click.argument('output', type=click.Path())
 def index_taxonomy(ncbi, output):
-    taxonomy.index(ncbi, output)
+    taxonomy.index(Path(ncbi), output)

@@ -18,16 +18,16 @@ process fetch_single_files {
     --exclude='*.fasta.gz' \
     "$remote" "$name"
 
-  find . -type f -empty -delete
-  find . -type f | xargs -I {} gzip --quiet -l {} | awk '{ if (\$2 == 0) print \$4 }' | xargs -I {} rm {}.gz
+  find $name -type f -empty -delete
+  find $name -type f | xargs -I {} gzip --quiet -l {} | awk '{ if (\$2 == 0) print \$4 }' | xargs -I {} rm {}.gz
 
-  find . -type f |\
+  find $name -type f |\
   xargs -I {} zgrep -Hc '^ID' {} |\
   awk -F ':' '{ if (\$2 > 100000) print \$1 }' |\
   xargs -I {} gzip -d {}
 
   mkdir large-splits
-  find . -type f -name '*.ncr' | xargs -I {} split-ena --max-sequences 20000 --remove-file {} large-splits
+  find $name -type f -name '*.ncr' | xargs -I {} split-ena --max-sequences $params.databases.ena.large_chunk_size --remove-file {} large-splits
   find large-splits -type f | xargs -I {} gzip {}
   """
 }
