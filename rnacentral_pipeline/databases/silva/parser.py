@@ -16,11 +16,14 @@ limitations under the License.
 import csv
 import typing as ty
 
+from sqlitedict import SqliteDict
+
 from rnacentral_pipeline.databases.data import Entry
 from rnacentral_pipeline.databases.silva import helpers
 
 
-def parse(handle, taxonomy) -> ty.Iterable[Entry]:
+def parse(handle, taxonomy_path) -> ty.Iterable[Entry]:
+    taxonomy = SqliteDict(filename=taxonomy_path)
     reader = csv.DictReader(handle, delimiter='\t')
     entries = map(lambda r: helpers.as_entry(taxonomy, r), reader)
     return filter(None, entries)

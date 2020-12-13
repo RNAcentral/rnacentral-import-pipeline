@@ -17,6 +17,8 @@ import os
 import csv
 import json
 import operator as op
+from pathlib import Path
+import typing as ty
 import itertools as it
 import collections as col
 from contextlib import ExitStack
@@ -108,23 +110,22 @@ def parse(handle, names_handle, merged_handle):
             )
 
 
-def parse_directory(directory):
+def parse_directory(directory: Path) -> ty.Iterable[TaxonomyEntry]:
     names = ['fullnamelineage.dmp', 'names.dmp', 'merged.dmp']
     filenames = [os.path.join(directory, name) for name in names]
     with ExitStack() as stack:
         files = [stack.enter_context(open(f)) for f in filenames]
-        for tax_entry in parse(*files):  # pylint: disable=star-args
-            yield tax_entry
+        yield from parse(*files)
 
 
-def write(directory, output):
+def write(directory: Path, output):
     writer = csv.writer(output)
     for entry in parse_directory(directory):
-        writer.writerows(tax_entry.writeable())
+        writer.writerows(entry.writeable())
 
 
-def index(directory, output):
+def index(directory: Path, output: str):
     mapping = SqliteDict(filename=output)
     for entry in parse_directory(directory):
-        mapping[str(entry.taxid)] = mapping
+        mapping[str(entry.tax_id)] = entry
     mapping.commit()
