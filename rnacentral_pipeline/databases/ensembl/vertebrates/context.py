@@ -98,6 +98,8 @@ class Context:
         return False
 
     def from_gencode(self, entry: data.Entry) -> bool:
+        if entry.primary_id not in self.gff:
+            return False
         return self.gff[entry.primary_id].from_gencode
 
     def is_excluded(self, entry: data.Entry) -> bool:
