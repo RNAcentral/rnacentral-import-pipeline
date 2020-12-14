@@ -49,8 +49,8 @@ def generate_paths(base: str, release: str, handle) -> ty.Iterable[ty.Tuple[str,
         url_name = info['url_name']
         assembly = entry['assembly']['assembly_default']
         organism_name = f"{url_name}.{assembly}.{release_id}"
-        gff_path = f"{base}/pub/{release}/gff3/{name}/{organism_name}.gff3.gz"
-        data_files = f"{base}/pub/{release}/embl/{name}/{organism_name}.*.dat.gz"
+        gff_path = f"{base}/{release}/gff3/{name}/{organism_name}.gff3.gz"
+        data_files = f"{base}/{release}/embl/{name}/{organism_name}.*.dat.gz"
         yield (name, data_files, gff_path)
 
 
