@@ -14,11 +14,12 @@ limitations under the License.
 """
 
 import re
+import typing as ty
 import collections as coll
 
 from Bio import SeqIO
 
-from rnacentral_pipeline.databases.data import Exon, Reference
+from rnacentral_pipeline.databases import data
 import rnacentral_pipeline.databases.helpers.phylogeny as phy
 import rnacentral_pipeline.databases.helpers.publications as pubs
 
@@ -45,7 +46,7 @@ class MissingSource(Exception):
     pass
 
 
-def grouped_annotations(raw, split):
+def grouped_annotations(raw, split) -> ty.Dict[str, ty.List[str]]:
     """
     Parse a raw string into a dict. This will produce a key value mappign where
     the key is everything before the first split and values is everything
@@ -64,7 +65,7 @@ def grouped_annotations(raw, split):
     return {k: sorted(v) for k, v in parsed.items()}
 
 
-def qualifier_value(feature, name, pattern, max_allowed=1):
+def qualifier_value(feature, name, pattern, max_allowed=1) -> ty.Optional[str]:
     """
     This will parse the qualifier field defined by the given name for the given
     feature. This will extract all values matching the given regex pattern. If
@@ -88,7 +89,7 @@ def qualifier_value(feature, name, pattern, max_allowed=1):
     return values
 
 
-def qualifier_string(feature, name, separator=' '):
+def qualifier_string(feature, name, separator=' ') -> ty.Optional[str]:
     """
     Extract the qualifier values and then join all results with the given
     separator, default ' '.
@@ -100,7 +101,7 @@ def qualifier_string(feature, name, separator=' '):
     return separator.join(values)
 
 
-def source_qualifier_value(record, qualifier, pattern=r'^(.+)$', **kwargs):
+def source_qualifier_value(record, qualifier, pattern=r'^(.+)$', **kwargs) -> ty.List[str]:
     source = source_feature(record)
     return qualifier_value(source, qualifier, pattern, **kwargs)
 
@@ -117,7 +118,7 @@ def source_feature(record):
     return source
 
 
-def taxid(record):
+def taxid(record) -> int:
     """
     Get the taxon id of the given record. This will pull the first feature,
     which must be of the 'source' type to do so.
@@ -134,7 +135,7 @@ def taxid(record):
     return value
 
 
-def common_name(record):
+def common_name(record) -> str:
     """
     Look up the common name of the record. This will use the taxid to pull an
     annotated common_name.
@@ -142,7 +143,7 @@ def common_name(record):
     return phy.common_name(taxid(record))
 
 
-def species(record):
+def species(record) -> str:
     """
     Get the species from the record. This will use the taxid to pull the
     species, and will not use the annotated species.
@@ -150,14 +151,14 @@ def species(record):
     return phy.species(taxid(record))
 
 
-def organism(record):
+def organism(record) -> str:
     """
     Get the annotated organism in the record.
     """
     return record.qualifiers['organism']
 
 
-def lineage(record):
+def lineage(record) -> str:
     """
     Extract the taxon id and then query a remote server for the lineage for the
     given taxon id. Results are cached because it is common to constantly query
@@ -166,7 +167,7 @@ def lineage(record):
     return phy.lineage(taxid(record))
 
 
-def project(record):
+def project(record) -> ty.Optional[str]:
     """
     Get the annotated project xref if one exists.
     """
@@ -177,43 +178,14 @@ def project(record):
     return None
 
 
-def description(record):
+def description(record) -> str:
     """
     Get the description of this record.
     """
     return record.description
 
 
-def as_exon(record, location):
-    """
-    Turn a Biopython location object in a record to an Exon.
-    """
-
-    accession = record.annotations['accessions'][0]
-    parts = accession.split(':')
-    assembly_id = parts[1]
-    chromosome_name = parts[2]
-    return Exon(
-        chromosome_name=chromosome_name,
-        primary_start=location.start + 1,
-        primary_end=int(location.end),
-        assembly_id=assembly_id,
-        complement=location.strand == -1,
-    )
-
-
-def exons(record, feature):
-    """
-    Turn all parts of the location into a list of exons to import.
-    """
-
-    parts = [feature.location]
-    if hasattr(feature.location, 'parts'):
-        parts = feature.location.parts
-    return [as_exon(record, l) for l in parts]
-
-
-def experiment(feature):
+def experiment(feature) -> ty.Optional[str]:
     """
     Lookup the annotated experiment information.
     """
@@ -221,7 +193,7 @@ def experiment(feature):
     return qualifier_string(feature, 'experiment')
 
 
-def inference(feature):
+def inference(feature) -> ty.Optional[str]:
     """
     Look up the annotated inference information. THis will return a single ' '
     separate string of all inferences.

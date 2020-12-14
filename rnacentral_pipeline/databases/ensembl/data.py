@@ -25,6 +25,8 @@ from sqlitedict import SqliteDict
 
 from rnacentral_pipeline.databases import data
 from rnacentral_pipeline.databases.rfam import utils as rfutils
+from rnacentral_pipeline.databases.helpers import embl
+from rnacentral_pipeline.databases.ensembl.vertebrates import helpers
 
 LOGGER = logging.getLogger(__name__)
 
@@ -59,3 +61,12 @@ class TranscriptInfo:
     so_rna_type = attr.ib(validator=is_a(str))
     regions: ty.List[data.SequenceRegion] = attr.ib(validator=is_a(list))
     from_gencode = attr.ib(validator=is_a(bool))
+
+    @classmethod
+    def from_feature(cls, record, feature) -> "TranscriptInfo":
+        so_term = data.as_so_term(embl.rna_type(feature))
+        return cls(
+            so_rna_type=so_term,
+            regions=helpers.regions(record, feature),
+            from_gencode=False,
+        )
