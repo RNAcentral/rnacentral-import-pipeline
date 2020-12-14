@@ -1,4 +1,5 @@
 process generic {
+  tag { "$name" }
   when { params.databases.ensembl.vertebrates.run || params.databases.rfam.run }
 
   input:
@@ -24,7 +25,7 @@ workflow rfam {
   emit: data
   main:
     Channel.fromPath('files/import-data/rfam/{clans,families,ontology-terms}.sql') \
-    | map { fn -> [fn.name, fn] } \
+    | map { fn -> [fn.baseName, fn] } \
     | generic \
     | flatten \
     | set { data }
