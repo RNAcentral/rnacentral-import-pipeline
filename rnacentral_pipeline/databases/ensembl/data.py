@@ -23,10 +23,11 @@ from attr.validators import instance_of as is_a
 
 from sqlitedict import SqliteDict
 
-from rnacentral_pipeline.databases import data
+from rnacentral_pipeline.databases.data import SequenceRegion
+from rnacentral_pipeline.databases.data.utils import as_so_term
 from rnacentral_pipeline.databases.rfam import utils as rfutils
 from rnacentral_pipeline.databases.helpers import embl
-from rnacentral_pipeline.databases.ensembl.vertebrates import helpers
+from rnacentral_pipeline.databases.ensembl import helpers
 
 LOGGER = logging.getLogger(__name__)
 
@@ -59,12 +60,12 @@ class Division(enum.Enum):
 @attr.s()
 class TranscriptInfo:
     so_rna_type = attr.ib(validator=is_a(str))
-    regions: ty.List[data.SequenceRegion] = attr.ib(validator=is_a(list))
+    regions: ty.List[SequenceRegion] = attr.ib(validator=is_a(list))
     from_gencode = attr.ib(validator=is_a(bool))
 
     @classmethod
     def from_feature(cls, record, feature) -> "TranscriptInfo":
-        so_term = data.as_so_term(embl.rna_type(feature))
+        so_term = as_so_term(embl.rna_type(feature))
         return cls(
             so_rna_type=so_term,
             regions=helpers.regions(record, feature),

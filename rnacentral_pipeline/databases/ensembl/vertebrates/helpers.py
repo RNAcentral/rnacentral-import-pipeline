@@ -43,47 +43,6 @@ class CouldNotTrimDescription(Exception):
     pass
 
 
-def as_exon(location):
-    """
-    Build an Exon from a biopython location object.
-    """
-
-    return data.Exon(start=location.start + 1, stop=int(location.end))
-
-
-def as_exons(feature):
-    """
-    Determine all Exons in this feature.
-    """
-
-    parts = [feature.location]
-    if hasattr(feature.location, 'parts'):
-        parts = feature.location.parts
-
-    strand = parts[0].strand
-    return strand, [as_exon(l) for l in parts]
-
-
-def regions(record, feature):
-    accessions = record.annotations['accessions']
-    if len(accessions) > 1 and accessions[0][-1] == '-':
-        accessions = [''.join(accessions)]
-    acc = accessions[0]
-    assert ':' in acc, "Invalid accession (%s) for %s" % (acc, record)
-    parts = acc.split(':')
-    assembly_id = parts[1]
-    chromosome_name = parts[2]
-
-    strand, exons = as_exons(feature)
-    return [data.SequenceRegion(
-        chromosome=chromosome_name,
-        strand=strand,
-        exons=exons,
-        assembly_id=assembly_id,
-        coordinate_system=data.CoordinateSystem.one_based(),
-    )]
-
-
 def references():
     """
     Get the standard reference for all Ensembl entries.
