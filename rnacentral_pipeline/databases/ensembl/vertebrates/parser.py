@@ -60,7 +60,8 @@ def as_entry(record, gene, feature, context: Context, is_nonchromosomal=False) -
         if is_nonchromosomal:
             info = TranscriptInfo.from_feature(record, feature)
         else:
-            raise ValueError(f"Cannot find transcript info for {pid}: {feature}")
+            LOGGER.warn("Cannot find transcript info for %s: %s", pid, feature)
+            return None
 
     entry = data.Entry(
         primary_id=pid,
