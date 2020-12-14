@@ -2,7 +2,7 @@ process fetch_metadata {
   when { params.databases.ensembl.vertebrates.run }
 
   input:
-  path(rfam_query)
+  path(query)
 
   output:
   path('families.tsv')
@@ -18,20 +18,21 @@ process fetch_metadata {
 
 process find_urls {
   when { params.databases.ensembl.vertebrates.run }
-
-  input:
-  val(remote)
+  memory '20GB'
 
   output:
   path('species.txt')
 
   """
-  rnac ensembl urls-for vertebrates $remote > species.txt
+  rnac ensembl urls-for vertebrates $params.databases.ensembl.vertebrates.ftp_host > species.txt
   """
 }
 
 process fetch_species_data {
   tag { "$name" }
+  errorStrategy 'retry'
+  maxRetries 10
+  maxForks 5
 
   input:
   tuple val(name), val(dat_path), val(gff_path)
@@ -42,14 +43,15 @@ process fetch_species_data {
   """
   wget '$dat_path'
   wget '$gff_path'
-  zgrep '^#' *.gff.gz | grep -v '^###\$' > $name.gff
-  zcat *.gff.gz | awk '{ if (\$3 !~ /CDS/) { print \$0 } }' >> ${name}.gff
+  zgrep '^#' *.gff3.gz | grep -v '^###\$' > ${name}.gff
+  zcat *.gff3.gz | awk '{ if (\$3 !~ /CDS/) { print \$0 } }' >> ${name}.gff
   gzip -d *.gz
   """
 }
 
 process parse_data {
   tag { "$name" }
+  memory { 10.GB }
 
   input:
   tuple val(name), path(embl), path(gff), path(rfam)
@@ -58,7 +60,7 @@ process parse_data {
   path('*.csv')
 
   """
-  rnac ensembl vertebrates parse --family-file $rfam $embl $gff .
+  rnac ensembl parse vertebrates --family-file $rfam $embl $gff .
   """
 }
 
@@ -67,15 +69,14 @@ workflow ensembl {
   main:
     Channel.fromPath('files/import-data/rfam/families.sql') | set { rfam }
 
-    Channel.of(params.databases.ensembl.ftp) \
-    | find_urls \
+    find_urls \
     | splitCsv \
     | filter { name, dat_url, gff_url ->
-      params.databases.ensembl.vertebrates.exclude.any { p -> name.toLowerCase() =~ p }
+      !params.databases.ensembl.vertebrates.exclude.any { p -> name.toLowerCase() =~ p }
     } \
     | fetch_species_data \
     | flatMap { name, dat_files, gff_file ->
-      dat_files.collect { [name, it, gff_file] }
+      (dat_files instanceof ArrayList) ? dat_files.collect { [name, it, gff_file] } : [[name, dat_files, gff_file]]
     } \
     | combine(fetch_metadata(rfam)) \
     | parse_data \
