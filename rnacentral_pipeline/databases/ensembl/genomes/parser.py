@@ -15,16 +15,19 @@ limitations under the License.
 
 import operator as op
 import itertools as it
+import typing as ty
 
 from Bio import SeqIO
 
+from rnacentral_pipeline.databases import data
 from rnacentral_pipeline.databases.helpers import embl
 from rnacentral_pipeline.databases.ensembl.vertebrates import helpers as ensembl
 
-from . import helpers
+from rnacentral_pipeline.databases.ensembl.genomes import helpers
+from rnacentral_pipeline.databases.ensembl.genomes.data import Context
 
 
-def ncrnas(context, handle):
+def ncrnas(context: Context, handle) -> ty.Iterable[data.Entry]:
     for record in SeqIO.parse(handle, 'embl'):
         current_gene = None
         for feature in record.features:
@@ -44,9 +47,8 @@ def ncrnas(context, handle):
             yield helpers.as_entry(context, record, current_gene, feature)
 
 
-def parse(context, handle):
+def parse(context: Context, handle) -> ty.Iterable[data.Entry]:
     data = ncrnas(context, handle)
     grouped = it.groupby(data, op.attrgetter('gene'))
     for gene, related in grouped:
-        for entry in ensembl.generate_related(related):
-            yield entry
+        yield from ensembl.generate_related(related)

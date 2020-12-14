@@ -128,11 +128,12 @@ def xref_data(feature):
 def as_entry(context, record, current_gene, feature):
     species, common_name = ensembl.organism_naming(record)
 
-    pid = primary_id(feature)
-    if pid not in context.gff:
-        raise ValueError(f"Cannot find transcript info for {feature}")
+    pid = helpers.primary_id(feature)
+    if pid in context.gff:
+        info = context.gff[pid]
+    else:
+        info = TranscriptInfo.from_feature(record, feature)
 
-    info = context.gff[pid]
     entry = data.Entry(
         primary_id=pid,
         accession=context.accession(primary_id(feature)),
@@ -140,7 +141,7 @@ def as_entry(context, record, current_gene, feature):
         database=context.database,
         sequence=embl.sequence(record, feature),
         regions=info.regions,
-        so_rna_type=info.so_rna_type,
+        rna_type=info.so_rna_type,
         url='',
         seq_version=seq_version(feature),
         lineage=embl.lineage(record),
