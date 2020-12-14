@@ -12,6 +12,7 @@ process fetch {
 
 process taxonomy_metadata {
   memory '4GB'
+  when { params.databases.silva.run }
 
   output:
   path('taxonomy.db')
