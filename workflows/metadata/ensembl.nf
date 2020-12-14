@@ -27,6 +27,7 @@ process fetch_compara {
 }
 
 process process_compara {
+  tag { "${gz.baseName}" }
   memory '20GB'
 
   input:
@@ -66,7 +67,7 @@ process coordinate_systems {
   path('coordinate_systems.csv')
 
   """
-  rnac ensembl coordinate_systems $connections $query coordinate_systems.csv
+  rnac ensembl coordinate-systems $connections $query coordinate_systems.csv
   """
 }
 
@@ -91,10 +92,10 @@ workflow compara {
 workflow ensembl {
   emit: data
   main:
-    Channel.fromPath('config/connections.json') | set { conn }
+    Channel.fromPath('config/databases.json') | set { conn }
 
     Channel.fromPath('files/import-data/ensembl/proteins.sql') | set { protein_sql }
-    Channel.fromPath('files/import-data/ensembl/coordinate_systems.sql') | set { coordinate_systems_sql }
+    Channel.fromPath('files/import-data/ensembl/coordinate-systems.sql') | set { coordinate_systems_sql }
 
     Channel.fromPath('files/import-data/ensembl/assemblies.sql') | set { assemblies_sql }
     Channel.fromPath('files/import-data/ensembl/example-locations.json') | set { examples }
