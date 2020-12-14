@@ -122,7 +122,7 @@ def ncrnas(raw, context: Context) -> ty.Iterable[data.Entry]:
 
             entry = as_entry(record, current_gene, feature, context, is_nonchromosomal=is_nonchromosomal)
             if not entry:
-                LOGGER.warn("COuld not parse %s" % feature)
+                LOGGER.warn("Could not parse %s" % feature)
                 continue
 
             if context.is_supressed(entry):
