@@ -23,6 +23,7 @@ from Bio import SeqIO
 
 from rnacentral_pipeline.databases import data
 from rnacentral_pipeline.databases.helpers import embl
+from rnacentral_pipeline.databases.ensembl.data import TranscriptInfo
 from rnacentral_pipeline.databases.ensembl.gencode import helpers as gencode
 
 from rnacentral_pipeline.databases.ensembl.vertebrates import helpers
@@ -37,7 +38,7 @@ IGNORE_FEATURES = {
 }
 
 
-def as_entry(record, gene, feature, context: Context) -> ty.Optional[data.Entry]:
+def as_entry(record, gene, feature, context: Context, is_nonchromosomal=False) -> ty.Optional[data.Entry]:
     """
     Turn the Record, Gene feature, transcript feature and Context into a Entry
     object for output.
@@ -53,9 +54,13 @@ def as_entry(record, gene, feature, context: Context) -> ty.Optional[data.Entry]
         return None
 
     pid = helpers.primary_id(feature)
-    if pid not in context.gff:
-        raise ValueError(f"Cannot find transcript info for {pid}: {feature}")
-    info = context.gff[pid]
+    if pid in context.gff:
+        info = context.gff[pid]
+    else:
+        if is_nonchromosomal:
+            info = TranscriptInfo.from_feature(record, feature)
+        else:
+            raise ValueError(f"Cannot find transcript info for {pid}: {feature}")
 
     entry = data.Entry(
         primary_id=pid,
@@ -92,6 +97,7 @@ def ncrnas(raw, context: Context) -> ty.Iterable[data.Entry]:
     This will parse an EMBL file for all Ensembl Entries to import.
     """
 
+    is_nonchromosomal = 'nonchromosomal' in raw.name
     for record in SeqIO.parse(raw, "embl"):
         current_gene = None
         for feature in record.features:
@@ -113,7 +119,7 @@ def ncrnas(raw, context: Context) -> ty.Iterable[data.Entry]:
                              feature)
                 continue
 
-            entry = as_entry(record, current_gene, feature, context)
+            entry = as_entry(record, current_gene, feature, context, is_nonchromosomal=is_nonchromosomal)
             if not entry:
                 LOGGER.warn("COuld not parse %s" % feature)
                 continue
