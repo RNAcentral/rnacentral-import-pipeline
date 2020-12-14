@@ -24,15 +24,17 @@ from rnacentral_pipeline.databases import data
 from rnacentral_pipeline.databases.ensembl.data import TranscriptInfo
 
 SO_MAPPING = {
-        'lnc_RNA': 'SO:0001877',
-        'miRNA': 'SO:0000276',
-        'ncRNA': 'SO:0000655',
-        'ncRNA_gene': 'SO:0001263',
-        'rRNA': 'SO:0000252',
-        'scRNA': 'SO:0000013',
-        'snRNA': 'SO:0000274',
-        'snoRNA': 'SO:0000275',
-        'tRNA': 'SO:0000253',
+    'lnc_RNA': 'SO:0001877',
+    'miRNA': 'SO:0000276',
+    'ncRNA': 'SO:0000655',
+    'ncRNA_gene': 'SO:0001263',
+    'rRNA': 'SO:0000252',
+    'scRNA': 'SO:0000013',
+    'snRNA': 'SO:0000274',
+    'snoRNA': 'SO:0000275',
+    'tRNA': 'SO:0000253',
+    'Y_RNA': 'SO:0000405',
+    'transcript': 'SO:0000655',
 }
 
 IGNORED_TRANSCRIPTS = {
