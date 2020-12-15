@@ -72,7 +72,6 @@ process coordinate_systems {
 }
 
 process karyotypes {
-  memory '8GB'
   when { params.databases.ensembl.vertebrates.run }
 
   output:

@@ -11,7 +11,7 @@ process fetch {
 }
 
 process taxonomy_metadata {
-  memory '4GB'
+  memory '2GB'
   when { params.databases.silva.run }
 
   output:

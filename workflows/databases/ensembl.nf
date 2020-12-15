@@ -50,8 +50,8 @@ process fetch_species_data {
 }
 
 process parse_data {
-  tag { "$name" }
-  memory { 10.GB }
+  tag { "${embl.basename}" }
+  memory { 5.GB }
 
   input:
   tuple val(name), path(embl), path(gff), path(rfam)

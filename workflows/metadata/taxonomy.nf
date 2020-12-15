@@ -1,5 +1,5 @@
 process taxonomy {
-  memory '4GB'
+  memory '2GB'
 
   output:
   path('*.csv')
