@@ -43,21 +43,21 @@ NORMALIZED_RNA_TYPES = {
 }
 
 
-def is_pseudogene(gene, feature):
+def is_pseudogene(gene, feature) -> bool:
     raw_notes = feature.qualifiers.get("note", [])
     if gene:
         raw_notes.extend(gene.qualifiers.get("note", []))
     return any("pseudogene" in n for n in raw_notes)
 
 
-def is_ncrna(feature):
+def is_ncrna(feature) -> bool:
     if not ensembl.is_ncrna(feature):
         return False
     rna_type = ensembl.raw_rna_type(feature)
     return rna_type not in EXCLUDED_TYPES
 
 
-def primary_id(feature):
+def primary_id(feature) -> str:
     """
     This will fetch an Ensembl specific primary id. This is used for extenral
     id in our database. It will be the transcript id with the version stripped,
@@ -71,7 +71,7 @@ def primary_id(feature):
     return primary
 
 
-def seq_version(feature):
+def seq_version(feature) -> str:
     version = ensembl.seq_version(feature) or "1"
     trna_version_match = re.match(r"\.?(\d+)-\w+-\w+", version)
     if trna_version_match:
@@ -83,7 +83,7 @@ def seq_version(feature):
     return version
 
 
-def description(gene, entry):
+def description(gene, entry) -> str:
     species = entry.species
     if entry.common_name:
         species += " (%s)" % entry.common_name

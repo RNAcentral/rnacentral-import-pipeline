@@ -40,10 +40,9 @@ def species_info(ftp: FTP, division: Division, release: str):
         yield tmp
 
 
-def generate_paths(base: str, release: str, handle) -> ty.Iterable[ty.Tuple[str, str, str]]:
+def generate_paths(division: Division, base: str, release: str, handle) -> ty.Iterable[ty.Tuple[str, str, str, str]]:
     _, release_id = release.split('-', 1)
     data = json.load(handle)
-    data_types = ['gff3', 'embl']
     for entry in data:
         info = entry['organism']
         name = info['name']
@@ -52,7 +51,7 @@ def generate_paths(base: str, release: str, handle) -> ty.Iterable[ty.Tuple[str,
         organism_name = f"{url_name}.{assembly}.{release_id}"
         gff_path = f"{base}/{release}/gff3/{name}/{organism_name}.gff3.gz"
         data_files = f"{base}/{release}/embl/{name}/{organism_name}.*.dat.gz"
-        yield (name, data_files, gff_path)
+        yield (division.name, name, data_files, gff_path)
 
 
 def urls_for(division: Division, host: str):
@@ -62,4 +61,5 @@ def urls_for(division: Division, host: str):
         releases = list_releases(ftp)
         latest = latest_release(releases)
         with species_info(ftp, division, latest) as info:
-            yield from generate_paths(f'ftp://{host}/pub/{division.name}', latest, info)
+            url_base = f'ftp://{host}/pub/{division.name}'
+            yield from generate_paths(division, url_base, latest, info)
