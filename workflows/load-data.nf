@@ -11,7 +11,7 @@ process create_load_tables {
 }
 
 process merge_and_import {
-  memory 4.GB
+  memory 3.GB
   tag { name }
 
   input:
