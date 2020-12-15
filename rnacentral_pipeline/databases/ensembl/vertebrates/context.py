@@ -13,15 +13,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import enum
-import tempfile
 import logging
 import typing as ty
 
 import attr
 from attr.validators import instance_of as is_a
 
-import gffutils
 from sqlitedict import SqliteDict
 
 from rnacentral_pipeline.databases import data

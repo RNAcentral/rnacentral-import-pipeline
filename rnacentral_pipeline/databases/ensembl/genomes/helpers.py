@@ -21,6 +21,7 @@ from rnacentral_pipeline.databases import data
 from rnacentral_pipeline.databases.helpers import embl
 from rnacentral_pipeline.databases.helpers import publications as pubs
 
+from rnacentral_pipeline.databases.ensembl.data import TranscriptInfo
 from rnacentral_pipeline.databases.ensembl.vertebrates import helpers as ensembl
 
 EXCLUDED_TYPES = {
@@ -125,10 +126,10 @@ def xref_data(feature):
     return result
 
 
-def as_entry(context, record, current_gene, feature):
+def as_entry(context, record, current_gene, feature) -> data.Entry:
     species, common_name = ensembl.organism_naming(record)
 
-    pid = helpers.primary_id(feature)
+    pid = primary_id(feature)
     if pid in context.gff:
         info = context.gff[pid]
     else:
