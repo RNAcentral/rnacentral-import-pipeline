@@ -44,7 +44,7 @@ FEATURE_TYPE_RNAS = set([
 
 
 @attr.s(frozen=True)
-class Entry(object):
+class Entry:
     """
     This represents an RNAcentral entry that will be imported into the
     database. It should contain all the information needed to define all the
