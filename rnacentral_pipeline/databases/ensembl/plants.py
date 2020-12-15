@@ -39,7 +39,7 @@ def inferred_entries(entry):
     yield as_tair_entry(entry)
 
 
-def parse(handle, gff_file):
+def parse(handle, gff_file, **kwargs):
     context = Context.build(
         'ENSEMBL_PLANTS',
         [pubs.reference(29092050)],

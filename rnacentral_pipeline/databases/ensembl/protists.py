@@ -35,7 +35,7 @@ def correct_rna_type(entry):
     return entry
 
 
-def parse(handle, gff_file):
+def parse(handle, gff_file, **kwargs):
     context = Context.build(
         'ENSEMBL_PROTISTS',
         [pubs.reference('doi:10.1093/nar/gkx1011')],

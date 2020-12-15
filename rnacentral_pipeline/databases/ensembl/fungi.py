@@ -25,7 +25,7 @@ def urls_for(base: str) -> ty.List[ty.Tuple[str, str, str]]:
     return []
 
 
-def parse(handle, gff_file) -> ty.Iterable[Entry]:
+def parse(handle, gff_file, **kwargs) -> ty.Iterable[Entry]:
     context = Context.build(
         'ENSEMBL_FUNGI',
         [pubs.reference('doi:10.1093/nar/gkx1011')],
