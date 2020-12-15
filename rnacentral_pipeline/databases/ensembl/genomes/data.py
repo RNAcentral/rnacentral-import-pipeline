@@ -13,10 +13,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+from pathlib import Path
+
 import attr
 from attr.validators import instance_of as is_a
 
 from sqlitedict import SqliteDict
+
+from rnacentral_pipeline.databases.ensembl.gff import load_coordinates
 
 
 @attr.s()
@@ -26,11 +30,11 @@ class Context:
     gff = attr.ib(validator=is_a(SqliteDict))
 
     @classmethod
-    def build(cls, assembly_id, database, references, gff_file):
+    def build(cls, database: str, references, gff_file: Path) -> "Context":
         return cls(
             database=database,
             references=references,
-            gff=load_coordinates(assembly_id, gff_file)
+            gff=load_coordinates(gff_file)
         )
 
     def accession(self, primary_id: str) -> str:
