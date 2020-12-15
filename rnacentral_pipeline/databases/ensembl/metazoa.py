@@ -18,7 +18,7 @@ from rnacentral_pipeline.databases.ensembl.genomes.data import Context
 from rnacentral_pipeline.databases.helpers import publications as pubs
 
 
-def parse(handle, gff_file):
+def parse(handle, gff_file, **kwargs):
     context = Context.build(
         'ENSEMBL_METAZOA',
         [pubs.reference('doi:10.1093/nar/gkx1011')],
