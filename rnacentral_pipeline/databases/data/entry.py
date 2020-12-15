@@ -219,6 +219,7 @@ class Entry(object):
         nt) not too long (> 1000000 nts) and has less than 10% N's.
         """
 
+        assert self.description, "All entries must have a description"
         length = len(self.sequence)
         if length < 10:
             LOGGER.warn("%s is too short (%s)", self.accession, length)
