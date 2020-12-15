@@ -40,6 +40,10 @@ def species_info(ftp: FTP, division: Division, release: str):
         yield tmp
 
 
+def collection(entry):
+    return entry['databases'][0]['dbname']
+
+
 def generate_paths(division: Division, base: str, release: str, handle) -> ty.Iterable[ty.Tuple[str, str, str, str]]:
     _, release_id = release.split('-', 1)
     data = json.load(handle)
@@ -49,8 +53,14 @@ def generate_paths(division: Division, base: str, release: str, handle) -> ty.It
         url_name = info['url_name']
         assembly = entry['assembly']['assembly_default']
         organism_name = f"{url_name}.{assembly}.{release_id}"
-        gff_path = f"{base}/{release}/gff3/{name}/{organism_name}.gff3.gz"
-        data_files = f"{base}/{release}/embl/{name}/{organism_name}.*.dat.gz"
+        path = f"{base}/{release}/gff3/{name}"
+        # This detects, and skips things that are part of a collection. I'm not
+        # sure what that means right now and those seem to be things that have
+        # other genomes that aren't nested in a collection.
+        if not any(not db['dbname'].startswith(name) for db in entry['databases']):
+            continue
+        gff_path = f"{path}/{organism_name}.gff3.gz"
+        data_files = f"{path}/{organism_name}.*.dat.gz"
         yield (division.name, name, data_files, gff_path)
 
 
