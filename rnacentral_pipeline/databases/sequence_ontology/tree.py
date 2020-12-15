@@ -13,10 +13,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import json
+import re
 import logging
 from functools import lru_cache
 
+from sqlitedict import SqliteDict
 import networkx as nx
 import obonet
 
@@ -54,7 +55,7 @@ def compute_rna_type_tree(ontology, child, parent):
 @lru_cache()
 def rna_type_tree(ontology, child):
     nid = None
-    node = None 
+    node = None
     if ontology.has_node(child):
         nid = child
         node = ontology.nodes[child]
@@ -68,3 +69,29 @@ def rna_type_tree(ontology, child):
     if not node.get('so_term_tree', None):
         node['so_term_tree'] = compute_rna_type_tree(ontology, nid, base_node)
     return node['so_term_tree']
+
+
+def insdc_synonyms(node):
+    pattern = re.compile(r'INSDC_(?:feature|qualifier):(\w+)')
+    for synonym in node.get('synonym', []):
+        if 'EXACT' not in synonym:
+            continue
+        match = re.search(pattern, synonym)
+        if not match:
+            continue
+        yield match.group(1)
+
+
+def name_index(ontology, filename) -> SqliteDict:
+    mapping = SqliteDict(filename)
+    for so_id, node in ontology.nodes(data=True):
+        mapping[so_id] = so_id
+        name = node.get('name', None)
+        if name:
+            mapping[name] = so_id
+        for insdc_name in insdc_synonyms(node):
+            if insdc_name not in mapping:
+                mapping[insdc_name] = so_id
+
+    mapping.commit()
+    return mapping
