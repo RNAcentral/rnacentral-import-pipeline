@@ -49,13 +49,12 @@ def generate_paths(division: Division, base: str, release: str, handle) -> ty.It
         url_name = info['url_name']
         assembly = entry['assembly']['assembly_default']
         organism_name = f"{url_name}.{assembly}.{release_id}"
-        path = f"{base}/{release}/gff3/{name}"
         # This detects, and skips things that are part of a collection. I'm not
         # sure what that means right now and those seem to be things that have
         # other genomes that aren't nested in a collection.
         if any(db['dbname'].startswith(name) for db in entry['databases']):
-            gff_path = f"{path}/{organism_name}.gff3.gz"
-            data_files = f"{path}/{organism_name}.*.dat.gz"
+            gff_path = f"{base}/{release}/gff3/{name}/{organism_name}.gff3.gz"
+            data_files = f"{base}/{release}/embl/{name}/{organism_name}.*.dat.gz"
             yield (division.name, name, data_files, gff_path)
 
 
