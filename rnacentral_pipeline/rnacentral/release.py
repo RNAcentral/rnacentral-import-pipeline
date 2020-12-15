@@ -16,7 +16,7 @@ limitations under the License.
 import json
 import logging
 
-from ..db import connection
+from rnacentral_pipeline.db import connection
 
 LOGGER = logging.getLogger(__name__)
 
@@ -38,7 +38,7 @@ SELECT
     db.descr,
     count(distinct xref.upi)
 from xref
-join rnc_database db 
+join rnc_database db
 on
     db.id = xref.dbid
 where
