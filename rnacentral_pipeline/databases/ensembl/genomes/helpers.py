@@ -23,30 +23,31 @@ from rnacentral_pipeline.databases.helpers import publications as pubs
 
 from rnacentral_pipeline.databases.ensembl.data import TranscriptInfo
 from rnacentral_pipeline.databases.ensembl.vertebrates import helpers as ensembl
+from rnacentral_pipeline.databases.ensembl.genomes.data import Context
 
 EXCLUDED_TYPES = {
-    'nontranslating_CDS',
-    'sense_intronic',
-    'transposable_element',
+    "nontranslating_CDS",
+    "sense_intronic",
+    "transposable_element",
 }
 
 NORMALIZED_RNA_TYPES = {
-    'pre_miRNA': 'pre_miRNA',
-    'atlncRNA': 'lncRNA',
-    'sense_intronic': 'lncRNA',
-    'atRNA': 'antisense_RNA',
-    'antisense': 'antisense_RNA',
-    'otherRNA': 'other',
-    'lincRNA': 'lncRNA',
-    'non_coding': 'ncRNA',
+    "pre_miRNA": "pre_miRNA",
+    "atlncRNA": "lncRNA",
+    "sense_intronic": "lncRNA",
+    "atRNA": "antisense_RNA",
+    "antisense": "antisense_RNA",
+    "otherRNA": "other",
+    "lincRNA": "lncRNA",
+    "non_coding": "ncRNA",
 }
 
 
 def is_pseudogene(gene, feature):
-    raw_notes = feature.qualifiers.get('note', [])
+    raw_notes = feature.qualifiers.get("note", [])
     if gene:
-        raw_notes.extend(gene.qualifiers.get('note', []))
-    return any('pseudogene' in n for n in raw_notes)
+        raw_notes.extend(gene.qualifiers.get("note", []))
+    return any("pseudogene" in n for n in raw_notes)
 
 
 def is_ncrna(feature):
@@ -70,16 +71,12 @@ def primary_id(feature):
     return primary
 
 
-def rna_type(context, primary_id: str) -> str:
-    return context[primary_id].so_rna_type
-
-
 def seq_version(feature):
-    version = ensembl.seq_version(feature) or '1'
-    trna_version_match = re.match(r'\.?(\d+)-\w+-\w+', version)
+    version = ensembl.seq_version(feature) or "1"
+    trna_version_match = re.match(r"\.?(\d+)-\w+-\w+", version)
     if trna_version_match:
         return trna_version_match.group(1)
-    splits = ['.', '-']
+    splits = [".", "-"]
     for split in splits:
         if split in version:
             version = version.split(split)[-1]
@@ -89,38 +86,35 @@ def seq_version(feature):
 def description(gene, entry):
     species = entry.species
     if entry.common_name:
-        species += ' (%s)' % entry.common_name
+        species += " (%s)" % entry.common_name
 
     gene_name = ensembl.notes(gene)
     if gene_name and len(gene_name) == 1:
         gene_name = gene_name[0]
-        if gene_name.endswith(']'):
-            gene_name = re.sub(r'\s*\[.+\]$', '', gene_name)
+        if gene_name.endswith("]"):
+            gene_name = re.sub(r"\s*\[.+\]$", "", gene_name)
 
         gene_name.strip()
-        if not re.search('^U\d+', gene_name):
+        if not re.search(r"^U\d+", gene_name):
             gene_name = gene_name[0].lower() + gene_name[1:]
 
-        return '{species} {gene_name}'.format(
-            species=species,
-            gene_name=gene_name
-        )
+        return f"{species} {gene_name}"
 
     assert entry.rna_type, "Cannot build description without rna_type"
-    return '{species} {rna_type} {locus_tag}'.format(
+    return "{species} {rna_type} {locus_tag}".format(
         species=species,
         rna_type=entry.human_rna_type(),
-        locus_tag=entry.locus_tag or entry.gene or '',
+        locus_tag=entry.locus_tag or entry.gene or "",
     ).strip()
 
 
 def xref_data(feature):
     result = {}
     for key, values in embl.xref_data(feature).items():
-        if key == 'RefSeq_dna':
-            result['RefSeq'] = values
-        elif key == 'TAIR_LOCUS_MODEL':
-            result['TAIR'] = values
+        if key == "RefSeq_dna":
+            result["RefSeq"] = values
+        elif key == "TAIR_LOCUS_MODEL":
+            result["TAIR"] = values
         else:
             result[key] = values
     return result
@@ -143,7 +137,7 @@ def as_entry(context, record, current_gene, feature) -> data.Entry:
         sequence=embl.sequence(record, feature),
         regions=info.regions,
         rna_type=info.so_rna_type,
-        url='',
+        url="",
         seq_version=seq_version(feature),
         lineage=embl.lineage(record),
         common_name=common_name,
@@ -155,7 +149,4 @@ def as_entry(context, record, current_gene, feature) -> data.Entry:
         references=context.references,
     )
 
-    return attr.evolve(
-        entry,
-        description=description(current_gene, entry)
-    )
+    return attr.evolve(entry, description=description(current_gene, entry))
