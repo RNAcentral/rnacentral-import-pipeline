@@ -92,11 +92,11 @@ workflow sequence_search_export {
 
   db_query \
   | find_db_to_export \
-  | splitCsv() \
-  | combine(db_specific_query)
-  | map { db, query -> [db, query, "-v db='%${db}%'"] }
-  | mix(simple_queries)
-  | map { db, query, param -> [db.toLowerCase().replace(' ', '_'), query, param] }
+  | splitCsv \
+  | combine(db_specific_query) \
+  | map { db, query -> [db, query, "-v db='%${db}%'"] } \
+  | mix(simple_queries) \
+  | map { db, query, param -> [db.toLowerCase().replace(' ', '_'), query, param] } \
   | map { db, q, p -> [(db == "tmrna_website" ? "tmrna_web" : db), q, p] } \
   | query_data \
   | create_fasta
