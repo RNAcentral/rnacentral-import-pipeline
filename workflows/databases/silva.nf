@@ -10,22 +10,6 @@ process fetch {
   """
 }
 
-process taxonomy_metadata {
-  memory '2GB'
-  when { params.databases.silva.run }
-
-  output:
-  path('taxonomy.db')
-
-  """
-  wget ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz
-  tar xvf new_taxdump.tar.gz
-  mkdir taxdump
-  mv *.dmp taxdump
-  rnac silva index-taxonomy taxdump taxonomy.db
-  """
-}
-
 process parse {
   tag { "$raw.name" }
 
@@ -41,11 +25,12 @@ process parse {
 }
 
 workflow silva {
+  take: tax_info
   emit: data
   main:
     fetch \
     | flatten \
-    | combine(taxonomy_metadata())
+    | combine(tax_info) \
     | parse \
     | set { data }
 }
