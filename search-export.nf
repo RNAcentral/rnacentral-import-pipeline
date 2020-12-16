@@ -4,31 +4,22 @@ process find_chunks {
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   output:
-  file('ranges.txt') into raw_ranges
+  path('ranges.txt')
 
-  script:
   """
   rnac upi-ranges ${params.search_export.max_entries} ranges.txt
   """
 }
-
-raw_ranges
-  .splitCsv()
-  .combine(Channel.fromPath('files/search-export/query.sql'))
-  .set { ranges }
-
-Channel.fromPath('files/search-export/metadata/*.sql')
-  .set { metadata_queries }
 
 process fetch_metdata {
   maxForks 2
   container ''
 
   input:
-  file(query) from metadata_queries
+  path(query)
 
   output:
-  file("${query.baseName}.json") into standard_metadata
+  path("${query.baseName}.json")
 
   """
   psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > "${query.baseName}.json"
@@ -39,10 +30,10 @@ process fetch_so_tree {
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
-  file(query) from Channel.fromPath('files/search-export/so-rna-types.sql')
+  path(query)
 
   output:
-  file('so-term-tree.json') into so_term_tree_metadata
+  path('so-term-tree.json')
 
   """
   psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > raw.json
@@ -50,19 +41,15 @@ process fetch_so_tree {
   """
 }
 
-standard_metadata
-  .collect()
-  .set { unmerged_metdata }
-
 process merge_metadata {
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
-  file(metadata) from unmerged_metdata
-  file(so_data) from so_term_tree_metadata
+  path(metadata)
+  path(so_data)
 
   output:
-  file('merged.db') into metadata
+  path('merged.db')
 
   """
   cat $metadata > metadata.json
@@ -79,10 +66,10 @@ process export_search_json {
   container ''
 
   input:
-  set val(tablename), val(min), val(max), file(query) from ranges
+  tuple val(tablename), val(min), val(max), path(query)
 
   output:
-  set val(min), val(max), file('search.json') into raw_json
+  tuple val(min), val(max), path('search.json')
 
   script:
   """
@@ -90,22 +77,17 @@ process export_search_json {
   """
 }
 
-raw_json
-  .filter { min, max, fn -> !fn.empty() }
-  .combine(metadata)
-  .set { search_json }
-
 process export_chunk {
   tag { "$min-$max" }
   memory params.search_export.memory
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
-  set val(min), val(max), file(json), file(metadata) from search_json
+  tuple val(min), val(max), path(json), path(metadata)
 
   output:
-  file("${xml}.gz") into search_chunks
-  file "count" into search_counts
+  path "${xml}.gz", emit: xml
+  path "count", emit: counts
 
   script:
   xml = "xml4dbdumps__${min}__${max}.xml"
@@ -120,10 +102,10 @@ process create_release_note {
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
-  file('count*') from search_counts.collect()
+  path('count*')
 
   output:
-  file 'release_note.txt' into release_note
+  path('release_note.txt')
 
   script:
   """
@@ -137,8 +119,8 @@ process atomic_publish {
   container ''
 
   input:
-  file('release_note.txt') from release_note
-  file(xml) from search_chunks.collect()
+  path('release_note.txt')
+  path(xml)
 
   script:
   def publish = params.search_export.publish
@@ -153,4 +135,31 @@ process atomic_publish {
     rm $publish.path/*
     cp ${xml} 'release_note.txt' $publish.path
     """
+}
+
+workflow search_export {
+  Channel.fromPath('files/search-export/query.sql').set { query_sql}
+  Channel.fromPath('files/search-export/metadata/*.sql').set { metadata_queries }
+  Channel.fromPath('files/search-export/so-rna-types.sql').set { so_query }
+
+  so_query | fetch_so_tree | set { so_tree }
+  metadata_queries | fetch_metadata | collect | set { raw_metadata }
+  merge_metadata(raw_metadata, so_tree) | set { metadata }
+
+  find_chunks \
+  | splitCsv \
+  | combine(query_sql) \
+  | export_search_json \
+  | filter { min, max, fn -> !fn.empty() } \
+  | combine(metadata) \
+  | export_chunk
+
+  export_chunk.out.counts | collect | create_release_note | set { note }
+  export_chunk.out.xml | collect | set { xml }
+
+  atomic_publish(note, xml)
+}
+
+workflow {
+  search_export()
 }
