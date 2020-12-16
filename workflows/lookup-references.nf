@@ -15,7 +15,7 @@ process merge_and_split_all_publications {
 }
 
 process fetch_publications {
-  when { params.will_import_data }
+  when { params.needs_publications }
 
   output:
   path('out')
