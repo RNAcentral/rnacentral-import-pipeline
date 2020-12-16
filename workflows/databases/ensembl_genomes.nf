@@ -1,5 +1,6 @@
 process find_species {
   tag { "$division" }
+  memory '4GB'
 
   input:
   tuple val(division), val(remote)
@@ -14,6 +15,7 @@ process find_species {
 
 process fetch_species_data {
   tag { "$species" }
+  memory '4GB'
 
   input:
   tuple val(division), val(species), val(dat_path), val(gff_path)
@@ -31,7 +33,8 @@ process fetch_species_data {
 }
 
 process parse_data {
-  tag { "${embl.basename}" }
+  tag { "${embl.baseName}" }
+  memory '6GB'
 
   input:
   tuple val(division), path(embl), path(gff)
@@ -40,7 +43,7 @@ process parse_data {
   path('*.csv')
 
   """
-  rnac ensembl genomes parse $division $embl $gff
+  rnac ensembl parse $division $embl $gff
   """
 }
 
@@ -54,11 +57,11 @@ workflow ensembl_genomes {
       'metazoa',
     ]) \
     | filter { division -> params.databases.ensembl[division].run } \
-    | map { division -> [name, params.databases.ensembl[division].ftp_host] } \
+    | map { division -> [division, params.databases.ensembl[division].ftp_host] } \
     | find_species \
     | splitCsv \
     | filter { division, species, data_files, gff_path ->
-      params.ensembl[division].exclude.any { p -> species =~ p }
+      !params.ensembl[division].exclude.any { p -> species =~ p }
     } \
     | fetch_species_data \
     | flatMap { division, data_files, gff_file ->
