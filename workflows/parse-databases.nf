@@ -26,26 +26,27 @@ include { tarbase } from './databases/tarbase'
 include { zfin } from './databases/zfin'
 include { zwd } from './databases/zwd'
 
-process taxonomy_metadata {
+process build_context {
   memory '2GB'
-  when { params.databases.silva.run }
+  when { params.needs_taxonomy }
 
   output:
-  path('taxonomy.db')
+  path('context.db')
 
   """
   wget ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz
   tar xvf new_taxdump.tar.gz
   mkdir taxdump
   mv *.dmp taxdump
-  rnac silva index-taxonomy taxdump taxonomy.db
+  rnac context build taxdump context.db
   """
 }
 
 workflow parse_databases {
   emit: data
   main:
-    taxonomy_metadata | set { tax_info }
+
+    build_context | set { context }
 
     Channel.empty() \
     | mix(

@@ -14,25 +14,24 @@ limitations under the License.
 """
 
 import click
+from pathlib import Path
 
-from rnacentral_pipeline.databases.silva import parser as silva
-from rnacentral_pipeline.writers import write_entries
+from rnacentral_pipeline.databases.ncbi import taxonomy
 
 
-@click.group("silva")
+@click.group("context")
 def cli():
     """
-    Commands for dealing with SILVA data.
+    Commands for building the context needed for parsing data.
     """
 
 
-@cli.command("parse")
-@click.argument("silva-file", type=click.File("r"))
-@click.argument("taxonomy", type=click.Path())
-@click.argument(
-    "output",
-    default=".",
-    type=click.Path(writable=True, dir_okay=True, file_okay=False,),
-)
-def process_silva(silva_file, taxonomy, output):
-    write_entries(silva.parse, output, silva_file, taxonomy)
+@cli.command('build')
+@click.argument('ncbi', type=click.Path(
+    writable=True,
+    dir_okay=True,
+    file_okay=False,
+))
+@click.argument('output', type=click.Path())
+def index_taxonomy(ncbi, output):
+    taxonomy.index(Path(ncbi), output)
