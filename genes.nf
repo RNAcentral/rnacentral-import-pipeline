@@ -39,9 +39,9 @@ process build {
   tuple val(assembly_id), val(taxid), path(data_file)
 
   output:
-  path('locus.csv'), emit: locus
-  path('rejected.csv'), emit: rejected
-  path('ignored.csv'), emit: ignored
+  path 'locus.csv', emit: locus
+  path 'rejected.csv', emit: rejected
+  path 'ignored.csv', emit: ignored
 
   """
   rnac genes build $data_file .
