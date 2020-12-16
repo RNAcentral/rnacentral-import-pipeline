@@ -71,7 +71,7 @@ workflow load_data {
     Channel.fromPath('files/schema/create_load.sql') | set { schema }
 
     parsed \
-    | filter { f -> !f.isEmpty() }
+    | filter { f -> !f.isEmpty() } \
     | map { f ->
       def name = f.getBaseName()
       def ctl = file("files/import-data/load/${name.replace('_', '-')}.ctl")
