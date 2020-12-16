@@ -50,7 +50,7 @@ process fetch_species_data {
 }
 
 process parse_data {
-  tag { "${embl.basename}" }
+  tag { "${embl.baseName}" }
   memory { 5.GB }
 
   input:
