@@ -15,18 +15,23 @@ process process_data {
   tag { "$raw.name" }
 
   input:
-  path(raw)
+  tuple path(tax_info), path(raw)
 
   output:
   path('*.csv')
 
   """
-  rnac external gtrnadb $raw .
+  rnac gtrnadb parse $tax_info $raw .
   """
 }
 
 workflow gtrnadb {
+  take: tax_info
   emit: data
   main:
-    fetch_data | flatten | process_data | set { data }
+    fetch_data \
+    | flatten \
+    | combine(tax_info) \
+    | process_data \
+    | set { data }
 }

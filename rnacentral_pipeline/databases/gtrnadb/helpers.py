@@ -110,24 +110,21 @@ def chromosome(location):
     return chrom
 
 
-def common_name(data):
-    """
-    Get a standardized common name for the given taxon id.
-    """
-    return phy.common_name(data['ncbi_tax_id'])
-
-
-def lineage(data):
+def lineage(taxonomy, data):
     """
     Get a standardized lineage for the given taxon id.
     """
+    if data['ncbi_tax_id'] in taxonomy:
+        return taxonomy['ncbi_tax_id'].lineage
     return phy.lineage(data['ncbi_tax_id'])
 
 
-def species(data):
+def species(taxonomy, data):
     """
     Get a standardized species name for the given taxon id.
     """
+    if data['ncbi_tax_id'] in taxonomy:
+        return taxonomy['ncbi_tax_id'].name
     return phy.species(data['ncbi_tax_id'])
 
 
@@ -236,18 +233,4 @@ def features(data):
 
 
 def regions(data):
-    # ['genome_locations']
     pass
-
-
-def secondary_structure(data):
-    """
-    Generate a secondary structure from the raw angle bracket string. This
-    will transform it into a reasonable dot-bracket string and create a
-    SecondaryStructure object.
-    """
-    twod = SecondaryStructure(dot_bracket=helpers.dot_bracket(data))
-    seq = helpers.sequence(data)
-    if len(seq) != len(twod):
-        return SecondaryStructure.empty()
-    return twod
