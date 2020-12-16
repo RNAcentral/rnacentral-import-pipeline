@@ -55,7 +55,7 @@ workflow parse_databases {
       ensembl_genomes(),
       flybase(),
       genecards_suite(),
-      gtrnadb(),
+      gtrnadb(tax_info),
       intact(),
       lncbase(),
       lncbook(),

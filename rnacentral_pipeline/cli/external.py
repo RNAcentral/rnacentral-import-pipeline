@@ -19,10 +19,8 @@ from click_aliases import ClickAliasedGroup
 
 from rnacentral_pipeline.databases import rfam
 from rnacentral_pipeline.databases.crw import parser as crw
-from rnacentral_pipeline.databases.ena import parser as ena
 from rnacentral_pipeline.databases.genecards_suite import genecards, malacards
 from rnacentral_pipeline.databases.generic import parser as generic
-from rnacentral_pipeline.databases.gtrnadb import parser as gtrnadb
 from rnacentral_pipeline.databases.intact import parser as intact
 from rnacentral_pipeline.databases.lncbook import parser as lncbook
 from rnacentral_pipeline.databases.ncbi.gene import parser as ncbi_gene
@@ -124,17 +122,6 @@ def process_rfam(rfam_file, mapping_file, output):
     Process Rfam's JSON format into the files to import.
     """
     write_entries(rfam.parser.parse, output, rfam_file, mapping_file)
-
-
-@cli.command("gtrnadb")
-@click.argument("data_file", type=click.File("r"))
-@click.argument(
-    "output",
-    default=".",
-    type=click.Path(writable=True, dir_okay=True, file_okay=False,),
-)
-def process_gtrnadb(data_file, output):
-    write_entries(gtrnadb.parse, output, data_file)
 
 
 @cli.command("genecards")

@@ -15,27 +15,18 @@ limitations under the License.
 
 import json
 import logging
-import itertools as it
+import typing as ty
+from pathlib import Path
+
+from sqlitedict import SqliteDict
 
 from rnacentral_pipeline.databases.data import Exon
 from rnacentral_pipeline.databases.data import Entry
-from rnacentral_pipeline.databases.data import SecondaryStructure
 import rnacentral_pipeline.databases.helpers.phylogeny as phy
 
-from rnacentral_pipeline.writers import build_entry_writer
-
-from . import helpers
+from rnacentral_pipeline.databases.gtrnadb import helpers
 
 LOGGER = logging.getLogger(__name__)
-
-
-def gtrnadb_secondary_structure(data):
-    """
-    Generate a secondary structure from the raw angle bracket string. This
-    will transform it into a reasonable dot-bracket string and create a
-    SecondaryStructure object.
-    """
-    return SecondaryStructure.empty()
 
 
 def gtrnadb_exons(locations):
@@ -62,7 +53,7 @@ def gtrnadb_exons(locations):
     return exons
 
 
-def gtrnadb_entries(data):
+def gtrnadb_entries(taxonomy, data) -> ty.Iterable[Entry]:
     """
     Take an entry from GtRNAdb and produce the RNAcentrals that it
     represents. A single entry may represent more than one Entry because it
@@ -73,7 +64,6 @@ def gtrnadb_entries(data):
     if data['metadata']['pseudogene']:
         return
 
-    two_d = gtrnadb_secondary_structure(data)
     for location in data['genome_locations']:
         try:
             yield Entry(
@@ -87,12 +77,10 @@ def gtrnadb_entries(data):
                 url=helpers.url(data),
                 seq_version=helpers.seq_version(data),
                 note_data=helpers.note_data(data),
-                secondary_structure=two_d,
                 chromosome=helpers.chromosome(location),
-                species=helpers.species(data),
-                common_name=helpers.common_name(data),
+                species=helpers.species(taxonomy, data),
                 anticodon=helpers.anticodon(data),
-                lineage=helpers.lineage(data),
+                lineage=helpers.lineage(taxonomy, data),
                 gene=data['gene'],
                 optional_id=data['gene'],
                 product=helpers.product(data),
@@ -112,12 +100,13 @@ def gtrnadb_entries(data):
             break
 
 
-def parse(raw):
+def parse(raw, taxonomy_file: Path) -> ty.Iterable[Entry]:
     """
     This will parse a JSON file produced by GtRNAdb and yield the RNAcentral
     entries that it represents.
     """
 
+    taxonomy = SqliteDict(filename=taxonomy_file)
     data = json.load(raw)
-    data = map(gtrnadb_entries, data)
-    return it.chain.from_iterable(data)
+    for raw in data:
+        yield from gtrnadb_entries(taxonomy, raw)
