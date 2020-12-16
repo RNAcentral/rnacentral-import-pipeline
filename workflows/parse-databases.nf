@@ -29,7 +29,7 @@ include { zwd } from './databases/zwd'
 workflow parse_databases {
   emit: data
   main:
-    Channel.empty()
+    Channel.empty() \
     | mix(
       five_s_rrnadb(),
       ena(),
