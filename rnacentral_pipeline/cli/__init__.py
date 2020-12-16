@@ -18,6 +18,7 @@ import logging
 import click
 
 from rnacentral_pipeline.cli import (
+    context,
     ena,
     ensembl,
     europepmc,
@@ -63,6 +64,7 @@ def cli(log_level):
     pass
 
 
+cli.add_command(context.cli)
 cli.add_command(ena.cli)
 cli.add_command(ensembl.cli)
 cli.add_command(europepmc.cli)
