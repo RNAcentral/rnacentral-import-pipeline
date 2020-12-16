@@ -24,16 +24,23 @@ from rnacentral_pipeline.databases import data
 from rnacentral_pipeline.databases.ensembl.data import TranscriptInfo
 
 SO_MAPPING = {
+    'RNase_MRP_RNA': 'SO:0000590',
+    'RNase_P_RNA': 'SO:0000386',
+    'SRP_RNA': 'SO:0000590',
+    'Y_RNA': 'SO:0000405',
+    'guide_RNA': 'SO:0000602',
     'lnc_RNA': 'SO:0001877',
     'miRNA': 'SO:0000276',
     'ncRNA': 'SO:0000655',
     'ncRNA_gene': 'SO:0001263',
+    'pre_miRNA': 'SO:0001244',
     'rRNA': 'SO:0000252',
     'scRNA': 'SO:0000013',
     'snRNA': 'SO:0000274',
     'snoRNA': 'SO:0000275',
     'tRNA': 'SO:0000253',
-    'Y_RNA': 'SO:0000405',
+    'telomerase_RNA': 'SO:0000390',
+    'tmRNA': 'SO:0000584',
     'transcript': 'SO:0000655',
 }
 
