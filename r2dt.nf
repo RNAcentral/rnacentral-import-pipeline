@@ -85,8 +85,8 @@ process parse_layout {
   tuple path(sequences), path(to_parse), path(mapping)
 
   output:
-  path("data.csv"), emit: data
-  path('attempted.csv'), emit: attempted
+  path "data.csv", emit: data
+  path 'attempted.csv', emit: attempted
 
   """
   rnac r2dt process-svgs --allow-missing $mapping $to_parse data.csv
