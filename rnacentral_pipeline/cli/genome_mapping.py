@@ -16,12 +16,11 @@ limitations under the License.
 
 import click
 
-from rnacentral_pipeline.rnacentral.genome_mapping import urls
-from rnacentral_pipeline.rnacentral.genome_mapping import blat
 from rnacentral_pipeline.rnacentral import attempted
+from rnacentral_pipeline.rnacentral.genome_mapping import blat, urls
 
 
-@click.group('genome-mapping')
+@click.group("genome-mapping")
 def cli():
     """
     This group of commands deals with figuring out what data to map as well as
@@ -30,7 +29,7 @@ def cli():
     pass
 
 
-@cli.group('blat')
+@cli.group("blat")
 def hits():
     """
     A series of commands for working with blat hits.
@@ -38,10 +37,10 @@ def hits():
     pass
 
 
-@hits.command('serialize')
-@click.argument('assembly_id')
-@click.argument('hits', default='-', type=click.File('r'))
-@click.argument('output', default='-', type=click.File('wb', lazy=False))
+@hits.command("serialize")
+@click.argument("assembly_id")
+@click.argument("hits", default="-", type=click.File("r"))
+@click.argument("output", default="-", type=click.File("wb", lazy=False))
 def hits_json(assembly_id, hits, output):
     """
     Serialize the PSL file into something that python can later process. This is
@@ -51,9 +50,9 @@ def hits_json(assembly_id, hits, output):
     blat.as_pickle(assembly_id, hits, output)
 
 
-@hits.command('as-importable')
-@click.argument('hits', default='-', type=click.File('rb'))
-@click.argument('output', default='-', type=click.File('w', lazy=False))
+@hits.command("as-importable")
+@click.argument("hits", default="-", type=click.File("rb"))
+@click.argument("output", default="-", type=click.File("w", lazy=False))
 def as_importable(hits, output):
     """
     Convert a json-line file into a CSV that can be used for import by pgloader.
@@ -62,10 +61,10 @@ def as_importable(hits, output):
     blat.write_importable(hits, output)
 
 
-@hits.command('select')
-@click.option('--sort', is_flag=True, default=False)
-@click.argument('hits', default='-', type=click.File('rb'))
-@click.argument('output', default='-', type=click.File('wb', lazy=False))
+@hits.command("select")
+@click.option("--sort", is_flag=True, default=False)
+@click.argument("hits", default="-", type=click.File("rb"))
+@click.argument("output", default="-", type=click.File("wb", lazy=False))
 def select_hits(hits, output, sort=False):
     """
     Parse a JSON-line file and select the best hits in the file. The best hits
@@ -76,11 +75,11 @@ def select_hits(hits, output, sort=False):
     blat.select_pickle(hits, output, sort=sort)
 
 
-@cli.command('url-for')
-@click.option('--host', default='ensembl')
-@click.argument('species')
-@click.argument('assembly_id')
-@click.argument('output', default='-', type=click.File('w'))
+@cli.command("url-for")
+@click.option("--host", default="ensembl")
+@click.argument("species")
+@click.argument("assembly_id")
+@click.argument("output", default="-", type=click.File("w"))
 def find_remote_url(species, assembly_id, output, host=None):
     """
     Determine the remote URL to fetch a the genome for a given species/assembly.
@@ -90,9 +89,9 @@ def find_remote_url(species, assembly_id, output, host=None):
     output.write(url)
 
 
-@cli.command('urls-for')
-@click.argument('filename', default='-', type=click.File('r'))
-@click.argument('output', default='-', type=click.File('w'))
+@cli.command("urls-for")
+@click.argument("filename", default="-", type=click.File("r"))
+@click.argument("output", default="-", type=click.File("w"))
 def find_remote_urls(filename, output):
     """
     Determine the remote URL to fetch a the genomes for all entries in a file,
@@ -102,9 +101,9 @@ def find_remote_urls(filename, output):
     urls.write_urls_for(filename, output)
 
 
-@cli.command('create-attempted')
-@click.argument('filename', type=click.File('r'))
-@click.argument('assembly_id')
-@click.argument('output', type=click.File('w'))
+@cli.command("create-attempted")
+@click.argument("filename", type=click.File("r"))
+@click.argument("assembly_id")
+@click.argument("output", type=click.File("w"))
 def parse_attempted_sequences(filename, assembly_id, output):
     attempted.genome_mapping(filename, assembly_id, output)

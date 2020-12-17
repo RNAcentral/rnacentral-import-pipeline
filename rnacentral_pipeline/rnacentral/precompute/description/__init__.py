@@ -13,12 +13,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from . import generic
-from . import species_specific as species
+from rnacentral_pipeline.rnacentral.precompute.data.sequence import Sequence
+
 from . import short
+from . import species_specific as species
 
 
-def description_of(rna_type, sequence):
+def description_of(rna_type: str, sequence: Sequence) -> str:
     """
     The entry point for using the rule based approach for descriptions. This
     approach works in two stages, first it determines the rna_type of the
@@ -49,10 +50,8 @@ def description_of(rna_type, sequence):
     if not rna_type:
         raise ValueError("Must have definied RNA type to get a description")
 
-    if sequence.is_species_specific():
-        return species.description_of(rna_type, sequence)
-    return generic.description_of(rna_type, sequence)
+    return species.description_of(rna_type, sequence)
 
 
-def short_description_for(description, sequence):
+def short_description_for(description: str, sequence: Sequence) -> str:
     return short.short_description(description, sequence)

@@ -22,11 +22,13 @@ select
         'so_rna_type', acc.rna_type
       )
     ),
-    'has_coordinates', exists(
-        select 1
-        from rnc_sequence_regions
-        where urs_taxid = rna.upi || '_' || xref.taxid
-    ),
+    'coordinates', array_agg(json_build_object(
+        'assembly_id', region.assembly_id,
+        'chromosome', region.chromosome,
+        'strand', region.strand,
+        'start', region.region_start,
+        'stop', region.region_stop
+      )),
     'deleted', array_agg(distinct xref.deleted = 'Y'),
     'previous', array_agg(row_to_json(prev.*)),
     'hits', array_agg(json_build_object(
@@ -43,31 +45,34 @@ select
        'sequence_start', hits.sequence_start,
        'sequence_stop', hits.sequence_stop
     )),
-    'last_release', max(xref.last),
-    'chromosomes', ARRAY(
-      select
-        distinct chromosome
-      from rnc_sequence_regions
-        where urs_taxid = rna.upi || '_' || xref.taxid
-    )
+    'last_release', max(xref.last)
 )
 FROM rna
-join :tablename todo on todo.upi = rna.upi
-join xref on xref.upi = rna.upi
-join rnc_accessions acc
-on
+JOIN :tablename todo ON todo.upi = rna.upi
+JOIN xref 
+ON 
+    xref.upi = rna.upi
+JOIN rnc_accessions acc
+ON
     acc.accession = xref.ac
-left join rnc_rna_precomputed prev
-on
+LEFT JOIN rnc_rna_precomputed prev
+ON
     prev.upi = rna.upi
-    and prev.taxid = xref.taxid
-left join rfam_model_hits hits ON hits.upi = xref.upi
-left join rfam_models models ON models.rfam_model_id = hits.rfam_model_id
-join rnc_database db
+    AND prev.taxid = xref.taxid
+LEFT JOIN rnc_sequence_regions region 
+ON 
+    region.urs_taxid = xref.upi || '_' || xref.taxid
+LEFT JOIN rfam_model_hits hits 
+ON 
+    hits.upi = xref.upi
+LEFT JOIN rfam_models models 
+ON 
+    models.rfam_model_id = hits.rfam_model_id
+JOIN rnc_database db
 ON
     db.id = xref.dbid
-left join rnc_taxonomy tax on tax.id = xref.taxid
-where
+LEFT JOIN rnc_taxonomy tax ON tax.id = xref.taxid
+WHERE
     todo.id BETWEEN :min AND :max
 GROUP BY rna.upi, xref.taxid
 ORDER BY rna.upi, xref.taxid

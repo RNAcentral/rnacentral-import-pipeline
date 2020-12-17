@@ -13,46 +13,49 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-
 import os
+import typing as ty
 
-from rnacentral_pipeline.rnacentral.precompute.process import as_sequences
-
-from tests.helpers import run_range_as_single
-from tests.helpers import run_with_replacements
+from rnacentral_pipeline.rnacentral.precompute.data.sequence import Sequence
+from tests.helpers import run_range_as_single, run_with_replacements
 
 
-def load_data(rna_id):
-    path = os.path.join('files', 'precompute', 'query.sql')
-    upi, taxid = rna_id.split('_')
+def load_data(rna_id) -> Sequence:
+    path = os.path.join("files", "precompute", "query.sql")
+    upi, taxid = rna_id.split("_")
     data = run_with_replacements(
         path,
-        (':tablename', 'rna'),
+        (":tablename", "rna"),
         (
-            'todo.id BETWEEN :min AND :max',
-            "xref.upi ='%s' AND xref.taxid = %i" % (upi, int(taxid))
+            "todo.id BETWEEN :min AND :max",
+            "xref.upi ='%s' AND xref.taxid = %i" % (upi, int(taxid)),
+        ),
+    )
+    # from pprint import pprint
+    # pprint(data)
+    return Sequence.build(data)
+
+
+def load_for_upi(upi) -> ty.List[Sequence]:
+    path = os.path.join("files", "precompute", "query.sql")
+    loaded = list(
+        run_with_replacements(
+            path,
+            (":tablename", "rna"),
+            ("todo.id BETWEEN :min AND :max", "xref.upi ='%s'" % upi),
+            take_all=True,
         )
     )
-    return next(as_sequences([data]))
+    return [Sequence.build(l) for l in loaded]
 
 
-def load_for_upi(upi):
-    path = os.path.join('files', 'precompute', 'query.sql')
-    loaded = list(run_with_replacements(
-        path,
-        (':tablename', 'rna'),
-        ('todo.id BETWEEN :min AND :max', "xref.upi ='%s'" % upi),
-        take_all=True))
-    return list(as_sequences(loaded))
-
-
-def load_for_range(start, stop):
-    path = os.path.join('files', 'precompute', 'query.sql')
+def load_for_range(start, stop) -> ty.List[Sequence]:
+    path = os.path.join("files", "precompute", "query.sql")
     loaded = run_with_replacements(
         path,
-        (':min', str(start)),
-        (':max', str(stop)),
-        (':tablename', 'rna'),
+        (":min", str(start)),
+        (":max", str(stop)),
+        (":tablename", "rna"),
         take_all=True,
     )
-    return list(as_sequences(loaded))
+    return [Sequence.build(l) for l in loaded]

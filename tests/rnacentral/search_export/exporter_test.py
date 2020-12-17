@@ -30,10 +30,7 @@ import six
 from rnacentral_pipeline.rnacentral.search_export import exporter
 from tests.helpers import run_range_as_single, run_with_replacements
 
-try:
-    from functools import lru_cache
-except ImportException:
-    from functools32 import lru_cache
+from functools import lru_cache
 
 
 
