@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Copyright [2009-2017] EMBL-European Bioinformatics Institute
+Copyright [2009-2020] EMBL-European Bioinformatics Institute
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -13,13 +13,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import json
-import typing as ty
+import attr
+from attr.validators import instance_of as is_a
 
 
-def json_handler(out) -> ty.Iterable[ty.Any]:
-    for row in out:
-        if not row:
-            continue
-        row = row.replace("\\\\", "\\")
-        yield json.loads(row)
+@attr.s()
+class R2dtHit:
+    model_id = attr.ib(validator=is_a(int))
+    model_name = attr.ib(validator=is_a(int))
+    model_so_term = attr.ib(validator=is_a(int))

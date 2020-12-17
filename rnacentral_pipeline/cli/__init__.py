@@ -36,6 +36,7 @@ from rnacentral_pipeline.cli import (
     precompute,
     qa,
     r2dt,
+    repeats,
     rfam,
     search_export,
     silva,
@@ -86,6 +87,7 @@ cli.add_command(pirbase.cli)
 cli.add_command(precompute.cli)
 cli.add_command(qa.cli)
 cli.add_command(r2dt.cli)
+cli.add_command(repeats.cli)
 cli.add_command(rfam.cli)
 cli.add_command(search_export.cli)
 cli.add_command(silva.cli)

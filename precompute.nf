@@ -2,8 +2,28 @@
 
 nextflow.enable.dsl=2
 
-process find_precompute_upis {
-  when: params.precompute.run
+include { repeats } from './workflows/repeats'
+
+process build_precompute_context {
+  input:
+  path('species-repeats*')
+
+  output:
+  path('context')
+
+  """
+  mkdir repeat-tree
+  mv species-repeats* repeat-tree
+  pushd repeat-tree
+  rnac repeats build-tree .
+  popd
+  mkdir context
+  mv repeat-tree context
+  """
+}
+
+process find_ranges {
+  when { params.precompute.run }
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
@@ -12,7 +32,6 @@ process find_precompute_upis {
   output:
   path('ranges.txt')
 
-  script:
   """
   psql \
     -v ON_ERROR_STOP=1 \
@@ -22,7 +41,7 @@ process find_precompute_upis {
   """
 }
 
-process precompute_range_query {
+process query_range {
   tag { "$min-$max" }
   beforeScript 'slack db-work precompute-range || true'
   afterScript 'slack db-done precompute-range || true'
@@ -52,18 +71,18 @@ process process_range {
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
-  tuple val(min), val(max), path(raw)
+  tuple val(min), val(max), path(raw), path(context)
 
   output:
   path('precompute.csv'), emit: data
   path('qa.csv'), emit: qa
 
   """
-  rnac precompute from-file $raw
+  rnac precompute from-file $context $raw
   """
 }
 
-process load_precomputed_data {
+process load_data {
   beforeScript 'slack db-work loading-precompute || true'
   afterScript 'slack db-done loading-precompute || true'
   container ''
@@ -81,16 +100,18 @@ process load_precomputed_data {
   """
 }
 
-
 workflow precompute {
-  take:
-    path(setup)
+  take: method
 
   main:
-    find_ranges(setup) \
-    | splitCsv() \
+    build_precompute_context(repeats()) | set { context }
+
+    method \
+    | find_ranges \
+    | splitCsv \
     | combine(Channel.fromPath('files/precompute/query.sql')) \
     | query_range \
+    | combine(context) \
     | process_range \
 
     process_range.out.data | collect | set { data }

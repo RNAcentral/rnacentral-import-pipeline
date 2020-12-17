@@ -40,6 +40,7 @@ RUN apt-get install -y \
     python3-pip \
     rsync \
     sbcl \
+    tabix \
     tar \
     time \
     unzip \

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Copyright [2009-2017] EMBL-European Bioinformatics Institute
+Copyright [2009-2020] EMBL-European Bioinformatics Institute
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -13,60 +13,44 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import json
-import operator as op
 import itertools as it
+import operator as op
+import typing as ty
+from pathlib import Path
 
 from rnacentral_pipeline import psql
+from rnacentral_pipeline.rnacentral.precompute.data.context import Context
+from rnacentral_pipeline.rnacentral.precompute.data.sequence import Sequence
+from rnacentral_pipeline.rnacentral.precompute.data.update import (
+    GenericUpdate, SequenceUpdate)
+from rnacentral_pipeline.rnacentral.repeats import tree
 from rnacentral_pipeline.writers import MultiCsvOutput
 
-from . import data
+AnUpdate = ty.Union[SequenceUpdate, GenericUpdate]
 
 
-def as_sequences(items):
+def parse(context_path: Path, data_path: Path) -> ty.Iterable[AnUpdate]:
     """
-    Turn an iterable of query results into an iterable of Sequence entries.
-    This will create both generic and specific Sequence entries.
-    """
-
-    grouped = it.groupby(items, op.itemgetter('upi'))
-    for _, species_sequences in grouped:
-        seqs = []
-        for seq in species_sequences:
-            current = data.SpeciesSequence.build(seq)
-            seqs.append(current)
-            yield current
-        yield data.GenericSequence.build(seqs)
-
-
-def as_update(sequence):
-    if sequence.is_active:
-        return data.ActiveUpdate.build(sequence)
-    return data.InactiveUpdate.build(sequence)
-
-
-def parse(handle):
-    sequences = psql.json_handler(handle)
-    sequences = as_sequences(sequences)
-    sequences = map(as_update, sequences)
-    return sequences
-
-
-def from_file(handle, output):
-    """
-    Process the results of the query stored in handle and write the updated
-    data to the given output handle. This assumes that handle contains one JSON
-    object per line.
+    Parse the given json file (handle) using the repeat tree at `repeat_path`,
+    and produce an iterable of updates for the database.
     """
 
-    writer = MultiCsvOutput.build(
-        parse,
-        precompute={
-            'transformer': op.methodcaller('as_writeables')
-        },
-        qa={
-            'transformer': op.methodcaller('writeable_statuses')
-        },
-    )
+    context = Context.from_directory(context_path)
+    with data_path.open("r") as handle:
+        raw = psql.json_handler(handle)
+        grouped = it.groupby(raw, op.itemgetter("upi"))
+        for _, sequences in grouped:
+            updates = []
+            for sequence in sequences:
+                sequence = Sequence.build(sequence)
+                update = SequenceUpdate.from_sequence(context, sequence)
+                updates.append(update)
+                yield update
+            yield GenericUpdate.from_updates(context, updates)
 
-    writer(output, handle)
+
+writer = MultiCsvOutput.build(
+    parse,
+    precompute={"transformer": op.methodcaller("as_writeables")},
+    qa={"transformer": op.methodcaller("writeable_statuses")},
+)

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Copyright [2009-2018] EMBL-European Bioinformatics Institute
+Copyright [2009-2020] EMBL-European Bioinformatics Institute
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -13,76 +13,90 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import attr
-from attr.validators import optional
-from attr.validators import instance_of as is_a
-
 import json
+import typing as ty
+
+import attr
+from attr.validators import instance_of as is_a
+from attr.validators import optional
 
 
-@attr.s()
-class QaStatus(object):
+@attr.s(frozen=True)
+class QaResult:
+    """
+    This represents the result of a single validator.
+    """
+
+    name = attr.ib(validator=is_a(str))
+    has_issue = attr.ib(validator=is_a(bool))
+    message = attr.ib(validator=optional(is_a(str)))
+
+    @classmethod
+    def ok(cls, name):
+        return cls(name=name, has_issue=False, message=None)
+
+    @classmethod
+    def not_ok(cls, name, message):
+        return cls(name=name, has_issue=True, message=message)
+
+    def str_issue(self):
+        return str(int(self.has_issue))
+
+
+@attr.s(frozen=True)
+class QaStatus:
     """
     This represents an update to the QA status table.
     """
 
-    incomplete_sequence = attr.ib(validator=is_a(bool))
-    possible_contamination = attr.ib(validator=is_a(bool))
-    missing_rfam_match = attr.ib(validator=is_a(bool))
-    messages = attr.ib(validator=is_a(list), default=attr.Factory(list))
-    mismatching_rna_type = attr.ib(validator=is_a(bool), default=False)
-    is_repetitive = attr.ib(validator=is_a(bool), default=False)
-    no_data = attr.ib(validator=optional(is_a(bool)), default=False)
+    incomplete_sequence = attr.ib(validator=is_a(QaResult))
+    possible_contamination = attr.ib(validator=is_a(QaResult))
+    missing_rfam_match = attr.ib(validator=is_a(QaResult))
+    from_repetitive_region = attr.ib(validator=is_a(QaResult))
 
     @classmethod
-    def from_validators(cls, validators, *args, **kwargs):
-        """
-        This will build a new QaStatus object update given the particular RNA
-        type and a Sequence object.
-        """
-        status = {'messages': [], 'no_data': False}
-        for validator in validators:
-            current = validator.status(*args, **kwargs)
-            status[validator.name] = current
-            if current:
-                status['messages'].append(validator.message(*args, **kwargs))
-        return cls(**status)
-
-    @classmethod
-    def empty(cls):
-        """
-        Build a QaStatus that will not produce any writeable data. Objects
-        produced by this should not be used for any updates.
-        """
-        return cls(False, False, False, no_data=True)
+    def from_results(cls, results: ty.List[QaResult]) -> "QaStatus":
+        fields = attr.fields_dict(cls)
+        data = {}
+        for result in results:
+            if result.name not in fields:
+                raise ValueError(f"Unknown QaResult {result}")
+            data[result.name] = result
+        return cls(**data)
 
     @property
-    def has_issue(self):
+    def has_issue(self) -> bool:
         """
         Check if this QA update indicates if there is any issue.
         """
 
         return (
-            self.incomplete_sequence or
-            self.possible_contamination or
-            self.missing_rfam_match
+            self.incomplete_sequence.has_issue
+            or self.possible_contamination.has_issue
+            or self.missing_rfam_match.has_issue
+            or self.from_repetitive_region.has_issue
         )
 
-    def writeable(self, upi, taxid):
+    def messages(self) -> ty.List[str]:
+        messages = []
+        for field in attr.fields(self.__class__):
+            result = getattr(self, field.name)
+            if result.message:
+                messages.append(result.message)
+        return messages
+
+    def writeable(self, upi: str, taxid: int) -> ty.List[str]:
         """
         Create a writeable array for writing CSV files.
         """
 
-        if self.no_data:
-            return None
-
         return [
-            '%s_%i' % (upi, taxid),
+            "%s_%i" % (upi, taxid),
             upi,
-            taxid,
-            int(self.has_issue),
-            int(self.incomplete_sequence),
-            int(self.possible_contamination),
-            int(self.missing_rfam_match),
-            json.dumps(self.messages),
+            str(taxid),
+            str(int(self.has_issue)),
+            self.incomplete_sequence.str_issue(),
+            self.possible_contamination.str_issue(),
+            self.missing_rfam_match.str_issue(),
+            json.dumps(self.messages()),
         ]
