@@ -16,6 +16,7 @@ limitations under the License.
 import click
 
 from rnacentral_pipeline.databases import rfam
+from rnacentral_pipeline.writers import write_entries
 
 
 @click.group('rfam')
@@ -24,6 +25,21 @@ def cli():
     Commands with processing the Rfam metadata.
     """
     pass
+
+
+@cli.command("parse")
+@click.argument("rfam_file", type=click.File("r"))
+@click.argument("mapping_file", type=click.File("r"))
+@click.argument(
+    "output",
+    default=".",
+    type=click.Path(writable=True, dir_okay=True, file_okay=False,),
+)
+def process_rfam(rfam_file, mapping_file, output):
+    """
+    Process Rfam's JSON format into the files to import.
+    """
+    write_entries(rfam.parser.parse, output, rfam_file, mapping_file)
 
 
 @cli.command('families')

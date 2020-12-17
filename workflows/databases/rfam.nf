@@ -36,7 +36,7 @@ process parse {
   path('*.csv')
 
   """
-  rnac external rfam $json $families .
+  rnac rfam parse $json $families .
   """
 }
 
