@@ -60,7 +60,7 @@ SoTree = ty.Tuple[SoTermInfo]
 
 
 @lru_cache()
-def normalized_term(so_id: str, ontology) -> SoTermInfo:
+def normalized_term(so_id: str, ontology) -> NormalizedSoTermInfo:
     for parent_so_id in NORMALIZED_IDS:
         if parent_so_id == so_id:
             so_term = SoTermInfo(so_id, ontology.id_to_name[so_id])
@@ -115,8 +115,8 @@ class RnaType:
             return False
 
         pairs = zip(self.ontology_terms, other.ontology_terms)
-        for (l, r) in pairs:
-            if l != r:
+        for (left, right) in pairs:
+            if left != right:
                 return False
         return True
 

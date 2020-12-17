@@ -186,6 +186,7 @@ class RfamHit(object):
 
     model = attr.ib(validator=is_a(str))
     model_rna_type = attr.ib(validator=is_a(str))
+    model_so_rna_type = attr.ib(validator=is_a(str))
     model_domain = attr.ib(validator=optional(is_a(str)))
     model_name = attr.ib(validator=is_a(str))
     model_long_name = attr.ib(validator=is_a(str))
@@ -238,6 +239,13 @@ class Sequence(object):
     rfam_hits = attr.ib(validator=is_a(list), type=typing.List[RfamHit])
     last_release = attr.ib(validator=is_a(int))
     chromosomes = attr.ib(validator=is_a(list), type=typing.List[str])
+    r2dt_hits = attr.ib(validator=is_a(list))
+
+    @property
+    def urs_id(self):
+        if self.taxid is None:
+            return self.upi
+        return f"{self.urs}_{self.taxid}"
 
     def is_species_specific(self):
         """
@@ -269,6 +277,12 @@ class Sequence(object):
         Check if there is only one Rfam hit to this sequence.
         """
         return len(self.rfam_hits) == 1
+
+    def has_r2dt_hit(self) -> bool:
+        return bool(self.r2dt_hits)
+
+    def has_rfam_hits(self) -> bool:
+        return bool(self.rfam_hits)
 
 
 @attr.s()
