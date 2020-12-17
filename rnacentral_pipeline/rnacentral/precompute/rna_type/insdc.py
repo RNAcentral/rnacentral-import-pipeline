@@ -13,6 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import typing as ty
 
 import logging
 from collections import Counter
@@ -152,8 +153,7 @@ def remove_anti_if_required(rna_types, data):
     return rna_types
 
 
-
-def rna_type_of(data):
+def rna_type_of(data) -> ty.Optional[str]:
     """
     Determine the rna_type for a given sequence and collection of xrefs. The
     idea behind this is that not all databases are equally trustworthy, so some
