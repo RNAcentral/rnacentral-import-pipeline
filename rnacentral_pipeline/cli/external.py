@@ -17,7 +17,6 @@ limitations under the License.
 import click
 from click_aliases import ClickAliasedGroup
 
-from rnacentral_pipeline.databases import rfam
 from rnacentral_pipeline.databases.crw import parser as crw
 from rnacentral_pipeline.databases.genecards_suite import genecards, malacards
 from rnacentral_pipeline.databases.generic import parser as generic
@@ -107,21 +106,6 @@ def process_refseq(refseq_file, output):
     This will parse GenBank files from refseq to produce the expected CSV files.
     """
     write_entries(refseq.parse, output, refseq_file)
-
-
-@cli.command("rfam")
-@click.argument("rfam_file", type=click.File("r"))
-@click.argument("mapping_file", type=click.File("r"))
-@click.argument(
-    "output",
-    default=".",
-    type=click.Path(writable=True, dir_okay=True, file_okay=False,),
-)
-def process_rfam(rfam_file, mapping_file, output):
-    """
-    Process Rfam's JSON format into the files to import.
-    """
-    write_entries(rfam.parser.parse, output, rfam_file, mapping_file)
 
 
 @cli.command("genecards")
