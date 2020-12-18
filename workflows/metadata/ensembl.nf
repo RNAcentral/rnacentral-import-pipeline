@@ -28,7 +28,7 @@ process fetch_compara {
 
 process process_compara {
   tag { "${gz.baseName}" }
-  memory '20GB'
+  memory '17GB'
 
   input:
   path(gz)
