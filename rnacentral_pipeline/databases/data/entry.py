@@ -13,34 +13,35 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import itertools as it
 import json
 import logging
 import operator as op
-import itertools as it
+import typing as ty
 from collections import Counter
 
 import attr
 from attr.validators import and_
 from attr.validators import instance_of as is_a
 
-from rnacentral_pipeline.databases.helpers.hashes import md5
-from rnacentral_pipeline.databases.helpers.hashes import crc64
+from rnacentral_pipeline.databases.helpers.hashes import crc64, md5
 
 from . import utils
-from .references import Reference
-from .references import IdReference
-from .secondary_structure import SecondaryStructure
 from .features import SequenceFeature
+from .references import IdReference, Reference
+from .secondary_structure import SecondaryStructure
 
 LOGGER = logging.getLogger(__name__)
 
-FEATURE_TYPE_RNAS = set([
-    'SO:0000252',
-    'SO:0000253',
-    # 'precursor_RNA',
-    'SO:0000584',
-    'SO:0000673',
-])
+FEATURE_TYPE_RNAS = set(
+    [
+        "SO:0000252",
+        "SO:0000253",
+        # 'precursor_RNA',
+        "SO:0000584",
+        "SO:0000673",
+    ]
+)
 
 
 @attr.s(frozen=True)
@@ -57,19 +58,15 @@ class Entry:
     primary_id = attr.ib(validator=is_a(str), converter=str)
     accession = attr.ib(validator=is_a(str), converter=str)
     ncbi_tax_id = attr.ib(validator=is_a(int))
-    database = attr.ib(
-        validator=is_a(str),
-        converter=lambda s: str(s.upper()),
-    )
+    database = attr.ib(validator=is_a(str), converter=lambda s: str(s.upper()),)
     sequence = attr.ib(validator=is_a(str), converter=str)
     regions = attr.ib(validator=is_a(list))
     rna_type = attr.ib(
-        validator=utils.matches_pattern(utils.SO_PATTERN),
-        converter=utils.as_so_term,
+        validator=utils.matches_pattern(utils.SO_PATTERN), converter=utils.as_so_term,
     )
     url = attr.ib(validator=is_a(str), converter=str)
     seq_version = attr.ib(
-        validator=and_(is_a(str), utils.matches_pattern(r'^\d+$')),
+        validator=and_(is_a(str), utils.matches_pattern(r"^\d+$")),
         converter=lambda r: str(int(float(r))),
     )
 
@@ -145,8 +142,8 @@ class Entry:
         Return a JSON encoded dictionary representing the note data.
         """
         data = self.note_data
-        if 'url' not in data:
-            data['url'] = self.url
+        if "url" not in data:
+            data["url"] = self.url
         return json.dumps(data)
 
     @property
@@ -156,7 +153,7 @@ class Entry:
         """
         if self.rna_type in FEATURE_TYPE_RNAS:
             return utils.SO_INSDC_MAPPING[self.rna_type]
-        return 'ncRNA'
+        return "ncRNA"
 
     @property
     def ncrna_class(self):
@@ -164,7 +161,7 @@ class Entry:
         The ncRNA class. If the feature type is not ncRNA this this will be the
         empty string.
         """
-        if self.feature_name != 'ncRNA':
+        if self.feature_name != "ncRNA":
             return None
         return utils.SO_INSDC_MAPPING[self.rna_type]
 
@@ -173,7 +170,7 @@ class Entry:
         """
         Returns a comma separated list of gene synonyms.
         """
-        return ','.join(self.gene_synonyms)
+        return ",".join(self.gene_synonyms)
 
     @property
     def feature_location_start(self):
@@ -211,7 +208,7 @@ class Entry:
         """
         Compute an MD5 hash of the sequence.
         """
-        return str(md5(self.sequence.encode('utf-8')))
+        return str(md5(self.sequence.encode("utf-8")))
 
     def is_valid(self):
         """
@@ -230,26 +227,23 @@ class Entry:
             return False
 
         counts = Counter(self.sequence)
-        fraction = float(counts.get('N', 0)) / float(len(self.sequence))
+        fraction = float(counts.get("N", 0)) / float(len(self.sequence))
         if fraction > 0.1:
             LOGGER.warn(
-                "%s has too many (%i/%i) N's",
-                self.accession,
-                counts['N'],
-                length
+                "%s has too many (%i/%i) N's", self.accession, counts["N"], length
             )
             return False
 
-        if self.rna_type == 'SO:0000234':
+        if self.rna_type == "SO:0000234":
             LOGGER.warn("Skipping a mRNA")
             return False
 
         return True
 
     def human_rna_type(self):
-        return utils.SO_INSDC_MAPPING[self.rna_type].replace('_', ' ')
+        return utils.SO_INSDC_MAPPING[self.rna_type].replace("_", " ")
 
-    def write_ac_info(self):
+    def write_ac_info(self) -> ty.Iterable[ty.List[ty.Optional[str]]]:
         if not self.is_valid():
             return
         yield [
@@ -295,13 +289,13 @@ class Entry:
             self.rna_type,
         ]
 
-    def write_secondary_structure(self):
+    def write_secondary_structure(self) -> ty.List[str]:
         if not self.is_valid():
             return []
         # pylint: disable=no-member
         return self.secondary_structure.writeable(self.accession)
 
-    def write_sequence(self):
+    def write_sequence(self) -> ty.Iterable[ty.List[str]]:
         if not self.is_valid():
             return
         yield [
@@ -316,12 +310,12 @@ class Entry:
             self.md5(),
         ]
 
-    def write_seq_short(self):
+    def write_seq_short(self) -> ty.Iterable[ty.List[str]]:
         if len(self.sequence) <= 4000:
             return self.write_sequence()
         return []
 
-    def write_seq_long(self):
+    def write_seq_long(self) -> ty.Iterable[ty.List[str]]:
         if len(self.sequence) > 4000:
             return self.write_sequence()
         return []
@@ -354,10 +348,10 @@ class Entry:
         for interaction in self.interactions:
             yield interaction.writeable()
 
-    def write_ontology_terms(self):
+    def write_ontology_terms(self) -> ty.Iteable[ty.List[str]]:
         yield [self.rna_type]
 
-    def __write_part__(self, attribute, method_name='writeable'):
+    def __write_part__(self, attribute, method_name="writeable"):
         if not self.is_valid():
             return []
         method = op.methodcaller(method_name, self.accession)
