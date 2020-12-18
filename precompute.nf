@@ -74,8 +74,8 @@ process process_range {
   tuple val(min), val(max), path(raw), path(context)
 
   output:
-  path('precompute.csv'), emit: data
-  path('qa.csv'), emit: qa
+  path 'precompute.csv', emit: data
+  path 'qa.csv', emit: qa
 
   """
   rnac precompute from-file $context $raw
