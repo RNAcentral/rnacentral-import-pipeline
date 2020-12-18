@@ -1,4 +1,6 @@
 process create_load_tables {
+  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
+
   input:
   file(create)
 
@@ -13,6 +15,7 @@ process create_load_tables {
 process merge_and_import {
   memory 3.GB
   tag { name }
+  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
   tuple val(name), path(ctl), path('raw*.csv')
@@ -28,6 +31,7 @@ process merge_and_import {
 process release {
   maxForks 1
   when { params.should_release }
+  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
   path(pre_sql)
@@ -85,7 +89,7 @@ workflow load_data {
       status
     } \
     | groupTuple \
-    | map { it -> [it[0][0], it[0][1], it[1]] } \
+    | map { [it[0][0], it[0][1], it[1]] } \
     | combine(create_load_tables(schema)) \
     | map { n, ctl, fs, _ -> [n, ctl, fs] } \
     | merge_and_import \
