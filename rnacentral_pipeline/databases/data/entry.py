@@ -30,6 +30,7 @@ from . import utils
 from .features import SequenceFeature
 from .references import IdReference, Reference
 from .secondary_structure import SecondaryStructure
+from .regions import Exon
 
 LOGGER = logging.getLogger(__name__)
 
@@ -123,21 +124,21 @@ class Entry:
         return self.database.upper()  # pylint: disable=E1101
 
     @property
-    def exons(self):
+    def exons(self) -> ty.List[Exon]:
         exons = []
         for region in self.regions:
             exons.extend(region.exons)
         return exons
 
     @property
-    def db_xrefs(self):
+    def db_xrefs(self) -> str:
         """
         Return a JSON encoded dict representing the xref data.
         """
         return json.dumps(self.xref_data)
 
     @property
-    def note(self):
+    def note(self) -> str:
         """
         Return a JSON encoded dictionary representing the note data.
         """
@@ -147,7 +148,7 @@ class Entry:
         return json.dumps(data)
 
     @property
-    def feature_name(self):
+    def feature_name(self) -> str:
         """
         Return the feature for the RNA type.
         """
@@ -156,7 +157,7 @@ class Entry:
         return "ncRNA"
 
     @property
-    def ncrna_class(self):
+    def ncrna_class(self) -> str:
         """
         The ncRNA class. If the feature type is not ncRNA this this will be the
         empty string.
@@ -166,7 +167,7 @@ class Entry:
         return utils.SO_INSDC_MAPPING[self.rna_type]
 
     @property
-    def gene_synonym(self):
+    def gene_synonym(self) -> str:
         """
         Returns a comma separated list of gene synonyms.
         """
@@ -198,19 +199,19 @@ class Entry:
             return len(self.sequence) + 1
         return max(e.stop for e in self.exons)
 
-    def crc64(self):
+    def crc64(self) -> str:
         """
         Compute a CRC64 check sum for the sequence.
         """
         return str(crc64(self.sequence))
 
-    def md5(self):
+    def md5(self) -> str:
         """
         Compute an MD5 hash of the sequence.
         """
         return str(md5(self.sequence.encode("utf-8")))
 
-    def is_valid(self):
+    def is_valid(self) -> bool:
         """
         Detect if this entry is valid. This means it is neither too short (< 10
         nt) not too long (> 1000000 nts) and has less than 10% N's.
@@ -240,7 +241,7 @@ class Entry:
 
         return True
 
-    def human_rna_type(self):
+    def human_rna_type(self) -> str:
         return utils.SO_INSDC_MAPPING[self.rna_type].replace("_", " ")
 
     def write_ac_info(self) -> ty.Iterable[ty.List[ty.Optional[str]]]:
