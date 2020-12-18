@@ -1,11 +1,12 @@
 #!/usr/bin/env nextflow
 
+nextflow.enable.dsl=2
+
 include { rfam_scan } from './workflows/rfam-scan'
 
 workflow qa {
-  emit: flag
   main:
-    rfam() | set { flag }
+    rfam_scan()
 }
 
 workflow {
