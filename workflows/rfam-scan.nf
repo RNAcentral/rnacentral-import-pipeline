@@ -84,7 +84,7 @@ process import_data {
 }
 
 workflow rfam_scan {
-  Channel.fromPath("files/find-active-xref-urs.sql").set { active_xref_sql }
+  Channel.fromPath("files/find-active-xrefs-urs.sql").set { active_xref_sql }
   Channel.fromPath("files/qa/computed.sql").set { computed_sql }
   Channel.fromPath("files/qa/compute-required.sql").set { compute_required_sql }
   Channel.fromPath("files/qa/rfam.ctl").set { ctl }
