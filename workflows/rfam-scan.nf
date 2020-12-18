@@ -3,7 +3,7 @@ process generate_files {
 
   output:
   path 'rfam', emit: cm_files
-  path 'version_file', version_info
+  path 'version_file', emit: version_info
 
   script:
   def base = params.qa.rfam.files
@@ -30,7 +30,7 @@ process sequences {
 
   """
   psql -v ON_ERROR_STOP=1 -f "$active_xrefs" "$PGDATABASE" | sort -u > active-urs
-  psql -v ON_ERROR_STOP=1 -v 'name=$name' -f "$computed" "$PGDATABASE" | sort > computed
+  psql -v ON_ERROR_STOP=1 -v 'name=rfam' -f "$computed" "$PGDATABASE" | sort > computed
   comm -23 active-urs computed > urs-to-compute
   psql -q -v ON_ERROR_STOP=1 -f "$compute_missing" "$PGDATABASE" > raw.json
   mkdir parts
@@ -88,7 +88,7 @@ workflow rfam_scan {
   Channel.fromPath("files/qa/computed.sql").set { computed_sql }
   Channel.fromPath("files/qa/compute-required.sql").set { compute_required_sql }
   Channel.fromPath("files/qa/rfam.ctl").set { ctl }
-  Channel.fromPath("files/qa/attempted/rfam.ctl").set { attempted }
+  Channel.fromPath("files/qa/attempted/rfam.ctl").set { attempted_ctl }
 
   generate_files()
 
@@ -101,10 +101,10 @@ workflow rfam_scan {
     (files instanceof ArrayList) ? files.collect { [version, it] } : [[version, files]]
   } \
   | combine(generate_files.out.cm_files) \
-  | qa_scan
+  | scan
 
-  qa_scan.out.hits | collect | set { hits }
-  qa_scan.out.attempted | collect | set { attempted }
+  scan.out.hits | collect | set { hits }
+  scan.out.attempted | collect | set { attempted }
 
   import_data(hits, ctl, attempted, attempted_ctl)
 }
