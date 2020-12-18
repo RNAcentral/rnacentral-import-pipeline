@@ -1,3 +1,7 @@
+#!/usr/bin/env nextflow
+
+nextflow.enable.dsl = 2
+
 process setup {
   input:
   path(setup)
@@ -98,8 +102,8 @@ process blat {
   tuple val(species), val(assembly), path(genome), path(ooc), path(chunk)
 
   output:
-  tuple val(species), path('selected.json'), emit: results
-  path('attempted.csv'), emit: attempted
+  tuple val(species), path('selected.json'), emit: hits
+  path 'attempted.csv', emit: attempted
 
   """
   set -o pipefail
@@ -142,7 +146,7 @@ process select_mapped_locations {
   """
 }
 
-process load_genome_mapping {
+process load_mapping {
   maxForks 1
 
   input:
@@ -151,7 +155,6 @@ process load_genome_mapping {
   path('attempted*.csv')
   path(attempted_ctl)
 
-  script:
   """
   split-and-load $ctl 'raw*.csv' ${params.import_data.chunk_size} genome-mapping
   split-and-load $attempted_ctl 'attempted*.csv' ${params.import_data.chunk_size} genome-mapping-attempted
@@ -166,7 +169,7 @@ workflow genome_mapping {
   Channel.fromPath('files/genome-mapping/attempted.ctl').set { attempted_ctl }
 
   setup(setup_sql, find_species) \
-  | splitCsv() \
+  | splitCsv \
   | filter { s, a, t, d -> !params.genome_mapping.species_excluded_from_mapping.contains(s) } \
   | set { genome_info }
 
@@ -180,18 +183,18 @@ workflow genome_mapping {
   | set { split_sequences }
 
   genomes \
-  | join(split_sequenecs)
+  | join(split_sequences) \
   | flatMap { species, assembly, genome_chunks, chunks ->
     [genome_chunks.collate(2), chunks]
-      .combinations()
-      .inject([]) { acc, it -> acc << [species, assembly] + it.flatten() }
+      .combinations
+      .inject([]) { acc, files -> acc << [species, assembly] + files.flatten() }
   } \
   | blat
 
   blat.out.hits \
-  | groupTuple() \
+  | groupTuple \
   | select_mapped_locations \
-  | collect() \
+  | collect \
   | set { hits }
 
   blat.out.attempted | collect | set { attempted }
