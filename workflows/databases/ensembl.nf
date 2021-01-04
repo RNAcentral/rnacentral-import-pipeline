@@ -1,66 +1,47 @@
-process fetch_metadata {
-  when { params.databases.ensembl.vertebrates.run }
-
-  input:
-  path(query)
-
-  output:
-  path('families.tsv')
-
-  """
-  mysql \
-    --host ${params.connections.rfam.host} \
-    --port ${params.connections.rfam.port} \
-    --user ${params.connections.rfam.user} \
-    --database ${params.connections.rfam.database} < ${query} > families.tsv
-  """
-}
-
 process find_urls {
-  when { params.databases.ensembl.vertebrates.run }
   memory '20GB'
 
   output:
-  path('species.txt')
+  tuple val(division), path('species.txt')
 
   """
-  rnac ensembl urls-for vertebrates $params.databases.ensembl.vertebrates.ftp_host > species.txt
+  rnac ensembl urls-for $division $params.databases.ensembl.vertebrates.ftp_host > species.txt
   """
 }
 
 process fetch_species_data {
-  tag { "$name" }
+  tag { "$species" }
   errorStrategy 'retry'
   maxRetries 10
   maxForks 5
 
   input:
-  tuple val(name), val(dat_path), val(gff_path)
+  tuple val(division), val(species), val(dat_path), val(gff_path)
 
   output:
-  tuple val(name), path("*.dat"), path("${name}.gff")
+  tuple val(division), path("*.dat"), path("${species}.gff")
 
   """
   wget '$dat_path'
   wget '$gff_path'
-  zgrep '^#' *.gff3.gz | grep -v '^###\$' > ${name}.gff
-  zcat *.gff3.gz | awk '{ if (\$3 !~ /CDS/) { print \$0 } }' >> ${name}.gff
+  zgrep '^#' *.gff3.gz | grep -v '^###\$' > ${species}.gff
+  zcat *.gff3.gz | awk '{ if (\$3 !~ /CDS/) { print \$0 } }' >> ${species}.gff
   gzip -d *.gz
   """
 }
 
 process parse_data {
   tag { "${embl.baseName}" }
-  memory { 5.GB }
+  memory { '6GB' }
 
   input:
-  tuple val(name), path(embl), path(gff), path(rfam)
+  tuple val(divsion), path(embl), path(gff), path(rfam)
 
   output:
   path('*.csv')
 
   """
-  rnac ensembl parse vertebrates --family-file $rfam $embl $gff .
+  rnac ensembl parse $division --family-file $rfam $embl $gff .
   """
 }
 
@@ -69,14 +50,22 @@ workflow ensembl {
   main:
     Channel.fromPath('files/import-data/rfam/families.sql') | set { rfam }
 
-    find_urls \
+    Channel.fromList([
+      'plants',
+      'fungi',
+      'protists',
+      'metazoa',
+      'vertebrates',
+    ]) \
+    | filter { division -> params.databases.ensembl[division].run } \
+    | find_urls \
     | splitCsv \
-    | filter { name, dat_url, gff_url ->
-      !params.databases.ensembl.vertebrates.exclude.any { p -> name.toLowerCase() =~ p }
+    | filter { division, species, dat_url, gff_url ->
+      !params.databases.ensembl[division].exclude.any { p -> species.toLowerCase() =~ p }
     } \
     | fetch_species_data \
-    | flatMap { name, dat_files, gff_file ->
-      (dat_files instanceof ArrayList) ? dat_files.collect { [name, it, gff_file] } : [[name, dat_files, gff_file]]
+    | flatMap { division, dat_files, gff_file ->
+      (dat_files instanceof ArrayList) ? dat_files.collect { [division, it, gff_file] } : [[division, dat_files, gff_file]]
     } \
     | combine(fetch_metadata(rfam)) \
     | parse_data \
