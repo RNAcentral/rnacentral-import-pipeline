@@ -20,7 +20,7 @@ from rnacentral_pipeline.rnacentral.precompute.data.sequence import Sequence
 from tests.helpers import run_range_as_single, run_with_replacements
 
 
-def load_data(rna_id) -> Sequence:
+def load_data(rna_id: str) -> Sequence:
     path = os.path.join("files", "precompute", "query.sql")
     upi, taxid = rna_id.split("_")
     data = run_with_replacements(
@@ -31,12 +31,10 @@ def load_data(rna_id) -> Sequence:
             "xref.upi ='%s' AND xref.taxid = %i" % (upi, int(taxid)),
         ),
     )
-    # from pprint import pprint
-    # pprint(data)
     return Sequence.build(data)
 
 
-def load_for_upi(upi) -> ty.List[Sequence]:
+def load_for_upi(upi: str) -> ty.List[Sequence]:
     path = os.path.join("files", "precompute", "query.sql")
     loaded = list(
         run_with_replacements(
@@ -49,7 +47,7 @@ def load_for_upi(upi) -> ty.List[Sequence]:
     return [Sequence.build(l) for l in loaded]
 
 
-def load_for_range(start, stop) -> ty.List[Sequence]:
+def load_for_range(start: int, stop: int) -> ty.List[Sequence]:
     path = os.path.join("files", "precompute", "query.sql")
     loaded = run_with_replacements(
         path,
