@@ -21,4 +21,4 @@ from attr.validators import instance_of as is_a
 class R2dtHit:
     model_id = attr.ib(validator=is_a(int))
     model_name = attr.ib(validator=is_a(int))
-    model_so_term = attr.ib(validator=is_a(int))
+    model_so_term = attr.ib(validator=is_a(str))

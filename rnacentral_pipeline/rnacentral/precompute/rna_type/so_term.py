@@ -14,38 +14,63 @@ limitations under the License.
 """
 
 import logging
-
 import typing as ty
 
-from rnacentral_pipeline.rnacentral.precompute import data
+from rnacentral_pipeline.databases.data import Database, RnaType
+from rnacentral_pipeline.rnacentral.precompute.data import sequence as seq
 
 LOGGER = logging.getLogger(__name__)
 
+ACCEPTED_DATABASES = {
+    Database.five_srrnadb,
+    Database.flybase,
+    Database.gtrnadb,
+    Database.lncbase,
+    Database.lncipedia,
+    Database.mirbase,
+    Database.mirgenedb,
+    Database.pirbase,
+    Database.pombase,
+    Database.sgd,
+    Database.snodb,
+    Database.snorna_database,
+    Database.tarbase,
+    Database.zwd,
+}
 
-def provided_so_terms(sequence) -> ty.Set[str]:
-    return set()
 
-
-def r2dt_so_term(context, sequence: data.Sequence) -> ty.Optional[str]:
+def try_to_find_specific(rna_types: ty.Set[RnaType]) -> ty.Optional[RnaType]:
     return None
 
 
-def rfam_so_term(context, sequence: data.Sequence) -> ty.Optional[str]:
-    terms = set()
-    for hit in sequence.rfam_hits:
-        terms.add(hit.model_rna_type.insdc)
-    LOGGER.debug("Sequence %s has Rfam terms: %s", sequence.urs_id, terms)
+def provided_so_terms(sequence: seq.Sequence) -> ty.Optional[RnaType]:
+    provided = set()
+    for accession in sequence.accessions:
+        if accession.database in ACCEPTED_DATABASES:
+            provided.add(accession.rna_type)
+    LOGGER.debug("Sequence %s was given provied terms %s", sequence.rna_id, provided)
+    if len(provided) == 1:
+        return provided.pop()
+    return try_to_find_specific(provided)
+
+
+def r2dt_so_term(sequence: seq.Sequence) -> ty.Optional[RnaType]:
+    terms = {hit.model_so_term for hit in sequence.r2dt_hits}
+    LOGGER.debug("Sequence %s has R2DT terms: %s", sequence.rna_id, terms)
     if len(terms) == 1:
         return terms.pop()
     return None
 
 
-def rna_type_of(context, sequence: data.Sequence) -> ty.Optional[str]:
-    provided = provided_so_terms(sequence)
-    if len(provided) == 1:
-        return provided.pop()
+def rfam_so_term(sequence: seq.Sequence) -> ty.Optional[RnaType]:
+    terms = {hit.model_rna_type for hit in sequence.rfam_hits}
+    LOGGER.debug("Sequence %s has Rfam terms: %s", sequence.rna_id, terms)
+    if len(terms) == 1:
+        return terms.pop()
+    return None
 
-    r2dt_term = r2dt_so_term(context, sequence)
-    if r2dt_term:
-        return r2dt_term
-    return rfam_so_term(context, sequence)
+
+def rna_type_of(sequence: seq.Sequence) -> ty.Optional[RnaType]:
+    return (
+        provided_so_terms(sequence) or r2dt_so_term(sequence) or rfam_so_term(sequence)
+    )

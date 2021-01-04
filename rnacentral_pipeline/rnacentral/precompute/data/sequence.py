@@ -13,13 +13,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import re
-import string
 import typing as ty
 
 import attr
 from attr.validators import instance_of as is_a
-from attr.validators import optional
 
 from rnacentral_pipeline.rnacentral.precompute.data.accession import Accession
 from rnacentral_pipeline.rnacentral.precompute.data.coordinate import \
@@ -88,7 +85,7 @@ class Sequence:
     rfam_hits: ty.List[RfamHit] = attr.ib(validator=is_a(list))
     coordinates: ty.List[Coordinate] = attr.ib(validator=is_a(list))
     last_release = attr.ib(validator=is_a(int))
-    r2dt_hits: ty.Optional[R2dtHit] = attr.ib(validator=optional(is_a(R2dtHit)))
+    r2dt_hits: ty.List[R2dtHit] = attr.ib(validator=is_a(list))
 
     @classmethod
     def build(cls, data) -> "Sequence":
@@ -104,7 +101,7 @@ class Sequence:
             if hit.pop("rfam_hit_id"):
                 hits.add(RfamHit.build(hit))
 
-        coords = [Coordinate.build(c) for c in data["coordinates"] if c['assembly_id']]
+        coords = [Coordinate.build(c) for c in data["coordinates"] if c["assembly_id"]]
 
         return cls(
             upi=data["upi"],
@@ -117,7 +114,7 @@ class Sequence:
             rfam_hits=list(hits),
             coordinates=coords,
             last_release=data["last_release"],
-            r2dt_hits=None,
+            r2dt_hits=[],
         )
 
     @property

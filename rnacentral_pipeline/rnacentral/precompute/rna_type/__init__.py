@@ -13,17 +13,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import typing as ty
+from rnacentral_pipeline.rnacentral.precompute.data.context import Context
+from rnacentral_pipeline.rnacentral.precompute.data.sequence import Sequence
 
 from rnacentral_pipeline.rnacentral.precompute.rna_type import insdc
 from rnacentral_pipeline.rnacentral.precompute.rna_type import so_term
 
 
-def rna_type_of(context, data) -> str:
-    rna_type = so_term.rna_type_of(context, data)
-    if not rna_type:
-        insdc_rna_type = insdc.rna_type_of(data)
-        if not insdc_rna_type:
-            insdc_rna_type = 'ncRNA'
-        rna_type = context.so_term_for(insdc_rna_type)
-    return rna_type
+def rna_type_of(context: Context, data: Sequence) -> str:
+    rna_type = so_term.rna_type_of(data)
+    if rna_type:
+        return rna_type
+
+    insdc_rna_type = insdc.rna_type_of(data) or "ncRNA"
+    return context.so_term_for(insdc_rna_type)

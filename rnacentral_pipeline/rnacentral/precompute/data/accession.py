@@ -13,11 +13,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import re
+import string
+import typing as ty
 from collections import Counter
 
 import attr
 from attr.validators import instance_of as is_a
 from attr.validators import optional
+
+from rnacentral_pipeline.databases.data import RnaType
+from rnacentral_pipeline.databases.data import Database
 
 
 @attr.s(frozen=True)
@@ -27,11 +33,9 @@ class Accession:
     name from the accession level data for a sequence.
     """
 
-    gene = attr.ib(validator=optional(is_a(str)), converter=str)
+    gene = attr.ib(validator=optional(is_a(str)))
     optional_id = attr.ib(validator=optional(is_a(str)))
-    pretty_database = attr.ib(validator=is_a(str), converter=str)
-    feature_name = attr.ib(validator=is_a(str), converter=str)
-    ncrna_class = attr.ib(validator=optional(is_a(str)))
+    database = attr.ib(validator=is_a(Database))
     species = attr.ib(validator=optional(is_a(str)))
     common_name = attr.ib(validator=optional(is_a(str)))
     description = attr.ib(validator=is_a(str), converter=str)
@@ -40,40 +44,38 @@ class Accession:
     lineage = attr.ib(validator=optional(is_a(str)))
     all_species = attr.ib(validator=is_a(tuple), converter=tuple)
     all_common_names = attr.ib(validator=is_a(tuple), converter=tuple)
-    so_rna_type = attr.ib(validator=is_a(str), converter=str)
+    rna_type = attr.ib(validator=is_a(RnaType))
 
     @classmethod
-    def build(cls, data):
+    def build(cls, data) -> "Accession":
         """
         Create a new Accession from the given dict. This assumes the dict has
         keys with the same names as accession fields.
         """
-        return cls(**data)
+        return cls(
+            gene=data["gene"],
+            optional_id=data["optional_id"],
+            database=Database.build(data["database"]),
+            species=data["species"],
+            common_name=data["common_name"],
+            description=data["description"],
+            locus_tag=data["locus_tag"],
+            organelle=data["organelle"],
+            lineage=data["lineage"],
+            all_species=tuple(data["all_species"]),
+            all_common_names=tuple(data["all_common_names"]),
+            rna_type=RnaType.bulid(data["so_term"]),
+        )
 
     @property
-    def database(self):
-        """
-        The normalized (lowercase) database name.
-        """
-        return self.pretty_database.lower()
-
-    @property
-    def rna_type(self):
-        """
-        Get a single INSDC RNA type for this accession.
-        """
-
-        if self.feature_name == "ncRNA":
-            return self.ncrna_class
-        return self.feature_name
-
-    @property
-    def domain(self):
+    def domain(self) -> ty.Optional[str]:
         """
         Get the domain, if any, that is assigned to this accession. This will
         not include uncultured, environmental or synthetic domains.
         """
 
+        if not self.lineage:
+            return None
         if self.lineage.startswith("other sequences"):
             return None
 
@@ -94,32 +96,34 @@ class Accession:
         return domain
 
     @property
-    def masked_description(self):
+    def masked_description(self) -> str:
         """
         Compute a masked description. This will do things like strip out
         '10-mer' and such. The description returned is suitable for entropy
         computation, but as the description that is displayed to the user.
         """
 
-        raw = self.description.lower()  # pylint: disable=no-member
+        raw = self.description.lower()
         allowed = set(string.ascii_lowercase + string.digits + " ")
         counts = Counter(r for r in raw if r in allowed)
         rep = counts.most_common(1)[0][0]
-        masked = re.sub(r"(\d+-mer)", lambda m: rep * len(m.groups(0)[0]), raw)
+        masked = re.sub(r"(\d+-mer)", lambda m: rep * len(m.group(1)[0]), raw)
         masked = re.sub(r"5'-(.+)-3'", "", masked)
         masked = "".join(m for m in masked if m in allowed)
         masked = re.sub(r"\s+", " ", masked)
         return masked
 
-    def is_mitochondrial(self):
+    def is_mitochondrial(self) -> bool:
         """
         Check if this accession is mitochrondrial.
         """
-        return "mitochondri" in self.description or (
+        found = "mitochondri" in self.description or (
             self.organelle and "mitochondri" in self.organelle
         )
+        return bool(found)
 
-    def is_chloroplast(self):
-        return "chloroplast" in self.description or (
+    def is_chloroplast(self) -> bool:
+        found = "chloroplast" in self.description or (
             self.organelle and "chloroplast" in self.organelle
         )
+        return bool(found)
