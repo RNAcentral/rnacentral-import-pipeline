@@ -39,3 +39,6 @@ class Context:
     def dump(self, path: Path):
         with path.open('wb') as out:
             pickle.dump(self, out)
+
+    def so_term_for(self, name: str) -> str:
+        return name

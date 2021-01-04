@@ -14,13 +14,15 @@ limitations under the License.
 """
 
 
+from .databases import *
 from .entry import *
+from .features import *
 from .go_annotations import *
 from .ontology_term import *
+from .psi_mi import *
 from .references import *
 from .regions import *
 from .related import *
-from .secondary_structure import *
-from .psi_mi import *
 from .ribovore import *
-from .features import *
+from .rna_type import *
+from .secondary_structure import *
