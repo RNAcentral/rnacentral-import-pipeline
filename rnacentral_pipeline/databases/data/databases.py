@@ -23,44 +23,56 @@ class Database(enum.Enum):
     knows about.
     """
 
-    dictybase      = 0
-    ena            = 1
-    ensembl        = 2
-    ensembl_plants = 3
-    flybase        = 4
-    gencode        = 5
-    greengenes     = 5
-    gtrnadb        = 6
-    hgnc           = 7
-    lncbase        = 8
-    lncbook        = 9
-    lncipedia      = 10
-    lncrnadb       = 11
-    mgi            = 12
-    mirbase        = 13
-    modomics       = 14
-    noncode        = 15
-    pdbe           = 16
-    pombase        = 17
-    rdp            = 18
-    refseq         = 19
-    rfam           = 20
-    rgd            = 21
-    sgd            = 22
-    silva          = 23
-    snopy          = 24
-    srpdb          = 25
-    tair           = 26
-    tarbase        = 27
-    tmrna_website  = 28
-    vega           = 29
-    wormbase       = 30
-    zwd            = 31
+    dictybase        = enum.auto()
+    ena              = enum.auto()
+    ensembl          = enum.auto()
+    ensembl_fungi    = enum.auto()
+    ensembl_metazoa  = enum.auto()
+    ensembl_plants   = enum.auto()
+    ensembl_protists = enum.auto()
+    five_srrnadb     = enum.auto()
+    flybase          = enum.auto()
+    gencode          = enum.auto()
+    genecards        = enum.auto()
+    greengenes       = enum.auto()
+    gtrnadb          = enum.auto()
+    hgnc             = enum.auto()
+    intact           = enum.auto()
+    lncbase          = enum.auto()
+    lncbook          = enum.auto()
+    lncipedia        = enum.auto()
+    lncrnadb         = enum.auto()
+    malacards        = enum.auto()
+    mgi              = enum.auto()
+    mirbase          = enum.auto()
+    mirgenedb        = enum.auto()
+    modomics         = enum.auto()
+    noncode          = enum.auto()
+    pdbe             = enum.auto()
+    pirbase          = enum.auto()
+    pombase          = enum.auto()
+    rdp              = enum.auto()
+    refseq           = enum.auto()
+    rfam             = enum.auto()
+    rgd              = enum.auto()
+    sgd              = enum.auto()
+    silva            = enum.auto()
+    snodb            = enum.auto()
+    snopy            = enum.auto()
+    snorna_database  = enum.auto()
+    srpdb            = enum.auto()
+    tair             = enum.auto()
+    tarbase          = enum.auto()
+    tmrna_website    = enum.auto()
+    vega             = enum.auto()
+    wormbase         = enum.auto()
+    zfin             = enum.auto()
+    zwd              = enum.auto()
 
-    @classmethod 
-    def build(cls, name):
-        if isinstance(value, cls):
-            return value
+    @classmethod
+    def build(cls, name) -> "Database":
+        if isinstance(name, cls):
+            return name
         attribute = name.lower().replace(' ', '_')
         if hasattr(cls, attribute):
             return getattr(cls, attribute)
@@ -72,10 +84,5 @@ class Database(enum.Enum):
             return cls.snopy
         raise ValueError("Unknown database name %s" % name)
 
-    def normalized(self):
-        return self.name.upper()
-
-    def public_name(self):
-        if self is Database.pdbe:
-            return 'PDB'
+    def normalized(self) -> str:
         return self.name.upper()
