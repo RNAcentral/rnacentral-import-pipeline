@@ -84,3 +84,4 @@ nix
 target/
 bin/json2fasta
 bin/split-ena
+stubs
