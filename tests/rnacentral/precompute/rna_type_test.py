@@ -194,6 +194,7 @@ from .helpers import load_data
     ('URS0000D56C46_9606', 'pre_miRNA'),
     ('URS0000EF7A6A_6945', 'U12_snRNA'),
     ('URS000075CEC3_9606', 'miRNA'),
+    ('URS0000EEE7A7_9606', 'SRP_RNA'),
 
     # # Not sure SO term
     # ('URS000018B855_1270', 'misc_RNA'),
