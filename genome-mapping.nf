@@ -46,7 +46,7 @@ process fetch_unmapped_sequences {
     -v species_to_map=${params.genome_mapping.species_table} \
     -f "$query" \
     "$PGDATABASE" > raw.json
-  json2fasta.py raw.json rnacentral.fasta
+  json2fasta raw.json rnacentral.fasta
   seqkit shuffle --two-pass rnacentral.fasta > shuffled.fasta
 
   split-sequences \
@@ -167,22 +167,17 @@ workflow genome_mapping {
   Channel.fromPath('files/genome-mapping/find-species.sql').set { find_species }
   Channel.fromPath('files/genome-mapping/load.ctl').set { hits_ctl }
   Channel.fromPath('files/genome-mapping/attempted.ctl').set { attempted_ctl }
+  Channel.fromPath('files/genome-mapping/find-unmapped.sql').set { unmapped_sql }
 
   setup(setup_sql, find_species) \
   | splitCsv \
   | filter { s, a, t, d -> !params.genome_mapping.species_excluded_from_mapping.contains(s) } \
   | set { genome_info }
 
+  genome_info | combine(unmapped_sql) | fetch_unmapped_sequences | set { split_sequences }
+
   genome_info \
   | download_genome \
-  | set { genomes }
-
-  genome_info \
-  | combine(Channel.fromPath('files/genome-mapping/find-unmapped.sql')) \
-  | fetch_unmapped_sequences \
-  | set { split_sequences }
-
-  genomes \
   | join(split_sequences) \
   | flatMap { species, assembly, genome_chunks, chunks ->
     [genome_chunks.collate(2), chunks]
@@ -191,12 +186,7 @@ workflow genome_mapping {
   } \
   | blat
 
-  blat.out.hits \
-  | groupTuple \
-  | select_mapped_locations \
-  | collect \
-  | set { hits }
-
+  blat.out.hits | groupTuple | select_mapped_locations | collect | set { hits }
   blat.out.attempted | collect | set { attempted }
 
   load_mapping(hits, hits_ctl, attempted, attempted_ctl)
