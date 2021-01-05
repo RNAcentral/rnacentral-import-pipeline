@@ -17,13 +17,16 @@ import itertools as it
 import typing as ty
 
 import attr
+from attr.validators import optional
 from attr.validators import instance_of as is_a
+
+from rnacentral_pipeline.databases.sequence_ontology import tree
 
 
 @attr.s(frozen=True, slots=True)
 class SoTermInfo:
-    name = attr.ib(validator=is_a(str))
     so_id = attr.ib(validator=is_a(str))
+    name = attr.ib(validator=optional(is_a(str)))
 
     @classmethod
     def ncRNA(cls):
@@ -33,14 +36,44 @@ class SoTermInfo:
         return self.name == value or self.so_id == value
 
 
-SoTree = ty.Tuple[SoTermInfo]
-
-
 @attr.s(frozen=True, slots=True, hash=True)
 class RnaType:
-    insdc = attr.ib(validator=is_a(str))
-    so_term = attr.ib(validator=is_a(str))
-    ontology_terms = attr.ib(validator=is_a(tuple), type=SoTree)
+    so_term = attr.ib(validator=is_a(SoTermInfo))
+    insdc = attr.ib(validator=optional(is_a(str)))
+
+    @classmethod
+    def from_so_term(cls, so_tree, so_id) -> "RnaType":
+        so_name = so_tree.name_to_id.get(so_id)
+        so_node = so_tree[so_id]
+        insdc = next(tree.insdc_synonyms(so_node), None)
+        return cls(so_term=SoTermInfo(so_id=so_id, name=so_name), insdc=insdc)
+
+    @classmethod
+    def from_so_id(cls, so_tree, so_id) -> "RnaType":
+        """
+        Build and RNA type given the SO id, like SO:0000001
+        """
+        if so_id.startswith('SO:'):
+            return cls.from_so_term(so_tree, so_id)
+        return cls.from_so_term(so_tree, so_tree.name_to_id[so_id])
+
+    @classmethod
+    def from_insdc_term(cls, so_tree, term) -> "RnaType":
+        """
+        Build an RNA type given an INSDC RNA type.
+        """
+        if term == 'other' or term == 'ncRNA' or term == 'sRNA':
+            return cls.from_so_term(so_tree, "SO:0000655")
+        if term == 'misc_RNA':
+            return cls.from_so_term(so_tree, "SO:0000673")
+        name = None
+        if term in so_tree.name_to_id:
+            name = so_tree.name_to_id[term]
+        elif term in so_tree.insdc_to_id:
+            name = so_tree.insdc_to_id[term]
+        else:
+            raise ValueError(f"Unknown INSDC term {term}")
+        return cls.from_so_term(so_tree, name)
 
     def is_a(self, so_name):
         return (

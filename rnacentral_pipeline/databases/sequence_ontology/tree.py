@@ -31,6 +31,10 @@ def load_ontology(filename):
     ont = obonet.read_obo(filename)
     ont.id_to_name = {id_: data.get('name') for id_, data in ont.nodes(data=True)}
     ont.name_to_id = {data['name']: id_ for id_, data in ont.nodes(data=True) if 'name' in data}
+    ont.insdc_to_id = {}
+    for id_, node in ont.nodes(data=True):
+        for insdc in insdc_synonyms(node):
+            ont.insdc_to_id[insdc] = id_
     return ont
 
 
