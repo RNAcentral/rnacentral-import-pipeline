@@ -18,18 +18,23 @@ from pathlib import Path
 
 import attr
 from attr.validators import instance_of as is_a
+from sqlitedict import SqliteDict
 
+from rnacentral_pipeline.databases.data import RnaType
 from rnacentral_pipeline.rnacentral.repeats import tree
+from rnacentral_pipeline.databases.sequence_ontology import tree as so
 
 
 @attr.s(frozen=True)
 class Context:
+    so_tree = attr.ib(validator=is_a(SqliteDict))
     repeats = attr.ib(validator=is_a(tree.RepeatTree), factory=tree.RepeatTree)
 
     @classmethod
     def from_directory(cls, path: Path) -> "Context":
         repeats = tree.RepeatTree.from_directory(path / "repeat-tree")
-        ctx = cls(repeats=repeats)
+        so_tree = so.load_ontology(so.REMOTE_ONTOLOGY)
+        ctx = cls(repeats=repeats, so_tree=so_tree)
         ctx.validate()
         return ctx
 
@@ -37,8 +42,9 @@ class Context:
         self.repeats.validate()
 
     def dump(self, path: Path):
-        with path.open('wb') as out:
-            pickle.dump(self, out)
+        data = {'repeats': self.repeats}
+        with path.open("wb") as out:
+            pickle.dump(data, out)
 
-    def so_term_for(self, name: str) -> str:
-        return name
+    def so_term_for(self, name: str) -> RnaType:
+        return RnaType.from_insdc_term(self.so_tree, name)

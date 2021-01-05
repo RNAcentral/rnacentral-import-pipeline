@@ -17,6 +17,7 @@ import attr
 from attr.validators import instance_of as is_a
 from attr.validators import optional
 
+from rnacentral_pipeline.databases.data import RnaType
 
 @attr.s(hash=True)
 class HitComponent:
@@ -33,7 +34,7 @@ class RfamHit:
     """
 
     model = attr.ib(validator=is_a(str))
-    model_rna_type = attr.ib(validator=is_a(str))
+    model_rna_type = attr.ib(validator=is_a(RnaType))
     model_domain = attr.ib(validator=optional(is_a(str)))
     model_name = attr.ib(validator=is_a(str))
     model_long_name = attr.ib(validator=is_a(str))
