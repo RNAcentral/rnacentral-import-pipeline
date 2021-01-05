@@ -349,7 +349,7 @@ class Entry:
         for interaction in self.interactions:
             yield interaction.writeable()
 
-    def write_ontology_terms(self) -> ty.Iteable[ty.List[str]]:
+    def write_ontology_terms(self) -> ty.Iterable[ty.List[str]]:
         yield [self.rna_type]
 
     def __write_part__(self, attribute, method_name="writeable"):
