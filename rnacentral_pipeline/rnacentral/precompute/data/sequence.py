@@ -96,11 +96,6 @@ class Sequence:
 
         active, inactive = partioned_accessions(data["accessions"])
         active = fix_hgnc_data(active)
-        hits = set()
-        for hit in data["hits"]:
-            if hit.pop("rfam_hit_id"):
-                hits.add(RfamHit.build(hit))
-
         coords = [Coordinate.build(c) for c in data["coordinates"] if c["assembly_id"]]
 
         return cls(
@@ -111,10 +106,10 @@ class Sequence:
             inactive_accessions=inactive,
             is_active=any(not d for d in data["deleted"]),
             previous_update=data["previous"][0],
-            rfam_hits=list(hits),
+            rfam_hits=list({RfamHit.build(r) for r in data.get("rfam_hits", [])}),
             coordinates=coords,
             last_release=data["last_release"],
-            r2dt_hits=[],
+            r2dt_hits=list({R2dtHit.build(r) for r in data.get("r2dt_hits", [])}),
         )
 
     @property

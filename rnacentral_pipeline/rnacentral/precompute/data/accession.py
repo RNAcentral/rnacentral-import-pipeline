@@ -64,7 +64,7 @@ class Accession:
             lineage=data["lineage"],
             all_species=tuple(data["all_species"]),
             all_common_names=tuple(data["all_common_names"]),
-            rna_type=RnaType.bulid(data["so_term"]),
+            rna_type=RnaType.from_so_term(data["so_term"]),
         )
 
     @property

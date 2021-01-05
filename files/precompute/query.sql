@@ -31,7 +31,7 @@ select
       )),
     'deleted', array_agg(distinct xref.deleted = 'Y'),
     'previous', array_agg(row_to_json(prev.*)),
-    'hits', array_agg(json_build_object(
+    'rfam_hits', array_agg(json_build_object(
        'rfam_hit_id', hits.rfam_hit_id,
        'model', hits.rfam_model_id,
        'model_rna_type', models.rna_type,
@@ -45,7 +45,12 @@ select
        'sequence_start', hits.sequence_start,
        'sequence_stop', hits.sequence_stop
     )),
-    'last_release', max(xref.last)
+    'last_release', max(xref.last),
+    'r2dt_hits', array_agg(json_build_object(
+        'model_id', r2dt.id,
+        'model_name', r2dt.model_name,
+        'model_so_term', r2dt.so_term,
+    ))
 )
 FROM rna
 JOIN :tablename todo ON todo.upi = rna.upi
@@ -72,6 +77,14 @@ JOIN rnc_database db
 ON
     db.id = xref.dbid
 LEFT JOIN rnc_taxonomy tax ON tax.id = xref.taxid
+WHERE
+    todo.id BETWEEN :min AND :max
+LEFT JOIN rnc_secondary_structure_layout_hits ss
+on
+  ss.urs = rna.upi
+LEFT JOIN rnc_secondary_structure_layout_hits r2dt
+on
+  r2dt.id = ss.model_id
 WHERE
     todo.id BETWEEN :min AND :max
 GROUP BY rna.upi, xref.taxid

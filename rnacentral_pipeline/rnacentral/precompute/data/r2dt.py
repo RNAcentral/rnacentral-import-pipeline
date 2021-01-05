@@ -16,9 +16,18 @@ limitations under the License.
 import attr
 from attr.validators import instance_of as is_a
 
+from rnacentral_pipeline.databases.data import RnaType
+
 
 @attr.s()
 class R2dtHit:
     model_id = attr.ib(validator=is_a(int))
-    model_name = attr.ib(validator=is_a(int))
-    model_so_term = attr.ib(validator=is_a(str))
+    model_name = attr.ib(validator=is_a(str))
+    model_rna_type = attr.ib(validator=is_a(RnaType))
+
+    def build(cls, raw):
+        return cls(
+            model_id=raw["model_id"],
+            model_name=raw["model_name"],
+            model_rna_type=RnaType.from_so_term(raw["model_so_term"]),
+        )

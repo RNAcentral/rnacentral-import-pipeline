@@ -39,14 +39,14 @@ class SequenceUpdate:
 
     sequence = attr.ib(validator=is_a(Sequence))
     insdc_rna_type = attr.ib(validator=is_a(str))
-    so_rna_type = attr.ib(validator=is_a(str))
+    so_rna_type = attr.ib(validator=is_a(RnaType))
     description = attr.ib(validator=is_a(str))
     short_description = attr.ib(validator=is_a(str))
     qa_status = attr.ib(validator=optional(is_a(QaStatus)))
 
     @classmethod
     def active(cls, context: Context, sequence: Sequence) -> "SequenceUpdate":
-        insdc_rna_type = rna_type_of(sequence)
+        insdc_rna_type = rna_type_of(context, sequence)
         so_rna_type = INSDC_SO_MAPPING.get(insdc_rna_type, "SO:0000655")
         description = description_of(insdc_rna_type, sequence)
         short_description = short_description_for(description, sequence)

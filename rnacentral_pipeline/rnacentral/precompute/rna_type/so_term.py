@@ -17,6 +17,7 @@ import logging
 import typing as ty
 
 from rnacentral_pipeline.databases.data import Database, RnaType
+from rnacentral_pipeline.rnacentral.precompute.data import context
 from rnacentral_pipeline.rnacentral.precompute.data import sequence as seq
 
 LOGGER = logging.getLogger(__name__)
@@ -39,38 +40,46 @@ ACCEPTED_DATABASES = {
 }
 
 
-def try_to_find_specific(rna_types: ty.Set[RnaType]) -> ty.Optional[RnaType]:
+def try_to_find_specific(
+    context: context.Context, rna_types: ty.Set[RnaType]
+) -> ty.Optional[RnaType]:
+    if len(rna_types) == 1:
+        return rna_types.pop()
     return None
 
 
-def provided_so_terms(sequence: seq.Sequence) -> ty.Optional[RnaType]:
+def provided_so_terms(
+    context: context.Context, sequence: seq.Sequence
+) -> ty.Optional[RnaType]:
     provided = set()
     for accession in sequence.accessions:
         if accession.database in ACCEPTED_DATABASES:
             provided.add(accession.rna_type)
     LOGGER.debug("Sequence %s was given provied terms %s", sequence.rna_id, provided)
-    if len(provided) == 1:
-        return provided.pop()
-    return try_to_find_specific(provided)
+    return try_to_find_specific(context, provided)
 
 
-def r2dt_so_term(sequence: seq.Sequence) -> ty.Optional[RnaType]:
+def r2dt_so_term(
+    context: context.Context, sequence: seq.Sequence
+) -> ty.Optional[RnaType]:
     terms = {hit.model_so_term for hit in sequence.r2dt_hits}
     LOGGER.debug("Sequence %s has R2DT terms: %s", sequence.rna_id, terms)
-    if len(terms) == 1:
-        return terms.pop()
-    return None
+    return try_to_find_specific(context, terms)
 
 
-def rfam_so_term(sequence: seq.Sequence) -> ty.Optional[RnaType]:
+def rfam_so_term(
+    context: context.Context, sequence: seq.Sequence
+) -> ty.Optional[RnaType]:
     terms = {hit.model_rna_type for hit in sequence.rfam_hits}
     LOGGER.debug("Sequence %s has Rfam terms: %s", sequence.rna_id, terms)
-    if len(terms) == 1:
-        return terms.pop()
-    return None
+    return try_to_find_specific(context, terms)
 
 
-def rna_type_of(sequence: seq.Sequence) -> ty.Optional[RnaType]:
+def rna_type_of(
+    context: context.Context, sequence: seq.Sequence
+) -> ty.Optional[RnaType]:
     return (
-        provided_so_terms(sequence) or r2dt_so_term(sequence) or rfam_so_term(sequence)
+        provided_so_terms(context, sequence)
+        or r2dt_so_term(context, sequence)
+        or rfam_so_term(context, sequence)
     )

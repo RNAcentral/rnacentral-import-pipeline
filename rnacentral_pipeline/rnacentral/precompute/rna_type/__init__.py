@@ -13,14 +13,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+from rnacentral_pipeline.databases.data import RnaType
 from rnacentral_pipeline.rnacentral.precompute.data.context import Context
 from rnacentral_pipeline.rnacentral.precompute.data.sequence import Sequence
-
-from rnacentral_pipeline.rnacentral.precompute.rna_type import insdc
-from rnacentral_pipeline.rnacentral.precompute.rna_type import so_term
+from rnacentral_pipeline.rnacentral.precompute.rna_type import insdc, so_term
 
 
-def rna_type_of(context: Context, data: Sequence) -> str:
+def rna_type_of(context: Context, data: Sequence) -> RnaType:
     rna_type = so_term.rna_type_of(data)
     if rna_type:
         return rna_type
