@@ -6,7 +6,7 @@ click==7.0
 gffutils==0.9
 click-aliases==1.0.1
 jsonschema==2.6.0
-lxml==4.2.1
+lxml==4.6.2
 more-itertools==4.3.0
 numpy==1.17.2
 psycopg2==2.7.3.2
