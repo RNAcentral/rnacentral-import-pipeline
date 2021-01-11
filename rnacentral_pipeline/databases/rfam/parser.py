@@ -13,13 +13,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import json
 import itertools as it
+import json
 
 from ..data import Entry
-
-from . import utils
-from . import helpers
+from . import helpers, utils
 
 
 def as_entry(data):
@@ -32,7 +30,7 @@ def as_entry(data):
         primary_id=helpers.primary_id(data),
         accession=helpers.accession(data),
         ncbi_tax_id=helpers.taxid(data),
-        database='RFAM',
+        database="RFAM",
         sequence=helpers.sequence(data),
         regions=[],
         rna_type=helpers.rna_type(data),
@@ -44,12 +42,12 @@ def as_entry(data):
         optional_id=helpers.optional_id(data),
         product=helpers.product(data),
         parent_accession=helpers.parent_accession(data),
-        project='RFAM',
+        project="RFAM",
         experiment=helpers.experiment(data),
         description=helpers.description(data),
         mol_type=helpers.mol_type(data),
         seq_version=helpers.seq_version(data),
-        is_composite='N',
+        is_composite="N",
         location_start=location_range[0],
         location_end=location_range[1],
         references=helpers.references(data),
