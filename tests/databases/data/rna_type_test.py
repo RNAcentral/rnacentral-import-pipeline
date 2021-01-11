@@ -15,7 +15,7 @@ limitations under the License.
 
 import pytest
 
-from rnacentral_pipeline.databases.data import RnaType
+from rnacentral_pipeline.databases.data import RnaType, SoTermInfo
 from rnacentral_pipeline.databases.sequence_ontology import tree
 
 
@@ -80,3 +80,14 @@ def test_can_build_from_so_id(so_tree, so_id):
 ])
 def test_can_build_from_so_name(so_tree, name, so_id):
     assert RnaType.from_so_id(so_tree, name).so_term.so_id == so_id
+
+
+@pytest.mark.parametrize("so_id, expected", [
+    ("SO:0000252", RnaType(so_term=SoTermInfo(so_id='SO:0000252', name='rRNA'), insdc='rRNA')),
+    ("SO:0001244", RnaType(so_term=SoTermInfo(so_id='SO:0001244', name='pre_miRNA'), insdc='pre_miRNA')),
+    ("SO:0000650", RnaType(so_term=SoTermInfo(so_id='SO:0000650', name='small_subunit_rRNA'), insdc=None)),
+    ("SO:0001000", RnaType(so_term=SoTermInfo(so_id='SO:0001000', name='rRNA_16S'), insdc=None)),
+    ("SO:0001035", RnaType(so_term=SoTermInfo(so_id='SO:0001035', name='piRNA'), insdc='piRNA')),
+])
+def test_build_expected_data(so_tree, so_id, expected):
+    assert RnaType.from_so_id(so_tree, so_id) == expected

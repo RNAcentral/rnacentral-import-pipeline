@@ -23,14 +23,14 @@ from attr.validators import instance_of as is_a
 from rnacentral_pipeline.databases.sequence_ontology import tree
 
 
-@attr.s(frozen=True, slots=True)
+@attr.s(frozen=True, slots=True, hash=True)
 class SoTermInfo:
     so_id = attr.ib(validator=is_a(str))
     name = attr.ib(validator=optional(is_a(str)))
 
     @classmethod
     def ncRNA(cls):
-        return cls("ncRNA", "SO:0000655")
+        return cls(so_id="SO:0000655", name="ncRNA")
 
     def is_a(self, value: str):
         return self.name == value or self.so_id == value
@@ -42,9 +42,13 @@ class RnaType:
     insdc = attr.ib(validator=optional(is_a(str)))
 
     @classmethod
+    def ncRNA(cls):
+        return cls(so_term=SoTermInfo.ncRNA(), insdc='ncRNA')
+
+    @classmethod
     def from_so_term(cls, so_tree, so_id) -> "RnaType":
-        so_name = so_tree.name_to_id.get(so_id)
         so_node = so_tree[so_id]
+        so_name = so_tree.id_to_name.get(so_id)
         insdc = next(tree.insdc_synonyms(so_node), None)
         return cls(so_term=SoTermInfo(so_id=so_id, name=so_name), insdc=insdc)
 
@@ -79,22 +83,8 @@ class RnaType:
         return (
             self.insdc == so_name
             or self.so_term == so_name
-            or any(p.is_a(so_name) for p in self.ontology_terms)
         )
 
-    def common(self, other: "RnaType") -> ty.Optional[SoTermInfo]:
-        zipped = zip(self.ontology_terms, other.ontology_terms)
-        common = list(it.takewhile(lambda z: z[0] == z[1], zipped))
-        if not common:
-            return None
-        return common
-
-    def is_parent_of(self, other: "RnaType") -> bool:
-        if len(other.ontology_terms) >= len(self.ontology_terms):
-            return False
-
-        pairs = zip(self.ontology_terms, other.ontology_terms)
-        for (left, right) in pairs:
-            if left != right:
-                return False
-        return True
+    @property
+    def so_id(self):
+        return self.so_term.so_id

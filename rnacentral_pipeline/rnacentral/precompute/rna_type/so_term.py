@@ -13,10 +13,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import enum
 import logging
 import typing as ty
 
+import attr
+import networkx as nx
+from attr.validators import instance_of as is_a
+
 from rnacentral_pipeline.databases.data import Database, RnaType
+from rnacentral_pipeline.databases.sequence_ontology import tree
 from rnacentral_pipeline.rnacentral.precompute.data import context
 from rnacentral_pipeline.rnacentral.precompute.data import sequence as seq
 
@@ -32,54 +38,195 @@ ACCEPTED_DATABASES = {
     Database.mirgenedb,
     Database.pirbase,
     Database.pombase,
-    Database.sgd,
+    # Database.sgd, This is excluded because they tend ot use things like rRNA_gene, which we don't like as much as the transcript terms
     Database.snodb,
     Database.snorna_database,
     Database.tarbase,
     Database.zwd,
+    Database.pdbe,
+}
+
+MODEL_GROUPS = {
+    "SO:0000209": {
+        "RF02543",
+        "RF00002",
+        "RF01960",
+        "RF02546",
+        "RF02543",
+        "RF02541",
+        "RF02540",
+        "RF01959",
+        "RF00177",
+        "RF01960",
+        "RF02542",
+        "RF02542",
+        "RF00957",
+    },
 }
 
 
-def try_to_find_specific(
-    context: context.Context, rna_types: ty.Set[RnaType]
-) -> ty.Optional[RnaType]:
-    if len(rna_types) == 1:
-        return rna_types.pop()
-    return None
+@enum.unique
+class SourceName(enum.Enum):
+    generic_database = enum.auto()
+    mod = enum.auto()
+    r2dt_hit = enum.auto()
+    rfam_hit = enum.auto()
+
+    def is_hit(self):
+        if self is SourceName.generic_database:
+            return False
+        if self is SourceName.mod:
+            return False
+        if self is SourceName.r2dt_hit:
+            return True
+        if self is SourceName.rfam_hit:
+            return True
+        raise ValueError(f"Unhandled SourceName {self}")
 
 
-def provided_so_terms(
-    context: context.Context, sequence: seq.Sequence
-) -> ty.Optional[RnaType]:
-    provided = set()
-    for accession in sequence.accessions:
+@attr.s(hash=True, frozen=True)
+class Source:
+    name = attr.ib(validator=is_a(SourceName))
+    data = attr.ib()
+
+    @classmethod
+    def from_mod(cls, accession):
+        return cls(name=SourceName.mod, data=accession)
+
+    @classmethod
+    def from_generic(cls, accession):
+        return cls(name=SourceName.generic_database, data=accession)
+
+    @classmethod
+    def from_r2dt(cls, hit):
+        return cls(name=SourceName.r2dt_hit, data=hit)
+
+    @classmethod
+    def from_rfam(cls, hit):
+        return cls(name=SourceName.rfam_hit, data=hit)
+
+    def is_hit(self):
+        return self.name.is_hit()
+
+
+@attr.s()
+class RnaTypeAnnotation:
+    path: ty.List[RnaType] = attr.ib(validator=is_a(list))
+    source: ty.Set[Source] = attr.ib(validator=is_a(set))
+
+    @classmethod
+    def build(
+        cls, context: context.Context, rna_type: RnaType, source: Source
+    ) -> "RnaTypeAnnotation":
+        path = tree.rna_type_tree(context.so_tree, rna_type.so_id)
+        path = [RnaType.from_so_term(context.so_tree, so_id) for (so_id, _) in path]
+        if path[-1] != rna_type:
+            path.append(rna_type)
+        return cls(path=path, source={source})
+
+    @classmethod
+    def from_accession(cls, context, accession) -> "RnaTypeAnnotation":
         if accession.database in ACCEPTED_DATABASES:
-            provided.add(accession.rna_type)
-    LOGGER.debug("Sequence %s was given provied terms %s", sequence.rna_id, provided)
-    return try_to_find_specific(context, provided)
+            return cls.build(context, accession.rna_type, Source.from_mod(accession))
+        return cls.build(context, accession.rna_type, Source.from_generic(accession))
+
+    @classmethod
+    def from_r2dt(cls, context, hit) -> "RnaTypeAnnotation":
+        return cls.build(context, hit.model_rna_type, Source.from_r2dt(hit))
+
+    @classmethod
+    def from_rfam(cls, context: context.Context, hit) -> "RnaTypeAnnotation":
+        return cls.build(context, hit.model_rna_type, Source.from_rfam(hit))
+
+    def equivalent(self, other: "RnaTypeAnnotation") -> bool:
+        return self.path == other.path
+
+    def is_parent_of(self, other: "RnaTypeAnnotation") -> bool:
+        if len(self.path) >= len(other.path):
+            return False
+        for (left, right) in zip(self.path, other.path):
+            if left != right:
+                return False
+        return True
+
+    def is_child_of(self, other: "RnaTypeAnnotation") -> bool:
+        return other.is_parent_of(self)
+
+    def is_mergeable(self, other: "RnaTypeAnnotation"):
+        return self.path == other.path or self.is_parent_of(other) or self.is_child_of(other)
+
+    @property
+    def rna_type(self):
+        return self.path[-1]
+
+    def merge(self, other: "RnaTypeAnnotation") -> "RnaTypeAnnotation":
+        source = set()
+        source.update(self.source)
+        source.update(other.source)
+        if self.path == other.path:
+            self.source = source
+        elif self.is_parent_of(other):
+            self.source = source
+            self.path = list(other.path)
+        elif self.is_child_of(other):
+            print(self.path)
+            print(other.path)
+            print(other.is_parent_of(self))
+            self.source = source
+        else:
+            raise ValueError(f"Cannot merge {self.path} to {other.path}")
+
+    def source_matches(self, fn):
+        return any(fn(s) for s in self.source)
+
+    def has_source(self, source: SourceName):
+        return self.source_matches(lambda s: s.name == source)
+
+    def is_specific(self):
+        return len(self.path) > 1
 
 
-def r2dt_so_term(
-    context: context.Context, sequence: seq.Sequence
-) -> ty.Optional[RnaType]:
-    terms = {hit.model_so_term for hit in sequence.r2dt_hits}
-    LOGGER.debug("Sequence %s has R2DT terms: %s", sequence.rna_id, terms)
-    return try_to_find_specific(context, terms)
-
-
-def rfam_so_term(
-    context: context.Context, sequence: seq.Sequence
-) -> ty.Optional[RnaType]:
-    terms = {hit.model_rna_type for hit in sequence.rfam_hits}
-    LOGGER.debug("Sequence %s has Rfam terms: %s", sequence.rna_id, terms)
-    return try_to_find_specific(context, terms)
+def merge_annotations(given: ty.List[RnaTypeAnnotation]) -> ty.List[RnaTypeAnnotation]:
+    grouped = [given[0]]
+    for annotation in given[1:]:
+        for group in grouped:
+            if group.is_mergeable(annotation):
+                group.merge(annotation)
+                break
+        else:
+            grouped.append(annotation)
+    return grouped
 
 
 def rna_type_of(
     context: context.Context, sequence: seq.Sequence
 ) -> ty.Optional[RnaType]:
-    return (
-        provided_so_terms(context, sequence)
-        or r2dt_so_term(context, sequence)
-        or rfam_so_term(context, sequence)
-    )
+    annotations = []
+    for accession in sequence.accessions:
+        annotations.append(RnaTypeAnnotation.from_accession(context, accession))
+    for r2dt in sequence.r2dt_hits:
+        if r2dt.paired_ratio() is None or r2dt.paired_ratio() > 0.80:
+            annotations.append(RnaTypeAnnotation.from_r2dt(context, r2dt))
+
+    for rfam in sequence.rfam_hits:
+        ann = RnaTypeAnnotation.from_rfam(context, rfam)
+        annotations.append(ann)
+
+    merged = merge_annotations(annotations)
+    print(len(merged))
+    from pprint import pprint
+    pprint([(m.path, list(s.name for s in m.source)) for m in merged])
+    if len(merged) == 1:
+        return merged[0].rna_type
+
+    mod_annotations = [m for m in merged if m.has_source(SourceName.mod)]
+    if len(mod_annotations) == 1 and mod_annotations[0].is_specific():
+        return mod_annotations[0].rna_type
+
+    hits = [m for m in merged if m.source_matches(lambda s: s.is_hit())]
+    if len(hits) == 1:
+        return hits[0].rna_type
+
+    if mod_annotations:
+        return mod_annotations[0].rna_type
+    return None

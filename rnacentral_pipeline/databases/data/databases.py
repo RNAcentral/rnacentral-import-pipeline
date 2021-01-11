@@ -82,7 +82,11 @@ class Database(enum.Enum):
             return cls.tmrna_website
         if name == 'snopydb':
             return cls.snopy
+        if attribute == 'ensembl/gencode' or attribute == 'ensembl_gencode':
+            return cls.gencode
         raise ValueError("Unknown database name %s" % name)
 
     def normalized(self) -> str:
+        if self is Database.gencode:
+            return 'ENSEMBL_GENCODE'
         return self.name.upper()

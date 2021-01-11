@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Copyright [2009-2018] EMBL-European Bioinformatics Institute
+Copyright [2009-2021] EMBL-European Bioinformatics Institute
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -15,35 +15,53 @@ limitations under the License.
 
 import pytest
 
-from rnacentral_pipeline.rnacentral.precompute.rna_type import rna_type_of
+from rnacentral_pipeline.rnacentral.precompute.rna_type import so_term
+from rnacentral_pipeline.rnacentral.precompute.data import context as ctx
 
-from .helpers import load_data
+from ..helpers import SO_TREE, load_data
+
+
+@pytest.mark.parametrize('first,second,expected', [
+    ('SO:0000252', 'SO:0000653', True),
+])
+def test_can_detect_parent_properly(first, second, expected):
+    context = ctx.Context(so_tree=SO_TREE)
+    s = so_term.Source.from_mod(None)
+    r1 = so_term.RnaTypeAnnotation.build(context, so_term.RnaType.from_so_term(SO_TREE, first), source=s)
+    r2 = so_term.RnaTypeAnnotation.build(context, so_term.RnaType.from_so_term(SO_TREE, second), source=s)
+    assert r1.is_parent_of(r2) == expected
 
 
 @pytest.mark.parametrize('rna_id,rna_type', [  # pylint: disable=no-member
-    ('URS0000000DBF_6239', 'piRNA'),
-    ('URS0000005270_9606', 'rRNA_5S'),
+    # ('URS000004F67F_109352', 'rRNA_primary_transcript'),
+    # ('URS0000050E80_67003', 'rRNA_primary_transcript'),
+    # ('URS0000127C85_175245', 'rRNA_primary_transcript'),
+    # ('URS00000FFD14_109352', 'rRNA_primary_transcript'),
+    # ('URS00003A60A1_10090', 'rRNA_primary_transcript'),
+    # ('URS00005CA2D5_6239', 'rRNA_primary_transcript'),
+    # ('URS0000ABD87F_9606', 'rRNA_primary_transcript'),
+    # ('URS0000ABD8C6_9606', 'rRNA_primary_transcript'),
+    # ('URS0000ABD7E8_9606', 'rRNA_primary_transcript'),
+    # ('URS00019AF356_9606', 'rRNA_primary_transcript'),
+    # ('URS00019BDBE3_9606', 'rRNA_primary_transcript'),
+
     ('URS0000005270_9606', 'rRNA_5_8S'),
     ('URS00000081EA_9606', 'U1_snRNA'),
-    ('URS00000101E5_9606', 'lnc_RNA'),
+    ('URS00000101E5_9606', 'antisense_lncRNA'),
     ('URS0000016972_6239', 'miRNA'),
     ('URS000001E7BA_559292', 'glutaminyl_tRNA'),
     ('URS00000478B7_9606', 'SRP_RNA'),
-    ('URS00000490A3_6239', 'miRNA'),
-    ('URS000004F67F_109352', 'rRNA_primary_transcript'),
-    ('URS0000050E80_67003', 'rRNA_primary_transcript'),
+    ('URS00000490A3_6239', 'snRNA'),
     ('URS000006F31F_4932', 'RNase_MRP_RNA'),
     ('URS0000086133_9606', 'transcript'),
     ('URS00000AEE53_380749', 'tmRNA'),
     ('URS00000B3045_7227', 'guide_RNA'),
-    ('URS00000CF490_2786', 'small_subunit_rRNA'),
+    ('URS00000CF490_2786', 'rRNA_18S'),
     ('URS00000DA486_3702', 'siRNA'),
     ('URS00000F9D45_9606', 'rRNA_5S'),
     ('URS00000F9D45_9606', 'rRNA_5S'),
-    ('URS00000FFD14_109352', 'rRNA_primary_transcript'),
     ('URS0000118C49_9606', 'U5_snRNA'),
     ('URS00001232FE_175275', 'rRNA_18S'),
-    ('URS0000127C85_175245', 'rRNA_primary_transcript'),
     ('URS000012DE89_9606', 'autocatalytically_spliced_intron'),
     ('URS0000130A6B_3702', 'pre_miRNA'),
     ('URS00001380AF_9606', 'U5_snRNA'),
@@ -52,9 +70,9 @@ from .helpers import load_data
     ('URS0000157BA2_4896', 'antisense_RNA'),
     ('URS000015995E_4615', 'miRNA'),
     ('URS000015F227_9606', 'scaRNA'),
+    ('URS00001872A7_9606', 'snRNA'),
     ('URS0000162C88_9606', 'rRNA_5_8S'),
-    ('URS00001872A7_9606', 'U6_snRNA'),
-    ('URS000018B855_1270', 'small_subunit_rRNA'),
+    ('URS000018B855_1270', 'rRNA_16S'),
     ('URS000018EB2E_3702', 'lnc_RNA'),
     ('URS0000193C7E_9606', 'lnc_RNA'),
     ('URS000019E0CD_9606', 'lnc_RNA'),
@@ -84,7 +102,6 @@ from .helpers import load_data
     ('URS000036E62B_9593', 'pre_miRNA'),
     ('URS000037602E_9606', 'tmRNA'),
     ('URS00003936E9_7227', 'pre_miRNA'),
-    ('URS00003A60A1_10090', 'rRNA_primary_transcript'),
     ('URS00003AC4AA_3702', 'siRNA'),
     ('URS00003BECAC_9606', 'lnc_RNA'),
     ('URS00003CE153_9606', 'lnc_RNA'),
@@ -120,7 +137,6 @@ from .helpers import load_data
     ('URS000059EA49_32644', 'tmRNA'),
     ('URS00005A245E_10090', 'tRNA'),
     ('URS00005A2612_9606', 'H_ACA_box_snoRNA'),
-    ('URS00005CA2D5_6239', 'rRNA_primary_transcript'),
     ('URS00005CDD41_352472', 'RNase_P_RNA'),
     ('URS00005CF03F_9606', 'Y_RNA'),
     ('URS00005D0BAB_9606', 'piRNA'),
@@ -199,7 +215,7 @@ from .helpers import load_data
     ('URS000092FF0A_9371', 'H_ACA_box_snoRNA'),
     ('URS00009AD661_10090', 'lnc_RNA'),
     ('URS00009BB4DD_10090', 'lnc_RNA'),
-    ('URS00009E8F92_885695', 'rRNA_16S'),
+    ('URS00009E8F92_885695', 'large_subunit_rRNA'),
     ('URS0000A17B82_640938', 'sequence_feature'),
     ('URS0000A767C0_3702', 'lnc_RNA'),
     ('URS0000A770BD_3702', 'U6atac_snRNA'),
@@ -209,11 +225,8 @@ from .helpers import load_data
     ('URS0000A8F612_9371', 'scaRNA'),
     ('URS0000A96391_9606', 'U4_snRNA'),
     ('URS0000A994FE_9606', 'ncRNA'),
-    ('URS0000ABD7E8_9606', 'rRNA_primary_transcript'),
     ('URS0000ABD7E9_9606', 'snoRNA_gene'),
     ('URS0000ABD7EF_9606', 'rRNA_28S'),
-    ('URS0000ABD87F_9606', 'rRNA_primary_transcript'),
-    ('URS0000ABD8C6_9606', 'rRNA_primary_transcript'),
     ('URS0000BC44FE_9606', 'lnc_RNA'),
     ('URS0000CC4B4C_10090', 'lnc_RNA'),
     ('URS0000D56C46_9606', 'pre_miRNA'),
@@ -224,8 +237,6 @@ from .helpers import load_data
     ('URS0000EEE7A7_9606', 'SRP_RNA'),
     ('URS0000EF7A6A_6945', 'U12_snRNA'),
     ('URS0001980FDE_6239', 'circular_ncRNA'),
-    ('URS00019AF356_9606', 'rRNA_primary_transcript'),
-    ('URS00019BDBE3_9606', 'rRNA_primary_transcript'),
     ('URS0001A7BF9C_85057', 'rRNA_18S'),
     ('URS0001BBAB5E_7227', 'rRNA_18S'),
     ('URS0001BBF240_224308', 'tmRNA'),
@@ -233,7 +244,10 @@ from .helpers import load_data
     # Known failing
     # pytest.param('URS0000175007_7227', 'miRNA', marks=pytest.mark.xfail(reason="Inactive sequence")),
     # pytest.param('URS000060C682_9606', 'vault_RNA', marks=pytest.mark.xfail(reason="Inactive sequence")),
+    # pytest.mark.xfail('URS0000000DBF_6239', 'piRNA', marks=pytest.mark.xfail(reason="Bad WB annotations")),
 ])
 def test_computes_correct_rna_types(rna_id, rna_type):
     context, data = load_data(rna_id)
-    assert rna_type_of(context, data).so_term.name == rna_type
+    result = so_term.rna_type_of(context, data)
+    assert result is not None
+    assert result.so_term.name == rna_type

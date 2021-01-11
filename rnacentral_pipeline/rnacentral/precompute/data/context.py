@@ -27,7 +27,7 @@ from rnacentral_pipeline.databases.sequence_ontology import tree as so
 
 @attr.s(frozen=True)
 class Context:
-    so_tree = attr.ib(validator=is_a(SqliteDict))
+    so_tree = attr.ib()
     repeats = attr.ib(validator=is_a(tree.RepeatTree), factory=tree.RepeatTree)
 
     @classmethod

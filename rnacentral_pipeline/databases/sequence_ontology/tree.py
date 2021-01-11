@@ -27,6 +27,7 @@ REMOTE_ONTOLOGY = 'https://raw.githubusercontent.com/The-Sequence-Ontology/SO-On
 LOGGER = logging.getLogger(__name__)
 
 
+@lru_cache()
 def load_ontology(filename):
     ont = obonet.read_obo(filename)
     ont.id_to_name = {id_: data.get('name') for id_, data in ont.nodes(data=True)}

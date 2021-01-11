@@ -20,9 +20,11 @@ from rnacentral_pipeline.rnacentral.precompute.rna_type import insdc, so_term
 
 
 def rna_type_of(context: Context, data: Sequence) -> RnaType:
-    rna_type = so_term.rna_type_of(data)
+    rna_type = so_term.rna_type_of(context, data)
     if rna_type:
         return rna_type
 
     insdc_rna_type = insdc.rna_type_of(data) or "ncRNA"
+    if isinstance(insdc_rna_type, RnaType):
+        return insdc_rna_type
     return context.so_term_for(insdc_rna_type)

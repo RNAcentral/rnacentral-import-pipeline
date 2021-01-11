@@ -72,11 +72,13 @@ class RfamFamily(object):
             raise ValueError("Can only handle a single clan per family")
         clan = clan.pop()
 
+        so_terms = set(row['so_terms'].split(','))
+        so_terms.discard('SO:0004725')
         return cls(
             id=row['id'],
             name=row['name'],
             pretty_name=row['pretty_name'],
-            so_terms=set(row['so_terms'].split(',')),
+            so_terms=so_terms,
             rna_type=row['rna_type'].strip().strip(';'),
             domain=domain,
             description=row['description'],
@@ -121,6 +123,13 @@ class RfamFamily(object):
             self.guess_insdc_using_rna_type() or \
             'other'
 
+    @property
+    def so_term(self):
+        terms = list(self.so_terms)
+        if len(terms) == 1:
+            return terms[0]
+        return None
+
     def writeable(self):
         return [
             self.id,
@@ -135,6 +144,7 @@ class RfamFamily(object):
             self.is_suppressed,
             self.guess_insdc(),
             self.rna_type,
+            self.so_term,
         ]
 
 

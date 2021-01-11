@@ -42,24 +42,28 @@ class RfamHit:
     model_info = attr.ib(validator=is_a(HitComponent))
 
     @classmethod
-    def build(cls, raw):
+    def build(cls, so_tree, raw):
         """
         Create a new RfamHit object. This accepts a dict where all keys match
         the attributes of this class.
         """
-
-        data = dict(raw)
-        data["model_info"] = HitComponent(
-            completeness=data.pop("model_completeness"),
-            start=data.pop("model_start"),
-            stop=data.pop("model_stop"),
+        return cls(
+            model=raw['model'],
+            model_rna_type=RnaType.from_so_id(so_tree, raw['model_rna_type']),
+            model_domain=raw['model_domain'],
+            model_name=raw['model_name'],
+            model_long_name=raw['model_long_name'],
+            sequence_info=HitComponent(
+                completeness=raw["sequence_completeness"],
+                start=raw["sequence_start"],
+                stop=raw["sequence_stop"],
+            ),
+            model_info=HitComponent(
+                completeness=raw["model_completeness"],
+                start=raw["model_start"],
+                stop=raw["model_stop"],
+            ),
         )
-        data["sequence_info"] = HitComponent(
-            completeness=data.pop("sequence_completeness"),
-            start=data.pop("sequence_start"),
-            stop=data.pop("sequence_stop"),
-        )
-        return cls(**data)  # pylint: disable=star-args
 
     @property
     def url(self):
