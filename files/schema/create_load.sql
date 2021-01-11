@@ -209,7 +209,8 @@ CREATE TABLE load_rfam_models (
     domain character varying(50) COLLATE pg_catalog."default",
     rna_type character varying(250) COLLATE pg_catalog."default",
     short_name character varying(50) COLLATE pg_catalog."default",
-    rfam_rna_type character varying(250) COLLATE pg_catalog."default"
+    rfam_rna_type character varying(250) COLLATE pg_catalog."default",
+    so_rna_type text
 );
 
 DROP TABLE IF EXISTS load_rfam_go_terms;

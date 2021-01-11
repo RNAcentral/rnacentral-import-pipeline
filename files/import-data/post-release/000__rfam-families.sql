@@ -10,7 +10,8 @@ INSERT INTO rfam_models (
     rfam_clan_id,
     domain,
     rna_type,
-    rfam_rna_type
+    rfam_rna_type,
+    so_rna_type
 ) (
 SELECT
     rfam_model_id,
@@ -24,7 +25,8 @@ SELECT
     rfam_clan_id,
     domain,
     rna_type,
-    rfam_rna_type
+    rfam_rna_type,
+    so_rna_type
 FROM load_rfam_models
 )
 ON CONFLICT (rfam_model_id) DO UPDATE SET
@@ -38,7 +40,7 @@ ON CONFLICT (rfam_model_id) DO UPDATE SET
     rfam_clan_id = EXCLUDED.rfam_clan_id,
     domain = EXCLUDED.domain,
     rna_type = EXCLUDED.rna_type,
-    rfam_rna_type = EXCLUDED.rfam_rna_type
+    rfam_rna_type = EXCLUDED.rfam_rna_type,
 ;
 
 DROP TABLE load_rfam_models;
