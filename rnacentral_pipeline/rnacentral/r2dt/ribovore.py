@@ -29,7 +29,7 @@ from rnacentral_pipeline.databases.data import RibovoreResult
 
 def as_dict(directory: Path, allow_missing=False) -> ty.Dict[str, RibovoreResult]:
     try:
-        results = ribovore.parse_directory(path)
+        results = ribovore.parse_directory(directory)
         return {p.target: p for p in results if p.status != 'FAIL'}
     except ValueError as e:
         if not allow_missing:
