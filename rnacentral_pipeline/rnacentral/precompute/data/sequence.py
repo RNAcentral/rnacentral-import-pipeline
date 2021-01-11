@@ -25,7 +25,7 @@ from rnacentral_pipeline.rnacentral.precompute.data.r2dt import R2dtHit
 from rnacentral_pipeline.rnacentral.precompute.data.rfam import RfamHit
 
 
-def partioned_accessions(all_accessions):
+def partioned_accessions(so_tree, all_accessions):
     """
     Parition the list of accessions between those athat are active and those
     that are inactive. This returns a tuple of active, inactive Accession
@@ -36,9 +36,9 @@ def partioned_accessions(all_accessions):
     inactive_accessions = []
     for accession in all_accessions:
         if accession.pop("is_active"):
-            accessions.append(Accession.build(accession))
+            accessions.append(Accession.build(so_tree, accession))
         else:
-            inactive_accessions.append(Accession.build(accession))
+            inactive_accessions.append(Accession.build(so_tree, accession))
     return accessions, inactive_accessions
 
 
@@ -88,13 +88,13 @@ class Sequence:
     r2dt_hits: ty.List[R2dtHit] = attr.ib(validator=is_a(list))
 
     @classmethod
-    def build(cls, data) -> "Sequence":
+    def build(cls, so_tree, data) -> "Sequence":
         """
         Given a dictonary of result from the precompute query this will build a
         SpeciesSequence.
         """
 
-        active, inactive = partioned_accessions(data["accessions"])
+        active, inactive = partioned_accessions(so_tree, data["accessions"])
         active = fix_hgnc_data(active)
         coords = [Coordinate.build(c) for c in data["coordinates"] if c["assembly_id"]]
 
@@ -106,10 +106,10 @@ class Sequence:
             inactive_accessions=inactive,
             is_active=any(not d for d in data["deleted"]),
             previous_update=data["previous"][0],
-            rfam_hits=list({RfamHit.build(r) for r in data.get("rfam_hits", [])}),
+            rfam_hits=list({RfamHit.build(so_tree, r) for r in data.get("rfam_hits", []) if r['rfam_hit_id']}),
             coordinates=coords,
             last_release=data["last_release"],
-            r2dt_hits=list({R2dtHit.build(r) for r in data.get("r2dt_hits", [])}),
+            r2dt_hits=list({R2dtHit.build(so_tree, r) for r in data.get("r2dt_hits", []) if r['model_id']}),
         )
 
     @property
@@ -168,3 +168,9 @@ class Sequence:
         Check if there is only one Rfam hit to this sequence.
         """
         return len(self.rfam_hits) == 1
+
+    def has_r2dt_match(self) -> bool:
+        return bool(self.r2dt_hits)
+
+    def has_rfam_hit(self) -> bool:
+        return bool(self.rfam_hits)

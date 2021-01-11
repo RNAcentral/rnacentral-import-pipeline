@@ -21,6 +21,7 @@ from attr.validators import instance_of as is_a
 from attr.validators import optional
 
 from rnacentral_pipeline.databases.data.utils import INSDC_SO_MAPPING
+from rnacentral_pipeline.databases.data import RnaType
 from rnacentral_pipeline.rnacentral.precompute.qa import status as qa
 from rnacentral_pipeline.rnacentral.precompute.qa.data import QaStatus
 from rnacentral_pipeline.rnacentral.precompute.data.context import Context

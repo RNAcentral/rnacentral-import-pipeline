@@ -9,7 +9,7 @@ select
         'description', acc.description,
         'gene', acc.gene,
         'optional_id', acc.optional_id,
-        'pretty_database', db.display_name,
+        'database', db.display_name,
         'species', coalesce(tax.name, acc.species),
         'common_name', coalesce(tax.common_name, acc.common_name),
         'feature_name', acc.feature_name,
@@ -34,7 +34,7 @@ select
     'rfam_hits', array_agg(json_build_object(
        'rfam_hit_id', hits.rfam_hit_id,
        'model', hits.rfam_model_id,
-       'model_rna_type', models.rna_type,
+       'model_rna_type', models.so_rna_type,
        'model_domain', models.domain,
        'model_name', models.short_name,
        'model_long_name', models.long_name,
@@ -49,7 +49,11 @@ select
     'r2dt_hits', array_agg(json_build_object(
         'model_id', r2dt.id,
         'model_name', r2dt.model_name,
-        'model_so_term', r2dt.so_term,
+        'model_so_term', r2dt.so_term_id,
+        'sequence_coverage', ss.sequence_coverage,
+        'model_coverage', ss.model_coverage,
+        'sequence_basepairs', ss.basepair_count,
+        'model_basepairs', r2dt.model_basepair_count
     ))
 )
 FROM rna
@@ -76,13 +80,14 @@ ON
 JOIN rnc_database db
 ON
     db.id = xref.dbid
-LEFT JOIN rnc_taxonomy tax ON tax.id = xref.taxid
-WHERE
-    todo.id BETWEEN :min AND :max
-LEFT JOIN rnc_secondary_structure_layout_hits ss
+LEFT JOIN rnc_taxonomy tax 
+ON 
+  tax.id = xref.taxid
+LEFT JOIN rnc_secondary_structure_layout ss
 on
   ss.urs = rna.upi
-LEFT JOIN rnc_secondary_structure_layout_hits r2dt
+  and ss.should_show = true
+LEFT JOIN rnc_secondary_structure_layout_models r2dt
 on
   r2dt.id = ss.model_id
 WHERE

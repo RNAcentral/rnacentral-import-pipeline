@@ -16,11 +16,15 @@ limitations under the License.
 import os
 import typing as ty
 
+from rnacentral_pipeline.databases.sequence_ontology import tree
 from rnacentral_pipeline.rnacentral.precompute.data.sequence import Sequence
+from rnacentral_pipeline.rnacentral.precompute.data.context import Context
 from tests.helpers import run_range_as_single, run_with_replacements
 
+SO_TREE = tree.load_ontology(tree.REMOTE_ONTOLOGY)
 
-def load_data(rna_id: str) -> Sequence:
+
+def load_data(rna_id: str) -> ty.Tuple[Context, Sequence]:
     path = os.path.join("files", "precompute", "query.sql")
     upi, taxid = rna_id.split("_")
     data = run_with_replacements(
@@ -31,7 +35,7 @@ def load_data(rna_id: str) -> Sequence:
             "xref.upi ='%s' AND xref.taxid = %i" % (upi, int(taxid)),
         ),
     )
-    return Sequence.build(data)
+    return (Context(so_tree=SO_TREE), Sequence.build(SO_TREE, data))
 
 
 def load_for_upi(upi: str) -> ty.List[Sequence]:
@@ -44,7 +48,7 @@ def load_for_upi(upi: str) -> ty.List[Sequence]:
             take_all=True,
         )
     )
-    return [Sequence.build(l) for l in loaded]
+    return [Sequence.build(SO_TREE, l) for l in loaded]
 
 
 def load_for_range(start: int, stop: int) -> ty.List[Sequence]:
@@ -56,4 +60,4 @@ def load_for_range(start: int, stop: int) -> ty.List[Sequence]:
         (":tablename", "rna"),
         take_all=True,
     )
-    return [Sequence.build(l) for l in loaded]
+    return [Sequence.build(SO_TREE, l) for l in loaded]

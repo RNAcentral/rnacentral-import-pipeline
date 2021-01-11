@@ -47,11 +47,17 @@ class Accession:
     rna_type = attr.ib(validator=is_a(RnaType))
 
     @classmethod
-    def build(cls, data) -> "Accession":
+    def build(cls, so_tree, data) -> "Accession":
         """
         Create a new Accession from the given dict. This assumes the dict has
         keys with the same names as accession fields.
         """
+        rna_type = None
+        if data['so_rna_type']:
+            rna_type = RnaType.from_so_term(so_tree, data["so_rna_type"])
+        else:
+            name = data['ncrna_class'] or data['feature_name']
+            rna_type = RnaType.from_insdc_term(so_tree, name)
         return cls(
             gene=data["gene"],
             optional_id=data["optional_id"],
@@ -64,7 +70,7 @@ class Accession:
             lineage=data["lineage"],
             all_species=tuple(data["all_species"]),
             all_common_names=tuple(data["all_common_names"]),
-            rna_type=RnaType.from_so_term(data["so_term"]),
+            rna_type=rna_type,
         )
 
     @property
