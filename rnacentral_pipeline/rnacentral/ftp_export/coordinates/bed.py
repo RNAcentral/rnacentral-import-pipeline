@@ -16,6 +16,7 @@ limitations under the License.
 import csv
 import itertools as it
 import operator as op
+import typing as ty
 
 import attr
 from attr.validators import instance_of as is_a
@@ -35,7 +36,7 @@ class BedEntry:
     rgb = attr.ib(default=(63, 125, 151), validator=is_a(tuple))
 
     @classmethod
-    def from_coordinate(cls, coordinate):
+    def from_coordinate(cls, coordinate: coord.Region):
         return cls(
             rna_id=coordinate.rna_id,
             rna_type=coordinate.metadata["rna_type"],
@@ -44,19 +45,19 @@ class BedEntry:
         )
 
     @property
-    def bed_chromosome(self):
+    def bed_chromosome(self) -> str:
         if self.region.chromosome in ["MT", "chrMT"]:
             return "chrM"
         return "chr" + self.region.chromosome
 
     @property
-    def bed_rgb(self):
+    def bed_rgb(self) -> str:
         return ",".join(str(c) for c in self.rgb)
 
-    def sizes(self):
+    def sizes(self) -> ty.List[int]:
         return self.region.sizes()
 
-    def starts(self):
+    def starts(self) -> ty.List[int]:
         starts = []
         end = self.region.exons[0].start
         for exon in self.region.exons[1:]:
@@ -65,7 +66,7 @@ class BedEntry:
             starts.append(start)
         return [0] + starts
 
-    def writeable(self, extended=True):
+    def writeable(self, extended=True) -> ty.List[str]:
         data = [
             self.bed_chromosome,
             self.region.start,
