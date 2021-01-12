@@ -13,19 +13,20 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import itertools as it
 import json
 import operator as op
-import itertools as it
+import typing as ty
 
 import attr
-from attr.validators import optional
 from attr.validators import instance_of as is_a
+from attr.validators import optional
 
 from rnacentral_pipeline.databases.data import regions
 
 
 def clean_databases(raw):
-    return [d.replace(' ', '_') for d in raw]
+    return [d.replace(" ", "_") for d in raw]
 
 
 @attr.s(hash=True, slots=True, frozen=True)
@@ -34,51 +35,43 @@ class Region(object):
     rna_id = attr.ib(validator=is_a(str), converter=str)
     region = attr.ib(validator=is_a(regions.SequenceRegion))
     was_mapped = attr.ib(validator=is_a(bool))
-    identity = attr.ib(
-        validator=optional(is_a(float)),
-        default=None,
-        cmp=False,
-    )
+    identity = attr.ib(validator=optional(is_a(float)), default=None, cmp=False,)
     metadata = attr.ib(validator=is_a(dict), default=dict, cmp=False)
 
     @classmethod
     def build(cls, index, raw):
         identity = None
-        if raw['identity'] is not None:
-            identity = float(raw['identity'])
+        if raw["identity"] is not None:
+            identity = float(raw["identity"])
 
         exons = []
-        for exon in raw['exons']:
-            exons.append(regions.Exon(
-                start=exon['exon_start'], 
-                stop=exon['exon_stop'], 
-            ))
+        for exon in raw["exons"]:
+            exons.append(
+                regions.Exon(start=exon["exon_start"], stop=exon["exon_stop"],)
+            )
 
-        region_id = '{rna_id}.{index}'.format(
-            rna_id=raw['rna_id'],
-            index=index
-        )
+        region_id = "{rna_id}.{index}".format(rna_id=raw["rna_id"], index=index)
 
         metadata = {
-            'rna_type': raw['rna_type'],
-            'providing_databases': clean_databases(raw['providing_databases']),
-            'databases': clean_databases(raw['databases']),
+            "rna_type": raw["rna_type"],
+            "providing_databases": clean_databases(raw["providing_databases"]),
+            "databases": clean_databases(raw["databases"]),
         }
-        if not metadata['providing_databases']:
-            del metadata['providing_databases']
+        if not metadata["providing_databases"]:
+            del metadata["providing_databases"]
 
         return cls(
             region_id=region_id,
-            rna_id=raw['rna_id'],
+            rna_id=raw["rna_id"],
             region=regions.SequenceRegion(
-                assembly_id=raw['assembly_id'],
-                chromosome=raw['chromosome'],
-                strand=raw['strand'],
+                assembly_id=raw["assembly_id"],
+                chromosome=raw["chromosome"],
+                strand=raw["strand"],
                 exons=exons,
                 coordinate_system=regions.CoordinateSystem.one_based(),
             ),
             identity=identity,
-            was_mapped=raw['was_mapped'],
+            was_mapped=raw["was_mapped"],
             metadata=metadata,
         )
 
@@ -101,8 +94,8 @@ class Region(object):
     @property
     def source(self):
         if self.was_mapped:
-            return 'alignment'
-        return 'expert-database'
+            return "alignment"
+        return "expert-database"
 
     def string_strand(self):
         return self.region.strand.display_string()
@@ -114,11 +107,12 @@ class Region(object):
         return attr.evolve(self, region=self.region.as_zero_based())
 
 
-def parse(regions):
+def parse(regions) -> ty.Iterable[Region]:
     for index, region in enumerate(regions):
         yield Region.build(index, region)
 
 
-def from_file(handle):
+def from_file(handle) -> ty.Iterable[Region]:
     data = map(json.loads, handle)
-    return parse(data)
+    data = filter(lambda d: d['rna_type'] != "NULL", data)
+    yield from parse(data)
