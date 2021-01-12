@@ -83,6 +83,19 @@ process import_data {
   """
 }
 
+workflow for_database {
+  take: sequences
+  emit: data
+  main:
+    generate_files()
+
+    sequences \
+    | flatten \
+    | filter_done_md5 \
+    | combine(generate_files.out.cm_files) \
+    | scan
+}
+
 workflow rfam_scan {
   Channel.fromPath("files/find-active-xrefs-urs.sql").set { active_xref_sql }
   Channel.fromPath("files/qa/computed.sql").set { computed_sql }
