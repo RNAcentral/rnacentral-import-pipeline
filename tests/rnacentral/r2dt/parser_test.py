@@ -204,3 +204,19 @@ def test_can_extract_expected_dot_bracket_data(directory, source, urs, secondary
     v = next(v for v in val if v.urs == urs)
     assert v.dot_bracket() == secondary
     assert v.basepair_count() == bp_count
+
+
+def test_parses_gtrnadb_results():
+    vals = results.parse(data.Source.ribovision, Path('data/r2dt/gtrnadb'))
+    val = next(v for v in vals if v.urs == 'URS0000A0BF23')
+    assert attr.asdict(val) == attr.asdict(data.TravelerResult(
+        urs='URS0000A0BF23',
+        model_id='EC_LSU_3D',
+        paths=data.TravelerPaths(
+            urs='URS0000A0BF23',
+            model_id='E-Gln',
+            source=data.Source.gtrnadb,
+            basepath=Path('data/r2dt/gtrnadb/'),
+        ),
+        source=data.Source.ribovision,
+        ribovore=None))
