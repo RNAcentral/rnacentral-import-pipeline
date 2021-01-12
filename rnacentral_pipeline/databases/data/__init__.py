@@ -26,3 +26,4 @@ from .related import *
 from .ribovore import *
 from .rna_type import *
 from .secondary_structure import *
+from .trnascan import *
