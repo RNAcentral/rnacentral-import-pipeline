@@ -9,6 +9,12 @@ workflow qa {
     rfam_scan()
 }
 
+workflow for_database {
+  take: sequences
+  emit: data
+    rfam_scan.for_database(sequences)
+}
+
 workflow {
   qa()
 }

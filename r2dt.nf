@@ -70,8 +70,6 @@ process layout_sequences {
 }
 
 process publish_layout {
-  maxForks 5
-
   input:
   tuple path(sequences), path(output), path(mapping)
 
@@ -107,10 +105,31 @@ process store_secondary_structures {
   """
 }
 
+workflow common {
+  emit: fasta
+  main:
+    Channel.fromPath('files/r2dt/model_mapping.sql') \
+    | fetch_model_mapping \
+    | set { mapping }
+}
+
+workflow for_database {
+  take: sequences
+  emit: data
+  main: 
+    common | set { model_mapping }
+
+    sequences \
+    | flatten \
+    | filter_done_md5 \
+    | flatten \
+    | layout_sequences \
+    | combine(model_mapping) \
+    | set { data }
+}
+
 workflow r2dt {
-  Channel.fromPath('files/r2dt/model_mapping.sql') \
-  | fetch_model_mapping \
-  | set { model_mapping }
+  common | set { model_mapping }
 
   Channel.fromPath("files/r2dt/find-sequences.sql") \
   | extract_sequences \
