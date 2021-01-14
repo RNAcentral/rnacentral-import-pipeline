@@ -1,5 +1,6 @@
 process generate_files {
   when { params.qa.rfam.run }
+  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   output:
   path 'rfam', emit: cm_files
@@ -11,16 +12,18 @@ process generate_files {
   mkdir rfam
   cd rfam
   wget -O Rfam.clanin "$base/Rfam.clanin"
-  wget -O Rfam.cm.gz" $base/Rfam.cm.gz"
+  wget -O Rfam.cm.gz "$base/Rfam.cm.gz"
   gzip -d *.gz
   cmpress Rfam.cm
   cd ..
-  wget -O version_file "$base/README"
+  wget -O version_file "$base/README*"
   """
 }
 
 process sequences {
-  memory '5GB'
+  memory '20GB'
+  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
+  clusterOptions '-R "rusage[scratch=4000]"'
 
   input:
   tuple path(version), path(active_xrefs), path(computed), path(compute_missing)
@@ -29,6 +32,7 @@ process sequences {
   tuple path(version), path('parts/*.fasta')
 
   """
+  export TMPDIR="$baseDir/work/tmp"
   psql -v ON_ERROR_STOP=1 -f "$active_xrefs" "$PGDATABASE" | sort -u > active-urs
   psql -v ON_ERROR_STOP=1 -v 'name=rfam' -f "$computed" "$PGDATABASE" | sort > computed
   comm -23 active-urs computed > urs-to-compute
@@ -42,6 +46,7 @@ process scan {
   cpus { params.qa.rfam.cpus }
   memory { params.qa.rfam.memory * params.qa.rfam.cpus }
   errorStrategy 'ignore'
+  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
   tuple path(version), path('sequences.fasta'), path(cm_files)
@@ -71,6 +76,8 @@ process scan {
 }
 
 process import_data {
+  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
+
   input:
   path('raw*.csv')
   path(ctl)
@@ -113,6 +120,7 @@ workflow rfam_scan {
   | flatMap { version, files ->
     (files instanceof ArrayList) ? files.collect { [version, it] } : [[version, files]]
   } \
+  | filter { v, f -> !f.isEmpty() } \
   | combine(generate_files.out.cm_files) \
   | scan
 
