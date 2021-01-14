@@ -31,8 +31,7 @@ from .. import helpers
     ('URS0000BB3C76_486071', 'rRNA', True),
 ])
 def test_can_detect_missing_rfam_match(rna_id, rna_type, flag):
-    sequence = helpers.load_data(rna_id)
-    context = ctx.Context()
+    context, sequence = helpers.load_data(rna_id)
     assert miss.validate(context, rna_type, sequence).has_issue == flag
 
 
@@ -44,6 +43,5 @@ def test_can_detect_missing_rfam_match(rna_id, rna_type, flag):
     )),
 ])
 def test_can_produce_correct_contamination_warnings(rna_id, rna_type, message):
-    sequence = helpers.load_data(rna_id)
-    context = ctx.Context()
+    context, sequence = helpers.load_data(rna_id)
     assert miss.validate(ctx, rna_type, sequence).message == message

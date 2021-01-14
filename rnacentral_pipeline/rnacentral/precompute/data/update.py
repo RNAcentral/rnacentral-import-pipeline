@@ -20,7 +20,7 @@ import attr
 from attr.validators import instance_of as is_a
 from attr.validators import optional
 
-from rnacentral_pipeline.databases.data.utils import INSDC_SO_MAPPING
+from rnacentral_pipeline.databases.data.utils import SO_INSDC_MAPPING, INSDC_SO_MAPPING
 from rnacentral_pipeline.databases.data import RnaType
 from rnacentral_pipeline.rnacentral.precompute.qa import status as qa
 from rnacentral_pipeline.rnacentral.precompute.qa.data import QaStatus
@@ -47,8 +47,8 @@ class SequenceUpdate:
 
     @classmethod
     def active(cls, context: Context, sequence: Sequence) -> "SequenceUpdate":
-        insdc_rna_type = rna_type_of(context, sequence)
-        so_rna_type = INSDC_SO_MAPPING.get(insdc_rna_type, "SO:0000655")
+        so_rna_type = rna_type_of(context, sequence)
+        insdc_rna_type = SO_INSDC_MAPPING.get(so_rna_type.so_term.so_id, "ncRNA")
         description = description_of(insdc_rna_type, sequence)
         short_description = short_description_for(description, sequence)
 

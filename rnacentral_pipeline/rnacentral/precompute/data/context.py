@@ -18,6 +18,7 @@ from pathlib import Path
 
 import attr
 from attr.validators import instance_of as is_a
+import networkx as nx
 from sqlitedict import SqliteDict
 
 from rnacentral_pipeline.databases.data import RnaType
@@ -48,3 +49,13 @@ class Context:
 
     def so_term_for(self, name: str) -> RnaType:
         return RnaType.from_insdc_term(self.so_tree, name)
+
+    def term_is_a(self, name: str, term: RnaType) -> bool:
+        target = name
+        if not name.startswith('SO:'):
+            target = self.so_tree.name_to_id[name]
+        source = term.so_term.so_id
+        if source == target:
+            return True
+        paths = nx.all_simple_paths(self.so_tree, source=source, target=target)
+        return bool(next(paths, None))

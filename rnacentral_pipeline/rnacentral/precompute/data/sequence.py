@@ -35,7 +35,7 @@ def partioned_accessions(so_tree, all_accessions):
     accessions = []
     inactive_accessions = []
     for accession in all_accessions:
-        if accession.pop("is_active"):
+        if accession["is_active"]:
             accessions.append(Accession.build(so_tree, accession))
         else:
             inactive_accessions.append(Accession.build(so_tree, accession))

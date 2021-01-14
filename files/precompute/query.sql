@@ -5,6 +5,7 @@ select
     'taxid', xref.taxid,
     'length', rna.len,
     'accessions', array_agg(json_build_object(
+        'id', acc.accession,
         'is_active', xref.deleted = 'N',
         'description', acc.description,
         'gene', acc.gene,
@@ -49,6 +50,7 @@ select
     'r2dt_hits', array_agg(json_build_object(
         'model_id', r2dt.id,
         'model_name', r2dt.model_name,
+        'model_source', r2dt.model_source,
         'model_so_term', r2dt.so_term_id,
         'sequence_coverage', ss.sequence_coverage,
         'model_coverage', ss.model_coverage,

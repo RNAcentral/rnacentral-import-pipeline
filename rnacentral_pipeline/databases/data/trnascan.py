@@ -41,8 +41,6 @@ class TRnaScanResults:
 
     @classmethod
     def from_line(cls, line: str) -> "TRnaScanResults":
-        print(line)
-        print(line.split('\t'))
         parts = [p.strip() for p in line.split("\t")]
         return cls(
             sequence_id=parts[0],

@@ -35,8 +35,7 @@ from .. import helpers
     ('URS00003EA5AC_9606', 'rRNA', False),
 ])
 def test_can_detect_possible_contamination(rna_id: str, rna_type: str, flag: bool):
-    sequence = helpers.load_data(rna_id)
-    context = ctx.Context()
+    context, sequence = helpers.load_data(rna_id)
     assert cont.validate(context, rna_type, sequence).has_issue == flag
 
 
@@ -48,6 +47,5 @@ def test_can_detect_possible_contamination(rna_id: str, rna_type: str, flag: boo
     ))
 ])
 def test_can_produce_correct_contamination_warnings(rna_id: str, rna_type: str, message: str):
-    sequence = helpers.load_data(rna_id)
-    context = ctx.Context()
+    context, sequence = helpers.load_data(rna_id)
     assert cont.validate(context, rna_type, sequence).message == message

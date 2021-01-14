@@ -18,7 +18,7 @@ import pytest
 from rnacentral_pipeline.rnacentral.precompute.data import context as ctx
 import rnacentral_pipeline.rnacentral.precompute.qa.incomplete_sequence as inco
 
-from .. import helpers
+from tests.rnacentral.precompute import helpers
 
 
 @pytest.mark.parametrize('rna_id,rna_type,flag', [  # pylint: disable=no-member
@@ -34,8 +34,7 @@ from .. import helpers
     ('URS0000010837_7227', 'misc_RNA', True),
 ])
 def test_can_detect_incomplete_sequence(rna_id, rna_type, flag):
-    sequence = helpers.load_data(rna_id)
-    context = ctx.Context()
+    context, sequence = helpers.load_data(rna_id)
     assert inco.validate(context, rna_type, sequence).has_issue == flag
 
 
@@ -46,6 +45,5 @@ def test_can_detect_incomplete_sequence(rna_id, rna_type, flag):
     )),
 ])
 def test_can_produce_correct_contamination_warnings(rna_id, rna_type, message):
-    sequence = helpers.load_data(rna_id)
-    context = ctx.Context()
+    context, sequence = helpers.load_data(rna_id)
     assert inco.validate(ctx, rna_type, sequence).message == message

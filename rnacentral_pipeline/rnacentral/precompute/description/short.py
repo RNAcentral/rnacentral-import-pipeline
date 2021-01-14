@@ -36,7 +36,11 @@ def short_description(description: str, sequence: Sequence) -> str:
 
     description = re.sub(r"^\s*(\(\))?\s*", "", description)
 
-    if description.startswith("(") and description.endswith(")"):
+    if (
+        description.startswith("(")
+        and description.endswith(")")
+        and ")" not in description[1:-1]
+    ):
         description = description[1:-1]
 
     return description
