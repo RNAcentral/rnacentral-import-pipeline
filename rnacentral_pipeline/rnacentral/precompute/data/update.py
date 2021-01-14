@@ -52,6 +52,8 @@ class SequenceUpdate:
         description = description_of(insdc_rna_type, sequence)
         short_description = short_description_for(description, sequence)
 
+        assert description, "Failed to build a description"
+        assert short_description, "Failed to build short_description"
         return cls(
             sequence=sequence,
             insdc_rna_type=insdc_rna_type,
