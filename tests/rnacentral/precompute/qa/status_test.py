@@ -30,8 +30,7 @@ from .. import helpers
     ('URS0000010837_7227', 'misc_RNA', True),
 ])
 def test_can_detect_possible_contamination(rna_id, rna_type, flag):
-    sequence = helpers.load_data(rna_id)
-    context = ctx.Context()
+    context, sequence = helpers.load_data(rna_id)
     assert qa.status(context, sequence, rna_type).possible_contamination.has_issue == flag
 
 
@@ -48,8 +47,7 @@ def test_can_detect_possible_contamination(rna_id, rna_type, flag):
     ('URS0000010837_7227', 'misc_RNA', True),
 ])
 def test_can_detect_incomplete_sequence(rna_id, rna_type, flag):
-    sequence = helpers.load_data(rna_id)
-    context = ctx.Context()
+    context, sequence = helpers.load_data(rna_id)
     assert qa.status(context, sequence, rna_type).incomplete_sequence.has_issue == flag
 
 
@@ -63,8 +61,7 @@ def test_can_detect_incomplete_sequence(rna_id, rna_type, flag):
     ('URS0000BB3C76_486071', 'rRNA', True),
 ])
 def test_can_detect_missing_rfam_match(rna_id, rna_type, flag):
-    sequence = helpers.load_data(rna_id)
-    context = ctx.Context()
+    context, sequence = helpers.load_data(rna_id)
     assert qa.status(context, sequence, rna_type).missing_rfam_match.has_issue == flag
 
 
@@ -76,8 +73,7 @@ def test_can_detect_missing_rfam_match(rna_id, rna_type, flag):
     ('URS0000BA5588_9606', 'precursor_RNA', True),
 ])
 def test_can_detect_problems_with_mismatched_rna_types(rna_id, rna_type, flag):
-    sequence = helpers.load_data(rna_id)
-    context = ctx.Context()
+    context, sequence = helpers.load_data(rna_id)
     assert qa.status(context, sequence, rna_type).mismatching_rna_type == flag
 
 
@@ -98,6 +94,5 @@ def test_can_detect_problems_with_mismatched_rna_types(rna_id, rna_type, flag):
     ]),
 ])
 def test_can_add_messages(rna_id, rna_type, messages):
-    sequence = helpers.load_data(rna_id)
-    context = ctx.Context()
+    context, sequence = helpers.load_data(rna_id)
     assert qa.status(context, sequence, rna_type).messages() == messages

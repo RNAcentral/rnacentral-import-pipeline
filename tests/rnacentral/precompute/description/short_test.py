@@ -49,5 +49,5 @@ from tests.rnacentral.precompute.helpers import load_data
     ],
 )
 def test_computes_correct_short_descriptions(rna_id, description, expected):
-    data = load_data(rna_id)
-    assert short.short_description(description, data) == expected
+    context, sequence = load_data(rna_id)
+    assert short.short_description(description, sequence) == expected

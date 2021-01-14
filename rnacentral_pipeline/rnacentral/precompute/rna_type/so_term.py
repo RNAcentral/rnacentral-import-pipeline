@@ -25,6 +25,7 @@ from rnacentral_pipeline.databases.data import Database, RnaType
 from rnacentral_pipeline.databases.sequence_ontology import tree
 from rnacentral_pipeline.rnacentral.precompute.data import context
 from rnacentral_pipeline.rnacentral.precompute.data import sequence as seq
+from rnacentral_pipeline.rnacentral.precompute.qa import contamination as cont
 
 LOGGER = logging.getLogger(__name__)
 
@@ -44,6 +45,7 @@ ACCEPTED_DATABASES = {
     Database.tarbase,
     Database.zwd,
     Database.pdbe,
+    Database.gencode,
 }
 
 MODEL_GROUPS = {
@@ -83,6 +85,17 @@ class SourceName(enum.Enum):
             return True
         raise ValueError(f"Unhandled SourceName {self}")
 
+    def is_database(self):
+        if self is SourceName.generic_database:
+            return True
+        if self is SourceName.mod:
+            return True
+        if self is SourceName.r2dt_hit:
+            return False
+        if self is SourceName.rfam_hit:
+            return False
+        raise ValueError(f"Unhandled SourceName {self}")
+
 
 @attr.s(hash=True, frozen=True)
 class Source:
@@ -107,6 +120,9 @@ class Source:
 
     def is_hit(self):
         return self.name.is_hit()
+
+    def is_database(self):
+        return self.name.is_database()
 
 
 @attr.s()
@@ -153,13 +169,17 @@ class RnaTypeAnnotation:
         return other.is_parent_of(self)
 
     def is_mergeable(self, other: "RnaTypeAnnotation"):
-        return self.path == other.path or self.is_parent_of(other) or self.is_child_of(other)
+        return (
+            self.path == other.path
+            or self.is_parent_of(other)
+            or self.is_child_of(other)
+        )
 
     @property
     def rna_type(self):
         return self.path[-1]
 
-    def merge(self, other: "RnaTypeAnnotation") -> "RnaTypeAnnotation":
+    def merge(self, other: "RnaTypeAnnotation"):
         source = set()
         source.update(self.source)
         source.update(other.source)
@@ -169,9 +189,6 @@ class RnaTypeAnnotation:
             self.source = source
             self.path = list(other.path)
         elif self.is_child_of(other):
-            print(self.path)
-            print(other.path)
-            print(other.is_parent_of(self))
             self.source = source
         else:
             raise ValueError(f"Cannot merge {self.path} to {other.path}")
@@ -198,9 +215,56 @@ def merge_annotations(given: ty.List[RnaTypeAnnotation]) -> ty.List[RnaTypeAnnot
     return grouped
 
 
-def rna_type_of(
-    context: context.Context, sequence: seq.Sequence
-) -> ty.Optional[RnaType]:
+def covers_sequence(hit) -> bool:
+    return hit.sequence_info.completeness > 0.80 and hit.model_info.completeness > 0.80
+
+
+def is_mito_hit(context, sequence, hit) -> bool:
+    return (
+        sequence.is_mitochondrial()
+        and context.term_is_a("rRNA", hit.model_rna_type)
+        and hit.model in cont.ALLOWED_FAMILIES
+    )
+
+
+def mito_rna_type_of(context, _hit) -> RnaType:
+    return RnaType.from_so_term(context.so_tree, "SO:0002128")
+
+
+def is_lncrna_data(
+    ctx: context.Context, annotations: ty.List[RnaTypeAnnotation]
+) -> bool:
+    def allowed(term):
+        return ctx.term_is_a("lnc_RNA", term) or ctx.term_is_a("antisense_RNA", term)
+
+    selected = filter(lambda a: a.source_matches(lambda s: s.is_database()), annotations)
+    return all(allowed(a.rna_type) for a in selected)
+
+
+def has_similar_rfam_and_r2dt(context, annotations):
+    r2dt = [a for a in annotations if a.has_source(SourceName.r2dt_hit)]
+    rfam = [a for a in annotations if a.has_source(SourceName.rfam_hit)]
+    if len(r2dt) != 1 or len(rfam) != 1:
+        return False
+    return context.term_is_a('rRNA', r2dt[0].rna_type) and \
+        context.term_is_a('rRNA', rfam[0].rna_type)
+
+
+def rfam_db_annotations(annotations: ty.List[RnaTypeAnnotation]) -> ty.Optional[RnaTypeAnnotation]:
+    def from_rfam(annotation: RnaTypeAnnotation) -> bool:
+        def fn(source) -> bool:
+            return source.name == SourceName.generic_database and \
+                    source.data.database == Database.rfam
+
+        return annotation.source_matches(fn)
+
+    selected = [a for a in annotations if from_rfam(a)]
+    if len(selected) == 1:
+        return selected[0]
+    return None
+
+
+def all_annotations(context: context.Context, sequence: seq.Sequence) -> ty.List[RnaTypeAnnotation]:
     annotations = []
     for accession in sequence.accessions:
         annotations.append(RnaTypeAnnotation.from_accession(context, accession))
@@ -209,13 +273,22 @@ def rna_type_of(
             annotations.append(RnaTypeAnnotation.from_r2dt(context, r2dt))
 
     for rfam in sequence.rfam_hits:
+        if not covers_sequence(rfam):
+            continue
+        if is_mito_hit(context, sequence, rfam):
+            rfam = attr.evolve(rfam, model_rna_type=mito_rna_type_of(context, rfam))
         ann = RnaTypeAnnotation.from_rfam(context, rfam)
         annotations.append(ann)
+    return annotations
 
+
+def rna_type_of(
+    context: context.Context, sequence: seq.Sequence
+) -> ty.Optional[RnaType]:
+
+    annotations = all_annotations(context, sequence)
     merged = merge_annotations(annotations)
-    print(len(merged))
-    from pprint import pprint
-    pprint([(m.path, list(s.name for s in m.source)) for m in merged])
+
     if len(merged) == 1:
         return merged[0].rna_type
 
@@ -229,4 +302,17 @@ def rna_type_of(
 
     if mod_annotations:
         return mod_annotations[0].rna_type
-    return None
+
+    if is_lncrna_data(context, merged):
+        return RnaType.from_so_id(context.so_tree, "SO:0001877")
+
+    if has_similar_rfam_and_r2dt(context, merged):
+        r2dt = [a for a in merged if a.has_source(SourceName.r2dt_hit)]
+        if len(r2dt) == 1:
+            return r2dt[0].rna_type
+
+    rfam_annotation = rfam_db_annotations(merged)
+    if rfam_annotation:
+        return rfam_annotation.rna_type
+
+    return RnaType.ncRNA()

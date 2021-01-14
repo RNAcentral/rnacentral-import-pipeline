@@ -45,6 +45,7 @@ class Accession:
     all_species = attr.ib(validator=is_a(tuple), converter=tuple)
     all_common_names = attr.ib(validator=is_a(tuple), converter=tuple)
     rna_type = attr.ib(validator=is_a(RnaType))
+    is_active = attr.ib(validator=is_a(bool))
 
     @classmethod
     def build(cls, so_tree, data) -> "Accession":
@@ -71,6 +72,7 @@ class Accession:
             all_species=tuple(data["all_species"]),
             all_common_names=tuple(data["all_common_names"]),
             rna_type=rna_type,
+            is_active=data['is_active'],
         )
 
     @property
@@ -96,6 +98,7 @@ class Accession:
             or "synthetic" in domain
             or "artificial" in domain
             or "unclassified" in domain
+            or 'other entries' in domain
         ):
             return None
 

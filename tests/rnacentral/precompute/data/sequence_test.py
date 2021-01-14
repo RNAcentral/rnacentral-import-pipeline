@@ -34,7 +34,7 @@ from .. import helpers
     ('URS0000D664B8_12908', set()),
 ])
 def test_can_get_correct_domains(rna_id, expected):
-    assert helpers.load_data(rna_id).domains() == expected
+    assert helpers.load_data(rna_id)[1].domains() == expected
 
 
 @pytest.mark.parametrize('rna_id,expected', [
@@ -46,7 +46,7 @@ def test_can_get_correct_domains(rna_id, expected):
     ('URS0000767631_155900', False),
 ])
 def test_can_detect_if_mitochondrial(rna_id, expected):
-    assert helpers.load_data(rna_id).is_mitochondrial() is expected
+    assert helpers.load_data(rna_id)[1].is_mitochondrial() is expected
 
 
 @pytest.mark.parametrize('rna_id,expected', [
@@ -57,7 +57,7 @@ def test_can_detect_if_mitochondrial(rna_id, expected):
     ('URS0000767631_155900', True),
 ])
 def test_can_detect_if_chloroplast(rna_id, expected):
-    assert helpers.load_data(rna_id).is_chloroplast() is expected
+    assert helpers.load_data(rna_id)[1].is_chloroplast() is expected
 
 
 @pytest.mark.skip()
@@ -65,7 +65,7 @@ def test_can_detect_if_chloroplast(rna_id, expected):
     ('URS00006DCF2F_387344', 'SO:0000252'),
 ])
 def test_can_load_rna_types(rna_id, expected):
-    assert helpers.load_data(rna_id).so_rna_type == expected
+    assert helpers.load_data(rna_id)[1].so_rna_type == expected
 
 
 @pytest.mark.skip()

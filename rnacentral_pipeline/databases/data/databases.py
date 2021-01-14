@@ -23,6 +23,7 @@ class Database(enum.Enum):
     knows about.
     """
 
+    crw              = enum.auto()
     dictybase        = enum.auto()
     ena              = enum.auto()
     ensembl          = enum.auto()
