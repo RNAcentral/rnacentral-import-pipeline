@@ -277,7 +277,7 @@ def as_reference(ref):
     else:
         title = str(title)
 
-    return Reference(
+    return data.Reference(
         authors=str(ref.authors),
         location=str(ref.journal),
         title=title,
