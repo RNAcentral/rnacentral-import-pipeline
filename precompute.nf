@@ -22,7 +22,7 @@ process build_precompute_context {
   """
 }
 
-process find_ranges {
+process build_table {
   when { params.precompute.run }
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
@@ -30,14 +30,64 @@ process find_ranges {
   path(sql)
 
   output:
-  path('ranges.txt')
+  val('done')
 
   """
   psql \
     -v ON_ERROR_STOP=1 \
-    -v tablename=$params.precompute.tablename \
+    -v "tablename=$params.precompute.tablename" \
     -f "$sql" "$PGDATABASE"
-  rnac upi-ranges --table-name $params.precompute.tablename ${params.precompute.max_entries} ranges.txt
+  """
+}
+
+process partial_query {
+  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
+
+  input:
+  path(query)
+
+  output:
+  path("${query.baseName}.json")
+
+  """
+  psql \
+    -v ON_ERROR_STOP=1 \
+    -v "tablename=$params.precompute.tablename" \
+    -f $query \
+    "$PGDATABASE" > ${query.baseName}.json
+  """
+}
+
+process index_data {
+  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
+
+  input:
+  path(data_files)
+
+  output:
+  path('index.db')
+
+  """
+  echo "${data_files.join("\n")}" > file-list
+  kv index-files file-list index.db
+  """
+}
+
+process find_ranges {
+  when { params.precompute.run }
+  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
+
+  input:
+  val(_)
+
+  output:
+  path('ranges.txt')
+
+  """
+  rnac upi-ranges \
+    --table-name ${params.precompute.tablename} \
+    ${params.precompute.max_entries} \
+    ranges.txt
   """
 }
 
@@ -52,7 +102,7 @@ process query_range {
   tuple val(tablename), val(min), val(max), path(query)
 
   output:
-  tuple val(min), val(max), path('raw-precompute.json')
+  tuple val(min), val(max), path('ids')
 
   """
   psql \
@@ -61,7 +111,7 @@ process query_range {
     --variable min=$min \
     --variable max=$max \
     -f "$query" \
-    '$PGDATABASE' > raw-precompute.json
+    '$PGDATABASE' > ids
   """
 }
 
@@ -71,14 +121,15 @@ process process_range {
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
-  tuple val(min), val(max), path(raw), path(context)
+  tuple val(min), val(max), path(ids), path(context), path(db)
 
   output:
   path 'precompute.csv', emit: data
   path 'qa.csv', emit: qa
 
   """
-  rnac precompute from-file $context $raw
+  kv lookup $db $ids raw-precompute.json
+  rnac precompute from-file $context raw-precompute
   """
 }
 
@@ -104,15 +155,28 @@ workflow precompute {
   take: method
 
   main:
-    build_precompute_context(repeats()) | set { context }
+    Channel.fromPath('files/precompute/queries/*.sql') | set { queries }
+    Channel.fromPath('files/precompute/fetch-ids.sql') | set { fetch_ids }
 
-    method \
+    build_precompute_context(repeats()) | set { context }
+    method | build_table | set { flag }
+
+    queries \
+    | combine(flag) \
+    | map { q, _ -> q } \
+    | partial_query \
+    | collect \
+    | index_data \
+    | set { indexed }
+
+    flag \
     | find_ranges \
     | splitCsv \
-    | combine(Channel.fromPath('files/precompute/query.sql')) \
+    | combine(fetch_ids) \
     | query_range \
     | combine(context) \
-    | process_range \
+    | combine(indexed) \
+    | process_range
 
     process_range.out.data | collect | set { data }
     process_range.out.qa | collect | set { qa }
