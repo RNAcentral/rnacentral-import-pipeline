@@ -17,15 +17,25 @@ pub struct UrsEntry {
     release: usize,
 }
 
+fn entries(path: &Path) -> Result<impl Iterator<Item=UrsEntry>> {
+    let file = File::open(path)?;
+    let buf = BufReader::new(file);
+    let reader = csv::ReaderBuilder::new()
+        .has_headers(false)
+        .from_reader(buf);
+
+    let records = reader
+        .into_deserialize()
+        .filter_map(Result::ok);
+
+    Ok(records)
+}
+
 pub fn write_max(filename: &Path, output: &Path) -> Result<()> {
-    let reader = rnc_utils::buf_reader(filename)?;
-    let mut reader = csv::Reader::from_reader(reader);
     let out = rnc_utils::buf_writer(output)?;
     let mut writer = csv::Writer::from_writer(out);
 
-    let results = reader
-        .deserialize()
-        .filter_map(Result::ok)
+    let results = entries(filename)?
         .group_by(|e: &UrsEntry| e.urs.to_owned());
 
     for (_, entries) in &results {
@@ -35,24 +45,17 @@ pub fn write_max(filename: &Path, output: &Path) -> Result<()> {
             None => (),
         }
     }
+    writer.flush()?;
 
     Ok(())
 }
 
 pub fn select_new(xrefs: &Path, known: &Path, output: &Path) -> Result<()> {
-    let xref_buf = BufReader::new(File::open(xrefs)?);
-    let mut xref_reader = csv::Reader::from_reader(xref_buf);
-    let xref_records = xref_reader
-        .deserialize()
-        .filter_map(Result::ok)
+    let xref_records = entries(xrefs)?
         .map(|e: UrsEntry| (e.urs.to_owned(), e))
         .assume_sorted_by_key();
 
-    let known_buf = BufReader::new(File::open(known)?);
-    let mut known_reader = csv::Reader::from_reader(known_buf);
-    let known_records = known_reader
-        .deserialize()
-        .filter_map(Result::ok)
+    let known_records = entries(known)?
         .map(|e: UrsEntry| (e.urs.to_owned(), e))
         .assume_sorted_by_key();
 
@@ -70,6 +73,7 @@ pub fn select_new(xrefs: &Path, known: &Path, output: &Path) -> Result<()> {
             (None, None) => (),
         }
     }
+    writer.flush()?;
 
     Ok(())
 }
