@@ -22,22 +22,40 @@ process build_precompute_context {
   """
 }
 
-process find_ranges {
+process fetch_release_info {
+  tag { "${query.baseName}" }
   when { params.precompute.run }
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
-  path(sql)
+  path(query)
+
+  output:
+  path('data.csv')
+
+  """
+  psql -v ON_ERROR_STOP=1 -f $query $PGDATABASE > raw
+  sort -u raw > sorted.csv
+  precompute max-release sorted.csv > data.csv
+  """
+}
+
+process find_ranges {
+  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
+
+  input:
+  tuple path(load), path('xref.csv'), path('precompute.csv')
 
   output:
   path('ranges.txt')
 
   """
+  precompute select xref.csv precompute.csv to-load.csv
   psql \
     -v ON_ERROR_STOP=1 \
-    -v tablename=$params.precompute.tablename \
-    -f "$sql" "$PGDATABASE"
-  rnac upi-ranges --table-name $params.precompute.tablename ${params.precompute.max_entries} ranges.txt
+    -v tablename=${params.precompute.tablename} \
+    -f $load "$PGDATABASE"
+  rnac upi-ranges --table-name ${params.precompute.tablename} ${params.precompute.max_entries} ranges.txt
   """
 }
 
@@ -101,12 +119,19 @@ process load_data {
 }
 
 workflow precompute {
-  take: method
-
   main:
+    Channel.fromPath('files/precompute/fetch-precompute-info.sql') | set { precompute_info_sql }
+    Channel.fromPath('files/precompute/fetch-xref-info.sql') | set { xref_info_sql }
+    Channel.fromPath('files/precompute/load-urs.sql') | set { load_sql }
+
     build_precompute_context(repeats()) | set { context }
 
-    method \
+    precompute_info_sql | fetch_release_info | set { precompute_info }
+    xref_info_sql | fetch_release_info | set { xref_info }
+
+    load_sql \
+    | combine(precompute_info) \
+    | combine(xref_info) \
     | find_ranges \
     | splitCsv \
     | combine(Channel.fromPath('files/precompute/query.sql')) \
@@ -126,5 +151,5 @@ workflow precompute {
 }
 
 workflow {
-  precompute(Channel.fromPath("files/precompute/methods/${params.precompute.method.replace('_', '-')}.sql"))
+  precompute()
 }
