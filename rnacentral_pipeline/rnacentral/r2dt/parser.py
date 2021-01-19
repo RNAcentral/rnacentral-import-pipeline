@@ -22,23 +22,23 @@ from glob import glob
 from itertools import islice
 from pathlib import Path
 
-from . import data, ribovore
+from rnacentral_pipeline import psql
+from rnacentral_pipeline.rnacentral.r2dt import data, ribovore
 
 LOGGER = logging.getLogger(__name__)
 
 
-def load_model_info(handle: ty.TextIO):
-    reader = csv.reader(handle)
+def load_model_info(handle: ty.TextIO) -> ty.Dict[str, data.ModelDatabaseInfo]:
     mapping = {}
-    for line in reader:
-        model_name, model_id = line
-        mapping[model_name] = int(model_id)
-        if model_name == "tRNA":
-            mapping["RF00005"] = int(model_id)
+    for entry in psql.json_handler(handle):
+        info = data.ModelDatabaseInfo.build(entry)
+        mapping[entry["model_name"]] = info
+        # if entry['model_name'] == "tRNA":
+        #     mapping["RF00005"] = int(model_id)
     return mapping
 
 
-def load_hit_info(base: Path, allow_missing):
+def load_hit_info(base: Path, allow_missing: bool):
     source_directories = [
         (base / "crw", data.Source.crw),
         (base / "gtrnadb", data.Source.gtrnadb),
@@ -54,7 +54,7 @@ def load_hit_info(base: Path, allow_missing):
         if not path.exists():
             continue
         if source in has_ribovision and path.name != "RF00005":
-            update = ribovore.as_dict(path, allow_missing=True)
+            update = ribovore.as_dict(path, allow_missing=allow_missing)
             if update:
                 hit_info.update(update)
     return hit_info
@@ -82,10 +82,8 @@ def parse(
             if model_name not in model_info:
                 LOGGER.warning("No info for model %s", model_name)
                 continue
-            model_db_id = model_info[model_name]
-            info = data.R2DTResultInfo(
-                urs, model_name, model_db_id, source, result_base
-            )
+            info = model_info[model_name]
+            info = data.R2DTResultInfo(urs, info, source, result_base)
             try:
                 info.validate()
             except Exception as e:

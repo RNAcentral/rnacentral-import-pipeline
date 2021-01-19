@@ -109,14 +109,41 @@ class ModelInfo(object):
             self.length,
         ]
 
+@attr.s
+class ModelDatabaseInfo:
+    name = attr.ib(validator=is_a(str))
+    db_id = attr.ib(validator=is_a(int))
+    source = attr.ib(validator=is_a(Source))
+    alias = attr.ib(validator=optional(is_a(str)))
+
+    @classmethod
+    def build(cls, raw) -> "ModelDatabaseInfo":
+        return cls(
+            name=raw['model_name'],
+            db_id=raw['model_id'],
+            source=getattr(Source, raw['model_source']),
+            alias=raw['model_alias'],
+        )
+
 
 @attr.s()
 class R2DTResultInfo(object):
     urs = attr.ib(validator=is_a(str))
-    model_name = attr.ib(validator=is_a(str))
-    model_db_id = attr.ib(validator=is_a(int))
+    db_info = attr.ib(validator=is_a(ModelDatabaseInfo))
     source = attr.ib(validator=is_a(Source))
     path = attr.ib(validator=is_a(Path))
+
+    @property
+    def model_name(self):
+        return self.db_info.name
+
+    @property
+    def model_db_id(self):
+        return self.db_info.db_id
+
+    @property
+    def model_alias(self):
+        return self.db_info.alias
 
     @property
     def svg(self) -> Path:
@@ -158,10 +185,19 @@ class R2DTResultInfo(object):
         return publish / f"{self.urs}{append}.{extension}"
 
     def validate(self):
-        assert self.svg.exists(), "Missing SVG file for %s" % self
-        assert self.fasta.exists(), "Missing FASTA file for %s" % self
-        assert self.overlaps.exists(), "Missing overlaps for %s" % self
-        assert self.source_directory.exists(), "Missing source for %s" % self
+        assert self.svg.exists(), "Missing SVG file (%s) for %s" % (self.svg, self)
+        assert self.fasta.exists(), "Missing FASTA file (%s) for %s" % (
+            self.fasta,
+            self,
+        )
+        assert self.overlaps.exists(), "Missing overlaps (%s) for %s" % (
+            self.overlaps,
+            self,
+        )
+        assert self.source_directory.exists(), "Missing source (%s) for %s" % (
+            self.source_directory,
+            self,
+        )
 
     def has_ribovore(self):
         if self.source in {Source.crw, Source.ribovision}:
@@ -174,10 +210,13 @@ class R2DTResultInfo(object):
         return self.has_ribovore()
 
     def __filename__(self, extension):
-        if self.source == Source.rfam:
-            return f"{self.urs}.{extension}"
         if self.source == Source.gtrnadb and extension == "fasta":
             return f"{self.urs}.{extension}"
+        if self.source == Source.rfam and not self.model_name.startswith("RF"):
+            if extension == "fasta":
+                return f"{self.urs}.{extension}"
+            assert self.model_alias.startswith("RF"), f"No existing alias for {self}"
+            return f"{self.urs}-{self.model_alias}.{extension}"
         return f"{self.urs}-{self.model_name}.{extension}"
 
 
