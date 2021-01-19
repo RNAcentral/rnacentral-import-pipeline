@@ -33,20 +33,20 @@ create table load_secondary_layout_models (
     taxid int NOT NULL,
     rna_type text NOT NULL,
     so_term text NOT NULL,
-    cell_location text NOT NULL,
+    cell_location text,
     model_source text not null,
-    model_length int not null
+    model_length int
 );
 $$
 
 AFTER LOAD DO
 $$
-INSERT INTO rnc_secondary_structure_layout_models models (
+INSERT INTO rnc_secondary_structure_layout_models (
     model_name,
     taxid,
     rna_type,
-    so_term,
-    cell_location,
+    so_term_id,
+    cellular_location,
     model_source,
     model_length
 ) (
