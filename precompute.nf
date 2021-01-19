@@ -22,17 +22,36 @@ process build_precompute_context {
   """
 }
 
-process build_table {
+process fetch_release_info {
+  tag { "${query.baseName}" }
   when { params.precompute.run }
+  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
+  memory '5GB'
+
+  input:
+  path(query)
+
+  output:
+  path('data.csv')
+
+  """
+  psql -v ON_ERROR_STOP=1 -f $query $PGDATABASE > raw
+  sort -u raw > sorted.csv
+  precompute max-release sorted.csv > data.csv
+  """
+}
+
+process build_urs_table {
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
-  path(sql)
+  tuple path(load), path('xref.csv'), path('precompute.csv')
 
   output:
   val('done')
 
   """
+  precompute select xref.csv precompute.csv to-load.csv
   psql \
     -v ON_ERROR_STOP=1 \
     -v "tablename=$params.precompute.tablename" \
@@ -152,14 +171,23 @@ process load_data {
 }
 
 workflow precompute {
-  take: method
-
   main:
     Channel.fromPath('files/precompute/queries/*.sql') | set { queries }
     Channel.fromPath('files/precompute/fetch-ids.sql') | set { fetch_ids }
+    Channel.fromPath('files/precompute/fetch-precompute-info.sql') | set { precompute_info_sql }
+    Channel.fromPath('files/precompute/fetch-xref-info.sql') | set { xref_info_sql }
+    Channel.fromPath('files/precompute/load-urs.sql') | set { load_sql }
 
     build_precompute_context(repeats()) | set { context }
-    method | build_table | set { flag }
+
+    precompute_info_sql | fetch_release_info | set { precompute_info }
+    xref_info_sql | fetch_release_info | set { xref_info }
+
+    load_sql \
+    | combine(precompute_info) \
+    | combine(xref_info) \
+    | build_urs_table \
+    | set { flag }
 
     queries \
     | combine(flag) \
@@ -190,5 +218,5 @@ workflow precompute {
 }
 
 workflow {
-  precompute(Channel.fromPath("files/precompute/methods/${params.precompute.method.replace('_', '-')}.sql"))
+  precompute()
 }

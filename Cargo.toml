@@ -6,4 +6,5 @@ members = [
   "utils/rnc-core",
   "utils/rnc-utils",
   "utils/rnc-test-utils",
+  "utils/precompute",
 ]
