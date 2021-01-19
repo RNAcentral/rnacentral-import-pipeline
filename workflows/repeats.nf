@@ -15,6 +15,8 @@ process find_genomes_with_repeats {
 
 process query_ensembl {
   maxForks 10
+  memory '4GB'
+  errorStrategy 'ignore'
 
   input:
   tuple val(assembly), val(conn_name), val(database), path(query)
@@ -33,12 +35,13 @@ process query_ensembl {
 process fetch_ensembl_data {
   tag { "$species-$assembly" }
   memory '4GB'
+  errorStrategy 'ignore'
 
   input:
   tuple val(assembly), path(raw)
 
   output:
-  path("$assembly-repeats"), emit: repeats
+  path "$assembly-repeats", emit: repeats
 
   script:
   def out = "$assembly-repeats"
