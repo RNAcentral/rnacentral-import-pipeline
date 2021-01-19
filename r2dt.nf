@@ -106,7 +106,7 @@ process store_secondary_structures {
 }
 
 workflow common {
-  emit: fasta
+  emit: mapping
   main:
     Channel.fromPath('files/r2dt/model_mapping.sql') \
     | fetch_model_mapping \
