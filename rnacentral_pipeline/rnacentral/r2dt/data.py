@@ -61,7 +61,21 @@ class Source(enum.Enum):
     crw = enum.auto()
     ribovision = enum.auto()
     rfam = enum.auto()
+    rnase_p = enum.auto()
     gtrnadb = enum.auto()
+
+    def result_directory(self) -> str:
+        if self is Source.crw:
+            return 'crw'
+        if self is Source.ribovision:
+            return 'ribovision'
+        if self is Source.rfam:
+            return 'rfam'
+        if self is Source.rnase_p:
+            return 'rnasep'
+        if self is Source.gtrnadb:
+            return 'gtrnadb'
+        raise ValueError(f"Could not find results for {self}")
 
 
 @attr.s()
@@ -72,7 +86,7 @@ class ModelInfo(object):
     taxid: int = attr.ib(validator=is_a(int))
     accessions: ty.List[str] = attr.ib(validator=is_a(list))
     source: Source = attr.ib(validator=is_a(Source))
-    length: int = attr.ib(validator=optional(is_a(int)))
+    length: ty.Optional[int] = attr.ib(validator=optional(is_a(int)))
     cell_location: ty.Optional[str] = attr.ib(validator=optional(is_a(str)))
 
     @property
@@ -127,7 +141,7 @@ class R2DTResultInfo(object):
 
         if self.source == Source.rfam and self.model_name == 'RF00005':
             return base / 'RF00005'
-        return base / self.source.name
+        return base / self.source.result_directory()
 
     @property
     def overlaps(self) -> Path:
