@@ -26,6 +26,7 @@ process fetch_release_info {
   tag { "${query.baseName}" }
   when { params.precompute.run }
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
+  memory '5GB'
 
   input:
   path(query)
