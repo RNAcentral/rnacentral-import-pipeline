@@ -13,46 +13,43 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import re
 import enum
+import re
+import typing as ty
 from pathlib import Path
 
-import typing as ty
-
-from Bio import SeqIO
-
 import attr
-from attr.validators import optional
 from attr.validators import instance_of as is_a
+from attr.validators import optional
+from Bio import SeqIO
 
 from rnacentral_pipeline.databases.data import RibovoreResult
 
-
 TRNAS = {
-    'SO:0000254',
-    'SO:0000259',
-    'SO:0000268',
-    'SO:0000260',
-    'SO:0000266',
-    'SO:0000256',
-    'SO:0000270',
-    'SO:0000261',
-    'SO:0000273',
-    'SO:0000272',
-    'SO:0000258',
-    'SO:0000263',
-    'SO:0000269',
-    'SO:0000264',
-    'SO:0000271',
-    'SO:0005857',
-    'SO:0000766',
-    'SO:0000265',
-    'SO:0000257',
-    'SO:0001036',
-    'SO:0000262',
-    'SO:0001172',
-    'SO:0002129',
-    'SO:0000267',
+    "SO:0000254",
+    "SO:0000259",
+    "SO:0000268",
+    "SO:0000260",
+    "SO:0000266",
+    "SO:0000256",
+    "SO:0000270",
+    "SO:0000261",
+    "SO:0000273",
+    "SO:0000272",
+    "SO:0000258",
+    "SO:0000263",
+    "SO:0000269",
+    "SO:0000264",
+    "SO:0000271",
+    "SO:0005857",
+    "SO:0000766",
+    "SO:0000265",
+    "SO:0000257",
+    "SO:0001036",
+    "SO:0000262",
+    "SO:0001172",
+    "SO:0002129",
+    "SO:0000267",
 }
 
 
@@ -61,7 +58,21 @@ class Source(enum.Enum):
     crw = enum.auto()
     ribovision = enum.auto()
     rfam = enum.auto()
+    rnase_p = enum.auto()
     gtrnadb = enum.auto()
+
+    def result_directory(self) -> str:
+        if self is Source.crw:
+            return "crw"
+        if self is Source.ribovision:
+            return "ribovision"
+        if self is Source.rfam:
+            return "rfam"
+        if self is Source.rnase_p:
+            return "rnasep"
+        if self is Source.gtrnadb:
+            return "gtrnadb"
+        raise ValueError(f"Could not find results for {self}")
 
 
 @attr.s()
@@ -72,18 +83,19 @@ class ModelInfo(object):
     taxid: int = attr.ib(validator=is_a(int))
     accessions: ty.List[str] = attr.ib(validator=is_a(list))
     source: Source = attr.ib(validator=is_a(Source))
-    length: int = attr.ib(validator=optional(is_a(int)))
+    length: ty.Optional[int] = attr.ib(validator=optional(is_a(int)))
     cell_location: ty.Optional[str] = attr.ib(validator=optional(is_a(str)))
 
     @property
     def rna_type(self):
-        if self.so_term in {'SO:0000650', 'SO:0000651', 'SO:0000652',
-                            'SO:0001001'}:
-            return 'rRNA'
-        if self.so_term in {'SO:0000587', 'SO:0000603'}:
-            return 'autocatalytically_spliced_intron'
+        if self.so_term in {"SO:0000650", "SO:0000651", "SO:0000652", "SO:0001001"}:
+            return "rRNA"
+        if self.so_term in {"SO:0000587", "SO:0000603"}:
+            return "autocatalytically_spliced_intron"
         if self.so_term in TRNAS:
-            return 'tRNA'
+            return "tRNA"
+        if self.so_term == "SO:0000386":
+            return "RNase_P_RNA"
         raise ValueError("No RNA type for: %s" % self)
 
     def writeable(self):
@@ -108,42 +120,42 @@ class R2DTResultInfo(object):
 
     @property
     def svg(self) -> Path:
-        return self.path / 'svg' / self.__filename__('colored.svg')
+        return self.path / "svg" / self.__filename__("colored.svg")
 
     @property
     def fasta(self) -> Path:
-        return self.path / 'fasta' / self.__filename__('fasta')
+        return self.path / "fasta" / self.__filename__("fasta")
 
     @property
     def source_directory(self) -> Path:
-        base = (self.path / '..').resolve()
+        base = (self.path / "..").resolve()
         if self.source == Source.ribovision:
-            parts = self.model_name.split('_', 3)
-            if parts[1] == 'LSU':
-                return base / 'ribovision-lsu'
-            elif parts[1] == 'SSU':
-                return base / 'ribovision-ssu'
+            parts = self.model_name.split("_", 3)
+            if parts[1] == "LSU":
+                return base / "ribovision-lsu"
+            elif parts[1] == "SSU":
+                return base / "ribovision-ssu"
             raise ValueError("Could not find correct data path: %s" % parts)
 
-        if self.source == Source.rfam and self.model_name == 'RF00005':
-            return base / 'RF00005'
-        return base / self.source.name
+        if self.source == Source.rfam and self.model_name == "RF00005":
+            return base / "RF00005"
+        return base / self.source.result_directory()
 
     @property
     def overlaps(self) -> Path:
-        return self.source_directory / self.__filename__('overlaps')
+        return self.source_directory / self.__filename__("overlaps")
 
-    def publish_path(self, suffix='', compressed=False) -> Path:
+    def publish_path(self, suffix="", compressed=False) -> Path:
         publish = Path(self.urs[0:3])
         for start in range(4, 11, 2):
-            publish = publish / self.urs[start:(start+2)]
-        append = ''
+            publish = publish / self.urs[start : (start + 2)]
+        append = ""
         if suffix:
-            append = f'-{suffix}'
-        extension = 'svg'
+            append = f"-{suffix}"
+        extension = "svg"
         if compressed:
-            extension += '.gz'
-        return publish / f'{self.urs}{append}.{extension}'
+            extension += ".gz"
+        return publish / f"{self.urs}{append}.{extension}"
 
     def validate(self):
         assert self.svg.exists(), "Missing SVG file for %s" % self
@@ -154,7 +166,7 @@ class R2DTResultInfo(object):
     def has_ribovore(self):
         if self.source in {Source.crw, Source.ribovision}:
             return True
-        if self.source == Source.rfam and self.model_name != 'RF00005':
+        if self.source == Source.rfam and self.model_name != "RF00005":
             return True
         return False
 
@@ -163,10 +175,10 @@ class R2DTResultInfo(object):
 
     def __filename__(self, extension):
         if self.source == Source.rfam:
-            return f'{self.urs}.{extension}'
-        if self.source == Source.gtrnadb and extension == 'fasta':
-            return f'{self.urs}.{extension}'
-        return f'{self.urs}-{self.model_name}.{extension}'
+            return f"{self.urs}.{extension}"
+        if self.source == Source.gtrnadb and extension == "fasta":
+            return f"{self.urs}.{extension}"
+        return f"{self.urs}-{self.model_name}.{extension}"
 
 
 @attr.s()
@@ -199,8 +211,8 @@ class R2DTResult(object):
         Process a single SVG file into the requried data. This produce an array
         that can be written to CSV for import into the database.
         """
-        with self.info.svg.open('r') as raw:
-            return raw.read().replace('\n', '')
+        with self.info.svg.open("r") as raw:
+            return raw.read().replace("\n", "")
 
     def dot_bracket(self):
         """
@@ -209,19 +221,19 @@ class R2DTResult(object):
         that there is only a single record in the file and it has a sequence then
         dot_bracket string which are the same length.
         """
-        with self.info.fasta.open('r') as raw:
-            record = SeqIO.read(raw, 'fasta')
+        with self.info.fasta.open("r") as raw:
+            record = SeqIO.read(raw, "fasta")
             seq_dot = str(record.seq)
-            sequence = re.match(r'^(\w+)', seq_dot).group(1)
-            dot_bracket = re.sub(r'^\w+', '', seq_dot)
+            sequence = re.match(r"^(\w+)", seq_dot).group(1)
+            dot_bracket = re.sub(r"^\w+", "", seq_dot)
             assert len(sequence) == len(dot_bracket)
             return dot_bracket
 
     def basepair_count(self):
-        return self.dot_bracket().count('(')
+        return self.dot_bracket().count("(")
 
     def overlap_count(self):
-        with self.info.overlaps.open('r') as raw:
+        with self.info.overlaps.open("r") as raw:
             return int(raw.readline().strip())
 
     def writeable(self):
