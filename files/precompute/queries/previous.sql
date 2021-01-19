@@ -1,7 +1,7 @@
 COPY (
 select
   json_build_object(
-    'id', todo.urs_taxid,
+    'id', pre.id,
     'previous', row_to_json(prev.*)
   )
 FROM :tablename todo

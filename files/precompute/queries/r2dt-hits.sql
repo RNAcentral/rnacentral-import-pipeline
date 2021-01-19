@@ -14,7 +14,7 @@ select
 FROM :tablename todo
 JOIN rnc_secondary_structure_layout ss
 on
-  ss.urs = todo.upi
+  ss.urs = todo.urs
   and ss.should_show = true
 JOIN rnc_secondary_structure_layout_models r2dt
 on
