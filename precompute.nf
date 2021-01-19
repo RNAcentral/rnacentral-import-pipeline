@@ -22,11 +22,25 @@ process build_precompute_context {
   """
 }
 
-process fetch_release_info {
-  tag { "${query.baseName}" }
+process fetch_all_urs_taxid {
   when { params.precompute.run }
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
-  memory '5GB'
+
+  input:
+  path(query)
+
+  output:
+  path('data.csv')
+
+  """
+  psql -v ON_ERROR_STOP=1 -f $query $PGDATABASE > data.csv
+  """
+}
+
+process fetch_release_info {
+  when { params.precompute.run }
+  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
+  memory '10GB'
 
   input:
   path(query)
@@ -37,7 +51,7 @@ process fetch_release_info {
   """
   psql -v ON_ERROR_STOP=1 -f $query $PGDATABASE > raw
   sort -u raw > sorted.csv
-  precompute max-release sorted.csv > data.csv
+  precompute max-release sorted.csv data.csv
   """
 }
 
@@ -45,21 +59,23 @@ process build_urs_table {
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
-  tuple path(load), path('xref.csv'), path('precompute.csv')
+  tuple path(load), path('xref.csv'), path('precompute.csv'), path('active.txt')
 
   output:
   val('done')
 
   """
-  precompute select xref.csv precompute.csv to-load.csv
+  precompute select xref.csv precompute.csv urs.csv
+  expand-urs text active.txt urs.csv to-load.csv
   psql \
-    -v ON_ERROR_STOP=1 \
-    -v "tablename=$params.precompute.tablename" \
-    -f "$sql" "$PGDATABASE"
+    --variable ON_ERROR_STOP=1 \
+    --variable tablename=${params.precompute.tablename} \
+    -f "$load" "$PGDATABASE"
   """
 }
 
 process partial_query {
+  tag { "${query.baseName}" }
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
@@ -70,8 +86,8 @@ process partial_query {
 
   """
   psql \
-    -v ON_ERROR_STOP=1 \
-    -v "tablename=$params.precompute.tablename" \
+    --variable ON_ERROR_STOP=1 \
+    --variable tablename=${params.precompute.tablename} \
     -f $query \
     "$PGDATABASE" > ${query.baseName}.json
   """
@@ -170,22 +186,40 @@ process load_data {
   """
 }
 
+// Hack to reuse the fetch_release_info process
+workflow precompute_releases {
+  emit: info
+  main:
+    Channel.fromPath('files/precompute/fetch-precompute-info.sql') \
+    | fetch_release_info \
+    | set { info }
+}
+
+workflow xref_releases {
+  emit: info
+  main:
+    Channel.fromPath('files/precompute/fetch-xref-info.sql') \
+    | fetch_release_info \
+    | set { info }
+}
+
 workflow precompute {
   main:
     Channel.fromPath('files/precompute/queries/*.sql') | set { queries }
     Channel.fromPath('files/precompute/fetch-ids.sql') | set { fetch_ids }
-    Channel.fromPath('files/precompute/fetch-precompute-info.sql') | set { precompute_info_sql }
-    Channel.fromPath('files/precompute/fetch-xref-info.sql') | set { xref_info_sql }
     Channel.fromPath('files/precompute/load-urs.sql') | set { load_sql }
+    Channel.fromPath('files/all-active-urs-taxid.sql') | set { active_sql }
 
     build_precompute_context(repeats()) | set { context }
 
-    precompute_info_sql | fetch_release_info | set { precompute_info }
-    xref_info_sql | fetch_release_info | set { xref_info }
+    precompute_releases() | set { precompute_info }
+    xref_releases() | set { xref_info }
+    active_sql | fetch_all_urs_taxid | set { active_urs }
 
     load_sql \
-    | combine(precompute_info) \
     | combine(xref_info) \
+    | combine(precompute_info) \
+    | combine(active_urs) \
     | build_urs_table \
     | set { flag }
 

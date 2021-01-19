@@ -117,6 +117,7 @@ COPY --from=rust /rna/rust/target/release/precompute .
 COPY --from=rust /rna/rust/target/release/kv .
 COPY --from=rust /rna/rust/target/release/split-ena .
 COPY --from=rust /rna/rust/target/release/json2fasta .
+COPY --from=rust /rna/rust/target/release/expand-urs .
 
 WORKDIR /
 
