@@ -134,8 +134,10 @@ workflow r2dt {
   Channel.fromPath("files/r2dt/find-sequences.sql") \
   | extract_sequences \
   | flatten \
+  | filter { f -> !f.empty() } \
   | split_sequences \
   | flatten \
+  | filter { f -> !f.empty() } \
   | layout_sequences \
   | combine(model_mapping) \
   | set { data }
