@@ -46,6 +46,7 @@ def load_hit_info(base: Path, allow_missing):
         (base / "ribovision-ssu", data.Source.ribovision),
         (base / "rfam", data.Source.rfam),
         (base / "RF00005", data.Source.rfam),
+        (base / "rnasep", data.Source.rnase_p),
     ]
     has_ribovision = {data.Source.crw, data.Source.ribovision, data.Source.rfam}
     hit_info = {}

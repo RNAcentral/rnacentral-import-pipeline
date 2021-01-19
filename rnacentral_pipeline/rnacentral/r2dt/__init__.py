@@ -24,6 +24,7 @@ from . import parser
 from .models import crw
 from .models import gtrnadb
 from .models import ribovision
+from .models import rnase_p
 
 
 def parse(model_mapping: ty.TextIO, directory: str, allow_missing=False):
@@ -76,3 +77,7 @@ def write_ribovision(handle, output):
 
 def write_crw(handle, output):
     return write_model(crw.parse, handle, output)
+
+
+def write_rnase_p(handle, output):
+    return write_model(rnase_p.parse, handle, output)

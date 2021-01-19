@@ -16,11 +16,10 @@ limitations under the License.
 
 import click
 
-from rnacentral_pipeline.rnacentral import r2dt
-from rnacentral_pipeline.rnacentral import attempted
+from rnacentral_pipeline.rnacentral import attempted, r2dt
 
 
-@click.group('r2dt')
+@click.group("r2dt")
 def cli():
     """
     A group of commands for parsing data from secondary structures into an
@@ -29,15 +28,13 @@ def cli():
     pass
 
 
-@cli.command('process-svgs')
-@click.option('--allow-missing', is_flag=True, default=False)
-@click.argument('model_info', type=click.File('r'))
-@click.argument('directory', type=click.Path(
-    writable=False,
-    dir_okay=True,
-    file_okay=False,
-))
-@click.argument('output', type=click.File('w'))
+@cli.command("process-svgs")
+@click.option("--allow-missing", is_flag=True, default=False)
+@click.argument("model_info", type=click.File("r"))
+@click.argument(
+    "directory", type=click.Path(writable=False, dir_okay=True, file_okay=False,)
+)
+@click.argument("output", type=click.File("w"))
 def process_svgs(model_info, directory, output, allow_missing=False):
     """
     Process all SVG secondary structures in the given directory and produce a
@@ -46,7 +43,7 @@ def process_svgs(model_info, directory, output, allow_missing=False):
     r2dt.write(model_info, directory, output, allow_missing=allow_missing)
 
 
-@cli.group('model-info')
+@cli.group("model-info")
 def model_info():
     """
     Commands for parsing and generating data files we can import into the
@@ -55,9 +52,9 @@ def model_info():
     pass
 
 
-@model_info.command('crw')
-@click.argument('filename', type=click.File('r'))
-@click.argument('output', default='-', type=click.File('w'))
+@model_info.command("crw")
+@click.argument("filename", type=click.File("r"))
+@click.argument("output", default="-", type=click.File("w"))
 def crw_model_info(filename, output):
     """
     Parse the CRW metadata file and produce 
@@ -65,9 +62,9 @@ def crw_model_info(filename, output):
     r2dt.write_crw(filename, output)
 
 
-@model_info.command('ribovision')
-@click.argument('filename', type=click.File('r'))
-@click.argument('output', default='-', type=click.File('w'))
+@model_info.command("ribovision")
+@click.argument("filename", type=click.File("r"))
+@click.argument("output", default="-", type=click.File("w"))
 def ribovision_model_info(filename, output):
     """
     Parse the metadata.tsv file from R2DT for Ribovision models to
@@ -76,9 +73,9 @@ def ribovision_model_info(filename, output):
     r2dt.write_ribovision(filename, output)
 
 
-@model_info.command('gtrnadb')
-@click.argument('filename', type=click.File('r'))
-@click.argument('output', default='-', type=click.File('w'))
+@model_info.command("gtrnadb")
+@click.argument("filename", type=click.File("r"))
+@click.argument("output", default="-", type=click.File("w"))
 def gtrnadb_model_info(filename, output):
     """
     Parse the metadata.tsv file from R2DT for gtrnadb models to
@@ -87,27 +84,35 @@ def gtrnadb_model_info(filename, output):
     r2dt.write_gtrnadb(filename, output)
 
 
-@cli.command('create-attempted')
-@click.argument('filename', type=click.File('r'))
-@click.argument('output', default='-', type=click.File('w'))
+@model_info.command("rnase-p")
+@click.argument("filename", type=click.File("r"))
+@click.argument("output", default="-", type=click.File("w"))
+def rnase_p_model_info(filename, output):
+    """
+    Parse the metadata.tsv file from R2DT for Ribovision models to
+    produce something we can put in our database.
+    """
+    r2dt.write_rnase_p(filename, output)
+
+
+@cli.command("create-attempted")
+@click.argument("filename", type=click.File("r"))
+@click.argument("output", default="-", type=click.File("w"))
 def r2dt_create_attempted(filename, output):
     attempted.r2dt(filename, output)
 
 
-@cli.command('publish')
-@click.option('--suffix', default='')
-@click.option('--allow-missing', is_flag=True, default=False)
-@click.argument('model_info', type=click.File('r'))
-@click.argument('directory', type=click.Path(
-    writable=False,
-    dir_okay=True,
-    file_okay=False,
-))
-@click.argument('output', type=click.Path(
-    writable=True,
-    dir_okay=True,
-    file_okay=False,
-))
-def r2dt_publish(model_info, directory, output, allow_missing, suffix=''):
-    r2dt.publish(model_info, directory, output, allow_missing=allow_missing,
-                 suffix=suffix)
+@cli.command("publish")
+@click.option("--suffix", default="")
+@click.option("--allow-missing", is_flag=True, default=False)
+@click.argument("model_info", type=click.File("r"))
+@click.argument(
+    "directory", type=click.Path(writable=False, dir_okay=True, file_okay=False,)
+)
+@click.argument(
+    "output", type=click.Path(writable=True, dir_okay=True, file_okay=False,)
+)
+def r2dt_publish(model_info, directory, output, allow_missing, suffix=""):
+    r2dt.publish(
+        model_info, directory, output, allow_missing=allow_missing, suffix=suffix
+    )
