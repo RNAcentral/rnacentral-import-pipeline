@@ -62,7 +62,8 @@ process build_urs_table {
   tuple path(load), path('xref.csv'), path('precompute.csv'), path('active.txt')
 
   output:
-  val('done')
+  val 'done', emit: 'flag'
+  tuple path('active.txt'), path('urs.csv'), emit: to_split
 
   """
   precompute select xref.csv precompute.csv urs.csv
@@ -108,45 +109,22 @@ process index_data {
   """
 }
 
-process find_ranges {
-  when { params.precompute.run }
-  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
-
+process build_chunks {
   input:
-  val(_)
+  tuple path('active.txt'), path('urs.txt')
 
   output:
-  path('ranges.txt')
+  path('parts/*.txt')
 
+  script:
+  def chunk_size = params.precompute.max_entries
   """
-  rnac upi-ranges \
-    --table-name ${params.precompute.tablename} \
-    ${params.precompute.max_entries} \
-    ranges.txt
-  """
-}
-
-process query_range {
-  tag { "$min-$max" }
-  beforeScript 'slack db-work precompute-range || true'
-  afterScript 'slack db-done precompute-range || true'
-  maxForks params.precompute.maxForks
-  container ''
-
-  input:
-  tuple val(tablename), val(min), val(max), path(query)
-
-  output:
-  tuple val(min), val(max), path('ids')
-
-  """
-  psql \
-    --variable ON_ERROR_STOP=1 \
-    --variable tablename=${params.precompute.tablename} \
-    --variable min=$min \
-    --variable max=$max \
-    -f "$query" \
-    '$PGDATABASE' > ids
+  mkdir parts
+  split \
+   --lines=${chunk_size} \
+   --additional-suffix='.txt' \
+   --filter 'expand-urs text active.txt - \$FILE' \
+   urs.txt parts/
   """
 }
 
@@ -220,22 +198,20 @@ workflow precompute {
     | combine(xref_info) \
     | combine(precompute_info) \
     | combine(active_urs) \
-    | build_urs_table \
-    | set { flag }
+    | build_urs_table
 
     queries \
-    | combine(flag) \
+    | combine(build_urs_table.out.flag) \
     | map { q, _ -> q } \
     | partial_query \
     | collect \
     | index_data \
     | set { indexed }
 
-    flag \
-    | find_ranges \
-    | splitCsv \
-    | combine(fetch_ids) \
-    | query_range \
+    build_urs_table.out.to_split
+    | build_chunks \
+    | flatten \
+    | filter { f -> !f.empty() } \
     | combine(context) \
     | combine(indexed) \
     | process_range
