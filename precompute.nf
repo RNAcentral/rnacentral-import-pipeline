@@ -114,7 +114,7 @@ process build_chunks {
   tuple path('active.txt'), path('urs.txt')
 
   output:
-  path('parts/*.txt')
+  tuple path('active.txt'), path('parts/*.txt')
 
   script:
   def chunk_size = params.precompute.max_entries
@@ -123,25 +123,24 @@ process build_chunks {
   split \
    --lines=${chunk_size} \
    --additional-suffix='.txt' \
-   --filter 'expand-urs text active.txt - \$FILE' \
    urs.txt parts/
   """
 }
 
 process process_range {
-  tag { "$min-$max" }
+  tag { "$urs.baseName" }
   memory params.precompute.range.memory
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
-  tuple val(min), val(max), path(ids), path(context), path(db)
+  tuple path(active), path(urs), path(context), path(db)
 
   output:
   path 'precompute.csv', emit: data
   path 'qa.csv', emit: qa
 
   """
-  kv lookup $db $ids raw-precompute.json
+  expand-urs text $active $urs - | kv lookup $db - raw-precompute.json
   rnac precompute from-file $context raw-precompute
   """
 }
@@ -184,7 +183,6 @@ workflow xref_releases {
 workflow precompute {
   main:
     Channel.fromPath('files/precompute/queries/*.sql') | set { queries }
-    Channel.fromPath('files/precompute/fetch-ids.sql') | set { fetch_ids }
     Channel.fromPath('files/precompute/load-urs.sql') | set { load_sql }
     Channel.fromPath('files/all-active-urs-taxid.sql') | set { active_sql }
 
@@ -208,10 +206,12 @@ workflow precompute {
     | index_data \
     | set { indexed }
 
-    build_urs_table.out.to_split
+    build_urs_table.out.to_split \
     | build_chunks \
-    | flatten \
-    | filter { f -> !f.empty() } \
+    | flatMap { active, chunks -> 
+      (chunks instanceof ArrayList) ? chunks.collect { [active, it] } : [[active, chunks]]
+    } \
+    | filter { _, f -> !f.empty() } \
     | combine(context) \
     | combine(indexed) \
     | process_range
