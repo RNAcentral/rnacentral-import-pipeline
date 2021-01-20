@@ -125,8 +125,10 @@ fn expand_text(active_file: &Path, filename: &Path, output: &Path) -> Result<()>
         match input.read_line(&mut buf)? {
             0 => break,
             _ => {
-                let urs: Urs =
-                    buf.parse().with_context(|| format!("Failed to parse URS id {}", &buf))?;
+                let urs: Urs = buf
+                    .trim_end()
+                    .parse()
+                    .with_context(|| format!("Failed to parse URS id {}", &buf))?;
                 let urs_taxids = container.urs_taxids(&urs);
                 if urs_taxids.len() == 0 {
                     log::warn!("No active URS_taxid found for: {}", &buf);
