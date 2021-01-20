@@ -121,9 +121,11 @@ process build_chunks {
   """
   mkdir parts
   split \
+   --elide-empty-files \
+   --numeric-suffixes \
    --lines=${chunk_size} \
    --additional-suffix='.txt' \
-   urs.txt parts/
+   urs.txt parts/chunk-
   """
 }
 
