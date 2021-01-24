@@ -27,6 +27,10 @@ enum Subcommand {
         #[structopt(long, short, default_value = "urs")]
         field_name: String,
 
+        /// Name of the field in the JSON object to add.
+        #[structopt(long, short, default_value = "id")]
+        new_field: String,
+
         /// A file where each line is a urs_taxid, which are all urs_taxids that need to
         /// be output. Duplicate will be treated as single entry.
         #[structopt(parse(from_os_str))]
@@ -72,7 +76,13 @@ struct Opt {
     command: Subcommand,
 }
 
-fn expand_json(active_file: &Path, filename: &Path, field_name: &str, output: &Path) -> Result<()> {
+fn expand_json(
+    active_file: &Path,
+    filename: &Path,
+    field_name: &str,
+    new_field: &str,
+    output: &Path,
+) -> Result<()> {
     let mut input = rnc_utils::buf_reader(filename)?;
     let mut output = rnc_utils::buf_writer(output)?;
 
@@ -98,7 +108,7 @@ fn expand_json(active_file: &Path, filename: &Path, field_name: &str, output: &P
 
                         for urs_taxid in urs_taxids {
                             m.insert(
-                                String::from("id"),
+                                String::from(new_field),
                                 serde_json::Value::String(urs_taxid.to_string()),
                             );
                             serde_json::to_writer(&mut output, &m)?;
@@ -151,10 +161,11 @@ fn main() -> Result<()> {
     match opt.command {
         Subcommand::Json {
             field_name,
+            new_field,
             active_file,
             filename,
             output,
-        } => expand_json(&active_file, &filename, &field_name, &output)?,
+        } => expand_json(&active_file, &filename, &field_name, &new_field, &output)?,
         Subcommand::Text {
             active_file,
             filename,

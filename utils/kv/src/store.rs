@@ -23,7 +23,7 @@ use serde_json::{
     Value,
 };
 
-use anyhow::Result;
+use anyhow::{Result, Context};
 
 use crossbeam_channel::{
     unbounded,
@@ -217,25 +217,17 @@ pub fn index_files(spec: &Spec, filename: &Path) -> anyhow::Result<()> {
 }
 
 pub fn lookup(spec: &Spec, key_file: &Path, output: &Path) -> anyhow::Result<()> {
-    let mut cfs: Vec<(String, &ColumnFamily)> = Vec::new();
     let mut db_opts = Options::default();
     db_opts.set_merge_operator("append operator", concat_merge, None);
-    let names = DB::list_cf(&db_opts, spec.path)?;
-    let descriptors = names.clone().into_iter().map(|name| {
-        let mut cf_opts = Options::default();
-        cf_opts.set_merge_operator("append operator", concat_merge, None);
-        ColumnFamilyDescriptor::new(name, cf_opts)
-    });
-    let store = DB::open_cf_descriptors(&db_opts, spec.path, descriptors)?;
+    let names = DB::list_cf(&db_opts, spec.path)
+        .with_context(|| "Failed to get lookup names")?;
+    let store = DB::open_cf_for_read_only(&db_opts, spec.path, &names, false)
+        .with_context(|| "Failed to open read only db")?;
 
-    for name in names {
-        if name != "default" {
-            cfs.push((name.to_string(), store.cf_handle(&name).unwrap()));
-        }
-    }
-
-    let mut writer = rnc_utils::buf_writer(&output)?;
-    let mut keys = rnc_utils::buf_reader(&key_file)?;
+    let mut writer = rnc_utils::buf_writer(&output)
+        .with_context(|| format!("Could not open {:?} for writing", &output))?;
+    let mut keys = rnc_utils::buf_reader(&key_file)
+        .with_context(|| format!("Could not open key file {:?}", &key_file))?;
     let mut buf = String::new();
 
     loop {
@@ -247,9 +239,10 @@ pub fn lookup(spec: &Spec, key_file: &Path, output: &Path) -> anyhow::Result<()>
                 data.insert("id", serde_json::Value::String(trimmed.to_string()));
                 let mut seen = false;
                 let key = trimmed.as_bytes();
-                for (name, cf) in &cfs {
+                for name in &names {
                     let default = serde_json::Value::Array(Vec::new());
-                    let to_update = data.entry(name).or_insert(default).as_array_mut().unwrap();
+                    let to_update = data.entry(&name).or_insert(default).as_array_mut().unwrap();
+                    let cf = store.cf_handle(&name).unwrap();
                     match store.get_pinned_cf(cf, &key)? {
                         None => (),
                         Some(v) => {
