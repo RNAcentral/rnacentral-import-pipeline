@@ -253,11 +253,11 @@ pub fn lookup(spec: &Spec, key_file: &Path, output: &Path) -> Result<(), Box<dyn
                             return Err(format!("No data found for key {} in {}", &id, &name).into());
                         },
                     }
-
-                    serde_json::to_writer(&mut writer, &data)?;
-                    writeln!(&mut writer)?;
-                    buf.clear();
                 }
+
+                serde_json::to_writer(&mut writer, &data)?;
+                writeln!(&mut writer)?;
+                buf.clear();
             },
         }
     }
