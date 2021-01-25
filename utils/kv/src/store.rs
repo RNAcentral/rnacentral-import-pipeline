@@ -29,6 +29,8 @@ use anyhow::{
 //     Sender,
 // };
 
+use serde_json::Deserializer;
+
 use rkv::{
     backend::{
         BackendEnvironmentBuilder,
@@ -37,7 +39,6 @@ use rkv::{
         LmdbEnvironment,
     },
     Manager,
-    MultiStore,
     Rkv,
     SingleStore,
     StoreOptions,
@@ -100,22 +101,13 @@ pub fn index(spec: &Spec, data_type: &str, filename: &Path) -> Result<(), Box<dy
             0 => break,
             _ => {
                 let line = buf.replace("\\\\", "\\");
-                let line = line.trim_end();
+                let value = line.trim_end().to_owned();
                 let id: DocId = serde_json::from_str::<Query<DocId>>(&line)?.into();
-                let value = serde_json::from_str(&line)?;
                 let existing = store.get(&writer, &id.id)?;
                 let to_add = match existing {
-                    None => {
-                        let value = vec![value];
-                        serde_json::to_string(&value)?
-                    },
+                    None => value,
                     Some(v) => match v {
-                        Value::Json(e) => {
-                            let mut current: serde_json::Value = serde_json::from_str(&e)?;
-                            let current = current.as_array_mut().unwrap();
-                            current.push(value);
-                            serde_json::to_string(&current)?
-                        },
+                        Value::Json(e) => format!("{}{}", value, e),
                         _ => panic!("Invalid existing data, should never happen"),
                     },
                 };
@@ -246,8 +238,10 @@ pub fn lookup(spec: &Spec, key_file: &Path, output: &Path) -> Result<(), Box<dyn
                         Some(v) => match v {
                             Value::Json(raw) => {
                                 seen = true;
-                                let parsed = serde_json::from_str(&raw)?;
-                                to_update.push(parsed);
+                                let values = Deserializer::from_str(raw).into_iter::<serde_json::Value>();
+                                for value in values {
+                                    to_update.push(value?);
+                                }
                             },
                             _ => panic!("Invalid lookup data"),
                         },
