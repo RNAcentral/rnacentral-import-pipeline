@@ -116,7 +116,6 @@ pub fn index(spec: &Spec, data_type: &str, filename: &Path) -> Result<(), Box<dy
                 buf.clear();
                 count += 1;
                 if count % spec.commit_size == 0 {
-                    println!("Commiting count: {}", count);
                     writer
                         .commit()
                         .with_context(|| format!("Failed to write data from {:?}", filename))?;
@@ -191,18 +190,15 @@ pub fn lookup(spec: &Spec, key_file: &Path, output: &Path) -> Result<(), Box<dyn
         .with_context(|| format!("Could not open key file {:?}", &key_file))?;
 
     // let mut manager = Manager::<LmdbEnvironment>::singleton().write()?;
-    // let mut builder = Rkv::environment_builder::<Lmdb>();
-    // builder.set_max_dbs(20);
-    // builder.set_make_dir_if_needed(true);
-    // builder.set_map_size(200000000000);
-    // println!("Created BUILDER");
-    // let arc = manager
-    //     .get_or_create_from_builder(spec.path, builder, Rkv::from_builder::<Lmdb>)
-    //     .with_context(|| "Failed to create arc")?;
+    let mut builder = Rkv::environment_builder::<Lmdb>();
+    builder.set_max_dbs(20);
     // let env = arc.read().unwrap();
 
     let mut manager = Manager::<LmdbEnvironment>::singleton().write().unwrap();
-    let created_arc = manager.get_or_create(spec.path, Rkv::new::<Lmdb>).unwrap();
+    // let created_arc = manager.get_or_create(spec.path, Rkv::new::<Lmdb>).unwrap();
+    let created_arc = manager
+        .get_or_create_from_builder(spec.path, builder, Rkv::from_builder::<Lmdb>)
+        .with_context(|| "Failed to create arc")?;
     let env = created_arc.read().unwrap();
 
     let names = env.get_dbs()?.iter().filter_map(|db| db.to_owned()).collect::<Vec<String>>();
@@ -250,11 +246,11 @@ pub fn lookup(spec: &Spec, key_file: &Path, output: &Path) -> Result<(), Box<dyn
                     match (seen, spec.allow_missing) {
                         (true, _) => (),
                         (false, true) => {
-                            log::warn!("No data found for key {}", &buf);
+                            log::info!("No data found for key {} in {}", &id, &name);
                             continue;
                         },
                         (false, false) => {
-                            return Err(format!("No data found for key {}", &id).into());
+                            return Err(format!("No data found for key {} in {}", &id, &name).into());
                         },
                     }
 
