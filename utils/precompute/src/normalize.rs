@@ -10,7 +10,7 @@ use serde::{
 
 use anyhow::Result;
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, PartialEq)]
 pub struct Accession {
     accession: String,
     is_active: bool,
@@ -30,7 +30,7 @@ pub struct Accession {
     so_rna_type: Option<String>,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, PartialEq)]
 pub struct RfamHit {
     rfam_hit_id: usize,
     model: String,
@@ -46,7 +46,7 @@ pub struct RfamHit {
     sequence_stop: usize,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, PartialEq)]
 pub struct R2dtHit {
     model_id: String,
     model_name: String,
@@ -58,7 +58,7 @@ pub struct R2dtHit {
     model_basepairs: Option<usize>,
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 pub struct Previous {
     id: String,
     upi: String,
@@ -97,7 +97,7 @@ pub struct RawAccessionEntry {
     so_rna_type: Option<String>,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, PartialEq)]
 pub struct Coordinate {
     assembly_id: String,
     chromosome: String,
