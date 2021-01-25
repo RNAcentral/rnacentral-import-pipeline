@@ -1,4 +1,7 @@
-use std::path::PathBuf;
+use std::{
+    error::Error,
+    path::PathBuf,
+};
 extern crate log;
 use structopt::StructOpt;
 
@@ -24,17 +27,16 @@ enum Subcommand {
         output: PathBuf,
     },
 
-    /// Given a file listing other files to index, index all of them at once.
-    IndexFiles {
-        #[structopt(parse(from_os_str))]
-        /// Filename of the raw json file, '-' means stdin.
-        filename: PathBuf,
+    // /// Given a file listing other files to index, index all of them at once.
+    // IndexFiles {
+    //     #[structopt(parse(from_os_str))]
+    //     /// Filename of the raw json file, '-' means stdin.
+    //     filename: PathBuf,
 
-        /// Filename to store the index in.
-        #[structopt(parse(from_os_str))]
-        output: PathBuf,
-    },
-
+    //     /// Filename to store the index in.
+    //     #[structopt(parse(from_os_str))]
+    //     output: PathBuf,
+    // },
     /// Given a file where each line is an id to extract, extract all values for it.
     Lookup {
         /// This will cause the program to emit a warning instead of fail if a requested
@@ -67,7 +69,7 @@ struct Opt {
     command: Subcommand,
 }
 
-fn main() -> anyhow::Result<()> {
+fn main() -> Result<(), Box<dyn Error>> {
     let opt = Opt::from_args();
 
     let level = match opt.verbose {
@@ -94,13 +96,13 @@ fn main() -> anyhow::Result<()> {
             spec.set_commit_size(commit_size);
             store::index(&spec, &data_type, &filename)?
         },
-        Subcommand::IndexFiles {
-            filename,
-            output,
-        } => {
-            let spec = store::Spec::new(&output);
-            store::index_files(&spec, &filename)?
-        },
+        // Subcommand::IndexFiles {
+        //     filename,
+        //     output,
+        // } => {
+        //     let spec = store::Spec::new(&output);
+        //     store::index_files(&spec, &filename)?
+        // },
         Subcommand::Lookup {
             allow_missing,
             cache,
