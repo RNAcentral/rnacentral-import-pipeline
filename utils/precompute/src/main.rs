@@ -2,12 +2,24 @@ use std::path::PathBuf;
 use structopt::StructOpt;
 
 pub mod releases;
+pub mod normalize;
 
 #[derive(Debug, StructOpt)]
 #[structopt(rename_all = "kebab-case")]
 enum Subcommand {
     /// Find the max release for each urs entry.
     MaxRelease {
+        #[structopt(parse(from_os_str))]
+        /// Filename of the raw json file, '-' means stdin.
+        filename: PathBuf,
+
+        #[structopt(parse(from_os_str))]
+        /// Filename to write the results to, '-' means stdout
+        output: PathBuf,
+    },
+
+    /// Take the output of the kv lookup and turn it into JSON suitable for the pipeline
+    Normalize {
         #[structopt(parse(from_os_str))]
         /// Filename of the raw json file, '-' means stdin.
         filename: PathBuf,
@@ -64,6 +76,9 @@ fn main() -> anyhow::Result<()> {
     match opt.command {
         Subcommand::MaxRelease { filename, output } => {
             releases::write_max(&filename, &output)?;
+        }
+        Subcommand::Normalize { filename, output } => {
+            normalize::write(&filename, &output)?;
         }
         Subcommand::Select { xrefs, known, output } => {
             releases::select_new(&xrefs, &known, &output)?;
