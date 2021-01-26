@@ -189,13 +189,10 @@ pub fn lookup(spec: &Spec, key_file: &Path, output: &Path) -> Result<(), Box<dyn
     let mut keys = rnc_utils::buf_reader(&key_file)
         .with_context(|| format!("Could not open key file {:?}", &key_file))?;
 
-    // let mut manager = Manager::<LmdbEnvironment>::singleton().write()?;
     let mut builder = Rkv::environment_builder::<Lmdb>();
     builder.set_max_dbs(20);
-    // let env = arc.read().unwrap();
 
     let mut manager = Manager::<LmdbEnvironment>::singleton().write().unwrap();
-    // let created_arc = manager.get_or_create(spec.path, Rkv::new::<Lmdb>).unwrap();
     let created_arc = manager
         .get_or_create_from_builder(spec.path, builder, Rkv::from_builder::<Lmdb>)
         .with_context(|| "Failed to create arc")?;
@@ -242,17 +239,17 @@ pub fn lookup(spec: &Spec, key_file: &Path, output: &Path) -> Result<(), Box<dyn
                             _ => panic!("Invalid lookup data"),
                         },
                     }
+                }
 
-                    match (seen, spec.allow_missing) {
-                        (true, _) => (),
-                        (false, true) => {
-                            log::info!("No data found for key {} in {}", &id, &name);
-                            continue;
-                        },
-                        (false, false) => {
-                            return Err(format!("No data found for key {} in {}", &id, &name).into());
-                        },
-                    }
+                match (seen, spec.allow_missing) {
+                    (true, _) => (),
+                    (false, true) => {
+                        log::info!("No data found for key {}", &id);
+                        continue;
+                    },
+                    (false, false) => {
+                        return Err(format!("No data found for key {}", &id).into());
+                    },
                 }
 
                 serde_json::to_writer(&mut writer, &data)?;
