@@ -3,6 +3,7 @@
 nextflow.enable.dsl=2
 
 include { repeats } from './workflows/repeats'
+include { build_precompute_accessions from './workflows/build-precompute-accessions'
 
 process build_precompute_context {
   input:
@@ -140,15 +141,21 @@ process process_range {
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
-  tuple path(active), path(urs), path(context), path(db)
+  tuple path(active), path(urs), path(query), path(context), path(db)
 
   output:
   path 'precompute.csv', emit: data
   path 'qa.csv', emit: qa
 
   """
-  expand-urs text $active $urs expanded-ids 
-  kv lookup $db expanded-ids raw-precompute.json
+  expand-urs text $active $urs to-query.csv
+  kv lookup $db to-query.csv partial.json
+  psql \
+    --client-min-messages=warning \
+    -v ON_ERROR_STOP=1 \
+    -f $query \
+    "$PGDATABASE" > accessions.json
+  precompute normalize accessions.json partial.json raw-precompute.json
   rnac precompute from-file $context raw-precompute.json
   """
 }
@@ -159,7 +166,11 @@ process load_data {
   container ''
 
   input:
-  tuple path('precompute*.csv'), path('qa*.csv'), path(pre_ctl), path(qa_ctl), path(post)
+  path('precompute*.csv') 
+  path('qa*.csv')
+  path(pre_ctl)
+  path(qa_ctl)
+  path(post)
 
   script:
   def tablename = params.precompute.tablename
@@ -193,6 +204,10 @@ workflow precompute {
     Channel.fromPath('files/precompute/queries/*.sql') | set { queries }
     Channel.fromPath('files/precompute/load-urs.sql') | set { load_sql }
     Channel.fromPath('files/all-active-urs-taxid.sql') | set { active_sql }
+    Channel.fromPath('files/precompute/get-accessions/query.sql') | set { accession_query }
+    Channel.fromPath('files/precompute/load.ctl') | set { data_ctl }
+    Channel.fromPath('files/precompute/qa.ctl') | set { qa_ctl }
+    Channel.fromPath('files/precompute/post-load.sql') | set { post_load }
 
     build_precompute_context(repeats()) | set { context }
 
@@ -206,6 +221,8 @@ workflow precompute {
     | combine(active_urs) \
     | build_urs_table
 
+    build_urs_table.out.flag | build_precompute_accessions | set { accessions_ready }
+
     queries \
     | combine(build_urs_table.out.flag) \
     | map { q, _ -> q } \
@@ -216,10 +233,12 @@ workflow precompute {
 
     build_urs_table.out.to_split \
     | build_chunks \
-    | flatMap { active, chunks ->
+    | combine(accessions_ready) \
+    | flatMap { active, chunks, _flag ->
       (chunks instanceof ArrayList) ? chunks.collect { [active, it] } : [[active, chunks]]
     } \
     | filter { _, f -> !f.empty() } \
+    | combine(accession_query) \
     | combine(context) \
     | combine(indexed) \
     | process_range
@@ -227,12 +246,7 @@ workflow precompute {
     process_range.out.data | collect | set { data }
     process_range.out.qa | collect | set { qa }
 
-    data \
-    | combine(qa) \
-    | combine(Channel.fromPath('files/precompute/load.ctl')) \
-    | combine(Channel.fromPath('files/precompute/qa.ctl')) \
-    | combine(Channel.fromPath('files/precompute/post-load.sql')) \
-    | load_data
+    load_data(data, qa, data_ctl, qa_ctl, post_load)
 }
 
 workflow {
