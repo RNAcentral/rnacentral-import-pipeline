@@ -7,7 +7,7 @@ select
     'description', acc.description,
     'gene', acc.gene,
     'optional_id', acc.optional_id,
-    'database', db.display_name,
+    'database', acc.database,
     'species', coalesce(tax.name, acc.species),
     'common_name', coalesce(tax.common_name, acc.common_name),
     'feature_name', acc.feature_name,
@@ -22,7 +22,8 @@ select
 FROM :tablename todo
 JOIN xref
 ON
-  xref.upi = rna.upi
+  xref.upi = todo.urs
+  and xref.taxid = todo.taxid
 JOIN rnc_accessions acc
 ON
   acc.accession = xref.ac
