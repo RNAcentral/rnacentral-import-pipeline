@@ -57,6 +57,7 @@ process fetch_release_info {
 
 process build_urs_table {
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
+  memory '10GB'
 
   input:
   tuple path(load), path('xref.csv'), path('precompute.csv'), path('active.txt')
@@ -96,6 +97,7 @@ process partial_query {
 
 process index_data {
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
+  memory '10GB'
 
   input:
   path(data_files)
@@ -103,13 +105,16 @@ process index_data {
   output:
   path('index.db')
 
+  script:
   """
-  echo "${data_files.join("\n")}" > file-list
-  kv index-files file-list index.db
+  mkdir index.db
+  ${data_files.collect { "kv index --commit-size 50000 ${it.baseName} $it index.db" }.join("\n")}
   """
 }
 
 process build_chunks {
+  memory '10GB'
+
   input:
   tuple path('active.txt'), path('urs.txt')
 
@@ -142,8 +147,9 @@ process process_range {
   path 'qa.csv', emit: qa
 
   """
-  expand-urs text $active $urs - | kv lookup $db - raw-precompute.json
-  rnac precompute from-file $context raw-precompute
+  expand-urs text $active $urs expanded-ids 
+  kv lookup $db expanded-ids raw-precompute.json
+  rnac precompute from-file $context raw-precompute.json
   """
 }
 
@@ -210,7 +216,7 @@ workflow precompute {
 
     build_urs_table.out.to_split \
     | build_chunks \
-    | flatMap { active, chunks -> 
+    | flatMap { active, chunks ->
       (chunks instanceof ArrayList) ? chunks.collect { [active, it] } : [[active, chunks]]
     } \
     | filter { _, f -> !f.empty() } \
