@@ -1,5 +1,5 @@
 COPY (
   SELECT
-    urs || '_' || taxid
+    upi || '_' || taxid
   from xref
 ) TO STDOUT
