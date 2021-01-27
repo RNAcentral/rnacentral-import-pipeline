@@ -7,7 +7,7 @@ CREATE TABLE :tablename (
 );
 
 create temp table loaded_urs (
-  urs_taxid text not null,
+  urs_taxid text not null
 );
 
 \copy loaded_urs from 'to-load.csv'
@@ -22,5 +22,6 @@ from loaded_urs
 
 ALTER TABLE :tablename 
   add constraint un_to_precompute__urs_taxid UNIQUE (urs_taxid),
+  add constraint un_to_precompute__urs_taxid UNIQUE (urs, taxid),
   add constraint fk_to_precompute__urs FOREIGN KEY (urs) REFERENCES rna(upi)
 ;
