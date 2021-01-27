@@ -71,9 +71,9 @@ class RepeatTree:
             pickle.dump(attr.asdict(self), out)
 
 
-def from_directories(output: Path):
+def from_directories(paths: ty.List[Path], output: Path):
     tree = RepeatTree()
-    for path in output.glob("*/"):
+    for path in paths:
         assert path.is_dir()
         info = ranges.Info.from_directory(path)
         info.validate()
