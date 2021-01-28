@@ -12,4 +12,5 @@ FROM :tablename todo
 JOIN rnc_sequence_regions region 
 ON 
   region.urs_taxid = todo.urs_taxid
+order by todo.urs_taxid
 ) TO STDOUT

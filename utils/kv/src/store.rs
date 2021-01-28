@@ -1,17 +1,14 @@
 use std::{
+    cmp::Ordering::{
+        Equal,
+        Greater,
+        Less,
+    },
     collections::HashMap,
     error::Error,
-    fs::File,
-    io::{
-        BufRead,
-        BufReader,
-    },
-    path::{
-        Path,
-        PathBuf,
-    },
+    io::BufRead,
+    path::Path,
     str,
-    thread,
 };
 
 use serde_query::{
@@ -23,11 +20,6 @@ use anyhow::{
     Context,
     Result,
 };
-
-// use crossbeam_channel::{
-//     unbounded,
-//     Sender,
-// };
 
 use serde_json::Deserializer;
 
@@ -45,7 +37,7 @@ use rkv::{
     Value,
 };
 
-#[derive(Debug, DeserializeQuery)]
+#[derive(Debug, DeserializeQuery, PartialEq)]
 struct DocId {
     #[query(".id")]
     id: String,
@@ -55,7 +47,6 @@ pub struct Spec<'a> {
     path: &'a Path,
     allow_missing: bool,
     commit_size: usize,
-    threads: usize,
 }
 
 impl<'a> Spec<'a> {
@@ -64,7 +55,6 @@ impl<'a> Spec<'a> {
             path,
             allow_missing: false,
             commit_size: 1_000_000usize,
-            threads: 4,
         }
     }
 
@@ -75,6 +65,72 @@ impl<'a> Spec<'a> {
     pub fn set_commit_size(&mut self, commit_size: usize) -> () {
         self.commit_size = commit_size;
     }
+}
+
+pub fn sorted_index(spec: &Spec, data_type: &str, filename: &Path) -> Result<(), Box<dyn Error>> {
+    let mut reader = rnc_utils::buf_reader(&filename)?;
+
+    let mut manager = Manager::<LmdbEnvironment>::singleton().write()?;
+    let mut builder = Rkv::environment_builder::<Lmdb>();
+    builder.set_max_dbs(20);
+    builder.set_make_dir_if_needed(true);
+    builder.set_map_size(200000000000);
+
+    let arc = manager
+        .get_or_create_from_builder(spec.path, builder, Rkv::from_builder::<Lmdb>)
+        .with_context(|| "Failed to create arc")?;
+    let env = arc.read().unwrap();
+    let store = env
+        .open_single(data_type, StoreOptions::create())
+        .with_context(|| format!("Failed to open store {:?}", data_type))?;
+
+    let mut writer = env.write().with_context(|| "Failed to create writer")?;
+    let mut buf = String::new();
+    let mut count = 0usize;
+    let mut current_id: Option<String> = None;
+    let mut to_add = String::new();
+
+    loop {
+        match reader.read_line(&mut buf)? {
+            0 => break,
+            _ => {
+                let line = buf.replace("\\\\", "\\");
+                let value = line.trim_end();
+                let id: DocId = serde_json::from_str::<Query<DocId>>(value)?.into();
+                let id = id.id;
+                match (&id, &current_id) {
+                    (_, None) => {
+                        current_id = Some(id.to_owned());
+                        to_add.push_str(value);
+                    },
+                    (_, Some(b)) => match id.cmp(b) {
+                        Equal => to_add.push_str(value),
+                        Less | Greater => {
+                            count += 1;
+                            store.put(&mut writer, &id, &Value::Json(&to_add))?;
+                            current_id = Some(id.to_owned());
+                            to_add.clear();
+                            to_add.push_str(value);
+                        },
+                    },
+                }
+
+                buf.clear();
+                if count > 0 && count % spec.commit_size == 0 {
+                    log::info!("Committing chunk {} of {}", count, &data_type);
+                    writer
+                        .commit()
+                        .with_context(|| format!("Failed to write data from {:?}", filename))?;
+                    writer = env.write().with_context(|| "Could not create for new chunk")?;
+                }
+            },
+        }
+    }
+
+    log::info!("Committing chunk {} of {}", count, &data_type);
+    writer.commit().with_context(|| format!("Failed to write data from {:?}", filename))?;
+
+    Ok(())
 }
 
 pub fn index(spec: &Spec, data_type: &str, filename: &Path) -> Result<(), Box<dyn Error>> {
@@ -116,6 +172,7 @@ pub fn index(spec: &Spec, data_type: &str, filename: &Path) -> Result<(), Box<dy
                 buf.clear();
                 count += 1;
                 if count % spec.commit_size == 0 {
+                    log::info!("Committing chunk {} of {}", count, &data_type);
                     writer
                         .commit()
                         .with_context(|| format!("Failed to write data from {:?}", filename))?;
@@ -231,7 +288,8 @@ pub fn lookup(spec: &Spec, key_file: &Path, output: &Path) -> Result<(), Box<dyn
                         Some(v) => match v {
                             Value::Json(raw) => {
                                 seen = true;
-                                let values = Deserializer::from_str(raw).into_iter::<serde_json::Value>();
+                                let values =
+                                    Deserializer::from_str(raw).into_iter::<serde_json::Value>();
                                 for value in values {
                                     to_update.push(value?);
                                 }

@@ -27,16 +27,23 @@ enum Subcommand {
         output: PathBuf,
     },
 
-    // /// Given a file listing other files to index, index all of them at once.
-    // IndexFiles {
-    //     #[structopt(parse(from_os_str))]
-    //     /// Filename of the raw json file, '-' means stdin.
-    //     filename: PathBuf,
+    /// Index a file of JSON objects where the objects are sorted by id. 
+    SortedIndex {
+        #[structopt(short, long, default_value = "1000000")]
+        commit_size: usize,
 
-    //     /// Filename to store the index in.
-    //     #[structopt(parse(from_os_str))]
-    //     output: PathBuf,
-    // },
+        /// Type of data being indexed, eg, secondary_structure, hits, etc
+        data_type: String,
+
+        #[structopt(parse(from_os_str))]
+        /// Filename of the raw json file, '-' means stdin.
+        filename: PathBuf,
+
+        #[structopt(parse(from_os_str))]
+        /// Filename to store the index in.
+        output: PathBuf,
+    },
+
     /// Given a file where each line is an id to extract, extract all values for it.
     Lookup {
         /// This will cause the program to emit a warning instead of fail if a requested
@@ -96,13 +103,16 @@ fn main() -> Result<(), Box<dyn Error>> {
             spec.set_commit_size(commit_size);
             store::index(&spec, &data_type, &filename)?
         },
-        // Subcommand::IndexFiles {
-        //     filename,
-        //     output,
-        // } => {
-        //     let spec = store::Spec::new(&output);
-        //     store::index_files(&spec, &filename)?
-        // },
+        Subcommand::SortedIndex {
+            commit_size,
+            data_type,
+            filename,
+            output,
+        } => {
+            let mut spec = store::Spec::new(&output);
+            spec.set_commit_size(commit_size);
+            store::sorted_index(&spec, &data_type, &filename)?
+        },
         Subcommand::Lookup {
             allow_missing,
             cache,
