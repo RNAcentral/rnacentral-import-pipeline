@@ -4,6 +4,7 @@ nextflow.enable.dsl=2
 
 process find_partitions {
   executor 'local'
+  container ''
 
   output:
   path('partitions.csv')
@@ -21,6 +22,7 @@ process find_partitions {
 
 process setup_accession_table {
   executor 'local'
+  container ''
 
   input:
   path('schema.sql')
@@ -35,7 +37,8 @@ process setup_accession_table {
 
 process build_accession_table {
   tag { "$partition" }
-  maxForks 1
+  maxForks 3
+  container ''
 
   input:
   tuple val(partition), val(db), path(sql)
@@ -54,6 +57,8 @@ process build_accession_table {
 }
 
 process finalize_accession_table {
+  container ''
+
   input:
   path(sql)
 
