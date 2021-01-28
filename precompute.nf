@@ -80,6 +80,7 @@ process build_urs_table {
 process partial_query {
   tag { "${query.baseName}" }
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
+  maxForks '3GB'
 
   input:
   path(query)
@@ -109,7 +110,7 @@ process index_data {
   script:
   """
   mkdir index.db
-  ${data_files.collect { "kv index --commit-size 50000 ${it.baseName} $it index.db" }.join("\n")}
+  ${data_files.collect { "kv sorted-index --commit-size 50000 ${it.baseName} $it index.db" }.join("\n")}
   """
 }
 
