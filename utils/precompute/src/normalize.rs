@@ -1,5 +1,11 @@
 use std::{
     convert::From,
+    error::Error,
+    fs::File,
+    io::{
+        BufRead,
+        BufReader,
+    },
     path::Path,
 };
 
@@ -7,6 +13,8 @@ use serde::{
     Deserialize,
     Serialize,
 };
+
+use itertools::Itertools;
 
 use anyhow::Result;
 
@@ -79,6 +87,7 @@ pub struct Previous {
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct RawAccessionEntry {
+    urs_taxid: String,
     accession: String,
     is_active: bool,
     description: String,
@@ -116,8 +125,11 @@ pub struct Xref {
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Raw {
     id: String,
+
     #[serde(rename = "xref")]
     xrefs: Vec<Xref>,
+
+    #[serde(default)]
     accessions: Vec<RawAccessionEntry>,
     coordinates: Vec<Coordinate>,
 
@@ -199,20 +211,69 @@ impl From<Raw> for Normalized {
     }
 }
 
-pub fn write(filename: &Path, output: &Path) -> Result<()> {
-    let mut reader = rnc_utils::buf_reader(filename)?;
+struct AccessionIterator {
+    reader: Box<dyn BufRead>,
+    buf: String,
+}
+
+impl AccessionIterator {
+    fn from_reader(reader: Box<dyn BufRead>) -> Self {
+        Self {
+            reader,
+            buf: String::new(),
+        }
+    }
+}
+
+impl Iterator for AccessionIterator {
+    type Item = Result<RawAccessionEntry, Box<dyn Error>>;
+
+    fn next(&mut self) -> Option<Result<RawAccessionEntry, Box<dyn Error>>> {
+        match self.reader.read_line(&mut self.buf) {
+            Err(e) => Some(Err(e.into())),
+            Ok(0) => None,
+            Ok(_) => {
+                let cleaned = self.buf.replace("\\\\", "\\");
+                match serde_json::from_str(&cleaned) {
+                    Err(e) => Some(Err(e.into())),
+                    Ok(r) => {
+                        self.buf.clear();
+                        let raw: RawAccessionEntry = r;
+                        Some(Ok(raw))
+                    },
+                }
+            },
+        }
+    }
+}
+
+pub fn write(accession_file: &Path, metadata_file: &Path, output: &Path) -> Result<()> {
+    let reader = rnc_utils::buf_reader(accession_file)?;
     let mut output = rnc_utils::buf_writer(output)?;
+    let accessions = AccessionIterator::from_reader(reader);
+    let accessions = accessions.filter_map(|acc| Some(acc.unwrap()));
+    let accessions = accessions.group_by(|a| a.urs_taxid.to_owned());
+    let mut accessions = accessions.into_iter();
+
     let mut buf = String::new();
+    let mut metadata_reader = BufReader::new(File::open(metadata_file)?);
     loop {
-        match reader.read_line(&mut buf)? {
-            0 => break,
-            _ => {
+        match (metadata_reader.read_line(&mut buf)?, accessions.next()) {
+            (0, None) => break,
+            (0, Some(_)) => {
+                return Err(anyhow::anyhow!("Not all accessions have metadata"));
+            },
+            (_, None) => {
+                return Err(anyhow::anyhow!("Not all metadata has an accession"));
+            },
+            (_, Some((urs_taxid, accessions))) => {
                 let cleaned = buf.replace("\\\\", "\\");
-                let raw: Raw = serde_json::from_str(&cleaned)?;
-                let norm: Normalized = Normalized::from(raw);
+                let mut raw: Raw = serde_json::from_str(&cleaned)?;
+                assert!(urs_taxid == raw.id);
+                raw.accessions.extend(accessions);
+                let norm = Normalized::from(raw);
                 serde_json::to_writer(&mut output, &norm)?;
                 writeln!(&mut output)?;
-                buf.clear();
             },
         }
     }

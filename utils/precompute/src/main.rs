@@ -21,8 +21,11 @@ enum Subcommand {
     /// Take the output of the kv lookup and turn it into JSON suitable for the pipeline
     Normalize {
         #[structopt(parse(from_os_str))]
-        /// Filename of the raw json file, '-' means stdin.
+        /// Filename of the raw accession json file, '-' means stdin.
         filename: PathBuf,
+
+        /// Filename of the raw metadata file
+        metadata: PathBuf,
 
         #[structopt(parse(from_os_str))]
         /// Filename to write the results to, '-' means stdout
@@ -77,8 +80,8 @@ fn main() -> anyhow::Result<()> {
         Subcommand::MaxRelease { filename, output } => {
             releases::write_max(&filename, &output)?;
         }
-        Subcommand::Normalize { filename, output } => {
-            normalize::write(&filename, &output)?;
+        Subcommand::Normalize { filename, metadata, output } => {
+            normalize::write(&filename, &metadata, &output)?;
         }
         Subcommand::Select { xrefs, known, output } => {
             releases::select_new(&xrefs, &known, &output)?;
