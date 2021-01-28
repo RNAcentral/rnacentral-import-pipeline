@@ -1,5 +1,6 @@
 CREATE TABLE IF NOT EXISTS urs_accession (
     id bigserial primary key,
+    precompute_id int not null,
     urs_taxid text not null,
     urs text not null,
     taxid int not null,
