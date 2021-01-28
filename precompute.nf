@@ -3,7 +3,7 @@
 nextflow.enable.dsl=2
 
 include { repeats } from './workflows/repeats'
-include { build_precompute_accessions from './workflows/build-precompute-accessions'
+include { build_precompute_accessions } from './workflows/build-precompute-accessions'
 
 process build_precompute_context {
   input:
