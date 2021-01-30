@@ -1,4 +1,5 @@
 use std::path::Path;
+use std::collections::HashMap;
 
 use serde::{
     Deserialize,
@@ -94,7 +95,6 @@ pub struct RawAccessionEntry {
     #[serde(rename = "id")]
     urs_taxid: String,
     accession: String,
-    is_active: bool,
     description: String,
     gene: Option<String>,
     optional_id: Option<String>,
@@ -129,6 +129,7 @@ pub struct Xref {
     length: usize,
     deleted: String,
     last_release: usize,
+    accession: String,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -143,6 +144,7 @@ pub struct Metadata {
     previous: Option<Previous>,
     rfam_hits: Vec<RfamHit>,
     r2dt_hits: Vec<R2dtHit>,
+    active_mapping: HashMap<String, bool>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -159,12 +161,13 @@ pub struct Normalized {
     r2dt_hits: Vec<R2dtHit>,
 }
 
-impl From<RawAccessionEntry> for Accession {
-    fn from(raw: RawAccessionEntry) -> Self {
+impl From<(RawAccessionEntry, bool)> for Accession {
+    fn from(given: (RawAccessionEntry, bool)) -> Self {
+        let (raw, is_active) = given;
         return Self {
             urs_taxid: raw.urs_taxid,
             accession: raw.accession,
-            is_active: raw.is_active,
+            is_active,
             description: raw.description,
             gene: raw.gene,
             optional_id: raw.optional_id,
@@ -183,12 +186,21 @@ impl From<RawAccessionEntry> for Accession {
     }
 }
 
+impl Xref {
+    fn is_active(&self) -> bool {
+        self.deleted == "N"
+    }
+}
+
 impl Normalized {
     fn new(
         raw_accessions: impl Iterator<Item = RawAccessionEntry>,
         metadata: Metadata,
     ) -> Result<Self> {
-        let accessions = raw_accessions.map(Accession::from).collect();
+        let accessions = raw_accessions.map(|a: RawAccessionEntry| {
+            let is_active = metadata.active_mapping.get(&a.urs_taxid).unwrap();
+            Accession::from((a, is_active.clone()))
+        }).collect();
         return Ok(Self {
             upi: metadata.upi,
             taxid: metadata.taxid,
@@ -218,6 +230,10 @@ impl Metadata {
         let taxid = parts[1].parse::<usize>().unwrap();
 
         let xrefs: Vec<Xref> = raw_xrefs.collect();
+        let mut active_mapping: HashMap<String, bool> = HashMap::new();
+        for xref in &xrefs {
+            active_mapping.insert(xref.accession.to_owned(), xref.is_active());
+        }
 
         let coordinates = raw_coordinates.into_iter().flatten().collect();
         let rfam_hits = raw_rfam_hits.into_iter().flatten().collect();
@@ -244,6 +260,7 @@ impl Metadata {
             previous,
             rfam_hits,
             r2dt_hits,
+            active_mapping,
         });
     }
 }
