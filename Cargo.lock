@@ -1076,6 +1076,7 @@ dependencies = [
 name = "rnc-core"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "bio",
  "fallible-iterator",
  "fnv",

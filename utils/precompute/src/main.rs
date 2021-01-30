@@ -1,8 +1,8 @@
 use std::path::PathBuf;
 use structopt::StructOpt;
 
-pub mod releases;
 pub mod normalize;
+pub mod releases;
 
 #[derive(Debug, StructOpt)]
 #[structopt(rename_all = "kebab-case")]
@@ -18,27 +18,70 @@ enum Subcommand {
         output: PathBuf,
     },
 
-    /// Take the output of the kv lookup and turn it into JSON suitable for the pipeline
-    Normalize {
+    MergeMetadata {
         #[structopt(parse(from_os_str))]
-        /// Filename of the raw accession json file, '-' means stdin.
-        filename: PathBuf,
+        /// Filename of the raw coordinates file
+        coordinates: PathBuf,
 
-        /// Filename of the raw metadata file
-        metadata: PathBuf,
+        #[structopt(parse(from_os_str))]
+        /// Filename of the raw rfam hits file
+        rfam_hits: PathBuf,
+
+        #[structopt(parse(from_os_str))]
+        /// Filename of the raw r2dt hits file
+        r2dt_hits: PathBuf,
+
+        #[structopt(parse(from_os_str))]
+        /// Filename of the raw previous file
+        previous: PathBuf,
+
+        #[structopt(parse(from_os_str))]
+        /// Filename of the raw xref file
+        xref: PathBuf,
 
         #[structopt(parse(from_os_str))]
         /// Filename to write the results to, '-' means stdout
         output: PathBuf,
     },
 
-    /// Select all xrefs to use. Xrefs will be selected if they have a newer release than the
-    /// previous one, if they have never been precomputed or if they are new.
+    /// Take the output of the kv lookup and turn it into JSON suitable for the pipeline
+    Normalize {
+        #[structopt(parse(from_os_str))]
+        /// Filename of the raw accession json file, '-' means stdin.
+        accessions: PathBuf,
+
+        #[structopt(parse(from_os_str))]
+        /// Filename of the raw coordinates file
+        coordinates: PathBuf,
+
+        #[structopt(parse(from_os_str))]
+        /// Filename of the raw rfam hits file
+        rfam_hits: PathBuf,
+
+        #[structopt(parse(from_os_str))]
+        /// Filename of the raw r2dt hits file
+        r2dt_hits: PathBuf,
+
+        #[structopt(parse(from_os_str))]
+        /// Filename of the raw previous file
+        previous: PathBuf,
+
+        #[structopt(parse(from_os_str))]
+        /// Filename of the raw xref file
+        xref: PathBuf,
+
+        #[structopt(parse(from_os_str))]
+        /// Filename to write the results to, '-' means stdout
+        output: PathBuf,
+    },
+
+    /// Select all xrefs to use. Xrefs will be selected if they have a newer release than
+    /// the previous one, if they have never been precomputed or if they are new.
     Select {
         #[structopt(parse(from_os_str))]
         /// Filename of the xref entries, must be sorted
         xrefs: PathBuf,
-        
+
         #[structopt(parse(from_os_str))]
         /// Filename of the known entries, must be sorted
         known: PathBuf,
@@ -46,7 +89,7 @@ enum Subcommand {
         #[structopt(parse(from_os_str))]
         /// Filename to write the results to, '-' means stdout
         output: PathBuf,
-    }
+    },
 }
 
 #[derive(Debug, StructOpt)]
@@ -77,15 +120,55 @@ fn main() -> anyhow::Result<()> {
     .unwrap_or_else(|_| eprintln!("Failed to create logger, ignore"));
 
     match opt.command {
-        Subcommand::MaxRelease { filename, output } => {
+        Subcommand::MaxRelease {
+            filename,
+            output,
+        } => {
             releases::write_max(&filename, &output)?;
-        }
-        Subcommand::Normalize { filename, metadata, output } => {
-            normalize::write(&filename, &metadata, &output)?;
-        }
-        Subcommand::Select { xrefs, known, output } => {
+        },
+        Subcommand::MergeMetadata {
+            coordinates,
+            rfam_hits,
+            r2dt_hits,
+            previous,
+            xref,
+            output,
+        } => {
+            normalize::write_metadata(
+                &coordinates,
+                &rfam_hits,
+                &r2dt_hits,
+                &previous,
+                &xref,
+                &output,
+            )?;
+        },
+        Subcommand::Normalize {
+            accessions,
+            coordinates,
+            rfam_hits,
+            r2dt_hits,
+            previous,
+            xref,
+            output,
+        } => {
+            normalize::write(
+                &accessions,
+                &coordinates,
+                &rfam_hits,
+                &r2dt_hits,
+                &previous,
+                &xref,
+                &output,
+            )?;
+        },
+        Subcommand::Select {
+            xrefs,
+            known,
+            output,
+        } => {
             releases::select_new(&xrefs, &known, &output)?;
-        }
+        },
     }
 
     Ok(())

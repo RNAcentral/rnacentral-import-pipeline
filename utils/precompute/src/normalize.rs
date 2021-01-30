@@ -1,13 +1,4 @@
-use std::{
-    convert::From,
-    error::Error,
-    fs::File,
-    io::{
-        BufRead,
-        BufReader,
-    },
-    path::Path,
-};
+use std::path::Path;
 
 use serde::{
     Deserialize,
@@ -18,8 +9,16 @@ use itertools::Itertools;
 
 use anyhow::Result;
 
+use sorted_iter::{
+    assume::*,
+    SortedPairIterator,
+};
+
+use rnc_core::psql::JsonlIterator;
+
 #[derive(Debug, Deserialize, Serialize, PartialEq)]
 pub struct Accession {
+    urs_taxid: String,
     accession: String,
     is_active: bool,
     description: String,
@@ -40,6 +39,7 @@ pub struct Accession {
 
 #[derive(Debug, Deserialize, Serialize, PartialEq)]
 pub struct RfamHit {
+    urs_taxid: String,
     rfam_hit_id: usize,
     model: String,
     model_rna_type: Option<String>,
@@ -56,6 +56,7 @@ pub struct RfamHit {
 
 #[derive(Debug, Deserialize, Serialize, PartialEq)]
 pub struct R2dtHit {
+    urs_taxid: String,
     model_id: String,
     model_name: String,
     model_source: String,
@@ -68,7 +69,7 @@ pub struct R2dtHit {
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 pub struct Previous {
-    id: String,
+    urs_taxid: String,
     upi: String,
     taxid: usize,
     databases: String,
@@ -108,6 +109,7 @@ pub struct RawAccessionEntry {
 
 #[derive(Debug, Deserialize, Serialize, PartialEq)]
 pub struct Coordinate {
+    urs_taxid: String,
     assembly_id: String,
     chromosome: String,
     strand: String,
@@ -117,28 +119,23 @@ pub struct Coordinate {
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Xref {
+    urs_taxid: String,
     length: usize,
     deleted: String,
     last_release: usize,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-pub struct Raw {
-    id: String,
-
-    #[serde(rename = "xref")]
-    xrefs: Vec<Xref>,
-
-    #[serde(default)]
-    accessions: Vec<RawAccessionEntry>,
+pub struct Metadata {
+    upi: String,
+    taxid: usize,
+    length: usize,
+    last_release: usize,
     coordinates: Vec<Coordinate>,
-
-    #[serde(rename = "rfam-hits")]
+    deleted: bool,
+    previous: Option<Previous>,
     rfam_hits: Vec<RfamHit>,
-
-    #[serde(rename = "r2dt-hits")]
     r2dt_hits: Vec<R2dtHit>,
-    previous: Vec<Previous>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -149,7 +146,7 @@ pub struct Normalized {
     last_release: usize,
     coordinates: Vec<Coordinate>,
     accessions: Vec<Accession>,
-    deleted: Vec<bool>,
+    deleted: bool,
     previous: Option<Previous>,
     rfam_hits: Vec<RfamHit>,
     r2dt_hits: Vec<R2dtHit>,
@@ -158,6 +155,7 @@ pub struct Normalized {
 impl From<RawAccessionEntry> for Accession {
     fn from(raw: RawAccessionEntry) -> Self {
         return Self {
+            urs_taxid: raw.urs_taxid,
             accession: raw.accession,
             is_active: raw.is_active,
             description: raw.description,
@@ -178,104 +176,190 @@ impl From<RawAccessionEntry> for Accession {
     }
 }
 
-impl From<Raw> for Normalized {
-    fn from(raw: Raw) -> Self {
-        let parts: Vec<&str> = raw.id.split("_").collect();
+impl Normalized {
+    fn new(
+        urs_taxid: String,
+        raw_accessions: impl Iterator<Item = RawAccessionEntry>,
+        raw_xrefs: impl Iterator<Item = Xref>,
+        raw_coordinates: Option<impl Iterator<Item = Coordinate>>,
+        raw_rfam_hits: Option<impl Iterator<Item = RfamHit>>,
+        raw_r2dt_hits: Option<impl Iterator<Item = R2dtHit>>,
+        raw_previous: Option<impl Iterator<Item = Previous>>,
+    ) -> Result<Self> {
+        let parts: Vec<&str> = urs_taxid.split("_").collect();
         let upi = parts[0].to_owned();
         let taxid = parts[1].parse::<usize>().unwrap();
-        let previous = raw.previous.get(0).cloned();
-        let length = raw.xrefs[0].length;
-        let last_release = raw.xrefs.iter().map(|x| x.last_release).max().unwrap();
+
+        let xrefs: Vec<Xref> = raw_xrefs.collect();
+
+        let coordinates = raw_coordinates.into_iter().flatten().collect();
+        let rfam_hits = raw_rfam_hits.into_iter().flatten().collect();
+        let r2dt_hits = raw_r2dt_hits.into_iter().flatten().collect();
+        let previous: Vec<Previous> = raw_previous.into_iter().flatten().collect();
+        let previous = match previous.len() {
+            0 => None,
+            _ => Some(previous[0].clone()),
+        };
+
+        let length = xrefs[0].length;
+        let last_release = xrefs.iter().map(|x| x.last_release).max().unwrap();
 
         let mut deleted = true;
-        let mut accessions = Vec::with_capacity(raw.accessions.len());
-        for raw_accession in raw.accessions {
+        let mut accessions = Vec::with_capacity(xrefs.len());
+        for raw_accession in raw_accessions {
             if raw_accession.is_active {
                 deleted = false;
             }
             accessions.push(Accession::from(raw_accession));
         }
 
-        return Self {
+        return Ok(Self {
             upi,
             taxid,
             length,
             last_release,
-            coordinates: raw.coordinates,
+            coordinates,
             accessions,
-            deleted: vec![deleted],
+            deleted,
             previous,
-            rfam_hits: raw.rfam_hits,
-            r2dt_hits: raw.r2dt_hits,
+            rfam_hits,
+            r2dt_hits,
+        });
+    }
+}
+
+impl Metadata {
+    fn new(
+        urs_taxid: String,
+        raw_xrefs: impl Iterator<Item = Xref>,
+        raw_coordinates: Option<impl Iterator<Item = Coordinate>>,
+        raw_rfam_hits: Option<impl Iterator<Item = RfamHit>>,
+        raw_r2dt_hits: Option<impl Iterator<Item = R2dtHit>>,
+        raw_previous: Option<impl Iterator<Item = Previous>>,
+    ) -> Result<Self> {
+        let parts: Vec<&str> = urs_taxid.split("_").collect();
+        let upi = parts[0].to_owned();
+        let taxid = parts[1].parse::<usize>().unwrap();
+
+        let xrefs: Vec<Xref> = raw_xrefs.collect();
+
+        let coordinates = raw_coordinates.into_iter().flatten().collect();
+        let rfam_hits = raw_rfam_hits.into_iter().flatten().collect();
+        let r2dt_hits = raw_r2dt_hits.into_iter().flatten().collect();
+        let previous: Vec<Previous> = raw_previous.into_iter().flatten().collect();
+        let previous = match previous.len() {
+            0 => None,
+            _ => Some(previous[0].clone()),
         };
+
+        let length = xrefs[0].length;
+        let last_release = xrefs.iter().map(|x| x.last_release).max().unwrap();
+
+        let deleted = xrefs.iter().all(|x| x.deleted == "Y");
+
+        return Ok(Self {
+            upi,
+            taxid,
+            length,
+            last_release,
+            coordinates,
+            deleted,
+            previous,
+            rfam_hits,
+            r2dt_hits,
+        });
     }
 }
 
-struct AccessionIterator {
-    reader: Box<dyn BufRead>,
-    buf: String,
-}
+pub fn write_metadata(
+    coordinate_file: &Path,
+    rfam_hits_file: &Path,
+    r2dt_hits_file: &Path,
+    previous_file: &Path,
+    xref_file: &Path,
+    output: &Path,
+) -> Result<()> {
+    let xrefs = JsonlIterator::from_path(xref_file)?;
+    let xrefs = xrefs.group_by(|x: &Xref| x.urs_taxid.to_owned());
+    let xrefs = xrefs.into_iter().assume_sorted_by_key();
 
-impl AccessionIterator {
-    fn from_reader(reader: Box<dyn BufRead>) -> Self {
-        Self {
-            reader,
-            buf: String::new(),
-        }
-    }
-}
+    let coordinates = JsonlIterator::from_path(coordinate_file)?;
+    let coordinates = coordinates.group_by(|c: &Coordinate| c.urs_taxid.to_owned());
+    let coordinates = coordinates.into_iter().assume_sorted_by_key();
 
-impl Iterator for AccessionIterator {
-    type Item = Result<RawAccessionEntry, Box<dyn Error>>;
+    let rfam_hits = JsonlIterator::from_path(rfam_hits_file)?;
+    let rfam_hits = rfam_hits.group_by(|h: &RfamHit| h.urs_taxid.to_owned());
+    let rfam_hits = rfam_hits.into_iter().assume_sorted_by_key();
 
-    fn next(&mut self) -> Option<Result<RawAccessionEntry, Box<dyn Error>>> {
-        match self.reader.read_line(&mut self.buf) {
-            Err(e) => Some(Err(e.into())),
-            Ok(0) => None,
-            Ok(_) => {
-                let cleaned = self.buf.replace("\\\\", "\\");
-                match serde_json::from_str(&cleaned) {
-                    Err(e) => Some(Err(e.into())),
-                    Ok(r) => {
-                        self.buf.clear();
-                        let raw: RawAccessionEntry = r;
-                        Some(Ok(raw))
-                    },
-                }
-            },
-        }
-    }
-}
+    let r2dt_hits = JsonlIterator::from_path(r2dt_hits_file)?;
+    let r2dt_hits = r2dt_hits.group_by(|h: &R2dtHit| h.urs_taxid.to_owned());
+    let r2dt_hits = r2dt_hits.into_iter().assume_sorted_by_key();
 
-pub fn write(accession_file: &Path, metadata_file: &Path, output: &Path) -> Result<()> {
-    let reader = rnc_utils::buf_reader(accession_file)?;
+    let previous = JsonlIterator::from_path(previous_file)?;
+    let previous = previous.group_by(|p: &Previous| p.urs_taxid.to_owned());
+    let previous = previous.into_iter().assume_sorted_by_key();
+
+    let partial =
+        xrefs.left_join(coordinates).left_join(rfam_hits).left_join(r2dt_hits).left_join(previous);
+
     let mut output = rnc_utils::buf_writer(output)?;
-    let accessions = AccessionIterator::from_reader(reader);
-    let accessions = accessions.filter_map(|acc| Some(acc.unwrap()));
-    let accessions = accessions.group_by(|a| a.urs_taxid.to_owned());
-    let mut accessions = accessions.into_iter();
+    for (id, data) in partial {
+        let ((((xrefs, coordinates), rfam_hits), r2dt_hits), previous) = data;
+        let norm = Metadata::new(id, xrefs, coordinates, rfam_hits, r2dt_hits, previous)?;
+        serde_json::to_writer(&mut output, &norm)?;
+        writeln!(&mut output)?;
+    }
 
-    let mut buf = String::new();
-    let mut metadata_reader = BufReader::new(File::open(metadata_file)?);
-    loop {
-        match (metadata_reader.read_line(&mut buf)?, accessions.next()) {
-            (0, None) => break,
-            (0, Some(_)) => {
-                return Err(anyhow::anyhow!("Not all accessions have metadata"));
-            },
-            (_, None) => {
-                return Err(anyhow::anyhow!("Not all metadata has an accession"));
-            },
-            (_, Some((urs_taxid, accessions))) => {
-                let cleaned = buf.replace("\\\\", "\\");
-                let mut raw: Raw = serde_json::from_str(&cleaned)?;
-                assert!(urs_taxid == raw.id);
-                raw.accessions.extend(accessions);
-                let norm = Normalized::from(raw);
-                serde_json::to_writer(&mut output, &norm)?;
-                writeln!(&mut output)?;
-            },
-        }
+    Ok(())
+}
+
+pub fn write(
+    accession_file: &Path,
+    coordinate_file: &Path,
+    rfam_hits_file: &Path,
+    r2dt_hits_file: &Path,
+    previous_file: &Path,
+    xref_file: &Path,
+    output: &Path,
+) -> Result<()> {
+    let accessions = JsonlIterator::from_path(accession_file)?;
+    let accessions = accessions.group_by(|a: &RawAccessionEntry| a.urs_taxid.to_owned());
+    let accessions = accessions.into_iter().assume_sorted_by_key();
+
+    let xrefs = JsonlIterator::from_path(xref_file)?;
+    let xrefs = xrefs.group_by(|x: &Xref| x.urs_taxid.to_owned());
+    let xrefs = xrefs.into_iter().assume_sorted_by_key();
+
+    let coordinates = JsonlIterator::from_path(coordinate_file)?;
+    let coordinates = coordinates.group_by(|c: &Coordinate| c.urs_taxid.to_owned());
+    let coordinates = coordinates.into_iter().assume_sorted_by_key();
+
+    let rfam_hits = JsonlIterator::from_path(rfam_hits_file)?;
+    let rfam_hits = rfam_hits.group_by(|h: &RfamHit| h.urs_taxid.to_owned());
+    let rfam_hits = rfam_hits.into_iter().assume_sorted_by_key();
+
+    let r2dt_hits = JsonlIterator::from_path(r2dt_hits_file)?;
+    let r2dt_hits = r2dt_hits.group_by(|h: &R2dtHit| h.urs_taxid.to_owned());
+    let r2dt_hits = r2dt_hits.into_iter().assume_sorted_by_key();
+
+    let previous = JsonlIterator::from_path(previous_file)?;
+    let previous = previous.group_by(|p: &Previous| p.urs_taxid.to_owned());
+    let previous = previous.into_iter().assume_sorted_by_key();
+
+    let partial = accessions
+        .join(xrefs)
+        .left_join(coordinates)
+        .left_join(rfam_hits)
+        .left_join(r2dt_hits)
+        .left_join(previous);
+
+    let mut output = rnc_utils::buf_writer(output)?;
+    for (id, data) in partial {
+        let (((((accessions, xrefs), coordinates), rfam_hits), r2dt_hits), previous) = data;
+        let norm =
+            Normalized::new(id, accessions, xrefs, coordinates, rfam_hits, r2dt_hits, previous)?;
+        serde_json::to_writer(&mut output, &norm)?;
+        writeln!(&mut output)?;
     }
 
     Ok(())
