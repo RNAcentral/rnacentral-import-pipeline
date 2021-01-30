@@ -51,24 +51,8 @@ enum Subcommand {
         accessions: PathBuf,
 
         #[structopt(parse(from_os_str))]
-        /// Filename of the raw coordinates file
-        coordinates: PathBuf,
-
-        #[structopt(parse(from_os_str))]
-        /// Filename of the raw rfam hits file
-        rfam_hits: PathBuf,
-
-        #[structopt(parse(from_os_str))]
-        /// Filename of the raw r2dt hits file
-        r2dt_hits: PathBuf,
-
-        #[structopt(parse(from_os_str))]
-        /// Filename of the raw previous file
-        previous: PathBuf,
-
-        #[structopt(parse(from_os_str))]
-        /// Filename of the raw xref file
-        xref: PathBuf,
+        /// Filename of the merged metadata file
+        metadata: PathBuf,
 
         #[structopt(parse(from_os_str))]
         /// Filename to write the results to, '-' means stdout
@@ -145,22 +129,10 @@ fn main() -> anyhow::Result<()> {
         },
         Subcommand::Normalize {
             accessions,
-            coordinates,
-            rfam_hits,
-            r2dt_hits,
-            previous,
-            xref,
+            metadata,
             output,
         } => {
-            normalize::write(
-                &accessions,
-                &coordinates,
-                &rfam_hits,
-                &r2dt_hits,
-                &previous,
-                &xref,
-                &output,
-            )?;
+            normalize::write(&accessions, &metadata, &output)?;
         },
         Subcommand::Select {
             xrefs,
