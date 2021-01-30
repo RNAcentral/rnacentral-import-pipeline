@@ -91,6 +91,7 @@ pub struct Previous {
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct RawAccessionEntry {
+    #[serde(rename = "id")]
     urs_taxid: String,
     accession: String,
     is_active: bool,
