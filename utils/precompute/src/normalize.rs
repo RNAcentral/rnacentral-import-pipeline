@@ -39,6 +39,7 @@ pub struct Accession {
 
 #[derive(Debug, Deserialize, Serialize, PartialEq)]
 pub struct RfamHit {
+    #[serde(rename = "id")]
     urs_taxid: String,
     rfam_hit_id: usize,
     model: String,
@@ -56,8 +57,9 @@ pub struct RfamHit {
 
 #[derive(Debug, Deserialize, Serialize, PartialEq)]
 pub struct R2dtHit {
+    #[serde(rename = "id")]
     urs_taxid: String,
-    model_id: String,
+    model_id: usize,
     model_name: String,
     model_source: String,
     model_so_term: Option<String>,
@@ -69,18 +71,19 @@ pub struct R2dtHit {
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 pub struct Previous {
+    #[serde(rename = "id")]
     urs_taxid: String,
     upi: String,
     taxid: usize,
-    databases: String,
+    databases: Option<String>,
     description: Option<String>,
-    has_coordinates: bool,
-    is_active: bool,
-    is_fragment: bool,
-    is_locus_representative: bool,
-    last_release: usize,
-    rfam_problems: String,
-    rna_type: String,
+    has_coordinates: Option<bool>,
+    is_active: Option<bool>,
+    is_fragment: Option<bool>,
+    is_locus_representative: Option<bool>,
+    last_release: Option<usize>,
+    rfam_problems: Option<String>,
+    rna_type: Option<String>,
     short_description: Option<String>,
     so_rna_type: Option<String>,
     update_date: Option<String>,
@@ -109,16 +112,18 @@ pub struct RawAccessionEntry {
 
 #[derive(Debug, Deserialize, Serialize, PartialEq)]
 pub struct Coordinate {
+    #[serde(rename = "id")]
     urs_taxid: String,
     assembly_id: String,
     chromosome: String,
-    strand: String,
+    strand: i8,
     start: usize,
     stop: usize,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Xref {
+    #[serde(rename = "id")]
     urs_taxid: String,
     length: usize,
     deleted: String,
@@ -127,6 +132,7 @@ pub struct Xref {
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Metadata {
+    urs_taxid: String,
     upi: String,
     taxid: usize,
     length: usize,
@@ -258,6 +264,7 @@ impl Metadata {
         let deleted = xrefs.iter().all(|x| x.deleted == "Y");
 
         return Ok(Self {
+            urs_taxid,
             upi,
             taxid,
             length,
