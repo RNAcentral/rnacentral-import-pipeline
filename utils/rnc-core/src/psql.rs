@@ -47,9 +47,8 @@ impl<R: Read, T: DeserializeOwned> Iterator for JsonlIterator<R, T> {
         match self.reader.read_line(&mut self.buf).unwrap() {
             0 => None,
             _ => {
-                let cleaned = self.buf.replace("\\\\", "\\");
-                let value: T = serde_json::from_str(&cleaned)
-                    .with_context(|| format!("Could not parse line {}", cleaned))
+                let value: T = serde_json::from_str(&self.buf)
+                    .with_context(|| format!("Could not parse line {}", &self.buf))
                     .unwrap();
                 self.buf.clear();
                 Some(value)

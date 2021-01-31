@@ -1,24 +1,18 @@
 use std::path::PathBuf;
 use structopt::StructOpt;
 
+pub mod accessions;
+pub mod metadata;
 pub mod normalize;
 pub mod releases;
 
 #[derive(Debug, StructOpt)]
 #[structopt(rename_all = "kebab-case")]
-enum Subcommand {
-    /// Find the max release for each urs entry.
-    MaxRelease {
-        #[structopt(parse(from_os_str))]
-        /// Filename of the raw json file, '-' means stdin.
-        filename: PathBuf,
-
-        #[structopt(parse(from_os_str))]
-        /// Filename to write the results to, '-' means stdout
-        output: PathBuf,
-    },
-
-    MergeMetadata {
+enum MetadataCommand {
+    /// Merge each distinct type of metadata into single merged entries. THis assumes that
+    /// all files are sorted in the same way. Additionally, the xref file must have at
+    /// least one entry for all possible urs_taxids.
+    Merge {
         #[structopt(parse(from_os_str))]
         /// Filename of the raw coordinates file
         coordinates: PathBuf,
@@ -44,6 +38,38 @@ enum Subcommand {
         output: PathBuf,
     },
 
+    /// Split the metadata into a series of chunks and write the chunks into separate
+    /// files. Doing this makes the normalzing step faster if you use the same chunks
+    /// as in accession chunks.
+    Chunk {
+        #[structopt(parse(from_os_str))]
+        /// The name of the metadata to read.
+        metadata: PathBuf,
+
+        #[structopt(parse(from_os_str))]
+        /// The name of the metadata to read.
+        chunk_file: PathBuf,
+
+        #[structopt(parse(from_os_str), default_value = ".")]
+        /// Base directory to write to.
+        output: PathBuf,
+    },
+}
+
+#[derive(Debug, StructOpt)]
+#[structopt(rename_all = "kebab-case")]
+enum Subcommand {
+    /// Find the max release for each urs entry.
+    MaxRelease {
+        #[structopt(parse(from_os_str))]
+        /// Filename of the raw json file, '-' means stdin.
+        filename: PathBuf,
+
+        #[structopt(parse(from_os_str))]
+        /// Filename to write the results to, '-' means stdout
+        output: PathBuf,
+    },
+
     /// Take the output of the kv lookup and turn it into JSON suitable for the pipeline
     Normalize {
         #[structopt(parse(from_os_str))]
@@ -57,6 +83,12 @@ enum Subcommand {
         #[structopt(parse(from_os_str))]
         /// Filename to write the results to, '-' means stdout
         output: PathBuf,
+    },
+
+    /// Commands dealing with metadata.
+    Metadata {
+        #[structopt(subcommand)]
+        command: MetadataCommand,
     },
 
     /// Select all xrefs to use. Xrefs will be selected if they have a newer release than
@@ -107,40 +139,43 @@ fn main() -> anyhow::Result<()> {
         Subcommand::MaxRelease {
             filename,
             output,
-        } => {
-            releases::write_max(&filename, &output)?;
-        },
-        Subcommand::MergeMetadata {
-            coordinates,
-            rfam_hits,
-            r2dt_hits,
-            previous,
-            xref,
-            output,
-        } => {
-            normalize::write_metadata(
-                &coordinates,
-                &rfam_hits,
-                &r2dt_hits,
-                &previous,
-                &xref,
-                &output,
-            )?;
+        } => releases::write_max(&filename, &output)?,
+        Subcommand::Metadata {
+            command,
+        } => match command {
+            MetadataCommand::Merge {
+                coordinates,
+                rfam_hits,
+                r2dt_hits,
+                previous,
+                xref,
+                output,
+            } => {
+                metadata::write_merge(
+                    &coordinates,
+                    &rfam_hits,
+                    &r2dt_hits,
+                    &previous,
+                    &xref,
+                    &output,
+                )?;
+            },
+            MetadataCommand::Chunk {
+                metadata,
+                chunk_file,
+                output,
+            } => metadata::write_splits(&metadata, &chunk_file, &output)?,
         },
         Subcommand::Normalize {
             accessions,
             metadata,
             output,
-        } => {
-            normalize::write(&accessions, &metadata, &output)?;
-        },
+        } => normalize::write(&accessions, &metadata, &output)?,
         Subcommand::Select {
             xrefs,
             known,
             output,
-        } => {
-            releases::select_new(&xrefs, &known, &output)?;
-        },
+        } => releases::select_new(&xrefs, &known, &output)?,
     }
 
     Ok(())
