@@ -1,21 +1,3 @@
-FROM rust:1.49 AS rust
-ENV RNA /rna
-
-RUN apt-get update
-RUN apt-get upgrade -y
-
-RUN apt-get install -y \
-    clang \
-    libclang-dev \
-    llvm \
-    llvm-dev
-
-WORKDIR /rna/rust
-COPY Cargo.toml Cargo.toml
-COPY Cargo.lock Cargo.lock
-COPY utils utils
-RUN cargo build --release
-
 FROM python:3.7-buster
 
 ENV RNA /rna
@@ -112,13 +94,6 @@ RUN pip3 install -r $RNACENTRAL_IMPORT_PIPELINE/requirements.txt
 
 RUN python3 -m textblob.download_corpora
 
-WORKDIR $RNA/utils/bin
-COPY --from=rust /rna/rust/target/release/precompute .
-COPY --from=rust /rna/rust/target/release/kv .
-COPY --from=rust /rna/rust/target/release/split-ena .
-COPY --from=rust /rna/rust/target/release/json2fasta .
-COPY --from=rust /rna/rust/target/release/expand-urs .
-
 WORKDIR /
 
 WORKDIR $RNA
@@ -139,7 +114,6 @@ ENV PERL5LIB="$BIOEASELDIR:$RIBODIR:$EPNOPTDIR:$EPNOFILEDIR:$EPNTESTDIR:$PERL5LI
 ENV PATH="$RNA/infernal-1.1.2/bin:$PATH"
 ENV PATH="$RNA/blatSrc/bin:$PATH"
 ENV PATH="$RNA/seqkit:$PATH"
-ENV PATH="$RNA/utils/bin:$PATH"
 ENV PATH="$RNACENTRAL_IMPORT_PIPELINE:$PATH"
 
 ENTRYPOINT ["/bin/bash"]
