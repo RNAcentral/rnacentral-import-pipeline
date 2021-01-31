@@ -4,7 +4,9 @@ select
     'id', todo.urs_taxid,
     'length', rna.len,
     'deleted', xref.deleted,
-    'last_release', xref.last
+    'last_release', xref.last,
+    'accession', xref.ac,
+    'ordering_index', todo.id
   )
 FROM :tablename todo
 JOIN rna
