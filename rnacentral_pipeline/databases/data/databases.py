@@ -91,3 +91,98 @@ class Database(enum.Enum):
         if self is Database.gencode:
             return 'ENSEMBL_GENCODE'
         return self.name.upper()
+
+    def pretty(self) -> str:
+        if self is Database.crw:
+            return 'CRW'
+        if self is Database.dictybase:
+            return 'DictyBase'
+        if self is Database.ena:
+            return 'ENA'
+        if self is Database.ensembl:
+            return 'Ensembl'
+        if self is Database.ensembl_fungi:
+            return 'Ensembl Funig'
+        if self is Database.ensembl_metazoa:
+            return 'Ensembl Metazoa'
+        if self is Database.ensembl_plants:
+            return 'Ensembl Plants'
+        if self is Database.ensembl_protists:
+            return 'Ensembl Protists'
+        if self is Database.five_srrnadb:
+            return '5SrRNAdb'
+        if self is Database.flybase:
+            return 'FlyBase'
+        if self is Database.gencode:
+            return 'Ensembl/GENCODE'
+        if self is Database.genecards:
+            return 'GeneCards'
+        if self is Database.greengenes:
+            return 'Greengenes'
+        if self is Database.gtrnadb:
+            return 'GtRNAdb'
+        if self is Database.hgnc:
+            return 'HGNC'
+        if self is Database.intact:
+            return 'IntAct'
+        if self is Database.lncbase:
+            return 'LncBase'
+        if self is Database.lncbook:
+            return 'LncBook'
+        if self is Database.lncipedia:
+            return 'LNCipedia'
+        if self is Database.lncrnadb:
+            return 'lncRNAdb'
+        if self is Database.malacards:
+            return 'MalaCards'
+        if self is Database.mgi:
+            return 'MGI'
+        if self is Database.mirbase:
+            return 'miRBase'
+        if self is Database.mirgenedb:
+            return 'MirGeneDB'
+        if self is Database.modomics:
+            return 'Modomics'
+        if self is Database.noncode:
+            return 'NONCODCE'
+        if self is Database.pdbe:
+            return 'PDBe'
+        if self is Database.pirbase:
+            return 'PirBase'
+        if self is Database.pombase:
+            return 'PomBase'
+        if self is Database.rdp:
+            return 'RDP'
+        if self is Database.refseq:
+            return 'RefSeq'
+        if self is Database.rfam:
+            return 'Rfam'
+        if self is Database.rgd:
+            return 'RGD'
+        if self is Database.sgd:
+            return 'SGD'
+        if self is Database.silva:
+            return 'SILVA'
+        if self is Database.snodb:
+            return 'snoDB'
+        if self is Database.snopy:
+            return 'snOPY'
+        if self is Database.snorna_database:
+            return 'snoRNA Database'
+        if self is Database.srpdb:
+            return 'SRPDB'
+        if self is Database.tair:
+            return 'TAIR'
+        if self is Database.tarbase:
+            return 'TarBase'
+        if self is Database.tmrna_website:
+            return 'tmRNA Website'
+        if self is Database.vega:
+            return 'VEGA'
+        if self is Database.wormbase:
+            return 'WormBase'
+        if self is Database.zfin:
+            return 'Zfin'
+        if self is Database.zwd:
+            return 'ZWD'
+        raise ValueError("No pretty name for %s" % self)
