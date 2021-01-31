@@ -33,7 +33,7 @@ class Context:
 
     @classmethod
     def from_directory(cls, path: Path) -> "Context":
-        repeats = tree.RepeatTree.from_directory(path / "repeat-tree")
+        repeats = tree.RepeatTree()
         so_tree = so.load_ontology(so.REMOTE_ONTOLOGY)
         ctx = cls(repeats=repeats, so_tree=so_tree)
         ctx.validate()
