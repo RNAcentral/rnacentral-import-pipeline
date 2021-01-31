@@ -42,7 +42,7 @@ def parse(context_path: Path, data_path: Path) -> ty.Iterable[AnUpdate]:
         for _, sequences in grouped:
             updates = []
             for sequence in sequences:
-                sequence = Sequence.build(sequence)
+                sequence = Sequence.build(context.so_tree, sequence)
                 update = SequenceUpdate.from_sequence(context, sequence)
                 updates.append(update)
                 yield update
