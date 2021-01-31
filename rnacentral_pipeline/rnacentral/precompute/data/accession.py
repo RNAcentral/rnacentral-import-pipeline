@@ -122,6 +122,10 @@ class Accession:
         masked = re.sub(r"\s+", " ", masked)
         return masked
 
+    @property
+    def pretty_database(self):
+        return self.database.pretty()
+
     def is_mitochondrial(self) -> bool:
         """
         Check if this accession is mitochrondrial.
