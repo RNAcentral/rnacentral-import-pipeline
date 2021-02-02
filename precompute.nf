@@ -40,18 +40,16 @@ process build_ranges {
   """
 }
 
-process process_range {
-  tag { "$urs.baseName" }
-  memory params.precompute.range.memory
+process query_accession_range {
+  tag { "$min-$max" }
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
-  maxForks $params.precompute.maxForks }
+  maxForks $params.precompute.maxForks
 
   input:
-  tuple val(min), val(max), path(metadata), path(query), path(context)
+  tuple val(min), val(max), path(query)
 
   output:
-  path 'precompute.csv', emit: data
-  path 'qa.csv', emit: qa
+  tuple val(min), val(max), path('accessions.json')
 
   """
   psql \
@@ -60,7 +58,23 @@ process process_range {
     -v max=$max \
     -f $query \
     "$PGDATABASE" > accessions.json
-  precompute normalize accessions.json $metadata merged.json
+  """
+}
+
+process process_range {
+  tag { "$min-$max" }
+  memory params.precompute.range.memory
+  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
+
+  input:
+  tuple val(min), val(max), path(accessions), path(metadata), path(context)
+
+  output:
+  path 'precompute.csv', emit: data
+  path 'qa.csv', emit: qa
+
+  """
+  precompute normalize $accessions $metadata merged.json
   rnac precompute from-file $context merged.json
   """
 }
@@ -102,6 +116,9 @@ workflow precompute {
     built_table \
     | build_ranges \
     | splitCsv \
+    | set { ranges }
+
+    ranges \
     | map { _tablename, min, max -> ["chunk-${min}-${max}.csv", min, max] } \
     | collectFile(name: "metadata-ranges.csv") \
     | build_metadata \
@@ -109,9 +126,18 @@ workflow precompute {
       val parts = fn.baseName.split('-');
       [parts[1], parts[2], filename]
     } \
+    | set { metadata_chunks }
+
+    ranges \
     | combine(accessions_ready) \
-    | map { min, max, metadata, _flag -> [min, max, metadata] } \
     | combine(accession_query) \
+    | map { min, max, _flag, sql -> [min, max, sql] } \
+    | query_accession_range \
+    | set { accession_chunks }
+
+    ranges \
+    | join(accesssion_chunks) \
+    | join(metadata_chunks) \
     | combine(context) \
     | process_range
 
