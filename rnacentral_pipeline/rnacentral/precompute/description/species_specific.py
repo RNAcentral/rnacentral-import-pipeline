@@ -68,6 +68,7 @@ ORDERING = [
     Database.lncbase,
     Database.snodb,
     Database.snorna_database,
+    Database.pirbase,
     Database.modomics,
     Database.vega,
     Database.srpdb,
