@@ -15,6 +15,8 @@ rust:
 	cargo build --release
 	cp target/release/json2fasta bin
 	cp target/release/split-ena bin
+	cp target/release/kv bin
+	cp target/release/precompute bin
 
 docker: Dockerfile requirements.txt .dockerignore
 	docker build -t "$(docker)" .
