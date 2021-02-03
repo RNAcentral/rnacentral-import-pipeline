@@ -79,12 +79,16 @@ class Database(enum.Enum):
             return getattr(cls, attribute)
         if name == 'pdb':
             return cls.pdbe
-        if name == 'tmrna-website':
+        if name == 'tmrna-website' or attribute == "tmrna_web":
             return cls.tmrna_website
         if name == 'snopydb':
             return cls.snopy
         if attribute == 'ensembl/gencode' or attribute == 'ensembl_gencode':
             return cls.gencode
+        if attribute == "5srrnadb":
+            return cls.five_srrnadb
+        if attribute == "snornadb":
+            return cls.snorna_database
         raise ValueError("Unknown database name %s" % name)
 
     def normalized(self) -> str:
