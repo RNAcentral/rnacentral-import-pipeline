@@ -222,5 +222,5 @@ class GenericUpdate:
             self.so_rna_type,
         ]
 
-    def writeable_status(self) -> ty.Iterable[ty.List[str]]:
-        pass
+    def writeable_statuses(self) -> ty.Iterable[ty.List[str]]:
+        return []
