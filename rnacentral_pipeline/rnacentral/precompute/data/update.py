@@ -223,7 +223,7 @@ class GenericUpdate:
             str(int(self.is_active)),
             self.description,
             self.insdc_rna_type,
-            "",
+            "0",
             self.database_names,
             self.description,
             str(self.last_release),
