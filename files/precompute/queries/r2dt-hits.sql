@@ -19,6 +19,5 @@ on
 JOIN rnc_secondary_structure_layout_models r2dt
 on
   r2dt.id = ss.model_id
+ORDER BY todo.id
 ) TO STDOUT
-
--- No need to sort since there is only one entry per urs_taxid
