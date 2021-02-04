@@ -21,5 +21,8 @@ def json_handler(out) -> ty.Iterable[ty.Any]:
     for row in out:
         if not row:
             continue
-        row = row.replace("\\\\", "\\")
-        yield json.loads(row)
+        try:
+            escaped = row.replace("\\\\", "\\")
+            yield json.loads(escaped)
+        except json.decoder.JSONDecodeError:
+            yield json.loads(row)
