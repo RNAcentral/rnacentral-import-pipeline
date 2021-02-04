@@ -1,14 +1,8 @@
-create temp table target_urs (
-  urs_taxid text primary key
-);
-
-\copy target_urs from 'to-query.csv'
-
 COPY (
 SELECT
   json_build_object(
     'id', todo.urs_taxid,
-    'accession', acc.accession,
+    'accession', todo.accession,
     'is_active', todo.deleted,
     'description', todo.description,
     'gene', todo.gene,
@@ -20,17 +14,16 @@ SELECT
     'ncrna_class', todo.ncrna_class,
     'locus_tag', todo.locus_tag,
     'organelle', todo.organelle,
-    'lineage', todo.classification,
+    'lineage', todo.lineage,
     'all_species', ARRAY[tax.name, todo.species::text],
     'all_common_names', ARRAY[tax.common_name, todo.common_name::text],
-    'so_rna_type', todo.rna_type
+    'so_rna_type', todo.so_rna_type
   )
 FROM urs_accession todo
-JOIN target_urs urs
-ON
-  urs.urs_taxid = todo.urs_taxid
 LEFT JOIN rnc_taxonomy tax 
 ON 
   tax.id = todo.taxid
-ORDER BY urs_taxid
+WHERE
+  todo.id BETWEEN :min and :max
+ORDER BY todo.precompute_id
 ) TO STDOUT
