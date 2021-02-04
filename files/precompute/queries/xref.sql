@@ -16,5 +16,5 @@ JOIN xref
 on 
   xref.upi = todo.urs
   and xref.taxid = todo.taxid
-order by todo.urs_taxid
+order by todo.id
 ) TO STDOUT

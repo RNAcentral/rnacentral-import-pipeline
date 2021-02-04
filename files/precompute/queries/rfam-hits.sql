@@ -22,5 +22,5 @@ ON
 JOIN rfam_models models 
 ON 
     models.rfam_model_id = hits.rfam_model_id
-order by todo.urs_taxid
+order by todo.id
 ) TO STDOUT
