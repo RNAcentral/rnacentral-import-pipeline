@@ -4,7 +4,7 @@ nextflow.enable.dsl=2
 
 include { repeats } from './workflows/precompute/repeats'
 include { build_precompute_accessions } from './workflows/precompute/accessions'
-include { metadata } from './workflows/precompute/metadata'
+include { build_metadata } from './workflows/precompute/metadata'
 include { build_urs_table } from './workflows/precompute/build_urs_table'
 
 process build_precompute_context {
@@ -119,7 +119,7 @@ workflow precompute {
     | set { ranges }
 
     ranges \
-    | map { _tablename, min, max -> ["chunk-${min}-${max}.csv", min, max] } \
+    | map { _tablename, min, max -> ["metadata-${min}-${max}.json", min, max] } \
     | collectFile(name: "metadata-ranges.csv") \
     | build_metadata \
     | map { fn -> 
