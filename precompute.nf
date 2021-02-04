@@ -60,7 +60,7 @@ process build_ranges {
 process query_accession_range {
   tag { "$min-$max" }
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
-  maxForks $params.precompute.maxForks
+  maxForks params.precompute.maxForks
 
   input:
   tuple val(min), val(max), path(query)
