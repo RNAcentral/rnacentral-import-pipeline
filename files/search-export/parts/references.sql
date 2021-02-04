@@ -1,7 +1,7 @@
 COPY (
   SELECT
     json_build_object(
-      'id', xref.upi || '_' || xref.taxid,
+      'urs_taxid', todo.urs_taxid,
       'authors', refs.authors,
       'journals', refs.location,
       'pub_titles', refs.title,
@@ -9,12 +9,13 @@ COPY (
       'pubmed_ids', refs.pmid,
       'dois', refs.doi
     )
-  FROM xref xref
+  FROM search_export_accessions todo
   JOIN rnc_reference_map ref_map
   ON
-    ref_map.accession = xref.ac
+    ref_map.accession = todo.accession
   JOIN rnc_references refs
   ON
     refs.id = ref_map.reference_id
+  ORDER BY todo.search_export_id
 ) TO STDOUT
 
