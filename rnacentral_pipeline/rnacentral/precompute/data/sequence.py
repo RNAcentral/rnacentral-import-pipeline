@@ -97,6 +97,9 @@ class Sequence:
         active, inactive = partioned_accessions(so_tree, data["accessions"])
         active = fix_hgnc_data(active)
         coords = [Coordinate.build(c) for c in data["coordinates"] if c["assembly_id"]]
+        previous = {}
+        if data['previous'] is not None:
+            previous = data['previous']
 
         return cls(
             upi=data["upi"],
@@ -105,7 +108,7 @@ class Sequence:
             accessions=active,
             inactive_accessions=inactive,
             is_active=any(not d for d in data["deleted"]),
-            previous_update=data["previous"][0],
+            previous_update=previous,
             rfam_hits=list({RfamHit.build(so_tree, r) for r in data.get("rfam_hits", []) if r['rfam_hit_id']}),
             coordinates=coords,
             last_release=data["last_release"],
