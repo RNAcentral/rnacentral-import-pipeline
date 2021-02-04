@@ -64,7 +64,7 @@ class SequenceUpdate:
         )
 
     @classmethod
-    def inactive(cls, sequence: Sequence) -> "SequenceUpdate":
+    def inactive(cls, context: Context, sequence: Sequence) -> "SequenceUpdate":
         """
         This will build InactiveUpdate for the given sequence. This will try to
         copy over any previous data and will do very little work to create a
@@ -75,16 +75,20 @@ class SequenceUpdate:
         if not insdc_rna_type:
             insdc_rna_type = "ncRNA"
             insdc_rna_types: ty.Set[str] = {
-                acc.rna_type for acc in sequence.inactive_accessions
+                acc.rna_type.insdc for acc in sequence.inactive_accessions if acc.rna_type.insdc
             }
             if len(insdc_rna_types) == 1:
                 insdc_rna_type = insdc_rna_types.pop()
 
-        description = sequence.previous_update.get("description", "")
+        description = sequence.previous_update.get("description", None)
         if not description:
-            description = "{name} {insdc_rna_type}"
+            species = sequence.species()
+            name = "Generic"
+            if species:
+                name = species.pop()
+            description = f"{name} {insdc_rna_type}"
 
-        so_rna_type = INSDC_SO_MAPPING.get(insdc_rna_type, "SO:0000655")
+        so_rna_type = RnaType.from_so_id(context.so_tree, INSDC_SO_MAPPING.get(insdc_rna_type, "SO:0000655"))
         return cls(
             sequence=sequence,
             insdc_rna_type=insdc_rna_type,
@@ -98,7 +102,7 @@ class SequenceUpdate:
     def from_sequence(cls, context: Context, sequence: Sequence) -> "SequenceUpdate":
         if sequence.is_active:
             return cls.active(context, sequence)
-        return cls.inactive(sequence)
+        return cls.inactive(context, sequence)
 
     @property
     def is_active(self):
@@ -123,6 +127,10 @@ class SequenceUpdate:
         Yield the arrays that will be written out for updates.
         """
 
+        so_name = self.so_rna_type.so_term.so_id
+        if not so_name:
+            so_name = "SO:0000655"
+
         yield [
             self.sequence.rna_id,
             self.sequence.upi,
@@ -134,7 +142,7 @@ class SequenceUpdate:
             self.databases,
             self.short_description,
             str(self.sequence.last_release),
-            self.so_rna_type,
+            so_name,
         ]
 
     def writeable_statuses(self) -> ty.Iterable[ty.List[str]]:
@@ -178,7 +186,7 @@ class GenericUpdate:
     def species_count(self):
         all_species = set()
         for update in self.updates:
-            all_species.update(update.sequences.species())
+            all_species.update(update.sequence.species())
         return len(all_species)
 
     @property
@@ -202,7 +210,7 @@ class GenericUpdate:
 
     @property
     def so_rna_type(self) -> str:
-        rna_types = {u.so_rna_type for u in self.updates}
+        rna_types = {u.so_rna_type.so_term.so_id for u in self.updates}
         if len(rna_types) == 1:
             return rna_types.pop()
         return "SO:0000655"
