@@ -42,5 +42,4 @@ def precompute_from_file(context, json_file, output):
     This command will take the output produced by the precompute query and
     process the results into a CSV that can be loaded into the database.
     """
-    data = pre.parse(Path(context), Path(json_file))
-    pre.writer(data, output)
+    pre.writer(output, Path(context), Path(json_file))
