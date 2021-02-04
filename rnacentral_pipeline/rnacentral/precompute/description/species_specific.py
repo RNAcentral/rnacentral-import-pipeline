@@ -28,7 +28,7 @@ from rnacentral_pipeline.rnacentral.precompute.data import sequence as seq
 from rnacentral_pipeline.rnacentral.precompute.data.accession import Accession
 from rnacentral_pipeline.rnacentral.precompute.qa import contamination as cont
 
-from .. import utils
+from rnacentral_pipeline.rnacentral.precompute import utils
 
 LOGGER = logging.getLogger(__name__)
 
@@ -166,6 +166,8 @@ class DatabaseSpecifcNameBuilder(object):
                     last = last[:-4]
                 if re.match(r"^.*-mir-\d+$", last, re.IGNORECASE):
                     gene = last
+            if not gene:
+                raise ValueError(f"Could not find gene for mirbase {accession}")
             match = re.match(r"^([^-]+?-mir-[^-]+)(.+)?$", gene)
             name = accession.description
             if match:
@@ -212,7 +214,7 @@ class DatabaseSpecifcNameBuilder(object):
         descriptions = [accession.description for accession in accessions]
         return select_best_description(descriptions)
 
-    def __call__(self, database: str, rna_type: str, accessions: ty.List[Accession]):
+    def __call__(self, database: Database, rna_type: str, accessions: ty.List[Accession]):
         name = database.normalized().lower()
         method = getattr(self, name, self._fallback)
         return method(accessions, rna_type)
@@ -254,7 +256,7 @@ def suitable_xref(required_rna_type):
 
         # PDBe has lots of things called 'misc_RNA' that have a good
         # description, so we allow this to use PDBe's misc_RNA descriptions
-        if accession.database == "pdbe" and accession.rna_type == "misc_rna":
+        if accession.database is Database.pdbe and accession.rna_type == "misc_rna":
             return True
 
         return accession.rna_type in allowed_rna_types
@@ -339,8 +341,8 @@ def select_with_several_genes(
     if description_items is not None:
         func = op.attrgetter(description_items)
 
-    items = {func(a) for a in accessions if func(a)}
-    items = sorted(items, key=utils.item_sorter)
+    possible = {func(a) for a in accessions if func(a)}
+    items = sorted(possible, key=utils.item_sorter)
     if not items:
         return basic
 
@@ -380,20 +382,6 @@ def cleanup(rna_type: str, db_name: str, description: str) -> str:
     description = description.replace(" (None)", "")
     description = re.sub(r"\s\s+", " ", description)
     return description.strip()
-
-
-def improve_mirbase_description(rna_type: str, accessions: Accession):
-    product_name = "precursors"
-    if rna_type == "miRNA":
-        product_name = "miRNAs"
-
-    return select_with_several_genes(
-        accessions,
-        product_name,
-        r"\w+-%s",
-        description_items="optional_id",
-        max_items=5,
-    )
 
 
 def replace_nulls(rna_type: str, description: str) -> str:
