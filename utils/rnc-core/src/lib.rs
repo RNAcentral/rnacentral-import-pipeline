@@ -10,3 +10,4 @@ pub mod publications;
 pub mod urs;
 pub mod urs_taxid;
 pub mod psql;
+pub mod chunking;

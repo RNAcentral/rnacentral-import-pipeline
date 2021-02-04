@@ -1,4 +1,3 @@
-pub mod chunks;
 pub mod coordinate;
 pub mod merged;
 pub mod previous;
@@ -7,15 +6,8 @@ pub mod rfam_hit;
 pub mod xref;
 
 use std::{
-    fs::File,
-    io::{
-        prelude::*,
-        BufWriter,
-    },
-    path::{
-        Path,
-        PathBuf,
-    },
+    io::Write,
+    path::Path,
 };
 
 use anyhow::Result;
@@ -80,24 +72,6 @@ pub fn write_merge(
 
 pub fn write_splits(filename: &Path, chunks: &Path, output: &Path) -> Result<()> {
     let metadata = JsonlIterator::from_path(&filename)?;
-    let chunks = chunks::load(chunks)?;
-    let grouped = metadata.group_by(|metadata: &Metadata| {
-        chunks
-            .filename_of(metadata.ordering_index)
-            .ok_or(format!("Could not find filename for {:?}", &metadata))
-            .unwrap()
-    });
-
-    for (filename, items) in &grouped {
-        let mut path = PathBuf::from(output);
-        path.push(filename);
-        let file = File::create(path)?;
-        let mut writer = BufWriter::new(file);
-        for item in items {
-            serde_json::to_writer(&mut writer, &item)?;
-            writeln!(&mut writer)?;
-        }
-    }
-
-    Ok(())
+    let getter = |m: &Metadata| m.ordering_index;
+    rnc_core::chunking::write_splits(metadata, getter, chunks, output)
 }
