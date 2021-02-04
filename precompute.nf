@@ -4,8 +4,13 @@ nextflow.enable.dsl=2
 
 include { repeats } from './workflows/precompute/repeats'
 include { build_precompute_accessions } from './workflows/precompute/accessions'
-include { build_metadata } from './workflows/precompute/metadata'
 include { build_urs_table } from './workflows/precompute/build_urs_table'
+
+include { query as coordinate_query} from './workflows/precompute/utils'
+include { query as rfam_query} from './workflows/precompute/utils'
+include { query as r2dt_query} from './workflows/precompute/utils'
+include { query as prev_query} from './workflows/precompute/utils'
+include { query as xref_query} from './workflows/precompute/utils'
 
 process build_precompute_context {
   input:
@@ -22,6 +27,18 @@ process build_precompute_context {
   popd
   mkdir context
   mv repeat-tree context
+  """
+}
+
+process build_metadata {
+  input:
+  tuple path(coordinates), path(rfam_hits), path(r2dt_hits), path(prev), path(xref)
+
+  output:
+  path("metadata.json")
+
+  """
+  precompute metadata merge $coordinates $rfam_hits $r2dt_hits $prev $xref metadata.json
   """
 }
 
@@ -108,36 +125,34 @@ workflow precompute {
     Channel.fromPath('files/precompute/qa.ctl') | set { qa_ctl }
     Channel.fromPath('files/precompute/post-load.sql') | set { post_load }
 
-    build_precompute_context(repeats()) | set { context }
-    build_urs_table() | set { built_table }
+    // Various metadata components for precompute
+    Channel.fromPath('files/precompute/queries/coordinates.sql') | set { coordinate_sql }
+    Channel.fromPath('files/precompute/queries/rfam-hits.sql') | set { rfam_sql }
+    Channel.fromPath('files/precompute/queries/r2dt-hits.sql') | set { r2dt_sql }
+    Channel.fromPath('files/precompute/queries/previous.sql') | set { prev_sql }
+    Channel.fromPath('files/precompute/queries/xref.sql') | set { xref_sql }
 
+    repeats | build_precompute_context | set { context }
+    build_urs_table | set { built_table }
     built_table | build_precompute_accessions | set { accessions_ready }
+
+    build_metadata(
+      coordinate_query(built_table, coordinate_sql),
+      rfam_query(built_table, rfam_sql),
+      r2dt_query(built_table, r2dt_sql),
+      prev_query(built_table, prev_sql),
+      xref_query(built_table, xref_sql),
+    ) \
+    | set { metadata }
 
     built_table \
     | build_ranges \
     | splitCsv \
-    | set { ranges }
-
-    ranges \
-    | map { _tablename, min, max -> ["metadata-${min}-${max}.json", min, max] } \
-    | collectFile(name: "metadata-ranges.csv") \
-    | build_metadata \
-    | map { fn -> 
-      val parts = fn.baseName.split('-');
-      [parts[1], parts[2], filename]
-    } \
-    | set { metadata_chunks }
-
-    ranges \
     | combine(accessions_ready) \
     | combine(accession_query) \
-    | map { min, max, _flag, sql -> [min, max, sql] } \
+    | map { _tablename, min, max, _flag, sql -> [min, max, sql] } \
     | query_accession_range \
-    | set { accession_chunks }
-
-    ranges \
-    | join(accesssion_chunks) \
-    | join(metadata_chunks) \
+    | combine(metadata) \
     | combine(context) \
     | process_range
 

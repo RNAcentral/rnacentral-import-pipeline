@@ -1,5 +1,5 @@
-include { fetch_release_info as precompute_releases } from './release-info'
-include { fetch_release_info as xref_releases } from './release-info'
+include { fetch_release_info as precompute_releases } from './utils'
+include { fetch_release_info as xref_releases } from './utils'
 
 process fetch_all_urs_taxid {
   when { params.precompute.run }
@@ -54,5 +54,4 @@ workflow build_urs_table {
       | combine(active_urs) \
       | build_table \
       | set { finished }
-
 }
