@@ -1,6 +1,7 @@
 COPY (
 SELECT
 json_build_object(
+  'id', todo.id,
   'urs_taxid', todo.urs_taxid,
   'go_term_id', anno.ontology_term_id,
   'qualifier', anno.qualifier,

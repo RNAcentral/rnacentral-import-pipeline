@@ -1,6 +1,7 @@
 COPY (
 SELECT
   json_build_object(
+    'id', todo.id,
     'urs_taxid', todo.urs_taxid,
     'has_secondary', true,
     'secondary_structure_model', models.model_name,

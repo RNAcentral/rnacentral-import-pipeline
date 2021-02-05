@@ -1,6 +1,7 @@
 COPY (
 select
   json_build_object(
+    'id', todo.id,
     'urs_taxid', todo.urs_taxid,
     'overlaps_with', overlap.overlaps_with,
     'no_overlaps_with', overlap.no_overlaps_with

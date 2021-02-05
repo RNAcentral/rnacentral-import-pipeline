@@ -1,6 +1,7 @@
 COPY (
 SELECT
   json_build_object(
+    'id', todo.id,
     'urs_taxid', todo.urs_taxid,
     'crs_ids', features.metadata->>'crs_id'
   )

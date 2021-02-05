@@ -129,9 +129,10 @@ workflow search_export {
   Channel.fromPath('files/search-export/parts/rfam-hits.sql') | set { rfam_sql }
 
   build_search_table | set { search_ready }
+  search_ready | build_search_accessions | set { accessions_ready }
 
   build_json(
-    accession_query(search_ready, accession_sql),
+    accession_query(accessions_ready, accession_sql),
     base_query(search_ready, base_sql),
     crs_query(search_ready, crs_sql),
     feeback_query(search_ready, feeback_sql),
@@ -141,7 +142,7 @@ workflow search_export {
     precompute_query(search_ready, precompute_sql),
     qa_query(search_ready, qa_sql),
     r2dt_query(search_ready, r2dt_sql),
-    ref_query(search_ready, ref_sql),
+    ref_query(accessions_ready, ref_sql),
     rfam_query(search_ready, rfam_sql),
     fetch_so_tree(search_ready, so_sql),
   )\

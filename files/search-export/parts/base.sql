@@ -1,6 +1,7 @@
 COPY (
   SELECT
     json_build_object(
+      'id', todo.id,
       'urs_taxid', todo.urs_taxid,
       'length', rna.len,
       'md5', rna.md5
