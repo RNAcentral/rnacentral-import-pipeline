@@ -1,6 +1,7 @@
 COPY (
 SELECT
     json_build_object(
+        'id', todo.id,
         'urs_taxid', todo.urs_taxid,
         'interacting_id', case
                         when related.relationship_type = 'target_protein'

@@ -1,6 +1,7 @@
 COPY (
   SELECT
     json_build_object(
+      'id', todo.id,
       'urs_taxid', todo.urs_taxid,
       'rfam_ids', hits.rfam_model_id,
       'rfam_family_names', models.short_name,

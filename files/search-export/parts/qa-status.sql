@@ -1,6 +1,7 @@
 COPY (
   SELECT
     json_build_object(
+      'id', todo.id,
       'urs_taxid', qa.urs_taxid,
       'has_issue', qa.has_issue,
       'possible_contamination', qa.possible_contamination,

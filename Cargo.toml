@@ -8,4 +8,5 @@ members = [
   "utils/rnc-test-utils",
   "utils/precompute",
   "utils/expand-urs",
+  "utils/search-export",
 ]
