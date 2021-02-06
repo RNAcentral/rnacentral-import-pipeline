@@ -9,7 +9,6 @@ pub mod interacting_rna;
 pub mod precompute;
 pub mod qa_status;
 pub mod r2dt;
-pub mod reference;
 pub mod rfam_hit;
 pub mod so_tree;
 // pub mod xref;

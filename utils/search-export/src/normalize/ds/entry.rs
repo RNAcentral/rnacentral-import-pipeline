@@ -1,7 +1,4 @@
-use std::{
-    collections::HashMap,
-    iter::FromIterator,
-};
+use std::iter::FromIterator;
 
 use serde::{
     Deserialize,
@@ -22,6 +19,7 @@ use crate::normalize::ds::{
         AccessionVec,
         CrossReference,
         RawAccession,
+        ReferenceVec,
     },
     basic::Basic,
     crs::{
@@ -47,10 +45,6 @@ use crate::normalize::ds::{
     },
     qa_status::QaStatus,
     r2dt::R2dt,
-    reference::{
-        Reference,
-        ReferenceVec,
-    },
     rfam_hit::{
         RfamHit,
         RfamHitVec,
@@ -72,7 +66,7 @@ pub enum NormalizationError {
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Raw {
-    pub accessions: Vec<RawAccession>,
+    pub id: usize,
     pub base: Basic,
     pub crs: Vec<Crs>,
     pub feedback: Vec<Feedback>,
@@ -82,8 +76,8 @@ pub struct Raw {
     pub precompute: Precompute,
     pub qa_status: QaStatus,
     pub r2dt: Option<R2dt>,
-    pub references: Vec<Reference>,
     pub rfam_hits: Vec<RfamHit>,
+    pub so_tree: so_tree::SoTree,
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
@@ -149,9 +143,8 @@ impl Raw {
 impl Normalized {
     pub fn new(
         raw: Raw,
-        so_info: &HashMap<String, so_tree::SoTree>,
+        accessions: Vec<RawAccession>,
     ) -> Result<Self, NormalizationError> {
-        let so_rna_type_tree = so_info[raw.precompute.so_rna_type()].clone();
         let pre_summary = PrecomputeSummary::from(raw.precompute);
         let base = raw.base.clone();
 
@@ -160,6 +153,7 @@ impl Normalized {
         let urs = parts[0].to_owned();
         let taxid = parts[1].parse::<usize>().unwrap();
         let parsed: urs_taxid::UrsTaxid = urs_taxid.parse()?;
+        let references = ReferenceVec::from_iter(accessions.into_iter());
 
         Ok(Self {
             urs_taxid,
@@ -168,15 +162,15 @@ impl Normalized {
             short_urs: parsed.short(),
             deleted: String::from("N"),
 
-            so_rna_type_tree,
+            so_rna_type_tree: raw.so_tree,
 
             pre_summary,
             basic: base,
             qa_status: raw.qa_status,
             secondary_structure: raw.r2dt.into(),
 
-            accessions: AccessionVec::from_iter(raw.accessions.clone().into_iter()),
-            cross_references: raw.accessions.into_iter().map(CrossReference::from).collect(),
+            accessions: AccessionVec::from_iter(accessions),
+            cross_references: accessions.into_iter().map(CrossReference::from).collect(),
             crs: CrsVec::from_iter(raw.crs.clone()),
             feedback: FeedbackVec::from_iter(raw.feedback.clone()),
             go_annotations: raw.go_annotations.clone(),
@@ -184,7 +178,7 @@ impl Normalized {
                 raw.interacting_proteins.clone(),
             ),
             interacting_rnas: InteractingRnaVec::from_iter(raw.interacting_rnas.clone()),
-            references: ReferenceVec::from_iter(raw.references.clone()),
+            references,
             rfam_hits: RfamHitVec::from_iter(raw.rfam_hits.clone()),
         })
     }

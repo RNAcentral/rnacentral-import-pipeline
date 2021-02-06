@@ -5,7 +5,6 @@ use anyhow::Result;
 
 pub mod normalize;
 
-
 #[derive(Debug, StructOpt)]
 #[structopt(rename_all = "kebab-case")]
 enum Subcommand {
@@ -13,9 +12,6 @@ enum Subcommand {
     /// all files are sorted in the same way. Additionally, the xref file must have at
     /// least one entry for all possible urs_taxids.
     Merge {
-        #[structopt(parse(from_os_str))]
-        accessions: PathBuf,
-
         #[structopt(parse(from_os_str))]
         base: PathBuf,
 
@@ -44,14 +40,25 @@ enum Subcommand {
         r2dt_hits: PathBuf,
 
         #[structopt(parse(from_os_str))]
-        references: PathBuf,
-
-        #[structopt(parse(from_os_str))]
         rfam_hits: PathBuf,
 
         #[structopt(parse(from_os_str))]
         /// Filename of the SO term tree metadata.
         so_term_tree: PathBuf,
+
+        #[structopt(parse(from_os_str))]
+        /// Filename to write the results to, '-' means stdout
+        output: PathBuf,
+    },
+
+    Normalize {
+        #[structopt(parse(from_os_str))]
+        /// Filename of the accessions
+        accessions: PathBuf,
+
+        #[structopt(parse(from_os_str))]
+        /// Filename for the merged metadata
+        metadata: PathBuf,
 
         #[structopt(parse(from_os_str))]
         /// Filename to write the results to, '-' means stdout
@@ -88,7 +95,6 @@ fn main() -> Result<()> {
 
     match opt.command {
         Subcommand::Merge {
-            accessions,
             base,
             crs,
             feedback,
@@ -98,12 +104,10 @@ fn main() -> Result<()> {
             precompute,
             qa_status,
             r2dt_hits,
-            references,
             rfam_hits,
             so_term_tree,
             output,
         } => normalize::write_merge(
-            &accessions,
             &base,
             &crs,
             &feedback,
@@ -113,11 +117,15 @@ fn main() -> Result<()> {
             &precompute,
             &qa_status,
             &r2dt_hits,
-            &references,
             &rfam_hits,
             &so_term_tree,
             &output,
         )?,
+        Subcommand::Normalize {
+            accessions,
+            metadata,
+            output,
+        } => normalize::write(&accessions, &metadata, &output)?,
     }
 
     Ok(())

@@ -29,6 +29,12 @@ pub struct RawAccession {
     species: Option<String>,
     standard_names: Option<String>,
     tax_strings: Option<String>,
+    authors: Option<String>,
+    journal: Option<String>,
+    pub_title: Option<String>,
+    pub_id: u64,
+    pubmed_id: Option<String>,
+    doi: Option<String>,
 }
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone)]
@@ -54,6 +60,29 @@ pub struct AccessionVec {
     locus_tags: HashSet<String>,
     standard_names: HashSet<String>,
     products: HashSet<String>,
+}
+
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ReferenceVec {
+    authors: HashSet<String>,
+    journals: HashSet<String>,
+    pub_titles: HashSet<String>,
+    pub_ids: HashSet<u64>,
+    pubmed_ids: HashSet<String>,
+    dois: HashSet<String>,
+}
+
+impl Default for ReferenceVec {
+    fn default() -> Self {
+        Self {
+            authors: HashSet::new(),
+            journals: HashSet::new(),
+            pub_titles: HashSet::new(),
+            pub_ids: HashSet::new(),
+            pubmed_ids: HashSet::new(),
+            dois: HashSet::new(),
+        }
+    }
 }
 
 impl Default for AccessionVec {
@@ -117,5 +146,27 @@ impl FromIterator<RawAccession> for AccessionVec {
         }
 
         a
+    }
+}
+
+impl FromIterator<RawAccession> for ReferenceVec {
+    fn from_iter<I: IntoIterator<Item = RawAccession>>(iter: I) -> Self {
+        let mut value = ReferenceVec::default();
+
+        for i in iter {
+            if i.authors.is_some() {
+                let authors = i.authors.unwrap();
+                let authors = authors.split(", ").filter(|a| !a.is_empty()).map(|s| s.to_string());
+                value.authors.extend(authors);
+            }
+
+            value.journals.extend(i.journal.into_iter());
+            value.pub_titles.extend(i.pub_title.into_iter());
+            value.pub_ids.insert(i.pub_id);
+            value.pubmed_ids.extend(i.pubmed_id.into_iter());
+            value.dois.extend(i.doi.into_iter());
+        }
+
+        value
     }
 }
