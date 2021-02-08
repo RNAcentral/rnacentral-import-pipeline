@@ -95,7 +95,3 @@ workflow build_precompute_accessions {
     | finalize_accession_table \
     | set { built }
 }
-
-workflow {
-	build_precompute_accessions(Channel.of('done'))
-}
