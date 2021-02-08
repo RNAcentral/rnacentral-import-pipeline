@@ -2,7 +2,7 @@ COPY (
   SELECT
     json_build_object(
       'id', todo.id,
-      'urs_taxid', todo.urs_taxid
+      'urs_taxid', todo.urs_taxid,
       'accession', todo.accession,
       'common_name', todo.common_name,
       'database', todo.database,
@@ -15,11 +15,11 @@ COPY (
       'notes', todo.note,
       'optional_id', todo.optional_id,
       'organelles', todo.organelle,
-      'parent_accession', todo.parent_acccession,
+      'parent_accession', todo.parent_accession,
       'products', todo.product,
       'species', todo.species,
       'standard_names', todo.standard_name,
-      'tax_strings', todo.classification,
+      'tax_strings', todo.lineage,
       'authors', refs.authors,
       'journals', refs.location,
       'pub_titles', refs.title,

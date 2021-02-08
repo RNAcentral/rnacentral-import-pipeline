@@ -3,7 +3,8 @@ process query {
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
-  tuple val(_flag), path(query)
+  val(_flag)
+  path(query)
 
   output:
   path("${query.baseName}.json")

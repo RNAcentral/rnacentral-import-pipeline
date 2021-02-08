@@ -59,8 +59,8 @@ workflow build_search_accessions {
   take: ready
   emit: built
   main:
-    Channel.fromPath('files/search-export/get-accessions/insert-chunk.sql') | set { chunk_sql }
-    Channel.fromPath('files/search-export/get-accessions/post-insert.sql') | set { post_sql }
+    Channel.fromPath('files/search-export/build-accessions/insert.sql') | set { chunk_sql }
+    Channel.fromPath('files/search-export/build-accessions/post-insert.sql') | set { post_sql }
 
     find_partitions | splitCsv | set { partitions }
 

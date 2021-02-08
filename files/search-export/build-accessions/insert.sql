@@ -32,6 +32,8 @@ INSERT INTO search_export_accessions
 (
     search_export_id,
     urs_taxid,
+    urs,
+    taxid,
     accession,
     lineage,
     common_name,
@@ -68,9 +70,9 @@ SELECT
     acc.note,
     acc.optional_id,
     acc.organelle,
-    acc.parent_accession,
+    acc.parent_ac || '.' || acc.seq_version,
     acc.product,
-    acc.species
+    acc.species,
     acc.standard_name
 FROM temp_current_urs_with_accession todo
 JOIN rnc_accessions acc

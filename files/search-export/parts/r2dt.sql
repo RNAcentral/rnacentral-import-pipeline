@@ -7,7 +7,7 @@ SELECT
     'secondary_structure_model', models.model_name,
     'secondary_structure_source', models.model_source
   )
-FROM :tablename todo
+FROM search_export_urs todo
 JOIN rnc_secondary_structure_layout as layout
 ON
   layout.urs = todo.urs
@@ -15,6 +15,6 @@ JOIN rnc_secondary_structure_layout_models as models
 ON
   layout.model_id = models.id
 WHERE
-  and layout.should_show = true
+  layout.should_show = true
 ORDER BY todo.id
 ) TO STDOUT
