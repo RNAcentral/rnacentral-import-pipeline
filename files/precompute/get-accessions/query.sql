@@ -19,11 +19,11 @@ SELECT
     'all_common_names', ARRAY[tax.common_name, todo.common_name::text],
     'so_rna_type', todo.so_rna_type
   )
-FROM urs_accession todo
+FROM precompute_urs_accessions todo
 LEFT JOIN rnc_taxonomy tax 
 ON 
   tax.id = todo.taxid
 WHERE
   todo.id BETWEEN :min and :max
-ORDER BY todo.precompute_id
+order by todo.precompute_urs_id, todo.urs_taxid
 ) TO STDOUT

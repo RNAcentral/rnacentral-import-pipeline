@@ -4,7 +4,7 @@ BEGIN TRANSACTION;
 
 CREATE TEMP TABLE temp_current_urs_with_accession (
     id bigserial primary key,
-    precompute_id int not null,
+    precompute_urs_id int not null,
     urs_taxid text not null,
     urs text not null,
     taxid int not null,
@@ -16,13 +16,13 @@ INSERT INTO temp_current_urs_with_accession
 (precompute_id, urs_taxid, urs, taxid, is_active, accession)
 (
 SELECT
-    todo.id,
+    todo.precompute_urs_id,
     todo.urs_taxid,
     todo.urs,
     todo.taxid,
     xref.deleted = 'N',
     xref.ac
-FROM upis_to_precompute todo
+FROM precompute_urs_taxid todo
 JOIN :partition xref
 ON
     xref.upi = todo.urs AND xref.taxid = todo.taxid
@@ -30,12 +30,13 @@ ON
 
 CREATE INDEX un_upis_accessions__accession ON temp_current_urs_with_accession(accession);
 
-INSERT INTO urs_accession
+INSERT INTO precompute_urs_accession
 (
-    precompute_id,
+    precompute_urs_id,
     urs_taxid,
     urs,
     taxid,
+    is_active,
     accession,
     database,
     description,
@@ -55,6 +56,7 @@ SELECT
     todo.urs_taxid,
     todo.urs,
     todo.taxid,
+    todo.is_active,
     todo.accession,
     acc.database,
     acc.description,

@@ -15,12 +15,12 @@ select
     'sequence_start', hits.sequence_start,
     'sequence_stop', hits.sequence_stop
   )
-FROM :tablename todo
+FROM precompute_urs_taxid todo
 JOIN rfam_model_hits hits 
 ON 
     hits.upi = todo.urs
 JOIN rfam_models models 
 ON 
     models.rfam_model_id = hits.rfam_model_id
-order by todo.id
+order by todo.precompute_urs_id, todo.urs_taxid
 ) TO STDOUT

@@ -8,7 +8,7 @@ select
     'accession', xref.ac,
     'ordering_index', todo.id
   )
-FROM :tablename todo
+FROM precompute_urs_taxid todo
 JOIN rna
 ON
   rna.upi = todo.urs
@@ -16,5 +16,5 @@ JOIN xref
 on 
   xref.upi = todo.urs
   and xref.taxid = todo.taxid
-order by todo.id
+order by todo.precompute_urs_id, todo.urs_taxid
 ) TO STDOUT

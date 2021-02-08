@@ -11,7 +11,7 @@ select
     'sequence_basepairs', ss.basepair_count,
     'model_basepairs', r2dt.model_basepair_count
   )
-FROM :tablename todo
+FROM precompute_urs_taxid todo
 JOIN rnc_secondary_structure_layout ss
 on
   ss.urs = todo.urs
@@ -19,5 +19,5 @@ on
 JOIN rnc_secondary_structure_layout_models r2dt
 on
   r2dt.id = ss.model_id
-ORDER BY todo.id
+order by todo.precompute_urs_id, todo.urs_taxid
 ) TO STDOUT

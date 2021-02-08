@@ -12,9 +12,9 @@ select
     'short_description', prev.short_description,
     'so_rna_type', prev.so_rna_type
   )
-FROM :tablename todo
+FROM precompute_urs_taxid todo
 JOIN rnc_rna_precomputed prev
 ON
   prev.id = todo.urs_taxid
-order by todo.id
+order by todo.precompute_urs_id, todo.urs_taxid
 ) TO STDOUT
