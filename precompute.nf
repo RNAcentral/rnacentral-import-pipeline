@@ -2,7 +2,7 @@
 
 nextflow.enable.dsl=2
 
-include { repeats } from './workflows/precompute/repeats'
+/* include { repeats } from './workflows/precompute/repeats' */
 include { build_precompute_accessions } from './workflows/precompute/accessions'
 include { build_urs_table } from './workflows/precompute/build_urs_table'
 
@@ -88,15 +88,16 @@ process process_range {
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
-  tuple val(min), val(max), path(accessions), path(metadata), path(context)
+  tuple val(min), val(max), path(accessions), path(metadata)
 
   output:
   path 'precompute.csv', emit: data
   path 'qa.csv', emit: qa
 
   """
+  mkdir context
   precompute normalize $accessions $metadata merged.json
-  rnac precompute from-file $context merged.json
+  rnac precompute from-file context merged.json
   """
 }
 
@@ -136,7 +137,7 @@ workflow precompute {
     Channel.fromPath('files/precompute/queries/previous.sql') | set { prev_sql }
     Channel.fromPath('files/precompute/queries/xref.sql') | set { xref_sql }
 
-    repeats | build_precompute_context | set { context }
+    // repeats | build_precompute_context | set { context }
     build_urs_table | set { built_table }
     built_table | build_precompute_accessions | set { accessions_ready }
 
@@ -157,7 +158,6 @@ workflow precompute {
     | map { _tablename, min, max, _flag, sql -> [min, max, sql] } \
     | query_accession_range \
     | combine(metadata) \
-    | combine(context) \
     | process_range
 
     process_range.out.data | collect | set { data }
