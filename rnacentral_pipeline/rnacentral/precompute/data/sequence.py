@@ -107,7 +107,7 @@ class Sequence:
             length=data["length"],
             accessions=active,
             inactive_accessions=inactive,
-            is_active=any(not d for d in data["deleted"]),
+            is_active=not data['deleted'],
             previous_update=previous,
             rfam_hits=list({RfamHit.build(so_tree, r) for r in data.get("rfam_hits", []) if r['rfam_hit_id']}),
             coordinates=coords,

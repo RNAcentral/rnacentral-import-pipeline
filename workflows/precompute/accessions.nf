@@ -37,7 +37,7 @@ process setup_accession_table {
 
 process build_accession_table {
   tag { "$partition" }
-  maxForks 3
+  maxForks 5
   container ''
 
   input:
