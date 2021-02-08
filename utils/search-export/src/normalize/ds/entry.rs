@@ -153,7 +153,7 @@ impl Normalized {
         let urs = parts[0].to_owned();
         let taxid = parts[1].parse::<usize>().unwrap();
         let parsed: urs_taxid::UrsTaxid = urs_taxid.parse()?;
-        let references = ReferenceVec::from_iter(accessions.into_iter());
+        let references = ReferenceVec::from_iter(accessions.clone());
 
         Ok(Self {
             urs_taxid,
@@ -169,7 +169,7 @@ impl Normalized {
             qa_status: raw.qa_status,
             secondary_structure: raw.r2dt.into(),
 
-            accessions: AccessionVec::from_iter(accessions),
+            accessions: AccessionVec::from_iter(accessions.clone()),
             cross_references: accessions.into_iter().map(CrossReference::from).collect(),
             crs: CrsVec::from_iter(raw.crs.clone()),
             feedback: FeedbackVec::from_iter(raw.feedback.clone()),
