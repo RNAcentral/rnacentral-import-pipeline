@@ -10,7 +10,7 @@ select
     'last_release', prev.last_release,
     'rna_type', prev.rna_type,
     'short_description', prev.short_description,
-    'so_rna_type', prev.so_rna_type,
+    'so_rna_type', prev.so_rna_type
   )
 FROM :tablename todo
 JOIN rnc_rna_precomputed prev

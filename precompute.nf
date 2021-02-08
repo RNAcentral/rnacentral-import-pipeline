@@ -32,7 +32,11 @@ process build_precompute_context {
 
 process build_metadata {
   input:
-  tuple path(coordinates), path(rfam_hits), path(r2dt_hits), path(prev), path(xref)
+  path(coordinates)
+  path(rfam_hits)
+  path(r2dt_hits)
+  path(prev)
+  path(xref)
 
   output:
   path("metadata.json")
