@@ -1,8 +1,22 @@
 include { fetch_release_info as precompute_releases } from './utils'
 include { fetch_release_info as xref_releases } from './utils'
 
+process create_schema {
+  executor 'local'
+  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
+
+  input:
+  path(sql)
+
+  output:
+  val('done')
+
+  """
+  psql -v ON_ERROR_STOP=1 -f $sql $PGDATABASE
+  """
+}
+
 process fetch_all_urs_taxid {
-  when { params.precompute.run }
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
@@ -16,30 +30,59 @@ process fetch_all_urs_taxid {
   """
 }
 
-process build_table {
+process select_outdated {
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
   memory '10GB'
 
   input:
-  tuple path(load), path('xref.csv'), path('precompute.csv'), path('active.txt')
+  path('xref.csv')
+  path('precompute.csv')
+  path('active.txt')
+
+  output:
+  path('to-load.csv')
+
+  """
+  precompute select xref.csv precompute.csv urs.csv
+  expand-urs text active.txt urs.csv to-load.csv
+  """
+}
+
+process run_query {
+  tag { "$query.baseName" }
+  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
+
+  input:
+  path(query)
+
+  output:
+  path('ids.txt')
+
+  """
+  psql -v ON_ERROR_STOP=1 -f $query $PGDATABASE > ids.csv
+  """
+}
+
+process build_table {
+  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
+
+  input:
+  path('computed*.csv')
 
   output:
   val('done')
 
   """
-  precompute select xref.csv precompute.csv urs.csv
-  expand-urs text active.txt urs.csv to-load.csv
+  sort -u computed*.csv > to-load.csv
   psql \
     --variable ON_ERROR_STOP=1 \
-    --variable tablename=${params.precompute.tablename} \
     -f "$load" "$PGDATABASE"
   """
 }
 
-workflow build_urs_table {
-    emit: finished
+workflow using_release {
+    emit: selected
     main:
-      Channel.fromPath('files/precompute/load-urs.sql') | set { load_sql }
       Channel.fromPath('files/all-active-urs-taxid.sql') | set { active_sql }
       Channel.fromPath('files/precompute/fetch-xref-info.sql') | set { xref_sql }
       Channel.fromPath('files/precompute/fetch-precompute-info.sql') | set { pre_sql }
@@ -48,10 +91,37 @@ workflow build_urs_table {
       xref_releases(xref_sql) | set { xref_info }
       fetch_all_urs_taxid(active_sql) | set { active_urs }
 
-      load_sql \
-      | combine(xref_info) \
-      | combine(precompute_info) \
-      | combine(active_urs) \
+      select_outdated(xref_info, precompute_info, active_urs) | set { selected }
+}
+
+workflow using_query {
+  emit: selected
+  main:
+    Channel.fromPath("$precompute.select.query") | set { to_select }
+
+    to_select | run_query | set { selected }
+}
+
+workflow build_urs_table {
+    take: method
+    emit: finished
+    main:
+      Channel.fromPath('files/precompute/schema.sql') | set { schema_sql }
+      Channel.fromPath('files/precompute/load-urs.sql') | set { load_sql }
+
+      create_schema(schema_sql) \
+      | combine(method) \
+      | map { _flag, method -> method } \
+      | branch {
+        release: it == 'release'
+        query: it == 'query'
+      } | set { to_build }
+
+      to_build.release | using_release | set { from_release }
+      to_build.query | using_query | set { from_query }
+
+      from_release.mix(from_query, from_all) \
+      | collect \
       | build_table \
       | set { finished }
 }

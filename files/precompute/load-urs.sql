@@ -1,27 +1,35 @@
-DROP TABLE IF EXISTS :tablename;
-CREATE TABLE :tablename (
-  id bigserial primary key,
-  urs_taxid text not null,
-  urs text not null,
-  taxid int not null
-);
-
-create temp table loaded_urs (
-  urs_taxid text not null
+CREATE TEMP TABLE loaded_urs (
+  urs_taxid TEXT NOT NULL
 );
 
 \copy loaded_urs from 'to-load.csv'
 
-INSERT INTO :tablename (urs_taxid, urs, taxid) (
-SELECT 
-  urs_taxid,
+INSERT INTO precompute_urs (urs) (
+SELECT DISTINCT
   split_part(urs_taxid, '_', 1),
-  split_part(urs_taxid, '_', 2)::int
 from loaded_urs
 );
 
-ALTER TABLE :tablename 
-  add constraint un_to_precompute__urs_taxid UNIQUE (urs_taxid),
-  add constraint un_to_precompute__urs_taxid UNIQUE (urs, taxid),
-  add constraint fk_to_precompute__urs FOREIGN KEY (urs) REFERENCES rna(upi)
+ALTER TABLE precompute_urs
+  ADD CONSTRAINT un_precompute_urs__urs UNIQUE (urs),
+  ADD CONSTRAINT fk_precompute_urs__urs FOREIGN KEY (urs) REFERENCES rna(upi)
+;
+
+INSERT INTO precompute_urs_taxid (urs_taxid, precompute_urs_id, urs, taxid) (
+SELECT 
+  loaded.urs_taxid,
+  urs.id,
+  split_part(loaded.urs_taxid, '_', 1),
+  split_part(loaded.urs_taxid, '_', 2)::int
+FROM loaded_urs loaded
+JOIN precompute_urs urs
+ON
+  urs.urs = split_part(loaded.urs_taxid, '_', 1)
+);
+
+ALTER TABLE precompute_urs_taxid
+  ADD CONSTRAINT un_to_precompute__urs_taxid UNIQUE (urs_taxid),
+  ADD CONSTRAINT un_to_precompute__urs_taxid UNIQUE (urs, taxid),
+  ADD CONSTRAINT fk_to_precompute__urs FOREIGN KEY (urs) REFERENCES rna(upi),
+  ADD CONSTRAINT fk_precompute_urs__urs FOREIGN KEY(precompute_urs_id) REFERENCES precompute_urs(id)
 ;

@@ -1,9 +1,10 @@
-CREATE TABLE IF NOT EXISTS urs_accession (
+CREATE TABLE IF NOT EXISTS precompute_urs_accession (
     id bigserial primary key,
-    precompute_id int not null,
+    precompute_urs_id int not null,
     urs_taxid text not null,
     urs text not null,
     taxid int not null,
+    is_active bool not null,
     accession text not null,
     database text not null,
     description text not null,

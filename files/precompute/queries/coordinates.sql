@@ -8,9 +8,9 @@ select
     'start', region.region_start,
     'stop', region.region_stop
   )
-FROM :tablename todo
+FROM precompute_urs_taxid todo
 JOIN rnc_sequence_regions region 
 ON 
   region.urs_taxid = todo.urs_taxid
-order by todo.id
+order by todo.precompute_urs_id, todo.urs_taxid
 ) TO STDOUT
