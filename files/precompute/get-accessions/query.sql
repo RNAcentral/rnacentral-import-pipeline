@@ -3,7 +3,7 @@ SELECT
   json_build_object(
     'id', todo.urs_taxid,
     'accession', todo.accession,
-    'is_active', todo.deleted,
+    'is_active', todo.is_active,
     'description', todo.description,
     'gene', todo.gene,
     'optional_id', todo.optional_id,
