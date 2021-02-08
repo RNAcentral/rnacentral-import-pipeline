@@ -1,6 +1,9 @@
 use std::path::Path;
 
-use anyhow::Result;
+use anyhow::{
+    anyhow,
+    Result,
+};
 
 use sorted_iter::{
     assume::*,
@@ -145,11 +148,17 @@ pub fn write(accession_file: &Path, metadata_file: &Path, output_file: &Path) ->
 
     let merged = accessions.join(metadata);
 
+    let mut seen = false;
     for (_id, entry) in merged {
         let (accessions, metadata) = entry;
         let normalized = ds::entry::Normalized::new(metadata, accessions.collect())?;
         serde_json::to_writer(&mut writer, &normalized)?;
         writeln!(&mut writer)?;
+        seen = true;
+    }
+
+    if !seen {
+        return Err(anyhow!("Failed to find any normalized data"));
     }
 
     Ok(())
