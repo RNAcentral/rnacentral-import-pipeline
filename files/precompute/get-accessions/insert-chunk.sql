@@ -13,7 +13,7 @@ CREATE TEMP TABLE temp_current_urs_with_accession (
 );
 
 INSERT INTO temp_current_urs_with_accession
-(precompute_id, urs_taxid, urs, taxid, is_active, accession)
+(precompute_urs_id, urs_taxid, urs, taxid, is_active, accession)
 (
 SELECT
     todo.precompute_urs_id,
@@ -52,7 +52,7 @@ INSERT INTO precompute_urs_accession
     so_rna_type
 ) (
 SELECT
-    todo.precompute_id,
+    todo.precompute_urs_id,
     todo.urs_taxid,
     todo.urs,
     todo.taxid,

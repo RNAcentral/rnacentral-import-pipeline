@@ -20,6 +20,7 @@ process fetch_all_urs_taxid {
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
+  path(_flag)
   path(query)
 
   output:
@@ -53,10 +54,11 @@ process run_query {
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
+  val(_flag)
   path(query)
 
   output:
-  path('ids.txt')
+  path('ids.csv')
 
   """
   psql -v ON_ERROR_STOP=1 -f $query $PGDATABASE > ids.csv
@@ -67,7 +69,7 @@ process build_table {
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
-  path('computed*.csv')
+  tuple path('computed*.csv'), path(load)
 
   output:
   val('done')
@@ -75,31 +77,33 @@ process build_table {
   """
   sort -u computed*.csv > to-load.csv
   psql \
-    --variable ON_ERROR_STOP=1 \
+    -v ON_ERROR_STOP=1 \
     -f "$load" "$PGDATABASE"
   """
 }
 
 workflow using_release {
+    take: flag
     emit: selected
     main:
       Channel.fromPath('files/all-active-urs-taxid.sql') | set { active_sql }
       Channel.fromPath('files/precompute/fetch-xref-info.sql') | set { xref_sql }
       Channel.fromPath('files/precompute/fetch-precompute-info.sql') | set { pre_sql }
 
-      precompute_releases(pre_sql) | set { precompute_info }
-      xref_releases(xref_sql) | set { xref_info }
-      fetch_all_urs_taxid(active_sql) | set { active_urs }
+      precompute_releases(flag, pre_sql) | set { precompute_info }
+      xref_releases(flag, xref_sql) | set { xref_info }
+      fetch_all_urs_taxid(flag, active_sql) | set { active_urs }
 
       select_outdated(xref_info, precompute_info, active_urs) | set { selected }
 }
 
 workflow using_query {
+  take: flag
   emit: selected
   main:
-    Channel.fromPath("$precompute.select.query") | set { to_select }
+    Channel.fromPath("$params.precompute.select.query") | set { to_select }
 
-    to_select | run_query | set { selected }
+    run_query(flag, to_select) | set { selected }
 }
 
 workflow build_urs_table {
@@ -120,8 +124,9 @@ workflow build_urs_table {
       to_build.release | using_release | set { from_release }
       to_build.query | using_query | set { from_query }
 
-      from_release.mix(from_query, from_all) \
+      from_release.mix(from_query, from_release) \
       | collect \
+      | combine(load_sql) \
       | build_table \
       | set { finished }
 }

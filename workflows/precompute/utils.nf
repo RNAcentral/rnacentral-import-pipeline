@@ -24,6 +24,7 @@ process fetch_release_info {
   memory '10GB'
 
   input:
+  val(_flag)
   path(query)
 
   output:

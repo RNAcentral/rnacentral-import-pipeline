@@ -55,9 +55,8 @@ process build_ranges {
 
   script:
   def chunk_size = params.precompute.max_entries
-  def tablename = params.precompute.tablename
   """
-  rnac upi-ranges --table-name $tablename $chunk_size ranges.csv
+  rnac upi-ranges --table-name precompute_urs $chunk_size ranges.csv
   """
 }
 
@@ -114,12 +113,10 @@ process load_data {
   path(post)
 
   script:
-  def tablename = params.precompute.tablename
   """
   split-and-load $pre_ctl 'precompute*.csv' ${params.import_data.chunk_size} precompute
   split-and-load $qa_ctl 'qa*.csv' ${params.import_data.chunk_size} qa
   psql -v ON_ERROR_STOP=1 -f $post "$PGDATABASE"
-  psql -v ON_ERROR_STOP=1 -c 'DROP TABLE IF EXISTS $tablename' "$PGDATABASE"
   """
 }
 
@@ -138,7 +135,7 @@ workflow precompute {
     Channel.fromPath('files/precompute/queries/xref.sql') | set { xref_sql }
 
     // repeats | build_precompute_context | set { context }
-    build_urs_table | set { built_table }
+    Channel.of(params.precompute.method) | build_urs_table | set { built_table }
     built_table | build_precompute_accessions | set { accessions_ready }
 
     build_metadata(
