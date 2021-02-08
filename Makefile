@@ -17,6 +17,7 @@ rust:
 	cp target/release/split-ena bin
 	cp target/release/kv bin
 	cp target/release/precompute bin
+	cp target/release/search-export bin
 
 docker: Dockerfile requirements.txt .dockerignore
 	docker build -t "$(docker)" .

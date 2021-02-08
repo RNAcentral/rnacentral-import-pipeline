@@ -1,5 +1,7 @@
 #!/usr/bin/env nextflow
 
+nextflow.enable.dsl=2
+
 include { query as accession_query } from './workflows/search-export/utils'
 include { query as base_query } from './workflows/search-export/utils'
 include { query as crs_query } from './workflows/search-export/utils'
@@ -12,6 +14,24 @@ include { query as qa_query } from './workflows/search-export/utils'
 include { query as r2dt_query } from './workflows/search-export/utils'
 include { query as ref_query } from './workflows/search-export/utils'
 include { query as rfam_query } from './workflows/search-export/utils'
+include { build_search_accessions } from './workflows/search-export/build-accession-table'
+
+process setup {
+  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
+
+  input:
+  path(sql)
+
+  output:
+  val('done')
+
+  """
+  psql \
+    -v ON_ERROR_STOP=1 \
+    -f "$sql" \
+    "$PGDATABASE" > raw.json
+  """
+}
 
 process fetch_so_tree {
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
@@ -60,15 +80,16 @@ process build_ranges {
   script:
   def chunk_size = params.search_export.max_entries
   """
-  rnac upi-ranges --table-name search_export_accessions $chunk_size ranges.csv
+  rnac upi-ranges --table-name search_export_urs $chunk_size ranges.csv
   """
 }
  
 process fetch_accession {
   tag { "$min-$max" }
+  maxForks 5
 
   input:
-  tuple val(min), val(max), val(sql)
+  tuple val(min), val(max), val(sql), val(_flag)
 
   output:
   path("raw.json")
@@ -145,6 +166,8 @@ process atomic_publish {
 }
 
 workflow search_export {
+  Channel.fromPath('files/search-export/setup.sql') | set { setup_sql }
+
   Channel.fromPath('files/search-export/parts/base.sql') | set { base_sql }
   Channel.fromPath('files/search-export/parts/crs.sql') | set { crs_sql }
   Channel.fromPath('files/search-export/parts/feedback.sql') | set { feeback_sql }
@@ -155,10 +178,11 @@ workflow search_export {
   Channel.fromPath('files/search-export/parts/qa-status.sql') | set { qa_sql }
   Channel.fromPath('files/search-export/parts/r2dt.sql') | set { r2dt_sql }
   Channel.fromPath('files/search-export/parts/rfam-hits.sql') | set { rfam_sql }
+  Channel.fromPath('files/search-export/so-rna-types.sql') | set { so_sql }
 
-  Channel.fromPath('files/search-export/get-accessions.sql') | set { accession_sql }
+  Channel.fromPath('files/search-export/parts/accessions.sql') | set { accessions_sql }
 
-  build_search_table | set { search_ready }
+  setup_sql | setup | set { search_ready }
   search_ready | build_search_accessions | set { accessions_ready }
 
   build_json(
@@ -172,14 +196,16 @@ workflow search_export {
     qa_query(search_ready, qa_sql),
     r2dt_query(search_ready, r2dt_sql),
     rfam_query(search_ready, rfam_sql),
-    fetch_so_tree(search_ready, so_sql),
+    fetch_so_tree(so_sql),
   )\
   | set { metadata }
 
   search_ready \
   | build_ranges \
+  | splitCsv \
   | map { _tablename, min, max -> [min, max ] } \
   | combine(accessions_sql) \
+  | combine(accessions_ready) \
   | fetch_accession \
   | combine(metadata) \
   | export_chunk

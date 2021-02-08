@@ -2,10 +2,10 @@ COPY (
 SELECT
     json_build_object(
         'id', todo.id,
-        'urs_taxid', todo.urs_taxid,
         'urs_taxid', related.source_urs_taxid,
-        'interacting_id', case when related.relationship_type = 'target_rna' then related.target_accession
+        'interacting_rna_id', case when related.relationship_type = 'target_rna' then related.target_accession
                         else null
+                        end,
         'methods', related.methods
     )
 FROM search_export_urs todo
