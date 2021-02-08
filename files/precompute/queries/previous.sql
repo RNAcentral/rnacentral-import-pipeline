@@ -1,7 +1,8 @@
 COPY (
 select
   json_build_object(
-    'id', prev.id,
+    'id', todo.id,
+    'urs_taxid', todo.urs_taxid,
     'upi', prev.upi,
     'taxid', prev.taxid,
     'databases', prev.databases,
@@ -16,5 +17,5 @@ FROM precompute_urs_taxid todo
 JOIN rnc_rna_precomputed prev
 ON
   prev.id = todo.urs_taxid
-order by todo.precompute_urs_id, todo.urs_taxid
+order by todo.precompute_urs_id, todo.id
 ) TO STDOUT

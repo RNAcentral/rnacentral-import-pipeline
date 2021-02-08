@@ -37,23 +37,23 @@ pub fn write_merge(
     output: &Path,
 ) -> Result<()> {
     let xrefs = JsonlIterator::from_path(xref_file)?;
-    let xrefs = xrefs.group_by(|x: &Xref| x.urs_taxid.to_owned());
+    let xrefs = xrefs.group_by(|x: &Xref| x.id);
     let xrefs = xrefs.into_iter().assume_sorted_by_key();
 
     let coordinates = JsonlIterator::from_path(coordinate_file)?;
-    let coordinates = coordinates.group_by(|c: &Coordinate| c.urs_taxid.to_owned());
+    let coordinates = coordinates.group_by(|c: &Coordinate| c.id);
     let coordinates = coordinates.into_iter().assume_sorted_by_key();
 
     let rfam_hits = JsonlIterator::from_path(rfam_hits_file)?;
-    let rfam_hits = rfam_hits.group_by(|h: &RfamHit| h.urs_taxid.to_owned());
+    let rfam_hits = rfam_hits.group_by(|h: &RfamHit| h.id);
     let rfam_hits = rfam_hits.into_iter().assume_sorted_by_key();
 
     let r2dt_hits = JsonlIterator::from_path(r2dt_hits_file)?;
-    let r2dt_hits = r2dt_hits.group_by(|h: &R2dtHit| h.urs_taxid.to_owned());
+    let r2dt_hits = r2dt_hits.group_by(|h: &R2dtHit| h.id);
     let r2dt_hits = r2dt_hits.into_iter().assume_sorted_by_key();
 
     let previous = JsonlIterator::from_path(previous_file)?;
-    let previous = previous.group_by(|p: &Previous| p.urs_taxid.to_owned());
+    let previous = previous.group_by(|p: &Previous| p.id);
     let previous = previous.into_iter().assume_sorted_by_key();
 
     let partial =

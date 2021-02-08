@@ -20,21 +20,6 @@ process find_partitions {
   """
 }
 
-process setup_accession_table {
-  executor 'local'
-  container ''
-
-  input:
-  path('schema.sql')
-
-  output:
-  val('done')
-
-  """
-  psql -v ON_ERROR_STOP=1 -f schema.sql "$PGDATABASE"
-  """
-}
-
 process build_accession_table {
   tag { "$partition" }
   maxForks 5
@@ -75,16 +60,12 @@ workflow build_precompute_accessions {
   take: ready
   emit: built
   main:
-    Channel.fromPath('files/precompute/get-accessions/schema.sql') | set { schema }
     Channel.fromPath('files/precompute/get-accessions/insert-chunk.sql') | set { chunk_sql }
     Channel.fromPath('files/precompute/get-accessions/post-insert.sql') | set { post_sql }
 
     find_partitions | splitCsv | set { partitions }
 
     ready \
-    | combine(schema) \
-    | map { _flag, sql -> sql } \
-    | setup_accession_table \
     | combine(partitions) \
     | map { _flag, p, descr -> [p, descr] } \
     | combine(chunk_sql) \

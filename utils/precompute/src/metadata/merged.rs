@@ -17,6 +17,7 @@ use crate::metadata::{
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Metadata {
+    pub id: usize,
     pub urs_taxid: String,
     pub upi: String,
     pub taxid: usize,
@@ -33,23 +34,24 @@ pub struct Metadata {
 
 impl Metadata {
     pub fn new(
-        urs_taxid: String,
+        id: usize,
         raw_xrefs: impl Iterator<Item = Xref>,
         raw_coordinates: Option<impl Iterator<Item = Coordinate>>,
         raw_rfam_hits: Option<impl Iterator<Item = RfamHit>>,
         raw_r2dt_hits: Option<impl Iterator<Item = R2dtHit>>,
         raw_previous: Option<impl Iterator<Item = Previous>>,
     ) -> Result<Self> {
-        let parts: Vec<&str> = urs_taxid.split("_").collect();
-        let upi = parts[0].to_owned();
-        let taxid = parts[1].parse::<usize>().unwrap();
-
         let xrefs: Vec<Xref> = raw_xrefs.collect();
         let ordering_index = xrefs.get(0).unwrap().ordering_index;
         let mut active_mapping: HashMap<String, bool> = HashMap::new();
         for xref in &xrefs {
             active_mapping.insert(xref.accession.to_owned(), xref.is_active());
         }
+
+        let urs_taxid = xrefs.get(0).unwrap().urs_taxid.clone();
+        let parts: Vec<&str> = urs_taxid.split("_").collect();
+        let upi = parts[0].to_owned();
+        let taxid = parts[1].parse::<usize>().unwrap();
 
         let coordinates = raw_coordinates.into_iter().flatten().collect();
         let rfam_hits = raw_rfam_hits.into_iter().flatten().collect();
@@ -66,6 +68,7 @@ impl Metadata {
         let deleted = xrefs.iter().all(|x| x.deleted == "Y");
 
         return Ok(Self {
+            id,
             urs_taxid,
             upi,
             taxid,

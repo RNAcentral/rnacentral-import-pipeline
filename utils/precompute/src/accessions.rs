@@ -26,7 +26,7 @@ pub struct Accession {
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct RawAccessionEntry {
-    #[serde(rename = "id")]
+    pub id: usize,
     pub urs_taxid: String,
     pub accession: String,
     description: String,
