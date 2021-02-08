@@ -5,7 +5,7 @@ use serde::{
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 pub struct Previous {
-    #[serde(rename = "id")]
+    pub id: usize,
     pub urs_taxid: String,
     upi: String,
     taxid: usize,

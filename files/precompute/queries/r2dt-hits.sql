@@ -1,7 +1,8 @@
 COPY (
 select
   json_build_object(
-    'id', todo.urs_taxid,
+    'id', todo.id,
+    'urs_taxid', todo.urs_taxid,
     'model_id', r2dt.id,
     'model_name', r2dt.model_name,
     'model_source', r2dt.model_source,
@@ -19,5 +20,5 @@ on
 JOIN rnc_secondary_structure_layout_models r2dt
 on
   r2dt.id = ss.model_id
-order by todo.precompute_urs_id, todo.urs_taxid
+order by todo.precompute_urs_id, todo.id
 ) TO STDOUT

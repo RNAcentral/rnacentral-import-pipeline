@@ -1,7 +1,8 @@
 COPY (
 select
   json_build_object(
-    'id', todo.urs_taxid,
+    'id', todo.id,
+    'urs_taxid', todo.urs_taxid,
     'rfam_hit_id', hits.rfam_hit_id,
     'model', hits.rfam_model_id,
     'model_rna_type', models.so_rna_type,
@@ -22,5 +23,5 @@ ON
 JOIN rfam_models models 
 ON 
     models.rfam_model_id = hits.rfam_model_id
-order by todo.precompute_urs_id, todo.urs_taxid
+order by todo.precompute_urs_id, todo.id
 ) TO STDOUT

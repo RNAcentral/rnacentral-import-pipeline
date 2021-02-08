@@ -5,8 +5,8 @@ use serde::{
 
 #[derive(Debug, Deserialize, Serialize, PartialEq)]
 pub struct RfamHit {
-    #[serde(rename = "id")]
-    pub urs_taxid: String,
+    pub id: usize,
+    urs_taxid: String,
     rfam_hit_id: usize,
     model: String,
     model_rna_type: Option<String>,

@@ -5,7 +5,7 @@ use serde::{
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Xref {
-    #[serde(rename = "id")]
+    pub id: usize,
     pub urs_taxid: String,
     pub length: usize,
     pub deleted: String,

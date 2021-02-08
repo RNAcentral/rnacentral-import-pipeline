@@ -1,7 +1,8 @@
 COPY (
 SELECT
   json_build_object(
-    'id', todo.urs_taxid,
+    'id', todo.precompute_urs_taxid_id,
+    'urs_taxid', todo.urs_taxid,
     'accession', todo.accession,
     'is_active', todo.is_active,
     'description', todo.description,
@@ -25,5 +26,5 @@ ON
   tax.id = todo.taxid
 WHERE
   todo.id BETWEEN :min and :max
-order by todo.precompute_urs_id, todo.urs_taxid
+order by todo.precompute_urs_id, todo.precompute_urs_taxid_id
 ) TO STDOUT

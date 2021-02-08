@@ -5,7 +5,7 @@ use serde::{
 
 #[derive(Debug, Deserialize, Serialize, PartialEq)]
 pub struct R2dtHit {
-    #[serde(rename = "id")]
+    pub id: usize,
     pub urs_taxid: String,
     model_id: usize,
     model_name: String,

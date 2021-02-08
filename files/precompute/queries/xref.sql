@@ -1,7 +1,8 @@
 COPY (
 select
   json_build_object(
-    'id', todo.urs_taxid,
+    'id', todo.id,
+    'urs_taxid', todo.urs_taxid,
     'length', rna.len,
     'deleted', xref.deleted,
     'last_release', xref.last,
@@ -16,5 +17,5 @@ JOIN xref
 on 
   xref.upi = todo.urs
   and xref.taxid = todo.taxid
-order by todo.precompute_urs_id, todo.urs_taxid
+order by todo.precompute_urs_id, todo.id
 ) TO STDOUT
