@@ -8,11 +8,12 @@ CREATE TEMP TABLE temp_current_urs_with_accession (
     urs text not null,
     taxid int not null,
     is_active bool not null,
+    last_release int not null,
     accession text not null
 );
 
 INSERT INTO temp_current_urs_with_accession
-(precompute_urs_id, precompute_urs_taxid_id, urs_taxid, urs, taxid, is_active, accession)
+(precompute_urs_id, precompute_urs_taxid_id, urs_taxid, urs, taxid, is_active, last_release, accession)
 (
 SELECT
     todo.precompute_urs_id,
@@ -21,6 +22,7 @@ SELECT
     todo.urs,
     todo.taxid,
     xref.deleted = 'N',
+    xref.last_release,
     xref.ac
 FROM precompute_urs_taxid todo
 JOIN :partition xref
@@ -38,6 +40,7 @@ INSERT INTO precompute_urs_accession
     urs,
     taxid,
     is_active,
+    last_release,
     accession,
     database,
     description,
@@ -59,6 +62,7 @@ SELECT
     todo.urs,
     todo.taxid,
     todo.is_active,
+    todo.last_release,
     todo.accession,
     acc.database,
     acc.description,

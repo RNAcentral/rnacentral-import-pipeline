@@ -48,24 +48,18 @@ impl Normalized {
         raw_accessions: impl Iterator<Item = RawAccessionEntry>,
         metadata: Metadata,
     ) -> Result<Self> {
-        let accessions = raw_accessions
-            .map(|a: RawAccessionEntry| {
-                let is_active = metadata
-                    .active_mapping
-                    .get(&a.accession)
-                    .ok_or(format!("Missing {:} in {:?}", &a.accession, &metadata.active_mapping))
-                    .unwrap();
-                Accession::from((a, is_active.clone()))
-            })
-            .collect();
+        let accessions: Vec<Accession> = raw_accessions.map(Accession::from).collect();
+        let last_release = accessions.iter().map(|a| a.last_release).max().unwrap();
+        let deleted = accessions.iter().all(|a| !a.is_active);
+
         return Ok(Self {
             upi: metadata.upi,
             taxid: metadata.taxid,
             length: metadata.length,
-            last_release: metadata.last_release,
+            last_release,
             coordinates: metadata.coordinates,
             accessions,
-            deleted: metadata.deleted,
+            deleted,
             previous: metadata.previous,
             rfam_hits: metadata.rfam_hits,
             r2dt_hits: metadata.r2dt_hits,
