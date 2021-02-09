@@ -3,7 +3,7 @@ pub mod merged;
 pub mod previous;
 pub mod r2dt_hit;
 pub mod rfam_hit;
-pub mod xref;
+pub mod basic;
 
 use std::{
     io::Write,
@@ -24,21 +24,21 @@ pub use merged::Metadata;
 pub use previous::Previous;
 pub use r2dt_hit::R2dtHit;
 pub use rfam_hit::RfamHit;
-pub use xref::Xref;
+pub use basic::Basic;
 
 use rnc_core::psql::JsonlIterator;
 
 pub fn write_merge(
+    basic_file: &Path,
     coordinate_file: &Path,
     rfam_hits_file: &Path,
     r2dt_hits_file: &Path,
     previous_file: &Path,
-    xref_file: &Path,
     output: &Path,
 ) -> Result<()> {
-    let xrefs = JsonlIterator::from_path(xref_file)?;
-    let xrefs = xrefs.group_by(|x: &Xref| (x.urs_id, x.id));
-    let xrefs = xrefs.into_iter().assume_sorted_by_key();
+    let basic = JsonlIterator::from_path(basic_file)?;
+    let basic = basic.map(|b: Basic| ((b.urs_id, b.id), b));
+    let basic = basic.into_iter().assume_sorted_by_key();
 
     let coordinates = JsonlIterator::from_path(coordinate_file)?;
     let coordinates = coordinates.group_by(|c: &Coordinate| (c.urs_id, c.id));
@@ -57,22 +57,15 @@ pub fn write_merge(
     let previous = previous.into_iter().assume_sorted_by_key();
 
     let partial =
-        xrefs.left_join(coordinates).left_join(rfam_hits).left_join(r2dt_hits).left_join(previous);
+        basic.left_join(coordinates).left_join(rfam_hits).left_join(r2dt_hits).left_join(previous);
 
     let mut output = rnc_utils::buf_writer(output)?;
-    for (ids, data) in partial {
-        let (urs_id, id) = ids;
-        let ((((xrefs, coordinates), rfam_hits), r2dt_hits), previous) = data;
-        let norm = Metadata::new(urs_id, id, xrefs, coordinates, rfam_hits, r2dt_hits, previous)?;
+    for (_ids, data) in partial {
+        let ((((basic, coordinates), rfam_hits), r2dt_hits), previous) = data;
+        let norm = Metadata::new(basic, coordinates, rfam_hits, r2dt_hits, previous)?;
         serde_json::to_writer(&mut output, &norm)?;
         writeln!(&mut output)?;
     }
 
     Ok(())
-}
-
-pub fn write_splits(filename: &Path, chunks: &Path, output: &Path) -> Result<()> {
-    let metadata = JsonlIterator::from_path(&filename)?;
-    let getter = |m: &Metadata| m.ordering_index;
-    rnc_core::chunking::write_splits(metadata, getter, chunks, output)
 }

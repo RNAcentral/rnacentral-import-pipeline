@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS precompute_urs_accession (
     urs text not null,
     taxid int not null,
     is_active bool not null,
+    last_release int not null,
     accession text not null,
     database text not null,
     description text not null,

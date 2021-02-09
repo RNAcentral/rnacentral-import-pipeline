@@ -14,6 +14,10 @@ enum MetadataCommand {
     /// least one entry for all possible urs_taxids.
     Merge {
         #[structopt(parse(from_os_str))]
+        /// Filename of the raw xref file
+        basic: PathBuf,
+
+        #[structopt(parse(from_os_str))]
         /// Filename of the raw coordinates file
         coordinates: PathBuf,
 
@@ -30,28 +34,7 @@ enum MetadataCommand {
         previous: PathBuf,
 
         #[structopt(parse(from_os_str))]
-        /// Filename of the raw xref file
-        xref: PathBuf,
-
-        #[structopt(parse(from_os_str))]
         /// Filename to write the results to, '-' means stdout
-        output: PathBuf,
-    },
-
-    /// Split the metadata into a series of chunks and write the chunks into separate
-    /// files. Doing this makes the normalzing step faster if you use the same chunks
-    /// as in accession chunks.
-    Chunk {
-        #[structopt(parse(from_os_str))]
-        /// The name of the metadata to read.
-        metadata: PathBuf,
-
-        #[structopt(parse(from_os_str))]
-        /// The name of the metadata to read.
-        chunk_file: PathBuf,
-
-        #[structopt(parse(from_os_str), default_value = ".")]
-        /// Base directory to write to.
         output: PathBuf,
     },
 }
@@ -144,27 +127,22 @@ fn main() -> anyhow::Result<()> {
             command,
         } => match command {
             MetadataCommand::Merge {
+                basic,
                 coordinates,
                 rfam_hits,
                 r2dt_hits,
                 previous,
-                xref,
                 output,
             } => {
                 metadata::write_merge(
+                    &basic,
                     &coordinates,
                     &rfam_hits,
                     &r2dt_hits,
                     &previous,
-                    &xref,
                     &output,
                 )?;
             },
-            MetadataCommand::Chunk {
-                metadata,
-                chunk_file,
-                output,
-            } => metadata::write_splits(&metadata, &chunk_file, &output)?,
         },
         Subcommand::Normalize {
             accessions,

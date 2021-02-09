@@ -10,7 +10,7 @@ include { query as coordinate_query} from './workflows/precompute/utils'
 include { query as rfam_query} from './workflows/precompute/utils'
 include { query as r2dt_query} from './workflows/precompute/utils'
 include { query as prev_query} from './workflows/precompute/utils'
-include { query as xref_query} from './workflows/precompute/utils'
+include { query as basic_query} from './workflows/precompute/utils'
 
 process build_precompute_context {
   input:
@@ -32,17 +32,17 @@ process build_precompute_context {
 
 process build_metadata {
   input:
+  path(basic)
   path(coordinates)
   path(rfam_hits)
   path(r2dt_hits)
   path(prev)
-  path(xref)
 
   output:
   path("metadata.json")
 
   """
-  precompute metadata merge $coordinates $rfam_hits $r2dt_hits $prev $xref metadata.json
+  precompute metadata merge $basic $coordinates $rfam_hits $r2dt_hits $prev metadata.json
   """
 }
 
@@ -128,22 +128,22 @@ workflow precompute {
     Channel.fromPath('files/precompute/post-load.sql') | set { post_load }
 
     // Various metadata components for precompute
+    Channel.fromPath('files/precompute/queries/basic.sql') | set { basic_sql }
     Channel.fromPath('files/precompute/queries/coordinates.sql') | set { coordinate_sql }
     Channel.fromPath('files/precompute/queries/rfam-hits.sql') | set { rfam_sql }
     Channel.fromPath('files/precompute/queries/r2dt-hits.sql') | set { r2dt_sql }
     Channel.fromPath('files/precompute/queries/previous.sql') | set { prev_sql }
-    Channel.fromPath('files/precompute/queries/xref.sql') | set { xref_sql }
 
     // repeats | build_precompute_context | set { context }
     Channel.of(params.precompute.method) | build_urs_table | set { built_table }
     built_table | build_precompute_accessions | set { accessions_ready }
 
     build_metadata(
+      basic_query(built_table, basic_sql),
       coordinate_query(built_table, coordinate_sql),
       rfam_query(built_table, rfam_sql),
       r2dt_query(built_table, r2dt_sql),
       prev_query(built_table, prev_sql),
-      xref_query(built_table, xref_sql),
     ) \
     | set { metadata }
 

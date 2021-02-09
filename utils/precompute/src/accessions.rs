@@ -7,7 +7,8 @@ use serde::{
 pub struct Accession {
     pub urs_taxid: String,
     pub accession: String,
-    is_active: bool,
+    pub is_active: bool,
+    pub last_release: usize,
     description: String,
     gene: Option<String>,
     optional_id: Option<String>,
@@ -30,6 +31,8 @@ pub struct RawAccessionEntry {
     pub urs_id: usize,
     pub urs_taxid: String,
     pub accession: String,
+    last_release: usize,
+    is_active: bool,
     description: String,
     gene: Option<String>,
     optional_id: Option<String>,
@@ -46,13 +49,13 @@ pub struct RawAccessionEntry {
     so_rna_type: Option<String>,
 }
 
-impl From<(RawAccessionEntry, bool)> for Accession {
-    fn from(given: (RawAccessionEntry, bool)) -> Self {
-        let (raw, is_active) = given;
+impl From<RawAccessionEntry> for Accession {
+    fn from(raw: RawAccessionEntry) -> Self {
         return Self {
             urs_taxid: raw.urs_taxid,
             accession: raw.accession,
-            is_active,
+            is_active: raw.is_active,
+            last_release: raw.last_release,
             description: raw.description,
             gene: raw.gene,
             optional_id: raw.optional_id,
