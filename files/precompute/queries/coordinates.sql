@@ -2,6 +2,7 @@ COPY (
 select
   json_build_object(
     'id', todo.id,
+    'urs_id', todo.precompute_urs_id,
     'urs_taxid', todo.urs_taxid,
     'assembly_id', region.assembly_id,
     'chromosome', region.chromosome,

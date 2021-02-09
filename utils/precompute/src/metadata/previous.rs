@@ -6,6 +6,7 @@ use serde::{
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 pub struct Previous {
     pub id: usize,
+    pub urs_id: usize,
     pub urs_taxid: String,
     upi: String,
     taxid: usize,

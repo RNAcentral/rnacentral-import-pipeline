@@ -2,6 +2,7 @@ COPY (
 SELECT
   json_build_object(
     'id', todo.precompute_urs_taxid_id,
+    'urs_id', todo.precompute_urs_id,
     'urs_taxid', todo.urs_taxid,
     'accession', todo.accession,
     'is_active', todo.is_active,

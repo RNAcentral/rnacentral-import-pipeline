@@ -27,6 +27,7 @@ pub struct Accession {
 #[derive(Debug, Deserialize, Serialize)]
 pub struct RawAccessionEntry {
     pub id: usize,
+    pub urs_id: usize,
     pub urs_taxid: String,
     pub accession: String,
     description: String,

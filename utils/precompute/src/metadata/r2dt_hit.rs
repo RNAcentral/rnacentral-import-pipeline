@@ -6,6 +6,7 @@ use serde::{
 #[derive(Debug, Deserialize, Serialize, PartialEq)]
 pub struct R2dtHit {
     pub id: usize,
+    pub urs_id: usize,
     pub urs_taxid: String,
     model_id: usize,
     model_name: String,

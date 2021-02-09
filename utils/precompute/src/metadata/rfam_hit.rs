@@ -6,6 +6,7 @@ use serde::{
 #[derive(Debug, Deserialize, Serialize, PartialEq)]
 pub struct RfamHit {
     pub id: usize,
+    pub urs_id: usize,
     urs_taxid: String,
     rfam_hit_id: usize,
     model: String,

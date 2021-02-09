@@ -6,6 +6,7 @@ use serde::{
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Xref {
     pub id: usize,
+    pub urs_id: usize,
     pub urs_taxid: String,
     pub length: usize,
     pub deleted: String,
