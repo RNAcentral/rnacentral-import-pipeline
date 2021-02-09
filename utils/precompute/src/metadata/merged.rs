@@ -18,6 +18,7 @@ use crate::metadata::{
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Metadata {
     pub id: usize,
+    pub urs_id: usize,
     pub urs_taxid: String,
     pub upi: String,
     pub taxid: usize,
@@ -34,6 +35,7 @@ pub struct Metadata {
 
 impl Metadata {
     pub fn new(
+        urs_id: usize,
         id: usize,
         raw_xrefs: impl Iterator<Item = Xref>,
         raw_coordinates: Option<impl Iterator<Item = Coordinate>>,
@@ -69,6 +71,7 @@ impl Metadata {
 
         return Ok(Self {
             id,
+            urs_id,
             urs_taxid,
             upi,
             taxid,

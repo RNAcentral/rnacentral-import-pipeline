@@ -2,6 +2,7 @@ COPY (
 select
   json_build_object(
     'id', todo.id,
+    'urs_id', todo.precompute_urs_id,
     'urs_taxid', todo.urs_taxid,
     'rfam_hit_id', hits.rfam_hit_id,
     'model', hits.rfam_model_id,

@@ -6,6 +6,7 @@ use serde::{
 #[derive(Debug, Deserialize, Serialize, PartialEq)]
 pub struct Coordinate {
     pub id: usize,
+    pub urs_id: usize,
     pub urs_taxid: String,
     assembly_id: String,
     chromosome: String,
