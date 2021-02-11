@@ -31,17 +31,16 @@ def cli():
 
 @cli.command("as-xml")
 @click.argument("raw_file", type=click.File("r"))
-@click.argument("metadata_file", type=click.Path())
 @click.argument("xml_file", type=click.File("w"))
 @click.argument("count_file", type=click.File("w"), default="count")
-def search_export_xml(raw_file, metadata_file, xml_file, count_file=None):
+def search_export_xml(raw_file, xml_file, count_file=None):
     """
     This will parse a file with one JSON object per line to produce XML
     formatted data that is used as input to the search team. Additionally, this
     produces a count file which contains the number of entries in the XML file.
     This is needed for building the release_note.txt file.
     """
-    search.as_xml(raw_file, metadata_file, xml_file, count_file)
+    search.as_xml(raw_file, xml_file, count_file)
 
 
 @cli.command("release-note")
