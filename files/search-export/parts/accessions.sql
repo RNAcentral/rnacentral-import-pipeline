@@ -34,5 +34,7 @@ COPY (
   LEFT JOIN rnc_references refs
   ON
     refs.id = ref_map.reference_id
+  WHERE
+    todo.search_export_id BETWEEN :min AND :max
   ORDER BY todo.search_export_id
 ) TO STDOUT
