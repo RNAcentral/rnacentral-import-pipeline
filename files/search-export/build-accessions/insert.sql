@@ -20,7 +20,7 @@ SELECT
     todo.urs,
     todo.taxid,
     xref.ac
-FROM upis_to_precompute todo
+FROM search_export_urs todo
 JOIN :partition xref
 ON
     xref.upi = todo.urs AND xref.taxid = todo.taxid
