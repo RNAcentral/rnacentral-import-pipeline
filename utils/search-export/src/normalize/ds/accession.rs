@@ -123,14 +123,14 @@ impl FromIterator<RawAccession> for AccessionVec {
         for i in iter {
             a.species.extend(i.species.into_iter().filter(|s| !s.is_empty()));
             a.tax_strings.extend(i.tax_strings.into_iter().filter(|t| !t.is_empty()));
-            a.organelles.extend(i.organelles.clone());
-            a.functions.extend(i.functions.into_iter());
-            a.genes.extend(i.genes.into_iter());
-            a.common_name.extend(i.common_name.into_iter());
-            a.notes.extend(i.notes.into_iter());
-            a.locus_tags.extend(i.locus_tags.into_iter());
-            a.standard_names.extend(i.standard_names.into_iter());
-            a.products.extend(i.products.into_iter());
+            a.organelles.extend(i.organelles.clone().filter(|t| !t.is_empty()));
+            a.functions.extend(i.functions.into_iter().filter(|t| !t.is_empty()));
+            a.genes.extend(i.genes.into_iter().filter(|t| !t.is_empty()));
+            a.common_name.extend(i.common_name.into_iter().filter(|t| !t.is_empty()));
+            a.notes.extend(i.notes.into_iter().filter(|t| !t.is_empty()));
+            a.locus_tags.extend(i.locus_tags.into_iter().filter(|t| !t.is_empty()));
+            a.standard_names.extend(i.standard_names.into_iter().filter(|t| !t.is_empty()));
+            a.products.extend(i.products.into_iter().filter(|t| !t.is_empty()));
 
             for synonyms in i.gene_synonyms.into_iter() {
                 if synonyms.contains(";") {
