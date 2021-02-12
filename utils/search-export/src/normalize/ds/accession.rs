@@ -11,28 +11,28 @@ use serde::{
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone)]
 pub struct RawAccession {
     pub id: usize,
-    urs_taxid: String,
+    pub urs_taxid: String,
     accession: String,
     common_name: Option<String>,
     database: String,
     external_id: String,
-    functions: Option<String>,
+    function: Option<String>,
     gene_synonyms: Option<String>,
-    genes: Option<String>,
-    locus_tags: Option<String>,
+    gene: Option<String>,
+    locus_tag: Option<String>,
     non_coding_id: Option<String>,
     notes: Option<String>,
     optional_id: Option<String>,
-    organelles: Option<String>,
+    organelle: Option<String>,
     parent_accession: Option<String>,
     products: Option<String>,
     species: Option<String>,
-    standard_names: Option<String>,
-    tax_strings: Option<String>,
+    standard_name: Option<String>,
+    tax_string: Option<String>,
     authors: Option<String>,
     journal: Option<String>,
     pub_title: Option<String>,
-    pub_id: u64,
+    pub_id: Option<u64>,
     pubmed_id: Option<String>,
     doi: Option<String>,
 }
@@ -161,10 +161,10 @@ impl FromIterator<RawAccession> for ReferenceVec {
             }
 
             value.journals.extend(i.journal.into_iter());
-            value.pub_titles.extend(i.pub_title.into_iter());
-            value.pub_ids.insert(i.pub_id);
-            value.pubmed_ids.extend(i.pubmed_id.into_iter());
-            value.dois.extend(i.doi.into_iter());
+            value.pub_titles.extend(i.pub_title.into_iter().filter(|t| !t.is_empty()));
+            value.pub_ids.extend(i.pub_id.into_iter());
+            value.pubmed_ids.extend(i.pubmed_id.into_iter().filter(|t| !t.is_empty()));
+            value.dois.extend(i.doi.into_iter().filter(|t| !t.is_empty()));
         }
 
         value
