@@ -31,14 +31,8 @@ use crate::normalize::ds::{
         FeedbackVec,
     },
     go_annotation::GoAnnotation,
-    interacting_protein::{
-        InteractingProtein,
-        InteractingProteinVec,
-    },
-    interacting_rna::{
-        InteractingRna,
-        InteractingRnaVec,
-    },
+    interacting_protein::InteractingProtein,
+    interacting_rna::InteractingRna,
     precompute::{
         Precompute,
         PrecomputeSummary,
@@ -99,16 +93,24 @@ pub struct Normalized {
     // #[serde(flatten)]
     // dates: Dates,
     qa_status: QaStatus,
-    secondary_structure: Option<R2dt>,
 
+    secondary: Option<R2dt>,
+
+    #[serde(flatten)]
     accessions: AccessionVec,
     cross_references: Vec<CrossReference>,
     crs: CrsVec,
-    feedback: FeedbackVec,
+    overlaps: FeedbackVec,
     go_annotations: Vec<GoAnnotation>,
-    interacting_proteins: InteractingProteinVec,
-    interacting_rnas: InteractingRnaVec,
+
+    interacting_proteins: Vec<InteractingProtein>,
+
+    interacting_rnas: Vec<InteractingRna>,
+
+    #[serde(flatten)]
     references: ReferenceVec,
+
+    #[serde(flatten)]
     rfam_hits: RfamHitVec,
 }
 
@@ -141,10 +143,7 @@ impl Raw {
 }
 
 impl Normalized {
-    pub fn new(
-        raw: Raw,
-        accessions: Vec<RawAccession>,
-    ) -> Result<Self, NormalizationError> {
+    pub fn new(raw: Raw, accessions: Vec<RawAccession>) -> Result<Self, NormalizationError> {
         let pre_summary = PrecomputeSummary::from(raw.precompute);
         let base = raw.base.clone();
 
@@ -168,17 +167,15 @@ impl Normalized {
             pre_summary,
             basic: base,
             qa_status: raw.qa_status,
-            secondary_structure: raw.r2dt.into(),
+            secondary: raw.r2dt,
 
             accessions: AccessionVec::from_iter(accessions.clone()),
             cross_references: accessions.into_iter().map(CrossReference::from).collect(),
             crs: CrsVec::from_iter(raw.crs.clone()),
-            feedback: FeedbackVec::from_iter(raw.feedback.clone()),
+            overlaps: FeedbackVec::from_iter(raw.feedback.clone()),
             go_annotations: raw.go_annotations.clone(),
-            interacting_proteins: InteractingProteinVec::from_iter(
-                raw.interacting_proteins.clone(),
-            ),
-            interacting_rnas: InteractingRnaVec::from_iter(raw.interacting_rnas.clone()),
+            interacting_proteins: raw.interacting_proteins,
+            interacting_rnas: raw.interacting_rnas,
             references,
             rfam_hits: RfamHitVec::from_iter(raw.rfam_hits.clone()),
         })
