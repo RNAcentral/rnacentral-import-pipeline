@@ -97,7 +97,7 @@ process fetch_accession {
   """
   psql \
     -v ON_ERROR_STOP=1 \
-    -v min-$min \
+    -v min=$min \
     -v max=$max \
     -f "$sql" \
     "$PGDATABASE" > raw.json
