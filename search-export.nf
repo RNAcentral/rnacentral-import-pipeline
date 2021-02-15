@@ -86,13 +86,13 @@ process build_ranges {
  
 process fetch_accession {
   tag { "$min-$max" }
-  maxForks 5
+  maxForks 8
 
   input:
-  tuple val(min), val(max), val(sql), val(_flag)
+  tuple val(min), val(max), path(sql), val(_flag)
 
   output:
-  path("raw.json")
+  tuple val(min), val(max), path("raw.json")
 
   """
   psql \
@@ -105,7 +105,7 @@ process fetch_accession {
 }
 
 process export_chunk {
-  tag { "$index" }
+  tag { "$min-$max" }
   memory params.search_export.memory
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
@@ -119,8 +119,8 @@ process export_chunk {
   script:
   xml = "xml4dbdumps__${min}__${max}.xml"
   """
-  search-export normalize $accessions $metadata raw.json
-  rnac search-export as-xml raw.json $xml count
+  search-export normalize $accessions $metadata data.json
+  rnac search-export as-xml data.json $xml count
   xmllint $xml --schema ${params.search_export.schema} --stream
   gzip $xml
   """
