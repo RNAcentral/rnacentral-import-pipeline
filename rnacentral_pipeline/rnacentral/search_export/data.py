@@ -72,7 +72,13 @@ def create_tag(root, name, value, attrib={}):
         if not isinstance(text, str):
             text = str(text)
 
-        element.text = text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;'")
+        cleaned = text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;'").encode(encoding='ascii', errors='backslashreplace')
+        try:
+            element.text = str(cleaned)
+        except:
+            print((name, text, cleaned))
+            print(etree.tostring(root))
+            raise
     return element
 
 
@@ -92,7 +98,12 @@ def create_getter(final_name, given_name):
 def tag(name, func, attrib={}, keys=None):
     def fn(root, data):
         getter = create_getter(name, keys)
-        value = func(*getter(data))
+        try:
+            value = func(*getter(data))
+        except:
+            print(getter(data))
+            print(data)
+            raise
         return create_tag(root, name, value, attrib=attrib)
     func_name = 'tag_' + name
     if 'name' in attrib:
@@ -156,6 +167,8 @@ def first(values):
     """
     Get the first value in the list of values as a string.
     """
+    if isinstance(values, (str, bytes)):
+        return values
     value = values[0]
     if isinstance(value, str):
         return values[0]
@@ -172,7 +185,9 @@ def unique_lower(values):
 
 def get_or_empty(name, missing=[]):
     def fn(data):
-        value = data.get(name, missing)
+        value = missing
+        if data:
+            value = data.get(name, missing)
         if isinstance(value, bool):
             value = str(value)
         if not isinstance(value, (list, tuple, set)):
@@ -184,7 +199,7 @@ def get_or_empty(name, missing=[]):
 def entry(spec):
     def fn(data):
         entry_id = '{upi}_{taxid}'.format(
-            upi=data['upi'],
+            upi=data['urs'],
             taxid=data['taxid'],
         )
         root = etree.Element('entry', {'id': entry_id})
@@ -559,7 +574,7 @@ def go_source(annotations):
 
 
 def has_interacting_proteins(interacting):
-    return str(bool(any(i['id'] for i in interacting)))
+    return str(bool(interacting))
 
 
 def interacting_proteins(interacting):
@@ -567,8 +582,8 @@ def interacting_proteins(interacting):
     for entry in interacting:
         if not entry:
             continue
-        if entry['id']:
-            proteins.add(entry['id'].split(':', 1)[1])
+        if entry['interacting_protein_id']:
+            proteins.add(entry['interacting_protein_id'].split(':', 1)[1])
         for key in ['label']:
             if entry[key]:
                 proteins.add(entry[key])
@@ -587,7 +602,7 @@ def interacting_evidence(proteins, rnas):
 
 
 def has_interacting_rnas(interacting):
-    return str(bool(any(i['id'] for i in interacting)))
+    return str(bool(interacting))
 
 
 def interacting_rnas(interacting):
@@ -595,8 +610,8 @@ def interacting_rnas(interacting):
     for rna in interacting:
         if not rna:
             continue
-        if rna['id']:
-            rnas.add(rna['id'].split(':', 1)[1])
+        if rna['interacting_rna_id']:
+            rnas.add(rna['interacting_rna_id'].split(':', 1)[1])
         if rna['urs']:
             rnas.add(rna['urs'])
     return rnas
@@ -660,14 +675,18 @@ def so_rna_type_name(rna_tree):
     return [n for (_, n) in rna_tree]
 
 
+def given(v):
+    return str(v)
+
+
 
 builder = entry([
-    tag('name', as_name, keys=('upi', 'taxid')),
+    tag('name', as_name, keys=('urs', 'taxid')),
     tag('description', first),
 
     section('dates', [
-        date_tag('first_seen', max),
-        date_tag('last_seen', min),
+        # date_tag('first_seen', max),
+        # date_tag('last_seen', min),
     ]),
 
     section('cross_references', [
@@ -681,20 +700,20 @@ builder = entry([
     ]),
 
     section('additional_fields', [
-        field('short_urs', short_urs, keys=('upi', 'taxid')),
+        field('short_urs', short_urs, keys=('urs', 'taxid')),
         field('active', as_active, keys='deleted'),
-        field('length', first),
+        field('length', given),
         field('species', first),
         fields('organelle', unique_lower, keys='organelles'),
-        fields('expert_db', unique, keys='expert_dbs'),
+        fields('expert_db', unique, keys='databases'),
         fields('common_name', normalize_common_name),
         fields('function', unique, keys='functions'),
-        fields('gene', get_genes, keys=('genes', 'product')),
+        fields('gene', get_genes, keys=('genes', 'products')),
         fields('gene_synonym', gene_synonyms, keys='gene_synonyms'),
         field('rna_type', normalize_rna_type),
         fields('product', unique, keys='products'),
-        field('has_genomic_coordinates', first, keys='has_coordinates'),
-        field('md5', first),
+        field('has_genomic_coordinates', given, keys='has_coordinates'),
+        field('md5', given),
         fields('author', as_authors, keys='authors'),
         fields('journal', as_journals, keys='journals'),
         fields('insdc_submission', as_insdc, keys='journals'),
@@ -705,7 +724,7 @@ builder = entry([
             'taxid',
             'deleted',
             'rna_type',
-            'expert_dbs',
+            'databases',
             'qa_status',
         )),
         fields('locus_tag', unique, keys='locus_tags'),
