@@ -4,30 +4,31 @@ COPY (
       'id', todo.id,
       'urs_taxid', todo.urs_taxid,
       'accession', todo.accession,
-      'common_name', todo.common_name,
+      'common_name', COALESCE(tax.common_name, todo.common_name),
       'database', todo.database,
       'external_id', todo.external_id,
-      'functions', todo.function,
+      'function', todo.function,
       'gene_synonyms', todo.gene_synonym,
-      'genes', todo.gene,
-      'locus_tags', todo.locus_tag,
+      'gene', todo.gene,
+      'locus_tag', todo.locus_tag,
       'non_coding_id', todo.non_coding_id,
       'notes', todo.note,
       'optional_id', todo.optional_id,
-      'organelles', todo.organelle,
+      'organelle', todo.organelle,
       'parent_accession', todo.parent_accession,
-      'products', todo.product,
-      'species', todo.species,
-      'standard_names', todo.standard_name,
-      'tax_strings', todo.lineage,
+      'product', todo.product,
+      'species', COALESCE(tax.name, todo.species),
+      'standard_name', todo.standard_name,
+      'tax_string', COALESCE(tax.lineage, todo.lineage),
       'authors', refs.authors,
-      'journals', refs.location,
-      'pub_titles', refs.title,
-      'pub_ids', refs.id,
-      'pubmed_ids', refs.pmid,
-      'dois', refs.doi
+      'journal', refs.location,
+      'pub_title', refs.title,
+      'pub_id', refs.id,
+      'pubmed_id', refs.pmid,
+      'doi', refs.doi
     )
   FROM search_export_accessions todo
+  LEFT JOIN rnc_taxonomy tax on tax.id = todo.taxid
   LEFT JOIN rnc_reference_map ref_map
   ON
     ref_map.accession = todo.accession

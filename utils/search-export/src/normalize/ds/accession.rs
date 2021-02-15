@@ -25,7 +25,7 @@ pub struct RawAccession {
     optional_id: Option<String>,
     organelle: Option<String>,
     parent_accession: Option<String>,
-    products: Option<String>,
+    product: Option<String>,
     species: Option<String>,
     standard_name: Option<String>,
     tax_string: Option<String>,
@@ -122,15 +122,15 @@ impl FromIterator<RawAccession> for AccessionVec {
 
         for i in iter {
             a.species.extend(i.species.into_iter().filter(|s| !s.is_empty()));
-            a.tax_strings.extend(i.tax_strings.into_iter().filter(|t| !t.is_empty()));
-            a.organelles.extend(i.organelles.clone().filter(|t| !t.is_empty()));
-            a.functions.extend(i.functions.into_iter().filter(|t| !t.is_empty()));
-            a.genes.extend(i.genes.into_iter().filter(|t| !t.is_empty()));
+            a.tax_strings.extend(i.tax_string.into_iter().filter(|t| !t.is_empty()));
+            a.organelles.extend(i.organelle.clone().filter(|t| !t.is_empty()));
+            a.functions.extend(i.function.into_iter().filter(|t| !t.is_empty()));
+            a.genes.extend(i.gene.into_iter().filter(|t| !t.is_empty()));
             a.common_name.extend(i.common_name.into_iter().filter(|t| !t.is_empty()));
             a.notes.extend(i.notes.into_iter().filter(|t| !t.is_empty()));
-            a.locus_tags.extend(i.locus_tags.into_iter().filter(|t| !t.is_empty()));
-            a.standard_names.extend(i.standard_names.into_iter().filter(|t| !t.is_empty()));
-            a.products.extend(i.products.into_iter().filter(|t| !t.is_empty()));
+            a.locus_tags.extend(i.locus_tag.into_iter().filter(|t| !t.is_empty()));
+            a.standard_names.extend(i.standard_name.into_iter().filter(|t| !t.is_empty()));
+            a.products.extend(i.product.into_iter().filter(|t| !t.is_empty()));
 
             for synonyms in i.gene_synonyms.into_iter() {
                 if synonyms.contains(";") {
