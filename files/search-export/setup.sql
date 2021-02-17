@@ -11,7 +11,7 @@ CREATE TABLE search_export_urs (
 DROP TABLE IF EXISTS search_export_accessions;
 CREATE TABLE search_export_accessions (
   id BIGSERIAL PRIMARY KEY,
-  search_export_id BIGSERIAL NOT NULL,
+  search_export_id bigint NOT NULL,
   urs TEXT NOT NULL,
   taxid INT NOT NULL,
   urs_taxid TEXT NOT NULL,
