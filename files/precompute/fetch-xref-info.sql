@@ -1,6 +1,10 @@
 COPY (
 SELECT
+  rna.id,
   xref.upi,
   xref.last
-from xref
+FROM xref
+JOIN rna
+ON
+  rna.upi = xref.upi
 ) TO STDOUT (FORMAT CSV)
