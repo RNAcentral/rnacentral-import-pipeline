@@ -32,7 +32,7 @@ process fetch_release_info {
 
   """
   psql -v ON_ERROR_STOP=1 -f $query $PGDATABASE > raw
-  sort -u raw > sorted.csv
+  sort -t , -nk1,1 -u raw > sorted.csv
   precompute max-release sorted.csv data.csv
   """
 }
