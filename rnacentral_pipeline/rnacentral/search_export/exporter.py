@@ -20,8 +20,6 @@ from datetime import date
 from lxml import etree
 from lxml.builder import E
 
-from rnacentral_pipeline import psql
-
 from .data import builder as raw_builder
 
 
@@ -72,7 +70,10 @@ def write(results, handle, count_handle):
 
 
 def parse(input_handle):
-    for entry in psql.json_handler(input_handle):
+    for line in input_handle:
+        if not line:
+            continue
+        entry = json.loads(line)
         yield raw_builder(entry)
 
 
