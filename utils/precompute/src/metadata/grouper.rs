@@ -117,7 +117,7 @@ where
     let data = JsonlIterator::from_read(reader);
     let data = data.group_by(T::index);
 
-    let mut expected = 0;
+    let mut expected = 1;
     for (id, entries) in &data {
         match (&expected).cmp(&id) {
             Less => {
@@ -151,12 +151,21 @@ where
     }
 
     match expected.cmp(&max) {
-        Less => (),
+        Less => {
+            while expected <= max {
+                let empty: Grouped<T> = Grouped::empty(&criteria, expected)?;
+                serde_json::to_writer(&mut writer, &empty)?;
+                writeln!(&mut writer)?;
+                expected += 1;
+            }
+        },
         Equal => (),
         Greater => {
             return Err(anyhow!("Got more items {} than expected {}", &expected, &max));
         },
     }
+
+    assert!(expected == max);
 
     Ok(())
 }

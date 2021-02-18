@@ -20,7 +20,6 @@ process fetch_all_urs_taxid {
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
-  path(_flag)
   path(query)
 
   output:
@@ -38,14 +37,12 @@ process select_outdated {
   input:
   path('xref.csv')
   path('precompute.csv')
-  path('active.txt')
 
   output:
-  path('to-load.csv')
+  path('urs.csv')
 
   """
   precompute select xref.csv precompute.csv urs.csv
-  expand-urs text active.txt urs.csv to-load.csv
   """
 }
 
@@ -69,13 +66,14 @@ process build_table {
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
-  tuple path('computed*.csv'), path(load)
+  tuple path('computed*.csv'), path(load), path('active.txt')
 
   output:
   val('done')
 
   """
-  sort -u computed*.csv > to-load.csv
+  sort -u computed*.csv > to-load-urs.csv
+  expand-urs text active.txt to-load-urs.csv > to-load-urs-taxid.csv
   psql \
     -v ON_ERROR_STOP=1 \
     -f "$load" "$PGDATABASE"
@@ -86,15 +84,13 @@ workflow using_release {
     take: flag
     emit: selected
     main:
-      Channel.fromPath('files/all-active-urs-taxid.sql') | set { active_sql }
       Channel.fromPath('files/precompute/fetch-xref-info.sql') | set { xref_sql }
       Channel.fromPath('files/precompute/fetch-precompute-info.sql') | set { pre_sql }
 
       precompute_releases(flag, pre_sql) | set { precompute_info }
       xref_releases(flag, xref_sql) | set { xref_info }
-      fetch_all_urs_taxid(flag, active_sql) | set { active_urs }
 
-      select_outdated(xref_info, precompute_info, active_urs) | set { selected }
+      select_outdated(xref_info, precompute_info) | set { selected }
 }
 
 workflow using_query {
@@ -112,6 +108,9 @@ workflow build_urs_table {
     main:
       Channel.fromPath('files/precompute/schema.sql') | set { schema_sql }
       Channel.fromPath('files/precompute/load-urs.sql') | set { load_sql }
+      Channel.fromPath('files/all-active-urs-taxid.sql') | set { active_sql }
+
+      fetch_all_urs_taxid(active_sql) | set { active_urs }
 
       create_schema(schema_sql) \
       | combine(method) \
@@ -119,7 +118,8 @@ workflow build_urs_table {
       | branch {
         release: it == 'release'
         query: it == 'query'
-      } | set { to_build }
+      } \
+      | set { to_build }
 
       to_build.release | using_release | set { from_release }
       to_build.query | using_query | set { from_query }
@@ -127,6 +127,7 @@ workflow build_urs_table {
       from_release.mix(from_query, from_release) \
       | collect \
       | combine(load_sql) \
+      | combine(active_urs) \
       | build_table \
       | set { finished }
 }
