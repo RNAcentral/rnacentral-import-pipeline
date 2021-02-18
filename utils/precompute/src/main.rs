@@ -1,10 +1,39 @@
-use std::path::PathBuf;
+use std::{
+    path::PathBuf,
+    str::FromStr,
+};
 use structopt::StructOpt;
 
 pub mod accessions;
 pub mod metadata;
 pub mod normalize;
 pub mod releases;
+
+#[derive(Debug)]
+enum Groupable {
+    Basic,
+    Coordinates,
+    Previous,
+    R2dtHits,
+    RfamHits,
+}
+
+impl FromStr for Groupable {
+    type Err = String;
+
+    fn from_str(raw: &str) -> Result<Self, Self::Err> {
+        match raw {
+            "basic" => Ok(Self::Basic),
+            "coordiantes" => Ok(Self::Coordinates),
+            "previous" => Ok(Self::Previous),
+            "r2dt-hits" => Ok(Self::R2dtHits),
+            "r2dt_hits" => Ok(Self::R2dtHits),
+            "rfam-hits" => Ok(Self::RfamHits),
+            "rfam_hits" => Ok(Self::RfamHits),
+            unknown => Err(format!("Unknown name {}", unknown)),
+        }
+    }
+}
 
 #[derive(Debug, StructOpt)]
 #[structopt(rename_all = "kebab-case")]
@@ -32,6 +61,23 @@ enum MetadataCommand {
         #[structopt(parse(from_os_str))]
         /// Filename of the raw previous file
         previous: PathBuf,
+
+        #[structopt(parse(from_os_str))]
+        /// Filename to write the results to, '-' means stdout
+        output: PathBuf,
+    },
+
+    Group {
+        /// Type of data to group
+        #[structopt(case_insensitive = true)]
+        data_type: Groupable,
+
+        #[structopt(parse(from_os_str))]
+        /// Filename to read the results from, '-' means stdin
+        path: PathBuf,
+
+        /// The maximum count of the entries.
+        max_count: usize,
 
         #[structopt(parse(from_os_str))]
         /// Filename to write the results to, '-' means stdout
@@ -142,6 +188,18 @@ fn main() -> anyhow::Result<()> {
                     &previous,
                     &output,
                 )?;
+            },
+            MetadataCommand::Group {
+                data_type,
+                path,
+                max_count,
+                output,
+            } => match data_type {
+                Groupable::Basic => metadata::basic::group(&path, max_count, &output)?,
+                Groupable::Coordinates => metadata::coordinate::group(&path, max_count, &output)?,
+                Groupable::Previous => metadata::previous::group(&path, max_count, &output)?,
+                Groupable::R2dtHits => metadata::r2dt_hit::group(&path, max_count, &output)?,
+                Groupable::RfamHits => metadata::rfam_hit::group(&path, max_count, &output)?,
             },
         },
         Subcommand::Normalize {

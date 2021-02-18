@@ -1,9 +1,10 @@
+pub mod basic;
 pub mod coordinate;
 pub mod merged;
 pub mod previous;
 pub mod r2dt_hit;
 pub mod rfam_hit;
-pub mod basic;
+pub mod grouper;
 
 use std::{
     io::Write,
@@ -19,12 +20,12 @@ use sorted_iter::{
     SortedPairIterator,
 };
 
+pub use basic::Basic;
 pub use coordinate::Coordinate;
 pub use merged::Metadata;
 pub use previous::Previous;
 pub use r2dt_hit::R2dtHit;
 pub use rfam_hit::RfamHit;
-pub use basic::Basic;
 
 use rnc_core::psql::JsonlIterator;
 
@@ -37,7 +38,7 @@ pub fn write_merge(
     output: &Path,
 ) -> Result<()> {
     let basic = JsonlIterator::from_path(basic_file)?;
-    let basic = basic.map(|b: Basic| ((b.urs_id, b.id), b));
+    let basic = basic.group_by(|b: &Basic| (b.urs_id, b.id));
     let basic = basic.into_iter().assume_sorted_by_key();
 
     let coordinates = JsonlIterator::from_path(coordinate_file)?;

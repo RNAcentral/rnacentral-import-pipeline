@@ -1,7 +1,13 @@
+use std::path::Path;
+
 use serde::{
     Deserialize,
     Serialize,
 };
+
+use anyhow::Result;
+
+use crate::metadata::grouper;
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 pub struct Previous {
@@ -18,4 +24,14 @@ pub struct Previous {
     rna_type: Option<String>,
     short_description: Option<String>,
     so_rna_type: Option<String>,
+}
+
+impl grouper::HasIndex for Previous {
+    fn index(&self) -> usize {
+        self.urs_id
+    }
+}
+
+pub fn group(path: &Path, max: usize, output: &Path) -> Result<()> {
+    grouper::group::<Previous>(grouper::Criteria::ZeroOrOne, &path, max, &output)
 }
