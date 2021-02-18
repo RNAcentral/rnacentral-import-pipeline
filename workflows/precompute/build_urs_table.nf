@@ -102,6 +102,15 @@ workflow using_query {
     run_query(flag, to_select) | set { selected }
 }
 
+workflow using_all {
+  take: flag
+  emit: selected
+  main:
+    Channel.fromPath("files/precompute/methods/all.sql") | set { to_select }
+
+    run_query(flag, to_select) | set { selected }
+}
+
 workflow build_urs_table {
     take: method
     emit: finished
@@ -118,13 +127,15 @@ workflow build_urs_table {
       | branch {
         release: it == 'release'
         query: it == 'query'
+        all: it == 'all'
       } \
       | set { to_build }
 
       to_build.release | using_release | set { from_release }
       to_build.query | using_query | set { from_query }
+      to_build.all | using_all | set { from_all }
 
-      from_release.mix(from_query, from_release) \
+      from_release.mix(from_query, from_all) \
       | collect \
       | combine(load_sql) \
       | combine(active_urs) \
