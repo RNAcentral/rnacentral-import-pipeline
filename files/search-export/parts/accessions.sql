@@ -1,7 +1,7 @@
 COPY (
   SELECT
     json_build_object(
-      'id', todo.id,
+      'id', todo.search_export_id,
       'urs_taxid', todo.urs_taxid,
       'accession', todo.accession,
       'common_name', COALESCE(tax.common_name, todo.common_name),
