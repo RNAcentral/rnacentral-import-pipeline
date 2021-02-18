@@ -71,8 +71,8 @@ pub fn select_new(xrefs: &Path, known: &Path, output: &Path) -> Result<()> {
             (Some(x), Some(p)) => match x.release.cmp(&p.release) {
                 Less => Err(anyhow!(
                     "This should never happen, too small release for {:?} vs {:?}",
-                    &xref,
-                    &pre
+                    &x,
+                    &p
                 ))?,
                 Equal => (),
                 Greater => writer.write_record(&[x.urs])?,

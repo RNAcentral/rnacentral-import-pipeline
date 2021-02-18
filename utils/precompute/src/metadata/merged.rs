@@ -29,12 +29,14 @@ pub struct Metadata {
 
 impl Metadata {
     pub fn new(
-        basic: Basic,
+        basic: impl Iterator<Item=Basic>,
         raw_coordinates: Option<impl Iterator<Item = Coordinate>>,
         raw_rfam_hits: Option<impl Iterator<Item = RfamHit>>,
         raw_r2dt_hits: Option<impl Iterator<Item = R2dtHit>>,
         raw_previous: Option<impl Iterator<Item = Previous>>,
     ) -> Result<Self> {
+        let basic = basic.collect::<Vec<Basic>>();
+        let basic = basic.get(0).unwrap();
         let coordinates = raw_coordinates.into_iter().flatten().collect();
         let rfam_hits = raw_rfam_hits.into_iter().flatten().collect();
         let r2dt_hits = raw_r2dt_hits.into_iter().flatten().collect();
@@ -47,8 +49,8 @@ impl Metadata {
         return Ok(Self {
             id: basic.id,
             urs_id: basic.urs_id,
-            urs_taxid: basic.urs_taxid,
-            upi: basic.urs,
+            urs_taxid: basic.urs_taxid.to_owned(),
+            upi: basic.urs.to_owned(),
             taxid: basic.taxid,
             length: basic.length,
             coordinates,

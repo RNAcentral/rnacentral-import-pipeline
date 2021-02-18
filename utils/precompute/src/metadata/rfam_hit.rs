@@ -1,7 +1,13 @@
+use std::path::Path;
+
 use serde::{
     Deserialize,
     Serialize,
 };
+
+use anyhow::Result;
+
+use crate::metadata::grouper;
 
 #[derive(Debug, Deserialize, Serialize, PartialEq)]
 pub struct RfamHit {
@@ -20,4 +26,14 @@ pub struct RfamHit {
     sequence_completeness: f64,
     sequence_start: usize,
     sequence_stop: usize,
+}
+
+impl grouper::HasIndex for RfamHit {
+    fn index(&self) -> usize {
+        self.urs_id
+    }
+}
+
+pub fn group(path: &Path, max: usize, output: &Path) -> Result<()> {
+    grouper::group::<RfamHit>(grouper::Criteria::AnyNumber, &path, max, &output)
 }
