@@ -148,7 +148,13 @@ impl Normalized {
         let base = raw.base.clone();
 
         let urs_taxid = base.urs_taxid.to_owned();
-        assert!(urs_taxid == accessions[0].urs_taxid);
+        assert!(
+            urs_taxid == accessions[0].urs_taxid,
+            "Accession urs {} and base urs {} disagree for id {}",
+            accessions[0].urs_taxid,
+            urs_taxid,
+            base.id
+        );
         let parts: Vec<&str> = urs_taxid.split("_").collect();
         let urs = parts[0].to_owned();
         let taxid = parts[1].parse::<usize>().unwrap();
