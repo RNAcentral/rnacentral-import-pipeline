@@ -4,7 +4,7 @@ BEGIN TRANSACTION;
 
 CREATE TEMP TABLE temp_current_urs_with_accession (
     id bigserial primary key,
-    search_id int not null,
+    search_export_id int not null,
     urs_taxid text not null,
     urs text not null,
     taxid int not null,
@@ -12,7 +12,7 @@ CREATE TEMP TABLE temp_current_urs_with_accession (
 );
 
 INSERT INTO temp_current_urs_with_accession
-(search_id, urs_taxid, urs, taxid, accession)
+(search_export_id, urs_taxid, urs, taxid, accession)
 (
 SELECT
     todo.id,
@@ -53,7 +53,7 @@ INSERT INTO search_export_accessions
     standard_name
 ) (
 SELECT
-    todo.search_id,
+    todo.search_export_id,
     todo.urs_taxid,
     todo.urs,
     todo.taxid,
