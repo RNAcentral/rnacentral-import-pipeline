@@ -22,7 +22,7 @@ SELECT
     todo.urs,
     todo.taxid,
     xref.deleted = 'N',
-    xref.last_release,
+    xref.last,
     xref.ac
 FROM precompute_urs_taxid todo
 JOIN :partition xref
