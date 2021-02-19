@@ -80,6 +80,21 @@ process build_table {
   """
 }
 
+process sort_ids {
+  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
+
+  input:
+  val(_flag)
+  path('raw*')
+
+  output:
+  path('finalized')
+
+  """
+  sort -u raw* > finalized
+  """
+}
+
 workflow using_release {
     take: flag
     emit: selected
@@ -111,6 +126,15 @@ workflow using_all {
     run_query(flag, to_select) | set { selected }
 }
 
+workflow using_ids {
+  take: flag
+  emit: selected
+  main:
+    Channel.fromPath(params.precompute.select.id_file) | set { id_files }
+
+    sort_ids(ids, id_files) | set { selected }
+}
+
 workflow build_urs_table {
     take: method
     emit: finished
@@ -128,14 +152,16 @@ workflow build_urs_table {
         release: it == 'release'
         query: it == 'query'
         all: it == 'all'
+        ids: it == 'ids'
       } \
       | set { to_build }
 
       to_build.release | using_release | set { from_release }
       to_build.query | using_query | set { from_query }
       to_build.all | using_all | set { from_all }
+      to_build.ids | using_ids | set { from_ids }
 
-      from_release.mix(from_query, from_all) \
+      from_release.mix(from_query, from_all, from_ids) \
       | collect \
       | combine(load_sql) \
       | combine(active_urs) \
