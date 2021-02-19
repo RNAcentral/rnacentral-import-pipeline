@@ -16,6 +16,7 @@ rust:
 	cp target/release/json2fasta bin
 	cp target/release/split-ena bin
 	cp target/release/kv bin
+	cp target/release/expand-urs bin
 	cp target/release/precompute bin
 	cp target/release/search-export bin
 
