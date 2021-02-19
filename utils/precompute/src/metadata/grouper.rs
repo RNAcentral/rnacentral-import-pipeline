@@ -1,6 +1,7 @@
 use serde::{
     de::DeserializeOwned,
     Serialize,
+    Deserialize,
 };
 
 use std::{
@@ -31,10 +32,8 @@ pub enum Criteria {
     ZeroOrOne,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub enum Grouped<T>
-where
-    T: Serialize,
 {
     Multiple {
         id: usize,
