@@ -32,7 +32,6 @@ process fetch_all_urs_taxid {
 
 process select_outdated {
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
-  memory '10GB'
 
   input:
   path('xref.csv')
@@ -64,6 +63,7 @@ process run_query {
 
 process build_table {
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
+  memory '10GB'
 
   input:
   tuple path('computed*.csv'), path(load), path('active.txt')
@@ -73,7 +73,7 @@ process build_table {
 
   """
   sort -u computed*.csv > to-load-urs.csv
-  expand-urs text active.txt to-load-urs.csv > to-load-urs-taxid.csv
+  expand-urs text active.txt to-load-urs.csv to-load-urs-taxid.csv
   psql \
     -v ON_ERROR_STOP=1 \
     -f "$load" "$PGDATABASE"
