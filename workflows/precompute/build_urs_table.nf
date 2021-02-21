@@ -164,7 +164,8 @@ workflow build_urs_table {
       to_build.all | using_all | set { from_all }
       to_build.ids | using_ids | set { from_ids }
 
-      from_release.mix(from_query, from_all, from_ids) \
+      Channel.empty() \
+      | mix(from_release, from_query, from_all, from_ids) \
       | collect \
       | combine(load_sql) \
       | combine(active_urs) \
