@@ -62,7 +62,7 @@ impl Normalized {
             deleted,
             previous: metadata.previous,
             rfam_hits: metadata.rfam_hits,
-            r2dt_hits: metadata.r2dt_hits,
+            r2dt_hits: metadata.r2dt_hits.into_iter().collect(),
         });
     }
 }

@@ -1,23 +1,19 @@
 pub mod basic;
 pub mod coordinate;
+pub mod grouper;
 pub mod merged;
 pub mod previous;
 pub mod r2dt_hit;
 pub mod rfam_hit;
-pub mod grouper;
 
 use std::{
     io::Write,
     path::Path,
 };
 
-use anyhow::Result;
-
-use itertools::Itertools;
-
-use sorted_iter::{
-    assume::*,
-    SortedPairIterator,
+use anyhow::{
+    anyhow,
+    Result,
 };
 
 pub use basic::Basic;
@@ -26,6 +22,12 @@ pub use merged::Metadata;
 pub use previous::Previous;
 pub use r2dt_hit::R2dtHit;
 pub use rfam_hit::RfamHit;
+
+use grouper::Grouped::{
+    Multiple,
+    Optional,
+    Required,
+};
 
 use rnc_core::psql::JsonlIterator;
 
@@ -37,35 +39,55 @@ pub fn write_merge(
     previous_file: &Path,
     output: &Path,
 ) -> Result<()> {
-    let basic = JsonlIterator::from_path(basic_file)?;
-    let basic = basic.group_by(|b: &Basic| (b.urs_id, b.id));
-    let basic = basic.into_iter().assume_sorted_by_key();
-
-    let coordinates = JsonlIterator::from_path(coordinate_file)?;
-    let coordinates = coordinates.group_by(|c: &Coordinate| (c.urs_id, c.id));
-    let coordinates = coordinates.into_iter().assume_sorted_by_key();
-
-    let rfam_hits = JsonlIterator::from_path(rfam_hits_file)?;
-    let rfam_hits = rfam_hits.group_by(|h: &RfamHit| (h.urs_id, h.id));
-    let rfam_hits = rfam_hits.into_iter().assume_sorted_by_key();
-
-    let r2dt_hits = JsonlIterator::from_path(r2dt_hits_file)?;
-    let r2dt_hits = r2dt_hits.group_by(|h: &R2dtHit| (h.urs_id, h.id));
-    let r2dt_hits = r2dt_hits.into_iter().assume_sorted_by_key();
-
-    let previous = JsonlIterator::from_path(previous_file)?;
-    let previous = previous.group_by(|p: &Previous| (p.urs_id, p.id));
-    let previous = previous.into_iter().assume_sorted_by_key();
-
-    let partial =
-        basic.left_join(coordinates).left_join(rfam_hits).left_join(r2dt_hits).left_join(previous);
+    let mut basic = JsonlIterator::from_path(basic_file)?;
+    let mut coordinates = JsonlIterator::from_path(coordinate_file)?;
+    let mut rfam_hits = JsonlIterator::from_path(rfam_hits_file)?;
+    let mut r2dt_hits = JsonlIterator::from_path(r2dt_hits_file)?;
+    let mut previous = JsonlIterator::from_path(previous_file)?;
 
     let mut output = rnc_utils::buf_writer(output)?;
-    for (_ids, data) in partial {
-        let ((((basic, coordinates), rfam_hits), r2dt_hits), previous) = data;
-        let norm = Metadata::new(basic, coordinates, rfam_hits, r2dt_hits, previous)?;
-        serde_json::to_writer(&mut output, &norm)?;
-        writeln!(&mut output)?;
+    loop {
+        match (
+            basic.next(),
+            coordinates.next(),
+            rfam_hits.next(),
+            r2dt_hits.next(),
+            previous.next(),
+        ) {
+            (None, None, None, None, None) => break,
+            (
+                Some(Required {
+                    id: id1,
+                    data: basic,
+                }),
+                Some(Multiple {
+                    id: id2,
+                    data: coords,
+                }),
+                Some(Multiple {
+                    id: id3,
+                    data: rfam_hits,
+                }),
+                Some(Optional {
+                    id: id4,
+                    data: r2dt_hit,
+                }),
+                Some(Optional {
+                    id: id5,
+                    data: previous,
+                }),
+            ) => {
+                assert!(
+                    id1 == id2 && id1 == id3 && id1 == id4 && id1 == id5,
+                    "The data ids are out of sync at {}",
+                    id1
+                );
+                let merged = Metadata::new(basic, coords, rfam_hits, r2dt_hit, previous)?;
+                serde_json::to_writer(&mut output, &merged)?;
+                writeln!(&mut output)?;
+            },
+            _ => return Err(anyhow!("Incorrect data format")),
+        }
     }
 
     Ok(())
