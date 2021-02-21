@@ -4,6 +4,7 @@ process query {
 
   input:
   val(_flag)
+  val(max_count)
   path(query)
 
   output:
@@ -14,7 +15,8 @@ process query {
     --variable ON_ERROR_STOP=1 \
     --variable tablename=$params.precompute.tablename \
     -f $query \
-    "$PGDATABASE" > ${query.baseName}.json
+    "$PGDATABASE" > raw.json
+  precompute group ${query.baseName} raw.json $max_count ${query.baseName}.json
   """
 }
 

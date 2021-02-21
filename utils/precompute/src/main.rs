@@ -72,15 +72,15 @@ enum MetadataCommand {
         #[structopt(case_insensitive = true)]
         data_type: Groupable,
 
-        #[structopt(parse(from_os_str))]
         /// Filename to read the results from, '-' means stdin
+        #[structopt(parse(from_os_str))]
         path: PathBuf,
 
         /// The maximum count of the entries.
         max_count: usize,
 
-        #[structopt(parse(from_os_str))]
         /// Filename to write the results to, '-' means stdout
+        #[structopt(parse(from_os_str))]
         output: PathBuf,
     },
 }
