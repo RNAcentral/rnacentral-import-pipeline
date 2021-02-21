@@ -1,6 +1,6 @@
 BEGIN TRANSACTION;
 
-DROP TABLE IF EXISTS search_export_urs;
+DROP TABLE IF EXISTS search_export_urs CASCADE;
 CREATE TABLE search_export_urs (
   id BIGSERIAL PRIMARY KEY,
   urs TEXT NOT NULL,
@@ -8,7 +8,7 @@ CREATE TABLE search_export_urs (
   urs_taxid TEXT NOT NULL
 );
 
-DROP TABLE IF EXISTS search_export_accessions;
+DROP TABLE IF EXISTS search_export_accessions CASCADE;
 CREATE TABLE search_export_accessions (
   id BIGSERIAL PRIMARY KEY,
   search_export_id bigint NOT NULL,
