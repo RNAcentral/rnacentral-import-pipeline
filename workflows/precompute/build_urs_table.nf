@@ -66,10 +66,10 @@ process build_table {
   memory '10GB'
 
   input:
-  tuple path('computed*.csv'), path(load), path('active.txt')
+  tuple path('computed*.csv'), path(load), path('active.txt'), path('counts.sql')
 
   output:
-  val('done')
+  path('counts.txt')
 
   """
   sort -u computed*.csv > to-load-urs.csv
@@ -77,6 +77,8 @@ process build_table {
   psql \
     -v ON_ERROR_STOP=1 \
     -f "$load" "$PGDATABASE"
+  psql -f counts.sql -v ON_ERROR_STOP=1 "$PGDATABASE" > counts.txt
+
   """
 }
 
@@ -142,6 +144,7 @@ workflow build_urs_table {
       Channel.fromPath('files/precompute/schema.sql') | set { schema_sql }
       Channel.fromPath('files/precompute/load-urs.sql') | set { load_sql }
       Channel.fromPath('files/all-active-urs-taxid.sql') | set { active_sql }
+      Channel.fromPath('files/precompute/get-urs-count.sql') | set { count_sql }
 
       fetch_all_urs_taxid(active_sql) | set { active_urs }
 
@@ -165,6 +168,9 @@ workflow build_urs_table {
       | collect \
       | combine(load_sql) \
       | combine(active_urs) \
+      | combine(count_sql) \
       | build_table \
+      | splitCsv \
+      | first \
       | set { finished }
 }
