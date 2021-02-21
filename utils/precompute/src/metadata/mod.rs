@@ -82,6 +82,7 @@ pub fn write_merge(
                     "The data ids are out of sync at {}",
                     id1
                 );
+
                 let merged = Metadata::new(basic, coords, rfam_hits, r2dt_hit, previous)?;
                 serde_json::to_writer(&mut output, &merged)?;
                 writeln!(&mut output)?;

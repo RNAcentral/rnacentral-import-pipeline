@@ -35,6 +35,24 @@ impl Metadata {
         r2dt_hits: Option<R2dtHit>,
         previous: Option<Previous>,
     ) -> Result<Self> {
+        if coordinates.len() > 0 {
+            assert!(
+                basic.urs_taxid == coordinates[0].urs_taxid,
+                "Coordinates had incorrect urs_taxid {}, expected: {}",
+                &coordinates[0].urs_taxid,
+                &basic.urs_taxid
+            )
+        }
+
+        if rfam_hits.len() > 0 {
+            assert!(
+                basic.urs_id == rfam_hits[0].urs_id,
+                "Rfam Hits had incorrect urs_id {}, expected: {}",
+                &rfam_hits[0].urs_id,
+                &basic.urs_id
+            )
+        }
+
         return Ok(Self {
             id: basic.id,
             urs_id: basic.urs_id,
