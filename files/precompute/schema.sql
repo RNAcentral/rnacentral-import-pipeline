@@ -1,8 +1,8 @@
 DROP TABLE IF EXISTS precompute_urs_accession CASCADE;
 CREATE TABLE IF NOT EXISTS precompute_urs_accession (
     id bigserial primary key,
-    precompute_urs_id int not null,
-    precompute_urs_taxid_id int not null,
+    precompute_urs_id bigint not null,
+    precompute_urs_taxid_id bigint not null,
     urs_taxid text not null,
     urs text not null,
     taxid int not null,
@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS precompute_urs_accession (
 DROP TABLE IF EXISTS precompute_urs_taxid CASCADE;
 CREATE TABLE precompute_urs_taxid (
   id bigserial primary key,
-  precompute_urs_id int not null,
+  precompute_urs_id bigint not null,
   urs text not null,
   taxid int not null,
   urs_taxid text not null
