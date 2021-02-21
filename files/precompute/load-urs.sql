@@ -34,6 +34,7 @@ FROM loaded_urs_taxid loaded
 JOIN precompute_urs urs
 ON
   urs.urs = split_part(loaded.urs_taxid, '_', 1)
+ORDER BY urs.id
 );
 
 ALTER TABLE precompute_urs_taxid
