@@ -135,19 +135,19 @@ workflow precompute {
     Channel.fromPath('files/precompute/queries/previous.sql') | set { prev_sql }
 
     // repeats | build_precompute_context | set { context }
-    Channel.of(params.precompute.method) | build_urs_table | set { built_table }
-    built_table | build_precompute_accessions | set { accessions_ready }
+    Channel.of(params.precompute.method) | build_urs_table | set { urs_counts }
+    urs_counts | build_precompute_accessions | set { accessions_ready }
 
     build_metadata(
-      basic_query(built_table, basic_sql),
-      coordinate_query(built_table, coordinate_sql),
-      rfam_query(built_table, rfam_sql),
-      r2dt_query(built_table, r2dt_sql),
-      prev_query(built_table, prev_sql),
+      basic_query(urs_counts, basic_sql),
+      coordinate_query(urs_counts, coordinate_sql),
+      rfam_query(urs_counts, rfam_sql),
+      r2dt_query(urs_counts, r2dt_sql),
+      prev_query(urs_counts, prev_sql),
     ) \
     | set { metadata }
 
-    built_table \
+    urs_counts \
     | build_ranges \
     | splitCsv \
     | combine(accessions_ready) \

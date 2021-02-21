@@ -3,7 +3,6 @@ process query {
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
-  val(_flag)
   val(max_count)
   path(query)
 
