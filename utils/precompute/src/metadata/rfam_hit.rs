@@ -30,7 +30,7 @@ pub struct RfamHit {
 
 impl grouper::HasIndex for RfamHit {
     fn index(&self) -> usize {
-        self.urs_id
+        self.id
     }
 }
 

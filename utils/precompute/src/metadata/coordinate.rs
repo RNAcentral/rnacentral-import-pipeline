@@ -23,7 +23,7 @@ pub struct Coordinate {
 
 impl grouper::HasIndex for Coordinate {
     fn index(&self) -> usize {
-        self.urs_id
+        self.id
     }
 }
 

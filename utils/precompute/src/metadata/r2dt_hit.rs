@@ -26,7 +26,7 @@ pub struct R2dtHit {
 
 impl grouper::HasIndex for R2dtHit {
     fn index(&self) -> usize {
-        self.urs_id
+        self.id
     }
 }
 

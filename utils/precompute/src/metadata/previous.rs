@@ -28,7 +28,7 @@ pub struct Previous {
 
 impl grouper::HasIndex for Previous {
     fn index(&self) -> usize {
-        self.urs_id
+        self.id
     }
 }
 
