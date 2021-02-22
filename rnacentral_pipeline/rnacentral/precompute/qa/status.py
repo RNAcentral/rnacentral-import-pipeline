@@ -40,4 +40,3 @@ def status(context: Context, sequence: Sequence, rna_type: str) -> QaStatus:
 
     results = [v(context, rna_type, sequence) for v in VALIDATORS]
     return QaStatus.from_results(results)
-
