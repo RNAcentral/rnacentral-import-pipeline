@@ -243,21 +243,6 @@ CREATE TABLE load_overlaps (
     assembly_id text
 );
 
-DROP TABLE IF EXISTS load_precomputed;
-CREATE TABLE load_precomputed (
-  id varchar(44) NOT NULL,
-  upi varchar(26) NOT NULL,
-  taxid int8 NULL,
-  description varchar(500) NULL,
-  short_description text NULL,
-  rna_type varchar(500) NULL DEFAULT 'NULL'::character varying,
-  has_coordinates bool NOT NULL DEFAULT false,
-  databases text,
-  is_active bool,
-  last_release int4,
-  so_rna_type text NOT NULL
-);
-
 DROP TABLE IF EXISTS load_qa_status;
 CREATE TABLE load_qa_status (
   rna_id varchar(44) NOT NULL,
