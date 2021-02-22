@@ -21,7 +21,7 @@ pub struct Basic {
 
 impl grouper::HasIndex for Basic {
     fn index(&self) -> usize {
-        self.urs_id
+        self.id
     }
 }
 
