@@ -24,7 +24,7 @@ impl FromStr for Groupable {
     fn from_str(raw: &str) -> Result<Self, Self::Err> {
         match raw {
             "basic" => Ok(Self::Basic),
-            "coordiantes" => Ok(Self::Coordinates),
+            "coordinates" => Ok(Self::Coordinates),
             "previous" => Ok(Self::Previous),
             "r2dt-hits" => Ok(Self::R2dtHits),
             "r2dt_hits" => Ok(Self::R2dtHits),
