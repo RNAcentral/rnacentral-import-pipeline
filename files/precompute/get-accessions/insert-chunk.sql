@@ -30,8 +30,6 @@ ON
     xref.upi = todo.urs AND xref.taxid = todo.taxid
 );
 
-CREATE INDEX un_upis_accessions__accession ON temp_current_urs_with_accession(accession);
-
 INSERT INTO precompute_urs_accession
 (
     precompute_urs_id,
