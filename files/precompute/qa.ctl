@@ -55,6 +55,7 @@ insert into qa_status (
   incomplete_sequence,
   possible_contamination,
   missing_rfam_match,
+  from_repetitive_region,
   messages
 ) (
 SELECT distinct
@@ -65,6 +66,7 @@ SELECT distinct
   incomplete_sequence,
   possible_contamination,
   missing_rfam_match,
+  false,
   messages
 FROM load_qa_status
 )
