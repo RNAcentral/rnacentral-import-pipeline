@@ -39,4 +39,13 @@ def parse(handle):
     processed = StringIO()
     json.dump(raw, processed)
     processed.seek(0)
-    return generic.parse(processed)
+
+    for entry in  generic.parse(processed):
+        updates = []
+        for region in entry.regions:
+            if region.chromosome == 'M':
+                updates.append(attr.evolve(region, chromosome='MT'))
+            else:
+                updates.append(region)
+        entry = attr.evolve(entry, regions=updates)
+        yield entry
