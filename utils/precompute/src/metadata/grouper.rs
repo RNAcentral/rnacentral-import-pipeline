@@ -151,12 +151,15 @@ where
 
     match expected.cmp(&max) {
         Less => {
-            while expected <= max {
+            while expected < max {
                 let empty: Grouped<T> = Grouped::empty(&criteria, expected)?;
                 serde_json::to_writer(&mut writer, &empty)?;
                 writeln!(&mut writer)?;
                 expected += 1;
             }
+            let empty: Grouped<T> = Grouped::empty(&criteria, expected)?;
+            serde_json::to_writer(&mut writer, &empty)?;
+            writeln!(&mut writer)?;
         },
         Equal => (),
         Greater => {
@@ -164,7 +167,7 @@ where
         },
     }
 
-    assert!(expected == max);
+    assert!(expected == max, "Did not reach {}, at {}", &max, &expected);
 
     Ok(())
 }
