@@ -27,6 +27,6 @@ LEFT JOIN rnc_taxonomy tax
 ON 
   tax.id = todo.taxid
 WHERE
-  todo.id BETWEEN :min and :max
+  todo.precompute_urs_id BETWEEN :min and :max
 order by todo.precompute_urs_id, todo.precompute_urs_taxid_id
 ) TO STDOUT
