@@ -12,9 +12,7 @@ use rnc_core::{
     urs_taxid,
 };
 
-use crate::normalize::utils;
-
-use crate::normalize::ds::{
+use crate::normalize::{
     accession::{
         AccessionVec,
         CrossReference,
@@ -48,9 +46,6 @@ use crate::normalize::ds::{
 
 #[derive(Error, Debug)]
 pub enum NormalizationError {
-    #[error("Could not ungroup {0}")]
-    CountError(#[from] utils::Error),
-
     #[error("Could not parse {0}")]
     UrsParsingError(#[from] urs::Error),
 

@@ -1,22 +1,19 @@
-use std::path::Path;
-
 use serde::{
     Deserialize,
     Serialize,
 };
+use std::path::Path;
 
 use anyhow::Result;
 
 use rnc_core::grouper;
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Basic {
     pub id: usize,
-    pub urs_id: usize,
-    pub urs_taxid: String,
-    pub urs: String,
-    pub taxid: usize,
     pub length: usize,
+    pub md5: String,
+    pub urs_taxid: String,
 }
 
 impl grouper::HasIndex for Basic {

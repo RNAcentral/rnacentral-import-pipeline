@@ -2,8 +2,12 @@ use serde::{
     Deserialize,
     Serialize,
 };
+use std::path::Path;
 
 use serde_with::CommaSeparator;
+
+use anyhow::Result;
+use rnc_core::grouper;
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Precompute {
@@ -49,4 +53,14 @@ impl Precompute {
             false => String::from("False"),
         }
     }
+}
+
+impl grouper::HasIndex for Precompute {
+    fn index(&self) -> usize {
+        self.id
+    }
+}
+
+pub fn group(path: &Path, max: usize, output: &Path) -> Result<()> {
+    grouper::group::<Precompute>(grouper::Criteria::ExactlyOne, &path, max, &output)
 }

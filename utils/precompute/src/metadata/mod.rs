@@ -1,6 +1,5 @@
 pub mod basic;
 pub mod coordinate;
-pub mod grouper;
 pub mod merged;
 pub mod previous;
 pub mod r2dt_hit;
@@ -23,7 +22,7 @@ pub use previous::Previous;
 pub use r2dt_hit::R2dtHit;
 pub use rfam_hit::RfamHit;
 
-use grouper::Grouped::{
+use rnc_core::grouper::Grouped::{
     Multiple,
     Optional,
     Required,

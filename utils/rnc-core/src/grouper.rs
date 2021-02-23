@@ -19,7 +19,8 @@ use anyhow::{
 };
 use itertools::Itertools;
 
-use rnc_core::psql::JsonlIterator;
+use crate::psql::JsonlIterator;
+use rnc_utils;
 
 pub trait HasIndex {
     fn index(&self) -> usize;

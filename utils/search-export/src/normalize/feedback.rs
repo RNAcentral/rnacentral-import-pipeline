@@ -1,12 +1,16 @@
 use std::{
     collections::HashSet,
     iter::FromIterator,
+    path::Path,
 };
 
 use serde::{
     Deserialize,
     Serialize,
 };
+
+use anyhow::Result;
+use rnc_core::grouper;
 
 // use serde_with::CommaSeparator;
 
@@ -43,4 +47,14 @@ impl FromIterator<Feedback> for FeedbackVec {
 
         value
     }
+}
+
+impl grouper::HasIndex for Feedback {
+    fn index(&self) -> usize {
+        self.id
+    }
+}
+
+pub fn group(path: &Path, max: usize, output: &Path) -> Result<()> {
+    grouper::group::<Feedback>(grouper::Criteria::AnyNumber, &path, max, &output)
 }
