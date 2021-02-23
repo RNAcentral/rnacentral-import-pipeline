@@ -379,6 +379,7 @@ from .helpers import load_data
             "Homo sapiens (human) let-7 microRNA precursor (2 structures)",
             marks=pytest.mark.xfail(reason="TBI"),
         ),
+        pytest.param('URS0001C7185B_9606', 'lnc_RNA', 'Homo sapiens (human) gb|MK280143')
     ],
 )
 def test_computes_correct_species_specific_descriptions(rna_id, rna_type, name):
