@@ -77,7 +77,8 @@ process query_accession_range {
     -v min=$min \
     -v max=$max \
     -f $query \
-    "$PGDATABASE" > accessions.json
+    "$PGDATABASE" > raw.json
+  precompute group-accessions raw.json $min $max accessions.json
   """
 }
 

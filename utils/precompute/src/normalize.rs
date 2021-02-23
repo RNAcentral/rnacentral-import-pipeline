@@ -5,8 +5,6 @@ use serde::{
     Serialize,
 };
 
-use itertools::Itertools;
-
 use anyhow::Result;
 
 use sorted_iter::{
@@ -27,7 +25,10 @@ use crate::{
         rfam_hit::RfamHit,
     },
 };
+
 use rnc_core::psql::JsonlIterator;
+use rnc_core::grouper::Grouped;
+
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Normalized {
@@ -45,10 +46,11 @@ pub struct Normalized {
 
 impl Normalized {
     fn new(
-        raw_accessions: impl Iterator<Item = RawAccessionEntry>,
+        raw_accessions: Vec<RawAccessionEntry>,
         metadata: Metadata,
     ) -> Result<Self> {
-        let accessions: Vec<Accession> = raw_accessions.map(Accession::from).collect();
+        assert!(raw_accessions.len() != 0, "Must given accessions to normalize");
+        let accessions: Vec<Accession> = raw_accessions.into_iter().map(Accession::from).collect();
         let last_release = accessions.iter().map(|a| a.last_release).max().unwrap();
         let deleted = accessions.iter().all(|a| !a.is_active);
 
@@ -69,13 +71,22 @@ impl Normalized {
 
 pub fn write(accession_file: &Path, metadata_file: &Path, output: &Path) -> Result<()> {
     let accessions = JsonlIterator::from_path(accession_file)?;
-    let accessions = accessions.group_by(|a: &RawAccessionEntry| (a.urs_id, a.id));
+    let accessions = accessions.map(|group: Grouped<RawAccessionEntry>| {
+        match group {
+            Grouped::Multiple { id, data } => (id, data),
+            _ => panic!("Illegal data format for accessions file {:?}", &group),
+        }
+    });
     let accessions = accessions.into_iter().assume_sorted_by_key();
 
     let metadata = JsonlIterator::from_path(metadata_file)?;
-    let metadata = metadata.map(|m: Metadata| ((m.urs_id, m.id), m));
+    let metadata = metadata.map(|group: Grouped<Metadata>| {
+        match group {
+            Grouped::Required { id, data } => (id, data),
+            _ => panic!("Illegal data format for metadata file {:?}", &group),
+        }
+    });
     let metadata = metadata.into_iter().assume_sorted_by_key();
-
     let partial = accessions.join(metadata);
 
     let mut output = rnc_utils::buf_writer(output)?;
