@@ -62,6 +62,8 @@ class QaStatus:
             if result.name not in fields:
                 raise ValueError(f"Unknown QaResult {result}")
             data[result.name] = result
+        if not data:
+            raise ValueError("Cannot build without QA results")
         return cls(**data)
 
     @property
