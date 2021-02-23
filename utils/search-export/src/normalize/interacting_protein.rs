@@ -1,12 +1,16 @@
 use std::{
     collections::HashSet,
     iter::FromIterator,
+    path::Path,
 };
 
 use serde::{
     Deserialize,
     Serialize,
 };
+
+use anyhow::Result;
+use rnc_core::grouper;
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct InteractingProtein {
@@ -57,4 +61,14 @@ impl FromIterator<InteractingProtein> for InteractingProteinVec {
 
         value
     }
+}
+
+impl grouper::HasIndex for InteractingProtein {
+    fn index(&self) -> usize {
+        self.id
+    }
+}
+
+pub fn group(path: &Path, max: usize, output: &Path) -> Result<()> {
+    grouper::group::<InteractingProtein>(grouper::Criteria::AnyNumber, &path, max, &output)
 }

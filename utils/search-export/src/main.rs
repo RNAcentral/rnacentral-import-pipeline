@@ -1,9 +1,44 @@
 use std::path::PathBuf;
+use std::str::FromStr;
 use structopt::StructOpt;
 
 use anyhow::Result;
 
 pub mod normalize;
+
+#[derive(Debug)]
+enum Groupable {
+    Basic,
+    Crs,
+    Feedback,
+    GoAnnotations,
+    InteractingProteins,
+    InteractingRnas,
+    QaStatus,
+    R2dtHits,
+    RfamHits,
+}
+
+impl FromStr for Groupable {
+    type Err = String;
+
+    fn from_str(raw: &str) -> Result<Self, Self::Err> {
+        match raw {
+            "basic" => Ok(Self::Basic),
+            "crs" => Ok(Self::Crs),
+            "feedback" => Ok(Self::Feedback),
+            "go-annotations" => Ok(Self::GoAnnotations),
+            "interacting-proteins" => Ok(Self::InteractingProteins),
+            "interacting-rnas" => Ok(Self::InteractingRnas),
+            "qa-status" => Ok(Self::QaStatus),
+            "r2dt-hits" => Ok(Self::R2dtHits),
+            "r2dt_hits" => Ok(Self::R2dtHits),
+            "rfam-hits" => Ok(Self::RfamHits),
+            "rfam_hits" => Ok(Self::RfamHits),
+            unknown => Err(format!("Unknown name {}", unknown)),
+        }
+    }
+}
 
 #[derive(Debug, StructOpt)]
 #[structopt(rename_all = "kebab-case")]
@@ -11,6 +46,23 @@ enum Subcommand {
     /// Merge each distinct type of metadata into single merged entries. This assumes that
     /// all files are sorted in the same way. Additionally, the xref file must have at
     /// least one entry for all possible urs_taxids.
+    Group {
+        /// Type of data to group
+        #[structopt(case_insensitive = true)]
+        data_type: Groupable,
+
+        /// Filename to read the results from, '-' means stdin
+        #[structopt(parse(from_os_str))]
+        path: PathBuf,
+
+        /// The maximum count of the entries.
+        max_count: usize,
+
+        /// Filename to write the results to, '-' means stdout
+        #[structopt(parse(from_os_str))]
+        output: PathBuf,
+    },
+
     Merge {
         #[structopt(parse(from_os_str))]
         base: PathBuf,
@@ -94,6 +146,22 @@ fn main() -> Result<()> {
     .unwrap_or_else(|_| eprintln!("Failed to create logger, ignore"));
 
     match opt.command {
+            Subcommand::Group {
+                data_type,
+                path,
+                max_count,
+                output,
+            } => match data_type {
+                Groupable::Basic => normalize::basic::group(&path, max_count, &output)?,
+                Groupable::Crs => normalize::crs::group(&path, max_count, &output)?,
+                Groupable::Feedback => normalize::feedback::group(&path, max_count, &output)?,
+                Groupable::GoAnnotations => normalize::go_annotation::group(&path, max_count, &output)?,
+                Groupable::InteractingProteins => normalize::interacting_protein::group(&path, max_count, &output)?,
+                Groupable::InteractingRnas => normalize::interacting_rna::group(&path, max_count, &output)?,
+                Groupable::QaStatus => normalize::qa_status::group(&path, max_count, &output)?,
+                Groupable::R2dtHits => normalize::r2dt::group(&path, max_count, &output)?,
+                Groupable::RfamHits => normalize::rfam_hit::group(&path, max_count, &output)?,
+            },
         Subcommand::Merge {
             base,
             crs,

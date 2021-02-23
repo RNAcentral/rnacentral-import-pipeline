@@ -12,10 +12,20 @@ use sorted_iter::{
 
 use itertools::Itertools;
 
-pub mod ds;
-pub mod utils;
+pub mod accession;
+pub mod basic;
+pub mod crs;
+pub mod entry;
+pub mod feedback;
+pub mod go_annotation;
+pub mod interacting_protein;
+pub mod interacting_rna;
+pub mod precompute;
+pub mod qa_status;
+pub mod r2dt;
+pub mod rfam_hit;
+pub mod so_tree;
 
-use crate::normalize::ds::so_tree;
 use rnc_core::psql::JsonlIterator;
 
 pub fn write_merge(
@@ -36,45 +46,45 @@ pub fn write_merge(
     let mut writer = rnc_utils::buf_writer(output_file)?;
 
     let base = JsonlIterator::from_path(base_file)?;
-    let base = base.map(|b: ds::basic::Basic| (b.id, b));
+    let base = base.map(|b: basic::Basic| (b.id, b));
     let base = base.into_iter().assume_sorted_by_key();
 
     let crs = JsonlIterator::from_path(crs_file)?;
-    let crs = crs.group_by(|c: &ds::crs::Crs| c.id);
+    let crs = crs.group_by(|c: &crs::Crs| c.id);
     let crs = crs.into_iter().assume_sorted_by_key();
 
     let feedback = JsonlIterator::from_path(feedback_file)?;
-    let feedback = feedback.group_by(|f: &ds::feedback::Feedback| f.id);
+    let feedback = feedback.group_by(|f: &feedback::Feedback| f.id);
     let feedback = feedback.into_iter().assume_sorted_by_key();
 
     let go_annotations = JsonlIterator::from_path(go_annotations_file)?;
-    let go_annotations = go_annotations.group_by(|f: &ds::go_annotation::GoAnnotation| f.id);
+    let go_annotations = go_annotations.group_by(|f: &go_annotation::GoAnnotation| f.id);
     let go_annotations = go_annotations.into_iter().assume_sorted_by_key();
 
     let interacting_proteins = JsonlIterator::from_path(interacting_proteins_file)?;
     let interacting_proteins =
-        interacting_proteins.group_by(|i: &ds::interacting_protein::InteractingProtein| i.id);
+        interacting_proteins.group_by(|i: &interacting_protein::InteractingProtein| i.id);
     let interacting_proteins = interacting_proteins.into_iter().assume_sorted_by_key();
 
     let interacting_rnas = JsonlIterator::from_path(interacting_rnas_file)?;
     let interacting_rnas =
-        interacting_rnas.group_by(|i: &ds::interacting_rna::InteractingRna| i.id);
+        interacting_rnas.group_by(|i: &interacting_rna::InteractingRna| i.id);
     let interacting_rnas = interacting_rnas.into_iter().assume_sorted_by_key();
 
     let precompute = JsonlIterator::from_path(precompute_file)?;
-    let precompute = precompute.map(|p: ds::precompute::Precompute| (p.id, p));
+    let precompute = precompute.map(|p: precompute::Precompute| (p.id, p));
     let precompute = precompute.into_iter().assume_sorted_by_key();
 
     let qa_status = JsonlIterator::from_path(qa_status_file)?;
-    let qa_status = qa_status.map(|q: ds::qa_status::QaStatus| (q.id, q));
+    let qa_status = qa_status.map(|q: qa_status::QaStatus| (q.id, q));
     let qa_status = qa_status.into_iter().assume_sorted_by_key();
 
     let r2dt_hits = JsonlIterator::from_path(r2dt_hits_file)?;
-    let r2dt_hits = r2dt_hits.map(|h: ds::r2dt::R2dt| (h.id, h));
+    let r2dt_hits = r2dt_hits.map(|h: r2dt::R2dt| (h.id, h));
     let r2dt_hits = r2dt_hits.into_iter().assume_sorted_by_key();
 
     let rfam_hits = JsonlIterator::from_path(rfam_hits_file)?;
-    let rfam_hits = rfam_hits.group_by(|i: &ds::rfam_hit::RfamHit| i.id);
+    let rfam_hits = rfam_hits.group_by(|i: &rfam_hit::RfamHit| i.id);
     let rfam_hits = rfam_hits.into_iter().assume_sorted_by_key();
 
     let merged = base
@@ -105,7 +115,7 @@ pub fn write_merge(
 
         let so_rna_type_tree = so_info[precompute.so_rna_type()].clone();
 
-        let raw = ds::entry::Raw {
+        let raw = entry::Raw {
             id,
             base: basic,
             precompute,
@@ -139,11 +149,11 @@ pub fn write(accession_file: &Path, metadata_file: &Path, output_file: &Path) ->
     let mut writer = rnc_utils::buf_writer(output_file)?;
 
     let metadata = JsonlIterator::from_path(metadata_file)?;
-    let metadata = metadata.map(|r: ds::entry::Raw| (r.id, r));
+    let metadata = metadata.map(|r: entry::Raw| (r.id, r));
     let metadata = metadata.into_iter().assume_sorted_by_key();
 
     let accessions = JsonlIterator::from_path(accession_file)?;
-    let accessions = accessions.group_by(|a: &ds::accession::RawAccession| a.id);
+    let accessions = accessions.group_by(|a: &accession::RawAccession| a.id);
     let accessions = accessions.into_iter().assume_sorted_by_key();
 
     let merged = accessions.join(metadata);
@@ -151,7 +161,7 @@ pub fn write(accession_file: &Path, metadata_file: &Path, output_file: &Path) ->
     let mut seen = false;
     for (_id, entry) in merged {
         let (accessions, metadata) = entry;
-        let normalized = ds::entry::Normalized::new(metadata, accessions.collect())?;
+        let normalized = entry::Normalized::new(metadata, accessions.collect())?;
         serde_json::to_writer(&mut writer, &normalized)?;
         writeln!(&mut writer)?;
         seen = true;

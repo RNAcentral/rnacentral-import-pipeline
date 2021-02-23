@@ -1128,6 +1128,7 @@ dependencies = [
  "md-5",
  "quick-xml",
  "regex",
+ "rnc-utils",
  "serde",
  "serde_json",
  "thiserror",

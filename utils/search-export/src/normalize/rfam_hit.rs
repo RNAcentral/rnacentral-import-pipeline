@@ -1,12 +1,16 @@
 use std::{
     collections::HashSet,
     iter::FromIterator,
+    path::Path,
 };
 
 use serde::{
     Deserialize,
     Serialize,
 };
+
+use anyhow::Result;
+use rnc_core::grouper;
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct RfamHit {
@@ -45,4 +49,14 @@ impl FromIterator<RfamHit> for RfamHitVec {
 
         value
     }
+}
+
+impl grouper::HasIndex for RfamHit {
+    fn index(&self) -> usize {
+        self.id
+    }
+}
+
+pub fn group(path: &Path, max: usize, output: &Path) -> Result<()> {
+    grouper::group::<RfamHit>(grouper::Criteria::AnyNumber, &path, max, &output)
 }

@@ -7,7 +7,7 @@ use serde::{
 
 use anyhow::Result;
 
-use crate::metadata::grouper;
+use rnc_core::grouper;
 
 #[derive(Debug, Deserialize, Serialize, PartialEq)]
 pub struct Coordinate {

@@ -1,12 +1,16 @@
 use std::{
     collections::HashSet,
     iter::FromIterator,
+    path::Path,
 };
 
 use serde::{
     Deserialize,
     Serialize,
 };
+
+use anyhow::Result;
+use rnc_core::grouper;
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Crs {
@@ -37,4 +41,14 @@ impl FromIterator<Crs> for CrsVec {
 
         c
     }
+}
+
+impl grouper::HasIndex for Crs {
+    fn index(&self) -> usize {
+        self.id
+    }
+}
+
+pub fn group(path: &Path, max: usize, output: &Path) -> Result<()> {
+    grouper::group::<Crs>(grouper::Criteria::AnyNumber, &path, max, &output)
 }
