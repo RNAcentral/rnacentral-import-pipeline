@@ -70,5 +70,5 @@ impl grouper::HasIndex for InteractingProtein {
 }
 
 pub fn group(path: &Path, max: usize, output: &Path) -> Result<()> {
-    grouper::group::<InteractingProtein>(grouper::Criteria::AnyNumber, &path, max, &output)
+    grouper::group::<InteractingProtein>(grouper::Criteria::AnyNumber, &path, 1, max, &output)
 }

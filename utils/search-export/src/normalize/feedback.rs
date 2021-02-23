@@ -56,5 +56,5 @@ impl grouper::HasIndex for Feedback {
 }
 
 pub fn group(path: &Path, max: usize, output: &Path) -> Result<()> {
-    grouper::group::<Feedback>(grouper::Criteria::AnyNumber, &path, max, &output)
+    grouper::group::<Feedback>(grouper::Criteria::AnyNumber, &path, 1, max, &output)
 }

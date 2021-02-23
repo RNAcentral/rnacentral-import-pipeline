@@ -62,5 +62,5 @@ impl grouper::HasIndex for Precompute {
 }
 
 pub fn group(path: &Path, max: usize, output: &Path) -> Result<()> {
-    grouper::group::<Precompute>(grouper::Criteria::ExactlyOne, &path, max, &output)
+    grouper::group::<Precompute>(grouper::Criteria::ExactlyOne, &path, 1, max, &output)
 }

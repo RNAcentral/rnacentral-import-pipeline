@@ -58,5 +58,5 @@ impl grouper::HasIndex for RfamHit {
 }
 
 pub fn group(path: &Path, max: usize, output: &Path) -> Result<()> {
-    grouper::group::<RfamHit>(grouper::Criteria::AnyNumber, &path, max, &output)
+    grouper::group::<RfamHit>(grouper::Criteria::AnyNumber, &path, 1, max, &output)
 }

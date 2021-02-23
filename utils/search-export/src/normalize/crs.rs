@@ -50,5 +50,5 @@ impl grouper::HasIndex for Crs {
 }
 
 pub fn group(path: &Path, max: usize, output: &Path) -> Result<()> {
-    grouper::group::<Crs>(grouper::Criteria::AnyNumber, &path, max, &output)
+    grouper::group::<Crs>(grouper::Criteria::AnyNumber, &path, 1, max, &output)
 }

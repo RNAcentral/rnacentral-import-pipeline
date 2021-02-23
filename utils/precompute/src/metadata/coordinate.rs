@@ -28,5 +28,5 @@ impl grouper::HasIndex for Coordinate {
 }
 
 pub fn group(path: &Path, max: usize, output: &Path) -> Result<()> {
-    grouper::group::<Coordinate>(grouper::Criteria::AnyNumber, &path, max, &output)
+    grouper::group::<Coordinate>(grouper::Criteria::AnyNumber, &path, 1, max, &output)
 }

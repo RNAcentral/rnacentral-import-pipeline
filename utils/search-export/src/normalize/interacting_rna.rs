@@ -60,5 +60,5 @@ impl grouper::HasIndex for InteractingRna {
 }
 
 pub fn group(path: &Path, max: usize, output: &Path) -> Result<()> {
-    grouper::group::<InteractingRna>(grouper::Criteria::AnyNumber, &path, max, &output)
+    grouper::group::<InteractingRna>(grouper::Criteria::AnyNumber, &path, 1, max, &output)
 }

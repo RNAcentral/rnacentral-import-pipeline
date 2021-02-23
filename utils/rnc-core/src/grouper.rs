@@ -107,7 +107,7 @@ where
     }
 }
 
-pub fn group<T>(criteria: Criteria, path: &Path, max: usize, output: &Path) -> Result<()>
+pub fn group<T>(criteria: Criteria, path: &Path, min: usize, max: usize, output: &Path) -> Result<()>
 where
     T: DeserializeOwned + HasIndex + Serialize,
 {
@@ -117,7 +117,7 @@ where
     let data = JsonlIterator::from_read(reader);
     let data = data.group_by(T::index);
 
-    let mut expected = 1;
+    let mut expected = min;
     for (id, entries) in &data {
         match (&expected).cmp(&id) {
             Less => {
