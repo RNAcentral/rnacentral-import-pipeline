@@ -173,5 +173,6 @@ workflow build_urs_table {
       | build_table \
       | splitCsv \
       | first \
+      | map { row -> row[0].toInteger() + 1 } \
       | set { finished }
 }
