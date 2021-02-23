@@ -150,6 +150,8 @@ class SequenceUpdate:
         Yield arrays for all updates for qa status.
         """
         if not self.qa_status:
+            if self.is_active:
+                raise ValueError(f"No QA status for active update {self}")
             return
 
         yield self.qa_status.writeable(self.sequence.upi, self.sequence.taxid)
