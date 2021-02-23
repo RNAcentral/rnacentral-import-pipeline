@@ -23,5 +23,5 @@ impl grouper::HasIndex for QaStatus {
 }
 
 pub fn group(path: &Path, max: usize, output: &Path) -> Result<()> {
-    grouper::group::<QaStatus>(grouper::Criteria::ExactlyOne, &path, max, &output)
+    grouper::group::<QaStatus>(grouper::Criteria::ExactlyOne, &path, 1, max, &output)
 }

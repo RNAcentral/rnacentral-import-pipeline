@@ -26,5 +26,5 @@ impl grouper::HasIndex for Basic {
 }
 
 pub fn group(path: &Path, max: usize, output: &Path) -> Result<()> {
-    grouper::group::<Basic>(grouper::Criteria::ExactlyOne, &path, max, &output)
+    grouper::group::<Basic>(grouper::Criteria::ExactlyOne, &path, 1, max, &output)
 }

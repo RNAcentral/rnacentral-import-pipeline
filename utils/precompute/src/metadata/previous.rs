@@ -33,5 +33,5 @@ impl grouper::HasIndex for Previous {
 }
 
 pub fn group(path: &Path, max: usize, output: &Path) -> Result<()> {
-    grouper::group::<Previous>(grouper::Criteria::ZeroOrOne, &path, max, &output)
+    grouper::group::<Previous>(grouper::Criteria::ZeroOrOne, &path, 1, max, &output)
 }

@@ -31,5 +31,5 @@ impl grouper::HasIndex for R2dtHit {
 }
 
 pub fn group(path: &Path, max: usize, output: &Path) -> Result<()> {
-    grouper::group::<R2dtHit>(grouper::Criteria::ZeroOrOne, &path, max, &output)
+    grouper::group::<R2dtHit>(grouper::Criteria::ZeroOrOne, &path, 1, max, &output)
 }
