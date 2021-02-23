@@ -33,7 +33,7 @@ pub enum Criteria {
     ZeroOrOne,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub enum Grouped<T>
 {
     Multiple {
