@@ -3,6 +3,12 @@ use serde::{
     Serialize,
 };
 
+use std::path::Path;
+
+use anyhow::Result;
+
+use rnc_core::grouper;
+
 #[derive(Debug, Deserialize, Serialize, PartialEq)]
 pub struct Accession {
     pub urs_taxid: String,
@@ -72,4 +78,14 @@ impl From<RawAccessionEntry> for Accession {
             so_rna_type: raw.so_rna_type,
         };
     }
+}
+
+impl grouper::HasIndex for RawAccessionEntry {
+    fn index(&self) -> usize {
+        self.id
+    }
+}
+
+pub fn group(path: &Path, min: usize, max: usize, output: &Path) -> Result<()> {
+    grouper::group::<RawAccessionEntry>(grouper::Criteria::AtleastOne, &path, min, max, &output)
 }

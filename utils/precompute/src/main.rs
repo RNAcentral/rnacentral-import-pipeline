@@ -120,6 +120,22 @@ enum Subcommand {
         command: MetadataCommand,
     },
 
+    GroupAccessions {
+        /// Filename to read the results from, '-' means stdin
+        #[structopt(parse(from_os_str))]
+        path: PathBuf,
+
+        /// The min index of these accessions.
+        min_index: usize,
+
+        /// The max index of these accessions.
+        max_index: usize,
+
+        /// Filename to write the results to, '-' means stdout
+        #[structopt(parse(from_os_str))]
+        output: PathBuf,
+    },
+
     /// Select all xrefs to use. Xrefs will be selected if they have a newer release than
     /// the previous one, if they have never been precomputed or if they are new.
     Select {
@@ -202,6 +218,12 @@ fn main() -> anyhow::Result<()> {
                 Groupable::RfamHits => metadata::rfam_hit::group(&path, max_count, &output)?,
             },
         },
+        Subcommand::GroupAccessions {
+            path,
+            min_index,
+            max_index,
+            output,
+        } => accessions::group(&path, min_index, max_index, &output)?,
         Subcommand::Normalize {
             accessions,
             metadata,
