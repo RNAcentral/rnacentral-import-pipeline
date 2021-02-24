@@ -114,7 +114,9 @@ workflow using_query {
   take: flag
   emit: selected
   main:
-    Channel.fromPath("$params.precompute.select.query") | set { to_select }
+    flag \
+    | map { _flag -> file($params.precompute.select.query) } \
+    | set { to_select }
 
     run_query(flag, to_select) | set { selected }
 }
@@ -132,7 +134,10 @@ workflow using_ids {
   take: flag
   emit: selected
   main:
-    Channel.fromPath(params.precompute.select.id_file) | set { id_files }
+
+    flag \
+    | map { _flag -> file(params.precompute.select.id_file) } \
+    | set { id_files } 
 
     sort_ids(ids, id_files) | set { selected }
 }
