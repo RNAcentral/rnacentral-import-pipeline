@@ -518,7 +518,7 @@ def rfam_problems(status):
     """
     Create a list of the names of all Rfam problems.
     """
-    ignore = {"has_issues", "messages", "has_issue"}
+    ignore = {"has_issues", "messages", "has_issue", "id"}
     problems = sorted(n for n, v in status.items() if v and n not in ignore)
     return problems or ["none"]
 
