@@ -79,11 +79,15 @@ workflow build_precompute_accessions {
   main:
     Channel.fromPath('files/precompute/get-accessions/insert-chunk.sql') | set { chunk_sql }
     Channel.fromPath('files/precompute/get-accessions/post-insert.sql') | set { post_sql }
-    Channel.fromPath('files/precompute/get-accessions/insert-xref-only.sql') | set { xref_only_sql } 
+    Channel.fromPath('files/precompute/get-accessions/insert-xref-only.sql') | set { xref_only_sql }
 
     find_partitions | splitCsv | set { partitions }
 
-    ready | accession_from_xref_only | set { xref_only }
+    ready \
+    | combine(xref_only_sql) \
+    | map { _flag, sql -> sql } \
+    | accession_from_xref_only \
+    | set { xref_only }
 
     ready \
     | combine(partitions) \

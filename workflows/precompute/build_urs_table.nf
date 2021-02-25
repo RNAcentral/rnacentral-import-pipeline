@@ -115,7 +115,7 @@ workflow using_query {
   emit: selected
   main:
     flag \
-    | map { _flag -> file($params.precompute.select.query) } \
+    | map { _flag -> file(params.precompute.select.query) } \
     | set { to_select }
 
     run_query(flag, to_select) | set { selected }
@@ -139,7 +139,7 @@ workflow using_ids {
     | map { _flag -> file(params.precompute.select.id_file) } \
     | set { id_files } 
 
-    sort_ids(ids, id_files) | set { selected }
+    sort_ids(flag, id_files) | set { selected }
 }
 
 workflow build_urs_table {
