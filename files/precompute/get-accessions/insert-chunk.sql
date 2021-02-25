@@ -25,10 +25,16 @@ SELECT
     xref.last,
     xref.ac
 FROM precompute_urs_taxid todo
-JOIN :partition xref
+JOIN xref_p36_not_deleted xref
 ON
     xref.upi = todo.urs AND xref.taxid = todo.taxid
 );
+
+do $$
+  begin
+    assert (select count(*) from temp_current_urs_with_accession) != 0, "Inserted no data";
+  end;
+$$;
 
 INSERT INTO precompute_urs_accession
 (
