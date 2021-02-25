@@ -60,13 +60,25 @@ process build_ranges {
   """
 }
 
+process find_upi_taxid_ranges {
+  input:
+  file(ranges)
+
+  output:
+  file('urs_taxid.csv')
+
+  """
+  rnac precompute upi-taxid-ranges $ranges urs_taxid.csv
+  """
+}
+
 process query_accession_range {
   tag { "$min-$max" }
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
   maxForks params.precompute.maxForks
 
   input:
-  tuple val(min), val(max), path(query)
+  tuple val(min), val(max), path(query), val(upi_start), val(upi_stop)
 
   output:
   tuple val(min), val(max), path('accessions.json')
@@ -78,7 +90,7 @@ process query_accession_range {
     -v max=$max \
     -f $query \
     "$PGDATABASE" > raw.json
-  precompute group-accessions raw.json $min $max accessions.json
+  precompute group-accessions raw.json $upi_start $upi_stop accessions.json
   """
 }
 
@@ -150,10 +162,19 @@ workflow precompute {
 
     urs_counts \
     | build_ranges \
+    | set { ranges }
+
+    ranges \
+    | find_upi_taxid_ranges \
+    | splitCsv \
+    | set { upi_taxid_ranges }
+
+    ranges \
     | splitCsv \
     | combine(accessions_ready) \
     | combine(accession_query) \
-    | map { _tablename, min, max, _flag, sql -> [min, max, sql] } \
+    | map { _tablename, min, max, _flag, sql, -> [min, max, sql] } \
+    | combine(upi_taxid_ranges) \
     | query_accession_range \
     | combine(metadata) \
     | process_range
