@@ -24,8 +24,8 @@ SELECT
     xref.deleted = 'N',
     xref.last,
     xref.ac
-FROM precompute_urs_taxid todo
-JOIN :partition xref
+FROM only xref
+JOIN precompute_urs_taxid todo
 ON
     xref.upi = todo.urs AND xref.taxid = todo.taxid
 );
@@ -78,8 +78,7 @@ FROM temp_current_urs_with_accession todo
 JOIN rnc_accessions acc
 ON
     acc.accession = todo.accession
-WHERE
-    acc.database = :'db_name'
 );
 
 COMMIT;
+

@@ -20,6 +20,23 @@ process find_partitions {
   """
 }
 
+process accession_from_xref_only {
+  container ''
+
+  input:
+  path(sql)
+
+  output:
+  val('done')
+
+  """
+  psql \
+  -v ON_ERROR_STOP=1 \
+  -f $sql \
+  "$PGDATABASE"
+  """
+}
+
 process build_accession_table {
   tag { "$partition" }
   maxForks 5
@@ -62,14 +79,18 @@ workflow build_precompute_accessions {
   main:
     Channel.fromPath('files/precompute/get-accessions/insert-chunk.sql') | set { chunk_sql }
     Channel.fromPath('files/precompute/get-accessions/post-insert.sql') | set { post_sql }
+    Channel.fromPath('files/precompute/get-accessions/insert-xref-only.sql') | set { xref_only_sql } 
 
     find_partitions | splitCsv | set { partitions }
+
+    ready | accession_from_xref_only | set { xref_only }
 
     ready \
     | combine(partitions) \
     | map { _flag, p, descr -> [p, descr] } \
     | combine(chunk_sql) \
     | build_accession_table \
+    | mix(xref_only) \
     | collect \
     | combine(post_sql) \
     | map { it[-1] } \
