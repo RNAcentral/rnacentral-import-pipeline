@@ -106,7 +106,7 @@ class Database(enum.Enum):
         if self is Database.ensembl:
             return 'Ensembl'
         if self is Database.ensembl_fungi:
-            return 'Ensembl Funig'
+            return 'Ensembl Fungi'
         if self is Database.ensembl_metazoa:
             return 'Ensembl Metazoa'
         if self is Database.ensembl_plants:
@@ -148,7 +148,7 @@ class Database(enum.Enum):
         if self is Database.modomics:
             return 'Modomics'
         if self is Database.noncode:
-            return 'NONCODCE'
+            return 'NONCODE'
         if self is Database.pdbe:
             return 'PDBe'
         if self is Database.pirbase:
