@@ -61,6 +61,8 @@ process build_ranges {
 }
 
 process find_upi_taxid_ranges {
+  executor 'local'
+
   input:
   file(ranges)
 
