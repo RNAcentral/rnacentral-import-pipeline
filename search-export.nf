@@ -86,7 +86,7 @@ process build_ranges {
  
 process fetch_accession {
   tag { "$min-$max" }
-  maxForks 8
+  maxForks 3
 
   input:
   tuple val(min), val(max), path(sql), val(_flag)
