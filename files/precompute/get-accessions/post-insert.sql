@@ -1,4 +1,4 @@
-/timing
+\timing
 
 BEGIN;
 

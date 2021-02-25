@@ -158,9 +158,6 @@ where
                 writeln!(&mut writer)?;
                 expected += 1;
             }
-            let empty: Grouped<T> = Grouped::empty(&criteria, expected)?;
-            serde_json::to_writer(&mut writer, &empty)?;
-            writeln!(&mut writer)?;
         },
         Equal => (),
         Greater => {
