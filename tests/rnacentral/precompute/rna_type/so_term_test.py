@@ -239,6 +239,8 @@ def test_can_detect_parent_properly(first, second, expected):
     ('URS0000000DBF_6239', 'piRNA'),
     ('URS000061F377_559292', 'rRNA_25S'),
     ('URS0000732D5D_9606', 'lnc_RNA'),
+    ('URS00021528E4_7515', 'large_subunit_rRNA'),
+    ('URS0002176781_1658108', 'rRNA_23S'),
 
     ('URS00001F11B5_6239', 'ncRNA'),
     ('URS000048B30C_3702', 'ncRNA'),
