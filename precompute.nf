@@ -64,10 +64,10 @@ process find_upi_taxid_ranges {
   executor 'local'
 
   input:
-  file(ranges)
+  path(ranges)
 
   output:
-  file('urs_taxid.csv')
+  path('urs_taxid.csv')
 
   """
   rnac precompute upi-taxid-ranges $ranges urs_taxid.csv
@@ -118,10 +118,9 @@ process process_range {
 process load_data {
   beforeScript 'slack db-work loading-precompute || true'
   afterScript 'slack db-done loading-precompute || true'
-  container ''
 
   input:
-  path('precompute*.csv') 
+  path('precompute*.csv')
   path('qa*.csv')
   path(pre_ctl)
   path(qa_ctl)
@@ -168,6 +167,7 @@ workflow precompute {
 
     ranges \
     | find_upi_taxid_ranges \
+    | map { upi_min, ut_min, ut_max -> [upi_min, ut_min, ut_max.toInteger() + 1] } \
     | splitCsv \
     | set { upi_taxid_ranges }
 
@@ -175,8 +175,8 @@ workflow precompute {
     | splitCsv \
     | combine(accessions_ready) \
     | combine(accession_query) \
-    | map { _tablename, min, max, _flag, sql, -> [min, max, sql] } \
-    | combine(upi_taxid_ranges) \
+    | map { _tablename, min, max, _flag, sql -> [min, max, sql] } \
+    | join(upi_taxid_ranges) \
     | query_accession_range \
     | combine(metadata) \
     | process_range
