@@ -10,7 +10,7 @@ process find_chunks {
   """
 }
 
-process query_chunks {
+process query_chunk {
   maxForks params.ftp_export.ensembl.maxForks
 
   input:
@@ -45,7 +45,7 @@ workflow ensembl_export {
   find_chunks \
   | splitCsv \
   | combine(query) \
-  | export_chunk \
+  | query_chunk \
   | combine(schema) \
   | process_chunk
 }
