@@ -1,6 +1,5 @@
-process id_mapping {
+process build_id_mapping {
   publishDir "${params.ftp_export.publish}/id_mapping/", mode: 'copy'
-  container ''
 
   when: params.ftp_export.id_mapping.run
 
@@ -47,7 +46,7 @@ workflow id_mapping {
   Channel.fromPath('files/ftp-export/id-mapping/id_mapping.sql') | set { id_query }
   Channel.fromPath('files/ftp-export/id-mapping/readme.txt') | set { readme_template }
 
-  id_mapping(id_query, readme_template)
+  build_id_mapping(id_query, readme_template)
 
-  id_mapping.out.mapping | database_mapping
+  build_id_mapping.out.mapping | database_mapping
 }
