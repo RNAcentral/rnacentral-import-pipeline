@@ -1,4 +1,3 @@
-
 process id_mapping {
   publishDir "${params.ftp_export.publish}/id_mapping/", mode: 'copy'
   container ''
@@ -25,7 +24,7 @@ process id_mapping {
   """
 }
 
-process database_id_mapping {
+process database_mapping {
   publishDir "${params.ftp_export.publish}/id_mapping/database_mappings/", mode: 'move'
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 

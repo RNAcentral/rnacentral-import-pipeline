@@ -1,4 +1,4 @@
-process coordinate_readme {
+process readme {
   publishDir "${params.ftp_export.publish}/genome_coordinates/", mode: 'copy'
   when: params.ftp_export.coordinates.run
 
@@ -13,7 +13,7 @@ process coordinate_readme {
   """
 }
 
-process find_genome_coordinate_jobs {
+process find_jobs {
   when: params.ftp_export.coordinates.run
 
   input:
@@ -27,7 +27,7 @@ process find_genome_coordinate_jobs {
   """
 }
 
-process fetch_coordinates {
+process fetch {
   tag { "${assembly}-${species}" }
   maxForks params.ftp_export.coordinates.maxForks
 
@@ -39,9 +39,6 @@ process fetch_coordinates {
 
   """
   psql -v ON_ERROR_STOP=1 -v "assembly_id=$assembly" -f $query "$PGDATABASE" > result.json
-  if [[ -z result.json ]]; then
-    rm result.json
-  fi
   """
 }
 
@@ -94,7 +91,7 @@ workflow export_coordinates {
   | find_jobs \
   | splitCsv \
   | combine(query) \
-  | fetch_coordinates \
-  | filter { fn -> !fn.isEmpty() } \
+  | fetch \
+  | filter { _a, _s, fn -> !fn.isEmpty() } \
   | (generate_bed & generate_gff3)
 }
