@@ -167,8 +167,8 @@ workflow precompute {
 
     ranges \
     | find_upi_taxid_ranges \
-    | map { upi_min, ut_min, ut_max -> [upi_min, ut_min, ut_max.toInteger() + 1] } \
     | splitCsv \
+    | map { upi_min, ut_min, ut_max -> [upi_min, ut_min, ut_max.toInteger() + 1] } \
     | set { upi_taxid_ranges }
 
     ranges \
