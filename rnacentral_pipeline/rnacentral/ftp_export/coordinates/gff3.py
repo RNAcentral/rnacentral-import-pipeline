@@ -100,7 +100,7 @@ def write_gff_text(features, output, allow_no_features=False, header=True) -> bo
         return False
 
     if header:
-        utput.write("##gff-version 3\n")
+        output.write("##gff-version 3\n")
     output.write(str(first_feature))
     output.write("\n")
     for feature in features:
