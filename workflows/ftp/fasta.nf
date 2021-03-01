@@ -1,4 +1,4 @@
-process active_fasta {
+process active {
   publishDir "${params.ftp_export.publish}/sequences/", mode: 'move'
   when: params.ftp_export.sequences.active.run
 
@@ -22,7 +22,7 @@ process active_fasta {
   """
 }
 
-process inactive_fasta {
+process inactive {
   publishDir "${params.ftp_export.publish}/sequences/", mode: 'move'
   when: params.ftp_export.sequences.inactive.run
 
@@ -40,7 +40,7 @@ process inactive_fasta {
   """
 }
 
-process species_specific_fasta {
+process species_specific {
   publishDir "${params.ftp_export.publish}/sequences/", mode: 'move'
   when: params.ftp_export.sequences.species.run
 
@@ -70,7 +70,7 @@ process find_db_to_export {
   """
 }
 
-process database_specific_fasta {
+process database_specific {
   tag { db }
   maxForks params.ftp_export.sequences.by_database.max_forks
   publishDir "${params.ftp_export.publish}/sequences/by-database", mode: 'move'
@@ -91,7 +91,6 @@ process database_specific_fasta {
   json2fasta raw.json ${db.toLowerCase().replaceAll(' ', '_')}.fasta
   """
 }
-
 
 process extract_nhmmer_valid {
   publishDir "${params.ftp_export.publish}/sequences/.internal/", mode: 'move'
@@ -133,16 +132,16 @@ process extract_nhmmer_invalid {
 workflow fasta_export {
   Channel.fromPath('files/ftp-export/sequences/active.sql') | set { active_sql }
   Channel.fromPath('files/ftp-export/sequences/readme.txt') | set { readme }
-  active_fasta(active_sql, readme)
+  active(active_sql, readme)
 
-  active_fasta.out.active | (extract_nhmmer_valid & extract_nhmmer_invalid)
+  active.out.active | (extract_nhmmer_valid & extract_nhmmer_invalid)
 
-  Channel.fromPath('files/ftp-export/sequences/inactive.sql') | inactive_fasta
-  Channel.fromPath('files/ftp-export/sequences/species-specific.sql') | species_specific_fasta
+  Channel.fromPath('files/ftp-export/sequences/inactive.sql') | inactive
+  Channel.fromPath('files/ftp-export/sequences/species-specific.sql') | species_specific
 
   Channel.fromPath('files/ftp-export/sequences/databases.sql') \
   | find_dbs \
-  | splitCsv()
-  | combine(Channel.fromPath('files/ftp-export/sequences/database-specific.sql'))
-  | database_specific_fasta
+  | splitCsv \
+  | combine(Channel.fromPath('files/ftp-export/sequences/database-specific.sql')) \
+  | database_specific
 }
