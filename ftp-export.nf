@@ -2,10 +2,10 @@
 
 nextflow.enable.dsl=2
 
-include { export_coordinates } from "./workflows/export-coordinates"
-include { id_mapping } from './workflows/id-mapping'
-include { ensembl_export } from './workflows/ensembl-export'
-include { fasta_export } from './workflows/fasta-export'
+include { export_coordinates } from "./workflows/ftp/coordinates"
+include { id_mapping } from './workflows/ftp/id-mapping'
+include { ensembl_export } from './workflows/ftp/ensembl'
+include { fasta_export } from './workflows/ftp/fasta'
 
 process release_note {
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
@@ -53,8 +53,8 @@ process rfam_annotations {
   when: params.ftp_export.rfam.annotations.run
 
   input:
-  path(query) from Channel.fromPath('files/ftp-export/rfam/rfam-annotations.sql')
-  path('template.txt') from Channel.fromPath('files/ftp-export/rfam/readme.txt')
+  path(query)
+  path('template.txt')
 
   output:
   path('rfam_annotations.tsv.gz')
@@ -96,7 +96,7 @@ workflow ftp_export {
   md5(md5_query, md5_template)
 
   Channel.fromPath('files/ftp-export/release_note.txt') | release_note
-  Channel.fromPath('files/ftp-export/go_annotations/rnacentral_rfam_annotations.sql') | rfam_go_annotations
+  Channel.fromPath('files/ftp-export/go_annotations/rnacentral_rfam_annotations.sql') | rfam_go_matches
 
   Channel.fromPath('files/ftp-export/rfam/rfam-annotations.sql') | set { rfam_annotation_query }
   Channel.fromPath('files/ftp-export/rfam/readme.txt') | set { rfam_readme }
