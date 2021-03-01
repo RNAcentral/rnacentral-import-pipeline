@@ -1,9 +1,11 @@
 #!/usr/bin/env nextflow
 
+nextflow.enable.dsl=2
+
 create_memory = params.sequence_search.create_fasta.memory_table
 
 process find_db_to_export {
-  when { params.sequence_search_export.run }
+  when { params.sequence_search.run }
 
   input:
   path(query)
@@ -21,13 +23,17 @@ process query_database {
   maxForks params.sequence_search.max_forks
 
   input:
-  tuple val(name), path(query), val(parameters)
+  tuple val(name), val(partition) path(query)
 
   output:
   tuple val(name), path('raw.json')
 
   """
-  psql -v ON_ERROR_STOP=1 -f "$query" $parameters "$PGDATABASE" > raw.json
+  psql \
+    -v ON_ERROR_STOP=1 \
+    -v partition=$partition \
+    -f "$query" \
+    "$PGDATABASE" > raw.json
   """
 }
 
@@ -39,14 +45,14 @@ process create_fasta {
   tuple val(name), path(json)
 
   output:
-  path("splits/$name*.fasta")
-  path("${name}.hash")
-  path("${name}.seqstat")
+  path "splits/$name*.fasta", emit: sequences
+  path "${name}.hash", emit: hashes
+  path "${name}.seqstat", emit: stats
 
   script:
   def ordered = "${name}-ordered.fasta"
   """
-  json2fasta ${json} - | rnac ftp-export sequences valid-nhmmer - ${ordered}
+  json2fasta.py ${json} - | rnac ftp-export sequences valid-nhmmer - ${ordered}
   md5sum ${ordered} > ${name}.hash
   seqkit shuffle --two-pass ${ordered} > ${name}.fasta
   esl-seqstat ${name}.fasta > ${name}.seqstat
@@ -86,19 +92,20 @@ workflow sequence_search_export {
   Channel.fromPath('files/ftp-export/sequences/database-specific.sql') | set { db_specific_query }
 
   Channel.fromPath('files/sequence-search-export/*.sql') \
-  | filter { params.sequence_search_export.run } \
+  | filter { params.sequence_search.run } \
   | map { fn -> [file(fn).baseName, fn, ''] } \
   | set { simple_queries }
 
   db_query \
   | find_db_to_export \
   | splitCsv \
+  | filter { row -> row[0].toLowerCase() != 'gencode' } \
   | combine(db_specific_query) \
   | map { db, query -> [db, query, "-v db='%${db}%'"] } \
   | mix(simple_queries) \
-  | map { db, query, param -> [db.toLowerCase().replace(' ', '_'), query, param] } \
+  | map { db, query, param -> [db.toLowerCase().replace(' ', '_').replace('/', '_'), query, param] } \
   | map { db, q, p -> [(db == "tmrna_website" ? "tmrna_web" : db), q, p] } \
-  | query_data \
+  | query_database \
   | create_fasta
 
   create_fasta.out.sequences | collect | set { sequences }
