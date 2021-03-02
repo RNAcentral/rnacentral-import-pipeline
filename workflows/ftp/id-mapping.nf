@@ -24,7 +24,7 @@ process build_id_mapping {
 }
 
 process database_mapping {
-  publishDir "${params.ftp_export.publish}/id_mapping/database_mappings/", mode: 'move'
+  publishDir "${params.ftp_export.publish}/id_mapping/database_mappings/", mode: 'copy'
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   when: params.ftp_export.id_mapping.by_database.run

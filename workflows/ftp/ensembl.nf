@@ -46,6 +46,7 @@ workflow ensembl_export {
   | splitCsv \
   | combine(query) \
   | query_chunk \
+  | filter { _min, _max, xrefs -> !xrefs.isEmpty() } \
   | combine(schema) \
   | process_chunk
 }

@@ -23,7 +23,7 @@ process active {
 }
 
 process inactive {
-  publishDir "${params.ftp_export.publish}/sequences/", mode: 'move'
+  publishDir "${params.ftp_export.publish}/sequences/", mode: 'copy'
   when: params.ftp_export.sequences.inactive.run
 
   input:
@@ -41,7 +41,7 @@ process inactive {
 }
 
 process species_specific {
-  publishDir "${params.ftp_export.publish}/sequences/", mode: 'move'
+  publishDir "${params.ftp_export.publish}/sequences/", mode: 'copy'
   when: params.ftp_export.sequences.species.run
 
   input:
@@ -73,7 +73,7 @@ process find_dbs {
 process database_specific {
   tag { db }
   maxForks params.ftp_export.sequences.by_database.max_forks
-  publishDir "${params.ftp_export.publish}/sequences/by-database", mode: 'move'
+  publishDir "${params.ftp_export.publish}/sequences/by-database", mode: 'copy'
   when: params.ftp_export.sequences.by_database.run
 
   input:
@@ -93,7 +93,7 @@ process database_specific {
 }
 
 process extract_nhmmer_valid {
-  publishDir "${params.ftp_export.publish}/sequences/.internal/", mode: 'move'
+  publishDir "${params.ftp_export.publish}/sequences/.internal/", mode: 'copy'
   when: params.ftp_export.sequences.nhmmer.run
 
   input:
@@ -111,7 +111,7 @@ process extract_nhmmer_valid {
 }
 
 process extract_nhmmer_invalid {
-  publishDir "${params.ftp_export.publish}/sequences/.internal/", mode: 'move'
+  publishDir "${params.ftp_export.publish}/sequences/.internal/", mode: 'copy'
   when: params.ftp_export.sequences.nhmmer.run
 
   input:
@@ -127,7 +127,6 @@ process extract_nhmmer_invalid {
   zcat $rna | rnac ftp-export sequences invalid-nhmmer - rnacentral_nhmmer_excluded.fasta
   """
 }
-
 
 workflow fasta_export {
   Channel.fromPath('files/ftp-export/sequences/active.sql') | set { active_sql }
