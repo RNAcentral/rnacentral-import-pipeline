@@ -62,8 +62,6 @@ process rfam_annotations {
   path("readme.txt")
 
   """
-  set -o pipefail
-
   psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > rfam_annotations.tsv
   head rfam_annotations.tsv > example.txt
   gzip rfam_annotations.tsv
