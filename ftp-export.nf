@@ -2,7 +2,7 @@
 
 nextflow.enable.dsl=2
 
-include { export_coordinates } from "./workflows/ftp/coordinates"
+include { export_coordinates } from './workflows/ftp/coordinates'
 include { id_mapping } from './workflows/ftp/id-mapping'
 include { ensembl_export } from './workflows/ftp/ensembl'
 include { fasta_export } from './workflows/ftp/sequences'
