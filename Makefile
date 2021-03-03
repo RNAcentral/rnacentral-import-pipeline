@@ -19,6 +19,7 @@ rust:
 	cp target/release/expand-urs bin
 	cp target/release/precompute bin
 	cp target/release/search-export bin
+	cp target/release/ftp-export bin
 
 docker: Dockerfile requirements.txt .dockerignore
 	docker build -t "$(docker)" .
