@@ -7,8 +7,7 @@ SELECT DISTINCT ON (pre.id)
     )
 FROM rnc_rna_precomputed pre
 JOIN rna ON rna.upi = pre.upi
-JOIN xref ON xref.upi = rna.upi
+JOIN xref ON xref.upi = rna.upi AND xref.taxid = pre.taxid
 WHERE
     pre.is_active = true
-    AND pre.taxid is not null
 ) TO STDOUT
