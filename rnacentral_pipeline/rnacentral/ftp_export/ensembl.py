@@ -70,6 +70,7 @@ def builder(data):
             xrefs.append(updated)
             seen.add(value)
 
+    result['sequence'] = result['sequence'].upper().replace('U', 'T')
     result['xrefs'] = xrefs
     return result
 
