@@ -80,7 +80,7 @@ pub fn write(accession_file: &Path, metadata_file: &Path, output: &Path) -> Resu
     let accessions = accessions.into_iter().assume_sorted_by_key();
 
     let metadata = JsonlIterator::from_path(metadata_file)?;
-    let metadata = metadata.map(|metadata: Metadata| (m.id, m));
+    let metadata = metadata.map(|m: Metadata| (m.id, m));
     let metadata = metadata.into_iter().assume_sorted_by_key();
     let partial = accessions.join(metadata);
 
