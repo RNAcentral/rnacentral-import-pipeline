@@ -54,8 +54,8 @@ process create_fasta {
   """
   json2fasta.py ${json} - | rnac ftp-export sequences valid-nhmmer - ${ordered}
   md5sum ${ordered} > ${name}.hash
-  seqkit shuffle --two-pass ${ordered} > ${name}.fasta
-  esl-seqstat ${name}.fasta > ${name}.seqstat
+  cp ${ordered} ${name}.fasta
+  esl-seqstat --dna ${name}.fasta > ${name}.seqstat
   split-sequences \
     --max-file-size ${params.sequence_search.max_file_size} \
     ${name}.fasta splits/
@@ -63,6 +63,8 @@ process create_fasta {
 }
 
 process atomic_publish {
+  stageInMode 'copy'
+
   input:
   path(fasta)
   path(hash)
@@ -99,7 +101,6 @@ workflow sequence_search_export {
   db_query \
   | find_db_to_export \
   | splitCsv \
-  | filter { row -> row[0].toLowerCase() != 'gencode' } \
   | combine(db_specific_query) \
   | map { db, query -> [db, query, "-v db='%${db}%'"] } \
   | mix(simple_queries) \
