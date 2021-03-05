@@ -5,16 +5,12 @@ nextflow.enable.dsl=2
 include { rfam_scan } from './workflows/rfam-scan'
 
 workflow qa {
+  take: ready
+  emit: done
   main:
-    rfam_scan()
-}
-
-workflow for_database {
-  take: sequences
-  emit: data
-    rfam_scan.for_database(sequences)
+    ready | rfam_scan | set { done }
 }
 
 workflow {
-  qa()
+  qa(Channel.from('ready'))
 }

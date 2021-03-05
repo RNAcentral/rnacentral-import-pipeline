@@ -1,6 +1,6 @@
 #!/usr/bin/env nextflow
 
-nextflow.enable.dsl=2
+nextflow.enable.dsl = 2
 
 include { lookup_ref_ids } from './workflows/lookup-references'
 include { batch_lookup_ontology_information } from './workflows/lookup-ontology-info'
@@ -9,9 +9,10 @@ include { parse_metadata } from './workflows/parse-metadata'
 include { load_data } from './workflows/load-data'
 
 workflow import_data {
+  take: databases
   emit: post_release
   main:
-    Channel.empty() \
+    databases \
     | mix(
       parse_databases(),
       parse_metadata(),
