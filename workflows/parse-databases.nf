@@ -30,6 +30,9 @@ process build_context {
   memory '2GB'
   when { params.needs_taxonomy }
 
+  input:
+  val(_flag)
+
   output:
   path('context.db')
 

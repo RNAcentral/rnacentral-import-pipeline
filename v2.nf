@@ -1,6 +1,6 @@
 #!/usr/bin/env nextflow
 
-nextflow.enable.dsl=2
+nextflow.enable.dsl = 2
 
 include { ftp_export } from './ftp-export'
 include { genes } from './genes'
@@ -13,8 +13,6 @@ include { search_export } from './search-export'
 include { sequence_search_export } from './sequence-search-export'
 
 workflow {
-  Channel.fromPath("files/precompute/methods/${params.precompute.method.replace('_', '-')}.sql") | set { pre_method }
-
   import_data \
   | ifEmpty('no import') \
   | set { imported }
@@ -37,7 +35,7 @@ workflow {
   Channel.empty() \
   | mix(qa_results, genome_mapping_results, r2dt_result) \
   | collect \
-  | map { pre_method } \
+  | map { 'done' } \
   | precompute \
   | ifEmpty('no precompute') \
   | genes \

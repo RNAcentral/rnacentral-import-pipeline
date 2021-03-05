@@ -135,6 +135,7 @@ process load_data {
 }
 
 workflow precompute {
+  take: _flag
   main:
     Channel.fromPath('files/precompute/get-accessions/query.sql') | set { accession_query }
     Channel.fromPath('files/precompute/load.ctl') | set { data_ctl }

@@ -2,6 +2,7 @@ nextflow.enable.dsl=2
 
 process fetch_model_mapping {
   input:
+  val(_flag)
   path(query)
 
   output:
@@ -16,6 +17,7 @@ process extract_sequences {
   clusterOptions '-sp 100'
 
   input:
+  val(_flag)
   path(query)
 
   output:
@@ -99,6 +101,9 @@ process store_secondary_structures {
   tuple path('data*.csv'), path(ctl)
   tuple path('attempted*.csv'), path(attempted_ctl)
 
+  output:
+  val('r2dt done')
+
   """
   split-and-load $ctl 'data*.csv' ${params.r2dt.data_chunk_size} traveler-data
   split-and-load $attempted_ctl 'attemped*.csv' ${params.r2dt.data_chunk_size} traveler-attempted
@@ -106,11 +111,12 @@ process store_secondary_structures {
 }
 
 workflow common {
+  take: ready
   emit: mapping
   main:
-    Channel.fromPath('files/r2dt/model_mapping.sql') \
-    | fetch_model_mapping \
-    | set { mapping }
+    Channel.fromPath('files/r2dt/model_mapping.sql') | set { query }
+
+    fetch_model_mapping(ready, sql) | set { mapping }
 }
 
 workflow for_database {
@@ -129,27 +135,30 @@ workflow for_database {
 }
 
 workflow r2dt {
-  common | set { model_mapping }
+  take: ready
+  emit: done
+  main:
+    Channel.fromPath("files/r2dt/find-sequences.sql") | set { sequences_sql }
+    ready | common | set { model_mapping }
 
-  Channel.fromPath("files/r2dt/find-sequences.sql") \
-  | extract_sequences \
-  | flatten \
-  | filter { f -> !f.empty() } \
-  | split_sequences \
-  | flatten \
-  | filter { f -> !f.empty() } \
-  | layout_sequences \
-  | combine(model_mapping) \
-  | set { data }
+    extract_sequences(ready, sequences_sql) \
+    | flatten \
+    | filter { f -> !f.empty() } \
+    | split_sequences \
+    | flatten \
+    | filter { f -> !f.empty() } \
+    | layout_sequences \
+    | combine(model_mapping) \
+    | set { data }
 
-  data | publish_layout
-  data | parse_layout 
-  parse_layout.out.data | collect | combine(Channel.fromPath('files/r2dt/load.ctl')) | set { to_load }
-  parse_layout.out.attempted | collect | combine(Channel.fromPath('files/r2dt/attempted.ctl')) | set { attempted }
+    data | publish_layout
+    data | parse_layout 
+    parse_layout.out.data | collect | combine(Channel.fromPath('files/r2dt/load.ctl')) | set { to_load }
+    parse_layout.out.attempted | collect | combine(Channel.fromPath('files/r2dt/attempted.ctl')) | set { attempted }
 
-  store_secondary_structures(to_load, attempted)
+    store_secondary_structures(to_load, attempted) | set { done }
 }
 
 workflow {
-  r2dt()
+  r2dt(Channel.from('ready'))
 }

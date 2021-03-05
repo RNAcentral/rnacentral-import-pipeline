@@ -84,48 +84,41 @@ process import_data {
   path('attempted*.csv')
   path('attempted.ctl')
 
+  output:
+  val('rfam done')
+
   """
   split-and-load $ctl 'raw*.csv' ${params.import_data.chunk_size} rfam
   split-and-load attempted.ctl 'attempted*.csv' ${params.import_data.chunk_size} attempted-rfam
   """
 }
 
-workflow for_database {
-  take: sequences
-  emit: data
+workflow rfam_scan {
+  take: ready
+  emit: done
   main:
+    Channel.fromPath("files/find-active-xrefs-urs.sql").set { active_xref_sql }
+    Channel.fromPath("files/qa/computed.sql").set { computed_sql }
+    Channel.fromPath("files/qa/compute-required.sql").set { compute_required_sql }
+    Channel.fromPath("files/qa/rfam.ctl").set { ctl }
+    Channel.fromPath("files/qa/attempted/rfam.ctl").set { attempted_ctl }
+
     generate_files()
 
-    sequences \
-    | flatten \
-    | filter_done_md5 \
+    generate_files.out.version_info \
+    | combine(active_xref_sql) \
+    | combine(computed_sql) \
+    | combine(compute_required_sql) \
+    | sequences \
+    | flatMap { version, files ->
+      (files instanceof ArrayList) ? files.collect { [version, it] } : [[version, files]]
+    } \
+    | filter { v, f -> !f.isEmpty() } \
     | combine(generate_files.out.cm_files) \
     | scan
-}
 
-workflow rfam_scan {
-  Channel.fromPath("files/find-active-xrefs-urs.sql").set { active_xref_sql }
-  Channel.fromPath("files/qa/computed.sql").set { computed_sql }
-  Channel.fromPath("files/qa/compute-required.sql").set { compute_required_sql }
-  Channel.fromPath("files/qa/rfam.ctl").set { ctl }
-  Channel.fromPath("files/qa/attempted/rfam.ctl").set { attempted_ctl }
+    scan.out.hits | collect | set { hits }
+    scan.out.attempted | collect | set { attempted }
 
-  generate_files()
-
-  generate_files.out.version_info \
-  | combine(active_xref_sql) \
-  | combine(computed_sql) \
-  | combine(compute_required_sql) \
-  | sequences \
-  | flatMap { version, files ->
-    (files instanceof ArrayList) ? files.collect { [version, it] } : [[version, files]]
-  } \
-  | filter { v, f -> !f.isEmpty() } \
-  | combine(generate_files.out.cm_files) \
-  | scan
-
-  scan.out.hits | collect | set { hits }
-  scan.out.attempted | collect | set { attempted }
-
-  import_data(hits, ctl, attempted, attempted_ctl)
+    import_data(hits, ctl, attempted, attempted_ctl) | set { done }
 }

@@ -4,6 +4,7 @@ nextflow.enable.dsl = 2
 
 process setup {
   input:
+  val(_flag)
   path(setup)
   path(query)
 
@@ -155,6 +156,9 @@ process load_mapping {
   path('attempted*.csv')
   path(attempted_ctl)
 
+  output:
+  val('done')
+
   """
   split-and-load $ctl 'raw*.csv' ${params.import_data.chunk_size} genome-mapping
   split-and-load $attempted_ctl 'attempted*.csv' ${params.import_data.chunk_size} genome-mapping-attempted
@@ -163,35 +167,38 @@ process load_mapping {
 }
 
 workflow genome_mapping {
-  Channel.fromPath('files/genome-mapping/setup.sql').set { setup_sql }
-  Channel.fromPath('files/genome-mapping/find-species.sql').set { find_species }
-  Channel.fromPath('files/genome-mapping/load.ctl').set { hits_ctl }
-  Channel.fromPath('files/genome-mapping/attempted.ctl').set { attempted_ctl }
-  Channel.fromPath('files/genome-mapping/find-unmapped.sql').set { unmapped_sql }
+  take: ready
+  emit: done
+  main:
+    Channel.fromPath('files/genome-mapping/setup.sql').set { setup_sql }
+    Channel.fromPath('files/genome-mapping/find-species.sql').set { find_species }
+    Channel.fromPath('files/genome-mapping/load.ctl').set { hits_ctl }
+    Channel.fromPath('files/genome-mapping/attempted.ctl').set { attempted_ctl }
+    Channel.fromPath('files/genome-mapping/find-unmapped.sql').set { unmapped_sql }
 
-  setup(setup_sql, find_species) \
-  | splitCsv \
-  | filter { s, a, t, d -> !params.genome_mapping.species_excluded_from_mapping.contains(s) } \
-  | set { genome_info }
+    setup(ready, setup_sql, find_species) \
+    | splitCsv \
+    | filter { s, a, t, d -> !params.genome_mapping.species_excluded_from_mapping.contains(s) } \
+    | set { genome_info }
 
-  genome_info | combine(unmapped_sql) | fetch_unmapped_sequences | set { split_sequences }
+    genome_info | combine(unmapped_sql) | fetch_unmapped_sequences | set { split_sequences }
 
-  genome_info \
-  | download_genome \
-  | join(split_sequences) \
-  | flatMap { species, assembly, genome_chunks, chunks ->
-    [genome_chunks.collate(2), chunks]
-      .combinations
-      .inject([]) { acc, files -> acc << [species, assembly] + files.flatten() }
-  } \
-  | blat
+    genome_info \
+    | download_genome \
+    | join(split_sequences) \
+    | flatMap { species, assembly, genome_chunks, chunks ->
+      [genome_chunks.collate(2), chunks]
+        .combinations
+        .inject([]) { acc, files -> acc << [species, assembly] + files.flatten() }
+    } \
+    | blat
 
-  blat.out.hits | groupTuple | select_mapped_locations | collect | set { hits }
-  blat.out.attempted | collect | set { attempted }
+    blat.out.hits | groupTuple | select_mapped_locations | collect | set { hits }
+    blat.out.attempted | collect | set { attempted }
 
-  load_mapping(hits, hits_ctl, attempted, attempted_ctl)
+    load_mapping(hits, hits_ctl, attempted, attempted_ctl) | set { done }
 }
 
 workflow {
-  genome_mapping()
+  genome_mapping(Channel.from('ready'))
 }
