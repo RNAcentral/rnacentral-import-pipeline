@@ -13,7 +13,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import typing as ty
+import operator as op
+import collections as coll
+
 import attr
+from attr.validators import instance_of as is_a
+from attr.validators import optional
+
+from pypika import Table, Query
+import psycopg2
 
 # {
 #   10   │         "date_approved_reserved": "2009-07-20",
@@ -66,21 +75,108 @@ import attr
 #   57   │         "location_sortable": "19q13.43"
 #   58   │       },
 
+
+def maybe_first(data, name):
+    value = data.get(name, [])
+    if not value:
+        return None
+    if isinstance(value, str):
+        return value
+    if isinstance(value, (list, tuple)):
+        return value[0]
+    raise ValueError("Unknown type of data")
+
+
 @attr.s()
-class RawEntry:
+class HgncEntry:
     agr_id = attr.ib(validator=is_a(str))
     symbol = attr.ib(validator=is_a(str))
-    name = attr.ib(validator=is_a(str)) 
+    name = attr.ib(validator=is_a(str))
     hgnc_id = attr.ib(validator=is_a(str))
     ucsc_id = attr.ib(validator=is_a(str))
     lncipedia_id = attr.ib(validator=optional(is_a(str)))
     rnacentral_id = attr.ib(validator=optional(is_a(str)))
     previous_names: ty.List[str] = attr.ib(validator=is_a(list))
-    refseq_ids: ty.List[str] = attr.ib(validator=is_a(list))
+    refseq_id = attr.ib(validator=is_a(str))
     ena_ids: ty.List[str] = attr.ib(validator=is_a(list))
+
+    @classmethod
+    def from_raw(cls, raw) -> "HgncEntry":
+        return cls(
+            agr_id=raw["agr"],
+            symbol=raw["symbol"],
+            name=raw["name"],
+            hgnc_id=raw["hgnc_id"],
+            ucsc_id=raw["ucsc_id"],
+            lncipedia_id=raw["lncipedia"],
+            rnacentral_id=maybe_first(raw, "rna_central_id"),
+            previous_names=raw["prev_name"],
+            refseq_id=maybe_first(raw, "refseq_accesion"),
+            ena_ids=raw["ena"],
+        )
 
     @property
     def gtrnadb_id(self):
-        if self.locus_type != 'RNA, transfer':
+        if self.locus_type != "RNA, transfer":
             return None
-        return ''
+        return ""
+
+
+def ensembl_mapping(conn):
+    xref = Table("xref")
+    rna = Table("rna")
+    acc = Table("rnc_accessions")
+    query = (
+        Query.from_(xref)
+        .select(xref.upi, acc.optional_id, rna.len)
+        .join(acc)
+        .on(acc.accession == xref.ac)
+        .join(rna)
+        .on(rna.upi == xref.upi)
+        .where(xref.dbid == 25, xref.taxid == 9606, xref.deleted == "N")
+    )
+
+    found = coll.defaultdict(set)
+    with conn.cursor() as cur:
+        cur.execute(str(query))
+        for result in cur:
+            urs, gene, length = result
+            found[gene].add((urs, length))
+
+    mapping = {}
+    for gene, ids in found.items():
+        if not ids:
+            continue
+
+        best, _ = max(ids, key=op.itemgetter(1))
+        mapping[gene] = best
+    return mapping
+
+
+@attr.s()
+class Context:
+    conn = attr.ib()
+    ensembl_mapping = attr.ib()
+
+    @classmethod
+    def build(cls, db_url):
+        conn = psycopg2.connect(db_url)
+        return cls(
+            conn=conn,
+            ensembl_mapping=ensembl_mapping(conn),
+        )
+
+    def ensembl_gene(self, gene_id):
+        return self.ensembl_mapping.get(gene_id, None)
+
+    def query_one(self, query):
+        sql = str(query)
+        with self.conn.cursor() as cur:
+            cur.execute(sql)
+            return cur.fetchone()
+
+    def query_all(self, query):
+        sql = str(query)
+        with self.conn.cursor() as cur:
+            cur.execute(sql)
+            return cur.fetchall()
