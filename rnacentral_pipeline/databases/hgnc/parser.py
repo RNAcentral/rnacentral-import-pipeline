@@ -16,49 +16,69 @@ limitations under the License.
 import json
 from pathlib import Path
 import typing as ty
+import logging
 
 from rnacentral_pipeline.databases import data
 
+from . import helpers
+from .data import HgncEntry, Context
+
+LOGGER = logging.getLogger(__name__)
 
 
-def rnacentral_entry(entry: RawEntry, ensembl_mapping: EnsemblMapping) -> ty.Optional[data.Entry]
-     """
-     Map HGNC ncRNAs to RNAcentral using RefSeq, Vega, gtRNAdb accessions
-     and sequence matches.
-     """
+def rnacentral_id(context: Context, entry: HgncEntry) -> ty.Optional[str]:
+    """
+    Map HGNC ncRNAs to RNAcentral using RefSeq, Vega, gtRNAdb accessions
+    and sequence matches.
+    """
 
-     if entry.refseq_accession:
-         rnacentral_id = self.get_rnacentral_id(entry['refseq_accession'][0])
-         return rnacentral_id
+    if entry.refseq_accession:
+        return helpers.refseq_id_to_urs(entry.refseq_accession)
 
-     elif entry.gtrnadb_id:
-         gtrnadb_id = raw_entry.gtrnadb_id
-         if gtrnadb_id:
-             rnacentral_id = gtrnadb_to_rnacentral(gtrnadb_id)
+    elif entry.gtrnadb_id:
+        gtrnadb_id = entry.gtrnadb_id
+        if gtrnadb_id:
+            return helpers.gtrnadb_to_urs(context, gtrnadb_id)
 
-     elif entry.ensembl_gene_id:
-         gene_id = entry.ensembl_gene_id
-         fasta = ensembl_sequence(gene_id)
-         if not fasta:
-             return None
+    elif entry.ensembl_gene_id:
+        gene = entry.ensembl_gene_id
+        fasta = helpers.ensembl_sequence(context, gene)
+        if not fasta:
+            return None
 
-         md5 = get_md5(fasta)
-         rnacentral_id = self.get_rnacentral_id_by_md5(md5)
-         if rnacentral_id:
-             return rnacentral_id
-         else:
-             return ensembl_mapping.get(gene_id, None)
-    else:
-        LOGGER.info("Cannot map %s", entry)
-        return None
+        md5_hash = helpers.md5(fasta)
+        urs = helpers.md5_to_urs(context, md5_hash)
+        if urs:
+            return urs
+        return helpers.ensembl_gene_to_urs(context, gene)
+
+    LOGGER.info("Cannot map %s", entry)
+    return None
 
 
-def parse(path: Path) -> ty.Iterable[data.Entry]:
+def as_entry(context: Context, hgnc: HgncEntry, urs: str) -> data.Entry:
+    return data.Entry(
+            primary_id=hgnc.hgnc_id,
+            accession=hgnc.hgnc_id,
+            ncbi_tax_id=9606,
+            database='HGNC',
+            sequence=helpers.urs_to_sequence(context, urs),
+            regions=[],
+            rna_type=hgnc.so_term(context),
+            url=helpers.url(hgnc),
+            seq_version='1',
+            description=helpers.description(hgnc),
+    )
+
+
+def parse(path: Path, db_url: str) -> ty.Iterable[data.Entry]:
     with path.open('r') as handle:
         raw_data = json.load(handle)
 
+    ctx = Context.build(db_url)
     for raw in raw_data['response']['docs']:
-        raw_entry = RawEntry.from_raw(raw)
-        mapped = rnacentral_entry(raw_entry)
-        if mapped:
-            yield mapped
+        raw_entry = HgncEntry.from_raw(raw)
+        mapped = rnacentral_id(ctx, raw_entry)
+        if not mapped:
+            continue
+        yield as_entry(ctx, raw_entry, mapped)
