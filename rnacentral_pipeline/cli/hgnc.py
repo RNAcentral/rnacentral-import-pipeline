@@ -20,6 +20,7 @@ import click
 from rnacentral_pipeline.writers import EntryWriter
 from rnacentral_pipeline.databases.hgnc import parser
 
+
 @click.group('hgnc')
 def cli():
     """
@@ -28,16 +29,17 @@ def cli():
 
 
 @cli.command('map')
+@click.option('--db-url', envvar='PGDATABASE')
 @click.argument('filename', type=click.Path())
 @click.argument(
     "output",
     default=".",
     type=click.Path(writable=True, dir_okay=True, file_okay=False,),
 )
-def process_hgnc(filename, output):
+def process_hgnc(filename, output, db_url=None):
     """
     Process the raw HGNC file into importable CSV files
     """
-    entries = parser.parse(Path(filename))
+    entries = parser.parse(Path(filename), db_url)
     writer = EntryWriter(output)
     writer.write(entries)
