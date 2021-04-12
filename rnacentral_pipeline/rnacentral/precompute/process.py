@@ -18,15 +18,26 @@ import operator as op
 import typing as ty
 from pathlib import Path
 
+import attr
+
 from rnacentral_pipeline import psql
 from rnacentral_pipeline.rnacentral.precompute.data.context import Context
 from rnacentral_pipeline.rnacentral.precompute.data.sequence import Sequence
 from rnacentral_pipeline.rnacentral.precompute.data.update import (
     GenericUpdate, SequenceUpdate)
-from rnacentral_pipeline.rnacentral.repeats import tree
 from rnacentral_pipeline.writers import MultiCsvOutput
 
 AnUpdate = ty.Union[SequenceUpdate, GenericUpdate]
+
+
+@attr.s()
+class Writer:
+    precompute = attr.ib()
+    qa = attr.ib()
+
+    def write(self, update: AnUpdate):
+        self.precompute.writerows(update.as_writeables())
+        self.qa.writerows(update.writeable_statuses())
 
 
 def parse(context_path: Path, data_path: Path) -> ty.Iterable[AnUpdate]:

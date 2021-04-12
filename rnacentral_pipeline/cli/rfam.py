@@ -13,6 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+from pathlib import Path
+
 import click
 
 from rnacentral_pipeline.databases import rfam
@@ -64,4 +66,4 @@ def rfam_group_clans(filename, output):
     file_okay=False,
 ))
 def ontologies_rfam_terms(filename, output):
-    rfam.cross_references.from_file(filename, output)
+    rfam.cross_references.from_file(filename, Path(output))

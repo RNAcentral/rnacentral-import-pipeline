@@ -14,14 +14,13 @@ limitations under the License.
 """
 
 import csv
-import operator as op
-import itertools as it
+from pathlib import Path
 
 import attr
 from attr.validators import optional
 from attr.validators import instance_of as is_a
 
-from rnacentral_pipeline.writers import MultiCsvOutput
+from rnacentral_pipeline import writers
 
 
 EXCLUDED_TERMS = {
@@ -115,6 +114,16 @@ class RfamDatabaseLink(object):
         yield [self.external_id]
 
 
+@attr.s()
+class Writer:
+    terms = attr.ib()
+    rfam_ontology_mappings = attr.ib()
+
+    def write(self, reference):
+        self.terms.writerows(reference.writeable_ontology_terms)
+        self.terms.writerows(reference.writeable_go_mappings)
+
+
 def parse(handle):
     """
     Parse the given filehandle to produce all database link objects in the
@@ -161,14 +170,6 @@ def ontology_references(handle):
         yield reference
 
 
-def from_file(handle, output):
-    writer = MultiCsvOutput.build(
-        ontology_references,
-        terms={
-            'transformer': op.methodcaller('writeable_ontology_terms'),
-        },
-        rfam_ontology_mappings={
-            'transformer': op.methodcaller('writeable_go_mappings'),
-        }
-    )
-    writer(output, handle)
+def from_file(handle, output: Path):
+    with writers.build(Writer, output) as writer:
+        writer.write(ontology_references(handle))
