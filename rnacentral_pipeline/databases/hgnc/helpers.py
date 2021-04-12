@@ -13,7 +13,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import re
 import hashlib
 import typing as ty
 
@@ -21,7 +20,7 @@ import requests
 from pypika import Table, Query, Order
 from pypika import functions as fn
 
-from .data import Context, HgncEntry
+from rnacentral_pipeline.databases.hgnc.data import Context, HgncEntry
 
 
 def url(entry: HgncEntry) -> str:
@@ -32,48 +31,6 @@ def url(entry: HgncEntry) -> str:
 
 def description(entry: HgncEntry) -> str:
     return f"Homo sapiens (human) {entry.name}"
-
-
-def hgnc_to_gtrnadb(accession: str) -> ty.Optional[str]:
-    one_to_three = {
-        "A": "Ala",
-        "C": "Cys",
-        "D": "Asp",
-        "E": "Glu",
-        "F": "Phe",
-        "G": "Gly",
-        "H": "His",
-        "I": "Ile",
-        "K": "Lys",
-        "L": "Leu",
-        "M": "Met",
-        "N": "Asn",
-        "P": "Pro",
-        "Q": "Gln",
-        "R": "Arg",
-        "S": "Ser",
-        "T": "Thr",
-        "U": "SeC",
-        "V": "Val",
-        "W": "Trp",
-        "Y": "Tyr",
-        "X": "iMet",
-        "SUP": "Sup",
-    }
-    m = re.match(r"TR(\S+)-(\S{3})(\d+-\d+)", accession)
-    if m:
-        if m.group(1) not in one_to_three:
-            return None
-        return "tRNA-" + one_to_three[m.group(1)] + "-" + m.group(2) + "-" + m.group(3)
-    # nuclear-encoded mitochondrial tRNAs
-    m = re.match(r"NMTR(\S+)-(\S{3})(\d+-\d+)", accession)
-    if m:
-        if m.group(1) not in one_to_three:
-            return None
-        return (
-            "nmt-tRNA-" + one_to_three[m.group(1)] + "-" + m.group(2) + "-" + m.group(3)
-        )
-    return None
 
 
 def gtrnadb_to_urs(context: Context, raw: str) -> ty.Optional[str]:
@@ -103,10 +60,9 @@ def gtrnadb_to_urs(context: Context, raw: str) -> ty.Optional[str]:
     return None
 
 
-def md5(sequence: bytes) -> str:
-    sequence = sequence.replace(b"U", b"T").upper()
-    m = hashlib.md5()
-    m.update(sequence)
+def md5(sequence: str) -> str:
+    sequence = sequence.replace("U", "T").upper()
+    m = hashlib.md5(sequence.encode())
     return m.hexdigest()
 
 
@@ -155,10 +111,13 @@ def md5_to_urs(context: Context, md5: str) -> ty.Optional[str]:
     rna = Table("rna")
     query = (
         Query.from_(rna)
-        .select(fn.Coalesce(rna.seq_short, rna.seq_long))
+        .select(rna.upi)
         .where(rna.md5 == md5)
     )
-    return context.query_one(query)[0]
+    found = context.query_one(query)
+    if found:
+        return found[0]
+    return None
 
 
 def ensembl_gene_to_urs(context: Context, gene: str) -> ty.Optional[str]:
@@ -173,3 +132,27 @@ def urs_to_sequence(context: Context, urs: str) -> str:
         .where(rna.upi == urs)
     )
     return context.query_one(query)[0]
+
+
+def so_term(context: Context, entry: HgncEntry) -> str:
+    if entry.hgnc_rna_type == 'RNA, long non-coding':
+        return 'SO:0001877'
+    if entry.hgnc_rna_type == "RNA, Y":
+        return 'SO:0000405'
+    if entry.hgnc_rna_type == "RNA, cluster":
+        return 'SO:0000655'
+    if entry.hgnc_rna_type == "RNA, micro":
+        return 'SO:0000276'
+    if entry.hgnc_rna_type == "RNA, misc":
+        return 'SO:0000655'
+    if entry.hgnc_rna_type == "RNA, ribosomal":
+        return 'SO:0000252'
+    if entry.hgnc_rna_type == "RNA, small nuclear":
+        return 'SO:0000274'
+    if entry.hgnc_rna_type == "RNA, small nucleolar":
+        return 'SO:0000275'
+    if entry.hgnc_rna_type == "RNA, transfer":
+        return 'SO:0000253'
+    if entry.hgnc_rna_type == "RNA, vault":
+        return 'SO:0000404'
+    raise ValueError(f"Unknown type of RNA for {entry}")

@@ -142,6 +142,9 @@ class EntryWriter:
 
     def write(self, entries: ty.Iterable[data.Entry]):
         for entry in entries:
+            if not entry.is_valid():
+                continue
+
             self.accessions.writerows(entry.write_ac_info())
             self.short_sequences.writerows(entry.write_seq_short())
             self.long_sequences.writerows(entry.write_seq_long())

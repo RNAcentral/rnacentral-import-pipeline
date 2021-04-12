@@ -20,8 +20,8 @@ import logging
 
 from rnacentral_pipeline.databases import data
 
-from . import helpers
-from .data import HgncEntry, Context
+from rnacentral_pipeline.databases.hgnc import helpers
+from rnacentral_pipeline.databases.hgnc.data import HgncEntry, Context
 
 LOGGER = logging.getLogger(__name__)
 
@@ -32,8 +32,8 @@ def rnacentral_id(context: Context, entry: HgncEntry) -> ty.Optional[str]:
     and sequence matches.
     """
 
-    if entry.refseq_accession:
-        return helpers.refseq_id_to_urs(entry.refseq_accession)
+    if entry.refseq_id:
+        return helpers.refseq_id_to_urs(context, entry.refseq_id)
 
     elif entry.gtrnadb_id:
         gtrnadb_id = entry.gtrnadb_id
@@ -64,7 +64,7 @@ def as_entry(context: Context, hgnc: HgncEntry, urs: str) -> data.Entry:
             database='HGNC',
             sequence=helpers.urs_to_sequence(context, urs),
             regions=[],
-            rna_type=hgnc.so_term(context),
+            rna_type=helpers.so_term(context, hgnc),
             url=helpers.url(hgnc),
             seq_version='1',
             description=helpers.description(hgnc),
@@ -81,4 +81,5 @@ def parse(path: Path, db_url: str) -> ty.Iterable[data.Entry]:
         mapped = rnacentral_id(ctx, raw_entry)
         if not mapped:
             continue
+        LOGGER.info("%s -> %s", raw_entry.hgnc_id, mapped)
         yield as_entry(ctx, raw_entry, mapped)
