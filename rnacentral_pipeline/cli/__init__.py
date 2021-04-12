@@ -27,6 +27,7 @@ from rnacentral_pipeline.cli import (
     genes,
     genome_mapping,
     gtrnadb,
+    hgnc,
     lookup,
     misc,
     ncbi,
@@ -40,7 +41,7 @@ from rnacentral_pipeline.cli import (
     rfam,
     search_export,
     silva,
-    text_mining,
+    # text_mining,
     zfin,
 )
 
@@ -74,6 +75,7 @@ cli.add_command(ftp_export.cli)
 cli.add_command(genes.cli)
 cli.add_command(genome_mapping.cli)
 cli.add_command(gtrnadb.cli)
+cli.add_command(hgnc.cli)
 cli.add_command(lookup.cli)
 cli.add_command(misc.check_release)
 cli.add_command(misc.crs_data)
@@ -91,5 +93,5 @@ cli.add_command(repeats.cli)
 cli.add_command(rfam.cli)
 cli.add_command(search_export.cli)
 cli.add_command(silva.cli)
-cli.add_command(text_mining.cli)
+# cli.add_command(text_mining.cli)
 cli.add_command(zfin.cli)

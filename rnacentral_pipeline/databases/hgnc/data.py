@@ -13,6 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import re
 import typing as ty
 import operator as op
 import collections as coll
@@ -89,37 +90,80 @@ def maybe_first(data, name):
 
 @attr.s()
 class HgncEntry:
-    agr_id = attr.ib(validator=is_a(str))
     symbol = attr.ib(validator=is_a(str))
     name = attr.ib(validator=is_a(str))
     hgnc_id = attr.ib(validator=is_a(str))
-    ucsc_id = attr.ib(validator=is_a(str))
+    ucsc_id = attr.ib(validator=optional(is_a(str)))
+    hgnc_rna_type = attr.ib(validator=is_a(str))
+    agr_id = attr.ib(validator=optional(is_a(str)))
+    ensembl_gene_id = attr.ib(validator=optional(is_a(str)))
     lncipedia_id = attr.ib(validator=optional(is_a(str)))
     rnacentral_id = attr.ib(validator=optional(is_a(str)))
     previous_names: ty.List[str] = attr.ib(validator=is_a(list))
-    refseq_id = attr.ib(validator=is_a(str))
+    refseq_id = attr.ib(validator=optional(is_a(str)))
     ena_ids: ty.List[str] = attr.ib(validator=is_a(list))
 
     @classmethod
     def from_raw(cls, raw) -> "HgncEntry":
         return cls(
-            agr_id=raw["agr"],
             symbol=raw["symbol"],
             name=raw["name"],
             hgnc_id=raw["hgnc_id"],
-            ucsc_id=raw["ucsc_id"],
-            lncipedia_id=raw["lncipedia"],
+            ucsc_id=raw.get("ucsc_id", None),
+            agr_id=raw.get("agr", None),
+            ensembl_gene_id=raw.get("ensembl_gene_id"),
+            hgnc_rna_type=raw["locus_type"],
+            lncipedia_id=raw.get("lncipedia"),
             rnacentral_id=maybe_first(raw, "rna_central_id"),
-            previous_names=raw["prev_name"],
+            previous_names=raw.get("prev_name", []),
             refseq_id=maybe_first(raw, "refseq_accesion"),
-            ena_ids=raw["ena"],
+            ena_ids=raw.get("ena", []),
         )
 
     @property
     def gtrnadb_id(self):
-        if self.locus_type != "RNA, transfer":
+        if self.hgnc_rna_type != "RNA, transfer":
             return None
-        return ""
+        accession = self.hgnc_id
+        one_to_three = {
+            "A": "Ala",
+            "C": "Cys",
+            "D": "Asp",
+            "E": "Glu",
+            "F": "Phe",
+            "G": "Gly",
+            "H": "His",
+            "I": "Ile",
+            "K": "Lys",
+            "L": "Leu",
+            "M": "Met",
+            "N": "Asn",
+            "P": "Pro",
+            "Q": "Gln",
+            "R": "Arg",
+            "S": "Ser",
+            "T": "Thr",
+            "U": "SeC",
+            "V": "Val",
+            "W": "Trp",
+            "Y": "Tyr",
+            "X": "iMet",
+            "SUP": "Sup",
+        }
+        m = re.match(r"TR(\S+)-(\S{3})(\d+-\d+)", self.gtrna)
+        if m:
+            if m.group(1) not in one_to_three:
+                return None
+            return "tRNA-" + one_to_three[m.group(1)] + "-" + m.group(2) + "-" + m.group(3)
+        # nuclear-encoded mitochondrial tRNAs
+        m = re.match(r"NMTR(\S+)-(\S{3})(\d+-\d+)", accession)
+        if m:
+            if m.group(1) not in one_to_three:
+                return None
+            return (
+                "nmt-tRNA-" + one_to_three[m.group(1)] + "-" + m.group(2) + "-" + m.group(3)
+            )
+        return None
 
 
 def ensembl_mapping(conn):
@@ -133,7 +177,11 @@ def ensembl_mapping(conn):
         .on(acc.accession == xref.ac)
         .join(rna)
         .on(rna.upi == xref.upi)
-        .where(xref.dbid == 25, xref.taxid == 9606, xref.deleted == "N")
+        .where(
+            (xref.dbid == 25)
+            & (xref.taxid == 9606)
+            & (xref.deleted == "N")
+        )
     )
 
     found = coll.defaultdict(set)
