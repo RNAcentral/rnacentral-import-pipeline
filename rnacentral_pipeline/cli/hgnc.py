@@ -17,7 +17,7 @@ from pathlib import Path
 
 import click
 
-from rnacentral_pipeline.writers import EntryWriter
+from rnacentral_pipeline.writers import entry_writer
 from rnacentral_pipeline.databases.hgnc import parser
 
 
@@ -41,5 +41,5 @@ def process_hgnc(filename, output, db_url=None):
     Process the raw HGNC file into importable CSV files
     """
     entries = parser.parse(Path(filename), db_url)
-    writer = EntryWriter(output)
-    writer.write(entries)
+    with entry_writer(Path(output)) as writer:
+        writer.write(entries)

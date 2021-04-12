@@ -17,6 +17,7 @@ from pathlib import Path
 
 import click
 
+from rnacentral_pipeline import writers
 from rnacentral_pipeline.rnacentral.precompute import process as pre
 from rnacentral_pipeline.rnacentral.precompute import ranges as pre_ranges
 from rnacentral_pipeline.rnacentral.precompute.data import context as ctx
@@ -43,7 +44,10 @@ def precompute_from_file(context, json_file, output):
     This command will take the output produced by the precompute query and
     process the results into a CSV that can be loaded into the database.
     """
-    pre.writer(output, Path(context), Path(json_file))
+    updates = pre.parse(Path(context), Path(json_file))
+    with writers.build(pre.Writer, Path(output)) as writer:
+        writer.write(updates)
+    # pre.writer(output, Path(context), Path(json_file))
 
 
 @cli.command("upi-taxid-ranges")
