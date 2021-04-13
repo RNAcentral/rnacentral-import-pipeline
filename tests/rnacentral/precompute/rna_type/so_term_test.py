@@ -45,6 +45,7 @@ def test_can_detect_parent_properly(first, second, expected):
     pytest.param('URS00019AF356_9606', 'rRNA_primary_transcript', marks=pytest.mark.xfail(reason="NYI")),
     pytest.param('URS00019BDBE3_9606', 'rRNA_primary_transcript', marks=pytest.mark.xfail(reason="NYI")),
 
+    ('URS0000BA5588_9606', 'miRNA'),
     ('URS0000005270_9606', 'rRNA_5_8S'),
     ('URS00000081EA_9606', 'U1_snRNA'),
     ('URS00000101E5_9606', 'antisense_lncRNA'),
