@@ -13,7 +13,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import json
 from pathlib import Path
 import typing as ty
 import logging
@@ -32,15 +31,23 @@ def rnacentral_id(context: Context, entry: HgncEntry) -> ty.Optional[str]:
     and sequence matches.
     """
 
+    print('WILL map')
+    print(entry)
     if entry.refseq_id:
-        return helpers.refseq_id_to_urs(context, entry.refseq_id)
+        print('Trying out refseq mapping')
+        refseq_based = helpers.refseq_id_to_urs(context, entry.refseq_id)
+        if refseq_based:
+            return refseq_based
 
-    elif entry.gtrnadb_id:
+    if entry.gtrnadb_id:
+        print('Trying out gtrnadb')
         gtrnadb_id = entry.gtrnadb_id
         if gtrnadb_id:
             return helpers.gtrnadb_to_urs(context, gtrnadb_id)
+        return None
 
     elif entry.ensembl_gene_id:
+        print('Trying out ensembl gene mapping')
         gene = entry.ensembl_gene_id
         fasta = helpers.ensembl_sequence(context, gene)
         if not fasta:
@@ -72,12 +79,8 @@ def as_entry(context: Context, hgnc: HgncEntry, urs: str) -> data.Entry:
 
 
 def parse(path: Path, db_url: str) -> ty.Iterable[data.Entry]:
-    with path.open('r') as handle:
-        raw_data = json.load(handle)
-
     ctx = Context.build(db_url)
-    for raw in raw_data['response']['docs']:
-        raw_entry = HgncEntry.from_raw(raw)
+    for raw_entry in helpers.load(path):
         mapped = rnacentral_id(ctx, raw_entry)
         if not mapped:
             continue

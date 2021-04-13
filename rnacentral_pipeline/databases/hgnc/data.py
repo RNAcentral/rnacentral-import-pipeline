@@ -116,7 +116,7 @@ class HgncEntry:
             lncipedia_id=raw.get("lncipedia"),
             rnacentral_id=maybe_first(raw, "rna_central_id"),
             previous_names=raw.get("prev_name", []),
-            refseq_id=maybe_first(raw, "refseq_accesion"),
+            refseq_id=maybe_first(raw, "refseq_accession"),
             ena_ids=raw.get("ena", []),
         )
 
@@ -150,7 +150,7 @@ class HgncEntry:
             "X": "iMet",
             "SUP": "Sup",
         }
-        m = re.match(r"TR(\S+)-(\S{3})(\d+-\d+)", self.gtrna)
+        m = re.match(r"TR(\S+)-(\S{3})(\d+-\d+)", self.symbol)
         if m:
             if m.group(1) not in one_to_three:
                 return None
@@ -183,12 +183,14 @@ def ensembl_mapping(conn):
             & (xref.deleted == "N")
         )
     )
+    print(query)
 
     found = coll.defaultdict(set)
     with conn.cursor() as cur:
         cur.execute(str(query))
         for result in cur:
             urs, gene, length = result
+            gene = gene.split('.')[0]
             found[gene].add((urs, length))
 
     mapping = {}
@@ -219,6 +221,7 @@ class Context:
 
     def query_one(self, query):
         sql = str(query)
+
         with self.conn.cursor() as cur:
             cur.execute(sql)
             return cur.fetchone()

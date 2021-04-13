@@ -14,6 +14,9 @@ limitations under the License.
 """
 
 import hashlib
+import json
+from pathlib import Path
+import operator as op
 import typing as ty
 
 import requests
@@ -27,6 +30,15 @@ def url(entry: HgncEntry) -> str:
     return (
         f"https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id/{entry.hgnc_id}"
     )
+
+
+def load(path: Path) -> ty.List[HgncEntry]:
+    data = []
+    with path.open('r') as handle:
+        raw_data = json.load(handle)
+        for raw in raw_data['response']['docs']:
+            data.append(HgncEntry.from_raw(raw))
+    return data
 
 
 def description(entry: HgncEntry) -> str:
@@ -45,18 +57,18 @@ def gtrnadb_to_urs(context: Context, raw: str) -> ty.Optional[str]:
         .join(rna)
         .on(rna.upi == xref.upi)
         .where(
-            xref.taxid == 9606,
-            xref.deleted == "N",
-            xref.db_id == 8,
-            acc.optional_id == raw,
-            acc.database == "GTRNADB",
+            (xref.taxid == 9606)
+            & (xref.deleted == "N")
+            & (xref.dbid == 8)
+            & (acc.optional_id == raw)
+            & (acc.database == "GTRNADB")
         )
         .orderby(rna.len, order=Order.desc)
     )
 
     found = context.query_all(query)
     if found:
-        return found[0]
+        return found[0][0]
     return None
 
 
@@ -72,24 +84,25 @@ def refseq_id_to_urs(context: Context, refseq_id: str) -> ty.Optional[str]:
     acc = Table("rnc_accessions")
     query = (
         Query.from_(xref)
-        .select(rna.upi)
+        .select(rna.upi, rna.len)
         .join(acc)
         .on(xref.ac == acc.accession)
         .join(rna)
         .on(rna.upi == xref.upi)
         .where(
-            xref.taxid == 9606,
-            xref.deleted == "N",
-            (acc.parent_ac == refseq_id)
-            | (acc.external_id == refseq_id)
-            | (acc.optional_id == refseq_id),
-        )
+            (xref.taxid == 9606) & (xref.deleted == "N")
+            & ((acc.parent_ac == refseq_id)
+                | (acc.external_id == refseq_id)
+                | (acc.optional_id == refseq_id))
+            )
         .orderby(rna.len, order=Order.desc)
     )
+    print(query)
 
     found = context.query_all(query)
+    print(found)
     if found:
-        return found[0]
+        return max(found, key=op.itemgetter(1))[0]
     return None
 
 
