@@ -49,7 +49,6 @@ def url(record):
 
 
 def description(record, feature):
-    rna_type = embl.rna_type(feature).replace('_', ' ')
     product = embl.product(feature)
 
     gene_feature = record.features[1]
