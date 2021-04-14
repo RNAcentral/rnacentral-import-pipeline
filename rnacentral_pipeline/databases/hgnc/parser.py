@@ -31,23 +31,18 @@ def rnacentral_id(context: Context, entry: HgncEntry) -> ty.Optional[str]:
     and sequence matches.
     """
 
-    print('WILL map')
-    print(entry)
     if entry.refseq_id:
-        print('Trying out refseq mapping')
         refseq_based = helpers.refseq_id_to_urs(context, entry.refseq_id)
         if refseq_based:
             return refseq_based
 
     if entry.gtrnadb_id:
-        print('Trying out gtrnadb')
         gtrnadb_id = entry.gtrnadb_id
         if gtrnadb_id:
             return helpers.gtrnadb_to_urs(context, gtrnadb_id)
         return None
 
     elif entry.ensembl_gene_id:
-        print('Trying out ensembl gene mapping')
         gene = entry.ensembl_gene_id
         fasta = helpers.ensembl_sequence(context, gene)
         if not fasta:

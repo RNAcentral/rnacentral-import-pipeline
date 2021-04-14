@@ -97,10 +97,8 @@ def refseq_id_to_urs(context: Context, refseq_id: str) -> ty.Optional[str]:
             )
         .orderby(rna.len, order=Order.desc)
     )
-    print(query)
 
     found = context.query_all(query)
-    print(found)
     if found:
         return max(found, key=op.itemgetter(1))[0]
     return None
