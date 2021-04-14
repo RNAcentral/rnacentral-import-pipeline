@@ -183,7 +183,6 @@ def ensembl_mapping(conn):
             & (xref.deleted == "N")
         )
     )
-    print(query)
 
     found = coll.defaultdict(set)
     with conn.cursor() as cur:
