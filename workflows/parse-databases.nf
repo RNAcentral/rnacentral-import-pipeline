@@ -5,6 +5,7 @@ include { ensembl_genomes } from './databases/ensembl_genomes'
 include { flybase } from './databases/flybase'
 include { genecards_suite } from './databases/genecards_suite'
 include { gtrnadb } from './databases/gtrnadb'
+include { hgnc } from './databases/hgnc'
 include { intact } from './databases/intact'
 include { lncbase } from './databases/lncbase'
 include { lncbook } from './databases/lncbook'
@@ -60,6 +61,7 @@ workflow parse_databases {
       flybase(),
       genecards_suite(),
       gtrnadb(context),
+      hgnc(),
       intact(),
       lncbase(),
       lncbook(),
