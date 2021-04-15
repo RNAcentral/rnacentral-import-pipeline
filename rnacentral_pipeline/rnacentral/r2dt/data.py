@@ -23,7 +23,6 @@ from pathlib import Path
 import attr
 from attr.validators import instance_of as is_a
 from attr.validators import optional
-from Bio import SeqIO
 
 from rnacentral_pipeline.databases.data import RibovoreResult
 
@@ -322,6 +321,7 @@ class R2DTResult(object):
             sequence_start,
             sequence_stop,
             sequence_coverage,
+            self.should_show(),
         ]
 
 
