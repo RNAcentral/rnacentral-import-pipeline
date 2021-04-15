@@ -32,7 +32,12 @@ def cli():
 @click.option("--allow-missing", is_flag=True, default=False)
 @click.argument("model_info", type=click.File("r"))
 @click.argument(
-    "directory", type=click.Path(writable=False, dir_okay=True, file_okay=False,)
+    "directory",
+    type=click.Path(
+        writable=False,
+        dir_okay=True,
+        file_okay=False,
+    ),
 )
 @click.argument("output", type=click.File("w"))
 def process_svgs(model_info, directory, output, allow_missing=False):
@@ -41,6 +46,13 @@ def process_svgs(model_info, directory, output, allow_missing=False):
     single data file that can be imported into the database.
     """
     r2dt.write(model_info, directory, output, allow_missing=allow_missing)
+
+
+@cli.command("should-show")
+@click.argument("filename", type=click.File("r"))
+@click.argument("output", type=click.File("w"))
+def write_should_show(filename, output):
+    r2dt.write_should_show(filename, output)
 
 
 @cli.group("model-info")
@@ -57,7 +69,7 @@ def model_info():
 @click.argument("output", default="-", type=click.File("w"))
 def crw_model_info(filename, output):
     """
-    Parse the CRW metadata file and produce 
+    Parse the CRW metadata file and produce
     """
     r2dt.write_crw(filename, output)
 
@@ -107,10 +119,20 @@ def r2dt_create_attempted(filename, output):
 @click.option("--allow-missing", is_flag=True, default=False)
 @click.argument("model_info", type=click.File("r"))
 @click.argument(
-    "directory", type=click.Path(writable=False, dir_okay=True, file_okay=False,)
+    "directory",
+    type=click.Path(
+        writable=False,
+        dir_okay=True,
+        file_okay=False,
+    ),
 )
 @click.argument(
-    "output", type=click.Path(writable=True, dir_okay=True, file_okay=False,)
+    "output",
+    type=click.Path(
+        writable=True,
+        dir_okay=True,
+        file_okay=False,
+    ),
 )
 def r2dt_publish(model_info, directory, output, allow_missing, suffix=""):
     r2dt.publish(
