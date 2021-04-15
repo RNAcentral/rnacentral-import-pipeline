@@ -60,16 +60,16 @@ def rnacentral_id(context: Context, entry: HgncEntry) -> ty.Optional[str]:
 
 def as_entry(context: Context, hgnc: HgncEntry, urs: str) -> data.Entry:
     return data.Entry(
-            primary_id=hgnc.hgnc_id,
-            accession=hgnc.hgnc_id,
-            ncbi_tax_id=9606,
-            database='HGNC',
-            sequence=helpers.urs_to_sequence(context, urs),
-            regions=[],
-            rna_type=helpers.so_term(context, hgnc),
-            url=helpers.url(hgnc),
-            seq_version='1',
-            description=helpers.description(hgnc),
+        primary_id=hgnc.hgnc_id,
+        accession=hgnc.hgnc_id,
+        ncbi_tax_id=9606,
+        database="HGNC",
+        sequence=helpers.urs_to_sequence(context, urs),
+        regions=[],
+        rna_type=helpers.so_term(context, hgnc),
+        url=helpers.url(hgnc),
+        seq_version="1",
+        description=helpers.description(hgnc),
     )
 
 
