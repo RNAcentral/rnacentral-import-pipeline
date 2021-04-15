@@ -315,13 +315,5 @@ CREATE TABLE load_secondary_layout (
     model_coverage float,
     sequence_start int,
     sequence_stop int,
-    sequence_coverage float,
-    stk text
-);
-
-DROP TABLE IF EXISTS load_secondary_should_show;
-CREATE TABLE load_secondary_should_show (
-  urs text NOT NULL,
-  zscore float,
-  should_show bool NOT NULL
+    sequence_coverage float
 );
