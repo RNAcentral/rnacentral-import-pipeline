@@ -44,7 +44,8 @@ RUN apt-get install -y \
     tar \
     time \
     unzip \
-    wget
+    wget \
+    default-jdk
 
 # Install Infernal
 RUN \
@@ -58,6 +59,12 @@ RUN \
     make install && \
     cd easel && \
     make install
+
+# Install Nextflow
+RUN \
+    mkdir nextflow && \
+    cd nextflow && \
+    wget -qO- https://get.nextflow.io | bash
 
 # Install blat
 RUN \
@@ -112,6 +119,7 @@ ENV BIOEASELDIR="$RNA/Bio-Easel/blib/lib:$RNA/Bio-Easel/blib/arch:$RNA/Bio-Easel
 ENV PERL5LIB="$BIOEASELDIR:$RIBODIR:$EPNOPTDIR:$EPNOFILEDIR:$EPNTESTDIR:$PERL5LIB"
 
 ENV PATH="$RNA/infernal-1.1.2/bin:$PATH"
+ENV PATH="$RNA/nextflow:$PATH"
 ENV PATH="$RNA/blatSrc/bin:$PATH"
 ENV PATH="$RNA/seqkit:$PATH"
 ENV PATH="$RNACENTRAL_IMPORT_PIPELINE:$PATH"
