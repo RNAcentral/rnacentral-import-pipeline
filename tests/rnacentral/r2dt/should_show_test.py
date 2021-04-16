@@ -54,7 +54,6 @@ def fetch_data(connection, urs) -> data.ShowInfo:
         cur.execute(str(query))
         found = dict(cur.fetchone())
         found['modeled_length'] = len(found['secondary_structure'])
-        print(found)
         return data.ShowInfo.from_raw(found)
 
 
