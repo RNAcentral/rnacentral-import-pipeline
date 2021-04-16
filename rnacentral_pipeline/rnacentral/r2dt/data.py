@@ -369,7 +369,9 @@ class ShowInfo:
         return float(self.model_basepairs) / self.model_length
 
     def showable(self) -> bool:
-        return self.observed_paired() < self.model_paired()
+        observed = round(self.observed_paired(), 1)
+        modeled = round(self.model_paired(), 1)
+        return observed >= modeled
 
     def writeable(self) -> ty.List[str]:
         return [self.urs, str(self.model_id), str(self.showable())]
