@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pipeline
+spec:
+  containers:
+  - name: pipeline
+    image: rnacentral/rnacentral-import-pipeline:k8
+    imagePullPolicy: Always
+    command: ["tail", "-f", "/dev/null"]
+    envFrom:
+    - secretRef:
+        name: db-pro
+    - configMapRef:
+        name: proxy-hh
+    volumeMounts:
+      - name: data
+        mountPath: /data
+  volumes:
+    - name: data
+      persistentVolumeClaim:
+        claimName: nextflow-volume
