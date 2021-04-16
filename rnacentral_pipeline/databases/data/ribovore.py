@@ -106,7 +106,7 @@ class RibovoreResult(object):
 
     @property
     def modeled_length(self) -> ty.Optional[int]:
-        if self.mto is not None and self.mfrom is not None
+        if self.mto is not None and self.mfrom is not None:
             return self.mto - self.mfrom
         return None
 

@@ -343,8 +343,8 @@ class ShowInfo:
             model_length=raw["model_length"],
             model_basepairs=raw["model_basepairs"],
             sequence_length=raw["sequence_length"],
-            modeled_length=raw["observed_length"],
-            modeled_basepairs=raw["observed_basepairs"],
+            modeled_length=raw["modeled_length"],
+            modeled_basepairs=raw["modeled_basepairs"],
         )
 
     @classmethod
