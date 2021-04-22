@@ -18,6 +18,7 @@ pypika
 ratelimiter
 requests
 retry
+scikit-learn
 semver
 sqlitedict
 tatsu

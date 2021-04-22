@@ -17,7 +17,22 @@ import csv
 import typing as ty
 import operator as op
 
+from sklearn.ensemble import RandomForestClassifier
+
 from rnacentral_pipeline.rnacentral.r2dt import data
+
+
+def train(data) -> RandomForestClassifier:
+    classifier = RandomForestClassifier(n_estimators=10, max_depth=4)
+    classifier.fit(data.samples(), data.values())
+    return classifier
+
+
+def write_model(filename, output):
+    data = load_training(filename)
+    model = train(data)
+    model.
+
 
 
 def parse(handle: ty.IO) -> ty.Iterable[data.ShowInfo]:
