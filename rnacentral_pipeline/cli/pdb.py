@@ -13,12 +13,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import json
-import pickle
-
 import click
 
-from rnacentral_pipeline.databases import pdb
+from rnacentral_pipeline.databases.pdb import fetch
 from rnacentral_pipeline.databases.pdb import parser
 from rnacentral_pipeline.writers import write_entries
 
@@ -31,32 +28,7 @@ def cli():
     pass
 
 
-@cli.group('fetch')
-def fetch():
-    """
-    Commands for fetch PDB(e) data.
-    """
-
-
-@fetch.command('data')
-@click.argument('output', default='pdb.json', type=click.File('w'))
-@click.argument('pdb_ids', nargs=-1)
-def pdb_group_data(output, pdb_ids=None):
-    json.dump(pdb.all_rna_chains(), output)
-
-
-@fetch.command('extra')
-@click.argument('chains', type=click.File('r'))
-@click.argument('output', default='pdb-extra.json', type=click.File('wb'))
-@click.argument('pdb_ids', nargs=-1)
-def pdb_group_extra(chains, output, pdb_ids=None):
-    data = json.load(chains)
-    pickle.dump(pdb.references(data), output)
-
-
-@cli.command("parse")
-@click.argument("pdb_data", default="pdb.json", type=click.File("rb"))
-@click.argument("extra", default="pdb-extra.json", type=click.File("rb"))
+@cli.command("generate")
 @click.argument(
     "output",
     default=".",
@@ -67,4 +39,6 @@ def process_pdb(pdb_data, extra, output):
     This will fetch and parse all sequence data from PDBe to produce the csv
     files we import.
     """
-    write_entries(parser.parse, output, pdb_data, extra)
+    chain_info = fetch.rna_chains()
+    references = fetch.references(chain_info)
+    write_entries(parser.parse, output, chain_info, references)
