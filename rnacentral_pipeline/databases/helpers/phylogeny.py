@@ -15,6 +15,7 @@ limitations under the License.
 
 import logging
 from time import sleep
+import typing as ty
 
 import requests
 import simplejson
@@ -41,7 +42,7 @@ class FailedTaxonId(Exception):
 
 
 @lru_cache()
-def phylogeny(taxon_id):
+def phylogeny(taxon_id: int) -> ty.Dict[str, str]:
     """
     Call the EBI taxonomy API to get the phylogenetic information for the given
     taxon id. This will cache requests to the same taxon id. This will retry
@@ -77,7 +78,7 @@ def phylogeny(taxon_id):
     return data
 
 
-def lineage(taxon_id):
+def lineage(taxon_id: int) -> str:
     """
     Call the EBI taxonomy API to fetch the lineage for the given
     """
@@ -89,7 +90,7 @@ def lineage(taxon_id):
     ))
 
 
-def common_name(taxon_id):
+def common_name(taxon_id: int) -> ty.Optional[str]:
     """
     Get the common name, if any for the given taxon id. If no common name
     exists then None is returned.
@@ -97,7 +98,7 @@ def common_name(taxon_id):
     return phylogeny(taxon_id).get('commonName', None)
 
 
-def species(taxon_id):
+def species(taxon_id: int) -> str:
     """
     Get a standardized species name for the given taxon id.
     """
@@ -106,7 +107,7 @@ def species(taxon_id):
     return data['scientificName']
 
 
-def division(taxon_id):
+def division(taxon_id: int) -> str:
     """
     Get the annotated division for the given taxon id.
     """
