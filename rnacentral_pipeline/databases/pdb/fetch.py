@@ -94,6 +94,7 @@ def all_rna_chains(query_size=1000):
                     slice[internal_name] = info.get(column, None)
                 chain_info.append(slice)
 
+    assert len(chain_info) == total
     return chain_info
 
 
