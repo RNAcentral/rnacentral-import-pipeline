@@ -15,12 +15,12 @@ limitations under the License.
 
 import re
 import logging
-import itertools as it
 import collections as coll
 
 from rnacentral_pipeline.databases.helpers import phylogeny as phy
 from rnacentral_pipeline.databases.helpers import publications as pubs
 from rnacentral_pipeline.databases.data import Reference
+from rnacentral_pipeline.databases.pdb.data import ChainInfo
 
 RIBOSOMES = set([
     '5S',
@@ -46,58 +46,43 @@ class InvalidSequence(Exception):
     pass
 
 
-def is_mrna(row):
+def is_mrna(chain: ChainInfo) -> bool:
     if re.search('mRNA', row['compound'], re.IGNORECASE) and \
        not re.search('tmRNA', row['compound'], re.IGNORECASE):
         return True
     return False
 
 
-def is_ncrna(row):
+def is_ncrna(info: ChainInfo) -> bool:
     return 'RNA' in row['entityMacromoleculeType'] and not is_mrna(row)
 
 
-def accession(row):
-    """
-    Generates and accession for the given entry. The accession is built from
-    the structureId, chainId, and entityId.
-    """
-
-    # use entityId to ensure that the id is unique when chainIds
-    # are only different in case ('A' and 'a')
-    return '{structureId}_{chainId}_{entityId}'.format(
-        structureId=row['structureId'],
-        chainId=row['chainId'],
-        entityId=row['entityId'],
-    )
-
-
-def sequence(row):
+def sequence(info: ChainInfo) -> str:
     """
     Fetches the sequence of the row as DNA.
     """
-    sequence = row['sequence'].replace('U', 'T')
+    sequence = info.sequence.replace('U', 'T')
     # In many tRNA's there is a single last amino acid, so we ignore that and
     # check before excluding sequences.
     if not re.match(ALLOWED, sequence):
-        raise InvalidSequence("%s appears to be mislabelled protein" % row)
+        raise InvalidSequence("%s appears to be mislabelled protein" % info)
     return sequence
 
 
-def taxid(row):
+def taxid(info: ChainInfo) -> int:
     """
     Fetch the taxid from the row. This will deal with , or empty taxids.
     """
 
     # if no taxonomy id, use that of the synthetic construct
-    if row['taxonomyId'] == '':
+    if not info.taxids:
         return 32630  # synthetic construct
 
-    # If there is a ',' in then that is synthetic
-    if ',' in row['taxonomyId']:
+    # If there is >1 taxid is is synthetic
+    if len(info.taxids) > 1:
         return 32630
 
-    return int(row['taxonomyId'])
+    return info.taxids[0]
 
 
 def as_reference(row):
@@ -138,15 +123,11 @@ def as_reference(row):
     )
 
 
-def references_for(row, mapping):
+def references_for(info: ChainInfo, mapping):
     return mapping[reference_mapping_id(row)]
 
 
-def primary_id(row):
-    return row['structureId']
-
-
-def rna_type(row):
+def rna_type(info: ChainInfo):
     compound = row['compound'].upper()
     for simple_type in ['tRNA', 'tmRNA', 'snRNA']:
         if simple_type.upper() in compound:
@@ -176,12 +157,12 @@ def rna_type(row):
     return 'misc_RNA'
 
 
-def url(row):
+def url(info: ChainInfo) -> str:
     """
     Generate a URL for a given result. It will point to the page for the whole
     structure.
     """
-    return URL.format(pdb_id=row['structureId'].lower())
+    return URL.format(pdb_id=info.pdb_id.lower())
 
 
 def xref_data(row):
@@ -213,7 +194,7 @@ def note_data(row):
     return notes
 
 
-def description(row, max_length=80):
+def description(info: ChainInfo, max_length=80) -> str:
     compound = row['compound'][:max_length] + \
                 (row['compound'][max_length:] and '...')
     return '{compound} from {source} (PDB {pdb}, chain {chain})'.format(
@@ -228,29 +209,13 @@ def product(row):
     return row['compound']
 
 
-def optional_id(row):
-    return row['chainId']
+def reference_mapping_id(info: ChainInfo) -> str:
+    return info.pdb_id
 
 
-def reference_mapping_id(row):
-    return row['structureId']
+def lineage(info: ChainInfo) -> str:
+    return phy.lineage(taxid(info))
 
 
-def parent_accession(row):
-    return row['structureId']
-
-
-def location_start(_):
-    return 1
-
-
-def location_end(row):
-    return int(row['chainLength'])
-
-
-def lineage(row):
-    return phy.lineage(taxid(row))
-
-
-def species(row):
-    return phy.species(taxid(row))
+def species(info: ChainInfo) -> str:
+    return phy.species(taxid(info))

@@ -16,40 +16,39 @@ limitations under the License.
 import json
 import pickle
 import logging
+import typing as ty
 import collections as coll
 
 import attr
 
 from rnacentral_pipeline.databases import data
-from rnacentral_pipeline.databases.helpers import publications as pubs
 
-from . import helpers
+from rnacentral_pipeline.databases.pdb.data import ChainInfo
+from rnacentral_pipeline.databases.pdb import helpers
 
 LOGGER = logging.getLogger(__name__)
 
 
-def as_entry(row, reference_mapping):
+def as_entry(info: ChainInfo, reference_mapping):
     return data.Entry(
-        primary_id=helpers.primary_id(row),
-        accession=helpers.accession(row),
-        ncbi_tax_id=helpers.taxid(row),
+        primary_id=info.pdb_id,
+        accession=info.accession,
+        ncbi_tax_id=helpers.taxid(info),
         database='PDBE',
-        sequence=helpers.sequence(row),
+        sequence=helpers.sequence(info),
         regions=[],
         rna_type=helpers.rna_type(row),
-        url=helpers.url(row),
+        url=helpers.url(info),
         seq_version='1',
         note_data=helpers.note_data(row),
         xref_data=helpers.xref_data(row),
         product=helpers.product(row),
-        optional_id=helpers.optional_id(row),
-        description=helpers.description(row),
-        species=helpers.species(row),
-        lineage=helpers.lineage(row),
-        parent_accession=helpers.parent_accession(row),
-        references=helpers.references_for(row, reference_mapping),
-        location_start=helpers.location_start(row),
-        location_end=helpers.location_end(row),
+        optional_id=info.chain_id,
+        description=helpers.description(info),
+        species=helpers.species(info),
+        lineage=helpers.lineage(info),
+        parent_accession=info.pdb_id,
+        references=helpers.references_for(info, reference_mapping),
     )
 
 
@@ -70,28 +69,25 @@ def as_reference_mapping(raw):
     return mapping
 
 
-def as_descriptions(report):
-    disqualified = {'mRNA': 0}
-
-    descriptions = []
-    for row in report:
-        if helpers.is_mrna(row):
-            disqualified['mRNA'] += 1
-
-        if helpers.is_ncrna(row):
-            descriptions.append(row)
-
-    LOGGER.info('Disqualified %i mRNA chains', disqualified['mRNA'])
-    return descriptions
-
-
-def as_entries(raw_data, reference_mapping):
+def as_entries(raw_data: ty.List[ChainInfo], reference_mapping) -> ty.Iterator[data.Entry]:
+    disqualified = {'mRNA': 0, "other": 0}
     for raw in raw_data:
+        if helpers.is_mrna(raw):
+            LOGGER.debug("Disqualifing %s", raw)
+            disqualified['mRNA'] += 1
+            continue
+
+        if not helpers.is_ncrna(raw):
+            LOGGER.debug("Skipping %s", raw)
+            disqualified["other"] += 1
+            continue
+
         try:
             yield as_entry(raw, reference_mapping)
         except helpers.InvalidSequence as err:
             LOGGER.warn("Invalid sequence")
             LOGGER.exception(err)
+    LOGGER.info('Disqualified %i mRNA chains', disqualified['mRNA'])
 
 
 def parse(handle, reference_handle):
