@@ -13,8 +13,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-# from . import helpers
-
-from .fetch import chains
+from .fetch import all_rna_chains
 from .fetch import references
 from .parser import parse

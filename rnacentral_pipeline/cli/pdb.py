@@ -13,10 +13,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import json
+import pickle
+
 import click
 
 from rnacentral_pipeline.databases import pdb
 from rnacentral_pipeline.databases.pdb import parser
+from rnacentral_pipeline.writers import write_entries
 
 
 @click.group('pdb')
@@ -25,6 +29,7 @@ def cli():
     Commands for dealing with the fetching PDB data.
     """
     pass
+
 
 @cli.group('fetch')
 def fetch():
@@ -37,14 +42,16 @@ def fetch():
 @click.argument('output', default='pdb.json', type=click.File('w'))
 @click.argument('pdb_ids', nargs=-1)
 def pdb_group_data(output, pdb_ids=None):
-    json.dump(pdb.chains(pdb_ids=pdb_ids), output)
+    json.dump(pdb.all_rna_chains(), output)
 
 
 @fetch.command('extra')
+@click.argument('chains', type=click.File('r'))
 @click.argument('output', default='pdb-extra.json', type=click.File('wb'))
 @click.argument('pdb_ids', nargs=-1)
-def pdb_group_extra(output, pdb_ids=None):
-    pickle.dump(pdb.references(pdb_ids=pdb_ids), output)
+def pdb_group_extra(chains, output, pdb_ids=None):
+    data = json.load(chains)
+    pickle.dump(pdb.references(data), output)
 
 
 @cli.command("parse")

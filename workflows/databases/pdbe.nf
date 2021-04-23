@@ -6,7 +6,7 @@ process pdbe {
 
   """
   rnac pdb fetch data pdb.json
-  rnac pdb fetch extra pdb-extra.json
-  rnac pdb parse pdb.json pdb-extra.json .
+  rnac pdb fetch extra pdb.json pdb-extra.pickle
+  rnac pdb parse pdb.json pdb-extra.pickle .
   """
 }
