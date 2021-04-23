@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import annotations
+
 """
 Copyright [2009-2018] EMBL-European Bioinformatics Institute
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,8 +15,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import datetime as dt
 import logging
+import typing as ty
 
+import attr
+from attr.validators import instance_of as is_a
+from attr.validators import optional
 from furl import furl
 import requests
 from retry import retry
@@ -35,6 +42,9 @@ CHAIN_QUERY_COLUMNS = {
     "release_date": "releaseDate",
     "experimental_method": "experimental_method",
     "title": "title",
+    "molecule_sequence": "sequence",
+    "molecule_name": "molecule_name",
+    "molecule_type": "molecule_type",
 }
 
 PDBE_SEARCH_URL = "https://www.ebi.ac.uk/pdbe/search/pdb/select"
@@ -48,7 +58,51 @@ class MissingPdbs(Exception):
     pass
 
 
-def get_pdbe_count(query):
+def first_or_none(value):
+    assert isinstance(value, (list, tuple))
+    if len(value) == 0:
+        return None
+    elif len(value) > 1:
+        return None
+    return value[0]
+
+
+@attr.s()
+class ChainInfo:
+    pdb_id = attr.ib(validator=is_a(str))
+    chain_id = attr.ib(validator=is_a(str))
+    release_date = attr.ib(validator=is_a(dt.datetime))
+    experimental_method = attr.ib(validator=optional(is_a(str)))
+    entity_id = attr.ib(validator=is_a(int))
+    taxids: ty.List[int] = attr.ib(validator=is_a(list))
+    resolution = attr.ib(validator=optional(is_a(float)))
+    title = attr.ib(validator=is_a(str))
+    sequence = attr.ib(validator=is_a(str))
+    molecule_names: ty.List[str] = attr.ib(validator=is_a(list))
+    molecule_type = attr.ib(validator=optional(is_a(str)))
+
+    @classmethod
+    def build(cls, chain_index, raw) -> ChainInfo:
+        release_date = dt.datetime.strptime(raw['release_date'], '%Y-%m-%dT%H:%M:%SZ')
+        return cls(
+            pdb_id=raw['pdb_id'],
+            chain_id=raw['chain_id'][chain_index],
+            release_date=release_date,
+            experimental_method=first_or_none(raw['experimental_method']),
+            entity_id=raw['entity_id'],
+            taxids=raw.get('tax_id', []),
+            resolution=raw.get('resolution'),
+            title=raw['title'],
+            sequence=raw['molecule_sequence'],
+            molecule_names=raw.get('molecule_name', []),
+            molecule_type=raw.get('molecule_type', None),
+        )
+
+    def is_rna(self):
+        return self.molecule_type == "RNA"
+
+
+def get_pdbe_count(query: str) -> int:
     url = furl(PDBE_SEARCH_URL)
     url.args["q"] = query
     url.args["fl"] = 'pdb_id'
@@ -59,7 +113,7 @@ def get_pdbe_count(query):
     return data["response"]["numFound"]
 
 
-def fetch_range(query, start, rows):
+def fetch_range(query, start, rows) -> ty.Iterator[ChainInfo]:
     url = furl(PDBE_SEARCH_URL)
     url.args["q"] = query
     url.args["rows"] = rows
@@ -72,30 +126,34 @@ def fetch_range(query, start, rows):
     data = response.json()
     if data["response"]["numFound"] == 0:
         raise MissingPdbs(f"Missing for '{query}', {start}")
-    return data["response"]["docs"]
+    for raw in data['response']['docs']:
+        for index in range(len(raw['chain_id'])):
+            yield ChainInfo.build(index, raw)
 
 
 @retry((requests.HTTPError, MissingPdbs), tries=5, delay=1)
-def all_rna_chains(query_size=1000):
+def rna_chains(pdb_ids: ty.Optional[ty.List[str]] = None, query_size=1000) -> ty.List[ChainInfo]:
     """
     Get PDB ids of all RNA-containing 3D structures
     using the RCSB PDB REST API.
     """
 
-    chain_info = []
     query = "number_of_RNA_chains:[1 TO *]"
-    total = get_pdbe_count(query)
+    if pdb_ids:
+        id_query = ' OR '.join([f"pdb_id:{p}" for p in pdb_ids])
+        query = f"{query} AND ({id_query})"
 
+    chain_info: ty.List[ChainInfo] = []
+    total = get_pdbe_count(query)
     for start in range(0, total, query_size):
         with RateLimiter(max_calls=10, period=1):
-            for info in fetch_range(query, start, query_size):
-                slice = {}
-                for column, internal_name in CHAIN_QUERY_COLUMNS.items():
-                    slice[internal_name] = info.get(column, None)
-                chain_info.append(slice)
+            chain_info.extend(fetch_range(query, start, query_size))
 
-    assert len(chain_info) == total
-    return chain_info
+    # Must be >= as sometimes more than one chain is in a single document
+    assert len(chain_info) >= total, "Too few results fetched"
+    rna_chains = [c for c in chain_info if c.is_rna()]
+    assert rna_chains, "Found no RNA chains"
+    return rna_chains
 
 
 @retry(requests.HTTPError, tries=5, delay=1)
@@ -109,87 +167,6 @@ def pdbe_publications(pdb_ids):
             response.raise_for_status()
             result.update(response.json())
     return result
-
-
-# def chains(pdb_ids=None):
-#     """
-#     Get per-chain information about each RNA sequence.
-#     Return a dictionary that looks like this:
-#     {
-#         '1S72_A': {'structureId': '1S72', 'chainId': '0' etc}
-#     }
-#     """
-
-#     if not pdb_ids:
-#         pdb_ids = rna_containing_pdb_ids()
-#     query = """
-# entries(entry_ids:{pdb_id_list}) {
-#     entry {
-#       id
-#     }
-#     struct {
-#       title
-#     }
-#     rcsb_primary_citation {
-#       pdbx_database_id_PubMed
-#       rcsb_authors
-#     }
-#     pubmed {
-#       rcsb_pubmed_central_id
-#     }
-#     rcsb_entry_info {
-#       experimental_method
-#       polymer_entity_count
-#     }
-#     refine {
-#       ls_d_res_high
-#     }
-#     pdbx_database_PDB_obs_spr {
-#       replace_pdb_id
-#     }
-#     struct_keywords {
-#       pdbx_keywords
-#     }
-#     rcsb_entry_info {
-#       entity_count
-#       polymer_entity_count
-#       deposited_polymer_monomer_count
-#       deposited_atom_count
-#     }
-#     rcsb_accession_info {
-#       deposit_date
-#       initial_release_date
-#       revision_date
-#     }
-#     audit_author {
-#       name
-#     }
-#     pdbx_database_related {
-#       db_id
-#       content_type
-#       details
-#     }
-#     pdbx_database_status {
-#       pdb_format_compatible
-#     }
-#   }
-#     """
-#     return parser.as_descriptions(custom_report(pdb_ids, [
-#         'chainId',
-#         'ndbId',
-#         'emdbId',
-#         'classification',
-#         'entityId',
-#         'sequence',
-#         'chainLength',
-#         'db_id',
-#         'db_name',
-#         'entityMacromoleculeType',
-#         'source',
-#         'taxonomyId',
-#         'compound',
-#         'resolution',
-#     ]))
 
 
 def references(chain_info):

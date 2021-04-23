@@ -13,6 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import datetime as dt
+
 import pytest
 
 from rnacentral_pipeline.databases.pdb import fetch
@@ -20,43 +22,59 @@ from rnacentral_pipeline.databases.pdb import fetch
 
 @pytest.fixture(scope='module')
 def chain_info():
-    return fetch.all_rna_chains()
+    return fetch.rna_chains()
 
 
 @pytest.fixture(scope='module')
 def chain_map(chain_info):
     info = {}
     for chain in chain_info:
-        print(chain)
-        info[(chain['pdb_id'], chain["chainId"][0])] = chain
+        info[(chain.pdb_id, chain.chain_id)] = chain
     return info
 
 
 def test_can_get_all_pdbs(chain_info):
-    assert len(chain_info) >= 77520
+    assert len(fetch.rna_chains()) >= 14686
 
 
 def test_contains_no_duplicate_chains(chain_info, chain_map):
     assert len(chain_info) == len(chain_map)
 
 
-@pytest.mark.parametrize("pdb_id,chain", [
-    ("6xrz", "A"),
-    ("1s72", "9"),
+def test_produces_correct_data():
+    chains = fetch.rna_chains(pdb_ids=["1s72"])
+    chain = next(c for c in chains if c.chain_id == "9")
+    assert chain == fetch.ChainInfo(
+        pdb_id="1s72",
+        chain_id="9",
+        release_date=dt.datetime(2004, 6, 15, hour=1),
+        # release_date=dt.datetime.strptime("2004-06-15T01:00:00Z", '%Y-%m-%dT%H:%m:%SZ'),
+        experimental_method="X-ray diffraction",
+        entity_id=2,
+        taxids=[2238],
+        resolution=2.4,
+        sequence='UUAGGCGGCCACAGCGGUGGGGUUGCCUCCCGUACCCAUCCCGAACACGGAAGAUAAGCCCACCAGCGUUCCGGGGAGUACUGGAGUGCGCGAGCCUCUGGGAAACCCGGUUCGCCGCCACC',
+        title="REFINED CRYSTAL STRUCTURE OF THE HALOARCULA MARISMORTUI LARGE RIBOSOMAL SUBUNIT AT 2.4 ANGSTROM RESOLUTION",
+        molecule_names=["5S ribosomal RNA"],
+        molecule_type="RNA",
+    )
+
+
+@pytest.mark.parametrize('pdb_id,chains', [
+    ('4v5d',
+     {'AX', 'CX', 'DB', 'DA', 'CW', 'CA', 'BB', 'BA', 'AW', 'AA', 'CY', 'CV', 'AY', 'AV'}),
+    ('1ob2', {'B'}),
+    ('1ob5', {'B', 'D', 'F'}),
+    ('1xnq', {'A', 'W', 'X'}),
+    ('4v3p', {'L3', 'S1', 'L1', 'S2', 'L2', 'S3'}),
+    ('1j5e', {'A'}),
+    ('157d', {'A', 'B'}),
+    ('1a1t', {'B'}),
+    ('1cq5', {'A'}),
+    ('1s72', {'0', '9'}),
+    ('3t4b', {'A'}),
+    ("6xrz", {"A"}),
 ])
-def test_has_required_ids(chain_map, pdb_id, chain):
-    assert (pdb_id, chain) in chain_map
-
-
-def test_produces_correct_data(chain_map):
-    assert chain_map["1s72", "9"] == {
-            "pdb_id": "1s72",
-            "chainId": ["9"],
-            "taxonomyId": [2238],
-            "resolution": 2.4,
-            "emdbId": None,
-            "entityId": 2,
-            "releaseDate": "2004-06-15T01:00:00Z",
-            "experimental_method": ["X-ray diffraction"],
-            "title": "REFINED CRYSTAL STRUCTURE OF THE HALOARCULA MARISMORTUI LARGE RIBOSOMAL SUBUNIT AT 2.4 ANGSTROM RESOLUTION",
-    }
+def test_fetches_all_rna_chains_even_mrna(pdb_id, chains):
+    entries = fetch.rna_chains(pdb_ids=[pdb_id])
+    assert set(d.chain_id for d in entries) == chains
