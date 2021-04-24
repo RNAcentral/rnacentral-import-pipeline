@@ -48,7 +48,6 @@ def test_produces_correct_data():
         pdb_id="1s72",
         chain_id="9",
         release_date=dt.datetime(2004, 6, 15, hour=1),
-        # release_date=dt.datetime.strptime("2004-06-15T01:00:00Z", '%Y-%m-%dT%H:%m:%SZ'),
         experimental_method="X-ray diffraction",
         entity_id=2,
         taxids=[2238],
@@ -57,6 +56,7 @@ def test_produces_correct_data():
         title="REFINED CRYSTAL STRUCTURE OF THE HALOARCULA MARISMORTUI LARGE RIBOSOMAL SUBUNIT AT 2.4 ANGSTROM RESOLUTION",
         molecule_names=["5S ribosomal RNA"],
         molecule_type="RNA",
+        organism_scientific_name="Haloarcula marismortui",
     )
 
 

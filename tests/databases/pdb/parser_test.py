@@ -17,136 +17,122 @@ import attr
 import pytest
 
 from rnacentral_pipeline.databases import data
-from rnacentral_pipeline.databases import pdb
 from rnacentral_pipeline.databases.pdb import parser
+from rnacentral_pipeline.databases.pdb import fetch
 from rnacentral_pipeline.databases.helpers import publications as pubs
 
 
-@pytest.fixture(scope='module')
-def chain_info():
-    return pdb.all_rna_chains()
+def load(pdb_id: str, chain_id: str) -> data.Entry:
+    chains = fetch.rna_chains(pdb_ids=[pdb_id.lower()])
+    chain_info = next(c for c in chains if c.chain_id == chain_id)
+    references = fetch.references([chain_info])
+    return parser.as_entry(chain_info, references)
 
 
-@pytest.fixture(scope='module')
-def chain_map(chain_info):
-    info = {}
-    for chain in chain_info:
-        info[(chain['pdb_id'], chain["chainId"][0])] = parser.as_entries(chain, {})
-    return info
+def test_can_build_correct_entry_for_rrna():
+    cur = attr.asdict(load('1J5E', 'A'))
+    assert cur == attr.asdict(data.Entry(
+        primary_id='1J5E',
+        accession='1J5E_A_1',
+        ncbi_tax_id=274,
+        database='PDBE',
+        sequence='TTTGTTGGAGAGTTTGATCCTGGCTCAGGGTGAACGCTGGCGGCGTGCCTAAGACATGCAAGTCGTGCGGGCCGCGGGGTTTTACTCCGTGGTCAGCGGCGGACGGGTGAGTAACGCGTGGGTGACCTACCCGGAAGAGGGGGACAACCCGGGGAAACTCGGGCTAATCCCCCATGTGGACCCGCCCCTTGGGGTGTGTCCAAAGGGCTTTGCCCGCTTCCGGATGGGCCCGCGTCCCATCAGCTAGTTGGTGGGGTAATGGCCCACCAAGGCGACGACGGGTAGCCGGTCTGAGAGGATGGCCGGCCACAGGGGCACTGAGACACGGGCCCCACTCCTACGGGAGGCAGCAGTTAGGAATCTTCCGCAATGGGCGCAAGCCTGACGGAGCGACGCCGCTTGGAGGAAGAAGCCCTTCGGGGTGTAAACTCCTGAACCCGGGACGAAACCCCCGACGAGGGGACTGACGGTACCGGGGTAATAGCGCCGGCCAACTCCGTGCCAGCAGCCGCGGTAATACGGAGGGCGCGAGCGTTACCCGGATTCACTGGGCGTAAAGGGCGTGTAGGCGGCCTGGGGCGTCCCATGTGAAAGACCACGGCTCAACCGTGGGGGAGCGTGGGATACGCTCAGGCTAGACGGTGGGAGAGGGTGGTGGAATTCCCGGAGTAGCGGTGAAATGCGCAGATACCGGGAGGAACGCCGATGGCGAAGGCAGCCACCTGGTCCACCCGTGACGCTGAGGCGCGAAAGCGTGGGGAGCAAACCGGATTAGATACCCGGGTAGTCCACGCCCTAAACGATGCGCGCTAGGTCTCTGGGTCTCCTGGGGGCCGAAGCTAACGCGTTAAGCGCGCCGCCTGGGGAGTACGGCCGCAAGGCTGAAACTCAAAGGAATTGACGGGGGCCCGCACAAGCGGTGGAGCATGTGGTTTAATTCGAAGCAACGCGAAGAACCTTACCAGGCCTTGACATGCTAGGGAACCCGGGTGAAAGCCTGGGGTGCCCCGCGAGGGGAGCCCTAGCACAGGTGCTGCATGGCCGTCGTCAGCTCGTGCCGTGAGGTGTTGGGTTAAGTCCCGCAACGAGCGCAACCCCCGCCGTTAGTTGCCAGCGGTTCGGCCGGGCACTCTAACGGGACTGCCCGCGAAAGCGGGAGGAAGGAGGGGACGACGTCTGGTCAGCATGGCCCTTACGGCCTGGGCGACACACGTGCTACAATGCCCACTACAAAGCGATGCCACCCGGCAACGGGGAGCTAATCGCAAAAAGGTGGGCCCAGTTCGGATTGGGGTCTGCAACCCGACCCCATGAAGCCGGAATCGCTAGTAATCGCGGATCAGCCATGCCGCGGTGAATACGTTCCCGGGCCTTGTACACACCGCCCGTCACGCCATGGGAGCGGGCTCTACCCGAAGTCGCCGGGAGCCTACGGGCAGGCGCCGAGGGTAGGGCCCGTGACTGGGGCGAAGTCGTAACAAGGTAGCTGTACCGGAAGGTGCGGCTGGATCACCTCCTTTCT',
+        regions=[],
+        rna_type='rRNA',
+        url='https://www.ebi.ac.uk/pdbe/entry/pdb/1j5e',
+        seq_version='1',
+        note_data={
+            "releaseDate": "2002-04-12",
+            "resolution": "3.05",
+            "structureTitle": "Structure of the Thermus thermophilus 30S Ribosomal Subunit",
+            "experimentalTechnique": "X-RAY DIFFRACTION",
+        },
+        optional_id='A',
+        description='16S ribosomal RNA from Thermus thermophilus (PDB 1J5E, chain A)',
+        species='Thermus thermophilus',
+        lineage=(
+            'Bacteria; Deinococcus-Thermus; Deinococci; Thermales; '
+            'Thermaceae; Thermus; Thermus thermophilus'
+        ),
+        parent_accession='1J5E',
+        product='16S ribosomal RNA',
+        references=[
+            pubs.reference(11014182),
+            pubs.reference(11014183),
+            pubs.reference(10476960),
+        ],
+    ))
 
 
-# def test_can_build_correct_entry_for_rrna():
-#     cur = attr.asdict(load('1J5E')[0])
-#     assert cur == attr.asdict(data.Entry(
-#         primary_id='1J5E',
-#         accession='1J5E_A_1',
-#         ncbi_tax_id=274,
-#         database='PDBE',
-#         sequence='TTTGTTGGAGAGTTTGATCCTGGCTCAGGGTGAACGCTGGCGGCGTGCCTAAGACATGCAAGTCGTGCGGGCCGCGGGGTTTTACTCCGTGGTCAGCGGCGGACGGGTGAGTAACGCGTGGGTGACCTACCCGGAAGAGGGGGACAACCCGGGGAAACTCGGGCTAATCCCCCATGTGGACCCGCCCCTTGGGGTGTGTCCAAAGGGCTTTGCCCGCTTCCGGATGGGCCCGCGTCCCATCAGCTAGTTGGTGGGGTAATGGCCCACCAAGGCGACGACGGGTAGCCGGTCTGAGAGGATGGCCGGCCACAGGGGCACTGAGACACGGGCCCCACTCCTACGGGAGGCAGCAGTTAGGAATCTTCCGCAATGGGCGCAAGCCTGACGGAGCGACGCCGCTTGGAGGAAGAAGCCCTTCGGGGTGTAAACTCCTGAACCCGGGACGAAACCCCCGACGAGGGGACTGACGGTACCGGGGTAATAGCGCCGGCCAACTCCGTGCCAGCAGCCGCGGTAATACGGAGGGCGCGAGCGTTACCCGGATTCACTGGGCGTAAAGGGCGTGTAGGCGGCCTGGGGCGTCCCATGTGAAAGACCACGGCTCAACCGTGGGGGAGCGTGGGATACGCTCAGGCTAGACGGTGGGAGAGGGTGGTGGAATTCCCGGAGTAGCGGTGAAATGCGCAGATACCGGGAGGAACGCCGATGGCGAAGGCAGCCACCTGGTCCACCCGTGACGCTGAGGCGCGAAAGCGTGGGGAGCAAACCGGATTAGATACCCGGGTAGTCCACGCCCTAAACGATGCGCGCTAGGTCTCTGGGTCTCCTGGGGGCCGAAGCTAACGCGTTAAGCGCGCCGCCTGGGGAGTACGGCCGCAAGGCTGAAACTCAAAGGAATTGACGGGGGCCCGCACAAGCGGTGGAGCATGTGGTTTAATTCGAAGCAACGCGAAGAACCTTACCAGGCCTTGACATGCTAGGGAACCCGGGTGAAAGCCTGGGGTGCCCCGCGAGGGGAGCCCTAGCACAGGTGCTGCATGGCCGTCGTCAGCTCGTGCCGTGAGGTGTTGGGTTAAGTCCCGCAACGAGCGCAACCCCCGCCGTTAGTTGCCAGCGGTTCGGCCGGGCACTCTAACGGGACTGCCCGCGAAAGCGGGAGGAAGGAGGGGACGACGTCTGGTCAGCATGGCCCTTACGGCCTGGGCGACACACGTGCTACAATGCCCACTACAAAGCGATGCCACCCGGCAACGGGGAGCTAATCGCAAAAAGGTGGGCCCAGTTCGGATTGGGGTCTGCAACCCGACCCCATGAAGCCGGAATCGCTAGTAATCGCGGATCAGCCATGCCGCGGTGAATACGTTCCCGGGCCTTGTACACACCGCCCGTCACGCCATGGGAGCGGGCTCTACCCGAAGTCGCCGGGAGCCTACGGGCAGGCGCCGAGGGTAGGGCCCGTGACTGGGGCGAAGTCGTAACAAGGTAGCTGTACCGGAAGGTGCGGCTGGATCACCTCCTTTCT',
-#         regions=[],
-#         rna_type='rRNA',
-#         url='https://www.ebi.ac.uk/pdbe/entry/pdb/1j5e',
-#         seq_version='1',
-
-#         note_data={
-#             "releaseDate": "2002-04-12",
-#             "resolution": "3.05",
-#             "structureTitle": "Structure of the Thermus thermophilus 30S Ribosomal Subunit",
-#             "experimentalTechnique": "X-RAY DIFFRACTION",
-#         },
-#         xref_data={
-#             'NDB': ['RR0052'],
-#             'GB': ['155076'],
-#         },
-
-#         optional_id='A',
-#         description='16S ribosomal RNA from Thermus thermophilus (PDB 1J5E, chain A)',
-#         species='Thermus thermophilus',
-#         lineage=(
-#             'Bacteria; Deinococcus-Thermus; Deinococci; Thermales; '
-#             'Thermaceae; Thermus; Thermus thermophilus'
-#         ),
-
-#         parent_accession='1J5E',
-#         product='16S ribosomal RNA',
-#         references=[
-#             pubs.reference(11014182),
-#             pubs.reference(11014183),
-#             pubs.reference(10476960),
-#         ],
-#     ))
+def test_can_handle_strange_taxids():
+    assert load('3T4B', 'A').ncbi_tax_id == 32630
 
 
-# def test_can_handle_strange_taxids():
-#     entries = [e for e in load('3T4B')]
-#     assert entries[0].ncbi_tax_id == 32630
+def test_can_build_correct_entry_for_srp_rna():
+    assert attr.asdict(load('1CQ5', 'A')) == attr.asdict(data.Entry(
+        primary_id='1CQ5',
+        accession='1CQ5_A_1',
+        ncbi_tax_id=562,
+        database='PDBE',
+        sequence='GGCGTTTACCAGGTCAGGTCCGGAAGGAAGCAGCCAAGGCGCC',
+        regions=[],
+        rna_type='SRP_RNA',
+        url='https://www.ebi.ac.uk/pdbe/entry/pdb/1cq5',
+        seq_version='1',
+        parent_accession='1CQ5',
+        product='SRP RNA DOMAIN IV',
+        note_data={
+            "releaseDate": "1999-08-23",
+            "structureTitle": "NMR STRUCTURE OF SRP RNA DOMAIN IV",
+            "experimentalTechnique": "SOLUTION NMR"
+        },
+        optional_id='A',
+        lineage=(
+            'Bacteria; Proteobacteria; Gammaproteobacteria; Enterobacterales; '
+            'Enterobacteriaceae; Escherichia; Escherichia coli'
+        ),
+        species='Escherichia coli',
+        description='SRP RNA DOMAIN IV from Escherichia coli (PDB 1CQ5, chain A)',
+        references=[
+            pubs.reference(10580470),
+        ],
+    ))
 
 
-# def test_can_build_correct_entry_for_srp_rna():
-#     assert attr.asdict(load('1CQ5')[0]) == attr.asdict(data.Entry(
-#         primary_id='1CQ5',
-#         accession='1CQ5_A_1',
-#         ncbi_tax_id=562,
-#         database='PDBE',
-#         sequence='GGCGTTTACCAGGTCAGGTCCGGAAGGAAGCAGCCAAGGCGCC',
-#         regions=[],
-#         rna_type='SRP_RNA',
-#         url='https://www.ebi.ac.uk/pdbe/entry/pdb/1cq5',
-#         seq_version='1',
-#         parent_accession='1CQ5',
-#         product='SRP RNA DOMAIN IV',
-#         note_data={
-#             "releaseDate": "1999-08-23",
-#             "structureTitle": "NMR STRUCTURE OF SRP RNA DOMAIN IV",
-#             "experimentalTechnique": "SOLUTION NMR"
-#         },
-#         optional_id='A',
-#         lineage=(
-#             'Bacteria; Proteobacteria; Gammaproteobacteria; Enterobacterales; '
-#             'Enterobacteriaceae; Escherichia; Escherichia coli'
-#         ),
-#         species='Escherichia coli',
-#         description='SRP RNA DOMAIN IV from Escherichia coli (PDB 1CQ5, chain A)',
-#         references=[
-#             pubs.reference(10580470),
-#         ],
-#     ))
+@pytest.mark.parametrize('pdb,expected', [  # pylint: disable=no-member
+    ('157D', [32630, 32630]),
+    ('1A1T', [32630]),
+    ('1J5E', [274]),
+])
+def test_can_get_given_taxid(pdb, expected):
+    taxids = [entry.ncbi_tax_id for entry in load(pdb)]
+    assert taxids == expected
 
 
-# @pytest.mark.parametrize('pdb,expected', [  # pylint: disable=no-member
-#     ('157D', [32630, 32630]),
-#     ('1A1T', [32630]),
-#     ('1J5E', [274]),
-# ])
-# def test_can_get_given_taxid(pdb, expected):
-#     taxids = [entry.ncbi_tax_id for entry in load(pdb)]
-#     assert taxids == expected
+@pytest.mark.parametrize('pdbid,missing', [  # pylint: disable=no-member
+    ('5WNT', '5WNT_U_21'),
+    ('5WNP', '5WNP_U_21'),
+])
+def test_will_not_fetch_mislabeled_chains(pdbid, missing):
+    entries = {e.primary_id for e in load(pdbid)}
+    assert missing not in entries
 
 
-# @pytest.mark.parametrize('pdbid,missing', [  # pylint: disable=no-member
-#     ('5WNT', '5WNT_U_21'),
-#     ('5WNP', '5WNP_U_21'),
-# ])
-# def test_will_not_fetch_mislabeled_chains(pdbid, missing):
-#     entries = {e.primary_id for e in load(pdbid)}
-#     assert missing not in entries
-
-
-# @pytest.mark.parametrize('pdb_id,chains', [
-#     ('4v5d',
-#      {'DB', 'DA', 'CW', 'CA', 'BB', 'BA', 'AW', 'AA', 'CY', 'CV', 'AY', 'AV'}),
-#     ('1ob2', {'B'}),
-#     ('1ob5', {'B', 'D', 'F'}),
-#     ('1xnq', {'A', 'X'}),
-#     ('4v3p', {'L3', 'S1', 'L1', 'S2', 'L2', 'S3'}),
-#     ('1j5e', {'A'}),
-#     ('157d', {'A', 'B'}),
-#     ('1a1t', {'B'}),
-#     ('1cq5', {'A'}),
-#     ('1s72', {'0', '9'}),
-#     ('3t4b', {'A'}),
-#     ("6xrz", {"A"}),
-# ])
-# def test_fetches_expected_chains(pdb_id, chains):
-#     entries = fetch.rna_chains(pdb_ids=[pdb_id])
-#     assert set(d.chain_id for d in entries) == chains
+@pytest.mark.parametrize('pdb_id,chains', [
+    ('4v5d',
+     {'DB', 'DA', 'CW', 'CA', 'BB', 'BA', 'AW', 'AA', 'CY', 'CV', 'AY', 'AV'}),
+    ('1ob2', {'B'}),
+    ('1ob5', {'B', 'D', 'F'}),
+    ('1xnq', {'A', 'X'}),
+    ('4v3p', {'L3', 'S1', 'L1', 'S2', 'L2', 'S3'}),
+    ('1j5e', {'A'}),
+    ('157d', {'A', 'B'}),
+    ('1a1t', {'B'}),
+    ('1cq5', {'A'}),
+    ('1s72', {'0', '9'}),
+    ('3t4b', {'A'}),
+    ("6xrz", {"A"}),
+])
+def test_fetches_expected_chains(pdb_id, chains):
+    entries = fetch.rna_chains(pdb_ids=[pdb_id])
+    assert set(d.chain_id for d in entries) == chains

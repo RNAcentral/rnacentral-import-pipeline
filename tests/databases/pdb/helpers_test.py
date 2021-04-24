@@ -48,15 +48,15 @@ from rnacentral_pipeline.databases.pdb import helpers
     ('60S ribosomal RNA', 'rRNA'),
 ])
 def test_can_compute_correct_rna_types(product, expected):
-    assert helpers.rna_type({'compound': product}) == expected
+    assert helpers.compound_rna_type({'compound': product}) == expected
 
 
-def test_gets_given_taxid():
-    assert(helpers.taxid({'taxonomyId': '562'})) == 562
+# def test_gets_given_taxid():
+#     assert(helpers.taxid({'taxonomyId': '562'})) == 562
 
 
-def test_uses_synthenic_if_given_no_taxid():
-    assert(helpers.taxid({'taxonomyId': ''})) == 32630
+# def test_uses_synthenic_if_given_no_taxid():
+#     assert(helpers.taxid({'taxonomyId': ''})) == 32630
 
 
 def test_can_detect_if_sequence_is_not_rna():

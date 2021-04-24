@@ -15,6 +15,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import collections as coll
 import logging
 import typing as ty
 
@@ -24,24 +25,26 @@ from retry import retry
 from more_itertools import chunked
 from ratelimiter import RateLimiter
 
-from rnacentral_pipeline.databases.pdb import parser
+from rnacentral_pipeline.databases.data import AnyReference
 from rnacentral_pipeline.databases.pdb.data import ChainInfo
+from rnacentral_pipeline.databases.pdb import helpers
 
 LOGGER = logging.getLogger(__name__)
 
 CHAIN_QUERY_COLUMNS = {
-    'chain_id': 'chainId',
-    "tax_id": 'taxonomyId',
-    'resolution': "resolution",
-    'pdb_id': 'pdb_id',
-    'emdb_id': 'emdbId',
-    'entity_id': 'entityId',
-    "release_date": "releaseDate",
-    "experimental_method": "experimental_method",
-    "title": "title",
-    "molecule_sequence": "sequence",
-    "molecule_name": "molecule_name",
-    "molecule_type": "molecule_type",
+    'chain_id',
+    "tax_id",
+    'resolution',
+    'pdb_id',
+    'emdb_id',
+    'entity_id',
+    "release_date",
+    "experimental_method",
+    "title",
+    "molecule_sequence",
+    "molecule_name",
+    "molecule_type",
+    "organism_scientific_name",
 }
 
 PDBE_SEARCH_URL = "https://www.ebi.ac.uk/pdbe/search/pdb/select"
@@ -66,12 +69,12 @@ def get_pdbe_count(query: str) -> int:
     return data["response"]["numFound"]
 
 
-def fetch_range(query, start, rows) -> ty.Iterator[ChainInfo]:
+def fetch_range(query: str, start: int, rows: int) -> ty.Iterator[ChainInfo]:
     url = furl(PDBE_SEARCH_URL)
     url.args["q"] = query
     url.args["rows"] = rows
     url.args["start"] = start
-    url.args["fl"] = ','.join(CHAIN_QUERY_COLUMNS.keys())
+    url.args["fl"] = ','.join(CHAIN_QUERY_COLUMNS)
 
     response = requests.get(url.url)
     response.raise_for_status()
@@ -110,19 +113,22 @@ def rna_chains(pdb_ids: ty.Optional[ty.List[str]] = None, query_size=1000) -> ty
 
 
 @retry(requests.HTTPError, tries=5, delay=1)
-def pdbe_publications(pdb_ids):
+def fetch_pdbe_publications(pdb_ids: ty.Iterable[str]) -> ty.Dict[str, AnyReference]:
     url = 'https://www.ebi.ac.uk/pdbe/api/pdb/entry/publications/'
-    result = {}
+    mapping = coll.defaultdict(list)
     for subset in chunked(pdb_ids, 200):
         with RateLimiter(max_calls=10, period=1):
             post_data = ','.join(subset)
             response = requests.post(url, data=post_data)
             response.raise_for_status()
-            result.update(response.json())
-    return result
+            for pdb_id, refs in response.json().items():
+                for ref in refs:
+                    pub = helpers.as_reference(ref)
+                    mapping[pdb_id.lower()].append(pub)
+    return dict(mapping)
 
 
-def references(chain_info):
+def references(chain_info: ty.Iterable[ChainInfo]) -> ty.Dict[str, AnyReference]:
     """
     Get literature citations for each PDB file.
     Return a dictionary that looks like this:
@@ -130,7 +136,4 @@ def references(chain_info):
         '1S72': {'structureId': '1S72', etc}
     }
     """
-
-    pdb_ids = {d['pdb_id'] for d in chain_info}
-    publications = pdbe_publications(pdb_ids)
-    return parser.as_reference_mapping(publications)
+    return fetch_pdbe_publications({c.pdb_id for c in chain_info})

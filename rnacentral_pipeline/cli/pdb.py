@@ -13,11 +13,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import logging
+
 import click
 
 from rnacentral_pipeline.databases.pdb import fetch
 from rnacentral_pipeline.databases.pdb import parser
 from rnacentral_pipeline.writers import write_entries
+
+LOGGER = logging.getLogger(__name__)
 
 
 @click.group('pdb')
@@ -40,5 +44,9 @@ def process_pdb(pdb_data, extra, output):
     files we import.
     """
     chain_info = fetch.rna_chains()
-    references = fetch.references(chain_info)
+    references = {}
+    try:
+        references = fetch.references(chain_info)
+    except Exception:
+        LOGGER.info("Failed to get extra references")
     write_entries(parser.parse, output, chain_info, references)

@@ -14,12 +14,13 @@ limitations under the License.
 """
 
 import re
+import typing as ty
 import logging
-import collections as coll
 
 from rnacentral_pipeline.databases.helpers import phylogeny as phy
 from rnacentral_pipeline.databases.helpers import publications as pubs
 from rnacentral_pipeline.databases.data import Reference
+from rnacentral_pipeline.databases.data import AnyReference
 from rnacentral_pipeline.databases.pdb.data import ChainInfo
 
 RIBOSOMES = set([
@@ -47,8 +48,8 @@ class InvalidSequence(Exception):
 
 
 def is_mrna(chain: ChainInfo) -> bool:
-    if re.search('mRNA', row['compound'], re.IGNORECASE) and \
-       not re.search('tmRNA', row['compound'], re.IGNORECASE):
+    if re.search('mRNA', product(chain), re.IGNORECASE) and \
+       not re.search('tmRNA', product(chain), re.IGNORECASE):
         return True
     return False
 
@@ -123,12 +124,12 @@ def as_reference(row):
     )
 
 
-def references_for(info: ChainInfo, mapping):
-    return mapping[reference_mapping_id(row)]
+def references_for(info: ChainInfo, mapping: ty.Dict[str, AnyReference]) -> ty.List[AnyReference]:
+    return mapping.get(reference_mapping_id(info), [])
 
 
-def rna_type(info: ChainInfo):
-    compound = row['compound'].upper()
+def compound_rna_type(compound: str) -> str:
+    compound = compound.upper()
     for simple_type in ['tRNA', 'tmRNA', 'snRNA']:
         if simple_type.upper() in compound:
             return simple_type
@@ -157,6 +158,10 @@ def rna_type(info: ChainInfo):
     return 'misc_RNA'
 
 
+def rna_type(info: ChainInfo) -> str:
+    return compound_rna_type(info.molecule_type)
+
+
 def url(info: ChainInfo) -> str:
     """
     Generate a URL for a given result. It will point to the page for the whole
@@ -165,48 +170,36 @@ def url(info: ChainInfo) -> str:
     return URL.format(pdb_id=info.pdb_id.lower())
 
 
-def xref_data(row):
-    """
-    Put NDB and EMDB xrefs in the db_xref field.
-    """
+def note_data(info: ChainInfo) -> ty.Dict[str, str]:
+    data = {
+        "releaseDate": info.release_day(),
+        "structureTitle": info.title,
+    }
 
-    xref = coll.defaultdict(list)
-    if row.get('ndbId', None):
-        xref['NDB'].append(row['ndbId'])
-    if row.get('db_name', None):
-        db_name = row['db_name']
-        if db_name != 'PDB':
-            xref[db_name].append(row['db_id'])
-    return dict(xref)
+    if info.resolution is not None:
+        data['resolution'] = str(info.resolution)
 
+    if info.experimental_method:
+        data["experimentalTechnique"] = info.experimental_method.upper()
 
-def note_data(row):
-    fields = [
-        'structureTitle',
-        'experimentalTechnique',
-        'resolution',
-        'releaseDate',
-    ]
-    notes = {}
-    for field in fields:
-        if field in row and row[field]:
-            notes[field] = row[field]
-    return notes
+    return data
 
 
 def description(info: ChainInfo, max_length=80) -> str:
-    compound = row['compound'][:max_length] + \
-                (row['compound'][max_length:] and '...')
+    compound = product(info)[:max_length] + \
+                (product(info)[max_length:] and '...')
     return '{compound} from {source} (PDB {pdb}, chain {chain})'.format(
         compound=compound,
-        source=row['source'],
-        pdb=row['structureId'],
-        chain=row['chainId'],
+        source=info.organism_scientific_name,
+        pdb=info.pdb_id.upper(),
+        chain=info.chain_id,
     )
 
 
-def product(row):
-    return row['compound']
+def product(info: ChainInfo) -> str:
+    if not info.molecule_names:
+        raise ValueError("No product found")
+    return info.molecule_names[0]
 
 
 def reference_mapping_id(info: ChainInfo) -> str:

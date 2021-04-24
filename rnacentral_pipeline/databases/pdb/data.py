@@ -45,6 +45,7 @@ class ChainInfo:
     sequence = attr.ib(validator=is_a(str))
     molecule_names: ty.List[str] = attr.ib(validator=is_a(list))
     molecule_type = attr.ib(validator=optional(is_a(str)))
+    organism_scientific_name = attr.ib(validator=optional(is_a(str)))
 
     @classmethod
     def build(cls, chain_index, raw) -> ChainInfo:
@@ -61,10 +62,14 @@ class ChainInfo:
             sequence=raw['molecule_sequence'],
             molecule_names=raw.get('molecule_name', []),
             molecule_type=raw.get('molecule_type', None),
+            organism_scientific_name=first_or_none(raw.get('organism_scientific_name', []))
         )
 
-    def is_rna(self):
+    def is_rna(self) -> bool:
         return self.molecule_type == "RNA"
 
-    def accession(self):
-        return f'{self.pdb_id}_{self.chain_id}_{self.entity_id}'
+    def accession(self) -> str:
+        return f'{self.pdb_id.upper()}_{self.chain_id}_{self.entity_id}'
+
+    def release_day(self) -> str:
+        return self.release_date.strftime('%Y-%m-%d')
