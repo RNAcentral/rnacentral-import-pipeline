@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import annotations
+
 """
 Copyright [2009-2018] EMBL-European Bioinformatics Institute
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,6 +17,7 @@ limitations under the License.
 
 import re
 import enum
+import typing as ty
 
 import attr
 from attr.validators import in_
@@ -26,7 +29,6 @@ from furl import furl
 from rnacentral_pipeline.databases.helpers.hashes import md5
 
 from . import utils
-
 
 @enum.unique
 class KnownServices(enum.Enum):
@@ -137,7 +139,7 @@ class IdReference(object):
     external_id = attr.ib(validator=is_a(str)) 
 
     @classmethod
-    def build(cls, ref_id):
+    def build(cls, ref_id) -> IdReference:
         if isinstance(ref_id, int):
             return cls(KnownServices.pmid, str(ref_id))
 
@@ -192,3 +194,6 @@ class IdReference(object):
 
     def writeable_id(self):
         yield [self.normalized_id]
+
+
+AnyReference = ty.Union[Reference, IdReference]

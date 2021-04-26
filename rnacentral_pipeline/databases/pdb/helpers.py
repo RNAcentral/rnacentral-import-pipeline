@@ -14,90 +14,85 @@ limitations under the License.
 """
 
 import re
+import typing as ty
 import logging
-import itertools as it
-import collections as coll
 
 from rnacentral_pipeline.databases.helpers import phylogeny as phy
 from rnacentral_pipeline.databases.helpers import publications as pubs
 from rnacentral_pipeline.databases.data import Reference
+from rnacentral_pipeline.databases.data import AnyReference
+from rnacentral_pipeline.databases.pdb.data import ChainInfo
+from rnacentral_pipeline.databases.pdb.data import ReferenceMapping
 
-RIBOSOMES = set([
-    '5S',
-    '5.8S',
-    '16S',
-    '18S',
-    '23S',
-    '28S',
-    '30S',
-    '40S',
-    '60S',
-    '80S',
-])
+RIBOSOMES = set(
+    [
+        "5S",
+        "5.8S",
+        "16S",
+        "18S",
+        "23S",
+        "28S",
+        "30S",
+        "40S",
+        "60S",
+        "80S",
+    ]
+)
 
-URL = 'https://www.ebi.ac.uk/pdbe/entry/pdb/{pdb_id}'
+URL = "https://www.ebi.ac.uk/pdbe/entry/pdb/{pdb_id}"
 
 LOGGER = logging.getLogger(__name__)
 
-ALLOWED = re.compile('^[ABCDFGHIKMNRSTVWXYU]+$', re.IGNORECASE)
+ALLOWED = re.compile("^[ABCDFGHIKMNRSTVWXYU]+$", re.IGNORECASE)
 
 
 class InvalidSequence(Exception):
     pass
 
 
-def is_mrna(row):
-    if re.search('mRNA', row['compound'], re.IGNORECASE) and \
-       not re.search('tmRNA', row['compound'], re.IGNORECASE):
-        return True
-    return False
+def is_mrna(chain: ChainInfo) -> bool:
+    mrna_names = [
+        "mRNA",
+        "Messenger RNA",
+    ]
+    name = product(chain)
+    if re.search("tmRNA", name, re.IGNORECASE):
+        return False
+    return any(re.search(n, name, re.IGNORECASE) for n in mrna_names)
 
 
-def is_ncrna(row):
-    return 'RNA' in row['entityMacromoleculeType'] and not is_mrna(row)
+def is_ncrna(info: ChainInfo) -> bool:
+    if not info.molecule_type:
+        return False
+    return "RNA" in info.molecule_type and not is_mrna(info)
 
 
-def accession(row):
-    """
-    Generates and accession for the given entry. The accession is built from
-    the structureId, chainId, and entityId.
-    """
-
-    # use entityId to ensure that the id is unique when chainIds
-    # are only different in case ('A' and 'a')
-    return '{structureId}_{chainId}_{entityId}'.format(
-        structureId=row['structureId'],
-        chainId=row['chainId'],
-        entityId=row['entityId'],
-    )
-
-
-def sequence(row):
+def sequence(info: ChainInfo) -> str:
     """
     Fetches the sequence of the row as DNA.
     """
-    sequence = row['sequence'].replace('U', 'T')
+    sequence = info.sequence.replace("U", "T")
     # In many tRNA's there is a single last amino acid, so we ignore that and
     # check before excluding sequences.
     if not re.match(ALLOWED, sequence):
-        raise InvalidSequence("%s appears to be mislabelled protein" % row)
+        raise InvalidSequence("%s appears to be mislabelled protein" % info)
     return sequence
 
 
-def taxid(row):
+def taxid(info: ChainInfo) -> int:
     """
     Fetch the taxid from the row. This will deal with , or empty taxids.
     """
 
     # if no taxonomy id, use that of the synthetic construct
-    if row['taxonomyId'] == '':
+    if not info.taxids:
         return 32630  # synthetic construct
 
-    # If there is a ',' in then that is synthetic
-    if ',' in row['taxonomyId']:
+    # If there is >1 taxid is is synthetic
+    if len(info.taxids) > 1:
         return 32630
 
-    return int(row['taxonomyId'])
+    return info.taxids[0]
 
 
 def as_reference(row):
@@ -105,152 +100,125 @@ def as_reference(row):
     # always has a ',' after both the first and last name.
 
     pmid = None
-    if row['pubmed_id']:
-        return pubs.reference(int(row['pubmed_id']))
+    if row["pubmed_id"]:
+        return pubs.reference(int(row["pubmed_id"]))
 
-    if row['doi']:
-        doi = row['doi']
-        if not doi.lower().startswith('doi:'):
-            doi = 'doi:' + doi
+    if row["doi"]:
+        doi = row["doi"]
+        if not doi.lower().startswith("doi:"):
+            doi = "doi:" + doi
         return pubs.reference(doi)
 
     authors = []
-    for author in row['author_list']:
-        if author['full_name']:
-            authors.append(author['full_name'].replace(',', ''))
+    for author in row["author_list"]:
+        if author["full_name"]:
+            authors.append(author["full_name"].replace(",", ""))
             continue
 
         current = []
-        if author['last_name']:
-            current.append(author['last_name'])
-        if author['first_name']:
-            current.append(author['first_name'])
-        authors.append(' '.join(current))
+        if author["last_name"]:
+            current.append(author["last_name"])
+        if author["first_name"]:
+            current.append(author["first_name"])
+        authors.append(" ".join(current))
 
-    journal = row['journal_info']['pdb_abbreviation']
+    journal = row["journal_info"]["pdb_abbreviation"]
 
     return Reference(
-        authors=', '.join(authors),
+        authors=", ".join(authors),
         location=journal,
-        title=row['title'],
+        title=row["title"],
         pmid=pmid,
-        doi=row['doi'],
+        doi=row["doi"],
     )
 
 
-def references_for(row, mapping):
-    return mapping[reference_mapping_id(row)]
+def references_for(info: ChainInfo, mapping: ReferenceMapping) -> ty.List[AnyReference]:
+    return mapping.get(reference_mapping_id(info), [])
 
 
-def primary_id(row):
-    return row['structureId']
-
-
-def rna_type(row):
-    compound = row['compound'].upper()
-    for simple_type in ['tRNA', 'tmRNA', 'snRNA']:
+def compound_rna_type(compound: str) -> str:
+    compound = compound.upper()
+    for simple_type in ["tRNA", "tmRNA", "snRNA"]:
         if simple_type.upper() in compound:
             return simple_type
 
     # rRNA
     for ribo_name in RIBOSOMES:
         if ribo_name in compound:
-            return 'rRNA'
+            return "rRNA"
 
     # SRP
-    if 'SRP' in compound:
-        return 'SRP_RNA'
+    if "SRP" in compound:
+        return "SRP_RNA"
 
     # Ribozyme
-    if 'RIBOZYME' in compound and 'HAMMERHEAD' not in compound:
-        return 'ribozyme'
+    if "RIBOZYME" in compound and "HAMMERHEAD" not in compound:
+        return "ribozyme"
 
     # Hammerhead ribozyme
-    if 'RIBOZYME' in compound and 'HAMMERHEAD' in compound:
-        return 'hammerhead_ribozyme'
+    if "RIBOZYME" in compound and "HAMMERHEAD" in compound:
+        return "hammerhead_ribozyme"
 
     # snoRNA
-    if 'SNORNA' in compound:
-        return 'ncRNA'
+    if "SNORNA" in compound:
+        return "ncRNA"
 
-    return 'misc_RNA'
+    return "misc_RNA"
 
 
-def url(row):
+def rna_type(info: ChainInfo) -> str:
+    if not info.molecule_names:
+        raise ValueError(f"Cannot find RNA type for {info}")
+    return compound_rna_type(info.molecule_names[0])
+
+
+def url(info: ChainInfo) -> str:
     """
     Generate a URL for a given result. It will point to the page for the whole
     structure.
     """
-    return URL.format(pdb_id=row['structureId'].lower())
+    return URL.format(pdb_id=info.pdb_id.lower())
 
 
-def xref_data(row):
-    """
-    Put NDB and EMDB xrefs in the db_xref field.
-    """
+def note_data(info: ChainInfo) -> ty.Dict[str, str]:
+    data = {
+        "releaseDate": info.release_day(),
+        "structureTitle": info.title,
+    }
 
-    xref = coll.defaultdict(list)
-    if row.get('ndbId', None):
-        xref['NDB'].append(row['ndbId'])
-    if row.get('db_name', None):
-        db_name = row['db_name']
-        if db_name != 'PDB':
-            xref[db_name].append(row['db_id'])
-    return dict(xref)
+    if info.resolution is not None:
+        data["resolution"] = str(info.resolution)
 
+    if info.experimental_method:
+        data["experimentalTechnique"] = info.experimental_method.upper()
 
-def note_data(row):
-    fields = [
-        'structureTitle',
-        'experimentalTechnique',
-        'resolution',
-        'releaseDate',
-    ]
-    notes = {}
-    for field in fields:
-        if field in row and row[field]:
-            notes[field] = row[field]
-    return notes
+    return data
 
 
-def description(row, max_length=80):
-    compound = row['compound'][:max_length] + \
-                (row['compound'][max_length:] and '...')
-    return '{compound} from {source} (PDB {pdb}, chain {chain})'.format(
+def description(info: ChainInfo, max_length=80) -> str:
+    compound = product(info)[:max_length] + (product(info)[max_length:] and "...")
+    return "{compound} from {source} (PDB {pdb}, chain {chain})".format(
         compound=compound,
-        source=row['source'],
-        pdb=row['structureId'],
-        chain=row['chainId'],
+        source=info.organism_scientific_name,
+        pdb=info.pdb_id.upper(),
+        chain=info.chain_id,
     )
 
 
-def product(row):
-    return row['compound']
+def product(info: ChainInfo) -> str:
+    if not info.molecule_names:
+        raise ValueError("No product found")
+    return info.molecule_names[0]
 
 
-def optional_id(row):
-    return row['chainId']
+def reference_mapping_id(info: ChainInfo) -> str:
+    return info.pdb_id
 
 
-def reference_mapping_id(row):
-    return row['structureId']
+def lineage(info: ChainInfo) -> str:
+    return phy.lineage(taxid(info))
 
 
-def parent_accession(row):
-    return row['structureId']
-
-
-def location_start(_):
-    return 1
-
-
-def location_end(row):
-    return int(row['chainLength'])
-
-
-def lineage(row):
-    return phy.lineage(taxid(row))
-
-
-def species(row):
-    return phy.species(taxid(row))
+def species(info: ChainInfo) -> str:
+    return phy.species(taxid(info))

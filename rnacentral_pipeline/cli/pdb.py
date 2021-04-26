@@ -13,10 +13,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import logging
+from pathlib import Path
+
 import click
 
-from rnacentral_pipeline.databases import pdb
+from rnacentral_pipeline.databases.pdb import fetch
 from rnacentral_pipeline.databases.pdb import parser
+from rnacentral_pipeline import writers
+
+LOGGER = logging.getLogger(__name__)
 
 
 @click.group('pdb')
@@ -26,38 +32,27 @@ def cli():
     """
     pass
 
-@cli.group('fetch')
-def fetch():
-    """
-    Commands for fetch PDB(e) data.
-    """
 
-
-@fetch.command('data')
-@click.argument('output', default='pdb.json', type=click.File('w'))
-@click.argument('pdb_ids', nargs=-1)
-def pdb_group_data(output, pdb_ids=None):
-    json.dump(pdb.chains(pdb_ids=pdb_ids), output)
-
-
-@fetch.command('extra')
-@click.argument('output', default='pdb-extra.json', type=click.File('wb'))
-@click.argument('pdb_ids', nargs=-1)
-def pdb_group_extra(output, pdb_ids=None):
-    pickle.dump(pdb.references(pdb_ids=pdb_ids), output)
-
-
-@cli.command("parse")
-@click.argument("pdb_data", default="pdb.json", type=click.File("rb"))
-@click.argument("extra", default="pdb-extra.json", type=click.File("rb"))
+@cli.command("generate")
+@click.option('--skip-references', default=False)
 @click.argument(
     "output",
     default=".",
     type=click.Path(writable=True, dir_okay=True, file_okay=False,),
 )
-def process_pdb(pdb_data, extra, output):
+def process_pdb(output, skip_references=False):
     """
     This will fetch and parse all sequence data from PDBe to produce the csv
     files we import.
     """
-    write_entries(parser.parse, output, pdb_data, extra)
+    chain_info = fetch.rna_chains()
+    references = {}
+    try:
+        if not skip_references:
+            references = fetch.references(chain_info)
+    except Exception:
+        LOGGER.info("Failed to get extra references")
+
+    entries = parser.parse(chain_info, references)
+    with writers.entry_writer(Path(output)) as writer:
+        writer.write(entries)
