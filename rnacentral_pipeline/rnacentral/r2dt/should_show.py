@@ -42,6 +42,14 @@ MODEL_COLUMNS = [
     "diagram_overlap_count",
 ]
 
+SOURCE_MAP = {
+    "crw": 0,
+    "ribovision": 0,
+    "gtrnadb": 1,
+    "rnase_p": 2,
+    "rfam": 3,
+}
+
 
 def fetch_modeled_data(
     all_ids: ty.Iterable[str], db_url: str, chunk_size=1000
@@ -79,8 +87,11 @@ def fetch_modeled_data(
         with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
             cur.execute(sql)
             for result in cur:
-                yield result
-                seen.add(result["urs"])
+                found = dict(result)
+                if any(v is None for v in found.values()):
+                    continue
+                yield found
+                seen.add(found["urs"])
 
         missing = set(chunk) - seen
         for urs in missing:
@@ -88,8 +99,15 @@ def fetch_modeled_data(
 
 
 def infer_columns(data: pd.DataFrame):
-    data["diagram_sequence_length"] = data["diagram_sequence_stop"] - data["diagram_sequence_start"]
-    data["diagram_model_length"] = data["diagram_model_stop"] - data["diagram_model_start"]
+    data["diagram_sequence_length"] = (
+        data["diagram_sequence_stop"] - data["diagram_sequence_start"]
+    )
+    data["diagram_model_length"] = (
+        data["diagram_model_stop"] - data["diagram_model_start"]
+    )
+    data["source_index"] = data.model_source.map(SOURCE_MAP)
+    if data["source_index"].isnull().any():
+        raise ValueError("Could not build source_index for all training data")
 
 
 def fetch_training_data(handle: ty.IO, db_url: str) -> pd.DataFrame:
@@ -120,7 +138,7 @@ def fetch_training_data(handle: ty.IO, db_url: str) -> pd.DataFrame:
 def train(handle, db_url) -> RandomForestClassifier:
     data = fetch_training_data(handle, db_url)
     X = data[MODEL_COLUMNS].to_numpy()
-    y = data["vaild"].to_numpy()
+    y = data["valid"].to_numpy()
     clf = RandomForestClassifier(min_samples_split=5)
     clf.fit(X, y)
     return clf
@@ -137,8 +155,8 @@ def write(model_path: Path, handle: ty.IO, output: ty.IO):
     infer_columns(data)
     predicted = model.predict(data[MODEL_COLUMNS].to_numpy())
     to_write = pd.DataFrame()
-    to_write['urs'] = data['urs']
-    to_write['should_show'] = predicted
+    to_write["urs"] = data["urs"]
+    to_write["should_show"] = predicted
     to_write.to_csv(output, index=False)
 
 

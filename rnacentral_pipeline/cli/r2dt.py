@@ -58,22 +58,32 @@ def should_show():
 
 
 @should_show.command("fetch-data")
+@click.option("--db-url", envvar="PGDATABASE")
 @click.argument("filename", type=click.File("r"))
 @click.argument("output", type=click.File("w"))
-def fetch_training_data(filename, output):
+def fetch_training_data(filename, output, db_url=None):
     """
     This builds a CSV file of training data to use for the model building. I
     keep it separate so I can build a training csv and play with it interactivly
     before committing the final modeling building logic to the pipeline.
     """
-    r2dt.write_training_data(filename, output)
+    r2dt.write_training_data(filename, db_url, output)
 
 
 @should_show.command("build-model")
-@click.argument("training-data", type=click.File("r"))
+@click.option("--db-url", envvar="PGDATABASE")
+@click.argument("training-info", type=click.File("r"))
 @click.argument("model", type=click.Path())
-def build_model(training_data, model):
-    r2dt.build_model(training_data, Path(model))
+def build_model(training_data, model, db_url=None):
+    """
+    This builds a model given then training information. The training
+    information should be a csv file of:
+        URS,flag
+    The flag must be 1 or 0 to indicate if the URS should be shown or not. THis
+    will fetch the data like the fetch-data command but will then build a model
+    and write it out the the output file directly.
+    """
+    r2dt.build_model(training_data, db_url, Path(model))
 
 
 @should_show.command("compute")

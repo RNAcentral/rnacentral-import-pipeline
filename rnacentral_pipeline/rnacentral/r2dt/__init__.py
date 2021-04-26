@@ -93,9 +93,9 @@ def write_should_show(model: Path, handle: ty.IO, output: ty.IO):
     return should_show.write(model, handle, output)
 
 
-def write_training_data(handle: ty.IO, output: ty.IO):
-    return should_show.write_training_data(handle, output)
+def write_training_data(handle: ty.IO, db_url: str, output: ty.IO):
+    return should_show.write_training_data(handle, db_url, output)
 
 
-def build_model(handle: ty.IO, output: Path):
-    return should_show.write_model(handle, output)
+def build_model(handle: ty.IO, db_url: str, output: Path):
+    return should_show.write_model(handle, db_url, output)
