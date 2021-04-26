@@ -13,6 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+from pathlib import Path
 
 import click
 
@@ -48,11 +49,45 @@ def process_svgs(model_info, directory, output, allow_missing=False):
     r2dt.write(model_info, directory, output, allow_missing=allow_missing)
 
 
-@cli.command("should-show")
+@cli.group("should-show")
+def should_show():
+    """
+    Some commands relating to building a model for should show as well as
+    running it.
+    """
+
+
+@should_show.command("fetch-data")
 @click.argument("filename", type=click.File("r"))
 @click.argument("output", type=click.File("w"))
-def write_should_show(filename, output):
-    r2dt.write_should_show(filename, output)
+def fetch_training_data(filename, output):
+    """
+    This builds a CSV file of training data to use for the model building. I
+    keep it separate so I can build a training csv and play with it interactivly
+    before committing the final modeling building logic to the pipeline.
+    """
+    r2dt.write_training_data(filename, output)
+
+
+@should_show.command("build-model")
+@click.argument("training-data", type=click.File("r"))
+@click.argument("model", type=click.Path())
+def build_model(training_data, model):
+    r2dt.build_model(training_data, Path(model))
+
+
+@should_show.command("compute")
+@click.argument("model", type=click.Path())
+@click.argument("filename", type=click.File("r"))
+@click.argument("output", type=click.File("w"))
+def write_should_show(model, filename, output):
+    """
+    This computes the should show values for the data in the given file and a
+    file listing urs ids to use. The data needed for the URS will be fetched
+    from the database. This is meant to operate on large batches, like
+    relabeling the entire database.
+    """
+    r2dt.write_should_show(model, filename, output)
 
 
 @cli.group("model-info")
