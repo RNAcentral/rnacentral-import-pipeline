@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import annotations
+
 """
 Copyright [2009-2018] EMBL-European Bioinformatics Institute
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,17 +15,39 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import csv
+import collections as coll
 import logging
+import typing as ty
 
+from furl import furl
 import requests
 from retry import retry
 from more_itertools import chunked
 from ratelimiter import RateLimiter
 
-from rnacentral_pipeline.databases.pdb import parser
+from rnacentral_pipeline.databases.pdb.data import ChainInfo
+from rnacentral_pipeline.databases.pdb.data import ReferenceMapping
+from rnacentral_pipeline.databases.pdb import helpers
 
 LOGGER = logging.getLogger(__name__)
+
+CHAIN_QUERY_COLUMNS = {
+    "chain_id",
+    "tax_id",
+    "resolution",
+    "pdb_id",
+    "emdb_id",
+    "entity_id",
+    "release_date",
+    "experimental_method",
+    "title",
+    "molecule_sequence",
+    "molecule_name",
+    "molecule_type",
+    "organism_scientific_name",
+}
+
+PDBE_SEARCH_URL = "https://www.ebi.ac.uk/pdbe/search/pdb/select"
 
 
 class MissingPdbs(Exception):
@@ -31,167 +55,85 @@ class MissingPdbs(Exception):
     Raised if we manage to request data from RCSB PDB but no PDB ids are in the
     response.
     """
-    pass
+
+
+def get_pdbe_count(query: str) -> int:
+    url = furl(PDBE_SEARCH_URL)
+    url.args["q"] = query
+    url.args["fl"] = "pdb_id"
+
+    response = requests.get(url.url)
+    response.raise_for_status()
+    data = response.json()
+    return data["response"]["numFound"]
+
+
+def fetch_range(query: str, start: int, rows: int) -> ty.Iterator[ChainInfo]:
+    url = furl(PDBE_SEARCH_URL)
+    url.args["q"] = query
+    url.args["rows"] = rows
+    url.args["start"] = start
+    url.args["fl"] = ",".join(CHAIN_QUERY_COLUMNS)
+
+    response = requests.get(url.url)
+    response.raise_for_status()
+
+    data = response.json()
+    if data["response"]["numFound"] == 0:
+        raise MissingPdbs(f"Missing for '{query}', {start}")
+    for raw in data["response"]["docs"]:
+        for index in range(len(raw["chain_id"])):
+            yield ChainInfo.build(index, raw)
 
 
 @retry((requests.HTTPError, MissingPdbs), tries=5, delay=1)
-def rna_containing_pdb_ids():
+def rna_chains(
+    pdb_ids: ty.Optional[ty.List[str]] = None, query_size=1000
+) -> ty.List[ChainInfo]:
     """
     Get PDB ids of all RNA-containing 3D structures
     using the RCSB PDB REST API.
     """
 
-    query = """
-    <orgPdbQuery>
-    <queryType>org.pdb.query.simple.ChainTypeQuery</queryType>
-    <containsProtein>I</containsProtein>
-    <containsDna>I</containsDna>
-    <containsRna>Y</containsRna>
-    <containsHybrid>I</containsHybrid>
-    </orgPdbQuery>
-    """
-    url = 'http://www.rcsb.org/pdb/rest/search'
+    query = "number_of_RNA_chains:[1 TO *]"
+    if pdb_ids:
+        id_query = " OR ".join([f"pdb_id:{p}" for p in pdb_ids])
+        query = f"{query} AND ({id_query})"
 
-    # without this header the request is redirected incorrectly
-    response = requests.post(
-        url,
-        data=query,
-        headers={'content-type': 'application/x-www-form-urlencoded'}
-    )
+    rna_chains: ty.List[ChainInfo] = []
+    total = get_pdbe_count(query)
+    for start in range(0, total, query_size):
+        with RateLimiter(max_calls=10, period=1):
+            rna_chains.extend(fetch_range(query, start, query_size))
 
-    response.raise_for_status()
-    pdb_ids = response.text.rstrip().split('\n')
-    if not pdb_ids:
-        raise MissingPdbs()
-
-    return pdb_ids
+    # Must be >= as sometimes more than one chain is in a single document
+    assert len(rna_chains) >= total, "Too few results fetched"
+    assert rna_chains, "Found no RNA chains"
+    return rna_chains
 
 
 @retry(requests.HTTPError, tries=5, delay=1)
-def custom_report(pdb_ids, fields):
-    """
-    Get custom report about PDB files in a tabular format.
-    """
-
-    url = 'http://www.rcsb.org/pdb/rest/customReport.csv'
-    data = {
-        'pdbids': ','.join(pdb_ids),
-        'customReportColumns': ','.join(fields),
-        'format': 'csv',
-        'service': 'wsfile',  # Use actual CSV files
-    }
-
-    response = requests.post(url, data=data)
-    response.raise_for_status()
-    lines = response.text.split('\n')
-    return csv.DictReader(lines, delimiter=',', quotechar='"')
-
-
-@retry(requests.HTTPError, tries=5, delay=1)
-def pdbe_publications(pdb_ids):
-    url = 'https://www.ebi.ac.uk/pdbe/api/pdb/entry/publications/'
-    result = {}
-    with RateLimiter(max_calls=10, period=1):
-        for subset in chunked(pdb_ids, 200):
-            post_data = ','.join(subset)
+def fetch_pdbe_publications(pdb_ids: ty.Iterable[str]) -> ReferenceMapping:
+    url = "https://www.ebi.ac.uk/pdbe/api/pdb/entry/publications/"
+    mapping = coll.defaultdict(list)
+    for subset in chunked(pdb_ids, 200):
+        with RateLimiter(max_calls=10, period=1):
+            post_data = ",".join(subset)
             response = requests.post(url, data=post_data)
             response.raise_for_status()
-            result.update(response.json())
-    return result
+            for pdb_id, refs in response.json().items():
+                for ref in refs:
+                    pub = helpers.as_reference(ref)
+                    mapping[pdb_id.lower()].append(pub)
+    return dict(mapping)
 
 
-
-
-def chains(pdb_ids=None):
-    """
-    Get per-chain information about each RNA sequence.
-    Return a dictionary that looks like this:
-    {
-        '1S72_A': {'structureId': '1S72', 'chainId': '0' etc}
-    }
-    """
-
-    if not pdb_ids:
-        pdb_ids = rna_containing_pdb_ids()
-    query = """
-entries(entry_ids:{pdb_id_list}) {
-    entry {
-      id
-    }
-    struct {
-      title
-    }
-    rcsb_primary_citation {
-      pdbx_database_id_PubMed
-      rcsb_authors
-    }
-    pubmed {
-      rcsb_pubmed_central_id
-    }
-    rcsb_entry_info {
-      experimental_method
-      polymer_entity_count
-    }
-    refine {
-      ls_d_res_high
-    }
-    pdbx_database_PDB_obs_spr {
-      replace_pdb_id
-    }
-    struct_keywords {
-      pdbx_keywords
-    }
-    rcsb_entry_info {
-      entity_count
-      polymer_entity_count
-      deposited_polymer_monomer_count
-      deposited_atom_count
-    }
-    rcsb_accession_info {
-      deposit_date
-      initial_release_date
-      revision_date
-    }
-    audit_author {
-      name
-    }
-    pdbx_database_related {
-      db_id
-      content_type
-      details
-    }
-    pdbx_database_status {
-      pdb_format_compatible
-    }
-  }
-    """
-    return parser.as_descriptions(custom_report(pdb_ids, [
-        'chainId',
-        'ndbId',
-        'emdbId',
-        'classification',
-        'entityId',
-        'sequence',
-        'chainLength',
-        'db_id',
-        'db_name',
-        'entityMacromoleculeType',
-        'source',
-        'taxonomyId',
-        'compound',
-        'resolution',
-    ]))
-
-
-def references(pdb_ids=None):
+def references(chain_info: ty.Iterable[ChainInfo]) -> ReferenceMapping:
     """
     Get literature citations for each PDB file.
     Return a dictionary that looks like this:
     {
-        '1S72': {'structureId': '1S72', etc}
+        '1s72': {'structureId': '1S72', etc}
     }
     """
-
-    if not pdb_ids:
-        pdb_ids = rna_containing_pdb_ids()
-    return parser.as_reference_mapping(pdbe_publications(pdb_ids))
+    return fetch_pdbe_publications({c.pdb_id for c in chain_info})
