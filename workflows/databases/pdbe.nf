@@ -5,8 +5,6 @@ process pdbe {
   path('*.csv')
 
   """
-  rnac pdb fetch data pdb.json
-  rnac pdb fetch extra pdb-extra.json
-  rnac pdb parse pdb.json pdb-extra.json .
+  rnac pdb generate .
   """
 }
