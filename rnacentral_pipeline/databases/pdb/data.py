@@ -22,6 +22,10 @@ import attr
 from attr.validators import instance_of as is_a
 from attr.validators import optional
 
+from rnacentral_pipeline.databases.data import AnyReference
+
+ReferenceMapping = ty.Dict[str, ty.List[AnyReference]]
+
 
 def first_or_none(value):
     assert isinstance(value, (list, tuple))
@@ -49,27 +53,26 @@ class ChainInfo:
 
     @classmethod
     def build(cls, chain_index, raw) -> ChainInfo:
-        release_date = dt.datetime.strptime(raw['release_date'], '%Y-%m-%dT%H:%M:%SZ')
+        release_date = dt.datetime.strptime(raw["release_date"], "%Y-%m-%dT%H:%M:%SZ")
         return cls(
-            pdb_id=raw['pdb_id'],
-            chain_id=raw['chain_id'][chain_index],
+            pdb_id=raw["pdb_id"],
+            chain_id=raw["chain_id"][chain_index],
             release_date=release_date,
-            experimental_method=first_or_none(raw['experimental_method']),
-            entity_id=raw['entity_id'],
-            taxids=raw.get('tax_id', []),
-            resolution=raw.get('resolution'),
-            title=raw['title'],
-            sequence=raw['molecule_sequence'],
-            molecule_names=raw.get('molecule_name', []),
-            molecule_type=raw.get('molecule_type', None),
-            organism_scientific_name=first_or_none(raw.get('organism_scientific_name', []))
+            experimental_method=first_or_none(raw["experimental_method"]),
+            entity_id=raw["entity_id"],
+            taxids=raw.get("tax_id", []),
+            resolution=raw.get("resolution"),
+            title=raw["title"],
+            sequence=raw["molecule_sequence"],
+            molecule_names=raw.get("molecule_name", []),
+            molecule_type=raw.get("molecule_type", None),
+            organism_scientific_name=first_or_none(
+                raw.get("organism_scientific_name", [])
+            ),
         )
 
-    def is_rna(self) -> bool:
-        return self.molecule_type == "RNA"
-
     def accession(self) -> str:
-        return f'{self.pdb_id.upper()}_{self.chain_id}_{self.entity_id}'
+        return f"{self.pdb_id.upper()}_{self.chain_id}_{self.entity_id}"
 
     def release_day(self) -> str:
-        return self.release_date.strftime('%Y-%m-%d')
+        return self.release_date.strftime("%Y-%m-%d")

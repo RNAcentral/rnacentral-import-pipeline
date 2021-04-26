@@ -19,22 +19,23 @@ import typing as ty
 from rnacentral_pipeline.databases import data
 
 from rnacentral_pipeline.databases.pdb.data import ChainInfo
+from rnacentral_pipeline.databases.pdb.data import ReferenceMapping
 from rnacentral_pipeline.databases.pdb import helpers
 
 LOGGER = logging.getLogger(__name__)
 
 
-def as_entry(info: ChainInfo, reference_mapping):
+def as_entry(info: ChainInfo, reference_mapping: ReferenceMapping):
     return data.Entry(
         primary_id=info.pdb_id.upper(),
         accession=info.accession(),
         ncbi_tax_id=helpers.taxid(info),
-        database='PDBE',
+        database="PDBE",
         sequence=helpers.sequence(info),
         regions=[],
         rna_type=helpers.rna_type(info),
         url=helpers.url(info),
-        seq_version='1',
+        seq_version="1",
         note_data=helpers.note_data(info),
         product=helpers.product(info),
         optional_id=info.chain_id,
@@ -46,12 +47,15 @@ def as_entry(info: ChainInfo, reference_mapping):
     )
 
 
-def parse(rna_chains: ty.List[ChainInfo], reference_mapping: ty.Dict[str, data.AnyReference]) -> ty.Iterator[data.Entry]:
-    disqualified = {'mRNA': 0, "other": 0}
+def parse(
+    rna_chains: ty.List[ChainInfo],
+    reference_mapping: ReferenceMapping,
+) -> ty.Iterator[data.Entry]:
+    disqualified = {"mRNA": 0, "other": 0}
     for chain in rna_chains:
         if helpers.is_mrna(chain):
             LOGGER.debug("Disqualifing %s", chain)
-            disqualified['mRNA'] += 1
+            disqualified["mRNA"] += 1
             continue
 
         if not helpers.is_ncrna(chain):
@@ -64,5 +68,5 @@ def parse(rna_chains: ty.List[ChainInfo], reference_mapping: ty.Dict[str, data.A
         except helpers.InvalidSequence as err:
             LOGGER.warn("Invalid sequence")
             LOGGER.exception(err)
-    LOGGER.info('Disqualified %i mRNA chains', disqualified['mRNA'])
-    LOGGER.info('Disqualified %i non ncRNA chains', disqualified['other'])
+    LOGGER.info("Disqualified %i mRNA chains", disqualified["mRNA"])
+    LOGGER.info("Disqualified %i non ncRNA chains", disqualified["other"])

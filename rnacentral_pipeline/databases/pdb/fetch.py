@@ -25,19 +25,19 @@ from retry import retry
 from more_itertools import chunked
 from ratelimiter import RateLimiter
 
-from rnacentral_pipeline.databases.data import AnyReference
 from rnacentral_pipeline.databases.pdb.data import ChainInfo
+from rnacentral_pipeline.databases.pdb.data import ReferenceMapping
 from rnacentral_pipeline.databases.pdb import helpers
 
 LOGGER = logging.getLogger(__name__)
 
 CHAIN_QUERY_COLUMNS = {
-    'chain_id',
+    "chain_id",
     "tax_id",
-    'resolution',
-    'pdb_id',
-    'emdb_id',
-    'entity_id',
+    "resolution",
+    "pdb_id",
+    "emdb_id",
+    "entity_id",
     "release_date",
     "experimental_method",
     "title",
@@ -55,13 +55,12 @@ class MissingPdbs(Exception):
     Raised if we manage to request data from RCSB PDB but no PDB ids are in the
     response.
     """
-    pass
 
 
 def get_pdbe_count(query: str) -> int:
     url = furl(PDBE_SEARCH_URL)
     url.args["q"] = query
-    url.args["fl"] = 'pdb_id'
+    url.args["fl"] = "pdb_id"
 
     response = requests.get(url.url)
     response.raise_for_status()
@@ -74,7 +73,7 @@ def fetch_range(query: str, start: int, rows: int) -> ty.Iterator[ChainInfo]:
     url.args["q"] = query
     url.args["rows"] = rows
     url.args["start"] = start
-    url.args["fl"] = ','.join(CHAIN_QUERY_COLUMNS)
+    url.args["fl"] = ",".join(CHAIN_QUERY_COLUMNS)
 
     response = requests.get(url.url)
     response.raise_for_status()
@@ -82,13 +81,15 @@ def fetch_range(query: str, start: int, rows: int) -> ty.Iterator[ChainInfo]:
     data = response.json()
     if data["response"]["numFound"] == 0:
         raise MissingPdbs(f"Missing for '{query}', {start}")
-    for raw in data['response']['docs']:
-        for index in range(len(raw['chain_id'])):
+    for raw in data["response"]["docs"]:
+        for index in range(len(raw["chain_id"])):
             yield ChainInfo.build(index, raw)
 
 
 @retry((requests.HTTPError, MissingPdbs), tries=5, delay=1)
-def rna_chains(pdb_ids: ty.Optional[ty.List[str]] = None, query_size=1000) -> ty.List[ChainInfo]:
+def rna_chains(
+    pdb_ids: ty.Optional[ty.List[str]] = None, query_size=1000
+) -> ty.List[ChainInfo]:
     """
     Get PDB ids of all RNA-containing 3D structures
     using the RCSB PDB REST API.
@@ -96,29 +97,28 @@ def rna_chains(pdb_ids: ty.Optional[ty.List[str]] = None, query_size=1000) -> ty
 
     query = "number_of_RNA_chains:[1 TO *]"
     if pdb_ids:
-        id_query = ' OR '.join([f"pdb_id:{p}" for p in pdb_ids])
+        id_query = " OR ".join([f"pdb_id:{p}" for p in pdb_ids])
         query = f"{query} AND ({id_query})"
 
-    chain_info: ty.List[ChainInfo] = []
+    rna_chains: ty.List[ChainInfo] = []
     total = get_pdbe_count(query)
     for start in range(0, total, query_size):
         with RateLimiter(max_calls=10, period=1):
-            chain_info.extend(fetch_range(query, start, query_size))
+            rna_chains.extend(fetch_range(query, start, query_size))
 
     # Must be >= as sometimes more than one chain is in a single document
-    assert len(chain_info) >= total, "Too few results fetched"
-    rna_chains = [c for c in chain_info if c.is_rna()]
+    assert len(rna_chains) >= total, "Too few results fetched"
     assert rna_chains, "Found no RNA chains"
     return rna_chains
 
 
 @retry(requests.HTTPError, tries=5, delay=1)
-def fetch_pdbe_publications(pdb_ids: ty.Iterable[str]) -> ty.Dict[str, AnyReference]:
-    url = 'https://www.ebi.ac.uk/pdbe/api/pdb/entry/publications/'
+def fetch_pdbe_publications(pdb_ids: ty.Iterable[str]) -> ReferenceMapping:
+    url = "https://www.ebi.ac.uk/pdbe/api/pdb/entry/publications/"
     mapping = coll.defaultdict(list)
     for subset in chunked(pdb_ids, 200):
         with RateLimiter(max_calls=10, period=1):
-            post_data = ','.join(subset)
+            post_data = ",".join(subset)
             response = requests.post(url, data=post_data)
             response.raise_for_status()
             for pdb_id, refs in response.json().items():
@@ -128,12 +128,12 @@ def fetch_pdbe_publications(pdb_ids: ty.Iterable[str]) -> ty.Dict[str, AnyRefere
     return dict(mapping)
 
 
-def references(chain_info: ty.Iterable[ChainInfo]) -> ty.Dict[str, AnyReference]:
+def references(chain_info: ty.Iterable[ChainInfo]) -> ReferenceMapping:
     """
     Get literature citations for each PDB file.
     Return a dictionary that looks like this:
     {
-        '1S72': {'structureId': '1S72', etc}
+        '1s72': {'structureId': '1S72', etc}
     }
     """
     return fetch_pdbe_publications({c.pdb_id for c in chain_info})

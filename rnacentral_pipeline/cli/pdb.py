@@ -14,12 +14,13 @@ limitations under the License.
 """
 
 import logging
+from pathlib import Path
 
 import click
 
 from rnacentral_pipeline.databases.pdb import fetch
 from rnacentral_pipeline.databases.pdb import parser
-from rnacentral_pipeline.writers import write_entries
+from rnacentral_pipeline import writers
 
 LOGGER = logging.getLogger(__name__)
 
@@ -33,12 +34,13 @@ def cli():
 
 
 @cli.command("generate")
+@click.option('--skip-references', default=False)
 @click.argument(
     "output",
     default=".",
     type=click.Path(writable=True, dir_okay=True, file_okay=False,),
 )
-def process_pdb(pdb_data, extra, output):
+def process_pdb(output, skip_references=False):
     """
     This will fetch and parse all sequence data from PDBe to produce the csv
     files we import.
@@ -46,7 +48,11 @@ def process_pdb(pdb_data, extra, output):
     chain_info = fetch.rna_chains()
     references = {}
     try:
-        references = fetch.references(chain_info)
+        if not skip_references:
+            references = fetch.references(chain_info)
     except Exception:
         LOGGER.info("Failed to get extra references")
-    write_entries(parser.parse, output, chain_info, references)
+
+    entries = parser.parse(chain_info, references)
+    with writers.entry_writer(Path(output)) as writer:
+        writer.write(entries)
