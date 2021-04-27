@@ -74,7 +74,7 @@ def fetch_training_data(filename, output, db_url=None):
 @click.option("--db-url", envvar="PGDATABASE")
 @click.argument("training-info", type=click.File("r"))
 @click.argument("model", type=click.Path())
-def build_model(training_data, model, db_url=None):
+def build_model(training_info, model, db_url=None):
     """
     This builds a model given then training information. The training
     information should be a csv file of:
@@ -83,7 +83,7 @@ def build_model(training_data, model, db_url=None):
     will fetch the data like the fetch-data command but will then build a model
     and write it out the the output file directly.
     """
-    r2dt.build_model(training_data, db_url, Path(model))
+    r2dt.build_model(training_info, db_url, Path(model))
 
 
 @should_show.command("compute")

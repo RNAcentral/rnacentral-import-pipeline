@@ -16,16 +16,17 @@ limitations under the License.
 import csv
 import logging
 import typing as ty
-import operator as op
 from pathlib import Path
 
 import joblib
 from more_itertools import chunked
 import pandas as pd
-from pypika import Table, Query, Order
+from pypika import Table, Query
 import psycopg2
 import psycopg2.extras
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import cross_val_score
+from sklearn.model_selection import train_test_split
 
 from rnacentral_pipeline.rnacentral.r2dt import data
 
@@ -44,10 +45,10 @@ MODEL_COLUMNS = [
 
 SOURCE_MAP = {
     "crw": 0,
-    "ribovision": 0,
-    "gtrnadb": 1,
-    "rnase_p": 2,
-    "rfam": 3,
+    "ribovision": 1,
+    "gtrnadb": 2,
+    "rnase_p": 3,
+    "rfam": 4,
 }
 
 
@@ -82,8 +83,8 @@ def fetch_modeled_data(
             .where(ss.urs.isin(chunk))
         )
 
-        seen: ty.Set[str] = set()
         sql = str(query)
+        seen: ty.Set[str] = set()
         with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
             cur.execute(sql)
             for result in cur:
@@ -93,9 +94,9 @@ def fetch_modeled_data(
                 yield found
                 seen.add(found["urs"])
 
-        missing = set(chunk) - seen
-        for urs in missing:
-            LOGGER.warn("Missed loading %s", urs)
+        for urs in chunk:
+            if urs not in seen:
+                LOGGER.warn("Missed loading %s", urs)
 
 
 def infer_columns(data: pd.DataFrame):
@@ -135,12 +136,17 @@ def fetch_training_data(handle: ty.IO, db_url: str) -> pd.DataFrame:
     return data
 
 
-def train(handle, db_url) -> RandomForestClassifier:
+def train(handle, db_url, cross_validation=5, test_size=0.4) -> RandomForestClassifier:
     data = fetch_training_data(handle, db_url)
-    X = data[MODEL_COLUMNS].to_numpy()
-    y = data["valid"].to_numpy()
+    X_train, X_test, y_train, y_test = train_test_split(
+        data[MODEL_COLUMNS].to_numpy(), data["valid"].to_numpy(), test_size=test_size
+    )
+
     clf = RandomForestClassifier(min_samples_split=5)
-    clf.fit(X, y)
+    scores = cross_val_score(clf, X_train, y_train, cv=cross_validation)
+    LOGGER.info("%s fold cross validation scores: %s", cross_validation, scores)
+    clf.fit(X_train, y_train)
+    LOGGER.info("Test data (%f) scoring %s", test_size, clf.score(X_test, y_test))
     return clf
 
 
