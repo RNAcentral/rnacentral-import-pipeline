@@ -155,9 +155,11 @@ def parse(handle: ty.IO) -> ty.Iterable[data.ShowInfo]:
         yield data.ShowInfo.from_raw(record)
 
 
-def write(model_path: Path, handle: ty.IO, output: ty.IO):
+def write(model_path: Path, handle: ty.IO, db_url: str, output: ty.IO):
     model = joblib.load(model_path)
-    data = pd.read_csv(handle)
+    ids = [r[0] for r in csv.reader(handle)]
+    data = fetch_modeled_data(ids, db_url)
+    data = pd.DataFrame.from_records(data)
     infer_columns(data)
     predicted = model.predict(data[MODEL_COLUMNS].to_numpy())
     to_write = pd.DataFrame()

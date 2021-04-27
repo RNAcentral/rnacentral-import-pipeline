@@ -89,8 +89,8 @@ def write_rnase_p(handle, output):
     return write_model(rnase_p.parse, handle, output)
 
 
-def write_should_show(model: Path, handle: ty.IO, output: ty.IO):
-    return should_show.write(model, handle, output)
+def write_should_show(model: Path, handle: ty.IO, db_url: str, output: ty.IO):
+    return should_show.write(model, handle, db_url, output)
 
 
 def write_training_data(handle: ty.IO, db_url: str, output: ty.IO):

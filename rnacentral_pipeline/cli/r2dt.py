@@ -87,17 +87,18 @@ def build_model(training_info, model, db_url=None):
 
 
 @should_show.command("compute")
+@click.option("--db-url", envvar="PGDATABASE")
 @click.argument("model", type=click.Path())
 @click.argument("filename", type=click.File("r"))
 @click.argument("output", type=click.File("w"))
-def write_should_show(model, filename, output):
+def write_should_show(model, filename, output, db_url=None):
     """
     This computes the should show values for the data in the given file and a
     file listing urs ids to use. The data needed for the URS will be fetched
     from the database. This is meant to operate on large batches, like
     relabeling the entire database.
     """
-    r2dt.write_should_show(model, filename, output)
+    r2dt.write_should_show(model, filename, db_url, output)
 
 
 @cli.group("model-info")
