@@ -164,7 +164,7 @@ def write(model_path: Path, handle: ty.IO, db_url: str, output: ty.IO):
     predicted = model.predict(data[MODEL_COLUMNS].to_numpy())
     to_write = pd.DataFrame()
     to_write["urs"] = data["urs"]
-    to_write["should_show"] = predicted
+    to_write["should_show"] = predicted.astype(int)
     to_write.to_csv(output, index=False)
 
 
