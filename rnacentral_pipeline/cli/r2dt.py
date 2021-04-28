@@ -57,6 +57,25 @@ def should_show():
     """
 
 
+@should_show.command("convert-sheet")
+@click.argument("filename", type=click.File("r"))
+@click.argument("output", type=click.File("w"))
+def convert_sheet(filename, output):
+    """
+    This command is to convert a downloaded google sheet csv into a csv that can
+    be used for training data. Often we will build a spreadsheet of example URS
+    and then use that to build a training set. It is nice since you can embedd
+    an SVG in google sheets so it is fast for us to compare several of them. 
+
+    In order to move that back into the training data you can download that
+    sheet as a CSV and then run this command on it to build the CSV that is used
+    in training. It requires there be a 'urs' and 'Labeled Should show' column
+    to build the CSV. The values in labeled should show must be true/false
+    (ignoring case).
+    """
+    r2dt.write_converted_sheet(filename, output)
+
+
 @should_show.command("fetch-data")
 @click.option("--db-url", envvar="PGDATABASE")
 @click.argument("filename", type=click.File("r"))
