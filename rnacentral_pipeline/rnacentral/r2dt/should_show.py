@@ -176,7 +176,7 @@ def write_training_data(handle: ty.IO, db_url: str, output: ty.IO):
     ids = []
     for row in csv.reader(handle):
         ids.append(row[0])
-    data = fetch_modeled_data(ids, db_url)
+    data = list(fetch_modeled_data(ids, db_url))
     writer = csv.DictWriter(output, fieldnames=data[0].keys())
     writer.writeheader()
     writer.writerows(data)
