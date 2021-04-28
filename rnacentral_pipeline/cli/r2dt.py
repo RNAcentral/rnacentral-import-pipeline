@@ -89,6 +89,20 @@ def fetch_training_data(filename, output, db_url=None):
     r2dt.write_training_data(filename, db_url, output)
 
 
+@should_show.command('inspect-data')
+@click.option("--db-url", envvar="PGDATABASE")
+@click.argument("filename", type=click.File("r"))
+@click.argument("output", type=click.File("w"))
+def fetch_inspect_data(filename, output, db_url=None):
+    """
+    This is the command to use when trying to fetch more examples to add to the
+    training set. This will fetch some information that is useful for a person
+    to evaluate a diagram and decide if it should be true/false in the training
+    set.
+    """
+    r2dt.write_training_data(filename, db_url, output)
+
+
 @should_show.command("build-model")
 @click.option("--db-url", envvar="PGDATABASE")
 @click.argument("training-info", type=click.File("r"))
