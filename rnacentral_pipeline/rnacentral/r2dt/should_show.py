@@ -180,3 +180,26 @@ def write_training_data(handle: ty.IO, db_url: str, output: ty.IO):
     writer = csv.DictWriter(output, fieldnames=data[0].keys())
     writer.writeheader()
     writer.writerows(data)
+
+
+def convert_sheet(handle: ty.IO, output: ty.IO):
+    data = []
+    for row in csv.DictReader(handle):
+        urs = row["urs"]
+        raw_should_show = row["Labeled Should show"]
+        if not raw_should_show:
+            LOGGER.info("No value for %s", urs)
+
+        should_show = None
+        raw_should_show = raw_should_show.lower()
+        if raw_should_show == "true":
+            should_show = "1"
+        elif raw_should_show == "false":
+            should_show = "0"
+        else:
+            LOGGER.warn("Unknown should show in %s", row)
+            continue
+        data.append((urs, should_show))
+    data.sort(key=lambda r: r[0])
+    writer = csv.writer(output)
+    writer.writerows(data)

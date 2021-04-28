@@ -99,3 +99,7 @@ def write_training_data(handle: ty.IO, db_url: str, output: ty.IO):
 
 def build_model(handle: ty.IO, db_url: str, output: Path):
     return should_show.write_model(handle, db_url, output)
+
+
+def write_converted_sheet(handle: ty.IO, output: ty.IO):
+    return should_show.convert_sheet(handle, output)
