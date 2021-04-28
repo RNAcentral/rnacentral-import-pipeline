@@ -103,3 +103,7 @@ def build_model(handle: ty.IO, db_url: str, output: Path):
 
 def write_converted_sheet(handle: ty.IO, output: ty.IO):
     return should_show.convert_sheet(handle, output)
+
+
+def write_inspect_data(handle: ty.IO, db_url: str, output: ty.IO):
+    return should_show.write_inspect_data(handle, db_url, output)

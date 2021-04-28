@@ -52,16 +52,27 @@ SOURCE_MAP = {
 }
 
 
+def chunked_query(
+    ids: ty.Iterable[str], query_builder, db_url: str, chunk_size=100
+) -> ty.Iterable[ty.Dict[str, ty.Any]]:
+    conn = psycopg2.connect(db_url)
+    for chunk in chunked(ids, chunk_size):
+        sql = str(query_builder(chunk))
+        with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
+            cur.execute(sql)
+            for result in cur:
+                yield dict(result)
+
+
 def fetch_modeled_data(
-    all_ids: ty.Iterable[str], db_url: str, chunk_size=1000
+    all_ids: ty.Iterable[str], db_url: str, chunk_size=100
 ) -> ty.Iterable[ty.Dict[str, ty.Any]]:
     rna = Table("rna")
     ss = Table("rnc_secondary_structure_layout")
     sm = Table("rnc_secondary_structure_layout_models")
-    conn = psycopg2.connect(db_url)
-    chunk_size = 100
-    for chunk in chunked(all_ids, chunk_size):
-        query = (
+
+    def build_query(ids):
+        return (
             Query.from_(rna)
             .select(
                 rna.upi.as_("urs"),
@@ -80,23 +91,20 @@ def fetch_modeled_data(
             .on(ss.urs == rna.upi)
             .join(sm)
             .on(sm.id == ss.model_id)
-            .where(ss.urs.isin(chunk))
+            .where(ss.urs.isin(ids))
         )
 
-        sql = str(query)
-        seen: ty.Set[str] = set()
-        with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
-            cur.execute(sql)
-            for result in cur:
-                found = dict(result)
-                if any(v is None for v in found.values()):
-                    continue
-                yield found
-                seen.add(found["urs"])
+    seen: ty.Set[str] = set()
+    results = chunked_query(all_ids, build_query, db_url, chunk_size=chunk_size)
+    for result in results:
+        if any(v is None for v in result.values()):
+            continue
+        yield result
+        seen.add(result["urs"])
 
-        for urs in chunk:
-            if urs not in seen:
-                LOGGER.warn("Missed loading %s", urs)
+    for urs in all_ids:
+        if urs not in seen:
+            LOGGER.warn("Missed loading %s", urs)
 
 
 def infer_columns(data: pd.DataFrame):
@@ -203,3 +211,52 @@ def convert_sheet(handle: ty.IO, output: ty.IO):
     data.sort(key=lambda r: r[0])
     writer = csv.writer(output)
     writer.writerows(data)
+
+
+def inspect_data(data, db_url: str) -> ty.Iterable[ty.Dict[str, ty.Any]]:
+    def build_query(ids):
+        ss = Table("rnc_secondary_structure_layout")
+        sm = Table("rnc_secondary_structure_layout_models")
+        pre = Table("rnc_rna_precomputed")
+        return (
+            Query.from_(ss)
+            .join(sm)
+            .on(sm.id == ss.model_id)
+            .join(pre)
+            .on(pre.urs == sm.urs)
+            .select(
+                sm.model_source,
+                sm.model_name,
+                sm.model_so_term,
+            )
+            .where(ss.urs.isin(ids))
+            .where(pre.taxid.isnotnull)
+        )
+
+    mapping = {d[0]: d for d in data}
+    seen: ty.Set[str] = set()
+    results = chunked_query(data, build_query, db_url)
+    for result in results:
+        if any(v is None for v in result.values()):
+            continue
+        yield {
+            "urs": result["urs"],
+            "link": f"https://rnacentral.org/rna/{result['urs']}",
+            "model_source": result["model_source"],
+            "model_name": result["model_name"],
+            "model_so_term": result["model_so_term"],
+            "Labeled Should show": result["urs"],
+        }
+        seen.add(result["urs"])
+
+    for urs in mapping.keys():
+        if urs not in seen:
+            LOGGER.warn("Missed loading %s", urs)
+
+
+def write_inspect_data(handle: ty.IO, db_url: str, output: ty.IO):
+    data = list(csv.reader(handle))
+    inspect = list(inspect_data(data, db_url))
+    writer = csv.DictWriter(output, fieldnames=inspect[0].keys())
+    writer.writeheader()
+    writer.writerows(inspect)
