@@ -2,6 +2,9 @@ process find_urls {
   memory '20GB'
 
   output:
+  val(division)
+
+  output:
   tuple val(division), path('species.txt')
 
   """
