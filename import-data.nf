@@ -9,10 +9,9 @@ include { parse_metadata } from './workflows/parse-metadata'
 include { load_data } from './workflows/load-data'
 
 workflow import_data {
-  take: databases
   emit: post_release
   main:
-    databases \
+    Channel.empty() \
     | mix(
       parse_databases(),
       parse_metadata(),
