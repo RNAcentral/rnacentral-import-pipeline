@@ -1,7 +1,25 @@
+process fetch_metadata {
+  when { params.databases.ensembl.vertebrates.run }
+
+  input:
+  path(query)
+
+  output:
+  path('families.tsv')
+
+  """
+  mysql \
+    --host ${params.connections.rfam.host} \
+    --port ${params.connections.rfam.port} \
+    --user ${params.connections.rfam.user} \
+    --database ${params.connections.rfam.database} < ${query} > families.tsv
+  """
+}
+
 process find_urls {
   memory '20GB'
 
-  output:
+  input:
   val(division)
 
   output:
