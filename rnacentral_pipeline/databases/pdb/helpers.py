@@ -65,8 +65,8 @@ def is_mrna(chain: ChainInfo) -> bool:
     try:
         name = product(chain)
     except MissingProduct:
-        LOGGER.warn(f"No product information for {chain}")
-        return False
+        LOGGER.warn(f"No product information for {chain}, so skipping")
+        return True
 
     if re.search("tmRNA", name, re.IGNORECASE):
         return False
