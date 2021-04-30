@@ -50,12 +50,24 @@ class InvalidSequence(Exception):
     pass
 
 
+class MissingProduct(Exception):
+    """
+    Raised when no product is available for the given chain.
+    """
+    pass
+
+
 def is_mrna(chain: ChainInfo) -> bool:
     mrna_names = [
         "mRNA",
         "Messenger RNA",
     ]
-    name = product(chain)
+    try:
+        name = product(chain)
+    except MissingProduct:
+        LOGGER.warn(f"No product information for {chain}")
+        return False
+
     if re.search("tmRNA", name, re.IGNORECASE):
         return False
     return any(re.search(n, name, re.IGNORECASE) for n in mrna_names)
@@ -197,7 +209,8 @@ def note_data(info: ChainInfo) -> ty.Dict[str, str]:
 
 
 def description(info: ChainInfo, max_length=80) -> str:
-    compound = product(info)[:max_length] + (product(info)[max_length:] and "...")
+    compound = product(info)[:max_length] + \
+        (product(info)[max_length:] and "...")
     return "{compound} from {source} (PDB {pdb}, chain {chain})".format(
         compound=compound,
         source=info.organism_scientific_name,
@@ -208,7 +221,7 @@ def description(info: ChainInfo, max_length=80) -> str:
 
 def product(info: ChainInfo) -> str:
     if not info.molecule_names:
-        raise ValueError("No product found")
+        raise MissingProduct(f"No products in: {info}")
     return info.molecule_names[0]
 
 

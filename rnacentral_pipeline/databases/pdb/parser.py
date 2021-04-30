@@ -65,8 +65,7 @@ def parse(
 
         try:
             yield as_entry(chain, reference_mapping)
-        except helpers.InvalidSequence as err:
-            LOGGER.warn("Invalid sequence")
-            LOGGER.exception(err)
+        except helpers.InvalidSequence:
+            LOGGER.warn(f"Invalid sequence for {chain}")
     LOGGER.info("Disqualified %i mRNA chains", disqualified["mRNA"])
     LOGGER.info("Disqualified %i non ncRNA chains", disqualified["other"])
