@@ -1,0 +1,3 @@
+MAILTO=bsweeney@ebi.ac.uk
+
+0 17 * * 5   source /etc/bashrc; cd /hps/nobackup/production/xfam/bsweeney/automated && bsub ./weekly-update/run.sh
