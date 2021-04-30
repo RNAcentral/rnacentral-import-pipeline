@@ -102,8 +102,9 @@ def rna_chains(
 
     rna_chains: ty.List[ChainInfo] = []
     total = get_pdbe_count(query)
+    limiter = RateLimiter(max_calls=10, period=1)
     for start in range(0, total, query_size):
-        with RateLimiter(max_calls=10, period=1):
+        with limiter:
             rna_chains.extend(fetch_range(query, start, query_size))
 
     # Must be >= as sometimes more than one chain is in a single document
@@ -116,8 +117,9 @@ def rna_chains(
 def fetch_pdbe_publications(pdb_ids: ty.Iterable[str]) -> ReferenceMapping:
     url = "https://www.ebi.ac.uk/pdbe/api/pdb/entry/publications/"
     mapping = coll.defaultdict(list)
+    limiter = RateLimiter(max_calls=10, period=1)
     for subset in chunked(pdb_ids, 200):
-        with RateLimiter(max_calls=10, period=1):
+        with limiter:
             post_data = ",".join(subset)
             response = requests.post(url, data=post_data)
             response.raise_for_status()
