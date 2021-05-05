@@ -105,7 +105,7 @@ class Database(enum.Enum):
         return self.name.upper().replace(' ', '_')
 
     def index(self) -> int:
-        return self.value.index
+        return self.value.id
 
     def pretty(self) -> str:
         return self.value.pretty
