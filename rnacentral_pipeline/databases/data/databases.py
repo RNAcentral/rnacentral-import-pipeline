@@ -16,10 +16,12 @@ limitations under the License.
 """
 
 import enum
-from collections import namedtuple
+import typing as ty
 
 
-DatabaseValue = namedtuple("DatabaseValue", ["index", "pretty"])
+class DatabaseValue(ty.NamedTuple):
+    id: int
+    pretty: str
 
 
 @enum.unique
