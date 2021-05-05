@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import annotations
+
 """
 Copyright [2009-2018] EMBL-European Bioinformatics Institute
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,6 +16,10 @@ limitations under the License.
 """
 
 import enum
+from collections import namedtuple
+
+
+DatabaseValue = namedtuple("DatabaseValue", ["index", "pretty"])
 
 
 @enum.unique
@@ -23,55 +29,55 @@ class Database(enum.Enum):
     knows about.
     """
 
-    crw              = enum.auto()
-    dictybase        = enum.auto()
-    ena              = enum.auto()
-    ensembl          = enum.auto()
-    ensembl_fungi    = enum.auto()
-    ensembl_metazoa  = enum.auto()
-    ensembl_plants   = enum.auto()
-    ensembl_protists = enum.auto()
-    five_srrnadb     = enum.auto()
-    flybase          = enum.auto()
-    gencode          = enum.auto()
-    genecards        = enum.auto()
-    greengenes       = enum.auto()
-    gtrnadb          = enum.auto()
-    hgnc             = enum.auto()
-    intact           = enum.auto()
-    lncbase          = enum.auto()
-    lncbook          = enum.auto()
-    lncipedia        = enum.auto()
-    lncrnadb         = enum.auto()
-    malacards        = enum.auto()
-    mgi              = enum.auto()
-    mirbase          = enum.auto()
-    mirgenedb        = enum.auto()
-    modomics         = enum.auto()
-    noncode          = enum.auto()
-    pdbe             = enum.auto()
-    pirbase          = enum.auto()
-    pombase          = enum.auto()
-    rdp              = enum.auto()
-    refseq           = enum.auto()
-    rfam             = enum.auto()
-    rgd              = enum.auto()
-    sgd              = enum.auto()
-    silva            = enum.auto()
-    snodb            = enum.auto()
-    snopy            = enum.auto()
-    snorna_database  = enum.auto()
-    srpdb            = enum.auto()
-    tair             = enum.auto()
-    tarbase          = enum.auto()
-    tmrna_website    = enum.auto()
-    vega             = enum.auto()
-    wormbase         = enum.auto()
-    zfin             = enum.auto()
-    zwd              = enum.auto()
+    crw = DatabaseValue(0, "CRW")
+    dictybase = DatabaseValue(1, "DictyBase")
+    ena = DatabaseValue(2, "ENA")
+    ensembl = DatabaseValue(3, "Ensembl")
+    ensembl_fungi = DatabaseValue(4, "Ensmbl Fungi")
+    ensembl_metazoa = DatabaseValue(5, "Ensmbl Metazoa")
+    ensembl_plants = DatabaseValue(6, "Ensembl Plants")
+    ensembl_protists = DatabaseValue(7, "Ensembl Protists")
+    five_srrnadb = DatabaseValue(8, "5SrRNAdb")
+    flybase = DatabaseValue(9, "FlyBase")
+    gencode = DatabaseValue(10, "Ensembl/GENCODE")
+    genecards = DatabaseValue(11, "GeneCards")
+    greengenes = DatabaseValue(12, "GtRNAdb")
+    gtrnadb = DatabaseValue(13, "GeneCards")
+    hgnc = DatabaseValue(14, "HGNC")
+    intact = DatabaseValue(15, "IntAct")
+    lncbase = DatabaseValue(16, "LncBase")
+    lncbook = DatabaseValue(17, "LncBook")
+    lncipedia = DatabaseValue(18, "LNCipedia")
+    lncrnadb = DatabaseValue(19, "lncRNAdb")
+    malacards = DatabaseValue(20, "MalaCards")
+    mgi = DatabaseValue(21, "MGI")
+    mirbase = DatabaseValue(22, "miRBase")
+    mirgenedb = DatabaseValue(23, "MirGeneDB")
+    modomics = DatabaseValue(24, "Modomics")
+    noncode = DatabaseValue(25, "NONCODE")
+    pdbe = DatabaseValue(26, "PDBe")
+    pirbase = DatabaseValue(27, "PirBase")
+    pombase = DatabaseValue(28, "PomBase")
+    rdp = DatabaseValue(29, "RDP")
+    refseq = DatabaseValue(30, "RefSeq")
+    rfam = DatabaseValue(31, "Rfam")
+    rgd = DatabaseValue(32, "RGD")
+    sgd = DatabaseValue(33, "SGD")
+    silva = DatabaseValue(34, "SILVA")
+    snodb = DatabaseValue(35, "snoDB")
+    snopy = DatabaseValue(36, "snOPY")
+    snorna_database = DatabaseValue(37, "snoRNA Database")
+    srpdb = DatabaseValue(38, "SRPDB")
+    tair = DatabaseValue(39, "TAIR")
+    tarbase = DatabaseValue(40, "TarBase")
+    tmrna_website = DatabaseValue(41, "tmRNA Website")
+    vega = DatabaseValue(42, "VEGA")
+    wormbase = DatabaseValue(43, "WormBase")
+    zfin = DatabaseValue(44, "Zfin")
+    zwd = DatabaseValue(45, "ZWD")
 
     @classmethod
-    def build(cls, name) -> "Database":
+    def build(cls, name: str) -> Database:
         if isinstance(name, cls):
             return name
         attribute = name.lower().replace(' ', '_')
@@ -94,99 +100,10 @@ class Database(enum.Enum):
     def normalized(self) -> str:
         if self is Database.gencode:
             return 'ENSEMBL_GENCODE'
-        return self.name.upper()
+        return self.name.upper().replace(' ', '_')
+
+    def index(self) -> int:
+        return self.value.index
 
     def pretty(self) -> str:
-        if self is Database.crw:
-            return 'CRW'
-        if self is Database.dictybase:
-            return 'DictyBase'
-        if self is Database.ena:
-            return 'ENA'
-        if self is Database.ensembl:
-            return 'Ensembl'
-        if self is Database.ensembl_fungi:
-            return 'Ensembl Fungi'
-        if self is Database.ensembl_metazoa:
-            return 'Ensembl Metazoa'
-        if self is Database.ensembl_plants:
-            return 'Ensembl Plants'
-        if self is Database.ensembl_protists:
-            return 'Ensembl Protists'
-        if self is Database.five_srrnadb:
-            return '5SrRNAdb'
-        if self is Database.flybase:
-            return 'FlyBase'
-        if self is Database.gencode:
-            return 'Ensembl/GENCODE'
-        if self is Database.genecards:
-            return 'GeneCards'
-        if self is Database.greengenes:
-            return 'Greengenes'
-        if self is Database.gtrnadb:
-            return 'GtRNAdb'
-        if self is Database.hgnc:
-            return 'HGNC'
-        if self is Database.intact:
-            return 'IntAct'
-        if self is Database.lncbase:
-            return 'LncBase'
-        if self is Database.lncbook:
-            return 'LncBook'
-        if self is Database.lncipedia:
-            return 'LNCipedia'
-        if self is Database.lncrnadb:
-            return 'lncRNAdb'
-        if self is Database.malacards:
-            return 'MalaCards'
-        if self is Database.mgi:
-            return 'MGI'
-        if self is Database.mirbase:
-            return 'miRBase'
-        if self is Database.mirgenedb:
-            return 'MirGeneDB'
-        if self is Database.modomics:
-            return 'Modomics'
-        if self is Database.noncode:
-            return 'NONCODE'
-        if self is Database.pdbe:
-            return 'PDBe'
-        if self is Database.pirbase:
-            return 'PirBase'
-        if self is Database.pombase:
-            return 'PomBase'
-        if self is Database.rdp:
-            return 'RDP'
-        if self is Database.refseq:
-            return 'RefSeq'
-        if self is Database.rfam:
-            return 'Rfam'
-        if self is Database.rgd:
-            return 'RGD'
-        if self is Database.sgd:
-            return 'SGD'
-        if self is Database.silva:
-            return 'SILVA'
-        if self is Database.snodb:
-            return 'snoDB'
-        if self is Database.snopy:
-            return 'snOPY'
-        if self is Database.snorna_database:
-            return 'snoRNA Database'
-        if self is Database.srpdb:
-            return 'SRPDB'
-        if self is Database.tair:
-            return 'TAIR'
-        if self is Database.tarbase:
-            return 'TarBase'
-        if self is Database.tmrna_website:
-            return 'tmRNA Website'
-        if self is Database.vega:
-            return 'VEGA'
-        if self is Database.wormbase:
-            return 'WormBase'
-        if self is Database.zfin:
-            return 'Zfin'
-        if self is Database.zwd:
-            return 'ZWD'
-        raise ValueError("No pretty name for %s" % self)
+        return self.value.pretty
