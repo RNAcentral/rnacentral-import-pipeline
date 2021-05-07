@@ -158,11 +158,6 @@ def train(handle, db_url, cross_validation=5, test_size=0.4) -> RandomForestClas
     return clf
 
 
-def parse(handle: ty.IO) -> ty.Iterable[data.ShowInfo]:
-    for record in csv.DictReader(handle):
-        yield data.ShowInfo.from_raw(record)
-
-
 def write(model_path: Path, handle: ty.IO, db_url: str, output: ty.IO):
     model = joblib.load(model_path)
     ids = [r[0] for r in csv.reader(handle)]
