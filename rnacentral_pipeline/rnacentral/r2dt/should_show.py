@@ -14,6 +14,7 @@ limitations under the License.
 """
 
 import csv
+import enum
 import logging
 import typing as ty
 from pathlib import Path
@@ -32,6 +33,48 @@ from rnacentral_pipeline.rnacentral.r2dt import data
 
 LOGGER = logging.getLogger(__name__)
 
+
+SOURCE_MAP = {
+    "crw": 0,
+    "ribovision": 1,
+    "gtrnadb": 2,
+    "rnase_p": 3,
+    "rfam": 4,
+}
+
+
+@enum.unique
+class Attributes(enum.Enum):
+    SourceIndex = "source_index"
+    SequenceLength = "sequence_length"
+    DiagramSequenceLength = "diagram_sequence_length"
+    ModelLength = "model_length"
+    ModelBasepairCount = "model_basepair_count"
+    DiagramBps = "diagram_bps"
+    DiagramModelLength = "diagram_model_length"
+    DiagramOverlapCount = "diagram_overlap_count"
+
+    def r2dt_result_value(self, result):
+        if self is Attributes.SourceIndex:
+            return SOURCE_MAP[result.source]
+        if self is Attributes.SequenceLength:
+            return result.sequence_length
+        if self is Attributes.DiagramSequenceLength:
+            return result.hit_info.length
+        if self is Attributes.ModelLength:
+            return result.hit_info.model_length
+        if self is Attributes.ModelBasepairCount:
+            return result.model_basepairs
+        if self is Attributes.DiagramBps:
+            return result.basepair_count()
+        if self is Attributes.DiagramOverlapCount:
+            return result.overlap_count()
+        raise ValueError("Unhandled Attribute")
+
+    def column_name(self) -> str:
+        return self.value
+
+
 MODEL_COLUMNS = [
     "source_index",
     "sequence_length",
@@ -42,14 +85,6 @@ MODEL_COLUMNS = [
     "diagram_model_length",
     "diagram_overlap_count",
 ]
-
-SOURCE_MAP = {
-    "crw": 0,
-    "ribovision": 1,
-    "gtrnadb": 2,
-    "rnase_p": 3,
-    "rfam": 4,
-}
 
 
 def chunked_query(
@@ -156,6 +191,11 @@ def train(handle, db_url, cross_validation=5, test_size=0.4) -> RandomForestClas
     clf.fit(X_train, y_train)
     LOGGER.info("Test data (%f) scoring %s", test_size, clf.score(X_test, y_test))
     return clf
+
+
+def from_result(clf, result) -> bool:
+    data = pd.DataFrame(
+    return clf.predict(data)
 
 
 def write(model_path: Path, handle: ty.IO, db_url: str, output: ty.IO):

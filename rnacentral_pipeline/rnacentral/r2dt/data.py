@@ -25,6 +25,7 @@ from attr.validators import instance_of as is_a
 from attr.validators import optional
 
 from rnacentral_pipeline.databases.data import RibovoreResult
+from rnacentral_pipeline.rnacentral.r2dt import should_show
 
 TRNAS = {
     "SO:0000254",
@@ -298,12 +299,10 @@ class R2DTResult(object):
             return None
         return self.hit_info.model_length
 
-    def should_show(self) -> bool:
-        if self.info.model_length is not None:
-            return ShowInfo.from_result(self).showable()
-        return True
+    def should_show(self, model) -> bool:
+        return should_show.from_result(model, self)
 
-    def writeable(self):
+    def writeable(self, model):
         model_start = None if not self.hit_info else self.hit_info.mfrom
         model_stop = None if not self.hit_info else self.hit_info.mto
         sequence_start = None if not self.hit_info else self.hit_info.bfrom
@@ -321,7 +320,7 @@ class R2DTResult(object):
             sequence_start,
             sequence_stop,
             sequence_coverage,
-            self.should_show(),
+            self.should_show(model),
         ]
 
 
