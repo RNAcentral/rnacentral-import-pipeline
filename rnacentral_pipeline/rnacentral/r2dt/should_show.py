@@ -54,6 +54,10 @@ class Attributes(enum.Enum):
     DiagramModelLength = "diagram_model_length"
     DiagramOverlapCount = "diagram_overlap_count"
 
+    @classmethod
+    def model_columns(cls) -> ty.List[str]:
+        return [attr.column_name() for attr in cls]
+
     def r2dt_result_value(self, result):
         if self is Attributes.SourceIndex:
             return SOURCE_MAP[result.source]
@@ -75,16 +79,7 @@ class Attributes(enum.Enum):
         return self.value
 
 
-MODEL_COLUMNS = [
-    "source_index",
-    "sequence_length",
-    "diagram_sequence_length",
-    "model_length",
-    "model_basepair_count",
-    "diagram_bps",
-    "diagram_model_length",
-    "diagram_overlap_count",
-]
+MODEL_COLUMNS: ty.List[str] = Attributes.model_columns()
 
 
 def chunked_query(
@@ -142,41 +137,41 @@ def fetch_modeled_data(
             LOGGER.warn("Missed loading %s", urs)
 
 
-def infer_columns(data: pd.DataFrame):
-    data["diagram_sequence_length"] = (
-        data["diagram_sequence_stop"] - data["diagram_sequence_start"]
+def infer_columns(frame: pd.DataFrame):
+    frame["diagram_sequence_length"] = (
+        frame["diagram_sequence_stop"] - frame["diagram_sequence_start"]
     )
-    data["diagram_model_length"] = (
-        data["diagram_model_stop"] - data["diagram_model_start"]
+    frame["diagram_model_length"] = (
+        frame["diagram_model_stop"] - frame["diagram_model_start"]
     )
-    data["source_index"] = data.model_source.map(SOURCE_MAP)
-    if data["source_index"].isnull().any():
+    frame["source_index"] = frame.model_source.map(SOURCE_MAP)
+    if frame["source_index"].isnull().any():
         raise ValueError("Could not build source_index for all training data")
 
 
 def fetch_training_data(handle: ty.IO, db_url: str) -> pd.DataFrame:
     ids = []
-    data = {}
+    training = {}
     for (urs, flag) in csv.reader(handle):
         ids.append(urs)
         if flag == "1":
-            data[urs] = True
+            training[urs] = True
         elif flag == "0":
-            data[urs] = False
+            training[urs] = False
         else:
             raise ValueError(f"Unknown flag {flag}")
 
     filled = []
     for metadata in fetch_modeled_data(ids, db_url):
         urs = metadata["urs"]
-        if urs not in data:
+        if urs not in training:
             raise ValueError(f"Got an extra entry, somehow {metadata}")
-        metadata["valid"] = data[urs]
+        metadata["valid"] = training[urs]
         filled.append(metadata)
 
-    data = pd.DataFrame.from_records(filled)
-    infer_columns(data)
-    return data
+    training = pd.DataFrame.from_records(filled)
+    infer_columns(training)
+    return training
 
 
 def train(handle, db_url, cross_validation=5, test_size=0.4) -> RandomForestClassifier:
@@ -194,19 +189,23 @@ def train(handle, db_url, cross_validation=5, test_size=0.4) -> RandomForestClas
 
 
 def from_result(clf, result) -> bool:
-    data = pd.DataFrame(
-    return clf.predict(data)
+    predictable = {}
+    for attribute in Attributes:
+        value = attribute.r2dt_result_value(result)
+        predictable[attribute.column_name()] = [value]
+    predictable = pd.DataFrame.from_records(predictable)
+    return clf.predict(predictable)[0]
 
 
 def write(model_path: Path, handle: ty.IO, db_url: str, output: ty.IO):
     model = joblib.load(model_path)
     ids = [r[0] for r in csv.reader(handle)]
-    data = fetch_modeled_data(ids, db_url)
-    data = pd.DataFrame.from_records(data)
-    infer_columns(data)
-    predicted = model.predict(data[MODEL_COLUMNS].to_numpy())
+    modeled = fetch_modeled_data(ids, db_url)
+    frame = pd.DataFrame.from_records(modeled)
+    infer_columns(frame)
+    predicted = model.predict(frame[MODEL_COLUMNS].to_numpy())
     to_write = pd.DataFrame()
-    to_write["urs"] = data["urs"]
+    to_write["urs"] = frame["urs"]
     to_write["should_show"] = predicted.astype(int)
     to_write.to_csv(output, index=False)
 
@@ -219,14 +218,14 @@ def write_training_data(handle: ty.IO, db_url: str, output: ty.IO):
     ids = []
     for row in csv.reader(handle):
         ids.append(row[0])
-    data = list(fetch_modeled_data(ids, db_url))
-    writer = csv.DictWriter(output, fieldnames=data[0].keys())
+    modeled = list(fetch_modeled_data(ids, db_url))
+    writer = csv.DictWriter(output, fieldnames=modeled[0].keys())
     writer.writeheader()
-    writer.writerows(data)
+    writer.writerows(modeled)
 
 
 def convert_sheet(handle: ty.IO, output: ty.IO):
-    data = []
+    converted = []
     for row in csv.DictReader(handle):
         urs = row["urs"]
         raw_should_show = row["Labeled Should show"]
@@ -242,10 +241,10 @@ def convert_sheet(handle: ty.IO, output: ty.IO):
         else:
             LOGGER.warn("Unknown should show in %s", row)
             continue
-        data.append((urs, should_show))
-    data.sort(key=lambda r: r[0])
+        converted.append((urs, should_show))
+    converted.sort(key=lambda r: r[0])
     writer = csv.writer(output)
-    writer.writerows(data)
+    writer.writerows(converted)
 
 
 def inspect_data(data, db_url: str) -> ty.Iterable[ty.Dict[str, ty.Any]]:

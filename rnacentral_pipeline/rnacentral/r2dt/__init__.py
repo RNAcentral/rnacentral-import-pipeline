@@ -17,8 +17,9 @@ import csv
 import gzip
 import shutil
 import typing as ty
-import operator as op
 from pathlib import Path
+
+import joblib
 
 from rnacentral_pipeline.rnacentral.r2dt import parser
 from rnacentral_pipeline.rnacentral.r2dt import should_show
@@ -34,7 +35,7 @@ def parse(model_mapping: ty.TextIO, directory: str, allow_missing=False):
 
 
 def write(
-    model_mapping: ty.TextIO, directory: str, output: ty.TextIO, allow_missing=False
+        model_mapping: ty.TextIO, should_show_model: str, directory: str, output: ty.TextIO, allow_missing=False
 ):
     """
     Parse all the secondary structure data from the given directory and write
@@ -42,7 +43,8 @@ def write(
     """
 
     parsed = parse(model_mapping, directory, allow_missing=allow_missing)
-    writeable = map(op.methodcaller("writeable"), parsed)
+    model = joblib.load(should_show_model)
+    writeable = (e.writeable(model) for e in parsed)
     csv.writer(output).writerows(writeable)
 
 
@@ -55,7 +57,8 @@ def publish(
 ):
     out_path = Path(output)
     for result in parse(model_mapping, directory, allow_missing=allow_missing):
-        publish_path = out_path / result.publish_path(suffix=suffix, compressed=True)
+        publish_path = out_path / \
+            result.publish_path(suffix=suffix, compressed=True)
         try:
             publish_path.parent.mkdir(parents=True, exist_ok=True)
         except FileExistsError:
@@ -69,7 +72,7 @@ def publish(
 
 def write_model(generator, handle, output):
     data = generator(handle)
-    data = map(op.methodcaller("writeable"), data)
+    data = (d.writeable() for d in data)
     csv.writer(output).writerows(data)
 
 
