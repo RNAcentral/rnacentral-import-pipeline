@@ -40,13 +40,16 @@ def cli():
         file_okay=False,
     ),
 )
+@click.argument("directory", type=click.Path())
+@click.argument("should-show-model", type=click.Path())
 @click.argument("output", type=click.File("w"))
-def process_svgs(model_info, directory, output, allow_missing=False):
+def process_svgs(model_info, should_show_model, directory, output, allow_missing=False):
     """
     Process all SVG secondary structures in the given directory and produce a
     single data file that can be imported into the database.
     """
-    r2dt.write(model_info, directory, output, allow_missing=allow_missing)
+    r2dt.write(model_info, should_show_model, directory,
+               output, allow_missing=allow_missing)
 
 
 @cli.group("should-show")

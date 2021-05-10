@@ -124,6 +124,8 @@ class ModelDatabaseInfo:
     db_id = attr.ib(validator=is_a(int))
     source = attr.ib(validator=is_a(Source))
     alias = attr.ib(validator=optional(is_a(str)))
+    length = attr.ib(validator=optional(is_a(int)))
+    basepairs = attr.ib(validator=optional(is_a(int)))
 
     @classmethod
     def build(cls, raw) -> ModelDatabaseInfo:
@@ -132,6 +134,8 @@ class ModelDatabaseInfo:
             db_id=raw["model_id"],
             source=getattr(Source, raw["model_source"]),
             alias=raw["model_alias"],
+            length=raw["model_length"],
+            basepairs=raw["model_basepairs"],
         )
 
 
@@ -153,6 +157,18 @@ class R2DTResultInfo(object):
     @property
     def model_alias(self):
         return self.db_info.alias
+
+    @property
+    def model_basepairs(self) -> int:
+        if self.db_info.basepairs is None:
+            raise ValueError(f"No model length for {self.db_info}")
+        return self.db_info.basepairs
+
+    @property
+    def model_length(self) -> int:
+        if self.db_info.length is None:
+            raise ValueError(f"No model length for {self.db_info}")
+        return self.db_info.length
 
     @property
     def svg(self) -> Path:
@@ -295,11 +311,11 @@ class R2DTResult(object):
 
     @property
     def model_length(self):
-        if not self.hit_info:
-            return None
-        return self.hit_info.model_length
+        return self.info.model_length
 
     def should_show(self, model) -> bool:
+        if self.info.source is not Source.crw:
+            return True
         return should_show.from_result(model, self)
 
     def writeable(self, model):
