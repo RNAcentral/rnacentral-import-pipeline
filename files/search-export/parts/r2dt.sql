@@ -15,6 +15,6 @@ JOIN rnc_secondary_structure_layout_models as models
 ON
   layout.model_id = models.id
 WHERE
-  layout.should_show = true
+  coalesce(layout.assigned_should_show, layout.inferred_should_show) = true
 ORDER BY todo.id
 ) TO STDOUT
