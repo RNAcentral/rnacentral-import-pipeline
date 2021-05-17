@@ -48,7 +48,7 @@ def compute_rna_type_tree(ontology, child, parent):
         return [(child, ontology.nodes[child]['name'])]
 
     if len(paths) > 1:
-        raise ValueError("Too many paths currently")
+        LOGGER.warn("Too many paths currently in %s", paths)
 
     tree = []
     for node_id in paths[0]:
