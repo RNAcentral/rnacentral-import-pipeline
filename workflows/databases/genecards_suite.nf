@@ -1,4 +1,24 @@
-process fetch_and_process {
+process fetch {
+  tag { "$name" }
+  input:
+  tuple val(name), path(data), val(column_name)
+
+  output:
+  tuple val(name), path('data.tsv'), val(column_name)
+
+  script:
+  if (data.getExtension() == "gz")
+    """
+    gzip -d $data > data.tsv
+    """
+  else
+    """
+    cp $data data.tsv
+    """
+
+}
+
+process process {
   tag { "$name" }
   input:
   tuple val(name), path(data), val(column_name)
@@ -21,6 +41,7 @@ workflow genecards_suite {
       ['malacards', params.databases.malacards.remote, params.databases.malacards.column],
     ]) \
     | filter { name, r, c -> params.databases[name].run } \
-    | fetch_and_process \
+    | fetch \
+    | process \
     | set { data }
 }
