@@ -6,6 +6,6 @@ process lncbase {
 
   """
   cp ${params.databases.lncbase.remote} lncbase.json
-  rnac external lncbase lncbase.json .
+  rnac lncbase parse lncbase.json .
   """
 }

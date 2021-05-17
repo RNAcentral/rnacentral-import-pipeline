@@ -6,6 +6,6 @@ process mirgenedb {
 
   """
   scp $params.databases.mirgenedb.remote mirgenedb.json
-  rnac external mirgenedb mirgenedb.json .
+  rnac mirgenedb parse mirgenedb.json .
   """
 }

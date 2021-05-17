@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Copyright [2009-2020] EMBL-European Bioinformatics Institute
+Copyright [2009-2021] EMBL-European Bioinformatics Institute
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -16,39 +16,31 @@ limitations under the License.
 from pathlib import Path
 
 import click
-from furl import furl
 
-from rnacentral_pipeline.databases.pirbase import fetch, parser
+from rnacentral_pipeline.databases.generic import parser as generic
 from rnacentral_pipeline.writers import entry_writer
 
 
-@click.group("pirbase")
+@click.group("snodb")
 def cli():
     """
-    A group of commands dealing with piRBase data.
+    Commands for parsing ENA data.
     """
-    pass
-
-
-@cli.command("urls-for")
-@click.argument("url")
-@click.argument("output", default="-", type=click.File("w"))
-def urls_for(url, output):
-    urls = fetch.find_urls(furl(url))
-    for url in urls:
-        output.write(str(url))
-        output.write("\n")
 
 
 @cli.command("parse")
-@click.argument("data", type=click.Path())
-@click.argument("md5s", type=click.Path())
+@click.argument("json_file", type=click.File("r"))
 @click.argument(
     "output",
     default=".",
     type=click.Path(writable=True, dir_okay=True, file_okay=False),
 )
-def parse(data, output, md5s):
-    entries = parser.parse(Path(data), Path(md5s))
+def process_json_schema(json_file, output):
+    """
+    This parses our JSON schema files to produce the importable CSV files.
+    """
+    entries = generic.parse(json_file)
     with entry_writer(Path(output)) as writer:
         writer.write(entries)
+
+

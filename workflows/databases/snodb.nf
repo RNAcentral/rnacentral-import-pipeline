@@ -6,6 +6,6 @@ process snodb {
 
   """
   scp $params.databases.snodb.remote snodb.json
-  rnac external snodb snodb.json .
+  rnac snodb parse snodb.json .
   """
 }

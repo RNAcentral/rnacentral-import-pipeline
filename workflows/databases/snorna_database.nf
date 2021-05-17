@@ -6,6 +6,6 @@ process snorna_database {
 
   """
   scp ${params.databases.snorna_database.remote} snorna_database.json 
-  rnac external snorna_database snorna_database.json .
+  rnac snorna_database parse snorna_database.json .
   """
 }

@@ -22,27 +22,41 @@ from rnacentral_pipeline.cli import (
     ena,
     ensembl,
     europepmc,
-    external,
+    five_s_rrnadb,
+    flybase,
     ftp_export,
+    genecards_suite,
     genes,
     genome_mapping,
     gtrnadb,
     hgnc,
-    lookup,
+    intact,
+    lncbase,
+    lncbook,
+    lncipedia,
+    mirbase,
+    mirgenedb,
     misc,
     ncbi,
     ols,
     pdb,
     pirbase,
+    pombase,
     precompute,
     qa,
+    quickgo,
     r2dt,
+    refseq,
     repeats,
     rfam,
     search_export,
+    sgd,
     silva,
-    # text_mining,
+    snodb,
+    snorna_database,
+    tarbase,
     zfin,
+    zwd,
 )
 
 
@@ -70,13 +84,20 @@ cli.add_command(context.cli)
 cli.add_command(ena.cli)
 cli.add_command(ensembl.cli)
 cli.add_command(europepmc.cli)
-cli.add_command(external.cli)
+cli.add_command(five_s_rrnadb.cli)
+cli.add_command(flybase.cli)
 cli.add_command(ftp_export.cli)
+cli.add_command(genecards_suite.cli)
 cli.add_command(genes.cli)
 cli.add_command(genome_mapping.cli)
 cli.add_command(gtrnadb.cli)
 cli.add_command(hgnc.cli)
-cli.add_command(lookup.cli)
+cli.add_command(intact.cli)
+cli.add_command(lncbase.cli)
+cli.add_command(lncbook.cli)
+cli.add_command(lncipedia.cli)
+cli.add_command(mirbase.cli)
+cli.add_command(mirgenedb.cli)
 cli.add_command(misc.check_release)
 cli.add_command(misc.crs_data)
 cli.add_command(misc.find_upi_ranges)
@@ -86,12 +107,19 @@ cli.add_command(ncbi.cli)
 cli.add_command(ols.cli)
 cli.add_command(pdb.cli)
 cli.add_command(pirbase.cli)
+cli.add_command(pombase.cli)
 cli.add_command(precompute.cli)
 cli.add_command(qa.cli)
+cli.add_command(quickgo.cli)
 cli.add_command(r2dt.cli)
+cli.add_command(refseq.cli)
 cli.add_command(repeats.cli)
 cli.add_command(rfam.cli)
 cli.add_command(search_export.cli)
+cli.add_command(sgd.cli)
 cli.add_command(silva.cli)
-# cli.add_command(text_mining.cli)
+cli.add_command(snodb.cli)
+cli.add_command(snorna_database.cli)
+cli.add_command(tarbase.cli)
 cli.add_command(zfin.cli)
+cli.add_command(zwd.cli)

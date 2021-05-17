@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Copyright [2009-2020] EMBL-European Bioinformatics Institute
+Copyright [2009-2021] EMBL-European Bioinformatics Institute
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -17,26 +17,29 @@ from pathlib import Path
 
 import click
 
-from rnacentral_pipeline.databases.silva import parser as silva
-from rnacentral_pipeline.writers import entry_writer
+from rnacentral_pipeline.databases.quickgo import parser
+from rnacentral_pipeline import writers
 
 
-@click.group("silva")
+@click.group('quickgo')
 def cli():
     """
-    Commands for dealing with SILVA data.
+    Commands for fetching data needed for genecards parsing.
     """
+    pass
 
 
 @cli.command("parse")
-@click.argument("silva-file", type=click.File("r"))
-@click.argument("taxonomy", type=click.Path())
+@click.argument("raw_data", type=click.File("r"))
 @click.argument(
     "output",
     default=".",
     type=click.Path(writable=True, dir_okay=True, file_okay=False,),
 )
-def process_silva(silva_file, taxonomy, output):
-    entries = silva.parse(silva_file, taxonomy)
-    with entry_writer(Path(output)) as writer:
-        writer.write(entries)
+def parse_quickgo(raw_data, output):
+    """
+    This will process a quickgo file and output files into the given directory.
+    """
+    terms = parser.parse(raw_data)
+    with writers.build(writers.OntologyAnnnotationWriter, Path(output)) as writer:
+        writer.write(terms)

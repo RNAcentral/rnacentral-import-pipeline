@@ -13,11 +13,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import csv
 import operator as op
 import itertools as it
 
-from rnacentral_pipeline.writers import write_entries
 from rnacentral_pipeline.databases.psi_mi import tab
 
 from . import lookup

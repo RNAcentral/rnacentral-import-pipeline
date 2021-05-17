@@ -8,6 +8,6 @@ process quickgo {
   """
   scp $params.databases.quickgo.remote data.gpa.gz
   gzip -d data.gpa
-  rnac external quickgo data.gpa .
+  rnac quickgo parse data.gpa .
   """
 }

@@ -9,6 +9,6 @@ process rgd {
   wget -O genes.txt $params.databases.rgd.genes
   gzip -d sequences.fasta.gz
 
-  rnac external rgd sequences.fasta genes.txt .
+  rnac rgd parse sequences.fasta genes.txt .
   """
 }

@@ -25,7 +25,6 @@ from rnacentral_pipeline.rnacentral.precompute.data.context import Context
 from rnacentral_pipeline.rnacentral.precompute.data.sequence import Sequence
 from rnacentral_pipeline.rnacentral.precompute.data.update import (
     GenericUpdate, SequenceUpdate)
-from rnacentral_pipeline.writers import MultiCsvOutput
 
 AnUpdate = ty.Union[SequenceUpdate, GenericUpdate]
 
@@ -58,10 +57,3 @@ def parse(context_path: Path, data_path: Path) -> ty.Iterable[AnUpdate]:
                 updates.append(update)
                 yield update
             yield GenericUpdate.from_updates(context, updates)
-
-
-writer = MultiCsvOutput.build(
-    parse,
-    precompute={"transformer": op.methodcaller("as_writeables")},
-    qa={"transformer": op.methodcaller("writeable_statuses")},
-)

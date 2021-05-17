@@ -18,7 +18,7 @@ from pathlib import Path
 import click
 
 from rnacentral_pipeline.databases import rfam
-from rnacentral_pipeline.writers import write_entries
+from rnacentral_pipeline.writers import entry_writer
 
 
 @click.group('rfam')
@@ -41,7 +41,9 @@ def process_rfam(rfam_file, mapping_file, output):
     """
     Process Rfam's JSON format into the files to import.
     """
-    write_entries(rfam.parser.parse, output, rfam_file, mapping_file)
+    entries = rfam.parser.parse(rfam_file, mapping_file)
+    with entry_writer(Path(output)) as writer:
+        writer.write(entries)
 
 
 @cli.command('families')

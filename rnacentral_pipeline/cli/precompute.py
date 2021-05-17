@@ -20,7 +20,6 @@ import click
 from rnacentral_pipeline import writers
 from rnacentral_pipeline.rnacentral.precompute import process as pre
 from rnacentral_pipeline.rnacentral.precompute import ranges as pre_ranges
-from rnacentral_pipeline.rnacentral.precompute.data import context as ctx
 
 
 @click.group("precompute")
@@ -47,7 +46,6 @@ def precompute_from_file(context, json_file, output):
     updates = pre.parse(Path(context), Path(json_file))
     with writers.build(pre.Writer, Path(output)) as writer:
         writer.write(updates)
-    # pre.writer(output, Path(context), Path(json_file))
 
 
 @cli.command("upi-taxid-ranges")

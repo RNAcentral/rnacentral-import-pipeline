@@ -14,6 +14,6 @@ process intact {
   head -1 fetched/intact.txt > intact.txt
   grep -i rnacentral fetched/intact.txt >> intact.txt
 
-  rnac external intact intact.txt .
+  rnac intact parse intact.txt .
   """
 }

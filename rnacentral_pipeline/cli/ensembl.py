@@ -26,7 +26,7 @@ from rnacentral_pipeline.databases.ensembl.metadata import proteins
 from rnacentral_pipeline.databases.ensembl.data import Division
 from rnacentral_pipeline.databases.ensembl import parser
 from rnacentral_pipeline.databases.ensembl import urls
-from rnacentral_pipeline.writers import write_entries
+from rnacentral_pipeline.writers import entry_writer
 
 
 @click.group('ensembl')
@@ -71,9 +71,9 @@ def parse_data(division, embl_file, gff_file, output, family_file=None):
     gff_file = Path(gff_file)
     if family_file:
         family_file = Path(family_file)
-    write_entries(
-        parser.parse, output, division, embl_file, gff_file, family_file=family_file,
-    )
+    entries = parser.parse(division, embl_file, gff_file, family_file=family_file)
+    with entry_writer(Path(output)) as writer:
+        writer.write(entries)
 
 
 @cli.command('assemblies')

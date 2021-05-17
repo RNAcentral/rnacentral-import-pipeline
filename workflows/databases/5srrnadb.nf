@@ -6,6 +6,6 @@ process five_s_rrnadb {
 
   """
   scp ${params.databases["5srrnadb"].remote} 5s.json
-  rnac external 5srrnadb 5s.json .
+  rnac 5srrnadb parse 5s.json .
   """
 }
