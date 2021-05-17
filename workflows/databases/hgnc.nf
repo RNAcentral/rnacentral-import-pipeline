@@ -5,7 +5,7 @@ process hgnc {
   path('*.csv')
 
   """
-  wget -O raw.json $params.databases.remote
+  wget -O raw.json $params.databases.hgnc.remote
   rnac hgnc map raw.json
   """
 }
