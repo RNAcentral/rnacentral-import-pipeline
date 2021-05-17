@@ -22,7 +22,7 @@ process query {
 process fetch_release_info {
   when { params.precompute.run }
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
-  memory '10GB'
+  memory '15GB'
 
   input:
   val(_flag)
@@ -33,7 +33,7 @@ process fetch_release_info {
 
   """
   psql -v ON_ERROR_STOP=1 -f $query $PGDATABASE > raw
-  sort -t , -nk1,1 -u raw > sorted.csv
+  sort -t , -nk1,1 raw > sorted.csv
   precompute max-release sorted.csv data.csv
   """
 }
