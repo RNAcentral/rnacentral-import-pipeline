@@ -15,7 +15,6 @@ limitations under the License.
 
 import gzip
 import json
-import shutil
 import urllib.request as request
 from contextlib import closing
 
