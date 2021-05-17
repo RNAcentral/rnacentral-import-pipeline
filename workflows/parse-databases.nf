@@ -78,7 +78,7 @@ workflow parse_databases {
       snorna_database(),
       tarbase(),
       zfin(),
-      zwd(),
+      zwd(context),
     ) \
     | flatten \
     | set { data }

@@ -14,13 +14,15 @@ limitations under the License.
 """
 
 import json
+import typing as ty
 
 import semver
 
-from . import v1
+from rnacentral_pipeline.databases.data import Entry
+from rnacentral_pipeline.databases.generic import v1
 
 
-def parse(handle):
+def parse(handle: ty.IO) -> ty.Iterable[Entry]:
     """
     This parses the file like object that should contain the RNAcentral data.
     The file can contain data in any of the accepted versions.
