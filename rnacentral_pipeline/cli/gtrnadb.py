@@ -18,7 +18,7 @@ from pathlib import Path
 import click
 from furl import furl
 
-from rnacentral_pipeline.writers import write_entries
+from rnacentral_pipeline.writers import entry_writer
 from rnacentral_pipeline.databases.gtrnadb import urls
 from rnacentral_pipeline.databases.gtrnadb import parser
 
@@ -51,4 +51,6 @@ def process_gtrnadb(taxonomy, data_file, output):
     """
     Parse the GtRNAdb data with the indexed taxonomy data.
     """
-    write_entries(parser.parse, output, data_file, Path(taxonomy))
+    entries = parser.parse(data_file, Path(taxonomy))
+    with entry_writer(Path(output)) as writer:
+        writer.write(entries)

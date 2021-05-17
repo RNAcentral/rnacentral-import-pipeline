@@ -20,7 +20,7 @@ process parse {
   path('*.csv')
 
   """
-  rnac external refseq $data .
+  rnac refseq parse $data .
   """
 }
 

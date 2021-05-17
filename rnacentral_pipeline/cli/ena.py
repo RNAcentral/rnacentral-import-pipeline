@@ -18,7 +18,7 @@ from pathlib import Path
 import click
 
 from rnacentral_pipeline.databases.ena import context, parser
-from rnacentral_pipeline.writers import write_entries
+from rnacentral_pipeline.writers import entry_writer
 
 
 @click.group("ena")
@@ -40,7 +40,7 @@ def cli():
     type=click.Path(writable=True, dir_okay=True, file_okay=False,),
 )
 def process_ena(ena_file, mapping_file, ribovore_path, model_lengths, output,
-        counts=None):
+                counts=None):
     """
     Process ENA EMBL formatted files into CSV to import. The additional mapping
     file is a file containing all TPA data we are using from ENA.
@@ -52,5 +52,7 @@ def process_ena(ena_file, mapping_file, ribovore_path, model_lengths, output,
     builder.with_tpa(Path(mapping_file))
     builder.with_dr(ena_file)
     ctx = builder.context()
-    write_entries(parser.parse_with_context, output, ctx, ena_file)
+    entries = parser.parse_with_context(ctx, ena_file)
+    with entry_writer(Path(output)) as writer:
+        writer.write(entries)
     ctx.dump_counts(Path(counts))

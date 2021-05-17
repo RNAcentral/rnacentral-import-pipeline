@@ -39,7 +39,7 @@ def as_annotation(record):
     )
 
 
-def parser(handle):
+def parse(handle):
     """
     Parse the given file to produce an iterable of GoTerm objects to import.
     """

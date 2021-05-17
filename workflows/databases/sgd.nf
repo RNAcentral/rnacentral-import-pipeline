@@ -6,6 +6,6 @@ process sgd {
 
   """
   wget -O sgd.json ${params.databases.sgd.remote}
-  rnac external sgd sgd.json .
+  rnac sgd parse sgd.json .
   """
 }

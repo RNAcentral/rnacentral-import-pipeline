@@ -31,12 +31,12 @@ from rnacentral_pipeline.databases.quickgo import parser as gpi
 ])
 def test_can_parse_a_gpa_file(filename, count):
     with open(filename, 'r') as raw:
-        assert len(list(gpi.parser(raw))) == count
+        assert len(list(gpi.parse(raw))) == count
 
 
 def test_can_correctly_parse_a_gpa_file():
     with open('data/quickgo/rna.gpa', 'r') as raw:
-        data = attr.asdict(next(gpi.parser(raw)))
+        data = attr.asdict(next(gpi.parse(raw)))
         assert data == attr.asdict(GoTermAnnotation(
             rna_id='URS00000064B1_559292',
             qualifier='enables',
@@ -50,7 +50,7 @@ def test_can_correctly_parse_a_gpa_file():
 
 def test_can_handle_duplicate_data():
     with open('data/quickgo/duplicates.gpa', 'r') as raw:
-        data = list(gpi.parser(raw))
+        data = list(gpi.parse(raw))
         assert attr.asdict(data[-1]) == attr.asdict(GoTermAnnotation(
             rna_id='URS0000783B7F_10090',
             qualifier='part_of',

@@ -6,6 +6,6 @@ process tarbase {
 
   """
   cp ${params.databases.tarbase.remote} tarbase.json
-  rnac external tarbase tarbase.json .
+  rnac tarbase parse tarbase.json .
   """
 }

@@ -6,6 +6,6 @@ process flybase {
 
   """
   wget -O - ${params.databases.flybase.remote} | gzip -d > flybase.json
-  rnac external flybase flybase.json .
+  rnac flybase parse flybase.json .
   """
 }

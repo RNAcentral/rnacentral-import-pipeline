@@ -6,6 +6,6 @@ process mirbase {
 
   """
   scp $params.databases.mirbase.remote mirbase.json
-  rnac external mirbase mirbase.json .
+  rnac mirbase parse mirbase.json .
   """
 }

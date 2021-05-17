@@ -6,6 +6,6 @@ process lncbook {
 
   """
   wget -O lncbook.json ${params.databases.lncbook.remote}
-  rnac external lncbook lncbook.json .
+  rnac lncbook parse lncbook.json .
   """
 }

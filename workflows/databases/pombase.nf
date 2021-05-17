@@ -6,6 +6,6 @@ process pombase {
 
   """
   wget -O pombase.json ${params.databases.pombase.remote}
-  rnac external pombase pombase.json .
+  rnac pombase parse pombase.json .
   """
 }

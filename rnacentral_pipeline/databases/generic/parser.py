@@ -19,8 +19,6 @@ import semver
 
 from . import v1
 
-from rnacentral_pipeline.writers import build_entry_writer
-
 
 def parse(handle):
     """
@@ -41,8 +39,3 @@ def parse(handle):
     if semver.match(version, "<=2.0.0"):
         return v1.parse(data)
     raise ValueError("Unknown schema version: %s" % version)
-
-
-def from_file(handle, output):
-    writer = build_entry_writer(parse)
-    writer(output, handle)

@@ -28,8 +28,8 @@ process process {
 
   script:
   """
-  rnac lookup genecards $column_name $data urs-info.pickle
-  rnac external $name $data urs-info.pickle .
+  rnac genecards-suite lookup $column_name $data urs-info.pickle
+  rnac genecards-suite $name $data urs-info.pickle .
   """
 }
 

@@ -6,6 +6,6 @@ process zwd {
 
   """
   curl $params.databases.zwd.remote > zwd.json
-  rnac external zwd zwd.json .
+  rnac zwd parse zwd.json .
   """
 }

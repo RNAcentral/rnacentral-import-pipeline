@@ -6,6 +6,6 @@ process lncipedia {
 
   """
   curl ${params.databases.lncipedia.remote} > lncipedia.json
-  rnac external lncipedia lncipedia.json .
+  rnac lncipedia parse lncipedia.json .
   """
 }

@@ -14,11 +14,13 @@ limitations under the License.
 """
 
 import json
+from pathlib import Path
+
 import click
 
 from rnacentral_pipeline.databases import zfin
 from rnacentral_pipeline.databases.generic import parser as generic
-from rnacentral_pipeline.writers import write_entries
+from rnacentral_pipeline.writers import entry_writer
 
 
 @click.group('zfin')
@@ -51,4 +53,6 @@ def process_json_schema(json_file, output):
     """
     This parses our JSON schema files to produce the importable CSV files.
     """
-    write_entries(generic.parse, output, json_file)
+    entries = generic.parse(json_file)
+    with entry_writer(Path(output)) as writer:
+        writer.write(entries)
