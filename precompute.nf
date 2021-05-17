@@ -189,5 +189,5 @@ workflow precompute {
 }
 
 workflow {
-  precompute()
+  precompute(Channel.of(true))
 }
