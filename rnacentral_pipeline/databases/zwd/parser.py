@@ -15,8 +15,13 @@ limitations under the License.
 
 import json
 import logging
+from pathlib import Path
+import typing as ty
 
 from sqlitedict import SqliteDict
+
+from rnacentral_pipeline.databases import data
+from rnacentral_pipeline.databases.generic import v1
 
 LOGGER = logging.getLogger(__name__)
 
@@ -36,8 +41,8 @@ def update_entry(context: SqliteDict, entry: ty.Dict[str, ty.Any]) -> ty.Dict[st
 
 
 def parse(context_file: Path, json_file: Path) -> ty.Iterable[data.Entry]:
-    taxonomy = SqliteDict(filename=context_file)
+    context = SqliteDict(filename=context_file)
     with json_file.open('r') as raw:
         ncrnas = json.load(raw)
-    ncrnas['data'] = [update_entry(context, e) for e in data['data']]
+    ncrnas['data'] = [update_entry(context, e) for e in ncrnas['data']]
     return v1.parse(ncrnas)
