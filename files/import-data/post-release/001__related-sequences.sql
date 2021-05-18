@@ -1,3 +1,5 @@
+BEGIN;
+
 -- Update the load table to contain the source URS
 UPDATE load_rnc_related_sequences load
 SET
@@ -157,3 +159,5 @@ set
 ;
 
 drop table load_rnc_related_sequences;
+
+COMMIT;
