@@ -18,7 +18,7 @@ import pytest
 
 from rnacentral_pipeline.databases import data as dat
 from rnacentral_pipeline.databases.helpers import publications as pubs
-from rnacentral_pipeline.databases.ensembl.genomes import plants
+from rnacentral_pipeline.databases.ensembl import plants
 
 from . import helpers
 

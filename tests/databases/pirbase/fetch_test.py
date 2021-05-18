@@ -16,7 +16,7 @@ limitations under the License.
 import pytest
 from furl import furl
 
-from rnacentral_pipeline.rnacentral.pirbase import fetch
+from rnacentral_pipeline.databases.pirbase import fetch
 
 
 def test_can_extract_base_url():

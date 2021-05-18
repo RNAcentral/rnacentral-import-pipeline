@@ -15,7 +15,6 @@ limitations under the License.
 
 import re
 import csv
-import operator as op
 
 from rnacentral_pipeline.rnacentral.r2dt.data import ModelInfo
 from rnacentral_pipeline.rnacentral.r2dt.data import Source
