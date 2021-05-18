@@ -153,9 +153,12 @@ SET
 ;
 
 -- Ensure all methods are distinct
-update rnc_related_sequences
+update rnc_related_sequences related
 set
-  methods = ARRAY(select distinct unnest(methods))
+  methods = ARRAY(select distinct unnest(related.methods))
+from load_rnc_related_sequences load
+where
+  load.source_urs_taxid = related.source_urs_taxid
 ;
 
 drop table load_rnc_related_sequences;
