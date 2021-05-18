@@ -73,11 +73,12 @@ class OntologyAnnnotationWriter:
     go_publication_mappings = attr.ib()
     terms = attr.ib()
 
-    def write(self, anno):
-        self.go_annotations.writerows(anno.writeable())
-        self.go_publication_mappings.writerows(
-            anno.writeable_publication_mappings())
-        self.terms.writerows(anno.writeable_ontology_terms())
+    def write(self, annotations: ty.Iterable[data.GoTermAnnotation]):
+        for anno in annotations:
+            self.go_annotations.writerows(anno.writeable())
+            self.go_publication_mappings.writerows(
+                anno.writeable_publication_mappings())
+            self.terms.writerows(anno.writeable_ontology_terms())
 
 
 @contextmanager
