@@ -227,6 +227,10 @@ def description(ncrna):
                 symbol = symbol.split(':', 1)[1]
             return add_organism_preifx(ncrna, symbol)
 
+    if 'primaryId' in ncrna:
+        _, pid = ncrna['primaryId'].split(":", 1)
+        return add_organism_preifx(ncrna, pid)
+
     raise ValueError("Could not create a name for %s" % ncrna)
 
 
