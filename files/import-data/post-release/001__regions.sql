@@ -102,6 +102,9 @@ set
 UPDATE rnc_sequence_regions
 SET
   providing_databases = ARRAY(SELECT DISTINCT unnest(providing_databases))
+FROM load_rnc_sequence_regions load
+WHERE
+  load.urs_taxid = rnc_sequence_regions.urs_taxid
 ;
 
 -- Populate all exons
