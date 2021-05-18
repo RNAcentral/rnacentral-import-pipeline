@@ -9,7 +9,7 @@ process fetch {
   script:
   if (data.getExtension() == "gz")
     """
-    gzip -d $data > data.tsv
+    zcat $data > data.tsv
     """
   else
     """
@@ -20,6 +20,8 @@ process fetch {
 
 process process {
   tag { "$name" }
+  memory '4GB'
+
   input:
   tuple val(name), path(data), val(column_name)
 
