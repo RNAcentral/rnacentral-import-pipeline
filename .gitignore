@@ -60,6 +60,13 @@ pipeline.png
 # python
 *.py[cod]
 
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
 default.nix
 env/
 data/Caenorhabditis_elegans.WBcel235.87.chromosome.IV.dat

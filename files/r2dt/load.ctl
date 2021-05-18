@@ -10,7 +10,8 @@ HAVING FIELDS (
     model_stop,
     sequence_start,
     sequence_stop,
-    sequence_coverage
+    sequence_coverage,
+    should_show
 ) INTO {{PGDATABASE}}?rnc_secondary_structure_layout
 TARGET COLUMNS (
     urs,
@@ -22,7 +23,8 @@ TARGET COLUMNS (
     model_stop,
     sequence_start,
     sequence_stop,
-    sequence_coverage
+    sequence_coverage,
+    should_show
 )
 
 WITH

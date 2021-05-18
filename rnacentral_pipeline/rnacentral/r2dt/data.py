@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import annotations
+
 """
 Copyright [2009-2019] EMBL-European Bioinformatics Institute
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,9 +23,9 @@ from pathlib import Path
 import attr
 from attr.validators import instance_of as is_a
 from attr.validators import optional
-from Bio import SeqIO
 
 from rnacentral_pipeline.databases.data import RibovoreResult
+from rnacentral_pipeline.rnacentral.r2dt import should_show
 
 TRNAS = {
     "SO:0000254",
@@ -84,6 +86,7 @@ class ModelInfo(object):
     accessions: ty.List[str] = attr.ib(validator=is_a(list))
     source: Source = attr.ib(validator=is_a(Source))
     length: ty.Optional[int] = attr.ib(validator=optional(is_a(int)))
+    basepairs = attr.ib(validator=optional(is_a(int)))
     cell_location: ty.Optional[str] = attr.ib(validator=optional(is_a(str)))
 
     @property
@@ -109,20 +112,30 @@ class ModelInfo(object):
             self.length,
         ]
 
+    def fraction_paired(self) -> ty.Optional[float]:
+        if self.length is not None and self.basepairs is not None:
+            return float(self.basepairs) / float(self.length)
+        return None
+
+
 @attr.s
 class ModelDatabaseInfo:
     name = attr.ib(validator=is_a(str))
     db_id = attr.ib(validator=is_a(int))
     source = attr.ib(validator=is_a(Source))
     alias = attr.ib(validator=optional(is_a(str)))
+    length = attr.ib(validator=optional(is_a(int)))
+    basepairs = attr.ib(validator=optional(is_a(int)))
 
     @classmethod
-    def build(cls, raw) -> "ModelDatabaseInfo":
+    def build(cls, raw) -> ModelDatabaseInfo:
         return cls(
-            name=raw['model_name'],
-            db_id=raw['model_id'],
-            source=getattr(Source, raw['model_source']),
-            alias=raw['model_alias'],
+            name=raw["model_name"],
+            db_id=raw["model_id"],
+            source=getattr(Source, raw["model_source"]),
+            alias=raw["model_alias"],
+            length=raw["model_length"],
+            basepairs=raw["model_basepairs"],
         )
 
 
@@ -144,6 +157,18 @@ class R2DTResultInfo(object):
     @property
     def model_alias(self):
         return self.db_info.alias
+
+    @property
+    def model_basepairs(self) -> int:
+        if self.db_info.basepairs is None:
+            raise ValueError(f"No model length for {self.db_info}")
+        return self.db_info.basepairs
+
+    @property
+    def model_length(self) -> int:
+        if self.db_info.length is None:
+            raise ValueError(f"No model length for {self.db_info}")
+        return self.db_info.length
 
     @property
     def svg(self) -> Path:
@@ -222,8 +247,10 @@ class R2DTResultInfo(object):
 
 @attr.s()
 class R2DTResult(object):
-    info = attr.ib(validator=is_a(R2DTResultInfo))
-    hit_info = attr.ib(validator=optional(is_a(RibovoreResult)), default=None)
+    info: R2DTResultInfo = attr.ib(validator=is_a(R2DTResultInfo))
+    hit_info: RibovoreResult = attr.ib(
+        validator=optional(is_a(RibovoreResult)), default=None
+    )
 
     @classmethod
     def from_info(cls, info: R2DTResultInfo, hit_info=None):
@@ -271,11 +298,27 @@ class R2DTResult(object):
     def basepair_count(self):
         return self.dot_bracket().count("(")
 
+    def modeled_length(self):
+        return len(self.dot_bracket())
+
     def overlap_count(self):
         with self.info.overlaps.open("r") as raw:
             return int(raw.readline().strip())
 
-    def writeable(self):
+    @property
+    def model_basepairs(self):
+        return self.info.model_basepairs
+
+    @property
+    def model_length(self):
+        return self.info.model_length
+
+    def should_show(self, model) -> bool:
+        if self.info.source is not Source.crw:
+            return True
+        return should_show.from_result(model, self)
+
+    def writeable(self, model):
         model_start = None if not self.hit_info else self.hit_info.mfrom
         model_stop = None if not self.hit_info else self.hit_info.mto
         sequence_start = None if not self.hit_info else self.hit_info.bfrom
@@ -293,4 +336,57 @@ class R2DTResult(object):
             sequence_start,
             sequence_stop,
             sequence_coverage,
+            self.should_show(model),
         ]
+
+
+@attr.s()
+class ShowInfo:
+    urs = attr.ib(validator=is_a(str))
+    model_id = attr.ib(validator=is_a(int))
+    model_length = attr.ib(validator=is_a(int))
+    model_basepairs = attr.ib(validator=is_a(int))
+    sequence_length = attr.ib(validator=is_a(int))
+    modeled_length = attr.ib(validator=is_a(int))
+    modeled_basepairs = attr.ib(validator=is_a(int))
+
+    @classmethod
+    def from_raw(cls, raw) -> ShowInfo:
+        return cls(
+            urs=raw["urs"],
+            model_id=raw["model_id"],
+            model_length=raw["model_length"],
+            model_basepairs=raw["model_basepairs"],
+            sequence_length=raw["sequence_length"],
+            modeled_length=raw["modeled_length"],
+            modeled_basepairs=raw["modeled_basepairs"],
+        )
+
+    @classmethod
+    def from_result(cls, result: R2DTResult) -> ShowInfo:
+        assert result.model_length is not None, "Cannot show without length"
+        assert result.model_basepairs is not None, "Cannot show without bps"
+
+        return cls(
+            urs=result.urs,
+            model_id=result.model_id,
+            model_length=result.model_length,
+            model_basepairs=result.model_basepairs,
+            sequence_length=result.sequence_length,
+            modeled_length=result.modeled_length(),
+            modeled_basepairs=result.basepair_count(),
+        )
+
+    def observed_paired(self) -> float:
+        return float(self.modeled_basepairs) / self.modeled_length
+
+    def model_paired(self) -> float:
+        return float(self.model_basepairs) / self.model_length
+
+    def showable(self) -> bool:
+        observed = round(self.observed_paired(), 1)
+        modeled = round(self.model_paired(), 1)
+        return observed >= modeled
+
+    def writeable(self) -> ty.List[str]:
+        return [self.urs, str(self.model_id), str(self.showable())]

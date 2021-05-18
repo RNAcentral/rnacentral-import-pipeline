@@ -1,19 +1,18 @@
 LOAD CSV
-FROM ALL FILENAMES MATCHING ~<traveler-data.*.csv$>
+FROM ALL FILENAMES MATCHING ~<should-show*.csv$>
 HAVING FIELDS (
   urs,
-  zscore,
   should_show
 ) INTO {{PGDATABASE}}?load_secondary_should_show
 TARGET COLUMNS (
   urs,
-  zscore,
   should_show
 )
 
 WITH
   FIELDS ESCAPED BY double-quote,
-  FIELDS TERMINATED BY ','
+  FIELDS TERMINATED BY ',',
+  SKIP header = 1
 
 BEFORE LOAD DO
 $$
@@ -22,7 +21,6 @@ $$,
 $$
 CREATE TABLE load_secondary_should_show (
   urs text NOT NULL,
-  zscore float,
   should_show bool NOT NULL
 );
 $$
@@ -31,7 +29,6 @@ AFTER LOAD DO
 $$
 UPDATE load_secondary_should_show load
 SET
-  zscore = load.zscore,
   should_show = load.should_show
 FROM rnc_secondary_structure_layout layout
 WHERE
