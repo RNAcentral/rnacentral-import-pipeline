@@ -15,15 +15,16 @@ limitations under the License.
 
 import operator as op
 import itertools as it
+import typing as ty
 
 from Bio.UniProt.GOA import gpa_iterator as raw_parser
 
 from rnacentral_pipeline.databases.data.go_annotations import GoTermAnnotation
 
-from . import helpers
+from rnacentral_pipeline.databases.quickgo import helpers
 
 
-def as_annotation(record):
+def as_annotation(record: ty.Dict[str, ty.Any]) -> GoTermAnnotation:
     """
     Turn a record into an annotation.
     """
@@ -39,7 +40,7 @@ def as_annotation(record):
     )
 
 
-def parse(handle):
+def parse(handle: ty.IO) -> ty.Iterable[GoTermAnnotation]:
     """
     Parse the given file to produce an iterable of GoTerm objects to import.
     """
@@ -53,8 +54,8 @@ def parse(handle):
     annotations = list(map(as_annotation, records))
     annotations.sort(key=key)
 
-    for _, similar in it.groupby(annotations, key):
-        similar = list(similar)
+    for _, similar_iter in it.groupby(annotations, key):
+        similar = list(similar_iter)
         if len(similar) == 1:
             yield similar[0]
             continue
