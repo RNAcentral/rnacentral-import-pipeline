@@ -15,11 +15,7 @@ limitations under the License.
 
 import csv
 import logging
-import os
-import re
 import typing as ty
-from glob import glob
-from itertools import islice
 from pathlib import Path
 
 from rnacentral_pipeline import psql
@@ -82,8 +78,7 @@ def parse(
             if model_name not in model_info:
                 LOGGER.warning("No info for model %s", model_name)
                 continue
-            info = model_info[model_name]
-            info = data.R2DTResultInfo(urs, info, source, result_base)
+            info = data.R2DTResultInfo(urs, model_info[model_name], source, result_base)
             try:
                 info.validate()
             except Exception as e:

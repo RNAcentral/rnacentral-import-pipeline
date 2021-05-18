@@ -17,14 +17,16 @@ import csv
 import gzip
 import shutil
 import typing as ty
-import operator as op
 from pathlib import Path
 
-from . import parser
-from .models import crw
-from .models import gtrnadb
-from .models import ribovision
-from .models import rnase_p
+import joblib
+
+from rnacentral_pipeline.rnacentral.r2dt import parser
+from rnacentral_pipeline.rnacentral.r2dt import should_show
+from rnacentral_pipeline.rnacentral.r2dt.models import crw
+from rnacentral_pipeline.rnacentral.r2dt.models import gtrnadb
+from rnacentral_pipeline.rnacentral.r2dt.models import ribovision
+from rnacentral_pipeline.rnacentral.r2dt.models import rnase_p
 
 
 def parse(model_mapping: ty.TextIO, directory: str, allow_missing=False):
@@ -32,38 +34,45 @@ def parse(model_mapping: ty.TextIO, directory: str, allow_missing=False):
     return parser.parse(model_mapping, path, allow_missing=allow_missing)
 
 
-def write(model_mapping: ty.TextIO, directory: str, output: ty.TextIO,
-          allow_missing=False):
+def write(
+        model_mapping: ty.TextIO, should_show_model: str, directory: str, output: ty.TextIO, allow_missing=False
+):
     """
     Parse all the secondary structure data from the given directory and write
     it to the given file.
     """
 
     parsed = parse(model_mapping, directory, allow_missing=allow_missing)
-    writeable = map(op.methodcaller('writeable'), parsed)
+    model = joblib.load(should_show_model)
+    writeable = (e.writeable(model) for e in parsed)
     csv.writer(output).writerows(writeable)
 
 
-def publish(model_mapping: ty.TextIO, directory: str, output: str,
-            allow_missing=False, suffix=''):
+def publish(
+    model_mapping: ty.TextIO,
+    directory: str,
+    output: str,
+    allow_missing=False,
+    suffix="",
+):
     out_path = Path(output)
     for result in parse(model_mapping, directory, allow_missing=allow_missing):
-        publish_path = out_path / result.publish_path(suffix=suffix,
-                                                      compressed=True)
+        publish_path = out_path / \
+            result.publish_path(suffix=suffix, compressed=True)
         try:
             publish_path.parent.mkdir(parents=True, exist_ok=True)
         except FileExistsError:
             if not publish_path.parent.exists():
                 raise ValueError("Could not create publishing directory")
 
-        with gzip.open(publish_path, 'wb') as out:
-            with result.info.svg.open('rb') as inp:
+        with gzip.open(publish_path, "wb") as out:
+            with result.info.svg.open("rb") as inp:
                 shutil.copyfileobj(inp, out)
 
 
 def write_model(generator, handle, output):
     data = generator(handle)
-    data = map(op.methodcaller('writeable'), data)
+    data = (d.writeable() for d in data)
     csv.writer(output).writerows(data)
 
 
@@ -81,3 +90,23 @@ def write_crw(handle, output):
 
 def write_rnase_p(handle, output):
     return write_model(rnase_p.parse, handle, output)
+
+
+def write_should_show(model: Path, handle: ty.IO, db_url: str, output: ty.IO):
+    return should_show.write(model, handle, db_url, output)
+
+
+def write_training_data(handle: ty.IO, db_url: str, output: ty.IO):
+    return should_show.write_training_data(handle, db_url, output)
+
+
+def build_model(handle: ty.IO, db_url: str, output: Path):
+    return should_show.write_model(handle, db_url, output)
+
+
+def write_converted_sheet(handle: ty.IO, output: ty.IO):
+    return should_show.convert_sheet(handle, output)
+
+
+def write_inspect_data(handle: ty.IO, db_url: str, output: ty.IO):
+    return should_show.write_inspect_data(handle, db_url, output)

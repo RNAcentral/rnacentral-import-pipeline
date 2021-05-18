@@ -20,14 +20,17 @@ import attr
 from attr.validators import optional
 from attr.validators import instance_of as is_a
 
-from .regions import UnknownStrand
+from rnacentral_pipeline.databases.data.regions import UnknownStrand
+
 
 def maybe(convert):
     def fn(value):
-        if value is None or value == '-':
+        if value is None or value == "-":
             return None
         return convert(value)
+
     return fn
+
 
 maybe_int = maybe(int)
 maybe_float = maybe(float)
@@ -57,13 +60,13 @@ class RibovoreResult(object):
 
     @classmethod
     def from_result_line(cls, row: str, lengths=None) -> "RibovoreResult":
-        parts = re.split(r'\s+', row, maxsplit=24)
+        parts = re.split(r"\s+", row, maxsplit=24)
         strand = None
-        if parts[8] == 'plus':
+        if parts[8] == "plus":
             strand = 1
-        elif parts[8] == 'minus':
+        elif parts[8] == "minus":
             strand = -1
-        elif parts[8] == '-':
+        elif parts[8] == "-":
             strand = None
         else:
             raise UnknownStrand(parts[8])
@@ -96,8 +99,15 @@ class RibovoreResult(object):
 
     @property
     def model_coverage(self) -> ty.Optional[float]:
-        if self.model_length:
-            return float(self.mto - self.mfrom) / float(self.model_length)
+        length = self.modeled_length
+        if length is not None:
+            return float(length) / float(self.model_length)
+        return None
+
+    @property
+    def modeled_length(self) -> ty.Optional[int]:
+        if self.mto is not None and self.mfrom is not None:
+            return self.mto - self.mfrom
         return None
 
     @property

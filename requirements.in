@@ -13,11 +13,13 @@ jsonschema
 lxml
 more-itertools
 obonet
+pandas
 psycopg2
 pypika
 ratelimiter
 requests
 retry
+scikit-learn
 semver
 sqlitedict
 tatsu
