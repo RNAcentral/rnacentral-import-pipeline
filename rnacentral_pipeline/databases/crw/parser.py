@@ -14,14 +14,18 @@ limitations under the License.
 """
 
 from pathlib import Path
+import typing as ty
+
+from Bio import SeqIO
 
 from rnacentral_pipeline import psql
 
-from . import helpers
+from rnacentral_pipeline.databases.data import Entry
+from rnacentral_pipeline.databases.crw import helpers
 
 
-def parse(metadata_handle, sequence_directory):
-    indexed = helpers.index(Path(sequence_directory))
+def parse(metadata_handle: ty.IO, sequences: Path) -> ty.Iterable[Entry]:
+    indexed = SeqIO.index(sequences, "fasta")
     for entry in psql.json_handler(metadata_handle):
         data = helpers.as_entry(entry, indexed)
         if data:

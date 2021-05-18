@@ -13,10 +13,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import re
 import logging
 from pathlib import Path
+import typing as ty
 
-from Bio import SeqIO
+from Bio.Seq import Seq
+from Bio.SeqRecord import SeqRecord
 
 from rnacentral_pipeline.databases import data
 from rnacentral_pipeline.databases.helpers import phylogeny as phy
@@ -30,41 +33,34 @@ ORGANELLE_MAPPING = {
     'Chloroplast': 'chloroplast'
 }
 
-def index(directory: Path):
-    sequences = {}
-    for path in directory.glob("*.fasta"):
-        model_name = path.stem
-        with path.open('r') as handle:
-            _header, sequence, _pairs = handle.readlines()
-        sequences[model_name] = sequence.strip()
-    return sequences
 
-
-def primary_id(row):
+def primary_id(row: ty.Dict[str, ty.Any]) -> str:
     return 'CRW:' + row['model_name']
 
 
-def taxid(row):
+def taxid(row: ty.Dict[str, ty.Any]) -> int:
     return row['taxid']
 
 
-def species(row):
+def species(row: ty.Dict[str, ty.Any]) -> str:
     return phy.species(taxid(row))
 
 
-def common_name(row):
+def common_name(row: ty.Dict[str, ty.Any]) -> str:
     return phy.common_name(taxid(row))
 
 
-def lineage(row):
+def lineage(row: ty.Dict[str, ty.Any]) -> str:
     return phy.lineage(taxid(row))
 
 
-def sequence(row, sequences):
-    return sequences[row['model_name']]
+def sequence(
+        row: ty.Dict[str, ty.Any],
+        sequences: ty.Dict[str, SeqRecord]) -> str:
+    return str(sequences[row['model_name']].seq)
 
 
-def description(row):
+def description(row: ty.Dict[str, ty.Any]) -> str:
     name = species(row)
     loc = organelle(row)
     rna_type = row['rna_type']
@@ -73,11 +69,11 @@ def description(row):
     return f'{name} {rna_type}'
 
 
-def organelle(row):
+def organelle(row: ty.Dict[str, ty.Any]) -> ty.Optional[str]:
     return ORGANELLE_MAPPING.get(row['cellular_location'], None)
 
 
-def as_entry(row, sequences):
+def as_entry(row: ty.Dict[str, ty.Any], sequences) -> ty.Optional[data.Entry]:
     try:
         return data.Entry(
             primary_id=primary_id(row),
@@ -98,6 +94,18 @@ def as_entry(row, sequences):
             ],
             organelle=organelle(row),
         )
-    except:
-        LOGGER.info("Could not generate entry for %s", row)
+    except Exception as err:
+        LOGGER.warn("Could not generate entry for %s", row)
+        LOGGER.exception(err)
         return None
+
+
+def fasta_entries(directory: Path) -> ty.Iterable[SeqRecord]:
+    model_pattern = re.compile("crw-bpseq/(.+).bpseq")
+    for fasta_file in directory.glob("*.fasta"):
+        with fasta_file.open('r') as raw:
+            header, sequence, _ = raw.readlines()
+            matches = re.search(model_pattern, header)
+            if matches is None:
+                raise ValueError(f"Could not get model id from {header}")
+        yield SeqRecord(Seq(sequence), id=matches.group(1))
