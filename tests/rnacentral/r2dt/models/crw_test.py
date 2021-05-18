@@ -15,7 +15,7 @@ limitations under the License.
 
 import pytest
 
-from rnacentral_pipeline.databases.crw.traveler import models as crw
+from rnacentral_pipeline.databases.r2dt.models import crw
 from rnacentral_pipeline.rnacentral.traveler.data import ModelInfo
 from rnacentral_pipeline.rnacentral.traveler.data import Source
 
@@ -78,4 +78,5 @@ def test_can_handle_multiple_filenames(parsed):
         length=-1,
         cell_location='Nucleus',
     )
+
 

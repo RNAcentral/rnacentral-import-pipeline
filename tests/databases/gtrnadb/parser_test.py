@@ -13,6 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+from pathlib import Path
+
 import attr
 import pytest
 
@@ -22,14 +24,16 @@ from rnacentral_pipeline.databases.gtrnadb import parser
 
 @pytest.fixture(scope='module')
 def simple():
+    tax_file = Path('taxonomy.db')
     with open('data/gtrnadb/simple.json', 'r') as raw:
-        yield list(parser.parse(raw))
+        yield list(parser.parse(raw, tax_file))
+
 
 @pytest.fixture(scope='module')
 def version2():
     with open('data/gtrnadb/version2.json', 'r') as raw:
-        yield list(parser.parse(raw))
-
+        tax_file = Path('taxonomy.db')
+        yield list(parser.parse(raw, tax_file))
 
 
 def test_it_can_generate_all_entries(simple):
@@ -59,9 +63,7 @@ def test_it_generates_correct_entries(simple):
             "score": 72.7,
             "url": "http://gtrnadb.ucsc.edu/genomes/bacteria/Acar_mari_MBIC11017/genes/tRNA-Ala-CGC-1-1.html"
         },
-        secondary_structure=data.SecondaryStructure(
-            "(((((((..((((........)))).(((((.......))))).....(((((.......))))))))))))."
-        ),
+        secondary_structure=data.SecondaryStructure.empty(),
         references=[data.Reference(
             authors='Chan P.P., Lowe T.M.',
             location='Nucl. Acids Res. 37(Database issue)',
@@ -116,9 +118,7 @@ def test_it_creates_correct_entries(version2):
             "score": 73.6,
             "url": "http://gtrnadb.ucsc.edu/genomes/archaea/Acid_MAR08_339/genes/tRNA-Arg-CCG-1-1.html"
         },
-        secondary_structure=data.SecondaryStructure(
-            "(((((((..(((............))).(((((.......)))))....(((((.......))))))))))))."
-        ),
+        secondary_structure=data.SecondaryStructure.empty(),
         references=[data.Reference(
             authors='Chan P.P., Lowe T.M.',
             location='Nucl. Acids Res. 37(Database issue)',

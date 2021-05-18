@@ -15,14 +15,14 @@ limitations under the License.
 
 import pytest
 
-from rnacentral_pipeline.rnacentral.traveler.data import ModelInfo
-from rnacentral_pipeline.databases.ribovision.traveler import models as parser
+from rnacentral_pipeline.rnacentral.r2dt.data import ModelInfo
+from rnacentral_pipeline.rnacentral.r2dt.models import ribovision
 
 
 @pytest.fixture()
 def models():
     with open('data/traveler/ribovision/metadata.tsv', 'r') as raw:
-        return list(parser.parse(raw))
+        return list(ribovision.parse(raw))
 
 
 @pytest.mark.xfail(reason="Cannot extract length")
@@ -59,4 +59,5 @@ def test_has_correct_rrna_types(models):
 def test_can_get_correct_cell_location(models, model_id, location):
     model = next(m for m in models if m.model_id == model_id)
     assert model.cell_location == location
+
 

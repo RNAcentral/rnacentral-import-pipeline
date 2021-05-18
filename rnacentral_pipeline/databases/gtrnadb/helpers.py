@@ -128,13 +128,13 @@ def species(taxonomy, data):
     return phy.species(data['ncbi_tax_id'])
 
 
-def description(data):
+def description(taxonomy, data):
     """
     Generate a description for the entries specified by the data.
     """
     details = data['metadata'].get('description', product(data))
     return '{name} {details}'.format(
-        name=species(data),
+        name=species(taxonomy, data),
         details=details,
     )
 

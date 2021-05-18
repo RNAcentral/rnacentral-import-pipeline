@@ -20,7 +20,6 @@ from pathlib import Path
 
 from sqlitedict import SqliteDict
 
-from rnacentral_pipeline.databases.data import Exon
 from rnacentral_pipeline.databases.data import Entry
 import rnacentral_pipeline.databases.helpers.phylogeny as phy
 
@@ -29,31 +28,7 @@ from rnacentral_pipeline.databases.gtrnadb import helpers
 LOGGER = logging.getLogger(__name__)
 
 
-def gtrnadb_exons(locations):
-    """
-    This will create the Exons from the data provided by GtRNAdb.
-    """
-
-    exons = []
-    for exon in locations['exons']:
-        complement = None
-        if exon['strand'] == '+':
-            complement = False
-        elif exon['strand'] == '-':
-            complement = True
-        else:
-            raise ValueError("Invalid strand %s" % exon)
-
-        exons.append(Exon(
-            chromosome=helpers.chromosome(locations),
-            primary_start=int(exon['start']),
-            primary_end=int(exon['stop']),
-            complement=complement,
-        ))
-    return exons
-
-
-def gtrnadb_entries(taxonomy, data) -> ty.Iterable[Entry]:
+def gtrnadb_entries(taxonomy: SqliteDict, data: ty.Dict[str, ty.Any]) -> ty.Iterable[Entry]:
     """
     Take an entry from GtRNAdb and produce the RNAcentrals that it
     represents. A single entry may represent more than one Entry because it
@@ -85,7 +60,7 @@ def gtrnadb_entries(taxonomy, data) -> ty.Iterable[Entry]:
                 optional_id=data['gene'],
                 product=helpers.product(data),
                 parent_accession=helpers.parent_accession(location),
-                description=helpers.description(data),
+                description=helpers.description(taxonomy, data),
                 mol_type='genomic DNA',
                 location_start=1,
                 location_end=len(data['sequence']),
@@ -100,7 +75,7 @@ def gtrnadb_entries(taxonomy, data) -> ty.Iterable[Entry]:
             break
 
 
-def parse(raw, taxonomy_file: Path) -> ty.Iterable[Entry]:
+def parse(raw: ty.IO, taxonomy_file: Path) -> ty.Iterable[Entry]:
     """
     This will parse a JSON file produced by GtRNAdb and yield the RNAcentral
     entries that it represents.
