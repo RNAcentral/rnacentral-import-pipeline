@@ -1,3 +1,4 @@
+include { crw } from './databases/crw'
 include { five_s_rrnadb } from './databases/5srrnadb'
 include { ena } from './databases/ena'
 include { ensembl } from './databases/ensembl'
@@ -51,6 +52,7 @@ workflow parse_databases {
 
     Channel.empty() \
     | mix(
+      crw(),
       five_s_rrnadb(),
       ena(),
       ensembl(),
