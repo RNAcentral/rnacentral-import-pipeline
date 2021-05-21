@@ -19,6 +19,6 @@ workflow crw {
   emit: data
   main:
     Channel.fromPath('files/import-data/crw/metadata.sql') \
-    | fetch_and_process(query) \
+    | fetch_and_process \
     | set { data }
 }
