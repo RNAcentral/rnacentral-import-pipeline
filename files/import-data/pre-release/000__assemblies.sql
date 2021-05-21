@@ -1,3 +1,5 @@
+BEGIN;
+
 DELETE FROM ensembl_assembly ensembl
 USING load_assemblies load
 WHERE
@@ -20,7 +22,7 @@ INSERT INTO ensembl_assembly (
   example_start,
   subdomain
 ) (
-SELECT DISTINCT
+SELECT DISTINCT ON (assembly_id)
   assembly_id,
   assembly_full_name,
   gca_accession,
@@ -52,3 +54,5 @@ SET
 ;
 
 DROP TABLE load_assemblies;
+
+COMMIT;
