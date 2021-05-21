@@ -1,5 +1,5 @@
 process fetch_metadata {
-  when { params.databases.ensembl.vertebrates.run }
+  when { params.databases.ensembl._any.run }
 
   input:
   path(query)
@@ -17,24 +17,28 @@ process fetch_metadata {
 }
 
 process find_urls {
+  when { params.databases.ensembl[division].run }
+
   memory '20GB'
+  clusterOptions '-sp 100'
 
   input:
   val(division)
 
   output:
-  tuple val(division), path('species.txt')
+  path('species.txt')
 
   """
-  rnac ensembl urls-for $division $params.databases.ensembl.vertebrates.ftp_host > species.txt
+  rnac ensembl urls-for $division ${params.databases.ensembl[division].ftp_host} > species.txt
   """
 }
 
 process fetch_species_data {
   tag { "$species" }
+  clusterOptions '-sp 90'
   errorStrategy 'retry'
   maxRetries 10
-  maxForks 5
+  maxForks 10
 
   input:
   tuple val(division), val(species), val(dat_path), val(gff_path)
@@ -53,10 +57,13 @@ process fetch_species_data {
 
 process parse_data {
   tag { "${embl.baseName}" }
-  memory { '6GB' }
+  memory { 6.GB * task.attempt }
+  clusterOptions '-sp 50'
+  errorStrategy 'retry'
+  maxRetries 3
 
   input:
-  tuple val(divsion), path(embl), path(gff), path(rfam)
+  tuple val(division), path(embl), path(gff), path(rfam)
 
   output:
   path('*.csv')
