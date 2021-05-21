@@ -1,3 +1,5 @@
+BEGIN;
+
 INSERT INTO rfam_models (
     rfam_model_id,
     short_name,
@@ -40,7 +42,9 @@ ON CONFLICT (rfam_model_id) DO UPDATE SET
     rfam_clan_id = EXCLUDED.rfam_clan_id,
     domain = EXCLUDED.domain,
     rna_type = EXCLUDED.rna_type,
-    rfam_rna_type = EXCLUDED.rfam_rna_type,
+    rfam_rna_type = EXCLUDED.rfam_rna_type
 ;
 
 DROP TABLE load_rfam_models;
+
+COMMIT;
