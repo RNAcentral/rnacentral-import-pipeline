@@ -27,7 +27,8 @@ LOGGER = logging.getLogger(__name__)
 
 
 def update_entry(context: SqliteDict, entry: ty.Dict[str, ty.Any]) -> ty.Dict[str, ty.Any]:
-    taxid = entry['taxonId']
+    prefix, raw_taxid = entry['taxonId'].split(":", 1)
+    taxid = int(raw_taxid)
     if taxid not in context:
         raise ValueError(f"Unknown tax id {taxid}")
 
@@ -35,7 +36,7 @@ def update_entry(context: SqliteDict, entry: ty.Dict[str, ty.Any]) -> ty.Dict[st
     if tax_info.replaced_by:
         pid = entry['primaryId']
         updated = tax_info.replaced_by
-        entry['taxonId'] = updated
+        entry['taxonId'] = f"{prefix}:{updated}"
         LOGGER.info(f"Entry {pid} replaced taxid {taxid} -> {updated}")
     return entry
 
@@ -45,4 +46,4 @@ def parse(context_file: Path, json_file: Path) -> ty.Iterable[data.Entry]:
     with json_file.open('r') as raw:
         ncrnas = json.load(raw)
     ncrnas['data'] = [update_entry(context, e) for e in ncrnas['data']]
-    return v1.parse(ncrnas)
+    yield from v1.parse(ncrnas)
