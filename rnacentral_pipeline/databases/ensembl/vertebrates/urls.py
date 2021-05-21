@@ -20,6 +20,8 @@ import typing as ty
 
 from contextlib import contextmanager
 
+from rnacentral_pipeline.databases.ensembl.data import Division, FtpInfo
+
 
 def list_releases(ftp: FTP) -> ty.List[str]:
     return [f for f in ftp.nlst() if f.startswith('release-')]
@@ -39,10 +41,9 @@ def species_info(ftp: FTP, release: str):
         yield tmp
 
 
-def generate_paths(base: str, release: str, handle) -> ty.Iterable[ty.Tuple[str, str, str]]:
+def generate_paths(base: str, release: str, handle) -> ty.Iterable[FtpInfo]:
     _, release_id = release.split('-', 1)
     data = json.load(handle)
-    data_types = ['gff3', 'embl']
     for entry in data:
         info = entry['organism']
         name = info['name']
@@ -51,10 +52,10 @@ def generate_paths(base: str, release: str, handle) -> ty.Iterable[ty.Tuple[str,
         organism_name = f"{url_name}.{assembly}.{release_id}"
         gff_path = f"{base}/{release}/gff3/{name}/{organism_name}.gff3.gz"
         data_files = f"{base}/{release}/embl/{name}/{organism_name}.*.dat.gz"
-        yield (name, data_files, gff_path)
+        yield FtpInfo(division=Division.vertebrates, species=name, data_files=data_files, gff_file=gff_path)
 
 
-def urls_for(host: str) -> ty.Iterable[ty.Tuple[str, str, str]]:
+def urls_for(host: str) -> ty.Iterable[FtpInfo]:
     with FTP(host) as ftp:
         ftp.login()
         ftp.cwd('pub')
