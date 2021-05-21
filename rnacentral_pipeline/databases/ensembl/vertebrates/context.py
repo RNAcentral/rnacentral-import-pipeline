@@ -95,7 +95,7 @@ class Context:
         return False
 
     def from_gencode(self, entry: data.Entry) -> bool:
-        if entry.taxid not in {9606, 10090}:
+        if entry.ncbi_tax_id not in {9606, 10090}:
             return False
         if entry.primary_id not in self.gff:
             return False
