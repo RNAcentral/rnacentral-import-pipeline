@@ -2,6 +2,9 @@ process generate_files {
   when { params.qa.rfam.run }
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
+  input:
+  val(_flag)
+
   output:
   path 'rfam', emit: cm_files
   path 'version_file', emit: version_info
@@ -103,7 +106,7 @@ workflow rfam_scan {
     Channel.fromPath("files/qa/rfam.ctl").set { ctl }
     Channel.fromPath("files/qa/attempted/rfam.ctl").set { attempted_ctl }
 
-    generate_files()
+    generate_files(ready)
 
     generate_files.out.version_info \
     | combine(active_xref_sql) \
