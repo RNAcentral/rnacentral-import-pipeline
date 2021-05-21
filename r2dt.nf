@@ -121,7 +121,9 @@ workflow common {
 
 workflow for_database {
   take: sequences
-  emit: data
+  emit: 
+    parsed
+    layouts
   main: 
     common | set { model_mapping }
 
@@ -131,7 +133,9 @@ workflow for_database {
     | flatten \
     | layout_sequences \
     | combine(model_mapping) \
-    | set { data }
+    | set { layouts }
+
+    layouts | parse_layout | set { parsed }
 }
 
 workflow r2dt {
