@@ -15,6 +15,7 @@ limitations under the License.
 
 import csv
 from pathlib import Path
+import typing as ty
 
 import attr
 from attr.validators import optional
@@ -119,12 +120,13 @@ class Writer:
     terms = attr.ib()
     rfam_ontology_mappings = attr.ib()
 
-    def write(self, reference):
-        self.terms.writerows(reference.writeable_ontology_terms)
-        self.terms.writerows(reference.writeable_go_mappings)
+    def write(self, references):
+        for reference in references:
+            self.terms.writerows(reference.writeable_ontology_terms())
+            self.rfam_ontology_mappings.writerows(reference.writeable_go_mappings())
 
 
-def parse(handle):
+def parse(handle: ty.IO) -> ty.Iterable[RfamDatabaseLink]:
     """
     Parse the given filehandle to produce all database link objects in the
     file.
@@ -152,7 +154,7 @@ def correct_go_term(reference):
     return attr.evolve(reference, external_id=go_term_id)
 
 
-def ontology_references(handle):
+def ontology_references(handle) -> ty.Iterable[RfamDatabaseLink]:
     """
     Produce an iterable of all ontology terms from Rfam.
     """
@@ -170,6 +172,6 @@ def ontology_references(handle):
         yield reference
 
 
-def from_file(handle, output: Path):
+def from_file(handle: ty.IO, output: Path):
     with writers.build(Writer, output) as writer:
         writer.write(ontology_references(handle))
