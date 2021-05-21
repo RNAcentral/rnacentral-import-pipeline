@@ -3,6 +3,8 @@
 nextflow.enable.dsl = 2
 
 process setup {
+  when { params.genome_mapping.run }
+
   input:
   val(_flag)
   path(setup)
