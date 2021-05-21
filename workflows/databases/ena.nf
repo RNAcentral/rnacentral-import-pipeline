@@ -67,7 +67,7 @@ process fetch_wgs_directories {
   mkdir files
   mkdir chunks
   find raw -type f > ids
-  split -n l/30 ids chunks/chunk-
+  split -n l/60 ids chunks/chunk-
   find chunks -type f -empty -delete
   find chunks/ -type f | xargs -I {} group-wgs {} "${file(to_fetch).name}" files
   """
@@ -109,7 +109,8 @@ process process_file {
   fi
   rnac ena parse --counts $raw-counts.txt sequences.dat $tpa ribotyper-results $model_lengths .
 
-  cp $raw-counts.txt $baseDir/ena-counts
+  mkdir $baseDir/ena-counts 2>/dev/null || true
+  cp $raw-counts.txt $baseDir/ena-counts/
   """
 }
 
