@@ -30,7 +30,7 @@ def cli():
 
 @cli.command("parse")
 @click.argument("context", type=click.Path())
-@click.argument("json_file", type=click.File("r"))
+@click.argument("json_file", type=click.Path())
 @click.argument(
     "output",
     default=".",
