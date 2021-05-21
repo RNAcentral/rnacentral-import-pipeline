@@ -71,3 +71,19 @@ class TranscriptInfo:
             regions=helpers.regions(record, feature),
             from_gencode=False,
         )
+
+
+@attr.s()
+class FtpInfo:
+    division = attr.ib(validator=is_a(Division))
+    species = attr.ib(validator=is_a(str))
+    data_files = attr.ib(validator=is_a(str))
+    gff_file = attr.ib(validator=is_a(str))
+
+    def writeable(self) -> ty.Tuple[str, str, str, str]:
+        return (
+            self.division.name,
+            self.species,
+            self.data_files,
+            self.gff_file,
+        )

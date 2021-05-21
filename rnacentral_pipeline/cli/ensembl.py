@@ -50,7 +50,8 @@ def vert_url(division, ftp, output):
     """
     division = Division.from_name(division)
     writer = csv.writer(output, lineterminator='\n')
-    writer.writerows(urls.urls_for(division, ftp))
+    rows = urls.urls_for(division, ftp)
+    writer.writerows(row.writeable() for row in rows)
 
 
 @cli.command('parse')

@@ -13,20 +13,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import json
-import tempfile
 import typing as ty
-from ftplib import FTP
-
-from contextlib import contextmanager
 
 from rnacentral_pipeline.databases.ensembl.genomes import urls
 from rnacentral_pipeline.databases.ensembl import vertebrates
 
-from rnacentral_pipeline.databases.ensembl.data import Division
+from rnacentral_pipeline.databases.ensembl.data import Division, FtpInfo
 
 
-def urls_for(division: Division, base: str) -> ty.Iterable[ty.Tuple[str, str, str]]:
+def urls_for(division: Division, base: str) -> ty.Iterable[FtpInfo]:
     if division == Division.fungi:
         yield from urls.urls_for(division, base)
     elif division == Division.metazoa:

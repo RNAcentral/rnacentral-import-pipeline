@@ -19,8 +19,10 @@ from rnacentral_pipeline.databases.data import Entry
 from rnacentral_pipeline.databases.ensembl.vertebrates import urls
 from rnacentral_pipeline.databases.ensembl.vertebrates import parser
 
+from rnacentral_pipeline.databases.ensembl.data import FtpInfo
 
-def urls_for(base: str) -> ty.Iterable[ty.Tuple[str, str, str]]:
+
+def urls_for(base: str) -> ty.Iterable[FtpInfo]:
     return urls.urls_for(base)
 
 
