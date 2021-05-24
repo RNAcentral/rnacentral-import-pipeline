@@ -190,7 +190,7 @@ workflow genome_mapping {
     | join(split_sequences) \
     | flatMap { species, assembly, genome_chunks, chunks ->
       [genome_chunks.collate(2), chunks]
-        .combinations
+        .combinations()
         .inject([]) { acc, files -> acc << [species, assembly] + files.flatten() }
     } \
     | blat

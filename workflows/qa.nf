@@ -2,7 +2,7 @@
 
 nextflow.enable.dsl=2
 
-include { rfam_scan } from './workflows/rfam-scan'
+include { rfam_scan } from './rfam-scan'
 
 workflow qa {
   take: ready
