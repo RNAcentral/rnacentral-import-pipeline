@@ -77,6 +77,8 @@ process publish_layout {
 
   """
   rnac r2dt publish --allow-missing $mapping $output $params.r2dt.publish
+  rnac r2dt prepare-s3 --allow-missing $mapping $output for-upload file-list
+  update-svg.sh file-list $params.r2dt.s3.env
   """
 }
 
@@ -116,7 +118,7 @@ workflow common {
   main:
     Channel.fromPath('files/r2dt/model_mapping.sql') | set { query }
 
-    fetch_model_mapping(ready, sql) | set { mapping }
+    fetch_model_mapping(ready, query) | set { mapping }
 }
 
 workflow for_database {
