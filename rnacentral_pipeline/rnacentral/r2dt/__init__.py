@@ -70,6 +70,33 @@ def publish(
                 shutil.copyfileobj(inp, out)
 
 
+def prepare_s3(
+    model_mapping: ty.TextIO,
+    directory: str,
+    output: Path,
+    file_list: Path,
+    allow_missing=False,
+):
+
+    if not output.exists():
+        output.mkdir(parents=True)
+
+    with file_list.open("w") as raw:
+        results = parse(model_mapping, directory, allow_missing=allow_missing)
+        for result in results:
+            s3_path = output / f"{result.urs}.svg"
+            if s3_path.exists():
+                raise ValueError(f"Will not overwrite {s3_path}")
+
+            if not result.info.svg.exists():
+                raise ValueError(
+                    f"Somehow missing unnormalized path {result.info.svg}")
+
+            shutil.copyfile(result.info.svg, s3_path)
+            raw.write(str(s3_path))
+            raw.write("\n")
+
+
 def write_model(generator, handle, output):
     data = generator(handle)
     data = (d.writeable() for d in data)

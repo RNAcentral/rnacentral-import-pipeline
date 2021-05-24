@@ -68,7 +68,7 @@ def convert_sheet(filename, output):
     This command is to convert a downloaded google sheet csv into a csv that can
     be used for training data. Often we will build a spreadsheet of example URS
     and then use that to build a training set. It is nice since you can embedd
-    an SVG in google sheets so it is fast for us to compare several of them. 
+    an SVG in google sheets so it is fast for us to compare several of them.
 
     In order to move that back into the training data you can download that
     sheet as a CSV and then run this command on it to build the CSV that is used
@@ -220,3 +220,30 @@ def r2dt_publish(model_info, directory, output, allow_missing, suffix=""):
     r2dt.publish(
         model_info, directory, output, allow_missing=allow_missing, suffix=suffix
     )
+
+
+@cli.command("prepare-s3")
+@click.option("--allow-missing", is_flag=True, default=False)
+@click.argument("model_info", type=click.File("r"))
+@click.argument(
+    "directory",
+    type=click.Path(
+        writable=False,
+        dir_okay=True,
+        file_okay=False,
+    ),
+)
+@click.argument(
+    "output",
+    type=click.Path(
+        writable=True,
+        dir_okay=True,
+        file_okay=False,
+    ),
+)
+@click.argument("file_list", type=click.Path())
+def r2dt_prepare_s3(model_info, directory, output, file_list, allow_missing):
+    file_list = Path(file_list)
+    output = Path(output)
+    r2dt.prepare_s3(model_info, directory, output,
+                    file_list, allow_missing=allow_missing)
