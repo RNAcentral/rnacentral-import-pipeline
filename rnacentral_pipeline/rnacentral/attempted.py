@@ -56,7 +56,7 @@ def write(data, output):
 
 
 def genome_mapping(handle, assembly_id, output):
-    data = json_parser(handle, extra_fields=[assembly_id])
+    data = fasta_parser(handle, extra_fields=[assembly_id])
     write(data, output)
 
 
