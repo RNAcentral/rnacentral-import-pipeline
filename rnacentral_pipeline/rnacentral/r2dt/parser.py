@@ -29,8 +29,8 @@ def load_model_info(handle: ty.TextIO) -> ty.Dict[str, data.ModelDatabaseInfo]:
     for entry in psql.json_handler(handle):
         info = data.ModelDatabaseInfo.build(entry)
         mapping[entry["model_name"]] = info
-        # if entry['model_name'] == "tRNA":
-        #     mapping["RF00005"] = int(model_id)
+        if info.source is data.Source.gtrnadb:
+            mapping[entry["model_name"].replace("_", "-")] = info
     return mapping
 
 
@@ -44,7 +44,8 @@ def load_hit_info(base: Path, allow_missing: bool):
         (base / "RF00005", data.Source.rfam),
         (base / "rnasep", data.Source.rnase_p),
     ]
-    has_ribovision = {data.Source.crw, data.Source.ribovision, data.Source.rfam}
+    has_ribovision = {data.Source.crw,
+                      data.Source.ribovision, data.Source.rfam}
     hit_info = {}
     for (path, source) in source_directories:
         if not path.exists():
@@ -73,12 +74,11 @@ def parse(
             urs = row[0]
             model_name = row[1]
             source = data.Source[row[2].lower()]
-            if source == data.Source.gtrnadb:
-                model_name = model_name.replace("_", "-")
             if model_name not in model_info:
-                LOGGER.warning("No info for model %s", model_name)
-                continue
-            info = data.R2DTResultInfo(urs, model_info[model_name], source, result_base)
+                raise ValueError("No info for model %s", model_name)
+
+            minfo = model_info[model_name]
+            info = data.R2DTResultInfo(urs, minfo, source, result_base)
             try:
                 info.validate()
             except Exception as e:
