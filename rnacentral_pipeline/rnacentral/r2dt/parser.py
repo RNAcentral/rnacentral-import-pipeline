@@ -73,7 +73,7 @@ def parse(
         for row in reader:
             urs = row[0]
             model_name = row[1]
-            source = data.Source[row[2].lower()]
+            source = data.Source.build(row[2])
             if model_name not in model_info:
                 raise ValueError("No info for model %s", model_name)
 

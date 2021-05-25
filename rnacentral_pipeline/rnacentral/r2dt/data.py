@@ -63,6 +63,17 @@ class Source(enum.Enum):
     rnase_p = enum.auto()
     gtrnadb = enum.auto()
 
+    @classmethod
+    def build(cls, name: ty.Union[str, Source]) -> Source:
+        if isinstance(name, Source):
+            return name
+        name = name.lower()
+        if hasattr(cls, name):
+            return getattr(cls, name)
+        if name == 'rnase p database':
+            return Source.rnase_p
+        raise ValueError(f"Unknown database name {name}")
+
     def result_directory(self) -> str:
         if self is Source.crw:
             return "crw"
