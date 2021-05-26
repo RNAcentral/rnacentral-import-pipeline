@@ -35,7 +35,7 @@ def parse(model_mapping: ty.TextIO, directory: str, allow_missing=False):
 
 
 def write(
-        model_mapping: ty.TextIO, should_show_model: str, directory: str, output: ty.TextIO, allow_missing=False
+        model_mapping: ty.TextIO, directory: str, output: ty.TextIO, allow_missing=False
 ):
     """
     Parse all the secondary structure data from the given directory and write
@@ -43,8 +43,7 @@ def write(
     """
 
     parsed = parse(model_mapping, directory, allow_missing=allow_missing)
-    model = joblib.load(should_show_model)
-    writeable = (e.writeable(model) for e in parsed)
+    writeable = (e.writeable() for e in parsed)
     csv.writer(output).writerows(writeable)
 
 
@@ -82,8 +81,12 @@ def prepare_s3(
         output.mkdir(parents=True)
 
     with file_list.open("w") as raw:
+        seen = set()
         results = parse(model_mapping, directory, allow_missing=allow_missing)
         for result in results:
+            if result.urs in seen:
+                raise ValueError(f"Dupcliate URS {result.urs}")
+            seen.add(result.urs)
             s3_path = output / f"{result.urs}.svg"
             if s3_path.exists():
                 raise ValueError(f"Will not overwrite {s3_path}")

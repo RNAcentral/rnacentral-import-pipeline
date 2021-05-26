@@ -1,5 +1,15 @@
 nextflow.enable.dsl=2
 
+process import_model_info {
+
+  output:
+  path('info.csv')
+
+  """
+  find cms/rfam -type f -name '*.cm' | xargs -I {} cmstat {}  | grep -v ^\\# | awk '{ printf("%s,%d,%d\n", $3, $6, $8); }' info.csv
+  """
+}
+
 process fetch_model_mapping {
   input:
   val(_flag)
@@ -102,13 +112,18 @@ process store_secondary_structures {
   input:
   tuple path('data*.csv'), path(ctl)
   tuple path('attempted*.csv'), path(attempted_ctl)
+  tuple path(urs_sql), path(model), path(should_show_ctl)
 
   output:
   val('r2dt done')
 
   """
-  split-and-load $ctl 'data*.csv' ${params.r2dt.data_chunk_size} traveler-data
-  split-and-load $attempted_ctl 'attemped*.csv' ${params.r2dt.data_chunk_size} traveler-attempted
+  split-and-load $ctl 'data*.csv' ${params.r2dt.data_chunk_size} r2dt-data
+  split-and-load $attempted_ctl 'attemped*.csv' ${params.r2dt.data_chunk_size} r2dt-attempted
+
+  psql -f "$urs_sql" "$PGDATABASE" > urs.txt
+  rnac r2dt should-show $model urs.txt should_show.csv
+  split-and-load $should_show_ctl 'should_show*.csv' ${params.r2dt.data_chunk_size} r2dt-should-show
   """
 }
 
@@ -145,6 +160,12 @@ workflow r2dt {
   emit: done
   main:
     Channel.fromPath("files/r2dt/find-sequences.sql") | set { sequences_sql }
+    Channel.fromPath('files/r2dt/should-show/model.joblib') | set { ss_model }
+    Channel.fromPath('files/r2dt/should-show/query.sql') | set { ss_query }
+    Channel.fromPath('files/r2dt/should-show/update.ctl') | set { ss_ctl }
+
+    ss_query | combine(ss_model, ss_ctl) | set { should_show }
+
     ready | common | set { model_mapping }
 
     extract_sequences(ready, sequences_sql) \
@@ -162,7 +183,7 @@ workflow r2dt {
     parse_layout.out.data | collect | combine(Channel.fromPath('files/r2dt/load.ctl')) | set { to_load }
     parse_layout.out.attempted | collect | combine(Channel.fromPath('files/r2dt/attempted.ctl')) | set { attempted }
 
-    store_secondary_structures(to_load, attempted) | set { done }
+    store_secondary_structures(to_load, attempted, should_show) | set { done }
 }
 
 workflow {

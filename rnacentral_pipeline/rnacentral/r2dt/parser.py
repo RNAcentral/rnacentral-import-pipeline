@@ -31,6 +31,9 @@ def load_model_info(handle: ty.TextIO) -> ty.Dict[str, data.ModelDatabaseInfo]:
         mapping[entry["model_name"]] = info
         if info.source is data.Source.gtrnadb:
             mapping[entry["model_name"].replace("_", "-")] = info
+            mapping[entry["model_name"].replace("-", "_")] = info
+        if entry["model_name"] == "tRNA":
+            mapping["RF00005"] = info
     return mapping
 
 
@@ -68,6 +71,8 @@ def parse(
     model_info = load_model_info(info_path)
     result_base = base / "results"
     metadata_path = result_base / "tsv" / "metadata.tsv"
+    seen = set()
+    seen_urs = set()
     with metadata_path.open("r") as raw:
         reader = csv.reader(raw, delimiter="\t")
         for row in reader:
@@ -79,6 +84,15 @@ def parse(
 
             minfo = model_info[model_name]
             info = data.R2DTResultInfo(urs, minfo, source, result_base)
+            if info in seen:
+                LOGGER.warn("Dupcliate line in metadata for, %s", info)
+                continue
+            seen.add(info)
+
+            if info.urs in seen_urs:
+                raise ValueError(f"Impossible state of >1 hit per URS for {info}")
+            seen_urs.add(info.urs)
+
             try:
                 info.validate()
             except Exception as e:
