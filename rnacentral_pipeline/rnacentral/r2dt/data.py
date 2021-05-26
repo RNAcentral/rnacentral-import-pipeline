@@ -20,12 +20,13 @@ import re
 import typing as ty
 from pathlib import Path
 
+from Bio import SeqIO
+
 import attr
 from attr.validators import instance_of as is_a
 from attr.validators import optional
 
 from rnacentral_pipeline.databases.data import RibovoreResult
-from rnacentral_pipeline.rnacentral.r2dt import should_show
 
 TRNAS = {
     "SO:0000254",
@@ -129,7 +130,7 @@ class ModelInfo(object):
         return None
 
 
-@attr.s
+@attr.s(hash=True)
 class ModelDatabaseInfo:
     name = attr.ib(validator=is_a(str))
     db_id = attr.ib(validator=is_a(int))
@@ -150,7 +151,7 @@ class ModelDatabaseInfo:
         )
 
 
-@attr.s()
+@attr.s(hash=True)
 class R2DTResultInfo(object):
     urs = attr.ib(validator=is_a(str))
     db_info = attr.ib(validator=is_a(ModelDatabaseInfo))
@@ -183,7 +184,13 @@ class R2DTResultInfo(object):
 
     @property
     def svg(self) -> Path:
-        return self.path / "svg" / self.__filename__("colored.svg")
+        base = self.path / "svg"
+        paths = list(base.glob(f"{self.urs}*.svg"))
+        if not paths:
+            raise ValueError(f"Could not figure out svg filename for {self}")
+        if len(paths) > 1:
+            raise ValueError("Too many possible svg files")
+        return paths[0]
 
     @property
     def fasta(self) -> Path:
@@ -200,18 +207,26 @@ class R2DTResultInfo(object):
                 return base / "ribovision-ssu"
             raise ValueError("Could not find correct data path: %s" % parts)
 
-        if self.source == Source.rfam and self.model_name == "RF00005":
+        if self.source == Source.rfam and self.model_name in {"RF00005", "tRNA"}:
             return base / "RF00005"
         return base / self.source.result_directory()
 
     @property
     def overlaps(self) -> Path:
-        return self.source_directory / self.__filename__("overlaps")
+        base = self.source_directory
+        paths = list(base.glob(f"{self.urs}*.overlaps"))
+        if not paths:
+            print(self)
+            raise ValueError(
+                f"Could not figure out overlaps filename for {self.source_directory}/{self.urs}")
+        if len(paths) > 1:
+            raise ValueError(f"Too many overlaps files for {self.urs}")
+        return paths[0]
 
     def publish_path(self, suffix="", compressed=False) -> Path:
         publish = Path(self.urs[0:3])
         for start in range(4, 11, 2):
-            publish = publish / self.urs[start : (start + 2)]
+            publish = publish / self.urs[start: (start + 2)]
         append = ""
         if suffix:
             append = f"-{suffix}"
@@ -238,7 +253,7 @@ class R2DTResultInfo(object):
     def has_ribovore(self):
         if self.source in {Source.crw, Source.ribovision}:
             return True
-        if self.source == Source.rfam and self.model_name != "RF00005":
+        if self.source == Source.rfam and self.model_name not in {"RF00005", "tRNA"}:
             return True
         return False
 
@@ -251,17 +266,16 @@ class R2DTResultInfo(object):
         if self.source == Source.rfam and not self.model_name.startswith("RF"):
             if extension == "fasta":
                 return f"{self.urs}.{extension}"
-            assert self.model_alias.startswith("RF"), f"No existing alias for {self}"
+            assert self.model_alias.startswith(
+                "RF"), f"No existing alias for {self}"
             return f"{self.urs}-{self.model_alias}.{extension}"
         return f"{self.urs}-{self.model_name}.{extension}"
 
 
 @attr.s()
 class R2DTResult(object):
-    info: R2DTResultInfo = attr.ib(validator=is_a(R2DTResultInfo))
-    hit_info: RibovoreResult = attr.ib(
-        validator=optional(is_a(RibovoreResult)), default=None
-    )
+    info = attr.ib(validator=is_a(R2DTResultInfo))
+    hit_info = attr.ib(validator=optional(is_a(RibovoreResult)), default=None)
 
     @classmethod
     def from_info(cls, info: R2DTResultInfo, hit_info=None):
@@ -324,12 +338,7 @@ class R2DTResult(object):
     def model_length(self):
         return self.info.model_length
 
-    def should_show(self, model) -> bool:
-        if self.info.source is not Source.crw:
-            return True
-        return should_show.from_result(model, self)
-
-    def writeable(self, model):
+    def writeable(self):
         model_start = None if not self.hit_info else self.hit_info.mfrom
         model_stop = None if not self.hit_info else self.hit_info.mto
         sequence_start = None if not self.hit_info else self.hit_info.bfrom
@@ -347,7 +356,7 @@ class R2DTResult(object):
             sequence_start,
             sequence_stop,
             sequence_coverage,
-            self.should_show(model),
+            True,
         ]
 
 

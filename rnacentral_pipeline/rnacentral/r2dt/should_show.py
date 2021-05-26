@@ -19,7 +19,6 @@ import logging
 import typing as ty
 from pathlib import Path
 
-import joblib
 from more_itertools import chunked
 import pandas as pd
 from pypika import Table, Query
@@ -28,8 +27,6 @@ import psycopg2.extras
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import train_test_split
-
-from rnacentral_pipeline.rnacentral.r2dt import data
 
 LOGGER = logging.getLogger(__name__)
 
@@ -57,23 +54,6 @@ class Attributes(enum.Enum):
     @classmethod
     def model_columns(cls) -> ty.List[str]:
         return [attr.column_name() for attr in cls]
-
-    def r2dt_result_value(self, result):
-        if self is Attributes.SourceIndex:
-            return SOURCE_MAP[result.source]
-        if self is Attributes.SequenceLength:
-            return result.sequence_length
-        if self is Attributes.DiagramSequenceLength:
-            return result.hit_info.length
-        if self is Attributes.ModelLength:
-            return result.hit_info.model_length
-        if self is Attributes.ModelBasepairCount:
-            return result.model_basepairs
-        if self is Attributes.DiagramBps:
-            return result.basepair_count()
-        if self is Attributes.DiagramOverlapCount:
-            return result.overlap_count()
-        raise ValueError("Unhandled Attribute")
 
     def column_name(self) -> str:
         return self.value
