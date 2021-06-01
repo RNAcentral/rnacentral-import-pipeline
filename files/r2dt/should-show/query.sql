@@ -6,5 +6,5 @@ COPY (
   on
     models.id = layout.model_id
   where
-    models.source = 'crw'
+    models.model_source = 'crw'
 ) TO STDOUT
