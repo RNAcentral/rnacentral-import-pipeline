@@ -1,5 +1,5 @@
 LOAD CSV
-FROM ALL FILENAMES MATCHING ~<should-show*.csv$>
+FROM ALL FILENAMES MATCHING ~<r2dt-should-show.*.csv$>
 HAVING FIELDS (
   urs,
   should_show
