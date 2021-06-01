@@ -53,6 +53,8 @@ class Context:
     def term_is_a(self, name: str, term: RnaType) -> bool:
         target = name
         if not name.startswith('SO:'):
+            if name == 'lnc_RNA':
+                name = 'lncRNA'
             target = self.so_tree.name_to_id[name]
         source = term.so_term.so_id
         if source == target:
