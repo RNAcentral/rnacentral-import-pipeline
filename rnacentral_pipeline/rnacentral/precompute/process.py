@@ -34,9 +34,10 @@ class Writer:
     precompute = attr.ib()
     qa = attr.ib()
 
-    def write(self, update: AnUpdate):
-        self.precompute.writerows(update.as_writeables())
-        self.qa.writerows(update.writeable_statuses())
+    def write(self, updates: ty.Iterable[AnUpdate]):
+        for update in updates:
+            self.precompute.writerows(update.as_writeables())
+            self.qa.writerows(update.writeable_statuses())
 
 
 def parse(context_path: Path, data_path: Path) -> ty.Iterable[AnUpdate]:
