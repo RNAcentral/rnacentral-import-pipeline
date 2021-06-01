@@ -1,5 +1,5 @@
 LOAD CSV
-FROM ALL FILENAMES MATCHING ~<traveler-attempted.*csv$>
+FROM ALL FILENAMES MATCHING ~<r2dt-attempted.*csv$>
 HAVING FIELDS (
   urs
 )
@@ -12,6 +12,16 @@ WITH
   skip header = 0,
   fields escaped by double-quote,
   fields terminated by ','
+
+BEFORE LOAD DO
+$$
+DROP TABLE IF EXISTS load_traveler_attempted;
+$$,
+$$
+CREATE TABLE load_traveler_attempted (
+  urs text primary key
+);
+$$
 
 AFTER LOAD DO
 $$
