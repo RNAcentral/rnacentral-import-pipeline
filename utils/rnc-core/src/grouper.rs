@@ -1,7 +1,7 @@
 use serde::{
     de::DeserializeOwned,
-    Serialize,
     Deserialize,
+    Serialize,
 };
 
 use std::{
@@ -34,8 +34,7 @@ pub enum Criteria {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub enum Grouped<T>
-{
+pub enum Grouped<T> {
     Multiple {
         id: usize,
         data: Vec<T>,
@@ -107,7 +106,13 @@ where
     }
 }
 
-pub fn group<T>(criteria: Criteria, path: &Path, min: usize, max: usize, output: &Path) -> Result<()>
+pub fn group<T>(
+    criteria: Criteria,
+    path: &Path,
+    min: usize,
+    max: usize,
+    output: &Path,
+) -> Result<()>
 where
     T: DeserializeOwned + HasIndex + Serialize,
 {
