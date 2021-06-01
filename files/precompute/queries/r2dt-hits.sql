@@ -18,7 +18,7 @@ JOIN rnc_secondary_structure_layout ss
 on
   ss.urs = todo.urs
   and ss.should_show = true
-JOIN rnc_secondary_structure_layout_models r2dt
+  and coalesce(ss.assigned_should_show, ss.inferred_should_show) = true
 on
   r2dt.id = ss.model_id
 order by todo.precompute_urs_id, todo.id
