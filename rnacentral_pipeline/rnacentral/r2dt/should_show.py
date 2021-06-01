@@ -19,6 +19,7 @@ import logging
 import typing as ty
 from pathlib import Path
 
+import joblib
 from more_itertools import chunked
 import pandas as pd
 from pypika import Table, Query
