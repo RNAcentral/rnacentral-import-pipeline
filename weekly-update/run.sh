@@ -16,7 +16,7 @@ if [[ -d singularity/bind/r2dt/ ]]; then
   rm -r singularity/bind/r2dt/
 fi
 
-mkdir singularity/bind/r2dt/data
+mkdir -p singularity/bind/r2dt/data
 pushd singularity/bind/r2dt/data
 wget -O cms.tar.gz https://www.dropbox.com/s/3ie8kzb8ol658s0/cms.tar.gz?dl=1
 tar xf cms.tar.gz
