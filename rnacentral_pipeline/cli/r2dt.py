@@ -32,14 +32,6 @@ def cli():
 @cli.command("process-svgs")
 @click.option("--allow-missing", is_flag=True, default=False)
 @click.argument("model_info", type=click.File("r"))
-@click.argument(
-    "directory",
-    type=click.Path(
-        writable=False,
-        dir_okay=True,
-        file_okay=False,
-    ),
-)
 @click.argument("directory", type=click.Path())
 @click.argument("output", type=click.File("w"))
 def process_svgs(model_info, directory, output, allow_missing=False):
