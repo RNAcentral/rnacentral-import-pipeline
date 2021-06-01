@@ -6,7 +6,7 @@ process import_model_info {
   path('info.csv')
 
   """
-  find cms/rfam -type f -name '*.cm' | xargs -I {} cmstat {}  | grep -v ^\\# | awk '{ printf("%s,%d,%d\n", $3, $6, $8); }' info.csv
+  find cms/rfam -type f -name '*.cm' | xargs -I {} cmstat {}  | grep -v ^\\# | awk '{ printf("%s,%d,%d\n", \$3, \$6, \$8); }' info.csv
   """
 }
 
@@ -110,20 +110,24 @@ process store_secondary_structures {
   memory params.r2dt.store.memory
 
   input:
-  tuple path('data*.csv'), path(ctl)
-  tuple path('attempted*.csv'), path(attempted_ctl)
-  tuple path(urs_sql), path(model), path(should_show_ctl)
+  path('data*.csv')
+  path(ctl)
+  path('attempted*.csv')
+  path(attempted_ctl)
+  path(urs_sql)
+  path(model)
+  path(should_show_ctl)
 
   output:
   val('r2dt done')
 
   """
   split-and-load $ctl 'data*.csv' ${params.r2dt.data_chunk_size} r2dt-data
-  split-and-load $attempted_ctl 'attemped*.csv' ${params.r2dt.data_chunk_size} r2dt-attempted
+  split-and-load $attempted_ctl 'attempted*.csv' ${params.r2dt.data_chunk_size} r2dt-attempted
 
   psql -f "$urs_sql" "$PGDATABASE" > urs.txt
-  rnac r2dt should-show $model urs.txt should_show.csv
-  split-and-load $should_show_ctl 'should_show*.csv' ${params.r2dt.data_chunk_size} r2dt-should-show
+  rnac r2dt should-show compute $model urs.txt should-show.csv
+  split-and-load $should_show_ctl 'should-show*.csv' ${params.r2dt.data_chunk_size} r2dt-should-show
   """
 }
 
@@ -163,8 +167,8 @@ workflow r2dt {
     Channel.fromPath('files/r2dt/should-show/model.joblib') | set { ss_model }
     Channel.fromPath('files/r2dt/should-show/query.sql') | set { ss_query }
     Channel.fromPath('files/r2dt/should-show/update.ctl') | set { ss_ctl }
-
-    ss_query | combine(ss_model, ss_ctl) | set { should_show }
+    Channel.fromPath('files/r2dt/load.ctl') | set { load_ctl }
+    Channel.fromPath('files/r2dt/attempted.ctl') | set { attempted_ctl }
 
     ready | common | set { model_mapping }
 
@@ -180,10 +184,11 @@ workflow r2dt {
 
     data | publish_layout
     data | parse_layout 
-    parse_layout.out.data | collect | combine(Channel.fromPath('files/r2dt/load.ctl')) | set { to_load }
-    parse_layout.out.attempted | collect | combine(Channel.fromPath('files/r2dt/attempted.ctl')) | set { attempted }
 
-    store_secondary_structures(to_load, attempted, should_show) | set { done }
+    parse_layout.out.data | collect | set { data }
+    parse_layout.out.attempted | collect | set { attempted }
+
+    store_secondary_structures(data, load_ctl, attempted, attempted_ctl, ss_query, ss_model, ss_ctl) | set { done }
 }
 
 workflow {
