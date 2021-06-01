@@ -78,6 +78,7 @@ process query_accession_range {
   tag { "$min-$max" }
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
   maxForks params.precompute.maxForks
+  memory '4GB'
 
   input:
   tuple val(min), val(max), path(query), val(upi_start), val(upi_stop)
