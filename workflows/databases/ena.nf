@@ -7,7 +7,7 @@ process fetch_single_files {
   tuple val(name), val(remote)
 
   output:
-  path("**/*.ncr.gz")
+  path("$name/*.ncr.gz")
 
   """
   rsync \
@@ -20,15 +20,6 @@ process fetch_single_files {
 
   find $name -type f -empty -delete
   find $name -type f | xargs -I {} gzip --quiet -l {} | awk '{ if (\$2 == 0) print \$4 }' | xargs -I {} rm {}.gz
-
-  find $name -type f |\
-  xargs -I {} zgrep -Hc '^ID' {} |\
-  awk -F ':' '{ if (\$2 > 100000) print \$1 }' |\
-  xargs -I {} gzip -d {}
-
-  mkdir large-splits
-  find $name -type f -name '*.ncr' | xargs -I {} split-ena --max-sequences $params.databases.ena.large_chunk_size --remove-file {} large-splits
-  find large-splits -type f | xargs -I {} gzip {}
   """
 }
 
@@ -42,34 +33,22 @@ process find_wgs_directories {
   script:
   def remote = params.databases.ena.remote
   """
-  find $remote/wgs/public -mindepth 1 -maxdepth 1 -not -empty > paths
+  cp $remote/wgs/*.tar .
   """
 }
 
-process fetch_wgs_directories {
+process expand_wgs_directories {
   tag { "${file(to_fetch).name}" }
-  clusterOptions '-sp 90'
 
   input:
-  val(to_fetch)
+  val(tar_file)
 
   output:
-  path('files/*')
+  path("${tar_file.name}.ncr.gz")
 
   """
-  rsync \
-    -avPL \
-    --prune-empty-dirs \
-    --include='**/*.ncr.gz' \
-    --exclude='*.fasta.gz' \
-    "$to_fetch" raw
-
-  mkdir files
-  mkdir chunks
-  find raw -type f > ids
-  split -n l/60 ids chunks/chunk-
-  find chunks -type f -empty -delete
-  find chunks/ -type f | xargs -I {} group-wgs {} "${file(to_fetch).name}" files
+  tar -xvf "$tar_file"
+  find . -name '*.ncr.gz' | zcat > "${tar_file.name}.ncr.gz"
   """
 }
 
@@ -118,22 +97,22 @@ workflow ena {
   emit: data
   main:
     Channel.fromPath('files/import-data/ena/tpa-urls.txt') | set { urls }
+    fetch_metadata(urls) | set { metadata }
 
-    find_wgs_directories \
-    | splitCsv \
-    | map { row -> row[0] } \
-    | fetch_wgs_directories \
+    fetch_wgs_directories \
+    | expand_wgs_directories \
     | set { wgs_files }
 
     Channel.fromList([
-      ['con-std', "$params.databases.ena.remote/con-std_latest/"],
-      ['tls', "$params.databases.ena.remote/tls/public/"],
-      ['tsa', "$params.databases.ena.remote/tsa/public/"],
+      ['con', "$params.databases.ena.remote/con/"],
+      ['std', "$params.databases.ena.remote/std/"],
+      ['tls', "$params.databases.ena.remote/tls/"],
+      ['tsa', "$params.databases.ena.remote/tsa/"],
     ]) \
     | fetch_single_files \
     | mix(wgs_files) \
     | flatten \
-    | combine(fetch_metadata(urls)) \
+    | combine(metadata) \
     | process_file \
     | set { data }
 }
