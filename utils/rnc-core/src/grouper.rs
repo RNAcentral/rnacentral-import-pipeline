@@ -146,7 +146,7 @@ where
                 expected += 1;
             },
             Greater => {
-                return Err(anyhow!("Somehow got too small index {}", id));
+                return Err(anyhow!("Somehow got too small index {}, expected, {}", &id, &expected));
             },
         }
 
