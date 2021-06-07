@@ -1,4 +1,4 @@
-process fetch_single_files {
+process fetch_directory {
   tag { "$name" }
   when { params.databases.ena.run }
   clusterOptions '-sp 100'
@@ -7,7 +7,8 @@ process fetch_single_files {
   tuple val(name), val(remote)
 
   output:
-  path("$name/*.ncr.gz")
+  path "$name/*.ncr.gz", emit: single_files
+  path "$name/*.gz", emit: tar_files
 
   """
   rsync \
@@ -15,33 +16,20 @@ process fetch_single_files {
     --prune-empty-dirs \
     --include='*/' \
     --include='**/*.ncr.gz' \
+    --include'**/*.tar'
     --exclude='*.fasta.gz' \
     "$remote" "$name"
 
   find $name -type f -empty -delete
-  find $name -type f | xargs -I {} gzip --quiet -l {} | awk '{ if (\$2 == 0) print \$4 }' | xargs -I {} rm {}.gz
+  find $name -type f -name '*.gz' | xargs -I {} gzip --quiet -l {} | awk '{ if (\$2 == 0) print \$4 }' | xargs -I {} rm {}.gz
   """
 }
 
-process find_wgs_directories {
-  when { params.databases.ena.run }
-  clusterOptions '-sp 100'
-
-  output:
-  path('paths')
-
-  script:
-  def remote = params.databases.ena.remote
-  """
-  cp $remote/wgs/*.tar .
-  """
-}
-
-process expand_wgs_directories {
-  tag { "${file(to_fetch).name}" }
+process expand_tar_files {
+  tag { "${to_fetch.name}" }
 
   input:
-  val(tar_file)
+  path(tar_file)
 
   output:
   path("${tar_file.name}.ncr.gz")
@@ -99,18 +87,19 @@ workflow ena {
     Channel.fromPath('files/import-data/ena/tpa-urls.txt') | set { urls }
     fetch_metadata(urls) | set { metadata }
 
-    fetch_wgs_directories \
-    | expand_wgs_directories \
-    | set { wgs_files }
-
     Channel.fromList([
       ['con', "$params.databases.ena.remote/con/"],
       ['std', "$params.databases.ena.remote/std/"],
       ['tls', "$params.databases.ena.remote/tls/"],
       ['tsa', "$params.databases.ena.remote/tsa/"],
+      ['wgs', "$params.databases.ena.remote/wgs/"],
     ]) \
-    | fetch_single_files \
-    | mix(wgs_files) \
+    | fetch_directory
+
+    fetch_directory.tar_files | expand_tar_files | set { tar_sequences }
+
+    fetch_directory.single_files \
+    | mix(tar_sequences) \
     | flatten \
     | combine(metadata) \
     | process_file \
