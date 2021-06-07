@@ -27,7 +27,7 @@ def upi_taxid_ranges(ranges, tablename, db_url):
             for (start, stop) in ranges:
                 query = Query.from_(table).\
                     select(fn.Min(table.id),
-                            fn.Max(table.id)).\
+                           fn.Max(table.id)).\
                     where(table.precompute_urs_id.isin([start, stop]))
 
                 cur.execute(str(query), ((start, stop),))
@@ -37,7 +37,7 @@ def upi_taxid_ranges(ranges, tablename, db_url):
                 yield (start, upi_start, upi_max)
 
 
-def write(handle, output, tablename=None, db_url=None):
+def write(handle, output, tablename='precompute_urs_taxid', db_url=None):
     reader = csv.reader(handle)
     ranges = [(start, stop) for (_tablename, start, stop) in reader]
     writer = csv.writer(output)
