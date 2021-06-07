@@ -67,8 +67,7 @@ pub fn write_merge(
     let interacting_proteins = interacting_proteins.into_iter().assume_sorted_by_key();
 
     let interacting_rnas = JsonlIterator::from_path(interacting_rnas_file)?;
-    let interacting_rnas =
-        interacting_rnas.group_by(|i: &interacting_rna::InteractingRna| i.id);
+    let interacting_rnas = interacting_rnas.group_by(|i: &interacting_rna::InteractingRna| i.id);
     let interacting_rnas = interacting_rnas.into_iter().assume_sorted_by_key();
 
     let precompute = JsonlIterator::from_path(precompute_file)?;
@@ -113,7 +112,11 @@ pub fn write_merge(
             rfam_hits,
         ) = entry;
 
-        let so_rna_type_tree = so_info[precompute.so_rna_type()].clone();
+        let pre_so_type = precompute.so_rna_type();
+        if !so_info.contains_key(pre_so_type) {
+            return Err(anyhow!("Could not find SeqOnt info for {}", &pre_so_type));
+        }
+        let so_rna_type_tree = so_info[pre_so_type].clone();
 
         let raw = entry::Raw {
             id,
