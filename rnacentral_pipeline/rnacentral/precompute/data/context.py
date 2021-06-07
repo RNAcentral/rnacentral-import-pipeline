@@ -19,7 +19,6 @@ from pathlib import Path
 import attr
 from attr.validators import instance_of as is_a
 import networkx as nx
-from sqlitedict import SqliteDict
 
 from rnacentral_pipeline.databases.data import RnaType
 from rnacentral_pipeline.rnacentral.repeats import tree
