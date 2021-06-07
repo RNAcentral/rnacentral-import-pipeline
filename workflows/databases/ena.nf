@@ -32,11 +32,11 @@ process expand_tar_files {
   path(tar_file)
 
   output:
-  path("${tar_file.name}.ncr.gz")
+  path("${tar_file.simpleName}.ncr.gz")
 
   """
   tar -xvf "$tar_file"
-  find . -name '*.ncr.gz' | cat > "${tar_file.name}.ncr.gz"
+  find "${tar_file.simpleName}" -name '*.ncr.gz' | xargs cat > "${tar_file.simpleName}.ncr.gz"
   """
 }
 
@@ -57,7 +57,7 @@ process fetch_metadata {
 }
 
 process process_file {
-  memory '4GB'
+  memory '8GB'
   tag { "$raw" }
 
   input:
@@ -95,13 +95,16 @@ workflow ena {
       ['wgs', "$params.databases.ena.remote/wgs/"],
     ]) \
     | fetch_directory \
+    | flatten \
     | branch {
-      tar: it.extension == 'tar'
-      gz: true
+      tar: it.getExtension() == 'tar'
+      gz: it.getExtension() == 'gz'
+      other: true
     } \
     | set { files }
 
     files.tar | expand_tar_files | set { tar_sequences }
+    files.other.map { error("Unknown fetched file ${it}") }
 
     files.gz \
     | mix(tar_sequences) \
