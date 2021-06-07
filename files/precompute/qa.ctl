@@ -41,7 +41,7 @@ insert into qa_status (
   from_repetitive_region,
   messages
 ) (
-SELECT distinct
+SELECT distinct on (rna_id)
   rna_id,
   upi,
   taxid,

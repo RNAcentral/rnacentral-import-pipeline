@@ -50,7 +50,7 @@ insert into rnc_rna_precomputed (
   last_release,
   so_rna_type
 ) (
-SELECT DISTINCT
+SELECT DISTINCT ON (id)
   id,
   upi,
   taxid,
