@@ -22,16 +22,25 @@ import networkx as nx
 import obonet
 
 
-REMOTE_ONTOLOGY = 'https://raw.githubusercontent.com/The-Sequence-Ontology/SO-Ontologies/master/Ontology_Files/so-simple.obo'
+REMOTE_ONTOLOGY = "https://raw.githubusercontent.com/The-Sequence-Ontology/SO-Ontologies/master/Ontology_Files/so-simple.obo"
 
 LOGGER = logging.getLogger(__name__)
+
+BASE_SO_TERMS = [
+    "ncRNA",
+    "intron",
+    "mRNA_region",
+    "transcript",
+]
 
 
 @lru_cache()
 def load_ontology(filename):
     ont = obonet.read_obo(filename)
-    ont.id_to_name = {id_: data.get('name') for id_, data in ont.nodes(data=True)}
-    ont.name_to_id = {data['name']: id_ for id_, data in ont.nodes(data=True) if 'name' in data}
+    ont.id_to_name = {id_: data.get("name") for id_, data in ont.nodes(data=True)}
+    ont.name_to_id = {
+        data["name"]: id_ for id_, data in ont.nodes(data=True) if "name" in data
+    }
     ont.insdc_to_id = {}
     for id_, node in ont.nodes(data=True):
         for insdc in insdc_synonyms(node):
@@ -39,22 +48,26 @@ def load_ontology(filename):
     return ont
 
 
-def compute_rna_type_tree(ontology, child, parent):
-    paths = nx.all_simple_paths(ontology, source=child, target=parent)
-    paths = list(paths)
-    if not paths:
-        LOGGER.error("Assumes all SO terms are ncRNA's currently: %s -> %s",
-                     child, parent)
-        return [(child, ontology.nodes[child]['name'])]
+def compute_rna_type_tree(ontology, child, parents):
+    for parent in parents:
+        paths = nx.all_simple_paths(ontology, source=child, target=parent)
+        paths = list(paths)
+        if not paths:
+            continue
 
-    if len(paths) > 1:
-        LOGGER.warn("Too many paths currently in %s", paths)
+        if len(paths) > 1:
+            LOGGER.warn("Too many paths currently in %s", paths)
 
-    tree = []
-    for node_id in paths[0]:
-        node = ontology.nodes[node_id]
-        tree.insert(0, (node_id, node['name']))
-    return tree
+        tree = []
+        for node_id in paths[0]:
+            node = ontology.nodes[node_id]
+            tree.insert(0, (node_id, node["name"]))
+        return tree
+
+    LOGGER.error(
+        "Assumes all SO terms are one of %s, %s is not", ", ".join(parents), child
+    )
+    return [(child, ontology.nodes[child]["name"])]
 
 
 @lru_cache()
@@ -70,16 +83,18 @@ def rna_type_tree(ontology, child):
     else:
         raise ValueError("Unknown node: " + child)
 
-    base_node = ontology.name_to_id['ncRNA']
-    if not node.get('so_term_tree', None):
-        node['so_term_tree'] = compute_rna_type_tree(ontology, nid, base_node)
-    return node['so_term_tree']
+    if not node.get("so_term_tree", None):
+        parents = [ontology.name_to_id[n] for n in BASE_SO_TERMS]
+        node["so_term_tree"] = compute_rna_type_tree(ontology, nid, parents)
+
+    print(node)
+    return node["so_term_tree"]
 
 
 def insdc_synonyms(node):
-    pattern = re.compile(r'INSDC_(?:feature|qualifier):(\w+)')
-    for synonym in node.get('synonym', []):
-        if 'EXACT' not in synonym:
+    pattern = re.compile(r"INSDC_(?:feature|qualifier):(\w+)")
+    for synonym in node.get("synonym", []):
+        if "EXACT" not in synonym:
             continue
         match = re.search(pattern, synonym)
         if not match:
@@ -91,7 +106,7 @@ def name_index(ontology, filename) -> SqliteDict:
     mapping = SqliteDict(filename)
     for so_id, node in ontology.nodes(data=True):
         mapping[so_id] = so_id
-        name = node.get('name', None)
+        name = node.get("name", None)
         if name:
             mapping[name] = so_id
         for insdc_name in insdc_synonyms(node):
