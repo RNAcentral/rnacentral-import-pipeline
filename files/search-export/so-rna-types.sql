@@ -1,9 +1,7 @@
 COPY (
 select distinct
-    pre.so_rna_type
+    coalesce(pre.assigned_so_rna_type, pre.so_rna_type)
 FROM rnc_rna_precomputed pre
 where
-  pre.taxid is not null
-  and pre.is_active = true
-  and pre.so_rna_type is not null
+  coalesce(pre.assigned_so_rna_type, pre.so_rna_type) is not null
 ) TO STDOUT
