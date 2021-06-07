@@ -143,7 +143,6 @@ workflow precompute {
     Channel.fromPath('files/precompute/qa.ctl') | set { qa_ctl }
     Channel.fromPath('files/precompute/post-load.sql') | set { post_load }
 
-    // Various metadata components for precompute
     Channel.fromPath('files/precompute/queries/basic.sql') | set { basic_sql }
     Channel.fromPath('files/precompute/queries/coordinates.sql') | set { coordinate_sql }
     Channel.fromPath('files/precompute/queries/rfam-hits.sql') | set { rfam_sql }
