@@ -7,8 +7,7 @@ process fetch_directory {
   tuple val(name), val(remote)
 
   output:
-  path "$name/*.ncr.gz", emit: single_files
-  path "$name/*.gz", emit: tar_files
+  path "$name/*.{ncr.gz,tar}"
 
   """
   rsync \
@@ -16,7 +15,7 @@ process fetch_directory {
     --prune-empty-dirs \
     --include='*/' \
     --include='**/*.ncr.gz' \
-    --include'**/*.tar'
+    --include='**/*.tar' \
     --exclude='*.fasta.gz' \
     "$remote" "$name"
 
@@ -27,6 +26,7 @@ process fetch_directory {
 
 process expand_tar_files {
   tag { "${to_fetch.name}" }
+  clusterOptions '-sp 90'
 
   input:
   path(tar_file)
@@ -36,7 +36,7 @@ process expand_tar_files {
 
   """
   tar -xvf "$tar_file"
-  find . -name '*.ncr.gz' | zcat > "${tar_file.name}.ncr.gz"
+  find . -name '*.ncr.gz' | cat > "${tar_file.name}.ncr.gz"
   """
 }
 
@@ -94,11 +94,16 @@ workflow ena {
       ['tsa', "$params.databases.ena.remote/tsa/"],
       ['wgs', "$params.databases.ena.remote/wgs/"],
     ]) \
-    | fetch_directory
+    | fetch_directory \
+    | branch {
+      tar: it.extension == 'tar'
+      gz: true
+    } \
+    | set { files }
 
-    fetch_directory.tar_files | expand_tar_files | set { tar_sequences }
+    files.tar | expand_tar_files | set { tar_sequences }
 
-    fetch_directory.single_files \
+    files.gz \
     | mix(tar_sequences) \
     | flatten \
     | combine(metadata) \
