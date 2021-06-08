@@ -8,6 +8,7 @@ use serde_with::CommaSeparator;
 
 use anyhow::Result;
 use rnc_core::grouper;
+use phf::phf_map;
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Precompute {
@@ -29,9 +30,30 @@ pub struct PrecomputeSummary {
     databases: Vec<String>,
 }
 
+static SO_MAPPING: phf::Map<&'static str, &'static str> = phf_map! {
+    "SO:0001263" => "SO:0000655",
+    "SO:0001637" => "SO:0000252",
+    "SO:0001427" => "SO:0000673",
+    "SO:1001268" => "SO:0000673",
+    "SO:0000122" => "SO:0000673",
+    "SO:0005836" => "SO:0000673",
+    "SO:0000185" => "SO:0000673",
+    "SO:0000204" => "SO:0000673",
+    "SO:0000140" => "SO:0000673",
+    "SO:0000243" => "SO:0000673",
+    "SO:0000205" => "SO:0000673",
+    "SO:1001274" => "SO:0000673",
+    "SO:0000726" => "SO:0000673",
+    "SO:0000077" => "SO:0000673",
+    "SO:0000836" => "SO:0000673",
+    "SO:0000233" => "SO:0000673",
+};
+
+
 impl Precompute {
     pub fn so_rna_type(&self) -> &str {
-        &self.so_rna_type
+        let given: &str = &self.so_rna_type;
+        SO_MAPPING.get(given).cloned().unwrap_or(given)
     }
 }
 

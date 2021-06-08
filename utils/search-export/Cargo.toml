@@ -18,6 +18,7 @@ simplelog = "^0.7.6"
 sorted-iter = "0.1.7"
 structopt = "0.3"
 thiserror = "1.0.20"
+phf = { version = "0.7.24", features = ["macros"] }
 
 [dependencies.serde_with]
 version = "1.5.1"
