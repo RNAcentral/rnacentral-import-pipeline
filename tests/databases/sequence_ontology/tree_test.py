@@ -63,6 +63,7 @@ def load():
                 ("SO:0000374", "ribozyme"),
             ],
         ),
+        ("ncRNA", [("SO:0000655", "ncRNA")]),
     ],
 )
 def test_can_compute_some_simple_paths(so_term_id, expected):
