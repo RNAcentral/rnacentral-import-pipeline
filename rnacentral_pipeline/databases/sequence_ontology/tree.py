@@ -50,6 +50,8 @@ def load_ontology(filename):
 
 def compute_rna_type_tree(ontology, child, parents):
     for parent in parents:
+        if child == parent:
+            break
         paths = nx.all_simple_paths(ontology, source=child, target=parent)
         paths = list(paths)
         if not paths:
@@ -87,7 +89,6 @@ def rna_type_tree(ontology, child):
         parents = [ontology.name_to_id[n] for n in BASE_SO_TERMS]
         node["so_term_tree"] = compute_rna_type_tree(ontology, nid, parents)
 
-    print(node)
     return node["so_term_tree"]
 
 
