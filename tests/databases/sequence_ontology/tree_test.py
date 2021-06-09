@@ -87,30 +87,3 @@ def test_can_create_expected_mapping(so_id, name):
         mapping = so.name_index(ont, tmp.name)
         assert mapping[so_id] == so_id
         assert mapping[name] == so_id
-
-
-# 'transcript',
-# 'pre-miRNA',
-# 'hammerhead_ribozyme',
-# 'riboswitch',
-# 'ncRNA_gene',
-# 'ribozyme',
-# 'regulatory_region',
-# 'primary_transcript',
-# 'group_II_intron',
-# 'five_prime_UTR',
-# 'group_I_intron',
-# 'cRISPR',
-# 'attenuator',
-# 'internal_ribosome_entry_site',
-# 'autocatalytically_spliced_intron',
-# 'three_prime_UTR',
-# 'sECIS_element',
-# 'repeat_unit',
-# 'antisense',
-# 'mRNA_region',
-# 'mature_transcript',
-# 'cis_regulatory_frameshift_element',
-# 'recoding_stimulatory_region',
-# 'rNA_sequence_secondary_structure',
-# 'rRNA_gene',
