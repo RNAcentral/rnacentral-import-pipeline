@@ -63,6 +63,7 @@ def load():
                 ("SO:0000374", "ribozyme"),
             ],
         ),
+        ("hammerhead_ribozyme", [("SO:0000374", "ribozyme"), ("SO:0000380", "hammerhead_ribozyme")]),
         ("ncRNA", [("SO:0000655", "ncRNA")]),
     ],
 )

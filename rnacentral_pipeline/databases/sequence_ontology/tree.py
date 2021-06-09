@@ -49,6 +49,12 @@ def load_ontology(filename):
 
 
 def compute_rna_type_tree(ontology, child, parents):
+    if child == 'SO:0000380':
+        return [
+                ('SO:0000374', 'ribozyme'),
+                ('SO:0000380', 'hammerhead_ribozyme'),
+        ]
+
     for parent in parents:
         if child == parent:
             break
