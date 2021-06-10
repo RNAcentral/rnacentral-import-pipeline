@@ -4,11 +4,9 @@ nextflow.enable.dsl = 2
 
 include { ftp_export } from './ftp-export'
 include { genes } from './genes'
-include { genome_mapping } from 'genome-mapping'
 include { import_data } from './import-data'
 include { precompute } from './precompute'
-include { qa } from './qa'
-include { r2dt } from './r2dt'
+include { analyze } from './analyze'
 include { search_export } from './search-export'
 include { sequence_search_export } from './sequence-search-export'
 
@@ -18,23 +16,12 @@ workflow {
   | set { imported }
 
   imported \
-  | genome_mapping \
-  | ifEmpty('no mapping') \
-  | set { genome_mapping_results }
-
-  imported \
-  | qa \
-  | ifEmpty('no qa') \
-  | set { qa_results }
-
-  imported \
-  | r2dt \
-  | ifEmpty('no r2dt') \
-  | set { r2dt_results }
+  | analyze \
+  | ifEmpty('no analysis') \
+  | set { analyze_results }
 
   Channel.empty() \
-  | mix(qa_results, genome_mapping_results, r2dt_result) \
-  | collect \
+  | mix(analyze_results) \
   | map { 'done' } \
   | precompute \
   | ifEmpty('no precompute') \
