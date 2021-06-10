@@ -22,8 +22,7 @@ process fetch_directory {
   find copied -type f -empty -delete
   find copied -type f -name '*.gz' | xargs -I {} gzip --quiet -l {} | awk '{ if (\$2 == 0) print \$4 }' | xargs -I {} rm {}.gz
 
-  mkdir $name
-  pushd $name
+  pushd copied
   find . -type f -name '*.tar' | xargs -I {} tar -xvf {}
   popd
   find copied -type f -name '*.ncr.gz' | xargs zcat > ${name}.ncr
