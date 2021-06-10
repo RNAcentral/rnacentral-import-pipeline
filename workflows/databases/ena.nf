@@ -7,7 +7,7 @@ process fetch_directory {
   tuple val(name), val(remote)
 
   output:
-  path("$name/*.{ncr.gz,tar}")
+  path("${name}-chunks/*.ncr")
 
   """
   rsync \
@@ -23,41 +23,13 @@ process fetch_directory {
   find copied -type f -name '*.gz' | xargs -I {} gzip --quiet -l {} | awk '{ if (\$2 == 0) print \$4 }' | xargs -I {} rm {}.gz
 
   mkdir $name
-  cp copied/*.tar $name
-  find copied -type f -name '*.ncr.gz' | xargs cat > $name/${name}.ncr.gz
-  """
-}
+  pushd $name
+  find . -type f -name '*.tar' | xargs -I {} tar -xvf {}
+  popd
+  find copied -type f -name '*.ncr.gz' | xargs zcat > ${name}.ncr
 
-process expand_tar_files {
-  tag { "${to_fetch.name}" }
-  clusterOptions '-sp 90'
-
-  input:
-  path(tar_file)
-
-  output:
-  path("${tar_file.simpleName}/*.ncr.gz")
-
-  """
-  tar -xvf "$tar_file"
-  find "${tar_file.simpleName}" -name '*.ncr.gz' | xargs cat > ${tar_file.simpleName}.ncr.gz
-  """
-}
-
-process split_ncr {
-  tag { "$ncr.name" }
-  clusterOptions '-sp 80'
-
-  input:
-  path(ncr)
-
-  output:
-  path("${ncr.simpleName}/*.ncr")
-
-  """
-  zcat $ncr > sequences.ncr
-  mkdir ${ncr.simpleName}
-  split-ena --max-sequences ${params.databases.ena.max_sequences} sequences.ncr ${ncr.simpleName}
+  mkdir $name-chunks
+  split-ena --max-sequences ${params.databases.ena.max_sequences} ${name}.ncr ${name}-chunks
   """
 }
 
@@ -94,7 +66,7 @@ process process_file {
   else
     mkdir ribotyper-results
   fi
-  rnac ena parse --counts $raw-counts.txt $rraw $tpa ribotyper-results $model_lengths .
+  rnac ena parse --counts $raw-counts.txt $raw $tpa ribotyper-results $model_lengths .
 
   mkdir $baseDir/ena-counts 2>/dev/null || true
   cp $raw-counts.txt $baseDir/ena-counts/
@@ -115,21 +87,6 @@ workflow ena {
       ['wgs', "$params.databases.ena.remote/wgs/"],
     ]) \
     | fetch_directory \
-    | flatten \
-    | branch {
-      tar: it.getExtension() == 'tar'
-      gz: it.getExtension() == 'gz'
-      other: true
-    } \
-    | set { files }
-
-    files.tar | expand_tar_files | set { tar_sequences }
-    files.other.map { error("Unknown fetched file ${it}") }
-
-    files.gz \
-    | mix(tar_sequences) \
-    | flatten \
-    | split_ncr \
     | flatten \
     | combine(metadata) \
     | process_file \
