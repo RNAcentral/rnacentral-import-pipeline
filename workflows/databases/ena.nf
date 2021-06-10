@@ -32,11 +32,14 @@ process expand_tar_files {
   path(tar_file)
 
   output:
-  path("${tar_file.simpleName}.ncr.gz")
+  path("all-sequences/*.ncr.gz")
 
   """
   tar -xvf "$tar_file"
-  find "${tar_file.simpleName}" -name '*.ncr.gz' | xargs cat > "${tar_file.simpleName}.ncr.gz"
+  find "${tar_file.simpleName}" -name '*.ncr.gz' | xargs zcat > all-sequences.ncr
+  mkdir all-sequences
+  split-ena --max-sequences ${params.databases.ena.max_sequences} all-sequences.ncr all-sequences
+  find all-sequences -type f | xargs -I {} gzip {}
   """
 }
 
