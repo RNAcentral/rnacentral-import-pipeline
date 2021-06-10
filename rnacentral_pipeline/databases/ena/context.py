@@ -32,7 +32,8 @@ from rnacentral_pipeline.databases.ena import mapping as tpa
 
 @attr.s()
 class Context:
-    ribovore: ty.Optional[ribo.Results] = attr.ib(validator=optional(is_a(dict)))
+    ribovore: ty.Optional[ribo.Results] = attr.ib(
+        validator=optional(is_a(dict)))
     tpa = attr.ib(validator=is_a(tpa.TpaMappings))
     dr = attr.ib(validator=is_a(SqliteDict))
     counts = attr.ib(validator=is_a(Counter), factory=Counter)
@@ -61,13 +62,14 @@ class Context:
             writer.writeheader()
             writer.writerow(self.counts)
 
+
 @attr.s()
 class ContextBuilder:
     ribovore_path = attr.ib(validator=optional(is_a(Path)), default=None)
     lengths_path = attr.ib(validator=optional(is_a(Path)), default=None)
     tpa_path = attr.ib(validator=optional(is_a(Path)), default=None)
-    dr_path = attr.ib(validator=optional(is_a(Path)), default=None) 
-    cache_filename = attr.ib(validator=optional(is_a(Path)), default=None) 
+    dr_path = attr.ib(validator=optional(is_a(Path)), default=None)
+    cache_filename = attr.ib(validator=optional(is_a(Path)), default=None)
 
     def with_ribovore(self, ribovore_path: Path, lengths_path: Path):
         self.ribovore_path = ribovore_path
@@ -99,7 +101,7 @@ class ContextBuilder:
 
         ribovore: ty.Optional[ribo.Results] = None
         if self.ribovore_path and self.lengths_path:
-           ribovore = ribo.load(self.ribovore_path, self.lengths_path)
+            ribovore = ribo.load(self.ribovore_path, self.lengths_path)
 
         return Context(
             ribovore=ribovore,
