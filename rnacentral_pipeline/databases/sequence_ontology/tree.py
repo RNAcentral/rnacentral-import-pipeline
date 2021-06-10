@@ -33,11 +33,43 @@ BASE_SO_TERMS = [
     "transcript",
 ]
 
+ALTERNATES = {
+    'SO:0000380': [
+        ("SO:0000673", "transcript"),
+        ('SO:0000374', 'ribozyme'),
+        ('SO:0000380', 'hammerhead_ribozyme'),
+    ],
+    'SO:0000209': [
+        ('SO:0000655', 'ncRNA'),
+        ('SO:0000252', 'rRNA'),
+        ('SO:0000655', 'rRNA_primary_transcript'),
+    ],
+    'SO:0001904': [
+        ("SO:0000655", "ncRNA"),
+        ("SO:0001877", "lncRNA"),
+        ("SO:0001904", "antisense_lncRNA"),
+    ],
+}
+
+SKIPPED_TERMS = {
+    "SO:0000372",
+    "SO:0000990",
+    "SO:0000383",
+    "SO:0000376",
+    "SO:0000387",
+    "SO:0000378",
+    "SO:0000377",
+    "SO:0000389",
+    "SO:0000384",
+    "SO:0000388",
+}
+
 
 @lru_cache()
 def load_ontology(filename):
     ont = obonet.read_obo(filename)
-    ont.id_to_name = {id_: data.get("name") for id_, data in ont.nodes(data=True)}
+    ont.id_to_name = {id_: data.get("name")
+                      for id_, data in ont.nodes(data=True)}
     ont.name_to_id = {
         data["name"]: id_ for id_, data in ont.nodes(data=True) if "name" in data
     }
@@ -49,11 +81,8 @@ def load_ontology(filename):
 
 
 def compute_rna_type_tree(ontology, child, parents):
-    if child == 'SO:0000380':
-        return [
-                ('SO:0000374', 'ribozyme'),
-                ('SO:0000380', 'hammerhead_ribozyme'),
-        ]
+    if child in ALTERNATES:
+        return ALTERNATES[child]
 
     for parent in parents:
         if child == parent:
@@ -68,12 +97,15 @@ def compute_rna_type_tree(ontology, child, parents):
 
         tree = []
         for node_id in paths[0]:
+            if node_id in SKIPPED_TERMS:
+                continue
             node = ontology.nodes[node_id]
             tree.insert(0, (node_id, node["name"]))
         return tree
 
     LOGGER.error(
-        "Assumes all SO terms are one of %s, %s is not", ", ".join(parents), child
+        "Assumes all SO terms are one of %s, %s is not", ", ".join(
+            parents), child
     )
     return [(child, ontology.nodes[child]["name"])]
 

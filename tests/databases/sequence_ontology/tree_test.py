@@ -59,12 +59,67 @@ def load():
             "ribozyme",
             [
                 ("SO:0000673", "transcript"),
-                ("SO:0000372", "enzymatic_RNA"),
                 ("SO:0000374", "ribozyme"),
             ],
         ),
-        ("hammerhead_ribozyme", [("SO:0000374", "ribozyme"), ("SO:0000380", "hammerhead_ribozyme")]),
+        ("hammerhead_ribozyme", [
+            ("SO:0000673", "transcript"),
+            ("SO:0000374", "ribozyme"),
+            ("SO:0000380", "hammerhead_ribozyme")
+        ]),
         ("ncRNA", [("SO:0000655", "ncRNA")]),
+        ("rRNA_primary_transcript", [
+            ('SO:0000655', 'ncRNA'),
+            ('SO:0000252', 'rRNA'),
+            ('SO:0000655', 'rRNA_primary_transcript'),
+        ]),
+        ("antisense_lncRNA", [
+            ("SO:0000655", "ncRNA"),
+            ("SO:0001877", "lncRNA"),
+            ("SO:0001904", "antisense_lncRNA"),
+        ]),
+        ("MicF_RNA", [
+            ("SO:0000655", "ncRNA"),
+            ("SO:0000644", "antisense_RNA"),
+        ]),
+        ("class_I_RNA", [
+            ("SO:0000655", "ncRNA"),
+        ]),
+        ("RNA_6S", [
+            ("SO:0000655", "ncRNA"),
+            ('SO:0002247', 'sncRNA'),
+            ("SO:0000370", "small_regulatory_ncRNA"),
+        ]),
+        ("RprA_RNA", [
+            ("SO:0000655", "ncRNA"),
+            ('SO:0002247', 'sncRNA'),
+            ("SO:0000370", "small_regulatory_ncRNA"),
+        ]),
+        ("DsrA_RNA", [
+            ("SO:0000655", "ncRNA"),
+            ('SO:0002247', 'sncRNA'),
+            ("SO:0000370", "small_regulatory_ncRNA"),
+        ]),
+        ("CsrB_RsmB_RNA", [
+            ("SO:0000655", "ncRNA"),
+            ('SO:0002247', 'sncRNA'),
+            ("SO:0000370", "small_regulatory_ncRNA"),
+        ]),
+        ("spot_42_RNA", [
+            ("SO:0000655", "ncRNA"),
+            ('SO:0002247', 'sncRNA'),
+            ("SO:0000370", "small_regulatory_ncRNA"),
+        ]),
+        ("OxyS_RNA", [
+            ("SO:0000655", "ncRNA"),
+            ('SO:0002247', 'sncRNA'),
+            ("SO:0000370", "small_regulatory_ncRNA"),
+        ]),
+        ("RRE_RNA", [
+            ("SO:0000655", "ncRNA"),
+            ('SO:0002247', 'sncRNA'),
+            ("SO:0000370", "small_regulatory_ncRNA"),
+        ]),
     ],
 )
 def test_can_compute_some_simple_paths(so_term_id, expected):
