@@ -91,5 +91,10 @@ nix
 target/
 bin/json2fasta
 bin/split-ena
+bin/expand-urs
+bin/ftp-export
+bin/kv
+bin/precompute
+bin/search-export
 stubs
 .envrc
