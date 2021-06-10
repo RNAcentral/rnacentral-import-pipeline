@@ -7,7 +7,7 @@ process fetch_directory {
   tuple val(name), val(remote)
 
   output:
-  path "$name/*.{ncr.gz,tar}"
+  path("$name/*.{ncr.gz,tar}")
 
   """
   rsync \
@@ -17,10 +17,14 @@ process fetch_directory {
     --include='**/*.ncr.gz' \
     --include='**/*.tar' \
     --exclude='*.fasta.gz' \
-    "$remote" "$name"
+    "$remote" "copied"
 
-  find $name -type f -empty -delete
-  find $name -type f -name '*.gz' | xargs -I {} gzip --quiet -l {} | awk '{ if (\$2 == 0) print \$4 }' | xargs -I {} rm {}.gz
+  find copied -type f -empty -delete
+  find copied -type f -name '*.gz' | xargs -I {} gzip --quiet -l {} | awk '{ if (\$2 == 0) print \$4 }' | xargs -I {} rm {}.gz
+
+  mkdir $name
+  cp copied/*.tar $name
+  find copied -type f -name '*.ncr.gz' | xargs cat > $name/${name}.ncr.gz
   """
 }
 
@@ -36,11 +40,24 @@ process expand_tar_files {
 
   """
   tar -xvf "$tar_file"
-  mv ${tar_file.simpleName} expanded
-  find "expanded" -name '*.ncr.gz' | xargs zcat > all-sequences.ncr
-  mkdir ${tar_file.simpleName}
-  split-ena --max-sequences ${params.databases.ena.max_sequences} all-sequences.ncr ${tar_file.simpleName}
-  find ${tar_file.simpleName} -type f | xargs -I {} gzip {}
+  find "${tar_file.simpleName}" -name '*.ncr.gz' | xargs cat > ${tar_file.simpleName}.ncr.gz
+  """
+}
+
+process split_ncr {
+  tag { "$ncr.name" }
+  clusterOptions '-sp 80'
+
+  input:
+  path(ncr)
+
+  output:
+  path("${ncr.simpleName}/*.ncr")
+
+  """
+  zcat $ncr > sequences.ncr
+  mkdir ${ncr.simpleName}
+  split-ena --max-sequences ${params.databases.ena.max_sequences} sequences.ncr ${ncr.simpleName}
   """
 }
 
@@ -71,14 +88,13 @@ process process_file {
   path('*.csv')
 
   """
-  zcat $raw > sequences.dat
-  ena2fasta.py sequences.dat sequences.fasta
+  ena2fasta.py $raw sequences.fasta
   if [[ -e sequences.fasta ]]; then
     /rna/ribovore/ribotyper.pl sequences.fasta ribotyper-results
   else
     mkdir ribotyper-results
   fi
-  rnac ena parse --counts $raw-counts.txt sequences.dat $tpa ribotyper-results $model_lengths .
+  rnac ena parse --counts $raw-counts.txt $rraw $tpa ribotyper-results $model_lengths .
 
   mkdir $baseDir/ena-counts 2>/dev/null || true
   cp $raw-counts.txt $baseDir/ena-counts/
@@ -112,6 +128,8 @@ workflow ena {
 
     files.gz \
     | mix(tar_sequences) \
+    | flatten \
+    | split_ncr \
     | flatten \
     | combine(metadata) \
     | process_file \
