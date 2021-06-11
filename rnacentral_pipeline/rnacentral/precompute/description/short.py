@@ -39,8 +39,13 @@ def short_description(initial: str, sequence: Sequence) -> str:
         cleaned = re.sub("^" + pattern, "", description, flags=re.IGNORECASE)
         cleaned = cleaned.strip()
         if not cleaned:
-            LOGGER.error("Pattern %s emptied description: %s (%s, %s)", pattern,
-                         description, initial, sequence)
+            LOGGER.error(
+                "Pattern %s emptied description: %s (%s, %s)",
+                pattern,
+                description,
+                initial,
+                sequence,
+            )
             continue
         description = cleaned
 

@@ -40,9 +40,9 @@ def as_exons(feature) -> ty.Tuple[str, ty.List[data.Exon]]:
 
 
 def regions(record, feature) -> ty.List[data.SequenceRegion]:
-    accessions = record.annotations['accessions']
-    if len(accessions) > 1 and accessions[0][-1] == '-':
-        accessions = [''.join(accessions)]
+    accessions = record.annotations["accessions"]
+    if len(accessions) > 1 and accessions[0][-1] == "-":
+        accessions = ["".join(accessions)]
     acc = accessions[0]
     assert ":" in acc, "Invalid accession (%s) for %s" % (acc, record)
     parts = acc.split(":")

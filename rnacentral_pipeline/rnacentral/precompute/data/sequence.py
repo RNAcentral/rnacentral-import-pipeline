@@ -19,8 +19,7 @@ import attr
 from attr.validators import instance_of as is_a
 
 from rnacentral_pipeline.rnacentral.precompute.data.accession import Accession
-from rnacentral_pipeline.rnacentral.precompute.data.coordinate import \
-    Coordinate
+from rnacentral_pipeline.rnacentral.precompute.data.coordinate import Coordinate
 from rnacentral_pipeline.rnacentral.precompute.data.r2dt import R2dtHit
 from rnacentral_pipeline.rnacentral.precompute.data.rfam import RfamHit
 
@@ -72,7 +71,7 @@ def fix_hgnc_data(accessions):
 class Sequence:
     """
     This is the representation of sequences for the purpose of our precompute
-    step. 
+    step.
     """
 
     upi = attr.ib(validator=is_a(str))
@@ -98,8 +97,8 @@ class Sequence:
         active = fix_hgnc_data(active)
         coords = [Coordinate.build(c) for c in data["coordinates"] if c["assembly_id"]]
         previous = {}
-        if data['previous'] is not None:
-            previous = data['previous']
+        if data["previous"] is not None:
+            previous = data["previous"]
 
         return cls(
             upi=data["upi"],
@@ -107,12 +106,24 @@ class Sequence:
             length=data["length"],
             accessions=active,
             inactive_accessions=inactive,
-            is_active=not data['deleted'],
+            is_active=not data["deleted"],
             previous_update=previous,
-            rfam_hits=list({RfamHit.build(so_tree, r) for r in data.get("rfam_hits", []) if r['rfam_hit_id']}),
+            rfam_hits=list(
+                {
+                    RfamHit.build(so_tree, r)
+                    for r in data.get("rfam_hits", [])
+                    if r["rfam_hit_id"]
+                }
+            ),
             coordinates=coords,
             last_release=data["last_release"],
-            r2dt_hits=list({R2dtHit.build(so_tree, r) for r in data.get("r2dt_hits", []) if r['model_id']}),
+            r2dt_hits=list(
+                {
+                    R2dtHit.build(so_tree, r)
+                    for r in data.get("r2dt_hits", [])
+                    if r["model_id"]
+                }
+            ),
         )
 
     @property

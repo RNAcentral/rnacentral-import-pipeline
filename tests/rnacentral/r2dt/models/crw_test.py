@@ -22,14 +22,17 @@ from rnacentral_pipeline.rnacentral.traveler.data import Source
 
 @pytest.fixture()
 def parsed():
-    with open('data/crw/simple-data.tsv') as raw:
+    with open("data/crw/simple-data.tsv") as raw:
         return {i.model_id: i for i in crw.parse(raw)}
 
 
 @pytest.mark.xfail(reason="Cannot extract length")
-@pytest.mark.parametrize('filename,count', [
-    ('data/crw/simple-data.tsv', 53),
-])
+@pytest.mark.parametrize(
+    "filename,count",
+    [
+        ("data/crw/simple-data.tsv", 53),
+    ],
+)
 def test_parses_whole_file(filename, count):
     with open(filename) as raw:
         assert len(list(crw.parse(raw))) == count
@@ -37,46 +40,44 @@ def test_parses_whole_file(filename, count):
 
 @pytest.mark.xfail(reason="Cannot extract length")
 def test_can_build_correct_data(parsed):
-    assert parsed['a.I1.m.A.aegerita.C2.SSU'] == ModelInfo(
-        model_id='a.I1.m.A.aegerita.C2.SSU',
+    assert parsed["a.I1.m.A.aegerita.C2.SSU"] == ModelInfo(
+        model_id="a.I1.m.A.aegerita.C2.SSU",
         is_intronic=True,
-        so_term='SO:0000587',
+        so_term="SO:0000587",
         taxid=5400,
-        accessions=['U54637'],
+        accessions=["U54637"],
         source=Source.crw,
         length=-1,
-        cell_location='Mitochondrion',
+        cell_location="Mitochondrion",
     )
 
 
 @pytest.mark.xfail(reason="Cannot extract length")
 def test_can_handle_multiple_filenames(parsed):
-    assert 'd.235.b.A.calcoaceticus.ps d.233.b.A.calcoaceticus.ps' not in parsed
-    assert 'd.235.b.A.calcoaceticus d.233.b.A.calcoaceticus' not in parsed
-    assert 'd.235.b.A.calcoaceticus d.233.b.A.calcoaceticus.ps' not in parsed
-    assert 'd.235.b.A.calcoaceticus.ps d.233.b.A.calcoaceticus' not in parsed
-    assert 'd.235.b.A.calcoaceticus' in parsed 
-    assert 'd.233.b.A.calcoaceticus' in parsed
-    assert parsed['d.235.b.A.calcoaceticus'] == ModelInfo(
-        model_id='d.235.b.A.calcoaceticus',
+    assert "d.235.b.A.calcoaceticus.ps d.233.b.A.calcoaceticus.ps" not in parsed
+    assert "d.235.b.A.calcoaceticus d.233.b.A.calcoaceticus" not in parsed
+    assert "d.235.b.A.calcoaceticus d.233.b.A.calcoaceticus.ps" not in parsed
+    assert "d.235.b.A.calcoaceticus.ps d.233.b.A.calcoaceticus" not in parsed
+    assert "d.235.b.A.calcoaceticus" in parsed
+    assert "d.233.b.A.calcoaceticus" in parsed
+    assert parsed["d.235.b.A.calcoaceticus"] == ModelInfo(
+        model_id="d.235.b.A.calcoaceticus",
         is_intronic=False,
-        so_term='SO:0000651',
+        so_term="SO:0000651",
         taxid=471,
-        accessions=['X87280'],
+        accessions=["X87280"],
         source=Source.crw,
         length=-1,
-        cell_location='Nucleus',
+        cell_location="Nucleus",
     )
 
-    assert parsed['d.233.b.A.calcoaceticus'] == ModelInfo(
-        model_id='d.233.b.A.calcoaceticus',
+    assert parsed["d.233.b.A.calcoaceticus"] == ModelInfo(
+        model_id="d.233.b.A.calcoaceticus",
         is_intronic=False,
-        so_term='SO:0000651',
+        so_term="SO:0000651",
         taxid=471,
-        accessions=['X87280'],
+        accessions=["X87280"],
         source=Source.crw,
         length=-1,
-        cell_location='Nucleus',
+        cell_location="Nucleus",
     )
-
-

@@ -28,8 +28,8 @@ def run_with_replacements(path, *replacements, **kwargs):
     Run a query from the given file with the given replacements.
     """
 
-    with tempfile.NamedTemporaryFile('w') as tmp:
-        with open(path, 'r') as raw:
+    with tempfile.NamedTemporaryFile("w") as tmp:
+        with open(path, "r") as raw:
             query = raw.read()
             for (initial, replacement) in replacements:
                 if initial.startswith(":'"):
@@ -38,14 +38,17 @@ def run_with_replacements(path, *replacements, **kwargs):
             tmp.write(query)
             tmp.flush()
 
-        cmd = subprocess.run(['psql', '-f', tmp.name, os.environ['PGDATABASE']],
-                             stdout=subprocess.PIPE, encoding='utf-8')
+        cmd = subprocess.run(
+            ["psql", "-f", tmp.name, os.environ["PGDATABASE"]],
+            stdout=subprocess.PIPE,
+            encoding="utf-8",
+        )
         cmd.check_returncode()
         buf = StringIO(cmd.stdout)
         results = psql.json_handler(buf)
 
         try:
-            if kwargs.get('take_all', False):
+            if kwargs.get("take_all", False):
                 return list(results)
             return next(results)
         except StopIteration:
@@ -58,20 +61,28 @@ def run_range_as_single(upi, path):
     and taxid paramenter.
     """
 
-    parts = upi.split('_')
+    parts = upi.split("_")
     upi, taxid = parts[0], int(parts[1])
-    return run_with_replacements(path, (
-        'rna.id BETWEEN :min AND :max',
-        "xref.upi ='%s' AND xref.taxid = %i" % (upi, taxid)
-    ))
+    return run_with_replacements(
+        path,
+        (
+            "rna.id BETWEEN :min AND :max",
+            "xref.upi ='%s' AND xref.taxid = %i" % (upi, taxid),
+        ),
+    )
 
 
 def run_with_upi_taxid_constraint(rna_id, path, **kwargs):
-    upi, taxid = rna_id.split('_')
+    upi, taxid = rna_id.split("_")
     taxid = int(taxid)
-    return run_with_replacements(path, (
-        'where\n',
-        '''where
+    return run_with_replacements(
+        path,
+        (
+            "where\n",
+            """where
             xref.upi = '%s' and xref.taxid = %i
-            and''' % (upi, taxid),
-    ), **kwargs)
+            and"""
+            % (upi, taxid),
+        ),
+        **kwargs
+    )

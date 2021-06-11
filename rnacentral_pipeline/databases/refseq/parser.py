@@ -29,7 +29,7 @@ def parse(handle):
     grouped = coll.defaultdict(coll.OrderedDict)
     for record in SeqIO.parse(handle, "genbank"):
         source = record.features[0]
-        assert source.type == 'source'
+        assert source.type == "source"
 
         for ncrna in helpers.ncrna_features(record.features[1:]):
             entry = helpers.as_entry(record, source, ncrna)

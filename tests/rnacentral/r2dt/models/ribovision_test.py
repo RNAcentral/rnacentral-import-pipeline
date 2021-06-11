@@ -21,7 +21,7 @@ from rnacentral_pipeline.rnacentral.r2dt.models import ribovision
 
 @pytest.fixture()
 def models():
-    with open('data/traveler/ribovision/metadata.tsv', 'r') as raw:
+    with open("data/traveler/ribovision/metadata.tsv", "r") as raw:
         return list(ribovision.parse(raw))
 
 
@@ -33,9 +33,9 @@ def test_can_parse_data_file(models):
 @pytest.mark.xfail(reason="Cannot extract length")
 def test_can_produce_correct_data(models):
     assert models[0] == ModelInfo(
-        model_id='DR_LSU_3D',
+        model_id="DR_LSU_3D",
         is_intronic=False,
-        so_term='SO:0000651',
+        so_term="SO:0000651",
         taxid=1299,
         accessions=[],
         source=Source.ribovision,
@@ -47,17 +47,18 @@ def test_can_produce_correct_data(models):
 @pytest.mark.xfail(reason="Cannot extract length")
 def test_has_correct_rrna_types(models):
     val = {m.rna_type for m in models}
-    assert {'rRNA'} == val
+    assert {"rRNA"} == val
 
 
 @pytest.mark.xfail(reason="Cannot extract length")
-@pytest.mark.parametrize('model_id,location', [
-    ('cSO_23S_3D', 'Chloroplast'),
-    ('mHS_LSU_3D', 'Mitochondrion'),
-    ('PF_LSU_3D', None),
-])
+@pytest.mark.parametrize(
+    "model_id,location",
+    [
+        ("cSO_23S_3D", "Chloroplast"),
+        ("mHS_LSU_3D", "Mitochondrion"),
+        ("PF_LSU_3D", None),
+    ],
+)
 def test_can_get_correct_cell_location(models, model_id, location):
     model = next(m for m in models if m.model_id == model_id)
     assert model.cell_location == location
-
-

@@ -26,5 +26,11 @@ class SequenceFeature:
     sequence: str = attr.ib()
 
     def writeable(self, accession, taxid):
-        return [accession, taxid, self.location[0], self.location[-1], self.feature_type,
-                '{}']
+        return [
+            accession,
+            taxid,
+            self.location[0],
+            self.location[-1],
+            self.feature_type,
+            "{}",
+        ]

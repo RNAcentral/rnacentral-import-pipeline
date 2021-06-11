@@ -15,7 +15,7 @@ limitations under the License.
 
 
 def parse(parser, filename):
-    with open(filename, 'r') as raw:
+    with open(filename, "r") as raw:
         return list(parser(raw))
 
 
@@ -31,5 +31,3 @@ def entry_for(entries, accession):
 
 def has_entry_for(entries, accession):
     return bool(entries_for(entries, accession))
-
-

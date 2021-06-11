@@ -42,7 +42,7 @@ class Context:
         self.repeats.validate()
 
     def dump(self, path: Path):
-        data = {'repeats': self.repeats}
+        data = {"repeats": self.repeats}
         with path.open("wb") as out:
             pickle.dump(data, out)
 
@@ -51,9 +51,9 @@ class Context:
 
     def term_is_a(self, name: str, term: RnaType) -> bool:
         target = name
-        if not name.startswith('SO:'):
-            if name == 'lnc_RNA':
-                name = 'lncRNA'
+        if not name.startswith("SO:"):
+            if name == "lnc_RNA":
+                name = "lncRNA"
             target = self.so_tree.name_to_id[name]
         source = term.so_term.so_id
         if source == target:

@@ -31,12 +31,12 @@ from sqlitedict import SqliteDict
 
 
 NAME_ALIASES = {
-    'common name',
-    'equivalent name',
-    'genbank common name',
-    'genbank synonym',
-    'scientific name',
-    'synonym',
+    "common name",
+    "equivalent name",
+    "genbank common name",
+    "genbank synonym",
+    "scientific name",
+    "synonym",
 }
 
 
@@ -78,9 +78,10 @@ class TaxonomyEntry(object):
 def ncbi_reader(handle):
     def cleaned_lines(to_clean):
         for line in to_clean:
-            cleaned = line.replace('\t|\n', '\n').replace('\t|\t', '\t')
+            cleaned = line.replace("\t|\n", "\n").replace("\t|\t", "\t")
             yield cleaned
-    return csv.reader(cleaned_lines(handle), delimiter='\t')
+
+    return csv.reader(cleaned_lines(handle), delimiter="\t")
 
 
 def grouped_extra(handle, group_idx=0):
@@ -103,15 +104,11 @@ def parse(handle, names_handle, merged_handle):
 
         for (old_tax_id, replaced) in merged.get(raw[0], []):
             assert int(replaced) == entry.tax_id
-            yield attr.evolve(
-                entry,
-                tax_id=int(old_tax_id),
-                replaced_by=entry.tax_id
-            )
+            yield attr.evolve(entry, tax_id=int(old_tax_id), replaced_by=entry.tax_id)
 
 
 def parse_directory(directory: Path) -> ty.Iterable[TaxonomyEntry]:
-    names = ['fullnamelineage.dmp', 'names.dmp', 'merged.dmp']
+    names = ["fullnamelineage.dmp", "names.dmp", "merged.dmp"]
     filenames = [os.path.join(directory, name) for name in names]
     with ExitStack() as stack:
         files = [stack.enter_context(open(f)) for f in filenames]

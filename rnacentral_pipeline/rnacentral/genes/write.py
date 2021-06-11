@@ -22,10 +22,8 @@ import typing as ty
 from functools import partial
 from pathlib import Path
 
-from rnacentral_pipeline.rnacentral.ftp_export.coordinates.bed import \
-    write_bed_text
-from rnacentral_pipeline.rnacentral.ftp_export.coordinates.gff3 import \
-    write_gff_text
+from rnacentral_pipeline.rnacentral.ftp_export.coordinates.bed import write_bed_text
+from rnacentral_pipeline.rnacentral.ftp_export.coordinates.gff3 import write_gff_text
 from rnacentral_pipeline.rnacentral.genes import data
 
 LOGGER = logging.getLogger(__name__)

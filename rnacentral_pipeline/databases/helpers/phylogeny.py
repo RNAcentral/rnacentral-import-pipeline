@@ -21,7 +21,7 @@ import requests
 import simplejson
 from functools import lru_cache
 
-TAX_URL = 'https://www.ebi.ac.uk/ena/data/taxonomy/v1/taxon/tax-id/{taxon_id}'
+TAX_URL = "https://www.ebi.ac.uk/ena/data/taxonomy/v1/taxon/tax-id/{taxon_id}"
 
 LOGGER = logging.getLogger(__name__)
 
@@ -31,6 +31,7 @@ class UnknownTaxonId(Exception):
     This is raised if we cannot get the required information about the given
     taxon id. This happens with the taxon id is obsoleted, or invalid.
     """
+
     pass
 
 
@@ -38,6 +39,7 @@ class FailedTaxonId(Exception):
     """
     This is raised when we cannot fetch information on a taxon id.
     """
+
     pass
 
 
@@ -84,10 +86,11 @@ def lineage(taxon_id: int) -> str:
     """
 
     data = phylogeny(taxon_id)
-    return str('{lineage}{name}'.format(
-        lineage=data.get('lineage', None),
-        name=data['scientificName']
-    ))
+    return str(
+        "{lineage}{name}".format(
+            lineage=data.get("lineage", None), name=data["scientificName"]
+        )
+    )
 
 
 def common_name(taxon_id: int) -> ty.Optional[str]:
@@ -95,7 +98,7 @@ def common_name(taxon_id: int) -> ty.Optional[str]:
     Get the common name, if any for the given taxon id. If no common name
     exists then None is returned.
     """
-    return phylogeny(taxon_id).get('commonName', None)
+    return phylogeny(taxon_id).get("commonName", None)
 
 
 def species(taxon_id: int) -> str:
@@ -104,7 +107,7 @@ def species(taxon_id: int) -> str:
     """
 
     data = phylogeny(taxon_id)
-    return data['scientificName']
+    return data["scientificName"]
 
 
 def division(taxon_id: int) -> str:
@@ -113,4 +116,4 @@ def division(taxon_id: int) -> str:
     """
 
     data = phylogeny(taxon_id)
-    return data['division']
+    return data["division"]

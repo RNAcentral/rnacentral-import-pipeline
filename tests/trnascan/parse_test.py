@@ -37,14 +37,14 @@ def test_can_parse_a_file(filename, count):
 def test_produces_reasonable_data():
     path = Path("data/r2dt/gtrnadb/E-shuffled.part_2464.txt")
     assert next(parser.parse(path)) == TRnaScanResults(
-        sequence_id='URS0000C7FBE7',
+        sequence_id="URS0000C7FBE7",
         hit_index=1,
         sequence_start=1,
         sequence_stop=73,
-        trna_type='Val',
-        anticodon='TAC',
+        trna_type="Val",
+        anticodon="TAC",
         intron_start=None,
         intron_stop=None,
         score=40.6,
-        note='pseudo',
+        note="pseudo",
     )

@@ -27,7 +27,7 @@ from rnacentral_pipeline.writers import entry_writer
 @click.group("genecards-suite")
 def cli():
     """
-    A suite of commands to handle genecards 
+    A suite of commands to handle genecards
     """
 
 
@@ -37,7 +37,11 @@ def cli():
 @click.argument(
     "output",
     default=".",
-    type=click.Path(writable=True, dir_okay=True, file_okay=False,),
+    type=click.Path(
+        writable=True,
+        dir_okay=True,
+        file_okay=False,
+    ),
 )
 def process_genecarrds(data_file, known_sequences, output):
     entries = genecards.parse(data_file, known_sequences)
@@ -51,7 +55,11 @@ def process_genecarrds(data_file, known_sequences, output):
 @click.argument(
     "output",
     default=".",
-    type=click.Path(writable=True, dir_okay=True, file_okay=False,),
+    type=click.Path(
+        writable=True,
+        dir_okay=True,
+        file_okay=False,
+    ),
 )
 def process_malacards(data_file, known_sequences, output):
     entries = malacards.parse(data_file, known_sequences)
@@ -59,11 +67,11 @@ def process_malacards(data_file, known_sequences, output):
         writer.write(entries)
 
 
-@cli.command('lookup')
-@click.option('--db-url', envvar='PGDATABASE')
-@click.argument('urs-field')
-@click.argument('filename', type=click.File('r'))
-@click.argument('output', default='urs-info.pickle', type=click.File('wb'))
+@cli.command("lookup")
+@click.option("--db-url", envvar="PGDATABASE")
+@click.argument("urs-field")
+@click.argument("filename", type=click.File("r"))
+@click.argument("output", default="urs-info.pickle", type=click.File("wb"))
 def lookup_genecards(filename, urs_field, output, db_url):
     """
     Lookup the required information for all URS ids in the given file and write

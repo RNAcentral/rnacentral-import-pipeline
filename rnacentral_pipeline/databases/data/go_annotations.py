@@ -19,7 +19,7 @@ import attr
 from attr.validators import instance_of as is_a
 
 
-ANN_URL = 'http://www.ebi.ac.uk/QuickGO/annotations?geneProductId={upi}'
+ANN_URL = "http://www.ebi.ac.uk/QuickGO/annotations?geneProductId={upi}"
 
 
 @attr.s()

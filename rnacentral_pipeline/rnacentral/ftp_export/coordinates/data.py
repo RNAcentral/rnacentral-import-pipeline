@@ -35,7 +35,11 @@ class Region(object):
     rna_id = attr.ib(validator=is_a(str), converter=str)
     region = attr.ib(validator=is_a(regions.SequenceRegion))
     was_mapped = attr.ib(validator=is_a(bool))
-    identity = attr.ib(validator=optional(is_a(float)), default=None, cmp=False,)
+    identity = attr.ib(
+        validator=optional(is_a(float)),
+        default=None,
+        cmp=False,
+    )
     metadata = attr.ib(validator=is_a(dict), default=dict, cmp=False)
 
     @classmethod
@@ -47,7 +51,10 @@ class Region(object):
         exons = []
         for exon in raw["exons"]:
             exons.append(
-                regions.Exon(start=exon["exon_start"], stop=exon["exon_stop"],)
+                regions.Exon(
+                    start=exon["exon_start"],
+                    stop=exon["exon_stop"],
+                )
             )
 
         region_id = "{rna_id}.{index}".format(rna_id=raw["rna_id"], index=index)
@@ -114,5 +121,5 @@ def parse(regions) -> ty.Iterable[Region]:
 
 def from_file(handle) -> ty.Iterable[Region]:
     data = map(json.loads, handle)
-    data = filter(lambda d: d['rna_type'] != "NULL", data)
+    data = filter(lambda d: d["rna_type"] != "NULL", data)
     yield from parse(data)

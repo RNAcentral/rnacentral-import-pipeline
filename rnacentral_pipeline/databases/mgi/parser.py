@@ -32,9 +32,9 @@ def lines(raw):
     with header being over 2 lines so a normal CSV parser can parse the file.
     """
 
-    header = '\t'.join([next(raw).strip(), next(raw).strip()])
+    header = "\t".join([next(raw).strip(), next(raw).strip()])
     header = header.lower()
-    yield header.replace(' ', '_')
+    yield header.replace(" ", "_")
     for line in raw:
         yield line
 
@@ -44,13 +44,13 @@ def as_entry(data):
         primary_id=helpers.primary_id(data),
         accession=helpers.accession(data),
         ncbi_tax_id=helpers.taxon_id(data),
-        database='MGI',
-        sequence='',
+        database="MGI",
+        sequence="",
         exons=[],
-        rna_type=helpers.infer_rna_type(data) or '',
-        url='',
-        division='MUS',
-        is_composite='N',
+        rna_type=helpers.infer_rna_type(data) or "",
+        url="",
+        division="MUS",
+        is_composite="N",
         xref_data=helpers.xref_data(data),
         chromosome=helpers.chromosome(data),
         species=helpers.species(data),
@@ -59,7 +59,7 @@ def as_entry(data):
         gene=helpers.gene(data),
         optional_id=helpers.symbol(data),
         description=helpers.name(data),
-        seq_version='1',
+        seq_version="1",
         location_start=helpers.start(data),
         location_end=helpers.stop(data),
         references=helpers.references(data),
@@ -71,9 +71,9 @@ def parse(raw):
     Parses the file and produces an iterable of all entries as MGI objects.
     """
 
-    data = csv.DictReader(lines(raw), delimiter='\t')
+    data = csv.DictReader(lines(raw), delimiter="\t")
     data = map(as_entry, data)
-    return filter(op.attrgetter('rna_type'), data)
+    return filter(op.attrgetter("rna_type"), data)
 
 
 def from_file(raw, output):

@@ -24,7 +24,7 @@ from psycopg2.extras import DictCursor
 from rnacentral_pipeline.rnacentral.r2dt import data
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def connection():
     return psycopg2.connect(os.environ["PGDATABASE"])
 
@@ -39,10 +39,10 @@ def fetch_data(connection, urs) -> data.ShowInfo:
             secondary.urs,
             secondary.model_id,
             models.model_length,
-            models.model_basepair_count.as_('model_basepairs'),
-            rna.len.as_('sequence_length'),
+            models.model_basepair_count.as_("model_basepairs"),
+            rna.len.as_("sequence_length"),
             secondary.secondary_structure,
-            secondary.basepair_count.as_('modeled_basepairs'),
+            secondary.basepair_count.as_("modeled_basepairs"),
         )
         .join(secondary)
         .on(secondary.urs == rna.upi)
@@ -53,7 +53,7 @@ def fetch_data(connection, urs) -> data.ShowInfo:
     with connection.cursor(cursor_factory=DictCursor) as cur:
         cur.execute(str(query))
         found = dict(cur.fetchone())
-        found['modeled_length'] = len(found['secondary_structure'])
+        found["modeled_length"] = len(found["secondary_structure"])
         return data.ShowInfo.from_raw(found)
 
 

@@ -21,10 +21,13 @@ from click.testing import CliRunner
 from rnacentral_pipeline.cli import pdb
 
 
-@pytest.mark.parametrize('command,output,pdbs', [
-    ('data', 'pdb.json', ('1S72',)),
-    ('extra', 'pdb-extra.json', ('1S72',)),
-])
+@pytest.mark.parametrize(
+    "command,output,pdbs",
+    [
+        ("data", "pdb.json", ("1S72",)),
+        ("extra", "pdb-extra.json", ("1S72",)),
+    ],
+)
 def test_can_fetch_expected_data(command, output, pdbs):
     runner = CliRunner()
     with runner.isolated_filesystem():
@@ -34,6 +37,5 @@ def test_can_fetch_expected_data(command, output, pdbs):
         assert result.exit_code == 0, result.output
         assert not result.exception
 
-        with open(output, 'rb') as raw:
+        with open(output, "rb") as raw:
             assert raw.read()
-

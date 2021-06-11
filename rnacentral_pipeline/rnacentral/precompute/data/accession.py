@@ -54,10 +54,10 @@ class Accession:
         keys with the same names as accession fields.
         """
         rna_type = None
-        if data['so_rna_type']:
+        if data["so_rna_type"]:
             rna_type = RnaType.from_so_term(so_tree, data["so_rna_type"])
         else:
-            name = data['ncrna_class'] or data['feature_name']
+            name = data["ncrna_class"] or data["feature_name"]
             rna_type = RnaType.from_insdc_term(so_tree, name)
         return cls(
             gene=data["gene"],
@@ -72,7 +72,7 @@ class Accession:
             all_species=tuple(data["all_species"]),
             all_common_names=tuple(data["all_common_names"]),
             rna_type=rna_type,
-            is_active=data['is_active'],
+            is_active=data["is_active"],
         )
 
     @property
@@ -98,7 +98,7 @@ class Accession:
             or "synthetic" in domain
             or "artificial" in domain
             or "unclassified" in domain
-            or 'other entries' in domain
+            or "other entries" in domain
         ):
             return None
 

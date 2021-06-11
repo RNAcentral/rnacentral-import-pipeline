@@ -21,30 +21,33 @@ from rnacentral_pipeline.db import cursor
 def unique_sequences(db_url):
     with cursor(db_url) as cur:
         cur.execute("select count(*) from rna")
-        return '{:,}'.format(cur.fetchone()[0])
+        return "{:,}".format(cur.fetchone()[0])
 
 
 def active_xrefs(db_url):
     with cursor(db_url) as cur:
         cur.execute("select count(*) from xref where deleted = 'N'")
-        return '{:,}'.format(cur.fetchone()[0])
+        return "{:,}".format(cur.fetchone()[0])
 
 
 def active_databases(db_url):
     with cursor(db_url) as cur:
         cur.execute("select count(*) from rnc_database")
-        return '{:,}'.format(cur.fetchone()[0])
+        return "{:,}".format(cur.fetchone()[0])
+
 
 def current_date():
-    return date.today().strftime('%d/%m/%Y')
+    return date.today().strftime("%d/%m/%Y")
 
 
 def write(template_file, release, output, db_url):
     template = template_file.read()
-    output.write(template.format(
-        release=release,
-        active_xrefs=active_xrefs(db_url),
-        unique_sequences=unique_sequences(db_url),
-        databases=active_databases(db_url),
-        date=current_date(),
-    ))
+    output.write(
+        template.format(
+            release=release,
+            active_xrefs=active_xrefs(db_url),
+            unique_sequences=unique_sequences(db_url),
+            databases=active_databases(db_url),
+            date=current_date(),
+        )
+    )

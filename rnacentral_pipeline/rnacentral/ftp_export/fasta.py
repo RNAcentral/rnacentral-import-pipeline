@@ -18,7 +18,7 @@ import itertools as it
 
 from Bio import SeqIO
 
-NHMMER_PATTERN = re.compile('^[ABCDGHKMNRSTVWXYU]+$', re.IGNORECASE)
+NHMMER_PATTERN = re.compile("^[ABCDGHKMNRSTVWXYU]+$", re.IGNORECASE)
 
 
 def is_valid_nhmmer_record(record):
@@ -29,12 +29,12 @@ def is_valid_nhmmer_record(record):
 
 
 def valid_nhmmer(handle, output):
-    sequences = SeqIO.parse(handle, 'fasta')
+    sequences = SeqIO.parse(handle, "fasta")
     accepted = filter(is_valid_nhmmer_record, sequences)
-    SeqIO.write(accepted, output, 'fasta')
+    SeqIO.write(accepted, output, "fasta")
 
 
 def invalid_nhmmer(handle, output):
-    sequences = SeqIO.parse(handle, 'fasta')
+    sequences = SeqIO.parse(handle, "fasta")
     rejected = it.filterfalse(is_valid_nhmmer_record, sequences)
-    SeqIO.write(rejected, output, 'fasta')
+    SeqIO.write(rejected, output, "fasta")

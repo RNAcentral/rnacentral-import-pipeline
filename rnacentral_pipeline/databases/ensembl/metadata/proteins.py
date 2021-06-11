@@ -27,33 +27,33 @@ def only_or_fail(possible):
 
 
 def short_description(entries):
-    description = {e['description'] for e in entries}
+    description = {e["description"] for e in entries}
     description.discard(None)
     if not description:
         return None
     description = only_or_fail(description).strip()
-    if description == 'NULL':
+    if description == "NULL":
         return None
-    description = re.sub(r'\s*\[.+\]$', '', description)
+    description = re.sub(r"\s*\[.+\]$", "", description)
     return description
 
 
 def parse(data):
-    grouped = it.groupby(data, op.itemgetter('stable_id'))
+    grouped = it.groupby(data, op.itemgetter("stable_id"))
     for gene_id, entries in grouped:
         entries = list(entries)
-        symbol = only_or_fail({e['display_label'] for e in entries})
+        symbol = only_or_fail({e["display_label"] for e in entries})
         description = short_description(entries)
         synonyms = set()
         for entry in entries:
-            value = entry['synonym']
-            if value and value != 'NULL':
-                synonyms.add(value.replace('"', ''))
+            value = entry["synonym"]
+            if value and value != "NULL":
+                synonyms.add(value.replace('"', ""))
 
-        synonyms = ','.join('"%s"' % s for s in synonyms)
-        synonyms = '{%s}' % synonyms
+        synonyms = ",".join('"%s"' % s for s in synonyms)
+        synonyms = "{%s}" % synonyms
         yield [
-            'ENSEMBL:%s' % gene_id,
+            "ENSEMBL:%s" % gene_id,
             description,
             symbol,
             synonyms,

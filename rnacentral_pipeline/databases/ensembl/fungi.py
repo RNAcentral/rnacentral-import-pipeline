@@ -27,8 +27,8 @@ def urls_for(base: str) -> ty.List[ty.Tuple[str, str, str]]:
 
 def parse(handle, gff_file, **kwargs) -> ty.Iterable[Entry]:
     context = Context.build(
-        'ENSEMBL_FUNGI',
-        [pubs.reference('doi:10.1093/nar/gkx1011')],
+        "ENSEMBL_FUNGI",
+        [pubs.reference("doi:10.1093/nar/gkx1011")],
         gff_file,
     )
 

@@ -154,14 +154,21 @@ class HgncEntry:
         if m:
             if m.group(1) not in one_to_three:
                 return None
-            return "tRNA-" + one_to_three[m.group(1)] + "-" + m.group(2) + "-" + m.group(3)
+            return (
+                "tRNA-" + one_to_three[m.group(1)] + "-" + m.group(2) + "-" + m.group(3)
+            )
         # nuclear-encoded mitochondrial tRNAs
         m = re.match(r"NMTR(\S+)-(\S{3})(\d+-\d+)", accession)
         if m:
             if m.group(1) not in one_to_three:
                 return None
             return (
-                "nmt-tRNA-" + one_to_three[m.group(1)] + "-" + m.group(2) + "-" + m.group(3)
+                "nmt-tRNA-"
+                + one_to_three[m.group(1)]
+                + "-"
+                + m.group(2)
+                + "-"
+                + m.group(3)
             )
         return None
 
@@ -177,11 +184,7 @@ def ensembl_mapping(conn):
         .on(acc.accession == xref.ac)
         .join(rna)
         .on(rna.upi == xref.upi)
-        .where(
-            (xref.dbid == 25)
-            & (xref.taxid == 9606)
-            & (xref.deleted == "N")
-        )
+        .where((xref.dbid == 25) & (xref.taxid == 9606) & (xref.deleted == "N"))
     )
 
     found = coll.defaultdict(set)
@@ -189,7 +192,7 @@ def ensembl_mapping(conn):
         cur.execute(str(query))
         for result in cur:
             urs, gene, length = result
-            gene = gene.split('.')[0]
+            gene = gene.split(".")[0]
             found[gene].add((urs, length))
 
     mapping = {}

@@ -15,7 +15,6 @@ limitations under the License.
 
 
 class Validator(object):
-
     def status(self, rna_type, data):
         """
         This will raise a warning if the hits have different RNA types than the
@@ -23,7 +22,7 @@ class Validator(object):
         works for miRNA's.
         """
 
-        if rna_type != 'miRNA':
+        if rna_type != "miRNA":
             return None
         rna_types = {hit.model_rna_type for hit in data.rfam_hits}
         return rna_types != {rna_type}

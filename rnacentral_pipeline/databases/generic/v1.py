@@ -30,6 +30,7 @@ class UnexpectedCoordinates(Exception):
     Raised if we get coordinates to store but we do not know what the coordinate
     system used is.
     """
+
     pass
 
 
@@ -44,7 +45,7 @@ def secondary_structure(record):
     Fetches the secondary structure, if any, of the given JSON schema entry.
     """
 
-    dot_bracket = record.get('secondary_structure', None)
+    dot_bracket = record.get("secondary_structure", None)
     if dot_bracket:
         return data.SecondaryStructure(dot_bracket=dot_bracket)
     return data.SecondaryStructure.empty()
@@ -57,8 +58,8 @@ def xrefs(record):
     """
 
     grouped = coll.defaultdict(list)
-    for xref in record.get('crossReferenceIds', []):
-        dbid, accession = xref.split(':', 1)
+    for xref in record.get("crossReferenceIds", []):
+        dbid, accession = xref.split(":", 1)
         grouped[dbid].append(accession)
     return dict(grouped)
 
@@ -68,8 +69,8 @@ def taxid(entry):
     Gets the NCBI taxon id as an integer.
     """
 
-    base, tid = entry['taxonId'].split(':', 1)
-    assert base == 'NCBITaxon'
+    base, tid = entry["taxonId"].split(":", 1)
+    assert base == "NCBITaxon"
     return int(tid)
 
 
@@ -80,13 +81,13 @@ def as_exon(exon, context):
 
     start_fix = 0
     stop_fix = 0
-    if context.database == 'MIRBASE':
+    if context.database == "MIRBASE":
         start_fix = 1
         stop_fix = 1
 
     return data.Exon(
-        start=int(exon['startPosition']) + start_fix,
-        stop=int(exon['endPosition']) + stop_fix,
+        start=int(exon["startPosition"]) + start_fix,
+        stop=int(exon["endPosition"]) + stop_fix,
     )
 
 
@@ -95,16 +96,16 @@ def as_region(region, context):
     Turn a raw region in the JSON document into a SequenceRegion object.
     """
 
-    exons = region['exons']
-    chromosome = exons[0]['chromosome']
-    if chromosome.startswith('chr'):
+    exons = region["exons"]
+    chromosome = exons[0]["chromosome"]
+    if chromosome.startswith("chr"):
         chromosome = chromosome[3:]
 
     return data.SequenceRegion(
         chromosome=chromosome,
-        strand=exons[0]['strand'],
+        strand=exons[0]["strand"],
         exons=[as_exon(e, context) for e in exons],
-        assembly_id=region['assembly'],
+        assembly_id=region["assembly"],
         coordinate_system=context.coordinate_system,
     )
 
@@ -115,8 +116,8 @@ def regions(entry, context):
     """
 
     result = []
-    for region in entry.get('genomeLocations', []):
-        if not region.get('exons', None):
+    for region in entry.get("genomeLocations", []):
+        if not region.get("exons", None):
             continue
 
         if not context.coordinate_system:
@@ -137,14 +138,14 @@ def references(record):
     """
     Get a list of all References in this record.
     """
-    return [pub.reference(r) for r in record.get('publications', [])]
+    return [pub.reference(r) for r in record.get("publications", [])]
 
 
 def anticodon(record):
     """
     Get the anticodon information, if any, of this record.
     """
-    return record.get('sequenceFeatures', {}).get('anticodon', None)
+    return record.get("sequenceFeatures", {}).get("anticodon", None)
 
 
 def external_id(record):
@@ -152,7 +153,7 @@ def external_id(record):
     Extract the external id for the record.
     """
 
-    _, eid = record['primaryId'].split(':', 1)
+    _, eid = record["primaryId"].split(":", 1)
     return eid
 
 
@@ -186,21 +187,23 @@ def add_organism_preifx(ncrna, suffix):
     prefix = species(ncrna)
     name = common_name(ncrna)
     if name:
-        prefix += ' (%s)' % name
-    return prefix + ' ' + suffix
+        prefix += " (%s)" % name
+    return prefix + " " + suffix
 
 
 def features(record):
-    if not record.get('sequenceFeatures', None):
+    if not record.get("sequenceFeatures", None):
         return []
     features = []
-    for key, feature in record['sequenceFeatures'].items():
-        features.append(data.SequenceFeature(
-            name=key,
-            feature_type=key,
-            location=features['indexes'],
-            sequence=features['sequence'],
-        ))
+    for key, feature in record["sequenceFeatures"].items():
+        features.append(
+            data.SequenceFeature(
+                name=key,
+                feature_type=key,
+                location=features["indexes"],
+                sequence=features["sequence"],
+            )
+        )
     return features
 
 
@@ -210,25 +213,25 @@ def description(ncrna):
     of choices to select a good description.
     """
 
-    if 'description' in ncrna and ncrna['description']:
-        return ncrna['description']
+    if "description" in ncrna and ncrna["description"]:
+        return ncrna["description"]
 
-    if 'name' in ncrna and ncrna['name']:
-        return add_organism_preifx(ncrna, ncrna['name'])
+    if "name" in ncrna and ncrna["name"]:
+        return add_organism_preifx(ncrna, ncrna["name"])
 
-    if 'gene' in ncrna:
-        raw_gene = ncrna['gene']
-        if 'name' in raw_gene:
-            return add_organism_preifx(ncrna, raw_gene['name'])
-        if 'symbol' in raw_gene:
-            symbol = raw_gene['symbol']
-            db_prefix = ncrna['primaryId'].split(':', 1)[0]
+    if "gene" in ncrna:
+        raw_gene = ncrna["gene"]
+        if "name" in raw_gene:
+            return add_organism_preifx(ncrna, raw_gene["name"])
+        if "symbol" in raw_gene:
+            symbol = raw_gene["symbol"]
+            db_prefix = ncrna["primaryId"].split(":", 1)[0]
             if symbol.startswith(db_prefix):
-                symbol = symbol.split(':', 1)[1]
+                symbol = symbol.split(":", 1)[1]
             return add_organism_preifx(ncrna, symbol)
 
-    if 'primaryId' in ncrna:
-        _, pid = ncrna['primaryId'].split(":", 1)
+    if "primaryId" in ncrna:
+        _, pid = ncrna["primaryId"].split(":", 1)
         return add_organism_preifx(ncrna, pid)
 
     raise ValueError("Could not create a name for %s" % ncrna)
@@ -238,10 +241,10 @@ def gene_synonyms(ncrna):
     """
     Find all gene synonyms, if they exist.
     """
-    gene = ncrna.get('gene', {})
-    synonyms = gene.get('synonyms', [])
-    if 'symbol' in gene:
-        synonyms.append(gene['symbol'])
+    gene = ncrna.get("gene", {})
+    synonyms = gene.get("synonyms", [])
+    if "symbol" in gene:
+        synonyms.append(gene["symbol"])
     return synonyms
 
 
@@ -250,9 +253,9 @@ def gene(ncrna):
     Get the id of the gene, if possible.
     """
 
-    gene_id = ncrna.get('gene', {}).get('geneId', None)
+    gene_id = ncrna.get("gene", {}).get("geneId", None)
     if gene_id:
-        return gene_id.split(':', 1)[1]
+        return gene_id.split(":", 1)[1]
     return None
 
 
@@ -260,7 +263,7 @@ def locus_tag(ncrna):
     """
     Get the locus tag of the gene, if present.
     """
-    return ncrna.get('gene', {}).get('locusTag', None)
+    return ncrna.get("gene", {}).get("locusTag", None)
 
 
 def optional_id(record, context):
@@ -269,11 +272,10 @@ def optional_id(record, context):
     field, which will be the miRBase gene name.
     """
 
-    if 'description' in record and \
-            'name' in record and ' ' not in record['name']:
-        return record['name']
-    if context.database == 'MIRBASE':
-        return record['name']
+    if "description" in record and "name" in record and " " not in record["name"]:
+        return record["name"]
+    if context.database == "MIRBASE":
+        return record["name"]
     return None
 
 
@@ -283,8 +285,8 @@ def related_sequences(record):
     """
 
     sequences = []
-    for related in record.get('relatedSequences', []):
-        evidence = related.get('evidence', {})
+    for related in record.get("relatedSequences", []):
+        evidence = related.get("evidence", {})
         if evidence:
             # pylint: disable=star-args
             evidence = data.RelatedEvidence(**evidence)
@@ -292,18 +294,22 @@ def related_sequences(record):
             evidence = data.RelatedEvidence.empty()
 
         coordinates = []
-        for coord in related.get('coordinates', []):
-            coordinates.append(data.RelatedCoordinate(
-                start=coord['startPosition'],
-                stop=coord['endPosition'],
-            ))
+        for coord in related.get("coordinates", []):
+            coordinates.append(
+                data.RelatedCoordinate(
+                    start=coord["startPosition"],
+                    stop=coord["endPosition"],
+                )
+            )
 
-        sequences.append(data.RelatedSequence(
-            sequence_id=related['sequenceId'],
-            relationship=related['relationship'],
-            coordinates=coordinates,
-            evidence=evidence,
-        ))
+        sequences.append(
+            data.RelatedSequence(
+                sequence_id=related["sequenceId"],
+                relationship=related["relationship"],
+                coordinates=coordinates,
+                evidence=evidence,
+            )
+        )
     return sequences
 
 
@@ -320,26 +326,30 @@ def add_related_by_gene(entries):
             if first.accession == second.accession:
                 continue
 
-            related.append(data.RelatedSequence(
-                sequence_id=second.accession,
-                relationship='isoform',
-            ))
+            related.append(
+                data.RelatedSequence(
+                    sequence_id=second.accession,
+                    relationship="isoform",
+                )
+            )
 
-        updated.append(attr.evolve(
-            first,
-            related_sequences=first.related_sequences + related,
-        ))
+        updated.append(
+            attr.evolve(
+                first,
+                related_sequences=first.related_sequences + related,
+            )
+        )
     return updated
 
 
 def note_data(record):
     return {
-        'url': record['url'],
+        "url": record["url"],
     }
 
 
 def coordinate_system(metadata):
-    system = metadata.get('genomicCoordinateSystem', '1-start, fully-closed')
+    system = metadata.get("genomicCoordinateSystem", "1-start, fully-closed")
     if not system:
         raise ValueError("Could not find coordinate system for: %s" % metadata)
     return data.CoordinateSystem.from_name(system)
@@ -351,14 +361,14 @@ def as_entry(record, context):
     """
     return data.Entry(
         primary_id=external_id(record),
-        accession=record['primaryId'],
+        accession=record["primaryId"],
         ncbi_tax_id=taxid(record),
         database=context.database,
-        sequence=record['sequence'],
+        sequence=record["sequence"],
         regions=regions(record, context),
-        rna_type=record['soTermId'],
-        url=record['url'],
-        seq_version=record.get('version', '1'),
+        rna_type=record["soTermId"],
+        url=record["url"],
+        seq_version=record.get("version", "1"),
         optional_id=optional_id(record, context),
         description=description(record),
         note_data=note_data(record),
@@ -369,8 +379,8 @@ def as_entry(record, context):
         common_name=common_name(record),
         secondary_structure=secondary_structure(record),
         references=references(record),
-        organelle=record.get('localization', None),
-        product=record.get('product', None),
+        organelle=record.get("localization", None),
+        product=record.get("product", None),
         anticodon=anticodon(record),
         gene=gene(record),
         gene_synonyms=gene_synonyms(record),
@@ -387,16 +397,16 @@ def parse(raw):
     """
 
     def key(raw):
-        return gene(raw) or ''
+        return gene(raw) or ""
 
     context = Context(
-        database=raw['metaData']['dataProvider'],
-        coordinate_system=coordinate_system(raw['metaData']),
+        database=raw["metaData"]["dataProvider"],
+        coordinate_system=coordinate_system(raw["metaData"]),
     )
 
-    ncrnas = sorted(raw['data'], key=key)
+    ncrnas = sorted(raw["data"], key=key)
 
-    metadata_pubs = raw['metaData'].get('publications', [])
+    metadata_pubs = raw["metaData"].get("publications", [])
     metadata_refs = [pub.reference(r) for r in metadata_pubs]
 
     for gene_id, records in it.groupby(ncrnas, gene):

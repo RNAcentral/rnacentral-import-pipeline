@@ -17,27 +17,37 @@ import pytest
 
 from rnacentral_pipeline.databases.ncbi.gene import helpers
 
-@pytest.mark.parametrize('filename,count', [
-    ('data/ncbi_gene/simple.txt', 11),
-])
+
+@pytest.mark.parametrize(
+    "filename,count",
+    [
+        ("data/ncbi_gene/simple.txt", 11),
+    ],
+)
 def test_can_find_expected_ncrnas(filename, count):
     with open(filename) as raw:
         assert len(list(helpers.ncrnas(raw))) == count
 
 
-@pytest.mark.parametrize('filename', [
-    ('data/ncbi_gene/proteins.txt'),
-    ('data/ncbi_gene/empty.txt'),
-])
+@pytest.mark.parametrize(
+    "filename",
+    [
+        ("data/ncbi_gene/proteins.txt"),
+        ("data/ncbi_gene/empty.txt"),
+    ],
+)
 def test_complains_if_no_ncrnas(filename):
     with pytest.raises(Exception):
         with open(filename) as raw:
             assert list(helpers.ncrnas(raw))
 
 
-@pytest.mark.parametrize('filename,index,rna_type', [
-    ('data/ncbi_gene/simple.txt', 0, 'snoRNA'),
-])
+@pytest.mark.parametrize(
+    "filename,index,rna_type",
+    [
+        ("data/ncbi_gene/simple.txt", 0, "snoRNA"),
+    ],
+)
 def test_can_generate_rna_type(filename, index, rna_type):
     with open(filename) as raw:
         data = list(helpers.ncrnas(raw))

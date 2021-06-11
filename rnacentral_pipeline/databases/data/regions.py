@@ -25,6 +25,7 @@ class UnknownStrand(Exception):
     """
     Raised when a strand integer has an invalid value.
     """
+
     pass
 
 
@@ -50,21 +51,21 @@ class Strand(enum.Enum):
     def build(cls, value):
         if isinstance(value, float) and int(value) == value:
             value = int(value)
-        if value in {1, '+', '1', Strand.forward}:
+        if value in {1, "+", "1", Strand.forward}:
             return cls.forward
-        if value in {-1, '-', '-1', Strand.reverse}:
+        if value in {-1, "-", "-1", Strand.reverse}:
             return cls.reverse
-        if value in {0, '.', 0, Strand.unknown}:
+        if value in {0, ".", 0, Strand.unknown}:
             return cls.unknown
         raise UnknownStrand("No way to handle raw strand: " + str(value))
 
     def display_string(self):
         if self is Strand.reverse:
-            return '-'
+            return "-"
         if self is Strand.forward:
-            return '+'
+            return "+"
         if self is Strand.unknown:
-            return '.'
+            return "."
         raise ValueError("Strand %s has no representation" % self)
 
     def display_int(self):
@@ -78,14 +79,14 @@ class CoordinateStart(enum.Enum):
 
     @classmethod
     def from_name(cls, name):
-        if name == '0-start':
+        if name == "0-start":
             return cls.zero
-        if name == '1-start':
+        if name == "1-start":
             return cls.one
         raise UnknownCoordinateStart(name)
 
     def __str__(self):
-        return '%i-start' % self.value
+        return "%i-start" % self.value
 
 
 # @enum.unique
@@ -95,17 +96,17 @@ class CloseStatus(enum.Enum):
 
     @classmethod
     def from_name(cls, name):
-        if name == 'fully-closed':
+        if name == "fully-closed":
             return cls.closed
-        if name == 'half-open':
+        if name == "half-open":
             return cls.open
         raise UnknownCloseStatus(name)
 
     def __str__(self):
         if self is CloseStatus.closed:
-            return 'fully-closed'
+            return "fully-closed"
         if self is CloseStatus.open:
-            return 'half-open'
+            return "half-open"
         raise ValueError("No name for %s" % self)
 
 
@@ -139,14 +140,14 @@ class CoordinateSystem(object):
     def from_name(cls, name):
         """
         Create a CoordinateSystem from a given name. The name must be formatted
-        like 'basis, close_status'. Examples are: 
+        like 'basis, close_status'. Examples are:
 
-        - '0-start, half-open', 
+        - '0-start, half-open',
         - '1-start, fully-closed'
         """
 
         try:
-            basis_name, close_name = name.split(', ', 1)
+            basis_name, close_name = name.split(", ", 1)
         except:
             raise UnknownCoordinateSystem(name)
 
@@ -160,7 +161,7 @@ class CoordinateSystem(object):
         """
         Just a short cut for '0-start, half-open'.
         """
-        return cls.from_name('0-start, half-open')
+        return cls.from_name("0-start, half-open")
 
     @classmethod
     def one_based(cls):
@@ -170,7 +171,7 @@ class CoordinateSystem(object):
         return cls.from_name("1-start, fully-closed")
 
     def name(self):
-        return '%s, %s' % (self.basis, self.close_status)
+        return "%s, %s" % (self.basis, self.close_status)
 
     def size(self, location):
         size = None
@@ -217,23 +218,22 @@ class Exon(object):
 
     @classmethod
     def from_dict(cls, raw):
-        return cls(start=raw['exon_start'], stop=raw['exon_stop'])
+        return cls(start=raw["exon_start"], stop=raw["exon_stop"])
 
     @stop.validator
     def greater_than_start(self, attribute, value):
         if value < self.start:
-            raise ValueError("stop (%i) must be >= start (%i)" % 
-                             (value, self.start))
+            raise ValueError("stop (%i) must be >= start (%i)" % (value, self.start))
 
 
 def as_sorted_exons(raw):
     exons = []
     for entry in raw:
         if isinstance(entry, dict):
-           exons.append(Exon(**entry))
+            exons.append(Exon(**entry))
         else:
             exons.append(entry)
-    return tuple(sorted(exons, key=op.attrgetter('start')))
+    return tuple(sorted(exons, key=op.attrgetter("start")))
 
 
 @attr.s(frozen=True, hash=True, slots=True)
@@ -255,19 +255,21 @@ class SequenceRegion:
     def stop(self):
         return self.exons[-1].stop
 
-    def name(self, upi=''):
+    def name(self, upi=""):
         exon_names = []
         for exon in self.exons:
             normalized = self.coordinate_system.normalize(exon)
-            exon_names.append('{start}-{stop}'.format(
-                start=normalized.start,
-                stop=normalized.stop,
-            ))
+            exon_names.append(
+                "{start}-{stop}".format(
+                    start=normalized.start,
+                    stop=normalized.stop,
+                )
+            )
 
-        return '{upi}@{chromosome}/{exons}:{strand}'.format(
+        return "{upi}@{chromosome}/{exons}:{strand}".format(
             upi=upi,
             chromosome=self.chromosome,
-            exons=','.join(exon_names),
+            exons=",".join(exon_names),
             strand=self.strand.display_string(),
         )
 
@@ -291,7 +293,7 @@ class SequenceRegion:
         )
 
     def writeable(self, accession, is_upi=False, require_strand=True):
-        assert accession, 'Must given an accession to write %s' % self
+        assert accession, "Must given an accession to write %s" % self
         if require_strand and self.strand is Strand.unknown:
             return
 

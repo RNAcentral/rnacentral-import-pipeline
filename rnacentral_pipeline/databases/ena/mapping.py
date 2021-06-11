@@ -23,22 +23,26 @@ from attr.validators import optional
 
 from rnacentral_pipeline.databases.data import Entry
 
-CHROMOSOME_LEVEL_MAPPINGS = set([
-    "WORMBASE",
-])
+CHROMOSOME_LEVEL_MAPPINGS = set(
+    [
+        "WORMBASE",
+    ]
+)
 
 DATABASES = {
-    'SRPDB',
-    'WormBase',
-    'lncRNAdb',
-    'snOPYdb',
-    'tmRNA-Website',
+    "SRPDB",
+    "WormBase",
+    "lncRNAdb",
+    "snOPYdb",
+    "tmRNA-Website",
 }
 
 TpaKey = ty.Tuple[str, ty.Optional[str]]
 
 
-def tpa_key(value: ty.Union[Entry, "GenericTpa"], database: ty.Optional[str]=None) -> TpaKey:
+def tpa_key(
+    value: ty.Union[Entry, "GenericTpa"], database: ty.Optional[str] = None
+) -> TpaKey:
     """
     Generate a key that can be used to map from a GenericTpa to an Entry.
     """
@@ -49,7 +53,7 @@ def tpa_key(value: ty.Union[Entry, "GenericTpa"], database: ty.Optional[str]=Non
 
     if db_name in CHROMOSOME_LEVEL_MAPPINGS:
         if isinstance(value, Entry):
-            if db_name == 'WORMBASE':
+            if db_name == "WORMBASE":
                 return (value.parent_accession, value.standard_name)
             else:
                 return (value.parent_accession, value.locus_tag)
@@ -62,10 +66,10 @@ def tpa_key(value: ty.Union[Entry, "GenericTpa"], database: ty.Optional[str]=Non
 
 def internal_database_name(ena_name: str) -> str:
     name = ena_name.upper()
-    if name == 'SNOPYDB':
-        return 'SNOPY'
-    if name == 'TMRNA-WEBSITE':
-        return 'TMRNA_WEB'
+    if name == "SNOPYDB":
+        return "SNOPY"
+    if name == "TMRNA-WEBSITE":
+        return "TMRNA_WEB"
     return name
 
 
@@ -79,29 +83,29 @@ class GenericTpa(object):
 
     @classmethod
     def from_tsv(cls, row) -> "GenericTpa":
-        locus_tag = row['Source secondary accession']
+        locus_tag = row["Source secondary accession"]
         if not locus_tag:
             locus_tag = None
 
-        secondary = row['Target secondary accession']
+        secondary = row["Target secondary accession"]
         if not secondary:
             secondary = None
 
-        database = internal_database_name(row['Source'])
+        database = internal_database_name(row["Source"])
 
         return cls(
             database,
-            row['Source primary accession'],
+            row["Source primary accession"],
             locus_tag,
-            row['Target primary accession'],
+            row["Target primary accession"],
             secondary,
         )
 
     def accession(self, entry: Entry) -> str:
-        return f'{entry.accession}:{self.database}:{self.database_accession}'
+        return f"{entry.accession}:{self.database}:{self.database_accession}"
 
     def optional_id(self, entry: Entry) -> ty.Optional[str]:
-        xrefs = entry.xref_data.get('ena_refs', {})
+        xrefs = entry.xref_data.get("ena_refs", {})
         if self.database in xrefs:
             return xrefs[self.database][1]
         return None
@@ -113,35 +117,40 @@ class GenericTpa(object):
             optional_id=self.optional_id(entry),
             accession=self.accession(entry),
             database=self.database,
-            is_composite='Y',
+            is_composite="Y",
             non_coding_id=entry.accession,
         )
 
 
 class UrlBuilder:
     def sgd(self, entry) -> str:
-        return 'http://www.yeastgenome.org/locus/%s/overview' % entry.primary_id
+        return "http://www.yeastgenome.org/locus/%s/overview" % entry.primary_id
 
     def srpdb(self, entry: Entry) -> str:
-        return 'http://rnp.uthscsa.edu/rnp/SRPDB/rna/sequences/fasta/%s' % entry.primary_id
+        return (
+            "http://rnp.uthscsa.edu/rnp/SRPDB/rna/sequences/fasta/%s" % entry.primary_id
+        )
 
     def wormbase(self, entry: Entry) -> str:
-        return 'http://www.wormbase.org/species/c_elegans/gene/%s' % entry.primary_id
+        return "http://www.wormbase.org/species/c_elegans/gene/%s" % entry.primary_id
 
     def dictybase(self, entry: Entry) -> str:
-        return 'http://dictybase.org/gene/%s' % entry.primary_id
+        return "http://dictybase.org/gene/%s" % entry.primary_id
 
     def lncrnadb(self, entry: Entry) -> str:
-        return 'http://www.lncrnadb.org/Detail.aspx?TKeyID=%s' % entry.primary_id
+        return "http://www.lncrnadb.org/Detail.aspx?TKeyID=%s" % entry.primary_id
 
     def mirbase(self, entry: Entry) -> str:
-        return 'http://www.mirbase.org/cgi-bin/mirna_entry.pl?acc=%s' % entry.primary_id
+        return "http://www.mirbase.org/cgi-bin/mirna_entry.pl?acc=%s" % entry.primary_id
 
     def snopy(self, entry: Entry) -> str:
-        return 'http://snoopy.med.miyazaki-u.ac.jp/snorna_db.cgi?mode=sno_info&id=%s' % entry.primary_id
+        return (
+            "http://snoopy.med.miyazaki-u.ac.jp/snorna_db.cgi?mode=sno_info&id=%s"
+            % entry.primary_id
+        )
 
     def tmrna_web(self, entry: Entry) -> str:
-        return 'http://bioinformatics.sandia.gov/tmrna/seqs/%s.html' % entry.primary_id
+        return "http://bioinformatics.sandia.gov/tmrna/seqs/%s.html" % entry.primary_id
 
     def transform(self, entry: Entry) -> Entry:
         builder = getattr(self, entry.database.lower())
@@ -178,14 +187,14 @@ class TpaMappings:
         dbs = [internal_database_name(db) for db in DATABASES]
         failed = [db for db in dbs if not self.counts[db]]
         if failed:
-            raise ValueError("No TPAs found for: %s" % ', '.join(failed))
+            raise ValueError("No TPAs found for: %s" % ", ".join(failed))
         return True
 
 
 def parse_tpa_file(handle) -> ty.Iterable[GenericTpa]:
-    reader = csv.DictReader(handle, delimiter='\t')
+    reader = csv.DictReader(handle, delimiter="\t")
     for row in reader:
-        if row['Target'] != 'sequence':
+        if row["Target"] != "sequence":
             continue
         yield GenericTpa.from_tsv(row)
 
@@ -197,7 +206,7 @@ def load(raw) -> TpaMappings:
 
 
 def load_file(filename: str) -> TpaMappings:
-    with open(filename, 'r') as raw:
+    with open(filename, "r") as raw:
         return load(raw)
 
 

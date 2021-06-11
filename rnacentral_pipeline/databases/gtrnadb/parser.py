@@ -28,7 +28,9 @@ from rnacentral_pipeline.databases.gtrnadb import helpers
 LOGGER = logging.getLogger(__name__)
 
 
-def gtrnadb_entries(taxonomy: SqliteDict, data: ty.Dict[str, ty.Any]) -> ty.Iterable[Entry]:
+def gtrnadb_entries(
+    taxonomy: SqliteDict, data: ty.Dict[str, ty.Any]
+) -> ty.Iterable[Entry]:
     """
     Take an entry from GtRNAdb and produce the RNAcentrals that it
     represents. A single entry may represent more than one Entry because it
@@ -36,19 +38,19 @@ def gtrnadb_entries(taxonomy: SqliteDict, data: ty.Dict[str, ty.Any]) -> ty.Iter
     each location this ends up representing more than one RNAcentral Entry.
     """
 
-    if data['metadata']['pseudogene']:
+    if data["metadata"]["pseudogene"]:
         return
 
-    for location in data['genome_locations']:
+    for location in data["genome_locations"]:
         try:
             yield Entry(
                 primary_id=helpers.primary_id(data, location),
                 accession=helpers.accession(data, location),
-                ncbi_tax_id=int(data['ncbi_tax_id']),
-                database='GTRNADB',
+                ncbi_tax_id=int(data["ncbi_tax_id"]),
+                database="GTRNADB",
                 sequence=helpers.sequence(data),
                 regions=[],
-                rna_type='tRNA',
+                rna_type="tRNA",
                 url=helpers.url(data),
                 seq_version=helpers.seq_version(data),
                 note_data=helpers.note_data(data),
@@ -56,15 +58,15 @@ def gtrnadb_entries(taxonomy: SqliteDict, data: ty.Dict[str, ty.Any]) -> ty.Iter
                 species=helpers.species(taxonomy, data),
                 anticodon=helpers.anticodon(data),
                 lineage=helpers.lineage(taxonomy, data),
-                gene=data['gene'],
-                optional_id=data['gene'],
+                gene=data["gene"],
+                optional_id=data["gene"],
                 product=helpers.product(data),
                 parent_accession=helpers.parent_accession(location),
                 description=helpers.description(taxonomy, data),
-                mol_type='genomic DNA',
+                mol_type="genomic DNA",
                 location_start=1,
-                location_end=len(data['sequence']),
-                gene_synonyms=data.get('synonyms', []),
+                location_end=len(data["sequence"]),
+                gene_synonyms=data.get("synonyms", []),
                 references=helpers.references(),
             )
         except phy.FailedTaxonId:

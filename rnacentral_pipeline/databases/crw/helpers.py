@@ -28,18 +28,18 @@ from rnacentral_pipeline.databases.helpers import publications as pub
 LOGGER = logging.getLogger(__name__)
 
 ORGANELLE_MAPPING = {
-    'Mitochondrion': 'mitochondria',
-    'Cyanelle': 'cyanelle',
-    'Chloroplast': 'chloroplast'
+    "Mitochondrion": "mitochondria",
+    "Cyanelle": "cyanelle",
+    "Chloroplast": "chloroplast",
 }
 
 
 def primary_id(row: ty.Dict[str, ty.Any]) -> str:
-    return 'CRW:' + row['model_name']
+    return "CRW:" + row["model_name"]
 
 
 def taxid(row: ty.Dict[str, ty.Any]) -> int:
-    return row['taxid']
+    return row["taxid"]
 
 
 def species(row: ty.Dict[str, ty.Any]) -> str:
@@ -54,23 +54,21 @@ def lineage(row: ty.Dict[str, ty.Any]) -> str:
     return phy.lineage(taxid(row))
 
 
-def sequence(
-        row: ty.Dict[str, ty.Any],
-        sequences: ty.Dict[str, SeqRecord]) -> str:
-    return str(sequences[row['model_name']].seq)
+def sequence(row: ty.Dict[str, ty.Any], sequences: ty.Dict[str, SeqRecord]) -> str:
+    return str(sequences[row["model_name"]].seq)
 
 
 def description(row: ty.Dict[str, ty.Any]) -> str:
     name = species(row)
     loc = organelle(row)
-    rna_type = row['rna_type']
+    rna_type = row["rna_type"]
     if loc:
-        return f'{name} {loc} {rna_type}'
-    return f'{name} {rna_type}'
+        return f"{name} {loc} {rna_type}"
+    return f"{name} {rna_type}"
 
 
 def organelle(row: ty.Dict[str, ty.Any]) -> ty.Optional[str]:
-    return ORGANELLE_MAPPING.get(row['cellular_location'], None)
+    return ORGANELLE_MAPPING.get(row["cellular_location"], None)
 
 
 def as_entry(row: ty.Dict[str, ty.Any], sequences) -> ty.Optional[data.Entry]:
@@ -79,12 +77,12 @@ def as_entry(row: ty.Dict[str, ty.Any], sequences) -> ty.Optional[data.Entry]:
             primary_id=primary_id(row),
             accession=primary_id(row),
             ncbi_tax_id=taxid(row),
-            database='CRW',
+            database="CRW",
             regions=[],
-            rna_type=row['so_term_id'],
+            rna_type=row["so_term_id"],
             sequence=sequence(row, sequences),
-            url='',
-            seq_version='1',
+            url="",
+            seq_version="1",
             description=description(row),
             species=species(row),
             common_name=common_name(row),
@@ -103,7 +101,7 @@ def as_entry(row: ty.Dict[str, ty.Any], sequences) -> ty.Optional[data.Entry]:
 def fasta_entries(directory: Path) -> ty.Iterable[SeqRecord]:
     model_pattern = re.compile("crw-bpseq/(.+).bpseq")
     for fasta_file in directory.glob("*.fasta"):
-        with fasta_file.open('r') as raw:
+        with fasta_file.open("r") as raw:
             header, sequence, _ = raw.readlines()
             matches = re.search(model_pattern, header)
             if matches is None:

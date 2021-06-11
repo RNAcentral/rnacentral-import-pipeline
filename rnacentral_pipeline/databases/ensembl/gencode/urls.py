@@ -19,28 +19,28 @@ import typing as ty
 
 
 def human_key(release):
-    match = re.match('^Gencode_human/release_(\d+)(\w*)$', release)
+    match = re.match("^Gencode_human/release_(\d+)(\w*)$", release)
     if not match:
         raise ValueError(f"Could not parse {release}")
     return (int(match.group(1)), match.group(2))
 
 
 def mouse_key(release):
-    parts = release.split('_', 2)
+    parts = release.split("_", 2)
     return int(parts[2][1:])
 
 
 def latest_human(ftp: FTP) -> str:
-    names = ftp.nlst('Gencode_human')
-    names = [f for f in names if f.startswith('Gencode_human/release_')]
+    names = ftp.nlst("Gencode_human")
+    names = [f for f in names if f.startswith("Gencode_human/release_")]
     best = max(names, key=human_key)
-    release_id = ''.join(str(p) for p in human_key(best))
+    release_id = "".join(str(p) for p in human_key(best))
     return f"{best}/gencode.v{release_id}.annotation.gff3.gz"
 
 
 def latest_mouse(ftp: FTP) -> str:
-    names = ftp.nlst('Gencode_mouse')
-    names = [f for f in names if f.startswith('Gencode_mouse/release_M')]
+    names = ftp.nlst("Gencode_mouse")
+    names = [f for f in names if f.startswith("Gencode_mouse/release_M")]
     best = max(names, key=mouse_key)
     release_id = f"M{mouse_key(best)}"
     return f"{best}/gencode.v{release_id}.annotation.gff3.gz"

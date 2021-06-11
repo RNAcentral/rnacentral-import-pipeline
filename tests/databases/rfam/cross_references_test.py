@@ -25,7 +25,7 @@ from rnacentral_pipeline.databases.data.ontology_term import OntologyTerm as Ter
 
 @pytest.fixture
 def data():
-    with open('data/rfam/database_link.tsv', 'r') as raw:
+    with open("data/rfam/database_link.tsv", "r") as raw:
         return list(cr.parse(raw))
 
 
@@ -34,30 +34,34 @@ def test_can_fetch_and_parse_data(data):
 
 
 def test_correctly_parses_so_data(data):
-    assert attr.asdict(data[1]) == attr.asdict(cr.RfamDatabaseLink(
-        # RF00001	SO		0000652	rRNA_5S	Gene; rRNA;
-        rfam_family='RF00001',
-        database='SO',
-        comment=None,
-        external_id='SO:0000652',
-        other='rRNA_5S',
-        family_type='Gene; rRNA;',
-    ))
+    assert attr.asdict(data[1]) == attr.asdict(
+        cr.RfamDatabaseLink(
+            # RF00001	SO		0000652	rRNA_5S	Gene; rRNA;
+            rfam_family="RF00001",
+            database="SO",
+            comment=None,
+            external_id="SO:0000652",
+            other="rRNA_5S",
+            family_type="Gene; rRNA;",
+        )
+    )
 
 
 def test_correctly_parses_other(data):
-    assert attr.asdict(data[49]) == attr.asdict(cr.RfamDatabaseLink(
-        rfam_family='RF00015',
-        database='GO',
-        comment=None,
-        external_id='GO:0017070',
-        other='U6 snRNA binding',
-        family_type='Gene; snRNA; splicing;',
-    ))
+    assert attr.asdict(data[49]) == attr.asdict(
+        cr.RfamDatabaseLink(
+            rfam_family="RF00015",
+            database="GO",
+            comment=None,
+            external_id="GO:0017070",
+            other="U6 snRNA binding",
+            family_type="Gene; snRNA; splicing;",
+        )
+    )
 
 
 def test_can_extract_all_ontology_terms():
-    with open('data/rfam/database_link.tsv', 'r') as raw:
+    with open("data/rfam/database_link.tsv", "r") as raw:
         sample = StringIO()
         for line in raw.readlines()[:10]:
             sample.write(line)
@@ -65,52 +69,73 @@ def test_can_extract_all_ontology_terms():
         references = list(cr.ontology_references(sample))
         references = [r.external_id for r in references]
         assert references == [
-            'SO:0000652',
-            'GO:0003735',
-            'GO:0005840',
-            'SO:0000375',
-            'GO:0003735',
-            'GO:0005840',
-            'SO:0000391',
+            "SO:0000652",
+            "GO:0003735",
+            "GO:0005840",
+            "SO:0000375",
+            "GO:0003735",
+            "GO:0005840",
+            "SO:0000391",
         ]
 
 
-@pytest.mark.parametrize('excluded', [
-    'GO:0008049',
-    'GO:0042981',
-    'GO:0042749',
-    'GO:0044005',
-])
+@pytest.mark.parametrize(
+    "excluded",
+    [
+        "GO:0008049",
+        "GO:0042981",
+        "GO:0042749",
+        "GO:0044005",
+    ],
+)
 def test_does_not_include_bad_go_terms_in_ontologies(excluded):
-    with open('data/rfam/database_link.tsv', 'r') as raw:
+    with open("data/rfam/database_link.tsv", "r") as raw:
         terms = {ref.external_id for ref in cr.ontology_references(raw)}
         assert excluded not in terms
 
 
-@pytest.mark.parametrize('model,expected,unexpected', [
-    ('RF02712', 'GO:0051819', 'GO:0044005')
-])
+@pytest.mark.parametrize(
+    "model,expected,unexpected", [("RF02712", "GO:0051819", "GO:0044005")]
+)
 def test_replaces_bad_ontology_references(model, expected, unexpected):
-    with open('data/rfam/database_link.tsv', 'r') as raw:
-        terms = {ref.external_id for ref in cr.ontology_references(raw) if ref.rfam_family == model}
+    with open("data/rfam/database_link.tsv", "r") as raw:
+        terms = {
+            ref.external_id
+            for ref in cr.ontology_references(raw)
+            if ref.rfam_family == model
+        }
         assert expected in terms
         assert unexpected not in terms
 
 
-@pytest.mark.parametrize('model,excluded', [
-    ('RF01942', 'GO:0035068'),
-    ('RF02338', 'GO:0006396'),
-])
+@pytest.mark.parametrize(
+    "model,excluded",
+    [
+        ("RF01942", "GO:0035068"),
+        ("RF02338", "GO:0006396"),
+    ],
+)
 def test_does_not_incorrectly_assign_mirna_go_mapping(model, excluded):
-    with open('data/rfam/database_link.tsv', 'r') as raw:
-        terms = {ref.external_id for ref in cr.ontology_references(raw) if ref.rfam_family == model}
+    with open("data/rfam/database_link.tsv", "r") as raw:
+        terms = {
+            ref.external_id
+            for ref in cr.ontology_references(raw)
+            if ref.rfam_family == model
+        }
         assert excluded not in terms
 
 
-@pytest.mark.parametrize('model,expected', [
-    ('RF00012', 'GO:0006396'),
-])
+@pytest.mark.parametrize(
+    "model,expected",
+    [
+        ("RF00012", "GO:0006396"),
+    ],
+)
 def test_does_not_exclude_bad_mirna_terms_from_other_families(model, expected):
-    with open('data/rfam/database_link.tsv', 'r') as raw:
-        terms = {ref.external_id for ref in cr.ontology_references(raw) if ref.rfam_family == model}
+    with open("data/rfam/database_link.tsv", "r") as raw:
+        terms = {
+            ref.external_id
+            for ref in cr.ontology_references(raw)
+            if ref.rfam_family == model
+        }
         assert expected in terms

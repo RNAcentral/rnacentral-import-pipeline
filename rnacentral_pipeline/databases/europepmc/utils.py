@@ -29,23 +29,23 @@ def pretty_location(data):
     Produce the noramlized location description we use from the EuropePMC data.
     """
 
-    issue = data.get('issue', '')
+    issue = data.get("issue", "")
     if issue:
-        issue = ('(%s)' % issue)
+        issue = "(%s)" % issue
 
-    pages = data.get('pageInfo', '')
-    if 'pageInfo' in data and pages:
-        pages = ':' + pages
+    pages = data.get("pageInfo", "")
+    if "pageInfo" in data and pages:
+        pages = ":" + pages
 
-    location = u'{title} {volume}{issue}{pages} ({year})'.format(
-        title=data.get('journalTitle', ''),
+    location = u"{title} {volume}{issue}{pages} ({year})".format(
+        title=data.get("journalTitle", ""),
         issue=issue,
-        volume=data.get('journalVolume', ''),
+        volume=data.get("journalVolume", ""),
         pages=pages,
-        year=data['pubYear'],
+        year=data["pubYear"],
     )
-    location = location.replace('  ', ' ')
-    if location.endswith('.'):
+    location = location.replace("  ", " ")
+    if location.endswith("."):
         return location[0:-1]
     return location
 
@@ -54,7 +54,7 @@ def clean_title(title):
     """
     Cleanup the title into a normalized setup.
     """
-    stripped = re.sub(r'\.$', '', title)
+    stripped = re.sub(r"\.$", "", title)
     parser = html_parser.HTMLParser()
     return parser.unescape(stripped)
 

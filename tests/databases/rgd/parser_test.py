@@ -21,17 +21,17 @@ from rnacentral_pipeline.databases.rgd import parser as rgd
 
 @pytest.fixture
 def sequences():
-    with indexed('data/rgd/sequences.fa.gz') as sequences:
+    with indexed("data/rgd/sequences.fa.gz") as sequences:
         yield sequences
 
 
 def test_can_find_version():
-    with open('data/rgd/rat_genes.txt', 'r') as raw:
-        assert rgd.get_version(raw) == 'genes-version-2.2.5'
+    with open("data/rgd/rat_genes.txt", "r") as raw:
+        assert rgd.get_version(raw) == "genes-version-2.2.5"
 
 
 @pytest.mark.xfail()
 def test_can_parse_data(sequences):
-    with open('data/rgd/rat_genes.txt', 'r') as raw:
+    with open("data/rgd/rat_genes.txt", "r") as raw:
         entries = list(rgd.parse(raw, sequences))
     assert len(entries) == 14

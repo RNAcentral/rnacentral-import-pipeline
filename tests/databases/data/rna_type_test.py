@@ -62,32 +62,66 @@ def test_can_build_from_insdc_name(so_tree, name, so_id):
     assert RnaType.from_insdc_term(so_tree, name).so_term.so_id == so_id
 
 
-@pytest.mark.parametrize("so_id", [
-    ("SO:0000252"),
-    ("SO:0001244"),
-    ("SO:0000650"),
-    ("SO:0001000"),
-])
+@pytest.mark.parametrize(
+    "so_id",
+    [
+        ("SO:0000252"),
+        ("SO:0001244"),
+        ("SO:0000650"),
+        ("SO:0001000"),
+    ],
+)
 def test_can_build_from_so_id(so_tree, so_id):
     assert RnaType.from_so_id(so_tree, so_id).so_term.so_id == so_id
 
 
-@pytest.mark.parametrize("name,so_id", [
-    ("rRNA", "SO:0000252"),
-    ("pre_miRNA", "SO:0001244"),
-    ("small_subunit_rRNA", "SO:0000650"),
-    ("rRNA_16S", "SO:0001000"),
-])
+@pytest.mark.parametrize(
+    "name,so_id",
+    [
+        ("rRNA", "SO:0000252"),
+        ("pre_miRNA", "SO:0001244"),
+        ("small_subunit_rRNA", "SO:0000650"),
+        ("rRNA_16S", "SO:0001000"),
+    ],
+)
 def test_can_build_from_so_name(so_tree, name, so_id):
     assert RnaType.from_so_id(so_tree, name).so_term.so_id == so_id
 
 
-@pytest.mark.parametrize("so_id, expected", [
-    ("SO:0000252", RnaType(so_term=SoTermInfo(so_id='SO:0000252', name='rRNA'), insdc='rRNA')),
-    ("SO:0001244", RnaType(so_term=SoTermInfo(so_id='SO:0001244', name='pre_miRNA'), insdc='pre_miRNA')),
-    ("SO:0000650", RnaType(so_term=SoTermInfo(so_id='SO:0000650', name='small_subunit_rRNA'), insdc=None)),
-    ("SO:0001000", RnaType(so_term=SoTermInfo(so_id='SO:0001000', name='rRNA_16S'), insdc=None)),
-    ("SO:0001035", RnaType(so_term=SoTermInfo(so_id='SO:0001035', name='piRNA'), insdc='piRNA')),
-])
+@pytest.mark.parametrize(
+    "so_id, expected",
+    [
+        (
+            "SO:0000252",
+            RnaType(so_term=SoTermInfo(so_id="SO:0000252", name="rRNA"), insdc="rRNA"),
+        ),
+        (
+            "SO:0001244",
+            RnaType(
+                so_term=SoTermInfo(so_id="SO:0001244", name="pre_miRNA"),
+                insdc="pre_miRNA",
+            ),
+        ),
+        (
+            "SO:0000650",
+            RnaType(
+                so_term=SoTermInfo(so_id="SO:0000650", name="small_subunit_rRNA"),
+                insdc=None,
+            ),
+        ),
+        (
+            "SO:0001000",
+            RnaType(
+                so_term=SoTermInfo(so_id="SO:0001000", name="rRNA_16S"), insdc=None
+            ),
+        ),
+        (
+            "SO:0001035",
+            RnaType(
+                so_term=SoTermInfo(so_id="SO:0001035", name="piRNA"), insdc="piRNA"
+            ),
+        ),
+    ],
+)
 def test_build_expected_data(so_tree, so_id, expected):
     assert RnaType.from_so_id(so_tree, so_id) == expected

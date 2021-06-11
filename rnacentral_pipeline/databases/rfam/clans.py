@@ -17,12 +17,12 @@ import csv
 
 
 def from_file(filename, output):
-    reader = csv.DictReader(filename, delimiter='\t')
+    reader = csv.DictReader(filename, delimiter="\t")
     fields = [
-        'id',
-        'name',
-        'description',
-        'family_count',
+        "id",
+        "name",
+        "description",
+        "family_count",
     ]
     writer = csv.DictWriter(output, fields)
     writer.writerows(reader)

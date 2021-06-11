@@ -82,16 +82,16 @@ class Database(enum.Enum):
     def build(cls, name: str) -> Database:
         if isinstance(name, cls):
             return name
-        attribute = name.lower().replace(' ', '_')
+        attribute = name.lower().replace(" ", "_")
         if hasattr(cls, attribute):
             return getattr(cls, attribute)
-        if name == 'pdb':
+        if name == "pdb":
             return cls.pdbe
-        if name == 'tmrna-website' or attribute == "tmrna_web":
+        if name == "tmrna-website" or attribute == "tmrna_web":
             return cls.tmrna_website
-        if name == 'snopydb':
+        if name == "snopydb":
             return cls.snopy
-        if attribute == 'ensembl/gencode' or attribute == 'ensembl_gencode':
+        if attribute == "ensembl/gencode" or attribute == "ensembl_gencode":
             return cls.gencode
         if attribute == "5srrnadb":
             return cls.five_srrnadb
@@ -101,8 +101,8 @@ class Database(enum.Enum):
 
     def normalized(self) -> str:
         if self is Database.gencode:
-            return 'ENSEMBL_GENCODE'
-        return self.name.upper().replace(' ', '_')
+            return "ENSEMBL_GENCODE"
+        return self.name.upper().replace(" ", "_")
 
     def index(self) -> int:
         return self.value.id

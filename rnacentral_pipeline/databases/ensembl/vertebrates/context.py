@@ -25,7 +25,9 @@ from rnacentral_pipeline.databases import data
 from rnacentral_pipeline.databases.rfam import utils as rfutils
 
 from rnacentral_pipeline.databases.ensembl.gff import load_coordinates
-from rnacentral_pipeline.databases.ensembl.vertebrates.rna_type_inference import RnaTypeInference
+from rnacentral_pipeline.databases.ensembl.vertebrates.rna_type_inference import (
+    RnaTypeInference,
+)
 
 LOGGER = logging.getLogger(__name__)
 
@@ -49,19 +51,19 @@ class Context:
         if not family_file:
             raise ValueError("Must give family file for E!vert")
 
-        with open(family_file, 'r') as raw:
+        with open(family_file, "r") as raw:
             supressed_mapping = rfutils.name_to_suppression(raw)
 
-        with open(family_file, 'r') as raw:
+        with open(family_file, "r") as raw:
             supressed_mapping.update(rfutils.id_to_suppression(raw))
 
-        with open(family_file, 'r') as raw:
+        with open(family_file, "r") as raw:
             inference = RnaTypeInference(raw)
 
-        with open(family_file, 'r') as raw:
+        with open(family_file, "r") as raw:
             rfam_names = rfutils.id_to_pretty_name(raw)
 
-        with open(family_file, 'r') as raw:
+        with open(family_file, "r") as raw:
             rfam_names.update(rfutils.name_to_pretty_name(raw))
 
         excluded = set()

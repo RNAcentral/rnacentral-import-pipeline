@@ -16,14 +16,14 @@ limitations under the License.
 import re
 
 
-SUCCESS_PATTERN = re.compile(r'^\s+Total import time\s+[?✓]')
-FAILED_PATTERN = re.compile(r'^\s+Total import time\s+\d+')
+SUCCESS_PATTERN = re.compile(r"^\s+Total import time\s+[?✓]")
+FAILED_PATTERN = re.compile(r"^\s+Total import time\s+\d+")
 
 
 def summary_line(handle):
     summary = None
     for line in handle:
-        if line.strip().startswith('Total import time'):
+        if line.strip().startswith("Total import time"):
             if summary:
                 raise ValueError("Mutliple summaries found")
             summary = line

@@ -15,6 +15,7 @@ limitations under the License.
 
 import pickle
 
+
 def pickle_stream(stream, handle, *args, **kwargs):
     for entry in stream:
         pickle.dump(entry, handle, *args, **kwargs)

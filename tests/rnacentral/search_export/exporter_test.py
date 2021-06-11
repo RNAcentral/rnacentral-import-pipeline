@@ -175,7 +175,11 @@ def test_assigns_common_name_correctly(upi, name):
 
 
 @pytest.mark.parametrize(
-    "upi,function", [("URS000000079A_87230", []), ("URS0000044908_2242", ["tRNA-Arg"]),]
+    "upi,function",
+    [
+        ("URS000000079A_87230", []),
+        ("URS0000044908_2242", ["tRNA-Arg"]),
+    ],
 )
 def test_assigns_function_correctly(upi, function):
     ans = [{"attrib": {"name": "function"}, "text": f} for f in function]
@@ -202,7 +206,14 @@ def test_assigns_gene_correctly(upi, ans):
         ("URS00006B19C2_77133", set([])),
         ("URS0000547AAD_7227", {"FBgn0019661", "roX1"}),
         ("URS0000D5E40F_7227", {"CR46362"}),
-        ("URS0000773F8D_7227", {"CR46280", "dme-mir-9384", r"Dmel\CR46280",}),
+        (
+            "URS0000773F8D_7227",
+            {
+                "CR46280",
+                "dme-mir-9384",
+                r"Dmel\CR46280",
+            },
+        ),
         (
             "URS0000602386_7227",
             {
@@ -248,7 +259,10 @@ def test_assigns_gene_synonym_correctly(upi, genes):
 
 
 @pytest.mark.parametrize(
-    "upi,transcript_ids", [("URS0000D5E5D0_7227", {"FBtr0473389"}),]
+    "upi,transcript_ids",
+    [
+        ("URS0000D5E5D0_7227", {"FBtr0473389"}),
+    ],
 )
 def test_can_search_using_flybase_transcript_ids(upi, transcript_ids):
     val = {c["attrib"]["dbkey"] for c in load_and_get_cross_references(upi, "FLYBASE")}
@@ -430,7 +444,14 @@ def test_assigns_rna_type_correctly(upi, ans):
 @pytest.mark.parametrize(
     "upi,ans",
     [  # pylint: disable=E1101
-        ("URS00004AFF8D_9544", ["ENA", "RefSeq", "miRBase",]),
+        (
+            "URS00004AFF8D_9544",
+            [
+                "ENA",
+                "RefSeq",
+                "miRBase",
+            ],
+        ),
         ("URS00001DA281_9606", ["ENA", "GtRNAdb", "HGNC", "PDBe"]),
     ],
 )
@@ -455,7 +476,13 @@ def test_correctly_gets_expert_db(upi, ans):
         ),
         (
             "URS00001F1DA8_9606",
-            {"MIR126", "hsa-miR-126", "hsa-miR-126-3p", "miR-126", "miR-126-3p",},
+            {
+                "MIR126",
+                "hsa-miR-126",
+                "hsa-miR-126-3p",
+                "miR-126",
+                "miR-126-3p",
+            },
         ),
     ],
 )

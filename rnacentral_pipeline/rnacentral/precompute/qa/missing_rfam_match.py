@@ -30,7 +30,10 @@ EXPECTED_MATCHES = {
         "RF02543",  # Eukaryotic large subunit ribosomal RNA
         "RF02547",  # mito 5S RNA
     },
-    "tRNA": {"RF00005", "RF01852",},  # tRNA  # Selenocysteine tRNA
+    "tRNA": {
+        "RF00005",
+        "RF01852",
+    },  # tRNA  # Selenocysteine tRNA
 }
 
 

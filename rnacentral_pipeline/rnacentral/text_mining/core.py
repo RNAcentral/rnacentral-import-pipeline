@@ -45,8 +45,8 @@ class MatchingSentence(object):
 
     def writeables(self, *extra):
         sentence = self.sentence.raw
-        sentence = sentence.replace('\n', ' ')
-        sentence = sentence.replace('  ', ' ')
+        sentence = sentence.replace("\n", " ")
+        sentence = sentence.replace("  ", " ")
         for match in self.matches:
             data = list(extra)
             rest = [
@@ -54,7 +54,7 @@ class MatchingSentence(object):
                 match.group,
                 match.name,
                 match.word,
-                sentence
+                sentence,
             ]
 
             yield data + rest
@@ -85,9 +85,7 @@ class PatternMatcher(object):
 
     @classmethod
     def build(cls, group, patterns):
-        pattern = re.compile(
-            '|'.join('(:?%s$)' % p for p in patterns),
-            re.IGNORECASE)
+        pattern = re.compile("|".join("(:?%s$)" % p for p in patterns), re.IGNORECASE)
 
         return cls(
             group=str(group),

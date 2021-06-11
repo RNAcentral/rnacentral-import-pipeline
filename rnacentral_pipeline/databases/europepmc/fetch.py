@@ -36,6 +36,7 @@ class UnknownReference(Exception):
     This is raised when EuropePMC does not have any information on the given
     reference.
     """
+
     pass
 
 
@@ -57,18 +58,18 @@ def summary(id_reference):
 
     data = response.json()
     assert data, "Somehow got no data"
-    if data.get('hitCount', 0) == 0:
+    if data.get("hitCount", 0) == 0:
         raise UnknownReference(id_reference)
 
-    if data['hitCount'] == 1:
-        if not data['resultList']['result'][0]:
+    if data["hitCount"] == 1:
+        if not data["resultList"]["result"][0]:
             raise UnknownReference(id_reference)
 
-        return data['resultList']['result'][0]
+        return data["resultList"]["result"][0]
 
     # TODO: Implement proper usage of pagination.
     possible = []
-    for result in data['resultList']['result']:
+    for result in data["resultList"]["result"]:
         if not result:
             continue
 
@@ -89,25 +90,25 @@ def lookup(id_reference):
     """
 
     data = summary(id_reference)
-    pmid = data.get('pmid', None)
+    pmid = data.get("pmid", None)
     if pmid:
         pmid = int(pmid)
 
     return Reference(
-        authors=str(data.get('authorString', '')),
+        authors=str(data.get("authorString", "")),
         location=str(pretty_location(data)),
-        title=str(clean_title(data.get('title', ''))),
+        title=str(clean_title(data.get("title", ""))),
         pmid=pmid,
-        doi=data.get('doi', None),
-        pmcid=data.get('pmcid', None),
+        doi=data.get("doi", None),
+        pmcid=data.get("pmcid", None),
     )
 
 
 def write_file_lookup(handle, output, column=0, ignore_missing=False):
     write_lookup(
-        lookup, 
-        handle, 
-        output, 
+        lookup,
+        handle,
+        output,
         column=column,
         ignore_errors=ignore_missing,
     )

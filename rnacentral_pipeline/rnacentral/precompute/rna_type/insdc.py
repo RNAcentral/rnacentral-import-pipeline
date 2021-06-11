@@ -20,17 +20,15 @@ from collections import Counter
 
 LOGGER = logging.getLogger(__name__)
 
-TRUSTED_DATABASES = set([
-    'miRBase'
-])
+TRUSTED_DATABASES = set(["miRBase"])
 """This defines the set of databases that we always trust. If we have
 annotations from one of these databases we will always use if, assuming all
 annotations from the database agree.
 """
 
 LNC_DATABASES = {
-    'lncipedia',
-    'lncrnadb',
+    "lncipedia",
+    "lncrnadb",
 }
 
 
@@ -42,15 +40,14 @@ def correct_by_length(rna_type, sequence):
     between the two.
     """
 
-    if rna_type == set([u'precursor_RNA', u'miRNA']) or \
-            rna_type == set(['miRNA']):
+    if rna_type == set([u"precursor_RNA", u"miRNA"]) or rna_type == set(["miRNA"]):
         if 15 <= sequence.length <= 30:
-            return set(['miRNA'])
-        return set(['precursor_RNA'])
+            return set(["miRNA"])
+        return set(["precursor_RNA"])
 
-    if 'tRNA' in rna_type and sequence.length > 700:
-        rna_type.remove('tRNA')
-        return rna_type or set(['other'])
+    if "tRNA" in rna_type and sequence.length > 700:
+        rna_type.remove("tRNA")
+        return rna_type or set(["other"])
 
     return rna_type
 
@@ -62,8 +59,8 @@ def correct_other_vs_misc(rna_type, _):
     rna_types.
     """
 
-    if rna_type == set(['other', 'misc_RNA']):
-        return set(['other'])
+    if rna_type == set(["other", "misc_RNA"]):
+        return set(["other"])
     return rna_type
 
 
@@ -73,7 +70,7 @@ def remove_ambiguous(rna_type, _):
     should use it. This will remove the annotations if possible
     """
 
-    ambiguous = set(['other', 'misc_RNA'])
+    ambiguous = set(["other", "misc_RNA"])
     specific = rna_type.difference(ambiguous)
     if specific:
         return specific
@@ -86,10 +83,11 @@ def remove_ribozyme_if_possible(rna_type, _):
     is a more specific ribozyme annotation avaiable.
     """
 
-    ribozymes = set(['hammerhead', 'hammerhead_ribozyme',
-                     'autocatalytically_spliced_intron'])
-    if 'ribozyme' in rna_type and rna_type.intersection(ribozymes):
-        rna_type.discard('ribozyme')
+    ribozymes = set(
+        ["hammerhead", "hammerhead_ribozyme", "autocatalytically_spliced_intron"]
+    )
+    if "ribozyme" in rna_type and rna_type.intersection(ribozymes):
+        rna_type.discard("ribozyme")
         return rna_type
     return rna_type
 
@@ -102,8 +100,8 @@ def prefer_lnc_over_anti(rna_type, _):
     will switch.
     """
 
-    if rna_type == set(['antisense_RNA', 'lncRNA']):
-        return set(['lncRNA'])
+    if rna_type == set(["antisense_RNA", "lncRNA"]):
+        return set(["lncRNA"])
     return rna_type
 
 
@@ -112,8 +110,8 @@ def remove_ncrna_if_possible(rna_types, _):
     ncRNA is always consitent with everything else, so ignore it if possible.
     """
 
-    if 'ncRNA' in rna_types and len(rna_types) > 1:
-        rna_types.discard('ncRNA')
+    if "ncRNA" in rna_types and len(rna_types) > 1:
+        rna_types.discard("ncRNA")
         return rna_types
     return rna_types
 
@@ -126,29 +124,29 @@ def from_lnc_database(data):
 
 
 def from_ensembl(data):
-    return any(a.database.lower() == 'ensembl' for a in data.accessions)
+    return any(a.database.lower() == "ensembl" for a in data.accessions)
 
 
 def choose_snoRNA_over_snRNA(rna_types, _):
-    if rna_types == {'snoRNA', 'snRNA'}:
-        return {'snoRNA'}
+    if rna_types == {"snoRNA", "snRNA"}:
+        return {"snoRNA"}
     return rna_types
 
 
 def change_ncrna_to_other(rna_types, _):
-    if rna_types == {'ncRNA'}:
-        return {'other'}
+    if rna_types == {"ncRNA"}:
+        return {"other"}
     return rna_types
 
 
 def remove_anti_if_required(rna_types, data):
-    if 'antisense_RNA' in rna_types and from_lnc_database(data):
-        rna_types.discard('antisense_RNA')
-        rna_types.add('lncRNA')
+    if "antisense_RNA" in rna_types and from_lnc_database(data):
+        rna_types.discard("antisense_RNA")
+        rna_types.add("lncRNA")
 
-    if 'antisense_RNA' in rna_types and from_ensembl(data):
-        rna_types.discard('antisense_RNA')
-        rna_types.add('lncRNA')
+    if "antisense_RNA" in rna_types and from_ensembl(data):
+        rna_types.discard("antisense_RNA")
+        rna_types.add("lncRNA")
 
     return rna_types
 

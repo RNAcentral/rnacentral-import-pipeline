@@ -30,6 +30,7 @@ class InvalidDotBracket(Exception):
     This is raised when the given string cannot be turned into a valid
     dot-bracket string.
     """
+
     pass
 
 
@@ -67,14 +68,14 @@ def url(data):
     """
     Adds a http:// to the start of the url in data.
     """
-    return 'http://%s' % data['metadata']['url']
+    return "http://%s" % data["metadata"]["url"]
 
 
 def anticodon(data):
     """
     Get the anticodon of this entry.
     """
-    return data['metadata']['anticodon']
+    return data["metadata"]["anticodon"]
 
 
 def note_data(data):
@@ -84,18 +85,18 @@ def note_data(data):
     """
 
     note = {}
-    note.update(data['metadata'])
-    extra = ['mature_sequence', 'description']
+    note.update(data["metadata"])
+    extra = ["mature_sequence", "description"]
     for entry in extra:
         if entry in note:
             del note[entry]
-    del note['organism']
-    del note['pseudogene']
-    for position in note['anticodon_positions']:
+    del note["organism"]
+    del note["pseudogene"]
+    for position in note["anticodon_positions"]:
         position["relative_start"] = int(position["relative_start"])
         position["relative_stop"] = int(position["relative_stop"])
-    note['score'] = float(note['score'])
-    note['url'] = url(data)
+    note["score"] = float(note["score"])
+    note["url"] = url(data)
     return note
 
 
@@ -104,9 +105,9 @@ def chromosome(location):
     Get the chromosome this location is part of.
     """
 
-    chrom = location['exons'][0]['chromosome']
-    if chrom == 'Chromosome':
-        return 'chr'
+    chrom = location["exons"][0]["chromosome"]
+    if chrom == "Chromosome":
+        return "chr"
     return chrom
 
 
@@ -114,26 +115,26 @@ def lineage(taxonomy, data):
     """
     Get a standardized lineage for the given taxon id.
     """
-    if data['ncbi_tax_id'] in taxonomy:
-        return taxonomy['ncbi_tax_id'].lineage
-    return phy.lineage(data['ncbi_tax_id'])
+    if data["ncbi_tax_id"] in taxonomy:
+        return taxonomy["ncbi_tax_id"].lineage
+    return phy.lineage(data["ncbi_tax_id"])
 
 
 def species(taxonomy, data):
     """
     Get a standardized species name for the given taxon id.
     """
-    if data['ncbi_tax_id'] in taxonomy:
-        return taxonomy['ncbi_tax_id'].name
-    return phy.species(data['ncbi_tax_id'])
+    if data["ncbi_tax_id"] in taxonomy:
+        return taxonomy["ncbi_tax_id"].name
+    return phy.species(data["ncbi_tax_id"])
 
 
 def description(taxonomy, data):
     """
     Generate a description for the entries specified by the data.
     """
-    details = data['metadata'].get('description', product(data))
-    return '{name} {details}'.format(
+    details = data["metadata"].get("description", product(data))
+    return "{name} {details}".format(
         name=species(taxonomy, data),
         details=details,
     )
@@ -143,9 +144,9 @@ def product(data):
     """
     Generate the product for the entries specified by the data.
     """
-    return 'tRNA-{aa} ({anticodon})'.format(
-        aa=data['metadata']['isotype'],
-        anticodon=data['metadata']['anticodon'],
+    return "tRNA-{aa} ({anticodon})".format(
+        aa=data["metadata"]["isotype"],
+        anticodon=data["metadata"]["anticodon"],
     )
 
 
@@ -154,11 +155,11 @@ def primary_id(data, location):
     Generate a primary key for the given data and location.
     """
 
-    start = min(int(e['start']) for e in location['exons'])
-    stop = max(int(e['stop']) for e in location['exons'])
-    return '{gene}:{accession}:{start}-{stop}'.format(
-        gene=data['gene'],
-        accession=location['exons'][0]['INSDC_accession'],
+    start = min(int(e["start"]) for e in location["exons"])
+    stop = max(int(e["stop"]) for e in location["exons"])
+    return "{gene}:{accession}:{start}-{stop}".format(
+        gene=data["gene"],
+        accession=location["exons"][0]["INSDC_accession"],
         start=start,
         stop=stop,
     )
@@ -170,11 +171,9 @@ def dot_bracket(data):
     GtRNAdb uses. That is turn '>>..<<' to '((..))'.
     """
 
-    transformed = data['secondary_structure'].\
-        replace('>', '(').\
-        replace('<', ')')
+    transformed = data["secondary_structure"].replace(">", "(").replace("<", ")")
 
-    if set(transformed) != set('(.)'):
+    if set(transformed) != set("(.)"):
         raise InvalidDotBracket("Unexpected characters in %s" % transformed)
 
     return transformed
@@ -184,16 +183,16 @@ def parent_accession(location):
     """
     Get the parent accessino for the given location.
     """
-    return location['exons'][0]['INSDC_accession']
+    return location["exons"][0]["INSDC_accession"]
 
 
 def accession(data, location):
     """
     Generate an accession for the given location in data.
     """
-    return '{ac}:{gene}'.format(
+    return "{ac}:{gene}".format(
         ac=parent_accession(location),
-        gene=data['gene'],
+        gene=data["gene"],
     )
 
 
@@ -202,7 +201,7 @@ def seq_version(_):
     Compute a seq_version for GtRNAdb data. CUrrentlyt his will always return
     '1'
     """
-    return '1'
+    return "1"
 
 
 def references():
@@ -210,22 +209,24 @@ def references():
     Returns the default accessions for GtRNAdb data.
     """
 
-    return [Reference(
-        authors='Chan P.P., Lowe T.M.',
-        location='Nucl. Acids Res. 37(Database issue)',
-        title=(
-            'GtRNAdb: A database of transfer RNA genes detected in '
-            'genomic sequence'
-        ),
-        pmid=18984615,
-        doi=u'10.1093/nar/gkn787.',
-    )]
+    return [
+        Reference(
+            authors="Chan P.P., Lowe T.M.",
+            location="Nucl. Acids Res. 37(Database issue)",
+            title=(
+                "GtRNAdb: A database of transfer RNA genes detected in "
+                "genomic sequence"
+            ),
+            pmid=18984615,
+            doi=u"10.1093/nar/gkn787.",
+        )
+    ]
 
 
 def sequence(data):
-    if 'mature_sequence' in data['metadata']:
-        return data['metadata']['mature_sequence'].upper()
-    return data['sequence'].upper()
+    if "mature_sequence" in data["metadata"]:
+        return data["metadata"]["mature_sequence"].upper()
+    return data["sequence"].upper()
 
 
 def features(data):

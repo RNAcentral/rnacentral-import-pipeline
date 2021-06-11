@@ -19,9 +19,10 @@ from rnacentral_pipeline.rnacentral.text_mining import core
 from rnacentral_pipeline.rnacentral.text_mining import patterns as pats
 
 
-OUTPUT='mined-publications.csv'
+OUTPUT = "mined-publications.csv"
 
-@click.group('text-mining')
+
+@click.group("text-mining")
 def cli():
     """
     A set of commands for extracting possible RNAcentral identifiers from text
@@ -31,23 +32,23 @@ def cli():
     pass
 
 
-@cli.command('ensembl')
-@click.argument('text', type=click.Path())
-@click.argument('output', default=OUTPUT, type=click.File('w'))
+@cli.command("ensembl")
+@click.argument("text", type=click.Path())
+@click.argument("output", default=OUTPUT, type=click.File("w"))
 def ensembl(text, output):
     core.write_pattern_matches(text, pats.ENSEMBL, output)
 
 
-@cli.command('hgnc')
-@click.argument('names', type=click.File('r'))
-@click.argument('text', type=click.Path())
-@click.argument('output', default=OUTPUT, type=click.File('w'))
+@cli.command("hgnc")
+@click.argument("names", type=click.File("r"))
+@click.argument("text", type=click.Path())
+@click.argument("output", default=OUTPUT, type=click.File("w"))
 def fixed_patterns(names, text, output):
-    core.write_name_matches(text, 'hgnc', names, output)
+    core.write_name_matches(text, "hgnc", names, output)
 
 
-@cli.command('mirbase')
-@click.argument('text', type=click.Path())
-@click.argument('output', default=OUTPUT, type=click.File('w'))
+@cli.command("mirbase")
+@click.argument("text", type=click.Path())
+@click.argument("output", default=OUTPUT, type=click.File("w"))
 def mirbase(text, output):
     core.write_pattern_matches(text, pats.MIRBASE, output)

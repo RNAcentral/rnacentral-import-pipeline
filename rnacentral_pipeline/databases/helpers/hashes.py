@@ -30,7 +30,7 @@ def crc64(input_string):
     http://code.activestate.com/recipes/259177-crc64-calculate-the-cyclic-redundancy-check/
     """
 
-    POLY64REVh = 0xd8000000
+    POLY64REVh = 0xD8000000
     CRCTableh = [0] * 256
     CRCTablel = [0] * 256
     isInitialized = False
@@ -45,7 +45,7 @@ def crc64(input_string):
                 rflag = partl & 1
                 partl >>= 1
                 if parth & 1:
-                    partl |= (1 << 31)
+                    partl |= 1 << 31
                 parth >>= 1
                 if rflag:
                     parth ^= POLY64REVh

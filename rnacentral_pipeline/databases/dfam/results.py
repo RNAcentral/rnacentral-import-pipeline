@@ -70,14 +70,14 @@ class Result(object):
 
 def parse(handle):
     for line in handle:
-        if line.startswith('#'):
+        if line.startswith("#"):
             continue
-        parts = re.split(r'\s+', line.strip(), 15)
+        parts = re.split(r"\s+", line.strip(), 15)
         yield Result.build(parts)
 
 
 def write(handle, output):
     writer = csv.writer(output)
     data = parse(handle)
-    data = map(op.methodcaller('writeable'), data)
+    data = map(op.methodcaller("writeable"), data)
     writer.writerows(data)

@@ -26,24 +26,26 @@ from rnacentral_pipeline.databases.generic import v1
 LOGGER = logging.getLogger(__name__)
 
 
-def update_entry(context: SqliteDict, entry: ty.Dict[str, ty.Any]) -> ty.Dict[str, ty.Any]:
-    prefix, raw_taxid = entry['taxonId'].split(":", 1)
+def update_entry(
+    context: SqliteDict, entry: ty.Dict[str, ty.Any]
+) -> ty.Dict[str, ty.Any]:
+    prefix, raw_taxid = entry["taxonId"].split(":", 1)
     taxid = int(raw_taxid)
     if taxid not in context:
         raise ValueError(f"Unknown tax id {taxid}")
 
     tax_info = context[taxid]
     if tax_info.replaced_by:
-        pid = entry['primaryId']
+        pid = entry["primaryId"]
         updated = tax_info.replaced_by
-        entry['taxonId'] = f"{prefix}:{updated}"
+        entry["taxonId"] = f"{prefix}:{updated}"
         LOGGER.info(f"Entry {pid} replaced taxid {taxid} -> {updated}")
     return entry
 
 
 def parse(context_file: Path, json_file: Path) -> ty.Iterable[data.Entry]:
     context = SqliteDict(filename=context_file)
-    with json_file.open('r') as raw:
+    with json_file.open("r") as raw:
         ncrnas = json.load(raw)
-    ncrnas['data'] = [update_entry(context, e) for e in ncrnas['data']]
+    ncrnas["data"] = [update_entry(context, e) for e in ncrnas["data"]]
     yield from v1.parse(ncrnas)

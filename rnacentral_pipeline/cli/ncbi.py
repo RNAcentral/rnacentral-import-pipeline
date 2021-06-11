@@ -32,12 +32,16 @@ def cli():
 
 
 @cli.command("taxonomy")
-@click.argument('ncbi', default='taxonomy', type=click.Path(
-    writable=True,
-    dir_okay=True,
-    file_okay=False,
-))
-@click.argument('output', default='taxonomy.csv', type=click.File('w'))
+@click.argument(
+    "ncbi",
+    default="taxonomy",
+    type=click.Path(
+        writable=True,
+        dir_okay=True,
+        file_okay=False,
+    ),
+)
+@click.argument("output", default="taxonomy.csv", type=click.File("w"))
 def parse_taxonomy(ncbi, output):
     taxonomy.write(ncbi, output)
 
@@ -49,8 +53,8 @@ def genes():
     """
 
 
-@genes.command('fetch')
-@click.argument('output', default='ncbi-genes.pickle', type=click.File('w'))
+@genes.command("fetch")
+@click.argument("output", default="ncbi-genes.pickle", type=click.File("w"))
 def fetch_genes(output):
     gene_fetch.write(output)
 
@@ -60,7 +64,11 @@ def fetch_genes(output):
 @click.argument(
     "output",
     default=".",
-    type=click.Path(writable=True, dir_okay=True, file_okay=False,),
+    type=click.Path(
+        writable=True,
+        dir_okay=True,
+        file_okay=False,
+    ),
 )
 def process_ncbi_gene(data_file, output):
     entries = gene_parser.parse(data_file)

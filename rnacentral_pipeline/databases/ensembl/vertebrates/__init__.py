@@ -26,5 +26,5 @@ def urls_for(base: str) -> ty.Iterable[FtpInfo]:
     return urls.urls_for(base)
 
 
-def parse(raw, gff_file, family_file=None)-> ty.Iterable[Entry]:
+def parse(raw, gff_file, family_file=None) -> ty.Iterable[Entry]:
     return parser.parse(raw, gff_file, family_file=family_file)

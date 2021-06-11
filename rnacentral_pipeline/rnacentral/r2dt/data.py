@@ -71,7 +71,7 @@ class Source(enum.Enum):
         name = name.lower()
         if hasattr(cls, name):
             return getattr(cls, name)
-        if name == 'rnase p database':
+        if name == "rnase p database":
             return Source.rnase_p
         raise ValueError(f"Unknown database name {name}")
 
@@ -218,7 +218,8 @@ class R2DTResultInfo(object):
         if not paths:
             print(self)
             raise ValueError(
-                f"Could not figure out overlaps filename for {self.source_directory}/{self.urs}")
+                f"Could not figure out overlaps filename for {self.source_directory}/{self.urs}"
+            )
         if len(paths) > 1:
             raise ValueError(f"Too many overlaps files for {self.urs}")
         return paths[0]
@@ -226,7 +227,7 @@ class R2DTResultInfo(object):
     def publish_path(self, suffix="", compressed=False) -> Path:
         publish = Path(self.urs[0:3])
         for start in range(4, 11, 2):
-            publish = publish / self.urs[start: (start + 2)]
+            publish = publish / self.urs[start : (start + 2)]
         append = ""
         if suffix:
             append = f"-{suffix}"
@@ -266,8 +267,7 @@ class R2DTResultInfo(object):
         if self.source == Source.rfam and not self.model_name.startswith("RF"):
             if extension == "fasta":
                 return f"{self.urs}.{extension}"
-            assert self.model_alias.startswith(
-                "RF"), f"No existing alias for {self}"
+            assert self.model_alias.startswith("RF"), f"No existing alias for {self}"
             return f"{self.urs}-{self.model_alias}.{extension}"
         return f"{self.urs}-{self.model_name}.{extension}"
 

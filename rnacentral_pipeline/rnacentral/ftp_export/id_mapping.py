@@ -23,14 +23,14 @@ def gene(result):
     Convert the gene name into a standarized format.
     """
 
-    if result['database'] == 'ENSEMBL':
-        return result['optional_id']
+    if result["database"] == "ENSEMBL":
+        return result["optional_id"]
 
-    if result['rna_type'] == 'piRNA' and result['database'] == 'ENA':
-        return result['product']
+    if result["rna_type"] == "piRNA" and result["database"] == "ENA":
+        return result["product"]
 
-    name = result['gene'] or ''
-    name = name.replace('\t', ' ')
+    name = result["gene"] or ""
+    name = name.replace("\t", " ")
     return name
 
 
@@ -40,11 +40,11 @@ def accession(result):
     depending on the database.
     """
 
-    if result['database'] == 'ENA' or result['database'] == 'HGNC':
-        return result['accession']
-    if result['database'] == 'PDBE':
-        return '%s_%s' % (result['external_id'], result['optional_id'])
-    return result['external_id']
+    if result["database"] == "ENA" or result["database"] == "HGNC":
+        return result["accession"]
+    if result["database"] == "PDBE":
+        return "%s_%s" % (result["external_id"], result["optional_id"])
+    return result["external_id"]
 
 
 def database(result):
@@ -52,9 +52,9 @@ def database(result):
     Normalize the database name.
     """
 
-    if result['database'] == 'PDBE':
-        return 'PDB'
-    return result['database']
+    if result["database"] == "PDBE":
+        return "PDB"
+    return result["database"]
 
 
 def as_entry(result):
@@ -62,11 +62,11 @@ def as_entry(result):
     Produce the final result list for writing.
     """
     return [
-        result['upi'],
+        result["upi"],
         database(result),
         accession(result),
-        result['taxid'],
-        result['rna_type'],
+        result["taxid"],
+        result["rna_type"],
         gene(result),
     ]
 
@@ -78,4 +78,4 @@ def generate_file(json_file, output):
 
     entries = map(json.loads, json_file)
     data = map(as_entry, entries)
-    csv.writer(output, delimiter='\t').writerows(data)
+    csv.writer(output, delimiter="\t").writerows(data)

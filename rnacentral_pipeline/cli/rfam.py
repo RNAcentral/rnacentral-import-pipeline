@@ -21,7 +21,7 @@ from rnacentral_pipeline.databases import rfam
 from rnacentral_pipeline.writers import entry_writer
 
 
-@click.group('rfam')
+@click.group("rfam")
 def cli():
     """
     Commands with processing the Rfam metadata.
@@ -35,7 +35,11 @@ def cli():
 @click.argument(
     "output",
     default=".",
-    type=click.Path(writable=True, dir_okay=True, file_okay=False,),
+    type=click.Path(
+        writable=True,
+        dir_okay=True,
+        file_okay=False,
+    ),
 )
 def process_rfam(rfam_file, mapping_file, output):
     """
@@ -46,26 +50,30 @@ def process_rfam(rfam_file, mapping_file, output):
         writer.write(entries)
 
 
-@cli.command('families')
-@click.argument('filename', default='data.tsv', type=click.File('r'))
-@click.argument('output', default='rfam-families.csv', type=click.File('w'))
+@cli.command("families")
+@click.argument("filename", default="data.tsv", type=click.File("r"))
+@click.argument("output", default="rfam-families.csv", type=click.File("w"))
 def rfam_group_families(filename, output):
     rfam.families.from_file(filename, output)
 
 
-@cli.command('clans')
-@click.argument('filename', default='data.tsv', type=click.File('r'))
-@click.argument('output', default='rfam-clans.csv', type=click.File('w'))
+@cli.command("clans")
+@click.argument("filename", default="data.tsv", type=click.File("r"))
+@click.argument("output", default="rfam-clans.csv", type=click.File("w"))
 def rfam_group_clans(filename, output):
     rfam.clans.from_file(filename, output)
 
 
-@cli.command('ontology-terms')
-@click.argument('filename', default='data.tsv', type=click.File('r'))
-@click.argument('output', default='.', type=click.Path(
-    writable=True,
-    dir_okay=True,
-    file_okay=False,
-))
+@cli.command("ontology-terms")
+@click.argument("filename", default="data.tsv", type=click.File("r"))
+@click.argument(
+    "output",
+    default=".",
+    type=click.Path(
+        writable=True,
+        dir_okay=True,
+        file_okay=False,
+    ),
+)
 def ontologies_rfam_terms(filename, output):
     rfam.cross_references.from_file(filename, Path(output))

@@ -126,7 +126,9 @@ def test_can_find_correct_urls_for_soft_masked(species, assembly_id, host, expec
 
 @pytest.mark.parametrize(
     "species,assembly_id",
-    [("anas_platyrhynchos", "CAU_duck1.0"),],  # Different species on FTP only
+    [
+        ("anas_platyrhynchos", "CAU_duck1.0"),
+    ],  # Different species on FTP only
 )
 def test_raises_exceptions_for_weird_url_cases(species, assembly_id):
     with pytest.raises(urls.NoTopLevelFiles):

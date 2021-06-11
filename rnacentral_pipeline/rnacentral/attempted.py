@@ -21,14 +21,15 @@ from Bio import SeqIO
 from rnacentral_pipeline import psql
 
 
-id_attribute = op.attrgetter('id')
-id_key = op.itemgetter('id')
+id_attribute = op.attrgetter("id")
+id_key = op.itemgetter("id")
 
 
 def append_taxid(taxid, getter=id_key):
     def fn(entry):
         urs = getter(entry)
         return f"{urs}_{taxid}"
+
     return fn
 
 
@@ -38,14 +39,14 @@ def json_parser(handle, id_generator=id_key, extra_fields=[]):
 
 
 def fasta_parser(handle, id_generator=id_attribute, extra_fields=[]):
-    for record in SeqIO.parse(handle, 'fasta'):
+    for record in SeqIO.parse(handle, "fasta"):
         yield [id_generator(record)] + extra_fields
 
 
 def parse_rfam_version(handle):
     for line in handle:
-        if line.startswith('Release'):
-            parts = line.split(' ')
+        if line.startswith("Release"):
+            parts = line.split(" ")
             return parts[1].strip()
     raise ValueError("Could not find version in file")
 
@@ -61,7 +62,7 @@ def genome_mapping(handle, assembly_id, output):
 
 
 def qa(handle, name, version_file, output):
-    if name == 'rfam':
+    if name == "rfam":
         version = parse_rfam_version(version_file)
     else:
         raise ValueError(f"Unknown QA type: {name}")

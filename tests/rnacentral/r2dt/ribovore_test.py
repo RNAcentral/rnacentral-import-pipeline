@@ -21,51 +21,56 @@ from pathlib import Path
 from rnacentral_pipeline.rnacentral.traveler import ribovore
 
 
-@pytest.mark.parametrize('filename,count', [
-    ('data/traveler/crw/crw.ribotyper.long.out', 1),
-    ('data/traveler/failed-data.ribotyper.long.out', 12),
-])
+@pytest.mark.parametrize(
+    "filename,count",
+    [
+        ("data/traveler/crw/crw.ribotyper.long.out", 1),
+        ("data/traveler/failed-data.ribotyper.long.out", 12),
+    ],
+)
 def test_can_parse_whole_file(filename, count):
     assert len(list(ribovore.parse(Path(filename)))) == count
 
 
 def test_can_parse_a_simple_result():
-    path = Path('data/traveler/crw/crw.ribotyper.long.out')
+    path = Path("data/traveler/crw/crw.ribotyper.long.out")
     data = list(ribovore.parse(path))
     assert len(data) == 1
-    assert attr.asdict(data[0]) == attr.asdict(ribovore.RibovoreResult(
-        target='URS00000F9D45_9606',
-        status='PASS',
-        length=1588,
-        fm=1,
-        fam='SSU',
-        domain='Bacteria',
-        model='d.16.b.C.perfringens',
-        strand=1,
-        ht=1,
-        tscore=1093.0,
-        bscore=1093.0,
-        bevalue=0.0,
-        tcov=0.999,
-        bcov=0.999,
-        bfrom=3,
-        bto=1588,
-        mfrom=3,
-        mto=1512,
-    ))
+    assert attr.asdict(data[0]) == attr.asdict(
+        ribovore.RibovoreResult(
+            target="URS00000F9D45_9606",
+            status="PASS",
+            length=1588,
+            fm=1,
+            fam="SSU",
+            domain="Bacteria",
+            model="d.16.b.C.perfringens",
+            strand=1,
+            ht=1,
+            tscore=1093.0,
+            bscore=1093.0,
+            bevalue=0.0,
+            tcov=0.999,
+            bcov=0.999,
+            bfrom=3,
+            bto=1588,
+            mfrom=3,
+            mto=1512,
+        )
+    )
 
 
 def test_can_produce_dict_of_results():
-    data = ribovore.as_dict(Path('data/traveler/crw'))
+    data = ribovore.as_dict(Path("data/traveler/crw"))
     assert data == {
-        'URS00000F9D45_9606': ribovore.RibovoreResult(
-            target='URS00000F9D45_9606',
-            status='PASS',
+        "URS00000F9D45_9606": ribovore.RibovoreResult(
+            target="URS00000F9D45_9606",
+            status="PASS",
             length=1588,
             fm=1,
-            fam='SSU',
-            domain='Bacteria',
-            model='d.16.b.C.perfringens',
+            fam="SSU",
+            domain="Bacteria",
+            model="d.16.b.C.perfringens",
             strand=1,
             ht=1,
             tscore=1093.0,
@@ -79,4 +84,3 @@ def test_can_produce_dict_of_results():
             mto=1512,
         )
     }
-

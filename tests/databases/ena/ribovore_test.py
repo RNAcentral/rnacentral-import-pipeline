@@ -23,7 +23,7 @@ def test_can_load_with_model_lengths():
     lengths = Path("data/ena/to-exclude/model-lengths.csv")
     data = ribovore.load(path, lengths)
     for key, status in data.items():
-        if status.status != 'FAIL':
+        if status.status != "FAIL":
             assert status.model_length is not None
 
 
@@ -31,5 +31,5 @@ def test_includes_failed_results():
     path = Path("data/ena/to-exclude/kdvk01017574/ribotyper-results/")
     lengths = Path("data/ena/to-exclude/model-lengths.csv")
     data = ribovore.load(path, lengths)
-    assert 'HAQP01000579.1:18..191:rRNA' in data
-    assert data['HAQP01000579.1:18..191:rRNA'].status == 'FAIL'
+    assert "HAQP01000579.1:18..191:rRNA" in data
+    assert data["HAQP01000579.1:18..191:rRNA"].status == "FAIL"

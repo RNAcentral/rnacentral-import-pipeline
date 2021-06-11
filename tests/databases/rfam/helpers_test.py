@@ -19,12 +19,12 @@ from rnacentral_pipeline.databases.rfam import helpers
 
 
 def test_builds_correct_accessions():
-    with open('data/rfam/rfam-duplicates.json', 'r') as raw:
+    with open("data/rfam/rfam-duplicates.json", "r") as raw:
         data = json.load(raw)
 
     accessions = [helpers.accession(d) for d in data]
 
     assert accessions == [
-        'CM000677.2:93286238..93286321:rfam',
-        'CM000677.2:93286321..93286238:rfam',
+        "CM000677.2:93286238..93286321:rfam",
+        "CM000677.2:93286321..93286238:rfam",
     ]

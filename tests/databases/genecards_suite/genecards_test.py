@@ -28,14 +28,14 @@ from rnacentral_pipeline.databases.genecards_suite.core import lookup
 @contextmanager
 def known(handle):
     with tempfile.NamedTemporaryFile() as tmp:
-        lookup.write(handle, os.environ['PGDATABASE'], gene.CONTEXT.urs_field, tmp)
+        lookup.write(handle, os.environ["PGDATABASE"], gene.CONTEXT.urs_field, tmp)
         tmp.seek(0)
         yield tmp
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def simple_data():
-    with open('data/genecards/data.tsv', 'r') as raw:
+    with open("data/genecards/data.tsv", "r") as raw:
         with known(raw) as indexed:
             raw.seek(0)
             entries = {}
@@ -60,25 +60,25 @@ def test_can_create_unique_accessions(simple_data):
 
 
 def test_can_create_correct_data(simple_data):
-    assert simple_data['GENECARDS:1A9N_Q-015:URS00001EE9F1_9606'] == data.Entry(
-        primary_id='GENECARDS:1A9N_Q-015:URS00001EE9F1_9606',
-        accession='GENECARDS:1A9N_Q-015:URS00001EE9F1_9606',
+    assert simple_data["GENECARDS:1A9N_Q-015:URS00001EE9F1_9606"] == data.Entry(
+        primary_id="GENECARDS:1A9N_Q-015:URS00001EE9F1_9606",
+        accession="GENECARDS:1A9N_Q-015:URS00001EE9F1_9606",
         ncbi_tax_id=9606,
-        database='GENECARDS',
-        sequence='ATTGCAGTACCTCCAGGAACGGTGCAC',
+        database="GENECARDS",
+        sequence="ATTGCAGTACCTCCAGGAACGGTGCAC",
         regions=[],
-        rna_type='misc_RNA',
-        url='https://www.genecards.org/cgi-bin/carddisp.pl?gene=1A9N_Q-015',
+        rna_type="misc_RNA",
+        url="https://www.genecards.org/cgi-bin/carddisp.pl?gene=1A9N_Q-015",
         seq_version=1,
-        gene='1A9N_Q-015',
-        description='Homo sapiens (human) miscellaneous RNA',
-        species='Homo sapiens',
-        common_name='human',
+        gene="1A9N_Q-015",
+        description="Homo sapiens (human) miscellaneous RNA",
+        species="Homo sapiens",
+        common_name="human",
         lineage=(
-            'Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; '
-            'Euteleostomi; Mammalia; Eutheria; Euarchontoglires; '
-            'Primates; Haplorrhini; Catarrhini; Hominidae; Homo; '
-            'Homo sapiens'
+            "Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; "
+            "Euteleostomi; Mammalia; Eutheria; Euarchontoglires; "
+            "Primates; Haplorrhini; Catarrhini; Hominidae; Homo; "
+            "Homo sapiens"
         ),
         references=[pub.reference(27322403)],
     )

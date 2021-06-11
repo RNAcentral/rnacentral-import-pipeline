@@ -27,7 +27,7 @@ class MissingRibotyperDataException(Exception):
 
 
 def load_lengths(path: Path):
-    with path.open('r') as raw:
+    with path.open("r") as raw:
         return {row[0]: int(row[1]) for row in csv.reader(raw)}
 
 
@@ -41,9 +41,9 @@ def parse_file(path: Path, length_file=None) -> ty.Iterator[RibovoreResult]:
     if length_file:
         lengths = load_lengths(length_file)
 
-    with path.open('r') as raw:
+    with path.open("r") as raw:
         for line in raw:
-            if line.startswith('#'):
+            if line.startswith("#"):
                 continue
             result = RibovoreResult.from_result_line(line, lengths=lengths)
             if result is None:
@@ -53,12 +53,14 @@ def parse_file(path: Path, length_file=None) -> ty.Iterator[RibovoreResult]:
 
 def parse_directory(directory: Path, length_file=None) -> ty.Iterator[RibovoreResult]:
     possible = [
-        directory / '.ribotyper.long.out',
-        directory / (directory.name + '.ribotyper.long.out'),
+        directory / ".ribotyper.long.out",
+        directory / (directory.name + ".ribotyper.long.out"),
     ]
     for path in possible:
         if path.exists():
             yield from parse_file(path, length_file=length_file)
             break
     else:
-        raise MissingRibotyperDataException("No ribovore result file in: %s " % directory)
+        raise MissingRibotyperDataException(
+            "No ribovore result file in: %s " % directory
+        )

@@ -32,6 +32,7 @@ class InvalidEnaFile(Exception):
     """
     This is raised when there is something wrong with the ENA EMBL file.
     """
+
     pass
 
 
@@ -71,8 +72,7 @@ def parse(ctx: context.Context, path: Path) -> ty.Iterable[Entry]:
         if ctx.ribovore is not None:
             ribo_result = ctx.ribovore.get(record.id, None)
             if helpers.is_skippable_sequence(entry, ribo_result):
-                LOGGER.info(
-                    f"Skipping record ({record.id}) excluded by ribotyper")
+                LOGGER.info(f"Skipping record ({record.id}) excluded by ribotyper")
                 ctx.add_riboytper_skip()
                 continue
 

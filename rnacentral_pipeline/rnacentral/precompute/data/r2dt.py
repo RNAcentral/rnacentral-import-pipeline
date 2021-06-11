@@ -20,6 +20,7 @@ from attr.validators import optional
 from rnacentral_pipeline.rnacentral.r2dt.data import Source as ModelSource
 from rnacentral_pipeline.databases.data import RnaType
 
+
 def maybe(fn, value):
     if value is None:
         return None
@@ -42,12 +43,12 @@ class R2dtHit:
         return cls(
             model_id=raw["model_id"],
             model_name=raw["model_name"],
-            model_source=getattr(ModelSource, raw['model_source']),
+            model_source=getattr(ModelSource, raw["model_source"]),
             model_rna_type=RnaType.from_so_term(so_tree, raw["model_so_term"]),
-            sequence_coverage=maybe(float, raw['sequence_coverage']),
-            model_coverage=maybe(float, raw['model_coverage']),
-            sequence_basepairs=maybe(int, raw['sequence_basepairs']),
-            model_basepairs=maybe(int, raw['model_basepairs']),
+            sequence_coverage=maybe(float, raw["sequence_coverage"]),
+            model_coverage=maybe(float, raw["model_coverage"]),
+            sequence_basepairs=maybe(int, raw["sequence_basepairs"]),
+            model_basepairs=maybe(int, raw["model_basepairs"]),
         )
 
     def paired_ratio(self):

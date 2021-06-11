@@ -22,13 +22,13 @@ from rnacentral_pipeline.databases.ensembl.metadata import coordinate_systems as
 
 @pytest.fixture()
 def chicken():
-    with open('data/ensembl/coordinate-systems/chicken.json') as raw:
+    with open("data/ensembl/coordinate-systems/chicken.json") as raw:
         return json.load(raw)
 
 
 @pytest.fixture()
 def human():
-    with open('data/ensembl/coordinate-systems/human.json') as raw:
+    with open("data/ensembl/coordinate-systems/human.json") as raw:
         return json.load(raw)
 
 

@@ -19,8 +19,9 @@ import six
 
 from rnacentral_pipeline import utils
 
+
 def test_can_serialize_stream():
-    data = ['a', 1, 2, 3, 4]
+    data = ["a", 1, 2, 3, 4]
     with tempfile.NamedTemporaryFile() as tmp:
         utils.pickle_stream(data, tmp)
         tmp.seek(0)

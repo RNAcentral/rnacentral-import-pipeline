@@ -22,9 +22,12 @@ from attr.validators import instance_of as is_a
 from attr.validators import optional
 from intervaltree import IntervalTree
 
-from rnacentral_pipeline.rnacentral.genes.data import (Cluster, ClusteringKey,
-                                                       LocationInfo,
-                                                       WriteableCluster)
+from rnacentral_pipeline.rnacentral.genes.data import (
+    Cluster,
+    ClusteringKey,
+    LocationInfo,
+    WriteableCluster,
+)
 
 LOGGER = logging.getLogger(__name__)
 
@@ -121,7 +124,9 @@ class State:
         self._clusters[cluster.id] = cluster
         self._tree.add(cluster.as_interval())
         if len(self._tree) != len(self._clusters):
-            raise ValueError(f"Tree and cluster mismatch {len(self._tree)} vs {len(self._clusters)}")
+            raise ValueError(
+                f"Tree and cluster mismatch {len(self._tree)} vs {len(self._clusters)}"
+            )
 
     def merge_clusters(self, clusters: ty.List[Cluster]) -> int:
         assert len(clusters) > 1
@@ -198,9 +203,7 @@ class State:
             info = self._locations[lid]
             del self._locations[lid]
             LOGGER.debug("Ignoring location %s", info.location.id)
-            self._locations[lid] = LocationStatus(
-                info.location, DataType.ignored, None
-            )
+            self._locations[lid] = LocationStatus(info.location, DataType.ignored, None)
 
     def highlight_location(self, location_id: int):
         info = self._locations.get(location_id, None)
@@ -256,11 +259,16 @@ class State:
 
         clusters: ty.List[WriteableCluster] = []
         for cid, cluster in self._clusters.items():
-            locations = {lid: self._locations[lid].location for lid in cluster.location_ids()}
+            locations = {
+                lid: self._locations[lid].location for lid in cluster.location_ids()
+            }
             clusters.append(WriteableCluster.build(cluster, locations))
 
         return FinalizedState(
-            key=self.key, clusters=clusters, rejected=rejected, ignored=ignored,
+            key=self.key,
+            clusters=clusters,
+            rejected=rejected,
+            ignored=ignored,
         )
 
     def validate(self):
@@ -282,7 +290,9 @@ class State:
     def lengths(self):
         return (len(self._locations), len(self._tree), len(self._clusters))
 
-    def __remove_location_from_clusters__(self, location: LocationInfo, new_status: DataType):
+    def __remove_location_from_clusters__(
+        self, location: LocationInfo, new_status: DataType
+    ):
         if location.id not in self._locations:
             raise ValueError(f"Unknown location: {location}")
 
@@ -297,7 +307,9 @@ class State:
             cluster = self._clusters[info.data]
             self._locations[location.id] = LocationStatus(location, new_status, None)
             if len(cluster) == 1:
-                LOGGER.debug(f"Cluster {info.data} has only one member, removing it completely")
+                LOGGER.debug(
+                    f"Cluster {info.data} has only one member, removing it completely"
+                )
                 del self._clusters[info.data]
                 self._tree.remove(cluster.as_interval())
                 assert info.data not in self._clusters

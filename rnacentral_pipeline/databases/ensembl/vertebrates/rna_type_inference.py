@@ -21,30 +21,36 @@ from rnacentral_pipeline.databases.rfam import utils as rfutil
 LOGGER = logging.getLogger(__name__)
 
 
-LNC_ALIASES = set([
-    'sense_intronic',
-    'sense_overlapping',
-    'macro_lncRNA',
-    'bidirectional_promoter_lncRNA',
-    'lincRNA',
-])
+LNC_ALIASES = set(
+    [
+        "sense_intronic",
+        "sense_overlapping",
+        "macro_lncRNA",
+        "bidirectional_promoter_lncRNA",
+        "lincRNA",
+    ]
+)
 
-MITO_TYPES = set([
-    'Mt_rRNA',
-    'Mt_tRNA',
-])
+MITO_TYPES = set(
+    [
+        "Mt_rRNA",
+        "Mt_tRNA",
+    ]
+)
 
-NC_ALIASES = set([
-    '3prime_overlapping_ncRNA',
-    'known_ncrna',
-    'non_coding',
-])
+NC_ALIASES = set(
+    [
+        "3prime_overlapping_ncRNA",
+        "known_ncrna",
+        "non_coding",
+    ]
+)
 
 
 MGI_TYPES = {
-    'Terc': 'telomerase_RNA',
-    'Rn7s6': 'SRP_RNA',
-    'Nkx2-2os': 'lncRNA',
+    "Terc": "telomerase_RNA",
+    "Rn7s6": "SRP_RNA",
+    "Nkx2-2os": "lncRNA",
 }
 
 
@@ -58,8 +64,8 @@ class RnaTypeInference(object):
         family_handle.seek(0)
         self.rfam_mapping.update(rfutil.id_to_insdc_type(family_handle))
         self.fallbacks = [
-            ('RFAM_trans_name', self.rfam_type),
-            ('MGI_trans_name', self.mouse_type),
+            ("RFAM_trans_name", self.rfam_type),
+            ("MGI_trans_name", self.mouse_type),
         ]
 
     def rfam_xref(self, entry):
@@ -72,7 +78,7 @@ class RnaTypeInference(object):
         if name in self.rfam_mapping:
             return name
 
-        pattern = r'^(.+?)\.\d+-\d+$'
+        pattern = r"^(.+?)\.\d+-\d+$"
         match = re.match(pattern, name)
         if match:
             return match.group(1)
@@ -83,7 +89,7 @@ class RnaTypeInference(object):
         return self.rfam_mapping.get(name, None)
 
     def mouse_type(self, name):
-        pattern = r'^(.+)-.*$'
+        pattern = r"^(.+)-.*$"
         match = re.match(pattern, name)
         if name not in MGI_TYPES and match:
             name = match.group(1)
@@ -98,11 +104,10 @@ class RnaTypeInference(object):
             if len(values) == 1:
                 return values.pop()
             if len(values) > 1:
-                LOGGER.info("Conflicting rna types for %s according to %s",
-                            xrefs, key)
+                LOGGER.info("Conflicting rna types for %s according to %s", xrefs, key)
 
         LOGGER.info("Could not infer an rna-type for %s", xrefs)
-        return 'misc_RNA'
+        return "misc_RNA"
 
     def compute_type(self, xref_data, base_type):
         """
@@ -113,15 +118,15 @@ class RnaTypeInference(object):
         """
 
         if base_type in LNC_ALIASES:
-            return 'lncRNA'
+            return "lncRNA"
         if base_type in NC_ALIASES:
-            return 'other'
+            return "other"
         if base_type in MITO_TYPES:
-            return base_type.replace('Mt_', '')
-        if base_type == 'misc_RNA':
+            return base_type.replace("Mt_", "")
+        if base_type == "misc_RNA":
             return self.compute_fallback_rna_type(xref_data)
-        if base_type == 'miRNA':
-            return 'precursor_RNA'
+        if base_type == "miRNA":
+            return "precursor_RNA"
         return base_type
 
     def correct_spelling(self, rna_type):
@@ -131,10 +136,10 @@ class RnaTypeInference(object):
         corrects those problems.
         """
 
-        if rna_type.startswith('vault'):
-            return 'vault_RNA'
-        if rna_type.startswith('antisense'):
-            return 'antisense_RNA'
+        if rna_type.startswith("vault"):
+            return "vault_RNA"
+        if rna_type.startswith("antisense"):
+            return "antisense_RNA"
         return rna_type
 
     def infer_rna_type(self, xref_data, base_type):

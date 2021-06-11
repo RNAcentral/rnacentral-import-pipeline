@@ -21,7 +21,7 @@ from rnacentral_pipeline.databases.lncbook import parser
 from rnacentral_pipeline.writers import entry_writer
 
 
-@click.group('lncbook')
+@click.group("lncbook")
 def cli():
     """
     Commands for fetching data needed for genecards parsing.

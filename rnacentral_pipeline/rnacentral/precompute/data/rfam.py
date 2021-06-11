@@ -19,6 +19,7 @@ from attr.validators import optional
 
 from rnacentral_pipeline.databases.data import RnaType
 
+
 @attr.s(hash=True)
 class HitComponent:
     completeness = attr.ib(validator=is_a(float), converter=float)
@@ -48,11 +49,11 @@ class RfamHit:
         the attributes of this class.
         """
         return cls(
-            model=raw['model'],
-            model_rna_type=RnaType.from_so_id(so_tree, raw['model_rna_type']),
-            model_domain=raw['model_domain'],
-            model_name=raw['model_name'],
-            model_long_name=raw['model_long_name'],
+            model=raw["model"],
+            model_rna_type=RnaType.from_so_id(so_tree, raw["model_rna_type"]),
+            model_domain=raw["model_domain"],
+            model_name=raw["model_name"],
+            model_long_name=raw["model_long_name"],
             sequence_info=HitComponent(
                 completeness=raw["sequence_completeness"],
                 start=raw["sequence_start"],

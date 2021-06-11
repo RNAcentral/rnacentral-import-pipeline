@@ -32,10 +32,8 @@ class Context:
     @classmethod
     def build(cls, database: str, references, gff_file: Path) -> "Context":
         return cls(
-            database=database,
-            references=references,
-            gff=load_coordinates(gff_file)
+            database=database, references=references, gff=load_coordinates(gff_file)
         )
 
     def accession(self, primary_id: str) -> str:
-        return '%s:%s' % (self.database, primary_id)
+        return "%s:%s" % (self.database, primary_id)

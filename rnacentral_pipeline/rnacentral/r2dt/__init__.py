@@ -35,7 +35,7 @@ def parse(model_mapping: ty.TextIO, directory: str, allow_missing=False):
 
 
 def write(
-        model_mapping: ty.TextIO, directory: str, output: ty.TextIO, allow_missing=False
+    model_mapping: ty.TextIO, directory: str, output: ty.TextIO, allow_missing=False
 ):
     """
     Parse all the secondary structure data from the given directory and write
@@ -56,8 +56,7 @@ def publish(
 ):
     out_path = Path(output)
     for result in parse(model_mapping, directory, allow_missing=allow_missing):
-        publish_path = out_path / \
-            result.publish_path(suffix=suffix, compressed=True)
+        publish_path = out_path / result.publish_path(suffix=suffix, compressed=True)
         try:
             publish_path.parent.mkdir(parents=True, exist_ok=True)
         except FileExistsError:
@@ -92,8 +91,7 @@ def prepare_s3(
                 raise ValueError(f"Will not overwrite {s3_path}")
 
             if not result.info.svg.exists():
-                raise ValueError(
-                    f"Somehow missing unnormalized path {result.info.svg}")
+                raise ValueError(f"Somehow missing unnormalized path {result.info.svg}")
 
             shutil.copyfile(result.info.svg, s3_path)
             raw.write(str(s3_path))

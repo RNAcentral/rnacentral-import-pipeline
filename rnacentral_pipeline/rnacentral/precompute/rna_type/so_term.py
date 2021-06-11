@@ -237,7 +237,9 @@ def is_lncrna_data(
     def allowed(term):
         return ctx.term_is_a("lnc_RNA", term) or ctx.term_is_a("antisense_RNA", term)
 
-    selected = filter(lambda a: a.source_matches(lambda s: s.is_database()), annotations)
+    selected = filter(
+        lambda a: a.source_matches(lambda s: s.is_database()), annotations
+    )
     return all(allowed(a.rna_type) for a in selected)
 
 
@@ -246,15 +248,20 @@ def has_similar_rfam_and_r2dt(context, annotations):
     rfam = [a for a in annotations if a.has_source(SourceName.rfam_hit)]
     if len(r2dt) != 1 or len(rfam) != 1:
         return False
-    return context.term_is_a('rRNA', r2dt[0].rna_type) and \
-        context.term_is_a('rRNA', rfam[0].rna_type)
+    return context.term_is_a("rRNA", r2dt[0].rna_type) and context.term_is_a(
+        "rRNA", rfam[0].rna_type
+    )
 
 
-def rfam_db_annotations(annotations: ty.List[RnaTypeAnnotation]) -> ty.Optional[RnaTypeAnnotation]:
+def rfam_db_annotations(
+    annotations: ty.List[RnaTypeAnnotation],
+) -> ty.Optional[RnaTypeAnnotation]:
     def from_rfam(annotation: RnaTypeAnnotation) -> bool:
         def fn(source) -> bool:
-            return source.name == SourceName.generic_database and \
-                    source.data.database == Database.rfam
+            return (
+                source.name == SourceName.generic_database
+                and source.data.database == Database.rfam
+            )
 
         return annotation.source_matches(fn)
 
@@ -264,7 +271,9 @@ def rfam_db_annotations(annotations: ty.List[RnaTypeAnnotation]) -> ty.Optional[
     return None
 
 
-def all_annotations(context: context.Context, sequence: seq.Sequence) -> ty.List[RnaTypeAnnotation]:
+def all_annotations(
+    context: context.Context, sequence: seq.Sequence
+) -> ty.List[RnaTypeAnnotation]:
     annotations = []
     for accession in sequence.accessions:
         annotations.append(RnaTypeAnnotation.from_accession(context, accession))

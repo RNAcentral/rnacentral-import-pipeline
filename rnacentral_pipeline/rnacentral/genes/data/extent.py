@@ -16,8 +16,12 @@ limitations under the License.
 import attr
 from attr.validators import instance_of as is_a
 
-from rnacentral_pipeline.databases.data.regions import (CoordinateSystem, Exon,
-                                                        SequenceRegion, Strand)
+from rnacentral_pipeline.databases.data.regions import (
+    CoordinateSystem,
+    Exon,
+    SequenceRegion,
+    Strand,
+)
 
 
 @attr.s(frozen=True, slots=True, hash=True)
@@ -31,7 +35,7 @@ class Extent:
 
     @classmethod
     def build(cls, raw) -> "Extent":
-        assert raw['region_start'] < raw['region_stop']
+        assert raw["region_start"] < raw["region_stop"]
         return cls(
             assembly=raw["assembly_id"],
             taxid=raw["taxid"],

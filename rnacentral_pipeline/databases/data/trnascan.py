@@ -21,7 +21,7 @@ from attr.validators import optional
 
 
 def intron_endpoint(raw: str) -> ty.Optional[int]:
-    if raw == '0':
+    if raw == "0":
         return None
     return int(raw)
 

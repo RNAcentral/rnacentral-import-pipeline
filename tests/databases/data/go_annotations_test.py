@@ -20,27 +20,31 @@ from rnacentral_pipeline.databases import data
 
 def test_can_build_correct_writeable():
     annotation = data.GoTermAnnotation(
-        rna_id='a',
-        qualifier='part_of',
-        term_id='GO:01',
-        evidence_code='ECO:001',
+        rna_id="a",
+        qualifier="part_of",
+        term_id="GO:01",
+        evidence_code="ECO:001",
         extensions=[
-            data.AnnotationExtension(qualifier='talks_to', target='ENESMBL:1'),
+            data.AnnotationExtension(qualifier="talks_to", target="ENESMBL:1"),
         ],
-        assigned_by='Bob',
+        assigned_by="Bob",
         publications=[],
     )
 
     writeable = list(annotation.writeable())
     assert len(writeable) == 1
     assert writeable[0] == [
-        'a',
-        'part_of',
-        'GO:01',
-        'ECO:001',
-        json.dumps([{
-            'qualifier': 'talks_to',
-            'target': 'ENESMBL:1',
-        }]),
-        'Bob',
+        "a",
+        "part_of",
+        "GO:01",
+        "ECO:001",
+        json.dumps(
+            [
+                {
+                    "qualifier": "talks_to",
+                    "target": "ENESMBL:1",
+                }
+            ]
+        ),
+        "Bob",
     ]

@@ -28,6 +28,7 @@ class NoBestFoundException(Exception):
     """
     Raised when it is not possible to find the 'best' xref.
     """
+
     pass
 
 
@@ -105,11 +106,11 @@ def entropy(data):
 
 
 def item_sorter(name):
-    match = re.search(r'(\d+)$', name)
+    match = re.search(r"(\d+)$", name)
     if match:
-        name = re.sub(r'(\d+)$', '', name)
+        name = re.sub(r"(\d+)$", "", name)
         return (name, int(match.group(1)))
-    return (name, '')
+    return (name, "")
 
 
 def group_consecutives(data, min_size=2):
@@ -121,7 +122,7 @@ def group_consecutives(data, min_size=2):
         if isinstance(ix[0], int) and isinstance(ix[1], int):
             return ix[0] - ix[1]
         else:
-            return float('inf')
+            return float("inf")
 
     for _, group in it.groupby(enumerate(data), grouper):
         key = op.itemgetter(1)
@@ -143,19 +144,12 @@ def remove_extra_description_terms(description):
     in the name of tmRNA's. This corrects those issues.
     """
 
+    description = re.sub(r"\(\s*non\s*-\s*protein\s+coding\s*\)", "", description)
     description = re.sub(
-        r'\(\s*non\s*-\s*protein\s+coding\s*\)',
-        '',
-        description
+        r"transfer-messenger mRNA", "transfer-messenger RNA", description, re.IGNORECASE
     )
-    description = re.sub(
-        r'transfer-messenger mRNA',
-        'transfer-messenger RNA',
-        description,
-        re.IGNORECASE
-    )
-    description = re.sub(r'\s\s+', ' ', description)
-    description = re.sub(r'\.?\s*$', '', description)
+    description = re.sub(r"\s\s+", " ", description)
+    description = re.sub(r"\.?\s*$", "", description)
     return description
 
 
@@ -167,17 +161,17 @@ def trim_trailing_rna_type(rna_type, description):
     out along with ', ' that tends to go along with those.
     """
 
-    if 'predicted gene' in description:
+    if "predicted gene" in description:
         return description
 
     trailing = [rna_type]
-    if rna_type == 'lncRNA' or 'antisense' in rna_type:
-        trailing.append('long non-coding RNA')
+    if rna_type == "lncRNA" or "antisense" in rna_type:
+        trailing.append("long non-coding RNA")
 
-    if rna_type == 'telomerase_RNA':
-        trailing.append('telomerase RNA')
+    if rna_type == "telomerase_RNA":
+        trailing.append("telomerase RNA")
 
     for value in trailing:
-        pattern = r'[, ]*%s$' % value
-        description = re.sub(pattern, '', description, re.IGNORECASE)
+        pattern = r"[, ]*%s$" % value
+        description = re.sub(pattern, "", description, re.IGNORECASE)
     return description

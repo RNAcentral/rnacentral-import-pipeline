@@ -29,20 +29,20 @@ def is_numeric(entry):
 def top_level_only(data):
     parsed = []
     has_name_rank = False
-    key = op.itemgetter('name', 'coordinate_system', 'attrib_value')
+    key = op.itemgetter("name", "coordinate_system", "attrib_value")
     grouped = it.groupby(data, key)
     for (name, sys, assembly), entries in grouped:
         entries = list(entries)
-        attribs = {e['attrib_name']: e['attrib_value'] for e in entries}
+        attribs = {e["attrib_name"]: e["attrib_value"] for e in entries}
 
-        is_ref = attribs.get('non_ref', None) != '1'
+        is_ref = attribs.get("non_ref", None) != "1"
         rank = None
-        if 'karyotype_rank' in attribs:
+        if "karyotype_rank" in attribs:
             try:
-                rank = int(attribs['karyotype_rank'])
+                rank = int(attribs["karyotype_rank"])
             except ValueError:
                 has_name_rank = True
-                rank = attribs['karyotype_rank']
+                rank = attribs["karyotype_rank"]
 
         # Some chromosomes have name like X_random which we don't want to
         # consider reference, these never have a karyotype_rank so we can
@@ -55,9 +55,10 @@ def top_level_only(data):
             yield entry
 
     else:
+
         def sort_key(items):
             if items[4] is None:
-                return ''
+                return ""
             return items[4]
 
         rest, numeric = more.partition(is_numeric, parsed)

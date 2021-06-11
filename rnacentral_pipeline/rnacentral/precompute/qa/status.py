@@ -17,12 +17,13 @@ limitations under the License.
 from rnacentral_pipeline.rnacentral.precompute.data.sequence import Sequence
 from rnacentral_pipeline.rnacentral.precompute.data.context import Context
 from rnacentral_pipeline.rnacentral.precompute.qa import contamination
-from rnacentral_pipeline.rnacentral.precompute.qa import \
-    incomplete_sequence as incomplete
-from rnacentral_pipeline.rnacentral.precompute.qa import \
-    missing_rfam_match as missing
-from rnacentral_pipeline.rnacentral.precompute.qa import \
-    repetitive_regions as repetitive
+from rnacentral_pipeline.rnacentral.precompute.qa import (
+    incomplete_sequence as incomplete,
+)
+from rnacentral_pipeline.rnacentral.precompute.qa import missing_rfam_match as missing
+from rnacentral_pipeline.rnacentral.precompute.qa import (
+    repetitive_regions as repetitive,
+)
 from rnacentral_pipeline.rnacentral.precompute.qa.data import QaStatus
 
 VALIDATORS = [

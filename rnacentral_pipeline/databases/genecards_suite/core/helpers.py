@@ -30,7 +30,7 @@ def accession(context: data.Context, row) -> str:
 
 def taxid(context, row) -> int:
     rna_id = context.urs(row)
-    return int(rna_id.split('_', 1)[1])
+    return int(rna_id.split("_", 1)[1])
 
 
 def species(context: data.Context, row) -> str:

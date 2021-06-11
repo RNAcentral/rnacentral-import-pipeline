@@ -25,14 +25,16 @@ from rnacentral_pipeline.databases.helpers import publications as pubs
 
 from rnacentral_pipeline.databases.ensembl.vertebrates.context import Context
 
-URL = 'http://www.ensembl.org/Homo_sapiens/Transcript/Summary?t={transcript}'
+URL = "http://www.ensembl.org/Homo_sapiens/Transcript/Summary?t={transcript}"
 
-CODING_RNA_TYPES = set([
-    'tec',
-    'processed_transcript',
-    'retained_intron',
-    'crispr',
-])
+CODING_RNA_TYPES = set(
+    [
+        "tec",
+        "processed_transcript",
+        "retained_intron",
+        "crispr",
+    ]
+)
 
 
 class CouldNotTrimDescription(Exception):
@@ -40,6 +42,7 @@ class CouldNotTrimDescription(Exception):
     Raised when a description could not be trimmed to only the organisms
     suffix.
     """
+
     pass
 
 
@@ -57,9 +60,9 @@ def is_pseudogene(gene, feature):
     from a pseudogene.
     """
 
-    raw_notes = feature.qualifiers.get('note', [])
-    raw_notes.extend(gene.qualifiers.get('note', []))
-    return any('pseudogene' in n for n in raw_notes)
+    raw_notes = feature.qualifiers.get("note", [])
+    raw_notes.extend(gene.qualifiers.get("note", []))
+    return any("pseudogene" in n for n in raw_notes)
 
 
 def raw_rna_type(feature):
@@ -86,28 +89,25 @@ def description(context, gene, entry):
 
     species = entry.species
     if entry.common_name:
-        species += ' (%s)' % entry.common_name
+        species += " (%s)" % entry.common_name
 
     gene_name = notes(gene)
     if gene_name and len(gene_name) == 1:
         gene_name = gene_name[0]
-        if gene_name.endswith(']'):
-            gene_name = re.sub(r'\s*\[.+\]$', '', gene_name)
+        if gene_name.endswith("]"):
+            gene_name = re.sub(r"\s*\[.+\]$", "", gene_name)
         gene_name.strip()
-        return '{species} {gene_name}'.format(
-            species=species,
-            gene_name=gene_name
-        )
+        return "{species} {gene_name}".format(species=species, gene_name=gene_name)
 
-    locus_tag = context.rfam_name(entry.locus_tag, entry.locus_tag or '')
-    if locus_tag.startswith('RF') and entry.optional_id:
-        locus_tag = entry.optional_id.split('.')[0]
+    locus_tag = context.rfam_name(entry.locus_tag, entry.locus_tag or "")
+    if locus_tag.startswith("RF") and entry.optional_id:
+        locus_tag = entry.optional_id.split(".")[0]
 
     assert entry.rna_type, "Cannot build description without rna_type"
     rna_type = entry.human_rna_type()
     if rna_type == locus_tag:
-        locus_tag = ''
-    return '{species} {rna_type} {locus_tag}'.format(
+        locus_tag = ""
+    return "{species} {rna_type} {locus_tag}".format(
         species=species,
         rna_type=rna_type,
         locus_tag=locus_tag,
@@ -120,19 +120,19 @@ def seq_version(feature):
     """
 
     acc = accession(feature)
-    if '.' in acc:
-        return acc.split('.', 1)[1]
-    return '1'
+    if "." in acc:
+        return acc.split(".", 1)[1]
+    return "1"
 
 
 def transcript(feature):
     """
     Get the transcript id of this feature.
     """
-    name = embl.qualifier_value(feature, 'note', '^transcript_id=(.+)$')
+    name = embl.qualifier_value(feature, "note", "^transcript_id=(.+)$")
     if name:
         return name
-    return embl.qualifier_string(feature, 'standard_name')
+    return embl.qualifier_string(feature, "standard_name")
 
 
 def primary_id(feature):
@@ -146,7 +146,7 @@ def primary_id(feature):
     if not primary:
         primary = embl.standard_name(feature)
     assert primary, "Could not generate primary id for %s" % feature
-    return primary.split('.', 1)[0]
+    return primary.split(".", 1)[0]
 
 
 def accession(feature):
@@ -175,13 +175,13 @@ def organism_naming(record):
     the parenthesis is the common name and everything else is the species.
     """
 
-    pattern = re.compile(r'\((.+)\)$')
+    pattern = re.compile(r"\((.+)\)$")
     common_name = None
-    species = record.annotations['organism']
+    species = record.annotations["organism"]
     match = re.search(pattern, species)
     if match:
         common_name = match.group(1)
-        species = re.sub(pattern, '', species).strip()
+        species = re.sub(pattern, "", species).strip()
     return (species, common_name)
 
 
@@ -197,7 +197,7 @@ def notes(feature):
     Get all notes from this feature. If none a present then an empty list is
     returned.
     """
-    return feature.qualifiers.get('note', [])
+    return feature.qualifiers.get("note", [])
 
 
 def note_data(feature):
@@ -209,9 +209,9 @@ def note_data(feature):
     notes_data = notes(feature)
     if len(notes_data) > 1:
         notes_data = notes_data[1:]
-    grouped = embl.grouped_annotations(notes_data, '=')
-    if 'transcript_id' not in grouped:
-        grouped['transcript_id'] = [transcript(feature)]
+    grouped = embl.grouped_annotations(notes_data, "=")
+    if "transcript_id" not in grouped:
+        grouped["transcript_id"] = [transcript(feature)]
     return grouped
 
 
@@ -223,8 +223,10 @@ def is_ncrna(feature):
 
     # The checking the first entry in 'note' is a quick and dirty way of
     # getting the ncRNA type.
-    return feature.type in {'misc_RNA', 'ncRNA'} and \
-        feature.qualifiers['note'][0].lower() not in CODING_RNA_TYPES
+    return (
+        feature.type in {"misc_RNA", "ncRNA"}
+        and feature.qualifiers["note"][0].lower() not in CODING_RNA_TYPES
+    )
 
 
 def chromosome(record):
@@ -234,10 +236,10 @@ def chromosome(record):
     """
 
     basic = record.id
-    if basic.startswith('chromosome:') or basic.startswith('scaffold:'):
-        parts = basic.split(':')
+    if basic.startswith("chromosome:") or basic.startswith("scaffold:"):
+        parts = basic.split(":")
         return parts[2]
-    return basic.split('.')[0]
+    return basic.split(".")[0]
 
 
 def product(feature):
@@ -246,8 +248,8 @@ def product(feature):
     then we use that as the product, otherwise nothing.
     """
 
-    if raw_rna_type(feature) == 'scaRNA':
-        return 'scaRNA'
+    if raw_rna_type(feature) == "scaRNA":
+        return "scaRNA"
     return None
 
 

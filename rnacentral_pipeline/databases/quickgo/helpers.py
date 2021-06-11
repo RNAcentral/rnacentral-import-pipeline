@@ -20,9 +20,9 @@ import rnacentral_pipeline.databases.helpers.publications as pub
 
 from rnacentral_pipeline.databases import data
 
-go_id = op.itemgetter('GO_ID')
-evidence = op.itemgetter('Evidence')
-assigned_by = op.itemgetter('Assigned_by')
+go_id = op.itemgetter("GO_ID")
+evidence = op.itemgetter("Evidence")
+assigned_by = op.itemgetter("Assigned_by")
 
 
 def rna_id(entry):
@@ -30,8 +30,8 @@ def rna_id(entry):
     Get the UPI for the entry, or fail if there is none.
     """
 
-    if entry['DB'] == 'RNAcentral':
-        return entry['DB_Object_ID']
+    if entry["DB"] == "RNAcentral":
+        return entry["DB_Object_ID"]
     raise ValueError("All entries are expected to come from RNAcentral")
 
 
@@ -39,13 +39,13 @@ def qualifier(entry):
     """
     Get the qualifer for this entry.
     """
-    return entry['Qualifier'][0]
+    return entry["Qualifier"][0]
 
 
 def publications(entry):
     references = []
-    for reference in entry['DB:Reference']:
-        match = re.match(r'^PMID:(\d+)$', reference)
+    for reference in entry["DB:Reference"]:
+        match = re.match(r"^PMID:(\d+)$", reference)
         if match:
             references.append(pub.reference(match.group(1)))
     return references
@@ -53,12 +53,14 @@ def publications(entry):
 
 def extensions(record):
     result = []
-    for extension in record['Annotation Extension']:
-        for part in extension.split(','):
-            match = re.match(r'(\w+)\((.+)\)', part)
+    for extension in record["Annotation Extension"]:
+        for part in extension.split(","):
+            match = re.match(r"(\w+)\((.+)\)", part)
             if match:
-                result.append(data.AnnotationExtension(
-                    qualifier=match.group(1),
-                    target=match.group(2),
-                ))
+                result.append(
+                    data.AnnotationExtension(
+                        qualifier=match.group(1),
+                        target=match.group(2),
+                    )
+                )
     return result

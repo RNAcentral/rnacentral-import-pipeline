@@ -21,7 +21,7 @@ from rnacentral_pipeline.databases.refseq import parser
 from rnacentral_pipeline.writers import entry_writer
 
 
-@click.group('refseq')
+@click.group("refseq")
 def cli():
     """
     Commands for fetching data needed for genecards parsing.
@@ -34,7 +34,11 @@ def cli():
 @click.argument(
     "output",
     default=".",
-    type=click.Path(writable=True, dir_okay=True, file_okay=False,),
+    type=click.Path(
+        writable=True,
+        dir_okay=True,
+        file_okay=False,
+    ),
 )
 def process_refseq(refseq_file, output):
     """

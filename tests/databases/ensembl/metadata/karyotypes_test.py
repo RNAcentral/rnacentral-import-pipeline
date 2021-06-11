@@ -24,30 +24,34 @@ def karyotype(domain, species):
 
 
 def test_builds_empty_karyotype_for_missing_data():
-    _, found = karyotype('ensembl', 'glycine_max')
+    _, found = karyotype("ensembl", "glycine_max")
     assert len(found) == 1190
-    assert found['1'] == {
-        'size': 56831624,
-        'bands': [{
-            'start': 1,
-            'end': 56831624,
-        }]
+    assert found["1"] == {
+        "size": 56831624,
+        "bands": [
+            {
+                "start": 1,
+                "end": 56831624,
+            }
+        ],
     }
 
 
 def test_builds_with_known_bands():
-    _, found = karyotype('ensembl', 'homo_sapiens')
+    _, found = karyotype("ensembl", "homo_sapiens")
     assert len(found) == 194
-    assert found['MT'] == {
-        'size': 16569,
-        'bands': [{
-            'start': 1,
-            'end': 16569,
-        }]
+    assert found["MT"] == {
+        "size": 16569,
+        "bands": [
+            {
+                "start": 1,
+                "end": 16569,
+            }
+        ],
     }
-    assert found['Y'] == {
-        'size': 57227415,
-        'bands': [
+    assert found["Y"] == {
+        "size": 57227415,
+        "bands": [
             {"type": "acen", "id": "p11.1", "start": 10300001, "end": 10400000},
             {"id": "p11.2", "end": 10300000, "start": 600001, "type": "gneg"},
             {"end": 600000, "start": 300001, "id": "p11.31", "type": "gpos50"},
@@ -58,6 +62,6 @@ def test_builds_with_known_bands():
             {"end": 19600000, "start": 17100001, "id": "q11.222", "type": "gneg"},
             {"type": "gpos50", "id": "q11.223", "end": 23800000, "start": 19600001},
             {"type": "gneg", "id": "q11.23", "end": 26600000, "start": 23800001},
-            {"type": "gvar", "id": "q12", "start": 26600001, "end": 57227415}
-        ]
+            {"type": "gvar", "id": "q12", "start": 26600001, "end": 57227415},
+        ],
     }

@@ -54,6 +54,7 @@ class MissingProduct(Exception):
     """
     Raised when no product is available for the given chain.
     """
+
     pass
 
 
@@ -209,8 +210,7 @@ def note_data(info: ChainInfo) -> ty.Dict[str, str]:
 
 
 def description(info: ChainInfo, max_length=80) -> str:
-    compound = product(info)[:max_length] + \
-        (product(info)[max_length:] and "...")
+    compound = product(info)[:max_length] + (product(info)[max_length:] and "...")
     return "{compound} from {source} (PDB {pdb}, chain {chain})".format(
         compound=compound,
         source=info.organism_scientific_name,

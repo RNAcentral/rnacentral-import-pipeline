@@ -26,9 +26,10 @@ from rnacentral_pipeline.databases.generic import v1
 
 LOGGER = logging.getLogger(__name__)
 
+
 def load_known(path: Path) -> SqliteDict:
     known = SqliteDict()
-    with path.open('r') as raw:
+    with path.open("r") as raw:
         for line in raw:
             known[line.strip()] = True
     known.commit()
@@ -38,11 +39,11 @@ def load_known(path: Path) -> SqliteDict:
 def parse(path: Path, known_path: Path) -> ty.Iterable[data.Entry]:
     known = load_known(known_path)
     ctx = v1.Context(
-        database='PIRBASE',
+        database="PIRBASE",
         coordinate_system=data.CoordinateSystem.zero_based(),
     )
 
-    with path.open('r') as handle:
+    with path.open("r") as handle:
         for raw in ijson.items(handle, "data.item"):
             entry = v1.as_entry(raw, ctx)
             if entry.md5() in known:

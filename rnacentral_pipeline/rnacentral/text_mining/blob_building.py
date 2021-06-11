@@ -50,24 +50,24 @@ def extract_node_text(node):
 
     paragraph = lines[0]
     for line in lines[1:]:
-        if re.match(r'^[,.)]', line):
+        if re.match(r"^[,.)]", line):
             paragraph += line
         else:
-            paragraph += ' ' + line
+            paragraph += " " + line
 
     if not paragraph:
         return None
-    paragraph = paragraph.replace('\n', ' ')
-    paragraph = re.sub(r'\s+', ' ', paragraph)
+    paragraph = paragraph.replace("\n", " ")
+    paragraph = re.sub(r"\s+", " ", paragraph)
     return paragraph
 
 
 def article_as_blob(article):
     text = []
     nodes = it.chain(
-        article.findall('.//article-title'),
-        article.findall('.//abstract//p'),
-        article.findall('.//body//p'),
+        article.findall(".//article-title"),
+        article.findall(".//abstract//p"),
+        article.findall(".//body//p"),
     )
 
     for node in nodes:
@@ -75,17 +75,17 @@ def article_as_blob(article):
         if not paragraph:
             continue
         text.append(paragraph)
-    return tb.TextBlob('\n'.join(text))
+    return tb.TextBlob("\n".join(text))
 
 
 def article_id_reference(article):
     ids = {}
-    for pub_id in article.findall('./front/article-meta/article-id'):
-        namespace = pub_id.attrib['pub-id-type']
+    for pub_id in article.findall("./front/article-meta/article-id"):
+        namespace = pub_id.attrib["pub-id-type"]
         ids[namespace] = pub_id.text
-    for name in ['pmid', 'doi', 'pmcid']:
+    for name in ["pmid", "doi", "pmcid"]:
         if name in ids:
-            return pubs.reference('%s:%s' % (name, ids[name]))
+            return pubs.reference("%s:%s" % (name, ids[name]))
     raise ValueError("Could not find an pub id for %s" % ET.tostring(article))
 
 
@@ -110,18 +110,18 @@ class TextBlobContainer(object):
                 yield blob
 
     def __blob__(self, path):
-        if path.suffix == '.txt':
+        if path.suffix == ".txt":
             yield self.__text_blob__(path)
 
-        elif path.suffix == '.xml':
-            with path.open('r') as raw:
+        elif path.suffix == ".xml":
+            with path.open("r") as raw:
                 header = raw.read(10)
 
-            if header.startswith('<articles>'):
+            if header.startswith("<articles>"):
                 for blob in self.__full_text_blob__(path):
                     yield blob
 
-            elif header.startswith('<PMCSet>'):
+            elif header.startswith("<PMCSet>"):
                 for blob in self.__metadata_blob__(path):
                     yield blob
 
@@ -129,23 +129,23 @@ class TextBlobContainer(object):
             raise ValueError("Cannot parse publication data from: %s" % path)
 
     def __text_blob__(self, path):
-        with codecs.open(path, 'r', errors='ignore') as raw:
+        with codecs.open(path, "r", errors="ignore") as raw:
             text = raw.read()
             blob = tb.TextBlob(text)
         return TextBlobWrapper(pubs.reference(path.stem), blob)
 
     def __metadata_blob__(cls, path):
-        with open(str(path), 'r') as raw:
+        with open(str(path), "r") as raw:
             for ref in pubs.parse_xml(raw):
                 id_ref = ref.id_reference()
                 blob = tb.TextBlob(ref.title)
                 yield TextBlobWrapper(id_ref, blob)
 
     def __full_text_blob__(self, path):
-        with path.open('r') as raw:
+        with path.open("r") as raw:
             tree = ET.parse(raw)
             root = tree.getroot()
-            for node in root.findall('./article'):
+            for node in root.findall("./article"):
                 id_ref = article_id_reference(node)
                 blob = article_as_blob(node)
                 yield TextBlobWrapper(id_ref, blob)

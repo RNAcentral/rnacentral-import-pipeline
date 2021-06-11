@@ -19,9 +19,9 @@ import pytest
 from rnacentral_pipeline.databases.dfam import results
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def test_data():
-    with open('data/dfam/dfam.tsv', 'r') as raw:
+    with open("data/dfam/dfam.tsv", "r") as raw:
         return list(results.parse(raw))
 
 
@@ -30,16 +30,18 @@ def test_can_parse_all_results(test_data):
 
 
 def test_can_parse_results_correctly(test_data):
-    assert attr.asdict(test_data[0]) == attr.asdict(results.Result(
-        model_name='MLT1A',
-        model_accession='DF0001126.4',
-        upi='URS00007CC20E',
-        bits=205.7,
-        e_value=3.6e-60,
-        bias=4.1,
-        model_start=1,
-        model_end=374,
-        strand=1,
-        sequence_start=726,
-        sequence_end=1062,
-    ))
+    assert attr.asdict(test_data[0]) == attr.asdict(
+        results.Result(
+            model_name="MLT1A",
+            model_accession="DF0001126.4",
+            upi="URS00007CC20E",
+            bits=205.7,
+            e_value=3.6e-60,
+            bias=4.1,
+            model_start=1,
+            model_end=374,
+            strand=1,
+            sequence_start=726,
+            sequence_end=1062,
+        )
+    )

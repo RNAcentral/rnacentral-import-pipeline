@@ -23,14 +23,20 @@ from rnacentral_pipeline.databases.ensembl import protists
 from . import helpers
 
 
-@pytest.fixture(scope='module')  # pylint: disable=no-member
+@pytest.fixture(scope="module")  # pylint: disable=no-member
 def leis_36():
-    return helpers.parse(protists.parse, 'data/ensembl_protists/Leishmania_major.ASM272v2.chromosome.36.dat')
+    return helpers.parse(
+        protists.parse,
+        "data/ensembl_protists/Leishmania_major.ASM272v2.chromosome.36.dat",
+    )
 
 
-@pytest.mark.parametrize('filename,count', [
-    ('data/ensembl_protists/Leishmania_major.ASM272v2.chromosome.36.dat', 71),
-])
+@pytest.mark.parametrize(
+    "filename,count",
+    [
+        ("data/ensembl_protists/Leishmania_major.ASM272v2.chromosome.36.dat", 71),
+    ],
+)
 def test_can_parse_all_entries(filename, count):
     assert len(helpers.parse(protists.parse, filename)) == count
 
@@ -111,12 +117,15 @@ def test_can_parse_expected_accounts(leis_36):
     }
 
 
-@pytest.mark.parametrize('accession,rna_type', [
-    ('ENSEMBL_PROTISTS:EPrT00049906997', 'SO:0000275'),
-    ('ENSEMBL_PROTISTS:ENSRNAT00049766004', 'SO:0000274'),
-    ('ENSEMBL_PROTISTS:EPrT00049907002', 'SO:0000253'),
-    ('ENSEMBL_PROTISTS:EPrT00049906963', 'SO:0000274'),
-])
+@pytest.mark.parametrize(
+    "accession,rna_type",
+    [
+        ("ENSEMBL_PROTISTS:EPrT00049906997", "SO:0000275"),
+        ("ENSEMBL_PROTISTS:ENSRNAT00049766004", "SO:0000274"),
+        ("ENSEMBL_PROTISTS:EPrT00049907002", "SO:0000253"),
+        ("ENSEMBL_PROTISTS:EPrT00049906963", "SO:0000274"),
+    ],
+)
 def test_can_get_expected_rna_types(leis_36, accession, rna_type):
     val = helpers.entry_for(leis_36, accession)
     assert val.rna_type == rna_type
@@ -124,41 +133,45 @@ def test_can_get_expected_rna_types(leis_36, accession, rna_type):
 
 def test_only_has_expected_ncrna_as_rna_type(leis_36):
     for entry in leis_36:
-        if entry.primary_id == 'EPrT00049906996':
+        if entry.primary_id == "EPrT00049906996":
             continue
-        assert entry.rna_type != 'SO:0000655'
+        assert entry.rna_type != "SO:0000655"
 
 
 def test_can_parse_expected_data(leis_36):
-    assert attr.asdict(helpers.entry_for(leis_36, 'ENSEMBL_PROTISTS:EPrT00049906982')) == attr.asdict(dat.Entry(
-        primary_id='EPrT00049906982',
-        accession='ENSEMBL_PROTISTS:EPrT00049906982',
-        ncbi_tax_id=347515,
-        database='ENSEMBL_PROTISTS',
-        sequence='GCGCAGTTGGTCTAGTGGTAGAATTCTCGCCTGCCACGCGGGAGGCCCGGGTTCGATTCCCGGACTGCGCA',
-        regions=[
-            dat.SequenceRegion(
-                chromosome='36',
-                strand=1,
-                exons=[dat.Exon(start=1032512, stop=1032582)],
-                assembly_id='ASM272v2',
-                coordinate_system=dat.CoordinateSystem.one_based(),
+    assert attr.asdict(
+        helpers.entry_for(leis_36, "ENSEMBL_PROTISTS:EPrT00049906982")
+    ) == attr.asdict(
+        dat.Entry(
+            primary_id="EPrT00049906982",
+            accession="ENSEMBL_PROTISTS:EPrT00049906982",
+            ncbi_tax_id=347515,
+            database="ENSEMBL_PROTISTS",
+            sequence="GCGCAGTTGGTCTAGTGGTAGAATTCTCGCCTGCCACGCGGGAGGCCCGGGTTCGATTCCCGGACTGCGCA",
+            regions=[
+                dat.SequenceRegion(
+                    chromosome="36",
+                    strand=1,
+                    exons=[dat.Exon(start=1032512, stop=1032582)],
+                    assembly_id="ASM272v2",
+                    coordinate_system=dat.CoordinateSystem.one_based(),
+                ),
+            ],
+            rna_type="SO:0000253",
+            url="",
+            seq_version="1",
+            note_data={},
+            xref_data={},
+            species="Leishmania major",
+            common_name=None,
+            lineage=(
+                "Eukaryota; Discoba; Euglenozoa; Kinetoplastea; Metakinetoplastina; "
+                "Trypanosomatida; Trypanosomatidae; Leishmaniinae; Leishmania; "
+                "Leishmania major strain Friedlin"
             ),
-        ],
-        rna_type='SO:0000253',
-        url='',
-        seq_version='1',
-        note_data={},
-        xref_data={},
-        species='Leishmania major',
-        common_name=None,
-        lineage=(
-            'Eukaryota; Discoba; Euglenozoa; Kinetoplastea; Metakinetoplastina; '
-            'Trypanosomatida; Trypanosomatidae; Leishmaniinae; Leishmania; '
-            'Leishmania major strain Friedlin'
-        ),
-        gene='LMJF_36_TRNAGLY_01',
-        locus_tag='LMJF_36_TRNAGLY_01',
-        description='Leishmania major tRNA-Gly',
-        references=[pubs.reference('doi:10.1093/nar/gkx1011')],
-    ))
+            gene="LMJF_36_TRNAGLY_01",
+            locus_tag="LMJF_36_TRNAGLY_01",
+            description="Leishmania major tRNA-Gly",
+            references=[pubs.reference("doi:10.1093/nar/gkx1011")],
+        )
+    )

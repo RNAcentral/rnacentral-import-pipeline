@@ -27,7 +27,9 @@ from rnacentral_pipeline.rnacentral.precompute.qa.data import QaStatus
 from rnacentral_pipeline.rnacentral.precompute.data.context import Context
 from rnacentral_pipeline.rnacentral.precompute.data.sequence import Sequence
 from rnacentral_pipeline.rnacentral.precompute.description import (
-    description_of, short_description_for)
+    description_of,
+    short_description_for,
+)
 from rnacentral_pipeline.rnacentral.precompute.rna_type import rna_type_of
 from rnacentral_pipeline.rnacentral.repeats import tree
 
@@ -75,7 +77,9 @@ class SequenceUpdate:
         if not insdc_rna_type:
             insdc_rna_type = "ncRNA"
             insdc_rna_types: ty.Set[str] = {
-                acc.rna_type.insdc for acc in sequence.inactive_accessions if acc.rna_type.insdc
+                acc.rna_type.insdc
+                for acc in sequence.inactive_accessions
+                if acc.rna_type.insdc
             }
             if len(insdc_rna_types) == 1:
                 insdc_rna_type = insdc_rna_types.pop()
@@ -88,7 +92,9 @@ class SequenceUpdate:
                 name = species.pop()
             description = f"{name} {insdc_rna_type}"
 
-        so_rna_type = RnaType.from_so_id(context.so_tree, INSDC_SO_MAPPING.get(insdc_rna_type, "SO:0000655"))
+        so_rna_type = RnaType.from_so_id(
+            context.so_tree, INSDC_SO_MAPPING.get(insdc_rna_type, "SO:0000655")
+        )
         return cls(
             sequence=sequence,
             insdc_rna_type=insdc_rna_type,
@@ -165,11 +171,19 @@ class GenericUpdate:
 
     @classmethod
     def active(cls, updates: ty.List[SequenceUpdate]) -> "GenericUpdate":
-        return cls(upi=updates[0].sequence.upi, updates=updates, is_active=True,)
+        return cls(
+            upi=updates[0].sequence.upi,
+            updates=updates,
+            is_active=True,
+        )
 
     @classmethod
     def inactive(cls, updates: ty.List[SequenceUpdate]) -> "GenericUpdate":
-        return cls(upi=updates[0].sequence.upi, updates=updates, is_active=False,)
+        return cls(
+            upi=updates[0].sequence.upi,
+            updates=updates,
+            is_active=False,
+        )
 
     @classmethod
     def from_updates(

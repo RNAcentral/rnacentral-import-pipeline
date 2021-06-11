@@ -18,11 +18,12 @@ from pathlib import Path
 
 from rnacentral_pipeline.databases.data import TRnaScanResults
 
+
 def parse(path: Path) -> ty.Iterable[TRnaScanResults]:
-    with path.open('r') as raw:
+    with path.open("r") as raw:
         _ = next(raw)
         _ = next(raw)
         sep = next(raw)
-        assert sep.startswith('--')
+        assert sep.startswith("--")
         for line in raw:
             yield TRnaScanResults.from_line(line)

@@ -31,11 +31,11 @@ class GenomicLocation(object):
 
     @classmethod
     def build(cls, raw):
-        chromosome = re.sub('^chr', '', raw['chromosome'])
+        chromosome = re.sub("^chr", "", raw["chromosome"])
         return cls(
             chromosome=chromosome,
-            start=raw['CRS_start_relative_to_genome'],
-            stop=raw['CRS_end_relative_to_genome'],
+            start=raw["CRS_start_relative_to_genome"],
+            stop=raw["CRS_end_relative_to_genome"],
         )
 
 
@@ -51,24 +51,24 @@ class CrsFeature(object):
 
     @classmethod
     def build(cls, raw_feature):
-        upi, taxid = raw_feature['URS_taxid'].split('_')
+        upi, taxid = raw_feature["URS_taxid"].split("_")
         return cls(
             upi=upi,
             taxid=taxid,
-            crs_name=raw_feature['CRS_id'],
-            start=raw_feature['CRS_start_relative_to_URS'],
-            stop=raw_feature['CRS_end_relative_to_URS'],
+            crs_name=raw_feature["CRS_id"],
+            start=raw_feature["CRS_start_relative_to_URS"],
+            stop=raw_feature["CRS_end_relative_to_URS"],
             genomic_location=GenomicLocation.build(raw_feature),
-            fdr=raw_feature['CRS_fdr'],
+            fdr=raw_feature["CRS_fdr"],
         )
 
     def writeable(self):
         metadata = attr.asdict(self)
         metadata = {
-            'crs_id': self.crs_name,
-            'genomic_location': metadata['genomic_location'],
-            'fdr': self.fdr,
-            'should_highlight': self.fdr <= 10.0,
+            "crs_id": self.crs_name,
+            "genomic_location": metadata["genomic_location"],
+            "fdr": self.fdr,
+            "should_highlight": self.fdr <= 10.0,
         }
 
         return [
@@ -77,24 +77,24 @@ class CrsFeature(object):
             None,
             self.start,
             self.stop,
-            'conserved_rna_structure',
+            "conserved_rna_structure",
             json.dumps(metadata),
         ]
 
 
 def parse(handle):
     field_names = [
-        'URS_taxid',
-        'CRS_start_relative_to_URS',
-        'CRS_end_relative_to_URS',
-        'chromosome',
-        'CRS_start_relative_to_genome',
-        'CRS_end_relative_to_genome',
-        'CRS_id',
-        'CRS_fdr',
+        "URS_taxid",
+        "CRS_start_relative_to_URS",
+        "CRS_end_relative_to_URS",
+        "chromosome",
+        "CRS_start_relative_to_genome",
+        "CRS_end_relative_to_genome",
+        "CRS_id",
+        "CRS_fdr",
     ]
-    for row in csv.reader(handle, delimiter='\t'):
-        if row[0] == 'URS_taxid':
+    for row in csv.reader(handle, delimiter="\t"):
+        if row[0] == "URS_taxid":
             continue
         assert len(row) == len(field_names)
         feature = dict(zip(field_names, row))
@@ -103,6 +103,6 @@ def parse(handle):
 
 def from_file(handle, output):
     data = parse(handle)
-    data = map(op.methodcaller('writeable'), data)
-    writer = csv.writer(output, delimiter=',')
+    data = map(op.methodcaller("writeable"), data)
+    writer = csv.writer(output, delimiter=",")
     writer.writerows(data)

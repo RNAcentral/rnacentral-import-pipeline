@@ -23,7 +23,7 @@ from rnacentral_pipeline.databases.generic import parser as generic
 from rnacentral_pipeline.writers import entry_writer
 
 
-@click.group('zfin')
+@click.group("zfin")
 def cli():
     """
     Commands for dealing with ZFIN data.
@@ -31,9 +31,9 @@ def cli():
     pass
 
 
-@cli.command('fetch')
-@click.argument('url')
-@click.argument('output', default='zfin.json', type=click.File('w'))
+@cli.command("fetch")
+@click.argument("url")
+@click.argument("output", default="zfin.json", type=click.File("w"))
 def fetch_zfin(url, output):
     """
     Fetches ZFIN data and strips out some bad entries and fixes a few issues
@@ -42,7 +42,7 @@ def fetch_zfin(url, output):
     json.dump(zfin.fetch(url), output)
 
 
-@cli.command('parse')
+@cli.command("parse")
 @click.argument("json_file", type=click.File("r"))
 @click.argument(
     "output",

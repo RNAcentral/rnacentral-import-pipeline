@@ -22,15 +22,15 @@ from rnacentral_pipeline.cli import ols
 
 def test_can_lookup_terms():
     runner = CliRunner()
-    output = 'terms.csv'
+    output = "terms.csv"
     with runner.isolated_filesystem():
-        cmd = ['lookup-terms', '-', output]
-        terms = 'GO:0043226\nSO:0000260\n'
+        cmd = ["lookup-terms", "-", output]
+        terms = "GO:0043226\nSO:0000260\n"
         result = runner.invoke(ols.cli, cmd, input=terms)
         assert result.exit_code == 0
         assert os.path.exists(output)
-        with open(output, 'r') as raw:
+        with open(output, "r") as raw:
             assert raw.readlines() == [
                 '"GO:0043226","GO","organelle","Organized structure of distinctive morphology and function. Includes the nucleus, mitochondria, plastids, vacuoles, vesicles, ribosomes and the cytoskeleton, and prokaryotic structures such as anammoxosomes and pirellulosomes. Excludes the plasma membrane."\n',
-                '''"SO:0000260","SO","glutamyl_tRNA","A tRNA sequence that has a glutamic acid anticodon, and a 3' glutamic acid binding region."\n''',
+                """"SO:0000260","SO","glutamyl_tRNA","A tRNA sequence that has a glutamic acid anticodon, and a 3' glutamic acid binding region."\n""",
             ]

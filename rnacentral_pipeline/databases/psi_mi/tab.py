@@ -27,7 +27,7 @@ from rnacentral_pipeline.databases.helpers import publications as pubs
 
 LOGGER = logging.getLogger(__name__)
 
-IDENT_GRAMMAR = r'''
+IDENT_GRAMMAR = r"""
 @@grammar::PSI_MI_IDENTIFIER
 
 start = empty:empty | idents $ ;
@@ -43,14 +43,15 @@ string = ('"' quoted_string  '"') | simple_string ;
 simple_string = /[^|():\t]+/ ;
 
 quoted_string = /(\\"|[^"])+/ ;
-'''
+"""
+
 
 class IdentSemantics(object):
     def string(self, ast):
         if isinstance(ast, (list, tuple)):
             l, v, r = ast
             ast = v
-        ast = ast.replace(r'\"', '"')
+        ast = ast.replace(r"\"", '"')
         return ast
 
 
@@ -61,19 +62,21 @@ def identifiers(raw: str) -> ty.List[data.InteractionIdentifier]:
     assert raw, "Must have at least one identifier"
     idents = []
     for possible in IDENT_MODEL.parse(raw):
-        if 'empty' in possible:
+        if "empty" in possible:
             continue
-        idents.append(data.InteractionIdentifier(
-            possible['xref'], 
-            possible.get('value', ''),
-            possible.get('description', None)
-        ))
+        idents.append(
+            data.InteractionIdentifier(
+                possible["xref"],
+                possible.get("value", ""),
+                possible.get("description", None),
+            )
+        )
 
     return idents
 
 
 def as_taxid(value):
-    if value == '-':
+    if value == "-":
         return None
     taxids = identifiers(value)
     unique = set()
@@ -95,22 +98,22 @@ def as_unique_id(value):
 
 
 def as_bool(value):
-    if value.lower() == 'true':
+    if value.lower() == "true":
         return True
-    if value.lower() == 'false':
+    if value.lower() == "false":
         return False
     raise ValueError("Unknown bool value: %s" % value)
 
 
 def as_date(value):
-    year, month, day = value.split('/')
+    year, month, day = value.split("/")
     return date(int(year), int(month), int(day))
 
 
 def as_pubs(value):
     refs = []
     for ident in identifiers(value):
-        if ident.key == 'pubmed':
+        if ident.key == "pubmed":
             try:
                 refs.append(pubs.reference(ident.value))
             except data.UnknownPublicationType:
@@ -120,74 +123,75 @@ def as_pubs(value):
 
 
 def stoichiometry(value):
-    if value == '-':
+    if value == "-":
         return None
     return int(value)
 
 
 def as_interactor(row, interactor: data.InteractorType) -> ty.Optional[data.Interactor]:
     field_names = {
-        'ID(s) interactor': ('id', as_unique_id),
-        'Alt. ID(s) interactor': ('alt_ids', identifiers),
-        'Alias(es) interactor': ('aliases', identifiers),
-        'Taxid interactor': ('taxid', as_taxid),
-        'Biological role(s) interactor': ('biological_role', identifiers),
-        'Experimental role(s) interactor': ('experimental_role', identifiers),
-        'Type(s) interactor': ('interactor_type', identifiers),
-        'Xref(s) interactor': ('xrefs', identifiers),
-        'Annotation(s) interactor': ('annotations', str),
-        'Feature(s) interactor': ('features', identifiers),
-        'Stoichiometry(s) interactor': ('stoichiometry', stoichiometry),
-        'Identification method participant': ('participant_identification',
-                                              identifiers),
+        "ID(s) interactor": ("id", as_unique_id),
+        "Alt. ID(s) interactor": ("alt_ids", identifiers),
+        "Alias(es) interactor": ("aliases", identifiers),
+        "Taxid interactor": ("taxid", as_taxid),
+        "Biological role(s) interactor": ("biological_role", identifiers),
+        "Experimental role(s) interactor": ("experimental_role", identifiers),
+        "Type(s) interactor": ("interactor_type", identifiers),
+        "Xref(s) interactor": ("xrefs", identifiers),
+        "Annotation(s) interactor": ("annotations", str),
+        "Feature(s) interactor": ("features", identifiers),
+        "Stoichiometry(s) interactor": ("stoichiometry", stoichiometry),
+        "Identification method participant": (
+            "participant_identification",
+            identifiers,
+        ),
     }
 
     parts: ty.Dict[str, ty.Any] = {}
     for field_template, (key, fn) in field_names.items():
-        if interactor == data.InteractorType.A and \
-                field_template == 'ID(s) interactor':
-            field_template = '#ID(s) interactor'
+        if interactor == data.InteractorType.A and field_template == "ID(s) interactor":
+            field_template = "#ID(s) interactor"
 
-        field_name = '%s %s' % (field_template, interactor.name)
+        field_name = "%s %s" % (field_template, interactor.name)
         parts[key] = fn(row[field_name])
 
-    if not parts['id']:
+    if not parts["id"]:
         return None
     return data.Interactor(**parts)
 
 
 def as_interaction(row) -> ty.Optional[data.Interaction]:
     field_names = {
-        'Interaction detection method(s)': ('methods', identifiers),
-        'Publication Identifier(s)': ('publications', as_pubs),
-        'Interaction type(s)': ('types', identifiers),
-        'Source database(s)': ('source_database', identifiers),
-        'Interaction identifier(s)': ('ids', identifiers),
-        'Confidence value(s)': ('confidence', identifiers),
-        'Expansion method(s)': ('methods', identifiers),
-        'Interaction Xref(s)': ('xrefs', identifiers),
-        'Interaction annotation(s)': ('annotations', identifiers),
-        'Host organism(s)': ('host_organisms', as_taxid),
-        'Creation date': ('create_date', as_date),
-        'Update date': ('update_date', as_date),
-        'Negative': ('is_negative', as_bool),
+        "Interaction detection method(s)": ("methods", identifiers),
+        "Publication Identifier(s)": ("publications", as_pubs),
+        "Interaction type(s)": ("types", identifiers),
+        "Source database(s)": ("source_database", identifiers),
+        "Interaction identifier(s)": ("ids", identifiers),
+        "Confidence value(s)": ("confidence", identifiers),
+        "Expansion method(s)": ("methods", identifiers),
+        "Interaction Xref(s)": ("xrefs", identifiers),
+        "Interaction annotation(s)": ("annotations", identifiers),
+        "Host organism(s)": ("host_organisms", as_taxid),
+        "Creation date": ("create_date", as_date),
+        "Update date": ("update_date", as_date),
+        "Negative": ("is_negative", as_bool),
     }
 
     parts: ty.Dict[str, ty.Any] = {}
     for field_name, (key, fn) in field_names.items():
         parts[key] = fn(row[field_name])
 
-    parts['interactor1'] = as_interactor(row, data.InteractorType.A)
-    parts['interactor2'] = as_interactor(row, data.InteractorType.B)
-    
-    if not parts['interactor1'] or not parts['interactor2']:
+    parts["interactor1"] = as_interactor(row, data.InteractorType.A)
+    parts["interactor2"] = as_interactor(row, data.InteractorType.B)
+
+    if not parts["interactor1"] or not parts["interactor2"]:
         return None
 
     return data.Interaction(**parts)
 
 
 def parse(handle) -> ty.Iterator[data.Interaction]:
-    rows = csv.DictReader(handle, delimiter='\t', quoting=csv.QUOTE_NONE)
+    rows = csv.DictReader(handle, delimiter="\t", quoting=csv.QUOTE_NONE)
     interactions = map(as_interaction, rows)
     valid = filter(None, interactions)
     return valid
