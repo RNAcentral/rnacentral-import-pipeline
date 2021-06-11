@@ -26,21 +26,21 @@ from rnacentral_pipeline.databases.helpers import publications as pub
 
 
 ALLOWED_RNA = {
-    'miscRNA',
-    'ncRNA',
-    'rRNA',
-    'scRNA',
-    'snRNA',
-    'snoRNA',
-    'tRNA',
+    "miscRNA",
+    "ncRNA",
+    "rRNA",
+    "scRNA",
+    "snRNA",
+    "snoRNA",
+    "tRNA",
 }
 
-row_rna_type = op.itemgetter('type_of_gene')
+row_rna_type = op.itemgetter("type_of_gene")
 
 
 def value(row, name, required=False):
     current = row[name]
-    if current == '-':
+    if current == "-":
         current = None
     if required:
         assert current is not None, "Value missing for: %s" % name
@@ -48,11 +48,11 @@ def value(row, name, required=False):
 
 
 def gene_id(row):
-    return value(row, 'GeneID', required=True)
+    return value(row, "GeneID", required=True)
 
 
 def taxid(row):
-    return int(value(row, '#tax_id', required=True))
+    return int(value(row, "#tax_id", required=True))
 
 
 def row_is_ncrna(row):
@@ -61,8 +61,8 @@ def row_is_ncrna(row):
 
 def ncrna_feature(row):
     ncrna = None
-    for feature in row['sequence'].features:
-        if feature.type in {'ncRNA', 'misc_RNA'}:
+    for feature in row["sequence"].features:
+        if feature.type in {"ncRNA", "misc_RNA"}:
             if ncrna is not None:
                 raise ValueError("Multiple ncRNAs")
             ncrna = feature
@@ -78,50 +78,50 @@ def rna_type(row):
 
 
 def primary_id(row):
-    return 'NCBI_GENE:' + gene_id(row)
+    return "NCBI_GENE:" + gene_id(row)
 
 
 def accession(row):
-    return 'NCBI_GENE:' + gene_id(row)
+    return "NCBI_GENE:" + gene_id(row)
 
 
 def sequence(row):
-    return str(row['sequence'].seq)
+    return str(row["sequence"].seq)
 
 
 def seq_version(_):
-    return '1'
+    return "1"
 
 
 def url(row):
-    return 'https://www.ncbi.nlm.nih.gov/gene/' + gene_id(row)
+    return "https://www.ncbi.nlm.nih.gov/gene/" + gene_id(row)
 
 
 def xref_data(row):
     data = coll.defaultdict(list)
-    given = value(row, 'dbXrefs') or ''
+    given = value(row, "dbXrefs") or ""
     if not given:
         return {}
-    for dbid in given.split(','):
-        parts = dbid.split(':', 1)
+    for dbid in given.split(","):
+        parts = dbid.split(":", 1)
         assert len(parts) == 2, "Invalid DB id: " + dbid
         data[db].append(key)
     return data
 
 
 def gene(row):
-    return value(row, 'Symbol', required=True)
+    return value(row, "Symbol", required=True)
 
 
 def locus_tag(row):
-    return value(row, 'LocusTag')
+    return value(row, "LocusTag")
 
 
 def gene_synonyms(row):
-    raw = value(row, 'Synonyms')
+    raw = value(row, "Synonyms")
     if not raw:
         return []
-    return raw.split(',')
+    return raw.split(",")
 
 
 def references(row):
@@ -132,9 +132,9 @@ def description(row):
     template = [species(row), gene(row)]
     name = common_name(row)
     if name:
-        name = '(%s)' % name
+        name = "(%s)" % name
         template.insert(1, name)
-    return ' '.join(template)
+    return " ".join(template)
 
 
 def species(row):
@@ -158,7 +158,7 @@ def product(row):
 
 def ncrnas(handle):
     found = False
-    reader = csv.DictReader(handle, delimiter='\t')
+    reader = csv.DictReader(handle, delimiter="\t")
     for row in reader:
         if row_is_ncrna(row):
             found = True

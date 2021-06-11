@@ -36,7 +36,11 @@ def cli():
 @click.argument(
     "output",
     default=".",
-    type=click.Path(writable=True, dir_okay=True, file_okay=False,),
+    type=click.Path(
+        writable=True,
+        dir_okay=True,
+        file_okay=False,
+    ),
 )
 def precompute_from_file(context, json_file, output):
     """
@@ -49,9 +53,9 @@ def precompute_from_file(context, json_file, output):
 
 
 @cli.command("upi-taxid-ranges")
-@click.option('--db-url', envvar='PGDATABASE')
-@click.option('--tablename', default='precompute_urs_taxid')
-@click.argument('ranges', type=click.File('r'))
-@click.argument('output', type=click.File('w'))
+@click.option("--db-url", envvar="PGDATABASE")
+@click.option("--tablename", default="precompute_urs_taxid")
+@click.argument("ranges", type=click.File("r"))
+@click.argument("output", type=click.File("w"))
 def precompute_find_upi_ranges(ranges, output, db_url=None, tablename=None):
     pre_ranges.write(ranges, output, db_url=db_url, tablename=tablename)

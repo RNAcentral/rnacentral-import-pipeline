@@ -22,12 +22,12 @@ from rnacentral_pipeline.cli import qa
 
 def test_can_parse_rfam_output():
     runner = CliRunner()
-    filename = os.path.abspath('data/qa/rfam/scan.tbl')
+    filename = os.path.abspath("data/qa/rfam/scan.tbl")
     with runner.isolated_filesystem():
-        result = runner.invoke(qa.cli, ['rfam', filename, 'rfam.csv'])
+        result = runner.invoke(qa.cli, ["rfam", filename, "rfam.csv"])
         assert result.exit_code == 0
         assert not result.exception
 
-        with open('rfam.csv', 'r') as raw:
+        with open("rfam.csv", "r") as raw:
             data = raw.readlines()
             assert len(data) == 126

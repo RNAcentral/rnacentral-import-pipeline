@@ -33,7 +33,7 @@ def as_annotation(record: ty.Dict[str, ty.Any]) -> GoTermAnnotation:
         rna_id=helpers.rna_id(record),
         qualifier=helpers.qualifier(record),
         term_id=helpers.go_id(record),
-        evidence_code=record['ECO_Evidence_code'],
+        evidence_code=record["ECO_Evidence_code"],
         extensions=helpers.extensions(record),
         assigned_by=helpers.assigned_by(record),
         publications=helpers.publications(record),
@@ -45,12 +45,13 @@ def parse(handle: ty.IO) -> ty.Iterable[GoTermAnnotation]:
     Parse the given file to produce an iterable of GoTerm objects to import.
     """
 
-    key = op.attrgetter('rna_id', 'qualifier', 'term_id', 'evidence_code',
-                        'assigned_by')
+    key = op.attrgetter(
+        "rna_id", "qualifier", "term_id", "evidence_code", "assigned_by"
+    )
 
     records = raw_parser(handle)
-    records = filter(lambda r: r['Assigned_by'] != 'RNAcentral', records)
-    records = filter(lambda r: r['DB:Reference'] != 'GO_REF:0000115', records)
+    records = filter(lambda r: r["Assigned_by"] != "RNAcentral", records)
+    records = filter(lambda r: r["DB:Reference"] != "GO_REF:0000115", records)
     annotations = list(map(as_annotation, records))
     annotations.sort(key=key)
 

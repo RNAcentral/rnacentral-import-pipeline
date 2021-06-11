@@ -25,10 +25,11 @@ def upi_taxid_ranges(ranges, tablename, db_url):
     with psycopg2.connect(db_url) as conn:
         with conn.cursor() as cur:
             for (start, stop) in ranges:
-                query = Query.from_(table).\
-                    select(fn.Min(table.id),
-                           fn.Max(table.id)).\
-                    where(table.precompute_urs_id.isin([start, stop]))
+                query = (
+                    Query.from_(table)
+                    .select(fn.Min(table.id), fn.Max(table.id))
+                    .where(table.precompute_urs_id.isin([start, stop]))
+                )
 
                 cur.execute(str(query), ((start, stop),))
                 results = cur.fetchall()
@@ -37,7 +38,7 @@ def upi_taxid_ranges(ranges, tablename, db_url):
                 yield (start, upi_start, upi_max)
 
 
-def write(handle, output, tablename='precompute_urs_taxid', db_url=None):
+def write(handle, output, tablename="precompute_urs_taxid", db_url=None):
     reader = csv.reader(handle)
     ranges = [(start, stop) for (_tablename, start, stop) in reader]
     writer = csv.writer(output)

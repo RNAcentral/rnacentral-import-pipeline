@@ -54,7 +54,7 @@ class Division(enum.Enum):
     @property
     def division_name(self):
         name = self.name[0].upper() + self.name[1:]
-        return f'Ensembl{name}'
+        return f"Ensembl{name}"
 
 
 @attr.s()

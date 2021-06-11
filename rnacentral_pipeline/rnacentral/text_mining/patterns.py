@@ -16,13 +16,16 @@ limitations under the License.
 from . import core
 
 
-ENSEMBL = core.PatternMatcher.build('ensembl', [
-    r'(?P<simple_id>ENS[A-Z]+\d{2,}(\.\d+)?)'
-])
+ENSEMBL = core.PatternMatcher.build(
+    "ensembl", [r"(?P<simple_id>ENS[A-Z]+\d{2,}(\.\d+)?)"]
+)
 
-MIRBASE = core.PatternMatcher.build('mirbase', [
-    r'(?P<mature>(\w{3}-)?mir-[0-9]+\w?(-[35]p)?)',
-    r'(?P<let_7>(\w{3}-)?let-7\w?(-[35]p)?)',
-    r'(?P<bantam>(\w{3}-)?bantam(-[35]p)?)',
-    r'(?P<unprefixed>miRNA-\d+)',
-])
+MIRBASE = core.PatternMatcher.build(
+    "mirbase",
+    [
+        r"(?P<mature>(\w{3}-)?mir-[0-9]+\w?(-[35]p)?)",
+        r"(?P<let_7>(\w{3}-)?let-7\w?(-[35]p)?)",
+        r"(?P<bantam>(\w{3}-)?bantam(-[35]p)?)",
+        r"(?P<unprefixed>miRNA-\d+)",
+    ],
+)

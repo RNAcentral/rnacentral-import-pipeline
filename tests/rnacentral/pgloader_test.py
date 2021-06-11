@@ -18,11 +18,14 @@ import pytest
 from rnacentral_pipeline.rnacentral import pgloader
 
 
-@pytest.mark.parametrize('output,expected', [
-    ('data/pgloader/failed.txt', False),
-    ('data/pgloader/success.txt', True),
-    ('data/pgloader/success-with-check.txt', True),
-])
+@pytest.mark.parametrize(
+    "output,expected",
+    [
+        ("data/pgloader/failed.txt", False),
+        ("data/pgloader/success.txt", True),
+        ("data/pgloader/success-with-check.txt", True),
+    ],
+)
 def test_can_validate_output(output, expected):
-    with open(output, 'r') as handle:
+    with open(output, "r") as handle:
         assert pgloader.validate(handle) is expected

@@ -24,15 +24,18 @@ from rnacentral_pipeline.databases.ensembl.genomes import urls
 
 @lru_cache()
 def species(division: Division) -> ty.List[str]:
-    found = urls.urls_for(division, 'ftp.ensemblgenomes.org')
+    found = urls.urls_for(division, "ftp.ensemblgenomes.org")
     return [f[1] for f in found]
 
 
-@pytest.mark.parametrize('division,expected,found', [
-    (Division.fungi, 'aspergillus_oryzae_gca_002007945', False),
-    (Division.fungi, 'aspergillus_fumigatus_var_rp_2014_gca_000731615', False),
-    (Division.fungi, 'aspergillus_oryzae', True),
-])
+@pytest.mark.parametrize(
+    "division,expected,found",
+    [
+        (Division.fungi, "aspergillus_oryzae_gca_002007945", False),
+        (Division.fungi, "aspergillus_fumigatus_var_rp_2014_gca_000731615", False),
+        (Division.fungi, "aspergillus_oryzae", True),
+    ],
+)
 def test_can_generate_reasonable_species(division, expected, found):
     if found:
         assert expected in species(division)

@@ -32,7 +32,7 @@ def exclude_uncultured(annotation):
     Detect if the annotation is from an uncultured organism and thus should be
     excluded.
     """
-    return int(annotation['taxid']) not in UNCULTURED_TAXIDS
+    return int(annotation["taxid"]) not in UNCULTURED_TAXIDS
 
 
 def parse(handle):
@@ -48,8 +48,8 @@ def export(handle, output):
 
     writer = csv.DictWriter(
         output,
-        ['id', 'ontology_term_id', 'models'],
-        extrasaction='ignore',
-        delimiter='\t',
+        ["id", "ontology_term_id", "models"],
+        extrasaction="ignore",
+        delimiter="\t",
     )
     writer.writerows(parse(handle))

@@ -34,7 +34,11 @@ def cli():
 @click.argument(
     "output",
     default=".",
-    type=click.Path(writable=True, dir_okay=True, file_okay=False,),
+    type=click.Path(
+        writable=True,
+        dir_okay=True,
+        file_okay=False,
+    ),
 )
 def process_silva(silva_file, taxonomy, output):
     entries = silva.parse(silva_file, taxonomy)

@@ -57,12 +57,12 @@ def test_ranges_between_handles_ranges_too_big():
 
 
 def test_can_get_range_of_all_upis():
-    size =  100000
-    dbconf = os.environ['PGDATABASE']
-    ranges = list(upi_ranges(dbconf, 'rna', size))
+    size = 100000
+    dbconf = os.environ["PGDATABASE"]
+    ranges = list(upi_ranges(dbconf, "rna", size))
 
     with cursor(dbconf) as cur:
-        cur.execute('select max(id) from rna')
+        cur.execute("select max(id) from rna")
         stop = cur.fetchone()[0]
 
     assert len(ranges) >= 135

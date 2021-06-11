@@ -66,10 +66,16 @@ def lookup(ids, directory, column, allow_fallback=True, ignore_missing=False):
             raise ValueError("Could not lookup %s" % id_ref)
 
 
-def write_lookup(ids, directory, output, column=0, allow_fallback=True, ignore_missing=False):
+def write_lookup(
+    ids, directory, output, column=0, allow_fallback=True, ignore_missing=False
+):
     writer = csv.writer(output)
-    for ref, rows in lookup(ids, directory, column,
-                            allow_fallback=allow_fallback,
-                            ignore_missing=ignore_missing):
+    for ref, rows in lookup(
+        ids,
+        directory,
+        column,
+        allow_fallback=allow_fallback,
+        ignore_missing=ignore_missing,
+    ):
         for rest in rows:
             writer.writerows(ref.writeable(rest))

@@ -24,11 +24,11 @@ from .core import parser
 
 
 CONTEXT = Context(
-    database='GENECARDS',
-    base_url='https://www.genecards.org/cgi-bin/carddisp.pl?gene=%s',
-    url_data_field='GeneCardsSymbol',
-    gene_field='GeneCardsSymbol',
-    urs_field='URSid',
+    database="GENECARDS",
+    base_url="https://www.genecards.org/cgi-bin/carddisp.pl?gene=%s",
+    url_data_field="GeneCardsSymbol",
+    gene_field="GeneCardsSymbol",
+    urs_field="URSid",
     references=[pub.reference(27322403)],
 )
 

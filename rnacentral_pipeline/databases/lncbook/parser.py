@@ -22,13 +22,13 @@ from rnacentral_pipeline.databases.generic import parser as generic
 def parse(handle):
     raw = json.load(handle)
     data = []
-    for ncrna in raw['data']:
-        regions = ncrna['genomeLocactions']
-        regions = filter(lambda r: r['assembly'] == 'GRCh38', regions)
+    for ncrna in raw["data"]:
+        regions = ncrna["genomeLocactions"]
+        regions = filter(lambda r: r["assembly"] == "GRCh38", regions)
         regions = list(regions)
         if not regions:
             continue
-        ncrna['genomeLocactions'] = regions
+        ncrna["genomeLocactions"] = regions
         data.append(ncrna)
     if not data:
         raise ValueError("All ncRNA are not from GRCh38, failing")
@@ -40,11 +40,11 @@ def parse(handle):
     json.dump(raw, processed)
     processed.seek(0)
 
-    for entry in  generic.parse(processed):
+    for entry in generic.parse(processed):
         updates = []
         for region in entry.regions:
-            if region.chromosome == 'M':
-                updates.append(attr.evolve(region, chromosome='MT'))
+            if region.chromosome == "M":
+                updates.append(attr.evolve(region, chromosome="MT"))
             else:
                 updates.append(region)
         entry = attr.evolve(entry, regions=updates)

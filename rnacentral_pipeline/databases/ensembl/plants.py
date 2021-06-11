@@ -21,27 +21,27 @@ from rnacentral_pipeline.databases.helpers import publications as pubs
 
 
 def as_tair_entry(entry):
-    database = 'TAIR'
+    database = "TAIR"
     xrefs = dict(entry.xref_data)
     if database in xrefs:
         del xrefs[database]
     return attr.evolve(
         entry,
-        accession='%s:%s' % (database, entry.primary_id),
+        accession="%s:%s" % (database, entry.primary_id),
         database=database,
         xref_data=xrefs,
     )
 
 
 def inferred_entries(entry):
-    if entry.ncbi_tax_id != 3702 or not entry.primary_id.startswith('AT'):
+    if entry.ncbi_tax_id != 3702 or not entry.primary_id.startswith("AT"):
         return
     yield as_tair_entry(entry)
 
 
 def parse(handle, gff_file, **kwargs):
     context = Context.build(
-        'ENSEMBL_PLANTS',
+        "ENSEMBL_PLANTS",
         [pubs.reference(29092050)],
         gff_file,
     )

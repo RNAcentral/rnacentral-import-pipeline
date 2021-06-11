@@ -82,7 +82,7 @@ def fetch_training_data(filename, output, db_url=None):
     r2dt.write_training_data(filename, db_url, output)
 
 
-@should_show.command('inspect-data')
+@should_show.command("inspect-data")
 @click.option("--db-url", envvar="PGDATABASE")
 @click.argument("filename", type=click.File("r"))
 @click.argument("output", type=click.File("w"))
@@ -235,5 +235,6 @@ def r2dt_publish(model_info, directory, output, allow_missing, suffix=""):
 def r2dt_prepare_s3(model_info, directory, output, file_list, allow_missing):
     file_list = Path(file_list)
     output = Path(output)
-    r2dt.prepare_s3(model_info, directory, output,
-                    file_list, allow_missing=allow_missing)
+    r2dt.prepare_s3(
+        model_info, directory, output, file_list, allow_missing=allow_missing
+    )

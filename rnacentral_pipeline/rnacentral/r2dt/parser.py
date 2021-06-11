@@ -47,8 +47,7 @@ def load_hit_info(base: Path, allow_missing: bool):
         (base / "RF00005", data.Source.rfam),
         (base / "rnasep", data.Source.rnase_p),
     ]
-    has_ribovision = {data.Source.crw,
-                      data.Source.ribovision, data.Source.rfam}
+    has_ribovision = {data.Source.crw, data.Source.ribovision, data.Source.rfam}
     hit_info = {}
     for (path, source) in source_directories:
         if not path.exists():

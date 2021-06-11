@@ -26,12 +26,15 @@ def cli():
     """
 
 
-@cli.command('build')
-@click.argument('ncbi', type=click.Path(
-    writable=True,
-    dir_okay=True,
-    file_okay=False,
-))
-@click.argument('output', type=click.Path())
+@cli.command("build")
+@click.argument(
+    "ncbi",
+    type=click.Path(
+        writable=True,
+        dir_okay=True,
+        file_okay=False,
+    ),
+)
+@click.argument("output", type=click.Path())
 def index_taxonomy(ncbi, output):
     taxonomy.index(Path(ncbi), output)

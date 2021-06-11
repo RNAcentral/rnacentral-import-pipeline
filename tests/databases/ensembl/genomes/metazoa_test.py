@@ -23,21 +23,27 @@ from rnacentral_pipeline.databases.ensembl import metazoa
 from . import helpers
 
 
-@pytest.fixture(scope='module')  # pylint: disable=no-member
+@pytest.fixture(scope="module")  # pylint: disable=no-member
 def apis_1():
-    return helpers.parse(metazoa.parse, 'data/ensembl_metazoa/Apis_mellifera.Amel_4.5.chromosome_group.1.dat')
+    return helpers.parse(
+        metazoa.parse,
+        "data/ensembl_metazoa/Apis_mellifera.Amel_4.5.chromosome_group.1.dat",
+    )
 
 
-@pytest.mark.parametrize('filename,count', [
-    ('data/ensembl_metazoa/Apis_mellifera.Amel_4.5.chromosome_group.1.dat', 36),
-])
+@pytest.mark.parametrize(
+    "filename,count",
+    [
+        ("data/ensembl_metazoa/Apis_mellifera.Amel_4.5.chromosome_group.1.dat", 36),
+    ],
+)
 def test_can_parse_all_entries(filename, count):
     assert len(helpers.parse(metazoa.parse, filename)) == count
 
 
 def test_gets_all_ids(apis_1):
     assert set(d.primary_id for d in apis_1) == {
-        'ENSRNA022717521-T1',
+        "ENSRNA022717521-T1",
         "ENSRNA022717522-T1",
         "ENSRNA022712925-T1",
         "ENSRNA022712939-T1",
@@ -77,58 +83,71 @@ def test_gets_all_ids(apis_1):
     }
 
 
-@pytest.mark.parametrize('accession,rna_type', [
-    ('ENSEMBL_METAZOA:ENSRNA022717521-T1', 'SO:0001244'),
-    ("ENSEMBL_METAZOA:ENSRNA022712925-T1", 'SO:0000253'),
-    ("ENSEMBL_METAZOA:ENSRNA022717829-T1", 'SO:0000275'),
-])
+@pytest.mark.parametrize(
+    "accession,rna_type",
+    [
+        ("ENSEMBL_METAZOA:ENSRNA022717521-T1", "SO:0001244"),
+        ("ENSEMBL_METAZOA:ENSRNA022712925-T1", "SO:0000253"),
+        ("ENSEMBL_METAZOA:ENSRNA022717829-T1", "SO:0000275"),
+    ],
+)
 def test_can_assign_expected_rna_types(apis_1, accession, rna_type):
     assert helpers.entry_for(apis_1, accession).rna_type == rna_type
 
 
-@pytest.mark.parametrize('accession,description', [
-    ('ENSEMBL_METAZOA:ENSRNA022717825-T1', 'Apis mellifera (European honey bee) U4 spliceosomal RNA'),
-])
+@pytest.mark.parametrize(
+    "accession,description",
+    [
+        (
+            "ENSEMBL_METAZOA:ENSRNA022717825-T1",
+            "Apis mellifera (European honey bee) U4 spliceosomal RNA",
+        ),
+    ],
+)
 def test_can_get_expected_descriptions(apis_1, accession, description):
     assert helpers.entry_for(apis_1, accession).description == description
 
 
 def test_can_get_expected_data(apis_1):
-    assert attr.asdict(helpers.entry_for(apis_1, 'ENSEMBL_METAZOA:ENSRNA022717521-T1')) == attr.asdict(dat.Entry(
-        primary_id='ENSRNA022717521-T1',
-        accession='ENSEMBL_METAZOA:ENSRNA022717521-T1',
-        ncbi_tax_id=7460,
-        database='ENSEMBL_METAZOA',
-        sequence='AGGGTCGAAGAGTGAGTAAATGGCCGAGGGTGATTTGGGCCTTAGTGGTCCTGTGGTGGCTGCGTACGAATCCTACTGGCCTGCTAAGTCCCAAGTGATTCTCGGCTCGCGCTGCGATA',
-        regions=[
-            dat.SequenceRegion(
-                chromosome='1',
-                strand=1,
-                exons=[dat.Exon(start=204902, stop=205020)],
-                assembly_id='Amel_4.5',
-                coordinate_system=dat.CoordinateSystem.one_based(),
+    assert attr.asdict(
+        helpers.entry_for(apis_1, "ENSEMBL_METAZOA:ENSRNA022717521-T1")
+    ) == attr.asdict(
+        dat.Entry(
+            primary_id="ENSRNA022717521-T1",
+            accession="ENSEMBL_METAZOA:ENSRNA022717521-T1",
+            ncbi_tax_id=7460,
+            database="ENSEMBL_METAZOA",
+            sequence="AGGGTCGAAGAGTGAGTAAATGGCCGAGGGTGATTTGGGCCTTAGTGGTCCTGTGGTGGCTGCGTACGAATCCTACTGGCCTGCTAAGTCCCAAGTGATTCTCGGCTCGCGCTGCGATA",
+            regions=[
+                dat.SequenceRegion(
+                    chromosome="1",
+                    strand=1,
+                    exons=[dat.Exon(start=204902, stop=205020)],
+                    assembly_id="Amel_4.5",
+                    coordinate_system=dat.CoordinateSystem.one_based(),
+                ),
+            ],
+            rna_type="SO:0001244",
+            url="",
+            seq_version="1",
+            note_data={},
+            xref_data={},
+            species="Apis mellifera",
+            common_name="European honey bee",
+            lineage=(
+                "Eukaryota; Metazoa; Ecdysozoa; Arthropoda; "
+                "Hexapoda; Insecta; Pterygota; Neoptera; Holometabola; "
+                "Hymenoptera; Apocrita; Aculeata; Apoidea; Apidae; Apis; "
+                "Apis mellifera"
             ),
-        ],
-        rna_type='SO:0001244',
-        url='',
-        seq_version='1',
-        note_data={},
-        xref_data={},
-        species='Apis mellifera',
-        common_name='European honey bee',
-        lineage=(
-            'Eukaryota; Metazoa; Ecdysozoa; Arthropoda; '
-            'Hexapoda; Insecta; Pterygota; Neoptera; Holometabola; '
-            'Hymenoptera; Apocrita; Aculeata; Apoidea; Apidae; Apis; '
-            'Apis mellifera'
-        ),
-        gene='ENSRNA022717521',
-        locus_tag='ame-mir-193',
-        description='Apis mellifera (European honey bee) pre miRNA ame-mir-193',
-        references=[pubs.reference('doi:10.1093/nar/gkx1011')],
-    ))
+            gene="ENSRNA022717521",
+            locus_tag="ame-mir-193",
+            description="Apis mellifera (European honey bee) pre miRNA ame-mir-193",
+            references=[pubs.reference("doi:10.1093/nar/gkx1011")],
+        )
+    )
 
 
 def test_does_not_create_ncRNA_rna_type(apis_1):
     for entry in apis_1:
-        assert entry.rna_type != 'ncRNA'
+        assert entry.rna_type != "ncRNA"

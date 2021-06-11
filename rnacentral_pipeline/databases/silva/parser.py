@@ -24,6 +24,6 @@ from rnacentral_pipeline.databases.silva import helpers
 
 def parse(handle, taxonomy_path) -> ty.Iterable[Entry]:
     taxonomy = SqliteDict(filename=taxonomy_path)
-    reader = csv.DictReader(handle, delimiter='\t')
+    reader = csv.DictReader(handle, delimiter="\t")
     entries = map(lambda r: helpers.as_entry(taxonomy, r), reader)
     return filter(None, entries)

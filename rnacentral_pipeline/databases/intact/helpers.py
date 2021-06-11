@@ -19,15 +19,15 @@ from rnacentral_pipeline.databases.helpers import publications as pubs
 
 
 def accession(urs_taxid):
-    return 'INTACT:' + urs_taxid
+    return "INTACT:" + urs_taxid
 
 
 def primary_id(urs_taxid):
-    return 'INTACT:' + urs_taxid
+    return "INTACT:" + urs_taxid
 
 
 def taxid(urs_taxid):
-    _, taxid = urs_taxid.split('_')
+    _, taxid = urs_taxid.split("_")
     return int(taxid)
 
 
@@ -44,7 +44,7 @@ def common_name(interaction):
 
 
 def url(urs_taxid):
-    return 'https://www.ebi.ac.uk/intact/query/' + urs_taxid
+    return "https://www.ebi.ac.uk/intact/query/" + urs_taxid
 
 
 def references(interactions):
@@ -60,13 +60,13 @@ def as_entry(urs_taxid, interactions, info):
         primary_id=primary_id(urs_taxid),
         accession=accession(urs_taxid),
         ncbi_tax_id=taxid(urs_taxid),
-        database='INTACT',
-        sequence=info['sequence'],
+        database="INTACT",
+        sequence=info["sequence"],
         regions=[],
-        rna_type=info['rna_type'],
+        rna_type=info["rna_type"],
         url=url(urs_taxid),
-        seq_version='1',
-        description=info['description'],
+        seq_version="1",
+        description=info["description"],
         references=references(interactions),
         species=species(urs_taxid),
         common_name=common_name(urs_taxid),

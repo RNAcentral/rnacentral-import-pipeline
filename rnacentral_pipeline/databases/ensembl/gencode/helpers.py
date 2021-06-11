@@ -25,7 +25,7 @@ def xref_data(entry):
     """
 
     xrefs = {k: v for k, v in entry.xref_data.items()}
-    xrefs['Ensembl'] = [entry.accession]
+    xrefs["Ensembl"] = [entry.accession]
     return xrefs
 
 
@@ -48,7 +48,7 @@ def accession(entry):
     """
     This will produce an accession that is unique and specific to GENCODE.
     """
-    return 'GENCODE:%s' % entry.accession
+    return "GENCODE:%s" % entry.accession
 
 
 def update_entry(entry):
@@ -58,9 +58,9 @@ def update_entry(entry):
     return attr.evolve(
         entry,
         accession=accession(entry),
-        database='ENSEMBL_GENCODE',
+        database="ENSEMBL_GENCODE",
         xref_data=xref_data(entry),
         optional_id=None,
         references=[references()],
-        url='',
+        url="",
     )

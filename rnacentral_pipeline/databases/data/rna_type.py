@@ -43,7 +43,7 @@ class RnaType:
 
     @classmethod
     def ncRNA(cls):
-        return cls(so_term=SoTermInfo.ncRNA(), insdc='ncRNA')
+        return cls(so_term=SoTermInfo.ncRNA(), insdc="ncRNA")
 
     @classmethod
     def from_so_term(cls, so_tree, so_id) -> "RnaType":
@@ -57,7 +57,7 @@ class RnaType:
         """
         Build and RNA type given the SO id, like SO:0000001
         """
-        if so_id.startswith('SO:'):
+        if so_id.startswith("SO:"):
             return cls.from_so_term(so_tree, so_id)
         return cls.from_so_term(so_tree, so_tree.name_to_id[so_id])
 
@@ -66,9 +66,9 @@ class RnaType:
         """
         Build an RNA type given an INSDC RNA type.
         """
-        if term == 'other' or term == 'ncRNA' or term == 'sRNA':
+        if term == "other" or term == "ncRNA" or term == "sRNA":
             return cls.from_so_term(so_tree, "SO:0000655")
-        if term == 'misc_RNA':
+        if term == "misc_RNA":
             return cls.from_so_term(so_tree, "SO:0000673")
         name = None
         if term in so_tree.name_to_id:
@@ -80,10 +80,7 @@ class RnaType:
         return cls.from_so_term(so_tree, name)
 
     def is_a(self, so_name):
-        return (
-            self.insdc == so_name
-            or self.so_term == so_name
-        )
+        return self.insdc == so_name or self.so_term == so_name
 
     @property
     def so_id(self):

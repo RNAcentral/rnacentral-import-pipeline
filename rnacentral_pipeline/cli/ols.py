@@ -18,7 +18,7 @@ import click
 from rnacentral_pipeline.databases.ols import helpers as ols
 
 
-@click.group('ols')
+@click.group("ols")
 def cli():
     """
     Entry point for fetching ontology data.
@@ -26,8 +26,8 @@ def cli():
     pass
 
 
-@cli.command('lookup-terms')
-@click.argument('terms', type=click.File('r'))
-@click.argument('output', type=click.File('w'))
+@cli.command("lookup-terms")
+@click.argument("terms", type=click.File("r"))
+@click.argument("output", type=click.File("w"))
 def ontologies_lookup_terms(terms, output):
     ols.process_term_file(terms, output)

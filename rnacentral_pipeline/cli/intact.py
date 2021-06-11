@@ -22,7 +22,7 @@ from rnacentral_pipeline.databases.intact import lookup
 from rnacentral_pipeline.writers import entry_writer
 
 
-@click.group('intact')
+@click.group("intact")
 def cli():
     """
     Commands for fetching data needed for genecards parsing.
@@ -36,7 +36,11 @@ def cli():
 @click.argument(
     "output",
     default=".",
-    type=click.Path(writable=True, dir_okay=True, file_okay=False,),
+    type=click.Path(
+        writable=True,
+        dir_okay=True,
+        file_okay=False,
+    ),
 )
 def process_intact(data_file, output, db_url):
     entries = parser.parse(data_file, db_url)

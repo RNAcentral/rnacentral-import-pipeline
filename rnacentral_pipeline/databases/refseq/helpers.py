@@ -21,24 +21,24 @@ from rnacentral_pipeline.databases import data as dat
 
 import rnacentral_pipeline.databases.helpers.embl as embl
 
-URL = 'https://www.ncbi.nlm.nih.gov/nuccore/{primary_id}.{version}'
+URL = "https://www.ncbi.nlm.nih.gov/nuccore/{primary_id}.{version}"
 
 NCRNA = {
-    'ncRNA',
-    'precursor_RNA',
-    'rRNA',
+    "ncRNA",
+    "precursor_RNA",
+    "rRNA",
 }
 
 
 def optional_id(feature):
-    for ref in feature.qualifiers['db_xref']:
-        if ref.startswith('GeneID:'):
+    for ref in feature.qualifiers["db_xref"]:
+        if ref.startswith("GeneID:"):
             return ref
     return None
 
 
 def parent_accession(record):
-    return record.annotations['accessions'][0]
+    return record.annotations["accessions"][0]
 
 
 def url(record):
@@ -52,23 +52,23 @@ def description(record, feature):
     product = embl.product(feature)
 
     gene_feature = record.features[1]
-    if product == 'other RNA':
-        product = gene_feature.qualifiers.get('note', [])
+    if product == "other RNA":
+        product = gene_feature.qualifiers.get("note", [])
         if len(product) == 1:
             product = product[0]
-            if ';' in product:
-                product = product[product.index(';') + 1:].strip()
+            if ";" in product:
+                product = product[product.index(";") + 1 :].strip()
             # Only lower case things that do not look like genes
             if product[0].isupper() and product[1].islower():
                 product = product[0].lower() + product[1:]
 
     gene = embl.gene(feature) or embl.locus_tag(feature)
     if gene:
-        gene = ' (%s)' % gene
+        gene = " (%s)" % gene
     else:
-        gene = ''
+        gene = ""
 
-    return '{organism} {product}{gene}'.format(
+    return "{organism} {product}{gene}".format(
         organism=embl.organism(record.features[0])[0],
         product=product,
         gene=gene,
@@ -76,11 +76,11 @@ def description(record, feature):
 
 
 def primary_id(record):
-    return record.annotations['accessions'][0]
+    return record.annotations["accessions"][0]
 
 
 def accession(record, feature):
-    return '{primary_id}.{version}:{start}..{stop}:{feature_type}'.format(
+    return "{primary_id}.{version}:{start}..{stop}:{feature_type}".format(
         primary_id=primary_id(record),
         version=embl.seq_version(record),
         start=feature.location.start + 1,
@@ -90,30 +90,29 @@ def accession(record, feature):
 
 
 def xref_data(feature):
-    feature_annotations = feature.qualifiers.get('db_xref', [])
-    return embl.grouped_annotations(feature_annotations, ':')
+    feature_annotations = feature.qualifiers.get("db_xref", [])
+    return embl.grouped_annotations(feature_annotations, ":")
 
 
 def rna_type(record, feature):
     rna_type = embl.rna_type(feature)
-    if rna_type != 'precursor_RNA':
+    if rna_type != "precursor_RNA":
         return rna_type
 
-    
-    products = feature.qualifiers.get('product', [])
+    products = feature.qualifiers.get("product", [])
     if products:
         prod = products[0].lower()
-        if prod.startswith('microrna') or prod.startswith('pre-microrna'):
-            return 'SO:0001244'
+        if prod.startswith("microrna") or prod.startswith("pre-microrna"):
+            return "SO:0001244"
 
-    genes = feature.qualifiers.get('gene', [])
+    genes = feature.qualifiers.get("gene", [])
     for gene in genes:
-        if gene.lower().startswith('mir'):
-            return 'SO:0001244'
+        if gene.lower().startswith("mir"):
+            return "SO:0001244"
 
-    syn = feature.qualifiers.get('gene_synonym', [])
-    if syn and any('mir' in s.lower() for s in syn):
-        return 'SO:0001244'
+    syn = feature.qualifiers.get("gene_synonym", [])
+    if syn and any("mir" in s.lower() for s in syn):
+        return "SO:0001244"
     return rna_type
 
 
@@ -131,7 +130,7 @@ def as_entry(record, source, feature):
         primary_id=primary_id(record),
         accession=accession(record, feature),
         ncbi_tax_id=embl.taxid(record),
-        database='REFSEQ',
+        database="REFSEQ",
         sequence=embl.sequence(record, feature),
         regions=[],
         rna_type=rna_type(record, feature),
@@ -157,7 +156,7 @@ def as_entry(record, source, feature):
         standard_name=embl.standard_name(feature),
         description=description(record, feature),
         mol_type=embl.mol_type(source),
-        is_composite='N',
+        is_composite="N",
         gene_synonyms=embl.gene_synonyms(feature),
         references=embl.references(record),
     )
@@ -183,18 +182,18 @@ def generate_related(entries):
             if first == second or first.accession == second.accession:
                 continue
 
-            relationship = 'isoform'
-            if first.rna_type == 'SO:0001244':
-                if second.rna_type == 'SO:0000276':
-                    relationship = 'mature_product'
+            relationship = "isoform"
+            if first.rna_type == "SO:0001244":
+                if second.rna_type == "SO:0000276":
+                    relationship = "mature_product"
                 else:
                     msg = "Unknown type of relationship between %s\t%s"
                     raise ValueError(msg % (first, second))
 
-            elif first.rna_type == 'SO:0000276':
-                if second.rna_type == 'SO:0001244':
+            elif first.rna_type == "SO:0000276":
+                if second.rna_type == "SO:0001244":
                     relationship = "precursor"
-                elif second.rna_type == 'SO:0000276':
+                elif second.rna_type == "SO:0000276":
                     continue
                 else:
                     print(first.rna_type)
@@ -202,10 +201,12 @@ def generate_related(entries):
                     msg = "Unknown type of relationship between %s\t%s"
                     raise ValueError(msg % (first, second))
 
-            related.append(dat.RelatedSequence(
-                sequence_id=second.accession,
-                relationship=relationship,
-                coordinates=[],
-                evidence=dat.RelatedEvidence.empty()
-            ))
+            related.append(
+                dat.RelatedSequence(
+                    sequence_id=second.accession,
+                    relationship=relationship,
+                    coordinates=[],
+                    evidence=dat.RelatedEvidence.empty(),
+                )
+            )
         yield attr.evolve(first, related_sequences=related)

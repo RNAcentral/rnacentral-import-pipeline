@@ -34,7 +34,7 @@ where
 
 
 def ids(interactions):
-    getter = op.attrgetter('urs_taxid')
+    getter = op.attrgetter("urs_taxid")
     return {getter(r) for r in interactions}
 
 

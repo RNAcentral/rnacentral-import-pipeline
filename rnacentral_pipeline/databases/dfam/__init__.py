@@ -15,5 +15,6 @@ limitations under the License.
 
 from . import results
 
+
 def as_csv(handle, output):
     return results.write(handle, output)

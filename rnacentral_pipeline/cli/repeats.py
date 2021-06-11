@@ -69,10 +69,12 @@ def find_databases(connections, assembly_file, output):
 @click.option("--stop-column", default=3)
 @click.argument("assembly")
 @click.argument("directory", type=click.Path(dir_okay=True, exists=True))
-def ranges_from_bed(assembly, directory, chromosome_column=None, start_column=None, stop_column=None):
+def ranges_from_bed(
+    assembly, directory, chromosome_column=None, start_column=None, stop_column=None
+):
     """
     Build a ranges object from a bed like file. The file should be compressed
-    and indexed for 
+    and indexed for
     """
     ranges.build_bed_directory(
         assembly,

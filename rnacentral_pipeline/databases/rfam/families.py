@@ -42,6 +42,7 @@ def empty_str_from(target):
         if raw == target:
             return None
         return raw
+
     return func
 
 
@@ -55,43 +56,42 @@ class RfamFamily(object):
     domain = attr.ib()
     description = attr.ib(
         validator=optional(is_a(str)),
-        converter=empty_str_from('NULL'),
+        converter=empty_str_from("NULL"),
     )
     seed_count = attr.ib(validator=is_a(int))
     full_count = attr.ib(validator=is_a(int))
-    clan_id = attr.ib(converter=empty_str_from('NULL'))
+    clan_id = attr.ib(converter=empty_str_from("NULL"))
     length = attr.ib(validator=is_a(int))
 
     @classmethod
     def from_dict(cls, row):
-        family = row['id']
+        family = row["id"]
         domain = DOMAIN_MAPPING.get(family, None)
 
-        clan = set(row['clan_id'].split(','))
+        clan = set(row["clan_id"].split(","))
         if len(clan) > 1:
             raise ValueError("Can only handle a single clan per family")
         clan = clan.pop()
 
-        so_terms = set(row['so_terms'].split(','))
-        so_terms.discard('SO:0004725')
+        so_terms = set(row["so_terms"].split(","))
+        so_terms.discard("SO:0004725")
         return cls(
-            id=row['id'],
-            name=row['name'],
-            pretty_name=row['pretty_name'],
+            id=row["id"],
+            name=row["name"],
+            pretty_name=row["pretty_name"],
             so_terms=so_terms,
-            rna_type=row['rna_type'].strip().strip(';'),
+            rna_type=row["rna_type"].strip().strip(";"),
             domain=domain,
-            description=row['description'],
-            seed_count=int(row['seed_count']),
-            full_count=int(row['full_count']),
+            description=row["description"],
+            seed_count=int(row["seed_count"]),
+            full_count=int(row["full_count"]),
             clan_id=clan,
-            length=int(row['length']),
+            length=int(row["length"]),
         )
 
     @property
     def is_suppressed(self):
-        return 'lncRNA' in self.rna_type or \
-            not self.rna_type.startswith('Gene')
+        return "lncRNA" in self.rna_type or not self.rna_type.startswith("Gene")
 
     def guess_insdc_using_name(self):
         found = set()
@@ -101,8 +101,9 @@ class RfamFamily(object):
 
         if found:
             if len(found) > 1:
-                raise ValueError("Name patterns not distinct %s" %
-                                 ', '.join(sorted(found)))
+                raise ValueError(
+                    "Name patterns not distinct %s" % ", ".join(sorted(found))
+                )
             return INFORMATIVE_NAMES[found.pop()]
         return None
 
@@ -111,17 +112,19 @@ class RfamFamily(object):
 
     def guess_insdc_using_so_terms(self):
         terms = set(SO_TERM_MAPPING.get(so, None) for so in self.so_terms)
-        if len(terms) > 1 and 'other' in terms:
-            terms.remove('other')
+        if len(terms) > 1 and "other" in terms:
+            terms.remove("other")
         if len(terms) != 1:
             return None
         return terms.pop()
 
     def guess_insdc(self):
-        return self.guess_insdc_using_name() or \
-            self.guess_insdc_using_so_terms() or \
-            self.guess_insdc_using_rna_type() or \
-            'other'
+        return (
+            self.guess_insdc_using_name()
+            or self.guess_insdc_using_so_terms()
+            or self.guess_insdc_using_rna_type()
+            or "other"
+        )
 
     @property
     def so_term(self):
@@ -149,12 +152,12 @@ class RfamFamily(object):
 
 
 def parse(handle):
-    reader = csv.DictReader(handle, delimiter='\t')
+    reader = csv.DictReader(handle, delimiter="\t")
     return map(RfamFamily.from_dict, reader)
 
 
 def from_file(handle, output):
     data = parse(handle)
-    data = map(op.methodcaller('writeable'), data)
+    data = map(op.methodcaller("writeable"), data)
     writer = csv.writer(output)
     writer.writerows(data)

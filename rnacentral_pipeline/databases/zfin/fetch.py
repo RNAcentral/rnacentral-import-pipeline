@@ -21,20 +21,20 @@ from contextlib import closing
 
 def fetch(url):
     with closing(request.urlopen(url)) as compressed:
-        with gzip.GzipFile(None, 'rb', 9, compressed) as raw:
+        with gzip.GzipFile(None, "rb", 9, compressed) as raw:
             data = json.load(raw)
 
     # Fix weird PMID formatting
     pubs = []
-    for publication in data['metaData']['publications']:
-        pubs.append(publication.replace(': ', ':'))
-    data['metaData']['publications'] = pubs
+    for publication in data["metaData"]["publications"]:
+        pubs.append(publication.replace(": ", ":"))
+    data["metaData"]["publications"] = pubs
 
     # Strip out entries without SO terms:
     valid = []
-    for entry in data['data']:
-        if 'soTermId' not in entry:
+    for entry in data["data"]:
+        if "soTermId" not in entry:
             continue
         valid.append(entry)
-    data['data'] = valid
+    data["data"] = valid
     return data

@@ -25,7 +25,7 @@ from functools import lru_cache
 
 
 DOMAINS = {
-    'ensembl',
+    "ensembl",
 }
 
 
@@ -34,14 +34,14 @@ DOMAINS = {
 @RateLimiter(max_calls=15, period=1)
 def find_species(domain):
     response = requests.get(
-        'http://rest.%s.org/info/species' % domain,
-        headers={'Content-Type': 'application/json'}
+        "http://rest.%s.org/info/species" % domain,
+        headers={"Content-Type": "application/json"},
     )
     response.raise_for_status()
     species = []
     raw = response.json()
-    for entry in raw['species']:
-        species.append(entry['name'])
+    for entry in raw["species"]:
+        species.append(entry["name"])
     return species
 
 
@@ -50,40 +50,33 @@ def find_species(domain):
 @RateLimiter(max_calls=15, period=1)
 def fetch(species, domain):
     response = requests.get(
-        'http://rest.%s.org/info/assembly/%s?bands=1' % (domain, species),
-        headers={'Content-Type': 'application/json'}
+        "http://rest.%s.org/info/assembly/%s?bands=1" % (domain, species),
+        headers={"Content-Type": "application/json"},
     )
     response.raise_for_status()
     return response.json()
 
 
 def default_bands(entry):
-    return {
-        "size": entry["length"],
-        "bands": [{
-            "start": 1,
-            "end": entry["length"]
-        }]
-    }
+    return {"size": entry["length"], "bands": [{"start": 1, "end": entry["length"]}]}
 
 
 def process_chromosome(entry):
-    if 'bands' not in entry:
+    if "bands" not in entry:
         return default_bands(entry)
 
     bands = []
     for band in entry["bands"]:
-        bands.append({
-            "id": band["id"],
-            "start": band["start"],
-            "end": band["end"],
-            "type": band["stain"]
-        })
+        bands.append(
+            {
+                "id": band["id"],
+                "start": band["start"],
+                "end": band["end"],
+                "type": band["stain"],
+            }
+        )
 
-    return {
-        "size": entry["length"],
-        "bands": bands
-    }
+    return {"size": entry["length"], "bands": bands}
 
 
 def process(raw):
@@ -91,8 +84,8 @@ def process(raw):
     for entry in raw["top_level_region"]:
         result[entry["name"]] = default_bands(entry)
         if entry["coord_system"] == "chromosome":
-            result[entry['name']] = process_chromosome(entry)
-    return raw['default_coord_system_version'], result
+            result[entry["name"]] = process_chromosome(entry)
+    return raw["default_coord_system_version"], result
 
 
 def for_domain(domain, allowed=None):

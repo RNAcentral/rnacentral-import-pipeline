@@ -122,7 +122,10 @@ class LocationInfo:
             strand=self.extent.string_strand(),
             frame=".",
             attributes=OrderedDict(
-                [("Name", [transcript_name]), ("type", [self.rna_type.so_term]),]
+                [
+                    ("Name", [transcript_name]),
+                    ("type", [self.rna_type.so_term]),
+                ]
             ),
         )
 

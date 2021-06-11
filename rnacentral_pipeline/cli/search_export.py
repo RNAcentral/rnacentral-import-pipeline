@@ -82,7 +82,7 @@ def so_term_tree(filename, output, ontology=None):
 
 
 @cli.command("generate-queries")
-@click.option('--db-url', envvar='PGDATABASE')
+@click.option("--db-url", envvar="PGDATABASE")
 @click.argument("base", type=click.Path(writable=True, dir_okay=True, file_okay=False))
 @click.argument(
     "output",

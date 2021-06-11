@@ -24,7 +24,9 @@ from rnacentral_pipeline import psql
 from rnacentral_pipeline.rnacentral.precompute.data.context import Context
 from rnacentral_pipeline.rnacentral.precompute.data.sequence import Sequence
 from rnacentral_pipeline.rnacentral.precompute.data.update import (
-    GenericUpdate, SequenceUpdate)
+    GenericUpdate,
+    SequenceUpdate,
+)
 
 AnUpdate = ty.Union[SequenceUpdate, GenericUpdate]
 

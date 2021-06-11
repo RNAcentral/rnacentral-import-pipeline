@@ -41,12 +41,18 @@ class GeneratedQuery:
     @classmethod
     def from_path(cls, filename: Path):
         with filename.open("r") as raw:
-            return cls(query_type=filename.stem, sql=raw.read(),)
+            return cls(
+                query_type=filename.stem,
+                sql=raw.read(),
+            )
 
     @classmethod
     def from_pika(cls, query_type, query):
         sql = f"COPY ({query}) TO STDOUT"
-        return cls(query_type=query_type, sql=sql,)
+        return cls(
+            query_type=query_type,
+            sql=sql,
+        )
 
     def path(self, base: Path):
         return base / f"{self.query_type}.sql"

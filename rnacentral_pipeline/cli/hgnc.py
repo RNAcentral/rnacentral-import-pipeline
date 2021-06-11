@@ -21,20 +21,24 @@ from rnacentral_pipeline.writers import entry_writer
 from rnacentral_pipeline.databases.hgnc import parser
 
 
-@click.group('hgnc')
+@click.group("hgnc")
 def cli():
     """
     Commands for HGNC data.
     """
 
 
-@cli.command('map')
-@click.option('--db-url', envvar='PGDATABASE')
-@click.argument('filename', type=click.Path())
+@cli.command("map")
+@click.option("--db-url", envvar="PGDATABASE")
+@click.argument("filename", type=click.Path())
 @click.argument(
     "output",
     default=".",
-    type=click.Path(writable=True, dir_okay=True, file_okay=False,),
+    type=click.Path(
+        writable=True,
+        dir_okay=True,
+        file_okay=False,
+    ),
 )
 def process_hgnc(filename, output, db_url=None):
     """

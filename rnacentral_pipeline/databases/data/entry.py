@@ -59,11 +59,15 @@ class Entry:
     primary_id = attr.ib(validator=is_a(str), converter=str)
     accession = attr.ib(validator=is_a(str), converter=str)
     ncbi_tax_id = attr.ib(validator=is_a(int))
-    database = attr.ib(validator=is_a(str), converter=lambda s: str(s.upper()),)
+    database = attr.ib(
+        validator=is_a(str),
+        converter=lambda s: str(s.upper()),
+    )
     sequence = attr.ib(validator=is_a(str), converter=str)
     regions = attr.ib(validator=is_a(list))
     rna_type = attr.ib(
-        validator=utils.matches_pattern(utils.SO_PATTERN), converter=utils.as_so_term,
+        validator=utils.matches_pattern(utils.SO_PATTERN),
+        converter=utils.as_so_term,
     )
     url = attr.ib(validator=is_a(str), converter=str)
     seq_version = attr.ib(

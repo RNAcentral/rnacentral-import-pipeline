@@ -20,18 +20,19 @@ from click.testing import CliRunner
 
 from rnacentral_pipeline.cli import ensembl
 
+
 def test_can_fetch_assemblies():
     runner = CliRunner()
-    filename = os.path.abspath('data/qa/rfam/scan.tbl')
+    filename = os.path.abspath("data/qa/rfam/scan.tbl")
     base = Path(os.curdir).absolute()
     with runner.isolated_filesystem():
-        assemblies = 'loaded-assemblies.csv'
+        assemblies = "loaded-assemblies.csv"
         cmd = [
-            'assemblies',
-            str(base / 'config' / 'databases.json'),
-            str(base / 'files' / 'import-data' / 'ensembl' / 'assemblies.sql'),
-            str(base / 'files' / 'import-data' / 'ensembl' / 'example-locations.json'),
-            str(base / 'files' / 'import-data' / 'ensembl' / 'known-assemblies.sql'),
+            "assemblies",
+            str(base / "config" / "databases.json"),
+            str(base / "files" / "import-data" / "ensembl" / "assemblies.sql"),
+            str(base / "files" / "import-data" / "ensembl" / "example-locations.json"),
+            str(base / "files" / "import-data" / "ensembl" / "known-assemblies.sql"),
             assemblies,
         ]
         result = runner.invoke(ensembl.cli, cmd)

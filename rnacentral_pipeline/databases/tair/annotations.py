@@ -22,20 +22,20 @@ from rnacentral_pipeline.databases.go_annotations import GoTermAnnotation
 
 
 ECO_MAPPING = {
-    'IBA': '',
-    'IC': '',
-    'IDA': '',
-    'IEA': '',
-    'IEP': '',
-    'IGI': '',
-    'IMP': '',
-    'IPI': '',
-    'ISM': '',
-    'ISS': '',
-    'NAS': '',
-    'ND': '',
-    'RCA': '',
-    'TAS': '',
+    "IBA": "",
+    "IC": "",
+    "IDA": "",
+    "IEA": "",
+    "IEP": "",
+    "IGI": "",
+    "IMP": "",
+    "IPI": "",
+    "ISM": "",
+    "ISS": "",
+    "NAS": "",
+    "ND": "",
+    "RCA": "",
+    "TAS": "",
 }
 
 TAIR_QUERY = """
@@ -55,57 +55,57 @@ where
 def load_known_tair(dbconf):
     known = coll.defaultdict(set)
     for result in run_query(dbconf, TAIR_QUERY):
-        known[result['locus_tag']].add(result['rna_id'])
+        known[result["locus_tag"]].add(result["rna_id"])
     return dict(known)
 
 
 def publications(raw):
     references = []
-    for ref in raw['references'].split('|'):
-        prefix, ident = ref.split(':')
-        if prefix != 'PMID':
+    for ref in raw["references"].split("|"):
+        prefix, ident = ref.split(":")
+        if prefix != "PMID":
             continue
         references.append(pubs.reference(ident))
     return references
 
 
 def evidence_code(raw):
-    return ECO_MAPPING[raw['eco_term']]
+    return ECO_MAPPING[raw["eco_term"]]
 
 
 def parse(handle, dbconf):
     reader = csv.DictReader(
         handle,
         fieldnames=[
-            'locus',
-            'tair_accession',
-            'object_name',
-            'qualifier',
-            'go_term',
-            'go_term_id',
-            'tair_keyword',
-            'aspect',
-            'goslim_term',
-            'eco_term',
-            'eco_description',
-            'with',
-            'references',
-            'source',
-            'date',
+            "locus",
+            "tair_accession",
+            "object_name",
+            "qualifier",
+            "go_term",
+            "go_term_id",
+            "tair_keyword",
+            "aspect",
+            "goslim_term",
+            "eco_term",
+            "eco_description",
+            "with",
+            "references",
+            "source",
+            "date",
         ],
-        delimiter='\t',
+        delimiter="\t",
     )
     known = load_known_tair(dbconf)
     for row in reader:
-        if row['tair_accession'] not in known:
+        if row["tair_accession"] not in known:
             continue
 
         yield GoTermAnnotation(
-            rna_id=known[row['tair_accession']],
-            qualifier=row['qualifier'].replace(' ', '_'),
-            term_id=row['go_term_id'],
+            rna_id=known[row["tair_accession"]],
+            qualifier=row["qualifier"].replace(" ", "_"),
+            term_id=row["go_term_id"],
             extensions=[],
             evidence_code=evidence_code(row),
-            assigned_by=row['source'],
+            assigned_by=row["source"],
             publications=publications(row),
         )

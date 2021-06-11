@@ -36,12 +36,15 @@ def genes_for(assembly, urs_taxid):
     return [g for g in found if g.urs_taxid == urs_taxid]
 
 
-@pytest.mark.parameterize('location_id,status', [
-    (33989329, data.DataType.rejected),
-    (33919630, data.DataType.rejected),
-    (34007230, data.DataType.rejected),
-    (34007229, data.DataType.rejected),
-])
+@pytest.mark.parameterize(
+    "location_id,status",
+    [
+        (33989329, data.DataType.rejected),
+        (33919630, data.DataType.rejected),
+        (34007230, data.DataType.rejected),
+        (34007229, data.DataType.rejected),
+    ],
+)
 def test_selects_correct_representative(assembly, location_id, status):
     assert genes_for(assembly, location_id)
     # genes = genes_for(assembly, urs_taxid)

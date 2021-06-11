@@ -21,21 +21,21 @@ import pymysql
 
 
 DISALLOWED_DATABASE_TERMS = {
-    'mirror',
-    'chok1gs',  # skip golden hamster genome (same taxid as CriGri)
-    'female',  # skip female naked mole rat genome
+    "mirror",
+    "chok1gs",  # skip golden hamster genome (same taxid as CriGri)
+    "female",  # skip female naked mole rat genome
 }
 
 
 def database_key(name):
-    parts = name.strip().split('_core_')
-    numbers = parts[1].split('_')
+    parts = name.strip().split("_core_")
+    numbers = parts[1].split("_")
     major = int(numbers[0])
-    match = re.match(r'^(\d+)([^\d]?)$', numbers[1])
+    match = re.match(r"^(\d+)([^\d]?)$", numbers[1])
     if not match:
         raise ValueError("Cannot process: " + name)
     minor = int(match.group(1))
-    suffix = ''
+    suffix = ""
     if match.group(2):
         suffix = match.group(2)
     return (parts[0], major, minor, suffix)
@@ -50,11 +50,11 @@ def select_max(handle):
     for line in handle:
         if any(t in line for t in DISALLOWED_DATABASE_TERMS):
             continue
-        if 'mus_musculus' in line and line.count('_') != 4:
+        if "mus_musculus" in line and line.count("_") != 4:
             continue  # skip mouse strains Mouse 129S1/SvImJ
-        if 'bacteria' in line:
+        if "bacteria" in line:
             continue
-        if '_core_' in line:
+        if "_core_" in line:
             databases.append(line.strip())
 
     max_major = max(database_key(d)[1] for d in databases)
@@ -66,7 +66,7 @@ def select_max(handle):
 
 def databases(connection):
     cursor = connection.cursor()
-    cursor.execute('show databases')
+    cursor.execute("show databases")
     db_names = [r[0] for r in cursor.fetchall()]
     cursor.close()
     databases = select_max(db_names)
@@ -86,10 +86,10 @@ def run_queries_across_databases(connection_handle, query_handle):
     specs = json.load(connection_handle)
     query = query_handle.read()
     for name, spec in specs.items():
-        if not name.lower().startswith('ensembl'):
+        if not name.lower().startswith("ensembl"):
             continue
-        if 'command' in spec:
-            del spec['command']
+        if "command" in spec:
+            del spec["command"]
         connection = pymysql.Connection(**spec)
         for results in run_queries(connection, query):
             yield results

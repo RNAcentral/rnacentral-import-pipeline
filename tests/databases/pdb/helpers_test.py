@@ -25,40 +25,43 @@ def load(pdb_id: str, chain_id: str) -> ChainInfo:
     return next(c for c in chains if c.chain_id == chain_id)
 
 
-@pytest.mark.parametrize('product,expected', [
-    ('SRP RNA DOMAIN IV', 'SRP_RNA'),
-    ('PRE-TRNA BULGE-HELIX-BULGE MOTIF', 'tRNA'),
-    ('tmRNA (63-MER)', 'tmRNA'),
-    ('U2 snRNA', 'snRNA'),
-    ('HAMMERHEAD RIBOZYME-RNA STRAND', 'hammerhead_ribozyme'),
-    ('RNA (HEPATITIS DELTA VIRUS GENOMIC RIBOZYME)', 'ribozyme'),
-    ('U65 H/ACA snoRNA', 'ncRNA'),
-    ("RNA (5'-R(*CP*GP*CP*GP*AP*AP*UP*UP*AP*GP*CP*G)-3')", 'misc_RNA'),
-    ('5S RRNA LOOP D/LOOP E', 'rRNA'),
-    ('5S RIBOSOMAL RNA', 'rRNA'),
-    ('5.8S RRNA', 'rRNA'),
-    ("16S RRNA (5'-R(*GP*GP*CP*GP*UP*CP*AP*CP*AP*CP*CP*UP*UP*C)-3')", 'rRNA'),
-    ('RNA (16S RNA)', 'rRNA'),
-    ('Helix 39 of 18S rRNA', 'rRNA'),
-    ('18S ribosomal RNA', 'rRNA'),
-    ('23S RRNA', 'rRNA'),
-    ('HELIX 95 OF 23S RRNA', 'rRNA'),
-    ('23S RRNA FRAGMENT', 'rRNA'),
-    ('28S rRNA', 'rRNA'),
-    ('sarcin/ricin 28S rRNA', 'rRNA'),
-    ('30S 16S ribosomal RNA', 'rRNA'),
-    ('30S RNA helix 8', 'rRNA'),
-    ('40S ribosomal RNA fragment', 'rRNA'),
-    ('40S ribosomal RNA', 'rRNA'),
-    ('40S WHEAT GERM RIBOSOME protein 4', 'rRNA'),
-    ('60S ribosomal RNA fragment', 'rRNA'),
-    ('60S ribosomal RNA', 'rRNA'),
-])
+@pytest.mark.parametrize(
+    "product,expected",
+    [
+        ("SRP RNA DOMAIN IV", "SRP_RNA"),
+        ("PRE-TRNA BULGE-HELIX-BULGE MOTIF", "tRNA"),
+        ("tmRNA (63-MER)", "tmRNA"),
+        ("U2 snRNA", "snRNA"),
+        ("HAMMERHEAD RIBOZYME-RNA STRAND", "hammerhead_ribozyme"),
+        ("RNA (HEPATITIS DELTA VIRUS GENOMIC RIBOZYME)", "ribozyme"),
+        ("U65 H/ACA snoRNA", "ncRNA"),
+        ("RNA (5'-R(*CP*GP*CP*GP*AP*AP*UP*UP*AP*GP*CP*G)-3')", "misc_RNA"),
+        ("5S RRNA LOOP D/LOOP E", "rRNA"),
+        ("5S RIBOSOMAL RNA", "rRNA"),
+        ("5.8S RRNA", "rRNA"),
+        ("16S RRNA (5'-R(*GP*GP*CP*GP*UP*CP*AP*CP*AP*CP*CP*UP*UP*C)-3')", "rRNA"),
+        ("RNA (16S RNA)", "rRNA"),
+        ("Helix 39 of 18S rRNA", "rRNA"),
+        ("18S ribosomal RNA", "rRNA"),
+        ("23S RRNA", "rRNA"),
+        ("HELIX 95 OF 23S RRNA", "rRNA"),
+        ("23S RRNA FRAGMENT", "rRNA"),
+        ("28S rRNA", "rRNA"),
+        ("sarcin/ricin 28S rRNA", "rRNA"),
+        ("30S 16S ribosomal RNA", "rRNA"),
+        ("30S RNA helix 8", "rRNA"),
+        ("40S ribosomal RNA fragment", "rRNA"),
+        ("40S ribosomal RNA", "rRNA"),
+        ("40S WHEAT GERM RIBOSOME protein 4", "rRNA"),
+        ("60S ribosomal RNA fragment", "rRNA"),
+        ("60S ribosomal RNA", "rRNA"),
+    ],
+)
 def test_can_compute_correct_rna_types(product, expected):
-    assert helpers.compound_rna_type({'compound': product}) == expected
+    assert helpers.compound_rna_type({"compound": product}) == expected
 
 
 def test_can_detect_if_sequence_is_not_rna():
-    data = load('5wnp', 'U')
+    data = load("5wnp", "U")
     with pytest.raises(helpers.InvalidSequence):
         helpers.sequence(data)

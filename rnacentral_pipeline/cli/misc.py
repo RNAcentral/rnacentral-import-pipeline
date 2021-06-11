@@ -24,8 +24,8 @@ from rnacentral_pipeline.databases.crs import parser as crs
 from rnacentral_pipeline.rnacentral import pgloader
 
 
-@click.command('run-release')
-@click.option('--db_url', envvar='PGDATABASE')
+@click.command("run-release")
+@click.option("--db_url", envvar="PGDATABASE")
 def run_release(db_url=None):
     """
     A command to run the release logic in the database.
@@ -33,18 +33,18 @@ def run_release(db_url=None):
     release.run(db_url)
 
 
-@click.command('check-release')
-@click.option('--db_url', envvar='PGDATABASE')
-@click.argument('limit_file', type=click.File('r'))
+@click.command("check-release")
+@click.option("--db_url", envvar="PGDATABASE")
+@click.argument("limit_file", type=click.File("r"))
 def check_release(limit_file, db_url=None):
     release.check(limit_file, db_url)
 
 
-@click.command('upi-ranges')
-@click.option('--db_url', envvar='PGDATABASE')
-@click.option('--table-name', default='rna')
-@click.argument('chunk_size', type=int)
-@click.argument('output', default='-', type=click.File('w'))
+@click.command("upi-ranges")
+@click.option("--db_url", envvar="PGDATABASE")
+@click.option("--table-name", default="rna")
+@click.argument("chunk_size", type=int)
+@click.argument("output", default="-", type=click.File("w"))
 def find_upi_ranges(chunk_size, output, db_url=None, table_name=None):
     """
     This will compute the ranges to use for our each xml file in the search
@@ -56,9 +56,9 @@ def find_upi_ranges(chunk_size, output, db_url=None, table_name=None):
     upi_ranges.to_file(db_url, table_name, chunk_size, output)
 
 
-@click.command('crs')
-@click.argument('filename', default='-', type=click.File('r'))
-@click.argument('output', default='complete_features.csv', type=click.File('w'))
+@click.command("crs")
+@click.argument("filename", default="-", type=click.File("r"))
+@click.argument("output", default="complete_features.csv", type=click.File("w"))
 def crs_data(filename, output):
     """
     This will parse the CRS file to produce a series of sequence features for
@@ -69,8 +69,8 @@ def crs_data(filename, output):
     crs.from_file(filename, output)
 
 
-@click.command('validate-pgloader')
-@click.argument('filename', default='-', type=click.File('r'))
+@click.command("validate-pgloader")
+@click.argument("filename", default="-", type=click.File("r"))
 def validate_pgloader(filename):
     """
     Check if pgloader ran without errors. Pgloader doesn't seem to crash when it

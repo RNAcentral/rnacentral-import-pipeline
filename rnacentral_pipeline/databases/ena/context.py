@@ -32,8 +32,7 @@ from rnacentral_pipeline.databases.ena import mapping as tpa
 
 @attr.s()
 class Context:
-    ribovore: ty.Optional[ribo.Results] = attr.ib(
-        validator=optional(is_a(dict)))
+    ribovore: ty.Optional[ribo.Results] = attr.ib(validator=optional(is_a(dict)))
     tpa = attr.ib(validator=is_a(tpa.TpaMappings))
     dr = attr.ib(validator=is_a(SqliteDict))
     counts = attr.ib(validator=is_a(Counter), factory=Counter)
@@ -42,22 +41,22 @@ class Context:
         yield from tpa.apply(self.tpa, entries)
 
     def add_skipped_protein(self):
-        self.counts['skipped_protein'] += 1
+        self.counts["skipped_protein"] += 1
 
     def add_skipped_pseudogene(self):
-        self.counts['skipped_pseudogene'] += 1
+        self.counts["skipped_pseudogene"] += 1
 
     def add_riboytper_skip(self):
-        self.counts['ribotyper_skipped'] += 1
+        self.counts["ribotyper_skipped"] += 1
 
     def add_total(self):
-        self.counts['total'] += 1
+        self.counts["total"] += 1
 
     def add_parsed(self):
-        self.counts['parsed'] += 1
+        self.counts["parsed"] += 1
 
     def dump_counts(self, path: Path):
-        with path.open('w') as out:
+        with path.open("w") as out:
             writer = csv.DictWriter(out, fieldnames=self.counts.keys())
             writer.writeheader()
             writer.writerow(self.counts)
@@ -88,13 +87,13 @@ class ContextBuilder:
     def context(self) -> Context:
         tpa_mapping = tpa.TpaMappings()
         if self.tpa_path:
-            with self.tpa_path.open('r') as raw:
+            with self.tpa_path.open("r") as raw:
                 tpa_mapping = tpa.load(raw)
             tpa_mapping.validate()
 
         dr_map = SqliteDict(filename=self.cache_filename)
         if self.dr_path:
-            with self.dr_path.open('r') as raw:
+            with self.dr_path.open("r") as raw:
                 for (record_id, dbrefs) in dr.mappings(raw):
                     dr_map[record_id] = dbrefs
                 dr_map.commit()

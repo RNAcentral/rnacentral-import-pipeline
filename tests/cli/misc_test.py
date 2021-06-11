@@ -19,10 +19,13 @@ from click.testing import CliRunner
 from rnacentral_pipeline.cli import misc
 
 
-@pytest.mark.parametrize('filename,exit_code', [
-    ('data/pgloader/failed.txt', 1),
-    ('data/pgloader/success.txt', 0),
-])
+@pytest.mark.parametrize(
+    "filename,exit_code",
+    [
+        ("data/pgloader/failed.txt", 1),
+        ("data/pgloader/success.txt", 0),
+    ],
+)
 def test_can_validate_pgloader_file(filename, exit_code):
     runner = CliRunner()
     result = runner.invoke(misc.validate_pgloader, [filename])

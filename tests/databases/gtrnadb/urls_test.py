@@ -33,7 +33,13 @@ def test_can_extract_ursl_from_text():
     with open("data/gtrnadb/files.html", "r") as raw:
         urls = list(fetch.extract_urls(REMOTE, raw.read()))
         assert urls == [
-            furl("http://trna.ucsc.edu/download/RNAcentral/export2019/archaea_tRNAs.json.gz"),
-            furl("http://trna.ucsc.edu/download/RNAcentral/export2019/bacteria_tRNAs.tar.gz"),
-            furl("http://trna.ucsc.edu/download/RNAcentral/export2019/eukaryotes_tRNAs.tar.gz"),
+            furl(
+                "http://trna.ucsc.edu/download/RNAcentral/export2019/archaea_tRNAs.json.gz"
+            ),
+            furl(
+                "http://trna.ucsc.edu/download/RNAcentral/export2019/bacteria_tRNAs.tar.gz"
+            ),
+            furl(
+                "http://trna.ucsc.edu/download/RNAcentral/export2019/eukaryotes_tRNAs.tar.gz"
+            ),
         ]

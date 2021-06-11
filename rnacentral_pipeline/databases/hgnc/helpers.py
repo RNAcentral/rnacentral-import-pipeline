@@ -34,9 +34,9 @@ def url(entry: HgncEntry) -> str:
 
 def load(path: Path) -> ty.List[HgncEntry]:
     data = []
-    with path.open('r') as handle:
+    with path.open("r") as handle:
         raw_data = json.load(handle)
-        for raw in raw_data['response']['docs']:
+        for raw in raw_data["response"]["docs"]:
             data.append(HgncEntry.from_raw(raw))
     return data
 
@@ -90,11 +90,14 @@ def refseq_id_to_urs(context: Context, refseq_id: str) -> ty.Optional[str]:
         .join(rna)
         .on(rna.upi == xref.upi)
         .where(
-            (xref.taxid == 9606) & (xref.deleted == "N")
-            & ((acc.parent_ac == refseq_id)
+            (xref.taxid == 9606)
+            & (xref.deleted == "N")
+            & (
+                (acc.parent_ac == refseq_id)
                 | (acc.external_id == refseq_id)
-                | (acc.optional_id == refseq_id))
+                | (acc.optional_id == refseq_id)
             )
+        )
         .orderby(rna.len, order=Order.desc)
     )
 
@@ -120,11 +123,7 @@ def ensembl_sequence(context: Context, ensembl_id: str) -> ty.Optional[str]:
 
 def md5_to_urs(context: Context, md5: str) -> ty.Optional[str]:
     rna = Table("rna")
-    query = (
-        Query.from_(rna)
-        .select(rna.upi)
-        .where(rna.md5 == md5)
-    )
+    query = Query.from_(rna).select(rna.upi).where(rna.md5 == md5)
     found = context.query_one(query)
     if found:
         return found[0]
@@ -146,24 +145,24 @@ def urs_to_sequence(context: Context, urs: str) -> str:
 
 
 def so_term(context: Context, entry: HgncEntry) -> str:
-    if entry.hgnc_rna_type == 'RNA, long non-coding':
-        return 'SO:0001877'
+    if entry.hgnc_rna_type == "RNA, long non-coding":
+        return "SO:0001877"
     if entry.hgnc_rna_type == "RNA, Y":
-        return 'SO:0000405'
+        return "SO:0000405"
     if entry.hgnc_rna_type == "RNA, cluster":
-        return 'SO:0000655'
+        return "SO:0000655"
     if entry.hgnc_rna_type == "RNA, micro":
-        return 'SO:0000276'
+        return "SO:0000276"
     if entry.hgnc_rna_type == "RNA, misc":
-        return 'SO:0000655'
+        return "SO:0000655"
     if entry.hgnc_rna_type == "RNA, ribosomal":
-        return 'SO:0000252'
+        return "SO:0000252"
     if entry.hgnc_rna_type == "RNA, small nuclear":
-        return 'SO:0000274'
+        return "SO:0000274"
     if entry.hgnc_rna_type == "RNA, small nucleolar":
-        return 'SO:0000275'
+        return "SO:0000275"
     if entry.hgnc_rna_type == "RNA, transfer":
-        return 'SO:0000253'
+        return "SO:0000253"
     if entry.hgnc_rna_type == "RNA, vault":
-        return 'SO:0000404'
+        return "SO:0000404"
     raise ValueError(f"Unknown type of RNA for {entry}")

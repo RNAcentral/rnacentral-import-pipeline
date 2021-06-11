@@ -142,14 +142,14 @@ def find_databases(connection_handle, assembly_file):
     for conn_name, spec in specs.items():
         if not conn_name.lower().startswith("ensembl"):
             continue
-        del spec['command']
+        del spec["command"]
         connection = pymysql.Connection(**spec)
         seen = set()
         for db_name in db.databases(connection):
             for key, info in assemblies.items():
                 if db_name.startswith(key):
                     if info["assembly_id"] in seen:
-                        LOGGER.warn("Duplicated assembly %s", info['assembly_id'])
+                        LOGGER.warn("Duplicated assembly %s", info["assembly_id"])
                         continue
                     yield [info["assembly_id"], conn_name, db_name]
                     seen.add(info["assembly_id"])

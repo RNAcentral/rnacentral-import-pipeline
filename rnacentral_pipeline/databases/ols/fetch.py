@@ -25,7 +25,7 @@ from functools import lru_cache
 
 from rnacentral_pipeline.databases.data import OntologyTerm
 
-BASE = 'https://www.ebi.ac.uk/ols/api/ontologies'
+BASE = "https://www.ebi.ac.uk/ols/api/ontologies"
 
 
 @lru_cache(maxsize=500)
@@ -47,17 +47,17 @@ def ontology_url(ontology):
     url = furl(BASE)
     url.path.segments.append(ontology.upper())
     info = query_ols(url.url)
-    return furl(info['config']['baseUris'][0])
+    return furl(info["config"]["baseUris"][0])
 
 
 def term_url(term_id):
-    ontology, rest = term_id.split(':', 1)
+    ontology, rest = term_id.split(":", 1)
     ont_url = ontology_url(ontology)
     ont_url.path.segments[-1] += rest
     iri = six.moves.urllib.parse.quote_plus(ont_url.url)
 
     url = furl(BASE)
-    url.path.segments.extend([ontology, 'terms', iri])
+    url.path.segments.extend([ontology, "terms", iri])
     return url
 
 
@@ -69,31 +69,31 @@ def term(term_id):
     OLS.
     """
 
-    ontology, _ = term_id.split(':', 1)
+    ontology, _ = term_id.split(":", 1)
     url = term_url(term_id)
     term_info = query_ols(url.url)
 
     definition = None
-    if term_info['description']:
-        definition = ' '.join(term_info['description'] or '')
+    if term_info["description"]:
+        definition = " ".join(term_info["description"] or "")
 
     qualifier = None
     synonyms = []
-    given = term_info.get('synonyms', None) or []
-    leader = 'INSDC_qualifier:'
+    given = term_info.get("synonyms", None) or []
+    leader = "INSDC_qualifier:"
     for synonym in given:
         if synonym.startswith(leader):
             if qualifier:
                 raise ValueError("Multiple INSDC qualifiers found")
-            qualifier = synonym[len(leader):]
+            qualifier = synonym[len(leader) :]
         else:
             synonyms.append(synonym)
 
     return OntologyTerm(
         ontology=ontology,
         ontology_id=term_id,
-        name=term_info['label'],
+        name=term_info["label"],
         definition=definition,
         synonyms=synonyms,
-        insdc_qualifier=qualifier
+        insdc_qualifier=qualifier,
     )

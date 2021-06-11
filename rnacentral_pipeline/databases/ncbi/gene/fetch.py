@@ -114,7 +114,10 @@ def find_genome_id(cur_id, entry):
 
 def lookup_by_nt(mapping):
     handle = Entrez.efetch(
-        db="nucleotide", id=",".join(mapping.keys()), rettype="gb", retmode="text",
+        db="nucleotide",
+        id=",".join(mapping.keys()),
+        rettype="gb",
+        retmode="text",
     )
     data = {}
     for sequence in SeqIO.parse(handle, "genbank"):
@@ -129,7 +132,12 @@ def lookup_by_nt(mapping):
 def lookup_by_genome(mapping):
     data = {}
     for gene_id, coord in mapping.items():
-        handle = Entrez.efetch(db="nuccore", rettype="gb", retmode="text", **coord,)
+        handle = Entrez.efetch(
+            db="nuccore",
+            rettype="gb",
+            retmode="text",
+            **coord,
+        )
         data[gene_id] = SeqIO.read(handle, "genbank")
         handle.close()
     return data

@@ -19,7 +19,9 @@ from rnacentral_pipeline.rnacentral.precompute.description import short
 from tests.rnacentral.precompute.helpers import load_data
 
 
-@pytest.mark.parametrize("rna_id,description,expected", [
+@pytest.mark.parametrize(
+    "rna_id,description,expected",
+    [
         (
             "URS0000D50284_7240",
             "Drosophila simulans () microRNA dsi-mir-988 precursor",
@@ -45,7 +47,11 @@ from tests.rnacentral.precompute.helpers import load_data
             "Saccharomyces cerevisiae S288c tRNA-Gln (tQ(UUG)C, tQ(UUG)D1-3, tQ(UUG)E1, tQ(UUG)H, tQ(UUG)L)",
             "tRNA-Gln (tQ(UUG)C, tQ(UUG)D1-3, tQ(UUG)E1, tQ(UUG)H, tQ(UUG)L)",
         ),
-        ("URS00002078D9_216597", "Salmonella enterica subsp. enterica serovar Typhimurium str. SL1344 YrlB", "YrlB"),
+        (
+            "URS00002078D9_216597",
+            "Salmonella enterica subsp. enterica serovar Typhimurium str. SL1344 YrlB",
+            "YrlB",
+        ),
     ],
 )
 def test_computes_correct_short_descriptions(rna_id, description, expected):

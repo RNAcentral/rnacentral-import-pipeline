@@ -26,9 +26,9 @@ def cli():
     pass
 
 
-@cli.command('index-xml')
-@click.argument('directory', default='out', type=click.Path())
-@click.argument('db', default='references.db', type=click.Path())
+@cli.command("index-xml")
+@click.argument("directory", default="out", type=click.Path())
+@click.argument("db", default="references.db", type=click.Path())
 def index_xml(directory, db):
     """
     Index a list of XML files of publication information.
@@ -36,11 +36,11 @@ def index_xml(directory, db):
     xml.index_directory(directory, db)
 
 
-@cli.command('query')
-@click.option('--column', default=0)
-@click.option('--ignore-missing/--no-ignore-missing', default=True)
-@click.argument('references', default='-', type=click.File('r'))
-@click.argument('output', default='references.csv', type=click.File('w'))
+@cli.command("query")
+@click.option("--column", default=0)
+@click.option("--ignore-missing/--no-ignore-missing", default=True)
+@click.argument("references", default="-", type=click.File("r"))
+@click.argument("output", default="references.csv", type=click.File("w"))
 def query(references, output, column=0, ignore_missing=True):
     """
     Query EuropePMC API for all references in the references file. This will be
@@ -55,16 +55,13 @@ def query(references, output, column=0, ignore_missing=True):
     )
 
 
-@cli.command('lookup')
-@click.option('--column', default=0)
-@click.option('--allow-fallback/--no-allow-fallback', default=False)
-@click.option('--ignore-missing/--no-ignore-missing', default=True)
-@click.argument('db', default='references.db', type=click.Path())
-@click.argument('ids', default='ref_ids.csv', type=click.File('r'))
-@click.argument(
-    'output',
-    default='references.csv',
-    type=click.File('w'))
+@cli.command("lookup")
+@click.option("--column", default=0)
+@click.option("--allow-fallback/--no-allow-fallback", default=False)
+@click.option("--ignore-missing/--no-ignore-missing", default=True)
+@click.argument("db", default="references.db", type=click.Path())
+@click.argument("ids", default="ref_ids.csv", type=click.File("r"))
+@click.argument("output", default="references.csv", type=click.File("w"))
 def lookup(db, ids, output, column=0, allow_fallback=False, ignore_missing=True):
     """
     Use the database index file to lookup all reference information for all xml
@@ -80,20 +77,24 @@ def lookup(db, ids, output, column=0, allow_fallback=False, ignore_missing=True)
     )
 
 
-@cli.command('stream-lookup')
-@click.option('--column', default=0)
-@click.option('--allow-fallback/--no-allow-fallback', default=False)
-@click.option('--ignore-missing/--no-ignore-missing', default=True)
-@click.argument('directory', default='out', type=click.Path())
-@click.argument('ids', default='ref_ids.csv', type=click.File('r'))
-@click.argument(
-    'output',
-    default='references.csv',
-    type=click.File('w'))
-def stream_lookup(directory, ids, output, column=0, allow_fallback=False, ignore_missing=True):
+@cli.command("stream-lookup")
+@click.option("--column", default=0)
+@click.option("--allow-fallback/--no-allow-fallback", default=False)
+@click.option("--ignore-missing/--no-ignore-missing", default=True)
+@click.argument("directory", default="out", type=click.Path())
+@click.argument("ids", default="ref_ids.csv", type=click.File("r"))
+@click.argument("output", default="references.csv", type=click.File("w"))
+def stream_lookup(
+    directory, ids, output, column=0, allow_fallback=False, ignore_missing=True
+):
     """
-    Load all ids to write in 
+    Load all ids to write in
     """
-    stream.write_lookup(ids, directory, output, column=column,
-                        ignore_missing=ignore_missing,
-                        allow_fallback=allow_fallback)
+    stream.write_lookup(
+        ids,
+        directory,
+        output,
+        column=column,
+        ignore_missing=ignore_missing,
+        allow_fallback=allow_fallback,
+    )

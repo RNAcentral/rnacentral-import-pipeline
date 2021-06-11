@@ -30,7 +30,7 @@ class KnownSequence(object):
 
     @property
     def urs(self):
-        return self.rna_id.split('_')[0]
+        return self.rna_id.split("_")[0]
 
 
 @attr.s(frozen=True)

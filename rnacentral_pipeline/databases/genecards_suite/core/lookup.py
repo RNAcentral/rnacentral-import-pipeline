@@ -36,13 +36,13 @@ where
 
 def parse_urs(handle, field: str):
     getter = op.itemgetter(field)
-    reader = csv.DictReader(handle, delimiter='\t')
+    reader = csv.DictReader(handle, delimiter="\t")
     return {getter(r) for r in reader}
 
 
 def write(handle, db_url, field_name, output):
     data = parse_urs(handle, field_name)
-    lookup.write_mapping(db_url, data, QUERY, output, key='rna_id')
+    lookup.write_mapping(db_url, data, QUERY, output, key="rna_id")
 
 
 def load(handle):

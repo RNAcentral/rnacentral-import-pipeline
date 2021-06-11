@@ -21,7 +21,7 @@ from rnacentral_pipeline.databases.quickgo import parser
 from rnacentral_pipeline import writers
 
 
-@click.group('quickgo')
+@click.group("quickgo")
 def cli():
     """
     Commands for fetching data needed for genecards parsing.
@@ -34,7 +34,11 @@ def cli():
 @click.argument(
     "output",
     default=".",
-    type=click.Path(writable=True, dir_okay=True, file_okay=False,),
+    type=click.Path(
+        writable=True,
+        dir_okay=True,
+        file_okay=False,
+    ),
 )
 def parse_quickgo(raw_data, output):
     """

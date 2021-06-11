@@ -56,7 +56,7 @@ def mappings(lines: ty.Iterable[str]) -> ty.Iterable[ty.Tuple[str, ty.List[DBRef
             current_id = line[5:].split(";")[0]
             refs = []
 
-        if line.startswith('DR'):
+        if line.startswith("DR"):
             refs.append(parse_line(line))
 
     if current_id:

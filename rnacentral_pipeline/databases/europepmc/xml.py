@@ -56,6 +56,7 @@ class UncachedReference(Exception):
     This is created when the requested reference was never indexed. This may be
     because it is not an open access publication, or it does not exist at all.
     """
+
     pass
 
 
@@ -82,7 +83,7 @@ class Storage(object):
         return Reference(**json.loads(data))
 
     @contextmanager
-    def open(self, mode='r'):
+    def open(self, mode="r"):
         self.db = dbm.open(str(self.path), mode)
         yield self
         self.db.sync()
@@ -90,11 +91,12 @@ class Storage(object):
 
     def __normalize_key__(self, raw):
         if isinstance(raw, str):
-            encoded = raw.encode('ascii', 'ignore')
+            encoded = raw.encode("ascii", "ignore")
         else:
             encoded = str(raw)
         assert encoded
         return encoded
+
 
 @attr.s()
 class Cache(object):
@@ -118,12 +120,12 @@ class Cache(object):
         cache = cls.build(base_path)
         chunks = more.chunked(references, COMMIT_SIZE)
         for index, chunk in enumerate(chunks):
-            with cache.open(mode='cf') as cache:
+            with cache.open(mode="cf") as cache:
                 for reference in chunk:
                     cache.store(reference)
 
     @contextmanager
-    def open(self, mode='r'):
+    def open(self, mode="r"):
         with ExitStack() as stack:
             for service in KnownServices:
                 storage = self.__storage__(service)
@@ -153,7 +155,7 @@ class Cache(object):
         else:
             raise ValueError("Unknown type: %s" % ref)
 
-        key = '_' + name
+        key = "_" + name
         if not hasattr(self, key):
             raise ValueError("Never cached references for: %s" % name)
         return getattr(self, key)
@@ -169,31 +171,31 @@ def xml_text(tag, node, missing=None, fn=None):
 
 
 def node_to_reference(node):
-    pmid = xml_text('pmid', node, fn=int)
-    doi = xml_text('DOI', node)
+    pmid = xml_text("pmid", node, fn=int)
+    doi = xml_text("DOI", node)
     if not pmid and not doi:
         return None
-    pmcid = str(xml_text('pmcid', node))
+    pmcid = str(xml_text("pmcid", node))
 
     authors = []
-    for author in node.findall('./AuthorList/Author'):
-        last = xml_text('LastName', author)
-        initials = xml_text('Initials', author)
-        authors.append('%s %s' % (last, initials))
-    authors = ', '.join(authors) + '.'
+    for author in node.findall("./AuthorList/Author"):
+        last = xml_text("LastName", author)
+        initials = xml_text("Initials", author)
+        authors.append("%s %s" % (last, initials))
+    authors = ", ".join(authors) + "."
 
     data = {
-        'journalTitle': xml_text('journalTitle', node, missing=''),
-        'issue': xml_text('issue', node, missing=''),
-        'journalVolume': xml_text('journalVolume', node, missing=''),
-        'pageInfo': xml_text('pageInfo', node, missing=''),
-        'pubYear': xml_text('pubYear', node, missing=''),
+        "journalTitle": xml_text("journalTitle", node, missing=""),
+        "issue": xml_text("issue", node, missing=""),
+        "journalVolume": xml_text("journalVolume", node, missing=""),
+        "pageInfo": xml_text("pageInfo", node, missing=""),
+        "pubYear": xml_text("pubYear", node, missing=""),
     }
 
     return Reference(
         authors=str(authors),
         location=str(pretty_location(data)),
-        title=str(xml_text('title', node, fn=clean_title)),
+        title=str(xml_text("title", node, fn=clean_title)),
         pmid=pmid,
         doi=str(doi),
         pmcid=pmcid,
@@ -201,7 +203,7 @@ def node_to_reference(node):
 
 
 def parse(xml_file):
-    for _, node in ET.iterparse(xml_file, events=('end',), tag='PMC_ARTICLE'):
+    for _, node in ET.iterparse(xml_file, events=("end",), tag="PMC_ARTICLE"):
         ref = node_to_reference(node)
         if not ref:
             continue
@@ -213,7 +215,7 @@ def parse(xml_file):
 
 
 def parse_directory(directory):
-    for filename in glob(os.path.join(directory, '*.xml')):
+    for filename in glob(os.path.join(directory, "*.xml")):
         for ref in parse(filename):
             yield ref
 
@@ -229,8 +231,9 @@ def id_refs_from_handle(handle, column=0):
         yield (reference(raw), rest)
 
 
-def write_file_lookup(cache_path, handle, output, column=0, allow_fallback=False,
-                      ignore_missing=True):
+def write_file_lookup(
+    cache_path, handle, output, column=0, allow_fallback=False, ignore_missing=True
+):
     with Cache.build(cache_path).open() as db:
         write_lookup(
             ft.partial(db.get, allow_fallback=allow_fallback),

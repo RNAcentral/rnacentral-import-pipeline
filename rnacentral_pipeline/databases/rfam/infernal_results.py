@@ -19,16 +19,16 @@ import csv
 import attr
 
 CSV_COLUMNS = [
-    'seq_name',
-    'seq_from',
-    'seq_to',
-    'strand',
-    'rfam_acc',
-    'mdl_from',
-    'mdl_to',
-    'overlap',
-    'e_value',
-    'score',
+    "seq_name",
+    "seq_from",
+    "seq_to",
+    "strand",
+    "rfam_acc",
+    "mdl_from",
+    "mdl_to",
+    "overlap",
+    "e_value",
+    "score",
 ]
 
 
@@ -44,9 +44,9 @@ def convert_strand(raw):
     Turn a '+'/'-' strand to the -1/1 that we use internally.
     """
 
-    if raw == '+' or raw == 1:
+    if raw == "+" or raw == 1:
         return 1
-    if raw == '-' or raw == -1:
+    if raw == "-" or raw == -1:
         return -1
     raise Exception("Unknown strand %s" % raw)
 
@@ -62,9 +62,10 @@ def dash_as_none(handle=lambda r: r):
         The actual converter function.
         """
 
-        if raw is None or raw == '-':
+        if raw is None or raw == "-":
             return None
         return handle(raw)
+
     return func
 
 
@@ -76,7 +77,7 @@ def convert_trunc(raw):
 
     if isinstance(raw, tuple):
         return raw
-    if raw == 'no':
+    if raw == "no":
         return (False, False)
     if raw == "5'":
         return (True, False)
@@ -92,12 +93,12 @@ def convert_overlap(raw):
     Convert the short overlap strings from infernal into more readable names.
     """
 
-    if raw == '*' or raw == 'unique':
-        return u'unique'
-    if raw == '^' or raw == 'best':
-        return u'best'
-    if raw == '=' or raw == 'secondary':
-        return u'secondary'
+    if raw == "*" or raw == "unique":
+        return u"unique"
+    if raw == "^" or raw == "best":
+        return u"best"
+    if raw == "=" or raw == "secondary":
+        return u"secondary"
     raise Exception("Unknown overlap symbol %s" % raw)
 
 
@@ -180,9 +181,9 @@ def parse(raw, clan_competition=False):
     count = len(fields) - 1
 
     for line in raw:
-        if line.startswith('#'):
+        if line.startswith("#"):
             continue
-        parts = re.split(r'\s+', line.strip(), count)
+        parts = re.split(r"\s+", line.strip(), count)
         yield model(*parts)  # pylint: disable=star-args
 
 
@@ -195,13 +196,13 @@ def as_csv(tblout, output):
     writer = csv.DictWriter(
         output,
         CSV_COLUMNS,
-        extrasaction='ignore',
-        delimiter=',',
+        extrasaction="ignore",
+        delimiter=",",
         quotechar='"',
         quoting=csv.QUOTE_ALL,
-        lineterminator='\n',
+        lineterminator="\n",
     )
 
     for hit in parse(tblout, clan_competition=True):
-        if hit.overlap == 'unique' or hit.overlap == 'best':
+        if hit.overlap == "unique" or hit.overlap == "best":
             writer.writerow(attr.asdict(hit))

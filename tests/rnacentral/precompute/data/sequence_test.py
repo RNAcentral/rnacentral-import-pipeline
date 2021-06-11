@@ -18,52 +18,64 @@ import pytest
 from .. import helpers
 
 
-@pytest.mark.parametrize('rna_id,expected', [
-    ('URS000013F331_9606', {'Eukaryota'}),
-    ('URS0000197DAA_77133', {'Bacteria'}),
-    ('URS00001A89B6_137771', {'Eukaryota'}),
-    ('URS00001FBB61_111789', set()),
-    ('URS00002C6CD1_6239', {'Eukaryota'}),
-    ('URS000040E1F7_562', {'Bacteria'}),
-    ('URS00004761A1_660924', {'Eukaryota'}),
-    ('URS0000759CF4_9606', {'Eukaryota'}),
-    ('URS0000767631_155900', set()),
-    ('URS00008089CA_224308', {'Bacteria'}),
-    ('URS0000871A17_32630', set()),
-    ('URS00008ABD77_155900', set()),
-    ('URS0000D664B8_12908', set()),
-])
+@pytest.mark.parametrize(
+    "rna_id,expected",
+    [
+        ("URS000013F331_9606", {"Eukaryota"}),
+        ("URS0000197DAA_77133", {"Bacteria"}),
+        ("URS00001A89B6_137771", {"Eukaryota"}),
+        ("URS00001FBB61_111789", set()),
+        ("URS00002C6CD1_6239", {"Eukaryota"}),
+        ("URS000040E1F7_562", {"Bacteria"}),
+        ("URS00004761A1_660924", {"Eukaryota"}),
+        ("URS0000759CF4_9606", {"Eukaryota"}),
+        ("URS0000767631_155900", set()),
+        ("URS00008089CA_224308", {"Bacteria"}),
+        ("URS0000871A17_32630", set()),
+        ("URS00008ABD77_155900", set()),
+        ("URS0000D664B8_12908", set()),
+    ],
+)
 def test_can_get_correct_domains(rna_id, expected):
     assert helpers.load_data(rna_id)[1].domains() == expected
 
 
-@pytest.mark.parametrize('rna_id,expected', [
-    ('URS00002C6CD1_6239', False),
-    ('URS000031188A_9606', True),
-    ('URS000031415B_9606', True),
-    ('URS00003EA5AC_9606', True),
-    ('URS0000010837_7227', False),
-    ('URS0000767631_155900', False),
-])
+@pytest.mark.parametrize(
+    "rna_id,expected",
+    [
+        ("URS00002C6CD1_6239", False),
+        ("URS000031188A_9606", True),
+        ("URS000031415B_9606", True),
+        ("URS00003EA5AC_9606", True),
+        ("URS0000010837_7227", False),
+        ("URS0000767631_155900", False),
+    ],
+)
 def test_can_detect_if_mitochondrial(rna_id, expected):
     assert helpers.load_data(rna_id)[1].is_mitochondrial() is expected
 
 
-@pytest.mark.parametrize('rna_id,expected', [
-    ('URS00002C6CD1_6239', False),
-    ('URS00004DCBD3_3702', True),
-    ('URS00006EF97C_3702', True),
-    ('URS0000506D7B_100272', True),
-    ('URS0000767631_155900', True),
-])
+@pytest.mark.parametrize(
+    "rna_id,expected",
+    [
+        ("URS00002C6CD1_6239", False),
+        ("URS00004DCBD3_3702", True),
+        ("URS00006EF97C_3702", True),
+        ("URS0000506D7B_100272", True),
+        ("URS0000767631_155900", True),
+    ],
+)
 def test_can_detect_if_chloroplast(rna_id, expected):
     assert helpers.load_data(rna_id)[1].is_chloroplast() is expected
 
 
 @pytest.mark.skip()
-@pytest.mark.parametrize('rna_id,expected', [
-    ('URS00006DCF2F_387344', 'SO:0000252'),
-])
+@pytest.mark.parametrize(
+    "rna_id,expected",
+    [
+        ("URS00006DCF2F_387344", "SO:0000252"),
+    ],
+)
 def test_can_load_rna_types(rna_id, expected):
     assert helpers.load_data(rna_id)[1].so_rna_type == expected
 

@@ -59,8 +59,7 @@ class EntryWriter:
             self.references.writerows(entry.write_refs())
             self.ref_ids.writerows(entry.write_ref_ids())
             self.regions.writerows(entry.write_sequence_regions())
-            self.secondary_structure.writerows(
-                entry.write_secondary_structure())
+            self.secondary_structure.writerows(entry.write_secondary_structure())
             self.related_sequences.writerows(entry.write_related_sequences())
             self.features.writerows(entry.write_sequence_features())
             self.interactions.writerows(entry.write_interactions())
@@ -77,7 +76,8 @@ class OntologyAnnnotationWriter:
         for anno in annotations:
             self.go_annotations.writerows(anno.writeable())
             self.go_publication_mappings.writerows(
-                anno.writeable_publication_mappings())
+                anno.writeable_publication_mappings()
+            )
             self.terms.writerows(anno.writeable_ontology_terms())
 
 

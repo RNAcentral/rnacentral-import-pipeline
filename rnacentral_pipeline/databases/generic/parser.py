@@ -31,10 +31,10 @@ def parse(handle: ty.IO) -> ty.Iterable[Entry]:
     data = json.load(handle)
     if not data:
         raise ValueError("No data loaded")
-    if not data['data']:
+    if not data["data"]:
         raise ValueError("Missing data to import")
 
-    version = data.get('metaData', {}).get('schemaVersion', None)
+    version = data.get("metaData", {}).get("schemaVersion", None)
     if not version:
         raise ValueError("Must specify a schema version in metadata")
 

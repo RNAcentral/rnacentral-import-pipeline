@@ -42,7 +42,7 @@ def lookup(db_url, all_ids, query, chunk_size=CHUNK_SIZE):
     conn.close()
 
 
-def as_mapping(db_url, data, query, key='id', **kwargs):
+def as_mapping(db_url, data, query, key="id", **kwargs):
     mapping = {}
     for result in lookup(db_url, data, query, **kwargs):
         pid = result[key]

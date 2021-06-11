@@ -39,26 +39,42 @@ class InteractionIdentifier:
     name = attr.ib(validator=optional(is_a(str)))
 
     def from_rnacentral(self) -> bool:
-        return self.key == 'rnacentral'
+        return self.key == "rnacentral"
 
     def simple_id(self) -> str:
-        return '%s:%s' % (self.key, self.value)
+        return "%s:%s" % (self.key, self.value)
 
 
 @attr.s(frozen=True)
 class Interactor:
     id = attr.ib(validator=is_a(InteractionIdentifier))
-    alt_ids: ty.Tuple[InteractionIdentifier] = attr.ib(validator=is_a(tuple), converter=tuple)
-    aliases: ty.Tuple[InteractionIdentifier] = attr.ib(validator=is_a(tuple), converter=tuple)
+    alt_ids: ty.Tuple[InteractionIdentifier] = attr.ib(
+        validator=is_a(tuple), converter=tuple
+    )
+    aliases: ty.Tuple[InteractionIdentifier] = attr.ib(
+        validator=is_a(tuple), converter=tuple
+    )
     taxid = attr.ib(validator=optional(is_a(int)))
-    biological_role: ty.Tuple[InteractionIdentifier] = attr.ib(validator=is_a(tuple), converter=tuple)
-    experimental_role: ty.Tuple[InteractionIdentifier] = attr.ib(validator=is_a(tuple), converter=tuple)
-    interactor_type: ty.Tuple[InteractionIdentifier] = attr.ib(validator=is_a(tuple), converter=tuple)
-    xrefs: ty.Tuple[InteractionIdentifier] = attr.ib(validator=is_a(tuple), converter=tuple)
+    biological_role: ty.Tuple[InteractionIdentifier] = attr.ib(
+        validator=is_a(tuple), converter=tuple
+    )
+    experimental_role: ty.Tuple[InteractionIdentifier] = attr.ib(
+        validator=is_a(tuple), converter=tuple
+    )
+    interactor_type: ty.Tuple[InteractionIdentifier] = attr.ib(
+        validator=is_a(tuple), converter=tuple
+    )
+    xrefs: ty.Tuple[InteractionIdentifier] = attr.ib(
+        validator=is_a(tuple), converter=tuple
+    )
     annotations = attr.ib(validator=is_a(str))
-    features: ty.Tuple[InteractionIdentifier] = attr.ib(validator=is_a(tuple), converter=tuple)
+    features: ty.Tuple[InteractionIdentifier] = attr.ib(
+        validator=is_a(tuple), converter=tuple
+    )
     stoichiometry = attr.ib(validator=optional(is_a(int)))
-    participant_identification: ty.Tuple[InteractionIdentifier] = attr.ib(validator=is_a(tuple), converter=tuple)
+    participant_identification: ty.Tuple[InteractionIdentifier] = attr.ib(
+        validator=is_a(tuple), converter=tuple
+    )
 
     @property
     def database(self):
@@ -71,11 +87,12 @@ class Interactor:
     def from_rnacentral(self) -> bool:
         if self.id.from_rnacentral():
             return True
-        return any(a.from_rnacentral() for a in self.alt_ids) or \
-            any(a.from_rnacentral() for a in self.aliases)
+        return any(a.from_rnacentral() for a in self.alt_ids) or any(
+            a.from_rnacentral() for a in self.aliases
+        )
 
     def all_ids(self):
-        ids = [self.id] 
+        ids = [self.id]
         ids.extend(self.alt_ids)
         ids.extend(self.aliases)
         return ids
@@ -102,28 +119,39 @@ class Interactor:
 
 @attr.s(frozen=True)
 class Interaction:
-    ids: ty.Tuple[InteractionIdentifier] = attr.ib(validator=is_a(tuple), converter=tuple)
+    ids: ty.Tuple[InteractionIdentifier] = attr.ib(
+        validator=is_a(tuple), converter=tuple
+    )
     interactor1 = attr.ib(validator=is_a(Interactor))
     interactor2 = attr.ib(validator=is_a(Interactor))
     methods: ty.Tuple[str] = attr.ib(validator=is_a(tuple), converter=tuple)
     types: ty.Tuple[str] = attr.ib(validator=is_a(tuple), converter=tuple)
-    xrefs: ty.Tuple[InteractionIdentifier] = attr.ib(validator=is_a(tuple), converter=tuple)
-    annotations: ty.Tuple[InteractionIdentifier] = attr.ib(validator=is_a(tuple), converter=tuple)
-    confidence: ty.Tuple[InteractionIdentifier] = attr.ib(validator=is_a(tuple), converter=tuple)
-    source_database: ty.Tuple[InteractionIdentifier] = attr.ib(validator=is_a(tuple), converter=tuple)
+    xrefs: ty.Tuple[InteractionIdentifier] = attr.ib(
+        validator=is_a(tuple), converter=tuple
+    )
+    annotations: ty.Tuple[InteractionIdentifier] = attr.ib(
+        validator=is_a(tuple), converter=tuple
+    )
+    confidence: ty.Tuple[InteractionIdentifier] = attr.ib(
+        validator=is_a(tuple), converter=tuple
+    )
+    source_database: ty.Tuple[InteractionIdentifier] = attr.ib(
+        validator=is_a(tuple), converter=tuple
+    )
     is_negative = attr.ib(validator=is_a(bool))
-    publications: ty.Tuple[IdReference] = attr.ib(validator=is_a(tuple), converter=tuple)
+    publications: ty.Tuple[IdReference] = attr.ib(
+        validator=is_a(tuple), converter=tuple
+    )
     create_date = attr.ib(validator=is_a(date))
     update_date = attr.ib(validator=is_a(date))
     host_organisms = attr.ib(validator=is_a(int))
 
     def involves_rnacentral(self) -> bool:
-        return self.interactor1.from_rnacentral() or \
-            self.interactor2.from_rnacentral()
+        return self.interactor1.from_rnacentral() or self.interactor2.from_rnacentral()
 
     def intact_id(self):
         for id in self.ids:
-            if id.key == 'intact':
+            if id.key == "intact":
                 return id
         return None
 

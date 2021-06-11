@@ -46,7 +46,7 @@ def as_entry(context: Context, row, matching: KnownSequence) -> data.Entry:
 
 def parse(context: Context, handle, known_handle):
     indexed = lookup.load(known_handle)
-    reader = csv.DictReader(handle, delimiter='\t')
+    reader = csv.DictReader(handle, delimiter="\t")
     rows = sorted(reader, key=context.urs)
     for row in rows:
         matching = indexed[context.urs(row)]

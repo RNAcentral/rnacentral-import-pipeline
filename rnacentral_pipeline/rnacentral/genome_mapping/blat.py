@@ -31,27 +31,27 @@ from rnacentral_pipeline.databases.data.regions import CoordinateSystem
 LOGGER = logging.getLogger(__name__)
 
 FIELDS = [
-    'matches',  # Number of bases that match that aren't repeats
-    'misMatches',  # Number of bases that don't match
-    'repMatches',  # Number of bases that match but are part of repeats
-    'nCount',  # Number of "N" bases
-    'qNumInsert',  # Number of inserts in query
-    'qBaseInsert',  # Number of bases inserted in query
-    'tNumInsert',  # Number of inserts in target
-    'tBaseInsert',  # Number of bases inserted in target
-    'strand',  # "+" or "-" for query strand. For translated alignments, second "+"or "-" is for target genomic strand.
-    'qName',  # Query sequence name
-    'qSize',  # Query sequence size.
-    'qStart',  # Alignment start position in query
-    'qEnd',  # Alignment end position in query
-    'tName',  # Target sequence name
-    'tSize',  # Target sequence size
-    'tStart',  # Alignment start position in target
-    'tEnd',  # Alignment end position in target
-    'blockCount',  # Number of blocks in the alignment (a block contains no gaps)
-    'blockSizes',  # Comma-separated list of sizes of each block. If the query is a protein and the target the genome, blockSizes are in amino acids. See below for more information on protein query PSLs.
-    'qStarts',  # Comma-separated list of starting positions of each block in query
-    'tStarts',  # Comma-separated list of starting positions of each block in target
+    "matches",  # Number of bases that match that aren't repeats
+    "misMatches",  # Number of bases that don't match
+    "repMatches",  # Number of bases that match but are part of repeats
+    "nCount",  # Number of "N" bases
+    "qNumInsert",  # Number of inserts in query
+    "qBaseInsert",  # Number of bases inserted in query
+    "tNumInsert",  # Number of inserts in target
+    "tBaseInsert",  # Number of bases inserted in target
+    "strand",  # "+" or "-" for query strand. For translated alignments, second "+"or "-" is for target genomic strand.
+    "qName",  # Query sequence name
+    "qSize",  # Query sequence size.
+    "qStart",  # Alignment start position in query
+    "qEnd",  # Alignment end position in query
+    "tName",  # Target sequence name
+    "tSize",  # Target sequence size
+    "tStart",  # Alignment start position in target
+    "tEnd",  # Alignment end position in target
+    "blockCount",  # Number of blocks in the alignment (a block contains no gaps)
+    "blockSizes",  # Comma-separated list of sizes of each block. If the query is a protein and the target the genome, blockSizes are in amino acids. See below for more information on protein query PSLs.
+    "qStarts",  # Comma-separated list of starting positions of each block in query
+    "tStarts",  # Comma-separated list of starting positions of each block in target
 ]
 
 
@@ -65,18 +65,18 @@ class BlatHit(object):
 
     @classmethod
     def build(cls, assembly_id, raw):
-        parts = zip(raw['tStarts'], raw['blockSizes'])
-        exons = [Exon(s, s+l) for (s, l) in parts]
+        parts = zip(raw["tStarts"], raw["blockSizes"])
+        exons = [Exon(s, s + l) for (s, l) in parts]
 
         return cls(
-            upi=raw['qName'],
-            sequence_length=raw['qSize'],
-            matches=raw['matches'],
-            target_insertions=raw['tBaseInsert'],
+            upi=raw["qName"],
+            sequence_length=raw["qSize"],
+            matches=raw["matches"],
+            target_insertions=raw["tBaseInsert"],
             region=SequenceRegion(
                 assembly_id=assembly_id,
-                chromosome=raw['tName'],
-                strand=raw['strand'],
+                chromosome=raw["tName"],
+                strand=raw["strand"],
                 exons=exons,
                 coordinate_system=CoordinateSystem.zero_based(),
             ),
@@ -99,38 +99,41 @@ def select_possible(hit):
         return False
     if hit.matches == hit.sequence_length:
         return True
-    if hit.sequence_length > 15 and hit.match_fraction > 0.95 and \
-            hit.match_fraction < 1:
+    if (
+        hit.sequence_length > 15
+        and hit.match_fraction > 0.95
+        and hit.match_fraction < 1
+    ):
         return True
     return False
 
 
 def select_best(hits):
     hits = list(hits)
-    best = max(hits, key=op.attrgetter('match_fraction'))
+    best = max(hits, key=op.attrgetter("match_fraction"))
     if best.match_fraction == 1.0:
         return [h for h in hits if h.match_fraction == best.match_fraction]
     return hits
 
 
 def parse_psl(assembly_id, handle):
-    to_split = ['blockSizes', 'qStarts', 'tStarts']
-    for row in csv.reader(handle, delimiter='\t'):
+    to_split = ["blockSizes", "qStarts", "tStarts"]
+    for row in csv.reader(handle, delimiter="\t"):
         result = dict(zip(FIELDS, row))
         for key in to_split:
-            result[key] = [int(v) for v in result[key].split(',') if v]
+            result[key] = [int(v) for v in result[key].split(",") if v]
         lens = {len(result[k]) for k in to_split}
         assert len(lens) == 1
 
         for key, value in result.items():
-            if key not in to_split and 'Name' not in key and key != 'strand':
+            if key not in to_split and "Name" not in key and key != "strand":
                 result[key] = int(value)
 
         yield BlatHit.build(assembly_id, result)
 
 
 def select_hits(hits, sort=False):
-    key = op.attrgetter('upi')
+    key = op.attrgetter("upi")
     if sort:
         hits = sorted(hits, key=key)
 
@@ -151,7 +154,7 @@ def select_hits(hits, sort=False):
 
 def write_importable(handle, output):
     hits = utils.unpickle_stream(handle)
-    writeable = map(op.methodcaller('writeable'), hits)
+    writeable = map(op.methodcaller("writeable"), hits)
     writeable = it.chain.from_iterable(writeable)
     csv.writer(output).writerows(writeable)
 

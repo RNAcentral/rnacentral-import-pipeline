@@ -23,7 +23,7 @@ from rnacentral_pipeline.databases.crw import parser
 from rnacentral_pipeline.writers import entry_writer
 
 
-@click.group('crw')
+@click.group("crw")
 def cli():
     """
     Commands for dealing with CRW data.
@@ -37,7 +37,11 @@ def cli():
 @click.argument(
     "output",
     default=".",
-    type=click.Path(writable=True, dir_okay=True, file_okay=False,),
+    type=click.Path(
+        writable=True,
+        dir_okay=True,
+        file_okay=False,
+    ),
 )
 def process_crw(metadata_file, sequence_directory, output):
     entries = parser.parse(metadata_file, sequence_directory)
@@ -50,4 +54,4 @@ def process_crw(metadata_file, sequence_directory, output):
 @click.argument("output", type=click.File("w"))
 def generate_r2dt_fasta(directory, output):
     entries = parser.fasta_entries(Path(directory))
-    SeqIO.write(entries, output, 'fasta')
+    SeqIO.write(entries, output, "fasta")

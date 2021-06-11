@@ -39,30 +39,28 @@ BASE_SO_TERMS = [
     "transcript",
 ]
 
-RENAME = {
-    ""
-}
+RENAME = {""}
 
 ALTERNATES = {
-    'SO:0000380': [
+    "SO:0000380": [
         ("SO:0000673", "transcript"),
-        ('SO:0000374', 'ribozyme'),
-        ('SO:0000380', 'hammerhead_ribozyme'),
+        ("SO:0000374", "ribozyme"),
+        ("SO:0000380", "hammerhead_ribozyme"),
     ],
-    'SO:0000209': [
-        ('SO:0000655', 'ncRNA'),
-        ('SO:0000252', 'rRNA'),
-        ('SO:0000655', 'rRNA_primary_transcript'),
+    "SO:0000209": [
+        ("SO:0000655", "ncRNA"),
+        ("SO:0000252", "rRNA"),
+        ("SO:0000655", "rRNA_primary_transcript"),
     ],
-    'SO:0001904': [
+    "SO:0001904": [
         ("SO:0000655", "ncRNA"),
         ("SO:0001877", "lncRNA"),
         ("SO:0001904", "antisense_lncRNA"),
     ],
-    'SO:0001244': [
+    "SO:0001244": [
         ("SO:0000673", "transcript"),
-        ('SO:0001244', "pre_miRNA"),
-    ]
+        ("SO:0001244", "pre_miRNA"),
+    ],
 }
 
 SKIPPED_TERMS = {
@@ -113,7 +111,12 @@ class SoOntology:
                 for insdc in insdc_synonyms(old_node):
                     insdc_to_id[insdc] = new_id
 
-        return cls(graph=ont, id_to_name=id_to_name, name_to_id=name_to_id, insdc_to_id=insdc_to_id)
+        return cls(
+            graph=ont,
+            id_to_name=id_to_name,
+            name_to_id=name_to_id,
+            insdc_to_id=insdc_to_id,
+        )
 
     def nodes(self):
         return self.graph.nodes(data=True)
@@ -152,8 +155,7 @@ class SoOntology:
         for parent in parents:
             if child == parent:
                 break
-            paths = nx.all_simple_paths(
-                self.graph, source=child, target=parent)
+            paths = nx.all_simple_paths(self.graph, source=child, target=parent)
             paths = list(paths)
             if not paths:
                 continue
@@ -170,8 +172,7 @@ class SoOntology:
             return tree
 
         LOGGER.error(
-            "Assumes all SO terms are one of %s, %s is not", ", ".join(
-                parents), child
+            "Assumes all SO terms are one of %s, %s is not", ", ".join(parents), child
         )
         return [(child, self.graph.nodes[child]["name"])]
 

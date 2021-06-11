@@ -22,7 +22,7 @@ from rnacentral_pipeline.rnacentral import attempted
 
 
 def write_and_parse(writer, filename, *args):
-    with open(filename, 'r') as raw:
+    with open(filename, "r") as raw:
         temp = io.StringIO()
         writer(raw, *args, temp)
         temp.flush()
@@ -32,24 +32,32 @@ def write_and_parse(writer, filename, *args):
 
 
 def test_can_get_rfam_version():
-    with open('data/attempted/rfam/readme', 'r') as raw:
-        assert attempted.parse_rfam_version(raw) == '14.1'
+    with open("data/attempted/rfam/readme", "r") as raw:
+        assert attempted.parse_rfam_version(raw) == "14.1"
 
 
-@pytest.mark.parametrize('parser,filename,rest,count', [
-    [attempted.genome_mapping, 'data/genome-mapping/raw.json', ['HanXRQr1.0'], 10],
-    [attempted.traveler, 'data/traveler/rfam/RF00162/URS0000A7635A.fasta', [], 1],
-])
+@pytest.mark.parametrize(
+    "parser,filename,rest,count",
+    [
+        [attempted.genome_mapping, "data/genome-mapping/raw.json", ["HanXRQr1.0"], 10],
+        [attempted.traveler, "data/traveler/rfam/RF00162/URS0000A7635A.fasta", [], 1],
+    ],
+)
 def test_can_produce_all_expected_data(parser, filename, rest, count):
     val = write_and_parse(parser, filename, *rest)
     assert len(val) == count
 
 
 def test_can_produce_valid_genome_mapping_entries():
-    val = write_and_parse(attempted.genome_mapping, 'data/genome-mapping/raw.json', 'HanXRQr1.0')
-    assert val[0] == ['URS00004AE028_4232', 'HanXRQr1.0']
+    val = write_and_parse(
+        attempted.genome_mapping, "data/genome-mapping/raw.json", "HanXRQr1.0"
+    )
+    assert val[0] == ["URS00004AE028_4232", "HanXRQr1.0"]
 
 
 def test_can_produce_correct_data_for_traveler():
-    val = write_and_parse(attempted.traveler, 'data/traveler/crw/URS00000F9D45_9606-d.5.e.H.sapiens.2.fasta')
-    assert val[0] == ['URS00000F9D45_9606']
+    val = write_and_parse(
+        attempted.traveler,
+        "data/traveler/crw/URS00000F9D45_9606-d.5.e.H.sapiens.2.fasta",
+    )
+    assert val[0] == ["URS00000F9D45_9606"]

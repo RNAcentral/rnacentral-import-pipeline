@@ -17,7 +17,8 @@ import attr
 
 from rnacentral_pipeline.databases.data import secondary_structure as ss
 
+
 def test_can_create_empty_secondary():
     assert attr.asdict(ss.SecondaryStructure.empty()) == attr.asdict(
-        ss.SecondaryStructure(dot_bracket='')
+        ss.SecondaryStructure(dot_bracket="")
     )

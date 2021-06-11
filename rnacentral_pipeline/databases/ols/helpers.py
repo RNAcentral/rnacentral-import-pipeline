@@ -19,6 +19,7 @@ import itertools as it
 
 from . import fetch
 
+
 def parse_file(handle):
     reader = csv.reader(handle)
     seen = set()
@@ -31,7 +32,7 @@ def parse_file(handle):
 
 def process_term_file(term_handle, output):
     data = parse_file(term_handle)
-    data = map(op.methodcaller('writeables'), data)
+    data = map(op.methodcaller("writeables"), data)
     data = it.chain.from_iterable(data)
     writer = csv.writer(output, quoting=csv.QUOTE_ALL)
     writer.writerows(data)

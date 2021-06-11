@@ -29,7 +29,7 @@ def parse(handle):
             primary_id=helpers.primary_id(row),
             accession=helpers.accession(row),
             ncbi_tax_id=helpers.taxid(row),
-            database='NCBI_GENE',
+            database="NCBI_GENE",
             sequence=helpers.sequence(row),
             regions=[],
             rna_type=helpers.rna_type(row),

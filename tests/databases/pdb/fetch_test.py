@@ -20,12 +20,12 @@ import pytest
 from rnacentral_pipeline.databases.pdb import fetch
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def chain_info():
     return fetch.rna_chains()
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def chain_map(chain_info):
     info = {}
     for chain in chain_info:
@@ -52,7 +52,7 @@ def test_produces_correct_data():
         entity_id=2,
         taxids=[2238],
         resolution=2.4,
-        sequence='UUAGGCGGCCACAGCGGUGGGGUUGCCUCCCGUACCCAUCCCGAACACGGAAGAUAAGCCCACCAGCGUUCCGGGGAGUACUGGAGUGCGCGAGCCUCUGGGAAACCCGGUUCGCCGCCACC',
+        sequence="UUAGGCGGCCACAGCGGUGGGGUUGCCUCCCGUACCCAUCCCGAACACGGAAGAUAAGCCCACCAGCGUUCCGGGGAGUACUGGAGUGCGCGAGCCUCUGGGAAACCCGGUUCGCCGCCACC",
         title="REFINED CRYSTAL STRUCTURE OF THE HALOARCULA MARISMORTUI LARGE RIBOSOMAL SUBUNIT AT 2.4 ANGSTROM RESOLUTION",
         molecule_names=["5S ribosomal RNA"],
         molecule_type="RNA",
@@ -60,21 +60,41 @@ def test_produces_correct_data():
     )
 
 
-@pytest.mark.parametrize('pdb_id,chains', [
-    ('4v5d',
-     {'AX', 'CX', 'DB', 'DA', 'CW', 'CA', 'BB', 'BA', 'AW', 'AA', 'CY', 'CV', 'AY', 'AV'}),
-    ('1ob2', {'B'}),
-    ('1ob5', {'B', 'D', 'F'}),
-    ('1xnq', {'A', 'W', 'X'}),
-    ('4v3p', {'L3', 'S1', 'L1', 'S2', 'L2', 'S3'}),
-    ('1j5e', {'A'}),
-    ('157d', {'A', 'B'}),
-    ('1a1t', {'B'}),
-    ('1cq5', {'A'}),
-    ('1s72', {'0', '9'}),
-    ('3t4b', {'A'}),
-    ("6xrz", {"A"}),
-])
+@pytest.mark.parametrize(
+    "pdb_id,chains",
+    [
+        (
+            "4v5d",
+            {
+                "AX",
+                "CX",
+                "DB",
+                "DA",
+                "CW",
+                "CA",
+                "BB",
+                "BA",
+                "AW",
+                "AA",
+                "CY",
+                "CV",
+                "AY",
+                "AV",
+            },
+        ),
+        ("1ob2", {"B"}),
+        ("1ob5", {"B", "D", "F"}),
+        ("1xnq", {"A", "W", "X"}),
+        ("4v3p", {"L3", "S1", "L1", "S2", "L2", "S3"}),
+        ("1j5e", {"A"}),
+        ("157d", {"A", "B"}),
+        ("1a1t", {"B"}),
+        ("1cq5", {"A"}),
+        ("1s72", {"0", "9"}),
+        ("3t4b", {"A"}),
+        ("6xrz", {"A"}),
+    ],
+)
 def test_fetches_all_rna_chains_even_mrna(pdb_id, chains):
     entries = fetch.rna_chains(pdb_ids=[pdb_id])
     assert set(d.chain_id for d in entries) == chains

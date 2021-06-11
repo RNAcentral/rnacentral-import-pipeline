@@ -23,16 +23,16 @@ from rnacentral_pipeline.databases.gtrnadb import urls
 from rnacentral_pipeline.databases.gtrnadb import parser
 
 
-@click.group('gtrnadb')
+@click.group("gtrnadb")
 def cli():
     """
     Commands for dealing with GtRNAdb data.
     """
 
 
-@cli.command('urls-for')
-@click.argument('url')
-@click.argument('output', default='-', type=click.File('w'))
+@cli.command("urls-for")
+@click.argument("url")
+@click.argument("output", default="-", type=click.File("w"))
 def urls_for(url, output):
     for url in urls.urls_for(furl(url)):
         output.write(url)
@@ -45,7 +45,11 @@ def urls_for(url, output):
 @click.argument(
     "output",
     default=".",
-    type=click.Path(writable=True, dir_okay=True, file_okay=False,),
+    type=click.Path(
+        writable=True,
+        dir_okay=True,
+        file_okay=False,
+    ),
 )
 def process_gtrnadb(taxonomy, data_file, output):
     """

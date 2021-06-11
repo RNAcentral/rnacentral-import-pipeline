@@ -22,62 +22,62 @@ from rnacentral_pipeline.databases import data
 import rnacentral_pipeline.databases.helpers.publications as pubs
 import rnacentral_pipeline.databases.helpers.phylogeny as phy
 
-url = op.itemgetter('silvaUri')
+url = op.itemgetter("silvaUri")
 
-CLASS_PATTERN = re.compile(r';\s*$')
+CLASS_PATTERN = re.compile(r";\s*$")
 
 KNOWN_TYPES = {
-    'rRNA': 'SO:0000252',
-    'rRNA_12S': 'SO:0002128',
-    'rRNA_16S': 'SO:0001000',
-    'rRNA_18S': 'SO:0000407',
-    'small_subunit_rRNA': 'SO:0000650',
-    'large_subunit_rRNA': 'SO:0000651',
-    'rRNA_23S': 'SO:0001001',
-    'rRNA_26S': 'SO:0000653',  # TODO: Get a better term
-    'rRNA_28S': 'SO:0000653',
+    "rRNA": "SO:0000252",
+    "rRNA_12S": "SO:0002128",
+    "rRNA_16S": "SO:0001000",
+    "rRNA_18S": "SO:0000407",
+    "small_subunit_rRNA": "SO:0000650",
+    "large_subunit_rRNA": "SO:0000651",
+    "rRNA_23S": "SO:0001001",
+    "rRNA_26S": "SO:0000653",  # TODO: Get a better term
+    "rRNA_28S": "SO:0000653",
 }
 
 RRNA_NAME_MAPPING = {
-    'rRNA': 'rRNA',
-    'rRNA_12S': 'mitochondrial SSU rRNA',
-    'rRNA_16S': 'bacterial SSU rRNA',
-    'rRNA_18S': 'SSU rRNA',
-    'small_subunit_rRNA': 'SSU rRNA',
-    'large_subunit_rRNA': 'LSU rRNA',
-    'rRNA_23S': 'bacterial LSU rRNA',
-    'rRNA_26S': 'eukaryotic LSU rRNA',
-    'rRNA_28S': 'eukaryotic LSU rRNA',
+    "rRNA": "rRNA",
+    "rRNA_12S": "mitochondrial SSU rRNA",
+    "rRNA_16S": "bacterial SSU rRNA",
+    "rRNA_18S": "SSU rRNA",
+    "small_subunit_rRNA": "SSU rRNA",
+    "large_subunit_rRNA": "LSU rRNA",
+    "rRNA_23S": "bacterial LSU rRNA",
+    "rRNA_26S": "eukaryotic LSU rRNA",
+    "rRNA_28S": "eukaryotic LSU rRNA",
 }
 
 LOGGER = logging.getLogger(__name__)
 
 
 def primary_id(row) -> str:
-    return 'SILVA:%s:%s' % (row['insdcAccession'], row['location'])
+    return "SILVA:%s:%s" % (row["insdcAccession"], row["location"])
 
 
 def taxid(row) -> int:
-    return int(row['ncbiTaxId'])
+    return int(row["ncbiTaxId"])
 
 
 def sequence(row) -> str:
-    return row['sequence'].replace('U', 'T')
+    return row["sequence"].replace("U", "T")
 
 
 def inference(row):
-    value = row['classification']
-    value = value.replace(';', '; ')
-    return re.sub(CLASS_PATTERN, '', value)
+    value = row["classification"]
+    value = value.replace(";", "; ")
+    return re.sub(CLASS_PATTERN, "", value)
 
 
 def version(row) -> str:
-    _, version = row['insdcAccession'].split('.', 1)
+    _, version = row["insdcAccession"].split(".", 1)
     return version
 
 
 def rna_type(row) -> str:
-    given = row['type']
+    given = row["type"]
     if given in KNOWN_TYPES:
         return KNOWN_TYPES[given]
     raise ValueError("Unknown RNA type")
@@ -99,8 +99,8 @@ def species(taxonomy, row) -> str:
 
 def description(taxonomy, row) -> str:
     organism = species(taxonomy, row)
-    rrna = RRNA_NAME_MAPPING[row['type']]
-    return f'{organism} {rrna}'
+    rrna = RRNA_NAME_MAPPING[row["type"]]
+    return f"{organism} {rrna}"
 
 
 def as_entry(taxonomy, row) -> ty.Optional[data.Entry]:
@@ -109,7 +109,7 @@ def as_entry(taxonomy, row) -> ty.Optional[data.Entry]:
             primary_id=primary_id(row),
             accession=primary_id(row),
             ncbi_tax_id=taxid(row),
-            database='SILVA',
+            database="SILVA",
             sequence=sequence(row),
             regions=[],
             rna_type=rna_type(row),
@@ -118,7 +118,7 @@ def as_entry(taxonomy, row) -> ty.Optional[data.Entry]:
             species=species(taxonomy, row),
             lineage=lineage(taxonomy, row),
             references=[
-                pubs.reference('doi:10.1093/nar/gks1219'),
+                pubs.reference("doi:10.1093/nar/gks1219"),
             ],
             inference=inference(row),
             description=description(taxonomy, row),

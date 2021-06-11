@@ -21,22 +21,37 @@ from Bio.SeqRecord import SeqRecord
 from rnacentral_pipeline.rnacentral.ftp_export import fasta
 
 
-@pytest.mark.parametrize('sequence,accepted', [
-    ('', False),
-    ('A', True),
-    ('A-', False),
-    ('ABCDGHKMNRSTVWXYU', True),
-    ('GCGGAUUUAGCUCAGUUGGGAGAGCGCCAGACUGAAGAUCUGGAGGUCCUGUGUUCGAUCCACAGAAUUCGCACCAF', False),
-    ('GCCCGGAUAGCUCAGUCGGUAGAGCAGGGGAUUGAAAAUCCCCGUGUCCUUGGUUCGAUUCCGAGUCCGGGCACCAF', False),
-    ('GCGGAUUUAGCUCAGUUGGGAGAGCGCCAGACUGAAGAUCUGGAGGUCCUGUGUUCGAUCCACAGAAUUCGCACCAFC', False),
-    ('AUUIGAAAUC', False),
-    ('CGGUGAIAAGGG', False),
-    ('UUCCUCGUGGCCCAAUGGUCACGGCGUCUGGCUICGAACCAGAAGAUUCCAGGUUCAAGUCCUGGCGGGGAAGCCA', False),
-    ('GGCUICGAACC', False),
-    ('AUUIGAAAUCU', False),
-    ('CUCGGCUICGAACCGAG', False),
-    ('CUCGGXUICGAACCGAG', False),
-])
+@pytest.mark.parametrize(
+    "sequence,accepted",
+    [
+        ("", False),
+        ("A", True),
+        ("A-", False),
+        ("ABCDGHKMNRSTVWXYU", True),
+        (
+            "GCGGAUUUAGCUCAGUUGGGAGAGCGCCAGACUGAAGAUCUGGAGGUCCUGUGUUCGAUCCACAGAAUUCGCACCAF",
+            False,
+        ),
+        (
+            "GCCCGGAUAGCUCAGUCGGUAGAGCAGGGGAUUGAAAAUCCCCGUGUCCUUGGUUCGAUUCCGAGUCCGGGCACCAF",
+            False,
+        ),
+        (
+            "GCGGAUUUAGCUCAGUUGGGAGAGCGCCAGACUGAAGAUCUGGAGGUCCUGUGUUCGAUCCACAGAAUUCGCACCAFC",
+            False,
+        ),
+        ("AUUIGAAAUC", False),
+        ("CGGUGAIAAGGG", False),
+        (
+            "UUCCUCGUGGCCCAAUGGUCACGGCGUCUGGCUICGAACCAGAAGAUUCCAGGUUCAAGUCCUGGCGGGGAAGCCA",
+            False,
+        ),
+        ("GGCUICGAACC", False),
+        ("AUUIGAAAUCU", False),
+        ("CUCGGCUICGAACCGAG", False),
+        ("CUCGGXUICGAACCGAG", False),
+    ],
+)
 def test_can_classify_sequences_for_nhmmer(sequence, accepted):
     record = SeqRecord(Seq(sequence))
     assert fasta.is_valid_nhmmer_record(record) is accepted

@@ -30,7 +30,13 @@ GENERIC_TYPES = set(["misc_RNA", "misc RNA", "other"])
 NO_OPTIONAL_IDS = set(["SILVA", "PDB"])
 
 KNOWN_QUALIFIERS = set(
-    ["part_of", "involved_in", "enables", "contributes_to", "colocalizes_with",]
+    [
+        "part_of",
+        "involved_in",
+        "enables",
+        "contributes_to",
+        "colocalizes_with",
+    ]
 )
 
 POPULAR_SPECIES = set(
@@ -67,7 +73,7 @@ def create_tag(root, name, value, attrib={}):
     element = etree.SubElement(root, name, attr)
     if text:
         if isinstance(text, bytes):
-            text = text.encode('ascii', 'ignore')
+            text = text.encode("ascii", "ignore")
             assert isinstance(text, str)
         if not isinstance(text, str):
             text = str(text)
@@ -148,7 +154,10 @@ def date_tag(date_name, func):
         date = func(dates)
 
         return {
-            "attrib": {"value": date.strftime("%d %b %Y"), "type": date_name,},
+            "attrib": {
+                "value": date.strftime("%d %b %Y"),
+                "type": date_name,
+            },
         }
 
     return tag("date", fn, keys=date_name)
@@ -197,7 +206,10 @@ def get_or_empty(name, missing=[]):
 
 def entry(spec):
     def fn(data):
-        entry_id = "{upi}_{taxid}".format(upi=data["urs"], taxid=data["taxid"],)
+        entry_id = "{upi}_{taxid}".format(
+            upi=data["urs"],
+            taxid=data["taxid"],
+        )
         root = etree.Element("entry", {"id": entry_id})
         for func in spec:
             func(root, data)
@@ -326,7 +338,10 @@ def as_name(upi, taxid):
     """
     Create the name of the RNA sequence using the UPI and taxid.
     """
-    return "Unique RNA Sequence {upi}_{taxid}".format(upi=upi, taxid=taxid,)
+    return "Unique RNA Sequence {upi}_{taxid}".format(
+        upi=upi,
+        taxid=taxid,
+    )
 
 
 def short_urs(upi, taxid):
@@ -695,7 +710,13 @@ builder = entry(
                 tags(
                     "ref",
                     references,
-                    keys=("taxid", "cross_references", "pubmed_ids", "dois", "notes",),
+                    keys=(
+                        "taxid",
+                        "cross_references",
+                        "pubmed_ids",
+                        "dois",
+                        "notes",
+                    ),
                 )
             ],
         ),
@@ -725,7 +746,13 @@ builder = entry(
                 field(
                     "boost",
                     boost,
-                    keys=("taxid", "deleted", "rna_type", "databases", "qa_status",),
+                    keys=(
+                        "taxid",
+                        "deleted",
+                        "rna_type",
+                        "databases",
+                        "qa_status",
+                    ),
                 ),
                 fields("locus_tag", unique, keys="locus_tags"),
                 fields("standard_name", unique, keys="standard_names"),
@@ -761,7 +788,10 @@ builder = entry(
                 fields(
                     "evidence_for_interaction",
                     interacting_evidence,
-                    keys=("interacting_proteins", "interacting_rnas",),
+                    keys=(
+                        "interacting_proteins",
+                        "interacting_rnas",
+                    ),
                 ),
                 fields("has_conserved_structure", has_value, keys="crs"),
                 fields("conserved_structure", get_or_empty("crs_ids"), keys="crs"),

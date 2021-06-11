@@ -179,7 +179,11 @@ class DatabaseSpecifcNameBuilder(object):
                     common_name=accession.common_name or "",
                     gene=trimmed,
                 )
-            changed = attr.evolve(accession, description=name, gene=gene,)
+            changed = attr.evolve(
+                accession,
+                description=name,
+                gene=gene,
+            )
             updated.append(changed)
 
         return select_with_several_genes(
@@ -214,7 +218,9 @@ class DatabaseSpecifcNameBuilder(object):
         descriptions = [accession.description for accession in accessions]
         return select_best_description(descriptions)
 
-    def __call__(self, database: Database, rna_type: str, accessions: ty.List[Accession]):
+    def __call__(
+        self, database: Database, rna_type: str, accessions: ty.List[Accession]
+    ):
         name = database.normalized().lower()
         method = getattr(self, name, self._fallback)
         return method(accessions, rna_type)
@@ -302,7 +308,10 @@ def add_term_suffix(base, additional_terms, name: str, max_items=3):
     if suffix in base:
         return base
 
-    return "{basic} ({suffix})".format(basic=base.strip(), suffix=suffix,)
+    return "{basic} ({suffix})".format(
+        basic=base.strip(),
+        suffix=suffix,
+    )
 
 
 def select_with_several_genes(
@@ -435,7 +444,11 @@ def description_of(rna_type: str, sequence: seq.Sequence) -> str:
     # It would be better to pull from Rfam which may have a more useful
     # description.
     if "predicted" in description:
-        description = improve_predicted_description(rna_type, accessions, description,)
+        description = improve_predicted_description(
+            rna_type,
+            accessions,
+            description,
+        )
 
     # ENA sometimes has things that end with 'null', which is bad.
     if description.endswith(" null"):

@@ -22,27 +22,27 @@ from . import lookup
 from . import helpers
 
 IGNORE = {
-    'URS00001346E7_559292',
-    'URS00002C74E0_559292',
-    'URS00002C74E0 _559292',
-    'URS0000459091_559191',
-    'URS000057FD8B-559292',  # Is known, but formatted wrong
-    'URS0000643233_559292',
-    'URS00008FED3E_559292',
+    "URS00001346E7_559292",
+    "URS00002C74E0_559292",
+    "URS00002C74E0 _559292",
+    "URS0000459091_559191",
+    "URS000057FD8B-559292",  # Is known, but formatted wrong
+    "URS0000643233_559292",
+    "URS00008FED3E_559292",
 }
 
 
 def parse_interactions(handle):
     data = tab.parse(handle)
-    data = filter(op.methodcaller('involves_rnacentral'), data)
-    data = filter(lambda i: i.urs_taxid.startswith('URS'), data)
+    data = filter(op.methodcaller("involves_rnacentral"), data)
+    data = filter(lambda i: i.urs_taxid.startswith("URS"), data)
     data = filter(lambda i: i.urs_taxid not in IGNORE, data)
     data = filter(lambda i: "_" in i.urs_taxid, data)
     return data
 
 
 def parse(handle, db_url):
-    key = op.attrgetter('urs_taxid')
+    key = op.attrgetter("urs_taxid")
     interactions = sorted(parse_interactions(handle), key=key)
     mapping = lookup.mapping(db_url, interactions)
     interactions = sorted(interactions, key=key)

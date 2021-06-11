@@ -66,7 +66,7 @@ def accession(data):
     """
     Get the accession for the given data.
     """
-    return data['mgi_marker_accession_id']
+    return data["mgi_marker_accession_id"]
 
 
 def infer_rna_type(data):
@@ -75,7 +75,7 @@ def infer_rna_type(data):
     None will be returned.
     """
 
-    base = data['feature_type']
+    base = data["feature_type"]
     return RNA_TYPE_MAPPING[base]
 
 
@@ -83,14 +83,14 @@ def name(data):
     """
     Get the assigned name of the entry.
     """
-    return data['marker_name']
+    return data["marker_name"]
 
 
 def symbol(data):
     """
     Get the feature symbol.
     """
-    return data['marker_symbol']
+    return data["marker_symbol"]
 
 
 def chromosome(data):
@@ -98,8 +98,8 @@ def chromosome(data):
     Get the chromosome, if known. This treats 'UN' as unknown meaning unknown.
     """
 
-    chrom = data['chromosome']
-    if chrom == 'UN':
+    chrom = data["chromosome"]
+    if chrom == "UN":
         return None
     return chrom
 
@@ -109,7 +109,7 @@ def start(data):
     Get the start coordinate as an int of the data.
     """
 
-    value = data['genome_coordinate_start']
+    value = data["genome_coordinate_start"]
     if value:
         return int(value)
     return None
@@ -120,7 +120,7 @@ def stop(data):
     Get the stop coordinate as an int of the data.
     """
 
-    value = data['genome_coordinate_end']
+    value = data["genome_coordinate_end"]
     if value:
         return int(value)
     return None
@@ -131,10 +131,10 @@ def is_complement(data):
     Check if the entry is on the - strand.
     """
 
-    strand = data['strand']
+    strand = data["strand"]
     if not strand:
         return None
-    return strand == '-'
+    return strand == "-"
 
 
 def exon(data):
@@ -164,7 +164,7 @@ def split_ids(key, data):
     """
 
     if data[key]:
-        return data[key].split('|')
+        return data[key].split("|")
     return []
 
 
@@ -177,22 +177,22 @@ def xref_data(data):
     transcript ids because we do not import this data.
     """
 
-    ref_trans_all = split_ids('refseq_transcript_ids', data)
-    xr_ids = [tid for tid in ref_trans_all if tid.startswith('XR_')]
-    ref_trans = [tid for tid in ref_trans_all if not tid.startswith('XR_')]
+    ref_trans_all = split_ids("refseq_transcript_ids", data)
+    xr_ids = [tid for tid in ref_trans_all if tid.startswith("XR_")]
+    ref_trans = [tid for tid in ref_trans_all if not tid.startswith("XR_")]
     return {
-        'ensembl': {
-            'transcript_ids': split_ids('ensembl_transcript_ids', data),
-            'protein_ids': split_ids('ensembl_protein_ids', data),
+        "ensembl": {
+            "transcript_ids": split_ids("ensembl_transcript_ids", data),
+            "protein_ids": split_ids("ensembl_protein_ids", data),
         },
-        'ref_seq': {
-            'transcript_ids': ref_trans,
-            'xr_ids': xr_ids,
-            'protein_ids': split_ids('refseq_protein_ids', data),
+        "ref_seq": {
+            "transcript_ids": ref_trans,
+            "xr_ids": xr_ids,
+            "protein_ids": split_ids("refseq_protein_ids", data),
         },
-        'vega': {
-            'transcript_ids': split_ids('vega_transcript_ids', data),
-            'protein_ids': split_ids('vega_protein_ids', data),
+        "vega": {
+            "transcript_ids": split_ids("vega_transcript_ids", data),
+            "protein_ids": split_ids("vega_protein_ids", data),
         },
     }
 
@@ -202,7 +202,7 @@ def gene(data):
     Gets the name of the gene this data is from. This is the symbol assigned to
     the data.
     """
-    if 'gene' in data['feature_type']:
+    if "gene" in data["feature_type"]:
         return symbol(data)
     return None
 
@@ -247,20 +247,22 @@ def references(data):
     """
     Creates the default reference for all MGI data.
     """
-    return [Reference(
-        accession=accession(data),
-        authors=(
-            'Blake JA, Eppig JT, Kadin JA, Richardson JE, Smith CL, Bult CJ; '
-            'the Mouse Genome Database Group.'
-        ),
-        location='Nucleic Acids Res. 2017 Jan 4;',
-        title=(
-            'Mouse Genome Database (MGD)-2017: community knowledge resource '
-            'for the laboratory mouse'
-        ),
-        pmid=27899570,
-        doi='10.1093/nar/gkw1040',
-    )]
+    return [
+        Reference(
+            accession=accession(data),
+            authors=(
+                "Blake JA, Eppig JT, Kadin JA, Richardson JE, Smith CL, Bult CJ; "
+                "the Mouse Genome Database Group."
+            ),
+            location="Nucleic Acids Res. 2017 Jan 4;",
+            title=(
+                "Mouse Genome Database (MGD)-2017: community knowledge resource "
+                "for the laboratory mouse"
+            ),
+            pmid=27899570,
+            doi="10.1093/nar/gkw1040",
+        )
+    ]
 
 
 def description(data):
@@ -268,7 +270,7 @@ def description(data):
     Computes a description of the entry. This will generate a hopefully
     useful name of the entry.
     """
-    return '{name} ({species}) {gene}'.format(
+    return "{name} ({species}) {gene}".format(
         name=common_name(data),
         species=species(data),
         gene=name(data),

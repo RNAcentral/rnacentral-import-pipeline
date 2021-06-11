@@ -30,6 +30,7 @@ from rnacentral_pipeline.databases.helpers.hashes import md5
 
 from . import utils
 
+
 @enum.unique
 class KnownServices(enum.Enum):
     doi = 0
@@ -46,6 +47,7 @@ class UnknownPublicationType(Exception):
     Raised when we are trying to build a reference but it is to an unknown type
     of identifier.
     """
+
     pass
 
 
@@ -68,14 +70,14 @@ class Reference(object):
         Computes the MD5 hash of the reference.
         """
 
-        title = self.title if self.title else ''
+        title = self.title if self.title else ""
         data = [
             self.authors,
             self.location,
             title,
         ]
 
-        return md5(''.join(data).encode('utf-8'))
+        return md5("".join(data).encode("utf-8"))
 
     def writeable_generic_pubmed(self):
         return [
@@ -106,17 +108,17 @@ class Reference(object):
     def id_reference(self):
         if self.pmid:
             return IdReference(
-                namespace=KnownServices.pmid, 
+                namespace=KnownServices.pmid,
                 external_id=str(self.pmid),
             )
         if self.doi:
             return IdReference(
-                namespace=KnownServices.doi, 
+                namespace=KnownServices.doi,
                 external_id=self.doi,
             )
         if self.pmcid:
             return IdReference(
-                namespace=KnownServices.pmcid, 
+                namespace=KnownServices.pmcid,
                 external_id=self.pmcid,
             )
         raise ValueError("Cannot build IdReference for %s" % self)
@@ -136,7 +138,7 @@ class Reference(object):
 @attr.s(frozen=True, hash=True)
 class IdReference(object):
     namespace = attr.ib(validator=is_a(KnownServices))
-    external_id = attr.ib(validator=is_a(str)) 
+    external_id = attr.ib(validator=is_a(str))
 
     @classmethod
     def build(cls, ref_id) -> IdReference:
@@ -147,44 +149,43 @@ class IdReference(object):
             raise UnknownPublicationType(ref_id)
 
         ref_id = str(ref_id.strip())
-        if re.match(r'^\d+$', ref_id):
+        if re.match(r"^\d+$", ref_id):
             return cls(KnownServices.pmid, ref_id)
 
-        if re.match(r'^PMC\d+$', ref_id, re.IGNORECASE):
+        if re.match(r"^PMC\d+$", ref_id, re.IGNORECASE):
             return cls(KnownServices.pmcid, ref_id.upper())
 
-        if ':' not in ref_id:
+        if ":" not in ref_id:
             raise UnknownPublicationType("Could not parse: " + ref_id)
 
-        service, eid = ref_id.split(':', 1)
+        service, eid = ref_id.split(":", 1)
         service = service.lower()
         service = KnownServices.from_name(service)
         if service is KnownServices.pmcid:
             eid = eid.upper()
-            if not eid.startswith('PMC'):
-                eid = 'PMC' + eid
+            if not eid.startswith("PMC"):
+                eid = "PMC" + eid
         return cls(service, eid)
 
     @property
     def normalized_id(self):
-        return '%s:%s' % (self.namespace.name, self.external_id)
+        return "%s:%s" % (self.namespace.name, self.external_id)
 
     def external_url(self):
-        base = furl('https://www.ebi.ac.uk/europepmc/webservices/rest/search')
-        base.args['format'] = 'json'
-        base.args['pageSize'] = 1000
+        base = furl("https://www.ebi.ac.uk/europepmc/webservices/rest/search")
+        base.args["format"] = "json"
+        base.args["pageSize"] = 1000
 
         if self.namespace is KnownServices.pmid:
-            query = '{pmid} AND SRC:MED'.format(pmid=self.external_id)
-            base.args['query'] = query
+            query = "{pmid} AND SRC:MED".format(pmid=self.external_id)
+            base.args["query"] = query
             return base.url
 
-        if self.namespace is KnownServices.doi or \
-                self.namespace is KnownServices.pmcid:
+        if self.namespace is KnownServices.doi or self.namespace is KnownServices.pmcid:
             suffix = self.external_id
             if self.namespace is KnownServices.doi:
                 suffix = '"%s"' % suffix
-            base.args['query'] = '%s:%s' % (self.namespace.name.upper(), suffix)
+            base.args["query"] = "%s:%s" % (self.namespace.name.upper(), suffix)
             return base.url
 
         raise ValueError("No URL for namespace %s" % self.namespace)

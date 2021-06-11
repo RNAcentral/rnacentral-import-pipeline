@@ -30,25 +30,25 @@ from rnacentral_pipeline.databases.helpers import publications as pub
 
 
 KNOWN_RNA_TYPES = {
-    'ncrna',
-    'rrna',
-    'snrna',
-    'trna',
+    "ncrna",
+    "rrna",
+    "snrna",
+    "trna",
 }
 
-URL = 'https://rgd.mcw.edu/rgdweb/report/gene/main.html?id={id}'
+URL = "https://rgd.mcw.edu/rgdweb/report/gene/main.html?id={id}"
 
 XREF_NAMING = {
-    'ensembl': 'ENSEMBL_ID',
-    'ncbi_gene': 'NCBI_GENE_ID',
-    'genbank': 'GENBANK_NUCLEOTIDE',
+    "ensembl": "ENSEMBL_ID",
+    "ncbi_gene": "NCBI_GENE_ID",
+    "genbank": "GENBANK_NUCLEOTIDE",
 }
 
-primary_id = op.itemgetter('GENE_RGD_ID')
-basic_rna_type = op.itemgetter('GENE_TYPE')
-pmids = op.itemgetter('CURATED_REF_PUBMED_ID', 'UNCURATED_PUBMED_ID')
-gene = op.itemgetter('SYMBOL')
-locus_tag = op.itemgetter('SYMBOL')
+primary_id = op.itemgetter("GENE_RGD_ID")
+basic_rna_type = op.itemgetter("GENE_TYPE")
+pmids = op.itemgetter("CURATED_REF_PUBMED_ID", "UNCURATED_PUBMED_ID")
+gene = op.itemgetter("SYMBOL")
+locus_tag = op.itemgetter("SYMBOL")
 
 
 def known_organisms():
@@ -59,9 +59,7 @@ def known_organisms():
     can extract sequences from. Without that I would have to write logic, like
     in Rfam, that tracks down genomes. This isn't needed yet.
     """
-    return [
-        'rat'
-    ]
+    return ["rat"]
 
 
 @attr.s()
@@ -76,23 +74,23 @@ class RgdInfo(object):
 
     @property
     def sequence_path(self):
-        if self.organism == 'rat':
-            return 'pub/data_release/UserReqFiles/RAT_NUCLEOTIDE_SEQUENCES.fa.gz'
+        if self.organism == "rat":
+            return "pub/data_release/UserReqFiles/RAT_NUCLEOTIDE_SEQUENCES.fa.gz"
         raise ValueError("Cannot find sequences for %s" % self.organism)
 
     @property
     def gene_path(self):
-        filename = 'GENES_%s.txt' % (self.organism.upper())
-        return 'pub/data_release/{filename}'.format(filename=filename)
+        filename = "GENES_%s.txt" % (self.organism.upper())
+        return "pub/data_release/{filename}".format(filename=filename)
 
     def sequence_uri(self, config):
-        return 'ftp://{host}/{path}'.format(
+        return "ftp://{host}/{path}".format(
             host=config.host,
             path=self.sequence_path,
         )
 
     def gene_uri(self, config):
-        return 'ftp://{host}/{path}'.format(
+        return "ftp://{host}/{path}".format(
             host=config.host,
             path=self.gene_path,
         )
@@ -107,13 +105,13 @@ class RgdLocation(object):
 
     @classmethod
     def from_dict(cls, entry):
-        if not entry['CHROMOSOME_6.0']:
+        if not entry["CHROMOSOME_6.0"]:
             return None
 
-        chromosomes = entry['CHROMOSOME_6.0'].split(';')
-        starts = [int(p) for p in entry['START_POS_6.0'].split(';')]
-        stops = [int(p) for p in entry['STOP_POS_6.0'].split(';')]
-        strands = entry['STRAND_6.0'].split(';')
+        chromosomes = entry["CHROMOSOME_6.0"].split(";")
+        starts = [int(p) for p in entry["START_POS_6.0"].split(";")]
+        stops = [int(p) for p in entry["STOP_POS_6.0"].split(";")]
+        strands = entry["STRAND_6.0"].split(";")
         assert len(chromosomes) == len(starts) == len(stops) == len(strands)
 
         return cls(
@@ -125,8 +123,12 @@ class RgdLocation(object):
 
     def endpoints(self):
         for index, chromosome in enumerate(self.chromosomes):
-            yield (chromosome, self.starts[index], self.stops[index],
-                   self.strands[index])
+            yield (
+                chromosome,
+                self.starts[index],
+                self.stops[index],
+                self.strands[index],
+            )
 
 
 def corrected_records(handle):
@@ -135,29 +137,28 @@ def corrected_records(handle):
     """
 
     seen = coll.defaultdict(set)
-    for record in SeqIO.parse(handle, 'fasta'):
+    for record in SeqIO.parse(handle, "fasta"):
 
         if not str(record.seq):
             continue
 
         # These are probably protein, so skip them
-        if record.id.startswith('XM_') or record.id.startswith('NM_'):
+        if record.id.startswith("XM_") or record.id.startswith("NM_"):
             continue
 
         # Change given ids into a probably unique id
-        given = record.id.replace(',', '')
-        match = re.search(r'gene RGD:(\d+),', record.description)
+        given = record.id.replace(",", "")
+        match = re.search(r"gene RGD:(\d+),", record.description)
         if not match:
-            raise ValueError("RGD fasta must state gene id: %s",
-                             record.description)
+            raise ValueError("RGD fasta must state gene id: %s", record.description)
         gene = match.group(1)
 
-        match = re.search('locus: (.+)$', record.description)
+        match = re.search("locus: (.+)$", record.description)
         if not match:
             raise ValueError("RGD fasta must have a locus")
         location = match.group(1)
 
-        record.id = '{given}-{gene}-{location}'.format(
+        record.id = "{given}-{gene}-{location}".format(
             given=given,
             gene=gene,
             location=location,
@@ -180,11 +181,11 @@ def indexed(filename):
     """
 
     with tempfile.NamedTemporaryFile() as tmp:
-        with gzip.open(filename, 'r') as raw:
-            SeqIO.write(corrected_records(raw), tmp, 'fasta')
+        with gzip.open(filename, "r") as raw:
+            SeqIO.write(corrected_records(raw), tmp, "fasta")
 
         tmp.flush()
-        yield SeqIO.index(tmp.name, 'fasta')
+        yield SeqIO.index(tmp.name, "fasta")
 
 
 def rna_type(entry):
@@ -195,14 +196,14 @@ def rna_type(entry):
     """
 
     basic = basic_rna_type(entry)
-    if basic == 'rrna':
-        return 'rRNA'
-    if basic == 'trna':
-        return 'tRNA'
-    if basic == 'ncrna':
-        return 'other'
-    if basic == 'snrna':
-        return 'snRNA'
+    if basic == "rrna":
+        return "rRNA"
+    if basic == "trna":
+        return "tRNA"
+    if basic == "ncrna":
+        return "other"
+    if basic == "snrna":
+        return "snRNA"
     raise ValueError("Cannot determine rna type for %s" % entry)
 
 
@@ -212,8 +213,8 @@ def indexed_gene_id(entry):
 
 def accession(entry, index=None):
     if index is not None:
-        return 'RRID:RGD_%s:%i' % (primary_id(entry), index)
-    return 'RRID:RGD_%s' % primary_id(entry)
+        return "RRID:RGD_%s:%i" % (primary_id(entry), index)
+    return "RRID:RGD_%s" % primary_id(entry)
 
 
 def taxid(_):
@@ -241,7 +242,7 @@ def url(entry):
 
 
 def seq_version(_):
-    return '1'
+    return "1"
 
 
 def seq_xref_ids(entry):
@@ -254,7 +255,7 @@ def seq_xref_ids(entry):
     for ids in xref_data(entry).values():
         for exon in exon_data:
             for xref_id in ids:
-                key = '{xref_id}-{gene_id}-{chr}:{start}..{stop}'.format(
+                key = "{xref_id}-{gene_id}-{chr}:{start}..{stop}".format(
                     xref_id=xref_id,
                     gene_id=primary_id(entry),
                     chr=exon.chromosome_name,
@@ -286,19 +287,19 @@ def as_region(chromosomes, starts, stops, strands, index):
         chromosome=chromosomes[index],
         strand=strands[index],
         exons=[data.Exon(start=starts[index], stop=stops[index])],
-        assembly_id='',
+        assembly_id="",
         coordinate_system=data.CoordinateSystem.zero_based(),
     )
 
 
 def regions(entry):
-    if not entry['CHROMOSOME_6.0']:
+    if not entry["CHROMOSOME_6.0"]:
         return []
 
-    chromosomes = entry['CHROMOSOME_6.0'].split(';')
-    starts = [int(p) for p in entry['START_POS_6.0'].split(';')]
-    stops = [int(p) for p in entry['STOP_POS_6.0'].split(';')]
-    strands = entry['STRAND_6.0'].split(';')
+    chromosomes = entry["CHROMOSOME_6.0"].split(";")
+    starts = [int(p) for p in entry["START_POS_6.0"].split(";")]
+    stops = [int(p) for p in entry["STOP_POS_6.0"].split(";")]
+    strands = entry["STRAND_6.0"].split(";")
     assert len(chromosomes) == len(starts) == len(stops) == len(strands)
 
     total = range(len(chromosomes))
@@ -310,7 +311,7 @@ def xref_data(entry):
     for name, key in XREF_NAMING.items():
         if not entry[key]:
             continue
-        xrefs[name] = entry[key].split(';')
+        xrefs[name] = entry[key].split(";")
 
     return xrefs
 
@@ -321,7 +322,7 @@ def references(entry):
     for pmid_set in pmids(entry):
         if not pmid_set:
             continue
-        for pmid in pmid_set.split(';'):
+        for pmid in pmid_set.split(";"):
             if not pmid:
                 continue
             refs.append(pub.reference(pmid))
@@ -329,23 +330,23 @@ def references(entry):
 
 
 def description(entry):
-    tag = ''
+    tag = ""
     if locus_tag(entry):
-        tag = ' (%s)' % locus_tag(entry)
+        tag = " (%s)" % locus_tag(entry)
 
-    if entry['NAME'].endswith(locus_tag(entry)):
-        tag = ''
+    if entry["NAME"].endswith(locus_tag(entry)):
+        tag = ""
 
-    return '{species} {name}{tag}'.format(
-        name=entry['NAME'],
+    return "{species} {name}{tag}".format(
+        name=entry["NAME"],
         species=species(entry),
         tag=tag,
     )
 
 
 def gene_synonyms(entry):
-    if entry['OLD_SYMBOL']:
-        return entry['OLD_SYMBOL'].split(';')
+    if entry["OLD_SYMBOL"]:
+        return entry["OLD_SYMBOL"].split(";")
     return []
 
 
@@ -360,57 +361,59 @@ def as_entries(genes, seqs):
             if len(sequences) == 1:
                 acc_index = None
 
-            ncrnas.append(data.Entry(
-                primary_id=primary_id(gene),
-                accession=accession(gene, acc_index),
-                ncbi_tax_id=taxid(gene),
-                database='RGD',
-                sequence=sequence,
-                regions=regions(gene, sequence),
-                rna_type=rna_type(gene),
-                url=url(gene),
-                seq_version=seq_version(gene),
-                xref_data=xref_data(gene),
-                common_name=common_name(gene),
-                species=species(gene),
-                lineage=lineage(gene),
-                gene=gene(gene),
-                locus_tag=locus_tag(gene),
-                gene_synonyms=gene_synonyms(gene),
-                description=description(gene),
-                references=references(gene),
-            ))
+            ncrnas.append(
+                data.Entry(
+                    primary_id=primary_id(gene),
+                    accession=accession(gene, acc_index),
+                    ncbi_tax_id=taxid(gene),
+                    database="RGD",
+                    sequence=sequence,
+                    regions=regions(gene, sequence),
+                    rna_type=rna_type(gene),
+                    url=url(gene),
+                    seq_version=seq_version(gene),
+                    xref_data=xref_data(gene),
+                    common_name=common_name(gene),
+                    species=species(gene),
+                    lineage=lineage(gene),
+                    gene=gene(gene),
+                    locus_tag=locus_tag(gene),
+                    gene_synonyms=gene_synonyms(gene),
+                    description=description(gene),
+                    references=references(gene),
+                )
+            )
 
         for entry in data.generate_related(ncrnas):
             yield entry
 
     # for index, (sequence, _) in enumerate(sequences):
-        # acc_index = index + 1
-        # if len(sequences) == 1:
-        #     acc_index = None
-        # acc = accession(data, acc_index)
-        # entries.append(Entry(
-        #     primary_id=primary_id(data),
-        #     accession=acc,
-        #     ncbi_tax_id=taxid(data),
-        #     database='RGD',
-        #     sequence=sequence,
-        #     regions=[],
-        #     rna_type=rna_type(data),
-        #     url=url(data),
-        #     seq_version=seq_version(data),
-        #     xref_data=xref_data(data),
-        #     common_name=common_name(data),
-        #     species=species(data),
-        #     lineage=lineage(data),
-        #     gene=gene(data),
-        #     locus_tag=locus_tag(data),
-        #     gene_synonyms=gene_synonyms(data),
-        #     description=description(data),
-        #     references=references(acc, data),
-        # ))
+    # acc_index = index + 1
+    # if len(sequences) == 1:
+    #     acc_index = None
+    # acc = accession(data, acc_index)
+    # entries.append(Entry(
+    #     primary_id=primary_id(data),
+    #     accession=acc,
+    #     ncbi_tax_id=taxid(data),
+    #     database='RGD',
+    #     sequence=sequence,
+    #     regions=[],
+    #     rna_type=rna_type(data),
+    #     url=url(data),
+    #     seq_version=seq_version(data),
+    #     xref_data=xref_data(data),
+    #     common_name=common_name(data),
+    #     species=species(data),
+    #     lineage=lineage(data),
+    #     gene=gene(data),
+    #     locus_tag=locus_tag(data),
+    #     gene_synonyms=gene_synonyms(data),
+    #     description=description(data),
+    #     references=references(acc, data),
+    # ))
     # return entries
 
 
 def as_rows(lines):
-    return csv.DictReader(lines, delimiter='\t')
+    return csv.DictReader(lines, delimiter="\t")

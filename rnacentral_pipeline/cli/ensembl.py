@@ -29,7 +29,7 @@ from rnacentral_pipeline.databases.ensembl import urls
 from rnacentral_pipeline.writers import entry_writer
 
 
-@click.group('ensembl')
+@click.group("ensembl")
 def cli():
     """
     This is a set of commands for dealing with processing protein information.
@@ -39,30 +39,38 @@ def cli():
     pass
 
 
-@cli.command('urls-for')
-@click.argument('division', type=click.Choice(Division.names(), case_sensitive=False))
-@click.argument('ftp')
-@click.argument('output', default='-', type=click.File('w'))
+@cli.command("urls-for")
+@click.argument("division", type=click.Choice(Division.names(), case_sensitive=False))
+@click.argument("ftp")
+@click.argument("output", default="-", type=click.File("w"))
 def vert_url(division, ftp, output):
     """
     This is a command to generate a CSV file of urls to fetch to get Ensembl
     data from. The urls may be globs suitable for fetching with wget.
     """
     division = Division.from_name(division)
-    writer = csv.writer(output, lineterminator='\n')
+    writer = csv.writer(output, lineterminator="\n")
     rows = urls.urls_for(division, ftp)
     writer.writerows(row.writeable() for row in rows)
 
 
-@cli.command('parse')
-@click.option("--family-file", default=None, type=click.Path(file_okay=True, dir_okay=False, readable=True))
-@click.argument('division', type=click.Choice(Division.names(), case_sensitive=False))
+@cli.command("parse")
+@click.option(
+    "--family-file",
+    default=None,
+    type=click.Path(file_okay=True, dir_okay=False, readable=True),
+)
+@click.argument("division", type=click.Choice(Division.names(), case_sensitive=False))
 @click.argument("embl_file", type=click.File("r"))
 @click.argument("gff_file", type=click.Path())
 @click.argument(
     "output",
     default=".",
-    type=click.Path(writable=True, dir_okay=True, file_okay=False,),
+    type=click.Path(
+        writable=True,
+        dir_okay=True,
+        file_okay=False,
+    ),
 )
 def parse_data(division, embl_file, gff_file, output, family_file=None):
     """
@@ -77,27 +85,29 @@ def parse_data(division, embl_file, gff_file, output, family_file=None):
         writer.write(entries)
 
 
-@cli.command('assemblies')
-@click.option('--db-url', envvar='PGDATABASE')
-@click.argument('connections', default='databases.json', type=click.File('r'))
-@click.argument('query', default='query.sql', type=click.File('r'))
-@click.argument('example_file', default='example-locations.json', type=click.File('r'))
-@click.argument('known_file', default='known-assemblies.sql',
-                type=click.File('r'))
-@click.argument('output', default='assemblies.csv', type=click.File('w'))
-def ensembl_write_assemblies(connections, query, example_file, known_file,
-                             output, db_url=None):
+@cli.command("assemblies")
+@click.option("--db-url", envvar="PGDATABASE")
+@click.argument("connections", default="databases.json", type=click.File("r"))
+@click.argument("query", default="query.sql", type=click.File("r"))
+@click.argument("example_file", default="example-locations.json", type=click.File("r"))
+@click.argument("known_file", default="known-assemblies.sql", type=click.File("r"))
+@click.argument("output", default="assemblies.csv", type=click.File("w"))
+def ensembl_write_assemblies(
+    connections, query, example_file, known_file, output, db_url=None
+):
     """
     This will query the ensembl databases in the connections file and write the
     output to the given file.
     """
-    assemblies.write(connections, query, example_file, known_file, output, db_url=db_url)
+    assemblies.write(
+        connections, query, example_file, known_file, output, db_url=db_url
+    )
 
 
-@cli.command('coordinate-systems')
-@click.argument('connections', default='databases.json', type=click.File('r'))
-@click.argument('query', default='query.sql', type=click.File('r'))
-@click.argument('output', default='coordinate_systems.csv', type=click.File('w'))
+@cli.command("coordinate-systems")
+@click.argument("connections", default="databases.json", type=click.File("r"))
+@click.argument("query", default="query.sql", type=click.File("r"))
+@click.argument("output", default="coordinate_systems.csv", type=click.File("w"))
 def ensembl_coordinates(connections, query, output):
     """
     Turn the tsv from the ensembl query into a csv that can be imported into
@@ -106,9 +116,9 @@ def ensembl_coordinates(connections, query, output):
     coordinate_systems.write(connections, query, output)
 
 
-@cli.command('karyotypes')
-@click.argument('output', default='karyotypes.csv', type=click.File('w'))
-@click.argument('species', nargs=-1)
+@cli.command("karyotypes")
+@click.argument("output", default="karyotypes.csv", type=click.File("w"))
+@click.argument("species", nargs=-1)
 def ensembl_write_karyotypes(output, species):
     """
     Fetch all the karyotype information from all Ensembl species. This will use
@@ -121,10 +131,10 @@ def ensembl_write_karyotypes(output, species):
     karyotypes.write(output, species=species)
 
 
-@cli.command('proteins')
-@click.argument('connections', default='databases.json', type=click.File('r'))
-@click.argument('query', default='query.sql', type=click.File('r'))
-@click.argument('output', default='proteins.csv', type=click.File('w'))
+@cli.command("proteins")
+@click.argument("connections", default="databases.json", type=click.File("r"))
+@click.argument("query", default="query.sql", type=click.File("r"))
+@click.argument("output", default="proteins.csv", type=click.File("w"))
 def ensembl_proteins_cmd(connections, query, output):
     """
     This will process the ensembl protein information files. This assumes the
@@ -133,9 +143,9 @@ def ensembl_proteins_cmd(connections, query, output):
     proteins.write(connections, query, output)
 
 
-@cli.command('compara')
-@click.argument('fasta', default='-', type=click.File('rb'))
-@click.argument('output', default='compara.csv', type=click.File('wb'))
+@cli.command("compara")
+@click.argument("fasta", default="-", type=click.File("rb"))
+@click.argument("output", default="compara.csv", type=click.File("wb"))
 def ensembl_compara(fasta, output):
     """
     Parse the FASTA file of Ensembl compara data. This will produce a CSV file

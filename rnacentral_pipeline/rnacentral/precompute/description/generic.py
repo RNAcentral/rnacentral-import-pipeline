@@ -32,16 +32,12 @@ def description_of(rna_type, sequence):
         A string naming the sequence.
     """
 
-    rna_type = rna_type.replace('_', ' ')
+    rna_type = rna_type.replace("_", " ")
     species_count = len(set(a.species for a in sequence.accessions))
     if species_count == 1:
         species = sequence.accessions[0].species
-        return '{species} {rna_type}'.format(
-            species=species,
-            rna_type=rna_type
-        )
+        return "{species} {rna_type}".format(species=species, rna_type=rna_type)
 
-    return '{rna_type} from {species_count} species'.format(
-        rna_type=rna_type,
-        species_count=species_count
+    return "{rna_type} from {species_count} species".format(
+        rna_type=rna_type, species_count=species_count
     )

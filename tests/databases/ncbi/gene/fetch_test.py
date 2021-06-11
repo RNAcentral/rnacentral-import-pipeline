@@ -19,9 +19,9 @@ from rnacentral_pipeline.databases.ncbi.gene import fetch
 from rnacentral_pipeline.databases.ncbi.gene import helpers
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def simple_sequences():
-    with open('data/ncbi_gene/simple.txt') as raw:
+    with open("data/ncbi_gene/simple.txt") as raw:
         ncrnas = helpers.ncrnas(raw)
         return fetch.sequences(ncrnas)
 
@@ -30,10 +30,13 @@ def test_can_get_expected_sequences(simple_sequences):
     assert len(simple_sequences) == 11
 
 
-@pytest.mark.parametrize('gene_id,sequence_id', {
-    ('108869573', 'NC_024802.2'),
-    ('107303968', 'XR_001549991.1'),
-})
+@pytest.mark.parametrize(
+    "gene_id,sequence_id",
+    {
+        ("108869573", "NC_024802.2"),
+        ("107303968", "XR_001549991.1"),
+    },
+)
 def test_can_fetch_correct_sequence_data(simple_sequences, gene_id, sequence_id):
     assert simple_sequences[gene_id].id == sequence_id
 

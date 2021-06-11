@@ -25,7 +25,9 @@ def validate(context: Context, rna_type: str, sequence: Sequence) -> QaResult:
             continue
         assem_reps = repeats.assembly(coordinate.assembly_id)
         enclosed = assem_reps.is_enveloped(
-            coordinate.chromosome, coordinate.start, coordinate.stop,
+            coordinate.chromosome,
+            coordinate.start,
+            coordinate.stop,
         )
         if enclosed:
             return QaResult.not_ok(

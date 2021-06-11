@@ -64,15 +64,14 @@ def run(db_url):
     with connection(db_url) as conn:
         cursor = conn.cursor()
         cursor.execute("SET work_mem TO '256MB'")
-        cursor.execute('SELECT rnc_update.update_rnc_accessions()')
-        cursor.execute('SELECT rnc_update.update_literature_references()')
+        cursor.execute("SELECT rnc_update.update_rnc_accessions()")
+        cursor.execute("SELECT rnc_update.update_literature_references()")
         cursor.execute(CREATE_INDEX_SQL)
         cursor.execute("SELECT rnc_update.prepare_releases('F')")
         cursor.execute(TO_RELEASE)
         for (dbid, rid) in cursor.fetchall():
             LOGGER.info("Executing release %i from database %i", rid, dbid)
-            cursor.execute('SELECT rnc_update.new_update_release(%s, %s)',
-                           (dbid, rid))
+            cursor.execute("SELECT rnc_update.new_update_release(%s, %s)", (dbid, rid))
             conn.commit()
 
 

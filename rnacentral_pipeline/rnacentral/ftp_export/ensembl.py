@@ -19,48 +19,49 @@ import operator as op
 from jsonschema import validate
 
 
-MOD_URL = 'http://modomics.genesilico.pl/sequences/list/{id}'
+MOD_URL = "http://modomics.genesilico.pl/sequences/list/{id}"
 
 
-TRUSTED_DB = set([
-    'gtrnadb',
-    'lncrnadb',
-    'mirbase',
-    'modomics',
-    'pdbe',
-    'snopy'
-    'srpdb',
-    'tmrna website',
-])
+TRUSTED_DB = set(
+    [
+        "gtrnadb",
+        "lncrnadb",
+        "mirbase",
+        "modomics",
+        "pdbe",
+        "snopy" "srpdb",
+        "tmrna website",
+    ]
+)
 
 
 def external_id(data):
-    if data['database'] == 'PDBe':
-        return '%s_%s' % (data['external_id'], data['optional_id'])
-    if data['database'] == 'Modomics':
-        return MOD_URL.format(id=data['external_id'])
-    return data['external_id']
+    if data["database"] == "PDBe":
+        return "%s_%s" % (data["external_id"], data["optional_id"])
+    if data["database"] == "Modomics":
+        return MOD_URL.format(id=data["external_id"])
+    return data["external_id"]
 
 
 def is_high_quality(data):
-    name = data['database'].lower()
+    name = data["database"].lower()
     if name in TRUSTED_DB:
         return True
-    if name == 'rfam':
-        return data['molecule_type'] == 'seed'
+    if name == "rfam":
+        return data["molecule_type"] == "seed"
     return False
 
 
 def as_xref(xref):
-    return {'database': xref['database'], 'id': external_id(xref)}
+    return {"database": xref["database"], "id": external_id(xref)}
 
 
 def builder(data):
     result = dict(data)
     xrefs = []
     seen = set()
-    key = op.itemgetter('database', 'id')
-    for xref in data['xrefs']:
+    key = op.itemgetter("database", "id")
+    for xref in data["xrefs"]:
         if not is_high_quality(xref):
             continue
 
@@ -70,8 +71,8 @@ def builder(data):
             xrefs.append(updated)
             seen.add(value)
 
-    result['sequence'] = result['sequence'].upper().replace('U', 'T')
-    result['xrefs'] = xrefs
+    result["sequence"] = result["sequence"].upper().replace("U", "T")
+    result["xrefs"] = xrefs
     return result
 
 
@@ -79,7 +80,7 @@ def generate_file(raw, output, schema_file=None):
     results = [builder(json.loads(l)) for l in raw]
 
     if schema_file:
-        with open(schema_file, 'r') as raw:
+        with open(schema_file, "r") as raw:
             validate(results, json.load(raw))
 
     json.dump(results, output)

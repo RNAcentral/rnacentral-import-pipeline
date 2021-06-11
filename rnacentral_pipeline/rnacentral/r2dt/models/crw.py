@@ -20,23 +20,23 @@ from rnacentral_pipeline.rnacentral.r2dt.data import ModelInfo
 from rnacentral_pipeline.rnacentral.r2dt.data import Source
 
 SO_TERM_MAPPING = {
-    '16S': 'SO:0000650',
-    '23S': 'SO:0000651',
-    '5S': 'SO:0000652',
-    'I': 'SO:0000587',
-    'IA1': 'SO:0000587',
-    'IA2': 'SO:0000587',
-    'IB': 'SO:0000587',
-    'IB1': 'SO:0000587',
-    'IB2': 'SO:0000587',
-    'IB4': 'SO:0000587',
-    'IC1': 'SO:0000587',
-    'IC2': 'SO:0000587',
-    'IC3': 'SO:0000587',
-    'ID': 'SO:0000587',
-    'IE': 'SO:0000587',
-    'IIA': 'SO:0000603',
-    'IIB': 'SO:0000603',
+    "16S": "SO:0000650",
+    "23S": "SO:0000651",
+    "5S": "SO:0000652",
+    "I": "SO:0000587",
+    "IA1": "SO:0000587",
+    "IA2": "SO:0000587",
+    "IB": "SO:0000587",
+    "IB1": "SO:0000587",
+    "IB2": "SO:0000587",
+    "IB4": "SO:0000587",
+    "IC1": "SO:0000587",
+    "IC2": "SO:0000587",
+    "IC3": "SO:0000587",
+    "ID": "SO:0000587",
+    "IE": "SO:0000587",
+    "IIA": "SO:0000603",
+    "IIB": "SO:0000603",
 }
 
 
@@ -47,37 +47,37 @@ def as_so_term(raw):
 
 
 def as_taxid(raw):
-    if raw == '501083':
+    if raw == "501083":
         return 126
-    if raw in {'600001', '600002', '600003'}:
+    if raw in {"600001", "600002", "600003"}:
         return 562
-    if raw in {'600101', '600102'}:
+    if raw in {"600101", "600102"}:
         return 2238
-    if raw in {'600301', '600302'}:
+    if raw in {"600301", "600302"}:
         return 4932
-    if raw in {'600201', '600202'}:
+    if raw in {"600201", "600202"}:
         return 274
     return int(raw)
 
 
 def models(raw):
-    for model_id in raw['structure'].split(' '):
+    for model_id in raw["structure"].split(" "):
         data = dict(raw)
-        model_id = re.sub(r'\.ps$', '', model_id)
-        data['model_id'] = model_id
+        model_id = re.sub(r"\.ps$", "", model_id)
+        data["model_id"] = model_id
         yield data
 
 
 def parse(handle):
-    for row in csv.DictReader(handle, delimiter='\t'):
+    for row in csv.DictReader(handle, delimiter="\t"):
         for info in models(row):
-            intronic = info['rna_type'] == 'I'
+            intronic = info["rna_type"] == "I"
             yield ModelInfo(
-                model_id=info['model_id'],
+                model_id=info["model_id"],
                 is_intronic=intronic,
-                so_term=as_so_term(info['rna_class']),
-                taxid=as_taxid(info['tax_id']),
-                accessions=row['accession(s)'].split(','),
+                so_term=as_so_term(info["rna_class"]),
+                taxid=as_taxid(info["tax_id"]),
+                accessions=row["accession(s)"].split(","),
                 source=Source.crw,
-                cell_location=info['cell_location'],
+                cell_location=info["cell_location"],
             )

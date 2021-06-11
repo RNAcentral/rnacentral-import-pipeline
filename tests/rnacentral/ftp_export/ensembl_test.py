@@ -24,18 +24,15 @@ from tests import helpers
 
 
 def load_data(rna_id):
-    path = os.path.join('files', 'ftp-export', 'ensembl', 'ensembl-xrefs.sql')
+    path = os.path.join("files", "ftp-export", "ensembl", "ensembl-xrefs.sql")
     raw = helpers.run_range_as_single(rna_id, path)
     return ensembl.builder(raw)
 
 
-@pytest.mark.parametrize(
-    'filename',
-    os.listdir('data/export/ensembl')
-)
+@pytest.mark.parametrize("filename", os.listdir("data/export/ensembl"))
 def test_can_export_data_for_single_upi(filename):
-    with open(os.path.join('data/export/ensembl', filename), 'r') as raw:
+    with open(os.path.join("data/export/ensembl", filename), "r") as raw:
         ans = json.load(raw)
 
-    rna_id = filename.split('.')[0]
+    rna_id = filename.split(".")[0]
     assert load_data(rna_id) == ans

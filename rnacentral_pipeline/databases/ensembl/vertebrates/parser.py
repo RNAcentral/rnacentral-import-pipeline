@@ -38,7 +38,9 @@ IGNORE_FEATURES = {
 }
 
 
-def as_entry(record, gene, feature, context: Context, is_nonchromosomal=False) -> ty.Optional[data.Entry]:
+def as_entry(
+    record, gene, feature, context: Context, is_nonchromosomal=False
+) -> ty.Optional[data.Entry]:
     """
     Turn the Record, Gene feature, transcript feature and Context into a Entry
     object for output.
@@ -98,7 +100,7 @@ def ncrnas(raw, context: Context) -> ty.Iterable[data.Entry]:
     This will parse an EMBL file for all Ensembl Entries to import.
     """
 
-    is_nonchromosomal = 'nonchromosomal' in raw.name
+    is_nonchromosomal = "nonchromosomal" in raw.name
     for record in SeqIO.parse(raw, "embl"):
         current_gene = None
         for feature in record.features:
@@ -116,11 +118,16 @@ def ncrnas(raw, context: Context) -> ty.Iterable[data.Entry]:
                 continue
 
             if not helpers.is_ncrna(feature):
-                LOGGER.debug("Skipping feature %s because it is not ncRNA", 
-                             feature)
+                LOGGER.debug("Skipping feature %s because it is not ncRNA", feature)
                 continue
 
-            entry = as_entry(record, current_gene, feature, context, is_nonchromosomal=is_nonchromosomal)
+            entry = as_entry(
+                record,
+                current_gene,
+                feature,
+                context,
+                is_nonchromosomal=is_nonchromosomal,
+            )
             if not entry:
                 LOGGER.warn("Could not parse %s" % feature)
                 continue
@@ -136,12 +143,16 @@ def ncrnas(raw, context: Context) -> ty.Iterable[data.Entry]:
             yield entry
 
 
-def parse(raw, gff_file, family_file=None, excluded_file=None) -> ty.Iterable[data.Entry]:
+def parse(
+    raw, gff_file, family_file=None, excluded_file=None
+) -> ty.Iterable[data.Entry]:
     """
     This will parse an EMBL file for all Ensembl Entries to import.
     """
 
-    context = Context.build(gff_file, family_file=family_file, excluded_file=excluded_file)
+    context = Context.build(
+        gff_file, family_file=family_file, excluded_file=excluded_file
+    )
     loaded = ncrnas(raw, context)
     grouped = it.groupby(loaded, op.attrgetter("gene"))
     for _, entries in grouped:

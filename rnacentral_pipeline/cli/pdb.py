@@ -25,7 +25,7 @@ from rnacentral_pipeline import writers
 LOGGER = logging.getLogger(__name__)
 
 
-@click.group('pdb')
+@click.group("pdb")
 def cli():
     """
     Commands for dealing with the fetching PDB data.
@@ -34,11 +34,15 @@ def cli():
 
 
 @cli.command("generate")
-@click.option('--skip-references', default=False)
+@click.option("--skip-references", default=False)
 @click.argument(
     "output",
     default=".",
-    type=click.Path(writable=True, dir_okay=True, file_okay=False,),
+    type=click.Path(
+        writable=True,
+        dir_okay=True,
+        file_okay=False,
+    ),
 )
 def process_pdb(output, skip_references=False):
     """

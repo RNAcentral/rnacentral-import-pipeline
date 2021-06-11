@@ -26,16 +26,16 @@ LOGGER = logging.getLogger(__name__)
 
 
 def list_releases(ftp: FTP) -> ty.List[str]:
-    return [f for f in ftp.nlst() if f.startswith('release-')]
+    return [f for f in ftp.nlst() if f.startswith("release-")]
 
 
 def latest_release(releases: ty.List[str]) -> str:
-    return max(releases, key=lambda r: int(r.split('-')[1]))
+    return max(releases, key=lambda r: int(r.split("-")[1]))
 
 
 @contextmanager
 def species_info(ftp: FTP, division: Division, release: str):
-    info_path = f'{release}/species_metadata_{division.division_name}.json'
+    info_path = f"{release}/species_metadata_{division.division_name}.json"
     print(info_path)
     with tempfile.NamedTemporaryFile() as tmp:
         ftp.retrbinary(f"RETR {info_path}", tmp.write)
@@ -44,18 +44,20 @@ def species_info(ftp: FTP, division: Division, release: str):
         yield tmp
 
 
-def generate_paths(ftp: FTP, division: Division, base: str, release: str, handle) -> ty.Iterable[FtpInfo]:
-    _, release_id = release.split('-', 1)
+def generate_paths(
+    ftp: FTP, division: Division, base: str, release: str, handle
+) -> ty.Iterable[FtpInfo]:
+    _, release_id = release.split("-", 1)
     data = json.load(handle)
     for entry in data:
-        info = entry['organism']
-        name = info['name']
+        info = entry["organism"]
+        name = info["name"]
 
         # So sometimes Ensembl users lower case names for the assemblies but
         # not always, so we try both and generate a name for the existing one.
         assemblies = [
-            entry['assembly']['assembly_default'],
-            entry['assembly']['assembly_default'].lower(),
+            entry["assembly"]["assembly_default"],
+            entry["assembly"]["assembly_default"].lower(),
         ]
         for assembly in assemblies:
             organism_name = f"{info['url_name']}.{assembly}.{release_id}"
@@ -63,7 +65,7 @@ def generate_paths(ftp: FTP, division: Division, base: str, release: str, handle
             # This detects, and skips things that are part of a collection. I'm not
             # sure what that means right now and those seem to be things that have
             # other genomes that aren't nested in a collection.
-            if not any(db['dbname'].startswith(name) for db in entry['databases']):
+            if not any(db["dbname"].startswith(name) for db in entry["databases"]):
                 continue
 
             gff_path = f"{base}/{release}/gff3/{name}/{organism_name}.gff3.gz"
@@ -73,7 +75,12 @@ def generate_paths(ftp: FTP, division: Division, base: str, release: str, handle
             if size is None:
                 continue
 
-            yield FtpInfo(division=division, species=name, data_files=data_files, gff_file=gff_path)
+            yield FtpInfo(
+                division=division,
+                species=name,
+                data_files=data_files,
+                gff_file=gff_path,
+            )
             break
         else:
             LOGGER.warn("No files found for %s", info)
@@ -82,10 +89,10 @@ def generate_paths(ftp: FTP, division: Division, base: str, release: str, handle
 def urls_for(division: Division, host: str) -> ty.Iterable[FtpInfo]:
     with FTP(host) as ftp:
         ftp.login()
-        print('LOGIN')
-        ftp.cwd(f'pub/{division.name}/')
+        print("LOGIN")
+        ftp.cwd(f"pub/{division.name}/")
         releases = list_releases(ftp)
         latest = latest_release(releases)
         with species_info(ftp, division, latest) as info:
-            url_base = f'ftp://{host}/pub/{division.name}'
+            url_base = f"ftp://{host}/pub/{division.name}"
             yield from generate_paths(ftp, division, url_base, latest, info)

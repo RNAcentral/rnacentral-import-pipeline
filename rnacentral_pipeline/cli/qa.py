@@ -28,9 +28,9 @@ def cli():
     pass
 
 
-@cli.command('rfam')
-@click.argument('tblout', default='-', type=click.File('r'))
-@click.argument('output', default='-', type=click.File('w'))
+@cli.command("rfam")
+@click.argument("tblout", default="-", type=click.File("r"))
+@click.argument("output", default="-", type=click.File("w"))
 def process_tblout(tblout, output):
     """
     Process a table out file and create a CSV for importing into our database.
@@ -39,9 +39,9 @@ def process_tblout(tblout, output):
     rfam.infernal_results.as_csv(tblout, output)
 
 
-@cli.command('dfam')
-@click.argument('data', default='-', type=click.File('r'))
-@click.argument('output', default='-', type=click.File('w'))
+@cli.command("dfam")
+@click.argument("data", default="-", type=click.File("r"))
+@click.argument("output", default="-", type=click.File("w"))
 def process_dfam(data, output):
     """
     This will parse the results from a dfamscan.pl call and turn the results
@@ -51,10 +51,10 @@ def process_dfam(data, output):
     dfam.as_csv(data, output)
 
 
-@cli.command('create-attempted')
-@click.argument('filename', type=click.File('r'))
-@click.argument('name')
-@click.argument('version_file', type=click.File('r'))
-@click.argument('output', type=click.File('w'))
+@cli.command("create-attempted")
+@click.argument("filename", type=click.File("r"))
+@click.argument("name")
+@click.argument("version_file", type=click.File("r"))
+@click.argument("output", type=click.File("w"))
 def track_attempted(filename, name, version_file, output):
     attempted.qa(filename, name, version_file, output)

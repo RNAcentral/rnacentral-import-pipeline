@@ -42,8 +42,3 @@ def process_json_schema(json_file, output):
     entries = generic.parse(json_file)
     with entry_writer(Path(output)) as writer:
         writer.write(entries)
-
-
-
-
-

@@ -25,21 +25,21 @@ from rnacentral_pipeline import writers
 
 
 EXCLUDED_TERMS = {
-    'GO:0008049',
-    'GO:0042981',
-    'GO:0042749',
-    'GO:0050789',
-    'GO:0006810',
-    'GO:0001263',
-    'SO:0004725',
-    'SO:0010039',
+    "GO:0008049",
+    "GO:0042981",
+    "GO:0042749",
+    "GO:0050789",
+    "GO:0006810",
+    "GO:0001263",
+    "SO:0004725",
+    "SO:0010039",
 }
 
-EXCLUDED_MIRNA = {'GO:0035068', 'GO:0006396'}
+EXCLUDED_MIRNA = {"GO:0035068", "GO:0006396"}
 
 
 GO_REPLACEMENTS = {
-    'GO:0044005': 'GO:0051819',
+    "GO:0044005": "GO:0051819",
 }
 
 
@@ -79,28 +79,28 @@ class RfamDatabaseLink(object):
         database columns.
         """
 
-        database = row['db_id']
-        external_id = row['db_link']
-        if database in {'SO', 'GO'}:
-            external_id = '%s:%s' % (database, row['db_link'])
+        database = row["db_id"]
+        external_id = row["db_link"]
+        if database in {"SO", "GO"}:
+            external_id = "%s:%s" % (database, row["db_link"])
 
         return cls(
-            rfam_family=row['rfam_acc'],
+            rfam_family=row["rfam_acc"],
             database=database,
-            comment=row['comment'],
+            comment=row["comment"],
             external_id=external_id,
-            other=row['other_params'],
-            family_type=row['type'],
+            other=row["other_params"],
+            family_type=row["type"],
         )
 
     def from_ontology(self):
         """
         Check if this instance comes from a known ontology (SO or GO).
         """
-        return self.database in {'SO', 'GO'}
+        return self.database in {"SO", "GO"}
 
     def writeable_go_mappings(self):
-        if self.database != 'GO':
+        if self.database != "GO":
             return
 
         yield [
@@ -132,7 +132,7 @@ def parse(handle: ty.IO) -> ty.Iterable[RfamDatabaseLink]:
     file.
     """
 
-    reader = csv.DictReader(handle, delimiter='\t')
+    reader = csv.DictReader(handle, delimiter="\t")
     return map(RfamDatabaseLink.from_row, reader)
 
 
@@ -146,8 +146,7 @@ def correct_go_term(reference):
     if go_term_id in EXCLUDED_TERMS:
         return None
 
-    if reference.family_type == 'Gene; miRNA;' and \
-            go_term_id in EXCLUDED_MIRNA:
+    if reference.family_type == "Gene; miRNA;" and go_term_id in EXCLUDED_MIRNA:
         return None
 
     go_term_id = GO_REPLACEMENTS.get(go_term_id, go_term_id)
@@ -163,7 +162,7 @@ def ontology_references(handle) -> ty.Iterable[RfamDatabaseLink]:
         if not reference.from_ontology():
             continue
 
-        if reference.database in {'SO', 'GO'}:
+        if reference.database in {"SO", "GO"}:
             reference = correct_go_term(reference)
 
         if not reference:

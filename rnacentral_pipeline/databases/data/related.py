@@ -18,6 +18,7 @@ import json
 import attr
 from attr.validators import instance_of as is_a
 
+
 def related_isoforms(entries):
     """
     This goes through all given entries, which are assumed to all be from the
@@ -31,16 +32,18 @@ def related_isoforms(entries):
             if first == second:
                 continue
 
-            related.append(RelatedSequence(
-                sequence_id=second.accession,
-                relationship='isoform',
-            ))
+            related.append(
+                RelatedSequence(
+                    sequence_id=second.accession,
+                    relationship="isoform",
+                )
+            )
         yield attr.evolve(first, related_sequences=related)
 
 
 def as_relationship_type(value):
     if value == "matureProduct":
-        return 'mature_product'
+        return "mature_product"
     return value
 
 
@@ -68,13 +71,12 @@ class RelatedSequence(object):
     )
     coordinates = attr.ib(validator=is_a(list), default=attr.Factory(list))
     evidence = attr.ib(
-        validator=is_a(RelatedEvidence),
-        default=attr.Factory(RelatedEvidence.empty)
+        validator=is_a(RelatedEvidence), default=attr.Factory(RelatedEvidence.empty)
     )
 
     def writeable(self, accession):
-        methods = ','.join('"%s"' % m for m in self.evidence.methods)
-        methods = '{%s}' % methods
+        methods = ",".join('"%s"' % m for m in self.evidence.methods)
+        methods = "{%s}" % methods
         yield [
             accession,
             self.sequence_id,
@@ -84,7 +86,7 @@ class RelatedSequence(object):
 
     def write_features(self, accession, taxid):
         for endpoints in self.coordinates:
-            metadata = {'related': self.sequence_id}
+            metadata = {"related": self.sequence_id}
             yield [
                 accession,
                 taxid,

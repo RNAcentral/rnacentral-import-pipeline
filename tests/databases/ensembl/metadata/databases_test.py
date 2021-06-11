@@ -22,18 +22,19 @@ import pymysql
 from rnacentral_pipeline.databases.ensembl.metadata import databases as db
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def databases():
-    with open('config/databases.json', 'r') as raw:
+    with open("config/databases.json", "r") as raw:
         info = json.load(raw)
-        spec = info['ensembl']
-        del spec['command']
+        spec = info["ensembl"]
+        del spec["command"]
         conn = pymysql.Connection(**spec)
         databases = []
         for db_name in db.databases(conn):
-            clean = re.sub(r'_core_.*$', '', db_name)
+            clean = re.sub(r"_core_.*$", "", db_name)
             databases.append(clean)
         return databases
 
+
 def test_gets_fly_database(databases):
-    assert 'drosophila_melanogaster' in databases
+    assert "drosophila_melanogaster" in databases

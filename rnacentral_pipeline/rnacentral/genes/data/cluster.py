@@ -122,7 +122,10 @@ class Cluster:
         extent = locations[0].extent
         for location in locations[1:]:
             extent = extent.merge(location.extent)
-        return cls(extent=extent, members=members,)
+        return cls(
+            extent=extent,
+            members=members,
+        )
 
     def as_interval(self) -> Interval:
         return Interval(self.extent.start, self.extent.stop, self.id)
@@ -179,7 +182,9 @@ class WriteableClusterMember:
     member_type = attr.ib(validator=is_a(MemberType))
 
     @classmethod
-    def build(cls, member: ClusterMember, location: LocationInfo) -> "WriteableClusterMember":
+    def build(
+        cls, member: ClusterMember, location: LocationInfo
+    ) -> "WriteableClusterMember":
         return cls(location=location, member_type=member.member_type)
 
     def as_bed(self) -> ty.Iterable[BedEntry]:
@@ -203,7 +208,9 @@ class WriteableCluster:
     members: ty.Set[WriteableClusterMember] = attr.ib(validator=is_a(set), factory=set)
 
     @classmethod
-    def build(cls, cluster: Cluster, mapping: ty.Dict[int, LocationInfo]) -> "WriteableCluster":
+    def build(
+        cls, cluster: Cluster, mapping: ty.Dict[int, LocationInfo]
+    ) -> "WriteableCluster":
         members = set()
         for lid, member in cluster._members.items():
             location = mapping[lid]

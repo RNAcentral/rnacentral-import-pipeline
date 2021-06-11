@@ -211,9 +211,7 @@ def load_data(upi):
         #     "microRNA hsa-mir-1302 precursor (hsa-mir-1302-2, hsa-mir-1302 9 to 11)",
         # ),
         # ("URS000075CF25_9913", "microRNA bta-mir-10a precursor"),
-        (
-            "URS0000808D70_1478174", "tmRNA"
-        ),
+        ("URS0000808D70_1478174", "tmRNA"),
         # ("URS00008E3A1B_10090", "predicted gene 11532 (Gm11532)"),
         # ("URS00009E8F92_885695", "partial 16S ribosomal RNA"),
         # pytest.param(
