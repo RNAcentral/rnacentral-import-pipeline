@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import annotations
+
 """
 Copyright [2009-2020] EMBL-European Bioinformatics Institute
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +17,11 @@ limitations under the License.
 
 import re
 import logging
+import typing as ty
 from functools import lru_cache
+
+import attr
+from attr.validators import instance_of as is_a
 
 from sqlitedict import SqliteDict
 import networkx as nx
@@ -74,67 +80,117 @@ SKIPPED_TERMS = {
 }
 
 
-@lru_cache()
-def load_ontology(filename):
-    ont = obonet.read_obo(filename)
-    ont.id_to_name = {id_: data.get("name")
-                      for id_, data in ont.nodes(data=True)}
-    ont.name_to_id = {
-        data["name"]: id_ for id_, data in ont.nodes(data=True) if "name" in data
-    }
-    ont.insdc_to_id = {}
-    for id_, node in ont.nodes(data=True):
-        for insdc in insdc_synonyms(node):
-            ont.insdc_to_id[insdc] = id_
-    return ont
+@attr.s(frozen=True, hash=False)
+class SoOntology:
+    graph = attr.ib(validator=is_a(nx.MultiDiGraph))
+    id_to_name: ty.Dict[str, ty.Optional[str]] = attr.ib(validator=is_a(dict))
+    name_to_id: ty.Dict[str, str] = attr.ib(validator=is_a(dict))
+    insdc_to_id: ty.Dict[str, str] = attr.ib(validator=is_a(dict))
 
+    @classmethod
+    def from_file(cls, filename) -> SoOntology:
+        ont = obonet.read_obo(filename, ignore_obsolete=False)
+        id_to_name = {}
+        name_to_id = {}
+        insdc_to_id = {}
 
-def compute_rna_type_tree(ontology, child, parents):
-    if child in ALTERNATES:
-        return ALTERNATES[child]
-
-    for parent in parents:
-        if child == parent:
-            break
-        paths = nx.all_simple_paths(ontology, source=child, target=parent)
-        paths = list(paths)
-        if not paths:
-            continue
-
-        if len(paths) > 1:
-            LOGGER.warn("Too many paths currently in %s", paths)
-
-        tree = []
-        for node_id in paths[0]:
-            if node_id in SKIPPED_TERMS:
+        for old_id, old_node in ont.nodes(data=True):
+            if "replaced_by" not in old_node:
+                name = old_node.get("name", None)
+                id_to_name[old_id] = name
+                if name:
+                    name_to_id[name] = old_id
+                for insdc in insdc_synonyms(old_node):
+                    insdc_to_id[insdc] = old_id
                 continue
-            node = ontology.nodes[node_id]
-            tree.insert(0, (node_id, node["name"]))
-        return tree
 
-    LOGGER.error(
-        "Assumes all SO terms are one of %s, %s is not", ", ".join(
-            parents), child
-    )
-    return [(child, ontology.nodes[child]["name"])]
+            for new_id in old_node["replaced_by"]:
+                new_node = ont.nodes[new_id]
+                if "name" in old_node:
+                    name_to_id[old_node["name"]] = new_id
+
+                id_to_name[old_id] = new_node.get("name")
+                for insdc in insdc_synonyms(old_node):
+                    insdc_to_id[insdc] = new_id
+
+        return cls(graph=ont, id_to_name=id_to_name, name_to_id=name_to_id, insdc_to_id=insdc_to_id)
+
+    def nodes(self):
+        return self.graph.nodes(data=True)
+
+    def as_node_id(self, id: str) -> str:
+        if self.graph.has_node(id):
+            if self.graph.nodes[id].get("replaced_by", []):
+                return self.graph.nodes[id]["replaced_by"][0]
+            return id
+        if id in self.name_to_id:
+            return self.name_to_id[id]
+        if id in self.insdc_to_id:
+            return self.insdc_to_id[id]
+        raise ValueError(f"Unknown node: {id}")
+
+    def node(self, id: str):
+        nid = self.as_node_id(id)
+        return self.graph.nodes[nid]
+
+    def name_mapping(self):
+        mapping = {}
+        for so_id, node in self.nodes():
+            mapping[so_id] = so_id
+            name = node.get("name", None)
+            if name:
+                mapping[name] = so_id
+            for insdc_name in insdc_synonyms(node):
+                if insdc_name not in mapping:
+                    mapping[insdc_name] = so_id
+        return mapping
+
+    def rna_type_tree(self, child, parents):
+        if child in ALTERNATES:
+            return ALTERNATES[child]
+
+        print(child)
+        for parent in parents:
+            print(parent)
+            if child == parent:
+                break
+            paths = nx.all_simple_paths(
+                self.graph, source=child, target=parent)
+            paths = list(paths)
+            print(paths)
+            if not paths:
+                continue
+
+            if len(paths) > 1:
+                LOGGER.warn("Too many paths currently in %s", paths)
+
+            tree = []
+            for node_id in paths[0]:
+                if node_id in SKIPPED_TERMS:
+                    continue
+                node = self.graph.nodes[node_id]
+                tree.insert(0, (node_id, node["name"]))
+            return tree
+
+        LOGGER.error(
+            "Assumes all SO terms are one of %s, %s is not", ", ".join(
+                parents), child
+        )
+        return [(child, self.graph.nodes[child]["name"])]
 
 
 @lru_cache()
-def rna_type_tree(ontology, child):
-    nid = None
-    node = None
-    if ontology.has_node(child):
-        nid = child
-        node = ontology.nodes[child]
-    elif child in ontology.name_to_id:
-        nid = ontology.name_to_id[child]
-        node = ontology.nodes[nid]
-    else:
-        raise ValueError("Unknown node: " + child)
+def load_ontology(filename) -> SoOntology:
+    return SoOntology.from_file(filename)
 
+
+@lru_cache()
+def rna_type_tree(ontology: SoOntology, child: str):
+    nid = ontology.as_node_id(child)
+    node = ontology.node(nid)
     if not node.get("so_term_tree", None):
         parents = [ontology.name_to_id[n] for n in BASE_SO_TERMS]
-        node["so_term_tree"] = compute_rna_type_tree(ontology, nid, parents)
+        node["so_term_tree"] = ontology.rna_type_tree(nid, parents)
 
     return node["so_term_tree"]
 
@@ -152,14 +208,6 @@ def insdc_synonyms(node):
 
 def name_index(ontology, filename) -> SqliteDict:
     mapping = SqliteDict(filename)
-    for so_id, node in ontology.nodes(data=True):
-        mapping[so_id] = so_id
-        name = node.get("name", None)
-        if name:
-            mapping[name] = so_id
-        for insdc_name in insdc_synonyms(node):
-            if insdc_name not in mapping:
-                mapping[insdc_name] = so_id
-
+    mapping.update(ontology.name_mapping())
     mapping.commit()
     return mapping

@@ -14,15 +14,14 @@ limitations under the License.
 """
 
 import tempfile
-from functools import lru_cache
 
 from rnacentral_pipeline.databases.sequence_ontology import tree as so
 
 import pytest
 
 
-@lru_cache()
-def load():
+@pytest.fixture(scope='module')
+def ontology():
     return so.load_ontology(so.REMOTE_ONTOLOGY)
 
 
@@ -132,9 +131,36 @@ def load():
         ]),
     ],
 )
-def test_can_compute_some_simple_paths(so_term_id, expected):
-    data = load()
-    assert so.rna_type_tree(data, so_term_id) == expected
+def test_can_compute_some_simple_paths(ontology, so_term_id, expected):
+    assert so.rna_type_tree(ontology, so_term_id) == expected
+
+
+@pytest.mark.parametrize("old_term,expected", [
+    ("SO:0001171", [
+        ("SO:0000655", "ncRNA"),
+        ("SO:0000252", "rRNA"),
+        ("SO:0002128", "mt_rRNA"),
+        ("SO:0002345", "mt_LSU_rRNA"),
+    ]),
+    ("rRNA_21S", [
+        ("SO:0000655", "ncRNA"),
+        ("SO:0000252", "rRNA"),
+        ("SO:0002128", "mt_rRNA"),
+        ("SO:0002345", "mt_LSU_rRNA"),
+    ]),
+])
+def test_can_compute_path_for_outdated_term(ontology, old_term, expected):
+    tree =  so.rna_type_tree(ontology, old_term) 
+    print(tree)
+    assert tree == expected
+
+
+@pytest.mark.parametrize("old_id,expected_name", [
+    ("SO:0001171", "mt_LSU_rRNA"),
+    ("SO:0002128", "mt_rRNA"),
+])
+def test_does_track_replacments(ontology, old_id, expected_name):
+    assert ontology.id_to_name[old_id] == expected_name
 
 
 @pytest.mark.parametrize(
@@ -146,9 +172,8 @@ def test_can_compute_some_simple_paths(so_term_id, expected):
         ("SO:0001877", "lncRNA"),
     ],
 )
-def test_can_create_expected_mapping(so_id, name):
+def test_can_create_expected_mapping(ontology, so_id, name):
     with tempfile.NamedTemporaryFile() as tmp:
-        ont = load()
-        mapping = so.name_index(ont, tmp.name)
+        mapping = so.name_index(ontology, tmp.name)
         assert mapping[so_id] == so_id
         assert mapping[name] == so_id
