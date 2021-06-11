@@ -14,7 +14,6 @@ limitations under the License.
 """
 
 import logging
-import collections as coll
 import json
 import sqlite3
 from contextlib import contextmanager
