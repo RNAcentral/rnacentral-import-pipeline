@@ -33,6 +33,10 @@ BASE_SO_TERMS = [
     "transcript",
 ]
 
+RENAME = {
+    ""
+}
+
 ALTERNATES = {
     'SO:0000380': [
         ("SO:0000673", "transcript"),
@@ -49,6 +53,10 @@ ALTERNATES = {
         ("SO:0001877", "lncRNA"),
         ("SO:0001904", "antisense_lncRNA"),
     ],
+    'SO:0001244': [
+        ("SO:0000673", "transcript"),
+        ('SO:0001244', "pre_miRNA"),
+    ]
 }
 
 SKIPPED_TERMS = {
@@ -62,6 +70,7 @@ SKIPPED_TERMS = {
     "SO:0000389",
     "SO:0000384",
     "SO:0000388",
+    "SO:0000379",
 }
 
 

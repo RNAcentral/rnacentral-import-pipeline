@@ -31,12 +31,13 @@ def load():
     [
         ("rRNA", [("SO:0000655", "ncRNA"), ("SO:0000252", "rRNA")]),
         (
-            "rRNA_18S",
+            "cytosolic_18S_rRNA",
             [
                 ("SO:0000655", "ncRNA"),
                 ("SO:0000252", "rRNA"),
-                ("SO:0000650", "small_subunit_rRNA"),
-                ("SO:0000407", "rRNA_18S"),
+                ('SO:0002343', 'cytosolic_rRNA'),
+                ("SO:0000650", "cytosolic_SSU_rRNA"),
+                ("SO:0000407", "cytosolic_18S_rRNA"),
             ],
         ),
         (
@@ -119,6 +120,15 @@ def load():
             ("SO:0000655", "ncRNA"),
             ('SO:0002247', 'sncRNA'),
             ("SO:0000370", "small_regulatory_ncRNA"),
+        ]),
+        ("GcvB_RNA", [
+            ("SO:0000655", "ncRNA"),
+            ('SO:0002247', 'sncRNA'),
+            ("SO:0000370", "small_regulatory_ncRNA"),
+        ]),
+        ("pre_miRNA", [
+            ("SO:0000673", "transcript"),
+            ('SO:0001244', "pre_miRNA"),
         ]),
     ],
 )
