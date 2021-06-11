@@ -149,15 +149,12 @@ class SoOntology:
         if child in ALTERNATES:
             return ALTERNATES[child]
 
-        print(child)
         for parent in parents:
-            print(parent)
             if child == parent:
                 break
             paths = nx.all_simple_paths(
                 self.graph, source=child, target=parent)
             paths = list(paths)
-            print(paths)
             if not paths:
                 continue
 
