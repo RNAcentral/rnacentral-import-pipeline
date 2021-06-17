@@ -80,8 +80,8 @@ def test_can_build_from_so_id(so_tree, so_id):
     [
         ("rRNA", "SO:0000252"),
         ("pre_miRNA", "SO:0001244"),
-        ("small_subunit_rRNA", "SO:0000650"),
-        ("rRNA_16S", "SO:0001000"),
+        ("cytosolic_SSU_rRNA", "SO:0000650"),
+        ("cytosolic_16S_rRNA", "SO:0001000"),
     ],
 )
 def test_can_build_from_so_name(so_tree, name, so_id):
@@ -105,14 +105,14 @@ def test_can_build_from_so_name(so_tree, name, so_id):
         (
             "SO:0000650",
             RnaType(
-                so_term=SoTermInfo(so_id="SO:0000650", name="small_subunit_rRNA"),
+                so_term=SoTermInfo(so_id="SO:0000650", name="cytosolic_SSU_rRNA"),
                 insdc=None,
             ),
         ),
         (
             "SO:0001000",
             RnaType(
-                so_term=SoTermInfo(so_id="SO:0001000", name="rRNA_16S"), insdc=None
+                so_term=SoTermInfo(so_id="SO:0001000", name="cytosolic_16S_rRNA"), insdc=None
             ),
         ),
         (
