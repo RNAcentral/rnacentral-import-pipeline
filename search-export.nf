@@ -149,6 +149,7 @@ process atomic_publish {
   input:
   path('release_note.txt')
   path(xml)
+  path(post)
 
   script:
   def publish = params.search_export.publish
@@ -157,11 +158,13 @@ process atomic_publish {
     ssh "$publish.host" 'mkdir -p $publish.path' || true
     ssh "$publish.host" 'rm -r $publish.path/*' || true
     scp ${xml} 'release_note.txt' $publish.host:$publish.path
+    psql -v ON_ERROR_STOP=1 -f "$post" "$PGDATABASE"
     """
   else
     """
     rm $publish.path/*
     cp ${xml} 'release_note.txt' $publish.path
+    psql -v ON_ERROR_STOP=1 -f "$post" "$PGDATABASE"
     """
 }
 
@@ -181,6 +184,8 @@ workflow search_export {
   Channel.fromPath('files/search-export/so-rna-types.sql') | set { so_sql }
 
   Channel.fromPath('files/search-export/parts/accessions.sql') | set { accessions_sql }
+
+  Channel.fromPath('files/search-export/post-publish.sql') set { post }
 
   setup_sql | setup | set { search_ready }
   search_ready | build_search_accessions | set { accessions_ready }
@@ -213,7 +218,7 @@ workflow search_export {
   export_chunk.out.counts | collect | create_release_note | set { note }
   export_chunk.out.xml | collect | set { xml }
 
-  atomic_publish(note, xml)
+  atomic_publish(note, xml, post)
 }
 
 workflow {
