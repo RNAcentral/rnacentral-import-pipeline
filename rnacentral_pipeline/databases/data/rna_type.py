@@ -46,8 +46,8 @@ class RnaType:
         return cls(so_term=SoTermInfo.ncRNA(), insdc="ncRNA")
 
     @classmethod
-    def from_so_term(cls, so_tree, so_id) -> "RnaType":
-        so_node = so_tree[so_id]
+    def from_so_term(cls, so_tree: tree.SoOntology, so_id: str) -> "RnaType":
+        so_node = so_tree.node(so_id)
         so_name = so_tree.id_to_name.get(so_id)
         insdc = next(tree.insdc_synonyms(so_node), None)
         return cls(so_term=SoTermInfo(so_id=so_id, name=so_name), insdc=insdc)

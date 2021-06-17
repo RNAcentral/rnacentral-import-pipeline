@@ -200,6 +200,8 @@ def insdc_synonyms(node):
             continue
         match = re.search(pattern, synonym)
         if not match:
+            if "pre-miRNA" in synonym:
+                yield "pre_miRNA"
             continue
         yield match.group(1)
 
