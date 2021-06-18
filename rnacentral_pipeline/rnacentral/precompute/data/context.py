@@ -58,5 +58,5 @@ class Context:
         source = term.so_term.so_id
         if source == target:
             return True
-        paths = nx.all_simple_paths(self.so_tree, source=source, target=target)
+        paths = nx.all_simple_paths(self.so_tree.graph, source=source, target=target)
         return bool(next(paths, None))
