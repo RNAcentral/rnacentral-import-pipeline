@@ -1,3 +1,5 @@
+BEGIN;
+
 INSERT INTO ref_pubmed (
     ref_pubmed_id,
     authors,
@@ -22,3 +24,5 @@ SET
 ;
 
 DROP TABLE load_ref_pubmed;
+
+COMMIT;

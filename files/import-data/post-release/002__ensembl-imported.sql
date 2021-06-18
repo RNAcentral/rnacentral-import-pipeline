@@ -1,3 +1,5 @@
+BEGIN;
+
 INSERT INTO ensembl_import_tracking (
     database_name,
     task_name,
@@ -14,3 +16,5 @@ SET
 ;
 
 DROP TABLE load_ensembl_analysis_status;
+
+COMMIT;

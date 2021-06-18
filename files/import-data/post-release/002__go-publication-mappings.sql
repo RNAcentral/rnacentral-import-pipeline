@@ -1,3 +1,5 @@
+BEGIN;
+
 INSERT INTO go_term_publication_map (
     go_term_annotation_id,
     reference_id
@@ -22,3 +24,5 @@ DO NOTHING
 ;
 
 DROP TABLE load_go_term_publication_map;
+
+COMMIT;

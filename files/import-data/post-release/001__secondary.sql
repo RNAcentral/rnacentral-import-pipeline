@@ -1,3 +1,5 @@
+BEGIN;
+
 INSERT INTO rnc_secondary_structure (
     rnc_accession_id,
     secondary_structure,
@@ -17,3 +19,5 @@ ON CONFLICT (rnc_accession_id, md5) DO UPDATE SET
 ;
 
 drop table load_rnc_secondary_structure;
+
+COMMIT;

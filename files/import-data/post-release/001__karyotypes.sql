@@ -1,3 +1,5 @@
+BEGIN;
+
 INSERT INTO ensembl_karyotype (
     assembly_id,
     karyotype
@@ -10,3 +12,5 @@ from load_karyotypes
 SET
     karyotype = excluded.karyotype
 ;
+
+COMMIT;

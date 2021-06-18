@@ -1,3 +1,5 @@
+BEGIN;
+
 INSERT INTO rfam_clans (
     rfam_clan_id,
     name,
@@ -18,3 +20,5 @@ ON CONFLICT (rfam_clan_id) DO UPDATE SET
 ;
 
 DROP TABLE load_rfam_clans;
+
+COMMIT;

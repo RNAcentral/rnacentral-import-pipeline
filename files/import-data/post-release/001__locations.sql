@@ -1,3 +1,5 @@
+BEGIN;
+
 SET work_mem TO '256MB';
 
 INSERT INTO rnacen.rnc_coordinates AS t1 (
@@ -40,3 +42,5 @@ where
 ;
 
 drop table load_rnc_coordinates;
+
+COMMIT;

@@ -1,3 +1,5 @@
+BEGIN;
+
 INSERT INTO go_term_annotations (
     rna_id,
     qualifier,
@@ -22,3 +24,5 @@ SET
 ;
 
 DROP TABLE load_go_term_annotations;
+
+COMMIT;

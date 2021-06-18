@@ -1,3 +1,5 @@
+BEGIN;
+
 ALTER TABLE load_compara
   ADD COLUMN urs_taxid text,
   ADD COLUMN homology_id int
@@ -57,3 +59,5 @@ FROM load_compara load
 ;
 
 DROP TABLE load_compara;
+
+COMMIT;

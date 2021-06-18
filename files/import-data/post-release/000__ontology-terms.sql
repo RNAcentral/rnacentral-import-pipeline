@@ -1,3 +1,5 @@
+BEGIN TRANSACTION;
+
 insert into ontology_terms (
   ontology_term_id,
   ontology,
@@ -19,3 +21,5 @@ ON CONFLICT (ontology_term_id) DO UPDATE SET
 ;
 
 drop table load_ontology_terms;
+
+COMMIT;

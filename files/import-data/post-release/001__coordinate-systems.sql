@@ -1,3 +1,5 @@
+BEGIN TRANSACTION;
+
 INSERT INTO ensembl_coordinate_systems (
   chromosome,
   coordinate_system,
@@ -22,3 +24,5 @@ SET
 ;
 
 DROP TABLE load_coordinate_info;
+
+COMMIT;

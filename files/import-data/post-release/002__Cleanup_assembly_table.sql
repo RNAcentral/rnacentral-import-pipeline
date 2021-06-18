@@ -1,3 +1,5 @@
+BEGIN;
+
 -- We want to remove the assemblies we have no regions for. This is because it
 -- doesn't make sense to list them in genome browser or anything if we have no
 -- data. However, we can't figure out what assemblies to remove until after the
@@ -55,3 +57,4 @@ WHERE
 	AND assem.example_chromosome IS NULL
 ;
 
+COMMIT;
