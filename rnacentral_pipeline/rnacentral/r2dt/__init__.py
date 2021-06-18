@@ -86,14 +86,16 @@ def prepare_s3(
             if result.urs in seen:
                 raise ValueError(f"Dupcliate URS {result.urs}")
             seen.add(result.urs)
-            s3_path = output / f"{result.urs}.svg"
+            s3_path = output / f"{result.urs}.svg.gz"
             if s3_path.exists():
                 raise ValueError(f"Will not overwrite {s3_path}")
 
             if not result.info.svg.exists():
                 raise ValueError(f"Somehow missing unnormalized path {result.info.svg}")
 
-            shutil.copyfile(result.info.svg, s3_path)
+            with gzip.open(s3_path, "wb") as out:
+                with result.info.svg.open("rb") as inp:
+                    shutil.copyfileobj(inp, out)
             raw.write(str(s3_path))
             raw.write("\n")
 
