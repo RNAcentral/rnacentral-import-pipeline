@@ -1,3 +1,5 @@
+BEGIN;
+
 INSERT INTO rnc_interactions (
   intact_id,
   urs_taxid,
@@ -27,3 +29,5 @@ SET
 ;
 
 drop table load_interactions;
+
+COMMIT;

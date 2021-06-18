@@ -1,3 +1,5 @@
+BEGIN;
+
 DELETE FROM rfam_go_terms rfam
 USING load_rfam_go_terms load
 WHERE
@@ -19,3 +21,5 @@ ON CONFLICT (ontology_term_id, rfam_model_id) DO UPDATE SET
 ;
 
 DROP TABLE load_rfam_go_terms;
+
+COMMIT;

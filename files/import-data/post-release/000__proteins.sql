@@ -1,3 +1,5 @@
+BEGIN;
+
 INSERT INTO protein_info (
   protein_accession,
   description,
@@ -19,3 +21,5 @@ SET
 ;
 
 DROP TABLE load_protein_info;
+
+COMMIT;
