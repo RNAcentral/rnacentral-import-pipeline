@@ -49,6 +49,7 @@ static SO_MAPPING: phf::Map<&'static str, &'static str> = phf_map! {
     "SO:0000233" => "SO:0000673",
     "SO:0001267" => "SO:0000275",
     "SO:0001243" => "SO:0001244",
+    "SO:0001459" => "SO:0000655",
 };
 
 
