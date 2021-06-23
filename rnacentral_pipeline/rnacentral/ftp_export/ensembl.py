@@ -18,6 +18,8 @@ import operator as op
 
 from jsonschema import validate
 
+from rnacentral_pipeline import psql
+
 
 MOD_URL = "http://modomics.genesilico.pl/sequences/list/{id}"
 
@@ -77,7 +79,7 @@ def builder(data):
 
 
 def generate_file(raw, output, schema_file=None):
-    results = [builder(json.loads(l)) for l in raw]
+    results = [builder(b) for b in psql.json_handler(raw)]
 
     if schema_file:
         with open(schema_file, "r") as raw:
