@@ -48,6 +48,7 @@ from rnacentral_pipeline.cli import (
     quickgo,
     r2dt,
     refseq,
+    release,
     repeats,
     rfam,
     search_export,
@@ -100,10 +101,8 @@ cli.add_command(lncbook.cli)
 cli.add_command(lncipedia.cli)
 cli.add_command(mirbase.cli)
 cli.add_command(mirgenedb.cli)
-cli.add_command(misc.check_release)
 cli.add_command(misc.crs_data)
 cli.add_command(misc.find_upi_ranges)
-cli.add_command(misc.run_release)
 cli.add_command(misc.validate_pgloader)
 cli.add_command(ncbi.cli)
 cli.add_command(ols.cli)
@@ -115,6 +114,7 @@ cli.add_command(qa.cli)
 cli.add_command(quickgo.cli)
 cli.add_command(r2dt.cli)
 cli.add_command(refseq.cli)
+cli.add_command(release.cli)
 cli.add_command(repeats.cli)
 cli.add_command(rfam.cli)
 cli.add_command(search_export.cli)

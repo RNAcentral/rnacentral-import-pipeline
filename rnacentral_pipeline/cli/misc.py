@@ -15,29 +15,11 @@ limitations under the License.
 
 import click
 
-from rnacentral_pipeline.rnacentral import release
-
 from rnacentral_pipeline.rnacentral import upi_ranges
 
 from rnacentral_pipeline.databases.crs import parser as crs
 
 from rnacentral_pipeline.rnacentral import pgloader
-
-
-@click.command("run-release")
-@click.option("--db_url", envvar="PGDATABASE")
-def run_release(db_url=None):
-    """
-    A command to run the release logic in the database.
-    """
-    release.run(db_url)
-
-
-@click.command("check-release")
-@click.option("--db_url", envvar="PGDATABASE")
-@click.argument("limit_file", type=click.File("r"))
-def check_release(limit_file, db_url=None):
-    release.check(limit_file, db_url)
 
 
 @click.command("upi-ranges")

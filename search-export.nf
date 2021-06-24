@@ -87,6 +87,9 @@ process build_ranges {
 process fetch_accession {
   tag { "$min-$max" }
   maxForks 3
+  time '10m'
+  errorStrategy 'retry'
+  maxRetries 5
 
   input:
   tuple val(min), val(max), path(sql), val(_flag)
