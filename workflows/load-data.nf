@@ -60,10 +60,11 @@ process release {
     fi
   }
 
-  ${should_release ? '' : '# ' }rnac check-release $limits
+  ${should_release ? '' : '# ' }rnac release check $limits
   run_sql "${ Utils.write_ordered(pre, pre_sql.inject([]) { a, fn -> a << fn.getName() }) }"
-  ${should_release ? '' : '# ' }rnac run-release
+  ${should_release ? '' : '# ' }rnac release run
   run_sql "${ Utils.write_ordered(post, post_sql.inject([]) { a, fn -> a << fn.getName() }) }"
+  ${should_release ? '' : '# ' }rnac release update-stats
   """
 }
 

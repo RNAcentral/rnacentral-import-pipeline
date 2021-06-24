@@ -112,7 +112,8 @@ def test_can_build_from_so_name(so_tree, name, so_id):
         (
             "SO:0001000",
             RnaType(
-                so_term=SoTermInfo(so_id="SO:0001000", name="cytosolic_16S_rRNA"), insdc=None
+                so_term=SoTermInfo(so_id="SO:0001000", name="cytosolic_16S_rRNA"),
+                insdc=None,
             ),
         ),
         (

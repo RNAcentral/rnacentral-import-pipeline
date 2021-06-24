@@ -233,10 +233,13 @@ def test_can_create_expected_mapping(ontology, so_id, name):
         assert mapping[name] == so_id
 
 
-@pytest.mark.parametrize("so_id,insdc", [
-    ("SO:0001035", ["piRNA"]),
-    ("SO:0001244", ["pre_miRNA"]),
-])
+@pytest.mark.parametrize(
+    "so_id,insdc",
+    [
+        ("SO:0001035", ["piRNA"]),
+        ("SO:0001244", ["pre_miRNA"]),
+    ],
+)
 def test_has_correct_insdc_mapping(ontology, so_id, insdc):
     node = ontology.node(so_id)
     assert sorted(so.insdc_synonyms(node)) == sorted(insdc)

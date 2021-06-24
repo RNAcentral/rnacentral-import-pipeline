@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Copyright [2009-2018] EMBL-European Bioinformatics Institute
+Copyright [2009-2021] EMBL-European Bioinformatics Institute
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -16,7 +16,7 @@ limitations under the License.
 import json
 import logging
 
-from rnacentral_pipeline.db import connection
+import psycopg2
 
 LOGGER = logging.getLogger(__name__)
 
@@ -61,7 +61,7 @@ def run(db_url):
     needed to update all the tables and then run the release update logic.
     """
 
-    with connection(db_url) as conn:
+    with psycopg2.connect(db_url) as conn:
         cursor = conn.cursor()
         cursor.execute("SET work_mem TO '256MB'")
         cursor.execute("SELECT rnc_update.update_rnc_accessions()")
@@ -83,7 +83,7 @@ def check(limit_file, db_url, default_allowed_change=0.30):
     limits = json.load(limit_file)
     cur_counts = {}
     new_counts = {}
-    with connection(db_url) as conn:
+    with psycopg2.connect(db_url) as conn:
         cursor = conn.cursor()
         cursor.execute(COUNT_QUERY)
         for (descr, raw_count) in cursor.fetchall():
