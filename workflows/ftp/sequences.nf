@@ -41,22 +41,50 @@ process inactive {
 }
 
 process species_specific {
-  publishDir "${params.ftp_export.publish}/sequences/", mode: 'copy'
   when: params.ftp_export.sequences.species.run
 
   input:
   path(query)
 
   output:
-  path('rnacentral_species_specific_ids.fasta.gz')
+  path('rnacentral_species_specific_ids.fasta'), emit: sequences
 
   """
   set -euo pipefail
 
   export PYTHONIOENCODING=utf8
-  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" | json2fasta.py - - | gzip > rnacentral_species_specific_ids.fasta.gz
+  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" | json2fasta.py - rnacentral_species_specific_ids.fasta 
   """
 }
+
+process create_ssi {
+  publishDir "${params.ftp_export.publish}/sequences/.internal/", mode: 'copy'
+
+  input:
+  path('rnacentral_species_specific_ids.fasta')
+
+  output:
+  path('rnacentral_species_specific_ids.fasta.ssi')
+
+  """
+  esl-sfetch --index rnacentral_species_specific_ids.fasta
+  """
+}
+
+proecss compress_species_fasta {
+  publishDir "${params.ftp_export.publish}/sequences/", mode: 'copy'
+
+  input:
+  path('rnacentral_species_specific_ids.fasta')
+
+  output:
+  path('rnacentral_species_specific_ids.fasta.gz')
+
+  """
+  gzip -k rnacentral_species_specific_ids.fasta
+  """
+}
+
 
 process find_dbs {
   input:
@@ -90,51 +118,15 @@ process database_specific {
   """
 }
 
-process extract_nhmmer_valid {
-  publishDir "${params.ftp_export.publish}/sequences/.internal/", mode: 'copy'
-  when: params.ftp_export.sequences.nhmmer.run
-
-  input:
-  path(rna)
-
-  output:
-  path('rnacentral_nhmmer.fasta')
-
-  """
-  set -euo pipefail
-
-  export PYTHONIOENCODING=utf8
-  zcat $rna | rnac ftp-export sequences valid-nhmmer - rnacentral_nhmmer.fasta
-  """
-}
-
-process extract_nhmmer_invalid {
-  publishDir "${params.ftp_export.publish}/sequences/.internal/", mode: 'copy'
-  when: params.ftp_export.sequences.nhmmer.run
-
-  input:
-  path(rna)
-
-  output:
-  path('rnacentral_nhmmer_excluded.fasta')
-
-  """
-  set -euo pipefail
-
-  export PYTHONIOENCODING=utf8
-  zcat $rna | rnac ftp-export sequences invalid-nhmmer - rnacentral_nhmmer_excluded.fasta
-  """
-}
-
 workflow fasta_export {
   Channel.fromPath('files/ftp-export/sequences/active.sql') | set { active_sql }
   Channel.fromPath('files/ftp-export/sequences/readme.txt') | set { readme }
   active(active_sql, readme)
 
-  active.out.active | (extract_nhmmer_valid & extract_nhmmer_invalid)
-
   Channel.fromPath('files/ftp-export/sequences/inactive.sql') | inactive
-  Channel.fromPath('files/ftp-export/sequences/species-specific.sql') | species_specific
+  Channel.fromPath('files/ftp-export/sequences/species-specific.sql') \
+  | species_specific \
+  | (compress_species_fasta & create_ssi)
 
   Channel.fromPath('files/ftp-export/sequences/databases.sql') \
   | find_dbs \
