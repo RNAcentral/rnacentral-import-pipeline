@@ -29,7 +29,7 @@ process find_urls {
   path('species.txt')
 
   """
-  rnac ensembl urls-for $division ${params.databases.ensembl[division].ftp_host} > species.txt
+  rnac ensembl urls-for $division ${params.databases.ensembl[division].ftp_host} species.txt
   """
 }
 
