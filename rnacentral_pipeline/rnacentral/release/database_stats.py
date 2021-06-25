@@ -190,7 +190,6 @@ def length_counts(conn, db_id: int) -> str:
             .groupby(rna.len)
             .orderby(rna.len, order=Order.asc)
         )
-        print(query)
         cur.execute(str(query))
         data = [dict(row) for row in cur]
         return json.dumps(data)
