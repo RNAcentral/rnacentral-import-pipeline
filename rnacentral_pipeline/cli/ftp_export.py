@@ -22,6 +22,7 @@ from rnacentral_pipeline.rnacentral.ftp_export import release_note
 from rnacentral_pipeline.rnacentral.ftp_export.coordinates import bed
 from rnacentral_pipeline.rnacentral.ftp_export.coordinates import gff3
 from rnacentral_pipeline.rnacentral.ftp_export import ensembl as ensembl_json
+from rnacentral_pipeline.rnacentral.ftp_export import gpi
 
 
 @click.group("ftp-export")
@@ -83,7 +84,7 @@ def sequences_invalid_nhmmer(active, output):
 @click.option(
     "--schema",
     default="files/ftp-export/ensembl/schema.json",
-    type=click.Path("r"),
+    type=click.Path(),
 )
 def export_ensembl(raw, output, schema=None):
     """
@@ -99,6 +100,13 @@ def export_ensembl(raw, output, schema=None):
 @click.argument("output", default="-", type=click.File("w"))
 def export_go_temrs(filename, output):
     go_terms.export(filename, output)
+
+
+@cli.command('gpi')
+@click.option("--db-url", envvar="PGDATABASE")
+@click.argument("output", default="-", type=click.File("w"))
+def export_gpi(output, db_url):
+    gpi.export(db_url, output)
 
 
 @cli.group("coordinates")
