@@ -36,12 +36,20 @@ def select_easel(entry):
     return re.match(EASEL_PATTERN, entry["sequence"])
 
 
+def parse(handle):
+    for line in handle:
+        try:
+            yield json.loads(line)
+        except:
+            yield json.loads(line.replace("\\\\", "\\"))
+
+
 def sequences(handle, only_valid_easel=False):
     """
     Parse each line and create a generator of SeqRecords to write.
     """
 
-    data = map(json.loads, handle)
+    data = parse(handle)
     if only_valid_easel:
         data = filter(select_easel, data)
     return map(as_record, data)
@@ -49,7 +57,7 @@ def sequences(handle, only_valid_easel=False):
 
 @click.command()
 @click.option("--only-valid-easel", is_flag=True, default=False)
-@click.argument("tsv_file", type=click.File("rb"))
+@click.argument("tsv_file", type=click.File("r"))
 @click.argument("output", default="-", type=click.File("w"))
 def cli(tsv_file, output=None, only_valid_easel=False):
     """
