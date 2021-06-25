@@ -22,7 +22,7 @@ INSERT INTO pipeline_tracking_genome_mapping (
     assembly_id,
     last_run
 ) (
-SELECT
+SELECT DISTINCT ON (urs_taxid)
     load.urs_taxid,
     load.assembly_id,
     load.last_run
