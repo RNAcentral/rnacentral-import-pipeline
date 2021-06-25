@@ -19,11 +19,11 @@ process find_db_to_export {
 }
 
 process query_database {
-  tag { name }
+  tag { "$name" }
   maxForks params.sequence_search.max_forks
 
   input:
-  tuple val(name), val(partition) path(query)
+  tuple val(name), path(query), val(partition) 
 
   output:
   tuple val(name), path('raw.json')
@@ -31,7 +31,7 @@ process query_database {
   """
   psql \
     -v ON_ERROR_STOP=1 \
-    -v partition=$partition \
+    $partition \
     -f "$query" \
     "$PGDATABASE" > raw.json
   """
@@ -98,8 +98,7 @@ workflow sequence_search_export {
   | map { fn -> [file(fn).baseName, fn, ''] } \
   | set { simple_queries }
 
-  db_query \
-  | find_db_to_export \
+  find_db_to_export(db_query) \
   | splitCsv \
   | combine(db_specific_query) \
   | map { db, query -> [db, query, "-v db='%${db}%'"] } \
