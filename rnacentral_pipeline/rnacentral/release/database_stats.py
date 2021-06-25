@@ -45,7 +45,7 @@ class DatabaseStats:
     num_sequences = attr.ib(validator=is_a(int))
     num_organisms = attr.ib(validator=is_a(int))
     lineage = attr.ib(validator=is_a(str))
-    length_counts: ty.Dict[int, int] = attr.ib(validator=is_a(dict))
+    length_counts = attr.ib(validator=is_a(str))
 
 
 def json_lineage_tree(xrefs) -> str:
@@ -148,9 +148,9 @@ def lineage(conn, db_id: int):
 def lengths(conn, db_id: int):
     rna = Table("rna")
     xref = Table(f"xref_p{db_id}_not_deleted")
-    min_length = an.Min(rna.length)
-    max_length = an.Max(rna.length)
-    avg_length = an.Avg(rna.length)
+    min_length = an.Min(rna.len).as_('min_length')
+    max_length = an.Max(rna.len).as_('max_length')
+    avg_length = an.Avg(rna.len).as_('avg_length')
     with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cursor:
         query = (
             Query.from_(rna)
@@ -196,14 +196,15 @@ def length_counts(conn, db_id: int) -> str:
 
 
 def update(conn, descr: str, db_id: int) -> DatabaseStats:
+    LOGGER.info("Updating data for %s", descr)
     length_info = lengths(conn, db_id)
     return DatabaseStats(
         name=descr,
         min_length=length_info["min_length"],
         max_length=length_info["max_length"],
-        avg_length=length_info["avg_length"],
-        num_sequences=sequence_count(conn, db_id),
-        num_organisms=organism_count(conn, db_id),
+        avg_length=float(length_info["avg_length"]),
+        num_sequences=count_sequences(conn, db_id),
+        num_organisms=count_organisms(conn, db_id),
         lineage=lineage(conn, db_id),
         length_counts=length_counts(conn, db_id),
     )
@@ -222,7 +223,8 @@ def has_stats_for(conn, name: str) -> bool:
 
 
 def insert(conn, stats: DatabaseStats):
-    dbs = Table("rnc_databases")
+    LOGGER.info("Storing %s", stats)
+    dbs = Table("rnc_database")
     json_stats = Table("rnc_database_json_stats")
     with conn.cursor() as cur:
         fields = [
@@ -244,22 +246,27 @@ def insert(conn, stats: DatabaseStats):
             insert = Query.into(json_stats).insert(stats.name, "", "")
             cur.execute(str(insert))
 
-        update = (
-            Query.update(json_stats)
-            .set(
-                (json_stats.length_counts, stats.length_counts),
-                (json_stats.taxonomic_lineage, stats.lineage),
+        fields = [(json_stats.length_counts, stats.length_counts),
+                  (json_stats.taxonomic_lineage, stats.lineage)]
+        for (column, value) in fields:
+            update = (
+                Query.update(json_stats)
+                .set(column, value)
+                .where(json_stats.database == stats.name)
             )
-            .where(json_stats.database == stats.name)
-        )
-        cur.execute(str(update))
+            cur.execute(str(update))
 
 
 def update_stats(db_url: str):
     db = Table("rnc_database")
     with psycopg2.connect(db_url) as conn:
-        query = Query.from_(db).select(db.id, db.descr)
-        db_ids = list(conn.execute(str(query)))
+        query = Query.from_(db).select(db.id, db.descr).where(db.alive == 'Y')
+        with conn.cursor() as cur:
+            cur.execute(str(query))
+            db_ids = list(cur)
         for (db_id, descr) in db_ids:
+            if descr == "ENA":
+                LOGGER.info("Skipping %s", descr)
+                continue
             stats = update(conn, descr, db_id)
             insert(conn, stats)
