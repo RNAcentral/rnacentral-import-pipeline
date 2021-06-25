@@ -14,8 +14,8 @@ limitations under the License.
 """
 
 import csv
-import json
-import itertools as it
+
+from rnacentral_pipeline import psql
 
 
 def gene(result):
@@ -76,6 +76,6 @@ def generate_file(json_file, output):
     This will generate a TSV mapping file given the input TSV.
     """
 
-    entries = map(json.loads, json_file)
+    entries = psql.json_handler(json_file)
     data = map(as_entry, entries)
     csv.writer(output, delimiter="\t").writerows(data)
