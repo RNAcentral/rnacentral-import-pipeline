@@ -71,8 +71,14 @@ def generate_paths(
             gff_path = f"{base}/{release}/gff3/{name}/{organism_name}.gff3.gz"
             data_files = f"{base}/{release}/embl/{name}/{organism_name}.*.dat.gz"
 
-            size = ftp.size(gff_path)
-            if size is None:
+            try:
+                size = ftp.size(gff_path)
+                if size is None:
+                    LOGGER.warn("GFF file %s is empty, skip %s", gff_path, assembly)
+                    continue
+            except:
+                LOGGER.warn("Could not get data for %s, skipping %s", gff_path,
+                        assembly)
                 continue
 
             yield FtpInfo(
