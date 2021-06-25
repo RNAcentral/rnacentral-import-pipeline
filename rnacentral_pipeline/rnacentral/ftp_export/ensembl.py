@@ -13,6 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import re
 import json
 import operator as op
 
@@ -35,6 +36,8 @@ TRUSTED_DB = set(
         "tmrna website",
     ]
 )
+
+SEQUENCE_PATTERN = re.compile('^[ACGTYRWSKMDVHBNXFI]+$')
 
 
 def external_id(data):
@@ -79,7 +82,8 @@ def builder(data):
 
 
 def generate_file(raw, output, schema_file=None):
-    results = [builder(b) for b in psql.json_handler(raw)]
+    results = (builder(b) for b in psql.json_handler(raw))
+    results = [r for r in results if re.match(SEQUENCE_PATTERN, r['sequences'])]
 
     if schema_file:
         with open(schema_file, "r") as raw:
