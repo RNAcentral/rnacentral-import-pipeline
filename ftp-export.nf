@@ -87,6 +87,19 @@ process rfam_go_matches {
   """
 }
 
+process gpi {
+  memory params.ftp_export.gpi.memory
+  publishDir "${params.ftp_export.publish}/gpi/", mode: 'copy'
+
+  output:
+  path("rnacentral.gpi*")
+
+  """
+  rnac ftp-export gpi rnacentral.gpi
+  gzip -k rnacentral.gpi
+  """
+}
+
 workflow ftp_export {
 
   Channel.fromPath('files/ftp-export/md5/md5.sql') | set { md5_query }
@@ -100,6 +113,7 @@ workflow ftp_export {
   Channel.fromPath('files/ftp-export/rfam/readme.txt') | set { rfam_readme }
   rfam_annotations(rfam_annotation_query, rfam_readme)
 
+  gpi()
   id_mapping()
   export_coordinates()
   ensembl_export()

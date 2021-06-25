@@ -28,7 +28,7 @@ def cli():
 
 
 @cli.command("run")
-@click.option("--db_url", envvar="PGDATABASE")
+@click.option("--db-url", envvar="PGDATABASE")
 def run_release(db_url=None):
     """
     A command to run the release logic in the database.
@@ -37,7 +37,7 @@ def run_release(db_url=None):
 
 
 @cli.command("check")
-@click.option("--db_url", envvar="PGDATABASE")
+@click.option("--db-url", envvar="PGDATABASE")
 @click.argument("limit_file", type=click.File("r"))
 def check_release(limit_file, db_url=None):
     """
@@ -47,7 +47,7 @@ def check_release(limit_file, db_url=None):
 
 
 @cli.command('update-stats')
-@click.option("--db_url", envvar="PGDATABASE")
+@click.option("--db-url", envvar="PGDATABASE")
 def update_stats(db_url):
     """
     Update the stats in the database.
