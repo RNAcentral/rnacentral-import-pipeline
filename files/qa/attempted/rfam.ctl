@@ -29,7 +29,7 @@ INSERT INTO pipeline_tracking_qa_scan (
   source_version,
   last_run
 ) (
-select 
+select DISTINCT ON (urs)
   urs,
   model_source,
   source_version,
