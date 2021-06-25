@@ -27,7 +27,7 @@ process fetch_publications {
 }
 
 process lookup_publications {
-  memory 3.GB
+  memory 6.GB
   maxForks params.lookup_publications.maxForks
 
   input:
