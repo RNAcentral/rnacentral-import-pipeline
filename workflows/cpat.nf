@@ -14,18 +14,18 @@ process find_models {
 }
 
 process find_sequences {
-  tag { "$taxid" }
+  tag { "$model_name" }
 
   input:
-  tuple path(rdata), path(hexamer), val(taxid)
+  tuple val(model_name), path(rdata), path(hexamer), val(taxid)
 
   output:
-  tuple path(rdata), path(hexamer), path('sequences/*.fasta')
+  tuple val(model_name), path(rdata), path(hexamer), path('sequences/*.fasta')
 
   """
   psql -v ON_ERROR_STOP=1 -v "taxid=$taxid" -f "$query" "$PGDATABASE" > raw.json
   mkdir sequences
-  split --lines=${params.cpat.chunk_size} --additional-suffix='.fasta' --filter 'json2fasta - - >> \$FILE' raw.json sequences/$taxid-
+  split --lines=${params.cpat.chunk_size} --additional-suffix='.fasta' --filter 'json2fasta - - >> \$FILE' raw.json sequences/$model_name-
   """
 }
 
@@ -34,13 +34,13 @@ process cpat_scan {
   container 'rnacentral-import-pipeline/cpat'
 
   input:
-  tuple path(data), path(hexamer), path(sequences)
+  tuple val(model_name), path(data), path(hexamer), path(sequences)
 
   output:
-  path('output.tsv')
+  tuple val(model_name), path('output.ORF_prob.tsv')
 
   """
-  cpat.py -g "$sequences" -d "$data" -x "$hexamer" -o output.tsv
+  cpat.py -g "$sequences" -d "$data" -x "$hexamer" -o output
   """
 }
 
@@ -49,10 +49,10 @@ process parse_results {
   tuple path('scan-results.tsv'), path(cutoff_info)
 
   output:
-  path('results.csv')
+  tuple val(model_name), path('results.csv')
 
   """
-  rnac cpat parse $cutoff_info scan-results.tsv results.csv
+  rnac cpat parse $cutoff_info $model_name scan-results.tsv results.csv
   """
 }
 
@@ -62,12 +62,13 @@ process store_results {
   path(load)
 
   """
-  split-and-load $load 'data*.csv' ${params.import_data.chunk_size} cpat-load
+  split-and-load $load 'data*.csv' ${params.import_data.chunk_size} cpat-results
   """
 }
 
 workflow cpat {
   Channel.fromPath('files/cpat/load.ctl') | set { load_ctl }
+  Channel.fromPath('files/cpat/query.sql') | set { query }
 
   find_models()
 
@@ -83,12 +84,12 @@ workflow cpat {
 
   rdata \
   | join(hexamers) |
-  | map { model_name, rdata, hexamer -> 
-    [rdata, hexamer, params.cdat.taxids[model_name]]
+  | map { model_name, rdata, hexamer ->
+    [model_name, rdata, hexamer, params.cdat.taxids[model_name]]
   } \
   | combine(query) \
   | find_sequences \
-  | flatMap { rdata, hexamer, seqs ->
+  | flatMap { model_name, rdata, hexamer, seqs ->
       (seqs instanceof ArrayList) ? seqs.collect { [rdata, hexamer, it] } : [[rdata, hexamer, seqs]]
   } \
   | cpat_scan \
