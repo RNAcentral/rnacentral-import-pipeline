@@ -23,7 +23,7 @@ from rnacentral_pipeline.cpat.data import CpatCutoffs
 
 def cutoffs(directory: Path) -> CpatCutoffs:
     cutoffs = CpatCutoffs()
-    for filename in directory.glob("*_cutoff.txt"):
+    for filename in directory.glob("dat/*_cutoff.txt"):
         source = filename.name.split("_", 1)[0].lower()
         with open(filename, 'r') as raw:
             lines = raw.readlines()
@@ -32,6 +32,8 @@ def cutoffs(directory: Path) -> CpatCutoffs:
                 raise ValueError(f"Bad config format in {filename}")
             cutoff = float(lines[0].split(": ")[1])
             cutoffs.add_cutoff(source, cutoff)
+    if not cutoffs.cutoffs:
+        raise ValueError(f"Loaded no data from {directory}")
     return cutoffs
 
 

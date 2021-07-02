@@ -1,5 +1,5 @@
 LOAD CSV
-FROM ALL FILENAMES MATCHING ~<cdat-results.*csv$>
+FROM ALL FILENAMES MATCHING ~<cpat-results.*csv$>
 HAVING FIELDS (
   urs_taxid,
   fickett_score,
@@ -7,7 +7,7 @@ HAVING FIELDS (
   coding_probability,
   is_protein_coding
 )
-INTO {{PGDATABASE}}?load_cdat
+INTO {{PGDATABASE}}?load_cpat
 TARGET COLUMNS (
   urs_taxid,
   fickett_score,
@@ -57,3 +57,4 @@ $$,
 $$
 DROP TABLE load_cpat;
 $$
+;
