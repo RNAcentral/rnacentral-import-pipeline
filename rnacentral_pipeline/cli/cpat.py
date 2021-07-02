@@ -19,7 +19,7 @@ import pickle
 
 import click
 
-from rnacentral_pipeline import cpat
+from rnacentral_pipeline.cpat import parser
 
 
 @click.group("cpat")
@@ -35,16 +35,16 @@ def cli():
 @click.argument("model_name")
 @click.argument("results", type=click.Path())
 @click.argument("output", type=click.File('w'))
-def parse(cutoffs, model_name, result, output):
+def parse(cutoffs, model_name, results, output):
     cutoffs = pickle.load(cutoffs)
-    data = cpat.parser.parse(cutoffs, model_name, Path(result))
+    data = parser.parse(cutoffs, model_name, Path(results))
     writer = csv.writer(output)
-    writer.writerows(data)
+    writer.writerows(d.writeable() for d in data)
 
 
 @cli.command("generate-cutoffs")
 @click.argument("data-folder", type=click.Path())
 @click.argument("output", type=click.File('wb'))
 def generate_cutoffs(data_folder, output):
-    cutoffs = cpat.parser.cutoffs(Path(data_folder))
+    cutoffs = parser.cutoffs(Path(data_folder))
     pickle.dump(cutoffs, output)
