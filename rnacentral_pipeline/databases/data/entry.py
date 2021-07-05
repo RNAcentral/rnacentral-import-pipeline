@@ -30,7 +30,7 @@ from . import utils
 from .features import SequenceFeature
 from .references import IdReference, Reference
 from .secondary_structure import SecondaryStructure
-from .regions import Exon
+from .regions import Exon, SequenceRegion
 
 LOGGER = logging.getLogger(__name__)
 
@@ -64,7 +64,7 @@ class Entry:
         converter=lambda s: str(s.upper()),
     )
     sequence = attr.ib(validator=is_a(str), converter=str)
-    regions = attr.ib(validator=is_a(list))
+    regions: ty.List[SequenceRegion] = attr.ib(validator=is_a(list))
     rna_type = attr.ib(
         validator=utils.matches_pattern(utils.SO_PATTERN),
         converter=utils.as_so_term,
@@ -167,7 +167,7 @@ class Entry:
         empty string.
         """
         if self.feature_name != "ncRNA":
-            return None
+            return ''
         return utils.SO_INSDC_MAPPING[self.rna_type]
 
     @property

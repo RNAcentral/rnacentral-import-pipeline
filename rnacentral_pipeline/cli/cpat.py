@@ -13,13 +13,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import csv
 from pathlib import Path
 import pickle
 
 import click
 
 from rnacentral_pipeline.cpat import parser
+from rnacentral_pipeline.cpat.data import CpatWriter
+from rnacentral_pipeline.writers import build
 
 
 @click.group("cpat")
@@ -34,12 +35,12 @@ def cli():
 @click.argument("cutoffs", type=click.File('rb'))
 @click.argument("model_name")
 @click.argument("results", type=click.Path())
-@click.argument("output", type=click.File('w'))
+@click.argument("output", type=click.Path())
 def parse(cutoffs, model_name, results, output):
     cutoffs = pickle.load(cutoffs)
     data = parser.parse(cutoffs, model_name, Path(results))
-    writer = csv.writer(output)
-    writer.writerows(d.writeable() for d in data)
+    with build(CpatWriter, Path(output)) as wtr:
+        wtr.write(data)
 
 
 @cli.command("generate-cutoffs")
