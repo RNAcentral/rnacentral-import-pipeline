@@ -23,7 +23,7 @@ CREATE TABLE load_cpat_orfs (
   urs_taxid TEXT not null,
   start_index int not null,
   stop_index int not null,
-  strand strand not null
+  strand text not null
 );
 $$
 

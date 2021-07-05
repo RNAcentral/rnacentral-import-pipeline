@@ -73,7 +73,7 @@ process store_results {
 
   """
   split-and-load $result_ctl 'results*.csv' ${params.import_data.chunk_size} cpat-results
-  split-and-load $orfs_ctl 'orfs*.csv' ${params.import_data.chunk_size} cpat-orfs
+  split-and-load $orf_ctl 'orfs*.csv' ${params.import_data.chunk_size} cpat-orfs
   """
 }
 
@@ -81,7 +81,7 @@ workflow cpat {
   take: flag
   main:
     Channel.fromPath('files/cpat/results.ctl') | set { load_ctl }
-    Channel.fromPath('files/cpat/orfs.ctl') | set { load_ctl }
+    Channel.fromPath('files/cpat/orfs.ctl') | set { orf_ctl }
     Channel.fromPath('files/cpat/query.sql') | set { query }
 
     flag | find_models
