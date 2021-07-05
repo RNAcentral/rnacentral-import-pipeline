@@ -56,27 +56,32 @@ process parse_results {
   tuple val(model_name), path('scan-results.tsv'), path(cutoff_info)
 
   output:
-  path('results.csv')
+  path('results.csv'), emit: results
+  path('orfs.csv'), emit: orfs
 
   """
-  rnac cpat parse $cutoff_info $model_name scan-results.tsv results.csv
+  rnac cpat parse $cutoff_info $model_name scan-results.tsv .
   """
 }
 
 process store_results {
   input:
-  path('data*.csv')
-  path(load)
+  path('results*.csv')
+  path('orfs.*.csv')
+  path(result_ctl)
+  path(orf_ctl)
 
   """
-  split-and-load $load 'data*.csv' ${params.import_data.chunk_size} cpat-results
+  split-and-load $result_ctl 'results*.csv' ${params.import_data.chunk_size} cpat-results
+  split-and-load $orfs_ctl 'orfs*.csv' ${params.import_data.chunk_size} cpat-orfs
   """
 }
 
 workflow cpat {
   take: flag
   main:
-    Channel.fromPath('files/cpat/load.ctl') | set { load_ctl }
+    Channel.fromPath('files/cpat/results.ctl') | set { load_ctl }
+    Channel.fromPath('files/cpat/orfs.ctl') | set { load_ctl }
     Channel.fromPath('files/cpat/query.sql') | set { query }
 
     flag | find_models
@@ -99,11 +104,12 @@ workflow cpat {
     | flatMap { model_name, rdata, hexamer, seqs -> (seqs instanceof ArrayList) ? seqs.collect { [model_name, rdata, hexamer, it] } : [[model_name, rdata, hexamer, seqs]] } \
     | cpat_scan \
     | combine(find_models.out.cutoffs) \
-    | parse_results \
-    | collect \
-    | set { data }
+    | parse_results
 
-    store_results(data, load_ctl)
+    parse_results.out.results | collect | set { data }
+    parse_results.out.orfs | collect | set { orfs }
+
+    store_results(data, orfs, load_ctl, orf_ctl)
 }
 
 workflow {
