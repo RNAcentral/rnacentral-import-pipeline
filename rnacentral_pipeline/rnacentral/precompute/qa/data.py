@@ -61,12 +61,8 @@ class QaStatus:
         Check if this QA update indicates if there is any issue.
         """
 
-        return (
-            self.incomplete_sequence.has_issue
-            or self.possible_contamination.has_issue
-            or self.missing_rfam_match.has_issue
-            or self.from_repetitive_region.has_issue
-        )
+        fields = (getattr(self, f.name) for f in attr.fields(self.__class__))
+        return any(f.has_issue for f in fields)
 
     def messages(self) -> ty.List[str]:
         messages = []
