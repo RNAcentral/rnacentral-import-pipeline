@@ -77,13 +77,8 @@ class QaStatus:
         Create a writeable array for writing CSV files.
         """
 
-        return [
-            "%s_%i" % (upi, taxid),
-            upi,
-            str(taxid),
-            str(int(self.has_issue)),
-            self.incomplete_sequence.str_issue(),
-            self.possible_contamination.str_issue(),
-            self.missing_rfam_match.str_issue(),
-            json.dumps(self.messages()),
-        ]
+        fields = (getattr(self, f.name) for f in attr.fields(self.__class__))
+        data = ["%s_%i" % (upi, taxid), upi, str(taxid)]
+        data.extend(f.str_issues() for f in fields)
+        data.append(json.dumps(self.messages()))
+        return data
