@@ -53,18 +53,7 @@ class QaStatus:
     possible_contamination = attr.ib(validator=is_a(QaResult))
     missing_rfam_match = attr.ib(validator=is_a(QaResult))
     from_repetitive_region = attr.ib(validator=is_a(QaResult))
-
-    @classmethod
-    def from_results(cls, results: ty.List[QaResult]) -> "QaStatus":
-        fields = attr.fields_dict(cls)
-        data = {}
-        for result in results:
-            if result.name not in fields:
-                raise ValueError(f"Unknown QaResult {result}")
-            data[result.name] = result
-        if not data:
-            raise ValueError("Cannot build without QA results")
-        return cls(**data)
+    # possible_orf = attr.ib(validator=is_a())
 
     @property
     def has_issue(self) -> bool:

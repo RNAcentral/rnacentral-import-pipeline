@@ -32,7 +32,7 @@ FAMILIES_TO_CHECK = {
 }
 
 
-def validate(context: Context, rna_type: str, sequence: Sequence) -> QaResult:
+def validate(sequence: Sequence) -> QaResult:
     hits = sequence.rfam_hits
     if len(hits) != 1:
         return QaResult.ok("incomplete_sequence")

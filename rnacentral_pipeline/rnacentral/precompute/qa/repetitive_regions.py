@@ -18,7 +18,7 @@ from rnacentral_pipeline.rnacentral.precompute.data.sequence import Sequence
 from rnacentral_pipeline.rnacentral.precompute.qa.data import QaResult
 
 
-def validate(context: Context, rna_type: str, sequence: Sequence) -> QaResult:
+def validate(context: Context, sequence: Sequence) -> QaResult:
     repeats = context.repeats
     for coordinate in sequence.coordinates:
         if not repeats.has_assembly(coordinate.assembly_id):
