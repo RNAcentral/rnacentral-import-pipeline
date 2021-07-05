@@ -15,12 +15,21 @@ limitations under the License.
 
 from pathlib import Path
 
+import pytest
+
 from rnacentral_pipeline.cpat import parser
-from rnacentral_pipeline.cpat.data import CpatCutoffs, CpatResult
+from rnacentral_pipeline.cpat.data import CpatCutoffs, CpatResult, CpatOrf
+from rnacentral_pipeline.databases.data.regions import Strand
+
+
+@pytest.fixture(scope='module')
+def results():
+    cutoffs = parser.cutoffs(Path('data/cpat'))
+    return list(parser.parse(cutoffs, 'human', Path('data/cpat/results.ORF_prob.best.tsv')))
 
 
 def test_parses_cutoffs_correctly():
-    assert parser.cutoffs(Path('data/cpat/cutoffs')) == CpatCutoffs(
+    assert parser.cutoffs(Path('data/cpat')) == CpatCutoffs(
         cutoffs={
             'human': 0.364,
             'mouse': 0.44,
@@ -30,14 +39,31 @@ def test_parses_cutoffs_correctly():
     )
 
 
-def test_parses_results_correctly():
-    cutoffs = parser.cutoffs(Path('data/cpat/cutoffs'))
-    results = list(parser.parse(cutoffs, 'human', Path('data/cpat/results.ORF_prob.best.tsv')))
-    assert len(results) == 1
+def test_parses_results_all_results(results):
+    assert len(results) == 3
+
+
+def test_parses_no_orf_correctly(results):
     assert results[0] == CpatResult(
         urs_taxid='URS0000ABD879_9606',
         fickett_score=0.644,
         hexamer_score=0.214251553920902,
         coding_prob=0.344950141950276,
         protein_coding=False,
+        orf=None,
+    )
+
+
+def test_parses_results_with_orfs_correctly(results):
+    assert results[2] == CpatResult(
+        urs_taxid='URS0000DB95A9_7955',
+        fickett_score=1.0354,
+        hexamer_score=-0.269716025049968,
+        coding_prob=1.0,
+        protein_coding=True,
+        orf=CpatOrf(
+            start=0,
+            stop=3315,
+            strand=Strand.forward,
+        ),
     )
