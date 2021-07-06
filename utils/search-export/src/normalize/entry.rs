@@ -1,4 +1,5 @@
 use std::iter::FromIterator;
+use std::convert::TryInto;
 
 use serde::{
     Deserialize,
@@ -150,26 +151,20 @@ impl Normalized {
             urs_taxid,
             base.id
         );
-        let parts: Vec<&str> = urs_taxid.split("_").collect();
-        let urs = parts[0].to_owned();
-        let taxid = parts[1].parse::<usize>().unwrap();
         let parsed: urs_taxid::UrsTaxid = urs_taxid.parse()?;
         let references = ReferenceVec::from_iter(accessions.clone());
 
         Ok(Self {
             urs_taxid,
-            urs,
-            taxid,
+            urs: parsed.urs().to_string(),
+            taxid: parsed.taxid().try_into().unwrap(),
             short_urs: parsed.short(),
             deleted: String::from("N"),
-
             so_rna_type_tree: raw.so_tree,
-
             pre_summary,
             basic: base,
             qa_status: raw.qa_status,
             secondary: raw.r2dt,
-
             accessions: AccessionVec::from_iter(accessions.clone()),
             cross_references: accessions.into_iter().map(CrossReference::from).collect(),
             crs: CrsVec::from_iter(raw.crs.clone()),
