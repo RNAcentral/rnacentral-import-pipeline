@@ -134,7 +134,7 @@ class Sequence:
 
         if self.taxid is not None:
             return f"{self.upi}_{self.taxid}"
-        return self.sequence.upi
+        return self.upi
 
     @property
     def has_coordinates(self) -> bool:
