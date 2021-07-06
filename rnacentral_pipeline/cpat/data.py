@@ -15,6 +15,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import json
 import typing as ty
 
 import attr
@@ -29,21 +30,28 @@ class CpatOrf:
     start = attr.ib(validator=is_a(int))
     stop = attr.ib(validator=is_a(int))
     strand = attr.ib(validator=is_a(Strand))
+    metadata: ty.Dict[str, ty.Any] = attr.ib(validator=is_a(dict))
 
     @classmethod
-    def build(cls, raw) -> CpatOrf:
+    def build(cls, raw: ty.Dict[str, str], cutoff: float, coding_prob: float) -> CpatOrf:
         return cls(
             start=int(raw['ORF_start']) - 1,
             stop=int(raw['ORF_end']),
             strand=Strand.build(raw['ORF_strand']),
+            metadata={
+                'cufoff': cutoff,
+                'coding_probability': coding_prob
+            }
         )
 
     def writeable(self, urs_taxid: str) -> ty.List[str]:
+        urs, taxid = urs_taxid.split('_', 1)
         return [
-            urs_taxid,
+            urs,
+            taxid,
             str(self.start),
             str(self.stop),
-            self.strand.display_string(),
+            json.dumps(self.metadata),
         ]
 
 
@@ -62,7 +70,10 @@ class CpatResult:
         coding = cutoffs.is_protein_coding(model_name, prob)
         orf = None
         if coding:
-            orf = CpatOrf.build(raw)
+            orf = CpatOrf.build(raw, cutoffs.cutoff_for(model_name), prob)
+            if orf.strand is not Strand.forward:
+                orf = None
+                coding = False
         return cls(
             urs_taxid=raw['seq_ID'],
             fickett_score=float(raw['Fickett']),
@@ -91,6 +102,9 @@ class CpatCutoffs:
 
     def is_protein_coding(self, source: str, coding_prob: float) -> bool:
         return coding_prob >= self.cutoffs[source]
+
+    def cutoff_for(self, model_name: str) -> float:
+        return self.cutoffs[model_name]
 
 
 @attr.s()

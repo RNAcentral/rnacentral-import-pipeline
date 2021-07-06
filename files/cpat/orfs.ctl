@@ -1,17 +1,19 @@
 LOAD CSV
 FROM ALL FILENAMES MATCHING ~<cpat-orfs.*csv$>
 HAVING FIELDS (
-  urs_taxid,
+  urs,
+  taxid,
   start_index,
   stop_index,
-  strand
+  metadata
 )
 INTO {{PGDATABASE}}?load_cpat_orfs
 TARGET COLUMNS (
-  urs_taxid,
+  urs,
+  taxid,
   start_index,
   stop_index,
-  strand
+  metadata
 )
 
 BEFORE LOAD DO
@@ -20,36 +22,42 @@ DROP TABLE IF EXISTS load_cpat_orfs;
 $$,
 $$
 CREATE TABLE load_cpat_orfs (
-  urs_taxid TEXT not null,
+  urs TEXT NOT NULL,
+  taxid int not null,
   start_index int not null,
   stop_index int not null,
-  strand text not null
+  metadata jsonb not null,
 );
 $$
 
 AFTER LOAD DO
 $$
-INSERT INTO rnc_cpat_orfs (
-  urs_taxid,
-  start_index,
-  stop_index,
-  strand
+DELETE FROM rnc_sequence_features features
+USING load_cpat_orfs orfs
+WHERE
+  orfs.urs = features.urs
+  and orfs.feature_name = "cpat_orf"
+;
+$$,
+$$
+INSERT INTO rnc_sequence_features (
+  urs,
+  taxid,
+  'start',
+  'stop',
+  feature_name,
+  metadata,
 ) (
 SELECT
   urs_taxid,
   start_index,
   stop_index,
-  strand
+  "cpat_orf",
+  metadata
 from load_cpat_orfs
-) ON CONFLICT (urs_taxid) DO UPDATE
-SET
-  start_index = EXCLUDED.start_index,
-  stop_index = EXCLUDED.stop_index,
-  strand = EXCLUDED.strand
-;
+);
 $$,
 $$
 DROP TABLE load_cpat_orfs;
 $$
 ;
-
