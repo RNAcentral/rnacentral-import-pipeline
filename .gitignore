@@ -96,5 +96,6 @@ bin/ftp-export
 bin/kv
 bin/precompute
 bin/search-export
+bin/json2dfasta
 stubs
 .envrc
