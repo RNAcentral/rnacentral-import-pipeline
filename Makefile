@@ -20,6 +20,7 @@ rust:
 	cp target/release/precompute bin
 	cp target/release/search-export bin
 	cp target/release/ftp-export bin
+	cp target/release/json2dfasta bin
 
 docker: Dockerfile requirements.txt .dockerignore
 	docker build -t "$(docker)" .
