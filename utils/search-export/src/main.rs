@@ -17,6 +17,7 @@ enum Groupable {
     QaStatus,
     R2dtHits,
     RfamHits,
+    Orfs,
 }
 
 impl FromStr for Groupable {
@@ -35,6 +36,7 @@ impl FromStr for Groupable {
             "r2dt_hits" => Ok(Self::R2dtHits),
             "rfam-hits" => Ok(Self::RfamHits),
             "rfam_hits" => Ok(Self::RfamHits),
+            "orfs" => Ok(Self::Orfs),
             unknown => Err(format!("Unknown name {}", unknown)),
         }
     }
@@ -93,6 +95,9 @@ enum Subcommand {
 
         #[structopt(parse(from_os_str))]
         rfam_hits: PathBuf,
+
+        #[structopt(parse(from_os_str))]
+        orfs: PathBuf,
 
         #[structopt(parse(from_os_str))]
         /// Filename of the SO term tree metadata.
@@ -161,6 +166,7 @@ fn main() -> Result<()> {
                 Groupable::QaStatus => normalize::qa_status::group(&path, max_count, &output)?,
                 Groupable::R2dtHits => normalize::r2dt::group(&path, max_count, &output)?,
                 Groupable::RfamHits => normalize::rfam_hit::group(&path, max_count, &output)?,
+                Groupable::Orfs => normalize::orf::group(&path, max_count, &output)?,
             },
         Subcommand::Merge {
             base,
@@ -173,6 +179,7 @@ fn main() -> Result<()> {
             qa_status,
             r2dt_hits,
             rfam_hits,
+            orfs,
             so_term_tree,
             output,
         } => normalize::write_merge(
@@ -186,6 +193,7 @@ fn main() -> Result<()> {
             &qa_status,
             &r2dt_hits,
             &rfam_hits,
+            &orfs,
             &so_term_tree,
             &output,
         )?,

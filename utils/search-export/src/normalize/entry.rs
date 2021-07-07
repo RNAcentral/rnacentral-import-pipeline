@@ -1,5 +1,4 @@
-use std::iter::FromIterator;
-use std::convert::TryInto;
+use std::{convert::TryInto, iter::FromIterator, num::TryFromIntError};
 
 use serde::{
     Deserialize,
@@ -32,6 +31,10 @@ use crate::normalize::{
     go_annotation::GoAnnotation,
     interacting_protein::InteractingProtein,
     interacting_rna::InteractingRna,
+    orf::{
+        Orf,
+        OrfVec,
+    },
     precompute::{
         Precompute,
         PrecomputeSummary,
@@ -52,6 +55,9 @@ pub enum NormalizationError {
 
     #[error("Could not parse {0}")]
     UrsTaxidParsingError(#[from] urs_taxid::Error),
+
+    #[error("Could not convert {0} to urs number")]
+    UrsNumberError(#[from] TryFromIntError),
 }
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -67,6 +73,7 @@ pub struct Raw {
     pub qa_status: QaStatus,
     pub r2dt: Option<R2dt>,
     pub rfam_hits: Vec<RfamHit>,
+    pub orfs: Vec<Orf>,
     pub so_tree: so_tree::SoTree,
 }
 
@@ -77,8 +84,18 @@ pub struct Normalized {
     urs_taxid: String,
     short_urs: String,
     deleted: String,
-
+    qa_status: QaStatus,
+    secondary: Option<R2dt>,
+    cross_references: Vec<CrossReference>,
+    crs: CrsVec,
+    overlaps: FeedbackVec,
+    go_annotations: Vec<GoAnnotation>,
+    interacting_proteins: Vec<InteractingProtein>,
+    interacting_rnas: Vec<InteractingRna>,
     so_rna_type_tree: so_tree::SoTree,
+
+    #[serde(flatten)]
+    orfs: OrfVec,
 
     #[serde(flatten)]
     pre_summary: PrecomputeSummary,
@@ -86,28 +103,17 @@ pub struct Normalized {
     #[serde(flatten)]
     basic: Basic,
 
-    // #[serde(flatten)]
-    // dates: Dates,
-    qa_status: QaStatus,
-
-    secondary: Option<R2dt>,
-
     #[serde(flatten)]
     accessions: AccessionVec,
-    cross_references: Vec<CrossReference>,
-    crs: CrsVec,
-    overlaps: FeedbackVec,
-    go_annotations: Vec<GoAnnotation>,
-
-    interacting_proteins: Vec<InteractingProtein>,
-
-    interacting_rnas: Vec<InteractingRna>,
 
     #[serde(flatten)]
     references: ReferenceVec,
 
     #[serde(flatten)]
     rfam_hits: RfamHitVec,
+
+    // #[serde(flatten)]
+    // dates: Dates,
 }
 
 impl Raw {
@@ -157,7 +163,7 @@ impl Normalized {
         Ok(Self {
             urs_taxid,
             urs: parsed.urs().to_string(),
-            taxid: parsed.taxid().try_into().unwrap(),
+            taxid: parsed.taxid().try_into()?,
             short_urs: parsed.short(),
             deleted: String::from("N"),
             so_rna_type_tree: raw.so_tree,
@@ -167,13 +173,14 @@ impl Normalized {
             secondary: raw.r2dt,
             accessions: AccessionVec::from_iter(accessions.clone()),
             cross_references: accessions.into_iter().map(CrossReference::from).collect(),
-            crs: CrsVec::from_iter(raw.crs.clone()),
-            overlaps: FeedbackVec::from_iter(raw.feedback.clone()),
-            go_annotations: raw.go_annotations.clone(),
+            crs: raw.crs.into_iter().collect(),
+            overlaps: raw.feedback.into_iter().collect(),
+            go_annotations: raw.go_annotations,
             interacting_proteins: raw.interacting_proteins,
             interacting_rnas: raw.interacting_rnas,
             references,
-            rfam_hits: RfamHitVec::from_iter(raw.rfam_hits.clone()),
+            rfam_hits: raw.rfam_hits.into_iter().collect(),
+            orfs: raw.orfs.into_iter().collect(),
         })
     }
 }
