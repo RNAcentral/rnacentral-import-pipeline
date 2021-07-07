@@ -26,7 +26,7 @@ CREATE TABLE load_cpat_orfs (
   taxid int not null,
   start_index int not null,
   stop_index int not null,
-  metadata jsonb not null,
+  metadata jsonb not null
 );
 $$
 
@@ -35,24 +35,26 @@ $$
 DELETE FROM rnc_sequence_features features
 USING load_cpat_orfs orfs
 WHERE
-  orfs.urs = features.urs
-  and orfs.feature_name = "cpat_orf"
+  orfs.urs = features.upi
+  and orfs.taxid = features.taxid
+  and features.feature_name = 'cpat_orf'
 ;
 $$,
 $$
 INSERT INTO rnc_sequence_features (
-  urs,
+  upi,
   taxid,
-  'start',
-  'stop',
+  "start",
+  "stop",
   feature_name,
-  metadata,
+  metadata
 ) (
 SELECT
-  urs_taxid,
+  urs,
+  taxid,
   start_index,
   stop_index,
-  "cpat_orf",
+  'cpat_orf',
   metadata
 from load_cpat_orfs
 );
