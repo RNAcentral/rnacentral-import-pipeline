@@ -116,21 +116,33 @@ impl From<RawAccession> for CrossReference {
     }
 }
 
+fn insert(current: &mut HashSet<String>, raw: Option<String>) {
+    match raw {
+        None => (),
+        Some(s) => match s.is_empty() {
+            false => {
+                current.insert(s);
+            },
+            true => (),
+        },
+    }
+}
+
 impl FromIterator<RawAccession> for AccessionVec {
     fn from_iter<I: IntoIterator<Item = RawAccession>>(iter: I) -> Self {
         let mut a = AccessionVec::default();
 
         for i in iter {
-            a.species.extend(i.species.into_iter().filter(|s| !s.is_empty()));
-            a.tax_strings.extend(i.tax_string.into_iter().filter(|t| !t.is_empty()));
-            a.organelles.extend(i.organelle.clone().filter(|t| !t.is_empty()));
-            a.functions.extend(i.function.into_iter().filter(|t| !t.is_empty()));
-            a.genes.extend(i.gene.into_iter().filter(|t| !t.is_empty()));
-            a.common_name.extend(i.common_name.into_iter().filter(|t| !t.is_empty()));
-            a.notes.extend(i.notes.into_iter().filter(|t| !t.is_empty()));
-            a.locus_tags.extend(i.locus_tag.into_iter().filter(|t| !t.is_empty()));
-            a.standard_names.extend(i.standard_name.into_iter().filter(|t| !t.is_empty()));
-            a.products.extend(i.product.into_iter().filter(|t| !t.is_empty()));
+            insert(&mut a.species, i.species);
+            insert(&mut a.tax_strings, i.tax_string);
+            insert(&mut a.functions, i.function);
+            insert(&mut a.organelles, i.organelle.map(|s| s.to_lowercase()));
+            insert(&mut a.genes, i.gene);
+            insert(&mut a.common_name, i.common_name.map(|s| s.to_lowercase()));
+            insert(&mut a.notes, i.notes);
+            insert(&mut a.locus_tags, i.locus_tag);
+            insert(&mut a.standard_names, i.standard_name);
+            insert(&mut a.products, i.product);
 
             for synonyms in i.gene_synonyms.into_iter() {
                 if synonyms.contains(";") {
@@ -154,17 +166,20 @@ impl FromIterator<RawAccession> for ReferenceVec {
         let mut value = ReferenceVec::default();
 
         for i in iter {
-            if i.authors.is_some() {
-                let authors = i.authors.unwrap();
-                let authors = authors.split(", ").filter(|a| !a.is_empty()).map(|s| s.to_string());
-                value.authors.extend(authors);
+            match i.authors {
+                None => (),
+                Some(authors) => {
+                    let authors =
+                        authors.split(", ").filter(|a| !a.is_empty()).map(|s| s.to_string());
+                    value.authors.extend(authors);
+                },
             }
 
-            value.journals.extend(i.journal.into_iter());
-            value.pub_titles.extend(i.pub_title.into_iter().filter(|t| !t.is_empty()));
+            insert(&mut value.journals, i.journal);
+            insert(&mut value.pub_titles, i.pub_title);
+            insert(&mut value.pubmed_ids, i.pubmed_id);
+            insert(&mut value.dois, i.doi);
             value.pub_ids.extend(i.pub_id.into_iter());
-            value.pubmed_ids.extend(i.pubmed_id.into_iter().filter(|t| !t.is_empty()));
-            value.dois.extend(i.doi.into_iter().filter(|t| !t.is_empty()));
         }
 
         value

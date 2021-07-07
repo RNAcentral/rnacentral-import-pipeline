@@ -20,6 +20,7 @@ pub mod feedback;
 pub mod go_annotation;
 pub mod interacting_protein;
 pub mod interacting_rna;
+pub mod orf;
 pub mod precompute;
 pub mod qa_status;
 pub mod r2dt;
@@ -39,6 +40,7 @@ pub fn write_merge(
     qa_status_file: &Path,
     r2dt_hits_file: &Path,
     rfam_hits_file: &Path,
+    orf_file: &Path,
     so_term_tree_file: &Path,
     output_file: &Path,
 ) -> Result<()> {
@@ -86,6 +88,10 @@ pub fn write_merge(
     let rfam_hits = rfam_hits.group_by(|i: &rfam_hit::RfamHit| i.id);
     let rfam_hits = rfam_hits.into_iter().assume_sorted_by_key();
 
+    let orfs = JsonlIterator::from_path(orf_file)?;
+    let orfs = orfs.group_by(|i: &orf::Orf| i.id);
+    let orfs = orfs.into_iter().assume_sorted_by_key();
+
     let merged = base
         .join(precompute)
         .join(qa_status)
@@ -95,21 +101,25 @@ pub fn write_merge(
         .left_join(interacting_proteins)
         .left_join(interacting_rnas)
         .left_join(r2dt_hits)
-        .left_join(rfam_hits);
+        .left_join(rfam_hits)
+        .left_join(orfs);
 
     for (id, entry) in merged {
         let (
             (
                 (
                     (
-                        (((((basic, precompute), qa_status), crs), feedback), go_annotations),
-                        interacting_proteins,
+                        (
+                            (((((basic, precompute), qa_status), crs), feedback), go_annotations),
+                            interacting_proteins,
+                        ),
+                        interacting_rnas,
                     ),
-                    interacting_rnas,
+                    r2dt_hits,
                 ),
-                r2dt_hits,
+                rfam_hits,
             ),
-            rfam_hits,
+            orfs,
         ) = entry;
 
         let pre_so_type = precompute.so_rna_type();
@@ -138,6 +148,7 @@ pub fn write_merge(
                 .collect(),
             r2dt: r2dt_hits,
             rfam_hits: rfam_hits.into_iter().map(|g| g.into_iter()).flatten().collect(),
+            orfs: orfs.into_iter().map(|g| g.into_iter()).flatten().collect(),
             so_tree: so_rna_type_tree,
         };
 
