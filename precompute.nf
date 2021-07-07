@@ -11,6 +11,7 @@ include { query as rfam_query} from './workflows/precompute/utils'
 include { query as r2dt_query} from './workflows/precompute/utils'
 include { query as prev_query} from './workflows/precompute/utils'
 include { query as basic_query} from './workflows/precompute/utils'
+include { query as orf_query} from './workflows/precompute/utils'
 
 process build_precompute_context {
   input:
@@ -37,12 +38,13 @@ process build_metadata {
   path(rfam_hits)
   path(r2dt_hits)
   path(prev)
+  path(orf)
 
   output:
   path("metadata.json")
 
   """
-  precompute metadata merge $basic $coordinates $rfam_hits $r2dt_hits $prev metadata.json
+  precompute metadata merge $basic $coordinates $rfam_hits $r2dt_hits $prev $orf metadata.json
   """
 }
 
@@ -148,6 +150,7 @@ workflow precompute {
     Channel.fromPath('files/precompute/queries/rfam-hits.sql') | set { rfam_sql }
     Channel.fromPath('files/precompute/queries/r2dt-hits.sql') | set { r2dt_sql }
     Channel.fromPath('files/precompute/queries/previous.sql') | set { prev_sql }
+    Channel.fromPath('files/precompute/queries/orf.sql') | set { orf_sql }
 
     // repeats | build_precompute_context | set { context }
     Channel.of(params.precompute.method) | build_urs_table | set { urs_counts }
@@ -159,6 +162,7 @@ workflow precompute {
       rfam_query(urs_counts, rfam_sql),
       r2dt_query(urs_counts, r2dt_sql),
       prev_query(urs_counts, prev_sql),
+      orf_query(urs_counts, orf_sql),
     ) \
     | set { metadata }
 
