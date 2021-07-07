@@ -13,6 +13,7 @@ pub mod releases;
 enum Groupable {
     Basic,
     Coordinates,
+    Orfs,
     Previous,
     R2dtHits,
     RfamHits,
@@ -25,6 +26,7 @@ impl FromStr for Groupable {
         match raw {
             "basic" => Ok(Self::Basic),
             "coordinates" => Ok(Self::Coordinates),
+            "orfs" => Ok(Self::Orfs),
             "previous" => Ok(Self::Previous),
             "r2dt-hits" => Ok(Self::R2dtHits),
             "r2dt_hits" => Ok(Self::R2dtHits),
@@ -61,6 +63,10 @@ enum MetadataCommand {
         #[structopt(parse(from_os_str))]
         /// Filename of the raw previous file
         previous: PathBuf,
+
+        #[structopt(parse(from_os_str))]
+        /// Filename of all orfs
+        orfs: PathBuf,
 
         #[structopt(parse(from_os_str))]
         /// Filename to write the results to, '-' means stdout
@@ -194,6 +200,7 @@ fn main() -> anyhow::Result<()> {
                 rfam_hits,
                 r2dt_hits,
                 previous,
+                orfs,
                 output,
             } => {
                 metadata::write_merge(
@@ -202,6 +209,7 @@ fn main() -> anyhow::Result<()> {
                     &rfam_hits,
                     &r2dt_hits,
                     &previous,
+                    &orfs,
                     &output,
                 )?;
             },
@@ -213,6 +221,7 @@ fn main() -> anyhow::Result<()> {
             } => match data_type {
                 Groupable::Basic => metadata::basic::group(&path, max_count, &output)?,
                 Groupable::Coordinates => metadata::coordinate::group(&path, max_count, &output)?,
+                Groupable::Orfs => metadata::orf::group(&path, max_count, &output)?,
                 Groupable::Previous => metadata::previous::group(&path, max_count, &output)?,
                 Groupable::R2dtHits => metadata::r2dt_hit::group(&path, max_count, &output)?,
                 Groupable::RfamHits => metadata::rfam_hit::group(&path, max_count, &output)?,

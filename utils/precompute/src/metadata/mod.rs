@@ -1,6 +1,7 @@
 pub mod basic;
 pub mod coordinate;
 pub mod merged;
+pub mod orf;
 pub mod previous;
 pub mod r2dt_hit;
 pub mod rfam_hit;
@@ -36,6 +37,7 @@ pub fn write_merge(
     rfam_hits_file: &Path,
     r2dt_hits_file: &Path,
     previous_file: &Path,
+    orf_file: &Path,
     output: &Path,
 ) -> Result<()> {
     let mut basic = JsonlIterator::from_path(basic_file)?;
@@ -43,6 +45,7 @@ pub fn write_merge(
     let mut rfam_hits = JsonlIterator::from_path(rfam_hits_file)?;
     let mut r2dt_hits = JsonlIterator::from_path(r2dt_hits_file)?;
     let mut previous = JsonlIterator::from_path(previous_file)?;
+    let mut orfs = JsonlIterator::from_path(orf_file)?;
 
     let mut output = rnc_utils::buf_writer(output)?;
     loop {
@@ -52,8 +55,9 @@ pub fn write_merge(
             rfam_hits.next(),
             r2dt_hits.next(),
             previous.next(),
+            orfs.next(),
         ) {
-            (None, None, None, None, None) => break,
+            (None, None, None, None, None, None) => break,
             (
                 Some(Required {
                     id: id1,
@@ -75,14 +79,18 @@ pub fn write_merge(
                     id: id5,
                     data: previous,
                 }),
+                Some(Multiple {
+                    id: id6,
+                    data: orfs,
+                }),
             ) => {
                 assert!(
-                    id1 == id2 && id1 == id3 && id1 == id4 && id1 == id5,
+                    id1 == id2 && id1 == id3 && id1 == id4 && id1 == id5 && id1 == id6,
                     "The data ids are out of sync at {}",
                     id1
                 );
 
-                let merged = Metadata::new(basic, coords, rfam_hits, r2dt_hit, previous)?;
+                let merged = Metadata::new(basic, coords, rfam_hits, r2dt_hit, previous, orfs)?;
                 serde_json::to_writer(&mut output, &merged)?;
                 writeln!(&mut output)?;
             },
