@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 # -*- coding: utf-8 -*-
 
 """
@@ -17,11 +19,13 @@ import typing as ty
 
 import attr
 from attr.validators import instance_of as is_a
+from attr.validators import optional
 
 from rnacentral_pipeline.rnacentral.precompute.data.accession import Accession
 from rnacentral_pipeline.rnacentral.precompute.data.coordinate import Coordinate
 from rnacentral_pipeline.rnacentral.precompute.data.r2dt import R2dtHit
 from rnacentral_pipeline.rnacentral.precompute.data.rfam import RfamHit
+from rnacentral_pipeline.rnacentral.precompute.data.orf import OrfInfo
 
 
 def partioned_accessions(so_tree, all_accessions):
@@ -85,9 +89,10 @@ class Sequence:
     coordinates: ty.List[Coordinate] = attr.ib(validator=is_a(list))
     last_release = attr.ib(validator=is_a(int))
     r2dt_hits: ty.List[R2dtHit] = attr.ib(validator=is_a(list))
+    orf_info = attr.ib(validator=optional(is_a(OrfInfo)))
 
     @classmethod
-    def build(cls, so_tree, data) -> "Sequence":
+    def build(cls, so_tree, data) -> Sequence:
         """
         Given a dictonary of result from the precompute query this will build a
         SpeciesSequence.
@@ -95,10 +100,16 @@ class Sequence:
 
         active, inactive = partioned_accessions(so_tree, data["accessions"])
         active = fix_hgnc_data(active)
-        coords = [Coordinate.build(c) for c in data["coordinates"] if c["assembly_id"]]
+        coords = [Coordinate.build(c)
+                  for c in data["coordinates"] if c["assembly_id"]]
+
         previous = {}
         if data["previous"] is not None:
             previous = data["previous"]
+
+        orf_info = None
+        if data.get("orf_info", None) is not None:
+            orf_info = OrfInfo.build(data["orf_info"])
 
         return cls(
             upi=data["upi"],
@@ -124,6 +135,7 @@ class Sequence:
                     if r["model_id"]
                 }
             ),
+            orf_info=orf_info,
         )
 
     @property

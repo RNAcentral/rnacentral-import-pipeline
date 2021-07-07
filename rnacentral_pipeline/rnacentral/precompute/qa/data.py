@@ -53,7 +53,7 @@ class QaStatus:
     possible_contamination = attr.ib(validator=is_a(QaResult))
     missing_rfam_match = attr.ib(validator=is_a(QaResult))
     from_repetitive_region = attr.ib(validator=is_a(QaResult))
-    # possible_orf = attr.ib(validator=is_a())
+    possible_orf = attr.ib(validator=is_a(QaResult))
 
     @property
     def has_issue(self) -> bool:

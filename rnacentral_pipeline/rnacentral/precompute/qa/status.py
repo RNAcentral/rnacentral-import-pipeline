@@ -24,6 +24,7 @@ from rnacentral_pipeline.rnacentral.precompute.qa import missing_rfam_match as m
 from rnacentral_pipeline.rnacentral.precompute.qa import (
     repetitive_regions as repetitive,
 )
+from rnacentral_pipeline.rnacentral.precompute.qa import possible_orf
 from rnacentral_pipeline.rnacentral.precompute.qa.data import QaStatus
 
 
@@ -37,4 +38,5 @@ def status(context: Context, sequence: Sequence, rna_type: str) -> QaStatus:
         possible_contamination=contamination.validate(rna_type, sequence),
         missing_rfam_match=missing.validate(rna_type, sequence),
         from_repetitive_region=repetitive.validate(context, sequence),
+        possible_orf=possible_orf.validate(sequence),
     )
