@@ -83,7 +83,7 @@ pub fn write(accession_file: &Path, metadata_file: &Path, output_file: &Path) ->
     let mut writer = rnc_utils::buf_writer(output_file)?;
 
     let metadata = JsonlIterator::from_path(metadata_file)?;
-    let metadata = metadata.map(|r: entry::Raw| (r.id, r));
+    let metadata = metadata.map(|r: entry::Raw| (r.id(), r));
     let metadata = metadata.into_iter().assume_sorted_by_key();
 
     let accessions = JsonlIterator::from_path(accession_file)?;

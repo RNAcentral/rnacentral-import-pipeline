@@ -120,6 +120,10 @@ pub struct Normalized {
 }
 
 impl Raw {
+    pub fn id(&self) -> usize {
+        return self.id
+    }
+
     pub fn urs_taxid(&self) -> String {
         return self.base.urs_taxid.to_owned();
     }
