@@ -1,8 +1,19 @@
-use std::error::Error;
-use std::fs::{File, remove_file};
-use std::path::{PathBuf, Path};
-use std::io::prelude::*;
-use std::io::{BufReader, BufWriter};
+use std::{
+    error::Error,
+    fs::{
+        remove_file,
+        File,
+    },
+    io::{
+        prelude::*,
+        BufReader,
+        BufWriter,
+    },
+    path::{
+        Path,
+        PathBuf,
+    },
+};
 
 use structopt::StructOpt;
 
@@ -26,7 +37,11 @@ struct Opt {
     output_directory: PathBuf,
 }
 
-fn chunk_writer(directory: &Path, basename: &str, index: u64) -> Result<BufWriter<File>, Box<dyn Error>> {
+fn chunk_writer(
+    directory: &Path,
+    basename: &str,
+    index: u64,
+) -> Result<BufWriter<File>, Box<dyn Error>> {
     let mut filename = String::from(basename);
     filename.push_str("-chunk");
     filename.push_str(&index.to_string());
@@ -63,12 +78,12 @@ fn main() -> Result<(), Box<dyn Error>> {
                     }
                 };
                 buf.clear();
-            }
+            },
         }
     }
 
     writer.flush()?;
-    
+
     if opt.remove_file {
         remove_file(&opt.raw)?;
     }

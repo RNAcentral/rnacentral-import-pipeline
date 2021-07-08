@@ -27,7 +27,7 @@ enum Subcommand {
         output: PathBuf,
     },
 
-    /// Index a file of JSON objects where the objects are sorted by id. 
+    /// Index a file of JSON objects where the objects are sorted by id.
     SortedIndex {
         #[structopt(short, long, default_value = "1000000")]
         commit_size: usize,

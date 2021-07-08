@@ -16,20 +16,21 @@ use anyhow::{
     Result,
 };
 
+use rnc_core::{
+    grouper::Grouped::{
+        Multiple,
+        Optional,
+        Required,
+    },
+    psql::JsonlIterator,
+};
+
 pub use basic::Basic;
 pub use coordinate::Coordinate;
 pub use merged::Metadata;
 pub use previous::Previous;
 pub use r2dt_hit::R2dtHit;
 pub use rfam_hit::RfamHit;
-
-use rnc_core::grouper::Grouped::{
-    Multiple,
-    Optional,
-    Required,
-};
-
-use rnc_core::psql::JsonlIterator;
 
 pub fn write_merge(
     basic_file: &Path,

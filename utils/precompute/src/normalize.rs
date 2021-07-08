@@ -26,9 +26,10 @@ use crate::{
     },
 };
 
-use rnc_core::psql::JsonlIterator;
-use rnc_core::grouper::Grouped;
-
+use rnc_core::{
+    grouper::Grouped,
+    psql::JsonlIterator,
+};
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Normalized {
@@ -45,10 +46,7 @@ pub struct Normalized {
 }
 
 impl Normalized {
-    fn new(
-        raw_accessions: Vec<RawAccessionEntry>,
-        metadata: Metadata,
-    ) -> Result<Self> {
+    fn new(raw_accessions: Vec<RawAccessionEntry>, metadata: Metadata) -> Result<Self> {
         assert!(raw_accessions.len() != 0, "Must given accessions to normalize");
         let accessions: Vec<Accession> = raw_accessions.into_iter().map(Accession::from).collect();
         let last_release = accessions.iter().map(|a| a.last_release).max().unwrap();
@@ -71,11 +69,12 @@ impl Normalized {
 
 pub fn write(accession_file: &Path, metadata_file: &Path, output: &Path) -> Result<()> {
     let accessions = JsonlIterator::from_path(accession_file)?;
-    let accessions = accessions.map(|group: Grouped<RawAccessionEntry>| {
-        match group {
-            Grouped::Multiple { id, data } => (id, data),
-            _ => panic!("Illegal data format for accessions file {:?}", &group),
-        }
+    let accessions = accessions.map(|group: Grouped<RawAccessionEntry>| match group {
+        Grouped::Multiple {
+            id,
+            data,
+        } => (id, data),
+        _ => panic!("Illegal data format for accessions file {:?}", &group),
     });
     let accessions = accessions.into_iter().assume_sorted_by_key();
 
