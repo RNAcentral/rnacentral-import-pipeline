@@ -22,15 +22,14 @@ process setup {
 
   input:
   path(sql)
+  path(counts)
 
   output:
-  val('done')
+  path('counts.txt')
 
   """
-  psql \
-    -v ON_ERROR_STOP=1 \
-    -f "$sql" \
-    "$PGDATABASE" > raw.json
+  psql -v ON_ERROR_STOP=1 -f "$sql" "$PGDATABASE"
+  psql -v ON_ERROR_STOP=1 -f "$counts" "$PGDATABASE" > counts.txt
   """
 }
 
@@ -85,7 +84,7 @@ process build_ranges {
   rnac upi-ranges --table-name search_export_urs $chunk_size ranges.csv
   """
 }
- 
+
 process fetch_accession {
   tag { "$min-$max" }
   maxForks 3
@@ -191,23 +190,29 @@ workflow search_export {
 
   Channel.fromPath('files/search-export/parts/accessions.sql') | set { accessions_sql }
 
-  Channel.fromPath('files/search-export/post-publish.sql') set { post }
+  Channel.fromPath('files/search-export/post-publish.sql') | set { post }
+  Channel.fromPath('files/search-export/get-counts.sql') | set { counts_sql }
 
-  setup_sql | setup | set { search_ready }
-  search_ready | build_search_accessions | set { accessions_ready }
+  setup(setup_sql, counts_sql)
+  | splitCsv \
+  | first \
+  | map { row -> row[0].toInteger() + 1 } \
+  | set { search_count }
+
+  search_count | build_search_accessions | set { accessions_ready }
 
   build_json(
-    base_query(search_ready, base_sql),
-    crs_query(search_ready, crs_sql),
-    feeback_query(search_ready, feeback_sql),
-    go_query(search_ready, go_sql),
-    prot_query(search_ready, prot_sql),
-    rnas_query(search_ready, rnas_sql),
-    precompute_query(search_ready, precompute_sql),
-    qa_query(search_ready, qa_sql),
-    r2dt_query(search_ready, r2dt_sql),
-    rfam_query(search_ready, rfam_sql),
-    orf_query(search_ready, orf_sql),
+    base_query(search_count, base_sql),
+    crs_query(search_count, crs_sql),
+    feeback_query(search_count, feeback_sql),
+    go_query(search_count, go_sql),
+    prot_query(search_count, prot_sql),
+    rnas_query(search_count, rnas_sql),
+    precompute_query(search_count, precompute_sql),
+    qa_query(search_count, qa_sql),
+    r2dt_query(search_count, r2dt_sql),
+    rfam_query(search_count, rfam_sql),
+    orf_query(search_count, orf_sql),
     fetch_so_tree(so_sql),
   )\
   | set { metadata }
