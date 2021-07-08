@@ -68,8 +68,8 @@ pub enum Error {
 
 #[derive(Debug, Display, PartialEq, Eq, Hash, EnumString)]
 pub enum FileTypes {
-    #[strum(ascii_case_insensitive, serialize = "base")]
-    Basic,
+    #[strum(ascii_case_insensitive)]
+    Base,
 
     #[strum(ascii_case_insensitive)]
     Crs,
@@ -168,7 +168,7 @@ impl FileJoinerBuilder {
     }
 
     pub fn build(&self) -> Result<FileJoiner, Error> {
-        let basic = self.iterator_for(FileTypes::Basic)?;
+        let basic = self.iterator_for(FileTypes::Base)?;
         let crs = self.iterator_for(FileTypes::Crs)?;
         let feedback = self.iterator_for(FileTypes::Feedback)?;
         let go_annotations = self.iterator_for(FileTypes::GoAnnotations)?;
