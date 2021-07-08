@@ -28,8 +28,8 @@ impl UrsTaxid {
         format!("URS{:010X}_{}", self.0, self.1)
     }
 
-    pub fn urs(&self) -> u64 {
-        self.0
+    pub fn urs(&self) -> Urs {
+        Urs::from(self.0)
     }
 
     pub fn taxid(&self) -> u64 {
