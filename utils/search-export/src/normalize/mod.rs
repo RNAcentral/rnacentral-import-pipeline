@@ -55,7 +55,7 @@ pub fn write_merge(
 ) -> Result<()> {
     let mut builder = FileJoinerBuilder::default();
     builder
-        .file(FileTypes::Basic, base_file)
+        .file(FileTypes::Base, base_file)
         .file(FileTypes::Crs, crs_file)
         .file(FileTypes::Feedback, feedback_file)
         .file(FileTypes::GoAnnotations, go_annotations_file)
