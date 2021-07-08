@@ -1,5 +1,7 @@
-use std::path::PathBuf;
-use std::str::FromStr;
+use std::{
+    path::PathBuf,
+    str::FromStr,
+};
 use structopt::StructOpt;
 
 use anyhow::Result;
@@ -151,23 +153,27 @@ fn main() -> Result<()> {
     .unwrap_or_else(|_| eprintln!("Failed to create logger, ignore"));
 
     match opt.command {
-            Subcommand::Group {
-                data_type,
-                path,
-                max_count,
-                output,
-            } => match data_type {
-                Groupable::Basic => normalize::basic::group(&path, max_count, &output)?,
-                Groupable::Crs => normalize::crs::group(&path, max_count, &output)?,
-                Groupable::Feedback => normalize::feedback::group(&path, max_count, &output)?,
-                Groupable::GoAnnotations => normalize::go_annotation::group(&path, max_count, &output)?,
-                Groupable::InteractingProteins => normalize::interacting_protein::group(&path, max_count, &output)?,
-                Groupable::InteractingRnas => normalize::interacting_rna::group(&path, max_count, &output)?,
-                Groupable::QaStatus => normalize::qa_status::group(&path, max_count, &output)?,
-                Groupable::R2dtHits => normalize::r2dt::group(&path, max_count, &output)?,
-                Groupable::RfamHits => normalize::rfam_hit::group(&path, max_count, &output)?,
-                Groupable::Orfs => normalize::orf::group(&path, max_count, &output)?,
+        Subcommand::Group {
+            data_type,
+            path,
+            max_count,
+            output,
+        } => match data_type {
+            Groupable::Basic => normalize::basic::group(&path, max_count, &output)?,
+            Groupable::Crs => normalize::crs::group(&path, max_count, &output)?,
+            Groupable::Feedback => normalize::feedback::group(&path, max_count, &output)?,
+            Groupable::GoAnnotations => normalize::go_annotation::group(&path, max_count, &output)?,
+            Groupable::InteractingProteins => {
+                normalize::interacting_protein::group(&path, max_count, &output)?
             },
+            Groupable::InteractingRnas => {
+                normalize::interacting_rna::group(&path, max_count, &output)?
+            },
+            Groupable::QaStatus => normalize::qa_status::group(&path, max_count, &output)?,
+            Groupable::R2dtHits => normalize::r2dt::group(&path, max_count, &output)?,
+            Groupable::RfamHits => normalize::rfam_hit::group(&path, max_count, &output)?,
+            Groupable::Orfs => normalize::orf::group(&path, max_count, &output)?,
+        },
         Subcommand::Merge {
             base,
             crs,
@@ -183,18 +189,18 @@ fn main() -> Result<()> {
             so_term_tree,
             output,
         } => normalize::write_merge(
-            &base,
-            &crs,
-            &feedback,
-            &go_annotations,
-            &interacting_proteins,
-            &interacting_rnas,
-            &precompute,
-            &qa_status,
-            &r2dt_hits,
-            &rfam_hits,
-            &orfs,
-            &so_term_tree,
+            base,
+            crs,
+            feedback,
+            go_annotations,
+            interacting_proteins,
+            interacting_rnas,
+            precompute,
+            qa_status,
+            r2dt_hits,
+            rfam_hits,
+            orfs,
+            so_term_tree,
             &output,
         )?,
         Subcommand::Normalize {

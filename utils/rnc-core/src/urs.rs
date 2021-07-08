@@ -1,6 +1,11 @@
-use std::path::{Path, PathBuf};
-use std::str;
-use std::str::FromStr;
+use std::{
+    path::{
+        Path,
+        PathBuf,
+    },
+    str,
+    str::FromStr,
+};
 
 use regex::Regex;
 
@@ -12,7 +17,7 @@ pub struct Urs(u64);
 #[derive(Error, Debug)]
 pub enum Error {
     #[error("Could not parse urs: {0}")]
-    ParsingError(#[from] std::num::ParseIntError)
+    ParsingError(#[from] std::num::ParseIntError),
 }
 
 impl FromStr for Urs {
