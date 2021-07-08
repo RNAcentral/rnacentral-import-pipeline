@@ -7,8 +7,8 @@ use std::path::Path;
 use serde_with::CommaSeparator;
 
 use anyhow::Result;
-use rnc_core::grouper;
 use phf::phf_map;
+use rnc_core::grouper;
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Precompute {
@@ -51,7 +51,6 @@ static SO_MAPPING: phf::Map<&'static str, &'static str> = phf_map! {
     "SO:0001243" => "SO:0001244",
     "SO:0001459" => "SO:0000655",
 };
-
 
 impl Precompute {
     pub fn so_rna_type(&self) -> &str {

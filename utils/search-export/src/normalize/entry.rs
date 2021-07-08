@@ -1,4 +1,8 @@
-use std::{convert::TryInto, iter::FromIterator, num::TryFromIntError};
+use std::{
+    convert::TryInto,
+    iter::FromIterator,
+    num::TryFromIntError,
+};
 
 use serde::{
     Deserialize,
@@ -111,9 +115,8 @@ pub struct Normalized {
 
     #[serde(flatten)]
     rfam_hits: RfamHitVec,
-
-    // #[serde(flatten)]
-    // dates: Dates,
+    /* #[serde(flatten)]
+     * dates: Dates, */
 }
 
 impl Raw {

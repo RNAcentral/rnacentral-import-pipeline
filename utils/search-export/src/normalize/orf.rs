@@ -15,8 +15,6 @@ use rnc_core::grouper;
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Orf {
     pub id: usize,
-    pub urs_id: usize,
-    pub urs_taxid: String,
     source: String,
 }
 

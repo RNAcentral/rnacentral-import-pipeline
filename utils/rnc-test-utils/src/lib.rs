@@ -10,16 +10,15 @@ use std::{
 
 use tempfile::NamedTempFile;
 
-/// This is a trait to extract the JSON encoded lines of something and produce a vector of all JSON
-/// values parsed.
+/// This is a trait to extract the JSON encoded lines of something and produce a vector of
+/// all JSON values parsed.
 pub trait Jsonl {
-    /// Parse and create a vector of each JSON encoded line. If any parsing step fails or there is
-    /// an IO error then the whole process fails.
+    /// Parse and create a vector of each JSON encoded line. If any parsing step fails or
+    /// there is an IO error then the whole process fails.
     fn jsonl(&self) -> Result<Vec<serde_json::Value>, Box<dyn Error>>;
 }
 
 impl Jsonl for Output {
-
     /// Parse the JSON encoded lines from stdout of some process.
     fn jsonl(&self) -> Result<Vec<serde_json::Value>, Box<dyn Error>> {
         let data = String::from_utf8_lossy(&self.stdout);
@@ -32,8 +31,8 @@ impl Jsonl for Output {
 }
 
 impl Jsonl for NamedTempFile {
-    /// Parse the lines in the NamedTempFile to extract all JSON values. This does not seek to the
-    /// start of the file, so that should be taken care of first.
+    /// Parse the lines in the NamedTempFile to extract all JSON values. This does not
+    /// seek to the start of the file, so that should be taken care of first.
     fn jsonl(&self) -> Result<Vec<serde_json::Value>, Box<dyn Error>> {
         let buf = io::BufReader::new(self);
         let mut data = Vec::new();
