@@ -2,6 +2,7 @@ COPY (
 SELECT
   json_build_object(
     'id', todo.id,
+    'urs_taxid', todo.urs_taxid,
     'source', split_part(features.feature_name, '_', 1)
   )
 FROM search_export_urs todo

@@ -79,6 +79,6 @@ class QaStatus:
 
         fields = (getattr(self, f.name) for f in attr.fields(self.__class__))
         data = ["%s_%i" % (upi, taxid), upi, str(taxid)]
-        data.extend(f.str_issues() for f in fields)
+        data.extend(f.str_issue() for f in fields)
         data.append(json.dumps(self.messages()))
         return data

@@ -150,7 +150,7 @@ workflow precompute {
     Channel.fromPath('files/precompute/queries/rfam-hits.sql') | set { rfam_sql }
     Channel.fromPath('files/precompute/queries/r2dt-hits.sql') | set { r2dt_sql }
     Channel.fromPath('files/precompute/queries/previous.sql') | set { prev_sql }
-    Channel.fromPath('files/precompute/queries/orf.sql') | set { orf_sql }
+    Channel.fromPath('files/precompute/queries/orfs.sql') | set { orf_sql }
 
     // repeats | build_precompute_context | set { context }
     Channel.of(params.precompute.method) | build_urs_table | set { urs_counts }
