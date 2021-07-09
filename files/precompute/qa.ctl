@@ -8,6 +8,8 @@ HAVING FIELDS (
   incomplete_sequence,
   possible_contamination,
   missing_rfam_match,
+  from_repetitive_region,
+  possible_orf,
   messages
 )
 INTO {{PGDATABASE}}?load_qa_status
@@ -19,6 +21,8 @@ TARGET COLUMNS (
   incomplete_sequence,
   possible_contamination,
   missing_rfam_match,
+  from_repetitive_region,
+  possible_orf,
   messages
 )
 
@@ -39,6 +43,7 @@ insert into qa_status (
   possible_contamination,
   missing_rfam_match,
   from_repetitive_region,
+  possible_orf,
   messages
 ) (
 SELECT distinct on (rna_id)
@@ -49,7 +54,8 @@ SELECT distinct on (rna_id)
   incomplete_sequence,
   possible_contamination,
   missing_rfam_match,
-  false,
+  from_repetitive_region,
+  possible_orf,
   messages
 FROM load_qa_status
 )
@@ -59,6 +65,8 @@ SET
   incomplete_sequence = EXCLUDED.incomplete_sequence,
   possible_contamination = EXCLUDED.possible_contamination,
   missing_rfam_match = EXCLUDED.missing_rfam_match,
+  from_repetitive_region = EXCLUDED.from_repetitive_region,
+  possible_orf = EXCLUDED.possible_orf,
   messages = EXCLUDED.messages
 ;
 $$,

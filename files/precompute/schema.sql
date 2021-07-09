@@ -58,9 +58,11 @@ CREATE TABLE load_qa_status (
   rna_id varchar(44) NOT NULL,
   upi varchar(26) NOT NULL,
   taxid int8 NOT NULL,
-  has_issue bool,
-  incomplete_sequence bool,
-  possible_contamination bool,
-  missing_rfam_match bool,
-  messages jsonb
+  has_issue bool not null,
+  incomplete_sequence bool not null,
+  possible_contamination bool not null,
+  missing_rfam_match bool not null,
+  from_repetitive_region bool not null,
+  possible_orf bool not null,
+  messages jsonb not null
 );

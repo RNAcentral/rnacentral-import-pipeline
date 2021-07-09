@@ -217,7 +217,7 @@ workflow search_export {
   )\
   | set { metadata }
 
-  search_ready \
+  search_count \
   | build_ranges \
   | splitCsv \
   | map { _tablename, min, max -> [min, max ] } \
