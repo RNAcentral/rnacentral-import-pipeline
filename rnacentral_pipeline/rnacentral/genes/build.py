@@ -26,11 +26,18 @@ from rnacentral_pipeline.rnacentral.genes import data, rrna
 LOGGER = logging.getLogger(__name__)
 
 
-def load(handle) -> ty.Iterable[data.LocationInfo]:
+def load(handle: ty.IO, counts: ty.Dict[str, data.Count]) -> ty.Iterable[data.LocationInfo]:
     ontology = so_tree.load_ontology(so_tree.REMOTE_ONTOLOGY)
     for entry in psql.json_handler(handle):
-        location = data.LocationInfo.build(entry, ontology)
+        location = data.LocationInfo.build(entry, ontology, counts)
         yield location
+
+
+def load_counts(handle: ty.IO) -> ty.Dict[str, data.Count]:
+    counts = {}
+    for entry in psql.json_handler(handle):
+        counts[entry['urs_taxid']] = data.Count.from_json(entry)
+    return counts
 
 
 def always_bad_location(location: data.LocationInfo) -> bool:
@@ -175,6 +182,7 @@ def build(
         yield state.finalize()
 
 
-def from_json(handle) -> ty.Iterable[data.FinalizedState]:
-    locations = load(handle)
+def from_json(handle, counts_handle) -> ty.Iterable[data.FinalizedState]:
+    counts = load_counts(counts_handle)
+    locations = load(handle, counts)
     return build(locations, IntervalTree())
