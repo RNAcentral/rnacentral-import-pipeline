@@ -21,13 +21,14 @@ process extract_sequences {
   maxForks params.genes.extract_sequences.maxForks
 
   input:
-  tuple val(assembly_id), val(taxid), path(query)
+  tuple val(assembly_id), val(taxid), path(query), path(counts_query)
 
   output:
-  tuple val(assembly_id), path('sequences.json')
+  tuple val(assembly_id), path('sequences.json'), path('counts.json')
 
   """
   psql -v ON_ERROR_STOP=1 -v assembly_id=$assembly_id -v taxid=$taxid -f $query $PGDATABASE > sequences.json
+  psql -v ON_ERROR_STOP=1 -v assembly_id=$assembly_id -v taxid=$taxid -f $counts_query $PGDATABASE > counts.json
   """
 }
 
@@ -36,7 +37,7 @@ process build {
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
-  tuple val(assembly_id), path(data_file)
+  tuple val(assembly_id), path(data_file), path(count_file)
 
   output:
   path 'locus.csv', emit: locus
@@ -44,7 +45,7 @@ process build {
   path 'ignored.csv', emit: ignored
 
   """
-  rnac genes build $data_file .
+  rnac genes build $data_file $counts .
   """
 }
 
@@ -78,6 +79,7 @@ workflow genes {
     | splitCsv \
     | map { row -> row[0] } \
     | combine(Channel.fromPath('files/genes/data.sql')) \
+    | combine(Channel.fromPath('files/genes/counts.sql')) \
     | extract_sequences \
     | build
 
