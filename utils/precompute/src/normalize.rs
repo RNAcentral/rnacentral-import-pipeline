@@ -20,6 +20,7 @@ use crate::{
     metadata::{
         coordinate::Coordinate,
         merged::Metadata,
+        orf::OrfInfo,
         previous::Previous,
         r2dt_hit::R2dtHit,
         rfam_hit::RfamHit,
@@ -43,6 +44,7 @@ pub struct Normalized {
     previous: Option<Previous>,
     rfam_hits: Vec<RfamHit>,
     r2dt_hits: Vec<R2dtHit>,
+    orf_info: Option<OrfInfo>,
 }
 
 impl Normalized {
@@ -63,6 +65,7 @@ impl Normalized {
             previous: metadata.previous,
             rfam_hits: metadata.rfam_hits,
             r2dt_hits: metadata.r2dt_hits.into_iter().collect(),
+            orf_info: metadata.orf_info,
         });
     }
 }
