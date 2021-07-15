@@ -73,9 +73,9 @@ def build_genes(
 
     allowed_data_types = DataType.all()
     if not include_rejected:
-        allowed_data_types.pop(DataType.rejected)
+        allowed_data_types.remove(DataType.rejected)
     if not include_ignored:
-        allowed_data_types.pop(DataType.ignored)
+        allowed_data_types.remove(DataType.ignored)
 
     output = Path(output)
     if not output.exists():
