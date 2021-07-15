@@ -32,11 +32,11 @@ process extract_sequences {
 }
 
 process build {
-  tag { "$assembly_id/$taxid" }
+  tag { "$assembly_id" }
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
-  tuple val(assembly_id), val(taxid), path(data_file)
+  tuple val(assembly_id), path(data_file)
 
   output:
   path 'locus.csv', emit: locus
