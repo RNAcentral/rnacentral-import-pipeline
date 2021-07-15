@@ -1,7 +1,4 @@
-use std::{
-    path::PathBuf,
-    str::FromStr,
-};
+use std::path::PathBuf;
 use structopt::StructOpt;
 
 pub mod accessions;
@@ -9,31 +6,7 @@ pub mod metadata;
 pub mod normalize;
 pub mod releases;
 
-#[derive(Debug)]
-enum Groupable {
-    Basic,
-    Coordinates,
-    Previous,
-    R2dtHits,
-    RfamHits,
-}
-
-impl FromStr for Groupable {
-    type Err = String;
-
-    fn from_str(raw: &str) -> Result<Self, Self::Err> {
-        match raw {
-            "basic" => Ok(Self::Basic),
-            "coordinates" => Ok(Self::Coordinates),
-            "previous" => Ok(Self::Previous),
-            "r2dt-hits" => Ok(Self::R2dtHits),
-            "r2dt_hits" => Ok(Self::R2dtHits),
-            "rfam-hits" => Ok(Self::RfamHits),
-            "rfam_hits" => Ok(Self::RfamHits),
-            unknown => Err(format!("Unknown name {}", unknown)),
-        }
-    }
-}
+use crate::metadata::file_types::FileType;
 
 #[derive(Debug, StructOpt)]
 #[structopt(rename_all = "kebab-case")]
@@ -63,6 +36,10 @@ enum MetadataCommand {
         previous: PathBuf,
 
         #[structopt(parse(from_os_str))]
+        /// Filename of all orfs
+        orfs: PathBuf,
+
+        #[structopt(parse(from_os_str))]
         /// Filename to write the results to, '-' means stdout
         output: PathBuf,
     },
@@ -70,7 +47,7 @@ enum MetadataCommand {
     Group {
         /// Type of data to group
         #[structopt(case_insensitive = true)]
-        data_type: Groupable,
+        data_type: metadata::file_types::FileType,
 
         /// Filename to read the results from, '-' means stdin
         #[structopt(parse(from_os_str))]
@@ -194,6 +171,7 @@ fn main() -> anyhow::Result<()> {
                 rfam_hits,
                 r2dt_hits,
                 previous,
+                orfs,
                 output,
             } => {
                 metadata::write_merge(
@@ -202,6 +180,7 @@ fn main() -> anyhow::Result<()> {
                     &rfam_hits,
                     &r2dt_hits,
                     &previous,
+                    &orfs,
                     &output,
                 )?;
             },
@@ -211,11 +190,12 @@ fn main() -> anyhow::Result<()> {
                 max_count,
                 output,
             } => match data_type {
-                Groupable::Basic => metadata::basic::group(&path, max_count, &output)?,
-                Groupable::Coordinates => metadata::coordinate::group(&path, max_count, &output)?,
-                Groupable::Previous => metadata::previous::group(&path, max_count, &output)?,
-                Groupable::R2dtHits => metadata::r2dt_hit::group(&path, max_count, &output)?,
-                Groupable::RfamHits => metadata::rfam_hit::group(&path, max_count, &output)?,
+                FileType::Basic => metadata::basic::group(&path, max_count, &output)?,
+                FileType::Coordinates => metadata::coordinate::group(&path, max_count, &output)?,
+                FileType::Orfs => metadata::orf::group(&path, max_count, &output)?,
+                FileType::Previous => metadata::previous::group(&path, max_count, &output)?,
+                FileType::R2dtHits => metadata::r2dt_hit::group(&path, max_count, &output)?,
+                FileType::RfamHits => metadata::rfam_hit::group(&path, max_count, &output)?,
             },
         },
         Subcommand::GroupAccessions {

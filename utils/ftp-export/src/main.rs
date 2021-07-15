@@ -1,9 +1,8 @@
+use anyhow::Result;
 use std::path::PathBuf;
 use structopt::StructOpt;
-use anyhow::Result;
 
 pub mod secondary_structure;
-
 
 #[derive(Debug, StructOpt)]
 #[structopt(rename_all = "kebab-case")]
@@ -45,7 +44,10 @@ fn main() -> Result<()> {
     .unwrap_or_else(|_| eprintln!("Failed to create logger, ignore"));
 
     match opt.command {
-        Subcommand::SecondaryStructure { raw, output } => secondary_structure::write(&raw, &output)?,
+        Subcommand::SecondaryStructure {
+            raw,
+            output,
+        } => secondary_structure::write(&raw, &output)?,
     }
 
     Ok(())

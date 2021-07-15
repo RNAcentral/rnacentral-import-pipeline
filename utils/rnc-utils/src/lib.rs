@@ -1,8 +1,13 @@
-use std::fs::File;
-use std::io;
-use std::io::prelude::*;
-use std::io::{BufReader, BufWriter};
-use std::path::Path;
+use std::{
+    fs::File,
+    io,
+    io::{
+        prelude::*,
+        BufReader,
+        BufWriter,
+    },
+    path::Path,
+};
 
 pub fn buf_reader(filename: &Path) -> io::Result<Box<dyn BufRead>> {
     if filename == Path::new("-") {

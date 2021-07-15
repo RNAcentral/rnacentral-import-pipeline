@@ -8,6 +8,10 @@ use anyhow::Result;
 use crate::metadata::{
     basic::Basic,
     coordinate::Coordinate,
+    orf::{
+        Orf,
+        OrfInfo,
+    },
     previous::Previous,
     r2dt_hit::R2dtHit,
     rfam_hit::RfamHit,
@@ -25,6 +29,7 @@ pub struct Metadata {
     pub previous: Option<Previous>,
     pub rfam_hits: Vec<RfamHit>,
     pub r2dt_hits: Option<R2dtHit>,
+    pub orf_info: Option<OrfInfo>,
 }
 
 impl Metadata {
@@ -34,6 +39,7 @@ impl Metadata {
         rfam_hits: Vec<RfamHit>,
         r2dt_hits: Option<R2dtHit>,
         previous: Option<Previous>,
+        orfs: Vec<Orf>,
     ) -> Result<Self> {
         if coordinates.len() > 0 {
             assert!(
@@ -64,6 +70,7 @@ impl Metadata {
             previous,
             rfam_hits,
             r2dt_hits,
+            orf_info: orfs.into_iter().collect(),
         });
     }
 }

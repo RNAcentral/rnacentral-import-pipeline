@@ -1,5 +1,7 @@
-use std::error::Error;
-use std::path::PathBuf;
+use std::{
+    error::Error,
+    path::PathBuf,
+};
 
 extern crate log;
 
@@ -7,14 +9,16 @@ use bio::io::fasta;
 
 use structopt::StructOpt;
 
-use rnc_core::json_sequence::Sequence;
-use rnc_core::nhmmer::valid_sequence;
+use rnc_core::{
+    json_sequence::Sequence,
+    nhmmer::valid_sequence,
+};
 
 #[derive(Debug, StructOpt)]
 #[structopt(rename_all = "kebab-case")]
 struct Opt {
-    /// This will select only sequence which have known easel/infernal characters. This limits things
-    /// to matching ACGUN.
+    /// This will select only sequence which have known easel/infernal characters. This
+    /// limits things to matching ACGUN.
     #[structopt(short, long)]
     only_valid_easel: bool,
 
@@ -44,7 +48,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                     writer.write_record(&data.into())?;
                 }
                 buf.clear();
-            }
+            },
         }
     }
 

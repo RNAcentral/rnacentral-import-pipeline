@@ -27,7 +27,7 @@ pub fn write(raw: &Path, output: &Path) -> Result<()> {
                 writeln!(&mut writer, "{}", data.sequence)?;
                 writeln!(&mut writer, "{}", data.secondary_structure)?;
                 buf.clear();
-            }
+            },
         }
     }
 

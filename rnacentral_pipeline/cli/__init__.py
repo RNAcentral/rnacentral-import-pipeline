@@ -19,6 +19,7 @@ import click
 
 from rnacentral_pipeline.cli import (
     context,
+    cpat,
     crw,
     ena,
     ensembl,
@@ -83,6 +84,7 @@ def cli(log_level):
 
 
 cli.add_command(context.cli)
+cli.add_command(cpat.cli)
 cli.add_command(crw.cli)
 cli.add_command(ena.cli)
 cli.add_command(ensembl.cli)

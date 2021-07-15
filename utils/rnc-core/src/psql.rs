@@ -1,21 +1,36 @@
 use std::{
     fs::File,
     io::{
+        self,
         BufRead,
         BufReader,
         Read,
     },
-    path::Path,
+    marker::PhantomData,
+    path::{
+        Path,
+        PathBuf,
+    },
 };
 
-use std::marker::PhantomData;
-
-use anyhow::{
-    Context,
-    Result,
-};
+use thiserror::Error;
 
 use serde::de::DeserializeOwned;
+
+#[derive(Debug, Error)]
+pub enum Error {
+    #[error("Could not find the file {0:?}")]
+    MissingFile(PathBuf),
+
+    #[error("Could not parse line: {line}, source {source}")]
+    BadlyFormattedLine {
+        line: String,
+        source: serde_json::Error,
+    },
+
+    #[error(transparent)]
+    IoError(#[from] io::Error),
+}
 
 pub struct JsonlIterator<R: Read, T: DeserializeOwned> {
     reader: BufReader<R>,
@@ -34,8 +49,8 @@ impl<R: Read, T: DeserializeOwned> JsonlIterator<R, T> {
 }
 
 impl<T: DeserializeOwned> JsonlIterator<File, T> {
-    pub fn from_path(path: &Path) -> Result<Self> {
-        let file = File::open(path).with_context(|| format!("Could not open file {:?}", &path))?;
+    pub fn from_path(path: &Path) -> Result<Self, Error> {
+        let file = File::open(path)?;
         Ok(JsonlIterator::from_read(file))
     }
 }
@@ -49,7 +64,10 @@ impl<R: Read, T: DeserializeOwned> Iterator for JsonlIterator<R, T> {
             _ => {
                 let value: T = serde_json::from_str(&self.buf.replace("\\\\", "\\"))
                     .or(serde_json::from_str(&self.buf))
-                    .with_context(|| format!("Could not parse line {}", &self.buf))
+                    .map_err(|source| Error::BadlyFormattedLine {
+                        line: self.buf.to_string(),
+                        source,
+                    })
                     .unwrap();
                 self.buf.clear();
                 Some(value)

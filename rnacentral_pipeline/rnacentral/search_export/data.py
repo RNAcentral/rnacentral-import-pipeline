@@ -693,6 +693,10 @@ def given(v):
     return str(v)
 
 
+def values(v):
+    return v
+
+
 builder = entry(
     [
         tag("name", as_name, keys=("urs", "taxid")),
@@ -730,11 +734,11 @@ builder = entry(
                 fields("organelle", unique_lower, keys="organelles"),
                 fields("expert_db", unique, keys="databases"),
                 fields("common_name", normalize_common_name),
-                fields("function", unique, keys="functions"),
+                fields("function", values, keys="functions"),
                 fields("gene", get_genes, keys=("genes", "products")),
                 fields("gene_synonym", gene_synonyms, keys="gene_synonyms"),
                 field("rna_type", normalize_rna_type),
-                fields("product", unique, keys="products"),
+                fields("product", values, keys="products"),
                 field("has_genomic_coordinates", given, keys="has_coordinates"),
                 field("md5", given),
                 fields("author", as_authors, keys="authors"),
@@ -754,14 +758,14 @@ builder = entry(
                         "qa_status",
                     ),
                 ),
-                fields("locus_tag", unique, keys="locus_tags"),
-                fields("standard_name", unique, keys="standard_names"),
-                fields("rfam_family_name", unique, keys="rfam_family_names"),
-                fields("rfam_id", unique, keys="rfam_ids"),
-                fields("rfam_clan", unique, keys="rfam_clans"),
+                fields("locus_tag", values, keys="locus_tags"),
+                fields("standard_name", values, keys="standard_names"),
+                fields("rfam_family_name", values, keys="rfam_family_names"),
+                fields("rfam_id", values, keys="rfam_ids"),
+                fields("rfam_clan", values, keys="rfam_clans"),
                 fields("qc_warning", rfam_problems, keys="qa_status"),
                 field("qc_warning_found", problem_found, keys="qa_status"),
-                fields("tax_string", unique, keys="tax_strings"),
+                fields("tax_string", values, keys="tax_strings"),
                 fields("involved_in", involved_in, keys="go_annotations"),
                 fields("part_of", part_of, keys="go_annotations"),
                 fields("enables", enables, keys="go_annotations"),
@@ -817,6 +821,7 @@ builder = entry(
                 fields("url", urls, keys="notes"),
                 fields("so_rna_type_name", so_rna_type_name, keys="so_rna_type_tree"),
                 tree("so_rna_type", so_rna_type_tree, key="so_rna_type_tree"),
+                fields("orf_source", values, keys="orf_sources"),
             ],
         ),
     ]
