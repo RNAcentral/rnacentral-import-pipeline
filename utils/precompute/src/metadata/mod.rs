@@ -5,6 +5,7 @@ pub mod orf;
 pub mod previous;
 pub mod r2dt_hit;
 pub mod rfam_hit;
+pub mod file_types;
 
 use std::{
     io::Write,

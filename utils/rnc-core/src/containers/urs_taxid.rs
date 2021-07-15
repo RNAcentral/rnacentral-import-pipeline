@@ -54,7 +54,7 @@ impl UrsTaxidMapping {
                 0 => break,
                 _ => {
                     let urs_taxid: UrsTaxid = buf.trim_end().parse()?;
-                    let set = mapping.entry(urs_taxid.urs()).or_insert(FnvHashSet::default());
+                    let set = mapping.entry(urs_taxid.urs().into()).or_insert(FnvHashSet::default());
                     set.insert(urs_taxid.taxid());
                     buf.clear();
                 },
