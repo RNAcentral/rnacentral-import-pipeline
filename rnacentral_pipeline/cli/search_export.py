@@ -18,7 +18,6 @@ import click
 from rnacentral_pipeline.databases.sequence_ontology import tree as so
 from rnacentral_pipeline.rnacentral.search_export import exporter as search
 from rnacentral_pipeline.rnacentral.search_export import metadata
-from rnacentral_pipeline.rnacentral.search_export import queries
 
 
 @click.group("search-export")
@@ -79,19 +78,3 @@ def so_term_tree(filename, output, ontology=None):
     search metadata.
     """
     metadata.write_so_term_tree(filename, ontology, output)
-
-
-@cli.command("generate-queries")
-@click.option("--db-url", envvar="PGDATABASE")
-@click.argument("base", type=click.Path(writable=True, dir_okay=True, file_okay=False))
-@click.argument(
-    "output",
-    default=".",
-    type=click.Path(writable=True, dir_okay=True, file_okay=False),
-)
-def generate_queries(base, output, db_url):
-    """
-    Basically create a series of queries to extract the search data from the
-    database
-    """
-    queries.write(base, db_url, output)

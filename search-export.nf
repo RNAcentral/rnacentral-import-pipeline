@@ -14,6 +14,7 @@ include { query as qa_query } from './workflows/search-export/utils'
 include { query as r2dt_query } from './workflows/search-export/utils'
 include { query as ref_query } from './workflows/search-export/utils'
 include { query as rfam_query } from './workflows/search-export/utils'
+include { query as orf_query } from './workflows/search-export/utils'
 include { build_search_accessions } from './workflows/search-export/build-accession-table'
 
 process setup {
@@ -21,15 +22,14 @@ process setup {
 
   input:
   path(sql)
+  path(counts)
 
   output:
-  val('done')
+  path('counts.txt')
 
   """
-  psql \
-    -v ON_ERROR_STOP=1 \
-    -f "$sql" \
-    "$PGDATABASE" > raw.json
+  psql -v ON_ERROR_STOP=1 -f "$sql" "$PGDATABASE"
+  psql -v ON_ERROR_STOP=1 -f "$counts" "$PGDATABASE" > counts.txt
   """
 }
 
@@ -60,13 +60,14 @@ process build_json {
   path(qa)
   path(r2dt)
   path(rfam)
+  path(orf)
   path(so_tree)
 
   output:
   path("merged.json")
 
   """
-  search-export merge $base $crs $feeback $go $prot $rnas $precompute $qa $r2dt $rfam $so_tree merged.json
+  search-export merge $base $crs $feeback $go $prot $rnas $precompute $qa $r2dt $rfam $orf $so_tree merged.json
   """
 }
 
@@ -83,7 +84,7 @@ process build_ranges {
   rnac upi-ranges --table-name search_export_urs $chunk_size ranges.csv
   """
 }
- 
+
 process fetch_accession {
   tag { "$min-$max" }
   maxForks 3
@@ -184,31 +185,39 @@ workflow search_export {
   Channel.fromPath('files/search-export/parts/qa-status.sql') | set { qa_sql }
   Channel.fromPath('files/search-export/parts/r2dt.sql') | set { r2dt_sql }
   Channel.fromPath('files/search-export/parts/rfam-hits.sql') | set { rfam_sql }
+  Channel.fromPath('files/search-export/parts/orfs.sql') | set { orf_sql }
   Channel.fromPath('files/search-export/so-rna-types.sql') | set { so_sql }
 
   Channel.fromPath('files/search-export/parts/accessions.sql') | set { accessions_sql }
 
-  Channel.fromPath('files/search-export/post-publish.sql') set { post }
+  Channel.fromPath('files/search-export/post-publish.sql') | set { post }
+  Channel.fromPath('files/search-export/get-counts.sql') | set { counts_sql }
 
-  setup_sql | setup | set { search_ready }
-  search_ready | build_search_accessions | set { accessions_ready }
+  setup(setup_sql, counts_sql)
+  | splitCsv \
+  | first \
+  | map { row -> row[0].toInteger() + 1 } \
+  | set { search_count }
+
+  search_count | build_search_accessions | set { accessions_ready }
 
   build_json(
-    base_query(search_ready, base_sql),
-    crs_query(search_ready, crs_sql),
-    feeback_query(search_ready, feeback_sql),
-    go_query(search_ready, go_sql),
-    prot_query(search_ready, prot_sql),
-    rnas_query(search_ready, rnas_sql),
-    precompute_query(search_ready, precompute_sql),
-    qa_query(search_ready, qa_sql),
-    r2dt_query(search_ready, r2dt_sql),
-    rfam_query(search_ready, rfam_sql),
+    base_query(search_count, base_sql),
+    crs_query(search_count, crs_sql),
+    feeback_query(search_count, feeback_sql),
+    go_query(search_count, go_sql),
+    prot_query(search_count, prot_sql),
+    rnas_query(search_count, rnas_sql),
+    precompute_query(search_count, precompute_sql),
+    qa_query(search_count, qa_sql),
+    r2dt_query(search_count, r2dt_sql),
+    rfam_query(search_count, rfam_sql),
+    orf_query(search_count, orf_sql),
     fetch_so_tree(so_sql),
   )\
   | set { metadata }
 
-  search_ready \
+  search_count \
   | build_ranges \
   | splitCsv \
   | map { _tablename, min, max -> [min, max ] } \

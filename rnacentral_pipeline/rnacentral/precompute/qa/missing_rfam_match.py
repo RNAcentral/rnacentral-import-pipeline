@@ -14,7 +14,6 @@ limitations under the License.
 """
 
 from rnacentral_pipeline.rnacentral.precompute.data.sequence import Sequence
-from rnacentral_pipeline.rnacentral.precompute.data.context import Context
 from rnacentral_pipeline.rnacentral.precompute.qa.data import QaResult
 
 EXPECTED_MATCHES = {
@@ -41,7 +40,7 @@ def href(model_id):
     return f'<a href="http://rfam.org/family/{model_id}">{model_id}</a>'
 
 
-def validate(context: Context, rna_type: str, sequence: Sequence) -> QaResult:
+def validate(rna_type: str, sequence: Sequence) -> QaResult:
     if rna_type not in EXPECTED_MATCHES:
         return QaResult.ok("missing_rfam_match")
 

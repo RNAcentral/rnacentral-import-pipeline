@@ -53,18 +53,7 @@ class QaStatus:
     possible_contamination = attr.ib(validator=is_a(QaResult))
     missing_rfam_match = attr.ib(validator=is_a(QaResult))
     from_repetitive_region = attr.ib(validator=is_a(QaResult))
-
-    @classmethod
-    def from_results(cls, results: ty.List[QaResult]) -> "QaStatus":
-        fields = attr.fields_dict(cls)
-        data = {}
-        for result in results:
-            if result.name not in fields:
-                raise ValueError(f"Unknown QaResult {result}")
-            data[result.name] = result
-        if not data:
-            raise ValueError("Cannot build without QA results")
-        return cls(**data)
+    possible_orf = attr.ib(validator=is_a(QaResult))
 
     @property
     def has_issue(self) -> bool:
@@ -72,12 +61,8 @@ class QaStatus:
         Check if this QA update indicates if there is any issue.
         """
 
-        return (
-            self.incomplete_sequence.has_issue
-            or self.possible_contamination.has_issue
-            or self.missing_rfam_match.has_issue
-            or self.from_repetitive_region.has_issue
-        )
+        fields = (getattr(self, f.name) for f in attr.fields(self.__class__))
+        return any(f.has_issue for f in fields)
 
     def messages(self) -> ty.List[str]:
         messages = []
@@ -92,13 +77,8 @@ class QaStatus:
         Create a writeable array for writing CSV files.
         """
 
-        return [
-            "%s_%i" % (upi, taxid),
-            upi,
-            str(taxid),
-            str(int(self.has_issue)),
-            self.incomplete_sequence.str_issue(),
-            self.possible_contamination.str_issue(),
-            self.missing_rfam_match.str_issue(),
-            json.dumps(self.messages()),
-        ]
+        fields = (getattr(self, f.name) for f in attr.fields(self.__class__))
+        data = ["%s_%i" % (upi, taxid), upi, str(taxid)]
+        data.extend(f.str_issue() for f in fields)
+        data.append(json.dumps(self.messages()))
+        return data

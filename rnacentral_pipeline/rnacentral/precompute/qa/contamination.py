@@ -99,7 +99,7 @@ def message(data: Sequence) -> str:
     return re.sub(r"\s+", " ", msg)
 
 
-def validate(context: Context, rna_type: str, sequence: Sequence) -> QaResult:
+def validate(rna_type: str, sequence: Sequence) -> QaResult:
     if not sequence.has_unique_hit():
         return QaResult.ok("possible_contamination")
 
