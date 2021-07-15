@@ -43,6 +43,7 @@ def cli():
 @click.option("--include-rejected/--no-rejected", default=True)
 @click.option("--extended-bed/--simple-bed", default=False)
 @click.argument("data_file", type=click.File("r"))
+@click.argument("count_file", type=click.File("r"))
 @click.argument(
     "output",
     default=".",
@@ -50,6 +51,7 @@ def cli():
 )
 def build_genes(
     data_file,
+    count_file,
     output,
     format=None,
     include_genes=None,
@@ -63,7 +65,7 @@ def build_genes(
     Build the genes for the given data file. The file can contain all data for a
     specific assembly.
     """
-    data = build.from_json(data_file)
+    data = build.from_json(data_file, count_file)
     format = write.Format.from_name(format)
     allowed_members = set()
     if include_representative:
