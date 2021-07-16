@@ -38,6 +38,8 @@ def load(
 def load_counts(handle: ty.IO) -> ty.Dict[str, data.Count]:
     counts = {}
     for entry in psql.json_handler(handle):
+        if entry["urs_taxid"] in counts:
+            raise ValueError(f"Counts data contains duplicates: {entry['urs_taxid']}")
         counts[entry["urs_taxid"]] = data.Count.from_json(entry)
     return counts
 

@@ -20,9 +20,8 @@ import io
 import pytest
 import psycopg2
 
-from rnacentral_pipeline.rnacentral.genes import build, data
+from rnacentral_pipeline.rnacentral.genes import build
 
-from tests import helpers
 
 ENDPOINT_QUERY = """
 SELECT
@@ -38,7 +37,8 @@ WHERE
 CREATE = """
 CREATE temp table tmp_regions AS
 SELECT
-    id
+    id,
+    urs_taxid
 FROM rnc_sequence_regions
 WHERE
     assembly_id = '{assembly}'
@@ -53,7 +53,7 @@ def endpoints(cur, region_name):
     return cur.fetchone()
 
 
-def fix_query(assembly_id, filename):
+def fix_query(assembly_id, filename, join_on='id'):
     with open(filename, "r") as raw:
         return (
             raw.read()
@@ -61,7 +61,7 @@ def fix_query(assembly_id, filename):
             .replace("AND regions.assembly_id = :'assembly_id'", "")
             .replace(":'assembly_id'", f"'{assembly_id}'")
             .replace(
-                "WHERE", "JOIN tmp_regions ON tmp_regions.id = regions.id\nWHERE\n"
+                "WHERE", f"JOIN tmp_regions ON tmp_regions.{join_on} = regions.{join_on}\nWHERE\n"
             )
         )
 
@@ -75,7 +75,7 @@ def load_overlapping_regions(region_name):
             )
             cur.execute(table)
             data_query = fix_query(assembly, "files/genes/data.sql")
-            count_query = fix_query(assembly, "files/genes/counts.sql")
+            count_query = fix_query(assembly, "files/genes/counts.sql", join_on="urs_taxid")
 
             with conn.cursor() as cur:
                 data_handle = io.StringIO()
