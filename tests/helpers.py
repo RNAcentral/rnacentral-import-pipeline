@@ -23,9 +23,10 @@ from io import StringIO
 from rnacentral_pipeline import psql
 
 
-def run_with_replacements(path, *replacements, **kwargs):
+def run_with_buffer(path, *replacements):
     """
-    Run a query from the given file with the given replacements.
+    Run a query from the given file with the given replacements and return a
+    io.StringIO object of the output.
     """
 
     with tempfile.NamedTemporaryFile("w") as tmp:
@@ -44,15 +45,23 @@ def run_with_replacements(path, *replacements, **kwargs):
             encoding="utf-8",
         )
         cmd.check_returncode()
-        buf = StringIO(cmd.stdout)
-        results = psql.json_handler(buf)
+        return StringIO(cmd.stdout)
 
-        try:
-            if kwargs.get("take_all", False):
-                return list(results)
-            return next(results)
-        except StopIteration:
-            raise ValueError("Found nothing for %s" % str(replacements))
+
+def run_with_replacements(path, *replacements, take_all=False, **kwargs):
+    """
+    Run a query from the given file with the given replacements.
+    """
+
+    buf = run_with_buffer(path, *replacements)
+    results = psql.json_handler(buf)
+
+    try:
+        if take_all:
+            return list(results)
+        return next(results)
+    except StopIteration:
+        raise ValueError("Found nothing for %s" % str(replacements))
 
 
 def run_range_as_single(upi, path):
