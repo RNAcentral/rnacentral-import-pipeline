@@ -54,14 +54,16 @@ def endpoints(cur, region_name):
 
 
 def fix_query(assembly_id, filename):
-    with open(filename, 'r') as raw:
-        return (raw
-                .read()
-                .replace("AND pre.taxid = :taxid", '')
-                .replace("AND regions.assembly_id = :'assembly_id'", "")
-                .replace(":'assembly_id'", f"'{assembly_id}'")
-                .replace("WHERE", "JOIN tmp_regions ON tmp_regions.id = regions.id\nWHERE\n")
-                )
+    with open(filename, "r") as raw:
+        return (
+            raw.read()
+            .replace("AND pre.taxid = :taxid", "")
+            .replace("AND regions.assembly_id = :'assembly_id'", "")
+            .replace(":'assembly_id'", f"'{assembly_id}'")
+            .replace(
+                "WHERE", "JOIN tmp_regions ON tmp_regions.id = regions.id\nWHERE\n"
+            )
+        )
 
 
 def load_overlapping_regions(region_name):
@@ -69,14 +71,11 @@ def load_overlapping_regions(region_name):
         with conn.cursor() as cur:
             assembly, chromosome, start, stop = endpoints(cur, region_name)
             table = CREATE.format(
-                assembly=assembly,
-                chromosome=chromosome,
-                start=start,
-                stop=stop
+                assembly=assembly, chromosome=chromosome, start=start, stop=stop
             )
             cur.execute(table)
-            data_query = fix_query(assembly, 'files/genes/data.sql')
-            count_query = fix_query(assembly, 'files/genes/counts.sql')
+            data_query = fix_query(assembly, "files/genes/data.sql")
+            count_query = fix_query(assembly, "files/genes/counts.sql")
 
             with conn.cursor() as cur:
                 data_handle = io.StringIO()
@@ -89,26 +88,26 @@ def load_overlapping_regions(region_name):
 
 
 def load_examples():
-    with open('data/genes/examples.json', 'r') as raw:
+    with open("data/genes/examples.json", "r") as raw:
         return json.load(raw)
 
 
 @pytest.mark.parametrize("expected", load_examples())
 def test_builds_correct_genes(expected):
-    region_name = expected['region_name']
+    region_name = expected["region_name"]
     states = load_overlapping_regions(region_name)
     assert len(states) == 1
     state = states[0]
 
     ignored = [r.region_name for r in state.ignored]
     assert len(ignored) == len(set(ignored))
-    assert set(ignored) == set(expected['ignored'])
+    assert set(ignored) == set(expected["ignored"])
 
     rejected = [r.region_name for r in state.rejected]
     assert len(rejected) == len(set(rejected))
-    assert set(rejected) == set(expected['rejected'])
+    assert set(rejected) == set(expected["rejected"])
 
-    expected = [set(ids) for ids in expected['clustered']]
+    expected = [set(ids) for ids in expected["clustered"]]
     expected = sorted(expected, key=lambda ids: min(ids))
     found = [set([r.region_name for r in c.members]) for c in state.clusters]
     found = sorted(found, key=lambda ids: min(ids))

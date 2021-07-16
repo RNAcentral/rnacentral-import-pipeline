@@ -33,19 +33,18 @@ class CpatOrf:
     metadata: ty.Dict[str, ty.Any] = attr.ib(validator=is_a(dict))
 
     @classmethod
-    def build(cls, raw: ty.Dict[str, str], cutoff: float, coding_prob: float) -> CpatOrf:
+    def build(
+        cls, raw: ty.Dict[str, str], cutoff: float, coding_prob: float
+    ) -> CpatOrf:
         return cls(
-            start=int(raw['ORF_start']) - 1,
-            stop=int(raw['ORF_end']),
-            strand=Strand.build(raw['ORF_strand']),
-            metadata={
-                'cufoff': cutoff,
-                'coding_probability': coding_prob
-            }
+            start=int(raw["ORF_start"]) - 1,
+            stop=int(raw["ORF_end"]),
+            strand=Strand.build(raw["ORF_strand"]),
+            metadata={"cufoff": cutoff, "coding_probability": coding_prob},
         )
 
     def writeable(self, urs_taxid: str) -> ty.List[str]:
-        urs, taxid = urs_taxid.split('_', 1)
+        urs, taxid = urs_taxid.split("_", 1)
         return [
             urs,
             taxid,
@@ -65,8 +64,10 @@ class CpatResult:
     orf = attr.ib(validator=optional(is_a(CpatOrf)))
 
     @classmethod
-    def build(cls, raw: ty.Dict[str, str], model_name: str, cutoffs: CpatCutoffs) -> CpatResult:
-        prob = float(raw['Coding_prob'])
+    def build(
+        cls, raw: ty.Dict[str, str], model_name: str, cutoffs: CpatCutoffs
+    ) -> CpatResult:
+        prob = float(raw["Coding_prob"])
         coding = cutoffs.is_protein_coding(model_name, prob)
         orf = None
         if coding:
@@ -75,9 +76,9 @@ class CpatResult:
                 orf = None
                 coding = False
         return cls(
-            urs_taxid=raw['seq_ID'],
-            fickett_score=float(raw['Fickett']),
-            hexamer_score=float(raw['Hexamer']),
+            urs_taxid=raw["seq_ID"],
+            fickett_score=float(raw["Fickett"]),
+            hexamer_score=float(raw["Hexamer"]),
             coding_prob=prob,
             protein_coding=coding,
             orf=orf,

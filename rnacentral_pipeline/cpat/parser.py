@@ -25,7 +25,7 @@ def cutoffs(directory: Path) -> CpatCutoffs:
     cutoffs = CpatCutoffs()
     for filename in directory.glob("dat/*_cutoff.txt"):
         source = filename.name.split("_", 1)[0].lower()
-        with open(filename, 'r') as raw:
+        with open(filename, "r") as raw:
             lines = raw.readlines()
             assert len(lines) == 2, f"Unexpected cutoff format {filename}"
             if not lines[0].startswith("Coding Probability Cutoff: "):
@@ -37,8 +37,10 @@ def cutoffs(directory: Path) -> CpatCutoffs:
     return cutoffs
 
 
-def parse(cutoffs: CpatCutoffs, model_name: str, results: Path) -> ty.Iterable[CpatResult]:
-    with results.open('r') as raw:
-        reader = csv.DictReader(raw, delimiter='\t')
+def parse(
+    cutoffs: CpatCutoffs, model_name: str, results: Path
+) -> ty.Iterable[CpatResult]:
+    with results.open("r") as raw:
+        reader = csv.DictReader(raw, delimiter="\t")
         for data in reader:
             yield CpatResult.build(data, model_name, cutoffs)
