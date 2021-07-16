@@ -22,19 +22,21 @@ from rnacentral_pipeline.cpat.data import CpatCutoffs, CpatResult, CpatOrf
 from rnacentral_pipeline.databases.data.regions import Strand
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def results():
-    cutoffs = parser.cutoffs(Path('data/cpat'))
-    return list(parser.parse(cutoffs, 'human', Path('data/cpat/results.ORF_prob.best.tsv')))
+    cutoffs = parser.cutoffs(Path("data/cpat"))
+    return list(
+        parser.parse(cutoffs, "human", Path("data/cpat/results.ORF_prob.best.tsv"))
+    )
 
 
 def test_parses_cutoffs_correctly():
-    assert parser.cutoffs(Path('data/cpat')) == CpatCutoffs(
+    assert parser.cutoffs(Path("data/cpat")) == CpatCutoffs(
         cutoffs={
-            'human': 0.364,
-            'mouse': 0.44,
-            'fly': 0.39,
-            'zebrafish': 0.381,
+            "human": 0.364,
+            "mouse": 0.44,
+            "fly": 0.39,
+            "zebrafish": 0.381,
         }
     )
 
@@ -45,7 +47,7 @@ def test_parses_results_all_results(results):
 
 def test_parses_no_orf_correctly(results):
     assert results[0] == CpatResult(
-        urs_taxid='URS0000ABD879_9606',
+        urs_taxid="URS0000ABD879_9606",
         fickett_score=0.644,
         hexamer_score=0.214251553920902,
         coding_prob=0.344950141950276,
@@ -56,7 +58,7 @@ def test_parses_no_orf_correctly(results):
 
 def test_parses_results_with_orfs_correctly(results):
     assert results[2] == CpatResult(
-        urs_taxid='URS0000DB95A9_7955',
+        urs_taxid="URS0000DB95A9_7955",
         fickett_score=1.0354,
         hexamer_score=-0.269716025049968,
         coding_prob=1.0,

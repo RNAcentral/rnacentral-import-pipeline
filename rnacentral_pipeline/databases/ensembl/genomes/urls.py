@@ -77,8 +77,9 @@ def generate_paths(
                     LOGGER.warn("GFF file %s is empty, skip %s", gff_path, assembly)
                     continue
             except:
-                LOGGER.warn("Could not get data for %s, skipping %s", gff_path,
-                        assembly)
+                LOGGER.warn(
+                    "Could not get data for %s, skipping %s", gff_path, assembly
+                )
                 continue
 
             yield FtpInfo(
