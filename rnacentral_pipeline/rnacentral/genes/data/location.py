@@ -17,6 +17,7 @@ import typing as ty
 from collections import OrderedDict
 
 import attr
+from attr.validators import instance_of as is_a
 from gffutils import Feature
 from intervaltree import Interval
 
@@ -53,11 +54,11 @@ class QaInfo:
         )
 
 
-@attr.s(auto_attribs=True, frozen=True, slots=True, hash=True)
+@attr.s(frozen=True, slots=True, hash=True)
 class Count:
-    mapped_count: int
-    given_count: int
-    total_count: int
+    mapped_count = attr.ib(validator=is_a(int))
+    given_count = attr.ib(validator=is_a(int))
+    total_count = attr.ib(validator=is_a(int))
 
     @classmethod
     def from_json(cls, raw: ty.Dict[str, int]):
@@ -66,6 +67,12 @@ class Count:
             given_count=raw["given_count"],
             total_count=raw["total_count"],
         )
+
+    def __attrs_post_init__(self):
+        if self.total_count <= 0:
+            raise ValueError("Must have >0 total counts")
+        if self.mapped_count + self.given_count != self.total_count:
+            raise ValueError("Counts do not sum")
 
 
 @attr.s(auto_attribs=True, frozen=True, slots=True, hash=True)
@@ -83,7 +90,8 @@ class LocationInfo:
 
     @classmethod
     def build(cls, raw: ty.Dict[str, ty.Any], ontology, counts: ty.Dict[str, Count]):
-        rna_type = RnaType.build(raw["insdc_rna_type"], raw["so_rna_type"], ontology)
+        rna_type = RnaType.build(
+            raw["insdc_rna_type"], raw["so_rna_type"], ontology)
         return cls(
             id=raw["region_id"],
             urs_taxid=raw["urs_taxid"],
