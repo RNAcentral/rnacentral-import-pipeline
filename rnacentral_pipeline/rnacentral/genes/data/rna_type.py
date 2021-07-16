@@ -60,12 +60,12 @@ SoTree = ty.Tuple[SoTermInfo]
 
 
 @lru_cache()
-def normalized_term(so_id: str, ontology) -> NormalizedSoTermInfo:
+def normalized_term(so_id: str, ontology: so_tree.SoOntology) -> NormalizedSoTermInfo:
     for parent_so_id in NORMALIZED_IDS:
         if parent_so_id == so_id:
             so_term = SoTermInfo(so_id, ontology.id_to_name[so_id])
             return NormalizedSoTermInfo(so_term, True)
-        paths = nx.all_simple_paths(ontology, source=so_id, target=parent_so_id)
+        paths = nx.all_simple_paths(ontology.graph, source=so_id, target=parent_so_id)
         paths = list(paths)
         if len(paths) == 1:
             name = ontology.id_to_name[parent_so_id]
