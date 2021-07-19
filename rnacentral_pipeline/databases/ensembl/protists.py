@@ -14,15 +14,19 @@ limitations under the License.
 """
 
 import re
+import typing as ty
 
 import attr
+
+from rnacentral_pipeline.databases.data import Entry
 
 from rnacentral_pipeline.databases.ensembl.genomes import parser
 from rnacentral_pipeline.databases.ensembl.genomes.data import Context
 from rnacentral_pipeline.databases.helpers import publications as pubs
+from rnacentral_pipeline.databases.ensembl.data import Pseudogene
 
 
-def correct_rna_type(entry):
+def correct_rna_type(entry: Entry) -> Entry:
     if re.match(r"^LMJF_\d+_snoRNA_?\d+$", entry.gene):
         return attr.evolve(entry, rna_type="snoRNA")
 
@@ -35,7 +39,7 @@ def correct_rna_type(entry):
     return entry
 
 
-def parse(handle, gff_file, **kwargs):
+def parse(handle: ty.IO, gff_file, **kwargs) -> ty.Iterable[Entry]:
     context = Context.build(
         "ENSEMBL_PROTISTS",
         [pubs.reference("doi:10.1093/nar/gkx1011")],
@@ -43,3 +47,7 @@ def parse(handle, gff_file, **kwargs):
     )
 
     return map(correct_rna_type, parser.parse(context, handle))
+
+
+def pseudogenes(handle: ty.IO) -> ty.Iterable[Pseudogene]:
+    return parser.pseudogenes(handle)

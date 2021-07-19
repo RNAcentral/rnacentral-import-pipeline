@@ -70,6 +70,7 @@ process parse_data {
 
   """
   rnac ensembl parse $division --family-file $rfam $embl $gff .
+  rnac ensembl pseudogenes $division $embl ensembl-pseudogenes.csv
   """
 }
 
