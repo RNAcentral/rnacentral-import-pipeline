@@ -14,18 +14,14 @@ limitations under the License.
 """
 
 import enum
-import tempfile
 import logging
 import typing as ty
 
 import attr
 from attr.validators import instance_of as is_a
 
-from sqlitedict import SqliteDict
-
 from rnacentral_pipeline.databases.data import SequenceRegion
 from rnacentral_pipeline.databases.data.utils import as_so_term
-from rnacentral_pipeline.databases.rfam import utils as rfutils
 from rnacentral_pipeline.databases.helpers import embl
 from rnacentral_pipeline.databases.ensembl import helpers
 
@@ -87,3 +83,12 @@ class FtpInfo:
             self.data_files,
             self.gff_file,
         )
+
+
+@attr.s()
+class Pseudogene:
+    gene = attr.ib(validator=is_a(str))
+    region = attr.ib(validator=is_a(SequenceRegion))
+
+    def writeable(self) -> ty.Iterable[ty.List[str]]:
+        return self.region.writeable(self.gene, is_upi=False)
