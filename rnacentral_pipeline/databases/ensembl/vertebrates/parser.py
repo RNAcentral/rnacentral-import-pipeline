@@ -83,7 +83,7 @@ def as_entry(
         parent_accession=record.id,
         common_name=common_name,
         species=species,
-        gene=helpers.gene_id(gene),
+        gene=embl.gene(gene),
         locus_tag=embl.locus_tag(gene),
         optional_id=embl.gene(gene),
         note_data=helpers.note_data(feature),
