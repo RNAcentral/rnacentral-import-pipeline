@@ -15,6 +15,7 @@ limitations under the License.
 
 import logging
 import typing as ty
+from pathlib import Path
 
 import attr
 from attr.validators import instance_of as is_a
@@ -41,7 +42,7 @@ class Context:
     gff = attr.ib(validator=is_a(SqliteDict))
 
     @classmethod
-    def build(cls, gff_file, family_file=None, excluded_file=None):
+    def build(cls, gff_file: Path, family_file=None, excluded_file=None):
         """
         Create a Context, by parsing the family file (families from Rfam), and
         the gencode_file (gff3 file from GENCODE) and excluded_file a list of

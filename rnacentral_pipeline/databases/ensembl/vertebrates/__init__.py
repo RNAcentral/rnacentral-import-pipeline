@@ -19,12 +19,16 @@ from rnacentral_pipeline.databases.data import Entry
 from rnacentral_pipeline.databases.ensembl.vertebrates import urls
 from rnacentral_pipeline.databases.ensembl.vertebrates import parser
 
-from rnacentral_pipeline.databases.ensembl.data import FtpInfo
+from rnacentral_pipeline.databases.ensembl.data import FtpInfo, Pseudogene
 
 
 def urls_for(base: str) -> ty.Iterable[FtpInfo]:
     return urls.urls_for(base)
 
 
-def parse(raw, gff_file, family_file=None) -> ty.Iterable[Entry]:
+def parse(raw: ty.IO, gff_file, family_file=None) -> ty.Iterable[Entry]:
     return parser.parse(raw, gff_file, family_file=family_file)
+
+
+def pseudogenes(handle: ty.IO) -> ty.Iterable[Pseudogene]:
+    return parser.pseudogenes(handle)
