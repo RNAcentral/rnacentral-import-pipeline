@@ -182,7 +182,6 @@ def pseudogenes(handle: ty.IO) -> ty.Iterable[Pseudogene]:
 
             if embl.is_gene(feature):
                 current_gene = feature
-                continue
 
             if helpers.is_pseudogene(current_gene, feature):
                 gene = embl.gene(feature)
