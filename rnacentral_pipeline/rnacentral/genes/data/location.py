@@ -22,7 +22,6 @@ from gffutils import Feature
 from intervaltree import Interval
 
 from rnacentral_pipeline.databases.data.regions import Exon
-from rnacentral_pipeline.databases.sequence_ontology import tree as so_tree
 from rnacentral_pipeline.rnacentral.ftp_export.coordinates.bed import BedEntry
 
 from .extent import Extent
@@ -89,9 +88,10 @@ class LocationInfo:
     counts: Count
 
     @classmethod
-    def build(cls, raw: ty.Dict[str, ty.Any], ontology, counts: ty.Dict[str, Count]):
+    def build(cls, context, raw: ty.Dict[str, ty.Any]):
         rna_type = RnaType.build(
-            raw["insdc_rna_type"], raw["so_rna_type"], ontology)
+            raw["insdc_rna_type"], raw["so_rna_type"], context.ontology
+        )
         return cls(
             id=raw["region_id"],
             urs_taxid=raw["urs_taxid"],
@@ -102,7 +102,7 @@ class LocationInfo:
             qa=QaInfo.build(raw["qa"][0]),
             providing_databases=tuple(raw["providing_databases"]),
             databases=tuple(raw["databases"]),
-            counts=counts[raw["urs_taxid"]],
+            counts=context.count_for(raw["urs_taxid"]),
         )
 
     @property

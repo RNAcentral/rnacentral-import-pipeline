@@ -20,28 +20,15 @@ import typing as ty
 from intervaltree import IntervalTree
 
 from rnacentral_pipeline import psql
-from rnacentral_pipeline.databases.sequence_ontology import tree as so_tree
 from rnacentral_pipeline.rnacentral.genes import data, rrna
 
 LOGGER = logging.getLogger(__name__)
 
 
-def load(
-    handle: ty.IO, counts: ty.Dict[str, data.Count]
-) -> ty.Iterable[data.LocationInfo]:
-    ontology = so_tree.load_ontology(so_tree.REMOTE_ONTOLOGY)
+def load(context: data.Context, handle: ty.IO) -> ty.Iterable[data.LocationInfo]:
     for entry in psql.json_handler(handle):
-        location = data.LocationInfo.build(entry, ontology, counts)
+        location = data.LocationInfo.build(context, entry)
         yield location
-
-
-def load_counts(handle: ty.IO) -> ty.Dict[str, data.Count]:
-    counts = {}
-    for entry in psql.json_handler(handle):
-        if entry["urs_taxid"] in counts:
-            raise ValueError(f"Counts data contains duplicates: {entry['urs_taxid']}")
-        counts[entry["urs_taxid"]] = data.Count.from_json(entry)
-    return counts
 
 
 def always_bad_location(location: data.LocationInfo) -> bool:
@@ -104,9 +91,9 @@ def handle_rfam_only(state: data.State, cluster: int):
             state.reject_location(location)
 
 
-def overlaps_pseudogene(location: data.LocationInfo, pseudo: IntervalTree) -> bool:
+def overlaps_pseudogene(context: data.Context, location: data.LocationInfo) -> bool:
     LOGGER.debug("Checking %s for overlaps to pseudogenes", location.id)
-    overlaps = pseudo.overlaps(location.as_interval())
+    overlaps = context.overlaps_pseudogene(location)
     if overlaps:
         LOGGER.debug("Overlaps %s", overlaps)
         return True
@@ -115,7 +102,7 @@ def overlaps_pseudogene(location: data.LocationInfo, pseudo: IntervalTree) -> bo
 
 
 def build(
-    locations: ty.Iterable[data.LocationInfo], pseudogenes: IntervalTree
+    context: data.Context, locations: ty.Iterable[data.LocationInfo]
 ) -> ty.Iterable[data.FinalizedState]:
     for (key, locations) in it.groupby(locations, data.ClusteringKey.from_location):
         LOGGER.debug("Building clusters for %s", key)
@@ -137,7 +124,7 @@ def build(
                 state.reject_location(location)
                 continue
 
-            if overlaps_pseudogene(location, pseudogenes):
+            if overlaps_pseudogene(context, location):
                 LOGGER.debug("Rejecting Pseudogene: %s", location.id)
                 state.reject_location(location)
                 continue
@@ -186,7 +173,6 @@ def build(
         yield state.finalize()
 
 
-def from_json(handle, counts_handle) -> ty.Iterable[data.FinalizedState]:
-    counts = load_counts(counts_handle)
-    locations = load(handle, counts)
-    return build(locations, IntervalTree())
+def from_json(context: data.Context, handle: ty.IO) -> ty.Iterable[data.FinalizedState]:
+    locations = load(context, handle)
+    return build(context, locations)
