@@ -20,6 +20,7 @@ import click
 from rnacentral_pipeline.rnacentral.genes import build, write
 from rnacentral_pipeline.rnacentral.genes.data import MemberType
 from rnacentral_pipeline.rnacentral.genes.data import DataType
+from rnacentral_pipeline.rnacentral.genes.data import Context
 
 
 @click.group("genes")
@@ -44,6 +45,8 @@ def cli():
 @click.option("--extended-bed/--simple-bed", default=False)
 @click.argument("data_file", type=click.File("r"))
 @click.argument("count_file", type=click.File("r"))
+@click.argument("genes_file", type=click.File("r"))
+@click.argument("repetitive_file", type=click.File("r"))
 @click.argument(
     "output",
     default=".",
@@ -52,6 +55,8 @@ def cli():
 def build_genes(
     data_file,
     count_file,
+    genes_file,
+    repetitive_file,
     output,
     format=None,
     include_genes=None,
@@ -65,7 +70,9 @@ def build_genes(
     Build the genes for the given data file. The file can contain all data for a
     specific assembly.
     """
-    data = build.from_json(data_file, count_file)
+
+    context = Context.from_file(genes_file, repetitive_file, count_file)
+    data = build.from_json(context, data_file)
     format = write.Format.from_name(format)
     allowed_members = set()
     if include_representative:

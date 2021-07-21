@@ -32,12 +32,27 @@ process extract_sequences {
   """
 }
 
+process fetch_context_data {
+  tag { "$assembly_id" }
+  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
+  maxForks params.genes.extract_sequences.maxForks
+
+  input:
+  tuple val(assembly_id), val(taxid)
+
+  output:
+  val(assembly_id), path('genes.gff'), path('repetative.bed')
+
+  """
+  """
+}
+
 process build {
   tag { "$assembly_id" }
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
-  tuple val(assembly_id), path(data_file), path(count_file)
+  tuple val(assembly_id), path(data_file), path(count_file), path(genes), path(repetative)
 
   output:
   path 'locus.csv', emit: locus
@@ -45,7 +60,7 @@ process build {
   path 'ignored.csv', emit: ignored
 
   """
-  rnac genes build $data_file $counts .
+  rnac genes build $data_file $counts $genes $repetative .
   """
 }
 
@@ -78,10 +93,17 @@ workflow genes {
     | get_species \
     | splitCsv \
     | map { row -> row[0] } \
+    | set { to_fetch }
+
+    to_fetch \
     | combine(Channel.fromPath('files/genes/data.sql')) \
     | combine(Channel.fromPath('files/genes/counts.sql')) \
     | extract_sequences \
-    | build
+    | set { sequences }
+
+    to_fetch | fetch_context_data | set { context_files }
+
+    sequences | join(context_files) | build
 
     build.out.locus | collect | set { locus }
     build.out.rejected | collect | set { rejected }
