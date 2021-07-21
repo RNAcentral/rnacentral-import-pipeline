@@ -1,8 +1,6 @@
 nextflow.enable.dsl=2
 
 process import_model_info {
-  when { params.r2dt.run }
-
   output:
   path('info.csv')
 
