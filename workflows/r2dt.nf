@@ -1,6 +1,7 @@
 nextflow.enable.dsl=2
 
 process import_model_info {
+  when { params.r2dt.run }
 
   output:
   path('info.csv')
@@ -11,6 +12,8 @@ process import_model_info {
 }
 
 process fetch_model_mapping {
+  when { params.r2dt.run }
+
   input:
   val(_flag)
   path(query)
@@ -24,6 +27,7 @@ process fetch_model_mapping {
 }
 
 process extract_sequences {
+  when { params.r2dt.run }
   clusterOptions '-sp 100'
 
   input:
