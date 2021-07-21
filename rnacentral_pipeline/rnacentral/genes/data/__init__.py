@@ -18,3 +18,4 @@ from .extent import *
 from .location import *
 from .cluster import *
 from .state import *
+from .context import *
