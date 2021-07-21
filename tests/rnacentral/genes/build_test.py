@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Copyright [2009-2020] EMBL-European Bioinformatics Institute
+Copyright [2009-2021] EMBL-European Bioinformatics Institute
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -14,11 +14,11 @@ limitations under the License.
 """
 
 import os
-import json
 import io
 
 import pytest
 import psycopg2
+import yaml
 
 from rnacentral_pipeline.rnacentral.genes import build
 
@@ -53,7 +53,7 @@ def endpoints(cur, region_name):
     return cur.fetchone()
 
 
-def fix_query(assembly_id, filename, join_on='id'):
+def fix_query(assembly_id, filename, join_on="id"):
     with open(filename, "r") as raw:
         return (
             raw.read()
@@ -61,7 +61,8 @@ def fix_query(assembly_id, filename, join_on='id'):
             .replace("AND regions.assembly_id = :'assembly_id'", "")
             .replace(":'assembly_id'", f"'{assembly_id}'")
             .replace(
-                "WHERE", f"JOIN tmp_regions ON tmp_regions.{join_on} = regions.{join_on}\nWHERE\n"
+                "WHERE",
+                f"JOIN tmp_regions ON tmp_regions.{join_on} = regions.{join_on}\nWHERE\n",
             )
         )
 
@@ -75,7 +76,9 @@ def load_overlapping_regions(region_name):
             )
             cur.execute(table)
             data_query = fix_query(assembly, "files/genes/data.sql")
-            count_query = fix_query(assembly, "files/genes/counts.sql", join_on="urs_taxid")
+            count_query = fix_query(
+                assembly, "files/genes/counts.sql", join_on="urs_taxid"
+            )
 
             with conn.cursor() as cur:
                 data_handle = io.StringIO()
@@ -88,8 +91,8 @@ def load_overlapping_regions(region_name):
 
 
 def load_examples():
-    with open("data/genes/examples.json", "r") as raw:
-        return json.load(raw)
+    with open("data/genes/examples.yaml", "r") as raw:
+        return yaml.load(raw)
 
 
 @pytest.mark.parametrize("expected", load_examples())
