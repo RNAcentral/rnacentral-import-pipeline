@@ -1,5 +1,5 @@
 process generate_files {
-  when { params.qa.rfam.run }
+  when { params.rfam.run }
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
@@ -10,7 +10,7 @@ process generate_files {
   path 'version_file', emit: version_info
 
   script:
-  def base = params.qa.rfam.files
+  def base = params.rfam.files
   """
   mkdir rfam
   cd rfam
@@ -41,13 +41,13 @@ process sequences {
   comm -23 active-urs computed > urs-to-compute
   psql -q -v ON_ERROR_STOP=1 -f "$compute_missing" "$PGDATABASE" > raw.json
   mkdir parts
-  split --filter 'json2fasta --only-valid-easel - \$FILE.fasta' --lines ${params.qa.rfam.chunk_size} raw.json parts/
+  split --filter 'json2fasta --only-valid-easel - \$FILE.fasta' --lines ${params.rfam.chunk_size} raw.json parts/
   """
 }
 
 process scan {
-  cpus { params.qa.rfam.cpus }
-  memory { params.qa.rfam.memory * params.qa.rfam.cpus }
+  cpus { params.rfam.cpus }
+  memory { params.rfam.memory * params.rfam.cpus }
   errorStrategy 'ignore'
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
