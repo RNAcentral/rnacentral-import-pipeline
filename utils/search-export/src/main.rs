@@ -16,10 +16,11 @@ enum Groupable {
     GoAnnotations,
     InteractingProteins,
     InteractingRnas,
+    Orfs,
+    Precompute,
     QaStatus,
     R2dtHits,
     RfamHits,
-    Orfs,
 }
 
 impl FromStr for Groupable {
@@ -28,17 +29,20 @@ impl FromStr for Groupable {
     fn from_str(raw: &str) -> Result<Self, Self::Err> {
         match raw {
             "basic" => Ok(Self::Basic),
+            "base" => Ok(Self::Basic),
             "crs" => Ok(Self::Crs),
             "feedback" => Ok(Self::Feedback),
             "go-annotations" => Ok(Self::GoAnnotations),
             "interacting-proteins" => Ok(Self::InteractingProteins),
             "interacting-rnas" => Ok(Self::InteractingRnas),
             "qa-status" => Ok(Self::QaStatus),
+            "r2dt" => Ok(Self::R2dtHits),
             "r2dt-hits" => Ok(Self::R2dtHits),
             "r2dt_hits" => Ok(Self::R2dtHits),
             "rfam-hits" => Ok(Self::RfamHits),
             "rfam_hits" => Ok(Self::RfamHits),
             "orfs" => Ok(Self::Orfs),
+            "precompute" => Ok(Self::Precompute),
             unknown => Err(format!("Unknown name {}", unknown)),
         }
     }
@@ -169,6 +173,7 @@ fn main() -> Result<()> {
             Groupable::InteractingRnas => {
                 normalize::interacting_rna::group(&path, max_count, &output)?
             },
+            Groupable::Precompute => normalize::precompute::group(&path, max_count, &output)?,
             Groupable::QaStatus => normalize::qa_status::group(&path, max_count, &output)?,
             Groupable::R2dtHits => normalize::r2dt::group(&path, max_count, &output)?,
             Groupable::RfamHits => normalize::rfam_hit::group(&path, max_count, &output)?,
