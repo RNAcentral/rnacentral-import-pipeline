@@ -27,7 +27,7 @@ def validate(sequence: Sequence) -> QaResult:
     sources = sequence.orf_info.all_sources()
     count = len(sources)
     sources = ", ".join(sources)
-    message = f"This sequence contains a possible orf, as annotated by {sources}"
+    message = f"This sequence contains a possible ORF, as annotated by {sources}"
     if count > 1:
-        message = f"This sequence contains {count} possible orfs, as annotated by {sources}"
+        message = f"This sequence contains {count} possible ORFs, as annotated by {sources}"
     return QaResult.not_ok(NAME, message)
