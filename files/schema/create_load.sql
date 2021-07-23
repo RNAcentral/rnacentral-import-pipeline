@@ -320,7 +320,6 @@ CREATE TABLE load_secondary_layout (
 
 create table load_ensembl_pseudogenes (
     gene text not null,
-    urs_taxid text not null,
     region_name text not null,
     chromosome text not null,
     strand int4 not null,
