@@ -30,4 +30,8 @@ class OrfInfo:
         return cls(**raw)
 
     def all_sources(self) -> ty.List[str]:
-        return sorted(self.sources)
+        sources = set(self.sources)
+        if 'cpat' in sources:
+            sources.remove('cpat')
+            sources.add('CPAT')
+        return sorted(sources)
