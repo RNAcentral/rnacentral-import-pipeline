@@ -39,7 +39,7 @@ class CpatOrf:
             stop=int(raw['ORF_end']),
             strand=Strand.build(raw['ORF_strand']),
             metadata={
-                'cufoff': cutoff,
+                'cutoff': cutoff,
                 'coding_probability': coding_prob
             }
         )
