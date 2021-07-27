@@ -41,6 +41,15 @@ WHERE
 ;
 $$,
 $$
+DELETE FROM rnc_sequence_features ft
+USING load_cpat_orfs load
+WHERE
+  ft.urs = load.urs
+  AND ft.taxid = load.taxid
+  AND ft.feature_name = 'cpat_orf'
+;
+$$,
+$$
 INSERT INTO rnc_sequence_features (
   upi,
   taxid,
@@ -57,7 +66,9 @@ SELECT
   'cpat_orf',
   metadata
 from load_cpat_orfs
-);
+) ON CONFLICT (upi, taxid, accession, start, stop, feature_name) DO UPDATE
+SET
+  metadata = excluded.metadata;
 $$,
 $$
 DROP TABLE load_cpat_orfs;
