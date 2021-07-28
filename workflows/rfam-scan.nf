@@ -41,7 +41,7 @@ process sequences {
   comm -23 active-urs computed > urs-to-compute
   psql -q -v ON_ERROR_STOP=1 -f "$compute_missing" "$PGDATABASE" > raw.json
   mkdir parts
-  split --filter 'json2fasta --only-valid-easel - \$FILE.fasta' --lines ${params.rfam.chunk_size} raw.json parts/
+  split --filter 'json2fasta --only-valid-easel - - >> \$FILE.fasta' --lines ${params.rfam.chunk_size} raw.json parts/
   """
 }
 
@@ -103,8 +103,8 @@ workflow rfam_scan {
     Channel.fromPath("files/find-active-xrefs-urs.sql").set { active_xref_sql }
     Channel.fromPath("files/qa/computed.sql").set { computed_sql }
     Channel.fromPath("files/qa/compute-required.sql").set { compute_required_sql }
-    Channel.fromPath("files/qa/rfam.ctl").set { ctl }
-    Channel.fromPath("files/qa/attempted/rfam.ctl").set { attempted_ctl }
+    Channel.fromPath("files/rfam-scan/load.ctl").set { ctl }
+    Channel.fromPath("files/rfam-scan/load-attempted.ctl").set { attempted_ctl }
 
     generate_files(ready)
 
