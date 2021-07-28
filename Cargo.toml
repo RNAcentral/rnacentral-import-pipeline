@@ -1,6 +1,5 @@
 [workspace]
 members = [
-  "utils/kv",
   "utils/json2fasta",
   "utils/split-ena",
   "utils/rnc-core",
