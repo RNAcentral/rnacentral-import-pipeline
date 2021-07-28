@@ -58,7 +58,15 @@ $$,
 $$
 create index ix__load_rfam_model_hits__rfam_model_id on load_rfam_model_hits (rfam_model_id);
 $$,
-$$ insert into rfam_model_hits (
+$$ 
+DELETE FROM rfam_model_hits hits
+USING load_rfam_model_hits load
+WHERE
+  hits.upi = load.upi
+;
+$$,
+$$ 
+insert into rfam_model_hits (
   sequence_start,
   sequence_stop,
   sequence_completeness,
