@@ -102,7 +102,7 @@ def export_go_temrs(filename, output):
     go_terms.export(filename, output)
 
 
-@cli.command('gpi')
+@cli.command("gpi")
 @click.option("--db-url", envvar="PGDATABASE")
 @click.argument("output", default="-", type=click.File("w"))
 def export_gpi(output, db_url):

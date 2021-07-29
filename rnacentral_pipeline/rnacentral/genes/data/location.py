@@ -62,9 +62,9 @@ class Count:
     @classmethod
     def from_json(cls, raw: ty.Dict[str, int]):
         return cls(
-            mapped_count=raw['mapped_count'],
-            given_count=raw['given_count'],
-            total_count=raw['total_count'],
+            mapped_count=raw["mapped_count"],
+            given_count=raw["given_count"],
+            total_count=raw["total_count"],
         )
 
 
@@ -83,8 +83,7 @@ class LocationInfo:
 
     @classmethod
     def build(cls, raw: ty.Dict[str, ty.Any], ontology, counts: ty.Dict[str, Count]):
-        rna_type = RnaType.build(
-            raw["insdc_rna_type"], raw["so_rna_type"], ontology)
+        rna_type = RnaType.build(raw["insdc_rna_type"], raw["so_rna_type"], ontology)
         return cls(
             id=raw["region_id"],
             urs_taxid=raw["urs_taxid"],

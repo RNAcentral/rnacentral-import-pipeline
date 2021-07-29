@@ -100,8 +100,7 @@ class Sequence:
 
         active, inactive = partioned_accessions(so_tree, data["accessions"])
         active = fix_hgnc_data(active)
-        coords = [Coordinate.build(c)
-                  for c in data["coordinates"] if c["assembly_id"]]
+        coords = [Coordinate.build(c) for c in data["coordinates"] if c["assembly_id"]]
 
         previous = {}
         if data["previous"] is not None:
