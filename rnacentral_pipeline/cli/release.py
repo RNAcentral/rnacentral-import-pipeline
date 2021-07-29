@@ -46,7 +46,7 @@ def check_release(limit_file, db_url=None):
     run.check(limit_file, db_url)
 
 
-@cli.command('update-stats')
+@cli.command("update-stats")
 @click.option("--db-url", envvar="PGDATABASE")
 def update_stats(db_url):
     """

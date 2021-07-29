@@ -26,7 +26,9 @@ from rnacentral_pipeline.rnacentral.genes import data, rrna
 LOGGER = logging.getLogger(__name__)
 
 
-def load(handle: ty.IO, counts: ty.Dict[str, data.Count]) -> ty.Iterable[data.LocationInfo]:
+def load(
+    handle: ty.IO, counts: ty.Dict[str, data.Count]
+) -> ty.Iterable[data.LocationInfo]:
     ontology = so_tree.load_ontology(so_tree.REMOTE_ONTOLOGY)
     for entry in psql.json_handler(handle):
         location = data.LocationInfo.build(entry, ontology, counts)
@@ -36,7 +38,7 @@ def load(handle: ty.IO, counts: ty.Dict[str, data.Count]) -> ty.Iterable[data.Lo
 def load_counts(handle: ty.IO) -> ty.Dict[str, data.Count]:
     counts = {}
     for entry in psql.json_handler(handle):
-        counts[entry['urs_taxid']] = data.Count.from_json(entry)
+        counts[entry["urs_taxid"]] = data.Count.from_json(entry)
     return counts
 
 

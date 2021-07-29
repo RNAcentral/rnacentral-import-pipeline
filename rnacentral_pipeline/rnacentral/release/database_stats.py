@@ -148,9 +148,9 @@ def lineage(conn, db_id: int):
 def lengths(conn, db_id: int):
     rna = Table("rna")
     xref = Table(f"xref_p{db_id}_not_deleted")
-    min_length = an.Min(rna.len).as_('min_length')
-    max_length = an.Max(rna.len).as_('max_length')
-    avg_length = an.Avg(rna.len).as_('avg_length')
+    min_length = an.Min(rna.len).as_("min_length")
+    max_length = an.Max(rna.len).as_("max_length")
+    avg_length = an.Avg(rna.len).as_("avg_length")
     with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cursor:
         query = (
             Query.from_(rna)
@@ -246,8 +246,10 @@ def insert(conn, stats: DatabaseStats):
             insert = Query.into(json_stats).insert(stats.name, "", "")
             cur.execute(str(insert))
 
-        fields = [(json_stats.length_counts, stats.length_counts),
-                  (json_stats.taxonomic_lineage, stats.lineage)]
+        fields = [
+            (json_stats.length_counts, stats.length_counts),
+            (json_stats.taxonomic_lineage, stats.lineage),
+        ]
         for (column, value) in fields:
             update = (
                 Query.update(json_stats)
@@ -260,7 +262,7 @@ def insert(conn, stats: DatabaseStats):
 def update_stats(db_url: str):
     db = Table("rnc_database")
     with psycopg2.connect(db_url) as conn:
-        query = Query.from_(db).select(db.id, db.descr).where(db.alive == 'Y')
+        query = Query.from_(db).select(db.id, db.descr).where(db.alive == "Y")
         with conn.cursor() as cur:
             cur.execute(str(query))
             db_ids = list(cur)
