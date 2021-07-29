@@ -111,9 +111,7 @@ def select_possible(hit):
 def select_best(hits):
     hits = list(hits)
     best = max(hits, key=op.attrgetter("match_fraction"))
-    if best.match_fraction == 1.0:
-        return [h for h in hits if h.match_fraction == best.match_fraction]
-    return hits
+    return [h for h in hits if h.match_fraction == best.match_fraction]
 
 
 def parse_psl(assembly_id, handle):
