@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 # -*- coding: utf-8 -*-
 
 """
@@ -14,17 +16,16 @@ limitations under the License.
 """
 
 import csv
-import json
 import operator as op
 import itertools as it
 import logging
+import typing as ty
 
 import attr
 from attr.validators import instance_of as is_a
 
 from rnacentral_pipeline import utils
 from rnacentral_pipeline.databases.data.regions import Exon
-from rnacentral_pipeline.databases.data.regions import Strand
 from rnacentral_pipeline.databases.data.regions import SequenceRegion
 from rnacentral_pipeline.databases.data.regions import CoordinateSystem
 
@@ -64,7 +65,7 @@ class BlatHit(object):
     region = attr.ib(validator=is_a(SequenceRegion))
 
     @classmethod
-    def build(cls, assembly_id, raw):
+    def build(cls, assembly_id: str, raw: ty.Dict[str, ty.Any]) -> BlatHit:
         parts = zip(raw["tStarts"], raw["blockSizes"])
         exons = [Exon(s, s + l) for (s, l) in parts]
 
@@ -83,18 +84,18 @@ class BlatHit(object):
         )
 
     @property
-    def name(self):
+    def name(self) -> str:
         return self.region.name(upi=self.upi)
 
     @property
-    def match_fraction(self):
+    def match_fraction(self) -> float:
         return float(self.matches) / float(self.sequence_length)
 
     def writeable(self):
         return self.region.writeable(self.upi, is_upi=True)
 
 
-def select_possible(hit):
+def select_possible(hit: BlatHit) -> bool:
     if hit.matches < 100 and hit.target_insertions > 25:
         return False
     if hit.matches == hit.sequence_length:
@@ -108,16 +109,16 @@ def select_possible(hit):
     return False
 
 
-def select_best(hits):
+def select_best(hits: ty.Iterable[BlatHit]) -> ty.List[BlatHit]:
     hits = list(hits)
     best = max(hits, key=op.attrgetter("match_fraction"))
     return [h for h in hits if h.match_fraction == best.match_fraction]
 
 
-def parse_psl(assembly_id, handle):
+def parse_psl(assembly_id: str, handle: ty.IO) -> ty.Iterable[BlatHit]:
     to_split = ["blockSizes", "qStarts", "tStarts"]
     for row in csv.reader(handle, delimiter="\t"):
-        result = dict(zip(FIELDS, row))
+        result: ty.Dict[str, ty.Any] = dict(zip(FIELDS, row))
         for key in to_split:
             result[key] = [int(v) for v in result[key].split(",") if v]
         lens = {len(result[k]) for k in to_split}
@@ -130,7 +131,7 @@ def parse_psl(assembly_id, handle):
         yield BlatHit.build(assembly_id, result)
 
 
-def select_hits(hits, sort=False):
+def select_hits(hits: ty.Iterable[BlatHit], sort=False) -> ty.Iterable[BlatHit]:
     key = op.attrgetter("upi")
     if sort:
         hits = sorted(hits, key=key)
