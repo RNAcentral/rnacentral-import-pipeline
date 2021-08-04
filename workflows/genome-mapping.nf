@@ -7,7 +7,6 @@ process setup {
 
   input:
   val(_flag)
-  path(setup)
   path(query)
 
   output:
@@ -20,22 +19,18 @@ process setup {
     -v species_to_map=${params.genome_mapping.species_table} \
     -v min_length=${params.genome_mapping.min_length} \
     -v max_length=${params.genome_mapping.max_length} \
-    -f "$setup" "$PGDATABASE"
-  psql \
-    -v ON_ERROR_STOP=1 \
-    -v tablename=${params.genome_mapping.to_map_table} \
-    -v species_to_map=${params.genome_mapping.species_table} \
-    -f "$query" "$PGDATABASE" > species.csv
+    -f "$query" "$PGDATABASE"
   """
 }
 
 process fetch_unmapped_sequences {
   tag { species }
   maxForks params.genome_mapping.fetch_unmapped_sequences.directives.maxForks
+  memory '10GB'
   clusterOptions '-sp 100'
 
   input:
-  tuple val(species), val(assembly_id), val(taxid), val(division), path(query)
+  tuple val(species), val(assembly_id), val(taxid), val(division), path(possible_query), path(mapped_query), path(query)
 
   output:
   tuple val(species), path('parts/*.fasta')
@@ -44,11 +39,18 @@ process fetch_unmapped_sequences {
   psql \
     -v ON_ERROR_STOP=1 \
     -v taxid=$taxid \
+    -f "$possible_query" \
+    "$PGDATABASE" | sort > possible
+
+  psql \
+    -v ON_ERROR_STOP=1 \
     -v assembly_id=$assembly_id \
-    -v tablename=${params.genome_mapping.to_map_table} \
-    -v species_to_map=${params.genome_mapping.species_table} \
-    -f "$query" \
-    "$PGDATABASE" > raw.json
+    -f "$mapped_query" \
+    "$PGDATABASE" | sort > mapped
+
+  comm -23 possible mapped | awk 'BEGIN { FS="_"; OFS="," } { print $1, $0 }' > urs-to-compute
+
+  psql -q -v ON_ERROR_STOP=1 -f "$query" > raw.json
   json2fasta raw.json rnacentral.fasta
   seqkit shuffle --two-pass rnacentral.fasta > shuffled.fasta
 
@@ -172,18 +174,24 @@ workflow genome_mapping {
   take: ready
   emit: done
   main:
-    Channel.fromPath('files/genome-mapping/setup.sql').set { setup_sql }
     Channel.fromPath('files/genome-mapping/find-species.sql').set { find_species }
+    Channel.fromPath('files/genome-mapping/possible.sql').set { possible_sql }
+    Channel.fromPath('files/genome-mapping/get-mapped.sql').set { mapped_sql }
+    Channel.fromPath('files/genome-mapping/find-unmapped.sql').set { unmapped_sql }
     Channel.fromPath('files/genome-mapping/load.ctl').set { hits_ctl }
     Channel.fromPath('files/genome-mapping/attempted.ctl').set { attempted_ctl }
-    Channel.fromPath('files/genome-mapping/find-unmapped.sql').set { unmapped_sql }
 
-    setup(ready, setup_sql, find_species) \
+    setup(ready, find_species) \
     | splitCsv \
     | filter { s, a, t, d -> !params.genome_mapping.species_excluded_from_mapping.contains(s) } \
     | set { genome_info }
 
-    genome_info | combine(unmapped_sql) | fetch_unmapped_sequences | set { split_sequences }
+    genome_info \
+    | combine(possible_sql) \
+    | combine(mapped_sql) \
+    | combine(unmapped_sql) \
+    | fetch_unmapped_sequences \
+    | set { split_sequences }
 
     genome_info \
     | download_genome \
