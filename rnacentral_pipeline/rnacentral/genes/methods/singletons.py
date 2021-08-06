@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Copyright [2009-2020] EMBL-European Bioinformatics Institute
+Copyright [2009-2021] EMBL-European Bioinformatics Institute
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -13,10 +13,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from .rna_type import *
-from .extent import *
-from .location import *
-from .cluster import *
-from .state import *
-from .context import *
-from .methods import *
+import logging
+
+from rnacentral_pipeline.rnacentral.genes.data import State, LocationInfo, Context
+from .common_filter import filter
+
+LOGGER = logging.getLogger(__name__)
+
+
+class SingletonMethod:
+    def handle_location(self, state: State, context: Context, location: LocationInfo):
+        if filter(state, context, location):
+            return
+        LOGGER.debug("Adding singleton cluster of %s", location.id)
+        state.add_singleton_cluster(location)
