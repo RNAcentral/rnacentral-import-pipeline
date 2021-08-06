@@ -86,6 +86,7 @@ class RnaType:
 
     @classmethod
     def build(cls, insdc, so_term, ontology):
+        so_term = so_tree.RENAME.get(so_term, so_term)
         subtree = so_tree.rna_type_tree(ontology, so_term)
         subtree = tuple([SoTermInfo(p[1], p[0]) for p in subtree])
         so_id = ontology.name_to_id[so_term]
