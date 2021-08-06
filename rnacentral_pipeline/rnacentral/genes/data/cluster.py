@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 # -*- coding: utf-8 -*-
 
 """
@@ -67,7 +69,7 @@ class ClusteringKey:
     strand = attr.ib(validator=is_a(int))
 
     @classmethod
-    def from_location(cls, location: LocationInfo):
+    def from_location(cls, location: LocationInfo) -> ClusteringKey:
         return cls(chromosome=location.extent.chromosome, strand=location.extent.strand)
 
 

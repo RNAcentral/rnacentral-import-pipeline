@@ -38,12 +38,15 @@ process fetch_context_data {
   maxForks params.genes.extract_sequences.maxForks
 
   input:
-  tuple val(assembly_id), val(taxid)
+  tuple val(assembly_id), val(taxid), path(genes_query)
 
   output:
-  val(assembly_id), path('genes.gff'), path('repetative.bed')
+  tuple val(assembly_id), path('pseudo.gff'), path('repetitive.bed')
 
   """
+  psql -v ON_ERROR_STOP=1 -v assembly_id=$assembly_id -f $genes_query > pseudo.json
+  rnac ftp-export coordinates as-gff3 pseudo.json pseudo.gff
+  touch repetitive.bed
   """
 }
 
@@ -101,7 +104,10 @@ workflow genes {
     | extract_sequences \
     | set { sequences }
 
-    to_fetch | fetch_context_data | set { context_files }
+    to_fetch \
+    | combine(Channel.fromPath('files/genes/pseudogenes.sql')) \
+    | fetch_context_data \
+    | set { context_files }
 
     sequences | join(context_files) | build
 

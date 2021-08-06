@@ -21,6 +21,7 @@ from intervaltree import IntervalTree
 
 from rnacentral_pipeline import psql
 from rnacentral_pipeline.rnacentral.genes import data, rrna
+from rnacentral_pipeline.rnacentral.genes.data import Methods
 
 LOGGER = logging.getLogger(__name__)
 
@@ -102,11 +103,13 @@ def overlaps_pseudogene(context: data.Context, location: data.LocationInfo) -> b
 
 
 def build(
-    context: data.Context, locations: ty.Iterable[data.LocationInfo]
+        context: data.Context, method: Methods, locations: ty.Iterable[data.LocationInfo]
 ) -> ty.Iterable[data.FinalizedState]:
+    print(dir(method))
+    handler = method.handler()
     for (key, locations) in it.groupby(locations, data.ClusteringKey.from_location):
         LOGGER.debug("Building clusters for %s", key)
-        state = data.State(key=key)
+        state = data.State(key=key, method=method.name)
         for location in locations:
             LOGGER.debug("Testing %s", location.id)
             state.add_location(location)
@@ -114,42 +117,7 @@ def build(
                 "Lengths, locations: %i, tree: %i, clusters: %i", *state.lengths()
             )
 
-            if always_ignorable_location(location):
-                LOGGER.debug("Always Ignoring: %s", location.id)
-                state.ignore_location(location)
-                continue
-
-            if always_bad_location(location):
-                LOGGER.debug("Always Rejected: %s", location.id)
-                state.reject_location(location)
-                continue
-
-            if overlaps_pseudogene(context, location):
-                LOGGER.debug("Rejecting Pseudogene: %s", location.id)
-                state.reject_location(location)
-                continue
-
-            overlaps = state.overlaps(location)
-            if not overlaps:
-                LOGGER.debug("Adding singleton cluster of %s", location.id)
-                state.add_singleton_cluster(location)
-                continue
-
-            to_merge = select_mergable(location, overlaps)
-            if to_merge is None:
-                LOGGER.debug("Adding singleton cluster of %s", location.id)
-                state.add_singleton_cluster(location)
-                continue
-            elif len(to_merge) == 1:
-                cluster = to_merge[0]
-                LOGGER.debug(
-                    "Adding location %i to cluster %i", location.id, cluster.id
-                )
-                state.add_to_cluster(location, cluster.id)
-            else:
-                LOGGER.debug("Merging into %s", [c.id for c in to_merge])
-                cluster_id = state.merge_clusters(to_merge)
-                state.add_to_cluster(location, cluster_id)
+            handler.handle_location(state, context, location)
 
         state.validate()
         LOGGER.debug("Done building clusters for %s", key)
@@ -173,6 +141,6 @@ def build(
         yield state.finalize()
 
 
-def from_json(context: data.Context, handle: ty.IO) -> ty.Iterable[data.FinalizedState]:
+def from_json(context: data.Context, method: Methods, handle: ty.IO) -> ty.Iterable[data.FinalizedState]:
     locations = load(context, handle)
-    return build(context, locations)
+    return build(context, method, locations)
