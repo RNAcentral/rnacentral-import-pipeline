@@ -25,7 +25,7 @@ INSERT INTO rnc_locus (
   locus_start,
   locus_stop,
   member_count
-) ( 
+) (
 SELECT DISTINCT
   assembly_id,
   locus_name,
@@ -43,7 +43,7 @@ INSERT INTO rnc_locus_members (
   region_id,
   locus_id,
   membership_status
-) ( 
+) (
 SELECT DISTINCT
   load.urs_taxid,
   load.region_id,
@@ -61,7 +61,7 @@ INSERT INTO rnc_gene_status (
   assembly_id,
   status
 ) (
-SELECT
+SELECT DISTINCT
   load.urs_taxid,
   load.region_id,
   load.assembly_id,
@@ -70,18 +70,18 @@ FROM load_gene_status load
 );
 
 INSERT INTO rnc_gene_status (
-  assembly_id, 
-  urs_taxid, 
-  region_id, 
+  assembly_id,
+  urs_taxid,
+  region_id,
   status
 ) (
-SELECT 
-  locus.assembly_id, 
-  member.urs_taxid, 
-  member.region_id, 
-  'clustered' 
-FROM rnc_locus locus 
-JOIN rnc_locus_members member 
+SELECT DISTINCT
+  locus.assembly_id,
+  member.urs_taxid,
+  member.region_id,
+  'clustered'
+FROM rnc_locus locus
+JOIN rnc_locus_members member
 ON member.locus_id = locus.id
 );
 
