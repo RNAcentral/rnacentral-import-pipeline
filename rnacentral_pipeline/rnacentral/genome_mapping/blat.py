@@ -112,7 +112,7 @@ def select_possible(hit: BlatHit) -> bool:
 def select_best(hits: ty.Iterable[BlatHit]) -> ty.List[BlatHit]:
     hits = list(hits)
     best = max(hits, key=op.attrgetter("match_fraction"))
-    return [h for h in hits if h.match_fraction == best.match_fraction]
+    return [h for h in hits if h.match_fraction >= best.match_fraction]
 
 
 def parse_psl(assembly_id: str, handle: ty.IO) -> ty.Iterable[BlatHit]:
