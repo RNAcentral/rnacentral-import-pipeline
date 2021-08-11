@@ -70,7 +70,7 @@ process download_genome {
   tuple val(species), val(assembly), val(taxid), val(division)
 
   output:
-  tuple val(species), val(assembly), path('parts/*.{2bit,ooc}')
+  tuple val(species), val(assembly), path("${species}.{2bit,ooc}")
 
   """
   set -o pipefail
@@ -79,29 +79,20 @@ process download_genome {
     xargs -I {} fetch generic '{}' ${species}.fasta.gz
 
   gzip -d ${species}.fasta.gz
-  split-sequences \
-    --max-nucleotides ${params.genome_mapping.download_genome.nucleotides_per_chunk} \
-    --max-sequences ${params.genome_mapping.download_genome.sequences_per_chunk} \
-    ${species}.fasta parts
-
-  find parts -name '*.fasta' |\
-    xargs -I {} faToTwoBit -noMask {} {}.2bit
-
-  find parts -name '*.fasta' |\
-  xargs -I {} \
-    blat \
-      -makeOoc={}.ooc \
-      -stepSize=${params.genome_mapping.blat.options.step_size} \
-      -repMatch=${params.genome_mapping.blat.options.rep_match} \
-      -minScore=${params.genome_mapping.blat.options.min_score} \
-      {} /dev/null /dev/null
+  faToTwoBit -noMask ${species}.fasta ${species}.2bit
+  blat \
+    -makeOoc=${species}.ooc \
+    -stepSize=${params.genome_mapping.blat.options.step_size} \
+    -repMatch=${params.genome_mapping.blat.options.rep_match} \
+    -minScore=${params.genome_mapping.blat.options.min_score} \
+    ${species}.fasta /dev/null /dev/null
   """
 }
 
 process blat {
   tag { "${species}-${genome.baseName}-${chunk.baseName}" }
   memory { params.genome_mapping.blat.directives.memory }
-  errorStrategy 'finish'
+  errorStrategy 'ignore'
 
   input:
   tuple val(species), val(assembly), path(genome), path(ooc), path(chunk)
