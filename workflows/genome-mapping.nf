@@ -13,13 +13,7 @@ process setup {
   path('species.csv')
 
   """
-  psql \
-    -v ON_ERROR_STOP=1 \
-    -v tablename=${params.genome_mapping.to_map_table} \
-    -v species_to_map=${params.genome_mapping.species_table} \
-    -v min_length=${params.genome_mapping.min_length} \
-    -v max_length=${params.genome_mapping.max_length} \
-    -f "$query" "$PGDATABASE"
+  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > species.csv
   """
 }
 
@@ -39,6 +33,8 @@ process fetch_unmapped_sequences {
   psql \
     -v ON_ERROR_STOP=1 \
     -v taxid=$taxid \
+    -v min_length=${params.genome_mapping.min_length} \
+    -v max_length=${params.genome_mapping.max_length} \
     -f "$possible_query" \
     "$PGDATABASE" | sort > possible
 
