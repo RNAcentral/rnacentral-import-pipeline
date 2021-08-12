@@ -165,7 +165,7 @@ workflow genome_mapping {
   take: ready
   emit: done
   main:
-    Channel.fromPath('files/genome-mapping/find-species.sql').set { find_species }
+    Channel.fromPath('files/genome-mapping/find_species.sql').set { find_species }
     Channel.fromPath('files/genome-mapping/possible.sql').set { possible_sql }
     Channel.fromPath('files/genome-mapping/get-mapped.sql').set { mapped_sql }
     Channel.fromPath('files/genome-mapping/find-unmapped.sql').set { unmapped_sql }
