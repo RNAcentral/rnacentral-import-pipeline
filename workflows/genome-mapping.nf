@@ -44,9 +44,9 @@ process fetch_unmapped_sequences {
     -f "$mapped_query" \
     "$PGDATABASE" | sort > mapped
 
-  comm -23 possible mapped | awk 'BEGIN { FS="_"; OFS="," } { print $1, $0 }' > urs-to-compute
+  comm -23 possible mapped | awk 'BEGIN { FS="_"; OFS="," } { print \$1, \$0 }' > urs-to-compute
 
-  psql -q -v ON_ERROR_STOP=1 -f "$query" > raw.json
+  psql -q -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > raw.json
   json2fasta raw.json rnacentral.fasta
   seqkit shuffle --two-pass rnacentral.fasta > shuffled.fasta
 

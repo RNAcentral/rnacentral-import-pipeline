@@ -3,7 +3,7 @@ CREATE TEMP TABLE urs_to_compute (
   urs_taxid text NOT NULL
 );
 
-\copy urs_to_compute from 'urs-to-compute'
+\copy urs_to_compute from 'urs-to-compute' csv
 
 COPY (
 SELECT
