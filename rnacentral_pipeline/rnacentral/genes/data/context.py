@@ -50,6 +50,7 @@ class Context:
     pseudogenes = attr.ib(validator=is_a(IntervalTree))
     repetitive = attr.ib(validator=is_a(IntervalTree))
     counts: ty.Dict[str, Count] = attr.ib(validator=is_a(dict))
+    max_rfam_shift = attr.ib(validator=is_a(int), default=10)
 
     @classmethod
     def from_files(cls, genes: ty.IO, repetitive: ty.IO, counts: ty.IO) -> Context:

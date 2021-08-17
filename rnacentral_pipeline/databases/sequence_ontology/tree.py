@@ -156,7 +156,7 @@ class SoOntology:
                     mapping[insdc_name] = so_id
         return mapping
 
-    def rna_type_tree(self, child, parents):
+    def rna_type_tree(self, child, parents) -> ty.List[ty.Tuple[str, str]]:
         if child in ALTERNATES:
             return ALTERNATES[child]
 

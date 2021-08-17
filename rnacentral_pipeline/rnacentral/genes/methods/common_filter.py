@@ -14,16 +14,41 @@ limitations under the License.
 """
 
 import logging
+import typing as ty
 
-from rnacentral_pipeline.rnacentral.genes.data import State, LocationInfo, Context
+from rnacentral_pipeline.databases.data.databases import Database
+from rnacentral_pipeline.rnacentral.genes.data import State, LocationInfo, Context, Cluster
 
 LOGGER = logging.getLogger(__name__)
 
 def overlaps_pseudogene(context: Context, location: LocationInfo) -> bool:
     return bool(context.pseudogenes.overlap(location.as_interval()))
 
+
 def overlaps_repetitive_region(context: Context, location: LocationInfo) -> bool:
     return bool(context.repetitive.overlap(location.as_interval()))
+
+
+# def possible_rfam_overlap(rfam: LocationInfo, other: LocationInfo) -> bool:
+
+
+def is_rfam_shift(state: State, context: Context, location: LocationInfo, overlaps: ty.List[Cluster]) -> bool:
+    return False
+#     if not location.is_rfam_only():
+#         return False
+#     assert not location.has_introns()
+#     for cluster in overlaps:
+#         locations = state.members_of(cluster.id)
+#         rfam_range = rfam.exons[0]
+#         for other in locations:
+#             if Database.rfam in other.databases:
+#                 continue
+#             if other.has_introns():
+#                 continue
+#             other_range = other.exons[0]
+#             if (rfam_range.start other_range.start &&
+#     return False
+
 
 def always_bad_location(location: LocationInfo) -> bool:
     if location.qa.has_issue:
@@ -61,6 +86,14 @@ def filter(state: State, context: Context, location: LocationInfo) -> bool:
 
     if overlaps_repetitive_region(context, location):
         LOGGER.debug("Rejected repetitive region: %s", location.id)
+        state.reject_location(location)
+        return True
+    return False
+
+
+def filter_overlaps(state: State, context: Context, location: LocationInfo, overlaps: ty.List[Cluster]):
+    if is_rfam_shift(state, context, location, overlaps):
+        LOGGER.debug("Rejecting %s as it is an Rfam shift", location)
         state.reject_location(location)
         return True
     return False
