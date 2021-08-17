@@ -17,7 +17,7 @@ import logging
 import typing as ty
 
 from rnacentral_pipeline.rnacentral.genes.data import State, LocationInfo, Context, Cluster
-from .common_filter import filter
+from .common_filter import filter, filter_overlaps
 
 LOGGER = logging.getLogger(__name__)
 
@@ -28,10 +28,10 @@ class RuleMethod:
         if not rna_types:
             raise ValueError("This should be impossible")
 
-        if len(rna_types) != 1:
-            return False
-        rna_type = rna_types.pop()
-        return rna_type.normalized_term == location.rna_type.normalized_term
+        for rna_type in rna_types:
+            if rna_type.normalized_term != location.rna_type.normalized_term:
+                return False
+        return True
 
     def select_mergable(self, location: LocationInfo, clusters: ty.List[Cluster]) -> ty.Optional[ty.List[Cluster]]:
         to_merge = []
@@ -55,6 +55,9 @@ class RuleMethod:
         if not overlaps:
             LOGGER.debug("Adding singleton cluster of %s", location.id)
             state.add_singleton_cluster(location)
+            return
+
+        if filter_overlaps(location, overlaps):
             return
 
         to_merge = self.select_mergable(location, overlaps)

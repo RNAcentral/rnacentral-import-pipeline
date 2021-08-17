@@ -20,7 +20,8 @@ import typing as ty
 from intervaltree import IntervalTree
 
 from rnacentral_pipeline import psql
-from rnacentral_pipeline.rnacentral.genes import data, rrna
+from rnacentral_pipeline.rnacentral.genes import data
+from rnacentral_pipeline.rnacentral.genes import classify
 from rnacentral_pipeline.rnacentral.genes.data import Methods
 
 LOGGER = logging.getLogger(__name__)
@@ -105,7 +106,6 @@ def overlaps_pseudogene(context: data.Context, location: data.LocationInfo) -> b
 def build(
         context: data.Context, method: Methods, locations: ty.Iterable[data.LocationInfo]
 ) -> ty.Iterable[data.FinalizedState]:
-    print(dir(method))
     handler = method.handler()
     for (key, locations) in it.groupby(locations, data.ClusteringKey.from_location):
         LOGGER.debug("Building clusters for %s", key)
@@ -135,7 +135,9 @@ def build(
 
             members = state.members_of(cluster_id)
             if any(l.rna_type.is_a("rRNA") for l in members):
-                rrna.classify_cluster(state, cluster_id)
+                classify.rrna(state, cluster_id)
+            elif any(l.rna_type.is_a('miRNA') for l in members):
+                classify.mirna(state, cluster_id)
             else:
                 state.ignore_cluster(cluster_id)
         yield state.finalize()

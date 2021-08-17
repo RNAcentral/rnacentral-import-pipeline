@@ -22,6 +22,7 @@ from gffutils import Feature
 from intervaltree import Interval
 
 from rnacentral_pipeline.databases.data.regions import Exon
+from rnacentral_pipeline.databases.data.databases import Database
 from rnacentral_pipeline.rnacentral.ftp_export.coordinates.bed import BedEntry
 
 from .extent import Extent
@@ -74,18 +75,18 @@ class Count:
             raise ValueError("Counts do not sum")
 
 
-@attr.s(auto_attribs=True, frozen=True, slots=True, hash=True)
+@attr.s(frozen=True, slots=True, hash=True)
 class LocationInfo:
-    id: int
-    urs_taxid: str
-    extent: Extent
-    exons: ty.Tuple[Exon]
-    region_name: str
-    rna_type: RnaType
-    qa: QaInfo
-    providing_databases: ty.Tuple[str]
-    databases: ty.Tuple[str]
-    counts: Count
+    id: int = attr.ib(validator=is_a(int))
+    urs_taxid: str = attr.ib(validator=is_a(str))
+    extent: Extent = attr.ib(validator=is_a(Extent))
+    exons: ty.Tuple[Exon] = attr.ib(validator=is_a(tuple))
+    region_name: str = attr.ib(validator=is_a(str))
+    rna_type: RnaType = attr.ib(validator=is_a(RnaType))
+    qa: QaInfo = attr.ib(validator=is_a(QaInfo))
+    providing_databases: ty.Tuple[Database] = attr.ib(validator=is_a(tuple))
+    databases: ty.Tuple[Database] = attr.ib(validator=is_a(tuple))
+    counts: Count = attr.ib(validator=is_a(Count))
 
     @classmethod
     def build(cls, context, raw: ty.Dict[str, ty.Any]):
@@ -100,8 +101,8 @@ class LocationInfo:
             region_name=raw["region_name"],
             rna_type=rna_type,
             qa=QaInfo.build(raw["qa"][0]),
-            providing_databases=tuple(raw["providing_databases"]),
-            databases=tuple(raw["databases"]),
+            providing_databases=tuple(Database.build(d) for d in raw["providing_databases"]),
+            databases=tuple(Database.build(d) for d in raw["databases"]),
             counts=context.count_for(raw["urs_taxid"]),
         )
 
@@ -121,7 +122,9 @@ class LocationInfo:
         return len(self.exons) > 1
 
     def is_rfam_only(self):
-        return self.databases == ("Rfam",)
+        inferred = {Database.genecards, Database.malacards, Database.pirbase}
+        dbs = set(self.databases) - inferred
+        return dbs == set([Database.rfam])
 
     def as_interval(self) -> Interval:
         return Interval(self.extent.start, self.extent.stop, self.id)
@@ -132,7 +135,7 @@ class LocationInfo:
         yield BedEntry(
             rna_id=self.urs_taxid,
             rna_type=self.rna_type.so_term,
-            databases=",".join(self.providing_databases),
+            databases=",".join(sorted(d.pretty() for d in self.providing_databases)),
             region=region,
         )
 
