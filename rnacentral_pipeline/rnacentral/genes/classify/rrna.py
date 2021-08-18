@@ -15,7 +15,7 @@ limitations under the License.
 
 from rnacentral_pipeline.databases.data.databases import Database
 
-from . import data
+from rnacentral_pipeline.rnacentral.genes import data
 
 REP_DBS = {
     Database.pdbe,

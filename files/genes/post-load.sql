@@ -83,7 +83,12 @@ SELECT DISTINCT
 FROM rnc_locus locus
 JOIN rnc_locus_members member
 ON member.locus_id = locus.id
-);
+) ON CONFLICT (region_id) DO UPDATE
+SET
+  assembly_id = EXCLUDED.assembly_id,
+  urs_taxid = EXCLUDED.urs_taxid,
+  status = EXCLUDED.status
+;
 
 DROP TABLE load_locus;
 DROP TABLE load_gene_status;

@@ -13,6 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import typing as ty
 
 from rnacentral_pipeline.databases.data.databases import Database
 from rnacentral_pipeline.rnacentral.genes import data
@@ -28,7 +29,7 @@ def ordered_choice_highlight(state: data.State, cluster: int, selector, choices:
     for location in state.members_of(cluster):
         if not selector(location):
             continue
-        for index, db in enumberate(choices):
+        for index, db in enumerate(choices):
             if db in location.databases:
                 grouped[index].append(location)
 
