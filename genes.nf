@@ -44,7 +44,7 @@ process fetch_context_data {
   tuple val(assembly_id), path('pseudo.gff'), path('repetitive.bed')
 
   """
-  psql -v ON_ERROR_STOP=1 -v assembly_id=$assembly_id -f $genes_query > pseudo.json
+  psql -v ON_ERROR_STOP=1 -v assembly_id=$assembly_id -f $genes_query "$PGDATABASE" > pseudo.json
   rnac ftp-export coordinates as-gff3 pseudo.json pseudo.gff
   touch repetitive.bed
   """
@@ -55,7 +55,7 @@ process build {
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
-  tuple val(assembly_id), path(data_file), path(count_file), path(genes), path(repetative)
+  tuple val(assembly_id), path(data_file), path(counts), path(genes), path(repetative)
 
   output:
   path 'locus.csv', emit: locus

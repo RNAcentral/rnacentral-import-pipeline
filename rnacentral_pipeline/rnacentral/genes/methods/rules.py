@@ -57,7 +57,7 @@ class RuleMethod:
             state.add_singleton_cluster(location)
             return
 
-        if filter_overlaps(location, overlaps):
+        if filter_overlaps(state, context, location, overlaps):
             return
 
         to_merge = self.select_mergable(location, overlaps)
