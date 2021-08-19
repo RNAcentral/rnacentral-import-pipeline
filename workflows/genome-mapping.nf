@@ -44,16 +44,21 @@ process fetch_unmapped_sequences {
     -f "$mapped_query" \
     "$PGDATABASE" | sort > mapped
 
+  mkdir parts
+
   comm -23 possible mapped | awk 'BEGIN { FS="_"; OFS="," } { print \$1, \$0 }' > urs-to-compute
+  if [[ -z urs-to-compute ]]; then
+    touch parts/empty.fasta
+  else
+    psql -q -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > raw.json
+    json2fasta raw.json rnacentral.fasta
+    seqkit shuffle --two-pass rnacentral.fasta > shuffled.fasta
 
-  psql -q -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > raw.json
-  json2fasta raw.json rnacentral.fasta
-  seqkit shuffle --two-pass rnacentral.fasta > shuffled.fasta
-
-  split-sequences \
-    --max-nucleotides ${params.genome_mapping.fetch_unmapped_sequences.nucleotides_per_chunk} \
-    --max-sequences ${params.genome_mapping.fetch_unmapped_sequences.sequences_per_chunk} \
-      shuffled.fasta parts
+    split-sequences \
+      --max-nucleotides ${params.genome_mapping.fetch_unmapped_sequences.nucleotides_per_chunk} \
+      --max-sequences ${params.genome_mapping.fetch_unmapped_sequences.sequences_per_chunk} \
+        shuffled.fasta parts
+  fi
   """
 }
 
@@ -188,6 +193,7 @@ workflow genome_mapping {
         .combinations()
         .inject([]) { acc, files -> acc << [species, assembly] + files.flatten() }
     } \
+    | filter { s, a, g, o, chunk -> !chunk.isEmpty() } \
     | blat
 
     blat.out.hits | groupTuple | select_mapped_locations | collect | set { hits }
