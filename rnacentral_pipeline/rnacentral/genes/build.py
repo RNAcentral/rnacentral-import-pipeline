@@ -139,7 +139,7 @@ def build(
             elif any(l.rna_type.is_a('miRNA') for l in members):
                 classify.mirna(state, cluster_id)
             else:
-                state.ignore_cluster(cluster_id)
+                LOGGER.info("Do not know how to cluster cluster %s", cluster_id)
         yield state.finalize()
 
 
