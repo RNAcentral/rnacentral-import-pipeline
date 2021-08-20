@@ -95,7 +95,6 @@ workflow genes {
     | combine(Channel.fromPath('files/genes/schema.sql')) \
     | get_species \
     | splitCsv \
-    | map { row -> row[0] } \
     | set { to_fetch }
 
     to_fetch \
