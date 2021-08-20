@@ -64,26 +64,22 @@ def always_bad_location(location: LocationInfo) -> bool:
     return False
 
 
-def always_ignorable_location(location: LocationInfo) -> bool:
-    return False
-
-
 def filter(state: State, context: Context, location: LocationInfo) -> bool:
-    if always_ignorable_location(location):
-        LOGGER.debug("Always Ignoring: %s", location.id)
-        state.ignore_location(location)
-        return True
+    LOGGER.debug("Testing common conditions for %s", location.id)
 
+    LOGGER.debug("Checking for invalid position")
     if always_bad_location(location):
         LOGGER.debug("Always Rejected: %s", location.id)
         state.reject_location(location)
         return True
 
+    LOGGER.debug("Checking for pseudogene")
     if overlaps_pseudogene(context, location):
         LOGGER.debug("Rejecting Pseudogene: %s", location.id)
         state.reject_location(location)
         return True
 
+    LOGGER.debug("Checking for repeat overlap")
     if overlaps_repetitive_region(context, location):
         LOGGER.debug("Rejected repetitive region: %s", location.id)
         state.reject_location(location)
