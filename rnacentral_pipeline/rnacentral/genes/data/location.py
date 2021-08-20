@@ -13,6 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import re
 import typing as ty
 from collections import OrderedDict
 
@@ -107,16 +108,21 @@ class LocationInfo:
         )
 
     @property
-    def start(self):
+    def start(self) -> int:
         return self.extent.start
 
     @property
-    def stop(self):
+    def stop(self) -> int:
         return self.extent.stop
 
     @property
-    def name(self):
+    def name(self) -> str:
         return self.region_name
+
+    @property
+    def short_urs_suffix(self) -> str:
+        urs, _taxid = self.urs_taxid.split("_")
+        return re.sub("URS0*", "", urs)
 
     def has_introns(self):
         return len(self.exons) > 1
@@ -129,7 +135,7 @@ class LocationInfo:
     def as_interval(self) -> Interval:
         return Interval(self.extent.start, self.extent.stop, self.id)
 
-    def as_bed(self):
+    def as_bed(self) -> ty.Iterable[BedEntry]:
         region = self.extent.as_region()
         region = attr.assoc(region, exons=self.exons)
         yield BedEntry(
@@ -139,7 +145,7 @@ class LocationInfo:
             region=region,
         )
 
-    def as_features(self):
+    def as_features(self) -> ty.Iterable[Feature]:
         transcript_name = self.urs_taxid
         yield Feature(
             seqid=self.extent.chromosome,
@@ -176,7 +182,7 @@ class LocationInfo:
                 ),
             )
 
-    def as_writeable(self, status=None):
+    def as_writeable(self, status=None) -> ty.Iterable[ty.List[str]]:
         yield [
             self.extent.assembly,
             self.id,
