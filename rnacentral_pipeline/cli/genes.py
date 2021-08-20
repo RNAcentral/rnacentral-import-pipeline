@@ -47,7 +47,7 @@ def cli():
 @click.option("--extended-bed/--simple-bed", default=False)
 @click.argument("data_file", type=click.File("r"))
 @click.argument("count_file", type=click.File("r"))
-@click.argument("genes_file", type=click.File("r"))
+@click.argument("genes_file", type=click.Path())
 @click.argument("repetitive_file", type=click.File("r"))
 @click.argument(
     "output",

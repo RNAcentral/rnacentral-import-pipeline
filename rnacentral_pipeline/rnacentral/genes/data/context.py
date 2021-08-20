@@ -16,15 +16,18 @@ limitations under the License.
 """
 
 import typing as ty
+from pathlib import Path
+import tempfile
 
 import attr
 from attr.validators import instance_of as is_a
 from intervaltree import IntervalTree
+import gffutils
 
 from rnacentral_pipeline import psql
 from rnacentral_pipeline.databases.sequence_ontology import tree as so_tree
 
-from .location import Count, LocationInfo
+from .location import Count
 
 
 def load_counts(handle: ty.IO) -> ty.Dict[str, Count]:
@@ -36,8 +39,14 @@ def load_counts(handle: ty.IO) -> ty.Dict[str, Count]:
     return counts
 
 
-def load_pseudogenes(handle: ty.IO) -> IntervalTree:
-    return IntervalTree()
+def load_pseudogenes(path: Path) -> IntervalTree:
+    tree = IntervalTree()
+    with tempfile.NamedTemporaryFile() as tmp:
+        db = gffutils.create_db(str(path), tmp.name)
+        for ncrna in db.features_of_type("transcript"):
+            for exon in db.children(ncrna):
+                tree.addi(exon.start, exon.stop + 1, ncrna["ID"])
+    return tree
 
 
 def load_repetitive(handle: ty.IO) -> IntervalTree:
@@ -53,7 +62,7 @@ class Context:
     max_rfam_shift = attr.ib(validator=is_a(int), default=10)
 
     @classmethod
-    def from_files(cls, genes: ty.IO, repetitive: ty.IO, counts: ty.IO) -> Context:
+    def from_files(cls, genes: Path, repetitive: ty.IO, counts: ty.IO) -> Context:
         ontology = so_tree.load_ontology(so_tree.REMOTE_ONTOLOGY)
         return cls(
             ontology=ontology,
