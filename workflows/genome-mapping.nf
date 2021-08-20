@@ -42,7 +42,7 @@ process fetch_unmapped_sequences {
     -v ON_ERROR_STOP=1 \
     -v assembly_id=$assembly_id \
     -f "$mapped_query" \
-    "$PGDATABASE" | sort > mapped
+    "$PGDATABASE" | sort -u > mapped
 
   mkdir parts
 
