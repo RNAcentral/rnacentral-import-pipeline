@@ -76,7 +76,6 @@ def build_genes(
 
     context = Context.from_files(genes_file, repetitive_file, count_file)
     method = Methods.from_name(method)
-    print(method)
     data = build.from_json(context, method, data_file)
     format = write.Format.from_name(format)
     allowed_members = set()
