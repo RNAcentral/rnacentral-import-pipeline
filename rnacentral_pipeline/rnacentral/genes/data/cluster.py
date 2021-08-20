@@ -261,8 +261,10 @@ class WriteableCluster:
     ) -> ty.Iterable[BedEntry]:
         members = self.__writeable_members__(allowed_members)
         if members and include_gene:
+            name = sorted(set(m.location.short_urs_suffix for m in members))
+            name = ",".join(name)
             yield BedEntry(
-                rna_id=self.id_hash(),
+                rna_id=name,
                 rna_type="gene",
                 databases="RNAcentral",
                 region=self.extent.as_region(),
