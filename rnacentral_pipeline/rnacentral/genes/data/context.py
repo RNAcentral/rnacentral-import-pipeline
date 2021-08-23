@@ -15,9 +15,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import collections as coll
 import typing as ty
 from pathlib import Path
-import tempfile
 
 import attr
 from attr.validators import instance_of as is_a
@@ -39,25 +39,28 @@ def load_counts(handle: ty.IO) -> ty.Dict[str, Count]:
     return counts
 
 
-def load_pseudogenes(path: Path) -> IntervalTree:
-    tree = IntervalTree()
-    with tempfile.NamedTemporaryFile() as tmp:
-        db = gffutils.create_db(str(path), tmp.name)
-        for ncrna in db.features_of_type("transcript"):
-            for exon in db.children(ncrna):
-                tree.addi(exon.start, exon.stop + 1, ncrna["ID"])
-    return tree
+def load_pseudogenes(path: Path) -> ty.DefaultDict[str, IntervalTree]:
+    trees = coll.defaultdict(IntervalTree)
+    with path.open('r') as handle:
+        for entry in psql.json_handler(handle):
+            tree = trees[entry['chromosome']]
+            for exon in entry['exons']:
+                tree.addi(exon['exon_start'], exon['exon_stop'], entry['rna_id'])
+            trees[entry['chromosome']] = tree
+
+    return trees
 
 
-def load_repetitive(handle: ty.IO) -> IntervalTree:
-    return IntervalTree()
+def load_repetitive(handle: ty.IO) -> ty.DefaultDict[str, IntervalTree]:
+    trees = coll.defaultdict(IntervalTree)
+    return trees
 
 
 @attr.s()
 class Context:
     ontology = attr.ib(validator=is_a(so_tree.SoOntology))
-    pseudogenes = attr.ib(validator=is_a(IntervalTree))
-    repetitive = attr.ib(validator=is_a(IntervalTree))
+    pseudogenes = attr.ib(validator=is_a(ty.DefaultDict[str, IntervalTree]))
+    repetitive = attr.ib(validator=is_a(ty.DefaultDict[str, IntervalTree]))
     counts: ty.Dict[str, Count] = attr.ib(validator=is_a(dict))
     max_rfam_shift = attr.ib(validator=is_a(int), default=10)
 
@@ -77,7 +80,9 @@ class Context:
         return self.counts[urs_taxid]
 
     def overlaps_pseudogene(self, location: LocationInfo) -> bool:
-        return self.pseudogenes.overlaps(location.as_interval())
+        tree = self.pseudogenes[location.extent.chromosome]
+        return tree.overlaps(location.as_interval())
 
     def overlaps_repetitive(self, location: LocationInfo) -> bool:
-        return self.repetitive.overlaps(location.as_interval())
+        tree = self.repetitive[location.extent.chromosome]
+        return tree.overlaps(location.as_interval())
