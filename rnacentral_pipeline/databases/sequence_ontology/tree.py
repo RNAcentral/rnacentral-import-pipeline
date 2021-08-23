@@ -47,6 +47,7 @@ RENAME = {
     "rRNA_18S": "cytosolic_18S_rRNA",
     "rRNA_16S": "cytosolic_16S_rRNA",
     "rRNA_23S": "cytosolic_23S_rRNA",
+    "rRNA_25S": "cytosolic_25S_rRNA",
 }
 
 ALTERNATES = {
