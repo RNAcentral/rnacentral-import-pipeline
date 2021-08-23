@@ -21,16 +21,6 @@ from rnacentral_pipeline.rnacentral.genes.data import State, LocationInfo, Conte
 
 LOGGER = logging.getLogger(__name__)
 
-def overlaps_pseudogene(context: Context, location: LocationInfo) -> bool:
-    return bool(context.pseudogenes.overlap(location.as_interval()))
-
-
-def overlaps_repetitive_region(context: Context, location: LocationInfo) -> bool:
-    return bool(context.repetitive.overlap(location.as_interval()))
-
-
-# def possible_rfam_overlap(rfam: LocationInfo, other: LocationInfo) -> bool:
-
 
 def is_rfam_shift(state: State, context: Context, location: LocationInfo, overlaps: ty.List[Cluster]) -> bool:
     return False
@@ -74,13 +64,13 @@ def filter(state: State, context: Context, location: LocationInfo) -> bool:
         return True
 
     LOGGER.debug("Checking for pseudogene")
-    if overlaps_pseudogene(context, location):
+    if context.overlaps_pseudogene(location):
         LOGGER.debug("Rejecting Pseudogene: %s", location.id)
         state.reject_location(location)
         return True
 
     LOGGER.debug("Checking for repeat overlap")
-    if overlaps_repetitive_region(context, location):
+    if context.overlaps_repetitive(location):
         LOGGER.debug("Rejected repetitive region: %s", location.id)
         state.reject_location(location)
         return True
