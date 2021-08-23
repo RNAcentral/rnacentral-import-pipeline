@@ -27,7 +27,7 @@ import gffutils
 from rnacentral_pipeline import psql
 from rnacentral_pipeline.databases.sequence_ontology import tree as so_tree
 
-from .location import Count
+from .location import Count, LocationInfo
 
 
 def load_counts(handle: ty.IO) -> ty.Dict[str, Count]:
