@@ -15,37 +15,21 @@ process get_species {
   """
 }
 
-process extract_sequences {
+process extract_data {
   tag { "$assembly_id" }
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
   maxForks params.genes.extract_sequences.maxForks
 
   input:
-  tuple val(assembly_id), val(taxid), path(query), path(counts_query)
+  tuple val(assembly_id), val(taxid), path(query), path(counts_query), path(genes_query)
 
   output:
-  tuple val(assembly_id), path('sequences.json'), path('counts.json')
+  tuple val(assembly_id), path('sequences.json'), path('counts.json'), path("pseudo.json"), path('repetitive.bed')
 
   """
   psql -v ON_ERROR_STOP=1 -v assembly_id=$assembly_id -v taxid=$taxid -f $query $PGDATABASE > sequences.json
   psql -v ON_ERROR_STOP=1 -v assembly_id=$assembly_id -v taxid=$taxid -f $counts_query $PGDATABASE > counts.json
-  """
-}
-
-process fetch_context_data {
-  tag { "$assembly_id" }
-  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
-  maxForks params.genes.extract_sequences.maxForks
-
-  input:
-  tuple val(assembly_id), val(taxid), path(genes_query)
-
-  output:
-  tuple val(assembly_id), path('pseudo.gff'), path('repetitive.bed')
-
-  """
   psql -v ON_ERROR_STOP=1 -v assembly_id=$assembly_id -f $genes_query "$PGDATABASE" > pseudo.json
-  rnac ftp-export coordinates as-gff3 --allow-none pseudo.json pseudo.gff
   touch repetitive.bed
   """
 }
@@ -95,26 +79,17 @@ workflow genes {
     | combine(Channel.fromPath('files/genes/schema.sql')) \
     | get_species \
     | splitCsv \
-    | set { to_fetch }
-
-    to_fetch \
     | combine(Channel.fromPath('files/genes/data.sql')) \
     | combine(Channel.fromPath('files/genes/counts.sql')) \
-    | extract_sequences \
-    | set { sequences }
-
-    to_fetch \
     | combine(Channel.fromPath('files/genes/pseudogenes.sql')) \
-    | fetch_context_data \
-    | set { context_files }
+    | extract_data \
+    | build
 
-    sequences | join(context_files) | build
+  build.out.locus | collect | set { locus }
+  build.out.rejected | collect | set { rejected }
+  build.out.ignored | collect | set { ignored }
 
-    build.out.locus | collect | set { locus }
-    build.out.rejected | collect | set { rejected }
-    build.out.ignored | collect | set { ignored }
-    
-    load_data(locus, rejected, ignored, load, load_status, post_load)
+  load_data(locus, rejected, ignored, load, load_status, post_load)
 }
 
 workflow {
