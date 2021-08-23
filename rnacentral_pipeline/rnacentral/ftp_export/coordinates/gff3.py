@@ -109,7 +109,7 @@ def write_gff_text(features, output, allow_no_features=False, header=True) -> bo
     return True
 
 
-def from_file(handle, output):
+def from_file(handle, output, allow_none=False):
     """
     Convert a handle of JSON formatted objects and write a GFF3 file to the
     given output handle.
@@ -117,4 +117,4 @@ def from_file(handle, output):
 
     parsed = coord.from_file(handle)
     features = regions_as_features(parsed)
-    write_gff_text(features, output)
+    write_gff_text(features, output, allow_no_features=allow_none)

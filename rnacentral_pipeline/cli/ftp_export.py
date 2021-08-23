@@ -130,11 +130,12 @@ def format_as_bed(json_file, output):
 
 
 @export_coordinates.command("as-gff3")
+@click.option("--allow-none")
 @click.argument("json_file", type=click.File("r"))
 @click.argument("output", default="-", type=click.File("w"))
-def format_as_gff3(json_file, output):
+def format_as_gff3(json_file, output, allow_none=False):
     """
     This will turn the json file produced by the coordiantes query into a GFF3
     file.
     """
-    gff3.from_file(json_file, output)
+    gff3.from_file(json_file, output, allow_none=allow_none)

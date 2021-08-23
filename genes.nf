@@ -45,7 +45,7 @@ process fetch_context_data {
 
   """
   psql -v ON_ERROR_STOP=1 -v assembly_id=$assembly_id -f $genes_query "$PGDATABASE" > pseudo.json
-  rnac ftp-export coordinates as-gff3 pseudo.json pseudo.gff
+  rnac ftp-export coordinates as-gff3 --allow-none pseudo.json pseudo.gff
   touch repetitive.bed
   """
 }
