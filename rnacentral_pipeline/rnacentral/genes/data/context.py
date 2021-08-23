@@ -22,7 +22,6 @@ from pathlib import Path
 import attr
 from attr.validators import instance_of as is_a
 from intervaltree import IntervalTree
-import gffutils
 
 from rnacentral_pipeline import psql
 from rnacentral_pipeline.databases.sequence_ontology import tree as so_tree
@@ -41,11 +40,11 @@ def load_counts(handle: ty.IO) -> ty.Dict[str, Count]:
 
 def load_pseudogenes(path: Path) -> ty.DefaultDict[str, IntervalTree]:
     trees = coll.defaultdict(IntervalTree)
-    with path.open('r') as handle:
+    with open(path, 'r') as handle:
         for entry in psql.json_handler(handle):
             tree = trees[entry['chromosome']]
             for exon in entry['exons']:
-                tree.addi(exon['exon_start'], exon['exon_stop'], entry['rna_id'])
+                tree.addi(exon['exon_start'], exon['exon_stop'] + 1, entry['rna_id'])
             trees[entry['chromosome']] = tree
 
     return trees
@@ -59,8 +58,8 @@ def load_repetitive(handle: ty.IO) -> ty.DefaultDict[str, IntervalTree]:
 @attr.s()
 class Context:
     ontology = attr.ib(validator=is_a(so_tree.SoOntology))
-    pseudogenes = attr.ib(validator=is_a(ty.DefaultDict[str, IntervalTree]))
-    repetitive = attr.ib(validator=is_a(ty.DefaultDict[str, IntervalTree]))
+    pseudogenes: ty.DefaultDict[str, IntervalTree] = attr.ib(validator=is_a(ty.DefaultDict))
+    repetitive: ty.DefaultDict[str, IntervalTree] = attr.ib(validator=is_a(ty.DefaultDict))
     counts: ty.Dict[str, Count] = attr.ib(validator=is_a(dict))
     max_rfam_shift = attr.ib(validator=is_a(int), default=10)
 
@@ -81,8 +80,8 @@ class Context:
 
     def overlaps_pseudogene(self, location: LocationInfo) -> bool:
         tree = self.pseudogenes[location.extent.chromosome]
-        return tree.overlaps(location.as_interval())
+        return bool(tree.overlaps(location.as_interval()))
 
     def overlaps_repetitive(self, location: LocationInfo) -> bool:
         tree = self.repetitive[location.extent.chromosome]
-        return tree.overlaps(location.as_interval())
+        return bool(tree.overlaps(location.as_interval()))
