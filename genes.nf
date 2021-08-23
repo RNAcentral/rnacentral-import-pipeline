@@ -44,7 +44,6 @@ process build {
   output:
   path 'locus.csv', emit: locus
   path 'rejected.csv', emit: rejected
-  path 'ignored.csv', emit: ignored
 
   """
   rnac genes build $data_file $counts $genes $repetative .
@@ -57,7 +56,6 @@ process load_data {
   input:
   path('locus*.csv')
   path('rejected*.csv')
-  path('ignored*.csv')
   path(load_locus)
   path(load_status)
   path(post_load)
@@ -65,7 +63,6 @@ process load_data {
   """
   split-and-load $load_locus 'locus*.csv' ${params.import_data.chunk_size} locus-data
   STATUS='rejected' split-and-load $load_status 'rejected*.csv' ${params.import_data.chunk_size} rejected-data
-  STATUS='ignored' split-and-load $load_status 'ignored*.csv' ${params.import_data.chunk_size} ignored-data
   psql -v ON_ERROR_STOP=1 -f $post_load $PGDATABASE
   """
 }
@@ -87,9 +84,8 @@ workflow genes {
 
   build.out.locus | collect | set { locus }
   build.out.rejected | collect | set { rejected }
-  build.out.ignored | collect | set { ignored }
 
-  load_data(locus, rejected, ignored, load, load_status, post_load)
+  load_data(locus, rejected, load, load_status, post_load)
 }
 
 workflow {
