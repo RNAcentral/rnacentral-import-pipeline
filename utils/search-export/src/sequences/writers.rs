@@ -20,44 +20,11 @@ use rnc_core::psql::JsonlIterator;
 use crate::sequences::{
     accession,
     entry,
-    file_joiner::{
-        FileJoinerBuilder,
-        FileTypes,
-    },
+    file_joiner::FileJoinerBuilder,
 };
 
-pub fn write_merge(
-    base_file: PathBuf,
-    crs_file: PathBuf,
-    feedback_file: PathBuf,
-    go_annotations_file: PathBuf,
-    interacting_proteins_file: PathBuf,
-    interacting_rnas_file: PathBuf,
-    locus_info_file: PathBuf,
-    precompute_file: PathBuf,
-    qa_status_file: PathBuf,
-    r2dt_hits_file: PathBuf,
-    rfam_hits_file: PathBuf,
-    orf_file: PathBuf,
-    so_term_tree_file: PathBuf,
-    output_file: &Path,
-) -> Result<()> {
-    let mut builder = FileJoinerBuilder::default();
-    builder
-        .file(FileTypes::Base, base_file)
-        .file(FileTypes::Crs, crs_file)
-        .file(FileTypes::Feedback, feedback_file)
-        .file(FileTypes::GoAnnotations, go_annotations_file)
-        .file(FileTypes::InteractingProteins, interacting_proteins_file)
-        .file(FileTypes::InteractingRnas, interacting_rnas_file)
-        .file(FileTypes::LocusInfo, locus_info_file)
-        .file(FileTypes::Orfs, orf_file)
-        .file(FileTypes::Precompute, precompute_file)
-        .file(FileTypes::QaStatus, qa_status_file)
-        .file(FileTypes::R2dtHits, r2dt_hits_file)
-        .file(FileTypes::RfamHits, rfam_hits_file)
-        .file(FileTypes::SoInfo, so_term_tree_file);
-
+pub fn write_merge(files: Vec<PathBuf>, output_file: &Path) -> Result<()> {
+    let builder = FileJoinerBuilder::from_files(files)?;
     let joiner = builder.build()?;
     let mut writer = rnc_utils::buf_writer(output_file)?;
     for raw in joiner {
