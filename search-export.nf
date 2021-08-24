@@ -15,6 +15,7 @@ include { query as r2dt_query } from './workflows/search-export/utils'
 include { query as ref_query } from './workflows/search-export/utils'
 include { query as rfam_query } from './workflows/search-export/utils'
 include { query as orf_query } from './workflows/search-export/utils'
+include { query as locus_query } from './workflows/search-export/utils'
 include { build_search_accessions } from './workflows/search-export/build-accession-table'
 
 process setup {
@@ -48,6 +49,18 @@ process fetch_so_tree {
   """
 }
 
+process fetch_gene_info {
+  input
+  path(query)
+
+  output:
+  path('gene-info.sql')
+
+  """
+  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > gene-info.sql
+  """
+}
+
 process build_json {
   input:
   path(base)
@@ -61,13 +74,14 @@ process build_json {
   path(r2dt)
   path(rfam)
   path(orf)
+  path(locus)
   path(so_tree)
 
   output:
   path("merged.json")
 
   """
-  search-export merge $base $crs $feeback $go $prot $rnas $precompute $qa $r2dt $rfam $orf $so_tree merged.json
+  search-export merge $base $crs $feeback $go $prot $rnas $locus $precompute $qa $r2dt $rfam $orf $so_tree merged.json
   """
 }
 
@@ -108,13 +122,53 @@ process fetch_accession {
   """
 }
 
+process normalize_chunk {
+  tag { "$min-$max" }
+  memory params.search_export.memory
+  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
+
+  input:
+  tuple val(min), val(max), path('raw.json'), path(metadata)
+
+  output:
+  tuple val(min), val(max), path('data.json'), emit: 'sequences'
+  path('gene_members.json'), emit: 'genes'
+
+  """
+  search-export normalize raw.json $metadata data.json
+  search-export genes select-members data.json gene_members.json
+  """
+}
+
+process export_gene_chunk {
+  tag { "$min-$max" }
+  memory params.search_export.memory
+  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
+
+  input:
+  tuple val(min), val(max), path(data), path(genes_info)
+
+  output:
+  path "${xml}.gz", emit: xml
+  path "count", emit: counts
+
+  script:
+  xml = "gene_xml__${min}__${max}.xml"
+  """
+  search-export genes as-xml $genes_info gene-members.json $xml count
+  xmllint $xml --schema ${params.search_export.schema} --stream
+  gzip $xml
+  touch ${xml}.gz
+  """
+}
+
 process export_chunk {
   tag { "$min-$max" }
   memory params.search_export.memory
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
-  tuple val(min), val(max), path(accessions), path(metadata)
+  tuple val(min), val(max), path(data)
 
   output:
   path "${xml}.gz", emit: xml
@@ -122,9 +176,9 @@ process export_chunk {
 
   script:
   xml = "xml4dbdumps__${min}__${max}.xml"
+  gene_xml = "gene_xml__${min}__${max}.xml"
   """
-  search-export normalize $accessions $metadata data.json
-  rnac search-export as-xml data.json $xml count
+  rnac search-export as-xml $data $xml count
   xmllint $xml --schema ${params.search_export.schema} --stream
   gzip $xml
   """
@@ -186,7 +240,10 @@ workflow search_export {
   Channel.fromPath('files/search-export/parts/r2dt.sql') | set { r2dt_sql }
   Channel.fromPath('files/search-export/parts/rfam-hits.sql') | set { rfam_sql }
   Channel.fromPath('files/search-export/parts/orfs.sql') | set { orf_sql }
+  Channel.fromPath('files/search-export/parts/locus-info.sql') | set { locus_sql }
   Channel.fromPath('files/search-export/so-rna-types.sql') | set { so_sql }
+
+  Channel.fromPath('files/search-export/gene-info.sql') | set { gene_info_sql }
 
   Channel.fromPath('files/search-export/parts/accessions.sql') | set { accessions_sql }
 
@@ -201,6 +258,8 @@ workflow search_export {
 
   search_count | build_search_accessions | set { accessions_ready }
 
+  gene_info_sql | fetch_gene_info | set { gene_info }
+
   build_json(
     base_query(search_count, base_sql),
     crs_query(search_count, crs_sql),
@@ -213,6 +272,7 @@ workflow search_export {
     r2dt_query(search_count, r2dt_sql),
     rfam_query(search_count, rfam_sql),
     orf_query(search_count, orf_sql),
+    locus_query(search_count, locus_sql),
     fetch_so_tree(so_sql),
   )\
   | set { metadata }
@@ -225,10 +285,22 @@ workflow search_export {
   | combine(accessions_ready) \
   | fetch_accession \
   | combine(metadata) \
-  | export_chunk
+  | combine(gene_info) \
+  | normalize_chunk 
 
-  export_chunk.out.counts | collect | create_release_note | set { note }
-  export_chunk.out.xml | collect | set { xml }
+  normalize_chunk.sequences | export_chunk
+  normalize_chunk.genes | filter { _, _, members -> !members.isEmpty() } | export_gene_chunk
+
+  export_chunk.out.counts \
+  | mix(export_gene_chunk.out.counts) \
+  | collect \
+  | create_release_note \
+  | set { note }
+
+  export_chunk.out.xml \
+  | mix(export_gene_chunk.out.xml) \
+  | collect \
+  | set { xml }
 
   atomic_publish(note, xml, post)
 }
