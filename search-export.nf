@@ -122,63 +122,47 @@ process fetch_accession {
   """
 }
 
-process normalize_chunk {
-  tag { "$min-$max" }
+process build_gene_xml {
   memory params.search_export.memory
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
-  tuple val(min), val(max), path('raw.json'), path(metadata)
-
-  output:
-  tuple val(min), val(max), path('data.json'), emit: 'sequences'
-  path('gene_members.json'), emit: 'genes'
-
-  """
-  search-export normalize raw.json $metadata data.json
-  search-export genes select-members data.json gene_members.json
-  """
-}
-
-process export_gene_chunk {
-  tag { "$min-$max" }
-  memory params.search_export.memory
-  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
-
-  input:
-  tuple val(min), val(max), path(data), path(genes_info)
+  tuple path('raw*.json'), path(gene_info)
 
   output:
   path "${xml}.gz", emit: xml
   path "count", emit: counts
 
   script:
-  xml = "gene_xml__${min}__${max}.xml"
+  xml = "genes_xml.xml"
   """
-  search-export genes as-xml $genes_info gene-members.json $xml count
+  find . -name 'raw*.json' | xargs -I {} search-export genes select-members {} - >> selected.json
+  search-export genes as-xml $gene_info selected.json $xml count
   xmllint $xml --schema ${params.search_export.schema} --stream
   gzip $xml
   touch ${xml}.gz
   """
 }
 
-process export_chunk {
+process export_sequence_xml {
   tag { "$min-$max" }
   memory params.search_export.memory
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
-  tuple val(min), val(max), path(data)
+  tuple val(min), val(max), path(raw), path(metadata)
 
   output:
   path "${xml}.gz", emit: xml
   path "count", emit: counts
+  path "data.json", emit: sequences
 
   script:
   xml = "xml4dbdumps__${min}__${max}.xml"
   gene_xml = "gene_xml__${min}__${max}.xml"
   """
-  rnac search-export as-xml $data $xml count
+  search-export normalize $raw $metadata data.json
+  rnac search-export as-xml data.json $xml count
   xmllint $xml --schema ${params.search_export.schema} --stream
   gzip $xml
   """
@@ -285,20 +269,21 @@ workflow search_export {
   | combine(accessions_ready) \
   | fetch_accession \
   | combine(metadata) \
+  | export_sequence_xml
+
+  export_sequence_xml.out.sequences \
+  | collect \
   | combine(gene_info) \
-  | normalize_chunk 
+  | build_gene_xml
 
-  normalize_chunk.sequences | export_chunk
-  normalize_chunk.genes | filter { _, _, members -> !members.isEmpty() } | export_gene_chunk
-
-  export_chunk.out.counts \
-  | mix(export_gene_chunk.out.counts) \
+  export_sequence_xml.out.counts \
+  | mix(build_gene_xml.out.counts) \
   | collect \
   | create_release_note \
   | set { note }
 
-  export_chunk.out.xml \
-  | mix(export_gene_chunk.out.xml) \
+  export_sequence_xml.out.xml \
+  | mix(build_gene_xml.out.xml) \
   | collect \
   | set { xml }
 
