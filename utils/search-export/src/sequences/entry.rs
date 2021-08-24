@@ -16,7 +16,7 @@ use rnc_core::{
     urs_taxid,
 };
 
-use crate::normalize::{
+use crate::sequences::{
     accession::{
         AccessionVec,
         CrossReference,
@@ -35,6 +35,7 @@ use crate::normalize::{
     go_annotation::GoAnnotation,
     interacting_protein::InteractingProtein,
     interacting_rna::InteractingRna,
+    locus::LocusInfo,
     orf::{
         Orf,
         OrfVec,
@@ -73,6 +74,7 @@ pub struct Raw {
     pub go_annotations: Vec<GoAnnotation>,
     pub interacting_proteins: Vec<InteractingProtein>,
     pub interacting_rnas: Vec<InteractingRna>,
+    pub locus_info: Option<LocusInfo>,
     pub precompute: Precompute,
     pub qa_status: QaStatus,
     pub r2dt: Option<R2dt>,
@@ -97,6 +99,7 @@ pub struct Normalized {
     interacting_proteins: Vec<InteractingProtein>,
     interacting_rnas: Vec<InteractingRna>,
     so_rna_type_tree: so_tree::SoTree,
+    locus_info: Option<LocusInfo>,
 
     #[serde(flatten)]
     orfs: OrfVec,
@@ -188,6 +191,23 @@ impl Normalized {
             references,
             rfam_hits: raw.rfam_hits.into_iter().collect(),
             orfs: raw.orfs.into_iter().collect(),
+            locus_info: raw.locus_info,
         })
+    }
+
+    pub fn urs_taxid(&self) -> &str {
+        &self.urs_taxid
+    }
+
+    pub fn is_locus_member(&self) -> bool {
+        self.locus_info.is_some()
+    }
+
+    pub fn locus_id(&self) -> Option<usize> {
+        self.locus_info.as_ref().map(|l| l.locus_id())
+    }
+
+    pub fn cross_references(&self) -> &Vec<CrossReference> {
+        &self.cross_references
     }
 }

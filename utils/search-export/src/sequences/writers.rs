@@ -17,26 +17,14 @@ use sorted_iter::{
 
 use rnc_core::psql::JsonlIterator;
 
-use self::file_joiner::{
-    FileJoinerBuilder,
-    FileTypes,
+use crate::sequences::{
+    accession,
+    entry,
+    file_joiner::{
+        FileJoinerBuilder,
+        FileTypes,
+    },
 };
-
-pub mod accession;
-pub mod basic;
-pub mod crs;
-pub mod entry;
-pub mod feedback;
-pub mod file_joiner;
-pub mod go_annotation;
-pub mod interacting_protein;
-pub mod interacting_rna;
-pub mod orf;
-pub mod precompute;
-pub mod qa_status;
-pub mod r2dt;
-pub mod rfam_hit;
-pub mod so_tree;
 
 pub fn write_merge(
     base_file: PathBuf,
@@ -45,6 +33,7 @@ pub fn write_merge(
     go_annotations_file: PathBuf,
     interacting_proteins_file: PathBuf,
     interacting_rnas_file: PathBuf,
+    locus_info_file: PathBuf,
     precompute_file: PathBuf,
     qa_status_file: PathBuf,
     r2dt_hits_file: PathBuf,
@@ -61,6 +50,7 @@ pub fn write_merge(
         .file(FileTypes::GoAnnotations, go_annotations_file)
         .file(FileTypes::InteractingProteins, interacting_proteins_file)
         .file(FileTypes::InteractingRnas, interacting_rnas_file)
+        .file(FileTypes::LocusInfo, locus_info_file)
         .file(FileTypes::Orfs, orf_file)
         .file(FileTypes::Precompute, precompute_file)
         .file(FileTypes::QaStatus, qa_status_file)

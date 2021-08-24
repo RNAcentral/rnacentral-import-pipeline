@@ -906,6 +906,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3cc440ee4802a86e357165021e3e255a9143724da31db1e2ea540214c96a0f82"
 dependencies = [
  "memchr",
+ "serde",
 ]
 
 [[package]]
@@ -1258,6 +1259,7 @@ dependencies = [
  "itertools 0.10.0",
  "log",
  "phf",
+ "quick-xml",
  "rnc-core",
  "rnc-utils",
  "serde",

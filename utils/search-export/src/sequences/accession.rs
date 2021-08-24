@@ -185,3 +185,13 @@ impl FromIterator<RawAccession> for ReferenceVec {
         value
     }
 }
+
+impl CrossReference {
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    pub fn external_id(&self) -> &str {
+        &self.external_id
+    }
+}
