@@ -1,7 +1,11 @@
 use std::{
     collections::HashMap,
+    convert::TryFrom,
     fs::File,
-    path::PathBuf,
+    path::{
+        Path,
+        PathBuf,
+    },
     str::FromStr,
 };
 
@@ -129,6 +133,20 @@ pub struct FileJoinerBuilder {
     paths: HashMap<FileTypes, PathBuf>,
 }
 
+impl TryFrom<&Path> for FileTypes {
+    type Error = Error;
+
+    fn try_from(path: &Path) -> Result<Self, Self::Error> {
+        let name = path
+            .file_stem()
+            .map(|s| s.to_str())
+            .flatten()
+            .ok_or_else(|| Error::BadFileName(PathBuf::from(path)))?;
+        let name = name.replace("-", "").replace("_", "");
+        Self::from_str(&name).map_err(|_| Error::UnknownFileType(PathBuf::from(path)))
+    }
+}
+
 impl Default for FileJoinerBuilder {
     fn default() -> Self {
         Self {
@@ -141,14 +159,7 @@ impl FileJoinerBuilder {
     pub fn from_files(paths: Vec<PathBuf>) -> Result<Self, Error> {
         let mut builder = Self::default();
         for path in paths {
-            let name = path
-                .file_stem()
-                .map(|s| s.to_str())
-                .flatten()
-                .ok_or_else(|| Error::BadFileName(path.clone()))?;
-            let name = name.replace("-", "").replace("_", "");
-            let file_type =
-                FileTypes::from_str(&name).map_err(|_| Error::UnknownFileType(path.clone()))?;
+            let file_type = FileTypes::try_from(path.as_ref())?;
             builder.file(file_type, path);
         }
 

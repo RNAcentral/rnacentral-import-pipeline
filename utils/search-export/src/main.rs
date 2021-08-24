@@ -1,7 +1,4 @@
-use std::{
-    path::PathBuf,
-    str::FromStr,
-};
+use std::path::PathBuf;
 use structopt::StructOpt;
 
 use anyhow::Result;
@@ -9,47 +6,7 @@ use anyhow::Result;
 pub mod genes;
 pub mod sequences;
 
-#[derive(Debug)]
-enum Groupable {
-    Basic,
-    Crs,
-    Feedback,
-    GoAnnotations,
-    InteractingProteins,
-    InteractingRnas,
-    LocusInfo,
-    Orfs,
-    Precompute,
-    QaStatus,
-    R2dtHits,
-    RfamHits,
-}
-
-impl FromStr for Groupable {
-    type Err = String;
-
-    fn from_str(raw: &str) -> Result<Self, Self::Err> {
-        match raw {
-            "basic" => Ok(Self::Basic),
-            "base" => Ok(Self::Basic),
-            "crs" => Ok(Self::Crs),
-            "feedback" => Ok(Self::Feedback),
-            "go-annotations" => Ok(Self::GoAnnotations),
-            "locus-info" => Ok(Self::LocusInfo),
-            "interacting-proteins" => Ok(Self::InteractingProteins),
-            "interacting-rnas" => Ok(Self::InteractingRnas),
-            "qa-status" => Ok(Self::QaStatus),
-            "r2dt" => Ok(Self::R2dtHits),
-            "r2dt-hits" => Ok(Self::R2dtHits),
-            "r2dt_hits" => Ok(Self::R2dtHits),
-            "rfam-hits" => Ok(Self::RfamHits),
-            "rfam_hits" => Ok(Self::RfamHits),
-            "orfs" => Ok(Self::Orfs),
-            "precompute" => Ok(Self::Precompute),
-            unknown => Err(format!("Unknown name {}", unknown)),
-        }
-    }
-}
+use crate::sequences::file_joiner::FileTypes;
 
 #[derive(Debug, StructOpt)]
 #[structopt(rename_all = "kebab-case")]
@@ -94,7 +51,7 @@ enum Subcommand {
     Group {
         /// Type of data to group
         #[structopt(case_insensitive = true)]
-        data_type: Groupable,
+        data_type: FileTypes,
 
         /// Filename to read the results from, '-' means stdin
         #[structopt(parse(from_os_str))]
@@ -208,22 +165,23 @@ fn main() -> Result<()> {
             max_count,
             output,
         } => match data_type {
-            Groupable::Basic => sequences::basic::group(&path, max_count, &output)?,
-            Groupable::Crs => sequences::crs::group(&path, max_count, &output)?,
-            Groupable::Feedback => sequences::feedback::group(&path, max_count, &output)?,
-            Groupable::GoAnnotations => sequences::go_annotation::group(&path, max_count, &output)?,
-            Groupable::InteractingProteins => {
+            FileTypes::Base => sequences::basic::group(&path, max_count, &output)?,
+            FileTypes::Crs => sequences::crs::group(&path, max_count, &output)?,
+            FileTypes::Feedback => sequences::feedback::group(&path, max_count, &output)?,
+            FileTypes::GoAnnotations => sequences::go_annotation::group(&path, max_count, &output)?,
+            FileTypes::InteractingProteins => {
                 sequences::interacting_protein::group(&path, max_count, &output)?
             },
-            Groupable::InteractingRnas => {
+            FileTypes::InteractingRnas => {
                 sequences::interacting_rna::group(&path, max_count, &output)?
             },
-            Groupable::LocusInfo => sequences::locus::group(&path, max_count, &output)?,
-            Groupable::Precompute => sequences::precompute::group(&path, max_count, &output)?,
-            Groupable::QaStatus => sequences::qa_status::group(&path, max_count, &output)?,
-            Groupable::R2dtHits => sequences::r2dt::group(&path, max_count, &output)?,
-            Groupable::RfamHits => sequences::rfam_hit::group(&path, max_count, &output)?,
-            Groupable::Orfs => sequences::orf::group(&path, max_count, &output)?,
+            FileTypes::LocusInfo => sequences::locus::group(&path, max_count, &output)?,
+            FileTypes::Precompute => sequences::precompute::group(&path, max_count, &output)?,
+            FileTypes::QaStatus => sequences::qa_status::group(&path, max_count, &output)?,
+            FileTypes::R2dtHits => sequences::r2dt::group(&path, max_count, &output)?,
+            FileTypes::RfamHits => sequences::rfam_hit::group(&path, max_count, &output)?,
+            FileTypes::Orfs => sequences::orf::group(&path, max_count, &output)?,
+            FileTypes::SoInfo => Err(anyhow::anyhow!("May not group so info"))?,
         },
         Subcommand::Merge {
             base,
