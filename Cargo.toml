@@ -1,13 +1,4 @@
 [workspace]
 members = [
-  "utils/json2fasta",
-  "utils/split-ena",
-  "utils/rnc-core",
-  "utils/rnc-utils",
-  "utils/rnc-test-utils",
-  "utils/precompute",
-  "utils/expand-urs",
-  "utils/search-export",
-  "utils/ftp-export",
-  "utils/json2dfasta",
+  "utils/*",
 ]

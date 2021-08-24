@@ -30,6 +30,7 @@ use super::{
     go_annotation::GoAnnotation,
     interacting_protein::InteractingProtein,
     interacting_rna::InteractingRna,
+    locus::LocusInfo,
     orf::Orf,
     precompute::Precompute,
     qa_status::QaStatus,
@@ -87,6 +88,9 @@ pub enum FileTypes {
     InteractingRnas,
 
     #[strum(ascii_case_insensitive)]
+    LocusInfo,
+
+    #[strum(ascii_case_insensitive)]
     Orfs,
 
     #[strum(ascii_case_insensitive)]
@@ -112,6 +116,7 @@ pub struct FileJoiner {
     go_annotations: JsonlIterator<File, Grouped<GoAnnotation>>,
     interacting_proteins: JsonlIterator<File, Grouped<InteractingProtein>>,
     interacting_rnas: JsonlIterator<File, Grouped<InteractingRna>>,
+    locus_info: JsonlIterator<File, Grouped<LocusInfo>>,
     orfs: JsonlIterator<File, Grouped<Orf>>,
     precompute: JsonlIterator<File, Grouped<Precompute>>,
     qa_status: JsonlIterator<File, Grouped<QaStatus>>,
@@ -174,6 +179,7 @@ impl FileJoinerBuilder {
         let go_annotations = self.iterator_for(FileTypes::GoAnnotations)?;
         let interacting_proteins = self.iterator_for(FileTypes::InteractingProteins)?;
         let interacting_rnas = self.iterator_for(FileTypes::InteractingRnas)?;
+        let locus_info = self.iterator_for(FileTypes::LocusInfo)?;
         let orfs = self.iterator_for(FileTypes::Orfs)?;
         let precompute = self.iterator_for(FileTypes::Precompute)?;
         let qa_status = self.iterator_for(FileTypes::QaStatus)?;
@@ -188,6 +194,7 @@ impl FileJoinerBuilder {
             go_annotations,
             interacting_proteins,
             interacting_rnas,
+            locus_info,
             orfs,
             precompute,
             qa_status,
@@ -209,6 +216,7 @@ impl Iterator for FileJoiner {
             self.go_annotations.next(),
             self.interacting_proteins.next(),
             self.interacting_rnas.next(),
+            self.locus_info.next(),
             self.orfs.next(),
             self.precompute.next(),
             self.qa_status.next(),
@@ -217,7 +225,7 @@ impl Iterator for FileJoiner {
         );
 
         match current {
-            (None, None, None, None, None, None, None, None, None, None, None) => None,
+            (None, None, None, None, None, None, None, None, None, None, None, None) => None,
             (
                 Some(Required {
                     id: id1,
@@ -243,24 +251,28 @@ impl Iterator for FileJoiner {
                     id: id6,
                     data: interacting_rnas,
                 }),
-                Some(Multiple {
+                Some(Optional {
                     id: id7,
+                    data: locus_info,
+                }),
+                Some(Multiple {
+                    id: id8,
                     data: orfs,
                 }),
                 Some(Required {
-                    id: id8,
+                    id: id9,
                     data: precompute,
                 }),
                 Some(Required {
-                    id: id9,
+                    id: id10,
                     data: qa_status,
                 }),
                 Some(Optional {
-                    id: id10,
+                    id: id11,
                     data: r2dt,
                 }),
                 Some(Multiple {
-                    id: id11,
+                    id: id12,
                     data: rfam_hits,
                 }),
             ) => {
@@ -274,9 +286,10 @@ impl Iterator for FileJoiner {
                     || id1 != id9
                     || id1 != id10
                     || id1 != id11
+                    || id1 != id12
                 {
                     return Some(Err(Error::OutofSyncData(vec![
-                        id1, id2, id3, id4, id5, id6, id7, id8, id9, id10, id11,
+                        id1, id2, id3, id4, id5, id6, id7, id8, id9, id10, id11, id12,
                     ])));
                 }
 
@@ -291,6 +304,7 @@ impl Iterator for FileJoiner {
                     base,
                     precompute,
                     qa_status,
+                    locus_info,
                     crs,
                     feedback,
                     go_annotations,

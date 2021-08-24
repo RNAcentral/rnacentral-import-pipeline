@@ -6,7 +6,8 @@ use structopt::StructOpt;
 
 use anyhow::Result;
 
-pub mod normalize;
+pub mod genes;
+pub mod sequences;
 
 #[derive(Debug)]
 enum Groupable {
@@ -16,6 +17,7 @@ enum Groupable {
     GoAnnotations,
     InteractingProteins,
     InteractingRnas,
+    LocusInfo,
     Orfs,
     Precompute,
     QaStatus,
@@ -33,6 +35,7 @@ impl FromStr for Groupable {
             "crs" => Ok(Self::Crs),
             "feedback" => Ok(Self::Feedback),
             "go-annotations" => Ok(Self::GoAnnotations),
+            "locus-info" => Ok(Self::LocusInfo),
             "interacting-proteins" => Ok(Self::InteractingProteins),
             "interacting-rnas" => Ok(Self::InteractingRnas),
             "qa-status" => Ok(Self::QaStatus),
@@ -46,6 +49,40 @@ impl FromStr for Groupable {
             unknown => Err(format!("Unknown name {}", unknown)),
         }
     }
+}
+
+#[derive(Debug, StructOpt)]
+#[structopt(rename_all = "kebab-case")]
+enum GenesCommand {
+    /// A command to filter the normalized data to only the entries that are part of some
+    /// locus. This will also sort the entries by locus_id so it should be easy to
+    MembersOnly {
+        /// Filename to read the results from, '-' means stdin
+        #[structopt(parse(from_os_str))]
+        path: PathBuf,
+
+        /// Filename to write the results to, '-' means stdout
+        #[structopt(parse(from_os_str))]
+        output: PathBuf,
+    },
+
+    AsXml {
+        /// Filename to read the gene info from
+        #[structopt(parse(from_os_str))]
+        genes: PathBuf,
+
+        /// Filename to read the selected data from
+        #[structopt(parse(from_os_str))]
+        members: PathBuf,
+
+        /// Filename to write the xml data to
+        #[structopt(parse(from_os_str))]
+        xml_output: PathBuf,
+
+        /// Filename to write the counts to
+        #[structopt(parse(from_os_str))]
+        count_output: PathBuf,
+    },
 }
 
 #[derive(Debug, StructOpt)]
@@ -91,6 +128,9 @@ enum Subcommand {
         interacting_rnas: PathBuf,
 
         #[structopt(parse(from_os_str))]
+        locus_info: PathBuf,
+
+        #[structopt(parse(from_os_str))]
         precompute: PathBuf,
 
         #[structopt(parse(from_os_str))]
@@ -126,6 +166,11 @@ enum Subcommand {
         #[structopt(parse(from_os_str))]
         /// Filename to write the results to, '-' means stdout
         output: PathBuf,
+    },
+
+    Genes {
+        #[structopt(subcommand)]
+        command: GenesCommand,
     },
 }
 
@@ -163,21 +208,22 @@ fn main() -> Result<()> {
             max_count,
             output,
         } => match data_type {
-            Groupable::Basic => normalize::basic::group(&path, max_count, &output)?,
-            Groupable::Crs => normalize::crs::group(&path, max_count, &output)?,
-            Groupable::Feedback => normalize::feedback::group(&path, max_count, &output)?,
-            Groupable::GoAnnotations => normalize::go_annotation::group(&path, max_count, &output)?,
+            Groupable::Basic => sequences::basic::group(&path, max_count, &output)?,
+            Groupable::Crs => sequences::crs::group(&path, max_count, &output)?,
+            Groupable::Feedback => sequences::feedback::group(&path, max_count, &output)?,
+            Groupable::GoAnnotations => sequences::go_annotation::group(&path, max_count, &output)?,
             Groupable::InteractingProteins => {
-                normalize::interacting_protein::group(&path, max_count, &output)?
+                sequences::interacting_protein::group(&path, max_count, &output)?
             },
             Groupable::InteractingRnas => {
-                normalize::interacting_rna::group(&path, max_count, &output)?
+                sequences::interacting_rna::group(&path, max_count, &output)?
             },
-            Groupable::Precompute => normalize::precompute::group(&path, max_count, &output)?,
-            Groupable::QaStatus => normalize::qa_status::group(&path, max_count, &output)?,
-            Groupable::R2dtHits => normalize::r2dt::group(&path, max_count, &output)?,
-            Groupable::RfamHits => normalize::rfam_hit::group(&path, max_count, &output)?,
-            Groupable::Orfs => normalize::orf::group(&path, max_count, &output)?,
+            Groupable::LocusInfo => sequences::locus::group(&path, max_count, &output)?,
+            Groupable::Precompute => sequences::precompute::group(&path, max_count, &output)?,
+            Groupable::QaStatus => sequences::qa_status::group(&path, max_count, &output)?,
+            Groupable::R2dtHits => sequences::r2dt::group(&path, max_count, &output)?,
+            Groupable::RfamHits => sequences::rfam_hit::group(&path, max_count, &output)?,
+            Groupable::Orfs => sequences::orf::group(&path, max_count, &output)?,
         },
         Subcommand::Merge {
             base,
@@ -186,6 +232,7 @@ fn main() -> Result<()> {
             go_annotations,
             interacting_proteins,
             interacting_rnas,
+            locus_info,
             precompute,
             qa_status,
             r2dt_hits,
@@ -193,13 +240,14 @@ fn main() -> Result<()> {
             orfs,
             so_term_tree,
             output,
-        } => normalize::write_merge(
+        } => sequences::writers::write_merge(
             base,
             crs,
             feedback,
             go_annotations,
             interacting_proteins,
             interacting_rnas,
+            locus_info,
             precompute,
             qa_status,
             r2dt_hits,
@@ -212,7 +260,21 @@ fn main() -> Result<()> {
             accessions,
             metadata,
             output,
-        } => normalize::write(&accessions, &metadata, &output)?,
+        } => sequences::writers::write(&accessions, &metadata, &output)?,
+        Subcommand::Genes {
+            command,
+        } => match command {
+            GenesCommand::MembersOnly {
+                path,
+                output,
+            } => genes::writers::write_gene_members(&path, &output)?,
+            GenesCommand::AsXml {
+                genes,
+                members,
+                xml_output,
+                count_output,
+            } => genes::writers::write_gene_info(&genes, &members, &xml_output, &count_output)?,
+        },
     }
 
     Ok(())
