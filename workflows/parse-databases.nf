@@ -1,7 +1,7 @@
 include { crw } from './databases/crw'
-include { five_s_rrnadb } from './databases/5srrnadb'
 include { ena } from './databases/ena'
 include { ensembl } from './databases/ensembl'
+include { five_s_rrnadb } from './databases/5srrnadb'
 include { flybase } from './databases/flybase'
 include { genecards_suite } from './databases/genecards_suite'
 include { gtrnadb } from './databases/gtrnadb'
@@ -15,6 +15,7 @@ include { mirgenedb } from './databases/mirgenedb'
 include { pdbe } from './databases/pdbe'
 include { pirbase } from './databases/pirbase'
 include { pombase } from './databases/pombase'
+include { psicquic } from './databases/psicquic'
 include { quickgo } from './databases/quickgo'
 include { refseq } from './databases/refseq'
 include { rfam } from './databases/rfam'
@@ -68,6 +69,7 @@ workflow parse_databases {
       pdbe(),
       pirbase(),
       pombase(),
+      psicquic(),
       quickgo(),
       refseq(),
       rfam(),
