@@ -103,6 +103,12 @@ def overlaps_pseudogene(context: data.Context, location: data.LocationInfo) -> b
     return False
 
 
+def is_pirna_singleton(state: data.State, cluster: int) -> bool:
+    members = state.members_of(cluster)
+    target = members[0]
+    return len(members) == 1 and target.rna_type.is_a('piRNA') and not bool(target.providing_databases)
+
+
 def build(
         context: data.Context, method: Methods, locations: ty.Iterable[data.LocationInfo]
 ) -> ty.Iterable[data.FinalizedState]:
@@ -133,8 +139,11 @@ def build(
 
             handle_rfam_only(state, cluster_id)
 
-            if not state.has_cluster(cluster_id):
-                continue
+            if is_pirna_singleton(state, cluster_id):
+                LOGGER.debug("Rejecting a piRNA singleton %s", cluster_id)
+                for location in state.members_of(cluster_id):
+                    state.reject_location(location)
+
 
             members = state.members_of(cluster_id)
             if any(l.rna_type.is_a("rRNA") for l in members):
