@@ -128,6 +128,9 @@ def build(
 
         for cluster_id in state.clusters():
             LOGGER.debug("Analyzing cluster %i", cluster_id)
+            if not state.has_cluster(cluster_id):
+                raise ValueError("Seems link this should be impossible")
+
             handle_rfam_only(state, cluster_id)
 
             if not state.has_cluster(cluster_id):
