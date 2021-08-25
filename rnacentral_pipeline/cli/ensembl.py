@@ -35,11 +35,7 @@ from rnacentral_pipeline.writers import entry_writer
 @click.group("ensembl")
 def cli():
     """
-    This is a set of commands for dealing with processing protein information.
-    We don't have much in the way of protein summary but sometimes we do need a
-    little for display.
-    """
-    pass
+    This is a set of commands for parsing ensembl data. 
 
 
 @cli.command("urls-for")
