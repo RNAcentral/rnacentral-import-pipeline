@@ -87,7 +87,6 @@ pub struct Raw {
 pub struct Normalized {
     urs: String,
     taxid: usize,
-    urs_taxid: String,
     short_urs: String,
     deleted: String,
     qa_status: QaStatus,
@@ -171,7 +170,6 @@ impl Normalized {
         let references = ReferenceVec::from_iter(accessions.clone());
 
         Ok(Self {
-            urs_taxid,
             urs: parsed.urs().to_string(),
             taxid: parsed.taxid().try_into()?,
             short_urs: parsed.short(),
@@ -196,7 +194,7 @@ impl Normalized {
     }
 
     pub fn urs_taxid(&self) -> &str {
-        &self.urs_taxid
+        &self.basic.urs_taxid
     }
 
     pub fn is_locus_member(&self) -> bool {
