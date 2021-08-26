@@ -29,7 +29,6 @@ use rnc_core::{
 use super::{
     basic::Basic,
     crs::Crs,
-    entry::Raw,
     feedback::Feedback,
     go_annotation::GoAnnotation,
     interacting_protein::InteractingProtein,
@@ -39,6 +38,7 @@ use super::{
     precompute::Precompute,
     qa_status::QaStatus,
     r2dt::R2dt,
+    raw::Raw,
     rfam_hit::RfamHit,
     so_tree,
     so_tree::SoMapping,
@@ -310,22 +310,24 @@ impl Iterator for FileJoiner {
                 }
                 let so_tree = self.so_info[pre_so_type].clone();
 
-                return Some(Ok(Raw {
-                    id: id1,
-                    base,
-                    precompute,
-                    qa_status,
-                    locus_info,
-                    crs,
-                    feedback,
-                    go_annotations,
-                    interacting_proteins,
-                    interacting_rnas,
-                    r2dt,
-                    rfam_hits,
-                    orfs,
-                    so_tree,
-                }));
+                let raw = Raw::builder()
+                    .id(id1)
+                    .base(base)
+                    .precompute(precompute)
+                    .qa_status(qa_status)
+                    .locus_info(locus_info)
+                    .crs(crs)
+                    .feedback(feedback)
+                    .go_annotations(go_annotations)
+                    .interacting_proteins(interacting_proteins)
+                    .interacting_rnas(interacting_rnas)
+                    .r2dt(r2dt)
+                    .rfam_hits(rfam_hits)
+                    .orfs(orfs)
+                    .so_tree(so_tree)
+                    .build();
+
+                return Some(Ok(raw));
             },
             _ => Some(Err(Error::InvalidDataFormat)),
         }

@@ -24,7 +24,7 @@ use crate::{
         info::GeneInfo,
         member::GeneMembers,
     },
-    sequences::entry::Normalized,
+    sequences::normalized::Normalized,
 };
 
 pub fn write_gene_members(normalized_file: &Path, output: &Path) -> Result<()> {
