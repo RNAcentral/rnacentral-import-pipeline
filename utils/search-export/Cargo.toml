@@ -22,6 +22,7 @@ structopt = "0.3"
 strum = "0.21"
 strum_macros = "0.21"
 thiserror = "1.0.20"
+typed-builder = "0.9.0"
 
 [dependencies.serde_with]
 version = "1.5.1"

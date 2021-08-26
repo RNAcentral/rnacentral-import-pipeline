@@ -59,13 +59,13 @@ impl Precompute {
     }
 }
 
-impl From<Precompute> for PrecomputeSummary {
-    fn from(pre: Precompute) -> PrecomputeSummary {
+impl<'a> From<&Precompute> for PrecomputeSummary {
+    fn from(pre: &Precompute) -> PrecomputeSummary {
         Self {
-            description: pre.description,
+            description: pre.description.to_owned(),
             rna_type: pre.rna_type.replace("_", " "),
             has_coordinates: pre.has_coordinates,
-            databases: pre.databases,
+            databases: pre.databases.to_owned(),
         }
     }
 }

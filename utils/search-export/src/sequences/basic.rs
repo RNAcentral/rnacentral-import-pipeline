@@ -22,6 +22,12 @@ impl grouper::HasIndex for Basic {
     }
 }
 
+impl Basic {
+    pub fn urs_taxid(&self) -> &str {
+        &self.urs_taxid
+    }
+}
+
 pub fn group(path: &Path, max: usize, output: &Path) -> Result<()> {
     grouper::group::<Basic>(grouper::Criteria::ExactlyOne, &path, 1, max, &output)
 }

@@ -19,9 +19,11 @@ use rnc_core::psql::JsonlIterator;
 
 use crate::sequences::{
     accession,
-    entry,
+    normalized::Normalized,
     file_joiner::FileJoinerBuilder,
 };
+
+use super::raw::Raw;
 
 pub fn write_merge(files: Vec<PathBuf>, output_file: &Path) -> Result<()> {
     let builder = FileJoinerBuilder::from_files(files)?;
@@ -40,7 +42,7 @@ pub fn write(accession_file: &Path, metadata_file: &Path, output_file: &Path) ->
     let mut writer = rnc_utils::buf_writer(output_file)?;
 
     let metadata = JsonlIterator::from_path(metadata_file)?;
-    let metadata = metadata.map(|r: entry::Raw| (r.id(), r));
+    let metadata = metadata.map(|r: Raw| (r.id(), r));
     let metadata = metadata.into_iter().assume_sorted_by_key();
 
     let accessions = JsonlIterator::from_path(accession_file)?;
@@ -52,7 +54,7 @@ pub fn write(accession_file: &Path, metadata_file: &Path, output_file: &Path) ->
     let mut seen = false;
     for (_id, entry) in merged {
         let (accessions, metadata) = entry;
-        let normalized = entry::Normalized::new(metadata, accessions.collect())?;
+        let normalized = Normalized::new(metadata, accessions.collect())?;
         serde_json::to_writer(&mut writer, &normalized)?;
         writeln!(&mut writer)?;
         seen = true;

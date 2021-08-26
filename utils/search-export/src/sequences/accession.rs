@@ -179,8 +179,8 @@ impl FromIterator<RawAccession> for ReferenceVec {
             insert(&mut value.pub_titles, i.pub_title);
             insert(&mut value.pubmed_ids, i.pubmed_id);
             insert(&mut value.dois, i.doi);
-            value.pub_ids.extend(i.pub_id.into_iter());
 
+            value.pub_ids.extend(i.pub_id.into_iter());
             value.pub_titles.remove("None");
         }
 

@@ -3,7 +3,7 @@ use serde::{
     Serialize,
 };
 
-use crate::sequences::entry::Normalized;
+use crate::sequences::normalized::Normalized;
 
 #[derive(Debug, Deserialize, Serialize, PartialEq)]
 pub struct GeneMembers {
