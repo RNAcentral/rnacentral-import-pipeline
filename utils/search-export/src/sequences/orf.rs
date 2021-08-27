@@ -18,7 +18,7 @@ pub struct Orf {
     source: String,
 }
 
-#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct OrfVec {
     orf_sources: HashSet<String>,
 }

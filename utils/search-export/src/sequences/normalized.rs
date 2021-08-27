@@ -29,7 +29,6 @@ use crate::sequences::{
     go_annotation::GoAnnotation,
     interacting_protein::InteractingProtein,
     interacting_rna::InteractingRna,
-    locus::LocusInfo,
     orf::OrfVec,
     precompute::PrecomputeSummary,
     qa_status::QaStatus,
@@ -51,7 +50,7 @@ pub enum NormalizationError {
     UrsNumberError(#[from] TryFromIntError),
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Normalized {
     urs: String,
     taxid: usize,
@@ -66,7 +65,6 @@ pub struct Normalized {
     interacting_proteins: Vec<InteractingProtein>,
     interacting_rnas: Vec<InteractingRna>,
     so_rna_type_tree: so_tree::SoTree,
-    locus_info: Option<LocusInfo>,
 
     #[serde(flatten)]
     orfs: OrfVec,
@@ -124,23 +122,22 @@ impl Normalized {
             references,
             rfam_hits: raw.rfam_hits().to_owned().into_iter().collect(),
             orfs: raw.orfs().to_vec().into_iter().collect(),
-            locus_info: raw.locus_info().to_owned(),
         })
+    }
+
+    pub fn id(&self) -> &usize {
+        &self.basic.id
     }
 
     pub fn urs_taxid(&self) -> &str {
         &self.basic.urs_taxid()
     }
 
-    pub fn is_locus_member(&self) -> bool {
-        self.locus_info.is_some()
-    }
-
-    pub fn locus_id(&self) -> Option<usize> {
-        self.locus_info.as_ref().map(|l| l.locus_id())
-    }
-
     pub fn cross_references(&self) -> &Vec<CrossReference> {
         &self.cross_references
+    }
+
+    pub fn description(&self) -> &str {
+        self.pre_summary.description()
     }
 }

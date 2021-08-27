@@ -1,76 +1,112 @@
 use std::{
-    fs::File,
+    collections::HashMap,
+    fs::{
+        create_dir_all,
+        File,
+    },
     io::{
         BufWriter,
         Write,
     },
-    path::Path,
+    iter::FromIterator,
+    path::{
+        Path,
+        PathBuf,
+    },
 };
 
 use anyhow::Result;
+use itertools::Itertools;
 
 use sorted_iter::{
     assume::*,
     SortedPairIterator,
 };
 
-use itertools::Itertools;
-
-use rnc_core::psql::JsonlIterator;
+use rnc_core::{
+    grouper::Grouped,
+    psql::JsonlIterator,
+};
 
 use crate::{
     genes::{
-        gene::Entry,
-        info::GeneInfo,
-        member::GeneMembers,
+        gene::Gene,
+        gene_member::GeneMember,
+        region::{
+            Region,
+            RegionGrouper,
+        },
     },
+    search_xml::Entry,
     sequences::normalized::Normalized,
 };
 
-pub fn write_gene_members(normalized_file: &Path, output: &Path) -> Result<()> {
-    let mut writer = rnc_utils::buf_writer(output)?;
+pub fn assembly_writer(base: &Path, assembly: &str) -> Result<BufWriter<File>> {
+    let mut path = PathBuf::from(base);
+    path.push(assembly);
+    path.set_extension("json");
+    Ok(BufWriter::new(File::create(path)?))
+}
 
-    let normalized = JsonlIterator::from_path(normalized_file)?;
-    let mut selected: Vec<Normalized> =
-        normalized.filter(|n: &Normalized| n.is_locus_member()).collect();
+pub fn write_selected_members(
+    locus_file: &Path,
+    sequence_file: &Path,
+    output: &Path,
+) -> Result<()> {
+    create_dir_all(output)?;
 
-    // Dangerous - this may use up too much memory one day, hopefully this stays efficent
-    // as we don't have too many members. We can always split by assembly if need be
-    // as this will ensure we only ever have very few sequences per chunk.
-    selected.sort_by_key(|n| n.locus_id());
-    let grouped = selected.into_iter().group_by(|e| e.locus_id());
+    let locus: JsonlIterator<File, Grouped<Region>> = JsonlIterator::from_path(locus_file)?;
+    let locus = RegionGrouper::new(locus);
+    let locus = locus.map(|l| (l.id().clone(), l)).assume_sorted_by_key();
 
-    for (_id, entries) in &grouped {
-        let member = GeneMembers::new(entries.collect());
-        serde_json::to_writer(&mut writer, &member)?;
+    let sequences: JsonlIterator<File, Normalized> = JsonlIterator::from_path(sequence_file)?;
+    let sequences = sequences.map(|n| (n.id().clone(), n)).assume_sorted_by_key();
+
+    let mut writers = HashMap::new();
+    let merged = locus.join(sequences);
+
+    for (_id, pair) in merged {
+        let (seq_locus, sequence) = pair;
+        for (assembly_id, regions) in seq_locus.regions_by_assembly() {
+            let mut writer = writers
+                .entry(assembly_id.clone())
+                .or_insert(assembly_writer(&output, &assembly_id)?)
+                .get_mut();
+            for region in regions {
+                let informative = GeneMember::new(region.clone(), sequence.clone());
+                serde_json::to_writer(&mut writer, &informative)?;
+                writeln!(&mut writer)?;
+            }
+        }
+    }
+
+    Ok(())
+}
+
+pub fn write_merged_members(member_file: &Path, output: &Path) -> Result<()> {
+    let members = JsonlIterator::from_path(member_file)?;
+    let mut members: Vec<GeneMember> = members.collect();
+    members.sort_by_key(|m| m.locus_id());
+    let grouped = members.into_iter().group_by(|l| l.locus_id());
+
+    let mut writer = BufWriter::new(File::create(&output)?);
+    for (_locus_id, locus) in &grouped {
+        let gene = Gene::from_iter(locus);
+        serde_json::to_writer(&mut writer, &gene)?;
         writeln!(&mut writer)?;
     }
 
     Ok(())
 }
 
-pub fn write_gene_info(
-    gene_file: &Path,
-    member_file: &Path,
-    xml_output: &Path,
-    count_output: &Path,
-) -> Result<()> {
-    let genes = JsonlIterator::from_path(gene_file)?;
-    let genes = genes.map(|g: GeneInfo| (g.id(), g));
-    let genes = genes.into_iter().assume_sorted_by_key();
-
-    let members = JsonlIterator::from_path(member_file)?;
-    let members = members.map(|m: GeneMembers| (m.locus_id(), m));
-    let members = members.into_iter().assume_sorted_by_key();
-
-    let merged = genes.join(members);
+pub fn write_search_files(gene_file: &Path, xml_output: &Path, count_output: &Path) -> Result<()> {
+    let genes: JsonlIterator<File, Gene> = JsonlIterator::from_path(gene_file)?;
 
     let mut xml_writer = BufWriter::new(File::create(&xml_output)?);
     let mut count = 0;
-    for (_id, entry) in merged {
-        let (info, members) = entry;
-        let gene = Entry::new(info, members);
-        quick_xml::se::to_writer(&mut xml_writer, &gene)?;
+    for gene in genes {
+        let xml: Entry = gene.into();
+        quick_xml::se::to_writer(&mut xml_writer, &xml)?;
         writeln!(&mut xml_writer)?;
         count += 1;
     }

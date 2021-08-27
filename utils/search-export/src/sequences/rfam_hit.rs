@@ -20,7 +20,7 @@ pub struct RfamHit {
     rfam_clans: Option<String>,
 }
 
-#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct RfamHitVec {
     rfam_ids: HashSet<String>,
     rfam_family_names: HashSet<String>,

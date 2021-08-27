@@ -10,8 +10,10 @@ use std::{
 };
 
 use serde::de::DeserializeOwned;
+use strum::IntoEnumIterator;
 use strum_macros::{
     Display,
+    EnumIter,
     EnumString,
 };
 use thiserror::Error;
@@ -33,7 +35,6 @@ use super::{
     go_annotation::GoAnnotation,
     interacting_protein::InteractingProtein,
     interacting_rna::InteractingRna,
-    locus::LocusInfo,
     orf::Orf,
     precompute::Precompute,
     qa_status::QaStatus,
@@ -71,7 +72,7 @@ pub enum Error {
     Other(#[from] anyhow::Error),
 }
 
-#[derive(Debug, Display, PartialEq, Eq, Hash, EnumString)]
+#[derive(Debug, Display, PartialEq, Eq, Hash, EnumString, EnumIter)]
 pub enum FileTypes {
     #[strum(ascii_case_insensitive)]
     Base,
@@ -120,7 +121,6 @@ pub struct FileJoiner {
     go_annotations: JsonlIterator<File, Grouped<GoAnnotation>>,
     interacting_proteins: JsonlIterator<File, Grouped<InteractingProtein>>,
     interacting_rnas: JsonlIterator<File, Grouped<InteractingRna>>,
-    locus_info: JsonlIterator<File, Grouped<LocusInfo>>,
     orfs: JsonlIterator<File, Grouped<Orf>>,
     precompute: JsonlIterator<File, Grouped<Precompute>>,
     qa_status: JsonlIterator<File, Grouped<QaStatus>>,
@@ -131,6 +131,15 @@ pub struct FileJoiner {
 
 pub struct FileJoinerBuilder {
     paths: HashMap<FileTypes, PathBuf>,
+}
+
+impl FileTypes {
+    pub fn required_for_joining(&self) -> bool {
+        match self {
+            Self::LocusInfo => false,
+            _ => true,
+        }
+    }
 }
 
 impl TryFrom<&Path> for FileTypes {
@@ -163,7 +172,17 @@ impl FileJoinerBuilder {
             builder.file(file_type, path);
         }
 
+        for file_type in FileTypes::iter() {
+            if !builder.is_set(&file_type) && file_type.required_for_joining() {
+                return Err(Error::MustDefineMissingFile(file_type));
+            }
+        }
+
         Ok(builder)
+    }
+
+    pub fn is_set(&mut self, file: &FileTypes) -> bool {
+        self.paths.contains_key(file)
     }
 
     pub fn file(&mut self, file: FileTypes, path: PathBuf) -> &mut Self {
@@ -190,7 +209,6 @@ impl FileJoinerBuilder {
         let go_annotations = self.iterator_for(FileTypes::GoAnnotations)?;
         let interacting_proteins = self.iterator_for(FileTypes::InteractingProteins)?;
         let interacting_rnas = self.iterator_for(FileTypes::InteractingRnas)?;
-        let locus_info = self.iterator_for(FileTypes::LocusInfo)?;
         let orfs = self.iterator_for(FileTypes::Orfs)?;
         let precompute = self.iterator_for(FileTypes::Precompute)?;
         let qa_status = self.iterator_for(FileTypes::QaStatus)?;
@@ -205,7 +223,6 @@ impl FileJoinerBuilder {
             go_annotations,
             interacting_proteins,
             interacting_rnas,
-            locus_info,
             orfs,
             precompute,
             qa_status,
@@ -227,7 +244,6 @@ impl Iterator for FileJoiner {
             self.go_annotations.next(),
             self.interacting_proteins.next(),
             self.interacting_rnas.next(),
-            self.locus_info.next(),
             self.orfs.next(),
             self.precompute.next(),
             self.qa_status.next(),
@@ -236,7 +252,7 @@ impl Iterator for FileJoiner {
         );
 
         match current {
-            (None, None, None, None, None, None, None, None, None, None, None, None) => None,
+            (None, None, None, None, None, None, None, None, None, None, None) => None,
             (
                 Some(Required {
                     id: id1,
@@ -262,28 +278,24 @@ impl Iterator for FileJoiner {
                     id: id6,
                     data: interacting_rnas,
                 }),
-                Some(Optional {
-                    id: id7,
-                    data: locus_info,
-                }),
                 Some(Multiple {
-                    id: id8,
+                    id: id7,
                     data: orfs,
                 }),
                 Some(Required {
-                    id: id9,
+                    id: id8,
                     data: precompute,
                 }),
                 Some(Required {
-                    id: id10,
+                    id: id9,
                     data: qa_status,
                 }),
                 Some(Optional {
-                    id: id11,
+                    id: id10,
                     data: r2dt,
                 }),
                 Some(Multiple {
-                    id: id12,
+                    id: id11,
                     data: rfam_hits,
                 }),
             ) => {
@@ -297,10 +309,9 @@ impl Iterator for FileJoiner {
                     || id1 != id9
                     || id1 != id10
                     || id1 != id11
-                    || id1 != id12
                 {
                     return Some(Err(Error::OutofSyncData(vec![
-                        id1, id2, id3, id4, id5, id6, id7, id8, id9, id10, id11, id12,
+                        id1, id2, id3, id4, id5, id6, id7, id8, id9, id10, id11
                     ])));
                 }
 
@@ -315,7 +326,6 @@ impl Iterator for FileJoiner {
                     .base(base)
                     .precompute(precompute)
                     .qa_status(qa_status)
-                    .locus_info(locus_info)
                     .crs(crs)
                     .feedback(feedback)
                     .go_annotations(go_annotations)

@@ -6,7 +6,6 @@ pub mod file_joiner;
 pub mod go_annotation;
 pub mod interacting_protein;
 pub mod interacting_rna;
-pub mod locus;
 pub mod normalized;
 pub mod orf;
 pub mod precompute;

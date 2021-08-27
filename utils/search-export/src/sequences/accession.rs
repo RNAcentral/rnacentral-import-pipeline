@@ -47,7 +47,7 @@ pub struct CrossReference {
     parent_accession: Option<String>,
 }
 
-#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct AccessionVec {
     species: HashSet<String>,
     organelles: HashSet<String>,
@@ -62,7 +62,7 @@ pub struct AccessionVec {
     products: HashSet<String>,
 }
 
-#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ReferenceVec {
     authors: HashSet<String>,
     journals: HashSet<String>,

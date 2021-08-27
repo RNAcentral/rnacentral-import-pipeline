@@ -22,7 +22,7 @@ pub struct Precompute {
     databases: Vec<String>,
 }
 
-#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct PrecomputeSummary {
     description: String,
     rna_type: String,
@@ -76,6 +76,13 @@ impl Precompute {
             true => String::from("True"),
             false => String::from("False"),
         }
+    }
+}
+
+impl PrecomputeSummary {
+    /// Get a reference to the precompute summary's description.
+    pub fn description(&self) -> &str {
+        self.description.as_str()
     }
 }
 
