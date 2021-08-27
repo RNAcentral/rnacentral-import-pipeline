@@ -1,4 +1,4 @@
 pub mod gene;
-pub mod info;
-pub mod member;
+pub mod region;
 pub mod writers;
+pub mod gene_member;

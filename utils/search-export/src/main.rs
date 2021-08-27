@@ -3,34 +3,52 @@ use structopt::StructOpt;
 
 use anyhow::Result;
 
+pub mod utils;
 pub mod genes;
 pub mod sequences;
+pub mod search_xml;
 
 use crate::sequences::file_joiner::FileTypes;
 
 #[derive(Debug, StructOpt)]
 #[structopt(rename_all = "kebab-case")]
 enum GenesCommand {
-    /// A command to filter the normalized data to only the entries that are part of some
-    /// locus. This will also sort the entries by locus_id so it should be easy to
-    MembersOnly {
-        /// Filename to read the results from, '-' means stdin
+    /// This command does a join between the sequence information, locus information and
+    /// gene information. Any sequence not part of a gene is ignored. It then splits
+    /// the resulting merged entries by assembly so it produces a directory of files,
+    /// one per assmebly. These can then be merge together to produce complete gene
+    /// entries. This assumes the locus and sequence information is sorted by a common
+    /// id.
+    SelectAndSplit {
+        /// Filename to read the locus level information from
         #[structopt(parse(from_os_str))]
-        path: PathBuf,
+        locus: PathBuf,
 
-        /// Filename to write the results to, '-' means stdout
+        /// Filename to read the selected members from
+        #[structopt(parse(from_os_str))]
+        sequences: PathBuf,
+
+        /// Output directory to write to, does not need to exist
+        #[structopt(parse(from_os_str))]
+        output: PathBuf,
+    },
+
+    /// This will take all gene member information and merge them into genes. This needs enough
+    /// memory to fit information on all members from an assembly into memory at once.
+    MergeAssembly {
+        /// A file of all gene members for a given assembly. The file does not need to be sorted.
+        #[structopt(parse(from_os_str))]
+        members: PathBuf,
+
+        /// Filename to write complete gene to
         #[structopt(parse(from_os_str))]
         output: PathBuf,
     },
 
     AsXml {
-        /// Filename to read the gene info from
+        /// File of the complete genes to read
         #[structopt(parse(from_os_str))]
         genes: PathBuf,
-
-        /// Filename to read the selected data from
-        #[structopt(parse(from_os_str))]
-        members: PathBuf,
 
         /// Filename to write the xml data to
         #[structopt(parse(from_os_str))]
@@ -83,9 +101,6 @@ enum Subcommand {
 
         #[structopt(parse(from_os_str))]
         interacting_rnas: PathBuf,
-
-        #[structopt(parse(from_os_str))]
-        locus_info: PathBuf,
 
         #[structopt(parse(from_os_str))]
         precompute: PathBuf,
@@ -175,7 +190,7 @@ fn main() -> Result<()> {
             FileTypes::InteractingRnas => {
                 sequences::interacting_rna::group(&path, max_count, &output)?
             },
-            FileTypes::LocusInfo => sequences::locus::group(&path, max_count, &output)?,
+            FileTypes::LocusInfo => genes::region::group(&path, max_count, &output)?,
             FileTypes::Precompute => sequences::precompute::group(&path, max_count, &output)?,
             FileTypes::QaStatus => sequences::qa_status::group(&path, max_count, &output)?,
             FileTypes::R2dtHits => sequences::r2dt::group(&path, max_count, &output)?,
@@ -190,7 +205,6 @@ fn main() -> Result<()> {
             go_annotations,
             interacting_proteins,
             interacting_rnas,
-            locus_info,
             precompute,
             qa_status,
             r2dt_hits,
@@ -206,7 +220,6 @@ fn main() -> Result<()> {
                 go_annotations,
                 interacting_proteins,
                 interacting_rnas,
-                locus_info,
                 precompute,
                 qa_status,
                 r2dt_hits,
@@ -224,16 +237,20 @@ fn main() -> Result<()> {
         Subcommand::Genes {
             command,
         } => match command {
-            GenesCommand::MembersOnly {
-                path,
+            GenesCommand::SelectAndSplit {
+                locus,
+                sequences,
                 output,
-            } => genes::writers::write_gene_members(&path, &output)?,
+            } => genes::writers::write_selected_members(&locus, &sequences, &output)?,
+            GenesCommand::MergeAssembly {
+                members,
+                output,
+            } => genes::writers::write_merged_members(&members, &output)?,
             GenesCommand::AsXml {
                 genes,
-                members,
                 xml_output,
                 count_output,
-            } => genes::writers::write_gene_info(&genes, &members, &xml_output, &count_output)?,
+            } => genes::writers::write_search_files(&genes, &xml_output, &count_output)?,
         },
     }
 

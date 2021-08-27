@@ -17,7 +17,6 @@ use crate::sequences::{
     go_annotation::GoAnnotation,
     interacting_protein::InteractingProtein,
     interacting_rna::InteractingRna,
-    locus::LocusInfo,
     orf::Orf,
     precompute::Precompute,
     qa_status::QaStatus,
@@ -35,7 +34,6 @@ pub struct Raw {
     go_annotations: Vec<GoAnnotation>,
     interacting_proteins: Vec<InteractingProtein>,
     interacting_rnas: Vec<InteractingRna>,
-    locus_info: Option<LocusInfo>,
     precompute: Precompute,
     qa_status: QaStatus,
     r2dt: Option<R2dt>,
@@ -96,11 +94,6 @@ impl Raw {
     /// Get a reference to the raw's interacting rnas.
     pub fn interacting_rnas(&self) -> &[InteractingRna] {
         self.interacting_rnas.as_slice()
-    }
-
-    /// Get a reference to the raw's locus info.
-    pub fn locus_info(&self) -> &Option<LocusInfo> {
-        &self.locus_info
     }
 
     /// Get a reference to the raw's precompute.

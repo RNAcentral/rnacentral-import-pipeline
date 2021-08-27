@@ -1,117 +1,79 @@
+use std::iter::FromIterator;
+
+use crate::{
+    search_xml::{
+        AdditionalFields,
+        CrossReferences,
+        Description,
+        Entry,
+        Name,
+    },
+    utils::set_or_check,
+};
 use serde::{
     Deserialize,
     Serialize,
 };
 
-use crate::genes::{
-    info::GeneInfo,
-    member::GeneMembers,
-};
+use super::gene_member::GeneMember;
 
-#[derive(Debug, Deserialize, Serialize, PartialEq)]
-pub struct Name {
-    #[serde(rename = "$value")]
-    value: String,
-}
-
-#[derive(Debug, Deserialize, Serialize, PartialEq)]
-pub struct Description {
-    #[serde(rename = "$value")]
-    value: String,
-}
-
-#[derive(Debug, Deserialize, Serialize, PartialEq)]
-pub struct Field {
+#[derive(Debug, Deserialize, Serialize)]
+pub struct Gene {
+    id: usize,
     name: String,
-    #[serde(rename = "$value")]
-    value: String,
+    assembly_id: String,
+    member_count: usize,
+    members: Vec<GeneMember>,
 }
 
-#[derive(Debug, Deserialize, Serialize, PartialEq)]
-pub struct AdditionalFields {
-    #[serde(rename = "field", default)]
-    fields: Vec<Field>,
-}
-
-#[derive(Debug, Deserialize, Serialize, PartialEq)]
-pub struct Ref {
-    dbname: String,
-    dbkey: String,
-}
-
-#[derive(Debug, Deserialize, Serialize, PartialEq)]
-pub struct CrossReferences {
-    #[serde(rename = "ref", default)]
-    refs: Vec<Ref>,
-}
-
-#[derive(Debug, Deserialize, Serialize, PartialEq)]
-pub struct Entry {
-    id: String,
-    name: Name,
-    description: Description,
-    cross_references: CrossReferences,
-    additional_fields: AdditionalFields,
-}
-
-impl Default for CrossReferences {
-    fn default() -> Self {
-        Self {
-            refs: Vec::new(),
-        }
-    }
-}
-
-impl Default for AdditionalFields {
-    fn default() -> Self {
-        Self {
-            fields: Vec::new(),
-        }
-    }
-}
-
-impl CrossReferences {
-    pub fn add_ref(&mut self, database_name: &str, key: &str) {
-        self.refs.push(Ref {
-            dbname: database_name.to_string(),
-            dbkey: key.to_string(),
-        });
-    }
-}
-
-impl AdditionalFields {
-    pub fn add_field(&mut self, name: &str, value: String) {
-        self.fields.push(Field {
-            name: name.to_string(),
-            value,
-        });
-    }
-}
-
-impl Entry {
-    pub fn new(gene: GeneInfo, members: GeneMembers) -> Self {
+impl Into<Entry> for Gene {
+    fn into(self) -> Entry {
         let mut cross_references = CrossReferences::default();
         let mut additional_fields = AdditionalFields::default();
 
-        for sequence in members.sequences() {
-            additional_fields.add_field("entry_type", "Gene".to_string());
-            additional_fields.add_field("gene_member", sequence.urs_taxid().to_string());
-            cross_references.add_ref("rnacentral", sequence.urs_taxid());
-            for xref in sequence.cross_references() {
+        for member in self.members {
+            additional_fields.add_field("entry_type", "Gene");
+            additional_fields.add_field("gene_member", member.urs_taxid());
+            additional_fields.add_field("member_description", member.description());
+
+            cross_references.add_ref("rnacentral", member.urs_taxid());
+            for xref in member.cross_references() {
                 cross_references.add_ref(xref.name(), xref.external_id())
             }
         }
 
+        Entry::builder()
+            .id(self.name.to_string())
+            .name(Name::new("".to_string()))
+            .description(Description::new("".to_string()))
+            .cross_references(cross_references)
+            .additional_fields(additional_fields)
+            .build()
+    }
+}
+
+impl FromIterator<GeneMember> for Gene {
+    fn from_iter<T: IntoIterator<Item = GeneMember>>(iter: T) -> Self {
+        let mut locus_id = None;
+        let mut name = None;
+        let mut member_count = None;
+        let mut assembly_id = None;
+        let mut members = Vec::new();
+
+        for locus in iter {
+            set_or_check(&mut locus_id, locus.locus_id());
+            set_or_check(&mut name, locus.name().to_string());
+            set_or_check(&mut member_count, *locus.member_count());
+            set_or_check(&mut assembly_id, locus.assembly_id().to_string());
+            members.push(GeneMember::from(locus));
+        }
+
         Self {
-            id: gene.name().to_string(),
-            name: Name {
-                value: "".to_string(),
-            },
-            description: Description {
-                value: "".to_string(),
-            },
-            cross_references,
-            additional_fields,
+            id: locus_id.unwrap(),
+            name: name.unwrap().to_string(),
+            member_count: member_count.unwrap().to_owned(),
+            assembly_id: assembly_id.unwrap().to_string(),
+            members,
         }
     }
 }

@@ -18,7 +18,7 @@ pub struct Crs {
     crs_id: String,
 }
 
-#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct CrsVec {
     crs_id: HashSet<String>,
 }
