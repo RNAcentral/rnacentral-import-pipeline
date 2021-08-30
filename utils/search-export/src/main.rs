@@ -3,12 +3,59 @@ use structopt::StructOpt;
 
 use anyhow::Result;
 
+use strum_macros::{
+    Display,
+    EnumIter,
+    EnumString,
+};
+
 pub mod genes;
 pub mod search_xml;
 pub mod sequences;
 pub mod utils;
 
-use crate::sequences::file_joiner::FileTypes;
+#[derive(Debug, Display, PartialEq, Eq, Hash, EnumString, EnumIter)]
+#[strum(serialize_all = "kebab-case")]
+pub enum Groupable {
+    #[strum(ascii_case_insensitive)]
+    Base,
+
+    #[strum(ascii_case_insensitive)]
+    Crs,
+
+    #[strum(ascii_case_insensitive)]
+    Feedback,
+
+    #[strum(ascii_case_insensitive)]
+    GoAnnotations,
+
+    #[strum(ascii_case_insensitive)]
+    InteractingProteins,
+
+    #[strum(ascii_case_insensitive)]
+    InteractingRnas,
+
+    #[strum(ascii_case_insensitive)]
+    RegionInfo,
+
+    #[strum(ascii_case_insensitive)]
+    Orfs,
+
+    #[strum(ascii_case_insensitive)]
+    Precompute,
+
+    #[strum(ascii_case_insensitive)]
+    QaStatus,
+
+    #[strum(ascii_case_insensitive)]
+    R2dtHits,
+
+    #[strum(ascii_case_insensitive)]
+    RfamHits,
+
+    #[strum(ascii_case_insensitive)]
+    SoInfo,
+}
 
 #[derive(Debug, StructOpt)]
 #[structopt(rename_all = "kebab-case")]
@@ -132,7 +179,7 @@ enum Subcommand {
     Group {
         /// Type of data to group
         #[structopt(case_insensitive = true)]
-        data_type: FileTypes,
+        data_type: Groupable,
 
         /// Filename to read the results from, '-' means stdin
         #[structopt(parse(from_os_str))]
@@ -193,23 +240,23 @@ fn main() -> Result<()> {
             max_count,
             output,
         } => match data_type {
-            FileTypes::Base => sequences::basic::group(&path, max_count, &output)?,
-            FileTypes::Crs => sequences::crs::group(&path, max_count, &output)?,
-            FileTypes::Feedback => sequences::feedback::group(&path, max_count, &output)?,
-            FileTypes::GoAnnotations => sequences::go_annotation::group(&path, max_count, &output)?,
-            FileTypes::InteractingProteins => {
+            Groupable::Base => sequences::basic::group(&path, max_count, &output)?,
+            Groupable::Crs => sequences::crs::group(&path, max_count, &output)?,
+            Groupable::Feedback => sequences::feedback::group(&path, max_count, &output)?,
+            Groupable::GoAnnotations => sequences::go_annotation::group(&path, max_count, &output)?,
+            Groupable::InteractingProteins => {
                 sequences::interacting_protein::group(&path, max_count, &output)?
             },
-            FileTypes::InteractingRnas => {
+            Groupable::InteractingRnas => {
                 sequences::interacting_rna::group(&path, max_count, &output)?
             },
-            FileTypes::LocusInfo => genes::region::group(&path, max_count, &output)?,
-            FileTypes::Precompute => sequences::precompute::group(&path, max_count, &output)?,
-            FileTypes::QaStatus => sequences::qa_status::group(&path, max_count, &output)?,
-            FileTypes::R2dtHits => sequences::r2dt::group(&path, max_count, &output)?,
-            FileTypes::RfamHits => sequences::rfam_hit::group(&path, max_count, &output)?,
-            FileTypes::Orfs => sequences::orf::group(&path, max_count, &output)?,
-            FileTypes::SoInfo => Err(anyhow::anyhow!("May not group so info"))?,
+            Groupable::RegionInfo => genes::region::group(&path, max_count, &output)?,
+            Groupable::Precompute => sequences::precompute::group(&path, max_count, &output)?,
+            Groupable::QaStatus => sequences::qa_status::group(&path, max_count, &output)?,
+            Groupable::R2dtHits => sequences::r2dt::group(&path, max_count, &output)?,
+            Groupable::RfamHits => sequences::rfam_hit::group(&path, max_count, &output)?,
+            Groupable::Orfs => sequences::orf::group(&path, max_count, &output)?,
+            Groupable::SoInfo => Err(anyhow::anyhow!("May not group so info"))?,
         },
         Subcommand::Sequences {
             command,
