@@ -62,14 +62,13 @@ process build_json {
   path(r2dt)
   path(rfam)
   path(orf)
-  path(locus)
   path(so_tree)
 
   output:
   path("merged.json")
 
   """
-  search-export sequences merge $base $crs $feeback $go $prot $rnas $locus $precompute $qa $r2dt $rfam $orf $so_tree merged.json
+  search-export sequences merge $base $crs $feeback $go $prot $rnas $precompute $qa $r2dt $rfam $orf $so_tree merged.json
   """
 }
 
