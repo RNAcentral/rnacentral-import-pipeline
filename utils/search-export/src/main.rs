@@ -3,10 +3,10 @@ use structopt::StructOpt;
 
 use anyhow::Result;
 
-pub mod utils;
 pub mod genes;
-pub mod sequences;
 pub mod search_xml;
+pub mod sequences;
+pub mod utils;
 
 use crate::sequences::file_joiner::FileTypes;
 
@@ -33,10 +33,12 @@ enum GenesCommand {
         output: PathBuf,
     },
 
-    /// This will take all gene member information and merge them into genes. This needs enough
-    /// memory to fit information on all members from an assembly into memory at once.
+    /// This will take all gene member information and merge them into genes. This needs
+    /// enough memory to fit information on all members from an assembly into memory
+    /// at once.
     MergeAssembly {
-        /// A file of all gene members for a given assembly. The file does not need to be sorted.
+        /// A file of all gene members for a given assembly. The file does not need to be
+        /// sorted.
         #[structopt(parse(from_os_str))]
         members: PathBuf,
 
@@ -62,27 +64,7 @@ enum GenesCommand {
 
 #[derive(Debug, StructOpt)]
 #[structopt(rename_all = "kebab-case")]
-enum Subcommand {
-    /// Merge each distinct type of metadata into single merged entries. This assumes that
-    /// all files are sorted in the same way. Additionally, the xref file must have at
-    /// least one entry for all possible urs_taxids.
-    Group {
-        /// Type of data to group
-        #[structopt(case_insensitive = true)]
-        data_type: FileTypes,
-
-        /// Filename to read the results from, '-' means stdin
-        #[structopt(parse(from_os_str))]
-        path: PathBuf,
-
-        /// The maximum count of the entries.
-        max_count: usize,
-
-        /// Filename to write the results to, '-' means stdout
-        #[structopt(parse(from_os_str))]
-        output: PathBuf,
-    },
-
+enum SequenceCommand {
     Merge {
         #[structopt(parse(from_os_str))]
         base: PathBuf,
@@ -139,7 +121,38 @@ enum Subcommand {
         /// Filename to write the results to, '-' means stdout
         output: PathBuf,
     },
+}
 
+#[derive(Debug, StructOpt)]
+#[structopt(rename_all = "kebab-case")]
+enum Subcommand {
+    /// Merge each distinct type of metadata into single merged entries. This assumes that
+    /// all files are sorted in the same way. Additionally, the xref file must have at
+    /// least one entry for all possible urs_taxids.
+    Group {
+        /// Type of data to group
+        #[structopt(case_insensitive = true)]
+        data_type: FileTypes,
+
+        /// Filename to read the results from, '-' means stdin
+        #[structopt(parse(from_os_str))]
+        path: PathBuf,
+
+        /// The maximum count of the entries.
+        max_count: usize,
+
+        /// Filename to write the results to, '-' means stdout
+        #[structopt(parse(from_os_str))]
+        output: PathBuf,
+    },
+
+    /// Set of commands dealing with building data for sequence data export
+    Sequences {
+        #[structopt(subcommand)]
+        command: SequenceCommand,
+    },
+
+    /// Commands dealing with building data for gene export
     Genes {
         #[structopt(subcommand)]
         command: GenesCommand,
@@ -198,22 +211,10 @@ fn main() -> Result<()> {
             FileTypes::Orfs => sequences::orf::group(&path, max_count, &output)?,
             FileTypes::SoInfo => Err(anyhow::anyhow!("May not group so info"))?,
         },
-        Subcommand::Merge {
-            base,
-            crs,
-            feedback,
-            go_annotations,
-            interacting_proteins,
-            interacting_rnas,
-            precompute,
-            qa_status,
-            r2dt_hits,
-            rfam_hits,
-            orfs,
-            so_term_tree,
-            output,
-        } => sequences::writers::write_merge(
-            vec![
+        Subcommand::Sequences {
+            command,
+        } => match command {
+            SequenceCommand::Merge {
                 base,
                 crs,
                 feedback,
@@ -226,14 +227,30 @@ fn main() -> Result<()> {
                 rfam_hits,
                 orfs,
                 so_term_tree,
-            ],
-            &output,
-        )?,
-        Subcommand::Normalize {
-            accessions,
-            metadata,
-            output,
-        } => sequences::writers::write(&accessions, &metadata, &output)?,
+                output,
+            } => sequences::writers::write_merge(
+                vec![
+                    base,
+                    crs,
+                    feedback,
+                    go_annotations,
+                    interacting_proteins,
+                    interacting_rnas,
+                    precompute,
+                    qa_status,
+                    r2dt_hits,
+                    rfam_hits,
+                    orfs,
+                    so_term_tree,
+                ],
+                &output,
+            )?,
+            SequenceCommand::Normalize {
+                accessions,
+                metadata,
+                output,
+            } => sequences::writers::write(&accessions, &metadata, &output)?,
+        },
         Subcommand::Genes {
             command,
         } => match command {
