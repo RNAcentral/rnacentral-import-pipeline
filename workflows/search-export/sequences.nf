@@ -2,21 +2,21 @@
 
 nextflow.enable.dsl=2
 
-include { query as accession_query } from './workflows/search-export/utils'
-include { query as base_query } from './workflows/search-export/utils'
-include { query as crs_query } from './workflows/search-export/utils'
-include { query as feeback_query } from './workflows/search-export/utils'
-include { query as go_query } from './workflows/search-export/utils'
-include { query as prot_query } from './workflows/search-export/utils'
-include { query as rnas_query } from './workflows/search-export/utils'
-include { query as precompute_query } from './workflows/search-export/utils'
-include { query as qa_query } from './workflows/search-export/utils'
-include { query as r2dt_query } from './workflows/search-export/utils'
-include { query as ref_query } from './workflows/search-export/utils'
-include { query as rfam_query } from './workflows/search-export/utils'
-include { query as orf_query } from './workflows/search-export/utils'
-include { query as locus_query } from './workflows/search-export/utils'
-include { build_search_accessions } from './workflows/search-export/build-accession-table'
+include { query as accession_query } from './utils'
+include { query as base_query } from './utils'
+include { query as crs_query } from './utils'
+include { query as feeback_query } from './utils'
+include { query as go_query } from './utils'
+include { query as prot_query } from './utils'
+include { query as rnas_query } from './utils'
+include { query as precompute_query } from './utils'
+include { query as qa_query } from './utils'
+include { query as r2dt_query } from './utils'
+include { query as ref_query } from './utils'
+include { query as rfam_query } from './utils'
+include { query as orf_query } from './utils'
+include { query as locus_query } from './utils'
+include { build_search_accessions } from './build-accession-table'
 
 process setup {
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
