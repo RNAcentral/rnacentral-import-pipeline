@@ -86,7 +86,7 @@ pub enum FileTypes {
     QaStatus,
     R2dt,
     RfamHits,
-    SoInfo,
+    SoTermTree,
 }
 
 pub struct FileJoiner {
@@ -179,7 +179,7 @@ impl FileJoinerBuilder {
         let qa_status = self.iterator_for(FileTypes::QaStatus)?;
         let r2dt_hits = self.iterator_for(FileTypes::R2dt)?;
         let rfam_hits = self.iterator_for(FileTypes::RfamHits)?;
-        let so_info = so_tree::load(self.path_for(FileTypes::SoInfo)?)?;
+        let so_info = so_tree::load(self.path_for(FileTypes::SoTermTree)?)?;
 
         Ok(FileJoiner {
             basic,
