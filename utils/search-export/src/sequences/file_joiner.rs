@@ -73,44 +73,19 @@ pub enum Error {
 }
 
 #[derive(Debug, Display, PartialEq, Eq, Hash, EnumString, EnumIter)]
+#[strum(ascii_case_insensitive, serialize_all = "kebab-case")]
 pub enum FileTypes {
-    #[strum(ascii_case_insensitive)]
     Base,
-
-    #[strum(ascii_case_insensitive)]
     Crs,
-
-    #[strum(ascii_case_insensitive)]
     Feedback,
-
-    #[strum(ascii_case_insensitive)]
     GoAnnotations,
-
-    #[strum(ascii_case_insensitive)]
     InteractingProteins,
-
-    #[strum(ascii_case_insensitive)]
     InteractingRnas,
-
-    #[strum(ascii_case_insensitive)]
-    LocusInfo,
-
-    #[strum(ascii_case_insensitive)]
     Orfs,
-
-    #[strum(ascii_case_insensitive)]
     Precompute,
-
-    #[strum(ascii_case_insensitive)]
     QaStatus,
-
-    #[strum(ascii_case_insensitive)]
-    R2dtHits,
-
-    #[strum(ascii_case_insensitive)]
+    R2dt,
     RfamHits,
-
-    #[strum(ascii_case_insensitive)]
     SoInfo,
 }
 
@@ -131,15 +106,6 @@ pub struct FileJoiner {
 
 pub struct FileJoinerBuilder {
     paths: HashMap<FileTypes, PathBuf>,
-}
-
-impl FileTypes {
-    pub fn required_for_joining(&self) -> bool {
-        match self {
-            Self::LocusInfo => false,
-            _ => true,
-        }
-    }
 }
 
 impl TryFrom<&Path> for FileTypes {
@@ -173,7 +139,7 @@ impl FileJoinerBuilder {
         }
 
         for file_type in FileTypes::iter() {
-            if !builder.is_set(&file_type) && file_type.required_for_joining() {
+            if !builder.is_set(&file_type) {
                 return Err(Error::MustDefineMissingFile(file_type));
             }
         }
@@ -212,7 +178,7 @@ impl FileJoinerBuilder {
         let orfs = self.iterator_for(FileTypes::Orfs)?;
         let precompute = self.iterator_for(FileTypes::Precompute)?;
         let qa_status = self.iterator_for(FileTypes::QaStatus)?;
-        let r2dt_hits = self.iterator_for(FileTypes::R2dtHits)?;
+        let r2dt_hits = self.iterator_for(FileTypes::R2dt)?;
         let rfam_hits = self.iterator_for(FileTypes::RfamHits)?;
         let so_info = so_tree::load(self.path_for(FileTypes::SoInfo)?)?;
 
