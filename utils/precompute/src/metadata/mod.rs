@@ -1,11 +1,11 @@
 pub mod basic;
 pub mod coordinate;
+pub mod file_types;
 pub mod merged;
 pub mod orf;
 pub mod previous;
 pub mod r2dt_hit;
 pub mod rfam_hit;
-pub mod file_types;
 
 use std::{
     io::Write,
