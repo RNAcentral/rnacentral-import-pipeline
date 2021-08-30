@@ -117,7 +117,6 @@ impl TryFrom<&Path> for FileTypes {
             .map(|s| s.to_str())
             .flatten()
             .ok_or_else(|| Error::BadFileName(PathBuf::from(path)))?;
-        let name = name.replace("-", "").replace("_", "");
         Self::from_str(&name).map_err(|_| Error::UnknownFileType(PathBuf::from(path)))
     }
 }
