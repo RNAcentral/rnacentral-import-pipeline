@@ -69,7 +69,7 @@ process build_json {
   path("merged.json")
 
   """
-  search-export merge $base $crs $feeback $go $prot $rnas $locus $precompute $qa $r2dt $rfam $orf $so_tree merged.json
+  search-export sequences merge $base $crs $feeback $go $prot $rnas $locus $precompute $qa $r2dt $rfam $orf $so_tree merged.json
   """
 }
 
@@ -127,7 +127,7 @@ process export_sequence_xml {
   xml = "xml4dbdumps__${min}__${max}.xml"
   gene_xml = "gene_xml__${min}__${max}.xml"
   """
-  search-export normalize $raw $metadata data.json
+  search-export sequences normalize $raw $metadata data.json
   rnac search-export as-xml data.json $xml count
   xmllint $xml --schema ${params.search_export.schema} --stream
   gzip $xml
