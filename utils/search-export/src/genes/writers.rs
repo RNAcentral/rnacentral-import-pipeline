@@ -70,11 +70,10 @@ pub fn write_selected_members(
         for (assembly_id, regions) in seq_locus.regions_by_assembly() {
             let mut writer = writers
                 .entry(assembly_id.clone())
-                .or_insert(assembly_writer(&output, &assembly_id)?)
-                .get_mut();
+                .or_insert_with(|| assembly_writer(&output, &assembly_id).unwrap());
             for region in regions {
-                let informative = GeneMember::new(region.clone(), sequence.clone());
-                serde_json::to_writer(&mut writer, &informative)?;
+                let member = GeneMember::new(region.clone(), sequence.clone());
+                serde_json::to_writer(&mut writer, &member)?;
                 writeln!(&mut writer)?;
             }
         }
