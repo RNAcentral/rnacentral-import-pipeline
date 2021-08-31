@@ -22,7 +22,7 @@ pub struct Gene {
 
 impl<'a> Gene {
     pub fn as_search(&'a self) -> Entry<'a> {
-        let mut entry = Entry::new(&self.name, "", "");
+        let mut entry = Entry::new(&self.name, &self.name, "");
 
         for member in &self.members {
             entry.add_field("entry_type", "Gene");
