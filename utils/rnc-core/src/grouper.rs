@@ -70,7 +70,7 @@ where
 
     pub fn is_empty(&self) -> bool {
         match self {
-            Self::Multiple { id: _id, data } => data.len() > 0,
+            Self::Multiple { id: _id, data } => data.len() == 0,
             Self::Optional { id: _id, data } => data.is_none(),
             Self::Required { id: _id, data: _data } => false,
         }
