@@ -37,7 +37,6 @@ use crate::{
             RegionGrouper,
         },
     },
-    search_xml::Entry,
     sequences::normalized::Normalized,
 };
 
@@ -106,7 +105,7 @@ pub fn write_search_files(gene_file: &Path, xml_output: &Path, count_output: &Pa
     let mut xml_writer = BufWriter::new(File::create(&xml_output)?);
     let mut count = 0;
     for gene in genes {
-        let xml: Entry = gene.into();
+        let xml = gene.as_search();
         quick_xml::se::to_writer(&mut xml_writer, &xml)?;
         writeln!(&mut xml_writer)?;
         count += 1;

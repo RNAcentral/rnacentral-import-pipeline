@@ -20,11 +20,11 @@ pub struct Gene {
     members: Vec<GeneMember>,
 }
 
-impl Into<Entry> for Gene {
-    fn into(self) -> Entry {
-        let mut entry = Entry::new(self.name, "".to_string(), "".to_string());
+impl<'a> Gene {
+    pub fn as_search(&'a self) -> Entry<'a> {
+        let mut entry = Entry::new(&self.name, "", "");
 
-        for member in self.members {
+        for member in &self.members {
             entry.add_field("entry_type", "Gene");
             entry.add_field("gene_member", member.urs_taxid());
             entry.add_field("member_description", member.description());
