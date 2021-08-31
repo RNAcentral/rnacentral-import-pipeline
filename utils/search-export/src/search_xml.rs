@@ -6,27 +6,7 @@ use serde::{
 use typed_builder::TypedBuilder;
 
 #[derive(Debug, Deserialize, Serialize, PartialEq)]
-pub struct Name {
-    #[serde(rename = "$value")]
-    value: String,
-}
-
-impl Name {
-    pub fn new(value: String) -> Self { Self { value } }
-}
-
-#[derive(Debug, Deserialize, Serialize, PartialEq)]
-pub struct Description {
-    #[serde(rename = "$value")]
-    value: String,
-}
-
-impl Description {
-    pub fn new(value: String) -> Self { Self { value } }
-}
-
-#[derive(Debug, Deserialize, Serialize, PartialEq)]
-pub struct FieldChild {
+pub struct ValueOnly {
     #[serde(rename = "$value")]
     value: String
 }
@@ -35,9 +15,9 @@ pub struct FieldChild {
 pub struct HierarchicalField {
     name: String,
 
-    root: FieldChild,
+    root: ValueOnly,
     #[serde(rename = "child")]
-    children: Vec<FieldChild>
+    children: Vec<ValueOnly>
 }
 
 #[derive(Debug, Deserialize, Serialize, PartialEq)]
@@ -71,8 +51,8 @@ pub struct CrossReferences {
 #[derive(TypedBuilder, Debug, Deserialize, Serialize, PartialEq)]
 pub struct Entry {
     id: String,
-    name: Name,
-    description: Description,
+    name: ValueOnly,
+    description: ValueOnly,
     cross_references: CrossReferences,
     additional_fields: AdditionalFields,
 }
@@ -94,6 +74,40 @@ impl Default for AdditionalFields {
     }
 }
 
+impl From<String> for ValueOnly {
+    fn from(value: String) -> Self {
+        Self { value }
+    }
+}
+
+impl ValueOnly {
+    pub fn new(value: String) -> Self { Self { value } }
+}
+
+impl Entry {
+    pub fn new(id: String, name: String, description: String) -> Self {
+        Self {
+            id,
+            name: ValueOnly::new(name),
+            description: ValueOnly::new(description),
+            cross_references: CrossReferences::default(),
+            additional_fields: AdditionalFields::default(),
+        }
+    }
+
+    pub fn add_ref(&mut self, database_name: &str, key: &str) {
+        self.cross_references.add_ref(database_name, key);
+    }
+
+    pub fn add_field(&mut self, name: &str, value: &str) {
+        self.additional_fields.add_field(name, value);
+    }
+
+    pub fn add_tree(&mut self, name: &str, root: &str, children: Vec<String>) {
+        self.additional_fields.add_tree(name, root, children);
+    }
+}
+
 impl CrossReferences {
     pub fn add_ref(&mut self, database_name: &str, key: &str) {
         self.refs.push(Ref {
@@ -111,11 +125,11 @@ impl AdditionalFields {
         });
     }
 
-    pub fn add_tree(&mut self, name: &str, root: FieldChild, children: Vec<FieldChild>) {
+    pub fn add_tree(&mut self, name: &str, root: &str, children: Vec<String>) {
         self.trees.push(HierarchicalField {
             name: name.to_string(),
-            root,
-            children,
+            root: root.to_string().into(),
+            children: children.iter().map(|s| s.to_string().into()).collect(),
         });
     }
 }

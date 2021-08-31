@@ -1,13 +1,7 @@
 use std::iter::FromIterator;
 
 use crate::{
-    search_xml::{
-        AdditionalFields,
-        CrossReferences,
-        Description,
-        Entry,
-        Name,
-    },
+    search_xml::Entry,
     utils::set_or_check,
 };
 use serde::{
@@ -28,27 +22,20 @@ pub struct Gene {
 
 impl Into<Entry> for Gene {
     fn into(self) -> Entry {
-        let mut cross_references = CrossReferences::default();
-        let mut additional_fields = AdditionalFields::default();
+        let mut entry = Entry::new(self.name, "".to_string(), "".to_string());
 
         for member in self.members {
-            additional_fields.add_field("entry_type", "Gene");
-            additional_fields.add_field("gene_member", member.urs_taxid());
-            additional_fields.add_field("member_description", member.description());
+            entry.add_field("entry_type", "Gene");
+            entry.add_field("gene_member", member.urs_taxid());
+            entry.add_field("member_description", member.description());
 
-            cross_references.add_ref("rnacentral", member.urs_taxid());
+            entry.add_ref("rnacentral", member.urs_taxid());
             for xref in member.cross_references() {
-                cross_references.add_ref(xref.name(), xref.external_id())
+                entry.add_ref(xref.name(), xref.external_id())
             }
         }
 
-        Entry::builder()
-            .id(self.name.to_string())
-            .name(Name::new("".to_string()))
-            .description(Description::new("".to_string()))
-            .cross_references(cross_references)
-            .additional_fields(additional_fields)
-            .build()
+        entry
     }
 }
 
