@@ -26,7 +26,22 @@ impl Description {
 }
 
 #[derive(Debug, Deserialize, Serialize, PartialEq)]
-pub struct Field {
+pub struct FieldChild {
+    #[serde(rename = "$value")]
+    value: String
+}
+
+#[derive(Debug, Deserialize, Serialize, PartialEq)]
+pub struct HierarchicalField {
+    name: String,
+
+    root: FieldChild,
+    #[serde(rename = "child")]
+    children: Vec<FieldChild>
+}
+
+#[derive(Debug, Deserialize, Serialize, PartialEq)]
+pub struct ValueField {
     name: String,
     #[serde(rename = "$value")]
     value: String,
@@ -35,7 +50,10 @@ pub struct Field {
 #[derive(Debug, Deserialize, Serialize, PartialEq)]
 pub struct AdditionalFields {
     #[serde(rename = "field", default)]
-    fields: Vec<Field>,
+    fields: Vec<ValueField>,
+
+    #[serde(rename = "hierarchical_field", default)]
+    trees: Vec<HierarchicalField>
 }
 
 #[derive(Debug, Deserialize, Serialize, PartialEq)]
@@ -71,6 +89,7 @@ impl Default for AdditionalFields {
     fn default() -> Self {
         Self {
             fields: Vec::new(),
+            trees: Vec::new()
         }
     }
 }
@@ -86,9 +105,17 @@ impl CrossReferences {
 
 impl AdditionalFields {
     pub fn add_field(&mut self, name: &str, value: &str) {
-        self.fields.push(Field {
+        self.fields.push(ValueField {
             name: name.to_string(),
             value: value.to_string(),
+        });
+    }
+
+    pub fn add_tree(&mut self, name: &str, root: FieldChild, children: Vec<FieldChild>) {
+        self.trees.push(HierarchicalField {
+            name: name.to_string(),
+            root,
+            children,
         });
     }
 }
