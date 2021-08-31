@@ -1,63 +1,59 @@
-use serde::{
-    Deserialize,
-    Serialize,
-};
+use serde::Serialize;
 
 use typed_builder::TypedBuilder;
 
-#[derive(Debug, Deserialize, Serialize, PartialEq)]
-pub struct ValueOnly {
+#[derive(Debug, Serialize, PartialEq)]
+pub struct ValueOnly<'a> {
     #[serde(rename = "$value")]
-    value: String
+    value: &'a str,
 }
 
-#[derive(Debug, Deserialize, Serialize, PartialEq)]
-pub struct HierarchicalField {
-    name: String,
-
-    root: ValueOnly,
+#[derive(Debug, Serialize, PartialEq)]
+pub struct HierarchicalField<'a> {
+    name: &'a str,
+    root: ValueOnly<'a>,
     #[serde(rename = "child")]
-    children: Vec<ValueOnly>
+    children: Vec<ValueOnly<'a>>,
 }
 
-#[derive(Debug, Deserialize, Serialize, PartialEq)]
-pub struct ValueField {
-    name: String,
+#[derive(Debug, Serialize, PartialEq)]
+pub struct NamedField<'a> {
+    name: &'a str,
     #[serde(rename = "$value")]
-    value: String,
+    value: &'a str,
 }
 
-#[derive(Debug, Deserialize, Serialize, PartialEq)]
-pub struct AdditionalFields {
+#[derive(Debug, Serialize, PartialEq)]
+pub struct AdditionalFields<'a> {
     #[serde(rename = "field", default)]
-    fields: Vec<ValueField>,
+    fields: Vec<NamedField<'a>>,
 
     #[serde(rename = "hierarchical_field", default)]
-    trees: Vec<HierarchicalField>
+    trees: Vec<HierarchicalField<'a>>,
 }
 
-#[derive(Debug, Deserialize, Serialize, PartialEq)]
-pub struct Ref {
-    dbname: String,
-    dbkey: String,
+#[derive(Debug, Serialize, PartialEq)]
+pub struct Ref<'a> {
+    dbname: &'a str,
+    dbkey: &'a str,
 }
 
-#[derive(Debug, Deserialize, Serialize, PartialEq)]
-pub struct CrossReferences {
+#[derive(Debug, Serialize, PartialEq)]
+pub struct CrossReferences<'a> {
     #[serde(rename = "ref", default)]
-    refs: Vec<Ref>,
+    refs: Vec<Ref<'a>>,
 }
 
-#[derive(TypedBuilder, Debug, Deserialize, Serialize, PartialEq)]
-pub struct Entry {
-    id: String,
-    name: ValueOnly,
-    description: ValueOnly,
-    cross_references: CrossReferences,
-    additional_fields: AdditionalFields,
+#[derive(TypedBuilder, Debug, Serialize, PartialEq)]
+pub struct Entry<'a> {
+    id: &'a str,
+    name: ValueOnly<'a>,
+    description: ValueOnly<'a>,
+    cross_references: CrossReferences<'a>,
+    additional_fields: AdditionalFields<'a>,
 }
 
-impl Default for CrossReferences {
+impl<'a> Default for CrossReferences<'a> {
     fn default() -> Self {
         Self {
             refs: Vec::new(),
@@ -65,27 +61,41 @@ impl Default for CrossReferences {
     }
 }
 
-impl Default for AdditionalFields {
+impl<'a> Default for AdditionalFields<'a> {
     fn default() -> Self {
         Self {
             fields: Vec::new(),
-            trees: Vec::new()
+            trees: Vec::new(),
         }
     }
 }
 
-impl From<String> for ValueOnly {
-    fn from(value: String) -> Self {
-        Self { value }
+impl<'a> From<&'a str> for ValueOnly<'a> {
+    fn from(value: &'a str) -> Self {
+        Self {
+            value,
+        }
     }
 }
 
-impl ValueOnly {
-    pub fn new(value: String) -> Self { Self { value } }
+impl<'a> From<&'a String> for ValueOnly<'a> {
+    fn from(value: &'a String) -> Self {
+        Self {
+            value,
+        }
+    }
 }
 
-impl Entry {
-    pub fn new(id: String, name: String, description: String) -> Self {
+impl<'a> ValueOnly<'a> {
+    pub fn new(value: &'a str) -> Self {
+        Self {
+            value,
+        }
+    }
+}
+
+impl<'a> Entry<'a> {
+    pub fn new(id: &'a str, name: &'a str, description: &'a str) -> Self {
         Self {
             id,
             name: ValueOnly::new(name),
@@ -95,41 +105,41 @@ impl Entry {
         }
     }
 
-    pub fn add_ref(&mut self, database_name: &str, key: &str) {
+    pub fn add_ref(&mut self, database_name: &'a str, key: &'a str) {
         self.cross_references.add_ref(database_name, key);
     }
 
-    pub fn add_field(&mut self, name: &str, value: &str) {
+    pub fn add_field(&mut self, name: &'a str, value: &'a str) {
         self.additional_fields.add_field(name, value);
     }
 
-    pub fn add_tree(&mut self, name: &str, root: &str, children: Vec<String>) {
+    pub fn add_tree(&mut self, name: &'a str, root: &'a str, children: &'a Vec<String>) {
         self.additional_fields.add_tree(name, root, children);
     }
 }
 
-impl CrossReferences {
-    pub fn add_ref(&mut self, database_name: &str, key: &str) {
+impl<'a> CrossReferences<'a> {
+    pub fn add_ref(&mut self, database_name: &'a str, key: &'a str) {
         self.refs.push(Ref {
-            dbname: database_name.to_string(),
-            dbkey: key.to_string(),
+            dbname: database_name,
+            dbkey: key,
         });
     }
 }
 
-impl AdditionalFields {
-    pub fn add_field(&mut self, name: &str, value: &str) {
-        self.fields.push(ValueField {
-            name: name.to_string(),
-            value: value.to_string(),
+impl<'a> AdditionalFields<'a> {
+    pub fn add_field(&mut self, name: &'a str, value: &'a str) {
+        self.fields.push(NamedField {
+            name,
+            value,
         });
     }
 
-    pub fn add_tree(&mut self, name: &str, root: &str, children: Vec<String>) {
+    pub fn add_tree(&mut self, name: &'a str, root: &'a str, children: &'a Vec<String>) {
         self.trees.push(HierarchicalField {
-            name: name.to_string(),
-            root: root.to_string().into(),
-            children: children.iter().map(|s| s.to_string().into()).collect(),
+            name,
+            root: root.into(),
+            children: children.iter().map(|s| s.into()).collect(),
         });
     }
 }
