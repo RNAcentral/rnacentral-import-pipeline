@@ -56,6 +56,7 @@ pub fn write_selected_members(
     create_dir_all(output)?;
 
     let locus: JsonlIterator<File, Grouped<Region>> = JsonlIterator::from_path(locus_file)?;
+    let locus = locus.filter(|l| !l.is_empty());
     let locus = RegionGrouper::new(locus);
     let locus = locus.map(|l| (l.id().clone(), l)).assume_sorted_by_key();
 

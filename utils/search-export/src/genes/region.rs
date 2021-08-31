@@ -71,8 +71,11 @@ impl Region {
     }
 }
 
-pub struct RegionGrouper {
-    iter: JsonlIterator<File, Grouped<Region>>,
+pub struct RegionGrouper<T>
+where
+    T: Iterator<Item = Grouped<Region>>,
+{
+    iter: T, // iter: JsonlIterator<File, Grouped<Region>>,
 }
 
 pub fn group(path: &Path, max: usize, output: &Path) -> Result<()> {
@@ -97,8 +100,11 @@ impl SequenceWithRegions {
     }
 }
 
-impl RegionGrouper {
-    pub fn new(iter: JsonlIterator<File, Grouped<Region>>) -> Self {
+impl<T> RegionGrouper<T>
+where
+    T: Iterator<Item = Grouped<Region>>,
+{
+    pub fn new(iter: T) -> Self {
         Self {
             iter,
         }
@@ -125,7 +131,10 @@ impl FromIterator<Region> for SequenceWithRegions {
     }
 }
 
-impl Iterator for RegionGrouper {
+impl<T> Iterator for RegionGrouper<T>
+where
+    T: Iterator<Item = Grouped<Region>>,
+{
     type Item = SequenceWithRegions;
 
     fn next(&mut self) -> Option<Self::Item> {
