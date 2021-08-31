@@ -3,6 +3,7 @@ where
     T: std::fmt::Debug + PartialEq
 {
     let previous = maybe.replace(value);
-
-    assert!(&previous == maybe, "Expected {:?} and {:?} to be equal", &maybe, &previous);
+    if previous.is_some() {
+        assert!(&previous == maybe, "Expected {:?} and {:?} to be equal", &maybe, &previous);
+    }
 }
