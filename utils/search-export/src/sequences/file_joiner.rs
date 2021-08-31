@@ -302,7 +302,7 @@ impl Iterator for FileJoiner {
                     .so_tree(so_tree)
                     .build();
 
-                return Some(Ok(raw));
+                Some(Ok(raw))
             },
             _ => Some(Err(Error::InvalidDataFormat)),
         }
