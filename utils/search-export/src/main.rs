@@ -15,45 +15,20 @@ pub mod sequences;
 pub mod utils;
 
 #[derive(Debug, Display, PartialEq, Eq, Hash, EnumString, EnumIter)]
-#[strum(serialize_all = "kebab-case")]
+#[strum(ascii_case_insensitive, serialize_all = "kebab-case")]
 pub enum Groupable {
-    #[strum(ascii_case_insensitive)]
     Base,
-
-    #[strum(ascii_case_insensitive)]
     Crs,
-
-    #[strum(ascii_case_insensitive)]
     Feedback,
-
-    #[strum(ascii_case_insensitive)]
     GoAnnotations,
-
-    #[strum(ascii_case_insensitive)]
     InteractingProteins,
-
-    #[strum(ascii_case_insensitive)]
     InteractingRnas,
-
-    #[strum(ascii_case_insensitive)]
     RegionInfo,
-
-    #[strum(ascii_case_insensitive)]
     Orfs,
-
-    #[strum(ascii_case_insensitive)]
     Precompute,
-
-    #[strum(ascii_case_insensitive)]
     QaStatus,
-
-    #[strum(ascii_case_insensitive)]
     R2dt,
-
-    #[strum(ascii_case_insensitive)]
     RfamHits,
-
-    #[strum(ascii_case_insensitive)]
     SoInfo,
 }
 
