@@ -145,12 +145,12 @@ impl FromIterator<RawAccession> for AccessionVec {
             insert(&mut a.products, i.product);
 
             for synonyms in i.gene_synonyms.into_iter() {
-                if synonyms.contains(";") {
+                if synonyms.contains(';') {
                     a.gene_synonyms
-                        .extend(synonyms.split(";").map(|p| p.trim()).map(str::to_string))
-                } else if synonyms.contains(",") {
+                        .extend(synonyms.split(';').map(|p| p.trim()).map(str::to_string))
+                } else if synonyms.contains(',') {
                     a.gene_synonyms
-                        .extend(synonyms.split(",").map(|p| p.trim()).map(str::to_string))
+                        .extend(synonyms.split(',').map(|p| p.trim()).map(str::to_string))
                 } else {
                     a.gene_synonyms.insert(synonyms);
                 }

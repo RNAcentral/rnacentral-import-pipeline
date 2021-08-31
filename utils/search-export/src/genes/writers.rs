@@ -47,7 +47,7 @@ pub fn assembly_writer(base: &Path, assembly: &str) -> Result<BufWriter<File>> {
     Ok(BufWriter::new(File::create(path)?))
 }
 
-pub fn write_selected_members(
+pub fn write_split_selected(
     locus_file: &Path,
     sequence_file: &Path,
     output: &Path,
@@ -57,10 +57,10 @@ pub fn write_selected_members(
     let locus: JsonlIterator<File, Grouped<Region>> = JsonlIterator::from_path(locus_file)?;
     let locus = locus.filter(|l| !l.is_empty());
     let locus = RegionGrouper::new(locus);
-    let locus = locus.map(|l| (l.id().clone(), l)).assume_sorted_by_key();
+    let locus = locus.map(|l| (*l.id(), l)).assume_sorted_by_key();
 
     let sequences: JsonlIterator<File, Normalized> = JsonlIterator::from_path(sequence_file)?;
-    let sequences = sequences.map(|n| (n.id().clone(), n)).assume_sorted_by_key();
+    let sequences = sequences.map(|n| (*n.id(), n)).assume_sorted_by_key();
 
     let mut writers = HashMap::new();
     let merged = locus.join(sequences);

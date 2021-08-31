@@ -280,7 +280,7 @@ fn main() -> Result<()> {
                 locus,
                 sequences,
                 output,
-            } => genes::writers::write_selected_members(&locus, &sequences, &output)?,
+            } => genes::writers::write_split_selected(&locus, &sequences, &output)?,
             GenesCommand::MergeAssembly {
                 members,
                 output,
