@@ -76,7 +76,12 @@ pub fn write_split_selected(locus_file: &Path, sequence_file: &Path, output: &Pa
                 serde_json::to_writer(&mut writer, &member)?;
                 writeln!(&mut writer)?;
             }
+            writer.flush()?;
         }
+    }
+
+    for (_assembly, writer) in writers.iter_mut() {
+        writer.flush()?;
     }
 
     Ok(())
@@ -94,6 +99,7 @@ pub fn write_merged_members(member_file: &Path, output: &Path) -> Result<()> {
         serde_json::to_writer(&mut writer, &gene)?;
         writeln!(&mut writer)?;
     }
+    writer.flush()?;
 
     Ok(())
 }

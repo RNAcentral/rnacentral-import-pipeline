@@ -109,7 +109,7 @@ process fetch_accession {
   """
 }
 
-process export_sequence_xml {
+process as_xml {
   tag { "$min-$max" }
   memory params.search_export.memory
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
@@ -124,7 +124,6 @@ process export_sequence_xml {
 
   script:
   xml = "xml4dbdumps__${min}__${max}.xml"
-  gene_xml = "gene_xml__${min}__${max}.xml"
   """
   search-export sequences normalize $raw $metadata data.json
   rnac search-export as-xml data.json $xml count
@@ -191,9 +190,9 @@ workflow sequences {
     | combine(accessions_ready) \
     | fetch_accession \
     | combine(metadata) \
-    | export_sequence_xml
+    | as_xml
 
-    export_sequence_xml.out.sequences | set { sequence_json }
-    export_sequence_xml.out.counts | set { counts }
-    export_sequence_xml.out.xml | set { xml }
+    as_xml.out.sequences | set { sequence_json }
+    as_xml.out.counts | set { counts }
+    as_xml.out.xml | set { xml }
 }

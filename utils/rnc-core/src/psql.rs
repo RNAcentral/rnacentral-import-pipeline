@@ -22,9 +22,10 @@ pub enum Error {
     #[error("Could not find the file {0:?}")]
     MissingFile(PathBuf),
 
-    #[error("Could not parse line: {line}, source {source}")]
+    #[error("Could not parse line {line_number}: {line}, source {source}")]
     BadlyFormattedLine {
         line: String,
+        line_number: usize,
         source: serde_json::Error,
     },
 
@@ -35,6 +36,7 @@ pub enum Error {
 pub struct JsonlIterator<R: Read, T: DeserializeOwned> {
     reader: BufReader<R>,
     buf: String,
+    index: usize,
     phantom: PhantomData<T>,
 }
 
@@ -43,6 +45,7 @@ impl<R: Read, T: DeserializeOwned> JsonlIterator<R, T> {
         Self {
             reader: BufReader::new(reader),
             buf: String::new(),
+            index: 1,
             phantom: PhantomData,
         }
     }
@@ -66,10 +69,12 @@ impl<R: Read, T: DeserializeOwned> Iterator for JsonlIterator<R, T> {
                     .or(serde_json::from_str(&self.buf))
                     .map_err(|source| Error::BadlyFormattedLine {
                         line: self.buf.to_string(),
+                        line_number: self.index,
                         source,
                     })
                     .unwrap();
                 self.buf.clear();
+                self.index += 1;
                 Some(value)
             },
         }
