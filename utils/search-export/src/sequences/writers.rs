@@ -63,6 +63,7 @@ pub fn write(accession_file: &Path, metadata_file: &Path, output_file: &Path) ->
     if !seen {
         return Err(anyhow!("Failed to find any normalized data"));
     }
+    writer.flush()?;
 
     Ok(())
 }
