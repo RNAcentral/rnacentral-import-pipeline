@@ -48,7 +48,7 @@ workflow genes {
     xml
     counts
   main:
-    Channel.fromPath('files/search-export/genes/locus-info.sql') | set { locus_sql }
+    Channel.fromPath('files/search-export/genes/region-info.sql') | set { locus_sql }
 
     locus_query(max_count, locus_sql) | set { locus_info }
 
