@@ -16,8 +16,11 @@ use std::{
 };
 
 use anyhow::Result;
+use chrono::{
+    DateTime,
+    Utc,
+};
 use itertools::Itertools;
-use chrono::{DateTime, Utc};
 
 use sorted_iter::{
     assume::*,

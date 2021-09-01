@@ -1,7 +1,5 @@
 use serde::Serialize;
 
-use typed_builder::TypedBuilder;
-
 #[derive(Debug, Serialize, PartialEq)]
 pub struct ValueOnly<'a> {
     #[serde(rename = "$value")]
