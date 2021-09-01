@@ -21,8 +21,15 @@ pub struct Gene {
 }
 
 impl<'a> Gene {
+    pub fn fill_default_name(&mut self) {
+        if self.name.is_empty() {
+            self.name = format!("RNA Gene {}", &self.id)
+        }
+    }
+
     pub fn as_search(&'a self) -> Entry<'a> {
-        let mut entry = Entry::new(&self.name, &self.name, "");
+        let description = self.members[0].description();
+        let mut entry = Entry::new(self.id.to_string(), &self.name, description);
 
         for member in &self.members {
             entry.add_field("entry_type", "Gene");
@@ -31,6 +38,9 @@ impl<'a> Gene {
 
             entry.add_ref("rnacentral", member.urs_taxid());
             for xref in member.cross_references() {
+                if xref.name().is_empty() || xref.external_id().is_empty() {
+                    continue;
+                }
                 entry.add_ref(xref.name(), xref.external_id())
             }
         }

@@ -17,6 +17,7 @@ use std::{
 
 use anyhow::Result;
 use itertools::Itertools;
+use chrono::{DateTime, Utc};
 
 use sorted_iter::{
     assume::*,
@@ -47,11 +48,7 @@ pub fn assembly_writer(base: &Path, assembly: &str) -> Result<BufWriter<File>> {
     Ok(BufWriter::new(File::create(path)?))
 }
 
-pub fn write_split_selected(
-    locus_file: &Path,
-    sequence_file: &Path,
-    output: &Path,
-) -> Result<()> {
+pub fn write_split_selected(locus_file: &Path, sequence_file: &Path, output: &Path) -> Result<()> {
     create_dir_all(output)?;
 
     let locus: JsonlIterator<File, Grouped<Region>> = JsonlIterator::from_path(locus_file)?;
@@ -103,12 +100,19 @@ pub fn write_search_files(gene_file: &Path, xml_output: &Path, count_output: &Pa
 
     let mut xml_writer = BufWriter::new(File::create(&xml_output)?);
     let mut count = 0;
-    for gene in genes {
+    let now: DateTime<Utc> = Utc::now();
+    let date = now.format("%d/%m/%Y");
+    writeln!(&mut xml_writer, "<database><name>RNAcentral</name><description></description><release>1.0</release><release_date>{}</release_date><entries>", &date)?;
+    for mut gene in genes {
+        gene.fill_default_name();
         let xml = gene.as_search();
         quick_xml::se::to_writer(&mut xml_writer, &xml)?;
         writeln!(&mut xml_writer)?;
         count += 1;
     }
+
+    writeln!(&mut xml_writer, "</entries>")?;
+    writeln!(&mut xml_writer, "<entry_count>{}</entry_count></database>", &count)?;
     xml_writer.flush()?;
 
     let mut count_writer = BufWriter::new(File::create(&count_output)?);

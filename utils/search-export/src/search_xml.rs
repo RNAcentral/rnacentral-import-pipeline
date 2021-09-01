@@ -19,6 +19,7 @@ pub struct HierarchicalField<'a> {
 #[derive(Debug, Serialize, PartialEq)]
 pub struct NamedField<'a> {
     name: &'a str,
+
     #[serde(rename = "$value")]
     value: &'a str,
 }
@@ -44,10 +45,15 @@ pub struct CrossReferences<'a> {
     refs: Vec<Ref<'a>>,
 }
 
-#[derive(TypedBuilder, Debug, Serialize, PartialEq)]
+#[derive(Debug, Serialize, PartialEq)]
+#[serde(rename = "entry")]
 pub struct Entry<'a> {
-    id: &'a str,
+    id: String,
+
+    #[serde(rename = "name")]
     name: ValueOnly<'a>,
+
+    #[serde(rename = "description")]
     description: ValueOnly<'a>,
     cross_references: CrossReferences<'a>,
     additional_fields: AdditionalFields<'a>,
@@ -95,9 +101,9 @@ impl<'a> ValueOnly<'a> {
 }
 
 impl<'a> Entry<'a> {
-    pub fn new(id: &'a str, name: &'a str, description: &'a str) -> Self {
+    pub fn new(id: String, name: &'a str, description: &'a str) -> Self {
         Self {
-            id,
+            id: id.to_string(),
             name: ValueOnly::new(name),
             description: ValueOnly::new(description),
             cross_references: CrossReferences::default(),
