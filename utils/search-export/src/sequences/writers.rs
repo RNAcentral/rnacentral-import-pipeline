@@ -1,6 +1,10 @@
-use std::path::{
-    Path,
-    PathBuf,
+use std::{
+    fs::File,
+    io::BufReader,
+    path::{
+        Path,
+        PathBuf,
+    },
 };
 
 use anyhow::{
@@ -10,17 +14,18 @@ use anyhow::{
 
 use itertools::Itertools;
 
+use serde_json::Deserializer;
 use sorted_iter::{
     assume::*,
     SortedPairIterator,
 };
 
-use rnc_core::psql::JsonlIterator;
+use rnc_core::psql::PsqlJsonIterator;
 
 use crate::sequences::{
     accession,
-    normalized::Normalized,
     file_joiner::FileJoinerBuilder,
+    normalized::Normalized,
 };
 
 use super::raw::Raw;
@@ -41,11 +46,13 @@ pub fn write_merge(files: Vec<PathBuf>, output_file: &Path) -> Result<()> {
 pub fn write(accession_file: &Path, metadata_file: &Path, output_file: &Path) -> Result<()> {
     let mut writer = rnc_utils::buf_writer(output_file)?;
 
-    let metadata = JsonlIterator::from_path(metadata_file)?;
-    let metadata = metadata.map(|r: Raw| (r.id(), r));
+    let meta_reader = BufReader::new(File::open(metadata_file)?);
+    let metadata = Deserializer::from_reader(meta_reader).into_iter::<Raw>();
+    let metadata = metadata.map(|r| r.unwrap());
+    let metadata = metadata.map(|r| (r.id(), r));
     let metadata = metadata.into_iter().assume_sorted_by_key();
 
-    let accessions = JsonlIterator::from_path(accession_file)?;
+    let accessions = PsqlJsonIterator::from_path(accession_file)?;
     let accessions = accessions.group_by(|a: &accession::RawAccession| a.id);
     let accessions = accessions.into_iter().assume_sorted_by_key();
 

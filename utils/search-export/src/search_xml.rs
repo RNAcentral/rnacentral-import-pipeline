@@ -101,7 +101,7 @@ impl<'a> ValueOnly<'a> {
 impl<'a> Entry<'a> {
     pub fn new(id: String, name: &'a str, description: &'a str) -> Self {
         Self {
-            id: id.to_string(),
+            id,
             name: ValueOnly::new(name),
             description: ValueOnly::new(description),
             cross_references: CrossReferences::default(),

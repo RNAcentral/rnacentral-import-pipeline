@@ -29,7 +29,7 @@ use crate::{
 
 use rnc_core::{
     grouper::Grouped,
-    psql::JsonlIterator,
+    psql::PsqlJsonIterator,
 };
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -71,7 +71,7 @@ impl Normalized {
 }
 
 pub fn write(accession_file: &Path, metadata_file: &Path, output: &Path) -> Result<()> {
-    let accessions = JsonlIterator::from_path(accession_file)?;
+    let accessions = PsqlJsonIterator::from_path(accession_file)?;
     let accessions = accessions.map(|group: Grouped<RawAccessionEntry>| match group {
         Grouped::Multiple {
             id,
@@ -81,7 +81,7 @@ pub fn write(accession_file: &Path, metadata_file: &Path, output: &Path) -> Resu
     });
     let accessions = accessions.into_iter().assume_sorted_by_key();
 
-    let metadata = JsonlIterator::from_path(metadata_file)?;
+    let metadata = PsqlJsonIterator::from_path(metadata_file)?;
     let metadata = metadata.map(|m: Metadata| (m.id, m));
     let metadata = metadata.into_iter().assume_sorted_by_key();
     let partial = accessions.join(metadata);
