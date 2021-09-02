@@ -45,8 +45,9 @@ use crate::{
 };
 
 pub fn assembly_writer(base: &Path, assembly: &str) -> Result<BufWriter<File>> {
+    let assembly_name = assembly.replace(".", "_");
     let mut path = PathBuf::from(base);
-    path.push(assembly);
+    path.push(assembly_name);
     path.set_extension("json");
     Ok(BufWriter::new(File::create(path)?))
 }
