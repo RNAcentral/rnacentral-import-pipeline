@@ -33,14 +33,14 @@ pub enum Error {
     IoError(#[from] io::Error),
 }
 
-pub struct JsonlIterator<R: Read, T: DeserializeOwned> {
+pub struct PsqlJsonIterator<R: Read, T: DeserializeOwned> {
     reader: BufReader<R>,
     buf: String,
     index: usize,
     phantom: PhantomData<T>,
 }
 
-impl<R: Read, T: DeserializeOwned> JsonlIterator<R, T> {
+impl<R: Read, T: DeserializeOwned> PsqlJsonIterator<R, T> {
     pub fn from_read(reader: R) -> Self {
         Self {
             reader: BufReader::new(reader),
@@ -51,14 +51,14 @@ impl<R: Read, T: DeserializeOwned> JsonlIterator<R, T> {
     }
 }
 
-impl<T: DeserializeOwned> JsonlIterator<File, T> {
+impl<T: DeserializeOwned> PsqlJsonIterator<File, T> {
     pub fn from_path(path: &Path) -> Result<Self, Error> {
         let file = File::open(path)?;
-        Ok(JsonlIterator::from_read(file))
+        Ok(PsqlJsonIterator::from_read(file))
     }
 }
 
-impl<R: Read, T: DeserializeOwned> Iterator for JsonlIterator<R, T> {
+impl<R: Read, T: DeserializeOwned> Iterator for PsqlJsonIterator<R, T> {
     type Item = T;
 
     fn next(&mut self) -> Option<T> {

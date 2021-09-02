@@ -49,7 +49,7 @@ process fetch_so_tree {
   """
 }
 
-process build_json {
+process build_metadata {
   input:
   path(base)
   path(crs)
@@ -166,7 +166,7 @@ workflow sequences {
 
     search_count | build_search_accessions | set { accessions_ready }
 
-    build_json(
+    build_metadata(
       base_query(search_count, base_sql),
       crs_query(search_count, crs_sql),
       feeback_query(search_count, feeback_sql),

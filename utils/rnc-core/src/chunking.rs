@@ -30,7 +30,7 @@ use csv::Reader;
 
 use itertools::Itertools;
 
-use crate::psql::JsonlIterator;
+use crate::psql::PsqlJsonIterator;
 
 pub struct SingleChunk {
     endpoints: Range<usize>,
@@ -92,7 +92,7 @@ pub fn load(filename: &Path) -> Result<ChunkSpec> {
 }
 
 pub fn write_splits<R: Read, T: DeserializeOwned + fmt::Debug + Serialize>(
-    iterator: JsonlIterator<R, T>,
+    iterator: PsqlJsonIterator<R, T>,
     id_getter: fn(&T) -> usize,
     chunks: &Path,
     output: &Path,

@@ -2,6 +2,7 @@ use std::{
     collections::HashMap,
     convert::TryFrom,
     fs::File,
+    io::BufReader,
     path::{
         Path,
         PathBuf,
@@ -10,6 +11,11 @@ use std::{
 };
 
 use serde::de::DeserializeOwned;
+use serde_json::{
+    de::IoRead,
+    Deserializer,
+    StreamDeserializer,
+};
 use strum::IntoEnumIterator;
 use strum_macros::{
     Display,
@@ -18,14 +24,11 @@ use strum_macros::{
 };
 use thiserror::Error;
 
-use rnc_core::{
-    grouper::Grouped::{
-        self,
-        Multiple,
-        Optional,
-        Required,
-    },
-    psql::JsonlIterator,
+use rnc_core::grouper::Grouped::{
+    self,
+    Multiple,
+    Optional,
+    Required,
 };
 
 use super::{
@@ -69,6 +72,9 @@ pub enum Error {
     JsonError(#[from] rnc_core::psql::Error),
 
     #[error(transparent)]
+    IoError(#[from] std::io::Error),
+
+    #[error(transparent)]
     Other(#[from] anyhow::Error),
 }
 
@@ -89,18 +95,19 @@ pub enum FileTypes {
     SoTermTree,
 }
 
-pub struct FileJoiner {
-    basic: JsonlIterator<File, Grouped<Basic>>,
-    crs: JsonlIterator<File, Grouped<Crs>>,
-    feedback: JsonlIterator<File, Grouped<Feedback>>,
-    go_annotations: JsonlIterator<File, Grouped<GoAnnotation>>,
-    interacting_proteins: JsonlIterator<File, Grouped<InteractingProtein>>,
-    interacting_rnas: JsonlIterator<File, Grouped<InteractingRna>>,
-    orfs: JsonlIterator<File, Grouped<Orf>>,
-    precompute: JsonlIterator<File, Grouped<Precompute>>,
-    qa_status: JsonlIterator<File, Grouped<QaStatus>>,
-    r2dt_hits: JsonlIterator<File, Grouped<R2dt>>,
-    rfam_hits: JsonlIterator<File, Grouped<RfamHit>>,
+pub struct FileJoiner<'de> {
+    basic: StreamDeserializer<'de, IoRead<BufReader<File>>, Grouped<Basic>>,
+    crs: StreamDeserializer<'de, IoRead<BufReader<File>>, Grouped<Crs>>,
+    feedback: StreamDeserializer<'de, IoRead<BufReader<File>>, Grouped<Feedback>>,
+    go_annotations: StreamDeserializer<'de, IoRead<BufReader<File>>, Grouped<GoAnnotation>>,
+    interacting_proteins:
+        StreamDeserializer<'de, IoRead<BufReader<File>>, Grouped<InteractingProtein>>,
+    interacting_rnas: StreamDeserializer<'de, IoRead<BufReader<File>>, Grouped<InteractingRna>>,
+    orfs: StreamDeserializer<'de, IoRead<BufReader<File>>, Grouped<Orf>>,
+    precompute: StreamDeserializer<'de, IoRead<BufReader<File>>, Grouped<Precompute>>,
+    qa_status: StreamDeserializer<'de, IoRead<BufReader<File>>, Grouped<QaStatus>>,
+    r2dt_hits: StreamDeserializer<'de, IoRead<BufReader<File>>, Grouped<R2dt>>,
+    rfam_hits: StreamDeserializer<'de, IoRead<BufReader<File>>, Grouped<RfamHit>>,
     so_info: SoMapping,
 }
 
@@ -159,15 +166,20 @@ impl FileJoinerBuilder {
         self.paths.get(&file).ok_or_else(|| Error::MustDefineMissingFile(file))
     }
 
-    fn iterator_for<T: DeserializeOwned>(
+    fn iterator_for<'de, T>(
         &self,
         file: FileTypes,
-    ) -> Result<JsonlIterator<File, T>, Error> {
+    ) -> Result<StreamDeserializer<'de, IoRead<BufReader<File>>, T>, Error>
+    where
+        T: DeserializeOwned,
+    {
         let path = self.path_for(file)?;
-        Ok(JsonlIterator::from_path(path)?)
+        let reader = BufReader::new(File::open(&path)?);
+        let stream = Deserializer::from_reader(reader).into_iter::<T>();
+        Ok(stream)
     }
 
-    pub fn build(&self) -> Result<FileJoiner, Error> {
+    pub fn build<'de>(&self) -> Result<FileJoiner<'de>, Error> {
         let basic = self.iterator_for(FileTypes::Base)?;
         let crs = self.iterator_for(FileTypes::Crs)?;
         let feedback = self.iterator_for(FileTypes::Feedback)?;
@@ -198,7 +210,7 @@ impl FileJoinerBuilder {
     }
 }
 
-impl Iterator for FileJoiner {
+impl<'de> Iterator for FileJoiner<'de> {
     type Item = Result<Raw, Error>;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -219,50 +231,50 @@ impl Iterator for FileJoiner {
         match current {
             (None, None, None, None, None, None, None, None, None, None, None) => None,
             (
-                Some(Required {
+                Some(Ok(Required {
                     id: id1,
                     data: base,
-                }),
-                Some(Multiple {
+                })),
+                Some(Ok(Multiple {
                     id: id2,
                     data: crs,
-                }),
-                Some(Multiple {
+                })),
+                Some(Ok(Multiple {
                     id: id3,
                     data: feedback,
-                }),
-                Some(Multiple {
+                })),
+                Some(Ok(Multiple {
                     id: id4,
                     data: go_annotations,
-                }),
-                Some(Multiple {
+                })),
+                Some(Ok(Multiple {
                     id: id5,
                     data: interacting_proteins,
-                }),
-                Some(Multiple {
+                })),
+                Some(Ok(Multiple {
                     id: id6,
                     data: interacting_rnas,
-                }),
-                Some(Multiple {
+                })),
+                Some(Ok(Multiple {
                     id: id7,
                     data: orfs,
-                }),
-                Some(Required {
+                })),
+                Some(Ok(Required {
                     id: id8,
                     data: precompute,
-                }),
-                Some(Required {
+                })),
+                Some(Ok(Required {
                     id: id9,
                     data: qa_status,
-                }),
-                Some(Optional {
+                })),
+                Some(Ok(Optional {
                     id: id10,
                     data: r2dt,
-                }),
-                Some(Multiple {
+                })),
+                Some(Ok(Multiple {
                     id: id11,
                     data: rfam_hits,
-                }),
+                })),
             ) => {
                 if id1 != id2
                     || id1 != id3
@@ -276,7 +288,7 @@ impl Iterator for FileJoiner {
                     || id1 != id11
                 {
                     return Some(Err(Error::OutofSyncData(vec![
-                        id1, id2, id3, id4, id5, id6, id7, id8, id9, id10, id11
+                        id1, id2, id3, id4, id5, id6, id7, id8, id9, id10, id11,
                     ])));
                 }
 

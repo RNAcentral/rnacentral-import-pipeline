@@ -1,6 +1,5 @@
 use std::{
     collections::HashMap,
-    fs::File,
     iter::FromIterator,
     path::Path,
 };
@@ -11,12 +10,9 @@ use serde::{
 };
 
 use anyhow::Result;
-use rnc_core::{
-    grouper::{
-        self,
-        Grouped,
-    },
-    psql::JsonlIterator,
+use rnc_core::grouper::{
+    self,
+    Grouped,
 };
 
 use crate::utils::set_or_check;
@@ -75,7 +71,7 @@ pub struct RegionGrouper<T>
 where
     T: Iterator<Item = Grouped<Region>>,
 {
-    iter: T, // iter: JsonlIterator<File, Grouped<Region>>,
+    iter: T,
 }
 
 pub fn group(path: &Path, max: usize, output: &Path) -> Result<()> {

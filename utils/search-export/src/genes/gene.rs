@@ -29,7 +29,7 @@ impl<'a> Gene {
 
     pub fn as_search(&'a self) -> Entry<'a> {
         let description = self.members[0].description();
-        let mut entry = Entry::new(self.id.to_string(), &self.name, description);
+        let mut entry = Entry::new(self.id.to_string(), &self.name, &description);
 
         for member in &self.members {
             entry.add_field("entry_type", "Gene");
