@@ -1,0 +1,108 @@
+[
+  {
+    "region_name": "URS000044DFF6_9606@MT/648-1601:+",
+    "ignored": [],
+    "rejected": [],
+    "clustered": ["URS000044DFF6_9606@MT/648-1601:+"]
+  },
+
+  {
+    "region_name": "URS0000668495_9606@11/111928400-111928540:+",
+    "ignored": [],
+    "rejected": ["URS0000668495_9606@11/111928400-111928540:+"],
+    "clustered": []
+  },
+
+  {
+    "region_name": "URS00006F8E30_9606@8/32256496-32256623:+",
+    "ignored": [],
+    "rejected": ["URS00006F8E30_9606@8/32256496-32256623:+"],
+    "clustered": []
+  },
+
+  {
+    "region_name": "URS00006E3908_9606@1/148193713-148193834:+",
+    "ignored": [],
+    "rejected": ["URS00006E3908_9606@1/148193713-148193834:+"],
+    "clustered": []
+  },
+
+  {
+    "region_name": "URS000063ADD9_9606@4/149907560-149907679:+",
+    "ignored": [],
+    "rejected": ["URS000063ADD9_9606@4/149907560-149907679:+"],
+    "clustered": []
+  },
+
+  {
+    "region_name": "URS0000672E5A_9606@16/68742477-68742591:+",
+    "ignored": [],
+    "rejected": ["URS0000672E5A_9606@16/68742477-68742591:+"],
+    "clustered": []
+  },
+
+  {
+    "region_name": "URS00006619A3_9606@1/146539545-146539666:-",
+    "ignored": [],
+    "rejected": ["URS00006619A3_9606@1/146539545-146539666:-"],
+    "clustered": []
+  },
+
+  # A 5S rRNA with lots of locations from mapping, this one is overlapping a
+  # pseduogene
+  {
+    "region_name": "URS0000D9AA0F_9606@6/4427963-4427988,4427989-4428081:+",
+    "ignored": [],
+    "rejected": [
+      "URS00004182E5_9606@6/4427963-4428009,4428010-4428082:+",
+      "URS00006CDFA7_9606@6/4427963-4428081:+"
+    ],
+    "clustered": [],
+  },
+
+  # A 5S rRNA with lots of locations from mapping, this one is overlapping a
+  # pseduogene
+  {
+    "region_name": "URS0000D9AA0F_9606@6/4427963-4427988,4427989-4428081:+",
+    "ignored": [],
+    "rejected": [
+      "URS0000D9AA0F_9606@6/4427963-4427988,4427989-4428081:+",
+      "URS0000D9AA0F_9606@3/181822872-181822963,181822964-181822990:-",
+      "URS000068483A_9606@3/181822872-181822990:-"
+    ],
+    "clustered": [],
+  },
+
+  # A 5S rRNA with lots of locations from mapping and this one overlaps other 5S
+  # rRNA and an Ensembl gene/HGNC gene, as well as some miRNA and piRNA
+  {
+    "region_name": "URS0000D9AA0F_9606@1/228610268-228610359,228610360-228610386:-",
+    "ignored": [
+      "URS0000CA1E16_9606@1/228646141-228646158:-",
+    ],
+    "rejected": [
+      "URS0000513774_9606@1/228646039-228646064:-",
+      "URS0000273971_9606@1/228646039-228646069:-",
+    ],
+    "clustered": [
+      "URS0000D9AA0F_9606@1/228610268-228610359,228610360-228610386:-",
+      "URS000002B0D5_9606@1/228610267-228610386:-",
+      "URS00004182E5_9606@1/228610266-228610339,228610340-228610386:-",
+      "URS0001BCA572_9606@1/228616989-228617109:-",
+      "URS00000F9D45_9606@1/228614748-228614868:-",
+      "URS000064027A_9606@1/228621447-228621565:-",
+    ],
+  },
+
+  # A partial rRNA that has too many hits around the genome, likely some sort of
+  # mistake
+  {
+    "region_name": "URS00002D3B31_9606@1/156216440-156216482:+",
+    "ignored": [],
+    "rejected": [
+      "URS000040233B_9606@1/156216440-156216468:+",
+      "URS00002D3B31_9606@1/156216440-156216482:+",
+    ],
+    "clustered": [],
+  }
+]

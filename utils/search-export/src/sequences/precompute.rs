@@ -22,7 +22,7 @@ pub struct Precompute {
     databases: Vec<String>,
 }
 
-#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct PrecomputeSummary {
     description: String,
     rna_type: String,
@@ -59,13 +59,13 @@ impl Precompute {
     }
 }
 
-impl From<Precompute> for PrecomputeSummary {
-    fn from(pre: Precompute) -> PrecomputeSummary {
+impl<'a> From<&Precompute> for PrecomputeSummary {
+    fn from(pre: &Precompute) -> PrecomputeSummary {
         Self {
-            description: pre.description,
+            description: pre.description.to_owned(),
             rna_type: pre.rna_type.replace("_", " "),
             has_coordinates: pre.has_coordinates,
-            databases: pre.databases,
+            databases: pre.databases.to_owned(),
         }
     }
 }
@@ -76,6 +76,13 @@ impl Precompute {
             true => String::from("True"),
             false => String::from("False"),
         }
+    }
+}
+
+impl PrecomputeSummary {
+    /// Get a reference to the precompute summary's description.
+    pub fn description(&self) -> &str {
+        self.description.as_str()
     }
 }
 

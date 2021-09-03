@@ -13,25 +13,27 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from . import data
+from rnacentral_pipeline.databases.data.databases import Database
+
+from rnacentral_pipeline.rnacentral.genes import data
 
 REP_DBS = {
-    "pdbe",
-    "refseq",
-    "ensembl",
-    "hgnc",
+    Database.pdbe,
+    Database.refseq,
+    Database.ensembl,
+    Database.hgnc,
 }
 
 
 def should_reject(location: data.LocationInfo) -> bool:
-    if any(d.lower() in REP_DBS for d in location.databases):
+    if any(d in REP_DBS for d in location.databases):
         return False
     return location.qa.has_issue
 
 
 def should_highlight(location: data.LocationInfo) -> bool:
     qa = location.qa
-    if any(d.lower() in REP_DBS for d in location.databases):
+    if any(d in REP_DBS for d in location.databases):
         return True
     if not qa.has_issue and not location.has_introns():
         return True

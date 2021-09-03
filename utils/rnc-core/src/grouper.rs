@@ -19,7 +19,7 @@ use anyhow::{
 };
 use itertools::Itertools;
 
-use crate::psql::JsonlIterator;
+use crate::psql::PsqlJsonIterator;
 use rnc_utils;
 
 pub trait HasIndex {
@@ -65,6 +65,14 @@ where
                 id,
                 data: None,
             }),
+        }
+    }
+
+    pub fn is_empty(&self) -> bool {
+        match self {
+            Self::Multiple { id: _id, data } => data.len() == 0,
+            Self::Optional { id: _id, data } => data.is_none(),
+            Self::Required { id: _id, data: _data } => false,
         }
     }
 
@@ -119,7 +127,7 @@ where
     let reader = rnc_utils::buf_reader(path)?;
     let mut writer = rnc_utils::buf_writer(output)?;
 
-    let data = JsonlIterator::from_read(reader);
+    let data = PsqlJsonIterator::from_read(reader);
     let data = data.group_by(T::index);
 
     let mut expected = min;

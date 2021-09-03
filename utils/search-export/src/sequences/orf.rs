@@ -12,13 +12,13 @@ use serde::{
 use anyhow::Result;
 use rnc_core::grouper;
 
-#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Orf {
     pub id: usize,
     source: String,
 }
 
-#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct OrfVec {
     orf_sources: HashSet<String>,
 }

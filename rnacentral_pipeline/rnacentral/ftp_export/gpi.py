@@ -72,29 +72,29 @@ class GpiEntry:
         return self.urs_taxid
 
     def db_object_symbol(self):
-        return ''
+        return ""
 
     def db_object_name(self):
         return self.description.replace("\t", " ")
 
     def db_object_synonym(self):
-        return ''
+        return ""
 
     def db_object_type(self):
         return self.rna_type
 
     def taxon(self):
-        return f'taxon:{self.taxid}'
+        return f"taxon:{self.taxid}"
 
     def parent_object_id(self):
-        return ''
+        return ""
 
     def db_xref(self):
-        return ''
+        return ""
 
     def gene_product_properties(self):
         if not self.precursors:
-            return ''
+            return ""
         return f"precursor_rna={','.join(self.precursors)}".replace("\t", " ")
 
     def writeable(self) -> ty.List[str]:
@@ -108,7 +108,7 @@ class GpiEntry:
             self.taxon(),
             self.parent_object_id(),
             self.db_xref(),
-            self.gene_product_properties()
+            self.gene_product_properties(),
         ]
 
 
@@ -119,8 +119,8 @@ def get_generic(conn, precursors) -> ty.Iterable[GpiEntry]:
             upi_taxid = f"{result['upi']}_{result['taxid']}"
             yield GpiEntry(
                 urs_taxid=upi_taxid,
-                description=result['description'],
-                rna_type=result['rna_type'],
+                description=result["description"],
+                rna_type=result["rna_type"],
                 precursors=precursors.get(upi_taxid, set()),
             )
 
@@ -131,14 +131,14 @@ def get_precusors(conn) -> ty.Dict[str, ty.List[str]]:
         cur.execute(MIRNA_QUERY)
         for result in cur:
             urs_id = f"{result['mature']}_{result['taxid']}"
-            data[urs_id].add(result['precursor'])
+            data[urs_id].add(result["precursor"])
     return dict(data)
 
 
 def write(results: ty.Iterable[GpiEntry], out: ty.IO):
-    out.write('!gpi-version: 1.2\n')
+    out.write("!gpi-version: 1.2\n")
     for result in results:
-        out.write('\t'.join(result.writeable()))
+        out.write("\t".join(result.writeable()))
         out.write("\n")
 
 

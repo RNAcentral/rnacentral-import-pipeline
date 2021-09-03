@@ -72,6 +72,7 @@ class LocationStatus:
 @attr.s()
 class State:
     key = attr.ib(validator=is_a(ClusteringKey))
+    method = attr.ib(validator=is_a(str))
     _tree = attr.ib(validator=is_a(IntervalTree), factory=IntervalTree)
     _locations: ty.Dict[int, LocationStatus] = attr.ib(
         validator=is_a(dict), factory=dict

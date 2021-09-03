@@ -22,6 +22,17 @@ impl grouper::HasIndex for Basic {
     }
 }
 
+impl Basic {
+    pub fn urs_taxid(&self) -> &str {
+        &self.urs_taxid
+    }
+
+    /// Get a mutable reference to the basic's id.
+    pub fn id_mut(&mut self) -> &mut usize {
+        &mut self.id
+    }
+}
+
 pub fn group(path: &Path, max: usize, output: &Path) -> Result<()> {
     grouper::group::<Basic>(grouper::Criteria::ExactlyOne, &path, 1, max, &output)
 }

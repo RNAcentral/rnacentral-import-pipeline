@@ -18,6 +18,7 @@ import typing as ty
 from functools import lru_cache
 
 import attr
+from attr.validators import instance_of as is_a
 import networkx as nx
 
 from rnacentral_pipeline.databases.sequence_ontology import tree as so_tree
@@ -31,6 +32,10 @@ NORMALIZED_IDS = {
     "SO:0000651",  # LSU rRNA
     "SO:0000652",  # 5S rRNA
     "SO:0002128",  # mito rRNA
+}
+
+NORM_TO = {
+    '': '',
 }
 
 
@@ -47,34 +52,27 @@ class SoTermInfo:
         return self.name == value or self.so_id == value
 
 
-@attr.s(auto_attribs=True, frozen=True, slots=True)
+@attr.s(frozen=True, slots=True)
 class NormalizedSoTermInfo:
-    so_term: SoTermInfo
-    is_normalized: bool
-
-    def __getattr__(self, name):
-        return getattr(self.so_term, name)
+    so_term = attr.ib(validator=is_a(str))
 
 
 SoTree = ty.Tuple[SoTermInfo]
 
 
 @lru_cache()
-def normalized_term(so_id: str, ontology) -> NormalizedSoTermInfo:
+def normalized_term(so_id: str, ontology: so_tree.SoOntology) -> NormalizedSoTermInfo:
+    target_path = so_tree.rna_type_tree(ontology, so_id)
+    if so_id in NORM_TO:
+        return NormalizedSoTermInfo(NORM_TO[so_id])
     for parent_so_id in NORMALIZED_IDS:
         if parent_so_id == so_id:
-            so_term = SoTermInfo(so_id, ontology.id_to_name[so_id])
-            return NormalizedSoTermInfo(so_term, True)
-        paths = nx.all_simple_paths(ontology, source=so_id, target=parent_so_id)
-        paths = list(paths)
-        if len(paths) == 1:
-            name = ontology.id_to_name[parent_so_id]
-            so_term = SoTermInfo(name, parent_so_id)
-            return NormalizedSoTermInfo(so_term, True)
+            return NormalizedSoTermInfo(ontology.id_to_name[so_id])
+        parent_path = so_tree.rna_type_tree(ontology, parent_so_id)
+        if target_path == parent_path:
+            return NormalizedSoTermInfo(ontology.id_to_name[parent_so_id])
 
-    name = ontology.id_to_name[so_id]
-    so_term = SoTermInfo(name, so_id)
-    return NormalizedSoTermInfo(so_term, False)
+    return NormalizedSoTermInfo(ontology.id_to_name[so_id])
 
 
 @attr.s(auto_attribs=True, frozen=True, slots=True, hash=True)
@@ -86,6 +84,7 @@ class RnaType:
 
     @classmethod
     def build(cls, insdc, so_term, ontology):
+        so_term = so_tree.RENAME.get(so_term, so_term)
         subtree = so_tree.rna_type_tree(ontology, so_term)
         subtree = tuple([SoTermInfo(p[1], p[0]) for p in subtree])
         so_id = ontology.name_to_id[so_term]

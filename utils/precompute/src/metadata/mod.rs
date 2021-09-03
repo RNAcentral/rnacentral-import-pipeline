@@ -1,11 +1,11 @@
 pub mod basic;
 pub mod coordinate;
+pub mod file_types;
 pub mod merged;
 pub mod orf;
 pub mod previous;
 pub mod r2dt_hit;
 pub mod rfam_hit;
-pub mod file_types;
 
 use std::{
     io::Write,
@@ -23,7 +23,7 @@ use rnc_core::{
         Optional,
         Required,
     },
-    psql::JsonlIterator,
+    psql::PsqlJsonIterator,
 };
 
 pub use basic::Basic;
@@ -42,12 +42,12 @@ pub fn write_merge(
     orf_file: &Path,
     output: &Path,
 ) -> Result<()> {
-    let mut basic = JsonlIterator::from_path(basic_file)?;
-    let mut coordinates = JsonlIterator::from_path(coordinate_file)?;
-    let mut rfam_hits = JsonlIterator::from_path(rfam_hits_file)?;
-    let mut r2dt_hits = JsonlIterator::from_path(r2dt_hits_file)?;
-    let mut previous = JsonlIterator::from_path(previous_file)?;
-    let mut orfs = JsonlIterator::from_path(orf_file)?;
+    let mut basic = PsqlJsonIterator::from_path(basic_file)?;
+    let mut coordinates = PsqlJsonIterator::from_path(coordinate_file)?;
+    let mut rfam_hits = PsqlJsonIterator::from_path(rfam_hits_file)?;
+    let mut r2dt_hits = PsqlJsonIterator::from_path(r2dt_hits_file)?;
+    let mut previous = PsqlJsonIterator::from_path(previous_file)?;
+    let mut orfs = PsqlJsonIterator::from_path(orf_file)?;
 
     let mut output = rnc_utils::buf_writer(output)?;
     loop {

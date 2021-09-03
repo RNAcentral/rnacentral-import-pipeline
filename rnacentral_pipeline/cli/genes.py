@@ -20,6 +20,8 @@ import click
 from rnacentral_pipeline.rnacentral.genes import build, write
 from rnacentral_pipeline.rnacentral.genes.data import MemberType
 from rnacentral_pipeline.rnacentral.genes.data import DataType
+from rnacentral_pipeline.rnacentral.genes.data import Context
+from rnacentral_pipeline.rnacentral.genes.data import Methods
 
 
 @click.group("genes")
@@ -36,6 +38,7 @@ def cli():
     default="csv",
     type=click.Choice(write.Format.names(), case_sensitive=False),
 )
+@click.option("--method", default="rules")
 @click.option("--include-genes/--no-genes", default=True)
 @click.option("--include-representative/--no-representatives", default=True)
 @click.option("--include-ignored/--no-ignored", default=True)
@@ -43,6 +46,9 @@ def cli():
 @click.option("--include-rejected/--no-rejected", default=True)
 @click.option("--extended-bed/--simple-bed", default=False)
 @click.argument("data_file", type=click.File("r"))
+@click.argument("count_file", type=click.File("r"))
+@click.argument("genes_file", type=click.Path())
+@click.argument("repetitive_file", type=click.File("r"))
 @click.argument(
     "output",
     default=".",
@@ -50,8 +56,12 @@ def cli():
 )
 def build_genes(
     data_file,
+    count_file,
+    genes_file,
+    repetitive_file,
     output,
     format=None,
+    method=None,
     include_genes=None,
     include_representative=None,
     include_members=None,
@@ -63,7 +73,10 @@ def build_genes(
     Build the genes for the given data file. The file can contain all data for a
     specific assembly.
     """
-    data = build.from_json(data_file)
+
+    context = Context.from_files(genes_file, repetitive_file, count_file)
+    method = Methods.from_name(method)
+    data = build.from_json(context, method, data_file)
     format = write.Format.from_name(format)
     allowed_members = set()
     if include_representative:
