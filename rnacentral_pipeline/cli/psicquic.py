@@ -18,7 +18,7 @@ from pathlib import Path
 import click
 
 from rnacentral_pipeline.writers import entry_writer
-from rnacentral_pipeline.databases import psicquic
+from rnacentral_pipeline.databases.psicquic import parser
 
 
 @click.group("psicquic")
@@ -44,6 +44,6 @@ def cli():
     ),
 )
 def parse(data: str, output: str, db_url: str):
-    entries = psicquic.parse(Path(data), db_url)
+    entries = parser.parse(Path(data), db_url)
     with entry_writer(Path(output)) as writer:
         writer.write(entries)

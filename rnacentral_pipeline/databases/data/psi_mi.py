@@ -39,7 +39,7 @@ class InteractionIdentifier:
     name = attr.ib(validator=optional(is_a(str)))
 
     def from_rnacentral(self) -> bool:
-        return self.key == "rnacentral"
+        return self.key.lower() == "rnacentral"
 
     def simple_id(self) -> str:
         return "%s:%s" % (self.key, self.value)
@@ -100,13 +100,14 @@ class Interactor:
     def urs_taxid(self) -> str:
         found = set()
         for id in self.all_ids():
-            if id.from_rnacentral():
+            if id.from_rnacentral() and id.value.startswith("URS"):
                 found.add(id.value)
 
         if len(found) == 1:
             return found.pop()
 
         if len(found) > 1:
+            print(self)
             raise ValueError("Found more than one URS/taxid")
 
         raise ValueError("Could not find a URS/taxid")
@@ -142,9 +143,9 @@ class Interaction:
     publications: ty.Tuple[IdReference] = attr.ib(
         validator=is_a(tuple), converter=tuple
     )
-    create_date = attr.ib(validator=is_a(date))
-    update_date = attr.ib(validator=is_a(date))
-    host_organisms = attr.ib(validator=is_a(int))
+    create_date = attr.ib(validator=optional(is_a(date)))
+    update_date = attr.ib(validator=optional(is_a(date)))
+    host_organisms = attr.ib(validator=optional(is_a(int)))
 
     def involves_rnacentral(self) -> bool:
         return self.interactor1.from_rnacentral() or self.interactor2.from_rnacentral()

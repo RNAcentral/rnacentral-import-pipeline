@@ -16,24 +16,34 @@ limitations under the License.
 import typing as ty
 
 from rnacentral_pipeline.databases.helpers import phylogeny as phy
-from rnacentral_pipeline.databases.data import Entry, Interaction
+from rnacentral_pipeline.databases.helpers import publications as pub
+from rnacentral_pipeline.databases.data import Entry, Interaction, IdReference
 
 
-def taxid(urs_taxid):
+def taxid(urs_taxid: str):
     _, taxid = urs_taxid.split("_")
     return int(taxid)
 
 
-def species(interaction):
-    return phy.species(taxid(interaction))
+def species(urs_taxid: str):
+    return phy.species(taxid(urs_taxid))
 
 
-def lineage(interaction):
-    return phy.lineage(taxid(interaction))
+def lineage(urs_taxid: str):
+    return phy.lineage(taxid(urs_taxid))
 
 
-def common_name(interaction):
-    return phy.common_name(taxid(interaction))
+def common_name(urs_taxid: str):
+    return phy.common_name(taxid(urs_taxid))
+
+
+def references(interactions: ty.List[Interaction]) -> ty.List[IdReference]:
+    ids = [
+        pub.reference('PMID:23671334')
+    ]
+    for interaction in interactions:
+        ids.extend(interaction.publications)
+    return ids
 
 
 def as_entry(urs_taxid: str, interactions: ty.List[Interaction], info: ty.Dict[str, str]):
@@ -47,7 +57,7 @@ def as_entry(urs_taxid: str, interactions: ty.List[Interaction], info: ty.Dict[s
         sequence=info["sequence"],
         regions=[],
         rna_type=info["rna_type"],
-        url=url(urs_taxid),
+        url="http://www.ebi.ac.uk/Tools/webservices/psicquic/view/main.xhtml",
         seq_version="1",
         description=info["description"],
         references=references(interactions),
