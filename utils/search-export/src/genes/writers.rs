@@ -114,8 +114,9 @@ pub fn write_search_files(gene_file: &Path, xml_output: &Path, count_output: &Pa
         let mut gene = gene?;
         gene.fill_default_name();
         let xml = gene.as_search();
-        quick_xml::se::to_writer(&mut xml_writer, &xml)?;
-        writeln!(&mut xml_writer)?;
+        let element = quick_xml::se::to_string(&xml)?;
+        let element = element.replace(r"", "\\b");
+        writeln!(&mut xml_writer, "{}", element)?;
         count += 1;
     }
 
