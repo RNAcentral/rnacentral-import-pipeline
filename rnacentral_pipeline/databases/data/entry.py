@@ -167,7 +167,7 @@ class Entry:
         empty string.
         """
         if self.feature_name != "ncRNA":
-            return ''
+            return ""
         return utils.SO_INSDC_MAPPING[self.rna_type]
 
     @property

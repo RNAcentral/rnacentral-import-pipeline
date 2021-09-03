@@ -20,16 +20,16 @@ import typing as ty
 from intervaltree import IntervalTree
 
 from rnacentral_pipeline import psql
-from rnacentral_pipeline.databases.sequence_ontology import tree as so_tree
-from rnacentral_pipeline.rnacentral.genes import data, rrna
+from rnacentral_pipeline.rnacentral.genes import data
+from rnacentral_pipeline.rnacentral.genes import classify
+from rnacentral_pipeline.rnacentral.genes.data import Methods
 
 LOGGER = logging.getLogger(__name__)
 
 
-def load(handle) -> ty.Iterable[data.LocationInfo]:
-    ontology = so_tree.load_ontology(so_tree.REMOTE_ONTOLOGY)
+def load(context: data.Context, handle: ty.IO) -> ty.Iterable[data.LocationInfo]:
     for entry in psql.json_handler(handle):
-        location = data.LocationInfo.build(entry, ontology)
+        location = data.LocationInfo.build(context, entry)
         yield location
 
 
@@ -93,9 +93,9 @@ def handle_rfam_only(state: data.State, cluster: int):
             state.reject_location(location)
 
 
-def overlaps_pseudogene(location: data.LocationInfo, pseudo: IntervalTree) -> bool:
+def overlaps_pseudogene(context: data.Context, location: data.LocationInfo) -> bool:
     LOGGER.debug("Checking %s for overlaps to pseudogenes", location.id)
-    overlaps = pseudo.overlaps(location.as_interval())
+    overlaps = context.overlaps_pseudogene(location)
     if overlaps:
         LOGGER.debug("Overlaps %s", overlaps)
         return True
@@ -103,12 +103,19 @@ def overlaps_pseudogene(location: data.LocationInfo, pseudo: IntervalTree) -> bo
     return False
 
 
+def is_pirna_singleton(state: data.State, cluster: int) -> bool:
+    members = state.members_of(cluster)
+    target = members[0]
+    return len(members) == 1 and target.rna_type.is_a('piRNA') and not bool(target.providing_databases)
+
+
 def build(
-    locations: ty.Iterable[data.LocationInfo], pseudogenes: IntervalTree
+        context: data.Context, method: Methods, locations: ty.Iterable[data.LocationInfo]
 ) -> ty.Iterable[data.FinalizedState]:
+    handler = method.handler()
     for (key, locations) in it.groupby(locations, data.ClusteringKey.from_location):
         LOGGER.debug("Building clusters for %s", key)
-        state = data.State(key=key)
+        state = data.State(key=key, method=method.name)
         for location in locations:
             LOGGER.debug("Testing %s", location.id)
             state.add_location(location)
@@ -116,42 +123,7 @@ def build(
                 "Lengths, locations: %i, tree: %i, clusters: %i", *state.lengths()
             )
 
-            if always_ignorable_location(location):
-                LOGGER.debug("Always Ignoring: %s", location.id)
-                state.ignore_location(location)
-                continue
-
-            if always_bad_location(location):
-                LOGGER.debug("Always Rejected: %s", location.id)
-                state.reject_location(location)
-                continue
-
-            if overlaps_pseudogene(location, pseudogenes):
-                LOGGER.debug("Rejecting Pseudogene: %s", location.id)
-                state.reject_location(location)
-                continue
-
-            overlaps = state.overlaps(location)
-            if not overlaps:
-                LOGGER.debug("Adding singleton cluster of %s", location.id)
-                state.add_singleton_cluster(location)
-                continue
-
-            to_merge = select_mergable(location, overlaps)
-            if to_merge is None:
-                LOGGER.debug("Adding singleton cluster of %s", location.id)
-                state.add_singleton_cluster(location)
-                continue
-            elif len(to_merge) == 1:
-                cluster = to_merge[0]
-                LOGGER.debug(
-                    "Adding location %i to cluster %i", location.id, cluster.id
-                )
-                state.add_to_cluster(location, cluster.id)
-            else:
-                LOGGER.debug("Merging into %s", [c.id for c in to_merge])
-                cluster_id = state.merge_clusters(to_merge)
-                state.add_to_cluster(location, cluster_id)
+            handler.handle_location(state, context, location)
 
         state.validate()
         LOGGER.debug("Done building clusters for %s", key)
@@ -162,19 +134,27 @@ def build(
 
         for cluster_id in state.clusters():
             LOGGER.debug("Analyzing cluster %i", cluster_id)
+            if not state.has_cluster(cluster_id):
+                raise ValueError("Seems link this should be impossible")
+
             handle_rfam_only(state, cluster_id)
 
-            if not state.has_cluster(cluster_id):
-                continue
+            if is_pirna_singleton(state, cluster_id):
+                LOGGER.debug("Rejecting a piRNA singleton %s", cluster_id)
+                for location in state.members_of(cluster_id):
+                    state.reject_location(location)
+
 
             members = state.members_of(cluster_id)
             if any(l.rna_type.is_a("rRNA") for l in members):
-                rrna.classify_cluster(state, cluster_id)
+                classify.rrna(state, cluster_id)
+            elif any(l.rna_type.is_a('miRNA') for l in members):
+                classify.mirna(state, cluster_id)
             else:
-                state.ignore_cluster(cluster_id)
+                LOGGER.info("Do not know how to cluster cluster %s", cluster_id)
         yield state.finalize()
 
 
-def from_json(handle) -> ty.Iterable[data.FinalizedState]:
-    locations = load(handle)
-    return build(locations, IntervalTree())
+def from_json(context: data.Context, method: Methods, handle: ty.IO) -> ty.Iterable[data.FinalizedState]:
+    locations = load(context, handle)
+    return build(context, method, locations)

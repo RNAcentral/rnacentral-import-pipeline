@@ -19,13 +19,14 @@ from rnacentral_pipeline.databases.ensembl.genomes import parser
 from rnacentral_pipeline.databases.ensembl.genomes.data import Context
 from rnacentral_pipeline.databases.helpers import publications as pubs
 from rnacentral_pipeline.databases.data import Entry
+from rnacentral_pipeline.databases.ensembl.data import Pseudogene
 
 
 def urls_for(base: str) -> ty.List[ty.Tuple[str, str, str]]:
     return []
 
 
-def parse(handle, gff_file, **kwargs) -> ty.Iterable[Entry]:
+def parse(handle: ty.IO, gff_file, **kwargs) -> ty.Iterable[Entry]:
     context = Context.build(
         "ENSEMBL_FUNGI",
         [pubs.reference("doi:10.1093/nar/gkx1011")],
@@ -33,3 +34,7 @@ def parse(handle, gff_file, **kwargs) -> ty.Iterable[Entry]:
     )
 
     return parser.parse(context, handle)
+
+
+def pseudogenes(handle: ty.IO) -> ty.Iterable[Pseudogene]:
+    return parser.pseudogenes(handle)

@@ -1,31 +1,39 @@
 use std::{
     collections::HashMap,
+    convert::TryFrom,
     fs::File,
-    path::PathBuf,
+    io::BufReader,
+    path::{
+        Path,
+        PathBuf,
+    },
     str::FromStr,
 };
 
 use serde::de::DeserializeOwned;
+use serde_json::{
+    de::IoRead,
+    Deserializer,
+    StreamDeserializer,
+};
+use strum::IntoEnumIterator;
 use strum_macros::{
     Display,
+    EnumIter,
     EnumString,
 };
 use thiserror::Error;
 
-use rnc_core::{
-    grouper::Grouped::{
-        self,
-        Multiple,
-        Optional,
-        Required,
-    },
-    psql::JsonlIterator,
+use rnc_core::grouper::Grouped::{
+    self,
+    Multiple,
+    Optional,
+    Required,
 };
 
 use super::{
     basic::Basic,
     crs::Crs,
-    entry::Raw,
     feedback::Feedback,
     go_annotation::GoAnnotation,
     interacting_protein::InteractingProtein,
@@ -34,6 +42,7 @@ use super::{
     precompute::Precompute,
     qa_status::QaStatus,
     r2dt::R2dt,
+    raw::Raw,
     rfam_hit::RfamHit,
     so_tree,
     so_tree::SoMapping,
@@ -63,65 +72,60 @@ pub enum Error {
     JsonError(#[from] rnc_core::psql::Error),
 
     #[error(transparent)]
+    IoError(#[from] std::io::Error),
+
+    #[error(transparent)]
     Other(#[from] anyhow::Error),
 }
 
-#[derive(Debug, Display, PartialEq, Eq, Hash, EnumString)]
+#[derive(Debug, Display, PartialEq, Eq, Hash, EnumString, EnumIter)]
+#[strum(ascii_case_insensitive, serialize_all = "kebab-case")]
 pub enum FileTypes {
-    #[strum(ascii_case_insensitive)]
     Base,
-
-    #[strum(ascii_case_insensitive)]
     Crs,
-
-    #[strum(ascii_case_insensitive)]
     Feedback,
-
-    #[strum(ascii_case_insensitive)]
     GoAnnotations,
-
-    #[strum(ascii_case_insensitive)]
     InteractingProteins,
-
-    #[strum(ascii_case_insensitive)]
     InteractingRnas,
-
-    #[strum(ascii_case_insensitive)]
     Orfs,
-
-    #[strum(ascii_case_insensitive)]
     Precompute,
-
-    #[strum(ascii_case_insensitive)]
     QaStatus,
-
-    #[strum(ascii_case_insensitive)]
-    R2dtHits,
-
-    #[strum(ascii_case_insensitive)]
+    R2dt,
     RfamHits,
-
-    #[strum(ascii_case_insensitive)]
-    SoInfo,
+    SoTermTree,
 }
 
-pub struct FileJoiner {
-    basic: JsonlIterator<File, Grouped<Basic>>,
-    crs: JsonlIterator<File, Grouped<Crs>>,
-    feedback: JsonlIterator<File, Grouped<Feedback>>,
-    go_annotations: JsonlIterator<File, Grouped<GoAnnotation>>,
-    interacting_proteins: JsonlIterator<File, Grouped<InteractingProtein>>,
-    interacting_rnas: JsonlIterator<File, Grouped<InteractingRna>>,
-    orfs: JsonlIterator<File, Grouped<Orf>>,
-    precompute: JsonlIterator<File, Grouped<Precompute>>,
-    qa_status: JsonlIterator<File, Grouped<QaStatus>>,
-    r2dt_hits: JsonlIterator<File, Grouped<R2dt>>,
-    rfam_hits: JsonlIterator<File, Grouped<RfamHit>>,
+pub struct FileJoiner<'de> {
+    basic: StreamDeserializer<'de, IoRead<BufReader<File>>, Grouped<Basic>>,
+    crs: StreamDeserializer<'de, IoRead<BufReader<File>>, Grouped<Crs>>,
+    feedback: StreamDeserializer<'de, IoRead<BufReader<File>>, Grouped<Feedback>>,
+    go_annotations: StreamDeserializer<'de, IoRead<BufReader<File>>, Grouped<GoAnnotation>>,
+    interacting_proteins:
+        StreamDeserializer<'de, IoRead<BufReader<File>>, Grouped<InteractingProtein>>,
+    interacting_rnas: StreamDeserializer<'de, IoRead<BufReader<File>>, Grouped<InteractingRna>>,
+    orfs: StreamDeserializer<'de, IoRead<BufReader<File>>, Grouped<Orf>>,
+    precompute: StreamDeserializer<'de, IoRead<BufReader<File>>, Grouped<Precompute>>,
+    qa_status: StreamDeserializer<'de, IoRead<BufReader<File>>, Grouped<QaStatus>>,
+    r2dt_hits: StreamDeserializer<'de, IoRead<BufReader<File>>, Grouped<R2dt>>,
+    rfam_hits: StreamDeserializer<'de, IoRead<BufReader<File>>, Grouped<RfamHit>>,
     so_info: SoMapping,
 }
 
 pub struct FileJoinerBuilder {
     paths: HashMap<FileTypes, PathBuf>,
+}
+
+impl TryFrom<&Path> for FileTypes {
+    type Error = Error;
+
+    fn try_from(path: &Path) -> Result<Self, Self::Error> {
+        let name = path
+            .file_stem()
+            .map(|s| s.to_str())
+            .flatten()
+            .ok_or_else(|| Error::BadFileName(PathBuf::from(path)))?;
+        Self::from_str(&name).map_err(|_| Error::UnknownFileType(PathBuf::from(path)))
+    }
 }
 
 impl Default for FileJoinerBuilder {
@@ -136,18 +140,21 @@ impl FileJoinerBuilder {
     pub fn from_files(paths: Vec<PathBuf>) -> Result<Self, Error> {
         let mut builder = Self::default();
         for path in paths {
-            let name = path
-                .file_stem()
-                .map(|s| s.to_str())
-                .flatten()
-                .ok_or_else(|| Error::BadFileName(path.clone()))?;
-            let name = name.replace("-", "").replace("_", "");
-            let file_type =
-                FileTypes::from_str(&name).map_err(|_| Error::UnknownFileType(path.clone()))?;
+            let file_type = FileTypes::try_from(path.as_ref())?;
             builder.file(file_type, path);
         }
 
+        for file_type in FileTypes::iter() {
+            if !builder.is_set(&file_type) {
+                return Err(Error::MustDefineMissingFile(file_type));
+            }
+        }
+
         Ok(builder)
+    }
+
+    pub fn is_set(&mut self, file: &FileTypes) -> bool {
+        self.paths.contains_key(file)
     }
 
     pub fn file(&mut self, file: FileTypes, path: PathBuf) -> &mut Self {
@@ -159,15 +166,20 @@ impl FileJoinerBuilder {
         self.paths.get(&file).ok_or_else(|| Error::MustDefineMissingFile(file))
     }
 
-    fn iterator_for<T: DeserializeOwned>(
+    fn iterator_for<'de, T>(
         &self,
         file: FileTypes,
-    ) -> Result<JsonlIterator<File, T>, Error> {
+    ) -> Result<StreamDeserializer<'de, IoRead<BufReader<File>>, T>, Error>
+    where
+        T: DeserializeOwned,
+    {
         let path = self.path_for(file)?;
-        Ok(JsonlIterator::from_path(path)?)
+        let reader = BufReader::new(File::open(&path)?);
+        let stream = Deserializer::from_reader(reader).into_iter::<T>();
+        Ok(stream)
     }
 
-    pub fn build(&self) -> Result<FileJoiner, Error> {
+    pub fn build<'de>(&self) -> Result<FileJoiner<'de>, Error> {
         let basic = self.iterator_for(FileTypes::Base)?;
         let crs = self.iterator_for(FileTypes::Crs)?;
         let feedback = self.iterator_for(FileTypes::Feedback)?;
@@ -177,9 +189,9 @@ impl FileJoinerBuilder {
         let orfs = self.iterator_for(FileTypes::Orfs)?;
         let precompute = self.iterator_for(FileTypes::Precompute)?;
         let qa_status = self.iterator_for(FileTypes::QaStatus)?;
-        let r2dt_hits = self.iterator_for(FileTypes::R2dtHits)?;
+        let r2dt_hits = self.iterator_for(FileTypes::R2dt)?;
         let rfam_hits = self.iterator_for(FileTypes::RfamHits)?;
-        let so_info = so_tree::load(self.path_for(FileTypes::SoInfo)?)?;
+        let so_info = so_tree::load(self.path_for(FileTypes::SoTermTree)?)?;
 
         Ok(FileJoiner {
             basic,
@@ -198,7 +210,7 @@ impl FileJoinerBuilder {
     }
 }
 
-impl Iterator for FileJoiner {
+impl<'de> Iterator for FileJoiner<'de> {
     type Item = Result<Raw, Error>;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -219,50 +231,50 @@ impl Iterator for FileJoiner {
         match current {
             (None, None, None, None, None, None, None, None, None, None, None) => None,
             (
-                Some(Required {
+                Some(Ok(Required {
                     id: id1,
                     data: base,
-                }),
-                Some(Multiple {
+                })),
+                Some(Ok(Multiple {
                     id: id2,
                     data: crs,
-                }),
-                Some(Multiple {
+                })),
+                Some(Ok(Multiple {
                     id: id3,
                     data: feedback,
-                }),
-                Some(Multiple {
+                })),
+                Some(Ok(Multiple {
                     id: id4,
                     data: go_annotations,
-                }),
-                Some(Multiple {
+                })),
+                Some(Ok(Multiple {
                     id: id5,
                     data: interacting_proteins,
-                }),
-                Some(Multiple {
+                })),
+                Some(Ok(Multiple {
                     id: id6,
                     data: interacting_rnas,
-                }),
-                Some(Multiple {
+                })),
+                Some(Ok(Multiple {
                     id: id7,
                     data: orfs,
-                }),
-                Some(Required {
+                })),
+                Some(Ok(Required {
                     id: id8,
                     data: precompute,
-                }),
-                Some(Required {
+                })),
+                Some(Ok(Required {
                     id: id9,
                     data: qa_status,
-                }),
-                Some(Optional {
+                })),
+                Some(Ok(Optional {
                     id: id10,
                     data: r2dt,
-                }),
-                Some(Multiple {
+                })),
+                Some(Ok(Multiple {
                     id: id11,
                     data: rfam_hits,
-                }),
+                })),
             ) => {
                 if id1 != id2
                     || id1 != id3
@@ -286,21 +298,23 @@ impl Iterator for FileJoiner {
                 }
                 let so_tree = self.so_info[pre_so_type].clone();
 
-                return Some(Ok(Raw {
-                    id: id1,
-                    base,
-                    precompute,
-                    qa_status,
-                    crs,
-                    feedback,
-                    go_annotations,
-                    interacting_proteins,
-                    interacting_rnas,
-                    r2dt,
-                    rfam_hits,
-                    orfs,
-                    so_tree,
-                }));
+                let raw = Raw::builder()
+                    .id(id1)
+                    .base(base)
+                    .precompute(precompute)
+                    .qa_status(qa_status)
+                    .crs(crs)
+                    .feedback(feedback)
+                    .go_annotations(go_annotations)
+                    .interacting_proteins(interacting_proteins)
+                    .interacting_rnas(interacting_rnas)
+                    .r2dt(r2dt)
+                    .rfam_hits(rfam_hits)
+                    .orfs(orfs)
+                    .so_tree(so_tree)
+                    .build();
+
+                Some(Ok(raw))
             },
             _ => Some(Err(Error::InvalidDataFormat)),
         }

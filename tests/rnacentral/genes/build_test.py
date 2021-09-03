@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Copyright [2009-2020] EMBL-European Bioinformatics Institute
+Copyright [2009-2021] EMBL-European Bioinformatics Institute
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -13,39 +13,105 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from functools import lru_cache
+import os
+import io
 
 import pytest
+import psycopg2
+import yaml
 
-from rnacentral_pipeline.rnacentral.genes import build, data
-
-
-@lru_cache(1000)
-def load_data(assembly):
-    return []
+from rnacentral_pipeline.rnacentral.genes import build
 
 
-@lru_cache(1000)
-def genes(assembly):
-    locations = load_data(assembly)
-    return genes.build(locations)
+ENDPOINT_QUERY = """
+SELECT
+    assembly_id,
+    chromosome,
+    region_start,
+    region_stop
+from rnc_sequence_regions
+WHERE
+    region_name = '{name}'
+"""
+
+CREATE = """
+CREATE temp table tmp_regions AS
+SELECT
+    id,
+    urs_taxid
+FROM rnc_sequence_regions
+WHERE
+    assembly_id = '{assembly}'
+    AND chromosome = '{chromosome}'
+    AND int8range({start}, {stop}, '[]') && int8range(region_start, region_stop, '[]')
+"""
 
 
-def genes_for(assembly, urs_taxid):
-    found = genes(assembly)
-    return [g for g in found if g.urs_taxid == urs_taxid]
+def endpoints(cur, region_name):
+    query = ENDPOINT_QUERY.format(name=region_name)
+    cur.execute(query)
+    return cur.fetchone()
 
 
-@pytest.mark.parameterize(
-    "location_id,status",
-    [
-        (33989329, data.DataType.rejected),
-        (33919630, data.DataType.rejected),
-        (34007230, data.DataType.rejected),
-        (34007229, data.DataType.rejected),
-    ],
-)
-def test_selects_correct_representative(assembly, location_id, status):
-    assert genes_for(assembly, location_id)
-    # genes = genes_for(assembly, urs_taxid)
-    # assert any(g.representative for g in genes) == representative
+def fix_query(assembly_id, filename, join_on="id"):
+    with open(filename, "r") as raw:
+        return (
+            raw.read()
+            .replace("AND pre.taxid = :taxid", "")
+            .replace("AND regions.assembly_id = :'assembly_id'", "")
+            .replace(":'assembly_id'", f"'{assembly_id}'")
+            .replace(
+                "WHERE",
+                f"JOIN tmp_regions ON tmp_regions.{join_on} = regions.{join_on}\nWHERE\n",
+            )
+        )
+
+
+def load_overlapping_regions(region_name):
+    with psycopg2.connect(os.environ["PGDATABASE"]) as conn:
+        with conn.cursor() as cur:
+            assembly, chromosome, start, stop = endpoints(cur, region_name)
+            table = CREATE.format(
+                assembly=assembly, chromosome=chromosome, start=start, stop=stop
+            )
+            cur.execute(table)
+            data_query = fix_query(assembly, "files/genes/data.sql")
+            count_query = fix_query(
+                assembly, "files/genes/counts.sql", join_on="urs_taxid"
+            )
+
+            with conn.cursor() as cur:
+                data_handle = io.StringIO()
+                count_handle = io.StringIO()
+                cur.copy_expert(data_query, data_handle)
+                cur.copy_expert(count_query, count_handle)
+                data_handle.seek(0)
+                count_handle.seek(0)
+            return list(build.from_json(data_handle, count_handle))
+
+
+def load_examples():
+    with open("data/genes/examples.yaml", "r") as raw:
+        return yaml.load(raw)
+
+
+@pytest.mark.parametrize("expected", load_examples())
+def test_builds_correct_genes(expected):
+    region_name = expected["region_name"]
+    states = load_overlapping_regions(region_name)
+    assert len(states) == 1
+    state = states[0]
+
+    ignored = [r.region_name for r in state.ignored]
+    assert len(ignored) == len(set(ignored))
+    assert set(ignored) == set(expected["ignored"])
+
+    rejected = [r.region_name for r in state.rejected]
+    assert len(rejected) == len(set(rejected))
+    assert set(rejected) == set(expected["rejected"])
+
+    expected = [set(ids) for ids in expected["clustered"]]
+    expected = sorted(expected, key=lambda ids: min(ids))
+    found = [set([r.region_name for r in c.members]) for c in state.clusters]
+    found = sorted(found, key=lambda ids: min(ids))
+    assert found == expected

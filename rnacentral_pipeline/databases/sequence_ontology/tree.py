@@ -39,7 +39,16 @@ BASE_SO_TERMS = [
     "transcript",
 ]
 
-RENAME = {""}
+RENAME = {
+    "small_subunit_rRNA": "cytosolic_SSU_rRNA",
+    "large_subunit_rRNA": "cytosolic_LSU_rRNA",
+    "rRNA_5S": "cytosolic_5S_rRNA",
+    "rRNA_28S": "cytosolic_28S_rRNA",
+    "rRNA_18S": "cytosolic_18S_rRNA",
+    "rRNA_16S": "cytosolic_16S_rRNA",
+    "rRNA_23S": "cytosolic_23S_rRNA",
+    "rRNA_25S": "cytosolic_25S_rRNA",
+}
 
 ALTERNATES = {
     "SO:0000380": [
@@ -148,7 +157,7 @@ class SoOntology:
                     mapping[insdc_name] = so_id
         return mapping
 
-    def rna_type_tree(self, child, parents):
+    def rna_type_tree(self, child, parents) -> ty.List[ty.Tuple[str, str]]:
         if child in ALTERNATES:
             return ALTERNATES[child]
 

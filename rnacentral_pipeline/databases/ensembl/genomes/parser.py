@@ -23,8 +23,10 @@ from rnacentral_pipeline.databases import data
 from rnacentral_pipeline.databases.helpers import embl
 from rnacentral_pipeline.databases.ensembl.vertebrates import helpers as ensembl
 
+from rnacentral_pipeline.databases.ensembl import helpers as common
 from rnacentral_pipeline.databases.ensembl.genomes import helpers
 from rnacentral_pipeline.databases.ensembl.genomes.data import Context
+from rnacentral_pipeline.databases.ensembl.data import Pseudogene
 
 
 def ncrnas(context: Context, handle) -> ty.Iterable[data.Entry]:
@@ -52,3 +54,23 @@ def parse(context: Context, handle) -> ty.Iterable[data.Entry]:
     grouped = it.groupby(data, op.attrgetter("gene"))
     for gene, related in grouped:
         yield from ensembl.generate_related(related)
+
+
+def pseudogenes(handle: ty.IO) -> ty.Iterable[Pseudogene]:
+    for record in SeqIO.parse(handle, "embl"):
+        current_gene = None
+        for feature in record.features:
+            if feature.type == "source":
+                continue
+
+            if embl.is_gene(feature) and help:
+                current_gene = feature
+
+            if helpers.is_pseudogene(current_gene, feature):
+                gene = embl.gene(feature)
+                if not gene:
+                    continue
+                yield Pseudogene(
+                    gene=embl.gene(feature),
+                    region=common.regions(record, feature)[0],
+                )

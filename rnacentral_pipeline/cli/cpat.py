@@ -32,7 +32,7 @@ def cli():
 
 
 @cli.command("parse")
-@click.argument("cutoffs", type=click.File('rb'))
+@click.argument("cutoffs", type=click.File("rb"))
 @click.argument("model_name")
 @click.argument("results", type=click.Path())
 @click.argument("output", type=click.Path())
@@ -45,7 +45,7 @@ def parse(cutoffs, model_name, results, output):
 
 @cli.command("generate-cutoffs")
 @click.argument("data-folder", type=click.Path())
-@click.argument("output", type=click.File('wb'))
+@click.argument("output", type=click.File("wb"))
 def generate_cutoffs(data_folder, output):
     cutoffs = parser.cutoffs(Path(data_folder))
     pickle.dump(cutoffs, output)

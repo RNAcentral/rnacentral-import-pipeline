@@ -47,7 +47,7 @@ pub struct CrossReference {
     parent_accession: Option<String>,
 }
 
-#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct AccessionVec {
     species: HashSet<String>,
     organelles: HashSet<String>,
@@ -62,7 +62,7 @@ pub struct AccessionVec {
     products: HashSet<String>,
 }
 
-#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ReferenceVec {
     authors: HashSet<String>,
     journals: HashSet<String>,
@@ -145,12 +145,12 @@ impl FromIterator<RawAccession> for AccessionVec {
             insert(&mut a.products, i.product);
 
             for synonyms in i.gene_synonyms.into_iter() {
-                if synonyms.contains(";") {
+                if synonyms.contains(';') {
                     a.gene_synonyms
-                        .extend(synonyms.split(";").map(|p| p.trim()).map(str::to_string))
-                } else if synonyms.contains(",") {
+                        .extend(synonyms.split(';').map(|p| p.trim()).map(str::to_string))
+                } else if synonyms.contains(',') {
                     a.gene_synonyms
-                        .extend(synonyms.split(",").map(|p| p.trim()).map(str::to_string))
+                        .extend(synonyms.split(',').map(|p| p.trim()).map(str::to_string))
                 } else {
                     a.gene_synonyms.insert(synonyms);
                 }
@@ -179,9 +179,21 @@ impl FromIterator<RawAccession> for ReferenceVec {
             insert(&mut value.pub_titles, i.pub_title);
             insert(&mut value.pubmed_ids, i.pubmed_id);
             insert(&mut value.dois, i.doi);
+
             value.pub_ids.extend(i.pub_id.into_iter());
+            value.pub_titles.remove("None");
         }
 
         value
+    }
+}
+
+impl CrossReference {
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    pub fn external_id(&self) -> &str {
+        &self.external_id
     }
 }

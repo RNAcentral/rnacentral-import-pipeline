@@ -13,14 +13,19 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import typing as ty
+
 import attr
 
 from rnacentral_pipeline.databases.ensembl.genomes import parser
 from rnacentral_pipeline.databases.ensembl.genomes.data import Context
 from rnacentral_pipeline.databases.helpers import publications as pubs
 
+from rnacentral_pipeline.databases.data import Entry
+from rnacentral_pipeline.databases.ensembl.data import Pseudogene
 
-def as_tair_entry(entry):
+
+def as_tair_entry(entry: Entry) -> Entry:
     database = "TAIR"
     xrefs = dict(entry.xref_data)
     if database in xrefs:
@@ -33,13 +38,13 @@ def as_tair_entry(entry):
     )
 
 
-def inferred_entries(entry):
+def inferred_entries(entry: Entry) -> ty.Iterable[Entry]:
     if entry.ncbi_tax_id != 3702 or not entry.primary_id.startswith("AT"):
         return
     yield as_tair_entry(entry)
 
 
-def parse(handle, gff_file, **kwargs):
+def parse(handle: ty.IO, gff_file, **kwargs) -> ty.Iterable[Entry]:
     context = Context.build(
         "ENSEMBL_PLANTS",
         [pubs.reference(29092050)],
@@ -50,3 +55,7 @@ def parse(handle, gff_file, **kwargs):
         yield entry
         for entry in inferred_entries(entry):
             yield entry
+
+
+def pseudogenes(handle: ty.IO) -> ty.Iterable[Pseudogene]:
+    return parser.pseudogenes(handle)

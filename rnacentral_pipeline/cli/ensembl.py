@@ -15,6 +15,8 @@ limitations under the License.
 
 import csv
 from pathlib import Path
+import itertools as it
+import operator as op
 
 import click
 
@@ -25,6 +27,7 @@ from rnacentral_pipeline.databases.ensembl.metadata import karyotypes
 from rnacentral_pipeline.databases.ensembl.metadata import proteins
 from rnacentral_pipeline.databases.ensembl.data import Division
 from rnacentral_pipeline.databases.ensembl import parser
+from rnacentral_pipeline.databases.ensembl import pseudogenes
 from rnacentral_pipeline.databases.ensembl import urls
 from rnacentral_pipeline.writers import entry_writer
 
@@ -153,3 +156,15 @@ def ensembl_compara(fasta, output):
     homologous.
     """
     compara.write(fasta, output)
+
+
+@cli.command("pseudogenes")
+@click.argument("division", type=click.Choice(Division.names(), case_sensitive=False))
+@click.argument("embl_file", type=click.File("r"))
+@click.argument("output", default="ensembl-pseudogenes.csv", type=click.File("w"))
+def ensembl_pseudogenes(division, embl_file, output):
+    division = Division.from_name(division)
+    genes = pseudogenes.parse(division, embl_file)
+    genes = it.chain.from_iterable(g.writeable() for g in genes)
+    writer = csv.writer(output)
+    writer.writerows(genes)

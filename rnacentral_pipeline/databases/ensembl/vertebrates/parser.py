@@ -17,6 +17,7 @@ import itertools as it
 import logging
 import operator as op
 import typing as ty
+from pathlib import Path
 
 import attr
 from Bio import SeqIO
@@ -26,6 +27,8 @@ from rnacentral_pipeline.databases.helpers import embl
 from rnacentral_pipeline.databases.ensembl.data import TranscriptInfo
 from rnacentral_pipeline.databases.ensembl.gencode import helpers as gencode
 
+from rnacentral_pipeline.databases.ensembl import helpers as common
+from rnacentral_pipeline.databases.ensembl.data import Pseudogene
 from rnacentral_pipeline.databases.ensembl.vertebrates import helpers
 from rnacentral_pipeline.databases.ensembl.vertebrates.context import Context
 
@@ -80,7 +83,7 @@ def as_entry(
         parent_accession=record.id,
         common_name=common_name,
         species=species,
-        gene=embl.locus_tag(gene),
+        gene=embl.gene(gene),
         locus_tag=embl.locus_tag(gene),
         optional_id=embl.gene(gene),
         note_data=helpers.note_data(feature),
@@ -118,7 +121,8 @@ def ncrnas(raw, context: Context) -> ty.Iterable[data.Entry]:
                 continue
 
             if not helpers.is_ncrna(feature):
-                LOGGER.debug("Skipping feature %s because it is not ncRNA", feature)
+                LOGGER.debug(
+                    "Skipping feature %s because it is not ncRNA", feature)
                 continue
 
             entry = as_entry(
@@ -144,7 +148,7 @@ def ncrnas(raw, context: Context) -> ty.Iterable[data.Entry]:
 
 
 def parse(
-    raw, gff_file, family_file=None, excluded_file=None
+    raw: ty.IO, gff_file: Path, family_file=None, excluded_file=None
 ) -> ty.Iterable[data.Entry]:
     """
     This will parse an EMBL file for all Ensembl Entries to import.
@@ -166,3 +170,24 @@ def parse(
                 from_gencode.append(gencode.update_entry(entry))
         for entry in helpers.generate_related(from_gencode):
             yield entry
+
+
+def pseudogenes(handle: ty.IO) -> ty.Iterable[Pseudogene]:
+    for record in SeqIO.parse(handle, "embl"):
+        current_gene = None
+        for feature in record.features:
+            if feature.type in IGNORE_FEATURES:
+                LOGGER.debug("Skipping ignored feature type for %s", feature)
+                continue
+
+            if embl.is_gene(feature):
+                current_gene = feature
+
+            if helpers.is_pseudogene(current_gene, feature):
+                gene = embl.gene(feature)
+                if not gene:
+                    continue
+                yield Pseudogene(
+                    gene=gene,
+                    region=common.regions(record, feature)[0],
+                )

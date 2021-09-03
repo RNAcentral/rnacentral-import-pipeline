@@ -21,7 +21,7 @@ pub struct Feedback {
     no_overlaps_with: Vec<String>,
 }
 
-#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct FeedbackVec {
     overlaps_with: HashSet<String>,
     no_overlaps_with: HashSet<String>,

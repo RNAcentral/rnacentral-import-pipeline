@@ -102,7 +102,7 @@ def export_go_temrs(filename, output):
     go_terms.export(filename, output)
 
 
-@cli.command('gpi')
+@cli.command("gpi")
 @click.option("--db-url", envvar="PGDATABASE")
 @click.argument("output", default="-", type=click.File("w"))
 def export_gpi(output, db_url):
@@ -130,11 +130,12 @@ def format_as_bed(json_file, output):
 
 
 @export_coordinates.command("as-gff3")
+@click.option("--allow-none/--require-some", default=False)
 @click.argument("json_file", type=click.File("r"))
 @click.argument("output", default="-", type=click.File("w"))
-def format_as_gff3(json_file, output):
+def format_as_gff3(json_file, output, allow_none=False):
     """
     This will turn the json file produced by the coordiantes query into a GFF3
     file.
     """
-    gff3.from_file(json_file, output)
+    gff3.from_file(json_file, output, allow_none=allow_none)
