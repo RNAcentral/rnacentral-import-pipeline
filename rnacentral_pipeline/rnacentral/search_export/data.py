@@ -697,6 +697,9 @@ def values(v):
     return v
 
 
+def entry_type(_urs):
+    return ["Sequence"]
+
 builder = entry(
     [
         tag("name", as_name, keys=("urs", "taxid")),
@@ -731,6 +734,7 @@ builder = entry(
                 field("active", as_active, keys="deleted"),
                 field("length", given),
                 field("species", first),
+                field("entry_type", entry_type, keys="urs"),
                 fields("organelle", unique_lower, keys="organelles"),
                 fields("expert_db", unique, keys="databases"),
                 fields("common_name", normalize_common_name),
