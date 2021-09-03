@@ -36,6 +36,7 @@ from rnacentral_pipeline.writers import entry_writer
 def cli():
     """
     This is a set of commands for parsing ensembl data. 
+    """
 
 
 @cli.command("urls-for")
