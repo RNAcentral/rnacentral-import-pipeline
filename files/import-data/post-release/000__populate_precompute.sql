@@ -1,3 +1,5 @@
+\timing
+
 BEGIN TRANSACTION;
 
 -- Populate rnc_rna_precomputed with partial data so we can create foreign keys

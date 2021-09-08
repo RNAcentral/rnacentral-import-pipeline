@@ -1,3 +1,5 @@
+\timing
+
 BEGIN;
 
 create index ix_load_rnc_sequence_features__accession on load_rnc_sequence_features(accession);

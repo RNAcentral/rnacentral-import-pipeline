@@ -1,3 +1,5 @@
+\timing
+
 BEGIN TRANSACTION;
 
 insert into ontology_terms (
