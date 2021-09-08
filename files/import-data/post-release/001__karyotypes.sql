@@ -1,3 +1,5 @@
+\timing
+
 BEGIN;
 
 INSERT INTO ensembl_karyotype (

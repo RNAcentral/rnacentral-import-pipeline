@@ -1,3 +1,5 @@
+\timing
+
 BEGIN TRANSACTION;
 
 INSERT INTO ensembl_pseudogene_regions (

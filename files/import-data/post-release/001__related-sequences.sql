@@ -1,3 +1,5 @@
+\timing
+
 BEGIN;
 
 -- Update the load table to contain the source URS

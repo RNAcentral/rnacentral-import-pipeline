@@ -1,3 +1,5 @@
+\timing
+
 BEGIN;
 
 SET work_mem TO '256MB';

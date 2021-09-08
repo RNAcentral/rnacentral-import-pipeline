@@ -1,3 +1,5 @@
+\timing
+
 BEGIN;
 
 INSERT INTO rnc_secondary_structure (

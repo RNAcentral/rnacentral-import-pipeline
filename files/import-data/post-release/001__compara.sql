@@ -1,3 +1,5 @@
+\timing
+
 BEGIN;
 
 ALTER TABLE load_compara
