@@ -105,28 +105,6 @@ SET
 ;
 $$,
 $$
-INSERT INTO rfam_analyzed_sequences (
-    upi,
-    date,
-    total_matches,
-    total_family_matches
-) (
-SELECT
-    upi,
-    current_date date,
-    count(*) total_matches,
-    count(distinct rfam_model_id) total_family_matches
-FROM rfam_model_hits
-GROUP BY upi
-)
-ON CONFLICT (upi)
-DO UPDATE
-SET
-  total_matches = EXCLUDED.total_matches,
-  total_family_matches = EXCLUDED.total_family_matches
-;
-$$,
-$$
 drop index ix__load_rfam_model_hits__rfam_model_id;
 $$,
 $$
