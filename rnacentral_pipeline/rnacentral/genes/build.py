@@ -42,6 +42,8 @@ def always_bad_location(location: data.LocationInfo) -> bool:
             LOGGER.debug("State: %s", state)
             return state != (True, False, True, False)
         return True
+    if location.rna_type.is_a('piRNA'):
+        return True
     return False
 
 
