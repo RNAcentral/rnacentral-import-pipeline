@@ -163,7 +163,7 @@ class SoOntology:
 
         for parent in parents:
             if child == parent:
-                break
+                return [(child, self.graph.nodes[child]["name"])]
             paths = nx.all_simple_paths(self.graph, source=child, target=parent)
             paths = list(paths)
             if not paths:
