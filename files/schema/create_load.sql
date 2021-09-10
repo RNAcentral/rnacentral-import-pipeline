@@ -318,6 +318,7 @@ CREATE TABLE load_secondary_layout (
     sequence_coverage float
 );
 
+DROP TABLE IF EXISTS load_ensembl_pseudogenes;
 create table load_ensembl_pseudogenes (
     gene text not null,
     region_name text not null,
@@ -326,5 +327,5 @@ create table load_ensembl_pseudogenes (
     exon_start int4 not null,
     exon_stop int4 not null,
     assembly_id varchar(255) not null,
-    exon_count int not null,
+    exon_count int not null
 );

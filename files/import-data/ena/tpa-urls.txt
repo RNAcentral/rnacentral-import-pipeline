@@ -1,6 +1,2 @@
-https://www.ebi.ac.uk/ena/data/xref/search?source=SRPDB&expanded=true&limit=0
-https://www.ebi.ac.uk/ena/data/xref/search?source=WormBase&expanded=true&limit=0
-https://www.ebi.ac.uk/ena/data/xref/search?source=dictyBase&expanded=true&limit=0
-https://www.ebi.ac.uk/ena/data/xref/search?source=lncRNAdb&expanded=true&limit=0
-https://www.ebi.ac.uk/ena/data/xref/search?source=snOPYdb&expanded=true&limit=0
-https://www.ebi.ac.uk/ena/data/xref/search?source=tmRNA-Website&expanded=true&limit=0
+https://www.ebi.ac.uk/ena/xref/rest/tsv/search?source=SRPDB&target=sequence&expanded=true
+https://www.ebi.ac.uk/ena/xref/rest/tsv/search?source=WormBase&target=sequence&expanded=true

@@ -11,7 +11,7 @@ process process_data {
 workflow psicquic {
   emit: data
   main:
-    process_data
+    process_data | set { data }
 }
 
 workflow {
