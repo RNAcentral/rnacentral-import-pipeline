@@ -2,10 +2,10 @@
 
 nextflow.enable.dsl=2
 
-create_memory = params.sequence_search.create_fasta.memory_table
+create_memory = params.export.sequence_search.create_fasta.memory_table
 
 process find_db_to_export {
-  when { params.sequence_search.run }
+  when { params.export.sequence_search.run }
 
   input:
   path(query)
@@ -20,7 +20,7 @@ process find_db_to_export {
 
 process query_database {
   tag { "$name" }
-  maxForks params.sequence_search.max_forks
+  maxForks params.export.sequence_search.max_forks
 
   input:
   tuple val(name), path(query), val(partition) 
@@ -57,7 +57,7 @@ process create_fasta {
   cp ${ordered} ${name}.fasta
   esl-seqstat --dna ${name}.fasta > ${name}.seqstat
   split-sequences \
-    --max-file-size ${params.sequence_search.max_file_size} \
+    --max-file-size ${params.export.sequence_search.max_file_size} \
     ${name}.fasta splits/
   """
 }
@@ -70,8 +70,11 @@ process atomic_publish {
   path(hash)
   path(stats)
 
+  output:
+  val('done')
+
   script:
-  def publish = params.sequence_search.publish
+  def publish = params.export.sequence_search.publish
   def remote = (publish.host ? "$publish.host:" : "") + publish.path
   def sequences = 'sequences-database.fa'
   def compressed = "${sequences}.tar.gz"
@@ -89,32 +92,35 @@ process atomic_publish {
   """
 }
 
-workflow sequence_search_export {
-  Channel.fromPath('files/ftp-export/sequences/databases.sql') | set { db_query }
-  Channel.fromPath('files/ftp-export/sequences/database-specific.sql') | set { db_specific_query }
+workflow sequence_search {
+  take: _flag
+  emit: done
+  main:
+    Channel.fromPath('files/ftp-export/sequences/databases.sql') | set { db_query }
+    Channel.fromPath('files/ftp-export/sequences/database-specific.sql') | set { db_specific_query }
 
-  Channel.fromPath('files/sequence-search-export/*.sql') \
-  | filter { params.sequence_search.run } \
-  | map { fn -> [file(fn).baseName, fn, ''] } \
-  | set { simple_queries }
+    Channel.fromPath('files/sequence-search-export/*.sql') \
+    | filter { params.export.sequence_search.run } \
+    | map { fn -> [file(fn).baseName, fn, ''] } \
+    | set { simple_queries }
 
-  find_db_to_export(db_query) \
-  | splitCsv \
-  | combine(db_specific_query) \
-  | map { db, query -> [db, query, "-v db='%${db}%'"] } \
-  | mix(simple_queries) \
-  | map { db, query, param -> [db.toLowerCase().replace(' ', '_').replace('/', '_'), query, param] } \
-  | map { db, q, p -> [(db == "tmrna_website" ? "tmrna_web" : db), q, p] } \
-  | query_database \
-  | create_fasta
+    find_db_to_export(db_query) \
+    | splitCsv \
+    | combine(db_specific_query) \
+    | map { db, query -> [db, query, "-v db='%${db}%'"] } \
+    | mix(simple_queries) \
+    | map { db, query, param -> [db.toLowerCase().replace(' ', '_').replace('/', '_'), query, param] } \
+    | map { db, q, p -> [(db == "tmrna_website" ? "tmrna_web" : db), q, p] } \
+    | query_database \
+    | create_fasta
 
-  create_fasta.out.sequences | collect | set { sequences }
-  create_fasta.out.hashes | collect | set { hashes }
-  create_fasta.out.stats | collect | set { stats }
+    create_fasta.out.sequences | collect | set { sequences }
+    create_fasta.out.hashes | collect | set { hashes }
+    create_fasta.out.stats | collect | set { stats }
 
-  atomic_publish(sequences, hashes, stats)
+    atomic_publish(sequences, hashes, stats) | set { done }
 }
 
 workflow {
-  sequence_search_export()
+  sequence_search(Channel.of('ready'))
 }
