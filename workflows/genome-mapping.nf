@@ -47,9 +47,7 @@ process fetch_unmapped_sequences {
   mkdir parts
 
   comm -23 possible mapped | awk 'BEGIN { FS="_"; OFS="," } { print \$1, \$0 }' > urs-to-compute
-  if [[ -z urs-to-compute ]]; then
-    touch parts/empty.fasta
-  else
+  if [[ -s urs-to-compute ]]; then
     psql -q -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > raw.json
     json2fasta raw.json rnacentral.fasta
     seqkit shuffle --two-pass rnacentral.fasta > shuffled.fasta
@@ -58,6 +56,8 @@ process fetch_unmapped_sequences {
       --max-nucleotides ${params.genome_mapping.fetch_unmapped_sequences.nucleotides_per_chunk} \
       --max-sequences ${params.genome_mapping.fetch_unmapped_sequences.sequences_per_chunk} \
         shuffled.fasta parts
+  else
+    touch parts/empty.fasta
   fi
   """
 }
