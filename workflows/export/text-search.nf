@@ -2,8 +2,8 @@
 
 nextflow.enable.dsl=2
 
-include { sequences } from './workflows/search-export/sequences'
-include { genes } from './workflows/search-export/genes'
+include { sequences } from './text-search/sequences'
+include { genes } from './text-search/genes'
 
 process create_release_note {
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
@@ -30,6 +30,9 @@ process atomic_publish {
   path(xml)
   path(post)
 
+  output:
+  val('done')
+
   script:
   def publish = params.search_export.publish
   if (params.search_export.publish.host)
@@ -47,27 +50,30 @@ process atomic_publish {
     """
 }
 
-workflow search_export {
-  Channel.fromPath('files/search-export/post-publish.sql') | set { post }
+workflow text_search {
+  take: _flag
+  emit: done
+  main:
+    Channel.fromPath('files/search-export/post-publish.sql') | set { post }
 
-  sequences()
+    sequences()
 
-  genes(sequences.out.search_count, sequences.out.sequence_json)
+    genes(sequences.out.search_count, sequences.out.sequence_json)
 
-  sequences.out.counts \
-  | mix(genes.out.counts) \
-  | collect \
-  | create_release_note \
-  | set { note }
+    sequences.out.counts \
+    | mix(genes.out.counts) \
+    | collect \
+    | create_release_note \
+    | set { note }
 
-  sequences.out.xml \
-  | mix(genes.out.xml) \
-  | collect \
-  | set { xml }
+    sequences.out.xml \
+    | mix(genes.out.xml) \
+    | collect \
+    | set { xml }
 
-  atomic_publish(note, xml, post)
+    atomic_publish(note, xml, post) | set { done }
 }
 
 workflow {
-  search_export()
+  text_search(Channel.of('ready'))
 }

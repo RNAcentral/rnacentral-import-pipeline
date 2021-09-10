@@ -5,6 +5,8 @@ nextflow.enable.dsl=2
 include { query as locus_query } from './utils'
 
 process merge_and_split {
+  errorStrategy 'finish'
+
   input:
   tuple path(sequence), path(locus)
 

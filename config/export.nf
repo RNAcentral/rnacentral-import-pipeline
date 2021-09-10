@@ -1,0 +1,87 @@
+params {
+  export {
+    search {
+      max_forks = 6
+      max_entries = 2237839
+      schema = 'http://www.ebi.ac.uk/ebisearch/XML4dbDumps.xsd'
+      publish {
+        host = ""
+        path = "${baseDir}/search-export"
+      }
+      memory = 8.GB
+    }
+
+    sequence_search {
+      max_file_size = '150MB'
+      max_forks = 10
+
+      publish {
+        host = ""
+        path = "${baseDir}/sequence-search-export"
+      }
+
+      create_fasta {
+        memory_table {
+          ena = 25.GB
+          all_except_rrna = 20.GB
+          silva = 20.GB
+          rfam = 4.GB
+          __default = 2.GB
+        }
+      }
+    }
+
+    ftp {
+      publish = "${baseDir}/ftp"
+      id_mapping {
+        run = true
+        by_database.run = true
+      }
+
+      ensembl {
+        run = true
+        chunk_size = 100000
+        maxForks = 15
+      }
+
+      coordinates {
+        run = true
+        maxForks = 30
+        gff3 {
+          run = true
+          memory = 8.GB
+        }
+
+        bed.run = true
+      }
+
+      rfam {
+        annotations.run = true
+        go_annotations {
+          run = true
+          memory = 8.GB
+        }
+      }
+
+      sequences {
+        active.run = true
+        inactive.run = true
+        species.run = true
+        nhmmer.run = true
+        by_database {
+          run = true
+          max_forks = 4
+        }
+      }
+
+      gpi {
+        memory = 8.GB
+      }
+
+      release_note.run = true
+      md5.run = true
+      status.run = true
+    }
+  }
+}
+
