@@ -13,8 +13,9 @@ process create_load_tables {
 }
 
 process merge_and_import {
-  memory 3.GB
   tag { name }
+  memory 3.GB
+  maxForks 2
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:

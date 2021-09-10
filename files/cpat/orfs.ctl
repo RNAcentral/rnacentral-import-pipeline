@@ -41,15 +41,6 @@ WHERE
 ;
 $$,
 $$
-DELETE FROM rnc_sequence_features ft
-USING load_cpat_orfs load
-WHERE
-  ft.urs = load.urs
-  AND ft.taxid = load.taxid
-  AND ft.feature_name = 'cpat_orf'
-;
-$$,
-$$
 INSERT INTO rnc_sequence_features (
   upi,
   taxid,

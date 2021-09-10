@@ -14,11 +14,14 @@ limitations under the License.
 """
 
 import csv
+import logging
 import operator as op
 
 from Bio import SeqIO
 
 from rnacentral_pipeline import psql
+
+LOGGER = logging.getLogger(__name__)
 
 
 id_attribute = op.attrgetter("id")
@@ -40,7 +43,10 @@ def json_parser(handle, id_generator=id_key, extra_fields=[]):
 
 def fasta_parser(handle, id_generator=id_attribute, extra_fields=[]):
     for record in SeqIO.parse(handle, "fasta"):
-        yield [id_generator(record)] + extra_fields
+        seq_id = id_generator(record)
+        if not seq_id:
+            raise ValueError("Failed to find seq id for %s" % record)
+        yield [seq_id] + extra_fields
 
 
 def parse_rfam_version(handle):
@@ -51,9 +57,16 @@ def parse_rfam_version(handle):
     raise ValueError("Could not find version in file")
 
 
-def write(data, output):
+def write(data, output, require_attempt=True):
     writer = csv.writer(output)
-    writer.writerows(data)
+    seen = False
+    for row in data:
+        writer.writerows(row)
+        seen = True
+    if not seen:
+        LOGGER.error("Nothing was attempted")
+        if require_attempt:
+            raise ValueError("Found nothing was attempted")
 
 
 def genome_mapping(handle, assembly_id, output):

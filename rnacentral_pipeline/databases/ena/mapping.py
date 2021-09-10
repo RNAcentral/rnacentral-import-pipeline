@@ -32,9 +32,6 @@ CHROMOSOME_LEVEL_MAPPINGS = set(
 DATABASES = {
     "SRPDB",
     "WormBase",
-    "lncRNAdb",
-    "snOPYdb",
-    "tmRNA-Website",
 }
 
 TpaKey = ty.Tuple[str, ty.Optional[str]]
