@@ -93,6 +93,8 @@ def chunked(handle, limit, format_name='fasta'):
     if format_name == 'ncr':
         format_name = 'embl'
     for sequence in SeqIO.parse(handle, format_name):
+        if len(sequence.seq) == 0:
+            continue
         chunk.add(sequence)
         if limit.is_too_large(chunk):
             yield chunk.sequences
