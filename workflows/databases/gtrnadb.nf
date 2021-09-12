@@ -1,5 +1,6 @@
 process fetch_data {
   when { params.databases.gtrnadb.run }
+  memory '4GB'
 
   output:
   path('*.json')
@@ -12,6 +13,7 @@ process fetch_data {
 
 process process_data {
   tag { "$raw.name" }
+  memory '4GB'
 
   input:
   tuple path(tax_info), path(raw)

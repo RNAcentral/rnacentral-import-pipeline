@@ -15,17 +15,17 @@ process fetch {
 }
 
 process group {
-  tag { "${query.baseName}" }
+  tag { "${name}" }
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
-  tuple val(name), val("raw.json"), val(max_count)
+  tuple val(name), path("raw.json"), val(max_count)
 
   output:
   path("${name}.json")
 
   """
-  search-export group ${name} raw ${max_count} ${name}.json
+  search-export group ${name} raw.json ${max_count} ${name}.json
   """
 }
 
