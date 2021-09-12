@@ -243,8 +243,8 @@ class Entry:
             LOGGER.warn("Skipping a mRNA")
             return False
 
-        if 'T' in self.sequence:
-            raise ValueError("Sequence %s contains a T, this is very bad" % self)
+        if 'U' in self.sequence:
+            raise ValueError("Sequence %s contains a U, this is very bad" % self)
 
         return True
 

@@ -80,7 +80,7 @@ process build_ranges {
   path('ranges.csv')
 
   script:
-  def chunk_size = params.search_export.max_entries
+  def chunk_size = params.export.search.max_entries
   """
   rnac upi-ranges --table-name search_export_urs $chunk_size ranges.csv
   """
@@ -111,7 +111,7 @@ process fetch_accession {
 
 process as_xml {
   tag { "$min-$max" }
-  memory params.search_export.memory
+  memory params.export.search.memory
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
@@ -127,7 +127,7 @@ process as_xml {
   """
   search-export sequences normalize $raw $metadata data.json
   rnac search-export as-xml data.json $xml count
-  xmllint $xml --schema ${params.search_export.schema} --stream
+  xmllint $xml --schema ${params.export.search.schema} --stream
   gzip $xml
   """
 }
