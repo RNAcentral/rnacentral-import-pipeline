@@ -1,4 +1,6 @@
-process process_data {
+process psicquic {
+  when: { params.databases.psicquic.run }
+
   output:
   path("*.csv")
 
@@ -6,14 +8,4 @@ process process_data {
   cp $params.databases.psicquic.remote raw.tsv
   rnac psicquic parse raw.tsv .
   """
-}
-
-workflow psicquic {
-  emit: data
-  main:
-    process_data | set { data }
-}
-
-workflow {
-  psicquic()
 }
