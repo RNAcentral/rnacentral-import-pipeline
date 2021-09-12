@@ -25,6 +25,12 @@ set
   region_name = urs_taxid || region_name
 ;
 
+--- Delete all regions that come from an assembly we do not know about
+DELETE from load_rnc_sequence_regions load
+WHERE
+NOT EXISTS (select 1 from ensembl_assembly assem WHERE assem.assembly_id = load.assembly_id)
+;
+
 -- Change the providing_databases in rnc_sequence_features to remove all
 -- mentions of the databases we have in the load table. We do this because some
 -- regions may come from more than one database and we don't update all
