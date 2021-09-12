@@ -5,9 +5,8 @@ process fetch_data {
   path('*.json')
 
   """
-  rnac gtrnadb urls-for $params.databases.gtrnadb.remote | xargs -I {} wget {}
-  gzip -d *.json.gz
-  find . -name '*.tar.gz' | xargs -I {} --verbose tar -xzvf {}
+  wget $params.databases.gtrnadb.remote
+  tar xvf *.tar.gz
   """
 }
 
