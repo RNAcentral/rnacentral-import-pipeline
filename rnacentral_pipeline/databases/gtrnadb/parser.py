@@ -29,7 +29,7 @@ LOGGER = logging.getLogger(__name__)
 
 
 def gtrnadb_entries(
-    taxonomy: SqliteDict, data: ty.Dict[str, ty.Any]
+        taxonomy: SqliteDict, data: ty.Dict[str, ty.Any], metadata: ty.Dict[str, ty.Any],
 ) -> ty.Iterable[Entry]:
     """
     Take an entry from GtRNAdb and produce the RNAcentrals that it
@@ -38,19 +38,19 @@ def gtrnadb_entries(
     each location this ends up representing more than one RNAcentral Entry.
     """
 
-    if data["metadata"]["pseudogene"]:
+    if data["pseudogene"]:
         return
 
-    for location in data["genome_locations"]:
+    for location in data["genomeLocations"]:
         try:
             yield Entry(
                 primary_id=helpers.primary_id(data, location),
                 accession=helpers.accession(data, location),
-                ncbi_tax_id=int(data["ncbi_tax_id"]),
+                ncbi_tax_id=helpers.taxid(data),
                 database="GTRNADB",
                 sequence=helpers.sequence(data),
-                regions=[],
-                rna_type="tRNA",
+                regions=helpers.regions(location),
+                rna_type=data["soTermId"],
                 url=helpers.url(data),
                 seq_version=helpers.seq_version(data),
                 note_data=helpers.note_data(data),
@@ -58,23 +58,20 @@ def gtrnadb_entries(
                 species=helpers.species(taxonomy, data),
                 anticodon=helpers.anticodon(data),
                 lineage=helpers.lineage(taxonomy, data),
-                gene=data["gene"],
-                optional_id=data["gene"],
+                gene=helpers.gene(data),
+                optional_id=helpers.optional_id(data),
                 product=helpers.product(data),
                 parent_accession=helpers.parent_accession(location),
                 description=helpers.description(taxonomy, data),
                 mol_type="genomic DNA",
-                location_start=1,
-                location_end=len(data["sequence"]),
-                gene_synonyms=data.get("synonyms", []),
-                references=helpers.references(),
+                gene_synonyms=helpers.gene_synonyms(data),
+                references=helpers.references(metadata),
+                features=helpers.features(data),
             )
         except phy.FailedTaxonId:
             LOGGER.warning("Could not get phylogeny info for %s", data)
-            break
         except phy.UnknownTaxonId:
             LOGGER.warning("Unknown taxon id in %s", data)
-            break
 
 
 def parse(raw: ty.IO, taxonomy_file: Path) -> ty.Iterable[Entry]:
@@ -84,6 +81,6 @@ def parse(raw: ty.IO, taxonomy_file: Path) -> ty.Iterable[Entry]:
     """
 
     taxonomy = SqliteDict(filename=taxonomy_file)
-    data = json.load(raw)
-    for raw in data:
-        yield from gtrnadb_entries(taxonomy, raw)
+    data: ty.Dict[str, ty.Any] = json.load(raw)
+    for raw in data["data"]:
+        yield from gtrnadb_entries(taxonomy, raw, data["metaData"])

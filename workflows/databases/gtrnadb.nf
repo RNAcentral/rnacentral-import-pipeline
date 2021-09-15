@@ -16,7 +16,7 @@ process process_data {
   memory '4GB'
 
   input:
-  tuple path(tax_info), path(raw)
+  tuple path(raw), path(tax_info)
 
   output:
   path('*.csv')
