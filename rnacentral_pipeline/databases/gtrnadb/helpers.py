@@ -15,14 +15,17 @@ limitations under the License.
 """
 
 import re
-import urllib
+import typing as ty
 
 import six
 
 import requests
+from sqlitedict import SqliteDict
 
-from rnacentral_pipeline.databases.data import Reference
+from rnacentral_pipeline.databases import data
 import rnacentral_pipeline.databases.helpers.phylogeny as phy
+import rnacentral_pipeline.databases.helpers.publications as pub
+from rnacentral_pipeline.databases.ncbi.taxonomy import TaxonomyEntry
 
 
 class InvalidDotBracket(Exception):
@@ -65,17 +68,14 @@ def downloadable_files(base_url):
 
 
 def url(data):
-    """
-    Adds a http:// to the start of the url in data.
-    """
-    return "http://%s" % data["metadata"]["url"]
+    return data["url"]
 
 
 def anticodon(data):
     """
     Get the anticodon of this entry.
     """
-    return data["metadata"]["anticodon"]
+    return data["sequenceFeatures"]["anticodon"]["sequence"]
 
 
 def note_data(data):
@@ -85,17 +85,6 @@ def note_data(data):
     """
 
     note = {}
-    note.update(data["metadata"])
-    extra = ["mature_sequence", "description"]
-    for entry in extra:
-        if entry in note:
-            del note[entry]
-    del note["organism"]
-    del note["pseudogene"]
-    for position in note["anticodon_positions"]:
-        position["relative_start"] = int(position["relative_start"])
-        position["relative_stop"] = int(position["relative_stop"])
-    note["score"] = float(note["score"])
     note["url"] = url(data)
     return note
 
@@ -111,32 +100,38 @@ def chromosome(location):
     return chrom
 
 
-def lineage(taxonomy, data):
+def taxid(data: ty.Dict[str, str]) -> int:
+    _, taxid = data["taxonId"].split(":", 1)
+    return int(taxid)
+
+
+def lineage(taxonomy: SqliteDict, data):
     """
     Get a standardized lineage for the given taxon id.
     """
-    if data["ncbi_tax_id"] in taxonomy:
-        return taxonomy["ncbi_tax_id"].lineage
-    return phy.lineage(data["ncbi_tax_id"])
+    ncbi_taxid = taxid(data)
+    if str(ncbi_taxid) in taxonomy:
+        return taxonomy[ncbi_taxid].lineage
+    return phy.lineage(ncbi_taxid)
 
 
 def species(taxonomy, data):
     """
     Get a standardized species name for the given taxon id.
     """
-    if data["ncbi_tax_id"] in taxonomy:
-        return taxonomy["ncbi_tax_id"].name
-    return phy.species(data["ncbi_tax_id"])
+    ncbi_taxid = taxid(data)
+    if ncbi_taxid in taxonomy:
+        return taxonomy[ncbi_taxid].name
+    return phy.species(ncbi_taxid)
 
 
 def description(taxonomy, data):
     """
     Generate a description for the entries specified by the data.
     """
-    details = data["metadata"].get("description", product(data))
     return "{name} {details}".format(
         name=species(taxonomy, data),
-        details=details,
+        details=product(data),
     )
 
 
@@ -144,10 +139,7 @@ def product(data):
     """
     Generate the product for the entries specified by the data.
     """
-    return "tRNA-{aa} ({anticodon})".format(
-        aa=data["metadata"]["isotype"],
-        anticodon=data["metadata"]["anticodon"],
-    )
+    return data['name']
 
 
 def primary_id(data, location):
@@ -155,10 +147,10 @@ def primary_id(data, location):
     Generate a primary key for the given data and location.
     """
 
-    start = min(int(e["start"]) for e in location["exons"])
-    stop = max(int(e["stop"]) for e in location["exons"])
-    return "{gene}:{accession}:{start}-{stop}".format(
-        gene=data["gene"],
+    start = min(int(e["startPosition"]) for e in location["exons"])
+    stop = max(int(e["endPosition"]) for e in location["exons"])
+    return "GTRNADB:{gene}:{accession}:{start}-{stop}".format(
+        gene=data["gene"]["symbol"],
         accession=location["exons"][0]["INSDC_accession"],
         start=start,
         stop=stop,
@@ -192,7 +184,7 @@ def accession(data, location):
     """
     return "{ac}:{gene}".format(
         ac=parent_accession(location),
-        gene=data["gene"],
+        gene=data["gene"]["symbol"],
     )
 
 
@@ -204,34 +196,65 @@ def seq_version(_):
     return "1"
 
 
-def references():
+def references(metadata):
     """
     Returns the default accessions for GtRNAdb data.
     """
 
-    return [
-        Reference(
-            authors="Chan P.P., Lowe T.M.",
-            location="Nucl. Acids Res. 37(Database issue)",
-            title=(
-                "GtRNAdb: A database of transfer RNA genes detected in "
-                "genomic sequence"
-            ),
-            pmid=18984615,
-            doi=u"10.1093/nar/gkn787.",
-        )
-    ]
+    return [pub.reference(pmid) for pmid in metadata["publications"]]
 
 
 def sequence(data):
-    if "mature_sequence" in data["metadata"]:
-        return data["metadata"]["mature_sequence"].upper()
+    if "matureSequence" in data:
+        return data["matureSequence"].upper()
     return data["sequence"].upper()
 
 
-def features(data):
-    return []
+def features(raw):
+    anti = raw['sequenceFeatures'].get('anticodon', None)
+    if not anti:
+        return []
+
+    return [data.SequenceFeature(
+        name='anticodon',
+        feature_type='anticodon',
+        location=anti['indexes'],
+        sequence=anti['sequence'],
+        metadata={
+            'isotype': raw['sequenceFeatures']['isotype'],
+            'sequence': anti['sequence'],
+
+            }
+        )]
 
 
-def regions(data):
-    pass
+def regions(location):
+    if not location:
+        return []
+    strand = data.Strand.build(location['exons'][0]['strand'])
+    exons = []
+    for exon in location['exons']:
+        exons.append(data.Exon(
+            start=exon['startPosition'],
+            stop=exon['endPosition'],
+        ))
+    exons = tuple(exons)
+    return [data.SequenceRegion(
+        assembly_id=location["assembly"],
+        chromosome=chromosome(location),
+        strand=strand,
+        exons=exons,
+        coordinate_system=data.CoordinateSystem.one_based()
+    )]
+
+
+def gene_synonyms(raw: ty.Dict[str, ty.Any]) -> ty.List[str]:
+    return raw["gene"]["synonyms"]
+
+
+def gene(raw: ty.Dict[str, ty.Any]) -> str:
+    return raw["gene"]["symbol"]
+
+
+def optional_id(raw) -> str:
+    return raw["gene"]["symbol"]

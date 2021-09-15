@@ -342,7 +342,7 @@ class Entry:
 
     def write_sequence_features(self):
         for feature in self.features:
-            yield feature.writeable()
+            yield feature.writeable(self.accession, self.ncbi_tax_id)
 
         for related in self.related_sequences:
             features = related.write_features(self.accession, self.ncbi_tax_id)

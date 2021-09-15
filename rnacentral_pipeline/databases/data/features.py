@@ -13,9 +13,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import json
 import typing as ty
 
 import attr
+from attr.validators import instance_of as is_a
 
 
 @attr.s()
@@ -24,6 +26,7 @@ class SequenceFeature:
     feature_type: str = attr.ib()
     location: ty.List[int] = attr.ib()
     sequence: str = attr.ib()
+    metadata = attr.ib(validator=is_a(dict), factory=dict)
 
     def writeable(self, accession, taxid):
         return [
@@ -32,5 +35,5 @@ class SequenceFeature:
             self.location[0],
             self.location[-1],
             self.feature_type,
-            "{}",
+            json.dumps(self.metadata),
         ]
