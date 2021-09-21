@@ -27,6 +27,7 @@ from rnacentral_pipeline.rnacentral.r2dt.models import crw
 from rnacentral_pipeline.rnacentral.r2dt.models import gtrnadb
 from rnacentral_pipeline.rnacentral.r2dt.models import ribovision
 from rnacentral_pipeline.rnacentral.r2dt.models import rnase_p
+from rnacentral_pipeline.rnacentral.r2dt.models import rfam
 
 
 def parse(model_mapping: ty.TextIO, directory: str, allow_missing=False):
@@ -120,6 +121,10 @@ def write_crw(handle, output):
 
 def write_rnase_p(handle, output):
     return write_model(rnase_p.parse, handle, output)
+
+
+def write_rfam(handle, output):
+    return write_model(rfam.parse, handle, output)
 
 
 def write_should_show(model: Path, handle: ty.IO, db_url: str, output: ty.IO):

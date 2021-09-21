@@ -7,7 +7,8 @@ HAVING FIELDS (
     so_term,
     cell_location,
     model_source,
-    model_length
+    model_length,
+    model_basepair_count
 ) INTO {{PGDATABASE}}?load_secondary_layout_models
 TARGET COLUMNS (
     model_name,
@@ -16,7 +17,8 @@ TARGET COLUMNS (
     so_term,
     cell_location,
     model_source,
-    model_length
+    model_length,
+    model_basepair_count
 )
 
 WITH
@@ -35,7 +37,8 @@ create table load_secondary_layout_models (
     so_term text NOT NULL,
     cell_location text,
     model_source text not null,
-    model_length int
+    model_length int,
+    model_basepair_count int
 );
 $$
 
@@ -48,7 +51,8 @@ INSERT INTO rnc_secondary_structure_layout_models (
     so_term_id,
     cellular_location,
     model_source,
-    model_length
+    model_length,
+    model_basepair_count
 ) (
 SELECT
     model_name,
@@ -57,7 +61,8 @@ SELECT
     so_term,
     cell_location,
     model_source,
-    model_length
+    model_length,
+    model_basepair_count
 FROM load_secondary_layout_models load
 ) ON CONFLICT (model_name) DO NOTHING
 ;

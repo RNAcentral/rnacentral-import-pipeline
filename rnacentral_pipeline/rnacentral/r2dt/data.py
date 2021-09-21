@@ -92,36 +92,20 @@ class Source(enum.Enum):
 @attr.s()
 class ModelInfo(object):
     model_name: str = attr.ib(validator=is_a(str))
-    is_intronic: bool = attr.ib(validator=is_a(bool))
-    so_term: str = attr.ib(validator=is_a(str))
+    so_rna_type: str = attr.ib(validator=is_a(str))
     taxid: int = attr.ib(validator=is_a(int))
-    accessions: ty.List[str] = attr.ib(validator=is_a(list))
     source: Source = attr.ib(validator=is_a(Source))
     length: ty.Optional[int] = attr.ib(validator=optional(is_a(int)))
-    basepairs = attr.ib(validator=optional(is_a(int)))
-    cell_location: ty.Optional[str] = attr.ib(validator=optional(is_a(str)))
-
-    @property
-    def rna_type(self):
-        if self.so_term in {"SO:0000650", "SO:0000651", "SO:0000652", "SO:0001001"}:
-            return "rRNA"
-        if self.so_term in {"SO:0000587", "SO:0000603"}:
-            return "autocatalytically_spliced_intron"
-        if self.so_term in TRNAS:
-            return "tRNA"
-        if self.so_term == "SO:0000386":
-            return "RNase_P_RNA"
-        raise ValueError("No RNA type for: %s" % self)
+    basepairs: ty.Optional[int] = attr.ib(validator=optional(is_a(int)))
 
     def writeable(self):
         return [
             self.model_name,
             self.taxid,
-            self.rna_type,
-            self.so_term,
-            self.cell_location,
+            self.so_rna_type,
             self.source.name,
             self.length,
+            self.basepairs,
         ]
 
     def fraction_paired(self) -> ty.Optional[float]:
