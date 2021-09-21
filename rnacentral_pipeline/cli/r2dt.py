@@ -179,6 +179,17 @@ def rnase_p_model_info(filename, output):
     r2dt.write_rnase_p(filename, output)
 
 
+@model_info.command('rfam')
+@click.argument("filename", type=click.File("r"))
+@click.argument("output", default="-", type=click.File("w"))
+def rnase_p_model_info(filename, output):
+    """
+    Parse the metadata.tsv file from R2DT for Ribovision models to
+    produce something we can put in our database.
+    """
+    r2dt.write_rfam(filename, output)
+
+
 @cli.command("create-attempted")
 @click.argument("filename", type=click.File("r"))
 @click.argument("output", default="-", type=click.File("w"))

@@ -1,14 +1,5 @@
 nextflow.enable.dsl=2
 
-process import_model_info {
-  output:
-  path('info.csv')
-
-  """
-  find cms/rfam -type f -name '*.cm' | xargs -I {} cmstat {}  | grep -v ^\\# | awk '{ printf("%s,%d,%d\n", \$3, \$6, \$8); }' info.csv
-  """
-}
-
 process fetch_model_mapping {
   when { params.r2dt.run }
 
