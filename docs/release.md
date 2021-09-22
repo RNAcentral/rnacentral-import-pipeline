@@ -1,5 +1,8 @@
 # How to run an RNAcentral release
 
+This outlines all the steps needed to run a release. This doesn't cover any of
+the debugging that may be needed if a database changes how they provide data.
+
 ## Setup environment
 
 There are some required directories and environment variables that have to be
@@ -16,16 +19,26 @@ cd release-number
 git checkout dev
 ```
 
+### Compile the code
+
+The pipeline uses some rust code which needs to be compiled ahead of time. Do
+this with:
+
+```sh
+$ make rust
+```
+
+This puts the programs into `bin/` which will be part of `$PATH` inside
+nextflow.
+
 ### Create required directories
 
-Create some required directories:
+We use a temp directory inside of `work` to try and avoid a possibly slow
+filesystem on nodes. 
 
 ```
 mkdir -p work/tmp
 ```
-
-We use a temp directory inside of `work` to try and avoid a possibly slow
-filesystem on nodes. 
 
 ### Set required environment variables
 
@@ -39,6 +52,17 @@ This variable is needed to ensure nextflow can create enough threads for the
 large number of jobs the pipeline runs.
 
 ### Download required R2DT files
+
+Fetch the latest R2DT files from the ftp site and place them where they are
+expected. Note, you may need to update the version `1.2` below to the latest
+one.
+
+```sh
+$ mkdir -p singularity/bind/r2dt/data/cms
+$ cd singularity/bind/r2dt/data/cms
+$ wget 'http://ftp.ebi.ac.uk/pub/databases/RNAcentral/r2dt/1.2/cms.tar.gz'
+$ tar xvf cms.tar.gz
+```
 
 ### Optionally install nextflow
 
