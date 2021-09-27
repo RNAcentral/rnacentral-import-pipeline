@@ -4,7 +4,7 @@ COPY (
     'id', todo.id,
     'urs_taxid', mem.urs_taxid,
     'locus_id', mem.locus_id,
-    'name', loc.name,
+    'name', loc.public_locus_name,
     'assembly_id', loc.assembly_id,
     'member_count', loc.member_count,
     'membership_status', mem.membership_status
