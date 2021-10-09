@@ -60,6 +60,7 @@ class Database(enum.Enum):
     pdbe = DatabaseValue(26, "PDBe")
     pirbase = DatabaseValue(27, "PirBase")
     pombase = DatabaseValue(28, "PomBase")
+    psicquic = DatabaseValue(48, "PSICQUIC")
     rdp = DatabaseValue(29, "RDP")
     refseq = DatabaseValue(30, "RefSeq")
     rfam = DatabaseValue(31, "Rfam")
