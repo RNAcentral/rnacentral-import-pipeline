@@ -17,7 +17,7 @@ import typing as ty
 
 from rnacentral_pipeline.databases.helpers import phylogeny as phy
 from rnacentral_pipeline.databases.helpers import publications as pub
-from rnacentral_pipeline.databases.data import Entry, Interaction, IdReference
+from rnacentral_pipeline.databases.data import Entry, Interaction, IdReference, GoTermAnnotation
 
 
 def taxid(urs_taxid: str):
@@ -44,6 +44,21 @@ def references(interactions: ty.List[Interaction]) -> ty.List[IdReference]:
     for interaction in interactions:
         ids.extend(interaction.publications)
     return ids
+
+
+def go_annotations(interactions: ty.List[Interaction]) -> ty.List[GoTermAnnotation]:
+    annotations = []
+    for interaction in interactions:
+        annotations.append(GoTermAnnotation(
+            rna_id=interaction.urs_taxid(),
+            qualifier='',
+            term_id='',
+            evidence_code='',
+            extensions={},
+            assigned_by=interaction.database(),
+            publications=[],
+        ))
+    return annotations
 
 
 def as_entry(urs_taxid: str, interactions: ty.List[Interaction], info: ty.Dict[str, str]):

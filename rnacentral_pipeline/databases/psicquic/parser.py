@@ -18,11 +18,21 @@ from pathlib import Path
 import operator as op
 import itertools as it
 
+import attr
+
 from rnacentral_pipeline.databases.psi_mi import tab
-from rnacentral_pipeline.databases.data import Entry, Interaction
+from rnacentral_pipeline.databases.data import Entry, Interaction, InteractionIdentifier
 
 from . import lookup
 from . import helpers
+
+
+def set_interaction_id(interaction: Interaction, index: int) -> Interaction:
+    ids = list(interaction.ids)
+    value = f"{interaction.urs_taxid}-{index}"
+    ids.append(InteractionIdentifier(key='psicquic', value=value, name=''))
+    ids = tuple(ids)
+    return attr.evolve(interaction, ids=ids)
 
 
 def parse_interactions(handle: ty.IO) -> ty.Iterable[Interaction]:
@@ -43,5 +53,7 @@ def parse(path: Path, db_url: str) -> ty.Iterable[Entry]:
                 raise ValueError("Found no sequence info for %s" % urs_taxid)
 
             info = mapping[urs_taxid]
-            entry = helpers.as_entry(urs_taxid, list(current), info)
+            current = sorted(current)
+            current = [set_interaction_id(inter, i) for i, inter in enumerate(current)]
+            entry = helpers.as_entry(urs_taxid, current, info)
             yield entry

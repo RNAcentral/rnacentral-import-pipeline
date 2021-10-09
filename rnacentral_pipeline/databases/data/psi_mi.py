@@ -183,6 +183,9 @@ class Interaction:
         intact_id = self.intact_id()
         if intact_id:
             intact_id = intact_id.value
+        else:
+            intact_id=self.ids[0].value
+
         return [
             intact_id,
             urs_taxid,
