@@ -165,7 +165,7 @@ def lengths(conn, db_id: int):
 def count_sequences(conn, db_id: int) -> int:
     xref = Table(f"xref_p{db_id}_not_deleted")
     with conn.cursor() as cursor:
-        query = Query.from_(xref).select(fn.Count("upi").distinct())
+        query = Query.from_(xref).select(fn.Count(xref.upi).distinct())
         cursor.execute(str(query))
         return cursor.fetchone()[0]
 
@@ -173,7 +173,7 @@ def count_sequences(conn, db_id: int) -> int:
 def count_organisms(conn, db_id: int) -> int:
     xref = Table(f"xref_p{db_id}_not_deleted")
     with conn.cursor() as cursor:
-        query = Query.from_(xref).select(fn.Count("taxid").distinct())
+        query = Query.from_(xref).select(fn.Count(xref.taxid).distinct())
         cursor.execute(str(query))
         return cursor.fetchone()[0]
 
