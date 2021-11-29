@@ -698,7 +698,7 @@ def values(v):
 
 
 def entry_type(_urs):
-    return ["Sequence"]
+    return "Sequence"
 
 builder = entry(
     [
