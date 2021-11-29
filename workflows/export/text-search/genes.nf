@@ -15,6 +15,9 @@ process merge_and_split {
 
   """
   search-export genes select-and-split $locus $sequence by-assembly
+  if [[ ! -e by-assembly/*.json ]]; then
+    touch by-assembly/empty.json
+  fi
   """
 }
 
@@ -36,7 +39,7 @@ process as_xml {
   cat raw*.json > members.json
   search-export genes merge-assembly members.json merged.json
   search-export genes as-xml merged.json $xml count
-  xmllint $xml --schema ${params.search_export.schema} --stream
+  xmllint $xml --schema ${params.export.search.schema} --stream
   gzip $xml
   touch ${xml}.gz
   """
@@ -58,6 +61,7 @@ workflow genes {
     | combine(locus_info) \
     | merge_and_split \
     | flatten \
+    | filter { f -> !f.isEmpty() } \
     | map { fn -> [fn.name, fn] } \
     | groupTuple \
     | as_xml
