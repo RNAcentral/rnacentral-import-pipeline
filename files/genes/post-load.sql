@@ -1,3 +1,5 @@
+\timing
+
 BEGIN TRANSACTION;
 
 -- DELETE all assignments from the assemblies to be loaded. This is needed
