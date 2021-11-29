@@ -29,7 +29,7 @@ include { zfin } from './databases/zfin'
 include { zwd } from './databases/zwd'
 
 process build_context {
-  memory '4GB'
+  memory '6GB'
   when { params.needs_taxonomy }
 
   output:
