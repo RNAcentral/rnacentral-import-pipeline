@@ -37,13 +37,10 @@ class CpatOrf:
         cls, raw: ty.Dict[str, str], cutoff: float, coding_prob: float
     ) -> CpatOrf:
         return cls(
-            start=int(raw['ORF_start']) - 1,
-            stop=int(raw['ORF_end']),
-            strand=Strand.build(raw['ORF_strand']),
-            metadata={
-                'cutoff': cutoff,
-                'coding_probability': coding_prob
-            }
+            start=int(raw["ORF_start"]) - 1,
+            stop=int(raw["ORF_end"]),
+            strand=Strand.build(raw["ORF_strand"]),
+            metadata={"cutoff": cutoff, "coding_probability": coding_prob},
         )
 
     def writeable(self, urs_taxid: str) -> ty.List[str]:

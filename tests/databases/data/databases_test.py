@@ -20,3 +20,8 @@ from rnacentral_pipeline.databases.data import Database
 def test_all_indexes_are_unique():
     indexes = set(db.index() for db in Database)
     assert len(indexes) == len(list(Database))
+
+
+def test_all_names_are_unique():
+    indexes = set(db.pretty() for db in Database)
+    assert len(indexes) == len(list(Database))

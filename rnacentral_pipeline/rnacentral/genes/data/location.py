@@ -102,7 +102,9 @@ class LocationInfo:
             region_name=raw["region_name"],
             rna_type=rna_type,
             qa=QaInfo.build(raw["qa"][0]),
-            providing_databases=tuple(Database.build(d) for d in raw["providing_databases"]),
+            providing_databases=tuple(
+                Database.build(d) for d in raw["providing_databases"]
+            ),
             databases=tuple(Database.build(d) for d in raw["databases"]),
             counts=context.count_for(raw["urs_taxid"]),
         )

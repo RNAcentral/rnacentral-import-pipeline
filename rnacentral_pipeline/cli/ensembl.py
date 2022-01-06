@@ -35,7 +35,7 @@ from rnacentral_pipeline.writers import entry_writer
 @click.group("ensembl")
 def cli():
     """
-    This is a set of commands for parsing ensembl data. 
+    This is a set of commands for parsing ensembl data.
     """
 
 

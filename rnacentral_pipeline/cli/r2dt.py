@@ -179,7 +179,7 @@ def rnase_p_model_info(filename, output):
     r2dt.write_rnase_p(filename, output)
 
 
-@model_info.command('rfam')
+@model_info.command("rfam")
 @click.argument("filename", type=click.File("r"))
 @click.argument("output", default="-", type=click.File("w"))
 def rnase_p_model_info(filename, output):

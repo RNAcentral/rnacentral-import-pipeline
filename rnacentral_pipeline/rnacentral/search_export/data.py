@@ -700,6 +700,7 @@ def values(v):
 def entry_type(_urs):
     return "Sequence"
 
+
 builder = entry(
     [
         tag("name", as_name, keys=("urs", "taxid")),

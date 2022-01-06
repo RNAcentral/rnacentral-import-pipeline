@@ -35,7 +35,7 @@ NORMALIZED_IDS = {
 }
 
 NORM_TO = {
-    '': '',
+    "": "",
 }
 
 

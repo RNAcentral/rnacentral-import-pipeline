@@ -29,7 +29,9 @@ LOGGER = logging.getLogger(__name__)
 
 
 def gtrnadb_entries(
-        taxonomy: SqliteDict, data: ty.Dict[str, ty.Any], metadata: ty.Dict[str, ty.Any],
+    taxonomy: SqliteDict,
+    data: ty.Dict[str, ty.Any],
+    metadata: ty.Dict[str, ty.Any],
 ) -> ty.Iterable[Entry]:
     """
     Take an entry from GtRNAdb and produce the RNAcentrals that it

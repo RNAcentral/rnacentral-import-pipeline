@@ -133,7 +133,7 @@ def rna_type(feature):
     if feature.type == "ncRNA":
         rna_type = embl.qualifier_value(feature, "ncRNA_class", r"^(.+)$")
         if rna_type is None:
-            return 'ncRNA'
+            return "ncRNA"
         return rna_type
     if feature.type == "misc_RNA":
         prod = product(feature) or ""

@@ -16,14 +16,21 @@ limitations under the License.
 import logging
 import typing as ty
 
-from rnacentral_pipeline.rnacentral.genes.data import State, LocationInfo, Context, Cluster
+from rnacentral_pipeline.rnacentral.genes.data import (
+    State,
+    LocationInfo,
+    Context,
+    Cluster,
+)
 from .common_filter import filter, filter_overlaps
 
 LOGGER = logging.getLogger(__name__)
 
 
 class RuleMethod:
-    def has_compatible_rna_types(self, location: LocationInfo, cluster: Cluster) -> bool:
+    def has_compatible_rna_types(
+        self, location: LocationInfo, cluster: Cluster
+    ) -> bool:
         rna_types = cluster.rna_types()
         if not rna_types:
             raise ValueError("This should be impossible")
@@ -33,7 +40,9 @@ class RuleMethod:
                 return False
         return True
 
-    def select_mergable(self, location: LocationInfo, clusters: ty.List[Cluster]) -> ty.Optional[ty.List[Cluster]]:
+    def select_mergable(
+        self, location: LocationInfo, clusters: ty.List[Cluster]
+    ) -> ty.Optional[ty.List[Cluster]]:
         to_merge = []
         target = location.as_interval()
         for cluster in clusters:
@@ -67,9 +76,7 @@ class RuleMethod:
             return
         elif len(to_merge) == 1:
             cluster = to_merge[0]
-            LOGGER.debug(
-                "Adding location %i to cluster %i", location.id, cluster.id
-            )
+            LOGGER.debug("Adding location %i to cluster %i", location.id, cluster.id)
             state.add_to_cluster(location, cluster.id)
         else:
             LOGGER.debug("Merging into %s", [c.id for c in to_merge])
