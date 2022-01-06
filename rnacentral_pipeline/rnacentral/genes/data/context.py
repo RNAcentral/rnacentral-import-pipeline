@@ -40,12 +40,12 @@ def load_counts(handle: ty.IO) -> ty.Dict[str, Count]:
 
 def load_pseudogenes(path: Path) -> ty.DefaultDict[str, IntervalTree]:
     trees = coll.defaultdict(IntervalTree)
-    with open(path, 'r') as handle:
+    with open(path, "r") as handle:
         for entry in psql.json_handler(handle):
-            tree = trees[entry['chromosome']]
-            for exon in entry['exons']:
-                tree.addi(exon['exon_start'], exon['exon_stop'] + 1, entry['rna_id'])
-            trees[entry['chromosome']] = tree
+            tree = trees[entry["chromosome"]]
+            for exon in entry["exons"]:
+                tree.addi(exon["exon_start"], exon["exon_stop"] + 1, entry["rna_id"])
+            trees[entry["chromosome"]] = tree
 
     return trees
 
@@ -58,8 +58,12 @@ def load_repetitive(handle: ty.IO) -> ty.DefaultDict[str, IntervalTree]:
 @attr.s()
 class Context:
     ontology = attr.ib(validator=is_a(so_tree.SoOntology))
-    pseudogenes: ty.DefaultDict[str, IntervalTree] = attr.ib(validator=is_a(ty.DefaultDict))
-    repetitive: ty.DefaultDict[str, IntervalTree] = attr.ib(validator=is_a(ty.DefaultDict))
+    pseudogenes: ty.DefaultDict[str, IntervalTree] = attr.ib(
+        validator=is_a(ty.DefaultDict)
+    )
+    repetitive: ty.DefaultDict[str, IntervalTree] = attr.ib(
+        validator=is_a(ty.DefaultDict)
+    )
     counts: ty.Dict[str, Count] = attr.ib(validator=is_a(dict))
     max_rfam_shift = attr.ib(validator=is_a(int), default=10)
 
