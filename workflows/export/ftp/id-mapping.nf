@@ -1,8 +1,6 @@
 process build_id_mapping {
   publishDir "${params.export.ftp.publish}/id_mapping/", mode: 'copy'
 
-  when: params.export.ftp.id_mapping.run
-
   input:
   path(query)
   path('template.txt')
@@ -26,8 +24,6 @@ process build_id_mapping {
 process database_mapping {
   publishDir "${params.export.ftp.publish}/id_mapping/database_mappings/", mode: 'copy'
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
-
-  when: params.export.ftp.id_mapping.by_database.run
 
   input:
   path('id_mapping.tsv.gz')
