@@ -83,7 +83,7 @@ def builder(data):
 
 def generate_file(raw, output, schema_file=None):
     results = (builder(b) for b in psql.json_handler(raw))
-    results = [r for r in results if re.match(SEQUENCE_PATTERN, r["sequences"])]
+    results = [r for r in results if re.match(SEQUENCE_PATTERN, r["sequence"])]
 
     if schema_file:
         with open(schema_file, "r") as raw:
