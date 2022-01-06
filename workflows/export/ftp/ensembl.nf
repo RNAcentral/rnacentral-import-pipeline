@@ -1,17 +1,17 @@
 process find_chunks {
   executor 'local'
-  when: params.ftp_export.ensembl.run
+  when: params.export.ftp.ensembl.run
 
   output:
   path('chunks')
 
   """
-  rnac upi-ranges ${params.ftp_export.ensembl.chunk_size} > chunks
+  rnac upi-ranges ${params.export.ftp.ensembl.chunk_size} > chunks
   """
 }
 
 process query_chunk {
-  maxForks params.ftp_export.ensembl.maxForks
+  maxForks params.export.ftp.ensembl.maxForks
 
   input:
   tuple val(table), val(min), val(max), path(query)
@@ -25,7 +25,7 @@ process query_chunk {
 }
 
 process process_chunk {
-  publishDir "${params.ftp_export.publish}/json/", mode: 'copy'
+  publishDir "${params.export.ftp.publish}/json/", mode: 'copy'
 
   input:
   tuple val(min), val(max), file(raw), path(schema)
