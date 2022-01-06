@@ -37,6 +37,7 @@ process extract_data {
 process build {
   tag { "$assembly_id" }
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
+  errorStrategy 'ignore'
 
   input:
   tuple val(assembly_id), path(data_file), path(counts), path(genes), path(repetative)
