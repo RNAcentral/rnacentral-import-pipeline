@@ -34,8 +34,8 @@ process atomic_publish {
   val('done')
 
   script:
-  def publish = params.search_export.publish
-  if (params.search_export.publish.host)
+  def publish = params.export.search.publish
+  if (params.export.search.publish.host)
     """
     ssh "$publish.host" 'mkdir -p $publish.path' || true
     ssh "$publish.host" 'rm -r $publish.path/*' || true
