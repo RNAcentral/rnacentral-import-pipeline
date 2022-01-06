@@ -1,6 +1,5 @@
 process find_chunks {
   executor 'local'
-  when: params.export.ftp.ensembl.run
 
   output:
   path('chunks')
