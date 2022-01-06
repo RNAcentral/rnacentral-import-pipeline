@@ -235,10 +235,14 @@ def regions(location):
     strand = data.Strand.build(location["exons"][0]["strand"])
     exons = []
     for exon in location["exons"]:
+        start = exon["startPosition"]
+        stop = exon["endPosition"]
+        if start > stop:
+            start, stop = stop, start
         exons.append(
             data.Exon(
-                start=exon["startPosition"],
-                stop=exon["endPosition"],
+                start=start,
+                stop=stop,
             )
         )
     exons = tuple(exons)
