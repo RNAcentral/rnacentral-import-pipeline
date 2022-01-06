@@ -47,6 +47,8 @@ class EntryWriter:
     features = attr.ib()
     interactions = attr.ib()
     terms = attr.ib()
+    go_annotations = attr.ib()
+    go_publication_mappings = attr.ib()
 
     def write(self, entries: ty.Iterable[data.Entry]):
         for entry in entries:
@@ -64,6 +66,13 @@ class EntryWriter:
             self.features.writerows(entry.write_sequence_features())
             self.interactions.writerows(entry.write_interactions())
             self.terms.writerows(entry.write_ontology_terms())
+
+            for annotations in entry.go_annotations:
+                self.go_annotations.writerows(annotations.writeable())
+                self.go_publication_mappings.writerows(
+                    annotations.writeable_publication_mappings()
+                )
+                self.terms.writerows(annotations.writeable_ontology_terms())
 
 
 @attr.s()
