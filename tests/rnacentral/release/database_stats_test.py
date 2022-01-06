@@ -40,6 +40,28 @@ def test_gets_correct_length_counts(connection, db_id):
 
 
 @pytest.mark.parametrize(
+    "db_id,count",
+    [
+        (28, 11124),
+    ],
+)
+def test_counts_sequences_correctly(connection, db_id, count):
+    found = stats.count_sequences(connection, db_id)
+    assert found == count
+
+
+@pytest.mark.parametrize(
+    "db_id,count",
+    [
+        (28, 1),
+    ],
+)
+def test_counts_organisms_correctly(connection, db_id, count):
+    found = stats.count_organisms(connection, db_id)
+    assert found == count
+
+
+@pytest.mark.parametrize(
     "db_id",
     [
         # 4,
