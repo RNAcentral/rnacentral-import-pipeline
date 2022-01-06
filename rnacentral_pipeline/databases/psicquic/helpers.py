@@ -17,7 +17,12 @@ import typing as ty
 
 from rnacentral_pipeline.databases.helpers import phylogeny as phy
 from rnacentral_pipeline.databases.helpers import publications as pub
-from rnacentral_pipeline.databases.data import Entry, Interaction, IdReference, GoTermAnnotation
+from rnacentral_pipeline.databases.data import (
+    Entry,
+    Interaction,
+    IdReference,
+    GoTermAnnotation,
+)
 
 
 def taxid(urs_taxid: str):
@@ -38,9 +43,7 @@ def common_name(urs_taxid: str):
 
 
 def references(interactions: ty.List[Interaction]) -> ty.List[IdReference]:
-    ids = [
-        pub.reference('PMID:23671334')
-    ]
+    ids = [pub.reference("PMID:23671334")]
     for interaction in interactions:
         ids.extend(interaction.publications)
     return ids
@@ -49,19 +52,23 @@ def references(interactions: ty.List[Interaction]) -> ty.List[IdReference]:
 def go_annotations(interactions: ty.List[Interaction]) -> ty.List[GoTermAnnotation]:
     annotations = []
     for interaction in interactions:
-        annotations.append(GoTermAnnotation(
-            rna_id=interaction.urs_taxid(),
-            qualifier='',
-            term_id='',
-            evidence_code='',
-            extensions={},
-            assigned_by=interaction.database(),
-            publications=[],
-        ))
+        annotations.append(
+            GoTermAnnotation(
+                rna_id=interaction.urs_taxid(),
+                qualifier="",
+                term_id="",
+                evidence_code="",
+                extensions={},
+                assigned_by=interaction.database(),
+                publications=[],
+            )
+        )
     return annotations
 
 
-def as_entry(urs_taxid: str, interactions: ty.List[Interaction], info: ty.Dict[str, str]):
+def as_entry(
+    urs_taxid: str, interactions: ty.List[Interaction], info: ty.Dict[str, str]
+):
     database = "PSICQUIC"
 
     return Entry(

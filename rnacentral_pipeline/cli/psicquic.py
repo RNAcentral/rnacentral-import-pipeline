@@ -30,7 +30,6 @@ def cli():
     pass
 
 
-
 @cli.command("parse")
 @click.option("--db-url", envvar="PGDATABASE")
 @click.argument("data", type=click.Path())

@@ -32,6 +32,7 @@ where
     pre.id in %s
 """
 
+
 def mapping(db_url: str, interactions: ty.List[Interaction]):
     getter = op.attrgetter("urs_taxid")
     ids = {getter(r) for r in interactions}
