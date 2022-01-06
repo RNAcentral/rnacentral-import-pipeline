@@ -1,6 +1,5 @@
 process active {
   publishDir "${params.export.ftp.publish}/sequences/", mode: 'copy'
-  when: params.export.ftp.sequences.active.run
 
   input:
   path(query)
@@ -24,7 +23,6 @@ process active {
 
 process inactive {
   publishDir "${params.export.ftp.publish}/sequences/", mode: 'copy'
-  when: params.export.ftp.sequences.inactive.run
 
   input:
   path(query)
@@ -41,8 +39,6 @@ process inactive {
 }
 
 process species_specific {
-  when: params.export.ftp.sequences.species.run
-
   input:
   path(query)
 
@@ -53,7 +49,8 @@ process species_specific {
   set -euo pipefail
 
   export PYTHONIOENCODING=utf8
-  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" | json2fasta.py - rnacentral_species_specific_ids.fasta 
+  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > raw.json
+  json2fasta.py - rnacentral_species_specific_ids.fasta 
   """
 }
 
@@ -81,7 +78,7 @@ proecss compress_species_fasta {
   path('rnacentral_species_specific_ids.fasta.gz')
 
   """
-  gzip -k rnacentral_species_specific_ids.fasta
+  gzip < rnacentral_species_specific_ids.fasta > rnacentral_species_specific_ids.fasta.gz
   """
 }
 
@@ -102,7 +99,6 @@ process database_specific {
   tag { db }
   maxForks params.export.ftp.sequences.by_database.max_forks
   publishDir "${params.export.ftp.publish}/sequences/by-database", mode: 'copy'
-  when: params.export.ftp.sequences.by_database.run
 
   input:
   tuple val(db), path(query)
@@ -126,7 +122,10 @@ workflow fasta_export {
   Channel.fromPath('files/ftp-export/sequences/inactive.sql') | inactive
   Channel.fromPath('files/ftp-export/sequences/species-specific.sql') \
   | species_specific \
-  | (compress_species_fasta & create_ssi)
+  | set { species_fasta }
+
+  compress_species_fasta(species_fasta)
+  create_ssi(species_fasta)
 
   Channel.fromPath('files/ftp-export/sequences/databases.sql') \
   | find_dbs \
