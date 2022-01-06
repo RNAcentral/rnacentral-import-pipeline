@@ -8,7 +8,7 @@ process zwd {
   path('*.csv')
 
   """
-  curl $params.databases.zwd.remote > zwd.json
+  cp $params.databases.zwd.remote zwd.json
   rnac zwd parse $context zwd.json .
   """
 }
