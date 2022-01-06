@@ -81,7 +81,7 @@ def so_term_tree(filename, output, ontology=None):
     metadata.write_so_term_tree(filename, ontology, output)
 
 
-@cli.command('compare')
+@cli.command("compare")
 @click.argument("output", type=click.File("w"))
 def compare_release(output):
     compare.write(output)

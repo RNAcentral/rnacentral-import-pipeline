@@ -42,7 +42,7 @@ def always_bad_location(location: data.LocationInfo) -> bool:
             LOGGER.debug("State: %s", state)
             return state != (True, False, True, False)
         return True
-    if location.rna_type.is_a('piRNA'):
+    if location.rna_type.is_a("piRNA"):
         return True
     return False
 
@@ -108,11 +108,15 @@ def overlaps_pseudogene(context: data.Context, location: data.LocationInfo) -> b
 def is_pirna_singleton(state: data.State, cluster: int) -> bool:
     members = state.members_of(cluster)
     target = members[0]
-    return len(members) == 1 and target.rna_type.is_a('piRNA') and not bool(target.providing_databases)
+    return (
+        len(members) == 1
+        and target.rna_type.is_a("piRNA")
+        and not bool(target.providing_databases)
+    )
 
 
 def build(
-        context: data.Context, method: Methods, locations: ty.Iterable[data.LocationInfo]
+    context: data.Context, method: Methods, locations: ty.Iterable[data.LocationInfo]
 ) -> ty.Iterable[data.FinalizedState]:
     handler = method.handler()
     for (key, locations) in it.groupby(locations, data.ClusteringKey.from_location):
@@ -146,17 +150,18 @@ def build(
                 for location in state.members_of(cluster_id):
                     state.reject_location(location)
 
-
             members = state.members_of(cluster_id)
             if any(l.rna_type.is_a("rRNA") for l in members):
                 classify.rrna(state, cluster_id)
-            elif any(l.rna_type.is_a('miRNA') for l in members):
+            elif any(l.rna_type.is_a("miRNA") for l in members):
                 classify.mirna(state, cluster_id)
             else:
                 LOGGER.info("Do not know how to cluster cluster %s", cluster_id)
         yield state.finalize()
 
 
-def from_json(context: data.Context, method: Methods, handle: ty.IO) -> ty.Iterable[data.FinalizedState]:
+def from_json(
+    context: data.Context, method: Methods, handle: ty.IO
+) -> ty.Iterable[data.FinalizedState]:
     locations = load(context, handle)
     return build(context, method, locations)

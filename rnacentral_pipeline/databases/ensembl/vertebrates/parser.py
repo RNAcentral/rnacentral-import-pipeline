@@ -121,8 +121,7 @@ def ncrnas(raw, context: Context) -> ty.Iterable[data.Entry]:
                 continue
 
             if not helpers.is_ncrna(feature):
-                LOGGER.debug(
-                    "Skipping feature %s because it is not ncRNA", feature)
+                LOGGER.debug("Skipping feature %s because it is not ncRNA", feature)
                 continue
 
             entry = as_entry(

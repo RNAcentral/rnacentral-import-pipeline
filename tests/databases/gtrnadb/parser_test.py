@@ -38,13 +38,15 @@ def test_it_generates_correct_entries(other_euk):
             ncbi_tax_id=6500,
             database="GTRNADB",
             sequence="GGGGCTGTAGCTCAGGTGGTAGAGCGCTCGCTTAGCATGTGAGAGGTACCGGGATCGATACCCGGCAGCTCCA",
-            regions=[data.SequenceRegion(
-                assembly_id='AplCal3.0',
-                chromosome='scaffold00844',
-                strand=data.Strand.forward,
-                exons=[data.Exon(start=40028, stop=40100)],
-                coordinate_system=data.CoordinateSystem.one_based()
-            )],
+            regions=[
+                data.SequenceRegion(
+                    assembly_id="AplCal3.0",
+                    chromosome="scaffold00844",
+                    strand=data.Strand.forward,
+                    exons=[data.Exon(start=40028, stop=40100)],
+                    coordinate_system=data.CoordinateSystem.one_based(),
+                )
+            ],
             rna_type="SO:0000254",
             url="http://gtrnadb.ucsc.edu/genomes/eukaryota/Acali3/genes/tRNA-Ala-AGC-1-1.html",
             seq_version="1",
@@ -68,16 +70,18 @@ def test_it_generates_correct_entries(other_euk):
             parent_accession="KB942240.1",
             description="Aplysia californica tRNA-Ala (AGC)",
             mol_type="genomic DNA",
-            features=[data.SequenceFeature(
-                name='anticodon',
-                feature_type='anticodon',
-                location=[34, 35, 36],
-                sequence="AGC",
-                metadata={
-                    'isotype': 'Ala',
-                    'sequence': "AGC",
-                }
-            )]
+            features=[
+                data.SequenceFeature(
+                    name="anticodon",
+                    feature_type="anticodon",
+                    location=[34, 35, 36],
+                    sequence="AGC",
+                    metadata={
+                        "isotype": "Ala",
+                        "sequence": "AGC",
+                    },
+                )
+            ],
         )
     )
 

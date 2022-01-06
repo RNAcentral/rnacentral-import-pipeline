@@ -139,7 +139,7 @@ def product(data):
     """
     Generate the product for the entries specified by the data.
     """
-    return data['name']
+    return data["name"]
 
 
 def primary_id(data, location):
@@ -211,41 +211,46 @@ def sequence(data):
 
 
 def features(raw):
-    anti = raw['sequenceFeatures'].get('anticodon', None)
+    anti = raw["sequenceFeatures"].get("anticodon", None)
     if not anti:
         return []
 
-    return [data.SequenceFeature(
-        name='anticodon',
-        feature_type='anticodon',
-        location=anti['indexes'],
-        sequence=anti['sequence'],
-        metadata={
-            'isotype': raw['sequenceFeatures']['isotype'],
-            'sequence': anti['sequence'],
-
-            }
-        )]
+    return [
+        data.SequenceFeature(
+            name="anticodon",
+            feature_type="anticodon",
+            location=anti["indexes"],
+            sequence=anti["sequence"],
+            metadata={
+                "isotype": raw["sequenceFeatures"]["isotype"],
+                "sequence": anti["sequence"],
+            },
+        )
+    ]
 
 
 def regions(location):
     if not location:
         return []
-    strand = data.Strand.build(location['exons'][0]['strand'])
+    strand = data.Strand.build(location["exons"][0]["strand"])
     exons = []
-    for exon in location['exons']:
-        exons.append(data.Exon(
-            start=exon['startPosition'],
-            stop=exon['endPosition'],
-        ))
+    for exon in location["exons"]:
+        exons.append(
+            data.Exon(
+                start=exon["startPosition"],
+                stop=exon["endPosition"],
+            )
+        )
     exons = tuple(exons)
-    return [data.SequenceRegion(
-        assembly_id=location["assembly"],
-        chromosome=chromosome(location),
-        strand=strand,
-        exons=exons,
-        coordinate_system=data.CoordinateSystem.one_based()
-    )]
+    return [
+        data.SequenceRegion(
+            assembly_id=location["assembly"],
+            chromosome=chromosome(location),
+            strand=strand,
+            exons=exons,
+            coordinate_system=data.CoordinateSystem.one_based(),
+        )
+    ]
 
 
 def gene_synonyms(raw: ty.Dict[str, ty.Any]) -> ty.List[str]:

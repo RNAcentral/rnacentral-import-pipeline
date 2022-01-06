@@ -24,7 +24,9 @@ DBS = [
 ]
 
 
-def ordered_choice_highlight(state: data.State, cluster: int, selector, choices: ty.List[Database]):
+def ordered_choice_highlight(
+    state: data.State, cluster: int, selector, choices: ty.List[Database]
+):
     grouped = [[] for x in range(len(choices))]
     for location in state.members_of(cluster):
         if not selector(location):
@@ -42,11 +44,11 @@ def ordered_choice_highlight(state: data.State, cluster: int, selector, choices:
 
 
 def is_mature(location: data.LocationInfo) -> bool:
-    return location.rna_type.is_a('SO:0001244')
+    return location.rna_type.is_a("SO:0001244")
 
 
 def is_precursor(location: data.LocationInfo) -> bool:
-    return location.rna_type.is_a('SO:0000276')
+    return location.rna_type.is_a("SO:0000276")
 
 
 def classify_cluster(state: data.State, cluster: int):

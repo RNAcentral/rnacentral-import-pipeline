@@ -30,6 +30,7 @@ where
 	so_rna_type is not null
 """
 
+
 def load_info(db_url: str) -> ty.Dict[str, ty.Tuple[str, int]]:
     return {}
 

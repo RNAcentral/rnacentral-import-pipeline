@@ -31,6 +31,7 @@ from .features import SequenceFeature
 from .references import IdReference, Reference
 from .secondary_structure import SecondaryStructure
 from .regions import Exon, SequenceRegion
+from .go_annotations import GoTermAnnotation
 
 LOGGER = logging.getLogger(__name__)
 
@@ -119,6 +120,7 @@ class Entry:
     secondary_structure = utils.possibly_empty(SecondaryStructure)
     features = utils.possibly_empty(list)
     interactions = utils.possibly_empty(list)
+    go_annotations: ty.List[GoTermAnnotation] = utils.possibly_empty(list)
 
     @property
     def database_name(self):
@@ -243,7 +245,7 @@ class Entry:
             LOGGER.warn("Skipping a mRNA")
             return False
 
-        if 'U' in self.sequence:
+        if "U" in self.sequence:
             raise ValueError("Sequence %s contains a U, this is very bad" % self)
 
         return True

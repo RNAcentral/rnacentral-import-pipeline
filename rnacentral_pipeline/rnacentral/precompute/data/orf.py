@@ -31,7 +31,7 @@ class OrfInfo:
 
     def all_sources(self) -> ty.List[str]:
         sources = set(self.sources)
-        if 'cpat' in sources:
-            sources.remove('cpat')
-            sources.add('CPAT')
+        if "cpat" in sources:
+            sources.remove("cpat")
+            sources.add("CPAT")
         return sorted(sources)

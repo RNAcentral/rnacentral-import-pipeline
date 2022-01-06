@@ -21,7 +21,7 @@ import requests
 
 from rnacentral_pipeline.databases.data import Database
 
-EXPERT_DATABASES = [f"expert_db:\"{db.pretty()}\"" for db in Database]
+EXPERT_DATABASES = [f'expert_db:"{db.pretty()}"' for db in Database]
 
 
 def search(index, query, facet):
@@ -58,16 +58,18 @@ def compare(output, results1, results2, facet):
             flag = "Change > 10%"
         else:
             flag = ""
-        output.write("\t".join(
-            [
-                facet,
-                str(before),
-                str(after),
-                str(change),
-                str(percent_change) + "%",
-                flag,
-            ]
-        ))
+        output.write(
+            "\t".join(
+                [
+                    facet,
+                    str(before),
+                    str(after),
+                    str(change),
+                    str(percent_change) + "%",
+                    flag,
+                ]
+            )
+        )
         output.write("\n")
 
 

@@ -98,7 +98,7 @@ def as_unique_id(value):
 
 
 def as_bool(value):
-    if value == '-' or value.lower() == "true":
+    if value == "-" or value.lower() == "true":
         return True
     if value.lower() == "false":
         return False
@@ -106,7 +106,7 @@ def as_bool(value):
 
 
 def as_date(value):
-    if value == '-':
+    if value == "-":
         return None
     year, month, day = value.split("/")
     return date(int(year), int(month), int(day))
@@ -159,6 +159,7 @@ def as_interactor(row, interactor: data.InteractorType) -> ty.Optional[data.Inte
 
     if not parts["id"]:
         from pprint import pprint
+
         pprint(row)
         return None
     return data.Interactor(**parts)

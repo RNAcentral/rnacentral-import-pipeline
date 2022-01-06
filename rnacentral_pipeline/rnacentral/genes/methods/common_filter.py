@@ -17,13 +17,22 @@ import logging
 import typing as ty
 
 from rnacentral_pipeline.databases.data.databases import Database
-from rnacentral_pipeline.rnacentral.genes.data import State, LocationInfo, Context, Cluster
+from rnacentral_pipeline.rnacentral.genes.data import (
+    State,
+    LocationInfo,
+    Context,
+    Cluster,
+)
 
 LOGGER = logging.getLogger(__name__)
 
 
-def is_rfam_shift(state: State, context: Context, location: LocationInfo, overlaps: ty.List[Cluster]) -> bool:
+def is_rfam_shift(
+    state: State, context: Context, location: LocationInfo, overlaps: ty.List[Cluster]
+) -> bool:
     return False
+
+
 #     if not location.is_rfam_only():
 #         return False
 #     assert not location.has_introns()
@@ -77,7 +86,9 @@ def filter(state: State, context: Context, location: LocationInfo) -> bool:
     return False
 
 
-def filter_overlaps(state: State, context: Context, location: LocationInfo, overlaps: ty.List[Cluster]):
+def filter_overlaps(
+    state: State, context: Context, location: LocationInfo, overlaps: ty.List[Cluster]
+):
     if is_rfam_shift(state, context, location, overlaps):
         LOGGER.debug("Rejecting %s as it is an Rfam shift", location)
         state.reject_location(location)
