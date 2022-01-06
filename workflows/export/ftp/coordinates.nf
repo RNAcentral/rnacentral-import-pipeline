@@ -1,6 +1,5 @@
 process readme {
   publishDir "${params.export.ftp.publish}/genome_coordinates/", mode: 'copy'
-  when: params.export.ftp.coordinates.run
 
   input:
   path(raw)
@@ -14,8 +13,6 @@ process readme {
 }
 
 process find_jobs {
-  when: params.export.ftp.coordinates.run
-
   input:
   path(query)
 
@@ -29,7 +26,7 @@ process find_jobs {
 
 process fetch {
   tag { "${assembly}-${species}" }
-  maxForks params.export.ftp.coordinates.maxForks
+  maxForks 2
 
   input:
   tuple val(assembly), val(species), val(taxid), path(query)
@@ -45,7 +42,6 @@ process fetch {
 process generate_bed {
   tag { "${assembly}-${species}" }
   publishDir "${params.export.ftp.publish}/genome_coordinates/bed/", mode: 'copy'
-  when: params.export.ftp.coordinates.bed.run
 
   input:
   tuple val(assembly), val(species), path(raw_data)
@@ -66,7 +62,6 @@ process generate_gff3 {
   tag { "${assembly}-${species}" }
   memory params.export.ftp.coordinates.gff3.memory
   publishDir "${params.export.ftp.publish}/genome_coordinates/gff3", mode: 'copy'
-  when: params.export.ftp.coordinates.gff3.run
 
   input:
   tuple val(assembly), val(species), path(raw_data)
