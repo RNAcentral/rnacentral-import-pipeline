@@ -19,8 +19,6 @@ from load_interactions load
 join rnc_rna_precomputed pre
 on
   pre.id = load.urs_taxid
-where
-  load.taxid > 0
 )
 ON CONFLICT (intact_id) DO UPDATE
 SET
