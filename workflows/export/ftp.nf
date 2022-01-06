@@ -11,7 +11,6 @@ process release_note {
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   publishDir "${params.export.ftp.publish}/", mode: 'copy'
-  when: params.export.ftp.release_note.run
 
   input:
   path(template_file)
@@ -28,8 +27,6 @@ process release_note {
 process md5 {
   publishDir "${params.export.ftp.publish}/md5/", mode: 'copy'
   container ''
-
-  when: params.export.ftp.md5.run
 
   input:
   path(query)
@@ -50,7 +47,6 @@ process md5 {
 
 process rfam_annotations {
   publishDir "${params.export.ftp.publish}/rfam/", mode: 'copy'
-  when: params.export.ftp.rfam.annotations.run
 
   input:
   path(query)
@@ -72,7 +68,6 @@ process rfam_annotations {
 process rfam_go_matches {
   memory params.export.ftp.rfam.go_annotations.memory
   publishDir "${params.export.ftp.publish}/go_annotations/", mode: 'copy'
-  when: params.export.ftp.rfam.go_annotations.run
 
   input:
   path(query)
@@ -100,7 +95,7 @@ process gpi {
   """
 }
 
-workflow ftp_export {
+workflow ftp {
   take: _flag
   main:
     Channel.fromPath('files/ftp-export/md5/md5.sql') | set { md5_query }
@@ -122,5 +117,5 @@ workflow ftp_export {
 }
 
 workflow {
-  ftp_export(Channel.of('ready'))
+  ftp(Channel.of('ready'))
 }
