@@ -10,8 +10,8 @@ include { fasta_export } from './ftp/sequences'
 process release_note {
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
-  publishDir "${params.ftp_export.publish}/", mode: 'copy'
-  when: params.ftp_export.release_note.run
+  publishDir "${params.export.ftp.publish}/", mode: 'copy'
+  when: params.export.ftp.release_note.run
 
   input:
   path(template_file)
@@ -21,15 +21,15 @@ process release_note {
 
   """
   rnac ftp-export release-note ${template_file} ${params.release} release_notes.txt
-  mkdir -p ${params.ftp_export.publish}/help-requests
+  mkdir -p ${params.export.ftp.publish}/help-requests
   """
 }
 
 process md5 {
-  publishDir "${params.ftp_export.publish}/md5/", mode: 'copy'
+  publishDir "${params.export.ftp.publish}/md5/", mode: 'copy'
   container ''
 
-  when: params.ftp_export.md5.run
+  when: params.export.ftp.md5.run
 
   input:
   path(query)
@@ -49,8 +49,8 @@ process md5 {
 }
 
 process rfam_annotations {
-  publishDir "${params.ftp_export.publish}/rfam/", mode: 'copy'
-  when: params.ftp_export.rfam.annotations.run
+  publishDir "${params.export.ftp.publish}/rfam/", mode: 'copy'
+  when: params.export.ftp.rfam.annotations.run
 
   input:
   path(query)
@@ -70,9 +70,9 @@ process rfam_annotations {
 }
 
 process rfam_go_matches {
-  memory params.ftp_export.rfam.go_annotations.memory
-  publishDir "${params.ftp_export.publish}/go_annotations/", mode: 'copy'
-  when: params.ftp_export.rfam.go_annotations.run
+  memory params.export.ftp.rfam.go_annotations.memory
+  publishDir "${params.export.ftp.publish}/go_annotations/", mode: 'copy'
+  when: params.export.ftp.rfam.go_annotations.run
 
   input:
   path(query)
@@ -88,8 +88,8 @@ process rfam_go_matches {
 }
 
 process gpi {
-  memory params.ftp_export.gpi.memory
-  publishDir "${params.ftp_export.publish}/gpi/", mode: 'copy'
+  memory params.export.ftp.gpi.memory
+  publishDir "${params.export.ftp.publish}/gpi/", mode: 'copy'
 
   output:
   path("rnacentral.gpi*")

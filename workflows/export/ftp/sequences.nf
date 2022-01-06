@@ -1,6 +1,6 @@
 process active {
-  publishDir "${params.ftp_export.publish}/sequences/", mode: 'copy'
-  when: params.ftp_export.sequences.active.run
+  publishDir "${params.export.ftp.publish}/sequences/", mode: 'copy'
+  when: params.export.ftp.sequences.active.run
 
   input:
   path(query)
@@ -23,8 +23,8 @@ process active {
 }
 
 process inactive {
-  publishDir "${params.ftp_export.publish}/sequences/", mode: 'copy'
-  when: params.ftp_export.sequences.inactive.run
+  publishDir "${params.export.ftp.publish}/sequences/", mode: 'copy'
+  when: params.export.ftp.sequences.inactive.run
 
   input:
   path(query)
@@ -41,7 +41,7 @@ process inactive {
 }
 
 process species_specific {
-  when: params.ftp_export.sequences.species.run
+  when: params.export.ftp.sequences.species.run
 
   input:
   path(query)
@@ -58,7 +58,7 @@ process species_specific {
 }
 
 process create_ssi {
-  publishDir "${params.ftp_export.publish}/sequences/.internal/", mode: 'copy'
+  publishDir "${params.export.ftp.publish}/sequences/.internal/", mode: 'copy'
 
   input:
   path('rnacentral_species_specific_ids.fasta')
@@ -72,7 +72,7 @@ process create_ssi {
 }
 
 proecss compress_species_fasta {
-  publishDir "${params.ftp_export.publish}/sequences/", mode: 'copy'
+  publishDir "${params.export.ftp.publish}/sequences/", mode: 'copy'
 
   input:
   path('rnacentral_species_specific_ids.fasta')
@@ -100,9 +100,9 @@ process find_dbs {
 
 process database_specific {
   tag { db }
-  maxForks params.ftp_export.sequences.by_database.max_forks
-  publishDir "${params.ftp_export.publish}/sequences/by-database", mode: 'copy'
-  when: params.ftp_export.sequences.by_database.run
+  maxForks params.export.ftp.sequences.by_database.max_forks
+  publishDir "${params.export.ftp.publish}/sequences/by-database", mode: 'copy'
+  when: params.export.ftp.sequences.by_database.run
 
   input:
   tuple val(db), path(query)
