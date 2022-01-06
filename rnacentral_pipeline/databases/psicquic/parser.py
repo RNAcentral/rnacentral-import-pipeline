@@ -30,7 +30,7 @@ from . import helpers
 def set_interaction_id(interaction: Interaction, index: int) -> Interaction:
     ids = list(interaction.ids)
     value = f"{interaction.urs_taxid}-{index}"
-    ids.append(InteractionIdentifier(key='psicquic', value=value, name=''))
+    ids.append(InteractionIdentifier(key="psicquic", value=value, name=""))
     ids = tuple(ids)
     return attr.evolve(interaction, ids=ids)
 
@@ -42,7 +42,7 @@ def parse_interactions(handle: ty.IO) -> ty.Iterable[Interaction]:
 
 
 def parse(path: Path, db_url: str) -> ty.Iterable[Entry]:
-    with path.open('r') as raw:
+    with path.open("r") as raw:
         key = op.attrgetter("urs_taxid")
         interactions = sorted(parse_interactions(raw), key=key)
         mapping = lookup.mapping(db_url, interactions)
