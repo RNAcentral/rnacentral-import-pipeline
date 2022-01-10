@@ -45,20 +45,24 @@ def simple_data():
             return entries
 
 
+@pytest.mark.db
 def test_can_parse_all_entries(simple_data):
     assert len(simple_data) == 100
 
 
+@pytest.mark.db
 def test_can_create_unique_primary_ids(simple_data):
     data = [d.primary_id for d in simple_data.values()]
     assert len(data) == 100
 
 
+@pytest.mark.db
 def test_can_create_unique_accessions(simple_data):
     data = [d.accession for d in simple_data.values()]
     assert len(data) == 100
 
 
+@pytest.mark.db
 def test_can_create_correct_data(simple_data):
     assert simple_data["GENECARDS:1A9N_Q-015:URS00001EE9F1_9606"] == data.Entry(
         primary_id="GENECARDS:1A9N_Q-015:URS00001EE9F1_9606",

@@ -31,10 +31,12 @@ def sample():
         return list(parser.parse(raw, os.environ["PGDATABASE"]))
 
 
+@pytest.mark.db
 def test_can_parse_all_data(sample):
     assert len(sample) == 4
 
 
+@pytest.mark.db
 def test_creates_entries_with_expected_ids(sample):
     ids = sorted(e.primary_id for e in sample)
     assert ids == [
@@ -45,6 +47,7 @@ def test_creates_entries_with_expected_ids(sample):
     ]
 
 
+@pytest.mark.db
 def test_correctly_groups_data(sample):
     val = {e.primary_id: len(e.interactions) for e in sample}
     assert val == {
@@ -55,6 +58,7 @@ def test_correctly_groups_data(sample):
     }
 
 
+@pytest.mark.db
 def test_produces_correct_data(sample):
     with open("data/intact/sample.txt", "r") as raw:
         val = next(parser.parse_interactions(raw))
