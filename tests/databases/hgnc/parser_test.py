@@ -65,6 +65,7 @@ def known_mappings():
     return params
 
 
+@pytest.mark.db
 @pytest.mark.parametrize("urs,hgnc_id", known_mappings())
 def test_maps_sequences_correctly(current_data, context, urs, hgnc_id):
     if hgnc_id not in current_data:
