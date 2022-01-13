@@ -61,7 +61,8 @@ NORMALIZE_TO_INSDC = {
     "3prime_overlapping_ncrna": "other",
 }
 
-SO_INSDC_MAPPING = {v: k for k, v in INSDC_SO_MAPPING.items()}
+SO_INSDC_MAPPING = {v: k for k, v in INSDC_SO_MAPPING.items() if k != "sRNA"}
+SO_INSDC_MAPPING["SO:0000655"] = "other"
 SO_INSDC_MAPPING["SO:0000035"] = "ncRNA"
 SO_INSDC_MAPPING["SO:0000077"] = "antisense_RNA"
 SO_INSDC_MAPPING["SO:0000122"] = "other"

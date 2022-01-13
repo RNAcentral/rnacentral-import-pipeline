@@ -147,7 +147,7 @@ def test_labels_feature_type_rnas_correctly(rna_type):
         seq_version="1",
     )
     assert entry.feature_name == rna_type
-    assert entry.ncrna_class is None
+    assert entry.ncrna_class == ""
 
 
 @pytest.mark.parametrize(
@@ -188,6 +188,9 @@ def test_labels_ncrna_types_correctly(rna_type):
         seq_version="1",
     )
     assert entry.feature_name == "ncRNA"
+    print(entry.rna_type)
+    print(entry.ncrna_class)
+    print(rna_type)
     assert entry.ncrna_class is rna_type
 
 
@@ -202,20 +205,14 @@ def test_can_write_valid_sequence_regions():
             data.SequenceRegion(
                 chromosome="1",
                 strand=-1,
-                exons=[
-                    data.Exon(start=1, stop=10),
-                    data.Exon(start=12, stop=14),
-                ],
+                exons=[data.Exon(start=1, stop=10), data.Exon(start=12, stop=14)],
                 assembly_id="hg19",
                 coordinate_system=data.CoordinateSystem.one_based(),
             ),
             data.SequenceRegion(
                 chromosome="12",
                 strand=1,
-                exons=[
-                    data.Exon(start=20, stop=22),
-                    data.Exon(start=24, stop=33),
-                ],
+                exons=[data.Exon(start=20, stop=22), data.Exon(start=24, stop=33)],
                 assembly_id="hg38",
                 coordinate_system=data.CoordinateSystem.one_based(),
             ),
@@ -223,6 +220,7 @@ def test_can_write_valid_sequence_regions():
         rna_type="snoRNA",
         url="http://www.google.com",
         seq_version="1",
+        description="A test sequence",
     )
 
     assert list(entry.write_sequence_regions()) == [
@@ -235,11 +233,7 @@ def test_can_write_valid_sequence_regions():
 
 @pytest.mark.parametrize(
     "rna_type,ans",
-    [
-        ("SO:0000590", "SRP RNA"),
-        ("SO:0001244", "pre miRNA"),
-        ("SO:0001268", "snRNA"),
-    ],
+    [("SO:0000590", "SRP RNA"), ("SO:0001244", "pre miRNA"), ("SO:0001268", "snRNA")],
 )
 def test_can_build_expected_rna_type_names(rna_type, ans):
     entry = data.Entry(
@@ -252,5 +246,6 @@ def test_can_build_expected_rna_type_names(rna_type, ans):
         rna_type=rna_type,
         url="http://www.google.com",
         seq_version="1",
+        description="Some test sequence",
     )
     assert entry.human_rna_type() == ans
