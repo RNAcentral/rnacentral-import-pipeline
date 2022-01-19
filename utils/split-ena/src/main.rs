@@ -67,16 +67,26 @@ fn main() -> Result<(), Box<dyn Error>> {
         match reader.read_line(&mut buf)? {
             0 => break,
             _ => {
-                writer.write_all(buf.as_bytes())?;
-                if buf.starts_with("//") {
-                    current_count += 1;
-                    if current_count == opt.max_sequences {
-                        current_count = 0;
-                        current_chunk += 1;
-                        writer.flush()?;
-                        writer = chunk_writer(&opt.output_directory, basename, current_chunk)?;
-                    }
-                };
+                let start = &buf[0..2];
+                match start {
+                    "ID" => {
+                        let line = buf.replace("linear; XXX;", "linear; RNA;");
+                        writer.write_all(line.as_bytes())?;
+                    },
+                    "//" => {
+                        writer.write_all(buf.as_bytes())?;
+                        current_count += 1;
+                        if current_count == opt.max_sequences {
+                            current_count = 0;
+                            current_chunk += 1;
+                            writer.flush()?;
+                            writer = chunk_writer(&opt.output_directory, basename, current_chunk)?;
+                        }
+                    },
+                    _ => {
+                        writer.write_all(buf.as_bytes())?;
+                    },
+                }
                 buf.clear();
             },
         }
