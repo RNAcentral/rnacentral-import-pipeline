@@ -30,22 +30,19 @@ def cli():
 
 
 @cli.command("parse")
-@click.argument("rfam_file", type=click.File("r"))
 @click.argument("mapping_file", type=click.File("r"))
+@click.argument("sequence_info", type=click.File("r"))
+@click.argument("sequence_fasta", type=click.Path())
 @click.argument(
     "output",
     default=".",
-    type=click.Path(
-        writable=True,
-        dir_okay=True,
-        file_okay=False,
-    ),
+    type=click.Path(writable=True, dir_okay=True, file_okay=False),
 )
-def process_rfam(rfam_file, mapping_file, output):
+def process_rfam(mapping_file, sequence_info, sequence_fasta, output):
     """
     Process Rfam's JSON format into the files to import.
     """
-    entries = rfam.parser.parse(rfam_file, mapping_file)
+    entries = rfam.parser.parse(mapping_file, sequence_info, Path(sequence_fasta))
     with entry_writer(Path(output)) as writer:
         writer.write(entries)
 
@@ -69,11 +66,7 @@ def rfam_group_clans(filename, output):
 @click.argument(
     "output",
     default=".",
-    type=click.Path(
-        writable=True,
-        dir_okay=True,
-        file_okay=False,
-    ),
+    type=click.Path(writable=True, dir_okay=True, file_okay=False),
 )
 def ontologies_rfam_terms(filename, output):
     rfam.cross_references.from_file(filename, Path(output))

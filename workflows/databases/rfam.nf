@@ -17,26 +17,47 @@ process fetch_families {
   """
 }
 
-process fetch_json {
+process fetch_info {
   when { params.databases.rfam.run }
 
+  input:
+  path(query)
+
   output:
-  path('*.json')
+  path("info.tsv")
 
   """
-  find $params.databases.rfam.remote -name '*.json' | xargs -I {} cp {} .
+  mysql \
+    --host $params.connections.rfam.host \
+    --port $params.connections.rfam.port \
+    --user $params.connections.rfam.user \
+    --database $params.connections.rfam.database \
+    < $query > info.tsv
   """
 }
 
+
 process parse {
+  maxForks 5
+
   input:
-  tuple path(json), path(families)
+  tuple val(family), path(info), path(sequence_query)
 
   output:
   path('*.csv')
 
   """
-  rnac rfam parse $json $families .
+  wget -O sequences.fa.gz 'http://ftp.ebi.ac.uk/pub/databases/Rfam/CURRENT/fasta_files/${family}.fa.gz'
+  gzip -d sequences.fa.gz
+
+  mysql \
+    --host $params.connections.rfam.host \
+    --port $params.connections.rfam.port \
+    --user $params.connections.rfam.user \
+    --database $params.connections.rfam.database \
+   -e "set @family='$family';\\. $sequence_query" > sequences.tsv
+
+  rnac rfam parse $info sequences.tsv sequences.fa .
   """
 }
 
@@ -44,12 +65,18 @@ process parse {
 workflow rfam {
   emit: data
   main:
-    Channel.fromPath('files/import-data/rfam/families.sql') | set { families_sql }
-    families_sql | fetch_families | set { families }
+    Channel.fromPath('files/import-data/rfam/select-families') | set { family_sql }
+    Channel.fromPath('files/import-data/rfam/families.sql') | set { info_sql }
+    Channel.fromPath('files/import-data/rfam/sequences.sql') | set { sequence_sql }
 
-    fetch_json \
-    | flatten \
-    | combine(families) \
+    info_sql | fetch_info | set { info }
+
+    family_sql \
+    | fetch_families \
+    | splitCsv(sep='\t') \
+    | map { row -> row[0] } \
+    | combine(info) \
+    | combine(sequence_sql) \
     | parse \
     | set { data }
 }
