@@ -228,7 +228,7 @@ fn main() -> Result<()> {
             Groupable::RegionInfo => genes::region::group(&path, max_count, &output)?,
             Groupable::Precompute => sequences::precompute::group(&path, max_count, &output)?,
             Groupable::QaStatus => sequences::qa_status::group(&path, max_count, &output)?,
-            Groupable::R2dt=> sequences::r2dt::group(&path, max_count, &output)?,
+            Groupable::R2dt => sequences::r2dt::group(&path, max_count, &output)?,
             Groupable::RfamHits => sequences::rfam_hit::group(&path, max_count, &output)?,
             Groupable::Orfs => sequences::orf::group(&path, max_count, &output)?,
             Groupable::SoInfo => Err(anyhow::anyhow!("May not group so info"))?,
