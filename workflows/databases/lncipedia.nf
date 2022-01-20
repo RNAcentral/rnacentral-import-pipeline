@@ -1,6 +1,8 @@
 process lncipedia {
-  when: { params.databases.lncipedia.run }
   memory '5GB'
+
+  when:
+  params.databases.lncipedia.run == true
 
   output:
   path('*.csv')
