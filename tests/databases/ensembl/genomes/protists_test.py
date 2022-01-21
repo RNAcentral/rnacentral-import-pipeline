@@ -28,17 +28,22 @@ def leis_36():
     return helpers.parse(
         protists.parse,
         "data/ensembl_protists/Leishmania_major.ASM272v2.chromosome.36.dat",
+        "data/ensembl_protists/Leishmania_major.ASM272v2.chromosome.36.gff3",
     )
 
 
 @pytest.mark.parametrize(
-    "filename,count",
+    "filename,gff3,count",
     [
-        ("data/ensembl_protists/Leishmania_major.ASM272v2.chromosome.36.dat", 71),
+        (
+            "data/ensembl_protists/Leishmania_major.ASM272v2.chromosome.36.dat",
+            "data/ensembl_protists/Leishmania_major.ASM272v2.chromosome.36.gff3",
+            71,
+        )
     ],
 )
-def test_can_parse_all_entries(filename, count):
-    assert len(helpers.parse(protists.parse, filename)) == count
+def test_can_parse_all_entries(filename, gff3, count):
+    assert len(helpers.parse(protists.parse, filename, gff3)) == count
 
 
 def test_can_parse_expected_accounts(leis_36):
@@ -155,7 +160,7 @@ def test_can_parse_expected_data(leis_36):
                     exons=[dat.Exon(start=1032512, stop=1032582)],
                     assembly_id="ASM272v2",
                     coordinate_system=dat.CoordinateSystem.one_based(),
-                ),
+                )
             ],
             rna_type="SO:0000253",
             url="",
@@ -170,7 +175,6 @@ def test_can_parse_expected_data(leis_36):
                 "Leishmania major strain Friedlin"
             ),
             gene="LMJF_36_TRNAGLY_01",
-            locus_tag="LMJF_36_TRNAGLY_01",
             description="Leishmania major tRNA-Gly",
             references=[pubs.reference("doi:10.1093/nar/gkx1011")],
         )

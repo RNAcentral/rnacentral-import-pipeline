@@ -27,7 +27,8 @@ from . import helpers
 def cress_2():
     return helpers.parse(
         plants.parse,
-        "data/ensembl_plants/Arabidopsis_thaliana.TAIR10.40.chromosome.2.dat",
+        "data/ensembl_plants/Arabidopsis_thaliana.TAIR10.chromosome.2.dat",
+        "data/ensembl_plants/Arabidopsis_thaliana.TAIR10.chromosome.2.gff3",
     )
 
 
@@ -35,21 +36,26 @@ def cress_2():
 def oryza_9():
     return helpers.parse(
         plants.parse,
-        "data/ensembl_plants/Oryza_barthii.O.barthii_v1.41.chromosome.9.dat",
+        "data/ensembl_plants/Oryza_barthii.O.barthii_v1.chromosome.9.dat",
+        "data/ensembl_plants/Oryza_barthii.O.barthii_v1.chromosome.9.gff3",
     )
 
 
 @pytest.fixture(scope="module")  # pylint: disable=no-member
 def hordeum_pt():
     return helpers.parse(
-        plants.parse, "data/ensembl_plants/Hordeum_vulgare.IBSC_v2.41.chromosome.Pt.dat"
+        plants.parse,
+        "data/ensembl_plants/Hordeum_vulgare.IBSC_v2.chromosome.Pt.dat",
+        "data/ensembl_plants/Hordeum_vulgare.IBSC_v2.chromosome.Pt.gff3",
     )
 
 
 @pytest.fixture(scope="module")  # pylint: disable=no-member
 def zea_7():
     return helpers.parse(
-        plants.parse, "data/ensembl_plants/Zea_mays.B73_RefGen_v4.41.chromosome.7.dat"
+        plants.parse,
+        "data/ensembl_plants/Zea_mays.B73_RefGen_v4.chromosome.7.dat",
+        "data/ensembl_plants/Zea_mays.B73_RefGen_v4.chromosome.7.gff3",
     )
 
 
@@ -107,10 +113,7 @@ def test_can_parse_data(cress_2):
             url="",
             seq_version="1",
             note_data={},
-            xref_data={
-                "RefSeq": ["NR_139968.1"],
-                "TAIR": ["AT2G01010.1"],
-            },
+            xref_data={"RefSeq": ["NR_139968.1"], "TAIR": ["AT2G01010.1"]},
             species="Arabidopsis thaliana",
             common_name="thale-cress",
             lineage=(
@@ -181,9 +184,7 @@ def test_can_create_tair_entry(cress_2):
             url="",
             seq_version="1",
             note_data={},
-            xref_data={
-                "RefSeq": ["NR_139968.1"],
-            },
+            xref_data={"RefSeq": ["NR_139968.1"]},
             species="Arabidopsis thaliana",
             common_name="thale-cress",
             lineage=(
@@ -201,11 +202,7 @@ def test_can_create_tair_entry(cress_2):
 
 
 @pytest.mark.parametrize(
-    "accession,status",
-    [
-        ("TAIR:AT2G01010.1", True),
-        ("TAIR:ENSRNA049757808-T1", False),
-    ],
+    "accession,status", [("TAIR:AT2G01010.1", True), ("TAIR:ENSRNA049757808-T1", False)]
 )
 def generates_expected_inferred_entries(cress_2, accession, status):
     assert helpers.has_entry_for(cress_2, accession) == status
@@ -238,9 +235,7 @@ def test_can_get_with_odd_rna_type(cress_2):
             url="",
             seq_version="1",
             note_data={},
-            xref_data={
-                "RefSeq": ["NR_139974.1"],
-            },
+            xref_data={"RefSeq": ["NR_139974.1"]},
             species="Arabidopsis thaliana",
             common_name="thale-cress",
             lineage=(
@@ -539,6 +534,7 @@ def test_can_parse_rice_u6(oryza_9):
     )
 
 
+@pytest.mark.skip(reason="Cannot fetch data")
 def test_can_parse_barley_antisense(hordeum_pt):
     val = attr.asdict(
         helpers.entry_for(hordeum_pt, "ENSEMBL_PLANTS:ENSRNA049483195-T1")
@@ -578,6 +574,7 @@ def test_can_parse_barley_antisense(hordeum_pt):
     )
 
 
+@pytest.mark.skip("Cannot fetch data")
 def test_can_parse_zea_lincrna(zea_7):
     val = attr.asdict(helpers.entry_for(zea_7, "ENSEMBL_PLANTS:Zm00001d001070_T001"))
     assert val == attr.asdict(
@@ -621,11 +618,13 @@ def test_can_parse_zea_lincrna(zea_7):
     )
 
 
+@pytest.mark.skip("Cannot fetch data")
 def test_does_not_generate_tair_for_others(zea_7):
     assert helpers.has_entry_for(zea_7, "TAIR:Zm00001d001070_T001") is False
     assert helpers.has_entry_for(zea_7, "ENSEMBL_PLANTS:Zm00001d001070_T001") is True
 
 
+@pytest.mark.skip("Cannot fetch data")
 def test_does_not_create_ncRNA_rna_type_zea_7(zea_7):
     for entry in zea_7:
         assert entry.rna_type != "ncRNA"
@@ -641,6 +640,7 @@ def test_does_not_create_ncRNA_rna_type_oryza_9(oryza_9):
         assert entry.rna_type != "ncRNA"
 
 
+@pytest.mark.skip(reason="Cannot fetch data")
 def test_does_not_create_ncRNA_rna_type_hordeum_pt(hordeum_pt):
     for entry in hordeum_pt:
         assert entry.rna_type != "ncRNA"

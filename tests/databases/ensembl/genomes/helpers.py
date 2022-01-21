@@ -13,10 +13,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+from pathlib import Path
 
-def parse(parser, filename):
+
+def parse(parser, filename: str, gff_file: str):
     with open(filename, "r") as raw:
-        return list(parser(raw))
+        return list(parser(raw, Path(gff_file)))
 
 
 def entries_for(entries, accession):

@@ -26,18 +26,24 @@ from . import helpers
 @pytest.fixture(scope="module")  # pylint: disable=no-member
 def asp_1():
     return helpers.parse(
-        fungi.parse, "data/ensembl_fungi/Aspergillus_nidulans.chromosome.I.dat"
+        fungi.parse,
+        "data/ensembl_fungi/Aspergillus_nidulans.chromosome.I.dat",
+        "data/ensembl_fungi/Aspergillus_nidulans.chromosome.I.gff3",
     )
 
 
 @pytest.mark.parametrize(
-    "filename,count",
+    "filename,gff3,count",
     [
-        ("data/ensembl_fungi/Aspergillus_nidulans.chromosome.I.dat", 24),
+        (
+            "data/ensembl_fungi/Aspergillus_nidulans.chromosome.I.dat",
+            "data/ensembl_fungi/Aspergillus_nidulans.chromosome.I.gff3",
+            24,
+        )
     ],
 )
-def test_can_parse_all_entries(filename, count):
-    assert len(helpers.parse(fungi.parse, filename)) == count
+def test_can_parse_all_entries(filename, gff3, count):
+    assert len(helpers.parse(fungi.parse, filename, gff3)) == count
 
 
 def test_can_parse_expected_ids(asp_1):
@@ -86,7 +92,7 @@ def test_can_produce_correct_data(asp_1):
                     exons=[dat.Exon(start=1978646, stop=1978838)],
                     assembly_id="ASM1142v1",
                     coordinate_system=dat.CoordinateSystem.one_based(),
-                ),
+                )
             ],
             rna_type="snRNA",
             url="",

@@ -22,7 +22,7 @@ from .helpers import features, feature_for, first_feature_for
 
 @pytest.fixture(scope="module")  # pylint: disable=no-member
 def human_12():
-    return features("data/ensembl/Homo_sapiens.GRCh38.90.chromosome.12.dat")
+    return features("data/ensembl/Homo_sapiens.GRCh38.chromosome.12.dat")
 
 
 def test_it_gets_transcript_id(human_12):
@@ -39,7 +39,7 @@ def test_it_gets_transcript_id(human_12):
         #     "processed_transcript",
         #     "transcript_id=ENST00000544511.1"
         # ]),
-        ("ENST00000540226.1", ["antisense_RNA"]),
+        ("ENST00000540226.1", ["antisense_RNA"])
     ],
 )
 def test_it_can_get_notes(human_12, transcript_id, notes):
@@ -50,7 +50,7 @@ def test_it_can_get_notes(human_12, transcript_id, notes):
     "transcript_id,note_data",
     [
         # ('ENST00000540907.11', {'transcript_id': ['ENST00000540907.11']}),
-        ("ENST00000544511.1", {"transcript_id": ["ENST00000544511.1"]}),
+        ("ENST00000544511.1", {"transcript_id": ["ENST00000544511.1"]})
     ],
 )
 def test_it_can_get_grouped_notes(human_12, transcript_id, note_data):

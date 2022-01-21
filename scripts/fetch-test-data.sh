@@ -22,21 +22,47 @@ fetch()
   wget -q -O - $1 | gzip -d - > $2
 }
 
+fetch_gff()
+{
+  echo "$1 -> $2"
+  dir="$(dirname $2)"
+  tmp="temp.gff3.gz"
+  [ -d "$dir" ] || mkdir -p "$dir"
+
+  wget -q -O "$tmp" $1
+  zgrep '^#' "$tmp" | grep -v '^###\$' > $2
+  zcat "$tmp" | awk '{ if ($3 !~ /CDS/) { print $0 } }' >> $2
+  rm $tmp
+}
+
 fetch 'ftp://ftp.ensembl.org/pub/current_embl/homo_sapiens/Homo_sapiens.GRCh38.*.chromosome.1.dat.gz' 'data/ensembl/Homo_sapiens.GRCh38.chromosome.1.dat'
+fetch_gff 'ftp://ftp.ensembl.org/pub/current_gff3/homo_sapiens/Homo_sapiens.GRCh38.*.chromosome.1.gff3.gz' 'data/ensembl/Homo_sapiens.GRCh38.chromosome.1.gff3'
+
 fetch 'ftp://ftp.ensembl.org/pub/current_embl/homo_sapiens/Homo_sapiens.GRCh38.*.chromosome.3.dat.gz' 'data/ensembl/Homo_sapiens.GRCh38.chromosome.3.dat'
+fetch_gff 'ftp://ftp.ensembl.org/pub/current_gff3/homo_sapiens/Homo_sapiens.GRCh38.*.chromosome.3.gff3.gz' 'data/ensembl/Homo_sapiens.GRCh38.chromosome.3.gff3'
+
 fetch 'ftp://ftp.ensembl.org/pub/current_embl/homo_sapiens/Homo_sapiens.GRCh38.*.chromosome.12.dat.gz' 'data/ensembl/Homo_sapiens.GRCh38.chromosome.12.dat'
+fetch_gff 'ftp://ftp.ensembl.org/pub/current_gff3/homo_sapiens/Homo_sapiens.GRCh38.*.chromosome.12.gff3.gz' 'data/ensembl/Homo_sapiens.GRCh38.chromosome.12.gff3'
+
 fetch 'ftp://ftp.ensembl.org/pub/current_embl/homo_sapiens/Homo_sapiens.GRCh38.*.chromosome.X.dat.gz' 'data/ensembl/Homo_sapiens.GRCh38.chromosome.X.dat'
+fetch_gff 'ftp://ftp.ensembl.org/pub/current_gff3/homo_sapiens/Homo_sapiens.GRCh38.*.chromosome.X.gff3.gz' 'data/ensembl/Homo_sapiens.GRCh38.chromosome.X.gff3'
 
 fetch 'ftp://ftp.ensembl.org/pub/current_embl/bos_taurus/Bos_taurus.ARS-UCD1.2.*.primary_assembly.8.dat.gz' 'data/ensembl/Bos_taurus.ARS-UCD1.2.primary_assembly.8.dat'
+fetch_gff 'ftp://ftp.ensembl.org/pub/current_gff3/bos_taurus/Bos_taurus.ARS-UCD1.2.*.primary_assembly.8.gff3.gz' 'data/ensembl/Bos_taurus.ARS-UCD1.2.primary_assembly.8.gff3'
 
 fetch 'ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_31/gencode.v31.annotation.gff3.gz' 'data/gencode/human-transcripts.gff3'
+
 fetch 'ftp://ftp.ensemblgenomes.org/pub/current/plants/embl/arabidopsis_thaliana/Arabidopsis_thaliana.TAIR10.*.chromosome.2.dat.gz' 'data/ensembl_plants/Arabidopsis_thaliana.TAIR10.chromosome.2.dat'
+fetch_gff 'ftp://ftp.ensemblgenomes.org/pub/current/plants/gff3/arabidopsis_thaliana/Arabidopsis_thaliana.TAIR10.*.chromosome.2.gff3.gz' 'data/ensembl_plants/Arabidopsis_thaliana.TAIR10.chromosome.2.gff3'
 
 fetch 'ftp://ftp.ensemblgenomes.org/pub/current/plants/embl/oryza_barthii/Oryza_barthii.O.barthii_v1.*.chromosome.9.dat.gz' 'data/ensembl_plants/Oryza_barthii.O.barthii_v1.chromosome.9.dat'
+fetch_gff 'ftp://ftp.ensemblgenomes.org/pub/current/plants/gff3/oryza_barthii/Oryza_barthii.O.barthii_v1.*.chromosome.9.gff3.gz' 'data/ensembl_plants/Oryza_barthii.O.barthii_v1.chromosome.9.gff3'
 
 fetch 'ftp://ftp.ensemblgenomes.org/pub/current/fungi/embl/aspergillus_nidulans//Aspergillus_nidulans.ASM1142v1.*.chromosome.I.dat.gz' 'data/ensembl_fungi/Aspergillus_nidulans.chromosome.I.dat'
+fetch_gff 'ftp://ftp.ensemblgenomes.org/pub/current/fungi/gff3/aspergillus_nidulans//Aspergillus_nidulans.ASM1142v1.*.chromosome.I.gff3.gz' 'data/ensembl_fungi/Aspergillus_nidulans.chromosome.I.gff3'
 
 fetch 'ftp://ftp.ensemblgenomes.org/pub/current/protists/embl/leishmania_major/Leishmania_major.ASM272v2.*.chromosome.36.dat.gz' 'data/ensembl_protists/Leishmania_major.ASM272v2.chromosome.36.dat'
+fetch_gff 'ftp://ftp.ensemblgenomes.org/pub/current/protists/gff3/leishmania_major/Leishmania_major.ASM272v2.*.chromosome.36.gff3.gz' 'data/ensembl_protists/Leishmania_major.ASM272v2.chromosome.36.gff3'
 
 # Invalid
 # fetch 'ftp://ftp.ensembl.org/pub/current_embl/mus_musculus/Mus_musculus.GRCm38.*.chromosome.3.dat.gz' 'data/ensembl/Mus_musculus.GRCm38.chromosome.3.dat'
