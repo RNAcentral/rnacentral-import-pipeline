@@ -36,6 +36,10 @@ jobs:
       shell: bash
       run: python -m poetry install
 
+    - name: Fetch test data
+      run: |
+        scripts/fetch-test-data.sh
+
     - name: Test with pytest
       run: |
         python -m poetry run python -m pytest -m 'not db and not slow' -v tests/databases/
