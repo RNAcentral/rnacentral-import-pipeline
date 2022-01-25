@@ -18,16 +18,17 @@ import typing as ty
 
 from bs4 import BeautifulSoup
 import psycopg2
+import psycopg2.extras
 from pypika import Query, Table
 from pypika import functions as fn
 
 from rnacentral_pipeline.databases import data
 
 
-PATTERN = re.compile(r"^(.+?)\s+\(([1-9]\w{3})\)\s+(http.+?)\s*$")
+PATTERN = re.compile(r"^(.+?)\s+\((.+?)\)\s+(http.+?)\s*$")
 
 
-def extract_mapping(raw: ty.IO) -> ty.Dict[str, ty.Tuple[str, str]]:
+def extract_mapping(raw: ty.IO) -> ty.Dict[ty.Tuple[str, str], ty.Tuple[str, str]]:
     html = BeautifulSoup(raw.read(), "html.parser")
     text = html.get_text()
     data = {}
@@ -36,13 +37,15 @@ def extract_mapping(raw: ty.IO) -> ty.Dict[str, ty.Tuple[str, str]]:
         if not match:
             continue
         name = match.group(1)
-        structure = match.group(2)
+        structures = match.group(2)
         url = match.group(3)
-        data[structure] = (name, url)
+        for structure in structures.split(","):
+            structure, chain = structure.strip().split("_", 1)
+            data[(structure, chain)] = (name, url)
     return data
 
 
-def build_query(ids: ty.List[str]) -> str:
+def build_query(pdb_id: str, chain_id: str) -> str:
     rna = Table("rna")
     xref = Table("xref_p11_not_deleted")
     pre = Table("rnc_rna_precomputed")
@@ -56,46 +59,46 @@ def build_query(ids: ty.List[str]) -> str:
             pre.taxid,
             pre.so_rna_type,
         )
-        .join(pre, (pre.upi == xref.upi) & (pre.taxid == xref.taxid))
-        .join(rna, rna.upi == xref.upi)
-        .join(acc, acc.accession == xref.ac)
-        .where(acc.parent_ac.in_(ids))
+        .join(pre)
+        .on((pre.upi == xref.upi) & (pre.taxid == xref.taxid))
+        .join(rna)
+        .on(rna.upi == xref.upi)
+        .join(acc)
+        .on(acc.accession == xref.ac)
+        .where((acc.external_id == pdb_id) & (acc.optional_id == chain_id))
     )
     return str(query)
 
 
-def process(
-    mapping: ty.Dict[str, ty.Tuple[str, str]], database: str
-) -> ty.Iterable[data.Entry]:
-    query = build_query(list(mapping.keys()))
+def parse(raw: ty.IO, database: str) -> ty.Iterable[data.Entry]:
+
+    missing = set()
+    mapping = extract_mapping(raw)
     with psycopg2.connect(database) as conn:
-        cursor = conn.cursor()
-        cursor.execute(query, ids=mapping.keys())
-        found = set()
-        for result in cursor:
-            id = result["id"]
-            if id not in mapping:
-                raise ValueError(f"Query found unknown structure: {result}")
-            found.add(id)
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        for ((pdb_id, chain), info) in mapping.items():
+            query = build_query(pdb_id, chain)
+            cursor.execute(query)
+            result = cursor.fetchall()
+            if result == []:
+                missing.add((pdb_id, chain))
+                continue
+            if len(result) != 1:
+                raise ValueError(f"Query for {pdb_id}_{chain} was not unique")
+            result = result[0]
 
             yield data.Entry(
-                primary_id=f"ribovision:{id}",
-                accession=f"ribovision:{id}",
+                primary_id=f"ribovision:{pdb_id}_{chain}",
+                accession=f"ribovision:{pdb_id}_{chain}",
                 ncbi_tax_id=result["taxid"],
                 database="RIBOVISION",
                 sequence=result["sequence"],
                 regions=[],
                 rna_type=result["so_rna_type"],
-                url=mapping[id][1],
+                url=info[1],
                 seq_version="1",
-                description=f"{mapping[id][0]} rRNA",
+                description=f"{info[0]} rRNA",
             )
 
-    missing = found - mapping.keys()
     if missing:
         raise ValueError(f"Did not load all ids, missed: {missing}")
-
-
-def parse(raw: ty.IO, database: str) -> ty.Iterable[data.Entry]:
-    mapping = extract_mapping(raw)
-    yield from process(mapping, database)
