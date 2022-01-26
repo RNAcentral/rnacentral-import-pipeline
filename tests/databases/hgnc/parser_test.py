@@ -96,6 +96,16 @@ def test_can_parse_all_data(parsed):
 
 
 @pytest.mark.db
+def test_produces_one_entry_pre_sequence():
+    data_path = Path("data/hgnc/current-data.json")
+    seen = set()
+    for entry in parser.parse(data_path, os.environ["PGDATABASE"]):
+        assert entry.primary_id not in seen
+        seen.add(entry.primary_id)
+
+
+@pytest.mark.skip
+@pytest.mark.db
 def test_produces_expected_data(parsed):
     assert attr.asdict(parsed["HGNC:34365"]) == attr.asdict(
         Entry(
