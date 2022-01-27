@@ -22,6 +22,7 @@ join family_literature_reference fl using (rfam_acc)
 where
     f.rfam_acc = @family
     and fr.type != 'seed'
+    and fr.is_significant = true
 group by rfam_acc, rfam_id, f.type, fr.type, f.description,rs.ncbi_id, fr.rfamseq_acc, fr.seq_start, fr.seq_end, '', rs.version, tx.species, tx.tax_string
 UNION
 select

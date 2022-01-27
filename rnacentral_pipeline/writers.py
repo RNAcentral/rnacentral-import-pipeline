@@ -18,6 +18,7 @@ limitations under the License.
 import csv
 import typing as ty
 from pathlib import Path
+import logging
 
 from contextlib import ExitStack
 from contextlib import contextmanager
@@ -29,12 +30,14 @@ from rnacentral_pipeline.databases import data
 
 _C = ty.TypeVar("_C")
 
+LOGGER = logging.getLogger(__name__)
+
 
 @attr.s()
 class EntryWriter:
     accessions = attr.ib()
     short_sequences = attr.ib(
-        metadata={"csv_options": {"delimiter": ",", "lineterminator": "\n"}},
+        metadata={"csv_options": {"delimiter": ",", "lineterminator": "\n"}}
     )
     long_sequences = attr.ib(
         metadata={"csv_options": {"delimiter": ",", "lineterminator": "\n"}}
@@ -51,8 +54,12 @@ class EntryWriter:
     go_publication_mappings = attr.ib()
 
     def write(self, entries: ty.Iterable[data.Entry]):
+        total = 0
+        invalid = 0
         for entry in entries:
+            total += 1
             if not entry.is_valid():
+                invalid += 1
                 continue
 
             self.accessions.writerows(entry.write_ac_info())
@@ -73,6 +80,15 @@ class EntryWriter:
                     annotations.writeable_publication_mappings()
                 )
                 self.terms.writerows(annotations.writeable_ontology_terms())
+
+        if not total:
+            raise ValueError("Found no entries to write")
+
+        LOGGER.info("Wrote %i entries", total)
+        if invalid:
+            LOGGER.warn("Did not write %i of %i total entries", invalid, total)
+            if invalid == total:
+                raise ValueError("No valid entries to write")
 
 
 @attr.s()

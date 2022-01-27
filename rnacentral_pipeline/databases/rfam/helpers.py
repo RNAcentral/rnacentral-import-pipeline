@@ -34,8 +34,13 @@ def taxid(data: ty.Dict[str, str]) -> int:
     return int(data["ncbi_id"])
 
 
+def sequence_id(data: ty.Dict[str, str]) -> str:
+    return f"{data['rfamseq_acc']}/{data['seq_start']}-{data['seq_end']}"
+
+
 def sequence(sequences, data: ty.Dict[str, str]) -> str:
-    seq_id = f"{data['rfamseq_acc']}/{data['seq_start']}-{data['seq_end']}"
+    seq_id = sequence_id(data)
+    # print((seq_id, data["sequence_type"]))
     sequence = str(sequences[seq_id].seq)
     return sequence.upper().replace("U", "T")
 
