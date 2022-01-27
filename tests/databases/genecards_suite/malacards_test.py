@@ -45,20 +45,24 @@ def simple_data():
             return entries
 
 
+@pytest.mark.db
 def test_can_parse_all_entries(simple_data):
     assert len(simple_data) == 51
 
 
+@pytest.mark.db
 def test_can_create_unique_primary_ids(simple_data):
     data = [d.primary_id for d in simple_data.values()]
     assert len(data) == 51
 
 
+@pytest.mark.db
 def test_can_create_unique_accessions(simple_data):
     data = [d.accession for d in simple_data.values()]
     assert len(data) == 51
 
 
+@pytest.mark.db
 def test_can_create_correct_data(simple_data):
     assert simple_data["MALACARDS:DELEC1:URS00008BD1D3_9606"] == data.Entry(
         primary_id="MALACARDS:DELEC1:URS00008BD1D3_9606",
@@ -138,6 +142,7 @@ def test_can_create_correct_data(simple_data):
     )
 
 
+@pytest.mark.db
 def test_correctly_groups_sequences(simple_data):
     assert simple_data["MALACARDS:ACTA2-AS1:URS00008C0BBE_9606"] == data.Entry(
         primary_id="MALACARDS:ACTA2-AS1:URS00008C0BBE_9606",
@@ -224,6 +229,6 @@ def test_correctly_groups_sequences(simple_data):
                     "name": "multisystemic smooth muscle dysfunction syndrome",
                     "url": "https://www.malacards.org/card/multisystemic_smooth_muscle_dysfunction_syndrome",
                 },
-            ],
+            ]
         },
     )

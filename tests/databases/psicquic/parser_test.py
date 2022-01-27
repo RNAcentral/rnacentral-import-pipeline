@@ -35,10 +35,12 @@ def data():
     return list(parser.parse(path, os.environ["PGDATABASE"]))
 
 
+@pytest.mark.db
 def test_can_parse_all_entries(data):
     assert len(data) == 9
 
 
+@pytest.mark.db
 def test_can_parse_correctly(data):
     assert data[0] == Entry(
         primary_id="PSICQUIC:URS000000B1C9_9606",
@@ -51,10 +53,7 @@ def test_can_parse_correctly(data):
         url="http://www.ebi.ac.uk/Tools/webservices/psicquic/view/main.xhtml",
         seq_version="1",
         description="Homo sapiens (human) hsa-let-7e-5p",
-        references=[
-            pub.reference("PMID:23671334"),
-            pub.reference("PMID:30670152"),
-        ],
+        references=[pub.reference("PMID:23671334"), pub.reference("PMID:30670152")],
         species="Homo sapiens",
         common_name="human",
         lineage="Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi; Mammalia; Eutheria; Euarchontoglires; Primates; Haplorrhini; Catarrhini; Hominidae; Homo; Homo sapiens",
