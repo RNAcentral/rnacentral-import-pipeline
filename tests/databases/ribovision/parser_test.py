@@ -37,11 +37,11 @@ def test_produces_expected_mapping():
             "E. coli",
             "http://apollo.chemistry.gatech.edu/RiboVision2/#ECOLI_LSU&ECOLI_SSU",
         ),
-        ("1VY4", "Z"): (
+        ("1VY4", "BA"): (
             "T. thermophilus",
             "http://apollo.chemistry.gatech.edu/RiboVision2/#THET8_LSU&THET8_SSU",
         ),
-        ("1VY4", "EB"): (
+        ("1VY4", "BB"): (
             "T. thermophilus",
             "http://apollo.chemistry.gatech.edu/RiboVision2/#THET8_LSU&THET8_SSU",
         ),
@@ -161,7 +161,7 @@ def test_produces_expected_mapping():
             "cl-S. oleracia",
             "http://apollo.chemistry.gatech.edu/RiboVision2/#SPIOL_LSU&SPIOL_SSU",
         ),
-        ("6ERI", "AX"): (
+        ("6ERI", "Ax"): (
             "cl-S. oleracia",
             "http://apollo.chemistry.gatech.edu/RiboVision2/#SPIOL_LSU&SPIOL_SSU",
         ),
