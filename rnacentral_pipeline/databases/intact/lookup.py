@@ -39,4 +39,7 @@ def ids(interactions):
 
 
 def mapping(db_url, data):
-    return lookup.as_mapping(db_url, ids(data), QUERY)
+    mapping = lookup.as_mapping(db_url, ids(data), QUERY)
+    for value in mapping.values():
+        value["sequence"] = value["sequence"].replace("U", "T")
+    return mapping
