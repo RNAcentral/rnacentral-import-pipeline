@@ -27,13 +27,7 @@ def lookup(ref_id):
 
 
 @pytest.mark.parametrize(
-    "raw_id",
-    [
-        28815543,
-        "28815543",
-        "PMC5890441",
-        "doi:10.1007/978-981-10-5203-3_9",
-    ],
+    "raw_id", [28815543, "28815543", "PMC5890441", "doi:10.1007/978-981-10-5203-3_9"]
 )
 def test_can_fetch_publication(raw_id):
     assert fetch.summary(IdReference.build(raw_id)) == {
@@ -74,12 +68,7 @@ def test_complains_given_bad_pmid():
 
 @pytest.mark.parametrize(
     "raw_id",
-    [
-        27858507,
-        "27858507",
-        "doi:10.1080/15476286.2016.1251002",
-        "PMCID:PMC5785218",
-    ],
+    [27858507, "27858507", "doi:10.1080/15476286.2016.1251002", "PMCID:PMC5785218"],
 )
 def test_can_build_reference(raw_id):
     assert lookup(raw_id) == attr.asdict(
@@ -95,6 +84,36 @@ def test_can_build_reference(raw_id):
             pmcid="PMC5785218",
         )
     )
+
+
+@pytest.mark.parametrize(
+    "pmid,title",
+    [
+        (
+            18372920,
+            "MicroRNA-21 promotes cell transformation by targeting the programmed cell death 4 gene",
+        ),
+        (
+            19546886,
+            "Regulation of the cell cycle gene, BTG2, by miR-21 in human laryngeal carcinoma",
+        ),
+        (
+            20533548,
+            "Micro-RNA-21 regulates TGF--induced myofibroblast differentiation by targeting PDCD4 in tumor-stroma interaction",
+        ),
+        (
+            22034194,
+            "MicroRNA-21 represses human cystathionine gamma-lyase expression by targeting at specificity protein-1 in smooth muscle cells",
+        ),
+        (
+            23239100,
+            "miR-21 modulates the ERK-MAPK signaling pathway by regulating SPRY2 expression during human mesenchymal stem cell differentiation",
+        ),
+    ],
+)
+def test_can_deal_with_weird_issues(pmid, title):
+    data = fetch.lookup(IdReference.build(pmid))
+    assert data.title == title
 
 
 def test_can_deal_with_unicode():
