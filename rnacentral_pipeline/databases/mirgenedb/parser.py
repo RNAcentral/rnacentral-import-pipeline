@@ -38,7 +38,7 @@ def get_sources(row: ty.Dict[str, str]) -> ty.List[str]:
 
 def load_assembly_mapping(handle: ty.IO) -> ty.Dict[str, str]:
     mapping = {}
-    reader = csv.DictReader(handle)
+    reader = csv.DictReader(handle, fieldnames=["assembly_id", "assembly_ucsc"])
     for row in reader:
         mapping[row["assembly_ucsc"]] = row["assembly_id"]
     return mapping
