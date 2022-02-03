@@ -83,7 +83,9 @@ def fetch_range(query: str, start: int, rows: int) -> ty.Iterator[ChainInfo]:
         raise MissingPdbs(f"Missing for '{query}', {start}")
     for raw in data["response"]["docs"]:
         for index in range(len(raw["chain_id"])):
-            yield ChainInfo.build(index, raw)
+            info = ChainInfo.build(index, raw)
+            if info.molecule_type and "RNA" in info.molecule_type:
+                yield info
 
 
 @retry((requests.HTTPError, MissingPdbs), tries=5, delay=1)
@@ -97,7 +99,7 @@ def rna_chains(
 
     query = "number_of_RNA_chains:[1 TO *]"
     if pdb_ids:
-        id_query = " OR ".join([f"pdb_id:{p}" for p in pdb_ids])
+        id_query = " OR ".join([f"pdb_id:{p.lower()}" for p in pdb_ids])
         query = f"{query} AND ({id_query})"
 
     rna_chains: ty.List[ChainInfo] = []
@@ -108,7 +110,6 @@ def rna_chains(
             rna_chains.extend(fetch_range(query, start, query_size))
 
     # Must be >= as sometimes more than one chain is in a single document
-    assert len(rna_chains) >= total, "Too few results fetched"
     assert rna_chains, "Found no RNA chains"
     return rna_chains
 
