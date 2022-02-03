@@ -25,6 +25,15 @@ set
   region_name = urs_taxid || region_name
 ;
 
+-- Map UCSC genome accesions to ensembl ones
+UPDATE load_rnc_sequence_regions regions
+SET
+  assembly_id = genomes.assembly_id
+FROM ensembl_assembly genomes
+WHERE
+  regions.assembly_id = genomes.assembly_ucsc
+;
+
 --- Delete all regions that come from an assembly we do not know about
 DELETE from load_rnc_sequence_regions load
 WHERE
