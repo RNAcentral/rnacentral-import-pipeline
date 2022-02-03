@@ -31,16 +31,17 @@ def cli():
 
 
 @cli.command("parse")
+@click.option("--db-url", envvar="PGDATABASE")
 @click.argument("html", type=click.File("r"))
 @click.argument(
     "output",
     default=".",
     type=click.Path(writable=True, dir_okay=True, file_okay=False),
 )
-def process_ribovision(html, output):
+def process_ribovision(html, output, db_url=None):
     """
     This parses the HTML that ribovision provides us
     """
-    entries = parser.parse(html, "")
-    # with entry_writer(Path(output)) as writer:
-    #     writer.write(entries)
+    entries = parser.parse(html, db_url)
+    with entry_writer(Path(output)) as writer:
+        writer.write(entries)
