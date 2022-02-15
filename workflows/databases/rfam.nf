@@ -13,7 +13,7 @@ process fetch_families {
     --port $params.connections.rfam.port \
     --user $params.connections.rfam.user \
     --database $params.connections.rfam.database \
-    $query > families.tsv
+    < $query > families.tsv
   """
 }
 
