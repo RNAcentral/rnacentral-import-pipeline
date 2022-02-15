@@ -14,98 +14,103 @@ limitations under the License.
 """
 
 import collections as coll
-import operator as op
 import re
+import typing as ty
 
 from rnacentral_pipeline.databases.helpers.publications import reference
 
-from ..data import Exon
+from rnacentral_pipeline.databases.data import IdReference
 
-seq_version = op.itemgetter("seq_version")
-species = op.itemgetter("species")
-product = op.itemgetter("description")
-primary_id = op.itemgetter("primary_id")
-common_name = op.itemgetter("common_name")
-optional_id = op.itemgetter("optional_id")
-parent_accession = op.itemgetter("parent_accession")
+
+def primary_id(data: ty.Dict[str, str]) -> str:
+    return data["rfam_acc"]
+
+
+def accession(data: ty.Dict[str, str]) -> str:
+    return f"{data['rfamseq_acc']}.{data['version']}:{data['seq_start']}..{data['seq_end']}:rfam"
+
+
+def taxid(data: ty.Dict[str, str]) -> int:
+    return int(data["ncbi_id"])
+
+
+def sequence_id(data: ty.Dict[str, str]) -> str:
+    return f"{data['rfamseq_acc']}/{data['seq_start']}-{data['seq_end']}"
+
+
+def sequence(sequences, data: ty.Dict[str, str]) -> str:
+    seq_id = sequence_id(data)
+    # print((seq_id, data["sequence_type"]))
+    sequence = str(sequences[seq_id].seq)
+    return sequence.upper().replace("U", "T")
+
+
+def seq_version(data: ty.Dict[str, str]) -> str:
+    return data["version"]
+
+
+def rna_type(family: ty.Dict[str, str]) -> str:
+    so_terms = family["so_terms"]
+    assert re.match(r"^SO:\d+", so_terms)
+    return so_terms
+
+
+def url(family: ty.Dict[str, str]) -> str:
+    return f"http://rfam.org/family/{family['id']}"
+
+
+def species(data: ty.Dict[str, str]) -> str:
+    return data["species"]
 
 
 def lineage(data):
-    base = re.sub(r"\.$", "", data["lineage"])
+    base = re.sub(r"\.$", "", data["tax_string"])
     return "; ".join(base.split(" ") + [data["species"]])
 
 
-def taxid(data) -> int:
-    return int(data["ncbi_tax_id"])
-
-
-def feature_location_endpoints(data):
-    start = int(data["feature_location_start"])
-    stop = int(data["feature_location_end"])
-    return (start, stop)
-
-
-def mol_type(data) -> str:
-    if data["is_seed"] == "0":
-        return "full"
-    return "seed"
-
-
-def references(data):
+def references(data: ty.Dict[str, str]) -> ty.List[IdReference]:
     refs = [reference(29112718)]
-    refs.extend(reference(pmid) for pmid in data.get("references", []))
+    pmids = data.get("PMIDS", "").split(",")
+    refs.extend(reference(pmid) for pmid in pmids)
     return refs
 
 
-def note(data):
+def note(data: ty.Dict[str, str]):
     result = coll.defaultdict(list)
-    result["Alignment"] = mol_type(data)
-    result.update(data["ontology"])
+    result["Alignment"] = data["sequence_type"]
+    for xref in data["dbxrefs"].split(","):
+        db, _id = xref.split(":")
+        result[db].append(xref)
     return result
 
 
-def exons(data):
-    location_range = feature_location_endpoints(data)
-    complement = int(data["feature_location_start"]) != location_range[0]
-    return [
-        Exon(
-            chromosome_name="",
-            primary_start=location_range[0],
-            primary_end=location_range[1],
-            assembly_id="",
-            complement=complement,
-        )
-    ]
-
-
-def rna_type(data) -> str:
-    so_id = data["ontology"]["SO"]
-    if so_id == "0010039":
-        so_id = "0000655"
-    return "SO:" + so_id
-
-
-def sequence(data) -> str:
-    return data["sequence"].upper().replace("U", "T")
-
-
 def experiment(data) -> str:
-    return " ".join(data["references"])
+    return " ".join(p.external_id for p in references(data))
 
 
-def accession(data):
-    location_range = feature_location_endpoints(data)
-    return ("{parent}.{version}:{start}..{stop}:rfam").format(
-        parent=parent_accession(data),
-        version=seq_version(data),
-        start=location_range[0],
-        stop=location_range[1],
-    )
+def description(family, data: ty.Dict[str, str]) -> str:
+    return f"{species(data)} {product(family)}"
 
 
-def description(data):
-    return "{species} {product}".format(species=species(data), product=product(data))
+def optional_id(family: ty.Dict[str, str]) -> str:
+    return family["name"]
 
 
-def url(data):
-    return "http://rfam.org/family/%s" % data["primary_id"]
+def product(family: ty.Dict[str, str]) -> str:
+    return family["pretty_name"]
+
+
+def parent_accession(data: ty.Dict[str, str]) -> str:
+    return data["rfamseq_acc"]
+
+
+def mol_type(data: ty.Dict[str, str]) -> str:
+    return data["sequence_type"]
+
+
+def location_start(data: ty.Dict[str, str]) -> int:
+    return int(data["seq_start"])
+
+
+def location_end(data: ty.Dict[str, str]) -> int:
+    return int(data["seq_end"])
