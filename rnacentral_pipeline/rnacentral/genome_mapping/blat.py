@@ -92,7 +92,9 @@ class BlatHit(object):
         return float(self.matches) / float(self.sequence_length)
 
     def writeable(self):
-        return self.region.writeable(self.upi, is_upi=True)
+        for row in self.region.writeable(self.upi, is_upi=True):
+            row.append(self.match_fraction)
+            yield row
 
 
 def select_possible(hit: BlatHit) -> bool:

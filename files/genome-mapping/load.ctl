@@ -8,7 +8,8 @@ HAVING FIELDS (
     assembly_id,
     exon_count,
     exon_start,
-    exon_stop
+    exon_stop,
+    identity
 )
 INTO {{PGDATABASE}}?load_genome_mapping
 TARGET COLUMNS (
@@ -19,7 +20,8 @@ TARGET COLUMNS (
     assembly_id,
     exon_count,
     exon_start,
-    exon_stop
+    exon_stop,
+    identity
 )
 
 WITH
