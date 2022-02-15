@@ -97,4 +97,11 @@ def parse(
         yield entry
 
     if missing:
-        LOGGER.warn("Did not load %i of %i sequences", missing, total)
+        LOGGER.warn(
+            "Did not load %i of %i sequences, yeilding: %i",
+            missing,
+            total,
+            total - missing,
+        )
+    if float(missing) / float(total) >= 0.5:
+        raise ValueError("Failed to find too many sequences")
