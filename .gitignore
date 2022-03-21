@@ -99,3 +99,4 @@ bin/search-export
 bin/json2dfasta
 stubs
 .envrc
+workflows/references/results
