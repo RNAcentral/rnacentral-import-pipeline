@@ -15,11 +15,32 @@
 #       |RF02770|
 
 
-# set file and database
+# set parameters
 file=$1
 database=$2
 primary=$3
 upi=$4
+
+# set database
+if [ $database == "ensembl_gencode_gene" ] || [ $database == "ensembl_gencode_locus_tag" ]; then
+  database="ensembl_gencode"
+elif [ $database == "ensembl_gene" ] || [ $database == "ensembl_locus_tag" ]; then
+  database="ensembl"
+elif [ $database == "ensembl_metazoa_gene" ] || [ $database == "ensembl_metazoa_locus_tag" ]; then
+  database="ensembl_metazoa"
+elif [ $database == "ensembl_plants_gene" ] || [ $database == "ensembl_plants_locus_tag" ]; then
+  database="ensembl_plants"
+elif [ $database == "ensembl_protists_gene" ] || [ $database == "ensembl_protists_locus_tag" ]; then
+  database="ensembl_protists"
+elif [ $database == "flybase_gene_synonym" ] || [ $database == "flybase_locus_tag" ]; then
+  database="flybase"
+elif [ $database == "hgnc_gene_synonym" ] || [ $database == "hgnc_accession" ]; then
+  database="hgnc"
+elif [ $database == "pombase_gene_synonym" ] || [ $database == "pombase_gene" ]; then
+  database="pombase"
+elif [ $database == "refseq_gene" ] || [ $database == "refseq_gene_synonym" ] || [ $database == "refseq_optional_id" ]; then
+  database="refseq"
+fi
 
 # create folder
 [ ! -d submitted ] && mkdir submitted
