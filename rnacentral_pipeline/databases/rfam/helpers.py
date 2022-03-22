@@ -16,10 +16,13 @@ limitations under the License.
 import collections as coll
 import re
 import typing as ty
+import logging
 
 from rnacentral_pipeline.databases.helpers.publications import reference
 
 from rnacentral_pipeline.databases.data import IdReference
+
+LOGGER = logging.getLogger(__name__)
 
 
 def primary_id(data: ty.Dict[str, str]) -> str:
@@ -51,7 +54,11 @@ def seq_version(data: ty.Dict[str, str]) -> str:
 
 def rna_type(family: ty.Dict[str, str]) -> str:
     so_terms = family["so_terms"]
-    assert re.match(r"^SO:\d+", so_terms)
+    if ',' in so_terms:
+        so_terms = so_terms.split(',')[0]
+    if ',' in so_terms:
+        so_terms = so_terms.split(',')[0]
+    assert re.match(r"^SO:\d+$", so_terms)
     return so_terms
 
 
@@ -71,7 +78,11 @@ def lineage(data):
 def references(data: ty.Dict[str, str]) -> ty.List[IdReference]:
     refs = [reference(29112718)]
     pmids = data.get("PMIDS", "").split(",")
-    refs.extend(reference(pmid) for pmid in pmids)
+    for pmid in pmids:
+        try:
+            refs.append(reference(pmid))
+        except:
+            LOGGER.warn("Failed to parse reference '%s'", pmid)
     return refs
 
 
@@ -79,7 +90,7 @@ def note(data: ty.Dict[str, str]):
     result = coll.defaultdict(list)
     result["Alignment"] = data["sequence_type"]
     for xref in data["dbxrefs"].split(","):
-        db, _id = xref.split(":")
+        db, _ = xref.split(":")
         result[db].append(xref)
     return result
 
