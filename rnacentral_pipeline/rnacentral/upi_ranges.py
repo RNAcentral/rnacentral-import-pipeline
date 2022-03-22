@@ -19,9 +19,13 @@ from ..db import cursor
 
 
 def ranges_between(start, stop, max_size):
+    last = None
     for start in range(start, stop, max_size):
         last = min(start + max_size, stop)
         yield (start, last)
+
+    if last is None:
+        raise ValueError("Some iterated over nothing")
 
     if last < stop:
         yield (last, stop)
