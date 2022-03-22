@@ -39,7 +39,6 @@ process extract_sequences {
 }
 
 process split_sequences {
-  clusterOptions '-sp 100'
 
   input:
   path("raw.json")
@@ -75,8 +74,15 @@ process layout_sequences {
 }
 
 process publish_layout {
+  maxForks 50
+  errorStrategy { task.attempt < 5 ? "retry" : "finish" }
+  maxRetries 5
+
   input:
   tuple path(sequences), path(output), path(mapping)
+
+  output:
+  val 'done', emit: flag
 
   """
   rnac r2dt publish --allow-missing $mapping $output $params.r2dt.publish
