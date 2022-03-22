@@ -185,7 +185,8 @@ workflow sequences {
     search_count \
     | build_ranges \
     | splitCsv \
-    | map { _tablename, min, max -> [min, max - 1] } \
+    | map { _tablename, min, max -> [min.toInteger(), max.toInteger()] }
+    | map { min, max -> [min, max - 1] } \
     | combine(accessions_sql) \
     | combine(accessions_ready) \
     | fetch_accession \
