@@ -2,6 +2,9 @@
 
 BEGIN TRANSACTION;
 
+TRUNCATE TABLE precompute_urs CASCADE;
+TRUNCATE TABLE precompute_urs_taxid CASCADE;
+
 CREATE TEMP TABLE loaded_urs (
   urs TEXT NOT NULL
 );
@@ -36,6 +39,13 @@ ON
   urs.urs = split_part(loaded.urs_taxid, '_', 1)
 ORDER BY urs.id
 );
+
+ALTER TABLE precompute_urs_taxid
+  DROP CONSTRAINT IF EXISTS un_precompute_urs_taxid__urs_taxid,
+  DROP CONSTRAINT IF EXISTS un_precompute_urs_taxid__urs__taxid,
+  DROP CONSTRAINT IF EXISTS fk_precompute_urs_taxid__urs,
+  DROP CONSTRAINT IF EXISTS fk_precompute_urs_taxid__urs_id
+;
 
 ALTER TABLE precompute_urs_taxid
   ADD CONSTRAINT un_precompute_urs_taxid__urs_taxid UNIQUE (urs_taxid),
