@@ -78,7 +78,6 @@ process find_upi_taxid_ranges {
 
 process query_accession_range {
   tag { "$min-$max" }
-  containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
   maxForks params.precompute.maxForks
   memory '4GB'
 
