@@ -44,7 +44,9 @@ process atomic_publish {
     """
   else
     """
-    rm $publish.path/*
+    mkdir -p $publish.path || true
+    rm $publish.path/genes* || true
+    rm $publish.path/xml4dbdumps* || true
     cp ${xml} 'release_note.txt' $publish.path
     psql -v ON_ERROR_STOP=1 -f "$post" "$PGDATABASE"
     """
