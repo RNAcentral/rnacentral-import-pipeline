@@ -17,7 +17,7 @@ process fetch_families {
   """
 }
 
-process fetch_info {
+process fetch_families_info {
   when { params.databases.rfam.run }
 
   input:
@@ -36,12 +36,31 @@ process fetch_info {
   """
 }
 
-
-process parse {
-  maxForks 5
+process fetch_sequence_info {
+  tag { "$family" }
+  maxForks 10
 
   input:
-  tuple val(family), path(info), path(sequence_query)
+  tuple val(family), path(sequence_query)
+
+  output:
+  tuple val(family), path('sequences.tsv')
+
+  """
+  mysql \
+    --host $params.connections.rfam.host \
+    --port $params.connections.rfam.port \
+    --user $params.connections.rfam.user \
+    --database $params.connections.rfam.database \
+   -e "set @family='$family';\\. $sequence_query" > sequences.tsv
+  """
+}
+
+process parse {
+  tag { "$family" }
+
+  input:
+  tuple val(family), path(sequence_info), path(families_info)
 
   output:
   path('*.csv')
@@ -50,14 +69,7 @@ process parse {
   wget -O sequences.fa.gz 'http://ftp.ebi.ac.uk/pub/databases/Rfam/CURRENT/fasta_files/${family}.fa.gz'
   gzip -d sequences.fa.gz
 
-  mysql \
-    --host $params.connections.rfam.host \
-    --port $params.connections.rfam.port \
-    --user $params.connections.rfam.user \
-    --database $params.connections.rfam.database \
-   -e "set @family='$family';\\. $sequence_query" > sequences.tsv
-
-  rnac rfam parse $info sequences.tsv sequences.fa .
+  rnac rfam parse $families_info $sequence_info sequences.fa .
   """
 }
 
@@ -65,18 +77,19 @@ process parse {
 workflow rfam {
   emit: data
   main:
-    Channel.fromPath('files/import-data/rfam/select-families') | set { family_sql }
-    Channel.fromPath('files/import-data/rfam/families.sql') | set { info_sql }
+    Channel.fromPath('files/import-data/rfam/select-families.sql') | set { family_sql }
+    Channel.fromPath('files/import-data/rfam/select-families.sql') | set { family_sql }
     Channel.fromPath('files/import-data/rfam/sequences.sql') | set { sequence_sql }
 
-    info_sql | fetch_info | set { info }
+    info_sql | fetch_families_info | set { info }
 
     family_sql \
     | fetch_families \
-    | splitCsv(sep='\t') \
-    | map { row -> row[0] } \
-    | combine(info) \
+    | splitCsv(sep: '\t', header: true) \
+    | map { row -> row.rfam_acc } \
     | combine(sequence_sql) \
+    | fetch_sequence_info \
+    | combine(info) \
     | parse \
     | set { data }
 }
