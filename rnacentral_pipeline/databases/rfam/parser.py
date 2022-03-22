@@ -17,8 +17,10 @@ import csv
 import typing as ty
 from pathlib import Path
 import logging
+import tempfile
 
 from Bio import SeqIO
+from Bio.SeqIO import SeqRecord
 
 from ..data import Entry
 from . import helpers
@@ -75,6 +77,16 @@ def load_mapping(handle: ty.TextIO) -> ty.Dict[str, ty.Dict[str, str]]:
     return data
 
 
+def dedup_sequences(path: Path) -> ty.Iterator[SeqRecord]:
+    seen = set()
+    for record in SeqIO.parse(str(path), 'fasta'):
+        if record.id in seen:
+            LOGGER.warn("Duplicate id seen %s", record.id)
+            continue
+        seen.add(record.id)
+        yield record
+
+
 def parse(
     family_file: ty.TextIO, sequence_info: ty.TextIO, fasta: Path
 ) -> ty.Iterable[Entry]:
@@ -83,18 +95,21 @@ def parse(
     objects in the file.
     """
 
-    indexed = SeqIO.index(str(fasta), "fasta")
-    families = load_mapping(family_file)
-    reader = csv.DictReader(sequence_info, delimiter="\t")
-    total = 0
-    missing = 0
-    for row in reader:
-        total += 1
-        entry = as_entry(families, indexed, row)
-        if entry is None:
-            missing += 1
-            continue
-        yield entry
+    with tempfile.NamedTemporaryFile() as temp:
+        SeqIO.write(dedup_sequences(fasta), temp.name, 'fasta')
+        temp.flush()
+        indexed = SeqIO.index(temp.name, "fasta")
+        families = load_mapping(family_file)
+        reader = csv.DictReader(sequence_info, delimiter="\t")
+        total = 0
+        missing = 0
+        for row in reader:
+            total += 1
+            entry = as_entry(families, indexed, row)
+            if entry is None:
+                missing += 1
+                continue
+            yield entry
 
     if missing:
         LOGGER.warn(
