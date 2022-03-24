@@ -48,7 +48,7 @@ def main(database, filename, output):
     Check ids and create file that will be used by RNAcentral-references.
     """
     remove_dot = ["ensembl_gene", "ensembl_gencode_gene", "ensembl_metazoa_gene"]
-    split_on_comma = ["flybase_gene_synonym", "pombase_gene_synonym", "refseq_gene_synonym"]
+    split_on_comma = ["flybase_gene_synonym", "pombase_gene_synonym", "refseq_gene_synonym", "hgnc_gene_synonym"]
 
     with open(filename, 'r') as input_file:
         with open(output, 'w') as output_file:
