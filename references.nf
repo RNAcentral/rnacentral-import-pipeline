@@ -33,21 +33,21 @@ process sort_ids {
     tuple val(database), file(output)
 
     output:
-    tuple val(database), path("${database}_sorted")
+    tuple val(database), path("${database}.txt")
 
     script:
     """
-    cat $output | sort | uniq > ${database}_sorted
+    cat $output | sort | uniq > ${database}.txt
     """
 }
 
 process submit_ids {
     input:
-    tuple val(database), file("${database}_sorted")
+    tuple val(database), file("${database}.txt")
 
     script:
     """
-    upload_ids.sh ${database}_sorted $database
+    upload_ids.sh ${database}.txt $database
     """
 }
 
