@@ -40,6 +40,7 @@ use super::{
     interacting_rna::InteractingRna,
     orf::Orf,
     precompute::Precompute,
+    publication_counts::PublicationCount,
     qa_status::QaStatus,
     r2dt::R2dt,
     raw::Raw,
@@ -92,6 +93,7 @@ pub enum FileTypes {
     QaStatus,
     R2dt,
     RfamHits,
+    PublicationCount,
     SoTermTree,
 }
 
@@ -108,6 +110,7 @@ pub struct FileJoiner<'de> {
     qa_status: StreamDeserializer<'de, IoRead<BufReader<File>>, Grouped<QaStatus>>,
     r2dt_hits: StreamDeserializer<'de, IoRead<BufReader<File>>, Grouped<R2dt>>,
     rfam_hits: StreamDeserializer<'de, IoRead<BufReader<File>>, Grouped<RfamHit>>,
+    publication_counts: StreamDeserializer<'de, IoRead<BufReader<File>>, Grouped<PublicationCount>>,
     so_info: SoMapping,
 }
 
@@ -191,6 +194,7 @@ impl FileJoinerBuilder {
         let qa_status = self.iterator_for(FileTypes::QaStatus)?;
         let r2dt_hits = self.iterator_for(FileTypes::R2dt)?;
         let rfam_hits = self.iterator_for(FileTypes::RfamHits)?;
+        let publication_counts = self.iterator_for(FileTypes::PublicationCount)?;
         let so_info = so_tree::load(self.path_for(FileTypes::SoTermTree)?)?;
 
         Ok(FileJoiner {
@@ -205,6 +209,7 @@ impl FileJoinerBuilder {
             qa_status,
             r2dt_hits,
             rfam_hits,
+            publication_counts,
             so_info,
         })
     }
@@ -226,10 +231,11 @@ impl<'de> Iterator for FileJoiner<'de> {
             self.qa_status.next(),
             self.r2dt_hits.next(),
             self.rfam_hits.next(),
+            self.publication_counts.next(),
         );
 
         match current {
-            (None, None, None, None, None, None, None, None, None, None, None) => None,
+            (None, None, None, None, None, None, None, None, None, None, None, None) => None,
             (
                 Some(Ok(Required {
                     id: id1,
@@ -275,6 +281,10 @@ impl<'de> Iterator for FileJoiner<'de> {
                     id: id11,
                     data: rfam_hits,
                 })),
+                Some(Ok(Optional {
+                    id: id12,
+                    data: publication_counts,
+                })),
             ) => {
                 if id1 != id2
                     || id1 != id3
@@ -286,9 +296,10 @@ impl<'de> Iterator for FileJoiner<'de> {
                     || id1 != id9
                     || id1 != id10
                     || id1 != id11
+                    || id1 != id12
                 {
                     return Some(Err(Error::OutofSyncData(vec![
-                        id1, id2, id3, id4, id5, id6, id7, id8, id9, id10, id11,
+                        id1, id2, id3, id4, id5, id6, id7, id8, id9, id10, id11, id12
                     ])));
                 }
 
@@ -311,6 +322,7 @@ impl<'de> Iterator for FileJoiner<'de> {
                     .r2dt(r2dt)
                     .rfam_hits(rfam_hits)
                     .orfs(orfs)
+                    .publication_counts(publication_counts)
                     .so_tree(so_tree)
                     .build();
 

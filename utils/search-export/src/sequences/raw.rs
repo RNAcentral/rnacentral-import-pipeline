@@ -25,6 +25,8 @@ use crate::sequences::{
     so_tree,
 };
 
+use super::publication_counts::PublicationCount;
+
 #[derive(TypedBuilder, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Raw {
     id: usize,
@@ -39,6 +41,7 @@ pub struct Raw {
     r2dt: Option<R2dt>,
     rfam_hits: Vec<RfamHit>,
     orfs: Vec<Orf>,
+    publication_counts: Option<PublicationCount>,
     so_tree: so_tree::SoTree,
 }
 

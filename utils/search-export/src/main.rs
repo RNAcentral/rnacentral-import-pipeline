@@ -29,6 +29,7 @@ pub enum Groupable {
     QaStatus,
     R2dt,
     RfamHits,
+    PublicationCount,
     SoInfo,
 }
 
@@ -120,6 +121,10 @@ enum SequenceCommand {
 
         #[structopt(parse(from_os_str))]
         orfs: PathBuf,
+
+        #[structopt(parse(from_os_str))]
+        /// Filename of the JSON file of publication counts
+        publication_counts: PathBuf,
 
         #[structopt(parse(from_os_str))]
         /// Filename of the SO term tree metadata.
@@ -232,6 +237,7 @@ fn main() -> Result<()> {
             Groupable::RfamHits => sequences::rfam_hit::group(&path, max_count, &output)?,
             Groupable::Orfs => sequences::orf::group(&path, max_count, &output)?,
             Groupable::SoInfo => Err(anyhow::anyhow!("May not group so info"))?,
+            Groupable::PublicationCount => sequences::publication_counts::group(&path, max_count, &output)?,
         },
         Subcommand::Sequences {
             command,
@@ -248,6 +254,7 @@ fn main() -> Result<()> {
                 r2dt_hits,
                 rfam_hits,
                 orfs,
+                publication_counts,
                 so_term_tree,
                 output,
             } => sequences::writers::write_merge(
@@ -262,6 +269,7 @@ fn main() -> Result<()> {
                     qa_status,
                     r2dt_hits,
                     rfam_hits,
+                    publication_counts,
                     orfs,
                     so_term_tree,
                 ],
