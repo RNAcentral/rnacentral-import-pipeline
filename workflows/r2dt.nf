@@ -116,6 +116,7 @@ process store_secondary_structures {
   path(urs_sql)
   path(model)
   path(should_show_ctl)
+  val(_flag)
 
   output:
   val('r2dt done')
@@ -187,7 +188,9 @@ workflow r2dt {
     parse_layout.out.data | collect | set { data }
     parse_layout.out.attempted | collect | set { attempted }
 
-    store_secondary_structures(data, load_ctl, attempted, attempted_ctl, ss_query, ss_model, ss_ctl) | set { done }
+    publish_layout.out.flag | collect | map { _ -> 'ready' } | set { uploaded }
+
+    store_secondary_structures(data, load_ctl, attempted, attempted_ctl, ss_query, ss_model, ss_ctl, uploaded) | set { done }
 }
 
 workflow {
