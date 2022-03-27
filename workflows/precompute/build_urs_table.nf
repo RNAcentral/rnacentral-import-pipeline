@@ -1,6 +1,3 @@
-include { fetch_release_info as precompute_releases } from './utils'
-include { fetch_release_info as xref_releases } from './utils'
-
 process create_schema {
   executor 'local'
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
@@ -94,6 +91,30 @@ process sort_ids {
 
   """
   sort -u raw* > finalized
+  """
+}
+
+process xref_releases {
+  input:
+  tuple val(_flag), file(query)
+
+  output:
+  path('data.csv')
+
+  """
+  psql -v ON_ERROR_STOP=1 -f $query $PGDATABASE > data.csv
+  """
+}
+
+process fetch_release_info {
+  input:
+  tuple val(_flag), file(query)
+
+  output:
+  path('data.csv')
+
+  """
+  psql -v ON_ERROR_STOP=1 -f $query $PGDATABASE > data.csv
   """
 }
 
