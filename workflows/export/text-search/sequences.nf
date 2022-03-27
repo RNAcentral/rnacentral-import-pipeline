@@ -62,13 +62,14 @@ process build_metadata {
   path(r2dt)
   path(rfam)
   path(orf)
+  path(text)
   path(so_tree)
 
   output:
   path("merged.json")
 
   """
-  search-export sequences merge $base $crs $feeback $go $prot $rnas $precompute $qa $r2dt $rfam $orf $so_tree merged.json
+  search-export sequences merge $base $crs $feeback $go $prot $rnas $precompute $qa $r2dt $rfam $orf $text $so_tree merged.json
   """
 }
 
@@ -106,6 +107,22 @@ process fetch_accession {
     -v max=$max \
     -f "$sql" \
     "$PGDATABASE" > raw.json
+  """
+}
+
+process text_mining_query {
+  input:
+  val(max_count)
+  path(script)
+
+  output:
+  path("text-mining.json")
+
+  """
+  curl "$params.export.search.text_mining" > counts.csv
+  psql -v ON_ERROR_STOP=1 -c "\\copy search_export_publication_counts from 'counts.csv'" "$PGDATABASE"
+  psql -v ON_ERROR_STOP=1 -f "$script" "$PGDATABASE" > raw.json
+  search-export group text-mining raw.json ${max_count} text-mining.json
   """
 }
 
@@ -152,6 +169,7 @@ workflow sequences {
     Channel.fromPath('files/search-export/parts/r2dt.sql') | set { r2dt_sql }
     Channel.fromPath('files/search-export/parts/rfam-hits.sql') | set { rfam_sql }
     Channel.fromPath('files/search-export/parts/orfs.sql') | set { orf_sql }
+    Channel.fromPath('files/search-export/parts/text-mining.sql') | set { text_sql }
     Channel.fromPath('files/search-export/so-rna-types.sql') | set { so_sql }
 
     Channel.fromPath('files/search-export/parts/accessions.sql') | set { accessions_sql }
@@ -178,6 +196,7 @@ workflow sequences {
       r2dt_query(search_count, r2dt_sql),
       rfam_query(search_count, rfam_sql),
       orf_query(search_count, orf_sql),
+      text_mining_query(search_count, text_sql),
       fetch_so_tree(so_sql),
     )\
     | set { metadata }
