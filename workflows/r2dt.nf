@@ -39,7 +39,6 @@ process extract_sequences {
 }
 
 process split_sequences {
-  clusterOptions '-sp 100'
 
   input:
   path("raw.json")
@@ -75,8 +74,15 @@ process layout_sequences {
 }
 
 process publish_layout {
+  maxForks 50
+  errorStrategy { task.attempt < 5 ? "retry" : "finish" }
+  maxRetries 5
+
   input:
   tuple path(sequences), path(output), path(mapping)
+
+  output:
+  val 'done', emit: flag
 
   """
   rnac r2dt publish --allow-missing $mapping $output $params.r2dt.publish
@@ -110,6 +116,7 @@ process store_secondary_structures {
   path(urs_sql)
   path(model)
   path(should_show_ctl)
+  val(_flag)
 
   output:
   val('r2dt done')
@@ -181,7 +188,9 @@ workflow r2dt {
     parse_layout.out.data | collect | set { data }
     parse_layout.out.attempted | collect | set { attempted }
 
-    store_secondary_structures(data, load_ctl, attempted, attempted_ctl, ss_query, ss_model, ss_ctl) | set { done }
+    publish_layout.out.flag | collect | map { _ -> 'ready' } | set { uploaded }
+
+    store_secondary_structures(data, load_ctl, attempted, attempted_ctl, ss_query, ss_model, ss_ctl, uploaded) | set { done }
 }
 
 workflow {

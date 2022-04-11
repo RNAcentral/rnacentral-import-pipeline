@@ -31,26 +31,9 @@ from rnacentral_pipeline.databases.data import IdReference
 
 LOGGER = logging.getLogger(__name__)
 
-ONTOLOGIES = set(
-    [
-        "ECO",
-        "SO",
-        "GO",
-    ]
-)
+ONTOLOGIES = set(["ECO", "SO", "GO"])
 
-MAY_SKIP = set(
-    [
-        1169740,
-        1202446,
-        1325974,
-        408170,
-        410658,
-        506600,
-        77133,
-        939928,
-    ]
-)
+MAY_SKIP = set([1169740, 1202446, 1325974, 408170, 410658, 506600, 77133, 939928])
 
 
 KNOWN_DBS = set(
@@ -150,7 +133,7 @@ def rna_type(feature):
 
 
 def mol_type(record):
-    return source_qualifier_value(record, "mol_type")
+    return record.annotations["molecule_type"]
 
 
 def product(feature):

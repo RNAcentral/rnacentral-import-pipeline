@@ -25,6 +25,15 @@ set
   region_name = urs_taxid || region_name
 ;
 
+-- Map UCSC genome accesions to ensembl ones
+UPDATE load_rnc_sequence_regions regions
+SET
+  assembly_id = genomes.assembly_id
+FROM ensembl_assembly genomes
+WHERE
+  regions.assembly_id = genomes.assembly_ucsc
+;
+
 --- Delete all regions that come from an assembly we do not know about
 DELETE from load_rnc_sequence_regions load
 WHERE
@@ -130,6 +139,18 @@ join rnc_sequence_regions regions on regions.region_name = load.region_name
 join ensembl_assembly ensembl on ensembl.assembly_id = load.assembly_id
 ) ON CONFLICT (region_id, exon_start, exon_stop) DO NOTHING
 ;
+
+-- Populate the link from accession to sequence regions
+INSERT into rnc_accession_sequence_region (
+  accession,
+  region_id
+) (
+select distinct
+  load.accession,
+  regions.id
+from load_rnc_sequence_regions load
+join rnc_sequence_regions regions on regions.region_name = load.region_name
+) ON CONFLICT (accession, region_id) DO NOTHING;
 
 do $$
 declare no_exons int;

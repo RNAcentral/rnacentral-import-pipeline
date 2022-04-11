@@ -43,14 +43,14 @@ process species_specific {
   path(query)
 
   output:
-  path('rnacentral_species_specific_ids.fasta'), emit: sequences
+  path('rnacentral_species_specific_ids.fasta')
 
   """
   set -euo pipefail
 
   export PYTHONIOENCODING=utf8
   psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > raw.json
-  json2fasta.py - rnacentral_species_specific_ids.fasta 
+  json2fasta.py raw.json rnacentral_species_specific_ids.fasta 
   """
 }
 
@@ -68,7 +68,7 @@ process create_ssi {
   """
 }
 
-proecss compress_species_fasta {
+process compress_species_fasta {
   publishDir "${params.export.ftp.publish}/sequences/", mode: 'copy'
 
   input:
@@ -122,10 +122,7 @@ workflow fasta_export {
   Channel.fromPath('files/ftp-export/sequences/inactive.sql') | inactive
   Channel.fromPath('files/ftp-export/sequences/species-specific.sql') \
   | species_specific \
-  | set { species_fasta }
-
-  compress_species_fasta(species_fasta)
-  create_ssi(species_fasta)
+  | (compress_species_fasta & create_ssi)
 
   Channel.fromPath('files/ftp-export/sequences/databases.sql') \
   | find_dbs \

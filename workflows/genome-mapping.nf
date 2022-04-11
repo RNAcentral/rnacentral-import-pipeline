@@ -30,6 +30,8 @@ process fetch_unmapped_sequences {
   tuple val(species), path('parts/*.fasta')
 
   """
+  set -euo pipefail
+
   psql \
     -v ON_ERROR_STOP=1 \
     -v taxid=$taxid \
@@ -158,7 +160,6 @@ process load_mapping {
   """
   split-and-load $ctl 'raw*.csv' ${params.import_data.chunk_size} genome-mapping
   split-and-load $attempted_ctl 'attempted*.csv' ${params.import_data.chunk_size} genome-mapping-attempted
-  psql -v ON_ERROR_STOP=1 -c 'DROP TABLE ${params.genome_mapping.to_map_table}' $PGDATABASE
   """
 }
 

@@ -4,7 +4,6 @@ set -euo pipefail
 IFS=$'\n\t'
 
 export NXF_OPTS='-Dnxf.pool.type=sync -Dnxf.pool.maxThreads=10000'
-export SINGULARITY_TMPDIR='/scratch'
 export PATH="/nfs/software/singularity/3.5.0/bin:$HOME/.cargo/bin:$PATH"
 
 [ -d work/tmp ] || mkdir -p work/tmp

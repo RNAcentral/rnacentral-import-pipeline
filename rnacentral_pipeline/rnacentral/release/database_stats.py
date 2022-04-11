@@ -145,7 +145,7 @@ def lineage(conn, db_id: int):
         return json_lineage_tree(data)
 
 
-def lengths(conn, db_id: int):
+def lengths(conn, db_id: int) -> ty.Dict[str, ty.Any]:
     rna = Table("rna")
     xref = Table(f"xref_p{db_id}_not_deleted")
     min_length = an.Min(rna.len).as_("min_length")

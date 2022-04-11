@@ -1,6 +1,6 @@
 COPY (
   SELECT
-    id
+    pre.id
   FROM rnc_rna_precomputed pre
   JOIN rna ON rna.upi = pre.upi
   WHERE

@@ -16,6 +16,7 @@ limitations under the License.
 import csv
 import logging
 import operator as op
+import typing as ty
 
 from Bio import SeqIO
 
@@ -36,12 +37,16 @@ def append_taxid(taxid, getter=id_key):
     return fn
 
 
-def json_parser(handle, id_generator=id_key, extra_fields=[]):
+def json_parser(
+    handle: ty.IO, id_generator=id_key, extra_fields: ty.List[str] = []
+) -> ty.Iterable[ty.List[str]]:
     for entry in psql.json_handler(handle):
         yield [id_generator(entry)] + extra_fields
 
 
-def fasta_parser(handle, id_generator=id_attribute, extra_fields=[]):
+def fasta_parser(
+    handle: ty.IO, id_generator=id_attribute, extra_fields: ty.List[str] = []
+) -> ty.Iterable[ty.List[str]]:
     for record in SeqIO.parse(handle, "fasta"):
         seq_id = id_generator(record)
         if not seq_id:
@@ -49,19 +54,19 @@ def fasta_parser(handle, id_generator=id_attribute, extra_fields=[]):
         yield [seq_id] + extra_fields
 
 
-def parse_rfam_version(handle):
+def parse_rfam_version(handle: ty.IO) -> str:
     for line in handle:
         if line.startswith("Release"):
             parts = line.split(" ")
             return parts[1].strip()
-    raise ValueError("Could not find version in file")
+    raise ValueError(f"Could not find version in file {handle}")
 
 
-def write(data, output, require_attempt=True):
+def write(data: ty.Iterable[ty.List[str]], output: ty.IO, require_attempt=True):
     writer = csv.writer(output)
     seen = False
     for row in data:
-        writer.writerows(row)
+        writer.writerow(row)
         seen = True
     if not seen:
         LOGGER.error("Nothing was attempted")
@@ -69,12 +74,12 @@ def write(data, output, require_attempt=True):
             raise ValueError("Found nothing was attempted")
 
 
-def genome_mapping(handle, assembly_id, output):
+def genome_mapping(handle: ty.IO, assembly_id: str, output: ty.IO):
     data = fasta_parser(handle, extra_fields=[assembly_id])
     write(data, output)
 
 
-def qa(handle, name, version_file, output):
+def qa(handle: ty.IO, name: str, version_file: ty.IO, output: ty.IO):
     if name == "rfam":
         version = parse_rfam_version(version_file)
     else:
@@ -83,6 +88,6 @@ def qa(handle, name, version_file, output):
     write(data, output)
 
 
-def r2dt(handle, output):
+def r2dt(handle: ty.IO, output: ty.IO):
     data = fasta_parser(handle)
     write(data, output)

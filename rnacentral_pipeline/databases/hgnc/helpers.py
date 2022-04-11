@@ -45,6 +45,14 @@ def description(entry: HgncEntry) -> str:
     return f"Homo sapiens (human) {entry.name}"
 
 
+def gene(entry: HgncEntry) -> str:
+    return entry.symbol
+
+
+def gene_synonyms(hgnc: HgncEntry) -> ty.List[str]:
+    return hgnc.previous_symbols
+
+
 def gtrnadb_to_urs(context: Context, raw: str) -> ty.Optional[str]:
     xref = Table("xref")
     rna = Table("rna")
@@ -156,6 +164,10 @@ def so_term(context: Context, entry: HgncEntry) -> str:
     if entry.hgnc_rna_type == "RNA, misc":
         return "SO:0000655"
     if entry.hgnc_rna_type == "RNA, ribosomal":
+        if "5S ribosomal RNAs" in entry.gene_groups:
+            return "SO:0000652"
+        if "12S RNA" in entry.gene_groups:
+            return "SO:0002344"
         return "SO:0000252"
     if entry.hgnc_rna_type == "RNA, small nuclear":
         return "SO:0000274"

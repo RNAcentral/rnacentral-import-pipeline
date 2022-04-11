@@ -9,6 +9,7 @@ pub mod interacting_rna;
 pub mod normalized;
 pub mod orf;
 pub mod precompute;
+pub mod publication_counts;
 pub mod qa_status;
 pub mod r2dt;
 pub mod raw;

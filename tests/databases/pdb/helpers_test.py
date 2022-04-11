@@ -57,11 +57,29 @@ def load(pdb_id: str, chain_id: str) -> ChainInfo:
         ("60S ribosomal RNA", "rRNA"),
     ],
 )
-def test_can_compute_correct_rna_types(product, expected):
-    assert helpers.compound_rna_type({"compound": product}) == expected
+def test_can_compute_correct_rna_types(product: str, expected):
+    assert helpers.compound_rna_type(product) == expected
 
 
-def test_can_detect_if_sequence_is_not_rna():
-    data = load("5wnp", "U")
-    with pytest.raises(helpers.InvalidSequence):
-        helpers.sequence(data)
+@pytest.mark.parametrize(
+    "pdb,chain,expected",
+    [
+        ("7mky", "A", True),
+        ("7lyj", "A", True),
+        ("5U3G", "B", True),
+        ("2L1V", "A", True),
+        ("6VAR", "A", True),
+        ("4Y1I", "A", True),
+        ("4Y1I", "B", True),
+        ("4Y1J", "A", True),
+        ("4Y1J", "B", True),
+        ("4Y1M", "A", True),
+        ("4Y1M", "B", True),
+        ("7MKY", "A", True),
+        ("7LYJ", "A", True),
+        ("7MLW", "F", True),
+    ],
+)
+def test_can_detect_if_is_ncrna(pdb, chain, expected):
+    info = load(pdb, chain)
+    assert helpers.is_ncrna(info) == expected

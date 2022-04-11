@@ -701,6 +701,10 @@ def entry_type(_urs):
     return "Sequence"
 
 
+def has_publications(counts):
+    return str(bool(counts))
+
+
 builder = entry(
     [
         tag("name", as_name, keys=("urs", "taxid")),
@@ -827,6 +831,7 @@ builder = entry(
                 fields("so_rna_type_name", so_rna_type_name, keys="so_rna_type_tree"),
                 tree("so_rna_type", so_rna_type_tree, key="so_rna_type_tree"),
                 fields("orf_source", values, keys="orf_sources"),
+                field("has_lit_scan", has_publications, keys="publication_counts")
             ],
         ),
     ]
