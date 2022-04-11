@@ -70,6 +70,9 @@ def as_entry(context: Context, hgnc: HgncEntry, urs: str) -> data.Entry:
         url=helpers.url(hgnc),
         seq_version="1",
         description=helpers.description(hgnc),
+        locus_tag=helpers.gene(hgnc),
+        gene=helpers.gene(hgnc),
+        gene_synonyms=helpers.gene_synonyms(hgnc),
     )
 
 

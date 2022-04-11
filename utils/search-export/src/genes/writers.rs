@@ -1,10 +1,20 @@
-use std::{collections::HashMap, fs::{
+use std::{
+    collections::HashMap,
+    fs::{
         create_dir_all,
         File,
-    }, io::{BufReader, BufWriter, Write}, iter::FromIterator, path::{
+    },
+    io::{
+        BufReader,
+        BufWriter,
+        Write,
+    },
+    iter::FromIterator,
+    path::{
         Path,
         PathBuf,
-    }};
+    },
+};
 
 use anyhow::Result;
 use chrono::{
@@ -101,7 +111,6 @@ pub fn write_merged_members(member_file: &Path, output: &Path) -> Result<()> {
 }
 
 pub fn write_search_files(gene_file: &Path, xml_output: &Path, count_output: &Path) -> Result<()> {
-
     let gene_reader = BufReader::new(File::open(gene_file)?);
     let genes = Deserializer::from_reader(gene_reader).into_iter::<Gene>();
 

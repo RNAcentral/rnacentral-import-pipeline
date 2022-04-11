@@ -45,6 +45,7 @@ def assembly_for(assemblies, taxid):
     return found[0]
 
 
+@pytest.mark.db
 def test_it_can_load_known():
     with open("files/import-data/ensembl/known-assemblies.sql", "r") as kn:
         known = assem.load_known(os.environ["PGDATABASE"], kn)
@@ -61,15 +62,12 @@ def test_it_can_load_known():
             ensembl_url="homo_sapiens",
             division="EnsemblVertebrates",
             blat_mapping=True,
-            example=assem.AssemblyExample(
-                chromosome="X",
-                start=73819307,
-                end=73856333,
-            ),
+            example=assem.AssemblyExample(chromosome="X", start=73819307, end=73856333),
         )
     )
 
 
+@pytest.mark.db
 def test_it_builds_a_valid_assembly(assemblies):
     val = assembly_for(assemblies, 9606)
     assert attr.asdict(val) == attr.asdict(
@@ -83,21 +81,19 @@ def test_it_builds_a_valid_assembly(assemblies):
             ensembl_url="homo_sapiens",
             division="EnsemblVertebrates",
             blat_mapping=True,
-            example=assem.AssemblyExample(
-                chromosome="X",
-                start=73819307,
-                end=73856333,
-            ),
+            example=assem.AssemblyExample(chromosome="X", start=73819307, end=73856333),
         )
     )
     assert val.subdomain == "ensembl.org"
 
 
+@pytest.mark.db
 def test_it_has_no_bacterial_assemblies(assemblies):
     divisions = set(a.division for a in assemblies)
     assert "EnsemblBacteria" not in divisions
 
 
+@pytest.mark.db
 @pytest.mark.parametrize(
     "taxid,count",
     [
@@ -116,19 +112,15 @@ def test_it_has_one_assembly_per_taxid(assemblies, taxid, count):
     assert len(val) == count, "Issue with counts for %i" % taxid
 
 
-@pytest.mark.parametrize(
-    "key",
-    [
-        "taxid",
-        "assembly_id",
-    ],
-)
+@pytest.mark.db
+@pytest.mark.parametrize("key", ["taxid", "assembly_id"])
 def test_it_never_has_more_than_one_assembly_unique_item(assemblies, key):
     counts = Counter(getattr(a, key) for a in assemblies)
     max_item = counts.most_common(n=1)[0]
     assert max_item[1] == 1, "Too many counts for: %s, %i" % max_item
 
 
+@pytest.mark.db
 @pytest.mark.parametrize(
     "taxid,division,assembly_id",
     [

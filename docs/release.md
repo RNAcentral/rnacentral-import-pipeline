@@ -34,7 +34,7 @@ nextflow.
 ### Create required directories
 
 We use a temp directory inside of `work` to try and avoid a possibly slow
-filesystem on nodes. 
+filesystem on nodes.
 
 ```
 mkdir -p work/tmp
@@ -172,6 +172,22 @@ includeConfig '../profiles.config'
 includeConfig 'config/cluster.config'
 ```
 
+### Configure database connections
+
+The database that is used in the nextflow pipeline is defined by the
+`PGDATABASE` environment variable. It can be set in nextflow like:
+
+```groovy
+profile {
+  prod {
+    env.PGDATABASE = 'postgres://<user>:<password>@<host>:<port>/<database>'
+  }
+}
+```
+
+In all follow nextflow commands I assume that is how it is set. This is why the
+`-profile prod` option is given to all nextflow commands.
+
 ## Import data
 
 Run the workflow to import data with:
@@ -218,6 +234,12 @@ This builds the text search, sequence search and ftp exports. It is run with:
 
 ```sh
 $ nextflow run -profile prod export.nf
+```
+
+This runs all parts, but individual parts can be run like:
+
+```sh
+$ nextflow run -profile prod workflows/export/sequence-search.nf
 ```
 
 ## Other notes

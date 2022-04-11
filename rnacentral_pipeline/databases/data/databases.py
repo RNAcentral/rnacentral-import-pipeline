@@ -63,6 +63,7 @@ class Database(enum.Enum):
     psicquic = DatabaseValue(48, "PSICQUIC")
     rdp = DatabaseValue(29, "RDP")
     refseq = DatabaseValue(30, "RefSeq")
+    ribovision = DatabaseValue(49, "RiboVision")
     rfam = DatabaseValue(31, "Rfam")
     rgd = DatabaseValue(32, "RGD")
     sgd = DatabaseValue(33, "SGD")

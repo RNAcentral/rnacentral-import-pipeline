@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import annotations
+
 """
 Copyright [2009-2017] EMBL-European Bioinformatics Institute
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -37,31 +39,34 @@ class Division(enum.Enum):
     vertebrates = enum.auto()
 
     @classmethod
-    def from_name(cls, name):
+    def from_name(cls, name: str) -> Division:
         for value in cls:
             if value.name.lower() == name.lower():
                 return value
         raise ValueError("Unknown Division %s" % name)
 
     @classmethod
-    def names(cls):
+    def names(cls) -> ty.List[str]:
         return [x.name for x in cls]
 
     @property
-    def division_name(self):
+    def division_name(self) -> str:
         name = self.name[0].upper() + self.name[1:]
         return f"Ensembl{name}"
 
 
 @attr.s()
 class TranscriptInfo:
-    so_rna_type = attr.ib(validator=is_a(str))
+    so_rna_type: str = attr.ib(validator=is_a(str))
     regions: ty.List[SequenceRegion] = attr.ib(validator=is_a(list))
-    from_gencode = attr.ib(validator=is_a(bool))
+    from_gencode: bool = attr.ib(validator=is_a(bool))
 
     @classmethod
-    def from_feature(cls, record, feature) -> "TranscriptInfo":
-        so_term = as_so_term(embl.rna_type(feature))
+    def from_feature(cls, record, feature) -> TranscriptInfo:
+        rna_type = embl.rna_type(feature)
+        if rna_type is None:
+            raise ValueError(f"Did not get an RNA type for {feature}")
+        so_term = as_so_term(rna_type)
         return cls(
             so_rna_type=so_term,
             regions=helpers.regions(record, feature),
@@ -77,12 +82,7 @@ class FtpInfo:
     gff_file = attr.ib(validator=is_a(str))
 
     def writeable(self) -> ty.Tuple[str, str, str, str]:
-        return (
-            self.division.name,
-            self.species,
-            self.data_files,
-            self.gff_file,
-        )
+        return (self.division.name, self.species, self.data_files, self.gff_file)
 
 
 @attr.s()

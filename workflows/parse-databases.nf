@@ -20,6 +20,7 @@ include { quickgo } from './databases/quickgo'
 include { refseq } from './databases/refseq'
 include { rfam } from './databases/rfam'
 include { rgd } from './databases/rgd'
+include { ribovision } from './databases/ribovision'
 include { sgd } from './databases/sgd'
 include { silva } from './databases/silva'
 include { snodb } from './databases/snodb'
@@ -74,6 +75,7 @@ workflow parse_databases {
       refseq(),
       rfam(),
       rgd(),
+      ribovision(),
       sgd(),
       silva(context),
       snodb(),

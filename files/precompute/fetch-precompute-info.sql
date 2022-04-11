@@ -7,4 +7,5 @@ FROM rnc_rna_precomputed pre
 JOIN rna
 ON
   rna.upi = pre.upi
+order by rna.id ASC
 ) TO STDOUT (FORMAT CSV)
