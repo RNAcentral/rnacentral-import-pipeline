@@ -49,6 +49,23 @@ def main(database, filename, output):
     """
     remove_dot = ["ensembl_gene", "ensembl_gencode_gene", "ensembl_metazoa_gene"]
     split_on_comma = ["flybase_gene_synonym", "pombase_gene_synonym", "refseq_gene_synonym", "hgnc_gene_synonym"]
+    rfam_ignore = [
+        "30_255", "30_292", "5S_rRNA", "5_8S_rRNA", "6A", "6S", "7SK", "C4", "CRISPR-DR10", "CRISPR-DR11",
+        "CRISPR-DR12", "CRISPR-DR13", "CRISPR-DR14", "CRISPR-DR15", "CRISPR-DR16", "CRISPR-DR17", "CRISPR-DR18",
+        "CRISPR-DR19", "CRISPR-DR2", "CRISPR-DR20", "CRISPR-DR21", "CRISPR-DR22", "CRISPR-DR23", "CRISPR-DR24",
+        "CRISPR-DR25", "CRISPR-DR26", "CRISPR-DR27", "CRISPR-DR28", "CRISPR-DR29", "CRISPR-DR3", "CRISPR-DR30",
+        "CRISPR-DR31", "CRISPR-DR32", "CRISPR-DR33", "CRISPR-DR34", "CRISPR-DR35", "CRISPR-DR36", "CRISPR-DR37",
+        "CRISPR-DR38", "CRISPR-DR39", "CRISPR-DR4", "CRISPR-DR40", "CRISPR-DR41", "CRISPR-DR42", "CRISPR-DR43",
+        "CRISPR-DR44", "CRISPR-DR45", "CRISPR-DR46", "CRISPR-DR47", "CRISPR-DR48", "CRISPR-DR49", "CRISPR-DR5",
+        "CRISPR-DR50", "CRISPR-DR51", "CRISPR-DR52", "CRISPR-DR53", "CRISPR-DR54", "CRISPR-DR55", "CRISPR-DR56",
+        "CRISPR-DR57", "CRISPR-DR58", "CRISPR-DR6", "CRISPR-DR60", "CRISPR-DR61", "CRISPR-DR62", "CRISPR-DR63",
+        "CRISPR-DR64", "CRISPR-DR65", "CRISPR-DR66", "CRISPR-DR7", "CRISPR-DR8", "CRISPR-DR9", "F6", "Hairpin",
+        "Hairpin-meta1", "Hairpin-meta2", "Hatchet", "P1", "P10", "P11", "P13", "P14", "P15", "P17", "P18", "P2", "P24",
+        "P26", "P27", "P31", "P33", "P34", "P35", "P36", "P37", "P4", "P5", "P6", "P8", "P9", "ROSE", "S35", "S414",
+        "S774", "S808", "SAM", "SL1", "SL2", "U1", "U11", "U12", "U1_yeast", "U2", "U3", "U4", "U4atac", "U5", "U54",
+        "U6", "U6atac", "U7", "U8", "VA", "csRNA", "drum", "g2", "pRNA", "sar", "sul1", "t44", "tRNA", "tRNA-Sec",
+        "tmRNA", "tp2", "tracrRNA"
+    ]
 
     with open(filename, 'r') as input_file:
         with open(output, 'w') as output_file:
@@ -61,6 +78,10 @@ def main(database, filename, output):
                     get_primary_id = line[1]
                     urs = line[2]
                     taxid = line[3]
+
+                    # ignore some optional_id from Rfam
+                    if database == "rfam" and get_gene in rfam_ignore:
+                        continue
 
                     # remove "."
                     if database in remove_dot and "." in get_gene:
