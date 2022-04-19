@@ -7,11 +7,11 @@ process create_xml {
     path(database)
 
     output:
-    path("metadata_${database.baseName}.xml.gz")
+    path("metadata_${database.baseName}_*")
 
     script:
     """
-    metadata.py $database metadata_${database.baseName}.xml.gz
+    metadata.py $database metadata_${database.baseName}_*
     """
 }
 
