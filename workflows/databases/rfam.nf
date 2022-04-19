@@ -78,7 +78,7 @@ workflow rfam {
   emit: data
   main:
     Channel.fromPath('files/import-data/rfam/select-families.sql') | set { family_sql }
-    Channel.fromPath('files/import-data/rfam/select-families.sql') | set { family_sql }
+    Channel.fromPath('files/import-data/rfam/families.sql') | set { info_sql }
     Channel.fromPath('files/import-data/rfam/sequences.sql') | set { sequence_sql }
 
     info_sql | fetch_families_info | set { info }
