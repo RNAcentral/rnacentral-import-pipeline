@@ -59,7 +59,7 @@ def test_blat_commands_handle_empty_inputs(command, extra):
     "filename",
     [
         os.path.join("data/genome-mapping/", f)
-        for f in os.listdir("data/genome-mapping/")
+        for f in os.listdir("data/genome-mapping/") if f.endswith("psl")
     ],
 )
 def test_always_produces_output(filename):
