@@ -88,7 +88,7 @@ def test_sorting_works_correctly():
     filename = os.path.abspath("data/genome-mapping/results.psl")
     parts = 1000
     with open(filename, "r") as raw:
-        lines = raw.readline()
+        lines = raw.readlines()
         lines = random.shuffle(lines)
 
     with runner.isolated_filesystem():
