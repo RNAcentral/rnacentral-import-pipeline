@@ -93,14 +93,14 @@ def test_sorting_works_correctly():
 
     with runner.isolated_filesystem():
         for index, chunk in enumerate(chunked(lines, parts)):
-            chunk_name = "results-%i" % index
-            psl = "%s.psl"
-            stored = "%s.pickle"
-            selected = "%s-selected.pickle"
-            with open(psl, "w") as out:
+            chunk_name = f"results-{index}"
+            # psl = f"{index}.psl"
+            stored = f"{index}.pickle"
+            # selected = f"{index}-selected.pickle"
+            with open(chunk_name, "w") as out:
                 out.writelines(chunk)
 
-            cmd = ["blat", "serialize", chunk_name, stored]
-            runner.invoke(gm.cli, cmd)
+            cmd = ["blat", "serialize", "a", chunk_name, stored]
+            result = runner.invoke(gm.cli, cmd)
             assert result.exit_code == 0
             assert os.path.exists(stored)
