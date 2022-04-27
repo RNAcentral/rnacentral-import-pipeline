@@ -102,7 +102,7 @@ def test_can_build_reference(raw_id):
         ),
         (
             20533548,
-            "Micro-RNA-21 regulates TGF--induced myofibroblast differentiation by targeting PDCD4 in tumor-stroma interaction",
+            "Micro-RNA-21 regulates TGF-β-induced myofibroblast differentiation by targeting PDCD4 in tumor-stroma interaction",
         ),
         (
             22034194,
