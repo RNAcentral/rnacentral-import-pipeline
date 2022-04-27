@@ -33,17 +33,17 @@ def chain_map(chain_info):
     return info
 
 
-@pytest.mark.skip()
+# @pytest.mark.skip()
 def test_can_get_all_pdbs(chain_info):
     assert len(fetch.rna_chains()) >= 14686
 
 
-@pytest.mark.skip()
+# @pytest.mark.skip()
 def test_contains_no_duplicate_chains(chain_info, chain_map):
     assert len(chain_info) == len(chain_map)
 
 
-@pytest.mark.skip()
+# @pytest.mark.skip()
 def test_produces_correct_data():
     chains = fetch.rna_chains(pdb_ids=["1s72"])
     chain = next(c for c in chains if c.chain_id == "9")
