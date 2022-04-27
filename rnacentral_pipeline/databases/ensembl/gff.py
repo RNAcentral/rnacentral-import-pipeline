@@ -70,7 +70,7 @@ def get_assembly(path: Path) -> str:
                 break
             if line.startswith("#!genome-version"):
                 parts = line.split(" ", 1)
-                return parts[1]
+                return parts[1].strip()
 
     raise ValueError(f"Could not find assembly id in {path}")
 

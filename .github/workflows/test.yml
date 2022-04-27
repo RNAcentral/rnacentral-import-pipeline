@@ -1,0 +1,51 @@
+name: RNAcentral Import Pipeline
+
+on: pull_request
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [3.8, 3.9]
+        poetry-version: [1.1.12]
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Stable with rustfmt and clippy
+      uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: stable
+
+    - name: Install poetry ${{ matrix.poetry-version }}
+      run: |
+        python -m ensurepip
+        python -m pip install --upgrade pip
+        python -m pip install poetry==${{ matrix.poetry-version }}
+
+    - name: Install dependencies
+      shell: bash
+      run: python -m poetry install
+
+    - name: Fetch test data
+      run: |
+        scripts/fetch-test-data.sh
+
+    - name: Test with pytest
+      run: |
+        python -m poetry run python -m pytest -m 'not db and not slow' -v tests/databases/
+
+    - name: Release build
+      uses: actions-rs/cargo@v1
+      with:
+        command: build
+        args: --release --all-features
