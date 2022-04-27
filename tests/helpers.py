@@ -95,3 +95,18 @@ def run_with_upi_taxid_constraint(rna_id, path, **kwargs):
         ),
         **kwargs
     )
+
+
+def compare_dicts(dict1, dict2, ignore_keys=[]):
+    """
+    Compare two dictionaries with option to ignore some ignore_keys
+
+    Use this when some things might change, e.g. when getting data from a URL
+
+    Taken from
+    https://stackoverflow.com/questions/10480806/compare-dictionaries-ignoring-specific-keys
+    """
+    print(dict1)
+    dict1_filt = {k:v for k,v in dict1.items() if k not in ignore_keys}
+    dict2_filt = {k:v for k,v in dict2.items() if k not in ignore_keys}
+    return dict1_filt == dict2_filt

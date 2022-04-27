@@ -21,6 +21,7 @@ from rnacentral_pipeline.databases.europepmc import fetch
 from rnacentral_pipeline.databases.data import Reference
 from rnacentral_pipeline.databases.data import IdReference
 
+from tests import helpers
 
 def lookup(ref_id):
     return attr.asdict(fetch.lookup(IdReference.build(ref_id)))
@@ -30,7 +31,7 @@ def lookup(ref_id):
     "raw_id", [28815543, "28815543", "PMC5890441", "doi:10.1007/978-981-10-5203-3_9"]
 )
 def test_can_fetch_publication(raw_id):
-    assert fetch.summary(IdReference.build(raw_id)) == {
+    assert helpers.compare_dicts(fetch.summary(IdReference.build(raw_id)), {
         "id": "28815543",
         "source": "MED",
         "pmid": "28815543",
@@ -58,7 +59,9 @@ def test_can_fetch_publication(raw_id):
         "hasSuppl": "N",
         "pmcid": "PMC5890441",
         "firstIndexDate": "2017-08-18",
-    }
+    },
+    ignore_keys=["citedByCount", "fullTextIdList"]) == True
+
 
 
 def test_complains_given_bad_pmid():
