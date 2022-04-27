@@ -152,7 +152,7 @@ def load_data(upi):
 # def test_builds_correct_descriptions(rna_id, description):
 #     assert load_data(rna_id).description == description
 
-
+@pytest.mark.db
 @pytest.mark.parametrize(
     "rna_id,short",
     [  # pylint: disable=no-member

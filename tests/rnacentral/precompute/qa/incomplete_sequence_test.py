@@ -20,7 +20,7 @@ import rnacentral_pipeline.rnacentral.precompute.qa.incomplete_sequence as inco
 
 from tests.rnacentral.precompute import helpers
 
-
+@pytest.mark.db
 @pytest.mark.parametrize(
     "rna_id,rna_type,flag",
     [  # pylint: disable=no-member
@@ -40,7 +40,7 @@ def test_can_detect_incomplete_sequence(rna_id, rna_type, flag):
     context, sequence = helpers.load_data(rna_id)
     assert inco.validate(context, rna_type, sequence).has_issue == flag
 
-
+@pytest.mark.db
 @pytest.mark.parametrize(
     "rna_id,rna_type,message",
     [  # pylint: disable=no-member

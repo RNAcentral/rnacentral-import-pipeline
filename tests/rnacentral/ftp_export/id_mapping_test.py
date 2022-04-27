@@ -152,7 +152,7 @@ def test_as_entry_works_correctly():
         "",
     ]
 
-
+@pytest.mark.db
 @pytest.mark.parametrize(
     "rna_id,expected",
     [

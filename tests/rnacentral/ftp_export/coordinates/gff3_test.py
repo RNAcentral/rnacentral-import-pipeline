@@ -18,6 +18,8 @@ limitations under the License.
 from collections import OrderedDict
 
 import pytest
+pytestmark = pytest.mark.db
+
 from gffutils import Feature
 
 from rnacentral_pipeline.rnacentral.ftp_export.coordinates import gff3

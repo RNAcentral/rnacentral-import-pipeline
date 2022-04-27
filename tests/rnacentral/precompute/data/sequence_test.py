@@ -17,7 +17,7 @@ import pytest
 
 from .. import helpers
 
-
+@pytest.mark.db
 @pytest.mark.parametrize(
     "rna_id,expected",
     [
@@ -39,7 +39,7 @@ from .. import helpers
 def test_can_get_correct_domains(rna_id, expected):
     assert helpers.load_data(rna_id)[1].domains() == expected
 
-
+@pytest.mark.db
 @pytest.mark.parametrize(
     "rna_id,expected",
     [
@@ -54,7 +54,7 @@ def test_can_get_correct_domains(rna_id, expected):
 def test_can_detect_if_mitochondrial(rna_id, expected):
     assert helpers.load_data(rna_id)[1].is_mitochondrial() is expected
 
-
+@pytest.mark.db
 @pytest.mark.parametrize(
     "rna_id,expected",
     [

@@ -20,7 +20,7 @@ import rnacentral_pipeline.rnacentral.precompute.qa.contamination as cont
 
 from .. import helpers
 
-
+@pytest.mark.db
 @pytest.mark.parametrize(
     "rna_id,rna_type,flag",
     [
@@ -41,7 +41,7 @@ def test_can_detect_possible_contamination(rna_id: str, rna_type: str, flag: boo
     context, sequence = helpers.load_data(rna_id)
     assert cont.validate(context, rna_type, sequence).has_issue == flag
 
-
+@pytest.mark.db
 @pytest.mark.parametrize(
     "rna_id,rna_type,message",
     [

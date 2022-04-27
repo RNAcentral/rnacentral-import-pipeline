@@ -20,7 +20,7 @@ from rnacentral_pipeline.rnacentral.precompute.qa import status as qa
 
 from .. import helpers
 
-
+@pytest.mark.db
 @pytest.mark.parametrize(
     "rna_id,rna_type,flag",
     [  # pylint: disable=no-member
@@ -38,7 +38,7 @@ def test_can_detect_possible_contamination(rna_id, rna_type, flag):
         qa.status(context, sequence, rna_type).possible_contamination.has_issue == flag
     )
 
-
+@pytest.mark.db
 @pytest.mark.parametrize(
     "rna_id,rna_type,flag",
     [  # pylint: disable=no-member
@@ -58,7 +58,7 @@ def test_can_detect_incomplete_sequence(rna_id, rna_type, flag):
     context, sequence = helpers.load_data(rna_id)
     assert qa.status(context, sequence, rna_type).incomplete_sequence.has_issue == flag
 
-
+@pytest.mark.db
 @pytest.mark.parametrize(
     "rna_id,rna_type,flag",
     [  # pylint: disable=no-member
@@ -90,7 +90,7 @@ def test_can_detect_problems_with_mismatched_rna_types(rna_id, rna_type, flag):
     context, sequence = helpers.load_data(rna_id)
     assert qa.status(context, sequence, rna_type).mismatching_rna_type == flag
 
-
+@pytest.mark.db
 @pytest.mark.parametrize(
     "rna_id,rna_type,messages",
     [  # pylint: disable=no-member

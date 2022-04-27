@@ -19,7 +19,7 @@ from rnacentral_pipeline.rnacentral.precompute.description import description_of
 
 from .helpers import load_data
 
-
+@pytest.mark.db
 @pytest.mark.parametrize(
     "rna_id,rna_type,name",
     [

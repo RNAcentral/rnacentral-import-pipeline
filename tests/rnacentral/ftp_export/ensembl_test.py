@@ -28,7 +28,7 @@ def load_data(rna_id):
     raw = helpers.run_range_as_single(rna_id, path)
     return ensembl.builder(raw)
 
-
+@pytest.mark.db
 @pytest.mark.parametrize("filename", os.listdir("data/export/ensembl"))
 def test_can_export_data_for_single_upi(filename):
     with open(os.path.join("data/export/ensembl", filename), "r") as raw:

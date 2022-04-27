@@ -16,6 +16,8 @@ limitations under the License.
 import attr
 
 import pytest
+pytestmark = pytest.mark.db
+# Pretty sure everything in here is requiring DB access
 
 from rnacentral_pipeline.databases.data import regions
 from rnacentral_pipeline.rnacentral.ftp_export.coordinates import bed

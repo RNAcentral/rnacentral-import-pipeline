@@ -95,7 +95,7 @@ def load_examples():
     with open("data/genes/examples.yaml", "r") as raw:
         return yaml.load(raw, Loader=Loader)
 
-
+@pytest.mark.db
 @pytest.mark.parametrize("expected", load_examples())
 def test_builds_correct_genes(expected):
     region_name = expected["region_name"]

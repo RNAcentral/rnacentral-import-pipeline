@@ -26,6 +26,8 @@ from functools import lru_cache
 from xml.dom import minidom
 
 import pytest
+# Mark this whole module as requiring database
+pytestmark = pytest.mark.db
 import six
 
 from rnacentral_pipeline.rnacentral.search_export import exporter

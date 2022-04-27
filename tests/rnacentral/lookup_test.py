@@ -27,7 +27,7 @@ from rnacentral_pipeline.databases.genecards_suite.core import lookup as gc
 def db():
     return os.environ["PGDATABASE"]
 
-
+@pytest.mark.db
 def test_lookups_expected_count(db):
     urs = [
         "URS00008BD1D3_9606",
@@ -36,7 +36,7 @@ def test_lookups_expected_count(db):
     ]
     assert len(list(lk.lookup(db, urs, gc.QUERY))) == len(urs)
 
-
+@pytest.mark.db
 def test_produces_correct_data(db):
     urs = ["URS0000D58B85_9606"]
     results = list(lk.lookup(db, urs, gc.QUERY))
@@ -64,7 +64,7 @@ def test_produces_correct_data(db):
         "description": "Homo sapiens (human) non-protein coding lnc-KLRG1-9:4",
     }
 
-
+@pytest.mark.db
 def test_can_lookup_and_index(db):
     urs = [
         "URS00008BD1D3_9606",
@@ -77,7 +77,7 @@ def test_can_lookup_and_index(db):
     for rna_id in urs:
         assert rna_id in data
 
-
+@pytest.mark.db
 def test_can_write_and_load_a_mapping(db):
     with tempfile.NamedTemporaryFile() as tmp:
         lk.write_mapping(db, ["URS0000D58B85_9606"], gc.QUERY, tmp)

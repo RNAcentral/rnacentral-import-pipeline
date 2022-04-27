@@ -55,7 +55,7 @@ def test_ranges_between_handles_ranges_too_big():
         (10, 11),
     ]
 
-
+@pytest.mark.db
 def test_can_get_range_of_all_upis():
     size = 100000
     dbconf = os.environ["PGDATABASE"]

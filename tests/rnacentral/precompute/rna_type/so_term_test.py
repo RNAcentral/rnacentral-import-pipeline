@@ -38,7 +38,7 @@ def test_can_detect_parent_properly(first, second, expected):
     )
     assert r1.is_parent_of(r2) == expected
 
-
+@pytest.mark.db
 @pytest.mark.parametrize(
     "rna_id,rna_type",
     [  # pylint: disable=no-member

@@ -18,6 +18,7 @@ limitations under the License.
 import attr
 
 import pytest
+pytestmark = pytest.mark.db
 
 from rnacentral_pipeline.databases.data import regions
 from rnacentral_pipeline.rnacentral.ftp_export.coordinates import data

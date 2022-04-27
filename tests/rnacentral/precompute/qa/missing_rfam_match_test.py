@@ -20,7 +20,7 @@ import rnacentral_pipeline.rnacentral.precompute.qa.missing_rfam_match as miss
 
 from .. import helpers
 
-
+@pytest.mark.db
 @pytest.mark.parametrize(
     "rna_id,rna_type,flag",
     [  # pylint: disable=no-member
@@ -37,7 +37,7 @@ def test_can_detect_missing_rfam_match(rna_id, rna_type, flag):
     context, sequence = helpers.load_data(rna_id)
     assert miss.validate(context, rna_type, sequence).has_issue == flag
 
-
+@pytest.mark.db
 @pytest.mark.parametrize(
     "rna_id,rna_type,message",
     [  # pylint: disable=no-member

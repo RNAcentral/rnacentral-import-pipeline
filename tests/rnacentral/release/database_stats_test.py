@@ -25,7 +25,7 @@ def connection():
     db_url = os.environ["PGDATABASE"]
     yield psycopg2.connect(db_url)
 
-
+@pytest.mark.db
 @pytest.mark.parametrize(
     "db_id",
     [
@@ -38,7 +38,7 @@ def test_gets_correct_length_counts(connection, db_id):
         expected = json.loads(raw.readline())
     assert json.loads(data) == expected
 
-
+@pytest.mark.db
 @pytest.mark.parametrize(
     "db_id,count",
     [
@@ -49,7 +49,7 @@ def test_counts_sequences_correctly(connection, db_id, count):
     found = stats.count_sequences(connection, db_id)
     assert found == count
 
-
+@pytest.mark.db
 @pytest.mark.parametrize(
     "db_id,count",
     [
@@ -60,7 +60,7 @@ def test_counts_organisms_correctly(connection, db_id, count):
     found = stats.count_organisms(connection, db_id)
     assert found == count
 
-
+@pytest.mark.db
 @pytest.mark.parametrize(
     "db_id",
     [
@@ -75,7 +75,7 @@ def test_gets_correct_lineage_info(connection, db_id):
         expected = json.loads(raw.readline())
     assert json.loads(data) == expected
 
-
+@pytest.mark.db
 @pytest.mark.parametrize(
     "name,expected",
     [
