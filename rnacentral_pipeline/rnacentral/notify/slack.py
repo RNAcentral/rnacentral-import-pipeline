@@ -15,7 +15,10 @@ def send_notification(title, message, plain=False):
     """
     SLACK_WEBHOOK = os.getenv('SLACK_WEBHOOK')
     if SLACK_WEBHOOK is None:
-        raise SystemExit("SLACK_WEBHOOK environment variable not defined")
+        try:
+            from rnacentral_pipeline.secrets import SLACK_WEBHOOK
+        except:
+            raise SystemExit("SLACK_WEBHOOK environment variable not defined, and couldn't find a secrets file")
 
     if plain:
         slack_json = {
