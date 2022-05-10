@@ -106,9 +106,9 @@ process xref_releases {
   """
 }
 
-process fetch_release_info {
+process precompute_releases {
   input:
-  tuple val(_flag), file(query)
+  val(_flag), file(query)
 
   output:
   path('data.csv')
@@ -158,7 +158,7 @@ workflow using_ids {
 
     flag \
     | map { _flag -> file(params.precompute.select.id_file) } \
-    | set { id_files } 
+    | set { id_files }
 
     sort_ids(flag, id_files) | set { selected }
 }
