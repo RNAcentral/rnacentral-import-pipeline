@@ -7,16 +7,21 @@ include { batch_lookup_ontology_information } from './workflows/lookup-ontology-
 include { parse_databases } from './workflows/parse-databases'
 include { parse_metadata } from './workflows/parse-metadata'
 include { load_data } from './workflows/load-data'
+include { slack_message } from './workflows/utils/slack'
+include { slack_closure } from './workflows/utils/slack'
 
 workflow import_data {
   emit: post_release
   main:
+    Channel.of("Starting data import pipeline") | slack_message
+
     Channel.empty() \
     | mix(
       parse_databases(),
       parse_metadata(),
     ) \
     | branch {
+      msg: slack_closure("Parsing and metadata step completed")
       terms: it.name == "terms.csv"
       ref_ids: it.name == "ref_ids.csv"
       csv: true
@@ -30,8 +35,19 @@ workflow import_data {
     | mix(term_info, references) \
     | load_data \
     | set { post_release }
+
+
+
 }
 
 workflow {
   import_data()
+}
+
+workflow.onError {
+  slack_closure("Import pipeline encountered an error and failed")
+}
+
+workflow.onComplete {
+  slack_closure("Workflow completed ${$workflow.status ? 'Ok' : 'with errors'} ")
 }
