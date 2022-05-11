@@ -3,6 +3,7 @@
 nextflow.enable.dsl=2
 
 include { slack_closure } from './workflows/utils/slack'
+include { slack_message } from './workflows/utils/slack'
 
 /* Get some data downloaded and in the right place */
 
@@ -10,7 +11,7 @@ process wget_r2dt_data{
   errorStrategy { slack_closure("""Wget is having trouble downloading r2dt data.
   This process will retry a maximum of 5 times;
   if the problem persists, try rerunning with the
-  --use_datamover option""".stripIndent()); 
+  --use_datamover option""".stripIndent());
   return 'retry' }
   maxRetries 5
 
@@ -68,8 +69,9 @@ I *think* this is preferable to using a when directive in the process, but not
 
 workflow prepare_environment {
   main:
+    Channel.of("Starting environment preparation") | slack_message
     (dm_inch, wg_inch) = ( params.use_datamover ?
-            [Channel.of("$workflow.launchDir/singularity/bind/r2dt/data"), Channel.enpty()]
+            [Channel.of("$workflow.launchDir/singularity/bind/r2dt/data"), Channel.empty()]
           : [Channel.empty(), Channel.of("$workflow.launchDir/singularity/bind/r2dt/data")] )
 
     dm_inch | dmget_r2dt_data
@@ -79,4 +81,8 @@ workflow prepare_environment {
 
 workflow {
   prepare_environment()
+}
+
+workflow.onComplete {
+  slack_closure("Environment preparation completed")
 }
