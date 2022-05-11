@@ -1,3 +1,4 @@
 MAILTO=agreen@ebi.ac.uk
+SHELL=/bin/bash
 
-0 17 * * 4   cd /hps/nobackup/agb/rnacentral/weekly-run && bsub ./weekly-update/run.sh
+0 17 * * 4   . ~/.bashrc &&  cd /hps/nobackup/agb/rnacentral/weekly-run && bsub -o weekly_run.out -e weekly_run.err -M 20480 ./weekly-update/run.sh
