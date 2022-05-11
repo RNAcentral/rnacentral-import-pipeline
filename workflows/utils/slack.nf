@@ -39,7 +39,7 @@ def slack_closure(msg) {
 
   post.getOutputStream().write(payload.getBytes("UTF-8"));
   def postRC = post.getResponseCode();
-  if !(postRC.equals(200)) {
+  if (postRC != 200) {
     println("Something went wrong calling slack webhook!");
     println(post.getInputStream().getText());
   }
