@@ -38,6 +38,8 @@ process wget_r2dt_data{
 /* On the cluster this is much much faster than wget */
 process dmget_r2dt_data {
   queue 'datamover'
+  executor 'lsf'
+  container ''
 
   input:
     val(data_dir)
