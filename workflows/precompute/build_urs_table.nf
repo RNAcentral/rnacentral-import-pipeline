@@ -96,7 +96,8 @@ process sort_ids {
 
 process xref_releases {
   input:
-  tuple val(_flag), file(query)
+  tuple val(_flag)
+  file(query)
 
   output:
   path('data.csv')
@@ -108,7 +109,8 @@ process xref_releases {
 
 process precompute_releases {
   input:
-  val(_flag), file(query)
+  val(_flag)
+  file(query)
 
   output:
   path('data.csv')
