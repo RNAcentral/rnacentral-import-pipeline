@@ -29,6 +29,8 @@ process fetch_all_urs_taxid {
 
 process select_outdated {
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
+  memory '24 GB'
+  cpus 8
 
   input:
   path('xref.csv')
