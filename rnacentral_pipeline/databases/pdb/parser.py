@@ -50,18 +50,23 @@ def as_entry(info: ChainInfo, reference_mapping: ReferenceMapping):
 def parse(
     rna_chains: ty.List[ChainInfo],
     reference_mapping: ReferenceMapping,
+    override_list: ty.Dict[str, str]
 ) -> ty.Iterator[data.Entry]:
     disqualified = {"mRNA": 0, "other": 0}
     for chain in rna_chains:
-        if helpers.is_mrna(chain):
-            LOGGER.debug("Disqualifing %s", chain)
-            disqualified["mRNA"] += 1
-            continue
+        if chain.pdb_id in override_list.keys() and chain.chain_id in override_list.values():
+            LOGGER.debug("Overriding %s", chain)
+            pass
+        else:
+            if helpers.is_mrna(chain):
+                LOGGER.debug("Disqualifing %s", chain)
+                disqualified["mRNA"] += 1
+                continue
 
-        if not helpers.is_ncrna(chain):
-            LOGGER.debug("Skipping %s", chain)
-            disqualified["other"] += 1
-            continue
+            if not helpers.is_ncrna(chain):
+                LOGGER.debug("Skipping %s", chain)
+                disqualified["other"] += 1
+                continue
 
         try:
             yield as_entry(chain, reference_mapping)

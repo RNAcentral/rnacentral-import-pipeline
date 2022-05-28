@@ -44,11 +44,26 @@ def cli():
         file_okay=False,
     ),
 )
-def process_pdb(output, skip_references=False):
+@click.option(
+    "--override-chains",
+    default=None,
+    type=click.Path(
+        writable=False,
+        dir_okay=False,
+        file_okay=True,
+    ),
+)
+def process_pdb(output, skip_references=False, override_chains=None):
     """
     This will fetch and parse all sequence data from PDBe to produce the csv
     files we import.
     """
+    if override_chains:
+        pdb_ids = { l.strip().split('\t')[0]:l.strip('\t').split()[1]
+                    for l in open(override_chains, 'r').readlines()
+                  }
+    else:
+        pdb_ids = {}
     chain_info = fetch.rna_chains()
     references = {}
     try:
@@ -57,6 +72,6 @@ def process_pdb(output, skip_references=False):
     except Exception:
         LOGGER.info("Failed to get extra references")
 
-    entries = parser.parse(chain_info, references)
+    entries = parser.parse(chain_info, references, pdb_ids)
     with writers.entry_writer(Path(output)) as writer:
         writer.write(entries)

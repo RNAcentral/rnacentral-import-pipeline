@@ -40,6 +40,7 @@ from rnacentral_pipeline.cli import (
     mirgenedb,
     misc,
     ncbi,
+    notify,
     ols,
     pdb,
     pirbase,
@@ -109,6 +110,7 @@ cli.add_command(misc.crs_data)
 cli.add_command(misc.find_upi_ranges)
 cli.add_command(misc.validate_pgloader)
 cli.add_command(ncbi.cli)
+cli.add_command(notify.cli)
 cli.add_command(ols.cli)
 cli.add_command(pdb.cli)
 cli.add_command(pirbase.cli)

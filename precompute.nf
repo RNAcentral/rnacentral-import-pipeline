@@ -13,6 +13,9 @@ include { query as prev_query} from './workflows/precompute/utils'
 include { query as basic_query} from './workflows/precompute/utils'
 include { query as orf_query} from './workflows/precompute/utils'
 
+include { slack_closure } from './workflows/utils/slack'
+include { slack_message } from './workflows/utils/slack'
+
 process build_precompute_context {
   input:
   path('species-repeats*')
@@ -139,6 +142,9 @@ process load_data {
 workflow precompute {
   take: _flag
   main:
+
+    Channel.of("Starting precompute pipeline") | slack_message
+
     Channel.fromPath('files/precompute/get-accessions/query.sql') | set { accession_query }
     Channel.fromPath('files/precompute/load.ctl') | set { data_ctl }
     Channel.fromPath('files/precompute/qa.ctl') | set { qa_ctl }
@@ -193,4 +199,14 @@ workflow precompute {
 
 workflow {
   precompute(Channel.of(true))
+}
+
+workflow.onComplete {
+
+  slack_closure("Precompute workflow completed. Data import complete")
+}
+
+workflow.onError {
+
+  slack_closure("Precompute workflow encountered an error and crashed")
 }
