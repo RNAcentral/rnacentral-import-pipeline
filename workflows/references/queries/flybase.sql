@@ -1,9 +1,10 @@
 -- Flybase
 select
-    locus_tag,
-    external_id,
     upi,
-    taxid
+    taxid,
+    external_id,
+    gene_synonym, -- Split on ,
+    locus_tag,
 from xref x 
 join rnc_accessions ra 
 on 

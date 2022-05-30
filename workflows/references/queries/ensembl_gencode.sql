@@ -1,9 +1,10 @@
 -- ENSEMBL_GENCODE
 select
-	  locus_tag,
-    external_id,
     upi,
-    taxid
+    taxid,
+    external_id,
+    gene, -- Also search for everything up to the first '.'
+    locus_tag
 from xref x
 join rnc_accessions ra
 on
