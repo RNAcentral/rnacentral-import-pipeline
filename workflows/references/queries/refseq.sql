@@ -1,9 +1,11 @@
 -- REFSEQ
 select
-    optional_id, -- Do not split
-	  external_id,
     upi,
-    taxid
+    taxid,
+    external_id,
+    gene,
+    gene_synonym, -- Split on ','
+    optional_id
 from xref x
 join rnc_accessions ra
 on

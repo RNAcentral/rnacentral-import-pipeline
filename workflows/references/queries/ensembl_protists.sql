@@ -1,9 +1,10 @@
 -- ENSEMBL PROTISTS
 select
-	  locus_tag,
-    external_id,
     upi,
-    taxid
+    taxid,
+    external_id,
+    gene,
+    locus_tag
 from xref x
 join rnc_accessions ra
 on

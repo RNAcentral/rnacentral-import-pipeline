@@ -1,9 +1,10 @@
 -- HGNC
 select
-    gene_synonym,
-	  gene,
     upi,
-    taxid
+    taxid,
+    gene,
+	  accession,
+	  gene_synonym
 from xref x
 join rnc_accessions ra
 on
