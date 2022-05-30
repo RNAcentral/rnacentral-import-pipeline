@@ -47,8 +47,8 @@ def main(database, filename, output):
     """
     Check ids and create file that will be used by RNAcentral-references.
     """
-    remove_dot = ["ensembl_gene", "ensembl_gencode_gene", "ensembl_metazoa_gene"]
-    split_on_comma = ["flybase_gene_synonym", "pombase_gene_synonym", "refseq_gene_synonym", "hgnc_gene_synonym"]
+    remove_dot = ["ensembl", "ensembl_gencode", "ensembl_metazoa"]
+    split_on_comma = ["flybase", "hgnc", "pombase", "refseq"]
     rfam_ignore = [
         "30_255", "30_292", "5S_rRNA", "5_8S_rRNA", "6A", "6S", "7SK", "C4", "CRISPR-DR10", "CRISPR-DR11",
         "CRISPR-DR12", "CRISPR-DR13", "CRISPR-DR14", "CRISPR-DR15", "CRISPR-DR16", "CRISPR-DR17", "CRISPR-DR18",
@@ -72,51 +72,44 @@ def main(database, filename, output):
             while line := input_file.readline():
                 line = line.rstrip()
                 line = line.split('|')
+                urs = line[0]
+                taxid = line[1]
+                primary_id = check_id(line[2])
 
-                if len(line) == 4:
-                    get_gene = line[0]
-                    get_primary_id = line[1]
-                    urs = line[2]
-                    taxid = line[3]
+                if primary_id and line[3:]:
+                    for item in line[3:]:
+                        if item:
+                            get_id = item
+                        else:
+                            continue
 
-                    # ignore some optional_id from Rfam
-                    if database == "rfam" and get_gene in rfam_ignore:
-                        continue
+                        # ignore some optional_id from Rfam
+                        if database == "rfam" and get_id in rfam_ignore:
+                            continue
 
-                    # remove "."
-                    if database in remove_dot and "." in get_gene:
-                        get_gene = get_gene.split('.')[0]
+                        # remove "."
+                        if database in remove_dot and "." in get_id:
+                            get_id = get_id.split('.')[0]
 
-                    # split on ","
-                    gene_results = []
-                    if database in split_on_comma:
-                        gene_list = get_gene.split(',')
-                        for item in gene_list:
-                            item = check_id(item)
-                            if item:
-                                gene_results.append(item)
+                        # split on ","
+                        results = []
+                        if database in split_on_comma:
+                            list_of_ids = get_id.split(',')
+                            for elem in list_of_ids:
+                                elem = check_id(elem)
+                                if elem:
+                                    results.append(elem)
 
-                    if gene_results:
-                        primary_id = check_id(get_primary_id)
-                        for gene in gene_results:
-                            if gene and primary_id and gene != primary_id:
-                                output_file.write(gene + '|' + primary_id + '|' + urs + '_' + taxid + '\n')
-                    else:
-                        gene = check_id(get_gene)
-                        primary_id = check_id(get_primary_id)
-                        if gene and primary_id and gene != primary_id:
-                            output_file.write(gene + '|' + primary_id + '|' + urs + '_' + taxid + '\n')
-
-                else:
-                    get_primary_id = line[0]
-                    urs = line[1]
-                    taxid = line[2]
-
-                    # check if it is a valid id
-                    primary_id = check_id(get_primary_id)
-
-                    if primary_id:
-                        output_file.write(primary_id + '|' + urs + '_' + taxid + '\n')
+                        if results:
+                            for db_id in results:
+                                if db_id != primary_id:
+                                    output_file.write(db_id + '|' + primary_id + '|' + urs + '_' + taxid + '\n')
+                        else:
+                            db_id = check_id(get_id)
+                            if db_id and db_id != primary_id:
+                                output_file.write(db_id + '|' + primary_id + '|' + urs + '_' + taxid + '\n')
+                elif primary_id:
+                    output_file.write(primary_id + '|' + urs + '_' + taxid + '\n')
 
 
 if __name__ == '__main__':
