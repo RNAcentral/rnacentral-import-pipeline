@@ -101,3 +101,4 @@ stubs
 .envrc
 workflows/references/results
 workflows/references/metadata
+workflows/references/backup
