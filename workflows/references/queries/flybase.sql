@@ -4,7 +4,7 @@ select
     taxid,
     external_id,
     gene_synonym, -- Split on ,
-    locus_tag,
+    locus_tag
 from xref x 
 join rnc_accessions ra 
 on 
