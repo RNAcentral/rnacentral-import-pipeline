@@ -64,12 +64,12 @@ def main(filename, output):
     with open(filename, "r") as input_file:
         temp_results = []
         database = filename.split(".")[0]
-        no_primary_id = ["genecards", "gtrnadb", "mirgenedb", "pdbe", "sgd"]
+
         while line := input_file.readline():
             line = line.rstrip()
             line = line.split('|')
 
-            if database in no_primary_id:
+            if len(line) < 3:
                 job_id = line[0]
                 urs = line[1]
 
