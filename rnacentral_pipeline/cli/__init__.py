@@ -23,6 +23,7 @@ from rnacentral_pipeline.cli import (
     crw,
     ena,
     ensembl,
+    expressionatlas,
     europepmc,
     five_s_rrnadb,
     flybase,
@@ -92,6 +93,7 @@ cli.add_command(crw.cli)
 cli.add_command(ena.cli)
 cli.add_command(ensembl.cli)
 cli.add_command(europepmc.cli)
+cli.add_command(expressionatlas.cli)
 cli.add_command(five_s_rrnadb.cli)
 cli.add_command(flybase.cli)
 cli.add_command(ftp_export.cli)
