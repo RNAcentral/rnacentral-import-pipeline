@@ -26,10 +26,11 @@ ignore_ids = [
 words.update(ignore_ids)
 special_char = re.compile('[@!#$%^&()<>?/\[\]\'}{~:]')
 nts = re.compile('^[acgu]+$')
+numbers_and_dash = re.compile('^\d+[\-]\d+$')  # do not use ids like 6-1, 260-1, etc
 
 
 def check_id(item):
-    if item.isnumeric() or item.lower() in words:
+    if item.isnumeric() or item.lower() in words or numbers_and_dash.search(item):
         result = None
     elif len(item) > 2 and not special_char.search(item) and not nts.search(item.lower()) and "\\" not in item:
         result = item
@@ -75,6 +76,8 @@ def main(database, filename, output):
                 urs = line[0]
                 taxid = line[1]
                 primary_id = check_id(line[2])
+                if primary_id and database in remove_dot and "." in primary_id:
+                    primary_id = primary_id.split('.')[0]
 
                 if primary_id and line[3:]:
                     for item in line[3:]:
@@ -85,6 +88,7 @@ def main(database, filename, output):
 
                         # ignore some optional_id from Rfam
                         if database == "rfam" and get_id in rfam_ignore:
+                            output_file.write('|' + primary_id + '|' + urs + '_' + taxid + '\n')
                             continue
 
                         # remove "."
