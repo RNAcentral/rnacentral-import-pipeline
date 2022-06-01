@@ -39,6 +39,7 @@ class Database(enum.Enum):
     ensembl_metazoa = DatabaseValue(5, "Ensembl Metazoa")
     ensembl_plants = DatabaseValue(6, "Ensembl Plants")
     ensembl_protists = DatabaseValue(7, "Ensembl Protists")
+    expression_atlas = DatabaseValue(50, "Expression Atlas")
     five_srrnadb = DatabaseValue(8, "5SrRNAdb")
     flybase = DatabaseValue(9, "FlyBase")
     gencode = DatabaseValue(10, "Ensembl/GENCODE")
