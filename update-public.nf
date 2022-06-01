@@ -7,7 +7,7 @@ process dump_data {
   script:
   prod = params.dbs.production
   """
-  /nfs/dbtools/pgsql10/usr/pgsql-10/bin/pg_dump \
+  /usr/pgsql-11/bin/pg_dump \
   	--exclude-table=load_ensembl_analysis_status \
   	--exclude-table=load_flybase \
   	--exclude-table=load_genome_mapping \
@@ -42,9 +42,9 @@ process restore_public {
 
   export PGPASSWORD='${public.password}'
   psql -c "set maintenance_work_mem='1GB'" $PUBLIC
-  psql -c 'drop schema if exists rnacen cascade' $PUBLIC 
+  psql -c 'drop schema if exists rnacen cascade' $PUBLIC
 
-  /nfs/dbtools/pgsql10/usr/pgsql-10/bin/pg_restore -x -h ${public_db.host} -U ${public_db.user} -d ${public_db.db_name} -j 2 $dump_file
+  /usr/pgsql-10/bin/pg_restore -x -h ${public_db.host} -U ${public_db.user} -d ${public_db.db_name} -j 2 $dump_file
 
   psql -c 'revoke usage on schema rnacen from public' $PUBLIC
   psql -c 'grant usage on schema rnacen to reader' $PUBLIC
