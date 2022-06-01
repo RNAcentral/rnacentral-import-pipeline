@@ -31,11 +31,19 @@ def as_expression(mapping):
 def parse(handle, db_url):
     """
     Loop through a csv file to construct entries from the linked data
+
+    We have to get two columns from the CSV, the URS_taxid, and the Gene ID that
+    we should already have joined on to get hits from EA in RNAcentral
+
+    That means there are tuples where there would usually be single values and
+    to be able to reuse as much as possible, it might look a bit untidy.
+
+    Also, I build a massive disctionary here, which may not be optimal, for
+    looking up the URS -> Gene ID mapping
+
     """
     rows = csv.DictReader(handle, delimiter=",", quoting=csv.QUOTE_NONE)
     urs_taxids_genes = sorted(map(op.itemgetter("urs_taxid", "GeneID"), rows))
-    # urs_taxids = map(op.itemgetter(0), urs_taxids_genes)
-    # genes = map(op.itemgetter(1), urs_taxids_genes)
 
     mappings = lookup.mapping(db_url, urs_taxids_genes)
     gene_lookup = {a[0] : a[1] for a in urs_taxids_genes}
