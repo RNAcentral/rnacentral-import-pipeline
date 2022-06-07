@@ -37,7 +37,7 @@ process sort_ids {
 
     script:
     """
-    cat $output | sort | uniq > ${database}.txt
+    cat $output | sort -fb | uniq -i > ${database}.txt
     """
 }
 
