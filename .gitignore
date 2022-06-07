@@ -102,3 +102,5 @@ stubs
 workflows/references/results
 workflows/references/metadata
 workflows/references/backup
+workflows/references/manually_annotated/from*
+workflows/references/manually_annotated/results
