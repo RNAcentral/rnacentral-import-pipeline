@@ -41,13 +41,16 @@ def main(filename, output):
                 elif type_id == 'job' and len(line) == 2:
                     job = line[0]
                     urs = line[1]
-                    output_file.write(job + '|' + urs + '\n')
+                    if job and urs:
+                        output_file.write(job + '|' + urs + '\n')
                 elif type_id == 'job' and len(line) == 3:
                     job = line[0]
                     primary = line[1]
                     urs = line[2]
-                    output_file.write(job + '|' + urs + '\n')
-                    output_file.write(primary + '|' + urs + '\n')
+                    if job and urs:
+                        output_file.write(job + '|' + urs + '\n')
+                    if primary and urs:
+                        output_file.write(primary + '|' + urs + '\n')
 
 
 if __name__ == "__main__":
