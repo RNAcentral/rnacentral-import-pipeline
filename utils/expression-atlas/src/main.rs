@@ -34,30 +34,94 @@ fn load_data(path: &PathBuf, delim: u8) -> Result<DataFrame> {
     let mut df: DataFrame = CsvReader::from_path(path)?
         .has_header(true)
         .with_delimiter(delim)
-        .with_ignore_parser_errors(true)
+        .with_null_values(Some(NullValues::AllColumns("NA".to_string())))
+        .infer_schema(None)
         .finish()
         .unwrap();
 
     // hstack the experiment name (derived from the filename) into the DataFrame
-    let iter_exp = vec![path
-        .file_name()
-        .unwrap()
-        .to_str()
-        .unwrap()
-        .split('-')
-        .collect::<Vec<&str>>()[0..=2]
-        .join("-")]
-    .into_iter();
+    let iter_exp =
+        vec![path.file_name().unwrap().to_str().unwrap().split('-').collect::<Vec<&str>>()[0..=2]
+            .join("-")]
+        .into_iter();
     let exp_col: Series = Series::new(
         "experiment",
-        iter_exp
-            .flat_map(|n| std::iter::repeat(n).take(df.height()))
-            .collect::<Vec<String>>(),
+        iter_exp.flat_map(|n| std::iter::repeat(n).take(df.height())).collect::<Vec<String>>(),
     );
     // exp_col.rename("experiment");
     df.hstack_mut(&[exp_col]).unwrap();
 
     Ok(df)
+}
+
+fn baseline_get_median_gt_zero(str_val: &Series) -> Series {
+    let lists = str_val
+        .utf8()
+        .unwrap()
+        .into_iter()
+        .map(|x| {
+            x.unwrap()
+                .split(',')
+                .into_iter()
+                .map(|y| y.parse::<f64>().unwrap())
+                .collect::<Vec<f64>>()
+        });
+
+    let medians: Vec<bool> =
+        lists.into_iter().map(|x| Series::from_iter(x).median().unwrap() > 0.0).collect();
+    Series::from_iter(medians)
+}
+
+fn filter_input(input: &mut DataFrame, baseline: bool) -> DataFrame {
+    if baseline {
+        filter_baseline(input)
+    } else {
+        filter_differential(input)
+    }
+}
+
+fn filter_baseline(input: &mut DataFrame) -> DataFrame {
+    // This is a baseline experiment.
+    // Find columns starting with lower case g, then apply the function to convert to
+    // medain and select greater than zero
+    let mut meas = Vec::<String>::new();
+
+    for col in input.get_column_names_owned() {
+        if col.starts_with('g') {
+            input.apply(&col, baseline_get_median_gt_zero).unwrap();
+            meas.push(col);
+        }
+    }
+    println!("{:?}", meas);
+    // Selection should now have all the gN column names in it
+    input
+        .clone()
+        .lazy()
+        .filter(any_exprs(meas.into_iter().map(|x| col(&x)).collect::<Vec<Expr>>()))
+        .collect()
+        .unwrap()
+}
+
+fn filter_differential(input: &DataFrame) -> DataFrame {
+    // find the p value and log fold columns
+    let pv_regex = Regex::new(r".*p-value.*").unwrap();
+    let log_fold_regex = Regex::new(r".*log2.*").unwrap();
+    let mut pv: String = "p-value".to_string();
+    let mut lf: String = "log2fold".to_string();
+    for col in input.get_column_names_owned() {
+        if pv_regex.is_match(&col) {
+            pv = col;
+        } else if log_fold_regex.is_match(&col) {
+            lf = col
+        }
+    }
+
+    input
+        .clone()
+        .lazy()
+        .filter(all_exprs([col(&pv).is_not_null(), col(&lf).neq(lit(0))]))
+        .collect()
+        .unwrap()
 }
 
 fn load_chunk(
@@ -81,10 +145,10 @@ fn load_chunk(
             _ => panic!("An error occurred! {:?}", error),
         });
 
-        // Rename columns to remove . in the names
+        // Rename columns to remove . in the names. Now also remove spaces
         let mut new_cols = Vec::new();
         for nm in input.get_column_names().iter() {
-            new_cols.push(nm.replace('.', ""));
+            new_cols.push(nm.replace('.', "").replace(' ', ""));
         }
 
         if new_cols != input.get_column_names() {
@@ -93,40 +157,37 @@ fn load_chunk(
             });
         }
 
+        // Need to detect which type of experiment it is - differential or baseline
+        let type_re = Regex::new(r"tpms").unwrap();
+        let filtered = filter_input(&mut input, type_re.is_match(infile.to_str().unwrap()));
         // Drop everything from the input except the genes
-        let genes: DataFrame = input
-            .select(select.iter())
-            .unwrap_or_else(|error| match error {
-                PolarsError::NotFound(_string) => {
-                    panic!(
-                        "{:?} was not found in the header, does the file have a header?\n{:?}",
-                        select,
-                        input.get_column_names()
-                    );
-                }
-                _ => panic!("Error selecting column from input: {:?}", error),
-            });
+        let genes: DataFrame = filtered.select(select.iter()).unwrap_or_else(|error| match error {
+            PolarsError::NotFound(_string) => {
+                panic!(
+                    "{:?} was not found in the header, does the file have a header?\n{:?}",
+                    select,
+                    input.get_column_names()
+                );
+            },
+            _ => panic!("Error selecting column from input: {:?}", error),
+        });
 
         output = match output {
             None => {
                 let output_df = genes.clone();
                 Some(output_df)
-            }
+            },
             Some(mut output_df) => {
                 // genes =/= output, so we are handling a new file
                 output_df.extend(&genes).unwrap_or_else(|error| {
                     panic!("Failed to extend the output dataframe. {:?}", error)
                 });
-                output_df = output_df
-                    .unique(None, UniqueKeepStrategy::First)
-                    .unwrap_or_else(|error| {
-                        panic!(
-                            "Failed to parse selected column for uniqueness. {:?}",
-                            error
-                        )
+                output_df =
+                    output_df.unique(None, UniqueKeepStrategy::First).unwrap_or_else(|error| {
+                        panic!("Failed to parse selected column for uniqueness. {:?}", error)
                     });
                 Some(output_df)
-            }
+            },
         }
     }
     Ok(output.unwrap())
@@ -136,15 +197,10 @@ fn get_taxid(paths: &mut Vec<PathBuf>, lookup_table: &mut HashMap<String, String
     let tax_regex = Regex::new(r".*Taxon_([0-9]{4,})").unwrap();
 
     while let Some(path) = paths.pop() {
-        let exp_name = path
-            .file_name()
-            .unwrap()
-            .to_str()
-            .unwrap()
-            .split('-')
-            .collect::<Vec<&str>>()[0..=2]
-            .join("-")
-            .replace(".condensed", "");
+        let exp_name =
+            path.file_name().unwrap().to_str().unwrap().split('-').collect::<Vec<&str>>()[0..=2]
+                .join("-")
+                .replace(".condensed", "");
 
         let file = File::open(path).unwrap();
         let lines = io::BufReader::new(file).lines();
@@ -157,11 +213,11 @@ fn get_taxid(paths: &mut Vec<PathBuf>, lookup_table: &mut HashMap<String, String
                             let taxid = caps.get(1).map_or("", |m| m.as_str());
                             lookup_table.insert(exp_name, taxid.to_string());
                             break;
-                        }
-                        None => {}
+                        },
+                        None => {},
                     };
-                }
-                Err(_idc) => {}
+                },
+                Err(_idc) => {},
             }
         }
     }
@@ -198,10 +254,8 @@ fn main() {
 
     let mut dataframes: Vec<DataFrame> = Vec::new();
 
-    let chunked_input: Vec<Vec<PathBuf>> = expr_files
-        .chunks(args.chunksize)
-        .map(|x| x.to_vec())
-        .collect();
+    let chunked_input: Vec<Vec<PathBuf>> =
+        expr_files.chunks(args.chunksize).map(|x| x.to_vec()).collect();
     // Read everything into a big vector
     let mut n_chunks = 0;
     for mut files_chunk in chunked_input {
@@ -223,10 +277,8 @@ fn main() {
     }
 
     // Now parse the experiment files to get taxa
-    let chunked_taxa: Vec<Vec<PathBuf>> = taxa_files
-        .chunks(args.chunksize)
-        .map(|x| x.to_vec())
-        .collect();
+    let chunked_taxa: Vec<Vec<PathBuf>> =
+        taxa_files.chunks(args.chunksize).map(|x| x.to_vec()).collect();
 
     let mut lookup_table: HashMap<String, String> = HashMap::new();
 
@@ -239,7 +291,7 @@ fn main() {
     let expt_col = output.select(["experiment"]).unwrap();
     let mut tax_ids: Vec<String> = Vec::with_capacity(expt_col.height());
     for ex in expt_col.iter() {
-        let mut warn_flag:bool = true;
+        let mut warn_flag: bool = true;
         let uhy = ex.utf8().unwrap();
         for (idx, x) in uhy.into_iter().enumerate() {
             if lookup_table.contains_key(x.unwrap()) {
@@ -254,9 +306,7 @@ fn main() {
         }
     }
 
-    output
-        .hstack_mut(&[Series::new("taxid", tax_ids.into_iter())])
-        .unwrap();
+    output.hstack_mut(&[Series::new("taxid", tax_ids.into_iter())]).unwrap();
 
     let out_stream: File = File::create(args.output).unwrap();
     CsvWriter::new(out_stream)
@@ -264,9 +314,5 @@ fn main() {
         .finish(&mut output)
         .unwrap_or_else(|error| panic!("Something wrong writing file: {:?}", error));
 
-    println!(
-        "Processed {} in {} seconds",
-        n_files,
-        timer.elapsed().as_secs()
-    );
+    println!("Processed {} in {} seconds", n_files, timer.elapsed().as_secs());
 }

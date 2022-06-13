@@ -9,4 +9,4 @@ edition = "2021"
 anyhow = "1.0"
 regex = "1.0"
 clap = { version = "3.1.18", features = ["derive"] }
-polars = { version = "0.21.1", features = ["lazy", "csv-file"] }
+polars = { version = "0.21.1", features = ["lazy", "csv-file", "rows"] }
