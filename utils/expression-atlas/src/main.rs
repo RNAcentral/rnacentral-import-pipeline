@@ -76,19 +76,21 @@ fn filter_baseline(input: &mut DataFrame) -> DataFrame {
     // This is a baseline experiment.
     // Find columns starting with lower case g, then apply the function to convert to
     // medain and select greater than zero
-    let mut meas = Vec::<String>::new();
+    let mut meas = Vec::<Expr>::new();
 
-    for col in input.get_column_names_owned() {
-        if col.starts_with('g') {
-            input.apply(&col, baseline_get_median_gt_zero).unwrap();
-            meas.push(col);
+    for column in input.get_column_names_owned() {
+        if column.starts_with('g') {
+            input.apply(&column, baseline_get_median_gt_zero).unwrap();
+            meas.push(col(&column));
         }
     }
+    // println!("{:?}", meas);
     // Selection should now have all the gN column names in it
     input
         .clone()
         .lazy()
-        .filter(any_exprs(meas.into_iter().map(|x| col(&x)).collect::<Vec<Expr>>()))
+        .filter(any_exprs(&meas[0..meas.len()/2]))
+        .filter(any_exprs(&meas[meas.len()/2 .. meas.len()])) // If we try to do the whole thing at once, we get a stack overflow
         .collect()
         .unwrap()
 }
