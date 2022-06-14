@@ -148,7 +148,7 @@ fn load_chunk(
         // Rename columns to remove . in the names. Now also remove spaces
         let mut new_cols = Vec::new();
         for nm in input.get_column_names().iter() {
-            new_cols.push(nm.replace('.', "");//.replace(' ', ""));
+            new_cols.push(nm.replace('.', ""));//.replace(' ', ""));
         }
 
         if new_cols != input.get_column_names() {
