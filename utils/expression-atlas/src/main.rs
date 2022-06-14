@@ -84,13 +84,11 @@ fn filter_baseline(input: &mut DataFrame) -> DataFrame {
             meas.push(col(&column));
         }
     }
-    // println!("{:?}", meas);
     // Selection should now have all the gN column names in it
     input
         .clone()
         .lazy()
-        .filter(any_exprs(&meas[0..meas.len()/2]))
-        .filter(any_exprs(&meas[meas.len()/2 .. meas.len()])) // If we try to do the whole thing at once, we get a stack overflow
+        .filter(any_exprs(&meas[0..meas.len()/2]).or(any_exprs(&meas[meas.len()/2 .. meas.len()])) ) // If we try to do the whole thing at once, we get a stack overflow
         .collect()
         .unwrap()
 }
