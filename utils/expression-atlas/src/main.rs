@@ -84,7 +84,6 @@ fn filter_baseline(input: &mut DataFrame) -> DataFrame {
             meas.push(col);
         }
     }
-    println!("{:?}", meas);
     // Selection should now have all the gN column names in it
     input
         .clone()
