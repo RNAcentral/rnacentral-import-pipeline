@@ -55,17 +55,9 @@ fn load_data(path: &PathBuf, delim: u8) -> Result<DataFrame> {
 }
 
 fn baseline_get_median_gt_zero(str_val: &Series) -> Series {
-    let lists = str_val
-        .utf8()
-        .unwrap()
-        .into_iter()
-        .map(|x| {
-            x.unwrap()
-                .split(',')
-                .into_iter()
-                .map(|y| y.parse::<f64>().unwrap())
-                .collect::<Vec<f64>>()
-        });
+    let lists = str_val.utf8().unwrap().into_iter().map(|x| {
+        x.unwrap().split(',').into_iter().map(|y| y.parse::<f64>().unwrap()).collect::<Vec<f64>>()
+    });
 
     let medians: Vec<bool> =
         lists.into_iter().map(|x| Series::from_iter(x).median().unwrap() > 0.0).collect();
@@ -106,22 +98,20 @@ fn filter_differential(input: &DataFrame) -> DataFrame {
     // find the p value and log fold columns
     let pv_regex = Regex::new(r".*p-value.*").unwrap();
     let log_fold_regex = Regex::new(r".*log2.*").unwrap();
-    let mut pv: String = "p-value".to_string();
-    let mut lf: String = "log2fold".to_string();
-    for col in input.get_column_names_owned() {
-        if pv_regex.is_match(&col) {
-            pv = col;
-        } else if log_fold_regex.is_match(&col) {
-            lf = col
+    let mut exprs: Vec<Expr> = Vec::new();
+    let mut pv: Expr;
+    let mut lf: Expr;
+    for column in input.get_column_names_owned() {
+        if pv_regex.is_match(&column) {
+            pv = col(&column).is_not_null();
+            exprs.push(pv);
+        } else if log_fold_regex.is_match(&column) {
+            lf = col(&column).neq(lit(0));
+            exprs.push(lf);
         }
     }
 
-    input
-        .clone()
-        .lazy()
-        .filter(all_exprs([col(&pv).is_not_null(), col(&lf).neq(lit(0))]))
-        .collect()
-        .unwrap()
+    input.clone().lazy().filter(all_exprs(exprs)).collect().unwrap()
 }
 
 fn load_chunk(
@@ -147,8 +137,14 @@ fn load_chunk(
 
         // Rename columns to remove . in the names. Now also remove spaces
         let mut new_cols = Vec::new();
+        let mut c: u8 = 0;
         for nm in input.get_column_names().iter() {
-            new_cols.push(nm.replace('.', ""));//.replace(' ', ""));
+            let mut new_name = nm.replace('.', "").replace(' ', "");
+            if new_cols.contains(&new_name) {
+                c += 1;
+                new_name += &c.to_string(); // Hopefully avoid duplicate names
+            }
+            new_cols.push(new_name);
         }
 
         if new_cols != input.get_column_names() {
