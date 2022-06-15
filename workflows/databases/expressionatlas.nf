@@ -10,7 +10,7 @@ process fetch_data {
   script:
   """
   BASE_DIR="/nfs/ftp/public/databases/microarray/data/atlas/experiments/"
-  find $BASE_DIR -type f -iname "*tpms.tsv" -or -iname "*precentile-ranks.tsv" -or -iname "*sdrf.tsv" > all_relevant_files
+  find $BASE_DIR -type f -iname "*tpms.tsv" -or -iname "*analytics.tsv" -or -iname "*sdrf.tsv" > all_relevant_files
 
   while read f; do
     cp $f .
