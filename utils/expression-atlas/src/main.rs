@@ -36,8 +36,9 @@ fn load_data(path: &PathBuf, delim: u8) -> Result<DataFrame> {
         .with_delimiter(delim)
         .with_null_values(Some(NullValues::AllColumns("NA".to_string())))
         .infer_schema(None)
+        // .with_dtypes_slice(Some(&[DataType::Utf8, DataType::Utf8, DataType::Float64, DataType::Float64]))
         .finish()
-        .unwrap();
+        .unwrap_or_else(|x| panic!("Failed on {:?} with error {:?}", path, x));
 
     // hstack the experiment name (derived from the filename) into the DataFrame
     let iter_exp =
@@ -88,12 +89,36 @@ fn filter_baseline(input: &mut DataFrame) -> DataFrame {
     input
         .clone()
         .lazy()
-        .filter(any_exprs(&meas[0..meas.len()/2]).or(any_exprs(&meas[meas.len()/2 .. meas.len()])) ) // If we try to do the whole thing at once, we get a stack overflow
+        .filter(
+            any_exprs(&meas[0..meas.len() / 2]).or(any_exprs(&meas[meas.len() / 2..meas.len()])),
+        ) // If we try to do the whole thing at once, we get a stack overflow
         .collect()
         .unwrap()
 }
 
-fn filter_differential(input: &DataFrame) -> DataFrame {
+fn lowercase_fn(ent: &Option<&str>) -> Option<String> {
+    match ent {
+        None => None,
+        Some(ent) => Some(ent.to_lowercase()),
+    }
+}
+
+fn fix_bad_infinities(str_val: &Series) -> Series {
+    let lowercased = str_val
+        .utf8()
+        .unwrap()
+        .into_iter()
+        .map(|x| lowercase_fn(&x))
+        .collect::<Vec<Option<String>>>()
+        .into_iter()
+        .map(|x| match x { None => None, Some(x) => Some(x.parse::<f64>().unwrap()) } )
+        .collect::<Vec<Option<f64>>>();
+
+    Series::from_iter(lowercased)
+
+}
+
+fn filter_differential(input: &mut DataFrame) -> DataFrame {
     // find the p value and log fold columns
     let pv_regex = Regex::new(r".*p-value.*").unwrap();
     let log_fold_regex = Regex::new(r".*log2.*").unwrap();
@@ -102,15 +127,29 @@ fn filter_differential(input: &DataFrame) -> DataFrame {
     let mut lf: Expr;
     for column in input.get_column_names_owned() {
         if pv_regex.is_match(&column) {
+            // Check for badly parsed infinities
+            if !input.column(&column).unwrap().dtype().is_numeric() {
+                // input.column(&column).unwrap().utf8().into_iter().map(|y| y.map(|x| x.to_lowercase()) ).collect();
+                input.apply(&column, fix_bad_infinities);
+                // input.column(&column).unwrap().cast(&DataType::Float64);
+            }
             pv = col(&column).is_not_null();
             exprs.push(pv);
         } else if log_fold_regex.is_match(&column) {
-            lf = col(&column).neq(lit(0));
+            if !input.column(&column).unwrap().dtype().is_numeric() {
+                input.apply(&column, fix_bad_infinities);
+                // input.column(&column).unwrap().cast(&DataType::Float64);
+            }
+            lf = col(&column).neq(lit(0.0));
             exprs.push(lf);
         }
     }
-
-    input.clone().lazy().filter(all_exprs(exprs)).collect().unwrap()
+    input
+        .clone()
+        .lazy()
+        .filter(all_exprs(exprs))
+        .collect()
+        .unwrap_or_else(|x| panic!("Error with dataframe: \n {:?}\nAnd error: {:?}", input, x))
 }
 
 fn load_chunk(
@@ -154,6 +193,7 @@ fn load_chunk(
 
         // Need to detect which type of experiment it is - differential or baseline
         let type_re = Regex::new(r"tpms").unwrap();
+        println!("{:?}", infile);
         let filtered = filter_input(&mut input, type_re.is_match(infile.to_str().unwrap()));
         // Drop everything from the input except the genes
         let genes: DataFrame = filtered.select(select.iter()).unwrap_or_else(|error| match error {
