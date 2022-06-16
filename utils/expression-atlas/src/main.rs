@@ -343,6 +343,8 @@ fn main() {
 
     output.hstack_mut(&[Series::new("taxid", tax_ids.into_iter())]).unwrap();
 
+    output = output.unique(Some(&["GeneID".to_string()]), UniqueKeepStrategy::First).unwrap();
+
     let out_stream: File = File::create(args.output).unwrap();
     CsvWriter::new(out_stream)
         .has_header(true)
