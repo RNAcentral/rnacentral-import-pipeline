@@ -45,6 +45,7 @@ from rnacentral_pipeline.cli import (
     ols,
     pdb,
     pirbase,
+    plncdb,
     pombase,
     psicquic,
     precompute,
@@ -116,6 +117,7 @@ cli.add_command(notify.cli)
 cli.add_command(ols.cli)
 cli.add_command(pdb.cli)
 cli.add_command(pirbase.cli)
+cli.add_command(plncdb.cli)
 cli.add_command(pombase.cli)
 cli.add_command(psicquic.cli)
 cli.add_command(precompute.cli)
