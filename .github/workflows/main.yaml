@@ -2,26 +2,13 @@
 # the plan later will be to include unit tests as well
 
 
- name: Building Pipeline Containers
+name: Building Pipeline Containers
 
- on:
-   push:
-     branches:
-       'dev'
+on:
+ push:
+  branches:
+   'dev'
 jobs:
-  # starting-notification:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v2
-  #
-  #     - name: Intital notification
-  #       uses: rtCamp/action-slack-notify@v2
-  #       env:
-  #         SLACK_MESSAGE: 'Creating new pipeline image in docker hub'
-  #         SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-  #         MSG_MINIMAL: true
-
-
   create-docker-image:
     runs-on: ubuntu-latest
     steps:
@@ -36,18 +23,5 @@ jobs:
       - name: docker build
         run: docker bulid -f Dockerfile -t rnacentral/rnacentral-import-pipeline
 
-
       - name: docker push
         run: docker push rnacentral/rnacentral-import-pipeline
-
-  # finished-notification:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v2
-  #
-  #     - name: Finished notification
-  #       uses: rtCamp/action-slack-notify@v2
-  #       env:
-  #         SLACK_MESSAGE: 'New pipeline image pushed to docker hub'
-  #         SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-  #         MSG_MINIMAL: true
