@@ -21,7 +21,7 @@ jobs:
         run: docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
 
       - name: docker build
-        run: docker bulid -f Dockerfile -t rnacentral/rnacentral-import-pipeline
+        run: docker build -f Dockerfile -t rnacentral/rnacentral-import-pipeline
 
       - name: docker push
         run: docker push rnacentral/rnacentral-import-pipeline
