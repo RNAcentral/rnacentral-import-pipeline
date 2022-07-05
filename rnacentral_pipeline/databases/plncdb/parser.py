@@ -51,7 +51,15 @@ def _find_info_file(search_path: pathlib.Path) -> pathlib.Path:
         if file.suffix == ".txt" and "lncRNA" in file.stem:
             return file
 
-
+def _generate_description(taxid: int, gene_name: str) -> str:
+    info = phy.phylogeny(taxid)
+    scientificName = info['scientificName']
+    shortName = scientificName[0] + f". {scientificName.split()[1]}"
+    description = (
+                f"{info['scientificName']} ({info.get('commonName', shortName)}) "
+                f"long non-coding RNA ({gene_name})"
+                )
+    return description
 
 def parse(data:pathlib.Path) -> ty.Iterable[Entry]:
     """
@@ -127,7 +135,7 @@ def parse(data:pathlib.Path) -> ty.Iterable[Entry]:
                     url=url.format(primary_id),
                     seq_version="1",
                     # optional_id=optional_id(record, context),
-                    description=" ",
+                    description=_generate_description(int(taxid), gene_info["Gene_ID"].values[0]),
                     # note_data=note_data(record),
                     # xref_data=xrefs(record),
                     # related_sequences=related_sequences(record),
