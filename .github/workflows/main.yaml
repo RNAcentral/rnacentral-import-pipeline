@@ -9,17 +9,17 @@
      branches:
        'dev'
 jobs:
-  starting-notification:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Intital notification
-        uses: rtCamp/action-slack-notify@v2
-        env:
-          SLACK_MESSAGE: 'Creating new pipeline image in docker hub'
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-          MSG_MINIMAL: true
+  # starting-notification:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #
+  #     - name: Intital notification
+  #       uses: rtCamp/action-slack-notify@v2
+  #       env:
+  #         SLACK_MESSAGE: 'Creating new pipeline image in docker hub'
+  #         SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+  #         MSG_MINIMAL: true
 
 
   create-docker-image:
@@ -40,14 +40,14 @@ jobs:
       - name: docker push
         run: docker push rnacentral/rnacentral-import-pipeline
 
-  finished-notification:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Finished notification
-        uses: rtCamp/action-slack-notify@v2
-        env:
-          SLACK_MESSAGE: 'New pipeline image pushed to docker hub'
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-          MSG_MINIMAL: true
+  # finished-notification:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #
+  #     - name: Finished notification
+  #       uses: rtCamp/action-slack-notify@v2
+  #       env:
+  #         SLACK_MESSAGE: 'New pipeline image pushed to docker hub'
+  #         SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+  #         MSG_MINIMAL: true
