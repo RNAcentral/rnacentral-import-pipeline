@@ -244,8 +244,8 @@ fn main() -> Result<()> {
     info!("All files parsed, preparing to write import csvs");
 
     let mut output_file = fs::File::create(&args.output)?;
-    CsvWriter::new(&mut output_file)
-        .has_header(true)
+    JsonWriter::new(&mut output_file)
+        .with_json_format(::JsonFormat::JsonLines)
         .finish(&mut big_df)?;
 
     Ok(())
