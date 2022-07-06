@@ -16,6 +16,7 @@ obonet
 pandas
 psycopg2
 pypika
+pyppeteer
 ratelimiter
 requests
 retry
