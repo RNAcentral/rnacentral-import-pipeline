@@ -14,6 +14,7 @@ include { mirbase } from './databases/mirbase'
 include { mirgenedb } from './databases/mirgenedb'
 include { pdbe } from './databases/pdbe'
 include { pirbase } from './databases/pirbase'
+include { plncdb } from './databases/plncdb'
 include { pombase } from './databases/pombase'
 include { psicquic } from './databases/psicquic'
 include { quickgo } from './databases/quickgo'
@@ -69,6 +70,7 @@ workflow parse_databases {
       mirgenedb(),
       pdbe(),
       pirbase(),
+      plncdb(),
       pombase(),
       psicquic(),
       quickgo(),
