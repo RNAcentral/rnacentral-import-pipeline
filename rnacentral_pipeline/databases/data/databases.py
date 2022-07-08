@@ -60,6 +60,7 @@ class Database(enum.Enum):
     noncode = DatabaseValue(25, "NONCODE")
     pdbe = DatabaseValue(26, "PDBe")
     pirbase = DatabaseValue(27, "PirBase")
+    plncdb = DatabaseValue(50, "PLncDB")
     pombase = DatabaseValue(28, "PomBase")
     psicquic = DatabaseValue(48, "PSICQUIC")
     rdp = DatabaseValue(29, "RDP")
