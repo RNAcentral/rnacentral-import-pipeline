@@ -74,7 +74,6 @@ async def render_urls(remote):
 
     await page.goto(remote)
     await asyncio.sleep(5) ## This is needed because the site takes a little while to load, but doesn't tell us
-    await page.screenshot({"path": "test1.png"})
 
     possible_links = await page.querySelectorAll(".span-name")
     link_names = await page.querySelectorAllEval('.span-name', '(nodes => nodes.map(n => n.innerText))')
@@ -84,7 +83,6 @@ async def render_urls(remote):
             await link.click()
             break
     await asyncio.sleep(5) ## This is needed because the site takes a little while to load, but doesn't tell us
-    await page.screenshot({"path": "test2.png"})
 
     urls = {}
     species_names = set()
