@@ -69,7 +69,7 @@ def fetch_data(remote, destination):
 
 
 async def render_urls(remote):
-    browser = await launch(headless=True)
+    browser = await launch(headless=True, args=['--no-sandbox'])
     page = await browser.newPage()
 
     await page.goto(remote)
