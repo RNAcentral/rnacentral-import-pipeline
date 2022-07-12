@@ -94,6 +94,9 @@ RUN pip3 install -r $RNACENTRAL_IMPORT_PIPELINE/requirements.txt
 
 RUN python3 -m textblob.download_corpora
 
+# Install pyppeteer dependency on chromium
+RUN pyppeteer-install
+
 WORKDIR /
 
 COPY openssl/openssl.cnf /etc/ssl/
