@@ -48,24 +48,40 @@ def parse(data, output):
     with entry_writer(Path(output)) as writer:
         writer.write(entries)
 
+@cli.command("fetch-data")
+@click.argument("urls", type=click.Path(writable=False, file_okay=True, dir_okay=False))
+@click.argument("destination", type=click.Path(writable=True, file_okay=False, dir_okay=True), default='.')
+def fetch_data(urls, destination):
+    url_dict = {}
+    with open(urls, 'r') as url_file:
+        for url_line in url_file:
+            url_dict[url_line.split(',')[0]] = url_line.split(',')[1:]
 
-@cli.command("fetch")
+
+    for dir_name in url_dict.keys():
+        target_path = Path(destination) / dir_name
+        target_path.mkdir(exist_ok=True, parents=True)
+        for url in url_dict[dir_name]:
+            download_file(url, target_path)
+        print(f"All data for {dir_name} is downloaded")
+
+
+@cli.command("get-urls")
 @click.argument("remote", type=str)
 @click.argument(
     "destination",
-    default=".",
-    type=click.Path(writable=True, dir_okay=True, file_okay=False),
+    default="urls.txt",
+    type=click.Path(writable=True, dir_okay=False, file_okay=True),
 )
-def fetch_data(remote, destination):
+def get_urls(remote, destination):
     ## fight the javascript app to get the right ftp urls for everything
     urls_dict = asyncio.get_event_loop().run_until_complete(render_urls(remote))
 
-    ## Create directories, then download data into them
-    for dir_name in urls_dict.keys():
-        target_path = Path(destination) / dir_name
-        target_path.mkdir(exist_ok=True)
-        for url in urls_dict[dir_name]:
-            download_file(url, target_path)
+    ## Write urls to a text file
+    with open(destination, 'w') as url_file:
+        for dir_name in urls_dict.keys():
+            record_string = f"{dir_name},\t{','.join(urls_dict[dir_name])}\n"
+            url_file.write(record_string)
 
 
 async def render_urls(remote):
@@ -112,16 +128,13 @@ async def render_urls(remote):
         if f_name is not None:
             info_file_urls[long_2_short_name(s_name)] += f_name.strip()
         else:
-            info_file_urls[[long_2_short_name(s_name)]] = None
+            info_file_urls[long_2_short_name(s_name)] = None
         # await _click_link_by_name(page, "lncRNA_info")
         await page.goto(remote, waitUntil='networkidle2')
         await _click_link_by_name(page, "PLncDB_v2.0")
 
-        break
-
     ## Merge the info urls into the data urls
     all_urls = merge_dicts(urls, info_file_urls)
-
 
     return all_urls
 
