@@ -245,7 +245,7 @@ fn main() -> Result<()> {
 
     let mut output_file = fs::File::create(&args.output)?;
     JsonWriter::new(&mut output_file)
-        .with_json_format(::JsonFormat::JsonLines)
+        .with_json_format(JsonFormat::JsonLines)
         .finish(&mut big_df)?;
 
     Ok(())
