@@ -26,7 +26,7 @@ import requests
 
 from rnacentral_pipeline.databases.plncdb import parser
 from rnacentral_pipeline.writers import entry_writer
-
+from rnacentral_pipeline.rnacentral.notify.slack import send_notification
 
 @click.group("plncdb")
 def cli():
@@ -59,6 +59,10 @@ def fetch_data(urls, destination):
 
 
     for dir_name in url_dict.keys():
+        print(f"Getting data for {dir_name}")
+
+        send_notification("PLncDB Download", f"Getting data for {dir_name}")
+
         target_path = Path(destination) / dir_name
         target_path.mkdir(exist_ok=True, parents=True)
         for url in url_dict[dir_name]:
