@@ -124,7 +124,7 @@ async def render_urls(remote):
     link_names = await page.querySelectorAllEval('.span-name', '(nodes => nodes.map(n => n.innerText))')
     # info_file_urls = [a +"PLncDB_v2.0/"+ b.strip().replace(" ", "") for a,b in zip(info_file_urls, link_names)]
     for link_name in link_names:
-        info_file_urls[long_2_short_name(link_name)] += ( "PLncDB_v2.0/" + link_name.strip().replace(" ", "") )
+        info_file_urls[long_2_short_name(link_name)] += ( "/PLncDB_v2.0/" + link_name.strip().replace(" ", "") )
 
     for s_name in link_names:
         await _click_link_by_name(page, s_name)
@@ -171,6 +171,8 @@ def merge_dicts(dol1, dos):
 
 def download_file(url, destination=Path('.')):
     local_filename = url.split('/')[-1]
+    if (destination / local_filename).exists():
+        return local_filename
     # NOTE the stream=True parameter below
     with requests.get(url, stream=True) as r:
         r.raise_for_status()
