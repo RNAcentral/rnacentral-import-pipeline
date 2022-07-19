@@ -159,7 +159,7 @@ async def _find_link_with_name(page, target_name):
 
     for link, name in zip(possible_links, link_names):
         if target_name in name:
-            return name
+            return name.strip()
 
 def long_2_short_name(long_name):
     return long_name[0:5]
