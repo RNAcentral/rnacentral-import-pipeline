@@ -37,21 +37,36 @@ process sort_ids {
 
     script:
     """
-    cat $output | sort | uniq > ${database}.txt
+    cat $output | sort -fb | uniq -i > ${database}.txt
+    """
+}
+
+process prepare_to_submit {
+    publishDir "$baseDir/workflows/references/submit/", mode: 'copy'
+
+    input:
+    tuple val(database), path("${database}.txt")
+
+    output:
+    tuple val(database), path("${database}_ids.txt")
+
+    script:
+    """
+    get_unique_ids.sh ${database}.txt $database
     """
 }
 
 process submit_ids {
     input:
-    tuple val(database), file("${database}.txt")
+    tuple val(database), file("${database}_ids.txt")
 
     script:
     """
-    upload_ids.sh ${database}.txt $database
+    upload_ids.sh ${database}_ids.txt
     """
 }
 
 workflow {
-    Channel.fromPath('workflows/references/queries/*.sql') | get_ids | check_ids | sort_ids
-    // Channel.fromPath('workflows/references/queries/*.sql') | get_ids | check_ids | sort_ids | submit_ids
+    Channel.fromPath('workflows/references/queries/*.sql') | get_ids | check_ids | sort_ids | prepare_to_submit
+    // Channel.fromPath('workflows/references/queries/*.sql') | get_ids | check_ids | sort_ids | prepare_to_submit | submit_ids
 }

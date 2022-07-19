@@ -19,6 +19,7 @@ import io
 import pytest
 import psycopg2
 import yaml
+from yaml import Loader
 
 from rnacentral_pipeline.rnacentral.genes import build
 
@@ -92,7 +93,7 @@ def load_overlapping_regions(region_name):
 
 def load_examples():
     with open("data/genes/examples.yaml", "r") as raw:
-        return yaml.load(raw)
+        return yaml.load(raw, Loader=Loader)
 
 
 @pytest.mark.parametrize("expected", load_examples())
