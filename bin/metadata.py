@@ -15,6 +15,8 @@ limitations under the License.
 """
 import click
 import gzip
+import random
+import string
 import uuid
 import xml.etree.ElementTree as ET
 
@@ -44,7 +46,8 @@ def create_xml_file(results, metadata):
     # save the file
     tree = ET.ElementTree(database)
     ET.indent(tree, space="\t", level=0)
-    with gzip.open(metadata, "wb") as file:
+    random_string = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+    with gzip.open(metadata.split("*")[0] + random_string + ".xml.gz", "wb") as file:
         tree.write(file)
 
 
@@ -61,12 +64,12 @@ def main(filename, output):
     with open(filename, "r") as input_file:
         temp_results = []
         database = filename.split(".")[0]
-        no_primary_id = ["genecards", "gtrnadb", "mirgenedb", "pdbe", "sgd"]
+
         while line := input_file.readline():
             line = line.rstrip()
             line = line.split('|')
 
-            if database in no_primary_id:
+            if len(line) < 3:
                 job_id = line[0]
                 urs = line[1]
 
@@ -83,6 +86,10 @@ def main(filename, output):
                 temp_results.append({"job_id": primary_id, "db": "rnacentral", "primary_id": urs})
                 temp_results.append({"job_id": job_id, "db": "rnacentral", "primary_id": urs})
                 temp_results.append({"job_id": job_id, "db": database, "primary_id": primary_id})
+
+            if len(temp_results) >= 500000:
+                create_xml_file(temp_results, output)
+                temp_results = []
 
         create_xml_file(temp_results, output)
 

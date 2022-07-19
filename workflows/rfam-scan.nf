@@ -24,9 +24,10 @@ process generate_files {
 }
 
 process sequences {
-  memory '20GB'
+  memory '4GB'
+  queue short
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
-  clusterOptions '-R "rusage[scratch=4000]"'
+  // clusterOptions '-R "rusage[scratch=4000]"'
 
   input:
   tuple path(version), path(active_xrefs), path(computed), path(compute_missing)

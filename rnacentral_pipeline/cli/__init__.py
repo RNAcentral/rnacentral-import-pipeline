@@ -23,6 +23,7 @@ from rnacentral_pipeline.cli import (
     crw,
     ena,
     ensembl,
+    expressionatlas,
     europepmc,
     five_s_rrnadb,
     flybase,
@@ -40,9 +41,11 @@ from rnacentral_pipeline.cli import (
     mirgenedb,
     misc,
     ncbi,
+    notify,
     ols,
     pdb,
     pirbase,
+    plncdb,
     pombase,
     psicquic,
     precompute,
@@ -91,6 +94,7 @@ cli.add_command(crw.cli)
 cli.add_command(ena.cli)
 cli.add_command(ensembl.cli)
 cli.add_command(europepmc.cli)
+cli.add_command(expressionatlas.cli)
 cli.add_command(five_s_rrnadb.cli)
 cli.add_command(flybase.cli)
 cli.add_command(ftp_export.cli)
@@ -109,9 +113,11 @@ cli.add_command(misc.crs_data)
 cli.add_command(misc.find_upi_ranges)
 cli.add_command(misc.validate_pgloader)
 cli.add_command(ncbi.cli)
+cli.add_command(notify.cli)
 cli.add_command(ols.cli)
 cli.add_command(pdb.cli)
 cli.add_command(pirbase.cli)
+cli.add_command(plncdb.cli)
 cli.add_command(pombase.cli)
 cli.add_command(psicquic.cli)
 cli.add_command(precompute.cli)

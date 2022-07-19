@@ -29,6 +29,8 @@ process fetch_all_urs_taxid {
 
 process select_outdated {
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
+  memory '24 GB'
+  cpus 4
 
   input:
   path('xref.csv')
@@ -96,7 +98,8 @@ process sort_ids {
 
 process xref_releases {
   input:
-  tuple val(_flag), file(query)
+  tuple val(_flag)
+  file(query)
 
   output:
   path('data.csv')
@@ -106,9 +109,10 @@ process xref_releases {
   """
 }
 
-process fetch_release_info {
+process precompute_releases {
   input:
-  tuple val(_flag), file(query)
+  val(_flag)
+  file(query)
 
   output:
   path('data.csv')
@@ -158,7 +162,7 @@ workflow using_ids {
 
     flag \
     | map { _flag -> file(params.precompute.select.id_file) } \
-    | set { id_files } 
+    | set { id_files }
 
     sort_ids(flag, id_files) | set { selected }
 }
