@@ -32,7 +32,7 @@ def _find_gff_file(search_path: pathlib.Path) -> pathlib.Path:
     info file
     """
     for file in search_path.iterdir():
-        if file.suffix == ".gff3" and "PLncDB" in file.stem:
+        if file.suffix.strip() == ".gff3" and "PLncDB" in file.stem:
             return file
 
 def _find_fasta_file(search_path: pathlib.Path) -> pathlib.Path:
@@ -40,7 +40,7 @@ def _find_fasta_file(search_path: pathlib.Path) -> pathlib.Path:
     Find the fasta file that corresponds with the gff file and info file
     """
     for file in search_path.iterdir():
-        if file.suffix == ".fa" and "PLncDB" in file.stem:
+        if file.suffix.strip() == ".fa" and "PLncDB" in file.stem:
             return file
 
 def _find_info_file(search_path: pathlib.Path) -> pathlib.Path:
@@ -48,7 +48,7 @@ def _find_info_file(search_path: pathlib.Path) -> pathlib.Path:
     Find the corresponding info filefor this fasta and gff
     """
     for file in search_path.iterdir():
-        if file.suffix == ".txt" and "lncRNA" in file.stem:
+        if file.suffix.strip() == ".txt" and "lncRNA" in file.stem:
             return file
 
 def _generate_description(taxid: int, gene_name: str) -> str:
@@ -94,6 +94,7 @@ def parse(data:pathlib.Path) -> ty.Iterable[Entry]:
 
         ## Finally, load the info file using pandas
         species_info = pd.read_csv(info_file, delimiter='\t')
+        species_info["Species"] = species_info["Species"].apply(lambda x: x.replace("_", " "))
         species_info["Species"] = species_info["Species"].apply(phy.taxid)
 
 
@@ -107,7 +108,7 @@ def parse(data:pathlib.Path) -> ty.Iterable[Entry]:
 
             taxid = gene_info["Species"].values[0]
 
-            sequence = fasta_db[primary_id]
+            sequence = fasta_db[gff_db[primary_id].seqid]
 
             features = list(gff_db.children(primary_id))
             ##TODO: check coordinate system
