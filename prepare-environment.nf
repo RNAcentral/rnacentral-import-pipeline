@@ -82,6 +82,7 @@ workflow prepare_environment {
 }
 
 workflow {
+  Channel.of("Starting...") | slack_message
   prepare_environment()
 }
 
