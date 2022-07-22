@@ -62,7 +62,7 @@ jobs:
 
   finished-singularity:
     needs:
-      - singulaity-conversion
+      - singularity-conversion
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
