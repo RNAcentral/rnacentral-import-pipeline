@@ -40,6 +40,29 @@ jobs:
         run: docker push rnacentral/rnacentral-import-pipeline
 
   finished-notification:
+    needs:
+      - create-docker-image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Finished notification
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_MESSAGE: 'New pipeline image pushed to docker hub'
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          MSG_MINIMAL: true
+
+  singularity-conversion:
+    needs:
+      - create-docker-image
+    uses: rnacentral/rnacentral-import-pipeline/.github/workflows/singularity.yaml@dev
+    secrets: inherit
+
+
+  finished-singularity:
+    needs:
+      - singulaity-conversion
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
