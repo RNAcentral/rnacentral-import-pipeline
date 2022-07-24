@@ -121,8 +121,6 @@ process process_range {
 }
 
 process load_data {
-  beforeScript 'slack db-work loading-precompute || true'
-  afterScript 'slack db-done loading-precompute || true'
 
   input:
   path('precompute*.csv')
