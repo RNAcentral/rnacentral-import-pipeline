@@ -70,6 +70,6 @@ jobs:
       - name: Finished notification
         uses: rtCamp/action-slack-notify@v2
         env:
-          SLACK_MESSAGE: 'New pipeline image pushed to docker hub'
+          SLACK_MESSAGE: 'New singularity image pushed to ghcr'
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           MSG_MINIMAL: true
