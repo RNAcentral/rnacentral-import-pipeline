@@ -1,7 +1,7 @@
 BEGIN TRANSACTION;
 
 DROP TABLE IF EXISTS search_export_publication_counts;
-CREATE TEMP TABLE search_export_publication_counts (
+CREATE TABLE search_export_publication_counts (
   urs text primary key,
   publication_count int not null
 );
