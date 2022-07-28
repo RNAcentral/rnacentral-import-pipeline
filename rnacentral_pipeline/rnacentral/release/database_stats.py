@@ -158,8 +158,9 @@ def lengths(conn, db_id: int) -> ty.Dict[str, ty.Any]:
             .join(xref)
             .on(xref.upi == rna.upi)
         )
-        cursor.execute(str(query))
-        return dict(cursor.fetchone())
+        r = {k:v if v is not None else 0 for k,v in dict(cursor.fetchone()).items()}
+
+        return r
 
 
 def count_sequences(conn, db_id: int) -> int:
