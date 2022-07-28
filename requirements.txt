@@ -4,8 +4,6 @@
 #
 #    pip-compile --output-file=requirements.txt requirements.in
 #
-appdirs==1.4.4
-    # via pyppeteer
 argcomplete==1.12.3
     # via gffutils
 argh==0.26.2
@@ -19,9 +17,7 @@ beautifulsoup4==4.9.3
 biopython==1.78
     # via -r requirements.in
 certifi==2022.6.15
-    # via
-    #   pyppeteer
-    #   requests
+    # via requests
 chardet==4.0.0
     # via requests
 click==7.1.2
@@ -45,8 +41,6 @@ idna==2.10
     # via requests
 ijson==3.1.4
     # via -r requirements.in
-importlib-metadata==4.0.1
-    # via pyppeteer
 intervaltree==3.1.0
     # via -r requirements.in
 joblib==1.0.1
@@ -79,15 +73,11 @@ psycopg2==2.8.6
     # via -r requirements.in
 py==1.10.0
     # via retry
-pyee==8.2.2
-    # via pyppeteer
 pyfaidx==0.5.9.5
     # via gffutils
 pymysql==1.0.2
     # via -r requirements.in
 pypika==0.48.1
-    # via -r requirements.in
-pyppeteer==1.0.2
     # via -r requirements.in
 pyrsistent==0.17.3
     # via jsonschema
@@ -132,17 +122,9 @@ textblob==0.15.3
 threadpoolctl==2.1.0
     # via scikit-learn
 tqdm==4.60.0
-    # via
-    #   nltk
-    #   pyppeteer
+    # via nltk
 urllib3==1.26.4
-    # via
-    #   pyppeteer
-    #   requests
-websockets==10.3
-    # via pyppeteer
-zipp==3.4.1
-    # via importlib-metadata
+    # via requests
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools
