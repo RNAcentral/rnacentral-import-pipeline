@@ -1,5 +1,5 @@
 process fetch_data {
-  when { params.databases.plncdb.run }
+  when { !params.databases.plncdb.prefetch and params.databases.plncdb.run }
 
   containerOptions "--contain --bind $baseDir"
 
@@ -21,7 +21,8 @@ process parse_data {
   path ('*.csv')
 
   """
-  rnac plncdb parse $data
+  rnac notify step "Data parsing for PLncDB" $params.databases.plncdb.data_path$data
+  rnac plncdb parse $params.databases.plncdb.data_path$data
   """
 }
 
@@ -29,7 +30,11 @@ workflow plncdb {
   emit: data_files
 
   main:
-  // If data is prefetched, this should use the prefetched data directory
-    (params.databases.plncdb.prefetch ? params.databases.plncdb.prefetch : fetch_data) | parse_data | set { data_files }
+
+  Channel.fromPath("$params.databases.plncdb.data_path/*", type:'dir') \
+  | parse_data
+  | collect
+  | set { data_files }
+
 
 }
