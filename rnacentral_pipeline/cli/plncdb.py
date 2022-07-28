@@ -46,7 +46,11 @@ def cli():
 def parse(data, output):
     entries = parser.parse(Path(data))
     with entry_writer(Path(output)) as writer:
-        writer.write(entries)
+        try:
+            writer.write(entries)
+        except ValueError as e:
+            print(e)
+            
 
 @cli.command("fetch-data")
 @click.argument("urls", type=click.Path(writable=False, file_okay=True, dir_okay=False))
