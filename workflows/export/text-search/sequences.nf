@@ -90,9 +90,9 @@ process build_ranges {
 process fetch_accession {
   tag { "$min-$max" }
   maxForks 3
-  time '10m'
   errorStrategy 'retry'
   maxRetries 5
+  container ''
 
   input:
   tuple val(min), val(max), path(sql), val(_flag)
@@ -114,6 +114,7 @@ process text_mining_query {
   input:
   val(max_count)
   path(script)
+  container ''
 
   output:
   path("publication-count.json")
