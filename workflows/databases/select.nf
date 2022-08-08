@@ -27,12 +27,22 @@ process make_selection {
 
   output:
     path ("*.config")
+    path ("$latest_md5s")
 
   """
-  env
-  $projectDir/../../bin/rnac scan-imports select-for-import $latest_md5s
+  rnac scan-imports select-for-import $latest_md5s
   """
 
+}
+
+
+process update_tracker_table {
+  input:
+    path latest_md5s
+
+  """
+  rnac scan-imports update-tracker $latest_md5s
+  """
 }
 
 
