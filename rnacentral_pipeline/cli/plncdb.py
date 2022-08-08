@@ -50,7 +50,7 @@ def parse(data, output):
             writer.write(entries)
         except ValueError as e:
             print(e)
-            
+
 
 @cli.command("fetch-data")
 @click.argument("urls", type=click.Path(writable=False, file_okay=True, dir_okay=False))
@@ -178,7 +178,7 @@ def download_file(url, destination=Path('.')):
     if (destination / local_filename).exists():
         return local_filename
     # NOTE the stream=True parameter below
-    with requests.get(url, stream=True) as r:
+    with requests.get(url.strip(), stream=True) as r:
         r.raise_for_status()
         with open(destination / local_filename, 'wb') as f:
             for chunk in r.iter_content(chunk_size=8192):

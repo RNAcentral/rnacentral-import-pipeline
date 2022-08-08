@@ -14,6 +14,8 @@ process fetch_data {
 process parse_data {
   when { params.databases.plncdb.run }
 
+  queue 'short'
+
   input:
   path data
 
@@ -33,7 +35,7 @@ workflow plncdb {
 
   Channel.fromPath("$params.databases.plncdb.data_path/*", type:'dir') \
   | parse_data
-  | collect
+  | collectFile
   | set { data_files }
 
 
