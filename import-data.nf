@@ -21,7 +21,6 @@ workflow import_data {
       parse_metadata(),
     ) \
     | branch {
-      msg: slack_closure("Parsing and metadata step completed")
       terms: it.name == "terms.csv"
       ref_ids: it.name == "ref_ids.csv"
       csv: true
