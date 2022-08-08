@@ -40,7 +40,7 @@ def _find_fasta_file(search_path: pathlib.Path) -> pathlib.Path:
     Find the fasta file that corresponds with the gff file and info file
     """
     for file in search_path.iterdir():
-        if file.suffix.strip() == ".fa" and "PLncDB" in file.stem:
+        if file.suffix.strip() == ".fa" and "chromosome" in file.stem:
             return file
 
 def _find_info_file(search_path: pathlib.Path) -> pathlib.Path:
