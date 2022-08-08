@@ -29,6 +29,7 @@ def parse(handle):
         if not regions:
             continue
         ncrna["genomeLocactions"] = regions
+        ncrna["data"] = ncrna["data"].upper()
         data.append(ncrna)
     if not data:
         raise ValueError("All ncRNA are not from GRCh38, failing")
