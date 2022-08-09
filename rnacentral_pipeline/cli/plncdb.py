@@ -70,17 +70,6 @@ def fetch_data(urls, destination):
         print(f"All data for {dir_name} is downloaded")
 
 
-@cli.command("get-urls")
-@click.argument("remote", type=str)
-@click.argument(
-    "destination",
-    default="urls.txt",
-    type=click.Path(writable=True, dir_okay=False, file_okay=True),
-)
-def get_urls_cli(remote, destination):
-    url_finder.get_urls(remote, destination)
-
-
 def download_file(url, destination=Path('.')):
     local_filename = url.split('/')[-1]
     if (destination / local_filename).exists():
