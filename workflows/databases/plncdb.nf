@@ -20,7 +20,18 @@ process parse_data {
   path data
 
   output:
-  path ('*.csv')
+  path('accessions.csv'),
+  path('features.csv'),
+  path('go_annotations.csv'),
+  path('interactions.csv'),
+  path('long_sequences.csv'),
+  path('references.csv'),
+  path('ref_ids.csv'),
+  path('regions.csv'),
+  path('related_sequences.csv'),
+  path('secondary_structure.csv'),
+  path('short_sequences.csv'),
+  path('terms.csv')
 
   """
   rnac notify step "Data parsing for PLncDB" $params.databases.plncdb.data_path$data

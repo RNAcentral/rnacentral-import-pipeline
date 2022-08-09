@@ -104,7 +104,7 @@ def parse(data:pathlib.Path) -> ty.Iterable[Entry]:
 
         taxid = gene_info["Species"].values[0]
 
-        sequence = fasta_db[gff_db[primary_id].seqid]
+        sequence = fasta_db[gff_db[primary_id].seqid].upper()
 
         features = list(gff_db.children(primary_id))
         ##TODO: check coordinate system
