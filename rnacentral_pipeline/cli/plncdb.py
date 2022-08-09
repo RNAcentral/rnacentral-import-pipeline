@@ -20,7 +20,7 @@ from furl import furl
 
 import requests
 
-from rnacentral_pipeline.databases.plncdb import parser, url_finder
+from rnacentral_pipeline.databases.plncdb import parser
 from rnacentral_pipeline.writers import entry_writer
 from rnacentral_pipeline.rnacentral.notify.slack import send_notification
 
