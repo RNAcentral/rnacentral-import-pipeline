@@ -38,10 +38,14 @@ $NF clean -f
 
 rm .nextflow.log
 
-$NF -quiet run -with-report "$when-setup.html" -profile test --use_datamover prepare-environment.nf
-$NF -quiet run -with-report "$when-import.html" -profile test import-data.nf
-$NF -quiet run -with-report "$when-analyze.html" -profile test analyze.nf
-$NF -quiet run -with-report "$when-precompute.html" -profile prod precompute.nf
+## Run new DB selection workflow - selects DBs based on file changes from remotes
+
+$NF -quiet run -profile pg11prod --import_selection_remotes=weekly-update/weekly_db_remotes select_databases.nf
+
+$NF -quiet run -with-report "$when-setup.html" -profile pg11prod --use_datamover prepare-environment.nf
+$NF -quiet run -with-report "$when-import.html" -profile pg11prod import-data.nf
+$NF -quiet run -with-report "$when-analyze.html" -profile pg11prod analyze.nf
+$NF -quiet run -with-report "$when-precompute.html" -profile pg11prod precompute.nf
 # $NF -quiet run -with-report "$when-search.html" -profile prod search-export.nf
 
 # Zip up reports and email them to me
