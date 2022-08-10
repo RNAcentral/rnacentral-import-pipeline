@@ -1,5 +1,8 @@
 process fetch {
   tag { "$name" }
+  queue 'datamover'
+  container ''
+
   input:
   tuple val(name), path(data), val(column_name)
 
