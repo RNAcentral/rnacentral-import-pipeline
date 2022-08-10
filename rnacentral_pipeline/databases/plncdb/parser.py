@@ -18,13 +18,14 @@ from rnacentral_pipeline.databases.helpers import phylogeny as phy
 
 import gffutils
 from Bio import SeqIO
-
+from Bio.SeqFeature import SeqFeature, FeatureLocation
 import pathlib
 import typing as ty
 import os
 
 import pandas as pd
 
+from tqdm import tqdm
 
 def _find_gff_file(search_path: pathlib.Path) -> pathlib.Path:
     """
@@ -70,13 +71,14 @@ def parse(data:pathlib.Path) -> ty.Iterable[Entry]:
     We read the gff3, fasta, and associated info file to construct the entry
     """
 
+
     ## Set some things which will be common for all entries
     rna_type = "SO:0001877"
     database = "PLNCDB"
 
     url = "https://www.tobaccodb.org/plncdb/nunMir?plncdb_id={}"
 
-    entries = []
+
     ## loop on all directories in the data directory
     gff_file = _find_gff_file(data)
     fasta_file = _find_fasta_file(data)
@@ -86,7 +88,7 @@ def parse(data:pathlib.Path) -> ty.Iterable[Entry]:
     gff_db = gffutils.create_db(str(gff_file), ":memory:")
 
     ## Load the FASTA file as well
-    fasta_db = SeqIO.index(str(fasta_file), 'fasta')
+    fasta_db = SeqIO.to_dict(SeqIO.parse(str(fasta_file), 'fasta'))
 
     ## Finally, load the info file using pandas
     species_info = pd.read_csv(info_file, delimiter='\t')
@@ -94,22 +96,29 @@ def parse(data:pathlib.Path) -> ty.Iterable[Entry]:
     species_info["Species"] = species_info["Species"].apply(phy.taxid)
 
 
-
-    for gene_id_q in gff_db.execute("select id from features"):
+    total_entries = len(gff_db.execute("select DISTINCT(id) from features where featuretype = 'transcript' ").fetchall())
+    entries = []
+    for gene_id_q in tqdm(gff_db.execute("select id from features"), total=total_entries):
         primary_id = gene_id_q["id"]
 
         gene_info = species_info[species_info["lncRNA_ID"] == primary_id]
         if len(gene_info) == 0:
             break
 
+
+
         taxid = gene_info["Species"].values[0]
 
-        sequence = fasta_db[gff_db[primary_id].seqid]
+        chromosome = fasta_db[gff_db[primary_id].seqid] ##Hopefully gets the right chromosome?
 
         features = list(gff_db.children(primary_id))
         ##TODO: check coordinate system
         exons = [Exon(start=e.start, stop=e.stop) for e in features]
+        seq_start = min([e.start for e in features])
+        seq_end = max([e.end for e in features])
+        whole_feature = SeqFeature(FeatureLocation(seq_start, seq_end))
 
+        sequence = whole_feature.extract(chromosome)
 
         region = SequenceRegion(
             chromosome = features[0].chrom,
@@ -119,14 +128,13 @@ def parse(data:pathlib.Path) -> ty.Iterable[Entry]:
             coordinate_system = "1-start, fully-closed"
         )
 
-
         entries.append(
-            Entry(
+        Entry(
                 primary_id=primary_id,
                 accession=primary_id,
                 ncbi_tax_id=int(taxid),
                 database=database,
-                sequence=str(sequence.seq.upper()),
+                sequence=sequence.seq.upper(),
                 regions=[region],
                 rna_type=rna_type,
                 url=url.format(primary_id),
