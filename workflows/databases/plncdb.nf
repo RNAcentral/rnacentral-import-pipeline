@@ -29,7 +29,7 @@ process parse_data {
   path('*.csv')
 
   """
-  rnac notify step "Data parsing for PLncDB" $params.databases.plncdb.data_path$data
+  # rnac notify step "Data parsing for PLncDB" $params.databases.plncdb.data_path$data
   rnac plncdb parse $params.databases.plncdb.data_path$data
   """
 }
