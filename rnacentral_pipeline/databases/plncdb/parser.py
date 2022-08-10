@@ -86,7 +86,7 @@ def parse(data:pathlib.Path) -> ty.Iterable[Entry]:
     gff_db = gffutils.create_db(str(gff_file), ":memory:")
 
     ## Load the FASTA file as well
-    fasta_db = SeqIO.to_dict(SeqIO.parse(fasta_file, 'fasta'))
+    fasta_db = SeqIO.index(fasta_file, 'fasta')
 
     ## Finally, load the info file using pandas
     species_info = pd.read_csv(info_file, delimiter='\t')
@@ -104,7 +104,7 @@ def parse(data:pathlib.Path) -> ty.Iterable[Entry]:
 
         taxid = gene_info["Species"].values[0]
 
-        sequence = fasta_db[gff_db[primary_id].seqid].upper()
+        sequence = fasta_db[gff_db[primary_id].seqid]
 
         features = list(gff_db.children(primary_id))
         ##TODO: check coordinate system
@@ -126,7 +126,7 @@ def parse(data:pathlib.Path) -> ty.Iterable[Entry]:
                 accession=primary_id,
                 ncbi_tax_id=int(taxid),
                 database=database,
-                sequence=sequence.seq,
+                sequence=str(sequence.seq.upper()),
                 regions=[region],
                 rna_type=rna_type,
                 url=url.format(primary_id),
