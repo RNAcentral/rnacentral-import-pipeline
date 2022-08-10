@@ -86,7 +86,7 @@ def parse(data:pathlib.Path) -> ty.Iterable[Entry]:
     gff_db = gffutils.create_db(str(gff_file), ":memory:")
 
     ## Load the FASTA file as well
-    fasta_db = SeqIO.index(fasta_file, 'fasta')
+    fasta_db = SeqIO.index(str(fasta_file), 'fasta')
 
     ## Finally, load the info file using pandas
     species_info = pd.read_csv(info_file, delimiter='\t')
