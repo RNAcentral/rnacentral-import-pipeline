@@ -17,6 +17,10 @@ process parse_data {
   when { params.databases.plncdb.run }
 
   queue 'short'
+  memory { 8.GB * task.attempt }
+
+  errorStrategy 'retry'
+  maxRetries 16
 
   input:
   path data
