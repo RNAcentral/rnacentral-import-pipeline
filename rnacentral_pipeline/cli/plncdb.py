@@ -20,7 +20,7 @@ from furl import furl
 
 import requests
 
-from rnacentral_pipeline.databases.plncdb import parser, url_finder
+from rnacentral_pipeline.databases.plncdb import parser
 from rnacentral_pipeline.writers import entry_writer
 from rnacentral_pipeline.rnacentral.notify.slack import send_notification
 
@@ -68,17 +68,6 @@ def fetch_data(urls, destination):
         for url in url_dict[dir_name]:
             download_file(url, target_path)
         print(f"All data for {dir_name} is downloaded")
-
-
-@cli.command("get-urls")
-@click.argument("remote", type=str)
-@click.argument(
-    "destination",
-    default="urls.txt",
-    type=click.Path(writable=True, dir_okay=False, file_okay=True),
-)
-def get_urls_cli(remote, destination):
-    url_finder.get_urls(remote, destination)
 
 
 def download_file(url, destination=Path('.')):
