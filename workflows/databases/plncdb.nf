@@ -38,12 +38,16 @@ workflow plncdb {
   emit: data_files
 
   main:
-
-  Channel.fromPath("$params.databases.plncdb.data_path/*", type:'dir') \
-  | parse_data \
-  | flatten
-  | collectFile() {csvfile -> [csvfile.name, csvfile.text]} \
-  | set { data_files }
+  if( params.databases.plncdb.run ) {
+    Channel.fromPath("$params.databases.plncdb.data_path/*", type:'dir') \
+    | parse_data \
+    | flatten
+    | collectFile() {csvfile -> [csvfile.name, csvfile.text]} \
+    | set { data_files }
+  }
+  else {
+  Channel.empty() | set { data_files }
+  }
 
 
 }
