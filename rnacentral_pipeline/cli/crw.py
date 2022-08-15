@@ -19,7 +19,7 @@ import click
 
 from Bio import SeqIO
 
-from rnacentral_pipeline.databases.crw import parser
+from rnacentral_pipeline.databases.crw import parser, helpers
 from rnacentral_pipeline.writers import entry_writer
 
 
@@ -53,5 +53,5 @@ def process_crw(metadata_file, sequence_directory, output):
 @click.argument("directory", type=click.Path())
 @click.argument("output", type=click.File("w"))
 def generate_r2dt_fasta(directory, output):
-    entries = parser.fasta_entries(Path(directory))
+    entries = helpers.fasta_entries(Path(directory))
     SeqIO.write(entries, output, "fasta")

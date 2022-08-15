@@ -11,7 +11,7 @@ process fetch_and_process {
   psql -f "$metadata_query" "$PGDATABASE" > metadata.json
   git clone "$params.databases.crw.r2dt_repo" r2dt
   rnac crw r2dt-to-fasta r2dt/data/crw-fasta sequences.fasta
-  rnac crw parse metadata.json $sequences
+  rnac crw parse metadata.json sequences.fasta
   """
 }
 
