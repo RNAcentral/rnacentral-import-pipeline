@@ -14,7 +14,7 @@ process check_db_md5 {
 
     """
     wget -O target_file $remote
-    echo -n "$db_name," >> latest_md5s.csv && md5 -q target_file >> latest_md5s.csv
+    echo -n "$db_name," >> latest_md5s.csv && md5sum target_file | awk 'BEGIN {fs="[ ]"}; {print \$1}' >> latest_md5s.csv
     """
 }
 
