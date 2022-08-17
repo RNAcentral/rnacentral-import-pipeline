@@ -114,6 +114,7 @@ def update_tracker(latest_md5s, db_url):
         db_id = row[1]
         checksum = row[2]
 
+        cur.execute("TRUNCATE TABLE rnc_import_tracker")
         cur.execute("INSERT INTO rnc_import_tracker(db_name, db_id, last_import_date, file_md5) VALUES (%s, %s, CURRENT_TIMESTAMP, %s) ", (db_name, db_id, checksum,))
 
     conn.commit()
