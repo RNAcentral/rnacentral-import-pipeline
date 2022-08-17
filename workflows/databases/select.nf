@@ -53,7 +53,7 @@ workflow select {
   | map { row -> tuple(row[0], row[1])}
   | check_db_md5
   | collectFile
-  | make_selection
+  | ( make_selection & update_tracker_table )
 
 }
 
