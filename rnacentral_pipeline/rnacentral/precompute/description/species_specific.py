@@ -48,6 +48,7 @@ ORDERING = [
     Database.rgd,
     Database.zfin,
     Database.mirgenedb,
+    Database.plncdb,
     Database.lncipedia,
     Database.lncrnadb,
     Database.lncbook,
