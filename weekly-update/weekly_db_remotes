@@ -1,5 +1,5 @@
 sgd,https://downloads.yeastgenome.org/latest/RNAcentral.json
-pombase,https://ftp.pombase.org/nightly_update/misc/rnacentral.json
+pombase,ftp://ftp.pombase.org/nightly_update/misc/rnacentral.json
 zfin,https://zfin.org/downloads/rnaCentral.json
 intact,https://ftp.ebi.ac.uk/pub/databases/intact/current/psimitab/intact.zip
 hgnc,https://ftp.ebi.ac.uk/pub/databases/genenames/new/json/locus_groups/non-coding_RNA.json
