@@ -24,6 +24,7 @@ process create_release_note {
 // This deletes the old data and then moves the new data in place.
 process atomic_publish {
   container ''
+  queue 'datamover'
 
   input:
   path('release_note.txt')
