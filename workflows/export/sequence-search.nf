@@ -23,7 +23,7 @@ process query_database {
   maxForks params.export.sequence_search.max_forks
 
   input:
-  tuple val(name), path(query), val(partition) 
+  tuple val(name), path(query), val(partition)
 
   output:
   tuple val(name), path('raw.json')
@@ -64,6 +64,7 @@ process create_fasta {
 
 process atomic_publish {
   stageInMode 'copy'
+  queue 'datamover'
 
   input:
   path(fasta)
