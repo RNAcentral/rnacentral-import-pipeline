@@ -15,7 +15,7 @@ limitations under the License.
 import click
 import os
 
-from rnacentral_pipeline.rnacentral.notify.slack import send_notification
+from rnacentral_pipeline.rnacentral.notify.slack import send_notification, pipeline_report
 from rnacentral_pipeline import db
 
 
@@ -81,3 +81,10 @@ def notify_file(path):
     Read a mrkdwn formatted file and send as a message in slack.
     """
     send_notification("", path.read())
+
+@cli.command("report")
+def notify_report():
+    """
+    Generate a run report and send it as mrkdwn
+    """
+    pipeline_report()
