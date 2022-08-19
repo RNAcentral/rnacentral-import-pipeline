@@ -21,6 +21,7 @@ requests
 retry
 scikit-learn
 semver
+slack_sdk
 sqlitedict
 tatsu
 textblob

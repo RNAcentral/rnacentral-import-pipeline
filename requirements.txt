@@ -109,6 +109,8 @@ six==1.15.0
     #   orderedmultidict
     #   pyfaidx
     #   python-dateutil
+slack-sdk==3.18.1
+    # via -r requirements.in
 sortedcontainers==2.3.0
     # via intervaltree
 soupsieve==2.2.1
