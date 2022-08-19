@@ -39,6 +39,7 @@ $NF clean -f
 rm .nextflow.log
 
 ## Run new DB selection workflow - selects DBs based on file changes from remotes
+rm -f db_selection.config && touch db_selection.config
 
 $NF -quiet run -profile pg11prod select_databases.nf --import_selection_remotes=weekly-update/weekly_db_remotes
 
