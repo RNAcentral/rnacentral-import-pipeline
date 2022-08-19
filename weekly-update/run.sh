@@ -47,7 +47,11 @@ $NF -quiet run -with-report "$when-setup.html" -profile pg11prod --use_datamover
 $NF -quiet run -with-report "$when-import.html" -profile pg11prod import-data.nf
 $NF -quiet run -with-report "$when-analyze.html" -profile pg11prod analyze.nf
 $NF -quiet run -with-report "$when-precompute.html" -profile pg11prod precompute.nf
-# $NF -quiet run -with-report "$when-search.html" -profile prod search-export.nf
+
+$NF -quiet run -profile pg11prod report.nf
+
+$NF -quiet run -with-report "$when-search.html" -profile pg11prod export.nf
+
 
 # Zip up reports and email them to me
 tar -cjf reports.tar.bz2 *.html
