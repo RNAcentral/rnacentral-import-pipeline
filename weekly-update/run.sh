@@ -40,7 +40,7 @@ rm .nextflow.log
 
 ## Run new DB selection workflow - selects DBs based on file changes from remotes
 
-$NF -quiet run -profile pg11prod --import_selection_remotes=weekly-update/weekly_db_remotes select_databases.nf
+$NF -quiet run -profile pg11prod select_databases.nf --import_selection_remotes=weekly-update/weekly_db_remotes
 
 $NF -quiet run -with-report "$when-setup.html" -profile pg11prod --use_datamover prepare-environment.nf
 $NF -quiet run -with-report "$when-import.html" -profile pg11prod import-data.nf
