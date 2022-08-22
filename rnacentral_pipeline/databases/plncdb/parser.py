@@ -93,7 +93,7 @@ def parse(data:pathlib.Path) -> ty.Iterable[Entry]:
     ## Finally, load the info file using pandas
     species_info = pd.read_csv(info_file, delimiter='\t')
     species_info["Species"] = species_info["Species"].apply(lambda x: x.replace("_", " "))
-    species_info["Species"] = species_info["Species"].apply(phy.taxid)
+    species_info["taxid"] = species_info["Species"].apply(phy.taxid)
 
 
     total_entries = len(gff_db.execute("select DISTINCT(id) from features where featuretype = 'transcript' ").fetchall())
@@ -107,7 +107,7 @@ def parse(data:pathlib.Path) -> ty.Iterable[Entry]:
 
 
 
-        taxid = gene_info["Species"].values[0]
+        taxid = gene_info["taxid"].values[0]
 
         chromosome = fasta_db[gff_db[primary_id].seqid] ##Hopefully gets the right chromosome?
 
