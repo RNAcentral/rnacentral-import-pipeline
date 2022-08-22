@@ -133,7 +133,7 @@ def parse(data:pathlib.Path) -> ty.Iterable[Entry]:
                 primary_id=primary_id,
                 accession=primary_id,
                 ncbi_tax_id=int(taxid),
-                species=species_info["Species"],
+                species=species_info["Species"][0],
                 database=database,
                 sequence=sequence.seq.upper(),
                 regions=[region],
