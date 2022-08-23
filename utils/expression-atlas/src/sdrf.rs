@@ -49,7 +49,11 @@ pub fn parse_condensed_sdrf(path: &PathBuf) -> Result<DataFrame, polars::prelude
             }
         }
     } else {
-        warn!("Unusual sdrf parsing with {} columns, not 7 for experiment {}",part_parsed.iter().map(|x| x.len()).max().unwrap(), part_parsed[0][0]);
+        warn!(
+            "Unusual sdrf parsing with {} columns, not 7 for experiment {}",
+            part_parsed.iter().map(|x| x.len()).max().unwrap(),
+            part_parsed[0][0]
+        );
         for line in part_parsed.iter() {
             exp_name.append_value(line[0]);
             assay_name.append_value(line[1]);

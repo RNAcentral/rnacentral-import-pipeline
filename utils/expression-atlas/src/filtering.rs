@@ -33,17 +33,11 @@ fn fix_bad_infinities(str_val: &Series) -> Series {
 
 fn baseline_get_median_gt_zero(str_val: &Series) -> Series {
     let lists = str_val.utf8().unwrap().into_iter().map(|x| {
-        x.unwrap()
-            .split(',')
-            .into_iter()
-            .map(|y| y.parse::<f64>().unwrap())
-            .collect::<Vec<f64>>()
+        x.unwrap().split(',').into_iter().map(|y| y.parse::<f64>().unwrap()).collect::<Vec<f64>>()
     });
 
-    let medians: Vec<bool> = lists
-        .into_iter()
-        .map(|x| Series::from_iter(x).median().unwrap() > 0.0)
-        .collect();
+    let medians: Vec<bool> =
+        lists.into_iter().map(|x| Series::from_iter(x).median().unwrap() > 0.0).collect();
     Series::from_iter(medians)
 }
 

@@ -6,7 +6,6 @@ use multimap::MultiMap;
 use polars::frame::DataFrame;
 use polars::prelude::*;
 
-
 use log::{info, warn};
 
 /// This function will 'augment' the experiment dataframe with information from the config
@@ -32,14 +31,10 @@ pub fn augment_differential_df(
 
             contrast_lookup.insert(
                 test_group,
-                (
-                    format!("{}.log2foldchange", cont.id),
-                    format!("{}.p-value", cont.id),
-                ),
+                (format!("{}.log2foldchange", cont.id), format!("{}.p-value", cont.id)),
             );
         }
     }
-
 
     // Set up some dataframes for the things we want
     let mut taxid_df = DataFrame::default();
@@ -66,10 +61,7 @@ pub fn augment_differential_df(
 
             let mut df_inter = df.clone();
 
-            df_inter = df_inter
-                .lazy()
-                .with_column(lit(NULL).alias("group_id"))
-                .collect()?;
+            df_inter = df_inter.lazy().with_column(lit(NULL).alias("group_id")).collect()?;
 
             // If there is localisation data, this will select it
             if localisation_df.height() == 0 {
@@ -135,13 +127,8 @@ pub fn augment_differential_df(
     } // closes loop on analyses
 
     // Use a df to join on selectively
-    df_result = join_augmentations(
-        &df_result,
-        &taxid_df,
-        &localisation_df,
-        &disease_df,
-        &cell_type_df,
-    )?;
+    df_result =
+        join_augmentations(&df_result, &taxid_df, &localisation_df, &disease_df, &cell_type_df)?;
 
     Ok(df_result)
 }
@@ -159,10 +146,7 @@ pub fn augment_baseline_df(
     let mut cell_type_df = DataFrame::default();
 
     let mut df_inter = df.clone();
-    df_inter = df_inter
-        .lazy()
-        .with_column(lit(NULL).alias("group_id"))
-        .collect()?;
+    df_inter = df_inter.lazy().with_column(lit(NULL).alias("group_id")).collect()?;
 
     let mut df_result = DataFrame::default();
 
@@ -227,13 +211,8 @@ pub fn augment_baseline_df(
         } // close loop on assay groups
     } //close loop on analyses
 
-    df_result = join_augmentations(
-        &df_result,
-        &taxid_df,
-        &localisation_df,
-        &disease_df,
-        &cell_type_df,
-    )?;
+    df_result =
+        join_augmentations(&df_result, &taxid_df, &localisation_df, &disease_df, &cell_type_df)?;
 
     Ok(df_result)
 }
@@ -269,9 +248,7 @@ fn get_cell_type_data(assay_df: LazyFrame) -> Result<DataFrame> {
     let cell_type = assay_df
         .clone()
         .filter(
-            col("feat_class")
-                .eq(lit("characteristic"))
-                .and(col("feat_type").eq(lit("cell type"))),
+            col("feat_class").eq(lit("characteristic")).and(col("feat_type").eq(lit("cell type"))),
         )
         .select([col("group_id"), col("ontology").alias("cell_type")])
         .first()
@@ -311,13 +288,8 @@ fn join_augmentations(
     }
 
     if localisation_df.height() > 0 {
-        df_result = df_result.join(
-            &localisation_df,
-            ["group_id"],
-            ["group_id"],
-            JoinType::Inner,
-            None,
-        )?;
+        df_result =
+            df_result.join(&localisation_df, ["group_id"], ["group_id"], JoinType::Inner, None)?;
     } else {
         df_result = df_result
             .lazy()
@@ -326,13 +298,8 @@ fn join_augmentations(
     }
 
     if disease_df.height() > 0 {
-        df_result = df_result.join(
-            &disease_df,
-            ["group_id"],
-            ["group_id"],
-            JoinType::Inner,
-            None,
-        )?;
+        df_result =
+            df_result.join(&disease_df, ["group_id"], ["group_id"], JoinType::Inner, None)?;
     } else {
         df_result = df_result
             .lazy()
@@ -341,13 +308,8 @@ fn join_augmentations(
     }
 
     if cell_type_df.height() > 0 {
-        df_result = df_result.join(
-            &cell_type_df,
-            ["group_id"],
-            ["group_id"],
-            JoinType::Inner,
-            None,
-        )?;
+        df_result =
+            df_result.join(&cell_type_df, ["group_id"], ["group_id"], JoinType::Inner, None)?;
     } else {
         df_result = df_result
             .lazy()
