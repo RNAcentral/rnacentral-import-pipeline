@@ -3,6 +3,7 @@ process fetch_directory {
   when { params.databases.ena.run }
   clusterOptions '-sp 100'
   queue 'datamover'
+  containerOptions '--bind /nfs:/nfs'
 
   input:
   tuple val(name), val(remote)
