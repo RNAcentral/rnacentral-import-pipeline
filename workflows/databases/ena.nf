@@ -2,6 +2,7 @@ process fetch_directory {
   tag { "$name" }
   when { params.databases.ena.run }
   clusterOptions '-sp 100'
+  queue 'datamover'
 
   input:
   tuple val(name), val(remote)
