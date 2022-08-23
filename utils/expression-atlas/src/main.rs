@@ -1,5 +1,5 @@
 use anyhow::Result;
-use clap::Parser;
+use clap::{Parser, Subcommand};
 use regex::Regex;
 use std::collections::HashMap;
 use std::fs;
@@ -16,30 +16,48 @@ pub mod filtering;
 pub mod sdrf;
 
 #[derive(Parser, Debug)]
-#[clap(author, version, about, long_about = None)]
+#[clap(author = "Andrew Green", version, about)]
 struct Args {
-    /// Path where input has been copied. Must contain the config files
-    #[clap(short, long, multiple_values(true))]
-    input: PathBuf,
+    #[clap(subcommand)]
+    cmd: Command,
+}
 
-    /// An output file
-    #[clap(short, long)]
-    output: String,
+#[derive(Subcommand, Debug)]
+enum Command {
+    /// Parse the Expression Atlas data into the unique genes per experiment jsonlines
+    Parse {
+        /// Path where input has been copied. Must contain the config files
+        #[clap(short, long, multiple_values(true))]
+        input: PathBuf,
 
-    /// The column to select. If files have no headers, use "column_N"
-    #[clap(short, long, multiple_values(true))]
-    select: Vec<String>,
+        /// An output file
+        #[clap(short, long)]
+        output: String,
+
+        /// The column to select. If files have no headers, use "column_N"
+        #[clap(short, long, multiple_values(true))]
+        select: Vec<String>,
+    },
+    /// Lookup the gene names we found, using a dump from the database
+    Lookup {
+        /// File containing the genes from all experiments
+        #[clap(short, long)]
+        genes: PathBuf,
+
+        /// Dump from the database containing all URS -> Gene names. See the query file for references
+        #[clap(short, long)]
+        lookup: PathBuf,
+
+        /// An output file. Will contain the data from the experiments file along with URS data and some other useful stuff
+        #[clap(short, long)]
+        output: String,
+    },
 }
 
 fn load_df_add_experiment(path: &PathBuf) -> Result<DataFrame, polars::prelude::PolarsError> {
     info!("Loading experiment data from {:?}", path);
-    let exp_name = path
-        .file_name()
-        .unwrap()
-        .to_str()
-        .unwrap()
-        .split('-')
-        .collect::<Vec<&str>>()[0..=2]
+    let exp_name = path.file_name().unwrap().to_str().unwrap().split('-').collect::<Vec<&str>>()
+        [0..=2]
         .join("-")
         .replace("_A", "");
 
@@ -75,28 +93,18 @@ fn load_df_add_experiment(path: &PathBuf) -> Result<DataFrame, polars::prelude::
     Ok(exp_df)
 }
 
-fn main() -> Result<()> {
-    env_logger::init();
-    info!("Starting Expression Atlas parser");
-    let args = Args::parse();
-
-    // Parse the config files first
-    // set up the regex
+fn run_parse(input: &PathBuf, output: &String) -> Result<()> {
     let config_re = Regex::new(r"configuration.xml").unwrap();
     let mut config_lookup: HashMap<String, configuration::Config> = HashMap::new();
-    for file in fs::read_dir(&args.input)? {
+    for file in fs::read_dir(&input)? {
         let file = file?;
         let path = file.path();
         if config_re.is_match(path.to_str().unwrap()) {
-            let exp_name = path
-                .file_name()
-                .unwrap()
-                .to_str()
-                .unwrap()
-                .split('-')
-                .collect::<Vec<&str>>()[0..=2]
-                .join("-")
-                .replace("configuration", ""); // yeah...
+            let exp_name =
+                path.file_name().unwrap().to_str().unwrap().split('-').collect::<Vec<&str>>()
+                    [0..=2]
+                    .join("-")
+                    .replace("configuration", ""); // yeah...
             let config = configuration::parse_config(&path)?;
             config_lookup.insert(exp_name, config);
         }
@@ -111,7 +119,7 @@ fn main() -> Result<()> {
     let differential_re = Regex::new(r".*diff.*").unwrap();
 
     let mut big_df = DataFrame::default();
-     // String::new();
+    // String::new();
     //  data_path = PathBuf::from(&args.input);
     // let mut sdrf_path = PathBuf::from(&args.input);
 
@@ -119,13 +127,14 @@ fn main() -> Result<()> {
 
     for (exp_name, config) in &config_lookup {
         let mut exp_df = DataFrame::default();
-        let mut data_path = PathBuf::from(&args.input);
-        let mut sdrf_path = PathBuf::from(&args.input);
+        let mut data_path = PathBuf::from(&input);
+        let mut sdrf_path = PathBuf::from(&input);
         if differential_re.is_match(&config.exp_type) {
             for analysis in &config.analytics {
                 let array_design = analysis.array_design.as_deref().unwrap_or("");
                 if !array_design.is_empty() {
-                    let data_filename: String = format!("{}_{}-analytics.tsv", exp_name, array_design);
+                    let data_filename: String =
+                        format!("{}_{}-analytics.tsv", exp_name, array_design);
                     data_path.push(&data_filename);
 
                     if !data_path.exists() {
@@ -159,7 +168,7 @@ fn main() -> Result<()> {
                         data_path.pop();
                     }
                 } else {
-                    let data_filename: String  = format!("{}-analytics.tsv", exp_name);
+                    let data_filename: String = format!("{}-analytics.tsv", exp_name);
                     data_path.push(&data_filename);
 
                     if !data_path.exists() {
@@ -196,10 +205,7 @@ fn main() -> Result<()> {
         sdrf_path.push(&sdrf_filename);
 
         if !sdrf_path.exists() {
-            warn!(
-                "File {} does not exist, skipping this experiment",
-                sdrf_path.to_str().unwrap()
-            );
+            warn!("File {} does not exist, skipping this experiment", sdrf_path.to_str().unwrap());
             sdrf_path.pop();
             data_path.pop();
             continue;
@@ -243,10 +249,79 @@ fn main() -> Result<()> {
 
     info!("All files parsed, preparing to write import csvs");
 
-    let mut output_file = fs::File::create(&args.output)?;
+    let mut output_file = fs::File::create(&output)?;
     JsonWriter::new(&mut output_file)
         .with_json_format(JsonFormat::JsonLines)
         .finish(&mut big_df)?;
 
     Ok(())
+}
+
+fn run_lookup(genes: &PathBuf, lookup: &PathBuf, output: &String) -> Result<()> {
+    let mut gene_df: DataFrame = CsvReader::from_path(&genes)?
+        .has_header(true)
+        .finish()
+        .unwrap_or_else(|x| panic!("Failed to load gene output"));
+
+    gene_df = gene_df.lazy().with_column(col("taxid").cast(DataType::UInt32)).collect().unwrap();
+
+    let mut lookup_df: DataFrame = CsvReader::from_path(&lookup)?
+        .has_header(false)
+        .finish()
+        .unwrap_or_else(|x| panic!("Failed to load lookup data!"));
+
+    lookup_df.rename("column_1", "upi");
+    lookup_df.rename("column_2", "taxid");
+    lookup_df.rename("column_3", "possible_ids");
+    lookup_df.rename("column_4", "start");
+    lookup_df.rename("column_5", "end");
+    lookup_df.rename("column_6", "rna_type");
+
+    // The database dump has a column where possible IDs are separated by a | character, so we need to split on that
+    // The plan then is to use explode on the df with the external IDs column to get a mega big dataframe which we join onto
+    // the gene one
+    println!("{:?}", &lookup_df);
+
+    lookup_df = lookup_df
+        .lazy()
+        .with_column(col("possible_ids").str().split("|").alias("possible_ids"))
+        .explode([col("possible_ids")])
+        .filter(col("possible_ids").neq(lit("")))
+        .collect()
+        .unwrap();
+
+    println!("Got to the end in one piece!");
+    println!("{:?}", &lookup_df);
+
+    println!("{:?}", &gene_df);
+
+    let mut matched_df =
+        gene_df.join(&lookup_df, ["GeneID"], ["possible_ids"], JoinType::Inner, None).unwrap();
+    matched_df = matched_df.lazy().filter(col("taxid").eq(col("taxid_right"))).collect().unwrap();
+
+    println!("{:?}", matched_df);
+
+    Ok(())
+}
+
+fn main() -> Result<()> {
+    env_logger::init();
+    info!("Starting Expression Atlas parser");
+    let args = Args::parse();
+
+    match args.cmd {
+        Command::Parse {
+            input,
+            output,
+            select,
+        } => run_parse(&input, &output),
+        Command::Lookup {
+            genes,
+            lookup,
+            output,
+        } => run_lookup(&genes, &lookup, &output),
+    }
+
+    // Parse the config files first
+    // set up the regex
 }
