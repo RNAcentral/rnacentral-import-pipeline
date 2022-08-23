@@ -5,7 +5,8 @@ process lncbook {
   path('*.csv')
 
   """
-  wget -O lncbook.json ${params.databases.lncbook.remote}
+  wget -O lncbook.json.gz ${params.databases.lncbook.remote}
+  gzip -d lncbook.json.gz
   rnac lncbook parse lncbook.json .
   """
 }
