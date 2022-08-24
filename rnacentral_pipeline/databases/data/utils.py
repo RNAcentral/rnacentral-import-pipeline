@@ -41,6 +41,7 @@ INSDC_SO_MAPPING = {
     "ribozyme": "SO:0000374",
     "scRNA": "SO:0000013",
     "scaRNA": "SO:0002095",
+    "sgRNA": "SO:0001998",
     "siRNA": "SO:0000646",
     "snRNA": "SO:0000274",
     "snoRNA": "SO:0000275",
