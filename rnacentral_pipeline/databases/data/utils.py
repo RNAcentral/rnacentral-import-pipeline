@@ -28,6 +28,7 @@ INSDC_SO_MAPPING = {
     "Y_RNA": "SO:0000405",
     "antisense_RNA": "SO:0000644",
     "autocatalytically_spliced_intron": "SO:0000588",
+    "circRNA": "SO:0002291",
     "guide_RNA": "SO:0000602",
     "hammerhead_ribozyme": "SO:0000380",
     "lncRNA": "SO:0001877",
