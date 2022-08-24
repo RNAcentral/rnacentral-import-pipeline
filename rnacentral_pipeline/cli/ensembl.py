@@ -82,7 +82,11 @@ def parse_data(division, embl_file, gff_file, output, family_file=None):
         family_file = Path(family_file)
     entries = parser.parse(division, embl_file, gff_file, family_file=family_file)
     with entry_writer(Path(output)) as writer:
-        writer.write(entries)
+        try:
+            writer.write(entries)
+        except ValueError:
+            print(f"WARNING: no ncRNA found in file {embl_file}.")
+            return
 
 
 @cli.command("assemblies")
