@@ -13,14 +13,14 @@ requirements-dev.txt: requirements-dev.in
 
 rust:
 	cargo build --release
-	mv target/release/json2fasta bin
-	mv target/release/split-ena bin
-	mv target/release/expand-urs bin
-	mv target/release/precompute bin
-	mv target/release/search-export bin
-	mv target/release/ftp-export bin
-	mv target/release/json2dfasta bin
-	mv target/release/expression-parse bin
+	mv -f target/release/json2fasta bin
+	mv -f target/release/split-ena bin
+	mv -f target/release/expand-urs bin
+	mv -f target/release/precompute bin
+	mv -f target/release/search-export bin
+	mv -f target/release/ftp-export bin
+	mv -f target/release/json2dfasta bin
+	mv -f target/release/expression-parse bin
 
 docker: Dockerfile requirements.txt .dockerignore
 	docker build -t "$(docker)" .
