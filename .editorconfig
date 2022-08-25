@@ -34,3 +34,6 @@ indent_size = 2
 [*.yaml]
 indent_style = space
 indent_size = 2
+
+[*.nf]
+indent_size = 2
