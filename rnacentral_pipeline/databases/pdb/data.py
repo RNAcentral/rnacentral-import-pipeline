@@ -64,7 +64,7 @@ class ChainInfo:
             resolution=raw.get("resolution"),
             title=raw["title"],
             sequence=raw["molecule_sequence"],
-            molecule_names=raw.get("molecule_name", []),
+            molecule_names=raw.get("molecule_name", raw.get("rfam_id", [])),
             molecule_type=raw.get("molecule_type", None),
             organism_scientific_name=first_or_none(
                 raw.get("organism_scientific_name", [])
