@@ -13,16 +13,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import logging
 import re
 import typing as ty
-import logging
 
+from rnacentral_pipeline.databases.data import AnyReference, Reference
 from rnacentral_pipeline.databases.helpers import phylogeny as phy
 from rnacentral_pipeline.databases.helpers import publications as pubs
-from rnacentral_pipeline.databases.data import Reference
-from rnacentral_pipeline.databases.data import AnyReference
-from rnacentral_pipeline.databases.pdb.data import ChainInfo
-from rnacentral_pipeline.databases.pdb.data import ReferenceMapping
+from rnacentral_pipeline.databases.pdb.data import ChainInfo, ReferenceMapping
 
 RIBOSOMES = set(
     [
@@ -53,6 +51,14 @@ class InvalidSequence(Exception):
 class MissingProduct(Exception):
     """
     Raised when no product is available for the given chain.
+    """
+
+    pass
+
+
+class MissingTypeInfo(Exception):
+    """
+    Raised when the chain molecule_names field is empty and we can't infer type
     """
 
     pass
@@ -182,7 +188,10 @@ def compound_rna_type(compound: str) -> str:
 
 def rna_type(info: ChainInfo) -> str:
     if not info.molecule_names:
-        raise ValueError(f"Cannot find RNA type for {info}")
+        raise MissingTypeInfo(
+            f'Cannot find RNA type for {info}, falling back to "misc_RNA"'
+        )
+        return "misc_RNA"
     return compound_rna_type(info.molecule_names[0])
 
 
