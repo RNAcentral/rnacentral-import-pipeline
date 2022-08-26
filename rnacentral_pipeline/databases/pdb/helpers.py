@@ -34,6 +34,7 @@ RIBOSOMES = set(
         "40S",
         "60S",
         "80S",
+        "LSU",
     ]
 )
 
