@@ -19,15 +19,14 @@ import collections as coll
 import logging
 import typing as ty
 
-from furl import furl
 import requests
-from retry import retry
+from furl import furl
 from more_itertools import chunked
 from ratelimiter import RateLimiter
+from retry import retry
 
-from rnacentral_pipeline.databases.pdb.data import ChainInfo
-from rnacentral_pipeline.databases.pdb.data import ReferenceMapping
 from rnacentral_pipeline.databases.pdb import helpers
+from rnacentral_pipeline.databases.pdb.data import ChainInfo, ReferenceMapping
 
 LOGGER = logging.getLogger(__name__)
 
@@ -45,6 +44,7 @@ CHAIN_QUERY_COLUMNS = {
     "molecule_name",
     "molecule_type",
     "organism_scientific_name",
+    "rfam_id",
 }
 
 PDBE_SEARCH_URL = "https://www.ebi.ac.uk/pdbe/search/pdb/select"
