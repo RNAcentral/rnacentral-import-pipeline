@@ -17,10 +17,8 @@ import logging
 import typing as ty
 
 from rnacentral_pipeline.databases import data
-
-from rnacentral_pipeline.databases.pdb.data import ChainInfo
-from rnacentral_pipeline.databases.pdb.data import ReferenceMapping
 from rnacentral_pipeline.databases.pdb import helpers
+from rnacentral_pipeline.databases.pdb.data import ChainInfo, ReferenceMapping
 
 LOGGER = logging.getLogger(__name__)
 
@@ -50,11 +48,14 @@ def as_entry(info: ChainInfo, reference_mapping: ReferenceMapping):
 def parse(
     rna_chains: ty.List[ChainInfo],
     reference_mapping: ReferenceMapping,
-    override_list: ty.Dict[str, str]
+    override_list: ty.Dict[str, str],
 ) -> ty.Iterator[data.Entry]:
     disqualified = {"mRNA": 0, "other": 0}
     for chain in rna_chains:
-        if chain.pdb_id in override_list.keys() and chain.chain_id in override_list.values():
+        if (
+            chain.pdb_id in override_list.keys()
+            and chain.chain_id in override_list.values()
+        ):
             LOGGER.debug("Overriding %s", chain)
             pass
         else:
@@ -72,5 +73,7 @@ def parse(
             yield as_entry(chain, reference_mapping)
         except helpers.InvalidSequence:
             LOGGER.warn(f"Invalid sequence for {chain}")
+        except helpers.MissingTypeInfo:
+            LOGGER.warn(f"Missing type info for {chain}")
     LOGGER.info("Disqualified %i mRNA chains", disqualified["mRNA"])
     LOGGER.info("Disqualified %i non ncRNA chains", disqualified["other"])
