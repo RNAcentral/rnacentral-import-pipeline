@@ -75,7 +75,7 @@ def process_ena(
         message += f"Working directory: {os.getcwd()}\n"
         message += "Ribotyper log:\n"
         message += open(
-            Path(ribovore_path) + "ribotyper-results.ribotyper.log", "r"
+            Path(ribovore_path) / "ribotyper-results.ribotyper.log", "r"
         ).read()
         message += "\n\nContext counts:\n"
         message += open(Path(counts), "r").read()
