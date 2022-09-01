@@ -13,11 +13,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import os
 from pathlib import Path
 
 import click
 
 from rnacentral_pipeline.databases.ena import context, parser
+from rnacentral_pipeline.rnacentral.notify.slack import send_notification
 from rnacentral_pipeline.writers import entry_writer
 
 
@@ -58,6 +60,26 @@ def process_ena(
     builder.with_dr(ena_file)
     ctx = builder.context()
     entries = parser.parse_with_context(ctx, ena_file)
-    with entry_writer(Path(output)) as writer:
-        writer.write(entries)
+    try:
+        with entry_writer(Path(output)) as writer:
+            writer.write(entries)
+    except ValueError:
+        print("No entries could be written for one of the parsed ENA files.")
+        print("Sending warning to slack, but carrying on")
+
+        # Dump this again to attach to the report
+        ctx.dump_counts(Path(counts))
+
+        message = f"No entries could be written for ENA file {ena_file}\n"
+        message += "This may be correct, but you should check\n"
+        message += f"Working directory: {os.getcwd()}\n"
+        message += "Ribotyper log:\n"
+        message += open(
+            Path(ribovore_path) + "ribotyper-results.ribotyper.log", "r"
+        ).read()
+        message += "\n\nContext counts:\n"
+        message += open(Path(counts), "r").read()
+
+        send_notification("ENA parsing error", message)
+
     ctx.dump_counts(Path(counts))
