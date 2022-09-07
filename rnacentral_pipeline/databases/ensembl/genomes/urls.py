@@ -14,11 +14,11 @@ limitations under the License.
 """
 
 import json
-import tempfile
-from ftplib import FTP
 import logging
+import tempfile
 import typing as ty
 from contextlib import contextmanager
+from ftplib import FTP
 
 from rnacentral_pipeline.databases.ensembl.data import Division, FtpInfo
 
@@ -71,16 +71,17 @@ def generate_paths(
             gff_path = f"{base}/{release}/gff3/{name}/{organism_name}.gff3.gz"
             data_files = f"{base}/{release}/embl/{name}/{organism_name}.*.dat.gz"
 
-            try:
-                size = ftp.size(gff_path)
-                if size is None:
-                    LOGGER.warn("GFF file %s is empty, skip %s", gff_path, assembly)
-                    continue
-            except:
-                LOGGER.warn(
-                    "Could not get data for %s, skipping %s", gff_path, assembly
-                )
-                continue
+            # try:
+            #     size = ftp.size(gff_path)
+            #     if size is None:
+            #         LOGGER.warn("GFF file %s is empty, skip %s", gff_path, assembly)
+            #         continue
+            # except e:
+            #     LOGGER.warn(
+            #         "Could not get data for %s, skipping %s", gff_path, assembly
+            #     )
+            #     print(e)
+            #     continue
 
             yield FtpInfo(
                 division=division,
