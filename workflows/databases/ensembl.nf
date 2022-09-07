@@ -28,9 +28,16 @@ process find_urls {
   output:
   path('species.txt')
 
-  """
-  rnac ensembl urls-for $division ${params.databases.ensembl[division].ftp_host} species.txt
-  """
+  script:
+  if (params.databases.ensembl.skip)
+    """
+    rnac ensembl urls-for $division ${params.databases.ensembl[division].ftp_host} species_pre.txt
+    comm --nocheck-order -3  species_pre.txt ${params.databases.ensembl.skip} > species.txt
+    """
+  else
+    """
+    rnac ensembl urls-for $division ${params.databases.ensembl[division].ftp_host} species.txt
+    """
 }
 
 process fetch_species_data {
