@@ -13,20 +13,19 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import operator as op
 import itertools as it
+import operator as op
 import typing as ty
 
 from Bio import SeqIO
 
 from rnacentral_pipeline.databases import data
-from rnacentral_pipeline.databases.helpers import embl
-from rnacentral_pipeline.databases.ensembl.vertebrates import helpers as ensembl
-
 from rnacentral_pipeline.databases.ensembl import helpers as common
+from rnacentral_pipeline.databases.ensembl.data import Pseudogene
 from rnacentral_pipeline.databases.ensembl.genomes import helpers
 from rnacentral_pipeline.databases.ensembl.genomes.data import Context
-from rnacentral_pipeline.databases.ensembl.data import Pseudogene
+from rnacentral_pipeline.databases.ensembl.vertebrates import helpers as ensembl
+from rnacentral_pipeline.databases.helpers import embl
 
 
 def ncrnas(context: Context, handle) -> ty.Iterable[data.Entry]:
@@ -57,20 +56,29 @@ def parse(context: Context, handle) -> ty.Iterable[data.Entry]:
 
 
 def pseudogenes(handle: ty.IO) -> ty.Iterable[Pseudogene]:
-    for record in SeqIO.parse(handle, "embl"):
-        current_gene = None
-        for feature in record.features:
-            if feature.type == "source":
-                continue
-
-            if embl.is_gene(feature) and help:
-                current_gene = feature
-
-            if helpers.is_pseudogene(current_gene, feature):
-                gene = embl.gene(feature)
-                if not gene:
+    try:
+        for record in SeqIO.parse(handle, "embl"):
+            current_gene = None
+            for feature in record.features:
+                if feature.type == "source":
                     continue
-                yield Pseudogene(
-                    gene=embl.gene(feature),
-                    region=common.regions(record, feature)[0],
-                )
+
+                if embl.is_gene(feature) and help:
+                    current_gene = feature
+
+                if helpers.is_pseudogene(current_gene, feature):
+                    gene = embl.gene(feature)
+                    if not gene:
+                        continue
+                    yield Pseudogene(
+                        gene=embl.gene(feature),
+                        region=common.regions(record, feature)[0],
+                    )
+    except UnicodeDecodeError:
+        import os
+
+        print(f"UTF-8 error in file {handle.name}. Abort parsing.")
+        print(f"The working directory is {os.getcwd()}")
+        message = f"UFT-8 error in file {handle.name} during pseudogenes parsing. Aborting parse\n"
+        message += f"Working directory: {os.getcwd()}"
+        slack.send_notification("Ensembl parser error", message)
