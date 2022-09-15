@@ -7,5 +7,5 @@ FROM ensembl_assembly species
 WHERE
   exists(select 1 from rnc_sequence_regions reg where reg.assembly_id = species.assembly_id)
   and species.division != 'EnsemblFungi'
+  and species.selected_genome = true
 ) TO STDOUT CSV;
-

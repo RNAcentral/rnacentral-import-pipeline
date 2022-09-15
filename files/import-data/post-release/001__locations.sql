@@ -27,6 +27,8 @@ on
     assembly.assembly_id = load.assembly_id
 WHERE
   load.chromosome is not null
+AND
+  assembly.selected_genome = true
 ON CONFLICT (accession, name, local_start, local_end, assembly_id)
 DO NOTHING
 ;
