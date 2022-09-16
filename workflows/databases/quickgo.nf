@@ -3,10 +3,11 @@ process quickgo_get {
   container ''
 
   output:
-  path('data.gpa.gz')
+  path('data.gpa')
 
   """
   scp $params.databases.quickgo.remote data.gpa.gz
+  gzip -d data.gpa.gz
   """
 }
 
@@ -22,8 +23,7 @@ process quickgo_parse {
   path('*.csv')
 
   """
-  gzip -d $data
-  rnac quickgo parse data.gpa .
+  rnac quickgo parse $data .
   """
 }
 
