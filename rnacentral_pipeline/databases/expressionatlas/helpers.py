@@ -13,38 +13,54 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from rnacentral_pipeline.databases import data
+from rnacentral_pipeline.databases.data import Entry, Exon, SequenceRegion
 from rnacentral_pipeline.databases.helpers import phylogeny as phy
 from rnacentral_pipeline.databases.helpers import publications as pubs
 
 
-def accession(urs_taxid):
-    return "EXPRESSIONATLAS:" + urs_taxid
+def accession(info):
+    return "EXPRESSIONATLAS:" + info["GeneID"]
 
 
-def primary_id(urs_taxid):
-    return "EXPRESSIONATLAS:" + urs_taxid
+def primary_id(info):
+    return "EXPRESSIONATLAS:" + info["GeneID"]
 
 
-def taxid(urs_taxid):
-    _, taxid = urs_taxid.split("_")
+def taxid(info):
+    taxid = info["taxid"][0]
     return int(taxid)
 
 
-def species(urs_taxid):
-    return phy.species(taxid(urs_taxid))
+def species(info):
+    return phy.species(info["taxid"][0])
 
 
-def lineage(urs_taxid):
-    return phy.lineage(taxid(urs_taxid))
+def lineage(info):
+    return phy.lineage(info["taxid"][0])
 
 
-def common_name(urs_taxid):
-    return phy.common_name(taxid(urs_taxid))
+def common_name(info):
+    return phy.common_name(info["taxid"][0])
 
 
-def url(ensembl_id):
-    return "https://www.ebi.ac.uk/gxa/genes/" + ensembl_id
+def url(experiment):
+    return "https://www.ebi.ac.uk/gxa/experiments/" + experiment
+
+
+def region_builder(info):
+    print(info["region_start"], info["region_stop"], info["strand"], info["urs_taxid"])
+    return [
+        SequenceRegion(
+            chromosome=info["chromosome"][0],
+            strand=info["strand"][0],
+            exons=[
+                Exon(start=start, stop=stop)
+                for start, stop in zip(info["region_start"], info["region_stop"])
+            ],
+            assembly_id=info["assembly_id"][0],
+            coordinate_system="1-start, fully-closed",
+        )
+    ]
 
 
 def references(interactions):
@@ -55,20 +71,25 @@ def references(interactions):
     return list(refs)
 
 
-
-def as_entry(urs_taxid, info, gene):
-    return data.Entry(
-        primary_id=primary_id(urs_taxid),
-        accession=accession(urs_taxid),
-        ncbi_tax_id=taxid(urs_taxid),
+def as_entry(info, experiment):
+    print(info["seq"][0])
+    print([""] if info["Gene Name"] == [None] else info["Gene Name"])
+    return Entry(
+        primary_id=primary_id(info),
+        accession=accession(info),
+        ncbi_tax_id=taxid(info),
         database="EXPRESSIONATLAS",
-        sequence=info["sequence"],
-        regions=[],
-        rna_type=info["rna_type"],
-        url=url(gene),
+        sequence=info["seq"][0],
+        regions=region_builder(info),
+        rna_type=info["rna_type"][0],
+        url=url(experiment),
         seq_version="1",
-        description=info["description"],
-        species=species(urs_taxid),
-        common_name=common_name(urs_taxid),
-        lineage=lineage(urs_taxid),
+        description=info["description"][0],
+        species=species(info),
+        common_name=common_name(info),
+        lineage=lineage(info),
+        gene=info["GeneID"][0],
+        gene_synonyms=[""]
+        if info.get("Gene Name", [None]) == [None]
+        else info["Gene Name"],
     )
