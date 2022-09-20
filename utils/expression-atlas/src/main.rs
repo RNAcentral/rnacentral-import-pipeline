@@ -33,10 +33,6 @@ enum Command {
         /// An output file
         #[clap(short, long)]
         output: String,
-
-        /// The column to select. If files have no headers, use "column_N"
-        #[clap(short, long, multiple_values(true))]
-        select: Vec<String>,
     },
     /// Lookup the gene names we found, using a dump from the database
     Lookup {
@@ -217,12 +213,12 @@ fn run_parse(input: &PathBuf, output: &String) -> Result<()> {
         // filter based on differential or baseline
         if differential_re.is_match(&config.exp_type) {
             info!("Filtering experiment dataset with differential filters");
-            exp_df = filtering::filter_differential(&mut exp_df)?;
-            exp_df = augment::augment_differential_df(&mut exp_df, &config, &sdrf_df)?;
+            exp_df = filtering::filter_differential(&exp_df)?;
+            exp_df = augment::augment_differential_df(&mut exp_df, config, &sdrf_df)?;
         } else {
             info!("Filtering with baseline filters");
             exp_df = filtering::filter_baseline(&mut exp_df);
-            exp_df = augment::augment_baseline_df(&mut exp_df, &config, &sdrf_df)?;
+            exp_df = augment::augment_baseline_df(&mut exp_df, config, &sdrf_df)?;
         }
 
         data_path.pop();
@@ -250,9 +246,7 @@ fn run_parse(input: &PathBuf, output: &String) -> Result<()> {
     info!("All files parsed, preparing to write import csvs");
 
     let mut output_file = fs::File::create(&output)?;
-    JsonWriter::new(&mut output_file)
-        .with_json_format(JsonFormat::JsonLines)
-        .finish(&mut big_df)?;
+    CsvWriter::new(&mut output_file).has_header(true).finish(&mut big_df)?;
 
     Ok(())
 }
@@ -261,45 +255,68 @@ fn run_lookup(genes: &PathBuf, lookup: &PathBuf, output: &String) -> Result<()> 
     let mut gene_df: DataFrame = CsvReader::from_path(&genes)?
         .has_header(true)
         .finish()
-        .unwrap_or_else(|x| panic!("Failed to load gene output"));
-
-    gene_df = gene_df.lazy().with_column(col("taxid").cast(DataType::UInt32)).collect().unwrap();
+        .unwrap_or_else(|_x| panic!("Failed to load gene output"));
+    // You need to get the taxid from the taxonomy URL. Should be able to split on _ and take last element if you can figure it out
+    gene_df = gene_df
+        .lazy()
+        .with_column(
+            col("taxonomy").str().extract("([0-9]+)$", 1).cast(DataType::Int64).alias("taxid"),
+        )
+        .collect()
+        .unwrap();
+    // gene_df = gene_df.lazy().with_column(col("taxid").cast(DataType::UInt32)).collect().unwrap();
+    println!("{:?}", gene_df);
 
     let mut lookup_df: DataFrame = CsvReader::from_path(&lookup)?
-        .has_header(false)
+        .has_header(true)
         .finish()
-        .unwrap_or_else(|x| panic!("Failed to load lookup data!"));
+        .unwrap_or_else(|_x| panic!("Failed to load lookup data!"));
 
-    lookup_df.rename("column_1", "upi");
-    lookup_df.rename("column_2", "taxid");
-    lookup_df.rename("column_3", "possible_ids");
-    lookup_df.rename("column_4", "start");
-    lookup_df.rename("column_5", "end");
-    lookup_df.rename("column_6", "rna_type");
+    // lookup_df.rename("column_1", "upi");
+    // lookup_df.rename("column_2", "taxid");
+    // lookup_df.rename("column_3", "possible_ids");
+    // lookup_df.rename("column_4", "start");
+    // lookup_df.rename("column_5", "end");
+    // lookup_df.rename("column_6", "rna_type");
 
     // The database dump has a column where possible IDs are separated by a | character, so we need to split on that
     // The plan then is to use explode on the df with the external IDs column to get a mega big dataframe which we join onto
     // the gene one
     println!("{:?}", &lookup_df);
 
+    // For now, I only have the external ID from the database, if this doesn't match many, I can tweak the lookupo query and re-add this
     lookup_df = lookup_df
         .lazy()
-        .with_column(col("possible_ids").str().split("|").alias("possible_ids"))
-        .explode([col("possible_ids")])
-        .filter(col("possible_ids").neq(lit("")))
+        .with_column(col("external_id").str().split("|").alias("external_id"))
+        .explode([col("external_id")])
+        .with_column(col("external_id").str().split(",").alias("external_id"))
+        .explode([col("external_id")])
+        .filter(col("external_id").neq(lit("")))
+        .filter(col("external_id").neq(lit("null")))
+        .filter(col("external_id").is_not_null())
         .collect()
         .unwrap();
 
     println!("Got to the end in one piece!");
     println!("{:?}", &lookup_df);
 
-    println!("{:?}", &gene_df);
+    // println!("{:?}", &gene_df);
 
     let mut matched_df =
-        gene_df.join(&lookup_df, ["GeneID"], ["possible_ids"], JoinType::Inner, None).unwrap();
+        gene_df.join(&lookup_df, ["GeneID"], ["external_id"], JoinType::Inner, None).unwrap();
+    println!("{:?}", matched_df.get_column_names());
+
     matched_df = matched_df.lazy().filter(col("taxid").eq(col("taxid_right"))).collect().unwrap();
 
-    println!("{:?}", matched_df);
+    let mut grouped_df =
+        matched_df.lazy().groupby([col("GeneID")]).agg([col("*").list().unique()]).collect()?;
+
+    println!("{:?}", grouped_df);
+
+    let mut output_file = fs::File::create(&output)?;
+    JsonWriter::new(&mut output_file)
+        .with_json_format(JsonFormat::JsonLines)
+        .finish(&mut grouped_df)?;
 
     Ok(())
 }
@@ -313,7 +330,6 @@ fn main() -> Result<()> {
         Command::Parse {
             input,
             output,
-            select,
         } => run_parse(&input, &output),
         Command::Lookup {
             genes,

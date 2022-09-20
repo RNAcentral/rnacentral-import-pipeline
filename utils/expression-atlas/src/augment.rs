@@ -232,7 +232,6 @@ fn get_localisation_data(assay_df: LazyFrame) -> Result<DataFrame> {
 
 fn get_disease_data(assay_df: LazyFrame) -> Result<DataFrame> {
     let disease = assay_df
-        .clone()
         .filter(
             ((col("feat_class").eq(lit("factor"))).or(col("feat_class").eq(lit("characteristic"))))
                 .and(col("feat_type").eq(lit("disease"))),
@@ -246,7 +245,6 @@ fn get_disease_data(assay_df: LazyFrame) -> Result<DataFrame> {
 
 fn get_cell_type_data(assay_df: LazyFrame) -> Result<DataFrame> {
     let cell_type = assay_df
-        .clone()
         .filter(
             col("feat_class").eq(lit("characteristic")).and(col("feat_type").eq(lit("cell type"))),
         )
@@ -259,8 +257,6 @@ fn get_cell_type_data(assay_df: LazyFrame) -> Result<DataFrame> {
 
 fn get_taxonomy_data(assay_df: LazyFrame) -> Result<DataFrame> {
     let tax_data = assay_df
-        .clone()
-        // .lazy()
         .filter(col("feat_type").eq(lit("organism")))
         .select([col("group_id"), col("ontology").alias("taxonomy")])
         .first()
@@ -279,7 +275,7 @@ fn join_augmentations(
     // Use a df to join on selectively
     let mut df_result = df_result_bare.clone();
     if taxid_df.height() > 0 {
-        df_result = df_result.join(&taxid_df, ["group_id"], ["group_id"], JoinType::Inner, None)?;
+        df_result = df_result.join(taxid_df, ["group_id"], ["group_id"], JoinType::Inner, None)?;
     } else {
         df_result = df_result
             .lazy()
@@ -289,7 +285,7 @@ fn join_augmentations(
 
     if localisation_df.height() > 0 {
         df_result =
-            df_result.join(&localisation_df, ["group_id"], ["group_id"], JoinType::Inner, None)?;
+            df_result.join(localisation_df, ["group_id"], ["group_id"], JoinType::Inner, None)?;
     } else {
         df_result = df_result
             .lazy()
@@ -299,7 +295,7 @@ fn join_augmentations(
 
     if disease_df.height() > 0 {
         df_result =
-            df_result.join(&disease_df, ["group_id"], ["group_id"], JoinType::Inner, None)?;
+            df_result.join(disease_df, ["group_id"], ["group_id"], JoinType::Inner, None)?;
     } else {
         df_result = df_result
             .lazy()
@@ -309,7 +305,7 @@ fn join_augmentations(
 
     if cell_type_df.height() > 0 {
         df_result =
-            df_result.join(&cell_type_df, ["group_id"], ["group_id"], JoinType::Inner, None)?;
+            df_result.join(cell_type_df, ["group_id"], ["group_id"], JoinType::Inner, None)?;
     } else {
         df_result = df_result
             .lazy()
