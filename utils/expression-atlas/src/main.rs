@@ -309,7 +309,7 @@ fn run_lookup(genes: &PathBuf, lookup: &PathBuf, output: &String) -> Result<()> 
     matched_df = matched_df.lazy().filter(col("taxid").eq(col("taxid_right"))).collect().unwrap();
 
     let mut grouped_df =
-        matched_df.lazy().groupby([col("GeneID")]).agg([col("*").list().unique()]).collect()?;
+        matched_df.lazy().groupby([col("GeneID"), col("urs_taxid")]).agg([col("*").list().unique()]).collect()?;
 
     println!("{:?}", grouped_df);
 
