@@ -19,20 +19,34 @@ process fetch_data {
   """
 }
 
+process fetch_lookup {
+  queue short
+
+  input:
+    path(query)
+
+  output:
+    path("lookup_dump.csv")
+
+    """
+    psql -f $query $PGDATABASE > lookup_dump.csv
+    """
+}
+
 
 process parse_tsvs {
   memory 50.GB
 
   input:
-  path(tsvs)
+  path(tsvs), path(lookup)
 
   output:
   path('*.csv')
 
   """
   expression-parse -i $tsvs -o all_genes.csv -s GeneID experiment
-
-  rnac expressionatlas parse all_genes.csv .
+  expression-parse lookup -g all_genes.csv -l $lookup -o exp_parse_stage2.json
+  rnac expressionatlas parse exp_parse_stage2.json .
   """
 
 }
@@ -44,7 +58,11 @@ workflow expressionatlas {
   main:
 
     Channel.of("Expression Atlas import starting...") | slack_message
+    Channel.fromPath('files/import-data/expressionatlas/lookup-dump-query.sql') | set { lookup_sql }
 
-    fetch_data | parse_tsvs | set { data }
+    lookup_sql | fetch_lookup | set { lookup }
+    fetch_data | set { tsvs }
+
+    tsvs| combine(lookup) | parse_tsvs | set { data }
 
 }
