@@ -6,7 +6,7 @@ use std::fs;
 
 use std::path::PathBuf;
 
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Debug, Deserialize, PartialEq, Eq)]
 pub struct Config {
     #[serde(rename = "experimentType")]
     pub exp_type: String,
@@ -14,19 +14,19 @@ pub struct Config {
     pub analytics: Vec<Analytics>,
 }
 
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Debug, Deserialize, PartialEq, Eq)]
 pub struct Analytics {
     pub assay_groups: AssayGroups,
     pub array_design: Option<String>,
     pub contrasts: Option<Contrasts>,
 }
 
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Debug, Deserialize, PartialEq, Eq)]
 pub struct AssayGroups {
     pub assay_group: Vec<AssayGroup>,
 }
 
-#[derive(Debug, Deserialize, PartialEq, Clone)]
+#[derive(Debug, Deserialize, PartialEq, Eq, Clone)]
 pub struct AssayGroup {
     pub id: String,
     pub label: Option<String>, // This contains the factors in a ; separated list
@@ -34,12 +34,12 @@ pub struct AssayGroup {
     pub assays: Vec<String>,
 }
 
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Debug, Deserialize, PartialEq, Eq)]
 pub struct Contrasts {
     pub contrast: Vec<Contrast>,
 }
 
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Debug, Deserialize, PartialEq, Eq)]
 pub struct Contrast {
     pub id: String,
     pub name: String,

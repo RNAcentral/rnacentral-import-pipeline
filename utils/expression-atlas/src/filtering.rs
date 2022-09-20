@@ -22,10 +22,7 @@ fn fix_bad_infinities(str_val: &Series) -> Series {
         .map(|x| lowercase_fn(&x))
         .collect::<Vec<Option<String>>>()
         .into_iter()
-        .map(|x| match x {
-            None => None,
-            Some(x) => Some(x.parse::<f64>().unwrap()),
-        })
+        .map(|x| x.map(|x| x.parse::<f64>().unwrap()))
         .collect::<Vec<Option<f64>>>();
 
     Series::from_iter(lowercased)
