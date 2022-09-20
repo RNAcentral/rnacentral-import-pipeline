@@ -15,12 +15,12 @@ repos:
     -   id: isort
         args: ["--profile", "black", "--filter-files"]
         name: isort (python)
--   repo: https://github.com/doublify/pre-commit-rust
-    rev: v1.0
-    hooks:
-    -   id: fmt
-    -   id: cargo-check
-    -   id: clippy
+# -   repo: https://github.com/doublify/pre-commit-rust
+#     rev: v1.0
+#     hooks:
+#     -   id: fmt
+#     -   id: cargo-check
+#     -   id: clippy
 - repo: https://github.com/python-poetry/poetry
   rev: '1.2.0rc1'
   hooks:
