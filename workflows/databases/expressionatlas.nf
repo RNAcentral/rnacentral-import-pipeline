@@ -57,6 +57,7 @@ workflow expressionatlas {
   emit: data
   main:
 
+  if( params.databases.expressionatlas.run ) {
     Channel.of("Expression Atlas import starting...") | slack_message
     Channel.fromPath('files/import-data/expressionatlas/lookup-dump-query.sql') | set { lookup_sql }
 
@@ -64,5 +65,9 @@ workflow expressionatlas {
     fetch_data | set { tsvs }
 
     tsvs| combine(lookup) | parse_tsvs | set { data }
+  }
+  else {
+    Channel.empty() | set { data }
+  }
 
 }

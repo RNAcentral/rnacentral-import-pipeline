@@ -1,6 +1,7 @@
 include { crw } from './databases/crw'
 include { ena } from './databases/ena'
 include { ensembl } from './databases/ensembl'
+include { expressionatlas } from './databases/expressionatlas'
 include { five_s_rrnadb } from './databases/5srrnadb'
 include { flybase } from './databases/flybase'
 include { genecards_suite } from './databases/genecards_suite'
@@ -58,6 +59,7 @@ workflow parse_databases {
       five_s_rrnadb(),
       ena(),
       ensembl(),
+      expressionatlas(),
       flybase(),
       genecards_suite(),
       gtrnadb(context),
