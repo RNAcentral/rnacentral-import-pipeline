@@ -130,6 +130,20 @@ def test_will_not_fetch_mislabeled_chains(pdb_id, missing):
 
 
 @pytest.mark.parametrize(
+    "pdb_id,overrides,expected",
+    [
+        ("7UMC", {"7umc": set("A")}, ("7UMC", "A")),
+    ],
+)
+def test_will_respect_the_override_list(pdb_id, overrides, expected):
+    chains = fetch.rna_chains(pdb_ids=[pdb_id])
+    entries = {
+        (e.primary_id, e.optional_id) for e in parser.parse(chains, {}, overrides)
+    }
+    assert expected in entries
+
+
+@pytest.mark.parametrize(
     "pdb_id,chains",
     [
         (
