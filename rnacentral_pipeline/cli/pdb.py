@@ -13,14 +13,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import collections as coll
+import csv
 import logging
 from pathlib import Path
 
 import click
 
-from rnacentral_pipeline.databases.pdb import fetch
-from rnacentral_pipeline.databases.pdb import parser
 from rnacentral_pipeline import writers
+from rnacentral_pipeline.databases.pdb import fetch, parser
 
 LOGGER = logging.getLogger(__name__)
 
@@ -47,23 +48,17 @@ def cli():
 @click.option(
     "--override-chains",
     default=None,
-    type=click.Path(
-        writable=False,
-        dir_okay=False,
-        file_okay=True,
-    ),
+    type=click.File("r"),
 )
 def process_pdb(output, skip_references=False, override_chains=None):
     """
     This will fetch and parse all sequence data from PDBe to produce the csv
     files we import.
     """
+    pdb_ids = set()
     if override_chains:
-        pdb_ids = { l.strip().split('\t')[0]:l.strip('\t').split()[1]
-                    for l in open(override_chains, 'r').readlines()
-                  }
-    else:
-        pdb_ids = {}
+        for row in csv.reader(override_chains, delimiter="\t"):
+            pdb_ids.add((row[0].lower(), row[1]))
     chain_info = fetch.rna_chains()
     references = {}
     try:
