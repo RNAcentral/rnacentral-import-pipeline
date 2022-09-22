@@ -17,9 +17,8 @@ import attr
 import pytest
 
 from rnacentral_pipeline.databases import data
-from rnacentral_pipeline.databases.pdb import parser
-from rnacentral_pipeline.databases.pdb import fetch
 from rnacentral_pipeline.databases.helpers import publications as pubs
+from rnacentral_pipeline.databases.pdb import fetch, parser
 
 
 def load(pdb_id: str, chain_id: str) -> data.Entry:
@@ -113,7 +112,7 @@ def test_can_build_correct_entry_for_srp_rna():
 )
 def test_can_get_given_taxid(pdb_id, expected):
     chains = fetch.rna_chains(pdb_ids=[pdb_id])
-    taxids = [entry.ncbi_tax_id for entry in parser.parse(chains, {})]
+    taxids = [entry.ncbi_tax_id for entry in parser.parse(chains, {}, {})]
     assert taxids == expected
 
 
@@ -126,7 +125,7 @@ def test_can_get_given_taxid(pdb_id, expected):
 )
 def test_will_not_fetch_mislabeled_chains(pdb_id, missing):
     chains = fetch.rna_chains(pdb_ids=[pdb_id])
-    entries = {e.primary_id for e in parser.parse(chains, {})}
+    entries = {(e.primary_id, e.optional_id) for e in parser.parse(chains, {}, {})}
     assert missing not in entries
 
 
@@ -174,7 +173,7 @@ def test_will_not_fetch_mislabeled_chains(pdb_id, missing):
 )
 def test_extracts_expected_chains(pdb_id, chains):
     fetched = fetch.rna_chains(pdb_ids=[pdb_id.lower()])
-    entries = parser.parse(fetched, {})
+    entries = parser.parse(fetched, {}, {})
     assert set(d.optional_id for d in entries) == chains
 
 
