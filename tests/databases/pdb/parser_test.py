@@ -119,8 +119,8 @@ def test_can_get_given_taxid(pdb_id, expected):
 @pytest.mark.parametrize(
     "pdb_id,missing",
     [
-        ("5wnt", "5WNT_U_21"),
-        ("5wnp", "5WNP_U_21"),
+        ("5wnt", ("5WNT", "U")),
+        ("5wnp", ("5WNP", "U")),
     ],
 )
 def test_will_not_fetch_mislabeled_chains(pdb_id, missing):
