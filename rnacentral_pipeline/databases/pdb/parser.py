@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Copyright [2009-2017] EMBL-European Bioinformatics Institute
+Copyright [2009-2022] EMBL-European Bioinformatics Institute
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -51,9 +51,9 @@ def parse(
     override_list: ty.Set[ty.Tuple[str, str]],
 ) -> ty.Iterator[data.Entry]:
     disqualified = {"mRNA": 0, "other": 0}
-    seen = set()
+    seen: ty.Set[ty.Tuple[str, str]] = set()
     for chain in rna_chains:
-        override_key = (chain.pdb_id, chain.chain_id)
+        override_key = chain.override_key()
         if override_key in override_list:
             LOGGER.debug("Overriding %s, %s", chain.pdb_id, chain.chain_id)
             seen.add(override_key)
@@ -75,10 +75,9 @@ def parse(
         except helpers.MissingTypeInfo:
             LOGGER.warn(f"Missing type info for {chain}")
 
-    missing = [k for k in override_list if k not in seen]
+    missing = override_list - seen
     LOGGER.info("Disqualified %i mRNA chains", disqualified["mRNA"])
     LOGGER.info("Disqualified %i non ncRNA chains", disqualified["other"])
-    LOGGER.info("Did not load %i overrided chains", missing)
-
+    LOGGER.info("Did not load %s overrided chains", missing)
     if missing:
-        raise ValueError("Did not load all chains")
+        raise ValueError("Missed some required ids %s" % missing)

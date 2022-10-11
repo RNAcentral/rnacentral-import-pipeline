@@ -71,6 +71,9 @@ class ChainInfo:
             ),
         )
 
+    def override_key(self) -> ty.Tuple[str, str]:
+        return (self.pdb_id.lower(), self.chain_id)
+
     def accession(self) -> str:
         return f"{self.pdb_id.upper()}_{self.chain_id}_{self.entity_id}"
 
