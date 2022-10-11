@@ -38,18 +38,18 @@ def first_or_none(value):
 
 @attr.s()
 class ChainInfo:
-    pdb_id = attr.ib(validator=is_a(str))
-    chain_id = attr.ib(validator=is_a(str))
-    release_date = attr.ib(validator=is_a(dt.datetime))
-    experimental_method = attr.ib(validator=optional(is_a(str)))
-    entity_id = attr.ib(validator=is_a(int))
+    pdb_id: str = attr.ib(validator=is_a(str))
+    chain_id: str = attr.ib(validator=is_a(str))
+    release_date: dt.datetime = attr.ib(validator=is_a(dt.datetime))
+    experimental_method: ty.Optional[str] = attr.ib(validator=optional(is_a(str)))
+    entity_id: int = attr.ib(validator=is_a(int))
     taxids: ty.List[int] = attr.ib(validator=is_a(list))
-    resolution = attr.ib(validator=optional(is_a(float)))
-    title = attr.ib(validator=is_a(str))
-    sequence = attr.ib(validator=is_a(str))
+    resolution: float = attr.ib(validator=optional(is_a(float)))
+    title: str = attr.ib(validator=is_a(str))
+    sequence: str = attr.ib(validator=is_a(str))
     molecule_names: ty.List[str] = attr.ib(validator=is_a(list))
-    molecule_type = attr.ib(validator=optional(is_a(str)))
-    organism_scientific_name = attr.ib(validator=optional(is_a(str)))
+    molecule_type: str = attr.ib(validator=optional(is_a(str)))
+    organism_scientific_name: ty.Optional[str] = attr.ib(validator=optional(is_a(str)))
 
     @classmethod
     def build(cls, chain_index, raw) -> ChainInfo:
