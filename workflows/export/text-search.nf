@@ -23,7 +23,6 @@ process create_release_note {
 // At this point we should be able to safely move data into the final location.
 // This deletes the old data and then moves the new data in place.
 process atomic_publish {
-  container ''
   queue 'datamover'
 
   input:
