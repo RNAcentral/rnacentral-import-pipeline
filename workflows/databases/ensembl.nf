@@ -29,12 +29,6 @@ process find_urls {
   path('species.txt')
 
   script:
-  if (params.databases.ensembl.skip)
-    """
-    rnac ensembl urls-for $division ${params.databases.ensembl[division].ftp_host} species_pre.txt
-    comm --nocheck-order -3  species_pre.txt ${params.databases.ensembl.skip} > species.txt
-    """
-  else
     """
     rnac ensembl urls-for $division ${params.databases.ensembl[division].ftp_host} species.txt
     """
@@ -43,7 +37,7 @@ process find_urls {
 process fetch_species_data {
   tag { "$species" }
   clusterOptions '-sp 90'
-  errorStrategy 'retry'
+  errorStrategy { task.exitStatis == 8 ? 'retry' : 'ignore' }
   maxRetries 10
   maxForks 10
 
@@ -77,7 +71,7 @@ process parse_data {
 
   """
   rnac ensembl parse $division --family-file $rfam $embl $gff .
-  rnac ensembl pseudogenes $division $embl ensembl-pseudogenes.csv
+#  rnac ensembl pseudogenes $division $embl ensembl-pseudogenes.csv
   """
 }
 
