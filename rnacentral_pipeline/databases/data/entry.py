@@ -28,10 +28,10 @@ from rnacentral_pipeline.databases.helpers.hashes import crc64, md5
 
 from . import utils
 from .features import SequenceFeature
-from .references import IdReference, Reference
-from .secondary_structure import SecondaryStructure
-from .regions import Exon, SequenceRegion
 from .go_annotations import GoTermAnnotation
+from .references import IdReference, Reference
+from .regions import Exon, SequenceRegion
+from .secondary_structure import SecondaryStructure
 
 LOGGER = logging.getLogger(__name__)
 
@@ -177,7 +177,10 @@ class Entry:
         """
         Returns a comma separated list of gene synonyms.
         """
-        return ",".join(self.gene_synonyms)
+        if self.gene_synonyms:
+            return ",".join(self.gene_synonyms)
+        else:
+            return ""
 
     @property
     def feature_location_start(self):
