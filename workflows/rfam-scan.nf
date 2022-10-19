@@ -51,6 +51,7 @@ process scan {
   memory { params.rfam.memory * params.rfam.cpus }
   errorStrategy 'ignore'
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
+  queue 'short'
 
   input:
   tuple path(version), path('sequences.fasta'), path(cm_files)
