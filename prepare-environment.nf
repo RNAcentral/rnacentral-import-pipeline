@@ -29,7 +29,7 @@ process wget_r2dt_data{
   cd $data_dir
   wget --read-timeout=30 -t 1 -O cms.tar.gz http://ftp.ebi.ac.uk/pub/databases/RNAcentral/r2dt/1.2/cms.tar.gz
 
-  tar -xf cms.tar.gz
+  tar -xf cms.tar.gz --strip-components=1 -C ./cms
 
   """
 }
@@ -56,7 +56,7 @@ process dmget_r2dt_data {
 
   cp /nfs/ftp/public/databases/RNAcentral/r2dt/1.2/cms.tar.gz .
 
-  tar -xf cms.tar.gz
+  tar -xf cms.tar.gz --strip-components=1 -C ./cms
   """
 }
 
@@ -73,8 +73,8 @@ workflow prepare_environment {
   main:
     Channel.of("Starting environment preparation") | slack_message
     (dm_inch, wg_inch) = ( params.use_datamover ?
-            [Channel.of("$workflow.launchDir/singularity/bind/r2dt/data"), Channel.empty()]
-          : [Channel.empty(), Channel.of("$workflow.launchDir/singularity/bind/r2dt/data")] )
+            [Channel.of("$params.r2dt.cms_path/../"), Channel.empty()]
+          : [Channel.empty(), Channel.of("$params.r2dt.cms_path/../")] )
 
     dm_inch | dmget_r2dt_data
     wg_inch | wget_r2dt_data
