@@ -31,22 +31,34 @@ process fetch_lookup {
 
 
 process parse_tsvs {
-  memory 92.GB
+  memory 24.GB
 
   input:
   path(tsvs)
-  path(lookup)
 
   output:
-  path('*.csv')
+  path('chunk_*')
 
   """
   expression-parse parse -i $tsvs -o all_genes.csv
-  wc -l all_genes.csv
-  expression-parse lookup -g all_genes.csv -l $lookup -o exp_parse_stage2.json
-  rnac expressionatlas parse exp_parse_stage2.json .
+  split -n l/10 all_genes.csv chunk_
   """
 
+}
+
+process lookup_genes {
+
+  input:
+    path(lookup)
+    path(genes)
+
+  output:
+    path('*.csv')
+
+  """
+  expression-parse lookup -g $genes -l $lookup -o exp_parse_stage2.json
+  rnac expressionatlas parse exp_parse_stage2.json .
+  """
 }
 
 
@@ -59,9 +71,12 @@ workflow expressionatlas {
     Channel.fromPath('files/import-data/expressionatlas/lookup-dump-query.sql') | set { lookup_sql }
     Channel.fromPath($params.databases.expressionatlas.remote) | set { tsv_path }
     lookup_sql | fetch_lookup | set { lookup }
-    tsv_path | fetch_data | set { tsvs }
+    tsv_path | fetch_data | parse_tsvs | set { genes }
 
-   parse_tsvs(tsvs, lookup) | set { data }
+   lookup_genes(genes, lookup) \
+   | collectFile() {csvfile -> [csvfile.name, csvfile.text]} \
+   | set { data }
+
   }
   else {
     Channel.empty() | set { data }
