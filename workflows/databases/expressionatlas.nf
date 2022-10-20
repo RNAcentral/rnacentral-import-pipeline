@@ -3,23 +3,15 @@ process fetch_data {
   container ''
   errorStrategy 'ignore'
 
+  input:
+    path("base_dir")
+
   output:
   path('tsv_files')
 
   """
-  find /nfs/ftp/public/databases/microarray/data/atlas/experiments -type f -name '*tpms.tsv' -or -name '*analytics.tsv' -or -name '*sdrf.tsv' -or -name '*configuration.xml' > all_relevant_files || true
-
-  sed -i '/E-MTAB-4748/d' all_relevant_files
-  sed -i '/E-GEOD-30281/d' all_relevant_files
-
-
   mkdir tsv_files
-  cat all_relevant_files | while read line
-  do
-    cp \$line ./tsv_files
-    echo \$line
-  done
-
+  find $base_dir -type f .. | grep -v E-MTAB-4748 | xargs -I {} -P 10 cp {} tsv_files
   """
 }
 
@@ -65,9 +57,9 @@ workflow expressionatlas {
 
   if( params.databases.expressionatlas.run ) {
     Channel.fromPath('files/import-data/expressionatlas/lookup-dump-query.sql') | set { lookup_sql }
-
+    Channel.fromPath($params.databases.expressionatlas.remote) | set { tsv_path }
     lookup_sql | fetch_lookup | set { lookup }
-    fetch_data | set { tsvs }
+    tsv_path | fetch_data | set { tsvs }
 
    parse_tsvs(tsvs, lookup) | set { data }
   }
