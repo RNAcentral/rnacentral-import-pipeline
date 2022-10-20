@@ -70,7 +70,6 @@
           "telomerase_RNA",
           "tmRNA",
           "vault_RNA",
-          "circRNA",
           "sgRNA"
         ]
       },
