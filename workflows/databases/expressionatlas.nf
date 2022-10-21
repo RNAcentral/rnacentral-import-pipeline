@@ -11,7 +11,7 @@ process fetch_data {
 
   """
   mkdir tsv_files
-  find $base_dir -type f .. | grep -v E-MTAB-4748 | xargs -I {} -P 10 cp {} tsv_files
+  find $base_dir -type f .. | xargs -I {} -P 10 cp {} tsv_files
   """
 }
 
@@ -71,7 +71,13 @@ workflow expressionatlas {
     Channel.fromPath('files/import-data/expressionatlas/lookup-dump-query.sql') | set { lookup_sql }
     Channel.fromPath($params.databases.expressionatlas.remote) | set { tsv_path }
     lookup_sql | fetch_lookup | set { lookup }
-    tsv_path | fetch_data | parse_tsvs | set { genes }
+    tsv_path \
+    | fetch_data \
+    | filter { tsv_name ->
+      !params.databases.expressionatlas.exclude.any {p -> tsv_name =~ p}
+    } \
+    | parse_tsvs \
+    | set { genes }
 
    lookup_genes(genes, lookup) \
    | collectFile() {csvfile -> [csvfile.name, csvfile.text]} \
