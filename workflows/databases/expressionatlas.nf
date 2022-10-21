@@ -74,7 +74,7 @@ workflow expressionatlas {
     tsv_path \
     | fetch_data \
     | filter { tsv_name ->
-      !params.databases.expressionatlas.exclude.any {p -> tsv_name =~ p}
+      !params.databases.expressionatlas.exclude.any {p -> tsv_name.baseName =~ p}
     } \
     | parse_tsvs \
     | set { genes }
