@@ -36,6 +36,13 @@ TRUSTED_DB = set(
     ]
 )
 
+DISALLOWED_TYPES = set(
+    [
+        "circRNA",
+        "sgRNA",
+    ]
+)
+
 SEQUENCE_PATTERN = re.compile("^[ACGTYRWSKMDVHBNXFI]+$")
 
 
@@ -49,8 +56,8 @@ def external_id(data):
 
 def is_high_quality(data):
     name = data["database"].lower()
-    ## Do not send circRNAs to ensembl
-    if data["rna_type"] == "circRNA":
+    ## Do not send some RNAs to ensembl
+    if data["rna_type"] in DISALLOWED_TYPES:
         return False
     if name in TRUSTED_DB:
         return True
