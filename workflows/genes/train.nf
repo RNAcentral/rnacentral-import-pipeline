@@ -10,7 +10,7 @@ process fetch_training {
 
   """
   psql -v ON_ERROR_STOP=1 -f $query "$PGDATABASE" > raw
-  rnac genes normalize-training raw train.csv test.csv
+  rnac genes normalize-training --test-split $params.genes.test_split raw train.csv test.csv
   """
 }
 
