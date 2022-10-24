@@ -102,11 +102,6 @@ RUN PATH="$PATH:/root/.local/bin" poetry install
 
 RUN python3 -m textblob.download_corpora
 
-
-WORKDIR /
-
-COPY openssl/openssl.cnf /etc/ssl/
-
 WORKDIR $RNA
 
 # Setup environmental variables
