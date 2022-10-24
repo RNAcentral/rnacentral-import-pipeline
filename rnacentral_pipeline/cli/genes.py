@@ -17,11 +17,14 @@ from pathlib import Path
 
 import click
 
+from rnacentral_pipeline.rnacentral import genes
 from rnacentral_pipeline.rnacentral.genes import build, write
-from rnacentral_pipeline.rnacentral.genes.data import MemberType
-from rnacentral_pipeline.rnacentral.genes.data import DataType
-from rnacentral_pipeline.rnacentral.genes.data import Context
-from rnacentral_pipeline.rnacentral.genes.data import Methods
+from rnacentral_pipeline.rnacentral.genes.data import (
+    Context,
+    DataType,
+    MemberType,
+    Methods,
+)
 
 
 @click.group("genes")
@@ -30,6 +33,21 @@ def cli():
     A group of commands dealing with building genes.
     """
     pass
+
+
+@cli.command("normalize-training")
+@click.option(
+    "--test-split",
+    default=0.3,
+)
+@click.argument("raw", type=click.File("r"))
+@click.argument("train_path", type=click.File("w"))
+@click.argument("test_path", type=click.File("w"))
+def norm_training(raw, train_path, test_path, test_split=None):
+    normalized = genes.training.normalize(raw)
+    test, train = genes.training.split(normalized, test_split)
+    test.to_json(test_path)
+    train.to_json(train_path)
 
 
 @cli.command("build")

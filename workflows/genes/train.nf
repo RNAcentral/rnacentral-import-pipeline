@@ -51,7 +51,6 @@ process save_work {
   """
 }
 
-
 workflow train {
   emit:
     model
