@@ -1,6 +1,6 @@
 *
-!requirements.txt
 !Cargo.toml
 !Cargo.lock
 !utils
-!openssl
+!pyproject.toml
+!poetry.lock

@@ -1,6 +1,15 @@
-FROM python:3.8-buster
+FROM python:3.8-bullseye
 
-ENV RNA /rna
+ENV RNA=/rna \
+    PYTHONFAULTHANDLER=1 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONHASHSEED=random \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=off \
+    PIP_DISABLE_PIP_VERSION_CHECK=on \
+    PIP_DEFAULT_TIMEOUT=100 \
+    POETRY_VERSION=1.1.12 \
+    POETRY_NO_INTERACTION=1
 
 WORKDIR $RNA
 
@@ -32,7 +41,6 @@ RUN apt-get install -y \
     pandoc \
     patch \
     pgloader \
-    postgresql-11 \
     postgresql-client-11 \
     procps \
     python3 \
@@ -45,7 +53,6 @@ RUN apt-get install -y \
     time \
     unzip \
     wget
-
 
 # Install Infernal
 RUN \
@@ -83,17 +90,15 @@ RUN git clone https://github.com/nawrockie/epn-options.git && cd epn-options && 
 RUN git clone https://github.com/nawrockie/epn-test.git && cd epn-test && git fetch && git fetch --tags && git checkout ribovore-0.40
 RUN git clone https://github.com/nawrockie/ribovore.git && cd ribovore && git fetch && git fetch --tags && git checkout ribovore-0.40
 
-# Install useful pip version
-RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && python get-pip.py
+# Install poetry
+RUN pip install "poetry==$POETRY_VERSION"
+
+COPY pyproject.toml poetry.lock ./
+RUN poetry config virtualenvs.create false
+RUN poetry install --no-dev --no-root --no-interaction --no-ansi
 
 # Install python requirements
 ENV RNACENTRAL_IMPORT_PIPELINE "$RNA/rnacentral-import-pipeline"
-
-ADD requirements.txt $RNACENTRAL_IMPORT_PIPELINE/requirements.txt
-RUN pip3 install --upgrade pip
-RUN pip3 install -r $RNACENTRAL_IMPORT_PIPELINE/requirements.txt
-
-RUN python3 -m textblob.download_corpora
 
 WORKDIR $RNA
 
