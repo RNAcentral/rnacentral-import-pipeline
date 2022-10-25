@@ -1,29 +1,25 @@
-include { slack_message } from './workflows/utils/slack'
-include { slack_closure } from './workflows/utils/slack'
-
 process fetch_data {
-  queue datamover
+  queue 'datamover'
+  container ''
+  errorStrategy 'ignore'
+
+  input:
+    path("base_dir")
 
   output:
-  path('*.tsv')
+  path('tsv_files')
 
-  script:
   """
-  BASE_DIR="/nfs/ftp/public/databases/microarray/data/atlas/experiments/"
-  find $BASE_DIR -type f -iname "*tpms.tsv" -or -iname "*analytics.tsv" -or -iname "*sdrf.tsv" > all_relevant_files
-
-  while read f; do
-    cp $f .
-    echo "$f"
-  done < all_relevant_files
+  mkdir tsv_files
+  find $base_dir -type f .. | xargs -I {} -P 10 cp {} tsv_files
   """
 }
 
 process fetch_lookup {
-  queue short
+  queue 'short'
 
   input:
-    path(query)
+    path (query)
 
   output:
     path("lookup_dump.csv")
@@ -35,20 +31,34 @@ process fetch_lookup {
 
 
 process parse_tsvs {
-  memory 50.GB
+  memory 24.GB
 
   input:
-  path(tsvs), path(lookup)
+  path(tsvs)
 
   output:
-  path('*.csv')
+  path('chunk_*')
 
   """
-  expression-parse -i $tsvs -o all_genes.csv -s GeneID experiment
-  expression-parse lookup -g all_genes.csv -l $lookup -o exp_parse_stage2.json
+  expression-parse parse -i $tsvs -o all_genes.csv
+  split -n l/10 all_genes.csv chunk_
+  """
+
+}
+
+process lookup_genes {
+
+  input:
+    path(lookup)
+    path(genes)
+
+  output:
+    path('*.csv')
+
+  """
+  expression-parse lookup -g $genes -l $lookup -o exp_parse_stage2.json
   rnac expressionatlas parse exp_parse_stage2.json .
   """
-
 }
 
 
@@ -57,12 +67,25 @@ workflow expressionatlas {
   emit: data
   main:
 
-    Channel.of("Expression Atlas import starting...") | slack_message
+  if( params.databases.expressionatlas.run ) {
     Channel.fromPath('files/import-data/expressionatlas/lookup-dump-query.sql') | set { lookup_sql }
-
+    Channel.fromPath($params.databases.expressionatlas.remote) | set { tsv_path }
     lookup_sql | fetch_lookup | set { lookup }
-    fetch_data | set { tsvs }
+    tsv_path \
+    | fetch_data \
+    | filter { tsv_name ->
+      !params.databases.expressionatlas.exclude.any {p -> tsv_name.baseName =~ p}
+    } \
+    | parse_tsvs \
+    | set { genes }
 
-    tsvs| combine(lookup) | parse_tsvs | set { data }
+   lookup_genes(genes, lookup) \
+   | collectFile() {csvfile -> [csvfile.name, csvfile.text]} \
+   | set { data }
+
+  }
+  else {
+    Channel.empty() | set { data }
+  }
 
 }

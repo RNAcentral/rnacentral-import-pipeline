@@ -58,7 +58,7 @@ process layout_sequences {
   tag { "${sequences}" }
   memory params.r2dt.layout.memory
   container params.r2dt.container
-  containerOptions "--bind ${params.r2dt.cms_path}:/rna/r2dt/data/cms" 
+  containerOptions "--bind ${params.r2dt.cms_path}:/rna/r2dt/data/cms"
   errorStrategy { task.exitStatus = 130 ? 'ignore' : 'terminate' }
 
   input:
@@ -75,8 +75,9 @@ process layout_sequences {
 
 process publish_layout {
   maxForks 50
-  errorStrategy { task.attempt < 5 ? "retry" : "finish" }
+  errorStrategy { task.attempt < 5 ? "retry" : "ignore" }
   maxRetries 5
+  queue 'datamover'
 
   input:
   tuple path(sequences), path(output), path(mapping)
@@ -94,6 +95,7 @@ process publish_layout {
 process parse_layout {
   input:
   tuple path(sequences), path(to_parse), path(mapping)
+  errorStrategy "ignore"
 
   output:
   path "data.csv", emit: data
@@ -142,10 +144,10 @@ workflow common {
 
 workflow for_database {
   take: sequences
-  emit: 
+  emit:
     parsed
     layouts
-  main: 
+  main:
     common | set { model_mapping }
 
     sequences \
@@ -183,7 +185,7 @@ workflow r2dt {
     | set { data }
 
     data | publish_layout
-    data | parse_layout 
+    data | parse_layout
 
     parse_layout.out.data | collect | set { data }
     parse_layout.out.attempted | collect | set { attempted }
