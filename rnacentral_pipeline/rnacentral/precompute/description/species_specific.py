@@ -23,12 +23,11 @@ import attr
 
 from rnacentral_pipeline.databases.data import Database, RnaType
 from rnacentral_pipeline.databases.sequence_ontology import tree
+from rnacentral_pipeline.rnacentral.precompute import utils
 from rnacentral_pipeline.rnacentral.precompute.data import context
 from rnacentral_pipeline.rnacentral.precompute.data import sequence as seq
 from rnacentral_pipeline.rnacentral.precompute.data.accession import Accession
 from rnacentral_pipeline.rnacentral.precompute.qa import contamination as cont
-
-from rnacentral_pipeline.rnacentral.precompute import utils
 
 LOGGER = logging.getLogger(__name__)
 
@@ -64,6 +63,7 @@ ORDERING = [
     Database.genecards,
     Database.malacards,
     Database.intact,
+    Database.expression_atlas,
     Database.rfam,
     Database.tarbase,
     Database.lncbase,
