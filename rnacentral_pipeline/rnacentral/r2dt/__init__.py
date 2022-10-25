@@ -21,29 +21,34 @@ from pathlib import Path
 
 import joblib
 
-from rnacentral_pipeline.rnacentral.r2dt import parser
-from rnacentral_pipeline.rnacentral.r2dt import should_show
-from rnacentral_pipeline.rnacentral.r2dt.models import crw
-from rnacentral_pipeline.rnacentral.r2dt.models import gtrnadb
-from rnacentral_pipeline.rnacentral.r2dt.models import ribovision
-from rnacentral_pipeline.rnacentral.r2dt.models import rnase_p
-from rnacentral_pipeline.rnacentral.r2dt.models import rfam
+from rnacentral_pipeline.rnacentral.r2dt import parser, should_show
+from rnacentral_pipeline.rnacentral.r2dt.models import (
+    crw,
+    gtrnadb,
+    rfam,
+    ribovision,
+    rnase_p,
+)
 
 
-def parse(model_mapping: ty.TextIO, directory: str, allow_missing=False):
+def parse(model_mapping: ty.TextIO, directory: str, version: str, allow_missing=False):
     path = Path(directory)
-    return parser.parse(model_mapping, path, allow_missing=allow_missing)
+    return parser.parse(model_mapping, path, version, allow_missing=allow_missing)
 
 
 def write(
-    model_mapping: ty.TextIO, directory: str, output: ty.TextIO, allow_missing=False
+    model_mapping: ty.TextIO,
+    directory: str,
+    version: str,
+    output: ty.TextIO,
+    allow_missing=False,
 ):
     """
     Parse all the secondary structure data from the given directory and write
     it to the given file.
     """
 
-    parsed = parse(model_mapping, directory, allow_missing=allow_missing)
+    parsed = parse(model_mapping, directory, version, allow_missing=allow_missing)
     writeable = (e.writeable() for e in parsed)
     csv.writer(output).writerows(writeable)
 
