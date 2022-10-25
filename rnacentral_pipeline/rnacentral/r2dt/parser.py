@@ -60,7 +60,7 @@ def load_hit_info(base: Path, allow_missing: bool):
 
 
 def parse(
-    info_path: ty.TextIO, base: Path, allow_missing=False
+    info_path: ty.TextIO, base: Path, version: str, allow_missing=False
 ) -> ty.Iterator[data.R2DTResult]:
 
     if not base.exists():
@@ -82,7 +82,7 @@ def parse(
                 raise ValueError("No info for model %s", model_name)
 
             minfo = model_info[model_name]
-            info = data.R2DTResultInfo(urs, minfo, source, result_base)
+            info = data.R2DTResultInfo(urs, minfo, source, result_base, version)
             if info in seen:
                 LOGGER.warn("Dupcliate line in metadata for, %s", info)
                 continue

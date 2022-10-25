@@ -11,7 +11,8 @@ HAVING FIELDS (
     sequence_start,
     sequence_stop,
     sequence_coverage,
-    inferred_should_show
+    inferred_should_show,
+    r2dt_version
 ) INTO {{PGDATABASE}}?load_secondary
 TARGET COLUMNS (
     urs,
@@ -24,7 +25,8 @@ TARGET COLUMNS (
     sequence_start,
     sequence_stop,
     sequence_coverage,
-    inferred_should_show
+    inferred_should_show,
+    r2dt_version
 )
 
 WITH
@@ -49,7 +51,8 @@ create table load_secondary (
     sequence_start int,
     sequence_stop int,
     sequence_coverage float,
-    inferred_should_show bool
+    inferred_should_show bool,
+    r2dt_version text
 );
 $$
 
@@ -66,7 +69,8 @@ INSERT INTO rnc_secondary_structure_layout (
     sequence_start,
     sequence_stop,
     sequence_coverage,
-    inferred_should_show
+    inferred_should_show,
+    r2dt_version
 ) (
 SELECT
     urs,
@@ -79,7 +83,8 @@ SELECT
     sequence_start,
     sequence_stop,
     sequence_coverage,
-    inferred_should_show
+    inferred_should_show,
+    r2dt_version
 FROM load_secondary
 ) ON CONFLICT (urs) DO UPDATE
 SET
@@ -93,6 +98,7 @@ SET
     sequence_stop = EXCLUDED.sequence_stop,
     sequence_coverage = EXCLUDED.sequence_coverage,
     inferred_should_show = EXCLUDED.inferred_should_show
+    r2dt_version = EXCLUDED.r2dt_version
 ;
 $$,
 $$
