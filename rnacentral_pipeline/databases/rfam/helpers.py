@@ -14,13 +14,12 @@ limitations under the License.
 """
 
 import collections as coll
+import logging
 import re
 import typing as ty
-import logging
-
-from rnacentral_pipeline.databases.helpers.publications import reference
 
 from rnacentral_pipeline.databases.data import IdReference
+from rnacentral_pipeline.databases.helpers.publications import reference
 
 LOGGER = logging.getLogger(__name__)
 
@@ -54,10 +53,10 @@ def seq_version(data: ty.Dict[str, str]) -> str:
 
 def rna_type(family: ty.Dict[str, str]) -> str:
     so_terms = family["so_terms"]
-    if ',' in so_terms:
-        so_terms = so_terms.split(',')[0]
-    if ',' in so_terms:
-        so_terms = so_terms.split(',')[0]
+    if "," in so_terms:
+        so_terms = so_terms.split(",")[0]
+    if "," in so_terms:
+        so_terms = so_terms.split(",")[0]
     assert re.match(r"^SO:\d+$", so_terms)
     return so_terms
 
@@ -90,7 +89,7 @@ def note(data: ty.Dict[str, str]):
     result = coll.defaultdict(list)
     result["Alignment"] = data["sequence_type"]
     for xref in data["dbxrefs"].split(","):
-        db, _ = xref.split(":")
+        db, _ = xref.split(":", 1)
         result[db].append(xref)
     return result
 

@@ -72,8 +72,9 @@ def references(interactions):
 
 
 def as_entry(info, experiment):
-    print(info["seq"][0])
-    print([""] if info["Gene Name"] == [None] else info["Gene Name"])
+    synonyms = list(
+        filter(None, [""] if info["Gene Name"] == [None] else info["Gene Name"])
+    )
     return Entry(
         primary_id=primary_id(info),
         accession=accession(info),
@@ -89,7 +90,5 @@ def as_entry(info, experiment):
         common_name=common_name(info),
         lineage=lineage(info),
         gene=info["GeneID"][0],
-        gene_synonyms=[""]
-        if info.get("Gene Name", [None]) == [None]
-        else info["Gene Name"],
+        gene_synonyms=synonyms,
     )

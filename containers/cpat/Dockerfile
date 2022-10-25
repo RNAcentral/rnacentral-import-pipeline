@@ -1,4 +1,4 @@
-From r-base:3.4.1
+From r-base:3.6.3
 
 RUN apt-get update && apt-get install -y python3-pip procps
 RUN cp /usr/bin/python3 /usr/bin/python
