@@ -62,10 +62,14 @@ def parse_rfam_version(handle: ty.IO) -> str:
     raise ValueError(f"Could not find version in file {handle}")
 
 
-def write(data: ty.Iterable[ty.List[str]], output: ty.IO, require_attempt=True):
+def write(
+    data: ty.Iterable[ty.List[str]], output: ty.IO, require_attempt=True, version=None
+):
     writer = csv.writer(output)
     seen = False
     for row in data:
+        if version:
+            row.append(version)
         writer.writerow(row)
         seen = True
     if not seen:
@@ -88,6 +92,6 @@ def qa(handle: ty.IO, name: str, version_file: ty.IO, output: ty.IO):
     write(data, output)
 
 
-def r2dt(handle: ty.IO, output: ty.IO):
+def r2dt(handle: ty.IO, version: str, output: ty.IO):
     data = fasta_parser(handle)
-    write(data, output)
+    write(data, output, version=version)
