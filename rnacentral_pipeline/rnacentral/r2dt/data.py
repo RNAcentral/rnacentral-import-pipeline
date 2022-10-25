@@ -244,7 +244,6 @@ class R2DTResultInfo(object):
     db_info = attr.ib(validator=is_a(ModelDatabaseInfo))
     source = attr.ib(validator=is_a(Source))
     path = attr.ib(validator=is_a(Path))
-    version = attr.ib(validator=is_a(str))
 
     @property
     def model_name(self):
@@ -374,10 +373,6 @@ class R2DTResult(object):
         return self.info.urs
 
     @property
-    def r2dt_version(self):
-        return self.info.version
-
-    @property
     def model_id(self):
         return self.info.model_db_id
 
@@ -449,7 +444,6 @@ class R2DTResult(object):
             sequence_stop,
             sequence_coverage,
             True,
-            self.r2dt_version,
         ]
 
 
