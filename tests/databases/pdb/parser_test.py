@@ -17,13 +17,12 @@ import attr
 import pytest
 
 from rnacentral_pipeline.databases import data
-from rnacentral_pipeline.databases.pdb import parser
-from rnacentral_pipeline.databases.pdb import fetch
 from rnacentral_pipeline.databases.helpers import publications as pubs
+from rnacentral_pipeline.databases.pdb import fetch, parser
 
 
 def load(pdb_id: str, chain_id: str) -> data.Entry:
-    chains = fetch.rna_chains(pdb_ids=[pdb_id.lower()])
+    chains = fetch.chains({(pdb_id.lower(), chain_id)})
     chain_info = next(c for c in chains if c.chain_id == chain_id)
     references = fetch.references([chain_info])
     return parser.as_entry(chain_info, references)
@@ -103,31 +102,57 @@ def test_can_build_correct_entry_for_srp_rna():
     )
 
 
+@pytest.mark.skip("Needs to be reworked")
 @pytest.mark.parametrize(
     "pdb_id,expected",
     [
         ("157d", [32630, 32630]),
         ("1a1t", [32630]),
-        ("1j5e", [274]),
     ],
 )
 def test_can_get_given_taxid(pdb_id, expected):
     chains = fetch.rna_chains(pdb_ids=[pdb_id])
-    taxids = [entry.ncbi_tax_id for entry in parser.parse(chains, {})]
+    taxids = [entry.ncbi_tax_id for entry in parser.parse(chains, {}, set())]
     assert taxids == expected
 
 
 @pytest.mark.parametrize(
-    "pdb_id,missing",
+    "requested,missing",
     [
-        ("5wnt", "5WNT_U_21"),
-        ("5wnp", "5WNP_U_21"),
+        (("5wnt", "A"), ("5WNT", "U")),
+        (("5wnp", "A"), ("5WNP", "U")),
     ],
 )
-def test_will_not_fetch_mislabeled_chains(pdb_id, missing):
-    chains = fetch.rna_chains(pdb_ids=[pdb_id])
-    entries = {e.primary_id for e in parser.parse(chains, {})}
+def test_will_not_fetch_mislabeled_chains(requested, missing):
+    chains = fetch.chains({requested})
+    entries = {(e.primary_id, e.optional_id) for e in parser.parse(chains, {}, set())}
     assert missing not in entries
+
+
+@pytest.mark.parametrize(
+    "overrides,expected",
+    [
+        (
+            {
+                ("7umc", "A"),
+            },
+            ("7UMC", "A"),
+        ),
+        (
+            {
+                ("7umc", "A"),
+            },
+            ("7UMC", "A"),
+        ),
+        ({("7mib", "H")}, ("7MIB", "H")),
+    ],
+)
+def test_will_respect_the_override_list(overrides, expected):
+    chains = fetch.chains(overrides)
+    entries = {
+        (e.primary_id, e.optional_id) for e in parser.parse(chains, {}, overrides)
+    }
+    assert expected in entries
 
 
 @pytest.mark.parametrize(
@@ -173,8 +198,8 @@ def test_will_not_fetch_mislabeled_chains(pdb_id, missing):
     ],
 )
 def test_extracts_expected_chains(pdb_id, chains):
-    fetched = fetch.rna_chains(pdb_ids=[pdb_id.lower()])
-    entries = parser.parse(fetched, {})
+    fetched = fetch.all_chains_in_pdbs([pdb_id])
+    entries = parser.parse(list(fetched), {}, set())
     assert set(d.optional_id for d in entries) == chains
 
 
