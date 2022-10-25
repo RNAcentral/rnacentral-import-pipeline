@@ -33,17 +33,13 @@ def cli():
 @click.option("--allow-missing", is_flag=True, default=False)
 @click.argument("model_info", type=click.File("r"))
 @click.argument("directory", type=click.Path())
-@click.argument("version", type=click.File("r"))
 @click.argument("output", type=click.File("w"))
-def process_svgs(model_info, directory, version, output, allow_missing=False):
+def process_svgs(model_info, directory, output, allow_missing=False):
     """
     Process all SVG secondary structures in the given directory and produce a
     single data file that can be imported into the database.
     """
-    version_string = version.read().strip()
-    r2dt.write(
-        model_info, directory, version_string, output, allow_missing=allow_missing
-    )
+    r2dt.write(model_info, directory, output, allow_missing=allow_missing)
 
 
 @cli.group("should-show")
