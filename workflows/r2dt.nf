@@ -59,17 +59,18 @@ process layout_sequences {
   memory params.r2dt.layout.memory
   container params.r2dt.container
   containerOptions "--bind ${params.r2dt.cms_path}:/rna/r2dt/data/cms"
-  errorStrategy { task.exitStatus = 130 ? 'ignore' : 'terminate' }
+  errorStrategy { task.exitStatus = 130 ? 'ignore' : 'finish' }
 
   input:
   path(sequences)
 
   output:
-  tuple path("$sequences"), path('output')
+  tuple path("$sequences"), path('output'), path('version')
 
   """
   esl-sfetch --index $sequences
   r2dt.py draw $sequences output/
+  r2dt.py version | perl -ne 'm/(\d\.\d)/ && print "$1\n"' > version
   """
 }
 
@@ -94,7 +95,7 @@ process publish_layout {
 
 process parse_layout {
   input:
-  tuple path(sequences), path(to_parse), path(mapping)
+  tuple path(sequences), path(to_parse), path(version), path(mapping)
   errorStrategy "ignore"
 
   output:
