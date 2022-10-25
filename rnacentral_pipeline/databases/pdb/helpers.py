@@ -13,6 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import csv
 import logging
 import re
 import typing as ty
@@ -245,3 +246,15 @@ def lineage(info: ChainInfo) -> str:
 
 def species(info: ChainInfo) -> str:
     return phy.species(taxid(info))
+
+
+def load_overrides(handle) -> ty.Set[ty.Tuple[str, str]]:
+    """
+    Parse TSV file of pdb_id chain and produce a set of (pdb_id, chain). PDB id
+    will be lowercased. This is used to ensure all sequences with an Rfam match
+    are loaded into the pipeline.
+    """
+    overrides = set()
+    for row in csv.reader(handle, delimiter="\t"):
+        overrides.add((row[0].lower(), row[1]))
+    return overrides

@@ -15,14 +15,14 @@ limitations under the License.
 
 import pytest
 
+from rnacentral_pipeline.databases.pdb import fetch, helpers
 from rnacentral_pipeline.databases.pdb.data import ChainInfo
-from rnacentral_pipeline.databases.pdb import helpers
-from rnacentral_pipeline.databases.pdb import fetch
 
 
 def load(pdb_id: str, chain_id: str) -> ChainInfo:
-    chains = fetch.rna_chains(pdb_ids=[pdb_id.lower()])
-    return next(c for c in chains if c.chain_id == chain_id)
+    chains = fetch.chains({(pdb_id, chain_id)})
+    assert len(chains) == 1
+    return chains[0]
 
 
 @pytest.mark.parametrize(
@@ -66,18 +66,18 @@ def test_can_compute_correct_rna_types(product: str, expected):
     [
         ("7mky", "A", True),
         ("7lyj", "A", True),
-        ("5U3G", "B", True),
-        ("2L1V", "A", True),
-        ("6VAR", "A", True),
-        ("4Y1I", "A", True),
-        ("4Y1I", "B", True),
-        ("4Y1J", "A", True),
-        ("4Y1J", "B", True),
-        ("4Y1M", "A", True),
-        ("4Y1M", "B", True),
-        ("7MKY", "A", True),
-        ("7LYJ", "A", True),
-        ("7MLW", "F", True),
+        ("5u3g", "B", True),
+        ("2l1v", "A", True),
+        ("6var", "A", True),
+        ("4y1i", "A", True),
+        ("4y1i", "B", True),
+        ("4y1j", "A", True),
+        ("4y1j", "B", True),
+        ("4y1m", "A", True),
+        ("4y1m", "B", True),
+        ("7mky", "A", True),
+        ("7lyj", "A", True),
+        ("7mlw", "F", True),
     ],
 )
 def test_can_detect_if_is_ncrna(pdb, chain, expected):
