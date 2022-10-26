@@ -206,6 +206,7 @@ class ModelInfo(object):
             self.cell_location,
             SO_RNA_NAME_LOOKUP[self.so_rna_type],
             self.so_rna_type,
+            self.cell_location,
             self.source.name,
             self.length,
             self.basepairs,
