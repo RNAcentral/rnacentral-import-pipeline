@@ -93,16 +93,18 @@ def parse_model(handle) -> ModelInfo:
         source=Source.gtrnadb,
         length=int(length),
         cell_location=loc,
+        basepairs=None,
     )
 
 
-def parse(handle):
+def parse(handle, extra=None):
     for line in handle:
         if line.startswith("INFERNAL"):
             yield parse_model(handle)
 
 
 def write(handle, output):
+
     data = parse(handle)
     data = map(op.methodcaller("writeable"), data)
     csv.writer(output).writerows(data)
