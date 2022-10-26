@@ -13,30 +13,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import re
 import csv
+import re
 
-from rnacentral_pipeline.rnacentral.r2dt.data import ModelInfo
-from rnacentral_pipeline.rnacentral.r2dt.data import Source
+from rnacentral_pipeline.databases.helpers.phylogeny import taxid
+from rnacentral_pipeline.rnacentral.r2dt.data import ModelInfo, Source
 
 SO_TERM_MAPPING = {
-    "16S": "SO:0000650",
-    "23S": "SO:0000651",
-    "5S": "SO:0000652",
-    "I": "SO:0000587",
-    "IA1": "SO:0000587",
-    "IA2": "SO:0000587",
-    "IB": "SO:0000587",
-    "IB1": "SO:0000587",
-    "IB2": "SO:0000587",
-    "IB4": "SO:0000587",
-    "IC1": "SO:0000587",
-    "IC2": "SO:0000587",
-    "IC3": "SO:0000587",
-    "ID": "SO:0000587",
-    "IE": "SO:0000587",
-    "IIA": "SO:0000603",
-    "IIB": "SO:0000603",
+    "16": "SO:0000650",
+    "5": "SO:0000652",
+    "I1": "SO:0000587",
 }
 
 
@@ -60,6 +46,39 @@ def as_taxid(raw):
     return int(raw)
 
 
+def parse_model(handle) -> ModelInfo:
+    length: ty.Optional[str] = None
+    model_name: ty.Optional[str] = None
+    for line in handle:
+        line = line.strip()
+        if line == "CM":
+            break
+        key, value = re.split("\s+", line, maxsplit=1)
+
+        if key == "NAME":
+            model_name = value
+        if key == "CLEN":
+            length = value
+
+    if not model_name:
+        raise ValueError("Invalid name")
+
+    if not length:
+        raise ValueError("Invalid length for: %s" % model_name)
+
+    rna_type_key = model_name.split(".")[1]
+
+    taxonomy_id = taxid(model_name.split(".")[3:4].join(" "))
+
+    return ModelInfo(
+        model_name=model_name,
+        so_rna_type=SO_TERM_MAPPING[rna_type_key],
+        taxid=taxonomy_id,
+        source=Source.rfam,
+        length=int(length),
+    )
+
+
 def models(raw):
     for model_id in raw["structure"].split(" "):
         data = dict(raw)
@@ -69,15 +88,6 @@ def models(raw):
 
 
 def parse(handle):
-    for row in csv.DictReader(handle, delimiter="\t"):
-        for info in models(row):
-            intronic = info["rna_type"] == "I"
-            yield ModelInfo(
-                model_id=info["model_id"],
-                is_intronic=intronic,
-                so_term=as_so_term(info["rna_class"]),
-                taxid=as_taxid(info["tax_id"]),
-                accessions=row["accession(s)"].split(","),
-                source=Source.crw,
-                cell_location=info["cell_location"],
-            )
+    for line in handle:
+        if line.startswith("INFERNAL"):
+            yield parse_model(handle)
