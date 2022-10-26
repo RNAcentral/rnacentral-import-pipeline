@@ -105,8 +105,8 @@ def prepare_s3(
             raw.write("\n")
 
 
-def write_model(generator, handle, output):
-    data = generator(handle)
+def write_model(generator, handle, output, extra=None):
+    data = generator(handle, extra=extra)
     data = (d.writeable() for d in data)
     csv.writer(output).writerows(data)
 
@@ -119,16 +119,16 @@ def write_ribovision(handle, output):
     return write_model(ribovision.parse, handle, output)
 
 
-def write_crw(handle, output):
-    return write_model(crw.parse, handle, output)
+def write_crw(handle, db_url, output):
+    return write_model(crw.parse, handle, output, extra=db_url)
 
 
 def write_rnase_p(handle, output):
     return write_model(rnase_p.parse, handle, output)
 
 
-def write_rfam(handle, output):
-    return write_model(rfam.parse, handle, output)
+def write_rfam(handle, db_url, output):
+    return write_model(rfam.parse, handle, output, extra=db_url)
 
 
 def write_should_show(model: Path, handle: ty.IO, db_url: str, output: ty.IO):

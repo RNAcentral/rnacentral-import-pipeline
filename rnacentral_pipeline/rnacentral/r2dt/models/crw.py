@@ -15,15 +15,41 @@ limitations under the License.
 
 import csv
 import re
+import typing as ty
 
-from rnacentral_pipeline.databases.helpers.phylogeny import taxid
+import psycopg2
+import psycopg2.extras
+from Bio import SeqIO
+
+from rnacentral_pipeline.databases.helpers.phylogeny import FailedTaxonId, taxid
 from rnacentral_pipeline.rnacentral.r2dt.data import ModelInfo, Source
 
 SO_TERM_MAPPING = {
     "16": "SO:0000650",
     "5": "SO:0000652",
     "I1": "SO:0000587",
+    "I2": "SO:0000587",
 }
+
+CRW_QUERY = """
+select xref.ac accession, rna.md5 md5, xref.taxid taxid, rnc_accessions.rna_type rna_type from rnc_accessions
+join xref on xref.ac = rnc_accessions.accession
+join rna on rna.upi = xref.upi
+where xref.dbid = 45
+and xref.deleted = 'N'
+"""
+
+
+def load_info(db_url: str) -> ty.Dict[str, ty.Tuple[str, int, str]]:
+    conn = psycopg2.connect(db_url)
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute(CRW_QUERY)
+    res = {}
+    for result in cur:
+        res[result["accession"].split(":")[1]] = (result[1], result[2], result[3])
+    cur.close()
+    conn.close()
+    return res
 
 
 def as_so_term(raw):
@@ -46,7 +72,7 @@ def as_taxid(raw):
     return int(raw)
 
 
-def parse_model(handle) -> ModelInfo:
+def parse_model(handle, metadata) -> ModelInfo:
     length: ty.Optional[str] = None
     model_name: ty.Optional[str] = None
     for line in handle:
@@ -66,16 +92,16 @@ def parse_model(handle) -> ModelInfo:
     if not length:
         raise ValueError("Invalid length for: %s" % model_name)
 
-    rna_type_key = model_name.split(".")[1]
-
-    taxonomy_id = taxid(model_name.split(".")[3:4].join(" "))
+    taxonomy_id = metadata[model_name][1]
 
     return ModelInfo(
         model_name=model_name,
-        so_rna_type=SO_TERM_MAPPING[rna_type_key],
+        so_rna_type=metadata[model_name][2],
         taxid=taxonomy_id,
-        source=Source.rfam,
+        source=Source.crw,
         length=int(length),
+        basepairs=None,
+        cell_location=None,
     )
 
 
@@ -87,7 +113,11 @@ def models(raw):
         yield data
 
 
-def parse(handle):
+def parse(handle, extra=None):
+    metadata = load_info(extra)
     for line in handle:
         if line.startswith("INFERNAL"):
-            yield parse_model(handle)
+            try:
+                yield parse_model(handle, metadata)
+            except KeyError:
+                continue
