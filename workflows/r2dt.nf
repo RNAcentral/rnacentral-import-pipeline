@@ -70,7 +70,7 @@ process layout_sequences {
   """
   esl-sfetch --index $sequences
   r2dt.py draw $sequences output/
-  r2dt.py version | perl -ne 'm/(\d\.\d)/ && print "$1\n"' > version
+  r2dt.py version | perl -ne 'm/(\\d\\.\\d)/ && print "\$1\\n"' > version
   """
 }
 
