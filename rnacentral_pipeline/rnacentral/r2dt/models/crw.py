@@ -34,6 +34,26 @@ SO_TERM_MAPPING = {
     "rRNA_23S": "SO:0001001",
 }
 
+CRW_QUERY = """
+select xref.ac accession, rna.md5 md5, xref.taxid taxid, rnc_accessions.rna_type rna_type from rnc_accessions
+join xref on xref.ac = rnc_accessions.accession
+join rna on rna.upi = xref.upi
+where xref.dbid = 45
+and xref.deleted = 'N'
+"""
+
+
+def load_info(db_url: str) -> ty.Dict[str, ty.Tuple[str, int, str]]:
+    conn = psycopg2.connect(db_url)
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute(CRW_QUERY)
+    res = {}
+    for result in cur:
+        res[result["accession"].split(":")[1]] = (result[1], result[2], result[3])
+    cur.close()
+    conn.close()
+    return res
+
 
 def load_metadata(handle: str):
     metadata = {}
