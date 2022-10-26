@@ -96,12 +96,14 @@ class ModelInfo(object):
     source: Source = attr.ib(validator=is_a(Source))
     length: ty.Optional[int] = attr.ib(validator=optional(is_a(int)))
     basepairs: ty.Optional[int] = attr.ib(validator=optional(is_a(int)))
+    cell_location: ty.Optional[str] = attr.ib(validator=optional(is_a(str)))
 
     def writeable(self):
         return [
             self.model_name,
             self.taxid,
             self.so_rna_type,
+            self.cell_location,
             self.source.name,
             self.length,
             self.basepairs,
