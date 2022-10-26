@@ -77,10 +77,9 @@ process parse_crw_models {
 
   script:
   """
-  #wget $metadata -O metadata.tsv
-  #sed -i '' 's/taxid  rna_type/taxid\trna_type/g' metadata.tsv
-  #rnac r2dt model-info crw $all_models metadata.tsv model_data.csv
-  rnac r2dt model-info crw $all_models $PGDATABASE model_data.csv
+  wget $metadata -O metadata.tsv
+  sed -i '' 's/taxid  rna_type/taxid\trna_type/g' metadata.tsv
+  rnac r2dt model-info crw $all_models metadata.tsv model_data.csv
   """
 }
 
