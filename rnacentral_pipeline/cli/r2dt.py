@@ -138,12 +138,13 @@ def model_info():
 
 @model_info.command("crw")
 @click.argument("filename", type=click.File("r"))
+@click.argument("metadata_url", type=str)
 @click.argument("output", default="-", type=click.File("w"))
-def crw_model_info(filename, output):
+def crw_model_info(filename, metadata_url, output):
     """
     Parse the CRW metadata file and produce
     """
-    r2dt.write_crw(filename, output)
+    r2dt.write_crw(filename, metadata_url, output)
 
 
 @model_info.command("ribovision")
@@ -158,7 +159,7 @@ def ribovision_model_info(filename, output):
 
 
 @model_info.command("gtrnadb")
-@click.argument("filename", type=click.File("r"))
+@click.argument("filename", type=click.File())
 @click.argument("output", default="-", type=click.File("w"))
 def gtrnadb_model_info(filename, output):
     """
@@ -181,13 +182,14 @@ def rnase_p_model_info(filename, output):
 
 @model_info.command("rfam")
 @click.argument("filename", type=click.File("r"))
+@click.argument("db_url", type=str)
 @click.argument("output", default="-", type=click.File("w"))
-def rnase_p_model_info(filename, output):
+def rnase_p_model_info(filename, db_url, output):
     """
     Parse the metadata.tsv file from R2DT for Ribovision models to
     produce something we can put in our database.
     """
-    r2dt.write_rfam(filename, output)
+    r2dt.write_rfam(filename, db_url, output)
 
 
 @cli.command("create-attempted")
