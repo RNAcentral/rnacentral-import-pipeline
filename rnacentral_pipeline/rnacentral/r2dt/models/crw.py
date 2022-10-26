@@ -17,39 +17,28 @@ import csv
 import re
 import typing as ty
 
-import psycopg2
-import psycopg2.extras
-from Bio import SeqIO
-
 from rnacentral_pipeline.databases.helpers.phylogeny import FailedTaxonId, taxid
 from rnacentral_pipeline.rnacentral.r2dt.data import ModelInfo, Source
 
 SO_TERM_MAPPING = {
-    "16": "SO:0000650",
-    "5": "SO:0000652",
-    "I1": "SO:0000587",
-    "I2": "SO:0000587",
+    "rRNA_16S": "SO:0000650",
+    "rRNA_5S": "SO:0000652",
+    "group_I_intron": "SO:0000587",
+    "group_II_intron": "SO:0000603",
+    "large_subunit_rRNA": "SO:0000651",
+    "small_subunit_rRNA": "SO:0000650",
+    "mt_rRNA": "SO:0002128",
+    "rRNA_18S": "SO:0000407",
+    "rRNA_21S": "SO:0002345",
+    "rRNA_23S": "SO:0001001",
 }
 
-CRW_QUERY = """
-select xref.ac accession, rna.md5 md5, xref.taxid taxid, rnc_accessions.rna_type rna_type from rnc_accessions
-join xref on xref.ac = rnc_accessions.accession
-join rna on rna.upi = xref.upi
-where xref.dbid = 45
-and xref.deleted = 'N'
-"""
 
-
-def load_info(db_url: str) -> ty.Dict[str, ty.Tuple[str, int, str]]:
-    conn = psycopg2.connect(db_url)
-    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-    cur.execute(CRW_QUERY)
-    res = {}
-    for result in cur:
-        res[result["accession"].split(":")[1]] = (result[1], result[2], result[3])
-    cur.close()
-    conn.close()
-    return res
+def load_metadata(handle: str):
+    metadata = {}
+    for row in csv.DictReader(open(handle), delimiter="\t"):
+        metadata[row["model_name"]] = {**row}
+    return metadata
 
 
 def as_so_term(raw):
@@ -92,11 +81,11 @@ def parse_model(handle, metadata) -> ModelInfo:
     if not length:
         raise ValueError("Invalid length for: %s" % model_name)
 
-    taxonomy_id = metadata[model_name][1]
+    taxonomy_id = int(metadata[model_name]["taxid"])
 
     return ModelInfo(
         model_name=model_name,
-        so_rna_type=metadata[model_name][2],
+        so_rna_type=as_so_term(metadata[model_name]["rna_type"]),
         taxid=taxonomy_id,
         source=Source.crw,
         length=int(length),
@@ -105,19 +94,11 @@ def parse_model(handle, metadata) -> ModelInfo:
     )
 
 
-def models(raw):
-    for model_id in raw["structure"].split(" "):
-        data = dict(raw)
-        model_id = re.sub(r"\.ps$", "", model_id)
-        data["model_id"] = model_id
-        yield data
-
-
 def parse(handle, extra=None):
-    metadata = load_info(extra)
+    metadata = load_metadata(extra)
     for line in handle:
         if line.startswith("INFERNAL"):
             try:
                 yield parse_model(handle, metadata)
-            except KeyError:
+            except KeyError as e:
                 continue
