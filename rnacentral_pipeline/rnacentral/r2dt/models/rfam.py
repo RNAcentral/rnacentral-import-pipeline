@@ -14,6 +14,7 @@ limitations under the License.
 """
 
 import csv
+import re
 import typing as ty
 
 import psycopg2
@@ -72,11 +73,16 @@ def parse_model(handle, known_info) -> ModelInfo:
         taxid=known_info[model_name][1],
         source=Source.rfam,
         length=int(length),
+        basepairs=None,
+        cell_location=None,
     )
 
 
-def parse(cm_stat: ty.IO, db_url: str) -> ty.Iterable[ModelInfo]:
-    known_info = load_info(db_url)
+def parse(cm_stat: ty.IO, extra: str = None) -> ty.Iterable[ModelInfo]:
+    known_info = load_info(extra)
     for line in cm_stat:
         if line.startswith("INFERNAL"):
-            yield parse_model(cm_stat, known_info)
+            try:
+                yield parse_model(cm_stat, known_info)
+            except KeyError:
+                continue
