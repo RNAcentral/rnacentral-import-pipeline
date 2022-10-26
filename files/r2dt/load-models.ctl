@@ -64,7 +64,16 @@ SELECT
     model_length,
     model_basepair_count
 FROM load_secondary_layout_models load
-) ON CONFLICT (model_name) DO NOTHING
+) ON CONFLICT (model_name) DO UPDATE
+SET
+    taxid = EXCLUDED.taxid,
+    rna_type = EXCLUDED.rna_type,
+    so_term = EXCLUDED.so_term,
+    cell_location = EXCLUDED.cell_location,
+    model_source = EXCLUDED.model_source,
+    model_length = EXCLUDED.model_length,
+    model_basepair_count = EXCLUDED.model_basepair_count
+
 ;
 $$,
 $$
