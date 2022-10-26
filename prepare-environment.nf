@@ -26,7 +26,7 @@ process get_r2dt_data {
 
   cd $data_dir
 
-  cp /nfs/ftp/public/databases/RNAcentral/r2dt/1.2/cms.tar.gz .
+  cp /nfs/ftp/public/databases/RNAcentral/r2dt/1.3/cms.tar.gz .
 
   tar -xf cms.tar.gz --strip-components=1 -C ./cms
   """
