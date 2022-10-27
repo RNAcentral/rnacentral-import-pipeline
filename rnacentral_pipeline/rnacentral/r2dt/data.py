@@ -54,6 +54,44 @@ TRNAS = {
     "SO:0000267",
 }
 
+SO_RNA_NAME_LOOKUP = {
+    "SO:0000254": "alanyl_tRNA",
+    "SO:0000259": "glutaminyl_tRNA",
+    "SO:0000268": "prolyl_tRNA",
+    "SO:0000260": "glutamyl_tRNA",
+    "SO:0000266": "methionyl_tRNA",
+    "SO:0000256": "asparaginyl_tRNA",
+    "SO:0000270": "threonyl_tRNA",
+    "SO:0000261": "glycyl_tRNA",
+    "SO:0000273": "valyl_tRNA",
+    "SO:0000272": "tyrosyl_tRNA",
+    "SO:0000258": "cysteinyl_tRNA",
+    "SO:0000263": "isoleucyl_tRNA",
+    "SO:0000269": "seryl_tRNA",
+    "SO:0000264": "leucyl_tRNA",
+    "SO:0000271": "tryptophanyl_tRNA",
+    "SO:0005857": "selenocysteinyl_tRNA",
+    "SO:0000766": "pyrrolysyl_tRNA",
+    "SO:0000265": "lysyl_tRNA",
+    "SO:0000257": "aspartyl_tRNA",
+    "SO:0001036": "arginyl_tRNA",
+    "SO:0000262": "histidyl_tRNA",
+    "SO:0001172": "tRNA_region",
+    "SO:0002129": "mt_tRNA",
+    "SO:0000267": "phenylalanyl_tRNA",
+    "SO:0001001": "cytosolic_23S_rRNA",
+    "SO:0000386": "RNase_P_RNA",
+    "SO:0000650": "cytosolic_SSU_rRNA",
+    "SO:0000652": "cytosolic_5S_rRNA",
+    "SO:0000587": "group_I_intron",
+    "SO:0000603": "group_II_intron",
+    "SO:0000651": "cytosolic_LSU_rRNA",
+    "SO:0002128": "mt_rRNA",
+    "SO:0000407": "cytosolic_18S_rRNA",
+    "SO:0002345": "mt_LSU_rRNA",
+    "SO:0001001": "cytosolic_23S_rRNA",
+}
+
 
 @enum.unique
 class Source(enum.Enum):
@@ -102,8 +140,9 @@ class ModelInfo(object):
         return [
             self.model_name,
             self.taxid,
-            self.so_rna_type,
             self.cell_location,
+            SO_RNA_NAME_LOOKUP[self.so_rna_type],
+            self.so_rna_type,
             self.source.name,
             self.length,
             self.basepairs,
