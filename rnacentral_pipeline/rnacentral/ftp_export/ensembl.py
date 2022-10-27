@@ -13,14 +13,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import re
 import json
 import operator as op
+import re
 
 from jsonschema import validate
 
 from rnacentral_pipeline import psql
-
 
 MOD_URL = "http://modomics.genesilico.pl/sequences/list/{id}"
 
@@ -37,6 +36,13 @@ TRUSTED_DB = set(
     ]
 )
 
+DISALLOWED_TYPES = set(
+    [
+        "circRNA",
+        "sgRNA",
+    ]
+)
+
 SEQUENCE_PATTERN = re.compile("^[ACGTYRWSKMDVHBNXFI]+$")
 
 
@@ -50,6 +56,9 @@ def external_id(data):
 
 def is_high_quality(data):
     name = data["database"].lower()
+    ## Do not send some RNAs to ensembl
+    if data["rna_type"] in DISALLOWED_TYPES:
+        return False
     if name in TRUSTED_DB:
         return True
     if name == "rfam":
