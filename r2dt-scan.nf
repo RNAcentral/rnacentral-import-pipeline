@@ -103,10 +103,10 @@ process load_models {
 
 
 workflow {
-  rfam_models = Channel.of("$baseDir/singularity/bind/r2dt/cms/rfam/all.cm")
-  crw_models = Channel.of("$baseDir/singularity/bind/r2dt/cms/crw/all.cm")
+  rfam_models = Channel.of("$baseDir/singularity/bind/r2dt/data/cms/rfam/all.cm")
+  crw_models = Channel.of("$baseDir/singularity/bind/r2dt/data/cms/crw/all.cm")
   crw_metadata = Channel.of("https://raw.githubusercontent.com/RNAcentral/R2DT/v1.3/data/crw-metadata.tsv")
-  gtrnadb_models = Channel.fromPath("$baseDir/singularity/bind/r2dt/cms/gtrnadb/*.cm")
+  gtrnadb_models = Channel.fromPath("$baseDir/singularity/bind/r2dt/data/cms/gtrnadb/*.cm")
   ribovision_lsu_metadata_url = Channel.of("https://raw.githubusercontent.com/RNAcentral/R2DT/v1.3/data/ribovision-lsu/metadata.tsv")
   ribovision_ssu_metadata_url = Channel.of("https://raw.githubusercontent.com/RNAcentral/R2DT/v1.3/data/ribovision-ssu/metadata.tsv")
 
