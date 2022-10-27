@@ -27,7 +27,8 @@ SO_TERM_MAPPING = {
     "group_II_intron": "SO:0000603",
     "large_subunit_rRNA": "SO:0000651",
     "small_subunit_rRNA": "SO:0000650",
-    "mt_rRNA": "SO:0002128",
+    "mt_LSU_rRNA": "SO:0002345",
+    "mt_SSU_rRNA": "SO:0002344",
     "rRNA_18S": "SO:0000407",
     "rRNA_21S": "SO:0002345",
     "rRNA_23S": "SO:0001001",
@@ -82,10 +83,16 @@ def parse_model(handle, metadata) -> ModelInfo:
         raise ValueError("Invalid length for: %s" % model_name)
 
     taxonomy_id = int(metadata[model_name]["taxid"])
+    so_type_name = metadata[model_name]["rna_type"]
+    if so_type_name == "mt_rRNA":
+        if model_name.contains(".16."):
+            so_type_name = "mt_SSU_rRNA"
+        else:
+            so_type_name = "mt_LSU_rRNA"
 
     return ModelInfo(
         model_name=model_name,
-        so_rna_type=as_so_term(metadata[model_name]["rna_type"]),
+        so_rna_type=as_so_term(so_type_name),
         taxid=taxonomy_id,
         source=Source.crw,
         length=int(length),
