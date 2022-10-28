@@ -22,6 +22,17 @@ rust:
 	mv -f target/release/json2dfasta bin
 	mv -f target/release/expression-parse bin
 
+clean:
+	rm bin/json2fasta
+	rm bin/split-ena
+	rm bin/expand-urs
+	rm bin/precompute
+	rm bin/search-export
+	rm bin/ftp-export
+	rm bin/json2dfasta
+	rm bin/expression-parse
+	cargo clean
+
 docker: Dockerfile requirements.txt .dockerignore
 	docker build -t "$(docker)" .
 

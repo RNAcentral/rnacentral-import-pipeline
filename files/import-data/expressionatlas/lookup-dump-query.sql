@@ -4,6 +4,7 @@ COPY(
     gene || '|' || external_id || '|' || gene_synonym || '|' || optional_id  as external_id,
     description,
     seq_version,
+    assembly_id,
     region_start,
     region_stop,
     rsr.chromosome,

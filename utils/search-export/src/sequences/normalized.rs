@@ -65,6 +65,7 @@ pub struct Normalized {
     interacting_proteins: Vec<InteractingProtein>,
     interacting_rnas: Vec<InteractingRna>,
     so_rna_type_tree: so_tree::SoTree,
+    publication_count: usize,
 
     #[serde(flatten)]
     orfs: OrfVec,
@@ -108,6 +109,7 @@ impl Normalized {
             short_urs: parsed.short(),
             deleted: String::from("N"),
             so_rna_type_tree: raw.so_tree().to_owned(),
+            publication_count: raw.publication_count(),
             pre_summary: raw.precompute().into(),
             basic: base,
             qa_status: raw.qa_status().to_owned(),
