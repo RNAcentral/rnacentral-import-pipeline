@@ -90,7 +90,37 @@ SO_RNA_NAME_LOOKUP = {
     "SO:0000407": "cytosolic_18S_rRNA",
     "SO:0002345": "mt_LSU_rRNA",
     "SO:0001001": "cytosolic_23S_rRNA",
+    "SO:0000391": "U1_snRNA",
+    # From Rfam table...
+    "SO:0000122": "RNA_sequence_secondary_structure",
+    "SO:0000140": "attenuator",
+    "SO:0000376": "RNA_6S",
+    "SO:0000377": "CsrB_RsmB_RNA",
+    "SO:0000378": "DsrA_RNA",
+    "SO:0000379": "GcvB_RNA",
+    "SO:0000383": "MicF_RNA",
+    "SO:0000384": "OxyS_RNA",
+    "SO:0000387": "RprA_RNA",
+    "SO:0000388": "RRE_RNA",
+    "SO:0000389": "spot_42_RNA",
+    "SO:0000394": "U4atac_snRNA",
+    "SO:0000395": "U5_snRNA",
+    "SO:0000397": "U6atac_snRNA",
+    "SO:0000398": "U11_snRNA",
+    "SO:0000399": "U12_snRNA",
+    "SO:0000404": "vault_RNA",
+    "SO:0000588": "autocatalytically_spliced_intron",
+    "SO:0000726": "repeat_unit",
+    "SO:0000836": "mRNA_region",
+    "SO:0000990": "class_I_RNA",
+    "SO:0001055": "transcriptional_cis_regulatory_region",
+    "SO:0001877": "lncRNA",
 }
+
+"""
+
+
+"""
 
 
 @enum.unique
