@@ -13,14 +13,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import collections as coll
+import csv
 import logging
 from pathlib import Path
 
 import click
 
-from rnacentral_pipeline.databases.pdb import fetch
-from rnacentral_pipeline.databases.pdb import parser
 from rnacentral_pipeline import writers
+from rnacentral_pipeline.databases.pdb import fetch, helpers, parser
 
 LOGGER = logging.getLogger(__name__)
 
@@ -44,12 +45,24 @@ def cli():
         file_okay=False,
     ),
 )
-def process_pdb(output, skip_references=False):
+@click.option(
+    "--override-chains",
+    default=None,
+    type=click.File("r"),
+)
+def process_pdb(output, skip_references=False, override_chains=None):
     """
     This will fetch and parse all sequence data from PDBe to produce the csv
     files we import.
     """
-    chain_info = fetch.rna_chains()
+    pdb_ids = set()
+    overrides = set()
+    if override_chains:
+        LOGGER.info("Loading chain overrides")
+        overrides = helpers.load_overrides(override_chains)
+        LOGGER.info("Loaded %i chain overrides", len(pdb_ids))
+    chain_info = fetch.rna_chains(overrides)
+    LOGGER.info("Loaded %i chains", len(chain_info))
     references = {}
     try:
         if not skip_references:
@@ -57,6 +70,6 @@ def process_pdb(output, skip_references=False):
     except Exception:
         LOGGER.info("Failed to get extra references")
 
-    entries = parser.parse(chain_info, references)
+    entries = parser.parse(chain_info, references, overrides)
     with writers.entry_writer(Path(output)) as writer:
         writer.write(entries)

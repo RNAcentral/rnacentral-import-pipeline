@@ -13,16 +13,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import csv
+import logging
 import re
 import typing as ty
-import logging
 
+from rnacentral_pipeline.databases.data import AnyReference, Reference
 from rnacentral_pipeline.databases.helpers import phylogeny as phy
 from rnacentral_pipeline.databases.helpers import publications as pubs
-from rnacentral_pipeline.databases.data import Reference
-from rnacentral_pipeline.databases.data import AnyReference
-from rnacentral_pipeline.databases.pdb.data import ChainInfo
-from rnacentral_pipeline.databases.pdb.data import ReferenceMapping
+from rnacentral_pipeline.databases.pdb.data import ChainInfo, ReferenceMapping
 
 RIBOSOMES = set(
     [
@@ -36,6 +35,7 @@ RIBOSOMES = set(
         "40S",
         "60S",
         "80S",
+        "LSU",
     ]
 )
 
@@ -53,6 +53,14 @@ class InvalidSequence(Exception):
 class MissingProduct(Exception):
     """
     Raised when no product is available for the given chain.
+    """
+
+    pass
+
+
+class MissingTypeInfo(Exception):
+    """
+    Raised when the chain molecule_names field is empty and we can't infer type
     """
 
     pass
@@ -182,7 +190,10 @@ def compound_rna_type(compound: str) -> str:
 
 def rna_type(info: ChainInfo) -> str:
     if not info.molecule_names:
-        raise ValueError(f"Cannot find RNA type for {info}")
+        raise MissingTypeInfo(
+            f'Cannot find RNA type for {info}, falling back to "misc_RNA"'
+        )
+        return "misc_RNA"
     return compound_rna_type(info.molecule_names[0])
 
 
@@ -235,3 +246,15 @@ def lineage(info: ChainInfo) -> str:
 
 def species(info: ChainInfo) -> str:
     return phy.species(taxid(info))
+
+
+def load_overrides(handle) -> ty.Set[ty.Tuple[str, str]]:
+    """
+    Parse TSV file of pdb_id chain and produce a set of (pdb_id, chain). PDB id
+    will be lowercased. This is used to ensure all sequences with an Rfam match
+    are loaded into the pipeline.
+    """
+    overrides = set()
+    for row in csv.reader(handle, delimiter="\t"):
+        overrides.add((row[0].lower(), row[1]))
+    return overrides

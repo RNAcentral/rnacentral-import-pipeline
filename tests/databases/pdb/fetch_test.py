@@ -20,34 +20,11 @@ import pytest
 from rnacentral_pipeline.databases.pdb import fetch
 
 
-@pytest.fixture(scope="module")
-def chain_info():
-    return fetch.rna_chains()
-
-
-@pytest.fixture(scope="module")
-def chain_map(chain_info):
-    info = {}
-    for chain in chain_info:
-        info[(chain.pdb_id, chain.chain_id)] = chain
-    return info
-
-
-@pytest.mark.skip()
-def test_can_get_all_pdbs(chain_info):
-    assert len(fetch.rna_chains()) >= 14686
-
-
-@pytest.mark.skip()
-def test_contains_no_duplicate_chains(chain_info, chain_map):
-    assert len(chain_info) == len(chain_map)
-
-
 @pytest.mark.skip()
 def test_produces_correct_data():
-    chains = fetch.rna_chains(pdb_ids=["1s72"])
-    chain = next(c for c in chains if c.chain_id == "9")
-    assert chain == fetch.ChainInfo(
+    chains = fetch.chains({("1S72", "9")})
+    assert len(chains) == 1
+    assert chains[0] == fetch.ChainInfo(
         pdb_id="1s72",
         chain_id="9",
         release_date=dt.datetime(2004, 6, 15, hour=1),
@@ -109,5 +86,5 @@ def test_produces_correct_data():
     ],
 )
 def test_fetches_all_rna_chains_even_mrna(pdb_id, chains):
-    entries = fetch.rna_chains(pdb_ids=[pdb_id])
-    assert set(d.chain_id for d in entries) == chains
+    entries = fetch.all_chains_in_pdbs([pdb_id])
+    assert set(d.chain_id for d in entries) & chains

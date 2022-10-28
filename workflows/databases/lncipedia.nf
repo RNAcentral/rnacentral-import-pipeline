@@ -8,7 +8,7 @@ process lncipedia {
   path('*.csv')
 
   """
-  curl ${params.databases.lncipedia.remote} > lncipedia.json
+  wget -O lncipedia.json ${params.databases.lncipedia.remote}
   rnac lncipedia parse lncipedia.json .
   """
 }

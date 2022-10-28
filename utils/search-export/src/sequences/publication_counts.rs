@@ -22,3 +22,9 @@ impl grouper::HasIndex for PublicationCount {
 pub fn group(path: &Path, max: usize, output: &Path) -> Result<()> {
     grouper::group::<PublicationCount>(grouper::Criteria::ZeroOrOne, &path, 1, max, &output)
 }
+
+impl PublicationCount {
+    pub fn publication_count(&self) -> usize {
+        self.publication_count
+    }
+}

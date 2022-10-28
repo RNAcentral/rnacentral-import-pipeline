@@ -28,15 +28,16 @@ process find_urls {
   output:
   path('species.txt')
 
-  """
-  rnac ensembl urls-for $division ${params.databases.ensembl[division].ftp_host} species.txt
-  """
+  script:
+    """
+    rnac ensembl urls-for $division ${params.databases.ensembl[division].ftp_host} species.txt
+    """
 }
 
 process fetch_species_data {
   tag { "$species" }
   clusterOptions '-sp 90'
-  errorStrategy 'retry'
+  errorStrategy { task.exitStatis == 8 ? 'retry' : 'ignore' }
   maxRetries 10
   maxForks 10
 
@@ -70,7 +71,7 @@ process parse_data {
 
   """
   rnac ensembl parse $division --family-file $rfam $embl $gff .
-  rnac ensembl pseudogenes $division $embl ensembl-pseudogenes.csv
+#  rnac ensembl pseudogenes $division $embl ensembl-pseudogenes.csv
   """
 }
 

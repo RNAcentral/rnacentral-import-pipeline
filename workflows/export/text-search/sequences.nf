@@ -90,9 +90,9 @@ process build_ranges {
 process fetch_accession {
   tag { "$min-$max" }
   maxForks 3
-  time '10m'
   errorStrategy 'retry'
   maxRetries 5
+  container ''
 
   input:
   tuple val(min), val(max), path(sql), val(_flag)
@@ -114,15 +114,16 @@ process text_mining_query {
   input:
   val(max_count)
   path(script)
+  container ''
 
   output:
-  path("text-mining.json")
+  path("publication-count.json")
 
   """
   curl "$params.export.search.text_mining" > counts.csv
   psql -v ON_ERROR_STOP=1 -c "\\copy search_export_publication_counts from 'counts.csv'" "$PGDATABASE"
   psql -v ON_ERROR_STOP=1 -f "$script" "$PGDATABASE" > raw.json
-  search-export group text-mining raw.json ${max_count} text-mining.json
+  search-export group publication-count raw.json ${max_count} publication-count.json
   """
 }
 

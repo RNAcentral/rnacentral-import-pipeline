@@ -19,15 +19,14 @@ import collections as coll
 import logging
 import typing as ty
 
-from furl import furl
 import requests
-from retry import retry
+from furl import furl
 from more_itertools import chunked
 from ratelimiter import RateLimiter
+from retry import retry
 
-from rnacentral_pipeline.databases.pdb.data import ChainInfo
-from rnacentral_pipeline.databases.pdb.data import ReferenceMapping
 from rnacentral_pipeline.databases.pdb import helpers
+from rnacentral_pipeline.databases.pdb.data import ChainInfo, ReferenceMapping
 
 LOGGER = logging.getLogger(__name__)
 
@@ -45,6 +44,7 @@ CHAIN_QUERY_COLUMNS = {
     "molecule_name",
     "molecule_type",
     "organism_scientific_name",
+    "rfam_id",
 }
 
 PDBE_SEARCH_URL = "https://www.ebi.ac.uk/pdbe/search/pdb/select"
@@ -83,34 +83,88 @@ def fetch_range(query: str, start: int, rows: int) -> ty.Iterator[ChainInfo]:
         raise MissingPdbs(f"Missing for '{query}', {start}")
     for raw in data["response"]["docs"]:
         for index in range(len(raw["chain_id"])):
-            info = ChainInfo.build(index, raw)
-            if info.molecule_type and "RNA" in info.molecule_type:
-                yield info
+            yield ChainInfo.build(index, raw)
+
+
+@retry((requests.HTTPError, MissingPdbs), tries=5, delay=1)
+def all_chains_in_pdbs(
+    pdb_ids: ty.List[str], query_size=1000
+) -> ty.Iterable[ChainInfo]:
+    """
+    Get all chains from all given PDB ids. This does no filtering to chains that
+    may be RNA or not and simply fetches everything.
+    """
+
+    LOGGER.info("Fetching all chains in requested structures")
+    query = " OR ".join([f"pdb_id:{p.lower()}" for p in pdb_ids])
+
+    total = get_pdbe_count(query)
+    limiter = RateLimiter(max_calls=10, period=1)
+    for start in range(0, total, query_size):
+        with limiter:
+            for chain in fetch_range(query, start, query_size):
+                yield chain
+
+
+@retry((requests.HTTPError, MissingPdbs), tries=5, delay=1)
+def chains(required: ty.Set[ty.Tuple[str, str]], query_size=1000) -> ty.List[ChainInfo]:
+    """
+    Get all chains from all given PDB ids. This does no filtering to chains that
+    may be RNA or not and simply fetches everything.
+    """
+
+    LOGGER.info("Fetching requested chains")
+
+    seen = set()
+    chains = []
+    pdb_ids = [r[0] for r in required]
+    for chain in all_chains_in_pdbs(pdb_ids):
+        key = chain.override_key()
+        if key not in required:
+            continue
+        seen.add(key)
+        chains.append(chain)
+
+    if seen != required:
+        missed = required - seen
+        raise ValueError("Did not find all requested ids: %s" % missed)
+    return chains
 
 
 @retry((requests.HTTPError, MissingPdbs), tries=5, delay=1)
 def rna_chains(
-    pdb_ids: ty.Optional[ty.List[str]] = None, query_size=1000
+    required: ty.Set[ty.Tuple[str, str]], query_size=1000
 ) -> ty.List[ChainInfo]:
     """
     Get PDB ids of all RNA-containing 3D structures
     using the RCSB PDB REST API.
     """
 
+    LOGGER.info("Fetching all RNA containing chains")
     query = "number_of_RNA_chains:[1 TO *]"
-    if pdb_ids:
-        id_query = " OR ".join([f"pdb_id:{p.lower()}" for p in pdb_ids])
-        query = f"{query} AND ({id_query})"
-
     rna_chains: ty.List[ChainInfo] = []
     total = get_pdbe_count(query)
+    seen = set()
     limiter = RateLimiter(max_calls=10, period=1)
     for start in range(0, total, query_size):
         with limiter:
-            rna_chains.extend(fetch_range(query, start, query_size))
+            for chain in fetch_range(query, start, query_size):
+                key = chain.override_key()
+                if (
+                    chain.molecule_type and "RNA" in chain.molecule_type
+                ) or key in required:
+                    rna_chains.append(chain)
+                    seen.add(key)
 
-    # Must be >= as sometimes more than one chain is in a single document
+    # This may be missed if the PDB does not contain any chains labeled as RNA.
+    # Rfam does match some DNA chains so we allow them into RNAcentral.
+    missed = required - seen
+    if missed:
+        LOGGER.info("Missed some chains, well fetch manually")
+        rna_chains.extend(chains(missed))
+
     assert rna_chains, "Found no RNA chains"
+    LOGGER.info("Found %i RNA containing chains", len(rna_chains))
     return rna_chains
 
 

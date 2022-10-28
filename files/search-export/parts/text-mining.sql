@@ -8,6 +8,6 @@ COPY (
     FROM search_export_urs todo
     JOIN search_export_publication_counts counts
     ON
-      todo.urs = counts.urs
+      todo.urs_taxid = counts.urs
     ORDER by todo.id
 ) TO STDOUT

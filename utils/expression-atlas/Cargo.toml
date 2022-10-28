@@ -1,0 +1,17 @@
+[package]
+name = "expression-parse"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+regex = "1.0"
+anyhow = "1.0"
+log = "0.4"
+env_logger = "0.9.0"
+multimap = "0.8.3"
+clap = { version = "3.1.18", features = ["derive"] }
+polars = { version = "0.21.1", features = ["lazy", "csv-file", "rows", "abs", "is_in", "strings", "concat_str", "list", "json"] }
+quick-xml = { version = "0.22.0", features = ["serialize"] }
+serde = { version = "1.0", features = [ "derive" ] }

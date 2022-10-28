@@ -55,7 +55,7 @@ def lineage(row: ty.Dict[str, ty.Any]) -> str:
 
 
 def sequence(row: ty.Dict[str, ty.Any], sequences: ty.Dict[str, SeqRecord]) -> str:
-    return str(sequences[row["model_name"]].seq)
+    return str(sequences[row["model_name"]].seq).upper().replace("U", "T")
 
 
 def description(row: ty.Dict[str, ty.Any]) -> str:
@@ -68,8 +68,11 @@ def description(row: ty.Dict[str, ty.Any]) -> str:
 
 
 def organelle(row: ty.Dict[str, ty.Any]) -> ty.Optional[str]:
-    return ORGANELLE_MAPPING.get(row["cellular_location"], None)
-
+    cellular_location = row.get("cellular_location", None)
+    if cellular_location is not None:
+        return ORGANELLE_MAPPING.get(row["cellular_location"], None)
+    else:
+        return None
 
 def as_entry(row: ty.Dict[str, ty.Any], sequences) -> ty.Optional[data.Entry]:
     try:
@@ -99,11 +102,11 @@ def as_entry(row: ty.Dict[str, ty.Any], sequences) -> ty.Optional[data.Entry]:
 
 
 def fasta_entries(directory: Path) -> ty.Iterable[SeqRecord]:
-    model_pattern = re.compile("crw-bpseq/(.+).bpseq")
+    model_pattern = re.compile("crw-bpseq/(.+).bpseq ")
     for fasta_file in directory.glob("*.fasta"):
         with fasta_file.open("r") as raw:
             header, sequence, _ = raw.readlines()
             matches = re.search(model_pattern, header)
             if matches is None:
                 raise ValueError(f"Could not get model id from {header}")
-        yield SeqRecord(Seq(sequence), id=matches.group(1))
+        yield SeqRecord(Seq(sequence.strip()), id=matches.group(1))

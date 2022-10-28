@@ -30,7 +30,7 @@ def as_entry(context: Context, row, matching: KnownSequence) -> data.Entry:
         accession=helpers.accession(context, row),
         ncbi_tax_id=helpers.taxid(context, row),
         database=context.database,
-        sequence=matching.sequence,
+        sequence=matching.sequence.upper().replace('U', 'T'),
         regions=[],
         rna_type=matching.rna_type,
         url=context.url(row),

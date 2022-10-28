@@ -1,4 +1,4 @@
-FROM python:3.7-buster
+FROM python:3.8-buster
 
 ENV RNA /rna
 
@@ -45,6 +45,7 @@ RUN apt-get install -y \
     time \
     unzip \
     wget
+
 
 # Install Infernal
 RUN \
@@ -93,6 +94,7 @@ RUN pip3 install --upgrade pip
 RUN pip3 install -r $RNACENTRAL_IMPORT_PIPELINE/requirements.txt
 
 RUN python3 -m textblob.download_corpora
+
 
 WORKDIR /
 
