@@ -85,7 +85,7 @@ def parse_model(handle, metadata) -> ModelInfo:
     taxonomy_id = int(metadata[model_name]["taxid"])
     so_type_name = metadata[model_name]["rna_type"]
     if so_type_name == "mt_rRNA":
-        if model_name.contains(".16."):
+        if ".16." in model_name:
             so_type_name = "mt_SSU_rRNA"
         else:
             so_type_name = "mt_LSU_rRNA"
