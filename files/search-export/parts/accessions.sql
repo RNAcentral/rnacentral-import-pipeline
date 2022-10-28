@@ -4,7 +4,7 @@ COPY (
       'id', todo.search_export_id,
       'urs_taxid', todo.urs_taxid,
       'accession', todo.accession,
-      'common_name', COALESCE(tax.common_name, todo.common_name),
+      'common_name', tax.common_name,
       'database', todo.database,
       'external_id', todo.external_id,
       'function', todo.function,
