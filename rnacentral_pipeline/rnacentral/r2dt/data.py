@@ -91,6 +91,7 @@ SO_RNA_NAME_LOOKUP = {
     "SO:0002345": "mt_LSU_rRNA",
     "SO:0001001": "cytosolic_23S_rRNA",
     "SO:0000391": "U1_snRNA",
+    "SO:0000392": "U2_snRNA",
     # From Rfam table...
     "SO:0000122": "RNA_sequence_secondary_structure",
     "SO:0000140": "attenuator",
