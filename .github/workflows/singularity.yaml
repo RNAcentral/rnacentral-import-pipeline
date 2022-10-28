@@ -1,0 +1,25 @@
+# This workflow runs the conversion to singularity and stores the result in the
+# ghcr so we can pull it easier
+
+name: Singularity Build
+on: workflow_call
+
+
+jobs:
+  run_conversion:
+    name: "Pull docker image and convert"
+    runs-on: ubuntu-latest
+
+    container:
+      image: quay.io/singularity/singularity:v3.8.1
+      options: --privileged
+
+    steps:
+      - name: "Pull image"
+        run: |
+          singularity pull  --name rnacentral-rnacentral-import-pipeline-latest.sif docker://rnacentral/rnacentral-import-pipeline:latest
+
+      - name: "Push to ghcr"
+        run: |
+          echo ${{ secrets.GITHUB_TOKEN }} | singularity remote login -u ${{ secrets.GHCR_USERNAME }} --password-stdin oras://ghcr.io
+          singularity push rnacentral-rnacentral-import-pipeline-latest.sif oras://ghcr.io/${GITHUB_REPOSITORY}:latest

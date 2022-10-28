@@ -16,12 +16,15 @@ process merge_and_split_all_publications {
 
 process fetch_publications {
   when { params.needs_publications }
+  queue 'datamover'
+  executor 'lsf'
+  container ''
 
   output:
   path('out')
 
   """
-  curl -L http://europepmc.org/ftp/pmclitemetadata/PMCLiteMetadata.tgz > PMCLiteMetadata.tgz
+  cp /nfs/ftp/public/databases/pmc/PMCLiteMetadata/PMCLiteMetadata.tgz .
   tar xvf PMCLiteMetadata.tgz
   """
 }

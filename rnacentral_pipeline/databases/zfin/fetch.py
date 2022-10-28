@@ -20,8 +20,7 @@ from contextlib import closing
 
 
 def fetch(url):
-    with closing(request.urlopen(url)) as compressed:
-        with gzip.GzipFile(None, "rb", 9, compressed) as raw:
+    with closing(request.urlopen(url)) as raw:
             data = json.load(raw)
 
     # Fix weird PMID formatting

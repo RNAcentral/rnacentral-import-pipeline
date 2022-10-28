@@ -175,9 +175,7 @@ class Sequence:
         for accession in self.accessions:
             if not accession.species:
                 continue
-            for species in accession.species:
-                if species:
-                    all_species.add(species)
+            all_species.add(accession.species)
         return all_species
 
     def domains(self) -> ty.Set[str]:

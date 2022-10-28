@@ -23,6 +23,8 @@ from functools import lru_cache
 
 TAX_URL = "https://www.ebi.ac.uk/ena/data/taxonomy/v1/taxon/tax-id/{taxon_id}"
 
+SPECIES_URL = "https://www.ebi.ac.uk/ena/taxonomy/rest/any-name/{species}"
+
 LOGGER = logging.getLogger(__name__)
 
 
@@ -117,3 +119,36 @@ def division(taxon_id: int) -> str:
 
     data = phylogeny(taxon_id)
     return data["division"]
+    
+@lru_cache
+def taxid(species: str) -> int:
+    """
+    Get the taxid for a given species
+    Re-use request logic from phylogeny, but this uses a different endpoint, so
+    can't directly reuse
+    """
+
+    for count in range(10):
+        response = requests.get(SPECIES_URL.format(species=species))
+        try:
+            response.raise_for_status()
+            data = response.json()
+            break
+        except simplejson.errors.JSONDecodeError:
+            sleep(0.15 * (count + 1) ** 2)
+            continue
+        except requests.HTTPError as err:
+            if response.status_code == 500:
+                sleep(0.15 * (count + 1) ** 2)
+                continue
+            elif response.status_code == 404:
+                raise UnknownTaxonId(taxon_id)
+            else:
+                LOGGER.exception(err)
+                raise FailedTaxonId("Unknown error")
+    else:
+        raise FailedTaxonId("Could not get taxon id for %s" % species)
+
+    if not data:
+        raise FailedTaxonId("Somehow got no data")
+    return int(data[0]["taxId"])

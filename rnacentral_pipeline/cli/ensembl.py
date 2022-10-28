@@ -14,21 +14,22 @@ limitations under the License.
 """
 
 import csv
-from pathlib import Path
 import itertools as it
 import operator as op
+from pathlib import Path
 
 import click
 
-from rnacentral_pipeline.databases.ensembl.metadata import assemblies
-from rnacentral_pipeline.databases.ensembl.metadata import compara
-from rnacentral_pipeline.databases.ensembl.metadata import coordinate_systems
-from rnacentral_pipeline.databases.ensembl.metadata import karyotypes
-from rnacentral_pipeline.databases.ensembl.metadata import proteins
+from rnacentral_pipeline.databases.ensembl import parser, pseudogenes, urls
 from rnacentral_pipeline.databases.ensembl.data import Division
-from rnacentral_pipeline.databases.ensembl import parser
-from rnacentral_pipeline.databases.ensembl import pseudogenes
-from rnacentral_pipeline.databases.ensembl import urls
+from rnacentral_pipeline.databases.ensembl.metadata import (
+    assemblies,
+    compara,
+    coordinate_systems,
+    karyotypes,
+    proteins,
+)
+from rnacentral_pipeline.rnacentral.notify import slack
 from rnacentral_pipeline.writers import entry_writer
 
 
@@ -81,8 +82,20 @@ def parse_data(division, embl_file, gff_file, output, family_file=None):
     if family_file:
         family_file = Path(family_file)
     entries = parser.parse(division, embl_file, gff_file, family_file=family_file)
-    with entry_writer(Path(output)) as writer:
-        writer.write(entries)
+    ## Send warning to slack with details about empty parse
+    try:
+        with entry_writer(Path(output)) as writer:
+            writer.write(entries)
+    except ValueError:
+        print("Empty entries, implies no ncRNAs. You should check that")
+        message = f"No ncRNA entries found for {embl_file.name}, or {gff_file.name}. Empty data supplied for now, but you should check the legitimacy of this result.\n"
+        message += "For reference, the other parameters to the parser were:\n"
+        message += f"division: {division}\n"
+        message += f"embl_file: {embl_file.name}\n"
+        message += f"gff_file: {gff_file.name}\n"
+        message += f"family_file: {family_file.name}\n"
+
+        slack.send_notification("Ensembl parser error", message)
 
 
 @cli.command("assemblies")

@@ -1,9 +1,9 @@
 -- TAIR
 select
-	  gene,
-    external_id,
     upi,
-    taxid
+    taxid,
+    external_id,
+    gene
 from xref x
 join rnc_accessions ra
 on

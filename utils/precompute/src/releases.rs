@@ -25,6 +25,8 @@ use anyhow::{
     Result,
 };
 
+use polars::prelude::*;
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct UrsEntry {
     id: usize,
@@ -61,28 +63,34 @@ pub fn write_max(filename: &Path, output: &Path) -> Result<()> {
 }
 
 pub fn select_new(xrefs: &Path, known: &Path, output: &Path) -> Result<()> {
-    let xref_records = entries(xrefs)?.map(|e: UrsEntry| (e.id, e)).assume_sorted_by_key();
-    let known_records = entries(known)?.map(|e: UrsEntry| (e.id, e)).assume_sorted_by_key();
 
-    let mut writer = csv::Writer::from_writer(File::create(output)?);
-    let pairs = xref_records.outer_join(known_records);
-    for (_key, (xref, pre)) in pairs {
-        match (xref, pre) {
-            (Some(x), Some(p)) => match x.release.cmp(&p.release) {
-                Less => Err(anyhow!(
-                    "This should never happen, too small release for {:?} vs {:?}",
-                    &x,
-                    &p
-                ))?,
-                Equal => (),
-                Greater => writer.write_record(&[x.urs])?,
-            },
-            (Some(x), None) => writer.write_record(&[x.urs])?,
-            (None, Some(_)) => (),
-            (None, None) => (),
-        }
-    }
-    writer.flush()?;
+    let mut xref_records : DataFrame = CsvReader::from_path(xrefs)?.has_header(false).finish().unwrap();
+    xref_records.rename("column_1", "id").ok();
+    xref_records.rename("column_2", "upi").ok();
+    xref_records.rename("column_3", "last").ok();
+    let mut known_records : DataFrame = CsvReader::from_path(known)?.has_header(false).finish().unwrap();
+    known_records.rename("column_1", "id").ok();
+    known_records.rename("column_2", "upi").ok();
+    known_records.rename("column_3", "last").ok();
+    // Run groupby, sort and max on xref (because the DB doesn't have the memory to do it)
+    xref_records = xref_records.groupby(["id", "upi"])?
+                .select(["last"])
+                .max()?
+                .sort(["id"], false)
+                .unwrap();
+
+    // Join the frames on id, then filter to select those where xref > known (?)
+    let mut selection = xref_records.join(&known_records, ["id", "upi"], ["id", "upi"], JoinType::Outer, None)?;
+    let mask = selection.column("last_max")?.gt(selection.column("last")?)?;
+    let mut selected_upis = selection.filter(&mask).unwrap()
+                                 .select(["upi"])?
+                                 .unique(None, UniqueKeepStrategy::First)?;
+
+
+    let out_stream : File = File::create(output).unwrap();
+    CsvWriter::new(out_stream)
+        .has_header(false)
+        .finish(&mut selected_upis);
 
     Ok(())
 }

@@ -1,9 +1,9 @@
 -- MIRBASE
-select 
-	  optional_id,
-	  external_id,
+select
     upi,
-    taxid
+    taxid,
+    external_id,
+	  optional_id
 from xref x 
 join rnc_accessions ra 
 on 

@@ -1,0 +1,75 @@
+# Thid workflow will build and push the import pipeline container.
+# the plan later will be to include unit tests as well
+
+
+name: Building Pipeline Containers
+
+on:
+ push:
+  branches:
+   'dev'
+jobs:
+
+  starting-notification:
+   runs-on: ubuntu-latest
+   steps:
+     - uses: actions/checkout@v2
+
+     - name: Intital notification
+       uses: rtCamp/action-slack-notify@v2
+       env:
+         SLACK_MESSAGE: 'Creating new pipeline image in docker hub'
+         SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+         MSG_MINIMAL: true
+
+  create-docker-image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: docker login
+        env:
+          DOCKER_USER: ${{ secrets.DOCKER_USER }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        run: docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
+
+      - name: docker build
+        run: docker build -f Dockerfile -t rnacentral/rnacentral-import-pipeline .
+
+      - name: docker push
+        run: docker push rnacentral/rnacentral-import-pipeline
+
+  finished-notification:
+    needs:
+      - create-docker-image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Finished notification
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_MESSAGE: 'New pipeline image pushed to docker hub'
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          MSG_MINIMAL: true
+
+  singularity-conversion:
+    needs:
+      - create-docker-image
+    uses: rnacentral/rnacentral-import-pipeline/.github/workflows/singularity.yaml@dev
+    secrets: inherit
+
+
+  finished-singularity:
+    needs:
+      - singularity-conversion
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Finished notification
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_MESSAGE: 'New singularity image pushed to ghcr'
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          MSG_MINIMAL: true

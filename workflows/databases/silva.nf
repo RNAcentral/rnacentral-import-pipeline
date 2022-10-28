@@ -5,7 +5,7 @@ process fetch {
   path('*.rnac')
 
   """
-  wget $params.databases.silva.remote
+  wget -e robots=off -nH -r --cut-dirs 3 --no-parent -A "SILVA_*Parc.rnac.gz" $params.databases.silva.remote
   gzip -d *.gz
   """
 }

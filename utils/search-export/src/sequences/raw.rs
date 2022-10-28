@@ -133,4 +133,9 @@ impl Raw {
     pub fn base(&self) -> &Basic {
         &self.base
     }
+
+    /// Get this raw's publication count.
+    pub fn publication_count(&self) -> usize {
+        self.publication_counts.as_ref().map(|p| p.publication_count()).unwrap_or(0)
+    }
 }

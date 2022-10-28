@@ -203,7 +203,7 @@ def node_to_reference(node):
 
 
 def parse(xml_file):
-    for _, node in ET.iterparse(xml_file, events=("end",), tag="PMC_ARTICLE"):
+    for _, node in ET.iterparse(xml_file, recover=True, events=("end",), tag="PMC_ARTICLE"):
         ref = node_to_reference(node)
         if not ref:
             continue

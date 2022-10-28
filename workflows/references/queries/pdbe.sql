@@ -1,8 +1,8 @@
 -- PDBE
 select
-	  external_id,
     upi,
-    taxid
+    taxid,
+	  external_id
 from xref x
 join rnc_accessions ra
 on

@@ -1,8 +1,8 @@
 -- GTRNADB
 select
-	  gene,
     upi,
-    taxid
+    taxid,
+    gene
 from xref x
 join rnc_accessions ra
 on
