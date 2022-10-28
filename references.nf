@@ -52,6 +52,9 @@ process prepare_to_submit {
 
     script:
     """
+    # make a copy of the old version before creating the new file
+    rm -f $baseDir/workflows/references/submit/previous-release/${database}_ids.txt
+    mv $baseDir/workflows/references/submit/${database}_ids.txt $baseDir/workflows/references/submit/previous-release
     get_unique_ids.sh ${database}.txt $database
     """
 }
@@ -62,7 +65,9 @@ process submit_ids {
 
     script:
     """
-    upload_ids.sh ${database}_ids.txt
+    # submit new ids only
+    comm -13 $baseDir/workflows/references/submit/previous-release/${database}_ids.txt $baseDir/workflows/references/submit/${database}_ids.txt > new_${database}_ids.txt
+    upload_ids.sh new_${database}_ids.txt
     """
 }
 

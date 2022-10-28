@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Copyright [2009-2017] EMBL-European Bioinformatics Institute
+Copyright [2009-2022] EMBL-European Bioinformatics Institute
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -48,16 +48,15 @@ def as_entry(info: ChainInfo, reference_mapping: ReferenceMapping):
 def parse(
     rna_chains: ty.List[ChainInfo],
     reference_mapping: ReferenceMapping,
-    override_list: ty.Dict[str, str],
+    override_list: ty.Set[ty.Tuple[str, str]],
 ) -> ty.Iterator[data.Entry]:
     disqualified = {"mRNA": 0, "other": 0}
+    seen: ty.Set[ty.Tuple[str, str]] = set()
     for chain in rna_chains:
-        if (
-            chain.pdb_id in override_list.keys()
-            and chain.chain_id in override_list.values()
-        ):
-            LOGGER.debug("Overriding %s", chain)
-            pass
+        override_key = chain.override_key()
+        if override_key in override_list:
+            LOGGER.debug("Overriding %s, %s", chain.pdb_id, chain.chain_id)
+            seen.add(override_key)
         else:
             if helpers.is_mrna(chain):
                 LOGGER.debug("Disqualifing %s", chain)
@@ -75,5 +74,10 @@ def parse(
             LOGGER.warn(f"Invalid sequence for {chain}")
         except helpers.MissingTypeInfo:
             LOGGER.warn(f"Missing type info for {chain}")
+
+    missing = override_list - seen
     LOGGER.info("Disqualified %i mRNA chains", disqualified["mRNA"])
     LOGGER.info("Disqualified %i non ncRNA chains", disqualified["other"])
+    LOGGER.info("Did not load %s overrided chains", missing)
+    if missing:
+        raise ValueError("Missed some required ids %s" % missing)
