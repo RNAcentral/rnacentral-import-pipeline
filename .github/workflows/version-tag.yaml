@@ -1,0 +1,23 @@
+# This workflow will create a version tag when a pull request is merged into main
+# It only fires if the commit message starts Release:
+name: Automatic version tagging
+
+on:
+  pull_request:
+    types:
+      - closed
+    branches:
+      - main
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Bump version and push tag
+        id: tag_version
+        uses: mathieudutour/github-tag-action@v6.1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          default_bump: false
+          tag_prefix: release_
+          custom_release_rules: Release:major
