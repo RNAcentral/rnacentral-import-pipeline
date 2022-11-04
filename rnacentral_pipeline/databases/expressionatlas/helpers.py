@@ -79,7 +79,7 @@ def as_entry(info, experiment):
         primary_id=primary_id(info),
         accession=accession(info),
         ncbi_tax_id=taxid(info),
-        database="EXPRESSIONATLAS",
+        database="Expression Atlas",
         sequence=info["seq"][0],
         regions=region_builder(info),
         rna_type=info["rna_type"][0],
