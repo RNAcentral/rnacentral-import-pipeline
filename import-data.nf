@@ -11,6 +11,7 @@ include { slack_message } from './workflows/utils/slack'
 include { slack_closure } from './workflows/utils/slack'
 
 workflow import_data {
+  take: _flag
   emit: post_release
   main:
     Channel.of("Starting data import pipeline") | slack_message
