@@ -1,14 +1,14 @@
-FROM python:3.8-buster
+FROM python:3.11.0-buster
 
 ENV RNA /rna
 
 WORKDIR $RNA
 
-RUN apt-get update
-RUN apt-get upgrade -y
+RUN apt update
+RUN apt upgrade -y
 
 # Install all required packages
-RUN apt-get install -y \
+RUN apt install -y \
     bedtools \
     ca-certificates \
     curl \
