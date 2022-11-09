@@ -7,7 +7,8 @@ name: Building Pipeline Containers
 on:
  push:
   branches:
-   'dev'
+   - 'dev'
+   - 'python-update'
 jobs:
 
   starting-notification:
@@ -36,8 +37,8 @@ jobs:
       - name: docker build
         run: docker build -f Dockerfile -t rnacentral/rnacentral-import-pipeline .
 
-      - name: docker push
-        run: docker push rnacentral/rnacentral-import-pipeline
+      # - name: docker push
+      #   run: docker push rnacentral/rnacentral-import-pipeline
 
   finished-notification:
     needs:
@@ -53,23 +54,23 @@ jobs:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           MSG_MINIMAL: true
 
-  singularity-conversion:
-    needs:
-      - create-docker-image
-    uses: rnacentral/rnacentral-import-pipeline/.github/workflows/singularity.yaml@dev
-    secrets: inherit
+  # singularity-conversion:
+  #   needs:
+  #     - create-docker-image
+  #   uses: rnacentral/rnacentral-import-pipeline/.github/workflows/singularity.yaml@dev
+  #   secrets: inherit
 
 
-  finished-singularity:
-    needs:
-      - singularity-conversion
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
+  # finished-singularity:
+  #   needs:
+  #     - singularity-conversion
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v2
 
-      - name: Finished notification
-        uses: rtCamp/action-slack-notify@v2
-        env:
-          SLACK_MESSAGE: 'New singularity image pushed to ghcr'
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-          MSG_MINIMAL: true
+  #     - name: Finished notification
+  #       uses: rtCamp/action-slack-notify@v2
+  #       env:
+  #         SLACK_MESSAGE: 'New singularity image pushed to ghcr'
+  #         SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+  #         MSG_MINIMAL: true
