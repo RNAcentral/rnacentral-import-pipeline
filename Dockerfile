@@ -25,6 +25,7 @@ RUN apt install -y \
     libsqlite3-dev \
     libssl1.1 \
     libxml2-utils \
+    libxml2-dev \
     libzip-dev \
     moreutils \
     mysql-common \
