@@ -82,7 +82,7 @@ process publish_layout {
   queue 'datamover'
 
   input:
-  tuple path(sequences), path(output), path(mapping)
+  tuple path(sequences), path(output), path(_version), path(mapping)
 
   output:
   val 'done', emit: flag
