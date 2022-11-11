@@ -19,7 +19,8 @@ COPY (
         'description', array_agg(pre.description),
         'deleted', array_agg(xref.deleted),
         'length', array_agg(rna.len),
-        'species', array_agg(acc.species),
+        -- 'species', array_agg(acc.species),
+        'species', array_agg(tax.name)
         'organelles', array_agg(acc.organelle),
         'expert_dbs', array_agg(db.display_name),
         'rna_type', array_agg(pre.rna_type),
@@ -42,11 +43,13 @@ COPY (
             'incomplete_sequence', bool_or(qa.incomplete_sequence),
             'missing_rfam_match', bool_or(qa.missing_rfam_match)
         ),
-        'tax_strings', array_agg(acc.classification),
+        -- 'tax_strings', array_agg(acc.classification),
+        'tax_strings', array_agg(tax.lineage),
         'functions', array_agg(acc.function),
         'genes', array_agg(acc.gene),
         'gene_synonyms', array_agg(acc.gene_synonym),
-        'common_name', array_agg(acc.common_name),
+        -- 'common_name', array_agg(acc.common_name),
+        'common_name', array_agg(tax.common_name),
         'notes', array_agg(acc.note),
         'locus_tags', array_agg(acc.locus_tag),
         'standard_names', array_agg(acc.standard_name),
@@ -56,6 +59,7 @@ FROM rna rna
 join xref xref ON xref.upi = rna.upi
 JOIN rnc_rna_precomputed pre ON xref.upi = pre.upi AND xref.taxid = pre.taxid
 JOIN rnc_accessions acc ON xref.ac = acc.accession
+JOIN rnc_taxonomy tax ON tax.id = xref.taxid
 JOIN rnc_database db ON xref.dbid = db.id
 JOIN rnc_release release1 ON xref.created = release1.id
 JOIN rnc_release release2 ON xref.last = release2.id
