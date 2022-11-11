@@ -103,6 +103,9 @@ COPY openssl/openssl.cnf /etc/ssl/
 
 WORKDIR $RNA
 
+# Install rust build system
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+
 # Setup environmental variables
 ENV PERL5LIB="/usr/bin/env:$PERL5LIB"
 
