@@ -32,6 +32,7 @@ process extract_sequences {
     -v ON_ERROR_STOP=1 \
     -v 'tablename=${params.r2dt.tablename}' \
     -v max_len=10000 \
+    -v 'sequence_count=${params.r2dt.sequence_count}' \
     -f "$query" "$PGDATABASE" > raw.json
   mkdir parts/
   split --number=l/4000 --additional-suffix='.json' raw.json parts/
