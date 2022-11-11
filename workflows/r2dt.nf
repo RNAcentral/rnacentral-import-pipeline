@@ -105,7 +105,7 @@ process parse_layout {
 
   """
   rnac r2dt process-svgs --allow-missing $mapping $to_parse data.csv
-  rnac r2dt create-attempted $sequences attempted.csv
+  rnac r2dt create-attempted $sequences $version attempted.csv
   """
 }
 
