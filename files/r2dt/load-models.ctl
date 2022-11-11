@@ -3,7 +3,7 @@ FROM ALL FILENAMES MATCHING ~<data.*.csv$>
 HAVING FIELDS (
     model_name,
     taxid,
-    cell_location,
+    cellular_location,
     rna_type,
     so_term_id,
     model_source,
@@ -13,7 +13,7 @@ HAVING FIELDS (
 TARGET COLUMNS (
     model_name,
     taxid,
-    cell_location,
+    cellular_location,
     rna_type,
     so_term_id,
     model_source,
@@ -33,7 +33,7 @@ $$
 create table load_secondary_layout_models (
     model_name text NOT NULL,
     taxid int NOT NULL,
-    cell_location text,
+    cellular_location text,
     rna_type text NOT NULL,
     so_term_id text NOT NULL,
     model_source text not null,
@@ -57,7 +57,7 @@ INSERT INTO rnc_secondary_structure_layout_models (
 SELECT
     model_name,
     taxid,
-    cell_location,
+    cellular_location,
     rna_type,
     so_term_id,
     model_source,
@@ -67,7 +67,7 @@ FROM load_secondary_layout_models load
 ) ON CONFLICT (model_name) DO UPDATE
 SET
     taxid = EXCLUDED.taxid,
-    cell_location = EXCLUDED.cell_location,
+    cellular_location = EXCLUDED.cellular_location,
     rna_type = EXCLUDED.rna_type,
     so_term_id = EXCLUDED.so_term_id,
     model_source = EXCLUDED.model_source,
