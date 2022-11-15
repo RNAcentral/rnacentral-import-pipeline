@@ -1,11 +1,13 @@
 LOAD CSV
 FROM ALL FILENAMES MATCHING ~<r2dt-attempted.*csv$>
 HAVING FIELDS (
-  urs
+  urs,
+  r2dt_version
 )
 INTO {{PGDATABASE}}?load_traveler_attempted
 TARGET COLUMNS (
-  urs
+  urs,
+  r2dt_version
 )
 
 WITH
@@ -20,7 +22,7 @@ $$,
 $$
 CREATE TABLE load_traveler_attempted (
   urs text primary key,
-  r2dt_version text,
+  r2dt_version text
 );
 $$
 
@@ -38,7 +40,7 @@ SELECT
 FROM load_traveler_attempted load
 ) ON CONFLICT (urs) DO UPDATE
 SET
-  last_run = EXCLUDED.last_run
+  last_run = EXCLUDED.last_run,
   r2dt_version = EXCLUDED.r2dt_version
 ;
 $$
