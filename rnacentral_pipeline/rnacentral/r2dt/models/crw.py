@@ -13,31 +13,33 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import re
 import csv
+import re
+import typing as ty
 
-from rnacentral_pipeline.rnacentral.r2dt.data import ModelInfo
-from rnacentral_pipeline.rnacentral.r2dt.data import Source
+from rnacentral_pipeline.databases.helpers.phylogeny import FailedTaxonId, taxid
+from rnacentral_pipeline.rnacentral.r2dt.data import ModelInfo, Source
 
 SO_TERM_MAPPING = {
-    "16S": "SO:0000650",
-    "23S": "SO:0000651",
-    "5S": "SO:0000652",
-    "I": "SO:0000587",
-    "IA1": "SO:0000587",
-    "IA2": "SO:0000587",
-    "IB": "SO:0000587",
-    "IB1": "SO:0000587",
-    "IB2": "SO:0000587",
-    "IB4": "SO:0000587",
-    "IC1": "SO:0000587",
-    "IC2": "SO:0000587",
-    "IC3": "SO:0000587",
-    "ID": "SO:0000587",
-    "IE": "SO:0000587",
-    "IIA": "SO:0000603",
-    "IIB": "SO:0000603",
+    "rRNA_16S": "SO:0000650",
+    "rRNA_5S": "SO:0000652",
+    "group_I_intron": "SO:0000587",
+    "group_II_intron": "SO:0000603",
+    "large_subunit_rRNA": "SO:0000651",
+    "small_subunit_rRNA": "SO:0000650",
+    "mt_LSU_rRNA": "SO:0002345",
+    "mt_SSU_rRNA": "SO:0002344",
+    "rRNA_18S": "SO:0000407",
+    "rRNA_21S": "SO:0002345",
+    "rRNA_23S": "SO:0001001",
 }
+
+
+def load_metadata(handle: str):
+    metadata = {}
+    for row in csv.DictReader(open(handle), delimiter="\t"):
+        metadata[row["model_name"]] = {**row}
+    return metadata
 
 
 def as_so_term(raw):
@@ -60,24 +62,50 @@ def as_taxid(raw):
     return int(raw)
 
 
-def models(raw):
-    for model_id in raw["structure"].split(" "):
-        data = dict(raw)
-        model_id = re.sub(r"\.ps$", "", model_id)
-        data["model_id"] = model_id
-        yield data
+def parse_model(handle, metadata) -> ModelInfo:
+    length: ty.Optional[str] = None
+    model_name: ty.Optional[str] = None
+    for line in handle:
+        line = line.strip()
+        if line == "CM":
+            break
+        key, value = re.split("\s+", line, maxsplit=1)
+
+        if key == "NAME":
+            model_name = value
+        if key == "CLEN":
+            length = value
+
+    if not model_name:
+        raise ValueError("Invalid name")
+
+    if not length:
+        raise ValueError("Invalid length for: %s" % model_name)
+
+    taxonomy_id = int(metadata[model_name]["taxid"])
+    so_type_name = metadata[model_name]["rna_type"]
+    if so_type_name == "mt_rRNA":
+        if ".16." in model_name:
+            so_type_name = "mt_SSU_rRNA"
+        else:
+            so_type_name = "mt_LSU_rRNA"
+
+    return ModelInfo(
+        model_name=model_name,
+        so_rna_type=as_so_term(so_type_name),
+        taxid=taxonomy_id,
+        source=Source.crw,
+        length=int(length),
+        basepairs=None,
+        cell_location=None,
+    )
 
 
-def parse(handle):
-    for row in csv.DictReader(handle, delimiter="\t"):
-        for info in models(row):
-            intronic = info["rna_type"] == "I"
-            yield ModelInfo(
-                model_id=info["model_id"],
-                is_intronic=intronic,
-                so_term=as_so_term(info["rna_class"]),
-                taxid=as_taxid(info["tax_id"]),
-                accessions=row["accession(s)"].split(","),
-                source=Source.crw,
-                cell_location=info["cell_location"],
-            )
+def parse(handle, extra=None):
+    metadata = load_metadata(extra)
+    for line in handle:
+        if line.startswith("INFERNAL"):
+            try:
+                yield parse_model(handle, metadata)
+            except KeyError as e:
+                continue

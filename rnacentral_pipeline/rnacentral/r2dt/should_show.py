@@ -20,14 +20,13 @@ import typing as ty
 from pathlib import Path
 
 import joblib
-from more_itertools import chunked
 import pandas as pd
-from pypika import Table, Query
 import psycopg2
 import psycopg2.extras
+from more_itertools import chunked
+from pypika import Query, Table
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import cross_val_score
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import cross_val_score, train_test_split
 
 LOGGER = logging.getLogger(__name__)
 

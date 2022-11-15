@@ -5,7 +5,8 @@ SELECT
     'sequence', COALESCE(rna.seq_short, rna.seq_long)
   )
 FROM rna
-WHERE 
+WHERE
   not exists(select 1 from pipeline_tracking_traveler track where track.urs = rna.upi)
   AND rna.len < :max_len
+  LIMIT :sequence_count
 ) TO STDOUT;
