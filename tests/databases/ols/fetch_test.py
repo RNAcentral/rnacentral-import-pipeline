@@ -19,7 +19,6 @@ from furl import furl
 from rnacentral_pipeline.databases.ols import fetch as ols
 from rnacentral_pipeline.databases.data import OntologyTerm
 
-
 @pytest.mark.parametrize(
     "ontology,url",
     [
@@ -45,7 +44,7 @@ def test_can_get_correct_term_url(term, url):
     val = ols.term_url(term)
     assert val == furl(url)
 
-
+@pytest.mark.network
 def test_can_fetch_a_go_term():
     assert ols.term("GO:0005739") == OntologyTerm(
         ontology="GO",
