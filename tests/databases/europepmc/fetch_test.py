@@ -26,6 +26,7 @@ from rnacentral_pipeline.databases.data import IdReference
 def lookup(ref_id):
     return attr.asdict(fetch.lookup(IdReference.build(ref_id)))
 
+@pytest.mark.epmc
 @pytest.mark.network
 @pytest.mark.parametrize(
     "raw_id", [28815543, "PMC5890441", "doi:10.1007/978-981-10-5203-3_9", "28815543"]
@@ -64,12 +65,13 @@ def test_can_fetch_publication(raw_id):
         "fullTextIdList": {"fullTextId" : ["PMC5890441"]},
         "firstIndexDate": "2017-08-18",
     }
-
+@pytest.mark.epmc
 @pytest.mark.network
 def test_complains_given_bad_pmid():
     with pytest.raises(Exception):
         fetch.summary(IdReference.build(-1))
 
+@pytest.mark.epmc
 @pytest.mark.network
 @pytest.mark.parametrize(
     "raw_id",
@@ -89,7 +91,7 @@ def test_can_build_reference(raw_id):
             pmcid="PMC5785218",
         )
     )
-
+@pytest.mark.epmc
 @pytest.mark.network
 @pytest.mark.parametrize(
     "pmid,title",
@@ -120,6 +122,7 @@ def test_can_deal_with_weird_issues(pmid, title):
     data = fetch.lookup(IdReference.build(pmid))
     assert data.title == title
 
+@pytest.mark.epmc
 @pytest.mark.network
 def test_can_deal_with_unicode():
     data = fetch.lookup(IdReference.build(27334534))
@@ -131,7 +134,7 @@ def test_can_deal_with_unicode():
         "doi": "10.1099/ijsem.0.001195",
         "pmcid": None,
     }
-
+@pytest.mark.epmc
 @pytest.mark.network
 def test_builds_correction_location():
     assert lookup(26184978) == attr.asdict(
@@ -148,7 +151,7 @@ def test_builds_correction_location():
             pmcid="PMC4505325",
         )
     )
-
+@pytest.mark.epmc
 @pytest.mark.network
 def test_can_handle_missing_volume():
     assert lookup(27389411) == attr.asdict(
@@ -161,7 +164,7 @@ def test_can_handle_missing_volume():
             pmcid="PMC5079273",
         )
     )
-
+@pytest.mark.epmc
 @pytest.mark.network
 def test_it_can_find_if_duplicate_ext_ids():
     assert lookup(375006) == attr.asdict(
@@ -174,7 +177,7 @@ def test_it_can_find_if_duplicate_ext_ids():
             pmcid=None,
         )
     )
-
+@pytest.mark.epmc
 @pytest.mark.network
 def test_can_lookup_by_doi():
     assert lookup("doi:10.1007/bf00271669") == attr.asdict(
@@ -188,8 +191,8 @@ def test_can_lookup_by_doi():
         )
     )
 
-## TODO: this test fails because of coroutine reuse at the moment. I need to fix that
 @pytest.mark.network
+@pytest.mark.epmc
 @pytest.mark.parametrize(
     "ref_id",
     [
