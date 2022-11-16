@@ -134,7 +134,7 @@ def chains(required: ty.Set[ty.Tuple[str, str]], query_size=1000) -> ty.List[Cha
 
 
 @retry((requests.HTTPError, MissingPdbs), tries=5, delay=1)
-def rna_chains(
+async def rna_chains(
     required: ty.Set[ty.Tuple[str, str]], query_size=1000
 ) -> ty.List[ChainInfo]:
     """
@@ -161,7 +161,7 @@ def rna_chains(
     missed = required - seen
     if missed:
         LOGGER.info("Missed some chains, well fetch manually")
-        rna_chains.extend(chains(missed))
+        rna_chains.extend(asyncio.run(chains(missed)))
 
     assert rna_chains, "Found no RNA chains"
     LOGGER.info("Found %i RNA containing chains", len(rna_chains))
