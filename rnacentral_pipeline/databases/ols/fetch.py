@@ -76,12 +76,12 @@ def term(term_id):
     term_info = asyncio.run(query_ols(url.url))
 
     definition = None
-    if term_info["description"]:
-        definition = " ".join(term_info["description"] or "")
+    if term_info['annotation']["definition"]:
+        definition = " ".join(term_info["annotation"]["definition"] or "")
 
     qualifier = None
     synonyms = []
-    given = term_info.get("synonyms", None) or []
+    given = term_info["annotation"].get("has_exact_synonym", None) or []
     leader = "INSDC_qualifier:"
     for synonym in given:
         if synonym.startswith(leader):
