@@ -37,8 +37,8 @@ jobs:
       - name: docker build
         run: docker build -f Dockerfile -t rnacentral/rnacentral-import-pipeline .
 
-      # - name: docker push
-      #   run: docker push rnacentral/rnacentral-import-pipeline
+      - name: docker push
+        run: docker push rnacentral/rnacentral-import-pipeline
 
   finished-notification:
     needs:
