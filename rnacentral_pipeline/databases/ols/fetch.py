@@ -13,25 +13,27 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import six
+import asyncio
+from functools import lru_cache
 
 import requests
+import six
 from furl import furl
 from retry import retry
 from retry.api import retry_call
-from ratelimiter import RateLimiter
-
-from functools import lru_cache
+from throttler import throttle
 
 from rnacentral_pipeline.databases.data import OntologyTerm
+from rnacentral_pipeline.utils import cacheable
 
 BASE = "https://www.ebi.ac.uk/ols/api/ontologies"
 
 
 @lru_cache(maxsize=500)
 @retry(requests.HTTPError, tries=5, delay=1)
-@RateLimiter(max_calls=10, period=1)
-def query_ols(url):
+@throttle(rate_limit=10, period=1.0)
+@cacheable
+async def query_ols(url):
     if isinstance(url, furl):
         url = url.url
     response = requests.get(url)
@@ -46,7 +48,7 @@ def ontology_url(ontology):
 
     url = furl(BASE)
     url.path.segments.append(ontology.upper())
-    info = query_ols(url.url)
+    info = asyncio.run(query_ols(url.url))
     return furl(info["config"]["baseUris"][0])
 
 
@@ -71,7 +73,7 @@ def term(term_id):
 
     ontology, _ = term_id.split(":", 1)
     url = term_url(term_id)
-    term_info = query_ols(url.url)
+    term_info = asyncio.run(query_ols(url.url))
 
     definition = None
     if term_info["description"]:
