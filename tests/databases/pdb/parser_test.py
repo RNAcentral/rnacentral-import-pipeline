@@ -27,7 +27,8 @@ def load(pdb_id: str, chain_id: str) -> data.Entry:
     references = fetch.references([chain_info])
     return parser.as_entry(chain_info, references)
 
-
+@pytest.mark.pdb
+@pytest.mark.network
 def test_can_build_correct_entry_for_rrna():
     cur = attr.asdict(load("1J5E", "A"))
     assert cur == attr.asdict(
@@ -64,11 +65,13 @@ def test_can_build_correct_entry_for_rrna():
         )
     )
 
-
+@pytest.mark.pdb
+@pytest.mark.network
 def test_can_handle_strange_taxids():
     assert load("3T4B", "A").ncbi_tax_id == 32630
 
-
+@pytest.mark.pdb
+@pytest.mark.network
 def test_can_build_correct_entry_for_srp_rna():
     assert attr.asdict(load("1CQ5", "A")) == attr.asdict(
         data.Entry(
@@ -101,7 +104,8 @@ def test_can_build_correct_entry_for_srp_rna():
         )
     )
 
-
+@pytest.mark.pdb
+@pytest.mark.network
 @pytest.mark.skip("Needs to be reworked")
 @pytest.mark.parametrize(
     "pdb_id,expected",
@@ -115,7 +119,8 @@ def test_can_get_given_taxid(pdb_id, expected):
     taxids = [entry.ncbi_tax_id for entry in parser.parse(chains, {}, set())]
     assert taxids == expected
 
-
+@pytest.mark.pdb
+@pytest.mark.network
 @pytest.mark.parametrize(
     "requested,missing",
     [
@@ -128,7 +133,8 @@ def test_will_not_fetch_mislabeled_chains(requested, missing):
     entries = {(e.primary_id, e.optional_id) for e in parser.parse(chains, {}, set())}
     assert missing not in entries
 
-
+@pytest.mark.pdb
+@pytest.mark.network
 @pytest.mark.parametrize(
     "overrides,expected",
     [
@@ -154,7 +160,8 @@ def test_will_respect_the_override_list(overrides, expected):
     }
     assert expected in entries
 
-
+@pytest.mark.pdb
+@pytest.mark.network
 @pytest.mark.parametrize(
     "pdb_id,chains",
     [
@@ -202,7 +209,8 @@ def test_extracts_expected_chains(pdb_id, chains):
     entries = parser.parse(list(fetched), {}, set())
     assert set(d.optional_id for d in entries) == chains
 
-
+@pytest.mark.pdb
+@pytest.mark.network
 @pytest.mark.parametrize(
     "pdb_id,chain_id,rna_type",
     [
