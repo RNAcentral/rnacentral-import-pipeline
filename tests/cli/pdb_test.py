@@ -21,6 +21,7 @@ from click.testing import CliRunner
 from rnacentral_pipeline.cli import pdb
 
 
+@pytest.mark.cli
 @pytest.mark.parametrize(
     "command,output,pdbs",
     [

@@ -17,12 +17,10 @@ import os
 from contextlib import contextmanager
 
 import pytest
-
 from click.testing import CliRunner
 
 from rnacentral_pipeline.cli import europepmc
-from rnacentral_pipeline.databases.data import IdReference
-from rnacentral_pipeline.databases.data import KnownServices
+from rnacentral_pipeline.databases.data import IdReference, KnownServices
 from rnacentral_pipeline.databases.europepmc.xml import UncachedReference
 
 
@@ -37,6 +35,7 @@ def run_indexed_command(cmd, **kwargs):
         yield result
 
 
+@pytest.mark.cli
 def test_can_index_directory_of_xml():
     runner = CliRunner()
     directory = os.path.abspath("data/publications/")
@@ -46,6 +45,7 @@ def test_can_index_directory_of_xml():
         assert os.path.exists("references.db")
 
 
+@pytest.mark.cli
 def test_can_do_lookup_with_fallback():
     ids = [
         "PMID:1903816,AAAA,BBBB",
@@ -62,6 +62,7 @@ def test_can_do_lookup_with_fallback():
             ]
 
 
+@pytest.mark.cli
 def test_can_use_specified_column():
     ids = ["FIRST,PMID:375006,SECOND"]
     cmd = ["lookup", "--allow-fallback", "--column=1", "references.db", "-"]
@@ -74,6 +75,7 @@ def test_can_use_specified_column():
             ]
 
 
+@pytest.mark.cli
 def test_will_fail_with_badly_formmated_ref_id():
     ids = ["b,PMID:1903816"]
     cmd = ["lookup", "--allow-fallback", "references.db", "-"]
@@ -82,6 +84,7 @@ def test_will_fail_with_badly_formmated_ref_id():
         assert os.path.exists("references.csv")
 
 
+@pytest.mark.cli
 def test_will_ignore_lookup_failures():
     ids = ["PMID:26184978,b", "PMID:1903816,a"]
     cmd = ["lookup", "--ignore-missing", "--no-allow-fallback", "references.db", "-"]
@@ -94,6 +97,7 @@ def test_will_ignore_lookup_failures():
             ]
 
 
+@pytest.mark.cli
 def test_will_fail_lookup_faiures_if_requested():
     ids = ["PMID:26184978,b", "PMID:1903816,a"]
     cmd = ["lookup", "--no-allow-fallback", "--no-ignore-missing", "references.db", "-"]
@@ -106,6 +110,7 @@ def test_will_fail_lookup_faiures_if_requested():
             ]
 
 
+@pytest.mark.cli
 def test_can_query_a_file():
     ids = ["FIRST,PMID:375006,SECOND"]
     cmd = ["query", "--column=1", "-"]

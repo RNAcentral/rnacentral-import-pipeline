@@ -27,6 +27,7 @@ except ImportError:
 from rnacentral_pipeline.rnacentral.text_mining import blob_building as bb
 
 
+@pytest.mark.text_mining
 @pytest.mark.parametrize(
     "xml,result",
     [

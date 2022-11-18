@@ -18,7 +18,7 @@ from pathlib import Path
 import pytest
 
 from rnacentral_pipeline.cpat import parser
-from rnacentral_pipeline.cpat.data import CpatCutoffs, CpatResult, CpatOrf
+from rnacentral_pipeline.cpat.data import CpatCutoffs, CpatOrf, CpatResult
 from rnacentral_pipeline.databases.data.regions import Strand
 
 
@@ -30,6 +30,7 @@ def results():
     )
 
 
+@pytest.mark.cpat
 def test_parses_cutoffs_correctly():
     assert parser.cutoffs(Path("data/cpat")) == CpatCutoffs(
         cutoffs={
@@ -41,10 +42,12 @@ def test_parses_cutoffs_correctly():
     )
 
 
+@pytest.mark.cpat
 def test_parses_results_all_results(results):
     assert len(results) == 3
 
 
+@pytest.mark.cpat
 def test_parses_no_orf_correctly(results):
     assert results[0] == CpatResult(
         urs_taxid="URS0000ABD879_9606",
@@ -56,6 +59,7 @@ def test_parses_no_orf_correctly(results):
     )
 
 
+@pytest.mark.cpat
 def test_parses_results_with_orfs_correctly(results):
     assert results[2] == CpatResult(
         urs_taxid="URS0000DB95A9_7955",

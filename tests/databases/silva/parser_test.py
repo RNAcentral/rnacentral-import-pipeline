@@ -16,12 +16,12 @@ limitations under the License.
 import attr
 import pytest
 
-from rnacentral_pipeline.databases import data
 import rnacentral_pipeline.databases.helpers.publications as pubs
-
+from rnacentral_pipeline.databases import data
 from rnacentral_pipeline.databases.silva import parser
 
 
+@pytest.mark.silva
 @pytest.mark.parametrize(
     "filename,count",
     [
@@ -34,6 +34,7 @@ def test_parses_all_data(filename, count):
         assert len(list(parser.parse(raw))) == count
 
 
+@pytest.mark.silva
 def test_parses_data_correctly():
     with open("data/silva/sample.tsv", "r") as raw:
         val = next(parser.parse(raw))
@@ -76,6 +77,7 @@ def test_parses_data_correctly():
     )
 
 
+@pytest.mark.silva
 def test_can_parse_lsu_data_correctly():
     with open("data/silva/lsu.tsv", "r") as raw:
         val = next(parser.parse(raw))
