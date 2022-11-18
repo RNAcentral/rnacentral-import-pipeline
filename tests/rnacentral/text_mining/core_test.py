@@ -13,17 +13,18 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import six
 import attr
 import pytest
+import six
 import textblob as tb
 
 from rnacentral_pipeline.databases.data import IdReference
+from rnacentral_pipeline.rnacentral.text_mining import blob_building as bb
 from rnacentral_pipeline.rnacentral.text_mining import core
 from rnacentral_pipeline.rnacentral.text_mining import patterns as pats
-from rnacentral_pipeline.rnacentral.text_mining import blob_building as bb
 
 
+@pytest.mark.text_mining
 def test_can_find_extact_names_in_text():
     matcher = core.NameMatcher.build("t1", ["HOTAIR", "XIST"])
     selector = core.SentenceSelector.build()

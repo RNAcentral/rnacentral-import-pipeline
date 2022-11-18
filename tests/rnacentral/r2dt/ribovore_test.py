@@ -13,14 +13,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+from pathlib import Path
+
 import attr
 import pytest
 
-from pathlib import Path
-
-from rnacentral_pipeline.rnacentral.traveler import ribovore
+from rnacentral_pipeline.rnacentral.r2dt import ribovore
 
 
+@pytest.mark.r2dt
 @pytest.mark.parametrize(
     "filename,count",
     [
@@ -32,6 +33,7 @@ def test_can_parse_whole_file(filename, count):
     assert len(list(ribovore.parse(Path(filename)))) == count
 
 
+@pytest.mark.r2dt
 def test_can_parse_a_simple_result():
     path = Path("data/traveler/crw/crw.ribotyper.long.out")
     data = list(ribovore.parse(path))
@@ -60,6 +62,7 @@ def test_can_parse_a_simple_result():
     )
 
 
+@pytest.mark.r2dt
 def test_can_produce_dict_of_results():
     data = ribovore.as_dict(Path("data/traveler/crw"))
     assert data == {

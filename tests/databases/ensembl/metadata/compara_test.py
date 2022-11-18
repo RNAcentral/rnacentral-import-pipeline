@@ -24,6 +24,7 @@ def simple():
         yield raw
 
 
+@pytest.mark.ensembl
 def test_can_produce_expected_data(simple):
     assert list(compara.data(simple)) == [
         (

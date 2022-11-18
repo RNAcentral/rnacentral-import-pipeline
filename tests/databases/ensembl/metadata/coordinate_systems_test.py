@@ -32,6 +32,7 @@ def human():
         return json.load(raw)
 
 
+@pytest.mark.ensembl
 @pytest.mark.skip()
 def test_can_generate_simple_karyotype_information(human):
     data = coord.top_level_only(human)

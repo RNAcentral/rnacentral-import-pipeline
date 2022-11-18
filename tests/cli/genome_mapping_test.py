@@ -18,8 +18,8 @@ import random
 from contextlib import contextmanager
 
 import pytest
-from more_itertools import chunked
 from click.testing import CliRunner
+from more_itertools import chunked
 
 from rnacentral_pipeline.cli import genome_mapping as gm
 
@@ -36,6 +36,7 @@ def empty_input(args, **kwargs):
         yield result
 
 
+@pytest.mark.cli
 @pytest.mark.parametrize(
     "command,extra",
     [
@@ -55,6 +56,7 @@ def test_blat_commands_handle_empty_inputs(command, extra):
             assert raw.read() == ""
 
 
+@pytest.mark.cli
 @pytest.mark.parametrize(
     "filename",
     [
@@ -83,6 +85,7 @@ def test_always_produces_output(filename):
         assert os.path.exists("selected.csv")
 
 
+@pytest.mark.cli
 def test_sorting_works_correctly():
     runner = CliRunner()
     filename = os.path.abspath("data/genome-mapping/results.psl")
