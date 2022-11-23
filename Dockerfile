@@ -111,7 +111,7 @@ COPY Cargo.toml Cargo.toml
 COPY Cargo.lock Cargo.lock
 ENV PATH="$PATH:/root/.cargo/bin"
 ENV CARGO_NET_GIT_FETCH_WITH_CLI=true
-RUN  make rust && make install
+RUN  make rust
 
 WORKDIR $RNA
 
