@@ -13,13 +13,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import os
 import csv
+import os
 
-import pytest
-from pypika import Table, Query
 import psycopg2
+import pytest
 from psycopg2.extras import DictCursor
+from pypika import Query, Table
 
 from rnacentral_pipeline.rnacentral.r2dt import data
 
@@ -29,6 +29,7 @@ def connection():
     return psycopg2.connect(os.environ["PGDATABASE"])
 
 
+@pytest.mark.r2dt
 def fetch_data(connection, urs) -> data.ShowInfo:
     rna = Table("rna")
     secondary = Table("rnc_secondary_structure_layout")
@@ -58,11 +59,12 @@ def fetch_data(connection, urs) -> data.ShowInfo:
 
 
 def loaded_data():
-    with open("data/r2dt/should-show-ids.csv", "r") as raw:
+    with open("data/r2dt/should-show/training-data.csv", "r") as raw:
         loaded = csv.reader(raw)
         return [(d[0], bool(d[1])) for d in loaded]
 
 
+@pytest.mark.r2dt
 @pytest.mark.parametrize("urs,expected", loaded_data())
 def test_should_show(connection, urs, expected):
     data = fetch_data(connection, urs)

@@ -13,23 +13,22 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import typing as ty
 import csv
+import typing as ty
 
 from rnacentral_pipeline.rnacentral.r2dt.data import ModelInfo, Source
 
 
-def parse(handle) -> ty.Iterable[ModelInfo]:
+def parse(handle, extra=None) -> ty.Iterable[ModelInfo]:
     for row in csv.DictReader(handle, delimiter="\t"):
         so_term_id = "SO:0000386"
         taxid = int(row["taxid"])
         yield ModelInfo(
             model_name=row["model_name"],
-            is_intronic=False,
-            so_term=so_term_id,
+            so_rna_type=so_term_id,
             taxid=taxid,
-            accessions=[],
             source=Source.rnase_p,
             cell_location=None,
             length=None,
+            basepairs=None,
         )

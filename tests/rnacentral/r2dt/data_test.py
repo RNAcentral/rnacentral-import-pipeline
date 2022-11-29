@@ -15,9 +15,12 @@ limitations under the License.
 
 from pathlib import Path
 
+import pytest
+
 from rnacentral_pipeline.rnacentral.r2dt import data
 
 
+@pytest.mark.r2dt
 def test_paths_creates_expected_crw_paths():
     base = Path("data/r2dt/crw/")
     path = data.r2dtPaths(
@@ -38,6 +41,7 @@ def test_paths_creates_expected_crw_paths():
     # assert path.stk == Path('data/r2dt/crw/URS00000F9D45_9606-d.5.e.H.sapiens.2.stk')
 
 
+@pytest.mark.r2dt
 def test_paths_creates_expected_ribovision_paths():
     base = Path("data/r2dt/ribovision/")
     path = data.r2dtPaths("URS0000AF4DA0", "EC_LSU_3D", data.Source.ribovision, base)
@@ -52,6 +56,7 @@ def test_paths_creates_expected_ribovision_paths():
     # assert path.stk == Path('data/r2dt/ribovision/URS0000AF4DA0-EC_LSU_3D.stk')
 
 
+@pytest.mark.r2dt
 def test_paths_creates_expected_rfam_paths():
     base = Path("data/r2dt/rfam/RF00162/")
     path = data.r2dtPaths("URS0000A7635A", "RF00162", data.Source.rfam, base)
@@ -64,6 +69,7 @@ def test_paths_creates_expected_rfam_paths():
     # assert path.stk == Path('data/r2dt/rfam/RF00162/URS0000AF4DA0.stk')
 
 
+@pytest.mark.r2dt
 def test_paths_creates_expected_gtrnadb_paths():
     base = Path("data/r2dt/gtrnadb/")
     path = data.r2dtPaths("URS0000A0BF23", "E-Gln", data.Source.gtrnadb, base)

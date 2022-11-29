@@ -13,11 +13,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import re
 import json
+import re
 
-import pytest
 import pymysql
+import pytest
 
 from rnacentral_pipeline.databases.ensembl.metadata import databases as db
 
@@ -36,5 +36,6 @@ def databases():
         return databases
 
 
+@pytest.mark.ensembl
 def test_gets_fly_database(databases):
     assert "drosophila_melanogaster" in databases

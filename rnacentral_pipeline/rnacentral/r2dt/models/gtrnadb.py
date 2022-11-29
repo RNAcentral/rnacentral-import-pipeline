@@ -13,13 +13,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import re
 import csv
-import typing as ty
 import operator as op
+import re
+import typing as ty
 
-from rnacentral_pipeline.rnacentral.r2dt.data import Source
-from rnacentral_pipeline.rnacentral.r2dt.data import ModelInfo
+from rnacentral_pipeline.rnacentral.r2dt.data import ModelInfo, Source
 
 DOMAINS = {
     "arch": ("A", 2157),
@@ -85,27 +84,27 @@ def parse_model(handle) -> ModelInfo:
 
     short_domain, taxid = DOMAINS[domain]
     so_term = TYPES[trna_type]
-    model_id = "%s-%s" % (short_domain, trna_type)
+    model_name = "%s-%s" % (short_domain, trna_type)
 
     return ModelInfo(
-        model_id=model_id,
-        is_intronic=False,
-        so_term=so_term,
+        model_name=model_name,
+        so_rna_type=so_term,
         taxid=taxid,
-        accessions=[],
         source=Source.gtrnadb,
         length=int(length),
         cell_location=loc,
+        basepairs=None,
     )
 
 
-def parse(handle):
+def parse(handle, extra=None):
     for line in handle:
         if line.startswith("INFERNAL"):
             yield parse_model(handle)
 
 
 def write(handle, output):
+
     data = parse(handle)
     data = map(op.methodcaller("writeable"), data)
     csv.writer(output).writerows(data)

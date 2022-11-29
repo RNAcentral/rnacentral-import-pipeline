@@ -14,7 +14,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-
+import asyncio
 import collections as coll
 import logging
 import typing as ty
@@ -22,8 +22,8 @@ import typing as ty
 import requests
 from furl import furl
 from more_itertools import chunked
-from ratelimiter import RateLimiter
 from retry import retry
+from throttler import throttle
 
 from rnacentral_pipeline.databases.pdb import helpers
 from rnacentral_pipeline.databases.pdb.data import ChainInfo, ReferenceMapping
@@ -67,8 +67,9 @@ def get_pdbe_count(query: str) -> int:
     data = response.json()
     return data["response"]["numFound"]
 
-
-def fetch_range(query: str, start: int, rows: int) -> ty.Iterator[ChainInfo]:
+@retry((requests.HTTPError, MissingPdbs), tries=5, delay=1)
+@throttle(rate_limit=10, period=1.0)
+async def fetch_range(query: str, start: int, rows: int) -> ty.Iterator[ChainInfo]:
     url = furl(PDBE_SEARCH_URL)
     url.args["q"] = query
     url.args["rows"] = rows
@@ -79,14 +80,16 @@ def fetch_range(query: str, start: int, rows: int) -> ty.Iterator[ChainInfo]:
     response.raise_for_status()
 
     data = response.json()
+    chains = []
     if data["response"]["numFound"] == 0:
         raise MissingPdbs(f"Missing for '{query}', {start}")
     for raw in data["response"]["docs"]:
         for index in range(len(raw["chain_id"])):
-            yield ChainInfo.build(index, raw)
+            chains.append( ChainInfo.build(index, raw))
+    return chains
 
 
-@retry((requests.HTTPError, MissingPdbs), tries=5, delay=1)
+
 def all_chains_in_pdbs(
     pdb_ids: ty.List[str], query_size=1000
 ) -> ty.Iterable[ChainInfo]:
@@ -99,11 +102,10 @@ def all_chains_in_pdbs(
     query = " OR ".join([f"pdb_id:{p.lower()}" for p in pdb_ids])
 
     total = get_pdbe_count(query)
-    limiter = RateLimiter(max_calls=10, period=1)
+    chains = []
     for start in range(0, total, query_size):
-        with limiter:
-            for chain in fetch_range(query, start, query_size):
-                yield chain
+        chains.extend(asyncio.run(fetch_range(query, start, query_size)))
+    return chains
 
 
 @retry((requests.HTTPError, MissingPdbs), tries=5, delay=1)
@@ -132,7 +134,7 @@ def chains(required: ty.Set[ty.Tuple[str, str]], query_size=1000) -> ty.List[Cha
 
 
 @retry((requests.HTTPError, MissingPdbs), tries=5, delay=1)
-def rna_chains(
+async def rna_chains(
     required: ty.Set[ty.Tuple[str, str]], query_size=1000
 ) -> ty.List[ChainInfo]:
     """
@@ -145,23 +147,21 @@ def rna_chains(
     rna_chains: ty.List[ChainInfo] = []
     total = get_pdbe_count(query)
     seen = set()
-    limiter = RateLimiter(max_calls=10, period=1)
     for start in range(0, total, query_size):
-        with limiter:
-            for chain in fetch_range(query, start, query_size):
-                key = chain.override_key()
-                if (
-                    chain.molecule_type and "RNA" in chain.molecule_type
-                ) or key in required:
-                    rna_chains.append(chain)
-                    seen.add(key)
+        for chain in asyncio.run(fetch_range(query, start, query_size)):
+            key = chain.override_key()
+            if (
+                chain.molecule_type and "RNA" in chain.molecule_type
+            ) or key in required:
+                rna_chains.append(chain)
+                seen.add(key)
 
     # This may be missed if the PDB does not contain any chains labeled as RNA.
     # Rfam does match some DNA chains so we allow them into RNAcentral.
     missed = required - seen
     if missed:
         LOGGER.info("Missed some chains, well fetch manually")
-        rna_chains.extend(chains(missed))
+        rna_chains.extend(asyncio.run(chains(missed)))
 
     assert rna_chains, "Found no RNA chains"
     LOGGER.info("Found %i RNA containing chains", len(rna_chains))
@@ -169,19 +169,18 @@ def rna_chains(
 
 
 @retry(requests.HTTPError, tries=5, delay=1)
-def fetch_pdbe_publications(pdb_ids: ty.Iterable[str]) -> ReferenceMapping:
+@throttle(rate_limit=10, period=1.0)
+async def fetch_pdbe_publications(pdb_ids: ty.Iterable[str]) -> ReferenceMapping:
     url = "https://www.ebi.ac.uk/pdbe/api/pdb/entry/publications/"
     mapping = coll.defaultdict(list)
-    limiter = RateLimiter(max_calls=10, period=1)
     for subset in chunked(pdb_ids, 200):
-        with limiter:
-            post_data = ",".join(subset)
-            response = requests.post(url, data=post_data)
-            response.raise_for_status()
-            for pdb_id, refs in response.json().items():
-                for ref in refs:
-                    pub = helpers.as_reference(ref)
-                    mapping[pdb_id.lower()].append(pub)
+        post_data = ",".join(subset)
+        response = requests.post(url, data=post_data)
+        response.raise_for_status()
+        for pdb_id, refs in response.json().items():
+            for ref in refs:
+                pub = helpers.as_reference(ref)
+                mapping[pdb_id.lower()].append(pub)
     return dict(mapping)
 
 
@@ -193,4 +192,4 @@ def references(chain_info: ty.Iterable[ChainInfo]) -> ReferenceMapping:
         '1s72': {'structureId': '1S72', etc}
     }
     """
-    return fetch_pdbe_publications({c.pdb_id for c in chain_info})
+    return asyncio.run(fetch_pdbe_publications({c.pdb_id for c in chain_info}))

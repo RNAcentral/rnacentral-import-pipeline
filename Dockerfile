@@ -84,17 +84,34 @@ RUN git clone https://github.com/nawrockie/epn-options.git && cd epn-options && 
 RUN git clone https://github.com/nawrockie/epn-test.git && cd epn-test && git fetch && git fetch --tags && git checkout ribovore-0.40
 RUN git clone https://github.com/nawrockie/ribovore.git && cd ribovore && git fetch && git fetch --tags && git checkout ribovore-0.40
 
-# Install useful pip version
-RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && python get-pip.py
-
 # Install python requirements
 ENV RNACENTRAL_IMPORT_PIPELINE "$RNA/rnacentral-import-pipeline"
 
-ADD requirements.txt $RNACENTRAL_IMPORT_PIPELINE/requirements.txt
-RUN pip3 install --upgrade pip
-RUN pip3 install -r $RNACENTRAL_IMPORT_PIPELINE/requirements.txt
+# Install useful pip version
+RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && python get-pip.py
+
+# Install poetry
+RUN curl -sSL https://install.python-poetry.org | python3 -
+
+COPY poetry.lock $RNACENTRAL_IMPORT_PIPELINE/poetry.lock
+COPY pyproject.toml $RNACENTRAL_IMPORT_PIPELINE/pyproject.toml
+
+WORKDIR "$RNA/rnacentral-import-pipeline"
+RUN PATH="$PATH:/root/.local/bin" poetry config virtualenvs.create false
+RUN PATH="$PATH:/root/.local/bin" poetry install
 
 RUN python3 -m textblob.download_corpora
+
+## Download Rust toolchain
+RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
+
+COPY utils ./utils
+COPY Makefile Makefile
+COPY Cargo.toml Cargo.toml
+COPY Cargo.lock Cargo.lock
+ENV PATH="$PATH:/root/.cargo/bin"
+ENV CARGO_NET_GIT_FETCH_WITH_CLI=true
+RUN  make rust
 
 WORKDIR $RNA
 
