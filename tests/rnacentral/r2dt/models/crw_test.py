@@ -15,9 +15,8 @@ limitations under the License.
 
 import pytest
 
-from rnacentral_pipeline.databases.r2dt.models import crw
-from rnacentral_pipeline.rnacentral.traveler.data import ModelInfo
-from rnacentral_pipeline.rnacentral.traveler.data import Source
+from rnacentral_pipeline.rnacentral.r2dt.data import ModelInfo, Source
+from rnacentral_pipeline.rnacentral.r2dt.models import crw
 
 
 @pytest.fixture()
@@ -26,6 +25,7 @@ def parsed():
         return {i.model_id: i for i in crw.parse(raw)}
 
 
+@pytest.mark.r2dt
 @pytest.mark.xfail(reason="Cannot extract length")
 @pytest.mark.parametrize(
     "filename,count",
@@ -38,6 +38,7 @@ def test_parses_whole_file(filename, count):
         assert len(list(crw.parse(raw))) == count
 
 
+@pytest.mark.r2dt
 @pytest.mark.xfail(reason="Cannot extract length")
 def test_can_build_correct_data(parsed):
     assert parsed["a.I1.m.A.aegerita.C2.SSU"] == ModelInfo(
@@ -52,6 +53,7 @@ def test_can_build_correct_data(parsed):
     )
 
 
+@pytest.mark.r2dt
 @pytest.mark.xfail(reason="Cannot extract length")
 def test_can_handle_multiple_filenames(parsed):
     assert "d.235.b.A.calcoaceticus.ps d.233.b.A.calcoaceticus.ps" not in parsed

@@ -35,10 +35,10 @@ jobs:
         run: docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
 
       - name: docker build
-        run: docker build -f Dockerfile -t rnacentral/rnacentral-import-pipeline .
+        run: docker build -f Dockerfile -t rnacentral/rnacentral-import-pipeline:experimental .
 
       - name: docker push
-        run: docker push rnacentral/rnacentral-import-pipeline
+        run: docker push rnacentral/rnacentral-import-pipeline:experimental
 
   finished-notification:
     needs:

@@ -15,8 +15,8 @@ limitations under the License.
 
 import csv
 
-from rnacentral_pipeline.rnacentral.r2dt.data import Source
-from rnacentral_pipeline.rnacentral.r2dt.data import ModelInfo
+from rnacentral_pipeline.databases.helpers.phylogeny import FailedTaxonId, taxid
+from rnacentral_pipeline.rnacentral.r2dt.data import ModelInfo, Source
 
 
 def lookup_taxid(species):
@@ -56,7 +56,10 @@ def lookup_taxid(species):
         return 7227
     if species == "Trypanosoma brucei":
         return 5691
-    raise ValueError("Unknown species name: " + species)
+    try:
+        return taxid(species)
+    except FailedTaxonId:
+        raise ValueError("Unknown species name: " + species)
 
 
 def as_location(raw):
@@ -85,23 +88,22 @@ def so_term(row):
     raise ValueError("Could not figure out SO term for: %s" % row)
 
 
-def parse(handle):
+def parse(handle, extra=None):
     for row in csv.DictReader(handle, delimiter="\t"):
         so_term_id = so_term(row)
 
-        if not row["taxid"]:
+        if not row.get("taxid", None):
             taxid = lookup_taxid(row["species"])
         else:
             taxid = int(row["taxid"])
 
-        location = as_location(row["cellular_location"])
+        # location = as_location(row["cellular_location"])
         yield ModelInfo(
-            model_id=row["model_name"],
-            is_intronic=False,
-            so_term=so_term_id,
+            model_name=row["model_name"],
+            so_rna_type=so_term_id,
             taxid=taxid,
-            accessions=[],
             source=Source.ribovision,
-            cell_location=location,
+            cell_location=None,
             length=None,
+            basepairs=None,
         )

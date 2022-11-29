@@ -6,7 +6,8 @@ include { select } from './workflows/databases/select.nf'
 
 
 workflow {
+  emit: done
 
-  select()
+  select() | set { done }
 
 }

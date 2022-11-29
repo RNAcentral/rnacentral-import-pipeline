@@ -15,8 +15,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import os
 import json
+import os
 from collections import Counter
 
 import attr
@@ -45,6 +45,7 @@ def assembly_for(assemblies, taxid):
     return found[0]
 
 
+@pytest.mark.ensembl
 @pytest.mark.db
 def test_it_can_load_known():
     with open("files/import-data/ensembl/known-assemblies.sql", "r") as kn:
@@ -67,6 +68,7 @@ def test_it_can_load_known():
     )
 
 
+@pytest.mark.ensembl
 @pytest.mark.db
 def test_it_builds_a_valid_assembly(assemblies):
     val = assembly_for(assemblies, 9606)
@@ -87,12 +89,14 @@ def test_it_builds_a_valid_assembly(assemblies):
     assert val.subdomain == "ensembl.org"
 
 
+@pytest.mark.ensembl
 @pytest.mark.db
 def test_it_has_no_bacterial_assemblies(assemblies):
     divisions = set(a.division for a in assemblies)
     assert "EnsemblBacteria" not in divisions
 
 
+@pytest.mark.ensembl
 @pytest.mark.db
 @pytest.mark.parametrize(
     "taxid,count",
@@ -112,6 +116,7 @@ def test_it_has_one_assembly_per_taxid(assemblies, taxid, count):
     assert len(val) == count, "Issue with counts for %i" % taxid
 
 
+@pytest.mark.ensembl
 @pytest.mark.db
 @pytest.mark.parametrize("key", ["taxid", "assembly_id"])
 def test_it_never_has_more_than_one_assembly_unique_item(assemblies, key):
@@ -120,6 +125,7 @@ def test_it_never_has_more_than_one_assembly_unique_item(assemblies, key):
     assert max_item[1] == 1, "Too many counts for: %s, %i" % max_item
 
 
+@pytest.mark.ensembl
 @pytest.mark.db
 @pytest.mark.parametrize(
     "taxid,division,assembly_id",

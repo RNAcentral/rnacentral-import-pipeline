@@ -19,6 +19,7 @@ from click.testing import CliRunner
 from rnacentral_pipeline.cli import misc
 
 
+@pytest.mark.cli
 @pytest.mark.parametrize(
     "filename,exit_code",
     [
