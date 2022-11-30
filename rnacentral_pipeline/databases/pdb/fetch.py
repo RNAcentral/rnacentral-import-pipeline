@@ -134,7 +134,7 @@ def chains(required: ty.Set[ty.Tuple[str, str]], query_size=1000) -> ty.List[Cha
 
 
 @retry((requests.HTTPError, MissingPdbs), tries=5, delay=1)
-async def rna_chains(
+def rna_chains(
     required: ty.Set[ty.Tuple[str, str]], query_size=1000
 ) -> ty.List[ChainInfo]:
     """
