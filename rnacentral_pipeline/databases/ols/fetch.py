@@ -87,13 +87,14 @@ def term(term_id):
         or term_info.get("synonyms", None)
     ) or None
     leader = "INSDC_qualifier:"
-    for synonym in given:
-        if synonym.startswith(leader):
-            if qualifier:
-                raise ValueError("Multiple INSDC qualifiers found")
-            qualifier = synonym[len(leader) :]
-        else:
-            synonyms.append(synonym)
+    if given:
+        for synonym in given:
+            if synonym.startswith(leader):
+                if qualifier:
+                    raise ValueError("Multiple INSDC qualifiers found")
+                qualifier = synonym[len(leader) :]
+            else:
+                synonyms.append(synonym)
 
     return OntologyTerm(
         ontology=ontology,
