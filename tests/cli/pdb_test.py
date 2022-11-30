@@ -22,18 +22,20 @@ from rnacentral_pipeline.cli import pdb
 
 
 @pytest.mark.cli
+@pytest.mark.pdb
+@pytest.mark.slow
 @pytest.mark.parametrize(
-    "command,output,pdbs",
+    "command,output",
     [
-        ("data", "pdb.json", ("1S72",)),
-        ("extra", "pdb-extra.json", ("1S72",)),
+        ("generate", "pdb.json"),
     ],
 )
-def test_can_fetch_expected_data(command, output, pdbs):
+def test_can_fetch_expected_data(command, output):
     runner = CliRunner()
     with runner.isolated_filesystem():
         args = [command, output]
-        args.extend(pdbs)
+        print(args)
+        # args.extend(pdbs)
         result = runner.invoke(pdb.cli, args)
         assert result.exit_code == 0, result.output
         assert not result.exception
