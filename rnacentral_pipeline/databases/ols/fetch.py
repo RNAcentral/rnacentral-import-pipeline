@@ -24,15 +24,12 @@ from retry.api import retry_call
 from throttler import throttle
 
 from rnacentral_pipeline.databases.data import OntologyTerm
-from rnacentral_pipeline.utils import cacheable
 
 BASE = "https://www.ebi.ac.uk/ols/api/ontologies"
 
 
-@lru_cache(maxsize=500)
 @retry(requests.HTTPError, tries=5, delay=1)
 @throttle(rate_limit=10, period=1.0)
-@cacheable
 async def query_ols(url):
     if isinstance(url, furl):
         url = url.url
@@ -75,13 +72,20 @@ def term(term_id):
     url = term_url(term_id)
     term_info = asyncio.run(query_ols(url.url))
 
-    definition = None
-    if term_info['annotation']["definition"]:
-        definition = " ".join(term_info["annotation"]["definition"] or "")
+    print(term_info)
+    definition = (
+        term_info["annotation"].get("definition", [None])[0]
+        or term_info.get("description", [None])[0]
+    )
+    # if term_info['annotation']["definition"]:
+    #     definition = " ".join(term_info["annotation"]["definition"] or "")
 
     qualifier = None
     synonyms = []
-    given = term_info["annotation"].get("has_exact_synonym", None) or []
+    given = (
+        term_info["annotation"].get("has_exact_synonym", None)
+        or term_info.get("synonyms", None)
+    ) or None
     leader = "INSDC_qualifier:"
     for synonym in given:
         if synonym.startswith(leader):
