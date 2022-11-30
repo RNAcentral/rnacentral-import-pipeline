@@ -24,7 +24,6 @@ from retry.api import retry_call
 from throttler import throttle
 
 from rnacentral_pipeline.databases.data import OntologyTerm
-from rnacentral_pipeline.utils import cacheable
 
 BASE = "https://www.ebi.ac.uk/ols/api/ontologies"
 
