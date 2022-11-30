@@ -161,7 +161,7 @@ def rna_chains(
     missed = required - seen
     if missed:
         LOGGER.info("Missed some chains, well fetch manually")
-        rna_chains.extend(asyncio.run(chains(missed)))
+        rna_chains.extend(chains(missed))
 
     assert rna_chains, "Found no RNA chains"
     LOGGER.info("Found %i RNA containing chains", len(rna_chains))
