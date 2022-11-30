@@ -15,6 +15,7 @@ limitations under the License.
 
 import tempfile
 
+import pytest
 import six
 
 from rnacentral_pipeline import utils
