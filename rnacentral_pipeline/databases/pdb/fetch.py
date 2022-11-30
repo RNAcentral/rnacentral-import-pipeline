@@ -67,6 +67,7 @@ def get_pdbe_count(query: str) -> int:
     data = response.json()
     return data["response"]["numFound"]
 
+
 @retry((requests.HTTPError, MissingPdbs), tries=5, delay=1)
 @throttle(rate_limit=10, period=1.0)
 async def fetch_range(query: str, start: int, rows: int) -> ty.Iterator[ChainInfo]:
@@ -85,9 +86,8 @@ async def fetch_range(query: str, start: int, rows: int) -> ty.Iterator[ChainInf
         raise MissingPdbs(f"Missing for '{query}', {start}")
     for raw in data["response"]["docs"]:
         for index in range(len(raw["chain_id"])):
-            chains.append( ChainInfo.build(index, raw))
+            chains.append(ChainInfo.build(index, raw))
     return chains
-
 
 
 def all_chains_in_pdbs(
@@ -134,7 +134,7 @@ def chains(required: ty.Set[ty.Tuple[str, str]], query_size=1000) -> ty.List[Cha
 
 
 @retry((requests.HTTPError, MissingPdbs), tries=5, delay=1)
-async def rna_chains(
+def rna_chains(
     required: ty.Set[ty.Tuple[str, str]], query_size=1000
 ) -> ty.List[ChainInfo]:
     """
