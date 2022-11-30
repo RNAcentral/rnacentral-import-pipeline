@@ -146,6 +146,8 @@ SO_RNA_NAME_LOOKUP = {
     "SO:0000990": "class_I_RNA",
     "SO:0001055": "transcriptional_cis_regulatory_region",
     "SO:0001877": "lncRNA",
+    # from updated cms...
+    "SO:0000233": "mature_transcript",
 }
 
 """
