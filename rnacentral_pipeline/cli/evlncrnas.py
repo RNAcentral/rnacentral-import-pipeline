@@ -29,8 +29,8 @@ def cli():
 
 
 @cli.command("parse")
-@click.option("--db-url", envvar="PGDATABASE")
 @click.argument("db_dir", type=click.Path(exists=True, dir_okay=True, readable=True))
+@click.option("--db-url", envvar="PGDATABASE")
 @click.argument(
     "output",
     default=".",
