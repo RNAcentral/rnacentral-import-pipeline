@@ -37,21 +37,30 @@ def main(filename, output):
 
                 if len(line) < 3:
                     job_id = line[0].lower()
-                    urs = line[1]
+                    urs = line[1].lower()
 
-                    output_file.write(urs + "|" + "rnacentral" + "\n")
-                    output_file.write(job_id + "|" + "rnacentral" + "|" + urs + "\n")
-                    output_file.write(job_id + "|" + database + "\n")
+                    if job_id:
+                        output_file.write(job_id + "|" + database + "\n")
+                    if urs:
+                        output_file.write(urs + "|" + "rnacentral" + "\n")
+                    if job_id and urs:
+                        output_file.write(job_id + "|" + "rnacentral" + "|" + urs + "\n")
+
                 else:
                     job_id = line[0].lower()
                     primary_id = line[1].lower()
-                    urs = line[2]
+                    urs = line[2].lower()
 
-                    output_file.write(urs + "|" + "rnacentral" + "\n")
-                    output_file.write(primary_id + "|" + database + "\n")
-                    output_file.write(primary_id + "|" + "rnacentral" + "|" + urs + "\n")
-                    output_file.write(job_id + "|" + "rnacentral" + "|" + urs + "\n")
-                    output_file.write(job_id + "|" + database + "|" + primary_id + "\n")
+                    if urs:
+                        output_file.write(urs + "|" + "rnacentral" + "\n")
+                    if primary_id:
+                        output_file.write(primary_id + "|" + database + "\n")
+                    if primary_id and urs:
+                        output_file.write(primary_id + "|" + "rnacentral" + "|" + urs + "\n")
+                    if job_id and urs:
+                        output_file.write(job_id + "|" + "rnacentral" + "|" + urs + "\n")
+                    if job_id and primary_id:
+                        output_file.write(job_id + "|" + database + "|" + primary_id + "\n")
 
 
 if __name__ == "__main__":
