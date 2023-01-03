@@ -23,8 +23,8 @@ from rnacentral_pipeline.cli import (
     crw,
     ena,
     ensembl,
-    expressionatlas,
     europepmc,
+    expressionatlas,
     five_s_rrnadb,
     flybase,
     ftp_export,
@@ -47,8 +47,8 @@ from rnacentral_pipeline.cli import (
     pirbase,
     plncdb,
     pombase,
-    psicquic,
     precompute,
+    psicquic,
     qa,
     quickgo,
     r2dt,
@@ -56,9 +56,10 @@ from rnacentral_pipeline.cli import (
     release,
     repeats,
     rfam,
+    ribocentre,
     ribovision,
-    search_export,
     scan_imports,
+    search_export,
     sgd,
     silva,
     snodb,
@@ -130,6 +131,7 @@ cli.add_command(release.cli)
 cli.add_command(repeats.cli)
 cli.add_command(rfam.cli)
 cli.add_command(ribovision.cli)
+cli.add_command(ribocentre.cli)
 cli.add_command(scan_imports.cli)
 cli.add_command(search_export.cli)
 cli.add_command(sgd.cli)
