@@ -13,57 +13,74 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from pathlib import Path
-import pandas as pd
 import operator as op
-import numpy as np
+from functools import partial
+from operator import is_not
+from pathlib import Path
 
+import numpy as np
+import pandas as pd
 from furl import furl
 
-from rnacentral_pipeline.databases.helpers import phylogeny as phy
 from rnacentral_pipeline.databases import data
-from operator import is_not
-from functools import partial
+from rnacentral_pipeline.databases.helpers import phylogeny as phy
 
 from . import lookup
 
-base_url = furl("https://www.sdklab-biophysics-dzu.net/EVLncRNAs2/index.php/Home/Browsc/rna.html")
+base_url = furl(
+    "https://www.sdklab-biophysics-dzu.net/EVLncRNAs2/index.php/Home/Browsc/rna.html"
+)
+
+
+def handled_phylogeny(species):
+    try:
+        return phy.taxid(species)
+    except phy.FailedTaxonId:
+        return None
+
 
 def as_entry(record):
     """
     Generate an Entry to import based off the database, exons and raw record.
     """
 
-    if len(record['exons']) == 0:
-        print(f"Something is wrong with sequence {record['index']}, the exon list is empty")
-        chromosome = str(record['chromosome'])
-        if record['Chain'] is not None:
-            strand = -1 if record['Chain'] == 'minus' else 1 ## This may not be right... think mito RNAs?
+    if len(record["exons"]) == 0:
+        print(
+            f"Something is wrong with sequence {record['index']}, the exon list is empty"
+        )
+        chromosome = str(record["chromosome"])
+        if record["Chain"] is not None:
+            strand = (
+                -1 if record["Chain"] == "minus" else 1
+            )  ## This may not be right... think mito RNAs?
         else:
             strand = None
     else:
-        chromosome = record['exons'][0]['chromosome']
-        strand = record['exons'][0]['strand']
+        chromosome = record["exons"][0]["chromosome"]
+        strand = record["exons"][0]["strand"]
 
     region = data.SequenceRegion(
-        chromosome = chromosome,
-        strand = strand,
-        exons = [data.Exon(start=e['exon_start'], stop=e['exon_stop']) for e in record['exons']],
-        assembly_id = record['Assembly'],
-        coordinate_system = "1-start, fully-closed"
+        chromosome=chromosome,
+        strand=strand,
+        exons=[
+            data.Exon(start=e["exon_start"], stop=e["exon_stop"])
+            for e in record["exons"]
+        ],
+        assembly_id=record["Assembly"],
+        coordinate_system="1-start, fully-closed",
     )
     try:
         entry = data.Entry(
             primary_id=record["index"],
             accession=record["index"],
-            ncbi_tax_id=record['taxid'],
+            ncbi_tax_id=record["taxid"],
             database="EVLNCRNA",
             sequence=record["sequence"],
             regions=[region],
             gene=record.get("Name", ""),
             gene_synonyms=record.get("Aliases", []),
-            rna_type=record.get("so_term", record['Class']),
-            url=base_url.set({"id":record["index"]}).url,
+            rna_type=record.get("so_term", record["Class"]),
+            url=base_url.set({"id": record["index"]}).url,
             seq_version=record.get("version", "1"),
             optional_id=record.get("optional_id", ""),
             description=record.get("description", ""),
@@ -71,10 +88,9 @@ def as_entry(record):
             # xref_data=xrefs(record),
             # related_sequences=related_sequences(record),
             species=record.get("Species", ""),
-            lineage=phy.lineage(record['taxid']),
-            common_name=phy.common_name(record['taxid']),
+            lineage=phy.lineage(record["taxid"]),
+            common_name=phy.common_name(record["taxid"]),
             chromosome=str(record["chromosome"]),
-
             # secondary_structure=secondary_structure(record),
             # references=references(record),
             organelle=record.get("localization", None),
@@ -88,10 +104,10 @@ def as_entry(record):
             # features=features(record),
         )
     except:
-        print(f"Unexpected RNA type: {record['so_term']} for record with ID {record['index']}")
+        print(
+            f"Unexpected RNA type: {record['so_term']} for record with ID {record['index']}"
+        )
         entry = None
-
-
 
     return entry
 
@@ -105,45 +121,57 @@ def parse(db_dir: Path, db_url: str):
     interaction = db_dir.joinpath("interaction2.xlsx")
     disease = db_dir.joinpath("disease2.xlsx")
 
-    assert(lncRNA.exists() and interaction.exists() and disease.exists())
+    assert lncRNA.exists() and interaction.exists() and disease.exists()
 
     lncRNA_df = pd.read_excel(lncRNA, index_col=0)
     interaction_df = pd.read_excel(interaction, index_col=0)
     disease_df = pd.read_excel(disease, index_col=0)
 
+    print("Loaded 3 sheets...")
+
     ## Joins on index if no on= is specified. The index is the ID column because
     ## we set index_col=0 during load, so this is same as saying on='ID'
     ## The benefit of doing it this way is that we can join multiple dfs on the
     ## ID because it is index
-    complete_df = lncRNA_df.join([disease_df.drop(columns=["Name", "Species", "Species category", "exosome", "structure"]),
-                                interaction_df.drop(columns=["Name", "Species", "Species category"])], how='outer', sort=True )
+    complete_df = lncRNA_df.join(
+        [
+            disease_df.drop(
+                columns=["Name", "Species", "Species category", "exosome", "structure"]
+            ),
+            interaction_df.drop(columns=["Name", "Species", "Species category"]),
+        ],
+        how="outer",
+        sort=True,
+    )
 
+    print("Sheet join complete...")
 
     ## Fix the way NA is read as NaN, cast to string
     ## Empty strings are dealt with in the lookup.mapping function
     complete_df.replace(np.nan, "", inplace=True)
 
     ## Expand the list of aliases by preprending the Name of the RNA, then splitting on commas
-    complete_df["Aliases"] = (complete_df["Name"] + ", " + complete_df["Aliases"].astype(str)).str.split(',')
+    complete_df["Aliases"] = (
+        complete_df["Name"] + ", " + complete_df["Aliases"].astype(str)
+    ).str.split(",")
 
+    complete_df["taxid"] = complete_df["Species"].apply(handled_phylogeny)
 
     ## Lookup the aliases to get what data we hold about them. This is
     ## ext_id -> RNAc information about it
-    mapping = lookup.mapping(db_url, {ID:aliases for ID, aliases in zip(complete_df.index.values, complete_df["Aliases"].values)})
+    # mapping = lookup.mapping(db_url, {ID:aliases for ID, aliases in zip(complete_df.index.values, complete_df["Aliases"].values)})
+    print("Getting ID lookup from database...")
+    mapping = lookup.mapping(db_url, complete_df)
 
-
-    tdf = pd.DataFrame.from_dict(mapping, orient='index')
-    complete_df = complete_df.join(tdf, how='outer', sort=True)
+    # complete_df = complete_df.join(mapping, how='outer', sort=True)
     complete_df.replace(np.nan, "", inplace=True)
-    complete_df = complete_df[complete_df['urs_taxid'] != ""]
+    # complete_df = complete_df[complete_df['urs_taxid'] != ""]
 
+    print(complete_df.groupby("Species").count())
     ## Add a column with taxid looked up from the species
-    complete_df["taxid"] = complete_df["Species"].apply(phy.taxid)
+
     complete_df = complete_df.reset_index()
-
-
 
     entries = complete_df.apply(as_entry, axis=1)
 
-
-    return list(filter(partial(is_not, None), entries) )
+    return list(filter(partial(is_not, None), entries))
