@@ -13,19 +13,27 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import io
 import operator as op
+import subprocess as sp
+import zipfile
 from functools import partial
 from operator import is_not
 from pathlib import Path
+from tempfile import NamedTemporaryFile
 
 import numpy as np
 import pandas as pd
+from Bio import SeqIO
 from furl import furl
+from tqdm import tqdm
 
 from rnacentral_pipeline.databases import data
 from rnacentral_pipeline.databases.helpers import phylogeny as phy
 
 from . import lookup
+
+tqdm.pandas()
 
 base_url = furl(
     "https://www.sdklab-biophysics-dzu.net/EVLncRNAs2/index.php/Home/Browsc/rna.html"
@@ -143,6 +151,62 @@ def split(db_dir: Path, output_loc: Path):
         )
 
 
+def get_accessions(accession_file: Path, output: Path):
+    """
+    For each entry having at least one NCBI accession, build the commandline for the NCBI
+    datasets tool and download the data. Then extract the RNA sequence and build a new
+    dataframe with the necessary information.
+    """
+
+    def download_and_get_sequence(accessions):
+        temp_filename = NamedTemporaryFile(delete=False).name
+        accession_list = [x.strip() for x in accessions.split(",")]
+        command = base_command.format(
+            accession_list[0], temp_filename, ",".join(accession_list)
+        ).split()
+        sp.Popen(command, stdin=None, stdout=sp.PIPE, stderr=sp.PIPE).communicate()
+        try:
+            downloaded_data = zipfile.ZipFile(temp_filename, "r")
+        except zipfile.BadZipFile:
+            if len(accession_list) == 1:
+                print(
+                    f"No sequences found for accession {accession_list}, returning empty list"
+                )
+                return []
+            else:
+                """
+                try to recover by moving to the next accession
+                """
+                print(accession_list)
+                accession_list.pop(0)
+                print(accession_list)
+                return download_and_get_sequence(",".join(accession_list))
+
+        sequence_data = SeqIO.parse(
+            io.TextIOWrapper(
+                downloaded_data.open("ncbi_dataset/data/rna.fna", "r"), encoding="utf-8"
+            ),
+            "fasta",
+        )
+        sequences = []
+        for record in sequence_data:
+            sequences.append("".join(record.seq).replace("U", "T"))
+        return sequences
+
+    assert accession_file.exists()
+    lnc_data = pd.read_json(accession_file, lines=True)
+    print(lnc_data)
+
+    base_command = "bin/datasets download gene accession {0} --filename {1} --include rna --fasta-filter {2} --no-progressbar"
+    lnc_data["sequences"] = lnc_data["NCBI accession"].progress_apply(
+        download_and_get_sequence
+    )
+    lnc_data = lnc_data.explode("sequences").dropna()
+
+    with open(output, "w") as out_file:
+        out_file.write(f"{lnc_data.to_json(orient='records', lines=True)}")
+
+
 def parse(db_dir: Path, db_url: str):
     """
     Parses the 3 excel sheets using pandas and joins them into one massive table
@@ -180,29 +244,8 @@ def parse(db_dir: Path, db_url: str):
     ## Fix the way NA is read as NaN, cast to string
     ## Empty strings are dealt with in the lookup.mapping function
     complete_df.replace(np.nan, "", inplace=True)
+    complete_df["taxid"] = complete_df["Species"].apply(handled_phylogeny).astype(int)
 
-    ## Expand the list of aliases by preprending the Name of the RNA, then splitting on commas
-    complete_df["Aliases"] = (
-        complete_df["Name"] + ", " + complete_df["Aliases"].astype(str)
-    ).str.split(",")
+    print(complete_df)
 
-    complete_df["taxid"] = complete_df["Species"].apply(handled_phylogeny)
-
-    ## Lookup the aliases to get what data we hold about them. This is
-    ## ext_id -> RNAc information about it
-    # mapping = lookup.mapping(db_url, {ID:aliases for ID, aliases in zip(complete_df.index.values, complete_df["Aliases"].values)})
-    print("Getting ID lookup from database...")
-    mapping = lookup.mapping(db_url, complete_df)
-
-    # complete_df = complete_df.join(mapping, how='outer', sort=True)
-    complete_df.replace(np.nan, "", inplace=True)
-    # complete_df = complete_df[complete_df['urs_taxid'] != ""]
-
-    print(complete_df.groupby("Species").count())
-    ## Add a column with taxid looked up from the species
-
-    complete_df = complete_df.reset_index()
-
-    entries = complete_df.apply(as_entry, axis=1)
-
-    return list(filter(partial(is_not, None), entries))
+    exit()
