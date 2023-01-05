@@ -17,7 +17,7 @@ from pathlib import Path
 
 import click
 
-from rnacentral_pipeline.databases.evlncrnas import parser
+from rnacentral_pipeline.databases.evlncrnas.parser import get_accessions, parse, split
 from rnacentral_pipeline.writers import entry_writer
 
 
@@ -26,6 +26,19 @@ def cli():
     """
     Commands for parsing EVLncRNAs data.
     """
+
+
+@cli.command("download_accessions")
+@click.argument(
+    "accession_file", type=click.Path(exists=True, dir_okay=False, readable=True)
+)
+@click.argument(
+    "output",
+    default="ev_with_accessions.jsonl",
+    type=click.Path(writable=True, dir_okay=False, file_okay=True),
+)
+def download_accessions(accession_file, output):
+    get_accessions(Path(accession_file), Path(output))
 
 
 @cli.command("split_accessions")
@@ -46,16 +59,17 @@ def split_xlsx_for_accessions(db_dir, output):
 
 @cli.command("parse")
 @click.argument("db_dir", type=click.Path(exists=True, dir_okay=True, readable=True))
+@click.argument("db_dump", type=click.File(mode="r"))
 @click.option("--db-url", envvar="PGDATABASE")
 @click.argument(
     "output",
     default=".",
     type=click.Path(writable=True, dir_okay=True, file_okay=False),
 )
-def process_xlsx_files(db_dir, output, db_url):
+def process_xlsx_files(db_dir, db_dump, output, db_url):
     """
     This parses the decompressed contents of the download into our csv files for import
     """
-    entries = parser.parse(Path(db_dir), db_url)
+    entries = parse(Path(db_dir), db_dump, db_url)
     with entry_writer(Path(output)) as writer:
         writer.write(entries)
