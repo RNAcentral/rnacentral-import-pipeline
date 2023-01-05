@@ -28,6 +28,22 @@ def cli():
     """
 
 
+@cli.command("split_accessions")
+@click.argument("db_dir", type=click.Path(exists=True, dir_okay=True, readable=True))
+@click.argument(
+    "output",
+    default=".",
+    type=click.Path(writable=True, dir_okay=True, file_okay=False),
+)
+def split_xlsx_for_accessions(db_dir, output):
+    """
+    Split the main excel sheet based on the presence of at least one NCBI accession for each record.
+
+    Writes out two jsonlines files, one with and one without accessions
+    """
+    split(Path(db_dir), Path(output))
+
+
 @cli.command("parse")
 @click.argument("db_dir", type=click.Path(exists=True, dir_okay=True, readable=True))
 @click.option("--db-url", envvar="PGDATABASE")
