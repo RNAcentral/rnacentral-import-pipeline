@@ -112,6 +112,37 @@ def as_entry(record):
     return entry
 
 
+def split(db_dir: Path, output_loc: Path):
+    """
+    Split the main dataset based on presence of an NCBI accession
+    """
+    lncRNA = db_dir.joinpath("lncRNA.xlsx")
+
+    no_acc = output_loc.joinpath("no_accessions.jsonl")
+    acc = output_loc.joinpath("with_accessions.jsonl")
+
+    assert lncRNA.exists()
+    lncRNA_df = pd.read_excel(lncRNA)
+
+    ## We might as well lookup the taxid while we're here
+    lncRNA_df["taxid"] = lncRNA_df["Species"].apply(
+        handled_phylogeny
+    )  # .dropna().astype(int)
+
+    no_accessions = lncRNA_df[lncRNA_df["NCBI accession"].isna()]
+    accessions = lncRNA_df[lncRNA_df["NCBI accession"].notna()]
+    print(len(no_accessions), len(accessions))
+
+    with open(no_acc, "w") as no_acc_output:
+        no_acc_output.write(
+            f"{no_accessions[['ID', 'Name', 'taxid']].to_json(orient='records', lines=True)}"
+        )
+    with open(acc, "w") as acc_output:
+        acc_output.write(
+            f"{accessions[['ID', 'Name', 'taxid', 'NCBI accession']].to_json(orient='records', lines=True)}"
+        )
+
+
 def parse(db_dir: Path, db_url: str):
     """
     Parses the 3 excel sheets using pandas and joins them into one massive table
