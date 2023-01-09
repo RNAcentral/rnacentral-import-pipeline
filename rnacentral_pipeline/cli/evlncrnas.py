@@ -17,7 +17,12 @@ from pathlib import Path
 
 import click
 
-from rnacentral_pipeline.databases.evlncrnas.parser import get_accessions, parse, split
+from rnacentral_pipeline.databases.evlncrnas.parser import (
+    get_accessions,
+    get_db_matches,
+    parse,
+    split,
+)
 from rnacentral_pipeline.writers import entry_writer
 
 
@@ -41,7 +46,21 @@ def download_accessions(accession_file, output):
     get_accessions(Path(accession_file), Path(output))
 
 
-@cli.command("split_accessions")
+@cli.command("rnc_match")
+@click.argument(
+    "no_accession_file", type=click.Path(exists=True, dir_okay=False, readable=True)
+)
+@click.argument("db_dump", type=click.Path(exists=True, dir_okay=False, readable=True))
+@click.argument(
+    "output",
+    default="ev_without_accessions.jsonl",
+    type=click.Path(writable=True, dir_okay=False, file_okay=True),
+)
+def match_in_db(no_accession_file, db_dump, output):
+    get_db_matches(Path(no_accession_file), Path(db_dump), Path(output))
+
+
+@cli.command("split")
 @click.argument("db_dir", type=click.Path(exists=True, dir_okay=True, readable=True))
 @click.argument(
     "output",

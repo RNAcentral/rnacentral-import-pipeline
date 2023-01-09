@@ -137,13 +137,13 @@ def split(db_dir: Path, output_loc: Path):
         handled_phylogeny
     )  # .dropna().astype(int)
 
-    no_accessions = lncRNA_df[lncRNA_df["NCBI accession"].isna()]
+    no_accessions = lncRNA_df[lncRNA_df["NCBI accession"].isna()].dropna(subset="taxid")
     accessions = lncRNA_df[lncRNA_df["NCBI accession"].notna()]
     print(len(no_accessions), len(accessions))
 
     with open(no_acc, "w") as no_acc_output:
         no_acc_output.write(
-            f"{no_accessions[['ID', 'Name', 'taxid']].to_json(orient='records', lines=True)}"
+            f"{no_accessions[['ID', 'Name', 'Aliases', 'taxid']].to_json(orient='records', lines=True)}"
         )
     with open(acc, "w") as acc_output:
         acc_output.write(
@@ -195,7 +195,6 @@ def get_accessions(accession_file: Path, output: Path):
 
     assert accession_file.exists()
     lnc_data = pd.read_json(accession_file, lines=True)
-    print(lnc_data)
 
     base_command = "bin/datasets download gene accession {0} --filename {1} --include rna --fasta-filter {2} --no-progressbar"
     lnc_data["sequences"] = lnc_data["NCBI accession"].progress_apply(
@@ -205,6 +204,44 @@ def get_accessions(accession_file: Path, output: Path):
 
     with open(output, "w") as out_file:
         out_file.write(f"{lnc_data.to_json(orient='records', lines=True)}")
+
+
+def get_db_matches(no_accession_file: Path, db_dump: Path, output: Path):
+    def split_clean_aliases(al):
+        if al:
+            return [a.strip() for a in str(al).split(",")]
+        return np.nan
+
+    assert no_accession_file.exists()
+    lnc_data = pd.read_json(no_accession_file, lines=True)
+    print(len(lnc_data))
+    lnc_data["taxid"] = lnc_data["taxid"].astype(int)
+    lnc_data["external_id"] = lnc_data[["Name", "Aliases"]].apply(
+        lambda x: ",".join(x.values.astype(str)), axis=1
+    )
+    lnc_data["external_id"] = lnc_data["external_id"].apply(split_clean_aliases)
+    lnc_data = (
+        lnc_data.explode("external_id")
+        .replace(to_replace=["None"], value=np.nan)
+        .dropna(subset="external_id")
+    )
+    # lnc_data = lnc_data.set_index("external_id")
+
+    rnc_data = pd.read_csv(db_dump)
+    rnc_data["external_id"] = rnc_data["external_id"].apply(lambda x: x.split("|"))
+    rnc_data = rnc_data.explode("external_id")
+    # rnc_data = rnc_data.set_index("external_id")
+
+    matches = lnc_data.merge(
+        rnc_data,
+        left_on=["external_id", "taxid"],
+        right_on=["external_id", "taxid"],
+        how="inner",
+    ).drop_duplicates()
+    pd.set_option("display.max_rows", 500)
+    print(lnc_data.groupby("taxid").count().sort_values("ID"))
+    print(matches.groupby("taxid").count().sort_values("ID"))
+    pass
 
 
 def parse(db_dir: Path, db_url: str):
