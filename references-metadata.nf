@@ -42,5 +42,5 @@ process create_xml {
 }
 
 workflow {
-    Channel.fromPath('workflows/references/results/*.txt') | create_metadata | collect | merge_metadata | create_xml
+    Channel.fromPath('workflows/references/results/*.txt') | create_metadata | merge_metadata | create_xml
 }
