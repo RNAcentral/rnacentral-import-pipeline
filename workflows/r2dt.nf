@@ -17,7 +17,7 @@ process fetch_model_mapping {
 
 process extract_sequences {
   when { params.r2dt.run }
-  clusterOptions '-sp 100'
+
 
   input:
   val(_flag)

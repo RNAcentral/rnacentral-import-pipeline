@@ -27,4 +27,5 @@ repos:
   hooks:
     - id: poetry-check
     - id: poetry-lock
+      args: ["--no-update"]
       language_version: 3.11.0
