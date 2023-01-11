@@ -18,7 +18,6 @@ import nltk
 import re
 
 
-nltk.download('words')
 words = set(nltk.corpus.words.words())
 ignore_ids = [
     "com", "mir-", "arg", "asn", "cys", "gln", "glu", "gly", "ile", "phe", "thr", "trp", "tyr", "val", "asx", "glx",
