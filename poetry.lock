@@ -675,7 +675,7 @@ socks = ["PySocks (>=1.5.6,!=1.5.7,<2.0)"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.11"
-content-hash = "c76286e805ef6cbce58a37009b3c73d1cf792e44af9f5a0e83203f21f00fe2cf"
+content-hash = "7bdc891b98d7fc879577f8b5b40b11d925b6d5dc441c9675cdbf36439be5f06d"
 
 [metadata.files]
 argcomplete = [

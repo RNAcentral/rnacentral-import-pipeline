@@ -34,6 +34,7 @@ TatSu = "5.8.2"
 textblob = "0.15.3"
 throttler = "^1.2.0"
 psycopg2= "2.9.3"
+nltk = "^3.8.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.2.0"
