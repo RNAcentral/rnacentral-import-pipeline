@@ -24,6 +24,7 @@ from tempfile import NamedTemporaryFile
 
 import numpy as np
 import pandas as pd
+import requests
 from Bio import SeqIO
 from furl import furl
 from tqdm import tqdm
@@ -38,6 +39,8 @@ tqdm.pandas()
 base_url = furl(
     "https://www.sdklab-biophysics-dzu.net/EVLncRNAs2/index.php/Home/Browsc/rna.html"
 )
+
+ensembl_rest_url = furl("https://rest.ensembl.org/sequence/id")
 
 
 def handled_phylogeny(species):
@@ -126,7 +129,12 @@ def split(db_dir: Path, output_loc: Path):
     """
     lncRNA = db_dir.joinpath("lncRNA.xlsx")
 
-    no_acc = output_loc.joinpath("no_accessions.jsonl")
+    no_acc = output_loc.joinpath(
+        "no_ncbi_ensembl_accessions.jsonl"
+    )  ## Those with nothing
+    no_ncbi = output_loc.joinpath(
+        "no_ncbi_accessions.jsonl"
+    )  ## Those with only ensembl
     acc = output_loc.joinpath("with_accessions.jsonl")
 
     assert lncRNA.exists()
@@ -138,6 +146,7 @@ def split(db_dir: Path, output_loc: Path):
     )  # .dropna().astype(int)
 
     no_accessions = lncRNA_df[lncRNA_df["NCBI accession"].isna()].dropna(subset="taxid")
+    e_accessions = no_accessions[no_accessions["Ensembl"].notna()]
     accessions = lncRNA_df[lncRNA_df["NCBI accession"].notna()]
     print(len(no_accessions), len(accessions))
 
@@ -148,6 +157,10 @@ def split(db_dir: Path, output_loc: Path):
     with open(acc, "w") as acc_output:
         acc_output.write(
             f"{accessions[['ID', 'Name', 'taxid', 'NCBI accession']].to_json(orient='records', lines=True)}"
+        )
+    with open(no_ncbi, "w") as e_output:
+        e_output.write(
+            f"{e_accessions[['ID', 'Name', 'taxid', 'Ensembl']].to_json(orient='records', lines=True)}"
         )
 
 
@@ -190,20 +203,40 @@ def get_accessions(accession_file: Path, output: Path):
         )
         sequences = []
         for record in sequence_data:
-            sequences.append("".join(record.seq).replace("U", "T"))
+            sequences.append(str(record.seq).replace("U", "T"))
         return sequences
 
     assert accession_file.exists()
     lnc_data = pd.read_json(accession_file, lines=True)
 
     base_command = "bin/datasets download gene accession {0} --filename {1} --include rna --fasta-filter {2} --no-progressbar"
-    lnc_data["sequences"] = lnc_data["NCBI accession"].progress_apply(
+    lnc_data["sequence"] = lnc_data["NCBI accession"].progress_apply(
         download_and_get_sequence
     )
     lnc_data = lnc_data.explode("sequences").dropna()
 
     with open(output, "w") as out_file:
         out_file.write(f"{lnc_data.to_json(orient='records', lines=True)}")
+
+
+def get_ensembl(e_file: Path, output: Path):
+    def pull_ensembl_data(e_id: str):
+        id_url = ensembl_rest_url / e_id
+
+        data = requests.get(id_url.url, headers={"Content-Type": "text/x-fasta"})
+        if not data.ok:
+            return None
+        sequence_data = SeqIO.read(
+            io.StringIO(data.text),
+            "fasta",
+        )
+        sequence = str(sequence_data.seq).replace("U", "T")
+        print(sequence_data.description)
+        return sequence
+
+    assert e_file.exists()
+    lnc_data = pd.read_json(e_file, lines=True)
+    lnc_data["sequence"] = lnc_data["Ensembl"].apply(pull_ensembl_data)
 
 
 def get_db_matches(no_accession_file: Path, db_dump: Path, output: Path):
