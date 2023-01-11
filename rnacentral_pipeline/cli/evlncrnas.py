@@ -20,6 +20,7 @@ import click
 from rnacentral_pipeline.databases.evlncrnas.parser import (
     get_accessions,
     get_db_matches,
+    get_ensembl,
     parse,
     split,
 )
@@ -43,7 +44,24 @@ def cli():
     type=click.Path(writable=True, dir_okay=False, file_okay=True),
 )
 def download_accessions(accession_file, output):
+    """
+    Downloads accessions from ncbi and adds them to the data from EVlncRNAs
+    """
     get_accessions(Path(accession_file), Path(output))
+
+
+@cli.command("download_ensembl")
+@click.argument("e_file", type=click.Path(exists=True, dir_okay=False, readable=True))
+@click.argument(
+    "output",
+    default="ev_with_ensembl.jsonl",
+    type=click.Path(writable=True, dir_okay=False, file_okay=True),
+)
+def download_accessions(e_file, output):
+    """
+    Downloads accessions from ncbi and adds them to the data from EVlncRNAs
+    """
+    get_ensembl(Path(e_file), Path(output))
 
 
 @cli.command("rnc_match")
