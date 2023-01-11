@@ -100,7 +100,7 @@ WORKDIR "$RNA/rnacentral-import-pipeline"
 RUN PATH="$PATH:/root/.local/bin" poetry config virtualenvs.create false
 RUN PATH="$PATH:/root/.local/bin" poetry install
 
-RUN python3 -m textblob.download_corpora
+RUN python3 -m textblob.download_corpora && python3 -m nltk.downloader words
 
 ## Download Rust toolchain
 RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
