@@ -22,7 +22,11 @@ process merge_metadata {
 
     script:
     """
-    cat $results | sort -fb | uniq -i > merged_metadata
+    if [[ -f $baseDir/workflows/references/metadata/rfam/extra-ids.txt ]]; then
+      cat $baseDir/workflows/references/metadata/rfam/extra-ids.txt > merged_metadata
+    fi
+
+    cat $results | sort -fb | uniq -i >> merged_metadata
     """
 }
 
