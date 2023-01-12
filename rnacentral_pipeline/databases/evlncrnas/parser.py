@@ -15,17 +15,16 @@ limitations under the License.
 
 import io
 import operator as op
-import subprocess as sp
-import zipfile
+import re
 from functools import partial
 from operator import is_not
 from pathlib import Path
-from tempfile import NamedTemporaryFile
 
 import numpy as np
 import pandas as pd
 import requests
 from Bio import SeqIO
+from bs4 import BeautifulSoup
 from furl import furl
 from tqdm import tqdm
 
@@ -41,6 +40,8 @@ base_url = furl(
 )
 
 ensembl_rest_url = furl("https://rest.ensembl.org/sequence/id")
+
+entrez_base_url = furl("https://eutils.ncbi.nlm.nih.gov/entrez/eutils")
 
 
 def handled_phylogeny(species):
@@ -172,44 +173,43 @@ def get_accessions(accession_file: Path, output: Path):
     """
 
     def download_and_get_sequence(accessions):
-        temp_filename = NamedTemporaryFile(delete=False).name
         accession_list = [x.strip() for x in accessions.split(",")]
-        command = base_command.format(
-            accession_list[0], temp_filename, ",".join(accession_list)
-        ).split()
-        sp.Popen(command, stdin=None, stdout=sp.PIPE, stderr=sp.PIPE).communicate()
-        try:
-            downloaded_data = zipfile.ZipFile(temp_filename, "r")
-        except zipfile.BadZipFile:
-            if len(accession_list) == 1:
-                print(
-                    f"No sequences found for accession {accession_list}, returning empty list"
-                )
-                return []
-            else:
-                """
-                try to recover by moving to the next accession
-                """
-                print(accession_list)
-                accession_list.pop(0)
-                print(accession_list)
-                return download_and_get_sequence(",".join(accession_list))
-
-        sequence_data = SeqIO.parse(
-            io.TextIOWrapper(
-                downloaded_data.open("ncbi_dataset/data/rna.fna", "r"), encoding="utf-8"
-            ),
-            "fasta",
-        )
         sequences = []
-        for record in sequence_data:
-            sequences.append(str(record.seq).replace("U", "T"))
+        search_url = entrez_base_url / "esearch.fcgi"
+        search_url.args["db"] = "nuccore"
+        search_url.args["term"] = " OR ".join(accession_list)
+        search_url.args["usehistory"] = "y"
+
+        search_result = requests.get(search_url.url)
+        if search_result.ok:
+            search_res_data = BeautifulSoup(search_result.text, features="xml")
+            num_hits = int(search_res_data.find("Count").text)
+            if num_hits > 0:
+                print(search_res_data)
+                query_key = search_res_data.find("QueryKey").text
+                webenv = search_res_data.find("WebEnv")
+
+                fetch_url = entrez_base_url / "efetch.fcgi"
+                fetch_url.args["db"] = "nuccore"
+                fetch_url.args["term"] = " OR ".join(accession_list)
+                fetch_url.args["query_key"] = query_key
+                fetch_url.args["WebEnv"] = webenv
+                fetch_url.args["rettype"] = "fasta"
+                fetch_url.args["retmode"] = "text"
+
+                fetch_res = requests.get(fetch_url.url)
+                if fetch_res.ok:
+                    sequence_data = SeqIO.parse(
+                        io.StringIO(fetch_res.text),
+                        "fasta",
+                    )
+                    for record in sequence_data:
+                        sequences.append(str(record.seq).replace("U", "T"))
         return sequences
 
     assert accession_file.exists()
     lnc_data = pd.read_json(accession_file, lines=True)
 
-    base_command = "bin/datasets download gene accession {0} --filename {1} --include rna --fasta-filter {2} --no-progressbar"
     lnc_data["sequence"] = lnc_data["NCBI accession"].progress_apply(
         download_and_get_sequence
     )
