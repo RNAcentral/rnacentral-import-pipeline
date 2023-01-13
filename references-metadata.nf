@@ -31,7 +31,7 @@ process merge_metadata {
 }
 
 process create_xml {
-    publishDir "$baseDir/workflows/references/metadata/", mode: 'copy'
+    publishDir "$params.litscan_index", mode: 'copy'
 
     input:
     file(merged_metadata)
@@ -41,10 +41,11 @@ process create_xml {
 
     script:
     """
+    rm -fr "$params.litscan_index/metadata*"
     create_xml_metadata.py $merged_metadata metadata_*
     """
 }
 
 workflow {
-    Channel.fromPath('workflows/references/results/*.txt') | create_metadata | merge_metadata | create_xml
+    Channel.fromPath('workflows/references/results/*.txt') | create_metadata |  collect | merge_metadata | create_xml
 }
