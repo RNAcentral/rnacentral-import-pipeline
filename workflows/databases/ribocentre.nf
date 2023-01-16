@@ -7,3 +7,4 @@ process ribocentre {
   """
   rnac ribocentre parse ${params.databases.ribocentre.remote}
   """
+}
