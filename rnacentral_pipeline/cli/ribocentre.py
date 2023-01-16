@@ -38,7 +38,7 @@ def cli():
     default=".",
     type=click.Path(writable=True, dir_okay=True, file_okay=False),
 )
-def process_ribovision(json_file, output, db_url=None):
+def process_ribocentre(json_file, output, db_url=None):
     """
     This parses the JSON that ribocentre provides us
     """

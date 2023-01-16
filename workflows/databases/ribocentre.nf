@@ -5,5 +5,5 @@ process ribocentre {
   path("*.csv")
 
   """
-  rnac ribovision parse ${params.databases.ribocentre.remote}
+  rnac ribocentre parse ${params.databases.ribocentre.remote}
   """
