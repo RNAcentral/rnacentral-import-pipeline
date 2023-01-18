@@ -34,7 +34,7 @@ DOMAINS = {
 @retry(requests.HTTPError, tries=5, delay=1)
 @throttle(rate_limit=15, period=1.0)
 @cacheable
-def find_species(domain):
+async def find_species(domain):
     response = requests.get(
         "http://rest.%s.org/info/species" % domain,
         headers={"Content-Type": "application/json"},
@@ -92,7 +92,7 @@ def process(raw):
 
 
 def for_domain(domain, allowed=None):
-    for species in find_species(domain):
+    for species in asyncio.run(find_species(domain)):
         if not species or (allowed and species in allowed):
             raw_data = asyncio.run(fetch(species, domain))
             yield process(raw_data)
