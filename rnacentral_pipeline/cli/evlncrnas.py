@@ -18,9 +18,9 @@ from pathlib import Path
 import click
 
 from rnacentral_pipeline.databases.evlncrnas.parser import (
-    get_accessions,
     get_db_matches,
-    get_ensembl,
+    get_ensembl_accessions,
+    get_ncbi_accessions,
     parse,
     split,
 )
