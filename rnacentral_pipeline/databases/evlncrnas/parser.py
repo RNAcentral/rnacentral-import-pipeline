@@ -44,7 +44,7 @@ ensembl_rest_url = furl("https://rest.ensembl.org/sequence/id")
 entrez_base_url = furl("https://eutils.ncbi.nlm.nih.gov/entrez/eutils")
 
 
-def handled_phylogeny(species):
+def handled_phylogeny(species: str) -> int:
     try:
         return phy.taxid(species)
     except phy.FailedTaxonId:
@@ -124,48 +124,27 @@ def as_entry(record):
     return entry
 
 
-def split(db_dir: Path, output_loc: Path):
+def split(input_frame: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
-    Split the main dataset based on presence of an NCBI accession
+    Split the main dataset based on presence of an NCBI accession, or ensembl accession
+
+    This will return a tuple of 3 frames, which can be dispatched to the 3 handlers
     """
-    lncRNA = db_dir.joinpath("lncRNA.xlsx")
-
-    no_acc = output_loc.joinpath(
-        "no_ncbi_ensembl_accessions.jsonl"
-    )  ## Those with nothing
-    no_ncbi = output_loc.joinpath(
-        "no_ncbi_accessions.jsonl"
-    )  ## Those with only ensembl
-    acc = output_loc.joinpath("with_accessions.jsonl")
-
-    assert lncRNA.exists()
-    lncRNA_df = pd.read_excel(lncRNA)
-
-    ## We might as well lookup the taxid while we're here
-    lncRNA_df["taxid"] = lncRNA_df["Species"].apply(
-        handled_phylogeny
-    )  # .dropna().astype(int)
-
-    no_accessions = lncRNA_df[lncRNA_df["NCBI accession"].isna()].dropna(subset="taxid")
+    print("Splitting based on presence of accessions...")
+    no_accessions = input_frame[input_frame["NCBI accession"].isna()].dropna(
+        subset="taxid"
+    )
+    print("NCBI missing done")
     e_accessions = no_accessions[no_accessions["Ensembl"].notna()]
-    accessions = lncRNA_df[lncRNA_df["NCBI accession"].notna()]
-    print(len(no_accessions), len(accessions))
-
-    with open(no_acc, "w") as no_acc_output:
-        no_acc_output.write(
-            f"{no_accessions[['ID', 'Name', 'Aliases', 'taxid']].to_json(orient='records', lines=True)}"
-        )
-    with open(acc, "w") as acc_output:
-        acc_output.write(
-            f"{accessions[['ID', 'Name', 'taxid', 'NCBI accession']].to_json(orient='records', lines=True)}"
-        )
-    with open(no_ncbi, "w") as e_output:
-        e_output.write(
-            f"{e_accessions[['ID', 'Name', 'taxid', 'Ensembl']].to_json(orient='records', lines=True)}"
-        )
+    print("ensembl subset done")
+    ncbi_accessions = input_frame[input_frame["NCBI accession"].notna()]
+    print("NCBI subset done")
+    return (no_accessions, e_accessions, ncbi_accessions)
 
 
-def get_accessions(accession_file: Path, output: Path):
+def get_ncbi_accessions(
+    accession_frame: pd.DataFrame,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
     For each entry having at least one NCBI accession, build the commandline for the NCBI
     datasets tool and download the data. Then extract the RNA sequence and build a new
@@ -183,9 +162,8 @@ def get_accessions(accession_file: Path, output: Path):
         search_result = requests.get(search_url.url)
         if search_result.ok:
             search_res_data = BeautifulSoup(search_result.text, features="xml")
-            num_hits = int(search_res_data.find("Count").text)
-            if num_hits > 0:
-                print(search_res_data)
+            num_hits = search_res_data.find("Count")
+            if num_hits and int(num_hits.text) > 0:
                 query_key = search_res_data.find("QueryKey").text
                 webenv = search_res_data.find("WebEnv")
 
@@ -207,19 +185,18 @@ def get_accessions(accession_file: Path, output: Path):
                         sequences.append(str(record.seq).replace("U", "T"))
         return sequences
 
-    assert accession_file.exists()
-    lnc_data = pd.read_json(accession_file, lines=True)
-
-    lnc_data["sequence"] = lnc_data["NCBI accession"].progress_apply(
+    accession_frame["sequence"] = accession_frame["NCBI accession"].progress_apply(
         download_and_get_sequence
     )
-    lnc_data = lnc_data.explode("sequences").dropna()
+    accession_frame = accession_frame.explode("sequence")
+    missing_frame = accession_frame[accession_frame["sequence"].isna()]
 
-    with open(output, "w") as out_file:
-        out_file.write(f"{lnc_data.to_json(orient='records', lines=True)}")
+    return (accession_frame.dropna(subset="sequence"), missing_frame)
 
 
-def get_ensembl(e_file: Path, output: Path):
+def get_ensembl_accessions(
+    ensembl_frame: pd.DataFrame,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
     def pull_ensembl_data(e_id: str):
         id_url = ensembl_rest_url / e_id
 
@@ -231,53 +208,54 @@ def get_ensembl(e_file: Path, output: Path):
             "fasta",
         )
         sequence = str(sequence_data.seq).replace("U", "T")
-        print(sequence_data.description)
         return sequence
 
-    assert e_file.exists()
-    lnc_data = pd.read_json(e_file, lines=True)
-    lnc_data["sequence"] = lnc_data["Ensembl"].apply(pull_ensembl_data)
+    ensembl_frame["sequence"] = ensembl_frame["Ensembl"].progress_apply(
+        pull_ensembl_data
+    )
+    missing_frame = ensembl_frame[ensembl_frame["sequence"].isna()]
+    return (ensembl_frame.dropna(subset="sequence"), missing_frame)
 
 
-def get_db_matches(no_accession_file: Path, db_dump: Path, output: Path):
+def get_db_matches(match_frame: pd.DataFrame, db_dump: Path) -> pd.DataFrame:
     def split_clean_aliases(al):
         if al:
             return [a.strip() for a in str(al).split(",")]
         return np.nan
 
-    assert no_accession_file.exists()
-    lnc_data = pd.read_json(no_accession_file, lines=True)
-    print(len(lnc_data))
-    lnc_data["taxid"] = lnc_data["taxid"].astype(int)
-    lnc_data["external_id"] = lnc_data[["Name", "Aliases"]].apply(
+    print(len(match_frame))
+    match_frame["taxid"] = match_frame["taxid"].astype(int)
+    match_frame["external_id"] = match_frame[["Name", "Aliases"]].apply(
         lambda x: ",".join(x.values.astype(str)), axis=1
     )
-    lnc_data["external_id"] = lnc_data["external_id"].apply(split_clean_aliases)
-    lnc_data = (
-        lnc_data.explode("external_id")
+    match_frame["external_id"] = match_frame["external_id"].apply(split_clean_aliases)
+    match_frame = (
+        match_frame.explode("external_id")
         .replace(to_replace=["None"], value=np.nan)
         .dropna(subset="external_id")
     )
     # lnc_data = lnc_data.set_index("external_id")
 
     rnc_data = pd.read_csv(db_dump)
-    rnc_data["external_id"] = rnc_data["external_id"].apply(lambda x: x.split("|"))
-    rnc_data = rnc_data.explode("external_id")
+    rnc_data["external_id"] = rnc_data["external_id"].apply(lambda x: str(x).split("|"))
+    rnc_data = (
+        rnc_data.explode("external_id")
+        .replace(to_replace=["", None], value=np.nan)
+        .dropna(subset="external_id")
+    )
     # rnc_data = rnc_data.set_index("external_id")
 
-    matches = lnc_data.merge(
+    matches = match_frame.merge(
         rnc_data,
         left_on=["external_id", "taxid"],
         right_on=["external_id", "taxid"],
         how="inner",
-    ).drop_duplicates()
-    pd.set_option("display.max_rows", 500)
-    print(lnc_data.groupby("taxid").count().sort_values("ID"))
-    print(matches.groupby("taxid").count().sort_values("ID"))
-    pass
+    ).drop_duplicates(subset="urs")
+
+    return matches
 
 
-def parse(db_dir: Path, db_url: str):
+def parse(db_dir: Path, db_dump: Path, db_url: str) -> None:
     """
     Parses the 3 excel sheets using pandas and joins them into one massive table
     which is then parsed to produce entries
@@ -298,24 +276,39 @@ def parse(db_dir: Path, db_url: str):
     ## we set index_col=0 during load, so this is same as saying on='ID'
     ## The benefit of doing it this way is that we can join multiple dfs on the
     ## ID because it is index
-    complete_df = lncRNA_df.join(
-        [
-            disease_df.drop(
-                columns=["Name", "Species", "Species category", "exosome", "structure"]
-            ),
-            interaction_df.drop(columns=["Name", "Species", "Species category"]),
-        ],
-        how="outer",
-        sort=True,
-    )
+    complete_df = lncRNA_df
+    # .join(
+    #     [
+    #         disease_df.drop(
+    #             columns=["Name", "Species", "Species category", "exosome", "structure"]
+    #         ),
+    #         interaction_df.drop(columns=["Name", "Species", "Species category"]),
+    #     ],
+    #     how="inner",
+    #     sort=True,
+    # )
 
     print("Sheet join complete...")
 
     ## Fix the way NA is read as NaN, cast to string
     ## Empty strings are dealt with in the lookup.mapping function
-    complete_df.replace(np.nan, "", inplace=True)
-    complete_df["taxid"] = complete_df["Species"].apply(handled_phylogeny).astype(int)
+    # complete_df.replace(np.nan, "", inplace=True)
+    complete_df["taxid"] = (
+        complete_df["Species"].progress_apply(handled_phylogeny).dropna().astype(int)
+    )
 
-    print(complete_df)
+    no_accession_frame, ensembl_frame, ncbi_frame = split(complete_df)
+
+    print(len(ensembl_frame), len(ncbi_frame), len(no_accession_frame))
+    ## These two look up directly from the source, so should be quick ish
+    # ensembl_frame, missing_ensembl_frame = get_ensembl_accessions(ensembl_frame)
+    print(f"Got all available ensembl accessions ({len(ensembl_frame)})")
+
+    # ncbi_frame, missing_ncbi_frame = get_ncbi_accessions(ncbi_frame)
+    # print(f"Got all available NCBI accessions ({len(ncbi_frame)})")
+    # no_accession_frame = pd.concat([no_accession_frame, missing_ensembl_frame]) # missing_ncbi_frame
+
+    no_accession_frame = get_db_matches(no_accession_frame, db_dump)
+    print(len(ensembl_frame), len(no_accession_frame))  # len(ncbi_frame),
 
     exit()
