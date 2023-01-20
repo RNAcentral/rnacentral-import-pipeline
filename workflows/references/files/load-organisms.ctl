@@ -26,4 +26,9 @@ create table litscan_load_organism (
     pmid text
 );
 $$
+
+AFTER LOAD DO
+$$
+CREATE INDEX ON litscan_load_organism (pmid);
+$$
 ;
