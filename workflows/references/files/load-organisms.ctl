@@ -10,7 +10,7 @@ TARGET COLUMNS (
 )
 
 WITH
-    batch rows = 300,
+    batch rows = 10000000,
     batch concurrency = 3,
     FIELDS ESCAPED BY double-quote,
     FIELDS TERMINATED BY ','
