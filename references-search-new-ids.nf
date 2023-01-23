@@ -73,6 +73,9 @@ process submit_ids {
 }
 
 workflow {
-    Channel.fromPath('workflows/references/queries/*.sql') | get_ids | check_ids | sort_ids | prepare_to_submit
-    // Channel.fromPath('workflows/references/queries/*.sql') | get_ids | check_ids | sort_ids | prepare_to_submit | submit_ids
+    Channel.fromPath('workflows/references/queries/*.sql') | get_ids
+    | check_ids
+    | sort_ids
+    | prepare_to_submit
+    | submit_ids
 }
