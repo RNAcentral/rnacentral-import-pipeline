@@ -9,7 +9,7 @@ process create_metadata {
 
     script:
     """
-    metadata.py $database metadata_${database.baseName}
+    references-metadata.py $database metadata_${database.baseName}
     """
 }
 
@@ -42,7 +42,7 @@ process create_xml {
     script:
     """
     rm -fr "$params.litscan_index/metadata*"
-    create_xml_metadata.py $merged_metadata metadata_*
+    references-create-xml-metadata.py $merged_metadata metadata_*
     """
 }
 
