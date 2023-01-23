@@ -14,42 +14,59 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 import click
+import collections
+import csv
+import psycopg2
+import psycopg2.extras
 
 
 @click.command()
+@click.argument('database')
 @click.argument('filename')
 @click.argument('output')
-def main(filename, output):
+def main(database, filename, output):
     """
-    This function creates a file for each database containing the manually annotated references
-    :param filename: file containing ids
+    This function checks whether the article that was manually annotated
+    by an Expert Database exists in LitScan.
+    :param database: params to connect to the db
+    :param filename: file containing pmids
     :param output: file to be created
     :return: None
     """
-    name = output.split("*")[0]
+    conn_string = database
+    conn = psycopg2.connect(conn_string)
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+    # retrieve all articles identified by LitScan
+    cursor.execute(""" SELECT pmid,pmcid FROM litscan_article WHERE pmid <> '' """)
+    rows = cursor.fetchall()
+    litscan_articles = collections.OrderedDict()
+    for row in rows:
+        # e.g. litscan_articles['24743346'] = 'PMC3990644'
+        litscan_articles[row[0]] = row[1]
 
     with open(filename, "r") as input_file:
-        with open(name + "hgnc", 'w') as hgnc, open(name + "pombase", 'w') as pombase, open(name + "sgd", 'w') as sgd, \
-                open(name + "tair", 'w') as tair, open(name + "zfin", 'w') as zfin:
+        with open(output, 'w') as output_file:
+            csv_writer = csv.writer(output_file)
+
+            # each database has a paper associated with it that we should ignore:
+            # flybase: 30364959 and 35266522 | lncipedia: 25378313 | gtrnadb: 18984615
+            # hgnc: 27799471 and 25361968 | mgi: 27899570 | pombase: 22039153
+            # psicquic: 23671334 | sgd: 22110037 | tair: 22140109 | zfin: 30407545
+            avoid_pmids = [
+                "30364959", "35266522", "25378313", "18984615", "27799471", "25361968",
+                "27899570", "22039153", "23671334", "22110037", "22140109", "30407545"
+            ]
+
             while line := input_file.readline():
                 line = line.rstrip()
-                line = line.split('|')
-                urs = line[0]
-                database = line[1]
-                pmid = line[2]
-                doi = line[3]
-                pmcid = line[4]
+                line = line.split(',')
+                pmid = line[0]
+                urs = line[1].lower()
 
-                if database.lower() == "hgnc":
-                    hgnc.write(urs + '|' + pmid + '|' + doi + '|' + pmcid + '\n')
-                elif database.lower() == "pombase":
-                    pombase.write(urs + '|' + pmid + '|' + doi + '|' + pmcid + '\n')
-                elif database.lower() == "sgd":
-                    sgd.write(urs + '|' + pmid + '|' + doi + '|' + pmcid + '\n')
-                elif database.lower() == "tair":
-                    tair.write(urs + '|' + pmid + '|' + doi + '|' + pmcid + '\n')
-                elif database.lower() == "zfin":
-                    zfin.write(urs + '|' + pmid + '|' + doi + '|' + pmcid + '\n')
+                # add this pmid to the output file if it is in LitScan
+                if pmid not in avoid_pmids and pmid in litscan_articles:
+                    csv_writer.writerow([litscan_articles[pmid], urs])
 
 
 if __name__ == "__main__":
