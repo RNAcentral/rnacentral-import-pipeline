@@ -14,7 +14,7 @@ process get_organisms {
 }
 
 process create_csv {
-    publishDir "$baseDir/workflows/references/files/", mode: 'copy'
+    publishDir "$baseDir/workflows/references/organisms/", mode: 'copy'
 
     input:
     file(organism_textmining_mentions)
@@ -39,7 +39,10 @@ process import_organisms {
 }
 
 workflow {
-    load_ctl = Channel.of("$baseDir/workflows/references/files/load-organisms.ctl")
-    Channel.of("https://download.jensenlab.org/organism_textmining_mentions.tsv") | get_organisms | create_csv | set{organism_pmid}
+    Channel.of("https://download.jensenlab.org/organism_textmining_mentions.tsv") \
+    | get_organisms \
+    | create_csv | set{organism_pmid}
+
+    load_ctl = Channel.of("$baseDir/workflows/references/organisms/load-organisms.ctl")
     import_organisms(organism_pmid, load_ctl)
 }

@@ -1,7 +1,7 @@
 nextflow.enable.dsl=2
 
 process find_organisms {
-    publishDir "$baseDir/workflows/references/files/", mode: 'copy'
+    publishDir "$baseDir/workflows/references/organisms/", mode: 'copy'
 
     input:
     path(query)
@@ -26,7 +26,7 @@ process save_organisms {
 }
 
 workflow {
-    save_ctl = Channel.of("$baseDir/workflows/references/files/save-organisms.ctl")
-    Channel.of("$baseDir/workflows/references/files/find-organisms.sql") | find_organisms | set{organism_pmcid}
+    save_ctl = Channel.of("$baseDir/workflows/references/organisms/save-organisms.ctl")
+    Channel.of("$baseDir/workflows/references/organisms/find-organisms.sql") | find_organisms | set{organism_pmcid}
     save_organisms(organism_pmcid, save_ctl)
 }
