@@ -104,7 +104,7 @@ def split(input_frame: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.Dat
 
 
 def get_ncbi_accessions(
-    accession_frame: pd.DataFrame,
+    accession_frame_in: pd.DataFrame,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
     For each entry having at least one NCBI accession, build the commandline for the NCBI
@@ -146,7 +146,8 @@ def get_ncbi_accessions(
                         sequences.append(str(record.seq).replace("U", "T"))
         return sequences
 
-    accession_frame["sequence"] = accession_frame["NCBI accession"].progress_apply(
+    accession_frame = accession_frame_in.copy()
+    accession_frame["sequence"] = accession_frame["NCBI accession"].apply(
         download_and_get_sequence
     )
     accession_frame = accession_frame.explode("sequence")
@@ -156,7 +157,7 @@ def get_ncbi_accessions(
 
 
 def get_ensembl_accessions(
-    ensembl_frame: pd.DataFrame,
+    ensembl_frame_in: pd.DataFrame,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     def pull_ensembl_data(e_id: str):
         id_url = ensembl_rest_url / e_id
@@ -178,6 +179,7 @@ def get_ensembl_accessions(
         sequence = str(sequence_data.seq).replace("U", "T")
         return (sequence, assembly, chromosome, region_start, region_stop, strand)
 
+    ensembl_frame = ensembl_frame_in.copy()
     ensembl_frame[
         [
             "sequence",
@@ -196,12 +198,13 @@ def get_ensembl_accessions(
     return (ensembl_frame.dropna(subset="sequence"), missing_frame)
 
 
-def get_db_matches(match_frame: pd.DataFrame, db_dump: Path) -> pd.DataFrame:
+def get_db_matches(match_frame_in: pd.DataFrame, db_dump: Path) -> pd.DataFrame:
     def split_clean_aliases(al):
         if al:
             return [a.strip() for a in str(al).split(",")]
         return np.nan
 
+    match_frame = match_frame_in.copy()
     match_frame["taxid"] = match_frame["taxid"].astype(int)
 
     match_frame.rename(columns={"Name": "external_id"}, inplace=True)
@@ -248,7 +251,7 @@ def parse(db_dir: Path, db_dumps: tuple[Path], db_url: str) -> None:
     print("Loaded 3 sheets...")
 
     lncRNA_df["taxid"] = (
-        lncRNA_df["Species"].progress_apply(handled_phylogeny).dropna().astype(int)
+        lncRNA_df["Species"].apply(handled_phylogeny).dropna().astype(int)
     )
 
     ## Split the data on the presence of accessions for either NCBI or Ensembl
