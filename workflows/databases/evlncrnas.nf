@@ -49,5 +49,5 @@ workflow evlncrnas {
     fetch | set {ev_data}
     dump_sql | rnc_dump | set {rnc_data}
 
-    ev_data.mix(rnc_data) | parse | set {data}
+    ev_data.combine(rnc_data) | parse | set {data}
 }
