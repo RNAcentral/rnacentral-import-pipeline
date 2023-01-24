@@ -41,7 +41,7 @@ workflow import_data {
 }
 
 workflow {
-  import_data()
+  import_data(Channel.of('ready'))
 }
 
 workflow.onError {
