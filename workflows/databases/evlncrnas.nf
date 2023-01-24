@@ -30,8 +30,7 @@ process parse {
   memory '16 GB'
 
   input:
-  path(ev_data)
-  path(rnc_data)
+  tuple path(ev_data), path(rnc_data)
 
   output:
   path('*.csv')
