@@ -15,16 +15,15 @@ limitations under the License.
 
 import pickle
 
+import more_itertools as more
 import psycopg2
 import psycopg2.extras
-
-import more_itertools as more
 
 CHUNK_SIZE = 300
 
 
 def lookup(db_url, all_ids, query, chunk_size=CHUNK_SIZE):
-    assert all_ids, "Must give ids to lookup"
+    # assert all_ids, "Must give ids to lookup"
     data = {}
     conn = psycopg2.connect(db_url)
     for chunk in more.chunked(all_ids, chunk_size):
