@@ -29,11 +29,26 @@ from furl import furl
 from tqdm import tqdm
 
 from rnacentral_pipeline.databases import data
+from rnacentral_pipeline.databases.data import Entry, Exon, SequenceRegion
 from rnacentral_pipeline.databases.helpers import phylogeny as phy
+from rnacentral_pipeline.rnacentral import lookup
 
-from . import lookup
+from . import helpers
 
 tqdm.pandas()
+
+QUERY = """
+select
+    pre.id as id,
+    pre.rna_type,
+    COALESCE(rna.seq_short, rna.seq_long) as sequence,
+    pre.description
+
+from rnc_rna_precomputed pre
+join rna on rna.upi = pre.upi
+where
+    pre.id in %s
+"""
 
 base_url = furl(
     "https://www.sdklab-biophysics-dzu.net/EVLncRNAs2/index.php/Home/Browsc/rna.html"
@@ -43,6 +58,17 @@ ensembl_rest_url = furl("https://rest.ensembl.org/sequence/id")
 
 entrez_base_url = furl("https://eutils.ncbi.nlm.nih.gov/entrez/eutils")
 
+chain_normalisation = {
+    "minus": "-",
+    "plus": "+",
+}
+
+type_normalisation = {
+    "lncRNA": "SO:0001877",
+    "lincRNA": "SO:0001463",
+    "antisense": "SO:0001904",
+}
+
 
 def handled_phylogeny(species: str) -> int:
     try:
@@ -51,77 +77,12 @@ def handled_phylogeny(species: str) -> int:
         return None
 
 
-def as_entry(record):
-    """
-    Generate an Entry to import based off the database, exons and raw record.
-    """
+def condense_publications(record):
+    pubs_list = [record["PMID_x"]]
+    if record["PMID_y"] and not record["PMID_y"] in pubs_list:
+        pubs_list.append(record["PMID_y"])
 
-    if len(record["exons"]) == 0:
-        print(
-            f"Something is wrong with sequence {record['index']}, the exon list is empty"
-        )
-        chromosome = str(record["chromosome"])
-        if record["Chain"] is not None:
-            strand = (
-                -1 if record["Chain"] == "minus" else 1
-            )  ## This may not be right... think mito RNAs?
-        else:
-            strand = None
-    else:
-        chromosome = record["exons"][0]["chromosome"]
-        strand = record["exons"][0]["strand"]
-
-    region = data.SequenceRegion(
-        chromosome=chromosome,
-        strand=strand,
-        exons=[
-            data.Exon(start=e["exon_start"], stop=e["exon_stop"])
-            for e in record["exons"]
-        ],
-        assembly_id=record["Assembly"],
-        coordinate_system="1-start, fully-closed",
-    )
-    try:
-        entry = data.Entry(
-            primary_id=record["index"],
-            accession=record["index"],
-            ncbi_tax_id=record["taxid"],
-            database="EVLNCRNA",
-            sequence=record["sequence"],
-            regions=[region],
-            gene=record.get("Name", ""),
-            gene_synonyms=record.get("Aliases", []),
-            rna_type=record.get("so_term", record["Class"]),
-            url=base_url.set({"id": record["index"]}).url,
-            seq_version=record.get("version", "1"),
-            optional_id=record.get("optional_id", ""),
-            description=record.get("description", ""),
-            # note_data=note_data(record),
-            # xref_data=xrefs(record),
-            # related_sequences=related_sequences(record),
-            species=record.get("Species", ""),
-            lineage=phy.lineage(record["taxid"]),
-            common_name=phy.common_name(record["taxid"]),
-            chromosome=str(record["chromosome"]),
-            # secondary_structure=secondary_structure(record),
-            # references=references(record),
-            organelle=record.get("localization", None),
-            product=record.get("product", None),
-            # location_start=record.get("Start site", None),
-            # location_end=record.get("End site", None),
-            # anticodon=anticodon(record),
-            # gene=gene(record),
-            # gene_synonyms=gene_synonyms(record),
-            # locus_tag=locus_tag(record),
-            # features=features(record),
-        )
-    except:
-        print(
-            f"Unexpected RNA type: {record['so_term']} for record with ID {record['index']}"
-        )
-        entry = None
-
-    return entry
+    return pubs_list
 
 
 def split(input_frame: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
@@ -172,14 +133,14 @@ def get_ncbi_accessions(
                 fetch_url.args["term"] = " OR ".join(accession_list)
                 fetch_url.args["query_key"] = query_key
                 fetch_url.args["WebEnv"] = webenv
-                fetch_url.args["rettype"] = "fasta"
+                fetch_url.args["rettype"] = "gb"
                 fetch_url.args["retmode"] = "text"
 
                 fetch_res = requests.get(fetch_url.url)
                 if fetch_res.ok:
                     sequence_data = SeqIO.parse(
                         io.StringIO(fetch_res.text),
-                        "fasta",
+                        "gb",
                     )
                     for record in sequence_data:
                         sequences.append(str(record.seq).replace("U", "T"))
@@ -202,16 +163,34 @@ def get_ensembl_accessions(
 
         data = requests.get(id_url.url, headers={"Content-Type": "text/x-fasta"})
         if not data.ok:
-            return None
+            return (None, None, None, None, None, None)
         sequence_data = SeqIO.read(
             io.StringIO(data.text),
             "fasta",
         )
-        sequence = str(sequence_data.seq).replace("U", "T")
-        return sequence
+        details = sequence_data.description.split(":")
+        assembly = details[1]
+        chromosome = details[2]
+        region_start = details[3]
+        region_stop = details[4]
+        strand = details[5]
 
-    ensembl_frame["sequence"] = ensembl_frame["Ensembl"].progress_apply(
-        pull_ensembl_data
+        sequence = str(sequence_data.seq).replace("U", "T")
+        return (sequence, assembly, chromosome, region_start, region_stop, strand)
+
+    ensembl_frame[
+        [
+            "sequence",
+            "assembly_id",
+            "chromosome",
+            "region_start",
+            "region_stop",
+            "chain",
+        ]
+    ] = ensembl_frame.apply(
+        lambda row: pull_ensembl_data(row["Ensembl"]),
+        axis="columns",
+        result_type="expand",
     )
     missing_frame = ensembl_frame[ensembl_frame["sequence"].isna()]
     return (ensembl_frame.dropna(subset="sequence"), missing_frame)
@@ -223,39 +202,35 @@ def get_db_matches(match_frame: pd.DataFrame, db_dump: Path) -> pd.DataFrame:
             return [a.strip() for a in str(al).split(",")]
         return np.nan
 
-    print(len(match_frame))
     match_frame["taxid"] = match_frame["taxid"].astype(int)
-    match_frame["external_id"] = match_frame[["Name", "Aliases"]].apply(
-        lambda x: ",".join(x.values.astype(str)), axis=1
-    )
+
+    match_frame.rename(columns={"Name": "external_id"}, inplace=True)
     match_frame["external_id"] = match_frame["external_id"].apply(split_clean_aliases)
     match_frame = (
         match_frame.explode("external_id")
         .replace(to_replace=["None"], value=np.nan)
         .dropna(subset="external_id")
     )
-    # lnc_data = lnc_data.set_index("external_id")
 
-    rnc_data = pd.read_csv(db_dump)
+    rnc_data = pd.read_csv(db_dump, names=["urs", "taxid", "external_id"], header=0)
     rnc_data["external_id"] = rnc_data["external_id"].apply(lambda x: str(x).split("|"))
     rnc_data = (
         rnc_data.explode("external_id")
         .replace(to_replace=["", None], value=np.nan)
         .dropna(subset="external_id")
     )
-    # rnc_data = rnc_data.set_index("external_id")
 
     matches = match_frame.merge(
         rnc_data,
         left_on=["external_id", "taxid"],
         right_on=["external_id", "taxid"],
         how="inner",
-    ).drop_duplicates(subset="urs")
+    )
 
     return matches
 
 
-def parse(db_dir: Path, db_dump: Path, db_url: str) -> None:
+def parse(db_dir: Path, db_dumps: tuple[Path], db_url: str) -> None:
     """
     Parses the 3 excel sheets using pandas and joins them into one massive table
     which is then parsed to produce entries
@@ -266,49 +241,105 @@ def parse(db_dir: Path, db_dump: Path, db_url: str) -> None:
 
     assert lncRNA.exists() and interaction.exists() and disease.exists()
 
-    lncRNA_df = pd.read_excel(lncRNA, index_col=0)
-    interaction_df = pd.read_excel(interaction, index_col=0)
-    disease_df = pd.read_excel(disease, index_col=0)
+    lncRNA_df = pd.read_excel(lncRNA)
+    interaction_df = pd.read_excel(interaction)
+    disease_df = pd.read_excel(disease)
 
     print("Loaded 3 sheets...")
 
-    ## Joins on index if no on= is specified. The index is the ID column because
-    ## we set index_col=0 during load, so this is same as saying on='ID'
-    ## The benefit of doing it this way is that we can join multiple dfs on the
-    ## ID because it is index
-    complete_df = lncRNA_df
-    # .join(
-    #     [
-    #         disease_df.drop(
-    #             columns=["Name", "Species", "Species category", "exosome", "structure"]
-    #         ),
-    #         interaction_df.drop(columns=["Name", "Species", "Species category"]),
-    #     ],
-    #     how="inner",
-    #     sort=True,
-    # )
-
-    print("Sheet join complete...")
-
-    ## Fix the way NA is read as NaN, cast to string
-    ## Empty strings are dealt with in the lookup.mapping function
-    # complete_df.replace(np.nan, "", inplace=True)
-    complete_df["taxid"] = (
-        complete_df["Species"].progress_apply(handled_phylogeny).dropna().astype(int)
+    lncRNA_df["taxid"] = (
+        lncRNA_df["Species"].progress_apply(handled_phylogeny).dropna().astype(int)
     )
 
-    no_accession_frame, ensembl_frame, ncbi_frame = split(complete_df)
+    ## Split the data on the presence of accessions for either NCBI or Ensembl
+    no_accession_frame, ensembl_frame, ncbi_frame = split(lncRNA_df)
 
-    print(len(ensembl_frame), len(ncbi_frame), len(no_accession_frame))
     ## These two look up directly from the source, so should be quick ish
-    # ensembl_frame, missing_ensembl_frame = get_ensembl_accessions(ensembl_frame)
+    ensembl_frame, missing_ensembl_frame = get_ensembl_accessions(ensembl_frame)
     print(f"Got all available ensembl accessions ({len(ensembl_frame)})")
 
-    # ncbi_frame, missing_ncbi_frame = get_ncbi_accessions(ncbi_frame)
-    # print(f"Got all available NCBI accessions ({len(ncbi_frame)})")
-    # no_accession_frame = pd.concat([no_accession_frame, missing_ensembl_frame]) # missing_ncbi_frame
+    ncbi_frame, missing_ncbi_frame = get_ncbi_accessions(ncbi_frame)
+    print(f"Got all available NCBI accessions ({len(ncbi_frame)})")
 
-    no_accession_frame = get_db_matches(no_accession_frame, db_dump)
-    print(len(ensembl_frame), len(no_accession_frame))  # len(ncbi_frame),
+    ## Stack the frames with missing accessions together to search RNAcentral
+    no_accession_frame = pd.concat(
+        [no_accession_frame, missing_ensembl_frame, missing_ncbi_frame]
+    )  #
 
-    exit()
+    ## Match with RNAcentral based on the gene name
+    ## This is optionally chunked to save memory - split the lookup file and provide a list on the commandline
+    matched_frame = pd.concat(
+        [get_db_matches(no_accession_frame, dump_chunk) for dump_chunk in db_dumps]
+    )
+    matched_frame["taxid"] = matched_frame["taxid"].astype(str)
+    matched_frame["urs_taxid"] = matched_frame[["urs", "taxid"]].agg("_".join, axis=1)
+    matched_frame.drop_duplicates(subset="urs_taxid", inplace=True)
+
+    ## Look up the rest of the data for the hits
+    mapping = lookup.as_mapping(db_url, matched_frame["urs_taxid"].values, QUERY)
+    for idx, value in enumerate(mapping.values()):
+        value["sequence"] = value["sequence"].replace("U", "T")
+
+    ## Copy matching sequence data
+    matched_frame["sequence"] = matched_frame["urs_taxid"].apply(
+        lambda x: mapping[x]["sequence"]
+    )
+
+    ## Build frame with all hits & accessions
+    ## The full frame is then merged with the disease and interaction frames
+    full_frame = pd.concat([matched_frame, ensembl_frame, ncbi_frame])
+
+    full_frame = full_frame.merge(
+        disease_df.drop(
+            columns=["Name", "Species", "Species category", "exosome", "structure"]
+        ),
+        how="left",
+        on="ID",
+    )
+
+    full_frame = full_frame.merge(
+        interaction_df.drop(columns=["Name", "Species", "Species category"]),
+        how="left",
+        on="ID",
+    )
+
+    ## Try to ensure one entry per URS_taxid
+    full_frame.drop_duplicates(subset="urs_taxid", inplace=True)
+
+    ## Tidy up and apply some normalisations
+    full_frame["publications"] = full_frame.apply(condense_publications, axis="columns")
+    full_frame["Chain"] = full_frame["Chain"].apply(
+        lambda x: chain_normalisation.get(x, None)
+    )
+    full_frame["Class"] = full_frame["Class"].apply(
+        lambda x: type_normalisation.get(x, "SO:0000655")
+    )
+
+    ## Tidy up and rename some columns
+    full_frame.drop(
+        columns=[
+            "Species category",
+            "peptide",
+            "circRNA",
+            "exosome",
+            "structure",
+            "Disease category",
+            "Methods_x",
+            "Sample",
+            "Expression pattern",
+            "Dysfunction type",
+            "Description of disease/function",
+            "Source",
+            "drug Resistance/chemoresistance/stress",
+            "PDBlink",
+            "Description of interaction",
+            "Methods_y",
+        ],
+        inplace=True,
+    )
+
+    full_frame.replace({np.nan: None}, inplace=True)
+
+    ## yield entry objects for each row in the frame, these get written directly.
+    for _, row in full_frame.iterrows():
+        yield helpers.as_entry(row)
