@@ -27,7 +27,7 @@ process rnc_dump {
 
 
 process parse {
-
+  memory '16 GB'
 
   input:
   path(ev_data)
