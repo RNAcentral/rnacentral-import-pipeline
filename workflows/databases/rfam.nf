@@ -98,7 +98,7 @@ workflow rfam {
     | fetch_families \
     | splitCsv(sep: '\t', header: true) \
     | map { row -> row.rfam_acc } \
-    | combine(sequence_sql) \
+    | combine(sequence_family_sql) \
     | combine(sequence_seed_sql)
     | fetch_sequence_info \
     | combine(info) \
