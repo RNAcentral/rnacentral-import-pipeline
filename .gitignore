@@ -97,6 +97,7 @@ bin/kv
 bin/precompute
 bin/search-export
 bin/json2dfasta
+bin/expression-parse
 stubs
 .envrc
 workflows/references/results
@@ -104,3 +105,4 @@ workflows/references/metadata
 workflows/references/backup
 workflows/references/submit/previous-release
 singularity/*
+.python-version
