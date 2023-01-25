@@ -1,9 +1,10 @@
 nextflow.enable.dsl=2
 
-process find_organisms {
+process get_organisms {
     publishDir "$baseDir/workflows/references/organisms/", mode: 'copy'
 
     input:
+    val(_flag)
     path(query)
 
     output:
@@ -20,13 +21,25 @@ process save_organisms {
     path(organism_pmcid)
     path(ctl)
 
+    output:
+    val('done')
+
     """
     pgloader --on-error-stop $ctl
     """
 }
 
+workflow find_organisms {
+    take: ready
+    emit: done
+    main:
+      query = Channel.of("$baseDir/workflows/references/organisms/get-organisms.sql")
+      get_organisms(ready, query) | set{ organism_pmcid }
+
+      save_ctl = Channel.of("$baseDir/workflows/references/organisms/save-organisms.ctl")
+      save_organisms(organism_pmcid, save_ctl) | set{ done }
+}
+
 workflow {
-    save_ctl = Channel.of("$baseDir/workflows/references/organisms/save-organisms.ctl")
-    Channel.of("$baseDir/workflows/references/organisms/find-organisms.sql") | find_organisms | set{organism_pmcid}
-    save_organisms(organism_pmcid, save_ctl)
+  find_organisms()
 }

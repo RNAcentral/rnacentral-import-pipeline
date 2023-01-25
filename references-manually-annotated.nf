@@ -2,6 +2,7 @@ nextflow.enable.dsl=2
 
 process get_expert_db_articles {
     input:
+    val(_flag)
     path(query)
 
     output:
@@ -46,17 +47,28 @@ process import_manually_annotated_articles {
     path(manually_annotated_articles)
     path(ctl)
 
+    output:
+    val('done')
+
     """
     pgloader --on-error-stop $ctl
     """
 }
 
-workflow {
-    Channel.fromPath('workflows/references/manually_annotated/query.sql') \
-    | get_expert_db_articles \
-    | sort_expert_db_articles \
-    | find_manually_annotated_articles | set{manually_annotated_articles}
+workflow manually_annotated {
+    take: ready
+    emit: done
+    main:
+      query = Channel.fromPath('workflows/references/manually_annotated/query.sql')
+      get_expert_db_articles(ready, query) \
+      | sort_expert_db_articles \
+      | find_manually_annotated_articles \
+      | set{ manually_annotated_articles }
 
-    load_ctl = Channel.of("$baseDir/workflows/references/manually_annotated/save-manually-annotated.ctl")
-    import_manually_annotated_articles(manually_annotated_articles, load_ctl)
+      load_ctl = Channel.of("$baseDir/workflows/references/manually_annotated/save-manually-annotated.ctl")
+      import_manually_annotated_articles(manually_annotated_articles, load_ctl) | set{ done }
+}
+
+workflow {
+  manually_annotated()
 }

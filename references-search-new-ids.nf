@@ -53,7 +53,7 @@ process prepare_to_submit {
     script:
     """
     # make a copy of the old version before creating the new file
-    [ ! -d previous-release ] && mkdir previous-release
+    [ ! -d $baseDir/workflows/references/submit/previous-release ] && mkdir $baseDir/workflows/references/submit/previous-release
     rm -f $baseDir/workflows/references/submit/previous-release/${database}_ids.txt
     mv $baseDir/workflows/references/submit/${database}_ids.txt $baseDir/workflows/references/submit/previous-release
     references-get-unique-ids.sh ${database}.txt $database
@@ -64,6 +64,9 @@ process submit_ids {
     input:
     tuple val(database), file("${database}_ids.txt")
 
+    output:
+    val('done')
+
     script:
     """
     # submit new ids only
@@ -72,10 +75,18 @@ process submit_ids {
     """
 }
 
+workflow search_new_ids {
+    emit: done
+    main:
+      Channel.fromPath('workflows/references/queries/zfin.sql') \
+      | get_ids \
+      | check_ids \
+      | sort_ids \
+      | prepare_to_submit \
+      | submit_ids \
+      | set { done }
+}
+
 workflow {
-    Channel.fromPath('workflows/references/queries/*.sql') | get_ids
-    | check_ids
-    | sort_ids
-    | prepare_to_submit
-    | submit_ids
+  search_new_ids()
 }
