@@ -2,6 +2,7 @@ nextflow.enable.dsl=2
 
 process create_metadata {
     input:
+    val(_flag)
     path(database)
 
     output:
@@ -46,6 +47,16 @@ process create_xml {
     """
 }
 
+workflow export_metadata {
+    take: ready
+    main:
+      database = Channel.fromPath('workflows/references/results/*.txt')
+      create_metadata(ready, database)
+      | collect
+      | merge_metadata
+      | create_xml
+}
+
 workflow {
-    Channel.fromPath('workflows/references/results/*.txt') | create_metadata |  collect | merge_metadata | create_xml
+  export_metadata()
 }

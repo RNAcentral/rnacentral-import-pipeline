@@ -2,14 +2,14 @@ nextflow.enable.dsl=2
 
 process get_organisms {
     input:
-    val(organisms)
+    val(_flag)
 
     output:
     path("organism_textmining_mentions")
 
     script:
     """
-    wget $organisms -O organism_textmining_mentions
+    wget https://download.jensenlab.org/organism_textmining_mentions.tsv -O organism_textmining_mentions
     """
 }
 
@@ -33,16 +33,27 @@ process import_organisms {
     path(organism_pmid)
     path(ctl)
 
+    output:
+    val('done')
+
     """
     pgloader --on-error-stop $ctl
     """
 }
 
-workflow {
-    Channel.of("https://download.jensenlab.org/organism_textmining_mentions.tsv") \
-    | get_organisms \
-    | create_csv | set{organism_pmid}
+workflow load_organisms {
+    take: ready
+    emit: done
+    main:
+      get_organisms(ready) \
+      | create_csv
+      | set{ organism_pmid }
 
-    load_ctl = Channel.of("$baseDir/workflows/references/organisms/load-organisms.ctl")
-    import_organisms(organism_pmid, load_ctl)
+      load_ctl = Channel.of("$baseDir/workflows/references/organisms/load-organisms.ctl")
+      import_organisms(organism_pmid, load_ctl) \
+      | set{ done }
+}
+
+workflow {
+  load_organisms()
 }
