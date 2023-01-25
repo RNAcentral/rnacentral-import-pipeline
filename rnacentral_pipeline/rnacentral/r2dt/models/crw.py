@@ -42,6 +42,13 @@ def load_metadata(handle: str):
     return metadata
 
 
+def load_metadata(handle: str):
+    metadata = {}
+    for row in csv.DictReader(open(handle), delimiter="\t"):
+        metadata[row["model_name"]] = {**row}
+    return metadata
+
+
 def as_so_term(raw):
     if raw in SO_TERM_MAPPING:
         return SO_TERM_MAPPING[raw]

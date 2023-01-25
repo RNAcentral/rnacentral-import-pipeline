@@ -57,6 +57,27 @@ where
   and load.assembly_id = regions.assembly_id
 ;
 
+-- Workaround for mis-selection of mapped entries
+update rnc_sequence_regions reg
+set
+        was_mapped = false
+from rnc_accession_sequence_region map
+where
+        map.region_id = reg.id
+;
+
+-- Make a copy of the data I will delete from rnc_accession_sequence_region into a backup table
+-- Hopefully we can then just drop it...
+drop table rnc_ac_sr_backup;
+
+select * into rnc_ac_sr_backup
+from rnc_accession_sequence_region
+where region_id in (select id from rnc_sequence_regions where was_mapped = false and providing_databases = '{}'::text[]);
+
+-- Now delete those accessions
+delete from rnc_accession_sequence_region
+where region_id in (select id from rnc_sequence_regions WHERE was_mapped = false AND providing_databases = '{}'::text[]);
+
 -- Delete all regions and exons where there are no providing databases. Note
 -- that we are relying upon cascading deletes to ensure we do not fill the exon
 -- table with orphan rows.
