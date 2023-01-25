@@ -22,12 +22,12 @@ process check_ids {
 
     script:
     """
-    references-check-ids.py $database $results output
+    litscan-check-ids.py $database $results output
     """
 }
 
 process sort_ids {
-    publishDir "$baseDir/workflows/references/results/", mode: 'copy'
+    publishDir "$baseDir/workflows/litscan/results/", mode: 'copy'
 
     input:
     tuple val(database), file(output)
@@ -42,7 +42,7 @@ process sort_ids {
 }
 
 process prepare_to_submit {
-    publishDir "$baseDir/workflows/references/submit/", mode: 'copy'
+    publishDir "$baseDir/workflows/litscan/submit/", mode: 'copy'
 
     input:
     tuple val(database), path("${database}.txt")
@@ -53,10 +53,10 @@ process prepare_to_submit {
     script:
     """
     # make a copy of the old version before creating the new file
-    [ ! -d $baseDir/workflows/references/submit/previous-release ] && mkdir $baseDir/workflows/references/submit/previous-release
-    rm -f $baseDir/workflows/references/submit/previous-release/${database}_ids.txt
-    mv $baseDir/workflows/references/submit/${database}_ids.txt $baseDir/workflows/references/submit/previous-release
-    references-get-unique-ids.sh ${database}.txt $database
+    [ ! -d $baseDir/workflows/litscan/submit/previous-release ] && mkdir $baseDir/workflows/litscan/submit/previous-release
+    rm -f $baseDir/workflows/litscan/submit/previous-release/${database}_ids.txt
+    mv $baseDir/workflows/litscan/submit/${database}_ids.txt $baseDir/workflows/litscan/submit/previous-release
+    litscan-get-unique-ids.sh ${database}.txt $database
     """
 }
 
@@ -70,15 +70,15 @@ process submit_ids {
     script:
     """
     # submit new ids only
-    comm -13 $baseDir/workflows/references/submit/previous-release/${database}_ids.txt $baseDir/workflows/references/submit/${database}_ids.txt > new_${database}_ids.txt
-    references-upload-ids.sh new_${database}_ids.txt
+    comm -13 $baseDir/workflows/litscan/submit/previous-release/${database}_ids.txt $baseDir/workflows/litscan/submit/${database}_ids.txt > new_${database}_ids.txt
+    litscan-upload-ids.sh new_${database}_ids.txt
     """
 }
 
 workflow search_new_ids {
     emit: done
     main:
-      Channel.fromPath('workflows/references/queries/zfin.sql') \
+      Channel.fromPath('workflows/litscan/queries/*.sql') \
       | get_ids \
       | check_ids \
       | sort_ids \

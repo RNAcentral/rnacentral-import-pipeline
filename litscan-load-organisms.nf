@@ -14,7 +14,7 @@ process get_organisms {
 }
 
 process create_csv {
-    publishDir "$baseDir/workflows/references/organisms/", mode: 'copy'
+    publishDir "$baseDir/workflows/litscan/organisms/", mode: 'copy'
 
     input:
     file(organism_textmining_mentions)
@@ -24,7 +24,7 @@ process create_csv {
 
     script:
     """
-    references-create-organisms-file.py $organism_textmining_mentions organism_pmid
+    litscan-create-organisms-file.py $organism_textmining_mentions organism_pmid
     """
 }
 
@@ -49,7 +49,7 @@ workflow load_organisms {
       | create_csv
       | set{ organism_pmid }
 
-      load_ctl = Channel.of("$baseDir/workflows/references/organisms/load-organisms.ctl")
+      load_ctl = Channel.of("$baseDir/workflows/litscan/organisms/load-organisms.ctl")
       import_organisms(organism_pmid, load_ctl) \
       | set{ done }
 }

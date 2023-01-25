@@ -100,9 +100,9 @@ bin/json2dfasta
 bin/expression-parse
 stubs
 .envrc
-workflows/references/results
-workflows/references/metadata
-workflows/references/backup
-workflows/references/submit/previous-release
+workflows/litscan/results
+workflows/litscan/metadata
+workflows/litscan/backup
+workflows/litscan/submit/previous-release
 singularity/*
 .python-version
