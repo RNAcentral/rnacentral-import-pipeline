@@ -12,7 +12,7 @@ process create_xml_files {
     script:
     """
     rm -fr "$params.litscan_index"/references_*
-    references-get-articles.py "$PGDB_EMBASSY_USER" $params.litscan_index
+    litscan-get-articles.py "$PGDB_EMBASSY_USER" $params.litscan_index
     """
 }
 

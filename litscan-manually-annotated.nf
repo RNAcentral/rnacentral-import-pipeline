@@ -28,7 +28,7 @@ process sort_expert_db_articles {
 }
 
 process find_manually_annotated_articles {
-    publishDir "$baseDir/workflows/references/manually_annotated/", mode: 'copy'
+    publishDir "$baseDir/workflows/litscan/manually_annotated/", mode: 'copy'
 
     input:
     file(sorted_results)
@@ -38,7 +38,7 @@ process find_manually_annotated_articles {
 
     script:
     """
-    references-manually-annotated.py "$PGDB_EMBASSY_USER" $sorted_results manually_annotated_articles
+    litscan-manually-annotated.py "$PGDB_EMBASSY_USER" $sorted_results manually_annotated_articles
     """
 }
 
@@ -59,13 +59,13 @@ workflow manually_annotated {
     take: ready
     emit: done
     main:
-      query = Channel.fromPath('workflows/references/manually_annotated/query.sql')
+      query = Channel.fromPath('workflows/litscan/manually_annotated/query.sql')
       get_expert_db_articles(ready, query) \
       | sort_expert_db_articles \
       | find_manually_annotated_articles \
       | set{ manually_annotated_articles }
 
-      load_ctl = Channel.of("$baseDir/workflows/references/manually_annotated/save-manually-annotated.ctl")
+      load_ctl = Channel.of("$baseDir/workflows/litscan/manually_annotated/save-manually-annotated.ctl")
       import_manually_annotated_articles(manually_annotated_articles, load_ctl) | set{ done }
 }
 
