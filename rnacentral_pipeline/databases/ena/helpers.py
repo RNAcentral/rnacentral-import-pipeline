@@ -392,7 +392,7 @@ def is_skippable_sequence(
 
 def as_entry(ctx, record, feature) -> Entry:
     prod = product(feature)
-    gene = (embl.gene(feature),)
+    gene = embl.gene(feature)
     if prod:
         prod = prod[0:500]
     if gene:
