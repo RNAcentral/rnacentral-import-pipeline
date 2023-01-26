@@ -11,7 +11,7 @@ process fetch_data {
 
   """
   mkdir tsv_files
-  find $base_dir -type f .. | xargs -I {} -P 10 cp {} tsv_files
+  find $base_dir -type f -name "*.tsv" | xargs -I {} -P 10 cp {} tsv_files
   """
 }
 
