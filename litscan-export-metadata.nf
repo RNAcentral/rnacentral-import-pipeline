@@ -67,6 +67,7 @@ workflow export_metadata {
       | collect
       | merge_metadata
       | create_xml
+      | create_release_file
 }
 
 workflow {
