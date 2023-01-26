@@ -47,6 +47,18 @@ process create_xml {
     """
 }
 
+process create_release_file {
+    publishDir "$params.litscan_index", mode: 'copy'
+
+    output:
+    path("release_note.txt")
+
+    script:
+    """
+    litscan-create-release-note-file.sh $params.litscan_index $params.release_version
+    """
+}
+
 workflow export_metadata {
     take: ready
     main:
