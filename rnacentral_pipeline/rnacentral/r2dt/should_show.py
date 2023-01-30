@@ -182,12 +182,13 @@ def write(model_path: Path, handle: ty.IO, db_url: str, output: ty.IO):
     ids = [r[0] for r in csv.reader(handle)]
     modeled = fetch_modeled_data(ids, db_url)
     frame = pd.DataFrame.from_records(modeled)
-    infer_columns(frame)
-    predicted = model.predict(frame[MODEL_COLUMNS].to_numpy())
-    to_write = pd.DataFrame()
-    to_write["urs"] = frame["urs"]
-    to_write["should_show"] = predicted.astype(int)
-    to_write.to_csv(output, index=False)
+    if len(frame) > 0:
+        infer_columns(frame)
+        predicted = model.predict(frame[MODEL_COLUMNS].to_numpy())
+        to_write = pd.DataFrame()
+        to_write["urs"] = frame["urs"]
+        to_write["should_show"] = predicted.astype(int)
+        to_write.to_csv(output, index=False)
 
 
 def write_model(handle: ty.IO, db_url: str, output: Path):
