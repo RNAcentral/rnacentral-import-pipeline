@@ -15,7 +15,7 @@ process extract_gtrnadb_metadata {
 
   shell:
   '''
-  cmstat !model_path | awk ' /^[^#]/ { print \$8 }' > basepairs.csv
+  cmstat !model_path | awk ' /^[^#]/ { print $8 }' > basepairs.csv
   '''
 }
 
@@ -43,8 +43,8 @@ process extract_ribovision_metadata {
 
     shell:
     '''
-      cmstat /rna/r2dt/data/ribovision-lsu/cms/all.cm | awk '/^[^#]/ {sep=","; printf "%s%s%s%s%s\n",$2,sep,$6,sep,$8}' > basepair_length_lsu
-      cmstat /rna/r2dt/data/ribovision-ssu/cms/all.cm | awk '/^[^#]/ {sep=","; printf "%s%s%s%s%s\n",$2,sep,$6,sep,$8}' > basepair_length_ssu
+      cmstat /rna/r2dt/data/ribovision-lsu/cms/all.cm | awk '/^[^#]/ {sep=","; printf "%s%s%s%s%s\\n",$2,sep,$6,sep,$8}' > basepair_length_lsu
+      cmstat /rna/r2dt/data/ribovision-ssu/cms/all.cm | awk '/^[^#]/ {sep=","; printf "%s%s%s%s%s\\n",$2,sep,$6,sep,$8}' > basepair_length_ssu
       cat basepair_length_lsu basepair_length_ssu > length_basepair.csv
   '''
 }
@@ -79,7 +79,7 @@ process extract_rnasep_metadata {
 
   shell:
   '''
-  cmstat /rna/r2dt/data/rnasep/cms/all.cm | awk '/^[^#]/ {sep=","; printf "%s%s%s%s%s\n",$2,sep,$6,sep,$8}' > length_basepair.csv
+  cmstat /rna/r2dt/data/rnasep/cms/all.cm | awk '/^[^#]/ {sep=","; printf "%s%s%s%s%s\\n",$2,sep,$6,sep,$8}' > length_basepair.csv
   '''
 }
 
@@ -115,7 +115,7 @@ process extract_rfam_metadata {
 
   shell:
   '''
-  cmstat !all_models | awk '/^[^#]/ {sep=","; printf "%s%s%s\n",$3,sep,$8}' > basepairs.csv
+  cmstat !all_models | awk '/^[^#]/ {sep=","; printf "%s%s%s\\n",$3,sep,$8}' > basepairs.csv
   '''
 }
 
@@ -146,7 +146,7 @@ process extract_crw_metadata {
 
   shell:
   '''
-    cmstat !all_models | awk '/^[^#]/ {sep=","; printf "%s%s%s\n",$2,sep,$8}' > basepairs.csv
+    cmstat !all_models | awk '/^[^#]/ {sep=","; printf "%s%s%s\\n",$2,sep,$8}' > basepairs.csv
   '''
 }
 
