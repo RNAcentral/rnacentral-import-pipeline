@@ -90,7 +90,10 @@ process parse_crw_models {
   """
   wget $metadata -O metadata.tsv
   sed -i 's/taxid  rna_type/taxid\trna_type/g' metadata.tsv
-  rnac r2dt model-info crw $all_models metadata.tsv model_data.csv
+  cmstat $all_models | awk '/^[^#]/ {sep=","; printf "%s%s%s\n",$2,sep,$8}' > basepairs
+  rnac r2dt model-info crw $all_models metadata.tsv model_data_nbp.csv
+  join -t","  model_data_nbp.csv basepairs -o 1.1,1.2,1.3,1.4,1.5,1.6,1.7,2.2 > model_data.csv
+
   """
 }
 
