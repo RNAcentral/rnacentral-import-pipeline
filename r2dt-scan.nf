@@ -14,7 +14,8 @@ process parse_gtrnadb_model {
 
   script:
     """
-    rnac r2dt model-info gtrnadb $model_path model_data.csv
+    bps=`/rna/infernal-1.1.2/bin/cmstat $model_path | awk ' /^[^#]/ { print $8 }'`
+    rnac r2dt model-info gtrnadb $model_path $bps model_data.csv
     """
 }
 
