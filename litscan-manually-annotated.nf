@@ -55,7 +55,7 @@ process import_manually_annotated_articles {
     """
 }
 
-workflow manually_annotated {
+workflow find_manually_annotated {
     take: ready
     emit: done
     main:
@@ -70,5 +70,5 @@ workflow manually_annotated {
 }
 
 workflow {
-  manually_annotated()
+  find_manually_annotated()
 }
