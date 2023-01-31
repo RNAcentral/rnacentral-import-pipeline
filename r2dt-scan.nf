@@ -27,12 +27,12 @@ process parse_gtrnadb_model {
   output:
     path("model_data.csv")
 
-  script:
-    """
+  shell:
+    '''
     sort -k 1 !{basepairs} > basepairs_sorted.csv
     rnac r2dt model-info gtrnadb !{model_path} model_data_nbp.csv
     join -t","  model_data_nbp.csv basepairs_sorted.csv -o 1.1,1.2,1.3,1.4,1.5,1.6,1.7,2.2 > model_data.csv
-    """
+    '''
 }
 
 process extract_ribovision_metadata {
