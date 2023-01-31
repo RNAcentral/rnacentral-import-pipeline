@@ -16,7 +16,7 @@ process parse_gtrnadb_model {
 
   script:
     """
-    bps=`/rna/infernal-1.1.2/bin/cmstat $model_path | awk ' /^[^#]/ { print $8 }'`
+    bps=`/rna/infernal-1.1.2/bin/cmstat $model_path | awk ' /^[^#]/ { print \$8 }'`
     rnac r2dt model-info gtrnadb $model_path $bps model_data.csv
     """
 }
@@ -36,8 +36,8 @@ process parse_ribovision_models {
   script:
   """
   wget $ribovision_metadata_url
-  cmstat /rna/r2dt/data/ribovision-lsu/cms/all.cm | awk '/^[^#]/ {sep=","; printf "%s%s%s%s%s\n",$2,sep,$6,sep,$8}' > basepair_length_lsu
-  cmstat /rna/r2dt/data/ribovision-ssu/cms/all.cm | awk '/^[^#]/ {sep=","; printf "%s%s%s%s%s\n",$2,sep,$6,sep,$8}' > basepair_length_ssu
+  cmstat /rna/r2dt/data/ribovision-lsu/cms/all.cm | awk '/^[^#]/ {sep=","; printf "%s%s%s%s%s\n",\$2,sep,\$6,sep,\$8}' > basepair_length_lsu
+  cmstat /rna/r2dt/data/ribovision-ssu/cms/all.cm | awk '/^[^#]/ {sep=","; printf "%s%s%s%s%s\n",\$2,sep,\$6,sep,\$8}' > basepair_length_ssu
   cat basepair_length_lsu basepair_length_ssu > basepair_length
 
   rnac r2dt model-info ribovision metadata.tsv model_data_us.csv
@@ -59,7 +59,7 @@ process parse_rnasep_models {
 
   script:
   """
-  cmstat /rna/r2dt/data/rnasep/cms/all.cm | awk '/^[^#]/ {sep=","; printf "%s%s%s%s%s\n",$2,sep,$6,sep,$8}' > length_basepair
+  cmstat /rna/r2dt/data/rnasep/cms/all.cm | awk '/^[^#]/ {sep=","; printf "%s%s%s%s%s\n",\$2,sep,\$6,sep,\$8}' > length_basepair
   wget $rnasep_metadata_url
   sed -i 's/\\tNRC-1\\t/\\t/g' metadata.tsv
   rnac r2dt model-info rnase-p metadata.tsv model_data_us.csv
@@ -80,7 +80,7 @@ process parse_rfam_models {
 
   script:
   """
-  cmstat $all_models | awk '/^[^#]/ {sep=","; printf "%s%s%s\n",$3,sep,$8}' > basepairs
+  cmstat $all_models | awk '/^[^#]/ {sep=","; printf "%s%s%s\n",\$3,sep,\$8}' > basepairs
   rnac r2dt model-info rfam $all_models $PGDATABASE model_data_nbp.csv
   join -t","  model_data_nbp.csv basepairs -o 1.1,1.2,1.3,1.4,1.5,1.6,1.7,2.2 > model_data.csv
   """
@@ -100,7 +100,7 @@ process parse_crw_models {
   """
   wget $metadata -O metadata.tsv
   sed -i 's/taxid  rna_type/taxid\trna_type/g' metadata.tsv
-  cmstat $all_models | awk '/^[^#]/ {sep=","; printf "%s%s%s\n",$2,sep,$8}' > basepairs
+  cmstat $all_models | awk '/^[^#]/ {sep=","; printf "%s%s%s\n",\$2,sep,\$8}' > basepairs
   rnac r2dt model-info crw $all_models metadata.tsv model_data_nbp.csv
   join -t","  model_data_nbp.csv basepairs -o 1.1,1.2,1.3,1.4,1.5,1.6,1.7,2.2 > model_data.csv
 
