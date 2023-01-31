@@ -15,7 +15,7 @@ process extract_gtrnadb_metadata {
 
   shell:
   '''
-  cmstat !model_path | awk ' /^[^#]/ { print $8 }' > basepairs.csv
+  cmstat !{model_path} | awk ' /^[^#]/ { print $8 }' > basepairs.csv
   '''
 }
 
@@ -94,11 +94,11 @@ process parse_rnasep_models {
 
   shell:
   '''
-  wget !rnasep_metadata_url
+  wget !{rnasep_metadata_url}
   sed -i 's/\\tNRC-1\\t/\\t/g' metadata.tsv
   rnac r2dt model-info rnase-p metadata.tsv model_data_us.csv
   sort -k1 model_data_us.csv > model_data_s.csv
-  join -t","  model_data_s.csv !length_basepair -o 1.1,1.2,1.3,1.4,1.5,1.6,2.2,2.3 > model_data.csv
+  join -t","  model_data_s.csv !{length_basepair} -o 1.1,1.2,1.3,1.4,1.5,1.6,2.2,2.3 > model_data.csv
   '''
 
 }
@@ -115,7 +115,7 @@ process extract_rfam_metadata {
 
   shell:
   '''
-  cmstat !all_models | awk '/^[^#]/ {sep=","; printf "%s%s%s\\n",$3,sep,$8}' > basepairs.csv
+  cmstat !{all_models} | awk '/^[^#]/ {sep=","; printf "%s%s%s\\n",$3,sep,$8}' > basepairs.csv
   '''
 }
 
@@ -129,8 +129,8 @@ process parse_rfam_models {
 
   shell:
   '''
-  rnac r2dt model-info rfam !all_models $PGDATABASE model_data_nbp.csv
-  join -t","  model_data_nbp.csv !basepairs -o 1.1,1.2,1.3,1.4,1.5,1.6,1.7,2.2 > model_data.csv
+  rnac r2dt model-info rfam !{all_models} $PGDATABASE model_data_nbp.csv
+  join -t","  model_data_nbp.csv !{basepairs} -o 1.1,1.2,1.3,1.4,1.5,1.6,1.7,2.2 > model_data.csv
   '''
 }
 
@@ -146,7 +146,7 @@ process extract_crw_metadata {
 
   shell:
   '''
-    cmstat !all_models | awk '/^[^#]/ {sep=","; printf "%s%s%s\\n",$2,sep,$8}' > basepairs.csv
+    cmstat !{all_models} | awk '/^[^#]/ {sep=","; printf "%s%s%s\\n",$2,sep,$8}' > basepairs.csv
   '''
 }
 
