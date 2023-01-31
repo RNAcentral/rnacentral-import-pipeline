@@ -4,16 +4,14 @@ BEGIN TRANSACTION;
 
 create index if not exists ix_load_rnc_sequence_regions__accession on load_rnc_sequence_regions(accession);
 
--- Update the table to include urs_taxid and pretty database name
+-- Update the table to include urs_taxid
 update load_rnc_sequence_regions regions
 set
   urs_taxid = xref.upi || '_' || xref.taxid,
-  providing_database = db.display_name
-from xref, rnc_database db
+from xref
 where
   xref.ac = regions.accession
   and xref.deleted = 'N'
-  and db.id = xref.dbid
 ;
 
 -- Ensure we have found all URS/taxids
@@ -40,23 +38,6 @@ WHERE
 NOT EXISTS (select 1 from ensembl_assembly assem WHERE assem.assembly_id = load.assembly_id)
 ;
 
--- Change the providing_databases in rnc_sequence_features to remove all
--- mentions of the databases we have in the load table. We do this because some
--- regions may come from more than one database and we don't update all
--- databases at once so we have allow regions to remain if some other database
--- supports them. This has a possible edge case, if there is a case where a
--- sequence is moved, that is the overall sequence is the same but it is found
--- in a new location, this will not remove the old location. I suspect this to be
--- very rare but if it happens we will end up including an outdated location.
-UPDATE rnc_sequence_regions regions
-set
-  providing_databases = array_remove(regions.providing_databases, load.providing_database)
-from load_rnc_sequence_regions load
-where
-  load.region_name = regions.region_name
-  and load.assembly_id = regions.assembly_id
-;
-
 -- Workaround for mis-selection of mapped entries
 update rnc_sequence_regions reg
 set
@@ -65,23 +46,6 @@ from rnc_accession_sequence_region map
 where
         map.region_id = reg.id
 ;
-
--- Make a copy of the data I will delete from rnc_accession_sequence_region into a backup table
--- Hopefully we can then just drop it...
-drop table rnc_ac_sr_backup;
-
-select * into rnc_ac_sr_backup
-from rnc_accession_sequence_region
-where region_id in (select id from rnc_sequence_regions where was_mapped = false and providing_databases = '{}'::text[]);
-
--- Now delete those accessions
-delete from rnc_accession_sequence_region
-where region_id in (select id from rnc_sequence_regions WHERE was_mapped = false AND providing_databases = '{}'::text[]);
-
--- Delete all regions and exons where there are no providing databases. Note
--- that we are relying upon cascading deletes to ensure we do not fill the exon
--- table with orphan rows.
-DELETE FROM rnc_sequence_regions WHERE was_mapped = false and providing_databases = '{}'::text[];
 
 -- Delete all mapped locations that are redundant with a given, but not yet
 -- loaded location. These will have the same region_name/assembly as a known
@@ -110,8 +74,7 @@ insert into rnc_sequence_regions (
   assembly_id,
   exon_count,
   was_mapped,
-	identity,
-	providing_databases
+	identity
 ) (
 select
   max(load.urs_taxid),
@@ -123,8 +86,7 @@ select
   load.assembly_id,
   max(load.exon_count),
   false,
-  null,
-  array_agg(distinct load.providing_database)
+  null
 from load_rnc_sequence_regions load
 join ensembl_assembly ensembl on ensembl.assembly_id = load.assembly_id
 group by load.region_name, load.assembly_id
@@ -133,16 +95,6 @@ ON CONFLICT (md5(region_name), assembly_id) do UPDATE
 set
   was_mapped = excluded.was_mapped,
   "identity" = excluded.identity,
-  providing_databases = rnc_sequence_regions.providing_databases || excluded.providing_databases
-;
-
--- Ensure all providing databases are distinct
-UPDATE rnc_sequence_regions
-SET
-  providing_databases = ARRAY(SELECT DISTINCT unnest(providing_databases))
-FROM load_rnc_sequence_regions load
-WHERE
-  load.urs_taxid = rnc_sequence_regions.urs_taxid
 ;
 
 -- Populate all exons
