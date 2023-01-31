@@ -7,6 +7,8 @@ include { r2dt } from './workflows/r2dt'
 
 process parse_gtrnadb_model {
 
+  memory '256 MB'
+
   input:
     path(model_path)
   output:
@@ -20,6 +22,8 @@ process parse_gtrnadb_model {
 }
 
 process parse_ribovision_models {
+
+  memory '256 MB'
 
   input:
     val(ribovision_metadata_url)
@@ -45,6 +49,8 @@ process parse_ribovision_models {
 
 process parse_rnasep_models {
 
+  memory '256 MB'
+
   input:
     val(rnasep_metadata_url)
 
@@ -65,6 +71,8 @@ process parse_rnasep_models {
 
 process parse_rfam_models {
 
+  memory '256 MB'
+
   input:
     path(all_models)
   output:
@@ -80,6 +88,8 @@ process parse_rfam_models {
 
 
 process parse_crw_models {
+
+  memory '256 MB'
 
   input:
     tuple path(all_models), val(metadata)
@@ -98,6 +108,8 @@ process parse_crw_models {
 }
 
 process load_models {
+
+  memory '256 MB'
 
   input:
     path(all_data)

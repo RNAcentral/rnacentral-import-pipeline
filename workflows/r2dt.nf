@@ -3,6 +3,8 @@ nextflow.enable.dsl=2
 process fetch_model_mapping {
   when { params.r2dt.run }
 
+  memory '16 MB'
+
   input:
   val(_flag)
   path(query)
@@ -18,6 +20,7 @@ process fetch_model_mapping {
 process extract_sequences {
   when { params.r2dt.run }
 
+  memory '16 MB'
 
   input:
   val(_flag)
@@ -40,6 +43,8 @@ process extract_sequences {
 }
 
 process split_sequences {
+
+  meory '8 MB'
 
   input:
   path("raw.json")
@@ -80,6 +85,7 @@ process publish_layout {
   errorStrategy { task.attempt < 5 ? "retry" : "ignore" }
   maxRetries 5
   queue 'datamover'
+  memory '256 MB'
 
   input:
   tuple path(sequences), path(output), path(_version), path(mapping)
@@ -95,9 +101,11 @@ process publish_layout {
 }
 
 process parse_layout {
+    memory '256 MB'
+    errorStrategy "ignore"
+
   input:
   tuple path(sequences), path(to_parse), path(version), path(mapping)
-  errorStrategy "ignore"
 
   output:
   path "data.csv", emit: data
