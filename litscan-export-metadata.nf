@@ -50,6 +50,9 @@ process create_xml {
 process create_release_file {
     publishDir "$params.litscan_index", mode: 'copy'
 
+    input:
+    val(_flag)
+
     output:
     path("release_note.txt")
 
