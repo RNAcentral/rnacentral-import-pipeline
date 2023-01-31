@@ -54,7 +54,7 @@ TYPES = {
 }
 
 
-def parse_model(handle) -> ModelInfo:
+def parse_model(handle, basepairs) -> ModelInfo:
     name: ty.Optional[str] = None
     length: ty.Optional[str] = None
     for line in handle:
@@ -93,7 +93,7 @@ def parse_model(handle) -> ModelInfo:
         source=Source.gtrnadb,
         length=int(length),
         cell_location=loc,
-        basepairs=None,
+        basepairs=basepairs,
     )
 
 

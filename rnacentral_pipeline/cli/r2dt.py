@@ -160,13 +160,14 @@ def ribovision_model_info(filename, output):
 
 @model_info.command("gtrnadb")
 @click.argument("filename", type=click.File())
+@click.argument("basepairs", type=int)
 @click.argument("output", default="-", type=click.File("w"))
-def gtrnadb_model_info(filename, output):
+def gtrnadb_model_info(filename, basepairs, output):
     """
     Parse the metadata.tsv file from R2DT for gtrnadb models to
     produce something we can put in our database.
     """
-    r2dt.write_gtrnadb(filename, output)
+    r2dt.write_gtrnadb(filename, basepairs, output)
 
 
 @model_info.command("rnase-p")
