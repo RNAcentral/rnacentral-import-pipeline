@@ -15,7 +15,7 @@ process extract_gtrnadb_metadata {
 
   shell:
   '''
-  cmstat !{model_path} | awk ' /^[^#]/ { print $8 }' > basepairs.csv
+  cmstat !{model_path} | awk ' /^[^#]/ { sep=","; printf "%s%s%s\\n, $2,sep,$8 }' > basepairs.csv
   '''
 }
 
