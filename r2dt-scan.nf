@@ -64,7 +64,7 @@ process parse_ribovision_models {
   '''
   wget !{ribovision_metadata_url}
   rnac r2dt model-info ribovision metadata.tsv model_data_us.csv
-  sort -k 1 model_data.csv > model_data_s.csv
+  sort -k 1 model_data_us.csv > model_data_s.csv
   join -t","  model_data_s.csv !{length_basepair} -o 1.1,1.2,1.3,1.4,1.5,1.6,2.2,2.3 > model_data.csv
   '''
 
