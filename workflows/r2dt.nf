@@ -44,7 +44,7 @@ process extract_sequences {
 
 process split_sequences {
 
-  meory '8 MB'
+  memory '8 MB'
 
   input:
   path("raw.json")
