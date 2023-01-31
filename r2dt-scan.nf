@@ -45,7 +45,7 @@ process extract_ribovision_metadata {
     '''
       cmstat /rna/r2dt/data/ribovision-lsu/cms/all.cm | awk '/^[^#]/ {sep=","; printf "%s%s%s%s%s\\n",$2,sep,$6,sep,$8}' > basepair_length_lsu
       cmstat /rna/r2dt/data/ribovision-ssu/cms/all.cm | awk '/^[^#]/ {sep=","; printf "%s%s%s%s%s\\n",$2,sep,$6,sep,$8}' > basepair_length_ssu
-      cat basepair_length_lsu basepair_length_ssu > length_basepair.csv
+      cat basepair_length_lsu basepair_length_ssu  | sort -k 1 > length_basepair.csv
   '''
 }
 
