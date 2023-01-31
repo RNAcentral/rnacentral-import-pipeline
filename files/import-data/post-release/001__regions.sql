@@ -24,6 +24,8 @@ set
 ;
 
 -- Map UCSC genome accesions to ensembl ones
+-- TODO: Convert the chromosome names as well, this probably produces unusable
+--       entries.
 UPDATE load_rnc_sequence_regions regions
 SET
   assembly_id = genomes.assembly_id
@@ -38,26 +40,26 @@ WHERE
 NOT EXISTS (select 1 from ensembl_assembly assem WHERE assem.assembly_id = load.assembly_id)
 ;
 
--- Workaround for mis-selection of mapped entries
-update rnc_sequence_regions reg
-set
-        was_mapped = false
-from rnc_accession_sequence_region map
-where
-        map.region_id = reg.id
+-- Detect which URS_taxids would have both mapped and provided locations within
+-- a given assembly. We always prefer provided coordinates over mapped ones.
+CREATE TEMP TABLE tmp_duplicate_regions AS
+SELECT
+  regions.id
+FROM rnc_sequence_regions regions
+USING load_rnc_sequence_regions load
+WHERE
+  load.urs_taxid = regions.urs_taxid
+  AND load.assembly_id = regions.assembly_id
+  AND regions.was_mapped = true
 ;
 
 -- Delete all mapped locations that are redundant with a given, but not yet
--- loaded location. These will have the same region_name/assembly as a known
--- location. It is possible that the overall region has the same endpoints but
--- different exon/intron boundaries because of mapping. So we delete the mapped
--- coordinates that will be overwritten by the given locations to be load.
-DELETE FROM rnc_sequence_regions regions
-USING load_rnc_sequence_regions load
+-- loaded location. This should cascade deletes to the exon table to prevent
+-- orphan rows.
+DELETE FROM rnc_sequence_regions
+USING tmp_duplicate_regions dup
 WHERE
-  load.region_name = regions.region_name
-  AND load.assembly_id = regions.assembly_id
-  AND regions.was_mapped = true
+  regions.id == dup.id
 ;
 
 -- Upsert regions table with needed info. Note the max's (for all but
@@ -146,6 +148,20 @@ from load_rnc_sequence_regions load
 where
   load.urs_taxid = pre.id
 ;
+
+-- Validate that all given locations are connected to an accession
+do $$
+declare no_accessions int;
+begin
+	select into no_accessions count(distinct t.id) from (
+		select regions.id
+		from rnc_sequence_regions regions
+		left join rnc_accession_sequence_region acc on acc.region_id = regions.id
+		group by regions.id
+		having regions.exon_count != count(exons.*)
+		) t;
+  assert no_accession = 0, 'Some regions ' || no_accessions || ' are missing providing accessions';
+end $$;
 
 drop table load_rnc_sequence_regions;
 
