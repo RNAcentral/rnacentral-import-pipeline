@@ -84,6 +84,7 @@ workflow search_new_ids {
       | sort_ids \
       | prepare_to_submit \
       | submit_ids \
+      | collect \
       | set { done }
 }
 
