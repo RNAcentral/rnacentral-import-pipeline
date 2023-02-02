@@ -55,7 +55,7 @@ process prepare_to_submit {
     # make a copy of the old version before creating the new file
     [ ! -d $baseDir/workflows/litscan/submit/previous-release ] && mkdir $baseDir/workflows/litscan/submit/previous-release
     rm -f $baseDir/workflows/litscan/submit/previous-release/${database}_ids.txt
-    mv $baseDir/workflows/litscan/submit/${database}_ids.txt $baseDir/workflows/litscan/submit/previous-release
+    test -f $baseDir/workflows/litscan/submit/${database}_ids.txt && mv $baseDir/workflows/litscan/submit/${database}_ids.txt $baseDir/workflows/litscan/submit/previous-release
     litscan-get-unique-ids.sh ${database}.txt $database
     """
 }
