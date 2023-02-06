@@ -54,6 +54,7 @@ ORDERING = [
     Database.gtrnadb,
     Database.tmrna_website,
     Database.five_srrnadb,
+    Database.ribocentre,
     Database.pdbe,
     Database.refseq,
     Database.ensembl_plants,
