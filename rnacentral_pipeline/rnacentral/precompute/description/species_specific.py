@@ -82,6 +82,7 @@ ORDERING = [
     Database.ena,
     Database.zwd,
     Database.noncode,
+    Database.evlncrnas,
 ]
 """
 A dict that defines the ordered choices for each type of RNA. This is the
