@@ -49,8 +49,7 @@ def region_builder(info):
 
 
 def rna_type(record):
-    return record["Class"]
-    pass
+    return record["so_type"]
 
 
 def url(record):
@@ -61,7 +60,7 @@ def url(record):
 
 
 def description(record):
-    return f"{record['Species']} {record['Class']} from EVlncRNAs"
+    return f"{record['Species']} {record['Class']}"
 
 
 def species(record):
