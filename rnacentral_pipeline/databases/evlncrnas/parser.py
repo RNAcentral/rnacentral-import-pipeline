@@ -314,7 +314,7 @@ def parse(db_dir: Path, db_dumps: tuple[Path], db_url: str) -> None:
     full_frame["Chain"] = full_frame["Chain"].apply(
         lambda x: chain_normalisation.get(x, None)
     )
-    full_frame["Class"] = full_frame["Class"].apply(
+    full_frame["so_type"] = full_frame["Class"].apply(
         lambda x: type_normalisation.get(x, "SO:0000655")
     )
 
