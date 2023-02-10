@@ -101,7 +101,9 @@ bin/expression-parse
 stubs
 .envrc
 workflows/litscan/results
-workflows/litscan/metadata
+workflows/litscan/metadata/files
+workflows/litscan/metadata/rfam
+workflows/litscan/metadata/merged_metadata
 workflows/litscan/backup
 workflows/litscan/submit/previous-release
 singularity/*

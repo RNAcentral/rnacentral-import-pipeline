@@ -15,6 +15,8 @@ process create_metadata {
 }
 
 process merge_metadata {
+    publishDir "$baseDir/workflows/litscan/metadata/", mode: 'copy'
+
     input:
     file(results)
 
@@ -42,7 +44,7 @@ process create_xml {
 
     script:
     """
-    rm -fr "$params.litscan_index/metadata*"
+    rm "$params.litscan_index"/metadata*
     litscan-create-xml-metadata.py $merged_metadata metadata_*
     """
 }
@@ -62,17 +64,29 @@ process create_release_file {
     """
 }
 
+process load_database_table {
+    input:
+    path(metadata)
+    path(ctl)
+
+    script:
+    """
+    pgloader --on-error-stop $ctl
+    """
+}
+
 workflow export_metadata {
     take: ready
     main:
       database = Channel.fromPath('workflows/litscan/results/*.txt')
-      create_metadata(ready, database)
-      | collect
-      | merge_metadata
-      | create_xml
-      | create_release_file
+      create_metadata(ready, database) | collect | merge_metadata | set{ metadata }
+
+      create_xml(metadata) | create_release_file
+
+      load = Channel.of("$baseDir/workflows/litscan/metadata/load-metadata.ctl")
+      load_database_table(metadata, load)
 }
 
 workflow {
-  export_metadata()
+  export_metadata(Channel.of('ready'))
 }
