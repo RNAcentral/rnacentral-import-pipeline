@@ -34,6 +34,7 @@ process merge_metadata {
 }
 
 process create_xml {
+    memory '2GB'
     publishDir "$params.litscan_index", mode: 'copy'
 
     input:

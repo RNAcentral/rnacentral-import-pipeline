@@ -1,6 +1,7 @@
 nextflow.enable.dsl=2
 
 process create_xml_files {
+    memory '18GB'
     publishDir "$params.litscan_index", mode: 'copy'
 
     input:
