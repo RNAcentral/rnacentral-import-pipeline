@@ -33,19 +33,7 @@ def aliases(record):
 
 
 def region_builder(info):
-    if not info["region_start"] or not info["region_stop"]:
-        return []
-    return [
-        SequenceRegion(
-            chromosome=info["chromosome"],
-            strand=info["Chain"],
-            exons=[
-                Exon(start=int(info["region_start"]), stop=int(info["region_stop"]))
-            ],
-            assembly_id=info["assembly_id"],
-            coordinate_system="1-start, fully-closed",
-        )
-    ]
+    return []
 
 
 def rna_type(record):
