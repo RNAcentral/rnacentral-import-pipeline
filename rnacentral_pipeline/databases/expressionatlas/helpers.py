@@ -48,19 +48,7 @@ def url(experiment):
 
 
 def region_builder(info):
-    print(info["region_start"], info["region_stop"], info["strand"], info["urs_taxid"])
-    return [
-        SequenceRegion(
-            chromosome=info["chromosome"][0],
-            strand=info["strand"][0],
-            exons=[
-                Exon(start=start, stop=stop)
-                for start, stop in zip(info["region_start"], info["region_stop"])
-            ],
-            assembly_id=info["assembly_id"][0],
-            coordinate_system="1-start, fully-closed",
-        )
-    ]
+    return []
 
 
 def references(interactions):
