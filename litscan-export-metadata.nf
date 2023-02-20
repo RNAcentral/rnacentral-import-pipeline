@@ -2,8 +2,7 @@ nextflow.enable.dsl=2
 
 process create_metadata {
     input:
-    val(_flag)
-    path(database)
+    tuple path(database), val(_ready)
 
     output:
     path("metadata_${database.baseName}")
@@ -80,7 +79,7 @@ workflow export_metadata {
     take: ready
     main:
       database = Channel.fromPath('workflows/litscan/results/*.txt')
-      create_metadata(ready, database) | collect | merge_metadata | set{ metadata }
+      database | combine(ready) | create_metadata | collect | merge_metadata | set{ metadata }
 
       create_xml(metadata) | create_release_file
 
