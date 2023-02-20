@@ -69,11 +69,43 @@ process load_database_table {
     path(metadata)
     path(ctl)
 
+    output:
+    val('done')
+
     script:
     """
     pgloader --on-error-stop $ctl
     """
 }
+
+process get_statistics {
+    publishDir "$baseDir/workflows/litscan/metadata/", mode: 'copy'
+
+    input:
+    val(_flag)
+
+    output:
+    path("statistics.csv")
+
+    script:
+    """
+    litscan-get-statistics.py "$PGDB_EMBASSY_USER" statistics.csv
+    """
+}
+
+process save_statistics {
+    input:
+    file(statistics)
+    path(ctl)
+
+    output:
+    val('done')
+
+    """
+    pgloader --on-error-stop $ctl
+    """
+}
+
 
 workflow export_metadata {
     take: ready
@@ -84,7 +116,10 @@ workflow export_metadata {
       create_xml(metadata) | create_release_file
 
       load = Channel.of("$baseDir/workflows/litscan/metadata/load-metadata.ctl")
-      load_database_table(metadata, load)
+      load_database_table(metadata, load) | get_statistics | set{ statistics }
+
+      load_statistics = Channel.of("$baseDir/workflows/litscan/metadata/load-statistics.ctl")
+      save_statistics(statistics, load_statistics)
 }
 
 workflow {
