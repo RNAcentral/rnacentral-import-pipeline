@@ -21,6 +21,7 @@ rust:
 	mv -f target/release/ftp-export bin
 	mv -f target/release/json2dfasta bin
 	mv -f target/release/expression-parse bin
+	mv -f target/release/bed-expander bin
 
 clean:
 	rm bin/json2fasta
