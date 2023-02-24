@@ -12,18 +12,22 @@ CREATE TEMP TABLE temp_current_urs_with_accession (
 );
 
 INSERT INTO temp_current_urs_with_accession
-(search_export_id, urs_taxid, urs, taxid, accession)
+(search_export_id, urs_taxid, urs, taxid, accession, database_name)
 (
 SELECT
     todo.id,
     todo.urs_taxid,
     todo.urs,
     todo.taxid,
-    xref.ac
+    xref.ac,
+    rncdb.display_name
 FROM search_export_urs todo
 JOIN :partition xref
 ON
     xref.upi = todo.urs AND xref.taxid = todo.taxid
+JOIN rnc_database rncdb
+ON
+    xref.dbid = rncdb.id
 );
 
 CREATE INDEX un_upis_accessions__accession ON temp_current_urs_with_accession(accession);
@@ -60,7 +64,7 @@ SELECT
     todo.accession,
     acc.classification,
     acc.common_name,
-    acc.database,
+    todo.database_name,
     acc.external_id,
     acc.function,
     acc.gene,
