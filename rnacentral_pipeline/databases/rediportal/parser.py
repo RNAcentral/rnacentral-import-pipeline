@@ -32,7 +32,6 @@ def parse(redi_bedfile, redi_metadata, rnc_bedfile, output):
         metadata["Region"] + "_" + metadata["Position"].astype(str) + "_hg38"
     )
 
-    print(metadata.dtypes)
     ## Make a dataframe from a bed file. Prefix things I want to drop with an underscore, but they all
     ## Need to be present for the conversion to work
     intersection = (
@@ -53,7 +52,8 @@ def parse(redi_bedfile, redi_metadata, rnc_bedfile, output):
                 "_rnc_score",
                 "_rnc_strand",
                 "_rnc_start",
-                "_rnc_end" "_rnc_bed_rgb",
+                "_rnc_end",
+                "_rnc_bed_rgb",
                 "rnc_num_exons",
                 "rnc_exon_sizes",
                 "rnc_exon_starts",
@@ -69,7 +69,8 @@ def parse(redi_bedfile, redi_metadata, rnc_bedfile, output):
                 "_rnc_score",
                 "_rnc_strand",
                 "_rnc_start",
-                "_rnc_end" "_rnc_bed_rgb",
+                "_rnc_end",
+                "_rnc_bed_rgb",
                 "_dot",
                 "_rnc_rna_type",
                 "_rnc_providing_dbs",
@@ -78,11 +79,19 @@ def parse(redi_bedfile, redi_metadata, rnc_bedfile, output):
         )
     )
 
-    intersection["start_rel_URS"] = (
-        intersection["start_rel_genome"] - intersection["rnc_start"]
-    )
-    print(intersection.head())
-    print(metadata.head())
-    complete_data = intersection.merge(metadata, how="inner", on="region_id")
+    # intersection["start_rel_URS"] = (
+    #     intersection["start_rel_genome"] - intersection["rnc_start"]
+    # )
+    # print(intersection.head())
+    # print(metadata.head())
+    # complete_data = intersection.merge(metadata, how="inner", on="region_id")
 
-    print(complete_data.head())
+    # complete_data["rnc_exon_starts"] = complete_data["rnc_exon_starts"].apply(lambda x: [int(a) for a in x.split(',')])
+    # complete_data["rnc_exon_sizes"] = complete_data["rnc_exon_sizes"].apply(lambda x: [int(a) for a in x.split(',')])
+    # complete_data = complete_data.explode(["rnc_exon_starts","rnc_exon_sizes"])
+    # complete_data["exon_start_rel_genome"] = (complete_data["rnc_exon_starts"] + complete_data["rnc_start"].astype(int)).astype(int)
+    # complete_data["exon_end_rel_genome"] = (complete_data["exon_start_rel_genome"] + complete_data["rnc_exon_sizes"]).astype(int)
+    # print(complete_data.dtypes)
+
+    # hits = complete_data.loc[complete_data[["start_rel_genome","exon_start_rel_genome"]].max().lt(complete_data[["end_rel_genome","exon_end_rel_genome"]].min(axis=1))]
+    # print(hits.head())
