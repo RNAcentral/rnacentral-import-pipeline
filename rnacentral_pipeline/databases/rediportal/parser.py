@@ -1,3 +1,4 @@
+import csv
 import json
 import re
 
@@ -8,6 +9,8 @@ from attr.validators import instance_of as is_a
 
 from rnacentral_pipeline.databases import data
 
+REDI_BASE_URL = "http://srv00.recas.ba.infn.it/cgi/atlas/getpage_dev.py?query1=chr{0}:{1}-{2}&query10=hg38&query9=hg"
+
 
 @attr.s(frozen=True)
 class GenomicLocation(object):
@@ -17,11 +20,11 @@ class GenomicLocation(object):
 
     @classmethod
     def build(cls, raw):
-        chromosome = re.sub("^chr", "", raw["chrom"])
+        chromosome = re.sub("^chr", "", raw.chrom)
         return cls(
             chromosome=chromosome,
-            start=raw["start_rel_URS"],
-            stop=raw["end_rel_URS"],
+            start=raw.start_rel_genome,
+            stop=raw.end_rel_genome,
         )
 
 
@@ -31,22 +34,22 @@ class RNAEditFeature(object):
     taxid = attr.ib(validator=is_a(int), converter=int)
     repeat_type = attr.ib(validator=is_a(str))
     ref = attr.ib(validator=is_a(str))
-    ed = attr.ib(validator == is_a(str))
+    ed = attr.ib(validator=is_a(str))
     start = attr.ib(validator=is_a(int), converter=int)
     stop = attr.ib(validator=is_a(int), converter=int)
     genomic_location = attr.ib(validator=is_a(GenomicLocation))
 
     @classmethod
     def build(cls, raw_feature):
-        upi, taxid = raw_feature["URS_taxid"].split("_")
+        upi, taxid = raw_feature.urs_taxid.split("_")
         return cls(
             upi=upi,
             taxid=taxid,
-            repeat_type=raw_feature["repeat_type"],
-            ref=raw_feature["Ref"],
-            ed=raw_feature["Ed"],
-            start=raw_feature["start_rel_URS"],
-            stop=raw_feature["end_rel_URS"],
+            repeat_type=raw_feature.repeat_type,
+            ref=raw_feature.Ref,
+            ed=raw_feature.Ed,
+            start=raw_feature.start_rel_URS,
+            stop=raw_feature.end_rel_URS,
             genomic_location=GenomicLocation.build(raw_feature),
         )
 
@@ -57,6 +60,11 @@ class RNAEditFeature(object):
             "genomic_location": metadata["genomic_location"],
             "reference": self.ref,
             "edit": self.ed,
+            "url": REDI_BASE_URL.format(
+                self.genomic_location.chromosome,
+                self.genomic_location.start,
+                self.genomic_location.stop,
+            ),
         }
 
         return [
@@ -85,7 +93,7 @@ def parse(redi_bedfile, redi_metadata, rnc_bedfile, output):
     ## Make a dataframe from a bed file. Prefix things I want to drop with an underscore, but they all
     ## Need to be present for the conversion to work
     intersection = (
-        redi_bed.intersect(rnc_bed, wb=True, s=True, sorted=True)
+        redi_bed.intersect(rnc_bed, wb=True, s=True)  # , sorted=True
         .to_dataframe(
             names=[
                 "chrom",
@@ -119,10 +127,13 @@ def parse(redi_bedfile, redi_metadata, rnc_bedfile, output):
     intersection["start_rel_URS"] = (
         intersection["start_rel_genome"] - intersection["rnc_transcript_start"]
     )
-    intersection["end_rel_URS"] = intersection["end_rel_genome"] = intersection[
-        "rnc_transcript_start"
-    ]
-    print(intersection.head())
+    intersection["end_rel_URS"] = (
+        intersection["end_rel_genome"] - intersection["rnc_transcript_start"]
+    )
 
     complete_data = intersection.merge(metadata, how="inner", on="region_id")
-    print(complete_data)
+
+    writer = csv.writer(output, delimiter=",")
+    for hit in complete_data.itertuples(index=False):
+        ef = RNAEditFeature.build(hit)
+        writer.writerow(ef.writeable())
