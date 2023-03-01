@@ -108,3 +108,4 @@ workflows/litscan/backup
 workflows/litscan/submit/previous-release
 singularity/*
 .python-version
+bin/bed-expander
