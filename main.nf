@@ -2,19 +2,21 @@
 
 nextflow.enable.dsl = 2
 
-include { select } from './workflows/databases/select.nf'
+
+include { genes } from './genes'
 include { import_data } from './import-data'
 include { precompute } from './precompute'
 include { analyze } from './analyze'
 include { export } from './export'
 
 workflow {
-  select \
-  | import_data \
+  import_data \
   | ifEmpty('no import') \
   | analyze \
   | ifEmpty('no analysis') \
   | precompute \
   | ifEmpty('no precompute') \
+  | genes \
+  | ifEmpty('no genes') \
   | export
 }
