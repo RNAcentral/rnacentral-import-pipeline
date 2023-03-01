@@ -29,7 +29,7 @@ def cli():
 @click.argument("redi_bedfile", type=click.File("r"))
 @click.argument("redi_metadata", type=click.File("r"))
 @click.argument("rnc_bedfile", type=click.File("r"))
-@click.argument("output", type=click.Path())
+@click.argument("output", type=click.File("w"))
 def parse_rediportal(redi_bedfile, redi_metadata, rnc_bedfile, output):
     """
     Intersect REDIportal bedfile with ours, parse the result alongside the metadata
