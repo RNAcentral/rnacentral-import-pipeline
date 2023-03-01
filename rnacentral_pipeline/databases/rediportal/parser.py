@@ -75,6 +75,7 @@ class RNAEditFeature(object):
             self.stop,
             "RNA_editing_event",
             json.dumps(metadata),
+            "REDIPORTAL",
         ]
 
 
