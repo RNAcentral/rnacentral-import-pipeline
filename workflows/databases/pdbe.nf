@@ -1,5 +1,7 @@
 process pdbe {
   when { params.databases.pdb.run }
+  errorStrategy 'retry'
+  maxRetries 5
 
   output:
   path('*.csv')
