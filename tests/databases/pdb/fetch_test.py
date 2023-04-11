@@ -19,7 +19,8 @@ import pytest
 
 from rnacentral_pipeline.databases.pdb import fetch
 
-
+@pytest.mark.pdb
+@pytest.mark.network
 @pytest.mark.skip()
 def test_produces_correct_data():
     chains = fetch.chains({("1S72", "9")})
@@ -39,7 +40,8 @@ def test_produces_correct_data():
         organism_scientific_name="Haloarcula marismortui",
     )
 
-
+@pytest.mark.pdb
+@pytest.mark.network
 @pytest.mark.parametrize(
     "pdb_id,chains",
     [

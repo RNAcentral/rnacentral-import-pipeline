@@ -16,8 +16,8 @@ limitations under the License.
 import re
 
 import attr
-from attr.validators import optional
 from attr.validators import instance_of as is_a
+from attr.validators import optional
 
 SO_PATTERN = re.compile(r"^SO:\d+$")
 
@@ -140,6 +140,7 @@ SO_INSDC_MAPPING["SO:0002129"] = "tRNA"
 SO_INSDC_MAPPING["SO:0000267"] = "tRNA"
 SO_INSDC_MAPPING["SO:0000273"] = "tRNA"
 SO_INSDC_MAPPING["SO:0002345"] = "rRNA"
+SO_INSDC_MAPPING["SO:0002247"] = "other"
 
 
 class UnxpectedRnaType(Exception):

@@ -12,21 +12,18 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-
-import re
+import asyncio
 import logging
+import re
 from functools import lru_cache
 
 import requests
 from retry import retry
-from ratelimiter import RateLimiter
+from throttler import throttle
 
 from rnacentral_pipeline.databases.data import Reference
-
-from .utils import clean_title
-from .utils import pretty_location
-from .utils import write_lookup
-
+from rnacentral_pipeline.utils import cacheable
+from .utils import clean_title, pretty_location, write_lookup
 
 LOGGER = logging.getLogger(__name__)
 
@@ -39,10 +36,24 @@ class UnknownReference(Exception):
 
     pass
 
-
-@lru_cache()
+## Split the actualy async request bit away from the other
+## bits to facilitate caching with coroutines
 @retry(requests.HTTPError, tries=5, delay=1)
-@RateLimiter(max_calls=5, period=1)
+@throttle(rate_limit=5, period=1.0)
+@lru_cache()
+@cacheable
+async def get_data(id_reference):
+    url = id_reference.external_url()
+    response = requests.get(url)
+    response.raise_for_status()
+
+    data = response.json()
+    assert data, "Somehow got no data"
+    return data
+
+## Higher level cache on the IDs 
+## Lower level cache on the coroutines
+@lru_cache()
 def summary(id_reference):
     """
     Get the summary data from EuropePMC for the given id reference. This will
@@ -52,12 +63,7 @@ def summary(id_reference):
     """
 
     LOGGER.info("Fetching remote summary for %s", id_reference)
-    url = id_reference.external_url()
-    response = requests.get(url)
-    response.raise_for_status()
-
-    data = response.json()
-    assert data, "Somehow got no data"
+    data = asyncio.run(get_data(id_reference))
     if data.get("hitCount", 0) == 0:
         raise UnknownReference(id_reference)
 

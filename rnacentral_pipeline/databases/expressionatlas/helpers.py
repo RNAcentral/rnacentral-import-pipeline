@@ -48,19 +48,7 @@ def url(experiment):
 
 
 def region_builder(info):
-    print(info["region_start"], info["region_stop"], info["strand"], info["urs_taxid"])
-    return [
-        SequenceRegion(
-            chromosome=info["chromosome"][0],
-            strand=info["strand"][0],
-            exons=[
-                Exon(start=start, stop=stop)
-                for start, stop in zip(info["region_start"], info["region_stop"])
-            ],
-            assembly_id=info["assembly_id"][0],
-            coordinate_system="1-start, fully-closed",
-        )
-    ]
+    return []
 
 
 def references(interactions):
@@ -79,7 +67,7 @@ def as_entry(info, experiment):
         primary_id=primary_id(info),
         accession=accession(info),
         ncbi_tax_id=taxid(info),
-        database="EXPRESSIONATLAS",
+        database="Expression Atlas",
         sequence=info["seq"][0],
         regions=region_builder(info),
         rna_type=info["rna_type"][0],

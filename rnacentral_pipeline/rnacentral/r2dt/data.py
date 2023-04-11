@@ -20,11 +20,10 @@ import re
 import typing as ty
 from pathlib import Path
 
-from Bio import SeqIO
-
 import attr
 from attr.validators import instance_of as is_a
 from attr.validators import optional
+from Bio import SeqIO
 
 from rnacentral_pipeline.databases.data import RibovoreResult
 
@@ -54,6 +53,107 @@ TRNAS = {
     "SO:0002129",
     "SO:0000267",
 }
+
+SO_RNA_NAME_LOOKUP = {
+    "SO:0000254": "alanyl_tRNA",
+    "SO:0000259": "glutaminyl_tRNA",
+    "SO:0000268": "prolyl_tRNA",
+    "SO:0000260": "glutamyl_tRNA",
+    "SO:0000266": "methionyl_tRNA",
+    "SO:0000256": "asparaginyl_tRNA",
+    "SO:0000270": "threonyl_tRNA",
+    "SO:0000261": "glycyl_tRNA",
+    "SO:0000273": "valyl_tRNA",
+    "SO:0000272": "tyrosyl_tRNA",
+    "SO:0000258": "cysteinyl_tRNA",
+    "SO:0000263": "isoleucyl_tRNA",
+    "SO:0000269": "seryl_tRNA",
+    "SO:0000264": "leucyl_tRNA",
+    "SO:0000271": "tryptophanyl_tRNA",
+    "SO:0005857": "selenocysteinyl_tRNA",
+    "SO:0000766": "pyrrolysyl_tRNA",
+    "SO:0000265": "lysyl_tRNA",
+    "SO:0000257": "aspartyl_tRNA",
+    "SO:0001036": "arginyl_tRNA",
+    "SO:0000262": "histidyl_tRNA",
+    "SO:0001172": "tRNA_region",
+    "SO:0002129": "mt_tRNA",
+    "SO:0000267": "phenylalanyl_tRNA",
+    "SO:0001001": "cytosolic_23S_rRNA",
+    "SO:0000386": "RNase_P_RNA",
+    "SO:0000650": "cytosolic_SSU_rRNA",
+    "SO:0000652": "cytosolic_5S_rRNA",
+    "SO:0000587": "group_I_intron",
+    "SO:0000603": "group_II_intron",
+    "SO:0000651": "cytosolic_LSU_rRNA",
+    "SO:0002128": "mt_rRNA",
+    "SO:0000407": "cytosolic_18S_rRNA",
+    "SO:0002345": "mt_LSU_rRNA",
+    "SO:0002344": "mt_SSU_rrNA",
+    "SO:0001001": "cytosolic_23S_rRNA",
+    "SO:0000391": "U1_snRNA",
+    "SO:0000392": "U2_snRNA",  # below here added...
+    "SO:0000380": "hammerhead_ribozyme",
+    "SO:0001179": "U3_snoRNA",
+    "SO:0000393": "U4_snRNA",
+    "SO:0000593": "C_D_box_snoRNA",
+    "SO:0000590": "SRP_RNA",
+    "SO:0000405": "Y_RNA",
+    "SO:0000584": "tmRNA",
+    "SO:0000390": "telomerase_RNA",
+    "SO:0000396": "U6_snRNA",
+    "SO:0001244": "pre_miRNA",
+    "SO:0000385": "RNase_MRP_RNA",
+    "SO:1001274": "SECIS_element",
+    "SO:0000205": "three_prime_UTR",
+    "SO:0000655": "ncRNA",
+    "SO:0000644": "antisense_RNA",
+    "SO:0000204": "five_prime_UTR",
+    "SO:0000594": "H_ACA_box_snoRNA",
+    "SO:0000035": "riboswitch",
+    "SO:0000243": "internal_ribosome_entry_site",
+    "SO:0000274": "snRNA",
+    "SO:0000275": "snoRNA",
+    "SO:0000374": "ribozyme",
+    "SO:0005836": "regulatory_region",
+    "SO:0001459": "CRISPR",
+    "SO:0001427": "cis_regulatory_frameshift_element",
+    "SO:1001268": "recoding_stimulatory_region",
+    "SO:0000370": "small_regulatory_ncRNA",
+    "SO:0000837": "UTR_region",
+    "SO:0001263": "ncRNA_gene",
+    # From Rfam table...
+    "SO:0000122": "RNA_sequence_secondary_structure",
+    "SO:0000140": "attenuator",
+    "SO:0000376": "RNA_6S",
+    "SO:0000377": "CsrB_RsmB_RNA",
+    "SO:0000378": "DsrA_RNA",
+    "SO:0000379": "GcvB_RNA",
+    "SO:0000383": "MicF_RNA",
+    "SO:0000384": "OxyS_RNA",
+    "SO:0000387": "RprA_RNA",
+    "SO:0000388": "RRE_RNA",
+    "SO:0000389": "spot_42_RNA",
+    "SO:0000394": "U4atac_snRNA",
+    "SO:0000395": "U5_snRNA",
+    "SO:0000397": "U6atac_snRNA",
+    "SO:0000398": "U11_snRNA",
+    "SO:0000399": "U12_snRNA",
+    "SO:0000404": "vault_RNA",
+    "SO:0000588": "autocatalytically_spliced_intron",
+    "SO:0000726": "repeat_unit",
+    "SO:0000836": "mRNA_region",
+    "SO:0000990": "class_I_RNA",
+    "SO:0001055": "transcriptional_cis_regulatory_region",
+    "SO:0001877": "lncRNA",
+    # from updated cms...
+    "SO:0000233": "mature_transcript",
+}
+
+"""
+
+
+"""
 
 
 @enum.unique
@@ -97,11 +197,14 @@ class ModelInfo(object):
     source: Source = attr.ib(validator=is_a(Source))
     length: ty.Optional[int] = attr.ib(validator=optional(is_a(int)))
     basepairs: ty.Optional[int] = attr.ib(validator=optional(is_a(int)))
+    cell_location: ty.Optional[str] = attr.ib(validator=optional(is_a(str)))
 
     def writeable(self):
         return [
             self.model_name,
             self.taxid,
+            self.cell_location,
+            SO_RNA_NAME_LOOKUP[self.so_rna_type],
             self.so_rna_type,
             self.source.name,
             self.length,

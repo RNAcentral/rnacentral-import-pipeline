@@ -50,12 +50,13 @@ process species_specific {
 
   export PYTHONIOENCODING=utf8
   psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > raw.json
-  json2fasta.py raw.json rnacentral_species_specific_ids.fasta 
+  json2fasta.py raw.json rnacentral_species_specific_ids.fasta
   """
 }
 
 process create_ssi {
   publishDir "${params.export.ftp.publish}/sequences/.internal/", mode: 'copy'
+  memory '8GB'
 
   input:
   path('rnacentral_species_specific_ids.fasta')

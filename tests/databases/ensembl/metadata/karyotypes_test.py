@@ -12,17 +12,18 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-
+import asyncio
 import pytest
 
 from rnacentral_pipeline.databases.ensembl.metadata import karyotypes as karyo
 
 
 def karyotype(domain, species):
-    raw = karyo.fetch(species, domain)
+    raw = asyncio.run(karyo.fetch(species, domain))
     return karyo.process(raw)
 
-
+@pytest.mark.ensembl
+@pytest.mark.network
 def test_builds_empty_karyotype_for_missing_data():
     _, found = karyotype("ensembl", "glycine_max")
     assert len(found) == 1190
@@ -36,7 +37,8 @@ def test_builds_empty_karyotype_for_missing_data():
         ],
     }
 
-
+@pytest.mark.ensembl
+@pytest.mark.network
 def test_builds_with_known_bands():
     _, found = karyotype("ensembl", "homo_sapiens")
     assert len(found) == 194

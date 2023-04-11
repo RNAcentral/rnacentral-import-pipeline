@@ -27,8 +27,8 @@ $$,
 $$
 create table if not exists load_rfam_clans (
     rfam_clan_id character varying(20) COLLATE pg_catalog."default" NOT NULL,
-    name character varying(40) COLLATE pg_catalog."default" NOT NULL,
-    description character varying(1000) COLLATE pg_catalog."default" NOT NULL,
+    name text COLLATE pg_catalog."default" NOT NULL,
+    description text COLLATE pg_catalog."default" NOT NULL,
     family_count integer NOT NULL
 );
 $$

@@ -13,21 +13,19 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import re
-import attr
-import logging
 import collections as coll
+import logging
+import re
 import typing as ty
 
+import attr
 from Bio.Seq import Seq
 
 import rnacentral_pipeline.databases.helpers.embl as embl
-from rnacentral_pipeline.databases.helpers.phylogeny import UnknownTaxonId
 import rnacentral_pipeline.databases.helpers.publications as pubs
-
 from rnacentral_pipeline import ribovore
-from rnacentral_pipeline.databases.data import Entry
-from rnacentral_pipeline.databases.data import IdReference
+from rnacentral_pipeline.databases.data import Entry, IdReference
+from rnacentral_pipeline.databases.helpers.phylogeny import UnknownTaxonId
 
 LOGGER = logging.getLogger(__name__)
 
@@ -394,8 +392,11 @@ def is_skippable_sequence(
 
 def as_entry(ctx, record, feature) -> Entry:
     prod = product(feature)
+    gene = embl.gene(feature)
     if prod:
         prod = prod[0:500]
+    if gene:
+        gene = gene[0:200]
 
     record_refs = ctx.dr[record.id]
     return Entry(
@@ -414,7 +415,7 @@ def as_entry(ctx, record, feature) -> Entry:
         species=species(record),
         common_name=common_name(record),
         lineage=lineage(record),
-        gene=embl.gene(feature),
+        gene=gene,
         locus_tag=embl.locus_tag(feature),
         product=prod,
         parent_accession=parent_accession(record),

@@ -14,6 +14,7 @@ limitations under the License.
 """
 
 import pickle
+import threading
 
 
 def pickle_stream(stream, handle, *args, **kwargs):
@@ -27,3 +28,28 @@ def unpickle_stream(handle, *args, **kwargs):
             yield pickle.load(handle)
     except EOFError:
         return
+
+
+## From https://stackoverflow.com/a/46723144/3249000 - make the cache store async objects properly
+class Cacheable:
+    def __init__(self, co):
+        self.co = co
+        self.done = False
+        self.result = None
+        self.lock = threading.RLock()
+        ## This needs to be a re-rntrant lock so it is only release by the coroutine that acquired it
+
+    def __await__(self):
+        with self.lock:
+            if self.done:
+                return self.result
+            self.result = yield from self.co.__await__()
+            self.done = True
+            return self.result
+
+def cacheable(f):
+    def wrapped(*args, **kwargs):
+        r = f(*args, **kwargs)
+        return Cacheable(r)
+    return wrapped
+

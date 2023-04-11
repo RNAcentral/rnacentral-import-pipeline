@@ -3,6 +3,8 @@ nextflow.enable.dsl=2
 process fetch_model_mapping {
   when { params.r2dt.run }
 
+  memory '16 MB'
+
   input:
   val(_flag)
   path(query)
@@ -17,7 +19,8 @@ process fetch_model_mapping {
 
 process extract_sequences {
   when { params.r2dt.run }
-  clusterOptions '-sp 100'
+
+  memory '16 MB'
 
   input:
   val(_flag)
@@ -32,6 +35,7 @@ process extract_sequences {
     -v ON_ERROR_STOP=1 \
     -v 'tablename=${params.r2dt.tablename}' \
     -v max_len=10000 \
+    -v 'sequence_count=${params.r2dt.sequence_count}' \
     -f "$query" "$PGDATABASE" > raw.json
   mkdir parts/
   split --number=l/4000 --additional-suffix='.json' raw.json parts/
@@ -39,6 +43,8 @@ process extract_sequences {
 }
 
 process split_sequences {
+
+  memory '8 MB'
 
   input:
   path("raw.json")
@@ -59,17 +65,18 @@ process layout_sequences {
   memory params.r2dt.layout.memory
   container params.r2dt.container
   containerOptions "--bind ${params.r2dt.cms_path}:/rna/r2dt/data/cms"
-  errorStrategy { task.exitStatus = 130 ? 'ignore' : 'terminate' }
+  errorStrategy { task.exitStatus = 130 ? 'ignore' : 'finish' }
 
   input:
   path(sequences)
 
   output:
-  tuple path("$sequences"), path('output')
+  tuple path("$sequences"), path('output'), path('version')
 
   """
   esl-sfetch --index $sequences
   r2dt.py draw $sequences output/
+  r2dt.py version | perl -ne 'm/(\\d\\.\\d)/ && print "\$1\\n"' > version
   """
 }
 
@@ -78,9 +85,10 @@ process publish_layout {
   errorStrategy { task.attempt < 5 ? "retry" : "ignore" }
   maxRetries 5
   queue 'datamover'
+  memory '256 MB'
 
   input:
-  tuple path(sequences), path(output), path(mapping)
+  tuple path(sequences), path(output), path(_version), path(mapping)
 
   output:
   val 'done', emit: flag
@@ -93,9 +101,11 @@ process publish_layout {
 }
 
 process parse_layout {
+    memory '256 MB'
+    errorStrategy "ignore"
+
   input:
-  tuple path(sequences), path(to_parse), path(mapping)
-  errorStrategy "ignore"
+  tuple path(sequences), path(to_parse), path(version), path(mapping)
 
   output:
   path "data.csv", emit: data
@@ -103,7 +113,7 @@ process parse_layout {
 
   """
   rnac r2dt process-svgs --allow-missing $mapping $to_parse data.csv
-  rnac r2dt create-attempted $sequences attempted.csv
+  rnac r2dt create-attempted $sequences $version attempted.csv
   """
 }
 

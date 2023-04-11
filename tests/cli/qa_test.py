@@ -15,11 +15,13 @@ limitations under the License.
 
 import os
 
+import pytest
 from click.testing import CliRunner
 
 from rnacentral_pipeline.cli import qa
 
 
+@pytest.mark.cli
 def test_can_parse_rfam_output():
     runner = CliRunner()
     filename = os.path.abspath("data/qa/rfam/scan.tbl")

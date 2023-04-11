@@ -56,9 +56,6 @@ def external_id(data):
 
 def is_high_quality(data):
     name = data["database"].lower()
-    ## Do not send some RNAs to ensembl
-    if data["rna_type"] in DISALLOWED_TYPES:
-        return False
     if name in TRUSTED_DB:
         return True
     if name == "rfam":
@@ -75,6 +72,10 @@ def builder(data):
     xrefs = []
     seen = set()
     key = op.itemgetter("database", "id")
+    ## Do not send some RNAs to ensembl
+    if data["rna_type"] in DISALLOWED_TYPES:
+        return {}
+
     for xref in data["xrefs"]:
         if not is_high_quality(xref):
             continue
@@ -92,7 +93,9 @@ def builder(data):
 
 def generate_file(raw, output, schema_file=None):
     results = (builder(b) for b in psql.json_handler(raw))
-    results = [r for r in results if re.match(SEQUENCE_PATTERN, r["sequence"])]
+    results = [
+        r for r in results if re.match(SEQUENCE_PATTERN, r.get("sequence", ""))
+    ]  ## Filters invalid sequences, but also empty dicts = disallowed types
 
     if schema_file:
         with open(schema_file, "r") as raw:

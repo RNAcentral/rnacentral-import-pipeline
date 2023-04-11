@@ -7,13 +7,14 @@ name: Building Pipeline Containers
 on:
  push:
   branches:
-   'dev'
+   - 'dev'
+   - 'python-update'
 jobs:
 
   starting-notification:
    runs-on: ubuntu-latest
    steps:
-     - uses: actions/checkout@v2
+     - uses: actions/checkout@v3
 
      - name: Intital notification
        uses: rtCamp/action-slack-notify@v2
@@ -25,7 +26,7 @@ jobs:
   create-docker-image:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: docker login
         env:
@@ -34,17 +35,17 @@ jobs:
         run: docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
 
       - name: docker build
-        run: docker build -f Dockerfile -t rnacentral/rnacentral-import-pipeline .
+        run: docker build -f Dockerfile -t rnacentral/rnacentral-import-pipeline:latest .
 
       - name: docker push
-        run: docker push rnacentral/rnacentral-import-pipeline
+        run: docker push rnacentral/rnacentral-import-pipeline:latest
 
   finished-notification:
     needs:
       - create-docker-image
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Finished notification
         uses: rtCamp/action-slack-notify@v2
@@ -65,7 +66,7 @@ jobs:
       - singularity-conversion
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Finished notification
         uses: rtCamp/action-slack-notify@v2

@@ -21,6 +21,7 @@ from rnacentral_pipeline.databases.data import TRnaScanResults
 from rnacentral_pipeline.trnascan import parser
 
 
+@pytest.mark.trna
 @pytest.mark.parametrize(
     "filename,count",
     [
@@ -34,6 +35,7 @@ def test_can_parse_a_file(filename, count):
     assert len(list(parser.parse(path))) == count
 
 
+@pytest.mark.trna
 def test_produces_reasonable_data():
     path = Path("data/r2dt/gtrnadb/E-shuffled.part_2464.txt")
     assert next(parser.parse(path)) == TRnaScanResults(

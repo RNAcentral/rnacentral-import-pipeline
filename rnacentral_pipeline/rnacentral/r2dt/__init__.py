@@ -21,13 +21,14 @@ from pathlib import Path
 
 import joblib
 
-from rnacentral_pipeline.rnacentral.r2dt import parser
-from rnacentral_pipeline.rnacentral.r2dt import should_show
-from rnacentral_pipeline.rnacentral.r2dt.models import crw
-from rnacentral_pipeline.rnacentral.r2dt.models import gtrnadb
-from rnacentral_pipeline.rnacentral.r2dt.models import ribovision
-from rnacentral_pipeline.rnacentral.r2dt.models import rnase_p
-from rnacentral_pipeline.rnacentral.r2dt.models import rfam
+from rnacentral_pipeline.rnacentral.r2dt import parser, should_show
+from rnacentral_pipeline.rnacentral.r2dt.models import (
+    crw,
+    gtrnadb,
+    rfam,
+    ribovision,
+    rnase_p,
+)
 
 
 def parse(model_mapping: ty.TextIO, directory: str, allow_missing=False):
@@ -36,7 +37,10 @@ def parse(model_mapping: ty.TextIO, directory: str, allow_missing=False):
 
 
 def write(
-    model_mapping: ty.TextIO, directory: str, output: ty.TextIO, allow_missing=False
+    model_mapping: ty.TextIO,
+    directory: str,
+    output: ty.TextIO,
+    allow_missing=False,
 ):
     """
     Parse all the secondary structure data from the given directory and write
@@ -101,8 +105,8 @@ def prepare_s3(
             raw.write("\n")
 
 
-def write_model(generator, handle, output):
-    data = generator(handle)
+def write_model(generator, handle, output, extra=None):
+    data = generator(handle, extra=extra)
     data = (d.writeable() for d in data)
     csv.writer(output).writerows(data)
 
@@ -115,16 +119,16 @@ def write_ribovision(handle, output):
     return write_model(ribovision.parse, handle, output)
 
 
-def write_crw(handle, output):
-    return write_model(crw.parse, handle, output)
+def write_crw(handle, db_url, output):
+    return write_model(crw.parse, handle, output, extra=db_url)
 
 
 def write_rnase_p(handle, output):
     return write_model(rnase_p.parse, handle, output)
 
 
-def write_rfam(handle, output):
-    return write_model(rfam.parse, handle, output)
+def write_rfam(handle, db_url, output):
+    return write_model(rfam.parse, handle, output, extra=db_url)
 
 
 def write_should_show(model: Path, handle: ty.IO, db_url: str, output: ty.IO):
