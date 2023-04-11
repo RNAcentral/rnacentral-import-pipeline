@@ -6,3 +6,4 @@
 !openssl
 !poetry.lock
 !pyproject.toml
+!Makefile
