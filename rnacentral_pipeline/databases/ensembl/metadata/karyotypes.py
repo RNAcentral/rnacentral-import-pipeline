@@ -13,16 +13,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import asyncio
 import csv
-import json
 import itertools as it
+import json
+from functools import lru_cache
 
 import requests
 from retry import retry
-from ratelimiter import RateLimiter
+from throttler import throttle
 
-from functools import lru_cache
-
+from rnacentral_pipeline.utils import cacheable
 
 DOMAINS = {
     "ensembl",
@@ -31,8 +32,9 @@ DOMAINS = {
 
 @lru_cache()
 @retry(requests.HTTPError, tries=5, delay=1)
-@RateLimiter(max_calls=15, period=1)
-def find_species(domain):
+@throttle(rate_limit=15, period=1.0)
+@cacheable
+async def find_species(domain):
     response = requests.get(
         "http://rest.%s.org/info/species" % domain,
         headers={"Content-Type": "application/json"},
@@ -47,8 +49,9 @@ def find_species(domain):
 
 @lru_cache()
 @retry(requests.HTTPError, tries=5, delay=1)
-@RateLimiter(max_calls=15, period=1)
-def fetch(species, domain):
+@throttle(rate_limit=15, period=1.0)
+@cacheable
+async def fetch(species, domain):
     response = requests.get(
         "http://rest.%s.org/info/assembly/%s?bands=1" % (domain, species),
         headers={"Content-Type": "application/json"},
@@ -89,9 +92,9 @@ def process(raw):
 
 
 def for_domain(domain, allowed=None):
-    for species in find_species(domain):
+    for species in asyncio.run(find_species(domain)):
         if not species or (allowed and species in allowed):
-            raw_data = fetch(species, domain)
+            raw_data = asyncio.run(fetch(species, domain))
             yield process(raw_data)
 
 

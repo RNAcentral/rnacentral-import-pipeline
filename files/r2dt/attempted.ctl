@@ -1,11 +1,13 @@
 LOAD CSV
 FROM ALL FILENAMES MATCHING ~<r2dt-attempted.*csv$>
 HAVING FIELDS (
-  urs
+  urs,
+  r2dt_version
 )
 INTO {{PGDATABASE}}?load_traveler_attempted
 TARGET COLUMNS (
-  urs
+  urs,
+  r2dt_version
 )
 
 WITH
@@ -19,7 +21,8 @@ DROP TABLE IF EXISTS load_traveler_attempted;
 $$,
 $$
 CREATE TABLE load_traveler_attempted (
-  urs text primary key
+  urs text primary key,
+  r2dt_version text
 );
 $$
 
@@ -27,15 +30,18 @@ AFTER LOAD DO
 $$
 INSERT INTO pipeline_tracking_traveler (
   urs,
-  last_run
+  last_run,
+  r2dt_version
 ) (
 SELECT
   load.urs,
-  NOW()
+  NOW(),
+  load.r2dt_version
 FROM load_traveler_attempted load
 ) ON CONFLICT (urs) DO UPDATE
-SET 
-  last_run = EXCLUDED.last_run
+SET
+  last_run = EXCLUDED.last_run,
+  r2dt_version = EXCLUDED.r2dt_version
 ;
 $$
 ;

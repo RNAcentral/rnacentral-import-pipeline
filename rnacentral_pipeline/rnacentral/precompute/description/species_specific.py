@@ -54,6 +54,7 @@ ORDERING = [
     Database.gtrnadb,
     Database.tmrna_website,
     Database.five_srrnadb,
+    Database.ribocentre,
     Database.pdbe,
     Database.refseq,
     Database.ensembl_plants,
@@ -81,6 +82,7 @@ ORDERING = [
     Database.ena,
     Database.zwd,
     Database.noncode,
+    Database.evlncrnas,
 ]
 """
 A dict that defines the ordered choices for each type of RNA. This is the

@@ -16,11 +16,13 @@ limitations under the License.
 import os
 from pathlib import Path
 
+import pytest
 from click.testing import CliRunner
 
 from rnacentral_pipeline.cli import ensembl
 
 
+@pytest.mark.cli
 def test_can_fetch_assemblies():
     runner = CliRunner()
     filename = os.path.abspath("data/qa/rfam/scan.tbl")

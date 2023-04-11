@@ -15,11 +15,13 @@ limitations under the License.
 
 import os
 
+import pytest
 from click.testing import CliRunner
 
 from rnacentral_pipeline.cli import ols
 
 
+@pytest.mark.cli
 def test_can_lookup_terms():
     runner = CliRunner()
     output = "terms.csv"

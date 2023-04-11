@@ -15,11 +15,13 @@ limitations under the License.
 
 import tempfile
 
+import pytest
 import six
 
 from rnacentral_pipeline import utils
 
 
+@pytest.mark.utils
 def test_can_serialize_stream():
     data = ["a", 1, 2, 3, 4]
     with tempfile.NamedTemporaryFile() as tmp:

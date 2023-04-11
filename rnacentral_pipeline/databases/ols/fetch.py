@@ -13,25 +13,24 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import six
+import asyncio
+from functools import lru_cache
 
 import requests
+import six
 from furl import furl
 from retry import retry
 from retry.api import retry_call
-from ratelimiter import RateLimiter
-
-from functools import lru_cache
+from throttler import throttle
 
 from rnacentral_pipeline.databases.data import OntologyTerm
 
 BASE = "https://www.ebi.ac.uk/ols/api/ontologies"
 
 
-@lru_cache(maxsize=500)
 @retry(requests.HTTPError, tries=5, delay=1)
-@RateLimiter(max_calls=10, period=1)
-def query_ols(url):
+@throttle(rate_limit=10, period=1.0)
+async def query_ols(url):
     if isinstance(url, furl):
         url = url.url
     response = requests.get(url)
@@ -46,7 +45,7 @@ def ontology_url(ontology):
 
     url = furl(BASE)
     url.path.segments.append(ontology.upper())
-    info = query_ols(url.url)
+    info = asyncio.run(query_ols(url.url))
     return furl(info["config"]["baseUris"][0])
 
 
@@ -71,23 +70,31 @@ def term(term_id):
 
     ontology, _ = term_id.split(":", 1)
     url = term_url(term_id)
-    term_info = query_ols(url.url)
+    term_info = asyncio.run(query_ols(url.url))
 
-    definition = None
-    if term_info["description"]:
-        definition = " ".join(term_info["description"] or "")
+    print(term_info)
+    definition = (
+        term_info["annotation"].get("definition", [None])[0]
+        or term_info.get("description", [None])[0]
+    )
+    # if term_info['annotation']["definition"]:
+    #     definition = " ".join(term_info["annotation"]["definition"] or "")
 
     qualifier = None
     synonyms = []
-    given = term_info.get("synonyms", None) or []
+    given = (
+        term_info["annotation"].get("has_exact_synonym", None)
+        or term_info.get("synonyms", None)
+    ) or None
     leader = "INSDC_qualifier:"
-    for synonym in given:
-        if synonym.startswith(leader):
-            if qualifier:
-                raise ValueError("Multiple INSDC qualifiers found")
-            qualifier = synonym[len(leader) :]
-        else:
-            synonyms.append(synonym)
+    if given:
+        for synonym in given:
+            if synonym.startswith(leader):
+                if qualifier:
+                    raise ValueError("Multiple INSDC qualifiers found")
+                qualifier = synonym[len(leader) :]
+            else:
+                synonyms.append(synonym)
 
     return OntologyTerm(
         ontology=ontology,

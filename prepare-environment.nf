@@ -10,7 +10,6 @@ include { slack_message } from './workflows/utils/slack'
 /* On the cluster this is much much faster than wget */
 process get_r2dt_data {
   queue 'datamover'
-  executor 'lsf'
   container ''
 
   input:

@@ -1,11 +1,11 @@
 LOAD CSV
-FROM ALL FILENAMES MATCHING ~<models.*.csv$>
+FROM ALL FILENAMES MATCHING ~<data.*.csv$>
 HAVING FIELDS (
     model_name,
     taxid,
+    cellular_location,
     rna_type,
-    so_term,
-    cell_location,
+    so_term_id,
     model_source,
     model_length,
     model_basepair_count
@@ -13,9 +13,9 @@ HAVING FIELDS (
 TARGET COLUMNS (
     model_name,
     taxid,
+    cellular_location,
     rna_type,
-    so_term,
-    cell_location,
+    so_term_id,
     model_source,
     model_length,
     model_basepair_count
@@ -33,9 +33,9 @@ $$
 create table load_secondary_layout_models (
     model_name text NOT NULL,
     taxid int NOT NULL,
+    cellular_location text,
     rna_type text NOT NULL,
-    so_term text NOT NULL,
-    cell_location text,
+    so_term_id text NOT NULL,
     model_source text not null,
     model_length int,
     model_basepair_count int
@@ -47,9 +47,9 @@ $$
 INSERT INTO rnc_secondary_structure_layout_models (
     model_name,
     taxid,
+    cellular_location,
     rna_type,
     so_term_id,
-    cellular_location,
     model_source,
     model_length,
     model_basepair_count
@@ -57,14 +57,23 @@ INSERT INTO rnc_secondary_structure_layout_models (
 SELECT
     model_name,
     taxid,
+    cellular_location,
     rna_type,
-    so_term,
-    cell_location,
+    so_term_id,
     model_source,
     model_length,
     model_basepair_count
 FROM load_secondary_layout_models load
-) ON CONFLICT (model_name) DO NOTHING
+) ON CONFLICT (model_name) DO UPDATE
+SET
+    taxid = EXCLUDED.taxid,
+    cellular_location = EXCLUDED.cellular_location,
+    rna_type = EXCLUDED.rna_type,
+    so_term_id = EXCLUDED.so_term_id,
+    model_source = EXCLUDED.model_source,
+    model_length = EXCLUDED.model_length,
+    model_basepair_count = EXCLUDED.model_basepair_count
+
 ;
 $$,
 $$

@@ -16,10 +16,11 @@ limitations under the License.
 import pytest
 from furl import furl
 
-from rnacentral_pipeline.databases.ols import fetch as ols
 from rnacentral_pipeline.databases.data import OntologyTerm
+from rnacentral_pipeline.databases.ols import fetch as ols
 
 
+@pytest.mark.ols
 @pytest.mark.parametrize(
     "ontology,url",
     [
@@ -32,6 +33,7 @@ def test_can_get_correct_base_url(ontology, url):
     assert ols.ontology_url(ontology) == furl(url)
 
 
+@pytest.mark.ols
 @pytest.mark.parametrize(
     "term,url",
     [
@@ -46,6 +48,8 @@ def test_can_get_correct_term_url(term, url):
     assert val == furl(url)
 
 
+@pytest.mark.ols
+@pytest.mark.network
 def test_can_fetch_a_go_term():
     assert ols.term("GO:0005739") == OntologyTerm(
         ontology="GO",
@@ -62,6 +66,7 @@ def test_can_fetch_a_go_term():
     )
 
 
+@pytest.mark.ols
 def test_can_fetch_an_so_term():
     assert ols.term("SO:0000276") == OntologyTerm(
         ontology="SO",
@@ -71,12 +76,12 @@ def test_can_fetch_an_so_term():
             "Small, ~22-nt, RNA molecule that is the endogenous "
             "transcript of a miRNA gene (or the product of other non "
             "coding RNA genes. Micro RNAs are produced from precursor "
-            "molecules (SO:0000647) that can form local hairpin "
+            "molecules (SO:0001244) that can form local hairpin "
             "structures, which ordinarily are processed (usually via the "
             "Dicer pathway) such that a single miRNA molecule "
             "accumulates from one arm of a hairpin precursor molecule. "
-            "Micro RNAs may trigger the cleavage of their target "
-            "molecules or act as translational repressors."
+            "Micro RNAs may trigger the cleavage of their target molecules "
+            "or act as translational repressors."
         ),
         synonyms=[
             "small temporal RNA",
@@ -88,6 +93,7 @@ def test_can_fetch_an_so_term():
     )
 
 
+@pytest.mark.ols
 def test_caching_works_as_expected():
     ols.term.cache_clear()
     assert ols.term.cache_info().hits == 0

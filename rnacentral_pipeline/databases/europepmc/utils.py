@@ -17,7 +17,7 @@ import re
 import csv
 import logging
 
-from six.moves import html_parser
+import html
 
 from rnacentral_pipeline.databases.helpers.publications import reference
 
@@ -55,8 +55,7 @@ def clean_title(title):
     Cleanup the title into a normalized setup.
     """
     stripped = re.sub(r"\.$", "", title)
-    parser = html_parser.HTMLParser()
-    return parser.unescape(stripped)
+    return html.unescape(stripped)
 
 
 def id_refs_from_handle(handle, column):
