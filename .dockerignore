@@ -5,3 +5,4 @@
 !utils
 !openssl
 !poetry.lock
+!pyproject.toml
