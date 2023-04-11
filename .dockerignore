@@ -4,3 +4,4 @@
 !Cargo.lock
 !utils
 !openssl
+!poetry.lock
