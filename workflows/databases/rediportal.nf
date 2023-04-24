@@ -56,6 +56,9 @@ process load_rediportal {
   input:
     tuple path(features), path(ctl)
 
+  output:
+    val('rediportal done')
+
   """
   psql -v ON_ERROR_STOP=1 -f $ctl "$PGDATABASE"
   """
@@ -63,16 +66,21 @@ process load_rediportal {
 }
 
 workflow rediportal {
-  Channel.fromPath("files/ftp-export/genome_coordinates/query.sql") | set { region_query }
-  Channel.fromPath("files/rediportal/load.ctl") | set { load_query }
+  take: ready
+  emit: done
+  main:
+    if( params.databases.rediportal.run ) {
+      Channel.fromPath("files/ftp-export/genome_coordinates/query.sql") | set { region_query }
+      Channel.fromPath("files/rediportal/load.ctl") | set { load_query }
 
-  region_query | build_rnc_bedfile | set { rnc_bedfile }
-  fetch_rediportal_metadata | set { redi_meta }
-  fetch_rediportal_bedfile) | set {redi_bedfile }
-  rnc_bedfile.combine(redi_meta, redi_bedfile) | intersect_rnc_rediportal \
-  | combine(load_query) | load_rediportal
-
-
-
+      region_query | build_rnc_bedfile | set { rnc_bedfile }
+      fetch_rediportal_metadata | set { redi_meta }
+      fetch_rediportal_bedfile) | set {redi_bedfile }
+      rnc_bedfile.combine(redi_meta, redi_bedfile) | intersect_rnc_rediportal \
+      | combine(load_query) | load_rediportal | set { done }
+    }
+    else {
+      Channel.of('rediportal not run') | set { done }
+    }
 
 }
