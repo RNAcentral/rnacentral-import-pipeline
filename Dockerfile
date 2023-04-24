@@ -113,17 +113,6 @@ ENV PATH="$PATH:/root/.cargo/bin"
 ENV CARGO_NET_GIT_FETCH_WITH_CLI=true
 RUN  make rust
 
-## Download Rust toolchain
-RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
-
-COPY utils ./utils
-COPY Makefile Makefile
-COPY Cargo.toml Cargo.toml
-COPY Cargo.lock Cargo.lock
-ENV PATH="$PATH:/root/.cargo/bin"
-ENV CARGO_NET_GIT_FETCH_WITH_CLI=true
-RUN  make rust
-
 WORKDIR $RNA
 
 # Setup environmental variables
