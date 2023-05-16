@@ -103,6 +103,7 @@ process save_statistics {
 
     """
     pgloader --on-error-stop $ctl
+    curl -X POST -H 'Content-type: application/json' --data '{"text":"LitScan workflow completed"}' $LITSCAN_SLACK_WEBHOOK
     """
 }
 
