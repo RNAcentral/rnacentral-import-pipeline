@@ -1,5 +1,15 @@
 nextflow.enable.dsl=2
 
+process slack_message {
+    input:
+    val(message)
+
+    """
+    #!/bin/bash
+    curl -X POST -H 'Content-type: application/json' --data '{"text":"$message"}' $LITSCAN_SLACK_WEBHOOK
+    """
+}
+
 process get_ids {
     input:
     path(database)
@@ -9,7 +19,6 @@ process get_ids {
 
     script:
     """
-    curl -X POST -H 'Content-type: application/json' --data '{"text":"Starting LitScan pipeline"}' $LITSCAN_SLACK_WEBHOOK
     psql -t -A -f $database "$PGDATABASE" > results
     """
 }
@@ -133,6 +142,8 @@ process submit_urs {
 workflow search_new_ids {
     emit: done
     main:
+      Channel.of("Starting LitScan pipeline") | slack_message
+
       Channel.fromPath('workflows/litscan/queries/*.sql') \
       | get_ids \
       | check_ids \
