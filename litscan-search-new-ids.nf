@@ -58,7 +58,7 @@ process prepare_to_submit {
     tuple val(database), path("${database}.txt")
 
     output:
-    val('done')
+    tuple val(database), path("${database}_ids.txt")
 
     script:
     """
