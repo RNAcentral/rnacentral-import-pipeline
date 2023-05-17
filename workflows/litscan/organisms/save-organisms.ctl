@@ -3,7 +3,7 @@ FROM ALL FILENAMES MATCHING ~<organism_pmcid>
 HAVING FIELDS (
     pmcid,
     organism
-) INTO {{PGDATABASE}}?litscan_organism
+) INTO {{PGDB_EMBASSY_USER}}?litscan_organism
 TARGET COLUMNS (
     pmcid,
     organism
