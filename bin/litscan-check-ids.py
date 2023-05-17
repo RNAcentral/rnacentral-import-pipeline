@@ -21,7 +21,7 @@ import re
 words = set(nltk.corpus.words.words())
 ignore_ids = [
     "com", "mir-", "arg", "asn", "cys", "gln", "glu", "gly", "ile", "phe", "thr", "trp", "tyr", "val", "asx", "glx",
-    "xaa"
+    "xaa", "mrna", "rrna", "rnai", "trna", "snrna", "ncrna", "12s", "16s", "16s rrna", "18s rrna", "28s", "28s rrna"
 ]
 words.update(ignore_ids)
 special_char = re.compile('[@!#$%^&()<>?/\[\]\'}{~:]')
