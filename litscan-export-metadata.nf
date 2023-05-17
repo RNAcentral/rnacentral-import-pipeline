@@ -89,7 +89,7 @@ process get_statistics {
 
     script:
     """
-    litscan-get-statistics.py "$PGDB_EMBASSY_USER" statistics.csv
+    litscan-get-statistics.py "$PSYCOPG_CONN" statistics.csv
     """
 }
 

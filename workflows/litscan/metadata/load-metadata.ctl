@@ -4,7 +4,7 @@ HAVING FIELDS (
     job_id,
     name,
     primary_id
-) INTO {{PGDATABASE}}?litscan_database
+) INTO {{PGDB_EMBASSY_USER}}?litscan_database
 TARGET COLUMNS (
     job_id,
     name,

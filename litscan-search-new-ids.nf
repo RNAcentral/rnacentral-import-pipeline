@@ -19,7 +19,7 @@ process get_ids {
 
     script:
     """
-    psql -t -A -f $database "$PGDATABASE" > results
+    psql -t -A -f $database "$PGDB_EMBASSY_USER" > results
     """
 }
 
