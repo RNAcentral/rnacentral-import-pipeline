@@ -64,6 +64,35 @@ process fetch_unmapped_sequences {
   """
 }
 
+process get_browser_coordinates {
+  tag { species }
+  memory { params.genome_mapping.download_genome.directives.memory }
+  publishDir "${params.export.ftp.publish}/.genome-browser", mode: 'copy'
+  errorStrategy 'ignore'
+
+  input:
+  tuple val(species), val(assembly), val(taxid), val(division)
+
+  output:
+  tuple path("${species}_${assembly}.sorted.gff3"), path("${species}_${assembly}.sorted.gff.gz.idx"),
+
+  """
+  set -o pipefail
+
+  rnac ensembl url-for gff3 --host="$division" "$species" "$assembly" - |\
+    xargs -I {} wget -O "${species}_${assembly}.gff3.gz" '{}'
+
+  gzip -d "${species}_${assembly}.gff3.gz"
+
+  (grep "^#" "${species}_${assembly}.gff3";
+   grep -v "^#" "${species}_${assembly}.gff3" |\
+    sort -t"`printf '\\t'`" -k1,1 -k4,4n) |\
+    bgzip) > "${species}_${assembly}".sorted.gff
+
+  tabix -p gff "${species}_${assembly}".sorted.gff.gz
+  """
+}
+
 process download_genome {
   tag { species }
   memory { params.genome_mapping.download_genome.directives.memory }
@@ -73,15 +102,29 @@ process download_genome {
   tuple val(species), val(assembly), val(taxid), val(division)
 
   output:
-  tuple val(species), val(assembly), path("${species}.{2bit,ooc}")
+  tuple val(species), val(assembly), path("${species}_${assembly}.fa")
 
   """
   set -o pipefail
 
   rnac genome-mapping url-for --host=$division $species $assembly - |\
-    xargs -I {} fetch generic '{}' ${species}.fasta.gz
+    xargs -I {} wget -O ${species}_${assembly}.fa.gz '{}'
 
-  gzip -d ${species}.fasta.gz
+  gzip -d ${species}_${assembly}.fa.gz
+  """
+}
+
+process blat_index {
+  tag { species }
+  memory { params.genome_mapping.download_genome.directives.memory }
+
+  input:
+  tuple val(species), val(assembly), path("${species}_${assembly}.fa")
+
+  output:
+  tuple val(species), val(assembly), path("${species}_${assembly}.{.2bit,ooc}")
+
+  """
   faToTwoBit -noMask ${species}.fasta ${species}.2bit
   blat \
     -makeOoc=${species}.ooc \
@@ -89,6 +132,20 @@ process download_genome {
     -repMatch=${params.genome_mapping.blat.options.rep_match} \
     -minScore=${params.genome_mapping.blat.options.min_score} \
     ${species}.fasta /dev/null /dev/null
+  """
+}
+
+process index_genome_for_browser {
+  publishDir "${params.export.ftp.publish}/.genome-browser", mode: 'copy'
+
+  input:
+  path(genome)
+
+  output:
+  tuple path("${genome}"), path("${genome.baseName}.fai")
+
+  """
+  samtools faidx $genome
   """
 }
 
@@ -188,6 +245,16 @@ workflow genome_mapping {
 
     genome_info \
     | download_genome \
+    | set { genomes }
+
+    genome_info | get_browser_coordinates
+
+    genomes \
+    | map { _s, _a, genome -> genome } \
+    | index_genome_for_browser
+
+    genomes
+    | blat_index \
     | join(split_sequences) \
     | flatMap { species, assembly, genome_chunks, chunks ->
       [genome_chunks.collate(2), chunks]
