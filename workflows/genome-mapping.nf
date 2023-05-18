@@ -87,7 +87,7 @@ process get_browser_coordinates {
   (grep "^#" "${species}_${assembly}.gff3";
    grep -v "^#" "${species}_${assembly}.gff3" |\
     sort -t"`printf '\\t'`" -k1,1 -k4,4n) |\
-    bgzip) > "${species}_${assembly}".sorted.gff
+    bgzip) > "${species}_${assembly}".sorted.gff.gz
 
   tabix -p gff "${species}_${assembly}".sorted.gff.gz
   """
