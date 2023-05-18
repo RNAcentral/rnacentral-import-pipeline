@@ -72,7 +72,24 @@ process generate_gff3 {
   """
   set -euo pipefail
 
-  rnac ftp-export coordinates as-gff3 $raw_data - | gzip > ${species}.${assembly}.gff3.gz
+  rnac ftp-export coordinates as-gff3 $raw_data - |\
+  sort -t"`printf '\\t'`" -k1,1 -k4,4n |\
+  gzip > ${species}.${assembly}.gff3.gz
+  """
+}
+
+process index_gff3 {
+  publishDir "${params.export.ftp.publish}/.genome-browser", mode: 'copy'
+
+  input:
+  path(gff)
+
+  output:
+  tuple path("${gffi.baseName}.bgz"), path("${gffi.baseName}.bgz.fai")
+
+  """
+  zcat $gff | bgzip > ${gff.baseName}.bgz
+  tabix -p gff ${gff.baseName}.bgz
   """
 }
 
