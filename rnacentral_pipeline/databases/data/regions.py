@@ -16,6 +16,7 @@ limitations under the License.
 import operator as op
 
 import enum
+import typing as ty
 
 import attr
 from attr.validators import instance_of as is_a
@@ -111,7 +112,7 @@ class CloseStatus(enum.Enum):
 
 
 @attr.s(frozen=True, hash=True, slots=True)
-class CoordinateSystem(object):
+class CoordinateSystem:
     """
     This is meant to represent how a database numbers a genome. Some databases
     will start counting at zeros and others one, this is called the basis here.
@@ -123,8 +124,8 @@ class CoordinateSystem(object):
     http://genome.ucsc.edu/blog/the-ucsc-genome-browser-coordinate-counting-systems/
     """
 
-    basis = attr.ib(validator=is_a(CoordinateStart))
-    close_status = attr.ib(validator=is_a(CloseStatus))
+    basis: CoordinateStart = attr.ib(validator=is_a(CoordinateStart))
+    close_status: CloseStatus = attr.ib(validator=is_a(CloseStatus))
 
     @classmethod
     def build(cls, value):
@@ -212,9 +213,9 @@ class CoordinateSystem(object):
 
 
 @attr.s(frozen=True, hash=True, slots=True)
-class Exon(object):
-    start = attr.ib(validator=is_a(int))
-    stop = attr.ib(validator=is_a(int))
+class Exon:
+    start: int = attr.ib(validator=is_a(int))
+    stop: int = attr.ib(validator=is_a(int))
 
     @classmethod
     def from_dict(cls, raw):
@@ -238,11 +239,11 @@ def as_sorted_exons(raw):
 
 @attr.s(frozen=True, hash=True, slots=True)
 class SequenceRegion:
-    assembly_id = attr.ib(validator=is_a(str), converter=str)
-    chromosome = attr.ib(validator=is_a(str), converter=str)
-    strand = attr.ib(validator=is_a(Strand), converter=Strand.build)
-    exons = attr.ib(validator=is_a(tuple), converter=as_sorted_exons)
-    coordinate_system = attr.ib(
+    assembly_id: str = attr.ib(validator=is_a(str), converter=str)
+    chromosome: str = attr.ib(validator=is_a(str), converter=str)
+    strand: Strand = attr.ib(validator=is_a(Strand), converter=Strand.build)
+    exons: ty.Tuple[Exon] = attr.ib(validator=is_a(tuple), converter=as_sorted_exons)
+    coordinate_system: CoordinateSystem = attr.ib(
         validator=is_a(CoordinateSystem),
         converter=CoordinateSystem.build,
     )
