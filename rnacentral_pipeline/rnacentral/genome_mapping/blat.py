@@ -21,8 +21,8 @@ import itertools as it
 import logging
 import typing as ty
 
-import attr
-from attr.validators import instance_of as is_a
+from attrs import frozen
+
 
 from rnacentral_pipeline import utils
 from rnacentral_pipeline.databases.data.regions import Exon
@@ -56,7 +56,7 @@ FIELDS = [
 ]
 
 
-@attr.s(frozen=True)
+@frozen
 class BlatHit:
     upi: str
     sequence_length: int

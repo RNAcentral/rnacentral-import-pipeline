@@ -19,6 +19,7 @@ import enum
 import typing as ty
 
 import attr
+from attrs import frozen, field
 from attr.validators import instance_of as is_a
 
 
@@ -111,7 +112,7 @@ class CloseStatus(enum.Enum):
         raise ValueError("No name for %s" % self)
 
 
-@attr.s(frozen=True, hash=True, slots=True)
+@frozen(hash=True, slots=True)
 class CoordinateSystem:
     """
     This is meant to represent how a database numbers a genome. Some databases
@@ -124,8 +125,8 @@ class CoordinateSystem:
     http://genome.ucsc.edu/blog/the-ucsc-genome-browser-coordinate-counting-systems/
     """
 
-    basis: CoordinateStart = attr.ib(validator=is_a(CoordinateStart))
-    close_status: CloseStatus = attr.ib(validator=is_a(CloseStatus))
+    basis: CoordinateStart = field(validator=is_a(CoordinateStart))
+    close_status: CloseStatus = field(validator=is_a(CloseStatus))
 
     @classmethod
     def build(cls, value):
@@ -212,10 +213,10 @@ class CoordinateSystem:
         return self.as_one_based(location)
 
 
-@attr.s(frozen=True, hash=True, slots=True)
+@frozen(hash=True, slots=True)
 class Exon:
-    start: int = attr.ib(validator=is_a(int))
-    stop: int = attr.ib(validator=is_a(int))
+    start: int = field(validator=is_a(int))
+    stop: int = field(validator=is_a(int))
 
     @classmethod
     def from_dict(cls, raw):
@@ -237,13 +238,13 @@ def as_sorted_exons(raw):
     return tuple(sorted(exons, key=op.attrgetter("start")))
 
 
-@attr.s(frozen=True, hash=True, slots=True)
+@frozen(hash=True, slots=True)
 class SequenceRegion:
-    assembly_id: str = attr.ib(validator=is_a(str), converter=str)
-    chromosome: str = attr.ib(validator=is_a(str), converter=str)
-    strand: Strand = attr.ib(validator=is_a(Strand), converter=Strand.build)
-    exons: ty.Tuple[Exon] = attr.ib(validator=is_a(tuple), converter=as_sorted_exons)
-    coordinate_system: CoordinateSystem = attr.ib(
+    assembly_id: str = field(validator=is_a(str), converter=str)
+    chromosome: str = field(validator=is_a(str), converter=str)
+    strand: Strand = field(validator=is_a(Strand), converter=Strand.build)
+    exons: ty.Tuple[Exon] = field(validator=is_a(tuple), converter=as_sorted_exons)
+    coordinate_system: CoordinateSystem = field(
         validator=is_a(CoordinateSystem),
         converter=CoordinateSystem.build,
     )
