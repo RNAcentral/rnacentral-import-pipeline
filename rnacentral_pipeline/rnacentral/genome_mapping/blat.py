@@ -57,12 +57,12 @@ FIELDS = [
 
 
 @attr.s(frozen=True)
-class BlatHit(object):
-    upi = attr.ib(validator=is_a(str), converter=str)
-    sequence_length = attr.ib(validator=is_a(int))
-    matches = attr.ib(validator=is_a(int))
-    target_insertions = attr.ib(validator=is_a(int))
-    region = attr.ib(validator=is_a(SequenceRegion))
+class BlatHit:
+    upi: str
+    sequence_length: int
+    matches: int
+    target_insertions: int
+    region: SequenceRegion
 
     @classmethod
     def build(cls, assembly_id: str, raw: ty.Dict[str, ty.Any]) -> BlatHit:
