@@ -36,5 +36,8 @@ $$
 AFTER LOAD DO
 $$
 CREATE INDEX ON litscan_database (name);
+$$,
+$$
+GRANT SELECT ON litscan_database TO rnacen;
 $$
 ;
