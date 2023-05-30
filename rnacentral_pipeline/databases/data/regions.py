@@ -13,14 +13,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import operator as op
-
 import enum
+import operator as op
 import typing as ty
 
 import attr
-from attrs import frozen, field
 from attr.validators import instance_of as is_a
+from attrs import field, frozen
 
 
 class UnknownStrand(Exception):
@@ -223,7 +222,7 @@ class Exon:
         return cls(start=raw["exon_start"], stop=raw["exon_stop"])
 
     @stop.validator
-    def greater_than_start(self, attribute, value):
+    def greater_than_start(self, _attribute, value):
         if value < self.start:
             raise ValueError("stop (%i) must be >= start (%i)" % (value, self.start))
 
