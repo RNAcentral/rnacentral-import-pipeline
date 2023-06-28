@@ -105,5 +105,8 @@ workflow export_coordinates {
   | combine(query) \
   | fetch \
   | filter { _a, _s, fn -> !fn.isEmpty() } \
-  | (generate_bed & generate_gff3)
+  | set { coordinates }
+
+  coordinates | generate_bed
+  coordinates | generate_gff3 | index_gff3
 }
