@@ -26,6 +26,9 @@ def gene(result):
     if result["database"] == "ENSEMBL":
         return result["optional_id"]
 
+    if result["database"] == "MIRBASE":
+        return result["optional_id"]
+
     if result["rna_type"] == "piRNA" and result["database"] == "ENA":
         return result["product"]
 
