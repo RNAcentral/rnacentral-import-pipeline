@@ -44,8 +44,8 @@ process create_xml {
 
     script:
     """
-    rm "$params.litscan_index"/metadata*
-    litscan-create-xml-metadata.py $merged_metadata metadata_*
+    rm -f "$params.litscan_index"/metadata*
+    litscan-create-xml-metadata.py "$PSYCOPG_CONN" $merged_metadata metadata_*
     """
 }
 
