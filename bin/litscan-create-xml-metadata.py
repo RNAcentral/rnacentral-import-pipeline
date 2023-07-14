@@ -15,6 +15,8 @@ limitations under the License.
 """
 import click
 import gzip
+import psycopg2
+import psycopg2.extras
 import random
 import string
 import uuid
@@ -40,6 +42,7 @@ def create_xml_file(results, metadata):
         ET.SubElement(additional_fields, "field", name="job_id").text = item["job_id"]
         ET.SubElement(additional_fields, "field", name="database").text = item["db"]
         ET.SubElement(additional_fields, "field", name="primary_id").text = item["primary_id"]
+        ET.SubElement(additional_fields, "field", name="hit_count").text = item["hit_count"]
 
     ET.SubElement(database, "entry_count").text = str(len(results))
 
@@ -52,15 +55,20 @@ def create_xml_file(results, metadata):
 
 
 @click.command()
+@click.argument('conn_string')
 @click.argument('filename')
 @click.argument('output')
-def main(filename, output):
+def main(conn_string, filename, output):
     """
     This function takes the ids and creates a temporary list to store the metadata.
+    :param conn_string: params to connect to the db
     :param filename: file containing ids
     :param output: file to be created
     :return: None
     """
+    conn = psycopg2.connect(conn_string)
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
     with open(filename, "r") as input_file:
         temp_results = []
 
@@ -70,11 +78,26 @@ def main(filename, output):
             job_id = line[0]
             database = line[1]
 
+            # get hit_count
+            cursor.execute("SELECT hit_count FROM litscan_job WHERE job_id=%s", job_id.lower())
+            result = cursor.fetchone()
+            hit_count = str(result[0]) if result else ""
+
             if len(line) < 3:
-                temp_results.append({"job_id": job_id, "db": database, "primary_id": ""})
+                temp_results.append({
+                    "job_id": job_id,
+                    "db": database,
+                    "primary_id": "",
+                    "hit_count": hit_count
+                })
             else:
                 primary_id = line[2]
-                temp_results.append({"job_id": job_id, "db": database, "primary_id": primary_id})
+                temp_results.append({
+                    "job_id": job_id,
+                    "db": database,
+                    "primary_id": primary_id,
+                    "hit_count": hit_count
+                })
 
             if len(temp_results) >= 500000:
                 create_xml_file(temp_results, output)
