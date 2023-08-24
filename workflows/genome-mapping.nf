@@ -74,12 +74,12 @@ process get_browser_coordinates {
   tuple val(species), val(assembly), val(taxid), val(division)
 
   output:
-  tuple path("${species}_${assembly}.sorted.gff3"), path("${species}_${assembly}.sorted.gff.gz.idx"),
+  tuple path("${species}_${assembly}.sorted.gff3"), path("${species}_${assembly}.sorted.gff.gz.idx")
 
   """
   set -o pipefail
 
-  rnac ensembl url-for --host="$division" "$species" "$assembly" - |\
+  rnac genome-mapping url-for --host="$division" "$species" "$assembly" - |\
     xargs -I {} wget -O "${species}_${assembly}.gff3.gz" '{}'
 
   gzip -d "${species}_${assembly}.gff3.gz"
@@ -87,7 +87,7 @@ process get_browser_coordinates {
   (grep "^#" "${species}_${assembly}.gff3";
    grep -v "^#" "${species}_${assembly}.gff3" |\
     sort -t"`printf '\\t'`" -k1,1 -k4,4n) |\
-    bgzip) > "${species}_${assembly}".sorted.gff.bgz
+    bgzip > "${species}_${assembly}".sorted.gff.bgz
 
   tabix -p gff "${species}_${assembly}".sorted.gff.bgz
   """
