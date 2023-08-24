@@ -22,6 +22,10 @@ RUN apt install -y \
     hmmer \
     jq \
     lftp \
+    libbz2-dev \
+    liblzma-dev \
+    libncurses5-dev \
+    libncursesw5-dev \
     libsqlite3-dev \
     libssl1.1 \
     libxml2-utils \
@@ -45,6 +49,7 @@ RUN apt install -y \
     tar \
     time \
     unzip \
+    zlib1g-dev\
     wget
 
 
@@ -83,6 +88,24 @@ RUN git clone https://github.com/nawrockie/epn-ofile.git && cd epn-ofile && git 
 RUN git clone https://github.com/nawrockie/epn-options.git && cd epn-options && git fetch && git fetch --tags && git checkout ribovore-0.40
 RUN git clone https://github.com/nawrockie/epn-test.git && cd epn-test && git fetch && git fetch --tags && git checkout ribovore-0.40
 RUN git clone https://github.com/nawrockie/ribovore.git && cd ribovore && git fetch && git fetch --tags && git checkout ribovore-0.40
+
+# Install htslib
+RUN \
+    wget https://github.com/samtools/htslib/releases/download/1.18/htslib-1.18.tar.bz2 && \
+    tar -jxf htslib-1.18.tar.bz2 && \
+	rm htslib-1.18.tar.bz2 && \
+	cd htslib-1.18 && \
+	make && \
+    make install
+
+# Install samtools
+RUN \
+    wget https://github.com/samtools/samtools/releases/download/1.18/samtools-1.18.tar.bz2 && \
+    tar jxf samtools-1.18.tar.bz2 && \
+	rm samtools-1.18.tar.bz2 && \
+	cd samtools-1.18 && \
+	make && \
+    make install
 
 # Install python requirements
 ENV RNACENTRAL_IMPORT_PIPELINE "$RNA/rnacentral-import-pipeline"
