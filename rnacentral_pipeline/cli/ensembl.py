@@ -41,7 +41,7 @@ def cli():
 
 
 @cli.command("urls-for")
-@click.option("kind", default=None)
+@click.option("--kind", default=None)
 @click.argument("division", type=click.Choice(Division.names(), case_sensitive=False))
 @click.argument("ftp")
 @click.argument("output", default="-", type=click.File("w"))
