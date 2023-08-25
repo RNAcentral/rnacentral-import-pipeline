@@ -146,7 +146,7 @@ process index_genome_for_browser {
   path(genome)
 
   output:
-  tuple path("${genome}"), path("${genome.baseName}.fai")
+  tuple path("${genome}"), path("${genome.baseName}.fa.fai")
 
   """
   samtools faidx $genome
