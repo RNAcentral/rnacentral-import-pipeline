@@ -129,13 +129,13 @@ process blat_index {
   tuple val(species), val(assembly), path("${species}_${assembly}.{.2bit,ooc}")
 
   """
-  faToTwoBit -noMask ${species}.fasta ${species}.2bit
+  faToTwoBit -noMask ${species}_${assembly}.fa ${species}_${assembly}.2bit
   blat \
-    -makeOoc=${species}.ooc \
+    -makeOoc=${species}_${assembly}.ooc \
     -stepSize=${params.genome_mapping.blat.options.step_size} \
     -repMatch=${params.genome_mapping.blat.options.rep_match} \
     -minScore=${params.genome_mapping.blat.options.min_score} \
-    ${species}.fasta /dev/null /dev/null
+    ${species}_${assembly}.fa /dev/null /dev/null
   """
 }
 
