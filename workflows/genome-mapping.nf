@@ -74,22 +74,26 @@ process get_browser_coordinates {
   tuple val(species), val(assembly), val(taxid), val(division)
 
   output:
-  tuple path("${species}_${assembly}.sorted.gff3"), path("${species}_${assembly}.sorted.gff.gz.idx")
+  tuple path("${species}_${assembly}.sorted.gff3.gz"), path("${species}_${assembly}.sorted.gff3.gz.tbi")
 
   """
   set -o pipefail
 
-  rnac genome-mapping url-for --host="$division" "$species" "$assembly" - |\
-    xargs -I {} wget -O "${species}_${assembly}.gff3.gz" '{}'
+  url=\$(curl -s -f -o /dev/null -w "%{http_code}\t%{url_effective}\n" \
+  "https://ftp.ensembl.org/pub/current_gff3/${species}/${species.capitalize()}.${assembly}.[110-150].gff3.gz" \
+  | grep "^200" | head -1 | cut -f2) || : "Ignoring exit status of $?"
 
-  gzip -d "${species}_${assembly}.gff3.gz"
+  if [[ \${url} ]]
+  then
+    wget -O "${species}_${assembly}.gff3.gz" "\${url}"
+    gzip -d "${species}_${assembly}.gff3.gz"
 
-  (grep "^#" "${species}_${assembly}.gff3";
-   grep -v "^#" "${species}_${assembly}.gff3" |\
+    (grep "^#" "${species}_${assembly}.gff3"; grep -v "^#" "${species}_${assembly}.gff3" |\
     sort -t"`printf '\\t'`" -k1,1 -k4,4n) |\
-    bgzip > "${species}_${assembly}".sorted.gff.bgz
+    bgzip > "${species}_${assembly}".sorted.gff.gz
 
-  tabix -p gff "${species}_${assembly}".sorted.gff.bgz
+    tabix -p gff "${species}_${assembly}".sorted.gff.gz
+  fi
   """
 }
 
