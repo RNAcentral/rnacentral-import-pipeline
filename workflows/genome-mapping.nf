@@ -81,7 +81,7 @@ process get_browser_coordinates {
 
   url=\$(curl -s -f -o /dev/null -w "%{http_code}\t%{url_effective}\n" \
   "https://ftp.ensembl.org/pub/current_gff3/${species}/${species.capitalize()}.${assembly}.[110-150].gff3.gz" \
-  | grep "^200" | head -1 | cut -f2) || : "Ignoring exit status of $?"
+  | grep "^200" | head -1 | cut -f2) || : "Ignoring exit status of \$?"
 
   if [[ \${url} ]]
   then
