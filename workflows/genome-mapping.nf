@@ -74,7 +74,8 @@ process get_browser_coordinates {
   tuple val(species), val(assembly), val(taxid), val(division)
 
   output:
-  tuple path("${species}_${assembly}.sorted.gff3.gz"), path("${species}_${assembly}.sorted.gff3.gz.tbi")
+  tuple path("${species}_${assembly}.ensembl.gff3.gz"), path("${species}_${assembly}.ensembl.gff3.gz.tbi"), \
+  path("${species}_${assembly}.rnacentral.gff3.gz"), path("${species}_${assembly}.rnacentral.gff3.gz.tbi")
 
   """
   set -o pipefail
@@ -85,14 +86,27 @@ process get_browser_coordinates {
 
   if [[ \${url} ]]
   then
+    # Ensembl track file
     wget -O "${species}_${assembly}.gff3.gz" "\${url}"
     gzip -d "${species}_${assembly}.gff3.gz"
 
     (grep "^#" "${species}_${assembly}.gff3"; grep -v "^#" "${species}_${assembly}.gff3" |\
     sort -t"`printf '\\t'`" -k1,1 -k4,4n) |\
-    bgzip > "${species}_${assembly}".sorted.gff3.gz
+    bgzip > "${species}_${assembly}".ensembl.gff3.gz
 
-    tabix -p gff "${species}_${assembly}".sorted.gff3.gz
+    tabix -p gff "${species}_${assembly}".ensembl.gff3.gz
+    rm "${species}_${assembly}.gff3"
+
+    # RNAcentral track file
+    wget -O "${species}_${assembly}.gff3.gz" http://ftp.ebi.ac.uk/pub/databases/RNAcentral/current_release/genome_coordinates/gff3/${species}.${assembly}.gff3.gz
+    gzip -d "${species}_${assembly}.gff3.gz"
+
+    (grep "^#" "${species}_${assembly}.gff3"; grep -v "^#" "${species}_${assembly}.gff3" |\
+    sort -t"`printf '\\t'`" -k1,1 -k4,4n) |\
+    bgzip > "${species}_${assembly}".rnacentral.gff3.gz
+
+    tabix -p gff "${species}_${assembly}".rnacentral.gff3.gz
+    rm "${species}_${assembly}.gff3"
   fi
   """
 }
