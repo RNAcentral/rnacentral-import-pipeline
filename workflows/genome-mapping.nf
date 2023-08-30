@@ -111,6 +111,51 @@ process get_browser_coordinates {
   """
 }
 
+process create_json_file {
+  tag { species }
+  errorStrategy 'ignore'
+
+  input:
+  tuple val(species), val(assembly), val(taxid), val(division)
+
+  output:
+  path("${species}_${assembly}.json")
+
+  """
+  set -o pipefail
+
+  url=\$(curl -s -f -o /dev/null -w "%{http_code}\t%{url_effective}\n" \
+  "https://ftp.ensembl.org/pub/current_gff3/${species}/${species.capitalize()}.${assembly}.[110-150].gff3.gz" \
+  | grep "^200" | head -1 | cut -f2) || : "Ignoring exit status of $?"
+
+  if [[ \${url} ]]
+  then
+    jq -n --arg a $assembly \
+    --arg b "https://ftp.ebi.ac.uk/pub/databases/RNAcentral/.genome-browser/${species}_${assembly}.fa" \
+    --arg c "https://ftp.ebi.ac.uk/pub/databases/RNAcentral/.genome-browser/${species}_${assembly}.fa.fai" \
+    --arg d "https://ftp.ebi.ac.uk/pub/databases/RNAcentral/.genome-browser/${species}_${assembly}.ensembl.gff3.gz" \
+    --arg e "https://ftp.ebi.ac.uk/pub/databases/RNAcentral/.genome-browser/${species}_${assembly}.ensembl.gff3.gz.tbi" \
+    --arg f "https://ftp.ebi.ac.uk/pub/databases/RNAcentral/.genome-browser/${species}_${assembly}.rnacentral.gff3.gz" \
+    --arg g "https://ftp.ebi.ac.uk/pub/databases/RNAcentral/.genome-browser/${species}_${assembly}.rnacentral.gff3.gz.tbi" \
+    '{name: \$a, fastaFile: \$b, fastaIndex: \$c, ensemblTrack: \$d, ensemblIndex: \$e, rnacentralTrack: \$f, rnacentralIndex: \$g}' > ${species}_${assembly}.json
+  fi
+  """
+}
+
+process merge_json {
+  publishDir "${params.export.ftp.publish}/.genome-browser", mode: 'copy'
+
+  input:
+  path(json)
+
+  output:
+  path('igv_files.json')
+
+  """
+  jq -s 'flatten' $json > igv_files.json
+  """
+}
+
 process download_genome {
   tag { species }
   memory { params.genome_mapping.download_genome.directives.memory }
@@ -266,6 +311,8 @@ workflow genome_mapping {
     | set { genomes }
 
     genome_info | get_browser_coordinates
+
+    genome_info | create_json_file | collect | merge_json
 
     genomes \
     | map { _s, _a, genome -> genome } \
