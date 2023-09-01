@@ -8,7 +8,7 @@ process build_rnc_bedfile {
 
   """
   set -euo pipefail
-  psql -v ON_ERROR_STOP=1 -v "assembly_id=GRCh38" -f $puery "$PGDATABASE" > result.json
+  psql -v ON_ERROR_STOP=1 -v "assembly_id=GRCh38" -f $query "$PGDATABASE" > result.json
 
   rnac ftp-export coordinates as-bed result.json |\
   sort -k1,1 -k2,2n > rnc_regions_gene.bed
