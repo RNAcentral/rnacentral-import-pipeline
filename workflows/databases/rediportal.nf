@@ -3,7 +3,7 @@ process build_rnc_bedfile {
   input:
     path(query)
 
-  ouput:
+  output:
     path("rnc_regions.bed")
 
   """
@@ -40,14 +40,18 @@ process fetch_rediportal_metadata {
 
 process intersect_rnc_rediportal {
 
+  memory '16GB'
+
   input:
-    tuple path(rnc_bed), path(redi_bed), path(redi_meta)
+    path(rnc_bed)
+    path(redi_bed)
+    path(redi_meta)
 
   output:
     path("features.csv")
 
   """
-  rnac rediportal parse $redi_bed $redi_meta $rnc_bed features.csv
+  rnac rediportal parse-bed $redi_bed $redi_meta $rnc_bed features.csv
   """
 }
 
@@ -60,7 +64,7 @@ process load_rediportal {
     val('rediportal done')
 
   """
-  psql -v ON_ERROR_STOP=1 -f $ctl "$PGDATABASE"
+  split-and-load $ctl *.csv ${params.databases.rediportal.chunk_size} redportal-data
   """
 
 }
@@ -75,12 +79,17 @@ workflow rediportal {
 
       region_query | build_rnc_bedfile | set { rnc_bedfile }
       fetch_rediportal_metadata | set { redi_meta }
-      fetch_rediportal_bedfile) | set {redi_bedfile }
-      rnc_bedfile.combine(redi_meta, redi_bedfile) | intersect_rnc_rediportal \
-      | combine(load_query) | load_rediportal | set { done }
+      fetch_rediportal_bedfile | set {redi_bedfile }
+      intersect_rnc_rediportal(rnc_bedfile, redi_bedfile, redi_meta) | combine(load_query) | load_rediportal | set { done }
+
     }
     else {
       Channel.of('rediportal not run') | set { done }
     }
 
+}
+
+
+workflow {
+  rediportal(Channel.of('ready'))
 }

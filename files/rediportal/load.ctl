@@ -1,5 +1,5 @@
 LOAD CSV
-FROM ALL FILENAMES MATCHING ~<features.*csv$>
+FROM ALL FILENAMES MATCHING ~<rediportal-data.*csv$>
 HAVING FIELDS (
     upi,
     taxid,
@@ -40,7 +40,7 @@ CREATE TABLE load_rediportal_features (
     stop int,
     feature_name text,
     metadata jsonb,
-    feature_provider text,
+    feature_provider text
 );
 $$
 
