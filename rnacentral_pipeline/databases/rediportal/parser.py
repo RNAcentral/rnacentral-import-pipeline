@@ -23,8 +23,8 @@ class GenomicLocation(object):
         chromosome = re.sub("^chr", "", raw.chrom)
         return cls(
             chromosome=chromosome,
-            start=raw.start_rel_genome,
-            stop=raw.end_rel_genome,
+            start=raw.start_rel_genome + 1,  ## BED is 0-based, so add 1
+            stop=raw.end_rel_genome + 1,
         )
 
 
@@ -48,13 +48,16 @@ class RNAEditFeature(object):
             repeat_type=raw_feature.repeat_type,
             ref=raw_feature.Ref,
             ed=raw_feature.Ed,
-            start=raw_feature.start_rel_URS,
-            stop=raw_feature.end_rel_URS,
+            start=raw_feature.start_rel_URS + 1,  ## BED is 0-based, so add 1
+            stop=raw_feature.end_rel_URS + 1,
             genomic_location=GenomicLocation.build(raw_feature),
         )
 
     def writeable(self):
         metadata = attr.asdict(self)
+        print(metadata)
+        exit()
+        # metadata['genomic_location']['strand'] = metadata['genomic_location']['strand'].display_int()
         metadata = {
             "repeat_type": self.repeat_type,
             "genomic_location": metadata["genomic_location"],
