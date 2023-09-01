@@ -23,7 +23,7 @@ process fetch_rediportal_bedfile {
 
   """
   wget -O REDI_sorted_untabbed.bed $params.databases.rediportal.bed_remote
-  awk 'BEGIN {OFS="\t"} {print $1,$2,$3,$4,$5,$6,$7}' REDI_sorted_untabbed.bed > REDI_sorted.bed
+  awk 'BEGIN {OFS="\t"} {print \$1,\$2,\$3,\$4,\$5,\$6,\$7} ' REDI_sorted_untabbed.bed > REDI_sorted.bed
   """
 }
 
