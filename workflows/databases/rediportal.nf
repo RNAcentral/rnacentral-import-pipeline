@@ -64,7 +64,7 @@ process load_rediportal {
     val('rediportal done')
 
   """
-  split-and-load $ctl *.csv ${params.databases.rediportal.chunk_size} redportal-data
+  split-and-load $ctl *.csv ${params.databases.rediportal.chunk_size} rediportal-data
   """
 
 }
