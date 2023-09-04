@@ -55,8 +55,7 @@ class RNAEditFeature(object):
 
     def writeable(self):
         metadata = attr.asdict(self)
-        print(metadata)
-        exit()
+
         # metadata['genomic_location']['strand'] = metadata['genomic_location']['strand'].display_int()
         metadata = {
             "repeat_type": self.repeat_type,
