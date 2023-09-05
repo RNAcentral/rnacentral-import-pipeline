@@ -74,40 +74,21 @@ process get_browser_coordinates {
   tuple val(species), val(assembly), val(taxid), val(division)
 
   output:
-  tuple path("${species}_${assembly}.ensembl.gff3.gz"), path("${species}_${assembly}.ensembl.gff3.gz.tbi"), \
-  path("${species}_${assembly}.rnacentral.gff3.gz"), path("${species}_${assembly}.rnacentral.gff3.gz.tbi")
+  tuple path("${species}.${assembly}.gff3.gz"), path("${species}.${assembly}.gff3.gz.tbi")
 
   """
   set -o pipefail
 
-  url=\$(curl -s -f -o /dev/null -w "%{http_code}\t%{url_effective}\n" \
-  "https://ftp.ensembl.org/pub/current_gff3/${species}/${species.capitalize()}.${assembly}.[110-150].gff3.gz" \
-  | grep "^200" | head -1 | cut -f2) || : "Ignoring exit status of \$?"
+  rnac genome-mapping url-for --kind="gff3" --host=\$division $species $assembly - |\
+    xargs -I {} wget -O ${species}.${assembly}.gff3.gz '{}'
+  gzip -d "${species}.${assembly}.gff3.gz"
 
-  if [[ \${url} ]]
-  then
-    # Ensembl track file
-    wget -O "${species}_${assembly}.gff3.gz" "\${url}"
-    gzip -d "${species}_${assembly}.gff3.gz"
-
-    (grep "^#" "${species}_${assembly}.gff3"; grep -v "^#" "${species}_${assembly}.gff3" |\
+  (grep "^#" "${species}.${assembly}.gff3"; grep -v "^#" "${species}.${assembly}.gff3" |\
     sort -t"`printf '\\t'`" -k1,1 -k4,4n) |\
-    bgzip > "${species}_${assembly}".ensembl.gff3.gz
+    bgzip > "${species}.${assembly}".gff3.gz
 
-    tabix -p gff "${species}_${assembly}".ensembl.gff3.gz
-    rm "${species}_${assembly}.gff3"
-
-    # RNAcentral track file
-    wget -O "${species}_${assembly}.gff3.gz" http://ftp.ebi.ac.uk/pub/databases/RNAcentral/current_release/genome_coordinates/gff3/${species}.${assembly}.gff3.gz
-    gzip -d "${species}_${assembly}.gff3.gz"
-
-    (grep "^#" "${species}_${assembly}.gff3"; grep -v "^#" "${species}_${assembly}.gff3" |\
-    sort -t"`printf '\\t'`" -k1,1 -k4,4n) |\
-    bgzip > "${species}_${assembly}".rnacentral.gff3.gz
-
-    tabix -p gff "${species}_${assembly}".rnacentral.gff3.gz
-    rm "${species}_${assembly}.gff3"
-  fi
+  tabix -p gff "${species}.${assembly}".gff3.gz
+  rm "${species}.${assembly}.gff3"
   """
 }
 
