@@ -79,7 +79,7 @@ process generate_gff3 {
 }
 
 process index_gff3 {
-  publishDir "${params.export.ftp.publish}/.genome-browser", mode: 'copy'
+  publishDir "${params.export.ftp.publish}/genome_coordinates/gff3/.index", mode: 'copy'
 
   input:
   path(gff)
