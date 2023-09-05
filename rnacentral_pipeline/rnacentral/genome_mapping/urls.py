@@ -70,22 +70,27 @@ class FtpHost(enum.Enum):
             return "ftp.ensemblgenomes.org"
         raise ValueError("No host for %s" % self)
 
-    def paths(self, species):
+    def paths(self, species, kind):
+        kind = "fasta" if kind == "fa" else kind
+
         if self is FtpHost.ensembl:
-            return ["/pub/current_fasta/{species}/dna".format(species=species)]
+            url = "/pub/current_{kind}/{species}".format(kind=kind, species=species)
+            return [url + "/dna"] if kind == "fasta" else [url]
         else:
-            template = "/pub/current/{group}/fasta/{species}/dna"
+            template = "/pub/current/{group}/{kind}/{species}"
+            template = template + "/dna" if kind == "fasta" else template
+
             if self is FtpHost.ensembl_plants:
-                return [template.format(group="plants", species=species)]
+                return [template.format(group="plants", kind=kind, species=species)]
             if self is FtpHost.ensembl_metazoa:
-                return [template.format(group="metazoa", species=species)]
+                return [template.format(group="metazoa", kind=kind, species=species)]
             if self is FtpHost.ensembl_protists:
-                return [template.format(group="protists", species=species)]
+                return [template.format(group="protists", kind=kind, species=species)]
             if self is FtpHost.ensembl_bacteria:
-                return [template.format(group="bacteria", species=species)]
+                return [template.format(group="bacteria", kind=kind, species=species)]
             if self is FtpHost.ensembl_genomes:
                 gs = ["plants", "metazoa", "protists", "bacteria"]
-                return [template.format(group=g, species=species) for g in gs]
+                return [template.format(group=g, kind=kind, species=species) for g in gs]
         raise ValueError("No paths for %s" % self)
 
 
@@ -103,26 +108,32 @@ def ftp(host):
         LOGGER.exception(err)
 
 
-def toplevel_file(host, species, assembly_id, directory, files, dna_type="dna"):
+def toplevel_file(host, species, assembly_id, directory, files, kind, release, dna_type="dna"):
     upper_species = species[0].upper() + species[1:]
-    base = f"{upper_species}.{assembly_id}.{dna_type}.{{type}}.fa.gz"
+    if kind == "fa":
+        base = f"{upper_species}.{assembly_id}.{dna_type}.{{type}}.fa.gz"
+    else:
+        base = f"{upper_species}.{assembly_id}.{release}.{kind}.gz"
+
     primary = base.format(type="primary_assembly")
     toplevel = base.format(type="toplevel")
-
     base_result = f"ftp://{host}{directory}/{{file}}"
+
     if primary in files:
         return base_result.format(file=primary)
     elif toplevel in files:
         return base_result.format(file=toplevel)
+
     raise NoTopLevelFiles(f"{species}/{assembly_id}")
 
 
-def url_for(species: str, assembly_id: str, host=FtpHost.ensembl, soft_masked=False):
+def url_for(species: str, assembly_id: str, kind: str, host: str, soft_masked=False):
 
     if isinstance(host, str):
         return url_for(
             species,
             assembly_id,
+            kind,
             host=FtpHost.from_string(host),
             soft_masked=soft_masked,
         )
@@ -134,7 +145,10 @@ def url_for(species: str, assembly_id: str, host=FtpHost.ensembl, soft_masked=Fa
     if isinstance(host, FtpHost):
         if host is not FtpHost.unknown:
             with ftp(host.host) as conn:
-                for path in host.paths(species):
+                conn.cwd("pub")
+                releases = [int(f.replace("release-", "")) for f in conn.nlst() if f.startswith("release-")]
+
+                for path in host.paths(species, kind):
                     try:
                         conn.cwd(path)
                         possible = set(conn.nlst())
@@ -146,6 +160,8 @@ def url_for(species: str, assembly_id: str, host=FtpHost.ensembl, soft_masked=Fa
                         assembly_id,
                         path,
                         possible,
+                        kind,
+                        max(releases),
                         dna_type=dna_type,
                     )
 
@@ -156,7 +172,7 @@ def url_for(species: str, assembly_id: str, host=FtpHost.ensembl, soft_masked=Fa
 
                 try:
                     return url_for(
-                        species, assembly_id, host=specific, soft_masked=soft_masked
+                        species, assembly_id, kind=kind, host=specific, soft_masked=soft_masked
                     )
                 except:
                     pass
