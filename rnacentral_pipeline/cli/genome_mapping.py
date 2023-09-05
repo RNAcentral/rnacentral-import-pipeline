@@ -76,16 +76,17 @@ def select_hits(hits, output, sort=False):
 
 
 @cli.command("url-for")
+@click.option("--kind", default="fa", type=click.Choice(["fa", "gff3"]))
 @click.option("--host", default="ensembl")
 @click.argument("species")
 @click.argument("assembly_id")
 @click.argument("output", default="-", type=click.File("w"))
-def find_remote_url(species, assembly_id, output, host=None):
+def find_remote_url(species, assembly_id, output, host=None, kind=None):
     """
-    Determine the remote URL to fetch a the genome for a given species/assembly.
+    Determine the remote URL to fetch the genome or coordinates for a given species/assembly.
     The url is written to the output file and may include '*'.
     """
-    url = urls.url_for(species, assembly_id, host=host)
+    url = urls.url_for(species, assembly_id, kind=kind, host=host)
     output.write(url)
 
 
