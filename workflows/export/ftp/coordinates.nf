@@ -85,9 +85,9 @@ process index_gff3 {
   path(gff)
 
   output:
-  path(${gff.baseName}.gz.tbi)
+  path("${gff.baseName}.gz.{tbi,csi}"), optional: true
   """
-  tabix -p gff $gff
+  tabix -p gff $gff || tabix -C -p gff $gff
   """
 }
 
