@@ -74,12 +74,32 @@ process generate_gff3 {
 
   rnac ftp-export coordinates as-gff3 $raw_data - |\
   sort -t"`printf '\\t'`" -k1,1 -k4,4n |\
-  bgzip > "${species}.${assembly}".gff3.gz
+  gzip > "${species}.${assembly}.gff3.gz"
+  """
+}
+
+process generate_gff3_for_igv {
+  tag { "${assembly}-${species}" }
+  memory params.export.ftp.coordinates.gff3.memory
+  publishDir "${params.export.ftp.publish}/.genome-browser", mode: 'copy'
+
+  input:
+  tuple val(assembly), val(species), path(raw_data)
+
+  output:
+  path("${species}.${assembly}.rnacentral.gff3.gz")
+
+  """
+  set -euo pipefail
+
+  rnac ftp-export coordinates as-gff3 $raw_data - |\
+  sort -t"`printf '\\t'`" -k1,1 -k4,4n |\
+  bgzip > "${species}.${assembly}.rnacentral.gff3.gz"
   """
 }
 
 process index_gff3 {
-  publishDir "${params.export.ftp.publish}/genome_coordinates/gff3/.index", mode: 'copy'
+  publishDir "${params.export.ftp.publish}/.genome-browser", mode: 'copy'
 
   input:
   path(gff)
@@ -106,5 +126,6 @@ workflow export_coordinates {
   | set { coordinates }
 
   coordinates | generate_bed
-  coordinates | generate_gff3 | index_gff3
+  coordinates | generate_gff3
+  coordinates | generate_gff3_for_igv | index_gff3
 }
