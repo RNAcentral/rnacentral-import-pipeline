@@ -3,6 +3,7 @@ import json
 import re
 
 import attr
+import numpy as np
 import pandas as pd
 import pybedtools as pbt
 from attr.validators import instance_of as is_a
@@ -23,8 +24,8 @@ class GenomicLocation(object):
         chromosome = re.sub("^chr", "", raw.chrom)
         return cls(
             chromosome=chromosome,
-            start=raw.start_rel_genome + 1,  ## BED is 0-based, so add 1
-            stop=raw.end_rel_genome + 1,
+            start=raw.start_rel_genome,
+            stop=raw.end_rel_genome,
         )
 
 
@@ -48,8 +49,8 @@ class RNAEditFeature(object):
             repeat_type=raw_feature.repeat_type,
             ref=raw_feature.Ref,
             ed=raw_feature.Ed,
-            start=raw_feature.start_rel_URS + 1,  ## BED is 0-based, so add 1
-            stop=raw_feature.end_rel_URS + 1,
+            start=raw_feature.start_rel_URS,
+            stop=raw_feature.end_rel_URS,
             genomic_location=GenomicLocation.build(raw_feature),
         )
 
@@ -110,7 +111,7 @@ def parse(redi_bedfile, redi_metadata, rnc_bedfile, output):
                 "rnc_exon_start",
                 "rnc_exon_end",
                 "urs_taxid",
-                "_rnc_score",
+                "urs_length",
                 "_rnc_strand",
                 "rnc_transcript_start",
                 "rnc_transcript_end",
@@ -120,19 +121,21 @@ def parse(redi_bedfile, redi_metadata, rnc_bedfile, output):
         .drop(
             [
                 "_rnc_chrom",
-                "_rnc_score",
                 "_rnc_strand",
             ],
             axis="columns",
         )
     )
 
-    intersection["start_rel_URS"] = (
-        intersection["start_rel_genome"] - intersection["rnc_transcript_start"]
+    intersection["start_rel_URS"] = np.where(
+        intersection["strand"] == "-",
+        intersection["rnc_exon_start"]
+        - intersection["start_rel_genome"]
+        + intersection["urs_length"]
+        - 1,  # -1 because bed is 0-based interplay with length
+        intersection["start_rel_genome"] - intersection["rnc_transcript_start"],
     )
-    intersection["end_rel_URS"] = (
-        intersection["end_rel_genome"] - intersection["rnc_transcript_start"]
-    )
+    intersection["end_rel_URS"] = intersection["start_rel_URS"]
 
     complete_data = intersection.merge(metadata, how="inner", on="region_id")
 
