@@ -74,7 +74,7 @@ process get_browser_coordinates {
   tuple val(species), val(assembly), val(taxid), val(division)
 
   output:
-  tuple path("${species}.${assembly}.gff3.gz"), path("${species}.${assembly}.gff3.gz.tbi")
+  path("${species}.${assembly}.ensembl.gff3.gz")
 
   """
   set -o pipefail
@@ -85,10 +85,22 @@ process get_browser_coordinates {
 
   (grep "^#" "${species}.${assembly}.gff3"; grep -v "^#" "${species}.${assembly}.gff3" |\
     sort -t"`printf '\\t'`" -k1,1 -k4,4n) |\
-    bgzip > "${species}.${assembly}".gff3.gz
+    bgzip > "${species}.${assembly}".ensembl.gff3.gz
 
-  tabix -p gff "${species}.${assembly}".gff3.gz
   rm "${species}.${assembly}.gff3"
+  """
+}
+
+process index_gff3 {
+  publishDir "${params.export.ftp.publish}/.genome-browser", mode: 'copy'
+
+  input:
+  path(gff)
+
+  output:
+  path("${gff.baseName}.gz.{tbi,csi}"), optional: true
+  """
+  tabix -p gff $gff || tabix -C -p gff $gff
   """
 }
 
@@ -101,15 +113,15 @@ process download_genome {
   tuple val(species), val(assembly), val(taxid), val(division)
 
   output:
-  tuple val(species), val(assembly), path("${species}_${assembly}.fa")
+  tuple val(species), val(assembly), path("${species}.${assembly}.fa")
 
   """
   set -o pipefail
 
   rnac genome-mapping url-for --host=$division $species $assembly - |\
-    xargs -I {} wget -O ${species}_${assembly}.fa.gz '{}'
+    xargs -I {} wget -O ${species}.${assembly}.fa.gz '{}'
 
-  gzip -d ${species}_${assembly}.fa.gz
+  gzip -d ${species}.${assembly}.fa.gz
   """
 }
 
@@ -246,9 +258,7 @@ workflow genome_mapping {
     | download_genome \
     | set { genomes }
 
-    genome_info | get_browser_coordinates
-
-    genome_info | create_json_file | collect | merge_json
+    genome_info | get_browser_coordinates | index_gff3
 
     genomes \
     | map { _s, _a, genome -> genome } \
