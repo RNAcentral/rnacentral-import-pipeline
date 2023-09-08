@@ -17,7 +17,7 @@ limitations under the License.
 import click
 
 from rnacentral_pipeline.rnacentral import attempted
-from rnacentral_pipeline.rnacentral.genome_mapping import blat, urls
+from rnacentral_pipeline.rnacentral.genome_mapping import blat, urls, igv
 
 
 @click.group("genome-mapping")
@@ -108,3 +108,14 @@ def find_remote_urls(filename, output):
 @click.argument("output", type=click.File("w"))
 def parse_attempted_sequences(filename, assembly_id, output):
     attempted.genome_mapping(filename, assembly_id, output)
+
+
+@cli.command("igv")
+@click.argument("species")
+@click.argument("assembly_id")
+@click.argument("output", default="-", type=click.File("w"))
+def find_url_and_create_json(species, assembly_id, output):
+    """
+    Check which files are available to be used by IGV
+    """
+    igv.create_json(species, assembly_id, output)
