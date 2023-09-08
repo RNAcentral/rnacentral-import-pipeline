@@ -7,4 +7,4 @@ edition = "2021"
 
 [dependencies]
 clap = { version = "4.1.6", features = ["derive"] }
-polars = { version = "0.27.2", features = ["streaming", "csv-file", "lazy", "strings"] }
+polars = { version = "0.32.1", features = ["streaming", "lazy", "strings"] }
