@@ -131,8 +131,7 @@ def parse(redi_bedfile, redi_metadata, rnc_bedfile, output):
         intersection["strand"] == "-",
         intersection["rnc_exon_start"]
         - intersection["start_rel_genome"]
-        + intersection["urs_length"]
-        - 1,  # -1 because bed is 0-based interplay with length
+        + intersection["urs_length"],
         intersection["start_rel_genome"] - intersection["rnc_transcript_start"],
     )
     intersection["end_rel_URS"] = intersection["start_rel_URS"]
