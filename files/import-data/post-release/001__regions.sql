@@ -68,7 +68,7 @@ where
 
 -- Make a copy of the data I will delete from rnc_accession_sequence_region into a backup table
 -- Hopefully we can then just drop it...
-drop table rnc_ac_sr_backup;
+drop table if exists rnc_ac_sr_backup;
 
 select * into rnc_ac_sr_backup
 from rnc_accession_sequence_region
