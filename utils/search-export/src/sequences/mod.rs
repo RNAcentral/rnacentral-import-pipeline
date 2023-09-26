@@ -16,3 +16,4 @@ pub mod raw;
 pub mod rfam_hit;
 pub mod so_tree;
 pub mod writers;
+pub mod litsumm;

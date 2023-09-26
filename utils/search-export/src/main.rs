@@ -31,6 +31,7 @@ pub enum Groupable {
     RfamHits,
     PublicationCount,
     SoInfo,
+    LitsummSummaries,
 }
 
 #[derive(Debug, StructOpt)]
@@ -129,6 +130,10 @@ enum SequenceCommand {
         #[structopt(parse(from_os_str))]
         /// Filename of the SO term tree metadata.
         so_term_tree: PathBuf,
+
+        #[structopt(parse(from_os_str))]
+        /// litsumm summaries
+        litsumm_summaries: PathBuf,
 
         #[structopt(parse(from_os_str))]
         /// Filename to write the results to, '-' means stdout
@@ -238,6 +243,7 @@ fn main() -> Result<()> {
             Groupable::Orfs => sequences::orf::group(&path, max_count, &output)?,
             Groupable::SoInfo => Err(anyhow::anyhow!("May not group so info"))?,
             Groupable::PublicationCount => sequences::publication_counts::group(&path, max_count, &output)?,
+            Groupable::LitsummSummaries => sequences::litsumm::group(&path, max_count, &output)?,
         },
         Subcommand::Sequences {
             command,
@@ -255,6 +261,7 @@ fn main() -> Result<()> {
                 rfam_hits,
                 orfs,
                 publication_counts,
+                litsumm_summaries,
                 so_term_tree,
                 output,
             } => sequences::writers::write_merge(
@@ -270,6 +277,7 @@ fn main() -> Result<()> {
                     r2dt_hits,
                     rfam_hits,
                     publication_counts,
+                    litsumm_summaries,
                     orfs,
                     so_term_tree,
                 ],
