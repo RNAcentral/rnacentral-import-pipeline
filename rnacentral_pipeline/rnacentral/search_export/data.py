@@ -829,9 +829,9 @@ builder = entry(
                 fields("disease", diseases, keys="notes"),
                 fields("url", urls, keys="notes"),
                 fields("so_rna_type_name", so_rna_type_name, keys="so_rna_type_tree"),
-                tree("so_rna_type", so_rna_type_tree, key="so_rna_type_tree"),
                 fields("orf_source", values, keys="orf_sources"),
                 field("has_lit_scan", has_publications, keys="publication_count"),
+                tree("so_rna_type", so_rna_type_tree, key="so_rna_type_tree"),
             ],
         ),
     ]
