@@ -15,6 +15,7 @@ process fetch {
 }
 
 process group {
+  memory params.search_export.memory
   tag { "${name}" }
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
