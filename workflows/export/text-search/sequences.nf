@@ -63,13 +63,14 @@ process build_metadata {
   path(rfam)
   path(orf)
   path(text)
+  path(litsumm)
   path(so_tree)
 
   output:
   path("merged.json")
 
   """
-  search-export sequences merge $base $crs $feeback $go $prot $rnas $precompute $qa $r2dt $rfam $orf $text $so_tree merged.json
+  search-export sequences merge $base $crs $feeback $go $prot $rnas $precompute $qa $r2dt $rfam $orf $text $litsumm $so_tree merged.json
   """
 }
 
