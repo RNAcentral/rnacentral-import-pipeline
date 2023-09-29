@@ -91,7 +91,7 @@ process submit_ids {
       # new_ids.txt is not empty
       # get original ids (not in lowercase)
       while IFS= read -r line; do
-        grep -ix "\$line" all_ids.txt | head -1 >> results.txt
+        grep -ixF "\$line" all_ids.txt | head -1 >> results.txt
       done < new_ids.txt
 
       # submit new ids only
