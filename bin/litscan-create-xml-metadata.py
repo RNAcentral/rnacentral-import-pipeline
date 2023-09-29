@@ -79,7 +79,7 @@ def main(conn_string, filename, output):
             database = line[1]
 
             # get hit_count
-            cursor.execute("SELECT hit_count FROM litscan_job WHERE job_id=%s", job_id.lower())
+            cursor.execute("SELECT hit_count FROM litscan_job WHERE job_id='{0}'".format(job_id.lower()))
             result = cursor.fetchone()
             hit_count = str(result[0]) if result else ""
 
