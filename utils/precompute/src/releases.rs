@@ -62,6 +62,49 @@ pub fn write_max(filename: &Path, output: &Path) -> Result<()> {
     Ok(())
 }
 
+/// Selects new UPIs from a set of cross-reference records and a set of known records.
+///
+/// # Description
+///
+/// Used to select wqhich UPIs are forwarded to the precompute workflow, based on when they were last updated.
+/// Xref is updated as a sequence is imported, so the value of last in there is the last time we updated the UPI.
+/// known comes from the existing precompute table. If the last value in known is the same as the last value in xref,
+/// then we don't need to update the UPI. If the last value in known is less than the last value in xref, then we need
+/// to update the UPI. If the last value in known is greater than the last value in xref, then something has gone wrong.
+///
+/// This function reads two CSV files containing cross-reference records and known records,
+/// respectively. It then joins the two data frames on the `id` and `upi` columns, filters the
+/// resulting data frame to only include rows where the `last_xref` column is greater than the
+/// `last_precompute` column, selects only the `upi` column, and removes any duplicate rows based
+/// on the `upi` column. The resulting data frame is then written to a new CSV file specified by
+/// the `output` argument.
+///
+/// # Arguments
+///
+/// * `xrefs` - A `Path` to the CSV file containing cross-reference records.
+/// * `known` - A `Path` to the CSV file containing known records.
+/// * `output` - A `Path` to the CSV file to write the selected UPIs to.
+///
+/// # Errors
+///
+/// This function returns an error if there is an issue reading or writing the CSV files, or if
+/// there is an issue with the data frames or data frame operations.
+///
+/// # Examples
+///
+/// ```
+/// use std::path::Path;
+/// use anyhow::Result;
+/// use polars::prelude::*;
+///
+/// fn main() -> Result<()> {
+///     let xrefs = Path::new("xrefs.csv");
+///     let known = Path::new("known.csv");
+///     let output = Path::new("selected_upis.csv");
+///     select_new(&xrefs, &known, &output)?;
+///     Ok(())
+/// }
+/// ```
 pub fn select_new(xrefs: &Path, known: &Path, output: &Path) -> Result<()> {
 
     let mut xref_records : DataFrame = CsvReader::from_path(xrefs)?.has_header(false).finish().unwrap();
