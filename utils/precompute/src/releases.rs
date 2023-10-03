@@ -142,3 +142,119 @@ pub fn select_new(xrefs: &Path, known: &Path, output: &Path) -> Result<()> {
 
     Ok(())
 }
+
+
+#[cfg(test)]
+extern crate rand;
+mod tests {
+    use super::*;
+    use std::io::Cursor;
+    use rand::{distributions::Alphanumeric, Rng}; // 0.8
+
+    fn get_random_fname() -> String {
+        let rand_string: String = rand::thread_rng()
+            .sample_iter(&Alphanumeric)
+            .take(30)
+            .map(char::from)
+            .collect();
+        let fname = format!("{}.csv", rand_string);
+        fname
+    }
+
+    #[test]
+    fn test_select_new() -> Result<()> {
+        // Create test data frames
+        let xref_data = "1,upi1,601\n\
+                         2,upi2,600\n\
+                         3,upi3,602\n\
+                         4,upi4,600\n\
+                         5,upi5,603\n";
+        let known_data = "1,upi1,600\n\
+                          2,upi2,600\n\
+                          3,upi3,600\n\
+                          4,upi4,600\n\
+                          5,upi5,600\n";
+        let xref_reader = CsvReader::new(Cursor::new(xref_data)).has_header(false);
+        let known_reader = CsvReader::new(Cursor::new(known_data)).has_header(false);
+        let mut xref_records = xref_reader.finish()?;
+        let mut known_records = known_reader.finish()?;
+
+        let xref_fname = get_random_fname();
+        let known_fname = get_random_fname();
+
+        // write the test data frames to files
+        let mut xref_path = File::create(&xref_fname)?;
+        let mut known_path = File::create(&known_fname)?;
+        let xref_writer = CsvWriter::new(&mut xref_path);
+        let known_writer = CsvWriter::new(&mut known_path);
+        xref_writer.has_header(false).finish(&mut xref_records)?;
+        known_writer.has_header(false).finish(&mut known_records)?;
+
+
+        // Call the function being tested
+        let output_fname = get_random_fname();
+        let output = Path::new(&output_fname);
+        select_new(Path::new(&xref_fname), Path::new(&known_fname), &output)?;
+
+        // Read the output file and check its contents
+        let output_reader = CsvReader::from_path(&output)?.has_header(false);
+        let output_records = output_reader.finish()?;
+        let expected_data = "upi1\n\
+                             upi3\n\
+                             upi5\n";
+        let expected_reader = CsvReader::new(Cursor::new(expected_data)).has_header(false);
+        let expected_records = expected_reader.finish()?;
+        assert_eq!(output_records.sort(["column_1"], false).unwrap(), expected_records);
+
+        // Clean up the output file
+        std::fs::remove_file(&output)?;
+        std::fs::remove_file(Path::new(&xref_fname))?;
+        std::fs::remove_file(Path::new(&known_fname))?;
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_select_new_known_newer() -> Result<()> {
+        // Create test data frames
+        // Create test data frames
+        let xref_data = "1,upi1,600\n\
+                         2,upi2,600\n\
+                         3,upi3,600\n\
+                         4,upi4,601\n\
+                         5,upi5,600\n";
+        let known_data = "1,upi1,600\n\
+                          2,upi2,600\n\
+                          3,upi3,600\n\
+                          4,upi4,602\n\
+                          5,upi5,600\n";
+        let xref_reader = CsvReader::new(Cursor::new(xref_data)).has_header(false);
+        let known_reader = CsvReader::new(Cursor::new(known_data)).has_header(false);
+        let mut xref_records = xref_reader.finish()?;
+        let mut known_records = known_reader.finish()?;
+
+        let xref_fname = get_random_fname();
+        let known_fname = get_random_fname();
+        // write the test data frames to files
+        let mut xref_path = File::create(&xref_fname)?;
+        let mut known_path = File::create(&known_fname)?;
+        let xref_writer = CsvWriter::new(&mut xref_path);
+        let known_writer = CsvWriter::new(&mut known_path);
+        xref_writer.has_header(false).finish(&mut xref_records)?;
+        known_writer.has_header(false).finish(&mut known_records)?;
+
+
+        // Call the function being tested
+        let output_fname = get_random_fname();
+        let output = Path::new(&output_fname);
+        let result = select_new(Path::new(&xref_fname), Path::new(&known_fname), &output);
+
+        assert!(result.is_err());
+
+        // Clean up the output file
+        std::fs::remove_file(Path::new(&xref_fname))?;
+        std::fs::remove_file(Path::new(&known_fname))?;
+
+        Ok(())
+    }
+}
