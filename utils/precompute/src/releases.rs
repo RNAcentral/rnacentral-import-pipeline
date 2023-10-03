@@ -15,6 +15,7 @@ use serde::{
 };
 
 use itertools::Itertools;
+use serde_json::error;
 use sorted_iter::{
     assume::*,
     SortedPairIterator,
@@ -66,18 +67,20 @@ pub fn write_max(filename: &Path, output: &Path) -> Result<()> {
 ///
 /// # Description
 ///
-/// Used to select wqhich UPIs are forwarded to the precompute workflow, based on when they were last updated.
-/// Xref is updated as a sequence is imported, so the value of last in there is the last time we updated the UPI.
-/// known comes from the existing precompute table. If the last value in known is the same as the last value in xref,
-/// then we don't need to update the UPI. If the last value in known is less than the last value in xref, then we need
-/// to update the UPI. If the last value in known is greater than the last value in xref, then something has gone wrong.
+/// Used to select wqhich UPIs are forwarded to the precompute workflow, based on when
+/// they were last updated. Xref is updated as a sequence is imported, so the value of
+/// last in there is the last time we updated the UPI. known comes from the existing
+/// precompute table. If the last value in known is the same as the last value in xref,
+/// then we don't need to update the UPI. If the last value in known is less than the last
+/// value in xref, then we need to update the UPI. If the last value in known is greater
+/// than the last value in xref, then something has gone wrong.
 ///
-/// This function reads two CSV files containing cross-reference records and known records,
-/// respectively. It then joins the two data frames on the `id` and `upi` columns, filters the
-/// resulting data frame to only include rows where the `last_xref` column is greater than the
-/// `last_precompute` column, selects only the `upi` column, and removes any duplicate rows based
-/// on the `upi` column. The resulting data frame is then written to a new CSV file specified by
-/// the `output` argument.
+/// This function reads two CSV files containing cross-reference records and known
+/// records, respectively. It then joins the two data frames on the `id` and `upi`
+/// columns, filters the resulting data frame to only include rows where the `last_xref`
+/// column is greater than the `last_precompute` column, selects only the `upi` column,
+/// and removes any duplicate rows based on the `upi` column. The resulting data frame is
+/// then written to a new CSV file specified by the `output` argument.
 ///
 /// # Arguments
 ///
@@ -87,8 +90,8 @@ pub fn write_max(filename: &Path, output: &Path) -> Result<()> {
 ///
 /// # Errors
 ///
-/// This function returns an error if there is an issue reading or writing the CSV files, or if
-/// there is an issue with the data frames or data frame operations.
+/// This function returns an error if there is an issue reading or writing the CSV files,
+/// or if there is an issue with the data frames or data frame operations.
 ///
 /// # Examples
 ///
@@ -105,57 +108,75 @@ pub fn write_max(filename: &Path, output: &Path) -> Result<()> {
 ///     Ok(())
 /// }
 /// ```
-pub fn select_new(xrefs: &Path, known: &Path, output: &Path) -> Result<()> {
+pub fn select_new(xrefs: &Path, known: &Path, output: &Path, streaming: bool) -> Result<()> {
+    println!("{:?} {:?} {:?}", xrefs, known, streaming);
+    let known_path = known.to_str().unwrap().to_owned();
+    let xrefs_path = xrefs.to_str().unwrap().to_owned();
+    let xref_records: LazyFrame = LazyCsvReader::new(xrefs_path)
+        .has_header(false)
+        .low_memory(streaming)
+        .finish()?
+        .rename(vec!["column_1", "column_2", "column_3"], vec!["id", "upi", "last"])
+        .group_by(["id", "upi"])
+        .agg([col("last").max().alias("last")])
+        .sort("id", Default::default());
 
-    let mut xref_records : DataFrame = CsvReader::from_path(xrefs)?.has_header(false).finish().unwrap();
-    xref_records.rename("column_1", "id").ok();
-    xref_records.rename("column_2", "upi").ok();
-    xref_records.rename("column_3", "last").ok();
-    let mut known_records : DataFrame = CsvReader::from_path(known)?.has_header(false).finish().unwrap();
-    known_records.rename("column_1", "id").ok();
-    known_records.rename("column_2", "upi").ok();
-    known_records.rename("column_3", "last").ok();
 
-    let mut selection = xref_records.join(&known_records, ["id", "upi"], ["id", "upi"], JoinType::Outer, None)?;
-    selection.rename("last", "last_xref")?;
-    selection.rename("last_right", "last_precompute")?;
+    let known_records: LazyFrame = LazyCsvReader::new(known_path)
+        .has_header(false)
+        .low_memory(streaming)
+        .finish()
+        .unwrap()
+        .rename(vec!["column_1", "column_2", "column_3"], vec!["id", "upi", "last"])
+        .group_by(["id", "upi"])
+        .agg([col("last").min().alias("last")])
+        .sort("id", Default::default());
 
-    // check we are not in a catastrophic error state - precompute should never be newer than xref
-    let check = selection.column("last_precompute")?.gt(selection.column("last_xref")?)?;
-    if check.any() {
-        return Err(anyhow!(
-            "Precompute newer than xref for these UPIs: {:?}",
-            selection.filter(&check).unwrap().select(["upi"]).unwrap()
+    let selection: LazyFrame = xref_records
+        .join(
+            known_records,
+            [col("id"), col("upi")],
+            [col("id"), col("upi")],
+            JoinArgs::new(JoinType::Outer),
         )
-        );
+        .rename(vec!["last", "last_right"], vec!["last_xref", "last_precompute"])
+        .with_columns([
+            col("last_xref").gt(col("last_precompute")).alias("selected"),
+            col("last_precompute").gt(col("last_xref")).alias("error_state"),
+        ]);
+        // .select([col("upi"), col("selected"), col("error_state")]);
+
+    let check: LazyFrame = selection.clone();
+
+    // // check we are not in a catastrophic error state - precompute should never be newer than
+    // // xref
+    let selected_urs = selection.filter(col("selected").eq(true)).with_streaming(streaming).collect()?;
+    let error_urs = check.filter(col("error_state").eq(true)).with_streaming(streaming).collect()?;
+    if error_urs.height() > 0 {
+        return Err(anyhow!("Precompute newer than xref for these UPIs: {:?}", error_urs));
     }
 
-    let mask = selection.column("last_xref")?.gt(selection.column("last_precompute")?)?;
-    let mut selected_upis = selection.filter(&mask).unwrap()
-                                 .select(["upi"])?
-                                 .unique(None, UniqueKeepStrategy::First)?;
+    let mut selected_upis =
+        selected_urs.select(["upi"])?.unique(None, UniqueKeepStrategy::First, None)?;
 
-    let out_stream : File = File::create(output).unwrap();
-    CsvWriter::new(out_stream)
-        .has_header(false)
-        .finish(&mut selected_upis)?;
+    let out_stream: File = File::create(output).unwrap();
+    CsvWriter::new(out_stream).has_header(false).finish(&mut selected_upis)?;
 
     Ok(())
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::io::Cursor;
-    use rand::{distributions::Alphanumeric, Rng}; // 0.8
+    use rand::{
+        distributions::Alphanumeric,
+        Rng,
+    };
+    use std::io::Cursor; // 0.8
 
     fn get_random_fname() -> String {
-        let rand_string: String = rand::thread_rng()
-            .sample_iter(&Alphanumeric)
-            .take(30)
-            .map(char::from)
-            .collect();
+        let rand_string: String =
+            rand::thread_rng().sample_iter(&Alphanumeric).take(30).map(char::from).collect();
         let fname = format!("{}.csv", rand_string);
         fname
     }
@@ -167,12 +188,22 @@ mod tests {
                          2,upi2,600\n\
                          3,upi3,602\n\
                          4,upi4,600\n\
-                         5,upi5,603\n";
+                         5,upi5,603\n\
+                         1,upi1,604\n\
+                         2,upi2,600\n\
+                         3,upi3,605\n\
+                         4,upi4,600\n\
+                         5,upi5,606\n";
         let known_data = "1,upi1,600\n\
                           2,upi2,600\n\
                           3,upi3,600\n\
                           4,upi4,600\n\
-                          5,upi5,600\n";
+                          5,upi5,600\n\
+                          1,upi1,500\n\
+                          2,upi2,600\n\
+                          3,upi3,500\n\
+                          4,upi4,600\n\
+                          5,upi5,500\n";
         let xref_reader = CsvReader::new(Cursor::new(xref_data)).has_header(false);
         let known_reader = CsvReader::new(Cursor::new(known_data)).has_header(false);
         let mut xref_records = xref_reader.finish()?;
@@ -189,11 +220,10 @@ mod tests {
         xref_writer.has_header(false).finish(&mut xref_records)?;
         known_writer.has_header(false).finish(&mut known_records)?;
 
-
         // Call the function being tested
         let output_fname = get_random_fname();
         let output = Path::new(&output_fname);
-        select_new(Path::new(&xref_fname), Path::new(&known_fname), &output)?;
+        select_new(Path::new(&xref_fname), Path::new(&known_fname), &output, false)?;
 
         // Read the output file and check its contents
         let output_reader = CsvReader::from_path(&output)?.has_header(false);
@@ -203,7 +233,7 @@ mod tests {
                              upi5\n";
         let expected_reader = CsvReader::new(Cursor::new(expected_data)).has_header(false);
         let expected_records = expected_reader.finish()?;
-        assert_eq!(output_records.sort(["column_1"], false).unwrap(), expected_records);
+        assert_eq!(output_records.sort(["column_1"], false, false).unwrap(), expected_records);
 
         // Clean up the output file
         std::fs::remove_file(&output)?;
@@ -221,11 +251,21 @@ mod tests {
                          2,upi2,600\n\
                          3,upi3,600\n\
                          4,upi4,601\n\
+                         5,upi5,600\n\
+                         1,upi1,600\n\
+                         2,upi2,600\n\
+                         3,upi3,600\n\
+                         4,upi4,501\n\
                          5,upi5,600\n";
         let known_data = "1,upi1,600\n\
                           2,upi2,600\n\
                           3,upi3,600\n\
                           4,upi4,602\n\
+                          5,upi5,600\n\
+                          1,upi1,600\n\
+                          2,upi2,600\n\
+                          3,upi3,600\n\
+                          4,upi4,703\n\
                           5,upi5,600\n";
         let xref_reader = CsvReader::new(Cursor::new(xref_data)).has_header(false);
         let known_reader = CsvReader::new(Cursor::new(known_data)).has_header(false);
@@ -242,11 +282,10 @@ mod tests {
         xref_writer.has_header(false).finish(&mut xref_records)?;
         known_writer.has_header(false).finish(&mut known_records)?;
 
-
         // Call the function being tested
         let output_fname = get_random_fname();
         let output = Path::new(&output_fname);
-        let result = select_new(Path::new(&xref_fname), Path::new(&known_fname), &output);
+        let result = select_new(Path::new(&xref_fname), Path::new(&known_fname), &output, false);
 
         assert!(result.is_err());
 
