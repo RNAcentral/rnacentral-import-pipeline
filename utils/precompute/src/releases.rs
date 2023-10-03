@@ -72,25 +72,30 @@ pub fn select_new(xrefs: &Path, known: &Path, output: &Path) -> Result<()> {
     known_records.rename("column_1", "id").ok();
     known_records.rename("column_2", "upi").ok();
     known_records.rename("column_3", "last").ok();
-    // Run groupby, sort and max on xref (because the DB doesn't have the memory to do it)
-    xref_records = xref_records.groupby(["id", "upi"])?
-                .select(["last"])
-                .max()?
-                .sort(["id"], false)
-                .unwrap();
 
-    // Join the frames on id, then filter to select those where xref > known (?)
     let mut selection = xref_records.join(&known_records, ["id", "upi"], ["id", "upi"], JoinType::Outer, None)?;
-    let mask = selection.column("last_max")?.gt(selection.column("last")?)?;
+    selection.rename("last", "last_xref")?;
+    selection.rename("last_right", "last_precompute")?;
+
+    // check we are not in a catastrophic error state - precompute should never be newer than xref
+    let check = selection.column("last_precompute")?.gt(selection.column("last_xref")?)?;
+    if check.any() {
+        return Err(anyhow!(
+            "Precompute newer than xref for these UPIs: {:?}",
+            selection.filter(&check).unwrap().select(["upi"]).unwrap()
+        )
+        );
+    }
+
+    let mask = selection.column("last_xref")?.gt(selection.column("last_precompute")?)?;
     let mut selected_upis = selection.filter(&mask).unwrap()
                                  .select(["upi"])?
                                  .unique(None, UniqueKeepStrategy::First)?;
 
-
     let out_stream : File = File::create(output).unwrap();
     CsvWriter::new(out_stream)
         .has_header(false)
-        .finish(&mut selected_upis);
+        .finish(&mut selected_upis)?;
 
     Ok(())
 }
