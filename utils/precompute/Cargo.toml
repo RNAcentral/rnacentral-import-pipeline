@@ -20,7 +20,7 @@ sorted-iter = "0.1.7"
 structopt = "0.3"
 strum = "0.21"
 strum_macros = "0.21"
-polars = "0.21.1"
+polars = { version = "0.33.2", features = ["lazy", "streaming"] }
 
 [dev-dependencies]
 rand = "0.8"
