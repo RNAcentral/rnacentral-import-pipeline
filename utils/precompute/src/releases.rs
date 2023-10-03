@@ -145,7 +145,6 @@ pub fn select_new(xrefs: &Path, known: &Path, output: &Path) -> Result<()> {
 
 
 #[cfg(test)]
-extern crate rand;
 mod tests {
     use super::*;
     use std::io::Cursor;
