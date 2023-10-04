@@ -117,8 +117,8 @@ pub fn select_new(xrefs: &Path, known: &Path, output: &Path, streaming: bool) ->
         .low_memory(streaming)
         .finish()?
         .rename(vec!["column_1", "column_2", "column_3"], vec!["id", "upi", "last"])
-        .group_by(["id", "upi"])
-        .agg([col("last").max().alias("last")])
+        .group_by(["id"])
+        .agg([col("last").max().alias("last"), col("upi").first().alias("upi")])
         .sort("id", Default::default());
 
 
@@ -128,15 +128,16 @@ pub fn select_new(xrefs: &Path, known: &Path, output: &Path, streaming: bool) ->
         .finish()
         .unwrap()
         .rename(vec!["column_1", "column_2", "column_3"], vec!["id", "upi", "last"])
-        .group_by(["id", "upi"])
-        .agg([col("last").min().alias("last")])
+        .group_by(["id"])
+        .agg([col("last").max().alias("last")])
         .sort("id", Default::default());
+
 
     let selection: LazyFrame = xref_records
         .join(
             known_records,
-            [col("id"), col("upi")],
-            [col("id"), col("upi")],
+            [col("id")],
+            [col("id")],
             JoinArgs::new(JoinType::Outer),
         )
         .rename(vec!["last", "last_right"], vec!["last_xref", "last_precompute"])
@@ -155,6 +156,7 @@ pub fn select_new(xrefs: &Path, known: &Path, output: &Path, streaming: bool) ->
     if error_urs.height() > 0 {
         return Err(anyhow!("Precompute newer than xref for these UPIs: {:?}", error_urs));
     }
+    println!("{:?}", selected_urs);
 
     let mut selected_upis =
         selected_urs.select(["upi"])?.unique(None, UniqueKeepStrategy::First, None)?;
@@ -199,11 +201,11 @@ mod tests {
                           3,upi3,600\n\
                           4,upi4,600\n\
                           5,upi5,600\n\
-                          1,upi1,500\n\
-                          2,upi2,600\n\
-                          3,upi3,500\n\
-                          4,upi4,600\n\
-                          5,upi5,500\n";
+                          6,upi1,500\n\
+                          7,upi2,600\n\
+                          8,upi3,500\n\
+                          9,upi4,600\n\
+                          10,upi5,500\n";
         let xref_reader = CsvReader::new(Cursor::new(xref_data)).has_header(false);
         let known_reader = CsvReader::new(Cursor::new(known_data)).has_header(false);
         let mut xref_records = xref_reader.finish()?;
