@@ -32,6 +32,7 @@ clean:
 	rm bin/ftp-export
 	rm bin/json2dfasta
 	rm bin/expression-parse
+	rm bin/bed-expander
 	cargo clean
 
 docker: Dockerfile requirements.txt .dockerignore
