@@ -109,60 +109,83 @@ pub fn write_max(filename: &Path, output: &Path) -> Result<()> {
 /// }
 /// ```
 pub fn select_new(xrefs: &Path, known: &Path, output: &Path, streaming: bool) -> Result<()> {
-    println!("{:?} {:?} {:?}", xrefs, known, streaming);
-    let known_path = known.to_str().unwrap().to_owned();
-    let xrefs_path = xrefs.to_str().unwrap().to_owned();
-    let xref_records: LazyFrame = LazyCsvReader::new(xrefs_path)
-        .has_header(false)
-        .low_memory(streaming)
-        .finish()?
-        .rename(vec!["column_1", "column_2", "column_3"], vec!["id", "upi", "last"])
-        .group_by(["id"])
-        .agg([col("last").max().alias("last"), col("upi").first().alias("upi")])
-        .sort("id", Default::default());
+    // println!("{:?} {:?} {:?}", xrefs, known, streaming);
+    // let known_path = known.to_str().unwrap().to_owned();
+    // let xrefs_path = xrefs.to_str().unwrap().to_owned();
+    // let xref_records: LazyFrame = LazyCsvReader::new(xrefs_path)
+    //     .has_header(false)
+    //     .low_memory(streaming)
+    //     .finish()?
+    //     .rename(vec!["column_1", "column_2", "column_3"], vec!["id", "upi", "last"])
+    //     .group_by(["upi"])
+    //     .agg([col("last").max().alias("last"), col("id").first().alias("id")])
+    //     .sort("id", Default::default());
 
 
-    let known_records: LazyFrame = LazyCsvReader::new(known_path)
-        .has_header(false)
-        .low_memory(streaming)
-        .finish()
-        .unwrap()
-        .rename(vec!["column_1", "column_2", "column_3"], vec!["id", "upi", "last"])
-        .group_by(["id"])
-        .agg([col("last").max().alias("last")])
-        .sort("id", Default::default());
+    // let known_records: LazyFrame = LazyCsvReader::new(known_path)
+    //     .has_header(false)
+    //     .low_memory(streaming)
+    //     .finish()
+    //     .unwrap()
+    //     .rename(vec!["column_1", "column_2", "column_3"], vec!["id", "upi", "last"])
+    //     .group_by(["upi"])
+    //     .agg([col("last").max().alias("last"), col("id").first().alias("id")])
+    //     .sort("id", Default::default());
 
 
-    let selection: LazyFrame = xref_records
-        .join(
-            known_records,
-            [col("id")],
-            [col("id")],
-            JoinArgs::new(JoinType::Outer),
-        )
-        .rename(vec!["last", "last_right"], vec!["last_xref", "last_precompute"])
-        .with_columns([
-            col("last_xref").gt(col("last_precompute")).alias("selected"),
-            col("last_precompute").gt(col("last_xref")).alias("error_state"),
-        ]);
-        // .select([col("upi"), col("selected"), col("error_state")]);
+    // let selection: LazyFrame = xref_records
+    //     .join(
+    //         known_records,
+    //         [col("upi")],
+    //         [col("upi")],
+    //         JoinArgs::new(JoinType::Outer),
+    //     )
+    //     .rename(vec!["last", "last_right"], vec!["last_xref", "last_precompute"])
+    //     .with_columns([
+    //         col("last_xref").gt(col("last_precompute")).alias("selected"),
+    //         col("last_precompute").gt(col("last_xref")).alias("error_state"),
+    //     ]);
+    //     // .select([col("upi"), col("selected"), col("error_state")]);
 
-    let check: LazyFrame = selection.clone();
+    // let check: LazyFrame = selection.clone();
 
-    // // check we are not in a catastrophic error state - precompute should never be newer than
-    // // xref
-    let selected_urs = selection.filter(col("selected").eq(true)).with_streaming(streaming).collect()?;
-    let error_urs = check.filter(col("error_state").eq(true)).with_streaming(streaming).collect()?;
-    if error_urs.height() > 0 {
-        return Err(anyhow!("Precompute newer than xref for these UPIs: {:?}", error_urs));
+    // // // check we are not in a catastrophic error state - precompute should never be newer than
+    // // // xref
+    // let selected_urs = selection.filter(col("selected").eq(true)).with_streaming(streaming).collect()?;
+    // let error_urs = check.filter(col("error_state").eq(true)).with_streaming(streaming).collect()?;
+    // if error_urs.height() > 0 {
+    //     return Err(anyhow!("Precompute newer than xref for these UPIs: {:?}", error_urs));
+    // }
+    // println!("{:?}", selected_urs);
+
+    // let mut selected_upis =
+    //     selected_urs.select(["upi"])?.unique(None, UniqueKeepStrategy::First, None)?;
+
+    // let out_stream: File = File::create(output).unwrap();
+    // CsvWriter::new(out_stream).has_header(false).finish(&mut selected_upis)?;
+
+    let xref_records = entries(xrefs)?.map(|e: UrsEntry| (e.id, e)).assume_sorted_by_key();
+    let known_records = entries(known)?.map(|e: UrsEntry| (e.id, e)).assume_sorted_by_key();
+
+    let mut writer = csv::Writer::from_writer(File::create(output)?);
+    let pairs = xref_records.outer_join(known_records);
+    for (_key, (xref, pre)) in pairs {
+        match (xref, pre) {
+            (Some(x), Some(p)) => match x.release.cmp(&p.release) {
+                Less => Err(anyhow!(
+                    "This should never happen, too small release for {:?} vs {:?}",
+                    &x,
+                    &p
+                ))?,
+                Equal => (),
+                Greater => writer.write_record(&[x.urs])?,
+            },
+            (Some(x), None) => writer.write_record(&[x.urs])?,
+            (None, Some(_)) => (),
+            (None, None) => (),
+        }
     }
-    println!("{:?}", selected_urs);
-
-    let mut selected_upis =
-        selected_urs.select(["upi"])?.unique(None, UniqueKeepStrategy::First, None)?;
-
-    let out_stream: File = File::create(output).unwrap();
-    CsvWriter::new(out_stream).has_header(false).finish(&mut selected_upis)?;
+    writer.flush()?;
 
     Ok(())
 }
