@@ -6,5 +6,5 @@ COPY (
     division
   FROM ensembl_assembly
   WHERE
-    division NOT IN ('EnsemblProtists', 'EnsemblFungi')
+    division NOT IN ('EnsemblProtists')
 ) TO STDOUT CSV;
