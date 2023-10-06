@@ -39,7 +39,8 @@ class FtpHost(enum.Enum):
     ensembl_protists = 3
     ensembl_bacteria = 4
     ensembl_genomes = 5
-    unknown = 6
+    ensembl_fungi = 6
+    unknown = 7
 
     @classmethod
     def from_string(cls, raw):
@@ -68,6 +69,8 @@ class FtpHost(enum.Enum):
             return "ftp.ensemblgenomes.org"
         if self is FtpHost.ensembl_genomes:
             return "ftp.ensemblgenomes.org"
+        if self is FtpHost.ensembl_fungi:
+            return "ftp.ensemblgenomes.org"
         raise ValueError("No host for %s" % self)
 
     def paths(self, species, kind):
@@ -88,8 +91,10 @@ class FtpHost(enum.Enum):
                 return [template.format(group="protists", kind=kind, species=species)]
             if self is FtpHost.ensembl_bacteria:
                 return [template.format(group="bacteria", kind=kind, species=species)]
+            if self is FtpHost.ensembl_fungi:
+                return [template.format(group="fungi", kind=kind, species=species)]
             if self is FtpHost.ensembl_genomes:
-                gs = ["plants", "metazoa", "protists", "bacteria"]
+                gs = ["plants", "metazoa", "protists", "bacteria", "fungi"]
                 return [template.format(group=g, kind=kind, species=species) for g in gs]
         raise ValueError("No paths for %s" % self)
 
