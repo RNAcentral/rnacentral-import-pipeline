@@ -38,6 +38,7 @@ from rnacentral_pipeline.cli import (
     lncbase,
     lncbook,
     lncipedia,
+    mgnify,
     mirbase,
     mirgenedb,
     misc,
@@ -112,6 +113,7 @@ cli.add_command(intact.cli)
 cli.add_command(lncbase.cli)
 cli.add_command(lncbook.cli)
 cli.add_command(lncipedia.cli)
+cli.add_command(mgnify.cli)
 cli.add_command(mirbase.cli)
 cli.add_command(mirgenedb.cli)
 cli.add_command(misc.crs_data)
@@ -129,7 +131,7 @@ cli.add_command(precompute.cli)
 cli.add_command(qa.cli)
 cli.add_command(quickgo.cli)
 cli.add_command(r2dt.cli)
-cli.add_command(rediportal.cli)
+# cli.add_command(rediportal.cli)
 cli.add_command(refseq.cli)
 cli.add_command(release.cli)
 cli.add_command(repeats.cli)
