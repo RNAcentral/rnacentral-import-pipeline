@@ -170,7 +170,7 @@ class Entry:
         """
         if self.feature_name != "ncRNA":
             return ""
-        return utils.SO_INSDC_MAPPING[self.rna_type]
+        return utils.SO_INSDC_MAPPING.get(self.rna_type, "other")
 
     @property
     def gene_synonym(self) -> str:
