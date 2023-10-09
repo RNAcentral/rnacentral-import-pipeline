@@ -28,7 +28,7 @@ def upi_taxid_ranges(ranges, tablename, db_url):
                 query = (
                     Query.from_(table)
                     .select(fn.Min(table.id), fn.Max(table.id))
-                    .where(table.precompute_urs_id.between([start, stop]))
+                    .where(table.precompute_urs_id.between(start, stop))
                 )
 
                 cur.execute(str(query), ((start, stop),))
