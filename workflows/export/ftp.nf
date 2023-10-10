@@ -98,22 +98,24 @@ process gpi {
 workflow ftp {
   take: _flag
   main:
-    Channel.fromPath('files/ftp-export/md5/md5.sql') | set { md5_query }
-    Channel.fromPath('files/ftp-export/md5/readme.txt') | set { md5_template }
-    md5(md5_query, md5_template)
+    if (params.export.ftp.run) {
+      Channel.fromPath('files/ftp-export/md5/md5.sql') | set { md5_query }
+      Channel.fromPath('files/ftp-export/md5/readme.txt') | set { md5_template }
+      md5(md5_query, md5_template)
 
-    Channel.fromPath('files/ftp-export/release_note.txt') | release_note
-    Channel.fromPath('files/ftp-export/go_annotations/rnacentral_rfam_annotations.sql') | rfam_go_matches
+      Channel.fromPath('files/ftp-export/release_note.txt') | release_note
+      Channel.fromPath('files/ftp-export/go_annotations/rnacentral_rfam_annotations.sql') | rfam_go_matches
 
-    Channel.fromPath('files/ftp-export/rfam/rfam-annotations.sql') | set { rfam_annotation_query }
-    Channel.fromPath('files/ftp-export/rfam/readme.txt') | set { rfam_readme }
-    rfam_annotations(rfam_annotation_query, rfam_readme)
+      Channel.fromPath('files/ftp-export/rfam/rfam-annotations.sql') | set { rfam_annotation_query }
+      Channel.fromPath('files/ftp-export/rfam/readme.txt') | set { rfam_readme }
+      rfam_annotations(rfam_annotation_query, rfam_readme)
 
-    gpi()
-    id_mapping()
-    export_coordinates()
-    ensembl_export()
-    fasta_export()
+      gpi()
+      id_mapping()
+      export_coordinates()
+      ensembl_export()
+      fasta_export()
+    }
 }
 
 workflow {
