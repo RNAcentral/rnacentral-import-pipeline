@@ -22,6 +22,7 @@ use crate::sequences::{
     qa_status::QaStatus,
     r2dt::R2dt,
     rfam_hit::RfamHit,
+    litsumm::LitsummSummaries,
     so_tree,
 };
 
@@ -42,6 +43,7 @@ pub struct Raw {
     rfam_hits: Vec<RfamHit>,
     orfs: Vec<Orf>,
     publication_counts: Option<PublicationCount>,
+    litsumm_summaries: Vec<LitsummSummaries>,
     so_tree: so_tree::SoTree,
 }
 
@@ -132,6 +134,11 @@ impl Raw {
     /// Get a reference to the raw's base.
     pub fn base(&self) -> &Basic {
         &self.base
+    }
+
+    /// Get a reference to the raw's lit summ.
+    pub fn litsumm_summaries(&self) -> &[LitsummSummaries] {
+        &self.litsumm_summaries
     }
 
     /// Get this raw's publication count.
