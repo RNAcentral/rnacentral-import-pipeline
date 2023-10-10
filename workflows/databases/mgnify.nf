@@ -20,3 +20,14 @@ process parse {
   rnac mgnify parse $json .
   """
 }
+
+
+workflow mgnify {
+  main:
+    if ( params.databases.mgnify.run ) {
+      mgnify_fetch | mgnify_parse | set { data }
+    }
+    else {
+      Channel.empty() | set { data }
+    }
+}
