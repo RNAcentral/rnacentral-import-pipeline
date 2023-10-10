@@ -70,7 +70,7 @@ process build_metadata {
   path("merged.json")
 
   """
-  search-export sequences merge $base $crs $feeback $go $prot $rnas $precompute $qa $r2dt $rfam $orf $text $litsumm $so_tree merged.json
+  search-export sequences merge $base $crs $feeback $go $prot $rnas $precompute $qa $r2dt $rfam $orf $text $so_tree $litsumm merged.json
   """
 }
 
