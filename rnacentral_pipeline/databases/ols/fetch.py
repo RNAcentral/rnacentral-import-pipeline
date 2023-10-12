@@ -25,7 +25,7 @@ from throttler import throttle
 
 from rnacentral_pipeline.databases.data import OntologyTerm
 
-BASE = "https://www.ebi.ac.uk/ols/api/ontologies"
+BASE = "https://www.ebi.ac.uk/ols4/api/ontologies"
 
 
 @retry(requests.HTTPError, tries=5, delay=1)
