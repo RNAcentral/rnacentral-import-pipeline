@@ -35,6 +35,7 @@ use crate::sequences::{
     r2dt::R2dt,
     raw::Raw,
     rfam_hit::RfamHitVec,
+    litsumm::LitsummSummaries,
     so_tree,
 };
 
@@ -64,8 +65,10 @@ pub struct Normalized {
     go_annotations: Vec<GoAnnotation>,
     interacting_proteins: Vec<InteractingProtein>,
     interacting_rnas: Vec<InteractingRna>,
-    so_rna_type_tree: so_tree::SoTree,
     publication_count: usize,
+    litsumm: Vec<LitsummSummaries>,
+    so_rna_type_tree: so_tree::SoTree,
+
 
     #[serde(flatten)]
     orfs: OrfVec,
@@ -124,6 +127,7 @@ impl Normalized {
             references,
             rfam_hits: raw.rfam_hits().to_owned().into_iter().collect(),
             orfs: raw.orfs().to_vec().into_iter().collect(),
+            litsumm: raw.litsumm_summaries().to_vec(),
         })
     }
 
