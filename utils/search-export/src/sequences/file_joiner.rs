@@ -34,10 +34,12 @@ use rnc_core::grouper::Grouped::{
 use super::{
     basic::Basic,
     crs::Crs,
+    editing_events::EditingEvent,
     feedback::Feedback,
     go_annotation::GoAnnotation,
     interacting_protein::InteractingProtein,
     interacting_rna::InteractingRna,
+    litsumm::LitsummSummaries,
     orf::Orf,
     precompute::Precompute,
     publication_counts::PublicationCount,
@@ -46,7 +48,7 @@ use super::{
     raw::Raw,
     rfam_hit::RfamHit,
     so_tree,
-    so_tree::SoMapping, litsumm::LitsummSummaries,
+    so_tree::SoMapping,
 };
 
 #[derive(Debug, Error)]
@@ -95,6 +97,7 @@ pub enum FileTypes {
     RfamHits,
     PublicationCount,
     LitsummSummaries,
+    EditingEvents,
     SoTermTree,
 }
 
@@ -113,6 +116,7 @@ pub struct FileJoiner<'de> {
     rfam_hits: StreamDeserializer<'de, IoRead<BufReader<File>>, Grouped<RfamHit>>,
     publication_counts: StreamDeserializer<'de, IoRead<BufReader<File>>, Grouped<PublicationCount>>,
     lit_summ: StreamDeserializer<'de, IoRead<BufReader<File>>, Grouped<LitsummSummaries>>,
+    editing_events: StreamDeserializer<'de, IoRead<BufReader<File>>, Grouped<EditingEvent>>,
     so_info: SoMapping,
 }
 
@@ -198,6 +202,7 @@ impl FileJoinerBuilder {
         let rfam_hits = self.iterator_for(FileTypes::RfamHits)?;
         let publication_counts = self.iterator_for(FileTypes::PublicationCount)?;
         let lit_summ = self.iterator_for(FileTypes::LitsummSummaries)?;
+        let editing_events = self.iterator_for(FileTypes::EditingEvents)?;
         let so_info = so_tree::load(self.path_for(FileTypes::SoTermTree)?)?;
 
         Ok(FileJoiner {
@@ -214,6 +219,7 @@ impl FileJoinerBuilder {
             rfam_hits,
             publication_counts,
             lit_summ,
+            editing_events,
             so_info,
         })
     }
@@ -237,10 +243,26 @@ impl<'de> Iterator for FileJoiner<'de> {
             self.rfam_hits.next(),
             self.publication_counts.next(),
             self.lit_summ.next(),
+            self.editing_events.next(),
         );
 
         match current {
-            (None, None, None, None, None, None, None, None, None, None, None, None, None) => None,
+            (
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+            ) => None,
             (
                 Some(Ok(Required {
                     id: id1,
@@ -294,6 +316,10 @@ impl<'de> Iterator for FileJoiner<'de> {
                     id: id13,
                     data: lit_summ,
                 })),
+                Some(Ok(Multiple {
+                    id: id14,
+                    data: editing_events,
+                })),
             ) => {
                 if id1 != id2
                     || id1 != id3
@@ -307,9 +333,10 @@ impl<'de> Iterator for FileJoiner<'de> {
                     || id1 != id11
                     || id1 != id12
                     || id1 != id13
+                    || id1 != id14
                 {
                     return Some(Err(Error::OutofSyncData(vec![
-                        id1, id2, id3, id4, id5, id6, id7, id8, id9, id10, id11, id12, id13
+                        id1, id2, id3, id4, id5, id6, id7, id8, id9, id10, id11, id12, id13, id14,
                     ])));
                 }
 
@@ -334,27 +361,13 @@ impl<'de> Iterator for FileJoiner<'de> {
                     .orfs(orfs)
                     .publication_counts(publication_counts)
                     .litsumm_summaries(lit_summ)
+                    .editing_events(editing_events)
                     .so_tree(so_tree)
                     .build();
 
                 Some(Ok(raw))
             },
-            _ => {
-                println!("{:?}", current.0);
-                println!("{:?}", current.1);
-                println!("{:?}", current.2);
-                println!("{:?}", current.3);
-                println!("{:?}", current.4);
-                println!("{:?}", current.5);
-                println!("{:?}", current.6);
-                println!("{:?}", current.7);
-                println!("{:?}", current.8);
-                println!("{:?}", current.9);
-                println!("{:?}", current.10);
-                println!("{:?}", current.11);
-                println!("{:?}", current.12);
-                Some(Err(Error::InvalidDataFormat))
-            },
+            _ => Some(Err(Error::InvalidDataFormat)),
         }
     }
 }
