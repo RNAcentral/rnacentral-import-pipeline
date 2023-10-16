@@ -64,13 +64,14 @@ process build_metadata {
   path(orf)
   path(text)
   path(litsumm)
+  path(editing_events)
   path(so_tree)
 
   output:
   path("merged.json")
 
   """
-  search-export sequences merge $base $crs $feeback $go $prot $rnas $precompute $qa $r2dt $rfam $orf $text $so_tree $litsumm merged.json
+  search-export sequences merge $base $crs $feeback $go $prot $rnas $precompute $qa $r2dt $rfam $orf $text $so_tree $litsumm $editing_events merged.json
   """
 }
 
@@ -142,6 +143,20 @@ process litsumm_summaries {
   """
 }
 
+process editing_events {
+  input:
+  val(max_count)
+  path (query)
+
+  output:
+  path("editing-events.json")
+
+  """
+  psql -v ON_ERROR_STOP=1 -f "$query" "$PGDATABASE" > raw.json
+  search-export group editing-events raw.json ${max_count} editing-events.json
+  """
+}
+
 process as_xml {
   tag { "$min-$max" }
   memory params.export.search.memory
@@ -187,6 +202,7 @@ workflow sequences {
     Channel.fromPath('files/search-export/parts/orfs.sql') | set { orf_sql }
     Channel.fromPath('files/search-export/parts/text-mining.sql') | set { text_sql }
     Channel.fromPath('files/search-export/parts/litsumm.sql') | set { litsumm_sql }
+    Channel.fromPath('files/search-export/parts/editing-events.sql') | set { editing_events_sql }
     Channel.fromPath('files/search-export/so-rna-types.sql') | set { so_sql }
 
     Channel.fromPath('files/search-export/parts/accessions.sql') | set { accessions_sql }
@@ -215,6 +231,7 @@ workflow sequences {
       orf_query(search_count, orf_sql),
       text_mining_query(search_count, text_sql),
       litsumm_summaries(search_count, litsumm_sql),
+      editing_events(search_count, editing_events_sql),
       fetch_so_tree(so_sql),
     )\
     | set { metadata }
