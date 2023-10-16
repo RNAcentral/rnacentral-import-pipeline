@@ -13,16 +13,17 @@ use rnc_core::{
 use crate::sequences::{
     basic::Basic,
     crs::Crs,
+    editing_events::EditingEvent,
     feedback::Feedback,
     go_annotation::GoAnnotation,
     interacting_protein::InteractingProtein,
     interacting_rna::InteractingRna,
+    litsumm::LitsummSummaries,
     orf::Orf,
     precompute::Precompute,
     qa_status::QaStatus,
     r2dt::R2dt,
     rfam_hit::RfamHit,
-    litsumm::LitsummSummaries,
     so_tree,
 };
 
@@ -44,6 +45,7 @@ pub struct Raw {
     orfs: Vec<Orf>,
     publication_counts: Option<PublicationCount>,
     litsumm_summaries: Vec<LitsummSummaries>,
+    editing_events: Vec<EditingEvent>,
     so_tree: so_tree::SoTree,
 }
 
@@ -139,6 +141,11 @@ impl Raw {
     /// Get a reference to the raw's lit summ.
     pub fn litsumm_summaries(&self) -> &[LitsummSummaries] {
         &self.litsumm_summaries
+    }
+
+    /// Get a reference to the raw's editing events.
+    pub fn editing_events(&self) -> &[EditingEvent] {
+        &self.editing_events
     }
 
     /// Get this raw's publication count.
