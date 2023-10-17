@@ -73,6 +73,7 @@ workflow parse_databases {
       lncbook(),
       lncipedia(),
       mirbase(),
+      mgnify(),
       mirgenedb(),
       pdbe(),
       pirbase(),
