@@ -1,7 +1,6 @@
 process fetch_directory {
   tag { "$name" }
   when { params.databases.ena.run }
-  clusterOptions '-sp 100'
   queue 'datamover'
   containerOptions '--bind /nfs:/nfs'
 
@@ -36,7 +35,6 @@ process fetch_directory {
 
 process fetch_metadata {
   when { params.databases.ena.run }
-  clusterOptions '-sp 100'
 
   input:
   path(urls)
