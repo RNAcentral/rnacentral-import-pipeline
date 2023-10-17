@@ -33,16 +33,17 @@ sqlitedict = "^2.0.0"
 TatSu = "5.8.2"
 textblob = "0.15.3"
 throttler = "^1.2.0"
-psycopg2= "2.9.3"
 nltk = "^3.8.1"
 openpyxl = "^3.0.10"
+pybedtools = {git = "https://github.com/afg1/pybedtools.git"}
+psycopg2-binary = "^2.9.7"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.2.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api" 
+build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
 xfail_strict = true

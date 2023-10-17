@@ -3,7 +3,7 @@ FROM ALL FILENAMES MATCHING ~<manually_annotated_articles>
 HAVING FIELDS (
     pmcid,
     urs
-) INTO {{PGDATABASE}}?litscan_manually_annotated
+) INTO {{PGDB_EMBASSY_USER}}?litscan_manually_annotated
 TARGET COLUMNS (
     pmcid,
     urs

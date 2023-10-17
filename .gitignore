@@ -105,6 +105,7 @@ workflows/litscan/metadata/files
 workflows/litscan/metadata/rfam
 workflows/litscan/metadata/merged_metadata
 workflows/litscan/backup
-workflows/litscan/submit/previous-release
+workflows/litscan/submit
 singularity/*
 .python-version
+bin/bed-expander

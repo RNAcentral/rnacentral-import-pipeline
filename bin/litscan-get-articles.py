@@ -50,6 +50,7 @@ def create_xml_file(results, directory):
             ET.SubElement(additional_fields, "field", name="year").text = item['year']
             ET.SubElement(additional_fields, "field", name="score").text = item['score']
             ET.SubElement(additional_fields, "field", name="cited_by").text = item['cited_by']
+            ET.SubElement(additional_fields, "field", name="type").text = item['type']
             ET.SubElement(additional_fields, "field", name="job_id").text = elem["display_id"]
             ET.SubElement(additional_fields, "field", name="title_value").text = elem['id_in_title']
             ET.SubElement(additional_fields, "field", name="abstract_value").text = elem['id_in_abstract']
@@ -106,6 +107,7 @@ def main(database, directory):
         article['journal'] = row[7]
         article['score'] = str(row[8])
         article['cited_by'] = str(row[9])
+        article['type'] = row[11]
         articles_list.append(article)
 
     for article in articles_list:

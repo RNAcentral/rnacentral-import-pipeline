@@ -705,6 +705,31 @@ def has_publications(counts):
     return str(bool(counts))
 
 
+def has_litsumm(litsumm):
+    return str(bool(litsumm))
+
+
+def has_editing_event(editing_events):
+    return str(bool(editing_events))
+
+
+def edit_chromosome(editing_events):
+    ## They should all be on the same chromosome
+    return editing_events[0]["chromosome"]
+
+
+def edit_locations(editing_events):
+    return [edit["genomic_location"] for edit in editing_events]
+
+
+def edit_repeat_type(editing_events):
+    return editing_events[0]["repeat_type"]
+
+
+def edit_ref_to_edit(editing_events):
+    return [f"{edit['reference']}->{edit['edit']}" for edit in editing_events]
+
+
 builder = entry(
     [
         tag("name", as_name, keys=("urs", "taxid")),
@@ -829,9 +854,15 @@ builder = entry(
                 fields("disease", diseases, keys="notes"),
                 fields("url", urls, keys="notes"),
                 fields("so_rna_type_name", so_rna_type_name, keys="so_rna_type_tree"),
-                tree("so_rna_type", so_rna_type_tree, key="so_rna_type_tree"),
                 fields("orf_source", values, keys="orf_sources"),
                 field("has_lit_scan", has_publications, keys="publication_count"),
+                field("has_litsumm", has_litsumm, keys="litsumm"),
+                field("has_editing_event", has_editing_event, keys="editing_events"),
+                field("edit_chromosome", edit_chromosome, keys="editing_events"),
+                field("edit_locations", edit_locations, keys="editing_events"),
+                field("edit_repeat_type", edit_repeat_type, keys="editing_events"),
+                ## Add new fields above this line! Otherwise editing the produced xml is hard.
+                tree("so_rna_type", so_rna_type_tree, key="so_rna_type_tree"),
             ],
         ),
     ]

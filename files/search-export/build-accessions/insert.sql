@@ -8,7 +8,8 @@ CREATE TEMP TABLE temp_current_urs_with_accession (
     urs_taxid text not null,
     urs text not null,
     taxid int not null,
-    accession text not null
+    accession text not null,
+    database_name text not null
 );
 
 INSERT INTO temp_current_urs_with_accession

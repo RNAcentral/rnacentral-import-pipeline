@@ -10,7 +10,7 @@ process get_expert_db_articles {
 
     script:
     """
-    psql -t -A -f $query "$PGDATABASE" > results
+    psql -t -A -f $query "$PGDB_EMBASSY_USER" > results
     """
 }
 
@@ -38,7 +38,7 @@ process find_manually_annotated_articles {
 
     script:
     """
-    litscan-manually-annotated.py "$PGDB_EMBASSY_USER" $sorted_results manually_annotated_articles
+    litscan-manually-annotated.py "$PSYCOPG_CONN" $sorted_results manually_annotated_articles
     """
 }
 
