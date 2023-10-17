@@ -22,9 +22,10 @@ process mgnify_parse {
 
 
 workflow mgnify {
+  emit: data
   main:
     if ( params.databases.mgnify.run ) {
-      mgnify_fetch | mgnify_parse | set { data }
+      mgnify_fetch | flatten | mgnify_parse | set { data }
     }
     else {
       Channel.empty() | set { data }
