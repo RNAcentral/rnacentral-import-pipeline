@@ -69,7 +69,7 @@ workflow expressionatlas {
 
   if( params.databases.expressionatlas.run ) {
     Channel.fromPath('files/import-data/expressionatlas/lookup-dump-query.sql') | set { lookup_sql }
-    Channel.fromPath($params.databases.expressionatlas.remote) | set { tsv_path }
+    Channel.fromPath(params.databases.expressionatlas.remote) | set { tsv_path }
     lookup_sql | fetch_lookup | set { lookup }
     tsv_path \
     | fetch_data \
