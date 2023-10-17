@@ -1,5 +1,6 @@
 process mgnify_fetch {
   queue 'datamover'
+  container ''
   output:
     path('*.json')
 
