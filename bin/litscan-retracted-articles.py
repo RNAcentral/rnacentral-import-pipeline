@@ -31,48 +31,57 @@ def main(database, webhook):
     :param webhook: address to send message to slack channel
     :return: None
     """
-    conn_string = database
-    conn = psycopg2.connect(conn_string)
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    conn = None
+    try:
+        conn = psycopg2.connect(database)
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
-    # retrieve all articles identified by LitScan
-    cursor.execute(""" SELECT pmcid FROM litscan_article WHERE retracted IS NOT TRUE """)
-    rows = cursor.fetchall()
-    articles = []
-    for row in rows:
-        articles.append(row[0])
+        # retrieve all articles identified by LitScan
+        cursor.execute(""" SELECT pmcid FROM litscan_article WHERE retracted IS NOT TRUE """)
+        rows = cursor.fetchall()
+        articles = []
+        for row in rows:
+            articles.append(row[0])
 
-    # check 1000 articles at a time
-    step = 1000
+        # check 1000 articles at a time
+        step = 1000
 
-    # list of articles that have been retracted
-    retracted_articles = []
+        # list of articles that have been retracted
+        retracted_articles = []
 
-    for sublist in range(0, len(articles), step):
-        check_pmcid = articles[sublist:sublist + step]
+        for sublist in range(0, len(articles), step):
+            check_pmcid = articles[sublist:sublist + step]
 
-        # create json object
-        obj = {"ids": []}
-        for item in check_pmcid:
-            obj["ids"].append({"src": "PMC", "extId": item})
+            # create json object
+            obj = {"ids": []}
+            for pmcid in check_pmcid:
+                obj["ids"].append({"src": "PMC", "extId": pmcid})
 
-        # use the Status Update Search module of the Europe PMC RESTful API
-        data = requests.post("https://www.ebi.ac.uk/europepmc/webservices/rest/status-update-search", json=obj).json()
+            # use the Status Update Search module of the Europe PMC RESTful API
+            data = requests.post("https://www.ebi.ac.uk/europepmc/webservices/rest/status-update-search", json=obj).json()
 
-        if "articlesWithStatusUpdate" in data and len(data["articlesWithStatusUpdate"]) > 0:
-            for item in data["articlesWithStatusUpdate"]:
-                if "statusUpdates" in item and "RETRACTED" in item["statusUpdates"]:
-                    # update article
-                    cursor.execute(" UPDATE litscan_article SET retracted=TRUE WHERE pmcid=%s", (item["extId"],))
-                    retracted_articles.append(item["extId"])
+            if "articlesWithStatusUpdate" in data and len(data["articlesWithStatusUpdate"]) > 0:
+                for item in data["articlesWithStatusUpdate"]:
+                    if "statusUpdates" in item and "RETRACTED" in item["statusUpdates"]:
+                        # update article
+                        cursor.execute("UPDATE litscan_article SET retracted=TRUE WHERE pmcid=%s", (item["extId"],))
+                        retracted_articles.append(item["extId"])
 
-        time.sleep(0.3)
+            time.sleep(0.3)
 
-    # send a message on Slack
-    if retracted_articles:
-        message = f'{len(retracted_articles)} {"articles have" if len(retracted_articles) > 1 else "article has"} ' \
-                  f'been retracted: {", ".join(retracted_articles)}'
-        requests.post(webhook, json.dumps({"text": message}))
+        # Commit the changes to the database
+        conn.commit()
+
+        # send a message on Slack
+        if retracted_articles:
+            message = f'{len(retracted_articles)} {"articles have" if len(retracted_articles) > 1 else "article has"} ' \
+                      f'been retracted: {", ".join(retracted_articles)}'
+            requests.post(webhook, json.dumps({"text": message}))
+    except (Exception, psycopg2.DatabaseError) as error:
+        requests.post(webhook, json.dumps({"text": error}))
+    finally:
+        if conn is not None:
+            conn.close()
 
 
 if __name__ == "__main__":

@@ -21,6 +21,7 @@ rust:
 	mv -f target/release/ftp-export bin
 	mv -f target/release/json2dfasta bin
 	mv -f target/release/expression-parse bin
+	mv -f target/release/bed-expander bin
 
 clean:
 	rm bin/json2fasta
@@ -31,6 +32,7 @@ clean:
 	rm bin/ftp-export
 	rm bin/json2dfasta
 	rm bin/expression-parse
+	rm bin/bed-expander
 	cargo clean
 
 docker: Dockerfile requirements.txt .dockerignore

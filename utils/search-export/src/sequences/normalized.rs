@@ -25,10 +25,12 @@ use crate::sequences::{
     },
     basic::Basic,
     crs::CrsVec,
+    editing_events::EditingEvent,
     feedback::FeedbackVec,
     go_annotation::GoAnnotation,
     interacting_protein::InteractingProtein,
     interacting_rna::InteractingRna,
+    litsumm::LitsummSummaries,
     orf::OrfVec,
     precompute::PrecomputeSummary,
     qa_status::QaStatus,
@@ -64,8 +66,10 @@ pub struct Normalized {
     go_annotations: Vec<GoAnnotation>,
     interacting_proteins: Vec<InteractingProtein>,
     interacting_rnas: Vec<InteractingRna>,
-    so_rna_type_tree: so_tree::SoTree,
     publication_count: usize,
+    litsumm: Vec<LitsummSummaries>,
+    editing_events: Vec<EditingEvent>,
+    so_rna_type_tree: so_tree::SoTree,
 
     #[serde(flatten)]
     orfs: OrfVec,
@@ -124,6 +128,8 @@ impl Normalized {
             references,
             rfam_hits: raw.rfam_hits().to_owned().into_iter().collect(),
             orfs: raw.orfs().to_vec().into_iter().collect(),
+            litsumm: raw.litsumm_summaries().to_vec(),
+            editing_events: raw.editing_events().to_vec(),
         })
     }
 

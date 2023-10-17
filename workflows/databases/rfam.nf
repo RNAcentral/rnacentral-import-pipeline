@@ -61,7 +61,7 @@ process fetch_sequence_info {
     --database $params.connections.rfam.database \
    -e "set @family='$family';\\. $sequence_seed_query" > sequences_seed.tsv
 
-  cat sequences_family.csv sequences_seed.csv > sequences.csv
+  cat sequences_family.tsv sequences_seed.tsv > sequences.tsv
 
   """
 }

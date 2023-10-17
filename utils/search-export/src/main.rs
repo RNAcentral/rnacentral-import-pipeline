@@ -31,6 +31,8 @@ pub enum Groupable {
     RfamHits,
     PublicationCount,
     SoInfo,
+    LitsummSummaries,
+    EditingEvents,
 }
 
 #[derive(Debug, StructOpt)]
@@ -130,6 +132,15 @@ enum SequenceCommand {
         /// Filename of the SO term tree metadata.
         so_term_tree: PathBuf,
 
+        #[structopt(parse(from_os_str))]
+        /// litsumm summaries
+        litsumm_summaries: PathBuf,
+
+        #[structopt(parse(from_os_str))]
+        /// RNA editing events
+        editing_events: PathBuf,
+
+        // Add new arguments above this line!
         #[structopt(parse(from_os_str))]
         /// Filename to write the results to, '-' means stdout
         output: PathBuf,
@@ -237,7 +248,13 @@ fn main() -> Result<()> {
             Groupable::RfamHits => sequences::rfam_hit::group(&path, max_count, &output)?,
             Groupable::Orfs => sequences::orf::group(&path, max_count, &output)?,
             Groupable::SoInfo => Err(anyhow::anyhow!("May not group so info"))?,
-            Groupable::PublicationCount => sequences::publication_counts::group(&path, max_count, &output)?,
+            Groupable::PublicationCount => {
+                sequences::publication_counts::group(&path, max_count, &output)?
+            },
+            Groupable::LitsummSummaries => sequences::litsumm::group(&path, max_count, &output)?,
+            Groupable::EditingEvents => {
+                sequences::editing_events::group(&path, max_count, &output)?
+            },
         },
         Subcommand::Sequences {
             command,
@@ -255,6 +272,8 @@ fn main() -> Result<()> {
                 rfam_hits,
                 orfs,
                 publication_counts,
+                litsumm_summaries,
+                editing_events,
                 so_term_tree,
                 output,
             } => sequences::writers::write_merge(
@@ -270,6 +289,8 @@ fn main() -> Result<()> {
                     r2dt_hits,
                     rfam_hits,
                     publication_counts,
+                    litsumm_summaries,
+                    editing_events,
                     orfs,
                     so_term_tree,
                 ],

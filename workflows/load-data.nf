@@ -33,6 +33,7 @@ process release {
   maxForks 1
   when { params.should_release }
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
+  memory  4.GB
 
   input:
   path(pre_sql)

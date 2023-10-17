@@ -12,6 +12,7 @@ include { intact } from './databases/intact'
 include { lncbase } from './databases/lncbase'
 include { lncbook } from './databases/lncbook'
 include { lncipedia } from './databases/lncipedia'
+include { mgnify } from './databases/mgnify'
 include { mirbase } from './databases/mirbase'
 include { mirgenedb } from './databases/mirgenedb'
 include { pdbe } from './databases/pdbe'
@@ -72,6 +73,7 @@ workflow parse_databases {
       lncbook(),
       lncipedia(),
       mirbase(),
+      mgnify(),
       mirgenedb(),
       pdbe(),
       pirbase(),

@@ -17,6 +17,7 @@ import logging
 import typing as ty
 
 from rnacentral_pipeline.databases import data
+from rnacentral_pipeline.databases.helpers import phylogeny as phy
 from rnacentral_pipeline.databases.pdb import helpers
 from rnacentral_pipeline.databases.pdb.data import ChainInfo, ReferenceMapping
 
@@ -74,6 +75,8 @@ def parse(
             LOGGER.warn(f"Invalid sequence for {chain}")
         except helpers.MissingTypeInfo:
             LOGGER.warn(f"Missing type info for {chain}")
+        except phy.UnknownTaxonId:
+            LOGGER.warn(f"Unknown taxid for {chain}")
 
     missing = override_list - seen
     LOGGER.info("Disqualified %i mRNA chains", disqualified["mRNA"])
