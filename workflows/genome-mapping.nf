@@ -118,6 +118,8 @@ process download_genome {
   """
   set -o pipefail
 
+  psql -c "UPDATE ensembl_assembly SET selected_genome=false WHERE assembly_id='${assembly}';" $PGDATABASE
+
   rnac genome-mapping url-for --host=$division $species $assembly - |\
     xargs -I {} wget -O ${species}.${assembly}.fa.gz '{}'
 
@@ -150,13 +152,14 @@ process index_genome_for_browser {
   publishDir "${params.export.ftp.publish}/.genome-browser", mode: 'copy'
 
   input:
-  path(genome)
+  tuple val(assembly), path(genome)
 
   output:
   tuple path("${genome}"), path("${genome.baseName}.fa.fai")
 
   """
   samtools faidx $genome
+  psql -c "UPDATE ensembl_assembly SET selected_genome=true WHERE assembly_id='${assembly}';" $PGDATABASE
   """
 }
 
@@ -261,7 +264,7 @@ workflow genome_mapping {
     genome_info | get_browser_coordinates | index_gff3
 
     genomes \
-    | map { _s, _a, genome -> genome } \
+    | map { _s, _a, genome -> [_a, genome] } \
     | index_genome_for_browser
 
     genomes
