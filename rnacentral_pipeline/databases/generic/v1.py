@@ -13,12 +13,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import itertools as it
 import collections as coll
+import itertools as it
 
 import attr
-from attr.validators import optional
 from attr.validators import instance_of as is_a
+from attr.validators import optional
 
 from rnacentral_pipeline.databases import data
 from rnacentral_pipeline.databases.helpers import phylogeny as phy
@@ -348,6 +348,10 @@ def note_data(record):
     }
 
 
+def inferred_phylogeny(record):
+    return record.get("inferredPhylogeny", None)
+
+
 def coordinate_system(metadata):
     system = metadata.get("genomicCoordinateSystem", "1-start, fully-closed")
     if not system:
@@ -386,6 +390,7 @@ def as_entry(record, context):
         gene_synonyms=gene_synonyms(record),
         locus_tag=locus_tag(record),
         features=features(record),
+        inference=inferred_phylogeny(record),
     )
 
 
