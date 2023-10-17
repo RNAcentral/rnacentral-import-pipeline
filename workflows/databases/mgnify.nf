@@ -1,4 +1,4 @@
-process fetch_data {
+process mgnify_fetch {
   when: { params.databases.mgnify.run }
   queue 'datamover'
   output:
@@ -9,7 +9,7 @@ process fetch_data {
   """
 }
 
-process parse {
+process mgnify_parse {
   when: { params.databases.mgnify.run }
   input:
     path(json)
