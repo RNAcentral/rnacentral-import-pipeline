@@ -59,7 +59,7 @@ process fetch_sequence_info {
     --port $params.connections.rfam.port \
     --user $params.connections.rfam.user \
     --database $params.connections.rfam.database \
-   -e "set @family='$family';\\. $sequence_seed_query" > sequences_seed.tsv
+   -e "set @family='$family';\\. $sequence_seed_query" | tail -n +2 > sequences_seed.tsv
 
   cat sequences_family.tsv sequences_seed.tsv > sequences.tsv
 
