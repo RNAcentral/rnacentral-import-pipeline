@@ -77,7 +77,7 @@ workflow expressionatlas {
       !params.databases.expressionatlas.exclude.any {p -> tsv_name.baseName =~ p}
     } \
     | parse_tsvs \
-    | set { genes }
+    | flatten | set { genes }
 
    lookup_genes(genes, lookup) \
    | collectFile() {csvfile -> [csvfile.name, csvfile.text]} \
