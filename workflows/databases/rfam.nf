@@ -55,8 +55,8 @@ process fetch_sequence_info {
    -e "set @family='$family';\\. $sequence_family_query" > sequences_family.tsv
 
   ## Don't strip header if there was no output from getting the family sequences
-  line_count=$(wc -l < sequences_family.tsv)
-  if [ $line_count -gt 0 ]; then
+  line_count=\$(wc -l < sequences_family.tsv)
+  if [ \$line_count -gt 0 ]; then
         mysql \
       --host $params.connections.rfam.host \
       --port $params.connections.rfam.port \
