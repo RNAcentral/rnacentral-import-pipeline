@@ -25,6 +25,7 @@ from load_ensembl_pseudogenes load
 join ensembl_assembly assem
 on
   assem.assembly_id = load.assembly_id
+where assem.selected_genome = true
 ) ON CONFLICT (md5(region_name)) DO NOTHING;
 
 INSERT INTO ensembl_pseudogene_exons (
