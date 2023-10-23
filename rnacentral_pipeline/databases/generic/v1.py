@@ -415,7 +415,14 @@ def parse(raw):
     metadata_refs = [pub.reference(r) for r in metadata_pubs]
 
     for gene_id, records in it.groupby(ncrnas, gene):
-        entries = [as_entry(r, context) for r in records]
+        entries = []
+        for r in records:
+            try:
+                entries.append(as_entry(r, context))
+            except phy.UnknownTaxonId as e:
+                print("Unknown taxid for %s" % r["primaryId"])
+                print(f"UnknownTaxonId: {e}")
+                continue
 
         if gene_id:
             entries = add_related_by_gene(entries)
