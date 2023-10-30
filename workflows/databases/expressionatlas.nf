@@ -4,7 +4,7 @@ process fetch_data {
   errorStrategy 'ignore'
 
   input:
-    path("base_dir")
+    path(base_dir)
 
   output:
   path('tsv_files')
