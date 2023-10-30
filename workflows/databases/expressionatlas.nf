@@ -4,14 +4,14 @@ process fetch_data {
   errorStrategy 'ignore'
 
   input:
-    path(base_dir)
+    val base_dir
 
   output:
   path('tsv_files')
 
   """
   mkdir tsv_files
-  find $base_dir -type f -name "*.tsv" -exec cp {} tsv_files \;
+  find ${base_dir} -type f -name "*.tsv" -exec cp {} tsv_files \\;
   """
 }
 
@@ -68,7 +68,7 @@ workflow expressionatlas {
 
   if( params.databases.expressionatlas.run ) {
     Channel.fromPath('files/import-data/expressionatlas/lookup-dump-query.sql') | set { lookup_sql }
-    Channel.fromPath(params.databases.expressionatlas.remote) | set { tsv_path }
+    Channel.of(params.databases.expressionatlas.remote) | set { tsv_path }
     lookup_sql | fetch_lookup | set { lookup }
     tsv_path \
     | fetch_data \
