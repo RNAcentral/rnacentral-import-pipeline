@@ -16,7 +16,6 @@ process fetch_data {
 }
 
 process fetch_lookup {
-  queue 'short'
 
   input:
     path (query)
