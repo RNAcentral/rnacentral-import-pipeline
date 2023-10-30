@@ -91,7 +91,7 @@ pub fn augment_differential_df(
                 taxid_df.vstack_mut(&get_taxonomy_data(assay_df.clone())?)?;
             }
 
-            if contrast_lookup.get(&ass_group.id) == None {
+            if contrast_lookup.get(&ass_group.id).is_none() {
                 continue;
             }
 
@@ -110,7 +110,7 @@ pub fn augment_differential_df(
                     .lazy()
                     .with_column(
                         when(col(&check_cols.0).and(col(&check_cols.1)))
-                            .then(lit(ass_group.id.as_ref()))
+                            .then(lit(ass_group.id.as_str()))
                             .otherwise(col("group_id"))
                             .alias("group_id"),
                     )
@@ -196,7 +196,7 @@ pub fn augment_baseline_df(
                 .lazy()
                 .with_column(
                     when(col(ass_group.as_str()))
-                        .then(lit(ass_group.as_ref()))
+                        .then(lit(ass_group.as_str()))
                         .otherwise(col("group_id"))
                         .alias("group_id"),
                 )
@@ -275,7 +275,7 @@ fn join_augmentations(
     // Use a df to join on selectively
     let mut df_result = df_result_bare.clone();
     if taxid_df.height() > 0 {
-        df_result = df_result.join(taxid_df, ["group_id"], ["group_id"], JoinType::Inner, None)?;
+        df_result = df_result.join(taxid_df, ["group_id"], ["group_id"], JoinArgs::new(JoinType::Inner))?;
     } else {
         df_result = df_result
             .lazy()
@@ -285,7 +285,7 @@ fn join_augmentations(
 
     if localisation_df.height() > 0 {
         df_result =
-            df_result.join(localisation_df, ["group_id"], ["group_id"], JoinType::Inner, None)?;
+            df_result.join(localisation_df, ["group_id"], ["group_id"], JoinArgs::new(JoinType::Inner))?;
     } else {
         df_result = df_result
             .lazy()
@@ -295,7 +295,7 @@ fn join_augmentations(
 
     if disease_df.height() > 0 {
         df_result =
-            df_result.join(disease_df, ["group_id"], ["group_id"], JoinType::Inner, None)?;
+            df_result.join(disease_df, ["group_id"], ["group_id"], JoinArgs::new(JoinType::Inner))?;
     } else {
         df_result = df_result
             .lazy()
@@ -305,7 +305,7 @@ fn join_augmentations(
 
     if cell_type_df.height() > 0 {
         df_result =
-            df_result.join(cell_type_df, ["group_id"], ["group_id"], JoinType::Inner, None)?;
+            df_result.join(cell_type_df, ["group_id"], ["group_id"], JoinArgs::new(JoinType::Inner))?;
     } else {
         df_result = df_result
             .lazy()
