@@ -71,7 +71,10 @@ def taxid(entry):
 
     base, tid = entry["taxonId"].split(":", 1)
     assert base == "NCBITaxon"
-    return int(tid)
+    try:
+        return int(tid)
+    except ValueError:
+        raise phy.FailedTaxonId(tid)
 
 
 def as_exon(exon, context):
@@ -423,6 +426,9 @@ def parse(raw):
                 print("Unknown taxid for %s" % r["primaryId"])
                 print(f"UnknownTaxonId: {e}")
                 continue
+            except phy.FailedTaxonId as e:
+                print("Taxid failed for %s" % r["primaryId"])
+                print(f"FailingTaxonId: {e}")
 
         if gene_id:
             entries = add_related_by_gene(entries)
