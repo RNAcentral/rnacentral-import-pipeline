@@ -371,7 +371,7 @@ def as_entry(record, context):
         accession=record["primaryId"],
         ncbi_tax_id=taxid(record),
         database=context.database,
-        sequence=record["sequence"],
+        sequence=record["sequence"].replace("U", "T"),
         regions=regions(record, context),
         rna_type=record["soTermId"],
         url=record["url"],
