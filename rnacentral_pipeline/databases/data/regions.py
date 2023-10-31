@@ -13,9 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import operator as op
-
 import enum
+import operator as op
 
 import attr
 from attr.validators import instance_of as is_a
@@ -308,7 +307,7 @@ class SequenceRegion:
                 name,
                 self.chromosome,
                 self.strand.display_int(),
-                self.assembly_id,
+                self.assembly_id.strip(),
                 len(self.exons),
                 normalized.start,
                 normalized.stop,
