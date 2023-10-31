@@ -429,6 +429,7 @@ def parse(raw):
             except phy.FailedTaxonId as e:
                 print("Taxid failed for %s" % r["primaryId"])
                 print(f"FailingTaxonId: {e}")
+                continue
 
         if gene_id:
             entries = add_related_by_gene(entries)
