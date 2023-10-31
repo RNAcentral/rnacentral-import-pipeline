@@ -9,5 +9,7 @@ COPY (
     JOIN litsumm_summaries lss
     ON
       todo.urs_taxid = lss.primary_id
+    WHERE
+      lss.should_show = true
     ORDER by todo.id
 ) TO STDOUT
