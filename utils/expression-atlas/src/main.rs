@@ -101,7 +101,13 @@ fn run_parse(input: &PathBuf, output: &String) -> Result<()> {
                     [0..=2]
                     .join("-")
                     .replace("configuration", ""); // yeah...
-            let config = configuration::parse_config(&path)?;
+            let config = match configuration::parse_config(&path){
+                Err(err) => {
+                    warn!("An error occured parsing {}, skipping it", err);
+                    continue;
+                },
+                Ok(config) => config,
+            };
             config_lookup.insert(exp_name, config);
         }
     }
