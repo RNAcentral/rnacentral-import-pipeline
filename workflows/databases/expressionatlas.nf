@@ -2,6 +2,7 @@ process fetch_data {
   queue 'datamover'
   container ''
   errorStrategy 'ignore'
+  cpus 10
 
   input:
     val base_dir
@@ -11,7 +12,8 @@ process fetch_data {
 
   """
   mkdir tsv_files
-  find ${base_dir} -type f -name "*.tsv" -exec cp {} tsv_files \\;
+  find "${base_dir}" -type f -name "*.tsv" -print0 | xargs -0 -I {} -P 20 cp {} tsv_files || true
+  find "${base_dir}" -type f -name "*configuration.xml" -print0 | xargs -0 -I {} -P 20 cp {} tsv_files || true
   """
 }
 
