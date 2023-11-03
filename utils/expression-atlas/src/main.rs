@@ -128,6 +128,7 @@ fn run_parse(input: &PathBuf, output: &String) -> Result<()> {
     let mut gene_count: usize = 0;
 
     for (exp_name, config) in &config_lookup {
+        println!("Processing {}...", exp_name);
         let mut exp_df = DataFrame::default();
         let mut data_path = PathBuf::from(&input);
         let mut sdrf_path = PathBuf::from(&input);
@@ -220,11 +221,41 @@ fn run_parse(input: &PathBuf, output: &String) -> Result<()> {
         if differential_re.is_match(&config.exp_type) {
             info!("Filtering experiment dataset with differential filters");
             exp_df = filtering::filter_differential(&exp_df)?;
-            exp_df = augment::augment_differential_df(&mut exp_df, config, &sdrf_df)?;
+            // If the experiment df is empty here, we should skip and continue
+            if exp_df.height() == 0 {
+                warn!("No data left after filtering, skipping this experiment");
+                sdrf_path.pop();
+                data_path.pop();
+                continue;
+            }
+            exp_df = match augment::augment_differential_df(&mut exp_df, config, &sdrf_df){
+                Ok(exp_df) => exp_df,
+                Err(err) => {
+                    warn!("An error occured augmenting the dataframe, skipping this experiment: {}", err);
+                    sdrf_path.pop();
+                    data_path.pop();
+                    continue;
+                }
+            };
         } else {
             info!("Filtering with baseline filters");
             exp_df = filtering::filter_baseline(&mut exp_df);
-            exp_df = augment::augment_baseline_df(&mut exp_df, config, &sdrf_df)?;
+            // If the experiment df is empty here, we should skip and continue
+            if exp_df.height() == 0 {
+                warn!("No data left after filtering, skipping this experiment");
+                sdrf_path.pop();
+                data_path.pop();
+                continue;
+            }
+            exp_df = match augment::augment_baseline_df(&mut exp_df, config, &sdrf_df){
+                Ok(exp_df) => exp_df,
+                Err(err) => {
+                    warn!("An error occured augmenting the dataframe, skipping this experiment: {}", err);
+                    sdrf_path.pop();
+                    data_path.pop();
+                    continue;
+                }
+            };
         }
 
         data_path.pop();
