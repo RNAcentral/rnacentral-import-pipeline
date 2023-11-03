@@ -42,7 +42,7 @@ process parse_tsvs {
 
   """
   expression-parse parse -i $tsvs -o all_genes.csv
-  split -n l/10 all_genes.csv chunk_
+  parallel --block 500M -a all_genes.csv --header : --pipepart 'cat > chunk_{#}'
   """
 
 }
