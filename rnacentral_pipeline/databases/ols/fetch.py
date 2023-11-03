@@ -43,7 +43,13 @@ def ontology_url(ontology):
     """
     This will fetch the base URL to use with the given ontology name.
     """
-
+    manual_lookup = {
+        "ECO": "http://purl.obolibrary.org/obo/ECO_",
+        "GO": "http://purl.obolibrary.org/obo/GO_",
+        "SO": "http://purl.obolibrary.org/obo/SO_",
+    }
+    if ontology.upper() in manual_lookup.keys():
+        return furl(manual_lookup[ontology.upper()])
     url = furl(OLS4_BASE)
     url.path.segments.append(ontology.upper())
     info = asyncio.run(query_ols(url.url))
@@ -56,7 +62,7 @@ def term_url(term_id):
     ont_url.path.segments[-1] += rest
     iri = six.moves.urllib.parse.quote_plus(ont_url.url)
 
-    url = furl(BASE)
+    url = furl(OLS4_BASE)
     url.path.segments.extend([ontology, "terms", iri])
     return url
 
