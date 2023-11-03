@@ -1,7 +1,7 @@
 use crate::configuration::*;
 /// This module will combine the config and dataframes to create a df we can extract all the
 /// necessary information from.
-use anyhow::Result;
+use anyhow::{Result, Error, anyhow};
 use multimap::MultiMap;
 use polars::frame::DataFrame;
 use polars::prelude::*;
@@ -43,7 +43,6 @@ pub fn augment_differential_df(
     let mut cell_type_df = DataFrame::default();
 
     let mut df_result = DataFrame::default();
-
     for analysis in &config.analytics {
         for ass_group in &analysis.assay_groups.assay_group {
             // Build the series of assay names for matching later
@@ -125,7 +124,6 @@ pub fn augment_differential_df(
             }
         }
     } // closes loop on analyses
-
     // Use a df to join on selectively
     df_result =
         join_augmentations(&df_result, &taxid_df, &localisation_df, &disease_df, &cell_type_df)?;
@@ -139,6 +137,7 @@ pub fn augment_baseline_df(
     config: &Config,
     sdrf: &DataFrame,
 ) -> Result<DataFrame> {
+    println!("Running augment_baseline...");
     // Set up some dataframes for the things we want
     let mut taxid_df = DataFrame::default();
     let mut localisation_df = DataFrame::default();
@@ -211,6 +210,7 @@ pub fn augment_baseline_df(
         } // close loop on assay groups
     } //close loop on analyses
 
+
     df_result =
         join_augmentations(&df_result, &taxid_df, &localisation_df, &disease_df, &cell_type_df)?;
 
@@ -226,7 +226,6 @@ fn get_localisation_data(assay_df: LazyFrame) -> Result<DataFrame> {
         .select([col("group_id"), col("ontology").alias("location")])
         .first()
         .collect()?;
-
     Ok(localisation)
 }
 
@@ -239,7 +238,6 @@ fn get_disease_data(assay_df: LazyFrame) -> Result<DataFrame> {
         .select([col("group_id"), col("ontology").alias("disease")])
         .first()
         .collect()?;
-
     Ok(disease)
 }
 
@@ -251,7 +249,6 @@ fn get_cell_type_data(assay_df: LazyFrame) -> Result<DataFrame> {
         .select([col("group_id"), col("ontology").alias("cell_type")])
         .first()
         .collect()?;
-
     Ok(cell_type)
 }
 
@@ -261,7 +258,6 @@ fn get_taxonomy_data(assay_df: LazyFrame) -> Result<DataFrame> {
         .select([col("group_id"), col("ontology").alias("taxonomy")])
         .first()
         .collect()?;
-
     Ok(tax_data)
 }
 
@@ -271,7 +267,12 @@ fn join_augmentations(
     localisation_df: &DataFrame,
     disease_df: &DataFrame,
     cell_type_df: &DataFrame,
-) -> Result<DataFrame> {
+) -> Result<DataFrame, Error> {
+    println!("Running join_augnemtation...");
+    if !df_result_bare.get_column_names().contains(&"group_id") {
+        warn!("Dataframe with no group_id! Skipping it");
+        return Err(anyhow!("group_id not in df_result_bare!"));
+    }
     // Use a df to join on selectively
     let mut df_result = df_result_bare.clone();
     if taxid_df.height() > 0 {
