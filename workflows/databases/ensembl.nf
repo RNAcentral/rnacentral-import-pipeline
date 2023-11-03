@@ -20,7 +20,6 @@ process find_urls {
   when { params.databases.ensembl[division].run }
 
   memory '20GB'
-  clusterOptions '-sp 100'
 
   input:
   val(division)
@@ -36,7 +35,6 @@ process find_urls {
 
 process fetch_species_data {
   tag { "$species" }
-  clusterOptions '-sp 90'
   errorStrategy { task.exitStatis == 8 ? 'retry' : 'ignore' }
   maxRetries 10
   maxForks 10
@@ -59,7 +57,6 @@ process fetch_species_data {
 process parse_data {
   tag { "${embl.baseName}" }
   memory { 6.GB * task.attempt }
-  clusterOptions '-sp 50'
   errorStrategy 'retry'
   maxRetries 3
 
