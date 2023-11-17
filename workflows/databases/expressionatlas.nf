@@ -51,10 +51,11 @@ process parse_tsvs {
 }
 
 process lookup_genes {
-
+  memory { 32.GB * task.attempt }
+  cpus 16
+  errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'terminate' }
   input:
-    path(lookup)
-    path(genes)
+    tuple path(lookup), path(genes)
 
   output:
     path('*.csv')
@@ -77,14 +78,11 @@ workflow expressionatlas {
     lookup_sql | fetch_lookup | set { lookup }
     tsv_path \
     | fetch_data \
-    | filter { tsv_name ->
-      !params.databases.expressionatlas.exclude.any {p -> tsv_name.baseName =~ p}
-    } \
     | parse_tsvs \
     | flatten | set { genes }
 
-   lookup_genes(genes, lookup) \
-   | collectFile() {csvfile -> [csvfile.name, csvfile.text]} \
+   lookup.combine(genes) | lookup_genes \
+   | collect \
    | set { data }
 
   }
