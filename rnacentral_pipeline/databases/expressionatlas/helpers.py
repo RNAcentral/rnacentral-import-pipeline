@@ -59,6 +59,13 @@ def references(interactions):
     return list(refs)
 
 
+def rna_type(type_str):
+    if type_str is None:
+        return "SO:0000655"
+    else:
+        return type_str
+
+
 def as_entry(info, experiment):
     synonyms = list(
         filter(None, [""] if info["Gene Name"] == [None] else info["Gene Name"])
@@ -70,7 +77,7 @@ def as_entry(info, experiment):
         database="Expression Atlas",
         sequence=info["seq"][0],
         regions=region_builder(info),
-        rna_type=info["rna_type"][0],
+        rna_type=rna_type(info["rna_type"][0]),
         url=url(experiment),
         seq_version="1",
         description=info["description"][0],
