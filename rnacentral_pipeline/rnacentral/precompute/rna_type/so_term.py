@@ -308,6 +308,8 @@ def rna_type_of(
 ) -> ty.Optional[RnaType]:
 
     annotations = all_annotations(context, sequence)
+    if len(annotations) == 0:
+        return RnaType.ncRNA()
     merged = merge_annotations(annotations)
 
     if len(merged) == 1:
