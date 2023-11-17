@@ -42,4 +42,7 @@ def process_csv(csv_file, output, db_url):
     """
     entries = parser.parse(csv_file, db_url)
     with entry_writer(Path(output)) as writer:
-        writer.write(entries)
+        try:
+            writer.write(entries)
+        except ValueError:
+            print("No entries from this chunk")
