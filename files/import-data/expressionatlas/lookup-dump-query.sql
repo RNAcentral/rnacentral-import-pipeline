@@ -13,5 +13,7 @@ COPY(
   JOIN rna
   ON xref.upi = rna.upi
 
+  WHERE xref.deleted = 'N'
+
 
   ) TO STDOUT CSV HEADER
