@@ -25,7 +25,6 @@ process generate_files {
 
 process sequences {
   memory '4GB'
-  queue short
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
   // clusterOptions '-R "rusage[scratch=4000]"'
 
@@ -51,7 +50,6 @@ process scan {
   memory { params.rfam.memory * params.rfam.cpus }
   errorStrategy 'ignore'
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
-  queue 'short'
 
   input:
   tuple path(version), path('sequences.fasta'), path(cm_files)
