@@ -296,7 +296,7 @@ impl<'de> Iterator for FileJoiner<'de> {
                     id: id8,
                     data: precompute,
                 })),
-                Some(Ok(Required {
+                Some(Ok(Optional {
                     id: id9,
                     data: qa_status,
                 })),
