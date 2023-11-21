@@ -5,6 +5,14 @@ This is a cleaned up version of the output of `\d tablename` with some notes on 
 
 # Tables
 
+## Notes on naming
+
+RNAcentral provides [`URS`] ids to uniquely identify all RNAcentral sequences.
+Internally this may be referred to as `upi`, for historical reasons.
+We also provide `URS_taxids`, which is a [`URS`] with the NCBI [taxid](https://www.ncbi.nlm.nih.gov/books/NBK54428/) the sequence has been observed in.
+Internally, this can be referred to as a `urs_taxid`, `rna_id`, or in some tables as `id`.
+This is an oversight and should be fixed, eventually.
+
 ## Notes on indexing
 
 There are several ways to assign coordinates in a sequence.
@@ -16,7 +24,31 @@ Note that bugs have happened and sometimes data is mixed or incorrect, we are wo
 
 ## `go_term_annotations`
 
+This table represents all [Gene Ontology (GO)] [RNAcentral] stores.
+This table is a fairly straightforward representation of the data in a [GPA file](https://geneontology.org/docs/gene-product-association-data-gpad-format/).
+That document covers the meaning of the fields.
+It is simplified for our needs and only contains annotations which are about an ncRNA in RNAcentral.
+
+|         Column         |  Type   | Description         |
+|------------------------|---------|---------------------|
+|  go_term_annotation_id | integer | The id of this row. |
+|  rna_id                | text    | The `URS_taxid` of the sequence which has a GO annotation. |
+|  qualifier             | text    | The qualifier for this annotation. |
+|  ontology_term_id      | text    | A reference to `ontology_terms` for the ontology term this GO annotation has. |
+|  evidence_code         | text    | The evidence code for this annotation. |
+|  assigned_by           | text    | Who assigned this annotation. |
+|  extensions            | jsonb   | A JSON object of all extensions for this annotation. |
+
 ## `go_term_publication_map`
+
+This table is meant to track what the source of publications for all GO annotations in `go_term_annotations` come from.
+It maps from `go_term_annotations` to `rnc_references`.
+
+|            Column              |  Type   | Description |
+|--------------------------------|---------|-------------|----------|
+| go_term_publication_mapping_id | integer | The id of this row. |
+| go_term_annotation_id          | integer | The id of the row in `go_term_annotations`. |
+| reference_id                   | integer | The id of the row in `rnc_references` that supports the given GO annotation. |
 
 ## `rfam_go_terms`
 
@@ -30,6 +62,19 @@ The terms may be filtered slightly to provide "better" terms for [RNAcentral] us
 | `ontology_term_id` | text     | A reference to the `ontology_terms.id` field. |
 
 ## `ontology_terms`
+
+This table represents all ontology terms knows about.
+This covers all ontologies like [Gene Ontology (GO)], [Sequence Ontology (SO)](http://www.sequenceontology.org/).
+It is a very simple table as we do very simple things with ontology terms, generally just display them.
+This doesn't support tricks like querying for all child terms of an ontology, because we do not do that within the database.
+
+
+|       Column     | Type | Description |
+|------------------|------|-------------|
+| ontology_term_id | text | The id for this ontology term. |
+| ontology         | text | The ontology this comes from, generally the short name like `SO`. |
+| name             | text | The name of the term. |
+| definition       | text | The definition of the term. |
 
 ## `rna`
 
@@ -177,10 +222,12 @@ This doesn't have much information, and it should stay that way, we only need to
 | `label`             | text   |
 | `synonyms`          | text[] | A list of synonyms for the protein. |
 
+[Gene Ontology (GO)]: https://geneontology.org/
 [MGnify]: https://www.ebi.ac.uk/metagenomics
 [R2DT]: http://r2dt.bio/
 [RNAcentral]: https://rnacentral.org/
 [Rfam]: https://rfam.org/
 [SILVA]: https://www.arb-silva.de/
+[`URS`]: https://rnacentral.org/help#rnacentral-identifiers
 [UniProt]: https://www.uniprot.org/
 [dot-bracket]: https://www.tbi.univie.ac.at/RNA/ViennaRNA/doc/html/io/rna_structures.html
