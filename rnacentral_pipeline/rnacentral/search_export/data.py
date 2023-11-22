@@ -858,9 +858,21 @@ builder = entry(
                 field("has_lit_scan", has_publications, keys="publication_count"),
                 field("has_litsumm", has_litsumm, keys="litsumm"),
                 field("has_editing_event", has_editing_event, keys="editing_events"),
-                field("edit_chromosome", edit_chromosome, keys="editing_events"),
-                field("edit_locations", edit_locations, keys="editing_events"),
-                field("edit_repeat_type", edit_repeat_type, keys="editing_events"),
+                field(
+                    "edit_chromosome",
+                    get_or_empty(edit_chromosome),
+                    keys="editing_events",
+                ),
+                field(
+                    "edit_locations",
+                    get_or_empty(edit_locations),
+                    keys="editing_events",
+                ),
+                field(
+                    "edit_repeat_type",
+                    get_or_empty(edit_repeat_type),
+                    keys="editing_events",
+                ),
                 ## Add new fields above this line! Otherwise editing the produced xml is hard.
                 tree("so_rna_type", so_rna_type_tree, key="so_rna_type_tree"),
             ],
