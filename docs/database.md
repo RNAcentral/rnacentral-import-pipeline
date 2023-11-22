@@ -108,7 +108,73 @@ For details of what those codes mean see: <https://www.bioinformatics.org/sms/iu
 | `seq_long`  | text                        | The sequence as DNA, if it is over 4,000 nts.                                                                            |
 | `md5`       | text                        | The MD5 hash of the sequence.                                                                                            |
 
+## `xref`
+
+In this section, we describe all `xref_*` tables.
+These are the key tables which link a sequence to their appearance in a database.
+There are `2 * number_of_databases` xref tables.
+These are partitions of all xref data on the `dbid` and `deleted` columns.
+Each table represents the active, `xref_p*_not_deleted`, and inactive, `xref_p*_deleted` tables.
+Rows from these tables are never deleted, only marked as deleted, by setting `deleted = 'Y'`.
+Currently, those tables have to created manually, but this can be automated with dynamic SQL.
+Additionally, the `xref` base table should always be empty.
+That is,
+
+```sql
+select
+  *
+from only xref
+```
+
+Should always return nothing.
+This is maintained by triggers for insert into the `xref` table.
+
+| Column    | Type                        | Description                                                          |
+|-----------|-----------------------------|----------------------------------------------------------------------|
+| dbid      | integer                     | A reference to `rnc_database.id` for the database this xref is from. |
+| created   | integer                     | The database release where this xref was first created.              |
+| last      | integer                     | The database release where the xref was last seen.                   |
+| upi       | text                        | The `urs` for this sequence.                                         |
+| version_i | integer                     | The version index of this sequence.                                  |
+| deleted   | text                        | A flag, `Y` or `N` for deleted or not.                               |
+| timestamp | timestamp without time zone | When this xref was modified.                                         |
+| userstamp | text                        | The user which modified this xref.                                   |
+| ac        | text                        | The accession for this xref.                                         |
+| version   | integer                     | The version of this accession.                                       |
+| taxid     | integer                     | The taxid for this sequence.                                         |
+| id        | integer                     | The id of this xref row.                                             |
+
 ## `rnc_rna_precomputed`
+
+This table plays several roles.
+First, it is the store of all known `urs_taxids`.
+Secondly, it is where the summary of analysis are stored.
+Also, all sequence pages, eg <https://rnacentral.org/rna/URS0000049E57/511145>, use this table as a starting point for information.
+One key data type in this table are the RNA types.
+RNAcentral used to use [INSDC RNA types](https://www.insdc.org/submitting-standards/ncrna-vocabulary/), however we have moved to [Sequence Ontology (SO)](http://www.sequenceontology.org/) terms.
+As a result, the INSDC terms are just a mapping from the SO terms to the INSDC ones.
+We still display both, which is why they are left here.
+
+It is important to keep in mind that this table not only contains entries for all `urs_taxids`, but also for all `urs` as well.
+This complicates working with the table in some cases.
+This is due to the fact that we have sequence pages without a taxid, eg <https://rnacentral.org/rna/URS0000049E57>, removing or simplifying this would allow us to cleanup this table.
+
+|         Column          |          Type           | Description                                                                               |
+|-------------------------|-------------------------|-------------------------------------------------------------------------------------------|
+| id                      | text                    | The id, generally a `urs_taxid`, but also sometimes just a `urs`.                         |
+| taxid                   | integer                 | The taxid, which may be null.                                                             |
+| description             | text                    | A description of this sequence.                                                           |
+| upi                     | text                    | The URS for this sequence.                                                                |
+| rna_type                | text                    | The INSDC RNA type of this sequence. These used to be the primary RNA type in RNAcentral. |
+| update_date             | date                    | Last date this entry was updated.                                                         |
+| has_coordinates         | boolean                 | If this sequence is present in a genome.                                                  |
+| databases               | text                    | A comma separated list of all databases which have an active xref for this sequence.      |
+| is_active               | boolean                 | A flag that is true if any xref is not marked as deleted.                                 |
+| last_release            | integer                 | Largest release in the xref table for this sequence.                                      |
+| short_description       | text                    | A description without organism prefix, which was used to display in our genome browser.   |
+| so_rna_type             | text                    | The SO term for this sequence.                                                            |
+| is_locus_representative | boolean                 | If this is representative for the gene it is a part of.                                   |
+| assigned_so_rna_type    | text                    | A manually assigned SO term for this sequence.                                            |
 
 ## `rnc_accessions`
 
