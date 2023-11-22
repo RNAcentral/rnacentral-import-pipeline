@@ -5,7 +5,13 @@ This is a cleaned up version of the output of `\d tablename` with some notes on 
 
 # Tables
 
-## Notes on naming
+## General column naming
+
+A useful principle is that columns with the same data type should have the same names.
+This isn't perfectly followed in the database, but should be.
+We generally try to stick to this pattern for future work.
+
+## URS column naming
 
 RNAcentral provides [`URS`] ids to uniquely identify all RNAcentral sequences.
 Internally this may be referred to as `upi`, for historical reasons.
@@ -31,13 +37,13 @@ It is simplified for our needs and only contains annotations which are about an 
 
 |         Column         |  Type   | Description                                                                   |
 |------------------------|---------|-------------------------------------------------------------------------------|
-|  go_term_annotation_id | integer | The id of this row.                                                           |
-|  rna_id                | text    | The `URS_taxid` of the sequence which has a GO annotation.                    |
-|  qualifier             | text    | The qualifier for this annotation.                                            |
-|  ontology_term_id      | text    | A reference to `ontology_terms` for the ontology term this GO annotation has. |
-|  evidence_code         | text    | The evidence code for this annotation.                                        |
-|  assigned_by           | text    | Who assigned this annotation.                                                 |
-|  extensions            | jsonb   | A JSON object of all extensions for this annotation.                          |
+|  `go_term_annotation_id` | integer | The id of this row.                                                           |
+|  `rna_id`                | text    | The `URS_taxid` of the sequence which has a GO annotation.                    |
+|  `qualifier`             | text    | The qualifier for this annotation.                                            |
+|  `ontology_term_id`      | text    | A reference to `ontology_terms` for the ontology term this GO annotation has. |
+|  `evidence_code`         | text    | The evidence code for this annotation.                                        |
+|  `assigned_by`           | text    | Who assigned this annotation.                                                 |
+|  `extensions`            | jsonb   | A JSON object of all extensions for this annotation.                          |
 
 ## `go_term_publication_map`
 
@@ -46,9 +52,9 @@ It maps from `go_term_annotations` to `rnc_references`.
 
 |            Column              |  Type   | Description                                                                  |
 |--------------------------------|---------|------------------------------------------------------------------------------|
-| go_term_publication_mapping_id | integer | The id of this row.                                                          |
-| go_term_annotation_id          | integer | The id of the row in `go_term_annotations`.                                  |
-| reference_id                   | integer | The id of the row in `rnc_references` that supports the given GO annotation. |
+| `go_term_publication_mapping_id` | integer | The id of this row.                                                          |
+| `go_term_annotation_id`          | integer | The id of the row in `go_term_annotations`.                                  |
+| `reference_id`                   | integer | The id of the row in `rnc_references` that supports the given GO annotation. |
 
 ## `rfam_go_terms`
 
@@ -71,10 +77,10 @@ This doesn't support tricks like querying for all child terms of an ontology, be
 
 |       Column     | Type | Description |
 |------------------|------|-------------|
-| ontology_term_id | text | The id for this ontology term. |
-| ontology         | text | The ontology this comes from, generally the short name like `SO`. |
-| name             | text | The name of the term. |
-| definition       | text | The definition of the term. |
+| `ontology_term_id` | text | The id for this ontology term. |
+| `ontology`         | text | The ontology this comes from, generally the short name like `SO`. |
+| `name`             | text | The name of the term. |
+| `definition`       | text | The definition of the term. |
 
 ## `rna`
 
@@ -131,18 +137,18 @@ This is maintained by triggers for insert into the `xref` table.
 
 | Column    | Type                        | Description                                                          |
 |-----------|-----------------------------|----------------------------------------------------------------------|
-| dbid      | integer                     | A reference to `rnc_database.id` for the database this xref is from. |
-| created   | integer                     | The database release where this xref was first created.              |
-| last      | integer                     | The database release where the xref was last seen.                   |
-| upi       | text                        | The `urs` for this sequence.                                         |
-| version_i | integer                     | The version index of this sequence.                                  |
-| deleted   | text                        | A flag, `Y` or `N` for deleted or not.                               |
-| timestamp | timestamp without time zone | When this xref was modified.                                         |
-| userstamp | text                        | The user which modified this xref.                                   |
-| ac        | text                        | The accession for this xref.                                         |
-| version   | integer                     | The version of this accession.                                       |
-| taxid     | integer                     | The taxid for this sequence.                                         |
-| id        | integer                     | The id of this xref row.                                             |
+| `dbid`      | integer                     | A reference to `rnc_database.id` for the database this xref is from. |
+| `created`   | integer                     | The database release where this xref was first created.              |
+| `last`      | integer                     | The database release where the xref was last seen.                   |
+| `upi`       | text                        | The `urs` for this sequence.                                         |
+| `version_i` | integer                     | The version index of this sequence.                                  |
+| `deleted`   | text                        | A flag, `Y` or `N` for deleted or not.                               |
+| `timestamp` | timestamp without time zone | When this xref was modified.                                         |
+| `userstamp` | text                        | The user which modified this xref.                                   |
+| `ac`        | text                        | The accession for this xref.                                         |
+| `version`   | integer                     | The version of this accession.                                       |
+| `taxid`     | integer                     | The taxid for this sequence.                                         |
+| `id`        | integer                     | The id of this xref row.                                             |
 
 ## `rnc_rna_precomputed`
 
@@ -161,20 +167,20 @@ This is due to the fact that we have sequence pages without a taxid, eg <https:/
 
 |         Column          |          Type           | Description                                                                               |
 |-------------------------|-------------------------|-------------------------------------------------------------------------------------------|
-| id                      | text                    | The id, generally a `urs_taxid`, but also sometimes just a `urs`.                         |
-| taxid                   | integer                 | The taxid, which may be null.                                                             |
-| description             | text                    | A description of this sequence.                                                           |
-| upi                     | text                    | The URS for this sequence.                                                                |
-| rna_type                | text                    | The INSDC RNA type of this sequence. These used to be the primary RNA type in RNAcentral. |
-| update_date             | date                    | Last date this entry was updated.                                                         |
-| has_coordinates         | boolean                 | If this sequence is present in a genome.                                                  |
-| databases               | text                    | A comma separated list of all databases which have an active xref for this sequence.      |
-| is_active               | boolean                 | A flag that is true if any xref is not marked as deleted.                                 |
-| last_release            | integer                 | Largest release in the xref table for this sequence.                                      |
-| short_description       | text                    | A description without organism prefix, which was used to display in our genome browser.   |
-| so_rna_type             | text                    | The SO term for this sequence.                                                            |
-| is_locus_representative | boolean                 | If this is representative for the gene it is a part of.                                   |
-| assigned_so_rna_type    | text                    | A manually assigned SO term for this sequence.                                            |
+| `id`                      | text                    | The id, generally a `urs_taxid`, but also sometimes just a `urs`.                         |
+| `taxid`                   | integer                 | The taxid, which may be null.                                                             |
+| `description`             | text                    | A description of this sequence.                                                           |
+| `upi`                     | text                    | The URS for this sequence.                                                                |
+| `rna_type`                | text                    | The INSDC RNA type of this sequence. These used to be the primary RNA type in RNAcentral. |
+| `update_date`             | date                    | Last date this entry was updated.                                                         |
+| `has_coordinates`         | boolean                 | If this sequence is present in a genome.                                                  |
+| `databases`               | text                    | A comma separated list of all databases which have an active xref for this sequence.      |
+| `is_active`               | boolean                 | A flag that is true if any xref is not marked as deleted.                                 |
+| `last_release`            | integer                 | Largest release in the xref table for this sequence.                                      |
+| `short_description`       | text                    | A description without organism prefix, which was used to display in our genome browser.   |
+| `so_rna_type`             | text                    | The SO term for this sequence.                                                            |
+| `is_locus_representative` | boolean                 | If this is representative for the gene it is a part of.                                   |
+| `assigned_so_rna_type`    | text                    | A manually assigned SO term for this sequence.                                            |
 
 ## `rnc_accessions`
 
