@@ -29,25 +29,25 @@ This table is a fairly straightforward representation of the data in a [GPA file
 That document covers the meaning of the fields.
 It is simplified for our needs and only contains annotations which are about an ncRNA in RNAcentral.
 
-|         Column         |  Type   | Description         |
-|------------------------|---------|---------------------|
-|  go_term_annotation_id | integer | The id of this row. |
-|  rna_id                | text    | The `URS_taxid` of the sequence which has a GO annotation. |
-|  qualifier             | text    | The qualifier for this annotation. |
+|         Column         |  Type   | Description                                                                   |
+|------------------------|---------|-------------------------------------------------------------------------------|
+|  go_term_annotation_id | integer | The id of this row.                                                           |
+|  rna_id                | text    | The `URS_taxid` of the sequence which has a GO annotation.                    |
+|  qualifier             | text    | The qualifier for this annotation.                                            |
 |  ontology_term_id      | text    | A reference to `ontology_terms` for the ontology term this GO annotation has. |
-|  evidence_code         | text    | The evidence code for this annotation. |
-|  assigned_by           | text    | Who assigned this annotation. |
-|  extensions            | jsonb   | A JSON object of all extensions for this annotation. |
+|  evidence_code         | text    | The evidence code for this annotation.                                        |
+|  assigned_by           | text    | Who assigned this annotation.                                                 |
+|  extensions            | jsonb   | A JSON object of all extensions for this annotation.                          |
 
 ## `go_term_publication_map`
 
 This table is meant to track what the source of publications for all GO annotations in `go_term_annotations` come from.
 It maps from `go_term_annotations` to `rnc_references`.
 
-|            Column              |  Type   | Description |
-|--------------------------------|---------|-------------|----------|
-| go_term_publication_mapping_id | integer | The id of this row. |
-| go_term_annotation_id          | integer | The id of the row in `go_term_annotations`. |
+|            Column              |  Type   | Description                                                                  |
+|--------------------------------|---------|------------------------------------------------------------------------------|
+| go_term_publication_mapping_id | integer | The id of this row.                                                          |
+| go_term_annotation_id          | integer | The id of the row in `go_term_annotations`.                                  |
 | reference_id                   | integer | The id of the row in `rnc_references` that supports the given GO annotation. |
 
 ## `rfam_go_terms`
