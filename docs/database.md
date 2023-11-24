@@ -9,7 +9,7 @@ This is a cleaned up version of the output of `\d tablename` with some notes on 
 
 A useful principle is that columns with the same data type should have the same names.
 This isn't perfectly followed in the database, but should be.
-We generally try to stick to this pattern for future work.
+We generally try to stick to this pattern for current and future work.
 
 ## URS column naming
 
@@ -35,8 +35,8 @@ This table is a fairly straightforward representation of the data in a [GPA file
 That document covers the meaning of the fields.
 It is simplified for our needs and only contains annotations which are about an ncRNA in RNAcentral.
 
-|         Column         |  Type   | Description                                                                   |
-|------------------------|---------|-------------------------------------------------------------------------------|
+|         Column           |  Type   | Description                                                                   |
+|--------------------------|---------|-------------------------------------------------------------------------------|
 |  `go_term_annotation_id` | integer | The id of this row.                                                           |
 |  `rna_id`                | text    | The `URS_taxid` of the sequence which has a GO annotation.                    |
 |  `qualifier`             | text    | The qualifier for this annotation.                                            |
@@ -50,8 +50,8 @@ It is simplified for our needs and only contains annotations which are about an 
 This table is meant to track what the source of publications for all GO annotations in `go_term_annotations` come from.
 It maps from `go_term_annotations` to `rnc_references`.
 
-|            Column              |  Type   | Description                                                                  |
-|--------------------------------|---------|------------------------------------------------------------------------------|
+|            Column                |  Type   | Description                                                                  |
+|----------------------------------|---------|------------------------------------------------------------------------------|
 | `go_term_publication_mapping_id` | integer | The id of this row.                                                          |
 | `go_term_annotation_id`          | integer | The id of the row in `go_term_annotations`.                                  |
 | `reference_id`                   | integer | The id of the row in `rnc_references` that supports the given GO annotation. |
@@ -75,25 +75,25 @@ It is a very simple table as we do very simple things with ontology terms, gener
 This doesn't support tricks like querying for all child terms of an ontology, because we do not do that within the database.
 
 
-|       Column     | Type | Description |
-|------------------|------|-------------|
-| `ontology_term_id` | text | The id for this ontology term. |
+|       Column       | Type | Description                                                       |
+|------------------  |------|-------------                                                      |
+| `ontology_term_id` | text | The id for this ontology term.                                    |
 | `ontology`         | text | The ontology this comes from, generally the short name like `SO`. |
-| `name`             | text | The name of the term. |
-| `definition`       | text | The definition of the term. |
+| `name`             | text | The name of the term.                                             |
+| `definition`       | text | The definition of the term.                                       |
 
 ## `rna`
 
 This table stores all sequences [RNAcentral] has ever seen.
 No data is ever deleted from this table, even in the case of bugs.
 No data should ever be deleted as unpredictable things may occur, also as we promise to keep all sequences public this could cause issues if the ids are public.
-This serves as where the [`URS`](https://rnacentral.org/help#rnacentral-identifiers) ids are created and stored.
+This serves as where the [`URS`] ids are created and stored.
 These ids are what we consistently use to identify a sequence to the public.
 However, internally we are not consistent with the naming of columns.
 So there are columns called `urs`, `upi` and sometimes `rna_id` which all may be the same thing.
 This is for historical reasons, basically the database was built of an existing one, [UniProt], which used `upi`, and not all columns were renamed.
 Then future work was not consistent in the name selected.
-Currently, columns should be named `urs` if it contains a `urs` and `urs_taxid` if it contains a `urs_taxid`.
+Currently, columns should be named [`URS`] if it contains a [`URS`] and `urs_taxid` if it contains a `urs_taxid`.
 
 Another fun note is that this table contains two sequence columns `seq_short` and `seq_long`.
 Only one will ever be populated.
@@ -105,7 +105,7 @@ For details of what those codes mean see: <https://www.bioinformatics.org/sms/iu
 | Column      |            Type             | Description                                                                                                              |
 |-------------|-----------------------------|--------------------------------------------------------------------------------------------------------------------------|
 | `id`        | integer                      | A numeric ID for each sequence. Not generally used elsewhere.                                                            |
-| `upi`       | text                        | This is the `URS` for the given sequence.                                                                                |
+| `upi`       | text                        | This is the [`URS`] for the given sequence.                                                                                |
 | `timestamp` | timestamp without time zone | When the sequence was created                                                                                            |
 | `userstamp` | text                        | The user that created it, never important.                                                                               |
 | `crc64`     | text                        | The [CRC](https://en.wikipedia.org/wiki/Cyclic_redundancy_check) checksum for the sequence. Not generally used anywhere. |
@@ -135,20 +135,20 @@ from only xref
 Should always return nothing.
 This is maintained by triggers for insert into the `xref` table.
 
-| Column    | Type                        | Description                                                          |
-|-----------|-----------------------------|----------------------------------------------------------------------|
-| `dbid`      | integer                     | A reference to `rnc_database.id` for the database this xref is from. |
-| `created`   | integer                     | The database release where this xref was first created.              |
-| `last`      | integer                     | The database release where the xref was last seen.                   |
-| `upi`       | text                        | The `urs` for this sequence.                                         |
-| `version_i` | integer                     | The version index of this sequence.                                  |
-| `deleted`   | text                        | A flag, `Y` or `N` for deleted or not.                               |
-| `timestamp` | timestamp without time zone | When this xref was modified.                                         |
-| `userstamp` | text                        | The user which modified this xref.                                   |
-| `ac`        | text                        | The accession for this xref.                                         |
-| `version`   | integer                     | The version of this accession.                                       |
-| `taxid`     | integer                     | The taxid for this sequence.                                         |
-| `id`        | integer                     | The id of this xref row.                                             |
+| Column      | Type                        | Description                                                            |
+|-------------|-----------------------------|------------------------------------------------------------------------|
+| `dbid`      | integer                     | A reference to `rnc_database.id` for the database this xref is from.   |
+| `created`   | integer                     | The database release where this xref was first created.                |
+| `last`      | integer                     | The database release where the xref was last seen.                     |
+| `upi`       | text                        | The [`URS`] for this sequence.                                         |
+| `version_i` | integer                     | The version index of this sequence.                                    |
+| `deleted`   | text                        | A flag, `Y` or `N` for deleted or not.                                 |
+| `timestamp` | timestamp without time zone | When this xref was modified.                                           |
+| `userstamp` | text                        | The user which modified this xref.                                     |
+| `ac`        | text                        | The accession for this xref.                                           |
+| `version`   | integer                     | The version of this accession.                                         |
+| `taxid`     | integer                     | The taxid for this sequence.                                           |
+| `id`        | integer                     | The id of this xref row.                                               |
 
 ## `rnc_rna_precomputed`
 
@@ -165,72 +165,74 @@ It is important to keep in mind that this table not only contains entries for al
 This complicates working with the table in some cases.
 This is due to the fact that we have sequence pages without a taxid, eg <https://rnacentral.org/rna/URS0000049E57>, removing or simplifying this would allow us to cleanup this table.
 
-|         Column          |          Type           | Description                                                                               |
-|-------------------------|-------------------------|-------------------------------------------------------------------------------------------|
-| `id`                      | text                    | The id, generally a `urs_taxid`, but also sometimes just a `urs`.                         |
-| `taxid`                   | integer                 | The taxid, which may be null.                                                             |
-| `description`             | text                    | A description of this sequence.                                                           |
-| `upi`                     | text                    | The URS for this sequence.                                                                |
-| `rna_type`                | text                    | The INSDC RNA type of this sequence. These used to be the primary RNA type in RNAcentral. |
-| `update_date`             | date                    | Last date this entry was updated.                                                         |
-| `has_coordinates`         | boolean                 | If this sequence is present in a genome.                                                  |
-| `databases`               | text                    | A comma separated list of all databases which have an active xref for this sequence.      |
-| `is_active`               | boolean                 | A flag that is true if any xref is not marked as deleted.                                 |
-| `last_release`            | integer                 | Largest release in the xref table for this sequence.                                      |
-| `short_description`       | text                    | A description without organism prefix, which was used to display in our genome browser.   |
-| `so_rna_type`             | text                    | The SO term for this sequence.                                                            |
-| `is_locus_representative` | boolean                 | If this is representative for the gene it is a part of.                                   |
-| `assigned_so_rna_type`    | text                    | A manually assigned SO term for this sequence.                                            |
+|         Column            | Type    | Description                                                                               |
+|---------------------------|---------|-------------------------------------------------------------------------------------------|
+| `id`                      | text    | The id, generally a `urs_taxid`, but also sometimes just a [`URS`].                         |
+| `taxid`                   | integer | The taxid, which may be null.                                                             |
+| `description`             | text    | A description of this sequence.                                                           |
+| `upi`                     | text    | The [`URS`] for this sequence.                                                            |
+| `rna_type`                | text    | The INSDC RNA type of this sequence. These used to be the primary RNA type in RNAcentral. |
+| `update_date`             | date    | Last date this entry was updated.                                                         |
+| `has_coordinates`         | boolean | If this sequence is present in a genome.                                                  |
+| `databases`               | text    | A comma separated list of all databases which have an active xref for this sequence.      |
+| `is_active`               | boolean | A flag that is true if any xref is not marked as deleted.                                 |
+| `last_release`            | integer | Largest release in the xref table for this sequence.                                      |
+| `short_description`       | text    | A description without organism prefix, which was used to display in our genome browser.   |
+| `so_rna_type`             | text    | The SO term for this sequence.                                                            |
+| `is_locus_representative` | boolean | If this is representative for the gene it is a part of.                                   |
+| `assigned_so_rna_type`    | text    | A manually assigned SO term for this sequence.                                            |
 
 ## `rnc_accessions`
 
 This table represents an entry the metadata about a sequence in a particular database.
 The columns are basically the possible fields from a EMBL formatted file, because very early [RNAcentral] was based on importing from ENA.
 This is no longer true, but the fundamental structure remains.
+For the fields, which are just copies of what the EMBL file provides, minimal information is provided here.
+Several columns in this are duplicate, `division`, `species`, `classification`, are all duplicate with data in `rnc_taxonomy` and should be removed.
 
-|      Column       | Type     | Description                                                                                                                        |
-|-----------------  |-------   |--------------                                                                                                                      |
-|  `id`             | integer  | A numeric id for each accession, not used anywhere.                                                                                |
-|  `accession`      | text     | A unique accession for each sequence. Generally this is formatted as `DATABASE:DATABASE-id`.                                       |
-|  `parent_ac`      | text     |
-|  `seq_version`    | integer  | Version of the sequence. For sequences like `ENST00000001.1`, this is `1`. This should match the sequence version field in `xref`. |
-|  `feature_start`  | integer  |
-|  `feature_end`    | integer  |
-|  `feature_name`   | text     |
-|  `ordinal`        | integer  |
-|  `division`       | text     |
-|  `keywords`       | text     |
-|  `description`    | text     |
-|  `species`        | text     |
-|  `organelle`      | text     |
-|  `classification` | text     |
-|  `project`        | text     |
-|  `is_composite`   | text     |
-|  `non_coding_id`  | text     |
-|  `database`       | text     | The name of the database which this accession is for. This is actually a reference to `rnc_database.descr` field.                  |
-|  `external_id`    | text     |
-|  `optional_id`    | text     |
-|  `common_name`    | text     |
-|  `allele`         | text     |
-|  `anticodon`      | text     | The anticodon for this sequence, if any. Not used and is replaced by the anticodon entries in `rnc_sequence_features`. |
-|  `chromosome`     | text     | The chromosome this accession is found on, if any. |
-|  `experiment`     | text     |
-|  `function`       | text     |
-|  `gene`           | text     | Name of the gene the database assigns to this sequence                                                                             |
-|  `gene_synonym`   | text     | A comma separated list of synonyms for the gene.                                                                                   |
-|  `inference`      | text     | The phylogeny that the providing database inferred. This only comes from two databases, [SILVA] and [MGnify] right now.            |
-|  `locus_tag`      | text     |
-|  `map`            | text     |
-|  `mol_type`       | text     |
-|  `ncrna_class`    | text     |
-|  `note`           | text     | A catch all field for data from the database. Newer accessions are JSON formatted, older ones are ad-hoc.                          |
-|  `old_locus_tag`  | text     |
-|  `operon`         | text     |
-|  `product`        | text     |
-|  `pseudogene`     | text     |
-|  `standard_name`  | text     |
-|  `db_xref`        | text     |
-|  `rna_type`       | text     | The [Sequence Ontology (SO)](http://www.sequenceontology.org/) term for this sequence.                                             |
+|      Column       | Type     | Description                                                                                                                               |
+|-------------------|----------|------------------------------------------------------------------------------------------------------------------------------------       |
+|  `id`             | integer  | A numeric id for each accession, not used anywhere.                                                                                       |
+|  `accession`      | text     | A unique accession for each sequence. Generally this is formatted as `DATABASE:DATABASE-id`.                                              |
+|  `parent_ac`      | text     | As in EMBL files.                                                                                                                         |
+|  `seq_version`    | integer  | Version of the sequence. For sequences like `ENST00000001.1`, this is `1`. This should match the sequence version field in `xref`.        |
+|  `feature_start`  | integer  | Start coordinate of this sequence, often genomic.                                                                                         |
+|  `feature_end`    | integer  | Stop coordinate of this sequence, often genomic.                                                                                          |
+|  `feature_name`   | text     | As in EMBL files.                                                                                                                         |
+|  `ordinal`        | integer  | As in EMBL files.                                                                                                                         |
+|  `division`       | text     | Phylogentic division.                                                                                                                     |
+|  `keywords`       | text     | As in EMBL files.                                                                                                                         |
+|  `description`    | text     | A description for this sequence, as provided by the database.                                                                             |
+|  `species`        | text     | The species of this sequence.                                                                                                             |
+|  `organelle`      | text     | As in EMBL files.                                                                                                                         |
+|  `classification` | text     | Lineage of this sequence.                                                                                                                 |
+|  `project`        | text     | As in EMBL files.                                                                                                                         |
+|  `is_composite`   | text     | As in EMBL files.                                                                                                                         |
+|  `non_coding_id`  | text     | As in EMBL files.                                                                                                                         |
+|  `database`       | text     | The name of the database which this accession is for. This is actually a reference to `rnc_database.descr` field, but it is not enforced. |
+|  `external_id`    | text     | A key which can be used to identify this sequence in the providing database, this is database dependent.                                  |
+|  `optional_id`    | text     | A optional key, which alongside the external key, can be used to identify this sequence in an external database.                          |
+|  `common_name`    | text     | As in EMBL files.                                                                                                                         |
+|  `allele`         | text     | As in EMBL files.                                                                                                                         |
+|  `anticodon`      | text     | The anticodon for this sequence, if any. Not used and is replaced by the anticodon entries in `rnc_sequence_features`.                    |
+|  `chromosome`     | text     | The chromosome this accession is found on, if any.                                                                                        |
+|  `experiment`     | text     | As in EMBL files.                                                                                                                         |
+|  `function`       | text     | As in EMBL files.                                                                                                                         |
+|  `gene`           | text     | Name of the gene the database assigns to this sequence                                                                                    |
+|  `gene_synonym`   | text     | A comma separated list of synonyms for the gene.                                                                                          |
+|  `inference`      | text     | The phylogeny that the providing database inferred. This only comes from two databases, [SILVA] and [MGnify] right now.                   |
+|  `locus_tag`      | text     | As in EMBL files.                                                                                                                         |
+|  `map`            | text     | As in EMBL files.                                                                                                                         |
+|  `mol_type`       | text     | As in EMBL files.                                                                                                                         |
+|  `ncrna_class`    | text     | As in EMBL files.                                                                                                                         |
+|  `note`           | text     | A catch all field for data from the database. Newer accessions are JSON formatted, older ones are ad-hoc.                                 |
+|  `old_locus_tag`  | text     | As in EMBL files.                                                                                                                         |
+|  `operon`         | text     | As in EMBL files.                                                                                                                         |
+|  `product`        | text     | As in EMBL files.                                                                                                                         |
+|  `pseudogene`     | text     | As in EMBL files.                                                                                                                         |
+|  `standard_name`  | text     | As in EMBL files.                                                                                                                         |
+|  `db_xref`        | text     | As in EMBL files.                                                                                                                         |
+|  `rna_type`       | text     | The [Sequence Ontology (SO)](http://www.sequenceontology.org/) term for this sequence.                                                    |
 
 ## `rnc_secondary_structure`
 
@@ -250,7 +252,7 @@ To detect cases where R2DT doesn't do well, we have some logic in the pipeline t
 
 |       Column           |       Type       | Description                                                                    |
 |------------------------|------------------|------------------------------------------------------------------------------  |
-| `urs`                  | text             | The `URS` that the secondary structure is assigned to.                         |
+| `urs`                  | text             | The [`URS`] that the secondary structure is assigned to.                         |
 | `secondary_structure`  | text             | A [dot-bracket] string of the secondary structure.                             |
 | `overlap_count`        | integer          | Number of overlaps in the diagram, as computed by [R2DT].                      |
 | `basepair_count`       | integer          | Number of base pairs in the diagram, as computed by [R2DT].                    |
@@ -287,12 +289,12 @@ Each row is a taxon and all taxons should have a row.
 This table is meant to provide [RNAcentral] with just enough information to display some summaries of proteins from [UniProt].
 This doesn't have much information, and it should stay that way, we only need to be able to display a few labels and provide links.
 
-|       Column        |  Type  | Description |
-|---------------------|--------|-----------|
-| `protein_accession` | text   |
-| `description`       | text   |
-| `label`             | text   |
-| `synonyms`          | text[] | A list of synonyms for the protein. |
+|       Column        |  Type  | Description                              |
+|---------------------|--------|------------------------------------------|
+| `protein_accession` | text   | The [UniProt] accession for the protein. |
+| `description`       | text   | A description of what this protein is.   |
+| `label`             | text   | A label name for the protein.            |
+| `synonyms`          | text[] | A list of synonyms for the protein.      |
 
 [Gene Ontology (GO)]: https://geneontology.org/
 [MGnify]: https://www.ebi.ac.uk/metagenomics
