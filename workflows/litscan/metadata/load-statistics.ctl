@@ -6,7 +6,7 @@ HAVING FIELDS (
     ids_in_use,
     urs,
     expert_db
-) INTO {{PGDB_EMBASSY_USER}}?litscan_statistics
+) INTO {{PGDATABASE}}?litscan_statistics
 TARGET COLUMNS (
     searched_ids,
     articles,
