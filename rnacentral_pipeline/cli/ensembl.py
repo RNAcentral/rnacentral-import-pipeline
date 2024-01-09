@@ -41,10 +41,11 @@ def cli():
 
 
 @cli.command("urls-for")
+@click.option("--kind", default=None)
 @click.argument("division", type=click.Choice(Division.names(), case_sensitive=False))
 @click.argument("ftp")
 @click.argument("output", default="-", type=click.File("w"))
-def vert_url(division, ftp, output):
+def vert_url(division, ftp, output, kind=None):
     """
     This is a command to generate a CSV file of urls to fetch to get Ensembl
     data from. The urls may be globs suitable for fetching with wget.
@@ -52,7 +53,7 @@ def vert_url(division, ftp, output):
     division = Division.from_name(division)
     writer = csv.writer(output, lineterminator="\n")
     rows = urls.urls_for(division, ftp)
-    writer.writerows(row.writeable() for row in rows)
+    writer.writerows(row.writeable(kind=kind) for row in rows)
 
 
 @cli.command("parse")

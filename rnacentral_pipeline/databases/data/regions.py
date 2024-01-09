@@ -15,9 +15,11 @@ limitations under the License.
 
 import enum
 import operator as op
+import typing as ty
 
 import attr
 from attr.validators import instance_of as is_a
+from attrs import field, frozen
 
 
 class UnknownStrand(Exception):
@@ -109,8 +111,8 @@ class CloseStatus(enum.Enum):
         raise ValueError("No name for %s" % self)
 
 
-@attr.s(frozen=True, hash=True, slots=True)
-class CoordinateSystem(object):
+@frozen(hash=True, slots=True)
+class CoordinateSystem:
     """
     This is meant to represent how a database numbers a genome. Some databases
     will start counting at zeros and others one, this is called the basis here.
@@ -122,8 +124,8 @@ class CoordinateSystem(object):
     http://genome.ucsc.edu/blog/the-ucsc-genome-browser-coordinate-counting-systems/
     """
 
-    basis = attr.ib(validator=is_a(CoordinateStart))
-    close_status = attr.ib(validator=is_a(CloseStatus))
+    basis: CoordinateStart = field(validator=is_a(CoordinateStart))
+    close_status: CloseStatus = field(validator=is_a(CloseStatus))
 
     @classmethod
     def build(cls, value):
@@ -210,17 +212,17 @@ class CoordinateSystem(object):
         return self.as_one_based(location)
 
 
-@attr.s(frozen=True, hash=True, slots=True)
-class Exon(object):
-    start = attr.ib(validator=is_a(int))
-    stop = attr.ib(validator=is_a(int))
+@frozen(hash=True, slots=True)
+class Exon:
+    start: int = field(validator=is_a(int))
+    stop: int = field(validator=is_a(int))
 
     @classmethod
     def from_dict(cls, raw):
         return cls(start=raw["exon_start"], stop=raw["exon_stop"])
 
     @stop.validator
-    def greater_than_start(self, attribute, value):
+    def greater_than_start(self, _attribute, value):
         if value < self.start:
             raise ValueError("stop (%i) must be >= start (%i)" % (value, self.start))
 
@@ -235,13 +237,13 @@ def as_sorted_exons(raw):
     return tuple(sorted(exons, key=op.attrgetter("start")))
 
 
-@attr.s(frozen=True, hash=True, slots=True)
+@frozen(hash=True, slots=True)
 class SequenceRegion:
-    assembly_id = attr.ib(validator=is_a(str), converter=str)
-    chromosome = attr.ib(validator=is_a(str), converter=str)
-    strand = attr.ib(validator=is_a(Strand), converter=Strand.build)
-    exons = attr.ib(validator=is_a(tuple), converter=as_sorted_exons)
-    coordinate_system = attr.ib(
+    assembly_id: str = field(validator=is_a(str), converter=str)
+    chromosome: str = field(validator=is_a(str), converter=str)
+    strand: Strand = field(validator=is_a(Strand), converter=Strand.build)
+    exons: ty.Tuple[Exon] = field(validator=is_a(tuple), converter=as_sorted_exons)
+    coordinate_system: CoordinateSystem = field(
         validator=is_a(CoordinateSystem),
         converter=CoordinateSystem.build,
     )
