@@ -63,6 +63,46 @@ process fetch_unmapped_sequences {
   """
 }
 
+process get_browser_coordinates {
+  tag { species }
+  memory { params.genome_mapping.download_genome.directives.memory }
+  publishDir "${params.export.ftp.publish}/.genome-browser", mode: 'copy'
+  errorStrategy 'ignore'
+
+  input:
+  tuple val(species), val(assembly), val(taxid), val(division)
+
+  output:
+  path("${species}.${assembly}.ensembl.gff3.gz")
+
+  """
+  set -o pipefail
+
+  rnac genome-mapping url-for --kind="gff3" --host=$division $species $assembly - |\
+    xargs -I {} wget -O ${species}.${assembly}.gff3.gz '{}'
+  gzip -d "${species}.${assembly}.gff3.gz"
+
+  (grep "^#" "${species}.${assembly}.gff3"; grep -v "^#" "${species}.${assembly}.gff3" |\
+    sort -t"`printf '\\t'`" -k1,1 -k4,4n) |\
+    bgzip > "${species}.${assembly}".ensembl.gff3.gz
+
+  rm "${species}.${assembly}.gff3"
+  """
+}
+
+process index_gff3 {
+  publishDir "${params.export.ftp.publish}/.genome-browser", mode: 'copy'
+
+  input:
+  path(gff)
+
+  output:
+  path("${gff.baseName}.gz.{tbi,csi}"), optional: true
+  """
+  tabix -p gff $gff || tabix -C -p gff $gff
+  """
+}
+
 process download_genome {
   tag { species }
   memory { params.genome_mapping.download_genome.directives.memory }
@@ -72,22 +112,53 @@ process download_genome {
   tuple val(species), val(assembly), val(taxid), val(division)
 
   output:
-  tuple val(species), val(assembly), path("${species}.{2bit,ooc}")
+  tuple val(species), val(assembly), path("${species}.${assembly}.fa")
 
   """
   set -o pipefail
 
-  rnac genome-mapping url-for --host=$division $species $assembly - |\
-    xargs -I {} fetch generic '{}' ${species}.fasta.gz
+  psql -c "UPDATE ensembl_assembly SET selected_genome=false WHERE assembly_id='${assembly}';" $PGDATABASE
 
-  gzip -d ${species}.fasta.gz
-  faToTwoBit -noMask ${species}.fasta ${species}.2bit
+  rnac genome-mapping url-for --host=$division $species $assembly - |\
+    xargs -I {} wget -O ${species}.${assembly}.fa.gz '{}'
+
+  gzip -d ${species}.${assembly}.fa.gz
+  """
+}
+
+process blat_index {
+  tag { species }
+  memory { params.genome_mapping.download_genome.directives.memory }
+
+  input:
+  tuple val(species), val(assembly), path("${species}_${assembly}.fa")
+
+  output:
+  tuple val(species), val(assembly), path("${species}_${assembly}.{.2bit,ooc}")
+
+  """
+  faToTwoBit -noMask ${species}_${assembly}.fa ${species}_${assembly}.2bit
   blat \
-    -makeOoc=${species}.ooc \
+    -makeOoc=${species}_${assembly}.ooc \
     -stepSize=${params.genome_mapping.blat.options.step_size} \
     -repMatch=${params.genome_mapping.blat.options.rep_match} \
     -minScore=${params.genome_mapping.blat.options.min_score} \
-    ${species}.fasta /dev/null /dev/null
+    ${species}_${assembly}.fa /dev/null /dev/null
+  """
+}
+
+process index_genome_for_browser {
+  publishDir "${params.export.ftp.publish}/.genome-browser", mode: 'copy'
+
+  input:
+  tuple val(assembly), path(genome)
+
+  output:
+  tuple path("${genome}"), path("${genome.baseName}.fa.fai")
+
+  """
+  samtools faidx $genome
+  psql -c "UPDATE ensembl_assembly SET selected_genome=true WHERE assembly_id='${assembly}';" $PGDATABASE
   """
 }
 
@@ -187,6 +258,16 @@ workflow genome_mapping {
 
     genome_info \
     | download_genome \
+    | set { genomes }
+
+    genome_info | get_browser_coordinates | index_gff3
+
+    genomes \
+    | map { _s, _a, genome -> [_a, genome] } \
+    | index_genome_for_browser
+
+    genomes
+    | blat_index \
     | join(split_sequences) \
     | flatMap { species, assembly, genome_chunks, chunks ->
       [genome_chunks.collate(2), chunks]
