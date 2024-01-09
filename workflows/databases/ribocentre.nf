@@ -1,6 +1,6 @@
 process ribocentre {
-  when: params.databases.ribocentre.run
-
+  when: { params.databases.ribocentre.run }
+  memory 8.GB
   output:
   path("*.csv")
 

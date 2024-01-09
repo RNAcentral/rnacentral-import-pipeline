@@ -2,6 +2,7 @@
 /// NB: This is all reverse engineered
 use anyhow::Result;
 use polars::frame::DataFrame;
+use polars::lazy::dsl::any_horizontal;
 use polars::prelude::*;
 use polars::series::Series;
 use regex::Regex;
@@ -30,7 +31,7 @@ fn fix_bad_infinities(str_val: &Series) -> Series {
 
 fn baseline_get_median_gt_zero(str_val: &Series) -> Series {
     let lists = str_val.utf8().unwrap().into_iter().map(|x| {
-        x.unwrap().split(',').into_iter().map(|y| y.parse::<f64>().unwrap()).collect::<Vec<f64>>()
+        x.unwrap().split(',').map(|y| y.parse::<f64>().unwrap()).collect::<Vec<f64>>()
     });
 
     let medians: Vec<bool> =
@@ -96,7 +97,7 @@ pub fn filter_baseline(input: &mut DataFrame) -> DataFrame {
         .clone()
         .lazy()
         .filter(
-            any_exprs(&meas[0..meas.len() / 2]).or(any_exprs(&meas[meas.len() / 2..meas.len()])),
+            any_horizontal(&meas[0..meas.len() / 2]).or(any_horizontal(&meas[meas.len() / 2..meas.len()])),
         ) // If we try to do the whole thing at once, we get a stack overflow
         .collect()
         .unwrap()

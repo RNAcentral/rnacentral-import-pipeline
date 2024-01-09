@@ -58,7 +58,7 @@ pub struct Normalized {
     taxid: usize,
     short_urs: String,
     deleted: String,
-    qa_status: QaStatus,
+    qa_status: Option<QaStatus>,
     secondary: Option<R2dt>,
     cross_references: Vec<CrossReference>,
     crs: CrsVec,

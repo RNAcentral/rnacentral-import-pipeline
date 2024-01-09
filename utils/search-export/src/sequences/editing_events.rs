@@ -11,10 +11,11 @@ use rnc_core::grouper;
 pub struct EditingEvent {
     pub id: usize,
     urs_taxid: String,
-    has_editing_event: bool,
     chromosome: String,
     genomic_location: usize,
     repeat_type: String,
+    reference: String,
+    edit: String,
 }
 
 impl grouper::HasIndex for EditingEvent {
@@ -28,10 +29,6 @@ pub fn group(path: &Path, max: usize, output: &Path) -> Result<()> {
 }
 
 impl EditingEvent {
-    pub fn has_editing_event(&self) -> bool {
-        self.has_editing_event
-    }
-
     pub fn urs_taxid(&self) -> &str {
         &self.urs_taxid
     }

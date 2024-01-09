@@ -39,7 +39,7 @@ pub struct Raw {
     interacting_proteins: Vec<InteractingProtein>,
     interacting_rnas: Vec<InteractingRna>,
     precompute: Precompute,
-    qa_status: QaStatus,
+    qa_status: Option<QaStatus>,
     r2dt: Option<R2dt>,
     rfam_hits: Vec<RfamHit>,
     orfs: Vec<Orf>,
@@ -109,7 +109,7 @@ impl Raw {
     }
 
     /// Get a reference to the raw's qa status.
-    pub fn qa_status(&self) -> &QaStatus {
+    pub fn qa_status(&self) -> &Option<QaStatus> {
         &self.qa_status
     }
 
