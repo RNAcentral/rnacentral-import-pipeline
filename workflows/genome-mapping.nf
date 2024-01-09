@@ -21,7 +21,6 @@ process fetch_unmapped_sequences {
   tag { species }
   maxForks params.genome_mapping.fetch_unmapped_sequences.directives.maxForks
   memory '10GB'
-  clusterOptions '-sp 100'
 
   input:
   tuple val(species), val(assembly_id), val(taxid), val(division), path(possible_query), path(mapped_query), path(query)

@@ -26,6 +26,7 @@ from throttler import throttle
 from rnacentral_pipeline.databases.data import OntologyTerm
 
 BASE = "https://www.ebi.ac.uk/ols/api/ontologies"
+OLS4_BASE = "https://www.ebi.ac.uk/ols4/api/ontologies"
 
 
 @retry(requests.HTTPError, tries=5, delay=1)
@@ -42,8 +43,14 @@ def ontology_url(ontology):
     """
     This will fetch the base URL to use with the given ontology name.
     """
-
-    url = furl(BASE)
+    manual_lookup = {
+        "ECO": "http://purl.obolibrary.org/obo/ECO_",
+        "GO": "http://purl.obolibrary.org/obo/GO_",
+        "SO": "http://purl.obolibrary.org/obo/SO_",
+    }
+    if ontology.upper() in manual_lookup.keys():
+        return furl(manual_lookup[ontology.upper()])
+    url = furl(OLS4_BASE)
     url.path.segments.append(ontology.upper())
     info = asyncio.run(query_ols(url.url))
     return furl(info["config"]["baseUris"][0])
@@ -55,7 +62,7 @@ def term_url(term_id):
     ont_url.path.segments[-1] += rest
     iri = six.moves.urllib.parse.quote_plus(ont_url.url)
 
-    url = furl(BASE)
+    url = furl(OLS4_BASE)
     url.path.segments.extend([ontology, "terms", iri])
     return url
 
@@ -72,7 +79,6 @@ def term(term_id):
     url = term_url(term_id)
     term_info = asyncio.run(query_ols(url.url))
 
-    print(term_info)
     definition = (
         term_info["annotation"].get("definition", [None])[0]
         or term_info.get("description", [None])[0]

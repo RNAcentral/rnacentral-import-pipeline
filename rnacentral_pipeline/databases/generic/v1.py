@@ -71,7 +71,10 @@ def taxid(entry):
 
     base, tid = entry["taxonId"].split(":", 1)
     assert base == "NCBITaxon"
-    return int(tid)
+    try:
+        return int(tid)
+    except ValueError:
+        raise phy.FailedTaxonId(tid)
 
 
 def as_exon(exon, context):
@@ -368,7 +371,7 @@ def as_entry(record, context):
         accession=record["primaryId"],
         ncbi_tax_id=taxid(record),
         database=context.database,
-        sequence=record["sequence"],
+        sequence=record["sequence"].replace("U", "T"),
         regions=regions(record, context),
         rna_type=record["soTermId"],
         url=record["url"],
@@ -415,7 +418,18 @@ def parse(raw):
     metadata_refs = [pub.reference(r) for r in metadata_pubs]
 
     for gene_id, records in it.groupby(ncrnas, gene):
-        entries = [as_entry(r, context) for r in records]
+        entries = []
+        for r in records:
+            try:
+                entries.append(as_entry(r, context))
+            except phy.UnknownTaxonId as e:
+                print("Unknown taxid for %s" % r["primaryId"])
+                print(f"UnknownTaxonId: {e}")
+                continue
+            except phy.FailedTaxonId as e:
+                print("Taxid failed for %s" % r["primaryId"])
+                print(f"FailingTaxonId: {e}")
+                continue
 
         if gene_id:
             entries = add_related_by_gene(entries)

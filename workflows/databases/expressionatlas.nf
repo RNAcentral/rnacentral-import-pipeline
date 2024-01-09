@@ -2,21 +2,22 @@ process fetch_data {
   queue 'datamover'
   container ''
   errorStrategy 'ignore'
+  cpus 10
 
   input:
-    path("base_dir")
+    val base_dir
 
   output:
   path('tsv_files')
 
   """
   mkdir tsv_files
-  find $base_dir -type f -name "*.tsv" | xargs -I {} -P 10 cp {} tsv_files
+  find "${base_dir}" -type f -name "*.tsv" -print0 | xargs -0 -I {} -P 20 cp {} tsv_files || true
+  find "${base_dir}" -type f -name "*configuration.xml" -print0 | xargs -0 -I {} -P 20 cp {} tsv_files || true
   """
 }
 
 process fetch_lookup {
-  queue 'short'
 
   input:
     path (query)
@@ -31,7 +32,10 @@ process fetch_lookup {
 
 
 process parse_tsvs {
-  memory 24.GB
+  memory { 64.GB * task.attempt }
+  cpus 16
+  container ''
+  errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'terminate' }
 
   input:
   path(tsvs)
@@ -41,16 +45,17 @@ process parse_tsvs {
 
   """
   expression-parse parse -i $tsvs -o all_genes.csv
-  split -n l/10 all_genes.csv chunk_
+  parallel --block 500M -a all_genes.csv --header : --pipepart 'cat > chunk_{#}'
   """
 
 }
 
 process lookup_genes {
-
+  memory { 32.GB * task.attempt }
+  cpus 16
+  errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'terminate' }
   input:
-    path(lookup)
-    path(genes)
+    tuple path(lookup), path(genes)
 
   output:
     path('*.csv')
@@ -69,18 +74,15 @@ workflow expressionatlas {
 
   if( params.databases.expressionatlas.run ) {
     Channel.fromPath('files/import-data/expressionatlas/lookup-dump-query.sql') | set { lookup_sql }
-    Channel.fromPath(params.databases.expressionatlas.remote) | set { tsv_path }
+    Channel.of(params.databases.expressionatlas.remote) | set { tsv_path }
     lookup_sql | fetch_lookup | set { lookup }
     tsv_path \
     | fetch_data \
-    | filter { tsv_name ->
-      !params.databases.expressionatlas.exclude.any {p -> tsv_name.baseName =~ p}
-    } \
     | parse_tsvs \
-    | set { genes }
+    | flatten | set { genes }
 
-   lookup_genes(genes, lookup) \
-   | collectFile() {csvfile -> [csvfile.name, csvfile.text]} \
+   lookup.combine(genes) | lookup_genes \
+   | collect \
    | set { data }
 
   }

@@ -37,5 +37,4 @@ def parse(handle, db_url):
     for line in handle:
         hit = json.loads(line)
         for experiment in hit["experiment"]:
-            print(hit)
             yield helpers.as_entry(hit, experiment)

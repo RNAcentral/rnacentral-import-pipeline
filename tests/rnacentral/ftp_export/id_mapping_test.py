@@ -122,6 +122,15 @@ def test_can_create_accession(data, expected):
             },
             "bob",
         ),
+        (
+            {
+                "gene": "gene1",
+                "database": "MIRBASE",
+                "optional_id": "hsa-mir-1",
+                "rna_type": "miRNA",
+            },
+            "hsa-mir-1",
+        ),
     ],
 )
 def test_can_generate_gene(data, expected):
@@ -223,6 +232,16 @@ def test_as_entry_works_correctly():
                 ],
             ],
         ),
+        # (
+        #     "URS000069C337_9606",
+        #     [
+        #         ["URS000069C337_9606", "ENSEMBL", "ENST00000401212", 9606, "pre-miRNA", "MIR298"],
+        #         ["URS000069C337_9606", "GENECARDS", "", 9606, "pre-miRNA", "MIR298"],
+        #         ["URS000069C337_9606", "MALACARDS", "", 9606, "pre-miRNA", "MIR298"],
+        #         ["URS000069C337_9606", "MIRBASE", "", 9606, "pre-miRNA", "MIR298"],
+        #         ["URS000069C337_9606", "REFSEQ", "", 9606, "pre-miRNA", "MIR298"],
+        #     ]
+        # ),
     ],
 )
 def test_can_create_expected_exports(rna_id, expected):

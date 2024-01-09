@@ -54,12 +54,25 @@ process fetch_sequence_info {
     --database $params.connections.rfam.database \
    -e "set @family='$family';\\. $sequence_family_query" > sequences_family.tsv
 
-  mysql \
-    --host $params.connections.rfam.host \
-    --port $params.connections.rfam.port \
-    --user $params.connections.rfam.user \
-    --database $params.connections.rfam.database \
-   -e "set @family='$family';\\. $sequence_seed_query" > sequences_seed.tsv
+  ## Don't strip header if there was no output from getting the family sequences
+  line_count=\$(wc -l < sequences_family.tsv)
+  if [ \$line_count -gt 0 ]; then
+        mysql \
+      --host $params.connections.rfam.host \
+      --port $params.connections.rfam.port \
+      --user $params.connections.rfam.user \
+      --database $params.connections.rfam.database \
+    -e "set @family='$family';\\. $sequence_seed_query" | tail -n +2 > sequences_seed.tsv
+  else
+        mysql \
+      --host $params.connections.rfam.host \
+      --port $params.connections.rfam.port \
+      --user $params.connections.rfam.user \
+      --database $params.connections.rfam.database \
+    -e "set @family='$family';\\. $sequence_seed_query" > sequences_seed.tsv
+  fi
+
+
 
   cat sequences_family.tsv sequences_seed.tsv > sequences.tsv
 

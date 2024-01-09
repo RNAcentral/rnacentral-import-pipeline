@@ -188,7 +188,7 @@ def write(model_path: Path, handle: ty.IO, db_url: str, output: ty.IO):
         to_write = pd.DataFrame()
         to_write["urs"] = frame["urs"]
         to_write["should_show"] = predicted.astype(int)
-        to_write.to_csv(output, index=False)
+        to_write.to_csv(output, index=False, header=False)
 
 
 def write_model(handle: ty.IO, db_url: str, output: Path):

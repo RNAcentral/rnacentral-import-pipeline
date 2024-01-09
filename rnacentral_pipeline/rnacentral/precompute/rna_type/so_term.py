@@ -29,6 +29,11 @@ from rnacentral_pipeline.rnacentral.precompute.qa import contamination as cont
 
 LOGGER = logging.getLogger(__name__)
 
+EXCLUDED_DATABASES = {
+    Database.genecards,
+    Database.malacards,
+}
+
 ACCEPTED_DATABASES = {
     Database.five_srrnadb,
     Database.flybase,
@@ -274,8 +279,15 @@ def rfam_db_annotations(
 def all_annotations(
     context: context.Context, sequence: seq.Sequence
 ) -> ty.List[RnaTypeAnnotation]:
+    """
+    This builds a list of RNATypeAnnotations using the accessions, R2DT and
+    Rfam hits. However, this will exclude using annotations from all databases
+    in EXCLUDED_DATABASES.
+    """
     annotations = []
     for accession in sequence.accessions:
+        if accession.database in EXCLUDED_DATABASES:
+            continue
         annotations.append(RnaTypeAnnotation.from_accession(context, accession))
     for r2dt in sequence.r2dt_hits:
         if r2dt.paired_ratio() is None or r2dt.paired_ratio() > 0.80:
@@ -296,6 +308,8 @@ def rna_type_of(
 ) -> ty.Optional[RnaType]:
 
     annotations = all_annotations(context, sequence)
+    if len(annotations) == 0:
+        return RnaType.ncRNA()
     merged = merge_annotations(annotations)
 
     if len(merged) == 1:

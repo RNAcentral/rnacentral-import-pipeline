@@ -55,6 +55,7 @@ class Database(enum.Enum):
     lncrnadb = DatabaseValue(19, "lncRNAdb")
     malacards = DatabaseValue(20, "MalaCards")
     mgi = DatabaseValue(21, "MGI")
+    mgnify = DatabaseValue(55, "MGNIFY")
     mirbase = DatabaseValue(22, "miRBase")
     mirgenedb = DatabaseValue(23, "MirGeneDB")
     modomics = DatabaseValue(24, "Modomics")
