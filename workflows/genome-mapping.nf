@@ -66,7 +66,7 @@ process fetch_unmapped_sequences {
 process get_browser_coordinates {
   tag { species }
   memory { params.genome_mapping.download_genome.directives.memory }
-  publishDir "${params.export.ftp.publish}/.genome-browser", mode: 'copy'
+  publishDir "${params.export.ftp.publish}/.genome-browser-dev", mode: 'copy'
   errorStrategy 'ignore'
 
   input:
@@ -91,7 +91,7 @@ process get_browser_coordinates {
 }
 
 process index_gff3 {
-  publishDir "${params.export.ftp.publish}/.genome-browser", mode: 'copy'
+  publishDir "${params.export.ftp.publish}/.genome-browser-dev", mode: 'copy'
 
   input:
   path(gff)
@@ -148,7 +148,7 @@ process blat_index {
 }
 
 process index_genome_for_browser {
-  publishDir "${params.export.ftp.publish}/.genome-browser", mode: 'copy'
+  publishDir "${params.export.ftp.publish}/.genome-browser-dev", mode: 'copy'
 
   input:
   tuple val(assembly), path(genome)
