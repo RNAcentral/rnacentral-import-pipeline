@@ -81,7 +81,7 @@ process generate_gff3 {
 process generate_gff3_for_igv {
   tag { "${assembly}-${species}" }
   memory params.export.ftp.coordinates.gff3.memory
-  publishDir "${params.export.ftp.publish}/.genome-browser", mode: 'copy'
+  publishDir "${params.export.ftp.publish}/.genome-browser-dev", mode: 'copy'
 
   input:
   tuple val(assembly), val(species), path(raw_data)
@@ -99,7 +99,7 @@ process generate_gff3_for_igv {
 }
 
 process index_gff3 {
-  publishDir "${params.export.ftp.publish}/.genome-browser", mode: 'copy'
+  publishDir "${params.export.ftp.publish}/.genome-browser-dev", mode: 'copy'
 
   input:
   path(gff)
