@@ -118,6 +118,9 @@ def toplevel_file(host, species, assembly_id, directory, files, kind, release, d
     if kind == "fa":
         base = f"{upper_species}.{assembly_id}.{dna_type}.{{type}}.fa.gz"
     else:
+        # Here is an example of what the URL should look like:
+        # ftp.ensembl.org/pub/release-110/gff3/homo_sapiens/Homo_sapiens.GRCh38.110.gff3.gz
+        # Warning:  it's not uncommon to find an empty directory for a given version.
         base = f"{upper_species}.{assembly_id}.{release}.{kind}.gz"
 
     primary = base.format(type="primary_assembly")
