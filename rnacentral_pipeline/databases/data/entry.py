@@ -267,7 +267,6 @@ class Entry:
             self.project,
             self.keywords,
             self.description,
-            self.species,
             self.organelle,
             self.chromosome,
             self.experiment,
