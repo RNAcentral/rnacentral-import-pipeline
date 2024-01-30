@@ -198,10 +198,6 @@ def function(feature):
     return value
 
 
-def allele(record):
-    return source_qualifier_value(record, "allele")
-
-
 def anticodon(record, feature):
     raw_anti = embl.qualifier_string(feature, "anticodon")
     if raw_anti:
