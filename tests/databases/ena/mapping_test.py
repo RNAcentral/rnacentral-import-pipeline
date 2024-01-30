@@ -20,10 +20,10 @@ import attr
 import pytest
 
 from rnacentral_pipeline.databases.data import Entry
-from rnacentral_pipeline.databases.ena import mapping as tpa
-from rnacentral_pipeline.databases.helpers.hashes import md5
-from rnacentral_pipeline.databases.ena import parser
 from rnacentral_pipeline.databases.ena import context
+from rnacentral_pipeline.databases.ena import mapping as tpa
+from rnacentral_pipeline.databases.ena import parser
+from rnacentral_pipeline.databases.helpers.hashes import md5
 
 
 def parse(path):
@@ -190,8 +190,6 @@ def test_can_transform_correct_lncrnadb_entry():
             non_coding_id="HG975405.1:1..32753:ncRNA",
             is_composite="Y",
             species="Homo sapiens",
-            division=None,
-            # division='HUM',
             lineage=(
                 "Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi;"
                 " Mammalia; Eutheria; Euarchontoglires; Primates; Haplorrhini; "
@@ -255,8 +253,6 @@ def test_can_transform_correct_srpdb_entry():
                 "Acinetobacter calcoaceticus/baumannii complex; "
                 "Acinetobacter baumannii ATCC 17978"
             ),
-            division=None,
-            # division='PRO',
             keywords="RNAcentral; TPA; TPA:specialist_db",
             description="Acinetobacter baumannii ATCC 17978 signal recognition particle RNA",
             mol_type="transcribed RNA",
@@ -305,8 +301,6 @@ def test_can_transform_correct_snopy_entry():
                 "Brassicaceae; Camelineae; Arabidopsis; Arabidopsis thaliana"
             ),
             common_name="thale cress",
-            division=None,
-            # division='PLN',
             keywords="RNAcentral; TPA; TPA:specialist_db",
             mol_type="genomic DNA",
             gene="SnoR1b",

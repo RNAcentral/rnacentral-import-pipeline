@@ -94,7 +94,6 @@ class Entry:
     non_coding_id: str = utils.optionally(str)
     project: str = utils.optionally(str)
     keywords: str = utils.optionally(str)
-    division: str = utils.optionally(str)
     organelle: str = utils.optionally(str)
     anticodon: str = utils.optionally(str)
     experiment: str = utils.optionally(str)
@@ -266,7 +265,6 @@ class Entry:
             self.primary_id,
             self.optional_id,
             self.project,
-            None,  # self.division,
             self.keywords,
             self.description,
             self.species,
