@@ -359,10 +359,6 @@ def gene_synonyms(feature):
     return result
 
 
-def operon(feature):
-    return qualifier_string(feature, "operon")
-
-
 def product(feature):
     return qualifier_string(feature, "product", separator="; ")
 

@@ -101,7 +101,6 @@ class Entry:
     experiment: str = utils.optionally(str)
     function: str = utils.optionally(str)
     inference: str = utils.optionally(str)
-    operon: str = utils.optionally(str)
     standard_name: str = utils.optionally(str)
     description: str = utils.optionally(str)
     mol_type: str = utils.optionally(str)
@@ -287,7 +286,6 @@ class Entry:
             self.mol_type,
             self.ncrna_class,
             self.note,
-            self.operon,
             self.product,
             self.pseudogene,
             self.standard_name,

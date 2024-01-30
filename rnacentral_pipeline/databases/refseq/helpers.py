@@ -150,7 +150,6 @@ def as_entry(record, source, feature):
         organelle=embl.organelle(source),
         experiment=embl.experiment(feature),
         inference=embl.inference(feature),
-        operon=embl.operon(feature),
         standard_name=embl.standard_name(feature),
         description=description(record, feature),
         mol_type=embl.mol_type(source),

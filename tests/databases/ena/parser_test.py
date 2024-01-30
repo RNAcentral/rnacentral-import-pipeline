@@ -577,14 +577,6 @@ def test_can_parse_function():
     assert data[2].rna_type == "SO:0000655"
 
 
-def test_can_parse_operons():
-    raw = Path("data/ena/operons.embl")
-    data = next(simple_parse(raw))
-
-    assert data.accession == "CP000102.1:1163547..1163662:rRNA"
-    assert data.operon == "rrnD"
-
-
 def test_can_parse_gene_synonyms():
     raw = Path("data/ena/gene_synonym.embl")
     data = next(simple_parse(raw))
