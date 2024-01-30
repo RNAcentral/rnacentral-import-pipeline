@@ -93,7 +93,6 @@ def test_creates_simple_entry():
             product="tRNA-Pro",
             parent_accession="AACD01000002",
             project="PRJNA130",
-            keywords="WGS",
             description="Aspergillus nidulans FGSC A4 tRNA-Pro",
             mol_type="genomic DNA",
             is_composite="N",
@@ -224,7 +223,6 @@ def test_can_find_correct_ncRNA_type():
             ),
             product="RybB RNA",
             parent_accession="ABXV02000002",
-            keywords="WGS",
             description="Providencia rustigianii DSM 4541 RybB RNA",
             mol_type="genomic DNA",
             is_composite="N",
@@ -387,7 +385,6 @@ def test_can_parse_all_example_entries():
             parent_accession="AB330785",
             mol_type="other RNA",
             is_composite="N",
-            keywords="RNAcentral; Third Party Annotation; TPA; TPA:specialist_db",
         )
     )
 
@@ -417,10 +414,6 @@ def test_can_parse_all_example_entries():
             experiment="EXISTENCE:RNA-seq ECO0000205",
             mol_type="transcribed RNA",
             gene="hsa-miR-1273g-3p",
-            keywords=(
-                "RNAcentral; TPA; TPA:specialist_db; Transcriptome Shotgun "
-                "Assembly; TSA"
-            ),
             is_composite="N",
             parent_accession="HAAO01001079",
             references=[
@@ -453,7 +446,6 @@ def test_can_parse_all_example_entries():
             xref_data={"ena_refs": {"TMRNA-WEBSITE": ("Campy_jejun_700819", None)}},
             lineage="unclassified sequences; unidentified",
             species="unidentified",
-            keywords="RNAcentral; TPA; TPA:specialist_db",
             description="unidentified transfer-messenger mRNA Campy_jejun_700819",
             product="transfer-messenger mRNA Campy_jejun_700819",
             gene="tmRNA Campy_jejun_700819",
