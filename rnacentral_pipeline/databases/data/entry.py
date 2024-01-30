@@ -102,7 +102,6 @@ class Entry:
     experiment: str = utils.optionally(str)
     function: str = utils.optionally(str)
     inference: str = utils.optionally(str)
-    map: str = utils.optionally(str)
     old_locus_tag: str = utils.optionally(str)
     operon: str = utils.optionally(str)
     standard_name: str = utils.optionally(str)
@@ -289,7 +288,6 @@ class Entry:
             self.gene_synonym,
             self.inference,
             self.locus_tag,
-            None,  # This was self.map,
             self.mol_type,
             self.ncrna_class,
             self.note,
