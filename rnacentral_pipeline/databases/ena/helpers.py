@@ -225,10 +225,6 @@ def organelle(record):
     return " ".join(sorted(values))
 
 
-def is_pseudogene(feature):
-    return "pseudogene" in feature.qualifiers or "pseudo" in feature.qualifiers
-
-
 def gene_synonyms(feature):
     result = []
     synonyms = feature.qualifiers.get("gene_synonym", [])
