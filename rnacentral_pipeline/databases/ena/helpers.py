@@ -202,13 +202,6 @@ def function(feature):
     return value
 
 
-def keywords(record):
-    keys = [k for k in record.annotations["keywords"] if k]
-    if not keys:
-        return None
-    return "; ".join(keys)
-
-
 def parent_accession(record):
     return record.id.split(".", 1)[0]
 
@@ -380,7 +373,6 @@ def as_entry(ctx, record, feature) -> Entry:
         product=prod,
         parent_accession=parent_accession(record),
         project=embl.project(record),
-        keywords=keywords(record),
         organelle=organelle(record),
         experiment=embl.experiment(feature),
         function=function(feature),

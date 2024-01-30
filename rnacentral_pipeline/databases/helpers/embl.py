@@ -377,7 +377,3 @@ def organelle(source):
         if second.startswith(first):
             return second
     return " ".join(sorted(values))
-
-
-def keywords(record):
-    return "; ".join(record.annotations["keywords"])

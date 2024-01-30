@@ -199,7 +199,6 @@ def test_can_transform_correct_lncrnadb_entry():
             project="PRJEB6238",
             product="Long non-coding sense-intronic RNA Kcnq1ot1",
             description="Homo sapiens (human) Long non-coding sense-intronic RNA Kcnq1ot1",
-            keywords="RNAcentral; TPA; TPA:specialist_db",
             parent_accession="HG975405",
             gene="Kncq1",
             mol_type="transcribed RNA",
@@ -253,7 +252,6 @@ def test_can_transform_correct_srpdb_entry():
                 "Acinetobacter calcoaceticus/baumannii complex; "
                 "Acinetobacter baumannii ATCC 17978"
             ),
-            keywords="RNAcentral; TPA; TPA:specialist_db",
             description="Acinetobacter baumannii ATCC 17978 signal recognition particle RNA",
             mol_type="transcribed RNA",
             gene="SRP RNA",
@@ -301,7 +299,6 @@ def test_can_transform_correct_snopy_entry():
                 "Brassicaceae; Camelineae; Arabidopsis; Arabidopsis thaliana"
             ),
             common_name="thale cress",
-            keywords="RNAcentral; TPA; TPA:specialist_db",
             mol_type="genomic DNA",
             gene="SnoR1b",
             is_composite="Y",
