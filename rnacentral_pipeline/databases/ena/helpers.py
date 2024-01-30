@@ -225,10 +225,6 @@ def organelle(record):
     return " ".join(sorted(values))
 
 
-def operon(feature):
-    return embl.qualifier_string(feature, "operon")
-
-
 def is_pseudogene(feature):
     return "pseudogene" in feature.qualifiers or "pseudo" in feature.qualifiers
 
@@ -389,7 +385,6 @@ def as_entry(ctx, record, feature) -> Entry:
         experiment=embl.experiment(feature),
         function=function(feature),
         inference=embl.inference(feature),
-        operon=operon(feature),
         standard_name=embl.standard_name(feature),
         description=description(record),
         mol_type=mol_type(record),
