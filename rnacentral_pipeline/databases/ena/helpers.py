@@ -79,6 +79,10 @@ def sequence(record):
     return str(record.seq)
 
 
+def is_pseudogene(feature):
+    return "pseudogene" in feature.qualifiers or "pseudo" in feature.qualifiers
+
+
 def extract_experiment_refs(feature, known):
     experiment = embl.experiment(feature)
     if not experiment:
