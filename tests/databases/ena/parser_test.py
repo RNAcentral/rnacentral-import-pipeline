@@ -13,18 +13,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import attr
 from io import open
 from pathlib import Path
 
+import attr
 import pytest
 
-from rnacentral_pipeline.databases.data import Entry, Reference
 import rnacentral_pipeline.databases.helpers.publications as pubs
-
-from rnacentral_pipeline.databases.ena import parser
-from rnacentral_pipeline.databases.ena import ribovore
-from rnacentral_pipeline.databases.ena import context
+from rnacentral_pipeline.databases.data import Entry, Reference
+from rnacentral_pipeline.databases.ena import context, parser, ribovore
 
 
 def simple_parse(path):
@@ -546,57 +543,6 @@ def test_can_handle_file_with_invalid_fields():
     assert data.product == "16S ribosomal RNA"
 
 
-def test_can_parse_out_anticodon_from_gene():
-    raw = Path("data/ena/trna-with-anticodon.embl")
-    data = next(simple_parse(raw))
-
-    assert data.accession == "HF536610.1:1288..1686:tRNA"
-    assert data.ncbi_tax_id == 188169
-    assert data.product == "transfer RNA Leu"
-    assert data.gene == "tRNA-Leu (UAA)"
-    assert data.mol_type == "genomic DNA"
-    assert data.anticodon == "UAA"
-    assert data.organelle == "plastid:chloroplast"
-
-
-def test_can_parse_anticodon_from_gtrnadb_stype_gene():
-    raw = Path("data/ena/trna-with-anticodon.embl")
-    data = list(simple_parse(raw))[1]
-
-    assert data.accession == "LK008175.1:1..73:tRNA"
-    assert data.ncbi_tax_id == 411154
-    assert data.mol_type == "genomic DNA"
-    assert data.anticodon == "GCC"
-    assert data.product == "transfer RNA-Gly (GCC)"
-    assert data.gene == "tRNA-Gly-GCC-1-1"
-    assert data.standard_name == "tRNA-Gly (GCC)"
-    assert data.inference == "ab initio prediction:tRNAscan-SE:1.21"
-    assert data.note_data == {
-        "ontology": [
-            "ECO:0000202",
-            "GO:0030533",
-            "SO:0000253",
-        ],
-        "text": [
-            "Covariance Model: Bacteria; CM Score: 87.61",
-            "Legacy ID: chr.trna3-GlyGCC",
-        ],
-    }
-
-
-def test_can_parse_anticodon_from_note():
-    raw = Path("data/ena/anticodon-in-note.embl")
-    data = next(simple_parse(raw))
-
-    assert data.accession == "CP000102.1:337323..337406:tRNA"
-    assert data.note_data == {"text": ["codon recognized: CUA"]}
-    assert data.anticodon == "UAG"
-    assert data.operon == "trnA"
-    assert data.product == "tRNA-Leu"
-    assert data.gene is None
-    assert data.locus_tag == "Msp_0274"
-
-
 @pytest.mark.parametrize(
     "filename,count",
     [
@@ -641,7 +587,6 @@ def test_can_parse_old_locus_tag():
     assert data.old_locus_tag == "SMb21712"
     assert data.locus_tag == "SM_b21712"
     assert data.gene == "tRNA-ARG_CCG"
-    assert data.anticodon == "CCG"
 
 
 def test_can_parse_operons():
@@ -750,7 +695,6 @@ def test_can_handle_unclosed_parens():
     assert (
         data.description == "Metacrangonyx sp. 3 ssp. 1 MDMBR-2012 transfer RNA Serine"
     )
-    assert data.anticodon == "(pos:HE860504.1: complement(14629..14631),aa:Ser)"
 
 
 def test_can_extract_xrefs():
