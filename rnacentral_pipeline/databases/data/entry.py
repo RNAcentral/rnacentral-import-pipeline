@@ -268,7 +268,6 @@ class Entry:
             self.keywords,
             self.description,
             self.species,
-            self.common_name,
             self.organelle,
             self.chromosome,
             self.experiment,
