@@ -105,7 +105,6 @@ class Entry:
     description: str = utils.optionally(str)
     mol_type: str = utils.optionally(str)
     is_composite: str = utils.optionally(str)
-    pseudogene: str = utils.optionally(str)
 
     location_start = utils.optionally(int)
     location_end = utils.optionally(int)
@@ -287,7 +286,6 @@ class Entry:
             self.ncrna_class,
             self.note,
             self.product,
-            self.pseudogene,
             self.standard_name,
             self.db_xrefs,
             self.rna_type,

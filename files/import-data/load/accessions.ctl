@@ -32,7 +32,6 @@ HAVING FIELDS (
     ncrna_class,
     note,
     product,
-    pseudogene,
     standard_name,
     db_xref,
     so_term
@@ -70,7 +69,6 @@ TARGET COLUMNS (
     ncrna_class,
     note,
     product,
-    pseudogene,
     standard_name,
     db_xref,
     so_term

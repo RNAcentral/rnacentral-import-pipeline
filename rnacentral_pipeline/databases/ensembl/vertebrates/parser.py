@@ -23,14 +23,12 @@ import attr
 from Bio import SeqIO
 
 from rnacentral_pipeline.databases import data
-from rnacentral_pipeline.databases.helpers import embl
-from rnacentral_pipeline.databases.ensembl.data import TranscriptInfo
-from rnacentral_pipeline.databases.ensembl.gencode import helpers as gencode
-
 from rnacentral_pipeline.databases.ensembl import helpers as common
-from rnacentral_pipeline.databases.ensembl.data import Pseudogene
+from rnacentral_pipeline.databases.ensembl.data import Pseudogene, TranscriptInfo
+from rnacentral_pipeline.databases.ensembl.gencode import helpers as gencode
 from rnacentral_pipeline.databases.ensembl.vertebrates import helpers
 from rnacentral_pipeline.databases.ensembl.vertebrates.context import Context
+from rnacentral_pipeline.databases.helpers import embl
 
 LOGGER = logging.getLogger(__name__)
 
@@ -91,7 +89,6 @@ def as_entry(
         product=helpers.product(feature),
         references=helpers.references(),
         mol_type="genomic DNA",
-        pseudogene="N",
         is_composite="N",
     )
 
