@@ -91,7 +91,6 @@ class Entry:
     optional_id: str = utils.optionally(str)
     product: str = utils.optionally(str)
     parent_accession: str = utils.optionally(str)
-    ordinal: str = utils.optionally(str)
     non_coding_id: str = utils.optionally(str)
     project: str = utils.optionally(str)
     keywords: str = utils.optionally(str)
@@ -261,7 +260,6 @@ class Entry:
             self.feature_location_start,
             self.feature_location_end,
             self.feature_name,
-            self.ordinal,
             self.is_composite,
             self.non_coding_id,
             self.database_name,
