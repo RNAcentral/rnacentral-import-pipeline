@@ -278,7 +278,6 @@ class Entry:
             self.common_name,
             self.organelle,
             self.lineage,
-            self.anticodon,
             self.chromosome,
             self.experiment,
             self.function,
