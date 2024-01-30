@@ -97,7 +97,6 @@ class Entry:
     keywords: str = utils.optionally(str)
     division: str = utils.optionally(str)
     organelle: str = utils.optionally(str)
-    allele: str = utils.optionally(str)
     anticodon: str = utils.optionally(str)
     experiment: str = utils.optionally(str)
     function: str = utils.optionally(str)
@@ -279,7 +278,6 @@ class Entry:
             self.common_name,
             self.organelle,
             self.lineage,
-            None,  # This was self.allele,
             self.anticodon,
             self.chromosome,
             self.experiment,
