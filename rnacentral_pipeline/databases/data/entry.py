@@ -270,7 +270,6 @@ class Entry:
             self.species,
             self.common_name,
             self.organelle,
-            self.lineage,
             self.chromosome,
             self.experiment,
             self.function,
