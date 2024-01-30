@@ -13,15 +13,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import collections as coll
 import re
 import typing as ty
-import collections as coll
 
 from Bio import SeqIO
 
-from rnacentral_pipeline.databases import data
 import rnacentral_pipeline.databases.helpers.phylogeny as phy
 import rnacentral_pipeline.databases.helpers.publications as pubs
+from rnacentral_pipeline.databases import data
 
 IGNORE_FEATURES = {
     "source",
@@ -257,13 +257,6 @@ def locus_tag(feature):
     is returned.
     """
     return feature.qualifiers.get("locus_tag", [None])[0]
-
-
-def old_locus_tag(feature):
-    """
-    Get the old_locus_tag of this feature.
-    """
-    return feature.qualifiers.get("old_locus_tag", [None])[0]
 
 
 def as_reference(ref):

@@ -577,18 +577,6 @@ def test_can_parse_function():
     assert data[2].rna_type == "SO:0000655"
 
 
-def test_can_parse_old_locus_tag():
-    raw = Path("data/ena/old_locus_tag.embl")
-    data = next(simple_parse(raw))
-
-    assert data.accession == "AL591985.1:1315182..1315258:tRNA"
-    assert data.parent_accession == "AL591985"
-    assert data.project == "PRJNA19"
-    assert data.old_locus_tag == "SMb21712"
-    assert data.locus_tag == "SM_b21712"
-    assert data.gene == "tRNA-ARG_CCG"
-
-
 def test_can_parse_operons():
     raw = Path("data/ena/operons.embl")
     data = next(simple_parse(raw))

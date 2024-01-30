@@ -389,7 +389,6 @@ def as_entry(ctx, record, feature) -> Entry:
         experiment=embl.experiment(feature),
         function=function(feature),
         inference=embl.inference(feature),
-        old_locus_tag=embl.old_locus_tag(feature),
         operon=operon(feature),
         standard_name=embl.standard_name(feature),
         description=description(record),
