@@ -57,30 +57,30 @@ class Entry:
     """
 
     # Also known as external_id
-    primary_id = attr.ib(validator=is_a(str), converter=str)
-    accession = attr.ib(validator=is_a(str), converter=str)
-    ncbi_tax_id = attr.ib(validator=is_a(int))
-    database = attr.ib(
+    primary_id: str = attr.ib(validator=is_a(str), converter=str)
+    accession: str = attr.ib(validator=is_a(str), converter=str)
+    ncbi_tax_id: int = attr.ib(validator=is_a(int))
+    database: str = attr.ib(
         validator=is_a(str),
         converter=lambda s: str(s.upper()),
     )
-    sequence = attr.ib(validator=is_a(str), converter=str)
+    sequence: str = attr.ib(validator=is_a(str), converter=str)
     regions: ty.List[SequenceRegion] = attr.ib(validator=is_a(list))
-    rna_type = attr.ib(
+    rna_type: str = attr.ib(
         validator=utils.matches_pattern(utils.SO_PATTERN),
         converter=utils.as_so_term,
     )
-    url = attr.ib(validator=is_a(str), converter=str)
-    seq_version = attr.ib(
+    url: str = attr.ib(validator=is_a(str), converter=str)
+    seq_version: str = attr.ib(
         validator=and_(is_a(str), utils.matches_pattern(r"^\d+$")),
         converter=lambda r: str(int(float(r))),
     )
 
-    note_data = utils.possibly_empty(dict)
-    xref_data = utils.possibly_empty(dict)
+    note_data: ty.Dict[ty.Any, ty.Any] = utils.possibly_empty(dict)
+    xref_data: ty.Dict[str, str] = utils.possibly_empty(dict)
 
-    related_sequences = utils.possibly_empty(list)
-    related_diseases = utils.possibly_empty(list)
+    related_sequences: ty.List[str] = utils.possibly_empty(list)
+    related_diseases: ty.List[str] = utils.possibly_empty(list)
 
     chromosome: str = utils.optionally(str)
     species: str = utils.optionally(str)
@@ -114,12 +114,12 @@ class Entry:
     location_start = utils.optionally(int)
     location_end = utils.optionally(int)
 
-    gene_synonyms = utils.possibly_empty(list)
-    references = utils.possibly_empty(list)
+    gene_synonyms: ty.List[str] = utils.possibly_empty(list)
+    references: ty.List = utils.possibly_empty(list)
 
-    secondary_structure = utils.possibly_empty(SecondaryStructure)
-    features = utils.possibly_empty(list)
-    interactions = utils.possibly_empty(list)
+    secondary_structure: SecondaryStructure = utils.possibly_empty(SecondaryStructure)
+    features: ty.List[SequenceFeature] = utils.possibly_empty(list)
+    interactions: ty.List = utils.possibly_empty(list)
     go_annotations: ty.List[GoTermAnnotation] = utils.possibly_empty(list)
 
     @property
