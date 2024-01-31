@@ -24,15 +24,16 @@ include { quickgo } from './databases/quickgo'
 include { refseq } from './databases/refseq'
 include { rfam } from './databases/rfam'
 include { rgd } from './databases/rgd'
-include {ribocentre } from './databases/ribocentre'
 include { ribovision } from './databases/ribovision'
 include { sgd } from './databases/sgd'
 include { silva } from './databases/silva'
 include { snodb } from './databases/snodb'
 include { snorna_database } from './databases/snorna_database'
 include { tarbase } from './databases/tarbase'
+include { tmrna } from './databases/tmrna'
 include { zfin } from './databases/zfin'
 include { zwd } from './databases/zwd'
+include {ribocentre } from './databases/ribocentre'
 
 process build_context {
   memory '6GB'
@@ -91,6 +92,7 @@ workflow parse_databases {
       snodb(),
       snorna_database(),
       tarbase(),
+      tmrna(),
       zfin(),
       zwd(context),
     ) \
