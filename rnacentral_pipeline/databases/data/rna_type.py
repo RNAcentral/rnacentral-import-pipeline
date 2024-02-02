@@ -13,20 +13,19 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import itertools as it
 import typing as ty
 
 import attr
-from attr.validators import optional
 from attr.validators import instance_of as is_a
+from attr.validators import optional
 
 from rnacentral_pipeline.databases.sequence_ontology import tree
 
 
 @attr.s(frozen=True, slots=True, hash=True)
 class SoTermInfo:
-    so_id = attr.ib(validator=is_a(str))
-    name = attr.ib(validator=optional(is_a(str)))
+    so_id: str = attr.ib(validator=is_a(str))
+    name: ty.Optional[str] = attr.ib(validator=optional(is_a(str)))
 
     @classmethod
     def ncRNA(cls):
@@ -38,8 +37,8 @@ class SoTermInfo:
 
 @attr.s(frozen=True, slots=True, hash=True)
 class RnaType:
-    so_term = attr.ib(validator=is_a(SoTermInfo))
-    insdc = attr.ib(validator=optional(is_a(str)))
+    so_term: SoTermInfo = attr.ib(validator=is_a(SoTermInfo))
+    insdc: ty.Optional[str] = attr.ib(validator=optional(is_a(str)))
 
     @classmethod
     def ncRNA(cls):
