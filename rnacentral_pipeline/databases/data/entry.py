@@ -29,7 +29,8 @@ from rnacentral_pipeline.databases.helpers.hashes import crc64, md5
 from . import utils
 from .features import SequenceFeature
 from .go_annotations import GoTermAnnotation
-from .references import IdReference, Reference
+from .psi_mi import Interaction
+from .references import AnyReference, IdReference, Reference
 from .regions import Exon, SequenceRegion
 from .secondary_structure import SecondaryStructure
 
@@ -57,21 +58,21 @@ class Entry:
     """
 
     # Also known as external_id
-    primary_id = attr.ib(validator=is_a(str), converter=str)
-    accession = attr.ib(validator=is_a(str), converter=str)
-    ncbi_tax_id = attr.ib(validator=is_a(int))
-    database = attr.ib(
+    primary_id: str = attr.ib(validator=is_a(str), converter=str)
+    accession: str = attr.ib(validator=is_a(str), converter=str)
+    ncbi_tax_id: int = attr.ib(validator=is_a(int))
+    database: str = attr.ib(
         validator=is_a(str),
         converter=lambda s: str(s.upper()),
     )
-    sequence = attr.ib(validator=is_a(str), converter=str)
+    sequence: str = attr.ib(validator=is_a(str), converter=str)
     regions: ty.List[SequenceRegion] = attr.ib(validator=is_a(list))
-    rna_type = attr.ib(
+    rna_type: str = attr.ib(
         validator=utils.matches_pattern(utils.SO_PATTERN),
         converter=utils.as_so_term,
     )
-    url = attr.ib(validator=is_a(str), converter=str)
-    seq_version = attr.ib(
+    url: str = attr.ib(validator=is_a(str), converter=str)
+    seq_version: str = attr.ib(
         validator=and_(is_a(str), utils.matches_pattern(r"^\d+$")),
         converter=lambda r: str(int(float(r))),
     )
@@ -111,19 +112,19 @@ class Entry:
     is_composite: str = utils.optionally(str)
     pseudogene: str = utils.optionally(str)
 
-    location_start = utils.optionally(int)
-    location_end = utils.optionally(int)
+    location_start: ty.Optional[int] = utils.optionally(int)
+    location_end: ty.Optional[int] = utils.optionally(int)
 
-    gene_synonyms = utils.possibly_empty(list)
-    references = utils.possibly_empty(list)
+    gene_synonyms: ty.List[str] = utils.possibly_empty(list)
+    references: ty.List[AnyReference] = utils.possibly_empty(list)
 
-    secondary_structure = utils.possibly_empty(SecondaryStructure)
-    features = utils.possibly_empty(list)
-    interactions = utils.possibly_empty(list)
+    secondary_structure: SecondaryStructure = utils.possibly_empty(SecondaryStructure)
+    features: ty.List[SequenceFeature] = utils.possibly_empty(list)
+    interactions: ty.List[Interaction] = utils.possibly_empty(list)
     go_annotations: ty.List[GoTermAnnotation] = utils.possibly_empty(list)
 
     @property
-    def database_name(self):
+    def database_name(self) -> str:
         """
         Get the database name in upper case.
         """
@@ -313,13 +314,13 @@ class Entry:
             return
         yield [
             self.crc64(),
-            len(self.sequence),
+            str(len(self.sequence)),
             self.sequence,
             self.database_name,
             self.accession,
             self.optional_id,
             self.seq_version,
-            self.ncbi_tax_id,
+            str(self.ncbi_tax_id),
             self.md5(),
         ]
 
