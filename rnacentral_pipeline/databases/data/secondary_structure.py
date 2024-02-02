@@ -25,7 +25,7 @@ class SecondaryStructure(object):
     This represents the secondary structure from GtRNAdb.
     """
 
-    dot_bracket = attr.ib(validator=is_a(str))
+    dot_bracket: str = attr.ib(validator=is_a(str))
 
     @classmethod
     def empty(cls):
