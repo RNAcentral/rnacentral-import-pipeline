@@ -3,14 +3,6 @@ tag=latest
 sif=$(tag).sif
 docker=$(image):$(tag)
 
-env: requirements.txt requirements-dev.txt
-
-requirements.txt: requirements.in
-	pip-compile -o requirements.txt requirements.in
-
-requirements-dev.txt: requirements-dev.in
-	pip-compile -o requirements-dev.txt requirements-dev.in
-
 rust:
 	cargo build --release
 	mv -f target/release/json2fasta bin
@@ -35,7 +27,7 @@ clean:
 	rm bin/bed-expander
 	cargo clean
 
-docker: Dockerfile requirements.txt .dockerignore
+docker: Dockerfile
 	docker build -t "$(docker)" .
 
 shell: docker
