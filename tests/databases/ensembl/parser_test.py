@@ -13,12 +13,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import pytest
 import attr
+import pytest
 
 from rnacentral_pipeline.databases import data as dat
 
-from .helpers import parse_with_family, entries_for, entry_for, has_entry_for
+from .helpers import entries_for, entry_for, has_entry_for, parse_with_family
 
 
 @pytest.fixture(scope="module")  # pylint: disable=no-member
@@ -252,7 +252,6 @@ def test_it_builds_correct_entries(human_12):
             },
             references=[dat.IdReference(dat.KnownServices.pmid, "27337980")],
             mol_type="genomic DNA",
-            pseudogene="N",
             is_composite="N",
         )
     )
@@ -354,7 +353,6 @@ def test_can_build_gencode_entries(human_12):
             },
             references=[dat.IdReference(dat.KnownServices.pmid, "22955987")],
             mol_type="genomic DNA",
-            pseudogene="N",
             is_composite="N",
         )
     )

@@ -79,6 +79,10 @@ def sequence(record):
     return str(record.seq)
 
 
+def is_pseudogene(feature):
+    return "pseudogene" in feature.qualifiers or "pseudo" in feature.qualifiers
+
+
 def extract_experiment_refs(feature, known):
     experiment = embl.experiment(feature)
     if not experiment:
@@ -198,49 +202,6 @@ def function(feature):
     return value
 
 
-def allele(record):
-    return source_qualifier_value(record, "allele")
-
-
-def anticodon(record, feature):
-    raw_anti = embl.qualifier_string(feature, "anticodon")
-    if raw_anti:
-        match = re.search("seq:([ACGUT]{3})", raw_anti)
-        if match:
-            return match.group(1).upper()
-
-    gene = embl.gene(feature)
-    if gene:
-        match = re.search(r"tRNA-\w+ \(([ACGU]{3})\)$", gene)
-        if match:
-            return match.group(1)
-
-        match = re.search(r"tRNA-\w{3}[-_]([ACGUT]{3})", gene)
-        if match:
-            return match.group(1)
-
-    note = " ".join(note_data(feature).get("text", []))
-    if note:
-        match = re.search(r"codon recognized:(\s*[ACGUT]{3}\s*)", note)
-        if match:
-            raw = match.group(1).strip()
-            try:
-                return str(Seq(raw).reverse_complement())
-            except Exception as err:
-                LOGGER.warn("Error getting reverse_complement")
-                LOGGER.exception(err)
-                return raw_anti
-
-    return raw_anti
-
-
-def keywords(record):
-    keys = [k for k in record.annotations["keywords"] if k]
-    if not keys:
-        return None
-    return "; ".join(keys)
-
-
 def parent_accession(record):
     return record.id.split(".", 1)[0]
 
@@ -259,14 +220,6 @@ def organelle(record):
         if second.startswith(first):
             return second
     return " ".join(sorted(values))
-
-
-def operon(feature):
-    return embl.qualifier_string(feature, "operon")
-
-
-def is_pseudogene(feature):
-    return "pseudogene" in feature.qualifiers or "pseudo" in feature.qualifiers
 
 
 def gene_synonyms(feature):
@@ -420,14 +373,10 @@ def as_entry(ctx, record, feature) -> Entry:
         product=prod,
         parent_accession=parent_accession(record),
         project=embl.project(record),
-        keywords=keywords(record),
         organelle=organelle(record),
-        anticodon=anticodon(record, feature),
         experiment=embl.experiment(feature),
         function=function(feature),
         inference=embl.inference(feature),
-        old_locus_tag=embl.old_locus_tag(feature),
-        operon=operon(feature),
         standard_name=embl.standard_name(feature),
         description=description(record),
         mol_type=mol_type(record),
