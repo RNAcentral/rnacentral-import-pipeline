@@ -17,8 +17,8 @@ for export to usable flat files.
 """
 
 import csv
-import operator as op
 import itertools as it
+import operator as op
 
 from rnacentral_pipeline.databases.data import Entry
 from rnacentral_pipeline.writers import build_entry_writer
@@ -49,7 +49,6 @@ def as_entry(data):
         exons=[],
         rna_type=helpers.infer_rna_type(data) or "",
         url="",
-        division="MUS",
         is_composite="N",
         xref_data=helpers.xref_data(data),
         chromosome=helpers.chromosome(data),

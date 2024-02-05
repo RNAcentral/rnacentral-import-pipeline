@@ -92,25 +92,17 @@ class Entry:
     optional_id: str = utils.optionally(str)
     product: str = utils.optionally(str)
     parent_accession: str = utils.optionally(str)
-    ordinal: str = utils.optionally(str)
     non_coding_id: str = utils.optionally(str)
     project: str = utils.optionally(str)
-    keywords: str = utils.optionally(str)
-    division: str = utils.optionally(str)
     organelle: str = utils.optionally(str)
-    allele: str = utils.optionally(str)
     anticodon: str = utils.optionally(str)
     experiment: str = utils.optionally(str)
     function: str = utils.optionally(str)
     inference: str = utils.optionally(str)
-    map: str = utils.optionally(str)
-    old_locus_tag: str = utils.optionally(str)
-    operon: str = utils.optionally(str)
     standard_name: str = utils.optionally(str)
     description: str = utils.optionally(str)
     mol_type: str = utils.optionally(str)
     is_composite: str = utils.optionally(str)
-    pseudogene: str = utils.optionally(str)
 
     location_start: ty.Optional[int] = utils.optionally(int)
     location_end: ty.Optional[int] = utils.optionally(int)
@@ -267,22 +259,14 @@ class Entry:
             self.feature_location_start,
             self.feature_location_end,
             self.feature_name,
-            self.ordinal,
             self.is_composite,
             self.non_coding_id,
             self.database_name,
             self.primary_id,
             self.optional_id,
             self.project,
-            None,  # self.division,
-            self.keywords,
             self.description,
-            self.species,
-            self.common_name,
             self.organelle,
-            self.lineage,
-            None,  # This was self.allele,
-            self.anticodon,
             self.chromosome,
             self.experiment,
             self.function,
@@ -290,14 +274,10 @@ class Entry:
             self.gene_synonym,
             self.inference,
             self.locus_tag,
-            None,  # This was self.map,
             self.mol_type,
             self.ncrna_class,
             self.note,
-            self.old_locus_tag,
-            self.operon,
             self.product,
-            self.pseudogene,
             self.standard_name,
             self.db_xrefs,
             self.rna_type,
