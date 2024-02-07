@@ -374,7 +374,6 @@ def as_entry(ctx, record, feature) -> Entry:
         parent_accession=parent_accession(record),
         project=embl.project(record),
         organelle=organelle(record),
-        experiment=embl.experiment(feature),
         function=function(feature),
         inference=embl.inference(feature),
         standard_name=embl.standard_name(feature),

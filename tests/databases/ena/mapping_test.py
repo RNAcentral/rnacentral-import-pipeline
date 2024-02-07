@@ -202,13 +202,6 @@ def test_can_transform_correct_lncrnadb_entry():
             parent_accession="HG975405",
             gene="Kncq1",
             mol_type="transcribed RNA",
-            experiment=(
-                "EXISTENCE: lncRNAdb literature review [PMID: "
-                "15340049,18299392,18951091,18848501,19144718,17917697, "
-                "20573698,10393948,15516932,17242189,10369866,11813134, "
-                "16702402,16575194,16965397,10958646,21345374,15590939, "
-                "15459184,21172659,21576366,22406755]"
-            ),
         )
     )
 

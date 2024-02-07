@@ -14,10 +14,10 @@ limitations under the License.
 """
 
 import csv
-import typing as ty
-from pathlib import Path
 import logging
 import tempfile
+import typing as ty
+from pathlib import Path
 
 from Bio import SeqIO
 from Bio.SeqIO import SeqRecord
@@ -58,7 +58,6 @@ def as_entry(
         product=helpers.product(family),
         parent_accession=helpers.parent_accession(data),
         project="RFAM",
-        experiment=helpers.experiment(data),
         description=helpers.description(family, data),
         mol_type=helpers.mol_type(data),
         seq_version=helpers.seq_version(data),
@@ -79,7 +78,7 @@ def load_mapping(handle: ty.TextIO) -> ty.Dict[str, ty.Dict[str, str]]:
 
 def dedup_sequences(path: Path) -> ty.Iterator[SeqRecord]:
     seen = set()
-    for record in SeqIO.parse(str(path), 'fasta'):
+    for record in SeqIO.parse(str(path), "fasta"):
         if record.id in seen:
             LOGGER.warn("Duplicate id seen %s", record.id)
             continue
@@ -96,7 +95,7 @@ def parse(
     """
 
     with tempfile.NamedTemporaryFile() as temp:
-        SeqIO.write(dedup_sequences(fasta), temp.name, 'fasta')
+        SeqIO.write(dedup_sequences(fasta), temp.name, "fasta")
         temp.flush()
         indexed = SeqIO.index(temp.name, "fasta")
         families = load_mapping(family_file)

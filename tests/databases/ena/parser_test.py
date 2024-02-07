@@ -411,7 +411,6 @@ def test_can_parse_all_example_entries():
             project="PRJEB4451",
             description="Homo sapiens (human) microRNA hsa-miR-1273g-3p",
             product="microRNA hsa-miR-1273g-3p",
-            experiment="EXISTENCE:RNA-seq ECO0000205",
             mol_type="transcribed RNA",
             gene="hsa-miR-1273g-3p",
             is_composite="N",
@@ -600,10 +599,6 @@ def test_can_extract_references_from_experiment(pmid):
 
     assert data.accession == "HG975378.1:1..299:ncRNA"
     assert data.rna_type == "SO:0000590"
-    assert (
-        data.experiment
-        == "EXISTENCE: lncRNAdb literature review [PMID: 12244299,6196367,6181418,6802847,3403542,6084597,10924331, 7528809,7529207,1704372,20610725,18617187,17881443, 17164479,8389475,10834842,10684931,15611297,20668672, 911771,6209580]"
-    )
     assert data.gene == "RN7SL1"
     assert data.mol_type == "transcribed RNA"
     assert data.product == "Small nucleolar RNA 7SL"
@@ -629,10 +624,6 @@ def test_can_extract_references_from_note_or_experiment(pmid):
     }
     assert data.product == "T-box"
     assert data.locus_tag == "BSU_misc_RNA_57"
-    assert (
-        data.experiment
-        == "publication(s) with functional evidences, PMID:1379177, 8288542, 9098041, 9826762, 12165569, 12547201, 1317842, 15831787"
-    )
     assert data.function == "16.3: Control"
     assert data.gene == "tboTB"
     assert pubs.reference(pmid) in data.references
