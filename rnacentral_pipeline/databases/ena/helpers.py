@@ -162,7 +162,7 @@ def note_data(feature):
     return data
 
 
-def url(record):
+def url(record) -> str:
     """
     Gets the standard url for this record.
     """
@@ -380,7 +380,6 @@ def as_entry(ctx, record, feature) -> Entry:
         standard_name=embl.standard_name(feature),
         description=description(record),
         mol_type=mol_type(record),
-        is_composite=is_composite(feature),
         gene_synonyms=gene_synonyms(feature),
         references=references(record, feature),
     )

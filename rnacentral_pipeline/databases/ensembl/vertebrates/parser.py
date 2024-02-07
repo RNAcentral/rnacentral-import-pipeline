@@ -89,7 +89,6 @@ def as_entry(
         product=helpers.product(feature),
         references=helpers.references(),
         mol_type="genomic DNA",
-        is_composite="N",
     )
 
     return attr.evolve(entry, description=helpers.description(context, gene, entry))
