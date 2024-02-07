@@ -281,6 +281,7 @@ class Entry:
             self.standard_name,
             self.db_xrefs,
             self.rna_type,
+            self.url,
         ]
 
     def write_secondary_structure(self) -> ty.List[str]:
