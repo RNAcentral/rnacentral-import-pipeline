@@ -28,7 +28,8 @@ HAVING FIELDS (
     product,
     standard_name,
     db_xref,
-    so_term
+    so_term,
+    url
 )
 INTO {{PGDATABASE}}?load_rnc_accessions
 TARGET COLUMNS (
@@ -59,7 +60,8 @@ TARGET COLUMNS (
     product,
     standard_name,
     db_xref,
-    so_term
+    so_term,
+    url
 )
 
 WITH truncate,
