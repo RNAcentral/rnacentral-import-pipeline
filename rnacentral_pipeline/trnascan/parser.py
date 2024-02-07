@@ -19,7 +19,12 @@ from pathlib import Path
 from rnacentral_pipeline.databases.data import TRnaScanResults
 
 
-def parse(path: Path) -> ty.Iterable[TRnaScanResults]:
+def parse(path: Path) -> ty.Iterator[TRnaScanResults]:
+    """
+    Parse a the results of tRNAScan-SE into an iterator of TRnaScanResults
+    objects. This assumes the file is correclty formatted, ie has 3 header
+    lines.
+    """
     with path.open("r") as raw:
         _ = next(raw)
         _ = next(raw)
