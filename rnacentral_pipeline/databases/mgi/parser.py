@@ -49,7 +49,6 @@ def as_entry(data):
         exons=[],
         rna_type=helpers.infer_rna_type(data) or "",
         url="",
-        is_composite="N",
         xref_data=helpers.xref_data(data),
         chromosome=helpers.chromosome(data),
         species=helpers.species(data),

@@ -17,10 +17,8 @@ import attr
 
 from rnacentral_pipeline.databases.data import Entry
 from rnacentral_pipeline.databases.helpers.publications import reference
-
 from rnacentral_pipeline.databases.rfam import utils
-from rnacentral_pipeline.databases.rfam.parser import as_entry
-from rnacentral_pipeline.databases.rfam.parser import parse
+from rnacentral_pipeline.databases.rfam.parser import as_entry, parse
 
 
 def test_it_labels_y_rna_correctly():
@@ -102,7 +100,6 @@ def test_it_builds_first_entry_correctly():
                 project="RFAM",
                 description="Stegodyphus mimosarum tRNA",
                 mol_type="full",
-                is_composite="N",
                 location_start=230594,
                 location_end=230666,
                 experiment="8256282 9023104",
