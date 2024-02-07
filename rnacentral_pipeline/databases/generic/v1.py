@@ -144,13 +144,6 @@ def references(record):
     return [pub.reference(r) for r in record.get("publications", [])]
 
 
-def anticodon(record):
-    """
-    Get the anticodon information, if any, of this record.
-    """
-    return record.get("sequenceFeatures", {}).get("anticodon", None)
-
-
 def external_id(record):
     """
     Extract the external id for the record.
@@ -388,7 +381,6 @@ def as_entry(record, context):
         references=references(record),
         organelle=record.get("localization", None),
         product=record.get("product", None),
-        anticodon=anticodon(record),
         gene=gene(record),
         gene_synonyms=gene_synonyms(record),
         locus_tag=locus_tag(record),

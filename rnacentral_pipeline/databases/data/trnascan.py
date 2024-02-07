@@ -28,16 +28,16 @@ def intron_endpoint(raw: str) -> ty.Optional[int]:
 
 @attr.s()
 class TRnaScanResults:
-    sequence_id = attr.ib(validator=is_a(str))
-    hit_index = attr.ib(validator=is_a(int))
-    sequence_start = attr.ib(validator=is_a(int))
-    sequence_stop = attr.ib(validator=is_a(int))
-    anticodon = attr.ib(validator=is_a(str))
-    trna_type = attr.ib(validator=is_a(str))
-    intron_start = attr.ib(validator=optional(is_a(int)))
-    intron_stop = attr.ib(validator=optional(is_a(int)))
-    score = attr.ib(validator=is_a(float))
-    note = attr.ib(validator=is_a(str))
+    sequence_id: str = attr.ib(validator=is_a(str))
+    hit_index: int = attr.ib(validator=is_a(int))
+    sequence_start: int = attr.ib(validator=is_a(int))
+    sequence_stop: int = attr.ib(validator=is_a(int))
+    anticodon: str = attr.ib(validator=is_a(str))
+    trna_type: str = attr.ib(validator=is_a(str))
+    intron_start: ty.Optional[int] = attr.ib(validator=optional(is_a(int)))
+    intron_stop: ty.Optional[int] = attr.ib(validator=optional(is_a(int)))
+    score: float = attr.ib(validator=is_a(float))
+    note: str = attr.ib(validator=is_a(str))
 
     @classmethod
     def from_line(cls, line: str) -> "TRnaScanResults":

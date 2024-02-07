@@ -14,34 +14,34 @@ limitations under the License.
 """
 
 import json
+import typing as ty
 
 import attr
 from attr.validators import instance_of as is_a
-
 
 ANN_URL = "http://www.ebi.ac.uk/QuickGO/annotations?geneProductId={upi}"
 
 
 @attr.s()
-class AnnotationExtension(object):
-    qualifier = attr.ib()
-    target = attr.ib()
+class AnnotationExtension:
+    qualifier: str = attr.ib()
+    target: str = attr.ib()
 
 
 @attr.s()
-class GoTermAnnotation(object):
+class GoTermAnnotation:
     """
     This is the simpliest possible representation of AmiGO annotations about
     RNAcentral sequences.
     """
 
-    rna_id = attr.ib(validator=is_a(str), converter=str)
-    qualifier = attr.ib(validator=is_a(str), converter=str)
-    term_id = attr.ib(validator=is_a(str), converter=str)
-    evidence_code = attr.ib(validator=is_a(str), converter=str)
-    extensions = attr.ib()
-    assigned_by = attr.ib(validator=is_a(str), converter=str)
-    publications = attr.ib(validator=is_a(list))
+    rna_id: str = attr.ib(validator=is_a(str), converter=str)
+    qualifier: str = attr.ib(validator=is_a(str), converter=str)
+    term_id: str = attr.ib(validator=is_a(str), converter=str)
+    evidence_code: str = attr.ib(validator=is_a(str), converter=str)
+    extensions: ty.List[AnnotationExtension] = attr.ib()
+    assigned_by: str = attr.ib(validator=is_a(str), converter=str)
+    publications: ty.List = attr.ib(validator=is_a(list))
 
     @property
     def url(self):

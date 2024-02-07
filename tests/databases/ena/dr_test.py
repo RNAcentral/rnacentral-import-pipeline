@@ -30,7 +30,7 @@ def test_can_parse_a_dr_line_with_only_primary():
 
 def test_can_extract_dr_lines():
     with open("data/ena/tpa/mirbase/entry.embl", "r") as raw:
-        data = dr.mapping(raw, cache_filename=None)
+        data = dr.mappings(raw, cache_filename=None)
 
     assert dict(data) == {
         "LM611181.1:1..180:precursor_RNA": [

@@ -27,10 +27,11 @@ def load(pdb_id: str, chain_id: str) -> data.Entry:
     references = fetch.references([chain_info])
     return parser.as_entry(chain_info, references)
 
-@pytest.mark.pdb
+
 @pytest.mark.network
 def test_can_build_correct_entry_for_rrna():
     cur = attr.asdict(load("1J5E", "A"))
+    print(cur["references"])
     assert cur == attr.asdict(
         data.Entry(
             primary_id="1J5E",
@@ -52,25 +53,32 @@ def test_can_build_correct_entry_for_rrna():
             description="16S ribosomal RNA from Thermus thermophilus (PDB 1J5E, chain A)",
             species="Thermus thermophilus",
             lineage=(
-                "Bacteria; Deinococcus-Thermus; Deinococci; Thermales; "
-                "Thermaceae; Thermus; Thermus thermophilus"
+                "Bacteria; Deinococcota; Deinococci; Thermales; Thermaceae; "
+                "Thermus; Thermus thermophilus"
             ),
             parent_accession="1J5E",
             product="16S ribosomal RNA",
             references=[
                 pubs.reference(11014182),
-                pubs.reference(11014183),
-                pubs.reference(10476960),
+                pubs.reference("doi:10.1038/35030019"),
+                {
+                    "authors": "Clemons Jr. W.M., May J.L.C., Wimberly B.T., McCutcheon J.P., Capel M.S., Ramakrishnan V.",
+                    "location": "Nature",
+                    "title": "Structure of a Bacterial 30S Ribosomal Subunit at 5.5 A Resolution",
+                    "pmid": None,
+                    "doi": None,
+                    "pmcid": None,
+                },
             ],
         )
     )
 
-@pytest.mark.pdb
+
 @pytest.mark.network
 def test_can_handle_strange_taxids():
     assert load("3T4B", "A").ncbi_tax_id == 32630
 
-@pytest.mark.pdb
+
 @pytest.mark.network
 def test_can_build_correct_entry_for_srp_rna():
     assert attr.asdict(load("1CQ5", "A")) == attr.asdict(
@@ -93,8 +101,9 @@ def test_can_build_correct_entry_for_srp_rna():
             },
             optional_id="A",
             lineage=(
-                "Bacteria; Proteobacteria; Gammaproteobacteria; Enterobacterales; "
-                "Enterobacteriaceae; Escherichia; Escherichia coli"
+                "Bacteria; Pseudomonadota; Gammaproteobacteria; "
+                "Enterobacterales; Enterobacteriaceae; Escherichia; "
+                "Escherichia coli"
             ),
             species="Escherichia coli",
             description="SRP RNA DOMAIN IV from Escherichia coli (PDB 1CQ5, chain A)",
@@ -104,7 +113,7 @@ def test_can_build_correct_entry_for_srp_rna():
         )
     )
 
-@pytest.mark.pdb
+
 @pytest.mark.network
 @pytest.mark.skip("Needs to be reworked")
 @pytest.mark.parametrize(
@@ -119,7 +128,7 @@ def test_can_get_given_taxid(pdb_id, expected):
     taxids = [entry.ncbi_tax_id for entry in parser.parse(chains, {}, set())]
     assert taxids == expected
 
-@pytest.mark.pdb
+
 @pytest.mark.network
 @pytest.mark.parametrize(
     "requested,missing",
@@ -133,7 +142,7 @@ def test_will_not_fetch_mislabeled_chains(requested, missing):
     entries = {(e.primary_id, e.optional_id) for e in parser.parse(chains, {}, set())}
     assert missing not in entries
 
-@pytest.mark.pdb
+
 @pytest.mark.network
 @pytest.mark.parametrize(
     "overrides,expected",
@@ -160,7 +169,7 @@ def test_will_respect_the_override_list(overrides, expected):
     }
     assert expected in entries
 
-@pytest.mark.pdb
+
 @pytest.mark.network
 @pytest.mark.parametrize(
     "pdb_id,chains",
@@ -209,7 +218,7 @@ def test_extracts_expected_chains(pdb_id, chains):
     entries = parser.parse(list(fetched), {}, set())
     assert set(d.optional_id for d in entries) == chains
 
-@pytest.mark.pdb
+
 @pytest.mark.network
 @pytest.mark.parametrize(
     "pdb_id,chain_id,rna_type",

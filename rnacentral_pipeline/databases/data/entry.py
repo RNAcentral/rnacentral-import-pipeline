@@ -29,7 +29,8 @@ from rnacentral_pipeline.databases.helpers.hashes import crc64, md5
 from . import utils
 from .features import SequenceFeature
 from .go_annotations import GoTermAnnotation
-from .references import IdReference, Reference
+from .psi_mi import Interaction
+from .references import AnyReference, IdReference, Reference
 from .regions import Exon, SequenceRegion
 from .secondary_structure import SecondaryStructure
 
@@ -91,39 +92,32 @@ class Entry:
     optional_id: str = utils.optionally(str)
     product: str = utils.optionally(str)
     parent_accession: str = utils.optionally(str)
-    ordinal: str = utils.optionally(str)
     non_coding_id: str = utils.optionally(str)
     project: str = utils.optionally(str)
-    keywords: str = utils.optionally(str)
-    division: str = utils.optionally(str)
     organelle: str = utils.optionally(str)
-    allele: str = utils.optionally(str)
     anticodon: str = utils.optionally(str)
     experiment: str = utils.optionally(str)
     function: str = utils.optionally(str)
     inference: str = utils.optionally(str)
-    map: str = utils.optionally(str)
-    old_locus_tag: str = utils.optionally(str)
-    operon: str = utils.optionally(str)
     standard_name: str = utils.optionally(str)
     description: str = utils.optionally(str)
     mol_type: str = utils.optionally(str)
     is_composite: str = utils.optionally(str)
-    pseudogene: str = utils.optionally(str)
 
-    location_start = utils.optionally(int)
-    location_end = utils.optionally(int)
+    location_start: ty.Optional[int] = utils.optionally(int)
+    location_end: ty.Optional[int] = utils.optionally(int)
 
     gene_synonyms: ty.List[str] = utils.possibly_empty(list)
-    references: ty.List = utils.possibly_empty(list)
+
+    references: ty.List[AnyReference] = utils.possibly_empty(list)
 
     secondary_structure: SecondaryStructure = utils.possibly_empty(SecondaryStructure)
     features: ty.List[SequenceFeature] = utils.possibly_empty(list)
-    interactions: ty.List = utils.possibly_empty(list)
+    interactions: ty.List[Interaction] = utils.possibly_empty(list)
     go_annotations: ty.List[GoTermAnnotation] = utils.possibly_empty(list)
 
     @property
-    def database_name(self):
+    def database_name(self) -> str:
         """
         Get the database name in upper case.
         """
@@ -266,22 +260,14 @@ class Entry:
             self.feature_location_start,
             self.feature_location_end,
             self.feature_name,
-            self.ordinal,
             self.is_composite,
             self.non_coding_id,
             self.database_name,
             self.primary_id,
             self.optional_id,
             self.project,
-            None,  # self.division,
-            self.keywords,
             self.description,
-            self.species,
-            self.common_name,
             self.organelle,
-            self.lineage,
-            None,  # This was self.allele,
-            self.anticodon,
             self.chromosome,
             self.experiment,
             self.function,
@@ -289,14 +275,10 @@ class Entry:
             self.gene_synonym,
             self.inference,
             self.locus_tag,
-            None,  # This was self.map,
             self.mol_type,
             self.ncrna_class,
             self.note,
-            self.old_locus_tag,
-            self.operon,
             self.product,
-            self.pseudogene,
             self.standard_name,
             self.db_xrefs,
             self.rna_type,
@@ -313,13 +295,13 @@ class Entry:
             return
         yield [
             self.crc64(),
-            len(self.sequence),
+            str(len(self.sequence)),
             self.sequence,
             self.database_name,
             self.accession,
             self.optional_id,
             self.seq_version,
-            self.ncbi_tax_id,
+            str(self.ncbi_tax_id),
             self.md5(),
         ]
 

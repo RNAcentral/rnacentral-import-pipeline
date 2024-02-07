@@ -24,7 +24,7 @@ def load(pdb_id: str, chain_id: str) -> ChainInfo:
     assert len(chains) == 1
     return chains[0]
 
-@pytest.mark.pdb
+
 @pytest.mark.parametrize(
     "product,expected",
     [
@@ -60,7 +60,7 @@ def load(pdb_id: str, chain_id: str) -> ChainInfo:
 def test_can_compute_correct_rna_types(product: str, expected):
     assert helpers.compound_rna_type(product) == expected
 
-@pytest.mark.pdb
+
 @pytest.mark.network
 @pytest.mark.parametrize(
     "pdb,chain,expected",

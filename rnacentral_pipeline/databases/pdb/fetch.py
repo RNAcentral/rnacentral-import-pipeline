@@ -120,6 +120,7 @@ def chains(required: ty.Set[ty.Tuple[str, str]], query_size=1000) -> ty.List[Cha
     seen = set()
     chains = []
     pdb_ids = [r[0] for r in required]
+    required = set((r[0].lower(), r[1]) for r in required)
     for chain in all_chains_in_pdbs(pdb_ids):
         key = chain.override_key()
         if key not in required:
