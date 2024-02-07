@@ -86,7 +86,6 @@ def test_it_can_build_correct_entry():
             ),
             gene="RMRP",
             gene_synonyms=["CHH", "NME1", "RMRPR", "RRP2"],
-            keywords="RefSeq",
             optional_id="GeneID:6023",
             product="RNA component of mitochondrial RNA processing endoribonuclease",
             mol_type="transcribed RNA",
@@ -129,7 +128,7 @@ def test_can_build_correct_entries_when_multiple_present():
             },
             note_data={},
             species="Homo sapiens",
-            common_name=u"human",
+            common_name="human",
             lineage=(
                 "Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; "
                 "Euteleostomi; Mammalia; Eutheria; Euarchontoglires; "
@@ -143,7 +142,6 @@ def test_can_build_correct_entries_when_multiple_present():
                 "MIR6089-1",
                 "MIR6089-2",
             ],
-            keywords="RefSeq",
             optional_id="GeneID:102464837",
             product="microRNA 6089",
             mol_type="transcribed RNA",
@@ -191,7 +189,6 @@ def test_can_build_correct_entries_when_multiple_present():
                 "MIR6089-1",
                 "MIR6089-2",
             ],
-            keywords="RefSeq",
             optional_id="GeneID:102464837",
             product="hsa-miR-6089",
             mol_type="transcribed RNA",
@@ -232,7 +229,6 @@ def test_can_assign_related_sequences_for_mirnas():
             lineage=phy.lineage(6239),
             gene="mir-79",
             gene_synonyms=[],
-            keywords="RefSeq",
             optional_id="GeneID:259856",
             product="pre-microRNA mir-79",
             mol_type="transcribed RNA",
@@ -299,10 +295,7 @@ def test_can_assign_isoform_to_rnase_p():
             species="Drosophila melanogaster",
             common_name="fruit fly",
             lineage=(
-                "Eukaryota; Metazoa; Ecdysozoa; Arthropoda; "
-                "Hexapoda; Insecta; Pterygota; Neoptera; Holometabola; "
-                "Diptera; Brachycera; Muscomorpha; Ephydroidea; "
-                "Drosophilidae; Drosophila; Sophophora; Drosophila melanogaster"
+                "Eukaryota; Metazoa; Ecdysozoa; Arthropoda; Hexapoda; Insecta; Pterygota; Neoptera; Endopterygota; Diptera; Brachycera; Muscomorpha; Ephydroidea; Drosophilidae; Drosophila; Sophophora; Drosophila melanogaster"
             ),
             gene="RNaseP:RNA",
             gene_synonyms=[
@@ -314,7 +307,6 @@ def test_can_assign_isoform_to_rnase_p():
                 "RNAseP",
                 "RPR RNA",
             ],
-            keywords="RefSeq",
             optional_id="GeneID:3772418",
             product="ribonuclease P RNA",
             mol_type="transcribed RNA",

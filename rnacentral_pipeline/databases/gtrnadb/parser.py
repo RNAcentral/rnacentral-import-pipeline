@@ -20,9 +20,8 @@ from pathlib import Path
 
 from sqlitedict import SqliteDict
 
-from rnacentral_pipeline.databases.data import Entry
 import rnacentral_pipeline.databases.helpers.phylogeny as phy
-
+from rnacentral_pipeline.databases.data import Entry
 from rnacentral_pipeline.databases.gtrnadb import helpers
 
 LOGGER = logging.getLogger(__name__)
@@ -58,7 +57,6 @@ def gtrnadb_entries(
                 note_data=helpers.note_data(data),
                 chromosome=helpers.chromosome(location),
                 species=helpers.species(taxonomy, data),
-                anticodon=helpers.anticodon(data),
                 lineage=helpers.lineage(taxonomy, data),
                 gene=helpers.gene(data),
                 optional_id=helpers.optional_id(data),

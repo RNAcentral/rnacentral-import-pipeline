@@ -17,8 +17,8 @@ import re
 import typing as ty
 
 import attr
-from attr.validators import optional
 from attr.validators import instance_of as is_a
+from attr.validators import optional
 
 from rnacentral_pipeline.databases.data.regions import UnknownStrand
 
@@ -38,25 +38,27 @@ maybe_float = maybe(float)
 
 @attr.s()
 class RibovoreResult(object):
-    target = attr.ib(validator=is_a(str))
-    status = attr.ib(validator=is_a(str))
-    length = attr.ib(validator=is_a(int))
-    fm = attr.ib(validator=is_a(int))
-    fam = attr.ib(validator=is_a(str))
-    domain = attr.ib(validator=is_a(str))
-    model = attr.ib(validator=is_a(str))
-    strand = attr.ib(validator=optional(is_a(int)))
-    ht = attr.ib(validator=optional(is_a(int)))
-    tscore = attr.ib(validator=optional(is_a(float)))
-    bscore = attr.ib(validator=optional(is_a(float)))
-    bevalue = attr.ib(validator=optional(is_a(float)))
-    tcov = attr.ib(validator=optional(is_a(float)))
-    bcov = attr.ib(validator=optional(is_a(float)))
-    bfrom = attr.ib(validator=optional(is_a(int)))
-    bto = attr.ib(validator=optional(is_a(int)))
-    mfrom = attr.ib(validator=optional(is_a(int)))
-    mto = attr.ib(validator=optional(is_a(int)))
-    model_length = attr.ib(validator=optional(is_a(int)), default=None)
+    target: str = attr.ib(validator=is_a(str))
+    status: str = attr.ib(validator=is_a(str))
+    length: int = attr.ib(validator=is_a(int))
+    fm: int = attr.ib(validator=is_a(int))
+    fam: str = attr.ib(validator=is_a(str))
+    domain: str = attr.ib(validator=is_a(str))
+    model: str = attr.ib(validator=is_a(str))
+    strand: ty.Optional[int] = attr.ib(validator=optional(is_a(int)))
+    ht: ty.Optional[int] = attr.ib(validator=optional(is_a(int)))
+    tscore: ty.Optional[float] = attr.ib(validator=optional(is_a(float)))
+    bscore: ty.Optional[float] = attr.ib(validator=optional(is_a(float)))
+    bevalue: ty.Optional[float] = attr.ib(validator=optional(is_a(float)))
+    tcov: ty.Optional[float] = attr.ib(validator=optional(is_a(float)))
+    bcov: ty.Optional[float] = attr.ib(validator=optional(is_a(float)))
+    bfrom: ty.Optional[int] = attr.ib(validator=optional(is_a(int)))
+    bto: ty.Optional[int] = attr.ib(validator=optional(is_a(int)))
+    mfrom: ty.Optional[int] = attr.ib(validator=optional(is_a(int)))
+    mto: ty.Optional[int] = attr.ib(validator=optional(is_a(int)))
+    model_length: ty.Optional[int] = attr.ib(
+        validator=optional(is_a(int)), default=None
+    )
 
     @classmethod
     def from_result_line(cls, row: str, lengths=None) -> "RibovoreResult":
