@@ -109,3 +109,4 @@ workflows/litscan/submit
 singularity/*
 .python-version
 bin/bed-expander
+.projections.json

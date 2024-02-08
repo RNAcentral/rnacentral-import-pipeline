@@ -77,11 +77,11 @@ class Entry:
         converter=lambda r: str(int(float(r))),
     )
 
-    note_data = utils.possibly_empty(dict)
-    xref_data = utils.possibly_empty(dict)
+    note_data: ty.Dict[ty.Any, ty.Any] = utils.possibly_empty(dict)
+    xref_data: ty.Dict[str, str] = utils.possibly_empty(dict)
 
-    related_sequences = utils.possibly_empty(list)
-    related_diseases = utils.possibly_empty(list)
+    related_sequences: ty.List[str] = utils.possibly_empty(list)
+    related_diseases: ty.List[str] = utils.possibly_empty(list)
 
     chromosome: str = utils.optionally(str)
     species: str = utils.optionally(str)
@@ -108,6 +108,7 @@ class Entry:
     location_end: ty.Optional[int] = utils.optionally(int)
 
     gene_synonyms: ty.List[str] = utils.possibly_empty(list)
+
     references: ty.List[AnyReference] = utils.possibly_empty(list)
 
     secondary_structure: SecondaryStructure = utils.possibly_empty(SecondaryStructure)
