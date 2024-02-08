@@ -92,7 +92,6 @@ def test_creates_simple_entry():
             ),
             product="tRNA-Pro",
             parent_accession="AACD01000002",
-            project="PRJNA130",
             description="Aspergillus nidulans FGSC A4 tRNA-Pro",
             mol_type="genomic DNA",
             is_composite="N",
@@ -228,7 +227,6 @@ def test_can_find_correct_ncRNA_type():
             is_composite="N",
             inference="nucleotide motif:Rfam:RF00110",
             locus_tag="PROVRUST_04548",
-            project="PRJNA28651",
             references=[
                 Reference(
                     authors=(
@@ -408,7 +406,6 @@ def test_can_parse_all_example_entries():
             ),
             species="Homo sapiens",
             common_name="human",
-            project="PRJEB4451",
             description="Homo sapiens (human) microRNA hsa-miR-1273g-3p",
             product="microRNA hsa-miR-1273g-3p",
             experiment="EXISTENCE:RNA-seq ECO0000205",
@@ -449,7 +446,6 @@ def test_can_parse_all_example_entries():
             description="unidentified transfer-messenger mRNA Campy_jejun_700819",
             product="transfer-messenger mRNA Campy_jejun_700819",
             gene="tmRNA Campy_jejun_700819",
-            project="PRJEB4570",
             mol_type="genomic DNA",
             parent_accession="HG519048",
             is_composite="N",
@@ -565,7 +561,6 @@ def test_can_parse_gene_synonyms():
     assert data.mol_type == "genomic DNA"
     assert data.gene == "ryeA"
     assert data.product == "small RNA"
-    assert data.project == "PRJNA20079"
 
 
 @pytest.mark.parametrize(
@@ -649,7 +644,6 @@ def test_can_handle_unclosed_parens():
     assert data.product == "transfer RNA Serine"
     assert data.species == "Metacrangonyx sp. 3 ssp. 1 MDMBR-2012"
     assert data.organelle == "mitochondrion"
-    assert data.project is None
     assert (
         data.description == "Metacrangonyx sp. 3 ssp. 1 MDMBR-2012 transfer RNA Serine"
     )

@@ -93,7 +93,6 @@ class Entry:
     product: str = utils.optionally(str)
     parent_accession: str = utils.optionally(str)
     non_coding_id: str = utils.optionally(str)
-    project: str = utils.optionally(str)
     organelle: str = utils.optionally(str)
     anticodon: str = utils.optionally(str)
     experiment: str = utils.optionally(str)
@@ -264,7 +263,6 @@ class Entry:
             self.database_name,
             self.primary_id,
             self.optional_id,
-            self.project,
             self.description,
             self.organelle,
             self.chromosome,
