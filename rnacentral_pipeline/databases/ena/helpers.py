@@ -372,7 +372,6 @@ def as_entry(ctx, record, feature) -> Entry:
         locus_tag=embl.locus_tag(feature),
         product=prod,
         parent_accession=parent_accession(record),
-        project=embl.project(record),
         organelle=organelle(record),
         experiment=embl.experiment(feature),
         function=function(feature),
