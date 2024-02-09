@@ -152,7 +152,6 @@ def as_entry(record, source, feature):
         standard_name=embl.standard_name(feature),
         description=description(record, feature),
         mol_type=embl.mol_type(source),
-        is_composite="N",
         gene_synonyms=embl.gene_synonyms(feature),
         references=embl.references(record),
     )

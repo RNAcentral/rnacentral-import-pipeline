@@ -188,7 +188,6 @@ def test_can_transform_correct_lncrnadb_entry():
             },
             optional_id="Kcnq1ot1",
             non_coding_id="HG975405.1:1..32753:ncRNA",
-            is_composite="Y",
             species="Homo sapiens",
             lineage=(
                 "Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi;"
@@ -256,7 +255,6 @@ def test_can_transform_correct_srpdb_entry():
             mol_type="transcribed RNA",
             gene="SRP RNA",
             non_coding_id="HG323367.1:1..116:ncRNA",
-            is_composite="Y",
             project="PRJEB4384",
             parent_accession="HG323367",
             product="signal recognition particle RNA",
@@ -301,7 +299,6 @@ def test_can_transform_correct_snopy_entry():
             common_name="thale cress",
             mol_type="genomic DNA",
             gene="SnoR1b",
-            is_composite="Y",
             non_coding_id="LN809305.1:1..93:ncRNA",
             # experiment='EXISTENCE:Curator Inference ECO0000305',
             product="small nucleolar RNA SnoR1b",
@@ -348,7 +345,6 @@ def test_can_transform_correct_wormbase_entry():
             locus_tag="CELE_ZK643.8",
             gene="grl-25",
             optional_id="ZK643.8b",
-            is_composite="Y",
             non_coding_id="BX284603.4:8962295..8965569:misc_RNA",
             product="Non-coding transcript of protein-coding gene grl-25",
             project="PRJNA13758",

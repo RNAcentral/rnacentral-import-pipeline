@@ -95,7 +95,6 @@ def test_creates_simple_entry():
             project="PRJNA130",
             description="Aspergillus nidulans FGSC A4 tRNA-Pro",
             mol_type="genomic DNA",
-            is_composite="N",
             references=[
                 pubs.reference(16372000),
                 Reference(
@@ -225,7 +224,6 @@ def test_can_find_correct_ncRNA_type():
             parent_accession="ABXV02000002",
             description="Providencia rustigianii DSM 4541 RybB RNA",
             mol_type="genomic DNA",
-            is_composite="N",
             inference="nucleotide motif:Rfam:RF00110",
             locus_tag="PROVRUST_04548",
             project="PRJNA28651",
@@ -318,7 +316,6 @@ def test_can_parse_all_example_entries():
                 ]
             },
             mol_type="other RNA",
-            is_composite="N",
         )
     )
 
@@ -351,7 +348,6 @@ def test_can_parse_all_example_entries():
                 ]
             },
             mol_type="other RNA",
-            is_composite="N",
         )
     )
 
@@ -384,7 +380,6 @@ def test_can_parse_all_example_entries():
             },
             parent_accession="AB330785",
             mol_type="other RNA",
-            is_composite="N",
         )
     )
 
@@ -414,7 +409,6 @@ def test_can_parse_all_example_entries():
             experiment="EXISTENCE:RNA-seq ECO0000205",
             mol_type="transcribed RNA",
             gene="hsa-miR-1273g-3p",
-            is_composite="N",
             parent_accession="HAAO01001079",
             references=[
                 Reference(
@@ -452,7 +446,6 @@ def test_can_parse_all_example_entries():
             project="PRJEB4570",
             mol_type="genomic DNA",
             parent_accession="HG519048",
-            is_composite="N",
             references=[
                 Reference(
                     authors="",
