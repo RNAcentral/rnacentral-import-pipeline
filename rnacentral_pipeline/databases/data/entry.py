@@ -102,7 +102,6 @@ class Entry:
     standard_name: str = utils.optionally(str)
     description: str = utils.optionally(str)
     mol_type: str = utils.optionally(str)
-    is_composite: str = utils.optionally(str)
 
     location_start: ty.Optional[int] = utils.optionally(int)
     location_end: ty.Optional[int] = utils.optionally(int)
@@ -260,7 +259,6 @@ class Entry:
             self.feature_location_start,
             self.feature_location_end,
             self.feature_name,
-            self.is_composite,
             self.non_coding_id,
             self.database_name,
             self.primary_id,
