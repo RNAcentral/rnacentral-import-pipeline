@@ -6,7 +6,7 @@ SELECT
     'rna_type', rna_type,
     'so_term_id', so_term_id
   )
-from rnc_secondary_structure_layout_models
+from r2dt_models
 where
   model_source = 'crw'
 ) TO STDOUT

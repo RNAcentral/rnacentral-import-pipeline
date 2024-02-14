@@ -78,8 +78,8 @@ def fetch_modeled_data(
     all_ids: ty.Iterable[str], db_url: str, chunk_size=100
 ) -> ty.Iterable[ty.Dict[str, ty.Any]]:
     rna = Table("rna")
-    ss = Table("rnc_secondary_structure_layout")
-    sm = Table("rnc_secondary_structure_layout_models")
+    ss = Table("r2dt_results")
+    sm = Table("r2dt_models")
 
     def build_query(ids):
         return (
@@ -230,8 +230,8 @@ def convert_sheet(handle: ty.IO, output: ty.IO):
 
 def inspect_data(data, db_url: str) -> ty.Iterable[ty.Dict[str, ty.Any]]:
     def build_query(ids):
-        ss = Table("rnc_secondary_structure_layout")
-        sm = Table("rnc_secondary_structure_layout_models")
+        ss = Table("r2dt_results")
+        sm = Table("r2dt_models")
         pre = Table("rnc_rna_precomputed")
         return (
             Query.from_(ss)

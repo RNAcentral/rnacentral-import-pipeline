@@ -7,7 +7,7 @@ SELECT
     'cellular_location', cellular_location,
     'rna_type', rna_type
   )
-FROM rnc_secondary_structure_layout_models
+FROM r2dt_models
 WHERE
   model_source = 'crw'
 ) TO STDOUT

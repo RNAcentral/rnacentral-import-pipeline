@@ -8,10 +8,10 @@ SELECT
     'secondary_structure_source', models.model_source
   )
 FROM search_export_urs todo
-JOIN rnc_secondary_structure_layout as layout
+JOIN r2dt_results as layout
 ON
   layout.urs = todo.urs
-JOIN rnc_secondary_structure_layout_models as models
+JOIN r2dt_models as models
 ON
   layout.model_id = models.id
 WHERE
