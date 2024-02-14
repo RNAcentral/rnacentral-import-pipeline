@@ -228,7 +228,6 @@ def test_can_assign_related_sequences_for_mirnas():
             optional_id="GeneID:259856",
             product="pre-microRNA mir-79",
             mol_type="transcribed RNA",
-            project="PRJNA158",
             standard_name="C12C8.4",
             locus_tag="CELE_C12C8.4",
             related_sequences=[
@@ -305,7 +304,6 @@ def test_can_assign_isoform_to_rnase_p():
             optional_id="GeneID:3772418",
             product="ribonuclease P RNA",
             mol_type="transcribed RNA",
-            project="PRJNA164",
             locus_tag="Dmel_CR32868",
             related_sequences=[
                 dat.RelatedSequence(

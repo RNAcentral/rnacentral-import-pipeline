@@ -145,7 +145,6 @@ def as_entry(record, source, feature):
         locus_tag=embl.locus_tag(feature),
         product=embl.product(feature),
         parent_accession=parent_accession(record),
-        project=embl.project(record),
         organelle=embl.organelle(source),
         experiment=embl.experiment(feature),
         inference=embl.inference(feature),

@@ -97,7 +97,6 @@ def test_it_builds_first_entry_correctly():
                 common_name="",
                 optional_id="tRNA",
                 parent_accession="KK113858",
-                project="RFAM",
                 description="Stegodyphus mimosarum tRNA",
                 mol_type="full",
                 location_start=230594,
