@@ -99,7 +99,6 @@ def test_it_builds_first_entry_correctly():
                 parent_accession="KK113858",
                 description="Stegodyphus mimosarum tRNA",
                 mol_type="full",
-                is_composite="N",
                 location_start=230594,
                 location_end=230666,
                 experiment="8256282 9023104",

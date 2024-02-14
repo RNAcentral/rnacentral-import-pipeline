@@ -61,7 +61,6 @@ def as_entry(
         description=helpers.description(family, data),
         mol_type=helpers.mol_type(data),
         seq_version=helpers.seq_version(data),
-        is_composite="N",
         location_start=helpers.location_start(data),
         location_end=helpers.location_end(data),
         references=helpers.references(data),
