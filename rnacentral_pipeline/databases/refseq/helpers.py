@@ -146,7 +146,6 @@ def as_entry(record, source, feature):
         product=embl.product(feature),
         parent_accession=parent_accession(record),
         organelle=embl.organelle(source),
-        experiment=embl.experiment(feature),
         inference=embl.inference(feature),
         standard_name=embl.standard_name(feature),
         description=description(record, feature),

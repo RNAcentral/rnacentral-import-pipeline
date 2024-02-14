@@ -95,7 +95,6 @@ class Entry:
     non_coding_id: str = utils.optionally(str)
     organelle: str = utils.optionally(str)
     anticodon: str = utils.optionally(str)
-    experiment: str = utils.optionally(str)
     function: str = utils.optionally(str)
     inference: str = utils.optionally(str)
     standard_name: str = utils.optionally(str)
@@ -265,7 +264,6 @@ class Entry:
             self.description,
             self.organelle,
             self.chromosome,
-            self.experiment,
             self.function,
             self.gene,
             self.gene_synonym,

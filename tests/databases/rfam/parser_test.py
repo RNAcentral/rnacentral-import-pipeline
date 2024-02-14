@@ -101,7 +101,6 @@ def test_it_builds_first_entry_correctly():
                 mol_type="full",
                 location_start=230594,
                 location_end=230666,
-                experiment="8256282 9023104",
                 seq_version="1",
                 product="tRNA",
             )
