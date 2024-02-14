@@ -145,13 +145,11 @@ def as_entry(record, source, feature):
         locus_tag=embl.locus_tag(feature),
         product=embl.product(feature),
         parent_accession=parent_accession(record),
-        project=embl.project(record),
         organelle=embl.organelle(source),
         inference=embl.inference(feature),
         standard_name=embl.standard_name(feature),
         description=description(record, feature),
         mol_type=embl.mol_type(source),
-        is_composite="N",
         gene_synonyms=embl.gene_synonyms(feature),
         references=embl.references(record),
     )

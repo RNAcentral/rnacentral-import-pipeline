@@ -65,7 +65,6 @@ def test_it_can_build_correct_entry():
             url="https://www.ncbi.nlm.nih.gov/nuccore/NR_003051.3",
             seq_version="3",
             parent_accession="NR_003051",
-            is_composite="N",
             description=(
                 "Homo sapiens RNA component of mitochondrial RNA processing "
                 "endoribonuclease (RMRP)"
@@ -119,7 +118,6 @@ def test_can_build_correct_entries_when_multiple_present():
             url="https://www.ncbi.nlm.nih.gov/nuccore/NR_106737.1",
             seq_version="1",
             parent_accession="NR_106737",
-            is_composite="N",
             description="Homo sapiens microRNA 6089 (MIR6089)",
             xref_data={
                 "GeneID": ["102464837"],
@@ -166,7 +164,6 @@ def test_can_build_correct_entries_when_multiple_present():
             url="https://www.ncbi.nlm.nih.gov/nuccore/NR_106737.1",
             seq_version="1",
             parent_accession="NR_106737",
-            is_composite="N",
             description="Homo sapiens hsa-miR-6089 (MIR6089)",
             xref_data={
                 "GeneID": ["102464837"],
@@ -221,7 +218,6 @@ def test_can_assign_related_sequences_for_mirnas():
             url="https://www.ncbi.nlm.nih.gov/nuccore/NR_000169.2",
             seq_version="2",
             parent_accession="NR_000169",
-            is_composite="N",
             description="Caenorhabditis elegans pre-microRNA mir-79 (mir-79)",
             xref_data={"GeneID": ["259856"]},
             note_data={},
@@ -232,7 +228,6 @@ def test_can_assign_related_sequences_for_mirnas():
             optional_id="GeneID:259856",
             product="pre-microRNA mir-79",
             mol_type="transcribed RNA",
-            project="PRJNA158",
             standard_name="C12C8.4",
             locus_tag="CELE_C12C8.4",
             related_sequences=[
@@ -285,7 +280,6 @@ def test_can_assign_isoform_to_rnase_p():
             url="https://www.ncbi.nlm.nih.gov/nuccore/NR_002092.1",
             seq_version="1",
             parent_accession="NR_002092",
-            is_composite="N",
             description="Drosophila melanogaster ribonuclease P RNA (RNaseP:RNA)",
             xref_data={
                 "GeneID": ["3772418"],
@@ -310,7 +304,6 @@ def test_can_assign_isoform_to_rnase_p():
             optional_id="GeneID:3772418",
             product="ribonuclease P RNA",
             mol_type="transcribed RNA",
-            project="PRJNA164",
             locus_tag="Dmel_CR32868",
             related_sequences=[
                 dat.RelatedSequence(

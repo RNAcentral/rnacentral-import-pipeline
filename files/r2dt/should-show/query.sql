@@ -1,8 +1,8 @@
 COPY (
   select
     urs
-  from rnc_secondary_structure_layout layout
-  join rnc_secondary_structure_layout_models models
+  from r2dt_results layout
+  join r2dt_models models
   on
     models.id = layout.model_id
   where

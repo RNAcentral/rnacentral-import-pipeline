@@ -13,8 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import csv
 import collections as coll
+import csv
 import typing as ty
 
 import attr
@@ -114,7 +114,6 @@ class GenericTpa(object):
             optional_id=self.optional_id(entry),
             accession=self.accession(entry),
             database=self.database,
-            is_composite="Y",
             non_coding_id=entry.accession,
         )
 

@@ -7,12 +7,10 @@ HAVING FIELDS (
     feature_start,
     feature_end,
     feature_name,
-    is_composite,
     non_coding_id,
     database,
     external_id,
     optional_id,
-    project,
     description,
     organelle,
     chromosome,
@@ -27,7 +25,8 @@ HAVING FIELDS (
     product,
     standard_name,
     db_xref,
-    so_term
+    so_term,
+    url
 )
 INTO {{PGDATABASE}}?load_rnc_accessions
 TARGET COLUMNS (
@@ -37,12 +36,10 @@ TARGET COLUMNS (
     feature_start,
     feature_end,
     feature_name,
-    is_composite,
     non_coding_id,
     database,
     external_id,
     optional_id,
-    project,
     description,
     organelle,
     chromosome,
@@ -57,7 +54,8 @@ TARGET COLUMNS (
     product,
     standard_name,
     db_xref,
-    so_term
+    so_term,
+    url
 )
 
 WITH truncate,

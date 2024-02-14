@@ -14,12 +14,12 @@ limitations under the License.
 """
 
 import logging
-from time import sleep
 import typing as ty
+from functools import lru_cache
+from time import sleep
 
 import requests
 import simplejson
-from functools import lru_cache
 
 TAX_URL = "https://www.ebi.ac.uk/ena/data/taxonomy/v1/taxon/tax-id/{taxon_id}"
 
@@ -119,7 +119,8 @@ def division(taxon_id: int) -> str:
 
     data = phylogeny(taxon_id)
     return data["division"]
-    
+
+
 @lru_cache
 def taxid(species: str) -> int:
     """

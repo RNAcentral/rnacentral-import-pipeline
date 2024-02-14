@@ -252,7 +252,6 @@ def test_it_builds_correct_entries(human_12):
             },
             references=[dat.IdReference(dat.KnownServices.pmid, "27337980")],
             mol_type="genomic DNA",
-            is_composite="N",
         )
     )
 
@@ -353,7 +352,6 @@ def test_can_build_gencode_entries(human_12):
             },
             references=[dat.IdReference(dat.KnownServices.pmid, "22955987")],
             mol_type="genomic DNA",
-            is_composite="N",
         )
     )
 

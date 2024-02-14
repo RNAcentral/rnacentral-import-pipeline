@@ -239,7 +239,7 @@ Several columns in this are duplicate, `division`, `species`, `classification`, 
 This is an outdated table, scheduled for removal/simplification.
 It was used to represent secondary structures provided by some expert databases.
 
-## `rnc_secondary_structure_layout`
+## `r2dt_results`
 
 This table stores the secondary structures [RNAcentral] knows about.
 These secondary structures are always computed by [R2DT].
