@@ -29,7 +29,7 @@ $$
 UPDATE load_secondary_should_show load
 SET
   should_show = load.should_show
-FROM rnc_secondary_structure_layout layout
+FROM r2dt_results layout
 WHERE
   layout.urs = load.urs
 ;

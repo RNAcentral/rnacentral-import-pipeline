@@ -60,8 +60,8 @@ select
 )
 FROM rna
 JOIN :tablename todo ON todo.upi = rna.upi
-JOIN xref 
-ON 
+JOIN xref
+ON
     xref.upi = rna.upi
 JOIN rnc_accessions acc
 ON
@@ -70,26 +70,26 @@ LEFT JOIN rnc_rna_precomputed prev
 ON
     prev.upi = rna.upi
     AND prev.taxid = xref.taxid
-LEFT JOIN rnc_sequence_regions region 
-ON 
+LEFT JOIN rnc_sequence_regions region
+ON
     region.urs_taxid = xref.upi || '_' || xref.taxid
-LEFT JOIN rfam_model_hits hits 
-ON 
+LEFT JOIN rfam_model_hits hits
+ON
     hits.upi = xref.upi
-LEFT JOIN rfam_models models 
-ON 
+LEFT JOIN rfam_models models
+ON
     models.rfam_model_id = hits.rfam_model_id
 JOIN rnc_database db
 ON
     db.id = xref.dbid
-LEFT JOIN rnc_taxonomy tax 
-ON 
+LEFT JOIN rnc_taxonomy tax
+ON
   tax.id = xref.taxid
-LEFT JOIN rnc_secondary_structure_layout ss
+LEFT JOIN r2dt_results ss
 on
   ss.urs = rna.upi
   and ss.should_show = true
-LEFT JOIN rnc_secondary_structure_layout_models r2dt
+LEFT JOIN r2dt_models r2dt
 on
   r2dt.id = ss.model_id
 WHERE

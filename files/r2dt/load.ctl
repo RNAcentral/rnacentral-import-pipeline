@@ -55,7 +55,7 @@ $$
 
 AFTER LOAD DO
 $$
-INSERT INTO rnc_secondary_structure_layout (
+INSERT INTO r2dt_results (
     urs,
     model_id,
     secondary_structure,
