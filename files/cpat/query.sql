@@ -9,5 +9,5 @@ COPY (
   where
     pre.is_active = true
     AND pre.taxid = :taxid
-    AND NOT exists(select 1 from rnc_cpat_results track where track.urs_taxid = pre.id)
+    AND NOT exists(select 1 from cpat_results track where track.urs_taxid = pre.id)
 ) TO STDOUT

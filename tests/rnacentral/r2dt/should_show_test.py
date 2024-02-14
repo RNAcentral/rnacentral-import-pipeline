@@ -32,8 +32,8 @@ def connection():
 @pytest.mark.r2dt
 def fetch_data(connection, urs) -> data.ShowInfo:
     rna = Table("rna")
-    secondary = Table("rnc_secondary_structure_layout")
-    models = Table("rnc_secondary_structure_layout_models")
+    secondary = Table("r2dt_results")
+    models = Table("r2dt_models")
     query = (
         Query.from_(rna)
         .select(

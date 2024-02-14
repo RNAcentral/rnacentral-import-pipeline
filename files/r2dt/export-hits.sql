@@ -8,8 +8,8 @@ SELECT
     'sequence_length', rna.len,
     'model_length', rfam.length
   )
-FROM rnc_secondary_structure_layout layout
-JOIN rnc_secondary_structure_layout_models models ON models.id = layout.model_id
+FROM r2dt_results layout
+JOIN r2dt_models models ON models.id = layout.model_id
 JOIN rna ON rna.upi = layout.urs
 LEFT JOIN rfam_models rfam ON rfam.rfam_model_id = models.model_name
 ) TO STDOUT

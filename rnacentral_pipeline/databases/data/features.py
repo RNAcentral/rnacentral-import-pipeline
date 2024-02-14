@@ -26,7 +26,8 @@ class SequenceFeature:
     feature_type: str = attr.ib()
     location: ty.List[int] = attr.ib()
     sequence: str = attr.ib()
-    metadata = attr.ib(validator=is_a(dict), factory=dict)
+    provider: str = attr.ib()
+    metadata: dict = attr.ib(validator=is_a(dict), factory=dict)
 
     def writeable(self, accession, taxid):
         return [

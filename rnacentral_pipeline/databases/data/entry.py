@@ -77,11 +77,11 @@ class Entry:
         converter=lambda r: str(int(float(r))),
     )
 
-    note_data = utils.possibly_empty(dict)
-    xref_data = utils.possibly_empty(dict)
+    note_data: ty.Dict[ty.Any, ty.Any] = utils.possibly_empty(dict)
+    xref_data: ty.Dict[str, str] = utils.possibly_empty(dict)
 
-    related_sequences = utils.possibly_empty(list)
-    related_diseases = utils.possibly_empty(list)
+    related_sequences: ty.List[str] = utils.possibly_empty(list)
+    related_diseases: ty.List[str] = utils.possibly_empty(list)
 
     chromosome: str = utils.optionally(str)
     species: str = utils.optionally(str)
@@ -93,7 +93,6 @@ class Entry:
     product: str = utils.optionally(str)
     parent_accession: str = utils.optionally(str)
     non_coding_id: str = utils.optionally(str)
-    project: str = utils.optionally(str)
     organelle: str = utils.optionally(str)
     anticodon: str = utils.optionally(str)
     function: str = utils.optionally(str)
@@ -101,12 +100,12 @@ class Entry:
     standard_name: str = utils.optionally(str)
     description: str = utils.optionally(str)
     mol_type: str = utils.optionally(str)
-    is_composite: str = utils.optionally(str)
 
     location_start: ty.Optional[int] = utils.optionally(int)
     location_end: ty.Optional[int] = utils.optionally(int)
 
     gene_synonyms: ty.List[str] = utils.possibly_empty(list)
+
     references: ty.List[AnyReference] = utils.possibly_empty(list)
 
     secondary_structure: SecondaryStructure = utils.possibly_empty(SecondaryStructure)
@@ -258,12 +257,10 @@ class Entry:
             self.feature_location_start,
             self.feature_location_end,
             self.feature_name,
-            self.is_composite,
             self.non_coding_id,
             self.database_name,
             self.primary_id,
             self.optional_id,
-            self.project,
             self.description,
             self.organelle,
             self.chromosome,
@@ -279,6 +276,7 @@ class Entry:
             self.standard_name,
             self.db_xrefs,
             self.rna_type,
+            self.url,
         ]
 
     def write_secondary_structure(self) -> ty.List[str]:
