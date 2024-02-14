@@ -57,7 +57,6 @@ def as_entry(
         optional_id=helpers.optional_id(family),
         product=helpers.product(family),
         parent_accession=helpers.parent_accession(data),
-        experiment=helpers.experiment(data),
         description=helpers.description(family, data),
         mol_type=helpers.mol_type(data),
         seq_version=helpers.seq_version(data),
