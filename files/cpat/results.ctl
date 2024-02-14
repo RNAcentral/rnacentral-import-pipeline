@@ -32,7 +32,7 @@ $$
 
 AFTER LOAD DO
 $$
-INSERT INTO rnc_cpat_results (
+INSERT INTO cpat_results (
   urs_taxid,
   fickett_score,
   hexamer_score,
