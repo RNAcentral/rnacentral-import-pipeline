@@ -60,6 +60,7 @@ class Region(object):
         region_id = "{rna_id}.{index}".format(rna_id=raw["rna_id"], index=index)
 
         metadata = {
+            "description": raw["description"],
             "rna_type": raw["rna_type"],
             "providing_databases": clean_databases(raw["providing_databases"]),
             "databases": clean_databases(raw["databases"]),

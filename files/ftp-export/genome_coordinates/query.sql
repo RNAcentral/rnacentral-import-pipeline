@@ -4,6 +4,7 @@ SELECT
       'assembly_id', :'assembly_id',
       'region_id', max(regions.region_name),
       'rna_id', max(pre.id),
+      'description', max(pre.description),
       'rna_type',  max(pre.rna_type),
       'databases', regexp_split_to_array(max(pre."databases"), ','),
       'providing_databases', max(regions.providing_databases),
