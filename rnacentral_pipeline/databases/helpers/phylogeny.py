@@ -118,9 +118,7 @@ def phylogeny(taxon_id: int) -> ty.Dict[str, str]:
                 data = uniprot_taxonomy_fallback(taxon_id)
             else:
                 LOGGER.exception(err)
-                raise FailedTaxonId("Unknown error")
-    else:
-        raise FailedTaxonId("Could not get taxon id for %s" % taxon_id)
+                raise FailedTaxonId(f"Could not get taxon id for {taxon_id}")
 
     if not data:
         raise FailedTaxonId("Somehow got no data")
