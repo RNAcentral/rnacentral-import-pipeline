@@ -14,7 +14,7 @@ SELECT
       'exons', array_agg(distinct exons.*)
   )
 FROM rnc_rna_precomputed pre
-JOIN rnc_sequence_regions regions
+JOIN rnc_sequence_regions_active regions
 ON
   regions.urs_taxid = pre.id
 JOIN rnc_sequence_exons exons
