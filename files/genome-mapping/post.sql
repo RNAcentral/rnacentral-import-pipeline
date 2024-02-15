@@ -138,4 +138,16 @@ JOIN ensembl_assembly ensembl ON ensembl.assembly_id = load.assembly_id
 
 DROP TABLE load_genome_mapping;
 
+-- Update rnc_sequence_regions_active
+DROP INDEX ix_rnc_sequence_regions_active__urs_taxid;
+
+TRUNCATE TABLE rnc_sequence_regions_active;
+INSERT INTO rnc_sequence_regions_active
+  SELECT * FROM rnc_sequence_regions_active_provided
+  UNION
+  SELECT * FROM rnc_sequence_regions_active_mapped
+;
+
+CREATE INDEX ix_rnc_sequence_regions_active__urs_taxid on rnc_sequence_regions_active (urs_taxid);
+
 COMMIT;
