@@ -96,7 +96,7 @@ def parse_data(division, embl_file, gff_file, output, family_file=None):
         message += f"gff_file: {gff_file.name}\n"
         message += f"family_file: {family_file.name}\n"
 
-        slack.send_notification("Ensembl parser error", message)
+        # slack.send_notification("Ensembl parser error", message)
 
 
 @cli.command("assemblies")
