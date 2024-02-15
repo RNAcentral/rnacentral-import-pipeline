@@ -94,6 +94,7 @@ process generate_gff3_for_igv {
 
   rnac ftp-export coordinates as-gff3 $raw_data - |\
   sort -t"`printf '\\t'`" -k1,1 -k4,4n |\
+  sed s/noncoding_exon/exon/g |\
   bgzip > "${species}.${assembly}.rnacentral.gff3.gz"
   """
 }
