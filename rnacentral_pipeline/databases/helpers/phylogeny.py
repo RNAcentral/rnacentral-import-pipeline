@@ -25,6 +25,8 @@ TAX_URL = "https://www.ebi.ac.uk/ena/data/taxonomy/v1/taxon/tax-id/{taxon_id}"
 
 SPECIES_URL = "https://www.ebi.ac.uk/ena/taxonomy/rest/any-name/{species}"
 
+FALLBACK_SPECIES_URL = "https://rest.uniprot.org/taxonomy/{taxon_id}.json"
+
 LOGGER = logging.getLogger(__name__)
 
 
@@ -43,6 +45,49 @@ class FailedTaxonId(Exception):
     """
 
     pass
+
+
+def uniprot_taxonomy_fallback(taxon_id: int) -> ty.Dict[str, str]:
+    """
+    Sometimes the ENA taxonomy doesn't know what something prefectly reasonable is,
+    so we need a fallback. In this case, we use UniProt, but we have to do a bit of
+    parsing to normalise to what things will expect.
+
+    This should do all its own retrying and backoff and raise an exception when
+    things go really wrong
+    """
+    for count in range(10):
+        response = requests.get(FALLBACK_SPECIES_URL.format(taxon_id=taxon_id))
+        try:
+            response.raise_for_status()
+            data = response.json()
+            break
+        except simplejson.errors.JSONDecodeError:
+            sleep(0.15 * (count + 1) ** 2)
+            continue
+        except requests.HTTPError as err:
+            if response.status_code == 500:
+                sleep(0.15 * (count + 1) ** 2)
+                continue
+            elif response.status_code == 404:
+                ## Uniprot taxonomy doesn't know this, so give up
+                raise UnknownTaxonId(taxon_id)
+            else:
+                LOGGER.exception(err)
+                raise FailedTaxonId("Unknown error")
+
+    ## Parse the data a bit to normalise to ENA taxonomy
+    lineage = "; ".join([l["scientificName"] for l in data["lineage"]])
+
+    ena_data = {
+        "taxId": str(taxon_id),
+        "scientificName": data["scientificName"],
+        "commonName": data.get("commonName", ""),
+        "rank": data["rank"],
+        "lineage": lineage,
+    }
+
+    return ena_data
 
 
 @lru_cache()
@@ -69,6 +114,8 @@ def phylogeny(taxon_id: int) -> ty.Dict[str, str]:
                 sleep(0.15 * (count + 1) ** 2)
                 continue
             elif response.status_code == 404:
+                ## ENA taxonomy doesn't know this, so fallback to uniprot
+                data = uniprot_taxonomy_fallback(taxon_id)
                 raise UnknownTaxonId(taxon_id)
             else:
                 LOGGER.exception(err)
