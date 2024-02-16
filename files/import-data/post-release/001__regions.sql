@@ -153,15 +153,17 @@ where
 
 drop table load_rnc_sequence_regions;
 
--- Update rnc_sequence_regions_active
-DROP INDEX ix_rnc_sequence_regions_active__urs_taxid;
-
-TRUNCATE TABLE rnc_sequence_regions_active;
-INSERT INTO rnc_sequence_regions_active
+-- Create the active materialized view
+CREATE MATERIALIZED VIEW IF NOT EXISTS rnc_sequence_regions_active AS
   SELECT * FROM rnc_sequence_regions_active_provided
   UNION
   SELECT * FROM rnc_sequence_regions_active_mapped
 ;
+
+-- Update rnc_sequence_regions_active
+DROP INDEX IF EXISTS ix_rnc_sequence_regions_active__urs_taxid;
+
+REFRESH MATERIALIZED VIEW rnc_sequence_regions_active
 
 CREATE INDEX ix_rnc_sequence_regions_active__urs_taxid on rnc_sequence_regions_active (urs_taxid);
 
