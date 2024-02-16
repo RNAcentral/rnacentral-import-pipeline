@@ -34,6 +34,7 @@ def regions_as_features(regions: ty.Iterable[coord.Region]) -> ty.Iterable[Featu
         attributes = OrderedDict(
             [
                 ("Name", [region.rna_id]),
+                ("description", [region.metadata["description"]]),
                 ("type", [region.metadata["rna_type"]]),
                 ("databases", region.metadata["databases"]),
                 ("ID", [region.region_id]),
@@ -63,6 +64,7 @@ def regions_as_features(regions: ty.Iterable[coord.Region]) -> ty.Iterable[Featu
             exon_attributes = OrderedDict(
                 [
                     ("Name", [region.rna_id]),
+                    ("description", [region.metadata["description"]]),
                     ("type", [region.metadata["rna_type"]]),
                     ("databases", region.metadata["databases"]),
                     ("ID", [exon_id]),
