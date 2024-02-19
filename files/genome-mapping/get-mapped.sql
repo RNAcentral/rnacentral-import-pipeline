@@ -7,7 +7,7 @@ COPY (
   UNION
     SELECT DISTINCT
       urs_taxid
-    FROM rnc_sequence_regions
+    FROM rnc_sequence_regions_active
     WHERE
       assembly_id = :'assembly_id'
       AND was_mapped = false
