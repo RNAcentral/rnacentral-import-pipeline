@@ -6,6 +6,7 @@ include { export_coordinates } from './ftp/coordinates'
 include { id_mapping } from './ftp/id-mapping'
 include { ensembl_export } from './ftp/ensembl'
 include { fasta_export } from './ftp/sequences'
+include { rediportal } from './ftp/rediportal.nf'
 
 process release_note {
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
@@ -115,6 +116,7 @@ workflow ftp {
       export_coordinates()
       ensembl_export()
       fasta_export()
+      rediportal()
     }
 }
 
