@@ -163,7 +163,7 @@ CREATE MATERIALIZED VIEW IF NOT EXISTS rnc_sequence_regions_active AS
 -- Update rnc_sequence_regions_active
 DROP INDEX IF EXISTS ix_rnc_sequence_regions_active__urs_taxid;
 
-REFRESH MATERIALIZED VIEW rnc_sequence_regions_active
+REFRESH MATERIALIZED VIEW rnc_sequence_regions_active;
 
 CREATE INDEX ix_rnc_sequence_regions_active__urs_taxid on rnc_sequence_regions_active (urs_taxid);
 
