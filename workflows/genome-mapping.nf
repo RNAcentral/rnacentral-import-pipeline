@@ -134,7 +134,7 @@ process blat_index {
   tuple val(species), val(assembly), path("${species}_${assembly}.fa")
 
   output:
-  tuple val(species), val(assembly), path("${species}_${assembly}.{.2bit,ooc}")
+  tuple val(species), val(assembly), path("${species}_${assembly}.{2bit,ooc}")
 
   """
   faToTwoBit -noMask ${species}_${assembly}.fa ${species}_${assembly}.2bit
