@@ -64,8 +64,8 @@ def json_lineage_tree(xrefs) -> str:
                 taxids[xref[0].split("; ")[-1]] = xref[1]
         else:
             for xref in xrefs:
-                lineages.add(xref.accession.classification)
-                taxids[xref.accession.classification.split("; ")[-1]] = xref.taxid
+                lineages.add(xref.accession.lineage)
+                taxids[xref.accession.lineage.split("; ")[-1]] = xref.taxid
 
     def build_nested_dict_helper(path, text, container):
         """Recursive function that builds the nested dictionary."""
@@ -144,7 +144,7 @@ def lineage(conn, db_id: int):
 
     with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
         cur.execute(LINEAGE_QUERY.format(dbid=db_id))
-        data = [(r["classification"], r["taxid"]) for r in cur]
+        data = [(r["lineage"], r["taxid"]) for r in cur]
         return json_lineage_tree(data)
 
 
