@@ -128,7 +128,8 @@ process download_genome {
 
 process blat_index {
   tag { species }
-  memory { params.genome_mapping.download_genome.directives.memory }
+  memory { params.genome_mapping.download_genome.directives.memory * task.attempt }
+  errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'terminate' }
 
   input:
   tuple val(species), val(assembly), path("${species}_${assembly}.fa")
