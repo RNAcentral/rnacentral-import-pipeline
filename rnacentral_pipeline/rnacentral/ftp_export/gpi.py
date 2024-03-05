@@ -13,52 +13,31 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import csv
 import collections as coll
-from pathlib import Path
 import typing as ty
 
 import attr
-from attr.validators import instance_of as is_a
 import psycopg2
 import psycopg2.extras
-
-MIRNA_QUERY = """
-SELECT
-    t1.upi as precursor, t4.upi as mature, t1.taxid
-FROM xref t1
-INNER JOIN rnc_accessions t2
-ON (t1.ac = t2.accession)
-INNER JOIN rnc_accessions t3
-ON (t2.external_id = t3.external_id)
-INNER JOIN xref t4
-ON (t3.accession = t4.ac)
-WHERE
-    t1.dbid = 4
-    AND t1.deleted = 'N'
-    AND t2.accession != t3.accession
-    AND t2.feature_name = 'precursor_RNA'
-    AND t3.feature_name != 'precursor_RNA'
-    AND t4.dbid = t1.dbid
-    AND t1.upi != t4.upi
-    AND t1.taxid = t4.taxid
-"""
-
-GENERIC_QUERY = """
-SELECT upi, taxid, description, rna_type
-FROM rnc_rna_precomputed
-WHERE taxid IS NOT NULL
-AND rna_type IS NOT NULL
-AND description IS NOT NULL
-AND is_active = true
-"""
+from attr.validators import instance_of as is_a
+from attr.validators import optional
+from pypika import CustomFunction, Query, Table
+from pypika import functions as fn
 
 
 @attr.s()
 class GpiEntry:
-    urs_taxid = attr.ib(validator=is_a(str))
-    description = attr.ib(validator=is_a(str))
-    rna_type = attr.ib(validator=is_a(str))
+    """
+    This represents a single entry in a GPI file. GPI files are documented
+    here:
+
+    https://geneontology.org/docs/gene-product-information-gpi-format/
+    """
+
+    urs_taxid: str = attr.ib(validator=is_a(str))
+    description: str = attr.ib(validator=is_a(str))
+    rna_type: str = attr.ib(validator=is_a(str))
+    symbol: str | None = attr.ib(validator=optional(is_a(str)))
     precursors: ty.Set[str] = attr.ib(validator=is_a(set))
 
     @property
@@ -68,31 +47,31 @@ class GpiEntry:
     def database(self) -> str:
         return "RNAcentral"
 
-    def db_object_id(self):
+    def db_object_id(self) -> str:
         return self.urs_taxid
 
-    def db_object_symbol(self):
-        return ""
+    def db_object_symbol(self) -> str:
+        return self.symbol or ""
 
-    def db_object_name(self):
+    def db_object_name(self) -> str:
         return self.description.replace("\t", " ")
 
-    def db_object_synonym(self):
+    def db_object_synonym(self) -> str:
         return ""
 
-    def db_object_type(self):
+    def db_object_type(self) -> str:
         return self.rna_type
 
-    def taxon(self):
+    def taxon(self) -> str:
         return f"taxon:{self.taxid}"
 
-    def parent_object_id(self):
+    def parent_object_id(self) -> str:
         return ""
 
-    def db_xref(self):
+    def db_xref(self) -> str:
         return ""
 
-    def gene_product_properties(self):
+    def gene_product_properties(self) -> str:
         if not self.precursors:
             return ""
         return f"precursor_rna={','.join(self.precursors)}".replace("\t", " ")
@@ -112,26 +91,88 @@ class GpiEntry:
         ]
 
 
-def get_generic(conn, precursors) -> ty.Iterable[GpiEntry]:
+def generic_query() -> Query:
+    pre = Table("rnc_rna_precomputed")
+    ont = Table("ontology_terms")
+    so_rna_type = fn.Coalesce(pre.assigned_so_rna_type, pre.so_rna_type)
+    return (
+        Query.from_(pre)
+        .select(pre.id, pre.taxid, pre.description, ont.name.as_("rna_type"))
+        .join(ont)
+        .on(ont.ontology_term_id == so_rna_type)
+        .where((pre.taxid != None) and (pre.is_active == True))
+    )
+
+
+# select
+# 	source_urs_taxid,
+# 	target_urs_taxid,
+# 	relationship_type,
+# 	acc.optional_id as symbol
+# from rnc_related_sequences related
+# join rnc_accessions acc on acc.accession = related.source_accession and acc."database" = 'MIRBASE'
+# where
+# 	exists (select 1 from xref where xref.deleted = 'N' and xref.ac = related.source_accession)
+# 	and relationship_type in ('precursor')
+# ;
+
+
+def mirbase_info_query() -> Query:
+    xref = Table("xref")
+    related = Table("rnc_related_sequences")
+    acc = Table("rnc_accessions")
+    exists_query = (
+        Query.from_(xref)
+        .select(xref.id)
+        .where((xref.deleted == "N") & (xref.ac == related.source_accession))
+    )
+    exists = CustomFunction("EXISTS", ["query"])
+
+    return (
+        Query.from_(related)
+        .select(
+            related.source_urs_taxid,
+            related.target_urs_taxid,
+            related.relationship_type,
+            acc.optional_id.as_("symbol"),
+        )
+        .join(acc)
+        .on((acc.accession == related.source_accession) & (acc.database == "MIRBASE"))
+        .where(related.relationship_type.isin(["precursor"]) & exists(exists_query))
+    )
+
+
+def get_generic(
+    conn, mirbase_info, generic_query=generic_query(), **kwargs
+) -> ty.Iterable[GpiEntry]:
     with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
-        cur.execute(GENERIC_QUERY)
+        cur.execute(str(generic_query))
         for result in cur:
-            upi_taxid = f"{result['upi']}_{result['taxid']}"
+            precursors = set()
+            symbol = None
+            if info := mirbase_info.get(result["id"], None):
+                precursors = info["precursors"]
+                assert len(info["symbol"]) <= 1, f"Multiple symbols for {result['id']}"
+                symbol = info["symbol"].pop()
             yield GpiEntry(
-                urs_taxid=upi_taxid,
+                urs_taxid=result["id"],
                 description=result["description"],
                 rna_type=result["rna_type"],
-                precursors=precursors.get(upi_taxid, set()),
+                symbol=symbol,
+                precursors=precursors,
             )
 
 
-def get_precusors(conn) -> ty.Dict[str, ty.List[str]]:
-    data = coll.defaultdict(set)
+def get_mirbase_info(
+    conn, mirbase_query: Query = mirbase_info_query(), **kwargs
+) -> ty.Dict[str, ty.List[str]]:
+    data = coll.defaultdict(lambda: coll.defaultdict(set))
     with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
-        cur.execute(MIRNA_QUERY)
+        cur.execute(str(mirbase_query))
         for result in cur:
-            urs_id = f"{result['mature']}_{result['taxid']}"
-            data[urs_id].add(result["precursor"])
+            urs_id = result["source_urs_taxid"]
+            data[urs_id]["precursors"].add(result["target_urs_taxid"])
+            data[urs_id]["symbol"].add(result["symbol"])
     return dict(data)
 
 
@@ -142,8 +183,16 @@ def write(results: ty.Iterable[GpiEntry], out: ty.IO):
         out.write("\n")
 
 
-def export(db_url: str, output: ty.IO):
+def load(conn, **kwargs) -> ty.Iterable[GpiEntry]:
+    precusors = get_mirbase_info(conn, **kwargs)
+    return get_generic(conn, precusors, **kwargs)
+
+
+def export(db_url: str, output: ty.IO, **kwargs):
+    """
+    Create a GPI file of for all active RNAcentral sequences. This will
+    generate a file formatted for version 1.2.
+    """
     with psycopg2.connect(db_url) as conn:
-        precusors = get_precusors(conn)
-        results = get_generic(conn, precusors)
+        results = load(conn)
         write(results, output)
