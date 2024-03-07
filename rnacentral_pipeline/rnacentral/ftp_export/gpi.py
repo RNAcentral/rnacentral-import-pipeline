@@ -100,7 +100,7 @@ def generic_query() -> Query:
         .select(pre.id, pre.taxid, pre.description, ont.name.as_("rna_type"))
         .join(ont)
         .on(ont.ontology_term_id == so_rna_type)
-        .where((pre.taxid != None) and (pre.is_active == True))
+        .where((pre.taxid.notnull()) & (pre.is_active == True))
     )
 
 
