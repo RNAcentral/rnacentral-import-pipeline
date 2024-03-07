@@ -7,7 +7,7 @@ SELECT
       'description', max(pre.short_description),
       'rna_type',  max(pre.rna_type),
       'databases', regexp_split_to_array(max(pre."databases"), ','),
-      'providing_databases', array_agg(ac.databases),
+      'providing_databases', array_agg(ac.database),
       'chromosome', max(regions.chromosome),
       'strand', max(regions.strand),
       'identity', max(regions.identity),
