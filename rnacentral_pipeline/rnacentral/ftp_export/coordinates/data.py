@@ -25,7 +25,7 @@ from attr.validators import optional
 from rnacentral_pipeline.databases.data import regions
 
 
-def clean_databases(raw):
+def lookup_databases(raw):
     lookup = {
         "ENA": "ENA",
         "RFAM": "Rfam",
@@ -86,6 +86,10 @@ def clean_databases(raw):
     return [lookup[d] for d in raw]
 
 
+def clean_databases(raw):
+    return [d.replace(" ", "_") for d in raw]
+
+
 @attr.s(hash=True, slots=True, frozen=True)
 class Region(object):
     region_id = attr.ib(validator=is_a(str), converter=str)
@@ -119,7 +123,7 @@ class Region(object):
         metadata = {
             "description": raw["description"],
             "rna_type": raw["rna_type"],
-            "providing_databases": clean_databases(raw["providing_databases"]),
+            "providing_databases": lookup_databases(raw["providing_databases"]),
             "databases": clean_databases(raw["databases"]),
         }
         if not metadata["providing_databases"]:
