@@ -7,7 +7,7 @@ SELECT
       'description', max(pre.short_description),
       'rna_type',  max(pre.rna_type),
       'databases', regexp_split_to_array(max(pre."databases"), ','),
-      'providing_databases', max(regions.providing_databases),
+      'providing_databases', array_agg(ac.databases),
       'chromosome', max(regions.chromosome),
       'strand', max(regions.strand),
       'identity', max(regions.identity),
@@ -21,6 +21,10 @@ ON
 JOIN rnc_sequence_exons exons
 ON
   exons.region_id = regions.id
+join rnc_accession_sequence_region sra
+	on sra.region_id = regions.id
+join rnc_accessions ac
+	on sra.accession = ac.accession
 WHERE
   pre.is_active = true
   AND regions.assembly_id = :'assembly_id'
