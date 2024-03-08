@@ -1,8 +1,8 @@
 CREATE TEMPORARY TABLE search_export_publication_counts
 AS
 SELECT
-  UPPER(d.primary_id),
-  SUM(j.hit_count)
+  UPPER(d.primary_id) as urs,
+  SUM(j.hit_count) as publication_count
 FROM litscan_job j
 JOIN litscan_database d
 ON d.job_id = j.job_id
