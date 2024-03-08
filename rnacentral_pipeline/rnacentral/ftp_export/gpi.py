@@ -16,16 +16,16 @@ limitations under the License.
 import collections as coll
 import typing as ty
 
-import attr
 import psycopg2
 import psycopg2.extras
+from attr import define
 from attr.validators import instance_of as is_a
 from attr.validators import optional
 from pypika import CustomFunction, Query, Table
 from pypika import functions as fn
 
 
-@attr.s()
+@define
 class GpiEntry:
     """
     This represents a single entry in a GPI file. GPI files are documented
@@ -34,11 +34,12 @@ class GpiEntry:
     https://geneontology.org/docs/gene-product-information-gpi-format/
     """
 
-    urs_taxid: str = attr.ib(validator=is_a(str))
-    description: str = attr.ib(validator=is_a(str))
-    rna_type: str = attr.ib(validator=is_a(str))
-    symbol: str | None = attr.ib(validator=optional(is_a(str)))
-    precursors: ty.Set[str] = attr.ib(validator=is_a(set))
+    urs_taxid: str
+    description: str
+    rna_type: str
+    symbol: str | None
+    precursors: ty.Set[str]
+    aliases: ty.List[str]
 
     @property
     def taxid(self) -> int:
@@ -57,7 +58,7 @@ class GpiEntry:
         return self.description.replace("\t", " ")
 
     def db_object_synonym(self) -> str:
-        return ""
+        return "|".join(self.aliases)
 
     def db_object_type(self) -> str:
         return self.rna_type
@@ -149,17 +150,20 @@ def get_generic(
         cur.execute(str(generic_query))
         for result in cur:
             precursors = set()
+            aliases = []
             symbol = None
             if info := mirbase_info.get(result["id"], None):
                 precursors = info["precursors"]
-                assert len(info["symbol"]) <= 1, f"Multiple symbols for {result['id']}"
-                symbol = info["symbol"].pop()
+                aliases = sorted(info["symbol"])
+                symbol = aliases.pop(0)
+            assert result["taxid"]
             yield GpiEntry(
                 urs_taxid=result["id"],
                 description=result["description"],
                 rna_type=result["rna_type"],
                 symbol=symbol,
                 precursors=precursors,
+                aliases=aliases,
             )
 
 

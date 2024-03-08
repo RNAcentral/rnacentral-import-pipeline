@@ -54,6 +54,7 @@ def entry(conn, urs_taxid: str) -> gpi.GpiEntry:
                 rna_type="miRNA",
                 symbol="hsa-miR-4691-3p",
                 precursors={"URS000075C981_9606"},
+                aliases=[],
             ),
         ),
         (
@@ -64,6 +65,29 @@ def entry(conn, urs_taxid: str) -> gpi.GpiEntry:
                 rna_type="miRNA",
                 symbol="mmu-miR-700-5p",
                 precursors={"URS000075A134_10090"},
+                aliases=[],
+            ),
+        ),
+        (
+            "URS0000D4EEDE_3880",
+            gpi.GpiEntry(
+                urs_taxid="URS0000D4EEDE_3880",
+                description="Medicago truncatula (barrel medic) mtr-miR5272c",
+                rna_type="miRNA",
+                symbol="mtr-miR5272a",
+                precursors={
+                    "URS0000D55C7C_3880",
+                    "URS0000D55814_3880",
+                    "URS0000D51472_3880",
+                    "URS0000D52D2C_3880",
+                    "URS0000D5012C_3880",
+                },
+                aliases=[
+                    "mtr-miR5272b",
+                    "mtr-miR5272c",
+                    "mtr-miR5272d",
+                    "mtr-miR5272e",
+                ],
             ),
         ),
     ],
