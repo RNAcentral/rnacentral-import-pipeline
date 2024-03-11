@@ -13,6 +13,5 @@ COPY (
   JOIN rnc_rna_precomputed pre
   ON
     pre.id = todo.urs_taxid
-  where pre.is_active
   ORDER BY todo.id
 ) TO STDOUT
