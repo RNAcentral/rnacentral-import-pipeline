@@ -21,7 +21,7 @@ from time import sleep
 import requests
 import simplejson
 
-TAX_URL = "https://www.ebi.ac.uk/ena/data/taxonomy/v1/taxon/tax-id/{taxon_id}"
+TAX_URL = "https://www.ebi.ac.uk/ena/taxonomy/rest/tax-id/{taxon_id}"
 
 SPECIES_URL = "https://www.ebi.ac.uk/ena/taxonomy/rest/any-name/{species}"
 
