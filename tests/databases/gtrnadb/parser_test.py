@@ -18,9 +18,9 @@ from pathlib import Path
 import attr
 import pytest
 
+import rnacentral_pipeline.databases.helpers.publications as pub
 from rnacentral_pipeline.databases import data
 from rnacentral_pipeline.databases.gtrnadb import parser
-import rnacentral_pipeline.databases.helpers.publications as pub
 
 
 @pytest.fixture(scope="module")
@@ -61,7 +61,6 @@ def test_it_generates_correct_entries(other_euk):
             chromosome="scaffold00844",
             species="Aplysia californica",
             # common_name=None,
-            anticodon="AGC",
             lineage="Eukaryota; Metazoa; Spiralia; Lophotrochozoa; Mollusca; Gastropoda; Heterobranchia; Euthyneura; Tectipleura; Aplysiida; Aplysioidea; Aplysiidae; Aplysia; Aplysia californica",
             gene="tRNA-Ala-AGC-1-1",
             gene_synonyms=["scaffold00844.trna1-AlaAGC"],

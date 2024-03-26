@@ -18,11 +18,12 @@ select
     'sequence_stop', hits.sequence_stop
   )
 FROM precompute_urs_taxid todo
-JOIN rfam_model_hits hits 
-ON 
+JOIN rfam_model_hits hits
+ON
     hits.upi = todo.urs
-JOIN rfam_models models 
-ON 
+JOIN rfam_models models
+ON
     models.rfam_model_id = hits.rfam_model_id
+where models.so_rna_type is not NULL
 order by todo.precompute_urs_id, todo.id
 ) TO STDOUT

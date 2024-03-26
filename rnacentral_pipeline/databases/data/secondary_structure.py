@@ -13,6 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import typing as ty
+
 import attr
 from attr.validators import instance_of as is_a
 
@@ -25,7 +27,7 @@ class SecondaryStructure(object):
     This represents the secondary structure from GtRNAdb.
     """
 
-    dot_bracket = attr.ib(validator=is_a(str))
+    dot_bracket: str = attr.ib(validator=is_a(str))
 
     @classmethod
     def empty(cls):
@@ -34,23 +36,23 @@ class SecondaryStructure(object):
         """
         return cls(dot_bracket="")
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
         """
         Check if this is empty.
         """
         return bool(self.dot_bracket)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.dot_bracket)
 
     @property
-    def md5(self):
+    def md5(self) -> str:
         """
         Compute the MD5 of the dot_bracket string.
         """
         return md5(self.dot_bracket)
 
-    def writeable(self, accession):
+    def writeable(self, accession: str) -> ty.Iterable[ty.List[str]]:
         if not self.dot_bracket:
             return
 

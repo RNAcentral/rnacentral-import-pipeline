@@ -94,10 +94,6 @@ def note(data: ty.Dict[str, str]):
     return result
 
 
-def experiment(data) -> str:
-    return " ".join(p.external_id for p in references(data))
-
-
 def description(family, data: ty.Dict[str, str]) -> str:
     return f"{species(data)} {product(family)}"
 

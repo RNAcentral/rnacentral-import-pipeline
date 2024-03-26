@@ -122,8 +122,6 @@ process text_mining_query {
   path("publication-count.json")
 
   """
-  curl "$params.export.search.text_mining" > counts.csv
-  psql -v ON_ERROR_STOP=1 -c "\\copy search_export_publication_counts from 'counts.csv'" "$PGDATABASE"
   psql -v ON_ERROR_STOP=1 -f "$script" "$PGDATABASE" > raw.json
   search-export group publication-count raw.json ${max_count} publication-count.json
   """

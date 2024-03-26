@@ -19,9 +19,8 @@ import attr
 import pytest
 
 from rnacentral_pipeline.databases import data as dat
-from rnacentral_pipeline.databases.helpers import publications as pub
-
 from rnacentral_pipeline.databases.generic import v1
+from rnacentral_pipeline.databases.helpers import publications as pub
 
 
 @pytest.mark.parametrize(
@@ -164,10 +163,7 @@ def test_can_correctly_parse_data():
             species="Drosophila melanogaster",
             common_name="fruit fly",
             lineage=(
-                "Eukaryota; Metazoa; Ecdysozoa; Arthropoda; Hexapoda; "
-                "Insecta; Pterygota; Neoptera; Holometabola; Diptera; Brachycera; "
-                "Muscomorpha; Ephydroidea; Drosophilidae; Drosophila; Sophophora; "
-                "Drosophila melanogaster"
+                "Eukaryota; Metazoa; Ecdysozoa; Arthropoda; Hexapoda; Insecta; Pterygota; Neoptera; Endopterygota; Diptera; Brachycera; Muscomorpha; Ephydroidea; Drosophilidae; Drosophila; Sophophora; Drosophila melanogaster"
             ),
             gene="FBgn0267497",
             locus_tag="Dmel_CR45837",

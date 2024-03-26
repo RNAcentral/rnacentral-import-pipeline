@@ -18,19 +18,21 @@ import logging
 import typing as ty
 
 import attr
-from attr.validators import instance_of as is_a
-from pypika import Table, Query, Order, analytics as an, functions as fn
 import psycopg2
 import psycopg2.extras
+from attr.validators import instance_of as is_a
+from pypika import Order, Query, Table
+from pypika import analytics as an
+from pypika import functions as fn
 
 LOGGER = logging.getLogger(__name__)
 
 
 LINEAGE_QUERY = """
-SELECT distinct classification, taxid
-from xref, rnc_accessions
+SELECT distinct lineage, taxid
+from xref, rnc_taxonomy
 WHERE
-    xref.ac = rnc_accessions.accession
+    xref.taxid = rnc_taxonomy.id
     and xref.dbid = {dbid}
     and xref.deleted = 'N'
 """
@@ -62,8 +64,8 @@ def json_lineage_tree(xrefs) -> str:
                 taxids[xref[0].split("; ")[-1]] = xref[1]
         else:
             for xref in xrefs:
-                lineages.add(xref.accession.classification)
-                taxids[xref.accession.classification.split("; ")[-1]] = xref.taxid
+                lineages.add(xref.accession.lineage)
+                taxids[xref.accession.lineage.split("; ")[-1]] = xref.taxid
 
     def build_nested_dict_helper(path, text, container):
         """Recursive function that builds the nested dictionary."""
@@ -139,9 +141,10 @@ def json_lineage_tree(xrefs) -> str:
 
 
 def lineage(conn, db_id: int):
+
     with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
         cur.execute(LINEAGE_QUERY.format(dbid=db_id))
-        data = [(r["classification"], r["taxid"]) for r in cur]
+        data = [(r["lineage"], r["taxid"]) for r in cur]
         return json_lineage_tree(data)
 
 
@@ -159,7 +162,7 @@ def lengths(conn, db_id: int) -> ty.Dict[str, ty.Any]:
             .on(xref.upi == rna.upi)
         )
         cursor.execute(str(query))
-        r = {k:v if v is not None else 0 for k,v in dict(cursor.fetchone()).items()}
+        r = {k: v if v is not None else 0 for k, v in dict(cursor.fetchone()).items()}
 
         return r
 

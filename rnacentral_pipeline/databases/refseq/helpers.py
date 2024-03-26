@@ -17,9 +17,8 @@ import re
 
 import attr
 
-from rnacentral_pipeline.databases import data as dat
-
 import rnacentral_pipeline.databases.helpers.embl as embl
+from rnacentral_pipeline.databases import data as dat
 
 URL = "https://www.ncbi.nlm.nih.gov/nuccore/{primary_id}.{version}"
 
@@ -146,17 +145,11 @@ def as_entry(record, source, feature):
         locus_tag=embl.locus_tag(feature),
         product=embl.product(feature),
         parent_accession=parent_accession(record),
-        project=embl.project(record),
-        keywords=embl.keywords(record),
         organelle=embl.organelle(source),
-        experiment=embl.experiment(feature),
         inference=embl.inference(feature),
-        old_locus_tag=embl.old_locus_tag(feature),
-        operon=embl.operon(feature),
         standard_name=embl.standard_name(feature),
         description=description(record, feature),
         mol_type=embl.mol_type(source),
-        is_composite="N",
         gene_synonyms=embl.gene_synonyms(feature),
         references=embl.references(record),
     )

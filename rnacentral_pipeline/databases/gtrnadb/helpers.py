@@ -17,14 +17,13 @@ limitations under the License.
 import re
 import typing as ty
 
-import six
-
 import requests
+import six
 from sqlitedict import SqliteDict
 
-from rnacentral_pipeline.databases import data
 import rnacentral_pipeline.databases.helpers.phylogeny as phy
 import rnacentral_pipeline.databases.helpers.publications as pub
+from rnacentral_pipeline.databases import data
 from rnacentral_pipeline.databases.ncbi.taxonomy import TaxonomyEntry
 
 
@@ -221,6 +220,7 @@ def features(raw):
             feature_type="anticodon",
             location=anti["indexes"],
             sequence=anti["sequence"],
+            provider="GTRNADB",
             metadata={
                 "isotype": raw["sequenceFeatures"]["isotype"],
                 "sequence": anti["sequence"],

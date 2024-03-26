@@ -13,18 +13,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import attr
 from io import open
 from pathlib import Path
 
+import attr
 import pytest
 
-from rnacentral_pipeline.databases.data import Entry, Reference
 import rnacentral_pipeline.databases.helpers.publications as pubs
-
-from rnacentral_pipeline.databases.ena import parser
-from rnacentral_pipeline.databases.ena import ribovore
-from rnacentral_pipeline.databases.ena import context
+from rnacentral_pipeline.databases.data import Entry, Reference
+from rnacentral_pipeline.databases.ena import context, parser, ribovore
 
 
 def simple_parse(path):
@@ -95,13 +92,8 @@ def test_creates_simple_entry():
             ),
             product="tRNA-Pro",
             parent_accession="AACD01000002",
-            project="PRJNA130",
-            keywords="WGS",
-            division=None,
-            # division='FUN',
             description="Aspergillus nidulans FGSC A4 tRNA-Pro",
             mol_type="genomic DNA",
-            is_composite="N",
             references=[
                 pubs.reference(16372000),
                 Reference(
@@ -229,15 +221,10 @@ def test_can_find_correct_ncRNA_type():
             ),
             product="RybB RNA",
             parent_accession="ABXV02000002",
-            keywords="WGS",
-            division=None,
-            # division='PRO',
             description="Providencia rustigianii DSM 4541 RybB RNA",
             mol_type="genomic DNA",
-            is_composite="N",
             inference="nucleotide motif:Rfam:RF00110",
             locus_tag="PROVRUST_04548",
-            project="PRJNA28651",
             references=[
                 Reference(
                     authors=(
@@ -318,8 +305,6 @@ def test_can_parse_all_example_entries():
             ),
             species="Homo sapiens",
             common_name="human",
-            division=None,
-            # division='HUM',
             description="Homo sapiens (human) miscellaneous RNA",
             parent_accession="AB330787",
             note_data={
@@ -329,7 +314,6 @@ def test_can_parse_all_example_entries():
                 ]
             },
             mol_type="other RNA",
-            is_composite="N",
         )
     )
 
@@ -353,8 +337,6 @@ def test_can_parse_all_example_entries():
             ),
             species="Homo sapiens",
             common_name="human",
-            division=None,
-            # division='HUM',
             description="Homo sapiens (human) miscellaneous RNA",
             parent_accession="AB330786",
             note_data={
@@ -364,7 +346,6 @@ def test_can_parse_all_example_entries():
                 ]
             },
             mol_type="other RNA",
-            is_composite="N",
         )
     )
 
@@ -388,8 +369,6 @@ def test_can_parse_all_example_entries():
             ),
             species="Homo sapiens",
             common_name="human",
-            division=None,
-            # division='HUM',
             description="Homo sapiens (human) miscellaneous RNA",
             note_data={
                 "text": [
@@ -399,8 +378,6 @@ def test_can_parse_all_example_entries():
             },
             parent_accession="AB330785",
             mol_type="other RNA",
-            is_composite="N",
-            keywords="RNAcentral; Third Party Annotation; TPA; TPA:specialist_db",
         )
     )
 
@@ -424,19 +401,10 @@ def test_can_parse_all_example_entries():
             ),
             species="Homo sapiens",
             common_name="human",
-            division=None,
-            # division='HUM',
-            project="PRJEB4451",
             description="Homo sapiens (human) microRNA hsa-miR-1273g-3p",
             product="microRNA hsa-miR-1273g-3p",
-            experiment="EXISTENCE:RNA-seq ECO0000205",
             mol_type="transcribed RNA",
             gene="hsa-miR-1273g-3p",
-            keywords=(
-                "RNAcentral; TPA; TPA:specialist_db; Transcriptome Shotgun "
-                "Assembly; TSA"
-            ),
-            is_composite="N",
             parent_accession="HAAO01001079",
             references=[
                 Reference(
@@ -468,16 +436,11 @@ def test_can_parse_all_example_entries():
             xref_data={"ena_refs": {"TMRNA-WEBSITE": ("Campy_jejun_700819", None)}},
             lineage="unclassified sequences; unidentified",
             species="unidentified",
-            division=None,
-            # division='UNC',
-            keywords="RNAcentral; TPA; TPA:specialist_db",
             description="unidentified transfer-messenger mRNA Campy_jejun_700819",
             product="transfer-messenger mRNA Campy_jejun_700819",
             gene="tmRNA Campy_jejun_700819",
-            project="PRJEB4570",
             mol_type="genomic DNA",
             parent_accession="HG519048",
-            is_composite="N",
             references=[
                 Reference(
                     authors="",
@@ -546,57 +509,6 @@ def test_can_handle_file_with_invalid_fields():
     assert data.product == "16S ribosomal RNA"
 
 
-def test_can_parse_out_anticodon_from_gene():
-    raw = Path("data/ena/trna-with-anticodon.embl")
-    data = next(simple_parse(raw))
-
-    assert data.accession == "HF536610.1:1288..1686:tRNA"
-    assert data.ncbi_tax_id == 188169
-    assert data.product == "transfer RNA Leu"
-    assert data.gene == "tRNA-Leu (UAA)"
-    assert data.mol_type == "genomic DNA"
-    assert data.anticodon == "UAA"
-    assert data.organelle == "plastid:chloroplast"
-
-
-def test_can_parse_anticodon_from_gtrnadb_stype_gene():
-    raw = Path("data/ena/trna-with-anticodon.embl")
-    data = list(simple_parse(raw))[1]
-
-    assert data.accession == "LK008175.1:1..73:tRNA"
-    assert data.ncbi_tax_id == 411154
-    assert data.mol_type == "genomic DNA"
-    assert data.anticodon == "GCC"
-    assert data.product == "transfer RNA-Gly (GCC)"
-    assert data.gene == "tRNA-Gly-GCC-1-1"
-    assert data.standard_name == "tRNA-Gly (GCC)"
-    assert data.inference == "ab initio prediction:tRNAscan-SE:1.21"
-    assert data.note_data == {
-        "ontology": [
-            "ECO:0000202",
-            "GO:0030533",
-            "SO:0000253",
-        ],
-        "text": [
-            "Covariance Model: Bacteria; CM Score: 87.61",
-            "Legacy ID: chr.trna3-GlyGCC",
-        ],
-    }
-
-
-def test_can_parse_anticodon_from_note():
-    raw = Path("data/ena/anticodon-in-note.embl")
-    data = next(simple_parse(raw))
-
-    assert data.accession == "CP000102.1:337323..337406:tRNA"
-    assert data.note_data == {"text": ["codon recognized: CUA"]}
-    assert data.anticodon == "UAG"
-    assert data.operon == "trnA"
-    assert data.product == "tRNA-Leu"
-    assert data.gene is None
-    assert data.locus_tag == "Msp_0274"
-
-
 @pytest.mark.parametrize(
     "filename,count",
     [
@@ -631,27 +543,6 @@ def test_can_parse_function():
     assert data[2].rna_type == "SO:0000655"
 
 
-def test_can_parse_old_locus_tag():
-    raw = Path("data/ena/old_locus_tag.embl")
-    data = next(simple_parse(raw))
-
-    assert data.accession == "AL591985.1:1315182..1315258:tRNA"
-    assert data.parent_accession == "AL591985"
-    assert data.project == "PRJNA19"
-    assert data.old_locus_tag == "SMb21712"
-    assert data.locus_tag == "SM_b21712"
-    assert data.gene == "tRNA-ARG_CCG"
-    assert data.anticodon == "CCG"
-
-
-def test_can_parse_operons():
-    raw = Path("data/ena/operons.embl")
-    data = next(simple_parse(raw))
-
-    assert data.accession == "CP000102.1:1163547..1163662:rRNA"
-    assert data.operon == "rrnD"
-
-
 def test_can_parse_gene_synonyms():
     raw = Path("data/ena/gene_synonym.embl")
     data = next(simple_parse(raw))
@@ -662,7 +553,6 @@ def test_can_parse_gene_synonyms():
     assert data.mol_type == "genomic DNA"
     assert data.gene == "ryeA"
     assert data.product == "small RNA"
-    assert data.project == "PRJNA20079"
 
 
 @pytest.mark.parametrize(
@@ -697,10 +587,6 @@ def test_can_extract_references_from_experiment(pmid):
 
     assert data.accession == "HG975378.1:1..299:ncRNA"
     assert data.rna_type == "SO:0000590"
-    assert (
-        data.experiment
-        == "EXISTENCE: lncRNAdb literature review [PMID: 12244299,6196367,6181418,6802847,3403542,6084597,10924331, 7528809,7529207,1704372,20610725,18617187,17881443, 17164479,8389475,10834842,10684931,15611297,20668672, 911771,6209580]"
-    )
     assert data.gene == "RN7SL1"
     assert data.mol_type == "transcribed RNA"
     assert data.product == "Small nucleolar RNA 7SL"
@@ -726,10 +612,6 @@ def test_can_extract_references_from_note_or_experiment(pmid):
     }
     assert data.product == "T-box"
     assert data.locus_tag == "BSU_misc_RNA_57"
-    assert (
-        data.experiment
-        == "publication(s) with functional evidences, PMID:1379177, 8288542, 9098041, 9826762, 12165569, 12547201, 1317842, 15831787"
-    )
     assert data.function == "16.3: Control"
     assert data.gene == "tboTB"
     assert pubs.reference(pmid) in data.references
@@ -746,11 +628,9 @@ def test_can_handle_unclosed_parens():
     assert data.product == "transfer RNA Serine"
     assert data.species == "Metacrangonyx sp. 3 ssp. 1 MDMBR-2012"
     assert data.organelle == "mitochondrion"
-    assert data.project is None
     assert (
         data.description == "Metacrangonyx sp. 3 ssp. 1 MDMBR-2012 transfer RNA Serine"
     )
-    assert data.anticodon == "(pos:HE860504.1: complement(14629..14631),aa:Ser)"
 
 
 def test_can_extract_xrefs():

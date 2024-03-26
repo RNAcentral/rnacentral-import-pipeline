@@ -1,3 +1,5 @@
+BEGIN;
+
 -- Create a table for the loaded assemblies
 CREATE TEMP TABLE mapped_assemblies AS SELECT DISTINCT assembly_id FROM load_genome_mapping;
 CREATE INDEX ix_mapped_assemblies ON mapped_assemblies (assembly_id);
@@ -135,3 +137,12 @@ JOIN ensembl_assembly ensembl ON ensembl.assembly_id = load.assembly_id
 ;
 
 DROP TABLE load_genome_mapping;
+
+-- Update rnc_sequence_regions_active
+DROP INDEX IF EXISTS ix_rnc_sequence_regions_active__urs_taxid;
+
+REFRESH MATERIALIZED VIEW rnc_sequence_regions_active
+
+CREATE INDEX ix_rnc_sequence_regions_active__urs_taxid on rnc_sequence_regions_active (urs_taxid);
+
+COMMIT;

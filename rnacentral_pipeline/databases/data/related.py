@@ -14,6 +14,7 @@ limitations under the License.
 """
 
 import json
+import typing as ty
 
 import attr
 from attr.validators import instance_of as is_a
@@ -49,13 +50,13 @@ def as_relationship_type(value):
 
 @attr.s(frozen=True)
 class RelatedCoordinate(object):
-    start = attr.ib(validator=is_a(int))
-    stop = attr.ib(validator=is_a(int))
+    start: int = attr.ib(validator=is_a(int))
+    stop: int = attr.ib(validator=is_a(int))
 
 
 @attr.s(frozen=True)
 class RelatedEvidence(object):
-    methods = attr.ib(validator=is_a(list))
+    methods: ty.List[str] = attr.ib(validator=is_a(list))
 
     @classmethod
     def empty(cls):
@@ -64,13 +65,15 @@ class RelatedEvidence(object):
 
 @attr.s(frozen=True)
 class RelatedSequence(object):
-    sequence_id = attr.ib(validator=is_a(str))
-    relationship = attr.ib(
+    sequence_id: str = attr.ib(validator=is_a(str))
+    relationship: str = attr.ib(
         validator=is_a(str),
         converter=as_relationship_type,
     )
-    coordinates = attr.ib(validator=is_a(list), default=attr.Factory(list))
-    evidence = attr.ib(
+    coordinates: ty.List[RelatedCoordinate] = attr.ib(
+        validator=is_a(list), default=attr.Factory(list)
+    )
+    evidence: RelatedEvidence = attr.ib(
         validator=is_a(RelatedEvidence), default=attr.Factory(RelatedEvidence.empty)
     )
 
@@ -99,7 +102,7 @@ class RelatedSequence(object):
 
 @attr.s()
 class RelatedDisease(object):
-    disease = attr.ib(validator=is_a(str))
+    disease: str = attr.ib(validator=is_a(str))
 
     def writeable(self, accession):
         yield [

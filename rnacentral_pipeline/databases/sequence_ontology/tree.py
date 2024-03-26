@@ -15,18 +15,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import re
 import logging
+import re
 import typing as ty
 from functools import lru_cache
 
 import attr
-from attr.validators import instance_of as is_a
-
-from sqlitedict import SqliteDict
 import networkx as nx
 import obonet
-
+from attr.validators import instance_of as is_a
+from sqlitedict import SqliteDict
 
 REMOTE_ONTOLOGY = "https://raw.githubusercontent.com/The-Sequence-Ontology/SO-Ontologies/master/Ontology_Files/so-simple.obo"
 
@@ -37,6 +35,7 @@ BASE_SO_TERMS = [
     "intron",
     "mRNA_region",
     "transcript",
+    "ncRNA_gene",
 ]
 
 RENAME = {
