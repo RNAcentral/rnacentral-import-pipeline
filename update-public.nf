@@ -46,10 +46,11 @@ process populate_public {
   script:
   public_db = params.dbs.pub
   """
-  export PGPASSWORD='\$PUBLIC_PASSWORD'
   psql -c "set maintenance_work_mem='1GB'" \$PUBLIC
   psql -c 'drop schema if exists rnacen cascade' \$PUBLIC
+  psql -c "ALTER ROLE rnacen SET statement_timeout = '2d';" \$PUBLIC
 
+  export PGPASSWORD='${public_db.password}'
   /usr/pgsql-10/bin/pg_restore -x -h ${public_db.host} -U ${public_db.user} -d ${public_db.db_name} -j 2 $dump_file
 
   psql -c 'revoke usage on schema rnacen from public' \$PUBLIC
