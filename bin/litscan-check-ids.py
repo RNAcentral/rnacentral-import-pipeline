@@ -49,7 +49,7 @@ def main(database, filename, output):
     Check ids and create file that will be used by RNAcentral-references.
     """
     remove_dot = ["ensembl", "ensembl_gencode", "ensembl_metazoa"]
-    split_on_comma = ["flybase", "hgnc", "pombase", "refseq"]
+    split_on_comma = ["flybase", "hgnc", "lncipedia", "pombase", "refseq"]
     rfam_ignore = [
         "30_255", "30_292", "5S_rRNA", "5_8S_rRNA", "6A", "6S", "7SK", "C4", "CRISPR-DR10", "CRISPR-DR11",
         "CRISPR-DR12", "CRISPR-DR13", "CRISPR-DR14", "CRISPR-DR15", "CRISPR-DR16", "CRISPR-DR17", "CRISPR-DR18",

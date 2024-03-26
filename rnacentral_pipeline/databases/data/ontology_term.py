@@ -13,23 +13,25 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import typing as ty
+
 import attr
 from attr.validators import instance_of as is_a
 from attr.validators import optional
 
 
 @attr.s(frozen=True)
-class OntologyTerm(object):
+class OntologyTerm:
     """
     This represents a single term in a specific ontology.
     """
 
-    ontology = attr.ib(validator=is_a(str), converter=str)
-    ontology_id = attr.ib(validator=is_a(str), converter=str)
-    name = attr.ib(validator=is_a(str), converter=str)
-    definition = attr.ib(validator=optional(is_a(str)))
-    synonyms = attr.ib(validator=is_a(list))
-    insdc_qualifier = attr.ib(
+    ontology: str = attr.ib(validator=is_a(str), converter=str)
+    ontology_id: str = attr.ib(validator=is_a(str), converter=str)
+    name: str = attr.ib(validator=is_a(str), converter=str)
+    definition: ty.Optional[str] = attr.ib(validator=optional(is_a(str)))
+    synonyms: ty.List[str] = attr.ib(validator=is_a(list))
+    insdc_qualifier: ty.Optional[str] = attr.ib(
         validator=optional(is_a(str)),
         default=None,
     )

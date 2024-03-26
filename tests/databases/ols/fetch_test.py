@@ -39,7 +39,7 @@ def test_can_get_correct_base_url(ontology, url):
     [
         (
             "GO:0043226",
-            r"https://www.ebi.ac.uk/ols/api/ontologies/GO/terms/http%253A%252F%252Fpurl.obolibrary.org%252Fobo%252FGO_0043226",
+            r"https://www.ebi.ac.uk/ols4/api/ontologies/GO/terms/http%253A%252F%252Fpurl.obolibrary.org%252Fobo%252FGO_0043226",
         ),
     ],
 )
@@ -84,9 +84,10 @@ def test_can_fetch_an_so_term():
             "or act as translational repressors."
         ),
         synonyms=[
-            "small temporal RNA",
+            "INSDC_feature:ncRNA",
             "micro RNA",
             "microRNA",
+            "small temporal RNA",
             "stRNA",
         ],
         insdc_qualifier="miRNA",

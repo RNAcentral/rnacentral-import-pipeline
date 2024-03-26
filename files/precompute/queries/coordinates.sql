@@ -11,8 +11,8 @@ select
     'stop', region.region_stop
   )
 FROM precompute_urs_taxid todo
-JOIN rnc_sequence_regions region 
-ON 
+JOIN rnc_sequence_regions_active region
+ON
   region.urs_taxid = todo.urs_taxid
 order by todo.precompute_urs_id, todo.id
 ) TO STDOUT

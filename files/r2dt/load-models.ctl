@@ -44,7 +44,7 @@ $$
 
 AFTER LOAD DO
 $$
-INSERT INTO rnc_secondary_structure_layout_models (
+INSERT INTO r2dt_models (
     model_name,
     taxid,
     cellular_location,

@@ -14,7 +14,6 @@ limitations under the License.
 """
 
 import typing as ty
-import collections as coll
 
 import attr
 from attr.validators import instance_of as is_a
@@ -23,9 +22,9 @@ from attr.validators import optional
 
 @attr.s()
 class DBRef(object):
-    database = attr.ib(validator=is_a(str))
-    primary_id = attr.ib(validator=is_a(str))
-    secondary_id = attr.ib(validator=optional(is_a(str)))
+    database: str = attr.ib(validator=is_a(str))
+    primary_id: str = attr.ib(validator=is_a(str))
+    secondary_id: ty.Optional[str] = attr.ib(validator=optional(is_a(str)))
 
 
 def parse_line(line: str) -> DBRef:

@@ -20,10 +20,10 @@ import attr
 import pytest
 
 from rnacentral_pipeline.databases.data import Entry
-from rnacentral_pipeline.databases.ena import mapping as tpa
-from rnacentral_pipeline.databases.helpers.hashes import md5
-from rnacentral_pipeline.databases.ena import parser
 from rnacentral_pipeline.databases.ena import context
+from rnacentral_pipeline.databases.ena import mapping as tpa
+from rnacentral_pipeline.databases.ena import parser
+from rnacentral_pipeline.databases.helpers.hashes import md5
 
 
 def parse(path):
@@ -188,30 +188,18 @@ def test_can_transform_correct_lncrnadb_entry():
             },
             optional_id="Kcnq1ot1",
             non_coding_id="HG975405.1:1..32753:ncRNA",
-            is_composite="Y",
             species="Homo sapiens",
-            division=None,
-            # division='HUM',
             lineage=(
                 "Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi;"
                 " Mammalia; Eutheria; Euarchontoglires; Primates; Haplorrhini; "
                 "Catarrhini; Hominidae; Homo; Homo sapiens"
             ),
             common_name="human",
-            project="PRJEB6238",
             product="Long non-coding sense-intronic RNA Kcnq1ot1",
             description="Homo sapiens (human) Long non-coding sense-intronic RNA Kcnq1ot1",
-            keywords="RNAcentral; TPA; TPA:specialist_db",
             parent_accession="HG975405",
             gene="Kncq1",
             mol_type="transcribed RNA",
-            experiment=(
-                "EXISTENCE: lncRNAdb literature review [PMID: "
-                "15340049,18299392,18951091,18848501,19144718,17917697, "
-                "20573698,10393948,15516932,17242189,10369866,11813134, "
-                "16702402,16575194,16965397,10958646,21345374,15590939, "
-                "15459184,21172659,21576366,22406755]"
-            ),
         )
     )
 
@@ -255,15 +243,10 @@ def test_can_transform_correct_srpdb_entry():
                 "Acinetobacter calcoaceticus/baumannii complex; "
                 "Acinetobacter baumannii ATCC 17978"
             ),
-            division=None,
-            # division='PRO',
-            keywords="RNAcentral; TPA; TPA:specialist_db",
             description="Acinetobacter baumannii ATCC 17978 signal recognition particle RNA",
             mol_type="transcribed RNA",
             gene="SRP RNA",
             non_coding_id="HG323367.1:1..116:ncRNA",
-            is_composite="Y",
-            project="PRJEB4384",
             parent_accession="HG323367",
             product="signal recognition particle RNA",
         )
@@ -305,16 +288,11 @@ def test_can_transform_correct_snopy_entry():
                 "Brassicaceae; Camelineae; Arabidopsis; Arabidopsis thaliana"
             ),
             common_name="thale cress",
-            division=None,
-            # division='PLN',
-            keywords="RNAcentral; TPA; TPA:specialist_db",
             mol_type="genomic DNA",
             gene="SnoR1b",
-            is_composite="Y",
             non_coding_id="LN809305.1:1..93:ncRNA",
             # experiment='EXISTENCE:Curator Inference ECO0000305',
             product="small nucleolar RNA SnoR1b",
-            project="PRJEB8122",
             parent_accession="LN809305",
         )
     )
@@ -357,10 +335,8 @@ def test_can_transform_correct_wormbase_entry():
             locus_tag="CELE_ZK643.8",
             gene="grl-25",
             optional_id="ZK643.8b",
-            is_composite="Y",
             non_coding_id="BX284603.4:8962295..8965569:misc_RNA",
             product="Non-coding transcript of protein-coding gene grl-25",
-            project="PRJNA13758",
             parent_accession="BX284603",
             standard_name="ZK643.8b",
         )

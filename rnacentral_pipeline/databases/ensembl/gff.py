@@ -42,6 +42,7 @@ SO_MAPPING = {
     "telomerase_RNA": "SO:0000390",
     "tmRNA": "SO:0000584",
     "transcript": "SO:0000655",
+    "processed_transcript": "SO:0001503",
 }
 
 IGNORED_TRANSCRIPTS = {

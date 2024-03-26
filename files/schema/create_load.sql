@@ -175,8 +175,7 @@ CREATE TABLE load_rnc_sequence_regions (
     exon_start int4,
     exon_stop int4,
     assembly_id varchar(255),
-    exon_count int,
-    providing_database text
+    exon_count int
 );
 
 DROP TABLE IF EXISTS load_rnc_related_sequences;

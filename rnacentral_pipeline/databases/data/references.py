@@ -15,20 +15,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import re
 import enum
+import re
 import typing as ty
 
 import attr
 from attr.validators import in_
-from attr.validators import optional
 from attr.validators import instance_of as is_a
-
+from attr.validators import optional
 from furl import furl
 
 from rnacentral_pipeline.databases.helpers.hashes import md5
-
-from . import utils
 
 
 @enum.unique
@@ -58,12 +55,12 @@ class Reference(object):
     files.
     """
 
-    authors = attr.ib(validator=is_a(str), converter=str)
-    location = attr.ib(validator=is_a(str), converter=str)
-    title = attr.ib(validator=optional(is_a(str)), converter=str)
-    pmid = attr.ib(validator=optional(is_a(int)))
-    doi = attr.ib(validator=optional(is_a(str)))
-    pmcid = attr.ib(validator=optional(is_a(str)), default=None)
+    authors: str = attr.ib(validator=is_a(str), converter=str)
+    location: str = attr.ib(validator=is_a(str), converter=str)
+    title: ty.Optional[str] = attr.ib(validator=optional(is_a(str)), converter=str)
+    pmid: ty.Optional[int] = attr.ib(validator=optional(is_a(int)))
+    doi: ty.Optional[str] = attr.ib(validator=optional(is_a(str)))
+    pmcid: ty.Optional[str] = attr.ib(validator=optional(is_a(str)), default=None)
 
     def md5(self):
         """
@@ -137,8 +134,8 @@ class Reference(object):
 
 @attr.s(frozen=True, hash=True)
 class IdReference(object):
-    namespace = attr.ib(validator=is_a(KnownServices))
-    external_id = attr.ib(validator=is_a(str))
+    namespace: KnownServices = attr.ib(validator=is_a(KnownServices))
+    external_id: str = attr.ib(validator=is_a(str))
 
     @classmethod
     def build(cls, ref_id) -> IdReference:

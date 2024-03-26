@@ -24,8 +24,8 @@ from attr.validators import instance_of as is_a
 
 from rnacentral_pipeline.databases.data import SequenceRegion
 from rnacentral_pipeline.databases.data.utils import as_so_term
-from rnacentral_pipeline.databases.helpers import embl
 from rnacentral_pipeline.databases.ensembl import helpers
+from rnacentral_pipeline.databases.helpers import embl
 
 LOGGER = logging.getLogger(__name__)
 
@@ -76,12 +76,12 @@ class TranscriptInfo:
 
 @attr.s()
 class FtpInfo:
-    division = attr.ib(validator=is_a(Division))
-    species = attr.ib(validator=is_a(str))
-    data_files = attr.ib(validator=is_a(str))
-    gff_file = attr.ib(validator=is_a(str))
+    division: Division = attr.ib(validator=is_a(Division))
+    species: str = attr.ib(validator=is_a(str))
+    data_files: str = attr.ib(validator=is_a(str))
+    gff_file: str = attr.ib(validator=is_a(str))
 
-    def writeable(self) -> ty.Tuple[str, str, str, str]:
+    def writeable(self, kind=None) -> ty.Tuple[str, str, str, str]:
         return (self.division.name, self.species, self.data_files, self.gff_file)
 
 

@@ -6,7 +6,7 @@ HAVING FIELDS (
     ids_in_use,
     urs,
     expert_db
-) INTO {{PGDB_EMBASSY_USER}}?litscan_statistics
+) INTO {{PGDATABASE}}?litscan_statistics
 TARGET COLUMNS (
     searched_ids,
     articles,
@@ -35,6 +35,6 @@ $$
 
 AFTER LOAD DO
 $$
-GRANT SELECT ON litscan_statistics TO rnacen;
+GRANT SELECT ON litscan_statistics TO wpk8srnaro;
 $$
 ;

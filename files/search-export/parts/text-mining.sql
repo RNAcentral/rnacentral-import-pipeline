@@ -1,3 +1,17 @@
+\o /dev/null
+CREATE TEMPORARY TABLE search_export_publication_counts
+AS
+SELECT
+  UPPER(d.primary_id) as urs,
+  SUM(j.hit_count) as publication_count
+FROM litscan_job j
+JOIN litscan_database d
+ON d.job_id = j.job_id
+WHERE j.hit_count > 0 AND d.name='rnacentral'
+GROUP BY d.primary_id;
+
+\o
+
 COPY (
   SELECT
     json_build_object(

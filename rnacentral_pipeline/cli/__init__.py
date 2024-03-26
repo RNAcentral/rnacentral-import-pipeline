@@ -71,6 +71,7 @@ from rnacentral_pipeline.cli import (
     zfin,
     zwd,
 )
+from rnacentral_pipeline.databases.tmrna import cli as tmrna
 
 
 @click.group()
@@ -147,3 +148,4 @@ cli.add_command(snorna_database.cli)
 cli.add_command(tarbase.cli)
 cli.add_command(zfin.cli)
 cli.add_command(zwd.cli)
+cli.add_command(tmrna.cli)

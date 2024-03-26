@@ -14,11 +14,11 @@ select
     'model_basepairs', r2dt.model_basepair_count
   )
 FROM precompute_urs_taxid todo
-JOIN rnc_secondary_structure_layout ss
+JOIN r2dt_results ss
 on
   ss.urs = todo.urs
   and coalesce(ss.assigned_should_show, ss.inferred_should_show) = true
-JOIN rnc_secondary_structure_layout_models r2dt
+JOIN r2dt_models r2dt
 on
   r2dt.id = ss.model_id
 order by todo.precompute_urs_id, todo.id

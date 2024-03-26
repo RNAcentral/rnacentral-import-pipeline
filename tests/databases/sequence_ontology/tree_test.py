@@ -15,9 +15,9 @@ limitations under the License.
 
 import tempfile
 
-from rnacentral_pipeline.databases.sequence_ontology import tree as so
-
 import pytest
+
+from rnacentral_pipeline.databases.sequence_ontology import tree as so
 
 
 @pytest.fixture(scope="module")
@@ -58,7 +58,7 @@ def ontology():
         (
             "ribozyme",
             [
-                ("SO:0000673", "transcript"),
+                ("SO:0000655", "ncRNA"),
                 ("SO:0000374", "ribozyme"),
             ],
         ),
