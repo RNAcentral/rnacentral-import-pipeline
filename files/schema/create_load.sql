@@ -1,5 +1,30 @@
-TRUNCATE TABLE load_rnc_accessions;
-TRUNCATE TABLE load_rnc_references;
+DROP TABLE IF EXISTS load_rnc_accessions;
+CREATE TABLE load_rnc_accessions (
+  assembly_id character varying(255) NOT NULL,
+  assembly_full_name character varying(255) NOT NULL,
+  gca_accession character varying(20) NULL,
+  assembly_ucsc character varying(100) NULL,
+  common_name character varying(255) NULL,
+  taxid integer NOT NULL,
+  ensembl_url character varying(100) NULL,
+  division character varying(20) NULL,
+  blat_mapping integer NULL,
+  example_chromosome character varying(20) NULL,
+  example_end integer NULL,
+  example_start integer NULL,
+  subdomain character varying(100) NOT NULL
+);
+
+DROP TABLE IF EXISTS load_rnc_references;
+CREATE TABLE load_rnc_references (
+    md5 character varying(64) NOT NULL,
+    accession character varying(200) NULL,
+    authors text NULL,
+    location character varying(4000) NULL,
+    title character varying(4000) NULL,
+    pmid character varying(20) NULL,
+    doi text NULL
+  );
 
 DROP TABLE IF EXISTS load_assemblies;
 CREATE TABLE load_assemblies (
