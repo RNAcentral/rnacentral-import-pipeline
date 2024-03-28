@@ -26,6 +26,21 @@ CREATE TABLE load_rnc_references (
     doi text NULL
   );
 
+DROP TABLE IF EXISTS load_rnacentral_all;
+CREATE TABLE
+  load_rnacentral_all (
+    crc64 character varying(16) NULL,
+    len integer NULL,
+    seq_short character varying(4000) NULL,
+    seq_long text NULL,
+    database character varying(40) NULL,
+    ac character varying(200) NULL,
+    optional_id character varying(100) NULL,
+    version integer NULL,
+    taxid bigint NULL,
+    md5 character varying(32) NULL
+  );
+
 DROP TABLE IF EXISTS load_assemblies;
 CREATE TABLE load_assemblies (
   assembly_id varchar(255) NOT NULL,
