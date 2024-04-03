@@ -39,7 +39,7 @@ CREATE TABLE load_rnc_accessions (
     pseudogene character varying(100) NULL,
     standard_name character varying(200) NULL,
     db_xref text NULL,
-    rna_type character varying(15) NULL,
+    so_term character varying(15) NULL,
     url text NULL
 );
 
