@@ -50,7 +50,7 @@ LOAD_COUNT_QUERY = """
 SELECT
     load.database,
     count(distinct load.md5)
-from load_rnacentral_all load
+from load_rnacentral load
 group by database
 """
 
