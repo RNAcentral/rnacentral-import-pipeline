@@ -70,6 +70,15 @@ CREATE TABLE
     comparable_prot_upi character varying(30)
   );
 
+DROP TABLE IF EXISTS load_md5_stats;
+CREATE TABLE
+  load_md5_stats (
+    in_md5 character varying(32),
+    cnt bigint,
+    cnt_dst_seq_short bigint,
+    cnt_dst_seq_long bigint
+  );
+
 DROP TABLE IF EXISTS load_rnacentral;
 CREATE TABLE
   load_rnacentral (
