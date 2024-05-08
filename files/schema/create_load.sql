@@ -54,6 +54,22 @@ CREATE TABLE load_rnc_references (
     doi text NULL
   );
 
+DROP TABLE IF EXISTS load_retro_tmp;
+CREATE TABLE
+  load_retro_tmp (
+    in_dbid smallint,
+    in_load_release integer,
+    in_crc64 character varying(16),
+    in_len integer,
+    in_seq_short character varying(4000),
+    in_seq_long text,
+    in_ac character varying(200),
+    in_version bigint,
+    in_md5 character varying(32),
+    in_taxid,
+    comparable_prot_upi character varying(30)
+  );
+
 DROP TABLE IF EXISTS load_rnacentral;
 CREATE TABLE
   load_rnacentral (
