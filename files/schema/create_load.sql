@@ -66,7 +66,7 @@ CREATE TABLE
     in_ac character varying(200),
     in_version bigint,
     in_md5 character varying(32),
-    in_taxid,
+    in_taxid integer,
     comparable_prot_upi character varying(30)
   );
 
