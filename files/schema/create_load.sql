@@ -91,7 +91,7 @@ DROP TABLE IF EXISTS load_md5_new_sequences;
 CREATE TABLE
   load_md5_new_sequences (
     IN_MD5 character varying(32),
-    PROT_ID character varying(30),
+    PROT_ID bigint,
     PROT_UPI character varying(30)
 );
 
