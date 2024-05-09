@@ -93,7 +93,7 @@ CREATE TABLE
     IN_MD5 character varying(32),
     PROT_ID character varying(30),
     PROT_UPI character varying(30)
-)
+);
 
 DROP TABLE IF EXISTS load_rnacentral;
 CREATE TABLE
