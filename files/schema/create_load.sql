@@ -97,10 +97,17 @@ CREATE TABLE
 
 DROP TABLE IF EXISTS load_upi_max_versions;
 CREATE TABLE load_upi_max_versions(
-        ac character varying(200),
-        dbid smallint,
-        max_version_i bigint,
-        UPI character varying(30)
+  ac character varying(200),
+  dbid smallint,
+  max_version_i bigint,
+  UPI character varying(30)
+);
+
+DROP TABLE IF EXISTS load_max_versions;
+CREATE TABLE load_max_versions(
+  ac character varying(200),
+  dbid smallint,
+  max_version_i bigint
 );
 
 DROP TABLE IF EXISTS load_rnacentral;
