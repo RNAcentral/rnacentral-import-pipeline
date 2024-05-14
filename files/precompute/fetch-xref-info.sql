@@ -16,13 +16,13 @@
 
 COPY (
 SELECT
-  rna.id as rna_id,
-  xref.upi as upi,
+  rna.id ,
+  xref.upi,
   max(last)
 from xref
 join rna
   on rna.upi = xref.upi
-group by rna_id, upi
-order by rna_id ASC
+group by rna.id, xref.upi
+order by rna.id ASC
 
 ) TO STDOUT (FORMAT CSV)
