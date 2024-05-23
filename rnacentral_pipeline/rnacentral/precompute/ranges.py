@@ -35,6 +35,10 @@ def upi_taxid_ranges(ranges, tablename, db_url):
                 results = cur.fetchall()
                 assert len(results) == 1
                 (upi_start, upi_max) = results[0]
+                ## This can end up with nulls, catch it and skip writing
+                ## here to avoid crashing the pipeline
+                if upi_start is None:
+                    continue
                 yield (start, upi_start, upi_max)
 
 
