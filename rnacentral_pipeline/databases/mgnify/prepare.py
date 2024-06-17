@@ -47,6 +47,7 @@ def prepare_mgnify_data(data, conn_str):
         "cow rumen genome catalogue": 506599,  # bovine gut metagenome
         "chicken gut genome catalogue": 506600,  # mouse gut metagenome
         "human vaginal genome catalogue": 1632839,  # human vaginal metagenome
+        "mouse gut genome catalogue": 410661,  # mouse gut metagenome
     }
 
     prepared_data = []
