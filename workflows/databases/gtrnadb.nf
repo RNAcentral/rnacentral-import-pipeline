@@ -6,7 +6,7 @@ process fetch_data {
   path('*.json')
 
   """
-  wget $params.databases.gtrnadb.remote
+  wget --no-check-certificate $params.databases.gtrnadb.remote
   tar xvf *.tar.gz
   """
 }
