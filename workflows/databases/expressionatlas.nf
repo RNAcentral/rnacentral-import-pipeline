@@ -20,7 +20,7 @@ process fetch_data {
 }
 
 process fetch_lookup {
-
+  memory: 8.GB
   input:
     path (query)
 
