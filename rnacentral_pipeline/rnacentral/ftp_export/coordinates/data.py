@@ -83,7 +83,7 @@ def lookup_databases(raw):
         "REDIPORTAL": "REDIPortal",
         "MGNIFY": "MGnify",
     }
-    return [lookup[d] for d in raw]
+    return [lookup[d] for d in raw if d]
 
 
 def clean_databases(raw):
