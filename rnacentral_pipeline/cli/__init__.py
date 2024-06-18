@@ -41,6 +41,7 @@ from rnacentral_pipeline.cli import (
     mgnify,
     mirbase,
     mirgenedb,
+    mirtrondb,
     misc,
     ncbi,
     notify,
@@ -117,6 +118,7 @@ cli.add_command(lncipedia.cli)
 cli.add_command(mgnify.cli)
 cli.add_command(mirbase.cli)
 cli.add_command(mirgenedb.cli)
+cli.add_command(mirtrondb.cli)
 cli.add_command(misc.crs_data)
 cli.add_command(misc.find_upi_ranges)
 cli.add_command(misc.validate_pgloader)
