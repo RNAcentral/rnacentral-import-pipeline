@@ -22,68 +22,17 @@ import attr
 from attr.validators import instance_of as is_a
 from attr.validators import optional
 
-from rnacentral_pipeline.databases.data import regions
+from rnacentral_pipeline.databases.data import Database, regions
 
 
 def lookup_databases(raw):
-    lookup = {
-        "ENA": "ENA",
-        "RFAM": "Rfam",
-        "SRPDB": "SRPDB",
-        "MIRBASE": "miRBase",
-        "VEGA": "VEGA",
-        "TMRNA_WEB": "tmRNA Website",
-        "LNCRNADB": "lncRNAdb",
-        "GTRNADB": "GtRNAdb",
-        "REFSEQ": "RefSeq",
-        "RDP": "RDP",
-        "PDBE": "PDBe",
-        "SNOPY": "snOPY",
-        "GREENGENES": "Greengenes",
-        "TAIR": "TAIR",
-        "WORMBASE": "WormBase",
-        "SGD": "SGD",
-        "SILVA": "SILVA",
-        "POMBASE": "PomBase",
-        "DICTYBASE": "dictyBase",
-        "LNCIPEDIA": "LNCipedia",
-        "NONCODE": "NONCODE",
-        "MODOMICS": "Modomics",
-        "HGNC": "HGNC",
-        "FLYBASE": "FlyBase",
-        "ENSEMBL": "Ensembl",
-        "GENCODE": "GENCODE",
-        "MGI": "MGI",
-        "RGD": "RGD",
-        "TARBASE": "TarBase",
-        "ZWD": "ZWD",
-        "ENSEMBL_PLANTS": "Ensembl Plants",
-        "LNCBASE": "LncBase",
-        "LNCBOOK": "LncBook",
-        "ENSEMBL_METAZOA": "Ensembl Metazoa",
-        "ENSEMBL_PROTISTS": "Ensembl Protists",
-        "ENSEMBL_FUNGI": "Ensembl Fungi",
-        "SNODB": "snoDB",
-        "5SRRNADB": "5SrRNAdb",
-        "MIRGENEDB": "MirGeneDB",
-        "MALACARDS": "MalaCards",
-        "GENECARDS": "GeneCards",
-        "INTACT": "IntAct",
-        "SNORNADB": "snoRNA Database",
-        "ZFIN": "ZFIN",
-        "CRW": "CRW",
-        "PIRBASE": "piRBase",
-        "ENSEMBL_GENCODE": "Ensembl/GENCODE",
-        "PSICQUIC": "PSICQUIC",
-        "RIBOVISION": "RiboVision",
-        "PLNCDB": "PLncDB",
-        "EXPRESSION_ATLAS": "Expression Atlas",
-        "RIBOCENTRE": "Ribocentre",
-        "EVLNCRNAS": "EVLncRNAs",
-        "REDIPORTAL": "REDIPortal",
-        "MGNIFY": "MGnify",
-    }
-    return [lookup[d] for d in raw if d]
+    databases = []
+    for db in raw:
+        found = Database.lookup(db)
+        if not found:
+            raise ValueError(f"Failed to lookup database {db}")
+        databases.append(found.pretty())
+    return databases
 
 
 def clean_databases(raw):
