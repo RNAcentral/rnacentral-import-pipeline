@@ -15,9 +15,9 @@ REDI_BASE_URL = "http://srv00.recas.ba.infn.it/cgi/atlas/getpage_dev.py?query1=c
 
 @attr.s(frozen=True)
 class GenomicLocation(object):
-    chromosome = attr.ib(validator=is_a(str))
-    start = attr.ib(validator=is_a(int), converter=int)
-    stop = attr.ib(validator=is_a(int), converter=int)
+    chromosome: str = attr.ib(validator=is_a(str))
+    start: int = attr.ib(validator=is_a(int), converter=int)
+    stop: int = attr.ib(validator=is_a(int), converter=int)
 
     @classmethod
     def build(cls, raw):
@@ -30,15 +30,15 @@ class GenomicLocation(object):
 
 
 @attr.s(frozen=True)
-class RNAEditFeature(object):
-    upi = attr.ib(validator=is_a(str))
-    taxid = attr.ib(validator=is_a(int), converter=int)
-    repeat_type = attr.ib(validator=is_a(str))
-    ref = attr.ib(validator=is_a(str))
-    ed = attr.ib(validator=is_a(str))
-    start = attr.ib(validator=is_a(int), converter=int)
-    stop = attr.ib(validator=is_a(int), converter=int)
-    genomic_location = attr.ib(validator=is_a(GenomicLocation))
+class RNAEditFeature:
+    upi: str = attr.ib(validator=is_a(str))
+    taxid: int = attr.ib(validator=is_a(int), converter=int)
+    repeat_type: str = attr.ib(validator=is_a(str))
+    ref: str = attr.ib(validator=is_a(str))
+    ed: str = attr.ib(validator=is_a(str))
+    start: int = attr.ib(validator=is_a(int), converter=int)
+    stop: int = attr.ib(validator=is_a(int), converter=int)
+    genomic_location: GenomicLocation = attr.ib(validator=is_a(GenomicLocation))
 
     @classmethod
     def build(cls, raw_feature):
