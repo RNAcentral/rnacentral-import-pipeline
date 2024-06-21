@@ -67,10 +67,10 @@ from rnacentral_pipeline.cli import (
     silva,
     snodb,
     snorna_database,
-    tarbase,
     zfin,
     zwd,
 )
+from rnacentral_pipeline.databases.tarbase import cli as tmrna
 from rnacentral_pipeline.databases.tmrna import cli as tmrna
 
 
