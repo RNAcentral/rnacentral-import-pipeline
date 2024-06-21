@@ -38,7 +38,9 @@ openpyxl = "^3.0.10"
 pybedtools = {git = "https://github.com/afg1/pybedtools.git"}
 psycopg2-binary = "^2.9.7"
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
+black = "^24.4.2"
+isort = "^5.13.2"
 pytest = "^7.2.0"
 
 [build-system]
