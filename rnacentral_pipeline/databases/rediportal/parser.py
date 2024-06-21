@@ -5,10 +5,7 @@ import re
 import attr
 import numpy as np
 import pandas as pd
-import pybedtools as pbt
 from attr.validators import instance_of as is_a
-
-from rnacentral_pipeline.databases import data
 
 REDI_BASE_URL = "http://srv00.recas.ba.infn.it/cgi/atlas/getpage_dev.py?query1=chr{0}:{1}-{2}&query10=hg38&query9=hg"
 
@@ -83,6 +80,8 @@ class RNAEditFeature:
 
 
 def parse(redi_bedfile, redi_metadata, rnc_bedfile, output):
+    import pybedtools as pbt
+
     redi_bed = pbt.BedTool(redi_bedfile)
     rnc_bed = pbt.BedTool(rnc_bedfile)
 
