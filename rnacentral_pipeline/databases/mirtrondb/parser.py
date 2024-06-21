@@ -12,10 +12,13 @@
 # limitations under the License.
 
 import csv
+import logging
 import re
 import typing as ty
 
-from rnacentral_pipeline.databases.data import Entry, Region, RelatedSequence
+from rnacentral_pipeline.databases.data import Entry, RelatedCoordinate, RelatedSequence
+
+LOGGER = logging.getLogger(__name__)
 
 RNA_TYPES = {
     "mature": "SO:0000276",
@@ -26,19 +29,19 @@ SPECIES = {
     "A. thaliana": 3702,
     "B. taurus": 9913,
     "C. elegans": 6239,
-    "C. familiaris": -1,
+    "C. familiaris": 9615,
     "D. melanogaster": 7227,
-    "D. pseudoobscura": -1,
-    "D. rerio": -1,
-    "D. simulans": -1,
-    "G. gallus": -1,
+    "D. pseudoobscura": 7237,
+    "D. rerio": 7955,
+    "D. simulans": 7240,
+    "G. gallus": 9031,
     "H. sapiens": 9606,
-    "M. esculenta": -1,
-    "M. mulatta": -1,
-    "M. musculus": -1,
-    "M. truncatula": -1,
-    "O. sativa": -1,
-    "P. troglodytes": -1,
+    "M. esculenta": 3983,
+    "M. mulatta": 9544,
+    "M. musculus": 10090,
+    "M. truncatula": 3880,
+    "O. sativa": 4530,
+    "P. troglodytes": 9598,
     "S. Italica": 4555,
     "S. scrofa": 9823,
 }
@@ -51,41 +54,49 @@ def text_value(row: ty.Dict[str, str], name: str) -> str | None:
     return value
 
 
-def regions(entry: ty.Dict[str, str]) -> ty.List[Region]:
-    return None
-
-
-def tax_id(entry: ty.Dict[str, str]) -> int:
-    return SPECIES[entry["specie"].strip()]
+def find_coords(id: str, target: str, query: str) -> ty.List[RelatedCoordinate]:
+    if query not in target:
+        LOGGER.warn(f"Mature not found in precusor for %s", id)
+        return []
+    start = target.index(query)
+    return [RelatedCoordinate(start=start, stop=start + len(query))]
 
 
 def parse(handle: ty.IO):
-    blank = handle.readline()
-    assert not blank
-    notification = handle.readline()
+    blank = handle.readline().strip()
+    assert not blank, f"Invalid first line `{blank}`"
+    notification = handle.readline().strip()
     assert notification == "##mirtronDB tabular format"
     reader = csv.DictReader(handle, delimiter="\t")
 
     pre = {}
     mature = {}
     for raw in reader:
+        rna_type = raw["type"].strip()
+        name = raw["name"].strip()
+        species = raw["specie"].strip()
+        description = f"{species} {name} {rna_type} miRNA"
+        if raw["host gene"].strip():
+            description += f" ({raw['host gene'].strip()})"
         entry = Entry(
-            primary_id=f"MIRTRONDB:{raw['id']}",
-            accesion=raw["name"],
-            ncbi_tax_id=tax_id(raw),
+            primary_id=f"MIRTRONDB:{raw['id'].strip()}",
+            accession=name,
+            ncbi_tax_id=SPECIES[species],
             database="MIRTRONDB",
-            sequence=raw["sequence"],
-            regions=regions(raw),
-            rna_type=RNA_TYPES[raw["type"]],
-            url=f"http://mirtrondb.cp.utfpr.edu.br/fetch_details.php?mrt_details={raw['name']}",
+            sequence=raw["sequence"].strip(),
+            regions=[],
+            rna_type=RNA_TYPES[rna_type],
+            url=f"http://mirtrondb.cp.utfpr.edu.br/fetch_details.php?mrt_details={name}",
             seq_version="1",
-            gene=raw["host gene"],
+            gene=raw["host gene"].strip(),
+            description=description,
         )
         assert entry.accession not in pre
         assert entry.accession not in mature
-        if raw["type"] == "mature":
+
+        if rna_type == "mature":
             mature[entry.accession] = entry
-        elif raw["type"] == "precursor":
+        elif rna_type == "precursor":
             pre[entry.accession] = entry
         else:
             raise ValueError(f"Cannot handle {raw}")
@@ -93,13 +104,14 @@ def parse(handle: ty.IO):
     for id, entry in mature.items():
         pre_id = re.sub(r"-[35]p", "", id)
         if pre_id not in pre:
+            LOGGER.warn("Failed to find precursor for %s", id)
             continue
         pre_entry = pre[pre_id]
         pre_entry.related_sequences.append(
             RelatedSequence(
                 sequence_id=id,
                 relationship="mature_product",
-                coordinates=find_coord(pre_entry.sequence, entry.sequence),
+                coordinates=find_coords(id, pre_entry.sequence, entry.sequence),
             )
         )
 

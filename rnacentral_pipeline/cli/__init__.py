@@ -55,7 +55,6 @@ from rnacentral_pipeline.cli import (
     qa,
     quickgo,
     r2dt,
-    rediportal,
     refseq,
     release,
     repeats,
