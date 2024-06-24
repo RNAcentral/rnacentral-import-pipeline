@@ -13,15 +13,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import re
 import enum
 import json
 import typing as ty
 from datetime import date
 
 import attr
-from attr.validators import optional
 from attr.validators import instance_of as is_a
+from attr.validators import optional
 
 from .references import IdReference
 
@@ -34,9 +33,9 @@ class InteractorType(enum.Enum):
 
 @attr.s(frozen=True)
 class InteractionIdentifier:
-    key = attr.ib(validator=is_a(str))
-    value = attr.ib(validator=is_a(str))
-    name = attr.ib(validator=optional(is_a(str)))
+    key: str = attr.ib(validator=is_a(str))
+    value: str = attr.ib(validator=is_a(str))
+    name: None | str = attr.ib(validator=optional(is_a(str)))
 
     def from_rnacentral(self) -> bool:
         return self.key.lower() == "rnacentral"
@@ -47,14 +46,14 @@ class InteractionIdentifier:
 
 @attr.s(frozen=True)
 class Interactor:
-    id = attr.ib(validator=is_a(InteractionIdentifier))
+    id: InteractionIdentifier = attr.ib(validator=is_a(InteractionIdentifier))
     alt_ids: ty.Tuple[InteractionIdentifier] = attr.ib(
         validator=is_a(tuple), converter=tuple
     )
     aliases: ty.Tuple[InteractionIdentifier] = attr.ib(
         validator=is_a(tuple), converter=tuple
     )
-    taxid = attr.ib(validator=optional(is_a(int)))
+    taxid: int = attr.ib(validator=optional(is_a(int)))
     biological_role: ty.Tuple[InteractionIdentifier] = attr.ib(
         validator=is_a(tuple), converter=tuple
     )
@@ -67,11 +66,11 @@ class Interactor:
     xrefs: ty.Tuple[InteractionIdentifier] = attr.ib(
         validator=is_a(tuple), converter=tuple
     )
-    annotations = attr.ib(validator=is_a(str))
+    annotations: str = attr.ib(validator=is_a(str))
     features: ty.Tuple[InteractionIdentifier] = attr.ib(
         validator=is_a(tuple), converter=tuple
     )
-    stoichiometry = attr.ib(validator=optional(is_a(int)))
+    stoichiometry: None | int = attr.ib(validator=optional(is_a(int)))
     participant_identification: ty.Tuple[InteractionIdentifier] = attr.ib(
         validator=is_a(tuple), converter=tuple
     )
@@ -123,8 +122,8 @@ class Interaction:
     ids: ty.Tuple[InteractionIdentifier] = attr.ib(
         validator=is_a(tuple), converter=tuple
     )
-    interactor1 = attr.ib(validator=is_a(Interactor))
-    interactor2 = attr.ib(validator=is_a(Interactor))
+    interactor1: Interactor = attr.ib(validator=is_a(Interactor))
+    interactor2: Interactor = attr.ib(validator=is_a(Interactor))
     methods: ty.Tuple[str] = attr.ib(validator=is_a(tuple), converter=tuple)
     types: ty.Tuple[str] = attr.ib(validator=is_a(tuple), converter=tuple)
     xrefs: ty.Tuple[InteractionIdentifier] = attr.ib(
@@ -139,13 +138,13 @@ class Interaction:
     source_database: ty.Tuple[InteractionIdentifier] = attr.ib(
         validator=is_a(tuple), converter=tuple
     )
-    is_negative = attr.ib(validator=is_a(bool))
+    is_negative: bool = attr.ib(validator=is_a(bool))
     publications: ty.Tuple[IdReference] = attr.ib(
         validator=is_a(tuple), converter=tuple
     )
-    create_date = attr.ib(validator=optional(is_a(date)))
-    update_date = attr.ib(validator=optional(is_a(date)))
-    host_organisms = attr.ib(validator=optional(is_a(int)))
+    create_date: None | date = attr.ib(validator=optional(is_a(date)))
+    update_date: None | date = attr.ib(validator=optional(is_a(date)))
+    host_organisms: None | int = attr.ib(validator=optional(is_a(int)))
 
     def involves_rnacentral(self) -> bool:
         return self.interactor1.from_rnacentral() or self.interactor2.from_rnacentral()

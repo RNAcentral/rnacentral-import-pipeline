@@ -42,9 +42,8 @@ def cleaned(raw: ty.Dict[str, str]) -> ty.Dict[str, None | str]:
     return entry
 
 
-def build_interactions(raw: ty.List[ty.Dict[str, str]]) -> ty.List[Interaction]:
-    data = [cleaned(r) for r in raw]
-    raise ValueError("Implement me")
+def build_interactions(raw: ty.List[ty.Dict[str, str | None]]) -> ty.List[Interaction]:
+    return []
 
 
 def parse(handle: ty.IO, fasta: Path) -> ty.Iterable[Entry]:
@@ -52,20 +51,25 @@ def parse(handle: ty.IO, fasta: Path) -> ty.Iterable[Entry]:
     iterable of Entry objects. This assumes that the file is from Tarbase v9
     and is sorted by the mirna_name column. It will produce a single Entry
     object per mirna_name with all interactions for that miRNA.
+
+    :handle: An open handle of the TarBase TSV file.
+    :fasta: A path to the a fasta file of all miRBase miRNA sequences
     """
 
     indexed = SeqIO.index(fasta, "fasta")
 
-    reader = csv.DictReader(handle)
-    grouped = it.groupby(reader, op.itemgetter("mirna_name"))
+    reader = csv.DictReader(handle, delimiter="\t")
+    clean_rows = (cleaned(r) for r in reader)
+    grouped = it.groupby(clean_rows, op.itemgetter("mirna_name"))
     for accession, raw_interactions in grouped:
         raw_interactions = list(raw_interactions)
         accession = raw_interactions[0]["mirna_name"]
         species = raw_interactions[0]["species"]
 
-        sequence = indexed[accession]
-        if not sequence:
+        if accession not in indexed:
+            print(indexed)
             raise ValueError(f"Failed to find sequence for {accession}")
+        sequence = indexed[accession]
         sequence = str(sequence.seq)
 
         yield Entry(

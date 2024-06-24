@@ -1,5 +1,5 @@
 COPY (
-SELECT
+SELECT DISTINCT ON (acc.optional_id)
   json_build_object(
     'id', acc.optional_id,
     'sequence', coalesce(rna.seq_short, rna.seq_long)
