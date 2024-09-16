@@ -76,9 +76,8 @@ process submit_ids {
     script:
     """
     # create file with IDs (without URS)
-    for i in $baseDir/workflows/litscan/submit/*.txt;do sed '/^URS/d' \$i >> all_ids.txt;done
-    tr A-Z a-z < all_ids.txt > all_ids_lower.txt
-    sort all_ids_lower.txt | uniq > all_ids_sorted.txt
+    find $baseDir/workflows/litscan/submit/ -name "*.txt" -print0 | xargs -0 sed '/^URS/d' > all_ids.txt
+    tr A-Z a-z < all_ids.txt | sort -u > all_ids_sorted.txt
 
     # get ids already scanned by LitScan (Expert DB ids only)
     psql -v ON_ERROR_STOP=1 -c "COPY (SELECT job_id FROM litscan_job WHERE job_id not like 'urs%' ORDER BY job_id) TO STDOUT;" $PGDATABASE > old_ids.txt
@@ -115,9 +114,8 @@ process submit_urs {
     script:
     """
     # create file with URS only
-    for i in $baseDir/workflows/litscan/submit/*.txt;do sed '/^URS/!d' \$i >> output.txt;done
-    tr a-z A-Z < output.txt > output_uppercase.txt
-    sort output_uppercase.txt | uniq > urs.txt
+    find $baseDir/workflows/litscan/submit/ -name "*.txt" -print0 | xargs -0 sed '/^URS/!d' > output.txt
+    tr a-z A-Z < output.txt | sort -u > urs.txt
 
     # get URS already scanned by LitScan
     psql -v ON_ERROR_STOP=1 -c "COPY (SELECT job_id FROM litscan_job WHERE job_id like 'urs%' ORDER BY job_id) TO STDOUT;" $PGDATABASE > urs_lower.txt
