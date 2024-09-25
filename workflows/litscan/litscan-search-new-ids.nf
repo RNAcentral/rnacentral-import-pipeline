@@ -47,11 +47,12 @@ process sort_ids {
 
     script:
     """
-    cat $output | sort -fb | uniq -i > ${database}.txt
+    LC_ALL=C sort -ufb $output > ${database}.txt
     """
 }
 
 process prepare_to_submit {
+    memory '2GB'
     publishDir "$baseDir/workflows/litscan/submit/", mode: 'copy'
 
     input:
