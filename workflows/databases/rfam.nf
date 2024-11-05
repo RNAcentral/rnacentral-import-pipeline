@@ -82,7 +82,7 @@ process fetch_sequence_info {
 process parse {
   tag { "$family" }
   queue 'datamover'
-
+  containerOptions '--bind /nfs:/nfs'
 
   input:
   tuple val(family), path(sequence_info), path(families_info)
