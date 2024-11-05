@@ -81,6 +81,8 @@ process fetch_sequence_info {
 
 process parse {
   tag { "$family" }
+  queue 'datamover'
+
 
   input:
   tuple val(family), path(sequence_info), path(families_info)
@@ -89,7 +91,7 @@ process parse {
   path('*.csv')
 
   """
-  wget -O sequences.fa.gz 'http://ftp.ebi.ac.uk/pub/databases/Rfam/CURRENT/fasta_files/${family}.fa.gz'
+  cp '/nfs/ftp/public/databases/Rfam/CURRENT/fasta_files/${family}.fa.gz' sequences.fa.gz
   gzip -d sequences.fa.gz
 
   rnac rfam parse $families_info $sequence_info sequences.fa .
