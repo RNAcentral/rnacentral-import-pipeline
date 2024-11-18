@@ -37,7 +37,8 @@ def prepare_mgnify_data(data, conn_str):
     ## Define fallback taxids of the general metagenome of the environment
     ## These are used if we can't do any better
     fallback = {
-        "zebrafish fecal genome catalogue": 1331678,  # zebrafish metagenome - more accurate then generic fish fecal?
+        "zebrafish fecal genome catalogue": 1331678,  # zebrafish metagenome - 
+                                                        # more accurate then generic fish fecal?
         "human gut genome catalogue": 408170,  # human gut metagenome
         "human oral genome catalogue": 447426,  # human oral metagenome
         "marine genome catalogue": 2994539,  # human skin metagenome
