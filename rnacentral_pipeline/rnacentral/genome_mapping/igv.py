@@ -38,7 +38,7 @@ def ftp(host):
 
     try:
         conn.quit()
-    except Exception as err:
+    except ftplib.all_errors as err:
         LOGGER.info("Failed to close FTP connection")
         LOGGER.exception(err)
 
