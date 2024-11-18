@@ -75,7 +75,8 @@ def compare(output, results1, results2, facet):
 
 def write(output: ty.IO):
     """ """
-    index1 = "http://www.ebi.ac.uk/ebisearch/ws/rest/rnacentral?query={query}&format=json&facetfields={facet}&facetcount=30"
+    index1 = ("http://www.ebi.ac.uk/ebisearch/ws/rest/rnacentral"
+                + "?query={query}&format=json&facetfields={facet}&facetcount=30")
     index2 = index1.replace("http://www.", "http://wwwdev.")
     queries = ["RNA", 'TAXONOMY:"9606"'] + EXPERT_DATABASES
     facets = ["rna_type", "has_genomic_coordinates"]
