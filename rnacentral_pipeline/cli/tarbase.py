@@ -21,6 +21,11 @@ from rnacentral_pipeline.databases.generic import parser as generic
 from rnacentral_pipeline.writers import entry_writer
 
 
+def _write_entries(entries, output):
+    with entry_writer(Path(output)) as writer:
+        writer.write(entries)
+
+
 @click.group("tarbase")
 def cli():
     """
@@ -40,5 +45,7 @@ def process_json_schema(json_file, output):
     This parses our JSON schema files to produce the importable CSV files.
     """
     entries = generic.parse(json_file)
+    _write_entries(entries, output)
+
     with entry_writer(Path(output)) as writer:
         writer.write(entries)
