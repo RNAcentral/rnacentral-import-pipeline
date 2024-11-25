@@ -1,6 +1,6 @@
 workflow tarbase {
   emit: data
-  remotes = channel.of( params.databases.tarbase.remotes )
+  remotes = channel.fromList( params.databases.tarbase.remotes )
   remotes | fetch | parse | set { data }
 }
 
