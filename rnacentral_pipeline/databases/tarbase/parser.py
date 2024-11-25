@@ -1,4 +1,5 @@
 import os
+import typing as ty
 
 import polars as pl
 import psycopg2 as pg
@@ -9,7 +10,7 @@ from rnacentral_pipeline.databases.data.related import RelatedEvidence, RelatedS
 from rnacentral_pipeline.databases.helpers import phylogeny as phy
 
 
-def build_entry(row):
+def build_entry(row: ty.Dict[str, str]) -> Entry:
     primary_id = row["mirna_id"]
     ## Use this accession form to match existing accessions
     accession = f"TARBASE:{row['mirna_id']}"
@@ -54,7 +55,7 @@ def build_entry(row):
     return ent
 
 
-def parse(filepath):
+def parse(filepath: str) -> ty.List[Entry]:
     """
     Parse the provided tsv file into entry objects we can put in the database
 
