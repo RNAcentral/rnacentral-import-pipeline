@@ -18,6 +18,7 @@ from pathlib import Path
 import click
 
 from rnacentral_pipeline.databases.generic import parser as generic
+from rnacentral_pipeline.databases.tarbase import parser as specific
 from rnacentral_pipeline.writers import entry_writer
 
 
@@ -47,5 +48,15 @@ def process_json_schema(json_file, output):
     entries = generic.parse(json_file)
     _write_entries(entries, output)
 
-    with entry_writer(Path(output)) as writer:
-        writer.write(entries)
+
+@cli.command("parse-tsv")
+@click.argument("tsv_file", type=click.File("r"))
+@click.argument(
+    "output",
+    default=".",
+    type=click.Path(writable=True, dir_okay=True, file_okay=False),
+)
+def process_tsv_file(tsv_file, output):
+    print(dir(tsv_file))
+    entries = specific.parse(tsv_file.name)
+    _write_entries(entries, output)
