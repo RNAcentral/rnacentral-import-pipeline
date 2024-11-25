@@ -37,7 +37,7 @@ def build_entry(row):
     ent = Entry(
         primary_id=primary_id,
         accession=accession,
-        ncbi_tax_id=row["taxid"],
+        ncbi_tax_id=int(row["taxid"]),
         database="TARBASE",
         sequence=row["sequence"].replace("U", "T"),
         regions=[],
@@ -45,7 +45,7 @@ def build_entry(row):
         url=url,
         seq_version=1,
         optional_id=row["mirna_name"],
-        description=f"{row['species']} ({phy.common_name(row['taxid']) }) {row['mirna_name']}",
+        description=f"{row['species']} ({phy.common_name(int(row['taxid'])) }) {row['mirna_name']}",
         note_data={"url": url},
         xref_data={},
         related_sequences=related_sequences,
