@@ -57,6 +57,5 @@ def process_json_schema(json_file, output):
     type=click.Path(writable=True, dir_okay=True, file_okay=False),
 )
 def process_tsv_file(tsv_file, output):
-    print(dir(tsv_file))
     entries = specific.parse(tsv_file.name)
     _write_entries(entries, output)
