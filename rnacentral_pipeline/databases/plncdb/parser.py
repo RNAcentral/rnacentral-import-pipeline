@@ -96,7 +96,8 @@ def parse(data:pathlib.Path) -> ty.Iterable[Entry]:
     species_info["taxid"] = species_info["Species"].apply(phy.taxid)
 
 
-    total_entries = len(gff_db.execute("select DISTINCT(id) from features where featuretype = 'transcript' ").fetchall())
+    total_entries = len(gff_db.execute(
+        "select DISTINCT(id) from features where featuretype = 'transcript' ").fetchall())
     entries = []
     for gene_id_q in tqdm(gff_db.execute("select id from features"), total=total_entries):
         primary_id = gene_id_q["id"]
