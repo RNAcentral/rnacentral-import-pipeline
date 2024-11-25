@@ -29,7 +29,7 @@ def test_tarbase_tsv_parse_existing():
     ## NB: the method changed between version 8 & 9: Microarrays -> PAR-CLIP
     url = "https://dianalab.e-ce.uth.gr/tarbasev9/interactions?gene=C1orf112&mirna=hsa-miR-103a-3p"
     correct_entry = Entry(
-        primary_id="MIMAT0000101",
+        primary_id="hsa-miR-103a-3p",
         accession="TARBASE:hsa-miR-103a-3p",
         ncbi_tax_id=9606,
         database="TARBASE",
@@ -38,7 +38,7 @@ def test_tarbase_tsv_parse_existing():
         rna_type="SO:0000276",
         url=url,
         seq_version=1,
-        optional_id="hsa-miR-103a-3p",
+        optional_id="MIMAT0000101",
         description="Homo sapiens (human) hsa-miR-103a-3p",
         note_data={"url": url},
         xref_data={},
