@@ -11,7 +11,7 @@ from rnacentral_pipeline.databases.helpers import phylogeny as phy
 
 
 def build_entry(row: ty.Dict[str, str]) -> Entry:
-    primary_id = row["mirna_id"]
+    primary_id = row["mirna_name"]
     ## Use this accession form to match existing accessions
     accession = f"TARBASE:{row['mirna_name']}"
 
@@ -45,7 +45,7 @@ def build_entry(row: ty.Dict[str, str]) -> Entry:
         rna_type="SO:0000276",  # miRNA - tarBase is all miRNA
         url=url,
         seq_version=1,
-        optional_id=row["mirna_name"],
+        optional_id=row["mirna_id"],
         description=f"{row['species']} ({phy.common_name(int(row['taxid'])) }) {row['mirna_name']}",
         note_data={"url": url},
         xref_data={},
