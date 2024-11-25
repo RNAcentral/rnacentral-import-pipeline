@@ -13,10 +13,10 @@ from rnacentral_pipeline.databases.helpers import phylogeny as phy
 def build_entry(row: ty.Dict[str, str]) -> Entry:
     primary_id = row["mirna_id"]
     ## Use this accession form to match existing accessions
-    accession = f"TARBASE:{row['mirna_id']}"
+    accession = f"TARBASE:{row['mirna_name']}"
 
     ## This takes you to the specific search results for the interation on this row
-    url = f"https://dianalab.e-ce.uth.gr/tarbasev9/interactions?gene={row['gene_name']}&mirna={row['mirna_name']}"
+    url = f"https://dianalab.e-ce.uth.gr/tarbasev9/interactions?gene={row['gene_name'][0]}&mirna={row['mirna_name']}"
 
     related_sequences = []
     for (
