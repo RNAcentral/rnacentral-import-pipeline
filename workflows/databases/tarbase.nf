@@ -1,11 +1,33 @@
-process tarbase {
+workflow tarbase {
+  emit: data
+  remotes = channel.of( params.databases.tarbase.remotes )
+  remotes | fetch | parse | set { data }
+}
+
+process fetch {
   when: { params.databases.tarbase.run }
+
+  input:
+  val remote
+  output:
+  path('*.tsv')
+
+  """
+  wget -O tarbase.tsv.gz ${remote}
+  gzip -d tarbase.tsv.gz
+  """
+}
+
+process parse {
+  when: { params.databases.tarbase.run }
+
+  input:
+  path tsv_file
 
   output:
   path('*.csv')
 
   """
-  cp ${params.databases.tarbase.remote} tarbase.json
-  rnac tarbase parse tarbase.json .
+  rnac tarbase parse ${tsv_file} .
   """
 }
