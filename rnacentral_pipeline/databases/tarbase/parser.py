@@ -5,11 +5,7 @@ import psycopg2 as pg
 from psycopg2.extras import execute_batch
 
 from rnacentral_pipeline.databases.data.entry import Entry
-from rnacentral_pipeline.databases.data.related import (
-    RelatedCoordinate,
-    RelatedEvidence,
-    RelatedSequence,
-)
+from rnacentral_pipeline.databases.data.related import RelatedEvidence, RelatedSequence
 from rnacentral_pipeline.databases.helpers import phylogeny as phy
 
 
