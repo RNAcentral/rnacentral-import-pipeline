@@ -28,6 +28,6 @@ process parse {
   path('*.csv')
 
   """
-  rnac tarbase parse-tsv ${tsv_file} .
+  rnac tarbase parse ${tsv_file} .
   """
 }
