@@ -18,18 +18,8 @@ def build_entry(row):
     ## Use this accession form to match existing accessions
     accession = f"TARBASE:{row['mirna_id']}"
 
-    database = "TARBASE"
-
-    regions = (
-        []
-    )  # The genome coords provided by tarbase are for the PROTEIN gene, not miRNA. Give empty region?
-    rna_type = "SO:0000276"  # miRNA - tarBase is all miRNA
-
     ## This takes you to the specific search results for the interation on this row
     url = f"https://dianalab.e-ce.uth.gr/tarbasev9/interactions?gene={row['gene_name']}&mirna={row['mirna_name']}"
-
-    ## Not clear how to set this here
-    seq_version = 1
 
     related_sequences = []
     for (
@@ -41,7 +31,7 @@ def build_entry(row):
 
         related_sequences.append(
             RelatedSequence(
-                sequence_id=related_gene,
+                sequence_id=f"ENSEMBL:{related_gene}",
                 relationship="target_protein",
                 evidence=evidence,
             )
@@ -52,12 +42,12 @@ def build_entry(row):
         primary_id=primary_id,
         accession=accession,
         ncbi_tax_id=row["taxid"],
-        database=database,
+        database="TARBASE",
         sequence=row["sequence"].replace("U", "T"),
-        regions=regions,
-        rna_type=rna_type,
+        regions=[],
+        rna_type="SO:0000276",  # miRNA - tarBase is all miRNA
         url=url,
-        seq_version=seq_version,
+        seq_version=1,
         optional_id=row["mirna_name"],
         description=f"{row['species']} ({phy.common_name(row['taxid']) }) {row['mirna_name']}",
         note_data={"url": url},
