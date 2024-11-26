@@ -19,6 +19,9 @@ process fetch {
 }
 
 process parse {
+  memory { 8.GB * task.attempt }
+  errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'terminate' }
+
   when: { params.databases.tarbase.run }
 
   input:
