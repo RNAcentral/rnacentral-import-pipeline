@@ -22,6 +22,7 @@ from rnacentral_pipeline.rnacentral.random_forest_genes import (
     extract,
     preprocess,
     split,
+    train,
 )
 
 
@@ -96,4 +97,31 @@ def split_dataset(
 ):
     split.train_test_val(
         input_data, train_path, test_path, val_path, test_frac, val_frac, seed, hub_repo
+    )
+
+
+@cli.command("train_nokf")
+@click.argument("training_data")
+@click.argument("model_file")
+@click.option("--n_estimators", type=int, default=100)
+@click.option("--exclude", "-e", type=str, multiple=True)
+@click.option("--seed", "-s", type=int, default=42)
+@click.option("--hub_path", type=str, default=None)
+def train_no_kfold(training_data, model_file, n_estimators, exclude, seed, hub_path):
+    train.no_kfold(training_data, model_file, n_estimators, exclude, seed, hub_path)
+
+
+@cli.command("train_kf")
+@click.argument("training_data")
+@click.argument("output_folder")
+@click.option("--folds", type=int, default=5, help="How many folds to run")
+@click.option("--exclude", "-e", multiple=True, help="Columns to exclude")
+@click.option("--seed", type=int, default=1337, help="Random number seed")
+@click.option("--basename", default="model_fold_", help="Basename for the model file")
+@click.option("--n_estimators", type=int, default=100)
+def train_with_kfold(
+    training_data, output_folder, folds, exclude, seed, basename, n_estimators
+):
+    train.with_kfold(
+        training_data, output_folder, folds, exclude, seed, basename, n_estimators
     )
