@@ -1,4 +1,6 @@
+import logging
 import os
+import sys
 import typing as ty
 
 import polars as pl
@@ -8,6 +10,10 @@ from psycopg2.extras import execute_batch
 from rnacentral_pipeline.databases.data.entry import Entry
 from rnacentral_pipeline.databases.data.related import RelatedEvidence, RelatedSequence
 from rnacentral_pipeline.databases.helpers import phylogeny as phy
+
+logger = logging.getLogger(__name__)
+
+from rnacentral_pipeline.rnacentral.notify.slack import send_notification
 
 
 def build_entry(row: ty.Dict[str, str]) -> Entry:
@@ -82,9 +88,9 @@ def parse(filepath: str) -> ty.List[Entry]:
         )
     )
 
-    species_mentioned = tuple(
-        data.select(pl.col("species").unique()).get_column("species").to_list()
-    )
+    species_mentioned = tuple(data.get_column("species").unique().to_list())
+    ## Try to catch when we miss something - raise a warning
+    n_species = len(species_mentioned)
 
     taxa_query = """
     SELECT name as species, id as taxid FROM rnc_taxonomy
@@ -100,8 +106,28 @@ def parse(filepath: str) -> ty.List[Entry]:
         connection=conn,
         execute_options={"parameters": {"names": species_mentioned}},
     )
+    if taxa_results.height < n_species:
+        if taxa_results.height > 0:
+            missing = (
+                data.join(taxa_results, on="species", how="anti")
+                .get_column("species")
+                .unique()
+                .to_list()
+            )
+        else:
+            missing = species_mentioned
+        message = (
+            "Tarbase taxonomy query returned fewer results than we asked for species\n"
+            "We are probably missing some entries! Ignoring for now.\n"
+            f"Missing: {', '.join(missing)}"
+        )
+        logger.warning(message)
 
-    data = data.join(taxa_results, on="species", how="left")
+        ## Only warn on slack if not testing
+        if not "pytest" in sys.modules:
+            send_notification("Tarbase parser warning", message)
+
+    data = data.join(taxa_results, on="species", how="left").drop_nulls("taxid")
 
     grouped_data = data.group_by("mirna_id", maintain_order=True).agg(
         pl.col("mirna_name").first(),
