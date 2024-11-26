@@ -21,6 +21,7 @@ from rnacentral_pipeline.rnacentral.random_forest_genes import (
     convert,
     extract,
     preprocess,
+    split,
 )
 
 
@@ -93,4 +94,6 @@ def preprocess_transcripts(candidates, transcript_data, feature_output):
 def split_dataset(
     input_data, train_path, test_path, val_path, test_frac, val_frac, seed, hub_repo
 ):
-    pass
+    split.train_test_val(
+        input_data, train_path, test_path, val_path, test_frac, val_frac, seed, hub_repo
+    )
