@@ -1,6 +1,8 @@
 process ribocentre {
+  memory { 2.GB * task.attempt }
+  errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'terminate' }
+
   when: { params.databases.ribocentre.run }
-  memory 8.GB
   output:
   path("*.csv")
 
