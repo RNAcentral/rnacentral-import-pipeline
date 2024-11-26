@@ -1,5 +1,7 @@
 workflow tarbase {
   emit: data
+
+  main:
   remotes = channel.fromList( params.databases.tarbase.remotes )
   remotes | fetch | parse | set { data }
 }
