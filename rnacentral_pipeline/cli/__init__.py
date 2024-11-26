@@ -58,6 +58,7 @@ from rnacentral_pipeline.cli import (
     refseq,
     release,
     repeats,
+    rf_genes,
     rfam,
     ribocentre,
     ribovision,
@@ -137,6 +138,7 @@ cli.add_command(refseq.cli)
 cli.add_command(release.cli)
 cli.add_command(repeats.cli)
 cli.add_command(rfam.cli)
+cli.add_command(rf_genes.cli)
 cli.add_command(ribovision.cli)
 cli.add_command(ribocentre.cli)
 cli.add_command(scan_imports.cli)
