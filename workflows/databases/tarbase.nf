@@ -7,6 +7,9 @@ workflow tarbase {
 }
 
 process fetch {
+  errorStrategy 'retry'
+  maxRetries 10
+
   when: { params.databases.tarbase.run }
 
   input:
