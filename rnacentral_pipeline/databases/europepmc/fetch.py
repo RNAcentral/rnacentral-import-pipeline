@@ -23,6 +23,7 @@ from throttler import throttle
 
 from rnacentral_pipeline.databases.data import Reference
 from rnacentral_pipeline.utils import cacheable
+
 from .utils import clean_title, pretty_location, write_lookup
 
 LOGGER = logging.getLogger(__name__)
@@ -35,6 +36,15 @@ class UnknownReference(Exception):
     """
 
     pass
+
+
+class TooManyPublications(Exception):
+    """
+    This is raised when there are too many publications for a given entry
+    """
+
+    pass
+
 
 ## Split the actualy async request bit away from the other
 ## bits to facilitate caching with coroutines
@@ -51,7 +61,8 @@ async def get_data(id_reference):
     assert data, "Somehow got no data"
     return data
 
-## Higher level cache on the IDs 
+
+## Higher level cache on the IDs
 ## Lower level cache on the coroutines
 @lru_cache()
 def summary(id_reference):
