@@ -67,6 +67,21 @@ def parse(filepath: str) -> ty.List[Entry]:
     """
     data = pl.read_csv(filepath, separator="\t", null_values=["NA"]).unique()
 
+    ## The taxa query will be null for the viruses provided by tarbase, so we make some substitutions
+    ## These are the NCBI names based on searching NBCI for the given species, or looking in RNAc
+    ## for interacting miRNAs
+    data = data.with_columns(
+        pl.col("species").replace(
+            ["EBV", "HIV-1", "KSHV", "MHV68"],
+            [
+                "human gammaherpesvirus 4",
+                "Human immunodeficiency virus 1",
+                "Human gammaherpesvirus 8",
+                "Murid gammaherpesvirus 4",
+            ],
+        )
+    )
+
     species_mentioned = tuple(
         data.select(pl.col("species").unique()).get_column("species").to_list()
     )
