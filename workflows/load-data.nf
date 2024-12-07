@@ -1,4 +1,5 @@
 process create_load_tables {
+  time '2d'
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"
 
   input:
