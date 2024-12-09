@@ -169,7 +169,7 @@ def parse(filepath: str) -> ty.List[Entry]:
         },
     )
 
-    grouped_data = grouped_data.join(sequence_results, on="mirna_id")
+    grouped_data = grouped_data.join(sequence_results, on="mirna_id").unique()
 
     entries = [build_entry(r) for r in grouped_data.iter_rows(named=True)]
 
