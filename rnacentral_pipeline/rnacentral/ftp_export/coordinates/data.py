@@ -28,6 +28,8 @@ from rnacentral_pipeline.databases.data import Database, regions
 def lookup_databases(raw):
     databases = []
     for db in raw:
+        if db is None:
+            continue
         found = Database.lookup(db)
         if not found:
             raise ValueError(f"Failed to lookup database {db}")
@@ -76,6 +78,9 @@ class Region(object):
             "databases": clean_databases(raw["databases"]),
         }
         if not metadata["providing_databases"]:
+            if not raw["was_mapped"]:
+                print(raw)
+                raise ValueError("No providing database for an unmapped region!")
             del metadata["providing_databases"]
 
         return cls(
