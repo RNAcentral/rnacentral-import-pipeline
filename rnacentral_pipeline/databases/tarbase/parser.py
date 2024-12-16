@@ -129,14 +129,23 @@ def parse(filepath: str) -> ty.List[Entry]:
 
     data = data.join(taxa_results, on="species", how="left").drop_nulls("taxid")
 
-    grouped_data = data.group_by("mirna_id", maintain_order=True).agg(
-        pl.col("mirna_name").first(),
-        pl.col("gene_id"),
-        pl.col("gene_name"),
-        pl.col("experimental_method"),
-        pl.col("article_pubmed_id"),
-        pl.col("taxid").first(),
-        pl.col("species").first(),
+    grouped_data = (
+        data.group_by("mirna_id", maintain_order=True)
+        .agg(
+            pl.col("mirna_name").first(),
+            pl.col("gene_id"),
+            pl.col("gene_name"),
+            pl.col("experimental_method"),
+            pl.col("article_pubmed_id"),
+            pl.col("taxid").first(),
+            pl.col("species").first(),
+        )
+        .with_columns(
+            pl.col("gene_id").list.unique(maintain_order=True),
+            pl.col("gene_name").list.unique(maintain_order=True),
+            pl.col("experimental_method").list.unique(maintain_order=True),
+            pl.col("article_pubmed_id").list.unique(maintain_order=True),
+        )
     )
 
     accessions = [
