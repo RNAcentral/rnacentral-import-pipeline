@@ -3,8 +3,6 @@ process fetch_ribocentre {
   memory 1.GB
 
   when: { params.databases.ribocentre.run }
-  input:
-  val ribocentre_remote
   output:
   path("ribocentre.json")
 
