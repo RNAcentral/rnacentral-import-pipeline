@@ -9,7 +9,7 @@ process fetch_ribocentre {
   path("ribocentre.json")
 
   """
-  wget -O ribocentre.json $ribocentre_remote
+  wget -O ribocentre.json ${params.databases.ribocentre.remote}
   """
 }
 
@@ -33,6 +33,5 @@ workflow ribocentre {
   emit: data
 
   main:
-  remote = channel.fromPath(params.databases.ribocentre.remote)
-  remote | fetch_ribocentre | parse_ribocentre | set { data }
+  fetch_ribocentre | parse_ribocentre | set { data }
 }
