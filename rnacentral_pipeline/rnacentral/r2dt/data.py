@@ -272,7 +272,7 @@ class R2DTResultInfo(object):
     @property
     def svg(self) -> Path:
         base = self.path / "svg"
-        paths = list(base.glob(f"{self.urs}*.svg"))
+        paths = list(base.glob(f"{self.urs}*colored.svg"))
         if not paths:
             raise ValueError(f"Could not figure out svg filename for {self}")
         if len(paths) > 1:
