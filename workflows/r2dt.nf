@@ -27,7 +27,7 @@ process extract_sequences {
   path(query)
 
   output:
-  path('parts/*.json')
+  path('raw.json')
 
   script:
   """
