@@ -9,7 +9,6 @@ include { slack_message } from './workflows/utils/slack'
 
 /* On the cluster this is much much faster than wget */
 process get_r2dt_data {
-  queue 'datamover'
   container ''
 
   input:
@@ -25,7 +24,7 @@ process get_r2dt_data {
 
   cd $data_dir
 
-  cp /nfs/ftp/public/databases/RNAcentral/r2dt/1.3/cms.tar.gz .
+  wget https://github.com/r2dt-bio/R2DT/releases/download/v2.0/cms.tar.gz
 
   tar -xf cms.tar.gz --strip-components=1 -C ./cms
   """
