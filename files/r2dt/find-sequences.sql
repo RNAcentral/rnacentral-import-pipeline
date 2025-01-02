@@ -1,7 +1,7 @@
 COPY (
-SELECT
+SELECT DISTINCT ON (rna.upi)
   json_build_object(
-    'id', DISTINCT(rna.upi),
+    'id', rna.upi,
     'sequence', COALESCE(rna.seq_short, rna.seq_long)
   )
 FROM rna
