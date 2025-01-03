@@ -29,9 +29,9 @@ def load_model_info(handle: ty.TextIO) -> ty.Dict[str, data.ModelDatabaseInfo]:
     for entry in psql.json_handler(handle):
         info = data.ModelDatabaseInfo.build(entry)
         mapping[entry["model_name"]] = info
-        if info.source is data.Source.gtrnadb:
-            mapping[entry["model_name"].replace("_", "-")] = info
-            mapping[entry["model_name"].replace("-", "_")] = info
+        # if info.source is data.Source.gtrnadb:
+        #     mapping[entry["model_name"].replace("_", "-")] = info
+        #     mapping[entry["model_name"].replace("-", "_")] = info
         if entry["model_name"] == "tRNA":
             mapping["RF00005"] = info
     return mapping
