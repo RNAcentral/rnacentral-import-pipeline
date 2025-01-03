@@ -104,5 +104,5 @@ def parse(
 
             hit = None
             if info.has_hit_info():
-                hit = hit_info[urs]
+                hit = hit_info.get(urs, None)
             yield data.R2DTResult.from_info(info, hit_info=hit)
