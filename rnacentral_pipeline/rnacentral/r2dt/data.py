@@ -349,8 +349,8 @@ class R2DTResultInfo(object):
         return self.has_ribovore()
 
     def __filename__(self, extension):
-        # if self.source == Source.gtrnadb and extension == "fasta":
-        #     return f"{self.urs}.{extension}"
+        if self.source == Source.gtrnadb and extension == "fasta":
+            return f"{self.urs}-{self.model_name.replace('-','_')}.{extension}"
         if self.source == Source.rfam and not self.model_name.startswith("RF"):
             if extension == "fasta":
                 return f"{self.urs}-{self.model_alias}.{extension}"
