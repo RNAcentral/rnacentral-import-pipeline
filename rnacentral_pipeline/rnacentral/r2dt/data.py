@@ -351,9 +351,9 @@ class R2DTResultInfo(object):
     def __filename__(self, extension):
         # if self.source == Source.gtrnadb and extension == "fasta":
         #     return f"{self.urs}.{extension}"
-        # if self.source == Source.rfam and not self.model_name.startswith("RF"):
-        #     if extension == "fasta":
-        #         return f"{self.urs}.{extension}"
+        if self.source == Source.rfam and not self.model_name.startswith("RF"):
+            if extension == "fasta":
+                return f"{self.urs}-{self.model_alias}.{extension}"
         #     assert self.model_alias.startswith("RF"), f"No existing alias for {self}"
         #     return f"{self.urs}-{self.model_alias}.{extension}"
         return f"{self.urs}-{self.model_name}.{extension}"
