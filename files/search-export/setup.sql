@@ -51,6 +51,7 @@ INSERT INTO search_export_urs (urs_taxid, urs, taxid) (
     and taxid is not null
 ) ON CONFLICT DO NOTHING;
 
+SET maintenance_work_mem = '256MB';
 CREATE INDEX ix__search_todo__urs_taxid ON search_export_urs(urs, taxid);
 
 COMMIT;
