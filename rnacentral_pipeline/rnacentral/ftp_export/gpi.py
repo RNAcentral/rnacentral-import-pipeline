@@ -75,7 +75,9 @@ class GpiEntry:
     def gene_product_properties(self) -> str:
         if not self.precursors:
             return ""
-        return f"precursor_rna={','.join(self.precursors)}".replace("\t", " ")
+        return f"precursor_rna={','.join(filter(lambda x: x is not None, self.precursors))}".replace(
+            "\t", " "
+        )
 
     def writeable(self) -> ty.List[str]:
         return [
