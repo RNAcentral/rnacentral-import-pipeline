@@ -28,6 +28,8 @@ from rnacentral_pipeline.databases.data import Database, regions
 def lookup_databases(raw):
     databases = []
     for db in raw:
+        if db is None:
+            continue
         found = Database.lookup(db)
         if not found:
             raise ValueError(f"Failed to lookup database {db}")
