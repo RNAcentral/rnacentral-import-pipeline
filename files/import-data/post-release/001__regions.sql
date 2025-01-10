@@ -47,6 +47,10 @@ where
         map.region_id = reg.id
 ;
 
+-- drop indices before doing further updates/deletes
+DROP INDEX idx_rnc_sequence_regions_id;
+DROP INDEX idx_rnc_accession_sequence_region_region_id;
+
 -- Make a copy of the data I will delete from rnc_accession_sequence_region into a backup table
 -- Hopefully we can then just drop it...
 drop table if exists rnc_ac_sr_backup;
@@ -166,5 +170,7 @@ DROP INDEX IF EXISTS ix_rnc_sequence_regions_active__urs_taxid;
 REFRESH MATERIALIZED VIEW rnc_sequence_regions_active;
 
 CREATE INDEX ix_rnc_sequence_regions_active__urs_taxid on rnc_sequence_regions_active (urs_taxid);
+CREATE INDEX idx_rnc_sequence_regions_id ON rnc_sequence_regions(id);
+CREATE INDEX idx_rnc_accession_sequence_region_region_id ON rnc_accession_sequence_region(region_id);
 
 COMMIT;
