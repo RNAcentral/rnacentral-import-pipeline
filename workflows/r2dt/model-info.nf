@@ -26,7 +26,7 @@ process create_model_info {
   path('models.csv')
 
   """
-  rnc r2dt model-info $model_source $info $metadata models.csv
+  rnac r2dt model-info $model_source $info $metadata models.csv
   """
 }
 
