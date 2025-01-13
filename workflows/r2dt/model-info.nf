@@ -35,6 +35,9 @@ process store_model_info {
   path('models*.csv')
   path(load)
 
+  output:
+    val('model info stored')
+
   """
   pgloader --on-error-stop $load
   """
