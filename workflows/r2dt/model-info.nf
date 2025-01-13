@@ -54,3 +54,7 @@ workflow model_info {
 
     // store_model_info(model_info, load)
 }
+
+workflow {
+  model_info(Channel.of('ready'))
+}
