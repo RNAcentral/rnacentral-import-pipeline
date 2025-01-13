@@ -52,7 +52,7 @@ workflow model_info {
     | collect \
     | set { model_info }
 
-    // store_model_info(model_info, load)
+    store_model_info(model_info, load) | set { done }
 }
 
 workflow {
