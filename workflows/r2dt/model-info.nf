@@ -22,6 +22,9 @@ process create_model_info {
   input:
   tuple val(model_source), path(metadata), path(info)
 
+  output:
+  path('models.csv')
+
   """
   rnc r2dt model-info $model_source $info $metadata models.csv
   """
