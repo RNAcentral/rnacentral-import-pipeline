@@ -1,7 +1,7 @@
 process fetch_model_stats {
   when { params.r2dt.run }
   container params.r2dt.container
-  containerOptions "--bind ${params.r2dt.cms_path}:/rna/r2dt/data/cms" 
+  containerOptions "--bind ${params.r2dt.cms_path}:/rna/r2dt/data/cms"
 
   input:
   val(_flag)
@@ -11,7 +11,7 @@ process fetch_model_stats {
   path '*.tsv', emit: metadata
 
   """
-  find /rna/r2dt/data/cms -type f -name '*.cm' | xargs -I {} cmstat {}  | grep -v ^\\# | awk '{ printf("%s,%d,%d\n", \$3, \$6, \$8); }' | sort -u > info.csv
+  find /rna/r2dt/data -type f -name '*.cm' | xargs -I {} cmstat {}  | grep -v ^\\# | awk '{ printf("%s,%d,%d\n", \$3, \$6, \$8); }' | sort -u > info.csv
   cp /rna/r2dt/data/rnasep/metadata.tsv rnasep.tsv
   cp /rna/r2dt/data/crw-metadata.tsv crw.tsv
   cat /rna/r2dt/data/ribovision*/metadata.tsv > ribovision.tsv
@@ -52,5 +52,5 @@ workflow model_info {
     | collect \
     | set { model_info }
 
-    store_model_info(model_info, load)
+    // store_model_info(model_info, load)
 }
