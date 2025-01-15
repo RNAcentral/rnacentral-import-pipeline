@@ -94,7 +94,7 @@ def parse(
 
             try:
                 info.validate()
-            except AssertionError as e:
+            except (AssertionError, ValueError) as e:
                 if allow_missing:
                     LOGGER.warn("Did not find all required files for %s", urs)
                     LOGGER.exception(e)
