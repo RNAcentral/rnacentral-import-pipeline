@@ -24,6 +24,7 @@ DOMAINS = {
     "arch": ("A", 2157),
     "euk": ("E", 2759),
     "bact": ("B", 2),
+    "mito": ("M", 131567),
 }
 
 TYPES = {
