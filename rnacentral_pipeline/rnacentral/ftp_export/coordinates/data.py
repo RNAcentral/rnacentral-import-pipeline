@@ -79,8 +79,9 @@ class Region(object):
         }
         if not metadata["providing_databases"]:
             if not raw["was_mapped"]:
-                print(raw)
-                raise ValueError("No providing database for an unmapped region!")
+                raise ValueError(
+                    f"No providing database for an unmapped region!\n{raw}"
+                )
             del metadata["providing_databases"]
 
         return cls(
