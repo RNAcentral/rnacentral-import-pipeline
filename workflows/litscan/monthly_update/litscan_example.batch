@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+
+#SBATCH --time=00:10:00                  # walltime
+#SBATCH --ntasks=1                       # number of tasks
+#SBATCH --cpus-per-task=1                # number of CPUs Per Task i.e if your code is multi-threaded
+#SBATCH --nodes=1                        # number of nodes
+#SBATCH --mem=250MB                      # memory per node
+#SBATCH -J "LitScan - rescan ids"        # job name
+#SBATCH -D "/path/to/script"             # working directory
+#SBATCH -o "out_example"                 # job output file
+#SBATCH -e "err_example"                 # job error file
+#SBATCH --mail-user=user@ebi.ac.uk       # email address
+#SBATCH --mail-type=END
+#SBATCH --mail-type=FAIL
+
+
+set -euo pipefail
+IFS=$'\n\t'
+
+module load nextflow
+NF="nextflow"
+
+# Clean up previous run by nextflow
+$NF clean -f
+
+# Add/change the list of databases that must be updated
+$NF run /path/to/litscan-rescan-ids-by-date.nf --rescan_ids_from "('ensembl_gencode', 'ensembl_plants')" --database "postgres://user:password@host:5432/database"
