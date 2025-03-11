@@ -83,7 +83,7 @@ def parse(raw: ty.IO) -> ty.Iterable[Entry]:
     rows = list(reader)
     for row in rows:
         accessions = row["Instances"].split(",")
-        assert len(accessions) == int(row["InstanceCt"])
+        assert len(accessions) == int(row["Count"])
         species = inferred_species(row["#ID"])
         tax_string = ",".join([row["Taxonomy"], species])
         tax_id = gtdb.phylogeny_to_taxid(tax_string)
