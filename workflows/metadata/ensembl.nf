@@ -17,6 +17,8 @@ process assemblies {
 
 process fetch_compara {
   when { params.databases.ensembl.vertebrates.run }
+  errorStrategy 'retry'
+  maxRetries 10
 
   output:
   path('*.nt.fasta.gz')
@@ -58,6 +60,8 @@ process proteins {
 
 process coordinate_systems {
   when { params.databases.ensembl.vertebrates.run }
+  errorStrategy 'retry'
+  maxRetries 10
 
   input:
   path(connections)
@@ -73,6 +77,8 @@ process coordinate_systems {
 
 process karyotypes {
   when { params.databases.ensembl.vertebrates.run }
+  errorStrategy 'retry'
+  maxRetries 10
 
   output:
   path('karyotypes.csv')
