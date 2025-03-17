@@ -35,6 +35,7 @@ name_mapping = {
     "GpI": "tmrna_gpi",
     "IVS": "tmrna_ivs",
     "TagCDS": "tmrna_tagcds",
+    "HEG": "tmrna_heg",
 }
 
 NO_CODING_SEQUENCE = ["frameshift", "undetermined"]
