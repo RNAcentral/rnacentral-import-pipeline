@@ -90,6 +90,7 @@ process submit_ids {
     if [ -s new_ids.txt ]; then
       # new_ids.txt is not empty
       # get original ids (not in lowercase)
+      # TODO: improve performance. This step may take a long time depending on the number of IDs.
       while IFS= read -r line; do
         grep -ixF "\$line" all_ids.txt | head -1 >> results.txt
       done < new_ids.txt
