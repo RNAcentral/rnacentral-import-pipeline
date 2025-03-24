@@ -13,7 +13,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+from pathlib import Path
+
+import polars as pl
+
 from rnacentral_pipeline.databases.data import Entry, Exon, SequenceRegion
+from rnacentral_pipeline.databases.expressionatlas import sdrf
 from rnacentral_pipeline.databases.helpers import phylogeny as phy
 from rnacentral_pipeline.databases.helpers import publications as pubs
 
@@ -87,3 +92,27 @@ def as_entry(info, experiment):
         gene=info["GeneID"][0],
         gene_synonyms=synonyms,
     )
+
+
+def find_all_taxids(directory):
+    directory = Path(directory)
+    sdrfs = list(directory.rglob("*condensed-sdrf.tsv"))
+    sdrf_data = None
+    for s in sdrfs:
+        if sdrf_data is None:
+            sdrf_data = sdrf.parse_condensed_sdrf(s)
+        else:
+            sdrf_data = pl.concat((sdrf_data, sdrf.parse_condensed_sdrf(s)))
+
+    organisms = (
+        sdrf_data.filter(pl.col("feat_type") == "organism").select("ontology").unique()
+    )
+    taxids = (
+        organisms.with_columns(
+            taxid=pl.col("ontology").str.split("NCBITaxon_").list.last().cast(pl.Int64)
+        )
+        .select(pl.col("taxid").unique())
+        .sort(by="taxid")
+    )
+
+    return taxids.get_column("taxid").to_list()
