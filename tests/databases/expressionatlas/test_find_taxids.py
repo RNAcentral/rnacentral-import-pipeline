@@ -5,9 +5,13 @@ from pathlib import Path
 from unittest.mock import MagicMock, mock_open, patch
 
 import polars as pl
+import pytest
+
+from rnacentral_pipeline.databases.expressionatlas import sdrf
 
 # Import the module where find_all_taxids is located
 # from your_module import find_all_taxids, sdrf
+from rnacentral_pipeline.databases.expressionatlas.helpers import find_all_taxids
 
 
 class TestFindAllTaxids(unittest.TestCase):
@@ -27,15 +31,15 @@ class TestFindAllTaxids(unittest.TestCase):
             }
         )
 
-    @patch("your_module.sdrf.parse_condensed_sdrf")
+    @patch("rnacentral_pipeline.databases.expressionatlas.sdrf.parse_condensed_sdrf")
     def test_empty_directory(self, mock_parse):
         # Test with a directory that has no matching files
         with tempfile.TemporaryDirectory() as temp_dir:
-            result = find_all_taxids(temp_dir)
-            self.assertEqual(result, [])
+            with pytest.raises(FileNotFoundError):
+                _ = find_all_taxids(temp_dir)
             mock_parse.assert_not_called()
 
-    @patch("your_module.sdrf.parse_condensed_sdrf")
+    @patch("rnacentral_pipeline.databases.expressionatlas.sdrf.parse_condensed_sdrf")
     def test_single_file(self, mock_parse):
         # Test with a directory containing a single sdrf file
         mock_parse.return_value = self.sample_data1
@@ -52,7 +56,7 @@ class TestFindAllTaxids(unittest.TestCase):
                 self.assertEqual(result, [9606, 10090])
                 mock_parse.assert_called_once()
 
-    @patch("your_module.sdrf.parse_condensed_sdrf")
+    @patch("rnacentral_pipeline.databases.expressionatlas.sdrf.parse_condensed_sdrf")
     def test_multiple_files(self, mock_parse):
         # Test with a directory containing multiple sdrf files
         mock_parse.side_effect = [self.sample_data1, self.sample_data2]
@@ -74,7 +78,7 @@ class TestFindAllTaxids(unittest.TestCase):
                 self.assertEqual(sorted(result), [7227, 9606, 10090])
                 self.assertEqual(mock_parse.call_count, 2)
 
-    @patch("your_module.sdrf.parse_condensed_sdrf")
+    @patch("rnacentral_pipeline.databases.expressionatlas.sdrf.parse_condensed_sdrf")
     def test_no_organism_entries(self, mock_parse):
         # Test when there are no organism entries in the data
         mock_parse.return_value = pl.DataFrame(
@@ -93,7 +97,7 @@ class TestFindAllTaxids(unittest.TestCase):
                 result = find_all_taxids(temp_dir)
                 self.assertEqual(result, [])
 
-    @patch("your_module.sdrf.parse_condensed_sdrf")
+    @patch("rnacentral_pipeline.databases.expressionatlas.sdrf.parse_condensed_sdrf")
     def test_invalid_taxid_format(self, mock_parse):
         # Test handling of invalid taxid formats
         mock_parse.return_value = pl.DataFrame(
@@ -113,7 +117,7 @@ class TestFindAllTaxids(unittest.TestCase):
                 with self.assertRaises(Exception):
                     find_all_taxids(temp_dir)
 
-    @patch("your_module.sdrf.parse_condensed_sdrf")
+    @patch("rnacentral_pipeline.databases.expressionatlas.sdrf.parse_condensed_sdrf")
     def test_different_ontology_format(self, mock_parse):
         # Test with different ontology format
         mock_parse.return_value = pl.DataFrame(
@@ -129,9 +133,9 @@ class TestFindAllTaxids(unittest.TestCase):
                 f.write("dummy content")
 
             with patch("pathlib.Path.rglob", return_value=[Path(file_path)]):
-                # The function should return an empty list since there are no valid NCBITaxon entries
-                result = find_all_taxids(temp_dir)
-                self.assertEqual(result, [])
+                # The function should throw an exception on unexpected taxonomies
+                with pytest.raises(ValueError):
+                    _ = find_all_taxids(temp_dir)
 
 
 if __name__ == "__main__":
