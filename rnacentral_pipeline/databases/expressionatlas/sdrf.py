@@ -28,8 +28,12 @@ def parse_condensed_sdrf(path: Union[str, Path]) -> pl.DataFrame:
         content = file.read()
 
     # Parse lines and split by tabs
-    part_parsed: List[List[str]] = [line.split("\t") for line in content.splitlines()]
+    part_parsed: List[List[str]] = [
+        line.strip().split("\t") for line in content.splitlines()
+    ]
 
+    if len(part_parsed) == 0:
+        raise ValueError(f"SDRF file {path} contained no data")
     # Initialize empty lists for each column
     exp_name_data = []
     assay_name_data = []
@@ -49,7 +53,6 @@ def parse_condensed_sdrf(path: Union[str, Path]) -> pl.DataFrame:
             feat_class_data.append(line[3])
             feat_type_data.append(line[4])
             feat_value_data.append(line[5])
-
             if len(line) == 7:
                 ontology_data.append(line[6])
             else:
@@ -59,6 +62,7 @@ def parse_condensed_sdrf(path: Union[str, Path]) -> pl.DataFrame:
             f"Unusual sdrf parsing with {max_columns} columns, not 7 for experiment {part_parsed[0][0]}"
         )
         for line in part_parsed:
+            print(line)
             exp_name_data.append(line[0])
             assay_name_data.append(line[1])
             feat_class_data.append(line[2])
