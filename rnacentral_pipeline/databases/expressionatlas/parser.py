@@ -133,7 +133,7 @@ def parse_baseline(tpms, sdrf_path, lookup):
     return output_data
 
 
-def parse(handle, db_url):
+def parse(handle, lookup):
     """
     Process the jsonlines output from Rust into entries.
 
@@ -141,7 +141,16 @@ def parse(handle, db_url):
     should give us the transcript level linkage we're after without any further
     processing.
     """
-    for line in handle:
-        hit = json.loads(line)
+    ## Group on urs to get a list of matching experiments
+    grouped_data = (
+        pl.scan_ndjson(handle).group_by("urs_taxid").agg(pl.col("experiment"))
+    )
+
+    lookup_data = pl.scan_csv(lookup, skip_rows=2)
+    ## Join against lookup to get the rest of the required information
+    hits = grouped_data.join(lookup_data, on="urs_taxid", how="inner").collect(
+        streaming=True
+    )
+    for hit in hits.iter_rows(named=True):
         for experiment in hit["experiment"]:
             yield helpers.as_entry(hit, experiment)
