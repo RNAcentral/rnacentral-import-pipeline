@@ -14,9 +14,13 @@ limitations under the License.
 """
 import json
 import operator as op
+import pathlib
 import typing as ty
 
+import polars as pl
+
 from rnacentral_pipeline.databases import data
+from rnacentral_pipeline.databases.expressionatlas import sdrf
 
 from . import helpers
 
@@ -24,6 +28,58 @@ from . import helpers
 def as_expression(mapping):
 
     pass
+
+
+def parse_differential(analytics, sdrf_path, lookup):
+    """
+    Join the analytics against the lookup to get only rows for genes we care about
+
+    Analytics is filtered by:
+    - non null p-value. Note the non-strict cast to coerce NA into null
+    - log2foldchange >= 1
+    """
+    analytics_data = pl.read_csv(
+        analytics,
+        separator="\t",
+    ).with_columns(pl.selectors.contains("p-value").cast(pl.Float32, strict=False))
+    if analytics_data.height == 0:
+        raise ValueError(f"Analytics data for {analytics} was empty, abort parsing")
+    analytics_data = (
+        analytics_data.filter(
+            pl.any_horizontal(pl.selectors.contains("p-value").is_not_null())
+        )
+        .filter(pl.any_horizontal(pl.selectors.contains("p-value").lt(0.05)))
+        .filter(pl.any_horizontal(pl.selectors.contains("log2foldchange").abs().ge(1)))
+        .with_columns(experiment=pl.lit(analytics.name.replace("-analytics.tsv", "")))
+    )
+    if "Gene ID" in analytics_data.columns:
+        analytics_data = analytics_data.rename({"Gene ID": "GeneID"})
+
+    analytics_data = analytics_data.select(["GeneID", "experiment"])
+
+    sdrf_data = sdrf.parse_condensed_sdrf(sdrf_path)
+
+    organisms = (
+        sdrf_data.filter(pl.col("feat_type") == "organism").select("ontology").unique()
+    )
+    taxids = organisms.with_columns(
+        taxid=pl.col("ontology").str.split("NCBITaxon_").list.last().cast(pl.Int64)
+    ).select("taxid")
+
+    ## The skip_rows=2 here is because psql will write the CREATE and COPY acknowledgements in front of the csv data
+    lookup_data = (
+        pl.scan_csv(lookup, skip_rows=2)
+        .unique(["urs_taxid", "gene"])
+        .select(["urs_taxid", "taxid", "gene"])
+        .join(taxids.lazy(), on="taxid")
+    )
+    output_data = (
+        lookup_data.join(analytics_data.lazy(), left_on="gene", right_on="GeneID")
+        .select(["urs_taxid", "experiment"])
+        .collect(streaming=True)
+    )
+
+    return output_data
 
 
 def parse(handle, db_url):
