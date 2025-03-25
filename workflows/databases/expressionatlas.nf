@@ -1,28 +1,55 @@
-process fetch_data {
+process fetch_taxids {
   queue 'datamover'
-  container ''
-  errorStrategy 'ignore'
-  cpus 10
+  memory '8GB'
 
   input:
-    val base_dir
+    tuple val(flag), path(experiments_path)
 
   output:
-  path('tsv_files')
+    path('taxids_to_fetch')
 
   """
-  mkdir tsv_files
-  find "${base_dir}" -type f -name "*analytics.tsv" -print0 | xargs -0 -I {} -P 20 cp {} tsv_files || true
-  find "${base_dir}" -type f -name "*tpms.tsv" -print0 | xargs -0 -I {} -P 20 cp {} tsv_files || true
-  find "${base_dir}" -type f -name "*condensed-sdrf.tsv" -print0 | xargs -0 -I {} -P 20 cp {} tsv_files || true
-  find "${base_dir}" -type f -name "*configuration.xml" -print0 | xargs -0 -I {} -P 20 cp {} tsv_files || true
+  rnac expressionatlas get-taxids ${experiments_path} taxids_to_fetch
+  """
+}
+
+process find_experiments {
+  queue 'datamover'
+
+  input:
+    tuple val(flag), path(experiments_path)
+
+  output:
+    path('experiment_list')
+
+  """
+  find ${experiments_path} -maxdepth 1 -name 'E*' -type d > experiment_list
+  """
+}
+
+process synchronize_cache {
+  queue 'datamover'
+
+  input:
+    tuple path(experiments_path), cache(ea_cache_path)
+  output:
+    val('cache synchronized')
+
+  """
+  rsync -qLrtvz --include "*analytics.tsv" \
+  --include "*condensed-sdrf.tsv" \
+  --include "*-tpms.tsv" \
+  --include "*-configuration.xml" \
+  --exclude "*-transcripts-tpms.tsv" \
+  --exclude "*" \
+  ${experiments_path} ${ea_cache_path}
   """
 }
 
 process fetch_lookup {
   memory '8GB'
   input:
-    path (query)
+    tuple path(query), path(taxids_to_fetch)
 
   output:
     path("lookup_dump.csv")
@@ -34,25 +61,22 @@ process fetch_lookup {
 
 
 process parse_tsvs {
-  memory { 64.GB * task.attempt }
-  cpus 16
-  container ''
-  errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'terminate' }
+  memory '2GB'
+  cpus 4
 
   input:
-  path(tsvs)
+  tuple path(tsvs), path(lookup)
 
   output:
   path('chunk_*')
 
   """
-  expression-parse parse -i $tsvs -o all_genes.csv
-  parallel --block 500M -a all_genes.csv --header : --pipepart 'cat > chunk_{#}'
+  rnac expressionatlas parse-dir ${tsvs} ${lookup} genes_hit.ndjson
   """
 
 }
 
-process lookup_genes {
+process group_and_convert {
   memory { 32.GB * task.attempt }
   cpus 16
   errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'terminate' }
@@ -63,8 +87,8 @@ process lookup_genes {
     path('*.csv')
 
   """
-  expression-parse lookup -g $genes -l $lookup -o exp_parse_stage2.json
-  rnac expressionatlas parse exp_parse_stage2.json .
+  rnac expressionatlas parse ${genes} ${lookup} .
+
   """
 }
 
@@ -77,19 +101,32 @@ workflow expressionatlas {
   if( params.databases.expressionatlas.run ) {
     Channel.fromPath('files/import-data/expressionatlas/lookup-dump-query.sql') | set { lookup_sql }
     Channel.of(params.databases.expressionatlas.remote) | set { tsv_path }
-    lookup_sql | fetch_lookup | set { lookup }
-    tsv_path \
-    | fetch_data \
-    | parse_tsvs \
-    | flatten | set { genes }
+    Channel.of(params.databases.expressionatlas.cache) | set { ea_cache }
 
-   lookup.combine(genes) | lookup_genes \
-   | collect \
-   | set { data }
+    tsv_path.combine(ea_cache) | synchronize_cache | { cache_syncd }
+
+    cache_syncd.combine(ea_cache) | fetch_taxids | set { taxids }
+    cache_syncd.combine(ea_cache) | find_experiments | set { experiments }
+
+    lookup_sql.combine(taxids) | fetch_lookup | set { lookup }
+
+    experiments \
+    | splitText \
+    | combine(lookup) \
+    | parse_tsvs \
+    | collectFile \
+    | group_and_convert \
+    | collect \
+    | set {data}
 
   }
   else {
     Channel.empty() | set { data }
   }
 
+}
+
+
+workflow {
+  expressionatlas()
 }
