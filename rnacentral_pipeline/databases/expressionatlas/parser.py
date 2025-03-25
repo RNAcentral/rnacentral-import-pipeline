@@ -82,6 +82,57 @@ def parse_differential(analytics, sdrf_path, lookup):
     return output_data
 
 
+def parse_baseline(tpms, sdrf_path, lookup):
+    """
+    Parse and filter the baseline tpms file, then get the genes we care about
+
+    - tpms is parsed to get to a median tpm from a lit of replicates (like 1,2,3,4,5 )
+    - Then we filter to only keep things with median > 0.5
+    - Then join against the lookup table for things with this taxid to extract gene-experiment-urs linkage
+    - Return dataframe with only necessary fields
+
+    """
+
+    tpms_data = (
+        pl.read_csv(tpms, separator="\t")
+        .with_columns(
+            pl.selectors.matches("^g\d+")
+            .str.split(",")
+            .list.eval(pl.element().cast(pl.Float64))
+        )
+        .with_columns(pl.selectors.matches("^g\d+").list.median())
+        .filter(pl.any_horizontal(pl.selectors.matches("^g\d+").gt(0.5)))
+        .with_columns(experiment=pl.lit(tpms.name.replace("-tpms.tsv", "")))
+    )
+    if "Gene ID" in tpms_data.columns:
+        tpms_data = tpms_data.rename({"Gene ID": "GeneID"})
+
+    tpms_data = tpms_data.select(["GeneID", "experiment"])
+
+    sdrf_data = sdrf.parse_condensed_sdrf(sdrf_path)
+
+    organisms = (
+        sdrf_data.filter(pl.col("feat_type") == "organism").select("ontology").unique()
+    )
+    taxids = organisms.with_columns(
+        taxid=pl.col("ontology").str.split("NCBITaxon_").list.last().cast(pl.Int64)
+    ).select("taxid")
+
+    lookup_data = (
+        pl.scan_csv(lookup, skip_rows=2)
+        .unique(["urs_taxid", "gene"])
+        .select(["urs_taxid", "taxid", "gene"])
+        .join(taxids.lazy(), on="taxid")
+    )
+    output_data = (
+        lookup_data.join(tpms_data.lazy(), left_on="gene", right_on="GeneID")
+        .select(["urs_taxid", "experiment"])
+        .collect(streaming=True)
+    )
+
+    return output_data
+
+
 def parse(handle, db_url):
     """
     Process the jsonlines output from Rust into entries.
