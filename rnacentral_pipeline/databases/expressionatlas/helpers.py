@@ -24,28 +24,28 @@ from rnacentral_pipeline.databases.helpers import publications as pubs
 
 
 def accession(info):
-    return "EXPRESSIONATLAS:" + info["GeneID"]
+    return "EXPRESSIONATLAS:" + info["gene"]
 
 
 def primary_id(info):
-    return "EXPRESSIONATLAS:" + info["GeneID"]
+    return "EXPRESSIONATLAS:" + info["gene"]
 
 
 def taxid(info):
-    taxid = info["taxid"][0]
+    taxid = info["taxid"]
     return int(taxid)
 
 
 def species(info):
-    return phy.species(info["taxid"][0])
+    return phy.species(info["taxid"])
 
 
 def lineage(info):
-    return phy.lineage(info["taxid"][0])
+    return phy.lineage(info["taxid"])
 
 
 def common_name(info):
-    return phy.common_name(info["taxid"][0])
+    return phy.common_name(info["taxid"])
 
 
 def url(experiment):
@@ -72,24 +72,22 @@ def rna_type(type_str):
 
 
 def as_entry(info, experiment):
-    synonyms = list(
-        filter(None, [""] if info["Gene Name"] == [None] else info["Gene Name"])
-    )
+    synonyms = list(filter(None, [""] if info["gene"] == [None] else info["gene"]))
     return Entry(
         primary_id=primary_id(info),
         accession=accession(info),
         ncbi_tax_id=taxid(info),
         database="EXPRESSION_ATLAS",
-        sequence=info["seq"][0],
+        sequence=info["seq"],
         regions=region_builder(info),
-        rna_type=rna_type(info["rna_type"][0]),
+        rna_type=rna_type(info["rna_type"]),
         url=url(experiment),
         seq_version="1",
-        description=info["description"][0],
+        description=info["description"],
         species=species(info),
         common_name=common_name(info),
         lineage=lineage(info),
-        gene=info["GeneID"][0],
+        gene=info["gene"],
         gene_synonyms=synonyms,
     )
 
@@ -103,16 +101,23 @@ def find_all_taxids(directory):
             sdrf_data = sdrf.parse_condensed_sdrf(s)
         else:
             sdrf_data = pl.concat((sdrf_data, sdrf.parse_condensed_sdrf(s)))
-
+    if sdrf_data is None:
+        raise FileNotFoundError("No SDRF files found? Check the provided directory")
     organisms = (
         sdrf_data.filter(pl.col("feat_type") == "organism").select("ontology").unique()
     )
-    taxids = (
-        organisms.with_columns(
-            taxid=pl.col("ontology").str.split("NCBITaxon_").list.last().cast(pl.Int64)
+    try:
+        taxids = (
+            organisms.with_columns(
+                taxid=pl.col("ontology")
+                .str.split("NCBITaxon_")
+                .list.last()
+                .cast(pl.Int64)
+            )
+            .select(pl.col("taxid").unique())
+            .sort(by="taxid")
         )
-        .select(pl.col("taxid").unique())
-        .sort(by="taxid")
-    )
+    except pl.exceptions.InvalidOperationError:
+        raise ValueError("Unknown ontology in an SDRF file")
 
     return taxids.get_column("taxid").to_list()
