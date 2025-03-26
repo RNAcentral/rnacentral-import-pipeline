@@ -29,6 +29,8 @@ process find_experiments {
 
 process synchronize_cache {
   queue 'datamover'
+  errorStrategy { task.exitStatus == 23 ? 'ignore' : 'terminate' }
+
 
   input:
     tuple path(experiments_path), path(ea_cache_path)
