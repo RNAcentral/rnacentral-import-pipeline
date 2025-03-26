@@ -119,6 +119,8 @@ def find_all_taxids(directory):
     N_not_NCBI = organisms.filter(
         pl.col("ontology").str.starts_with("NCBI").not_()
     ).height
+    ## Check if any ontology terms in the organism column are not NCBI taxa
+    ## Remove them if not and give a warning
     if N_not_NCBI > 0:
         LOGGER.warning("%s taxids found that are not NCBI taxa!", N_not_NCBI)
         organisms = organisms.filter(pl.col("ontology").str.starts_with("NCBI"))
