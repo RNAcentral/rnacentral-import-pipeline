@@ -25,11 +25,6 @@ from rnacentral_pipeline.databases.expressionatlas import sdrf
 from . import helpers
 
 
-def as_expression(mapping):
-
-    pass
-
-
 def parse_differential(analytics, sdrf_path, lookup):
     """
     Join the analytics against the lookup to get only rows for genes we care about
