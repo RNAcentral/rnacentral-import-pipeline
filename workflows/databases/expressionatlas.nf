@@ -36,6 +36,8 @@ process synchronize_cache {
     val('cache synchronized')
 
   """
+  find . ! -readable -o -type d ! -executable | sed -e 's:^\./:/:' -e 's:[?*\\[]:\\1:g' >> exclude_dirs
+
   rsync -qLrtvz --include "*analytics.tsv" \
   --filter="+ */" \
   --filter="+ *condensed-sdrf.tsv" \
@@ -43,6 +45,7 @@ process synchronize_cache {
   --filter="+ *-configuration.xml" \
   --filter="- *-transcripts-tpms.tsv" \
   --filter="- *" \
+  --exclude-from=exclude_dirs \
   ${experiments_path}/ ${ea_cache_path}/
   """
 }
