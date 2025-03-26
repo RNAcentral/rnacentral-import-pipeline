@@ -13,6 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import logging
 from pathlib import Path
 
 import polars as pl
@@ -21,6 +22,8 @@ from rnacentral_pipeline.databases.data import Entry, Exon, SequenceRegion
 from rnacentral_pipeline.databases.expressionatlas import sdrf
 from rnacentral_pipeline.databases.helpers import phylogeny as phy
 from rnacentral_pipeline.databases.helpers import publications as pubs
+
+LOGGER = logging.getLogger(__name__)
 
 
 def accession(info):
@@ -93,6 +96,13 @@ def as_entry(info, experiment):
 
 
 def find_all_taxids(directory):
+    """
+    Find all the taxids mentioned in all the SDRF files in the given directory.
+
+    This will recursively glob, so should find everything within the EA cache dir.
+    It also means that this one function processes all N thousand SDRF files, so
+    we need a good way to catch errors here and not crash.
+    """
     directory = Path(directory)
     sdrfs = list(directory.rglob("*condensed-sdrf.tsv"))
     sdrf_data = None
@@ -106,6 +116,13 @@ def find_all_taxids(directory):
     organisms = (
         sdrf_data.filter(pl.col("feat_type") == "organism").select("ontology").unique()
     )
+    N_not_NCBI = organisms.filter(
+        pl.col("ontology").str.starts_with("NCBI").not_()
+    ).height
+    if N_not_NCBI > 0:
+        LOGGER.warning("%s taxids found that are not NCBI taxa!", N_not_NCBI)
+        organisms = organisms.filter(pl.col("ontology").str.starts_with("NCBI"))
+
     try:
         taxids = (
             organisms.with_columns(
@@ -118,6 +135,6 @@ def find_all_taxids(directory):
             .sort(by="taxid")
         )
     except pl.exceptions.InvalidOperationError:
-        raise ValueError("Unknown ontology in an SDRF file")
+        raise ValueError("Failed to extract taxids from all SDRF files")
 
     return taxids.get_column("taxid").to_list()
