@@ -35,8 +35,9 @@ process synchronize_cache {
   output:
     val('cache synchronized')
 
+  script:
   """
-  find . ! -readable -o -type d ! -executable | sed -e 's:^\./:/:' -e 's:[?*\\[]:\\1:g' >> exclude_dirs
+  find . ! -readable -o -type d ! -executable | sed -e 's:^\\./:/:\\/' -e 's:[?*\\\\[]:\\\\\\\\1:g' >> exclude_dirs
 
   rsync -qLrtvz --include "*analytics.tsv" \
   --filter="+ */" \
