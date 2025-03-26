@@ -18,6 +18,7 @@ import re
 from pathlib import Path
 
 import click
+import polars as pl
 
 from rnacentral_pipeline.databases.expressionatlas import configuration, parser, sdrf
 from rnacentral_pipeline.databases.expressionatlas.helpers import find_all_taxids
@@ -106,7 +107,11 @@ def parse_dir(directory, lookup, output):
         assert len(sdrfs) == 1
         sdrf = sdrfs[0]
         print(analytics_file)
-        hits = parser.parse_differential(analytics_file, sdrf, lookup)
+        try:
+            hits = parser.parse_differential(analytics_file, sdrf, lookup)
+        except ValueError:
+            LOGGER.error("Failed to parse differential experiment %s", analytics_file)
+            hits = pl.DataFrame()
     elif config.exp_type == "rnaseq_mrna_baseline":
         ## There is a transcripts tpms file which we don't want, so grab both with
         ## pathlib glob, then filter to only get the one we want
@@ -116,7 +121,10 @@ def parse_dir(directory, lookup, output):
         sdrfs = list(directory.glob("*condensed-sdrf.tsv"))
         assert len(sdrfs) == 1
         sdrf = sdrfs[0]
-
-        hits = parser.parse_baseline(tpms, sdrf, lookup)
+        try:
+            hits = parser.parse_baseline(tpms, sdrf, lookup)
+        except ValueError:
+            hits = pl.DataFrame()
+            LOGGER.error("failed to parse baseline experiment %s", tpms)
 
     hits.write_ndjson(output)
