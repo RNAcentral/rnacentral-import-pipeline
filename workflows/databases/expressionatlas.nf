@@ -103,7 +103,7 @@ workflow expressionatlas {
     Channel.of(params.databases.expressionatlas.remote) | set { tsv_path }
     Channel.of(params.databases.expressionatlas.cache) | set { ea_cache }
 
-    tsv_path.combine(ea_cache) | synchronize_cache | { cache_syncd }
+    tsv_path.combine(ea_cache) | synchronize_cache |  set { cache_syncd }
 
     cache_syncd.combine(ea_cache) | fetch_taxids | set { taxids }
     cache_syncd.combine(ea_cache) | find_experiments | set { experiments }
