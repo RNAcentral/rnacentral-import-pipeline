@@ -37,7 +37,7 @@ process synchronize_cache {
 
   script:
   """
-  find . ! -readable -o -type d ! -executable | sed -e 's:^\\./:/:\\/' -e 's:[?*\\\\[]:\\\\\\\\1:g' >> exclude_dirs
+  find experiments/ -maxdepth 1 -type d ! -readable -o -type d ! -executable | sort -u >> exclude_dirs
 
   rsync -qLrtvz --include "*analytics.tsv" \
   --filter="+ */" \
