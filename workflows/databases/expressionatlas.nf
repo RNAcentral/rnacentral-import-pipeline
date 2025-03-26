@@ -31,7 +31,7 @@ process synchronize_cache {
   queue 'datamover'
 
   input:
-    tuple path(experiments_path), cache(ea_cache_path)
+    tuple path(experiments_path), path(ea_cache_path)
   output:
     val('cache synchronized')
 
