@@ -37,12 +37,13 @@ process synchronize_cache {
 
   """
   rsync -qLrtvz --include "*analytics.tsv" \
-  --include "*condensed-sdrf.tsv" \
-  --include "*-tpms.tsv" \
-  --include "*-configuration.xml" \
-  --exclude "*-transcripts-tpms.tsv" \
-  --exclude "*" \
-  ${experiments_path} ${ea_cache_path}
+  --filter="+ */" \
+  --filter="+ *condensed-sdrf.tsv" \
+  --filter="+ *-tpms.tsv" \
+  --filter="+ *-configuration.xml" \
+  --filter="- *-transcripts-tpms.tsv" \
+  --filter="- *" \
+  ${experiments_path}/ ${ea_cache_path}/
   """
 }
 
