@@ -134,7 +134,7 @@ def find_all_taxids(directory):
             .select(pl.col("taxid").unique())
             .sort(by="taxid")
         )
-    except pl.exceptions.InvalidOperationError:
-        raise ValueError("Failed to extract taxids from all SDRF files")
+    except pl.exceptions.InvalidOperationError as e:
+        raise ValueError(f"Failed to extract taxids from all SDRF files: {e}")
 
     return taxids.get_column("taxid").to_list()
