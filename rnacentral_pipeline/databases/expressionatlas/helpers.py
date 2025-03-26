@@ -81,7 +81,7 @@ def as_entry(info, experiment):
         accession=accession(info),
         ncbi_tax_id=taxid(info),
         database="EXPRESSION_ATLAS",
-        sequence=info["seq"],
+        sequence=info["seq"].replace("U", "T"),
         regions=region_builder(info),
         rna_type=rna_type(info["rna_type"]),
         url=url(experiment),
