@@ -110,6 +110,9 @@ def find_all_taxids(directory):
     for p in directory.iterdir():
         if p.is_dir():
             this_sdrf = list(p.glob("*condensed-sdrf.tsv"))
+            if len(this_sdrf) == 0:
+                LOGGER.warning("No SDRF found in %s", p)
+                continue
 
             sdrfs.append(this_sdrf[0])
     # sdrfs = list(directory.rglob("*condensed-sdrf.tsv"))
