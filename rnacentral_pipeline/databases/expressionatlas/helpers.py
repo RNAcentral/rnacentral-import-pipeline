@@ -143,6 +143,7 @@ def find_all_taxids(directory):
                 .cast(pl.Int64)
             )
             .select(pl.col("taxid").unique())
+            .filter(pl.col("taxid").is_not_null())
             .sort(by="taxid")
         )
     except pl.exceptions.InvalidOperationError as e:
