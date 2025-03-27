@@ -47,7 +47,7 @@ process synchronize_cache {
   --filter="+ *-tpms.tsv" \
   --filter="+ *-configuration.xml" \
   --filter="- *-transcripts-tpms.tsv" \
-  --filter="-
+  --filter="- *" \
   --exclude-from=exclude_dirs \
   ${experiments_path}/ ${ea_cache_path}/ || true
   """
