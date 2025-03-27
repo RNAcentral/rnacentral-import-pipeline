@@ -111,7 +111,7 @@ def find_all_taxids(directory):
         if p.is_dir():
             this_sdrf = list(p.glob("*condensed-sdrf.tsv"))
 
-            sdrfs.append(this_sdrf)
+            sdrfs.append(this_sdrf[0])
     # sdrfs = list(directory.rglob("*condensed-sdrf.tsv"))
     sdrf_data = None
     for s in sdrfs:
