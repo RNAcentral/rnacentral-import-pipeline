@@ -106,7 +106,13 @@ def find_all_taxids(directory):
     we need a good way to catch errors here and not crash.
     """
     directory = Path(directory)
-    sdrfs = list(directory.rglob("*condensed-sdrf.tsv"))
+    sdrfs = []
+    for p in directory.iterdir():
+        if p.is_dir():
+            this_sdrf = list(p.glob("*condensed-sdrf.tsv"))
+
+            sdrfs.append(this_sdrf)
+    # sdrfs = list(directory.rglob("*condensed-sdrf.tsv"))
     sdrf_data = None
     for s in sdrfs:
         if sdrf_data is None:
@@ -118,14 +124,12 @@ def find_all_taxids(directory):
     organisms = (
         sdrf_data.filter(pl.col("feat_type") == "organism").select("ontology").unique()
     )
-    N_not_NCBI = organisms.filter(
-        pl.col("ontology").str.starts_with("NCBI").not_()
-    ).height
+    N_not_NCBI = organisms.filter(pl.col("ontology").str.contains("NCBI").not_()).height
     ## Check if any ontology terms in the organism column are not NCBI taxa
     ## Remove them if not and give a warning
     if N_not_NCBI > 0:
         LOGGER.warning("%s taxids found that are not NCBI taxa!", N_not_NCBI)
-        organisms = organisms.filter(pl.col("ontology").str.starts_with("NCBI"))
+        organisms = organisms.filter(pl.col("ontology").str.contains("NCBI"))
 
     try:
         taxids = (
