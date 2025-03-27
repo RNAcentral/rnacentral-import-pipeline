@@ -107,7 +107,6 @@ def parse_dir(directory, lookup, output):
     assert len(configurations) == 1
     config_file = configurations[0]
     config = configuration.parse_config(config_file)
-    input("wait...")
     if config.exp_type == "rnaseq_mrna_differential":
         analytics = list(directory.glob("*analytics.tsv"))
         assert len(analytics) == 1
@@ -116,7 +115,6 @@ def parse_dir(directory, lookup, output):
         sdrfs = list(directory.glob("*condensed-sdrf.tsv"))
         assert len(sdrfs) == 1
         sdrf = sdrfs[0]
-        print(analytics_file)
         try:
             hits = parser.parse_differential(analytics_file, sdrf, lookup)
         except ValueError:
