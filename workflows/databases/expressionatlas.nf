@@ -23,7 +23,7 @@ process find_experiments {
     path('experiment_list')
 
   """
-  find ${experiments_path} -maxdepth 1 -name 'E*' -type d > experiment_list
+  find ${experiments_path}/ -maxdepth 1 -name 'E*' -type d ! -empty > experiment_list
   """
 }
 
@@ -47,7 +47,7 @@ process synchronize_cache {
   --filter="+ *-tpms.tsv" \
   --filter="+ *-configuration.xml" \
   --filter="- *-transcripts-tpms.tsv" \
-  --filter="- *" \
+  --filter="-
   --exclude-from=exclude_dirs \
   ${experiments_path}/ ${ea_cache_path}/ || true
   """
