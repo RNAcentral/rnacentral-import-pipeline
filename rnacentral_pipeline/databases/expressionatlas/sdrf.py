@@ -62,7 +62,6 @@ def parse_condensed_sdrf(path: Union[str, Path]) -> pl.DataFrame:
             f"Unusual sdrf parsing with {max_columns} columns, not 7 for experiment {part_parsed[0][0]}"
         )
         for line in part_parsed:
-            print(line)
             exp_name_data.append(line[0])
             assay_name_data.append(line[1])
             feat_class_data.append(line[2])
