@@ -23,7 +23,7 @@ process find_experiments {
     path('experiment_list')
 
   """
-  find ${experiments_path}/ -maxdepth 1 -name 'E*' -type d ! -empty > experiment_list
+  find `readlink ${experiments_path}`/ -maxdepth 1 -name 'E*' -type d ! -empty > experiment_list
   """
 }
 
