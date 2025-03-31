@@ -30,7 +30,7 @@ process find_experiments {
 process synchronize_cache {
   queue 'datamover'
   errorStrategy { task.exitStatus == 23 ? 'ignore' : 'terminate' }
-
+  container ''
 
   input:
     tuple path(experiments_path), path(ea_cache_path)
