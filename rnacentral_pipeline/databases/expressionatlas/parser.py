@@ -38,6 +38,7 @@ def parse_differential(analytics, sdrf_path, lookup):
             analytics,
             separator="\t",
             null_values=["NA"],
+            infer_schema=None,
         )
         .with_columns(pl.selectors.contains("p-value").cast(pl.Float32, strict=False))
         .with_columns(
