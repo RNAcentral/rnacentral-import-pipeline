@@ -104,18 +104,25 @@ def parse_dir(directory, lookup, output):
     """
     directory = Path(directory)
     configurations = list(directory.glob("*configuration.xml"))
-    assert len(configurations) == 1
+    if len(configurations) != 1:
+        LOGGER.error("missing configuration for: %s, skipping", directory)
+        hits = pl.DataFrame({"urs_taxid": [], "experiment": []})
     config_file = configurations[0]
     config = configuration.parse_config(config_file)
     if "differential" in config.exp_type:
-        analytics = list(directory.glob("*analytics.tsv"))
-        assert len(analytics) == 1
-        analytics_file = analytics[0]
-
-        sdrfs = list(directory.glob("*condensed-sdrf.tsv"))
-        assert len(sdrfs) == 1
-        sdrf = sdrfs[0]
         try:
+            analytics = list(directory.glob("*analytics.tsv"))
+            if len(analytics) != 1:
+                raise ValueError(
+                    "Didn't find the expected analytics file for %s", directory
+                )
+            analytics_file = analytics[0]
+
+            sdrfs = list(directory.glob("*condensed-sdrf.tsv"))
+            if len(sdrfs) != 1:
+                raise ValueError("Didn't find the expected SDRF for %s", directory)
+            sdrf = sdrfs[0]
+
             hits = parser.parse_differential(analytics_file, sdrf, lookup)
         except ValueError:
             LOGGER.error("Failed to parse differential experiment %s", analytics_file)
@@ -123,13 +130,18 @@ def parse_dir(directory, lookup, output):
     elif "baseline" in config.exp_type:
         ## There is a transcripts tpms file which we don't want, so grab both with
         ## pathlib glob, then filter to only get the one we want
-        tpms = list(directory.glob(r"*-tpms.tsv"))
-        tpms = list(filter(lambda x: re.match(".*\d+-tpms\.tsv$", str(x)), tpms))[0]
-
-        sdrfs = list(directory.glob("*condensed-sdrf.tsv"))
-        assert len(sdrfs) == 1
-        sdrf = sdrfs[0]
         try:
+            tpms = list(directory.glob(r"*-tpms.tsv"))
+            tpms = list(filter(lambda x: re.match(".*\d+-tpms\.tsv$", str(x)), tpms))
+            if len(tpms) != 1:
+                raise ValueError("Didn't find the expected tpms file for %s", directory)
+            tpms = tpms[0]
+
+            sdrfs = list(directory.glob("*condensed-sdrf.tsv"))
+            if len(sdrfs) != 1:
+                raise ValueError("Didn't find the expected SDRF for %s", directory)
+            sdrf = sdrfs[0]
+
             hits = parser.parse_baseline(tpms, sdrf, lookup)
         except ValueError:
             hits = pl.DataFrame({"urs_taxid": [], "experiment": []})
