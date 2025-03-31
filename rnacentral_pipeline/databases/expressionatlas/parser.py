@@ -45,7 +45,7 @@ def parse_differential(analytics, sdrf_path, lookup):
         )
         .filter(pl.any_horizontal(pl.selectors.contains("p-value").lt(0.05)))
         .filter(pl.any_horizontal(pl.selectors.contains("log2foldchange").abs().ge(1)))
-        .with_columns(experiment=pl.lit(analytics.name.replace("-analytics.tsv", "")))
+        .with_columns(experiment=pl.lit(analytics.parents[-1]))
     )
     if "Gene ID" in analytics_data.columns:
         analytics_data = analytics_data.rename({"Gene ID": "GeneID"})
@@ -97,7 +97,7 @@ def parse_baseline(tpms, sdrf_path, lookup):
         )
         .with_columns(pl.selectors.matches("^g\d+").list.median())
         .filter(pl.any_horizontal(pl.selectors.matches("^g\d+").gt(0.5)))
-        .with_columns(experiment=pl.lit(tpms.name.replace("-tpms.tsv", "")))
+        .with_columns(experiment=pl.lit(tpms.parents[-1]))
     )
     if "Gene ID" in tpms_data.columns:
         tpms_data = tpms_data.rename({"Gene ID": "GeneID"})
