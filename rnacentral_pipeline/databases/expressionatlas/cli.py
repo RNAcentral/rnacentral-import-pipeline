@@ -107,7 +107,7 @@ def parse_dir(directory, lookup, output):
     assert len(configurations) == 1
     config_file = configurations[0]
     config = configuration.parse_config(config_file)
-    if config.exp_type == "rnaseq_mrna_differential":
+    if "differential" in config.exp_type:
         analytics = list(directory.glob("*analytics.tsv"))
         assert len(analytics) == 1
         analytics_file = analytics[0]
@@ -120,7 +120,7 @@ def parse_dir(directory, lookup, output):
         except ValueError:
             LOGGER.error("Failed to parse differential experiment %s", analytics_file)
             hits = pl.DataFrame()
-    elif config.exp_type == "rnaseq_mrna_baseline":
+    elif "baseline" in config.exp_type:
         ## There is a transcripts tpms file which we don't want, so grab both with
         ## pathlib glob, then filter to only get the one we want
         tpms = list(directory.glob(r"*-tpms.tsv"))
@@ -134,5 +134,8 @@ def parse_dir(directory, lookup, output):
         except ValueError:
             hits = pl.DataFrame()
             LOGGER.error("failed to parse baseline experiment %s", tpms)
+    else:
+        LOGGER.error("unknown experiment type: %s", config.exp_type)
+        hits = pl.DataFrame()
 
     hits.write_ndjson(output)
