@@ -50,7 +50,7 @@ process synchronize_cache {
   --filter="+ *-configuration.xml" \
   --filter="- *-transcripts-tpms.tsv" \
   --filter="- *" \
-  ${experiments_path}/ ${ea_cache_path}/ || true
+  `readlink ${experiments_path}`/ ${ea_cache_path}/ || true
   """
 }
 
