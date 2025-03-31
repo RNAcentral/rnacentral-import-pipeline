@@ -36,6 +36,7 @@ def parse_differential(analytics, sdrf_path, lookup):
     analytics_data = pl.read_csv(
         analytics,
         separator="\t",
+        null_values=["NA"],
     ).with_columns(pl.selectors.contains("p-value").cast(pl.Float32, strict=False))
     if analytics_data.height == 0:
         raise ValueError(f"Analytics data for {analytics} was empty, abort parsing")
@@ -89,7 +90,11 @@ def parse_baseline(tpms, sdrf_path, lookup):
     """
 
     tpms_data = (
-        pl.read_csv(tpms, separator="\t")
+        pl.read_csv(
+            tpms,
+            separator="\t",
+            null_values=["NA"],
+        )
         .with_columns(
             pl.selectors.matches("^g\d+")
             .str.split(",")
