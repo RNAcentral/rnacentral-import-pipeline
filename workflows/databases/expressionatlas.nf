@@ -75,7 +75,7 @@ process parse_tsvs {
   tuple path(tsvs), path(lookup)
 
   output:
-  path('chunk_*')
+  path('genes_hit.ndjson')
 
   """
   rnac expressionatlas parse-dir ${tsvs} ${lookup} genes_hit.ndjson
