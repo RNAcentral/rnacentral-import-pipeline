@@ -33,11 +33,17 @@ def parse_differential(analytics, sdrf_path, lookup):
     - non null p-value. Note the non-strict cast to coerce NA into null
     - log2foldchange >= 1
     """
-    analytics_data = pl.read_csv(
-        analytics,
-        separator="\t",
-        null_values=["NA"],
-    ).with_columns(pl.selectors.contains("p-value").cast(pl.Float32, strict=False))
+    analytics_data = (
+        pl.read_csv(
+            analytics,
+            separator="\t",
+            null_values=["NA"],
+        )
+        .with_columns(pl.selectors.contains("p-value").cast(pl.Float32, strict=False))
+        .with_columns(
+            pl.selectors.contains("log2foldchange").cast(pl.Float32, strict=False)
+        )
+    )
     if analytics_data.height == 0:
         raise ValueError(f"Analytics data for {analytics} was empty, abort parsing")
     analytics_data = (
