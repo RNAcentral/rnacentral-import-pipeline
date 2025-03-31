@@ -41,7 +41,7 @@ process synchronize_cache {
   """
   find experiments/ -maxdepth 1 -type d ! -readable -o -type d ! -executable | sort -u >> exclude_dirs
 
-  rsync -qLrtvz --ignore-errors
+  rsync -qLrtvzm --ignore-errors
   --exclude-from=exclude_dirs \
   --filter="+ *analytics.tsv" \
   --filter="+ */" \
@@ -50,7 +50,6 @@ process synchronize_cache {
   --filter="+ *-configuration.xml" \
   --filter="- *-transcripts-tpms.tsv" \
   --filter="- *" \
-  --prune-empty-dirs \
   ${experiments_path}/ ${ea_cache_path}/ || true
   """
 }
