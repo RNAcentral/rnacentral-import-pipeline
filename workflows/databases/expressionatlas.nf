@@ -41,7 +41,7 @@ process synchronize_cache {
   """
   find experiments/ -maxdepth 1 -type d ! -readable -o -type d ! -executable | sort -u >> exclude_dirs
 
-  rsync -qLrtvzm --ignore-errors
+  rsync -qLrtvzm --ignore-errors \
   --exclude-from=exclude_dirs \
   --filter="+ *analytics.tsv" \
   --filter="+ */" \
