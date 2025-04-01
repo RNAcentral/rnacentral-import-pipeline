@@ -69,7 +69,8 @@ process fetch_lookup {
 
 
 process parse_tsvs {
-  memory '2GB'
+  memory { 2.GB * task.attempt }
+  errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'terminate' }
   cpus 4
 
   input:
