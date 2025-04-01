@@ -107,47 +107,52 @@ def parse_dir(directory, lookup, output):
     if len(configurations) != 1:
         LOGGER.error("missing configuration for: %s, skipping", directory)
         hits = pl.DataFrame({"urs_taxid": [], "experiment": []})
-    config_file = configurations[0]
-    config = configuration.parse_config(config_file)
-    if "differential" in config.exp_type:
-        try:
-            analytics = list(directory.glob("*analytics.tsv"))
-            if len(analytics) != 1:
-                raise ValueError(
-                    "Didn't find the expected analytics file for %s", directory
-                )
-            analytics_file = analytics[0]
-
-            sdrfs = list(directory.glob("*condensed-sdrf.tsv"))
-            if len(sdrfs) != 1:
-                raise ValueError("Didn't find the expected SDRF for %s", directory)
-            sdrf = sdrfs[0]
-
-            hits = parser.parse_differential(analytics_file, sdrf, lookup)
-        except ValueError:
-            LOGGER.error("Failed to parse differential experiment %s", directory)
-            hits = pl.DataFrame({"urs_taxid": [], "experiment": []})
-    elif "baseline" in config.exp_type:
-        ## There is a transcripts tpms file which we don't want, so grab both with
-        ## pathlib glob, then filter to only get the one we want
-        try:
-            tpms = list(directory.glob(r"*-tpms.tsv"))
-            tpms = list(filter(lambda x: re.match(".*\d+-tpms\.tsv$", str(x)), tpms))
-            if len(tpms) != 1:
-                raise ValueError("Didn't find the expected tpms file for %s", directory)
-            tpms = tpms[0]
-
-            sdrfs = list(directory.glob("*condensed-sdrf.tsv"))
-            if len(sdrfs) != 1:
-                raise ValueError("Didn't find the expected SDRF for %s", directory)
-            sdrf = sdrfs[0]
-
-            hits = parser.parse_baseline(tpms, sdrf, lookup)
-        except ValueError:
-            hits = pl.DataFrame({"urs_taxid": [], "experiment": []})
-            LOGGER.error("failed to parse baseline experiment %s", tpms)
     else:
-        LOGGER.error("unknown experiment type: %s", config.exp_type)
-        hits = pl.DataFrame({"urs_taxid": [], "experiment": []})
+        config_file = configurations[0]
+        config = configuration.parse_config(config_file)
+        if "differential" in config.exp_type:
+            try:
+                analytics = list(directory.glob("*analytics.tsv"))
+                if len(analytics) != 1:
+                    raise ValueError(
+                        "Didn't find the expected analytics file for %s", directory
+                    )
+                analytics_file = analytics[0]
+
+                sdrfs = list(directory.glob("*condensed-sdrf.tsv"))
+                if len(sdrfs) != 1:
+                    raise ValueError("Didn't find the expected SDRF for %s", directory)
+                sdrf = sdrfs[0]
+
+                hits = parser.parse_differential(analytics_file, sdrf, lookup)
+            except ValueError:
+                LOGGER.error("Failed to parse differential experiment %s", directory)
+                hits = pl.DataFrame({"urs_taxid": [], "experiment": []})
+        elif "baseline" in config.exp_type:
+            ## There is a transcripts tpms file which we don't want, so grab both with
+            ## pathlib glob, then filter to only get the one we want
+            try:
+                tpms = list(directory.glob(r"*-tpms.tsv"))
+                tpms = list(
+                    filter(lambda x: re.match(".*\d+-tpms\.tsv$", str(x)), tpms)
+                )
+                if len(tpms) != 1:
+                    raise ValueError(
+                        "Didn't find the expected tpms file for %s", directory
+                    )
+                tpms = tpms[0]
+
+                sdrfs = list(directory.glob("*condensed-sdrf.tsv"))
+                if len(sdrfs) != 1:
+                    raise ValueError("Didn't find the expected SDRF for %s", directory)
+                sdrf = sdrfs[0]
+
+                hits = parser.parse_baseline(tpms, sdrf, lookup)
+            except ValueError:
+                hits = pl.DataFrame({"urs_taxid": [], "experiment": []})
+                LOGGER.error("failed to parse baseline experiment %s", tpms)
+        else:
+            LOGGER.error("unknown experiment type: %s", config.exp_type)
+            hits = pl.DataFrame({"urs_taxid": [], "experiment": []})
 
     hits.write_ndjson(output)
