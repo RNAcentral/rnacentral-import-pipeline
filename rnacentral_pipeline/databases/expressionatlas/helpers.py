@@ -51,8 +51,8 @@ def common_name(info):
     return phy.common_name(info["taxid"])
 
 
-def url(experiment):
-    return "https://www.ebi.ac.uk/gxa/experiments/" + experiment
+def url(info):
+    return "https://www.ebi.ac.uk/gxa/genes/" + info["gene"]
 
 
 def region_builder(info):
