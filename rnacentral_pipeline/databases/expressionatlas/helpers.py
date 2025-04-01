@@ -75,7 +75,6 @@ def rna_type(type_str):
 
 
 def as_entry(info, experiment):
-    synonyms = list(filter(None, [""] if info["gene"] == [None] else info["gene"]))
     return Entry(
         primary_id=primary_id(info),
         accession=accession(info),
@@ -93,7 +92,6 @@ def as_entry(info, experiment):
         common_name=common_name(info),
         lineage=lineage(info),
         gene=info["gene"],
-        gene_synonyms=synonyms,
     )
 
 
