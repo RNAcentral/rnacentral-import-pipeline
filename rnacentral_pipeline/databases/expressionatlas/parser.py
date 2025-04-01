@@ -13,6 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 import json
+import logging
 import operator as op
 import pathlib
 import typing as ty
@@ -23,6 +24,8 @@ from rnacentral_pipeline.databases import data
 from rnacentral_pipeline.databases.expressionatlas import sdrf
 
 from . import helpers
+
+LOGGER = logging.getLogger(__name__)
 
 
 def parse_differential(analytics, sdrf_path, lookup):
@@ -181,6 +184,6 @@ def parse(handle, lookup):
     hits = grouped_data.join(lookup_data, on="urs_taxid", how="inner").collect(
         streaming=True
     )
+    LOGGER.info("Parsed %s hits", hits.height)
     for hit in hits.iter_rows(named=True):
-        for experiment in hit["experiment"]:
-            yield helpers.as_entry(hit, experiment)
+        yield helpers.as_entry(hit)
