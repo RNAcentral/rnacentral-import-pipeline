@@ -65,6 +65,11 @@ def parse_differential(analytics, sdrf_path, lookup):
     organisms = (
         sdrf_data.filter(pl.col("feat_type") == "organism").select("ontology").unique()
     )
+    ## We need the organism to be annotated to an ontology
+    if organisms.filter(pl.col("ontology").is_not_null()).is_empty():
+        raise ValueError(
+            f"No organisms found in {sdrf_path}, cannot parse differential data"
+        )
     ## check that we actually have some NCBI taxa
     organisms = organisms.filter(pl.col("ontology").str.contains("NCBI"))
     if organisms.height == 0:
@@ -127,6 +132,10 @@ def parse_baseline(tpms, sdrf_path, lookup):
     organisms = (
         sdrf_data.filter(pl.col("feat_type") == "organism").select("ontology").unique()
     )
+    if organisms.filter(pl.col("ontology").is_not_null()).is_empty():
+        raise ValueError(
+            f"No organisms found in {sdrf_path}, cannot parse differential data"
+        )
     ## check that we actually have some NCBI taxa
     organisms = organisms.filter(pl.col("ontology").str.contains("NCBI"))
     if organisms.height == 0:
