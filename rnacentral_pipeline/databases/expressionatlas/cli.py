@@ -125,7 +125,7 @@ def parse_dir(directory, lookup, output):
 
             hits = parser.parse_differential(analytics_file, sdrf, lookup)
         except ValueError:
-            LOGGER.error("Failed to parse differential experiment %s", analytics_file)
+            LOGGER.error("Failed to parse differential experiment %s", directory)
             hits = pl.DataFrame({"urs_taxid": [], "experiment": []})
     elif "baseline" in config.exp_type:
         ## There is a transcripts tpms file which we don't want, so grab both with
