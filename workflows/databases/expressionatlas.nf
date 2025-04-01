@@ -71,6 +71,7 @@ process fetch_lookup {
 process parse_tsvs {
   memory { 2.GB * task.attempt }
   errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'terminate' }
+  maxRetries 5
   cpus 4
 
   input:
@@ -89,6 +90,7 @@ process group_and_convert {
   memory { 32.GB * task.attempt }
   cpus 16
   errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'terminate' }
+  maxRetries 5
   input:
     tuple path(lookup), path(genes)
 
