@@ -45,6 +45,8 @@ def parse_differential(analytics, sdrf_path, lookup):
             pl.selectors.contains("log2foldchange").cast(pl.Float32, strict=False)
         )
     )
+    if "Gene.ID" in tpms_data.columns:
+        tpms_data = tpms_data.rename({"Gene.ID": "GeneID"})
     if analytics_data.height == 0:
         raise ValueError(f"Analytics data for {analytics} was empty, abort parsing")
     analytics_data = (
