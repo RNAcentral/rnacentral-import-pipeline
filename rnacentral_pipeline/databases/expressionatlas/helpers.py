@@ -92,7 +92,7 @@ def as_entry(info):
         common_name=common_name(info),
         lineage=lineage(info),
         gene=info["gene"],
-        note_data={"experiments": info["experiments"]},
+        note_data={"experiments": info["experiment"]},
     )
 
 
