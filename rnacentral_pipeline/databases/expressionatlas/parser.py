@@ -65,6 +65,12 @@ def parse_differential(analytics, sdrf_path, lookup):
     organisms = (
         sdrf_data.filter(pl.col("feat_type") == "organism").select("ontology").unique()
     )
+    ## check that we actually have some NCBI taxa
+    organisms = organisms.filter(pl.col("ontology").str.contains("NCBI"))
+    if organisms.height == 0:
+        raise ValueError(
+            f"No NCBI taxa found in {sdrf_path}, cannot parse differential data"
+        )
     taxids = organisms.with_columns(
         taxid=pl.col("ontology").str.split("NCBITaxon_").list.last().cast(pl.Int64)
     ).select("taxid")
@@ -121,6 +127,12 @@ def parse_baseline(tpms, sdrf_path, lookup):
     organisms = (
         sdrf_data.filter(pl.col("feat_type") == "organism").select("ontology").unique()
     )
+    ## check that we actually have some NCBI taxa
+    organisms = organisms.filter(pl.col("ontology").str.contains("NCBI"))
+    if organisms.height == 0:
+        raise ValueError(
+            f"No NCBI taxa found in {sdrf_path}, cannot parse differential data"
+        )
     taxids = organisms.with_columns(
         taxid=pl.col("ontology").str.split("NCBITaxon_").list.last().cast(pl.Int64)
     ).select("taxid")
