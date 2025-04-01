@@ -92,7 +92,7 @@ process group_and_convert {
   errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'terminate' }
   maxRetries 5
   input:
-    tuple path(lookup), path(genes)
+    tuple path(genes), path(lookup)
 
   output:
     path('*.csv')
@@ -126,6 +126,7 @@ workflow expressionatlas {
     | combine(lookup) \
     | parse_tsvs \
     | collectFile \
+    | combine (lookup) \
     | group_and_convert \
     | collect \
     | set {data}
