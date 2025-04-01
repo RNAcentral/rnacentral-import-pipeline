@@ -74,7 +74,7 @@ def rna_type(type_str):
         return type_str
 
 
-def as_entry(info, experiment):
+def as_entry(info):
     return Entry(
         primary_id=primary_id(info),
         accession=accession(info),
@@ -85,13 +85,14 @@ def as_entry(info, experiment):
         ),  # Make sure we store the cDNA rather than RNA sequence
         regions=region_builder(info),
         rna_type=rna_type(info["rna_type"]),
-        url=url(experiment),
+        url=url(info),
         seq_version="1",
         description=info["description"],
         species=species(info),
         common_name=common_name(info),
         lineage=lineage(info),
         gene=info["gene"],
+        note_data={"experiments": info["experiments"]},
     )
 
 
