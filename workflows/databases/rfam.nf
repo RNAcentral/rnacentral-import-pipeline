@@ -91,7 +91,7 @@ process parse {
   path('*.csv')
 
   """
-  cp '/nfs/ftp/public/databases/Rfam/CURRENT/fasta_files/${family}.fa.gz' sequences.fa.gz
+  cp '/hps/nobackup/agb/rfam/test-fasta-export/release/results/ftp/fasta_files/${family}.fa.gz' sequences.fa.gz
   gzip -d sequences.fa.gz
 
   rnac rfam parse $families_info $sequence_info sequences.fa .
