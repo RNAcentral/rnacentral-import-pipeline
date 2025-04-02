@@ -39,6 +39,9 @@ process fetch_families_info {
 process fetch_sequence_info {
   tag { "$family" }
   maxForks 10
+  memory { 2.GB * task.attempt }
+  errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'terminate' }
+  maxRetries 10
 
   input:
   tuple val(family), path(sequence_family_query), path(sequence_seed_query)
