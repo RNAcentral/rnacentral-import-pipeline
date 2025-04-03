@@ -58,6 +58,7 @@ class Database(enum.Enum):
     mgnify = DatabaseValue(55, "MGNIFY")
     mirbase = DatabaseValue(22, "miRBase")
     mirgenedb = DatabaseValue(23, "MirGeneDB")
+    mirtrondb = DatabaseValue(56, "mirtronDB")
     modomics = DatabaseValue(24, "Modomics")
     noncode = DatabaseValue(25, "NONCODE")
     pdbe = DatabaseValue(26, "PDBe")
