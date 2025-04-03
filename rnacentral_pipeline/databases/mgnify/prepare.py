@@ -103,7 +103,10 @@ def prepare_mgnify_data(data, conn_str):
         entry["taxonId"] = f"NCBITaxon:{taxid}"
 
         ## Add the type of the sequence
-        entry["soTermId"] = so_type[entry["sourceModel"].split(":")[1]]
+        if entry["sourceModel"].startswith("TRNASCANSE"):
+            entry["soTermId"] = transcanse_so_lookup[entry["sourceModel"]]
+        else:
+            entry["soTermId"] = so_type[entry["sourceModel"].split(":")[1]]
 
         prepared_data.append(entry)
 
