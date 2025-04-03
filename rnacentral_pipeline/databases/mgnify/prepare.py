@@ -13,6 +13,35 @@ from rnacentral_pipeline.databases.helpers import gtdb
 
 LOGGER = logging.getLogger(__name__)
 
+transcanse_so_lookup = {
+    "TRNASCANSE:Ala": "SO:0000254",
+    "TRNASCANSE:Arg": "SO:0001036",
+    "TRNASCANSE:Asn": "SO:0000256",
+    "TRNASCANSE:Asp": "SO:0000257",
+    "TRNASCANSE:Cys": "SO:0000258",
+    "TRNASCANSE:Gln": "SO:0000259",
+    "TRNASCANSE:Glu": "SO:0000260",
+    "TRNASCANSE:Gly": "SO:0000261",
+    "TRNASCANSE:His": "SO:0000262",
+    "TRNASCANSE:Ile": "SO:0000263",
+    "TRNASCANSE:Ile2": "SO:0000263",
+    "TRNASCANSE:Leu": "SO:0000264",
+    "TRNASCANSE:Lys": "SO:0000265",
+    "TRNASCANSE:Met": "SO:0000266",
+    "TRNASCANSE:Phe": "SO:0000267",
+    "TRNASCANSE:Pro": "SO:0000268",
+    "TRNASCANSE:SeC": "SO:0002857",
+    "TRNASCANSE:Ser": "SO:0000269",
+    "TRNASCANSE:Sup": "SO:0000253",
+    "TRNASCANSE:Thr": "SO:0000270",
+    "TRNASCANSE:Trp": "SO:0000271",
+    "TRNASCANSE:Tyr": "SO:0000272",
+    "TRNASCANSE:Undet": "SO:0000253",
+    "TRNASCANSE:Val": "SO:0000273",
+    "TRNASCANSE:fMet": "SO:0000266",
+    "TRNASCANSE:iMet": "SO:0000266",
+}
+
 
 def get_so_type(conn_str):
     conn = connect(conn_str)
