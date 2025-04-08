@@ -3,6 +3,7 @@ name = "rnacentral_pipeline"
 version = "0.1.0"
 description = "The pipeline that imports all RNAcentral data"
 authors = ["Blake Sweeney <bsweeney@ebi.ac.uk>"]
+package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.11"
