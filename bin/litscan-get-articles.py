@@ -81,7 +81,13 @@ def create_xml_file(results, directory):
 @click.argument('directory')
 def main(database, directory):
     """
-    Get the data that will be used by the search index
+    Get the data that will be used by the search index.
+    I tried to fetch all data in one query (query available at the end of this
+    file), but that requires a large amount of RAM. A second approach was made
+    using two queries (the second query was to fetch organism data), but that
+    still requires 65GB of RAM. This task usually takes about 3 hours and for
+    now it will stay like this.
+
     :param database: params to connect to the db
     :param directory: directory to store xml files
     :return: None
@@ -173,3 +179,21 @@ def main(database, directory):
 
 if __name__ == "__main__":
     main()
+
+# cursor.execute("""
+#     SELECT
+#         a.pmcid, a.title, a.abstract, a.author, a.pmid, a.doi, a.year, a.journal, a.score, a.cited_by, a.type,
+#         r.id AS result_id, r.job_id, r.id_in_title, r.id_in_abstract, r.id_in_body,
+#         j.display_id,
+#         abs_s.sentence AS abstract_sentence,
+#         bod_s.sentence AS body_sentence,
+#         ma.urs AS manually_annotated
+#     FROM litscan_article a
+#     LEFT JOIN litscan_result r ON r.pmcid = a.pmcid
+#     LEFT JOIN litscan_job j ON r.job_id = j.job_id
+#     LEFT JOIN (SELECT result_id, sentence FROM litscan_abstract_sentence ORDER BY length(sentence) DESC LIMIT 1) abs_s ON abs_s.result_id = r.id
+#     LEFT JOIN (SELECT result_id, sentence FROM litscan_body_sentence ORDER BY length(sentence) DESC LIMIT 1) bod_s ON bod_s.result_id = r.id
+#     LEFT JOIN litscan_manually_annotated ma ON ma.pmcid = a.pmcid
+#     WHERE a.retracted IS NOT TRUE;
+# """)
+# rows = cursor.fetchall()
