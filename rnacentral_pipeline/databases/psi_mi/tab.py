@@ -120,7 +120,6 @@ def as_pubs(value):
                 refs.append(pubs.reference(ident.value))
             except data.UnknownPublicationType:
                 LOGGER.warn("Could not handle publication %s", ident)
-                pass
     return refs
 
 

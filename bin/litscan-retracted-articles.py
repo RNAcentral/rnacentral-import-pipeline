@@ -77,7 +77,7 @@ def main(database, webhook):
             message = f'{len(retracted_articles)} {"articles have" if len(retracted_articles) > 1 else "article has"} ' \
                       f'been retracted: {", ".join(retracted_articles)}'
             requests.post(webhook, json.dumps({"text": message}))
-    except (Exception, psycopg2.DatabaseError) as error:
+    except (ValueError, psycopg2.DatabaseError) as error:
         requests.post(webhook, json.dumps({"text": error}))
     finally:
         if conn is not None:

@@ -94,7 +94,7 @@ def parse(
 
             try:
                 info.validate()
-            except Exception as e:
+            except (AssertionError, ValueError) as e:
                 if allow_missing:
                     LOGGER.warn("Did not find all required files for %s", urs)
                     LOGGER.exception(e)
@@ -104,5 +104,5 @@ def parse(
 
             hit = None
             if info.has_hit_info():
-                hit = hit_info[urs]
+                hit = hit_info.get(urs, None)
             yield data.R2DTResult.from_info(info, hit_info=hit)

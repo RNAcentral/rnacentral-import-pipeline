@@ -39,6 +39,9 @@ process fetch_families_info {
 process fetch_sequence_info {
   tag { "$family" }
   maxForks 10
+  memory { 2.GB * task.attempt }
+  errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'terminate' }
+  maxRetries 10
 
   input:
   tuple val(family), path(sequence_family_query), path(sequence_seed_query)
@@ -81,6 +84,8 @@ process fetch_sequence_info {
 
 process parse {
   tag { "$family" }
+  queue 'datamover'
+  containerOptions '--bind /nfs:/nfs'
 
   input:
   tuple val(family), path(sequence_info), path(families_info)
@@ -89,7 +94,7 @@ process parse {
   path('*.csv')
 
   """
-  wget -O sequences.fa.gz 'http://ftp.ebi.ac.uk/pub/databases/Rfam/CURRENT/fasta_files/${family}.fa.gz'
+  cp '/hps/nobackup/agb/rfam/test-fasta-export/release/results/ftp/fasta_files/${family}.fa.gz' sequences.fa.gz
   gzip -d sequences.fa.gz
 
   rnac rfam parse $families_info $sequence_info sequences.fa .

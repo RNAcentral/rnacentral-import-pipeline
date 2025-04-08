@@ -16,6 +16,17 @@ process dump_data {
 
   /usr/pgsql-11/bin/pg_dump \
     -h ${prod.host} -U ${prod.user} -d ${prod.db_name} -j 4 --schema ${prod.schema} -F d -O -f 'prod-dump' \
+    --exclude-table=auth_group \
+    --exclude-table=auth_group_permissions \
+    --exclude-table=auth_user \
+    --exclude-table=auth_user_groups \
+    --exclude-table=auth_user_user_permissions \
+    --exclude-table=corsheaders_corsmodel \
+    --exclude-table=django_admin_log \
+    --exclude-table=django_content_type \
+    --exclude-table=django_migrations \
+    --exclude-table=django_session \
+    --exclude-table=django_site \
     --exclude-table=load_ensembl_analysis_status \
     --exclude-table=load_flybase \
     --exclude-table=load_genome_mapping \
