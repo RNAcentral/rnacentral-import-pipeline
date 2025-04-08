@@ -30,7 +30,6 @@ CHROMOSOME_LEVEL_MAPPINGS = set(
 )
 
 DATABASES = {
-    "SRPDB",
     "WormBase",
 }
 

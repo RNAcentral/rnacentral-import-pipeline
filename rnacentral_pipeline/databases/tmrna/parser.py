@@ -35,6 +35,7 @@ name_mapping = {
     "GpI": "tmrna_gpi",
     "IVS": "tmrna_ivs",
     "TagCDS": "tmrna_tagcds",
+    "HEG": "tmrna_heg",
 }
 
 NO_CODING_SEQUENCE = ["frameshift", "undetermined"]
@@ -83,7 +84,7 @@ def parse(raw: ty.IO) -> ty.Iterable[Entry]:
     rows = list(reader)
     for row in rows:
         accessions = row["Instances"].split(",")
-        assert len(accessions) == int(row["InstanceCt"])
+        assert len(accessions) == int(row["Count"])
         species = inferred_species(row["#ID"])
         tax_string = ",".join([row["Taxonomy"], species])
         tax_id = gtdb.phylogeny_to_taxid(tax_string)

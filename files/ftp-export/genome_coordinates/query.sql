@@ -21,10 +21,8 @@ ON
 JOIN rnc_sequence_exons exons
 ON
   exons.region_id = regions.id
-join rnc_accession_sequence_region sra
-	on sra.region_id = regions.id
-join rnc_accessions ac
-	on sra.accession = ac.accession
+LEFT JOIN rnc_accession_sequence_region sra on sra.region_id = regions.id
+LEFT JOIN rnc_accessions ac on sra.accession = ac.accession
 WHERE
   pre.is_active = true
   AND regions.assembly_id = :'assembly_id'

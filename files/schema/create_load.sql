@@ -1,5 +1,144 @@
-TRUNCATE TABLE load_rnc_accessions;
-TRUNCATE TABLE load_rnc_references;
+DROP TABLE IF EXISTS load_rnc_accessions;
+CREATE TABLE load_rnc_accessions (
+    accession character varying(200) NOT NULL,
+    parent_ac character varying(200) NULL,
+    seq_version bigint NULL,
+    feature_start bigint NULL,
+    feature_end bigint NULL,
+    feature_name character varying(80) NULL,
+    ordinal bigint NULL,
+    division character varying(6) NULL,
+    keywords character varying(200) NULL,
+    description character varying(500) NULL,
+    species character varying(300) NULL,
+    organelle character varying(200) NULL,
+    classification character varying(1000) NULL,
+    project character varying(100) NULL,
+    is_composite character varying(2) NULL,
+    non_coding_id character varying(200) NULL,
+    database character varying(40) NULL,
+    external_id character varying(300) NULL,
+    optional_id character varying(200) NULL,
+    common_name character varying(200) NULL,
+    allele character varying(100) NULL,
+    anticodon character varying(200) NULL,
+    chromosome character varying(200) NULL,
+    experiment text NULL,
+    function character varying(4000) NULL,
+    gene character varying(200) NULL,
+    gene_synonym character varying(800) NULL,
+    inference character varying(600) NULL,
+    locus_tag character varying(100) NULL,
+    map character varying(400) NULL,
+    mol_type character varying(100) NULL,
+    ncrna_class character varying(100) NULL,
+    note text NULL,
+    old_locus_tag character varying(200) NULL,
+    operon character varying(100) NULL,
+    product character varying(600) NULL,
+    pseudogene character varying(100) NULL,
+    standard_name character varying(200) NULL,
+    db_xref text NULL,
+    so_term character varying(15) NULL,
+    url text NULL
+);
+
+DROP TABLE IF EXISTS load_rnc_references;
+CREATE TABLE load_rnc_references (
+    md5 character varying(64) NOT NULL,
+    accession character varying(200) NULL,
+    authors text NULL,
+    location character varying(4000) NULL,
+    title character varying(4000) NULL,
+    pmid character varying(20) NULL,
+    doi text NULL
+  );
+
+DROP TABLE IF EXISTS load_retro_tmp;
+CREATE TABLE
+  load_retro_tmp (
+    in_dbid smallint,
+    in_load_release integer,
+    in_crc64 character varying(16),
+    in_len integer,
+    in_seq_short character varying(4000),
+    in_seq_long text,
+    in_ac character varying(200),
+    in_version bigint,
+    in_md5 character varying(32),
+    in_taxid integer,
+    comparable_prot_upi character varying(30)
+  );
+
+DROP TABLE IF EXISTS load_md5_stats;
+CREATE TABLE
+  load_md5_stats (
+    in_md5 character varying(32),
+    cnt bigint,
+    cnt_dst_seq_short bigint,
+    cnt_dst_seq_long bigint
+  );
+
+DROP TABLE IF EXISTS load_md5_collisions;
+CREATE TABLE
+  load_md5_collisions (
+    in_md5 character varying(32),
+    cnt bigint,
+    cnt_dst_seq_short bigint,
+    cnt_dst_seq_long bigint
+  );
+DROP TABLE IF EXISTS load_md5_new_sequences;
+CREATE TABLE
+  load_md5_new_sequences (
+    IN_MD5 character varying(32),
+    PROT_ID bigint,
+    PROT_UPI character varying(30)
+);
+
+DROP TABLE IF EXISTS load_upi_max_versions;
+CREATE TABLE load_upi_max_versions(
+  ac character varying(200),
+  dbid smallint,
+  max_version_i bigint,
+  UPI character varying(30)
+);
+
+DROP TABLE IF EXISTS load_max_versions;
+CREATE TABLE load_max_versions(
+  ac character varying(200),
+  dbid smallint,
+  max_version_i bigint
+);
+
+DROP TABLE IF EXISTS load_rnacentral;
+CREATE TABLE
+  load_rnacentral (
+    crc64 character varying(16) NULL,
+    len integer NULL,
+    seq_short character varying(4000) NULL,
+    seq_long text NULL,
+    database character varying(40) NULL,
+    ac character varying(200) NULL,
+    optional_id character varying(100) NULL,
+    version integer NULL,
+    taxid bigint NULL,
+    md5 character varying(32) NULL
+  );
+
+DROP TABLE IF EXISTS load_rnacentral_all;
+CREATE TABLE
+  load_rnacentral_all (
+    crc64 character varying(16) NULL,
+    len integer NULL,
+    seq_short character varying(4000) NULL,
+    seq_long text NULL,
+    database character varying(40) NULL,
+    ac character varying(200) NULL,
+    optional_id character varying(100) NULL,
+    version integer NULL,
+    taxid bigint NULL,
+    md5 character varying(32) NULL
+  );
 
 DROP TABLE IF EXISTS load_assemblies;
 CREATE TABLE load_assemblies (

@@ -27,7 +27,7 @@ process extract_sequences {
   path(query)
 
   output:
-  path('parts/*.json')
+  path('raw.json')
 
   script:
   """
@@ -37,9 +37,6 @@ process extract_sequences {
     -v max_len=10000 \
     -v 'sequence_count=${params.r2dt.sequence_count}' \
     -f "$query" "$PGDATABASE" > raw.json
-  uniq raw.json > deduped.json
-  mkdir parts/
-  split --number=l/4000 --additional-suffix='.json' deduped.json parts/
   """
 }
 

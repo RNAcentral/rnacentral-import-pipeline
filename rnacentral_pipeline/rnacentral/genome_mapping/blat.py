@@ -40,7 +40,8 @@ FIELDS = [
     "qBaseInsert",  # Number of bases inserted in query
     "tNumInsert",  # Number of inserts in target
     "tBaseInsert",  # Number of bases inserted in target
-    "strand",  # "+" or "-" for query strand. For translated alignments, second "+"or "-" is for target genomic strand.
+    "strand",  # "+" or "-" for query strand. For translated alignments,
+                    # second "+"or "-" is for target genomic strand.
     "qName",  # Query sequence name
     "qSize",  # Query sequence size.
     "qStart",  # Alignment start position in query
@@ -50,7 +51,10 @@ FIELDS = [
     "tStart",  # Alignment start position in target
     "tEnd",  # Alignment end position in target
     "blockCount",  # Number of blocks in the alignment (a block contains no gaps)
-    "blockSizes",  # Comma-separated list of sizes of each block. If the query is a protein and the target the genome, blockSizes are in amino acids. See below for more information on protein query PSLs.
+    "blockSizes",  # Comma-separated list of sizes of each block. 
+                        # If the query is a protein and the target the genome,
+                        #  blockSizes are in amino acids. 
+                        # See below for more information on protein query PSLs.
     "qStarts",  # Comma-separated list of starting positions of each block in query
     "tStarts",  # Comma-separated list of starting positions of each block in target
 ]

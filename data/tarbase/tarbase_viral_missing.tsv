@@ -1,0 +1,3 @@
+species	mirna_name	mirna_id	gene_name	gene_id	gene_location	transcript_name	transcript_id	chromosome	start	end	strand	experimental_method	regulation	tissue	cell_line	article_pubmed_id	confidence	interaction_group	cell_type	microt_score	comment
+QQQQ	mghv-miR-M1-1-3p	MIMAT0001564	Rpl13	ENSMUSG00000000740	CDS	Rpl13-201	ENSMUST00000000756	chr8	123829671	123829698	+	qCLASH	Negative	Bone marrow	HE2.1	31393953	1	primary	B cells	NA	Replicated:2/3, Counts total:5, Min. Free Energy (mean):-12.46kcal/mol
+MHV68	mghv-miR-M1-1-3p	MIMAT0001564	Rpl13	ENSMUSG00000000740	CDS	Rpl13-201	ENSMUST00000000756	chr8	123829671	123829698	+	qCLASH	Negative	Bone marrow	HE2.1	31393953	1	primary	B cells	NA	Replicated:2/3, Counts total:5, Min. Free Energy (mean):-12.46kcal/mol

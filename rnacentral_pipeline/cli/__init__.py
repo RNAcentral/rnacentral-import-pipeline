@@ -25,7 +25,6 @@ from rnacentral_pipeline.cli import (
     ensembl,
     europepmc,
     evlncrnas,
-    expressionatlas,
     five_s_rrnadb,
     flybase,
     ftp_export,
@@ -71,6 +70,7 @@ from rnacentral_pipeline.cli import (
     zfin,
     zwd,
 )
+from rnacentral_pipeline.databases.expressionatlas import cli as expressionatlas
 from rnacentral_pipeline.databases.tmrna import cli as tmrna
 
 

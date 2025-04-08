@@ -89,7 +89,9 @@ def parse_data(division, embl_file, gff_file, output, family_file=None):
             writer.write(entries)
     except ValueError:
         print("Empty entries, implies no ncRNAs. You should check that")
-        message = f"No ncRNA entries found for {embl_file.name}, or {gff_file.name}. Empty data supplied for now, but you should check the legitimacy of this result.\n"
+        message = (f"No ncRNA entries found for {embl_file.name}, or {gff_file.name}. " 
+                   + "Empty data supplied for now"
+                   + ", but you should check the legitimacy of this result.\n")
         message += "For reference, the other parameters to the parser were:\n"
         message += f"division: {division}\n"
         message += f"embl_file: {embl_file.name}\n"

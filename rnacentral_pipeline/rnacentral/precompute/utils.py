@@ -76,7 +76,8 @@ def entropy(data):
     structures) the name will be very long because it contains the sequence
     itself. For example:
 
-    RNA (5'-R(*GP*UP*GP*GP*UP*CP*UP*GP*AP*UP*GP*AP*GP*GP*CP*C)-3') from synthetic construct (PDB 3D0M, chain X)
+    RNA (5'-R(*GP*UP*GP*GP*UP*CP*UP*GP*AP*UP*GP*AP*GP*GP*CP*C)-3') 
+    from synthetic construct (PDB 3D0M, chain X)
 
     This is not a useful name, but it is very long. Thus we do not want it.
     What we are generally after is something with the most information (to a

@@ -270,7 +270,8 @@ def parse(db_dir: Path, db_dumps: tuple[Path], db_url: str) -> None:
     )  #
 
     ## Match with RNAcentral based on the gene name
-    ## This is optionally chunked to save memory - split the lookup file and provide a list on the commandline
+    ## This is optionally chunked to save memory - 
+    ## split the lookup file and provide a list on the commandline
     matched_frame = pd.concat(
         [get_db_matches(no_accession_frame, dump_chunk) for dump_chunk in db_dumps]
     )

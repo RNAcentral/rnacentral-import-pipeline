@@ -6,7 +6,7 @@ name: Building Pipeline Containers
 
 on:
  push:
-  branches: ['dev','python-update']
+  branches: ['master', 'dev','python-update']
   paths: ['pyproject.toml', 'poetry.lock', 'Cargo.toml', 'Cargo.lock', 'Dockerfile', 'utils/**']
 jobs:
 
