@@ -14,64 +14,60 @@ limitations under the License.
 """
 
 import csv
+import re
+import typing as ty
+
+from attr import frozen
 
 from rnacentral_pipeline import psql
 
 
-def gene(result):
-    """
-    Convert the gene name into a standarized format.
-    """
+@frozen
+class IdMapping:
+    upi: str
+    accession: str
+    taxid: int
+    external_id: str
+    optional_id: str
+    rna_type: str
+    gene: str
+    product: str
+    database: str
 
-    if result["database"] == "ENSEMBL":
-        return result["optional_id"]
+    def entry(self) -> ty.List[str]:
+        database = self.database
+        accession = self.external_id
+        gene = self.gene or ""
+        gene = gene.replace("\t", " ")
 
-    if result["database"] == "MIRBASE":
-        return result["optional_id"]
+        if self.database == "PDBE":
+            database = "PDB"
+            accession = "%s_%s" % (self.external_id, self.optional_id)
+        elif self.database == "HGNC":
+            accession = self.accession
+        elif self.database == "ENA":
+            if self.rna_type == "piRNA":
+                gene = self.product
+            accession = self.accession
+        elif self.database == "MIRBASE":
+            gene = self.optional_id
+        elif self.database == "ENSEMBL":
+            gene = self.optional_id
+        elif self.database == "RFAM":
+            if self.rna_type == "pre_miRNA":
+                acc_range, endpoints, _ = self.accession.split(":", 2)
+                acc = re.sub(r"\.\d\d+$", "", acc_range)
+                start, stop = endpoints.split("..", 1)
+                gene = f"{acc}/{start}-{stop}"
 
-    if result["rna_type"] == "piRNA" and result["database"] == "ENA":
-        return result["product"]
-
-    name = result["gene"] or ""
-    name = name.replace("\t", " ")
-    return name
-
-
-def accession(result):
-    """
-    Produce the accession for the result. This will compute the accession
-    depending on the database.
-    """
-
-    if result["database"] == "ENA" or result["database"] == "HGNC":
-        return result["accession"]
-    if result["database"] == "PDBE":
-        return "%s_%s" % (result["external_id"], result["optional_id"])
-    return result["external_id"]
-
-
-def database(result):
-    """
-    Normalize the database name.
-    """
-
-    if result["database"] == "PDBE":
-        return "PDB"
-    return result["database"]
-
-
-def as_entry(result):
-    """
-    Produce the final result list for writing.
-    """
-    return [
-        result["upi"],
-        database(result),
-        accession(result),
-        result["taxid"],
-        result["rna_type"],
-        gene(result),
-    ]
+        return [
+            self.upi,
+            database,
+            accession,
+            str(self.taxid),
+            self.rna_type,
+            gene,
+        ]
 
 
 def generate_file(json_file, output):
@@ -79,6 +75,7 @@ def generate_file(json_file, output):
     This will generate a TSV mapping file given the input TSV.
     """
 
-    entries = psql.json_handler(json_file)
-    data = map(as_entry, entries)
-    csv.writer(output, delimiter="\t").writerows(data)
+    writer = csv.writer(output, delimiter="\t")
+    for entry in psql.json_handler(json_file):
+        data = IdMapping(**entry)
+        writer.writerow(data.entry())
