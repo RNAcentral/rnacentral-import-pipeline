@@ -7,6 +7,7 @@ description = "Bash tab completion for argparse"
 optional = false
 python-versions = ">=3.8"
 files = [
+
     {file = "argcomplete-3.5.0-py3-none-any.whl", hash = "sha256:d4bcf3ff544f51e16e54228a7ac7f486ed70ebf2ecfe49a63a91171c76bf029b"},
     {file = "argcomplete-3.5.0.tar.gz", hash = "sha256:4349400469dccfb7950bb60334a680c58d88699bff6159df61251878dc6bf74b"},
 ]
@@ -1739,20 +1740,6 @@ files = [
 [package.extras]
 colorization = ["colorama"]
 parproc = ["rich"]
-
-[[package]]
-name = "textblob"
-version = "0.15.3"
-description = "Simple, Pythonic text processing. Sentiment analysis, part-of-speech tagging, noun phrase parsing, and more."
-optional = false
-python-versions = "*"
-files = [
-    {file = "textblob-0.15.3-py2.py3-none-any.whl", hash = "sha256:b0eafd8b129c9b196c8128056caed891d64b7fa20ba570e1fcde438f4f7dd312"},
-    {file = "textblob-0.15.3.tar.gz", hash = "sha256:7ff3c00cb5a85a30132ee6768b8c68cb2b9d76432fec18cd1b3ffe2f8594ec8c"},
-]
-
-[package.dependencies]
-nltk = ">=3.1"
 
 [[package]]
 name = "threadpoolctl"
