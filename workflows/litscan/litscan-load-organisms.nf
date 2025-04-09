@@ -14,7 +14,7 @@ process get_organisms {
 }
 
 process create_csv {
-    memory '2GB'
+    memory '4GB'
     publishDir "$baseDir/workflows/litscan/organisms/", mode: 'copy'
 
     input:

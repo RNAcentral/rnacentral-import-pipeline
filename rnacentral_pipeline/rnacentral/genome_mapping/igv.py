@@ -72,7 +72,7 @@ def check_url(file_list: List[str], name: str, path: str, assembly_id: str) -> D
 
 def create_json(species: str, assembly_id: str, output: IO[str]) -> None:
     with ftp(FTP_SERVER) as conn:
-        path = "pub/databases/RNAcentral/.genome-browser"
+        path = "pub/databases/RNAcentral/.genome-browser-dev"
         conn.cwd(path)
         file_list = conn.nlst()
         name = f"{species}.{assembly_id}"
