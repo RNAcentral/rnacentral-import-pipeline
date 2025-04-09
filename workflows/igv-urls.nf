@@ -34,7 +34,7 @@ process create_json {
 }
 
 process merge_json {
-  publishDir "${params.export.ftp.publish}/.genome-browser", mode: 'copy'
+  publishDir "${params.export.ftp.publish}/.genome-browser-dev", mode: 'copy'
 
   input:
   path(json)

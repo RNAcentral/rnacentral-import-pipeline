@@ -3,6 +3,7 @@ name = "rnacentral_pipeline"
 version = "0.1.0"
 description = "The pipeline that imports all RNAcentral data"
 authors = ["Blake Sweeney <bsweeney@ebi.ac.uk>"]
+package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.11"
@@ -30,16 +31,17 @@ scikit-learn = "^1.1.3"
 semver = "^2.13.0"
 slack_sdk = "^3.19.4"
 sqlitedict = "^2.0.0"
-TatSu = "5.8.2"
-textblob = "0.15.3"
+TatSu = "5.10.6"
 throttler = "^1.2.0"
 nltk = "^3.8.1"
 openpyxl = "^3.0.10"
-pybedtools = {git = "https://github.com/afg1/pybedtools.git"}
+pybedtools = "^0.10.0"
 psycopg2-binary = "^2.9.7"
 polars = "^1.14.0"
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
+black = "^24.4.2"
+isort = "^5.13.2"
 pytest = "^7.2.0"
 
 [build-system]
