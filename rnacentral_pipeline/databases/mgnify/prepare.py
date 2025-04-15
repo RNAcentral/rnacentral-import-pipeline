@@ -91,12 +91,6 @@ def prepare_mgnify_data(data, conn_str):
             taxid = gtdb.get_inferred_genus_taxid(entry["inferredPhylogeny"])
 
         if taxid is None:
-            taxid = gtdb.get_inferred_family_taxid(entry["inferredPhylogeny"])
-
-        if taxid is None:
-            taxid = gtdb.get_inferred_order_taxid(entry["inferredPhylogeny"])
-
-        if taxid is None:
             LOGGER.warning("falling back to generic metagenome taxid")
             taxid = fallback[entry["additionalAnnotations"]["catalog_name"]]
 
