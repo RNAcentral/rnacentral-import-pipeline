@@ -213,6 +213,7 @@ def features(record):
                 feature_type=key,
                 location=feature["indexes"],
                 sequence=feature["sequence"],
+                provider=record["database"],
             )
         )
     return features
