@@ -30,7 +30,7 @@ transcanse_so_lookup = {
     "TRNASCANSE:Met": "SO:0000266",
     "TRNASCANSE:Phe": "SO:0000267",
     "TRNASCANSE:Pro": "SO:0000268",
-    "TRNASCANSE:SeC": "SO:0002857",
+    "TRNASCANSE:SeC": "SO:0005857",
     "TRNASCANSE:Ser": "SO:0000269",
     "TRNASCANSE:Sup": "SO:0000253",
     "TRNASCANSE:Thr": "SO:0000270",
