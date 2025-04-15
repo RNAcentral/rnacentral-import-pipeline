@@ -192,6 +192,12 @@ def features(record):
         return []
     features = []
     for key, feature in record["sequenceFeatures"].items():
+        ## Skip sequence features that don't have the required fields
+        if not feature.get("indexes", None):
+            continue
+        if not feature.get("sequence", None):
+            continue
+
         features.append(
             data.SequenceFeature(
                 name=key,
