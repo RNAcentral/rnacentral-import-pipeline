@@ -196,8 +196,8 @@ def features(record):
             data.SequenceFeature(
                 name=key,
                 feature_type=key,
-                location=features["indexes"],
-                sequence=features["sequence"],
+                location=feature["indexes"],
+                sequence=feature["sequence"],
             )
         )
     return features
