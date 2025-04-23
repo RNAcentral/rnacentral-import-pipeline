@@ -23,6 +23,12 @@ from rnacentral_pipeline.rnacentral.r2dt import data, ribovore
 
 LOGGER = logging.getLogger(__name__)
 
+## Use this for now because R2DT isn't fully up to date with Rfam so
+## model names don't always match
+temp_model_name_lookup = {
+    "glnA": "Glutamine",
+}
+
 
 def load_model_info(handle: ty.TextIO) -> ty.Dict[str, data.ModelDatabaseInfo]:
     mapping = {}
@@ -79,7 +85,10 @@ def parse(
             model_name = row[1]
             source = data.Source.build(row[2])
             if model_name not in model_info:
-                raise ValueError("No info for model %s", model_name)
+                ## Try using the temporary lookup
+                model_name = temp_model_name_lookup.get(model_name, None)
+                if model_name is None:
+                    raise ValueError("No info for model %s", model_name)
 
             minfo = model_info[model_name]
             info = data.R2DTResultInfo(urs, minfo, source, result_base)
