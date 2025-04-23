@@ -173,6 +173,8 @@ class Source(enum.Enum):
             return getattr(cls, name)
         if name == "rnase p database":
             return Source.rnase_p
+        if name == "tmrna database":
+            return Source.gtrnadb
         raise ValueError(f"Unknown database name {name}")
 
     def result_directory(self) -> str:
