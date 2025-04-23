@@ -27,6 +27,26 @@ LOGGER = logging.getLogger(__name__)
 ## model names don't always match
 temp_model_name_lookup = {
     "glnA": "Glutamine",
+    "yybP-ykoY": "Manganese",
+    "ydaO-yuaA": "c-di-AMP",
+    "M-box": "Magnesium",
+    "MIR162_2": "MIR162_1",
+    "ykkC-yxkD": "Guanidine-I",
+    "MOCO_RNA_motif": "Molybdenum",
+    "Mg_sensor": "Magnesium-II",
+    "SAH_riboswitch": "SAH",
+    "mini-ykkC": "Guanidine-II",
+    "AdoCbl_riboswitch": "AdoCbl",
+    "MFR": "2dG-I",
+    "AdoCbl-variant": "AdoCbl-II",
+    "SAM-I-IV-variant": "SAM-I-IV",
+    "SAM-II_long_loops": "SAM-II",
+    "ykkC-III": "Guanidine-III",
+    "yjdF": "azaaromatic",
+    "SMK_box_riboswitch": "SAM-III",
+    "mir-506": "mir-511",
+    "Virus_CITE_7": "Virus-PTE",
+    "folE": "THF-II",
 }
 
 
