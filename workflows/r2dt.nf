@@ -17,13 +17,72 @@ process fetch_model_mapping {
   """
 }
 
-process extract_sequences {
-  when { params.r2dt.run }
-
-  memory '16 MB'
+process get_partitions {
 
   input:
   val(_flag)
+  path(query)
+
+  output:
+  path('databases.csv')
+
+  script:
+  """
+  psql \
+    -v ON_ERROR_STOP=1 \
+    -f $query "$PGDATABASE" \
+    > databases.csv
+  """
+}
+
+
+process fetch_xrefs {
+  // when { params.r2dt.run }
+
+  input:
+  tuple val(partition), path(query)
+
+  output:
+  path('urs_xref.csv')
+
+  script:
+  """
+  psql \
+    -v ON_ERROR_STOP=1 \
+    -v tablename=xref_p${partition}_not_deleted \
+    -f $query "$PGDATABASE" \
+    > urs_xref.csv
+  """
+}
+
+process fetch_tracked {
+  // when { params.r2dt.run }
+
+  input:
+  tuple val(_flag)
+  path(query)
+
+  output:
+  path('urs_tracked.csv')
+
+  script:
+  """
+  psql \
+    -v ON_ERROR_STOP=1 \
+    -f $query "$PGDATABASE" \
+    > urs_tracked.csv
+  """
+}
+
+
+process extract_sequences {
+  // when { params.r2dt.run }
+
+  memory '12GB'
+
+  input:
+  path(xrefs)
+  path(tracked)
   path(query)
 
   output:
@@ -31,12 +90,14 @@ process extract_sequences {
 
   script:
   """
-  psql \
-    -v ON_ERROR_STOP=1 \
-    -v 'tablename=${params.r2dt.tablename}' \
-    -v max_len=10000 \
-    -v 'sequence_count=${params.r2dt.sequence_count}' \
-    -f "$query" "$PGDATABASE" > raw.json
+    rnac r2dt prepare-sequences $xrefs $tracked urs_to_fetch.csv
+
+    psql \
+      -v ON_ERROR_STOP=1 \
+      -v max_len=10000 \
+      -v 'sequence_count=${params.r2dt.sequence_count}' \
+      -q \
+      -f $query $PGDATABASE > raw.json
   """
 }
 
@@ -175,15 +236,28 @@ workflow r2dt {
   emit: done
   main:
     Channel.fromPath("files/r2dt/find-sequences.sql") | set { sequences_sql }
+    Channel.fromPath("files/r2dt/fetch-partition-xref.sql") | set { xref_sql }
+    Channel.fromPath("files/r2dt/fetch-tracked.sql") | set { tracked_sql }
+    Channel.fromPath("files/r2dt/fetch-partitions.sql") | set { partitions_sql }
     Channel.fromPath('files/r2dt/should-show/model.joblib') | set { ss_model }
     Channel.fromPath('files/r2dt/should-show/query.sql') | set { ss_query }
     Channel.fromPath('files/r2dt/should-show/update.ctl') | set { ss_ctl }
     Channel.fromPath('files/r2dt/load.ctl') | set { load_ctl }
     Channel.fromPath('files/r2dt/attempted.ctl') | set { attempted_ctl }
 
+    fetch_tracked(ready, tracked_sql) | set { tracked }
+
+
+    get_partitions(ready, partitions_sql) \
+    | splitCsv \
+    | combine(xref_sql) \
+    | fetch_xrefs \
+    | collectFile \
+    | set { partitions }
+
     ready | common | set { model_mapping }
 
-    extract_sequences(ready, sequences_sql) \
+  extract_sequences(partitions, tracked, sequences_sql) \
     | flatten \
     | filter { f -> !f.empty() } \
     | split_sequences \

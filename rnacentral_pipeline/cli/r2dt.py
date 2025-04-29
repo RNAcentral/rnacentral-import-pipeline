@@ -253,3 +253,20 @@ def r2dt_prepare_s3(model_info, directory, output, file_list, allow_missing):
     r2dt.prepare_s3(
         model_info, directory, output, file_list, allow_missing=allow_missing
     )
+
+
+@cli.command("prepare-sequences")
+@click.argument("xref_urs", type=click.File("r"))
+@click.argument("tracked_urs", type=click.File("r"))
+@click.argument("urs_to_fetch", type=click.File("w"))
+@click.option("--max_sequences", default=-1)
+def r2dt_prepare_sequences(xref_urs, tracked_urs, urs_to_fetch, max_sequences):
+    """
+    Prepare the sequences extracted from RNAcentral
+
+    This means we will load and deduplicate the json file before rewriting
+    a json file containing only the requested number of sequences.
+
+    The default will be to write out all sequences
+    """
+    r2dt.prepare_sequences(xref_urs, tracked_urs, urs_to_fetch, max_sequences)
