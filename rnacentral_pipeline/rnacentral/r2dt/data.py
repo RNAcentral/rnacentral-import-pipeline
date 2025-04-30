@@ -189,6 +189,8 @@ class Source(enum.Enum):
             return "rnasep"
         if self is Source.gtrnadb:
             return "gtrnadb"
+        if self is Source.tmrna_website:
+            return "tmrna"
         raise ValueError(f"Could not find results for {self}")
 
 
