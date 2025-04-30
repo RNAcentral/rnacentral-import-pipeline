@@ -106,9 +106,10 @@ def parse(
             source = data.Source.build(row[2])
             if model_name not in model_info:
                 ## Try using the temporary lookup
+                old_model_name = model_name
                 model_name = temp_model_name_lookup.get(model_name, None)
                 if model_name is None:
-                    raise ValueError("No info for model %s", model_name)
+                    raise ValueError("No info for model %s", old_model_name)
 
             minfo = model_info[model_name]
             info = data.R2DTResultInfo(urs, minfo, source, result_base)
