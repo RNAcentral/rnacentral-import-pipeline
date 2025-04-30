@@ -163,6 +163,7 @@ class Source(enum.Enum):
     rfam = enum.auto()
     rnase_p = enum.auto()
     gtrnadb = enum.auto()
+    tmrnadb = enum.auto()
 
     @classmethod
     def build(cls, name: ty.Union[str, Source]) -> Source:
@@ -173,8 +174,8 @@ class Source(enum.Enum):
             return getattr(cls, name)
         if name == "rnase p database":
             return Source.rnase_p
-        if name == "tmrna database":
-            return Source.gtrnadb
+        if name == "tmrna_website":
+            return Source.tmrnadb
         raise ValueError(f"Unknown database name {name}")
 
     def result_directory(self) -> str:
