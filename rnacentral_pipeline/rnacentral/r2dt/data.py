@@ -175,7 +175,7 @@ class Source(enum.Enum):
         if name == "rnase p database":
             return Source.rnase_p
         if name == "tmrna database":
-            return Source.tmrna_webiste
+            return Source.tmrna_website
         raise ValueError(f"Unknown database name {name}")
 
     def result_directory(self) -> str:
