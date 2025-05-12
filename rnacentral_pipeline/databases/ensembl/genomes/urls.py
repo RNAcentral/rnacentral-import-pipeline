@@ -15,6 +15,7 @@ limitations under the License.
 
 import json
 import logging
+import re
 import tempfile
 import typing as ty
 from contextlib import contextmanager
@@ -29,8 +30,15 @@ def list_releases(ftp: FTP) -> ty.List[str]:
     return [f for f in ftp.nlst() if f.startswith("release-")]
 
 
-def latest_release(releases: ty.List[str]) -> str:
-    return max(releases, key=lambda r: int(r.split("-")[1]))
+def latest_release(releases: ty.List[str], ftp: FTP) -> str:
+    ## Parse the readme for the current release to avoid getting a half baked release
+    readme_lines = []
+    ftp.retrlines("RETR current_README", readme_lines.append)
+    cur_readme = "\n".join(readme_lines)
+    pattern = r"Ensembl Release (\d+) Databases."
+    release = re.search(pattern, cur_readme).group(1)
+    print(f"Ensembl release {release}")
+    return f"release-{release}"
 
 
 @contextmanager
