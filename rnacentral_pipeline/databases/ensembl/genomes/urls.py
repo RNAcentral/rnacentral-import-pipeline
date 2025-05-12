@@ -96,7 +96,7 @@ def urls_for(division: Division, host: str) -> ty.Iterable[FtpInfo]:
         print("LOGIN")
         ftp.cwd(f"pub/{division.name}/")
         releases = list_releases(ftp)
-        latest = latest_release(releases)
+        latest = latest_release(releases, ftp)
         with species_info(ftp, division, latest) as info:
             url_base = f"ftp://{host}/pub/{division.name}"
             yield from generate_paths(ftp, division, url_base, latest, info)
