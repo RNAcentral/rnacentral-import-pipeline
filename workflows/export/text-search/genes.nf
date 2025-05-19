@@ -5,7 +5,8 @@ nextflow.enable.dsl=2
 include { query as locus_query } from './utils'
 
 process merge_and_split {
-  errorStrategy 'finish'
+  memory { 2.GB * task.attempt }
+  errorStrategy { task.exitStatus in 137..140 ? 'retry' : 'finish' }
 
   input:
   tuple path(sequence), path(locus)
