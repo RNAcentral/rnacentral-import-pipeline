@@ -3,6 +3,8 @@ import re
 from pathlib import Path
 
 import polars as pl
+import psycopg2 as pg
+from psycopg2.extras import RealDictCursor
 
 urs_regex = re.compile(r"(URS[0-9A-Z]+_\d+)")
 
@@ -75,8 +77,12 @@ def get_all_mapped_ids(db: str) -> pl.DataFrame:
 
     """
     query = "SELECT id as urs_taxid FROM rnc_rna_precomputed WHERE (is_active AND has_coordinates)"
-
-    all_db_ids = pl.read_database_uri(query, db).unique()
+    conn = pg.connect(db, cursor_factory=RealDictCursor)
+    with conn.cursor() as cur:
+        cur.execute(query)
+        all_db_ids = cur.fetchall()
+    conn.close()
+    all_db_ids = pl.DataFrame(all_db_ids)
 
     return all_db_ids
 
@@ -86,7 +92,6 @@ def compare_gff(ftp_path: Path, db: str):
     Compare the ids in the GFF files to the ids in the database
     """
     all_written_ids = get_all_written_ids_gff(ftp_path)
-    exit()
     all_db_ids = get_all_mapped_ids(db)
 
     ids_missing_in_files = all_db_ids.join(all_written_ids, on="urs_taxid", how="anti")
@@ -104,7 +109,6 @@ def compare_bed(ftp_path: Path, db: str):
     """
     all_written_ids = get_all_written_ids_bed(ftp_path)
     all_db_ids = get_all_mapped_ids(db)
-
     ids_missing_in_files = all_db_ids.join(all_written_ids, on="urs_taxid", how="anti")
 
     print(f"Found {len(all_written_ids)} ids in the files")
