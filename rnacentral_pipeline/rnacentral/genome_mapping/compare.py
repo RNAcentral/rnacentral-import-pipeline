@@ -103,7 +103,6 @@ def compare_bed(ftp_path: Path, db: str):
     Compare the ids in the GFF files to the ids in the database
     """
     all_written_ids = get_all_written_ids_bed(ftp_path)
-    exit()
     all_db_ids = get_all_mapped_ids(db)
 
     ids_missing_in_files = all_db_ids.join(all_written_ids, on="urs_taxid", how="anti")
