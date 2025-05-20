@@ -82,7 +82,7 @@ def get_all_mapped_ids(db: str) -> pl.DataFrame:
         cur.execute(query)
         all_db_ids = cur.fetchall()
     conn.close()
-    all_db_ids = pl.DataFrame(all_db_ids)
+    all_db_ids = pl.DataFrame(all_db_ids).unique()
 
     return all_db_ids
 
@@ -101,6 +101,7 @@ def compare_gff(ftp_path: Path, db: str):
     print(
         f"Found {len(ids_missing_in_files)} ids in the database that are not in the files"
     )
+    return ids_missing_in_files
 
 
 def compare_bed(ftp_path: Path, db: str):
@@ -116,3 +117,5 @@ def compare_bed(ftp_path: Path, db: str):
     print(
         f"Found {len(ids_missing_in_files)} ids in the database that are not in the files"
     )
+
+    return ids_missing_in_files

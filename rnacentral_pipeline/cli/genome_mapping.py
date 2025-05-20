@@ -123,15 +123,19 @@ def find_url_and_create_json(species, assembly_id, output):
 
 @cli.command("compare-gff")
 @click.argument("ftp_path", type=click.Path(exists=True))
+@click.argument("output", type=click.File("w"))
 @click.option("--db-url", envvar="PGDATABASE")
-def compare_gff(ftp_path, db_url):
+def compare_gff(ftp_path, output, db_url):
 
-    compare.compare_gff(ftp_path, db_url)
+    missing_ids = compare.compare_gff(ftp_path, db_url)
+    missing_ids.write_csv(output)
 
 
 @cli.command("compare-bed")
 @click.argument("ftp_path", type=click.Path(exists=True))
+@click.argument("output", type=click.File("w"))
 @click.option("--db-url", envvar="PGDATABASE")
-def compare_gff(ftp_path, db_url):
+def compare_gff(ftp_path, output, db_url):
 
-    compare.compare_bed(ftp_path, db_url)
+    missing_ids = compare.compare_bed(ftp_path, db_url)
+    missing_ids.write_csv(output)
