@@ -17,7 +17,7 @@ limitations under the License.
 import click
 
 from rnacentral_pipeline.rnacentral import attempted
-from rnacentral_pipeline.rnacentral.genome_mapping import blat, urls, igv
+from rnacentral_pipeline.rnacentral.genome_mapping import blat, compare, igv, urls
 
 
 @click.group("genome-mapping")
@@ -119,3 +119,19 @@ def find_url_and_create_json(species, assembly_id, output):
     Check which files are available to be used by IGV
     """
     igv.create_json(species, assembly_id, output)
+
+
+@cli.command("compare-gff")
+@click.argument("ftp_path", type=click.Path(exists=True))
+@click.option("--db-url", envvar="PGDATABASE")
+def compare_gff(ftp_path, db_url):
+
+    compare.compare_gff(ftp_path, db_url)
+
+
+@cli.command("compare-bed")
+@click.argument("ftp_path", type=click.Path(exists=True))
+@click.option("--db-url", envvar="PGDATABASE")
+def compare_gff(ftp_path, db_url):
+
+    compare.compare_bed(ftp_path, db_url)
