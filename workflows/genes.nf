@@ -119,3 +119,8 @@ workflow rnacentral_genes {
   | set { genes }
 
 }
+
+
+workflow {
+  rnacentral_genes()
+}
