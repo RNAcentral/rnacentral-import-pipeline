@@ -18,10 +18,17 @@ from pathlib import Path
 import click
 
 from rnacentral_pipeline.rnacentral.genes import build, write
-from rnacentral_pipeline.rnacentral.genes.data import MemberType
-from rnacentral_pipeline.rnacentral.genes.data import DataType
-from rnacentral_pipeline.rnacentral.genes.data import Context
-from rnacentral_pipeline.rnacentral.genes.data import Methods
+from rnacentral_pipeline.rnacentral.genes.data import (
+    Context,
+    DataType,
+    MemberType,
+    Methods,
+)
+from rnacentral_pipeline.rnacentral.genes.random_forest import (
+    classify,
+    data,
+    preprocessing,
+)
 
 
 @click.group("genes")
@@ -103,3 +110,129 @@ def build_genes(
         extended_bed=extended_bed,
         allowed_data_types=allowed_data_types,
     )
+
+
+## New RF based gene models
+
+
+@cli.command("fetch")
+@click.option(
+    "--conn_str",
+    envvar="PGDATABASE",
+    required=True,
+    help="Database connection string (can use PGDATABASE env var)",
+)
+@click.option("--taxid", type=int, required=True, help="Taxonomy ID to fetch data for")
+@click.option(
+    "--output",
+    required=True,
+    help="Output file path for transcript data (parquet format)",
+)
+def fetch(conn_str, taxid, output):
+    """
+    Fetch transcript data from the database for a given taxonomy ID.
+
+    This command queries the database to retrieve all transcripts for the specified
+    taxonomy ID and saves them to a parquet file for later processing.
+    """
+    click.echo(f"Fetching data for taxid {taxid}...")
+
+    transcripts = data.fetch_data(taxid, conn_str)
+
+    # Ensure output directory exists
+    output_path = Path(output)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    transcripts.write_parquet(output)
+    click.echo(f"Saved {transcripts.height} transcripts to {output}")
+
+
+@cli.command("preprocess")
+@click.option(
+    "--transcripts_file",
+    required=True,
+    help="Input parquet file containing transcript data",
+)
+@click.option(
+    "--conn_str",
+    envvar="PGDATABASE",
+    help="Database connection string (required if region_ids not in transcripts)",
+)
+@click.option("--so_model_path", required=True, help="SO Node2Vec model path")
+@click.option(
+    "--output", required=True, help="Output file path for features (parquet format)"
+)
+@click.option(
+    "--nearby_distance",
+    default=1000,
+    type=int,
+    help="Distance threshold for identifying nearby transcripts (default: 1000)",
+)
+def preprocess(transcripts_file, conn_str, so_model_path, output, nearby_distance):
+    """
+    Generate features by comparing nearby transcripts.
+
+    This command loads transcript data and generates pairwise comparison features
+    for transcripts that are within the specified distance threshold.
+    """
+    if not Path(transcripts_file).exists():
+        raise click.ClickException(f"Transcripts file not found: {transcripts_file}")
+
+    if not Path(so_model_path).exists():
+        raise click.ClickException(f"Transcripts file not found: {so_model_path}")
+
+    click.echo(f"Loading transcripts from {transcripts_file}...")
+
+    features = preprocessing.run_preprocessing(
+        transcripts_file, conn_str, so_model_path, nearby_distance
+    )
+
+    # Ensure output directory exists
+    output_path = Path(output)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    features.write_parquet(output)
+    click.echo(f"Generated {features.height} feature comparisons, saved to {output}")
+
+
+@cli.command("classify")
+@click.option(
+    "--features_file", required=True, help="Input parquet file containing features"
+)
+@click.option(
+    "--transcripts_file", required=True, help="Input parquet file containing features"
+)
+@click.option("--model_path", required=True, help="Path to trained model pickle file")
+@click.option("--taxid", type=int, required=True, help="Taxonomy ID for gene naming")
+@click.option(
+    "--conn_str",
+    envvar="PGDATABASE",
+    required=True,
+    help="Database connection string (can use PGDATABASE env var)",
+)
+@click.option("--output_dir", required=True, help="Output directory for results")
+@click.option(
+    "--seed",
+    default=20240520,
+    type=int,
+    help="Random seed for gene naming (default: 20240520)",
+)
+def classify(
+    features_file, transcripts_file, model_path, taxid, conn_str, output_dir, seed
+):
+    """
+    Apply machine learning model to classify transcript pairs and generate genes.
+
+    This command loads features, applies the trained model to classify transcript
+    pairs as belonging to the same gene, then uses community detection to group
+    transcripts into genes.
+    """
+    genes_table = classify.run_final_classification(
+        features_file, transcripts_file, model_path, taxid, conn_str, output_dir, seed
+    )
+
+    # Ensure output directory exists
+    output_path = Path(output_dir)
+    output_path.mkdir(parents=True, exist_ok=True)
+
+    genes_table.write_csv(output_path / f"genes_{taxid}.csv")
