@@ -110,7 +110,8 @@ workflow rnacentral_genes {
   Channel.fromPath(params.genes.taxa_query) | fetch_taxids | set { taxa }
 
   taxa \
-  | splitCsv { row -> row[0] } \
+  | splitCsv \
+  | map { row -> row[0] } \
   | fetch_transcripts \
   | combine( so_model ) \
   | preprocess_transcripts \
