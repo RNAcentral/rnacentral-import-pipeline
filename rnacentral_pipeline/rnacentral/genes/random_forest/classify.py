@@ -209,6 +209,9 @@ def run_final_classification(
     # Load features
     features = pl.read_parquet(features_file)
 
+    if features.height == 0:
+        return pl.DataFrame()
+
     transcripts = pl.read_parquet(transcripts_file)
 
     # Run classification
