@@ -156,9 +156,16 @@ def compare_transcripts(transcripts_a, transcripts_b, so_model, label=0):
 
 
 def identify_nearby_transcripts(transcripts, so_model, nearby_distance=1000):
-    """ """
+    """
+    Find transcripts within 1kb of each other to calculate feature sets for and calculate features
+
+    Args:
+        transcripts (pl.DataFrame): DataFrame of transcripts
+        nearby_distance (int): Distance to search for nearby transcripts
+    Returns:
+        pl.DataFrame: DataFrame of features
+    """
     features = []
-    candidates_df = []
     for transcript_a in tqdm(
         transcripts.iter_rows(named=True),
         total=transcripts.height,
@@ -335,42 +342,3 @@ def compare_transcripts(transcripts_a, transcripts_b, label=0):
                 ]
             )
     return features
-
-
-def identify_nearby_transcripts(
-    transcripts: pl.DataFrame, nearby_distance: int = 1000
-) -> pl.DataFrame:
-    """
-    Find transcripts within 1kb of each other to calculate feature sets for and calculate features
-
-    Args:
-        transcripts (pl.DataFrame): DataFrame of transcripts
-        nearby_distance (int): Distance to search for nearby transcripts
-    Returns:
-        pl.DataFrame: DataFrame of features
-    """
-    features = []
-    for transcript_a in transcripts.iter_rows(named=True):
-        candidates = transcripts.filter(
-            (
-                pl.col("region_start").is_between(
-                    transcript_a["region_start"] - nearby_distance,
-                    transcript_a["region_stop"] + nearby_distance,
-                )
-                | pl.col("region_stop").is_between(
-                    transcript_a["region_start"] - nearby_distance,
-                    transcript_a["region_stop"] + nearby_distance,
-                )
-            )
-            & (pl.col("region_name") != transcript_a["region_name"])
-            & (pl.col("chromosome") == transcript_a["chromosome"])
-            & (pl.col("assembly_id") == transcript_a["assembly_id"])
-        )
-
-        if len(candidates) > 0:
-            f = compare_transcripts(
-                pl.DataFrame([transcript_a]), candidates, label=None
-            )
-            features.extend(f)
-
-    return pl.DataFrame(features)
