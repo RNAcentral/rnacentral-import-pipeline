@@ -29,24 +29,21 @@ select
 region_name,
 sr.id as region_id,
 urs_taxid,
-sr.assembly_id,
-sr.chromosome,
+assembly_id,
+chromosome,
 region_start,
 region_stop,
 exon_count,
 exon_start,
 exon_stop,
 strand,
-rna_type as so_type
+so_rna_type as so_type
 
-from rnc_sequence_regions sr
+from rnc_sequence_regions_active_mapped sr
 join rnc_sequence_exons ex on ex.region_id = sr.id
-join xref on urs_taxid = xref.upi ||'_'||xref.taxid
-join rnc_accessions ac on ac.accession = xref.ac
-where xref.taxid = %s
+join rnc_rna_precomputed pc on pc.id = sr.urs_taxid
 
-and was_mapped
-and deleted = 'N'
+where pc.taxid = %s
 """
 
 
