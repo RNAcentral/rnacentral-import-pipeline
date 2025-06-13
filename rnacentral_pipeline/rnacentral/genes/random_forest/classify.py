@@ -143,14 +143,17 @@ def run_classification(model_path, features):
     """
     excluded_columns = ["comparison", "label"]
     X = features.select(pl.exclude(excluded_columns)).to_numpy()
+
+    sess_opt = ort.SessionOptions()
+    sess_opt.execution_mode = ort.ExecutionMode.ORT_PARALLEL
+    sess_opt.inter_op_num_threads = 1
+
     sess = ort.InferenceSession(model_path, providers=["CPUExecutionProvider"])
     input_name = sess.get_inputs()[0].name  ## gets the probability dict
     label_name = sess.get_outputs()[0].name
     probability_name = sess.get_outputs()[1].name
 
-    predictions, prob_dict = sess.run([label_name, probability_name], {input_name: X})[
-        0
-    ]
+    predictions, prob_dict = sess.run([label_name, probability_name], {input_name: X})
     probabilities = [pr[c] for pr, c in zip(prob_dict, predictions)]
 
     comparisons = features.get_column("comparison").to_numpy()
