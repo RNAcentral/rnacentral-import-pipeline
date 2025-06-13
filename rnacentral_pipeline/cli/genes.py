@@ -231,4 +231,4 @@ def classify(
     output_path = Path(output_dir)
     output_path.mkdir(parents=True, exist_ok=True)
 
-    genes_table.write_csv(output_path / f"genes_{taxid}.csv")
+    genes_table.write_json(output_path / f"genes_{taxid}.json")
