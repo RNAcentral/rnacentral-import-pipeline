@@ -12,12 +12,11 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-
-import pickle as pkl
 from pathlib import Path
 
 import networkx as nx
 import numpy as np
+import onnxruntime as ort
 import polars as pl
 from community import community_louvain
 
@@ -138,18 +137,21 @@ def get_community_genes(classifications, transcripts):
     return genes
 
 
-def run_classification(model, features):
+def run_classification(model_path, features):
     """
     Run the model over the features and classify every single pair
     """
     excluded_columns = ["comparison", "label"]
     X = features.select(pl.exclude(excluded_columns)).to_numpy()
+    sess = ort.InferenceSession(model_path, providers=["CPUExecutionProvider"])
+    input_name = sess.get_inputs()[0].name  ## gets the probability dict
+    label_name = sess.get_outputs()[0].name
+    probability_name = sess.get_outputs()[1].name
 
-    ## this is potentially a lot of work, so minimise calling this,
-    ## then we can use argmax on the probs to get classes
-    probabilities = model.predict_proba(X)
-
-    predictions = np.argmax(probabilities, axis=1)
+    predictions, prob_dict = sess.run([label_name, probability_name], {input_name: X})[
+        0
+    ]
+    probabilities = [pr[c] for pr, c in zip(prob_dict, predictions)]
 
     comparisons = features.get_column("comparison").to_numpy()
 
@@ -157,7 +159,7 @@ def run_classification(model, features):
         {
             "comparison": comparisons,
             "prediction": predictions,
-            "probability": probabilities[:, 1],
+            "probability": probabilities,
         }
     )
 
@@ -191,12 +193,8 @@ def run_final_classification(
 
     transcripts = pl.read_parquet(transcripts_file)
 
-    # Load model
-    with open(model_path, "rb") as model_file:
-        model = pkl.load(model_file)
-
     # Run classification
-    classifications = run_classification(model, features)
+    classifications = run_classification(model_path, features)
 
     # Get unique transcript names from features
     all_comparisons = features.get_column("comparison").to_list()
