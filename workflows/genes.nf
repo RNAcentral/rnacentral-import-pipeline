@@ -91,7 +91,7 @@ process classify_transcripts {
     tuple val(taxid), path(features), path(transcripts), path(model)
 
   output:
-    tuple val(taxid), path("*.csv")
+    tuple val(taxid), path("*.json")
 
   """
   rnac genes classify --features_file ${features} --transcripts_file ${transcripts} --model_path ${model} --taxid ${taxid} --output_dir .
