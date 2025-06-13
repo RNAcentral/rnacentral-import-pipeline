@@ -168,7 +168,8 @@ def run_classification(model_path, features):
         predictions, prob_dict = sess.run(
             [label_name, probability_name], {input_name: X}
         )
-        probabilities = [pr[c] for pr, c in zip(prob_dict, predictions)]
+
+    probabilities = [pr[c] for pr, c in zip(prob_dict, predictions)]
 
     comparisons = features.get_column("comparison").to_numpy()
 
