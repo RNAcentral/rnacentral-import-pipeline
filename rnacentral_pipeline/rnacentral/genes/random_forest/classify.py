@@ -153,8 +153,22 @@ def run_classification(model_path, features):
     label_name = sess.get_outputs()[0].name
     probability_name = sess.get_outputs()[1].name
 
-    predictions, prob_dict = sess.run([label_name, probability_name], {input_name: X})
-    probabilities = [pr[c] for pr, c in zip(prob_dict, predictions)]
+    if features.height > 10_000:
+        predictions = []
+        prob_dict = []
+        chunk_size = 1000
+        for batch_idx in range(0, features.height, chunk_size):
+            pred_part, prob_part = sess.run(
+                [label_name, probability_name],
+                {input_name: X[batch_idx : batch_idx + chunk_size]},
+            )
+            predictions.extend(pred_part)
+            prob_dict.extend(prob_part)
+    else:
+        predictions, prob_dict = sess.run(
+            [label_name, probability_name], {input_name: X}
+        )
+        probabilities = [pr[c] for pr, c in zip(prob_dict, predictions)]
 
     comparisons = features.get_column("comparison").to_numpy()
 
