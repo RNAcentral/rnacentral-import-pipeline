@@ -24,11 +24,8 @@ from rnacentral_pipeline.rnacentral.genes.data import (
     MemberType,
     Methods,
 )
-from rnacentral_pipeline.rnacentral.genes.random_forest import (
-    classify,
-    data,
-    preprocessing,
-)
+from rnacentral_pipeline.rnacentral.genes.random_forest import classify as rf_classify
+from rnacentral_pipeline.rnacentral.genes.random_forest import data, preprocessing
 
 
 @click.group("genes")
@@ -227,10 +224,9 @@ def classify(
     pairs as belonging to the same gene, then uses community detection to group
     transcripts into genes.
     """
-    genes_table = classify.run_final_classification(
-        features_file, transcripts_file, model_path, taxid, conn_str, output_dir, seed
+    genes_table = rf_classify.run_final_classification(
+        features_file, transcripts_file, model_path, taxid, conn_str, seed
     )
-
     # Ensure output directory exists
     output_path = Path(output_dir)
     output_path.mkdir(parents=True, exist_ok=True)
