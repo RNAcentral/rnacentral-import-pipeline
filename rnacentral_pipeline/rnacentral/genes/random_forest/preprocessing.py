@@ -198,17 +198,20 @@ def identify_nearby_transcripts(transcripts, so_model, nearby_distance=1000):
 
 def run_preprocessing(transcripts_file, conn_str, so_model_path, nearby_distance):
     transcripts = pl.read_parquet(transcripts_file)
-    so_model = Word2Vec.load(so_model_path)
+    if transcripts.height > 0:
+        so_model = Word2Vec.load(so_model_path)
 
-    # Check if region_ids are present, fetch if needed
-    if "region_id" not in transcripts.columns:
-        if not conn_str:
-            raise ValueError(
-                "Region IDs not found in transcripts file and no database connection provided. "
-                "Please provide --conn_str to fetch region IDs from database."
-            )
-        transcripts = data.add_region_ids(transcripts, conn_str)
+        # Check if region_ids are present, fetch if needed
+        if "region_id" not in transcripts.columns:
+            if not conn_str:
+                raise ValueError(
+                    "Region IDs not found in transcripts file and no database connection provided. "
+                    "Please provide --conn_str to fetch region IDs from database."
+                )
+            transcripts = data.add_region_ids(transcripts, conn_str)
 
-    features = identify_nearby_transcripts(transcripts, so_model, nearby_distance)
+        features = identify_nearby_transcripts(transcripts, so_model, nearby_distance)
+    else:
+        features = pl.DataFrame()
 
     return features

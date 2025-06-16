@@ -79,19 +79,20 @@ def fetch_data(taxid, conn_str):
 
     transcripts = pl.DataFrame(results)
 
-    # Group transcripts as in the original main function
-    transcripts = transcripts.group_by(
-        ["assembly_id", "chromosome", "region_name"], maintain_order=True
-    ).agg(
-        pl.col("urs_taxid").first(),
-        pl.col("region_start").first(),
-        pl.col("region_stop").first(),
-        pl.col("region_id").first(),
-        pl.col("exon_start"),
-        pl.col("exon_stop"),
-        pl.col("strand").first(),
-        pl.col("so_type").first(),
-    )
+    if transcripts.height > 0:
+        # Group transcripts as in the original main function
+        transcripts = transcripts.group_by(
+            ["assembly_id", "chromosome", "region_name"], maintain_order=True
+        ).agg(
+            pl.col("urs_taxid").first(),
+            pl.col("region_start").first(),
+            pl.col("region_stop").first(),
+            pl.col("region_id").first(),
+            pl.col("exon_start"),
+            pl.col("exon_stop"),
+            pl.col("strand").first(),
+            pl.col("so_type").first(),
+        )
 
     return transcripts
 
