@@ -196,6 +196,54 @@ def identify_nearby_transcripts(transcripts, so_model, nearby_distance=1000):
     return pl.DataFrame(features)
 
 
+def identify_nearby_transcripts_sorted(transcripts, so_model, nearby_distance=1000):
+    """Optimized version using sorting and binary search"""
+
+    # Group by chromosome and assembly_id
+    grouped = transcripts.group_by(["chromosome", "assembly_id"])
+
+    features = []
+
+    for group_key, group_df in grouped:
+        # Sort by region_start for binary search
+        sorted_df = group_df.sort("region_start")
+        sorted_data = sorted_df.to_dicts()
+
+        for i, transcript_a in enumerate(
+            tqdm(sorted_data, desc=f"Processing {group_key}")
+        ):
+
+            # Use binary search to find the range of potentially nearby transcripts
+            search_start = transcript_a["region_start"] - nearby_distance
+            search_end = transcript_a["region_stop"] + nearby_distance
+
+            # Find candidates within the search range
+            candidates_data = []
+            for j, transcript_b in enumerate(sorted_data):
+                if i == j:  # Skip self
+                    continue
+
+                # Early termination if we've passed the search range
+                if transcript_b["region_start"] > search_end:
+                    break
+
+                # Check if within range
+                if (
+                    transcript_b["region_start"] <= search_end
+                    and transcript_b["region_stop"] >= search_start
+                ):
+                    candidates_data.append(transcript_b)
+
+            if candidates_data:
+                candidates = pl.DataFrame(candidates_data)
+                f = compare_transcripts(
+                    pl.DataFrame([transcript_a]), candidates, so_model, label=None
+                )
+                features.extend(f)
+
+    return pl.DataFrame(features)
+
+
 def run_preprocessing(transcripts_file, conn_str, so_model_path, nearby_distance):
     transcripts = pl.read_parquet(transcripts_file)
     if transcripts.height > 0:
@@ -210,8 +258,21 @@ def run_preprocessing(transcripts_file, conn_str, so_model_path, nearby_distance
                 )
             transcripts = data.add_region_ids(transcripts, conn_str)
 
-        features = identify_nearby_transcripts(transcripts, so_model, nearby_distance)
+        features = identify_nearby_transcripts_sorted(
+            transcripts, so_model, nearby_distance
+        )
     else:
         features = pl.DataFrame()
 
     return features
+
+
+if __name__ == "__main__":
+    transcripts = pl.read_parquet("/Users/agreen/code/rnc-genes/human_transcripts.pq")
+    print(transcripts)
+
+    so_model = Word2Vec.load(
+        "/Users/agreen/code/rnc-genes/node2vec/so_embedding_model.emb"
+    )
+
+    identify_nearby_transcripts_sorted(transcripts, so_model)
