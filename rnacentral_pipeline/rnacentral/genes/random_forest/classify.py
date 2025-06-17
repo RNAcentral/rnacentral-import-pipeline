@@ -12,6 +12,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+import os
 from pathlib import Path
 
 import networkx as nx
@@ -146,7 +147,10 @@ def run_classification(model_path, features):
 
     sess_opt = ort.SessionOptions()
     sess_opt.execution_mode = ort.ExecutionMode.ORT_PARALLEL
-    sess_opt.inter_op_num_threads = 1
+    if os.getenv("SLURM_JOB_ID") is not None:
+        cpus_on_node = os.getenv("SLURM_CPUS_ON_NODE") or 1
+        sess_opt.intra_op_num_threads = int(cpus_on_node)
+        sess_opt.inter_op_num_threads = int(cpus_on_node)
 
     sess = ort.InferenceSession(model_path, providers=["CPUExecutionProvider"])
     input_name = sess.get_inputs()[0].name  ## gets the probability dict
