@@ -166,10 +166,12 @@ CREATE MATERIALIZED VIEW IF NOT EXISTS rnc_sequence_regions_active AS
 
 -- Update rnc_sequence_regions_active
 DROP INDEX IF EXISTS ix_rnc_sequence_regions_active__urs_taxid;
+DROP INDEX IF EXISTS ix_rnc_sequence_regions_active__assembly_id;
 
 REFRESH MATERIALIZED VIEW rnc_sequence_regions_active;
 
 CREATE INDEX ix_rnc_sequence_regions_active__urs_taxid on rnc_sequence_regions_active (urs_taxid);
+CREATE INDEX ix_rnc_sequence_regions_active__assembly_id ON rnc_sequence_regions_active (assembly_id);
 CREATE INDEX idx_rnc_sequence_regions_id ON rnc_sequence_regions(id);
 CREATE INDEX idx_rnc_accession_sequence_region_region_id ON rnc_accession_sequence_region(region_id);
 
