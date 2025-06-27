@@ -25,6 +25,7 @@ from rnacentral_pipeline.rnacentral.genes.data import (
     Methods,
 )
 from rnacentral_pipeline.rnacentral.genes.random_forest import classify as rf_classify
+from rnacentral_pipeline.rnacentral.genes.random_forest import convert as gff_convert
 from rnacentral_pipeline.rnacentral.genes.random_forest import data, preprocessing
 
 
@@ -232,3 +233,24 @@ def classify(
     output_path.mkdir(parents=True, exist_ok=True)
 
     genes_table.write_json(output_path / f"genes_{taxid}.json")
+
+
+@cli.command("convert")
+@click.option("--gff_file", required=True, help="Input GFF file with genes")
+@click.option("--taxid", type=int, help="Taxonomy ID for the GFF file")
+def convert(gff_file, taxid):
+    """
+    Convert GFF file to parquet format.
+
+    This command reads a GFF file containing gene annotations and converts it to a
+    parquet format suitable for further processing.
+    """
+    if not Path(gff_file).exists():
+        raise click.ClickException(f"GFF file not found: {gff_file}")
+
+    output_path = Path(gff_file).with_suffix(".parquet")
+    transcripts_table = gff_convert.gff_to_polars(Path(gff_file), taxid=taxid)
+    transcripts_table.write_parquet(output_path)
+    click.echo(
+        f"Converted {gff_file} to {output_path} with {transcripts_table.height} transcripts."
+    )
