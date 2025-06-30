@@ -23,6 +23,32 @@ from rnacentral_pipeline.rnacentral.r2dt import data, ribovore
 
 LOGGER = logging.getLogger(__name__)
 
+## Use this for now because R2DT isn't fully up to date with Rfam so
+## model names don't always match
+temp_model_name_lookup = {
+    "glnA": "Glutamine",
+    "yybP-ykoY": "Manganese",
+    "ydaO-yuaA": "c-di-AMP",
+    "M-box": "Magnesium",
+    "MIR162_2": "MIR162_1",
+    "ykkC-yxkD": "Guanidine-I",
+    "MOCO_RNA_motif": "Molybdenum",
+    "Mg_sensor": "Magnesium-II",
+    "SAH_riboswitch": "SAH",
+    "mini-ykkC": "Guanidine-II",
+    "AdoCbl_riboswitch": "AdoCbl",
+    "MFR": "2dG-I",
+    "AdoCbl-variant": "AdoCbl-II",
+    "SAM-I-IV-variant": "SAM-I-IV",
+    "SAM-II_long_loops": "SAM-II",
+    "ykkC-III": "Guanidine-III",
+    "yjdF": "azaaromatic",
+    "SMK_box_riboswitch": "SAM-III",
+    "mir-506": "mir-511",
+    "Virus_CITE_7": "Virus-PTE",
+    "folE": "THF-II",
+}
+
 
 def load_model_info(handle: ty.TextIO) -> ty.Dict[str, data.ModelDatabaseInfo]:
     mapping = {}
@@ -79,7 +105,11 @@ def parse(
             model_name = row[1]
             source = data.Source.build(row[2])
             if model_name not in model_info:
-                raise ValueError("No info for model %s", model_name)
+                ## Try using the temporary lookup
+                old_model_name = model_name
+                model_name = temp_model_name_lookup.get(model_name, None)
+                if model_name is None:
+                    raise ValueError("No info for model %s", old_model_name)
 
             minfo = model_info[model_name]
             info = data.R2DTResultInfo(urs, minfo, source, result_base)

@@ -31,6 +31,7 @@ process merge_and_import {
 }
 
 process release {
+  time '5d'
   maxForks 1
   when { params.should_release }
   containerOptions "--contain --workdir $baseDir/work/tmp --bind $baseDir"

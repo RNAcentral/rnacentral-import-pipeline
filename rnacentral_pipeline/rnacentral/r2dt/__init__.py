@@ -20,6 +20,7 @@ import typing as ty
 from pathlib import Path
 
 import joblib
+import polars as pl
 
 from rnacentral_pipeline.rnacentral.r2dt import parser, should_show
 from rnacentral_pipeline.rnacentral.r2dt.models import (
@@ -149,3 +150,23 @@ def write_converted_sheet(handle: ty.IO, output: ty.IO):
 
 def write_inspect_data(handle: ty.IO, db_url: str, output: ty.IO):
     return should_show.write_inspect_data(handle, db_url, output)
+
+
+def prepare_sequences(xref_urs, tracked_urs, urs_to_fetch, max_sequences):
+    print(urs_to_fetch.name)
+    raw_xref = (
+        pl.scan_csv(xref_urs.name, has_header=False, low_memory=True)
+        .unique()
+        .rename({"column_1": "urs"})
+    )
+
+    raw_tracked = pl.scan_csv(
+        tracked_urs.name, low_memory=True
+    ).unique()  ## May not need to be uniqued?
+
+    to_fetch = raw_xref.join(raw_tracked, on="urs", how="anti")
+
+    if max_sequences < 0:
+        to_fetch.sink_csv(urs_to_fetch.name)
+    else:
+        to_fetch.head(max_sequences).sink_csv(urs_to_fetch.name)
