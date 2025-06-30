@@ -13,6 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import re
 import tempfile
 from pathlib import Path
 
@@ -65,6 +66,7 @@ def get_assembly(path: Path) -> str:
 def load_coordinates(path: Path, taxid: int) -> SqliteDict:
     # assembly_id = get_assembly(path)
     assembly_id = ".".join(path.stem.split(".")[1:])
+    assembly_id = re.sub("_\d+$", "", assembly_id)
     transcript_data = []
 
     with tempfile.NamedTemporaryFile() as tmp:
@@ -76,7 +78,7 @@ def load_coordinates(path: Path, taxid: int) -> SqliteDict:
             for exon in db.children(ncrna_gene.id):
                 urs = ncrna_gene.attributes["Name"][0]
                 rna_insdc_type = ncrna_gene.attributes["type"][0]
-                rna_so_type = insdc_so_lookup[rna_insdc_type]
+                rna_so_type = insdc_so_lookup.get(rna_insdc_type, "SO:0000655")
                 chromosome = ncrna_gene.chrom
                 strand = ncrna_gene.strand
 
