@@ -38,14 +38,13 @@ openpyxl = "^3.0.10"
 pybedtools = "^0.12.0"
 psycopg2-binary = "^2.9.7"
 polars = "^1.14.0"
-cython = "^3.0.12"
 numpy = "<2"
 gensim = "^4.3.3"
 python-louvain = "^0.16"
 pysam = "^0.23.3"
 onnxruntime = "^1.22.0"
 cython = "^3.1.2"
-pybedtools = "^0.12.0"
+
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.4.2"
