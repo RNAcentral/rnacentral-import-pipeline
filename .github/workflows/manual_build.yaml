@@ -2,7 +2,7 @@
 # the plan later will be to include unit tests as well
 
 
-name: Building Pipeline Containers
+name: Manually Building Pipeline Containers
 
 on: workflow_dispatch
 jobs:
