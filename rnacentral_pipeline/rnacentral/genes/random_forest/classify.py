@@ -152,7 +152,7 @@ def run_classification(model_path, features):
         sess_opt.intra_op_num_threads = int(cpus_on_node)
         sess_opt.inter_op_num_threads = int(cpus_on_node)
 
-    sess = ort.InferenceSession(model_path, providers=["CPUExecutionProvider"])
+    sess = ort.InferenceSession(model_path, providers=["CPUExecutionProvider"], sess_options=sess_opt)
     input_name = sess.get_inputs()[0].name  ## gets the probability dict
     label_name = sess.get_outputs()[0].name
     probability_name = sess.get_outputs()[1].name
