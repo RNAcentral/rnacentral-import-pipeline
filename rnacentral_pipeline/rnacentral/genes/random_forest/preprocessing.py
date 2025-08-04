@@ -317,10 +317,10 @@ def _process_group_worker_optimized(args):
     Returns:
         List of feature dictionaries for the group
     """
-    group_key, group_data, so_model_path, nearby_distance = args
+    group_key, group_data, so_model, nearby_distance = args
 
     # Load the model in each worker process
-    so_model = Word2Vec.load(so_model_path)
+    # so_model = Word2Vec.load(so_model_path)
 
     # Convert group data back to DataFrame
     group_df = pl.DataFrame(group_data)
@@ -394,12 +394,13 @@ def identify_nearby_transcripts_sorted_parallel(
     # Prepare arguments for worker processes
     # Convert DataFrames to dictionaries to avoid pickling issues
     worker_args = []
+    so_model = Word2Vec.load(so_model_path)
     for group_key, group_df in grouped:
         group_data = group_df.to_dicts()
         if len(group_data) < 1000:
             # Skip groups with less than 2 transcripts
             continue
-        worker_args.append((group_key, group_data, so_model_path, nearby_distance))
+        worker_args.append((group_key, group_data, so_model, nearby_distance))
 
     # Sort by group size (largest first) for better load balancing
     worker_args.sort(key=lambda x: len(x[1]), reverse=True)
