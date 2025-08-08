@@ -74,24 +74,22 @@ def load_coordinates(path: Path, taxid: int) -> SqliteDict:
         for ncrna_gene in db.features_of_type(("transcript")):
             region_start = ncrna_gene.start
             region_stop = ncrna_gene.stop
-            exons = []
-            for exon in db.children(ncrna_gene.id):
-                urs = ncrna_gene.attributes["Name"][0]
-                rna_insdc_type = ncrna_gene.attributes["type"][0]
-                rna_so_type = insdc_so_lookup.get(rna_insdc_type, "SO:0000655")
-                chromosome = ncrna_gene.chrom
-                strand = ncrna_gene.strand
+            chromosome = ncrna_gene.chrom
+            strand = ncrna_gene.strand
+            urs = ncrna_gene.attributes["Name"][0]
+            rna_insdc_type = ncrna_gene.attributes["type"][0]
+            rna_so_type = insdc_so_lookup.get(rna_insdc_type, "SO:0000655")
+            if "_" in urs:
+                urs_taxid = urs
+            else:
+                urs_taxid = f"{urs}_{taxid}"
 
+
+            exons = []
+            for exon in db.children(ncrna_gene.id):                
                 exon_start = exon.start
                 exon_stop = exon.stop
-
-                if "_" in urs:
-                    urs_taxid = urs
-                else:
-                    urs_taxid = f"{urs}_{taxid}"
-
                 exon_dict = {
-                    "assembly_id": assembly_id,
                     "chromosome": chromosome,
                     "urs_taxid": urs_taxid,
                     # "region_id": "" ## This has to be collected by querying later
