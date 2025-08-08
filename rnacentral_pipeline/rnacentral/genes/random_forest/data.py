@@ -125,6 +125,32 @@ def add_region_ids(transcripts, conn_str):
     transcripts = transcripts.join(region_ids, on="region_name", how="inner")
     return transcripts
 
+def add_assembly_ids(transcripts, conn_str):
+    conn = pg.connect(conn_str)
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+
+    ## Get the region names as a list from the transcript file
+    region_names = transcripts.get_column("region_name").unique().to_list()
+    print(region_names[:10])
+
+    buffer = io.StringIO()
+    for name in region_names:
+        buffer.write(f"{name}\n")
+    buffer.seek(0)
+
+    ## Create a temp table from the region names
+    cur.execute("CREATE TEMPORARY TABLE temp_gff_region_names (region_name TEXT)")
+    cur.copy_from(buffer, "temp_gff_region_names", columns=("region_name",))
+
+    ## Now join against rnc_sequence_regions and get the name - id lookup
+
+    cur.execute(
+        """SELECT sr.region_name as region_name, sr.assembly_id as assembly_id FROM rnc_sequence_regions sr JOIN temp_gff_region_names rn ON rn.region_name = sr.region_name"""
+    )
+
+    region_ids = pl.DataFrame(cur.fetchall())
+    transcripts = transcripts.join(region_ids, on="region_name", how="inner")
+    return transcripts
 
 def coordinate_hash(coords, chromosome_number):
     """
