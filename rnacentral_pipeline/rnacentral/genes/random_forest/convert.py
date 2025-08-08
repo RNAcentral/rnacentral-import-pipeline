@@ -21,7 +21,7 @@ import gffutils
 import polars as pl
 from sqlitedict import SqliteDict
 
-from rnacentral_pipeline.rnacentral.genes.random_forest.data import add_assembly_id
+from rnacentral_pipeline.rnacentral.genes.random_forest import data
 
 insdc_so_lookup = {
     "ncRNA": "SO:0000655",
@@ -139,7 +139,7 @@ def load_coordinates(path: Path, taxid: int, conn_str: str) -> SqliteDict:
     ## Assembly ID is not guaranteed to be in the filename, so query it from the DB here
     ## - Is it possible for a region ID to be on multiple assemblies? 
     ## I don't _think_ it is, but if things go wrong, check here
-    transcript_dataframe = add_assembly_id(transcript_dataframe, conn_str)
+    transcript_dataframe = data.add_assembly_ids(transcript_dataframe, conn_str)
 
     transcript_dataframe = transcript_dataframe.group_by(
         ["assembly_id", "chromosome", "region_name"], maintain_order=True
