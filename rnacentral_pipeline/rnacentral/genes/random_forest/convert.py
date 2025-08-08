@@ -21,6 +21,8 @@ import gffutils
 import polars as pl
 from sqlitedict import SqliteDict
 
+from data import add_assembly_id
+
 insdc_so_lookup = {
     "ncRNA": "SO:0000655",
     "lncRNA": "SO:0001877",
@@ -63,10 +65,16 @@ def get_assembly(path: Path) -> str:
     raise ValueError(f"Could not find assembly id in {path}")
 
 
-def load_coordinates(path: Path, taxid: int) -> SqliteDict:
-    # assembly_id = get_assembly(path)
-    assembly_id = ".".join(path.stem.split(".")[1:])
-    assembly_id = re.sub("_\d+$", "", assembly_id)
+def load_coordinates(path: Path, taxid: int, conn_str: str) -> SqliteDict:
+    """
+    Load transcript coordinates from a GFF3 file and return a Polars DataFrame.
+    Args:
+        path (Path): Path to the GFF3 file.
+        taxid (int): Taxonomy ID for the transcripts.
+        conn_str (str): Database connection string to fetch assembly IDs.
+    Returns:
+        pl.DataFrame: DataFrame with transcript coordinates.
+    """
     transcript_data = []
 
     with tempfile.NamedTemporaryFile() as tmp:
@@ -106,7 +114,6 @@ def load_coordinates(path: Path, taxid: int) -> SqliteDict:
                     f"{urs_taxid}@{chromosome}/{region_start}-{region_stop}:{strand}"
                 )
                 transcript_dict = {
-                    "assembly_id": assembly_id,
                     "chromosome": chromosome,
                     "region_name": region_id,
                     "urs_taxid": urs_taxid,
@@ -129,7 +136,11 @@ def load_coordinates(path: Path, taxid: int) -> SqliteDict:
                 transcript_data.extend(exons)
 
     transcript_dataframe = pl.DataFrame(transcript_data)
-    print(transcript_dataframe.columns)
+    ## Assembly ID is not guaranteed to be in the filename, so query it from the DB here
+    ## - Is it possible for a region ID to be on multiple assemblies? 
+    ## I don't _think_ it is, but if things go wrong, check here
+    transcript_dataframe = add_assembly_id(transcript_dataframe, conn_str)
+
     transcript_dataframe = transcript_dataframe.group_by(
         ["assembly_id", "chromosome", "region_name"], maintain_order=True
     ).agg(
@@ -145,15 +156,16 @@ def load_coordinates(path: Path, taxid: int) -> SqliteDict:
     return transcript_dataframe
 
 
-def gff_to_polars(path: Path, taxid: int) -> pl.DataFrame:
+def gff_to_polars(path: Path, taxid: int, conn_str: str) -> pl.DataFrame:
     """
     Convert a GFF3 file to a Polars DataFrame containing transcript coordinates.
 
     Args:
         path (Path): Path to the GFF3 file.
         taxid (int): Taxonomy ID for the transcripts.
+        conn_str (str): Database connection string to fetch assembly IDs.
 
     Returns:
         pl.DataFrame: DataFrame with transcript coordinates.
     """
-    return load_coordinates(path, taxid)
+    return load_coordinates(path, taxid, conn_str)
