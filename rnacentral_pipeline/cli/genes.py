@@ -261,7 +261,13 @@ def classify(
 @cli.command("convert")
 @click.option("--gff_file", required=True, help="Input GFF file with genes")
 @click.option("--taxid", type=int, help="Taxonomy ID for the GFF file")
-def convert(gff_file, taxid):
+@click.option(
+    "--conn_str",
+    envvar="PGDATABASE",
+    required=True,
+    help="Database connection string (can use PGDATABASE env var)",
+)
+def convert(gff_file, taxid, conn_str):
     """
     Convert GFF file to parquet format.
 
@@ -272,7 +278,7 @@ def convert(gff_file, taxid):
         raise click.ClickException(f"GFF file not found: {gff_file}")
 
     output_path = Path(gff_file).with_suffix(".parquet")
-    transcripts_table = gff_convert.gff_to_polars(Path(gff_file), taxid=taxid)
+    transcripts_table = gff_convert.gff_to_polars(Path(gff_file), taxid=taxid, conn_str=conn_str)
     transcripts_table.write_parquet(output_path)
     click.echo(
         f"Converted {gff_file} to {output_path} with {transcripts_table.height} transcripts."
