@@ -21,7 +21,7 @@ import gffutils
 import polars as pl
 from sqlitedict import SqliteDict
 
-from from rnacentral_pipeline.rnacentral.genes.random_forest.data import add_assembly_id
+from rnacentral_pipeline.rnacentral.genes.random_forest.data import add_assembly_id
 
 insdc_so_lookup = {
     "ncRNA": "SO:0000655",
