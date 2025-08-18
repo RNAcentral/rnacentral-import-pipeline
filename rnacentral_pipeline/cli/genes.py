@@ -276,8 +276,8 @@ def convert(gff_file, taxid, conn_str):
     """
     if not Path(gff_file).exists():
         raise click.ClickException(f"GFF file not found: {gff_file}")
-
-    output_path = Path(gff_file).with_suffix("_transcripts.parquet")
+    output_name = Path(gff_file).stem + "_transcripts.parquet"
+    output_path = Path(gff_file).parent / output_name
     transcripts_table = gff_convert.gff_to_polars(Path(gff_file), taxid=taxid, conn_str=conn_str)
     transcripts_table.write_parquet(output_path)
     click.echo(
