@@ -310,3 +310,41 @@ def create_bedfile(bed_file, taxid, conn_str):
     click.echo(
         f"Converted database records to {bed_file} with."
     )
+
+
+@cli.command("merge")
+@click.option("--previous_genes", required=True, help="Path to previous genes file")
+@click.option("--next_genes", required=True, help="Path to new genes file")
+@click.option("--output", required=True, help="Output file path for merged genes")
+@click.option("--inactive_ids", type=click.Path(exists=True), default=None, help="Path to inactive IDs file. Should be a CSV with one column of URS'.")
+@click.option("--prev_release_number", type=int, default=None, help="Previous release number")
+@click.option("--next_release_number", type=int, default=None, help="Next release number")
+def merge(previous_genes, next_genes, output, inactive_ids, prev_release_number, next_release_number):
+    """
+    Merge two gene files, updating IDs and handling inactive genes.
+
+    This command takes two gene files (previous and next), merges them, updates IDs,
+    and handles any inactive genes based on the provided inactive IDs file.
+
+    The merge is done based on one of two conditions:
+    1. If the previous gene has a perfect overlap, the two are merged and the version is updated
+    2. Within 1kb around each gene, we merge genes that have total region overlap > 0.9, and update the version
+
+    If a gene is present in the previous release but not the next, it is discarded. Genes present in the next 
+    release but not the previous are added as new genes.
+    """
+    previous_genes = Path(previous_genes)
+    next_genes = Path(next_genes)
+    output = Path(output)
+
+    if not previous_genes.exists():
+        raise click.ClickException(f"Previous genes file not found: {previous_genes}")
+    if not next_genes.exists():
+        raise click.ClickException(f"Next genes file not found: {next_genes}")
+
+    merged_genes = data.merge_genes(
+        previous_genes, next_genes,output, inactive_ids, prev_release_number, next_release_number
+    )
+    
+    merged_genes.write_json(output)
+    click.echo(f"Merged genes saved to {output}")
