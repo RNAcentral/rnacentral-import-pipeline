@@ -205,7 +205,7 @@ def identify_nearby_transcripts_sorted(transcripts, so_model, nearby_distance=10
     """Optimized version using sorting and binary search"""
 
     # Group by chromosome and assembly_id
-    grouped = transcripts.group_by(["chromosome", "assembly_id"])
+    grouped = transcripts.group_by(["chromosome", "assembly_id", "strand"])
 
     features = []
 
@@ -426,7 +426,6 @@ def identify_nearby_transcripts_sorted_parallel(
                     desc="Processing groups",
                 )
             )
-
             # Flatten results
             for features in results:
                 all_features.extend(features)
