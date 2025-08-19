@@ -20,6 +20,7 @@ from pathlib import Path
 import gffutils
 import polars as pl
 from sqlitedict import SqliteDict
+import psycopg2 as pg
 
 from rnacentral_pipeline.rnacentral.genes.random_forest import data
 
@@ -153,6 +154,8 @@ def load_coordinates(path: Path, taxid: int, conn_str: str) -> SqliteDict:
         pl.col("strand").first(),
         pl.col("so_type").first(),
     )
+    transcript_dataframe = data.add_region_ids(transcript_dataframe, conn_str)
+    
     return transcript_dataframe
 
 
@@ -169,3 +172,36 @@ def gff_to_polars(path: Path, taxid: int, conn_str: str) -> pl.DataFrame:
         pl.DataFrame: DataFrame with transcript coordinates.
     """
     return load_coordinates(path, taxid, conn_str)
+
+
+def database_to_bed(output_path: Path, taxid: int, conn_str: str) -> None:
+    """
+    Convert transcript data from the database to a BED file format.
+
+    Args:
+        output_path (Path): Path to save the output BED file.
+        taxid (int): Taxonomy ID for the transcripts.
+        conn_str (str): Database connection string to fetch transcript data.
+    """
+    conn = pg.connect(conn_str)
+    cur = conn.cursor()
+    
+    cur.execute("""
+        SELECT chromosome, start-1, stop, public_name, 0, strand 
+        FROM rnc_genes 
+        WHERE assembly_id = 'GRCh38'
+        AND taxid = %s
+        AND chromosome IN ('1','2','3','4','5','6','7','8','9','10',
+                          '11','12','13','14','15','16','17','18','19','20',
+                          '21','22','X','Y','MT')
+        ORDER BY chromosome, start
+    """, (taxid,))
+    
+    with open(output_path, 'w') as f:
+        for row in cur.fetchall():
+            chrom = f"chr{row[0]}" if not str(row[0]).startswith('chr') else str(row[0])
+            f.write(f"{chrom}\t{row[1]}\t{row[2]}\t{row[3]}\t{row[4]}\t{row[5]}\n")
+    
+    cur.close()
+    conn.close()
+

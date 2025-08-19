@@ -283,3 +283,30 @@ def convert(gff_file, taxid, conn_str):
     click.echo(
         f"Converted {gff_file} to {output_path} with {transcripts_table.height} transcripts."
     )
+
+
+@cli.command("create-bedfile")
+@click.option("--bed_file", required=True, help="BEDfile output path")
+@click.option("--taxid", type=int, help="Taxonomy ID for the BED file")
+@click.option(
+    "--conn_str",
+    envvar="PGDATABASE",
+    required=True,
+    help="Database connection string (can use PGDATABASE env var)",
+)
+def create_bedfile(bed_file, taxid, conn_str):
+    """
+    Convert GFF file to parquet format.
+
+    This command reads a GFF file containing gene annotations and converts it to a
+    parquet format suitable for further processing.
+    """
+    gff_convert.database_to_bed(
+        output_path=Path(bed_file),
+        taxid=taxid,
+        conn_str=conn_str,
+    )
+    
+    click.echo(
+        f"Converted database records to {bed_file} with."
+    )
