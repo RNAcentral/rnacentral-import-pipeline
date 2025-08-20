@@ -31,67 +31,65 @@ def exon_overlap(exon_a_start, exon_a_end, exon_b_start, exon_b_end):
     """
     Calculates overlap of exon b with exon a
     """
+    # Early exit if no overlap possible
+    if exon_a_end <= exon_b_start or exon_b_end <= exon_a_start:
+        return 0
+    
+    length_a = abs(exon_a_end - exon_a_start)
+    length_b = abs(exon_b_end - exon_b_start)
+    
+    # Early exit for invalid exons
+    if length_a == 0 or length_b == 0:
+        return 0
+    
     overlap_start = max(exon_a_start, exon_b_start)
     overlap_stop = min(exon_a_end, exon_b_end)
-    overlap_length = max(0, overlap_stop - overlap_start)
-
-    length_a = exon_a_end - exon_a_start
-    length_b = exon_b_end - exon_b_start
-
-    if length_a > 0:
-        overlap_a = overlap_length / length_a
-    else:
-        overlap_a = 999
-
-    if length_b > 0:
-        overlap_b = overlap_length / length_b
-    else:
-        overlap_b = 999
-    overlap = min(overlap_a, overlap_b)
-
-    if overlap > 1:
-        overlap = 0
-
-    return overlap
+    overlap_length = abs(overlap_stop - overlap_start)
+    
+    overlap_a = overlap_length / length_a
+    overlap_b = overlap_length / length_b
+    
+    return min(overlap_a, overlap_b)
 
 
 def exon_overlap_tup(exon_a, exon_b):
-    return exon_overlap(exon_a[0], exon_a[1], exon_b[0], exon_b[1])
+    # Normalize coordinates
+    a_start, a_end = min(exon_a[0], exon_a[1]), max(exon_a[0], exon_a[1])
+    b_start, b_end = min(exon_b[0], exon_b[1]), max(exon_b[0], exon_b[1])
+    
+    return exon_overlap(a_start, a_end, b_start, b_end)
 
 
 def distance_2_agreement(exon_a, exon_b):
     """
-    Only look at the squared distance between the start coordinates
+    Only look at the absolute distance between the start coordinates
     """
-    dist_5p = np.sqrt((exon_a[0] - exon_b[0]) ** 2)
-    dist_3p = np.sqrt((exon_a[1] - exon_b[1]) ** 2)
-    return (dist_5p, dist_3p)
-
+    return tuple(np.abs(np.array(exon_a) - np.array(exon_b)))
 
 def rna_type_similarity(so_type_a, so_type_b, so_model):
     """
     Compute dot product similarity between transcript type vectors
     """
-    so_vec_a = so_model.wv[so_type_a]
-    so_vec_b = so_model.wv[so_type_b]
+    so_vec_a = so_model[so_type_a]
+    so_vec_b = so_model[so_type_b]
 
-    sim = np.dot(so_vec_a, so_vec_b) / (
-        np.linalg.norm(so_vec_a) * np.linalg.norm(so_vec_b)
-    )
+    sim = np.dot(so_vec_a, so_vec_b) 
     return sim
-
+    
 
 def compare_transcripts(transcripts_a, transcripts_b, so_model, label=0):
-    comparisons = []
+    comparisons = set()
+    similarity_comparisons = set()
+    similarity_cache = {}
+
     features = []
     for tr_a in transcripts_a.iter_rows(named=True):
         for tr_b in transcripts_b.iter_rows(named=True):
             if tr_a["region_name"] == tr_b["region_name"]:
                 continue
-            if (tr_a["region_name"], tr_b["region_name"]) in comparisons or (
-                tr_b["region_name"],
-                tr_a["region_name"],
-            ) in comparisons:
+            ## Check if we already compared these two transcripts
+            normalized_pair = tuple(sorted([tr_a["region_name"], tr_b["region_name"]]))
+            if normalized_pair in comparisons:
                 continue
 
             if tr_a["strand"] == 1:
@@ -111,24 +109,35 @@ def compare_transcripts(transcripts_a, transcripts_b, so_model, label=0):
 
             exons_a = [(s, e) for s, e in zip(tr_a["exon_start"], tr_a["exon_stop"])]
             exons_b = [(s, e) for s, e in zip(tr_b["exon_start"], tr_b["exon_stop"])]
-            # Optimized exon overlap calculation - avoid full Cartesian product
+
             count_90_overlap = 0
             for xa in exons_a:
                 for xb in exons_b:
-                    # Quick overlap check before expensive calculation
-                    if xa[1] <= xb[0] or xb[1] <= xa[0]:  # No overlap
+                    # Normalize coordinates
+                    xa_min, xa_max = min(xa[0], xa[1]), max(xa[0], xa[1])
+                    xb_min, xb_max = min(xb[0], xb[1]), max(xb[0], xb[1])
+                    
+                    # Quick overlap check with corrected logic
+                    if xa_max <= xb_min or xb_max <= xa_min:  # No overlap
                         continue
+                        
                     if exon_overlap_tup(xa, xb) > 0.9:
                         count_90_overlap += 1
 
-            type_similarity = rna_type_similarity(
-                tr_a["so_type"], tr_b["so_type"], so_model
-            )
+            # Check if we already calculated similarity for this pair
+            type_pair = tuple(sorted([tr_a["so_type"], tr_b["so_type"]]))
+            if type_pair in similarity_comparisons:
+                type_similarity = similarity_cache[type_pair]
+            else:
+                type_similarity = rna_type_similarity(
+                    tr_a["so_type"], tr_b["so_type"], so_model
+                )
+                similarity_comparisons.add(type_pair)
+                similarity_cache[type_pair] = type_similarity
             comparison = f"{tr_a['region_name']} vs {tr_b['region_name']}"
 
             if label is not None:
-                features.append(
-                    {
+                features_dict ={
                         "5p_exon_overlap": five_prime_overlap,
                         "5p_exon_dta": five_prime_dta,
                         "5p_exon_3p_dta": five_prime_ex_3p_dta,
@@ -138,10 +147,9 @@ def compare_transcripts(transcripts_a, transcripts_b, so_model, label=0):
                         "label": int(label),
                         "comparison": comparison,
                     }
-                )
+                
             else:
-                features.append(
-                    {
+                features_dict = {
                         "5p_exon_overlap": five_prime_overlap,
                         "5p_exon_dta": five_prime_dta,
                         "5p_exon_3p_dta": five_prime_ex_3p_dta,
@@ -150,14 +158,9 @@ def compare_transcripts(transcripts_a, transcripts_b, so_model, label=0):
                         "type_sim": type_similarity,
                         "comparison": comparison,
                     }
-                )
-            comparisons.extend(
-                [
-                    (tr_a["region_name"], tr_b["region_name"]),
-                    (tr_b["region_name"], tr_a["region_name"]),
-                ]
-            )
-    return features
+            yield features_dict
+            comparisons.add(normalized_pair)
+    # return features
 
 
 def identify_nearby_transcripts(transcripts, so_model, nearby_distance=1000):
@@ -170,35 +173,34 @@ def identify_nearby_transcripts(transcripts, so_model, nearby_distance=1000):
     Returns:
         pl.DataFrame: DataFrame of features
     """
-    features = []
-    for transcript_a in tqdm(
-        transcripts.iter_rows(named=True),
-        total=transcripts.height,
-        desc="Calculating features...",
-    ):
-        candidates = transcripts.filter(
-            (
-                pl.col("region_start").is_between(
-                    transcript_a["region_start"] - nearby_distance,
-                    transcript_a["region_stop"] + nearby_distance,
+    def process_transcripts():
+        for transcript_a in tqdm(
+            transcripts.iter_rows(named=True),
+            total=transcripts.height,
+            desc="Calculating features...",
+        ):
+            candidates = transcripts.filter(
+                (
+                    pl.col("region_start").is_between(
+                        transcript_a["region_start"] - nearby_distance,
+                        transcript_a["region_stop"] + nearby_distance,
+                    )
+                    | pl.col("region_stop").is_between(
+                        transcript_a["region_start"] - nearby_distance,
+                        transcript_a["region_stop"] + nearby_distance,
+                    )
                 )
-                | pl.col("region_stop").is_between(
-                    transcript_a["region_start"] - nearby_distance,
-                    transcript_a["region_stop"] + nearby_distance,
+                & (pl.col("region_name") != transcript_a["region_name"])
+                & (pl.col("chromosome") == transcript_a["chromosome"])
+                & (pl.col("assembly_id") == transcript_a["assembly_id"])
+            )
+
+            if len(candidates) > 0:
+                yield from compare_transcripts(
+                    pl.DataFrame([transcript_a]), candidates, so_model, label=None
                 )
-            )
-            & (pl.col("region_name") != transcript_a["region_name"])
-            & (pl.col("chromosome") == transcript_a["chromosome"])
-            & (pl.col("assembly_id") == transcript_a["assembly_id"])
-        )
-
-        if len(candidates) > 0:
-            f = compare_transcripts(
-                pl.DataFrame([transcript_a]), candidates, so_model, label=None
-            )
-            features.extend(f)
-
-    return pl.DataFrame(features)
+    
+    return pl.DataFrame(process_transcripts())
 
 
 def identify_nearby_transcripts_sorted(transcripts, so_model, nearby_distance=1000):
@@ -459,8 +461,10 @@ def run_preprocessing(
         else:
             # Load model for sequential processing
             so_model = Word2Vec.load(so_model_path)
+            so_vec_normalised = {key: so_model.wv[key] / np.linalg.norm(so_model.wv[key]) 
+                     for key in so_model.wv.key_to_index}
             features = identify_nearby_transcripts_sorted(
-                transcripts, so_model, nearby_distance
+                transcripts, so_vec_normalised, nearby_distance
             )
     else:
         features = pl.DataFrame()
