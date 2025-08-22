@@ -18,7 +18,7 @@ import random
 import re
 import uuid
 from functools import lru_cache
-from preprocessing import exon_overlap
+from rnacentral_pipeline.rnacentral.genes.random_forest.preprocessing import exon_overlap
 
 import numpy as np
 import polars as pl
