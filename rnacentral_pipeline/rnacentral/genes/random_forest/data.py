@@ -375,3 +375,101 @@ def merge_genes(previous_genes, next_genes, output, inactive_ids, prev_release_n
     final_merged_data = pl.concat([common, nearby_merged_df, remaining_new], how="vertical")
 
     return final_merged_data
+
+
+def store_genes(final_genes, taxid, db_str):
+    """
+    Store the final merged genes in the database.
+
+    Does not truncate the table, but instead upserts the new data.
+
+    This may lead to some old genes remaining in the table if they are no longer
+    present in the final_genes file.
+    """
+    db_str = db_str.replace("postgres", "postgresql")
+
+    conn = pg.connect(db_str)
+    cur = conn.cursor()
+
+    for_database = pl.read_json(final_genes)
+    ## We need the taxid for other things, so make sure it is in the data here
+    for_database = for_database.with_columns(
+        taxid=pl.lit(taxid, dtype=pl.Int64),
+    )
+
+    ## This just gets columns in the right order for the insert
+    rnc_genes = for_database.select(
+        pl.col("internal_name"),
+        pl.col("name").alias("public_name"),
+        pl.col("assembly_id"),
+        pl.col("chromosome"),
+        pl.col("start"),    
+        pl.col("stop"),
+        pl.col("strand"),
+        pl.col("version"),
+        pl.col("first_release"),
+        pl.col("last_release"),
+        pl.col("members").list.len().alias("member_count"),
+        pl.col("taxid"),
+    )
+
+    insert_query = """
+    INSERT INTO rnc_genes (internal_name, public_name, assembly_id, chromosome, start, stop, strand, version, first_release, last_update, member_count, taxid) VALUES """
+    args_str = ""
+    for row in rnc_genes.iter_rows():
+        args_str += cur.mogrify("(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s, %s),", row).decode('utf-8') 
+    
+    args_str = args_str.rstrip(',')
+
+    upsert_query = insert_query + args_str + """
+    ON CONFLICT (internal_name) 
+    DO UPDATE SET 
+        public_name = EXCLUDED.public_name,
+        assembly_id = EXCLUDED.assembly_id,
+        chromosome = EXCLUDED.chromosome,
+        start = EXCLUDED.start,
+        stop = EXCLUDED.stop,
+        strand = EXCLUDED.strand,
+        version = EXCLUDED.version,
+        first_release = EXCLUDED.first_release,
+        last_update = EXCLUDED.last_update,
+        member_count = EXCLUDED.member_count,
+        taxid = EXCLUDED.taxid
+    """
+    cur.execute(upsert_query)
+    conn.commit()
+
+
+    ## Now fetch the ID - name lookup
+
+    rnc_genes_id_lookup = pl.read_database(
+        "SELECT id, internal_name FROM rnc_genes",
+        conn,)
+    
+    ## Use the id-name lookup to figure out what needs to be put in the member table
+    ## We will need the gene ID to link to regions, which is done by linking the id in the rnc_sequence_regions table
+    ## to the locus_id on the rnc_gene_members table
+    rnc_genes_for_membertable = for_database.join(rnc_genes_id_lookup, on="internal_name", how="inner").rename({"id": "rnc_gene_id"})
+    rnc_genes_for_membertable = rnc_genes_for_membertable.explode("members")
+
+    assembly_id = rnc_genes.get_column("assembly_id").unique().to_list()[0]
+    rnc_loci_lookup = pl.read_database(
+        cur.mogrify("SELECT id, region_name, assembly_id FROM rnc_sequence_regions where assembly_id = %s", (assembly_id, )).decode('utf-8'),
+        conn
+    )
+    rnc_genes_for_membertable = rnc_genes_for_membertable.join(rnc_loci_lookup, left_on=["members", "assembly_id"], right_on=["region_name", "assembly_id"], how="inner").rename({"id": "locus_id"})
+
+    ## Now we can insert the members. This is going to be an upsert, but we leave the old ones
+    ## linked, because we should only ever be adding to the membership of a gene.
+    ## This assumption needs to be checked though.
+    member_insert_query = "INSERT INTO rnc_gene_members (rnc_gene_id, locus_id) VALUES "
+    member_args_str = ""
+    for row in rnc_genes_for_membertable.iter_rows(named=True):
+        member_args_str += cur.mogrify("(%s,%s),", (row["rnc_gene_id"], row["locus_id"])).decode('utf-8')
+    member_args_str = member_args_str.rstrip(',')
+    member_upsert_query = member_insert_query + member_args_str + """
+    ON CONFLICT (rnc_gene_id, locus_id)
+    DO NOTHING
+    """
+    cur.execute(member_upsert_query)
+    conn.commit()   

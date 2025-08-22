@@ -267,3 +267,23 @@ def merge(previous_genes, next_genes, output, inactive_ids, prev_release_number,
     
     merged_genes.write_json(output)
     click.echo(f"Merged genes saved to {output}")
+
+
+@cli.command("store")
+@click.argument("final_genes", type=click.Path(exists=True))
+@click.option("--taxid", type=int)
+@click.option("--db_str", envvar="PGDATABASE",)
+def store(final_genes, taxid, db_str):
+    """
+    Store final genes in the database.
+
+    This command reads the final genes file and stores the gene annotations
+    in the specified database.
+    """
+    final_genes = Path(final_genes)
+
+    if not final_genes.exists():
+        raise click.ClickException(f"Final genes file not found: {final_genes}")
+
+    data.store_genes(final_genes, taxid, db_str)
+    click.echo(f"Stored genes from {final_genes} into the database.")
