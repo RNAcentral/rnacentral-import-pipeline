@@ -18,6 +18,7 @@ import random
 import re
 import uuid
 from functools import lru_cache
+from preprocessing import exon_overlap
 
 import numpy as np
 import polars as pl
@@ -265,7 +266,7 @@ def merge_genes(previous_genes, next_genes, output, inactive_ids, prev_release_n
     ## The name comes from a hash based on the start, stop and chromosome, so it should
     ## be joinable when those things have not changed. As long as we also join on the 
     ## strand and assembly to avoid mixing 
-    
+
     common = start.join(next_rel, on=["start", "stop", "strand", "assembly_id", "chromosome"], how="inner")
     common = common.with_columns(pl.min_horizontal("first_release", "first_release_right").alias("first_release"))
     common = common.with_columns(pl.max_horizontal("last_release", "last_release_right").alias("last_release"))
