@@ -79,7 +79,7 @@ RUN \
 RUN \
     mkdir seqkit && \
     cd seqkit && \
-    wget https://github.com/shenwei356/seqkit/releases/download/v0.10.0/seqkit_linux_amd64.tar.gz && \
+    wget https://github.com/shenwei356/seqkit/releases/download/v2.10.1/seqkit_linux_amd64.tar.gz && \
     tar xvf seqkit_linux_amd64.tar.gz && \
     rm seqkit_linux_amd64.tar.gz
 
