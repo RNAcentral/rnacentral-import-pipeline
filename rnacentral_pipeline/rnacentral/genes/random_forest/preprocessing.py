@@ -222,7 +222,7 @@ def identify_nearby_transcripts_sorted(transcripts, so_model, nearby_distance=10
 
             # Use binary search to find the range of potentially nearby transcripts
             search_start = transcript_a["region_start"] - nearby_distance
-            search_end = transcript_a["region_stop"] + nearby_distance
+            search_end = transcript_a["region_start"] + nearby_distance
 
             # Find candidates within the search range
             candidates_data = []
@@ -237,9 +237,9 @@ def identify_nearby_transcripts_sorted(transcripts, so_model, nearby_distance=10
                 # Check if within range
                 if (
                     transcript_b["region_start"] <= search_end
-                    and transcript_b["region_stop"] >= search_start
+                    and transcript_b["region_start"] >= search_start
                 ):
-                    candidates_data.append(transcript_b)
+                    candidates_data.append(transcript_b)                    
 
             if candidates_data:
                 candidates = pl.DataFrame(candidates_data)
@@ -474,7 +474,6 @@ def run_preprocessing(
 
 if __name__ == "__main__":
     transcripts = pl.read_parquet("/Users/agreen/code/rnc-genes/human_transcripts.pq")
-    print(transcripts)
 
     so_model = Word2Vec.load(
         "/Users/agreen/code/rnc-genes/node2vec/so_embedding_model.emb"
