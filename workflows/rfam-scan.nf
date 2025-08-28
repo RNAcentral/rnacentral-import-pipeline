@@ -70,6 +70,7 @@ process scan {
     --rfam \
     --notextw \
     --nohmmonly \
+    --toponly \
     "$cm_files/Rfam.cm" \
     sequences.fasta
 
