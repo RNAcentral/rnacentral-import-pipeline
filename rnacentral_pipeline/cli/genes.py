@@ -269,7 +269,19 @@ def merge(previous_genes, next_genes, output, inactive_ids, prev_release_number,
     click.echo(f"Merged genes saved to {output}")
 
 
-@cli.command("store")
+@cli.command("process-metadata")
+@click.argument("final_genes", type=click.Path(exists=True))
+@click.argument("metadata_output", type=click.Path())
+@click.option("--db_str", envvar="PGDATABASE")
+def process_metadata(final_genes, metadata_output, db_str):
+    metadata = data.get_metadata(final_genes, db_str)
+    metadata.write_json(metadata_output)
+    click.echo(f"Metadata written to {metadata_output}")
+
+
+
+
+@cli.command("store-genes")
 @click.argument("final_genes", type=click.Path(exists=True))
 @click.option("--taxid", type=int)
 @click.option("--db_str", envvar="PGDATABASE",)
@@ -287,3 +299,22 @@ def store(final_genes, taxid, db_str):
 
     data.store_genes(final_genes, taxid, db_str)
     click.echo(f"Stored genes from {final_genes} into the database.")
+
+
+@cli.command("store-metadata")
+@click.argument("metadata_file", type=click.Path(exists=True))
+@click.option("--db_str", envvar="PGDATABASE",)
+def store_metadata(metadata_file, db_str):
+    """
+    Store gene metadata in the database.
+
+    This command reads the gene metadata file and stores the metadata
+    in the specified database.
+    """
+    metadata_file = Path(metadata_file)
+
+    if not metadata_file.exists():
+        raise click.ClickException(f"Metadata file not found: {metadata_file}")
+
+    data.store_metadata(metadata_file, db_str)
+    click.echo(f"Stored metadata from {metadata_file} into the database.")
