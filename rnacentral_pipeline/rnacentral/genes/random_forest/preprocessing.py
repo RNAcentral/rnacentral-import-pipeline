@@ -444,6 +444,9 @@ def run_preprocessing(
     n_processes=None,
 ):
     transcripts = pl.read_parquet(transcripts_file)
+    ## Filter out piRNAs
+    transcripts = transcripts.filter(pl.col("so_type") != 'SO:0001035')
+    
     if transcripts.height > 0:
         # Check if region_ids are present, fetch if needed
         if "region_id" not in transcripts.columns:
