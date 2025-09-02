@@ -645,6 +645,7 @@ def get_cm_hits(urs_taxids, db_str):
             hits = pl.DataFrame(res)
         else:
             hits = pl.DataFrame([{"urs_taxid": None, "database": None, "description": None, "rna_type": None, "cm_overlap": None}]).filter(pl.col("urs_taxid").is_not_null())
+    conn.commit()
     conn.close()
     return hits
 
