@@ -639,7 +639,6 @@ def get_cm_hits(urs_taxids, db_str):
         else:
             rfam_hits = pl.from_dict({"urs_taxid": [], "database": [], "description": [], "rna_type": [], "cm_overlap": []}, schema={"urs_taxid": pl.Utf8, "database": pl.Utf8, "description": pl.Utf8, "rna_type": pl.Utf8, "cm_overlap": pl.Float64})
         
-        print(rfam_hits)
         return rfam_hits
             
     def get_r2dt():
@@ -673,11 +672,11 @@ def get_cm_hits(urs_taxids, db_str):
             r2dt_hits = pl.from_dicts(res, schema={"urs_taxid": pl.Utf8, "database": pl.Utf8, "description": pl.Utf8, "rna_type": pl.Utf8, "cm_overlap": pl.Float64})
         else:
             r2dt_hits = pl.from_dict({"urs_taxid": [], "database": [], "description": [], "rna_type": [], "cm_overlap": []}, schema={"urs_taxid": pl.Utf8, "database": pl.Utf8, "description": pl.Utf8, "rna_type": pl.Utf8, "cm_overlap": pl.Float64})
-        print(r2dt_hits)
         return r2dt_hits
 
-    cm_hits = pl.concat([get_rfam(), get_r2dt()], how="vertical_relaxed")
-    print(cm_hits)
+    rfam_hits = get_rfam()
+    r2dt_hits = get_r2dt()
+    cm_hits = rfam_hits.vstack(r2dt_hits)
     return cm_hits
     
 
@@ -714,7 +713,7 @@ def process_group(group_data, db_str, progress_queue=None):
         descriptions = get_accessions(group_df.get_column("urs_taxid").unique().to_list(), db_str)
         cm_hits = get_cm_hits(group_df.get_column("urs_taxid").unique().to_list(), db_str)
         cm_hits = cm_hits.with_columns(pl.col("cm_overlap").fill_null(0.0))
-        descriptions = pl.concat([descriptions, cm_hits], how="vertical_relaxed")
+        descriptions = descriptions.vstack(cm_hits)
         descriptions_with_scores = descriptions.with_columns(
             desc_score=pl.struct(pl.col("database"), pl.col("description"))
             .map_elements(calculate_description_score, return_dtype=pl.Float32)
@@ -814,8 +813,8 @@ def get_metadata(final_genes, db_str):
     max_workers = 6 ## Based in the number of connections and what saturates the DB
     
     
-    
-    with ProcessPoolExecutor(max_workers=max_workers) as executor:
+    ctx = mp.get_context('spawn')
+    with ProcessPoolExecutor(max_workers=max_workers, mp_context=ctx) as executor:
         chunk_futures = [executor.submit(process_chunk, chunk, db_str) for chunk in chunks]
         
         for future in tqdm(as_completed(chunk_futures), 
