@@ -675,8 +675,8 @@ def process_group(group_data, db_str, progress_queue=None):
     gene_name, = group_key
     
     try:
-        descriptions = get_accessions(group_df.get_column("urs_taxid").to_list(), db_str)
-        cm_hits = get_cm_hits(group_df.get_column("urs_taxid").to_list(), db_str)
+        descriptions = get_accessions(group_df.get_column("urs_taxid").unique().to_list(), db_str)
+        cm_hits = get_cm_hits(group_df.get_column("urs_taxid").unique().to_list(), db_str)
         cm_hits = cm_hits.with_columns(pl.col("cm_overlap").fill_null(0.0))
         descriptions = pl.concat([descriptions, cm_hits], how="vertical")
         descriptions_with_scores = descriptions.with_columns(
@@ -758,7 +758,7 @@ def get_metadata(final_genes, db_str):
     final_genes = final_genes.explode("members").with_columns(pl.col("members").str.split('@').list.first().alias("urs_taxid"))
     
     buffer = io.StringIO()
-    for name in final_genes.get_column("urs_taxid").to_list():
+    for name in final_genes.get_column("urs_taxid").unique().to_list():
         buffer.write(f"{name}\t{name.split('_')[0]}\n")
     buffer.seek(0)
 
