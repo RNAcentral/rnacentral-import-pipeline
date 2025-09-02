@@ -634,7 +634,7 @@ def get_cm_hits(urs_taxids, db_str):
             """, (urs_taxids,))
             res = cur.fetchall()
             if len(res) > 0:
-                rfam_hits = pl.from_dict(res, schema={"urs_taxid": pl.Utf8, "database": pl.Utf8, "description": pl.Utf8, "rna_type": pl.Utf8, "cm_overlap": pl.Float64})
+                rfam_hits = pl.from_dicts(res, schema={"urs_taxid": pl.Utf8, "database": pl.Utf8, "description": pl.Utf8, "rna_type": pl.Utf8, "cm_overlap": pl.Float64})
             else:
                 rfam_hits = pl.from_dict({"urs_taxid": [], "database": [], "description": [], "rna_type": [], "cm_overlap": []}, schema={"urs_taxid": pl.Utf8, "database": pl.Utf8, "description": pl.Utf8, "rna_type": pl.Utf8, "cm_overlap": pl.Float64})
             
@@ -665,7 +665,7 @@ def get_cm_hits(urs_taxids, db_str):
 
             res = cur.fetchall()
             if len(res) > 0:
-                r2dt_hits = pl.from_dict(res, schema={"urs_taxid": pl.Utf8, "database": pl.Utf8, "description": pl.Utf8, "rna_type": pl.Utf8, "cm_overlap": pl.Float64})
+                r2dt_hits = pl.from_dicts(res, schema={"urs_taxid": pl.Utf8, "database": pl.Utf8, "description": pl.Utf8, "rna_type": pl.Utf8, "cm_overlap": pl.Float64})
             else:
                 r2dt_hits = pl.from_dict({"urs_taxid": [], "database": [], "description": [], "rna_type": [], "cm_overlap": []}, schema={"urs_taxid": pl.Utf8, "database": pl.Utf8, "description": pl.Utf8, "rna_type": pl.Utf8, "cm_overlap": pl.Float64})
             print(r2dt_hits)
