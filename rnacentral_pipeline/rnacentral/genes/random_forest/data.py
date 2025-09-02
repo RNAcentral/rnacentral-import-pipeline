@@ -576,78 +576,101 @@ def store_genes(final_genes, taxid, db_str):
 
 
 def get_accessions(urs_taxids, db_str):
-    conn = pg.connect(db_str)
-    with conn.cursor(cursor_factory=RealDictCursor) as cur:
-        cur.execute(
-        """SELECT 
-        a.urs_taxid, 
-        ac.database, 
-        ac.description, 
-        ac.rna_type,
-        0.0 as cm_overlap
-        FROM
-        rnc_accession_active a
-        JOIN genes_urs_taxid t 
-            ON t.urs_taxid = a.urs_taxid
-        JOIN rnc_accessions ac
-            ON ac.accession = a.accession
-            WHERE t.urs_taxid = ANY(%s)"""
-        , (urs_taxids,))
+    conn = None
+    try:
+        conn = pg.connect(db_str)
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute(
+            """SELECT 
+            a.urs_taxid, 
+            ac.database, 
+            ac.description, 
+            ac.rna_type,
+            0.0 as cm_overlap
+            FROM
+            rnc_accession_active a
+            JOIN genes_urs_taxid t 
+                ON t.urs_taxid = a.urs_taxid
+            JOIN rnc_accessions ac
+                ON ac.accession = a.accession
+                WHERE t.urs_taxid = ANY(%s)"""
+            , (urs_taxids,))
 
-        accessions = pl.DataFrame(cur.fetchall()).cast({"cm_overlap": pl.Float64})
-    conn.commit()
-    conn.close()
-    return accessions
+            accessions = pl.DataFrame(cur.fetchall()).cast({"cm_overlap": pl.Float64})
+        conn.commit()
+        return accessions
+    except Exception as e:
+        print(f"error getting accessions: {e}")
+        if conn:
+            conn.rollback()
+    finally:
+        if conn:
+            try:
+                conn.close()
+            except Exception as e:
+                print(f"error closing connection: {e}")
 
 def get_cm_hits(urs_taxids, db_str):
-    conn = pg.connect(db_str)
-    with conn.cursor(cursor_factory=RealDictCursor) as cur:
+    conn = None
+    try:
+        conn = pg.connect(db_str)
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
 
-        cur.execute(
-        """(
-                SELECT 
-                g.urs_taxid,
-                'RFAM' as database,
-                rfm.long_name as description,
-                rfm.so_rna_type as rna_type,
-                rf.sequence_completeness as cm_overlap
-            
-                FROM genes_urs_taxid g
-                LEFT JOIN rfam_model_hits_old rf
-                        ON rf.upi = g.urs
-                JOIN rfam_models rfm
-                        ON rfm.rfam_model_id = rf.rfam_model_id
-                WHERE g.urs_taxid = ANY(%s)
-                )
-
-                UNION
-
-                (SELECT 
-                g.urs_taxid,
-                'R2DT' as database,
-                r2m.model_name as description,
-                r2m.so_term_id as rna_type,
-                r2.sequence_coverage as cm_overlap
-                
-
-                FROM genes_urs_taxid g
-                LEFT JOIN r2dt_results r2
-                        ON r2.urs = g.urs
-                JOIN r2dt_models r2m
-                        ON r2m.id = r2.model_id
-                WHERE g.urs_taxid = ANY(%s)
-            )
+            cur.execute(
             """
-        , (urs_taxids,urs_taxids,)
-        )
-        res = cur.fetchall()
-        if len(res) > 0:
-            hits = pl.DataFrame(res)
-        else:
-            hits = pl.DataFrame([{"urs_taxid": None, "database": None, "description": None, "rna_type": None, "cm_overlap": None}]).filter(pl.col("urs_taxid").is_not_null())
-    conn.commit()
-    conn.close()
-    return hits
+                    SELECT 
+                    g.urs_taxid,
+                    'RFAM' as database,
+                    rfm.long_name as description,
+                    rfm.so_rna_type as rna_type,
+                    rf.sequence_completeness as cm_overlap
+                
+                    FROM genes_urs_taxid g
+                    LEFT JOIN rfam_model_hits_old rf
+                            ON rf.upi = g.urs
+                    JOIN rfam_models rfm
+                            ON rfm.rfam_model_id = rf.rfam_model_id
+                    WHERE g.urs_taxid = ANY(%s)
+                    
+
+                    UNION
+
+                    SELECT 
+                    g.urs_taxid,
+                    'R2DT' as database,
+                    r2m.model_name as description,
+                    r2m.so_term_id as rna_type,
+                    r2.sequence_coverage as cm_overlap
+                    
+
+                    FROM genes_urs_taxid g
+                    LEFT JOIN r2dt_results r2
+                            ON r2.urs = g.urs
+                    JOIN r2dt_models r2m
+                            ON r2m.id = r2.model_id
+                    WHERE g.urs_taxid = ANY(%s)
+                
+                """
+            , (urs_taxids,urs_taxids,)
+            )
+            res = cur.fetchall()
+            if len(res) > 0:
+                hits = pl.DataFrame(res)
+            else:
+                hits = pl.DataFrame([{"urs_taxid": None, "database": None, "description": None, "rna_type": None, "cm_overlap": None}]).filter(pl.col("urs_taxid").is_not_null())
+        conn.commit()
+        return hits
+    
+    except Exception as e:
+        print(f"error getting cm hits: {e}")
+        if conn:
+            conn.rollback()
+    finally:
+        if conn:
+            try:
+                conn.close()
+            except Exception as e:
+                print(f"error closing connection: {e}")
 
 def calculate_type_specificity(so_type):
         if so_type is None:
