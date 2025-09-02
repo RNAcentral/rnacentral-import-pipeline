@@ -670,7 +670,9 @@ def get_cm_hits(urs_taxids, db_str):
                 r2dt_hits = pl.DataFrame({"urs_taxid": [], "database": [], "description": [], "rna_type": [], "cm_overlap": []})
             print(r2dt_hits)
             cur.close()
-        return pl.concat([rfam_hits, r2dt_hits], how="vertical_relaxed")
+        cm_hits = pl.concat([rfam_hits, r2dt_hits], how="vertical_relaxed")
+        print(cm_hits)
+        return cm_hits
     
     except Exception as e:
         print(f"error getting cm hits: {e}")
