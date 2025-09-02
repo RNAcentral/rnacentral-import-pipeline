@@ -314,7 +314,7 @@ def name_genes(gene_list, prefix, seed=42):
 
         # Generate hash based on coordinates and chromosome
         hash_id = coordinate_hash(overall_coords, chromosome_number)
-        name = f"RNAC{prefix}G{hash_id}.0"
+        name = f"RNAC{prefix}G{hash_id}.1"
 
         gene_table.append(
             {
