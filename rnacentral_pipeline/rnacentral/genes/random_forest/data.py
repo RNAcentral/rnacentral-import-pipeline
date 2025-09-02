@@ -611,8 +611,7 @@ def get_accessions(urs_taxids, db_str):
                 print(f"error closing connection: {e}")
 
 def get_cm_hits(urs_taxids, db_str):
-    conn = None
-    try:
+    def get_rfam():
         conn = pg.connect(db_str)
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
 
@@ -633,14 +632,18 @@ def get_cm_hits(urs_taxids, db_str):
                     WHERE g.urs_taxid = ANY(%s)
             """, (urs_taxids,))
             res = cur.fetchall()
-            if len(res) > 0:
-                rfam_hits = pl.from_dicts(res, schema={"urs_taxid": pl.Utf8, "database": pl.Utf8, "description": pl.Utf8, "rna_type": pl.Utf8, "cm_overlap": pl.Float64})
-            else:
-                rfam_hits = pl.from_dict({"urs_taxid": [], "database": [], "description": [], "rna_type": [], "cm_overlap": []}, schema={"urs_taxid": pl.Utf8, "database": pl.Utf8, "description": pl.Utf8, "rna_type": pl.Utf8, "cm_overlap": pl.Float64})
-            
-            print(rfam_hits)
             cur.close()
-
+        conn.close()
+        if len(res) > 0:
+            rfam_hits = pl.from_dicts(res, schema={"urs_taxid": pl.Utf8, "database": pl.Utf8, "description": pl.Utf8, "rna_type": pl.Utf8, "cm_overlap": pl.Float64})
+        else:
+            rfam_hits = pl.from_dict({"urs_taxid": [], "database": [], "description": [], "rna_type": [], "cm_overlap": []}, schema={"urs_taxid": pl.Utf8, "database": pl.Utf8, "description": pl.Utf8, "rna_type": pl.Utf8, "cm_overlap": pl.Float64})
+        
+        print(rfam_hits)
+        return rfam_hits
+            
+    def get_r2dt():
+        conn = pg.connect(db_str)
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute(
                 """
@@ -664,26 +667,20 @@ def get_cm_hits(urs_taxids, db_str):
             
 
             res = cur.fetchall()
-            if len(res) > 0:
-                r2dt_hits = pl.from_dicts(res, schema={"urs_taxid": pl.Utf8, "database": pl.Utf8, "description": pl.Utf8, "rna_type": pl.Utf8, "cm_overlap": pl.Float64})
-            else:
-                r2dt_hits = pl.from_dict({"urs_taxid": [], "database": [], "description": [], "rna_type": [], "cm_overlap": []}, schema={"urs_taxid": pl.Utf8, "database": pl.Utf8, "description": pl.Utf8, "rna_type": pl.Utf8, "cm_overlap": pl.Float64})
-            print(r2dt_hits)
             cur.close()
-        cm_hits = pl.concat([rfam_hits, r2dt_hits], how="vertical_relaxed")
-        print(cm_hits)
-        return cm_hits
+        conn.close()
+        if len(res) > 0:
+            r2dt_hits = pl.from_dicts(res, schema={"urs_taxid": pl.Utf8, "database": pl.Utf8, "description": pl.Utf8, "rna_type": pl.Utf8, "cm_overlap": pl.Float64})
+        else:
+            r2dt_hits = pl.from_dict({"urs_taxid": [], "database": [], "description": [], "rna_type": [], "cm_overlap": []}, schema={"urs_taxid": pl.Utf8, "database": pl.Utf8, "description": pl.Utf8, "rna_type": pl.Utf8, "cm_overlap": pl.Float64})
+        print(r2dt_hits)
+        return r2dt_hits
+
+    cm_hits = pl.concat([get_rfam(), get_r2dt()], how="vertical_relaxed")
+    print(cm_hits)
+    return cm_hits
     
-    except Exception as e:
-        print(f"error getting cm hits: {e}")
-        if conn:
-            conn.rollback()
-    finally:
-        if conn:
-            try:
-                conn.close()
-            except Exception as e:
-                print(f"error closing connection: {e}")
+
 
 def calculate_type_specificity(so_type):
         if so_type is None:
