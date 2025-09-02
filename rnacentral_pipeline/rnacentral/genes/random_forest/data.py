@@ -624,17 +624,23 @@ def get_cm_hits(urs_taxids, db_str):
                     rfm.long_name as description,
                     rfm.so_rna_type as rna_type,
                     rf.sequence_completeness as cm_overlap
-                
+
                     FROM genes_urs_taxid g
                     LEFT JOIN rfam_model_hits_old rf
                             ON rf.upi = g.urs
                     JOIN rfam_models rfm
                             ON rfm.rfam_model_id = rf.rfam_model_id
                     WHERE g.urs_taxid = ANY(%s)
-                    
-
-                    UNION
-
+            """, (urs_taxids,))
+            res = cur.fetchall()
+            if len(res) > 0:
+                rfam_hits = pl.DataFrame(res)
+            else:
+                rfam_hits = pl.DataFrame([{"urs_taxid": None, "database": None, "description": None, "rna_type": None, "cm_overlap": None}]).filter(pl.col("urs_taxid").is_not_null())
+            conn.commit()
+            
+            cur.execute(
+                """
                     SELECT 
                     g.urs_taxid,
                     'R2DT' as database,
@@ -650,16 +656,17 @@ def get_cm_hits(urs_taxids, db_str):
                             ON r2m.id = r2.model_id
                     WHERE g.urs_taxid = ANY(%s)
                 
-                """
-            , (urs_taxids,urs_taxids,)
+                """, (urs_taxids,)
             )
+            
+
             res = cur.fetchall()
             if len(res) > 0:
-                hits = pl.DataFrame(res)
+                r2dt_hits = pl.DataFrame(res)
             else:
-                hits = pl.DataFrame([{"urs_taxid": None, "database": None, "description": None, "rna_type": None, "cm_overlap": None}]).filter(pl.col("urs_taxid").is_not_null())
+                r2dt_hits = pl.DataFrame([{"urs_taxid": None, "database": None, "description": None, "rna_type": None, "cm_overlap": None}]).filter(pl.col("urs_taxid").is_not_null())
         conn.commit()
-        return hits
+        return pl.concat([rfam_hits, r2dt_hits], how="vertical")
     
     except Exception as e:
         print(f"error getting cm hits: {e}")
