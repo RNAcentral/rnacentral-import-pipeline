@@ -604,7 +604,7 @@ def get_cm_hits(urs_taxids, db_str):
     cur = conn.cursor(cursor_factory=RealDictCursor)
 
     cur.execute(
-    """(SELECT 
+    """SELECT 
             g.urs_taxid,
             'RFAM' as database,
             rfm.long_name as description,
@@ -635,7 +635,7 @@ def get_cm_hits(urs_taxids, db_str):
             JOIN r2dt_models r2m
                     ON r2m.id = r2.model_id
             WHERE g.urs_taxid = ANY(%s)
-        )"""
+        """
     , (urs_taxids,urs_taxids,)
     )
     res = cur.fetchall()
