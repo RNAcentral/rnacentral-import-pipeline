@@ -754,7 +754,7 @@ def get_metadata(final_genes, db_str):
      
 
     """
-    final_genes = pl.read_json(final_genes).with_columns(n_members=pl.col("members").list.len()).sort(by="n_members", descending=False).head(10)
+    final_genes = pl.read_json(final_genes).with_columns(n_members=pl.col("members").list.len()).sort(by="n_members", descending=False)
     final_genes = final_genes.explode("members").with_columns(pl.col("members").str.split('@').list.first().alias("urs_taxid"))
     
     buffer = io.StringIO()
