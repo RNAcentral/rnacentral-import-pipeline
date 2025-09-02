@@ -636,7 +636,7 @@ def get_cm_hits(urs_taxids, db_str):
             if len(res) > 0:
                 rfam_hits = pl.DataFrame(res)
             else:
-                rfam_hits = pl.DataFrame([{"urs_taxid": None, "database": None, "description": None, "rna_type": None, "cm_overlap": None}]).filter(pl.col("urs_taxid").is_not_null())
+                rfam_hits = pl.DataFrame({"urs_taxid": [], "database": [], "description": [], "rna_type": [], "cm_overlap": []})
             conn.commit()
             
             cur.execute(
@@ -664,7 +664,7 @@ def get_cm_hits(urs_taxids, db_str):
             if len(res) > 0:
                 r2dt_hits = pl.DataFrame(res)
             else:
-                r2dt_hits = pl.DataFrame([{"urs_taxid": None, "database": None, "description": None, "rna_type": None, "cm_overlap": None}]).filter(pl.col("urs_taxid").is_not_null())
+                r2dt_hits = pl.DataFrame({"urs_taxid": [], "database": [], "description": [], "rna_type": [], "cm_overlap": []})
         conn.commit()
         return pl.concat([rfam_hits, r2dt_hits], how="vertical")
     
