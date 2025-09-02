@@ -666,7 +666,7 @@ def get_cm_hits(urs_taxids, db_str):
             else:
                 r2dt_hits = pl.DataFrame({"urs_taxid": [], "database": [], "description": [], "rna_type": [], "cm_overlap": []})
         conn.commit()
-        return pl.concat([rfam_hits, r2dt_hits], how="vertical")
+        return pl.concat([rfam_hits, r2dt_hits], how="vertical_relaxed")
     
     except Exception as e:
         print(f"error getting cm hits: {e}")
@@ -705,7 +705,7 @@ def process_chunk(chunk, db_str):
 def process_group(group_data, db_str, progress_queue=None):
     """Process a single group - extracted from your original loop"""
     group_key, group_df = group_data
-    gene_name, = group_key
+    gene_name = group_key
     
     try:
         descriptions = get_accessions(group_df.get_column("urs_taxid").unique().to_list(), db_str)
@@ -732,7 +732,6 @@ def process_group(group_data, db_str, progress_queue=None):
                      .to_list()[0])
         
         result = {"name": gene_name, "description": best_description, "rna_type": best_type}
-        
         # Update progress if queue provided
         if progress_queue:
             progress_queue.put(1)
