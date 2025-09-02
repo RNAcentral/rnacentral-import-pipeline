@@ -577,25 +577,25 @@ def store_genes(final_genes, taxid, db_str):
 
 def get_accessions(urs_taxids, db_str):
     conn = pg.connect(db_str)
-    cur = conn.cursor(cursor_factory=RealDictCursor)
+    with conn.cursor(cursor_factory=RealDictCursor) as cur:
+        cur.execute(
+        """SELECT 
+        a.urs_taxid, 
+        ac.database, 
+        ac.description, 
+        ac.rna_type,
+        0.0 as cm_overlap
+        FROM
+        rnc_accession_active a
+        JOIN genes_urs_taxid t 
+            ON t.urs_taxid = a.urs_taxid
+        JOIN rnc_accessions ac
+            ON ac.accession = a.accession
+            WHERE t.urs_taxid = ANY(%s)"""
+        , (urs_taxids,))
 
-    cur.execute(
-    """SELECT 
-    a.urs_taxid, 
-    ac.database, 
-    ac.description, 
-    ac.rna_type,
-    0.0 as cm_overlap
-    FROM
-    rnc_accession_active a
-    JOIN genes_urs_taxid t 
-        ON t.urs_taxid = a.urs_taxid
-    JOIN rnc_accessions ac
-        ON ac.accession = a.accession
-        WHERE t.urs_taxid = ANY(%s)"""
-    , (urs_taxids,))
-
-    accessions = pl.DataFrame(cur.fetchall()).cast({"cm_overlap": pl.Float64})
+        accessions = pl.DataFrame(cur.fetchall()).cast({"cm_overlap": pl.Float64})
+    conn.commit()
     conn.close()
     return accessions
 
