@@ -637,6 +637,8 @@ def get_cm_hits(urs_taxids, db_str):
                 rfam_hits = pl.DataFrame(res)
             else:
                 rfam_hits = pl.DataFrame({"urs_taxid": [], "database": [], "description": [], "rna_type": [], "cm_overlap": []})
+            
+            print(rfam_hits)
             cur.close()
 
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
@@ -666,6 +668,7 @@ def get_cm_hits(urs_taxids, db_str):
                 r2dt_hits = pl.DataFrame(res)
             else:
                 r2dt_hits = pl.DataFrame({"urs_taxid": [], "database": [], "description": [], "rna_type": [], "cm_overlap": []})
+            print(r2dt_hits)
             cur.close()
         return pl.concat([rfam_hits, r2dt_hits], how="vertical_relaxed")
     
