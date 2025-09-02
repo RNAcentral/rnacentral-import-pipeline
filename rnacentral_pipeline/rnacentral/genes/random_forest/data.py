@@ -717,7 +717,7 @@ def process_group(group_data, db_str, progress_queue=None):
         descriptions = get_accessions(group_df.get_column("urs_taxid").unique().to_list(), db_str)
         cm_hits = get_cm_hits(group_df.get_column("urs_taxid").unique().to_list(), db_str)
         cm_hits = cm_hits.with_columns(pl.col("cm_overlap").fill_null(0.0))
-        descriptions = pl.concat([descriptions, cm_hits], how="vertical")
+        descriptions = pl.concat([descriptions, cm_hits], how="vertical_relaxed")
         descriptions_with_scores = descriptions.with_columns(
             desc_score=pl.struct(pl.col("database"), pl.col("description"))
             .map_elements(calculate_description_score, return_dtype=pl.Float32)
