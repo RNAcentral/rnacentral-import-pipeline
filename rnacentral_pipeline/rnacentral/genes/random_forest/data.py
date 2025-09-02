@@ -726,11 +726,11 @@ def process_group(group_data, db_str, progress_queue=None):
 
         
         best_description = (descriptions_with_scores
-                           .sort(by='desc_score', descending=True)
+                           .sort(by='desc_score', descending=True, multithreaded=False)
                            .get_column("description")
                            .to_list()[0])
         best_type = (descriptions_with_scores
-                     .sort(by='type_score', descending=True)
+                     .sort(by='type_score', descending=True, multithreaded=False)
                      .get_column("rna_type")
                      .to_list()[0])
         
