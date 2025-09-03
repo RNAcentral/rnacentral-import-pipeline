@@ -27,7 +27,7 @@ RUN apt install -y --no-install-recommends \
     libncurses5-dev \
     libncursesw5-dev \
     libsqlite3-dev \
-    libssl3 \
+    libssl-dev \
     libxml2-utils \
     libxml2-dev \
     libzip-dev \
@@ -66,14 +66,11 @@ RUN \
     cd easel && \
     make install
 
-# Install blat
-RUN \
-    wget https://hgwdev.gi.ucsc.edu/~kent/src/blatSrc37.zip && \
-    unzip blatSrc37.zip && \
-    rm blatSrc37.zip && \
-    cd blatSrc && \
-    mkdir bin && \
-    make MACHTYPE=x86_64 BINDIR=$PWD/bin
+RUN mkdir -p $RNA/blatSrc/bin && \
+    cd $RNA/blatSrc/bin && \
+    wget https://hgwdev.gi.ucsc.edu/~kent/exe/linux/blatSuite.zip && \
+    unzip blatSuite.zip && \
+    rm blatSuite.zip 
 
 # Install seqkit
 RUN \
