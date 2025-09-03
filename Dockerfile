@@ -68,7 +68,7 @@ RUN \
 
 # Install blat
 RUN \
-    wget https://users.soe.ucsc.edu/~kent/src/blatSrc37.zip && \
+    wget https://hgwdev.gi.ucsc.edu/~kent/src/blatSrc37.zip && \
     unzip blatSrc37.zip && \
     rm blatSrc37.zip && \
     cd blatSrc && \
