@@ -68,9 +68,9 @@ RUN \
 
 # Install blat
 RUN \
-    wget https://users.soe.ucsc.edu/~kent/src/blatSrc35.zip && \
-    unzip blatSrc35.zip && \
-    rm blatSrc35.zip && \
+    wget https://users.soe.ucsc.edu/~kent/src/blatSrc37.zip && \
+    unzip blatSrc37.zip && \
+    rm blatSrc37.zip && \
     cd blatSrc && \
     mkdir bin && \
     make MACHTYPE=x86_64 BINDIR=$PWD/bin
