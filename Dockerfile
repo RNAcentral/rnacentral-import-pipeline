@@ -73,10 +73,8 @@ RUN \
     rm blatSrc37.zip && \
     cd blatSrc && \
     mkdir bin && \
-    cd lib && \
-    make MACHTYPE=x86_64 BINDIR=$PWD/../bin && \
-    cd ../blat && \
-    make MACHTYPE=x86_64 BINDIR=$PWD/../bin
+    sed -i '/^all:/,/^clean:/{/^all:/!{/^clean:/!d}}; /^all:/a\\tcd lib && ${MAKE}\n\tcd blat && $(MAKE)' makefile && \
+    make MACHTYPE=x86_64 BINDIR=$PWD/bin
 
 # Install seqkit
 RUN \
