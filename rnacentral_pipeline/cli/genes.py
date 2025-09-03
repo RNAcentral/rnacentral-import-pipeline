@@ -29,10 +29,26 @@ def cli():
     """
     pass
 
+
+# Inference subgroup  
+@cli.group("infer")
+def infer_cli():
+    """
+    Commands for running gene inference/classification.
+    """
+    pass
+
+@cli.group("utils")
+def utils_cli():
+    """
+    Utility commands for gene processing.
+    """
+    pass
+
 ## New RF based gene models
 
-
-@cli.command("fetch")
+## Inference commands to fetch, preprocess and classify transcripts
+@infer_cli.command("fetch")
 @click.option(
     "--conn_str",
     envvar="PGDATABASE",
@@ -64,7 +80,7 @@ def fetch(conn_str, taxid, output):
     click.echo(f"Saved {transcripts.height} transcripts to {output}")
 
 
-@cli.command("preprocess")
+@infer_cli.command("preprocess")
 @click.option(
     "--transcripts_file",
     required=True,
@@ -135,7 +151,7 @@ def preprocess(
     click.echo(f"Generated {features.height} feature comparisons, saved to {output}")
 
 
-@cli.command("classify")
+@infer_cli.command("classify")
 @click.option(
     "--features_file", required=True, help="Input parquet file containing features"
 )
@@ -177,7 +193,7 @@ def classify(
     genes_table.write_json(output_path / f"genes_{taxid}.json")
 
 
-@cli.command("convert")
+@utils_cli.command("convert")
 @click.option("--gff_file", required=True, help="Input GFF file with genes")
 @click.option("--taxid", type=int, help="Taxonomy ID for the GFF file")
 @click.option(
@@ -204,7 +220,7 @@ def convert(gff_file, taxid, conn_str):
     )
 
 
-@cli.command("create-bedfile")
+@utils_cli.command("create-bedfile")
 @click.option("--bed_file", required=True, help="BEDfile output path")
 @click.option("--taxid", type=int, help="Taxonomy ID for the BED file")
 @click.option(
@@ -215,10 +231,7 @@ def convert(gff_file, taxid, conn_str):
 )
 def create_bedfile(bed_file, taxid, conn_str):
     """
-    Convert GFF file to parquet format.
-
-    This command reads a GFF file containing gene annotations and converts it to a
-    parquet format suitable for further processing.
+    Query the genes table in the database and convert the data there into a bed file for analysis.
     """
     gff_convert.database_to_bed(
         output_path=Path(bed_file),
@@ -231,7 +244,7 @@ def create_bedfile(bed_file, taxid, conn_str):
     )
 
 
-@cli.command("merge")
+@utils_cli.command("merge")
 @click.option("--previous_genes", required=True, help="Path to previous genes file")
 @click.option("--next_genes", required=True, help="Path to new genes file")
 @click.option("--output", required=True, help="Output file path for merged genes")
@@ -269,7 +282,7 @@ def merge(previous_genes, next_genes, output, inactive_ids, prev_release_number,
     click.echo(f"Merged genes saved to {output}")
 
 
-@cli.command("process-metadata")
+@utils_cli.command("process-metadata")
 @click.argument("final_genes", type=click.Path(exists=True))
 @click.argument("metadata_output", type=click.Path())
 @click.option("--db_str", envvar="PGDATABASE")
@@ -281,7 +294,7 @@ def process_metadata(final_genes, metadata_output, db_str):
 
 
 
-@cli.command("store-genes")
+@utils_cli.command("store-genes")
 @click.argument("final_genes", type=click.Path(exists=True))
 @click.option("--taxid", type=int)
 @click.option("--db_str", envvar="PGDATABASE",)
@@ -301,7 +314,7 @@ def store(final_genes, taxid, db_str):
     click.echo(f"Stored genes from {final_genes} into the database.")
 
 
-@cli.command("store-metadata")
+@utils_cli.command("store-metadata")
 @click.argument("metadata_file", type=click.Path(exists=True))
 @click.option("--db_str", envvar="PGDATABASE",)
 def store_metadata(metadata_file, db_str):
