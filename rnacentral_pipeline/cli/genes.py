@@ -20,12 +20,22 @@ import click
 from rnacentral_pipeline.rnacentral.genes.random_forest import classify as rf_classify
 from rnacentral_pipeline.rnacentral.genes.random_forest import convert as gff_convert
 from rnacentral_pipeline.rnacentral.genes.random_forest import data, preprocessing
+from rnacentral_pipeline.rnacentral.genes.random_forest import train
 
 
 @click.group("genes")
 def cli():
     """
     A group of commands dealing with building genes.
+    """
+    pass
+
+
+# Training subgroup
+@cli.group("train")
+def train_cli():
+    """
+    Commands for training gene classification models.
     """
     pass
 
@@ -331,3 +341,106 @@ def store_metadata(metadata_file, db_str):
 
     data.store_metadata(metadata_file, db_str)
     click.echo(f"Stored metadata from {metadata_file} into the database.")
+
+
+@train_cli.command("convert-csv")
+@click.option("--input_csv", required=True, help="Input CSV file path")
+@click.option("--output_parquet", required=True, help="Output Parquet file path")
+def convert_csv(input_csv, output_parquet):
+    """
+    Convert the CSV dumped by psql into a parquet file for further processing
+    """
+    if not Path(input_csv).exists():
+        raise click.ClickException(f"Input CSV file not found: {input_csv}")
+
+    train.convert_csv_2_parquet(input_csv, output_parquet)
+    click.echo(f"Converted {input_csv} to {output_parquet}")
+
+
+@train_cli.command("fetch-training-data")
+@click.option("--transcripts_parquet", required=True, help="The input transcripts")
+@click.option("--nearby_distance", default=1000, type=int, help="Distance to search for candidate genes to compare")
+@click.option("--output_parquet", required=True, help="Output Parquet file path")
+def fetch_training_data(transcripts_parquet, nearby_distance, output_parquet):
+    """
+    Fetch training data by finding nearby transcripts and labeling them.
+
+    This command processes the input transcripts to find nearby candidates
+    within the specified distance and labels them for training.
+    """
+    if not Path(transcripts_parquet).exists():
+        raise click.ClickException(f"Input transcripts file not found: {transcripts_parquet}")
+    candidates_df = train.fetch_training_data(transcripts_parquet, nearby_distance)
+    candidates_df.write_parquet(output_parquet)
+    click.echo(f"Fetched training data and saved to {output_parquet}")
+
+
+@train_cli.command("prepare-features")
+@click.option("--candidates_parquet", required=True, help="Input Parquet file with candidates")
+@click.option("--transcripts_parquet", required=True, help="Input Parquet file with transcripts")
+@click.option("--so_model_path", required=True, help="SO Node2Vec model path")
+@click.option("--output_parquet", required=True, help="Output Parquet file path")
+def prepare_features(candidates_parquet, transcripts_parquet, so_model_path, output_parquet):
+    """
+    Prepare features for training the model.
+
+    This command generates features for the candidate transcript pairs
+    using the specified SO Node2Vec model.
+    """
+    if not Path(candidates_parquet).exists():
+        raise click.ClickException(f"Input candidates file not found: {candidates_parquet}")
+    if not Path(so_model_path).exists():
+        raise click.ClickException(f"SO model file not found: {so_model_path}")
+
+    features = train.build_training_features(candidates_parquet, transcripts_parquet, so_model_path)
+    features.write_parquet(output_parquet)
+    click.echo(f"Prepared features and saved to {output_parquet}")
+
+
+@train_cli.command("split-dataset")
+@click.option("--features_parquet", required=True, help="Input Parquet file with features")
+@click.option("--train_path", required=True, help="Output Parquet file for training data")
+@click.option("--val_path", required=True, help="Output Parquet file for validation data")
+@click.option("--test_path", required=True, help="Output Parquet file for testing data")
+@click.option("--test_frac", default=0.2, type=float, help="Proportion of data to use for testing (default: 0.2)")
+@click.option("--val_frac", default=0.2, type=float, help="Proportion of data to use for validation (default: 0.2)")
+@click.option("--seed", default=1337, type=int, help="Random seed for reproducibility (default: 1337)")
+@click.option("--hub_path", default=None, help="Repo to upload dataset to on huggingface hub")
+def split_dataset(features_parquet, train_path, val_path, test_path, test_frac, val_frac, seed, hub_path):
+    """
+    Split the dataset into training, validation, and testing sets.
+
+    This command takes the full feature dataset and splits it into
+    training, validation, and testing subsets based on the specified proportions.
+    """
+    if not Path(features_parquet).exists():
+        raise click.ClickException(f"Input features file not found: {features_parquet}")
+
+    train.split_datasets(features_parquet, train_path, val_path, test_path, test_frac, val_frac, seed, hub_path)
+    click.echo(f"Split dataset into train ({train_path}), val ({val_path}), and test ({test_path})")
+
+
+@train_cli.command("train-model")
+@click.option("--train_data", required=True, help="Input Parquet file with training data")
+@click.option("--model_output", required=True, help="Output folder for the trained models")
+@click.option("--folds", default=5, type=int, help="Number of cross-validation folds (default: 5)")
+@click.option("--exclude", multiple=True, help="Columns to exclude from features")
+@click.option("--seed", default=1337, type=int, help="Random seed for reproducibility (default: 1337)")
+@click.option("--basename", default="rf_model", help="Base name for output model files (default: rf_model)")
+@click.option("--n_estimators", default=100, type=int, help="Number of trees in the random forest (default: 100)")
+def train_model(train_data, model_output, folds, exclude, seed, basename, n_estimators):
+    """
+    Train a Random Forest model using the provided training data.
+
+    This command trains a Random Forest classifier with cross-validation
+    and saves the trained model to the specified output folder.
+    """
+    if not Path(train_data).exists():
+        raise click.ClickException(f"Input training data file not found: {train_data}")
+    if not Path(model_output).exists():
+        Path(model_output).mkdir(parents=True, exist_ok=True)
+
+    
+    train.train(train_data, model_output, folds, exclude, seed, basename, n_estimators)
+    click.echo(f"Trained models saved to {model_output}")
+
