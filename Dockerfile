@@ -71,8 +71,11 @@ RUN \
     wget https://hgwdev.gi.ucsc.edu/~kent/src/blatSrc37.zip && \
     unzip blatSrc37.zip && \
     rm blatSrc37.zip && \
-    cd blatSrc/blat && \
-    mkdir ../bin && \
+    cd blatSrc && \
+    mkdir bin && \
+    cd lib && \
+    make MACHTYPE=x86_64 BINDIR=$PWD/../bin && \
+    cd ../blat && \
     make MACHTYPE=x86_64 BINDIR=$PWD/../bin
 
 # Install seqkit
