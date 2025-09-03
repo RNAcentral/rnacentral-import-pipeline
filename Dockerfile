@@ -72,6 +72,7 @@ RUN \
     unzip blatSrc37.zip && \
     rm blatSrc37.zip && \
     cd blatSrc && \
+    sed -i '/^\tcd webBlat && \$(MAKE)$/d' makefile && \
     mkdir bin && \
     make MACHTYPE=x86_64 BINDIR=$PWD/bin
 
