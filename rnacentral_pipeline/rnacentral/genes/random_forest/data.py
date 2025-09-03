@@ -835,7 +835,7 @@ def store_metadata(metadata, db_str):
     conn = pg.connect(db_str)
     cur = conn.cursor(cursor_factory=RealDictCursor)
 
-    metadata = pl.read_json(metadata)
+    metadata = pl.read_json(metadata).with_columns(pl.col("name").list.first())
 
     buffer = io.StringIO()
     for name in metadata.get_column("name").to_list():
@@ -854,10 +854,10 @@ def store_metadata(metadata, db_str):
     metadata = metadata.join(gene_ids, left_on="name", right_on="public_name", how="inner")
     print(metadata)
     insert_query = """
-    INSERT INTO rnc_gene_metadata (rnc_gene_id, description, so_rna_type) VALUES """
+    INSERT INTO rnc_gene_metadata (rnc_gene_id, description, so_rna_type, short_description) VALUES """
     args_str = ""
-    for row in metadata.iter_rows():
-        args_str += cur.mogrify("(%s,%s,%s),", row).decode('utf-8') 
+    for row in metadata.select(["rnc_gene_id", "description", "rna_type", "short_description"]).iter_rows():
+        args_str += cur.mogrify("(%s,%s,%s,%s),", row).decode('utf-8') 
     
     args_str = args_str.rstrip(',')
 
