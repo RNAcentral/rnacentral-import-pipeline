@@ -8,7 +8,7 @@ RUN apt update
 RUN apt upgrade -y
 
 # Install all required packages
-RUN apt install -y \
+RUN apt install -y --no-install-reccomends \
     bedtools \
     ca-certificates \
     curl \
@@ -27,7 +27,7 @@ RUN apt install -y \
     libncurses5-dev \
     libncursesw5-dev \
     libsqlite3-dev \
-    libssl1.1 \
+    libssl3 \
     libxml2-utils \
     libxml2-dev \
     libzip-dev \
@@ -37,8 +37,8 @@ RUN apt install -y \
     pandoc \
     patch \
     pgloader \
-    postgresql-11 \
-    postgresql-client-11 \
+    postgresql-17 \
+    postgresql-client-17 \
     procps \
     python3 \
     python3-dev \
