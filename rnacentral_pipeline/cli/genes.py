@@ -20,7 +20,7 @@ import click
 from rnacentral_pipeline.rnacentral.genes.random_forest import classify as rf_classify
 from rnacentral_pipeline.rnacentral.genes.random_forest import convert as gff_convert
 from rnacentral_pipeline.rnacentral.genes.random_forest import data, preprocessing
-from rnacentral_pipeline.rnacentral.genes.random_forest import train
+from rnacentral_pipeline.rnacentral.genes.random_forest import train, evaluate
 
 
 @click.group("genes")
@@ -444,3 +444,31 @@ def train_model(train_data, model_output, folds, exclude, seed, basename, n_esti
     train.train(train_data, model_output, folds, exclude, seed, basename, n_estimators)
     click.echo(f"Trained models saved to {model_output}")
 
+@train_cli.command("evaluate-model")
+@click.option("--model_path", required=True, help="Path to the trained model file")
+@click.option("--test_data", required=True, help="Input Parquet file with testing data")
+@click.option("--metric_output", required=True, help="Output file for metrics (should be ndjson)")
+@click.option("--exclude", "-e", default=None, multiple=True, help="Columns to exclude")
+def evaluate_model(model_path, test_data, metric_output, exclude):
+    """
+    Evaluate the trained model on the test dataset.
+
+    This command loads the trained model and evaluates its performance
+    on the provided test dataset, printing out relevant metrics.
+    """
+    if not Path(model_path).exists():
+        raise click.ClickException(f"Trained model file not found: {model_path}")
+    if not Path(test_data).exists():
+        raise click.ClickException(f"Input testing data file not found: {test_data}")
+
+    excluded_columns = ["label", "comparison"]
+    if exclude is not None:
+        excluded_columns.extend(list(exclude))
+
+    metrics = evaluate.evaluate_model(model_path, test_data, excluded_columns)
+    click.echo("Model evaluation metrics:")
+    for key, value in metrics.items():
+        click.echo(f"{key}: {value}")
+    # Save metrics to output file
+    metrics.write_ndjson(metric_output)
+    
