@@ -8,7 +8,7 @@ RUN apt update
 RUN apt upgrade -y
 
 # Install all required packages
-RUN apt install -y --no-install-reccomends \
+RUN apt install -y --no-install-recommends \
     bedtools \
     ca-certificates \
     curl \
