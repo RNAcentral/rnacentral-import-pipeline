@@ -264,9 +264,11 @@ def coordinate_hash(coords, chromosome_number, assembly_id):
     hasher = hashlib.sha256()
     hasher.update(hash_input.encode('utf-8'))
     hash_digest = hasher.digest()
-    b64_hash = base64.urlsafe_b64encode(hash_digest).decode('utf-8')
+    b64_hash = int.from_bytes(hash_digest, 'big')
 
-    return b64_hash[:11]
+    numeric_hash = b64_hash % 10**11
+
+    return f"{numeric_hash:011d}"
 
 
 def name_genes(gene_list, prefix, seed=42):
