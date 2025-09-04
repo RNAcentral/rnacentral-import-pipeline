@@ -35,11 +35,11 @@ def evaluate_model(model_path, test_data, exclude) -> pl.DataFrame:
     X_test = test.select(pl.exclude(excludes)).to_numpy()
     y_test = test.select("label").to_numpy().flatten()
 
-    if X_test.height > 10_000:
+    if test.height > 10_000:
         predictions = []
         prob_dict = []
         chunk_size = 1000
-        for batch_idx in range(0, X_test.height, chunk_size):
+        for batch_idx in range(0, test.height, chunk_size):
             pred_part, prob_part = sess.run(
                 [label_name, probability_name],
                 {input_name: X_test[batch_idx : batch_idx + chunk_size]},
@@ -51,7 +51,7 @@ def evaluate_model(model_path, test_data, exclude) -> pl.DataFrame:
             [label_name, probability_name], {input_name: X_test}
         )
 
-    probabilities = [pr[c] for pr, c in zip(prob_dict, predictions)]
+    probabilities = [pr[1] for pr in prob_dict]
 
     bal_acc = balanced_accuracy_score(y_test, predictions)
     f1 = f1_score(y_test, predictions)
