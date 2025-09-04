@@ -467,8 +467,8 @@ def evaluate_model(model_path, test_data, metric_output, exclude):
 
     metrics = evaluate.evaluate_model(model_path, test_data, excluded_columns)
     click.echo("Model evaluation metrics:")
-    for key, value in metrics.items():
-        click.echo(f"{key}: {value}")
+    
+    click.echo(metrics)
     # Save metrics to output file
     metrics.write_ndjson(metric_output)
     
