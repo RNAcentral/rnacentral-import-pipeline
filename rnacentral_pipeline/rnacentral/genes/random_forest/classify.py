@@ -173,7 +173,7 @@ def run_classification(model_path, features):
             [label_name, probability_name], {input_name: X}
         )
 
-    probabilities = [pr[c] for pr, c in zip(prob_dict, predictions)]
+    probabilities = [pr[1] for pr in prob_dict]
 
     comparisons = features.get_column("comparison").to_numpy()
 
