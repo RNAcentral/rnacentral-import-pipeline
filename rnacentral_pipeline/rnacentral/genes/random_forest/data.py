@@ -20,6 +20,8 @@ import uuid
 from functools import lru_cache
 from rnacentral_pipeline.rnacentral.genes.random_forest.preprocessing import exon_overlap
 from rnacentral_pipeline.rnacentral.precompute import utils
+import hashlib
+import base64
 
 import numpy as np
 import polars as pl
@@ -253,21 +255,18 @@ def add_assembly_ids(transcripts, conn_str):
     transcripts = transcripts.join(region_ids, on="region_name", how="inner")
     return transcripts
 
-def coordinate_hash(coords, chromosome_number):
+def coordinate_hash(coords, chromosome_number, assembly_id):
     """
     Create a hash from the start/stop coordinates of the locus, and return it
     as a string
     """
-    p1 = 73939133
-    p2 = 40127333
-    p3 = 104395303
+    hash_input = f"{coords[0]}::{coords[1]}::{chromosome_number}::{assembly_id}"
+    hasher = hashlib.sha256()
+    hasher.update(hash_input.encode('utf-8'))
+    hash_digest = hasher.digest()
+    b64_hash = base64.urlsafe_b64encode(hash_digest).decode('utf-8')
 
-    hash = ((coords[0] * p1) + (coords[1] * p2) + (chromosome_number * p3)) % 10**11
-
-    # Ensure it's exactly 11 digits by zero-padding if needed
-    formatted_hash = f"{hash:011d}"
-
-    return formatted_hash
+    return b64_hash[:11]
 
 
 def name_genes(gene_list, prefix, seed=42):
@@ -304,6 +303,7 @@ def name_genes(gene_list, prefix, seed=42):
                 "start": overall_coords[0],
                 "stop": overall_coords[1],
                 "members": set(gene),
+                "assembly": assembly,
             }
 
     # Now process the merged genes
@@ -311,9 +311,10 @@ def name_genes(gene_list, prefix, seed=42):
         chromosome = gene_info["chromosome"]
         chromosome_number = gene_info["chromosome_number"]
         overall_coords = (gene_info["start"], gene_info["stop"])
+        assembly = gene_info["assembly"]
 
         # Generate hash based on coordinates and chromosome
-        hash_id = coordinate_hash(overall_coords, chromosome_number)
+        hash_id = coordinate_hash(overall_coords, chromosome_number, assembly)
         name = f"RNAC{prefix}G{hash_id}.1"
 
         gene_table.append(
