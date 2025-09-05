@@ -66,13 +66,13 @@ def get_assembly(path: Path) -> str:
     raise ValueError(f"Could not find assembly id in {path}")
 
 
-def load_coordinates(path: Path, taxid: int, conn_str: str) -> SqliteDict:
+def load_coordinates(path: Path, taxid: int, regions_data: Path) -> SqliteDict:
     """
     Load transcript coordinates from a GFF3 file and return a Polars DataFrame.
     Args:
         path (Path): Path to the GFF3 file.
         taxid (int): Taxonomy ID for the transcripts.
-        conn_str (str): Database connection string to fetch assembly IDs.
+        regions_data (Path): path to the regions data in CSV
     Returns:
         pl.DataFrame: DataFrame with transcript coordinates.
     """
@@ -140,7 +140,7 @@ def load_coordinates(path: Path, taxid: int, conn_str: str) -> SqliteDict:
     ## Assembly ID is not guaranteed to be in the filename, so query it from the DB here
     ## - Is it possible for a region ID to be on multiple assemblies? 
     ## I don't _think_ it is, but if things go wrong, check here
-    transcript_dataframe = data.add_assembly_ids(transcript_dataframe, conn_str)
+    transcript_dataframe = data.add_assembly_region_ids(transcript_dataframe, regions_data)
 
     transcript_dataframe = transcript_dataframe.group_by(
         ["assembly_id", "chromosome", "region_name"], maintain_order=True
@@ -148,18 +148,16 @@ def load_coordinates(path: Path, taxid: int, conn_str: str) -> SqliteDict:
         pl.col("urs_taxid").first(),
         pl.col("region_start").first(),
         pl.col("region_stop").first(),
-        # pl.col("region_id").first(),
         pl.col("exon_start"),
         pl.col("exon_stop"),
         pl.col("strand").first(),
         pl.col("so_type").first(),
     )
-    transcript_dataframe = data.add_region_ids(transcript_dataframe, conn_str)
     
     return transcript_dataframe
 
 
-def gff_to_polars(path: Path, taxid: int, conn_str: str) -> pl.DataFrame:
+def gff_to_polars(path: Path, taxid: int, regions_data: Path) -> pl.DataFrame:
     """
     Convert a GFF3 file to a Polars DataFrame containing transcript coordinates.
 
@@ -171,7 +169,7 @@ def gff_to_polars(path: Path, taxid: int, conn_str: str) -> pl.DataFrame:
     Returns:
         pl.DataFrame: DataFrame with transcript coordinates.
     """
-    return load_coordinates(path, taxid, conn_str)
+    return load_coordinates(path, taxid, regions_data)
 
 
 def database_to_bed(output_path: Path, taxid: int, conn_str: str) -> None:

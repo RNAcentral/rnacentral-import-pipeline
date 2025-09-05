@@ -437,7 +437,7 @@ def identify_nearby_transcripts_sorted_parallel(
 
 def run_preprocessing(
     transcripts_file,
-    conn_str,
+    regions_data,
     so_model_path,
     nearby_distance,
     use_parallel=True,
@@ -450,12 +450,12 @@ def run_preprocessing(
     if transcripts.height > 0:
         # Check if region_ids are present, fetch if needed
         if "region_id" not in transcripts.columns:
-            if not conn_str:
+            if not regions_data.exists():
                 raise ValueError(
                     "Region IDs not found in transcripts file and no database connection provided. "
                     "Please provide --conn_str to fetch region IDs from database."
                 )
-            transcripts = data.add_region_ids(transcripts, conn_str)
+            transcripts = data.add_assembly_region_ids(transcripts, regions_data)
 
         if use_parallel:
             features = identify_nearby_transcripts_sorted_parallel(

@@ -97,9 +97,8 @@ def fetch(conn_str, taxid, output):
     help="Input parquet file containing transcript data",
 )
 @click.option(
-    "--conn_str",
-    envvar="PGDATABASE",
-    help="Database connection string (required if region_ids not in transcripts)",
+    "--regions_data",
+    help="Region data for this taxid, csv format",
 )
 @click.option("--so_model_path", required=True, help="SO Node2Vec model path")
 @click.option(
@@ -123,7 +122,7 @@ def fetch(conn_str, taxid, output):
 )
 def preprocess(
     transcripts_file,
-    conn_str,
+    regions_data,
     so_model_path,
     output,
     nearby_distance,
@@ -142,11 +141,14 @@ def preprocess(
     if not Path(so_model_path).exists():
         raise click.ClickException(f"Transcripts file not found: {so_model_path}")
 
+    if not Path(regions_data).exists():
+        raise click.ClickException(f"Regions data file not found: {regions_data}")
+
     click.echo(f"Loading transcripts from {transcripts_file}...")
 
     features = preprocessing.run_preprocessing(
         transcripts_file,
-        conn_str,
+        regions_data,
         so_model_path,
         nearby_distance,
         use_parallel,
@@ -207,12 +209,11 @@ def classify(
 @click.option("--gff_file", required=True, help="Input GFF file with genes")
 @click.option("--taxid", type=int, help="Taxonomy ID for the GFF file")
 @click.option(
-    "--conn_str",
-    envvar="PGDATABASE",
+    "--regions_data",
     required=True,
-    help="Database connection string (can use PGDATABASE env var)",
+    help="Path to extracted region data for this taxid, csv format",
 )
-def convert(gff_file, taxid, conn_str):
+def convert(gff_file, taxid, regions_data):
     """
     Convert GFF file to parquet format.
 
@@ -223,7 +224,7 @@ def convert(gff_file, taxid, conn_str):
         raise click.ClickException(f"GFF file not found: {gff_file}")
     output_name = Path(gff_file).stem + "_transcripts.parquet"
     output_path = Path(gff_file).parent / output_name
-    transcripts_table = gff_convert.gff_to_polars(Path(gff_file), taxid=taxid, conn_str=conn_str)
+    transcripts_table = gff_convert.gff_to_polars(Path(gff_file), taxid=taxid, regions_data=Path(regions_data))
     transcripts_table.write_parquet(output_path)
     click.echo(
         f"Converted {gff_file} to {output_path} with {transcripts_table.height} transcripts."
