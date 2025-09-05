@@ -178,7 +178,9 @@ def parse(regions) -> ty.Iterable[Region]:
         yield Region.build(index, region)
 
 
-def from_file(handle) -> ty.Iterable[Region]:
+def from_file(handle, genes=True) -> ty.Iterable[Region]:
     data = map(json.loads, handle)
     data = filter(lambda d: d["rna_type"] != "NULL", data)
+    if not genes:
+        data = filter(lambda d: d['rna_id'] != None, data)
     yield from parse(data)
