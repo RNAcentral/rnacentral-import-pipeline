@@ -23,6 +23,7 @@ import numpy as np
 import polars as pl
 from gensim.models import Word2Vec
 from tqdm import tqdm
+from pathlib import Path
 
 from rnacentral_pipeline.rnacentral.genes.random_forest import data
 
