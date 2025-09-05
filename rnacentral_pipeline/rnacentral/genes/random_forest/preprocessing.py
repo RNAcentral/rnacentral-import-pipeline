@@ -450,7 +450,7 @@ def run_preprocessing(
     if transcripts.height > 0:
         # Check if region_ids are present, fetch if needed
         if "region_id" not in transcripts.columns:
-            if not regions_data.exists():
+            if not Path(regions_data).exists():
                 raise ValueError(
                     "Region IDs not found in transcripts file and no database connection provided. "
                     "Please provide --conn_str to fetch region IDs from database."
