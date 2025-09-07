@@ -201,7 +201,7 @@ def fetch_data(taxid, conn_str):
     return transcripts
 
 def add_assembly_region_ids(transcripts, regions_data):
-    regions = pl.read_csv(regions_data)
+    regions = pl.read_ndjson(regions_data)
     
     transcripts = transcripts.join(regions, on="region_name", how="inner")
     return transcripts
