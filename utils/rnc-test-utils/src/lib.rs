@@ -1,10 +1,7 @@
 use std::{
     error::Error,
     io,
-    io::{
-        BufRead,
-        Write,
-    },
+    io::{BufRead, Write},
     process::Output,
 };
 
@@ -24,7 +21,7 @@ impl Jsonl for Output {
         let data = String::from_utf8_lossy(&self.stdout);
         let mut result = Vec::new();
         for line in data.lines() {
-            result.push(serde_json::from_str(&line)?);
+            result.push(serde_json::from_str(line)?);
         }
         Ok(result)
     }

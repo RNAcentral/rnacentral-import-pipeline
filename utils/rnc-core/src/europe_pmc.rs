@@ -1,25 +1,12 @@
-use std::{
-    fs::File,
-    io,
-    io::BufRead,
-    path::Path,
-};
+use std::{fs::File, io, io::BufRead, path::Path};
 
-use quick_xml::{
-    events::Event,
-    Reader,
-};
+use quick_xml::{events::Event, Reader};
 
 use fallible_iterator::FallibleIterator;
 use thiserror::Error;
 
 use crate::publications::reference::{
-    Author,
-    AuthorBuilder,
-    AuthorBuildingError,
-    Reference,
-    ReferenceBuildError,
-    ReferenceBuilder,
+    Author, AuthorBuilder, AuthorBuildingError, Reference, ReferenceBuildError, ReferenceBuilder,
 };
 
 #[derive(Error, Debug)]

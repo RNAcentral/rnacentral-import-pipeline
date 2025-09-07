@@ -1,19 +1,10 @@
-use std::path::{
-    Path,
-    PathBuf,
-};
+use std::path::{Path, PathBuf};
 
 use structopt::StructOpt;
 
-use anyhow::{
-    Context,
-    Result,
-};
+use anyhow::{Context, Result};
 
-use rnc_core::{
-    containers::urs_taxid::UrsTaxidMapping,
-    urs::Urs,
-};
+use rnc_core::{containers::urs_taxid::UrsTaxidMapping, urs::Urs};
 
 #[derive(Debug, StructOpt)]
 #[structopt(rename_all = "kebab-case")]

@@ -1,4 +1,4 @@
-use std::str::FromStr;
+use std::{fmt, str::FromStr};
 
 use thiserror::Error;
 
@@ -43,9 +43,11 @@ impl ExternalReference {
     pub fn ref_id(&self) -> &str {
         &self.1
     }
+}
 
-    pub fn to_string(&self) -> String {
-        format!("{}:{}", self.0.to_string(), self.0)
+impl fmt::Display for ExternalReference {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}:{}", self.0, self.1)
     }
 }
 

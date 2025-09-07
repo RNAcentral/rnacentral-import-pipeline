@@ -1,17 +1,11 @@
-use serde::{
-    Deserialize,
-    Serialize,
-};
+use serde::{Deserialize, Serialize};
 
 use anyhow::Result;
 
 use crate::metadata::{
     basic::Basic,
     coordinate::Coordinate,
-    orf::{
-        Orf,
-        OrfInfo,
-    },
+    orf::{Orf, OrfInfo},
     previous::Previous,
     r2dt_hit::R2dtHit,
     rfam_hit::RfamHit,

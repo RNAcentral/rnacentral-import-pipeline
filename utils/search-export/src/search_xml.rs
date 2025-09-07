@@ -1,149 +1,191 @@
 use serde::Serialize;
 
 #[derive(Debug, Serialize, PartialEq)]
-pub struct ValueOnly<'a> {
+pub struct ValueOnly {
     #[serde(rename = "$value")]
-    value: &'a str,
+    value: String,
 }
 
 #[derive(Debug, Serialize, PartialEq)]
-pub struct HierarchicalField<'a> {
-    name: &'a str,
-    root: ValueOnly<'a>,
+pub struct HierarchicalField {
+    name: String,
+    root: ValueOnly,
     #[serde(rename = "child")]
-    children: Vec<ValueOnly<'a>>,
+    children: Vec<ValueOnly>,
 }
 
 #[derive(Debug, Serialize, PartialEq)]
-pub struct NamedField<'a> {
-    name: &'a str,
+pub struct NamedField {
+    name: String,
 
     #[serde(rename = "$value")]
-    value: &'a str,
+    value: String,
 }
 
-#[derive(Debug, Serialize, PartialEq)]
-pub struct AdditionalFields<'a> {
+#[derive(Debug, Serialize, PartialEq, Default)]
+pub struct AdditionalFields {
     #[serde(rename = "field", default)]
-    fields: Vec<NamedField<'a>>,
+    fields: Vec<NamedField>,
 
     #[serde(rename = "hierarchical_field", default)]
-    trees: Vec<HierarchicalField<'a>>,
+    trees: Vec<HierarchicalField>,
 }
 
 #[derive(Debug, Serialize, PartialEq)]
-pub struct Ref<'a> {
-    dbname: &'a str,
-    dbkey: &'a str,
+pub struct Ref {
+    dbname: String,
+    dbkey: String,
 }
 
-#[derive(Debug, Serialize, PartialEq)]
-pub struct CrossReferences<'a> {
+#[derive(Debug, Serialize, PartialEq, Default)]
+pub struct CrossReferences {
     #[serde(rename = "ref", default)]
-    refs: Vec<Ref<'a>>,
+    refs: Vec<Ref>,
 }
 
 #[derive(Debug, Serialize, PartialEq)]
 #[serde(rename = "entry")]
-pub struct Entry<'a> {
+pub struct Entry {
     id: String,
 
     #[serde(rename = "name")]
-    name: ValueOnly<'a>,
+    name: ValueOnly,
 
     #[serde(rename = "description")]
-    description: ValueOnly<'a>,
-    cross_references: CrossReferences<'a>,
-    additional_fields: AdditionalFields<'a>,
+    description: ValueOnly,
+    cross_references: CrossReferences,
+    additional_fields: AdditionalFields,
 }
 
-impl<'a> Default for CrossReferences<'a> {
-    fn default() -> Self {
+impl<S> From<S> for ValueOnly
+where
+    S: Into<String>,
+{
+    fn from(value: S) -> Self {
         Self {
-            refs: Vec::new(),
+            value: value.into(),
         }
     }
 }
 
-impl<'a> Default for AdditionalFields<'a> {
-    fn default() -> Self {
-        Self {
-            fields: Vec::new(),
-            trees: Vec::new(),
-        }
-    }
-}
+// impl<'a> From<&'a str> for ValueOnly {
+//     fn from(value: &'a str) -> Self {
+//         Self {
+//             value.to_string(),
+//         }
+//     }
+// }
+//
+// impl<'a> From<&'a String> for ValueOnly {
+//     fn from(value: &'a String) -> Self {
+//         Self {
+//             value,
+//         }
+//     }
+// }
+//
+// impl<'a> ValueOnly<'a> {
+//     pub fn new(value: &'a str) -> Self {
+//         Self {
+//             value,
+//         }
+//     }
+// }
 
-impl<'a> From<&'a str> for ValueOnly<'a> {
-    fn from(value: &'a str) -> Self {
-        Self {
-            value,
-        }
-    }
-}
-
-impl<'a> From<&'a String> for ValueOnly<'a> {
-    fn from(value: &'a String) -> Self {
-        Self {
-            value,
-        }
-    }
-}
-
-impl<'a> ValueOnly<'a> {
-    pub fn new(value: &'a str) -> Self {
-        Self {
-            value,
-        }
-    }
-}
-
-impl<'a> Entry<'a> {
-    pub fn new(id: String, name: &'a str, description: &'a str) -> Self {
+impl Entry {
+    pub fn new<N, D>(id: String, name: N, description: D) -> Self
+    where
+        N: Into<String>,
+        D: Into<String>,
+    {
         Self {
             id,
-            name: ValueOnly::new(name),
-            description: ValueOnly::new(description),
+            name: ValueOnly::from(name),
+            description: ValueOnly::from(description),
             cross_references: CrossReferences::default(),
             additional_fields: AdditionalFields::default(),
         }
     }
 
-    pub fn add_ref(&mut self, database_name: &'a str, key: &'a str) {
+    pub fn add_ref<D, K>(&mut self, database_name: D, key: K)
+    where
+        D: Into<String>,
+        K: Into<String>,
+    {
         self.cross_references.add_ref(database_name, key);
     }
 
-    pub fn add_field(&mut self, name: &'a str, value: &'a str) {
+    pub fn add_field<N, S>(&mut self, name: N, value: S)
+    where
+        N: Into<String>,
+        S: Into<String>,
+    {
         self.additional_fields.add_field(name, value);
     }
 
-    pub fn add_tree(&mut self, name: &'a str, root: &'a str, children: &'a Vec<String>) {
+    pub fn add_field_values<N, C, V>(&mut self, name: N, values: V)
+    where
+        N: Into<String>,
+        C: Into<String>,
+        V: Iterator<Item = C>,
+    {
+        let name: String = name.into();
+        for value in values {
+            self.add_field(&name, value);
+        }
+    }
+
+    pub fn add_tree<N, R, C, I>(&mut self, name: N, root: R, children: I)
+    where
+        N: Into<String>,
+        R: Into<String>,
+        C: Into<String>,
+        I: Iterator<Item = C>,
+    {
         self.additional_fields.add_tree(name, root, children);
     }
 }
 
-impl<'a> CrossReferences<'a> {
-    pub fn add_ref(&mut self, database_name: &'a str, key: &'a str) {
+impl CrossReferences {
+    pub fn add_ref<D, K>(&mut self, database_name: D, key: K)
+    where
+        D: Into<String>,
+        K: Into<String>,
+    {
         self.refs.push(Ref {
-            dbname: database_name,
-            dbkey: key,
+            dbname: database_name.into(),
+            dbkey: key.into(),
         });
     }
 }
 
-impl<'a> AdditionalFields<'a> {
-    pub fn add_field(&mut self, name: &'a str, value: &'a str) {
+impl AdditionalFields {
+    pub fn add_field<N, V>(&mut self, name: N, value: V)
+    where
+        N: Into<String>,
+        V: Into<String>,
+    {
         self.fields.push(NamedField {
-            name,
-            value,
+            name: name.into(),
+            value: value.into(),
         });
     }
 
-    pub fn add_tree(&mut self, name: &'a str, root: &'a str, children: &'a Vec<String>) {
+    pub fn add_tree<N, R, C, I>(&mut self, name: N, root: R, children: I)
+    where
+        N: Into<String>,
+        R: Into<String>,
+        C: Into<String>,
+        I: Iterator<Item = C>,
+    {
+        let mut members = Vec::new();
+        for child in children {
+            members.push(ValueOnly::from(child));
+        }
         self.trees.push(HierarchicalField {
-            name,
-            root: root.into(),
-            children: children.iter().map(|s| s.into()).collect(),
+            name: name.into(),
+            root: root.into().into(),
+            children: members,
         });
     }
 }

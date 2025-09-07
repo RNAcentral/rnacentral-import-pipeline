@@ -1,6 +1,6 @@
 use std::{
-    str,
-    str::FromStr,
+    fmt,
+    str::{self, FromStr},
 };
 
 use thiserror::Error;
@@ -24,10 +24,6 @@ impl UrsTaxid {
         UrsTaxid(urs, taxid)
     }
 
-    pub fn to_string(&self) -> String {
-        format!("URS{:010X}_{}", self.0, self.1)
-    }
-
     pub fn urs(&self) -> Urs {
         Urs::from(self.0)
     }
@@ -37,8 +33,14 @@ impl UrsTaxid {
     }
 
     pub fn short(&self) -> String {
-        let urs: Urs = self.urs().into();
+        let urs: Urs = self.urs();
         format!("{}_{}", urs.short_urs(), self.taxid())
+    }
+}
+
+impl fmt::Display for UrsTaxid {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "URS{:010X}_{}", self.0, self.1)
     }
 }
 

@@ -1,13 +1,6 @@
-use std::{
-    collections::HashSet,
-    iter::FromIterator,
-    path::Path,
-};
+use std::{collections::HashSet, iter::FromIterator, path::Path};
 
-use serde::{
-    Deserialize,
-    Serialize,
-};
+use serde::{Deserialize, Serialize};
 
 use anyhow::Result;
 use rnc_core::grouper;

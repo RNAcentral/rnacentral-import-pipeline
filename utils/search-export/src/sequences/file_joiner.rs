@@ -3,52 +3,24 @@ use std::{
     convert::TryFrom,
     fs::File,
     io::BufReader,
-    path::{
-        Path,
-        PathBuf,
-    },
+    path::{Path, PathBuf},
     str::FromStr,
 };
 
 use serde::de::DeserializeOwned;
-use serde_json::{
-    de::IoRead,
-    Deserializer,
-    StreamDeserializer,
-};
+use serde_json::{de::IoRead, Deserializer, StreamDeserializer};
 use strum::IntoEnumIterator;
-use strum_macros::{
-    Display,
-    EnumIter,
-    EnumString,
-};
+use strum_macros::{Display, EnumIter, EnumString};
 use thiserror::Error;
 
-use rnc_core::grouper::Grouped::{
-    self,
-    Multiple,
-    Optional,
-    Required,
-};
+use rnc_core::grouper::Grouped::{self, Multiple, Optional, Required};
 
 use super::{
-    basic::Basic,
-    crs::Crs,
-    editing_events::EditingEvent,
-    feedback::Feedback,
-    go_annotation::GoAnnotation,
-    interacting_protein::InteractingProtein,
-    interacting_rna::InteractingRna,
-    litsumm::LitsummSummaries,
-    orf::Orf,
-    precompute::Precompute,
-    publication_counts::PublicationCount,
-    qa_status::QaStatus,
-    r2dt::R2dt,
-    raw::Raw,
-    rfam_hit::RfamHit,
-    so_tree,
-    so_tree::SoMapping,
+    basic::Basic, crs::Crs, editing_events::EditingEvent, feedback::Feedback,
+    go_annotation::GoAnnotation, interacting_protein::InteractingProtein,
+    interacting_rna::InteractingRna, litsumm::LitsummSummaries, orf::Orf, precompute::Precompute,
+    publication_counts::PublicationCount, qa_status::QaStatus, r2dt::R2dt, raw::Raw,
+    rfam_hit::RfamHit, so_tree, so_tree::SoMapping,
 };
 
 #[derive(Debug, Error)]

@@ -1,27 +1,28 @@
-use serde::{
-    Deserialize,
-    Serialize,
-};
+use serde::{Deserialize, Serialize};
 
-use crate::sequences::{
-    accession::CrossReference,
-    normalized::Normalized,
-};
+use crate::sequences::normalized::Normalized;
 
-use super::region::Region;
+use super::region::UrsRegion;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct GeneMember {
-    region: Region,
+    region: UrsRegion,
     sequence: Normalized,
 }
 
 impl GeneMember {
-    pub fn new(region: Region, sequence: Normalized) -> Self {
-        assert!(region.id() == sequence.id(), "Region and sequence do not match ids");
+    pub fn new(region: UrsRegion, sequence: Normalized) -> Self {
+        assert!(
+            region.id() == sequence.id(),
+            "Region and sequence do not match ids, region: {} vs sequence {}",
+            region.id(),
+            sequence.id()
+        );
         assert!(
             region.urs_taxid() == sequence.urs_taxid(),
-            "Region and sequence do not match sequences"
+            "Region and sequence do not match urs_taxids, region: {} vs sequence: {}",
+            region.urs_taxid(),
+            sequence.urs_taxid(),
         );
 
         Self {
@@ -30,31 +31,11 @@ impl GeneMember {
         }
     }
 
-    pub fn locus_id(&self) -> usize {
-        self.region.locus_id()
+    pub fn into_inner(self) -> (UrsRegion, Normalized) {
+        (self.region, self.sequence)
     }
 
-    pub fn name(&self) -> &str {
-        self.region.name()
-    }
-
-    pub fn member_count(&self) -> &usize {
-        &self.region.member_count()
-    }
-
-    pub fn assembly_id(&self) -> &str {
-        self.region.assembly_id()
-    }
-
-    pub fn cross_references(&self) -> &[CrossReference] {
-        self.sequence.cross_references()
-    }
-
-    pub fn urs_taxid(&self) -> &str {
-        self.sequence.urs_taxid()
-    }
-
-    pub fn description(&self) -> &str {
-        self.sequence.description()
+    pub fn gene_id(&self) -> usize {
+        self.region.gene_id()
     }
 }

@@ -1,12 +1,6 @@
-use std::{
-    collections::HashSet,
-    iter::FromIterator,
-};
+use std::{collections::HashSet, iter::FromIterator};
 
-use serde::{
-    Deserialize,
-    Serialize,
-};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone)]
 pub struct RawAccession {
@@ -60,6 +54,16 @@ pub struct AccessionVec {
     locus_tags: HashSet<String>,
     standard_names: HashSet<String>,
     products: HashSet<String>,
+}
+
+impl AccessionVec {
+    pub fn genes(&self) -> &HashSet<String> {
+        &self.genes
+    }
+
+    pub fn gene_synonyms(&self) -> &HashSet<String> {
+        &self.gene_synonyms
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]

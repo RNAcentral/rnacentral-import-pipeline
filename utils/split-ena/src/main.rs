@@ -1,18 +1,8 @@
 use std::{
     error::Error,
-    fs::{
-        remove_file,
-        File,
-    },
-    io::{
-        prelude::*,
-        BufReader,
-        BufWriter,
-    },
-    path::{
-        Path,
-        PathBuf,
-    },
+    fs::{remove_file, File},
+    io::{prelude::*, BufReader, BufWriter},
+    path::{Path, PathBuf},
 };
 
 use structopt::StructOpt;
@@ -50,7 +40,7 @@ fn chunk_writer(
     final_name.set_extension("ncr");
 
     let file = File::create(final_name)?;
-    return Ok(BufWriter::new(file));
+    Ok(BufWriter::new(file))
 }
 
 fn main() -> Result<(), Box<dyn Error>> {

@@ -1,30 +1,17 @@
 use std::{
-    cmp::Ordering::{
-        Equal,
-        Greater,
-        Less,
-    },
+    cmp::Ordering::{Equal, Greater, Less},
     fs::File,
     io::BufReader,
     path::Path,
 };
 
-use serde::{
-    Deserialize,
-    Serialize,
-};
+use serde::{Deserialize, Serialize};
 
 use itertools::Itertools;
 use serde_json::error;
-use sorted_iter::{
-    assume::*,
-    SortedPairIterator,
-};
+use sorted_iter::{assume::*, SortedPairIterator};
 
-use anyhow::{
-    anyhow,
-    Result,
-};
+use anyhow::{anyhow, Result};
 
 use polars::prelude::*;
 
@@ -121,7 +108,6 @@ pub fn select_new(xrefs: &Path, known: &Path, output: &Path, streaming: bool) ->
     //     .agg([col("last").max().alias("last"), col("id").first().alias("id")])
     //     .sort("id", Default::default());
 
-
     // let known_records: LazyFrame = LazyCsvReader::new(known_path)
     //     .has_header(false)
     //     .low_memory(streaming)
@@ -131,7 +117,6 @@ pub fn select_new(xrefs: &Path, known: &Path, output: &Path, streaming: bool) ->
     //     .group_by(["upi"])
     //     .agg([col("last").max().alias("last"), col("id").first().alias("id")])
     //     .sort("id", Default::default());
-
 
     // let selection: LazyFrame = xref_records
     //     .join(
@@ -193,10 +178,7 @@ pub fn select_new(xrefs: &Path, known: &Path, output: &Path, streaming: bool) ->
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rand::{
-        distributions::Alphanumeric,
-        Rng,
-    };
+    use rand::{distributions::Alphanumeric, Rng};
     use std::io::Cursor; // 0.8
 
     fn get_random_fname() -> String {
