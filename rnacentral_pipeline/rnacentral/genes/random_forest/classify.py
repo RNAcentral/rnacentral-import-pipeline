@@ -160,7 +160,7 @@ def run_classification(model_path, features):
     if features.height > 10_000:
         predictions = []
         prob_dict = []
-        chunk_size = 1000
+        chunk_size = 10_000
         for batch_idx in range(0, features.height, chunk_size):
             pred_part, prob_part = sess.run(
                 [label_name, probability_name],
