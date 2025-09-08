@@ -133,9 +133,12 @@ def get_community_genes(classifications, transcripts):
         communities[community_id].add(transcript)
 
     genes = list(communities.values())
-    genes = [(g, node_assembly_lookup[list(g)[0]]) for g in genes]
+    return_genes = []
+    for g in genes:
+        if node_assembly_lookup.get( list(g)[0], None) is not None:
+            return_genes.append( (g, node_assembly_lookup[list(g)[0]]) )
 
-    return genes
+    return return_genes
 
 
 def run_classification(model_path, features):
