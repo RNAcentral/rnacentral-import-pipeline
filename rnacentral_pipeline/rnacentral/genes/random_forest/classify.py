@@ -151,7 +151,7 @@ def run_classification(model_path, features):
     sess_opt = ort.SessionOptions()
     sess_opt.execution_mode = ort.ExecutionMode.ORT_PARALLEL
     if os.getenv("SLURM_JOB_ID") is not None:
-        cpus_on_node = os.getenv("SLURM_CPUS_PER_TASK") or 1
+        cpus_on_node = os.getenv("SLURM_CPUS_ON_NODE") or 1
         sess_opt.intra_op_num_threads = int(cpus_on_node)
         sess_opt.inter_op_num_threads = int(cpus_on_node)
 
