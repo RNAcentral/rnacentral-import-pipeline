@@ -137,7 +137,27 @@ def fetch_training_data(data: str, nearby_distance: int) -> pl.DataFrame:
 def build_training_features(candidates: pl.DataFrame, transcripts: pl.DataFrame, so_model_path:str) -> pl.DataFrame:
     so_model = Word2Vec.load(so_model_path)
     ## Features can now be built for these candidate genes
-    features = []
+    features = pl.DataFrame(
+            {
+                "5p_exon_overlap": [],
+                "5p_exon_dta": [],
+                "5p_exon_3p_dta": [],
+                "exons_overlapping": [],
+                "strand": [],
+                "type_sim": [],
+                "label": [],
+                "comparison": [],
+            }, schema={
+                "5p_exon_overlap": pl.Float64,
+                "5p_exon_dta": pl.Int64,
+                "5p_exon_3p_dta": pl.Int64,
+                "exons_overlapping": pl.Int64,
+                "strand": pl.Int64,
+                "type_sim": pl.Float64,
+                "label": pl.Int8,
+                "comparison": pl.Utf8,
+            }
+        )
     for row in candidates.iter_rows(named=True):
         ## The extract genes step has already guaranteed that genes and candidates are from the same assembly
         cand_genes = row["candidates"]
@@ -148,7 +168,7 @@ def build_training_features(candidates: pl.DataFrame, transcripts: pl.DataFrame,
             t_data = transcripts.filter(pl.col("gene") == cand)
 
             ## Mark up all transcripts in this gene as being in the gene
-            features.extend(
+            features.vstack(
                 compare_transcripts(t_data, row_transcripts, so_model, label=label)
             )
 

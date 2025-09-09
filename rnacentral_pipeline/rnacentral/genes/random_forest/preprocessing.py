@@ -83,7 +83,48 @@ def compare_transcripts(transcripts_a, transcripts_b, so_model, label=0):
     similarity_comparisons = set()
     similarity_cache = {}
 
-    features = []
+    if label is not None:
+        features = pl.DataFrame(
+            {
+                "5p_exon_overlap": [],
+                "5p_exon_dta": [],
+                "5p_exon_3p_dta": [],
+                "exons_overlapping": [],
+                "strand": [],
+                "type_sim": [],
+                "label": [],
+                "comparison": [],
+            }, schema={
+                "5p_exon_overlap": pl.Float64,
+                "5p_exon_dta": pl.Int64,
+                "5p_exon_3p_dta": pl.Int64,
+                "exons_overlapping": pl.Int64,
+                "strand": pl.Int64,
+                "type_sim": pl.Float64,
+                "label": pl.Int8,
+                "comparison": pl.Utf8,
+            }
+        )
+    else:
+        features = pl.DataFrame(
+            {
+                "5p_exon_overlap": [],
+                "5p_exon_dta": [],
+                "5p_exon_3p_dta": [],
+                "exons_overlapping": [],
+                "strand": [],
+                "type_sim": [],
+                "comparison": [],
+            }, schema={
+                "5p_exon_overlap": pl.Float64,
+                "5p_exon_dta": pl.Int64,
+                "5p_exon_3p_dta": pl.Int64,
+                "exons_overlapping": pl.Int64,
+                "strand": pl.Int64,
+                "type_sim": pl.Float64,
+                "comparison": pl.Utf8,
+            }
+        )
     for tr_a in transcripts_a.iter_rows(named=True):
         for tr_b in transcripts_b.iter_rows(named=True):
             if tr_a["region_name"] == tr_b["region_name"]:
@@ -138,7 +179,7 @@ def compare_transcripts(transcripts_a, transcripts_b, so_model, label=0):
             comparison = f"{tr_a['region_name']} vs {tr_b['region_name']}"
 
             if label is not None:
-                features_dict ={
+                new_features =pl.DataFrame({
                         "5p_exon_overlap": five_prime_overlap,
                         "5p_exon_dta": five_prime_dta,
                         "5p_exon_3p_dta": five_prime_ex_3p_dta,
@@ -147,10 +188,20 @@ def compare_transcripts(transcripts_a, transcripts_b, so_model, label=0):
                         "type_sim": type_similarity,
                         "label": int(label),
                         "comparison": comparison,
+                    }, 
+                    schema={
+                        "5p_exon_overlap": pl.Float64,
+                        "5p_exon_dta": pl.Int64,
+                        "5p_exon_3p_dta": pl.Int64,
+                        "exons_overlapping": pl.Int64,
+                        "strand": pl.Int64,
+                        "type_sim": pl.Float64,
+                        "label": pl.Int8,
+                        "comparison": pl.Utf8,
                     }
-                
+                )
             else:
-                features_dict = {
+                new_features = pl.DataFrame({
                         "5p_exon_overlap": five_prime_overlap,
                         "5p_exon_dta": five_prime_dta,
                         "5p_exon_3p_dta": five_prime_ex_3p_dta,
@@ -158,10 +209,22 @@ def compare_transcripts(transcripts_a, transcripts_b, so_model, label=0):
                         "strand": int(tr_a["strand"] == tr_b["strand"]),
                         "type_sim": type_similarity,
                         "comparison": comparison,
+                    },
+                    schema={
+                        "5p_exon_overlap": pl.Float64,
+                        "5p_exon_dta": pl.Int64,
+                        "5p_exon_3p_dta": pl.Int64,
+                        "exons_overlapping": pl.Int64,
+                        "strand": pl.Int64,
+                        "type_sim": pl.Float64,
+                        "comparison": pl.Utf8,
                     }
-            yield features_dict
+                )
+
+
+            features = features.vstack(new_features)
             comparisons.add(normalized_pair)
-    # return features
+    return features
 
 
 def identify_nearby_transcripts(transcripts, so_model, nearby_distance=1000):
@@ -210,7 +273,26 @@ def identify_nearby_transcripts_sorted(transcripts, so_model, nearby_distance=10
     # Group by chromosome and assembly_id
     grouped = transcripts.group_by(["chromosome", "assembly_id", "strand"])
 
-    features = []
+    ## This should not have labels in because we're in the inference side
+    features = pl.DataFrame(
+            {
+                "5p_exon_overlap": [],
+                "5p_exon_dta": [],
+                "5p_exon_3p_dta": [],
+                "exons_overlapping": [],
+                "strand": [],
+                "type_sim": [],
+                "comparison": [],
+            }, schema={
+                "5p_exon_overlap": pl.Float64,
+                "5p_exon_dta": pl.Int64,
+                "5p_exon_3p_dta": pl.Int64,
+                "exons_overlapping": pl.Int64,
+                "strand": pl.Int64,
+                "type_sim": pl.Float64,
+                "comparison": pl.Utf8,
+            }
+        )
 
     for group_key, group_df in grouped:
         # Sort by region_start for binary search
@@ -247,9 +329,9 @@ def identify_nearby_transcripts_sorted(transcripts, so_model, nearby_distance=10
                 f = compare_transcripts(
                     pl.DataFrame([transcript_a]), candidates, so_model, label=None
                 )
-                features.extend(f)
+                features.vstack(f)
 
-    return pl.DataFrame(features)
+    return features.rechunk()
 
 
 def _process_group_worker(args):
