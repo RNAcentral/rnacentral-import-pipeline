@@ -20,6 +20,7 @@ import numpy as np
 import onnxruntime as ort
 import polars as pl
 from community import community_louvain
+from tqdm import tqdm
 
 from rnacentral_pipeline.rnacentral.genes.random_forest import data
 
@@ -91,52 +92,68 @@ def convert_for_load(gene_table, transcripts):
 
 
 def get_community_genes(classifications, transcripts):
-    G = nx.Graph()
-    # Add all nodes
-    node_assembly_lookup = {
-        n: a
-        for n, a in zip(
-            transcripts.get_column("region_name").unique().to_list(),
-            transcripts.get_column("assembly_id").to_list(),
-        )
-    }
-    nodes = [
-        (n, {"assembly": a})
-        for n, a in zip(
-            transcripts.get_column("region_name").unique().to_list(),
-            transcripts.get_column("assembly_id").unique().to_list(),
-        )
-    ]
-    G.add_nodes_from(nodes)
+    
+    return_genes = []
 
-    # Add weighted edges
+    ## try moving the split closer to where it is needed, so we don't store so many tuples
     classifications = classifications.with_columns(
         node_tuple=pl.col("comparison").str.split(" vs ")
     )
-    edges = classifications.filter(pl.col("prediction") == 1).select(
-        ["node_tuple", "probability"]
-    )
+    for chromosome_transcripts in tqdm(transcripts.partition_by("chromosome"), total=transcripts.select("chromosome").unique().height):
+        G = nx.Graph()
+        chromosome = chromosome_transcripts.get_column("chromosome").to_list()[0]
+        ## partition the classifications per chromosome to make this manageable
+        chromosome_classifications = classifications.filter(pl.col("chromosome") == chromosome)
 
-    for row in edges.iter_rows():
-        source, target = row[0][0], row[0][1]
-        probability = row[1]
-        G.add_edge(source, target, weight=probability)
 
-    # Find communities (genes) using Louvain method
-    partition = community_louvain.best_partition(G)
+        # Add all nodes
+        node_assembly_lookup = {
+            n: a
+            for n, a in zip(
+                chromosome_transcripts.get_column("region_name").unique().to_list(),
+                chromosome_transcripts.get_column("assembly_id").to_list(),
+            )
+        }
+        nodes = [
+            (n, {"assembly": a})
+            for n, a in zip(
+                chromosome_transcripts.get_column("region_name").to_list(),
+                chromosome_transcripts.get_column("assembly_id").to_list(),
+            )
+        ]
+    
+        G.add_nodes_from(nodes)
+    
+        # Add weighted edges
+        edges = chromosome_classifications.filter(pl.col("prediction") == 1).select(
+            ["node_tuple", "probability"]
+        ).collect()
 
-    # Group transcripts by community
-    communities = {}
-    for transcript, community_id in partition.items():
-        if community_id not in communities:
-            communities[community_id] = set()
-        communities[community_id].add(transcript)
 
-    genes = list(communities.values())
-    return_genes = []
-    for g in genes:
-        if node_assembly_lookup.get( list(g)[0], None) is not None:
-            return_genes.append( (g, node_assembly_lookup[list(g)[0]]) )
+        edge_tuples = []
+        for idx, row in enumerate(edges.iter_rows()):
+            source, target = row[0][0], row[0][1]
+            probability = row[1]
+            edge_tuples.append((source, target, probability))
+            if idx > 0 and idx % 100_000 == 0:
+                G.add_weighted_edges_from(edge_tuples)
+                edge_tuples = []
+        if len(edge_tuples) > 0:
+            G.add_weighted_edges_from(edge_tuples)
+        print("edges added")
+        # Find communities (genes) using Louvain method
+        partition = community_louvain.best_partition(G)
+
+        # Group transcripts by community
+        communities = {}
+        for transcript, community_id in partition.items():
+            if community_id not in communities:
+                communities[community_id] = set()
+            communities[community_id].add(transcript)
+        genes = list(communities.values())
+        for g in genes:
+            if node_assembly_lookup.get( list(g)[0], None) is not None:
+                return_genes.append( (g, node_assembly_lookup[list(g)[0]]) )
 
     return return_genes
 
@@ -146,7 +163,7 @@ def run_classification(model_path, features):
     Run the model over the features and classify every single pair
     """
     excluded_columns = ["comparison", "label"]
-    X = features.select(pl.exclude(excluded_columns)).to_numpy()
+    
 
     sess_opt = ort.SessionOptions()
     sess_opt.execution_mode = ort.ExecutionMode.ORT_PARALLEL
@@ -160,35 +177,66 @@ def run_classification(model_path, features):
     label_name = sess.get_outputs()[0].name
     probability_name = sess.get_outputs()[1].name
 
+    classifications = pl.DataFrame(
+        {
+            "chromosome": [],
+            "comparison": [],
+            "prediction": [],
+            "probability": [],
+        },
+        schema={"chromosome": pl.Utf8, "comparison": pl.Utf8, "prediction": pl.Int64, "probability": pl.Float64},
+    )
     if features.height > 10_000:
         predictions = []
         prob_dict = []
         chunk_size = 10_000
-        for batch_idx in range(0, features.height, chunk_size):
+        for batch_idx in tqdm(range(0, features.height, chunk_size), total = (features.height // chunk_size) + 1):
+            features_slice = features.slice(batch_idx, chunk_size)
+            
+            X = features_slice.select(pl.exclude(excluded_columns)).to_numpy()
+            comparisons = features_slice.get_column("comparison").to_numpy()
+            features_slice = features_slice.with_columns(chromosome=pl.col("comparison").str.split("@").list.get(1).str.split("/").list.first())
+            chromosomes = features_slice.get_column("chromosome").to_numpy()
             pred_part, prob_part = sess.run(
                 [label_name, probability_name],
-                {input_name: X[batch_idx : batch_idx + chunk_size]},
+                {input_name: X},
             )
-            predictions.extend(pred_part)
-            prob_dict.extend(prob_part)
+
+            new_classifications = pl.DataFrame(
+                {
+                    "chromosome": chromosomes,
+                    "comparison": comparisons,
+                    "prediction": pred_part,
+                    "probability": [pr[1] for pr in prob_part],
+                },
+                schema={
+                    "chromosome": pl.Utf8,
+                    "comparison": pl.Utf8,
+                    "prediction": pl.Int64,
+                    "probability": pl.Float64,
+                },
+            )
+            classifications = classifications.vstack(new_classifications)
     else:
+        X = features.select(pl.exclude(excluded_columns)).to_numpy()
+        comparisons = features.get_column("comparison").to_numpy()
+        chromosomes = features.get_column("chromosome").to_numpy()
         predictions, prob_dict = sess.run(
             [label_name, probability_name], {input_name: X}
         )
+        classifications = pl.DataFrame(
+            {
+                "chromosome": chromosomes,
+                "comparison": comparisons,
+                "prediction": predictions,
+                "probability": [pr[1] for pr in prob_dict],
+            },
+            schema={"chromosome": pl.Utf8, "comparison": pl.Utf8, "prediction": pl.Int64, "probability": pl.Float64},
+        )
 
-    probabilities = [pr[1] for pr in prob_dict]
-
-    comparisons = features.get_column("comparison").to_numpy()
-
-    classifications = pl.DataFrame(
-        {
-            "comparison": comparisons,
-            "prediction": predictions,
-            "probability": probabilities,
-        }
-    )
-
-    return classifications.unique("comparison")
+    ## Rechunk because the many vstacks don't make the memory contiguous, which will slow the next
+    ## stage down
+    return classifications.rechunk().unique("comparison")
 
 
 def run_final_classification(
@@ -219,17 +267,20 @@ def run_final_classification(
     if features.height == 0:
         return pl.DataFrame()
 
-    transcripts = pl.read_parquet(transcripts_file)
-
     # Run classification
     classifications = run_classification(model_path, features)
 
+    ## The classifications is the number of edges in the whole genome graph
+    ## This is often preposterously huge, meaning the graph construction
+    ## is very memory intensive. So, instead we write the classifications 
+    ## to a parquet file and re-open it in lazy mode. This allows us to do 
+    ## operations on it without running OOM, at the cost of a little speed.
+    classifications.write_parquet("_temp_classifications.parquet")
+    del classifications
+    classifications = pl.scan_parquet("_temp_classifications.parquet")
+    print("Done classifying, now generating genes")
     # Get unique transcript names from features
-    all_comparisons = features.get_column("comparison").to_list()
-    transcript_names = set()
-    for comparison in all_comparisons:
-        parts = comparison.split(" vs ")
-        transcript_names.update(parts)
+    transcripts = pl.read_parquet(transcripts_file)
 
     genes = get_community_genes(classifications, transcripts)
     genes = list(filter(lambda x: len(x[0]) > 1, genes))
@@ -240,5 +291,8 @@ def run_final_classification(
     # Name genes
     prefix = data.get_stable_prefix(taxid, conn_str)
     genes_table = data.name_genes(genes, prefix, seed=seed)
+
+    ## Clean up
+    os.unlink("_temp_classifications.parquet")
 
     return genes_table
