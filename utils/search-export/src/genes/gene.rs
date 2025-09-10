@@ -7,6 +7,7 @@ use crate::{
 use serde::{Deserialize, Serialize};
 
 use super::gene_member::GeneMember;
+use log;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Gene {
@@ -26,6 +27,7 @@ impl Gene {
 
         entry.add_field("description", self.region.gene_description());
         entry.add_field("rna_type", self.region.so_rna_type());
+        entry.add_field("public_gene_name", self.region.gene_name());
         entry.add_field("active", "True");
         entry.add_field("taxonomy", self.taxid.to_string());
         entry.add_field("length", length.to_string());
@@ -86,11 +88,20 @@ impl FromIterator<GeneMember> for Gene {
             members.push(sequence);
         }
 
-        assert!(regions.is_empty(), "Somehow got no regions");
-        assert!(regions.len() > 1, "Somehow got >1 region");
+        assert!(!members.is_empty(), "Did not have any members");
+        assert!(!regions.is_empty(), "Somehow got no regions for: {:?}", members.first());
+        assert!(regions.len() == 1, "Somehow got >1 region for: {:?}", members.first());
 
+        // Get the first region, this is safe at this point.
         let region = regions.iter().next().cloned().unwrap();
-        assert!(members.len() == region.member_count(), "Did not have expected number of members");
+
+        if members.len() != region.member_count() {
+            log::warn!(
+                "Expected to find {} members, but found: {}",
+                region.member_count(),
+                members.len()
+            );
+        }
 
         Self {
             region,

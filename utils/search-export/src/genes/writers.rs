@@ -77,17 +77,23 @@ pub fn write_split_selected(locus_path: &Path, sequence_file: &Path, output: &Pa
 }
 
 pub fn write_merged_members(member_file: &Path, output: &Path) -> Result<()> {
-    let member_reader = BufReader::new(File::open(member_file)?);
+    let open_member = File::open(member_file)
+        .with_context(|| format!("Failed to open member file {member_file:?}"))?;
+    let member_reader = BufReader::new(open_member);
     let members = Deserializer::from_reader(member_reader).into_iter::<GeneMember>();
     let members = members.map(|r| r.unwrap());
     let mut members: Vec<GeneMember> = members.collect();
     members.sort_by_key(|m| m.gene_id());
     let grouped = members.into_iter().group_by(|l| l.gene_id());
 
-    let mut writer = BufWriter::new(File::create(&output)?);
-    for (_locus_id, locus) in &grouped {
+    let create =
+        File::create(output).with_context(|| format!("Failed to create output file {output:?}"))?;
+    let mut writer = BufWriter::new(create);
+    for (locus_id, locus) in &grouped {
+        log::info!("Merging locus id {locus_id}");
         let gene = Gene::from_iter(locus);
-        serde_json::to_writer(&mut writer, &gene)?;
+        serde_json::to_writer(&mut writer, &gene)
+            .with_context(|| format!("Failed to format to JSON: {gene:?}"))?;
         writeln!(&mut writer)?;
     }
     writer.flush()?;
