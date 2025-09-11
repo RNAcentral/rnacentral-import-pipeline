@@ -305,34 +305,22 @@ def merge_genes(previous_genes, next_genes, output, inactive_ids, prev_release_n
     if "last_release" not in next_rel.columns:
         next_rel = next_rel.with_columns(last_release=pl.lit(next_release_number, dtype=pl.Int64))
 
-    if inactive_ids:
-        inactive_ids = pl.read_csv(inactive_ids, has_header=False, new_columns=["urs"])
-        column_order = start.columns
-        start = start.with_columns(member_urs=pl.col("members").list.eval(pl.element().str.split("_").list.first())).explode("member_urs")
-        start = start.join(inactive_ids, left_on="member_urs", right_on="urs", how="anti")
-        start = start.group_by(["name", "internal_name", "start", "stop", "strand", "chromosome", "assembly_id", "version", "first_release", "last_release"]).agg(
-            pl.col("members").list.first() # it makes a list of lists since we didn't explode on this column
-        ).select(
-            column_order
-        ).filter(pl.col("members").list.len() > 0)
-
 
     ## The name comes from a hash based on the start, stop and chromosome, so it should
     ## be joinable when those things have not changed. As long as we also join on the 
     ## strand and assembly to avoid mixing 
 
-    common = start.join(next_rel, on=["start", "stop", "strand", "assembly_id", "chromosome"], how="inner")
-    common = common.with_columns(pl.min_horizontal("first_release", "first_release_right").alias("first_release"))
-    common = common.with_columns(pl.max_horizontal("last_release", "last_release_right").alias("last_release"))
+    common = start.join(next_rel, on=["start", "stop", "strand", "assembly_id", "chromosome"], how="inner", suffix="_new")
+    common = common.with_columns(pl.min_horizontal("first_release", "first_release_new").alias("first_release"))
+    common = common.with_columns(pl.max_horizontal("last_release", "last_release_new").alias("last_release"))
     ##If the membership changes, we need to increment the version of the gene.
-    common = common.with_columns(updated_members=pl.col("members").list.set_union(pl.col("members_right")))
-    common = common.with_columns(version=pl.when(pl.col("members") == pl.col("members_right")).then(pl.col("version")).otherwise(pl.col("version") + 1))
+    common = common.with_columns(version=pl.when(pl.col("members") == pl.col("members_new")).then(pl.col("version")).otherwise(pl.col("version") + 1))
 
     common = common.with_columns(name=pl.col("name") + "." + pl.col("version").cast(pl.Utf8))
     common = common.select(
         pl.col("name"),
         pl.col("internal_name"),
-        pl.col("updated_members").alias("members"),
+        pl.col("members_new"),
         pl.col("start"),
         pl.col("stop"),
         pl.col("strand"),
@@ -377,7 +365,7 @@ def merge_genes(previous_genes, next_genes, output, inactive_ids, prev_release_n
                             {
                                 "name": old_row['name'],
                                 "internal_name": old_row['internal_name'],
-                                "members": list(set(new_row['members']).union(set(old_row['members']))),
+                                "members": new_row['members'],
                                 "start": min(new_row['start'], old_row['start']),
                                 "stop": max(new_row['stop'], old_row['stop']),
                                 "strand": strand,
@@ -410,7 +398,6 @@ def merge_genes(previous_genes, next_genes, output, inactive_ids, prev_release_n
         pl.col("last_release"),
     )
 
-    remaining_old =old_uncommon.join(nearby_merged_df, on="name", how="anti")
     remaining_new = next_new.filter(~pl.col("name").is_in(new_discarded_names)).with_columns(name=pl.col("name") + "." + pl.col("version").cast(pl.Utf8))
     remaining_new = remaining_new.select(
         pl.col("name"),
