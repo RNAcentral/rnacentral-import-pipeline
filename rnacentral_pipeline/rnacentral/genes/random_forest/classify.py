@@ -220,6 +220,7 @@ def run_classification(model_path, features):
     else:
         X = features.select(pl.exclude(excluded_columns)).to_numpy()
         comparisons = features.get_column("comparison").to_numpy()
+        features = features.with_columns(chromosome=pl.col("comparison").str.split("@").list.get(1).str.split("/").list.first())
         chromosomes = features.get_column("chromosome").to_numpy()
         predictions, prob_dict = sess.run(
             [label_name, probability_name], {input_name: X}
