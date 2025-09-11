@@ -329,8 +329,7 @@ def identify_nearby_transcripts_sorted(transcripts, so_model, nearby_distance=10
                 f = compare_transcripts(
                     pl.DataFrame([transcript_a]), candidates, so_model, label=None
                 )
-                features.vstack(f)
-
+                features = features.vstack(f)
     return features.rechunk()
 
 
