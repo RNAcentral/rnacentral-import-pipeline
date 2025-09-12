@@ -320,7 +320,7 @@ def merge_genes(previous_genes, next_genes, output, inactive_ids, prev_release_n
     common = common.select(
         pl.col("name"),
         pl.col("internal_name"),
-        pl.col("members_new"),
+        pl.col("members_new").alias("members"),
         pl.col("start"),
         pl.col("stop"),
         pl.col("strand"),
@@ -343,7 +343,7 @@ def merge_genes(previous_genes, next_genes, output, inactive_ids, prev_release_n
 
     ## Use a threshold of 1kb around the start/stop to select candidates to merge
     ## Then look at the overlap and merge if >0.9
-    nearby_merged = []
+    nearby_merged = common.clear()
     new_discarded_names = []
     for name, data in next_new.group_by(["assembly_id", "chromosome", "strand"], maintain_order=True):
         assembly, chromosome, strand = name
@@ -361,7 +361,7 @@ def merge_genes(previous_genes, next_genes, output, inactive_ids, prev_release_n
                 if abs(new_row["start"] - old_row['start']) < 1000 and abs(new_row["stop"] - old_row['stop']) < 1000:
                     overlap = exon_overlap(new_row['start'], new_row['stop'], old_row['start'], old_row['stop'])
                     if overlap > 0.9:
-                        nearby_merged.append(
+                        merged_row = pl.DataFrame(
                             {
                                 "name": old_row['name'],
                                 "internal_name": old_row['internal_name'],
@@ -374,17 +374,18 @@ def merge_genes(previous_genes, next_genes, output, inactive_ids, prev_release_n
                                 "version": max(new_row['version'], old_row['version']) + 1,
                                 "first_release": min(new_row['first_release'], old_row['first_release']),
                                 "last_release": max(new_row['last_release'], old_row['last_release']),
-                                
-                            }
+                            },
+                            schema=common.schema
                         )
+                        nearby_merged = nearby_merged.vstack(merged_row)
                         new_discarded_names.append(new_row['name'])
                         used_old_rows.add(old_key)
                         break
 
 
-    nearby_merged_df = pl.DataFrame(nearby_merged)
-    nearby_merged_df = nearby_merged_df.with_columns(name=pl.col("name") + "." + pl.col("version").cast(pl.Utf8))
-    nearby_merged_df = nearby_merged_df.select(
+    
+    nearby_merged = nearby_merged.with_columns(name=pl.col("name") + "." + pl.col("version").cast(pl.Utf8))
+    nearby_merged = nearby_merged.select(
         pl.col("name"),
         pl.col("internal_name"),
         pl.col("members"),
@@ -413,7 +414,7 @@ def merge_genes(previous_genes, next_genes, output, inactive_ids, prev_release_n
         pl.col("last_release"),
     )
     ## For now, just concatenate the remaining stuff, thought some of it may no longer be active
-    final_merged_data = pl.concat([common, nearby_merged_df, remaining_new], how="vertical")
+    final_merged_data = pl.concat([common, nearby_merged, remaining_new], how="vertical")
 
     return final_merged_data
 
