@@ -1,4 +1,4 @@
-FROM python:3.11.0-buster
+FROM python:3.11.13-trixie
 
 ENV RNA /rna
 
@@ -8,7 +8,7 @@ RUN apt update
 RUN apt upgrade -y
 
 # Install all required packages
-RUN apt install -y \
+RUN apt install -y --no-install-recommends \
     bedtools \
     ca-certificates \
     curl \
@@ -27,7 +27,7 @@ RUN apt install -y \
     libncurses5-dev \
     libncursesw5-dev \
     libsqlite3-dev \
-    libssl1.1 \
+    libssl-dev \
     libxml2-utils \
     libxml2-dev \
     libzip-dev \
@@ -37,8 +37,8 @@ RUN apt install -y \
     pandoc \
     patch \
     pgloader \
-    postgresql-11 \
-    postgresql-client-11 \
+    postgresql-17 \
+    postgresql-client-17 \
     procps \
     python3 \
     python3-dev \
@@ -66,14 +66,11 @@ RUN \
     cd easel && \
     make install
 
-# Install blat
-RUN \
-    wget https://users.soe.ucsc.edu/~kent/src/blatSrc35.zip && \
-    unzip blatSrc35.zip && \
-    rm blatSrc35.zip && \
-    cd blatSrc && \
-    mkdir bin && \
-    make MACHTYPE=x86_64 BINDIR=$PWD/bin
+RUN mkdir -p $RNA/blatSrc/bin && \
+    cd $RNA/blatSrc/bin && \
+    wget https://hgwdev.gi.ucsc.edu/~kent/exe/linux/blatSuite.zip && \
+    unzip blatSuite.zip && \
+    rm blatSuite.zip 
 
 # Install seqkit
 RUN \

@@ -12,7 +12,6 @@ rust:
 	mv -f target/release/search-export bin
 	mv -f target/release/ftp-export bin
 	mv -f target/release/json2dfasta bin
-	mv -f target/release/expression-parse bin
 	mv -f target/release/bed-expander bin
 
 clean:
@@ -23,7 +22,6 @@ clean:
 	rm bin/search-export
 	rm bin/ftp-export
 	rm bin/json2dfasta
-	rm bin/expression-parse
 	rm bin/bed-expander
 	cargo clean
 
