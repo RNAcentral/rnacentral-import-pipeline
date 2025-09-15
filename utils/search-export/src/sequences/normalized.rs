@@ -1,28 +1,13 @@
-use std::{
-    convert::TryInto,
-    iter::FromIterator,
-    num::TryFromIntError,
-};
+use std::{convert::TryInto, iter::FromIterator, num::TryFromIntError};
 
-use serde::{
-    Deserialize,
-    Serialize,
-};
+use serde::{Deserialize, Serialize};
 
 use thiserror::Error;
 
-use rnc_core::{
-    urs,
-    urs_taxid,
-};
+use rnc_core::{urs, urs_taxid};
 
 use crate::sequences::{
-    accession::{
-        AccessionVec,
-        CrossReference,
-        RawAccession,
-        ReferenceVec,
-    },
+    accession::{AccessionVec, CrossReference, RawAccession, ReferenceVec},
     basic::Basic,
     crs::CrsVec,
     editing_events::EditingEvent,
@@ -147,5 +132,33 @@ impl Normalized {
 
     pub fn description(&self) -> &str {
         self.pre_summary.description()
+    }
+
+    pub fn accessions(&self) -> &AccessionVec {
+        &self.accessions
+    }
+
+    pub fn so_rna_type_tree(&self) -> &so_tree::SoTree {
+        &self.so_rna_type_tree
+    }
+
+    pub fn has_litsumm(&self) -> bool {
+        !self.litsumm.is_empty()
+    }
+
+    pub fn has_lit_scan(&self) -> bool {
+        self.has_litsumm() // FIXME This isn't correct
+    }
+
+    pub fn has_go_annotations(&self) -> bool {
+        !self.go_annotations.is_empty()
+    }
+
+    pub fn has_secondary_structure(&self) -> bool {
+        self.secondary.is_some()
+    }
+
+    pub fn has_qc_warning(&self) -> bool {
+        false // FIXME This isn't correct yet
     }
 }

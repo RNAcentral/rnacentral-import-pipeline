@@ -1,17 +1,11 @@
 use std::{
     collections::HashMap,
     fs::File,
-    io::{
-        BufRead,
-        BufReader,
-    },
+    io::{BufRead, BufReader},
     path::Path,
 };
 
-use serde::{
-    Deserialize,
-    Serialize,
-};
+use serde::{Deserialize, Serialize};
 
 use anyhow::Result;
 

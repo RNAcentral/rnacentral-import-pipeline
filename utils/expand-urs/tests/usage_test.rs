@@ -1,18 +1,12 @@
 use std::{
     io,
-    path::{
-        Path,
-        PathBuf,
-    },
+    path::{Path, PathBuf},
     process::Output,
 };
 
 use serde_json::json;
 
-use rnc_test_utils::{
-    temp_file_with,
-    Jsonl,
-};
+use rnc_test_utils::{temp_file_with, Jsonl};
 
 fn expand(id_file: &Path, json_file: &Path, output: &Path) -> io::Result<Output> {
     test_bin::get_test_bin("expand-urs").arg(id_file).arg(json_file).arg(output).output()

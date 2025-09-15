@@ -7,22 +7,12 @@ pub mod previous;
 pub mod r2dt_hit;
 pub mod rfam_hit;
 
-use std::{
-    io::Write,
-    path::Path,
-};
+use std::{io::Write, path::Path};
 
-use anyhow::{
-    anyhow,
-    Result,
-};
+use anyhow::{anyhow, Result};
 
 use rnc_core::{
-    grouper::Grouped::{
-        Multiple,
-        Optional,
-        Required,
-    },
+    grouper::Grouped::{Multiple, Optional, Required},
     psql::PsqlJsonIterator,
 };
 

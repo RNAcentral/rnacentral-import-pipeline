@@ -3,28 +3,14 @@ use serde::Deserialize;
 use std::{
     fmt,
     fs::File,
-    io::{
-        BufReader,
-        BufWriter,
-        Read,
-        Write,
-    },
+    io::{BufReader, BufWriter, Read, Write},
     ops::Range,
-    path::{
-        Path,
-        PathBuf,
-    },
+    path::{Path, PathBuf},
 };
 
-use anyhow::{
-    Context,
-    Result,
-};
+use anyhow::{Context, Result};
 
-use serde::{
-    de::DeserializeOwned,
-    ser::Serialize,
-};
+use serde::{de::DeserializeOwned, ser::Serialize};
 
 use csv::Reader;
 
@@ -50,13 +36,13 @@ pub struct ChunkSpec {
 
 impl From<RawChunk> for SingleChunk {
     fn from(raw: RawChunk) -> SingleChunk {
-        return Self {
+        Self {
             endpoints: Range {
                 start: raw.start,
                 end: raw.stop + 1,
             },
             filename: raw.filename,
-        };
+        }
     }
 }
 

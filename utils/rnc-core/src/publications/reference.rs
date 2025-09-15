@@ -1,9 +1,6 @@
 use thiserror::Error;
 
-use md5::{
-    Digest,
-    Md5,
-};
+use md5::{Digest, Md5};
 
 use crate::publications::external_reference::ExternalReference;
 

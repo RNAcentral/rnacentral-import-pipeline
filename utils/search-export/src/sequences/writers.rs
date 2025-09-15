@@ -1,32 +1,19 @@
 use std::{
     fs::File,
     io::BufReader,
-    path::{
-        Path,
-        PathBuf,
-    },
+    path::{Path, PathBuf},
 };
 
-use anyhow::{
-    anyhow,
-    Result,
-};
+use anyhow::{anyhow, Result};
 
 use itertools::Itertools;
 
 use serde_json::Deserializer;
-use sorted_iter::{
-    assume::*,
-    SortedPairIterator,
-};
+use sorted_iter::{assume::*, SortedPairIterator};
 
 use rnc_core::psql::PsqlJsonIterator;
 
-use crate::sequences::{
-    accession,
-    file_joiner::FileJoinerBuilder,
-    normalized::Normalized,
-};
+use crate::sequences::{accession, file_joiner::FileJoinerBuilder, normalized::Normalized};
 
 use super::raw::Raw;
 

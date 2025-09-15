@@ -1,9 +1,6 @@
 use bio::io::fasta;
 
-use serde::{
-    Deserialize,
-    Serialize,
-};
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Sequence<'a> {
